@@ -352,7 +352,7 @@ AppFetchError app_fetch_get_previous_error(void) {
 }
 
 static void prv_cancel_fetch_from_system_task(void *data) {
-  AppInstallId app_id = (AppInstallId)data;
+  AppInstallId app_id = (AppInstallId)(intptr_t)data;
 
   if ((!s_fetch_state.in_progress) ||
       ((s_fetch_state.app_id != app_id) && (app_id != INSTALL_ID_INVALID))) {

@@ -47,7 +47,7 @@ static void prv_put_debounced_connection_event(DebounceConnection conn_id) {
 }
 
 static void prv_handle_disconnection_debounced(void *data) {
-  DebounceConnection conn_id = (DebounceConnection)data;
+  DebounceConnection conn_id = (DebounceConnection)(uintptr_t)data;
   s_debounced_state_is_connected[conn_id] = false;
   prv_put_debounced_connection_event(conn_id);
 #ifndef CONFIG_RECOVERY_FW

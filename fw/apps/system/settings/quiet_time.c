@@ -126,11 +126,11 @@ enum {
 
 static void prv_toggle_scheduled_dnd(ActionMenu *action_menu, const ActionMenuItem *item,
                                      void *context) {
-  do_not_disturb_toggle_scheduled((DoNotDisturbScheduleType)item->action_data);
+  do_not_disturb_toggle_scheduled((DoNotDisturbScheduleType)(uintptr_t)item->action_data);
 }
 
 static void prv_complete_schedule(TimeRangeSelectionWindowData *schedule_window, void *data) {
-  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType)data;
+  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType)(uintptr_t)data;
   DoNotDisturbSchedule schedule = {
     .from_hour = schedule_window->from.hour,
     .from_minute = schedule_window->from.minute,
@@ -167,7 +167,7 @@ static void prv_time_range_select_window_push(DoNotDisturbScheduleType type,
 
 static void prv_dnd_set_schedule(ActionMenu *action_menu, const ActionMenuItem *item,
                                  void *context) {
-  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType)item->action_data;
+  DoNotDisturbScheduleType type = (DoNotDisturbScheduleType)(uintptr_t)item->action_data;
   do_not_disturb_set_schedule_enabled(type, true);
   prv_time_range_select_window_push(type, context);
 }

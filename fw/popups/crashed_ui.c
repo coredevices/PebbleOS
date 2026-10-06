@@ -97,7 +97,7 @@ static char *prv_create_worker_crash_reason_string(AppInstallId app_install_id) 
 }
 
 static void prv_push_worker_crash_dialog(void *context) {
-  const AppInstallId app_install_id = (AppInstallId)context;
+  const AppInstallId app_install_id = (AppInstallId)(intptr_t)context;
 
   WorkerCrashDialogData *data = kernel_zalloc_check(sizeof(WorkerCrashDialogData));
   data->app_install_id = app_install_id;
@@ -139,7 +139,7 @@ static void prv_push_worker_crash_dialog(void *context) {
 }
 
 void crashed_ui_show_worker_crash(const AppInstallId install_id) {
-  launcher_task_add_callback(prv_push_worker_crash_dialog, (void *)install_id);
+  launcher_task_add_callback(prv_push_worker_crash_dialog, (void *)(intptr_t)install_id);
 }
 
 // ---------------------------------------------------------------------------

@@ -80,7 +80,7 @@ static WakeupState s_wakeup_state = {-1, -1, 0};
 static bool s_catchup_enabled = false; // enables catching up with missed events
 
 void wakeup_dispatcher_system_task(void *data) {
-  WakeupId wakeup_id = (WakeupId)data;
+  WakeupId wakeup_id = (WakeupId)(intptr_t)data;
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
   // Delete event from settings

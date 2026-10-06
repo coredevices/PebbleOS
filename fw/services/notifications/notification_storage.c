@@ -348,7 +348,7 @@ static bool prv_uuid_equal_func(SerializedTimelineItemHeader *header, void *data
 }
 
 static bool prv_ancs_id_compare_func(SerializedTimelineItemHeader *header, void *data) {
-  uint32_t ancs_uid = (uint32_t)data;
+  uintptr_t ancs_uid = (uintptr_t)data;
   return header->common.ancs_uid == ancs_uid;
 }
 

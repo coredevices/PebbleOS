@@ -99,7 +99,7 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_
     case 0: {
       if (length != sizeof(PingMsgV1) &&
           length != sizeof(PingMsgV2) /* idle boolean is optional */) {
-        PBL_LOG_ERR("Invalid Ping, l=%u", length);
+        PBL_LOG_ERR("Invalid Ping, l=%zu", length);
         return;
       }
 
@@ -117,7 +117,7 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_
 
     case 1:
       if (length != sizeof(PongMsg)) {
-        PBL_LOG_ERR("Invalid Pong, l=%u", length);
+        PBL_LOG_ERR("Invalid Pong, l=%zu", length);
         return;
       }
 

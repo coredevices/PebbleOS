@@ -38,7 +38,7 @@ static BlobDBSyncSession *prv_find_live_session(void *session_id) {
 }
 
 static bool prv_session_id_filter_callback(ListNode *node, void *data) {
-  BlobDBId db_id = (BlobDBId)data;
+  BlobDBId db_id = (BlobDBId)(uintptr_t)data;
   BlobDBSyncSession *session = (BlobDBSyncSession *)node;
   if (session->session_type == BlobDBSyncSessionTypeRecord) {
     return false;

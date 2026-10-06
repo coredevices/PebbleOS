@@ -101,15 +101,16 @@ static int prv_timer_expire_compare_func(void *a, void *b) {
 // Find timer by id
 static bool prv_id_list_filter(ListNode *node, void *data) {
   TaskTimer *timer = (TaskTimer *)node;
-  return timer->id == (uint32_t)data;
+  return timer->id == (uintptr_t)data;
 }
 
 static TaskTimer *prv_find_timer(TaskTimerManager *manager, TaskTimerID timer_id) {
   PBL_ASSERTN(timer_id != TASK_TIMER_INVALID_ID);
   // Look for this timer in either the running or idle list
-  ListNode *node = list_find(manager->running_timers, prv_id_list_filter, (void *)timer_id);
+  ListNode *node =
+      list_find(manager->running_timers, prv_id_list_filter, (void *)(uintptr_t)timer_id);
   if (!node) {
-    node = list_find(manager->idle_timers, prv_id_list_filter, (void *)timer_id);
+    node = list_find(manager->idle_timers, prv_id_list_filter, (void *)(uintptr_t)timer_id);
   }
   PBL_ASSERTN(node);
   return (TaskTimer *)node;

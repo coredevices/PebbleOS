@@ -128,7 +128,7 @@ void dump_log_protocol_msg_callback(CommSession *session, const uint8_t *data, s
   int generation = 0;
   if (data[0] == 0x10 || data[0] == 0x11) {
     if (length != 6) {
-      PBL_LOG_ERR("Invalid dump log message received -- length %u", length);
+      PBL_LOG_ERR("Invalid dump log message received -- length %zu", length);
       return;
     }
 
@@ -136,7 +136,7 @@ void dump_log_protocol_msg_callback(CommSession *session, const uint8_t *data, s
     cookie = *((uint32_t *)(data + 2));
   } else {
     if (length != 5) {
-      PBL_LOG_ERR("Invalid dump log message received -- length %u", length);
+      PBL_LOG_ERR("Invalid dump log message received -- length %zu", length);
       return;
     }
 

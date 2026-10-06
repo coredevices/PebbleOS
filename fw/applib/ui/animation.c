@@ -91,7 +91,7 @@ static AnimationPrivate *prv_find_animation_by_handle(AnimationState *state, Ani
   }
   if (!node) {
     if (!quiet) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Animation %d does not exist", (int)handle);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Animation %d does not exist", (int)(uintptr_t)handle);
     }
     return NULL;
   }
@@ -152,7 +152,7 @@ static void prv_unlink_and_free(AnimationState *state, AnimationPrivate *animati
   PBL_ASSERTN(list_contains(state->unscheduled_head, &animation->list_node));
   list_remove(&animation->list_node, &state->unscheduled_head /* &head */, NULL /* &tail */);
 
-  PBL_LOG_DBG("destroying %d (%p) ", (int)animation->handle, animation);
+  PBL_LOG_DBG("destroying %d (%p) ", (int)(uintptr_t)animation->handle, animation);
   applib_free(animation);
 }
 
@@ -382,7 +382,7 @@ void prv_unschedule_animation(AnimationState *state, AnimationPrivate *animation
   }
 
   // Unschedule the passed in animation
-  PBL_LOG_DBG("unscheduling %d (%p)", (int)animation->handle, animation);
+  PBL_LOG_DBG("unscheduling %d (%p)", (int)(uintptr_t)animation->handle, animation);
   PBL_ASSERTN(animation->implementation != NULL);
 
   const bool was_old_head = (&animation->list_node == state->scheduled_head);
@@ -475,9 +475,9 @@ static void prv_schedule_low_level_animation(AnimationState *state, const uint32
     }
   }
 
-  PBL_LOG_DBG("scheduled %d (%p) to run at (%d). delay:%d, duration:%d", (int)animation->handle,
-              animation, (int)animation->abs_start_time_ms, (int)(animation->delay_ms),
-              (int)(animation->duration_ms));
+  PBL_LOG_DBG("scheduled %d (%p) to run at (%d). delay:%d, duration:%d",
+              (int)(uintptr_t)animation->handle, animation, (int)animation->abs_start_time_ms,
+              (int)(animation->delay_ms), (int)(animation->duration_ms));
 }
 
 // -------------------------------------------------------------------------------------------
@@ -499,8 +499,8 @@ static bool prv_schedule_animation(AnimationState *state, const uint32_t now,
     return false;
   }
 
-  PBL_LOG_DBG("scheduling %d (%p) to run in %d ms (%d)", (int)animation->handle, animation,
-              (int)(animation->delay_ms + add_delay_ms),
+  PBL_LOG_DBG("scheduling %d (%p) to run in %d ms (%d)", (int)(uintptr_t)animation->handle,
+              animation, (int)(animation->delay_ms + add_delay_ms),
               (int)(now + animation->delay_ms + add_delay_ms));
 
   uint32_t earliest_start_time = now;
@@ -812,7 +812,7 @@ static void prv_run(AnimationState *state, uint32_t now, AnimationPrivate *top_l
       // one or one of it's children, and if so advance it
       if (!top_level_animation || animation == top_level_animation ||
           prv_is_descendent_of(state, animation, top_level_animation)) {
-        PBL_LOG_DBG("advancing animation %d to %" PRIu32 " ms", (int)animation->handle,
+        PBL_LOG_DBG("advancing animation %d to %" PRIu32 " ms", (int)(uintptr_t)animation->handle,
                     now - top_level_start_time);
         // Run this animation. Record if this is a parent ready to unschedule itself but
         // still waiting for one of its children.
@@ -1097,7 +1097,7 @@ Animation *animation_private_animation_init(AnimationPrivate *animation) {
   PBL_ASSERTN(animation->handle);
 
   state->unscheduled_head = list_insert_before(state->unscheduled_head, &animation->list_node);
-  PBL_LOG_DBG("creating %d (%p)", (int)animation->handle, animation);
+  PBL_LOG_DBG("creating %d (%p)", (int)(uintptr_t)animation->handle, animation);
   return (Animation *)(animation->handle);
 }
 

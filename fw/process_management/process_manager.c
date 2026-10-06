@@ -67,7 +67,7 @@ static ProcessContext *prv_get_context(void) {
 // timeout (currently 3 seconds).
 static void prv_graceful_close_timer_callback(void *data) {
   PBL_LOG_DBG("deinit timeout expired, killing app forcefully");
-  PebbleTask task = (PebbleTask)data;
+  PebbleTask task = (PebbleTask)(uintptr_t)data;
 
   process_manager_put_kill_process_event(task, false /*gracefully*/);
 }
@@ -90,7 +90,7 @@ static bool prv_force_stop_task_if_unprivileged(ProcessContext *context) {
 
 // --------------------------------------------------------------------------------------------------
 static void prv_force_close_timer_callback(void *data) {
-  PebbleTask task = (PebbleTask)data;
+  PebbleTask task = (PebbleTask)(uintptr_t)data;
   ProcessContext *context = prv_get_context_for_task(task);
 
   if (!prv_force_stop_task_if_unprivileged(context)) {
@@ -713,7 +713,7 @@ DEFINE_SYSCALL(uint32_t, sys_process_get_launch_args, void) {
   if (sys_process_get_launch_reason() != APP_LAUNCH_TIMELINE_ACTION) {
     return 0;
   } else {
-    return (uint32_t)process_manager_get_current_process_args();
+    return (uint32_t)(uintptr_t)process_manager_get_current_process_args();
   }
 }
 

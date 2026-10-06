@@ -27,12 +27,12 @@ DEFINE_SYSCALL(AppTimer *, app_timer_register_repeatable, uint32_t timeout_ms,
 DEFINE_SYSCALL(bool, app_timer_reschedule, AppTimer *timer, uint32_t new_timeout_ms) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (!evented_timer_exists((EventedTimerID)timer)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)timer);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)(uintptr_t)timer);
       return (false);
     }
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
-              (unsigned)timer);
+              (unsigned)(uintptr_t)timer);
       syscall_failed();
     }
   }
@@ -42,12 +42,12 @@ DEFINE_SYSCALL(bool, app_timer_reschedule, AppTimer *timer, uint32_t new_timeout
 DEFINE_SYSCALL(void, app_timer_cancel, AppTimer *timer) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (!evented_timer_exists((EventedTimerID)timer)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)timer);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)(uintptr_t)timer);
       return;
     }
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
-              (unsigned)timer);
+              (unsigned)(uintptr_t)timer);
       syscall_failed();
     }
   }
@@ -57,12 +57,12 @@ DEFINE_SYSCALL(void, app_timer_cancel, AppTimer *timer) {
 DEFINE_SYSCALL(void *, app_timer_get_data, AppTimer *timer) {
   if (PRIVILEGE_WAS_ELEVATED) {
     if (!evented_timer_exists((EventedTimerID)timer)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)timer);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)(uintptr_t)timer);
       return NULL;
     }
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
-              (unsigned)timer);
+              (unsigned)(uintptr_t)timer);
       syscall_failed();
     }
   }

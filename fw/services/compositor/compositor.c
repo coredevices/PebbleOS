@@ -384,7 +384,8 @@ static void prv_animation_teardown(Animation *animation) {
 
 void compositor_transition(const CompositorTransition *compositor_animation) {
   if (s_animation_state.animation != NULL) {
-    PBL_LOG_DBG("Animation <%u> in progress, cancelling", (int)s_animation_state.animation);
+    PBL_LOG_DBG("Animation <%u> in progress, cancelling",
+                (unsigned)(uintptr_t)s_animation_state.animation);
 
     animation_destroy(s_animation_state.animation);
     s_animation_state = (CompositorTransitionState){0};

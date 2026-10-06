@@ -15,12 +15,12 @@ typedef struct PBL_PACKED MemoryEraseOptions {
 } MemoryEraseOptions;
 
 static int memory_domain_read(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
-  memcpy(buf, (void *)address, length);
+  memcpy(buf, (void *)(uintptr_t)address, length);
   return length;
 }
 
 static int memory_domain_write(uint8_t *buf, uint32_t address, uint32_t length, void *context) {
-  memcpy(buf, (void *)address, length);
+  memcpy(buf, (void *)(uintptr_t)address, length);
   return length;
 }
 
@@ -35,7 +35,7 @@ static status_t memory_domain_erase(uint8_t *packet_data, size_t length, uint8_t
 
   MemoryEraseOptions *options = (MemoryEraseOptions *)packet_data;
 
-  memset((void *)options->address, 0x0, length);
+  memset((void *)(uintptr_t)options->address, 0x0, length);
   return S_SUCCESS;
 }
 

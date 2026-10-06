@@ -38,7 +38,7 @@ static AppResourceCache s_app_resource_cache;
 
 static bool prv_resource_filter(ListNode *found_node, void *data) {
   CachedResource *resource = (CachedResource *)found_node;
-  uint32_t resource_id = (uint32_t)data;
+  uintptr_t resource_id = (uintptr_t)data;
 
   return (resource->id == resource_id);
 }

@@ -188,7 +188,7 @@ const ResourceStoreImplementation g_file_impl = {
 // ResourceStoreTypeAppFile implementation
 
 static int prv_app_file_open(ResourceStoreEntry *entry, uint8_t op_flags) {
-  ResAppNum app_num = (ResAppNum)entry->store_data;
+  ResAppNum app_num = (ResAppNum)(uintptr_t)entry->store_data;
   if (app_num == SYSTEM_APP) {
     return -1;
   }
@@ -214,7 +214,7 @@ static bool resource_storage_app_file_find_resource(ResourceStoreEntry *entry, R
 }
 
 static void resource_storage_app_file_clear(ResourceStoreEntry *entry) {
-  ResAppNum app_num = (ResAppNum)entry->store_data;
+  ResAppNum app_num = (ResAppNum)(uintptr_t)entry->store_data;
   if (app_num == SYSTEM_APP) {
     return;
   }

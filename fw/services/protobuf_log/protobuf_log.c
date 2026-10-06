@@ -355,8 +355,8 @@ static bool prv_log_struct(PLogSession *session, uint32_t field_number, const pb
   // If it fits, add it. If it doesn't, flush first.
   if (size_if_added > session->max_data_size) {
     // We would be over capacity if we added this message. Let's flush first.
-    PBL_LOG_DBG("Session: 0x%x - Would have been over limit at size %" PRIu32 ", flushing",
-                (int)session, size_if_added);
+    PBL_LOG_DBG("Session: %p - Would have been over limit at size %" PRIu32 ", flushing", session,
+                size_if_added);
     protobuf_log_session_flush(session);
   }
 
@@ -381,7 +381,7 @@ bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sa
   // error check
   PBL_ASSERT(num_values == session->config.measurements.num_types, "Wrong number of values passed");
 
-  PBL_LOG_DBG("Session: 0x%x - Adding measurement sample with %" PRIu32 " values", (int)session_ref,
+  PBL_LOG_DBG("Session: %p - Adding measurement sample with %" PRIu32 " values", session_ref,
               num_values);
 
   // Encode the Measurement
@@ -421,7 +421,7 @@ bool protobuf_log_session_add_event(ProtobufLogRef session_ref, pebble_pipeline_
     .arg = &uuid,
   };
 
-  PBL_LOG_DBG("Session: 0x%x - Adding event with type: %d", (int)session_ref, event->type);
+  PBL_LOG_DBG("Session: %p - Adding event with type: %d", session_ref, event->type);
 
   bool success = prv_log_struct(session, pebble_pipeline_Payload_events_tag,
                                 &pebble_pipeline_Event_msg, event);
@@ -452,7 +452,7 @@ bool protobuf_log_session_flush(ProtobufLogRef session_ref) {
   };
 
   // Send it out now
-  PBL_LOG_DBG("Session: 0x%x - Flushing %d bytes", (int)session_ref, hdr->msg_size);
+  PBL_LOG_DBG("Session: %p - Flushing %d bytes", session_ref, hdr->msg_size);
   success = (session->transport)(session->msg_buffer, hdr->msg_size + sizeof(PLogMessageHdr));
   if (!success) {
     PBL_LOG_ERR("Failure when sending encoded message, resetting session");
@@ -467,7 +467,7 @@ exit:
 }
 
 bool protobuf_log_session_delete(ProtobufLogRef session_ref) {
-  PBL_LOG_DBG("Session: 0x%x - Deleting", (int)session_ref);
+  PBL_LOG_DBG("Session: %p - Deleting", session_ref);
 
   if (session_ref == NULL) {
     return true;

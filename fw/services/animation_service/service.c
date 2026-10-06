@@ -44,7 +44,7 @@ void animation_service_cleanup(PebbleTask task) {
 
 // ------------------------------------------------------------------------------------------
 static void prv_timer_callback(void *context) {
-  PebbleTask task = (PebbleTask)context;
+  PebbleTask task = (PebbleTask)(uintptr_t)context;
 
   PebbleEvent e = {
     .type = PEBBLE_CALLBACK_EVENT,

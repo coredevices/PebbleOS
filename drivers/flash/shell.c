@@ -454,7 +454,7 @@ static uint32_t s_flash_stress_addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
 static uint32_t s_flash_stress_last_sector = FLASH_REGION_FIRMWARE_DEST_BEGIN + SECTOR_SIZE_BYTES;
 
 static void prv_flash_stress_callback(void *data) {
-  int iters = (int)data;
+  int iters = (int)(intptr_t)data;
 
   if (iters == 0) {
     PBL_LOG_ALWAYS("flash stress test complete");
@@ -465,7 +465,7 @@ static void prv_flash_stress_callback(void *data) {
   uint8_t *buf = kernel_malloc(bufsz);
   if (!buf) {
     PBL_LOG_ALWAYS("flash stress test: malloc of size %d failed", bufsz);
-    system_task_add_callback(prv_flash_stress_callback, (void *)(iters - 1));
+    system_task_add_callback(prv_flash_stress_callback, (void *)(intptr_t)(iters - 1));
     return;
   }
 
@@ -486,11 +486,11 @@ static void prv_flash_stress_callback(void *data) {
   // the beginning is already erased, chunks are always smaller than a sector
   uint32_t sector_address = flash_get_sector_base_address(flash_addr + bufsz);
   if (sector_address != s_flash_stress_last_sector) {
-    PBL_LOG_ALWAYS("flash stress test: erasing flash address %lx", sector_address);
+    PBL_LOG_ALWAYS("flash stress test: erasing flash address %" PRIx32, sector_address);
     flash_erase_sector_blocking(sector_address);
     s_flash_stress_last_sector = sector_address;
     if (!prv_is_really_erased(NULL, sector_address, false)) {
-      PBL_LOG_ALWAYS("flash stress test: flash address %lx erase failed!", sector_address);
+      PBL_LOG_ALWAYS("flash stress test: flash address %" PRIx32 " erase failed!", sector_address);
       miscompare = -1;
       goto bailout;
     }
@@ -512,9 +512,9 @@ static void prv_flash_stress_callback(void *data) {
 
     for (int i = 0; i < bufsz; i++) {
       if (buf[i] != (lfsr_cur & 0xFF)) {
-        PBL_LOG_ALWAYS(
-            "flash stress test: readback %d: miscompare at offset %d (%lx): expected 0x%02lx, found 0x%02x",
-            j, i, flash_addr + i, lfsr_cur & 0xFF, buf[i]);
+        PBL_LOG_ALWAYS("flash stress test: readback %d: miscompare at offset %d (%" PRIx32
+                       "): expected 0x%02" PRIx32 ", found 0x%02x",
+                       j, i, flash_addr + i, lfsr_cur & 0xFF, buf[i]);
         miscompare++;
       }
       lfsr_cur = prv_xorshift32(lfsr_cur);
@@ -528,12 +528,13 @@ bailout:
   kernel_free(buf);
 
   if (miscompare) {
-    PBL_LOG_ALWAYS("flash stress test: %d miscompares on %d byte chunk at address %lx!  giving up",
+    PBL_LOG_ALWAYS("flash stress test: %d miscompares on %d byte chunk at address %" PRIx32
+                   "!  giving up",
                    miscompare, bufsz, flash_addr);
   } else {
-    PBL_LOG_ALWAYS("flash stress test: %d bytes at address %lx OK; %d to go", bufsz, flash_addr,
-                   iters - 1);
-    system_task_add_callback(prv_flash_stress_callback, (void *)(iters - 1));
+    PBL_LOG_ALWAYS("flash stress test: %d bytes at address %" PRIx32 " OK; %d to go", bufsz,
+                   flash_addr, iters - 1);
+    system_task_add_callback(prv_flash_stress_callback, (void *)(intptr_t)(iters - 1));
   }
 }
 
@@ -581,7 +582,7 @@ static int prv_flash_benchmark(const struct pbl_shell *sh, size_t sz) {
   } while (ticks_elapsed < 300);
 
   uint32_t us_per_tick = ticks_elapsed * 1000000 / (iters * RTC_TICKS_HZ);
-  pbl_shell_print(sh, "  -> %d bytes: %d iters in %lld ticks = %ld us/iter", (int)sz, iters,
+  pbl_shell_print(sh, "  -> %d bytes: %d iters in %lld ticks = %" PRIu32 " us/iter", (int)sz, iters,
                   ticks_elapsed, us_per_tick);
 
   kernel_free(buf);

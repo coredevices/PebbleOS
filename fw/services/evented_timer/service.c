@@ -41,7 +41,7 @@ static PBL_MUTEX_DEFINE(s_mutex);
 // Find timer by id
 static bool prv_id_list_filter(ListNode *node, void *data) {
   EventedTimer *timer = (EventedTimer *)node;
-  return timer->sys_timer_id == (TimerID)data;
+  return timer->sys_timer_id == (uintptr_t)data;
 }
 
 static EventedTimer *prv_find_timer(TimerID timer_id) {
@@ -111,7 +111,7 @@ static void prv_evented_timer_event_callback(void *data) {
   // Note this may be running on the app task, so we have to jump through hoops to read kernel
   // memory.
 
-  TimerID timer_id = (TimerID)data;
+  TimerID timer_id = (TimerID)(uintptr_t)data;
 
   EventedTimerCallback timer_cb;
   void *timer_cb_data;
@@ -130,7 +130,7 @@ static void prv_evented_timer_event_callback(void *data) {
 //! Called on the timer task. From here we need to generate a callback on the client's task.
 static void prv_sys_timer_callback(void *cb_data) {
   PBL_ASSERT_TASK(PebbleTask_NewTimers);
-  TimerID id = (TimerID)cb_data;
+  TimerID id = (TimerID)(uintptr_t)cb_data;
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 

@@ -102,7 +102,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
       goto cleanup;
     }
     state->num_bytes = size;
-    PBL_LOG_DBG("GET_BYTES: total bytes: %ld", state->num_bytes);
+    PBL_LOG_DBG("GET_BYTES: total bytes: %" PRIu32, state->num_bytes);
   }
 
   // -------------------------------------------------------------------------------------------

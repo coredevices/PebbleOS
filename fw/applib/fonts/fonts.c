@@ -52,7 +52,8 @@ GFont fonts_get_system_font(const char *font_key) {
 }
 
 GFont fonts_load_custom_font(ResHandle handle) {
-  GFont res = fonts_load_custom_font_system(sys_get_current_resource_num(), (uint32_t)handle);
+  GFont res =
+      fonts_load_custom_font_system(sys_get_current_resource_num(), (uint32_t)(uintptr_t)handle);
   if (res == NULL) {
     PBL_LOG_WRN("Getting fallback font instead");
     res = sys_font_get_system_font("RESOURCE_ID_GOTHIC_14");

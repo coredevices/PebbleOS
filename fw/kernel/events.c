@@ -132,7 +132,7 @@ struct pbl_msgq *event_get_to_kernel_queue(PebbleTask task) {
 //! Decode a bit more information out about an event and pack it into a uint32_t
 static uint32_t prv_get_fancy_type_from_event(const PebbleEvent *event) {
   if (event->type == PEBBLE_CALLBACK_EVENT) {
-    return (uint32_t)event->callback.callback;
+    return (uint32_t)(uintptr_t)event->callback.callback;
   }
   return event->type;
 }

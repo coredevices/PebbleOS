@@ -85,8 +85,9 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
       (state->prev_timestamp_ms != 0) ? timestamp_ms - state->prev_timestamp_ms : 0;
   state->prev_timestamp_ms = timestamp_ms;
 
-  PBL_LOG_VERBOSE("got %d samples for task %d at %ld (%lu ms delta)", (int)num_samples,
-                  (int)pebble_task_get_current(), (uint32_t)timestamp_ms, time_since_last_sample);
+  PBL_LOG_VERBOSE("got %d samples for task %d at %" PRIu32 " (%" PRIu32 " ms delta)",
+                  (int)num_samples, (int)pebble_task_get_current(), (uint32_t)timestamp_ms,
+                  time_since_last_sample);
 
   for (unsigned int i = 0; i < num_samples; i++) {
     PBL_LOG_VERBOSE("  => x:%d, y:%d, z:%d", state->raw_data[i].x, state->raw_data[i].y,

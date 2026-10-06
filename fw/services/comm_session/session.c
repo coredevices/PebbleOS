@@ -432,7 +432,7 @@ static bool prv_find_session_is_system_filter(ListNode *found_node, void *data) 
 
 static bool prv_find_session_is_type_filter(ListNode *found_node, void *data) {
   CommSession *session = (CommSession *)found_node;
-  CommSessionTransportType required_session_type = (CommSessionTransportType)data;
+  CommSessionTransportType required_session_type = (CommSessionTransportType)(uintptr_t)data;
   return prv_is_transport_type(session->transport, session->transport_imp, required_session_type);
 }
 

@@ -85,7 +85,7 @@ static int prv_num_unfocused_rows_per_side(const LauncherMenuLayerStyle *style) 
 // Misc. callbacks/helpers
 
 static void prv_launch_app_cb(void *data) {
-  const AppInstallId app_install_id_to_launch = (AppInstallId)data;
+  const AppInstallId app_install_id_to_launch = (AppInstallId)(intptr_t)data;
   app_manager_put_launch_app_event(&(AppLaunchEventConfig){
     .id = app_install_id_to_launch,
     .common.reason = APP_LAUNCH_USER,

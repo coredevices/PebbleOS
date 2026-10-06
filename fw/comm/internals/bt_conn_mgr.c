@@ -253,7 +253,8 @@ static void prv_bt_le_gateway_response_latency_watchdog_cb(void *data) {
 }
 
 static bool prv_find_source(ListNode *found_node, void *data) {
-  return (((ConnectionStateRequest *)found_node)->consumer == (enum pbl_bt_consumer)data);
+  return (((ConnectionStateRequest *)found_node)->consumer ==
+          (enum pbl_bt_consumer)(uintptr_t)data);
 }
 
 /*

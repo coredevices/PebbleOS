@@ -43,7 +43,7 @@ PBL_T_STATIC int32_t prv_convert_1bit_addr_to_8bit_x(GBitmap *dest_bitmap, uint3
   // no padding on each row of the 8-bit frame buffer.
   const int32_t padding = (32 - (dest_bitmap->bounds.size.w % 32)) % 32;
   // Calculate the overall offset in the 8-bit bitmap
-  const int32_t bitmap_offset_8bit = ((uint32_t)block_addr * 8) - (padding * y_offset);
+  const int32_t bitmap_offset_8bit = ((uintptr_t)block_addr * 8) - (padding * y_offset);
   // Calculate just the offset from the start of the target row in the 8-bit bitmap (i.e. "x")
   return bitmap_offset_8bit - (dest_bitmap->bounds.size.w * y_offset);
 }

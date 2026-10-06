@@ -55,7 +55,7 @@ static void prv_sync_health_system_task_cb(void *unused) {
 
 static void prv_handle_sync(const uint8_t *msg, size_t len) {
   if (len < sizeof(HealthSyncEndpointSyncMsg)) {
-    PBL_LOG_ERR("Invalid SYNC msg received, length: %u", len);
+    PBL_LOG_ERR("Invalid SYNC msg received, length: %zu", len);
     return;
   }
 
@@ -66,7 +66,7 @@ static void prv_handle_sync(const uint8_t *msg, size_t len) {
 
 void health_sync_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t len) {
   if (len < 1) {
-    PBL_LOG_ERR("Invalid message received, length: %u", len);
+    PBL_LOG_ERR("Invalid message received, length: %zu", len);
   }
 
   HealthSyncEndpointCmd cmd = *msg;

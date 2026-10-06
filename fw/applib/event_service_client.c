@@ -33,8 +33,7 @@ static int event_service_comparator(EventServiceInfo *a, EventServiceInfo *b) {
 
 bool event_service_filter(ListNode *node, void *tp) {
   EventServiceInfo *info = (EventServiceInfo *)node;
-  uint32_t type = (uint32_t)tp;
-  return (info->type == type);
+  return (info->type == (uintptr_t)tp);
 }
 
 static void do_handle(EventServiceInfo *info, PebbleEvent *e) {

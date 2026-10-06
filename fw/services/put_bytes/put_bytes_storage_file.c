@@ -30,19 +30,19 @@ void pb_storage_file_write(PutBytesStorage *storage, uint32_t offset, const uint
   // We don't support writing to arbitrary offsets in this implementation.
   PBL_ASSERTN(offset == storage->current_offset);
 
-  int fd = (int)storage->impl_data;
+  int fd = (int)(intptr_t)storage->impl_data;
   pfs_write(fd, buffer, length);
 }
 
 uint32_t pb_storage_file_calculate_crc(PutBytesStorage *storage, PutBytesCrcType crc_type) {
   PBL_ASSERTN(crc_type == PutBytesCrcType_Legacy); // PFS doesn't use new checksum at the moment
 
-  int fd = (int)storage->impl_data;
+  int fd = (int)(intptr_t)storage->impl_data;
   return pfs_crc_calculate_file(fd, 0, storage->current_offset);
 }
 
 void pb_storage_file_deinit(PutBytesStorage *storage, bool is_success) {
-  int fd = (int)storage->impl_data;
+  int fd = (int)(intptr_t)storage->impl_data;
 
   if (!is_success) {
     pfs_close_and_remove(fd);

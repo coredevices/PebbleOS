@@ -237,7 +237,7 @@ static void prv_handle_passkey_event(struct ble_gap_event *event) {
     device_name = s_device_name;
   }
 
-  snprintf(passkey_str, sizeof(passkey_str), "%06lu", passkey);
+  snprintf(passkey_str, sizeof(passkey_str), "%06" PRIu32, passkey);
   pbl_bt_cb_pairing_confirm_handle_request(ctx, device_name, passkey_str);
   s_pairing_in_progress = true;
 }

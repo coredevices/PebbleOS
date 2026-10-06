@@ -22,7 +22,7 @@ DEFINE_SYSCALL(bool, sys_app_worker_is_running, void) {
 // ---------------------------------------------------------------------------------------------------------------
 // Display the confirmation dialog for switching into the worker
 static void prv_switch_worker(void *data) {
-  AppInstallId install_id = (AppInstallId)data;
+  AppInstallId install_id = (AppInstallId)(intptr_t)data;
 
   WindowStack *window_stack = modal_manager_get_window_stack(ModalPriorityGeneric);
   switch_worker_confirm(install_id, false /* do not set as default */, window_stack);
@@ -46,7 +46,7 @@ DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_launch, void) {
     }
 
     // We have to get confirmation first that it is OK to launch the new worker
-    launcher_task_add_callback(prv_switch_worker, (void *)install_id);
+    launcher_task_add_callback(prv_switch_worker, (void *)(intptr_t)install_id);
     return APP_WORKER_RESULT_ASKING_CONFIRMATION;
   }
 
