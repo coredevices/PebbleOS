@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Toolchain runtime linked into the firmware, see docs/development/sbom.md.
+# Paths are relative to the toolchain root.
+
+components:
+  - name: picolibc-prebuilt
+    toolchain-path: arm-none-eabi/picolibc
+    supplier: Keith Packard
+    description: picolibc as pre-built by the PebbleOS SDK
+    version-from:
+      file: arm-none-eabi/picolibc/arm-none-eabi/include/picolibc.h
+      define: __PICOLIBC_VERSION__
+    license: BSD-3-Clause AND BSD-2-Clause
+    purl: pkg:github/picolibc/picolibc@{version}
+    url: https://github.com/picolibc/picolibc
+
+  - name: libgcc
+    toolchain-path: lib/gcc
+    supplier: Free Software Foundation
+    description: GCC runtime library and freestanding headers
+    version-from: compiler
+    license: GPL-3.0-or-later WITH GCC-exception-3.1
+    cpe: cpe:2.3:a:gnu:gcc:{version}:*:*:*:*:*:*:*
+    url: https://gcc.gnu.org
+
+  - name: newlib-headers
+    toolchain-path: arm-none-eabi/include
+    supplier: Red Hat, Inc.
+    description: newlib headers, used by the stored apps and the XS host
+    version-from:
+      file: arm-none-eabi/include/_newlib_version.h
+      define: _NEWLIB_VERSION
+    license: BSD-3-Clause AND BSD-2-Clause
+    url: https://sourceware.org/newlib/

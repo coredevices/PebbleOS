@@ -1,0 +1,167 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Third-party components, see docs/development/sbom.md. Components inside a
+# submodule record the commit their version was taken from.
+
+components:
+  - name: CMSIS
+    path: cmsis_core/CMSIS
+    supplier: Arm Limited
+    version: 5.9.1-dev-126-g55b19837f
+    commit: 55b19837f5703e418ca37894d5745b1dc05e4c91
+    license: Apache-2.0
+    purl: pkg:github/ARM-software/CMSIS_5@55b19837f5703e418ca37894d5745b1dc05e4c91
+    url: https://github.com/ARM-software/CMSIS_5
+
+  - name: nrfx
+    path: hal_nordic/nrfx
+    supplier: Nordic Semiconductor ASA
+    version: 3.11.0
+    commit: bacc23e5387964462e5638f0c914c2ab5802fa3c
+    license: BSD-3-Clause
+    purl: pkg:github/NordicSemiconductor/nrfx@v3.11.0
+    url: https://github.com/NordicSemiconductor/nrfx
+
+  - name: SiFli-SDK
+    path: hal_sifli/SiFli-SDK
+    nested: [external]
+    supplier: SiFli Technology
+    description: SiFli-SDK v2.4.0 with PebbleOS changes
+    commit: 1f7536a53379207a048a846a804c2eefe165ebe1
+    license: Apache-2.0
+    purl: pkg:github/coredevices/SiFli-SDK@1f7536a53379207a048a846a804c2eefe165ebe1
+    url: https://github.com/coredevices/SiFli-SDK
+
+  - name: SiFli-SDK-CMSIS
+    path: hal_sifli/SiFli-SDK/external/CMSIS
+    supplier: Arm Limited
+    description: CMSIS headers as bundled in SiFli-SDK
+    commit: 1f7536a53379207a048a846a804c2eefe165ebe1
+    license: Apache-2.0
+
+  - name: mbedtls
+    path: mbedtls/mbedtls
+    nested: [3rdparty]
+    supplier: Mbed TLS
+    version: 3.6.7
+    commit: 068ff080b369adfac81509f9b57b2afabaf82dc5
+    license: Apache-2.0 OR GPL-2.0-or-later
+    cpe: cpe:2.3:a:arm:mbed_tls:{version}:*:*:*:*:*:*:*
+    purl: pkg:github/Mbed-TLS/mbedtls@mbedtls-3.6.7
+    url: https://github.com/Mbed-TLS/mbedtls
+
+  - name: moddable
+    path: moddable/moddable
+    supplier: Moddable Tech, Inc.
+    description: Moddable SDK (XS JavaScript engine) with PebbleOS changes
+    commit: e3e87b7e2fa92c316b6ca4d4395b7270e36fe280
+    license: LGPL-3.0-or-later AND Apache-2.0
+    purl: pkg:github/coredevices/moddable@e3e87b7e2fa92c316b6ca4d4395b7270e36fe280
+    url: https://github.com/coredevices/moddable
+
+  - name: nanopb
+    path: nanopb/nanopb
+    supplier: Petteri Aimonen
+    version: 0.4.9.1
+    commit: cad3c18ef15a663e30e3e43e3a752b66378adec1
+    license: Zlib
+    cpe: cpe:2.3:a:nanopb_project:nanopb:{version}:*:*:*:*:*:*:*
+    purl: pkg:github/nanopb/nanopb@nanopb-0.4.9.1
+    url: https://github.com/nanopb/nanopb
+
+  - name: mynewt-nimble
+    path: nimble/mynewt-nimble
+    nested: [ext]
+    supplier: The Apache Software Foundation
+    description: Apache NimBLE Bluetooth LE stack with PebbleOS changes
+    commit: 9ed683d0f8e2c3976d3e113b1c3015777198b2d7
+    license: Apache-2.0
+    purl: pkg:github/coredevices/mynewt-nimble@9ed683d0f8e2c3976d3e113b1c3015777198b2d7
+    url: https://github.com/coredevices/mynewt-nimble
+
+  - name: nrf_fuel_gauge
+    path: nonfree/pebbleos-nonfree/npm1300
+    type: library
+    supplier: Nordic Semiconductor ASA
+    description: nRF Fuel Gauge library and battery models, from sdk-nrfxlib 8f9ab9b01dd3
+    commit: d8ce9fc9bcc527094554bffc00822fb24d7907c1
+    license: LicenseRef-Nordic-5-Clause
+    url: https://github.com/nrfconnect/sdk-nrfxlib
+
+  - name: cst816-firmware
+    path: nonfree/pebbleos-nonfree/cst816
+    type: firmware
+    supplier: Shanghai Hynitron Microelectronics Co., Ltd
+    description: CST816 touch controller firmware
+    commit: d8ce9fc9bcc527094554bffc00822fb24d7907c1
+    license: LicenseRef-Hynitron-5-Clause
+
+  - name: gh3x2x
+    path: nonfree/pebbleos-nonfree/gh3x2x
+    supplier: Shenzhen Goodix Technology Co., Ltd.
+    description: GH3x2x heart rate sensor driver and algorithms
+    commit: d8ce9fc9bcc527094554bffc00822fb24d7907c1
+    license: LicenseRef-Goodix-5-Clause
+
+  - name: sf32lb52-lcpu-patch
+    path: nonfree/pebbleos-nonfree/sf32lb52
+    type: firmware
+    supplier: SiFli Technology
+    description: SF32LB52 LCPU (Bluetooth controller) firmware patches
+    commit: d8ce9fc9bcc527094554bffc00822fb24d7907c1
+    license: LicenseRef-SiFli-5-Clause
+
+  - name: as7000-firmware
+    path: nonfree/pebbleos-nonfree/as7000
+    type: firmware
+    supplier: ams AG
+    description: AS7000 heart rate sensor firmware
+    commit: d8ce9fc9bcc527094554bffc00822fb24d7907c1
+    license: LicenseRef-AS7000
+
+  - name: picolibc
+    path: picolibc
+    build-paths: [picolibc/install]
+    supplier: Keith Packard
+    version: 1.8.11-345-g2cb62b35a
+    commit: 2cb62b35aaf461e730860cb7ecc31c51b9848d78
+    license: BSD-3-Clause AND BSD-2-Clause
+    purl: pkg:github/picolibc/picolibc@2cb62b35aaf461e730860cb7ecc31c51b9848d78
+    url: https://github.com/picolibc/picolibc
+
+  - name: QR-Code-generator
+    path: qr_code_generator/QR-Code-generator
+    supplier: Project Nayuki
+    version: 1.8.0-24-g2c9044d
+    commit: 2c9044de6b049ca25cb3cd1649ed7e27aa055138
+    license: MIT
+    purl: pkg:github/nayuki/QR-Code-generator@2c9044de6b049ca25cb3cd1649ed7e27aa055138
+    url: https://github.com/nayuki/QR-Code-generator
+
+  - name: iconography
+    path: resources/iconography
+    type: data
+    supplier: Rebble
+    commit: 99e2660ccd8c0c98e596612bb1c21700e28156b3
+    license: Apache-2.0
+    purl: pkg:github/pebble-dev/iconography@99e2660ccd8c0c98e596612bb1c21700e28156b3
+    url: https://github.com/pebble-dev/iconography
+
+  - name: speex
+    path: speex/speex
+    supplier: Xiph.Org Foundation
+    version: 1.2.1-51-g0589522
+    commit: 05895229896dc942d453446eba6f9f5ddcf95422
+    license: BSD-3-Clause
+    purl: pkg:github/xiph/speex@05895229896dc942d453446eba6f9f5ddcf95422
+    url: https://github.com/xiph/speex
+
+  - name: TinyMT
+    path: tinymt/TinyMT
+    supplier: Mutsuo Saito, Makoto Matsumoto
+    version: 1.1.2-4-gfabd141
+    commit: fabd14128db25498d6d3baf9cd25e15983bc12fd
+    license: BSD-3-Clause
+    purl: pkg:github/MersenneTwister-Lab/TinyMT@fabd14128db25498d6d3baf9cd25e15983bc12fd
+    url: https://github.com/MersenneTwister-Lab/TinyMT

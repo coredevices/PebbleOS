@@ -179,6 +179,31 @@ function(pbl_link_firmware)
     VERBATIM
   )
 
+  # --- Software bill of materials ----------------------------------------
+
+  # Built on request only: it reads ninja's dependency logs, so it needs
+  # the Ninja generator.
+  if(CMAKE_GENERATOR MATCHES "Ninja")
+    get_filename_component(toolchain_root ${CMAKE_C_COMPILER} DIRECTORY)
+    get_filename_component(toolchain_root ${toolchain_root} DIRECTORY)
+    add_custom_target(sbom
+      COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/sbom.py generate
+              --ninja ${CMAKE_MAKE_PROGRAM}
+              --build-dir ${PROJECT_BINARY_DIR}
+              --target pebbleos.elf
+              --image ${bin}
+              --board ${PBL_BOARD_NORMALIZED}
+              --variant ${VARIANT}
+              --toolchain-root ${toolchain_root}
+              --compiler-version ${CMAKE_C_COMPILER_VERSION}
+              --output ${PROJECT_BINARY_DIR}/pebbleos.cdx.json
+      DEPENDS pbl_firmware
+      WORKING_DIRECTORY ${PBL_BASE}
+      COMMENT "Generating the software bill of materials"
+      VERBATIM
+    )
+  endif()
+
   # --- QEMU flash images --------------------------------------------------
 
   if(CONFIG_QEMU)

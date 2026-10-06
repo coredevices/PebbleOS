@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Third-party code kept in the library tree, see docs/development/sbom.md.
+
+components:
+  - name: egnite-mktime
+    path: c/time/mktime.c
+    supplier: egnite Software GmbH
+    description: mktime() from Nut/OS
+    license: BSD-3-Clause
+
+  - name: snprintf
+    path: c/newlib/vsnprintf.c
+    supplier: Patrick Powell, Holger Weiss
+    description: portable snprintf implementation, with Pebble changes
+    license: LicenseRef-snprintf-Powell
+    url: http://www.jhweiss.de/software/snprintf.html

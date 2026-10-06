@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Third-party code kept in the firmware tree, see docs/development/sbom.md.
+
+components:
+  - name: uPNG
+    path: applib/vendor/uPNG
+    supplier: Lode Vandevenne, Sean Middleditch, Matthew Hungerford
+    description: PNG decoder derived from LodePNG 20100808, with Pebble changes
+    license: Zlib
+
+  - name: tinflate
+    path: applib/vendor/tinflate
+    supplier: Joergen Ibsen
+    description: tiny inflate library, with Pebble changes
+    license: Zlib
+
+  - name: utf8-decoder
+    path: applib/graphics/utf8.c
+    supplier: Bjoern Hoehrmann
+    description: Flexible and Economical UTF-8 Decoder
+    license: MIT
+    url: https://bjoern.hoehrmann.de/utf-8/decoder/dfa/
+
+  - name: freebsd-timelocal
+    paths: [applib/pbl_std/timelocal.c, applib/pbl_std/timelocal.h]
+    supplier: The FreeBSD Project
+    description: locale time formatting tables from FreeBSD libc
+    license: BSD-2-Clause
+
+  - name: citrus-mo
+    paths: [services/i18n/i18n.c, ../include/pbl/services/i18n/mo.h]
+    supplier: Citrus Project
+    description: gettext message catalog reader from the Citrus Project
+    license: BSD-2-Clause
+
+  - name: kraepelin
+    paths:
+      - services/activity/kraepelin/kraepelin_algorithm.c
+      - ../include/pbl/services/activity/kraepelin/kraepelin_algorithm.h
+    supplier: Nathaniel T. Stockham
+    description: step counting and sleep detection algorithm
+    license: MIT
