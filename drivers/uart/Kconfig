@@ -29,6 +29,12 @@ config UART_QEMU
     help
       Support for the QEMU simple UART peripheral.
 
+config UART_POSIX
+    bool "POSIX UART"
+    default y if SOC_POSIX
+    help
+      UART backed by a host file descriptor.
+
 module = DRIVER_UART
 module-str = UART
 source "subsys/logging/Kconfig.template.log_level"

@@ -9,6 +9,8 @@ set(sources
 )
 if(CONFIG_FLASH_QEMU)
   list(APPEND sources qemu.c)
+elseif(CONFIG_FLASH_POSIX)
+  list(APPEND sources posix.c)
 elseif(CONFIG_FLASH_GD25LQ255E)
   list(APPEND sources gd25lq255e.c)
 elseif(CONFIG_FLASH_GD25Q256E)

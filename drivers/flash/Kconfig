@@ -24,6 +24,12 @@ config FLASH_QEMU
     help
       Support for the QEMU external flash peripheral.
 
+config FLASH_POSIX
+    bool "POSIX External Flash"
+    default y if SOC_POSIX
+    help
+      External flash backed by a file on the host.
+
 module = DRIVER_FLASH
 module-str = Flash
 source "subsys/logging/Kconfig.template.log_level"

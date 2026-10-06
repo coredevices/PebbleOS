@@ -40,6 +40,11 @@ config ACCEL_QEMU
     help
       QEMU accelerometer, fed with samples from the QEMU host.
 
+config ACCEL_POSIX
+    bool "POSIX"
+    help
+      Accelerometer of a native build: a watch lying still, face up.
+
 endchoice
 
 if ACCEL_LIS2DW12

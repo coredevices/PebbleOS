@@ -31,6 +31,12 @@ config RNG_QEMU
     help
       QEMU RNG. QEMU emulates no RNG, so it returns a fixed value.
 
+config RNG_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      Host random number generator.
+
 module = DRIVER_RNG
 module-str = Random Number Generator
 source "subsys/logging/Kconfig.template.log_level"

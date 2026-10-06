@@ -23,4 +23,11 @@ config BUTTON_QEMU
     help
       Support for the QEMU buttons.
 
+config BUTTON_SDL
+    bool "SDL keyboard"
+    default y if SOC_POSIX
+    select SDL
+    help
+      Buttons driven by the keyboard, through SDL, in a native build.
+
 endmenu

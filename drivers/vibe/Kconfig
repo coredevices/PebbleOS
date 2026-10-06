@@ -59,6 +59,12 @@ config VIBE_QEMU
     help
       QEMU vibration motor, reporting its state to the QEMU host.
 
+config VIBE_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      Vibration motor of a native build, which does nothing.
+
 module = DRIVER_VIBE
 module-str = Vibration Motor
 source "subsys/logging/Kconfig.template.log_level"

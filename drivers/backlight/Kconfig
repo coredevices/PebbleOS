@@ -37,6 +37,12 @@ config BACKLIGHT_QEMU
       Emulated backlight controller that writes to the QEMU
       pebble-display MMIO registers.
 
+config BACKLIGHT_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      Backlight of a native build, which does nothing.
+
 config BACKLIGHT_QEMU_COLOR
     bool "QEMU Color"
     depends on BACKLIGHT_QEMU

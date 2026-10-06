@@ -20,4 +20,10 @@ config OTP_QEMU
     help
       QEMU OTP. QEMU emulates none, so all slots read as locked and empty.
 
+config OTP_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      No OTP on the host: all slots read as locked and empty.
+
 endif # OTP

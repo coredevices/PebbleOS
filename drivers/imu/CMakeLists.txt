@@ -4,6 +4,8 @@
 set(accel_sources)
 if(CONFIG_ACCEL_QEMU)
   list(APPEND accel_sources qemu.c)
+elseif(CONFIG_ACCEL_POSIX)
+  list(APPEND accel_sources posix.c)
 elseif(CONFIG_ACCEL_LIS2DW12)
   list(APPEND accel_sources lis2dw12/lis2dw12.c)
 elseif(CONFIG_ACCEL_LSM6DSO)

@@ -24,4 +24,10 @@ config MCU_QEMU
       QEMU MCU information. QEMU emulates no unique ID, so it reports a
       fixed serial.
 
+config MCU_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      MCU information for a native build.
+
 endmenu

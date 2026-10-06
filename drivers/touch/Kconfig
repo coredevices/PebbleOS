@@ -20,6 +20,13 @@ config TOUCH_QEMU
     help
       Support for the QEMU touchscreen peripheral.
 
+config TOUCH_SDL
+    bool "SDL mouse"
+    default y if SOC_POSIX
+    select SDL
+    help
+      Touchscreen driven by the mouse, through SDL, in a native build.
+
 module = DRIVER_TOUCH
 module-str = Touchscreen
 source "subsys/logging/Kconfig.template.log_level"

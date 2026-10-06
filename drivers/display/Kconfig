@@ -29,6 +29,13 @@ config DISPLAY_QEMU
     help
       Support for the QEMU framebuffer display peripheral.
 
+config DISPLAY_SDL
+    bool "SDL window"
+    default y if SOC_POSIX
+    select SDL
+    help
+      Display shown in an SDL window on the host of a native build.
+
 module = DRIVER_DISPLAY
 module-str = Display
 source "subsys/logging/Kconfig.template.log_level"

@@ -29,4 +29,10 @@ config TEMPERATURE_QEMU
       QEMU temperature sensor. QEMU emulates none, so it reports a fixed
       25 degrees Celsius.
 
+config TEMPERATURE_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      Temperature driver for a native build (fixed value).
+
 endif # TEMPERATURE

@@ -30,6 +30,12 @@ config RTC_QEMU
     help
       Support for the QEMU RTC peripheral.
 
+config RTC_POSIX
+    bool "POSIX RTC"
+    default y if SOC_POSIX
+    help
+      RTC following the host clock.
+
 module = DRIVER_RTC
 module-str = RTC
 source "subsys/logging/Kconfig.template.log_level"

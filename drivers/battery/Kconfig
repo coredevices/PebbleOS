@@ -20,4 +20,10 @@ config BATTERY_QEMU
     help
       Stub battery driver for QEMU (fixed values).
 
+config BATTERY_POSIX
+    bool "POSIX Battery"
+    default y if SOC_POSIX
+    help
+      Battery driver for a native build (fixed values).
+
 endif # BATTERY
