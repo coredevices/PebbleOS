@@ -45,6 +45,8 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
     notification_storage_store(&notification);
     PBL_LOG_INFO("Notification added: %s", uuid_string);
     notifications_handle_notification_added(id);
+  } else {
+    kernel_free(id);
   }
 
   timeline_item_free_allocated_buffer(&notification);
