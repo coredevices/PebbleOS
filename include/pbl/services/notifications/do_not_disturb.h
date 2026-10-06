@@ -187,7 +187,7 @@ void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffe
 //! Get the number of active (enabled and non-empty) schedule slots
 int quiet_time_get_num_active(void);
 
-/** @brief Initialize the DND service and arm the schedule timers. */
+/** @brief Initialize the DND service and arm the schedule cron jobs. */
 void do_not_disturb_init(void);
 
 /** @brief Re-evaluate the schedule after the wall clock or timezone changed. */
@@ -209,11 +209,5 @@ void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e);
 
 /** @brief Push the manual DND toggle prompt, which sets manual DND to the opposite state. */
 void do_not_disturb_manual_toggle_with_dialog(void);
-
-#if UNITTEST
-#include "pbl/services/new_timer/new_timer.h"
-TimerID get_dnd_timer_id(void);
-void set_dnd_timer_id(TimerID id);
-#endif
 
 /** @} */

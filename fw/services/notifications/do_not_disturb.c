@@ -7,7 +7,6 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
@@ -34,7 +33,6 @@
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
 typedef struct DoNotDisturbData {
-  TimerID update_timer_id;
   bool is_in_schedule_period;
   bool manually_override_dnd;
   bool was_active;
@@ -44,9 +42,13 @@ static DoNotDisturbData s_data;
 
 static QuietTimeScheduleConfig s_qt_schedule_cache[MAX_QUIET_TIME_SCHEDULES];
 
+//! Cron jobs for each schedule slot's window start and end. The job
+//! structures are owned here and stay valid while scheduled.
+static struct pbl_cron_job s_qt_jobs[MAX_QUIET_TIME_SCHEDULES][2];
+
 static bool prv_is_smart_dnd_active(void);
 static bool prv_is_schedule_active(void);
-static void prv_set_schedule_mode_timer();
+static void prv_update_schedule_mode(void);
 static void prv_reload_qt_schedule_cache(void);
 
 static void prv_update_active_time(bool is_active) {
@@ -228,13 +230,7 @@ static void prv_try_update_schedule_mode(void *data) {
     s_data.manually_override_dnd = false;
   }
   prv_reload_qt_schedule_cache();
-
-  if (prv_is_any_qt_schedule_enabled()) {
-    prv_set_schedule_mode_timer();
-  } else {
-    new_timer_stop(s_data.update_timer_id);
-    s_data.is_in_schedule_period = false;
-  }
+  prv_update_schedule_mode();
   prv_do_update();
 }
 
@@ -242,72 +238,73 @@ static void prv_try_update_schedule_mode_callback(bool clear_manual_override) {
   system_task_add_callback(prv_try_update_schedule_mode, (void *)(uintptr_t)clear_manual_override);
 }
 
-static void prv_update_schedule_mode_timer_callback(void *not_used) {
+static void prv_qt_cron_callback(struct pbl_cron_job *job, void *data) {
+  const int slot = (int)(uintptr_t)data / 2;
+  const bool is_end = (bool)((int)(uintptr_t)data % 2);
+  PBL_LOG_DBG("Quiet Time slot %d %s boundary fired", slot, is_end ? "end" : "start");
   prv_try_update_schedule_mode_callback(true);
 }
 
-//! Seconds from now until the next daily occurrence of hour:minute (tomorrow if passed).
-static time_t prv_seconds_until_daily_time(const struct tm *now, int hour, int minute) {
-  int hour_diff = hour - now->tm_hour;
-  if (hour < now->tm_hour || (hour == now->tm_hour && minute <= now->tm_min)) {
-    hour_diff += PBL_HOUR_PER_DAY;
+//! Day mask for a cron job from a scheduled-days array. tm_wday numbering
+//! matches the PBL_CRON_WDAY_ bits (Sunday is bit 0).
+static uint8_t prv_qt_wday_mask(const bool days[PBL_DAY_PER_WEEK]) {
+  uint8_t mask = 0;
+  for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
+    if (days[i]) {
+      mask |= (1 << i);
+    }
   }
-  const int minutes_diff = hour_diff * PBL_MIN_PER_HOUR + (minute - now->tm_min);
-  return minutes_diff * PBL_SEC_PER_MIN - now->tm_sec;
+  return mask;
 }
 
-static void prv_set_schedule_mode_timer(void) {
-  struct tm now_tm;
-  rtc_get_time_tm(&now_tm);
-  const int now_sec = now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec;
-  const time_t midnight_in = prv_seconds_until_daily_time(&now_tm, 0, 0);
-  time_t earliest_transition = PBL_SEC_PER_DAY * 7;
-  bool currently_active = prv_is_any_qt_schedule_active_now();
+static void prv_schedule_boundary_job(struct pbl_cron_job *job, int slot, bool is_end, int hour,
+                                      int minute, uint8_t wday) {
+  *job = (struct pbl_cron_job){
+    .cb = prv_qt_cron_callback,
+    .cb_data = (void *)(uintptr_t)(slot * 2 + (is_end ? 1 : 0)),
+    .minute = minute,
+    .hour = hour,
+    .mday = PBL_CRON_MDAY_ANY,
+    .month = PBL_CRON_MONTH_ANY,
+    .wday = wday,
+  };
+  pbl_cron_job_schedule(job);
+}
 
-  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
-    if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled)
-      continue;
-    bool days[PBL_DAY_PER_WEEK];
-    quiet_time_get_scheduled_days(&s_qt_schedule_cache[i], days);
-    const int from_sec =
-        s_qt_schedule_cache[i].from_hour * 3600 + s_qt_schedule_cache[i].from_minute * 60;
-    const int from_min = s_qt_schedule_cache[i].from_hour * 60 + s_qt_schedule_cache[i].from_minute;
-    const int to_min = prv_schedule_end_minutes(&s_qt_schedule_cache[i]);
-    const int to_sec = to_min * 60;
-    const bool wrapping = (from_min > to_min);
-
+static void prv_schedule_qt_slot_jobs(int slot, const QuietTimeScheduleConfig *s) {
+  bool days[PBL_DAY_PER_WEEK];
+  quiet_time_get_scheduled_days(s, days);
+  const int from_min = s->from_hour * 60 + s->from_minute;
+  const int to_min = prv_schedule_end_minutes(s);
+  uint8_t end_mask = prv_qt_wday_mask(days);
+  if (from_min > to_min) {
+    // Wrapping window: the end belongs to the day after each start day.
+    end_mask = 0;
     for (int d = 0; d < PBL_DAY_PER_WEEK; d++) {
-      const int day = (now_tm.tm_wday + d) % PBL_DAY_PER_WEEK;
-      if (!days[day]) {
-        continue;
+      if (days[d]) {
+        end_mask |= (1 << ((d + 1) % PBL_DAY_PER_WEEK));
       }
-      if (d == 0) {
-        if (from_sec > now_sec) {
-          earliest_transition = MIN(earliest_transition, (time_t)(from_sec - now_sec));
-        }
-        if (wrapping) {
-          // The window runs past midnight: its end is tomorrow.
-          earliest_transition = MIN(earliest_transition, midnight_in + to_sec);
-        } else if (to_sec > now_sec) {
-          earliest_transition = MIN(earliest_transition, (time_t)(to_sec - now_sec));
-        }
-      } else {
-        // Absolute time of 00:00 d days from now, plus the boundary offset.
-        const time_t day_start = midnight_in + (d - 1) * PBL_SEC_PER_DAY;
-        earliest_transition = MIN(earliest_transition, day_start + from_sec);
-        if (wrapping) {
-          earliest_transition = MIN(earliest_transition, day_start + PBL_SEC_PER_DAY + to_sec);
-        }
-      }
-    }
-
-    // A wrapping window started yesterday ends this morning.
-    const int yesterday = (now_tm.tm_wday + PBL_DAY_PER_WEEK - 1) % PBL_DAY_PER_WEEK;
-    if (wrapping && days[yesterday] && to_sec > now_sec) {
-      earliest_transition = MIN(earliest_transition, (time_t)(to_sec - now_sec));
     }
   }
+  prv_schedule_boundary_job(&s_qt_jobs[slot][0], slot, false, s->from_hour, s->from_minute,
+                            prv_qt_wday_mask(days));
+  prv_schedule_boundary_job(&s_qt_jobs[slot][1], slot, true, to_min / 60, to_min % 60, end_mask);
+}
 
+static void prv_update_schedule_mode(void) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    pbl_cron_job_unschedule(&s_qt_jobs[i][0]);
+    pbl_cron_job_unschedule(&s_qt_jobs[i][1]);
+  }
+
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled) {
+      continue;
+    }
+    prv_schedule_qt_slot_jobs(i, &s_qt_schedule_cache[i]);
+  }
+
+  const bool currently_active = prv_is_any_qt_schedule_active_now();
   if (currently_active != s_data.is_in_schedule_period) {
     if (currently_active && do_not_disturb_is_manually_enabled()) {
       alerts_preferences_dnd_set_manually_enabled(false);
@@ -322,19 +319,7 @@ static void prv_set_schedule_mode_timer(void) {
     s_data.is_in_schedule_period = currently_active;
   }
 
-  // Defensive clamp: a config edge case (e.g. all-true day mask collapsing to
-  // the current minute) could theoretically yield 0; never reboot the watch
-  // over a schedule-config oddity.
-  if (earliest_transition <= 0) {
-    earliest_transition = PBL_SEC_PER_DAY;
-  }
-
-  PBL_LOG_DBG("%s scheduled period. %u seconds until update",
-              s_data.is_in_schedule_period ? "In" : "Out of", (unsigned int)earliest_transition);
-
-  bool success = new_timer_start(s_data.update_timer_id, earliest_transition * 1000,
-                                 prv_update_schedule_mode_timer_callback, NULL, 0 /*flags*/);
-  PBL_ASSERTN(success);
+  PBL_LOG_DBG("%s scheduled period", s_data.is_in_schedule_period ? "In" : "Out of");
 }
 
 static bool prv_is_schedule_active(void) {
@@ -562,7 +547,6 @@ void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffe
 
 void do_not_disturb_init(void) {
   s_data = (DoNotDisturbData){
-    .update_timer_id = new_timer_create(),
     .was_active = false,
   };
   prv_try_update_schedule_mode((void *)true);
@@ -583,13 +567,3 @@ void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e) {
 void do_not_disturb_manual_toggle_with_dialog(void) {
   do_not_disturb_toggle_push(ActionTogglePrompt_NoPrompt, false /* set_exit_reason */);
 }
-
-#ifdef UNITTEST
-TimerID get_dnd_timer_id(void) {
-  return s_data.update_timer_id;
-}
-
-void set_dnd_timer_id(TimerID id) {
-  s_data.update_timer_id = id;
-}
-#endif

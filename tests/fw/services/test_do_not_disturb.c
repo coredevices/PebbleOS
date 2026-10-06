@@ -128,6 +128,10 @@ static void prv_assert_manually_dnd_setting_val(bool expected_value) {
                             sizeof(bool));
 }
 
+static void prv_assert_seconds_until_next_boundary(time_t expected) {
+  cl_assert_equal_i(pbl_cron_get_next_execute_time() - rtc_get_time(), expected);
+}
+
 //! Create a quiet-time schedule mirroring the legacy weekday/weekend windows
 //! used by the older tests. Returns the slot index.
 static int prv_create_qt_schedule(QuietTimeKind kind, uint8_t from_hour, uint8_t from_minute,
@@ -419,25 +423,45 @@ void test_do_not_disturb__disable_manual_dnd_when_scheduled_ends(void) {
   quiet_time_delete_schedule(sched_idx);
 }
 
-void test_do_not_disturb__timer_fires_schedule_boundaries(void) {
+void test_do_not_disturb__cron_fires_schedule_boundaries(void) {
   int sched_idx = prv_create_qt_schedule(QT_KIND_WEEKDAYS, 1, 0, 12, 30, true);
   cl_assert(do_not_disturb_is_active() == false);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 3600 * PBL_MSEC_PER_SEC);
+  prv_assert_seconds_until_next_boundary(3600);
 
-  // Timer fires at 01:00: advance the clock and re-evaluate.
+  // Cron job fires at 01:00: advance the clock and re-evaluate.
   rtc_set_time(s_thursday_01_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 41400 * PBL_MSEC_PER_SEC);
+  prv_assert_seconds_until_next_boundary(41400);
 
   do_not_disturb_set_manually_enabled(true);
   rtc_set_time(s_thursday_13_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
-  // Next wakeup is 01:00 on Friday (next scheduled day); no midnight entry.
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()),
-                    12 * PBL_SEC_PER_HOUR * PBL_MSEC_PER_SEC);
+  // Next boundary is 01:00 on Friday (next scheduled day); no midnight entry.
+  prv_assert_seconds_until_next_boundary(12 * PBL_SEC_PER_HOUR);
+
+  quiet_time_delete_schedule(sched_idx);
+}
+
+void test_do_not_disturb__cron_job_fires_start_and_end(void) {
+  int sched_idx = prv_create_qt_schedule(QT_KIND_WEEKDAYS, 1, 0, 2, 0, true);
+  // Thursday 00:00, outside the window; the start job fires at 01:00.
+  cl_assert(do_not_disturb_is_active() == false);
+  prv_assert_seconds_until_next_boundary(3600);
+
+  // Start boundary fires: the window becomes active, the end job is next.
+  rtc_set_time(s_thursday_01_00);
+  pbl_cron_wakeup();
+  cl_assert(do_not_disturb_is_active() == true);
+  prv_assert_seconds_until_next_boundary(3600);
+
+  // End boundary fires: the window closes, the next start is Friday 01:00.
+  rtc_set_time(s_thursday_01_00 + 3600);
+  pbl_cron_wakeup();
+  cl_assert(do_not_disturb_is_active() == false);
+  prv_assert_seconds_until_next_boundary(23 * 3600);
 
   quiet_time_delete_schedule(sched_idx);
 }
@@ -516,37 +540,37 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 23:00 on Friday. (14.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 23:00 on Friday. (14.5 hours)
+  prv_assert_seconds_until_next_boundary(52200);
 
   rtc_set_time(s_friday_23_30); // In schedule
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
-  // Timer will go off at 01:00 on Saturday (weekend window starts). (1.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 5400 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 01:00 on Saturday (weekend window starts). (1.5 hours)
+  prv_assert_seconds_until_next_boundary(5400);
 
   rtc_set_time(s_saturday_00_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   // Still Friday's window (started Friday 23:00), which runs past midnight.
   cl_assert(active == true);
-  // Timer will go off at 01:00 on Saturday. (0.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 01:00 on Saturday. (0.5 hours)
+  prv_assert_seconds_until_next_boundary(1800);
 
   rtc_set_time(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
-  // Timer will go off at 07:00 on Saturday (Friday's window ends). (5.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 07:00 on Saturday (Friday's window ends). (5.5 hours)
+  prv_assert_seconds_until_next_boundary(19800);
 
   rtc_set_time(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 01:00 on Sunday. (14.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 52200 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 01:00 on Sunday. (14.5 hours)
+  prv_assert_seconds_until_next_boundary(52200);
 
   quiet_time_set_schedule_enabled(weekend_idx, false);
   rtc_set_time(s_saturday_01_30);
@@ -554,29 +578,29 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   active = do_not_disturb_is_active();
   // Still Friday's window (started Friday 23:00), which runs past midnight.
   cl_assert(active == true);
-  // Timer will go off at 07:00 on Saturday (Friday's window ends). (5.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 07:00 on Saturday (Friday's window ends). (5.5 hours)
+  prv_assert_seconds_until_next_boundary(19800);
 
   rtc_set_time(s_thursday_00_00);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
-  // Timer will go off at 07:00 on Thursday. (7.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 25200 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 07:00 on Thursday. (7.0 hours)
+  prv_assert_seconds_until_next_boundary(25200);
 
-  // Check that there is a timer scheduled
-  cl_assert(stub_new_timer_is_scheduled(get_dnd_timer_id()));
+  // Check that a cron job is scheduled
+  cl_assert(pbl_cron_get_job_count() > 0);
   quiet_time_set_schedule_enabled(weekday_idx, false);
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Neither schedules enabled, timer should not be scheduled
-  cl_assert(!stub_new_timer_is_scheduled(get_dnd_timer_id()));
+  // Neither schedules enabled, no cron job should be scheduled
+  cl_assert_equal_i(pbl_cron_get_next_execute_time(), 0);
 
   quiet_time_set_schedule_enabled(weekday_idx, true);
   active = do_not_disturb_is_active();
   cl_assert(active == true);
-  // Timer will go off at 07:00 on Thursday. (7.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 25200 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 07:00 on Thursday. (7.0 hours)
+  prv_assert_seconds_until_next_boundary(25200);
 
   quiet_time_set_schedule_enabled(weekend_idx, true);
   quiet_time_set_schedule_enabled(weekday_idx, false);
@@ -584,8 +608,8 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 01:00 on Saturday. (48.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 172800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 01:00 on Saturday. (48.0 hours)
+  prv_assert_seconds_until_next_boundary(172800);
 
   quiet_time_set_schedule_enabled(weekend_idx, false);
   quiet_time_set_schedule_enabled(weekday_idx, true);
@@ -594,8 +618,8 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   active = do_not_disturb_is_active();
   // Still Friday's window (started Friday 23:00), which runs past midnight.
   cl_assert(active == true);
-  // Timer will go off at 07:00 on Saturday (Friday's window ends). (5.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 19800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 07:00 on Saturday (Friday's window ends). (5.5 hours)
+  prv_assert_seconds_until_next_boundary(19800);
 
   // 10:30 PM - 8:30 AM on weekdays
   prv_qt_set_schedule_window(weekday_idx, 22, 30, 8, 30);
@@ -610,50 +634,50 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
-  // Timer will go off at 00:00 on Saturday. (0.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 00:00 on Saturday. (0.5 hours)
+  prv_assert_seconds_until_next_boundary(1800);
 
   rtc_set_time(s_saturday_00_00);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
-  // Timer will go off at 08:30 on Saturday (Friday's window ends). (8.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 30600 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 08:30 on Saturday (Friday's window ends). (8.5 hours)
+  prv_assert_seconds_until_next_boundary(30600);
 
   rtc_set_time(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 00:00 on Sunday. (13.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 48600 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 00:00 on Sunday. (13.5 hours)
+  prv_assert_seconds_until_next_boundary(48600);
 
   rtc_set_time(s_sunday_9_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == true);
-  // Timer will go off at 10:00 on Sunday. (0.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 1800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 10:00 on Sunday. (0.5 hours)
+  prv_assert_seconds_until_next_boundary(1800);
 
   rtc_set_time(s_sunday_10_00);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 22:30 on Monday. (36.5 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 131400 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 22:30 on Monday. (36.5 hours)
+  prv_assert_seconds_until_next_boundary(131400);
 
   rtc_set_time(s_sunday_23_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 22:30 on Monday. (23.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 82800 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 22:30 on Monday. (23.0 hours)
+  prv_assert_seconds_until_next_boundary(82800);
 
   rtc_set_time(s_monday_10_30);
   do_not_disturb_handle_clock_change();
   active = do_not_disturb_is_active();
   cl_assert(active == false);
-  // Timer will go off at 22:30 on Monday. (12.0 hours)
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 43200 * PBL_MSEC_PER_SEC);
+  // Cron job fires at 22:30 on Monday. (12.0 hours)
+  prv_assert_seconds_until_next_boundary(43200);
 
   quiet_time_delete_schedule(weekday_idx);
   quiet_time_delete_schedule(weekend_idx);
@@ -969,7 +993,7 @@ void test_do_not_disturb__wrapping_schedule_belongs_to_start_day(void) {
   rtc_set_time(1426118400 - 86400 + (21 * 3600) + (59 * 60)); // Wed 21:59
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()), 60 * PBL_MSEC_PER_SEC);
+  prv_assert_seconds_until_next_boundary(60);
 
   // Wednesday 22:00, window opens.
   rtc_set_time(1426118400 - 86400 + (22 * 3600)); // Wed 22:00
@@ -980,8 +1004,7 @@ void test_do_not_disturb__wrapping_schedule_belongs_to_start_day(void) {
   rtc_set_time(s_thursday_00_00 + (2 * 3600)); // Thu 02:00
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()),
-                    5 * PBL_SEC_PER_HOUR * PBL_MSEC_PER_SEC);
+  prv_assert_seconds_until_next_boundary(5 * PBL_SEC_PER_HOUR);
 
   // Thursday 07:00, window end is exclusive.
   rtc_set_time(s_thursday_00_00 + (7 * 3600)); // Thu 07:00
@@ -1022,8 +1045,7 @@ void test_do_not_disturb__weekday_day_boundaries_inactive(void) {
   rtc_set_time(1427068800 + 3600); // Mon 01:00
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
-  cl_assert_equal_i(stub_new_timer_timeout(get_dnd_timer_id()),
-                    8 * PBL_SEC_PER_HOUR * PBL_MSEC_PER_SEC);
+  prv_assert_seconds_until_next_boundary(8 * PBL_SEC_PER_HOUR);
 
   // Clean up
   quiet_time_delete_schedule(idx);
@@ -1329,7 +1351,7 @@ void test_do_not_disturb__refresh_active_state_noop_when_unchanged(void) {
 }
 
 //! A phone-originated qtSchedule* write must re-evaluate active state and
-//! re-arm the schedule timer, same as the other DND state keys.
+//! rebuild the schedule cron jobs, same as the other DND state keys.
 void test_do_not_disturb__phone_qt_schedule_synced(void) {
   // Time is Thursday 12:00 in the fixture; schedule Thursday 13:00-14:00.
   QuietTimeScheduleConfig config = {
