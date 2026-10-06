@@ -84,7 +84,7 @@ static status_t prv_set_timer(Reminder *item) {
   s_next_reminder_timestamp = item->header.timestamp;
   s_reminder_armed = true;
   pbl_cron_job_schedule_at(&s_reminder_job, s_next_reminder_timestamp);
-  PBL_LOG_DBG("Set reminder for %ld", s_next_reminder_timestamp);
+  PBL_LOG_DBG("Set reminder for %ld", (long)s_next_reminder_timestamp);
   return S_SUCCESS;
 }
 

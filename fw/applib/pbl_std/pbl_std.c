@@ -26,7 +26,7 @@ time_t pbl_override_time(time_t *tloc) {
 // Manually construct double to avoid requiring soft-fp
 static double prv_time_to_double(time_t time) {
   // time_t is 32bit signed int, convert it manually
-#if !UNITTEST && __SIZEOF_POINTER__ == 4
+#if !UNITTEST && !defined(CONFIG_LIBC_HOST)
   static_assert(sizeof(time_t) == 4, "Conversion depends on 32bit time_t");
 #endif
 

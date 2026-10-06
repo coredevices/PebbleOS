@@ -210,7 +210,7 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   // Ignore notifications older than 2 hours (Mail.app Fetch can be set to hourly). Location based
   // reminders come with an invalid timestamp.
   if (timestamp < (now - MAXIMUM_NOTIFY_TIME) && timestamp != INVALID_TIME) {
-    PBL_LOG_DBG("Not presenting stale notif (ts=%ld)", timestamp);
+    PBL_LOG_DBG("Not presenting stale notif (ts=%ld)", (long)timestamp);
     return true;
   }
 
