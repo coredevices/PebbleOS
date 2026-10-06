@@ -2,10 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_library_sources(
-  arch.c
   cycle.c
   mcu.c
-  native.c
 )
+if(CONFIG_ARCH_POSIX_FIBERS)
+  pbl_library_sources(fiber.c)
+else()
+  pbl_library_sources(
+    arch.c
+    native.c
+  )
+endif()
 
 pbl_include_directories(include)
