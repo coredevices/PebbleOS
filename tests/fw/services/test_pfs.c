@@ -361,6 +361,58 @@ void test_pfs__seek(void) {
   cl_assert(rv == E_RANGE);
 }
 
+void test_pfs__seek_walks_forward_from_current_page(void) {
+  const int num_file_pages = 32;
+  const int file_size = num_file_pages * 4000;
+  const int stride = 64;
+
+  uint8_t *data = malloc(file_size);
+  for (int i = 0; i < file_size; i++) {
+    data[i] = (uint8_t)(i * 7 + (i >> 8));
+  }
+
+  int fd = pfs_open("big", OP_FLAG_WRITE, FILE_TYPE_STATIC, file_size);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_write(fd, data, file_size), file_size);
+  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+
+  fd = pfs_open("big", OP_FLAG_READ | OP_FLAG_WRITE, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+
+  const uint32_t reads_before = fake_flash_read_count();
+  int steps = 0;
+  for (int off = 0; off + 4 <= file_size; off += stride) {
+    uint8_t buf[4];
+    cl_assert_equal_i(pfs_seek(fd, off, FSeekSet), off);
+    cl_assert_equal_i(pfs_read(fd, buf, sizeof(buf)), sizeof(buf));
+    cl_assert_equal_m(buf, &data[off], sizeof(buf));
+    steps++;
+  }
+  cl_assert(fake_flash_read_count() - reads_before <= 2 * (steps + num_file_pages));
+
+  const int write_off = file_size / 2 + 4090;
+  const uint8_t patch[16] = {0};
+  memcpy(&data[write_off], patch, sizeof(patch));
+  cl_assert_equal_i(pfs_seek(fd, write_off - 3000, FSeekSet), write_off - 3000);
+  uint8_t byte;
+  cl_assert_equal_i(pfs_read(fd, &byte, 1), 1);
+  cl_assert_equal_i(pfs_seek(fd, write_off, FSeekSet), write_off);
+  cl_assert_equal_i(pfs_write(fd, patch, sizeof(patch)), sizeof(patch));
+
+  uint8_t *readback = malloc(file_size);
+  for (int off = file_size - 4096; off >= 0; off -= 4096) {
+    cl_assert_equal_i(pfs_seek(fd, off, FSeekSet), off);
+    cl_assert_equal_i(pfs_read(fd, &readback[off], 4096), 4096);
+  }
+  cl_assert_equal_i(pfs_seek(fd, 0, FSeekSet), 0);
+  cl_assert_equal_i(pfs_read(fd, readback, file_size % 4096), file_size % 4096);
+  cl_assert_equal_m(readback, data, file_size);
+
+  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  free(readback);
+  free(data);
+}
+
 void test_pfs__read(void) {
   const int rd_len = 10;
 

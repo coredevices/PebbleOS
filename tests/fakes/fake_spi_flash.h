@@ -30,5 +30,6 @@ void fake_spi_flash_force_future_failure(int after_n_bytes, jmp_buf *retire_to);
 
 void fake_flash_assert_region_untouched(uint32_t start_addr, uint32_t length);
 
+uint32_t fake_flash_read_count(void);
 uint32_t fake_flash_write_count(void);
 uint32_t fake_flash_erase_count(void);

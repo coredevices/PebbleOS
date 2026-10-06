@@ -735,6 +735,34 @@ void test_settings_file__growable_reopen(void) {
   settings_file_close(&file);
 }
 
+void test_settings_file__open_and_lookup_scale_linearly(void) {
+  const int num_records = 400;
+  SettingsFile file;
+  cl_must_pass(settings_file_open_growable(&file, "lin", 1024 * 1024, 4096));
+
+  uint8_t key[5];
+  uint8_t val[256];
+  memset(val, 0x5A, sizeof(val));
+  for (int i = 0; i < num_records; i++) {
+    snprintf((char *)key, sizeof(key), "k%03d", i);
+    cl_must_pass(settings_file_set(&file, key, 4, val, sizeof(val)));
+  }
+  const int num_pages = pfs_get_file_size(file.iter.fd) / 4000 + 1;
+  settings_file_close(&file);
+
+  uint32_t reads = fake_flash_read_count();
+  cl_must_pass(settings_file_open_growable(&file, "lin", 1024 * 1024, 4096));
+  reads = fake_flash_read_count() - reads;
+  cl_assert(reads <= 3 * (num_records + num_pages));
+
+  uint32_t lookup_reads = fake_flash_read_count();
+  cl_assert(!settings_file_exists(&file, (uint8_t *)"none", 4));
+  lookup_reads = fake_flash_read_count() - lookup_reads;
+  cl_assert(lookup_reads <= 2 * (num_records + num_pages));
+
+  settings_file_close(&file);
+}
+
 // Compaction shrinks a grown growable file back toward the initial allocation when most
 // records have been deleted, so a brief storage burst doesn't permanently hold flash.
 void test_settings_file__growable_shrinks_on_compact(void) {

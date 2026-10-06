@@ -21,6 +21,7 @@ typedef struct FakeFlashState {
   uint32_t bytes_left_till_write_failure;
   jmp_buf *jmp_on_failure;
   uint8_t *storage; //! Allocated buffer of length bytes.
+  uint32_t read_count;
   uint32_t write_count;
   uint32_t erase_count;
 } FakeFlashState;
@@ -129,6 +130,7 @@ void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size
   cl_assert(start_addr >= s_state.offset);
   cl_assert(start_addr + buffer_size <= s_state.offset + s_state.length);
 
+  ++s_state.read_count;
   memcpy(buffer, s_state.storage + (start_addr - s_state.offset), buffer_size);
 }
 
@@ -184,6 +186,10 @@ void flash_erase_subsector_blocking(uint32_t subsector_addr) {
 
 uint32_t flash_get_sector_base_address(uint32_t flash_addr) {
   return (flash_addr & ~(SECTOR_SIZE_BYTES - 1));
+}
+
+uint32_t fake_flash_read_count(void) {
+  return s_state.read_count;
 }
 
 uint32_t fake_flash_write_count(void) {
