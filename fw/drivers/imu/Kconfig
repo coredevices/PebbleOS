@@ -133,11 +133,6 @@ if MAG
 choice MAG_DRIVER
     prompt "Magnetometer Driver"
 
-config MAG_MAG3110
-    bool "Freescale MAG3110"
-    help
-      Support for the Freescale MAG3110 magnetometer.
-
 config MAG_MMC5603NJ
     bool "MEMSIC MMC5603NJ"
     help
