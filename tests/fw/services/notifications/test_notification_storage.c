@@ -454,6 +454,37 @@ void test_notification_storage__remove_single(void) {
   cl_assert_equal_b(notification_storage_get(&i, &r), false);
 }
 
+void test_notification_storage__exists_matches_deleted(void) {
+  Uuid i;
+  uuid_generate(&i);
+  TimelineItem e = {
+    .header =
+        {
+          .id = i,
+          .type = TimelineItemTypeNotification,
+          .layout = LayoutIdGeneric,
+          .timestamp = 0x53f0dda5,
+        },
+    .attr_list = {
+      .num_attributes = ARRAY_LENGTH(attributes),
+      .attributes = attributes,
+    },
+  };
+
+  notification_storage_store(&e);
+  notification_storage_remove(&i);
+
+  uint8_t status;
+  cl_assert(notification_storage_notification_exists(&i));
+  cl_assert_equal_b(notification_storage_get_status(&i, &status), false);
+  cl_assert_equal_i(notification_storage_get_len(&i), 0);
+
+  notification_storage_set_status(&i, TimelineItemStatusActioned);
+  TimelineItem r;
+  cl_assert_equal_b(notification_storage_get(&i, &r), false);
+  cl_assert_equal_b(notification_storage_get_status(&i, &status), false);
+}
+
 void test_notification_storage__set_actioned_flag(void) {
   Uuid i;
   uuid_generate(&i);

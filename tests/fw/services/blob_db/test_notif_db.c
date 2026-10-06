@@ -34,6 +34,7 @@ void test_notif_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
   notification_storage_reset();
+  fake_kernel_services_notifications_reset();
 }
 
 void test_notif_db__cleanup(void) {
@@ -108,4 +109,51 @@ void test_notif_db__flush(void) {
   cl_assert_equal_i(notif_db_get_len((uint8_t *)&hdr1, UUID_SIZE), 0);
   cl_assert_equal_i(notif_db_get_len((uint8_t *)&hdr2, UUID_SIZE), 0);
   cl_assert_equal_i(notif_db_get_len((uint8_t *)&hdr3, UUID_SIZE), 0);
+}
+
+void test_notif_db__redelivery_after_dismissal(void) {
+  SerializedTimelineItemHeader hdr = {
+    .common = {
+      .ancs_uid = 1,
+      .layout = 0,
+      .flags = 0,
+      .timestamp = 0,
+    },
+  };
+  uuid_generate(&hdr.common.id);
+  cl_assert_equal_i(notif_db_insert((uint8_t *)&hdr, UUID_SIZE, (uint8_t *)&hdr, sizeof(hdr)), 0);
+  cl_assert_equal_i(notif_db_delete((uint8_t *)&hdr, UUID_SIZE), 0);
+
+  cl_assert_equal_i(notif_db_insert((uint8_t *)&hdr, UUID_SIZE, (uint8_t *)&hdr, sizeof(hdr)), 0);
+  cl_assert_equal_i(notif_db_get_len((uint8_t *)&hdr, UUID_SIZE), 0);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+  cl_assert_equal_i(fake_kernel_services_notifications_acted_upon_count(), 0);
+
+  hdr.common.status = TimelineItemStatusRead;
+  cl_assert_equal_i(notif_db_insert((uint8_t *)&hdr, UUID_SIZE, (uint8_t *)&hdr, sizeof(hdr)), 0);
+  cl_assert_equal_i(notif_db_get_len((uint8_t *)&hdr, UUID_SIZE), 0);
+  cl_assert_equal_i(fake_kernel_services_notifications_acted_upon_count(), 0);
+}
+
+void test_notif_db__redelivery_updates_status(void) {
+  SerializedTimelineItemHeader hdr = {
+    .common = {
+      .ancs_uid = 1,
+      .layout = 0,
+      .flags = 0,
+      .timestamp = 0,
+    },
+  };
+  uuid_generate(&hdr.common.id);
+  cl_assert_equal_i(notif_db_insert((uint8_t *)&hdr, UUID_SIZE, (uint8_t *)&hdr, sizeof(hdr)), 0);
+
+  hdr.common.status = TimelineItemStatusRead;
+  cl_assert_equal_i(notif_db_insert((uint8_t *)&hdr, UUID_SIZE, (uint8_t *)&hdr, sizeof(hdr)), 0);
+  cl_assert_equal_i(notif_db_get_len((uint8_t *)&hdr, UUID_SIZE), sizeof(hdr));
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+  cl_assert_equal_i(fake_kernel_services_notifications_acted_upon_count(), 1);
+
+  uint8_t status;
+  cl_assert(notification_storage_get_status(&hdr.common.id, &status));
+  cl_assert_equal_i(status, TimelineItemStatusRead);
 }

@@ -36,16 +36,21 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(id, uuid_string);
 
-  // If the notification already exists, only update the status flags
-  if (notification_storage_notification_exists(&notification.header.id)) {
+  uint8_t status;
+  if (!notification_storage_notification_exists(&notification.header.id)) {
+    if (!has_status_bits) {
+      notification_storage_store(&notification);
+      PBL_LOG_INFO("Notification added: %s", uuid_string);
+      notifications_handle_notification_added(id);
+    } else {
+      kernel_free(id);
+    }
+  } else if (notification_storage_get_status(&notification.header.id, &status)) {
     notification_storage_set_status(&notification.header.id, notification.header.status);
     PBL_LOG_INFO("Notification modified: %s", uuid_string);
     notifications_handle_notification_acted_upon(id);
-  } else if (!has_status_bits) {
-    notification_storage_store(&notification);
-    PBL_LOG_INFO("Notification added: %s", uuid_string);
-    notifications_handle_notification_added(id);
   } else {
+    PBL_LOG_DBG("Notification already dismissed: %s", uuid_string);
     kernel_free(id);
   }
 
