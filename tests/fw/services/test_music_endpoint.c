@@ -204,6 +204,12 @@ static void prv_assert_playback_command_sent_cb(uint16_t endpoint_id, const uint
   }
 }
 
+static void prv_take_event(PebbleEvent *e) {
+  if (e->type == PEBBLE_MEDIA_EVENT) {
+    music_handle_media_event(&e->media);
+  }
+}
+
 // Tests
 ///////////////////////////////////////////////////////////
 
@@ -215,6 +221,7 @@ void test_music_endpoint__initialize(void) {
   s_is_playback_cmd_sent = false;
   s_playback_cmd_sent = ~0;
   fake_event_init();
+  fake_event_set_callback(prv_take_event);
   fake_rtc_init(0, 0);
   fake_comm_session_init();
   music_init();
@@ -233,6 +240,57 @@ void test_music_endpoint__cleanup(void) {
   prv_receive_app_event(false /* is_open */);
 
   fake_comm_session_cleanup();
+}
+
+void test_music_endpoint__coalesce_untaken_events(void) {
+  fake_event_set_callback(NULL);
+  fake_event_reset_count();
+
+  music_update_now_playing("one", 3, "artist", 6, "album", 5);
+  music_update_track_position(1000);
+  cl_assert_equal_i(fake_event_get_count(), 2);
+
+  music_update_now_playing("two", 3, "artist", 6, "album", 5);
+  music_update_track_title("three", 5);
+  music_update_track_position(2000);
+  music_update_track_duration(5000);
+  cl_assert_equal_i(fake_event_get_count(), 2);
+
+  char title[MUSIC_BUFFER_LENGTH];
+  music_get_now_playing(title, NULL, NULL);
+  cl_assert_equal_s(title, "three");
+  uint32_t track_position, track_duration;
+  music_get_pos(&track_position, &track_duration);
+  cl_assert_equal_i(track_position, 2000);
+  cl_assert_equal_i(track_duration, 5000);
+
+  music_update_player_volume_percent(10);
+  music_update_player_volume_percent(20);
+  cl_assert_equal_i(fake_event_get_count(), 4);
+}
+
+void test_music_endpoint__post_again_once_taken(void) {
+  fake_event_set_callback(NULL);
+  fake_event_reset_count();
+
+  music_update_now_playing("one", 3, "artist", 6, "album", 5);
+  music_update_track_position(1000);
+  cl_assert_equal_i(fake_event_get_count(), 2);
+
+  PebbleMediaEvent taken = {.type = PebbleMediaEventTypeNowPlayingChanged};
+  music_handle_media_event(&taken);
+  music_update_now_playing("two", 3, "artist", 6, "album", 5);
+  music_update_track_position(2000);
+  cl_assert_equal_i(fake_event_get_count(), 3);
+  PebbleEvent e = fake_event_get_last();
+  cl_assert_equal_i(e.media.type, PebbleMediaEventTypeNowPlayingChanged);
+
+  taken.type = PebbleMediaEventTypeTrackPosChanged;
+  music_handle_media_event(&taken);
+  music_update_track_position(3000);
+  cl_assert_equal_i(fake_event_get_count(), 4);
+  e = fake_event_get_last();
+  cl_assert_equal_i(e.media.type, PebbleMediaEventTypeTrackPosChanged);
 }
 
 void test_music_endpoint__album_art_transfer_failure_does_not_latch(void) {

@@ -82,6 +82,9 @@ struct MusicServiceContext {
   //! Generation token, bumped whenever the track (title/artist) changes. Used to discard album art
   //! that arrives after a track change. @see music_get_now_playing_generation
   uint8_t now_playing_generation;
+
+  bool now_playing_event_pending;
+  bool pos_event_pending;
 } s_music_ctx;
 
 static void prv_free_album_art_locked(void);
@@ -105,6 +108,8 @@ static void prv_imaging_album_art_transfer_failed(uint8_t token) {
 
 void music_init(void) {
   pbl_mutex_init(&s_music_ctx.mutex);
+  s_music_ctx.now_playing_event_pending = false;
+  s_music_ctx.pos_event_pending = false;
   imaging_register_handler(ImagingImageTypeAlbumArt, prv_imaging_album_art_received);
   imaging_register_transfer_handlers(ImagingImageTypeAlbumArt, prv_imaging_album_art_will_receive,
                                      prv_imaging_album_art_transfer_failed);
@@ -148,9 +153,31 @@ static void prv_free_album_art_locked(void) {
   }
 }
 
+static void prv_put_coalesced_event(PebbleMediaEventType type, bool *pending) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  const bool was_pending = *pending;
+  *pending = true;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+
+  if (!was_pending) {
+    PebbleEvent e = {.type = PEBBLE_MEDIA_EVENT, .media.type = type};
+    event_put(&e);
+  }
+}
+
 static void prv_put_now_playing_changed_event(void) {
-  PebbleEvent e = {.type = PEBBLE_MEDIA_EVENT, .media.type = PebbleMediaEventTypeNowPlayingChanged};
-  event_put(&e);
+  prv_put_coalesced_event(PebbleMediaEventTypeNowPlayingChanged,
+                          &s_music_ctx.now_playing_event_pending);
+}
+
+void music_handle_media_event(const PebbleMediaEvent *event) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  if (event->type == PebbleMediaEventTypeNowPlayingChanged) {
+    s_music_ctx.now_playing_event_pending = false;
+  } else if (event->type == PebbleMediaEventTypeTrackPosChanged) {
+    s_music_ctx.pos_event_pending = false;
+  }
+  pbl_mutex_unlock(&s_music_ctx.mutex);
 }
 
 bool music_set_connected_server(const MusicServerImplementation *implementation, bool connected) {
@@ -286,11 +313,7 @@ void music_update_track_album(const char *album, size_t album_length) {
 }
 
 static void prv_put_pos_changed_event(void) {
-  PebbleEvent e = {
-    .type = PEBBLE_MEDIA_EVENT,
-    .media.type = PebbleMediaEventTypeTrackPosChanged,
-  };
-  event_put(&e);
+  prv_put_coalesced_event(PebbleMediaEventTypeTrackPosChanged, &s_music_ctx.pos_event_pending);
 }
 
 void music_update_track_position(uint32_t track_pos_ms) {
