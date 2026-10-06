@@ -215,7 +215,8 @@ size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *r
       _fmt_strcopy:
         // old strftime doesn't use 'width' for strings
         if (!use_i18n && i18nstr) {
-          cpystr = i18nstr;
+          cpystr = strchr(i18nstr, '\4');
+          cpystr = cpystr ? cpystr + 1 : i18nstr;
           i18nstr = NULL;
         }
         if (i18nstr) {

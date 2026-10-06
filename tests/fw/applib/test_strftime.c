@@ -78,12 +78,22 @@ char *app_get_system_locale(void) {
   return "es_ES";
 }
 
+static bool s_i18n_translate_may = false;
+
 const char *i18n_get(const char *msgid, const void *owner) {
   if (s_i18n_translate) {
     return "Hola";
-  } else {
-    return msgid;
   }
+  if (s_i18n_translate_may) {
+    if (strcmp(msgid, "MonthAbbr\4May") == 0) {
+      return "Mai.";
+    }
+    if (strcmp(msgid, "May") == 0) {
+      return "Mai";
+    }
+  }
+  const char *message = strchr(msgid, '\4');
+  return message ? message + 1 : msgid;
 }
 
 void i18n_get_with_buffer(const char *string, char *buffer, size_t length) {
@@ -1674,4 +1684,34 @@ void test_strftime__i18n(void) {
 
   s_i18n_translate = false;
   s_i18n_locale_other = false;
+}
+
+void test_strftime__i18n_month_abbr_context(void) {
+  char tmbuf[512];
+
+  struct tm may_2_2015 = {
+    .tm_year = 2015 - 1900,
+    .tm_mon = 4,
+    .tm_mday = 2,
+    .tm_wday = 6,
+    .tm_yday = 121,
+    .tm_zone = "UTC",
+  };
+
+  tmbuf[0] = '\0';
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, NULL);
+  cl_assert_equal_s(tmbuf, "May May May");
+  tmbuf[0] = '\0';
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, i18n_get_locale());
+  cl_assert_equal_s(tmbuf, "May May May");
+
+  s_i18n_translate_may = true;
+  tmbuf[0] = '\0';
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, NULL);
+  cl_assert_equal_s(tmbuf, "Mai. Mai. Mai");
+  tmbuf[0] = '\0';
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, i18n_get_locale());
+  cl_assert_equal_s(tmbuf, "May May May");
+
+  s_i18n_translate_may = false;
 }
