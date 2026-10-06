@@ -71,18 +71,33 @@ enum pbl_bt_errno gatt_client_discovery_discover_all(const struct pbl_bt_device_
   return PBL_BT_ERRNO_OK;
 }
 
+static int s_pending_notifications;
+static int s_reschedule_count;
+static uint32_t s_kernel_events_free;
+
+uint32_t event_kernel_to_kernel_num_free(void) {
+  return s_kernel_events_free;
+}
+
 uint16_t gatt_client_subscriptions_consume_notification(
     pbl_bt_characteristic_t *characteristic_ref_out, uint8_t *value_out,
     uint16_t *value_length_in_out, GAPLEClient client, bool *has_more_out) {
-  return 0;
+  --s_pending_notifications;
+  *has_more_out = (s_pending_notifications > 0);
+  return *has_more_out ? 1 : 0;
 }
 
 bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
                                                        GATTBufferedNotificationHeader *header_out) {
-  return false;
+  if (s_pending_notifications == 0) {
+    return false;
+  }
+  *header_out = (GATTBufferedNotificationHeader){.value_length = 1};
+  return true;
 }
 
 void gatt_client_subscriptions_reschedule(GAPLEClient c) {
+  ++s_reschedule_count;
 }
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
@@ -196,9 +211,12 @@ void test_client_handle_subscribe(pbl_bt_characteristic_t characteristic,
                                   BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
 }
 
+static int s_notifications_handled;
 void test_client_handle_read_or_notification(pbl_bt_characteristic_t characteristic,
                                              const uint8_t *value, size_t value_length,
                                              enum pbl_bt_gatt_error error) {
+  ++s_notifications_handled;
+  --s_kernel_events_free;
 }
 
 // Tests
@@ -208,6 +226,10 @@ void test_kernel_le_client__initialize(void) {
   s_services_discovered_count = 0;
   s_read_responses_consumed_count = 0;
   s_can_handle_characteristic = false;
+  s_pending_notifications = 0;
+  s_reschedule_count = 0;
+  s_kernel_events_free = 14;
+  s_notifications_handled = 0;
   kernel_le_client_init();
 }
 
@@ -240,6 +262,43 @@ void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) 
   kernel_le_client_handle_event(&e);
 
   cl_assert_equal_i(s_read_responses_consumed_count, 0);
+}
+
+void test_kernel_le_client__notifications_yield_before_kernel_queue_fills(void) {
+  s_can_handle_characteristic = true;
+  s_pending_notifications = 50;
+
+  PebbleEvent e = (PebbleEvent){
+    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+    .bluetooth.le.gatt_client.subtype = PebbleBLEGATTClientEventTypeNotification,
+  };
+  kernel_le_client_handle_event(&e);
+
+  cl_assert_equal_i(s_notifications_handled, 11);
+  cl_assert_equal_i(s_reschedule_count, 1);
+  cl_assert_equal_i(s_pending_notifications, 39);
+
+  // KernelMain drained its queue before taking the rescheduled event:
+  s_kernel_events_free = 14;
+  s_notifications_handled = 0;
+  kernel_le_client_handle_event(&e);
+  cl_assert_equal_i(s_notifications_handled, 11);
+  cl_assert_equal_i(s_reschedule_count, 2);
+}
+
+void test_kernel_le_client__notifications_drained_with_room_in_kernel_queue(void) {
+  s_can_handle_characteristic = true;
+  s_pending_notifications = 5;
+
+  PebbleEvent e = (PebbleEvent){
+    .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
+    .bluetooth.le.gatt_client.subtype = PebbleBLEGATTClientEventTypeNotification,
+  };
+  kernel_le_client_handle_event(&e);
+
+  cl_assert_equal_i(s_notifications_handled, 5);
+  cl_assert_equal_i(s_pending_notifications, 0);
+  cl_assert_equal_i(s_reschedule_count, 0);
 }
 
 void test_kernel_le_client__service_added(void) {

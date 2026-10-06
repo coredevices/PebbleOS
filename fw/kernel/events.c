@@ -383,6 +383,10 @@ struct pbl_msgq *event_kernel_to_kernel_event_queue(void) {
   return &s_from_kernel_event_queue;
 }
 
+uint32_t event_kernel_to_kernel_num_free(void) {
+  return pbl_msgq_num_free(&s_from_kernel_event_queue);
+}
+
 void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
   int num_events_in_queue = pbl_msgq_num_used(queue);
   PebbleEvent event;

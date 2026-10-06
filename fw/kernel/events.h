@@ -850,5 +850,8 @@ struct pbl_msgq *event_get_to_kernel_queue(PebbleTask task);
 
 struct pbl_msgq *event_kernel_to_kernel_event_queue(void);
 
+//! Number of free slots in the queue KernelMain uses to post events to itself
+uint32_t event_kernel_to_kernel_num_free(void);
+
 //! Call to reset a queue and free all memory associated w/ the events it contains
 void event_queue_cleanup_and_reset(struct pbl_msgq *queue);
