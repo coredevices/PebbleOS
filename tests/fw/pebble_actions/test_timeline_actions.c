@@ -34,6 +34,12 @@ extern ActionResultData *prv_invoke_action(ActionMenu *action_menu,
 ///////////////////////////////////////////////////////////
 static const uint8_t *s_expected_send_data = NULL;
 static bool s_sent_action = false;
+static size_t s_sent_length = 0;
+static bool s_window_state_supported = false;
+
+bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
+  return s_window_state_supported && capability == CommSessionNotificationWindowStateSupport;
+}
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
                             size_t length, uint32_t timeout_ms) {
@@ -47,6 +53,7 @@ bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const ui
 
   cl_assert_equal_m(s_expected_send_data, data, length);
   s_sent_action = true;
+  s_sent_length = length;
   return true;
 }
 
@@ -55,6 +62,8 @@ bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const ui
 void test_timeline_actions__initialize(void) {
   s_expected_send_data = NULL;
   s_sent_action = false;
+  s_sent_length = 0;
+  s_window_state_supported = false;
 }
 
 void test_timeline_actions__cleanup(void) {
@@ -104,4 +113,33 @@ void test_timeline_actions__send_text(void) {
   s_expected_send_data = s_send_text_data;
   prv_invoke_action(NULL, &item.action_group.actions[0], &item, "Yo, what's up?");
   cl_assert(s_sent_action);
+}
+
+void test_timeline_actions__displayed_item(void) {
+  const Uuid id = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                   0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+  const uint8_t expected[] = {0x04, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                              0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+  s_window_state_supported = true;
+  s_expected_send_data = expected;
+  timeline_action_endpoint_send_displayed_item(&id);
+  cl_assert(s_sent_action);
+  cl_assert_equal_i(s_sent_length, sizeof(expected));
+}
+
+void test_timeline_actions__nothing_displayed(void) {
+  const uint8_t expected[] = {0x04, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                              0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+  s_window_state_supported = true;
+  s_expected_send_data = expected;
+  timeline_action_endpoint_send_displayed_item(NULL);
+  cl_assert(s_sent_action);
+  cl_assert_equal_i(s_sent_length, sizeof(expected));
+}
+
+void test_timeline_actions__displayed_item_needs_phone_support(void) {
+  const uint8_t expected[] = {0x04};
+  s_expected_send_data = expected;
+  timeline_action_endpoint_send_displayed_item(NULL);
+  cl_assert(!s_sent_action);
 }

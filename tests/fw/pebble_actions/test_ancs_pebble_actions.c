@@ -33,6 +33,10 @@ extern const int TIMELINE_ACTION_ENDPOINT;
 static const uint8_t *s_expected_send_data = NULL;
 static bool s_sent_action = false;
 
+bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
+  return false;
+}
+
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
                             size_t length, uint32_t timeout_ms) {
   if (s_expected_send_data == NULL) {

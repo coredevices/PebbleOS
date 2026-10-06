@@ -34,6 +34,15 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
                                             bool do_async);
 
 /**
+ * @brief Tell the phone which notification the watch is displaying.
+ *
+ * Only sent to phones with @ref CommSessionNotificationWindowStateSupport.
+ *
+ * @param id Id of the displayed notification, or NULL when none is displayed.
+ */
+void timeline_action_endpoint_send_displayed_item(const Uuid *id);
+
+/**
  * @brief Handle a message from the phone on the timeline action endpoint.
  *
  * @param session Session the message arrived on.

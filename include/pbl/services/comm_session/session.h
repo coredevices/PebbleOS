@@ -93,6 +93,8 @@ typedef enum {
   CommSessionImagingSupport = 1 << 17,
   /** Phone syncs settings through BlobDB. */
   CommSessionSettingsSyncSupport = 1 << 23,
+  /** Phone tracks which notification the watch is displaying. */
+  CommSessionNotificationWindowStateSupport = 1 << 26,
   /** First value past the defined capabilities. */
   CommSessionOutOfRange
 } CommSessionCapability;

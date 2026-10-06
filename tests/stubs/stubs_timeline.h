@@ -31,6 +31,9 @@ void PBL_WEAK timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t act
                                                      AttributeList *attributes) {
 }
 
+void PBL_WEAK timeline_action_endpoint_send_displayed_item(const Uuid *id) {
+}
+
 Animation *PBL_WEAK timeline_animate_back_from_card(void) {
   return NULL;
 }

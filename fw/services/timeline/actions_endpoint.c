@@ -21,6 +21,7 @@ PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 typedef enum {
   CommandInvokeAction = 0x02,
   CommandInvokeActionANCSNotif = 0x03,
+  CommandDisplayedItem = 0x04,
   CommandPhoneResponse = 0x11,
   CommandPhoneActionResponse = 0x12,
 } Command;
@@ -68,6 +69,11 @@ typedef struct {
   size_t length;
   InvokeActionMsg msg;
 } InvokeActionMsgCbData;
+
+typedef struct PBL_PACKED {
+  Command command : 8;
+  Uuid item_id;
+} DisplayedItemMsg;
 
 PBL_T_STATIC const int TIMELINE_ACTION_ENDPOINT = 0x2cb0;
 
@@ -176,6 +182,19 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
                            COMM_SESSION_DEFAULT_TIMEOUT);
     kernel_free(invoke_action_data);
   }
+}
+
+void timeline_action_endpoint_send_displayed_item(const Uuid *id) {
+  CommSession *session = comm_session_get_system_session();
+  if (!comm_session_has_capability(session, CommSessionNotificationWindowStateSupport)) {
+    return;
+  }
+  const DisplayedItemMsg msg = {
+    .command = CommandDisplayedItem,
+    .item_id = id ? *id : UUID_INVALID,
+  };
+  comm_session_send_data(session, TIMELINE_ACTION_ENDPOINT, (const uint8_t *)&msg, sizeof(msg),
+                         COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
 void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
