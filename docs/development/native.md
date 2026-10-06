@@ -31,7 +31,10 @@ build/pebbleos
 | Right, Enter, Space         | Select |
 | Left, Backspace, Escape     | Back   |
 
-The mouse drives the touchscreen. Logs go to the terminal, and `Ctrl-\`
+The mouse drives the touchscreen.
+
+The terminal is the watch's serial console: logs go there, and as on the
+watch, `Ctrl-C` opens the shell prompt and `Ctrl-D` leaves it. `Ctrl-\`
 quits.
 
 Options:
@@ -74,6 +77,12 @@ one such bottom (`soc/posix/sdl`), selected by the drivers that use it: the
 display (`DISPLAY_SDL`), the buttons (`BUTTON_SDL`, the keyboard) and the
 touchscreen (`TOUCH_SDL`, the mouse). It runs on the main thread, as macOS
 requires.
+
+A native build is linked without the firmware linker script
+(`PBL_NO_LINKER_SCRIPT`, decided in `cmake/modules/linker.cmake`). Code that
+gathers objects from many files, like the shell commands, then uses
+`PBL_UNSORTED_SECTION()`: the host linker collects the section on its own but
+cannot sort it, so the shell picks commands by name when looking them up.
 
 Things the linker script provides on the target, such as the heaps, the app
 RAM and the build ID, are plain objects in `soc/posix/memory.c`. Firmware

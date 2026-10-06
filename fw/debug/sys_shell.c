@@ -16,14 +16,16 @@
 #include "system/reboot_reason.h"
 #include "system/reset.h"
 
-#include <cmsis_core.h>
-
 #include <errno.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
 
-#ifndef CONFIG_RELEASE
+// The delay audit counts Cortex-M cycles.
+#if !defined(CONFIG_RELEASE) && defined(CONFIG_CPU_CORTEX_M)
+#define AUDIT_DELAY 1
+#include <cmsis_core.h>
+
 #include "system/profiler.h"
 #endif
 
@@ -148,7 +150,7 @@ static int prv_cmd_waste_time(const struct pbl_shell *sh, size_t argc, char **ar
   return 0;
 }
 
-#ifndef CONFIG_RELEASE
+#ifdef AUDIT_DELAY
 static int prv_cmd_audit_delay(const struct pbl_shell *sh, size_t argc, char **argv) {
   profiler_init();
 
@@ -190,7 +192,7 @@ PBL_SHELL_SUBCMD_ADD(sub_sys, factory_reset, NULL, "Factory reset [fast]", prv_c
 PBL_SHELL_SUBCMD_ADD(sub_sys, bootbit, NULL, "Set a boot bit <bit> <0|1>", prv_cmd_bootbit, 3, 0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, waste_time, NULL, "Busy-wait on the timer task <count> <delay_ms>",
                      prv_cmd_waste_time, 3, 0);
-#ifndef CONFIG_RELEASE
+#ifdef AUDIT_DELAY
 PBL_SHELL_SUBCMD_ADD(sub_sys, audit_delay, NULL, "Audit the accuracy of delay_us",
                      prv_cmd_audit_delay, 0, 0);
 #endif

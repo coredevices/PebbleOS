@@ -12,27 +12,100 @@
 
 #include "pbl/services/system_task.h"
 
-extern const struct pbl_shell_cmd __pbl_shell_root_cmds_start[];
-extern const struct pbl_shell_cmd __pbl_shell_root_cmds_end[];
-
 #define ESC_NONE  0
 #define ESC_START 1
 #define ESC_CSI   2
 
-static const struct pbl_shell_cmd *prv_level_get(const struct pbl_shell_cmd *parent, size_t idx) {
-  const struct pbl_shell_cmd *cmd;
+static const struct pbl_shell_cmd *prv_array_get(const struct pbl_shell_cmd *cmds, size_t idx) {
+  return (cmds[idx].syntax != NULL) ? &cmds[idx] : NULL;
+}
 
-  if (parent == NULL) {
-    cmd = &__pbl_shell_root_cmds_start[idx];
-    return (cmd < __pbl_shell_root_cmds_end) ? cmd : NULL;
+#ifndef PBL_NO_LINKER_SCRIPT
+// The linker script gathers the root commands sorted by name, and the entries of each set
+// between the set's two markers.
+
+extern const struct pbl_shell_cmd __pbl_shell_root_cmds_start[];
+extern const struct pbl_shell_cmd __pbl_shell_root_cmds_end[];
+
+static const struct pbl_shell_cmd *prv_root_get(size_t idx) {
+  const struct pbl_shell_cmd *cmd = &__pbl_shell_root_cmds_start[idx];
+  return (cmd < __pbl_shell_root_cmds_end) ? cmd : NULL;
+}
+
+static const struct pbl_shell_cmd *prv_subcmd_get(const struct pbl_shell_cmd *subcmd, size_t idx) {
+  return prv_array_get(subcmd, idx);
+}
+#else
+// Without the linker script the commands are gathered unsorted, and the entries of a set apart
+// from each other, each naming its set: pick them by name when looked up.
+
+extern const struct pbl_shell_cmd __pbl_shell_root_cmds_start[] PBL_UNSORTED_SECTION_START(
+    pbl_shroot);
+extern const struct pbl_shell_cmd __pbl_shell_root_cmds_end[] PBL_UNSORTED_SECTION_END(pbl_shroot);
+extern const struct pbl_shell_cmd __pbl_shell_sets_start[] PBL_UNSORTED_SECTION_START(pbl_shset);
+extern const struct pbl_shell_cmd __pbl_shell_sets_end[] PBL_UNSORTED_SECTION_END(pbl_shset);
+extern const struct pbl_shell_subcmd_entry __pbl_shell_subcmds_start[] PBL_UNSORTED_SECTION_START(
+    pbl_shsub);
+extern const struct pbl_shell_subcmd_entry __pbl_shell_subcmds_end[] PBL_UNSORTED_SECTION_END(
+    pbl_shsub);
+
+// The idx-th command of a set, or of the root commands if @p set is NULL, in no order.
+static const struct pbl_shell_cmd *prv_unsorted_get(const char *set, size_t idx) {
+  if (set == NULL) {
+    return (&__pbl_shell_root_cmds_start[idx] < __pbl_shell_root_cmds_end)
+               ? &__pbl_shell_root_cmds_start[idx]
+               : NULL;
+  }
+  for (const struct pbl_shell_subcmd_entry *e = __pbl_shell_subcmds_start;
+       e < __pbl_shell_subcmds_end; e++) {
+    if (strcmp(e->set, set) == 0 && idx-- == 0) {
+      return &e->cmd;
+    }
+  }
+  return NULL;
+}
+
+static const struct pbl_shell_cmd *prv_sorted_get(const char *set, size_t idx) {
+  const struct pbl_shell_cmd *prev = NULL;
+
+  for (size_t n = 0; n <= idx; n++) {
+    const struct pbl_shell_cmd *next = NULL;
+    const struct pbl_shell_cmd *cmd;
+    for (size_t i = 0; (cmd = prv_unsorted_get(set, i)) != NULL; i++) {
+      if ((prev == NULL || strcmp(cmd->syntax, prev->syntax) > 0) &&
+          (next == NULL || strcmp(cmd->syntax, next->syntax) < 0)) {
+        next = cmd;
+      }
+    }
+    if (next == NULL) {
+      return NULL;
+    }
+    prev = next;
   }
 
+  return prev;
+}
+
+static const struct pbl_shell_cmd *prv_root_get(size_t idx) {
+  return prv_sorted_get(NULL, idx);
+}
+
+static const struct pbl_shell_cmd *prv_subcmd_get(const struct pbl_shell_cmd *subcmd, size_t idx) {
+  if (subcmd >= __pbl_shell_sets_start && subcmd < __pbl_shell_sets_end) {
+    return prv_sorted_get(subcmd->help, idx);
+  }
+  return prv_array_get(subcmd, idx);
+}
+#endif
+
+static const struct pbl_shell_cmd *prv_level_get(const struct pbl_shell_cmd *parent, size_t idx) {
+  if (parent == NULL) {
+    return prv_root_get(idx);
+  }
   if (parent->subcmd == NULL) {
     return NULL;
   }
-
-  cmd = &parent->subcmd[idx];
-  return (cmd->syntax != NULL) ? cmd : NULL;
+  return prv_subcmd_get(parent->subcmd, idx);
 }
 
 static const struct pbl_shell_cmd *prv_find(const struct pbl_shell_cmd *parent, const char *name) {

@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "pbl/kernel/compiler.h"
+#include "pbl/kernel/section.h"
 
 /**
  * @defgroup shell Shell
@@ -121,21 +122,44 @@ struct pbl_shell_cmd {
 /**
  * @brief Define a subcommand set that any file can extend with PBL_SHELL_SUBCMD_ADD().
  *
- * Entries are sorted by name at link time.
+ * Entries are sorted by name by the linker script, or when looked up in builds without one
+ * (@c PBL_NO_LINKER_SCRIPT).
  *
  * @param _name Name of the set, usable as the @c _subcmd of a command.
  */
+#ifdef PBL_NO_LINKER_SCRIPT
+#define PBL_SHELL_SUBCMD_SET_CREATE(_name)                                                 \
+  static const struct pbl_shell_cmd _name[1] PBL_USED PBL_UNSORTED_SECTION(pbl_shset) = {{ \
+    .help = #_name,                                                                        \
+  }}
+#else
 #define PBL_SHELL_SUBCMD_SET_CREATE(_name)                              \
   static const struct pbl_shell_cmd _name[0] PBL_USED PBL_ALIGNED(4)    \
       PBL_SECTION(".pbl_shell_subcmds." #_name ".!");                   \
   static const struct pbl_shell_cmd _name##_end PBL_USED PBL_ALIGNED(4) \
       PBL_SECTION(".pbl_shell_subcmds." #_name ".~") = PBL_SHELL_SUBCMD_SET_END
+#endif
 
 /** @cond INTERNAL_HIDDEN */
+#ifdef PBL_NO_LINKER_SCRIPT
+/* A set's entries, scattered in their section, name the set they belong to. */
+struct pbl_shell_subcmd_entry {
+  const char *set;
+  struct pbl_shell_cmd cmd;
+};
+
+#define PBL_SHELL_SUBCMD_ADD_IMPL(_id, _set, _syntax, _subcmd, _help, _handler, _mand, _opt)       \
+  static const struct pbl_shell_subcmd_entry pbl_shell_subcmd_##_id PBL_USED PBL_UNSORTED_SECTION( \
+      pbl_shsub) = {                                                                               \
+    .set = #_set,                                                                                  \
+    .cmd = PBL_SHELL_CMD_ARG(_syntax, _subcmd, _help, _handler, _mand, _opt),                      \
+  }
+#else
 #define PBL_SHELL_SUBCMD_ADD_IMPL(_id, _set, _syntax, _subcmd, _help, _handler, _mand, _opt) \
   static const struct pbl_shell_cmd pbl_shell_subcmd_##_id PBL_USED PBL_ALIGNED(4)           \
       PBL_SECTION(".pbl_shell_subcmds." #_set "." #_syntax) =                                \
           PBL_SHELL_CMD_ARG(_syntax, _subcmd, _help, _handler, _mand, _opt)
+#endif
 
 #define PBL_SHELL_SUBCMD_ADD_ID(_id, ...) PBL_SHELL_SUBCMD_ADD_IMPL(_id, __VA_ARGS__)
 /** @endcond */
@@ -159,7 +183,8 @@ struct pbl_shell_cmd {
 /**
  * @brief Register a root command with an argument count check.
  *
- * Root commands are sorted by name at link time.
+ * Root commands are sorted by name by the linker script, or when looked up in builds without
+ * one.
  *
  * @param _syntax Name, an identifier.
  * @param _subcmd Subcommands, or NULL.
@@ -168,10 +193,16 @@ struct pbl_shell_cmd {
  * @param _mand Mandatory arguments, the command name included; 0 skips the check.
  * @param _opt Optional arguments, or @ref PBL_SHELL_OPT_ARG_MAX.
  */
+#ifdef PBL_NO_LINKER_SCRIPT
+#define PBL_SHELL_CMD_ARG_REGISTER(_syntax, _subcmd, _help, _handler, _mand, _opt)              \
+  static const struct pbl_shell_cmd pbl_shell_root_cmd_##_syntax PBL_USED PBL_UNSORTED_SECTION( \
+      pbl_shroot) = PBL_SHELL_CMD_ARG(_syntax, _subcmd, _help, _handler, _mand, _opt)
+#else
 #define PBL_SHELL_CMD_ARG_REGISTER(_syntax, _subcmd, _help, _handler, _mand, _opt)       \
   static const struct pbl_shell_cmd pbl_shell_root_cmd_##_syntax PBL_USED PBL_ALIGNED(4) \
       PBL_SECTION(".pbl_shell_root_cmds." #_syntax) =                                    \
           PBL_SHELL_CMD_ARG(_syntax, _subcmd, _help, _handler, _mand, _opt)
+#endif
 
 /**
  * @brief Register a root command without an argument count check.
