@@ -2,6 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(excludes)
+if(CONFIG_RECOVERY_FW)
+  list(APPEND excludes accessory_transport_service.c)
+else()
+  list(APPEND excludes accessory_transport_service_prf.c)
+endif()
 if(NOT CONFIG_BT_GH3X2X_TUNING_SERVICE)
   list(APPEND excludes gh3x2x_tuning_service.c)
 endif()

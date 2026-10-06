@@ -15,6 +15,7 @@
 #define ACCESSORY_TRANSPORT_MAX_PAYLOAD 2048
 
 //! Register the AccessoryNotifications transport GATT service.
+//! Recovery firmware retains the service layout but rejects notification operations.
 //! @see accessory_transport_service.c
 void accessory_transport_service_init(void);
 
