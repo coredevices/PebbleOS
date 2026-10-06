@@ -4,7 +4,7 @@
 #include "pbl/kernel/thread.h"
 #include "pbl/services/boot_splash.h"
 
-#if defined(CONFIG_PBLBOOT) || defined(CONFIG_QEMU)
+#if defined(CONFIG_PBLBOOT) || defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 
 #include "board/display.h"
 #include "board/splash.h"
@@ -15,12 +15,12 @@
 #include <string.h>
 
 // Platform-specific colors: PebbleOS uses ARGB2222 (GColor8), not raw RGB332
-#ifdef CONFIG_QEMU
-// QEMU display natively renders ARGB2222
+#if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
+// QEMU and native displays render ARGB2222
 #define SPLASH_COLOR_WHITE 0xFF // A=3, R=3, G=3, B=3
 #define SPLASH_COLOR_BLACK 0xC0 // A=3, R=0, G=0, B=0
 #define SPLASH_COLOR_LGRAY 0xEA // A=3, R=2, G=2, B=2
-// QEMU boot splash always uses 8bpp framebuffer regardless of platform bit depth
+// Their boot splash always uses an 8bpp framebuffer regardless of platform bit depth
 #define BOOT_SPLASH_FB_BYTES (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT)
 #else
 // Hardware displays: the compositor handles GColor8 → native conversion,

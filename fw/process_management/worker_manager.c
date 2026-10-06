@@ -7,6 +7,7 @@
 
 // Pebble stuff
 #include "kernel/pbl_malloc.h"
+#include "kernel/memory_layout.h"
 #include "kernel/util/segment.h"
 #include "kernel/util/task_init.h"
 #include "pbl/mcu/privilege.h"
@@ -151,7 +152,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   // Set up the worker's memory and load the binary into it.
   const size_t worker_segment_size = prv_get_worker_segment_size(app_md);
   // The stack guard is counted as part of the app segment size...
-  const size_t stack_guard_size = (uintptr_t)__stack_guard_size__;
+  const size_t stack_guard_size = MEMORY_LAYOUT_STACK_GUARD_SIZE;
   // ...and is carved out of the stack.
   const size_t stack_size = prv_get_worker_stack_size(app_md) - stack_guard_size;
 

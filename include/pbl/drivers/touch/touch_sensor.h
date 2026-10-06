@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 /**
  * @defgroup drivers_touch Touch sensor
  * @ingroup drivers

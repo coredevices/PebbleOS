@@ -73,7 +73,7 @@ typedef struct PBL_PACKED {
   char region_name[TIMEZONE_NAME_LENGTH]; // timezone name string
 } TimezoneCBData;
 
-#ifndef UNITTEST
+#if !UNITTEST && __SIZEOF_POINTER__ == 4
 _Static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
 #endif
 

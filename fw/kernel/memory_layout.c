@@ -65,9 +65,7 @@ void memory_layout_dump_mpu_regions_to_dbgserial(void) {
   }
 }
 
-#ifdef UNITTEST
-static const uint32_t __privileged_functions_start__ = 0;
-static const uint32_t __privileged_functions_size__ = 0;
+#if defined(UNITTEST) || defined(CONFIG_ARCH_POSIX)
 static const uint32_t __unpriv_ro_bss_start__ = 0;
 static const uint32_t __unpriv_ro_bss_size__ = 0;
 static const uint32_t __isr_stack_start__ = 0;
@@ -84,8 +82,6 @@ static const uint32_t __FLASH_size__ = 0;
 static const uint32_t __kernel_main_stack_start__ = 0;
 static const uint32_t __kernel_bg_stack_start__ = 0;
 #else
-extern const uint32_t __privileged_functions_start__[];
-extern const uint32_t __privileged_functions_size__[];
 extern const uint32_t __unpriv_ro_bss_start__[];
 extern const uint32_t __unpriv_ro_bss_size__[];
 extern const uint32_t __isr_stack_start__[];

@@ -22,7 +22,7 @@
 #define CORE_DUMP_MAX_IMAGES 2
 #elif defined(CONFIG_SOC_SF32LB52)
 #define CORE_DUMP_MAX_IMAGES 1
-#elif defined(CONFIG_QEMU)
+#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 #define CORE_DUMP_MAX_IMAGES 1
 #else
 #error "Unsupported micro family"

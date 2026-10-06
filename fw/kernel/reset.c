@@ -14,6 +14,10 @@
 #include <pbl/drivers/flash.h>
 #include "system/reboot_reason.h"
 
+#ifdef CONFIG_SOC_POSIX
+#include "posix_host.h"
+#endif
+
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
 #include "pbl/kernel/compiler.h"
@@ -59,6 +63,8 @@ PBL_NORETURN void system_hard_reset(void) {
 
 #ifdef CONFIG_SOC_SF32LB52
   HAL_PMU_Reboot();
+#elif defined(CONFIG_SOC_POSIX)
+  posix_host_reboot();
 #else
   NVIC_SystemReset();
 #endif

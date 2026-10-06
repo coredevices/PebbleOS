@@ -6,7 +6,7 @@
 #include "system/bootbits.h"
 #include "system/reset.h"
 
-#include <cmsis_core.h>
+#include "pbl/kernel/irq.h"
 
 void prepare_for_software_failure(void) {
 #ifdef CONFIG_PULSE_EVERYWHERE
@@ -24,7 +24,7 @@ PBL_NORETURN void reset_due_to_software_failure(void) {
 #ifndef CONFIG_WATCHDOG
   // Don't reset right away, leave it in a state we can inspect
 
-  __disable_irq();
+  pbl_irq_lock();
   while (1) {
     continue;
   }

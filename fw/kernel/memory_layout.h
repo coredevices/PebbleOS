@@ -6,8 +6,21 @@
 #include <pbl/mcu/mpu.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
+
+// Sizes the linker script encodes as symbol addresses; the symbols are
+// declared by the users. Builds without the linker script use fixed sizes.
+#ifdef PBL_NO_LINKER_SCRIPT
+#define MEMORY_LAYOUT_STACK_GUARD_SIZE       ((uintptr_t)0)
+#define MEMORY_LAYOUT_KERNEL_MAIN_STACK_SIZE ((uintptr_t)4096)
+#define MEMORY_LAYOUT_KERNEL_BG_STACK_SIZE   ((uintptr_t)4096)
+#else
+#define MEMORY_LAYOUT_STACK_GUARD_SIZE       ((uintptr_t)__stack_guard_size__)
+#define MEMORY_LAYOUT_KERNEL_MAIN_STACK_SIZE ((uintptr_t)__kernel_main_stack_size__)
+#define MEMORY_LAYOUT_KERNEL_BG_STACK_SIZE   ((uintptr_t)__kernel_bg_stack_size__)
+#endif
 
 enum MemoryRegionAssignments {
 // SF32LB52: SiFli's system_bf0_ap.c programs MPU regions 0..4 in

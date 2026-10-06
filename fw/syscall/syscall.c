@@ -18,8 +18,10 @@
 #include "pbl/services/time.h"
 
 DEFINE_SYSCALL(int, sys_test, int arg) {
-  uint32_t ipsr;
+  uint32_t ipsr = 0;
+#ifdef __arm__
   __asm volatile("mrs %0, ipsr" : "=r"(ipsr));
+#endif
 
   PBL_LOG_DBG("Inside test kernel function! Privileged? %s Arg %u IPSR: %" PRIu32,
               bool_to_str(mcu_state_is_privileged()), arg, ipsr);

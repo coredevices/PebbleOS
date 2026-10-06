@@ -26,7 +26,19 @@ bool resource_storage_builtin_bytes_are_readonly(const void *bytes) {
   if (bytes == NULL) {
     return false;
   }
+#ifdef CONFIG_ARCH_POSIX
+  // No flash region to check against: look for the resource itself.
+  for (unsigned int i = 0; i < g_num_builtin_resources; ++i) {
+    const uint8_t *start = g_builtin_resources[i].address;
+    if ((const uint8_t *)bytes >= start &&
+        (const uint8_t *)bytes < start + g_builtin_resources[i].num_bytes) {
+      return true;
+    }
+  }
+  return false;
+#else
   return memory_layout_is_pointer_in_region(memory_layout_get_microflash_region(), bytes);
+#endif
 }
 
 static const uint8_t *resource_storage_builtin_readonly_bytes(ResourceStoreEntry *entry,

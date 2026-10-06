@@ -28,8 +28,16 @@ else()
 endif()
 
 file(GLOB sources CONFIGURE_DEPENDS *.c)
+if(CONFIG_ARCH_POSIX)
+  pbl_filter_sources(sources EXCLUDE hardfault_handler.c)
+endif()
 pbl_library()
 pbl_library_sources(${sources})
+# A native build's main() is the host process entry; the firmware's own
+# one is entered from the kernel thread it hands over to.
+if(CONFIG_ARCH_POSIX)
+  set_property(SOURCE main.c APPEND PROPERTY COMPILE_DEFINITIONS main=pbl_fw_main)
+endif()
 
 if(NOT CONFIG_RECOVERY_FW)
   # One universal catalog, independent of board and enabled services.

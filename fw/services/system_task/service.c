@@ -6,6 +6,7 @@
 #include <pbl/logging/logging.h>
 
 #include <pbl/task_wdt/task_wdt.h>
+#include "kernel/memory_layout.h"
 #include "kernel/pebble_tasks.h"
 #include "process_management/app_manager.h"
 #include "pbl/services/new_timer/new_timer.h"
@@ -140,8 +141,8 @@ void system_task_init(void) {
     .entry = system_task_main,
     .prio = SYSTEM_TASK_PRIORITY,
     .privileged = true,
-    .stack = (void *)((uintptr_t)__kernel_bg_stack_start__ + (uintptr_t)__stack_guard_size__),
-    .stack_size = (uintptr_t)__kernel_bg_stack_size__ - (uintptr_t)__stack_guard_size__,
+    .stack = (void *)((uintptr_t)__kernel_bg_stack_start__ + MEMORY_LAYOUT_STACK_GUARD_SIZE),
+    .stack_size = MEMORY_LAYOUT_KERNEL_BG_STACK_SIZE - MEMORY_LAYOUT_STACK_GUARD_SIZE,
   };
 
   pebble_task_create(PebbleTask_KernelBackground, &attr);

@@ -19,7 +19,7 @@
 #include "pbl/kernel/compiler.h"
 #endif
 
-#ifdef CONFIG_QEMU
+#if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 // Provided by the QEMU RTC driver
 extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
 extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);

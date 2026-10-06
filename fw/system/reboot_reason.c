@@ -12,9 +12,16 @@
 #include <bf0_hal.h>
 #endif
 
-#ifdef CONFIG_QEMU
+#if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
 extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
+#endif
+
+#ifdef CONFIG_SOC_POSIX
+// The host has no interrupt priority masking.
+#define prv_get_basepri() (0U)
+#else
+#define prv_get_basepri() __get_BASEPRI()
 #endif
 
 _Static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
@@ -26,7 +33,7 @@ void reboot_reason_set(RebootReason *reason) {
   if (retained_read(REBOOT_REASON_REGISTER_1)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
+    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -42,7 +49,7 @@ void reboot_reason_set(RebootReason *reason) {
   if (HAL_Get_backup(REBOOT_REASON_REGISTER_1)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
+    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -52,13 +59,13 @@ void reboot_reason_set(RebootReason *reason) {
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
-#elif defined(CONFIG_QEMU)
+#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   uint32_t *raw = (uint32_t *)reason;
 
   if (RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
-    if (!mcu_state_is_isr() && __get_BASEPRI() == 0 && pbl_kernel_is_running()) {
+    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -82,7 +89,7 @@ void reboot_reason_set_restarted_safely(void) {
 #elif defined(CONFIG_SOC_SF32LB52)
   uint32_t *raw = (uint32_t *)&reason;
   HAL_Set_backup(REBOOT_REASON_REGISTER_1, *raw);
-#elif defined(CONFIG_QEMU)
+#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   uint32_t *raw = (uint32_t *)&reason;
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, *raw);
 #endif
@@ -101,7 +108,7 @@ void reboot_reason_get(RebootReason *reason) {
   raw[1] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_PC);
   raw[2] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_LR);
   raw[3] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_CALLBACK);
-#elif defined(CONFIG_QEMU)
+#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   uint32_t *raw = (uint32_t *)reason;
   raw[0] = RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1);
   raw[1] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_PC);
@@ -121,7 +128,7 @@ void reboot_reason_clear(void) {
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, 0);
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, 0);
   HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
-#elif defined(CONFIG_QEMU)
+#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, 0);
   RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_PC, 0);
   RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_LR, 0);
@@ -134,7 +141,7 @@ uint32_t reboot_get_slot_of_last_launched_app(void) {
   return retained_read(SLOT_OF_LAST_LAUNCHED_APP);
 #elif defined(CONFIG_SOC_SF32LB52)
   return HAL_Get_backup(SLOT_OF_LAST_LAUNCHED_APP);
-#elif defined(CONFIG_QEMU)
+#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   return RTC_ReadBackupRegister(SLOT_OF_LAST_LAUNCHED_APP);
 #endif
 }
@@ -144,7 +151,7 @@ void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
   retained_write(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #elif defined(CONFIG_SOC_SF32LB52)
   HAL_Set_backup(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
-#elif defined(CONFIG_QEMU)
+#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   RTC_WriteBackupRegister(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #endif
 }

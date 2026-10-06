@@ -6,13 +6,25 @@
 #include "pbl/services/analytics/analytics.h"
 #include "pbl/util/heap.h"
 
+#ifndef CONFIG_ARCH_POSIX
 #include <cmsis_core.h>
+#endif
 
 #if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
 #include <pbl/shell/shell.h>
 #endif
 
 static Heap s_kernel_heap;
+
+#ifdef CONFIG_ARCH_POSIX
+// Kernel threads run one at a time, and only yield the CPU when they block,
+// which no heap operation does.
+static void prv_heap_lock(void *ctx) {
+}
+
+static void prv_heap_unlock(void *ctx) {
+}
+#else
 static bool s_interrupts_disabled_by_heap;
 static uint32_t s_pri_mask; // cache basepri mask we restore to in heap_unlock
 
@@ -35,6 +47,7 @@ static void prv_heap_unlock(void *ctx) {
     s_interrupts_disabled_by_heap = false;
   }
 }
+#endif
 
 void kernel_heap_init(void) {
   extern int _heap_start;

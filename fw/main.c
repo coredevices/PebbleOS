@@ -125,8 +125,8 @@ int main(void) {
     .entry = main_task,
     .prio = PBL_PRIO_IDLE + 3,
     .privileged = true,
-    .stack = (void *)((uintptr_t)__kernel_main_stack_start__ + (uintptr_t)__stack_guard_size__),
-    .stack_size = (uintptr_t)__kernel_main_stack_size__ - (uintptr_t)__stack_guard_size__,
+    .stack = (void *)((uintptr_t)__kernel_main_stack_start__ + MEMORY_LAYOUT_STACK_GUARD_SIZE),
+    .stack_size = MEMORY_LAYOUT_KERNEL_MAIN_STACK_SIZE - MEMORY_LAYOUT_STACK_GUARD_SIZE,
   };
 
   pebble_task_create(PebbleTask_KernelMain, &attr);

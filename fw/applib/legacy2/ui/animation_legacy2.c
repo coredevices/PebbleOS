@@ -50,7 +50,7 @@ static void animation_legacy2_private_run(AnimationLegacy2Scheduler *animation_l
 //
 // When such a time comes that more ranges are required, the spare two
 // bits in AnimationLegacy2.curve can be utilized.
-#ifndef UNITTEST
+#if !UNITTEST && __SIZEOF_POINTER__ == 4
 _Static_assert(sizeof(AnimationLegacy2) <= 40, "Breaking back-compatibility!");
 _Static_assert(sizeof(AnimationLegacy2Scheduler) <= 16, "Breaking back-compatibility!");
 #endif

@@ -68,7 +68,7 @@ typedef struct PBL_PACKED {
   uint8_t data[];
 } AppInboxMessageHeader;
 
-#ifndef UNITTEST
+#if !UNITTEST && __SIZEOF_POINTER__ == 4
 _Static_assert(sizeof(AppInboxMessageHeader) == 8,
                "The size of AppInboxMessageHeader cannot grow beyond 8 bytes!");
 #endif

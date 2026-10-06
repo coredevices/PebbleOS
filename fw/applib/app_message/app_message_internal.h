@@ -107,7 +107,7 @@ typedef struct {
   uint8_t data[];
 } AppMessageReceiverHeader;
 
-#ifndef UNITTEST
+#if !UNITTEST && __SIZEOF_POINTER__ == 4
 _Static_assert(sizeof(AppMessageReceiverHeader) == 12,
                "The size of AppMessageReceiverHeader cannot grow beyond 12 bytes!");
 #endif

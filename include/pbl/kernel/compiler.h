@@ -123,11 +123,12 @@
 /**
  * @brief Place the symbol in a linker section.
  *
- * A no-op in unit tests, whose host object format rejects the firmware's section names.
+ * A no-op in unit tests and in builds linked without the firmware linker script
+ * (@c PBL_NO_LINKER_SCRIPT), where nothing would gather the sections.
  *
  * @param name Section name, as a string.
  */
-#if UNITTEST
+#if UNITTEST || defined(PBL_NO_LINKER_SCRIPT)
 #define PBL_SECTION(name)
 #else
 #define PBL_SECTION(name) PBL_SECTION_IMPL(name)

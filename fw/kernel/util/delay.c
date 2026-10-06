@@ -9,6 +9,8 @@
 #include <soc/nrfx_coredep.h>
 #elif defined(CONFIG_SOC_SF32LB52)
 #include <bf0_hal.h>
+#elif defined(CONFIG_SOC_POSIX)
+#include <unistd.h>
 #endif
 
 #ifdef CONFIG_SOC_NRF52
@@ -43,5 +45,13 @@ void delay_init(void) {
   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
   DWT->CYCCNT = 0;
   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
+
+#elif defined(CONFIG_SOC_POSIX)
+void PBL_NOINLINE delay_us(uint32_t us) {
+  usleep(us);
+}
+
+void delay_init(void) {
 }
 #endif
