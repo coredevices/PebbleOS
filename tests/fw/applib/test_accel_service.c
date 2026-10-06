@@ -103,9 +103,18 @@ uint32_t sys_accel_manager_get_max_samples_per_update(void) {
   return 25;
 }
 
+// The real manager only accepts the four supported rates
 int sys_accel_manager_set_sampling_rate(AccelManagerState *state, AccelSamplingRate rate) {
   prv_assert_live(state);
-  return 0;
+  switch (rate) {
+    case ACCEL_SAMPLING_10HZ:
+    case ACCEL_SAMPLING_25HZ:
+    case ACCEL_SAMPLING_50HZ:
+    case ACCEL_SAMPLING_100HZ:
+      return 0;
+    default:
+      return -1;
+  }
 }
 
 int sys_accel_manager_set_sample_buffer(AccelManagerState *state, AccelRawData *buffer,
@@ -342,6 +351,18 @@ void test_accel_service__subscribing_again_resets_the_sampling_rate(void) {
   prv_deliver(2);
 
   cl_assert_equal_i(s_timestamps[1] - s_timestamps[0], 40);
+}
+
+//! A rate the manager turns down isn't kept. The samples still arrive at the old rate, so spacing
+//! their timestamps for the rejected one gets them wrong.
+void test_accel_service__a_rejected_sampling_rate_is_not_kept(void) {
+  accel_data_service_subscribe(2, prv_data_handler);
+  accel_service_set_sampling_rate(ACCEL_SAMPLING_100HZ);
+  accel_service_set_sampling_rate((AccelSamplingRate)30);
+
+  prv_deliver(2);
+
+  cl_assert_equal_i(s_timestamps[1] - s_timestamps[0], 10);
 }
 
 // Changing the subscription inside the data handler

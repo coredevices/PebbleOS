@@ -396,8 +396,12 @@ int accel_session_set_sampling_rate(AccelServiceState *state, AccelSamplingRate 
       (!state->data_handler && !state->raw_data_handler && !state->raw_data_handler_deprecated)) {
     return -1;
   }
-  state->sampling_rate = rate;
-  return sys_accel_manager_set_sampling_rate(state->manager_state, rate);
+  int result = sys_accel_manager_set_sampling_rate(state->manager_state, rate);
+  // A rate the manager rejects leaves the driver sampling at the old rate, so the old rate stays.
+  if (result == 0) {
+    state->sampling_rate = rate;
+  }
+  return result;
 }
 
 // -----------------------------------------------------------------------------------------------
