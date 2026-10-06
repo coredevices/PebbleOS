@@ -57,7 +57,7 @@ PBL_NORETURN void passert_failed(const char *filename, int line_number, const ch
 
 PBL_NORETURN void passert_failed_hashed(uint32_t packed_loghash, ...) {
   uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
-  PBL_LOG_ALWAYS("ASSERTION at LR 0x%x", saved_lr);
+  PBL_LOG_ALWAYS("ASSERTION at LR 0x%" PRIxPTR, saved_lr);
 
   va_list fmt_args;
   va_start(fmt_args, packed_loghash);
@@ -89,7 +89,7 @@ PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr) {
 }
 
 PBL_NORETURN void passert_failed_hashed_no_message(void) {
-  passert_failed_hashed_no_message_with_lr((uint32_t)PBL_RETURN_ADDRESS(0));
+  passert_failed_hashed_no_message_with_lr((uint32_t)(uintptr_t)PBL_RETURN_ADDRESS(0));
 }
 
 PBL_NORETURN void passert_failed_no_message_with_lr(const char *filename, int line_number,
@@ -135,8 +135,7 @@ void passert_check_not_task(PebbleTask unexpected_task) {
 //! Assert function called by the STM peripheral library's
 //! 'assert_param' method. See stm32f2xx_conf.h for more information.
 void assert_failed(uint8_t *file, uint32_t line) {
-  register uintptr_t lr __asm("lr");
-  uintptr_t saved_lr = lr;
+  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
 
   handle_passert_failed((const char *)file, line, saved_lr, "STM32",
                         "STM32 peripheral library tripped an assert");
@@ -147,7 +146,7 @@ PBL_NORETURN void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
   if (heap_ptr) {
     heap_calc_totals(heap_ptr, &used, &free_bytes, &max_free);
   }
-  PBL_LOG_ALWAYS("CROAK OOM: Failed to alloc %d bytes at LR: 0x%x (used %u, free %u, max_free %u)",
+  PBL_LOG_ALWAYS("CROAK OOM: Failed to alloc %zu bytes at LR: 0x%x (used %u, free %u, max_free %u)",
                  bytes, saved_lr, used, free_bytes, max_free);
 
 #ifdef CONFIG_MALLOC_INSTRUMENTATION

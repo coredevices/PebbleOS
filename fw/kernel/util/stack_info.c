@@ -8,12 +8,12 @@
 extern uint32_t __isr_stack_start__[];
 
 uint32_t stack_free_bytes(void) {
-  // Get the current SP
-  register uint32_t SP __asm("sp");
-  uint32_t cur_sp = SP;
+  // The current SP, give or take a few bytes
+  uint8_t marker;
+  uintptr_t cur_sp = (uintptr_t)&marker;
 
   // Default stack
-  uint32_t start = (uint32_t)__isr_stack_start__;
+  uintptr_t start = (uintptr_t)__isr_stack_start__;
 
   // On ISR stack?
   if (!mcu_state_is_isr()) {
@@ -22,7 +22,7 @@ uint32_t stack_free_bytes(void) {
       // NULL before the first thread starts
       struct pbl_thread_stack_info info;
       pbl_thread_stack_info(thread, &info);
-      start = (uint32_t)info.start;
+      start = (uintptr_t)info.start;
     }
   }
 

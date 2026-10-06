@@ -25,9 +25,7 @@ struct pbl_mutex *bt_lock_get(void) {
 }
 
 void bt_lock(void) {
-  register uint32_t LR __asm("lr");
-  uint32_t myLR = LR;
-  pbl_mutex_lock_lr(&s_bt_lock, PBL_FOREVER, myLR);
+  pbl_mutex_lock_lr(&s_bt_lock, PBL_FOREVER, (uintptr_t)PBL_RETURN_ADDRESS(0));
 }
 
 void bt_unlock(void) {
