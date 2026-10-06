@@ -61,8 +61,9 @@ set(PBL_TEST_INCLUDES_TAIL
   kernel/arch/posix/include
   subsys
   fw
-  fw/applib/vendor/tinflate
-  fw/applib/vendor/uPNG
+  third_party/uzlib/uzlib/src
+  third_party/upng
+  third_party/upng/upng
   third_party/nanopb/nanopb
   third_party/tinymt/TinyMT/tinymt
 )

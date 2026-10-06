@@ -130,8 +130,10 @@ pbl_clar_test(test_graphics_draw_bitmap
     fw/applib/graphics/gtypes.c
     fw/applib/ui/bitmap_layer.c
     fw/applib/ui/layer.c
-    fw/applib/vendor/tinflate/tinflate.c
-    fw/applib/vendor/uPNG/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
+    third_party/upng/upng/upng.c
   PLATFORMS obelix
   TEST_IMAGES
 )
@@ -321,8 +323,10 @@ pbl_clar_test(test_gdraw_command_transforms
 
 pbl_clar_test(test_pdc
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gbitmap.c
     fw/applib/graphics/gbitmap_png.c
     fw/applib/graphics/gcolor_definitions.c
@@ -341,8 +345,10 @@ pbl_clar_test(test_pdc
 
 pbl_clar_test(test_png
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gbitmap.c
     fw/applib/graphics/gbitmap_png.c
     fw/applib/graphics/gcolor_definitions.c
@@ -361,8 +367,10 @@ pbl_clar_test(test_png
 
 pbl_clar_test(test_gbitmap_sequence
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gbitmap.c
     fw/applib/graphics/gbitmap_png.c
     fw/applib/graphics/gbitmap_sequence.c
@@ -384,8 +392,10 @@ pbl_clar_test(test_gbitmap_sequence
 
 pbl_clar_test(test_pbi
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gtypes.c
     fw/applib/graphics/gbitmap.c
     tests/fakes/fake_gbitmap_png.c
@@ -404,8 +414,10 @@ pbl_clar_test(test_pbi
 
 pbl_clar_test(test_palettized_conversion
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gtypes.c
     fw/applib/graphics/gbitmap.c
     fw/applib/graphics/gbitmap_png.c
@@ -439,8 +451,10 @@ pbl_clar_test(test_perimeter
 
 pbl_clar_test(test_bitblt_palette_1bit
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gtypes.c
     fw/applib/graphics/gbitmap.c
     fw/applib/graphics/gbitmap_png.c
@@ -460,8 +474,10 @@ pbl_clar_test(test_bitblt_palette_1bit
 
 pbl_clar_test(test_framebuffer_duma
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gbitmap.c
     fw/applib/graphics/gbitmap_png.c
     fw/applib/graphics/gcolor_definitions.c
@@ -482,8 +498,10 @@ pbl_clar_test(test_framebuffer_duma
 
 pbl_clar_test(test_framebuffer_legacy
   SOURCES
-    fw/applib/vendor/uPNG/upng.c
-    fw/applib/vendor/tinflate/tinflate.c
+    third_party/upng/upng/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
     fw/applib/graphics/gbitmap.c
     fw/applib/graphics/gbitmap_png.c
     fw/applib/graphics/gcolor_definitions.c

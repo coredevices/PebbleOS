@@ -18,7 +18,7 @@
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/vibes.h"
 #include "applib/applib_malloc.auto.h"
-#include "applib/vendor/tinflate/tinflate.h"
+#include "uzlib.h"
 
 #include <string.h>
 #include "pbl/kernel/compiler.h"
@@ -948,7 +948,7 @@ static void set_color_orientation(GlobeView *view, int32_t latitude_e2, int32_t 
 
 // The globe blobs are stored raw-deflate compressed in the pack ([u32 LE
 // inflated_size][raw DEFLATE stream], tools/deflate_resource.py) and inflated
-// here via the firmware's tinflate (the same raw-deflate decoder uPNG uses).
+// here via uzlib (the same raw-deflate decoder uPNG uses).
 // Buffers come from malloc_try — the app-task heap free() and the allocator
 // gdraw_command_sequence_destroy's munmap-or-free path pair with, so the
 // inflated BW sequence can be handed to the normal destroy path. The croaking
@@ -968,15 +968,24 @@ static void *prv_load_inflated(uint32_t res_id, uint32_t *out_size) {
   if (resource_load(handle, cbuf, csize) == csize) {
     memcpy(&inflated_size, cbuf, sizeof(inflated_size)); // LE prefix
     out = malloc_try(inflated_size);
-    if (out) {
-      unsigned int dlen = inflated_size;
-      if (tinflate_uncompress(out, &dlen, cbuf + sizeof(uint32_t),
-                              (unsigned int)(csize - sizeof(uint32_t))) != TINF_OK ||
-          dlen != inflated_size) {
+    TINF_DATA *d = malloc_try(sizeof(*d));
+    if (out && d) {
+      uzlib_uncompress_init(d, NULL, 0);
+      d->source = cbuf + sizeof(uint32_t);
+      d->source_limit = cbuf + csize;
+      d->source_read_cb = NULL;
+      d->dest_start = out;
+      d->dest = out;
+      d->dest_limit = (uint8_t *)out + inflated_size;
+      if (uzlib_uncompress(d) < 0 || d->dest != d->dest_limit) {
         free(out);
         out = NULL;
       }
+    } else {
+      free(out);
+      out = NULL;
     }
+    free(d);
   }
   free(cbuf);
   if (out && out_size)

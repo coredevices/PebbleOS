@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-pbl_include_directories(. applib/vendor/uPNG applib/vendor/tinflate)
+pbl_include_directories(.)
 
 add_subdirectory(drivers)
 add_subdirectory(board)
@@ -36,5 +36,5 @@ if(NOT CONFIG_RECOVERY_FW)
   # One universal catalog, independent of board and enabled services.
   file(GLOB_RECURSE pot_sources CONFIGURE_DEPENDS *.c *.h *.def)
   pbl_firmware_pot(${PROJECT_BINARY_DIR}/pebbleos.pot ${pot_sources}
-    EXCLUDE apps/prf/** applib/vendor/**)
+    EXCLUDE apps/prf/**)
 endif()

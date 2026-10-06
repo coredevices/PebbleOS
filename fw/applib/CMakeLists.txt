@@ -1,16 +1,12 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(vendor/tinflate)
-add_subdirectory(vendor/uPNG)
-
 # The graphics code ships one implementation per screen colour depth.
 if(CONFIG_SCREEN_COLOR_DEPTH_BITS EQUAL 1)
   set(excl 8_bit/**)
 else()
   set(excl 1_bit/**)
 endif()
-list(APPEND excl vendor)
 
 if(CONFIG_RECOVERY_FW)
   list(APPEND excl

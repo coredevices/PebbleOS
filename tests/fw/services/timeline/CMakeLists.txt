@@ -167,8 +167,10 @@ pbl_clar_test(test_timeline_layouts
     fw/applib/ui/text_layer.c
     fw/applib/ui/text_layer_flow.c
     fw/applib/ui/window.c
-    fw/applib/vendor/tinflate/tinflate.c
-    fw/applib/vendor/uPNG/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
+    third_party/upng/upng/upng.c
     fw/apps/system/timeline/text_node.c
     fw/board/displays/display_getafix.c
     fw/drivers/flash/flash_crc.c

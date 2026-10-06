@@ -69,8 +69,7 @@ target_include_directories(pebble_renderer PRIVATE
   "${PEBBLEOS_ROOT}/kernel/arch/posix/include"
   "${PEBBLEOS_ROOT}/subsys"
   "${PEBBLEOS_ROOT}/fw"
-  "${PEBBLEOS_ROOT}/fw/applib/vendor/uPNG"
-  "${PEBBLEOS_ROOT}/fw/applib/vendor/tinflate"
+  "${PEBBLEOS_ROOT}/third_party/upng/upng"
   "${PEBBLEOS_ROOT}/tests/fixtures"
 )
 target_compile_definitions(pebble_renderer PRIVATE

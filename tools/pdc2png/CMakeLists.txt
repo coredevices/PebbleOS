@@ -8,8 +8,10 @@ file(GLOB pdc2png_sources CONFIGURE_DEPENDS src/*.c)
 
 add_executable(pdc2png
   ${pdc2png_sources}
-  ${PBL_BASE}/fw/applib/vendor/uPNG/upng.c
-  ${PBL_BASE}/fw/applib/vendor/tinflate/tinflate.c
+  ${PBL_BASE}/third_party/upng/upng/upng.c
+  ${PBL_BASE}/third_party/uzlib/uzlib/src/tinflate.c
+  ${PBL_BASE}/third_party/uzlib/uzlib/src/adler32.c
+  ${PBL_BASE}/third_party/uzlib/uzlib/src/crc32.c
   ${PBL_BASE}/fw/applib/graphics/8_bit/bitblt_private.c
   ${PBL_BASE}/fw/applib/graphics/8_bit/framebuffer.c
   ${PBL_BASE}/fw/applib/graphics/bitblt.c
@@ -40,8 +42,9 @@ target_include_directories(pdc2png PRIVATE
   ${PBL_BASE}/lib/c/include
   ${PBL_BASE}/tests/stubs
   ${PBL_BASE}/tests/fw/graphics
-  ${PBL_BASE}/fw/applib/vendor/uPNG
-  ${PBL_BASE}/fw/applib/vendor/tinflate
+  ${PBL_BASE}/third_party/upng
+  ${PBL_BASE}/third_party/upng/upng
+  ${PBL_BASE}/third_party/uzlib/uzlib/src
   ${PBL_BASE}/tests/overrides/default
   ${PBL_BASE}/include
   ${PBL_BASE}/kernel/arch/posix/include
@@ -70,5 +73,8 @@ target_compile_definitions(pdc2png PRIVATE
   # Check that our <time.h> is the one that got included.
   _TIME_H_
   "PBI2PNG_EXE=\"pbi2png.py\""
+  "UPNG_CONFIG_FILE=\"upng_config.h\""
+  UZLIB_CONF_PARANOID_CHECKS=1
+  UZLIB_CONF_LENGTHS_IN_STATE=1
 )
 target_compile_options(pdc2png PRIVATE -Wno-gnu-variable-sized-type-not-at-end)

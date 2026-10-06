@@ -65,8 +65,10 @@ pbl_clar_test(test_launcher_menu_layer
     fw/applib/ui/kino/kino_reel_pdci.c
     fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/menu_layer_system_cells.c
-    fw/applib/vendor/tinflate/tinflate.c
-    fw/applib/vendor/uPNG/upng.c
+    third_party/uzlib/uzlib/src/tinflate.c
+    third_party/uzlib/uzlib/src/adler32.c
+    third_party/uzlib/uzlib/src/crc32.c
+    third_party/upng/upng/upng.c
     fw/apps/system/launcher/default/app_glance.c
     fw/apps/system/launcher/default/app_glance_alarms.c
     fw/apps/system/launcher/default/app_glance_generic.c

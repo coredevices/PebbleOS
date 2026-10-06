@@ -5,7 +5,7 @@
 """Compress a raw resource for the weather app's inflate-at-load path.
 
 Output layout: [u32 LE inflated_size][raw DEFLATE stream]
-The stream is consumed on-watch by tinflate_uncompress() (raw deflate, no zlib
+The stream is consumed on-watch by uzlib_uncompress() (raw deflate, no zlib
 header), see fw/apps/system/weather/globe_view.c prv_load_inflated().
 
 --pdc-payload strips the 8-byte PDC file header ("PDCS"/"PDCI" magic + u32 size)
@@ -15,7 +15,7 @@ gdraw_command_sequence_validate(). Regenerate with:
   python3 tools/deflate_resource.py IN OUT [--pdc-payload]
 
 Searches window sizes / strategies for the smallest stream (matches what
-tinflate accepts: any raw-deflate window).
+uzlib accepts: any raw-deflate window).
 """
 
 import argparse
@@ -55,7 +55,7 @@ def main() -> int:
         data = data[8:]
 
     stream = best_deflate(data)
-    # round-trip check (tinflate-equivalent: raw stream, exact size)
+    # round-trip check (uzlib-equivalent: raw stream, exact size)
     assert zlib.decompress(stream, wbits=-15) == data, "round-trip mismatch"
 
     blob = struct.pack("<I", len(data)) + stream
