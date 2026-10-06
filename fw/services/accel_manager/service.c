@@ -499,7 +499,7 @@ static bool prv_state_is_valid_subscriber(const AccelManagerState *state) {
   return false;
 }
 
-static void prv_assert_state_from_user(const AccelManagerState *state) {
+static PBL_ALWAYS_INLINE void prv_assert_state_from_user(const AccelManagerState *state) {
   if (!PRIVILEGE_WAS_ELEVATED) {
     return;
   }
