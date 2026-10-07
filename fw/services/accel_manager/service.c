@@ -280,13 +280,8 @@ static void prv_dispatch_data(bool post_event) {
 
   AccelManagerState *state = (AccelManagerState *)s_data_subscribers;
   while (state) {
-    if (!state->raw_buffer) {
-      state = (AccelManagerState *)state->list_node.next;
-      continue;
-    }
-
-    // if subscribed but not looking for any samples then just drop the data
-    if (state->samples_per_update == 0) {
+    // drop the data if none are wanted or there's no buffer, so the subscriber doesn't fall behind
+    if (state->samples_per_update == 0 || !state->raw_buffer) {
       uint16_t len =
           pbl_shared_cbuf_get_read_space_remaining(&s_buffer, &state->buffer_client.buffer_client);
       pbl_shared_cbuf_consume(&s_buffer, &state->buffer_client.buffer_client, len);
@@ -586,13 +581,14 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelManagerState *stat
     return -1;
   }
 
-  if (PRIVILEGE_WAS_ELEVATED) {
+  // A batch size of 0 never writes the buffer, so it's neither checked nor kept
+  if (PRIVILEGE_WAS_ELEVATED && samples_per_update > 0) {
     syscall_assert_userspace_buffer(buffer, samples_per_update * sizeof(AccelRawData));
   }
 
   pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
   {
-    state->raw_buffer = buffer;
+    state->raw_buffer = (samples_per_update > 0) ? buffer : NULL;
     state->samples_per_update = samples_per_update;
     state->num_samples = 0;
     prv_update_driver_config();

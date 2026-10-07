@@ -79,7 +79,8 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
 
   uint64_t timestamp_ms;
   num_samples = sys_accel_manager_get_num_samples(state->manager_state, &timestamp_ms);
-  if (num_samples < state->samples_per_update) {
+  // Nothing to deliver until a full batch is in, and with a batch size of 0 there never is one
+  if (state->samples_per_update == 0 || num_samples < state->samples_per_update) {
     return 0;
   }
 
@@ -419,11 +420,15 @@ int accel_session_set_samples_per_update(AccelServiceState *state, uint32_t samp
                                 !state->raw_data_handler && !state->raw_data_handler_deprecated)) {
     return -1;
   }
-  // This is a packed array of simple types and therefore shouldn't have compatibility padding
-  AccelRawData *new_buf = applib_malloc(samples_per_update * sizeof(AccelRawData));
-  if (!new_buf) {
-    APP_LOG(LOG_LEVEL_ERROR, "Not enough memory to subscribe");
-    return -1;
+  // A batch size of 0 needs no buffer, and applib_malloc(0) returns NULL
+  AccelRawData *new_buf = NULL;
+  if (samples_per_update > 0) {
+    // This is a packed array of simple types and therefore shouldn't have compatibility padding
+    new_buf = applib_malloc(samples_per_update * sizeof(AccelRawData));
+    if (!new_buf) {
+      APP_LOG(LOG_LEVEL_ERROR, "Not enough memory to subscribe");
+      return -1;
+    }
   }
 
   int result =

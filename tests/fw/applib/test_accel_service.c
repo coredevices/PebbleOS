@@ -368,6 +368,26 @@ void test_accel_service__a_rejected_sampling_rate_is_not_kept(void) {
   cl_assert_equal_i(s_timestamps[1] - s_timestamps[0], 10);
 }
 
+//! A batch size of 0 allocates no buffer, since applib_malloc(0) returns NULL on the watch
+void test_accel_service__a_batch_size_of_0_allocates_no_buffer(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+
+  int result = accel_service_set_samples_per_update(0);
+
+  cl_assert_equal_i(result, 0);
+  cl_assert(s_app_state.raw_data == NULL);
+}
+
+//! A data event at a batch size of 0 doesn't call the handler
+void test_accel_service__an_event_at_batch_size_0_calls_no_handler(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+  accel_service_set_samples_per_update(0);
+
+  prv_deliver(0);
+
+  cl_assert_equal_i(s_data_handler_calls, 0);
+}
+
 //! A refused buffer keeps the old buffer and batch size, which the manager still uses
 void test_accel_service__a_refused_buffer_keeps_the_old_one(void) {
   accel_data_service_subscribe(1, prv_data_handler);

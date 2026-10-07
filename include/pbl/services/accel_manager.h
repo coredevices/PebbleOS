@@ -131,7 +131,8 @@ uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
  * @brief Set the buffer that receives a subscription's samples.
  *
  * @param state Subscription.
- * @param buffer Buffer of at least @p samples_per_update samples, owned by the caller.
+ * @param buffer Buffer of at least @p samples_per_update samples, owned by the caller. Can be NULL
+ *               when @p samples_per_update is 0.
  * @param samples_per_update Samples to batch before calling the data callback, 0 to drop all
  *                           data. Must not exceed sys_accel_manager_get_max_samples_per_update().
  * @retval 0 Success.

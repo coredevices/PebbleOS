@@ -266,3 +266,56 @@ void test_accel_manager__batched_samples(void) {
   sys_accel_manager_set_sample_buffer(main_session, fake_buf, 3);
   cl_assert_equal_i(s_num_samples, 7); /* 300ms / (1000ms / 25 samps) */
 }
+
+// Data events
+//////////////////////////////////////////
+
+static uint64_t s_now_us;
+
+// Feeds samples in from the driver, one sampling interval apart
+static void prv_feed(int count) {
+  for (int i = 0; i < count; i++) {
+    AccelDriverSample sample = {.x = i, .timestamp_us = s_now_us};
+    s_now_us += 1000000 / ACCEL_SAMPLING_25HZ;
+    accel_cb_new_sample(&sample);
+  }
+}
+
+static AccelManagerState *prv_subscribe_on(PebbleTask task) {
+  s_now_us = 0;
+  stub_pebble_tasks_set_current(task);
+  return sys_accel_manager_data_subscribe(ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, NULL, task);
+}
+
+static AccelManagerState *prv_subscribe_on_new_timers(void) {
+  return prv_subscribe_on(PebbleTask_NewTimers);
+}
+
+// Consumes the full batch in a subscription's buffer and returns its timestamp
+static uint64_t prv_consume_timestamp(AccelManagerState *state) {
+  uint64_t timestamp_ms;
+  uint32_t num_samples = sys_accel_manager_get_num_samples(state, &timestamp_ms);
+  sys_accel_manager_consume_samples(state, num_samples);
+  return timestamp_ms;
+}
+
+//! A subscriber with no buffer, or a batch size of 0, has its data dropped. Left in the shared
+//! buffer, it would keep the buffer from emptying, and every other subscriber's timestamps would
+//! wrap after 65 s
+void test_accel_manager__a_subscriber_without_a_buffer_doesnt_hold_back_timestamps(void) {
+  prv_subscribe_on_new_timers();
+  AccelManagerState *idle = prv_subscribe_on_new_timers();
+  sys_accel_manager_set_sample_buffer(idle, NULL, 0);
+  AccelRawData buffer[1];
+  AccelManagerState *state = prv_subscribe_on_new_timers();
+  sys_accel_manager_set_sample_buffer(state, buffer, 1);
+  const int num_samples = 70 * ACCEL_SAMPLING_25HZ;
+
+  uint64_t timestamp_ms = 0;
+  for (int i = 0; i < num_samples; i++) {
+    prv_feed(1);
+    timestamp_ms = prv_consume_timestamp(state);
+  }
+
+  cl_assert_equal_i(timestamp_ms, (num_samples - 1) * (1000 / ACCEL_SAMPLING_25HZ));
+}
