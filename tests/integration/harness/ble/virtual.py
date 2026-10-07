@@ -92,14 +92,67 @@ class VirtualLink:
             self._log = None
 
 
+def _controller_class():
+    """Bumble's controller, answering a scan with the advertiser's scan
+    response data: Bumble's own repeats the advertising data."""
+    import dataclasses
+
+    from bumble import hci
+    from bumble.controller import Controller
+
+    legacy_response = hci.HCI_LE_Advertising_Report_Event.EventType.SCAN_RSP
+    extended_response = (
+        hci.HCI_LE_Extended_Advertising_Report_Event.EventType.SCAN_RESPONSE
+    )
+
+    class ScanResponseController(Controller):
+        _scan_response = None
+
+        def _advertiser_scan_response(self, address):
+            for controller in self.link.controllers:
+                advertiser = controller.le_legacy_advertiser
+                if advertiser.enabled and advertiser.address == address:
+                    return bytes(advertiser.scan_response_data)
+            return None
+
+        def on_advertising_pdu(self, pdu):
+            self._scan_response = self._advertiser_scan_response(pdu.advertiser_address)
+            try:
+                super().on_advertising_pdu(pdu)
+            finally:
+                self._scan_response = None
+
+        def send_hci_packet(self, packet):
+            if self._scan_response is not None and isinstance(
+                packet,
+                (
+                    hci.HCI_LE_Advertising_Report_Event,
+                    hci.HCI_LE_Extended_Advertising_Report_Event,
+                ),
+            ):
+                reports = []
+                for report in packet.reports:
+                    if (
+                        isinstance(packet, hci.HCI_LE_Extended_Advertising_Report_Event)
+                        and report.event_type & extended_response
+                    ) or report.event_type == legacy_response:
+                        report = dataclasses.replace(report, data=self._scan_response)
+                    reports.append(report)
+                packet = type(packet)(reports)
+            super().send_hci_packet(packet)
+
+    return ScanResponseController
+
+
 def _serve(transports):
     """Run linked software controllers, one per Bumble transport."""
     import asyncio
 
     import bumble.logging
-    from bumble.controller import Controller
     from bumble.link import LocalLink
     from bumble.transport import open_transport
+
+    Controller = _controller_class()
 
     async def main():
         link = LocalLink()
