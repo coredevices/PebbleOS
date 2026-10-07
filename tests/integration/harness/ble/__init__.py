@@ -56,6 +56,8 @@ CONNECT_ATTEMPTS = 3
 CONNECTION_INTERVAL_MS = 15
 SUPERVISION_TIMEOUT_MS = 6000
 ESTABLISH_S = 0.3
+ESTABLISH_TIMEOUT_S = 5.0
+MTU_EXCHANGE_TIMEOUT_S = 10.0
 PAIRING_TIMEOUT_S = 40.0
 CONFIRM_DELAY_S = 1.0
 SESSION_TIMEOUT_S = 15.0
@@ -351,12 +353,34 @@ class BleLink:
         the watch starts it as soon as the link is encrypted."""
         from bumble.device import Peer
 
-        self._connection = await self._connect(address)
-        self._connection.on("disconnection", self._on_disconnection)
-        self._peer = Peer(self._connection)
-        mtu = await self._peer.request_mtu(REQUESTED_MTU)
+        for attempt in range(1, CONNECT_ATTEMPTS + 1):
+            self._connection = await self._connect(address)
+            self._connection.on("disconnection", self._on_disconnection)
+            self._peer = Peer(self._connection)
+            try:
+                mtu = await asyncio.wait_for(
+                    self._peer.request_mtu(REQUESTED_MTU), MTU_EXCHANGE_TIMEOUT_S
+                )
+                break
+            except TimeoutError:
+                # The watch never saw the link, e.g. it stopped advertising
+                # as the connection was made.
+                logger.info("BLE: no answer on the link (attempt %d)", attempt)
+                if attempt == CONNECT_ATTEMPTS:
+                    raise WatchTimeout(
+                        f"no answer from {address} on the link"
+                    ) from None
+                await self._drop_unanswered()
         await self._peer.discover_services()
         self._new_session(mtu)
+
+    async def _drop_unanswered(self):
+        connection, self._connection = self._connection, None
+        connection.remove_listener("disconnection", self._on_disconnection)
+        try:
+            await asyncio.wait_for(connection.disconnect(), ESTABLISH_TIMEOUT_S)
+        except Exception:
+            logger.debug("BLE: disconnect failed", exc_info=True)
 
     async def _connect(self, address):
         from bumble.core import ConnectionError as BumbleConnectionError
