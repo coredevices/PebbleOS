@@ -5,8 +5,17 @@
 
 #include <stdint.h>
 
-//! Makes the host's terminal the console: raw, and read on a thread of its own.
-void uart_posix_bottom_console_start(void);
+//! Host end of a UART: the console is the terminal unless given a TCP port;
+//! the others are a TCP port, or not connected.
+enum uart_posix_channel {
+  UART_POSIX_CONSOLE,
+  UART_POSIX_QEMU,
+  UART_POSIX_NUM_CHANNELS,
+};
 
-//! A character was typed on the terminal. Called by the bottom, from its thread.
-void uart_posix_console_rx(uint8_t c);
+void uart_posix_bottom_start(enum uart_posix_channel channel);
+
+void uart_posix_bottom_write(enum uart_posix_channel channel, uint8_t c);
+
+//! A byte came in. Called by the bottom, from a thread of its own.
+void uart_posix_rx(enum uart_posix_channel channel, uint8_t c);

@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <unistd.h>
-
 #include "board/board.h"
 
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
@@ -12,11 +10,19 @@ static UARTDeviceState s_dbg_uart_state;
 
 static const struct UARTDevice s_dbg_uart = {
   .state = &s_dbg_uart_state,
-  .fd = STDOUT_FILENO,
-  .console = true,
+  .channel = 0,
 };
 
 UARTDevice *const DBG_UART = &s_dbg_uart;
+
+static UARTDeviceState s_qemu_uart_state;
+
+static const struct UARTDevice s_qemu_uart = {
+  .state = &s_qemu_uart_state,
+  .channel = 1,
+};
+
+UARTDevice *const QEMU_UART = &s_qemu_uart;
 
 static const PosixDisplayDevice s_display = {
   .width = PBL_DISPLAY_WIDTH,

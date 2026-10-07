@@ -9,7 +9,7 @@
 /**
  * @defgroup drivers_uart_posix POSIX
  * @ingroup drivers_uart
- * @brief UART backed by a host file descriptor.
+ * @brief UART on the host: the terminal or a TCP port.
  * @{
  */
 
@@ -25,10 +25,8 @@ typedef struct UARTDeviceState {
 struct UARTDevice {
   /** Driver state. */
   UARTDeviceState *state;
-  /** Host file descriptor the transmitted bytes go to. */
-  int fd;
-  /** Receives what is typed on the host's terminal. */
-  bool console;
+  /** Host end: 0 for the console, 1 for the QEMU serial protocol. */
+  uint8_t channel;
 };
 
 /** @} */

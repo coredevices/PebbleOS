@@ -46,6 +46,10 @@ Options:
   default.
 - `-s N`: window scale factor.
 - `-t SECONDS`: quit after that long.
+- `-c PORT`: serve the console on a TCP port, one client at a time, instead
+  of the terminal. Its output still goes to stdout.
+- `-p PORT`: serve the QEMU serial protocol on a TCP port, where a phone
+  connects with libpebble2's QEMU transport (`pebble --qemu`).
 - `-S FILE`: save the last frame to a BMP file on quitting.
 
 A reset of the watch restarts the process. A fatal error aborts it, so that a

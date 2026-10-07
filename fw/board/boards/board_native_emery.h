@@ -7,6 +7,7 @@
 #define BT_VENDOR_NAME "Native"
 
 extern UARTDevice *const DBG_UART;
+extern UARTDevice *const QEMU_UART;
 extern DisplayDevice *const DISPLAY;
 extern MicDevice *const MIC;
 extern const BoardConfigPower BOARD_CONFIG_POWER;

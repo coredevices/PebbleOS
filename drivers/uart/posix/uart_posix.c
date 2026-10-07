@@ -1,34 +1,40 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <unistd.h>
+#include <stddef.h>
 
 #include <pbl/drivers/uart/posix.h>
 #include <pbl_arch_posix.h>
 
 #include "uart_posix_bottom.h"
 
-static UARTDevice *s_console;
+static UARTDevice *s_devices[UART_POSIX_NUM_CHANNELS];
+
+struct rx {
+  UARTDevice *dev;
+  uint8_t c;
+};
 
 static void prv_rx_isr(void *arg) {
-  const uint8_t *c = arg;
-  UARTDeviceState *state = s_console->state;
+  const struct rx *rx = arg;
+  UARTDeviceState *state = rx->dev->state;
   if (state->rx_int_enabled && state->rx_irq_handler != NULL) {
     const UARTRXErrorFlags flags = {0};
-    state->rx_irq_handler(s_console, *c, &flags);
+    state->rx_irq_handler(rx->dev, rx->c, &flags);
   }
 }
 
-void uart_posix_console_rx(uint8_t c) {
-  if (s_console != NULL) {
-    pbl_posix_irq_run(prv_rx_isr, &c);
+void uart_posix_rx(enum uart_posix_channel channel, uint8_t c) {
+  struct rx rx = {.dev = s_devices[channel], .c = c};
+  if (rx.dev != NULL) {
+    pbl_posix_irq_run(prv_rx_isr, &rx);
   }
 }
 
 void uart_init(UARTDevice *dev) {
-  if (dev->console && s_console == NULL) {
-    s_console = dev;
-    uart_posix_bottom_console_start();
+  if (s_devices[dev->channel] == NULL) {
+    s_devices[dev->channel] = dev;
+    uart_posix_bottom_start((enum uart_posix_channel)dev->channel);
   }
 }
 
@@ -62,7 +68,7 @@ void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
 }
 
 void uart_write_byte(UARTDevice *dev, uint8_t data) {
-  (void)write(dev->fd, &data, 1);
+  uart_posix_bottom_write((enum uart_posix_channel)dev->channel, data);
 }
 
 uint8_t uart_read_byte(UARTDevice *dev) {
