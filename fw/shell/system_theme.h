@@ -103,8 +103,13 @@ PreferredContentSize system_theme_get_default_content_size_for_runtime_platform(
 PreferredContentSize system_theme_convert_host_content_size_to_runtime_platform(
     PreferredContentSize size);
 
+//! @return true if the caller is system UI (a system app or a kernel task), which follows the
+//! system theme. Third-party apps keep the documented SDK defaults.
+bool system_theme_is_system_ui(void);
+
 //! @return true if the current app context should render in dark mode (system apps only).
 bool system_theme_is_dark_mode(void);
+
 
 //! @return The background color appropriate for the current theme (black in dark mode on color
 //!         displays, white otherwise).

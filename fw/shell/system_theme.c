@@ -85,6 +85,10 @@ static bool prv_is_system_app(void) {
   return sdk_type == ProcessAppSDKType_System;
 }
 
+PBL_SYSCALL(bool, system_theme_is_system_ui) {
+  return prv_is_system_app();
+}
+
 PBL_SYSCALL(bool, system_theme_is_dark_mode) {
   // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
   if (PBL_IF_COLOR_ELSE(false, true)) {
