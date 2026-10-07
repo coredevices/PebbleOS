@@ -11,8 +11,9 @@
 #include <apps/system/launcher/default/menu_layer.h>
 #include <apps/system/launcher/default/menu_layer_private.h>
 #include <clar.h>
-#include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
+#include <resource/resource_ids.auto.h>
 
 static GContext s_ctx;
 
@@ -229,6 +230,10 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 GColor shell_prefs_get_theme_highlight_color(void) {
   // Black and white displays always highlight in black
   return PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack);
+}
+
+GColor sys_shell_prefs_get_theme_highlight_color(void) {
+  return shell_prefs_get_theme_highlight_color();
 }
 
 bool alerts_preferences_get_notification_alternative_design(void) {

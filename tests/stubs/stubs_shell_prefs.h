@@ -6,6 +6,7 @@
 #include <pbl/kernel/compiler.h>
 
 #include <shell/prefs.h>
+#include <shell/prefs_syscalls.h>
 
 static bool s_clock_24h;
 
@@ -77,6 +78,10 @@ void PBL_WEAK shell_prefs_set_menu_scroll_wrap_around_enable(bool enable) {
 
 GColor PBL_WEAK shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+}
+
+GColor PBL_WEAK sys_shell_prefs_get_theme_highlight_color(void) {
+  return shell_prefs_get_theme_highlight_color();
 }
 
 DarkMode PBL_WEAK shell_prefs_get_dark_mode(void) {

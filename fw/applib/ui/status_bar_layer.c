@@ -150,9 +150,17 @@ void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
   };
   event_service_client_subscribe(&(status_bar_layer->tick_event));
 
+  // Third-party apps keep the documented white-on-black defaults. System UI follows the system
+  // theme on color displays.
+  GColor foreground_color = GColorWhite;
+  GColor background_color = GColorBlack;
+  if (system_theme_is_system_ui()) {
+    foreground_color = PBL_IF_COLOR_ELSE(system_theme_get_fg_color(), GColorWhite);
+    background_color = PBL_IF_COLOR_ELSE(system_theme_get_bg_color(), GColorBlack);
+  }
   status_bar_layer->config = (StatusBarLayerConfig){
-    .foreground_color = system_theme_get_fg_color(),
-    .background_color = system_theme_get_bg_color(),
+    .foreground_color = foreground_color,
+    .background_color = background_color,
     .separator.mode = StatusBarLayerSeparatorModeNone,
   };
 

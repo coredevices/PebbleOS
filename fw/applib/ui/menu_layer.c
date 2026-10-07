@@ -22,6 +22,7 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
 #include <shell/prefs_syscalls.h>
+#include <shell/system_theme.h>
 #include <system/passert.h>
 
 #ifdef CONFIG_TOUCH
@@ -978,9 +979,15 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
   scroll_layer_set_shadow_hidden(scroll_layer, true);
   scroll_layer_set_context(scroll_layer, menu_layer);
 
-  menu_layer_set_normal_colors(menu_layer, system_theme_get_bg_color(), system_theme_get_fg_color());
-  GColor highlight_bg = sys_shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+  if (system_theme_is_system_ui()) {
+    menu_layer_set_normal_colors(menu_layer, system_theme_get_bg_color(), system_theme_get_fg_color());
+    const GColor highlight_bg = sys_shell_prefs_get_theme_highlight_color();
+    menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+  } else {
+    // Third-party apps keep the documented defaults, without the system accent
+    menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
+    menu_layer_set_highlight_colors(menu_layer, GColorBlack, GColorWhite);
+  }
 
   InverterLayer *inverter = &menu_layer->inverter;
   inverter_layer_init(inverter, &GRectZero);

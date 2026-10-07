@@ -190,6 +190,18 @@ static bool prv_is_system_app(void) {
   return sdk_type == ProcessAppSDKType_System;
 }
 
+DEFINE_SYSCALL(bool, system_theme_is_system_ui, void) {
+  return prv_is_system_app();
+}
+
+//! Last ambient light sample for DarkModeAmbient. Only written by system_theme_refresh_ambient()
+//! because sampling the sensor can block, so rendering code reads this instead.
+static volatile bool s_ambient_is_dark;
+
+void system_theme_refresh_ambient(void) {
+  s_ambient_is_dark = !ambient_light_is_light();
+}
+
 DEFINE_SYSCALL(bool, system_theme_is_dark_mode, void) {
   // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
   if (PBL_IF_COLOR_ELSE(false, true)) {
@@ -204,7 +216,7 @@ DEFINE_SYSCALL(bool, system_theme_is_dark_mode, void) {
     case DarkModeOn:
       return true;
     case DarkModeAmbient:
-      return !ambient_light_is_light();
+      return s_ambient_is_dark;
     case DarkModeScheduled: {
       DarkModeSchedule schedule;
       shell_prefs_get_dark_mode_schedule(&schedule);

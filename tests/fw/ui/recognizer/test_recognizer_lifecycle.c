@@ -30,6 +30,7 @@
 #include <stubs_resources.h>
 #include <stubs_status_bar_layer.h>
 #include <stubs_syscalls.h>
+#include <stubs_system_theme.h>
 #include <stubs_unobstructed_area.h>
 #include <stubs_window_stack.h>
 
