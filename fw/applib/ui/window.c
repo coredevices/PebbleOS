@@ -89,8 +89,8 @@ void prv_render_legacy2_system_status_bar(GContext *ctx, Window *window) {
     grect_clip(&ctx->draw_state.clip_box, &window->layer.frame);
 
     StatusBarLayerConfig config = {
-      .foreground_color = system_theme_get_fg_color(),
-      .background_color = system_theme_get_bg_color(),
+      .foreground_color = GColorWhite,
+      .background_color = GColorBlack,
       .mode = StatusBarLayerModeClock,
     };
     GRect frame = window->layer.frame;
