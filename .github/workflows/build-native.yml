@@ -1,0 +1,122 @@
+name: Build Firmware (native)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, '*-branch']
+  workflow_call:
+
+jobs:
+  changes-native:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v4
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/actions/**'
+              - '.github/workflows/build-native.yml'
+              - 'boards/**'
+              - 'cmake/**'
+              - 'drivers/**'
+              - 'fw/**'
+              - 'include/**'
+              - 'kernel/**'
+              - 'lib/**'
+              - 'resources/**'
+              - 'soc/**'
+              - 'subsys/**'
+              - 'third_party/**'
+              - 'tools/**'
+              - 'CMakeLists.txt'
+              - 'Kconfig'
+
+  build-native:
+    needs: changes-native
+    if: needs.changes-native.outputs.should-build == 'true'
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: linux
+            os: ubuntu-24.04
+            container: ghcr.io/coredevices/pebbleos-docker:v9
+          - host: macos
+            os: macos-15
+
+    steps:
+      - name: Mark Github workspace as safe
+        if: matrix.host == 'linux'
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+        with:
+          submodules: true
+
+      - name: Install host dependencies (macOS)
+        if: matrix.host == 'macos'
+        run: brew install $(grep -v '^#' requirements-brew.txt)
+
+      - name: Set up Python (macOS)
+        if: matrix.host == 'macos'
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Configure
+        run: pbl configure --board native_emery
+
+      - name: Build
+        run: pbl build
+
+      # Boot without a display and check the firmware gets to the launcher.
+      - name: Smoke test
+        shell: bash
+        env:
+          SDL_VIDEODRIVER: dummy
+        run: |
+          set -o pipefail
+          cd build
+          ./pebbleos -t 20 -S smoke.bmp < /dev/null | tee smoke.log
+          grep -q "Starting Launcher" smoke.log
+
+      - name: Store smoke test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-smoke-${{ matrix.host }}
+          path: |
+            build/smoke.log
+            build/smoke.bmp
+
+  build-native-status:
+    needs: [changes-native, build-native]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: >-
+          needs.build-native.result == 'failure' ||
+          needs.build-native.result == 'cancelled'
+        run: exit 1
