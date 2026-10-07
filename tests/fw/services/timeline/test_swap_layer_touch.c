@@ -13,6 +13,7 @@
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
 #include <applib/ui/window.h>
+#include <shell/system_theme.h>
 #include <clar.h>
 #include <fake_rtc.h>
 
