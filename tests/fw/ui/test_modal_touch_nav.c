@@ -22,6 +22,7 @@
 #include <clar.h>
 #include <fff.h>
 #include <kernel/ui/modals/modal_manager.h>
+#include <shell/system_theme.h>
 
 // Stubs
 ////////////////////////////////////

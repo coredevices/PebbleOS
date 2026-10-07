@@ -37,6 +37,10 @@ GColor PBL_WEAK system_theme_get_fg_color(void) {
   return GColorBlack;
 }
 
+bool PBL_WEAK system_theme_is_system_ui(void) {
+  return true;
+}
+
 bool PBL_WEAK system_theme_is_dark_mode(void) {
   return false;
 }

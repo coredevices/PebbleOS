@@ -15,6 +15,7 @@
 #include <applib/ui/window.h>
 #include <clar.h>
 #include <fake_rtc.h>
+#include <shell/system_theme.h>
 
 // Stubs
 

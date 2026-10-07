@@ -15,6 +15,7 @@
 #include <clar.h>
 #include <fake_rtc.h>
 #include <pebble_asserts.h>
+#include <shell/prefs.h>
 #include <shell/system_theme.h>
 #include <stubs_app_state.h>
 #include <stubs_fonts.h>
