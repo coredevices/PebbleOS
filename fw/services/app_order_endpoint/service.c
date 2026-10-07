@@ -53,6 +53,7 @@ static void prv_handle_app_order_msg(CommSession *session, const uint8_t *data, 
   if (num_uuids != (length / UUID_SIZE)) {
     PBL_LOG_DBG("invalid length, num_uuids does not match with the length of message");
     prv_send_result(session, APP_ORDER_RES_INVALID);
+    return;
   }
 
   write_uuid_list_to_file((const Uuid *)&data[1], num_uuids);
