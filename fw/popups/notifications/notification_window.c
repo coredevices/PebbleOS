@@ -133,6 +133,10 @@ static TimelineItem *prv_get_current_notification(NotificationWindowData *data) 
   }
 
   LayoutLayer *current = swap_layer_get_current_layout(&data->swap_layer);
+  if (!current) {
+    return NULL;
+  }
+
   TimelineItem *item = (TimelineItem *)layout_get_context(current);
   return item;
 }
