@@ -451,3 +451,16 @@ void test_notification_window__big_bold(void) {
   prv_prepare_canvas_and_render_notification_windows(num_down_scrolls);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
+
+void test_notification_window__emoji(void) {
+  s_test_data = (NotificationWindowTestData){
+    .icon_id = TIMELINE_RESOURCE_NOTIFICATION_FACEBOOK_MESSENGER,
+    .title = "Henry 😎",
+    .body = "On my way 😃👍 See you soon 🎉",
+    .show_notification_timestamp = true,
+    .timestamp = "Just now",
+    .background_color = GColorPictonBlue,
+  };
+  prv_prepare_canvas_and_render_notification_windows(0 /* num_down_scrolls */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
