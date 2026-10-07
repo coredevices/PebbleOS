@@ -526,6 +526,7 @@ int8_t gap_le_advert_get_tx_power(void) {
     if (pbl_bt_advert_client_get_tx_power(&tx_power)) {
       s_tx_power_cached = tx_power;
     }
+    tx_power = s_tx_power_cached;
   }
   bt_unlock();
   return tx_power;
