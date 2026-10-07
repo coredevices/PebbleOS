@@ -700,7 +700,7 @@ static bool prv_intent_matches_connection(const GAPLEConnectionIntent *intent,
   if (intent->is_bonding_based) {
     // If the bonding-based intent is connected, the `device` is set to the connection address,
     // if it's not connected, it's all zeroes.
-    if (bt_device_equal(&connection->device.opaque, &intent->device.opaque)) {
+    if (bt_device_internal_equal(&connection->device, &intent->device)) {
       return true;
     }
     if (!connection->irk) {
@@ -715,7 +715,7 @@ static bool prv_intent_matches_connection(const GAPLEConnectionIntent *intent,
     }
     return (0 == memcmp(connection->irk, &intent->bonding->irk, sizeof(*connection->irk)));
   } else {
-    return bt_device_equal(&connection->device.opaque, &intent->device.opaque);
+    return bt_device_internal_equal(&connection->device, &intent->device);
   }
 }
 
@@ -730,7 +730,7 @@ static bool prv_intent_filter_by_device(ListNode *node, void *data) {
   if (intent->is_bonding_based) {
     return false;
   }
-  return bt_device_equal(&target_device->opaque, &intent->device.opaque);
+  return bt_device_internal_equal(target_device, &intent->device);
 }
 
 static GAPLEConnectionIntent *prv_get_intent_by_device(

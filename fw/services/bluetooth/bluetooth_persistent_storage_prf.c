@@ -180,7 +180,7 @@ bool bt_persistent_storage_get_ble_pairing_by_addr(const struct pbl_bt_device_in
                                                    char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE]) {
   struct pbl_bt_device_internal device_out = {};
   bool rv = bt_persistent_storage_get_ble_pairing_by_id(BLE_BONDING_ID, IRK_out, &device_out, name);
-  return (rv && bt_device_equal(&device->opaque, &device_out.opaque));
+  return (rv && bt_device_internal_equal(device, &device_out));
 }
 
 void bt_persistent_storage_set_active_ble_gateway(pbl_bt_bonding_id_t bonding) {

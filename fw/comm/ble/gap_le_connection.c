@@ -69,7 +69,7 @@ static GAPLEConnection *prv_find_connection_by_addr(const struct pbl_bt_addr *ad
 static bool prv_list_filter_for_device(ListNode *found_node, void *data) {
   const struct pbl_bt_device_internal *device = (const struct pbl_bt_device_internal *)data;
   const GAPLEConnection *connection = (const GAPLEConnection *)found_node;
-  return bt_device_equal(&connection->device.opaque, &device->opaque);
+  return bt_device_internal_equal(&connection->device, device);
 }
 
 static GAPLEConnection *prv_find_connection(const struct pbl_bt_device_internal *device) {

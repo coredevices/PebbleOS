@@ -87,7 +87,7 @@ static void prv_assert_event(const struct pbl_bt_device_internal *device,
   cl_assert_equal_i(event.bluetooth.le.gatt_client_service.info->status, status);
   const struct pbl_bt_device_internal event_device =
       event.bluetooth.le.gatt_client_service.info->device;
-  const bool equal_devices = bt_device_equal(&device->opaque, &event_device.opaque);
+  const bool equal_devices = bt_device_internal_equal(device, &event_device);
   cl_assert_equal_b(equal_devices, true);
 
   // clear the event

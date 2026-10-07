@@ -130,7 +130,7 @@ void test_gatt_client_accessors__copy_service_refs(void) {
 
     // Test gatt_client_service_get_device():
     struct pbl_bt_device_internal returned_device = gatt_client_service_get_device(service_ref);
-    cl_assert(bt_device_equal(&returned_device.opaque, &device.opaque));
+    cl_assert(bt_device_internal_equal(&returned_device, &device));
 
     // Check Characteristics:
     const uint8_t num_characteristics = expected_service->num_characteristics;
@@ -158,7 +158,7 @@ void test_gatt_client_accessors__copy_service_refs(void) {
       // Test gatt_client_characteristic_get_device():
       struct pbl_bt_device_internal returned_device =
           gatt_client_characteristic_get_device(characteristic_ref);
-      cl_assert(bt_device_equal(&returned_device.opaque, &device.opaque));
+      cl_assert(bt_device_internal_equal(&returned_device, &device));
 
       // Test gatt_client_characteristic_get_descriptors():
       const uint8_t num_descriptors = expected_characteristic->num_descriptors;

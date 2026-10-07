@@ -531,7 +531,7 @@ typedef struct {
 static bool prv_is_pairing_info_equal_identity(const BtPersistLEPairingInfo *a,
                                                const struct pbl_bt_sm_pairing_info *b) {
   return (a->is_remote_identity_info_valid && b->is_remote_identity_info_valid &&
-          bt_device_equal(&a->identity.opaque, &b->identity.opaque) &&
+          bt_device_internal_equal(&a->identity, &b->identity) &&
           memcmp(&a->irk, &b->irk, sizeof(struct pbl_bt_sm_key)) == 0);
 }
 
@@ -905,8 +905,7 @@ static bool prv_find_by_addr_itr(SettingsFile *file, SettingsRecordInfo *info, v
   info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE &&
-      bt_device_equal(&itr_data->device.opaque,
-                      &stored_data.ble_data.pairing_info.identity.opaque)) {
+      bt_device_internal_equal(&itr_data->device, &stored_data.ble_data.pairing_info.identity)) {
     itr_data->irk_out = stored_data.ble_data.pairing_info.irk;
     strncpy(itr_data->name_out, stored_data.ble_data.name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
     itr_data->id_out = key;

@@ -114,7 +114,7 @@ static void prv_request_response_time(enum pbl_bt_consumer consumer,
     const pbl_bt_characteristic_t characteristic = s_ams_client->characteristics[0];
     const struct pbl_bt_device_internal device =
         gatt_client_characteristic_get_device(characteristic);
-    if (!bt_device_is_invalid(&device.opaque)) {
+    if (!bt_device_internal_equal(&device, &PBL_BT_DEVICE_INTERNAL_INVALID)) {
       GAPLEConnection *connection = gap_le_connection_by_device(&device);
       conn_mgr_set_ble_conn_response_time(connection, consumer, state, max_period_secs);
     }
