@@ -24,6 +24,7 @@
 #include <stubs_ambient_light.h>
 #include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
+#include <stubs_dark_mode_updater.h>
 #include <stubs_event_loop.h>
 #include <stubs_hexdump.h>
 #include <stubs_logging.h>
