@@ -788,7 +788,7 @@ typedef struct BitmapInfo {
   uint8_t version : 4;
 } BitmapInfo;
 
-typedef struct PBL_PACKED GBitmap {
+typedef struct GBitmap {
   //! Pointer to the address where the image data lives
   void *addr;
   //! @note The number of bytes per row may have restrictions depending on the format:
@@ -1282,7 +1282,7 @@ typedef struct GDrawMask GDrawMask;
 //! @internal
 //! Data structure that contains all kinds of drawing parameters, like the clipping box,
 //! the drawing box, stroke, fill and text colors and bitmap compositing mode.
-typedef struct PBL_PACKED {
+typedef struct {
   //! The box relative to bitmap's bounds, that graphics functions MUST use to clip what they draw
   GRect clip_box;
   //! The box relative to bitmap's bounds, that graphics functions MUST use as their coordinate
