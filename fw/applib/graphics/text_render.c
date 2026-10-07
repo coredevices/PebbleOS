@@ -12,6 +12,8 @@
 #include "pbl/util/math.h"
 #include "pbl/util/testing.h"
 
+typedef uint32_t GlyphBlock PBL_ALIGNED(1);
+
 #if !defined(__clang__)
 #pragma GCC optimize("O2")
 #endif
@@ -290,7 +292,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
   uint8_t dest_shift = dest_shift_at_line_begin;
 
   // The glyph bitmap starts the block after the metrics data:
-  uint32_t const *glyph_block = glyph->data;
+  const GlyphBlock *glyph_block = glyph->data;
 
   // Set up the first piece of source glyph bitmap:
   int8_t glyph_block_bits_left = 32;
