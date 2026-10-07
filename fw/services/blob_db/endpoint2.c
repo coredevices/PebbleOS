@@ -97,8 +97,10 @@ static void prv_handle_start_sync(CommSession *session, const uint8_t *data, uin
     .cmd = BLOB_DB_COMMAND_START_SYNC_RESPONSE,
   };
 
+  BlobDBToken token;
   BlobDBId db_id;
-  endpoint_private_read_token_db_id(data, &response.token, &db_id);
+  endpoint_private_read_token_db_id(data, &token, &db_id);
+  response.token = token;
 
   status_t rv = blob_db_sync_db(db_id);
   switch (rv) {

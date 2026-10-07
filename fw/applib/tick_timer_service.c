@@ -42,7 +42,8 @@ static void do_handle(PebbleEvent *e, void *context) {
 
   TimeUnits units_changed = 0;
   struct tm currtime;
-  sys_localtime_r(&e->clock_tick.tick_time, &currtime);
+  const time_t tick_time = e->clock_tick.tick_time;
+  sys_localtime_r(&tick_time, &currtime);
 
   if (!state->first_tick) {
     if (state->last_time.tm_sec != currtime.tm_sec) {

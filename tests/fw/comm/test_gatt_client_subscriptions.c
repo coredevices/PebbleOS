@@ -892,8 +892,10 @@ void test_gatt_client_subscriptions__cleanup_by_att_handle_range(void) {
 
   cl_assert(s_connection->gatt_subscriptions != NULL);
 
-  struct pbl_bt_att_handle_range range;
-  fake_gatt_get_bp_att_handle_range(&range.start, &range.end);
+  uint16_t start;
+  uint16_t end;
+  fake_gatt_get_bp_att_handle_range(&start, &end);
+  struct pbl_bt_att_handle_range range = {.start = start, .end = end};
 
   struct pbl_bt_att_handle_range bogus_range = {.start = range.end + 1, .end = range.end + 5};
 

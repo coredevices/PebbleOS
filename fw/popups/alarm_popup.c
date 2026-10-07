@@ -354,7 +354,8 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   Dialog *dialog = actionable_dialog_get_dialog(s_alarm_popup_data->alarm_popup);
   char display_time[16];
   struct tm alarm_tm;
-  localtime_r(&event->alarm_time, &alarm_tm);
+  const time_t alarm_time = event->alarm_time;
+  localtime_r(&alarm_time, &alarm_tm);
   if (clock_is_24h_style()) {
     strftime(display_time, 16, "%H:%M", &alarm_tm);
   } else {

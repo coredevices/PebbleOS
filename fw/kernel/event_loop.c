@@ -349,7 +349,9 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         e->task_mask |= 1 << PebbleTask_App;
       }
       // Stamp on every event so the whole gesture carries the Touchdown latch.
-      touch_wake_gate_stamp(&e->touch.event, gate);
+      TouchEvent touch = e->touch.event;
+      touch_wake_gate_stamp(&touch, gate);
+      e->touch.event = touch;
       return;
     }
 #endif

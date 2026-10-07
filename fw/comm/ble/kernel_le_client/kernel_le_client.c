@@ -336,8 +336,12 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
       return;
     }
 
+    pbl_bt_characteristic_t characteristic;
+    uint16_t value_length = header.value_length;
     const uint16_t next_value_length = gatt_client_subscriptions_consume_notification(
-        &header.characteristic, buffer, &header.value_length, GAPLEClientKernel, &has_more);
+        &characteristic, buffer, &value_length, GAPLEClientKernel, &has_more);
+    header.characteristic = characteristic;
+    header.value_length = value_length;
 
     const KernelLEClient *const client = prv_client_for_characteristic(header.characteristic);
     if (client->handle_read_or_notification) {

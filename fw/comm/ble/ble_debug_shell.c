@@ -68,12 +68,14 @@ static int prv_cmd_conn_params(const struct pbl_shell *sh, size_t argc, char **a
 }
 
 static int prv_cmd_disc_start(const struct pbl_shell *sh, size_t argc, char **argv) {
-  struct pbl_bt_att_handle_range range;
+  uint16_t start;
+  uint16_t end;
 
-  if (prv_parse_u16(sh, argv[1], &range.start) != 0 ||
-      prv_parse_u16(sh, argv[2], &range.end) != 0) {
+  if (prv_parse_u16(sh, argv[1], &start) != 0 || prv_parse_u16(sh, argv[2], &end) != 0) {
     return -EINVAL;
   }
+
+  struct pbl_bt_att_handle_range range = {.start = start, .end = end};
 
   bt_lock();
   GAPLEConnection *conn = prv_get_le_connection_and_print_info(sh);

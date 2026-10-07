@@ -308,9 +308,11 @@ void workout_service_health_event_handler(PebbleHealthEvent *event) {
       goto unlock;
     }
     if (event->type == HealthEventMovementUpdate) {
-      prv_handle_movement_update(&event->data.movement_update);
+      HealthEventMovementUpdateData movement_update = event->data.movement_update;
+      prv_handle_movement_update(&movement_update);
     } else if (event->type == HealthEventHeartRateUpdate) {
-      prv_handle_heart_rate_update(&event->data.heart_rate_update);
+      HealthEventHeartRateUpdateData heart_rate_update = event->data.heart_rate_update;
+      prv_handle_heart_rate_update(&heart_rate_update);
     }
   }
 unlock:

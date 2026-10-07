@@ -881,8 +881,12 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples,
 // We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
 // Returns distance we traveled in the last minute, in mm.
 static uint32_t PBL_NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLSSample *m_rec) {
+  uint16_t vmc;
+  uint8_t orientation;
   bool still;
-  kalg_minute_stats(s_alg_state->k_state, &m_rec->base.vmc, &m_rec->base.orientation, &still);
+  kalg_minute_stats(s_alg_state->k_state, &vmc, &orientation, &still);
+  m_rec->base.vmc = vmc;
+  m_rec->base.orientation = orientation;
 
   m_rec->base.steps = MIN(s_alg_state->minute_steps, UINT8_MAX);
 
