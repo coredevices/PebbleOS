@@ -25,9 +25,10 @@ def _attribute(attr_id, text):
 
 
 def serialize(
-    notification_id, timestamp, body, title=None, sender=None, app="WhatsApp"
+    notification_id, timestamp, body, title=None, sender=None, app="WhatsApp", status=0
 ):
-    """A notification timeline item with a Dismiss action."""
+    """A notification timeline item with a Dismiss action. ``status`` is the
+    header's status byte, which the phone sets when it resends one."""
     attributes = [
         _attribute(TITLE, title or sender or app),
         _attribute(BODY, body),
@@ -45,7 +46,7 @@ def serialize(
         0,
         TYPE_NOTIFICATION,
         FLAG_VISIBLE,
-        0,
+        status,
         LAYOUT_NOTIFICATION,
         len(payload),
         len(attributes),
@@ -69,12 +70,22 @@ def _blobdb(pebble, method, *args):
         raise HarnessError(f"blob DB {method}: {name}")
 
 
-def send(dut, body, title=None, sender=None, app="WhatsApp", timestamp=None):
+def send(
+    dut,
+    body,
+    title=None,
+    sender=None,
+    app="WhatsApp",
+    timestamp=None,
+    notification_id=None,
+    status=0,
+):
     """Insert a notification, received at ``timestamp`` (default: the host's
-    now); returns its id."""
-    notification_id = uuid.uuid4()
+    now); returns its id. Sending an existing ``notification_id`` again only
+    updates its ``status``, as the phone does when it syncs a change."""
+    notification_id = notification_id or uuid.uuid4()
     when = int(time.time()) if timestamp is None else int(timestamp)
-    item = serialize(notification_id, when, body, title, sender, app)
+    item = serialize(notification_id, when, body, title, sender, app, status)
     _blobdb(dut.protocol, "insert", BLOBDB_NOTIFS, notification_id, item)
     return notification_id
 

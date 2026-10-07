@@ -484,8 +484,9 @@ static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t 
   // Seek to the status field
   pfs_seek(fd, (-(int)sizeof(*header) + (int)offsetof(CommonTimelineItemHeader, status)), FSeekCur);
 
+  // Keep the bits already set. Flash can only clear bits, but the emulator's replaces the byte.
   // Invert flags & status to store on flash
-  status = ~status;
+  status = ~(status | header->common.status);
 
   int result = pfs_write(fd, (uint8_t *)&status, sizeof(header->common.status));
   if (result < 0) {
