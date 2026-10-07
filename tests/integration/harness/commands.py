@@ -9,6 +9,8 @@ from harness.errors import Unsupported
 SHELL = {
     "app_launch": "app launch {id}",
     "app_list": "app list",
+    "bt_airplane": "bt airplane {mode}",
+    "bt_mac": "bt mac",
     "bt_pairing": "bt pairing",
     "bt_status": "bt status",
     "bt_unpair": "bt prefs_wipe",
