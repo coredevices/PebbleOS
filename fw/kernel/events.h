@@ -834,8 +834,11 @@ bool event_try_put_from_process(PebbleTask task, PebbleEvent *event);
 
 bool event_take_timeout(PebbleEvent *event, pbl_timeout_t timeout);
 
-//! Return a reference to the allocated buffer within an event, if applicable
-void **event_get_buffer(PebbleEvent *event);
+//! Return the allocated buffer within an event, if applicable
+void *event_get_buffer(PebbleEvent *event);
+
+//! Clear the allocated buffer reference within an event, without freeing it
+void event_clear_buffer(PebbleEvent *event);
 
 //! De-initialize an event, freeing the allocated buffer if necessary
 void event_deinit(PebbleEvent *event);

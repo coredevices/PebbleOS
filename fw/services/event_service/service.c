@@ -203,9 +203,9 @@ void event_service_handle_event(PebbleEvent *e) {
   }
 
   bool stolen = false;
-  void **buf_ptr = event_get_buffer(e);
-  if (buf_ptr && *buf_ptr) {
-    stolen = prv_steal_buffer(*buf_ptr, service, e); // FIXME arguments?
+  void *buf = event_get_buffer(e);
+  if (buf) {
+    stolen = prv_steal_buffer(buf, service, e); // FIXME arguments?
   }
 
   PebbleTask cur_task = pebble_task_get_current();
@@ -249,7 +249,7 @@ void event_service_handle_event(PebbleEvent *e) {
 
   if (stolen) {
     // we stole the buffer from the event, NULL it out
-    *buf_ptr = NULL;
+    event_clear_buffer(e);
   }
 }
 
@@ -268,11 +268,11 @@ bool event_service_is_known_buffer(const void *buf) {
 }
 
 static EventServiceBuffer *prv_get_esb_for_event(PebbleEvent *e) {
-  void **buf_ptr = event_get_buffer(e);
+  void *buf = event_get_buffer(e);
   EventServiceBuffer *esb = NULL;
-  if (buf_ptr && *buf_ptr) {
-    esb = (EventServiceBuffer *)list_find((ListNode *)s_event_service_buffers, prv_buffer_find,
-                                          *buf_ptr);
+  if (buf) {
+    esb =
+        (EventServiceBuffer *)list_find((ListNode *)s_event_service_buffers, prv_buffer_find, buf);
   }
   return esb;
 }
@@ -378,9 +378,8 @@ DEFINE_SYSCALL(void, sys_event_service_cleanup, PebbleEvent *e) {
     uint16_t task_bit = 1 << pebble_task_get_current();
     uint16_t intents_pending = __sync_and_and_fetch(&esb->intents_pending, ~task_bit);
     if (intents_pending) {
-      // zero out buf_ptr so it won't be freed by cleanup. Other tasks are still waiting to use it
-      void **buf_ptr = event_get_buffer(e);
-      *buf_ptr = NULL;
+      // zero out buf so it won't be freed by cleanup. Other tasks are still waiting to use it
+      event_clear_buffer(e);
     } else {
       // free the EventServiceBuffer and free the data
       list_remove((ListNode *)esb, (ListNode **)&s_event_service_buffers, NULL);

@@ -15,7 +15,7 @@ void fake_event_reset_count(void);
 
 uint32_t fake_event_get_count(void);
 
-void **fake_event_get_buffer(PebbleEvent *event);
+void *fake_event_get_buffer_slot(PebbleEvent *event);
 
 typedef void (*FakeEventCallback)(PebbleEvent *event);
 void fake_event_set_callback(FakeEventCallback cb);

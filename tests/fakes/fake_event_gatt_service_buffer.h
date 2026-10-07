@@ -7,6 +7,8 @@
 #include "fake_pbl_malloc.h"
 #include "kernel/events.h"
 
+#include <string.h>
+
 //! Strong override of the PBL_WEAK fake_events.c implementation, for tests that
 //! exercise the GATT client service-change event (which carries a heap-allocated
 //! info pointer that must be freed).
@@ -23,13 +25,15 @@
 //!
 //! Include this header in the test's main translation unit (the one that pulls
 //! in fake_pbl_malloc.h) so the override sees the same allocation tracking list.
-void **fake_event_get_buffer(PebbleEvent *event) {
+void *fake_event_get_buffer_slot(PebbleEvent *event) {
   if (event->type != PEBBLE_BLE_GATT_CLIENT_EVENT) {
     return NULL;
   }
-  void **info = (void **)(&event->bluetooth.le.gatt_client_service.info);
-  if (*info && fake_pbl_malloc_contains(*info)) {
-    return info;
+  void *slot = &event->bluetooth.le.gatt_client_service.info;
+  void *info;
+  memcpy(&info, slot, sizeof(info));
+  if (info && fake_pbl_malloc_contains(info)) {
+    return slot;
   }
   return NULL;
 }

@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "pbl/kernel/compiler.h"
 
 #define MAX_KERNEL_EVENTS           32
@@ -211,10 +212,10 @@ static void prv_event_put(struct pbl_msgq *queue, const char *queue_type, uintpt
 }
 
 void event_deinit(PebbleEvent *event) {
-  void **buffer = event_get_buffer(event);
-  if (buffer && *buffer) {
-    kernel_free(*buffer);
-    *buffer = NULL;
+  void *buffer = event_get_buffer(event);
+  if (buffer) {
+    kernel_free(buffer);
+    event_clear_buffer(event);
   }
 }
 
@@ -303,61 +304,77 @@ bool event_take_timeout(PebbleEvent *event, pbl_timeout_t timeout) {
   return true;
 }
 
-void **event_get_buffer(PebbleEvent *event) {
+static void *prv_buffer_slot(PebbleEvent *event) {
   switch (event->type) {
     case PEBBLE_SYS_NOTIFICATION_EVENT:
       if (event->sys_notification.type == NotificationActionResult) {
-        return (void **)&event->sys_notification.action_result;
+        return &event->sys_notification.action_result;
       } else if ((event->sys_notification.type == NotificationAdded) ||
                  (event->sys_notification.type == NotificationRemoved) ||
                  (event->sys_notification.type == NotificationActedUpon)) {
-        return (void **)&event->sys_notification.notification_id;
+        return &event->sys_notification.notification_id;
       }
       break;
 
     case PEBBLE_BLOBDB_EVENT:
-      return (void **)&event->blob_db.key;
+      return &event->blob_db.key;
 
     case PBL_BT_PEBBLE_PAIRING_EVENT:
       if (event->bluetooth.pair.type == PebbleBluetoothPairEventTypePairingUserConfirmation) {
-        return (void **)&event->bluetooth.pair.confirmation_info;
+        return &event->bluetooth.pair.confirmation_info;
       }
       break;
 
     case PEBBLE_APP_LAUNCH_EVENT:
-      return (void **)&event->launch_app.data;
+      return &event->launch_app.data;
 
     case PEBBLE_VOICE_SERVICE_EVENT:
-      return (void **)&event->voice_service.data;
+      return &event->voice_service.data;
 
     case PEBBLE_REMINDER_EVENT:
-      return (void **)&event->reminder.reminder_id;
+      return &event->reminder.reminder_id;
 
     case PEBBLE_BLE_GATT_CLIENT_EVENT:
       if (event->bluetooth.le.gatt_client.subtype == PebbleBLEGATTClientEventTypeServiceChange) {
-        return (void **)(&event->bluetooth.le.gatt_client_service.info);
+        return &event->bluetooth.le.gatt_client_service.info;
       }
       break;
 #ifdef CONFIG_MFG
     case PEBBLE_HRM_EVENT:
       if (event->hrm.event_type == HRMEvent_CTR) {
-        return (void **)(&event->hrm.ctr);
+        return &event->hrm.ctr;
       } else if (event->hrm.event_type == HRMEvent_Leakage) {
-        return (void **)(&event->hrm.leakage);
+        return &event->hrm.leakage;
       }
       break;
 #endif
     case PEBBLE_APP_GLANCE_EVENT:
-      return (void **)&event->app_glance.app_uuid;
+      return &event->app_glance.app_uuid;
 
     case PEBBLE_TIMELINE_PEEK_EVENT:
-      return (void **)&event->timeline_peek.item_id;
+      return &event->timeline_peek.item_id;
 
     default:
       break; // Nothing to do!
   }
 
   return NULL;
+}
+
+void *event_get_buffer(PebbleEvent *event) {
+  void *slot = prv_buffer_slot(event);
+  void *buffer = NULL;
+  if (slot) {
+    memcpy(&buffer, slot, sizeof(buffer));
+  }
+  return buffer;
+}
+
+void event_clear_buffer(PebbleEvent *event) {
+  void *slot = prv_buffer_slot(event);
+  if (slot) {
+    memset(slot, 0, sizeof(void *));
+  }
 }
 
 void event_cleanup(PebbleEvent *event) {
