@@ -16,6 +16,8 @@
   PREFS_MACRO(PREF_KEY_BACKLIGHT_TOUCH, s_backlight_touch_wake)
   PREFS_MACRO(PREF_KEY_TOUCH_ENABLED, s_touch_enabled)
   PREFS_MACRO(PREF_KEY_TOUCH_NAVIGATION_MENU, s_touch_navigation_menu_enabled)
+  PREFS_MACRO(PREF_KEY_CHARGING_BLINK_WHEN_FULL, s_charging_blink_when_full)
+  PREFS_MACRO(PREF_KEY_CHARGING_VIBE_WHEN_FULL, s_charging_vibe_when_full)
   PREFS_MACRO(PREF_KEY_MOTION_SENSITIVITY, s_motion_sensitivity)
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
   PREFS_MACRO(PREF_KEY_BACKLIGHT_DYNAMIC_MODE, s_backlight_dynamic_mode)
