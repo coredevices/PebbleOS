@@ -79,6 +79,44 @@ config DEBUG_INFO_MACROS
       firmware's macros. It costs around 7% of the compile time and
       makes the objects, and with them the link, noticeably larger.
 
+config ASAN
+    bool "AddressSanitizer"
+    depends on ARCH_POSIX
+    help
+      Build with AddressSanitizer (-fsanitize=address). It reports
+      out-of-bounds accesses and uses after free on the stacks, the
+      globals and the host C library's heap of a native build. The
+      firmware's own heaps are not instrumented. Runtime options go in
+      ASAN_OPTIONS.
+
+config ASAN_RECOVER
+    bool "Continue after AddressSanitizer errors"
+    depends on ASAN
+    help
+      Let the program go on after an error, to report several in one
+      run. Takes ASAN_OPTIONS=halt_on_error=0 at runtime as well.
+
+config UBSAN
+    bool "UndefinedBehaviorSanitizer"
+    depends on ARCH_POSIX
+    help
+      Build with UndefinedBehaviorSanitizer (-fsanitize=undefined),
+      which reports undefined behaviour (overflows, invalid shifts, null
+      accesses, ...) as it happens, and goes on. Alignment is not
+      checked: packed structs holding pointers leave what follows them
+      misaligned on a 64-bit host, which they are not on the target.
+      Runtime options go in UBSAN_OPTIONS.
+
+config TSAN
+    bool "ThreadSanitizer"
+    depends on ARCH_POSIX && !ASAN
+    help
+      Build with ThreadSanitizer (-fsanitize=thread), which reports data
+      races between host threads. Kernel threads run one at a time,
+      handing a lock over, so it checks the host side of a native build
+      rather than races between firmware threads and interrupts.
+      Runtime options go in TSAN_OPTIONS.
+
 config LINKER_MAP
     bool "Linker map file"
     help

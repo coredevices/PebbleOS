@@ -189,6 +189,12 @@
 #define PBL_POPCOUNT(x) PBL_POPCOUNT_IMPL(x)
 
 /**
+ * @brief Keep AddressSanitizer off the object: no redzones around a global,
+ * e.g. one that must sit next to its neighbours in a section.
+ */
+#define PBL_NO_SANITIZE_ADDRESS PBL_NO_SANITIZE_ADDRESS_IMPL
+
+/**
  * @brief Add, detecting overflow. Prefer the typed helpers of pbl/util/math.h.
  *
  * @param a First operand.

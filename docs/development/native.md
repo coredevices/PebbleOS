@@ -55,6 +55,22 @@ debugger stops right there:
 lldb build/pebbleos
 ```
 
+## Sanitizers
+
+The compiler's sanitizers can be built in with Kconfig options:
+
+```shell
+pbl configure --board=native_emery -DCONFIG_ASAN=y -DCONFIG_UBSAN=y
+```
+
+- `CONFIG_ASAN`: AddressSanitizer, out-of-bounds and use-after-free accesses.
+  The firmware heaps keep what they have not handed out poisoned.
+  `CONFIG_ASAN_RECOVER` reports errors and goes on, with
+  `ASAN_OPTIONS=halt_on_error=0`.
+- `CONFIG_UBSAN`: UndefinedBehaviorSanitizer, without the alignment check.
+- `CONFIG_TSAN`: ThreadSanitizer, not together with AddressSanitizer. Firmware
+  threads take turns on one CPU, so it mostly checks the host side.
+
 ## How it works
 
 The kernel's `posix` architecture (`kernel/arch/posix`) runs each kernel

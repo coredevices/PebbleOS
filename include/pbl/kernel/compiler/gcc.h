@@ -37,4 +37,6 @@
 #define PBL_ADD_OVERFLOW_IMPL(a, b, r)  __builtin_add_overflow(a, b, r)
 #define PBL_MUL_OVERFLOW_IMPL(a, b, r)  __builtin_mul_overflow(a, b, r)
 
+#define PBL_NO_SANITIZE_ADDRESS_IMPL __attribute__((__no_sanitize_address__))
+
 /** @endcond */

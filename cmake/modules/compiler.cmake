@@ -27,6 +27,26 @@ if(CONFIG_ARCH_POSIX)
     -ffunction-sections
     -fdata-sections
   )
+  set(pbl_sanitize_flags "")
+  if(CONFIG_ASAN)
+    list(APPEND pbl_sanitize_flags -fsanitize=address -fno-omit-frame-pointer)
+    if(CONFIG_ASAN_RECOVER)
+      list(APPEND pbl_sanitize_flags -fsanitize-recover=address)
+    endif()
+  endif()
+  if(CONFIG_UBSAN)
+    # Packed structs holding pointers leave what follows them misaligned on
+    # a 64-bit host, which they are not on the target.
+    list(APPEND pbl_sanitize_flags -fsanitize=undefined -fno-sanitize=alignment)
+  endif()
+  if(CONFIG_TSAN)
+    list(APPEND pbl_sanitize_flags -fsanitize=thread)
+  endif()
+  # The host side is instrumented along with the firmware.
+  list(APPEND pbl_arch_flags ${pbl_sanitize_flags})
+  if(pbl_sanitize_flags)
+    pbl_host_compile_options(${pbl_sanitize_flags})
+  endif()
 else()
   add_compile_options(-Werror)
   set(pbl_arch_flags

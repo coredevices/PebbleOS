@@ -72,11 +72,11 @@
  */
 
 #ifdef __APPLE__
-#define PBL_UNSORTED_SECTION(name)       PBL_SECTION_IMPL("__DATA_CONST,__" #name)
+#define PBL_UNSORTED_SECTION(name) PBL_SECTION_IMPL("__DATA_CONST,__" #name) PBL_NO_SANITIZE_ADDRESS
 #define PBL_UNSORTED_SECTION_START(name) __asm("section$start$__DATA_CONST$__" #name)
 #define PBL_UNSORTED_SECTION_END(name)   __asm("section$end$__DATA_CONST$__" #name)
 #else
-#define PBL_UNSORTED_SECTION(name)       PBL_SECTION_IMPL(#name)
+#define PBL_UNSORTED_SECTION(name)       PBL_SECTION_IMPL(#name) PBL_NO_SANITIZE_ADDRESS
 #define PBL_UNSORTED_SECTION_START(name) __asm("__start_" #name)
 #define PBL_UNSORTED_SECTION_END(name)   __asm("__stop_" #name)
 #endif
