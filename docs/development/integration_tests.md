@@ -20,6 +20,18 @@ pbl build
 pbl itest
 ```
 
+A native board (see [](native.md)) runs as a host process instead, on a
+fresh flash file, serving its console and the QEMU serial protocol on TCP
+ports. Built with sanitizers, it runs the suite under them:
+
+```shell
+pbl configure --board native_emery -DCONFIG_ASAN=y -DCONFIG_UBSAN=y
+pbl itest
+```
+
+The process's output, sanitizer reports included, is in `native.log` with
+the rest of the results.
+
 Anything `pbl itest` does not recognize goes straight to pytest, which it
 runs from `tests/integration`, so the usual selection options work:
 

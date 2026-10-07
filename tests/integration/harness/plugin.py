@@ -16,13 +16,13 @@ from harness.errors import HarnessError, Unsupported
 pytest_plugins = ("harness.fixtures",)
 
 TOPDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-DEVICE_TYPES = ("qemu", "hardware")
+DEVICE_TYPES = ("qemu", "native", "hardware")
 
 # Where a test applies; every one of them given must match the device.
 SCOPE_MARKERS = {
     "boards": "boards(*names): only on these boards (e.g. obelix, qemu_emery)",
     "platforms": "platforms(*names): only on these platforms (emery, flint, gabbro)",
-    "device_types": "device_types(*types): only on these device types (qemu, hardware)",
+    "device_types": "device_types(*types): only on these device types (qemu, native, hardware)",
     "requires_config": "requires_config(*symbols): only when these Kconfig symbols are set",
     "variants": "variants(*names): only on these firmware variants (normal, prf); "
     "unmarked tests are for normal",
@@ -83,7 +83,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--device-type",
         choices=DEVICE_TYPES,
-        help="qemu or hardware (default: qemu for emulated boards)",
+        help="qemu, native or hardware (default: from the board)",
     )
     group.addoption(
         "--device-serial",
@@ -203,7 +203,10 @@ def pytest_configure(config):
 
     device_type = config.getoption("device_type")
     if device_type is None and build is not None:
-        device_type = "qemu" if build.emulated else "hardware"
+        if build.native:
+            device_type = "native"
+        else:
+            device_type = "qemu" if build.emulated else "hardware"
     config.pbl_device_type = device_type
 
     board = config.getoption("board") or (build.board if build else None)

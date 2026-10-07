@@ -27,7 +27,8 @@ class ITest(PblCommand):
         parser.add_argument(
             "--no-build",
             action="store_true",
-            help="Use the emulator's flash images as they are instead of building them",
+            help="Use the emulator's flash images or the native program as they "
+            "are instead of building them",
         )
         return parser
 
@@ -37,6 +38,8 @@ class ITest(PblCommand):
             self.cmake_build(
                 build, "qemu_image_micro", "qemu_image_spi", msg="QEMU images failed"
             )
+        elif build.config.CONFIG_SOC_POSIX and not args.no_build:
+            self.cmake_build(build, msg="Build failed")
 
         tests = os.path.join(self.topdir, "tests", "integration")
         # Load the harness up front: pytest only loads conftest.py early when

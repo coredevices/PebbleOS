@@ -91,12 +91,21 @@ class Build:
         return bool(self.config.get("CONFIG_QEMU"))
 
     @property
+    def native(self):
+        return bool(self.config.get("CONFIG_SOC_POSIX"))
+
+    @property
     def variant(self):
         return self.cache.get("VARIANT", "normal")
 
     @property
     def elf(self):
         return self.join(f"{self.cache.get('CMAKE_PROJECT_NAME', 'pebbleos')}.elf")
+
+    @property
+    def executable(self):
+        """The native build's program."""
+        return self.join(self.cache.get("CMAKE_PROJECT_NAME", "pebbleos"))
 
     @property
     def loghash_dict(self):
