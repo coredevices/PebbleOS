@@ -11,6 +11,17 @@
 #include <string.h>
 #include <stdio.h>
 
+// With AddressSanitizer, only what is allocated is addressable. This file is
+// not instrumented itself, as it walks block headers and free memory.
+#ifdef CONFIG_ASAN
+#include <sanitizer/asan_interface.h>
+#define HEAP_POISON(addr, size)   ASAN_POISON_MEMORY_REGION(addr, size)
+#define HEAP_UNPOISON(addr, size) ASAN_UNPOISON_MEMORY_REGION(addr, size)
+#else
+#define HEAP_POISON(addr, size)
+#define HEAP_UNPOISON(addr, size)
+#endif
+
 /* The following defines a type that is the size in bytes of the     */
 /* desired alignment of each data fragment.                          */
 typedef unsigned long Alignment_t;
@@ -202,6 +213,7 @@ void heap_init(Heap *const heap, void *start, void *end, bool fuzz_on_free) {
   *heap = (Heap){.begin = start, .end = end, .fuzz_on_free = fuzz_on_free};
 
   *(heap->begin) = (HeapInfo_t){.PrevSize = heap_size, .is_allocated = false, .Size = heap_size};
+  HEAP_POISON(start, heap_size * ALIGNMENT_SIZE);
 }
 
 void heap_set_lock_impl(Heap *heap, HeapLockImpl lock_impl) {
@@ -255,6 +267,8 @@ void *heap_malloc(Heap *const heap, unsigned long nbytes, uintptr_t client_pc) {
   heap_unlock(heap);
 
   if (allocated_block) {
+    HEAP_UNPOISON(&allocated_block->Data,
+                  (allocated_block->Size - HEAP_INFO_BLOCK_SIZE(0)) * ALIGNMENT_SIZE);
     return &allocated_block->Data;
   }
   return NULL;
@@ -299,6 +313,7 @@ void heap_free(Heap *const heap, void *ptr, uintptr_t client_pc) {
       memset(ptr, 0xBD, (heap_info_ptr->Size - HEAP_INFO_BLOCK_SIZE(0)) * ALIGNMENT_SIZE);
     }
 #endif
+    HEAP_POISON(ptr, (heap_info_ptr->Size - HEAP_INFO_BLOCK_SIZE(0)) * ALIGNMENT_SIZE);
 
     // Update metrics
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
