@@ -29,7 +29,6 @@ set(PBL_TEST_C_FLAGS
   -Wno-error=unused-function
   -Wno-error=missing-braces
   -Wno-error=unused-const-variable
-  -Wno-error=address-of-packed-member
   -Wno-enum-conversion
   -g3
   -gdwarf-4
