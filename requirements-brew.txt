@@ -6,3 +6,5 @@ lcov
 ninja
 node
 librsvg
+pkg-config
+sdl2

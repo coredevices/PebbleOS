@@ -57,9 +57,11 @@ sudo apt install \
     libgtk-3-dev \
     libncurses-dev \
     librsvg2-bin \
+    libsdl2-dev \
     make \
     nodejs \
     openocd \
+    pkg-config \
     python3-dev \
     python3-venv
 ```
@@ -94,7 +96,9 @@ sudo dnf install \
     ncurses-devel \
     nodejs \
     openocd \
-    python3-devel
+    pkgconf-pkg-config \
+    python3-devel \
+    SDL2-devel
 ```
 
 ::::

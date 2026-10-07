@@ -13,8 +13,8 @@ binaries. Only macOS has been tried so far.
 
 ## Requirements
 
-A host C compiler and [SDL2](https://www.libsdl.org) (`brew install sdl2`,
-`apt install libsdl2-dev`).
+A host C compiler and [SDL2](https://www.libsdl.org), both part of the
+dependencies in [](getting_started.md).
 
 ## Build and run
 

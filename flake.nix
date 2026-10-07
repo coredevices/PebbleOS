@@ -118,7 +118,10 @@
             ] ++ lib.optionals stdenv.isLinux [
               gcc
             ];
-            buildInputs = with pkgs; lib.optionals stdenv.isDarwin [
+            buildInputs = with pkgs; [
+              # Native board window
+              SDL2
+            ] ++ lib.optionals stdenv.isDarwin [
               apple-sdk
             ] ++ lib.optionals stdenv.isLinux [
               # Required for Moddable build
