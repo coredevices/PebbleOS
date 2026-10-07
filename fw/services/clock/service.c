@@ -67,7 +67,7 @@ static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
 typedef struct PBL_PACKED {
   // This struct is packed because it mirrors the endpoint definition:
   // https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=491698#PebbleProtocol(BluetoothSerial)-0xb(11)-Time/Clock(bigendian)
-  time_t utc_time;                        // UTC timestamp
+  int32_t utc_time;                       // UTC timestamp
   int16_t utc_offset_min;                 // local timestamp - UTC timestamp in mins
   int8_t region_name_len;                 // timezone name length
   char region_name[TIMEZONE_NAME_LENGTH]; // timezone name string
@@ -309,10 +309,11 @@ static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
     // Manual time mode: ignore time set from phone entirely
     return;
   }
+  time_t utc_time = tz_data->utc_time;
   if (clock_timezone_source_is_manual()) {
-    prv_update_time_info_and_generate_event(&tz_data->utc_time, NULL);
+    prv_update_time_info_and_generate_event(&utc_time, NULL);
   } else {
-    prv_update_time_info_and_generate_event(&tz_data->utc_time, &tz_info);
+    prv_update_time_info_and_generate_event(&utc_time, &tz_info);
   }
 }
 

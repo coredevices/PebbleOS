@@ -256,8 +256,8 @@ void test_app_cache__clear(void) {
 #define APP_CACHE_MAX_SIZE  4000
 
 typedef struct PBL_PACKED {
-  time_t install_date;
-  time_t last_launch;
+  int32_t install_date;
+  int32_t last_launch;
   uint32_t total_size;
   uint16_t launch_count;
 } AppCacheEntry;

@@ -84,7 +84,7 @@ typedef struct PBL_PACKED {
   /** Tomorrow's low temperature. */
   int16_t tomorrow_low_temp;
   /** Time of the last update, UTC. */
-  time_t last_update_time_utc;
+  int32_t last_update_time_utc;
   /** Whether this is the phone's current location. */
   bool is_current_location;
   /** Location name and short phrase, see ::WeatherDbStringIndex. */
@@ -140,7 +140,7 @@ typedef struct PBL_PACKED {
   /** Tomorrow's low temperature. */
   int16_t tomorrow_low_temp;
   /** Time of the last update, UTC. */
-  time_t last_update_time_utc;
+  int32_t last_update_time_utc;
   /** Whether this is the phone's current location. */
   bool is_current_location;
 

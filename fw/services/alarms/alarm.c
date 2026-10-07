@@ -56,7 +56,7 @@ PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 
 typedef struct PBL_PACKED AlarmArmedRecord {
   //! Cron execute time of the armed alarm, 0 if no alarm is armed.
-  time_t time;
+  int32_t time;
   AlarmId id;
 } AlarmArmedRecord;
 

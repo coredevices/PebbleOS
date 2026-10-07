@@ -66,8 +66,8 @@ static PBL_MUTEX_DEFINE(s_app_cache_mutex);
 
 //! Actual data structure stored in flash about an app cache entry
 typedef struct PBL_PACKED {
-  time_t install_date;
-  time_t last_launch;
+  int32_t install_date;
+  int32_t last_launch;
   uint32_t total_size;
   uint16_t launch_count;
 } AppCacheEntry;

@@ -360,7 +360,7 @@ typedef struct {
 /** @brief A detected or manual activity session. */
 typedef struct PBL_PACKED {
   /** Start time, UTC. */
-  time_t start_utc;
+  int32_t start_utc;
   /** Length, in minutes. */
   uint16_t length_min;
   /** Session type. */

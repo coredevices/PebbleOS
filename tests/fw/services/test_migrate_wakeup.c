@@ -62,7 +62,7 @@ typedef struct PBL_PACKED {
   bool repeating;
   uint16_t repeat_hours_missed;
   bool notify_if_missed;
-  time_t timestamp;
+  int32_t timestamp;
   bool utc;
 } WakeupEntryV2;
 

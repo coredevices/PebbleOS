@@ -104,7 +104,7 @@ static EventServiceInfo s_blobdb_event_info;     // Used to detect pin deletion 
 // Timestamp and UUID of the last time we added a new summary pin - stored to flash to allow
 // us to continue to update the pin across reboots
 typedef struct PBL_PACKED SummaryPinLastState {
-  time_t last_triggered_utc;
+  int32_t last_triggered_utc;
   Uuid uuid;
 } SummaryPinLastState;
 
