@@ -163,7 +163,7 @@ class Ui:
             raise Unsupported("no connection or device can capture the screen")
         return image
 
-    def _protocol_screenshot(self, timeout=SCREENSHOT_TIMEOUT_S):
+    def _protocol_screenshot(self, timeout=SCREENSHOT_TIMEOUT_S, pebble=None):
         """The screenshot endpoint's image as RGB rows; libpebble2's own
         client waits forever on a watch that stops answering."""
         from libpebble2.exceptions import TimeoutError as PebbleTimeoutError
@@ -174,7 +174,7 @@ class Ui:
         )
         from libpebble2.services.screenshot import Screenshot
 
-        pebble = self.dut.protocol
+        pebble = pebble or self.dut.protocol
         responses = pebble.get_endpoint_queue(ScreenshotResponse)
         try:
             pebble.send_packet(ScreenshotRequest())

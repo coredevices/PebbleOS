@@ -37,6 +37,7 @@ class Phone:
     """A phone with the Pebble app: it connects to the watch and carries the
     Pebble protocol (``pebble``, a libpebble2 connection)."""
 
+    dut = None
     name = None
     address = None
     pebble = None
@@ -78,6 +79,12 @@ class Phone:
         running = response.data.running
         running.is_recovery = bool(message[RUNNING_FLAGS_OFFSET] & FLAG_RECOVERY)
         return running
+
+    def screenshot(self, timeout=60.0):
+        """The watch's screen, through the phone's session: RGB rows."""
+        from harness.helpers.ui import Ui
+
+        return Ui(self.dut)._protocol_screenshot(timeout, pebble=self.pebble)
 
     def reset_into_recovery(self):
         """What the app's 'Reset to PRF' sends."""
@@ -175,6 +182,7 @@ class BumblePhone(Phone):
         name=HOST_NAME,
         watch=AUTO,
         ppogatt=REVERSED,
+        **link_options,
     ):
         if not dut.ble_controller:
             raise HarnessError("no Bluetooth controller for the phone")
@@ -187,6 +195,7 @@ class BumblePhone(Phone):
             address=address,
             name=name,
             ppogatt=ppogatt,
+            **link_options,
         )
         self._pairing = None
 

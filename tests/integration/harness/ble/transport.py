@@ -24,6 +24,11 @@ class BleTransport(BaseTransport):
     def connect(self):
         self.link.on_data = self._on_data
         self.link.on_disconnect = lambda: self._frames.put(_CLOSED)
+        self.link.on_reset = self._on_reset
+
+    def _on_reset(self):
+        # A new session starts a new stream.
+        self._buffer = b""
 
     @property
     def connected(self):

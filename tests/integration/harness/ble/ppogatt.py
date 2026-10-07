@@ -71,6 +71,7 @@ class PPoGATT:
         self._retransmits = 0
         self._reset_sent_at = None
         self._answered_reset = False
+        self._ignore_data = 0
 
     @property
     def max_payload(self):
@@ -126,7 +127,19 @@ class PPoGATT:
         elif packet_type == PacketType.ACK:
             self._receive_ack(sn)
 
+    @property
+    def expected_sn(self):
+        """The sequence number of the next data packet expected."""
+        return self._rx_sn
+
+    def ignore_data(self, count):
+        """Drop the next ``count`` data packets received, as if lost."""
+        self._ignore_data = count
+
     def _receive_data(self, sn, payload):
+        if self._ignore_data:
+            self._ignore_data -= 1
+            return
         if sn == self._rx_sn:
             self._rx_sn = (self._rx_sn + 1) % SN_MOD
             self._write(header(PacketType.ACK, sn))
