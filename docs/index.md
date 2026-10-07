@@ -85,6 +85,7 @@ Look things up: protocol specifications, podcasts, developer documents and more!
 :hidden:
 :caption: 🛠️ Development
 development/getting_started.md
+development/quickstart.md
 development/pbl.md
 development/options.md
 development/building_fw.md
