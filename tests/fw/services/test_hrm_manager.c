@@ -7,6 +7,7 @@
 #include "pbl/kernel/types.h"
 #include "pbl/services/hrm/hrm_manager.h"
 #include "pbl/services/hrm/hrm_manager_private.h"
+#include "applib/health_service.h"
 #include "pbl/util/size.h"
 
 #include "fake_app_manager.h"
@@ -141,6 +142,18 @@ static const HRMData s_hrm_event_data = {
 
 static void prv_fake_send_new_data(void) {
   hrm_manager_new_data_cb(&s_hrm_event_data);
+}
+
+static const HRMData s_hrv_event_data = {
+  .features = HRMFeature_BPM | HRMFeature_HRV,
+  .hrm_bpm = 58,
+  .hrm_quality = HRMQuality_Excellent,
+  .hrv_ppi_ms = 1034,
+  .hrv_quality = HRMQuality_Good,
+};
+
+static void prv_fake_send_hrv_data(void) {
+  hrm_manager_new_data_cb(&s_hrv_event_data);
 }
 
 static PebbleHRMEvent s_cb_events_1[16];
@@ -1084,4 +1097,43 @@ void test_hrm_manager__immediate_off_wrist(void) {
   cl_assert_equal_i(s_cb_events_1[0].bpm.quality, HRMQuality_OffWrist);
 
   sys_hrm_manager_unsubscribe(session_ref);
+}
+
+// HRV is broadcast to health service subscribers only while an app holds an HRV sample period, as
+// documented for health_service_set_hrv_sample_period(). A kernel client collecting HRV must not
+// flood every app with a health event per beat.
+void test_hrm_manager__hrv_broadcast_only_for_app_hrv(void) {
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  HRMSessionRef kernel_ref = hrm_manager_subscribe_with_callback(
+      INSTALL_ID_INVALID, 1, 0 /*expire_s*/, HRMFeature_BPM | HRMFeature_HRV, false /*low_latency*/,
+      prv_fake_hrm_1_cb, NULL);
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  fake_event_reset_count();
+
+  // Only the kernel asked for HRV: no health event
+  prv_fake_send_hrv_data();
+  cl_assert_equal_i(fake_event_get_count(), 0);
+
+  // An app with a heart rate period only does not get HRV either
+  HRMSessionRef bpm_ref = sys_hrm_manager_app_subscribe(1, 1, 0 /*expire_s*/, HRMFeature_BPM);
+  prv_fake_send_hrv_data();
+  cl_assert_equal_i(fake_event_get_count(), 0);
+
+  // Once an app holds an HRV sample period, every HRV update is broadcast
+  HRMSessionRef hrv_ref =
+      sys_hrm_manager_app_subscribe(2, 1, 0 /*expire_s*/, HRMFeature_BPM | HRMFeature_HRV);
+  prv_fake_send_hrv_data();
+  cl_assert_equal_i(fake_event_get_count(), 1);
+  PebbleEvent last = fake_event_get_last();
+  cl_assert_equal_i(last.type, PEBBLE_HEALTH_SERVICE_EVENT);
+  cl_assert_equal_i(last.health_event.type, HealthEventHRVUpdate);
+  cl_assert_equal_i(last.health_event.data.hrv_update.ppi_ms, s_hrv_event_data.hrv_ppi_ms);
+
+  // And it stops again when that app drops HRV
+  sys_hrm_manager_unsubscribe(hrv_ref);
+  prv_fake_send_hrv_data();
+  cl_assert_equal_i(fake_event_get_count(), 1);
+
+  sys_hrm_manager_unsubscribe(bpm_ref);
+  sys_hrm_manager_unsubscribe(kernel_ref);
 }
