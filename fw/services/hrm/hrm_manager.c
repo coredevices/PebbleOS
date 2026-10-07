@@ -454,6 +454,14 @@ static void prv_update_enable_timer_cb(void *context) {
   system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
 }
 
+// A pass can only act if the sensor could turn on or is already running; every path that makes
+// the sensor runnable again posts the pass itself, so skip the KernelBG wakeup otherwise.
+static void prv_schedule_update_if_needed(void) {
+  if (prv_can_turn_sensor_on() || hrm_is_enabled(HRM)) {
+    system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
+  }
+}
+
 //! The system task needs its own handler for HRM data since we can't queue up generic events.
 static void prv_system_task_hrm_handler(void *context) {
   time_t utc_now = rtc_get_time();
@@ -954,7 +962,7 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_features, HRMSessionRef session, HRMFea
   }
   // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
   // optical path, and must not wait for the next sample to trigger a pass.
-  system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
+  prv_schedule_update_if_needed();
   pbl_mutex_unlock(&s_manager_state.lock);
   return success;
 }
@@ -976,7 +984,7 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_update_interval, HRMSessionRef session,
     }
     success = true;
   }
-  system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
+  prv_schedule_update_if_needed();
   pbl_mutex_unlock(&s_manager_state.lock);
   return success;
 }
