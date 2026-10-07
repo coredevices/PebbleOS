@@ -1512,7 +1512,9 @@ static void prv_apply_art_appearance(MusicAppData *data) {
     clock_mode = StatusBarLayerModeClockLargeBold;
   }
 #endif
-  status_bar_layer_set_colors(&data->status_layer, GColorClear, system_theme_get_fg_color());
+  // Over album art the clock is drawn with a dark outline, so it stays white in every theme
+  status_bar_layer_set_colors(&data->status_layer, GColorClear,
+                              data->has_album_art ? GColorWhite : system_theme_get_fg_color());
   status_bar_layer_set_mode(&data->status_layer, clock_mode);
 #if MUSIC_ROUND_MEDIA_LAYOUT
   const GRect clock_frame = GRect(0, ART_ROUND_CLOCK_Y, DISP_COLS, 30);
@@ -1608,7 +1610,7 @@ static void prv_init_ui(Window *window) {
 
   progress_layer_init(&data->track_pos_bar, &track_rect);
   progress_layer_set_background_color(&data->track_pos_bar,
-                                      PBL_IF_COLOR_ELSE(system_theme_get_bg_color(), GColorWhite));
+                                      PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
   progress_layer_set_foreground_color(&data->track_pos_bar,
                                       PBL_IF_COLOR_ELSE(GColorRed, GColorBlack));
   progress_layer_set_corner_radius(&data->track_pos_bar, config->track_corner_radius);
