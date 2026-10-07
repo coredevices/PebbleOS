@@ -1062,8 +1062,26 @@ static int prv_cmd_tz_clear(const struct pbl_shell *sh, size_t argc, char **argv
   return 0;
 }
 
+#ifndef CONFIG_RECOVERY_FW
+static int prv_cmd_show(const struct pbl_shell *sh, size_t argc, char **argv) {
+  const time_t utc = rtc_get_time();
+  char region[TIMEZONE_NAME_LENGTH];
+  clock_get_timezone_region(region, sizeof(region));
+
+  pbl_shell_print(sh, "UTC: %" PRIi32, (int32_t)utc);
+  pbl_shell_print(sh, "Local: %" PRIi32, (int32_t)time_utc_to_local(utc));
+  pbl_shell_print(sh, "Offset: %" PRIi32, time_get_gmtoffset());
+  pbl_shell_print(sh, "DST: %d", time_get_isdst(utc));
+  pbl_shell_print(sh, "Region: %s", clock_is_timezone_set() ? region : "");
+  return 0;
+}
+#endif
+
 PBL_SHELL_SUBCMD_SET_CREATE(sub_time);
 PBL_SHELL_CMD_REGISTER(time, sub_time, "Time and timezone", NULL);
 PBL_SHELL_SUBCMD_ADD(sub_time, set, NULL, "Set the time <unix_timestamp>", prv_cmd_set, 2, 0);
 PBL_SHELL_SUBCMD_ADD(sub_time, tz_clear, NULL, "Clear the timezone", prv_cmd_tz_clear, 0, 0);
+#ifndef CONFIG_RECOVERY_FW
+PBL_SHELL_SUBCMD_ADD(sub_time, show, NULL, "Show the time and timezone", prv_cmd_show, 0, 0);
+#endif
 #endif
