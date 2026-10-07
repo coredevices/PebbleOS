@@ -16,8 +16,10 @@ class BleTransport(BaseTransport):
     # The watch asks for the phone's version; libpebble2 answers it.
     must_initialise = True
 
-    def __init__(self, link):
+    def __init__(self, link, on_frame=None):
         self.link = link
+        # Sees every frame, including those libpebble2 cannot decode.
+        self.on_frame = on_frame
         self._frames = queue.Queue()
         self._buffer = b""
 
@@ -41,7 +43,10 @@ class BleTransport(BaseTransport):
             (length,) = struct.unpack(">H", self._buffer[:2])
             if len(self._buffer) < length + 4:
                 break
-            self._frames.put(self._buffer[: length + 4])
+            frame = self._buffer[: length + 4]
+            if self.on_frame is not None:
+                self.on_frame(frame)
+            self._frames.put(frame)
             self._buffer = self._buffer[length + 4 :]
 
     def read_packet(self):

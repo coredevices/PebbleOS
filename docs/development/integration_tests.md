@@ -200,6 +200,13 @@ def test_version(phones):
     assert phone.watch_version().version_tag
 ```
 
+`phone.inbox` keeps every message the watch sends the phone, from the
+start of the session; `mark()` and `wait(endpoint, match, timeout, since)`
+work as the log's do, and `phone.send(endpoint, payload)` sends raw
+payloads. `harness.helpers.blobdb` writes blob DB records and timeline
+items as the phone app does. The `bluetooth/test_*_endpoints.py` tests
+cover the Pebble protocol endpoints the watch serves the phone this way.
+
 ### Results
 
 Everything a run produces goes to `BUILD/itest` (or `--results-dir`):

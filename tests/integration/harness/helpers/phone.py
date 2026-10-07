@@ -10,6 +10,7 @@ import os
 import queue
 import struct
 import threading
+import time
 
 from harness.ble import AUTO, HOST_ADDRESS, HOST_NAME, REVERSED, BleLink
 from harness.errors import HarnessError, Unsupported, WatchTimeout
@@ -18,6 +19,9 @@ from harness.lab import PHONE_BUMBLE, PHONE_COREAPP
 logger = logging.getLogger(__name__)
 
 RESET_ENDPOINT = 2003
+TIME_ENDPOINT = 0x000B
+TIME_GET = 0x00
+TIME_GET_RESPONSE = 0x01
 # In a version response: the frame header, the command, then the running
 # firmware's timestamp, version tag and git hash before its flags.
 RUNNING_FLAGS_OFFSET = 4 + 1 + 4 + 32 + 8
@@ -33,14 +37,64 @@ def send_raw(pebble, endpoint, payload):
     pebble.send_raw(struct.pack(">HH", len(payload), endpoint) + payload)
 
 
+class Inbox:
+    """Every message the watch sent the phone in a session, in order, as
+    ``(endpoint, payload)``; :meth:`mark` and :meth:`wait` work as the
+    device log's do."""
+
+    def __init__(self):
+        self._messages = []
+        self._cond = threading.Condition()
+
+    def __call__(self, frame):
+        length, endpoint = struct.unpack_from(">HH", frame)
+        with self._cond:
+            self._messages.append((endpoint, bytes(frame[4 : 4 + length])))
+            self._cond.notify_all()
+
+    def mark(self):
+        with self._cond:
+            return len(self._messages)
+
+    def received(self, endpoint, since=0):
+        """The payloads received on ``endpoint`` after mark ``since``."""
+        with self._cond:
+            return [p for e, p in self._messages[since:] if e == endpoint]
+
+    def wait(self, endpoint, match=None, timeout=10.0, since=0):
+        """The first payload on ``endpoint`` after mark ``since`` that
+        ``match`` accepts."""
+        return self.next(endpoint, match, timeout, since)[0]
+
+    def next(self, endpoint, match=None, timeout=10.0, since=0):
+        """As :meth:`wait`, with the mark just after the payload found, to
+        go on from."""
+        deadline = time.monotonic() + timeout
+        index = since
+        with self._cond:
+            while True:
+                for e, payload in self._messages[index:]:
+                    index += 1
+                    if e == endpoint and (match is None or match(payload)):
+                        return payload, index
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise WatchTimeout(
+                        f"no expected message on endpoint {endpoint:#x} within {timeout}s"
+                    )
+                self._cond.wait(remaining)
+
+
 class Phone:
     """A phone with the Pebble app: it connects to the watch and carries the
-    Pebble protocol (``pebble``, a libpebble2 connection)."""
+    Pebble protocol (``pebble``, a libpebble2 connection). ``inbox`` holds
+    what the watch sent it."""
 
     dut = None
     name = None
     address = None
     pebble = None
+    inbox = None
 
     def connect(self, timeout=90.0):
         raise NotImplementedError
@@ -82,9 +136,22 @@ class Phone:
 
     def screenshot(self, timeout=60.0):
         """The watch's screen, through the phone's session: RGB rows."""
-        from harness.helpers.ui import Ui
+        from harness.helpers.ui import protocol_screenshot
 
-        return Ui(self.dut)._protocol_screenshot(timeout, pebble=self.pebble)
+        return protocol_screenshot(self.pebble, timeout)
+
+    def watch_time(self, timeout=10.0):
+        """The watch's UTC time, as its clock endpoint gives it."""
+        since = self.inbox.mark()
+        self.send(TIME_ENDPOINT, bytes([TIME_GET]))
+        response = self.inbox.wait(
+            TIME_ENDPOINT, lambda p: p[0] == TIME_GET_RESPONSE, timeout, since
+        )
+        return struct.unpack_from(">I", response, 1)[0]
+
+    def send(self, endpoint, payload):
+        """Send ``payload`` to ``endpoint`` as it is."""
+        send_raw(self.pebble, endpoint, payload)
 
     def reset_into_recovery(self):
         """What the app's 'Reset to PRF' sends."""
@@ -212,7 +279,8 @@ class BumblePhone(Phone):
         from harness.connections import start_protocol
 
         self.link.open(timeout)
-        self.pebble = start_protocol(BleTransport(self.link))
+        self.inbox = Inbox()
+        self.pebble = start_protocol(BleTransport(self.link, on_frame=self.inbox))
         return self
 
     def pair(self, timeout=90.0):
