@@ -12,6 +12,8 @@ DEFAULT_BAUDRATE = 115200
 # "<level> <task> <time> <file>:<line>> <message>"; hashed lines have no file.
 LOG_LINE = re.compile(r"^(\S) (\S+) (\S+) (\S*:\d+)> (.*)$")
 CTRL_C = b"\x03"
+# The next prompt, at the start of a line: ">" or a shell's "pebble> ".
+PROMPT_END = re.compile(r"\n\S*> ?$")
 CTRL_D = b"\x04"
 
 
@@ -127,9 +129,10 @@ class SerialConnection(Connection):
                 with self._cond:
                     self._prompt_buf = ""
                 self._serial.write(command.encode() + b"\r")
-                # The next prompt is a '>' at the start of a line.
                 output = self._wait_prompt_until(
-                    lambda b: b.endswith("\n>"), timeout, f"prompt command {command!r}"
+                    lambda b: PROMPT_END.search(b) is not None,
+                    timeout,
+                    f"prompt command {command!r}",
                 )
             finally:
                 self._serial.write(CTRL_D)
