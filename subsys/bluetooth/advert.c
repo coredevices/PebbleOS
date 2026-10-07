@@ -8,6 +8,8 @@
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/pairing_confirm.h>
 #include <host/ble_gap.h>
+#include <host/ble_gatt.h>
+#include <services/gatt/ble_svc_gatt.h>
 #include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
 #include <pbl/logging/logging.h>
@@ -287,6 +289,25 @@ static void prv_handle_subscription_event(struct ble_gap_event *event) {
               event->subscribe.conn_handle, event->subscribe.attr_handle,
               event->subscribe.prev_notify, event->subscribe.cur_notify,
               event->subscribe.prev_indicate, event->subscribe.cur_indicate);
+  const ble_uuid16_t svc_uuid = BLE_UUID16_INIT(PBL_BT_GATT_SERVICE_UUID);
+  const ble_uuid16_t chr_uuid = BLE_UUID16_INIT(BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16);
+  uint16_t value_handle;
+  if (ble_gatts_find_chr(&svc_uuid.u, &chr_uuid.u, NULL, &value_handle) != 0 ||
+      event->subscribe.attr_handle != value_handle ||
+      event->subscribe.prev_indicate == event->subscribe.cur_indicate) {
+    return;
+  }
+
+  struct ble_gap_conn_desc desc;
+  if (ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
+    return;
+  }
+  struct pbl_bt_gatt_server_subscribe_event subscription = {
+    .connection_id = event->subscribe.conn_handle,
+    .is_subscribing = event->subscribe.cur_indicate,
+  };
+  nimble_addr_to_pebble_addr(&desc.peer_id_addr, &subscription.dev_address);
+  pbl_bt_cb_gatt_service_changed_server_subscribe(&subscription);
 }
 
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
