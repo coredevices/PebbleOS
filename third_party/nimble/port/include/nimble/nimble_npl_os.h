@@ -29,7 +29,8 @@
 #include "pbl/soc/nrf/sleep.h"
 #endif
 
-#define BLE_NPL_OS_ALIGNMENT 4
+// Pool blocks hold pointers.
+#define BLE_NPL_OS_ALIGNMENT __SIZEOF_POINTER__
 
 #define BLE_NPL_TIME_FOREVER PBL_TICK_FOREVER
 
