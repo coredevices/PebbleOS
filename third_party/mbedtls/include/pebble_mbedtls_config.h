@@ -38,4 +38,16 @@ void kernel_free(void *ptr);
 #define MBEDTLS_ECP_WINDOW_SIZE       2
 #define MBEDTLS_ECP_FIXED_POINT_OPTIM 0
 
+/* HPKE (RFC 9180) building blocks, for AccessoryNotifications' transport
+ * security. Mbed TLS ships no HPKE itself; this enables the primitives the HPKE
+ * layer here is built on, for the one suite that actually ships —
+ * DHKEM(P-256, HKDF-SHA256) + HKDF-SHA256 + AES-256-GCM:
+ *   - P-256 ECDH through the existing ECP/ECDH support (secp256r1)
+ *   - HKDF-SHA256: the KDF, and the labeled extract/expand the key schedule uses
+ *   - AES-256-GCM: the AEAD */
+#define MBEDTLS_MD_C
+#define MBEDTLS_SHA256_C
+#define MBEDTLS_HKDF_C
+#define MBEDTLS_GCM_C
+
 #define MBEDTLS_NO_PLATFORM_ENTROPY

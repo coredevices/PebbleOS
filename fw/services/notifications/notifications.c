@@ -3,6 +3,7 @@
 
 #include "pbl/services/notifications/notifications.h"
 
+#include "pbl/services/notifications/accessory_notifications.h"
 #include "pbl/services/notifications/notification_storage.h"
 
 #include "pbl/util/bitops.h"
@@ -72,6 +73,7 @@ void vibe_intensity_init(void);
 
 void notifications_init(void) {
   notification_storage_init();
+  accessory_notifications_init();
 }
 
 void notifications_add_notification(TimelineItem *notification) {

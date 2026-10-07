@@ -11,6 +11,7 @@ pbl_clar_test(test_timeline
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/item.c
     fw/services/timeline/timeline.c
+    tests/stubs/stubs_accessory_notifications.c
     lib/c/time/mktime.c
     fw/services/clock/time.c
     lib/c/time/gmtime.c

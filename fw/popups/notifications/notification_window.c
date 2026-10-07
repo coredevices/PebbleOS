@@ -692,6 +692,11 @@ static bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
       // and only show non ANCS actions. Once iOS9 is more widespread we can look at updating this
       return !timeline_item_action_is_ancs(action);
     }
+  } else if (attribute_get_string(&item->attr_list, AttributeIdAccessoryFeatureId, NULL)) {
+    // Forwarded AccessoryNotifications notification: its actions/reply travel over the
+    // AN transport, not the Android extended-notification session, so show them
+    // whether opened as a modal or from the app (until acted upon).
+    return !item->header.actioned && !item->header.dismissed;
   } else { // Android
     // Show all actions unless the item has already been acted upon, in which case show none
     return (
@@ -863,7 +868,13 @@ static bool prv_has_mute_action(TimelineItem *item) {
   PebbleProtocolCapabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
 
-  return timeline_item_is_ancs_notif(item) && capabilities.notification_filtering_support;
+  // A forwarded AccessoryNotifications item carries the bundle id when the phone sent one;
+  // its prefs record is created on arrival, as for ANCS.
+  const bool is_forwarded_with_app_id =
+      attribute_get_string(&item->attr_list, AttributeIdAccessoryFeatureId, NULL) &&
+      *attribute_get_string(&item->attr_list, AttributeIdiOSAppIdentifier, "");
+  return (timeline_item_is_ancs_notif(item) || is_forwarded_with_app_id) &&
+         capabilities.notification_filtering_support;
 }
 
 static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,

@@ -153,6 +153,11 @@ bool timeline_is_bulk_ancs_action_mode_enabled(void);
 void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,
                             const AttributeList *attributes);
 
+//! Post a "Sent"/"Failed" notification action result (dialog) for `id`. Used by the
+//! AccessoryNotifications transport's async send completion to report the real outcome
+//! of a reply once the seal+notify has actually run.
+void timeline_put_accessory_action_result(const Uuid *id, bool ok);
+
 /**
  * @brief Get the direction in which a pin is shown.
  *

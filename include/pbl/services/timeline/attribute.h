@@ -191,6 +191,14 @@ typedef enum {
   AttributeIdImageAspectRatio = 52,
   /** (uint8) WeatherPinKind of a weather pin. */
   AttributeIdWeatherPinKind = 53,
+  //! AccessoryNotifications reply context, stored on a forwarded
+  //! notification so a watch action can be sealed back to the phone: the transport
+  //! featureID and the iOS notification identifier. Not displayed.
+  AttributeIdAccessoryFeatureId = 54,
+  AttributeIdAccessoryNotificationId = 55,
+  //! The forwarded action's iOS action identifier (not displayed), sealed back when
+  //! the action is chosen.
+  AttributeIdAccessoryActionId = 56,
   /** Number of attribute ids. */
   NumAttributeIds,
 } AttributeId;

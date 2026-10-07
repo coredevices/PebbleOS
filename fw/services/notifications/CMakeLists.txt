@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(sources
+  accessory_notifications.c
   action_chaining_window.c
   alerts.c
   alerts_preferences.c

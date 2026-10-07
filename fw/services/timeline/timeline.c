@@ -20,6 +20,7 @@
 #include "pbl/services/blob_db/api.h"
 #include "pbl/services/blob_db/pin_db.h"
 #include "pbl/services/blob_db/reminder_db.h"
+#include "pbl/services/notifications/accessory_notifications.h"
 #include "pbl/services/notifications/notification_storage.h"
 #include "pbl/services/notifications/notifications.h"
 #include "pbl/services/phone_call_util.h"
@@ -808,6 +809,20 @@ static void prv_app_render_ready(PebbleEvent *e, void *context) {
   kernel_free(ctx);
 }
 
+// Fire the action-menu result dialog for a forwarded AN reply: without it the
+// menu waits for a phone ACK that never comes and shows a failure.
+// See timeline.h. Posts "Sent"/"Failed" as a notification action result by id, so the
+// AccessoryNotifications transport's async completion can report the real send outcome.
+void timeline_put_accessory_action_result(const Uuid *id, bool ok) {
+  if (ok) {
+    prv_put_notification_action_result(id, i18n_get("Sent", &i18n_key),
+                                       TIMELINE_RESOURCE_RESULT_SENT, ActionResultTypeSuccess);
+  } else {
+    prv_put_notification_action_result(id, i18n_get("Failed", &i18n_key),
+                                       TIMELINE_RESOURCE_RESULT_FAILED, ActionResultTypeFailure);
+  }
+}
+
 void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,
                             const AttributeList *attributes) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
@@ -901,6 +916,23 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       break;
     case TimelineItemActionTypeInsightResponse:
       prv_perform_health_response_action(item, action);
+      break;
+    case TimelineItemActionTypeAccessoryResponse:
+      // Forwarded AccessoryNotifications text reply: the reply menu (canned/emoji/
+      // voice) collected the text into `attributes`; seal it back over the AN
+      // transport instead of taking the phone remote-action path. The send is async:
+      // post FAILED only if it wasn't accepted; on acceptance the transport's
+      // completion posts SENT/FAILED with the real seal+notify outcome.
+      if (!accessory_notifications_invoke_action(item, action, attributes)) {
+        timeline_put_accessory_action_result(&item->header.id, false);
+      }
+      break;
+    case TimelineItemActionTypeAccessoryGeneric:
+      // Forwarded AccessoryNotifications action: seal it back over the AN transport.
+      // A plain action carries no text, so no reply attributes. Async result as above.
+      if (!accessory_notifications_invoke_action(item, action, NULL)) {
+        timeline_put_accessory_action_result(&item->header.id, false);
+      }
       break;
     default:
       PBL_LOG_ERR("Action type not implemented: %d", action->type);

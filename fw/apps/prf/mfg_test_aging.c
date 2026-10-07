@@ -28,6 +28,7 @@
 #include <pbl/logging/logging.h>
 #include "pbl/util/units.h"
 #include <time.h>
+#include <stdio.h>
 
 #define STATUS_STRING_LEN                200
 #define COMPONENT_TEST_DURATION_SEC      10
