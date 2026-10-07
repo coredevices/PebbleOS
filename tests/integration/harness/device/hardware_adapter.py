@@ -13,6 +13,8 @@ from harness.errors import HarnessError
 POWER_ON_SETTLE_S = 1.0
 # How long the watch is left unpowered when repowering it.
 POWER_OFF_S = 1.0
+# The smallest erasable unit, all a slot header needs.
+FLASH_SUBSECTOR_SIZE = 0x1000
 
 
 class HardwareAdapter(DeviceAdapter):
@@ -64,25 +66,39 @@ class HardwareAdapter(DeviceAdapter):
             raise HarnessError(f"{what} failed ({result.returncode}); see {log}")
 
     def flash(self):
+        if self.build.variant == "prf":
+            self.invalidate_firmware_slots()
         self._run_repowered(self._flash_command(), "flash")
 
-    def erase_filesystem(self):
-        """Erase the filesystem (bondings, settings, apps and data), and the
-        bonding kept for PRF, which the firmware restores from otherwise."""
+    def _erase_regions(self, regions, what, purpose):
         sftool = self.build.tool("sftool")
         soc = self.build.config.get("CONFIG_SOC")
         if not (sftool and soc and self.config.serial):
             raise HarnessError(
-                f"erasing the filesystem needs sftool and --device-serial (board {self.build.board})"
+                f"{purpose} needs sftool and --device-serial (board {self.build.board})"
             )
+        command = [sftool, "-c", soc, "-p", self.config.serial[0], "erase_region"]
+        command += [f"{address:#x}:{size:#x}" for address, size in regions]
+        self._run_repowered(command, what)
+
+    def invalidate_firmware_slots(self):
+        """Erase the normal firmware slots' headers, as PRF does when it
+        boots: the bootloader only falls back to PRF without a valid slot."""
+        regions = []
+        for name in ("FIRMWARE_SLOT_0", "FIRMWARE_SLOT_1"):
+            address, _ = self.build.flash_region(name)
+            regions.append((address, FLASH_SUBSECTOR_SIZE))
+        self._erase_regions(regions, "invalidate", "booting PRF")
+
+    def erase_filesystem(self):
+        """Erase the filesystem (bondings, settings, apps and data), and the
+        bonding kept for PRF, which the firmware restores from otherwise."""
         regions = [self.build.flash_region("FILESYSTEM")]
         try:
             regions.append(self.build.flash_region("SHARED_PRF_STORAGE"))
         except HarnessError:
             pass
-        command = [sftool, "-c", soc, "-p", self.config.serial[0], "erase_region"]
-        command += [f"{address:#x}:{size:#x}" for address, size in regions]
-        self._run_repowered(command, "erase")
+        self._erase_regions(regions, "erase", "erasing the filesystem")
 
     def wipe(self):
         # sftool needs the serial port the connections hold.
