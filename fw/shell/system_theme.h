@@ -97,8 +97,18 @@ PreferredContentSize system_theme_get_default_content_size_for_runtime_platform(
 PreferredContentSize system_theme_convert_host_content_size_to_runtime_platform(
     PreferredContentSize size);
 
+//! @return true if the caller is system UI (a system app or a kernel task), which follows the
+//! system theme. Third-party apps keep the documented SDK defaults.
+bool system_theme_is_system_ui(void);
+
 //! @return true if the current app context should render in dark mode (system apps only).
+//! @note In Ambient mode this reads the last sample taken by \ref system_theme_refresh_ambient, so
+//! it is safe to call from rendering code.
 bool system_theme_is_dark_mode(void);
+
+//! Samples the ambient light sensor for the state used by \ref system_theme_is_dark_mode in
+//! Ambient mode. This can block for up to ~200 ms, so never call it from a rendering path.
+void system_theme_refresh_ambient(void);
 
 //! @return The background color appropriate for the current theme (black in dark mode on color
 //!         displays, white otherwise).

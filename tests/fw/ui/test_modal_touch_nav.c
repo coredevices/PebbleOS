@@ -19,6 +19,7 @@
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
 #include <applib/ui/window_stack_private.h>
+#include <shell/system_theme.h>
 #include <clar.h>
 #include <fff.h>
 #include <kernel/ui/modals/modal_manager.h>
