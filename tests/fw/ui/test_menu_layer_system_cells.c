@@ -25,6 +25,7 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
+#include <fixtures/screen_grid.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
 
 static bool s_cell_is_highlighted = false;
@@ -699,4 +700,43 @@ void test_menu_layer_system_cells__larger_two_line_cell_has_matching_padding(voi
   cl_assert_equal_i(height - foreground.origin.y - foreground.size.h, foreground.origin.x);
   system_theme_set_content_size(PreferredContentSizeDefault);
 #endif
+}
+
+//! A screen of rows with only a title, as Settings and Quiet Time list them, at each size
+void test_menu_layer_system_cells__single_line_content_sizes(void) {
+  static const char *const titles[] = {
+    "Notifications", "Bluetooth", "Quiet Time", "Display", "Timeline", "Health", "System",
+  };
+  ScreenGrid grid;
+  screen_grid_init(&grid, 1);
+
+  gbitmap_destroy(s_dest_bitmap);
+  s_dest_bitmap = gbitmap_create_blank(DISP_FRAME.size,
+                                       PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
+  s_ctx.dest_bitmap = *s_dest_bitmap;
+  s_ctx.draw_state.clip_box = DISP_FRAME;
+  s_ctx.draw_state.drawing_box = DISP_FRAME;
+
+  for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
+    system_theme_set_content_size(size);
+    const int16_t row_height = menu_cell_basic_cell_height();
+    int16_t y_offset = 0;
+    for (unsigned int i = 0; i < ARRAY_LENGTH(titles); i++) {
+      const MenuLayerSystemCellTestRowData row_data = {
+        .title = (char *)titles[i],
+        .icon_align = DEFAULT_ICON_ALIGN,
+      };
+      const GRect cell_bounds = GRect(0, y_offset, DISP_COLS, row_height);
+      prv_draw_cell(MenuCellType_Basic, &cell_bounds, &row_data,
+                    &s_menu_system_basic_cell_test_column_data[0], i == 0 /* is_selected */);
+      y_offset += row_height;
+    }
+    s_ctx.draw_state.drawing_box = DISP_FRAME;
+    screen_grid_add(&grid, &s_ctx, size, 0);
+  }
+
+  // The content size setting leaks across tests in this process, restore it before checking
+  system_theme_set_content_size(PreferredContentSizeDefault);
+
+  screen_grid_check(&grid, TEST_PBI_FILE);
 }

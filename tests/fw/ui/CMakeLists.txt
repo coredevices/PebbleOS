@@ -251,6 +251,8 @@ pbl_clar_test(test_menu_layer_system_cells
     tests/stubs/stubs_system_theme.c
     fw/shell/system_theme.c
     fw/shell/system_theme_style.c
+    tests/fakes/fake_fonts.c
+    tests/fixtures/screen_grid.c
     tests/fixtures/resources/timeline_resource_table.auto.c
   PLATFORMS obelix gabbro asterix
   OVERRIDES dummy_board
