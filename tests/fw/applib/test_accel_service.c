@@ -55,6 +55,7 @@ static bool s_slot_used[FAKE_SUBSCRIPTION_SLOTS];
 static int s_last_freed_slot;
 
 static bool s_event_outstanding;
+static bool s_refuse_buffer;
 static int s_live_subscriptions;
 static int s_fewest_live_subscriptions;
 static AccelDataReadyCallback s_data_cb;
@@ -117,10 +118,11 @@ int sys_accel_manager_set_sampling_rate(AccelManagerState *state, AccelSamplingR
   }
 }
 
+// The real manager refuses a batch size above its maximum and keeps the old buffer
 int sys_accel_manager_set_sample_buffer(AccelManagerState *state, AccelRawData *buffer,
                                         uint32_t samples_per_update) {
   prv_assert_live(state);
-  return 0;
+  return s_refuse_buffer ? -1 : 0;
 }
 
 uint32_t sys_accel_manager_get_num_samples(AccelManagerState *state, uint64_t *timestamp_ms) {
@@ -188,6 +190,7 @@ void test_accel_service__initialize(void) {
   }
   s_last_freed_slot = -1;
   s_event_outstanding = false;
+  s_refuse_buffer = false;
   s_live_subscriptions = 0;
   s_fewest_live_subscriptions = INT_MAX;
   s_data_cb = NULL;
@@ -363,6 +366,17 @@ void test_accel_service__a_rejected_sampling_rate_is_not_kept(void) {
   prv_deliver(2);
 
   cl_assert_equal_i(s_timestamps[1] - s_timestamps[0], 10);
+}
+
+//! A refused buffer keeps the old buffer and batch size, which the manager still uses
+void test_accel_service__a_refused_buffer_keeps_the_old_one(void) {
+  accel_data_service_subscribe(1, prv_data_handler);
+  s_refuse_buffer = true;
+  accel_service_set_samples_per_update(2);
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_data_handler_calls, 1);
 }
 
 // Changing the subscription inside the data handler

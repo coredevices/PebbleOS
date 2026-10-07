@@ -419,18 +419,23 @@ int accel_session_set_samples_per_update(AccelServiceState *state, uint32_t samp
                                 !state->raw_data_handler && !state->raw_data_handler_deprecated)) {
     return -1;
   }
-  AccelRawData *old_buf = state->raw_data;
-
   // This is a packed array of simple types and therefore shouldn't have compatibility padding
-  state->raw_data = applib_malloc(samples_per_update * sizeof(AccelRawData));
-  if (!state->raw_data) {
+  AccelRawData *new_buf = applib_malloc(samples_per_update * sizeof(AccelRawData));
+  if (!new_buf) {
     APP_LOG(LOG_LEVEL_ERROR, "Not enough memory to subscribe");
-    state->raw_data = old_buf;
     return -1;
   }
+
+  int result =
+      sys_accel_manager_set_sample_buffer(state->manager_state, new_buf, samples_per_update);
+  if (result != 0) {
+    // The manager still writes into the old buffer, so keep it
+    applib_free(new_buf);
+    return result;
+  }
+
+  applib_free(state->raw_data);
+  state->raw_data = new_buf;
   state->samples_per_update = samples_per_update;
-  int result = sys_accel_manager_set_sample_buffer(state->manager_state, state->raw_data,
-                                                   samples_per_update);
-  applib_free(old_buf);
-  return result;
+  return 0;
 }
