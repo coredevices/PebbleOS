@@ -479,13 +479,6 @@ static void prv_connect_gateway_bonding(pbl_bt_bonding_id_t gateway_bonding) {
 }
 
 // -------------------------------------------------------------------------------------------------
-static void prv_cancel_connect_gateway_bonding(pbl_bt_bonding_id_t gateway_bonding) {
-  gap_le_slave_reconnect_stop();
-  // FIXME: Redundant? since gap_le_connect will also clean up?
-  gap_le_connect_cancel_by_bonding(gateway_bonding, GAPLEClientKernel);
-}
-
-// -------------------------------------------------------------------------------------------------
 static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 #if defined(CONFIG_BT_ANCS_CLIENT)
   ancs_destroy();
@@ -497,12 +490,15 @@ static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 
 // -------------------------------------------------------------------------------------------------
 void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op) {
-  if (bt_persistent_storage_is_ble_ancs_bonding(bonding)) {
-    if (op == BtPersistBondingOpWillDelete) {
-      prv_cancel_connect_gateway_bonding(bonding);
-    } else if (op == BtPersistBondingOpDidAdd) {
-      prv_connect_gateway_bonding(bonding);
+  if (op == BtPersistBondingOpWillDelete) {
+    // The bonding is already gone from storage, so its type cannot be read back.
+    if (!bt_persistent_storage_has_active_ble_gateway_bonding() &&
+        !bt_persistent_storage_has_ble_ancs_bonding()) {
+      gap_le_slave_reconnect_stop();
     }
+    gap_le_connect_cancel_by_bonding(bonding, GAPLEClientKernel);
+  } else if (op == BtPersistBondingOpDidAdd && bt_persistent_storage_is_ble_ancs_bonding(bonding)) {
+    prv_connect_gateway_bonding(bonding);
   }
 }
 
