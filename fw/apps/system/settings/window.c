@@ -62,6 +62,7 @@ static void prv_pref_change_handler(PebbleEvent *event, void *context) {
   // layer and can change with the preferred content size. Re-anchor the
   // selection afterwards so the scroll offset stays within the new geometry.
   prv_refresh_theme_colors(data);
+  menu_layer_reload_data(&data->menu_layer);
   menu_layer_set_selected_index(&data->menu_layer, menu_layer_get_selected_index(&data->menu_layer),
                                 MenuRowAlignCenter, false /* animated */);
 }
