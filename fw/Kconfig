@@ -81,6 +81,14 @@ endchoice
 
 menu "Debug & instrumentation"
 
+config QEMU_SERIAL
+    bool "QEMU serial protocol"
+    default y if QEMU
+    help
+      The Pebble protocol and the emulator's controls (battery, taps,
+      time format, ...) over the board's QEMU_UART, framed as libpebble2's
+      QEMU transport expects.
+
 config NO_WATCH_TIMEOUT
     bool "Disable watchface idle timeout"
 

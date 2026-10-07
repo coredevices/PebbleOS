@@ -1,8 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#ifdef CONFIG_ACCEL_QEMU
 #include <pbl/drivers/imu/qemu.h>
+#endif
+#ifdef CONFIG_BATTERY_QEMU
 #include <pbl/drivers/battery/qemu.h>
+#endif
 #include "comm/qemu/serial.h"
 #include "comm/qemu/serial_private.h"
 #include <pbl/drivers/uart.h>
@@ -211,8 +215,12 @@ static const QemuMessageHandler s_qemu_endpoints[] = {
   {QemuProtocol_Tap, prv_tap_msg_callback},
   {QemuProtocol_BluetoothConnection, prv_bluetooth_connection_msg_callback},
   {QemuProtocol_Compass, prv_compass_msg_callback},
+#ifdef CONFIG_BATTERY_QEMU
   {QemuProtocol_Battery, qemu_battery_msg_callback},
+#endif
+#ifdef CONFIG_ACCEL_QEMU
   {QemuProtocol_Accel, qemu_accel_msg_callback},
+#endif
   {QemuProtocol_TimeFormat, prv_time_format_msg_callback},
   {QemuProtocol_TimelinePeek, prv_timeline_peek_msg_callback},
   {QemuProtocol_ContentSize, prv_content_size_msg_callback},

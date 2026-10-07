@@ -206,11 +206,21 @@ unlock:
   bt_unlock();
 }
 
+#ifndef CONFIG_BT_HCI_UART
+static bool prv_default_connected(void) {
+#ifdef CONFIG_QEMU
+  return qemu_setting_get(QemuSetting_DefaultConnected);
+#else
+  return true;
+#endif
+}
+#endif
+
 void qemu_transport_start(void) {
 #ifndef CONFIG_BT_HCI_UART
   // Open the session synchronously: the host may send a WatchVersionRequest
   // as soon as it sees "Ready for communication".
-  if (qemu_setting_get(QemuSetting_DefaultConnected)) {
+  if (prv_default_connected()) {
     qemu_transport_set_connected(true);
   }
 #endif

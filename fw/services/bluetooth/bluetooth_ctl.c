@@ -8,7 +8,7 @@
 
 #include "comm/ble/gap_le.h"
 #include "comm/ble/gatt_client_subscriptions.h"
-#ifdef CONFIG_QEMU
+#ifdef CONFIG_QEMU_SERIAL
 #include "comm/qemu/transport.h"
 #endif
 #include "kernel/events.h"
@@ -94,7 +94,7 @@ static void prv_comm_start(void) {
 #endif
     ble_bas_init();
     bt_pairability_init();
-#ifdef CONFIG_QEMU
+#ifdef CONFIG_QEMU_SERIAL
     qemu_transport_start();
 #endif
   } else {
@@ -112,7 +112,7 @@ static void prv_comm_stop(void) {
   ble_hrm_deinit();
 #endif
   gap_le_deinit();
-#ifdef CONFIG_QEMU
+#ifdef CONFIG_QEMU_SERIAL
   qemu_transport_stop();
 #endif
 

@@ -73,7 +73,7 @@
 #include "mfg/mfg_serials.h"
 
 #include <pbl/bluetooth/init.h>
-#ifdef CONFIG_QEMU
+#ifdef CONFIG_QEMU_SERIAL
 #include "comm/qemu/serial.h"
 #endif
 
@@ -291,7 +291,7 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   compositor_init();
   kernel_ui_init();
 
-#ifdef CONFIG_QEMU
+#ifdef CONFIG_QEMU_SERIAL
   qemu_serial_init();
 #endif
   pbl_bt_init();
