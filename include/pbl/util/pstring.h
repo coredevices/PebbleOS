@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "pbl/kernel/compiler.h"
+
 /**
  * @defgroup util_pstring Pascal strings
  * @ingroup util
@@ -14,7 +16,7 @@
  */
 
 /** @brief Length-prefixed string, not NUL-terminated. */
-struct pbl_pstring16 {
+struct PBL_PACKED pbl_pstring16 {
   /** Length of @ref str_value in bytes. */
   uint16_t str_length;
   /** Characters. */
@@ -22,7 +24,7 @@ struct pbl_pstring16 {
 };
 
 /** @brief Length-prefixed byte array. */
-struct pbl_serialized_array {
+struct PBL_PACKED pbl_serialized_array {
   /** Size of @ref data in bytes. */
   uint16_t data_size;
   /** Bytes. */
