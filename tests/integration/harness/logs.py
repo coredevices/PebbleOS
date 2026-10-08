@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 
 from harness.errors import WatchTimeout
 
+_BUILD_ID = re.compile(r"BUILD ID: ([0-9a-f]{40})")
 _LEVELS = {"0": "A", "1": "E", "50": "W", "100": "I", "200": "D", "255": "V"}
 
 
@@ -31,23 +32,49 @@ class LogRecord:
 
 
 class Dehasher:
-    """Turns raw log messages into :class:`LogRecord` with the build's
-    loghash dictionary; messages that were never hashed pass through."""
+    """Turns raw log messages into :class:`LogRecord` with the loghash
+    dictionaries of the builds the watch may run; messages that were never
+    hashed pass through.
 
-    def __init__(self, dict_path):
-        self._dict = None
-        if dict_path and os.path.isfile(dict_path):
-            with open(dict_path, "rb") as f:
-                self._dict = json.load(f)
+    The first dictionary is used until a message only another one knows
+    arrives, or a boot reports another dictionary's build ID."""
 
-    def record(self, raw, level="", task="", source=""):
+    def __init__(self, *dict_paths):
+        self._dicts = []
+        for path in dict_paths:
+            if path and os.path.isfile(path):
+                with open(path, "rb") as f:
+                    self._dicts.append(json.load(f))
+        self._active = self._dicts[0] if self._dicts else None
+
+    def _parse(self, raw):
         from pebble.loghashing.newlogging import parse_message
 
+        msg = f":0> {raw}"
+        line = parse_message(msg, self._active)
+        if line is not None:
+            return line
+        for log_dict in self._dicts:
+            if log_dict is not self._active:
+                line = parse_message(msg, log_dict)
+                if line is not None:
+                    self._active = log_dict
+                    return line
+        return None
+
+    def _follow_build_id(self, message):
+        match = _BUILD_ID.search(message)
+        if match:
+            for log_dict in self._dicts:
+                if log_dict.get("build_id") == match.group(1):
+                    self._active = log_dict
+
+    def record(self, raw, level="", task="", source=""):
         raw = str(raw)
         line = None
-        if self._dict is not None and raw.startswith("NL:"):
+        if self._active is not None and raw.startswith("NL:"):
             # Hashed messages come with no file and line 0, as ":0> NL:...".
-            line = parse_message(f":0> {raw}", self._dict)
+            line = self._parse(raw)
         if line is not None:
             level = _LEVELS.get(str(line.get("level")), level)
             # A log module's name already prefixes the message.
@@ -56,6 +83,7 @@ class Dehasher:
             elif "module" in line:
                 source = ""
             raw = line["formatted_msg"]
+            self._follow_build_id(raw)
         text = " ".join(p for p in (level, task, source, raw) if p)
         return LogRecord(raw, level, task, source, text)
 

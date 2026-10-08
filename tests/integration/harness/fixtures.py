@@ -75,8 +75,11 @@ def ppk2(lab_setup):
 @pytest.fixture(scope="session")
 def device_object(request, build, results_dir, lab_setup, ppk2):
     """The device, not launched."""
+    from harness.build import Build
+
     config = request.config
     device_type = config.pbl_device_type
+    main_build = config.getoption("main_build")
     device = get_device(device_type)(
         DeviceConfig(
             build=build,
@@ -92,6 +95,7 @@ def device_object(request, build, results_dir, lab_setup, ppk2):
             bt_hci=lab_setup.bt_hci,
             ble_controller=lab_setup.phone.controller if lab_setup.phone else None,
             power_supply=ppk2,
+            main_build=Build(main_build) if main_build else None,
         )
     )
     try:

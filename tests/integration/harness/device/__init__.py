@@ -46,6 +46,7 @@ class DeviceConfig:
     bt_hci: str = None
     ble_controller: str = None
     power_supply: object = None
+    main_build: object = None
 
 
 class DeviceAdapter(ABC):
@@ -56,7 +57,10 @@ class DeviceAdapter(ABC):
         self.build = config.build
         self.logs = LogBuffer()
         self.connections = []
-        self._dehasher = Dehasher(self.build.loghash_dict)
+        self._dehasher = Dehasher(
+            self.build.loghash_dict,
+            *(b.loghash_dict for b in [config.main_build] if b is not None),
+        )
         #: The Bumble transport of the controller the harness talks to the
         #: watch's Bluetooth with, if any.
         self.ble_controller = config.ble_controller
