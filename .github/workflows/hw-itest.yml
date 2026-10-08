@@ -1,0 +1,153 @@
+name: Integration Tests (hardware)
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  pull_request_target:
+    types: [labeled]
+
+permissions: {}
+
+jobs:
+  build:
+    if: github.event_name == 'schedule' || github.event.label.name == 'ci:hw-itest'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    container:
+      image: ghcr.io/coredevices/pebbleos-docker:v10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - watch: getafix
+            board: getafix@dvt2
+            variant: normal
+          - watch: getafix
+            board: getafix@dvt2
+            variant: prf
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Configure
+        run: pbl configure --board '${{ matrix.board }}' --variant ${{ matrix.variant }}
+
+      - name: Build
+        run: pbl build
+
+      - name: Bundle
+        if: matrix.variant == 'normal'
+        run: pbl bundle
+
+      - name: Store build
+        uses: actions/upload-artifact@v7
+        with:
+          name: itest-build-${{ matrix.watch }}-${{ matrix.variant }}
+          include-hidden-files: true
+          retention-days: 3
+          path: |
+            build/CMakeCache.txt
+            build/.config
+            build/pebbleos.elf
+            build/pebbleos.hex
+            build/system_resources.pbpack
+            build/fw/loghash_dict.json
+            build/normal_*.pbz
+
+  test:
+    needs: build
+    runs-on: [self-hosted, "hw-${{ matrix.watch }}"]
+    timeout-minutes: 120
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - watch: getafix
+            board: getafix@dvt2
+            variant: normal
+          - watch: getafix
+            board: getafix@dvt2
+            variant: prf
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up Python
+        run: |
+          rm -rf .venv
+          /opt/homebrew/bin/python3 -m venv .venv
+          .venv/bin/pip install -U pip
+          .venv/bin/pip install -r requirements.txt
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Set up sftool
+        run: |
+          version=$(cat SDK_VERSION)
+          sdk="$HOME/.cache/hw-itest/pebbleos-sdk-$version"
+          if [ ! -x "$sdk/sftool/sftool" ]; then
+            curl -LsSf "https://github.com/coredevices/PebbleOS-SDK/releases/download/v$version/pebbleos-sdk-installer.sh" |
+              sh -s -- --version "$version" --prefix "$sdk" --defaults --force
+          fi
+          echo "$sdk/sftool" >> "$GITHUB_PATH"
+
+      - name: Download build
+        uses: actions/download-artifact@v8
+        with:
+          name: itest-build-${{ matrix.watch }}-${{ matrix.variant }}
+          path: build
+
+      - name: Download normal build
+        if: matrix.variant == 'prf'
+        uses: actions/download-artifact@v8
+        with:
+          name: itest-build-${{ matrix.watch }}-normal
+          path: build-main
+
+      - name: Integration tests
+        env:
+          MAIN_BUILD: ${{ matrix.variant == 'prf' && format('--main-build={0}/build-main', github.workspace) || '' }}
+        run: pbl itest --no-build --lab "$HOME/pebble-lab.yaml" --flash-before --erase-fs --integration $MAIN_BUILD
+
+      - name: Store results
+        if: (!cancelled())
+        uses: actions/upload-artifact@v7
+        with:
+          name: hw-itest-${{ matrix.watch }}-${{ matrix.variant }}
+          path: build/itest
+          retention-days: 14
+
+      - name: Publish integration test report
+        uses: mikepenz/action-junit-report@v6
+        if: (!cancelled())
+        with:
+          report_paths: build/itest/junit.xml
+          check_name: Integration tests (${{ matrix.board }}, ${{ matrix.variant }})
+          annotate_only: true
+          detailed_summary: true
