@@ -8,19 +8,19 @@
   outputs =
     { self, nixpkgs }:
     let
-      sdkVersion = "0.1.10";
+      sdkVersion = "0.1.11";
       sdkBundles = {
         aarch64-darwin = {
           osArch = "darwin-aarch64";
-          sha256 = "f2c8c60a19fdc90c5c588fd9c8a15bbd9f405e7fa949e83a77122aff69f0c057";
+          sha256 = "310fae6cf4469b9142418b919413e47fa2ce349826d95742b7178731431588eb";
         };
         aarch64-linux = {
           osArch = "linux-aarch64";
-          sha256 = "7b61cb3a5ba8c350f059a38c2742f4dc5120e3452a5fd8943e2606b8564f121b";
+          sha256 = "68d8d600a2aff1b5119748c7bb9840db5b49d8e834718a2b534abbe8c6716d6a";
         };
         x86_64-linux = {
           osArch = "linux-x86_64";
-          sha256 = "14260c23b6ba5443dabf4c31ec2a2a88822fa222b85b3ad7413bab990b0ffc4f";
+          sha256 = "27e605f9a4801866f04a35f7d29a71a3e7ee1ff82e18ac12837b991f69137e45";
         };
       };
       forSupportedSystems = nixpkgs.lib.genAttrs (builtins.attrNames sdkBundles);
