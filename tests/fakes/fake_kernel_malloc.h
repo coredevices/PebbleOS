@@ -6,9 +6,9 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 // Simple pass-through implementation of kernel_malloc/free that attempts to
 // protect against buffer overruns in tested code by adding a canary value to

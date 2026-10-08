@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "process_management/app_install_types.h"
+#include <applib/graphics/gtypes.h>
+#include <process_management/app_install_types.h>
 
 //! @file app.h
 //!

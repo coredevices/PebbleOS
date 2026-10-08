@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/gtransform.h"
-#include "pbl/util/trig.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/gtransform.h>
+#include <pbl/util/trig.h>
 
-#include "pbl/util/math_fixed.h"
+#include <pbl/util/math_fixed.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -18,20 +18,20 @@
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_app_state.h"
-#include "stubs_applib_resource.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_print.h"
-#include "stubs_resources.h"
-#include "stubs_serial.h"
-#include "stubs_syscalls.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_print.h>
+#include <stubs_resources.h>
+#include <stubs_serial.h>
+#include <stubs_syscalls.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
 
 
 // Tests

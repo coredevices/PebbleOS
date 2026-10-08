@@ -4,10 +4,10 @@
 #include "morph_square.h"
 #include "transform.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/graphics/gdraw_command_transforms.h"
-#include "applib/ui/kino/kino_reel.h"
-#include "applib/ui/animation_timing.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/ui/kino/kino_reel.h>
+#include <applib/ui/animation_timing.h>
 
 typedef struct {
   KinoReel *reel;

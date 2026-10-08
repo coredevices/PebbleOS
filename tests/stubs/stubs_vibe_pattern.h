@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/vibe_pattern.h"
+#include <pbl/services/vibe_pattern.h>
 
 void vibes_set_default_vibe_strength(int32_t vibe_strength_default) {
 }

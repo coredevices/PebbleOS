@@ -1,92 +1,92 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/preferred_content_size.h"
-#include "applib/ui/window_private.h"
-#include "apps/system/settings/notifications_private.h"
-#include "popups/notifications/notification_window.h"
-#include "popups/notifications/notification_window_private.h"
-#include "resource/timeline_resource_ids.auto.h"
-#include "pbl/services/timeline/notification_layout.h"
-#include "pbl/util/trig.h"
+#include <applib/preferred_content_size.h>
+#include <applib/ui/window_private.h>
+#include <apps/system/settings/notifications_private.h>
+#include <popups/notifications/notification_window.h>
+#include <popups/notifications/notification_window_private.h>
+#include <resource/timeline_resource_ids.auto.h>
+#include <pbl/services/timeline/notification_layout.h>
+#include <pbl/util/trig.h>
 
 #include <stdio.h>
 
 // Stubs
 /////////////////////
 
-#include "stubs_action_menu.h"
-#include "stubs_alarm_layout.h"
-#include "stubs_alerts.h"
+#include <stubs_action_menu.h>
+#include <stubs_alarm_layout.h>
+#include <stubs_alerts.h>
 // stubs_alerts_preferences.h intentionally omitted; see local replacements below
-#include "stubs_analytics.h"
-#include "stubs_ancs_filtering.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_app_window_stack.h"
-#include "stubs_bluetooth_persistent_storage.h"
-#include "stubs_bootbits.h"
-#include "stubs_buffer.h"
-#include "stubs_calendar_layout.h"
-#include "stubs_click.h"
-#include "stubs_content_indicator.h"
-#include "stubs_dialog.h"
-#include "stubs_do_not_disturb.h"
-#include "stubs_event_loop.h"
-#include "stubs_event_service_client.h"
-#include "stubs_evented_timer.h"
-#include "stubs_generic_layout.h"
-#include "stubs_health_layout.h"
-#include "stubs_heap.h"
-#include "stubs_i18n.h"
-#include "stubs_imaging.h"
-#include "stubs_ios_notif_pref_db.h"
-#include "stubs_layer.h"
-#include "stubs_light.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_menu_cell_layer.h"
-#include "stubs_modal_manager.h"
-#include "stubs_mutex.h"
-#include "stubs_notification_storage.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_process_info.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_peek_layer.h"
-#include "stubs_pin_db.h"
-#include "stubs_print.h"
-#include "stubs_process_manager.h"
-#include "stubs_regular_timer.h"
-#include "stubs_reminder_db.h"
-#include "stubs_reminders.h"
-#include "stubs_serial.h"
-#include "stubs_session.h"
-#include "stubs_shell_prefs.h"
-#include "stubs_simple_dialog.h"
-#include "stubs_sleep.h"
-#include "stubs_sports_layout.h"
-#include "stubs_syscall_internal.h"
-#include "stubs_syscalls.h"
-#include "stubs_task_wdt.h"
-#include "stubs_time.h"
-#include "stubs_timeline.h"
-#include "stubs_timeline_actions.h"
-#include "stubs_timeline_item.h"
-#include "stubs_timeline_layer.h"
-#include "stubs_timeline_peek.h"
-#include "stubs_vibes.h"
-#include "stubs_vibe_client.h"
-#include "stubs_vibe_score.h"
-#include "stubs_vibe_score_info.h"
-#include "stubs_weather_layout.h"
-#include "stubs_window_manager.h"
-#include "stubs_window_stack.h"
+#include <stubs_analytics.h>
+#include <stubs_ancs_filtering.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_app_window_stack.h>
+#include <stubs_bluetooth_persistent_storage.h>
+#include <stubs_bootbits.h>
+#include <stubs_buffer.h>
+#include <stubs_calendar_layout.h>
+#include <stubs_click.h>
+#include <stubs_content_indicator.h>
+#include <stubs_dialog.h>
+#include <stubs_do_not_disturb.h>
+#include <stubs_event_loop.h>
+#include <stubs_event_service_client.h>
+#include <stubs_evented_timer.h>
+#include <stubs_generic_layout.h>
+#include <stubs_health_layout.h>
+#include <stubs_heap.h>
+#include <stubs_i18n.h>
+#include <stubs_imaging.h>
+#include <stubs_ios_notif_pref_db.h>
+#include <stubs_layer.h>
+#include <stubs_light.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_menu_cell_layer.h>
+#include <stubs_modal_manager.h>
+#include <stubs_mutex.h>
+#include <stubs_notification_storage.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_process_info.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_peek_layer.h>
+#include <stubs_pin_db.h>
+#include <stubs_print.h>
+#include <stubs_process_manager.h>
+#include <stubs_regular_timer.h>
+#include <stubs_reminder_db.h>
+#include <stubs_reminders.h>
+#include <stubs_serial.h>
+#include <stubs_session.h>
+#include <stubs_shell_prefs.h>
+#include <stubs_simple_dialog.h>
+#include <stubs_sleep.h>
+#include <stubs_sports_layout.h>
+#include <stubs_syscall_internal.h>
+#include <stubs_syscalls.h>
+#include <stubs_task_wdt.h>
+#include <stubs_time.h>
+#include <stubs_timeline.h>
+#include <stubs_timeline_actions.h>
+#include <stubs_timeline_item.h>
+#include <stubs_timeline_layer.h>
+#include <stubs_timeline_peek.h>
+#include <stubs_vibes.h>
+#include <stubs_vibe_client.h>
+#include <stubs_vibe_score.h>
+#include <stubs_vibe_score_info.h>
+#include <stubs_weather_layout.h>
+#include <stubs_window_manager.h>
+#include <stubs_window_stack.h>
 
-#include "pbl/services/notifications/alerts_preferences_private.h"
+#include <pbl/services/notifications/alerts_preferences_private.h>
 
 // Local replacements for stubs_alerts_preferences.h so the notification status
 // bar style is settable per test (a strong override cannot share a TU with the
@@ -154,11 +154,11 @@ uint32_t interpolate_moook_soft_duration(int32_t num_frames_mid) {
 // Fakes
 /////////////////////
 
-#include "fake_animation.h"
-#include "fake_app_state.h"
-#include "fake_content_indicator.h"
-#include "fake_graphics_context.h"
-#include "fake_spi_flash.h"
+#include <fake_animation.h>
+#include <fake_app_state.h>
+#include <fake_content_indicator.h>
+#include <fake_graphics_context.h>
+#include <fake_spi_flash.h>
 #include "../../fixtures/load_test_resources.h"
 
 typedef struct NotificationWindowTestData {

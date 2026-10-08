@@ -3,15 +3,15 @@
 
 #include "ble_scan.h"
 
-#include "applib/app_logging.h"
-#include "applib/applib_malloc.auto.h"
+#include <applib/app_logging.h>
+#include <applib/applib_malloc.auto.h>
 
-#include "process_state/app_state/app_state.h"
-#include "comm/ble/gap_le_scan.h"
+#include <process_state/app_state/app_state.h>
+#include <comm/ble/gap_le_scan.h>
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
 void ble_scan_handle_event(PebbleEvent *e) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();

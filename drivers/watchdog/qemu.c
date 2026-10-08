@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/watchdog.h>
 
-#include "board/board.h"
+#include <board/board.h>
 
 #include <stdint.h>
 

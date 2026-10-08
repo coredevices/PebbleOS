@@ -1,50 +1,50 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/accel_service.h"
-#include "applib/data_logging.h"
+#include <applib/accel_service.h>
+#include <applib/data_logging.h>
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/rtc.h>
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/battery/battery_state.h"
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/activity/activity_algorithm.h"
-#include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
-#include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
-#include "pbl/services/data_logging/data_logging_service.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
-#include "pbl/services/system_task.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/battery/battery_state.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
+#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <stdint.h>
 #include <string.h>
 #include <applib/health_service.h>
 #include <services/activity/kraepelin/activity_algorithm_kraepelin.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
-#include "stubs_analytics.h"
-#include "stubs_irq.h"
-#include "stubs_hexdump.h"
-#include "stubs_hr_util.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
+#include <stubs_analytics.h>
+#include <stubs_irq.h>
+#include <stubs_hexdump.h>
+#include <stubs_hr_util.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
 
 // Fakes
-#include "fake_accel_service.h"
-#include "fake_new_timer.h"
-#include "fake_rtc.h"
-#include "fake_spi_flash.h"
-#include "fake_system_task.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <fake_accel_service.h>
+#include <fake_new_timer.h>
+#include <fake_rtc.h>
+#include <fake_spi_flash.h>
+#include <fake_system_task.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 #define ASSERT_EQUAL_I(i1, i2, file, line) \
   clar__assert_equal_i((i1), (i2), file, line, #i1 " != " #i2, 1)

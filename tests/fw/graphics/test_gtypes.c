@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
 #include <stdio.h>
 
 // stubs
-#include "stubs_process_manager.h"
-#include "stubs_passert.h"
-#include "stubs_app_state.h"
-#include "stubs_heap.h"
+#include <stubs_process_manager.h>
+#include <stubs_passert.h>
+#include <stubs_app_state.h>
+#include <stubs_heap.h>
 
 /////////////////////////////
 

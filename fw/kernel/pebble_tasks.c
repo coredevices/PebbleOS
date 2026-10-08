@@ -3,19 +3,19 @@
 
 #include "pebble_tasks.h"
 
-#include "kernel/memory_layout.h"
-#include "system/reboot_reason.h"
-#include "system/die.h"
+#include <kernel/memory_layout.h>
+#include <system/reboot_reason.h>
+#include <system/die.h>
 #include <pbl/logging/logging.h>
 
-#include "process_management/app_manager.h"
-#include "process_management/worker_manager.h"
-#include "pbl/services/analytics/analytics.h"
-#include "syscall/syscall_internal.h"
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <process_management/app_manager.h>
+#include <process_management/worker_manager.h>
+#include <pbl/services/analytics/analytics.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
-#include "pbl/kernel/debug.h"
+#include <pbl/kernel/debug.h>
 
 static struct pbl_thread s_threads[NumPebbleTask];
 struct pbl_thread *g_task_threads[NumPebbleTask] KERNEL_READONLY_DATA = {0};

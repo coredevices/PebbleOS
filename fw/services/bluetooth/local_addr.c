@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/bluetooth/local_addr.h"
+#include <pbl/services/bluetooth/local_addr.h>
 
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/id.h>

@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_message/app_message.h"
-#include "applib/app_message/app_message_internal.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/comm_session/protocol.h"
-#include "syscall/syscall.h"
+#include <applib/app_message/app_message.h>
+#include <applib/app_message/app_message_internal.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/comm_session/protocol.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
 
 // -------- Initialization ---------------------------------------------------------------------- //

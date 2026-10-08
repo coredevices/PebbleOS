@@ -3,11 +3,11 @@
 
 #include "prefs_sync.h"
 
-#include "applib/event_service_client.h"
-#include "kernel/events.h"
-#include "pbl/services/blob_db/api.h"
-#include "pbl/services/blob_db/settings_blob_db.h"
-#include "pbl/services/blob_db/sync.h"
+#include <applib/event_service_client.h>
+#include <kernel/events.h>
+#include <pbl/services/blob_db/api.h>
+#include <pbl/services/blob_db/settings_blob_db.h>
+#include <pbl/services/blob_db/sync.h>
 #include <pbl/logging/logging.h>
 
 //! Prefs Sync using BlobDB

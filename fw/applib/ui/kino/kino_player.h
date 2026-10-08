@@ -5,7 +5,7 @@
 
 #include "kino_reel.h"
 
-#include "applib/ui/animation.h"
+#include <applib/ui/animation.h>
 
 struct KinoPlayer;
 typedef struct KinoPlayer KinoPlayer;

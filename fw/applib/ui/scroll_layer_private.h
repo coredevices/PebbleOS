@@ -6,7 +6,7 @@
 #include "scroll_layer.h"
 
 #ifdef CONFIG_TOUCH
-#include "applib/ui/recognizer/swipe.h"
+#include <applib/ui/recognizer/swipe.h>
 
 //! Settle to a touch page boundary with a timed ease-out animation.
 void scroll_layer_touch_settle(ScrollLayer *scroll_layer, GPoint offset, uint32_t duration_ms);

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/comm_session/session.h"
+#include <pbl/services/comm_session/session.h>
 
 /**
  * @defgroup services_comm_session_session_send_buffer Send buffers

@@ -3,15 +3,15 @@
 
 #include "menu_layer.h"
 
-#include "applib/ui/kino/kino_reel.h"
-#include "applib/ui/kino/kino_reel_gbitmap_private.h"
-#include "kernel/pebble_tasks.h"
-#include "process_management/app_install_types.h"
-#include "process_management/process_manager.h"
-#include "shell/system_theme.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
-#include "pbl/util/math.h"
+#include <applib/ui/kino/kino_reel.h>
+#include <applib/ui/kino/kino_reel_gbitmap_private.h>
+#include <kernel/pebble_tasks.h>
+#include <process_management/app_install_types.h>
+#include <process_management/process_manager.h>
+#include <shell/system_theme.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
+#include <pbl/util/math.h>
 
 /////////////////////////////////
 // System Provided Cell Types

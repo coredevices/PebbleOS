@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/graphics_circle.h"
+#include <applib/graphics/graphics_circle.h>
 
 void graphics_circle_quadrant_draw(GContext *ctx, GPoint p, uint16_t radius, GCornerMask quadrant) {
 }

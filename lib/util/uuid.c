@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/uuid.h"
-#include "pbl/util/rand32.h"
+#include <pbl/util/uuid.h>
+#include <pbl/util/rand32.h>
 
 #include <inttypes.h>
 #include <string.h>

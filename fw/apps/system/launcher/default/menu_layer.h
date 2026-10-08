@@ -5,8 +5,8 @@
 
 #include "app_glance_service.h"
 
-#include "applib/preferred_content_size.h"
-#include "process_management/app_menu_data_source.h"
+#include <applib/preferred_content_size.h>
+#include <process_management/app_menu_data_source.h>
 
 //! Fonts and cell geometry of the launcher for one content size
 typedef struct LauncherMenuLayerStyle {

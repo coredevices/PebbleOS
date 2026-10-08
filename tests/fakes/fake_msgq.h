@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/util/circular_buffer.h"
-#include "pbl/util/list.h"
+#include <pbl/util/circular_buffer.h>
+#include <pbl/util/list.h>
 
 #include <pbl/kernel/msgq.h>
 

@@ -4,10 +4,10 @@
 #include <pbl/bluetooth/gatt.h>
 
 #include <pbl/logging/logging.h>
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gatt_service_changed.h"
-#include "comm/bt_lock.h"
-#include "kernel/events.h"
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gatt_service_changed.h>
+#include <comm/bt_lock.h>
+#include <kernel/events.h>
 
 #include <pbl/bluetooth/pebble_pairing_service.h>
 

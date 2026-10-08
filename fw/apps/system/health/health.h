@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 //! Call for system to obtain information about the application
 //! @return System information about the app

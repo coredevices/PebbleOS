@@ -3,16 +3,16 @@
 
 #pragma once
 
-#include "flash_region/flash_region.h"
-#include "resource/resource.h"
-#include "resource/resource_version.auto.h"
-#include "pbl/services/filesystem/pfs.h"
+#include <flash_region/flash_region.h>
+#include <resource/resource.h>
+#include <resource/resource_version.auto.h>
+#include <pbl/services/filesystem/pfs.h>
 
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
-#include "fake_spi_flash.h"
+#include <fake_spi_flash.h>
 
 #define RESOURCES_FIXTURE_PATH "resources"
 #define APP_RESOURCES_FIXTURE_NAME "app_resources.pbpack"

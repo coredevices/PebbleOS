@@ -7,8 +7,8 @@
 // DO NOT MODIFY
 //
 
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/timeline/timeline_resources.h"
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/timeline/timeline_resources.h>
 
 #include <stdint.h>
 

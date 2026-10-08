@@ -3,13 +3,13 @@
 
 #include "animated_demo.h"
 
-#include "applib/app.h"
-#include "process_state/app_state/app_state.h"
-#include "applib/fonts/fonts.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "system/passert.h"
+#include <applib/app.h>
+#include <process_state/app_state/app_state.h>
+#include <applib/fonts/fonts.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 #include <string.h>
 #include <stdio.h>

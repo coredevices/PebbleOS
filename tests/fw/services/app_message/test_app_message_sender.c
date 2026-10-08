@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_message/app_message_internal.h"
-#include "clar.h"
-#include "pbl/services/app_message/app_message_sender.h"
-#include "pbl/services/comm_session/session_internal.h"
-#include "pbl/services/comm_session/protocol.h"
-#include "pbl/services/comm_session/session.h"
-#include "process_management/app_install_manager.h"
-#include "pbl/services/app_outbox_service.h"
-#include "pbl/util/math.h"
-#include "pbl/util/byteorder.h"
+#include <applib/app_message/app_message_internal.h>
+#include <clar.h>
+#include <pbl/services/app_message/app_message_sender.h>
+#include <pbl/services/comm_session/session_internal.h>
+#include <pbl/services/comm_session/protocol.h>
+#include <pbl/services/comm_session/session.h>
+#include <process_management/app_install_manager.h>
+#include <pbl/services/app_outbox_service.h>
+#include <pbl/util/math.h>
+#include <pbl/util/byteorder.h>
 
 extern const SessionSendJobImpl s_app_message_send_job_impl;
 extern void comm_session_send_queue_cleanup(CommSession *session);
@@ -18,11 +18,11 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 // Fakes & Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_bt_lock.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
+#include <stubs_analytics.h>
+#include <stubs_bt_lock.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
 
 static int s_app_install_timestamp_update_count;
 void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {

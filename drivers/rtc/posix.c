@@ -6,7 +6,7 @@
 
 #include <pbl/drivers/rtc.h>
 
-#include "pbl/services/time.h"
+#include <pbl/services/time.h>
 
 // Wall time follows the host clock, plus whatever offset the firmware sets.
 

@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <string.h>
 
-#include "kernel.h"
+#include <kernel.h>
 #include "posix.h"
 
 // The thread state is host memory, not firmware heap.

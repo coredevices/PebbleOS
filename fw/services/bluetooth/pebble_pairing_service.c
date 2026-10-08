@@ -3,12 +3,12 @@
 
 #include <pbl/bluetooth/pebble_pairing_service.h>
 
-#include "comm/ble/gap_le_connect_params.h"
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/kernel_le_client/app_launch/app_launch.h"
-#include "comm/bt_conn_mgr.h"
-#include "comm/bt_lock.h"
-#include "kernel/pbl_malloc.h"
+#include <comm/ble/gap_le_connect_params.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/kernel_le_client/app_launch/app_launch.h>
+#include <comm/bt_conn_mgr.h>
+#include <comm/bt_lock.h>
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);

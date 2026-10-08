@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "syscall/syscall_internal.h"
+#include <syscall/syscall_internal.h>
 
-#include "applib/bluetooth/ble_client.h"
+#include <applib/bluetooth/ble_client.h>
 
-#include "comm/ble/gap_le_advert.h"
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gap_le_connect.h"
-#include "comm/ble/gap_le_scan.h"
+#include <comm/ble/gap_le_advert.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_connect.h>
+#include <comm/ble/gap_le_scan.h>
 
-#include "comm/ble/gatt_client_accessors.h"
-#include "comm/ble/gatt_client_discovery.h"
-#include "comm/ble/gatt_client_operations.h"
-#include "comm/ble/gatt_client_subscriptions.h"
+#include <comm/ble/gatt_client_accessors.h>
+#include <comm/ble/gatt_client_discovery.h>
+#include <comm/ble/gatt_client_operations.h>
+#include <comm/ble/gatt_client_subscriptions.h>
 
 // -----------------------------------------------------------------------------
 // ble_scan.h

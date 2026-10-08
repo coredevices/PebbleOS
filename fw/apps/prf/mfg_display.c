@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/text.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/dialogs/confirmation_dialog.h"
-#include "applib/ui/window.h"
-#include "apps/prf/mfg_test_result.h"
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "process_management/app_manager.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/util/size.h"
+#include <applib/app.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/text.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/dialogs/confirmation_dialog.h>
+#include <applib/ui/window.h>
+#include <apps/prf/mfg_test_result.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <mfg/mfg_mode/mfg_factory_mode.h>
+#include <process_management/app_manager.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/util/size.h>
 
 typedef enum {
   TestPattern_Crosshair,

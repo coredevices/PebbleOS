@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/imaging.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/imaging.h>
+#include <pbl/kernel/compiler.h>
 
 static ImagingReceivedHandler s_imaging_received_handlers[ImagingImageTypeCount];
 static ImagingWillReceiveHandler s_imaging_will_receive_handlers[ImagingImageTypeCount];

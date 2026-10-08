@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/graphics/gcontext.h"
-#include "applib/graphics/gtypes.h"
-#include "kernel/events.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/compositor/compositor.h"
+#include <applib/graphics/gcontext.h>
+#include <applib/graphics/gtypes.h>
+#include <kernel/events.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <pbl/services/compositor/compositor.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_framebuffer.h"
-#include "stubs_gbitmap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_timeline_peek.h"
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_framebuffer.h>
+#include <stubs_gbitmap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_timeline_peek.h>
 
 extern void prv_handle_display_update_complete(void);
 

@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "applib/graphics/graphics.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/kino/kino_layer.h"
-#include "applib/ui/text_layer.h"
-#include "pbl/services/evented_timer.h"
-#include "pbl/services/timeline/timeline_resources.h"
+#include <applib/graphics/graphics.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/kino/kino_layer.h>
+#include <applib/ui/text_layer.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/timeline/timeline_resources.h>
 
 #define PEEK_LAYER_UNFOLD_DURATION 500
 #define PEEK_LAYER_SCALE_DURATION  300

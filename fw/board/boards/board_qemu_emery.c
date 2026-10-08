@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
-#include "pbl/kernel/irq.h"
+#include <board/board.h>
+#include <pbl/kernel/irq.h>
 
 // UART device for debug serial
 #include <pbl/drivers/uart/qemu.h>

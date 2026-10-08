@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/util/fw_reset.h"
+#include <kernel/util/fw_reset.h>
 
-#include "apps/core/progress_ui.h"
-#include "console/pulse_internal.h"
-#include "kernel/core_dump.h"
-#include "kernel/event_loop.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "kernel/util/factory_reset.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/runlevel.h"
-#include "process_management/app_manager.h"
-#include "system/bootbits.h"
+#include <apps/core/progress_ui.h>
+#include <console/pulse_internal.h>
+#include <kernel/core_dump.h>
+#include <kernel/event_loop.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <kernel/util/factory_reset.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/runlevel.h>
+#include <process_management/app_manager.h>
+#include <system/bootbits.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "system/reset.h"
-#include "pbl/kernel/compiler.h"
+#include <system/passert.h>
+#include <system/reset.h>
+#include <pbl/kernel/compiler.h>
 
 static void prv_reset_into_prf(void) {
   RebootReason reason = {RebootReasonCode_PrfReset, 0};

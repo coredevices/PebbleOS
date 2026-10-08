@@ -5,6 +5,6 @@
 
 #include "app_glance.h"
 
-#include "process_management/app_menu_data_source.h"
+#include <process_management/app_menu_data_source.h>
 
 LauncherAppGlance *launcher_app_glance_weather_create(const AppMenuNode *node);

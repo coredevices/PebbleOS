@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "board/board.h"
+#include <board/board.h>
 
 /**
  * @defgroup drivers_pwm PWM

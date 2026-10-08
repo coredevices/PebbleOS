@@ -3,7 +3,7 @@
 
 // Need to use the real struct because the product code accesses the structure directly. It would
 // be nice to instead create a dummy with only the fields we need, but oh well.
-#include "applib/ui/animation_private.h"
+#include <applib/ui/animation_private.h>
 
 #include <stdarg.h>
 

@@ -68,7 +68,7 @@ void mcu_call_unprivileged(void (*fn)(void *), void *ctx);
 /** @} */
 
 #ifdef __arm__
-#include "pbl/mcu/privilege_arm.inl.h"
+#include <pbl/mcu/privilege_arm.inl.h>
 #else
-#include "pbl/mcu/privilege_stubs.inl.h"
+#include <pbl/mcu/privilege_stubs.inl.h>
 #endif

@@ -3,15 +3,15 @@
 
 #include "simple_dialog.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/fonts/fonts.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/dialogs/dialog_private.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window.h"
-#include "kernel/ui/kernel_ui.h"
-#include "system/passert.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/fonts/fonts.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/dialogs/dialog_private.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
+#include <kernel/ui/kernel_ui.h>
+#include <system/passert.h>
 
 #if defined(CONFIG_RECOVERY_FW) || defined(UNITTEST)
 #define SIMPLE_DIALOG_ANIMATED false

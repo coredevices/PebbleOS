@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/msgq.h"
+#include <pbl/kernel/msgq.h>
 
 /**
  * @defgroup kernel_poll Poll groups

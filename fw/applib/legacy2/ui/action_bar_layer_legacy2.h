@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "applib/ui/layer.h"
-#include "applib/ui/click.h"
+#include <applib/ui/layer.h>
+#include <applib/ui/click.h>
 
 //! @file action_bar_layer.h
 //! @addtogroup UI

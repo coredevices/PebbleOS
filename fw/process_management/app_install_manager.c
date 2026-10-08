@@ -8,31 +8,31 @@
 #include "app_manager.h"
 #include "worker_manager.h"
 
-#include "applib/event_service_client.h"
-#include "apps/system_app_registry.h"
+#include <applib/event_service_client.h>
+#include <apps/system_app_registry.h>
 #include <pbl/task_wdt/task_wdt.h>
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/pebble_tasks.h"
-#include "kernel/util/sleep.h"
-#include "resource/resource.h"
-#include "pbl/services/comm_session/app_session_capabilities.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/app_cache.h"
-#include "pbl/services/blob_db/app_db.h"
-#include "pbl/services/blob_db/pin_db.h"
-#include "pbl/services/persist.h"
-#include "pbl/services/process_management/app_storage.h"
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <kernel/util/sleep.h>
+#include <resource/resource.h>
+#include <pbl/services/comm_session/app_session_capabilities.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/app_cache.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/services/blob_db/pin_db.h>
+#include <pbl/services/persist.h>
+#include <pbl/services/process_management/app_storage.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/circular_cache.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/circular_cache.h>
+#include <pbl/util/size.h>
 
-#include "pbl/kernel/mutex.h"
+#include <pbl/kernel/mutex.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/testing.h>
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 typedef struct PBL_PACKED RecentApp {
   AppInstallId id;

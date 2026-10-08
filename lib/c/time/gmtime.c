@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/time.h"
+#include <pbl/util/time.h>
 
 #include <string.h>
 #include <time.h>

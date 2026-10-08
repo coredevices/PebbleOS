@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_logging.h"
-#include "applib/graphics/gbitmap_sequence.h"
-#include "applib/graphics/graphics.h"
+#include <applib/app_logging.h>
+#include <applib/graphics/gbitmap_sequence.h>
+#include <applib/graphics/graphics.h>
 
-#include "clar.h"
+#include <clar.h>
 #include "util.h"
 
 #include <pbl/util/size.h>
@@ -25,30 +25,30 @@
 // http://opengameart.org/content/open-pixel-platformer-tiles-sprites
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-#include "applib/graphics/8_bit/framebuffer.c"
+#include <applib/graphics/8_bit/framebuffer.c>
 #elif CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
-#include "applib/graphics/1_bit/framebuffer.c"
+#include <applib/graphics/1_bit/framebuffer.c>
 #endif
 
 // Fakes
 ////////////////////////////////////
-#include "fake_resource_syscalls.h"
-#include "fake_app_timer.h"
+#include <fake_resource_syscalls.h>
+#include <fake_app_timer.h>
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_applib_resource.h"
-#include "stubs_app_state.h"
+#include <stubs_applib_resource.h>
+#include <stubs_app_state.h>
 #define CUSTOM_LOG_INTERNAL
-#include "stubs_logging.h"
-#include "stubs_heap.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_print.h"
-#include "stubs_resources.h"
-#include "stubs_serial.h"
-#include "stubs_ui_window.h"
+#include <stubs_logging.h>
+#include <stubs_heap.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_print.h>
+#include <stubs_resources.h>
+#include <stubs_serial.h>
+#include <stubs_ui_window.h>
 
 static int s_dispose_previous_warnings;
 

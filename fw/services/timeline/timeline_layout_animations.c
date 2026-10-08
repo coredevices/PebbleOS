@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/timeline_layout_animations.h"
+#include <pbl/services/timeline/timeline_layout_animations.h>
 
-#include "applib/ui/animation_interpolate.h"
-#include "applib/ui/kino/kino_reel/scale_segmented.h"
-#include "applib/ui/kino/kino_reel/transform.h"
-#include "applib/ui/ui.h"
-#include "apps/system/timeline/animations.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/ui/animation_interpolate.h>
+#include <applib/ui/kino/kino_reel/scale_segmented.h>
+#include <applib/ui/kino/kino_reel/transform.h>
+#include <applib/ui/ui.h>
+#include <apps/system/timeline/animations.h>
+#include <process_state/app_state/app_state.h>
 
 #define CARD_TRANSITION_ICON_EXPAND 5
 

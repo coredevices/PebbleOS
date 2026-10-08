@@ -4,9 +4,9 @@
 #include "gdraw_command_image.h"
 #include "gdraw_command_private.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/applib_resource_private.h"
-#include "syscall/syscall.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/applib_resource_private.h>
+#include <syscall/syscall.h>
 
 GDrawCommandImage *gdraw_command_image_create_with_resource(uint32_t resource_id) {
   ResAppNum app_num = sys_get_current_resource_num();

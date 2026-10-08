@@ -5,8 +5,8 @@
 
 #include <stdlib.h>
 
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "pbl/services/timeline/item.h"
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
+#include <pbl/services/timeline/item.h>
 
 /**
  * @defgroup services_notifications_ancs ANCS notifications

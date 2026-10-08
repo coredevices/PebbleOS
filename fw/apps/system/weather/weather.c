@@ -15,7 +15,7 @@
 
 #include "weather.h"
 
-#include "pbl/services/i18n/i18n.h"
+#include <pbl/services/i18n/i18n.h>
 #include "clock_face.h"
 #include "warning_dialog.h"
 #include "weather_report.h"
@@ -28,8 +28,8 @@
 #include "weather_data_source.h"
 
 #include "pebble_compat.h"
-#include "pbl/services/timeline/timeline.h" // UUID_WEATHER_DATA_SOURCE
-#include "pbl/util/units.h"
+#include <pbl/services/timeline/timeline.h> // UUID_WEATHER_DATA_SOURCE
+#include <pbl/util/units.h>
 
 #define WX_MAX_DAYS 7
 

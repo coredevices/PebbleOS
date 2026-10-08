@@ -10,18 +10,18 @@
 
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/task_wdt/task_wdt.h>
-#include "flash_region/flash_region.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/kernel/types.h"
-#include "process_management/worker_manager.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/analytics/analytics.h"
+#include <flash_region/flash_region.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/types.h>
+#include <process_management/worker_manager.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/analytics/analytics.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "kernel/util/sleep.h"
+#include <system/passert.h>
+#include <kernel/util/sleep.h>
 
-#include "pbl/kernel/sem.h"
-#include "pbl/util/math.h"
+#include <pbl/kernel/sem.h>
+#include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DEFINE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 

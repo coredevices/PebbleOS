@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/gpio.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <hal/nrf_gpio.h>
 

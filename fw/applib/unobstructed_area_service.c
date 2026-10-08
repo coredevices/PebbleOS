@@ -4,11 +4,11 @@
 #include "unobstructed_area_service.h"
 #include "unobstructed_area_service_private.h"
 
-#include "applib/app.h"
-#include "applib/graphics/framebuffer.h"
-#include "kernel/events.h"
-#include "process_state/app_state/app_state.h"
-#include "system/passert.h"
+#include <applib/app.h>
+#include <applib/graphics/framebuffer.h>
+#include <kernel/events.h>
+#include <process_state/app_state/app_state.h>
+#include <system/passert.h>
 
 #include <pbl/logging/logging.h>
 

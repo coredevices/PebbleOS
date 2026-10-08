@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pbl/services/comm_session/app_session_capabilities.h"
-#include "pbl/services/comm_session/session.h"
-#include "process_management/pebble_process_md.h"
-#include "pbl/services/settings/settings_file.h"
-#include "system/status_codes.h"
+#include <clar.h>
+#include <pbl/services/comm_session/app_session_capabilities.h>
+#include <pbl/services/comm_session/session.h>
+#include <process_management/pebble_process_md.h>
+#include <pbl/services/settings/settings_file.h>
+#include <system/status_codes.h>
 
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
 
 static const CommSessionCapability s_live_capabilities = (CommSessionInfiniteLogDumping);
 

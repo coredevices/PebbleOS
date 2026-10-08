@@ -5,7 +5,7 @@
 
 #include <pbl/drivers/uart.h>
 
-#include "board/board.h"
+#include <board/board.h>
 
 #include <stdbool.h>
 #include <stdint.h>

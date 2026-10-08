@@ -31,8 +31,8 @@ typedef struct MenuRenderIterator {
 } MenuRenderIterator;
 
 #ifdef CONFIG_TOUCH
-#include "applib/ui/recognizer/swipe.h"
-#include "applib/ui/recognizer/touch_nav.h"
+#include <applib/ui/recognizer/swipe.h>
+#include <applib/ui/recognizer/touch_nav.h>
 
 //! Default gesture operations for menus that override a subset of the widget behavior.
 const TouchNavWidgetOps *menu_layer_touch_get_default_ops(void);

@@ -3,21 +3,21 @@
 
 #include "status_bar_layer.h"
 
-#include "applib/app_logging.h"
-#include "applib/applib_malloc.auto.h"
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/graphics_line.h"
-#include "applib/graphics/text.h"
-#include "applib/ui/window_stack.h"
-#include "kernel/ui/kernel_ui.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/clock.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/string.h"
+#include <applib/app_logging.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/graphics_line.h>
+#include <applib/graphics/text.h>
+#include <applib/ui/window_stack.h>
+#include <kernel/ui/kernel_ui.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/clock.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/string.h>
 
 typedef struct StatusBarTextFormat {
   GTextOverflowMode overflow_mode;

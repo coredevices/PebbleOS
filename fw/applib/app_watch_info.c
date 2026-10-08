@@ -3,11 +3,11 @@
 
 #include "app_watch_info.h"
 
-#include "syscall/syscall_internal.h"
-#include "system/version.h"
-#include "mfg/mfg_info.h"
+#include <syscall/syscall_internal.h>
+#include <system/version.h>
+#include <mfg/mfg_info.h>
 
-#include "pbl/version.h"
+#include <pbl/version.h>
 
 DEFINE_SYSCALL(WatchInfoColor, sys_watch_info_get_color, void) {
   return mfg_info_get_watch_color();

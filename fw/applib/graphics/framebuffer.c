@@ -6,8 +6,8 @@
 //! Bitdepth dependant routines can be found in the 1_bit & 8_bit folders in their
 //! respective framebuffer.c files.
 
-#include "applib/graphics/framebuffer.h"
-#include "system/passert.h"
+#include <applib/graphics/framebuffer.h>
+#include <system/passert.h>
 
 void framebuffer_init(FrameBuffer *fb, const GSize *size) {
   PBL_ASSERTN(!gsize_equal(size, &GSizeZero));

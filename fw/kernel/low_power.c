@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/low_power.h"
+#include <kernel/low_power.h>
 
-#include "apps/prf/low_power.h"
-#include "kernel/event_loop.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "kernel/util/standby.h"
-#include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "process_management/app_manager.h"
-#include "process_management/worker_manager.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/runlevel.h"
+#include <apps/prf/low_power.h>
+#include <kernel/event_loop.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <kernel/util/standby.h>
+#include <mfg/mfg_mode/mfg_factory_mode.h>
+#include <process_management/app_manager.h>
+#include <process_management/worker_manager.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/runlevel.h>
 
 #include <stdbool.h>
 

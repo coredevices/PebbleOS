@@ -5,40 +5,40 @@
 // single layer. Verifies that a vertical drag starts the (vertical) pan while the swipe and tap
 // fail, and that a fast horizontal flick completes the swipe while the pan and tap fail.
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/ui/layer.h"
-#include "applib/ui/window.h"
-#include "applib/ui/recognizer/recognizer.h"
-#include "applib/ui/recognizer/recognizer_impl.h"
-#include "applib/ui/recognizer/recognizer_list.h"
-#include "applib/ui/recognizer/recognizer_manager.h"
-#include "applib/ui/recognizer/recognizer_private.h"
-#include "applib/ui/recognizer/pan.h"
-#include "applib/ui/recognizer/swipe.h"
-#include "applib/ui/recognizer/tap.h"
+#include <applib/ui/layer.h>
+#include <applib/ui/window.h>
+#include <applib/ui/recognizer/recognizer.h>
+#include <applib/ui/recognizer/recognizer_impl.h>
+#include <applib/ui/recognizer/recognizer_list.h>
+#include <applib/ui/recognizer/recognizer_manager.h>
+#include <applib/ui/recognizer/recognizer_private.h>
+#include <applib/ui/recognizer/pan.h>
+#include <applib/ui/recognizer/swipe.h>
+#include <applib/ui/recognizer/tap.h>
 
-#include "pbl/drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 #include <stdint.h>
 
 // Fakes
-#include "fake_rtc.h"
+#include <fake_rtc.h>
 
 // Stubs
-#include "stubs_app_state.h"
-#include "stubs_gbitmap.h"
-#include "stubs_graphics.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_process_manager.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_app_state.h>
+#include <stubs_gbitmap.h>
+#include <stubs_graphics.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_process_manager.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
 #include "test_recognizer_impl.h"
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 static RecognizerList *s_app_list;
 static Layer *s_active_layer;

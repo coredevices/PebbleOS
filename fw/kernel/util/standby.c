@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/util/standby.h"
+#include <kernel/util/standby.h>
 
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/pmic.h>
-#include "system/bootbits.h"
+#include <system/bootbits.h>
 #include <pbl/logging/logging.h>
-#include "system/reset.h"
-#include "system/passert.h"
+#include <system/reset.h>
+#include <system/passert.h>
 
 #ifdef CONFIG_PMIC
 static PBL_NORETURN void prv_enter_standby(void) {

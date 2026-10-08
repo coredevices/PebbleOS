@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/util/uuid.h"
-#include "kernel/events.h"
-#include "process_management/app_install_types.h"
+#include <pbl/util/uuid.h>
+#include <kernel/events.h>
+#include <process_management/app_install_types.h>
 
 /**
  * @defgroup services_app_fetch_endpoint App fetch endpoint

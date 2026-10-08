@@ -4,12 +4,12 @@
 #include "hr_detail_card.h"
 #include "detail_card.h"
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/health_util.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/activity/health_util.h>
 
 #include <stdio.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 typedef struct HealthHrDetailCard {
   int16_t num_headings;

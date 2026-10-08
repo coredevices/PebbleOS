@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "process_management/app_install_types.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/comm_session/app_session_capabilities.h"
-#include "pbl/services/settings/settings_file.h"
-#include "pbl/kernel/mutex.h"
-#include "system/passert.h"
-#include "pbl/util/units.h"
+#include <process_management/app_install_types.h>
+#include <process_management/app_manager.h>
+#include <pbl/services/comm_session/app_session_capabilities.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/kernel/mutex.h>
+#include <system/passert.h>
+#include <pbl/util/units.h>
 
 #define APP_SESSION_CAPABILITIES_CACHE_FILENAME "app_comm"
 

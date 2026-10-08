@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
-#include "applib/ui/animation_timing.h"
-#include "applib/ui/animation.h"
+#include <applib/ui/animation_timing.h>
+#include <applib/ui/animation.h>
 
 // stubs
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 // tests
 

@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "applib/ui/animation.h"
-#include "applib/ui/progress_layer.h"
-#include "applib/ui/window.h"
-#include "applib/ui/window_stack.h"
-#include "apps/system/timeline/peek_layer.h"
-#include "pbl/services/evented_timer.h"
+#include <applib/ui/animation.h>
+#include <applib/ui/progress_layer.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_stack.h>
+#include <apps/system/timeline/peek_layer.h>
+#include <pbl/services/evented_timer.h>
 
 //! @file progress_window.h
 //!

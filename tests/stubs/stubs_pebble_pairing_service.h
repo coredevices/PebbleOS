@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/ble/gap_le_connection.h"
+#include <comm/ble/gap_le_connection.h>
 
 void pebble_pairing_service_deinit(unsigned int stack_id) {
 }

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/notifications/do_not_disturb.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/kernel/compiler.h>
 
 bool PBL_WEAK do_not_disturb_is_active(void) {
   return false;

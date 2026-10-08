@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "applib/ui/recognizer/recognizer.h"
+#include <applib/ui/recognizer/recognizer.h>
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #define NEW_RECOGNIZER(r) Recognizer *r PBL_CLEANUP(test_recognizer_destroy)
 

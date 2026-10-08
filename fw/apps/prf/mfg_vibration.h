@@ -7,6 +7,6 @@
 //!
 //! Boring test app that vibes 5 times and quits
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 const PebbleProcessMd *mfg_vibration_app_get_info(void);

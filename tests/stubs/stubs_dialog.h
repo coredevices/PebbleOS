@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/dialogs/dialog.h"
+#include <applib/ui/dialogs/dialog.h>
 
 void dialog_set_background_color(Dialog *dialog, GColor background_color) {
   return;

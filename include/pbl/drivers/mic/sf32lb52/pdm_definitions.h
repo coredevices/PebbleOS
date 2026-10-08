@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/mic.h>
-#include "pbl/kernel/mutex.h"
+#include <pbl/kernel/mutex.h>
 #include <pbl/util/circular_buffer.h>
 
 #include <stdbool.h>

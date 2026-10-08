@@ -5,8 +5,8 @@
 //!
 
 #pragma once
-#include "applib/ui/layer.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/ui/layer.h>
+#include <applib/graphics/gtypes.h>
 
 //! @file bitmap_layer.h
 //! @addtogroup UI

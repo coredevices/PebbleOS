@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2026 Khalid Nuaim (kaluaim) */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/bidi.h"
+#include <applib/graphics/bidi.h>
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #include <string.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 // Helpers
 ///////////////////////////////////////////////////////////

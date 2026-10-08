@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/gtypes.h"
-#include "upng.h"
+#include <applib/graphics/gtypes.h>
+#include <upng.h>
 
 bool gbitmap_png_data_is_png(uint8_t *data, size_t data_size) {
   return false;

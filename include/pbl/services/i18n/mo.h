@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_i18n_mo MO file format

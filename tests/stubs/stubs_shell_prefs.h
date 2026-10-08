@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "shell/prefs.h"
-#include "pbl/kernel/compiler.h"
+#include <shell/prefs.h>
+#include <pbl/kernel/compiler.h>
 
 static bool s_clock_24h;
 

@@ -5,8 +5,8 @@
 #include "animations.h"
 #include "relbar.h"
 
-#include "applib/graphics/graphics.h"
-#include "pbl/services/timeline/timeline_layout.h"
+#include <applib/graphics/graphics.h>
+#include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/logging/logging.h>
 
 #include <stdint.h>

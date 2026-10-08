@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/data_logging.h"
-#include "pbl/util/uuid.h"
-#include "kernel/pebble_tasks.h"
+#include <applib/data_logging.h>
+#include <pbl/util/uuid.h>
+#include <kernel/pebble_tasks.h>
 
 /**
  * @defgroup services_data_logging Data logging

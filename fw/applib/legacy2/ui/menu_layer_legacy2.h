@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/menu_layer.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/ui/menu_layer.h>
+#include <applib/graphics/gtypes.h>
 
 #define MENU_CELL_LEGACY2_BASIC_SEPARATOR_HEIGHT ((const int16_t)1)
 

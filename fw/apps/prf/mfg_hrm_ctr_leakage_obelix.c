@@ -3,34 +3,34 @@
 
 #include "mfg_hrm_ctr_leakage_obelix.h"
 
-#include "applib/app.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window.h"
-#include "applib/ui/window_private.h"
-#include "apps/prf/mfg_test_result.h"
+#include <applib/app.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_private.h>
+#include <apps/prf/mfg_test_result.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
-#include "gh_demo.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
-#include "mfg/mfg_info.h"
-#include "process_state/app_state/app_state.h"
-#include "process_management/pebble_process_md.h"
-#include "process_management/process_manager.h"
-#include "pbl/services/evented_timer.h"
-#include "pbl/services/hrm/hrm_manager.h"
-#include "pbl/util/bitops.h"
-#include "pbl/util/size.h"
-#include "pbl/util/trig.h"
+#include <gh_demo.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/util/sleep.h>
+#include <mfg/mfg_info.h>
+#include <process_state/app_state/app_state.h>
+#include <process_management/pebble_process_md.h>
+#include <process_management/process_manager.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/util/bitops.h>
+#include <pbl/util/size.h>
+#include <pbl/util/trig.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 #define STATUS_STRING_LEN  32
 #define CTR_STRING_LEN     128

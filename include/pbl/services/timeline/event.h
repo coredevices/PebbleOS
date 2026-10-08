@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/blob_db/pin_db.h"
+#include <pbl/services/blob_db/pin_db.h>
 
 /**
  * @defgroup services_timeline_event Timeline events

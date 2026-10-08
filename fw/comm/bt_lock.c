@@ -3,7 +3,7 @@
 
 #include "bt_lock.h"
 
-#include "system/passert.h"
+#include <system/passert.h>
 
 // NOTE: The s_bt_lock is the global Bluetooth lock that is used by the firmware
 // *and* by Bluetopia. It gets handed to Bluetopia using bt_lock_get() in

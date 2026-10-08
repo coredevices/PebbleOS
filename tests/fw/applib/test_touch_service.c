@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/touch_service.h"
-#include "applib/touch_service_private.h"
-#include "kernel/events.h"
-#include "kernel/pebble_tasks.h"
+#include <applib/touch_service.h>
+#include <applib/touch_service_private.h>
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
 // Stubs
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 // Fake event service
 //////////////////////////////////////////

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "process_management/app_manager.h"
+#include <process_management/app_manager.h>
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
 typedef struct {
   ListNode *head; //! Pointer to the Animation struct that is the animation that is scheduled

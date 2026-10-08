@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "applib/platform.h"
-#include "process_management/process_manager.h"
+#include <applib/platform.h>
+#include <process_management/process_manager.h>
 #include "stubs_compiled_with_legacy2_sdk.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 #include "stubs_compiled_with_legacy2_sdk.h"
 
 const PebbleProcessMd *PBL_WEAK sys_process_manager_get_current_process_md(void) {

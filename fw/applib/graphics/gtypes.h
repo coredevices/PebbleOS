@@ -7,10 +7,10 @@
 #pragma once
 
 #include <pbl/drivers/display/display.h> // FIXME: Need display dimensions
-#include "resource/resource.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
-#include "pbl/util/math_fixed.h"
+#include <resource/resource.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
+#include <pbl/util/math_fixed.h>
 
 #if !(defined(SDK) || defined(UNITTEST))
 #endif

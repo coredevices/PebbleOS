@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/vibes/vibe_score.h"
+#include <pbl/services/vibes/vibe_score.h>
 
-#include "process_management/app_manager.h"
-#include "syscall/syscall.h"
+#include <process_management/app_manager.h>
+#include <syscall/syscall.h>
 
-#include "system/passert.h"
+#include <system/passert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/drivers/vibe.h>
-#include "applib/applib_malloc.auto.h"
-#include "pbl/util/byteorder.h"
+#include <applib/applib_malloc.auto.h>
+#include <pbl/util/byteorder.h>
 
 PBL_LOG_MODULE_DECLARE(service_vibes, CONFIG_SERVICE_VIBES_LOG_LEVEL);
 

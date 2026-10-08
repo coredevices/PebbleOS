@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/applib_malloc.auto.h"
+#include <applib/applib_malloc.auto.h>
 #include "applib_resource_private.h"
-#include "board/board.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_storage_builtin.h"
-#include "resource/resource_storage_flash.h"
-#include "syscall/syscall.h"
+#include <board/board.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_storage_builtin.h>
+#include <resource/resource_storage_flash.h>
+#include <syscall/syscall.h>
 
 ResHandle applib_resource_get_handle(uint32_t resource_id) {
   if (sys_resource_is_valid(sys_get_current_resource_num(), resource_id)) {

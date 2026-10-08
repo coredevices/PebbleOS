@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/app_timer.h"
+#include <applib/app_timer.h>
 #include <pbl/logging/logging.h>
 
 #include <string.h>

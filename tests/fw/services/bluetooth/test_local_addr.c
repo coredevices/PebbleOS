@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/bluetooth/local_addr.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_addr.h>
 
 #include <pbl/bluetooth/types.h>
 
@@ -13,9 +13,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fakes / Stubs
 
-#include "stubs_bt_lock.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_bt_lock.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 static bool s_last_driver_allow_cycling;
 struct pbl_bt_addr s_last_driver_addr;

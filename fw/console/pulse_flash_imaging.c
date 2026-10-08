@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "console/pulse_protocol_impl.h"
+#include <console/pulse_protocol_impl.h>
 
 #include <stdint.h>
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
-#include "kernel/util/sleep.h"
-#include "resource/resource_storage_flash.h"
-#include "pbl/services/system_task.h"
-#include "system/bootbits.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
+#include <flash_region/flash_region.h>
+#include <kernel/util/sleep.h>
+#include <resource/resource_storage_flash.h>
+#include <pbl/services/system_task.h>
+#include <system/bootbits.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
 
 #define IMAGING_CMD_ERASE           (1)
 #define IMAGING_CMD_WRITE           (2)

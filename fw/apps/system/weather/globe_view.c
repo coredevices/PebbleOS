@@ -7,21 +7,21 @@
  */
 
 #include "globe_view.h"
-#include "pbl/services/i18n/i18n.h"
+#include <pbl/services/i18n/i18n.h>
 // GLOBE_* resource ids come from the real resource_ids.auto.h (via
 // pebble_compat.h); the stored-app pinned header is not used in the system app.
 
 #include "weather_data_source.h" // WX_DS_UNKNOWN_TEMP
 #include "weather_math.h"
-#include "applib/graphics/gdraw_command_transforms.h"
+#include <applib/graphics/gdraw_command_transforms.h>
 #include "weather.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/vibes.h"
-#include "applib/applib_malloc.auto.h"
-#include "uzlib.h"
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/vibes.h>
+#include <applib/applib_malloc.auto.h>
+#include <uzlib.h>
 
 #include <string.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #define GLOBE_FRAME_INTERVAL_MS     35 // ~28.6 FPS, matching Pebble's shredder PDC cadence
 #define GLOBE_IDLE_TIMEOUT_MS       5000

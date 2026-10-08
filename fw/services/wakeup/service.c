@@ -1,27 +1,27 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/wakeup.h"
+#include <pbl/services/wakeup.h>
 
-#include "popups/wakeup_ui.h"
+#include <popups/wakeup_ui.h>
 
-#include "pbl/kernel/mutex.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/event_service.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/settings/settings_file.h"
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <pbl/kernel/mutex.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/event_service.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/settings/settings_file.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
-#include "pbl/util/units.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/time.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/time.h>
 
 PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 

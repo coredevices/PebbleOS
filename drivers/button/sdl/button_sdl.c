@@ -5,7 +5,7 @@
 #include <pbl/drivers/debounced_button.h>
 #include <pbl_arch_posix.h>
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 #include "button_sdl_bottom.h"
 
 static const ButtonId s_buttons[] = {

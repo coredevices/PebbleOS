@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "kernel/events.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/notifications/alerts.h"
-#include "pbl/services/phone_call.h"
-#include "pbl/services/phone_call_util.h"
-#include "pbl/util/testing.h"
+#include <kernel/events.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/notifications/alerts.h>
+#include <pbl/services/phone_call.h>
+#include <pbl/services/phone_call_util.h>
+#include <pbl/util/testing.h>
 
 extern PBL_T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context);
 extern PBL_T_STATIC void prv_handle_mobile_app_event(PebbleEvent *e, void *context);
@@ -17,14 +17,14 @@ extern PBL_T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void
 ///////////////////////////////////////////////////////////
 // Stubs
 ///////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_event_service_client.h"
-#include "stubs_logging.h"
-#include "stubs_new_timer.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_phone_call_util.h"
-#include "stubs_session.h"
-#include "stubs_system_task.h"
+#include <stubs_analytics.h>
+#include <stubs_event_service_client.h>
+#include <stubs_logging.h>
+#include <stubs_new_timer.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_phone_call_util.h>
+#include <stubs_session.h>
+#include <stubs_system_task.h>
 
 bool alerts_should_notify_for_type(AlertType type) {
   return true;

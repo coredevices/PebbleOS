@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
-#include "clar.h"
-#include "stubs_app_state.h"
-#include "stubs_heap.h"
-#include "stubs_passert.h"
-#include "stubs_process_manager.h"
+#include <clar.h>
+#include <stubs_app_state.h>
+#include <stubs_heap.h>
+#include <stubs_passert.h>
+#include <stubs_process_manager.h>
 
 void test_graphics_colors__black(void) {
   cl_assert(GColorBlack.r == 0b00);

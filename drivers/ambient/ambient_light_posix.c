@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/ambient_light.h>
 
-#include "board/board.h"
+#include <board/board.h>
 
 static uint32_t s_dark_threshold;
 

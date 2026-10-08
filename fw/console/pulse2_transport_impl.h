@@ -34,7 +34,7 @@ void pulse_link_send_cancel(void *buf);
 #define ON_LINK_STATE_CHANGE(ON_UP, ON_DOWN) \
   void ON_UP(void);                          \
   void ON_DOWN(void);
-#include "console/pulse2_transport_registry.def"
+#include <console/pulse2_transport_registry.def>
 #undef ON_PACKET
 #undef ON_INIT
 #undef ON_LINK_STATE_CHANGE

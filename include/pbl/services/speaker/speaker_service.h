@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "pbl/services/speaker/limits.h"
-#include "pbl/services/speaker/note_sequence.h"
-#include "pbl/services/speaker/speaker_finish_reason.h"
-#include "pbl/services/speaker/speaker_pcm_format.h"
-#include "pbl/services/speaker/track.h"
-#include "kernel/pebble_tasks.h"
+#include <pbl/services/speaker/limits.h>
+#include <pbl/services/speaker/note_sequence.h>
+#include <pbl/services/speaker/speaker_finish_reason.h>
+#include <pbl/services/speaker/speaker_pcm_format.h>
+#include <pbl/services/speaker/track.h>
+#include <kernel/pebble_tasks.h>
 
 #include <stdbool.h>
 #include <stdint.h>

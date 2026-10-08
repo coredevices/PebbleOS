@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
 #include <pbl/kernel/sem.h>
 

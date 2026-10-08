@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
 /**
  * @defgroup services_regular_timer Regular timers

@@ -1,30 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/notifications/alerts.h"
-#include "pbl/services/notifications/alerts_private.h"
+#include <pbl/services/notifications/alerts.h>
+#include <pbl/services/notifications/alerts_private.h>
 
-#include "clar.h"
+#include <clar.h>
 
-#include "stdbool.h"
+#include <stdbool.h>
 
 // Stubs
 /////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_events.h"
-#include "stubs_firmware_update.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_notification_storage.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
-#include "stubs_vibes.h"
-#include "stubs_vibe_score_info.h"
-#include "fake_rtc.h"
+#include <stubs_analytics.h>
+#include <stubs_events.h>
+#include <stubs_firmware_update.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_notification_storage.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
+#include <stubs_vibes.h>
+#include <stubs_vibe_score_info.h>
+#include <fake_rtc.h>
 
 // Overrides
 /////////////////////////////////

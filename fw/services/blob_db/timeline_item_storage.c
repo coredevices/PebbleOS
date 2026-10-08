@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/blob_db/timeline_item_storage.h"
+#include <pbl/services/blob_db/timeline_item_storage.h>
 
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/settings/settings_raw_iter.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/settings/settings_raw_iter.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

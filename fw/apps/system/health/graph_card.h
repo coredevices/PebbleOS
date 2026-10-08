@@ -5,10 +5,10 @@
 
 #include "data.h"
 
-#include "applib/fonts/fonts.h"
-#include "applib/ui/layer.h"
-#include "pbl/util/time.h"
-#include "pbl/util/units.h"
+#include <applib/fonts/fonts.h>
+#include <applib/ui/layer.h>
+#include <pbl/util/time.h>
+#include <pbl/util/units.h>
 
 typedef enum {
   HealthGraphIndex_Sunday = PBL_SUNDAY,

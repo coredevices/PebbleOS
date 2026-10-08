@@ -3,7 +3,7 @@
 
 #include "kino_reel_custom.h"
 
-#include "applib/applib_malloc.auto.h"
+#include <applib/applib_malloc.auto.h>
 
 const uint32_t CUSTOM_REEL_CANARY = 0xbaebaef8;
 

@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "animation_interpolate.h"
 #include <pbl/drivers/rtc.h>
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
 //! @file animation.h
 //! @addtogroup UI

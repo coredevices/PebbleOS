@@ -1,59 +1,59 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/events.h"
-#include "pbl/services/blob_db/pin_db.h"
-#include "pbl/services/timeline/calendar.h"
-#include "pbl/services/timeline/event.h"
-#include "pbl/services/timeline/timeline.h"
+#include <kernel/events.h>
+#include <pbl/services/blob_db/pin_db.h>
+#include <pbl/services/timeline/calendar.h>
+#include <pbl/services/timeline/event.h>
+#include <pbl/services/timeline/timeline.h>
 #include <pbl/logging/logging.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_ancs.h"
-#include "stubs_ancs_notifications.h"
-#include "stubs_app_cache.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_manager.h"
-#include "stubs_blob_db.h"
-#include "stubs_blob_db_sync.h"
-#include "stubs_blob_db_sync_util.h"
-#include "stubs_event_loop.h"
-#include "stubs_event_service_client.h"
-#include "stubs_hexdump.h"
-#include "stubs_i18n.h"
-#include "stubs_layout_layer.h"
-#include "stubs_logging.h"
-#include "stubs_modal_manager.h"
-#include "stubs_mutex.h"
-#include "stubs_notification_storage.h"
-#include "stubs_notifications.h"
-#include "stubs_passert.h"
-#include "stubs_phone_call_util.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_regular_timer.h"
-#include "stubs_reminder_db.h"
-#include "stubs_session.h"
-#include "stubs_sleep.h"
-#include "stubs_system_task.h"
-#include "stubs_task_wdt.h"
-#include "stubs_text_layer_flow.h"
-#include "stubs_timeline.h"
-#include "stubs_timeline_pin_window.h"
-#include "stubs_window_stack.h"
+#include <stubs_analytics.h>
+#include <stubs_ancs.h>
+#include <stubs_ancs_notifications.h>
+#include <stubs_app_cache.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_manager.h>
+#include <stubs_blob_db.h>
+#include <stubs_blob_db_sync.h>
+#include <stubs_blob_db_sync_util.h>
+#include <stubs_event_loop.h>
+#include <stubs_event_service_client.h>
+#include <stubs_hexdump.h>
+#include <stubs_i18n.h>
+#include <stubs_layout_layer.h>
+#include <stubs_logging.h>
+#include <stubs_modal_manager.h>
+#include <stubs_mutex.h>
+#include <stubs_notification_storage.h>
+#include <stubs_notifications.h>
+#include <stubs_passert.h>
+#include <stubs_phone_call_util.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_regular_timer.h>
+#include <stubs_reminder_db.h>
+#include <stubs_session.h>
+#include <stubs_sleep.h>
+#include <stubs_system_task.h>
+#include <stubs_task_wdt.h>
+#include <stubs_text_layer_flow.h>
+#include <stubs_timeline.h>
+#include <stubs_timeline_pin_window.h>
+#include <stubs_window_stack.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_pebble_tasks.h"
-#include "fake_rtc.h"
-#include "fake_spi_flash.h"
-#include "fake_settings_file.h"
-#include "fake_events.h"
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_pebble_tasks.h>
+#include <fake_rtc.h>
+#include <fake_spi_flash.h>
+#include <fake_settings_file.h>
+#include <fake_events.h>
 
 bool calendar_layout_verify(bool existing_attributes[]) {
   return true;

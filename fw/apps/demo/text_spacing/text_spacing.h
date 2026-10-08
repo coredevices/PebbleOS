@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 const PebbleProcessMd *text_spacing_app_get_info();

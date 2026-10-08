@@ -1,30 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/app_logging.h"
-#include "applib/fonts/fonts.h"
-#include "applib/health_service.h"
-#include "applib/ui/simple_menu_layer.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_algorithm.h"
-#include "pbl/services/activity/activity_insights.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
-#include "pbl/services/activity/insights_settings.h"
+#include <applib/app.h>
+#include <applib/app_logging.h>
+#include <applib/fonts/fonts.h>
+#include <applib/health_service.h>
+#include <applib/ui/simple_menu_layer.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
+#include <pbl/services/activity/insights_settings.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include "activity_test.h"
 
 #include <stdio.h>
 #include <services/activity/activity.h>
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 // Test the activity API
 typedef struct {

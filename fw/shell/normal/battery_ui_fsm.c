@@ -5,19 +5,19 @@
 
 #include <stdint.h>
 
-#include "applib/ui/vibes.h"
-#include "apps/system_app_ids.h"
-#include "kernel/low_power.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "kernel/util/standby.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/battery/battery_curve.h"
-#include "pbl/services/vibe_pattern.h"
-#include "pbl/services/notifications/do_not_disturb.h"
-#include "pbl/services/vibes/vibe_intensity.h"
-#include "shell/normal/watchface.h"
-#include "pbl/util/ratio.h"
-#include "pbl/util/size.h"
+#include <applib/ui/vibes.h>
+#include <apps/system_app_ids.h>
+#include <kernel/low_power.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <kernel/util/standby.h>
+#include <process_management/app_manager.h>
+#include <pbl/services/battery/battery_curve.h>
+#include <pbl/services/vibe_pattern.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/vibes/vibe_intensity.h>
+#include <shell/normal/watchface.h>
+#include <pbl/util/ratio.h>
+#include <pbl/util/size.h>
 
 // The Battery UI state machine keeps track of when to notify the user of a
 // change in battery charge state, and when to automatically dismiss the status

@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/notifications/alerts.h"
-#include "pbl/services/notifications/alerts_private.h"
+#include <pbl/services/notifications/alerts.h>
+#include <pbl/services/notifications/alerts_private.h>
 
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/low_power.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/firmware_update.h"
-#include "pbl/services/notifications/do_not_disturb.h"
-#include "pbl/services/notifications/alerts_preferences_private.h"
+#include <kernel/low_power.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/firmware_update.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(service_alerts, CONFIG_SERVICE_ALERTS_LOG_LEVEL);

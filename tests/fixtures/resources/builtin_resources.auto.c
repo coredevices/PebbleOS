@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "resource/resource_ids.auto.h"
-#include "resource/resource_storage.h"
-#include "resource/resource_storage_builtin.h"
-#include "pbl/kernel/compiler.h"
+#include <resource/resource_ids.auto.h>
+#include <resource/resource_storage.h>
+#include <resource/resource_storage_builtin.h>
+#include <pbl/kernel/compiler.h>
 
 PBL_ALIGNED(8)
 static const uint8_t ACTION_BAR_ICON_CHECK_builtin_bytes[] = {

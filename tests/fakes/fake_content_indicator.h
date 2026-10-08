@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/content_indicator_private.h"
+#include <applib/ui/content_indicator_private.h>
 
 static ContentIndicatorsBuffer s_content_indicators_buffer;
 

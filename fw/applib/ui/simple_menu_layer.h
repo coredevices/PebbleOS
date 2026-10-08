@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/menu_layer.h"
-#include "applib/ui/window.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/menu_layer.h>
+#include <applib/ui/window.h>
 
 //! @file simple_menu_layer.h
 //! @addtogroup UI

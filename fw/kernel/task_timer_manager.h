@@ -5,8 +5,8 @@
 
 #include "task_timer.h"
 
-#include "pbl/kernel/sem.h"
-#include "pbl/util/list.h"
+#include <pbl/kernel/sem.h>
+#include <pbl/util/list.h>
 
 //! Internal state object. Each task that wants to execute timers should allocate their own
 //! instance of this object.

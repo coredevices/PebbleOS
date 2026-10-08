@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/event_service_client.h"
+#include <applib/event_service_client.h>
 #include "connection_service.h"
 
 typedef struct ConnectionServiceState {

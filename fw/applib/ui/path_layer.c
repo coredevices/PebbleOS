@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "path_layer.h"
-#include "applib/graphics/graphics.h"
+#include <applib/graphics/graphics.h>
 
 void path_layer_update_proc(PathLayer *path_layer, GContext *ctx) {
   if (!gcolor_is_transparent(path_layer->fill_color)) {

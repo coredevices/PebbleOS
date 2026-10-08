@@ -1,39 +1,39 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
 #include "./blob_db/weather_data_shared.h"
 
-#include "applib/event_service_client.h"
-#include "kernel/events.h"
-#include "pbl/services/comm_session/session_remote_version.h"
-#include "pbl/services/blob_db/weather_db.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/weather/weather_service.h"
-#include "pbl/services/weather/weather_service_private.h"
-#include "pbl/services/weather/weather_types.h"
-#include "pbl/util/pstring.h"
+#include <applib/event_service_client.h>
+#include <kernel/events.h>
+#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/services/blob_db/weather_db.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/weather/weather_service.h>
+#include <pbl/services/weather/weather_service_private.h>
+#include <pbl/services/weather/weather_types.h>
+#include <pbl/util/pstring.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include "fake_pbl_malloc.h"
-#include "fake_spi_flash.h"
+#include <fake_pbl_malloc.h>
+#include <fake_spi_flash.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_events.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_hexdump.h"
-#include "stubs_passert.h"
-#include "stubs_task_wdt.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_sleep.h"
+#include <stubs_analytics.h>
+#include <stubs_events.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_hexdump.h>
+#include <stubs_passert.h>
+#include <stubs_task_wdt.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_sleep.h>
 
 static EventServiceInfo *s_event_info;
 void event_service_client_subscribe(EventServiceInfo *service_info) {

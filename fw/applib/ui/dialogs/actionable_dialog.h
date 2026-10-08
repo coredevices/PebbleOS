@@ -5,10 +5,10 @@
 
 #include "actionable_dialog_private.h"
 
-#include "applib/ui/action_bar_layer.h"
-#include "applib/ui/click.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/window_stack.h"
+#include <applib/ui/action_bar_layer.h>
+#include <applib/ui/click.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/window_stack.h>
 
 //! Creates a new ActionableDialog on the heap.
 //! @param dialog_name The debug name to give the \ref ActionableDialog

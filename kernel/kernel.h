@@ -5,12 +5,12 @@
 
 #include <errno.h>
 
-#include "pbl/kernel/debug.h"
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
-#include "pbl/kernel/thread.h"
+#include <pbl/kernel/debug.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
+#include <pbl/kernel/thread.h>
 
-#include "arch.h"
+#include <arch.h>
 
 //! Internal interface between the objects, the scheduler and the arch code.
 //! Everything here is called with interrupts locked unless noted.

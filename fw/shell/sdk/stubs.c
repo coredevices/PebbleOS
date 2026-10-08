@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/backlight.h>
-#include "process_management/pebble_process_md.h"
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/timeline/peek.h"
-#include "resource/resource_ids.auto.h"
-#include "shell/prefs.h"
-#include "pbl/util/uuid.h"
+#include <process_management/pebble_process_md.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/timeline/peek.h>
+#include <resource/resource_ids.auto.h>
+#include <shell/prefs.h>
+#include <pbl/util/uuid.h>
 
 #include <stdlib.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 void app_idle_timeout_start(uint32_t timeout_ms) {
 }
@@ -88,7 +88,7 @@ bool touch_navigation_menu_is_enabled(void) {
 void touch_set_navigation_menu_enabled(bool enable) {
 }
 
-#include "process_management/app_install_types.h"
+#include <process_management/app_install_types.h>
 void worker_preferences_set_default_worker(AppInstallId id) {
 }
 

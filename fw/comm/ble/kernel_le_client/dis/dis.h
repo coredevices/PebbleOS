@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/bluetooth/ble_client.h"
+#include <applib/bluetooth/ble_client.h>
 
 //! @file dis.h Module implementing an DIS client.
 //! See https://developer.bluetooth.org/TechnologyOverview/Pages/DIS.aspx

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/services/alarms/alarm.h"
-#include "pbl/services/speaker/note_sequence.h"
-#include "pbl/services/vibes/vibe_score_info.h"
+#include <pbl/services/alarms/alarm.h>
+#include <pbl/services/speaker/note_sequence.h>
+#include <pbl/services/vibes/vibe_score_info.h>
 
 //! Look up the SpeakerNote sequence for a given alarm tone.
 //! @param tone The tone to look up.

@@ -5,10 +5,10 @@
 
 #include <pbl/shell/shell.h>
 
-#include "applib/ui/recognizer/touch_nav.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/touch/touch_nav_service.h"
-#include "pbl/util/size.h"
+#include <applib/ui/recognizer/touch_nav.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <pbl/services/touch/touch_nav_service.h>
+#include <pbl/util/size.h>
 
 static int prv_cmd_nav_enable(const struct pbl_shell *sh, size_t argc, char **argv) {
   touch_nav_set_enabled(true);

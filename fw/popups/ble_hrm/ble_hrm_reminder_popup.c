@@ -4,9 +4,9 @@
 #include "ble_hrm_reminder_popup.h"
 
 #include <pbl/drivers/rtc.h>
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/notifications/notifications.h"
-#include "pbl/services/timeline/timeline_resources.h"
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/notifications/notifications.h>
+#include <pbl/services/timeline/timeline_resources.h>
 
 void ble_hrm_push_reminder_popup(void) {
   AttributeList attr_list = {};

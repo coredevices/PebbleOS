@@ -1,28 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/bluetooth/bluetooth_ctl.h"
+#include <pbl/services/bluetooth/bluetooth_ctl.h>
 
 #include <pbl/bluetooth/init.h>
 #include <string.h>
 
-#include "comm/ble/gap_le.h"
-#include "comm/ble/gatt_client_subscriptions.h"
+#include <comm/ble/gap_le.h>
+#include <comm/ble/gatt_client_subscriptions.h>
 #ifdef CONFIG_QEMU_SERIAL
-#include "comm/qemu/transport.h"
+#include <comm/qemu/transport.h>
 #endif
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/bluetooth/ble_bas.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/bluetooth/dis.h"
-#include "pbl/services/bluetooth/local_addr.h"
-#include "pbl/services/bluetooth/local_id.h"
-#include "pbl/services/bluetooth/pairability.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/bluetooth/ble_hrm.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/bluetooth/ble_bas.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/dis.h>
+#include <pbl/services/bluetooth/local_addr.h>
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/bluetooth/pairability.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);

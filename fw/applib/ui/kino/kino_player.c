@@ -3,10 +3,10 @@
 
 #include "kino_player.h"
 
-#include "applib/ui/animation_interpolate.h"
+#include <applib/ui/animation_interpolate.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/math.h"
-#include "pbl/util/testing.h"
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
 //////////////////////////////////
 // Callbacks

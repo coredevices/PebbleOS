@@ -14,16 +14,16 @@
 #include "quick_launch_setup_menu.h"
 #include "window.h"
 
-#include "applib/app_launch_button.h"
-#include "applib/app_launch_reason.h"
-#include "applib/ui/window_stack.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_menu_data_source.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/i18n/i18n.h"
-#include "shell/normal/quick_launch.h"
-#include "system/passert.h"
+#include <applib/app_launch_button.h>
+#include <applib/app_launch_reason.h>
+#include <applib/ui/window_stack.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_menu_data_source.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/i18n/i18n.h>
+#include <shell/normal/quick_launch.h>
+#include <system/passert.h>
 
 #define NUM_ROWS (NUM_BUTTONS + 2) // 4 hold buttons + 2 tap buttons (up and down)
 

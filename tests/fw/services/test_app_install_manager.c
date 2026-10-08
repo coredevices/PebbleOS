@@ -1,62 +1,62 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
-#include "apps/system_app_ids.h"
-#include "flash_region/flash_region.h"
-#include "process_management/app_install_manager.h"
-#include "pbl/services/process_management/app_storage.h"
-#include "process_management/pebble_process_info.h"
-#include "process_management/pebble_process_md.h"
-#include "resource/resource.h"
-#include "resource/resource_storage.h"
-#include "resource/resource_storage_file.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/app_cache.h"
-#include "pbl/services/blob_db/app_db.h"
-#include "pbl/util/build_id.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <apps/system_app_ids.h>
+#include <flash_region/flash_region.h>
+#include <process_management/app_install_manager.h>
+#include <pbl/services/process_management/app_storage.h>
+#include <process_management/pebble_process_info.h>
+#include <process_management/pebble_process_md.h>
+#include <resource/resource.h>
+#include <resource/resource_storage.h>
+#include <resource/resource_storage_file.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/app_cache.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/util/build_id.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "fixtures/load_test_resources.h"
+#include <fixtures/load_test_resources.h>
 
 // Stub Includes
 ////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_app_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_bootbits.h"
-#include "stubs_event_service_client.h"
-#include "stubs_events.h"
-#include "stubs_heap.h"
-#include "stubs_hexdump.h"
-#include "stubs_i18n.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_persist.h"
-#include "stubs_process_manager.h"
-#include "stubs_quick_launch.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
-#include "stubs_watchface.h"
-#include "stubs_worker_manager.h"
+#include <stubs_analytics.h>
+#include <stubs_app_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_bootbits.h>
+#include <stubs_event_service_client.h>
+#include <stubs_events.h>
+#include <stubs_heap.h>
+#include <stubs_hexdump.h>
+#include <stubs_i18n.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_persist.h>
+#include <stubs_process_manager.h>
+#include <stubs_quick_launch.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
+#include <stubs_watchface.h>
+#include <stubs_worker_manager.h>
 
 // Fake Includes
 ////////////////////////////////////
-#include "fake_spi_flash.h"
-#include "fake_rtc.h"
+#include <fake_spi_flash.h>
+#include <fake_rtc.h>
 
 // Stubs
 ////////////////////////////////////

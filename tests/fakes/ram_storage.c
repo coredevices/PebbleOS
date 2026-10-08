@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 
 typedef struct {
   const uint8_t *key;

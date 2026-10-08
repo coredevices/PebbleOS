@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 /**
  * @defgroup services_music_endpoint Music endpoint

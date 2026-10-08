@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/activity/hr_util.h"
+#include <pbl/services/activity/hr_util.h>
 
-#include "pbl/services/activity/activity.h"
+#include <pbl/services/activity/activity.h>
 
 // ------------------------------------------------------------------------------------------------
 HRZone hr_util_get_hr_zone(int bpm) {

@@ -6,12 +6,12 @@
 #include "recognizer.h"
 #include "recognizer_impl.h"
 
-#include "pbl/drivers/rtc.h"
-#include "pbl/util/math.h"
-#include "syscall/syscall.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/util/math.h>
+#include <syscall/syscall.h>
 
 #include <string.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 // Maximum touchdown-to-liftoff duration for a press to count as a tap; a longer
 // contact is treated as a hold, not a tap. Value from the reference PT2 touch-nav

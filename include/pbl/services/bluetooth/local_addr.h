@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 
 /**
  * @defgroup services_bluetooth_local_addr Local address

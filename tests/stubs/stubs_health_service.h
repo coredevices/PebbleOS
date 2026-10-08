@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/health_service.h"
+#include <applib/health_service.h>
 
 bool health_service_private_get_metric_history(HealthMetric metric, uint32_t history_len,
                                                int32_t *history) {

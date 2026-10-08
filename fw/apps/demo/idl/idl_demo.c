@@ -3,16 +3,16 @@
 
 #include "idl_demo.h"
 
-#include "applib/app.h"
-#include "applib/ui/app_window_stack.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
-#include "system/hexdump.h"
+#include <system/hexdump.h>
 
-#include "pb_decode.h"
-#include "pb_encode.h"
-#include "simple.pb.h"
+#include <pb_decode.h>
+#include <pb_encode.h>
+#include <simple.pb.h>
 
 static void prv_init(void) {
   SimpleMessage msg = {

@@ -5,7 +5,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup util_math_fixed Fixed-point math

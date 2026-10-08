@@ -6,17 +6,17 @@
 #include "app_glance_private.h"
 #include "menu_layer.h"
 
-#include "applib/graphics/gdraw_command_transforms.h"
-#include "applib/ui/kino/kino_reel_custom.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/timeline/attribute.h"
-#include "shell/prefs.h"
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/string.h"
-#include "pbl/util/struct.h"
+#include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/ui/kino/kino_reel_custom.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/timeline/attribute.h>
+#include <shell/prefs.h>
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/string.h>
+#include <pbl/util/struct.h>
 
 // Use display height to determine icon margins: larger displays use more margin
 #if PBL_DISPLAY_HEIGHT >= 200

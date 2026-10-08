@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/ui/action_menu_window_private.h"
-#include "pbl/services/notifications/notification_types.h"
-#include "pbl/services/timeline/item.h"
+#include <applib/ui/action_menu_window_private.h>
+#include <pbl/services/notifications/notification_types.h>
+#include <pbl/services/timeline/item.h>
 
 /**
  * @defgroup services_timeline_timeline_actions Timeline action menus

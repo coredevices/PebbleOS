@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/app_launch_button.h"
-#include "applib/app_launch_reason.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/app_launch_button.h>
+#include <applib/app_launch_reason.h>
+#include <pbl/kernel/compiler.h>
 
 AppLaunchReason PBL_WEAK app_launch_reason(void) {
   return APP_LAUNCH_SYSTEM;

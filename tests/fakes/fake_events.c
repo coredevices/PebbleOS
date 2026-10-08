@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fake_events.h"
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 
 #include <string.h>
 

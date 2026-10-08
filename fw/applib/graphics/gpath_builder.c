@@ -3,8 +3,8 @@
 
 #include "gpath_builder.h"
 #include "gpath.h"
-#include "applib/applib_malloc.auto.h"
-#include "pbl/util/trig.h"
+#include <applib/applib_malloc.auto.h>
+#include <pbl/util/trig.h>
 
 #include <string.h>
 

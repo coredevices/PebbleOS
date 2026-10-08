@@ -3,11 +3,11 @@
 
 #include <stdio.h>
 
-#include "board/board.h"
+#include <board/board.h>
 
-#include "console/dbgserial.h"
-#include "console/dbgserial_input.h"
-#include "console/pulse.h"
+#include <console/dbgserial.h>
+#include <console/dbgserial_input.h>
+#include <console/pulse.h>
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/flash.h>
@@ -31,50 +31,50 @@
 #include <pbl/drivers/watchdog.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
 
-#include "resource/resource.h"
-#include "resource/system_resource.h"
+#include <resource/resource.h>
+#include <resource/system_resource.h>
 
-#include "kernel/util/task_init.h"
-#include "kernel/events.h"
-#include "kernel/kernel_heap.h"
-#include "kernel/fault_handling.h"
-#include "kernel/memory_layout.h"
-#include "logging/pulse_logging.h"
-#include "pbl/services/services.h"
-#include "pbl/services/boot_splash.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/compositor/compositor.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/new_timer/new_timer_service.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/prf_update.h"
-#include "kernel/ui/kernel_ui.h"
-#include "kernel/kernel_applib_state.h"
-#include "kernel/util/delay.h"
-#include "system/firmware_storage.h"
-#include "system/passert.h"
-#include "system/version.h"
+#include <kernel/util/task_init.h>
+#include <kernel/events.h>
+#include <kernel/kernel_heap.h>
+#include <kernel/fault_handling.h>
+#include <kernel/memory_layout.h>
+#include <logging/pulse_logging.h>
+#include <pbl/services/services.h>
+#include <pbl/services/boot_splash.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/compositor/compositor.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/new_timer/new_timer_service.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/prf_update.h>
+#include <kernel/ui/kernel_ui.h>
+#include <kernel/kernel_applib_state.h>
+#include <kernel/util/delay.h>
+#include <system/firmware_storage.h>
+#include <system/passert.h>
+#include <system/version.h>
 
-#include "kernel/event_loop.h"
+#include <kernel/event_loop.h>
 
-#include "console/serial_console.h"
-#include "system/bootbits.h"
+#include <console/serial_console.h>
+#include <system/bootbits.h>
 #include <pbl/logging/logging.h>
 
-#include "debug/debug.h"
+#include <debug/debug.h>
 
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
-#include "pbl/kernel/thread.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
+#include <pbl/kernel/thread.h>
 
-#include "mfg/mfg_info.h"
-#include "mfg/mfg_serials.h"
+#include <mfg/mfg_info.h>
+#include <mfg/mfg_serials.h>
 
 #include <pbl/bluetooth/init.h>
 #ifdef CONFIG_QEMU_SERIAL
-#include "comm/qemu/serial.h"
+#include <comm/qemu/serial.h>
 #endif
 
 static TimerID s_lowpower_timer = TIMER_INVALID_ID;

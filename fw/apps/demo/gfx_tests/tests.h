@@ -4,9 +4,9 @@
 #pragma once
 
 // All graphics/UI includes needed for tests. Add here if more are needed.
-#include "applib/ui/layer.h"
-#include "applib/ui/window.h"
-#include "applib/ui/menu_layer.h"
+#include <applib/ui/layer.h>
+#include <applib/ui/window.h>
+#include <applib/ui/menu_layer.h>
 
 #include <stdint.h>
 
@@ -20,6 +20,6 @@ typedef struct GfxTest {
   void (*teardown)(Window *window); //!< Test teardown function
 } GfxTest;
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 const PebbleProcessMd *gfx_tests_get_app_info(void);

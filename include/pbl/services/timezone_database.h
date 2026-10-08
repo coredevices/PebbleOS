@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl/services/time.h"
+#include <pbl/services/time.h>
 
 /**
  * @defgroup services_timezone_database Timezone database

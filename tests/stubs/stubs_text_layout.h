@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/text.h"
+#include <applib/graphics/text.h>
 
 #define STUBBED_CREATED_LAYOUT (GTextLayoutCacheRef)123456
 

@@ -5,8 +5,8 @@
 
 #include "pulse_protocol_impl.h"
 
-#include "console/pulse2_transport_impl.h"
-#include "system/passert.h"
+#include <console/pulse2_transport_impl.h>
+#include <system/passert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/byteorder.h>
 

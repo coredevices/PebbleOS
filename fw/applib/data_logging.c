@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "data_logging.h"
-#include "pbl/services/data_logging/dls_private.h"
+#include <pbl/services/data_logging/dls_private.h>
 
-#include "applib/app_logging.h"
-#include "applib/applib_malloc.auto.h"
-#include "syscall/syscall.h"
+#include <applib/app_logging.h>
+#include <applib/applib_malloc.auto.h>
+#include <syscall/syscall.h>
 
 DataLoggingSessionRef data_logging_create(uint32_t tag, DataLoggingItemType item_type,
                                           uint16_t item_length, bool resume) {

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "apps/system/timeline/pin_window.h"
+#include <apps/system/timeline/pin_window.h>
 
 void timeline_pin_window_push_modal(TimelineItem *item) {
 }

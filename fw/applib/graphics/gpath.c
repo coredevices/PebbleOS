@@ -6,12 +6,12 @@
 #include "graphics.h"
 #include "graphics_private.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/app_logging.h"
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/misc.h"
-#include "pbl/util/trig.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/app_logging.h>
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/misc.h>
+#include <pbl/util/trig.h>
 
 #include <string.h>
 

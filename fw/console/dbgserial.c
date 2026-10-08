@@ -3,7 +3,7 @@
 
 #include "dbgserial.h"
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/uart.h>
 
 #include <stdarg.h>

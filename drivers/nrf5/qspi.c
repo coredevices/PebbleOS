@@ -3,23 +3,23 @@
 
 #include <stdint.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/flash/qspi_flash.h>
-#include "flash_region/flash_region.h"
-#include "kernel/util/delay.h"
-#include "kernel/util/sleep.h"
-#include "pbl/soc/nrf/sleep.h"
+#include <flash_region/flash_region.h>
+#include <kernel/util/delay.h>
+#include <kernel/util/sleep.h>
+#include <pbl/soc/nrf/sleep.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
 
 #include <hal/nrf_qspi.h>
 #include <nrfx.h>
 
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sem.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/kernel/compiler.h>
 
 // NOTE: This driver does not cover anomaly 244, which may cause data corruption
 // if HF clock source is switching between HFXO and HFINT (e.g. by BLE). This

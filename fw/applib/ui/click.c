@@ -6,8 +6,8 @@
 
 #include "window_stack_private.h"
 
-#include "process_state/app_state/app_state.h"
-#include "pbl/util/size.h"
+#include <process_state/app_state/app_state.h>
+#include <pbl/util/size.h>
 
 #include <stddef.h>
 

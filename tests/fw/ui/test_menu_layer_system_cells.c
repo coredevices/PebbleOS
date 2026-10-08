@@ -1,28 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/menu_layer.h"
-#include "applib/ui/status_bar_layer.h"
-#include "kernel/pebble_tasks.h"
-#include "process_management/app_install_types.h"
-#include "resource/resource.h"
-#include "resource/resource_ids.auto.h"
-#include "shell/system_theme.h"
-#include "applib/graphics/raw_image.h"
-#include "pbl/util/size.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/menu_layer.h>
+#include <applib/ui/status_bar_layer.h>
+#include <kernel/pebble_tasks.h>
+#include <process_management/app_install_types.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
+#include <applib/graphics/raw_image.h>
+#include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <stdio.h>
 
 // Fakes
 /////////////////////
 
-#include "fake_resource_syscalls.h"
-#include "fake_spi_flash.h"
-#include "fixtures/load_test_resources.h"
+#include <fake_resource_syscalls.h>
+#include <fake_spi_flash.h>
+#include <fixtures/load_test_resources.h>
 
 static bool s_cell_is_highlighted = false;
 
@@ -64,31 +64,31 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
 // Stubs
 /////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_bootbits.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_content_indicator.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_print.h"
-#include "stubs_process_manager.h"
-#include "stubs_serial.h"
-#include "stubs_shell_prefs.h"
-#include "stubs_sleep.h"
+#include <stubs_analytics.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_bootbits.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_content_indicator.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_print.h>
+#include <stubs_process_manager.h>
+#include <stubs_serial.h>
+#include <stubs_shell_prefs.h>
+#include <stubs_sleep.h>
 // Hide the PBL_WEAK stub so the controllable strong definition above owns the real symbol
 #define sys_process_manager_get_current_process_id \
   prv_stubbed_sys_process_manager_get_current_process_id
-#include "stubs_syscalls.h"
+#include <stubs_syscalls.h>
 #undef sys_process_manager_get_current_process_id
-#include "stubs_task_wdt.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_task_wdt.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
 
 void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
                                  ClickHandler up_handler) {

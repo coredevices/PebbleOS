@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/pressure.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>

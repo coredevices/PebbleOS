@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/wakeup.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/wakeup.h>
+#include <pbl/kernel/compiler.h>
 
 void wakeup_migrate_timezone(int utc_diff) {
 }

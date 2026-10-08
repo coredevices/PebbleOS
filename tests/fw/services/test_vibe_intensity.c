@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/vibes/vibe_intensity.h"
+#include <pbl/services/vibes/vibe_intensity.h>
 
 // Stubs
 /////////
 
-#include "stubs_alerts_preferences.h"
-#include "stubs_vibe_pattern.h"
+#include <stubs_alerts_preferences.h>
+#include <stubs_vibe_pattern.h>
 
 // Setup and Teardown
 //////////////////////

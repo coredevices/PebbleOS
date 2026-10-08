@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/window_private.h"
-#include "applib/ui/window_stack.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/window_private.h>
+#include <applib/ui/window_stack.h>
 
 // The function creates a Spinner UI window on the heap with the specified color.
 // The window is cleaned up when it is popped.

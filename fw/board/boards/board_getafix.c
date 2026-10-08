@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
-#include "board/splash.h"
+#include <board/board.h>
+#include <board/splash.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
-#include "pbl/kernel/irq.h"
-#include "system/passert.h"
+#include <pbl/kernel/irq.h>
+#include <system/passert.h>
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart =

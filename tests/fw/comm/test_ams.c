@@ -1,35 +1,35 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/kernel_le_client/ams/ams.h"
+#include <comm/ble/kernel_le_client/ams/ams.h>
 
-#include "comm/bt_conn_mgr.h"
+#include <comm/bt_conn_mgr.h>
 
-#include "pbl/services/music.h"
-#include "pbl/services/music_internal.h"
+#include <pbl/services/music.h>
+#include <pbl/services/music_internal.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_events.h"
-#include "fake_gatt_client_operations.h"
-#include "fake_gatt_client_subscriptions.h"
-#include "fake_pebble_tasks.h"
-#include "fake_rtc.h"
+#include <fake_events.h>
+#include <fake_gatt_client_operations.h>
+#include <fake_gatt_client_subscriptions.h>
+#include <fake_pebble_tasks.h>
+#include <fake_rtc.h>
 
-#include "stubs_app_install_manager.h"
-#include "stubs_app_manager.h"
-#include "stubs_bt_lock.h"
-#include "stubs_hexdump.h"
-#include "stubs_imaging.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_serial.h"
-#include "stubs_tick.h"
+#include <stubs_app_install_manager.h>
+#include <stubs_app_manager.h>
+#include <stubs_bt_lock.h>
+#include <stubs_hexdump.h>
+#include <stubs_imaging.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_serial.h>
+#include <stubs_tick.h>
 
 struct {
   enum pbl_bt_response_time_state state;

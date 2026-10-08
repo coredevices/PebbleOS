@@ -4,11 +4,11 @@
 #include "action_menu_window.h"
 #include "action_menu_window_private.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/ui/status_bar_layer.h"
-#include "applib/ui/window.h"
-#include "applib/ui/window_stack.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/ui/status_bar_layer.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_stack.h>
+#include <process_state/app_state/app_state.h>
 
 #define ACTION_MENU_DEFAULT_BACKGROUND_COLOR GColorWhite
 

@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "system/status_codes.h"
+#include <system/status_codes.h>
 
 /**
  * @defgroup drivers_vibe Vibration motor

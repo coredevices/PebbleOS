@@ -8,16 +8,16 @@
 #include "compass_service.h"
 #include "compass_service_private.h"
 
-#include "applib/app_timer.h"
-#include "applib/event_service_client.h"
-#include "pbl/util/trig.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "system/passert.h"
+#include <applib/app_timer.h>
+#include <applib/event_service_client.h>
+#include <pbl/util/trig.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
-#include "kernel/kernel_applib_state.h"
-#include "process_state/app_state/app_state.h"
-#include "process_state/worker_state/worker_state.h"
+#include <kernel/kernel_applib_state.h>
+#include <process_state/app_state/app_state.h>
+#include <process_state/worker_state/worker_state.h>
 
 #define PEEK_TIMEOUT_MS 11 * 1000
 

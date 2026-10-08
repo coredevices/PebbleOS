@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 GBitmap *shadow_get_top(void);
 GBitmap *shadow_get_bottom(void);

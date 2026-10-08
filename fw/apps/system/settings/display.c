@@ -7,16 +7,16 @@
 #include "option_menu.h"
 #include "window.h"
 
-#include "applib/ui/ui.h"
+#include <applib/ui/ui.h>
 #include <pbl/drivers/ambient_light.h>
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/light.h"
-#include "shell/prefs.h"
-#include "shell/system_theme.h"
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 #include <stdbool.h>
 #include <stdio.h>

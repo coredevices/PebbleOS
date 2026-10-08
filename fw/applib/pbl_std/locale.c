@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "locale.h"
-#include "applib/i18n.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/i18n.h>
+#include <process_state/app_state/app_state.h>
 
 void locale_init_app_locale(LocaleInfo *info) {
   strncpy(info->app_locale_strings, "en_US", ISO_LOCALE_LENGTH);

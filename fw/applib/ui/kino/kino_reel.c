@@ -7,13 +7,13 @@
 #include "kino_reel_gbitmap.h"
 #include "kino_reel_gbitmap_sequence.h"
 
-#include "applib/graphics/gdraw_command_private.h"
-#include "applib/graphics/gbitmap_png.h"
+#include <applib/graphics/gdraw_command_private.h>
+#include <applib/graphics/gbitmap_png.h>
 
-#include "resource/resource.h"
-#include "resource/resource_ids.auto.h"
-#include "syscall/syscall.h"
-#include "pbl/util/byteorder.h"
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <syscall/syscall.h>
+#include <pbl/util/byteorder.h>
 
 KinoReel *kino_reel_create_with_resource(uint32_t resource_id) {
   ResAppNum app_num = sys_get_current_resource_num();

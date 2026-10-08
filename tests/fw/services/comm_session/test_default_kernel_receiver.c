@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/comm_session/session_receive_router.h"
-#include "pbl/services/system_task.h"
+#include <pbl/services/comm_session/session_receive_router.h>
+#include <pbl/services/system_task.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <string.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 typedef void (*CallbackEventCallback)(void *data);
 
@@ -25,8 +25,8 @@ void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "../../fakes/fake_pbl_malloc.h"
-#include "../../fakes/fake_system_task.h"
+#include <fakes/fake_pbl_malloc.h>
+#include <fakes/fake_system_task.h>
 
 #define FAKE_COMM_SESSION (CommSession *)1
 

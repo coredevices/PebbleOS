@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "applib/graphics/graphics.h"
-#include "applib/ui/click_internal.h"
-#include "applib/ui/window.h"
-#include "applib/ui/window_stack_private.h"
-#include "kernel/events.h"
+#include <applib/graphics/graphics.h>
+#include <applib/ui/click_internal.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_stack_private.h>
+#include <kernel/events.h>
 
 struct ModalContext;
 typedef struct ModalContext ModalContext;

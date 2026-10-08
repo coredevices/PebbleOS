@@ -5,12 +5,12 @@
 
 #include <stdio.h>
 
-#include "applib/app.h"
-#include "applib/fonts/fonts.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/util/size.h"
+#include <applib/app.h>
+#include <applib/fonts/fonts.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/util/size.h>
 
 #define FIRST_GLYPH 0x20 // space
 #define LAST_GLYPH  0x7E // tilde

@@ -4,10 +4,10 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/drivers/watchdog.h>
-#include "flash_region/flash_region.h"
-#include "kernel/util/delay.h"
+#include <flash_region/flash_region.h>
+#include <kernel/util/delay.h>
 
-#include "kernel/core_dump_private.h"
+#include <kernel/core_dump_private.h>
 
 static bool s_active;
 

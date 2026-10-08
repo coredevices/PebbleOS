@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/uuid.h"
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_notifications_notification_types Notification types

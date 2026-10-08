@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/vibes.h"
+#include <applib/ui/vibes.h>
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #define PATTERN_FROM_DURATIONS(pat, array)                      \
   (pat) = (VibePattern) {                                       \

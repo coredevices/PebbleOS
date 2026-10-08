@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 const PebbleProcessMd *bouncing_box_demo_get_app_info(void);

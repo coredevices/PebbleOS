@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/ble/gatt_client_subscriptions.h"
+#include <comm/ble/gatt_client_subscriptions.h>
 
 void fake_gatt_client_subscriptions_init(void);
 

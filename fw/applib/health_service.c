@@ -4,26 +4,26 @@
 #include "health_service.h"
 #include "health_service_private.h"
 
-#include "applib/app.h"
-#include "applib/applib_malloc.auto.h"
-#include "applib/pbl_std/pbl_std.h"
+#include <applib/app.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/pbl_std/pbl_std.h>
 #include "event_service_client.h"
-#include "kernel/events.h"
-#include "process_state/app_state/app_state.h"
-#include "process_state/worker_state/worker_state.h"
-#include "pbl/services/hrm/hrm_manager.h"
-#include "pbl/services/activity/activity.h"
-#include "shell/prefs_syscalls.h"
-#include "syscall/syscall.h"
+#include <kernel/events.h>
+#include <process_state/app_state/app_state.h>
+#include <process_state/worker_state/worker_state.h>
+#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/activity/activity.h>
+#include <shell/prefs_syscalls.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "pbl/util/stats.h"
-#include "pbl/util/testing.h"
-#include "pbl/services/time.h"
-#include "pbl/util/time.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/stats.h>
+#include <pbl/util/testing.h>
+#include <pbl/services/time.h>
+#include <pbl/util/time.h>
+#include <pbl/util/units.h>
 
 // Fetching minute history can take a while, so we limit the amount of data we will ever access
 // in one call to this

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/speaker/note_sequence.h"
+#include <pbl/services/speaker/note_sequence.h>
 
 #include <string.h>
 

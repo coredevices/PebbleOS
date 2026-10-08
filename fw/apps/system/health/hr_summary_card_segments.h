@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "board/display.h"
+#include <board/display.h>
 #include "progress.h"
 
 //! 4 main segments + 4 real corners

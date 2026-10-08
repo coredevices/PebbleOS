@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "applib/accel_service.h"
-#include "pbl/util/size.h"
+#include <applib/accel_service.h>
+#include <pbl/util/size.h>
 
 // ----------------------------------------------------------------
 // Sample captured: 2015-08-06 13:31:28 GMT

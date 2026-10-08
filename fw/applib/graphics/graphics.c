@@ -8,16 +8,16 @@
 #include "graphics_private.h"
 #include "graphics_private_raw.h"
 
-#include "applib/app_logging.h"
-#include "process_management/process_manager.h"
-#include "process_state/app_state/app_state.h"
-#include "system/passert.h"
-#include "pbl/util/bitops.h"
-#include "applib/graphics/raw_image.h"
-#include "pbl/util/math.h"
+#include <applib/app_logging.h>
+#include <process_management/process_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <system/passert.h>
+#include <pbl/util/bitops.h>
+#include <applib/graphics/raw_image.h>
+#include <pbl/util/math.h>
 
 #include <string.h>
-#include "pbl/util/testing.h"
+#include <pbl/util/testing.h>
 
 #if !defined(__clang__)
 #pragma GCC optimize("O3")

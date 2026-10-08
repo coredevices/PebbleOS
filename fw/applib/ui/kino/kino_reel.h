@@ -5,10 +5,10 @@
 
 #include <stdlib.h>
 
-#include "applib/graphics/gbitmap_sequence.h"
-#include "applib/graphics/gdraw_command_image.h"
-#include "applib/graphics/gdraw_command_sequence.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gbitmap_sequence.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gdraw_command_sequence.h>
+#include <applib/graphics/gtypes.h>
 
 struct KinoReel;
 typedef struct KinoReel KinoReel;

@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "services/light/als_screen_compensation.h"
-#include "applib/graphics/gtypes.h"
+#include <services/light/als_screen_compensation.h>
+#include <applib/graphics/gtypes.h>
 #include <pbl/drivers/ambient_light.h> // AMBIENT_LIGHT_LEVEL_MAX
 
 #include <string.h>

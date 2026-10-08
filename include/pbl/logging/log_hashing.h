@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup logging_log_hashing Log hashing

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "protobuf_log.h"
-#include "pbl/services/activity/activity.h"
+#include <pbl/services/activity/activity.h>
 
 #include <stdint.h>
 

@@ -3,18 +3,18 @@
 
 #pragma once
 
-#include "pbl/kernel/msgq.h"
+#include <pbl/kernel/msgq.h>
 #include "hrm_manager.h"
 
-#include "applib/event_service_client.h"
-#include "pbl/services/hrm/hrm_activity_scene.h"
+#include <applib/event_service_client.h>
+#include <pbl/services/hrm/hrm_activity_scene.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/events.h"
-#include "pbl/kernel/mutex.h"
-#include "process_management/app_install_types.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/util/list.h"
-#include "pbl/util/circular_buffer.h"
+#include <kernel/events.h>
+#include <pbl/kernel/mutex.h>
+#include <process_management/app_install_types.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/list.h>
+#include <pbl/util/circular_buffer.h>
 
 #include <stdint.h>
 

@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "process_management/app_install_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/timeline/timeline_resources.h"
-#include "system/passert.h"
-#include "pbl/util/struct.h"
+#include <process_management/app_install_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <system/passert.h>
+#include <pbl/util/struct.h>
 
 // Stubs
 /////////////////////////
 
-#include "stubs_kino_reel.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
+#include <stubs_kino_reel.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
 
 // Test Data
 /////////////////////////

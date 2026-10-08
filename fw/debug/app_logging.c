@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
-#include "applib/app_logging.h"
+#include <applib/app_logging.h>
 
 #include <stdint.h>
 
-#include "logging/logging_private.h"
-#include "kernel/util/stack_info.h"
-#include "pbl/services/comm_session/session.h"
-#include "syscall/syscall_internal.h"
+#include <logging/logging_private.h>
+#include <kernel/util/stack_info.h>
+#include <pbl/services/comm_session/session.h>
+#include <syscall/syscall_internal.h>
 
 static const uint16_t APP_LOGGING_ENDPOINT = 2006;
 

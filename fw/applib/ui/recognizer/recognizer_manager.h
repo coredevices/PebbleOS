@@ -5,7 +5,7 @@
 
 #include "recognizer.h"
 
-#include "applib/ui/layer.h"
+#include <applib/ui/layer.h>
 
 #include <stdbool.h>
 #include <stdint.h>

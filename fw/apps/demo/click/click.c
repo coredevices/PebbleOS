@@ -3,14 +3,14 @@
 
 #include "click.h"
 
-#include "applib/app.h"
-#include "process_state/app_state/app_state.h"
-#include "applib/ui/ui.h"
-#include "applib/ui/window.h"
-#include "kernel/pbl_malloc.h"
+#include <applib/app.h>
+#include <process_state/app_state/app_state.h>
+#include <applib/ui/ui.h>
+#include <applib/ui/window.h>
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
 
 #include <stdio.h>
 

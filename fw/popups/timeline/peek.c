@@ -3,22 +3,22 @@
 
 #include "peek_private.h"
 
-#include "applib/ui/property_animation.h"
-#include "process_management/app_manager.h"
-#include "applib/ui/window_stack.h"
-#include "applib/unobstructed_area_service.h"
-#include "apps/system/timeline/common.h"
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/ui/kernel_ui.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "shell/prefs.h"
+#include <applib/ui/property_animation.h>
+#include <process_management/app_manager.h>
+#include <applib/ui/window_stack.h>
+#include <applib/unobstructed_area_service.h>
+#include <apps/system/timeline/common.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/ui/kernel_ui.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <shell/prefs.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #include <pbl/cron/cron.h>
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 #define TIMELINE_PEEK_FRAME_HIDDEN         GRect(0, DISP_ROWS, DISP_COLS, TIMELINE_PEEK_HEIGHT)
 #define TIMELINE_PEEK_OUTER_BORDER_WIDTH   PBL_IF_RECT_ELSE(2, 1)

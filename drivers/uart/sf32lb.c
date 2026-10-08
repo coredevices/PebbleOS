@@ -4,15 +4,15 @@
 #include <pbl/drivers/uart/sf32lb.h>
 
 #include <pbl/drivers/uart.h>
-#include "pbl/kernel/irq.h"
-#include "pbl/mcu/cache.h"
-#include "pbl/soc/sf32lb/sleep.h"
-#include "system/passert.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/mcu/cache.h>
+#include <pbl/soc/sf32lb/sleep.h>
+#include <system/passert.h>
 
-#include "bf0_hal_dma.h"
-#include "bf0_hal_uart.h"
+#include <bf0_hal_dma.h>
+#include <bf0_hal_uart.h>
 
-#include "pbl/util/misc.h"
+#include <pbl/util/misc.h>
 
 static void prv_init(UARTDevice *dev, uint32_t mode) {
   HAL_StatusTypeDef ret;

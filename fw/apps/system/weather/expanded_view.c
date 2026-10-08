@@ -2,18 +2,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "expanded_view.h"
-#include "pbl/services/i18n/i18n.h"
+#include <pbl/services/i18n/i18n.h>
 #include "weather_types.h"
 #include "weather_math.h"
 #include "weather_app_layout.h"          // the shared UV bar (round)
-#include "applib/ui/content_indicator.h" // Health's nav arrow
+#include <applib/ui/content_indicator.h> // Health's nav arrow
 #include "pebble_compat.h"
-#include "applib/app_timer.h"
-#include "applib/graphics/gdraw_command_image.h"
-#include "applib/graphics/gdraw_command_transforms.h"
-#include "applib/ui/animation.h"
-#include "applib/ui/animation_interpolate.h"
-#include "applib/ui/property_animation.h"
+#include <applib/app_timer.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/animation_interpolate.h>
+#include <applib/ui/property_animation.h>
 #include <time.h>
 #include <stdint.h>
 #include <string.h>

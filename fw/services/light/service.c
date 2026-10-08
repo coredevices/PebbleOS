@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/light.h"
+#include <pbl/services/light.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/backlight.h>
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 #include <pbl/drivers/backlight.h>
 #endif
 #include <pbl/drivers/rtc.h>
-#include "kernel/events.h"
-#include "kernel/low_power.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/util/math.h"
-#include "services/light/als_screen_compensation.h"
-#include "syscall/syscall_internal.h"
+#include <kernel/events.h>
+#include <kernel/low_power.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/math.h>
+#include <services/light/als_screen_compensation.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/mutex.h"
+#include <pbl/kernel/mutex.h>
 
 PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
 

@@ -5,10 +5,10 @@
 
 #include "click.h"
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/recognizer/recognizer.h"
-#include "applib/ui/recognizer/recognizer_manager.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/recognizer/recognizer.h>
+#include <applib/ui/recognizer/recognizer_manager.h>
 
 struct Window;
 struct WindowStack;

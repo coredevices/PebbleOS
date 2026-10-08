@@ -6,9 +6,9 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-#include "kernel/pebble_tasks.h"
-#include "system/status_codes.h"
-#include "pbl/util/list.h"
+#include <kernel/pebble_tasks.h>
+#include <system/status_codes.h>
+#include <pbl/util/list.h>
 
 /**
  * @defgroup services_filesystem Filesystem

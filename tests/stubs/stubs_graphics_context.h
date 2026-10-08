@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/graphics.h"
+#include <applib/graphics/graphics.h>
 
 void graphics_context_init(GContext *ctx, FrameBuffer *framebuffer,
                            GContextInitializationMode init_mode) {

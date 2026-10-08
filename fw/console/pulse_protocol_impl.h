@@ -58,13 +58,13 @@ size_t pulse_reliable_max_send_size(void);
 #define REGISTER_PROTOCOL(n, message_handler, link_state_handler) \
   void message_handler(void *packet, size_t length);              \
   void link_state_handler(PulseLinkState link_state);
-#include "console/pulse_protocol_registry.def"
+#include <console/pulse_protocol_registry.def>
 #undef REGISTER_PROTOCOL
 
 #define ON_PACKET(N, PACKET_HANDLER) void PACKET_HANDLER(void *packet, size_t length);
 #define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) \
   void UP_HANDLER(void);                                    \
   void DOWN_HANDLER(void);
-#include "console/pulse2_reliable_protocol_registry.def"
+#include <console/pulse2_reliable_protocol_registry.def>
 #undef ON_PACKET
 #undef ON_TRANSPORT_STATE_CHANGE

@@ -3,13 +3,13 @@
 
 #include "kino_reel_pdcs.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/graphics/gdraw_command_frame.h"
-#include "applib/graphics/gdraw_command_private.h"
-#include "applib/graphics/gdraw_command_sequence.h"
-#include "resource/resource_ids.auto.h"
-#include "syscall/syscall.h"
-#include "pbl/util/struct.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/gdraw_command_frame.h>
+#include <applib/graphics/gdraw_command_private.h>
+#include <applib/graphics/gdraw_command_sequence.h>
+#include <resource/resource_ids.auto.h>
+#include <syscall/syscall.h>
+#include <pbl/util/struct.h>
 
 typedef struct {
   KinoReel base;

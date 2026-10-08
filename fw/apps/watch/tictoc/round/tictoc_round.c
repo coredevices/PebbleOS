@@ -3,15 +3,15 @@
 
 #include "watch_model.h"
 
-#include "applib/app.h"
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/gpath.h"
-#include "applib/graphics/graphics_circle.h"
-#include "applib/graphics/text.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/gpath.h>
+#include <applib/graphics/graphics_circle.h>
+#include <applib/graphics/text.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 
 typedef struct {
   Window window;

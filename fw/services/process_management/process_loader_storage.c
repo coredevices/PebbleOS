@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "process_management/process_loader.h"
+#include <process_management/process_loader.h>
 
 #include <pbl/drivers/flash.h>
-#include "kernel/util/segment.h"
-#include "process_management/pebble_process_md.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/process_management/app_storage.h"
+#include <kernel/util/segment.h>
+#include <process_management/pebble_process_md.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_storage.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/crc/crc.h"
+#include <system/passert.h>
+#include <pbl/crc/crc.h>
 
 #include <inttypes.h>
 #include <stdint.h>

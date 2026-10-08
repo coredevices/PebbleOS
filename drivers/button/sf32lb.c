@@ -3,10 +3,10 @@
 
 #include <pbl/drivers/button.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/gpio.h>
-#include "kernel/events.h"
-#include "system/passert.h"
+#include <kernel/events.h>
+#include <system/passert.h>
 
 static bool s_rotated_180 = false;
 

@@ -4,29 +4,29 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "applib/accel_service.h"
-#include "pbl/services/hrm/hrm_manager_private.h"
-#include "pbl/services/activity/activity_algorithm.h"
-#include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
-#include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
+#include <applib/accel_service.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
+#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/list.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/util/list.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/units.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_sleep.h"
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_sleep.h>
 
 // Fakes
-#include "fake_rtc.h"
+#include <fake_rtc.h>
 
 HRMSessionRef s_hrm_next_session_ref = 1;
 int s_hrm_live_subscriptions = 0;

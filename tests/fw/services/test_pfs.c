@@ -5,28 +5,28 @@
 #include <stdlib.h>
 
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/filesystem/flash_translation.h"
+#include <flash_region/flash_region.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/filesystem/flash_translation.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
-#include "fake_spi_flash.h"
-#include "fake_rtc.h"
-#include "stubs_analytics.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_print.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
+#include <fake_spi_flash.h>
+#include <fake_rtc.h>
+#include <stubs_analytics.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_print.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
 
 #define PFS_SECTOR_SIZE 4096
 

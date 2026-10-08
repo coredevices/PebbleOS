@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/compositor/compositor_transitions.h"
+#include <pbl/services/compositor/compositor_transitions.h>
 
 /**
  * @defgroup services_compositor_default_compositor_peek_transitions Peek transitions

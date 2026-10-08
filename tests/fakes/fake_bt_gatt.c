@@ -5,11 +5,11 @@
 
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/gatt_discovery.h>
-#include "comm/ble/gap_le_connection.h"
+#include <comm/ble/gap_le_connection.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/util/uuid.h>

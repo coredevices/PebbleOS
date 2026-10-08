@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 typedef struct {
   uint8_t data;

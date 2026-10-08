@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup pebbleos_core_dump_structs Core dump records

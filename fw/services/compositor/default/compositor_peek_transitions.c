@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/compositor/default/compositor_peek_transitions.h"
+#include <pbl/services/compositor/default/compositor_peek_transitions.h>
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/animation_interpolate.h"
-#include "popups/timeline/peek.h"
-#include "popups/timeline/peek_animations.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/animation_interpolate.h>
+#include <popups/timeline/peek.h>
+#include <popups/timeline/peek_animations.h>
 
 #define NUM_FRAMES (3)
 

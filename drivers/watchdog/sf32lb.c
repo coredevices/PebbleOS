@@ -4,7 +4,7 @@
 #include <pbl/drivers/watchdog.h>
 #include <pbl/logging/logging.h>
 
-#include "bf0_hal.h"
+#include <bf0_hal.h>
 
 static WDT_HandleTypeDef hwdt = {
   .Instance = hwp_wdt1,

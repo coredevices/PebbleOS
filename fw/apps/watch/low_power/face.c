@@ -3,17 +3,17 @@
 
 #include "face.h"
 
-#include "applib/app.h"
-#include "applib/graphics/gdraw_command_image.h"
-#include "applib/graphics/text.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/kino/kino_layer.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/clock.h"
+#include <applib/app.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/text.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/kino/kino_layer.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/clock.h>
 #include <time.h>
 
 typedef struct {

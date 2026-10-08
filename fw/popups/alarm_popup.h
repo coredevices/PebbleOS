@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 #ifdef CONFIG_SPEAKER
 // Full volume = 0 dB DAC gain, the loudest undistorted level; the user's

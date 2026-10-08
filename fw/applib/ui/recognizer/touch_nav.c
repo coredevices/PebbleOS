@@ -10,14 +10,14 @@
 #include "swipe.h"
 #include "tap.h"
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/layer.h"
-#include "pbl/drivers/rtc.h"
-#include "pbl/logging/logging.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/layer.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 #include <stddef.h>
 

@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "pbl/services/audio_endpoint.h"
-#include "pbl/services/voice_endpoint.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/generic_attr.h"
+#include <pbl/services/audio_endpoint.h>
+#include <pbl/services/voice_endpoint.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/generic_attr.h>
 
 /**
  * @addtogroup services_voice_endpoint

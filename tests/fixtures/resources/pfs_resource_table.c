@@ -7,8 +7,8 @@
 // DO NOT MODIFY
 //
 
-#include "resource/resource_storage_file.h"
-#include "resource/resource_ids.auto.h"
+#include <resource/resource_storage_file.h>
+#include <resource/resource_ids.auto.h>
 
 const uint32_t g_num_file_resource_stores = 2;
 

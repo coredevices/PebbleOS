@@ -8,10 +8,10 @@
 #include "window.h"
 #include "window_stack_private.h"
 
-#include "kernel/pebble_tasks.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "process_state/app_state/app_state.h"
-#include "system/passert.h"
+#include <kernel/pebble_tasks.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <system/passert.h>
 
 typedef bool (*ModalWindowPredicate)(Window *window);
 

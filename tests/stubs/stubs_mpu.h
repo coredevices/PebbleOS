@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/memory_layout.h"
+#include <kernel/memory_layout.h>
 
 const uint32_t __app_stack_start__;
 const uint32_t __app_stack_end__;

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "pbl/services/regular_timer.h"
+#include <pbl/services/regular_timer.h>
 #include <stdint.h>
 
 /**

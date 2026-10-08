@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "applib/preferred_content_size.h"
-#include "kernel/events.h"
-#include "pbl/services/notifications/alerts_private.h"
-#include "pbl/services/notifications/do_not_disturb.h"
-#include "pbl/services/vibes/vibe_intensity.h"
-#include "pbl/util/units.h"
-#include "pbl/services/vibes/vibe_client.h"
-#include "pbl/services/vibes/vibe_score_info.h"
+#include <applib/preferred_content_size.h>
+#include <kernel/events.h>
+#include <pbl/services/notifications/alerts_private.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/vibes/vibe_intensity.h>
+#include <pbl/util/units.h>
+#include <pbl/services/vibes/vibe_client.h>
+#include <pbl/services/vibes/vibe_score_info.h>
 
 /**
  * @defgroup services_notifications_alerts_preferences_private Alert preferences (internal)

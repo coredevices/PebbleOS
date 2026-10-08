@@ -3,20 +3,20 @@
 
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include "board/board.h"
-#include "kernel/kernel_heap.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/mcu/cache.h"
+#include <board/board.h>
+#include <kernel/kernel_heap.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/mcu/cache.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/mutex.h"
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
-#include "system/passert.h"
-#include "pbl/util/circular_buffer.h"
-#include "pbl/util/heap.h"
-#include "pbl/soc/sf32lb/sleep.h"
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
+#include <system/passert.h>
+#include <pbl/util/circular_buffer.h>
+#include <pbl/util/heap.h>
+#include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
-#include "pbl/services/system_task.h"
+#include <pbl/services/system_task.h>
 
 #include <inttypes.h>
 

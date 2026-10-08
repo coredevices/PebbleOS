@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/data_logging/dls_list.h"
+#include <pbl/services/data_logging/dls_list.h>
 
 #include <pbl/drivers/flash.h>
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/process_manager.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/process_manager.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/uuid.h"
+#include <system/passert.h>
+#include <pbl/util/uuid.h>
 
 #include <inttypes.h>
 #include <stdlib.h>

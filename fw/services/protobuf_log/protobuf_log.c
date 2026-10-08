@@ -1,32 +1,32 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/protobuf_log/protobuf_log.h"
-#include "pbl/services/protobuf_log/protobuf_log_private.h"
-#include "pbl/services/protobuf_log/protobuf_log_util.h"
+#include <pbl/services/protobuf_log/protobuf_log.h>
+#include <pbl/services/protobuf_log/protobuf_log_private.h>
+#include <pbl/services/protobuf_log/protobuf_log_util.h>
 
-#include "applib/data_logging.h"
+#include <applib/data_logging.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
-#include "mfg/mfg_serials.h"
-#include "pbl/kernel/mutex.h"
-#include "pb.h"
-#include "pb_encode.h"
-#include "pbl/services/data_logging/data_logging_service.h"
+#include <kernel/pbl_malloc.h>
+#include <mfg/mfg_serials.h>
+#include <pbl/kernel/mutex.h>
+#include <pb.h>
+#include <pb_encode.h>
+#include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "system/version.h"
-#include "pbl/util/math.h"
-#include "pbl/services/time.h"
+#include <system/passert.h>
+#include <system/version.h>
+#include <pbl/util/math.h>
+#include <pbl/services/time.h>
 
-#include "pbl/util/uuid.h"
+#include <pbl/util/uuid.h>
 
 #include <string.h>
 
 // These headers auto-generated from the measurements.proto
-#include "event.pb.h"
-#include "measurements.pb.h"
-#include "payload.pb.h"
+#include <event.pb.h>
+#include <measurements.pb.h>
+#include <payload.pb.h>
 
 PBL_LOG_MODULE_DEFINE(service_protobuf_log, CONFIG_SERVICE_PROTOBUF_LOG_LOG_LEVEL);
 

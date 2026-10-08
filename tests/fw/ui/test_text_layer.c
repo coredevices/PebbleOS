@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/ui/text_layer.h"
+#include <applib/ui/text_layer.h>
 
 // Stubs
 /////////////////////
-#include "stubs_app_state.h"
-#include "stubs_graphics.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_process_manager.h"
-#include "stubs_system_theme.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_app_state.h>
+#include <stubs_graphics.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_process_manager.h>
+#include <stubs_system_theme.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
 
 GFont fonts_get_system_font(const char *font_key) {
   return NULL;

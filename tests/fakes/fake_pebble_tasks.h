@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "stubs_worker_manager.h"
+#include <stubs_worker_manager.h>
 
-#include "kernel/pebble_tasks.h"
+#include <kernel/pebble_tasks.h>
 
 static PebbleTask s_current_task = PebbleTask_KernelMain;
 

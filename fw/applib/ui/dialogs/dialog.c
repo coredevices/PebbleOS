@@ -3,8 +3,8 @@
 
 #include "dialog.h"
 
-#include "applib/ui/window.h"
-#include "applib/applib_malloc.auto.h"
+#include <applib/ui/window.h>
+#include <applib/applib_malloc.auto.h>
 
 #include <string.h>
 

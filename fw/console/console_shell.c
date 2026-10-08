@@ -6,7 +6,7 @@
 #include <pbl/shell/shell.h>
 
 #include "console_internal.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <pbl/services/new_timer/new_timer.h>
 
 #include <errno.h>
 #include <stdint.h>

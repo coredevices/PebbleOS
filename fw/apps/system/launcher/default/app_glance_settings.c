@@ -6,23 +6,23 @@
 #include "app_glance_structured.h"
 #include "menu_layer.h"
 
-#include "applib/battery_state_service.h"
-#include "applib/graphics/gpath.h"
-#include "apps/system/timeline/text_node.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/battery/battery_state.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/bluetooth/ble_hrm.h"
-#include "pbl/services/notifications/alerts_private.h"
-#include "pbl/services/notifications/do_not_disturb.h"
-#include "shell/system_theme.h"
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/size.h"
-#include "pbl/util/struct.h"
+#include <applib/battery_state_service.h>
+#include <applib/graphics/gpath.h>
+#include <apps/system/timeline/text_node.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/battery/battery_state.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
+#include <pbl/services/notifications/alerts_private.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <shell/system_theme.h>
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/size.h>
+#include <pbl/util/struct.h>
 
 #include <stdio.h>
 

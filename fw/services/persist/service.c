@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/persist.h"
+#include <pbl/services/persist.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "process_management/app_install_manager.h"
-#include "pbl/services/filesystem/app_file.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <process_management/app_install_manager.h>
+#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/list.h"
-#include "pbl/util/math.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/list.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 

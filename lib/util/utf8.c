@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de> */
 /* SPDX-License-Identifier: MIT */
 
-#include "pbl/util/utf8.h"
+#include <pbl/util/utf8.h>
 
 #include <stdint.h>
 

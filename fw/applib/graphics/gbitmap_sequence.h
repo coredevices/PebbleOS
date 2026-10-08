@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "upng.h"
+#include <upng.h>
 #include "gtypes.h"
 
 #include <stdint.h>

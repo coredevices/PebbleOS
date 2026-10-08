@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "applib/preferred_content_size.h"
-#include "applib/ui/animation.h"
-#include "applib/ui/window.h"
-#include "kernel/events.h"
+#include <applib/preferred_content_size.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/window.h>
+#include <kernel/events.h>
 
 #define TIMELINE_PEEK_HEIGHT                                                                   \
   PREFERRED_CONTENT_SIZE_SWITCH(                                                               \

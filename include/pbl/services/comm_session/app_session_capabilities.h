@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/comm_session/session.h"
-#include "pbl/util/uuid.h"
+#include <pbl/services/comm_session/session.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_comm_session_app_session_capabilities App session capability cache

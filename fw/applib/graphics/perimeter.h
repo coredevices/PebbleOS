@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 typedef struct GPerimeter GPerimeter;
 

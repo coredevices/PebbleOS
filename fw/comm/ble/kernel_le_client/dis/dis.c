@@ -3,12 +3,12 @@
 
 #include "dis.h"
 
-#include "comm/ble/gap_le_connection.h"
+#include <comm/ble/gap_le_connection.h>
 #if defined(CONFIG_BT_ANCS_CLIENT)
-#include "comm/ble/kernel_le_client/ancs/ancs.h"
+#include <comm/ble/kernel_le_client/ancs/ancs.h>
 #endif
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

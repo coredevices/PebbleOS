@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/actions_endpoint.h"
-#include "pbl/services/timeline/attributes_actions.h"
+#include <pbl/services/timeline/actions_endpoint.h>
+#include <pbl/services/timeline/attributes_actions.h>
 
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/notifications/notification_storage.h"
-#include "pbl/services/notifications/notifications.h"
-#include "pbl/services/timeline/timeline_actions.h"
-#include "system/hexdump.h"
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/notifications/notifications.h>
+#include <pbl/services/timeline/timeline_actions.h>
+#include <system/hexdump.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/testing.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/testing.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

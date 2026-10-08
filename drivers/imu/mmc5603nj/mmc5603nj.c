@@ -4,13 +4,13 @@
 
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/mag.h>
-#include "kernel/events.h"
-#include "kernel/util/sleep.h"
-#include "pbl/kernel/mutex.h"
+#include <kernel/events.h>
+#include <kernel/util/sleep.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/math.h>
 
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/imu/mmc5603nj/registers.h>

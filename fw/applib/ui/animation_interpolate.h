@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "pbl/util/math_fixed.h"
+#include <applib/graphics/gtypes.h>
+#include <pbl/util/math_fixed.h>
 
 #include <stdint.h>
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/bt_conn_mgr_impl.h"
+#include <comm/bt_conn_mgr_impl.h>
 
 #include <pbl/drivers/rtc.h>
 
@@ -11,7 +11,7 @@
 #include "gatt_client_discovery.h"
 #include "gatt_client_subscriptions.h"
 
-#include "pbl/services/new_timer/new_timer.h"
+#include <pbl/services/new_timer/new_timer.h>
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/gap_le_connect.h>
@@ -19,7 +19,7 @@
 
 // FIXME: Including this header results in a compile time failure because the
 // chain eventually includes a Bluetopia API. Figure out why this is problematic
-// #include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+// #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 // void gap_le_connection_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
 
 // -----------------------------------------------------------------------------

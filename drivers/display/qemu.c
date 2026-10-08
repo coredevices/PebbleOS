@@ -3,8 +3,8 @@
 
 #include <pbl/drivers/display/display.h>
 
-#include "board/board.h"
-#include "system/passert.h"
+#include <board/board.h>
+#include <system/passert.h>
 
 #include <string.h>
 

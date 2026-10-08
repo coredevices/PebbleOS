@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/util/generic_attr.h"
+#include <pbl/util/generic_attr.h>
 
 #include <string.h>
 

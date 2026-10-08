@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/compositor/default/compositor_modal_transitions.h"
+#include <pbl/services/compositor/default/compositor_modal_transitions.h>
 
-#include "pbl/services/compositor/compositor_transitions.h"
-#include "pbl/services/compositor/compositor_private.h"
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/compositor/compositor_private.h>
 
-#include "applib/graphics/framebuffer.h"
-#include "pbl/util/trig.h"
-#include "applib/ui/animation_interpolate.h"
-#include "applib/graphics/gdraw_command_sequence.h"
-#include "apps/system/timeline/common.h"
-#include "kernel/ui/kernel_ui.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/graphics/framebuffer.h>
+#include <pbl/util/trig.h>
+#include <applib/ui/animation_interpolate.h>
+#include <applib/graphics/gdraw_command_sequence.h>
+#include <apps/system/timeline/common.h>
+#include <kernel/ui/kernel_ui.h>
+#include <resource/resource_ids.auto.h>
 
 // No animations will be shown on the following platforms
 #if defined(CONFIG_RECOVERY_FW)

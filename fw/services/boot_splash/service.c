@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/thread.h"
-#include "pbl/services/boot_splash.h"
+#include <pbl/kernel/thread.h>
+#include <pbl/services/boot_splash.h>
 
 #if defined(CONFIG_PBLBOOT) || defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 
-#include "board/display.h"
-#include "board/splash.h"
+#include <board/display.h>
+#include <board/splash.h>
 #include <pbl/drivers/display/display.h>
-#include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
+#include <kernel/pbl_malloc.h>
+#include <kernel/util/sleep.h>
 
 #include <string.h>
 

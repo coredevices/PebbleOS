@@ -1,40 +1,40 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
-#include "applib/ui/action_menu_layer.h"
-#include "applib/ui/menu_layer.h"
-#include "applib/ui/menu_layer_private.h"
-#include "applib/ui/property_animation.h"
-#include "applib/ui/recognizer/recognizer.h"
-#include "applib/ui/recognizer/recognizer_list.h"
-#include "applib/ui/recognizer/recognizer_manager.h"
-#include "applib/ui/recognizer/touch_nav.h"
-#include "shell/system_theme.h"
-#include "pbl/util/size.h"
+#include <applib/ui/action_menu_layer.h>
+#include <applib/ui/menu_layer.h>
+#include <applib/ui/menu_layer_private.h>
+#include <applib/ui/property_animation.h>
+#include <applib/ui/recognizer/recognizer.h>
+#include <applib/ui/recognizer/recognizer_list.h>
+#include <applib/ui/recognizer/recognizer_manager.h>
+#include <applib/ui/recognizer/touch_nav.h>
+#include <shell/system_theme.h>
+#include <pbl/util/size.h>
 
-#include "fake_rtc.h"
-#include "pbl/drivers/rtc.h"
+#include <fake_rtc.h>
+#include <pbl/drivers/rtc.h>
 
 // Stubs
 /////////////////////
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_click.h"
-#include "stubs_fonts.h"
-#include "stubs_graphics.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_process_manager.h"
-#include "stubs_system_theme.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
-#include "stubs_vibes.h"
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_click.h>
+#include <stubs_fonts.h>
+#include <stubs_graphics.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_process_manager.h>
+#include <stubs_system_theme.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
+#include <stubs_vibes.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH), mirroring test_menu_layer.c: menu_layer.c resolves the

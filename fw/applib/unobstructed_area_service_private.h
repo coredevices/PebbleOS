@@ -5,7 +5,7 @@
 
 #include "unobstructed_area_service.h"
 
-#include "applib/event_service_client.h"
+#include <applib/event_service_client.h>
 
 //! @internal
 typedef struct UnobstructedAreaState {

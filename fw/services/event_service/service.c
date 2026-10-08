@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/event_service_client.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/pebble_tasks.h"
-#include "process_management/app_manager.h"
-#include "process_management/worker_manager.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/event_service.h"
-#include "syscall/syscall_internal.h"
-#include "syscall/syscall.h"
+#include <applib/event_service_client.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <process_management/app_manager.h>
+#include <process_management/worker_manager.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/event_service.h>
+#include <syscall/syscall_internal.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <string.h>
 

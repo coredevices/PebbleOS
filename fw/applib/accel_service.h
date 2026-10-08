@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/services/accel_manager.h"
-#include "pbl/services/imu/units.h"
-#include "kernel/pebble_tasks.h"
+#include <pbl/services/accel_manager.h>
+#include <pbl/services/imu/units.h>
+#include <kernel/pebble_tasks.h>
 
 #include <stdbool.h>
 

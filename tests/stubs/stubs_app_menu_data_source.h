@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "process_management/app_menu_data_source.h"
+#include <process_management/app_menu_data_source.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 PBL_WEAK void app_menu_data_source_init(AppMenuDataSource *source,
                                         const AppMenuDataSourceCallbacks *handlers,

@@ -7,8 +7,8 @@
 #include <stdlib.h>
 
 #include "display_sdl_bottom.h"
-#include "posix_host.h"
-#include "sdl_bottom.h"
+#include <posix_host.h>
+#include <sdl_bottom.h>
 
 // Frames come from the firmware's display thread; the window is drawn on the
 // main thread.

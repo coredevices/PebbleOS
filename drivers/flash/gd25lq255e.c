@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/drivers/flash/qspi_flash.h>
 #include <pbl/drivers/flash/qspi_flash_part_definitions.h>
-#include "flash_region/flash_region.h"
-#include "system/passert.h"
-#include "system/status_codes.h"
-#include "pbl/util/size.h"
+#include <flash_region/flash_region.h>
+#include <system/passert.h>
+#include <system/status_codes.h>
+#include <pbl/util/size.h>
 
 static bool s_protected;
 static FlashAddress s_protected_start;

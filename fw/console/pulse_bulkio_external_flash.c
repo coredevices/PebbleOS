@@ -4,10 +4,10 @@
 #include "pulse_bulkio_domain_handler.h"
 
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
-#include "kernel/pbl_malloc.h"
-#include "system/status_codes.h"
-#include "pbl/kernel/compiler.h"
+#include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
+#include <system/status_codes.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdint.h>
 

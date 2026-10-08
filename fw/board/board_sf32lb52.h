@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "bf0_hal_pinmux.h"
+#include <bf0_hal_pinmux.h>
 #include <pbl/drivers/button_id.h>
 
 #define GPIO_Port_NULL NULL

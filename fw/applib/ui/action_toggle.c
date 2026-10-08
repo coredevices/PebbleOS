@@ -3,19 +3,19 @@
 
 #include "action_toggle.h"
 
-#include "applib/app_launch_button.h"
-#include "applib/app_launch_reason.h"
-#include "applib/applib_malloc.auto.h"
-#include "applib/ui/dialogs/actionable_dialog.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/dialogs/simple_dialog.h"
-#include "applib/ui/vibes.h"
-#include "applib/ui/window_manager.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/i18n/i18n.h"
-#include "system/passert.h"
+#include <applib/app_launch_button.h>
+#include <applib/app_launch_reason.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/ui/dialogs/actionable_dialog.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/vibes.h>
+#include <applib/ui/window_manager.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/i18n/i18n.h>
+#include <system/passert.h>
 
 typedef struct ActionToggleDialogConfig {
   const char *window_name;

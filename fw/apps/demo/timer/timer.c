@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "process_management/pebble_process_md.h"
-#include "applib/app.h"
-#include "applib/app_logging.h"
-#include "process_state/app_state/app_state.h"
-#include "applib/ui/ui.h"
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
+#include <applib/app.h>
+#include <applib/app_logging.h>
+#include <process_state/app_state/app_state.h>
+#include <applib/ui/ui.h>
+#include <process_management/pebble_process_md.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 static AppTimer *s_timer = NULL;
 

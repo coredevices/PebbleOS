@@ -5,8 +5,8 @@
 
 #include "layer.h"
 
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/text.h"
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/text.h>
 
 #include <stdint.h>
 

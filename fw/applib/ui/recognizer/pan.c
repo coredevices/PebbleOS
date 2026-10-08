@@ -6,12 +6,12 @@
 #include "recognizer.h"
 #include "recognizer_impl.h"
 
-#include "pbl/drivers/rtc.h"
-#include "pbl/util/math.h"
-#include "syscall/syscall.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/util/math.h>
+#include <syscall/syscall.h>
 
 #include <string.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 // Component-wise movement budget from the touchdown point that the finger must
 // exceed on the locked axis before the pan Starts. A smaller drift is treated as

@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-#include "applib/graphics/8_bit/framebuffer.h"
+#include <applib/graphics/8_bit/framebuffer.h>
 #else
-#include "applib/graphics/1_bit/framebuffer.h"
+#include <applib/graphics/1_bit/framebuffer.h>
 #endif
 
 #include <stdbool.h>

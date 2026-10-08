@@ -3,22 +3,22 @@
 
 #include "syscall_internal.h"
 
-#include "applib/app_logging.h"
-#include "kernel/memory_layout.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/mcu/privilege.h"
-#include "process_management/app_manager.h"
-#include "process_management/pebble_process_md.h"
-#include "process_management/process_loader.h"
-#include "process_management/process_manager.h"
-#include "syscall/syscall.h"
+#include <applib/app_logging.h>
+#include <kernel/memory_layout.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/mcu/privilege.h>
+#include <process_management/app_manager.h>
+#include <process_management/pebble_process_md.h>
+#include <process_management/process_loader.h>
+#include <process_management/process_manager.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 #include <stdint.h>
 #include <stddef.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 // Run App/Worker syscalls on a dedicated privileged stack instead of the
 // caller's small unprivileged one, so a task that exhausts its stack faults

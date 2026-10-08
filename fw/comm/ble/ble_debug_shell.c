@@ -7,8 +7,8 @@
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/shell/shell.h>
 
-#include "comm/ble/gap_le_connection.h"
-#include "comm/bt_lock.h"
+#include <comm/ble/gap_le_connection.h>
+#include <comm/bt_lock.h>
 
 #include <errno.h>
 #include <stdint.h>

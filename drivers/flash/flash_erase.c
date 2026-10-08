@@ -4,15 +4,15 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_internal.h>
 
-#include "flash_region/flash_region.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <flash_region/flash_region.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/testing.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/math.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
 PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 

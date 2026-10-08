@@ -4,17 +4,17 @@
 #include "gap_le_connect_params.h"
 #include "gap_le_connection.h"
 
-#include "pbl/bluetooth/gap_le_connect.h"
-#include "pbl/bluetooth/responsiveness.h"
-#include "comm/bluetooth_analytics.h"
-#include "comm/bt_conn_mgr.h"
-#include "comm/bt_lock.h"
+#include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/responsiveness.h>
+#include <comm/bluetooth_analytics.h>
+#include <comm/bt_conn_mgr.h>
+#include <comm/bt_lock.h>
 #include <pbl/drivers/rtc.h>
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 #include <stdint.h>
 

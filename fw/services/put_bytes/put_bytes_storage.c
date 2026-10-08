@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/put_bytes/put_bytes_storage_internal.h"
+#include <pbl/services/put_bytes/put_bytes_storage_internal.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 PBL_LOG_MODULE_DECLARE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
 
@@ -14,7 +14,7 @@ PBL_LOG_MODULE_DECLARE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
 extern const PutBytesStorageImplementation s_raw_implementation;
 extern const PutBytesStorageImplementation s_file_implementation;
 #else // #ifdef UNITTEST
-#include "pbl/services/put_bytes/put_bytes_storage_raw.h"
+#include <pbl/services/put_bytes/put_bytes_storage_raw.h>
 
 static const PutBytesStorageImplementation s_raw_implementation = {
   .init = pb_storage_raw_init,
@@ -25,7 +25,7 @@ static const PutBytesStorageImplementation s_raw_implementation = {
 };
 
 #ifndef CONFIG_RECOVERY_FW
-#include "pbl/services/put_bytes/put_bytes_storage_file.h"
+#include <pbl/services/put_bytes/put_bytes_storage_file.h>
 
 static const PutBytesStorageImplementation s_file_implementation = {
   .init = pb_storage_file_init,

@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/tick_timer.h"
+#include <pbl/services/tick_timer.h>
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 #include <pbl/drivers/rtc.h>
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/regular_timer.h"
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/regular_timer.h>
 #include <pbl/logging/logging.h>
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
-#include "system/passert.h"
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_tick_timer, CONFIG_SERVICE_TICK_TIMER_LOG_LEVEL);
 

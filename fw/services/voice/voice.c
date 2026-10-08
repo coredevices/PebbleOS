@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/voice/voice.h"
+#include <pbl/services/voice/voice.h>
 
-#include "pbl/bluetooth/responsiveness.h"
-#include "board/board.h"
+#include <pbl/bluetooth/responsiveness.h>
+#include <board/board.h>
 #include <pbl/drivers/mic.h>
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/audio_endpoint.h"
-#include "pbl/services/voice/transcription.h"
-#include "pbl/services/voice/voice_speex.h"
-#include "pbl/services/voice_endpoint.h"
-#include "syscall/syscall_internal.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <process_management/app_manager.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/audio_endpoint.h>
+#include <pbl/services/voice/transcription.h>
+#include <pbl/services/voice/voice_speex.h>
+#include <pbl/services/voice_endpoint.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/uuid.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 #include <string.h>
 

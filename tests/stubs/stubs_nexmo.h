@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 bool nexmo_is_reauth_sms(const ANCSAttribute *app_id, const ANCSAttribute *message) {
   return false;

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 /**
  * @addtogroup services_activity_kraepelin

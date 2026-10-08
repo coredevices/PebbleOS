@@ -8,8 +8,8 @@
 //! its row is labelled with that size. If every size matches, the image is just the first column.
 //! Tests that include this list tests/fixtures/screen_grid.c in their sources.
 
-#include "applib/graphics/gtypes.h"
-#include "applib/preferred_content_size.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/preferred_content_size.h>
 
 #include <stdint.h>
 

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "popups/phone_formatting.h"
+#include <popups/phone_formatting.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <string.h>
 #include <stdarg.h>
@@ -12,8 +12,8 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 // Tests
 ///////////////////////////////////////////////////////////

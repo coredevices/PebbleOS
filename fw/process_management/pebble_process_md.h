@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "applib/platform.h"
-#include "kernel/pebble_tasks.h"
-#include "resource/resource.h"
-#include "pbl/util/build_id.h"
+#include <applib/platform.h>
+#include <kernel/pebble_tasks.h>
+#include <resource/resource.h>
+#include <pbl/util/build_id.h>
 
 #include "pebble_process_info.h"
 
-#include "pbl/util/uuid.h"
+#include <pbl/util/uuid.h>
 
 #include <stdbool.h>
 

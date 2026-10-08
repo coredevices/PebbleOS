@@ -4,20 +4,20 @@
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/clocksource.h>
-#include "kernel/events.h"
-#include "kernel/kernel_heap.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/system_task.h"
+#include <kernel/events.h>
+#include <kernel/kernel_heap.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/util/sleep.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/circular_buffer.h"
-#include "pbl/util/heap.h"
+#include <system/passert.h>
+#include <pbl/util/circular_buffer.h>
+#include <pbl/util/heap.h>
 
-#include "nrfx_pdm.h"
+#include <nrfx_pdm.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_nrf5, CONFIG_DRIVER_MIC_LOG_LEVEL);
 

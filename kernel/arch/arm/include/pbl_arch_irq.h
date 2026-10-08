@@ -7,7 +7,7 @@
 
 #include <soc_irqs.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 struct arch_irq_prio {
   uint16_t irq;

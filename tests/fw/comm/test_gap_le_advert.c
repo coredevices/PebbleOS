@@ -1,33 +1,33 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/gap_le_advert.h"
-#include "comm/ble/gap_le_connection.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/util/size.h"
+#include <comm/ble/gap_le_advert.h>
+#include <comm/ble/gap_le_connection.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_advert.h"
-#include "fake_new_timer.h"
-#include "fake_rtc.h"
-#include "fake_system_task.h"
-#include "fake_pbl_malloc.h"
+#include <fake_bt_advert.h>
+#include <fake_new_timer.h>
+#include <fake_rtc.h>
+#include <fake_system_task.h>
+#include <fake_pbl_malloc.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_bluetopia_interface.h"
-#include "stubs_bt_lock.h"
-#include "stubs_gatt_client_discovery.h"
-#include "stubs_gatt_client_subscriptions.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
+#include <stubs_analytics.h>
+#include <stubs_bluetopia_interface.h>
+#include <stubs_bt_lock.h>
+#include <stubs_gatt_client_discovery.h>
+#include <stubs_gatt_client_subscriptions.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
 
 bool static s_is_connected_as_slave = false;
 

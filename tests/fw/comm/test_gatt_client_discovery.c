@@ -1,38 +1,38 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/gatt_client_discovery.h"
-#include "comm/ble/gatt_service_changed.h"
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gap_le_task.h"
+#include <comm/ble/gatt_client_discovery.h>
+#include <comm/ble/gatt_service_changed.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_task.h>
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <pbl/btutil/bt_device.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_bt_gatt.h"
-#include "fake_events.h"
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_system_task.h"
+#include <fake_bt_gatt.h>
+#include <fake_events.h>
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_system_task.h>
 
-#include "fake_event_gatt_service_buffer.h"
+#include <fake_event_gatt_service_buffer.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_bt_lock.h"
-#include "stubs_gatt_client_subscriptions.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_regular_timer.h"
+#include <stubs_bt_lock.h>
+#include <stubs_gatt_client_subscriptions.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_regular_timer.h>
 
 void core_dump_reset(bool is_forced) {
 }

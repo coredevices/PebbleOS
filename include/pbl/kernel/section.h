@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup kernel_section Code and data placement

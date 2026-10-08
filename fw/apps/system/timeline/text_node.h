@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/text.h"
+#include <applib/graphics/text.h>
 
 // TODO: PBL-22261 Rename GTextNode et. al. with a proper Prefix, e.g. TimelineTextNode
 

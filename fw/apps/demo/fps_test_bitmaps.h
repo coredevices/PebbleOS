@@ -4,7 +4,7 @@
 // @nolint
 
 #pragma once
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 

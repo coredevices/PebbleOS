@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/logging/logging.h>
-#include "clar.h"
+#include <clar.h>
 
-#include "logging/pulse_logging.h"
+#include <logging/pulse_logging.h>
 
 // How many bytes are in a log message before the actual message content in pulse log messages
 const int LOG_METADATA_LENGTH = 29;
@@ -12,8 +12,8 @@ const int LOG_METADATA_LENGTH = 29;
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "kernel/events.h"
-#include "kernel/pebble_tasks.h"
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
 
 static int s_num_event_puts;
 static PebbleEvent s_last_event;

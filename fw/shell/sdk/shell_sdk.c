@@ -3,7 +3,7 @@
 
 #include "shell_sdk.h"
 
-#include "process_management/app_install_manager.h"
+#include <process_management/app_install_manager.h>
 
 AppInstallId s_last_installed_app = INSTALL_ID_INVALID;
 

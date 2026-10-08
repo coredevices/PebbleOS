@@ -5,18 +5,18 @@
 
 #include "app_glance_structured.h"
 
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/music.h"
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/string.h"
-#include "pbl/util/struct.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/music.h>
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/string.h>
+#include <pbl/util/struct.h>
 
 #include <stdio.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 // We need enough space for the track artist and title (so 2 * MUSIC_BUFFER_LENGTH from music.h),
 // the delimiter string " - " (3), and 1 for the null terminator

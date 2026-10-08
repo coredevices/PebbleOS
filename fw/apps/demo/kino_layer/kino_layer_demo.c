@@ -3,15 +3,15 @@
 
 #include "kino_layer_demo.h"
 
-#include "applib/app.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/kino/kino_layer.h"
-#include "applib/ui/window.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/util/size.h"
+#include <applib/app.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/kino/kino_layer.h>
+#include <applib/ui/window.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/util/size.h>
 
 typedef struct {
   Window window;

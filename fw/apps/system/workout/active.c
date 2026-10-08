@@ -6,25 +6,25 @@
 #include "summary.h"
 #include "workout.h"
 
-#include "applib/app.h"
-#include "applib/ui/action_menu_window.h"
-#include "applib/ui/ui.h"
-#include "applib/ui/window_manager.h"
-#include "apps/system/timeline/text_node.h"
-#include "kernel/pbl_malloc.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/activity/health_util.h"
-#include "pbl/services/activity/hr_util.h"
-#include "pbl/services/activity/workout_service.h"
+#include <applib/app.h>
+#include <applib/ui/action_menu_window.h>
+#include <applib/ui/ui.h>
+#include <applib/ui/window_manager.h>
+#include <apps/system/timeline/text_node.h>
+#include <kernel/pbl_malloc.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/health_util.h>
+#include <pbl/services/activity/hr_util.h>
+#include <pbl/services/activity/workout_service.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #include <stdio.h>
-#include "pbl/util/testing.h"
-#include "pbl/util/units.h"
+#include <pbl/util/testing.h>
+#include <pbl/util/units.h>
 
 #define TEXT_COLOR       (GColorBlack)
 #define TEXT_ALIGNMENT   (PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight))

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gpath.h"
-#include "pbl/util/trig.h"
-#include "applib/ui/ui.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gpath.h>
+#include <pbl/util/trig.h>
+#include <applib/ui/ui.h>
 
 #include <string.h>
 
@@ -15,12 +15,12 @@
 ////////////////////////////////////
 #include "util.h"
 #include "test_graphics.h"
-#include "${BIT_DEPTH_NAME}/test_framebuffer.h"
+#include <${BIT_DEPTH_NAME}/test_framebuffer.h>
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
+#include <stubs_applib_resource.h>
 
 static const int16_t SCREEN_WIDTH = 144;
 static const int16_t SCREEN_HEIGHT = 168;

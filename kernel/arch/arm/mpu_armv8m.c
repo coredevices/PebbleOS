@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/mcu/mpu.h"
+#include <pbl/mcu/mpu.h>
 
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #include <cmsis_core.h>
 
-#include "kernel.h"
+#include <kernel.h>
 
 // On SF32LB52 the SiFli vendor code (system_bf0_ap.c) programs its own MPU
 // regions in SystemInit() and burns MAIR indices 0..2 (code / ram / device)

@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
-#include "board/splash.h"
+#include <board/board.h>
+#include <board/splash.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
-#include "pbl/kernel/irq.h"
-#include "system/passert.h"
-#include "kernel/util/delay.h"
+#include <pbl/kernel/irq.h>
+#include <system/passert.h>
+#include <kernel/util/delay.h>
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart =

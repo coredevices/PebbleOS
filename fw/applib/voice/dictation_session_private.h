@@ -5,7 +5,7 @@
 
 #include "voice_window.h"
 #include "dictation_session.h"
-#include "applib/event_service_client.h"
+#include <applib/event_service_client.h>
 
 #include <stdbool.h>
 

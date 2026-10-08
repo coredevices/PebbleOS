@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "order.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup util_list Linked list

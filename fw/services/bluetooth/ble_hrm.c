@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/bluetooth/ble_hrm.h"
+#include <pbl/services/bluetooth/ble_hrm.h>
 
-#include "applib/event_service_client.h"
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gap_le_slave_reconnect.h"
-#include "comm/bt_lock.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/event_loop.h"
-#include "kernel/events.h"
-#include "popups/ble_hrm/ble_hrm_reminder_popup.h"
-#include "popups/ble_hrm/ble_hrm_sharing_popup.h"
-#include "pbl/services/hrm/hrm_manager_private.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/activity/activity.h"
+#include <applib/event_service_client.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_slave_reconnect.h>
+#include <comm/bt_lock.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/event_loop.h>
+#include <kernel/events.h>
+#include <popups/ble_hrm/ble_hrm_reminder_popup.h>
+#include <popups/ble_hrm/ble_hrm_sharing_popup.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/activity/activity.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/hrm_service.h>

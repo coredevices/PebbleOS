@@ -1,34 +1,34 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/iterator.h"
-#include "applib/graphics/utf8.h"
-#include "applib/graphics/text.h"
-#include "applib/graphics/text_layout_private.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/framebuffer.h"
+#include <pbl/util/iterator.h>
+#include <applib/graphics/utf8.h>
+#include <applib/graphics/text.h>
+#include <applib/graphics/text_layout_private.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/framebuffer.h>
 
-#include "clar.h"
+#include <clar.h>
 
 ///////////////////////////////////////////////////////////
 // Stubs
 
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_hexdump.h"
-#include "stubs_heap.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_pbl_malloc.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_hexdump.h>
+#include <stubs_heap.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_pbl_malloc.h>
 
-#include "stubs_applib_resource.h"
-#include "stubs_app_state.h"
-#include "stubs_fonts.h"
-#include "stubs_text_resources.h"
-#include "stubs_text_render.h"
-#include "stubs_reboot_reason.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
+#include <stubs_applib_resource.h>
+#include <stubs_app_state.h>
+#include <stubs_fonts.h>
+#include <stubs_text_resources.h>
+#include <stubs_text_render.h>
+#include <stubs_reboot_reason.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 #define FONT_LINE_DELTA 2
@@ -352,7 +352,7 @@ void test_text_layout__get_default_flow_data(void) {
   cl_assert_equal_i(data2->paging.page_on_screen.size_h, 0);
 }
 
-#include "applib/legacy2/ui/text_layer_legacy2.h"
+#include <applib/legacy2/ui/text_layer_legacy2.h>
 void test_text_layout__delta(void) {
   GContext gcontext = (GContext){};
   GFont font = (GFont){0};

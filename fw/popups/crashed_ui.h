@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/app_install_types.h"
+#include <process_management/app_install_types.h>
 
 //! Show the "Bug report captured" modal
 void crashed_ui_show_forced_core_dump(void);

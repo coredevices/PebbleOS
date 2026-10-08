@@ -3,8 +3,8 @@
 
 #include <nrfx_i2s.h>
 
-#include "board/board.h"
-#include "pbl/kernel/irq.h"
+#include <board/board.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
@@ -18,7 +18,7 @@
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
-#include "flash_region/flash_region.h"
+#include <flash_region/flash_region.h>
 
 // QSPI
 #include <hal/nrf_clock.h>

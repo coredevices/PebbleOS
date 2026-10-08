@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/animation.h"
-#include "applib/ui/kino/kino_reel.h"
+#include <applib/ui/animation.h>
+#include <applib/ui/kino/kino_reel.h>
 
 // Transform Kino Reel
 // This Kino Reel is meant for plugging in transform logic. Memory management and kino reel

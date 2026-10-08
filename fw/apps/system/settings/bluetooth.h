@@ -5,9 +5,9 @@
 
 #include <pbl/bluetooth/types.h>
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 #include "menu.h"
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
 typedef struct GAPLEConnection GAPLEConnection;
 

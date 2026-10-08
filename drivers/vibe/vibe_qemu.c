@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/vibe.h>
 
-#include "comm/qemu/serial.h"
+#include <comm/qemu/serial.h>
 
 static bool s_vibe_on;
 

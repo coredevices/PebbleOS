@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/comm_session/session_internal.h"
-#include "pbl/services/comm_session/session_remote_os.h"
-#include "pbl/services/comm_session/session_remote_version.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/comm_session/session_internal.h>
+#include <pbl/services/comm_session/session_remote_os.h>
+#include <pbl/services/comm_session/session_remote_version.h>
 
 static CommSession s_session;
 
@@ -16,15 +16,15 @@ extern void session_remote_version_protocol_msg_callback(CommSession *session, c
 // Fakes & Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "fake_pbl_malloc.h"
-#include "fake_events.h"
-#include "fake_new_timer.h"
+#include <fake_pbl_malloc.h>
+#include <fake_events.h>
+#include <fake_new_timer.h>
 
-#include "stubs_bt_lock.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_rtc.h"
+#include <stubs_bt_lock.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_rtc.h>
 
 static bool s_session_is_system;
 bool comm_session_is_system(CommSession *session) {

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/ui/layer.h"
+#include <applib/ui/layer.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #include "stubs_unobstructed_area.h"
 

@@ -3,7 +3,7 @@
 
 #include "preferred_durations.h"
 
-#include "dialogs/dialog.h"
+#include <applib/ui/dialogs/dialog.h>
 
 uint32_t preferred_result_display_duration(void) {
   return DIALOG_TIMEOUT_DEFAULT;

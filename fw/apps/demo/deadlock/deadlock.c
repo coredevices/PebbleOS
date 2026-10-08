@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "profile_mutexes.h"
+#include <profile_mutexes.h>
 
-#include "applib/app.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/window.h"
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/window.h>
 
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/mutex.h"
-#include "system/profiler.h"
+#include <pbl/kernel/mutex.h>
+#include <system/profiler.h>
 
-#include "kernel/util/sleep.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <kernel/util/sleep.h>
+#include <pbl/services/new_timer/new_timer.h>
 
 static Window *window;
 static PBL_MUTEX_DEFINE(s_mutex);

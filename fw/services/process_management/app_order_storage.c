@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/process_management/app_order_storage.h"
+#include <pbl/services/process_management/app_order_storage.h>
 
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "pbl/services/filesystem/pfs.h"
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
 

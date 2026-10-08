@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/layer.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/ui/layer.h>
+#include <applib/graphics/gtypes.h>
 
 //! @file rotate_bitmap_layer.h
 //! @addtogroup UI

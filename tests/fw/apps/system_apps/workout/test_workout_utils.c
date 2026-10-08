@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system/workout/utils.h"
+#include <apps/system/workout/utils.h>
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/activity/activity.h"
+#include <pbl/services/activity/activity.h>
 
 // ---------------------------------------------------------------------------------------
-#include "stubs_attribute.h"
-#include "stubs_i18n.h"
-#include "stubs_notifications.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_rtc.h"
-#include "stubs_timeline_item.h"
+#include <stubs_attribute.h>
+#include <stubs_i18n.h>
+#include <stubs_notifications.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_rtc.h>
+#include <stubs_timeline_item.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

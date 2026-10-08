@@ -3,18 +3,18 @@
 
 #undef CONFIG_LOG_HASHED
 
-#include "applib/app.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
-#include "process_management/pebble_process_md.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/regular_timer.h"
+#include <applib/app.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/util/sleep.h>
+#include <process_management/pebble_process_md.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/regular_timer.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 #define NUM_MAX_TIMERS 10
 

@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/framebuffer.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/framebuffer.h>
 
-#include "pbl/util/bitops.h"
-#include "pbl/util/size.h"
-#include "${BIT_DEPTH_NAME}/test_framebuffer.h"
+#include <pbl/util/bitops.h>
+#include <pbl/util/size.h>
+#include <${BIT_DEPTH_NAME}/test_framebuffer.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
+#include <stubs_applib_resource.h>
 
 // Setup
 ////////////////////////////////////

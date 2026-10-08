@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
+#include <flash_region/flash_region.h>
 
 #include <stdint.h>
 

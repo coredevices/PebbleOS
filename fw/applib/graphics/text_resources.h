@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "applib/fonts/fonts_private.h"
-#include "applib/fonts/codepoint.h"
-#include "pbl/util/keyed_circular_cache.h"
+#include <applib/fonts/fonts_private.h>
+#include <applib/fonts/codepoint.h>
+#include <pbl/util/keyed_circular_cache.h>
 
 #include <stdint.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 typedef struct PBL_PACKED {
   uint8_t width_px;

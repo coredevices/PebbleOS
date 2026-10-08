@@ -1,29 +1,29 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/graphics/gdraw_command.h"
-#include "applib/graphics/gdraw_command_list.h"
-#include "applib/graphics/gdraw_command_image.h"
-#include "applib/graphics/gdraw_command_private.h"
+#include <applib/graphics/gdraw_command.h>
+#include <applib/graphics/gdraw_command_list.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gdraw_command_private.h>
 
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/graphics_line.h"
-#include "applib/graphics/gpath.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/graphics_line.h>
+#include <applib/graphics/gpath.h>
 
 #include <string.h>
 
-#include "stubs_applib_resource.h"
-#include "stubs_app_state.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_heap.h"
-#include "stubs_memory_layout.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
+#include <stubs_applib_resource.h>
+#include <stubs_app_state.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_heap.h>
+#include <stubs_memory_layout.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
 
 extern size_t prv_get_list_max_command_size(GDrawCommandList *command_list);
 

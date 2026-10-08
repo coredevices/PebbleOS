@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "kernel/events.h"
-#include "pbl/kernel/compiler.h"
+#include <kernel/events.h>
+#include <pbl/kernel/compiler.h>
 
 void PBL_WEAK event_put(PebbleEvent *event) {
 }

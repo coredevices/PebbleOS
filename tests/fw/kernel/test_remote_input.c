@@ -1,28 +1,28 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/remote_input.h"
+#include <kernel/remote_input.h>
 
-#include "applib/event_service_client.h"
-#include "applib/ui/recognizer/swipe.h"
+#include <applib/event_service_client.h>
+#include <applib/ui/recognizer/swipe.h>
 #include <pbl/drivers/display/display.h>
-#include "kernel/events.h"
-#include "pbl/services/touch/touch.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <kernel/events.h>
+#include <pbl/services/touch/touch.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////////////////////////
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
 
-#include "fake_pbl_malloc.h"
-#include "fake_new_timer.h"
+#include <fake_pbl_malloc.h>
+#include <fake_new_timer.h>
 
 #define MAX_RECORDED 32
 

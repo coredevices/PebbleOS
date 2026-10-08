@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 const PebbleProcessMd *fw_update_progress_sim_app_get_info(void);

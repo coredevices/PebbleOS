@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/util/list.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/util/list.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdbool.h>
 #include <stddef.h>

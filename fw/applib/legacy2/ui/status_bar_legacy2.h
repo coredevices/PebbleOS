@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 //! @file status_bar_legacy2.h
 //!

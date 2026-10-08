@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/kernel/kernel.h"
-#include "system/reboot_reason.h"
+#include <pbl/kernel/kernel.h>
+#include <system/reboot_reason.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include "kernel_test.h"
+#include <kernel_test.h>
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "stubs_passert.h"
+#include <stubs_passert.h>
 
 // The subsystem on the POSIX kernel: time only moves when every thread is
 // blocked, so the watchdog thread's periodic sleep drives the clock.

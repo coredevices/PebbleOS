@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/mcu/mpu.h"
+#include <pbl/mcu/mpu.h>
 
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #include <cmsis_core.h>
 
-#include "kernel.h"
+#include <kernel.h>
 
 // ARMv7-M has a 3-bit AP field, so every MpuPermissions value maps to a
 // unique encoding (0x4 is reserved; 0x6/0x7 both decode to "RO any priv",

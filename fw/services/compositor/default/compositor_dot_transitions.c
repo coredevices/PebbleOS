@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/compositor/default/compositor_dot_transitions.h"
+#include <pbl/services/compositor/default/compositor_dot_transitions.h>
 
-#include "pbl/services/compositor/compositor_private.h"
-#include "pbl/services/compositor/compositor_transitions.h"
+#include <pbl/services/compositor/compositor_private.h>
+#include <pbl/services/compositor/compositor_transitions.h>
 
-#include "apps/system/timeline/common.h"
-#include "applib/ui/animation_interpolate.h"
-#include "applib/ui/animation_timing.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gpath.h"
-#include "pbl/util/trig.h"
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <apps/system/timeline/common.h>
+#include <applib/ui/animation_interpolate.h>
+#include <applib/ui/animation_timing.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gpath.h>
+#include <pbl/util/trig.h>
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 static CompositorTransitionDirection prv_flip_transition_direction(
     CompositorTransitionDirection direction) {

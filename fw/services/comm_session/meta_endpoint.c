@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/comm_session/meta_endpoint.h"
+#include <pbl/services/comm_session/meta_endpoint.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/system_task.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/byteorder.h"
+#include <pbl/util/byteorder.h>
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 

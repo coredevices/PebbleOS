@@ -5,7 +5,7 @@
 
 #include <pbl/bluetooth/types.h>
 
-#include "applib/bluetooth/ble_ad_parse.h"
+#include <applib/bluetooth/ble_ad_parse.h>
 
 //! Size in bytes of the iBeacon advertisement data, including the length and
 //! AD Type bytes.

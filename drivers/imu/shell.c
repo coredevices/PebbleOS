@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <inttypes.h>
 
-#include "kernel/util/sleep.h"
+#include <kernel/util/sleep.h>
 
 static int prv_accel_read(const struct pbl_shell *sh, size_t argc, char **argv) {
   AccelDriverSample sample;

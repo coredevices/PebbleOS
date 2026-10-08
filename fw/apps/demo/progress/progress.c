@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "progress.h"
+#include <progress.h>
 
-#include "applib/app.h"
-#include "applib/fonts/fonts.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/fonts/fonts.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/math.h"
+#include <pbl/util/math.h>
 
 #define PROGRESS_STEP 2
 

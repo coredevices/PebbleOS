@@ -3,25 +3,25 @@
 
 #include "window_private.h"
 
-#include "applib/app_logging.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/app_window_click_glue.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/click.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/layer_private.h"
-#include "applib/ui/recognizer/recognizer_manager.h"
-#include "applib/ui/window_manager.h"
-#include "applib/ui/window_stack.h"
-#include "applib/applib_malloc.auto.h"
-#include "applib/legacy2/ui/status_bar_legacy2.h"
-#include "kernel/ui/kernel_ui.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "process_management/process_manager.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app_logging.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/app_window_click_glue.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/click.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/layer_private.h>
+#include <applib/ui/recognizer/recognizer_manager.h>
+#include <applib/ui/window_manager.h>
+#include <applib/ui/window_stack.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/legacy2/ui/status_bar_legacy2.h>
+#include <kernel/ui/kernel_ui.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <process_management/process_manager.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "syscall/syscall.h"
+#include <system/passert.h>
+#include <syscall/syscall.h>
 
 #include "status_bar_layer.h"
 

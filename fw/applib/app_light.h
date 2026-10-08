@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 //! @file light.h
 //! @addtogroup UI

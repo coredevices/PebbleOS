@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "shell/normal/quick_launch.h"
+#include <shell/normal/quick_launch.h>
 
-#include "applib/ui/window.h"
+#include <applib/ui/window.h>
 
 #include <stdbool.h>
 

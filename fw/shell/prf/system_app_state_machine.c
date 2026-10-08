@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "shell/system_app_state_machine.h"
+#include <shell/system_app_state_machine.h>
 
-#include "apps/system_app_ids.h"
-#include "apps/core/panic_window.h"
-#include "apps/prf/mfg_menu.h"
-#include "apps/prf/recovery_first_use/recovery_first_use.h"
-#include "kernel/panic.h"
-#include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "process_management/app_manager.h"
+#include <apps/system_app_ids.h>
+#include <apps/core/panic_window.h>
+#include <apps/prf/mfg_menu.h>
+#include <apps/prf/recovery_first_use/recovery_first_use.h>
+#include <kernel/panic.h>
+#include <mfg/mfg_mode/mfg_factory_mode.h>
+#include <process_management/app_manager.h>
 
 const PebbleProcessMd *system_app_state_machine_system_start(void) {
   if (launcher_panic_get_current_error() != 0) {

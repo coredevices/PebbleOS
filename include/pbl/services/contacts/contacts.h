@@ -5,7 +5,7 @@
 
 #include "attributes_address.h"
 
-#include "pbl/util/uuid.h"
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_contacts Contacts

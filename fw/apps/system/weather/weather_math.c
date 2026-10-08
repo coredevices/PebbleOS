@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "weather_math.h"
-#include "applib/ui/animation_interpolate.h"
+#include <applib/ui/animation_interpolate.h>
 #include <string.h>
 #include <time.h>
 

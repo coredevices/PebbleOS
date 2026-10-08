@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/ui.h"
+#include <applib/ui/ui.h>
 
 void health_ui_draw_text_in_box(GContext *ctx, const char *text, const GRect drawing_bounds,
                                 const int16_t y_offset, const GFont small_font, GColor box_color,

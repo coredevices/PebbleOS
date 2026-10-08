@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/services/timeline/item.h"
-#include "apps/system/timeline/timeline.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/timeline/item.h>
+#include <apps/system/timeline/timeline.h>
+#include <pbl/kernel/compiler.h>
 
 void PBL_WEAK timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,
                                      const AttributeList *attributes) {

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/animation.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/animation.h>
 
 //! @addtogroup UI
 //! @{

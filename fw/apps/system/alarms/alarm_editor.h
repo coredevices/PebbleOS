@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/alarms/alarm.h"
-#include "applib/ui/window.h"
+#include <pbl/services/alarms/alarm.h>
+#include <applib/ui/window.h>
 
 typedef enum {
   CREATED,

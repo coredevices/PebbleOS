@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "drivers/watchdog.h"
-#include "pbl/kernel/init.h"
-#include "system/passert.h"
+#include <drivers/watchdog.h>
+#include <pbl/kernel/init.h>
+#include <system/passert.h>
 
 #include <bf0_hal.h>
 

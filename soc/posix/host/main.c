@@ -12,7 +12,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "posix_host.h"
+#include <posix_host.h>
 
 #define MAX_OPTIONS 16
 #define MAX_HOOKS   16

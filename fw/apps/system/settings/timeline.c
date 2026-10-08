@@ -5,13 +5,13 @@
 #include "option_menu.h"
 #include "window.h"
 
-#include "applib/ui/dialogs/expandable_dialog.h"
-#include "applib/ui/menu_layer.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/i18n/i18n.h"
-#include "shell/prefs.h"
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <applib/ui/dialogs/expandable_dialog.h>
+#include <applib/ui/menu_layer.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/i18n/i18n.h>
+#include <shell/prefs.h>
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 typedef enum TimelineSettingsVersion {
   //! Initial version or never opened

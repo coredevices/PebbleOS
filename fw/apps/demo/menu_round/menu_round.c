@@ -3,15 +3,15 @@
 
 #include "menu_round.h"
 
-#include "applib/app.h"
-#include "applib/graphics/gdraw_command_image.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/app.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 #include <stdio.h>
 

@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/app_watch_info.h"
-#include "applib/battery_state_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/qr_code.h"
-#include "applib/ui/window.h"
-#include "apps/prf/mfg_test_menu.h"
-#include "apps/prf/mfg_test_result.h"
-#include "pbl/bluetooth/types.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "process_management/pebble_process_md.h"
-#include "mfg/mfg_serials.h"
-#include "services/bluetooth/local_id.h"
-#include "system/version.h"
+#include <applib/app.h>
+#include <applib/app_watch_info.h>
+#include <applib/battery_state_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/qr_code.h>
+#include <applib/ui/window.h>
+#include <apps/prf/mfg_test_menu.h>
+#include <apps/prf/mfg_test_result.h>
+#include <pbl/bluetooth/types.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <process_management/pebble_process_md.h>
+#include <mfg/mfg_serials.h>
+#include <services/bluetooth/local_id.h>
+#include <system/version.h>
 
 #include <stdio.h>
 #include <string.h>

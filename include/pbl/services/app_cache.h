@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "process_management/app_install_types.h"
-#include "system/status_codes.h"
+#include <process_management/app_install_types.h>
+#include <system/status_codes.h>
 
 #include <stdbool.h>
 #include <stdint.h>

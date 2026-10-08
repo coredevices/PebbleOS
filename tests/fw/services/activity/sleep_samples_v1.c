@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "pbl/services/activity/activity_algorithm.h"
-#include "pbl/util/size.h"
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/util/size.h>
 
 // ----------------------------------------------------------------
 // Sample captured at: 2015-08-18 22:15:00 local, 2015-08-19 05:15:00 GMT

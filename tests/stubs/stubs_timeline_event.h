@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/timeline/event.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/timeline/event.h>
+#include <pbl/kernel/compiler.h>
 
 void PBL_WEAK timeline_event_refresh(void) {
 }

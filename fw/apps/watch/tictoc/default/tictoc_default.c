@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/app_focus_service.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/app_focus_service.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <time.h>
-#include "pbl/util/trig.h"
+#include <pbl/util/trig.h>
 
 #if PBL_ROUND
 static const int MINUTE_HAND_MARGIN = 16;

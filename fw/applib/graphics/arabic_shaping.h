@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/fonts/codepoint.h"
+#include <applib/fonts/codepoint.h>
 #include "utf8.h"
 
 #include <stdbool.h>

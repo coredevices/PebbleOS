@@ -5,7 +5,7 @@
 #include <pbl/drivers/uart.h>
 
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <nrfx_uarte.h>
 #ifdef NRF_PPI_BASE

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/mcu/mpu.h"
+#include <pbl/mcu/mpu.h>
 
-#include "pbl/mcu/cache.h"
+#include <pbl/mcu/cache.h>
 
 #include <cmsis_core.h>
 
-#include "kernel.h"
+#include <kernel.h>
 
 extern const uint32_t __SRAM_size__[];
 #if !defined(SRAM_BASE)

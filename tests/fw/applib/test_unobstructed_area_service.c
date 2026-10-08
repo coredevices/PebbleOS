@@ -1,29 +1,29 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
-#include "applib/unobstructed_area_service_private.h"
+#include <applib/unobstructed_area_service_private.h>
 
 // Stubs
 /////////////////////
-#include "stubs_app.h"
-#include "stubs_app_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_events.h"
-#include "stubs_framebuffer.h"
-#include "stubs_graphics.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_process_manager.h"
-#include "stubs_ui_window.h"
+#include <stubs_app.h>
+#include <stubs_app_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_events.h>
+#include <stubs_framebuffer.h>
+#include <stubs_graphics.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_process_manager.h>
+#include <stubs_ui_window.h>
 
 // Fakes
 /////////////////////
-#include "fake_event_service.h"
+#include <fake_event_service.h>
 
 // Statics
 /////////////////////

@@ -1,36 +1,36 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
-#include "applib/ui/scroll_layer.h"
-#include "applib/ui/scroll_layer_private.h"
-#include "applib/ui/recognizer/recognizer.h"
-#include "applib/ui/recognizer/recognizer_list.h"
-#include "applib/ui/recognizer/recognizer_manager.h"
-#include "applib/ui/recognizer/swipe.h"
-#include "applib/ui/recognizer/touch_nav.h"
+#include <applib/ui/scroll_layer.h>
+#include <applib/ui/scroll_layer_private.h>
+#include <applib/ui/recognizer/recognizer.h>
+#include <applib/ui/recognizer/recognizer_list.h>
+#include <applib/ui/recognizer/recognizer_manager.h>
+#include <applib/ui/recognizer/swipe.h>
+#include <applib/ui/recognizer/touch_nav.h>
 
-#include "applib/ui/animation_private.h"
-#include "applib/ui/property_animation_private.h"
+#include <applib/ui/animation_private.h>
+#include <applib/ui/property_animation_private.h>
 
-#include "fake_rtc.h"
-#include "pbl/drivers/rtc.h"
+#include <fake_rtc.h>
+#include <pbl/drivers/rtc.h>
 
 // Stubs
 /////////////////////
-#include "stubs_app_state.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_content_indicator.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_app_state.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_content_indicator.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
+#include <stubs_unobstructed_area.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH). scroll_layer.c resolves the per-task touch-nav state

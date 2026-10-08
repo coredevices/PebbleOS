@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/layer.h"
-#include "applib/ui/layer_private.h"
-#include "pbl/util/size.h"
+#include <applib/ui/layer.h>
+#include <applib/ui/layer_private.h>
+#include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_app_state.h"
-#include "stubs_bitblt.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_gbitmap.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_app_state.h>
+#include <stubs_bitblt.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_gbitmap.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
+#include <stubs_unobstructed_area.h>
 
 // Setup
 ////////////////////////////////////

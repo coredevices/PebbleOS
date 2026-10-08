@@ -1,35 +1,35 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "process_management/app_install_types.h"
-#include "process_management/pebble_process_info.h"
-#include "process_management/pebble_process_md.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/blob_db/app_db.h"
+#include <process_management/app_install_types.h>
+#include <process_management/pebble_process_info.h>
+#include <process_management/pebble_process_md.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/blob_db/app_db.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include "fake_spi_flash.h"
+#include <fake_spi_flash.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_app_cache.h"
-#include "stubs_events.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
+#include <stubs_analytics.h>
+#include <stubs_app_cache.h>
+#include <stubs_events.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
 
 void app_install_clear_app_db(void) {
 }

@@ -3,13 +3,13 @@
 
 #ifdef CONFIG_SHELL
 
-#include "comm/ble/gap_le_connection.h"
-#include "comm/bt_lock.h"
+#include <comm/ble/gap_le_connection.h>
+#include <comm/bt_lock.h>
 
-#include "pbl/services/bluetooth/bluetooth_ctl.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/bluetooth/local_id.h"
-#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
+#include <pbl/services/bluetooth/bluetooth_ctl.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 
 #include <pbl/bluetooth/id.h>
 #include <pbl/bluetooth/types.h>

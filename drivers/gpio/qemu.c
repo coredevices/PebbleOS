@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/gpio.h>
 
-#include "board/board.h"
+#include <board/board.h>
 
 #include <stddef.h>
 

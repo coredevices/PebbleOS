@@ -4,13 +4,13 @@
 #include "touch_service.h"
 #include "touch_service_private.h"
 
-#include "applib/event_service_client.h"
-#include "kernel/events.h"
-#include "kernel/kernel_applib_state.h"
-#include "kernel/pebble_tasks.h"
-#include "process_state/app_state/app_state.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <applib/event_service_client.h>
+#include <kernel/events.h>
+#include <kernel/kernel_applib_state.h>
+#include <kernel/pebble_tasks.h>
+#include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 //! @return the per-task touch service state, or NULL if the current task is
 //! not permitted to use the touch service (e.g. background workers, or

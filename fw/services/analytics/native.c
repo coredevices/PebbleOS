@@ -4,14 +4,14 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/analytics/backend.h"
-#include "pbl/services/data_logging/data_logging_service.h"
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/analytics/backend.h>
+#include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/build_id.h"
-#include "pbl/util/math.h"
-#include "pbl/util/uuid.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/build_id.h>
+#include <pbl/util/math.h>
+#include <pbl/util/uuid.h>
 
 PBL_LOG_MODULE_DEFINE(service_analytics, CONFIG_SERVICE_ANALYTICS_LOG_LEVEL);
 
@@ -32,7 +32,7 @@ struct PBL_PACKED native_heartbeat_record {
   uint16_t metric_##key##_scale;
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)       uint32_t metric_##key;
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) char metric_##key[(len) + 1];
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -50,7 +50,7 @@ _Static_assert(sizeof(struct native_heartbeat_record) ==
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   +sizeof(int32_t) + sizeof(uint16_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  +sizeof(uint32_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            +((len) + 1)
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -69,7 +69,7 @@ enum native_integer_index {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -86,7 +86,7 @@ enum native_timer_index {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) NATIVE_TIMER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -103,7 +103,7 @@ enum native_string_index {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) NATIVE_STRING_IDX_##key,
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -122,7 +122,7 @@ static const int8_t s_key_to_integer[] = {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   NATIVE_INTEGER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            -1,
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -138,7 +138,7 @@ static const int8_t s_key_to_timer[] = {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  NATIVE_TIMER_IDX_##key,
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            -1,
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -154,7 +154,7 @@ static const int8_t s_key_to_string[] = {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)   -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)                  -1,
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)            NATIVE_STRING_IDX_##key,
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -180,7 +180,7 @@ static struct {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) static char s_string_##key[(len) + 1];
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -197,7 +197,7 @@ static char *const s_string_ptrs[] = {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) s_string_##key,
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -213,7 +213,7 @@ static const uint8_t s_string_lens[] = {
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key)
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) (len),
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -266,7 +266,7 @@ static void prv_record_metrics(struct native_heartbeat_record *record, bool rese
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len)    \
   strncpy(record->metric_##key, s_string_##key, (len)); \
   record->metric_##key[(len)] = '\0';
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED
@@ -412,7 +412,7 @@ static int prv_cmd_metrics(const struct pbl_shell *sh, size_t argc, char **argv)
   pbl_shell_print(sh, STRINGIFY(key) "=%" PRId32 " ms", record.metric_##key);
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) \
   pbl_shell_print(sh, STRINGIFY(key) "=%s", record.metric_##key);
-#include "pbl/services/analytics/analytics.def"
+#include <pbl/services/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED

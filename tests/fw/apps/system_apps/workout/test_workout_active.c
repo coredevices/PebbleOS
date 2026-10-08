@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system/workout/workout.h"
-#include "apps/system/workout/active.h"
-#include "apps/system/workout/data.h"
-#include "apps/system/workout/dialog.h"
+#include <apps/system/workout/workout.h>
+#include <apps/system/workout/active.h>
+#include <apps/system/workout/data.h>
+#include <apps/system/workout/dialog.h>
 
-#include "pbl/services/activity/health_util.h"
+#include <pbl/services/activity/health_util.h>
 
 #include "test_workout_app_includes.h"
 
-#include "stubs_window_manager.h"
-#include "pbl/util/units.h"
+#include <stubs_window_manager.h>
+#include <pbl/util/units.h>
 
 bool s_hrm_is_present;
 

@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/compositor/compositor.h"
+#include <pbl/services/compositor/compositor.h>
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/gcolor_definitions.h"
-#include "applib/graphics/gtypes.h"
-#include "pbl/util/bitops.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/gcolor_definitions.h>
+#include <applib/graphics/gtypes.h>
+#include <pbl/util/bitops.h>
 #include <pbl/drivers/rtc.h>
-#include "pbl/kernel/irq.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
 

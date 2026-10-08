@@ -4,7 +4,7 @@
 #ifndef __CLAR_TEST_H__
 #define __CLAR_TEST_H__
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 /**
  * Test method declarations

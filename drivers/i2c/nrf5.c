@@ -5,9 +5,9 @@
 #include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/nrf5.h>
 
-#include "system/passert.h"
+#include <system/passert.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
 #include <nrfx.h>
 

@@ -4,16 +4,16 @@
 #include "fonts.h"
 #include "fonts_private.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/applib_resource.h"
-#include "applib/graphics/text_resources.h"
-#include "process_management/app_manager.h"
-#include "resource/resource.h"
-#include "resource/resource_ids.auto.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/applib_resource.h>
+#include <applib/graphics/text_resources.h>
+#include <process_management/app_manager.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #include <string.h>
 

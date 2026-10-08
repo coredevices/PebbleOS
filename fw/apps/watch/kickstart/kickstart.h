@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/ui.h"
-#include "process_management/pebble_process_md.h"
+#include <applib/ui/ui.h>
+#include <process_management/pebble_process_md.h>
 
 typedef struct KickstartData {
   Window window;

@@ -3,16 +3,16 @@
 
 #include "app_glance.h"
 
-#include "applib/template_string.h"
-#include "apps/system/launcher/default/app_glance_generic.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/blob_db/app_glance_db_private.h"
-#include "pbl/services/timeline/attribute.h"
-#include "pbl/services/timeline/timeline_resources.h"
-#include "syscall/syscall.h"
-#include "pbl/util/string.h"
-#include "pbl/util/uuid.h"
+#include <applib/template_string.h>
+#include <apps/system/launcher/default/app_glance_generic.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/blob_db/app_glance_db_private.h>
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <syscall/syscall.h>
+#include <pbl/util/string.h>
+#include <pbl/util/uuid.h>
 
 AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceSlice slice) {
   AppGlanceResult result = APP_GLANCE_RESULT_SUCCESS;

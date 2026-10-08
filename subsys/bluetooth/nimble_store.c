@@ -8,7 +8,7 @@
 #include <host/ble_store.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include "pbl/kernel/mutex.h"
+#include <pbl/kernel/mutex.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <string.h>
 #include <pbl/logging/logging.h>

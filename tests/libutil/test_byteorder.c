@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/util/byteorder.h"
+#include <pbl/util/byteorder.h>
 
 #include <string.h>
 

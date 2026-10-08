@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/pebble_tasks.h"
+#include <kernel/pebble_tasks.h>
 
 typedef struct MemorySegment MemorySegment;
 typedef struct PebbleProcessMd PebbleProcessMd;

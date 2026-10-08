@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system/timeline/text_node.h"
+#include <apps/system/timeline/text_node.h>
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
 // Stubs
 /////////////////////
 
-#include "stubs_app_state.h"
-#include "stubs_heap.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_process_manager.h"
+#include <stubs_app_state.h>
+#include <stubs_heap.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_process_manager.h>
 
 // TODO: PBL-22271 Complete timeline text node unit tests
 

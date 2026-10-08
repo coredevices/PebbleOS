@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../display.h"
+#include <pbl/drivers/display/display.h>
 
 /**
  * @defgroup drivers_display_sharp_ls013b7dh01 Sharp LS013B7DH01

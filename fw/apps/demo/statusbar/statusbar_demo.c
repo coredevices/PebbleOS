@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "statusbar_demo.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/i18n/i18n.h"
-#include "applib/app.h"
-#include "applib/ui/ui.h"
-#include "pbl/util/size.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/i18n/i18n.h>
+#include <applib/app.h>
+#include <applib/ui/ui.h>
+#include <pbl/util/size.h>
 
 typedef struct StatusBarDemoWindow {
   Window window;

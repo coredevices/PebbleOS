@@ -5,22 +5,22 @@
 
 #include "activity.h"
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 #include "hr_util.h"
 
-#include "applib/event_service_client.h"
-#include "kernel/events.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/data_logging/data_logging_service.h"
-#include "pbl/services/settings/settings_file.h"
-#include "system/hexdump.h"
+#include <applib/event_service_client.h>
+#include <kernel/events.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/settings/settings_file.h>
+#include <system/hexdump.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "pbl/util/time.h"
-#include "pbl/util/units.h"
+#include <pbl/util/time.h>
+#include <pbl/util/units.h>
 
 /**
  * @defgroup services_activity_activity_private Activity service internals

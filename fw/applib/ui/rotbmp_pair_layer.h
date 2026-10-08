@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/ui/layer.h"
-#include "applib/ui/rotate_bitmap_layer.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/ui/layer.h>
+#include <applib/ui/rotate_bitmap_layer.h>
+#include <applib/graphics/gtypes.h>
 
 /**
    A pair of images, one drawn white-transparent, the other black-transparent

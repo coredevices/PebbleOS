@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/app_inbox.h"
-#include "applib/app_message/app_message_internal.h"
-#include "applib/app_message/app_message_receiver.h"
-#include "comm/bt_conn_mgr.h"
-#include "pbl/services/comm_session/session_receive_router.h"
-#include "kernel/events.h"
-#include "process_management/app_install_types.h"
+#include <applib/app_inbox.h>
+#include <applib/app_message/app_message_internal.h>
+#include <applib/app_message/app_message_receiver.h>
+#include <comm/bt_conn_mgr.h>
+#include <pbl/services/comm_session/session_receive_router.h>
+#include <kernel/events.h>
+#include <process_management/app_install_types.h>
 
 extern const ReceiverImplementation g_app_message_receiver_implementation;
 
@@ -21,14 +21,14 @@ static const ReceiverImplementation *s_rcv_imp = &g_app_message_receiver_impleme
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fakes & Stubs
 
-#include "fake_kernel_malloc.h"
-#include "fake_system_task.h"
+#include <fake_kernel_malloc.h>
+#include <fake_system_task.h>
 
-#include "stubs_analytics.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_syscall_internal.h"
+#include <stubs_analytics.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_syscall_internal.h>
 
 bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   cl_assert_equal_i(PEBBLE_CALLBACK_EVENT, e->type);

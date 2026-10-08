@@ -3,16 +3,16 @@
 
 #include "ble_ad_parse.h"
 
-#include "applib/applib_malloc.auto.h"
+#include <applib/applib_malloc.auto.h>
 
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
-#include "pbl/util/math.h"
-#include "pbl/util/byteorder.h"
+#include <pbl/util/math.h>
+#include <pbl/util/byteorder.h>
 
 #include <pbl/btutil/bt_uuid.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 // -----------------------------------------------------------------------------
 //! Internal parsed advertisement data structures.

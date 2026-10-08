@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/listify.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/listify.h>
 
-#include "kernel.h"
+#include <kernel.h>
 
 extern uint8_t _estack[];
 

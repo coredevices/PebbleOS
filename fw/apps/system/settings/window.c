@@ -7,16 +7,16 @@
 #include "menu.h"
 #include "window.h"
 
-#include "applib/event_service_client.h"
-#include "applib/ui/menu_layer.h"
-#include "applib/ui/option_menu_window.h"
-#include "applib/ui/ui.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/i18n/i18n.h"
-#include "system/passert.h"
-#include "shell/prefs.h"
+#include <applib/event_service_client.h>
+#include <applib/ui/menu_layer.h>
+#include <applib/ui/option_menu_window.h>
+#include <applib/ui/ui.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/i18n/i18n.h>
+#include <system/passert.h>
+#include <shell/prefs.h>
 
 typedef struct SettingsData {
   Window window;

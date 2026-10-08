@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/music_internal.h"
+#include <pbl/services/music_internal.h>
 
-#include "applib/graphics/gtypes.h"
-#include "apps/system/music.h"
-#include "pbl/services/imaging.h"
+#include <applib/graphics/gtypes.h>
+#include <apps/system/music.h>
+#include <pbl/services/imaging.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/kernel/types.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/math.h"
+#include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 

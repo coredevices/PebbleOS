@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/kernel/thread.h"
+#include <pbl/kernel/thread.h>
 
 /**
  * @defgroup task_wdt Task watchdog

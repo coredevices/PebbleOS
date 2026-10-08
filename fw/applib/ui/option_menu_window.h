@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/ui.h"
+#include <applib/ui/ui.h>
 
 #define OPTION_MENU_CHOICE_NONE (-1)
 

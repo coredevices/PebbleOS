@@ -5,16 +5,16 @@
 
 #include "animation.h"
 #include "animation_timing.h"
-#include "applib/app_timer.h"
-#include "applib/applib_malloc.auto.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/window_private.h"
-#include "process_management/process_manager.h"
-#include "system/passert.h"
-#include "pbl/util/trig.h"
+#include <applib/app_timer.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/window_private.h>
+#include <process_management/process_manager.h>
+#include <system/passert.h>
+#include <pbl/util/trig.h>
 
 #ifdef CONFIG_TOUCH
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 #endif
 
 const int16_t MAX_ICON_HEIGHT = 18;

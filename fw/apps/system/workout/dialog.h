@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/ui/action_bar_layer.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/window_stack.h"
+#include <applib/ui/action_bar_layer.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/window_stack.h>
 
 typedef struct WorkoutDialog {
   Dialog dialog;

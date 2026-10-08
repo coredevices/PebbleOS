@@ -3,17 +3,17 @@
 
 #include "bt_conn_dialog.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/dialogs/dialog_private.h"
-#include "applib/ui/window.h"
-#include "kernel/events.h"
-#include "kernel/pebble_tasks.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/dialogs/dialog_private.h>
+#include <applib/ui/window.h>
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 static void prv_handle_comm_session_event(PebbleEvent *e, void *context) {
   BtConnDialog *bt_dialog = context;

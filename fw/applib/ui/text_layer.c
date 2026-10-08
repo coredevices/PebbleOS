@@ -4,16 +4,16 @@
 #include "text_layer.h"
 #include "text_layer_flow.h"
 
-#include "applib/app_logging.h"
-#include "applib/applib_malloc.auto.h"
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/preferred_content_size.h"
-#include "process_state/app_state/app_state.h"
-#include "shell/system_theme.h"
+#include <applib/app_logging.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/preferred_content_size.h>
+#include <process_state/app_state/app_state.h>
+#include <shell/system_theme.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <string.h>
 #include <stddef.h>

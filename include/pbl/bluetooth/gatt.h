@@ -7,7 +7,7 @@
 #include <pbl/bluetooth/gatt_discovery.h>
 #include <pbl/bluetooth/hci_types.h>
 
-#include "comm/ble/gap_le_connection.h"
+#include <comm/ble/gap_le_connection.h>
 
 /**
  * @defgroup bluetooth_gatt GATT

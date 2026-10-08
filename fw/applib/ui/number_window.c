@@ -3,12 +3,12 @@
 
 #include "number_window.h"
 
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/graphics.h"
-#include "applib/applib_malloc.auto.h"
-#include "kernel/ui/kernel_ui.h"
-#include "kernel/ui/system_icons.h"
-#include "pbl/util/size.h"
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/graphics.h>
+#include <applib/applib_malloc.auto.h>
+#include <kernel/ui/kernel_ui.h>
+#include <kernel/ui/system_icons.h>
+#include <pbl/util/size.h>
 
 #include <stdio.h>
 #include <limits.h>

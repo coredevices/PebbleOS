@@ -5,7 +5,7 @@
 
 #include "scale_segmented.h"
 
-#include "applib/ui/kino/kino_reel.h"
+#include <applib/ui/kino/kino_reel.h>
 
 #define UNFOLD_DEFAULT_POINT_DURATION Fixed_S32_16(FIXED_S32_16_ONE.raw_value / 6)
 

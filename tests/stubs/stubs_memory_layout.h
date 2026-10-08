@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/memory_layout.h"
+#include <kernel/memory_layout.h>
 
 const MpuRegion *memory_layout_get_app_region(void) {
   return NULL;

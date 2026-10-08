@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 void shell_event_loop_init(void);
 

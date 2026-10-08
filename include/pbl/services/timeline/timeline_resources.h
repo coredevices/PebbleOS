@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/gdraw_command_image.h"
-#include "pbl/util/uuid.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_timeline_timeline_resources Timeline resources
@@ -21,7 +21,7 @@
  */
 
 #if !defined(CONFIG_RECOVERY_FW)
-#include "resource/timeline_resource_ids.auto.h"
+#include <resource/timeline_resource_ids.auto.h>
 #else
 /** @brief Timeline resource id; generated with the resources in normal firmware. */
 typedef uint32_t TimelineResourceId;

@@ -3,7 +3,7 @@
 
 #include "fake_GATTAPI.h"
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 #include <string.h>
 

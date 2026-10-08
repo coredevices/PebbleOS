@@ -4,9 +4,9 @@
 #pragma once
 
 #if defined(__clang__)
-#include "pbl/kernel/compiler/clang.h"
+#include <pbl/kernel/compiler/clang.h>
 #elif defined(__GNUC__)
-#include "pbl/kernel/compiler/gcc.h"
+#include <pbl/kernel/compiler/gcc.h>
 #else
 #error "Unsupported compiler"
 #endif

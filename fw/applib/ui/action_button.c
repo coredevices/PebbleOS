@@ -3,8 +3,8 @@
 
 #include "action_button.h"
 
-#include "applib/graphics/graphics.h"
-#include "applib/preferred_content_size.h"
+#include <applib/graphics/graphics.h>
+#include <applib/preferred_content_size.h>
 
 void action_button_draw(GContext *ctx, Layer *layer, GColor fill_color) {
   // This should match the window bounds

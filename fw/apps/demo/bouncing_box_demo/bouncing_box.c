@@ -3,13 +3,13 @@
 
 #include "bouncing_box.h"
 
-#include "applib/app.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/window.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/window.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 
 static const int TARGET_FPS = 20;
 static const int PIXEL_SPEED_PER_FRAME = 4;

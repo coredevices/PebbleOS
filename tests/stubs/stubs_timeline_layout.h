@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/timeline/timeline_layout.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/timeline/timeline_layout.h>
+#include <pbl/kernel/compiler.h>
 
 void PBL_WEAK timeline_layout_init(TimelineLayout *layout, const LayoutLayerConfig *config,
                                    const TimelineLayoutImpl *timeline_layout_impl) {

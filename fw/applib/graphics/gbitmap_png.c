@@ -3,10 +3,10 @@
 
 #include "gbitmap_png.h"
 
-#include "applib/app_logging.h"
-#include "applib/applib_malloc.auto.h"
-#include "syscall/syscall.h"
-#include "pbl/util/byteorder.h"
+#include <applib/app_logging.h>
+#include <applib/applib_malloc.auto.h>
+#include <syscall/syscall.h>
+#include <pbl/util/byteorder.h>
 
 #define PNG_DECODE_ERROR "PNG decoding failed"
 #define PNG_MEMORY_ERROR "PNG memory allocation failed"

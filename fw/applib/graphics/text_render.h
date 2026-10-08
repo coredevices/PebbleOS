@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/fonts/codepoint.h"
-#include "applib/fonts/fonts_private.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/fonts/codepoint.h>
+#include <applib/fonts/fonts_private.h>
+#include <applib/graphics/gtypes.h>
 
 #include "gtypes.h"
 

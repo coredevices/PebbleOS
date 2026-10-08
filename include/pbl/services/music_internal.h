@@ -5,7 +5,7 @@
 
 #include "music.h"
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 #include <stdbool.h>
 

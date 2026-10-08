@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/perimeter.h"
+#include <applib/graphics/perimeter.h>
 
-#include "clar.h"
-#include "pbl/util/trig.h"
+#include <clar.h>
+#include <pbl/util/trig.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -18,11 +18,11 @@
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_heap.h"
-#include "stubs_passert.h"
-#include "stubs_logging.h"
-#include "stubs_app_state.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
+#include <stubs_heap.h>
+#include <stubs_passert.h>
+#include <stubs_logging.h>
+#include <stubs_app_state.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
 
 #define BETWEEN(val, low, high) (val >= low && val <= high) ? true : false
 

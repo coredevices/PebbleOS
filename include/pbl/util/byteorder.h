@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 _Static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__, "only little-endian CPUs are supported");
 

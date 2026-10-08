@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/pebble_process_info.h"
+#include <process_management/pebble_process_info.h>
 
 int version_compare(Version a, Version b) {
   return 0;

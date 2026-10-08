@@ -6,19 +6,19 @@
 #include "loading_layer.h"
 #include "transcription_dialog.h"
 
-#include "applib/app_timer.h"
-#include "applib/event_service_client.h"
-#include "applib/ui/animation.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/property_animation.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/status_bar_layer.h"
-#include "applib/ui/window.h"
-#include "applib/ui/dialogs/bt_conn_dialog.h"
-#include "applib/ui/dialogs/simple_dialog.h"
-#include "applib/ui/dialogs/expandable_dialog.h"
-#include "applib/ui/kino/kino_layer.h"
-#include "applib/voice/dictation_session.h"
+#include <applib/app_timer.h>
+#include <applib/event_service_client.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/property_animation.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/status_bar_layer.h>
+#include <applib/ui/window.h>
+#include <applib/ui/dialogs/bt_conn_dialog.h>
+#include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/dialogs/expandable_dialog.h>
+#include <applib/ui/kino/kino_layer.h>
+#include <applib/voice/dictation_session.h>
 
 #include <stdint.h>
 #include <stdbool.h>

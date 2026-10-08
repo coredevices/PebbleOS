@@ -3,7 +3,7 @@
 
 #include "fake_gatt_client_subscriptions.h"
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 typedef struct {
   ListNode node;

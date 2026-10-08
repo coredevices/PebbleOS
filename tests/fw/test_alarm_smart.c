@@ -4,13 +4,13 @@
 #include "test_alarm_common.h"
 
 // Fakes
-#include "fake_rtc.h"
-#include "fake_new_timer.h"
+#include <fake_rtc.h>
+#include <fake_new_timer.h>
 
-#include "stubs_blob_db_sync.h"
-#include "stubs_blob_db_sync_util.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <stubs_blob_db_sync.h>
+#include <stubs_blob_db_sync_util.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 static int s_rand = 0;
 

@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "pbl/kernel/types.h"
+#include <pbl/kernel/types.h>
 #include "launch_config.h"
 #include "process_manager.h"
 
-#include "kernel/events.h"
-#include "kernel/pebble_tasks.h"
-#include "resource/resource.h"
-#include "pbl/services/compositor/compositor.h"
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
+#include <resource/resource.h>
+#include <pbl/services/compositor/compositor.h>
 
 #include <stdbool.h>
 

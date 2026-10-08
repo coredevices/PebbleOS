@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/perimeter.h"
+#include <applib/graphics/perimeter.h>
 
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/testing.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
 #if PBL_ROUND
 static uint16_t prv_triangle_side(uint16_t hypotenuse, uint16_t side) {

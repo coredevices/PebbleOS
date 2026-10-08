@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/graphics.h"
+#include <applib/graphics/graphics.h>
 
 /**
  * @addtogroup services_compositor

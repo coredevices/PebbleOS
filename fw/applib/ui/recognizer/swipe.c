@@ -6,12 +6,12 @@
 #include "recognizer.h"
 #include "recognizer_impl.h"
 
-#include "pbl/drivers/rtc.h"
-#include "pbl/util/math.h"
-#include "syscall/syscall.h"
+#include <pbl/drivers/rtc.h>
+#include <pbl/util/math.h>
+#include <syscall/syscall.h>
 
 #include <string.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 // SWIPE_MIN_LENGTH_PX and SWIPE_MAX_DURATION_MS live in swipe.h: synthetic gesture generators size
 // their paths from the same limits this recognizer enforces.

@@ -5,33 +5,33 @@
 
 #include "getting_started_button_combo.h"
 
-#include "apps/core/spinner_ui_window.h"
-#include "applib/fonts/fonts.h"
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gap_le_device_name.h"
-#include "comm/ble/gap_le_connect.h"
-#include "mfg/mfg_info.h"
-#include "mfg/mfg_serials.h"
+#include <apps/core/spinner_ui_window.h>
+#include <applib/fonts/fonts.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_device_name.h>
+#include <comm/ble/gap_le_connect.h>
+#include <mfg/mfg_info.h>
+#include <mfg/mfg_serials.h>
 
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
 
-#include "applib/app.h"
-#include "applib/event_service_client.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/qr_code.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window.h"
-#include "applib/ui/window_private.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/event_service_client.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/qr_code.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_private.h>
+#include <process_state/app_state/app_state.h>
 
-#include "pbl/services/bluetooth/local_id.h"
-#include "pbl/services/bluetooth/pairability.h"
-#include "pbl/services/comm_session/session.h"
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/bluetooth/pairability.h>
+#include <pbl/services/comm_session/session.h>
 
-#include "pbl/version.h"
+#include <pbl/version.h>
 
 #include <stdio.h>
 #include <string.h>

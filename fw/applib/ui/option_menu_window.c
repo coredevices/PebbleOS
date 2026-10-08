@@ -3,10 +3,10 @@
 
 #include "option_menu_window.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "resource/resource_ids.auto.h"
-#include "shell/system_theme.h"
-#include "system/passert.h"
+#include <applib/applib_malloc.auto.h>
+#include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
+#include <system/passert.h>
 
 typedef struct OptionMenuStyle {
 #if PBL_RECT

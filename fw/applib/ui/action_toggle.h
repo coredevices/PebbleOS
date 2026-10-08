@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/graphics/gtypes.h>
+#include <resource/resource_ids.auto.h>
 
 typedef bool (*ActionToggleGetStateCallback)(void *context);
 typedef void (*ActionToggleSetStateCallback)(bool enabled, void *context);

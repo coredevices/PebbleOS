@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/window.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/ui/window.h>
+#include <pbl/kernel/compiler.h>
 
 Window *PBL_WEAK app_window_stack_pop(bool animated) {
   return NULL;

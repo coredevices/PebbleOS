@@ -8,15 +8,15 @@
 #include <pbl/shell/shell.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gtypes.h"
-#include "kernel/event_loop.h"
-#include "pbl/services/compositor/compositor.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "system/profiler.h"
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <kernel/event_loop.h>
+#include <pbl/services/compositor/compositor.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <system/profiler.h>
 
 #include <errno.h>
 #include <inttypes.h>

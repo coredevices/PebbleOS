@@ -5,8 +5,8 @@
 
 #include <stdint.h>
 
-#include "pbl/kernel/compiler.h"
-#include "pebbleos/core_dump_structs.h"
+#include <pbl/kernel/compiler.h>
+#include <pebbleos/core_dump_structs.h>
 
 // LCPU (BLE coprocessor) RAM, in the LPSYS domain outside main RAM.
 #if defined(CONFIG_SOC_SF32LB52)

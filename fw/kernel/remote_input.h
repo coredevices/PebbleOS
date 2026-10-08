@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/drivers/button_id.h>
-#include "pbl/services/comm_session/session.h"
+#include <pbl/services/comm_session/session.h>
 
 #include <stddef.h>
 #include <stdint.h>

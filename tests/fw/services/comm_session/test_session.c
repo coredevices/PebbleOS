@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pbl/bluetooth/comm.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/comm_session/session_remote_version.h"
-#include "pbl/services/comm_session/session_send_buffer.h"
-#include "pbl/services/comm_session/session_transport.h"
-#include "kernel/events.h"
+#include <clar.h>
+#include <pbl/bluetooth/comm.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/services/comm_session/session_transport.h>
+#include <kernel/events.h>
 
 extern void comm_session_set_capabilities(CommSession *session,
                                           CommSessionCapability capability_flags);
@@ -19,13 +19,13 @@ extern void comm_session_send_next_immediately(CommSession *session);
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_bt_lock.h"
-#include "stubs_bt_stack.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_syscall_internal.h"
+#include <stubs_analytics.h>
+#include <stubs_bt_lock.h>
+#include <stubs_bt_stack.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_syscall_internal.h>
 
 void comm_session_analytics_open_session(CommSession *session) {
 }
@@ -122,10 +122,10 @@ static const TransportImplementation s_transport_imp = {
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_kernel_malloc.h"
-#include "fake_session_send_buffer.h"
-#include "fake_system_task.h"
-#include "fake_app_manager.h"
+#include <fake_kernel_malloc.h>
+#include <fake_session_send_buffer.h>
+#include <fake_system_task.h>
+#include <fake_app_manager.h>
 
 static void prv_system_task_cb(void *data) {
   CommSession *session = (CommSession *)data;

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "shell/normal/language_ui.h"
+#include <shell/normal/language_ui.h>
 
 void language_ui_display_changed(const char *lang_name) {
 }

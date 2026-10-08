@@ -8,7 +8,7 @@
 
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/flash/qspi_flash_part_definitions.h>
-#include "system/status_codes.h"
+#include <system/status_codes.h>
 
 /**
  * @defgroup drivers_flash_qspi_flash QSPI flash

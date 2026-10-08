@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/accel_service.h"
-#include "applib/accel_service_private.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/services/accel_manager.h"
+#include <applib/accel_service.h>
+#include <applib/accel_service_private.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/services/accel_manager.h>
 
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 // Fakes
-#include "fake_pbl_malloc.h"
-#include "fake_pebble_tasks.h"
+#include <fake_pbl_malloc.h>
+#include <fake_pebble_tasks.h>
 
 // Stubs
-#include "stubs_event_service_client.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_event_service_client.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 bool sys_vibe_history_was_vibrating(uint64_t time_search) {
   return false;

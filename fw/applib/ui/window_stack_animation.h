@@ -5,9 +5,9 @@
 
 #include "window.h"
 
-#include "applib/ui/animation.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/property_animation_private.h"
+#include <applib/ui/animation.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/property_animation_private.h>
 
 typedef struct WindowTransitioningContext WindowTransitioningContext;
 

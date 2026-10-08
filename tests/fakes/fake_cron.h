@@ -5,7 +5,7 @@
 
 #include <pbl/cron/cron.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 static struct pbl_cron_job *s_job = NULL;
 static time_t s_job_time;

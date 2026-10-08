@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 //! Shut down system services but don't actually reset.
 void system_reset_prepare(void);

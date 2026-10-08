@@ -3,9 +3,9 @@
 
 #include <pbl/drivers/exti.h>
 
-#include "board/board.h"
-#include "kernel/events.h"
-#include "system/passert.h"
+#include <board/board.h>
+#include <kernel/events.h>
+#include <system/passert.h>
 
 #include <nrfx.h>
 

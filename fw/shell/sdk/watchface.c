@@ -3,21 +3,21 @@
 
 #include "watchface.h"
 
-#include "applib/ui/dialogs/expandable_dialog.h"
-#include "apps/system_app_ids.h"
-#include "apps/system/launcher/launcher.h"
-#include "apps/system/timeline/timeline.h"
-#include "kernel/event_loop.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "popups/timeline/peek.h"
-#include "process_management/app_manager.h"
-#include "process_management/pebble_process_md.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/compositor/compositor_transitions.h"
-#include "shell/sdk/shell_sdk.h"
-#include "shell/system_app_state_machine.h"
+#include <applib/ui/dialogs/expandable_dialog.h>
+#include <apps/system_app_ids.h>
+#include <apps/system/launcher/launcher.h>
+#include <apps/system/timeline/timeline.h>
+#include <kernel/event_loop.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <popups/timeline/peek.h>
+#include <process_management/app_manager.h>
+#include <process_management/pebble_process_md.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <shell/sdk/shell_sdk.h>
+#include <shell/system_app_state_machine.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 typedef struct WatchfaceData {
   ClickManager click_manager;

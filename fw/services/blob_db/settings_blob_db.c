@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/blob_db/settings_blob_db.h"
-#include "pbl/services/blob_db/sync.h"
-#include "pbl/services/blob_db/api.h"
+#include <pbl/services/blob_db/settings_blob_db.h>
+#include <pbl/services/blob_db/sync.h>
+#include <pbl/services/blob_db/api.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/notifications/alerts_preferences_private.h"
-#include "pbl/services/settings/settings_file.h"
-#include "shell/prefs.h"
-#include "shell/prefs_private.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/settings/settings_file.h>
+#include <shell/prefs.h>
+#include <shell/prefs_private.h>
 #include <pbl/logging/logging.h>
-#include "pbl/services/system_task.h"
-#include "pbl/util/list.h"
-#include "pbl/util/size.h"
+#include <pbl/services/system_task.h>
+#include <pbl/util/list.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
 

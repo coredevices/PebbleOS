@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "../bitblt_private.h"
+#include <applib/graphics/bitblt_private.h>
 
-#include "applib/app_logging.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/graphics_private.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/app_logging.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/graphics_private.h>
+#include <applib/graphics/gtypes.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/bitops.h"
-#include "applib/graphics/raw_image.h"
-#include "pbl/util/size.h"
-#include "pbl/util/testing.h"
+#include <system/passert.h>
+#include <pbl/util/bitops.h>
+#include <applib/graphics/raw_image.h>
+#include <pbl/util/size.h>
+#include <pbl/util/testing.h>
 
 #define MAX_SUPPORTED_PALETTE_ENTRIES 4
 

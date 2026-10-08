@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/fonts/fonts.h"
+#include <applib/fonts/fonts.h>
 
 GFont fonts_get_system_font(const char *font_key);
 

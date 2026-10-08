@@ -3,7 +3,7 @@
 
 #include "progress.h"
 
-#include "applib/graphics/gpath_builder.h"
+#include <applib/graphics/gpath_builder.h>
 
 #include <pbl/logging/logging.h>
 

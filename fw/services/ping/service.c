@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/dialogs/simple_dialog.h"
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/dialogs/simple_dialog.h>
 #include <pbl/drivers/battery.h>
-#include "kernel/event_loop.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/accel_manager.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/system_task.h"
+#include <kernel/event_loop.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <pbl/services/accel_manager.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/byteorder.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/byteorder.h>
 
 #include <inttypes.h>
 

@@ -3,9 +3,9 @@
 
 #include "kino_reel_pdci.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "syscall/syscall.h"
-#include "pbl/util/struct.h"
+#include <applib/applib_malloc.auto.h>
+#include <syscall/syscall.h>
+#include <pbl/util/struct.h>
 
 typedef struct {
   KinoReel base;

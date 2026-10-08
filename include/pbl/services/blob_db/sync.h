@@ -6,7 +6,7 @@
 #include "api.h"
 #include "endpoint.h"
 
-#include "pbl/services/regular_timer.h"
+#include <pbl/services/regular_timer.h>
 
 /**
  * @defgroup services_blob_db_sync Sync

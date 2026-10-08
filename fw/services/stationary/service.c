@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/stationary.h"
+#include <pbl/services/stationary.h>
 
-#include "applib/accel_service_private.h"
+#include <applib/accel_service_private.h>
 #include <pbl/drivers/battery.h>
-#include "kernel/event_loop.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/accel_manager.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/runlevel.h"
-#include "shell/prefs.h"
+#include <kernel/event_loop.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/accel_manager.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/runlevel.h>
+#include <shell/prefs.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 #include <stdlib.h>
 

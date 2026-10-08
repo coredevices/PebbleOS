@@ -1,39 +1,39 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/kernel_le_client/ppogatt/ppogatt.h"
-#include "comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h"
-#include "pbl/services/comm_session/session_transport.h"
-#include "pbl/services/regular_timer.h"
+#include <comm/ble/kernel_le_client/ppogatt/ppogatt.h>
+#include <comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h>
+#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/services/regular_timer.h>
 
 #include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_bt_conn_mgr.h"
-#include "stubs_bt_lock.h"
-#include "stubs_logging.h"
-#include "stubs_mfg_info.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_print.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_rtc.h"
-#include "stubs_serial.h"
+#include <stubs_analytics.h>
+#include <stubs_bt_conn_mgr.h>
+#include <stubs_bt_lock.h>
+#include <stubs_logging.h>
+#include <stubs_mfg_info.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_print.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_rtc.h>
+#include <stubs_serial.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_gatt_client_operations.h"
-#include "fake_gatt_client_subscriptions.h"
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_session.h"
-#include "fake_system_task.h"
+#include <fake_gatt_client_operations.h>
+#include <fake_gatt_client_subscriptions.h>
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_session.h>
+#include <fake_system_task.h>
 
 #define MTU_SIZE         (158)
 #define MAX_PAYLOAD_SIZE (MTU_SIZE - 3 /* ATT Header size */ - 1 /* PPoGATT Packet Header */)

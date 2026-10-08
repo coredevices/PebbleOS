@@ -3,11 +3,11 @@
 
 #include "backlight_state.h"
 
-#include "applib/app.h"
-#include "applib/ui/action_toggle.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/light.h"
-#include "shell/prefs.h"
+#include <applib/app.h>
+#include <applib/ui/action_toggle.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
+#include <shell/prefs.h>
 
 static bool prv_get_state(void *context) {
   return backlight_is_enabled();

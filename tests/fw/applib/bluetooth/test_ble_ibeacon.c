@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/bluetooth/ble_ibeacon.h"
+#include <applib/bluetooth/ble_ibeacon.h>
 #include <pbl/btutil/bt_device.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_ble_syscalls.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_ble_syscalls.h>
 
 // The test data and descriptions in this file are captured using the FrontLine
 // Bluetooth sniffer.

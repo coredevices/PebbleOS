@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/get_bytes/get_bytes_storage.h"
+#include <pbl/services/get_bytes/get_bytes_storage.h>
 
-#include "kernel/pbl_malloc.h"
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 //! Skeleton implementation struct
 typedef struct GetBytesStorageImplementation {
@@ -20,9 +20,9 @@ typedef struct GetBytesStorageImplementation {
 //! List of storage implementations and their functions
 //! If one is not included in PRF, then it is ifdef'ed out.
 
-#include "pbl/services/get_bytes/get_bytes_storage_coredump.h"
-#include "pbl/services/get_bytes/get_bytes_storage_file.h"
-#include "pbl/services/get_bytes/get_bytes_storage_flash.h"
+#include <pbl/services/get_bytes/get_bytes_storage_coredump.h>
+#include <pbl/services/get_bytes/get_bytes_storage_file.h>
+#include <pbl/services/get_bytes/get_bytes_storage_flash.h>
 
 static const GetBytesStorageImplementation s_get_bytes_impls[] = {
   {// Coredump Storage

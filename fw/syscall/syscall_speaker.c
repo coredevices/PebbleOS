@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 
-#include "kernel/pebble_tasks.h"
-#include "pbl/services/speaker/speaker_pcm_format.h"
-#include "pbl/services/speaker/speaker_service.h"
-#include "pbl/services/speaker/limits.h"
-#include "pbl/services/speaker/note_sequence.h"
-#include "pbl/services/speaker/track.h"
-#include "system/passert.h"
+#include <kernel/pebble_tasks.h>
+#include <pbl/services/speaker/speaker_pcm_format.h>
+#include <pbl/services/speaker/speaker_service.h>
+#include <pbl/services/speaker/limits.h>
+#include <pbl/services/speaker/note_sequence.h>
+#include <pbl/services/speaker/track.h>
+#include <system/passert.h>
 
 #define SPEAKER_MAX_STREAM_WRITE 8192
 

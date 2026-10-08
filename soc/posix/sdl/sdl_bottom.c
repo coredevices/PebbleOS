@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "posix_host.h"
+#include <posix_host.h>
 #include "sdl_bottom.h"
 
 #define MAX_HANDLERS 8

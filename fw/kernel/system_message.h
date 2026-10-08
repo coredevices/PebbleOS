@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/firmware_update.h"
+#include <pbl/services/firmware_update.h>
 
 #include <pbl/kernel/compiler.h>
 

@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "applib/ui/click.h"
-#include "applib/ui/click_internal.h"
-#include "applib/ui/window.h"
+#include <applib/ui/click.h>
+#include <applib/ui/click_internal.h>
+#include <applib/ui/window.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 PBL_WEAK ButtonId click_recognizer_get_button_id(ClickRecognizerRef recognizer) {
   return 0;

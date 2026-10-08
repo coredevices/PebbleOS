@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_blob_db_endpoint_private Protocol

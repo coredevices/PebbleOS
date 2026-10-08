@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "console/control_protocol.h"
-#include "console/control_protocol_impl.h"
+#include <console/control_protocol.h>
+#include <console/control_protocol_impl.h>
 
-#include "console/pulse2_transport_impl.h"
-#include "kernel/events.h"
-#include "kernel/util/sleep.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <console/pulse2_transport_impl.h>
+#include <kernel/events.h>
+#include <kernel/util/sleep.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 #include <pbl/util/math.h>
 #include <pbl/util/byteorder.h>
 

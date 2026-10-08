@@ -3,16 +3,16 @@
 
 #include "getting_started_button_combo.h"
 
-#include "applib/ui/app_window_stack.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/ui/app_window_stack.h>
+#include <applib/graphics/gtypes.h>
 
-#include "apps/core/spinner_ui_window.h"
-#include "kernel/util/factory_reset.h"
-#include "mfg/mfg_mode/mfg_factory_mode.h"
-#include "process_management/process_manager.h"
-#include "pbl/services/system_task.h"
+#include <apps/core/spinner_ui_window.h>
+#include <kernel/util/factory_reset.h>
+#include <mfg/mfg_mode/mfg_factory_mode.h>
+#include <process_management/process_manager.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 void getting_started_button_combo_init(GettingStartedButtonComboState *state,
                                        GettingStartedButtonComboCallback select_callback) {

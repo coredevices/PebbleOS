@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "resource/resource.h"
-#include "resource/resource_ids.auto.h"
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 #include <stdio.h>
 

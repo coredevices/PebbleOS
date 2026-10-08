@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
+#include <applib/graphics/gtypes.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <time.h>
 
 /**

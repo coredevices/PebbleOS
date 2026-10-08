@@ -5,12 +5,12 @@
 
 #include "pulse_protocol_impl.h"
 
-#include "console/control_protocol.h"
-#include "console/control_protocol_impl.h"
-#include "console/pulse.h"
-#include "console/pulse2_transport_impl.h"
-#include "console/pulse_control_message_protocol.h"
-#include "system/passert.h"
+#include <console/control_protocol.h>
+#include <console/control_protocol_impl.h>
+#include <console/pulse.h>
+#include <console/pulse2_transport_impl.h>
+#include <console/pulse_control_message_protocol.h>
+#include <system/passert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/byteorder.h>
 
@@ -26,7 +26,7 @@ static bool s_layer_up = false;
 static void prv_on_this_layer_up(PPPControlProtocol *this) {
   s_layer_up = true;
 #define REGISTER_PROTOCOL(N, HANDLER, LAYER_STATE_HANDLER) LAYER_STATE_HANDLER(PulseLinkState_Open);
-#include "console/pulse_protocol_registry.def"
+#include <console/pulse_protocol_registry.def>
 #undef REGISTER_PROTOCOL
 }
 
@@ -34,7 +34,7 @@ static void prv_on_this_layer_down(PPPControlProtocol *this) {
   s_layer_up = false;
 #define REGISTER_PROTOCOL(N, HANDLER, LAYER_STATE_HANDLER) \
   LAYER_STATE_HANDLER(PulseLinkState_Closed);
-#include "console/pulse_protocol_registry.def"
+#include <console/pulse_protocol_registry.def>
 #undef REGISTER_PROTOCOL
 }
 
@@ -96,7 +96,7 @@ void pulse2_best_effort_transport_on_packet(void *raw_packet, size_t length) {
   case N:                                                  \
     HANDLER(packet->information, info_length);             \
     break;
-#include "console/pulse_protocol_registry.def"
+#include <console/pulse_protocol_registry.def>
 #undef REGISTER_PROTOCOL
     default:
       pulse_control_message_protocol_send_port_closed_message(&s_best_effort_pcmp,

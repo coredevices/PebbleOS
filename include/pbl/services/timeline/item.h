@@ -6,8 +6,8 @@
 #include "attribute.h"
 #include "layout_layer.h"
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/uuid.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 #include <time.h>
 #include <stdint.h>

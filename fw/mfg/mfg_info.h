@@ -7,8 +7,8 @@
 //!
 //! Stores information about the physical watch that is encoded during the manufacturing process.
 
-#include "applib/app_watch_info.h"
-#include "applib/graphics/gtypes.h"
+#include <applib/app_watch_info.h>
+#include <applib/graphics/gtypes.h>
 
 #include <string.h>
 

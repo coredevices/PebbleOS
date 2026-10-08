@@ -3,13 +3,13 @@
 
 #include "pulse_bulkio_domain_handler.h"
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/ui/animation_private.h"
-#include "kernel/event_loop.h"
-#include "pbl/services/compositor/compositor.h"
-#include "pbl/services/compositor/compositor_display.h"
-#include "system/status_codes.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/ui/animation_private.h>
+#include <kernel/event_loop.h>
+#include <pbl/services/compositor/compositor.h>
+#include <pbl/services/compositor/compositor_display.h>
+#include <system/status_codes.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdint.h>
 #include <string.h>

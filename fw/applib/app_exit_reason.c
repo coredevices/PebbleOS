@@ -3,7 +3,7 @@
 
 #include "app_exit_reason.h"
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
 AppExitReason app_exit_reason_get(void) {
   return sys_process_get_exit_reason();

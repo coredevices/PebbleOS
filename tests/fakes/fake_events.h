@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 void fake_event_init(void);
 

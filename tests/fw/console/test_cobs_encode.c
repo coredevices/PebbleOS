@@ -6,9 +6,9 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "clar.h"
+#include <clar.h>
 
-#include "console/cobs.h"
+#include <console/cobs.h>
 
 unsigned char out[1024];
 

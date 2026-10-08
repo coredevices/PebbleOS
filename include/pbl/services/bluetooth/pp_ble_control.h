@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/comm_session/session.h"
+#include <pbl/services/comm_session/session.h>
 
 /**
  * @defgroup services_bluetooth_pp_ble_control BLE control endpoint

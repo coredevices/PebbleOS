@@ -6,22 +6,22 @@
 #include "process_loader.h"
 
 // Pebble stuff
-#include "kernel/pbl_malloc.h"
-#include "kernel/memory_layout.h"
-#include "kernel/util/segment.h"
-#include "kernel/util/task_init.h"
-#include "pbl/mcu/privilege.h"
-#include "popups/crashed_ui.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_manager.h"
-#include "process_management/process_heap.h"
-#include "process_state/worker_state/worker_state.h"
-#include "shell/prefs.h"
+#include <kernel/pbl_malloc.h>
+#include <kernel/memory_layout.h>
+#include <kernel/util/segment.h>
+#include <kernel/util/task_init.h>
+#include <pbl/mcu/privilege.h>
+#include <popups/crashed_ui.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
+#include <process_management/process_heap.h>
+#include <process_state/worker_state/worker_state.h>
+#include <shell/prefs.h>
 
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 // FreeRTOS stuff
 

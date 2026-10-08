@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/build_id.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/build_id.h>
 
 bool PBL_WEAK build_id_contains_gnu_build_id(const ElfExternalNote *note) {
   return false;

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/window_stack.h"
+#include <applib/ui/window_stack.h>
 
 //! @param new_worker_id The new ID that we'd like to ask the user to switch to
 //! @param set_as_default Whether this new worker should become the default after being accepted

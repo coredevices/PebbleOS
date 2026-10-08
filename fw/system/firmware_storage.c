@@ -4,7 +4,7 @@
 #include "firmware_storage.h"
 
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
+#include <flash_region/flash_region.h>
 #include <pbl/logging/logging.h>
 
 #ifndef CONFIG_PBLBOOT

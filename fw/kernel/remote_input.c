@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/remote_input.h"
+#include <kernel/remote_input.h>
 
-#include "applib/event_service_client.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
+#include <applib/event_service_client.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
-#include "pbl/services/comm_session/session.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
-#include "pbl/util/byteorder.h"
+#include <pbl/services/comm_session/session.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
+#include <pbl/util/byteorder.h>
 
 #if defined(CONFIG_SERVICE_TOUCH)
-#include "applib/ui/recognizer/swipe.h"
-#include "pbl/services/touch/touch.h"
+#include <applib/ui/recognizer/swipe.h>
+#include <pbl/services/touch/touch.h>
 #endif
 
 #include <stdbool.h>

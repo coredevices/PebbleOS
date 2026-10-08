@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl/util/uuid.h"
+#include <pbl/util/uuid.h>
 
 struct GBitmap;
 

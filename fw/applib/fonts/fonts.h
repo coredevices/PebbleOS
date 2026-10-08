@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "applib/fonts/fonts_private.h"
-#include "resource/resource.h"
+#include <applib/fonts/fonts_private.h>
+#include <resource/resource.h>
 
 #if !defined(SDK)
-#include "font_resource_keys.auto.h"
+#include <font_resource_keys.auto.h>
 #endif
 
 //! @addtogroup Graphics

@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "comm/bt_conn_mgr.h"
+#include <comm/bt_conn_mgr.h>
 
 /**
  * @defgroup services_comm_session Communication sessions

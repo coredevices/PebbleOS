@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/speaker/note_sequence.h"
-#include "pbl/services/speaker/track.h"
+#include <pbl/services/speaker/note_sequence.h>
+#include <pbl/services/speaker/track.h>
 
 #include <stdbool.h>
 #include <stdint.h>

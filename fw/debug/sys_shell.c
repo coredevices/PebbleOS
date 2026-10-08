@@ -5,16 +5,16 @@
 
 #include <pbl/shell/shell.h>
 
-#include "kernel/event_loop.h"
-#include "kernel/util/delay.h"
-#include "kernel/util/factory_reset.h"
-#include "kernel/util/sleep.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "process_management/worker_manager.h"
-#include "system/bootbits.h"
-#include "system/passert.h"
-#include "system/reboot_reason.h"
-#include "system/reset.h"
+#include <kernel/event_loop.h>
+#include <kernel/util/delay.h>
+#include <kernel/util/factory_reset.h>
+#include <kernel/util/sleep.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <process_management/worker_manager.h>
+#include <system/bootbits.h>
+#include <system/passert.h>
+#include <system/reboot_reason.h>
+#include <system/reset.h>
 
 #include <errno.h>
 #include <inttypes.h>
@@ -26,7 +26,7 @@
 #define AUDIT_DELAY 1
 #include <cmsis_core.h>
 
-#include "system/profiler.h"
+#include <system/profiler.h>
 #endif
 
 static int prv_cmd_reset(const struct pbl_shell *sh, size_t argc, char **argv) {

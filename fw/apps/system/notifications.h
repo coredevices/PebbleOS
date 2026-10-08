@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 // UUID: d9c0d758-54bd-45b1-99ac-2a3a889350c9
 #define NOTIFICATIONS_CLEAR_HISTORY_UUID \

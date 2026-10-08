@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_calculators.h"
-#include "pbl/services/activity/workout_service.h"
-#include "pbl/services/hrm/hrm_manager.h"
-#include "drivers/hrm.h"
-#include "process_management/app_install_types.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_calculators.h>
+#include <pbl/services/activity/workout_service.h>
+#include <pbl/services/hrm/hrm_manager.h>
+#include <drivers/hrm.h>
+#include <process_management/app_install_types.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 // ---------------------------------------------------------------------------------------
-#include "stubs_activity_insights.h"
-#include "stubs_evented_timer.h"
-#include "stubs_logging.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_regular_timer.h"
+#include <stubs_activity_insights.h>
+#include <stubs_evented_timer.h>
+#include <stubs_logging.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_regular_timer.h>
 
-#include "fake_rtc.h"
-#include "fake_mutex.h"
+#include <fake_rtc.h>
+#include <fake_mutex.h>
 
 extern void prv_abandon_workout_timer_callback(void *data);
 extern void prv_abandoned_notification_timer_callback(void *data);

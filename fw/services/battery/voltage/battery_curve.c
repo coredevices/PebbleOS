@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/battery/battery_curve.h"
+#include <pbl/services/battery/battery_curve.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/math.h"
-#include "pbl/util/ratio.h"
-#include "pbl/util/size.h"
+#include <pbl/util/math.h>
+#include <pbl/util/ratio.h>
+#include <pbl/util/size.h>
 
 typedef struct VoltagePoint {
   uint8_t percent;

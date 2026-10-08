@@ -5,11 +5,11 @@
 
 #include "gatt_client_operations.h"
 
-#include "comm/bt_lock.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/util/list.h"
-#include "system/passert.h"
+#include <comm/bt_lock.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/util/list.h>
+#include <system/passert.h>
 
 // -------------------------------------------------------------------------------------------------
 //! @see gatt_client_accessors.c / gatt_client_subscriptions.c

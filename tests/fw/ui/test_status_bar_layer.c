@@ -1,36 +1,36 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/status_bar_layer.h"
-#include "pbl/util/list.h"
-#include "resource/resource_ids.auto.h"
-#include "resource/resource.h"
+#include <applib/ui/status_bar_layer.h>
+#include <pbl/util/list.h>
+#include <resource/resource_ids.auto.h>
+#include <resource/resource.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Fakes
 ////////////////////////////////////
-#include "fake_fonts.h"
+#include <fake_fonts.h>
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_applib_resource.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_event_service_client.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_print.h"
-#include "stubs_process_manager.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
-#include "stubs_window_stack.h"
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_applib_resource.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_event_service_client.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_print.h>
+#include <stubs_process_manager.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
+#include <stubs_window_stack.h>
 
 // Stubs
 ////////////////////////////////////

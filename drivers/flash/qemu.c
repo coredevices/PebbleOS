@@ -4,9 +4,9 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_impl.h>
 
-#include "board/board.h"
-#include "system/passert.h"
-#include "system/status_codes.h"
+#include <board/board.h>
+#include <system/passert.h>
+#include <system/status_codes.h>
 
 #include <string.h>
 

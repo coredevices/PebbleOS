@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 //! This function extracts a value for a specific bit per pixel depth from an image buffer
 //! at a specific x y position.

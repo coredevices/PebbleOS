@@ -5,7 +5,7 @@
 
 #include "data.h"
 
-#include "applib/ui/ui.h"
+#include <applib/ui/ui.h>
 
 //! Creates a health sleep detail window
 //! @param health_data pointer to the health data to be given to this card

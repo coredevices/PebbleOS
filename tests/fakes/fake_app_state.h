@@ -3,9 +3,9 @@
 
 #include "fake_graphics_context.h"
 
-#include "applib/ui/content_indicator.h"
-#include "kernel/ui/kernel_ui.h"
-#include "stubs_app_state.h"
+#include <applib/ui/content_indicator.h>
+#include <kernel/ui/kernel_ui.h>
+#include <stubs_app_state.h>
 
 void fake_app_state_init(void) {
   // Setup graphics context

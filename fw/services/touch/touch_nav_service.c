@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/touch/touch_nav_service.h"
+#include <pbl/services/touch/touch_nav_service.h>
 
 #ifdef CONFIG_TOUCH
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/recognizer/touch_nav.h"
-#include "kernel/event_loop.h"
-#include "kernel/pebble_tasks.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/touch/touch.h"
-#include "process_management/process_manager.h"
-#include "process_state/app_state/app_state.h"
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/recognizer/touch_nav.h>
+#include <kernel/event_loop.h>
+#include <kernel/pebble_tasks.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <pbl/services/touch/touch.h>
+#include <process_management/process_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 
 // --- Action-bar snapshot publish (applib -> current task's nav state) --------------------------
 

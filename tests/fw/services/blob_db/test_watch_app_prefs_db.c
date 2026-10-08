@@ -1,34 +1,34 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/blob_db/watch_app_prefs_db.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/weather/weather_service_private.h"
-#include "pbl/util/uuid.h"
+#include <pbl/services/blob_db/watch_app_prefs_db.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/weather/weather_service_private.h>
+#include <pbl/util/uuid.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include "fake_spi_flash.h"
-#include "fake_system_task.h"
-#include "fake_kernel_services_notifications.h"
+#include <fake_spi_flash.h>
+#include <fake_system_task.h>
+#include <fake_kernel_services_notifications.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_hexdump.h"
-#include "stubs_layout_layer.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
+#include <stubs_analytics.h>
+#include <stubs_hexdump.h>
+#include <stubs_layout_layer.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
 
 extern const char *PREF_KEY_SEND_TEXT_APP;
 #define SEND_TEXT_KEY     ((uint8_t *)PREF_KEY_SEND_TEXT_APP)

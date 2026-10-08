@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/assert.h"
-#include "pbl/util/math_fixed.h"
+#include <pbl/util/assert.h>
+#include <pbl/util/math_fixed.h>
 
 Fixed_S64_32 math_fixed_recursive_filter(Fixed_S64_32 x, int num_input_coefficients,
                                          int num_output_coefficients, const Fixed_S64_32 *cb,

@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
-#include "pbl/services/battery/battery_curve.h"
+#include <board/board.h>
+#include <pbl/services/battery/battery_curve.h>
 
 uint32_t battery_curve_get_percent_remaining(uint32_t hours) {
   return ((hours * 100) / BOARD_CONFIG_POWER.battery_capacity_hours) +

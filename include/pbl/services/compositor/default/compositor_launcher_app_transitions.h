@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/services/compositor/compositor.h"
+#include <pbl/services/compositor/compositor.h>
 
-#include "apps/system/launcher/launcher.h"
+#include <apps/system/launcher/launcher.h>
 
 /**
  * @defgroup services_compositor_default_compositor_launcher_app_transitions Launcher transitions

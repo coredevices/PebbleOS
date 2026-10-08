@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/ui/dialogs/simple_dialog.h"
-#include "kernel/event_loop.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/comm_session/session.h"
+#include <applib/ui/dialogs/simple_dialog.h>
+#include <kernel/event_loop.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <pbl/services/comm_session/session.h>
 
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 extern void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length);
 

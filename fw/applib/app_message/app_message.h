@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "applib/dict.h"
-#include "pbl/util/list.h"
+#include <applib/dict.h>
+#include <pbl/util/list.h>
 
 //! @addtogroup Foundation
 //! @{

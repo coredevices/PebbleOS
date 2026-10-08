@@ -10,10 +10,10 @@
 
 #include <pbl/shell/shell.h>
 
-#include "kernel/util/factory_reset.h"
-#include "kernel/util/standby.h"
-#include "mfg/mfg_info.h"
-#include "system/bootbits.h"
+#include <kernel/util/factory_reset.h>
+#include <kernel/util/standby.h>
+#include <mfg/mfg_info.h>
+#include <system/bootbits.h>
 
 #ifdef CONFIG_MFG
 #define MFG_WRITE_OPT 1

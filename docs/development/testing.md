@@ -58,7 +58,7 @@ generator (`tools/clar/clar.py`) scans the file for functions named
 `test_<suite>__<case>` — no manual registration is needed:
 
 ```c
-#include "clar.h"
+#include <clar.h>
 
 #include <pbl/crc/crc.h>
 

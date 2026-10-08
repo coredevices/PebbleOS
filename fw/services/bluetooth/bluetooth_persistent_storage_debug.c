@@ -3,10 +3,10 @@
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RELEASE)
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage_debug.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
 
-#include "pbl/services/shared_prf_storage/shared_prf_storage_debug.h"
-#include "pbl/util/string.h"
+#include <pbl/services/shared_prf_storage/shared_prf_storage_debug.h>
+#include <pbl/util/string.h>
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/sm_types.h>

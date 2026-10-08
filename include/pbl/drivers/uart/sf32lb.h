@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/uart.h>
 
 /**

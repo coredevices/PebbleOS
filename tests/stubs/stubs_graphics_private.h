@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/graphics_private.h"
+#include <applib/graphics/graphics_private.h>
 
 void graphics_private_set_pixel(GContext *ctx, GPoint point) {
 }

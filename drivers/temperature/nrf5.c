@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/temperature.h>
 
-#include "kernel/util/delay.h"
+#include <kernel/util/delay.h>
 
 #include <nrfx.h>
 #include <hal/nrf_temp.h>

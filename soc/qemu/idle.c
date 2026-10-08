@@ -3,9 +3,9 @@
 
 #include <cmsis_core.h>
 
-#include "kernel/util/idle.h"
+#include <kernel/util/idle.h>
 
-#include "pbl/kernel/idle.h"
+#include <pbl/kernel/idle.h>
 
 void pbl_soc_idle(pbl_tick_t max_ticks) {
   if (!idle_is_allowed()) {

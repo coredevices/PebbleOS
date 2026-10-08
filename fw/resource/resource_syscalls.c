@@ -3,8 +3,8 @@
 
 #include "resource.h"
 
-#include "process_management/app_manager.h"
-#include "syscall/syscall_internal.h"
+#include <process_management/app_manager.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
 
 //! @file resource_syscalls.c

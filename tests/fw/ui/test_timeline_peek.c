@@ -1,35 +1,35 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/bitblt.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window_private.h"
-#include "popups/timeline/peek_private.h"
-#include "resource/resource.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/timeline/timeline_resources.h"
-#include "pbl/util/buffer.h"
-#include "applib/graphics/raw_image.h"
-#include "pbl/util/hash.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "pbl/util/trig.h"
+#include <applib/graphics/bitblt.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window_private.h>
+#include <popups/timeline/peek_private.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/buffer.h>
+#include <applib/graphics/raw_image.h>
+#include <pbl/util/hash.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/trig.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <stdio.h>
 
 // Fakes
 /////////////////////
 
-#include "fake_rtc.h"
-#include "fake_spi_flash.h"
-#include "fixtures/load_test_resources.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <fake_rtc.h>
+#include <fake_spi_flash.h>
+#include <fixtures/load_test_resources.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs) {
   snprintf(buffer, buf_size, "In 5 minutes");
@@ -38,49 +38,49 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_
 // Stubs
 /////////////////////
 
-#include "stubs_activity.h"
-#include "stubs_alerts_preferences.h"
-#include "stubs_analytics.h"
-#include "stubs_animation_timing.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_bootbits.h"
-#include "stubs_click.h"
-#include "stubs_cron.h"
-#include "stubs_event_loop.h"
-#include "stubs_i18n.h"
-#include "stubs_layer.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_menu_cell_layer.h"
-#include "stubs_modal_manager.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_process_info.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_pin_db.h"
-#include "stubs_process_manager.h"
-#include "stubs_property_animation.h"
-#include "stubs_scroll_layer.h"
-#include "stubs_serial.h"
-#include "stubs_shell_prefs.h"
-#include "stubs_sleep.h"
-#include "stubs_status_bar_layer.h"
-#include "stubs_syscalls.h"
-#include "stubs_task_wdt.h"
-#include "stubs_timeline_event.h"
-#include "stubs_timeline_layer.h"
-#include "stubs_unobstructed_area.h"
-#include "stubs_window_manager.h"
-#include "stubs_window_stack.h"
+#include <stubs_activity.h>
+#include <stubs_alerts_preferences.h>
+#include <stubs_analytics.h>
+#include <stubs_animation_timing.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_bootbits.h>
+#include <stubs_click.h>
+#include <stubs_cron.h>
+#include <stubs_event_loop.h>
+#include <stubs_i18n.h>
+#include <stubs_layer.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_menu_cell_layer.h>
+#include <stubs_modal_manager.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_process_info.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_pin_db.h>
+#include <stubs_process_manager.h>
+#include <stubs_property_animation.h>
+#include <stubs_scroll_layer.h>
+#include <stubs_serial.h>
+#include <stubs_shell_prefs.h>
+#include <stubs_sleep.h>
+#include <stubs_status_bar_layer.h>
+#include <stubs_syscalls.h>
+#include <stubs_task_wdt.h>
+#include <stubs_timeline_event.h>
+#include <stubs_timeline_layer.h>
+#include <stubs_unobstructed_area.h>
+#include <stubs_window_manager.h>
+#include <stubs_window_stack.h>
 
 // Helper Functions
 /////////////////////
 
-#include "fw/graphics/test_graphics.h"
-#include "fw/graphics/util.h"
+#include <fw/graphics/test_graphics.h>
+#include <fw/graphics/util.h>
 
 static GContext s_ctx;
 

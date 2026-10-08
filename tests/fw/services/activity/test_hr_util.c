@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/activity/hr_util.h"
+#include <pbl/services/activity/hr_util.h>
 
-#include "stubs_activity.h"
+#include <stubs_activity.h>
 
 void test_hr_util__initialize(void) {
 }

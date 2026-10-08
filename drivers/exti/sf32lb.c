@@ -5,9 +5,9 @@
 
 #include <stdbool.h>
 
-#include "board/board.h"
-#include "kernel/events.h"
-#include "pbl/kernel/irq.h"
+#include <board/board.h>
+#include <kernel/events.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(driver_exti_sf32lb, CONFIG_DRIVER_EXTI_LOG_LEVEL);

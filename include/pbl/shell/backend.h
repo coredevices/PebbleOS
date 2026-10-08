@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "pbl/shell/shell.h"
+#include <pbl/shell/shell.h>
 
 /**
  * @defgroup shell_backend Shell backends

@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/gdraw_command_image.h"
-#include "applib/graphics/gdraw_command_sequence.h"
-#include "applib/graphics/gdraw_command_private.h"
-#include "applib/graphics/graphics_private_raw.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gdraw_command_sequence.h>
+#include <applib/graphics/gdraw_command_private.h>
+#include <applib/graphics/graphics_private_raw.h>
 
-#include "stubs_applib_resource.h"
-#include "stubs_app_state.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
+#include <stubs_applib_resource.h>
+#include <stubs_app_state.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <libgen.h>
 
-#include "util_pbi.h"
+#include <util_pbi.h>
 
 static char *s_pbi2png_path;
 

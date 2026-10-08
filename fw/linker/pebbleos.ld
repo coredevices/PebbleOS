@@ -53,25 +53,25 @@ We take that image and load part of it into RAM. That lay out looks like...
 */
 
 SECTIONS {
-#include "sections/vectors.ld"
+#include <sections/vectors.ld>
 
 #include <snippets-rom-start.ld>
 
 #ifdef CONFIG_RAMFUNC
-#include "sections/ramfunc.ld"
+#include <sections/ramfunc.ld>
 #endif
 
 #include <snippets-ram-sections.ld>
 
-#include "sections/text.ld"
+#include <sections/text.ld>
 
-#include "sections/kernel-ram.ld"
+#include <sections/kernel-ram.ld>
 
-#include "sections/identity.ld"
+#include <sections/identity.ld>
 
-#include "sections/log-strings.ld"
+#include <sections/log-strings.ld>
 
-#include "sections/debug.ld"
+#include <sections/debug.ld>
 }
 
 /* Standalone top-level commands (e.g. whole SECTIONS blocks). */

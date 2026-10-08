@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "process_management/app_install_manager.h"
-#include "process_management/app_install_types.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/uuid.h"
+#include <process_management/app_install_manager.h>
+#include <process_management/app_install_types.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 AppInstallId PBL_WEAK app_install_get_id_for_uuid(const Uuid *uuid) {
   return 1;

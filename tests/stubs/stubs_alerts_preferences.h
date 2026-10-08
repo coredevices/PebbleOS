@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/notifications/alerts_preferences_private.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/kernel/compiler.h>
 
 VibeScoreId PBL_WEAK alerts_preferences_get_vibe_score_for_client(VibeClient client) {
   return VibeScoreId_Invalid;

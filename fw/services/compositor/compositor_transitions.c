@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/compositor/compositor_transitions.h"
-#include "pbl/services/compositor/compositor_private.h"
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/compositor/compositor_private.h>
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/gdraw_command_transforms.h"
-#include "applib/graphics/gpath.h"
-#include "applib/graphics/graphics_private_raw.h"
-#include "applib/ui/animation_interpolate.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "system/passert.h"
-#include "pbl/util/math.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/graphics/gpath.h>
+#include <applib/graphics/graphics_private_raw.h>
+#include <applib/ui/animation_interpolate.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <system/passert.h>
+#include <pbl/util/math.h>
 
 bool compositor_transition_app_to_app_should_be_skipped(void) {
   // App-to-app compositor transitions should only be visible if there are no opaque modal windows

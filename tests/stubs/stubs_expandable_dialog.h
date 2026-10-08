@@ -4,8 +4,8 @@
 #pragma once
 
 #include "stubs_dialog.h"
-#include "applib/ui/window_stack.h"
-#include "applib/ui/window_stack_private.h"
+#include <applib/ui/window_stack.h>
+#include <applib/ui/window_stack_private.h>
 
 typedef struct ExpandableDialog {
   Dialog dialog;

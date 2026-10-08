@@ -3,12 +3,12 @@
 
 #include "pin_window.h"
 
-#include "applib/ui/action_button.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/time.h"
+#include <applib/ui/action_button.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <pbl/services/time.h>
 
 void timeline_pin_window_set_item(TimelinePinWindow *pin_window, TimelineItem *item,
                                   time_t current_day) {

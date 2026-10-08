@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/action_toggle.h"
+#include <applib/ui/action_toggle.h>
 
 /**
  * @defgroup services_notifications_do_not_disturb_toggle Do Not Disturb toggle

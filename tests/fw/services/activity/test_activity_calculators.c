@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/activity/activity_calculators.h"
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/activity_calculators.h>
 
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 #include <stdint.h>
 
-#include "stubs_logging.h"
+#include <stubs_logging.h>
 
 // Fakes
 static uint8_t s_age_years;

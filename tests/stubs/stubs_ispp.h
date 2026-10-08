@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ispp.h"
+#include <ispp.h>
 
 SPPContextRef ispp_get_context(BTContext *ctx) {
   return NULL;

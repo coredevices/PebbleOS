@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/services/timeline/reminders.h"
-#include "system/status_codes.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/timeline/reminders.h>
+#include <system/status_codes.h>
+#include <pbl/kernel/compiler.h>
 
 status_t PBL_WEAK reminders_update_timer(void) {
   return S_SUCCESS;

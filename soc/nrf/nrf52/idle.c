@@ -3,11 +3,11 @@
 
 #include <inttypes.h>
 
-#include "drivers/flash.h"
-#include "drivers/rtc.h"
-#include "kernel/util/idle.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/soc/nrf/sleep.h"
+#include <drivers/flash.h>
+#include <drivers/rtc.h>
+#include <kernel/util/idle.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/soc/nrf/sleep.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
@@ -17,7 +17,7 @@
 
 #include <hal/nrf_nvmc.h>
 
-#include "pbl/kernel/idle.h"
+#include <pbl/kernel/idle.h>
 
 static RtcTicks s_analytics_sleep_ticks = 0;
 static RtcTicks s_analytics_full_sleep_ticks = 0;

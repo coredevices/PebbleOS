@@ -7,7 +7,7 @@
 #include "ble_central.h"
 #include "ble_client.h"
 
-#include "applib/event_service_client.h"
+#include <applib/event_service_client.h>
 
 typedef struct {
   // Scanning

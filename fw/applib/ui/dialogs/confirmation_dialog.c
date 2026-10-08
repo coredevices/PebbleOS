@@ -3,12 +3,12 @@
 
 #include "confirmation_dialog.h"
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/action_bar_layer.h"
-#include "applib/ui/dialogs/actionable_dialog.h"
-#include "kernel/pbl_malloc.h"
-#include "resource/resource_ids.auto.h"
-#include "system/passert.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/action_bar_layer.h>
+#include <applib/ui/dialogs/actionable_dialog.h>
+#include <kernel/pbl_malloc.h>
+#include <resource/resource_ids.auto.h>
+#include <system/passert.h>
 
 struct ConfirmationDialog {
   ActionableDialog action_dialog;

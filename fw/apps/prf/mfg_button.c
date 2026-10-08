@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/tick_timer_service.h"
-#include "board/display.h"
-#include "pbl/util/trig.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/window.h"
-#include "applib/ui/window_private.h"
-#include "applib/ui/path_layer.h"
-#include "applib/ui/text_layer.h"
-#include "kernel/pbl_malloc.h"
-#include "apps/prf/mfg_test_result.h"
-#include "process_state/app_state/app_state.h"
-#include "process_management/pebble_process_md.h"
-#include "pbl/util/bitops.h"
-#include "pbl/util/size.h"
+#include <applib/app.h>
+#include <applib/tick_timer_service.h>
+#include <board/display.h>
+#include <pbl/util/trig.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_private.h>
+#include <applib/ui/path_layer.h>
+#include <applib/ui/text_layer.h>
+#include <kernel/pbl_malloc.h>
+#include <apps/prf/mfg_test_result.h>
+#include <process_state/app_state/app_state.h>
+#include <process_management/pebble_process_md.h>
+#include <pbl/util/bitops.h>
+#include <pbl/util/size.h>
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "pbl/services/system_task.h"
+#include <pbl/services/system_task.h>
 #include "fake_pebble_tasks.h"
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 #include <string.h>
 #include <stdint.h>

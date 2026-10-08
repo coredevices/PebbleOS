@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include "shell/prefs.h"
+#include <shell/prefs.h>
 
 UnitsDistance sys_shell_prefs_get_units_distance(void);

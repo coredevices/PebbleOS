@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 //! Get the process metadata for the MFG Microphone test app
 //! This test records from both microphones, performs FFT analysis,

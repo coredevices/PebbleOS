@@ -3,7 +3,7 @@
 
 #include "tictoc.h"
 
-#include "resource/resource_ids.auto.h"
+#include <resource/resource_ids.auto.h>
 
 const PebbleProcessMd *tictoc_get_app_info(void) {
   static const PebbleProcessMdSystem s_app_md = {

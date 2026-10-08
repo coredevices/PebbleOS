@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/order.h"
+#include <pbl/util/order.h>
 
 #include <stdbool.h>
 #include <stddef.h>

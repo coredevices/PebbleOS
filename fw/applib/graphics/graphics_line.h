@@ -3,7 +3,7 @@
 
 #pragma once
 #include "gtypes.h"
-#include "pbl/util/testing.h"
+#include <pbl/util/testing.h>
 
 //! @addtogroup Graphics
 //! @{

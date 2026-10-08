@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/util/uuid.h"
+#include <pbl/util/uuid.h>
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 /**
  * @defgroup services_notifications_notification_storage Notification storage

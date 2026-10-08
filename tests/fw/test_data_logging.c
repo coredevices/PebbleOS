@@ -1,67 +1,67 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/data_logging.h"
-#include "pbl/util/uuid.h"
+#include <applib/data_logging.h>
+#include <pbl/util/uuid.h>
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/filesystem/flash_translation.h"
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/filesystem/flash_translation.h>
 
-#include "pbl/services/comm_session/protocol.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/comm_session/session_send_buffer.h"
-#include "pbl/services/comm_session/session_transport.h"
+#include <pbl/services/comm_session/protocol.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/services/comm_session/session_transport.h>
 
-#include "pbl/services/data_logging/data_logging_service.h"
-#include "pbl/services/data_logging/dls_private.h"
-#include "pbl/services/data_logging/dls_list.h"
-#include "pbl/services/data_logging/dls_storage.h"
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/data_logging/dls_private.h>
+#include <pbl/services/data_logging/dls_list.h>
+#include <pbl/services/data_logging/dls_storage.h>
 
-#include "pbl/services/regular_timer.h"
+#include <pbl/services/regular_timer.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
-#include "pbl/crc/crc.h"
-#include "pbl/util/list.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "pbl/util/string.h"
+#include <pbl/crc/crc.h>
+#include <pbl/util/list.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/string.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
-#include "fake_app_manager.h"
-#include "fake_pebble_tasks.h"
-#include "fake_system_task.h"
-#include "fake_spi_flash.h"
-#include "fake_session.h"
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_rtc.h"
-#include "stubs_analytics.h"
-#include "stubs_bt_lock.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_syscall_internal.h"
-#include "stubs_task_wdt.h"
-#include "stubs_reboot_reason.h"
+#include <fake_app_manager.h>
+#include <fake_pebble_tasks.h>
+#include <fake_system_task.h>
+#include <fake_spi_flash.h>
+#include <fake_session.h>
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
+#include <stubs_analytics.h>
+#include <stubs_bt_lock.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_syscall_internal.h>
+#include <stubs_task_wdt.h>
+#include <stubs_reboot_reason.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "pbl/kernel/sched.h"
+#include <pbl/kernel/sched.h>
 pbl_tick_t pbl_uptime_ticks(void) {
   return 1337;
 }
 
-#include "kernel/memory_layout.h"
+#include <kernel/memory_layout.h>
 const MpuRegion *memory_layout_get_app_region(void) {
   return NULL;
 }

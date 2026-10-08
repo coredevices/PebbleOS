@@ -3,9 +3,9 @@
 
 #include <pbl/drivers/flash.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
-#include "pbl/crc/crc.h"
+#include <pbl/crc/crc.h>
 
 #include <stdint.h>
 

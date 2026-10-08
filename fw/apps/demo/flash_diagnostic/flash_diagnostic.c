@@ -5,21 +5,21 @@
 
 #include <stdio.h>
 
-#include "applib/app.h"
-#include "applib/ui/simple_menu_layer.h"
-#include "applib/ui/ui.h"
-#include "applib/ui/window.h"
+#include <applib/app.h>
+#include <applib/ui/simple_menu_layer.h>
+#include <applib/ui/ui.h>
+#include <applib/ui/window.h>
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/pebble_tasks.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "resource/resource_storage_flash.h"
+#include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <resource/resource_storage_flash.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "kernel/util/sleep.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <kernel/util/sleep.h>
+#include <pbl/util/size.h>
 
 #define NUM_REGIONS ARRAY_LENGTH(s_flash_regions)
 

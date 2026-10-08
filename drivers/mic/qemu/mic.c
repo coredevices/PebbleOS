@@ -4,10 +4,10 @@
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 
-#include "board/board.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <board/board.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <string.h>
 

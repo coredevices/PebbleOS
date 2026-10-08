@@ -5,9 +5,9 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/task_wdt/task_wdt.h>
-#include "kernel/util/sleep.h"
+#include <kernel/util/sleep.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <inttypes.h>
 

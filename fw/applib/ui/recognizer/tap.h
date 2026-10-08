@@ -5,7 +5,7 @@
 
 #include "recognizer.h"
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 typedef struct TapRecognizerData TapRecognizerData;
 

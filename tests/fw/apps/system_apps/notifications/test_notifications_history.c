@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Aliaksandr Karnilovich */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/system/notifications_history.h"
+#include <apps/system/notifications_history.h>
 
-#include "clar.h"
-#include "fake_pbl_malloc.h"
-#include "pbl/services/timeline/attribute.h"
-#include "pbl/services/timeline/timeline.h"
+#include <clar.h>
+#include <fake_pbl_malloc.h>
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/timeline.h>
 
 static NotificationHistory s_history;
 

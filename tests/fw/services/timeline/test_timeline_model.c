@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/util/uuid.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/blob_db/pin_db.h"
-#include "pbl/services/timeline/timeline.h"
-#include "apps/system/timeline/model.h"
-#include "pbl/util/size.h"
+#include <pbl/util/uuid.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/blob_db/pin_db.h>
+#include <pbl/services/timeline/timeline.h>
+#include <apps/system/timeline/model.h>
+#include <pbl/util/size.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include "fake_spi_flash.h"
-#include "fake_pbl_malloc.h"
-#include "fake_rtc.h"
-#include "pbl/services/time.h"
+#include <fake_spi_flash.h>
+#include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
+#include <pbl/services/time.h>
 
 static TimezoneInfo tz = {
   .tm_gmtoff = -8 * 60 * 60, // PST
@@ -27,33 +27,33 @@ static TimezoneInfo tz = {
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_app_cache.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_manager.h"
-#include "stubs_blob_db.h"
-#include "stubs_blob_db_sync.h"
-#include "stubs_blob_db_sync_util.h"
-#include "stubs_calendar.h"
-#include "stubs_event_service_client.h"
-#include "stubs_events.h"
-#include "stubs_fonts.h"
-#include "stubs_hexdump.h"
-#include "stubs_i18n.h"
-#include "stubs_layout_layer.h"
-#include "stubs_logging.h"
-#include "stubs_modal_manager.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_regular_timer.h"
-#include "stubs_resources.h"
-#include "stubs_session.h"
-#include "stubs_sleep.h"
-#include "stubs_syscalls.h"
-#include "stubs_task_wdt.h"
-#include "stubs_window_stack.h"
+#include <stubs_analytics.h>
+#include <stubs_app_cache.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_manager.h>
+#include <stubs_blob_db.h>
+#include <stubs_blob_db_sync.h>
+#include <stubs_blob_db_sync_util.h>
+#include <stubs_calendar.h>
+#include <stubs_event_service_client.h>
+#include <stubs_events.h>
+#include <stubs_fonts.h>
+#include <stubs_hexdump.h>
+#include <stubs_i18n.h>
+#include <stubs_layout_layer.h>
+#include <stubs_logging.h>
+#include <stubs_modal_manager.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_regular_timer.h>
+#include <stubs_resources.h>
+#include <stubs_session.h>
+#include <stubs_sleep.h>
+#include <stubs_syscalls.h>
+#include <stubs_task_wdt.h>
+#include <stubs_window_stack.h>
 
 void ancs_notifications_enable_bulk_action_mode(bool enable) {
   return;

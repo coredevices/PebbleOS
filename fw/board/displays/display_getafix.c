@@ -16,7 +16,7 @@
 // for the adjacent rows or columns moving inwards towards the center
 // of the display.
 
-#include "board/display.h"
+#include <board/display.h>
 
 // g_gbitmap_data_row_infos was generated with this script:
 //

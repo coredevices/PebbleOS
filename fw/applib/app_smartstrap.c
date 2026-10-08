@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_smartstrap.h"
+#include <applib/app_smartstrap.h>
 
 SmartstrapResult app_smartstrap_subscribe(SmartstrapHandlers handlers) {
   return SmartstrapResultNotPresent;

@@ -3,16 +3,16 @@
 
 #include "dialog_private.h"
 
-#include "applib/app_timer.h"
-#include "applib/applib_malloc.auto.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/kino/kino_reel/transform.h"
-#include "applib/ui/kino/kino_reel/scale_segmented.h"
-#include "applib/ui/vibes.h"
-#include "applib/ui/window_stack.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "system/passert.h"
+#include <applib/app_timer.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/kino/kino_reel/transform.h>
+#include <applib/ui/kino/kino_reel/scale_segmented.h>
+#include <applib/ui/vibes.h>
+#include <applib/ui/window_stack.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <system/passert.h>
 
 static void prv_app_timer_callback(void *context) {
   Dialog *dialog = context;

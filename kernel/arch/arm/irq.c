@@ -3,7 +3,7 @@
 
 #include <cmsis_core.h>
 
-#include "kernel.h"
+#include <kernel.h>
 
 extern const void *const arch_vector_table[];
 extern const struct arch_irq_prio __pbl_irq_prio_start[];

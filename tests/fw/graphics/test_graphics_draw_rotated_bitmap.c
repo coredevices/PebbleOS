@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gtypes.h"
-#include "pbl/util/trig.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <pbl/util/trig.h>
 
-#include "applib/ui/layer.h"
-#include "applib/ui/window_private.h"
+#include <applib/ui/layer.h>
+#include <applib/ui/window_private.h>
 
-#include "clar.h"
+#include <clar.h>
 #include "util.h"
 
 #include <stdio.h>
@@ -26,11 +26,11 @@
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
+#include <stubs_applib_resource.h>
 
 ///////////////////////////////////////////////////////////
 // Fakes
-#include "fake_gbitmap_get_data_row.h"
+#include <fake_gbitmap_get_data_row.h>
 
 // Setup
 ////////////////////////////////////

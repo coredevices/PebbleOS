@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/dialogs/expandable_dialog.h"
+#include <applib/ui/dialogs/expandable_dialog.h>
 
 typedef ExpandableDialog WeatherAppWarningDialog;
 

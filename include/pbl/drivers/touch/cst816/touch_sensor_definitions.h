@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #pragma once
 
-#include "board/board.h"
+#include <board/board.h>
 
 /**
  * @defgroup drivers_touch_cst816 CST816

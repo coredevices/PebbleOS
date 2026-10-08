@@ -4,7 +4,7 @@
 #pragma once
 
 #if !PUBLIC_SDK
-#include "board/display.h"
+#include <board/display.h>
 #endif
 
 //! PreferredContentSize represents the display scale of all the app's UI components. The enum

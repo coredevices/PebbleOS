@@ -3,7 +3,7 @@
 
 #include "gap_le_task.h"
 
-#include "system/passert.h"
+#include <system/passert.h>
 
 PebbleTaskBitset gap_le_pebble_task_bit_for_client(GAPLEClient c) {
   switch (c) {

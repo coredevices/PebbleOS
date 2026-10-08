@@ -3,21 +3,21 @@
 
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/clocksource.h>
 #include <pbl/drivers/i2c.h>
-#include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
+#include <kernel/pbl_malloc.h>
+#include <kernel/util/sleep.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/circular_buffer.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/util/circular_buffer.h>
+#include <pbl/util/math.h>
 
-#include "nrfx_i2s.h"
+#include <nrfx_i2s.h>
 
 PBL_LOG_MODULE_DEFINE(driver_speaker_da7212, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
 

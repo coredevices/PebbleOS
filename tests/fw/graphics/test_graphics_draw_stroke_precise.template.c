@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/framebuffer.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/framebuffer.h>
 
-#include "applib/ui/window_private.h"
-#include "applib/ui/layer.h"
+#include <applib/ui/window_private.h>
+#include <applib/ui/layer.h>
 
-#include "applib/graphics/bitblt_private.h"
+#include <applib/graphics/bitblt_private.h>
 
-#include "clar.h"
+#include <clar.h>
 #include "util.h"
 
 #include <stdio.h>
@@ -17,12 +17,12 @@
 // Helper Functions
 ////////////////////////////////////
 #include "test_graphics.h"
-#include "${BIT_DEPTH_NAME}/test_framebuffer.h"
+#include <${BIT_DEPTH_NAME}/test_framebuffer.h>
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
+#include <stubs_applib_resource.h>
 
 static FrameBuffer *fb = NULL;
 

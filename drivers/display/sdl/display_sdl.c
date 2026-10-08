@@ -5,9 +5,9 @@
 
 #include <pbl/drivers/display/display.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include "display_sdl_bottom.h"
-#include "system/passert.h"
+#include <system/passert.h>
 
 static uint8_t s_fb[PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT];
 static bool s_enabled;

@@ -5,17 +5,17 @@
 #include "gbitmap_pbi.h"
 #include "gbitmap_png.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/applib_resource_private.h"
-#include "applib/graphics/graphics.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/applib_resource_private.h>
+#include <applib/graphics/graphics.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "syscall/syscall.h"
+#include <system/passert.h>
+#include <syscall/syscall.h>
 
 #include <string.h>
 #include <stddef.h>
-#include "pbl/util/testing.h"
+#include <pbl/util/testing.h>
 
 uint8_t gbitmap_get_bits_per_pixel(GBitmapFormat format) {
   switch (format) {

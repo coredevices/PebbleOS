@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/bluetooth/types.h>
-#include "comm/ble/gap_le_advert.h"
+#include <comm/ble/gap_le_advert.h>
 
 #include <stdbool.h>
 #include <stdint.h>

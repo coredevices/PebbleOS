@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/time_range_selection_window.h"
-#include "applib/ui/time_selection_window.h"
-#include "applib/ui/app_window_stack.h"
-#include "apps/system/settings/notifications_private.h"
-#include "resource/resource.h"
-#include "shell/system_theme.h"
-#include "system/passert.h"
-#include "applib/graphics/raw_image.h"
-#include "pbl/util/hash.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/time_range_selection_window.h>
+#include <applib/ui/time_selection_window.h>
+#include <applib/ui/app_window_stack.h>
+#include <apps/system/settings/notifications_private.h>
+#include <resource/resource.h>
+#include <shell/system_theme.h>
+#include <system/passert.h>
+#include <applib/graphics/raw_image.h>
+#include <pbl/util/hash.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <stdio.h>
 
@@ -28,8 +28,8 @@
 // Fakes
 /////////////////////
 
-#include "fake_graphics_context.h"
-#include "fake_spi_flash.h"
+#include <fake_graphics_context.h>
+#include <fake_spi_flash.h>
 #include "../../fixtures/load_test_resources.h"
 
 static GContext s_ctx;
@@ -70,35 +70,35 @@ GContext *graphics_context_get_current_context(void) {
 // Stubs
 /////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_animation_timing.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_bootbits.h"
-#include "stubs_buffer.h"
-#include "stubs_click.h"
-#include "stubs_heap.h"
-#include "stubs_layer.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_menu_cell_layer.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_print.h"
-#include "stubs_process_manager.h"
-#include "stubs_serial.h"
-#include "stubs_shell_prefs.h"
-#include "stubs_sleep.h"
-#include "stubs_status_bar_layer.h"
-#include "stubs_syscall_internal.h"
-#include "stubs_syscalls.h"
-#include "stubs_task_wdt.h"
-#include "stubs_text_layer_flow.h"
-#include "stubs_window_manager.h"
-#include "stubs_window_stack.h"
+#include <stubs_analytics.h>
+#include <stubs_animation_timing.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_bootbits.h>
+#include <stubs_buffer.h>
+#include <stubs_click.h>
+#include <stubs_heap.h>
+#include <stubs_layer.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_menu_cell_layer.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_print.h>
+#include <stubs_process_manager.h>
+#include <stubs_serial.h>
+#include <stubs_shell_prefs.h>
+#include <stubs_sleep.h>
+#include <stubs_status_bar_layer.h>
+#include <stubs_syscall_internal.h>
+#include <stubs_syscalls.h>
+#include <stubs_task_wdt.h>
+#include <stubs_text_layer_flow.h>
+#include <stubs_window_manager.h>
+#include <stubs_window_stack.h>
 
 // Setup and Teardown
 ////////////////////////////////////

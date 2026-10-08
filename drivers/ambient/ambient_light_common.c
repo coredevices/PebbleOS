@@ -3,9 +3,9 @@
 
 #include <pbl/drivers/ambient_light.h>
 
-#include "board/board.h"
-#include "pbl/kernel/mutex.h"
-#include "system/passert.h"
+#include <board/board.h>
+#include <pbl/kernel/mutex.h>
+#include <system/passert.h>
 
 #include <stdbool.h>
 #include <stdint.h>

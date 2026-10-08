@@ -4,9 +4,9 @@
 #include "weather_report.h"
 #include "weather_math.h"
 #include "forecast_list.h" // arm_hslide_in — the report-BACK glide pair
-#include "applib/app_timer.h"
-#include "applib/ui/animation.h"
-#include "applib/ui/animation_interpolate.h"
+#include <applib/app_timer.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/animation_interpolate.h>
 #include "pebble_compat.h"
 
 // "The Weather Report" — the SELECT screen.

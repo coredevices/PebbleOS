@@ -10,8 +10,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "bf0_hal.h"
-#include "bf0_hal_crc.h"
+#include <bf0_hal.h>
+#include <bf0_hal_crc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_crc_sf32lb, CONFIG_DRIVER_CRC_LOG_LEVEL);
 

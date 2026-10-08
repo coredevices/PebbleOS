@@ -3,23 +3,23 @@
 
 #include "progress_ui.h"
 
-#include "applib/app.h"
-#include "applib/app_timer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/dialogs/simple_dialog.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/progress_layer.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window_private.h"
-#include "applib/ui/app_window_stack.h"
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_manager.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/firmware_update.h"
-#include "pbl/services/i18n/i18n.h"
+#include <applib/app.h>
+#include <applib/app_timer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/progress_layer.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window_private.h>
+#include <applib/ui/app_window_stack.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/firmware_update.h>
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/logging/logging.h>
 
 #include <stdio.h>

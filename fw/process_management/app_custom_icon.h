@@ -9,8 +9,8 @@
 //! to customize the title and icon of certain stock apps, like the "Sports" app.
 
 #include "pebble_process_md.h"
-#include "applib/graphics/gtypes.h"
-#include "process_management/app_install_types.h"
+#include <applib/graphics/gtypes.h>
+#include <process_management/app_install_types.h>
 
 const char *app_custom_get_title(AppInstallId app_id);
 

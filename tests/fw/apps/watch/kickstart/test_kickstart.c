@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/watch/kickstart/kickstart.h"
-#include "popups/timeline/peek.h"
+#include <apps/watch/kickstart/kickstart.h>
+#include <popups/timeline/peek.h>
 
-#include "applib/ui/window_private.h"
-#include "fw/graphics/util.h"
-#include "pbl/util/size.h"
+#include <applib/ui/window_private.h>
+#include <fw/graphics/util.h>
+#include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
 extern void prv_window_load_handler(Window *window);
 extern void prv_window_unload_handler(Window *window);
@@ -19,9 +19,9 @@ extern void prv_set_data(KickstartData *data, int32_t current_steps, int32_t typ
 // Fakes
 /////////////////////
 
-#include "fake_pbl_std.h"
-#include "fake_spi_flash.h"
-#include "fixtures/load_test_resources.h"
+#include <fake_pbl_std.h>
+#include <fake_spi_flash.h>
+#include <fixtures/load_test_resources.h>
 
 static bool s_clock_is_24h_style = false;
 bool clock_is_24h_style(void) {
@@ -31,33 +31,33 @@ bool clock_is_24h_style(void) {
 // Stubs
 /////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_app.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_timer.h"
-#include "stubs_app_window_stack.h"
-#include "stubs_bootbits.h"
-#include "stubs_click.h"
-#include "stubs_event_service_client.h"
-#include "stubs_health_service.h"
-#include "stubs_layer.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_process_info.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_process_manager.h"
-#include "stubs_serial.h"
-#include "stubs_shell_prefs.h"
-#include "stubs_sleep.h"
-#include "stubs_syscalls.h"
-#include "stubs_task_wdt.h"
-#include "stubs_text_layer_flow.h"
-#include "stubs_vibes.h"
-#include "stubs_window_manager.h"
-#include "stubs_window_stack.h"
+#include <stubs_analytics.h>
+#include <stubs_app.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_timer.h>
+#include <stubs_app_window_stack.h>
+#include <stubs_bootbits.h>
+#include <stubs_click.h>
+#include <stubs_event_service_client.h>
+#include <stubs_health_service.h>
+#include <stubs_layer.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_process_info.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_process_manager.h>
+#include <stubs_serial.h>
+#include <stubs_shell_prefs.h>
+#include <stubs_sleep.h>
+#include <stubs_syscalls.h>
+#include <stubs_task_wdt.h>
+#include <stubs_text_layer_flow.h>
+#include <stubs_vibes.h>
+#include <stubs_window_manager.h>
+#include <stubs_window_stack.h>
 
 void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
 }

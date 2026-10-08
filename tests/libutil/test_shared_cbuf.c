@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/shared_cbuf.h"
+#include <pbl/util/shared_cbuf.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <string.h>
 
-#include "stubs_passert.h"
+#include <stubs_passert.h>
 
 void test_shared_cbuf__initialize(void) {
 }

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/comm_session/protocol.h"
+#include <pbl/services/comm_session/protocol.h>
 
 #include <stddef.h>
 #include <stdint.h>

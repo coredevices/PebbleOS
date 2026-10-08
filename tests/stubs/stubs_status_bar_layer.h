@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/status_bar_layer.h"
+#include <applib/ui/status_bar_layer.h>
 
 void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig *config) {
 }

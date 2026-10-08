@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "system/status_codes.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/uuid.h"
+#include <system/status_codes.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_blob_db_contacts_db Contacts database

@@ -4,9 +4,9 @@
 #include <pbl/shell/backend.h>
 #include <pbl/shell/shell.h>
 
-#include "console/console_internal.h"
-#include "console/dbgserial.h"
-#include "console/shell_dbgserial.h"
+#include <console/console_internal.h>
+#include <console/dbgserial.h>
+#include <console/shell_dbgserial.h>
 
 static void prv_write(const struct pbl_shell *sh, const char *data, size_t len) {
   if (serial_console_get_state() == SERIAL_CONSOLE_STATE_PULSE) {

@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/blob_db/app_glance_db.h"
+#include <pbl/services/blob_db/app_glance_db.h>
 
-#include "pbl/services/blob_db/app_glance_db_private.h"
+#include <pbl/services/blob_db/app_glance_db_private.h>
 
-#include "applib/app_glance.h"
+#include <applib/app_glance.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "resource/resource_ids.auto.h"
-#include "process_management/app_install_manager.h"
-#include "pbl/services/app_cache.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <resource/resource_ids.auto.h>
+#include <process_management/app_install_manager.h>
+#include <pbl/services/app_cache.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

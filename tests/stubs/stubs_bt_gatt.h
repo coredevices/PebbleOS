@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/bluetooth/gatt.h>
-#include "fake_GATTAPI.h"
+#include <fake_GATTAPI.h>
 
 // TODO: Rethink how we want to stub out these new driver wrapper calls.
 

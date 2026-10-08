@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/app_install_types.h"
+#include <process_management/app_install_types.h>
 
 //! Show a modal with a message and text with an optional action bar
 void health_tracking_ui_show_message(uint32_t res_id, const char *text, bool show_action_bar);

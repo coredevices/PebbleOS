@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 void test_pebble_process_md__uninitialized(void) {
   PebbleProcessMdFlash md = {};

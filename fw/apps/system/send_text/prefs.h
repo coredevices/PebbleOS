@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/uuid.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 typedef struct PBL_PACKED {
   Uuid contact_uuid;

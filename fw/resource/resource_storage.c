@@ -6,13 +6,13 @@
 
 #include <string.h>
 
-#include "pbl/services/filesystem/app_file.h"
-#include "system/hexdump.h"
+#include <pbl/services/filesystem/app_file.h>
+#include <system/hexdump.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "system/version.h"
-#include "pbl/util/size.h"
-#include "pbl/util/testing.h"
+#include <system/passert.h>
+#include <system/version.h>
+#include <pbl/util/size.h>
+#include <pbl/util/testing.h>
 
 static const ResourceStoreImplementation *s_resource_store_impls[] = {
 #define RESOURCE_IMPL(impl) &impl,

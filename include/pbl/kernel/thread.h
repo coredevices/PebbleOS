@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/mcu/mpu.h"
-#include "pbl/kernel/types.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/mcu/mpu.h>
+#include <pbl/kernel/types.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup kernel_thread Threads

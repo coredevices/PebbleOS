@@ -9,8 +9,8 @@
 #include <pbl/kernel/init.h>
 #include <pbl_arch_posix.h>
 
-#include "kernel/util/idle.h"
-#include "posix_host.h"
+#include <kernel/util/idle.h>
+#include <posix_host.h>
 
 uint32_t SystemCoreClock = 64000000;
 

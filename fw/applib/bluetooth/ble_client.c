@@ -5,14 +5,14 @@
 
 #include "ble_app_support.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "pbl/services/event_service.h"
-#include "process_state/app_state/app_state.h"
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <applib/applib_malloc.auto.h>
+#include <pbl/services/event_service.h>
+#include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
 
 #include <stdint.h>
 

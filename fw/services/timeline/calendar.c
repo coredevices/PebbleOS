@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/calendar.h"
+#include <pbl/services/timeline/calendar.h>
 
 #include <pbl/drivers/rtc.h>
-#include "kernel/events.h"
+#include <kernel/events.h>
 #include <pbl/logging/logging.h>
 #include <time.h>
 

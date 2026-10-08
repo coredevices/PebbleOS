@@ -4,7 +4,7 @@
 #pragma once
 
 #include "layer.h"
-#include "applib/ui/animation.h"
+#include <applib/ui/animation.h>
 
 typedef enum {
   RelationshipBarOffsetTypePrev,

@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/protobuf_log/protobuf_log_test.h"
+#include <pbl/services/protobuf_log/protobuf_log_test.h>
 
-#include "pbl/services/protobuf_log/protobuf_log.h"
-#include "pbl/services/protobuf_log/protobuf_log_private.h"
-#include "pbl/services/protobuf_log/protobuf_log_activity_sessions.h"
+#include <pbl/services/protobuf_log/protobuf_log.h>
+#include <pbl/services/protobuf_log/protobuf_log_private.h>
+#include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
 
-#include "pb_decode.h"
+#include <pb_decode.h>
 
-#include "payload.pb.h"
-#include "measurements.pb.h"
-#include "system/passert.h"
+#include <payload.pb.h>
+#include <measurements.pb.h>
+#include <system/passert.h>
 
 #include <pbl/util/uuid.h>
 

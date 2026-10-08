@@ -3,15 +3,15 @@
 
 #include "detail_card.h"
 
-#include "applib/pbl_std/pbl_std.h"
-#include "board/display.h"
-#include "kernel/pbl_malloc.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/health_util.h"
-#include "shell/prefs.h"
-#include "pbl/util/size.h"
-#include "pbl/util/units.h"
+#include <applib/pbl_std/pbl_std.h>
+#include <board/display.h>
+#include <kernel/pbl_malloc.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/activity/health_util.h>
+#include <shell/prefs.h>
+#include <pbl/util/size.h>
+#include <pbl/util/units.h>
 
 // Compile-time display offset calculations
 #define HEALTH_Y_OFFSET       ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)

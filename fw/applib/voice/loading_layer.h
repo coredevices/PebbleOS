@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/animation.h"
-#include "applib/ui/progress_layer.h"
+#include <applib/ui/animation.h>
+#include <applib/ui/progress_layer.h>
 
 #include <stdint.h>
 

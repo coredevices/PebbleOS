@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/prf/recovery_first_use/getting_started_button_combo.h"
+#include <apps/prf/recovery_first_use/getting_started_button_combo.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////////////////////////
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
-#include "fake_new_timer.h"
+#include <fake_new_timer.h>
 
 static bool s_mfg_mode_entered;
 

@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timezone_database.h"
+#include <pbl/services/timezone_database.h>
 
-#include "resource/resource.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/clock.h"
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/clock.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/size.h>
 
 #include <string.h>
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(service_timezone_database, CONFIG_SERVICE_TIMEZONE_DATABASE_LOG_LEVEL);
 

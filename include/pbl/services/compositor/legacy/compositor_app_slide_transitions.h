@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/compositor/compositor.h"
+#include <pbl/services/compositor/compositor.h>
 
 /**
  * @defgroup services_compositor_legacy Legacy transitions

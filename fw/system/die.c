@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "logging/logging_private.h"
-#include "logging/pulse_logging.h"
-#include "system/bootbits.h"
-#include "system/reset.h"
+#include <logging/logging_private.h>
+#include <logging/pulse_logging.h>
+#include <system/bootbits.h>
+#include <system/reset.h>
 
-#include "pbl/kernel/irq.h"
+#include <pbl/kernel/irq.h>
 
 void prepare_for_software_failure(void) {
 #ifdef CONFIG_PULSE_EVERYWHERE

@@ -1,36 +1,36 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/kino/kino_reel.h"
-#include "applib/ui/kino/kino_reel_custom.h"
-#include "applib/ui/kino/kino_reel_gbitmap.h"
-#include "applib/ui/kino/kino_reel_gbitmap_sequence.h"
-#include "applib/ui/kino/kino_reel_pdci.h"
-#include "applib/ui/kino/kino_reel_pdcs.h"
-#include "applib/graphics/raw_image.h"
+#include <applib/ui/kino/kino_reel.h>
+#include <applib/ui/kino/kino_reel_custom.h>
+#include <applib/ui/kino/kino_reel_gbitmap.h>
+#include <applib/ui/kino/kino_reel_gbitmap_sequence.h>
+#include <applib/ui/kino/kino_reel_pdci.h>
+#include <applib/ui/kino/kino_reel_pdcs.h>
+#include <applib/graphics/raw_image.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Fakes
 ////////////////////////////////////
-#include "fake_resource_syscalls.h"
+#include <fake_resource_syscalls.h>
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_app_state.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_gpath.h"
-#include "stubs_graphics.h"
-#include "stubs_graphics_context.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_resources.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_app_state.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_gpath.h>
+#include <stubs_graphics.h>
+#include <stubs_graphics_context.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_resources.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
 
 void framebuffer_clear(FrameBuffer *f) {
 }

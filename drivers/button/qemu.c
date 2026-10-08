@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/irq.h"
+#include <pbl/kernel/irq.h>
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/debounced_button.h>
 
-#include "board/board.h"
-#include "kernel/events.h"
+#include <board/board.h>
+#include <kernel/events.h>
 
 #include <cmsis_core.h>
 

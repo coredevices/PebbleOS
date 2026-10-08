@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/preferred_content_size.h"
+#include <applib/preferred_content_size.h>
 
 //! TODO PBL-41920: This mapping should be an opt in set in a platform specific location
 typedef enum SettingsContentSize {

@@ -8,15 +8,15 @@
 #include <errno.h>
 #include <string.h>
 
-#include "pbl/services/runlevel.h"
-#include "pbl/util/size.h"
+#include <pbl/services/runlevel.h>
+#include <pbl/util/size.h>
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_sys);
 PBL_SHELL_CMD_REGISTER(sys, sub_sys, "System control", NULL);
 
 static const char *s_runlevel_names[] = {
 #define RUNLEVEL(number, name) [number] = #name,
-#include "pbl/services/runlevel.def"
+#include <pbl/services/runlevel.def>
 #undef RUNLEVEL
 };
 

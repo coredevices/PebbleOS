@@ -6,29 +6,29 @@
 #include "animations.h"
 #include "model.h"
 
-#include "applib/app.h"
-#include "applib/ui/animation_interpolate.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/kino/kino_reel/unfold.h"
-#include "applib/ui/ui.h"
+#include <applib/app.h>
+#include <applib/ui/animation_interpolate.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/kino/kino_reel/unfold.h>
+#include <applib/ui/ui.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "resource/timeline_resource_ids.auto.h"
-#include "pbl/services/compositor/compositor_transitions.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/blob_db/pin_db.h"
-#include "shell/normal/watchface.h"
-#include "shell/system_theme.h"
-#include "syscall/syscall.h"
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <resource/timeline_resource_ids.auto.h>
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/blob_db/pin_db.h>
+#include <shell/normal/watchface.h>
+#include <shell/system_theme.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/testing.h"
-#include "pbl/util/uuid.h"
-#include "pbl/services/time.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/uuid.h>
+#include <pbl/services/time.h>
 
 // This is used to determine whether this app was launched as Timeline or Timeline Past.
 // See timeline_get_app_info, timeline_past_get_app_info, and the usage of sys_get_app_uuid.

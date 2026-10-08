@@ -7,7 +7,7 @@
 #pragma once
 
 #include "click.h"
-#include "applib/app_timer.h"
+#include <applib/app_timer.h>
 
 /**
 A bag of parameters that holds all of the state required to identify

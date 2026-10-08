@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
 
 #include <stdint.h>
 

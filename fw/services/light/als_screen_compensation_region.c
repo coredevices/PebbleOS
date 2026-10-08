@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/light/als_screen_compensation.h"
+#include <services/light/als_screen_compensation.h>
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
-#include "applib/graphics/gtypes.h"
-#include "pbl/util/math.h"
+#include <applib/graphics/gtypes.h>
+#include <pbl/util/math.h>
 
 #include <stddef.h>
 

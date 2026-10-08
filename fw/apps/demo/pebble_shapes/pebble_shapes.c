@@ -3,18 +3,18 @@
 
 #include "pebble_shapes.h"
 
-#include "applib/app.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gpath.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/gtransform.h"
-#include "applib/graphics/text.h"
-#include "pbl/util/trig.h"
-#include "applib/ui/action_bar_layer.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/window.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gpath.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/gtransform.h>
+#include <applib/graphics/text.h>
+#include <pbl/util/trig.h>
+#include <applib/ui/action_bar_layer.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/window.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
 
 typedef enum {

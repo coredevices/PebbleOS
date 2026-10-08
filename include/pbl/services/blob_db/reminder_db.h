@@ -6,8 +6,8 @@
 #include "api.h"
 #include "timeline_item_storage.h"
 
-#include "system/status_codes.h"
-#include "pbl/services/timeline/item.h"
+#include <system/status_codes.h>
+#include <pbl/services/timeline/item.h>
 
 /**
  * @defgroup services_blob_db_reminder_db Reminder database

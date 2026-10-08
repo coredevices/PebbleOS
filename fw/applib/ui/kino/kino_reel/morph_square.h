@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/kino/kino_reel.h"
+#include <applib/ui/kino/kino_reel.h>
 
 //! A KinoReel that can transform an image to a square or an image to another
 //! with a square as an intermediate.

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "kernel/events.h"
-#include "pbl/services/blob_db/api.h"
-#include "pbl/kernel/compiler.h"
+#include <kernel/events.h>
+#include <pbl/services/blob_db/api.h>
+#include <pbl/kernel/compiler.h>
 
 status_t PBL_WEAK blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
   return S_SUCCESS;

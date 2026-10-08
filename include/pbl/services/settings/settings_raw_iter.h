@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "system/status_codes.h"
-#include "pbl/kernel/compiler.h"
+#include <system/status_codes.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_settings_settings_raw_iter Settings file raw iterator

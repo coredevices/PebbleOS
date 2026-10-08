@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
-#include "system/reset.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
+#include <system/reset.h>
 
-#include "board/board.h"
-#include "system/bootbits.h"
-#include "kernel/core_dump.h"
-#include "kernel/util/fw_reset.h"
-#include "pbl/mcu/interrupts.h"
+#include <board/board.h>
+#include <system/bootbits.h>
+#include <kernel/core_dump.h>
+#include <kernel/util/fw_reset.h>
+#include <pbl/mcu/interrupts.h>
 
 #include <pbl/drivers/flash.h>
-#include "system/reboot_reason.h"
+#include <system/reboot_reason.h>
 
 #ifdef CONFIG_SOC_POSIX
-#include "posix_host.h"
+#include <posix_host.h>
 #endif
 
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 #endif
 
 void system_reset_prepare(void) {

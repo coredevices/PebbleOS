@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "kernel/events.h"
-#include "pbl/services/compositor/compositor.h"
+#include <kernel/events.h>
+#include <pbl/services/compositor/compositor.h>
 
 void watchface_init(void);
 

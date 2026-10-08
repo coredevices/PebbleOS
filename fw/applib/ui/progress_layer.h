@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/layer.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/layer.h>
 
 #define MIN_PROGRESS_PERCENT 0
 #define MAX_PROGRESS_PERCENT 100

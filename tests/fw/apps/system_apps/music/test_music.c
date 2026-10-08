@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/window_private.h"
-#include "pbl/services/imaging.h"
-#include "pbl/services/music.h"
-#include "pbl/util/size.h"
-#include "shell/system_theme.h"
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/window_private.h>
+#include <pbl/services/imaging.h>
+#include <pbl/services/music.h>
+#include <pbl/util/size.h>
+#include <shell/system_theme.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -18,37 +18,37 @@
 // Fakes
 /////////////////////
 
-#include "fake_spi_flash.h"
-#include "fixtures/load_test_resources.h"
+#include <fake_spi_flash.h>
+#include <fixtures/load_test_resources.h>
 
 // Stubs
 /////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_animation_timing.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_app_window_stack.h"
-#include "stubs_bootbits.h"
-#include "stubs_click.h"
-#include "stubs_event_service_client.h"
-#include "stubs_i18n.h"
-#include "stubs_layer.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_process_manager.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_syscalls.h"
-#include "stubs_task_wdt.h"
-#include "stubs_vibe_score.h"
-#include "stubs_window_manager.h"
-#include "stubs_window_stack.h"
+#include <stubs_analytics.h>
+#include <stubs_animation_timing.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_app_window_stack.h>
+#include <stubs_bootbits.h>
+#include <stubs_click.h>
+#include <stubs_event_service_client.h>
+#include <stubs_i18n.h>
+#include <stubs_layer.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_process_manager.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_syscalls.h>
+#include <stubs_task_wdt.h>
+#include <stubs_vibe_score.h>
+#include <stubs_window_manager.h>
+#include <stubs_window_stack.h>
 
 // Music service fake
 /////////////////////
@@ -249,12 +249,12 @@ GFont system_theme_get_font_for_default_size(TextStyleFont font) {
 // Helper Functions
 /////////////////////
 
-#include "fw/graphics/util.h"
+#include <fw/graphics/util.h>
 
 // App under test
 /////////////////////
 
-#include "apps/system/music.c"
+#include <apps/system/music.c>
 
 // Setup and Teardown
 ////////////////////////////////////

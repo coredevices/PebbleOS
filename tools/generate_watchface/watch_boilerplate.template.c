@@ -5,15 +5,15 @@
  * The basis for a generated watch face
  */
 
-#include "pebble_gen_defs.h"
+#include <pebble_gen_defs.h>
 
-#include "pebble.h"
+#include <pebble.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pebble_gen_header.h"
-#include "resource_ids.gen.h"
+#include <pebble_gen_header.h>
+#include <resource_ids.gen.h>
 
 
 PBL_APP_INFO(PBL_GEN_VISIBLE_NAME_STR, PBL_GEN_COMPANY_NAME_STR);

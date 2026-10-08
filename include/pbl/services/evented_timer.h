@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "kernel/pebble_tasks.h"
+#include <kernel/pebble_tasks.h>
 
 /**
  * @defgroup services_evented_timer Evented timers

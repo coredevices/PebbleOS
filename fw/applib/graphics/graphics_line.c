@@ -4,10 +4,10 @@
 #include "graphics_line.h"
 #include "graphics_private.h"
 #include "graphics.h"
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/misc.h"
-#include "pbl/util/testing.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/misc.h>
+#include <pbl/util/testing.h>
 
 #define MINIMUM_PRECISE_STROKE_WIDTH 2
 

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "applib/fonts/fonts.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/fonts/fonts.h>
 
 #ifdef CONFIG_PLATFORM_GABBRO
 

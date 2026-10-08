@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl/services/time.h"
+#include <pbl/services/time.h>
 
 /**
  * @defgroup drivers_rtc RTC

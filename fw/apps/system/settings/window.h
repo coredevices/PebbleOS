@@ -5,7 +5,7 @@
 
 #include "menu.h"
 
-#include "applib/ui/window.h"
+#include <applib/ui/window.h>
 
 Window *settings_window_create(SettingsMenuItem category, SettingsCallbacks *callbacks);
 

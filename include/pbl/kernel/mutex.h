@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/kernel/types.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/types.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup kernel_mutex Mutexes

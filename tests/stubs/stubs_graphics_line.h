@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/graphics_line.h"
+#include <applib/graphics/graphics_line.h>
 
 void graphics_draw_line(GContext *ctx, GPoint p0, GPoint p1) {
 }

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/notifications/ancs/ancs_notifications.h"
-#include "pbl/services/notifications/ancs/ancs_notifications_util.h"
-#include "pbl/services/notifications/ancs/ancs_item.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_util.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
+#include <pbl/services/notifications/ancs/ancs_notifications.h>
+#include <pbl/services/notifications/ancs/ancs_notifications_util.h>
+#include <pbl/services/notifications/ancs/ancs_item.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_util.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 // Test Data
 ///////////////////////////////////////////////////////////
@@ -16,11 +16,11 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 #include "stubs_common.h"
-#include "stubs_blob_db_sync_util.h"
-#include "stubs_sleep.h"
-#include "stubs_nexmo.h"
-#include "stubs_codepoint.h"
-#include "stubs_utf8.h"
+#include <stubs_blob_db_sync_util.h>
+#include <stubs_sleep.h>
+#include <stubs_nexmo.h>
+#include <stubs_codepoint.h>
+#include <stubs_utf8.h>
 
 // Externs
 ///////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ extern const int TIMELINE_ACTION_ENDPOINT;
 
 // Fakes / Helpers
 ///////////////////////////////////////////////////////////
-#include "fake_spi_flash.h"
+#include <fake_spi_flash.h>
 
 static const uint8_t *s_expected_send_data = NULL;
 static bool s_sent_action = false;

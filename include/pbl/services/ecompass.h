@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/battery/battery_monitor.h"
+#include <pbl/services/battery/battery_monitor.h>
 
 /**
  * @brief Represents an angle relative to get to a reference direction, e.g. (magnetic) north.

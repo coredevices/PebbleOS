@@ -7,7 +7,7 @@
 
 #include <string.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 // Simulated state of the BT controller, as driven through the pbl_bt_advert
 // contract by gap_le_advert.c.

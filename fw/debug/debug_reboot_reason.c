@@ -3,12 +3,12 @@
 
 #include "debug.h"
 
-#include "comm/ble/gatt_service_changed.h"
-#include "kernel/core_dump.h"
-#include "kernel/event_loop.h"
-#include "popups/crashed_ui.h"
+#include <comm/ble/gatt_service_changed.h>
+#include <kernel/core_dump.h>
+#include <kernel/event_loop.h>
+#include <popups/crashed_ui.h>
 #include <pbl/logging/logging.h>
-#include "system/reboot_reason.h"
+#include <system/reboot_reason.h>
 
 static RebootReasonCode s_last_reboot_reason_code = RebootReasonCode_Unknown;
 RebootReasonCode reboot_reason_get_last_reboot_reason(void) {

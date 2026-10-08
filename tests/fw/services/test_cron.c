@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
 #include <pbl/cron/cron.h>
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/util/size.h"
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/size.h>
 
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "fake_rtc.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <fake_rtc.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 static uint32_t s_timer_timeout_ms;
 

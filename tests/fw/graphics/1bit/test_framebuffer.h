@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/framebuffer.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/framebuffer.h>
 
 #include <unistd.h>
 #include <stdio.h>

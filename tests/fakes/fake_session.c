@@ -3,19 +3,19 @@
 
 #include "fake_session.h"
 
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
-#include "pbl/services/comm_session/protocol.h"
-#include "pbl/services/comm_session/session_send_buffer.h"
-#include "pbl/services/system_task.h"
-#include "pbl/util/circular_buffer.h"
-#include "system/hexdump.h"
+#include <pbl/services/comm_session/protocol.h>
+#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/circular_buffer.h>
+#include <system/hexdump.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
 #include <string.h>
 

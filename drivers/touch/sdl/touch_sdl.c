@@ -4,9 +4,9 @@
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl_arch_posix.h>
 
-#include "pbl/services/system_task.h"
-#include "pbl/services/touch/touch.h"
-#include "board/board.h"
+#include <pbl/services/system_task.h>
+#include <pbl/services/touch/touch.h>
+#include <board/board.h>
 #include "touch_sdl_bottom.h"
 
 static bool s_enabled;

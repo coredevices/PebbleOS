@@ -4,7 +4,7 @@
 #pragma once
 
 #include "dls_private.h"
-#include "applib/data_logging.h"
+#include <applib/data_logging.h>
 
 #include <stdint.h>
 #include <time.h>

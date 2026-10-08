@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/gpath.h"
+#include <applib/graphics/gpath.h>
 
 void gpath_init(GPath *path, const GPathInfo *init) {
 }

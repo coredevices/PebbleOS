@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/pebble_tasks.h"
+#include <kernel/pebble_tasks.h>
 
 PebbleTask pebble_task_get_current(void) {
   return 0;

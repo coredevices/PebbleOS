@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "aes.h"
+#include <aes.h>
 
 //! @file fake_aes.c This file implements the aes_128_encrypt_block() helper in software, which in
 //! real life uses Dialog's AES hardware block.

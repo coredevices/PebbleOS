@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/heap.h"
+#include <pbl/util/heap.h>
 
 void kernel_heap_init(void);
 

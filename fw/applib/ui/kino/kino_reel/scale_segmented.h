@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gdraw_command_transforms.h"
-#include "applib/ui/kino/kino_reel.h"
+#include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/ui/kino/kino_reel.h>
 
 // These are KinoReels that use the per-point segmented delayed scaling animation.
 // @see gdraw_command_list_scale_segmented_to.

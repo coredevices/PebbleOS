@@ -1,34 +1,34 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/blob_db/contacts_db.h"
-#include "pbl/services/contacts/contacts.h"
-#include "pbl/util/uuid.h"
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/blob_db/contacts_db.h>
+#include <pbl/services/contacts/contacts.h>
+#include <pbl/util/uuid.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include "fake_spi_flash.h"
-#include "fake_system_task.h"
-#include "fake_kernel_services_notifications.h"
+#include <fake_spi_flash.h>
+#include <fake_system_task.h>
+#include <fake_kernel_services_notifications.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_hexdump.h"
-#include "stubs_layout_layer.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
+#include <stubs_analytics.h>
+#include <stubs_hexdump.h>
+#include <stubs_layout_layer.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
 
 #define CONTACT_1_UUID \
   0x0a, 0x04, 0x98, 0x00, 0x39, 0x18, 0x47, 0xaa, 0x9c, 0x16, 0x8e, 0xa0, 0xa8, 0x2a, 0x2e, 0xb8

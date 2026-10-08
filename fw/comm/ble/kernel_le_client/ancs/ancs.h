@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/bluetooth/ble_client.h"
+#include <applib/bluetooth/ble_client.h>
 
 //! @file ancs.h Module implementing an ANCS client.
 //! See http://bit.ly/ancs-spec for Apple's documentation of ANCS

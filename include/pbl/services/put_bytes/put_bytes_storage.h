@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include "pbl/services/put_bytes/put_bytes.h"
+#include <pbl/services/put_bytes/put_bytes.h>
 
 /**
  * @defgroup services_put_bytes_put_bytes_storage Put bytes storage

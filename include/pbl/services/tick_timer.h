@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/pebble_tasks.h"
+#include <kernel/pebble_tasks.h>
 
 /**
  * @defgroup services_tick_timer Tick timer

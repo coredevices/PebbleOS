@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/speaker.h"
+#include <applib/ui/speaker.h>
 
-#include "applib/event_service_client.h"
-#include "kernel/events.h"
-#include "process_state/app_state/app_state.h"
-#include "syscall/syscall.h"
+#include <applib/event_service_client.h>
+#include <kernel/events.h>
+#include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
 
 bool speaker_play_notes(const SpeakerNote *notes, uint32_t num_notes, uint8_t volume) {

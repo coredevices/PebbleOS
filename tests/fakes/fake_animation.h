@@ -6,7 +6,7 @@
 //! Simple fake of the Animation code. Not intended to be a complete drop in replacement, but good
 //! enough for some simple tests.
 
-#include "applib/ui/animation_private.h"
+#include <applib/ui/animation_private.h>
 
 //! @return A pointer to the first animation that was created since we last called
 //! fake_animation_cleanup

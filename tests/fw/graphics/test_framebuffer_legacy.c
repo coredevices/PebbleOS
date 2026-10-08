@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/framebuffer.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/framebuffer.h>
 
-#include "clar.h"
+#include <clar.h>
 #include "util.h"
 
 // Helper Functions
@@ -15,7 +15,7 @@
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
+#include <stubs_applib_resource.h>
 
 // The legacy 3.x framebuffer must be byte-for-byte identical to the chalk
 // (spalding) packed circular layout, so chalk apps that access the

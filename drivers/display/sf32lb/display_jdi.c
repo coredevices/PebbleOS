@@ -3,25 +3,25 @@
 
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/gpio.h>
-#include "kernel/events.h"
-#include "kernel/util/delay.h"
-#include "pbl/soc/sf32lb/sleep.h"
+#include <kernel/events.h>
+#include <kernel/util/delay.h>
+#include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/drivers/rtc.h>
-#include "pbl/kernel/irq.h"
-#include "pbl/mcu/cache.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/mcu/cache.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/sem.h>
 
-#include "bf0_hal_lcdc.h"
-#include "bf0_hal_lptim.h"
-#include "bf0_hal_rtc.h"
+#include <bf0_hal_lcdc.h>
+#include <bf0_hal_lptim.h>
+#include <bf0_hal_rtc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_display_jdi, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 

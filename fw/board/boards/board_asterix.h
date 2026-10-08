@@ -3,7 +3,7 @@
 #include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include "pbl/services/imu/units.h"
+#include <pbl/services/imu/units.h>
 
 #define BT_VENDOR_ID   0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"

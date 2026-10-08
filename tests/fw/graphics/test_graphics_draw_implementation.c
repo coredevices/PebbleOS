@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/graphics_private.h"
-#include "applib/graphics/graphics_private_raw.h"
-#include "applib/graphics/framebuffer.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/graphics_private.h>
+#include <applib/graphics/graphics_private_raw.h>
+#include <applib/graphics/framebuffer.h>
 
-#include "applib/ui/window_private.h"
-#include "applib/ui/layer.h"
+#include <applib/ui/window_private.h>
+#include <applib/ui/layer.h>
 
-#include "clar.h"
+#include <clar.h>
 #include "util.h"
 
 #include <stdio.h>
@@ -22,7 +22,7 @@
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
+#include <stubs_applib_resource.h>
 
 // State
 ////////////////////////////////////

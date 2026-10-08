@@ -1,60 +1,60 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "process_management/app_manager.h"
+#include <process_management/app_manager.h>
 
-#include "applib/app_comm.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/ui/window_stack.h"
-#include "applib/ui/window_stack_private.h"
+#include <applib/app_comm.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/ui/window_stack.h>
+#include <applib/ui/window_stack_private.h>
 #include <pbl/mcu/mpu.h>
-#include "kernel/util/segment.h"
-#include "popups/crashed_ui.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_manager.h"
-#include "process_management/app_run_state.h"
-#include "process_management/process_manager.h"
-#include "pbl/services/vibe_pattern.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/blob_db/app_db.h"
-#include "pbl/util/heap.h"
+#include <kernel/util/segment.h>
+#include <popups/crashed_ui.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
+#include <process_management/app_run_state.h>
+#include <process_management/process_manager.h>
+#include <pbl/services/vibe_pattern.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/util/heap.h>
 
 // Fakes
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_rtc.h"
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
 
 // Stubs
-#include "stubs_accel_service.h"
-#include "stubs_analytics.h"
-#include "stubs_animation_service.h"
-#include "stubs_app_state.h"
-#include "stubs_applib_resource.h"
-#include "stubs_cache.h"
-#include "stubs_compositor.h"
-#include "stubs_dialog.h"
-#include "stubs_events.h"
-#include "stubs_expandable_dialog.h"
-#include "stubs_gettext.h"
-#include "stubs_i18n.h"
-#include "stubs_logging.h"
-#include "stubs_modal_manager.h"
-#include "stubs_mpu.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_persist.h"
-#include "stubs_print.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_resources.h"
-#include "stubs_serial.h"
-#include "stubs_simple_dialog.h"
-#include "stubs_syscall_internal.h"
-#include "stubs_thread.h"
-#include "stubs_tick.h"
-#include "stubs_timeline_peek.h"
-#include "stubs_worker_manager.h"
+#include <stubs_accel_service.h>
+#include <stubs_analytics.h>
+#include <stubs_animation_service.h>
+#include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
+#include <stubs_cache.h>
+#include <stubs_compositor.h>
+#include <stubs_dialog.h>
+#include <stubs_events.h>
+#include <stubs_expandable_dialog.h>
+#include <stubs_gettext.h>
+#include <stubs_i18n.h>
+#include <stubs_logging.h>
+#include <stubs_modal_manager.h>
+#include <stubs_mpu.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_persist.h>
+#include <stubs_print.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_resources.h>
+#include <stubs_serial.h>
+#include <stubs_simple_dialog.h>
+#include <stubs_syscall_internal.h>
+#include <stubs_thread.h>
+#include <stubs_tick.h>
+#include <stubs_timeline_peek.h>
+#include <stubs_worker_manager.h>
 
 // Fake "Apps"
 ///////////////////////////////////////////////////////////

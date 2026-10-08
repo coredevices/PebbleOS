@@ -23,23 +23,23 @@
 #include "text_resources.h"
 #include "utf8.h"
 
-#include "applib/fonts/codepoint.h"
-#include "applib/fonts/fonts.h"
-#include "kernel/ui/kernel_ui.h"
-#include "process_state/app_state/app_state.h"
-#include "applib/applib_malloc.auto.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/fonts/codepoint.h>
+#include <applib/fonts/fonts.h>
+#include <kernel/ui/kernel_ui.h>
+#include <process_state/app_state/app_state.h>
+#include <applib/applib_malloc.auto.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/hash.h"
-#include "pbl/util/iterator.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/util/hash.h>
+#include <pbl/util/iterator.h>
+#include <pbl/util/math.h>
 
-#include "process_management/process_manager.h"
+#include <process_management/process_manager.h>
 
 #include <stdint.h>
 #include <limits.h>
-#include "pbl/util/testing.h"
+#include <pbl/util/testing.h>
 
 static bool prv_char_iter_next_start_of_word(Iterator *char_iter);
 

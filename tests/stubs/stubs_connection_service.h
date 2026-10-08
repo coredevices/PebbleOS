@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/connection_service.h"
-#include "applib/connection_service_private.h"
+#include <applib/connection_service.h>
+#include <applib/connection_service_private.h>
 
 bool connection_service_peek_pebble_app_connection(void) {
   return false;

@@ -6,12 +6,12 @@
 #include "common.h"
 #include "peek_layer.h"
 
-#include "applib/graphics/text.h"
-#include "applib/ui/animation.h"
-#include "applib/ui/layer.h"
-#include "pbl/services/evented_timer.h"
-#include "pbl/services/timeline/timeline_layout.h"
-#include "pbl/services/timeline/timeline_layout_animations.h"
+#include <applib/graphics/text.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/layer.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/timeline/timeline_layout.h>
+#include <pbl/services/timeline/timeline_layout_animations.h>
 
 #include <stdbool.h>
 

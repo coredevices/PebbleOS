@@ -7,9 +7,9 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 
-#include "console/pulse_internal.h"
-#include "console/pulse_protocol_impl.h"
-#include "pbl/kernel/compiler.h"
+#include <console/pulse_internal.h>
+#include <console/pulse_protocol_impl.h>
+#include <pbl/kernel/compiler.h>
 
 #include <errno.h>
 #include <string.h>

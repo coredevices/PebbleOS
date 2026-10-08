@@ -5,9 +5,9 @@
 
 #include "health_service.h"
 #include "event_service_client.h"
-#include "pbl/services/activity/activity.h"
-#include "pbl/util/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/activity/activity.h>
+#include <pbl/util/time.h>
+#include <pbl/util/units.h>
 
 typedef struct {
   HealthValue totals[ACTIVITY_HISTORY_DAYS];

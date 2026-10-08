@@ -3,14 +3,14 @@
 
 #include "spinner_ui_window.h"
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gtypes.h"
-#include "pbl/util/trig.h"
-#include "applib/ui/animation.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/property_animation.h"
-#include "kernel/pbl_malloc.h"
-#include "system/passert.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <pbl/util/trig.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/property_animation.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 ////////////////////////////////////////////////////////////
 // Data structures

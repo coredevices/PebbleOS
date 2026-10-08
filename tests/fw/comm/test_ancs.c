@@ -1,46 +1,46 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/kernel_le_client/ancs/ancs.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_util.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_definition.h"
+#include <comm/ble/kernel_le_client/ancs/ancs.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_util.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_definition.h>
 
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gap_le_task.h"
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_task.h>
 
-#include "pbl/services/evented_timer.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/notifications/ancs/ancs_notifications.h"
-#include "pbl/util/size.h"
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/notifications/ancs/ancs_notifications.h>
+#include <pbl/util/size.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_ios_notif_pref_db.h"
-#include "stubs_bt_stack.h"
-#include "stubs_ble.h"
-#include "stubs_pin_db.h"
-#include "stubs_i18n.h"
-#include "stubs_layout_layer.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_pebble_pairing_service.h"
-#include "stubs_timeline.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_reminder_db.h"
-#include "stubs_reminders.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_system_reset.h"
-#include "stubs_task_wdt.h"
-#include "stubs_nexmo.h"
-#include "stubs_codepoint.h"
-#include "stubs_utf8.h"
+#include <stubs_analytics.h>
+#include <stubs_ios_notif_pref_db.h>
+#include <stubs_bt_stack.h>
+#include <stubs_ble.h>
+#include <stubs_pin_db.h>
+#include <stubs_i18n.h>
+#include <stubs_layout_layer.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_pebble_pairing_service.h>
+#include <stubs_timeline.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_reminder_db.h>
+#include <stubs_reminders.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_system_reset.h>
+#include <stubs_task_wdt.h>
+#include <stubs_nexmo.h>
+#include <stubs_codepoint.h>
+#include <stubs_utf8.h>
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
@@ -53,13 +53,13 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_events.h"
-#include "fake_gatt_client_subscriptions.h"
-#include "fake_kernel_services_notifications.h"
-#include "fake_new_timer.h"
-#include "fake_notification_storage.h"
-#include "fake_pbl_malloc.h"
-#include "fake_spi_flash.h"
+#include <fake_events.h>
+#include <fake_gatt_client_subscriptions.h>
+#include <fake_kernel_services_notifications.h>
+#include <fake_new_timer.h>
+#include <fake_notification_storage.h>
+#include <fake_pbl_malloc.h>
+#include <fake_spi_flash.h>
 
 bool shell_prefs_get_language_english(void) {
   return false;

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
-#include "process_management/process_manager.h"
+#include <process_management/pebble_process_md.h>
+#include <process_management/process_manager.h>
 
 // Worker management functions
 void worker_manager_init(void) {

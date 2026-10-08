@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/audio.h>
-#include "pbl/util/circular_buffer.h"
+#include <pbl/util/circular_buffer.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "nrfx_i2s.h"
+#include <nrfx_i2s.h>
 
 /**
  * @defgroup drivers_speaker_nrf5 DA7212 on nRF5

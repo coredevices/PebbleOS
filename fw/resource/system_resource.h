@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/fonts/fonts.h"
+#include <applib/fonts/fonts.h>
 
 void system_resource_init(void);
 

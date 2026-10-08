@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/ui/recognizer/recognizer.h"
-#include "applib/ui/recognizer/recognizer_impl.h"
-#include "applib/ui/recognizer/recognizer_private.h"
-#include "applib/ui/recognizer/pan.h"
+#include <applib/ui/recognizer/recognizer.h>
+#include <applib/ui/recognizer/recognizer_impl.h>
+#include <applib/ui/recognizer/recognizer_private.h>
+#include <applib/ui/recognizer/pan.h>
 
-#include "pbl/drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 
 // Fakes
-#include "fake_rtc.h"
+#include <fake_rtc.h>
 
 // Stubs
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_logging.h"
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_logging.h>
 
 #include "test_recognizer_impl.h"
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 // The manager is not under test here; swallow the notification.
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {

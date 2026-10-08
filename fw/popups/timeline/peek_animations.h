@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 #define PEEK_ANIMATIONS_SPEED_LINES_OFFSET_X (7)
 

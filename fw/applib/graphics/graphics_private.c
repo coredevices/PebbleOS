@@ -5,10 +5,10 @@
 #include "graphics.h"
 #include "graphics_private.h"
 #include "gtypes.h"
-#include "system/passert.h"
-#include "pbl/util/bitops.h"
-#include "pbl/util/math.h"
-#include "pbl/util/testing.h"
+#include <system/passert.h>
+#include <pbl/util/bitops.h>
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
 // ## Point setting/blending functions
 

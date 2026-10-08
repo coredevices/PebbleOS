@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/battery/battery_state.h"
+#include <pbl/services/battery/battery_state.h>
 
 #ifdef CONFIG_QEMU
 #include <pbl/drivers/battery/qemu.h>
 #endif
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/battery.h>
-#include "kernel/events.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/battery/battery_curve.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
-#include "syscall/syscall_internal.h"
+#include <kernel/events.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/battery/battery_curve.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/ratio.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/ratio.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 

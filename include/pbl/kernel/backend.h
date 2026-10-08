@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl_arch_thread.h"
+#include <pbl_arch_thread.h>
 
 /** @cond INTERNAL_HIDDEN */
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "system/status_codes.h"
+#include <system/status_codes.h>
 
 #include <stddef.h>
 #include <stdint.h>

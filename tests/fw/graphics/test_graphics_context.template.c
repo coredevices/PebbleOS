@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/graphics.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/graphics.h>
+#include <pbl/kernel/compiler.h>
 
-#include "clar.h"
+#include <clar.h>
 #include "util.h"
 
 
 // Helper Functions
 ////////////////////////////////////
 #include "test_graphics.h"
-#include "${BIT_DEPTH_NAME}/test_framebuffer.h"
+#include <${BIT_DEPTH_NAME}/test_framebuffer.h>
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
+#include <stubs_applib_resource.h>
 
 // Definitions
 #define SW_EVEN 4

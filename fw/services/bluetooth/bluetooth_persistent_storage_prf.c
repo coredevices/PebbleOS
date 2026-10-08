@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 
-#include "comm/ble/gap_le_connect.h"
+#include <comm/ble/gap_le_connect.h>
 
-#include "pbl/services/bluetooth/pairability.h"
-#include "pbl/services/settings/settings_file.h"
-#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
+#include <pbl/services/bluetooth/pairability.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 
-#include "comm/ble/kernel_le_client/kernel_le_client.h"
+#include <comm/ble/kernel_le_client/kernel_le_client.h>
 
 #include <pbl/logging/logging.h>
 

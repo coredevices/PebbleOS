@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/fonts/codepoint.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/fonts/codepoint.h>
+#include <resource/resource_ids.auto.h>
 
 /**
  * @defgroup services_timeline_notification_jumboji_table Jumboji table

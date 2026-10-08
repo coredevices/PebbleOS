@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/ble/gap_le_connection.h"
+#include <comm/ble/gap_le_connection.h>
 
 /**
  * @defgroup bluetooth_gap_le_device_name Peer device names

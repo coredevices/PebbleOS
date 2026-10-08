@@ -3,34 +3,34 @@
 
 #ifdef CONFIG_PULSE_EVERYWHERE
 
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
 #include "pulse.h"
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse2_transport_impl.h"
 #include "pulse_internal.h"
 
-#include "console/cobs.h"
-#include "console/console_internal.h"
-#include "console/control_protocol.h"
-#include "console/control_protocol_impl.h"
-#include "console/dbgserial.h"
+#include <console/cobs.h>
+#include <console/console_internal.h>
+#include <console/control_protocol.h>
+#include <console/control_protocol_impl.h>
+#include <console/dbgserial.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/task_wdt/task_wdt.h>
-#include "kernel/pbl_malloc.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/mcu/interrupts.h"
-#include "pbl/kernel/mutex.h"
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/crc/crc.h"
-#include "pbl/util/math.h"
-#include "pbl/util/byteorder.h"
-#include "pbl/util/size.h"
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/mcu/interrupts.h>
+#include <pbl/kernel/mutex.h>
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/crc/crc.h>
+#include <pbl/util/math.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/size.h>
 
-#include "pbl/kernel/msgq.h"
-#include "pbl/kernel/thread.h"
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/msgq.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/sem.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -52,7 +52,7 @@ static void prv_on_lcp_up(PPPControlProtocol *this) {
 #define ON_PACKET(...)
 #define ON_INIT(...)
 #define ON_LINK_STATE_CHANGE(ON_UP, ON_DOWN) ON_UP();
-#include "console/pulse2_transport_registry.def"
+#include <console/pulse2_transport_registry.def>
 #undef ON_PACKET
 #undef ON_INIT
 #undef ON_LINK_STATE_CHANGE
@@ -62,7 +62,7 @@ static void prv_on_lcp_down(PPPControlProtocol *this) {
 #define ON_PACKET(...)
 #define ON_INIT(...)
 #define ON_LINK_STATE_CHANGE(ON_UP, ON_DOWN) ON_DOWN();
-#include "console/pulse2_transport_registry.def"
+#include <console/pulse2_transport_registry.def>
 #undef ON_PACKET
 #undef ON_INIT
 #undef ON_LINK_STATE_CHANGE
@@ -178,7 +178,7 @@ static void prv_process_received_frame(size_t frame_length) {
     break;
 #define ON_INIT(...)
 #define ON_LINK_STATE_CHANGE(...)
-#include "console/pulse2_transport_registry.def"
+#include <console/pulse2_transport_registry.def>
 #undef ON_PACKET
 #undef ON_INIT
 #undef ON_LINK_STATE_CHANGE
@@ -334,7 +334,7 @@ void pulse_start(void) {
 #define ON_PACKET(...)
 #define ON_INIT(INITIALIZER) INITIALIZER();
 #define ON_LINK_STATE_CHANGE(...)
-#include "console/pulse2_transport_registry.def"
+#include <console/pulse2_transport_registry.def>
 #undef ON_PACKET
 #undef ON_INIT
 #undef ON_LINK_STATE_CHANGE

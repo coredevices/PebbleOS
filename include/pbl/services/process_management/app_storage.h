@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "kernel/pebble_tasks.h"
-#include "flash_region/flash_region.h"
-#include "process_management/pebble_process_info.h"
-#include "process_management/app_install_types.h"
+#include <kernel/pebble_tasks.h>
+#include <flash_region/flash_region.h>
+#include <process_management/pebble_process_info.h>
+#include <process_management/app_install_types.h>
 
 #include <stdbool.h>
 #include <stddef.h>

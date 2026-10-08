@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "resource/resource.h"
+#include <resource/resource.h>
 
 ResAppNum app_get_resource_num(void) {
   return 0;

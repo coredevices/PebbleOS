@@ -1,32 +1,32 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/notifications/alerts_preferences_private.h"
+#include <pbl/services/notifications/alerts_preferences_private.h>
 
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
-#include "shell/prefs_private.h"
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
+#include <shell/prefs_private.h>
 
 #include <string.h>
 
-#include "clar.h"
+#include <clar.h>
 
-#include "stubs_analytics.h"
-#include "stubs_do_not_disturb.h"
-#include "stubs_events.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_rtc.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
-#include "stubs_vibe_score_info.h"
+#include <stubs_analytics.h>
+#include <stubs_do_not_disturb.h>
+#include <stubs_events.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_rtc.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
+#include <stubs_vibe_score_info.h>
 
-#include "fake_spi_flash.h"
-#include "pbl/util/units.h"
+#include <fake_spi_flash.h>
+#include <pbl/util/units.h>
 
 #define NOTIF_PREFS_FILE_NAME         "notifpref"
 #define NOTIF_PREFS_FILE_LEN          1024

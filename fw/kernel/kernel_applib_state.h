@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "applib/ui/animation_private.h"
-#include "logging/logging_private.h"
-#include "applib/tick_timer_service_private.h"
-#include "applib/touch_service_private.h"
-#include "applib/compass_service_private.h"
-#include "applib/battery_state_service_private.h"
-#include "applib/connection_service_private.h"
+#include <applib/ui/animation_private.h>
+#include <logging/logging_private.h>
+#include <applib/tick_timer_service_private.h>
+#include <applib/touch_service_private.h>
+#include <applib/compass_service_private.h>
+#include <applib/battery_state_service_private.h>
+#include <applib/connection_service_private.h>
 
 void kernel_applib_init(void);
 

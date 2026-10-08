@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/data_logging/data_logging_service.h"
-#include "pbl/services/data_logging/dls_storage.h"
-#include "pbl/services/data_logging/dls_list.h"
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/data_logging/dls_storage.h>
+#include <pbl/services/data_logging/dls_list.h>
 
 #include <pbl/drivers/flash.h>
-#include "kernel/pbl_malloc.h"
-#include "kernel/pebble_tasks.h"
-#include "kernel/util/sleep.h"
-#include "pbl/services/filesystem/pfs.h"
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <kernel/util/sleep.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
-#include "pbl/util/string.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
+#include <pbl/util/string.h>
 
 #include <inttypes.h>
 #include <stddef.h>

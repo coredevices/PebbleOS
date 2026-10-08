@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/accel_service_private.h"
+#include <applib/accel_service_private.h>
 
 void accel_service_state_init(AccelServiceState *state) {
 }

@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/blob_db/watch_app_prefs_db.h"
+#include <pbl/services/blob_db/watch_app_prefs_db.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
-#include "pbl/services/weather/weather_service_private.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/weather/weather_service_private.h>
 #include <pbl/logging/logging.h>
-#include "system/status_codes.h"
-#include "pbl/util/units.h"
-#include "pbl/util/uuid.h"
-#include "pbl/util/testing.h"
+#include <system/status_codes.h>
+#include <pbl/util/units.h>
+#include <pbl/util/uuid.h>
+#include <pbl/util/testing.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

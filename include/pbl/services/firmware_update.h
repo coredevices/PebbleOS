@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 /**
  * @defgroup services_firmware_update Firmware update

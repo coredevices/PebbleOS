@@ -7,7 +7,7 @@
 #include <pbl/shell/shell.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include "pbl/services/filesystem/pfs.h"
+#include <pbl/services/filesystem/pfs.h>
 
 #include <errno.h>
 #include <stdio.h>

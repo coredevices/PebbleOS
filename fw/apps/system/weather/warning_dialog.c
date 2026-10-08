@@ -3,9 +3,9 @@
 
 #include "warning_dialog.h"
 
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/dialogs/expandable_dialog.h"
-#include "kernel/pbl_malloc.h"
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/dialogs/expandable_dialog.h>
+#include <kernel/pbl_malloc.h>
 
 typedef struct WeatherAppWarningDialogData {
   WeatherAppWarningDialogDismissedCallback dismissed_cb;

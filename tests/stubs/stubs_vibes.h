@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/vibes.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/ui/vibes.h>
+#include <pbl/kernel/compiler.h>
 
 void PBL_WEAK vibes_long_pulse(void) {
 }

@@ -4,8 +4,8 @@
 #include "resource_storage_impl.h"
 #include "resource_storage_file.h"
 
-#include "kernel/util/sleep.h"
-#include "pbl/services/filesystem/pfs.h"
+#include <kernel/util/sleep.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/logging/logging.h>
 
 #include <stdint.h>

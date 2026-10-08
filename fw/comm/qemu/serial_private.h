@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/kernel/mutex.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/shared_cbuf.h"
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/shared_cbuf.h>
 
 #include <stdbool.h>
 #include <stdint.h>

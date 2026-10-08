@@ -6,8 +6,8 @@
 #include "attribute.h"
 #include "item.h"
 
-#include "pbl/services/comm_session/session.h"
-#include "pbl/util/uuid.h"
+#include <pbl/services/comm_session/session.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_timeline_actions_endpoint Timeline action endpoint

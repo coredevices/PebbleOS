@@ -3,11 +3,11 @@
 
 #include "fake_gatt_client_operations.h"
 
-#include "comm/ble/gatt_client_operations.h"
+#include <comm/ble/gatt_client_operations.h>
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 #include <string.h>
 

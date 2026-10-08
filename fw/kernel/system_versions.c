@@ -2,25 +2,25 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/mcu.h>
-#include "mfg/mfg_info.h"
-#include "mfg/mfg_serials.h"
-#include "resource/resource.h"
-#include "resource/system_resource.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/bluetooth/local_id.h"
-#include "pbl/services/comm_session/protocol.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/comm_session/session_remote_version.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/insights_settings.h"
-#include "pbl/services/notifications/notification_image.h"
-#include "shell/system_app_ids.auto.h"
-#include "system/bootbits.h"
+#include <mfg/mfg_info.h>
+#include <mfg/mfg_serials.h>
+#include <resource/resource.h>
+#include <resource/system_resource.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/comm_session/protocol.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/activity/insights_settings.h>
+#include <pbl/services/notifications/notification_image.h>
+#include <shell/system_app_ids.auto.h>
+#include <system/bootbits.h>
 #include <pbl/logging/logging.h>
-#include "system/version.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/byteorder.h"
-#include "pbl/util/string.h"
+#include <system/version.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/string.h>
 
 #include <pbl/bluetooth/types.h>
 

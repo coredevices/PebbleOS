@@ -4,13 +4,13 @@
 #include "text_render.h"
 
 #include "gcontext.h"
-#include "process_state/app_state/app_state.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 #include "text_resources.h"
-#include "pbl/util/bitops.h"
-#include "pbl/util/math.h"
-#include "pbl/util/testing.h"
+#include <pbl/util/bitops.h>
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
 typedef uint32_t GlyphBlock PBL_ALIGNED(1);
 

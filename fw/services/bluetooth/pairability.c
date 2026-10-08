@@ -2,16 +2,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
-#include "comm/ble/gap_le_slave_discovery.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/services/bluetooth/bluetooth_ctl.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/bluetooth/local_addr.h"
-#include "pbl/services/bluetooth/pairability.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/system_task.h"
+#include <comm/ble/gap_le_slave_discovery.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/services/bluetooth/bluetooth_ctl.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_addr.h>
+#include <pbl/services/bluetooth/pairability.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/system_task.h>
 
 #include <pbl/bluetooth/pairability.h>
 

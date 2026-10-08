@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pbl/services/system_task.h"
+#include <pbl/services/system_task.h>
 
 #define ESC_NONE  0
 #define ESC_START 1

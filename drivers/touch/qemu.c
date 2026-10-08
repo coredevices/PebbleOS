@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/touch/touch_sensor.h>
-#include "pbl/services/system_task.h"
-#include "pbl/kernel/irq.h"
-#include "pbl/services/touch/touch.h"
+#include <pbl/services/system_task.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/services/touch/touch.h>
 
 #include <cmsis_core.h>
 #include <stdbool.h>

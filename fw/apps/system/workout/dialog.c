@@ -3,12 +3,12 @@
 
 #include "dialog.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/dialogs/dialog_private.h"
-#include "kernel/ui/kernel_ui.h"
-#include "resource/resource_ids.auto.h"
-#include "system/passert.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/dialogs/dialog_private.h>
+#include <kernel/ui/kernel_ui.h>
+#include <resource/resource_ids.auto.h>
+#include <system/passert.h>
 
 #define TEXT_FLOW_INSET_PX (PBL_IF_RECT_ELSE(0, 8))
 

@@ -3,51 +3,51 @@
 
 #pragma once
 
-#include "applib/event_service_client.h"
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/alarms/alarm.h"
-#include "pbl/services/alarms/alarm_pin.h"
-#include "pbl/services/blob_db/pin_db.h"
+#include <applib/event_service_client.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/alarms/alarm.h>
+#include <pbl/services/alarms/alarm_pin.h>
+#include <pbl/services/blob_db/pin_db.h>
 
 #include <pbl/drivers/rtc.h>
-#include "resource/timeline_resource_ids.auto.h"
+#include <resource/timeline_resource_ids.auto.h>
 #include <pbl/cron/cron.h>
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
-#include "pbl/services/timeline/item.h"
-#include "pbl/services/timeline/timeline.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/size.h"
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/timeline/item.h>
+#include <pbl/services/timeline/timeline.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/size.h>
 
 #include <stdint.h>
 #include <string.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
-#include "stubs_analytics.h"
-#include "stubs_app_cache.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_blob_db.h"
-#include "stubs_calendar.h"
-#include "stubs_hexdump.h"
-#include "stubs_i18n.h"
-#include "stubs_layout_layer.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_regular_timer.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
-#include "stubs_timeline_event.h"
+#include <stubs_analytics.h>
+#include <stubs_app_cache.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_blob_db.h>
+#include <stubs_calendar.h>
+#include <stubs_hexdump.h>
+#include <stubs_i18n.h>
+#include <stubs_layout_layer.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_regular_timer.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
+#include <stubs_timeline_event.h>
 
 // Fakes
-#include "fake_spi_flash.h"
-#include "pbl/util/units.h"
+#include <fake_spi_flash.h>
+#include <pbl/util/units.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Stubs

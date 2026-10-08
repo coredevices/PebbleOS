@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/framebuffer.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/graphics/framebuffer.h>
+#include <pbl/kernel/compiler.h>
 
 volatile const int FrameBuffer_MaxX = DISP_COLS;
 volatile const int FrameBuffer_MaxY = DISP_ROWS;

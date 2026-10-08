@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/app_launch_button.h"
-#include "applib/app_launch_reason.h"
-#include "pbl/services/compositor/compositor.h"
+#include <applib/app_launch_button.h>
+#include <applib/app_launch_reason.h>
+#include <pbl/services/compositor/compositor.h>
 
 typedef struct LaunchConfigCommon {
   AppLaunchReason reason;

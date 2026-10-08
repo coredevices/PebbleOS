@@ -42,7 +42,7 @@ bool mcu_state_are_interrupts_enabled(void);
 /** @} */
 
 #ifdef __arm__
-#include "pbl/mcu/interrupts_arm.inl.h"
+#include <pbl/mcu/interrupts_arm.inl.h>
 #else
-#include "pbl/mcu/interrupts_stubs.inl.h"
+#include <pbl/mcu/interrupts_stubs.inl.h>
 #endif

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/window_stack.h"
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/window_stack.h>
 
 //! Initializes the dialog.
 //! @param dialog Pointer to a \ref Dialog to initialize

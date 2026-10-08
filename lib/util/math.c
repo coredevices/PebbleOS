@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/math.h"
+#include <pbl/util/math.h>
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 int32_t sign_extend(uint32_t a, int bits) {
   if (bits == 32) {

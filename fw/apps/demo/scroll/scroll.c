@@ -3,11 +3,11 @@
 
 #include "scroll.h"
 
-#include "applib/app.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_manager.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_manager.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
 
 typedef struct {

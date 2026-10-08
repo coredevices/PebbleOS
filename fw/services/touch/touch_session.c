@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/touch/touch_session.h"
+#include <pbl/services/touch/touch_session.h>
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
-#include "kernel/ui/modals/modal_manager.h"
-#include "pbl/services/light.h"
-#include "process_management/app_manager.h"
-#include "shell/prefs.h"
+#include <kernel/ui/modals/modal_manager.h>
+#include <pbl/services/light.h>
+#include <process_management/app_manager.h>
+#include <shell/prefs.h>
 
 PBL_LOG_MODULE_DECLARE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);
 

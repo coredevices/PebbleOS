@@ -7,12 +7,12 @@
 #include "window_stack.h"
 #include "window_stack_private.h"
 
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>

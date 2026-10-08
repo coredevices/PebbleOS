@@ -4,14 +4,14 @@
 #include "app_run_state.h"
 #include "launcher_app_message.h"
 
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_manager.h"
-#include "process_management/process_manager.h"
-#include "pbl/services/system_task.h"
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
+#include <process_management/process_manager.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #define PB_APP_STATE_ENDPOINT_ID 0x34
 

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/settings/settings_raw_iter.h"
+#include <pbl/services/settings/settings_raw_iter.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/filesystem/pfs.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DECLARE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
 

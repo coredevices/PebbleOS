@@ -1,28 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/hrm/hrm_manager.h"
-#include "pbl/services/hrm/hrm_manager_private.h"
+#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
 
-#include "applib/health_service.h"
+#include <applib/health_service.h>
 #include <pbl/drivers/hrm.h>
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/types.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/activity/activity.h"
-#include "syscall/syscall_internal.h"
-#include "system/hexdump.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/types.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/activity/activity.h>
+#include <syscall/syscall_internal.h>
+#include <system/hexdump.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/testing.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <stddef.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
 

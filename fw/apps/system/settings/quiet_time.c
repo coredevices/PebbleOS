@@ -5,20 +5,20 @@
 #include "menu.h"
 #include "window.h"
 
-#include "applib/ui/action_menu_window_private.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/menu_layer.h"
-#include "applib/ui/time_range_selection_window.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/notifications/alerts_private.h"
-#include "pbl/services/notifications/do_not_disturb.h"
-#include "pbl/services/notifications/alerts_preferences.h"
-#include "system/passert.h"
-#include "pbl/util/size.h"
-#include "pbl/util/string.h"
-#include "shell/prefs.h"
+#include <applib/ui/action_menu_window_private.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/menu_layer.h>
+#include <applib/ui/time_range_selection_window.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/notifications/alerts_private.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/notifications/alerts_preferences.h>
+#include <system/passert.h>
+#include <pbl/util/size.h>
+#include <pbl/util/string.h>
+#include <shell/prefs.h>
 
 typedef struct {
   SettingsCallbacks callbacks;

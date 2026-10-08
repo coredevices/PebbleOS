@@ -3,16 +3,16 @@
 
 #include "progress_window.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/fonts/fonts.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/window_private.h"
-#include "applib/ui/window_stack.h"
-#include "pbl/services/compositor/compositor_transitions.h"
-#include "pbl/services/timeline/timeline_resources.h"
-#include "system/passert.h"
-#include "pbl/util/math.h"
-#include "pbl/util/units.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/fonts/fonts.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/window_private.h>
+#include <applib/ui/window_stack.h>
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <system/passert.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 #define SCROLL_OUT_MS         250
 #define BAR_HEIGHT            PROGRESS_SUGGESTED_HEIGHT

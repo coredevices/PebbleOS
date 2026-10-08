@@ -7,7 +7,7 @@
 // its own FontInfo. This lives in a separate translation unit so it overrides the weak stub at
 // link time rather than colliding with it.
 
-#include "applib/fonts/fonts.h"
+#include <applib/fonts/fonts.h>
 
 FontInfo *s_test_fallback_font;
 

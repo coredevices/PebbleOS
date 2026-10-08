@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/ecompass.h"
+#include <pbl/services/ecompass.h>
 
-#include "applib/accel_service.h"
-#include "applib/compass_service.h"
-#include "pbl/util/trig.h"
+#include <applib/accel_service.h>
+#include <applib/compass_service.h>
+#include <pbl/util/trig.h>
 #include <pbl/drivers/mag.h>
-#include "pbl/services/event_service.h"
-#include "pbl/services/regular_timer.h"
-#include "syscall/syscall_internal.h"
-#include "syscall/syscall.h"
+#include <pbl/services/event_service.h>
+#include <pbl/services/regular_timer.h>
+#include <syscall/syscall_internal.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 

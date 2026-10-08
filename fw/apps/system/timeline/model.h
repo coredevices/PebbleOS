@@ -5,7 +5,7 @@
 
 #include "common.h"
 
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 #define TIMELINE_NUM_ITEMS_IN_MODEL (TIMELINE_NUM_VISIBLE_ITEMS + 1)
 

@@ -3,18 +3,18 @@
 
 #include "graph_card.h"
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/text.h"
-#include "board/display.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/text.h>
+#include <board/display.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/util/math.h"
-#include "pbl/util/string.h"
-#include "pbl/services/time.h"
-#include "pbl/util/time.h"
-#include "pbl/util/units.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/math.h>
+#include <pbl/util/string.h>
+#include <pbl/services/time.h>
+#include <pbl/util/time.h>
+#include <pbl/util/units.h>
 
 // Compile-time display offset calculations
 #define DISPLAY_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)

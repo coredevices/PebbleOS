@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include "pbl/kernel/sem.h"
-#include "board/board.h"
+#include <pbl/kernel/sem.h>
+#include <board/board.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
 #ifdef CONFIG_SOC_SF32LB52
-#include "bf0_hal_dma.h"
-#include "bf0_hal_mpi.h"
+#include <bf0_hal_dma.h>
+#include <bf0_hal_mpi.h>
 #endif
 
 /**

@@ -11,9 +11,9 @@
 #include <host/util/util.h>
 #include <kernel/pebble_tasks.h>
 #include <nimble/nimble_port.h>
-#include "pbl/kernel/types.h"
-#include "pbl/kernel/sem.h"
-#include "pbl/kernel/thread.h"
+#include <pbl/kernel/types.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/kernel/thread.h>
 #include <services/dis/ble_svc_dis.h>
 #include <services/bas/ble_svc_bas.h>
 #include <services/gap/ble_svc_gap.h>

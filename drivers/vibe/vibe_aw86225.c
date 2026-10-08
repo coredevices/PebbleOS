@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/vibe.h>
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
-#include "system/passert.h"
-#include "kernel/util/sleep.h"
+#include <system/passert.h>
+#include <kernel/util/sleep.h>
 #include <string.h>
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);

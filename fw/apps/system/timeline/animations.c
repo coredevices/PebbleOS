@@ -3,8 +3,8 @@
 
 #include "animations.h"
 
-#include "applib/ui/property_animation.h"
-#include "applib/ui/ui.h"
+#include <applib/ui/property_animation.h>
+#include <applib/ui/ui.h>
 
 #include <stdint.h>
 

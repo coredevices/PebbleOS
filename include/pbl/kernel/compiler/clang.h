@@ -5,7 +5,7 @@
 
 /** @cond INTERNAL_HIDDEN */
 
-#include "pbl/kernel/compiler/gcc.h"
+#include <pbl/kernel/compiler/gcc.h>
 
 #undef PBL_OPTIMIZE_IMPL
 #define PBL_OPTIMIZE_IMPL(level)

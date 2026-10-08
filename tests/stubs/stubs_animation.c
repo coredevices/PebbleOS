@@ -7,11 +7,11 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "applib/ui/animation.h"
-#include "applib/ui/animation_private.h"
-#include "applib/ui/property_animation.h"
-#include "applib/ui/property_animation_private.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/ui/animation.h>
+#include <applib/ui/animation_private.h>
+#include <applib/ui/property_animation.h>
+#include <applib/ui/property_animation_private.h>
+#include <pbl/kernel/compiler.h>
 
 Animation *PBL_WEAK animation_create(void) {
   Animation *animation = malloc(sizeof(AnimationPrivate));

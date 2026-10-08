@@ -3,7 +3,7 @@
 
 #include "fake_gap_le_connect_params.h"
 
-#include "pbl/services/new_timer/new_timer.h"
+#include <pbl/services/new_timer/new_timer.h>
 
 static enum pbl_bt_response_time_state s_last_requested_desired_state;
 

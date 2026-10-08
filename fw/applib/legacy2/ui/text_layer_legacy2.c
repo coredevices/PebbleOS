@@ -3,13 +3,13 @@
 
 #include "text_layer_legacy2.h"
 
-#include "applib/graphics/gtypes.h"
-#include "process_state/app_state/app_state.h"
-#include "applib/graphics/graphics.h"
-#include "applib/fonts/fonts.h"
-#include "kernel/pbl_malloc.h"
+#include <applib/graphics/gtypes.h>
+#include <process_state/app_state/app_state.h>
+#include <applib/graphics/graphics.h>
+#include <applib/fonts/fonts.h>
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <string.h>
 #include <stddef.h>

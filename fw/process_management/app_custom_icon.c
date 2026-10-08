@@ -5,12 +5,12 @@
 
 #include "app_install_manager_private.h"
 
-#include "apps/system_app_ids.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/comm_session/session.h"
+#include <apps/system_app_ids.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/comm_session/session.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
 
 #include <string.h>
 #include <stddef.h>

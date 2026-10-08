@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/comm_session/default_kernel_sender.h"
-#include "pbl/services/comm_session/session_send_buffer.h"
-#include "pbl/services/comm_session/session_transport.h"
-#include "pbl/services/comm_session/session_internal.h"
-#include "pbl/services/comm_session/session_send_queue.h"
-#include "pbl/services/comm_session/protocol.h"
+#include <pbl/services/comm_session/default_kernel_sender.h>
+#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/services/comm_session/session_internal.h>
+#include <pbl/services/comm_session/session_send_queue.h>
+#include <pbl/services/comm_session/protocol.h>
 
-#include "pbl/util/byteorder.h"
-#include "pbl/util/size.h"
+#include <pbl/util/byteorder.h>
+#include <pbl/util/size.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
-#include "clar.h"
-#include "pbl/util/testing.h"
+#include <clar.h>
+#include <pbl/util/testing.h>
 
 extern SendBuffer *comm_session_send_buffer_create(bool is_system);
 extern void comm_session_send_buffer_destroy(SendBuffer *sb);
@@ -26,17 +26,17 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_bt_lock.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_analytics.h"
+#include <stubs_bt_lock.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_analytics.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include "fake_kernel_malloc.h"
-#include "fake_sem.h"
-#include "fake_rtc.h"
+#include <fake_kernel_malloc.h>
+#include <fake_sem.h>
+#include <fake_rtc.h>
 
 static CommSession s_session;
 

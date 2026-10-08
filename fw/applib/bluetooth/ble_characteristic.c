@@ -3,7 +3,7 @@
 
 #include "ble_characteristic.h"
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
 bool ble_characteristic_is_readable(pbl_bt_characteristic_t characteristic) {
   return (sys_ble_characteristic_get_properties(characteristic) & PBL_BT_ATTRIBUTE_PROPERTY_READ);

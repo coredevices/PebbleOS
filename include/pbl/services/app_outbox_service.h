@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "applib/app_outbox.h"
-#include "kernel/events.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/util/list.h"
+#include <applib/app_outbox.h>
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/util/list.h>
 
 #include <stdint.h>
 #include <stddef.h>

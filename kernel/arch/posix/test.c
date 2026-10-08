@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "pbl/kernel/idle.h"
+#include <pbl/kernel/idle.h>
 
-#include "kernel.h"
-#include "kernel_test.h"
+#include <kernel.h>
+#include <kernel_test.h>
 #include "posix.h"
 
 // Unit test harness: time only moves when the test ticks it, or when every

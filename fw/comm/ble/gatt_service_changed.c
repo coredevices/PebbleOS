@@ -5,12 +5,12 @@
 
 #include "gap_le_connection.h"
 
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
 
 #include <pbl/bluetooth/gatt.h>

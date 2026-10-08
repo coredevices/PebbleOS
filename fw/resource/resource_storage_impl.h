@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #include "resource.h"
 #include "resource_storage.h"

@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/bitblt.h"
-#include "applib/graphics/bitblt_private.h"
-#include "applib/graphics/8_bit/framebuffer.h"
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/bitblt.h>
+#include <applib/graphics/bitblt_private.h>
+#include <applib/graphics/8_bit/framebuffer.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <string.h>
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include "stubs_applib_resource.h"
-#include "stubs_compiled_with_legacy2_sdk.h"
+#include <stubs_applib_resource.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
 #include "test_graphics.h"
 
 // Setup

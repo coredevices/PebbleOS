@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/blob_db/ios_notif_pref_db.h"
+#include <pbl/services/blob_db/ios_notif_pref_db.h>
 
-#include "pbl/services/blob_db/sync.h"
-#include "pbl/services/blob_db/sync_util.h"
+#include <pbl/services/blob_db/sync.h>
+#include <pbl/services/blob_db/sync_util.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
-#include "pbl/services/timeline/attributes_actions.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/testing.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

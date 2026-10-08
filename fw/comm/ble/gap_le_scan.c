@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/bluetooth/gap_le_scan.h"
-#include "kernel/pbl_malloc.h"
-#include "comm/bt_lock.h"
+#include <pbl/bluetooth/gap_le_scan.h>
+#include <kernel/pbl_malloc.h>
+#include <comm/bt_lock.h>
 #include "gap_le_scan.h"
-#include "kernel/events.h"
-#include "system/passert.h"
-#include "pbl/util/circular_buffer.h"
-#include "pbl/kernel/compiler.h"
+#include <kernel/events.h>
+#include <system/passert.h>
+#include <pbl/util/circular_buffer.h>
+#include <pbl/kernel/compiler.h>
 
 // -----------------------------------------------------------------------------
 // Static Variables -- MUST be protected with bt_lock/unlock!

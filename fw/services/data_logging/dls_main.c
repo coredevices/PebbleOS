@@ -1,30 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/data_logging.h"
-#include "pbl/util/list.h"
-#include "pbl/util/uuid.h"
+#include <applib/data_logging.h>
+#include <pbl/util/list.h>
+#include <pbl/util/uuid.h>
 
-#include "pbl/services/data_logging/data_logging_service.h"
-#include "pbl/services/data_logging/dls_endpoint.h"
-#include "pbl/services/data_logging/dls_list.h"
-#include "pbl/services/data_logging/dls_storage.h"
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/data_logging/dls_endpoint.h>
+#include <pbl/services/data_logging/dls_list.h>
+#include <pbl/services/data_logging/dls_storage.h>
 
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
-#include "process_management/pebble_process_md.h"
-#include "process_management/process_manager.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/services/system_task.h"
-#include "syscall/syscall.h"
+#include <kernel/pbl_malloc.h>
+#include <process_management/pebble_process_md.h>
+#include <process_management/process_manager.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/system_task.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/mutex.h"
-#include "system/passert.h"
-#include "kernel/util/sleep.h"
-#include "pbl/util/string.h"
+#include <pbl/kernel/mutex.h>
+#include <system/passert.h>
+#include <kernel/util/sleep.h>
+#include <pbl/util/string.h>
 
 #include <string.h>
 #include <stdlib.h>

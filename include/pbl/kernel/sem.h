@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/types.h"
+#include <pbl/kernel/types.h>
 
 /**
  * @defgroup kernel_sem Semaphores

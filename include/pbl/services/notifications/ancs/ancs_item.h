@@ -5,8 +5,8 @@
 
 #include "ancs_notifications_util.h"
 
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "pbl/services/blob_db/ios_notif_pref_db.h"
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
+#include <pbl/services/blob_db/ios_notif_pref_db.h>
 
 /**
  * @defgroup services_notifications_ancs_ancs_item ANCS items

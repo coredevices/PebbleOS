@@ -1,28 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "kernel/event_loop.h"
-#include "kernel/events.h"
-#include "kernel/pebble_tasks.h"
+#include <kernel/event_loop.h>
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
 #include <pbl/drivers/display/display.h>
-#include "pbl/services/event_service.h"
-#include "pbl/services/touch/touch.h"
-#include "pbl/services/touch/touch_event.h"
-#include "pbl/services/touch/touch_session.h"
+#include <pbl/services/event_service.h>
+#include <pbl/services/touch/touch.h>
+#include <pbl/services/touch/touch_event.h>
+#include <pbl/services/touch/touch_session.h>
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#include "fake_events.h"
+#include <fake_events.h>
 
 // Stubs
-#include "stubs_analytics.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
+#include <stubs_analytics.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
 
 void kernel_free(void *p) {
 }

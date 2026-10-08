@@ -9,23 +9,23 @@
 
 #include "gap_le_connection.h"
 
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 #include <pbl/drivers/rtc.h>
 
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
 
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
-#include "pbl/util/circular_buffer.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/util/circular_buffer.h>
+#include <pbl/kernel/compiler.h>
 
-#include "pbl/kernel/mutex.h"
-#include "pbl/kernel/types.h"
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/types.h>
 
-#include "pbl/kernel/sem.h"
-#include "pbl/util/testing.h"
+#include <pbl/kernel/sem.h>
+#include <pbl/util/testing.h>
 
 // TODO:
 // - Intercept "manual" CCCD writes from the app, error for now? or translate to

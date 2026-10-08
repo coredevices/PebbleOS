@@ -4,16 +4,16 @@
 
 #include "mfg_als.h"
 
-#include "applib/app.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/text_layer.h"
-#include "apps/prf/mfg_test_result.h"
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <apps/prf/mfg_test_result.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/evented_timer.h"
-#include "pbl/services/light.h"
+#include <kernel/pbl_malloc.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/light.h>
 #include <pbl/logging/logging.h>
 
 #include <stdint.h>

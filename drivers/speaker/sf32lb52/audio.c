@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 #include <pbl/drivers/gpio.h>
-#include "kernel/util/delay.h"
+#include <kernel/util/delay.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/drivers/speaker/sf32lb52/sf32lb_audio.h>

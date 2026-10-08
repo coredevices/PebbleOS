@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/logging/logging.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/system_task.h"
+#include <pbl/services/system_task.h>
 
 #include <pbl/logging/logging.h>
 
 #include <pbl/task_wdt/task_wdt.h>
-#include "kernel/memory_layout.h"
-#include "kernel/pebble_tasks.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "kernel/util/task_init.h"
-#include "pbl/mcu/fpu.h"
-#include "pbl/kernel/types.h"
-#include "system/passert.h"
+#include <kernel/memory_layout.h>
+#include <kernel/pebble_tasks.h>
+#include <process_management/app_manager.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <kernel/util/task_init.h>
+#include <pbl/mcu/fpu.h>
+#include <pbl/kernel/types.h>
+#include <system/passert.h>
 
-#include "pbl/kernel/msgq.h"
-#include "pbl/kernel/poll.h"
-#include "pbl/kernel/thread.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/kernel/irq.h"
+#include <pbl/kernel/msgq.h>
+#include <pbl/kernel/poll.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/irq.h>
 
 #include <string.h>
 

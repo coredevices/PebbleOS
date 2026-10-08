@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/pwm.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <nrfx.h>
 

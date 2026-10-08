@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "process_management/app_install_types.h"
+#include <process_management/app_install_types.h>
 
 #define APP_ID_SIMPLICITY         ((AppInstallId) - 1)
 #define APP_ID_LOW_POWER_FACE     ((AppInstallId) - 2)

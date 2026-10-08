@@ -3,10 +3,10 @@
 
 #include "countdown.h"
 
-#include "applib/ui/ui.h"
-#include "applib/ui/kino/kino_layer.h"
-#include "kernel/pbl_malloc.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/ui/ui.h>
+#include <applib/ui/kino/kino_layer.h>
+#include <kernel/pbl_malloc.h>
+#include <resource/resource_ids.auto.h>
 
 #define TIMER_DURATION (1000)
 #define NUM_IMAGES     (3)

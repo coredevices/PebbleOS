@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/drivers/mag.h>
-#include "pbl/services/ecompass.h"
+#include <pbl/services/ecompass.h>
 
 //! @addtogroup Foundation
 //! @{

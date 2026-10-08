@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @addtogroup services_music_endpoint

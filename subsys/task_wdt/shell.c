@@ -7,10 +7,10 @@
 #include <pbl/logging/logging.h>
 #include <pbl/shell/shell.h>
 
-#include "kernel/event_loop.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
+#include <kernel/event_loop.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
 
 #include <errno.h>
 #include <string.h>

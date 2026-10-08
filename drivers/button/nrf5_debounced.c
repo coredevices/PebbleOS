@@ -3,14 +3,14 @@
 
 #include <pbl/drivers/debounced_button.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/exti.h>
-#include "kernel/events.h"
-#include "system/bootbits.h"
-#include "system/reboot_reason.h"
-#include "system/reset.h"
-#include "pbl/util/bitops.h"
+#include <kernel/events.h>
+#include <system/bootbits.h>
+#include <system/reboot_reason.h>
+#include <system/reset.h>
+#include <pbl/util/bitops.h>
 
 #include <nrfx.h>
 

@@ -5,17 +5,17 @@
 
 #include "app_glance_structured.h"
 
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/timeline/timeline_resources.h"
-#include "pbl/services/weather/weather_service.h"
-#include "pbl/services/weather/weather_types.h"
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/struct.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/services/weather/weather_service.h>
+#include <pbl/services/weather/weather_types.h>
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/struct.h>
 
 #include <stdio.h>
 

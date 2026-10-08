@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include "system/bootbits.h"
+#include <system/bootbits.h>
 
 void fake_boot_bit_set(BootBitValue bit);

@@ -15,7 +15,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "posix_host.h"
+#include <posix_host.h>
 #include "uart_posix_bottom.h"
 
 #ifndef MSG_NOSIGNAL

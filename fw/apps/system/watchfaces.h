@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 #define WATCHFACES_APP_COLOR_PRIMARY GColorJazzberryJam
 

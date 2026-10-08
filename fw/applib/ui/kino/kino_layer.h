@@ -6,7 +6,7 @@
 #include "kino_reel.h"
 #include "kino_player.h"
 
-#include "applib/ui/layer.h"
+#include <applib/ui/layer.h>
 
 struct KinoLayer;
 typedef struct KinoLayer KinoLayer;

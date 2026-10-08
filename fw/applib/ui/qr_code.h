@@ -5,8 +5,8 @@
 
 #include <stddef.h>
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/layer.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/layer.h>
 
 //! @file qr_code.h
 //! @addtogroup UI

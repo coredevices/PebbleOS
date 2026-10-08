@@ -1,27 +1,27 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/speaker/speaker_service.h"
+#include <pbl/services/speaker/speaker_service.h>
 
 #ifdef CONFIG_SPEAKER
 
-#include "pbl/services/speaker/note_sequence.h"
+#include <pbl/services/speaker/note_sequence.h>
 #include "pcm_stream.h"
 #include "track_player.h"
 
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/rtc.h>
-#include "board/board.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/notifications/alerts_preferences.h"
-#include "pbl/services/notifications/do_not_disturb.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <board/board.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/notifications/alerts_preferences.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <string.h>
 

@@ -1,41 +1,41 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/util/uuid.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/blob_db/prefs_db.h"
-#include "shell/prefs.h"
-#include "shell/prefs_private.h"
+#include <pbl/util/uuid.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/blob_db/prefs_db.h>
+#include <shell/prefs.h>
+#include <shell/prefs_private.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include "fake_spi_flash.h"
-#include "fake_system_task.h"
-#include "fake_kernel_services_notifications.h"
+#include <fake_spi_flash.h>
+#include <fake_system_task.h>
+#include <fake_kernel_services_notifications.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_analytics.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_event_loop.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_mfg_info.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_sleep.h"
-#include "stubs_system_theme.h"
-#include "stubs_task_wdt.h"
-#include "stubs_timeline_peek.h"
-#include "stubs_ambient_light.h"
-#include "stubs_activity.h"
+#include <stubs_analytics.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_event_loop.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_mfg_info.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_sleep.h>
+#include <stubs_system_theme.h>
+#include <stubs_task_wdt.h>
+#include <stubs_timeline_peek.h>
+#include <stubs_ambient_light.h>
+#include <stubs_activity.h>
 
 void prefs_sync_init(void) {
 }

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/pstring.h"
+#include <pbl/util/pstring.h>
 
 #include <stddef.h>
 #include <string.h>

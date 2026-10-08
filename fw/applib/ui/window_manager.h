@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/ui/modals/modal_manager.h"
+#include <kernel/ui/modals/modal_manager.h>
 #include "window.h"
 
 //! @internal

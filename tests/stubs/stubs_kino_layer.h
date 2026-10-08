@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/kino/kino_layer.h"
+#include <applib/ui/kino/kino_layer.h>
 
 void kino_layer_init(KinoLayer *kino_layer, const GRect *frame) {
 }

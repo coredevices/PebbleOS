@@ -6,8 +6,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "system/status_codes.h"
-#include "pbl/util/list.h"
+#include <system/status_codes.h>
+#include <pbl/util/list.h>
 
 typedef enum {
   RamStorageFlagDirty = 1 << 0,

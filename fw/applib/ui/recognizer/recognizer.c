@@ -7,9 +7,9 @@
 #include "recognizer_manager.h"
 #include "recognizer_private.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "system/passert.h"
-#include "pbl/util/list.h"
+#include <applib/applib_malloc.auto.h>
+#include <system/passert.h>
+#include <pbl/util/list.h>
 
 #include <stddef.h>
 

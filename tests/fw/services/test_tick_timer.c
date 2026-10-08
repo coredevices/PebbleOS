@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/tick_timer.h"
+#include <pbl/services/tick_timer.h>
 
-#include "applib/tick_timer_service.h"
-#include "kernel/events.h"
-#include "syscall/syscall.h"
+#include <applib/tick_timer_service.h>
+#include <kernel/events.h>
+#include <syscall/syscall.h>
 
-#include "fake_pebble_tasks.h"
-#include "fake_regular_timer.h"
+#include <fake_pebble_tasks.h>
+#include <fake_regular_timer.h>
 
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
 
 #include <stdlib.h>
 

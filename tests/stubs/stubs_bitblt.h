@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 PBL_WEAK void bitblt_bitmap_into_bitmap(GBitmap *dest_bitmap, const GBitmap *src_bitmap,
                                         GPoint dest_offset, GCompOp compositing_mode,

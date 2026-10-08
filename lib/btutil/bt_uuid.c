@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/btutil/bt_uuid.h"
+#include <pbl/btutil/bt_uuid.h>
 #include <pbl/bluetooth/types.h>
 
 #include <stdint.h>

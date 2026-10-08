@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "pebble_asserts.h"
+#include <clar.h>
+#include <pebble_asserts.h>
 
-#include "pbl/util/uuid.h"
-#include "applib/graphics/graphics_circle_private.h"
+#include <pbl/util/uuid.h>
+#include <applib/graphics/graphics_circle_private.h>
 
-#include "stubs_compiled_with_legacy2_sdk.h"
-#include "stubs_passert.h"
-#include "stubs_heap.h"
-#include "stubs_app_state.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_rand_ptr.h"
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_passert.h>
+#include <stubs_heap.h>
+#include <stubs_app_state.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_rand_ptr.h>
 
 //! Welcome to the test file for all of our additional cl_assert macros.
 //! You will find very basic tests, and only ones that pass (because a failure

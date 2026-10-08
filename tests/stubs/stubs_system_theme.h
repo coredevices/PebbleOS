@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "shell/system_theme.h"
-#include "pbl/kernel/compiler.h"
+#include <shell/system_theme.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdlib.h>
 

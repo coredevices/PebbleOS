@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "pb_decode.h"
-#include "pb_encode.h"
+#include <pb_decode.h>
+#include <pb_encode.h>
 
 #include "protobuf_log.h"
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #include <stdint.h>
 

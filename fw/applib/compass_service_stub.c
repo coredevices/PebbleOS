@@ -12,7 +12,7 @@
 
 #include "compass_service.h"
 
-#include "process_management/process_manager.h"
+#include <process_management/process_manager.h>
 
 //! @return which status value we should use to indicate we have no compass
 static CompassStatus prv_get_status(void) {

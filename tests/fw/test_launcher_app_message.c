@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/app_message/app_message_internal.h"
-#include "process_management/app_run_state.h"
-#include "process_management/launcher_app_message.h"
-#include "pbl/services/comm_session/session_internal.h"
-#include "system/passert.h"
-#include "applib/dict.h"
-#include "pbl/util/uuid.h"
+#include <applib/app_message/app_message_internal.h>
+#include <process_management/app_run_state.h>
+#include <process_management/launcher_app_message.h>
+#include <pbl/services/comm_session/session_internal.h>
+#include <system/passert.h>
+#include <applib/dict.h>
+#include <pbl/util/uuid.h>
 
 extern void launcher_app_message_reset(void);
 extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *session,
@@ -18,18 +18,18 @@ extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *s
 
 // Fakes
 ////////////////////////////////////
-#include "fake_app_manager.h"
-#include "fake_pbl_malloc.h"
-#include "fake_session.h"
-#include "fake_system_task.h"
+#include <fake_app_manager.h>
+#include <fake_pbl_malloc.h>
+#include <fake_session.h>
+#include <fake_system_task.h>
 
 // Stubs
 ////////////////////////////////////
-#include "stubs_bt_lock.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_rand_ptr.h"
+#include <stubs_bt_lock.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_rand_ptr.h>
 
 AppRunStateCommand s_last_cmd;
 

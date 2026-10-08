@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
 #include "pulse_logging.h"
 
-#include "kernel/pebble_tasks.h"
+#include <kernel/pebble_tasks.h>
 #include "logging_private.h"
-#include "kernel/util/stack_info.h"
+#include <kernel/util/stack_info.h>
 
-#include "console/serial_console.h"
-#include "debug/advanced_logging.h"
+#include <console/serial_console.h>
+#include <debug/advanced_logging.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 
-#include "pbl/mcu/interrupts.h"
-#include "pbl/mcu/privilege.h"
+#include <pbl/mcu/interrupts.h>
+#include <pbl/mcu/privilege.h>
 
-#include "pbl/util/byteorder.h"
-#include "pbl/util/string.h"
+#include <pbl/util/byteorder.h>
+#include <pbl/util/string.h>
 
 #include <ctype.h>
 #include <stdio.h>

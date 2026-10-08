@@ -5,14 +5,14 @@
 
 #include <stdio.h>
 
-#include "applib/app.h"
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/utf8.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/utf8.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <process_state/app_state/app_state.h>
 
 #define EMOJIS_PER_PAGE   48
 #define EMOJI_BUFFER_SIZE (EMOJIS_PER_PAGE * 5 + 1)

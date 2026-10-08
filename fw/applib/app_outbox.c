@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_outbox.h"
-#include "kernel/events.h"
-#include "process_state/app_state/app_state.h"
-#include "syscall/syscall.h"
+#include <applib/app_outbox.h>
+#include <kernel/events.h>
+#include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 static void prv_handle_event(PebbleEvent *e, void *unused) {
   const PebbleAppOutboxSentEvent *sent_event = &e->app_outbox_sent;

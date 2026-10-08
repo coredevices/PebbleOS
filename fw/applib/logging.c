@@ -2,27 +2,27 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
-#include "logging/logging_private.h"
-#include "kernel/kernel_applib_state.h"
+#include <logging/logging_private.h>
+#include <kernel/kernel_applib_state.h>
 
-#include "process_state/app_state/app_state.h"
-#include "process_state/worker_state/worker_state.h"
+#include <process_state/app_state/app_state.h>
+#include <process_state/worker_state/worker_state.h>
 
-#include "pebbleos/chip_id.h"
+#include <pebbleos/chip_id.h>
 
 #include <pbl/logging/log_hashing.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/byteorder.h"
-#include "pbl/util/string.h"
+#include <system/passert.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/string.h>
 
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #define NEW_LOG_HEADER "NL" NEW_LOG_VERSION
 _Static_assert((CORE_ID_MAIN_MCU & PACKED_CORE_MASK) == CORE_ID_MAIN_MCU, "Core number invalid");

@@ -3,14 +3,14 @@
 
 #include "sleep_detail_card.h"
 #include "detail_card.h"
-#include "pbl/services/activity/health_util.h"
+#include <pbl/services/activity/health_util.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/i18n/i18n.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
 
 #include <stdio.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 typedef struct HealthSleepDetailCard {
   int32_t daily_avg;

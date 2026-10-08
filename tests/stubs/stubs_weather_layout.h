@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/timeline/weather_layout.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/timeline/weather_layout.h>
+#include <pbl/kernel/compiler.h>
 
 LayoutLayer *PBL_WEAK weather_layout_create(const LayoutLayerConfig *config) {
   return NULL;

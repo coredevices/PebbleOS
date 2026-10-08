@@ -3,10 +3,10 @@
 
 #include <string.h>
 
-#include "pbl/kernel/irq.h"
-#include "pbl/mcu/cache.h"
-#include "pbl/mcu/fpu.h"
-#include "pbl/mcu/mpu.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/mcu/cache.h>
+#include <pbl/mcu/fpu.h>
+#include <pbl/mcu/mpu.h>
 
 // The host has no interrupt controller, caches to maintain or MPU: interrupts
 // come from host threads (see native.c) and memory is unprotected.

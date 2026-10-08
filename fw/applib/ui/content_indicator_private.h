@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "applib/app_timer.h"
-#include "applib/ui/scroll_layer.h"
-#include "applib/ui/layer.h"
-#include "pbl/util/buffer.h"
+#include <applib/app_timer.h>
+#include <applib/ui/scroll_layer.h>
+#include <applib/ui/layer.h>
+#include <pbl/util/buffer.h>
 
 typedef struct {
   ContentIndicatorDirection direction : 2;

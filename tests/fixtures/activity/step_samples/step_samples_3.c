@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "applib/accel_service.h"
+#include <applib/accel_service.h>
 
 
 // ----------------------------------------------------------------

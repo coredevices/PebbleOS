@@ -6,7 +6,7 @@
 
 #include "quick_launch_nothing.h"
 
-#include "pbl/services/i18n/i18n.h"
+#include <pbl/services/i18n/i18n.h>
 
 static void prv_main(void) {
   // Never runs; the shell drops the launch before it gets here.

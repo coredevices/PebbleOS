@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/app_timer.h"
+#include <applib/app_timer.h>
 
 AppTimer *app_timer_register(uint32_t timeout_ms, AppTimerCallback callback, void *callback_data) {
   return NULL;

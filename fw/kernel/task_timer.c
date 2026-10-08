@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/drivers/rtc.h"
+#include <pbl/drivers/rtc.h>
 #include "task_timer.h"
 #include "task_timer_manager.h"
 
-#include "kernel/pebble_tasks.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/kernel/types.h"
+#include <kernel/pebble_tasks.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/list.h"
+#include <system/passert.h>
+#include <pbl/util/list.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
 // Structure of a timer
 typedef struct TaskTimer {

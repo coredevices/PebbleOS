@@ -5,14 +5,14 @@
 #include "card_view.h"
 #include "data.h"
 
-#include "applib/app.h"
-#include "applib/ui/dialogs/expandable_dialog.h"
-#include "kernel/pbl_malloc.h"
-#include "popups/health_tracking_ui.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/timeline/timeline.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/app.h>
+#include <applib/ui/dialogs/expandable_dialog.h>
+#include <kernel/pbl_malloc.h>
+#include <popups/health_tracking_ui.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/timeline/timeline.h>
+#include <resource/resource_ids.auto.h>
 
 // Health app versions
 // 0: Invalid (app was never opened)

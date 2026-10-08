@@ -14,14 +14,14 @@
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
-#include "pbl/kernel/debug.h"
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
-#include "pbl/kernel/thread.h"
-#include "pbl/kernel/types.h"
-#include "system/die.h"
-#include "system/passert.h"
-#include "system/reboot_reason.h"
+#include <pbl/kernel/debug.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/types.h>
+#include <system/die.h>
+#include <system/passert.h>
+#include <system/reboot_reason.h>
 
 PBL_LOG_MODULE_DEFINE(task_wdt, CONFIG_TASK_WDT_LOG_LEVEL);
 

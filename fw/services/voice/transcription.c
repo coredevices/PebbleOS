@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/voice/transcription.h"
+#include <pbl/services/voice/transcription.h>
 
-#include "system/passert.h"
+#include <system/passert.h>
 
 // Check that there are no null terminators or special characters in the word
 static bool prv_validate_word(utf8_t *str, uint16_t size) {

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/crc/crc.h"
+#include <pbl/crc/crc.h>
 
 #include <inttypes.h>
 #include <stdio.h>

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 void __assert_func(const char *file, int line, const char *func, const char *e) {
   PBL_LOG_ERR("assert in %s:%d", file, line);

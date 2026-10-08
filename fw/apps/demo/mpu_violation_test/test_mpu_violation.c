@@ -3,19 +3,19 @@
 
 #include "test_mpu_violation.h"
 
-#include "applib/app.h"
-#include "applib/app_timer.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/click.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window.h"
-#include "font_resource_keys.auto.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/memory_layout.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/app_timer.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/click.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
+#include <font_resource_keys.auto.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/memory_layout.h>
+#include <process_state/app_state/app_state.h>
 
 #include <stdio.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 // Demo app that deliberately runs a series of memory accesses that the
 // MPU is supposed to deny for the unprivileged App task. Use up/down to

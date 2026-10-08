@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/property_animation.h"
-#include "applib/ui/window.h"
+#include <applib/ui/property_animation.h>
+#include <applib/ui/window.h>
 
 /**
  * @defgroup services_compositor Compositor

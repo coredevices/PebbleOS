@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include "../launcher.h"
+#include <apps/system/launcher/launcher.h>
 
 #include "menu_layer.h"
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 #include <stdbool.h>
 

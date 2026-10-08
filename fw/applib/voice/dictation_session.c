@@ -5,11 +5,11 @@
 #include "dictation_session_private.h"
 #include "voice_window_private.h"
 
-#include "applib/voice/voice_window.h"
-#include "applib/applib_malloc.auto.h"
-#include "syscall/syscall.h"
+#include <applib/voice/voice_window.h>
+#include <applib/applib_malloc.auto.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #ifdef CONFIG_MIC
 

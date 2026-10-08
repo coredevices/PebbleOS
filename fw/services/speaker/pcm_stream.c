@@ -3,7 +3,7 @@
 
 #include "pcm_stream.h"
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 
 #include <string.h>
 

@@ -3,8 +3,8 @@
 
 #include <pbl/drivers/ambient_light.h>
 
-#include "board/board.h"
-#include "system/passert.h"
+#include <board/board.h>
+#include <system/passert.h>
 
 #include <inttypes.h>
 

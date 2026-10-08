@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/applib_resource_private.h"
+#include <applib/applib_resource_private.h>
 #include "fake_resource_syscalls.h"
 
 bool applib_resource_track_mmapped(const void *bytes) {

@@ -14,10 +14,10 @@
 
 #include <pbl/logging/logging.h>
 
-#include "flash_region/flash_region.h"
-#include "posix_host.h"
-#include "system/passert.h"
-#include "system/status_codes.h"
+#include <flash_region/flash_region.h>
+#include <posix_host.h>
+#include <system/passert.h>
+#include <system/status_codes.h>
 
 // External flash, as a file mapped into memory. Writes and erases land in
 // the file right away, so its contents survive a restart.

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "shell/normal/watchface.h"
-#include "pbl/kernel/compiler.h"
+#include <shell/normal/watchface.h>
+#include <pbl/kernel/compiler.h>
 
 AppInstallId PBL_WEAK watchface_get_default_install_id(void) {
   return 0;

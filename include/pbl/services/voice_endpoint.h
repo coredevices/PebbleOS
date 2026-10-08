@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "pbl/services/audio_endpoint.h"
-#include "pbl/services/voice/transcription.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/uuid.h"
+#include <pbl/services/audio_endpoint.h>
+#include <pbl/services/voice/transcription.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 #include <inttypes.h>
 #include <stdlib.h>

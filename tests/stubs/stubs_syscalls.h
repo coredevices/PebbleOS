@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "syscall/syscall.h"
-#include "pbl/kernel/compiler.h"
+#include <syscall/syscall.h>
+#include <pbl/kernel/compiler.h>
 
 struct tm *PBL_WEAK sys_localtime_r(const time_t *timep, struct tm *result) {
   return localtime_r(timep, result);

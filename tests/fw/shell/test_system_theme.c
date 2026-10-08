@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/platform.h"
-#include "applib/preferred_content_size.h"
+#include <applib/platform.h>
+#include <applib/preferred_content_size.h>
 
 // Stubs
 ///////////////
 
-#include "stubs_analytics.h"
-#include "stubs_fonts.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_process_manager.h"
-#include "stubs_shell_prefs.h"
+#include <stubs_analytics.h>
+#include <stubs_fonts.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_process_manager.h>
+#include <stubs_shell_prefs.h>
 
 // Tests
 ///////////////

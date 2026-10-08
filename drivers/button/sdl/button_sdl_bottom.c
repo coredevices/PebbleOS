@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "button_sdl_bottom.h"
-#include "sdl_bottom.h"
+#include <sdl_bottom.h>
 
 static int prv_key_to_button(SDL_Keycode key) {
   switch (key) {

@@ -7,21 +7,21 @@
 #include <string.h>
 #include <math.h>
 
-#include "pbl/util/math.h"
-#include "applib/app.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window.h"
-#include "apps/prf/mfg_test_result.h"
-#include "kernel/pbl_malloc.h"
+#include <pbl/util/math.h>
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
+#include <apps/prf/mfg_test_result.h>
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
-#include "board/board.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
+#include <board/board.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/rtc.h>
-#include "mfg/mfg_info.h"
-#include "flash_region/flash_region.h"
+#include <mfg/mfg_info.h>
+#include <flash_region/flash_region.h>
 #include <pbl/drivers/flash.h>
 
 // Kiss FFT from Speex library - must include config and os_support before kiss_fft headers
@@ -29,9 +29,9 @@
 #ifdef ABS
 #undef ABS
 #endif
-#include "config.h"
-#include "os_support_custom.h"
-#include "kiss_fftr.h"
+#include <config.h>
+#include <os_support_custom.h>
+#include <kiss_fftr.h>
 
 #define SAMPLE_RATE_HZ        16000
 #define RECORDING_DURATION_MS 1000

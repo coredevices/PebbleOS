@@ -4,7 +4,7 @@
 #include "test_args_rx.h"
 #include "test_args_tx.h"
 
-#include "process_management/process_manager.h"
+#include <process_management/process_manager.h>
 #include <pbl/logging/logging.h>
 
 static void s_main(void) {

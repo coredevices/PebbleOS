@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "applib/graphics/gdraw_command_image.h"
-#include "applib/graphics/gdraw_command_private.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/size.h"
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gdraw_command_private.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/size.h>
 
 /**
  * @defgroup services_timeline_calendar_layout_resources Calendar layout icons

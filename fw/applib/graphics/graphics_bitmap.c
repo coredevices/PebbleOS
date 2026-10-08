@@ -8,10 +8,10 @@
 #include "graphics.h"
 #include "graphics_private.h"
 
-#include "system/passert.h"
-#include "applib/graphics/raw_image.h"
-#include "pbl/util/trig.h"
-#include "pbl/util/testing.h"
+#include <system/passert.h>
+#include <applib/graphics/raw_image.h>
+#include <pbl/util/trig.h>
+#include <pbl/util/testing.h>
 
 void graphics_draw_bitmap_in_rect_processed(GContext *ctx, const GBitmap *src_bitmap,
                                             const GRect *rect_ref, GBitmapProcessor *processor) {

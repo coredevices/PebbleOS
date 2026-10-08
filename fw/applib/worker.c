@@ -3,9 +3,9 @@
 
 #include "worker.h"
 
-#include "process_management/worker_manager.h"
-#include "applib/event_service_client.h"
-#include "syscall/syscall.h"
+#include <process_management/worker_manager.h>
+#include <applib/event_service_client.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
 
 // -------------------------------------------------------------------------------------------------

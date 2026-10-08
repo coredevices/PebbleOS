@@ -6,7 +6,7 @@
 #include "layout_layer.h"
 #include "timeline_layout.h"
 
-#include "applib/ui/ui.h"
+#include <applib/ui/ui.h>
 
 /**
  * @defgroup services_timeline_calendar_layout Calendar layout

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/uart.h>
 
 /**

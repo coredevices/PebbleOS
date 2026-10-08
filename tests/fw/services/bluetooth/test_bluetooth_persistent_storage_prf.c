@@ -1,39 +1,39 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/shared_prf_storage/shared_prf_storage.h"
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 
-#include "pbl/services/system_task.h"
-#include "flash_region/flash_region.h"
-#include "pbl/util/size.h"
+#include <pbl/services/system_task.h>
+#include <flash_region/flash_region.h>
+#include <pbl/util/size.h>
 
 typedef struct GAPLEConnection GAPLEConnection;
 
-#include "fake_bonding_sync.h"
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_spi_flash.h"
-#include "fake_regular_timer.h"
+#include <fake_bonding_sync.h>
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_spi_flash.h>
+#include <fake_regular_timer.h>
 
-#include "stubs_bluetopia_interface.h"
-#include "stubs_bt_lock.h"
-#include "stubs_gap_le_advert.h"
-#include "stubs_bluetooth_analytics.h"
-#include "stubs_gatt_client_discovery.h"
-#include "stubs_gatt_client_subscriptions.h"
-#include "stubs_hexdump.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pebble_pairing_service.h"
+#include <stubs_bluetopia_interface.h>
+#include <stubs_bt_lock.h>
+#include <stubs_gap_le_advert.h>
+#include <stubs_bluetooth_analytics.h>
+#include <stubs_gatt_client_discovery.h>
+#include <stubs_gatt_client_subscriptions.h>
+#include <stubs_hexdump.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pebble_pairing_service.h>
 
 typedef bool (*BondingSyncFilterCb)(const struct pbl_bt_bonding *bonding, void *ctx);
 const struct pbl_bt_bonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {

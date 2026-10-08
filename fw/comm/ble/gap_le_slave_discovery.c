@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
+#include <board/board.h>
 
 #include "gap_le_slave_discovery.h"
 #include "gap_le_advert.h"
 
-#include "applib/bluetooth/ble_ad_parse.h"
+#include <applib/bluetooth/ble_ad_parse.h>
 
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 
-#include "pbl/version.h"
+#include <pbl/version.h>
 
-#include "mfg/mfg_info.h"
+#include <mfg/mfg_info.h>
 
-#include "mfg/mfg_serials.h"
+#include <mfg/mfg_serials.h>
 
-#include "pbl/services/bluetooth/local_id.h"
-#include "pbl/services/bluetooth/ble_hrm.h"
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
 
-#include "system/passert.h"
-#include "system/version.h"
+#include <system/passert.h>
+#include <system/version.h>
 
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/pebble_pairing_service.h>

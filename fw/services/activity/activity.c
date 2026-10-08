@@ -1,42 +1,42 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/data_logging.h"
-#include "applib/health_service.h"
+#include <applib/data_logging.h>
+#include <applib/health_service.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/vibe.h>
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/hrm/hrm_manager_private.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/vibe_pattern.h"
-#include "pbl/services/alarms/alarm.h"
-#include "pbl/services/blob_db/health_db.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/protobuf_log/protobuf_log.h"
-#include "pbl/services/protobuf_log/protobuf_log_hr.h"
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/vibe_pattern.h>
+#include <pbl/services/alarms/alarm.h>
+#include <pbl/services/blob_db/health_db.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/protobuf_log/protobuf_log.h>
+#include <pbl/services/protobuf_log/protobuf_log_hr.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/base64.h"
-#include "pbl/util/math.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/util/base64.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 #include <pbl/cron/cron.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_algorithm.h"
-#include "pbl/services/activity/activity_calculators.h"
-#include "pbl/services/activity/activity_insights.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/activity/workout_service.h"
-#include "pbl/util/testing.h"
-#include "pbl/services/time.h"
-#include "pbl/util/time.h"
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/services/activity/activity_calculators.h>
+#include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/workout_service.h>
+#include <pbl/util/testing.h>
+#include <pbl/services/time.h>
+#include <pbl/util/time.h>
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

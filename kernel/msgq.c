@@ -3,8 +3,8 @@
 
 #include <string.h>
 
-#include "pbl/kernel/msgq.h"
-#include "pbl/kernel/poll.h"
+#include <pbl/kernel/msgq.h>
+#include <pbl/kernel/poll.h>
 
 #include "kernel.h"
 

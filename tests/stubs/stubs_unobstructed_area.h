@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/unobstructed_area_service_private.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/unobstructed_area_service_private.h>
+#include <pbl/kernel/compiler.h>
 
 void PBL_WEAK unobstructed_area_service_get_area(UnobstructedAreaState *state, GRect *area) {
 }

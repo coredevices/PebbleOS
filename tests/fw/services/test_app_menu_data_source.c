@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/ui/menu_layer.h"
-#include "flash_region/flash_region.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_menu_data_source.h"
-#include "resource/resource.h"
-#include "resource/resource_storage.h"
-#include "resource/resource_storage_file.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/app_cache.h"
-#include "pbl/services/blob_db/app_db.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/util/build_id.h"
-#include "pbl/util/size.h"
-#include "fixtures/load_test_resources.h"
+#include <applib/ui/menu_layer.h>
+#include <flash_region/flash_region.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_menu_data_source.h>
+#include <resource/resource.h>
+#include <resource/resource_storage.h>
+#include <resource/resource_storage_file.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/app_cache.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/util/build_id.h>
+#include <pbl/util/size.h>
+#include <fixtures/load_test_resources.h>
 
 // access it directly just to test things out
-#include "shell/system_app_registry_list.auto.h"
+#include <shell/system_app_registry_list.auto.h>
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -27,54 +27,54 @@
 
 // Stub Includes
 ////////////////////////////////////
-#include "stubs_activity.h"
-#include "stubs_analytics.h"
-#include "stubs_app_custom_icon.h"
-#include "stubs_app_fetch_endpoint.h"
-#include "stubs_app_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_bootbits.h"
-#include "stubs_build_id.h"
-#include "stubs_comm_session.h"
-#include "stubs_event_loop.h"
-#include "stubs_event_service_client.h"
-#include "stubs_events.h"
-#include "stubs_fonts.h"
-#include "stubs_gbitmap.h"
-#include "stubs_graphics.h"
-#include "stubs_graphics.h"
-#include "stubs_graphics_context.h"
-#include "stubs_heap.h"
-#include "stubs_hexdump.h"
-#include "stubs_i18n.h"
-#include "stubs_kino_reel.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_menu_layer.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_persist.h"
-#include "stubs_pin_db.h"
-#include "stubs_process_loader.h"
-#include "stubs_process_manager.h"
-#include "stubs_process_manager.h"
-#include "stubs_put_bytes.h"
-#include "stubs_quick_launch.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_serial.h"
-#include "stubs_shell_prefs.h"
-#include "stubs_sleep.h"
-#include "stubs_system_task.h"
-#include "stubs_task_wdt.h"
-#include "stubs_watchface.h"
-#include "stubs_worker_manager.h"
+#include <stubs_activity.h>
+#include <stubs_analytics.h>
+#include <stubs_app_custom_icon.h>
+#include <stubs_app_fetch_endpoint.h>
+#include <stubs_app_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_bootbits.h>
+#include <stubs_build_id.h>
+#include <stubs_comm_session.h>
+#include <stubs_event_loop.h>
+#include <stubs_event_service_client.h>
+#include <stubs_events.h>
+#include <stubs_fonts.h>
+#include <stubs_gbitmap.h>
+#include <stubs_graphics.h>
+#include <stubs_graphics.h>
+#include <stubs_graphics_context.h>
+#include <stubs_heap.h>
+#include <stubs_hexdump.h>
+#include <stubs_i18n.h>
+#include <stubs_kino_reel.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_menu_layer.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_persist.h>
+#include <stubs_pin_db.h>
+#include <stubs_process_loader.h>
+#include <stubs_process_manager.h>
+#include <stubs_process_manager.h>
+#include <stubs_put_bytes.h>
+#include <stubs_quick_launch.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_serial.h>
+#include <stubs_shell_prefs.h>
+#include <stubs_sleep.h>
+#include <stubs_system_task.h>
+#include <stubs_task_wdt.h>
+#include <stubs_watchface.h>
+#include <stubs_worker_manager.h>
 
 // Fake Includes
 ////////////////////////////////////
-#include "fake_spi_flash.h"
-#include "pbl/services/time.h"
+#include <fake_spi_flash.h>
+#include <pbl/services/time.h>
 
 // Test reset function for app_order_storage cached state
 extern void app_order_storage_reset_for_tests(void);

@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "applib/ui/layer.h"
-#include "applib/ui/click.h"
-#include "applib/ui/property_animation.h"
-#include "pbl/services/timeline/layout_layer.h"
+#include <applib/ui/layer.h>
+#include <applib/ui/click.h>
+#include <applib/ui/property_animation.h>
+#include <pbl/services/timeline/layout_layer.h>
 
 /**
  * @defgroup services_timeline_swap_layer Swap layer

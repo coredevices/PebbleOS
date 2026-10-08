@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/ble/gap_le_connect_params.h"
+#include <comm/ble/gap_le_connect_params.h>
 
 void fake_gap_le_connect_params_init(void);
 

@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/bluetooth/pp_ble_control.h"
-#include "pbl/services/bluetooth/pairability.h"
+#include <pbl/services/bluetooth/pp_ble_control.h>
+#include <pbl/services/bluetooth/pairability.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

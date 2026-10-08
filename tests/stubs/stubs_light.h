@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 void PBL_WEAK light_enable_interaction(void) {
 }

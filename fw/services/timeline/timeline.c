@@ -1,36 +1,36 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/timeline.h"
+#include <pbl/services/timeline/timeline.h>
 
-#include "pbl/util/uuid.h"
-#include "applib/ui/status_bar_layer.h"
-#include "apps/system/timeline/timeline.h"
-#include "apps/system/timeline/pin_window.h"
-#include "comm/ble/kernel_le_client/ancs/ancs.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
+#include <pbl/util/uuid.h>
+#include <applib/ui/status_bar_layer.h>
+#include <apps/system/timeline/timeline.h>
+#include <apps/system/timeline/pin_window.h>
+#include <comm/ble/kernel_le_client/ancs/ancs.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/activity_insights.h"
-#include "pbl/services/blob_db/api.h"
-#include "pbl/services/blob_db/pin_db.h"
-#include "pbl/services/blob_db/reminder_db.h"
-#include "pbl/services/notifications/notification_storage.h"
-#include "pbl/services/notifications/notifications.h"
-#include "pbl/services/phone_call_util.h"
-#include "pbl/services/timeline/actions_endpoint.h"
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/blob_db/api.h>
+#include <pbl/services/blob_db/pin_db.h>
+#include <pbl/services/blob_db/reminder_db.h>
+#include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/notifications/notifications.h>
+#include <pbl/services/phone_call_util.h>
+#include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/list.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/util/list.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

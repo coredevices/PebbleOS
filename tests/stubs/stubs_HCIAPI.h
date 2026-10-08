@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "SS1BTPS.h"
+#include <SS1BTPS.h>
 
 int HCI_Command_Supported(unsigned int BluetoothStackID, unsigned int SupportedCommandBitNumber) {
   return 1;

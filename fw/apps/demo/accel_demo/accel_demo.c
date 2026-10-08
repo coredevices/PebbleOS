@@ -3,12 +3,12 @@
 
 #include "accel_demo.h"
 
-#include "applib/accel_service.h"
-#include "applib/app.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/util/size.h"
+#include <applib/accel_service.h>
+#include <applib/app.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/util/size.h>
 
 #include <inttypes.h>
 #include <stdio.h>

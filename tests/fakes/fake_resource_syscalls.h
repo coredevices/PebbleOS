@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "resource/resource.h"
+#include <resource/resource.h>
 
 #include <stdint.h>
 #include <stdbool.h>

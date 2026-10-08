@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "process_management/app_install_types.h"
+#include <process_management/app_install_types.h>
 
 #define APP_ID_TICTOC            ((AppInstallId) - 69)
 #define APP_ID_MUSIC             ((AppInstallId) - 3)

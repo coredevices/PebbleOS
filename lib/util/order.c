@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/order.h"
+#include <pbl/util/order.h>
 
 int uint32_comparator(void *a, void *b) {
   uint32_t A = *(uint32_t *)a;

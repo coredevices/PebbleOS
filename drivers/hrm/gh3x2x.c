@@ -4,21 +4,21 @@
 #include <pbl/drivers/hrm/gh3x2x.h>
 
 #include <pbl/drivers/hrm.h>
-#include "board/board.h"
-#include "pbl/services/analytics/analytics.h"
+#include <board/board.h>
+#include <pbl/services/analytics/analytics.h>
 #include <pbl/logging/logging.h>
 
 #ifdef CONFIG_GH3X2X_ALGO
-#include "math.h"
-#include "kernel/util/delay.h"
-#include "kernel/events.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/hrm/hrm_manager.h"
+#include <math.h>
+#include <kernel/util/delay.h>
+#include <kernel/events.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/hrm/hrm_manager.h>
 
-#include "gh_demo.h"
-#include "gh_demo_inner.h"
-#include "gh3x2x_demo_mp.h"
-#include "goodix_hba.h"
+#include <gh_demo.h>
+#include <gh_demo_inner.h>
+#include <gh3x2x_demo_mp.h>
+#include <goodix_hba.h>
 #endif // CONFIG_GH3X2X_ALGO
 
 PBL_LOG_MODULE_DEFINE(driver_hrm_gh3x2x, CONFIG_DRIVER_HRM_LOG_LEVEL);

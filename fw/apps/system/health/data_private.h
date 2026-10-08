@@ -4,7 +4,7 @@
 #pragma once
 
 #include "data.h"
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 typedef struct HealthData {
   //!< Current step / activity info

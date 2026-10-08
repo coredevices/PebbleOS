@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/ui/layer.h"
-#include "applib/graphics/text.h"
+#include <applib/ui/layer.h>
+#include <applib/graphics/text.h>
 
 //! @file text_layer.h
 //! @addtogroup UI

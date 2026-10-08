@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/util/build_id.h"
+#include <pbl/util/build_id.h>
 
 #include <stdbool.h>
 #include <stdint.h>

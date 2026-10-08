@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/comm_session/session_remote_version.h"
+#include <pbl/services/comm_session/session_remote_version.h>
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/bonding_sync.h>

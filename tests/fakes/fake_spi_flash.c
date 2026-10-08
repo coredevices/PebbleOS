@@ -3,8 +3,8 @@
 
 #include "fake_spi_flash.h"
 
-#include "flash_region/flash_region.h"
-#include "system/status_codes.h"
+#include <flash_region/flash_region.h>
+#include <system/status_codes.h>
 
 #include <unistd.h>
 #include <stdio.h>
@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 typedef struct FakeFlashState {
   uint32_t offset;

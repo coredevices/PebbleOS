@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/kernel/thread.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/thread.h>
 
 /**
  * @defgroup kernel_debug Introspection

@@ -3,10 +3,10 @@
 
 #include "ble_hrm_stop_sharing_popup.h"
 
-#include "applib/ui/dialogs/simple_dialog.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/util/units.h"
+#include <applib/ui/dialogs/simple_dialog.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/units.h>
 
 #define BLE_HRM_CONFIRMATION_TIMEOUT_MS (2 * PBL_MSEC_PER_SEC)
 

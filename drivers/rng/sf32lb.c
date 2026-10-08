@@ -3,10 +3,10 @@
 
 #include <pbl/drivers/rng.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
-#include "bf0_hal_rcc.h"
-#include "bf0_hal_rng.h"
+#include <bf0_hal_rcc.h>
+#include <bf0_hal_rng.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rng_sf32lb, CONFIG_DRIVER_RNG_LOG_LEVEL);
 

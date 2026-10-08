@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "mfg/mfg_serials.h"
+#include <mfg/mfg_serials.h>
 #include <pbl/drivers/otp.h>
 
-#include "clar.h"
+#include <clar.h>
 
-#include "stubs_passert.h"
-#include "stubs_logging.h"
-#include "fake_otp.h"
+#include <stubs_passert.h>
+#include <stubs_logging.h>
+#include <fake_otp.h>
 
 #include <signal.h>
 

@@ -7,11 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "board/board.h"
-#include "process_management/pebble_process_info.h"
-#include "mfg/mfg_info.h"
-#include "mfg/mfg_serials.h"
-#include "system/version.h"
+#include <board/board.h>
+#include <process_management/pebble_process_info.h>
+#include <mfg/mfg_info.h>
+#include <mfg/mfg_serials.h>
+#include <system/version.h>
 
 _Static_assert(PBL_BT_DIS_MODEL_NUMBER_LEN >= MFG_HW_VERSION_SIZE + 1, "Size mismatch");
 _Static_assert(PBL_BT_DIS_MANUFACTURER_LEN >= sizeof(BT_VENDOR_NAME), "Size mismatch");

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/util/uuid.h"
-#include "pbl/services/notifications/notification_types.h"
+#include <pbl/util/uuid.h>
+#include <pbl/services/notifications/notification_types.h>
 
 //! @file notifications_presented_list.h
 //!

@@ -6,19 +6,19 @@
 #include "pulse_protocol_impl.h"
 #include "pulse2_reliable_retransmit_timer.h"
 
-#include "console/control_protocol.h"
-#include "console/control_protocol_impl.h"
-#include "console/pulse.h"
-#include "console/pulse2_transport_impl.h"
-#include "console/pulse_control_message_protocol.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/system_task.h"
-#include "system/passert.h"
+#include <console/control_protocol.h>
+#include <console/control_protocol_impl.h>
+#include <console/pulse.h>
+#include <console/pulse2_transport_impl.h>
+#include <console/pulse_control_message_protocol.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/system_task.h>
+#include <system/passert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/byteorder.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -188,7 +188,7 @@ void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length
     HANDLER(packet->i.information, info_length); \
     break;
 #define ON_TRANSPORT_STATE_CHANGE(...)
-#include "console/pulse2_reliable_protocol_registry.def"
+#include <console/pulse2_reliable_protocol_registry.def>
 #undef ON_PACKET
 #undef ON_TRANSPORT_STATE_CHANGE
           default: {
@@ -326,7 +326,7 @@ static void prv_on_this_layer_up(PPPControlProtocol *this) {
 
 #define ON_PACKET(...)
 #define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) UP_HANDLER();
-#include "console/pulse2_reliable_protocol_registry.def"
+#include <console/pulse2_reliable_protocol_registry.def>
 #undef ON_PACKET
 #undef ON_TRANSPORT_STATE_CHANGE
 }
@@ -338,7 +338,7 @@ static void prv_on_this_layer_down(PPPControlProtocol *this) {
 
 #define ON_PACKET(...)
 #define ON_TRANSPORT_STATE_CHANGE(UP_HANDLER, DOWN_HANDLER) DOWN_HANDLER();
-#include "console/pulse2_reliable_protocol_registry.def"
+#include <console/pulse2_reliable_protocol_registry.def>
 #undef ON_PACKET
 #undef ON_TRANSPORT_STATE_CHANGE
 }

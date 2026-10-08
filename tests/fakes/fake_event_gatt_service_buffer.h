@@ -5,7 +5,7 @@
 
 #include "fake_events.h"
 #include "fake_pbl_malloc.h"
-#include "kernel/events.h"
+#include <kernel/events.h>
 
 #include <string.h>
 

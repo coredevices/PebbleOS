@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 uint8_t gbitmap_get_bits_per_pixel(GBitmapFormat format) {
   return 0;

@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/calendar.h"
-#include "pbl/services/timeline/event.h"
-#include "pbl/services/timeline/peek.h"
+#include <pbl/services/timeline/calendar.h>
+#include <pbl/services/timeline/event.h>
+#include <pbl/services/timeline/peek.h>
 
 #include <pbl/drivers/rtc.h>
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/blob_db/pin_db.h"
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/blob_db/pin_db.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "system/status_codes.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <system/status_codes.h>
+#include <pbl/util/units.h>
 #include <time.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);

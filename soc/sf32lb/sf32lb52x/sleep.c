@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/irq.h"
-#include "pbl/soc/sf32lb/sleep.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/soc/sf32lb/sleep.h>
 
-#include "system/passert.h"
+#include <system/passert.h>
 
 //! One refcount per blockable level. SOC_SF32LB_ACTIVE cannot be blocked
 //! (the CPU is always allowed to stay active), so index 0 is unused.

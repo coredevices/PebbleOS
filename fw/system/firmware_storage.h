@@ -6,7 +6,7 @@
 //! @file firmware_storage.h
 //! Utilities for reading a firmware image stored in flash.
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 #include <stdbool.h>
 #include <stdint.h>

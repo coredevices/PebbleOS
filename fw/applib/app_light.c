@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_light.h"
+#include <applib/app_light.h>
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
 bool app_light_is_on(void) {
   return sys_light_is_on();

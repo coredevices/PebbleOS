@@ -5,12 +5,12 @@
 
 #include <stdbool.h>
 
-#include "kernel/pebble_tasks.h"
-#include "pbl/services/audio_endpoint.h"
-#include "pbl/services/voice_endpoint.h"
-#include "pbl/services/voice/transcription.h"
+#include <kernel/pebble_tasks.h>
+#include <pbl/services/audio_endpoint.h>
+#include <pbl/services/voice_endpoint.h>
+#include <pbl/services/voice/transcription.h>
 
-#include "applib/graphics/utf8.h"
+#include <applib/graphics/utf8.h>
 
 #include <sys/types.h>
 

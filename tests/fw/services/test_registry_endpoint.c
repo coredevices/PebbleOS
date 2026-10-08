@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/app_watch_info.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/system_task.h"
+#include <applib/app_watch_info.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/system_task.h>
 
 #include <string.h>
 

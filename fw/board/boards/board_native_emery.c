@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
+#include <board/board.h>
 
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/drivers/uart/posix.h>

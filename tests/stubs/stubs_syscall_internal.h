@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "kernel/pebble_tasks.h"
-#include "system/passert.h"
+#include <kernel/pebble_tasks.h>
+#include <system/passert.h>
 
 #include <stdio.h>
 #include <stdbool.h>

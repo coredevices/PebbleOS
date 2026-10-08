@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/sports_layout.h"
-#include "pbl/services/timeline/timeline_layout.h"
+#include <pbl/services/timeline/sports_layout.h>
+#include <pbl/services/timeline/timeline_layout.h>
 
-#include "applib/graphics/gtypes.h"
-#include "applib/preferred_content_size.h"
-#include "applib/ui/ui.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/preferred_content_size.h>
+#include <applib/ui/ui.h>
 #include <pbl/drivers/rtc.h>
-#include "font_resource_keys.auto.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/util/size.h"
-#include "pbl/util/string.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <font_resource_keys.auto.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/size.h>
+#include <pbl/util/string.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 _Static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
                "Sports layout requires that all Home attributes are directly after Away");

@@ -8,12 +8,12 @@
 #include "model.h"
 #include "layer.h"
 
-#include "applib/ui/action_menu_layer.h"
-#include "applib/ui/ui.h"
-#include "popups/timeline/timeline_item_layer.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/evented_timer.h"
+#include <applib/ui/action_menu_layer.h>
+#include <applib/ui/ui.h>
+#include <popups/timeline/timeline_item_layer.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/evented_timer.h>
 
 typedef enum {
   TimelineAppStateNone = 0,

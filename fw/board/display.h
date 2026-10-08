@@ -23,18 +23,18 @@ typedef struct {
 #else
 
 #ifdef CONFIG_BOARD_ASTERIX
-#include "displays/display_asterix.h"
+#include <board/displays/display_asterix.h>
 #elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || \
     defined(CONFIG_BOARD_OBELIX_BB2)
-#include "displays/display_obelix.h"
+#include <board/displays/display_obelix.h>
 #elif defined(CONFIG_BOARD_GETAFIX_DVT) || defined(CONFIG_BOARD_GETAFIX_DVT2)
-#include "displays/display_getafix.h"
+#include <board/displays/display_getafix.h>
 #elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
-#include "displays/display_qemu_emery.h"
+#include <board/displays/display_qemu_emery.h>
 #elif defined(CONFIG_BOARD_QEMU_FLINT)
-#include "displays/display_qemu_flint.h"
+#include <board/displays/display_qemu_flint.h>
 #elif defined(CONFIG_BOARD_QEMU_GABBRO)
-#include "displays/display_qemu_gabbro.h"
+#include <board/displays/display_qemu_gabbro.h>
 #else
 #error "Unknown display definition for board"
 #endif // BOARD_*

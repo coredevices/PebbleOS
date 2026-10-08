@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "pbl/util/build_id.h"
+#include <pbl/util/build_id.h>
 
 // What the linker script lays out on the target, as plain objects.
 

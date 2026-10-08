@@ -5,8 +5,8 @@
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/gatt_service_types.h>
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/util/uuid.h"
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/uuid.h>
 
 #include <stdbool.h>
 #include <stdint.h>

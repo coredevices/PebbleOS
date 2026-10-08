@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "applib/platform.h"
+#include <applib/platform.h>
 #include "layer.h"
 #include "click.h"
 

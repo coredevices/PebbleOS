@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/kernel/mutex.h"
+#include <pbl/kernel/mutex.h>
 
 void bt_lock_init(void);
 

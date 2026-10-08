@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "process_management/app_install_types.h"
+#include <process_management/app_install_types.h>
 
 //! This function creates a popup window displaying a missed wakeup events notification
 //! along with the application names that were missed

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/app_fetch_endpoint.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/app_fetch_endpoint.h>
+#include <pbl/kernel/compiler.h>
 
 bool PBL_WEAK app_fetch_in_progress(void) {
   return false;

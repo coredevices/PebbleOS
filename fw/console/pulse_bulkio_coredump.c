@@ -4,10 +4,10 @@
 #include "pulse_bulkio_domain_handler.h"
 
 #include <pbl/drivers/flash.h>
-#include "kernel/core_dump.h"
-#include "kernel/core_dump_private.h"
-#include "system/status_codes.h"
-#include "pbl/kernel/compiler.h"
+#include <kernel/core_dump.h>
+#include <kernel/core_dump_private.h>
+#include <system/status_codes.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdint.h>
 

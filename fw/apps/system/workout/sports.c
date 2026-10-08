@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/app_comm.h"
-#include "applib/app_sync/app_sync.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/activity/activity_algorithm.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/i18n/i18n.h"
+#include <applib/app.h>
+#include <applib/app_comm.h>
+#include <applib/app_sync/app_sync.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 #include "active.h"
 #include "controller.h"

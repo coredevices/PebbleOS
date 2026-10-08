@@ -3,11 +3,11 @@
 
 #include "bluetooth_analytics.h"
 
-#include "comm/ble/gap_le_connection.h"
-#include "comm/bt_lock.h"
+#include <comm/ble/gap_le_connection.h>
+#include <comm/bt_lock.h>
 #include <pbl/drivers/rtc.h>
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/comm_session/session.h"
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/comm_session/session.h>
 #include <pbl/logging/logging.h>
 
 #include <pbl/bluetooth/conn_event_stats.h>

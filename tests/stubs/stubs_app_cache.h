@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "process_management/app_install_types.h"
+#include <process_management/app_install_types.h>
 
 AppInstallId app_cache_get_next_eviction(void) {
   return 0;

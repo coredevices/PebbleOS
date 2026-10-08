@@ -5,9 +5,9 @@
 
 #include <string.h>
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/graphics/graphics.h"
-#include "system/passert.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/graphics.h>
+#include <system/passert.h>
 
 #include <qrcodegen_ext.h>
 

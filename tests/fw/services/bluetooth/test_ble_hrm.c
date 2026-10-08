@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/bluetooth/ble_hrm.h"
+#include <pbl/services/bluetooth/ble_hrm.h>
 
-#include "comm/ble/gap_le_connection.h"
-#include "pbl/services/hrm/hrm_manager_private.h"
+#include <comm/ble/gap_le_connection.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
 
 #include <pbl/bluetooth/hrm_service.h>
 #include <pbl/btutil/bt_device.h>
@@ -15,15 +15,15 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Stubs & Fakes
 
-#include "fake_event_service.h"
-#include "fake_pebble_tasks.h"
-#include "fake_pbl_malloc.h"
-#include "fake_regular_timer.h"
+#include <fake_event_service.h>
+#include <fake_pebble_tasks.h>
+#include <fake_pbl_malloc.h>
+#include <fake_regular_timer.h>
 
-#include "stubs_analytics.h"
-#include "stubs_bt_lock.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_analytics.h>
+#include <stubs_bt_lock.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 void gap_le_slave_reconnect_hrm_restart(void) {
 }

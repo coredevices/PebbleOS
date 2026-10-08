@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "pbl/kernel/init.h"
+#include <pbl/kernel/init.h>
 
 #include "kernel.h"
 

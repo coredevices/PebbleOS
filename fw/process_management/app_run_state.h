@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/comm_session/session.h"
-#include "pbl/util/uuid.h"
+#include <pbl/services/comm_session/session.h>
+#include <pbl/util/uuid.h>
 
 typedef enum {
   //! Used as reply from the watch to the phone, to indicate the app is running.

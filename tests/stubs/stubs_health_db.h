@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/blob_db/health_db.h"
-#include "pbl/util/time.h"
+#include <pbl/services/blob_db/health_db.h>
+#include <pbl/util/time.h>
 
 bool health_db_get_typical_value(ActivityMetric metric, enum pbl_weekday day, int32_t *value_out) {
   return false;

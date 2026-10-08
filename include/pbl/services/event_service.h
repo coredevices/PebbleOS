@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "kernel/events.h"
-#include "process_management/app_manager.h"
+#include <kernel/events.h>
+#include <process_management/app_manager.h>
 
 /**
  * @defgroup services_event_service Event service

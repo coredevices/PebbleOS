@@ -3,8 +3,8 @@
 
 #include "kino_layer.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/graphics/graphics.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/graphics.h>
 
 static void prv_invert_pdc_colors(GDrawCommandProcessor *processor, GDrawCommand *processed_command,
                                   size_t processed_command_max_size, const GDrawCommandList *list,

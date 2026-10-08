@@ -1,29 +1,29 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/kernel_le_client/ancs/ancs.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "comm/ble/kernel_le_client/ancs/ancs_util.h"
+#include <comm/ble/kernel_le_client/ancs/ancs.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
+#include <comm/ble/kernel_le_client/ancs/ancs_util.h>
 
-#include "pbl/util/buffer.h"
+#include <pbl/util/buffer.h>
 
-#include "clar.h"
+#include <clar.h>
 
 #include <string.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include "stubs_analytics.h"
-#include "stubs_ble.h"
-#include "stubs_bt_stack.h"
-#include "stubs_logging.h"
-#include "stubs_serial.h"
-#include "stubs_passert.h"
-#include "stubs_mutex.h"
-#include "stubs_system_reset.h"
-#include "stubs_task_wdt.h"
-#include "stubs_pbl_malloc.h"
+#include <stubs_analytics.h>
+#include <stubs_ble.h>
+#include <stubs_bt_stack.h>
+#include <stubs_logging.h>
+#include <stubs_serial.h>
+#include <stubs_passert.h>
+#include <stubs_mutex.h>
+#include <stubs_system_reset.h>
+#include <stubs_task_wdt.h>
+#include <stubs_pbl_malloc.h>
 
 // Test data
 ///////////////////////////////////////////////////////////

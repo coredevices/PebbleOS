@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "GATTAPI.h"
+#include <GATTAPI.h>
 
 #include <stdbool.h>
 #include <stdint.h>

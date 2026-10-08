@@ -6,18 +6,18 @@
 
 #include "event_service_client.h"
 
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/event_service.h"
-#include "pbl/services/tick_timer.h"
-#include "kernel/events.h"
-#include "kernel/kernel_applib_state.h"
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/event_service.h>
+#include <pbl/services/tick_timer.h>
+#include <kernel/events.h>
+#include <kernel/kernel_applib_state.h>
 
-#include "process_state/app_state/app_state.h"
-#include "process_state/worker_state/worker_state.h"
+#include <process_state/app_state/app_state.h>
+#include <process_state/worker_state/worker_state.h>
 
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 // ----------------------------------------------------------------------------------------------------
 static TickTimerServiceState *prv_get_state(PebbleTask task) {

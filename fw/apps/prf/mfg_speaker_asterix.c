@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/dialogs/confirmation_dialog.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window.h"
-#include "apps/prf/mfg_test_result.h"
+#include <applib/app.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/dialogs/confirmation_dialog.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
+#include <apps/prf/mfg_test_result.h>
 #include <pbl/drivers/i2c.h>
-#include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
+#include <kernel/pbl_malloc.h>
+#include <kernel/util/sleep.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
 
 #define DA7212_CIF_CTRL            0x1D
 #define DA7212_DAI_CLK_MODE        0x28

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "resource/timeline_resource_ids.auto.h"
+#include <applib/graphics/gtypes.h>
+#include <resource/timeline_resource_ids.auto.h>
 
 /**
  * @defgroup services_weather_weather_types Weather types

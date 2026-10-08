@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
-#include "kernel.h"
+#include <kernel.h>
 
 PBL_NAKED PBL_NORETURN void Reset_Handler(void) {
   __asm volatile(

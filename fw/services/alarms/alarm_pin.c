@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/alarms/alarm_pin.h"
+#include <pbl/services/alarms/alarm_pin.h>
 
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/blob_db/pin_db.h"
-#include "pbl/services/timeline/attribute.h"
-#include "pbl/services/timeline/timeline.h"
-#include "pbl/services/timeline/timeline_resources.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/blob_db/pin_db.h>
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/timeline.h>
+#include <pbl/services/timeline/timeline_resources.h>
 
 #define ALARM_PIN_REMOVE_BATCH_SIZE 8
 

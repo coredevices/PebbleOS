@@ -4,9 +4,9 @@
 #include "gdraw_command_sequence.h"
 #include "gdraw_command_private.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/applib_resource_private.h"
-#include "syscall/syscall.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/applib_resource_private.h>
+#include <syscall/syscall.h>
 
 #define GDRAW_COMMAND_SEQUENCE_PLAY_COUNT_INFINITE_STORED ((uint16_t)~0)
 

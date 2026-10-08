@@ -3,19 +3,19 @@
 
 #include "gap_le_slave_reconnect.h"
 
-#include "applib/bluetooth/ble_ad_parse.h"
+#include <applib/bluetooth/ble_ad_parse.h>
 
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
 
 #include <pbl/logging/logging.h>
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 
 #include <pbl/drivers/rtc.h>
-#include "kernel/event_loop.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/regular_timer.h"
-#include "pbl/util/size.h"
+#include <kernel/event_loop.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/util/size.h>
 
 #include <pbl/btutil/bt_uuid.h>
 

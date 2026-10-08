@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/mcu/fpu.h"
+#include <pbl/mcu/fpu.h>
 
 #include <cmsis_core.h>
 

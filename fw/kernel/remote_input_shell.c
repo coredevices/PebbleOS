@@ -5,7 +5,7 @@
 
 #include <pbl/shell/shell.h>
 
-#include "kernel/remote_input.h"
+#include <kernel/remote_input.h>
 
 #include <errno.h>
 

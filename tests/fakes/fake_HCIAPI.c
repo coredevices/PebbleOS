@@ -3,11 +3,11 @@
 
 #include "fake_HCIAPI.h"
 
-#include "bluetopia_interface.h"
+#include <bluetopia_interface.h>
 
-#include "HCIAPI.h"
+#include <HCIAPI.h>
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
 #include <stdlib.h>
 

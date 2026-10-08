@@ -3,30 +3,30 @@
 
 #include "mfg_test_aging.h"
 
-#include "apps/prf/mfg_test_result.h"
-#include "applib/app.h"
-#include "applib/graphics/graphics.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/vibes.h"
-#include "applib/ui/window.h"
-#include "board/board.h"
-#include "console/console_internal.h"
+#include <apps/prf/mfg_test_result.h>
+#include <applib/app.h>
+#include <applib/graphics/graphics.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/vibes.h>
+#include <applib/ui/window.h>
+#include <board/board.h>
+#include <console/console_internal.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/mag.h>
-#include "kernel/pbl_malloc.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/services/bluetooth/bluetooth_ctl.h"
-#include "pbl/services/light.h"
-#include "pbl/services/idle_watchdog.h"
+#include <kernel/pbl_malloc.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/services/bluetooth/bluetooth_ctl.h>
+#include <pbl/services/light.h>
+#include <pbl/services/idle_watchdog.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 #include <stdio.h>
 #include <time.h>
 

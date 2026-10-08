@@ -6,10 +6,10 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/shell/shell.h>
 
-#include "debug/flash_logging.h"
-#include "logging/logging_private.h"
-#include "pbl/services/system_task.h"
-#include "pbl/util/byteorder.h"
+#include <debug/flash_logging.h>
+#include <logging/logging_private.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/byteorder.h>
 
 #include <errno.h>
 #include <stdint.h>

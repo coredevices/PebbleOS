@@ -4,13 +4,13 @@
 #include "data.h"
 #include "data_private.h"
 
-#include "applib/health_service_private.h"
+#include <applib/health_service_private.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
-#include "syscall/syscall.h"
+#include <kernel/pbl_malloc.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/units.h"
-#include "pbl/util/testing.h"
+#include <pbl/util/units.h>
+#include <pbl/util/testing.h>
 #include <time.h>
 
 PBL_T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {

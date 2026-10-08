@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/util/uuid.h"
-#include "fake_rtc.h"
-#include "stubs_passert.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_pebble_tasks.h"
+#include <pbl/util/uuid.h>
+#include <fake_rtc.h>
+#include <stubs_passert.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_pebble_tasks.h>
 
 void test_uuid__equal(void) {
   const Uuid system = UUID_SYSTEM;

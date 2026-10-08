@@ -1,34 +1,34 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
 #include <pbl/drivers/hrm.h>
-#include "pbl/kernel/types.h"
-#include "pbl/services/hrm/hrm_manager.h"
-#include "pbl/services/hrm/hrm_manager_private.h"
-#include "pbl/util/size.h"
+#include <pbl/kernel/types.h>
+#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/util/size.h>
 
-#include "fake_app_manager.h"
-#include "fake_events.h"
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_system_task.h"
+#include <fake_app_manager.h>
+#include <fake_events.h>
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_system_task.h>
 #include <errno.h>
-#include "fake_rtc.h"
+#include <fake_rtc.h>
 
-#include "stubs_accel_manager.h"
-#include "stubs_analytics.h"
-#include "stubs_event_service_client.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_worker_manager.h"
+#include <stubs_accel_manager.h>
+#include <stubs_analytics.h>
+#include <stubs_event_service_client.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_worker_manager.h>
 
 #include <stdio.h>
 #include <services/hrm/hrm_manager.h>
-#include "pbl/util/testing.h"
-#include "pbl/util/units.h"
+#include <pbl/util/testing.h>
+#include <pbl/util/units.h>
 
 // -----------------------------------------------------------------------------
 // PBL_T_STATIC functions

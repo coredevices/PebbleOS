@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/byteorder.h>
 

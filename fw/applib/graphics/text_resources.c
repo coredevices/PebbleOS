@@ -4,17 +4,17 @@
 #include "text.h"
 #include "text_resources.h"
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
-#include "applib/fonts/fonts.h"
-#include "applib/fonts/fonts_private.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/fonts/fonts.h>
+#include <applib/fonts/fonts_private.h>
+#include <resource/resource_ids.auto.h>
 #include <pbl/logging/logging.h>
 #include <pbl/kernel/compiler.h>
-#include "system/passert.h"
-#include "system/profiler.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <system/profiler.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <stdint.h>
 #include <stdbool.h>

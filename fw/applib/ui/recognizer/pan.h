@@ -5,7 +5,7 @@
 
 #include "recognizer.h"
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 //! @addtogroup UI
 //! @{

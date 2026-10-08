@@ -4,7 +4,7 @@
 #include "fake_otp.h"
 
 #include <pbl/drivers/otp.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <stdint.h>
 #include <stdbool.h>

@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "cpu_cache.h"
-#include "syscall/syscall_internal.h"
+#include <syscall/syscall_internal.h>
 
-#include "pbl/mcu/cache.h"
+#include <pbl/mcu/cache.h>
 
 DEFINE_SYSCALL(void, memory_cache_flush, void *start, size_t size) {
   // We need to align the address and size properly for the cache functions. It needs to be done

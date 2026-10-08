@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/app_inbox.h"
-#include "kernel/events.h"
-#include "pbl/services/app_inbox_service.h"
-#include "pbl/util/list.h"
+#include <applib/app_inbox.h>
+#include <kernel/events.h>
+#include <pbl/services/app_inbox_service.h>
+#include <pbl/util/list.h>
 
 extern bool app_inbox_service_has_inbox_for_tag(AppInboxServiceTag tag);
 extern bool app_inbox_service_has_inbox_for_storage(uint8_t *storage);
@@ -17,13 +17,13 @@ extern size_t app_inbox_service_num_success_for_tag(AppInboxServiceTag tag);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fakes & Stubs
 
-#include "fake_kernel_malloc.h"
-#include "fake_pebble_tasks.h"
+#include <fake_kernel_malloc.h>
+#include <fake_pebble_tasks.h>
 
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_syscall_internal.h"
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_syscall_internal.h>
 
 #define BUFFER_SIZE                (32)
 #define NOT_PERMITTED_MSG_HANDLER  ((AppInboxMessageHandler)~0)

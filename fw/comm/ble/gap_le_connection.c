@@ -3,15 +3,15 @@
 
 #include "gap_le_connection.h"
 
-#include "comm/bt_conn_mgr.h"
-#include "comm/bt_lock.h"
+#include <comm/bt_conn_mgr.h>
+#include <comm/bt_lock.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "system/passert.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <system/passert.h>
 
-#include "pbl/util/list.h"
+#include <pbl/util/list.h>
 
 #include <pbl/btutil/bt_device.h>
 

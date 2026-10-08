@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/notifications/alerts.h"
+#include <pbl/services/notifications/alerts.h>
 
 /**
  * @defgroup services_notifications_alerts_private Alerts settings

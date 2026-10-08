@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/ui.h"
+#include <applib/ui/ui.h>
 
 #define HEALTH_PROGRESS_BAR_MAX_VALUE 0xfff
 

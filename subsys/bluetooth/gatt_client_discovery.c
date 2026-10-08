@@ -9,7 +9,7 @@
 
 #include <services/gatt/ble_svc_gatt.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
 #include "nimble_gattc_op_queue.h"
 #include "nimble_type_conversions.h"

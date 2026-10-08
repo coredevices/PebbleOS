@@ -6,9 +6,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "pbl/kernel/debug.h"
-#include "pbl/kernel/thread.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/debug.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/compiler.h>
 
 //! What the portable kernel needs from an architecture.
 

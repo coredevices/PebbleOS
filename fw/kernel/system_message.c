@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel/system_message.h"
+#include <kernel/system_message.h>
 
-#include "flash_region/filesystem_regions.h"
-#include "kernel/events.h"
-#include "pbl/services/comm_session/protocol.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/firmware_update.h"
-#include "pbl/services/put_bytes/put_bytes.h"
-#include "pbl/services/system_task.h"
+#include <flash_region/filesystem_regions.h>
+#include <kernel/events.h>
+#include <pbl/services/comm_session/protocol.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/firmware_update.h>
+#include <pbl/services/put_bytes/put_bytes.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "system/reboot_reason.h"
-#include "system/reset.h"
-#include "pbl/kernel/compiler.h"
+#include <system/passert.h>
+#include <system/reboot_reason.h>
+#include <system/reset.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdbool.h>
 #include <inttypes.h>

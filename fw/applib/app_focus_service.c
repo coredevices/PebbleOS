@@ -4,7 +4,7 @@
 #include "app_focus_service.h"
 
 #include "event_service_client.h"
-#include "process_state/app_state/app_state.h"
+#include <process_state/app_state/app_state.h>
 
 static void prv_focus_event_handler(PebbleEvent *e, void *context) {
   AppFocusState *state = app_state_get_app_focus_state();

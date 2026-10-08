@@ -1,48 +1,48 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h"
-#include "pbl/services/settings/settings_file.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/event_service.h"
-#include "flash_region/flash_region.h"
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/event_service.h>
+#include <flash_region/flash_region.h>
 
 // Stubs
 ////////////////////////////////////
 
 typedef struct GAPLEConnection GAPLEConnection;
 
-#include "fake_bonding_sync.h"
-#include "fake_rtc.h"
-#include "fake_spi_flash.h"
-#include "fake_system_task.h"
-#include "fake_events.h"
-#include "fake_new_timer.h"
-#include "fake_pbl_malloc.h"
-#include "fake_shared_prf_storage.h"
+#include <fake_bonding_sync.h>
+#include <fake_rtc.h>
+#include <fake_spi_flash.h>
+#include <fake_system_task.h>
+#include <fake_events.h>
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_shared_prf_storage.h>
 
-#include "stubs_bluetopia_interface.h"
-#include "stubs_bt_lock.h"
-#include "stubs_gap_le_advert.h"
-#include "stubs_gatt_client_discovery.h"
-#include "stubs_gatt_client_subscriptions.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pebble_pairing_service.h"
-#include "stubs_print.h"
-#include "stubs_regular_timer.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_system_reset.h"
-#include "stubs_task_wdt.h"
+#include <stubs_bluetopia_interface.h>
+#include <stubs_bt_lock.h>
+#include <stubs_gap_le_advert.h>
+#include <stubs_gatt_client_discovery.h>
+#include <stubs_gatt_client_subscriptions.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pebble_pairing_service.h>
+#include <stubs_print.h>
+#include <stubs_regular_timer.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_system_reset.h>
+#include <stubs_task_wdt.h>
 
 static int s_ble_bonding_change_add_count;
 static int s_ble_bonding_change_update_count;

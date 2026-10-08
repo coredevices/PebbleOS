@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/pwm.h>
 
-#include "board/board.h"
+#include <board/board.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/util/uuid.h"
-#include "applib/voice/dictation_session.h"
-#include "pbl/services/voice_endpoint.h"
+#include <pbl/util/uuid.h>
+#include <applib/voice/dictation_session.h>
+#include <pbl/services/voice_endpoint.h>
 
 #include <stddef.h>
 #include <stdbool.h>

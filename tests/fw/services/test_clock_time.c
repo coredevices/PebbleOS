@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
-#include "fake_rtc.h"
+#include <fake_rtc.h>
 
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
 #include <string.h>
 

@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/gap_le_connection.h"
-#include "comm/bt_conn_mgr.h"
+#include <comm/ble/gap_le_connection.h>
+#include <comm/bt_conn_mgr.h>
 
 void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
                                          enum pbl_bt_response_time_state state,

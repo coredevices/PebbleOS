@@ -3,12 +3,12 @@
 
 #include "system_theme.h"
 
-#include "applib/fonts/fonts.h"
-#include "process_management/process_manager.h"
-#include "syscall/syscall_internal.h"
-#include "system/passert.h"
-#include "pbl/util/size.h"
-#include "pbl/util/testing.h"
+#include <applib/fonts/fonts.h>
+#include <process_management/process_manager.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
+#include <pbl/util/size.h>
+#include <pbl/util/testing.h>
 
 typedef struct SystemThemeTextStyle {
   const char *fonts[TextStyleFontCount];

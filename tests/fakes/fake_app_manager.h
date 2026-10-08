@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "process_management/pebble_process_md.h"
-#include "process_management/app_manager.h"
-#include "system/passert.h"
-#include "pbl/util/list.h"
+#include <process_management/pebble_process_md.h>
+#include <process_management/app_manager.h>
+#include <system/passert.h>
+#include <pbl/util/list.h>
 
 #include <string.h>
 

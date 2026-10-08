@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/compositor/compositor.h"
+#include <pbl/services/compositor/compositor.h>
 
 /**
  * @defgroup services_compositor_default_compositor_modal_transitions Modal transitions

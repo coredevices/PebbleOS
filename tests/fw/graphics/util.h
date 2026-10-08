@@ -4,11 +4,11 @@
 #pragma once
 
 #include "test_graphics.h"
-#include "applib/graphics/gbitmap_png.h"
-#include "applib/graphics/raw_image.h"
-#include "pbl/util/math.h"
+#include <applib/graphics/gbitmap_png.h>
+#include <applib/graphics/raw_image.h>
+#include <pbl/util/math.h>
 
-#include "clar.h"
+#include <clar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

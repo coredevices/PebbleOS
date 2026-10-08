@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/alarms/alarm_pin.h"
+#include <pbl/services/alarms/alarm_pin.h>
 
 status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind,
                        Uuid *uuid_out) {

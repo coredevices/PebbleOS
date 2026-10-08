@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/evented_timer.h"
+#include <pbl/services/evented_timer.h>
 
-#include "kernel/events.h"
-#include "pbl/kernel/mutex.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "system/passert.h"
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <kernel/events.h>
+#include <pbl/kernel/mutex.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <system/passert.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "process_management/app_manager.h"
+#include <process_management/app_manager.h>
 
 PBL_LOG_MODULE_DEFINE(service_evented_timer, CONFIG_SERVICE_EVENTED_TIMER_LOG_LEVEL);
 

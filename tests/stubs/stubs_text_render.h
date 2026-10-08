@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/fonts/fonts_private.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/text_resources.h"
+#include <applib/fonts/fonts_private.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/text_resources.h>
 
 #include <stdbool.h>
 #include <inttypes.h>

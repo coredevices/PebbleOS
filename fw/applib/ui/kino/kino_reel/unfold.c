@@ -5,10 +5,10 @@
 #include "scale_segmented.h"
 #include "unfold.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "pbl/util/trig.h"
-#include "applib/graphics/gdraw_command_private.h"
-#include "syscall/syscall.h"
+#include <applib/applib_malloc.auto.h>
+#include <pbl/util/trig.h>
+#include <applib/graphics/gdraw_command_private.h>
+#include <syscall/syscall.h>
 
 static AnimationProgress prv_ease_in_out_first_quarter(AnimationProgress progress) {
   return animation_timing_curve(animation_timing_clip(4 * progress), AnimationCurveEaseInOut);

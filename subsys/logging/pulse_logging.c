@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/irq.h"
-#include "pbl/kernel/sched.h"
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
 #include "pulse_logging.h"
 
 #include "logging_private.h"
-#include "kernel/pebble_tasks.h"
+#include <kernel/pebble_tasks.h>
 
-#include "console/pulse_protocol_impl.h"
-#include "kernel/events.h"
+#include <console/pulse_protocol_impl.h>
+#include <kernel/events.h>
 
-#include "pbl/mcu/interrupts.h"
-#include "pbl/mcu/privilege.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/circular_buffer.h"
-#include "pbl/util/math.h"
-#include "pbl/util/string.h"
+#include <pbl/mcu/interrupts.h>
+#include <pbl/mcu/privilege.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/circular_buffer.h>
+#include <pbl/util/math.h>
+#include <pbl/util/string.h>
 
 #include <ctype.h>
 

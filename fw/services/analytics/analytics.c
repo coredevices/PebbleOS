@@ -3,16 +3,16 @@
 
 #include <stdlib.h>
 
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/analytics/backend.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
-#include "kernel/memory_layout.h"
-#include "syscall/syscall_internal.h"
-#include "system/reboot_reason.h"
-#include "system/version.h"
-#include "pbl/util/size.h"
-#include "pbl/services/time.h"
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/analytics/backend.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <kernel/memory_layout.h>
+#include <syscall/syscall_internal.h>
+#include <system/reboot_reason.h>
+#include <system/version.h>
+#include <pbl/util/size.h>
+#include <pbl/services/time.h>
 
 #define HEARTBEAT_PERIOD_SEC     3600
 #define ANALYTICS_STRING_MAX_LEN 64

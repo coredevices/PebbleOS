@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/app_fetch_endpoint.h"
+#include <pbl/services/app_fetch_endpoint.h>
 
 #include <string.h>
 #include <stdbool.h>
 
-#include "kernel/pbl_malloc.h"
-#include "process_management/pebble_process_info.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/put_bytes/put_bytes.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/app_cache.h"
-#include "pbl/services/blob_db/app_db.h"
+#include <kernel/pbl_malloc.h>
+#include <process_management/pebble_process_info.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/put_bytes/put_bytes.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/app_cache.h>
+#include <pbl/services/blob_db/app_db.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/math.h"
-#include "pbl/util/uuid.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/math.h>
+#include <pbl/util/uuid.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_fetch_endpoint, CONFIG_SERVICE_APP_FETCH_ENDPOINT_LOG_LEVEL);
 

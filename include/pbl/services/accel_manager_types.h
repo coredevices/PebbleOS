@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /** @brief Valid accelerometer sampling rates, in Hz */
 typedef enum {

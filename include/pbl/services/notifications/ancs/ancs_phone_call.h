@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/ble/kernel_le_client/ancs/ancs_types.h"
+#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 /**
  * @defgroup services_notifications_ancs_ancs_phone_call ANCS phone calls

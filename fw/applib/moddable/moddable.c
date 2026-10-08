@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-FileCopyrightText: 2025-2026 Moddable Tech, Inc. */
 /* SPDX-License-Identifier: Apache-2.0 */
-#include "applib/app.h"
-#include "logging/logging_private.h"
-#include "pbl/services/evented_timer.h"
-#include "syscall/syscall_internal.h"
-#include "syscall/syscall.h"
-#include "applib/app_logging.h"
-#include "applib/moddable/moddable.h"
-#include "applib/ui/dialogs/expandable_dialog.h"
+#include <applib/app.h>
+#include <logging/logging_private.h>
+#include <pbl/services/evented_timer.h>
+#include <syscall/syscall_internal.h>
+#include <syscall/syscall.h>
+#include <applib/app_logging.h>
+#include <applib/moddable/moddable.h>
+#include <applib/ui/dialogs/expandable_dialog.h>
 
 #include <stddef.h>
 
 #if defined(CONFIG_MODDABLE_XS) && !defined(CONFIG_RECOVERY_FW)
-#include "xsmc.h"
-#include "xsHost.h"
-#include "xsHosts.h"
-#include "moddableAppState.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/event_loop.h"
-#include "kernel/ui/modals/modal_manager.h"
-#include "shell/normal/watchface.h"
+#include <xsmc.h>
+#include <xsHost.h>
+#include <xsHosts.h>
+#include <moddableAppState.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/event_loop.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <shell/normal/watchface.h>
 
 static ExpandableDialog *prv_create_fatal_dialog(const char *message) {
   ExpandableDialog *dialog = expandable_dialog_create("");

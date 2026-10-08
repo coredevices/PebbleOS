@@ -8,26 +8,26 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/util/math.h"
+#include <flash_region/flash_region.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/util/math.h>
 
-#include "stubs_analytics.h"
-#include "stubs_hexdump.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_print.h"
-#include "stubs_prompt.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_task_wdt.h"
-#include "fake_spi_flash.h"
+#include <stubs_analytics.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_print.h>
+#include <stubs_prompt.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
+#include <fake_spi_flash.h>
 
 void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,
                                                   uint32_t min_end, uint32_t max_end) {

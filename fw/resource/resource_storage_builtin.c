@@ -4,8 +4,8 @@
 #include "resource_storage_builtin.h"
 #include "resource_storage_impl.h"
 
-#include "kernel/memory_layout.h"
-#include "pbl/services/process_management/app_storage.h"
+#include <kernel/memory_layout.h>
+#include <pbl/services/process_management/app_storage.h>
 
 #include <string.h>
 

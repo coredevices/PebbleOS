@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/util/buffer.h"
+#include <pbl/util/buffer.h>
 
 void pbl_buffer_init(struct pbl_buffer *buffer, size_t capacity) {
 }

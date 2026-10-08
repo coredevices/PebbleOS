@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "pbl/kernel/compiler.h"
+#include <applib/graphics/gtypes.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stddef.h>
 #include <stdint.h>

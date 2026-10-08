@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/gtransform.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/property_animation.h"
-#include "applib/ui/property_animation_private.h"
-#include "applib/ui/animation.h"
-#include "applib/ui/animation_private.h"
-#include "applib/legacy2/ui/animation_private_legacy2.h"
-#include "pbl/util/math.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/gtransform.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/property_animation.h>
+#include <applib/ui/property_animation_private.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/animation_private.h>
+#include <applib/legacy2/ui/animation_private_legacy2.h>
+#include <pbl/util/math.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -19,25 +19,25 @@
 
 ///////////////////////////////////////////////////////////
 // Stubs
-#include "stubs_logging.h"
-#include "stubs_passert.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
 
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_irq.h"
-#include "stubs_heap.h"
-#include "stubs_mutex.h"
-#include "stubs_resources.h"
-#include "stubs_serial.h"
-#include "stubs_syscalls.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_irq.h>
+#include <stubs_heap.h>
+#include <stubs_mutex.h>
+#include <stubs_resources.h>
+#include <stubs_serial.h>
+#include <stubs_syscalls.h>
+#include <stubs_unobstructed_area.h>
 
 // Fakes
-#include "fake_new_timer.h"
-#include "fake_pebble_tasks.h"
-#include "fake_pbl_malloc.h"
-#include "fake_rtc.h"
-#include "fake_events.h"
+#include <fake_new_timer.h>
+#include <fake_pebble_tasks.h>
+#include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
+#include <fake_events.h>
 
 #define TEST_INCLUDE_BASIC
 #define TEST_INCLUDE_COMPLEX

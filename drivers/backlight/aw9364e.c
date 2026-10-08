@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/kernel/irq.h"
-#include "board/board.h"
+#include <pbl/kernel/irq.h>
+#include <board/board.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/backlight.h>
-#include "kernel/util/delay.h"
-#include "pbl/util/math.h"
+#include <kernel/util/delay.h>
+#include <pbl/util/math.h>
 
 // AW9364E 1-wire dimming protocol implementation
 // The AW9364E uses pulse counting for brightness control:

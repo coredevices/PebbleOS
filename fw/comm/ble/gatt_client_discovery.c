@@ -5,12 +5,12 @@
 #include "gatt_service_changed.h"
 #include "gap_le_connection.h"
 
-#include "comm/bt_lock.h"
-#include "comm/bt_conn_mgr.h"
+#include <comm/bt_lock.h>
+#include <comm/bt_conn_mgr.h>
 
-#include "kernel/core_dump.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
+#include <kernel/core_dump.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
 #include "gatt_client_accessors.h"
 #include <pbl/logging/logging.h>
 #include <pbl/drivers/rtc.h>

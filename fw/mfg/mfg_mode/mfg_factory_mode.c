@@ -3,11 +3,11 @@
 
 #include "mfg_factory_mode.h"
 
-#include "apps/prf/mfg_menu.h"
-#include "board/board.h"
-#include "kernel/event_loop.h"
-#include "kernel/low_power.h"
-#include "process_management/app_manager.h"
+#include <apps/prf/mfg_menu.h>
+#include <board/board.h>
+#include <kernel/event_loop.h>
+#include <kernel/low_power.h>
+#include <process_management/app_manager.h>
 
 static bool s_mfg_mode = false;
 

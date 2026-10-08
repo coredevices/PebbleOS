@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "apps/system/send_text/prefs.h"
-#include "apps/system/reminders/reminder_prefs.h"
-#include "pbl/services/weather/weather_service_private.h"
-#include "system/status_codes.h"
+#include <apps/system/send_text/prefs.h>
+#include <apps/system/reminders/reminder_prefs.h>
+#include <pbl/services/weather/weather_service_private.h>
+#include <system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_watch_app_prefs_db Watch app preferences

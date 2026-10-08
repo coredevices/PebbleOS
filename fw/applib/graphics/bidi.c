@@ -7,8 +7,8 @@
 #include "arabic_shaping.h"
 #include "utf8.h"
 
-#include "applib/fonts/codepoint.h"
-#include "pbl/util/size.h"
+#include <applib/fonts/codepoint.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
 

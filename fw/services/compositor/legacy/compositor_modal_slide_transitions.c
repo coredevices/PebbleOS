@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/compositor/legacy/compositor_modal_slide_transitions.h"
+#include <pbl/services/compositor/legacy/compositor_modal_slide_transitions.h>
 
-#include "pbl/services/compositor/compositor_private.h"
+#include <pbl/services/compositor/compositor_private.h>
 
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/animation_interpolate.h"
-#include "kernel/ui/kernel_ui.h"
-#include "pbl/util/math.h"
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/animation_interpolate.h>
+#include <kernel/ui/kernel_ui.h>
+#include <pbl/util/math.h>
 
 #include <string.h>
 

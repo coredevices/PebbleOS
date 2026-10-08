@@ -1,30 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/accel_service.h"
-#include "applib/data_logging.h"
-#include "pbl/util/uuid.h"
+#include <applib/accel_service.h>
+#include <applib/data_logging.h>
+#include <pbl/util/uuid.h>
 #include <pbl/drivers/ambient_light.h>
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/battery/battery_state.h"
-#include "pbl/services/system_task.h"
-#include "pbl/services/activity/activity_algorithm.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/data_logging/data_logging_service.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/settings/settings_file.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/battery/battery_state.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/base64.h"
-#include "pbl/util/math.h"
-#include "pbl/util/shared_cbuf.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <system/passert.h>
+#include <pbl/util/base64.h>
+#include <pbl/util/math.h>
+#include <pbl/util/shared_cbuf.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
-#include "pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h"
-#include "pbl/services/activity/kraepelin/kraepelin_algorithm.h"
+#include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
+#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 
-#include "pbl/services/light.h"
+#include <pbl/services/light.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

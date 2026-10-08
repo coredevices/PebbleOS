@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_sync/app_sync.h"
-#include "syscall/syscall.h"
-#include "system/passert.h"
+#include <applib/app_sync/app_sync.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 static void delegate_errors(AppSync *s, DictionaryResult dict_result,
                             AppMessageResult app_message_result) {

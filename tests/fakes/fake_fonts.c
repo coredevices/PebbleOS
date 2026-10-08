@@ -3,16 +3,16 @@
 
 #include "fake_fonts.h"
 
-#include "resource/resource_ids.auto.h"
-#include "font_resource_keys.auto.h"
-#include "applib/fonts/fonts_private.h"
-#include "applib/graphics/text_resources.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <resource/resource_ids.auto.h>
+#include <font_resource_keys.auto.h>
+#include <applib/fonts/fonts_private.h>
+#include <applib/graphics/text_resources.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 typedef struct {
   const char *key;

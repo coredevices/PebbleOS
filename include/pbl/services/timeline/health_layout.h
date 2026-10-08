@@ -7,7 +7,7 @@
 #include "layout_layer.h"
 #include "timeline_layout.h"
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_timeline_health_layout Health layout

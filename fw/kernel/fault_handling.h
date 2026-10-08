@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "system/reboot_reason.h"
+#include <system/reboot_reason.h>
 
 #include <stdbool.h>
 #include <stddef.h>

@@ -4,18 +4,18 @@
 #include "settings.h"
 #include "menu.h"
 
-#include "applib/app.h"
-#include "applib/event_service_client.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/ui.h"
-#include "kernel/events.h"
-#include "kernel/pbl_malloc.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/i18n/i18n.h"
-#include "system/passert.h"
-#include "shell/normal/app_idle_timeout.h"
-#include "shell/prefs.h"
-#include "pbl/util/size.h"
+#include <applib/app.h>
+#include <applib/event_service_client.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/ui.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/i18n/i18n.h>
+#include <system/passert.h>
+#include <shell/normal/app_idle_timeout.h>
+#include <shell/prefs.h>
+#include <pbl/util/size.h>
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
 

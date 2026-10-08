@@ -3,30 +3,30 @@
 
 #include <math.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/rtc.h>
-#include "kernel/events.h"
-#include "pbl/services/analytics/analytics.h"
-#include "pbl/services/battery/battery_state.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
-#include "syscall/syscall_internal.h"
+#include <kernel/events.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/battery/battery_state.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/ratio.h"
+#include <system/passert.h>
+#include <pbl/util/ratio.h>
 
 #ifndef CONFIG_RECOVERY_FW
-#include "pbl/services/settings/settings_file.h"
+#include <pbl/services/settings/settings_file.h>
 #endif
 
 #ifdef CONFIG_MFG
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
+#include <flash_region/flash_region.h>
 #endif
 
-#include "nrf_fuel_gauge.h"
+#include <nrf_fuel_gauge.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -49,11 +49,11 @@ PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
 static const struct battery_model prv_battery_model = {
 #ifdef CONFIG_BOARD_ASTERIX
-#include "battery_asterix.inc"
+#include <battery_asterix.inc>
 #elif defined(CONFIG_BOARD_OBELIX)
-#include "battery_obelix.inc"
+#include <battery_obelix.inc>
 #elif defined(CONFIG_BOARD_GETAFIX)
-#include "battery_getafix.inc"
+#include <battery_getafix.inc>
 #else
 #error "Battery model not defined for this platform"
 #endif

@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/app_inbox_service.h"
+#include <pbl/services/app_inbox_service.h>
 
-#include "kernel/pbl_malloc.h"
-#include "kernel/pebble_tasks.h"
-#include "process_management/process_manager.h"
-#include "pbl/kernel/mutex.h"
-#include "syscall/syscall_internal.h"
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <process_management/process_manager.h>
+#include <pbl/kernel/mutex.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/list.h"
+#include <system/passert.h>
+#include <pbl/util/list.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_inbox_service, CONFIG_SERVICE_APP_INBOX_SERVICE_LOG_LEVEL);
 

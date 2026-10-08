@@ -3,18 +3,18 @@
 
 #include "weather_data_shared.h"
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
 #include <pbl/drivers/rtc.h>
-#include "kernel/pbl_malloc.h"
-#include "pbl/util/size.h"
+#include <kernel/pbl_malloc.h>
+#include <pbl/util/size.h>
 
 #include <string.h>
-#include "pbl/services/blob_db/watch_app_prefs_db.h"
-#include "pbl/services/blob_db/weather_db.h"
-#include "pbl/services/weather/weather_service_private.h"
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/blob_db/watch_app_prefs_db.h>
+#include <pbl/services/blob_db/weather_db.h>
+#include <pbl/services/weather/weather_service_private.h>
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 #define WEATHER_PREFS_DATA_SIZE        \
   (sizeof(SerializedWeatherAppPrefs) + \

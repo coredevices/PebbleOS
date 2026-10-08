@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "mfg/mfg_serials.h"
+#include <mfg/mfg_serials.h>
 
 //! @file mfg_info.c
 //!

@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/click.h"
-#include "applib/ui/action_bar_layer.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/scroll_layer.h"
-#include "applib/ui/window_stack.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/click.h>
+#include <applib/ui/action_bar_layer.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/scroll_layer.h>
+#include <applib/ui/window_stack.h>
+#include <resource/resource_ids.auto.h>
 
 #include <stdint.h>
 

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/uuid.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/backlight.h>
 
-#include "board/board.h"
+#include <board/board.h>
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 #include <pbl/drivers/backlight.h>
 #endif

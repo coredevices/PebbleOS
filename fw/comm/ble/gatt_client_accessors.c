@@ -7,7 +7,7 @@
 
 #include "gap_le_connection.h"
 
-#include "comm/bt_lock.h"
+#include <comm/bt_lock.h>
 
 #include <pbl/btutil/bt_uuid.h>
 

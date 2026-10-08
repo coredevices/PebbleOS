@@ -14,7 +14,7 @@
  */
 
 #ifdef CONFIG_ORIENTATION_MANAGER
-#include "shell/prefs.h"
+#include <shell/prefs.h>
 
 /**
  * @brief Apply the orientation preference after it changed.

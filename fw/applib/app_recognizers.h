@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/recognizer/recognizer.h"
+#include <applib/ui/recognizer/recognizer.h>
 
 //! Attach a recognizer to the app
 //! @param recognizer \ref Recognizer to attach

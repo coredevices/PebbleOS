@@ -3,6 +3,6 @@
 
 #pragma once
 
-#include "pebble.h"
+#include <pebble.h>
 
 Window *ble_demo_scan_window_create(void);

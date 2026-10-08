@@ -5,11 +5,11 @@
 
 #include <stdint.h>
 
-#include "pbl/util/uuid.h"
-#include "process_management/app_install_manager.h"
-#include "process_management/pebble_process_info.h"
-#include "system/status_codes.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/util/uuid.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/pebble_process_info.h>
+#include <system/status_codes.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_blob_db_app_db App database

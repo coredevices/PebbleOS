@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
-#include "fixtures/load_test_resources.h"
+#include <clar.h>
+#include <fixtures/load_test_resources.h>
 
-#include "applib/fonts/fonts_private.h"
-#include "applib/graphics/framebuffer.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/graphics/text.h"
-#include "applib/graphics/text_resources.h"
-#include "applib/ui/layer.h"
-#include "applib/ui/window_private.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/fonts/fonts_private.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/graphics/text.h>
+#include <applib/graphics/text_resources.h>
+#include <applib/ui/layer.h>
+#include <applib/ui/window_private.h>
+#include <resource/resource_ids.auto.h>
 
 #include <stdio.h>
 
@@ -20,35 +20,35 @@
 // Helper Functions
 ////////////////////////////////////
 #include "test_graphics.h"
-#include "${BIT_DEPTH_NAME}/test_framebuffer.h"
+#include <${BIT_DEPTH_NAME}/test_framebuffer.h>
 #include "util.h"
 
 ///////////////////////////////////////////////////////////
 // Stubs
-#include "stubs_analytics.h"
-#include "stubs_app_state.h"
-#include "stubs_applib_resource.h"
-#include "stubs_bootbits.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_memory_layout.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_print.h"
-#include "stubs_serial.h"
-#include "stubs_sleep.h"
-#include "stubs_syscall_internal.h"
-#include "stubs_syscalls.h"
-#include "stubs_system_reset.h"
-#include "stubs_task_wdt.h"
-#include "stubs_ui_window.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_analytics.h>
+#include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
+#include <stubs_bootbits.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_memory_layout.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_print.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_syscall_internal.h>
+#include <stubs_syscalls.h>
+#include <stubs_system_reset.h>
+#include <stubs_task_wdt.h>
+#include <stubs_ui_window.h>
+#include <stubs_unobstructed_area.h>
 
 ///////////////////////////////////////////////////////////
 // Fakes
-#include "fake_gbitmap_get_data_row.h"
+#include <fake_gbitmap_get_data_row.h>
 
 static FrameBuffer *fb = NULL;
 

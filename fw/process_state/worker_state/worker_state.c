@@ -3,11 +3,11 @@
 
 #include <string.h>
 
-#include "kernel/util/segment.h"
-#include "process_management/process_manager.h"
-#include "process_state/worker_state/worker_state.h"
-#include "syscall/syscall.h"
-#include "tinymt32.h"
+#include <kernel/util/segment.h>
+#include <process_management/process_manager.h>
+#include <process_state/worker_state/worker_state.h>
+#include <syscall/syscall.h>
+#include <tinymt32.h>
 
 #if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
 #include <pbl/shell/shell.h>

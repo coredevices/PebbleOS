@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "pbl/services/filesystem/app_file.h"
+#include <pbl/services/filesystem/app_file.h>
 
-#include "stubs_passert.h"
+#include <stubs_passert.h>
 
 static void assert_file_name(const char *vector, AppInstallId app_id, const char *suffix) {
   char buf[42];

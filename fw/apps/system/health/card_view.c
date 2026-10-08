@@ -7,14 +7,14 @@
 #include "sleep_summary_card.h"
 #include "hr_summary_card.h"
 
-#include "applib/app_launch_button.h"
-#include "applib/app_launch_reason.h"
-#include "applib/ui/action_button.h"
-#include "applib/ui/content_indicator.h"
-#include "applib/ui/content_indicator_private.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/timeline/health_layout.h"
+#include <applib/app_launch_button.h>
+#include <applib/app_launch_reason.h>
+#include <applib/ui/action_button.h>
+#include <applib/ui/content_indicator.h>
+#include <applib/ui/content_indicator_private.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/timeline/health_layout.h>
 
 #define BACK_TO_WATCHFACE (-1)
 

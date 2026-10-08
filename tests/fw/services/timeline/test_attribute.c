@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "pbl/services/timeline/attribute.h"
-#include "pbl/services/timeline/attributes_actions.h"
-#include "pbl/util/size.h"
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/attributes_actions.h>
+#include <pbl/util/size.h>
 
 #include <stdint.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
 
 // Setup
 ////////////////////////////////////////////////////////////////

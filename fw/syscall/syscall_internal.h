@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "kernel/pebble_tasks.h"
-#include "pbl/kernel/compiler.h"
+#include <kernel/pebble_tasks.h>
+#include <pbl/kernel/compiler.h>
 
 #include <pbl/mcu/mpu.h>
 

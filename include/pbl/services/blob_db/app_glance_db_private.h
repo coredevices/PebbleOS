@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "pbl/services/timeline/attribute.h"
-#include "pbl/services/timeline/attribute_private.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/attribute_private.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_blob_db_app_glance_db_private App glance records

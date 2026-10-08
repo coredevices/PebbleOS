@@ -1,52 +1,52 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/window.h"
-#include "applib/ui/window_manager.h"
-#include "applib/ui/window_stack.h"
-#include "applib/ui/window_stack_private.h"
-#include "kernel/ui/modals/modal_manager.h"
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_manager.h>
+#include <applib/ui/window_stack.h>
+#include <applib/ui/window_stack_private.h>
+#include <kernel/ui/modals/modal_manager.h>
 
-#include "applib/connection_service_private.h"
-#include "applib/battery_state_service_private.h"
-#include "applib/tick_timer_service_private.h"
+#include <applib/connection_service_private.h>
+#include <applib/battery_state_service_private.h>
+#include <applib/tick_timer_service_private.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////
 
-#include "stubs_sem.h"
-#include "stubs_accel_service.h"
-#include "stubs_app_state.h"
-#include "stubs_app_timer.h"
-#include "stubs_ble_app_support.h"
-#include "stubs_event_service_client.h"
-#include "stubs_fonts.h"
-#include "stubs_irq.h"
-#include "stubs_gbitmap.h"
-#include "stubs_graphics.h"
-#include "stubs_graphics_context.h"
-#include "stubs_heap.h"
-#include "stubs_logging.h"
-#include "stubs_new_timer.h"
-#include "stubs_passert.h"
-#include "stubs_persist.h"
-#include "stubs_plugin_service.h"
-#include "stubs_print.h"
-#include "stubs_process_manager.h"
-#include "stubs_resources.h"
-#include "stubs_syscalls.h"
-#include "stubs_unobstructed_area.h"
+#include <stubs_sem.h>
+#include <stubs_accel_service.h>
+#include <stubs_app_state.h>
+#include <stubs_app_timer.h>
+#include <stubs_ble_app_support.h>
+#include <stubs_event_service_client.h>
+#include <stubs_fonts.h>
+#include <stubs_irq.h>
+#include <stubs_gbitmap.h>
+#include <stubs_graphics.h>
+#include <stubs_graphics_context.h>
+#include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_new_timer.h>
+#include <stubs_passert.h>
+#include <stubs_persist.h>
+#include <stubs_plugin_service.h>
+#include <stubs_print.h>
+#include <stubs_process_manager.h>
+#include <stubs_resources.h>
+#include <stubs_syscalls.h>
+#include <stubs_unobstructed_area.h>
 
 // Fakes
 ////////////////////////////////////
 
-#include "fake_events.h"
-#include "fake_pbl_malloc.h"
-#include "fake_pebble_tasks.h"
-#include "fake_animation.h"
+#include <fake_events.h>
+#include <fake_pbl_malloc.h>
+#include <fake_pebble_tasks.h>
+#include <fake_animation.h>
 
 #include <stdlib.h>
 #include <stdio.h>

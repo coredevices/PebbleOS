@@ -3,8 +3,8 @@
 
 #include "profiler.h"
 
-#include "system/passert.h"
-#include "pbl/util/size.h"
+#include <system/passert.h>
+#include <pbl/util/size.h>
 
 #include <cmsis_core.h>
 

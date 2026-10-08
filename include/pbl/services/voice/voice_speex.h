@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "pbl/services/voice_endpoint.h"
+#include <pbl/services/voice_endpoint.h>
 
 /**
  * @defgroup services_voice_voice_speex Speex encoder

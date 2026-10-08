@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "bf0_hal_tim.h"
+#include <bf0_hal_tim.h>
 
 /**
  * @addtogroup drivers_sf32lb52

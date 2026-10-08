@@ -3,9 +3,9 @@
 
 #include "app_inbox.h"
 
-#include "applib/applib_malloc.auto.h"
-#include "pbl/services/app_inbox_service.h"
-#include "syscall/syscall.h"
+#include <applib/applib_malloc.auto.h>
+#include <pbl/services/app_inbox_service.h>
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
 
 AppInbox *app_inbox_create_and_register(size_t buffer_size, uint32_t min_num_messages,

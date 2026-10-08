@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "pbl/services/put_bytes/put_bytes.h"
-#include "system/firmware_storage.h"
+#include <pbl/services/put_bytes/put_bytes.h>
+#include <system/firmware_storage.h>
 
 #include <stddef.h>
 #include <stdint.h>

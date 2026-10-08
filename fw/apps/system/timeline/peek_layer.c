@@ -3,16 +3,16 @@
 
 #include "peek_layer.h"
 
-#include "pbl/util/trig.h"
-#include "applib/ui/kino/kino_reel/scale_segmented.h"
-#include "applib/ui/kino/kino_reel/transform.h"
-#include "applib/ui/kino/kino_reel/unfold.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/ui/kernel_ui.h"
-#include "pbl/services/evented_timer.h"
-#include "pbl/services/timeline/notification_layout.h"
-#include "pbl/services/timeline/timeline_resources.h"
-#include "pbl/util/math.h"
+#include <pbl/util/trig.h>
+#include <applib/ui/kino/kino_reel/scale_segmented.h>
+#include <applib/ui/kino/kino_reel/transform.h>
+#include <applib/ui/kino/kino_reel/unfold.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/ui/kernel_ui.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/timeline/notification_layout.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/math.h>
 
 //! Title text vertically centered position
 #define TEXT_OFFSET_Y ((DISP_ROWS / 2) + PBL_IF_RECT_ELSE(46, 42))

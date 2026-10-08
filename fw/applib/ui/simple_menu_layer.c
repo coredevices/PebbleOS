@@ -3,9 +3,9 @@
 
 #include "simple_menu_layer.h"
 
-#include "applib/legacy2/ui/menu_layer_legacy2.h"
-#include "applib/applib_malloc.auto.h"
-#include "process_management/process_manager.h"
+#include <applib/legacy2/ui/menu_layer_legacy2.h>
+#include <applib/applib_malloc.auto.h>
+#include <process_management/process_manager.h>
 
 static int16_t get_header_height(struct MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {

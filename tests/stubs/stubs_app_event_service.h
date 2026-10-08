@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/app_event_service.h"
+#include <applib/app_event_service.h>
 
 void app_event_service_subscribe(EventServiceInfo *service_info) {
   return;

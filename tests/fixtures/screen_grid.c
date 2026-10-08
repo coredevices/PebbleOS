@@ -3,13 +3,13 @@
 
 #include "screen_grid.h"
 
-#include "clar_asserts.h"
+#include <clar_asserts.h>
 
-#include "applib/fonts/fonts.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/text.h"
-#include "font_resource_keys.auto.h"
-#include "pbl/util/math.h"
+#include <applib/fonts/fonts.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/text.h>
+#include <font_resource_keys.auto.h>
+#include <pbl/util/math.h>
 
 #include <stdio.h>
 #include <stdlib.h>

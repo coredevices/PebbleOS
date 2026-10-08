@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/animation.h"
+#include <applib/ui/animation.h>
 
 #define TIMELINE_NUM_MOOOK_FRAMES_MID 3
 #define TIMELINE_UP_DOWN_ANIMATION_DURATION_MS \

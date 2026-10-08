@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/timeline_resources.h"
+#include <pbl/services/timeline/timeline_resources.h>
 
-#include "applib/graphics/gdraw_command_private.h"
-#include "applib/ui/kino/kino_reel.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/app_install_manager.h"
-#include "resource/resource_ids.auto.h"
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
-#include "system/passert.h"
-#include "pbl/util/byteorder.h"
-#include "pbl/util/uuid.h"
-#include "pbl/util/testing.h"
+#include <applib/graphics/gdraw_command_private.h>
+#include <applib/ui/kino/kino_reel.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/uuid.h>
+#include <pbl/util/testing.h>
 
 #define RESOURCE_MAX_SIZE (700)
 

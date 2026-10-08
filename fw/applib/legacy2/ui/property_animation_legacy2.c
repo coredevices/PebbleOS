@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "property_animation_legacy2.h"
-#include "applib/ui/property_animation.h"
+#include <applib/ui/property_animation.h>
 
-#include "applib/ui/layer.h"
+#include <applib/ui/layer.h>
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
 
 /////////////////////

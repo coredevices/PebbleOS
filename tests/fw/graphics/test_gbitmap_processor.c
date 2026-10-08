@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-#include "applib/graphics/framebuffer.h"
+#include <applib/graphics/framebuffer.h>
 
 // Stubs
 ///////////////////////
 
-#include "stubs_app_state.h"
-#include "stubs_graphics_circle.h"
-#include "stubs_graphics_line.h"
-#include "stubs_graphics_private.h"
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_process_manager.h"
+#include <stubs_app_state.h>
+#include <stubs_graphics_circle.h>
+#include <stubs_graphics_line.h>
+#include <stubs_graphics_private.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_process_manager.h>
 
 const GDrawRawImplementation g_default_draw_implementation;
 

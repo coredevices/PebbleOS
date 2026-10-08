@@ -7,6 +7,6 @@
 //!
 //! Test app that shows various display pattern
 
-#include "process_management/pebble_process_md.h"
+#include <process_management/pebble_process_md.h>
 
 const PebbleProcessMd *mfg_display_app_get_info(void);

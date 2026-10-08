@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "system/reboot_reason.h"
-#include "pbl/kernel/compiler.h"
+#include <system/reboot_reason.h>
+#include <pbl/kernel/compiler.h>
 
 #if !UNITTEST
 PBL_NORETURN

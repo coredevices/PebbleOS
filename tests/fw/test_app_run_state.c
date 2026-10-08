@@ -1,29 +1,29 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clar.h"
+#include <clar.h>
 
-// #include "comm/remote.h"
-#include "process_management/app_run_state.h"
-#include "pbl/services/comm_session/protocol.h"
-#include "system/passert.h"
+// #include <comm/remote.h>
+#include <process_management/app_run_state.h>
+#include <pbl/services/comm_session/protocol.h>
+#include <system/passert.h>
 
-#include "pbl/kernel/compiler.h"
-#include "pbl/util/list.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/list.h>
 
 #include <stdlib.h>
 
 // Stubs
 ///////////////////////////////////////
-#include "stubs_logging.h"
-#include "stubs_passert.h"
-#include "stubs_pbl_malloc.h"
-#include "stubs_rand_ptr.h"
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_rand_ptr.h>
 
 // Fakes
 ///////////////////////////////////////
-#include "fake_app_manager.h"
-#include "fake_pebble_tasks.h"
+#include <fake_app_manager.h>
+#include <fake_pebble_tasks.h>
 
 // Structures
 ///////////////////////////////////////

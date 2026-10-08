@@ -5,7 +5,7 @@
 #include <pbl/drivers/speaker/qemu/audio.h>
 #include <pbl/kernel/irq.h>
 
-#include "pbl/services/system_task.h"
+#include <pbl/services/system_task.h>
 
 #include <stdint.h>
 

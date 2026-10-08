@@ -3,15 +3,15 @@
 
 #include "option_menu_demo.h"
 
-#include "applib/app.h"
-#include "applib/graphics/graphics.h"
-#include "applib/ui/option_menu_window.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
+#include <applib/app.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/option_menu_window.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
 #include <pbl/logging/logging.h>
-#include "pbl/util/size.h"
+#include <pbl/util/size.h>
 
 const char *s_strings[] = {
   "One",

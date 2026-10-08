@@ -3,7 +3,7 @@
 
 /** @cond INTERNAL_HIDDEN */
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 static inline bool mcu_state_is_thread_privileged(void) {
   return true;

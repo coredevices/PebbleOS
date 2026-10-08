@@ -3,7 +3,7 @@
 
 #include "fake_gbitmap_get_data_row.h"
 
-#include "applib/graphics/gtypes.h"
+#include <applib/graphics/gtypes.h>
 
 #include <stdint.h>
 

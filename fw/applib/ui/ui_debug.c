@@ -4,8 +4,8 @@
 #if defined(CONFIG_UI_DEBUG) && defined(CONFIG_SHELL)
 
 #include "ui.h"
-#include "applib/ui/app_window_stack.h"
-#include "kernel/ui/modals/modal_manager.h"
+#include <applib/ui/app_window_stack.h>
+#include <kernel/ui/modals/modal_manager.h>
 
 #include <pbl/shell/shell.h>
 

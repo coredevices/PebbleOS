@@ -3,4 +3,4 @@
 
 #pragma once
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage_v2_impl.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage_v2_impl.h>

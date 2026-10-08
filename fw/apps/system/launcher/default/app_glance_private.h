@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/kino/kino_reel.h"
+#include <applib/ui/kino/kino_reel.h>
 
 //! Get the size of the provided reel that implements how a launcher app glance should be drawn.
 //! @param reel The reel that implements how a glance should be drawn

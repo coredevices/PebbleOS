@@ -8,9 +8,9 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/rtc.h>
-#include "pbl/kernel/compiler.h"
-#include "pbl/mcu/cache.h"
-#include "pbl/services/regular_timer.h"
+#include <pbl/kernel/compiler.h>
+#include <pbl/mcu/cache.h>
+#include <pbl/services/regular_timer.h>
 
 /**
  * @defgroup drivers_imu IMU

@@ -3,34 +3,34 @@
 
 #include "music.h"
 
-#include "applib/app.h"
-#include "applib/event_service_client.h"
-#include "applib/app_timer.h"
-#include "applib/accel_service.h"
-#include "applib/fonts/fonts.h"
-#include "applib/preferred_content_size.h"
-#include "applib/tick_timer_service.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/property_animation.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/ui/system_icons.h"
-#include "pbl/services/clock.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/imaging.h"
-#include "pbl/services/music.h"
-#include "pbl/services/vibes/vibe_score.h"
-#include "shell/prefs.h"
-#include "shell/system_theme.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/util/math.h"
-#include "pbl/util/trig.h"
+#include <applib/app.h>
+#include <applib/event_service_client.h>
+#include <applib/app_timer.h>
+#include <applib/accel_service.h>
+#include <applib/fonts/fonts.h>
+#include <applib/preferred_content_size.h>
+#include <applib/tick_timer_service.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/property_animation.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/ui/system_icons.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/imaging.h>
+#include <pbl/services/music.h>
+#include <pbl/services/vibes/vibe_score.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/util/math.h>
+#include <pbl/util/trig.h>
 
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include "pbl/util/units.h"
+#include <pbl/util/units.h>
 
 // Album art needs a colour display with enough RAM for a full-screen 4-bpp cover; only emery and
 // gabbro qualify. Flint and lower never request it, so their layout stays text-only.

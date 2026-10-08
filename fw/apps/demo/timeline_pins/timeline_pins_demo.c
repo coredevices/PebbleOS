@@ -3,25 +3,25 @@
 
 #include "timeline_pins_demo.h"
 
-#include "applib/app.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/option_menu_window.h"
-#include "apps/system_app_ids.h"
-#include "apps/system/timeline/timeline.h"
-#include "process_management/app_manager.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/activity_insights.h"
-#include "pbl/services/blob_db/pin_db.h"
-#include "pbl/services/notifications/notification_storage.h"
-#include "pbl/services/timeline/calendar_layout.h"
-#include "pbl/services/timeline/event.h"
-#include "pbl/services/timeline/health_layout.h"
-#include "pbl/services/timeline/weather_layout.h"
-#include "pbl/util/size.h"
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/option_menu_window.h>
+#include <apps/system_app_ids.h>
+#include <apps/system/timeline/timeline.h>
+#include <process_management/app_manager.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/blob_db/pin_db.h>
+#include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/timeline/calendar_layout.h>
+#include <pbl/services/timeline/event.h>
+#include <pbl/services/timeline/health_layout.h>
+#include <pbl/services/timeline/weather_layout.h>
+#include <pbl/util/size.h>
 
 #include <sys/cdefs.h>
-#include "pbl/services/time.h"
-#include "pbl/util/units.h"
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 #define StringListLiteral(str)                       \
   {                                                  \

@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "apps/prf/mfg_test_result.h"
+#include <apps/prf/mfg_test_result.h>
 
 #include <string.h>
 
 #ifdef CONFIG_MFG
 #include <pbl/drivers/flash.h>
-#include "flash_region/flash_region.h"
-#include "pbl/kernel/compiler.h"
+#include <flash_region/flash_region.h>
+#include <pbl/kernel/compiler.h>
 #endif
 
 #define NUM_MODES 2

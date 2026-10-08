@@ -6,20 +6,20 @@
 #include "time.h"
 #include "window.h"
 
-#include "applib/app.h"
-#include "applib/ui/action_menu_window_private.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/date_selection_window.h"
-#include "applib/ui/option_menu_window.h"
-#include "applib/ui/time_selection_window.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/util/string.h"
+#include <applib/app.h>
+#include <applib/ui/action_menu_window_private.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/date_selection_window.h>
+#include <applib/ui/option_menu_window.h>
+#include <applib/ui/time_selection_window.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/util/string.h>
 
-#include "pbl/services/clock.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/timezone_database.h"
-#include "shell/prefs.h"
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/timezone_database.h>
+#include <shell/prefs.h>
 
 #include <stdio.h>
 #include <time.h>

@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "services/light/als_screen_compensation.h"
+#include <services/light/als_screen_compensation.h>
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
-#include "applib/graphics/gtypes.h"
-#include "board/board.h"
-#include "pbl/services/compositor/compositor.h"
+#include <applib/graphics/gtypes.h>
+#include <board/board.h>
+#include <pbl/services/compositor/compositor.h>
 #ifdef CONFIG_ORIENTATION_MANAGER
-#include "shell/prefs.h"
+#include <shell/prefs.h>
 #endif
 
 uint16_t als_compensation_sample_luminance(void) {

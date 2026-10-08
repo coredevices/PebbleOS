@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/ui/dialogs/confirmation_dialog.h"
+#include <applib/ui/dialogs/confirmation_dialog.h>
 
 ConfirmationDialog *confirmation_dialog_create(const char *dialog_name) {
   return NULL;

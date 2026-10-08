@@ -3,10 +3,10 @@
 
 #include "action_bar_layer_legacy2.h"
 
-#include "applib/graphics/graphics.h"
-#include "applib/ui/window_private.h"
-#include "kernel/pbl_malloc.h"
-#include "system/passert.h"
+#include <applib/graphics/graphics.h>
+#include <applib/ui/window_private.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 inline static bool action_bar_legacy2_is_highlighted(ActionBarLayerLegacy2 *action_bar,
                                                      uint8_t index) {

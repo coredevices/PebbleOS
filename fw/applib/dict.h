@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 //! @file dict.h Generic key/value serializer and parser.
 

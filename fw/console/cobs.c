@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "console/cobs.h"
+#include <console/cobs.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "pbl/kernel/compiler.h"
+#include <pbl/kernel/compiler.h>
 
 void cobs_streaming_decode_start(CobsDecodeContext *restrict ctx, void *restrict output_buffer,
                                  size_t length) {

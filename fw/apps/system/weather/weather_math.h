@@ -4,7 +4,7 @@
 #pragma once
 
 #include "pebble_compat.h"
-#include "pbl/util/bitops.h"
+#include <pbl/util/bitops.h>
 
 // Format-safe framebuffer row pixel access, shared by every raw-blit routine in
 // the app. Colour boards address a row one byte per pixel; the BW boards pack

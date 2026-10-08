@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_logging.h"
+#include <applib/app_logging.h>
 
 #include <stdint.h>
 #include <stddef.h>
 
 // FIXME PBL-1629: move needed declarations into applib
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
 
 void app_log_vargs(uint8_t log_level, const char *src_filename, int src_line_number,

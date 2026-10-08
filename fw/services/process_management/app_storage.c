@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/process_management/app_storage.h"
+#include <pbl/services/process_management/app_storage.h>
 
 #include <inttypes.h>
 #include <stdint.h>
@@ -9,14 +9,14 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
-#include "process_management/pebble_process_md.h"
-#include "resource/resource_storage.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/services/filesystem/app_file.h"
+#include <process_management/pebble_process_md.h>
+#include <resource/resource_storage.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/filesystem/app_file.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/build_id.h"
-#include "pbl/util/math.h"
+#include <system/passert.h>
+#include <pbl/util/build_id.h>
+#include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
 

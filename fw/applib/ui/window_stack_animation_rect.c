@@ -6,8 +6,8 @@
 #include "window_private.h"
 #include "window_stack.h"
 
-#include "applib/graphics/graphics_private.h"
-#include "applib/legacy2/ui/property_animation_legacy2.h"
+#include <applib/graphics/graphics_private.h>
+#include <applib/legacy2/ui/property_animation_legacy2.h>
 
 static void prv_update_rect_compatible(Animation *a, const AnimationProgress progress) {
   bool uses_legacy2_animations = animation_private_using_legacy_2(NULL);

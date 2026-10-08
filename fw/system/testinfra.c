@@ -3,8 +3,8 @@
 
 #include "testinfra.h"
 
-#include "console/pulse_internal.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include <console/pulse_internal.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/logging/logging.h>
 
 #if !UNITTEST

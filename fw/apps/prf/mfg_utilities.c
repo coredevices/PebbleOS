@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app.h"
-#include "applib/ui/ui.h"
-#include "applib/ui/dialogs/confirmation_dialog.h"
-#include "apps/prf/mfg_test_result.h"
-#include "apps/prf/mfg_utilities.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/util/size.h"
+#include <applib/app.h>
+#include <applib/ui/ui.h>
+#include <applib/ui/dialogs/confirmation_dialog.h>
+#include <apps/prf/mfg_test_result.h>
+#include <apps/prf/mfg_utilities.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/util/size.h>
 
 typedef struct {
   Window *window;

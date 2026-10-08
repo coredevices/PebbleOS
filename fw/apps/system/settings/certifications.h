@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "mfg/mfg_info.h"
+#include <mfg/mfg_info.h>
 
 #include <stdbool.h>
 

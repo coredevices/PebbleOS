@@ -1,46 +1,46 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/activity/activity_insights.h"
-#include "pbl/services/activity/activity_private.h"
-#include "pbl/services/activity/insights_settings.h"
-#include "pbl/services/filesystem/pfs.h"
-#include "pbl/kernel/compiler.h"
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/insights_settings.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/kernel/compiler.h>
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "clar.h"
+#include <clar.h>
 
 // Stubs
-#include "stubs_analytics.h"
-#include "stubs_app_install_manager.h"
-#include "stubs_app_state.h"
-#include "stubs_event_service_client.h"
-#include "stubs_health_db.h"
-#include "stubs_health_util.h"
-#include "stubs_i18n.h"
-#include "stubs_logging.h"
-#include "stubs_mutex.h"
-#include "stubs_passert.h"
-#include "stubs_pebble_tasks.h"
-#include "stubs_rand_ptr.h"
-#include "stubs_system_task.h"
-#include "pbl/services/time.h"
-#include "pbl/util/time.h"
-#include "pbl/util/units.h"
+#include <stubs_analytics.h>
+#include <stubs_app_install_manager.h>
+#include <stubs_app_state.h>
+#include <stubs_event_service_client.h>
+#include <stubs_health_db.h>
+#include <stubs_health_util.h>
+#include <stubs_i18n.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pebble_tasks.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_system_task.h>
+#include <pbl/services/time.h>
+#include <pbl/util/time.h>
+#include <pbl/util/units.h>
 
 bool activity_is_initialized(void) {
   return true;
 }
 
 // Fakes
-#include "fake_kernel_services_notifications.h"
-#include "fake_pbl_malloc.h"
-#include "fake_rtc.h"
-#include "fake_settings_file.h"
+#include <fake_kernel_services_notifications.h>
+#include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
+#include <fake_settings_file.h>
 
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
 static struct tm s_init_time_tm = {

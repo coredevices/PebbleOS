@@ -3,13 +3,13 @@
 
 #include "test_fs_resources.h"
 
-#include "applib/app.h"
-#include "applib/ui/ui.h"
-#include "applib/ui/window.h"
-#include "kernel/pbl_malloc.h"
-#include "process_state/app_state/app_state.h"
-#include "resource/resource_ids.auto.h"
-#include "system/passert.h"
+#include <applib/app.h>
+#include <applib/ui/ui.h>
+#include <applib/ui/window.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <resource/resource_ids.auto.h>
+#include <system/passert.h>
 
 typedef struct {
   Window window;

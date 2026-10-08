@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/timeline/swap_layer.h"
+#include <pbl/services/timeline/swap_layer.h>
 
-#include "applib/applib_malloc.auto.h"
-#include "applib/graphics/graphics.h"
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/property_animation.h"
-#include "applib/ui/status_bar_layer.h"
-#include "applib/ui/window.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/timeline/layout_layer.h"
-#include "pbl/services/timeline/notification_layout.h"
-#include "pbl/services/notifications/alerts_preferences_private.h"
-#include "kernel/ui/kernel_ui.h"
-#include "process_state/app_state/app_state.h"
-#include "pbl/util/math.h"
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/property_animation.h>
+#include <applib/ui/status_bar_layer.h>
+#include <applib/ui/window.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/timeline/layout_layer.h>
+#include <pbl/services/timeline/notification_layout.h>
+#include <pbl/services/notifications/alerts_preferences_private.h>
+#include <kernel/ui/kernel_ui.h>
+#include <process_state/app_state/app_state.h>
+#include <pbl/util/math.h>
 
 #ifdef CONFIG_TOUCH
-#include "applib/ui/recognizer/touch_nav.h"
-#include "kernel/pebble_tasks.h"
-#include "pbl/util/testing.h"
+#include <applib/ui/recognizer/touch_nav.h>
+#include <kernel/pebble_tasks.h>
+#include <pbl/util/testing.h>
 #endif
 
 // Initial pixel scroll amount, paging_height (LAYOUT_HEIGHT) for circular display

@@ -3,7 +3,7 @@
 
 #include <clar.h>
 
-#include "applib/graphics/raw_image.h"
+#include <applib/graphics/raw_image.h>
 
 // Make sure that row stride, bit depth is all being used correctly.
 // Really, these are just some simple cases and sanity checks.

@@ -4,20 +4,20 @@
 #include "alarm_detail.h"
 #include "alarm_editor.h"
 
-#include "applib/ui/action_menu_window.h"
-#include "applib/ui/action_menu_window_private.h"
-#include "applib/ui/dialogs/simple_dialog.h"
-#include "kernel/pbl_malloc.h"
-#include "popups/health_tracking_ui.h"
-#include "resource/resource_ids.auto.h"
-#include "pbl/services/i18n/i18n.h"
-#include "pbl/services/activity/activity.h"
-#include "pbl/services/alarms/alarm.h"
+#include <applib/ui/action_menu_window.h>
+#include <applib/ui/action_menu_window_private.h>
+#include <applib/ui/dialogs/simple_dialog.h>
+#include <kernel/pbl_malloc.h>
+#include <popups/health_tracking_ui.h>
+#include <resource/resource_ids.auto.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/alarms/alarm.h>
 
 #ifdef CONFIG_SPEAKER
-#include "popups/alarm_popup.h"
-#include "services/alarms/alarm_tones.h"
-#include "pbl/services/speaker/speaker_service.h"
+#include <popups/alarm_popup.h>
+#include <services/alarms/alarm_tones.h>
+#include <pbl/services/speaker/speaker_service.h>
 #endif
 
 #include <stdio.h>

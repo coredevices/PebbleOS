@@ -3,14 +3,14 @@
 
 #include "test_mpu_cache.h"
 
-#include "applib/app.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/ui.h"
-#include "font_resource_keys.auto.h"
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
-#include "process_management/process_manager.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/ui.h>
+#include <font_resource_keys.auto.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/process_manager.h>
+#include <process_state/app_state/app_state.h>
 
 // This demo app tests that MPU reconfiguration whilst context switching preserves the coherency of
 // the data cache across between privileged and unprivileged tasks.

@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "pebbleos/firmware_metadata.h"
-#include "pbl/util/build_id.h"
+#include <pebbleos/firmware_metadata.h>
+#include <pbl/util/build_id.h>
 
 extern const FirmwareMetadata TINTIN_METADATA;
 

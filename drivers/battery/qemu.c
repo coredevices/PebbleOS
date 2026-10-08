@@ -2,14 +2,14 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/battery.h>
-#include "comm/qemu/serial.h"
-#include "comm/qemu/settings.h"
+#include <comm/qemu/serial.h>
+#include <comm/qemu/settings.h>
 
-#include "pbl/services/battery/battery_state.h"
-#include "pbl/services/battery/battery_curve.h"
+#include <pbl/services/battery/battery_state.h>
+#include <pbl/services/battery/battery_curve.h>
 #include <pbl/logging/logging.h>
 
-#include "pbl/util/math.h"
+#include <pbl/util/math.h>
 
 static uint16_t s_battery_mv = 4000;
 static bool s_usb_connected;

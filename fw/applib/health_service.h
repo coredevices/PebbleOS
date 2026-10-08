@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <pbl/drivers/ambient_light.h>
-#include "pbl/services/hrm/hrm_manager.h"
+#include <pbl/services/hrm/hrm_manager.h>
 #include <time.h>
 
 //! @addtogroup Foundation

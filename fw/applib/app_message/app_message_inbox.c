@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_message/app_message_internal.h"
-#include "applib/app_message/app_message_receiver.h"
-#include "process_state/app_state/app_state.h"
+#include <applib/app_message/app_message_internal.h>
+#include <applib/app_message/app_message_receiver.h>
+#include <process_state/app_state/app_state.h>
 #include <pbl/logging/logging.h>
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
 AppMessageResult app_message_inbox_open(AppMessageCtxInbox *inbox, size_t size_inbound) {
   const size_t size_maximum = app_message_inbox_size_maximum();

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/graphics/perimeter.h"
-#include "applib/ui/dialogs/dialog.h"
-#include "applib/ui/window_stack.h"
+#include <applib/graphics/perimeter.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/window_stack.h>
 
 //! Simple dialogs just contain a large icon and some text.
 //! @internal

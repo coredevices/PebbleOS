@@ -7,7 +7,7 @@
 
 #include "ram_storage.h"
 
-#include "kernel/pbl_malloc.h"
+#include <kernel/pbl_malloc.h>
 
 struct {
   RamStorage ram_storage;

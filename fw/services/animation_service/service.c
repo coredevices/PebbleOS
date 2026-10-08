@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/ui/animation_private.h"
-#include "applib/app_logging.h"
+#include <applib/ui/animation_private.h>
+#include <applib/app_logging.h>
 
-#include "kernel/events.h"
-#include "kernel/kernel_applib_state.h"
+#include <kernel/events.h>
+#include <kernel/kernel_applib_state.h>
 
-#include "process_management/process_manager.h"
-#include "process_state/app_state/app_state.h"
+#include <process_management/process_manager.h>
+#include <process_state/app_state/app_state.h>
 
-#include "pbl/services/new_timer/new_timer.h"
+#include <pbl/services/new_timer/new_timer.h>
 
-#include "system/passert.h"
+#include <system/passert.h>
 
-#include "syscall/syscall_internal.h"
+#include <syscall/syscall_internal.h>
 
 // The timer ID used for each task that we support
 static TimerID s_kernel_main_timer_id = TIMER_INVALID_ID;

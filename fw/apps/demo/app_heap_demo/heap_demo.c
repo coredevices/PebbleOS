@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "heap_demo.h"
-#include "applib/app.h"
-#include "applib/fonts/fonts.h"
-#include "applib/ui/ui.h"
-#include "kernel/pbl_malloc.h"
+#include <applib/app.h>
+#include <applib/fonts/fonts.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
 
 #include <stdio.h>
 

@@ -6,10 +6,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "host/ble_hs.h"
-#include "host/ble_uuid.h"
-#include "os/endian.h"
-#include "console/console.h"
+#include <host/ble_hs.h>
+#include <host/ble_uuid.h>
+#include <os/endian.h>
+#include <console/console.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
 
 uint16_t g_gh3x2x_ble_attr_tx_handle;

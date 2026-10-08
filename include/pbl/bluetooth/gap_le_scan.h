@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "comm/ble/gap_le_scan.h"
+#include <comm/ble/gap_le_scan.h>
 
 /**
  * @defgroup bluetooth_gap_le_scan Scanning

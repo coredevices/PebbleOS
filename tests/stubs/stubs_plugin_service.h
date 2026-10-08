@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "applib/plugin_service_private.h"
+#include <applib/plugin_service_private.h>
 
 void plugin_service_state_init(PluginServiceState *state) {
 }

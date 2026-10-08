@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "comm/ble/gap_le_connection.h"
-#include "comm/ble/gap_le_device_name.h"
-#include "comm/bt_lock.h"
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_device_name.h>
+#include <comm/bt_lock.h>
 
-#include "pbl/services/bluetooth/bluetooth_persistent_storage.h"
-#include "pbl/services/bluetooth/local_addr.h"
-#include "kernel/event_loop.h"
-#include "kernel/pbl_malloc.h"
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_addr.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
 
 #include <pbl/bluetooth/bonding_sync.h>

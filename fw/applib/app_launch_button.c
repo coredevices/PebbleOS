@@ -3,7 +3,7 @@
 
 #include "app_launch_button.h"
 
-#include "syscall/syscall.h"
+#include <syscall/syscall.h>
 
 ButtonId app_launch_button(void) {
   return sys_process_get_launch_button();

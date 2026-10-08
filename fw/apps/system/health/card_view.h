@@ -5,7 +5,7 @@
 
 #include "data.h"
 
-#include "applib/ui/ui.h"
+#include <applib/ui/ui.h>
 
 //! Main structure for card view
 typedef struct HealthCardView HealthCardView;

@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "kernel/memory_layout.h"
+#include <kernel/memory_layout.h>
 
 #include <stdint.h>
 
-#include "pbl/kernel/msgq.h"
-#include "pbl/kernel/thread.h"
+#include <pbl/kernel/msgq.h>
+#include <pbl/kernel/thread.h>
 
 //! This is an enumeration of different tasks we've had in our system. Please don't rearrange
 //! these numbers! For example, the value of PebbleTask_Timers is hardcoded into our syscall

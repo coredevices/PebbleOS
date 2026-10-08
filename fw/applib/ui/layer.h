@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "applib/graphics/gtypes.h"
-#include "applib/ui/recognizer/recognizer.h"
-#include "applib/ui/recognizer/recognizer_list.h"
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/recognizer/recognizer.h>
+#include <applib/ui/recognizer/recognizer_list.h>
 
 #include <stdbool.h>
 

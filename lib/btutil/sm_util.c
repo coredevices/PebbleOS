@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/btutil/sm_util.h"
-#include "pbl/btutil/bt_device.h"
+#include <pbl/btutil/sm_util.h>
+#include <pbl/btutil/bt_device.h>
 
 #include <pbl/bluetooth/sm_types.h>
 

@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "board/board.h"
+#include <board/board.h>
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/i2c.h>
-#include "kernel/util/sleep.h"
-#include "pbl/kernel/mutex.h"
+#include <kernel/util/sleep.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
-#include "system/passert.h"
+#include <system/passert.h>
 
 #include <inttypes.h>
 

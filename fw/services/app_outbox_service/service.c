@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "applib/app_message/app_message_internal.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "process_management/process_manager.h"
-#include "pbl/services/app_message/app_message_sender.h"
-#include "pbl/services/app_outbox_service.h"
-#include "syscall/syscall.h"
-#include "syscall/syscall_internal.h"
+#include <applib/app_message/app_message_internal.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <process_management/process_manager.h>
+#include <pbl/services/app_message/app_message_sender.h>
+#include <pbl/services/app_outbox_service.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/util/list.h"
+#include <system/passert.h>
+#include <pbl/util/list.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_outbox_service, CONFIG_SERVICE_APP_OUTBOX_SERVICE_LOG_LEVEL);
 

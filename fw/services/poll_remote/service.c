@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pbl/services/poll_remote.h"
-#include "pbl/services/comm_session/protocol.h"
-#include "pbl/services/comm_session/session.h"
-#include "pbl/services/system_task.h"
+#include <pbl/services/poll_remote.h>
+#include <pbl/services/comm_session/protocol.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/system_task.h>
 #include <pbl/logging/logging.h>
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
 
 PBL_LOG_MODULE_DEFINE(service_poll_remote, CONFIG_SERVICE_POLL_REMOTE_LOG_LEVEL);
 

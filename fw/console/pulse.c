@@ -9,21 +9,21 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "console/cobs.h"
-#include "console/console_internal.h"
-#include "console/dbgserial.h"
-#include "console/pulse_internal.h"
-#include "console/pulse_llc.h"
-#include "console/pulse_protocol_impl.h"
-#include "kernel/pbl_malloc.h"
-#include "pbl/kernel/mutex.h"
-#include "pbl/services/new_timer/new_timer.h"
-#include "pbl/services/system_task.h"
-#include "system/passert.h"
-#include "pbl/kernel/compiler.h"
-#include "pbl/crc/crc.h"
-#include "pbl/util/math.h"
-#include "pbl/util/size.h"
+#include <console/cobs.h>
+#include <console/console_internal.h>
+#include <console/dbgserial.h>
+#include <console/pulse_internal.h>
+#include <console/pulse_llc.h>
+#include <console/pulse_protocol_impl.h>
+#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <system/passert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/crc/crc.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <pbl/shell/shell.h>
 
@@ -59,7 +59,7 @@ typedef struct ProtocolHandler {
 
 static const ProtocolHandler s_supported_protocols[] = {
 #define REGISTER_PROTOCOL(n, f1, f2) {.number = (n), .handler = (f1), .link_state_handler = (f2)},
-#include "console/pulse_protocol_registry.def"
+#include <console/pulse_protocol_registry.def>
 #undef REGISTER_PROTOCOL
 };
 

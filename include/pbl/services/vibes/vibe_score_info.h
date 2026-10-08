@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "pbl/services/vibes/vibe_client.h"
+#include <pbl/services/vibes/vibe_client.h>
 
 #include <stdbool.h>
 #include <stdint.h>

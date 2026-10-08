@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "applib/fonts/fonts.h"
-#include "applib/platform.h"
-#include "applib/preferred_content_size.h"
+#include <applib/fonts/fonts.h>
+#include <applib/platform.h>
+#include <applib/preferred_content_size.h>
 
 //! System Theme Text Style is a font collection used to unify text styles across the system.
 //! It contains a variety of different font sizes for use in an application, each meant for a

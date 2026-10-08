@@ -3,9 +3,9 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
-#include "pbl/services/regular_timer.h"
+#include <pbl/services/regular_timer.h>
 
-#include "bf0_hal.h"
+#include <bf0_hal.h>
 
 PBL_LOG_MODULE_DECLARE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
 

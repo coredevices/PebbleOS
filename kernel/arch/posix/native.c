@@ -8,11 +8,11 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include "pbl/kernel/idle.h"
-#include "pbl/kernel/init.h"
+#include <pbl/kernel/idle.h>
+#include <pbl/kernel/init.h>
 
-#include "kernel.h"
-#include "pbl_arch_posix.h"
+#include <kernel.h>
+#include <pbl_arch_posix.h>
 #include "posix.h"
 
 // Native application: interrupts come from host threads, which take the CPU

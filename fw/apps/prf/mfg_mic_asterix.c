@@ -3,25 +3,25 @@
 
 #include "mfg_sine_wave.h"
 
-#include "applib/app.h"
-#include "applib/ui/app_window_stack.h"
-#include "applib/ui/text_layer.h"
-#include "applib/ui/window.h"
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/clocksource.h>
-#include "flash_region/flash_region.h"
-#include "kernel/pbl_malloc.h"
-#include "kernel/util/sleep.h"
-#include "process_management/pebble_process_md.h"
-#include "process_state/app_state/app_state.h"
+#include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/util/sleep.h>
+#include <process_management/pebble_process_md.h>
+#include <process_state/app_state/app_state.h>
 
-#include "pbl/kernel/sem.h"
+#include <pbl/kernel/sem.h>
 
-#include "nrfx_i2s.h"
-#include "nrfx_pdm.h"
+#include <nrfx_i2s.h>
+#include <nrfx_pdm.h>
 
-#include "console/dbgserial.h"
+#include <console/dbgserial.h>
 
 #define DUMP_RECORDING_DBGSERIAL 0
 #define PLAY_SINEWAVE            0
