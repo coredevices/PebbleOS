@@ -107,7 +107,6 @@ typedef struct ANCSClient {
   RegularTimerInfo is_alive_timer;
   // Watchdog for the in-flight Control Point request.
   RegularTimerInfo op_timeout_timer;
-  ReassemblyContext reassembly_ctx;
   ANCSAttribute *attributes[NUM_FETCHED_NOTIF_ATTRIBUTES];
   NotificationQueueNode *queue;
   bool alive_check_pending;
@@ -119,6 +118,7 @@ typedef struct ANCSClient {
   uint8_t consecutive_busy_alive_checks;
   // Consecutive alive checks whose Control Point write iOS rejected.
   uint8_t consecutive_rejected_alive_checks;
+  ReassemblyContext reassembly_ctx;
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
