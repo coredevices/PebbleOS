@@ -15,7 +15,7 @@
     "include/pbl/util/math.h",
     "include/pbl/util/size.h",
     "include/pbl/util/trig.h",
-    "lib/c/include/time.h",
+    "include/pbl/util/time.h",
     "fw/applib/accel_service.h",
     "fw/applib/app.h",
     "fw/applib/app_comm.h",
@@ -4579,7 +4579,8 @@
           "exports": [
             {
               "type": "define",
-              "name": "TZ_LEN"
+              "name": "TZ_LEN",
+              "implName": "PBL_TZ_LEN"
             }, {
               "type": "define",
               "name": "SECONDS_PER_MINUTE"
@@ -4600,7 +4601,8 @@
               "name": "SECONDS_PER_DAY"
             }, {
               "type": "type",
-              "name": "tm"
+              "name": "tm",
+              "implName": "pbl_tm"
             }, {
               "type": "function",
               "name": "strftime",

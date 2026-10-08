@@ -346,10 +346,10 @@ static void prv_debug_cmd_sleep_sessions(int index, void *context) {
     safe_strcat(data->debug_card.dialog_text, prefix, sizeof(data->debug_card.dialog_text));
 
     // Write start time
-    struct tm local_tm;
+    struct pbl_tm local_tm;
     char temp[32];
-    localtime_r(&session->start_utc, &local_tm);
-    strftime(temp, sizeof(temp), "%H:%M", &local_tm);
+    pbl_localtime_r(&session->start_utc, &local_tm);
+    pbl_strftime_r(temp, sizeof(temp), "%H:%M", &local_tm);
     safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
 
     // Write end time/elapsed
@@ -357,8 +357,8 @@ static void prv_debug_cmd_sleep_sessions(int index, void *context) {
       snprintf(temp, sizeof(temp), " %dm\n", (int)(session->length_min));
     } else {
       time_t end_time = session->start_utc + (session->length_min * PBL_SEC_PER_MIN);
-      localtime_r(&end_time, &local_tm);
-      strftime(temp, sizeof(temp), "-%H:%M\n", &local_tm);
+      pbl_localtime_r(&end_time, &local_tm);
+      pbl_strftime_r(temp, sizeof(temp), "-%H:%M\n", &local_tm);
     }
     safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
   }
@@ -415,10 +415,10 @@ static void prv_debug_cmd_step_sessions(int index, void *context) {
     safe_strcat(data->debug_card.dialog_text, prefix, sizeof(data->debug_card.dialog_text));
 
     // Write start time
-    struct tm local_tm;
+    struct pbl_tm local_tm;
     char temp[64];
-    localtime_r(&session->start_utc, &local_tm);
-    strftime(temp, sizeof(temp), "%H:%M", &local_tm);
+    pbl_localtime_r(&session->start_utc, &local_tm);
+    pbl_strftime_r(temp, sizeof(temp), "%H:%M", &local_tm);
     safe_strcat(data->debug_card.dialog_text, temp, sizeof(data->debug_card.dialog_text));
 
     // Write length

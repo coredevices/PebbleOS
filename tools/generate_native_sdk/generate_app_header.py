@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import io
 import os
+import re
 
 import exports
 from doc_comments import to_bang_comments
@@ -49,13 +51,31 @@ def rename_full_definition(e):
         return e.full_definition
 
 
+def collect_type_renames(exports_tree):
+    renames = {}
+
+    def collect(e):
+        if e.type in ("type", "define") and e.impl_name != e.name:
+            renames[e.impl_name] = e.name
+
+    exports.walk_tree(exports_tree, collect)
+    return renames
+
+
+def apply_renames(text, renames):
+    if not renames:
+        return text
+    pattern = re.compile(r"\b(" + "|".join(map(re.escape, renames)) + r")\b")
+    return pattern.sub(lambda m: renames[m.group(1)], text)
+
+
 def make_app_header(exports_tree, output_filename, header_type, inject_text):
     output_filename_dir = os.path.dirname(output_filename)
     if not os.path.exists(output_filename_dir):
         os.makedirs(output_filename_dir)
 
     """ header_type can be either "app", "worker" or "both" """
-    with open(output_filename, "w") as f:
+    with io.StringIO() as f:
         writeline(f, "#pragma once")
         writeline(f)
         if inject_text is not None:
@@ -157,6 +177,9 @@ def make_app_header(exports_tree, output_filename, header_type, inject_text):
                 format_export(e)
 
         format_export_list(exports_tree)
+
+        with open(output_filename, "w") as out:
+            out.write(apply_renames(f.getvalue(), collect_type_renames(exports_tree)))
 
 
 import unittest

@@ -96,6 +96,9 @@ pbl_clar_test(test_launcher_menu_layer
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_app_install_manager.c
     tests/stubs/stubs_app_menu_data_source.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
+    fw/services/clock/time.c
   PLATFORMS obelix gabbro asterix
   OVERRIDES dummy_board
   TEST_IMAGES

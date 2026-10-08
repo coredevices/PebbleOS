@@ -5,16 +5,16 @@
 
 #include <time.h>
 
-struct tm *app_state_get_gmtime_tm(void) {
-  static struct tm gmtime_tm = {0};
+struct pbl_tm *app_state_get_gmtime_tm(void) {
+  static struct pbl_tm gmtime_tm = {0};
   return &gmtime_tm;
 }
-struct tm *app_state_get_localtime_tm(void) {
-  static struct tm localtime_tm = {0};
+struct pbl_tm *app_state_get_localtime_tm(void) {
+  static struct pbl_tm localtime_tm = {0};
   return &localtime_tm;
 }
 char *app_state_get_localtime_zone(void) {
-  static char localtime_zone[TZ_LEN] = {0};
+  static char localtime_zone[PBL_TZ_LEN] = {0};
   return localtime_zone;
 }
 

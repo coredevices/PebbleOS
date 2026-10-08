@@ -512,7 +512,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
                                              GColor today_fill_color, int32_t *day_data,
                                              void *i18n_owner) {
   time_t time_utc = rtc_get_time();
-  struct tm time_tm;
+  struct pbl_tm time_tm;
 
   int max_data = 0;
   int crown_index = 0;
@@ -520,7 +520,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
   *num_zones = PBL_DAY_PER_WEEK;
 
   for (int i = 0; i < *num_zones; i++) {
-    localtime_r(&time_utc, &time_tm);
+    pbl_localtime_r(&time_utc, &time_tm);
 
     const bool is_today = (i == 0);
 
@@ -539,7 +539,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
     if (i == 0) {
       pos += snprintf(label_ptr, buffer_size, "%s ", i18n_get("Today", i18n_owner));
     } else {
-      pos += strftime(label_ptr, buffer_size, "%a ", &time_tm);
+      pos += pbl_strftime_r(label_ptr, buffer_size, "%a ", &time_tm);
     }
 
     if (day_data[i] > 0) {

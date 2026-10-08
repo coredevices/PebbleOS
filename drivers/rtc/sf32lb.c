@@ -240,8 +240,8 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
   // Capture old time before changing it to send proper event
   time_t old_time = rtc_get_time();
 
-  struct tm t;
-  gmtime_r(&time, &t);
+  struct pbl_tm t;
+  pbl_gmtime_r(&time, &t);
 
   PBL_ASSERTN(!rtc_sanitize_struct_tm(&t));
 
@@ -298,7 +298,7 @@ void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
     HAL_RTC_GetTime(&RTC_Handler, &rtc_time, RTC_FORMAT_BIN);
   };
 
-  struct tm current_time = {
+  struct pbl_tm current_time = {
     .tm_sec = rtc_time.Seconds,
     .tm_min = rtc_time.Minutes,
     .tm_hour = rtc_time.Hours,
@@ -310,7 +310,7 @@ void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
     .tm_isdst = 0,
   };
 
-  *out_seconds = mktime(&current_time);
+  *out_seconds = pbl_mktime(&current_time);
   *out_ms = (uint16_t)((rtc_time.SubSeconds * 1000) / DIV_B);
 }
 
@@ -341,7 +341,7 @@ bool rtc_alarm_is_initialized(void) {
   return true;
 }
 
-bool rtc_sanitize_struct_tm(struct tm *t) {
+bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which
   // only stores a 2 digit year, so we only represent values after 2000.
 
@@ -358,18 +358,18 @@ bool rtc_sanitize_struct_tm(struct tm *t) {
 }
 
 bool rtc_sanitize_time_t(time_t *t) {
-  struct tm time_struct;
-  gmtime_r(t, &time_struct);
+  struct pbl_tm time_struct;
+  pbl_gmtime_r(t, &time_struct);
 
   const bool result = rtc_sanitize_struct_tm(&time_struct);
-  *t = mktime(&time_struct);
+  *t = pbl_mktime(&time_struct);
 
   return result;
 }
 
-void rtc_get_time_tm(struct tm *time_tm) {
+void rtc_get_time_tm(struct pbl_tm *time_tm) {
   time_t t = rtc_get_time();
-  localtime_r(&t, time_tm);
+  pbl_localtime_r(&t, time_tm);
 }
 
 const char *rtc_get_time_string(char *buffer) {
@@ -377,10 +377,10 @@ const char *rtc_get_time_string(char *buffer) {
 }
 
 const char *time_t_to_string(char *buffer, time_t t) {
-  struct tm time;
-  localtime_r(&t, &time);
+  struct pbl_tm time;
+  pbl_localtime_r(&t, &time);
 
-  strftime(buffer, TIME_STRING_BUFFER_SIZE, "%c", &time);
+  pbl_strftime_r(buffer, TIME_STRING_BUFFER_SIZE, "%c", &time);
 
   return buffer;
 }
@@ -390,13 +390,13 @@ const char *time_t_to_string(char *buffer, time_t t) {
 //! Versioned storage structure for timezone info in flash
 //! This allows for future migrations and avoids struct alignment issues
 typedef struct PBL_PACKED {
-  uint8_t version;          // Version number for future migrations
-  char tm_zone[TZ_LEN - 1]; // Up to 5 character timezone abbreviation
-  uint8_t dst_id;           // Daylight savings time zone index
-  int16_t timezone_id;      // Olson index of timezone
-  int32_t tm_gmtoff;        // GMT time offset
-  time_t dst_start;         // Timestamp of start of DST period (0 if none)
-  time_t dst_end;           // Timestamp of end of DST period (0 if none)
+  uint8_t version;              // Version number for future migrations
+  char tm_zone[PBL_TZ_LEN - 1]; // Up to 5 character timezone abbreviation
+  uint8_t dst_id;               // Daylight savings time zone index
+  int16_t timezone_id;          // Olson index of timezone
+  int32_t tm_gmtoff;            // GMT time offset
+  time_t dst_start;             // Timestamp of start of DST period (0 if none)
+  time_t dst_end;               // Timestamp of end of DST period (0 if none)
 } TzinfoFlashStorage;
 
 #define TZINFO_VERSION 1
@@ -414,7 +414,7 @@ void rtc_set_timezone(TimezoneInfo *tzinfo) {
     .dst_start = tzinfo->dst_start,
     .dst_end = tzinfo->dst_end,
   };
-  memcpy(storage.tm_zone, tzinfo->tm_zone, TZ_LEN - 1);
+  memcpy(storage.tm_zone, tzinfo->tm_zone, PBL_TZ_LEN - 1);
 
   flash_erase_subsector_blocking(FLASH_REGION_TZINFO_BEGIN);
   flash_write_bytes((const uint8_t *)&storage, FLASH_REGION_TZINFO_BEGIN,
@@ -433,7 +433,7 @@ void rtc_get_timezone(TimezoneInfo *tzinfo) {
     return;
   }
 
-  memcpy(tzinfo->tm_zone, storage.tm_zone, TZ_LEN - 1);
+  memcpy(tzinfo->tm_zone, storage.tm_zone, PBL_TZ_LEN - 1);
   tzinfo->dst_id = storage.dst_id;
   tzinfo->timezone_id = storage.timezone_id;
   tzinfo->tm_gmtoff = storage.tm_gmtoff;

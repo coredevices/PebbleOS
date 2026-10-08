@@ -1013,7 +1013,7 @@ static void prv_update_pos(void) {
   prv_update_track_progress(data);
 }
 
-static void prv_handle_tick_time(struct tm *time, TimeUnits units_changed) {
+static void prv_handle_tick_time(struct pbl_tm *time, TimeUnits units_changed) {
   if (music_get_playback_state() == MusicPlayStatePlaying) {
     prv_update_pos();
   }

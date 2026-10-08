@@ -4,12 +4,14 @@
 #include <math.h>
 #include <time.h>
 
+#include <pbl/util/time.h>
+
 #include <clar.h>
 
 // Tests
 ///////////////////////////////////////////////////////////
 void test_mktime__birthdays(void) {
-  struct tm francois_birthday = {
+  struct pbl_tm francois_birthday = {
     .tm_sec = 0,
     .tm_min = 44,
     .tm_hour = 10,
@@ -17,9 +19,9 @@ void test_mktime__birthdays(void) {
     .tm_mon = 4,
     .tm_year = 89,
   };
-  cl_assert_equal_i(mktime(&francois_birthday), 612528240);
+  cl_assert_equal_i(pbl_mktime(&francois_birthday), 612528240);
 
-  struct tm rons_birthday = {
+  struct pbl_tm rons_birthday = {
     .tm_sec = 17,
     .tm_min = 1,
     .tm_hour = 9,
@@ -27,9 +29,9 @@ void test_mktime__birthdays(void) {
     .tm_mon = 4,
     .tm_year = 63,
   };
-  cl_assert_equal_i(mktime(&rons_birthday), -1);
+  cl_assert_equal_i(pbl_mktime(&rons_birthday), -1);
 
-  struct tm alex_marianetti_birthday = {
+  struct pbl_tm alex_marianetti_birthday = {
     .tm_sec = 29,
     .tm_min = 4,
     .tm_hour = 17,
@@ -37,9 +39,9 @@ void test_mktime__birthdays(void) {
     .tm_mon = 9,
     .tm_year = 107,
   };
-  cl_assert_equal_i(mktime(&alex_marianetti_birthday), 1191344669);
+  cl_assert_equal_i(pbl_mktime(&alex_marianetti_birthday), 1191344669);
 
-  struct tm chris_birthday = {
+  struct pbl_tm chris_birthday = {
     .tm_sec = 59,
     .tm_min = 3,
     .tm_hour = 10,
@@ -47,11 +49,11 @@ void test_mktime__birthdays(void) {
     .tm_mon = 5,
     .tm_year = 89,
   };
-  cl_assert_equal_i(mktime(&chris_birthday), 613908239);
+  cl_assert_equal_i(pbl_mktime(&chris_birthday), 613908239);
 }
 
 void test_mktime__epoch(void) {
-  struct tm epoch = {
+  struct pbl_tm epoch = {
     .tm_sec = 0,
     .tm_min = 0,
     .tm_hour = 0,
@@ -59,11 +61,11 @@ void test_mktime__epoch(void) {
     .tm_mon = 0,
     .tm_year = 70,
   };
-  cl_assert_equal_i(mktime(&epoch), 0);
+  cl_assert_equal_i(pbl_mktime(&epoch), 0);
 }
 
 void test_mktime__leap(void) {
-  struct tm real_leap = {
+  struct pbl_tm real_leap = {
     .tm_sec = 0,
     .tm_min = 0,
     .tm_hour = 10,
@@ -71,5 +73,5 @@ void test_mktime__leap(void) {
     .tm_mon = 1,
     .tm_year = 112,
   };
-  cl_assert_equal_i(mktime(&real_leap), 1330509600);
+  cl_assert_equal_i(pbl_mktime(&real_leap), 1330509600);
 }

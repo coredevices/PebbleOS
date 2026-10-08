@@ -85,7 +85,7 @@ def scan_file_content_for_groups(content, groups):
 def scan_file_content_for_defines(content, defines):
     for match in define_block_comment_re.finditer(content):
         for d in defines:
-            if d.name == match.group("define_name"):
+            if match.group("define_name") in (d.name, getattr(d, "impl_name", None)):
                 d.comment = match.group("block_comment").strip()
                 break
 

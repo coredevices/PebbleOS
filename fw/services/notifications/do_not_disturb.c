@@ -148,7 +148,7 @@ static void prv_schedule_cron_callback(struct pbl_cron_job *job, void *data) {
 }
 
 static DoNotDisturbScheduleType prv_current_schedule_type(void) {
-  struct tm time;
+  struct pbl_tm time;
   rtc_get_time_tm(&time);
   return ((time.tm_wday == PBL_SATURDAY || time.tm_wday == PBL_SUNDAY) ? WeekendSchedule
                                                                        : WeekdaySchedule);
@@ -165,7 +165,7 @@ static bool prv_is_in_schedule_period(void) {
   const int from = schedule.from_hour * PBL_MIN_PER_HOUR + schedule.from_minute;
   const int to = schedule.to_hour * PBL_MIN_PER_HOUR + schedule.to_minute;
 
-  struct tm time;
+  struct pbl_tm time;
   rtc_get_time_tm(&time);
   const int now = time.tm_hour * PBL_MIN_PER_HOUR + time.tm_min;
 

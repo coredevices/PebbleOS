@@ -77,7 +77,7 @@ void rtc_init_timers(void);
  * @param[in,out] t Time to clamp.
  * @return true if @p t was changed.
  */
-bool rtc_sanitize_struct_tm(struct tm *t);
+bool rtc_sanitize_struct_tm(struct pbl_tm *t);
 
 /**
  * @brief Clamp the year of a time to 2000-2037, as rtc_sanitize_struct_tm().
@@ -108,14 +108,14 @@ time_t rtc_get_time(void);
  *
  * @param time_tm Time to set.
  */
-void rtc_set_time_tm(struct tm *time_tm);
+void rtc_set_time_tm(struct pbl_tm *time_tm);
 
 /**
  * @brief Get the current time as a broken-down local time.
  *
  * @param[out] time_tm Current time.
  */
-void rtc_get_time_tm(struct tm *time_tm);
+void rtc_get_time_tm(struct pbl_tm *time_tm);
 
 /**
  * @brief Get the current time with millisecond resolution.

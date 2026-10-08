@@ -329,7 +329,7 @@ static void prv_tick_timer_handler_cb(PebbleEvent *e, void *cb_data) {
   if (!prv_mode_is_clock(status_bar_layer->config.mode)) {
     return;
   }
-  struct tm currtime;
+  struct pbl_tm currtime;
   const time_t tick_time = e->clock_tick.tick_time;
   sys_localtime_r(&tick_time, &currtime);
   const int min_of_day = (currtime.tm_hour * 60) + currtime.tm_min;

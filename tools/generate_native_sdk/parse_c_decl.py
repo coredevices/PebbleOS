@@ -217,7 +217,6 @@ def parse_file(
         f"-I{root_dir}/include",
         f"-I{root_dir}/subsys",
         f"-I{root_dir}/fw",
-        f"-I{root_dir}/lib/c/include",
         f"-I{root_dir}/third_party/upng/upng",
         f"-I{root_dir}/build/fw",
         "-DSDK",
@@ -251,10 +250,6 @@ def parse_file(
         args.insert(0, r"-D__UINT32_TYPE__=unsigned __INT32_TYPE__")
         args.insert(0, r"-D__UINT64_TYPE__=unsigned __INT64_TYPE__")
         args.insert(0, r"-D__UINTPTR_TYPE__=unsigned __INTPTR_TYPE__")
-
-    # Tools pull in time.h from arm toolchain instead of using our core/utils/time/time.h
-    # with modified definition of struct tm, so disable accidental include of wrong time.h
-    args.insert(0, r"-D_TIME_H_")
 
     # Use the libc headers from the ARM toolchain. -print-sysroot resolves
     # the real toolchain location even when the driver is reached through a

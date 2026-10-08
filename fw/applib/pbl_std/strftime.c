@@ -22,6 +22,7 @@
 #include <time.h>
 
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
@@ -33,7 +34,7 @@
 #define INTFMT_PADZERO  (1)
 
 // Used for wrong specifiers that want Monday as first day of the week.
-static int prv_week_of_year(const struct tm *t, bool monday_is_first_day) {
+static int prv_week_of_year(const struct pbl_tm *t, bool monday_is_first_day) {
   int wday = t->tm_wday; // Week day in range 0-6 (Sun-Sat)
   if (monday_is_first_day) {
     wday = (wday + 6) % 7;
@@ -46,7 +47,7 @@ static int prv_full_year(int year) {
   return year + PBL_TM_YEAR_ORIGIN;
 }
 
-static int prv_iso8601_base_week(const struct tm *t) {
+static int prv_iso8601_base_week(const struct pbl_tm *t) {
   // Not quite the same as prv_week_of_year
   // The ISO-8601 week count is defined as the number of weeks with Thursday in it.
   // Who knows why...
@@ -54,7 +55,8 @@ static int prv_iso8601_base_week(const struct tm *t) {
 }
 
 // Here be dragons
-static int prv_year_week_count(int year, const struct tm *t, int normal_compare, int leap_compare) {
+static int prv_year_week_count(int year, const struct pbl_tm *t, int normal_compare,
+                               int leap_compare) {
   /*
   Find first wday of the year.
 
@@ -83,7 +85,7 @@ static int prv_year_week_count(int year, const struct tm *t, int normal_compare,
   }
 }
 
-static int prv_iso8601_adjust(const struct tm *t, int year) {
+static int prv_iso8601_adjust(const struct pbl_tm *t, int year) {
   const int week = prv_iso8601_base_week(t);
   if (week == 0) {
     return -1;
@@ -96,12 +98,12 @@ static int prv_iso8601_adjust(const struct tm *t, int year) {
   }
 }
 
-static int prv_iso8601_year(const struct tm *t) {
+static int prv_iso8601_year(const struct pbl_tm *t) {
   const int year = prv_full_year(t->tm_year);
   return year + prv_iso8601_adjust(t, year);
 }
 
-static int prv_iso8601_week(const struct tm *t) {
+static int prv_iso8601_week(const struct pbl_tm *t) {
   const int year = prv_full_year(t->tm_year);
   switch (prv_iso8601_adjust(t, year)) {
     case -1:
@@ -117,7 +119,7 @@ static int prv_iso8601_week(const struct tm *t) {
 
 // Sorry I made a mess, it was in the name of size.
 size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *restrict fmt,
-                          const struct tm *restrict t, const char *locale) {
+                          const struct pbl_tm *restrict t, const char *locale) {
   const struct lc_time_T *time_locale = time_locale_get();
   size_t left = maxsize;
   const int year = prv_full_year(t->tm_year);
@@ -427,7 +429,8 @@ _out_of_size:
   return 0;
 }
 
-size_t strftime(char *restrict s, size_t maxsize, const char *format, const struct tm *tim_p) {
+size_t pbl_strftime_r(char *restrict s, size_t maxsize, const char *format,
+                      const struct pbl_tm *tim_p) {
   // Pass a NULL locale because firmware strftime is always localized
   return localized_strftime(s, maxsize, format, tim_p, NULL);
 }

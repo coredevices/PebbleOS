@@ -190,8 +190,8 @@ EventServiceInfo *app_state_get_speaker_finish_event_info(void);
 //! capture_frame_buffer API. Note this memory is only valid when used with 2.x apps.
 GBitmap *app_state_legacy2_get_2bit_framebuffer(void);
 
-struct tm *app_state_get_gmtime_tm(void);
-struct tm *app_state_get_localtime_tm(void);
+struct pbl_tm *app_state_get_gmtime_tm(void);
+struct pbl_tm *app_state_get_localtime_tm(void);
 char *app_state_get_localtime_zone(void);
 
 void *app_state_get_rand_ptr(void);

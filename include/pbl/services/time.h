@@ -36,7 +36,7 @@ typedef struct TimezoneInfo {
    * Abbreviation, up to 5 characters, not NUL terminated. A @c * is replaced by @c D or @c S
    * depending on DST.
    */
-  char tm_zone[TZ_LEN - 1];
+  char tm_zone[PBL_TZ_LEN - 1];
   /** DST rule index. */
   uint8_t dst_id;
   /** Olson index of the timezone. */
@@ -52,10 +52,30 @@ typedef struct TimezoneInfo {
 /**
  * @brief Get the timezone abbreviation in effect at a given time.
  *
- * @param[out] out_buf Buffer of @c TZ_LEN bytes, receives a NUL terminated abbreviation.
+ * @param[out] out_buf Buffer of @c PBL_TZ_LEN bytes, receives a NUL terminated abbreviation.
  * @param utc_time Time used to decide whether DST applies.
  */
 void time_get_timezone_abbr(char *out_buf, time_t utc_time);
+
+/**
+ * @brief Convert seconds since the epoch to broken-down local time.
+ *
+ * @param timep Seconds since the Unix epoch.
+ * @param[out] result Broken-down time, in the current timezone.
+ * @return @p result.
+ */
+struct pbl_tm *pbl_localtime_r(const time_t *timep, struct pbl_tm *result);
+
+/**
+ * @brief Format broken-down time, in the language of the firmware.
+ *
+ * @param[out] s Output buffer.
+ * @param maxsize Size of @p s.
+ * @param format strftime() format.
+ * @param tim_p Broken-down time.
+ * @return Number of characters written, excluding the NUL, or 0 if @p s is too small.
+ */
+size_t pbl_strftime_r(char *s, size_t maxsize, const char *format, const struct pbl_tm *tim_p);
 
 /**
  * @brief Get the offset of the timezone from UTC, without DST.

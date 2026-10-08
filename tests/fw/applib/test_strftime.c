@@ -52,15 +52,15 @@ int32_t time_get_dstoffset(void) {
 
 void sys_copy_timezone_abbr(char *timezone_abbr, time_t time) {
   const char *sys_tz = get_timezone_abbr();
-  strncpy(timezone_abbr, sys_tz, TZ_LEN);
+  strncpy(timezone_abbr, sys_tz, PBL_TZ_LEN);
 }
 
-struct tm *sys_gmtime_r(const time_t *timep, struct tm *result) {
-  return gmtime_r(timep, result);
+struct pbl_tm *sys_gmtime_r(const time_t *timep, struct pbl_tm *result) {
+  return pbl_gmtime_r(timep, result);
 }
 
-struct tm *sys_localtime_r(const time_t *timep, struct tm *result) {
-  return localtime_r(timep, result);
+struct pbl_tm *sys_localtime_r(const time_t *timep, struct pbl_tm *result) {
+  return pbl_gmtime_r(timep, result);
 }
 
 // i18n dummies
@@ -148,7 +148,7 @@ size_t sys_i18n_get_length(const char *string) {
 void test_strftime__simple(void) {
   char tmbuf[512];
 
-  struct tm jan_2_2015__13_00_00 = {
+  struct pbl_tm jan_2_2015__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -163,98 +163,98 @@ void test_strftime__simple(void) {
   };
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
 
 #if EXTENSION_SU
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%C %h", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%C %h", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "20 Jan");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%D %e", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%D %e", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "01/02/15  2");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%n %r", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%n %r", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "\n 01:00:00 PM");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%R %t %T", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%R %t %T", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "13:00 \t 13:00:00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%u %V", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%u %V", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "5 01");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+0000");
 #endif
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%d", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%d", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "02");
 
 #if EXTENSION_C99
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%F", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%F", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "2015-01-02");
 #endif
 
 #if EXTENSION_TZ
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%G %g", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%G %g", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "2015 15");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%k %l", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%k %l", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "13  1");
 #endif
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%H %I", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%H %I", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "13 01");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%j %m %M %p", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%j %m %M %p", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "002 01 00 PM");
 
 #if EXTENSION_GNU
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%P", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%P", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "pm");
 #endif
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%S %U", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%S %U", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "00 00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%w %W", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%w %W", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "5 00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%x %X", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%x %X", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "01/02/15 13:00:00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%y %Y", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%y %Y", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "15 2015");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%Z %%", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%Z %%", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "UTC %");
 }
 
 void test_strftime__return_value(void) {
   char tmbuf[512];
 
-  struct tm jan_2_2015__13_00_00 = {
+  struct pbl_tm jan_2_2015__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -269,14 +269,14 @@ void test_strftime__return_value(void) {
   };
 
   tmbuf[0] = '\0';
-  cl_assert_equal_i(strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00), 22);
+  cl_assert_equal_i(pbl_strftime_r(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00), 22);
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
 }
 
 void test_strftime__abusive(void) {
   char tmbuf[512];
 
-  struct tm gobbledygook = {
+  struct pbl_tm gobbledygook = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -291,14 +291,14 @@ void test_strftime__abusive(void) {
   };
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%c", &gobbledygook);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%c", &gobbledygook);
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
 }
 
 void test_strftime__small_buffer(void) {
   char tmbuf[8];
 
-  struct tm jan_2_2015__13_00_00 = {
+  struct pbl_tm jan_2_2015__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -314,18 +314,18 @@ void test_strftime__small_buffer(void) {
 
 #if SUPER_STRICT_FAILURE
   memset(tmbuf, 0xFF, sizeof(tmbuf));
-  cl_assert_equal_i(strftime(tmbuf, 4, "%a %A %b %B", &jan_2_2015__13_00_00), 0);
+  cl_assert_equal_i(pbl_strftime_r(tmbuf, 4, "%a %A %b %B", &jan_2_2015__13_00_00), 0);
   // This is how our current strftime works, so we need to obey...
   cl_assert_equal_m(tmbuf, "Fri\xFF\xFF", 5);
 
   memset(tmbuf, 0xFF, sizeof(tmbuf));
-  cl_assert_equal_i(strftime(tmbuf, 4, "%a ", &jan_2_2015__13_00_00), 0);
+  cl_assert_equal_i(pbl_strftime_r(tmbuf, 4, "%a ", &jan_2_2015__13_00_00), 0);
   // This is how our current strftime works, so we need to obey...
   cl_assert_equal_m(tmbuf, "Fri\xFF\xFF", 5);
 #endif
 
   memset(tmbuf, 0xFF, sizeof(tmbuf));
-  cl_assert_equal_i(strftime(tmbuf, 4, "%a", &jan_2_2015__13_00_00), 3);
+  cl_assert_equal_i(pbl_strftime_r(tmbuf, 4, "%a", &jan_2_2015__13_00_00), 3);
   cl_assert_equal_m(tmbuf, "Fri\x00\xFF", 5);
 }
 
@@ -343,7 +343,7 @@ d = DateTime.new(2000,1,1)
 (0..(365*8)).each do |i|
   print "\n  " if (i % 7) == 0
   printf("{%d,\"%s\",\"%s\"},", d.to_time.to_i,
-          d.strftime("%V"), d.strftime("%g"))
+          d.pbl_strftime_r("%V"), d.pbl_strftime_r("%g"))
   d += 1
 end
 print "\n"
@@ -1328,18 +1328,18 @@ static const ISO8601TestData s_iso8601_data[] = {
 void test_strftime__full_iso8601(void) {
   char tmbuf[512];
 
-  struct tm wrk = {0};
+  struct pbl_tm wrk = {0};
 
   for (int i = 0; i < ARRAY_LENGTH(s_iso8601_data); i++) {
-    gmtime_r(&s_iso8601_data[i].stamp, &wrk);
+    pbl_gmtime_r(&s_iso8601_data[i].stamp, &wrk);
     printf("%d: %ld(%d,%d,%d,%d), ", i, s_iso8601_data[i].stamp, wrk.tm_yday, wrk.tm_year,
            wrk.tm_mon, wrk.tm_mday);
     tmbuf[0] = '\0';
-    strftime(tmbuf, sizeof(tmbuf), "%V", &wrk);
+    pbl_strftime_r(tmbuf, sizeof(tmbuf), "%V", &wrk);
     cl_assert_equal_s(tmbuf, s_iso8601_data[i].str_V);
     printf("%s, ", tmbuf);
     tmbuf[0] = '\0';
-    strftime(tmbuf, sizeof(tmbuf), "%g", &wrk);
+    pbl_strftime_r(tmbuf, sizeof(tmbuf), "%g", &wrk);
     cl_assert_equal_s(tmbuf, s_iso8601_data[i].str_g);
     printf("%s\n", tmbuf);
   }
@@ -1350,7 +1350,7 @@ void test_strftime__full_iso8601(void) {
 void test_strftime__full_percent_z(void) {
   char tmbuf[512];
 
-  struct tm jan_2_2015__13_00_00 = {
+  struct pbl_tm jan_2_2015__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -1365,42 +1365,42 @@ void test_strftime__full_percent_z(void) {
   };
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+0000");
 
   jan_2_2015__13_00_00.tm_gmtoff = 60;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+0001");
 
   jan_2_2015__13_00_00.tm_gmtoff = 600;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+0010");
 
   jan_2_2015__13_00_00.tm_gmtoff = 3600;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+0100");
 
   jan_2_2015__13_00_00.tm_gmtoff = 4200;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+0110");
 
   jan_2_2015__13_00_00.tm_gmtoff = 36000;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+1000");
 
   jan_2_2015__13_00_00.tm_gmtoff = 39600;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "+1100");
 
   jan_2_2015__13_00_00.tm_gmtoff = -60;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
 #if !OUR_STRFTIME_BUGS
   cl_assert_equal_s(tmbuf, "-0001");
 #else // BUG!!
@@ -1409,7 +1409,7 @@ void test_strftime__full_percent_z(void) {
 
   jan_2_2015__13_00_00.tm_gmtoff = -600;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
 #if !OUR_STRFTIME_BUGS
   cl_assert_equal_s(tmbuf, "-0010");
 #else // BUG!!
@@ -1418,22 +1418,22 @@ void test_strftime__full_percent_z(void) {
 
   jan_2_2015__13_00_00.tm_gmtoff = -3600;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "-0100");
 
   jan_2_2015__13_00_00.tm_gmtoff = -4200;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "-0110");
 
   jan_2_2015__13_00_00.tm_gmtoff = -36000;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "-1000");
 
   jan_2_2015__13_00_00.tm_gmtoff = -39600;
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%z", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "-1100");
 }
 #endif
@@ -1441,7 +1441,7 @@ void test_strftime__full_percent_z(void) {
 void test_strftime__full_percent_U(void) {
   char tmbuf[512];
 
-  struct tm dec_30_2014__13_00_00 = {
+  struct pbl_tm dec_30_2014__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -1455,7 +1455,7 @@ void test_strftime__full_percent_U(void) {
     .tm_zone = "UTC", // No DST, UTC+0
   };
 
-  struct tm jan_2_2015__13_00_00 = {
+  struct pbl_tm jan_2_2015__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -1469,7 +1469,7 @@ void test_strftime__full_percent_U(void) {
     .tm_zone = "UTC", // No DST, UTC+0
   };
 
-  struct tm jan_1_2016__13_00_00 = {
+  struct pbl_tm jan_1_2016__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -1484,15 +1484,15 @@ void test_strftime__full_percent_U(void) {
   };
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%U", &dec_30_2014__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%U", &dec_30_2014__13_00_00);
   cl_assert_equal_s(tmbuf, "52");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%U", &jan_2_2015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%U", &jan_2_2015__13_00_00);
   cl_assert_equal_s(tmbuf, "00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%U", &jan_1_2016__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%U", &jan_1_2016__13_00_00);
   cl_assert_equal_s(tmbuf, "00");
 }
 
@@ -1500,7 +1500,7 @@ void test_strftime__full_percent_U(void) {
 void test_strftime__zeroflag(void) {
   char tmbuf[512];
 
-  struct tm jan_2_10015__13_00_00 = {
+  struct pbl_tm jan_2_10015__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -1515,101 +1515,101 @@ void test_strftime__zeroflag(void) {
   };
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%02a %01A %06b %04B", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%02a %01A %06b %04B", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%06c", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%06c", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 10015");
 
 #if EXTENSION_SU
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%0C %01h", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%0C %01h", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "100 Jan");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%02D %04e", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%02D %04e", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "01/02/15 0002");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%05n %03r", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%05n %03r", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "\n 01:00:00 PM");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%02R %06t %04T", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%02R %06t %04T", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "13:00 \t 13:00:00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%5u %3V", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%5u %3V", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "00005 001");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%9z", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%9z", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "+0000");
 #endif
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%12d", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%12d", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "000000000002");
 
 #if EXTENSION_C99
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%123F", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%123F", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "10015-01-02");
 #endif
 
 #if EXTENSION_TZ
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%7G %01g", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%7G %01g", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "0010015 15");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%4k %0l", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%4k %0l", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "  13 01");
 #endif
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%3H %4I", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%3H %4I", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "013 0001");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%01j %05m %03M %05p", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%01j %05m %03M %05p", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "002 00001 000 PM");
 
 #if EXTENSION_GNU
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%05P", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%05P", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "pm");
 #endif
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%4S %2U", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%4S %2U", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "0000 00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%3w %1W", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%3w %1W", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "005 00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%123x %432X", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%123x %432X", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "01/02/15 13:00:00");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%6Y %3y", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%6Y %3y", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "010015 015");
 
   tmbuf[0] = '\0';
-  strftime(tmbuf, sizeof(tmbuf), "%Z %%", &jan_2_10015__13_00_00);
+  pbl_strftime_r(tmbuf, sizeof(tmbuf), "%Z %%", &jan_2_10015__13_00_00);
   cl_assert_equal_s(tmbuf, "UTC %");
 }
 
 extern size_t localized_strftime(char *s, size_t maxsize, const char *format,
-                                 const struct tm *tim_p, const char *locale);
+                                 const struct pbl_tm *tim_p, const char *locale);
 
 void test_strftime__i18n(void) {
   char tmbuf[512];
 
-  struct tm jan_2_2015__13_00_00 = {
+  struct pbl_tm jan_2_2015__13_00_00 = {
     .tm_hour = 13,
     .tm_min = 0,
     .tm_sec = 0, // 13:00:00
@@ -1690,7 +1690,7 @@ void test_strftime__i18n(void) {
 void test_strftime__i18n_month_abbr_context(void) {
   char tmbuf[512];
 
-  struct tm may_2_2015 = {
+  struct pbl_tm may_2_2015 = {
     .tm_year = 2015 - 1900,
     .tm_mon = 4,
     .tm_mday = 2,

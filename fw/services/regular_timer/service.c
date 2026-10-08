@@ -145,8 +145,8 @@ static void timer_callback(void *data) {
 
   do_callbacks(&s_seconds_callbacks, elapsed);
 
-  struct tm time;
-  localtime_r(&t, &time);
+  struct pbl_tm time;
+  pbl_localtime_r(&t, &time);
 
   // Fire minute callbacks when the minute changes (not just when tm_sec == 0)
   // This prevents missing callbacks when RTC adjusts

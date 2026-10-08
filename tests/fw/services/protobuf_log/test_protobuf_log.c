@@ -38,7 +38,7 @@ extern uint32_t prv_hr_quality_int(HRMQuality quality);
 
 // ---------------------------------------------------------------------------------------------
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
-static const struct tm s_init_time_tm = {
+static const struct pbl_tm s_init_time_tm = {
   // Thursday, Jan 1, 2015, 5:pm
   .tm_hour = 17,
   .tm_mday = 1,
@@ -442,8 +442,8 @@ static void prv_test_decode_payload(TestPLParsedMsg *input, bool use_data_loggin
 
 // ---------------------------------------------------------------------------------------------
 void test_protobuf_log__initialize(void) {
-  struct tm time_tm = s_init_time_tm;
-  time_t utc_sec = mktime(&time_tm);
+  struct pbl_tm time_tm = s_init_time_tm;
+  time_t utc_sec = pbl_mktime(&time_tm);
   fake_rtc_init(100 /*initial_ticks*/, utc_sec);
 
   TimezoneInfo tz_info = {

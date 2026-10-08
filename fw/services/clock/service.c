@@ -80,7 +80,7 @@ _Static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint defin
 #if !defined(CONFIG_RECOVERY_FW)
 static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz_info,
                                              const TimezoneDSTRule *rule, int year) {
-  struct tm time_tm = {
+  struct pbl_tm time_tm = {
     .tm_min = rule->minute,
     .tm_hour = rule->hour,
     .tm_mday = rule->mday,
@@ -98,8 +98,8 @@ static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz
   if (tz_info->dst_id == DSTID_BRAZIL && (((PBL_TM_YEAR_ORIGIN + year) % 3) == 2) && is_end) {
     time_tm.tm_mday += PBL_DAY_PER_WEEK;
   }
-  time_t uxtime = mktime(&time_tm);
-  gmtime_r(&uxtime, &time_tm);
+  time_t uxtime = pbl_mktime(&time_tm);
+  pbl_gmtime_r(&uxtime, &time_tm);
 
   for (int i = 0; i < PBL_DAY_PER_WEEK; i++) { // max is DAYS_PER_WEEK to find a day_of_week
     // we also have to check month here, as leap-year case puts us 1 day past feb
@@ -109,14 +109,14 @@ static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz
       break;
     }
     time_tm.tm_mday += (rule->flag & TIMEZONE_FLAG_DAY_DECREMENT) ? -1 : 1;
-    uxtime = mktime(&time_tm);
-    gmtime_r(&uxtime, &time_tm);
+    uxtime = pbl_mktime(&time_tm);
+    pbl_gmtime_r(&uxtime, &time_tm);
   }
 
   if (rule->hour >= PBL_HOUR_PER_DAY) {
     time_tm.tm_mday += rule->hour / PBL_HOUR_PER_DAY;
-    uxtime = mktime(&time_tm);
-    gmtime_r(&uxtime, &time_tm);
+    uxtime = pbl_mktime(&time_tm);
+    pbl_gmtime_r(&uxtime, &time_tm);
   }
 
   if (rule->flag & TIMEZONE_FLAG_STANDARD_TIME) { // Standard time (not wall time)
@@ -164,8 +164,8 @@ PBL_T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_i
     return;
   }
 
-  struct tm current_tm;
-  gmtime_r(&utc_time, &current_tm);
+  struct pbl_tm current_tm;
+  pbl_gmtime_r(&utc_time, &current_tm);
 
   // Calculate the timestamps of the start and ends of DST for the previous year, the current
   // year, and the next year.
@@ -237,7 +237,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
   };
 
   // I was hoping to fill the name with something like UTC-10 or UTC+4.25 but we only get 5 chars
-  strncpy(tz_info.tm_zone, "N/A", TZ_LEN - 1);
+  strncpy(tz_info.tm_zone, "N/A", PBL_TZ_LEN - 1);
   return tz_info;
 #else
   return (TimezoneInfo){};
@@ -451,7 +451,7 @@ void clock_hourly_chime_arm(void) {
 }
 #endif
 
-void clock_get_time_tm(struct tm *time_tm) {
+void clock_get_time_tm(struct pbl_tm *time_tm) {
   rtc_get_time_tm(time_tm);
 }
 
@@ -479,7 +479,7 @@ size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minu
 }
 
 size_t clock_copy_time_string_timestamp(char *buffer, uint8_t size, time_t timestamp) {
-  struct tm time;
+  struct pbl_tm time;
   sys_localtime_r(&timestamp, &time);
   return clock_format_time(buffer, size, time.tm_hour, time.tm_min, true);
 }
@@ -490,15 +490,15 @@ void clock_copy_time_string(char *buffer, uint8_t size) {
 }
 
 static size_t prv_format_time_tm(char *buffer, int buf_size, const char *format,
-                                 const struct tm *time_tm) {
-  const size_t ret_val = strftime(buffer, buf_size, i18n_get(format, buffer), time_tm);
+                                 const struct pbl_tm *time_tm) {
+  const size_t ret_val = pbl_strftime_r(buffer, buf_size, i18n_get(format, buffer), time_tm);
   i18n_free(format, buffer);
   return ret_val;
 }
 
 static size_t prv_format_time(char *buffer, int buf_size, const char *format, time_t timestamp) {
-  struct tm time_tm;
-  localtime_r(&timestamp, &time_tm);
+  struct pbl_tm time_tm;
+  pbl_localtime_r(&timestamp, &time_tm);
   return prv_format_time_tm(buffer, buf_size, format, &time_tm);
 }
 
@@ -636,7 +636,7 @@ void clock_request_time_from_phone(void) {
 
 DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
   time_t t = sys_get_time();
-  struct tm cal;
+  struct pbl_tm cal;
   sys_localtime_r(&t, &cal);
 
   if (day != TODAY) {
@@ -656,7 +656,7 @@ DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
   cal.tm_gmtoff = time_get_gmtoffset();
   cal.tm_isdst = 0;
 
-  t = mktime(&cal);
+  t = pbl_mktime(&cal);
   if (time_get_isdst(t)) {
     t -= time_get_dstoffset();
     if (!time_get_isdst(t)) {
@@ -936,7 +936,7 @@ size_t clock_get_date(char *buffer, int buf_size, time_t timestamp) {
   return prv_format_time(buffer, buf_size, i18n_noop("%m/%d"), timestamp);
 }
 
-size_t clock_get_date_tm(char *buffer, int buf_size, const struct tm *time_tm) {
+size_t clock_get_date_tm(char *buffer, int buf_size, const struct pbl_tm *time_tm) {
   return prv_format_time_tm(buffer, buf_size, i18n_noop("%m/%d"), time_tm);
 }
 
@@ -1017,9 +1017,9 @@ static const daypart_message daypart_messages[] = {
 //! and is a minimum threshold, ie. "Powered 'til at least"...
 const char *clock_get_relative_daypart_string(time_t current_timestamp,
                                               uint32_t hours_in_the_future) {
-  struct tm current_tm;
+  struct pbl_tm current_tm;
   const char *message = NULL;
-  localtime_r(&current_timestamp, &current_tm);
+  pbl_localtime_r(&current_timestamp, &current_tm);
 
   // Look for the furthest time in the future that we are "above"
   for (int i = ARRAY_LENGTH(daypart_messages) - 1; i >= 0; i--) {

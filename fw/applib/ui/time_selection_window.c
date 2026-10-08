@@ -188,7 +188,7 @@ static void prv_handle_dec(unsigned index, void *context) {
 
 // Public Functions
 void time_selection_window_set_to_current_time(TimeSelectionWindowData *time_selection_window) {
-  struct tm current_time;
+  struct pbl_tm current_time;
   clock_get_time_tm(&current_time);
   time_selection_window->time_data.hour = current_time.tm_hour;
   time_selection_window->time_data.minute = current_time.tm_min;

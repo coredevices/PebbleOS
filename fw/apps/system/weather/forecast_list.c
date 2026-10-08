@@ -2214,11 +2214,11 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   {
     time_t now = time(NULL);
     if (now >= s_list->date_cache_expiry || s_list->today_header_dirty) {
-      struct tm *lt = localtime(&now);
+      struct pbl_tm *lt = localtime(&now);
       if (lt) {
-        strftime(s_list->daydate_cache, sizeof(s_list->daydate_cache),
-                 /* xgettext:no-c-format */ i18n_get("%a, %b %d", s_list),
-                 lt); // title-case "Thu, Jun 25"
+        pbl_strftime_r(s_list->daydate_cache, sizeof(s_list->daydate_cache),
+                       /* xgettext:no-c-format */ i18n_get("%a, %b %d", s_list),
+                       lt); // title-case "Thu, Jun 25"
         // Cap the expiry at an hour: DST-transition days aren't 86400s long and backward
         // clock/timezone changes would otherwise leave stale strings up for hours. One extra
         // strftime per hour is noise; the midnight rollover still lands within the hour.
@@ -2878,11 +2878,11 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   // Digital time: right-aligned (matches main screen)
   char time_str[8];
   time_t now = time(NULL);
-  struct tm *lt = localtime(&now);
+  struct pbl_tm *lt = localtime(&now);
   if (clock_is_24h_style()) {
-    strftime(time_str, sizeof(time_str), "%H:%M", lt);
+    pbl_strftime_r(time_str, sizeof(time_str), "%H:%M", lt);
   } else {
-    strftime(time_str, sizeof(time_str), "%I:%M", lt);
+    pbl_strftime_r(time_str, sizeof(time_str), "%I:%M", lt);
     if (time_str[0] == '0')
       memmove(time_str, time_str + 1, sizeof(time_str) - 1);
   }

@@ -8,7 +8,6 @@ pbl_clar_test(test_reminders
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/flash_region/flash_region.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     fw/flash_region/filesystem_regions.c
     fw/services/blob_db/timeline_item_storage.c
     fw/services/settings/settings_file.c
@@ -36,7 +35,6 @@ pbl_clar_test(test_calendar
     fw/services/timeline/item.c
     fw/services/timeline/timeline.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
@@ -55,7 +53,6 @@ pbl_clar_test(test_timeline_peek_event
     fw/services/timeline/peek.c
     fw/services/timeline/timeline.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
@@ -72,8 +69,6 @@ pbl_clar_test(test_attribute
 pbl_clar_test(test_timeline_model
   SOURCES
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     tests/fakes/fake_spi_flash.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
@@ -108,6 +103,7 @@ pbl_clar_test(test_alarm_layout
     fw/services/alarms/alarm.c
     fw/services/timeline/alarm_layout.c
     fw/services/timeline/attribute.c
+    fw/services/clock/time.c
   PLATFORMS obelix gabbro
   DEFINES CAPABILITY_HAS_HEALTH_TRACKING=0
   OVERRIDES dummy_board
@@ -186,7 +182,6 @@ pbl_clar_test(test_timeline_layouts
     fw/services/filesystem/pfs.c
     fw/system/hexdump.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_display.c
@@ -216,6 +211,8 @@ pbl_clar_test(test_timeline_layouts
     fw/shell/system_theme.c
     tests/stubs/stubs_clock.c
     tests/stubs/stubs_timeline_layout.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

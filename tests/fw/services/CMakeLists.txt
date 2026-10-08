@@ -53,8 +53,6 @@ pbl_clar_test(test_cron
     tests/fakes/fake_rtc.c
     subsys/cron/cron.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
 )
 
 pbl_clar_test(test_contacts
@@ -76,7 +74,6 @@ pbl_clar_test(test_contacts
     fw/services/timeline/attribute.c
     fw/kernel/rand.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
   OVERRIDES dummy_board
 )
@@ -148,6 +145,7 @@ pbl_clar_test(test_regular_timer
   SOURCES
     fw/services/regular_timer/service.c
     tests/fakes/fake_rtc.c
+    fw/services/clock/time.c
 )
 
 pbl_clar_test(test_debounced_connection_service
@@ -156,6 +154,7 @@ pbl_clar_test(test_debounced_connection_service
     tests/fakes/fake_rtc.c
     tests/fakes/fake_session.c
     fw/services/debounced_connection_service/service.c
+    fw/services/clock/time.c
 )
 
 pbl_clar_test(test_timeline_item
@@ -168,7 +167,6 @@ pbl_clar_test(test_timeline_item
     fw/services/timeline/attribute_group.c
     fw/services/timeline/attribute.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
 )
 
 pbl_clar_test(test_clock
@@ -185,8 +183,6 @@ pbl_clar_test(test_clock
     fw/services/filesystem/pfs.c
     fw/services/filesystem/app_file.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     tests/fakes/fake_bootbits.c
     drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
@@ -196,6 +192,9 @@ pbl_clar_test(test_clock
     tests/fixtures/resources/pfs_resource_table.c
     fw/services/timezone_database/service.c
     fw/services/clock/service.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
+    tests/stubs/stubs_i18n.c
   OVERRIDES dummy_board
 )
 
@@ -435,8 +434,6 @@ pbl_clar_test(test_do_not_disturb
     fw/services/notifications/do_not_disturb.c
     subsys/cron/cron.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
   OVERRIDES dummy_board
@@ -445,7 +442,6 @@ pbl_clar_test(test_do_not_disturb
 pbl_clar_test(test_weather_service
   SOURCES
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     fw/flash_region/flash_region.c
@@ -518,7 +514,5 @@ pbl_clar_test(test_app_glance_service
 pbl_clar_test(test_clock_time
   SOURCES
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
 )

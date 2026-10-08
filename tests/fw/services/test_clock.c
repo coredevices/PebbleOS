@@ -91,8 +91,8 @@ static void prv_clock_reset(int32_t gmtoff) {
   clock_init();
   clock_set_24h_style(false);
 }
-static void prv_set_current_time(struct tm new_time) {
-  time_t secs = mktime(&new_time);
+static void prv_set_current_time(struct pbl_tm new_time) {
+  time_t secs = pbl_mktime(&new_time);
   rtc_set_time(secs);
 }
 
@@ -128,11 +128,11 @@ bool shell_prefs_get_language_english(void) {
 }
 void shell_prefs_set_language_english(bool english) {
 }
-void sys_localtime_r(time_t const *t, struct tm *lcltime) {
-  localtime_r(t, lcltime);
+void sys_localtime_r(time_t const *t, struct pbl_tm *lcltime) {
+  pbl_localtime_r(t, lcltime);
 }
-void sys_gmtime_r(time_t const *t, struct tm *lcltime) {
-  gmtime_r(t, lcltime);
+void sys_gmtime_r(time_t const *t, struct pbl_tm *lcltime) {
+  pbl_gmtime_r(t, lcltime);
 }
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
@@ -553,7 +553,7 @@ void test_clock__dstzone_rule_check(void) {
 }
 
 void test_clock__next_monday(void) {
-  struct tm jan_1 = {
+  struct pbl_tm jan_1 = {
     .tm_sec = 0,  // 0 seconds after the minute
     .tm_min = 0,  // 0 minutes after the hour
     .tm_hour = 0, // 0 hours since midnight
@@ -564,7 +564,7 @@ void test_clock__next_monday(void) {
   };
 
   // next Monday (the 6th) at 17:30
-  struct tm jan_6 = {
+  struct pbl_tm jan_6 = {
     .tm_sec = 0,   // 0 seconds after the minute
     .tm_min = 30,  // 30 minutes after the hour
     .tm_hour = 17, // 17 hours since midnight
@@ -581,7 +581,7 @@ void test_clock__next_monday(void) {
   };
   time_util_update_timezone(&tz_info);
   prv_set_current_time(jan_1);
-  cl_assert_equal_i(clock_to_timestamp(MONDAY, 17, 30), mktime(&jan_6));
+  cl_assert_equal_i(clock_to_timestamp(MONDAY, 17, 30), pbl_mktime(&jan_6));
 }
 
 void test_clock__clock_to_timestamp(void) {
@@ -608,8 +608,8 @@ void test_clock__clock_to_timestamp(void) {
     cl_assert_equal_i(rtc_get_time(), jan1st_noon_2005);
 
     time_t t = rtc_get_time();
-    struct tm now;
-    localtime_r(&t, &now);
+    struct pbl_tm now;
+    pbl_localtime_r(&t, &now);
     time_t timestamp = clock_to_timestamp(TODAY, now.tm_hour, now.tm_min + 1);
 
     cl_assert_equal_i(timestamp, t + 60);
@@ -617,7 +617,7 @@ void test_clock__clock_to_timestamp(void) {
 }
 
 void test_clock__cross_dst(void) {
-  struct tm oct_31 = {
+  struct pbl_tm oct_31 = {
     .tm_sec = 0,
     .tm_min = 59,
     .tm_hour = 23,
@@ -628,7 +628,7 @@ void test_clock__cross_dst(void) {
     .tm_gmtoff = -4 * PBL_SEC_PER_HOUR, // EDT (base -5h + 1h DST)
   };
 
-  struct tm nov_7 = {
+  struct pbl_tm nov_7 = {
     .tm_sec = 0,
     .tm_min = 15,
     .tm_hour = 0,
@@ -647,11 +647,11 @@ void test_clock__cross_dst(void) {
   };
   time_util_update_timezone(&tz_info);
   prv_set_current_time(oct_31);
-  cl_assert_equal_i(clock_to_timestamp(SATURDAY, 0, 15), mktime(&nov_7));
+  cl_assert_equal_i(clock_to_timestamp(SATURDAY, 0, 15), pbl_mktime(&nov_7));
 }
 
 void test_clock__today(void) {
-  struct tm may_30 = {
+  struct pbl_tm may_30 = {
     .tm_sec = 0,
     .tm_min = 59,
     .tm_hour = 7,
@@ -662,7 +662,7 @@ void test_clock__today(void) {
     .tm_gmtoff = -4 * PBL_SEC_PER_HOUR, // EDT (base -5h + 1h DST)
   };
 
-  struct tm may_31 = {
+  struct pbl_tm may_31 = {
     .tm_sec = 0,
     .tm_min = 0,
     .tm_hour = 5,
@@ -682,7 +682,7 @@ void test_clock__today(void) {
   };
   time_util_update_timezone(&tz_info);
   prv_set_current_time(may_30);
-  cl_assert_equal_i(clock_to_timestamp(TODAY, 5, 0), mktime(&may_31));
+  cl_assert_equal_i(clock_to_timestamp(TODAY, 5, 0), pbl_mktime(&may_31));
 }
 
 void test_clock__time_until_one_hour_relative(void) {

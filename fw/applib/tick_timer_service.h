@@ -5,6 +5,8 @@
 
 #include <time.h>
 
+#include <pbl/util/time.h>
+
 //! @addtogroup Foundation
 //! @{
 //!   @addtogroup EventService
@@ -37,7 +39,7 @@ typedef enum {
 //! Callback type for tick timer events
 //! @param tick_time the time at which the tick event was triggered
 //! @param units_changed which unit change triggered this tick event
-typedef void (*TickHandler)(struct tm *tick_time, TimeUnits units_changed);
+typedef void (*TickHandler)(struct pbl_tm *tick_time, TimeUnits units_changed);
 
 //! Subscribe to the tick timer event service. Once subscribed, the handler gets called
 //! on every requested unit change.

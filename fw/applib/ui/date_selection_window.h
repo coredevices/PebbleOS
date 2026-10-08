@@ -16,7 +16,7 @@ struct DateSelectionWindowData;
 
 typedef void (*DateSelectionCompleteCallback)(struct DateSelectionWindowData *window, void *ctx);
 
-//! Date data stored as fields mirroring struct tm
+//! Date data stored as fields mirroring struct pbl_tm
 typedef struct {
   int16_t year; //!< years since 1900 (tm_year)
   int8_t month; //!< 0-11 (tm_mon)

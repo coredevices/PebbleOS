@@ -4,11 +4,12 @@
 #pragma once
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/util/time.h>
 
 #include <syscall/syscall.h>
 
-struct tm *PBL_WEAK sys_localtime_r(const time_t *timep, struct tm *result) {
-  return localtime_r(timep, result);
+struct pbl_tm *PBL_WEAK sys_localtime_r(const time_t *timep, struct pbl_tm *result) {
+  return pbl_gmtime_r(timep, result);
 }
 
 ResAppNum PBL_WEAK sys_get_current_resource_num(void) {

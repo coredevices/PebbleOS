@@ -52,8 +52,8 @@ TickTimerServiceState *worker_state_get_tick_timer_service_state(void);
 
 ConnectionServiceState *worker_state_get_connection_service_state(void);
 
-struct tm *worker_state_get_gmtime_tm(void);
-struct tm *worker_state_get_localtime_tm(void);
+struct pbl_tm *worker_state_get_gmtime_tm(void);
+struct pbl_tm *worker_state_get_localtime_tm(void);
 char *worker_state_get_localtime_zone(void);
 
 void *worker_state_get_rand_ptr(void);

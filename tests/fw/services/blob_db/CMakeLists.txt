@@ -11,9 +11,7 @@ pbl_clar_test(test_timeline
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/item.c
     fw/services/timeline/timeline.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
   OVERRIDES dummy_board
@@ -29,9 +27,7 @@ pbl_clar_test(test_pin_db
     fw/services/timeline/attribute_group.c
     fw/services/timeline/attributes_actions.c
     fw/services/timeline/item.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_blobdb.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_session.c
@@ -130,7 +126,6 @@ pbl_clar_test(test_reminder_db
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     fw/services/blob_db/timeline_item_storage.c
     tests/fakes/fake_settings_file.c
     fw/services/blob_db/reminder_db.c
@@ -152,7 +147,6 @@ pbl_clar_test(test_notif_db
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/services/notifications/notification_storage.c
@@ -167,7 +161,6 @@ pbl_clar_test(test_notif_db
 pbl_clar_test(test_weather_db
   SOURCES
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
     fw/flash_region/flash_region.c
@@ -186,7 +179,6 @@ pbl_clar_test(test_prefs_db
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     fw/flash_region/filesystem_regions.c
     fw/flash_region/flash_region.c
     fw/services/filesystem/flash_translation.c
@@ -210,7 +202,6 @@ pbl_clar_test(test_ios_notif_pref_db
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     fw/services/timeline/attribute.c
     fw/services/timeline/item.c
     fw/services/timeline/attributes_actions.c
@@ -223,7 +214,6 @@ pbl_clar_test(test_ios_notif_pref_db
 pbl_clar_test(test_health_db
   SOURCES
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_settings_file.c
     fw/services/blob_db/health_db.c
   OVERRIDES dummy_board

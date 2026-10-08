@@ -14,7 +14,30 @@
  * @{
  */
 
-/** @brief Year that @c tm_year in struct tm counts from. */
+/** @brief Size of @c tm_zone in struct pbl_tm, including the terminating NUL. */
+#define PBL_TZ_LEN 6
+
+/**
+ * structure containing broken-down time for expressing calendar time
+ * (ie. Year, Month, Day of Month, Hour of Day) and timezone information
+ */
+struct pbl_tm {
+  int tm_sec;   /*!< Seconds. [0-60] (1 leap second) */
+  int tm_min;   /*!< Minutes. [0-59] */
+  int tm_hour;  /*!< Hours.  [0-23] */
+  int tm_mday;  /*!< Day. [1-31] */
+  int tm_mon;   /*!< Month. [0-11] */
+  int tm_year;  /*!< Years since 1900 */
+  int tm_wday;  /*!< Day of week. [0-6] */
+  int tm_yday;  /*!< Days in year.[0-365] */
+  int tm_isdst; /*!< DST. [-1/0/1] */
+
+  int tm_gmtoff; /*!< Total seconds east of UTC, DST included. tm_isdst is an indicator only --
+                      never add it to this value. */
+  char tm_zone[PBL_TZ_LEN]; /*!< Timezone abbreviation */
+};
+
+/** @brief Year that @c tm_year in struct pbl_tm counts from. */
 #define PBL_TM_YEAR_ORIGIN 1900
 /** @brief Year of the Unix epoch. */
 #define PBL_EPOCH_YEAR 1970
@@ -107,13 +130,32 @@ int pbl_time_display_hour(int hour, bool is_24h);
 int pbl_time_minute_of_day_adjust(int minute, int delta);
 
 /**
- * @brief Fill the calendar fields of a struct tm from seconds since the epoch.
+ * @brief Fill the calendar fields of a struct pbl_tm from seconds since the epoch.
  *
  * Sets @c tm_sec to @c tm_yday. The DST, offset and zone fields are left untouched.
  *
  * @param t Seconds since the Unix epoch.
  * @param[out] tm Broken-down time.
  */
-void pbl_time_breakdown(time_t t, struct tm *tm);
+void pbl_time_breakdown(time_t t, struct pbl_tm *tm);
+
+/**
+ * @brief Convert seconds since the epoch to broken-down UTC time.
+ *
+ * @param timep Seconds since the Unix epoch.
+ * @param[out] result Broken-down time, in the UTC zone.
+ * @return @p result.
+ */
+struct pbl_tm *pbl_gmtime_r(const time_t *timep, struct pbl_tm *result);
+
+/**
+ * @brief Convert broken-down time to seconds since the epoch.
+ *
+ * Fields out of their range are carried over, and @c tm_gmtoff is subtracted from the result.
+ *
+ * @param[in,out] tb Broken-down time, replaced by the UTC broken-down time of the result.
+ * @return Seconds since the Unix epoch, or -1 if out of range.
+ */
+time_t pbl_mktime(struct pbl_tm *tb);
 
 /** @} */

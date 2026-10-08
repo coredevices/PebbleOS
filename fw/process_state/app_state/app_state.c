@@ -34,9 +34,9 @@
 typedef struct {
   Heap heap;
 
-  struct tm gmtime_tm;
-  struct tm localtime_tm;
-  char localtime_zone[TZ_LEN];
+  struct pbl_tm gmtime_tm;
+  struct pbl_tm localtime_tm;
+  char localtime_zone[PBL_TZ_LEN];
 
   tinymt32_t rand_seed;
 
@@ -347,10 +347,10 @@ Heap *app_state_get_heap(void) {
   return &s_app_state_ptr->heap;
 }
 
-struct tm *app_state_get_gmtime_tm(void) {
+struct pbl_tm *app_state_get_gmtime_tm(void) {
   return &s_app_state_ptr->gmtime_tm;
 }
-struct tm *app_state_get_localtime_tm(void) {
+struct pbl_tm *app_state_get_localtime_tm(void) {
   return &s_app_state_ptr->localtime_tm;
 }
 char *app_state_get_localtime_zone(void) {

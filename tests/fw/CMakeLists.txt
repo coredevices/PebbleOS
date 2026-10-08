@@ -112,8 +112,6 @@ pbl_clar_test(test_alarm
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     subsys/cron/cron.c
@@ -138,8 +136,6 @@ pbl_clar_test(test_alarm_smart
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     subsys/cron/cron.c
     fw/services/filesystem/flash_translation.c
@@ -154,6 +150,8 @@ pbl_clar_test(test_alarm_smart
     tests/fakes/fake_clock.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   DEFINES CAPABILITY_HAS_HEALTH_TRACKING=1
   OVERRIDES dummy_board
 )
@@ -219,6 +217,7 @@ pbl_clar_test(test_data_logging
     fw/applib/data_logging.c
     fw/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
+    fw/services/clock/time.c
   OVERRIDES dummy_board
 )
 
@@ -284,7 +283,6 @@ pbl_clar_test(test_timeline_api
     fw/services/timeline/timeline.c
     fw/kernel/rand.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c

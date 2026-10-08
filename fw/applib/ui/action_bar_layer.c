@@ -11,6 +11,7 @@
 #include <applib/app_timer.h>
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
+#include <applib/pbl_std/pbl_std.h>
 #include <applib/ui/window_private.h>
 #include <process_management/process_manager.h>
 #include <system/passert.h>

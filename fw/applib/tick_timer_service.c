@@ -40,7 +40,7 @@ static void do_handle(PebbleEvent *e, void *context) {
   PBL_ASSERTN(state->handler != NULL);
 
   TimeUnits units_changed = 0;
-  struct tm currtime;
+  struct pbl_tm currtime;
   const time_t tick_time = e->clock_tick.tick_time;
   sys_localtime_r(&tick_time, &currtime);
 

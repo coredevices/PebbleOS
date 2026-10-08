@@ -136,7 +136,7 @@ static void prv_legacy2_status_bar_handler(PebbleEvent *e, void *context) {
   if (!window->is_fullscreen) {
     // a little logic to only force update when the minute changes
     ApplibInternalEventsInfo *events_info = app_state_get_applib_internal_events_info();
-    struct tm currtime;
+    struct pbl_tm currtime;
     const time_t tick_time = e->clock_tick.tick_time;
     sys_localtime_r(&tick_time, &currtime);
     const int minute_of_day = (currtime.tm_hour * 60) + currtime.tm_min;

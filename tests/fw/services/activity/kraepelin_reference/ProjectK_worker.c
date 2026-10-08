@@ -360,7 +360,7 @@ static void epoch_analysis() {
 }
 
 #if PEBBLE_APP
-void tick_summ_datalog_second_handler(struct tm *tick_time, TimeUnits units_changed) {
+void tick_summ_datalog_second_handler(struct pbl_tm *tick_time, TimeUnits units_changed) {
   static int8_t cur_min = -1; // this tracks the current min, 0-59 values
   // this is to protect against summ_datalog() being called more than once a min
 
@@ -517,7 +517,7 @@ void ref_minute_stats(uint8_t *orientation, uint8_t *vmc) {
 }
 
 //
-// void tick_summ_datalog_handler(struct tm *tick_time, TimeUnits units_changed){
+// void tick_summ_datalog_handler(struct pbl_tm *tick_time, TimeUnits units_changed){
 //   static int8_t cur_min = -1; // this tracks the current min, 0-59 values
 //   // this is to protect against summ_datalog() being called more than once a min
 //

@@ -65,7 +65,7 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
     return 0;
   }
 
-  struct tm time_tm = {0};
+  struct pbl_tm time_tm = {0};
   time_tm.tm_sec = atoi(timestamp.second);
   timestamp.second[0] = '\0';
   time_tm.tm_min = atoi(timestamp.minute);
@@ -84,7 +84,7 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
   time_tm.tm_gmtoff = time_get_gmtoffset() + (time_tm.tm_isdst ? time_get_dstoffset() : 0);
   time_get_timezone_abbr(time_tm.tm_zone, sys_time);
 
-  return mktime(&time_tm);
+  return pbl_mktime(&time_tm);
 }
 
 bool ancs_notifications_util_is_phone(const ANCSAttribute *app_id) {

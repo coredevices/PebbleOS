@@ -87,9 +87,7 @@ pbl_clar_test(test_workout_summary
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c
@@ -100,6 +98,8 @@ pbl_clar_test(test_workout_summary
     fw/apps/system/workout/dialog.c
     fw/apps/system/workout/utils.c
     fw/apps/system/workout/summary.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -192,9 +192,7 @@ pbl_clar_test(test_workout_active
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c
@@ -203,6 +201,8 @@ pbl_clar_test(test_workout_active
     fw/apps/system/workout/data.c
     fw/apps/system/workout/dialog.c
     fw/apps/system/workout/active.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -295,9 +295,7 @@ pbl_clar_test(test_workout_dialog
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c
@@ -305,6 +303,8 @@ pbl_clar_test(test_workout_dialog
     fw/applib/ui/menu_layer.c
     fw/apps/system/workout/data.c
     fw/apps/system/workout/dialog.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -397,9 +397,7 @@ pbl_clar_test(test_workout_selection
     fw/services/activity/health_util.c
     fw/services/activity/hr_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_workout_service.c
@@ -407,6 +405,8 @@ pbl_clar_test(test_workout_selection
     fw/applib/ui/menu_layer.c
     fw/apps/system/workout/utils.c
     fw/apps/system/workout/selection.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

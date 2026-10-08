@@ -316,13 +316,13 @@ static void prv_draw_time(GContext *ctx, GFont time_font, GFont am_pm_font, GRec
   const time_t now = rtc_get_time();
   /// Current time in 24 or 12 hour
   const char *time_fmt = clock_is_24h_style() ? "%R" : "%l:%M";
-  strftime(time_buffer, sizeof(time_buffer), time_fmt, pbl_override_localtime(&now));
+  pbl_strftime_r(time_buffer, sizeof(time_buffer), time_fmt, pbl_override_localtime(&now));
   health_util_create_text_node_with_text(string_strip_leading_whitespace(time_buffer), time_font,
                                          GColorWhite, container);
 
   if (!clock_is_24h_style()) {
     /// AM/PM for the current time
-    strftime(am_pm_buffer, sizeof(am_pm_buffer), "%p", pbl_override_localtime(&now));
+    pbl_strftime_r(am_pm_buffer, sizeof(am_pm_buffer), "%p", pbl_override_localtime(&now));
     health_util_create_text_node_with_text(am_pm_buffer, am_pm_font, GColorWhite, container);
   }
 
@@ -542,7 +542,7 @@ static void prv_health_service_events_handler(HealthEventType event, void *conte
   }
 }
 
-static void prv_tick_handler(struct tm *tick_time, TimeUnits changed) {
+static void prv_tick_handler(struct pbl_tm *tick_time, TimeUnits changed) {
   KickstartData *data = app_state_get_user_data();
   prv_update_data(data);
 }

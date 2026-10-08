@@ -63,9 +63,9 @@ static void prv_render_sleep_sessions(GContext *ctx, HealthSleepSummaryCardData 
       continue;
     }
 
-    struct tm local_tm;
+    struct pbl_tm local_tm;
     const time_t start_utc = session->start_utc;
-    localtime_r(&start_utc, &local_tm);
+    pbl_localtime_r(&start_utc, &local_tm);
 
     const int session_start_24h =
         (local_tm.tm_sec + local_tm.tm_min * PBL_SEC_PER_MIN + local_tm.tm_hour * PBL_SEC_PER_HOUR);

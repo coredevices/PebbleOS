@@ -102,7 +102,7 @@ static int prv_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_mi
     return -1;
   }
   time_t now = rtc_get_time();
-  struct tm lt = *localtime(&now);
+  struct pbl_tm lt = *localtime(&now);
   const int N = lt.tm_yday + 1; // day of year 1..366
   // The LOCATION's UTC offset when the phone synced one (v4.1) — so a saved city's
   // sunset reads in that city's local clock; otherwise the watch's own offset.
@@ -184,7 +184,7 @@ static void prv_build_sunset(char *out, size_t n, int16_t lat_e2, int16_t lon_e2
 
 static void prv_build_time(char *out, size_t n) {
   time_t now = rtc_get_time();
-  struct tm *lt = localtime(&now);
+  struct pbl_tm *lt = localtime(&now);
   if (!lt) {
     snprintf(out, n, "--:--");
     return;
@@ -198,7 +198,7 @@ static void prv_build_time(char *out, size_t n) {
 #define EV_STATUS_FONT FONT_KEY_GOTHIC_18_BOLD
 
 void expanded_view_format_updated(const WeatherLocationForecast *f, char *out, size_t n) {
-  struct tm *lt = NULL;
+  struct pbl_tm *lt = NULL;
   if (f && f->time_updated_utc > 0) {
     time_t t = f->time_updated_utc;
     lt = localtime(&t);

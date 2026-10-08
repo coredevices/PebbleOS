@@ -194,7 +194,7 @@ typedef struct PBL_PACKED { // 6 bytes
 } PebbleSysNotificationEvent;
 
 typedef struct PBL_PACKED { // 4 bytes
-  time_t tick_time;         //!< Needs to be converted to 'struct tm' in the event service handler
+  time_t tick_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
 } PebbleTickEvent;
 
 typedef struct PBL_PACKED { // 4 bytes
@@ -433,7 +433,7 @@ typedef struct PBL_PACKED { // 8 bytes
 } PebbleLaunchAppEvent;
 
 typedef struct PBL_PACKED { // 8 bytes
-  time_t alarm_time;        //!< Needs to be converted to 'struct tm' in the event service handler
+  time_t alarm_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
   const char *alarm_label;
 } PebbleAlarmClockEvent;
 

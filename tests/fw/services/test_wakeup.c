@@ -49,10 +49,6 @@
 // int g_pbl_log_level = 0;
 // void pbl_log(uint8_t level, const char* src_filename, int src_line_number, const char* fmt, ...)
 // {}
-int pbl_time_display_hour(int hours, bool is24h) {
-  return 0;
-}
-
 bool sys_clock_is_24h_style(void) {
   return false;
 }

@@ -68,7 +68,7 @@ static void prv_show_result_dialog(void) {
   app_confirmation_dialog_push(confirmation_dialog);
 }
 
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   const int WAIT_AFTER_CALIBRATION_S = 3;

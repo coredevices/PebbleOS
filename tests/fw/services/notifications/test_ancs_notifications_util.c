@@ -39,7 +39,7 @@ static void prv_destroy_ancs_attr(ANCSAttribute *attr) {
 }
 
 void test_ancs_notifications_util__parse_timestamp(void) {
-  struct tm apr_3_13_00 = {
+  struct pbl_tm apr_3_13_00 = {
     .tm_sec = 0,
     .tm_min = 0,
     .tm_hour = 13,
@@ -57,7 +57,7 @@ void test_ancs_notifications_util__parse_timestamp(void) {
   };
   time_util_update_timezone(&tz_info);
 
-  time_t actual = mktime(&apr_3_13_00);
+  time_t actual = pbl_mktime(&apr_3_13_00);
   rtc_set_time(actual);
 
   ANCSAttribute *valid_date = prv_create_ancs_attr("20150403T130000");

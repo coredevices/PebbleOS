@@ -12,7 +12,7 @@
 #include <syscall/syscall_internal.h>
 
 // timezone abbreviation
-static char s_timezone_abbr[TZ_LEN] = {0}; // longest timezone abbreviation is 5 char + null
+static char s_timezone_abbr[PBL_TZ_LEN] = {0}; // longest timezone abbreviation is 5 char + null
 static int32_t s_timezone_gmtoffset = 0;
 static int32_t s_dst_adjust = PBL_SEC_PER_HOUR;
 static time_t s_dst_start = 0;
@@ -63,24 +63,24 @@ void time_get_timezone_abbr(char *out_buf, time_t utc_time) {
   if (!out_buf) {
     return;
   }
-  strncpy(out_buf, s_timezone_abbr, TZ_LEN);
-  out_buf[TZ_LEN - 1] = 0;
+  strncpy(out_buf, s_timezone_abbr, PBL_TZ_LEN);
+  out_buf[PBL_TZ_LEN - 1] = 0;
 
   // Timezones with daylight savings, update modifier with current dst char
   // ie. P*T is PDT for daylight savings, PST for non-daylight savings
-  char *tz_zone_dst_char = memchr(out_buf, '*', TZ_LEN);
+  char *tz_zone_dst_char = memchr(out_buf, '*', PBL_TZ_LEN);
   if (tz_zone_dst_char) {
     *tz_zone_dst_char = (time_get_isdst(utc_time)) ? 'D' : 'S';
     // Workaround for UK Winter, Greenwich Mean Time; UK Summer, British Summer Time
-    if (!strncmp(out_buf, "BDT", TZ_LEN)) {
-      strncpy(out_buf, "BST", TZ_LEN);
-    } else if (!strncmp(out_buf, "BST", TZ_LEN)) {
-      strncpy(out_buf, "GMT", TZ_LEN);
+    if (!strncmp(out_buf, "BDT", PBL_TZ_LEN)) {
+      strncpy(out_buf, "BST", PBL_TZ_LEN);
+    } else if (!strncmp(out_buf, "BST", PBL_TZ_LEN)) {
+      strncpy(out_buf, "GMT", PBL_TZ_LEN);
     }
   }
 }
 
-struct tm *localtime_r(const time_t *timep, struct tm *result) {
+struct pbl_tm *pbl_localtime_r(const time_t *timep, struct pbl_tm *result) {
   const time_t utc_time = *timep;
   result->tm_isdst = time_get_isdst(utc_time);
   result->tm_gmtoff = time_get_gmtoffset() + (result->tm_isdst ? s_dst_adjust : 0);
@@ -91,7 +91,7 @@ struct tm *localtime_r(const time_t *timep, struct tm *result) {
 
 void time_util_update_timezone(const TimezoneInfo *tz_info) {
   strncpy(s_timezone_abbr, tz_info->tm_zone, sizeof(tz_info->tm_zone) + 0);
-  s_timezone_abbr[TZ_LEN - 1] = '\0';
+  s_timezone_abbr[PBL_TZ_LEN - 1] = '\0';
   s_timezone_gmtoffset = tz_info->tm_gmtoff;
   s_dst_start = tz_info->dst_start;
   s_dst_end = tz_info->dst_end;
@@ -104,12 +104,12 @@ void time_util_update_timezone(const TimezoneInfo *tz_info) {
 }
 
 time_t time_util_get_midnight_of(time_t ts) {
-  struct tm tm;
-  localtime_r(&ts, &tm);
+  struct pbl_tm tm;
+  pbl_localtime_r(&ts, &tm);
   tm.tm_hour = 0;
   tm.tm_min = 0;
   tm.tm_sec = 0;
-  return mktime(&tm);
+  return pbl_mktime(&tm);
 }
 
 bool time_util_range_spans_day(time_t start, time_t end, time_t start_of_day) {
@@ -123,8 +123,8 @@ time_t time_util_utc_to_local_offset(void) {
 
 // ---------------------------------------------------------------------------------------
 enum pbl_weekday time_util_get_day_in_week(time_t utc_sec) {
-  struct tm local_tm;
-  localtime_r(&utc_sec, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&utc_sec, &local_tm);
   return local_tm.tm_wday;
 }
 
@@ -139,8 +139,8 @@ uint16_t time_util_get_day(time_t utc_sec) {
 
 // ---------------------------------------------------------------------------------------
 int time_util_get_minute_of_day(time_t utc_sec) {
-  struct tm local_tm;
-  localtime_r(&utc_sec, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&utc_sec, &local_tm);
   return (local_tm.tm_hour * PBL_MIN_PER_HOUR) + local_tm.tm_min;
 }
 

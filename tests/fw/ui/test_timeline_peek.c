@@ -112,14 +112,14 @@ void test_timeline_peek__initialize(void) {
   rtc_set_time(PBL_SEC_PER_DAY);
 
   // We start time out at 5pm on Jan 1, 2015 for all of these tests
-  struct tm time_tm = {
+  struct pbl_tm time_tm = {
     // Thursday, Jan 1, 2015, 5pm
     .tm_hour = 17,
     .tm_mday = 1,
     .tm_year = 115
   };
 
-  const time_t utc_sec = mktime(&time_tm);
+  const time_t utc_sec = pbl_mktime(&time_tm);
   fake_rtc_init(0 /* initial_ticks */, utc_sec);
 
   // Setup graphics context

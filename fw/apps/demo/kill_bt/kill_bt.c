@@ -36,7 +36,7 @@ static void push_window(struct AppState *data) {
 ////////////////////
 // App boilerplate
 
-static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
   PBL_LOG_DBG("Try to kill the BT:%d", s_progress_count);
   s_progress_count += 1;
 

@@ -160,9 +160,6 @@ endif()
 # otherwise fold the repeated -include options into one.
 add_compile_options("SHELL:-include ${PBL_AUTOCONF_H}")
 
-# time.h shims the firmware needs ahead of the toolchain's.
-include_directories(${PBL_BASE}/lib/c/include)
-
 # MAX_FONT_GLYPH_SIZE comes from the SDK platform description.
 execute_process(
   COMMAND ${PYTHON_EXECUTABLE} -c

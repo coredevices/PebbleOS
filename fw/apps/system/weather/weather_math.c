@@ -196,8 +196,8 @@ void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buf
   if (!buffer || buffer_size == 0)
     return;
   time_t target = time(NULL) + (time_t)day_offset * 86400;
-  struct tm *lt = localtime(&target);
-  if (!lt || strftime(buffer, buffer_size, "%a", lt) == 0) {
+  struct pbl_tm *lt = localtime(&target);
+  if (!lt || pbl_strftime_r(buffer, buffer_size, "%a", lt) == 0) {
     if (fallback && fallback[0]) {
       snprintf(buffer, buffer_size, "%.3s", fallback);
     } else {

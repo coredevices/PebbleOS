@@ -31,15 +31,15 @@ add_executable(pdc2png
   ${PBL_BASE}/fw/applib/graphics/graphics_private.c
   ${PBL_BASE}/fw/applib/graphics/graphics_private_raw.c
   ${PBL_BASE}/fw/applib/graphics/gtypes.c
+  ${PBL_BASE}/lib/util/gmtime.c
   ${PBL_BASE}/lib/util/keyed_circular_cache.c
   ${PBL_BASE}/lib/util/math.c
   ${PBL_BASE}/lib/util/platform.c
+  ${PBL_BASE}/lib/util/time.c
   ${PBL_BASE}/lib/util/trig.c
 )
 
 target_include_directories(pdc2png PRIVATE
-  # Ahead of the rest: this time.h deliberately shadows the host's.
-  ${PBL_BASE}/lib/c/include
   ${PBL_BASE}/tests/stubs
   ${PBL_BASE}/tests/fw/graphics
   ${PBL_BASE}/third_party/upng
@@ -70,8 +70,6 @@ target_compile_definitions(pdc2png PRIVATE
   CONFIG_BOARD_OBELIX=1
   CONFIG_PLATFORM_EMERY=1
   CONFIG_FLASH_GD25Q256E=1
-  # Check that our <time.h> is the one that got included.
-  _TIME_H_
   "PBI2PNG_EXE=\"pbi2png.py\""
   "UPNG_CONFIG_FILE=\"upng_config.h\""
   UZLIB_CONF_PARANOID_CHECKS=1

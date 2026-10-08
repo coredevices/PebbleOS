@@ -318,9 +318,9 @@ bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs) {
   uint8_t mute_type = ancs_filtering_get_mute_type(app_notif_prefs);
   uint32_t expiration_ts = ancs_filtering_get_mute_expiration(app_notif_prefs);
 
-  struct tm now_tm;
+  struct pbl_tm now_tm;
   time_t now = rtc_get_time();
-  localtime_r(&now, &now_tm);
+  pbl_localtime_r(&now, &now_tm);
 
   return (mute_type & (1 << now_tm.tm_wday)) || (expiration_ts > (uint32_t)now);
 }

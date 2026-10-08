@@ -1241,7 +1241,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
 }
 
 // ---- Tick handler — redraws every minute to keep hands + time current ----
-static void prv_tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_tick_handler(struct pbl_tm *tick_time, TimeUnits units_changed) {
   if (s_cf && s_cf->canvas)
     layer_mark_dirty(s_cf->canvas);
 }

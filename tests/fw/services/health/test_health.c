@@ -1193,8 +1193,8 @@ void test_health__get_yesterdays_sleep_activity(void) {
 void test_health__avg_full_days(void) {
   // Get the current time and day
   const time_t now = rtc_get_time();
-  struct tm local_tm;
-  localtime_r(&now, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&now, &local_tm);
   enum pbl_weekday day_in_week = local_tm.tm_wday;
 
   // ----------------------------------------
@@ -1296,8 +1296,8 @@ static uint32_t prv_averages_sum(uint32_t minute_start_idx, uint32_t minute_end_
 void test_health__avg_partial_days(void) {
   // Get the current time and day
   const time_t now = rtc_get_time();
-  struct tm local_tm;
-  localtime_r(&now, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&now, &local_tm);
   enum pbl_weekday day_in_week = local_tm.tm_wday;
 
   // Our _initialize should set us to Monday, 9am UTC
@@ -1463,11 +1463,11 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
   const time_t now = rtc_get_time();
   const time_t yesterday_utc = now - PBL_SEC_PER_DAY;
 
-  struct tm local_tm;
-  localtime_r(&now, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&now, &local_tm);
   enum pbl_weekday todays_day_in_week = local_tm.tm_wday;
 
-  localtime_r(&yesterday_utc, &local_tm);
+  pbl_localtime_r(&yesterday_utc, &local_tm);
   enum pbl_weekday yesterday_day_in_week = local_tm.tm_wday;
   bool yesterday_was_weekend =
       (yesterday_day_in_week == PBL_SUNDAY) || (yesterday_day_in_week == PBL_SATURDAY);

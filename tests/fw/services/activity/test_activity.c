@@ -74,7 +74,7 @@ void prefs_sync_init(void) {
 #include <fake_system_task.h>
 
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
-static const struct tm s_init_time_tm = {
+static const struct pbl_tm s_init_time_tm = {
   // Thursday, Jan 1, 2015, 5:pm
   .tm_hour = 17,
   .tm_mday = 1,
@@ -875,12 +875,12 @@ static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, 
   }
 
   char time_start_text[64];
-  struct tm *local_tm = localtime(&time_start);
-  strftime(time_start_text, sizeof(time_start_text), "%F %r", local_tm);
+  struct pbl_tm *local_tm = pbl_override_localtime(&time_start);
+  pbl_strftime_r(time_start_text, sizeof(time_start_text), "%F %r", local_tm);
 
   char time_end_text[64];
-  local_tm = localtime(&time_end);
-  strftime(time_end_text, sizeof(time_end_text), "%F %r", local_tm);
+  local_tm = pbl_override_localtime(&time_end);
+  pbl_strftime_r(time_end_text, sizeof(time_end_text), "%F %r", local_tm);
 
   PBL_LOG_DBG("Got activity: %d %s to %s (%d min)", (int)activity, time_start_text, time_end_text,
               (int)((time_end - time_start) / PBL_SEC_PER_MIN));
@@ -951,8 +951,8 @@ void test_activity__initialize(void) {
   };
   time_util_update_timezone(&tz_info);
 
-  struct tm time_tm = s_init_time_tm;
-  time_t utc_sec = mktime(&time_tm);
+  struct pbl_tm time_tm = s_init_time_tm;
+  time_t utc_sec = pbl_mktime(&time_tm);
   fake_rtc_init(100 /*initial_ticks*/, utc_sec);
   fake_spi_flash_init(0, 0x1000000);
   pfs_init(false);
@@ -1101,9 +1101,9 @@ void test_activity__init_history(void) {
 
   // Pretend that 24 hours has elapsed since we saved prefs. This should put both the step and
   // sleep history 1 day behind
-  struct tm time_tm = s_init_time_tm;
+  struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
-  time_t utc_sec = mktime(&time_tm);
+  time_t utc_sec = pbl_mktime(&time_tm);
   rtc_set_time(utc_sec);
   prv_activity_init_and_set_enabled(true);
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
@@ -1312,9 +1312,9 @@ void test_activity__step_derived_metrics(void) {
   stub_pebble_tasks_set_current(PebbleTask_App);
 
   // Advance to a new day to give a chance for the new resting metabolism to be incorporated
-  struct tm time_tm = s_init_time_tm;
+  struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
-  time_t utc_sec = mktime(&time_tm);
+  time_t utc_sec = pbl_mktime(&time_tm);
   rtc_set_time(utc_sec);
   prv_activity_init_and_set_enabled(true);
 
@@ -1696,14 +1696,14 @@ void test_activity__get_minute_history(void) {
 
   // Start on a ALG_MINUTES_PER_RECORD minute boundary so that we know we have
   // ALG_MINUTES_PER_RECORD records available up to the current time
-  struct tm start_tm = {
+  struct pbl_tm start_tm = {
     // Jan 1, 2015, 5am
     .tm_hour = 5,
     .tm_mday = 1,
     .tm_mon = 0,
     .tm_year = 115
   };
-  time_t utc_sec = mktime(&start_tm);
+  time_t utc_sec = pbl_mktime(&start_tm);
   rtc_set_time(utc_sec);
 
   time_t oldest_to_fetch = rtc_get_time() - (ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN);
@@ -1752,8 +1752,8 @@ int prv_expected_steps_per_min(int slot, int multiplier) {
 // ------------------------------------------------------------------------------------
 // Verify that the settings are what we expected from prv_save_known_settings()
 void prv_assert_known_settings(void) {
-  struct tm time_tm = s_init_time_tm;
-  time_t utc_sec = mktime(&time_tm);
+  struct pbl_tm time_tm = s_init_time_tm;
+  time_t utc_sec = pbl_mktime(&time_tm);
   rtc_set_time(utc_sec);
 
   prv_activity_init_and_set_enabled(true);
@@ -1776,8 +1776,8 @@ void prv_assert_known_settings(void) {
 // be checked in and used for migration tests.
 PBL_UNUSED static void prv_save_known_settings_file(const char *filename) {
   // Let's include 3 days of history by start at s_init_time_tm - 3 days
-  struct tm time_tm = s_init_time_tm;
-  time_t utc_sec = mktime(&time_tm);
+  struct pbl_tm time_tm = s_init_time_tm;
+  time_t utc_sec = pbl_mktime(&time_tm);
   utc_sec -= 2 * PBL_SEC_PER_DAY;
   rtc_set_time(utc_sec);
 
@@ -2231,9 +2231,9 @@ void test_activity__distance(void) {
   };
 
   // Init the time
-  struct tm time_tm = s_init_time_tm;
+  struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
-  time_t utc_sec = mktime(&time_tm);
+  time_t utc_sec = pbl_mktime(&time_tm);
   rtc_set_time(utc_sec);
   fake_system_task_callbacks_invoke_pending();
 
@@ -2612,14 +2612,14 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
   cl_assert_equal_i(0, health_service_peek_current_activities());
 
   // Start on known boundary
-  struct tm start_tm = {
+  struct pbl_tm start_tm = {
     // Jan 1, 2015, 5am
     .tm_hour = 5,
     .tm_mday = 1,
     .tm_mon = 0,
     .tm_year = 115
   };
-  time_t utc_sec = mktime(&start_tm);
+  time_t utc_sec = pbl_mktime(&start_tm);
   rtc_set_time(utc_sec);
 
   // Add a run session
@@ -2662,14 +2662,14 @@ void test_activity__activity_sessions_sleep_ongoing_then_delete(void) {
   cl_assert_equal_i(0, health_service_peek_current_activities());
 
   // Start on known boundary
-  struct tm start_tm = {
+  struct pbl_tm start_tm = {
     // Jan 1, 2015, 5am
     .tm_hour = 5,
     .tm_mday = 1,
     .tm_mon = 0,
     .tm_year = 115
   };
-  time_t utc_sec = mktime(&start_tm);
+  time_t utc_sec = pbl_mktime(&start_tm);
   rtc_set_time(utc_sec);
 
   // Add a Sleep session
@@ -2715,14 +2715,14 @@ void test_activity__activity_sessions_ongoing_multiple(void) {
   cl_assert_equal_i(0, health_service_peek_current_activities());
 
   // Start on known boundary
-  struct tm start_tm = {
+  struct pbl_tm start_tm = {
     // Jan 1, 2015, 5am
     .tm_hour = 5,
     .tm_mday = 1,
     .tm_mon = 0,
     .tm_year = 115
   };
-  time_t utc_sec = mktime(&start_tm);
+  time_t utc_sec = pbl_mktime(&start_tm);
   rtc_set_time(utc_sec);
 
   const time_t time_elapsed = (20 * PBL_SEC_PER_MIN);

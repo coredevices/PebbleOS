@@ -991,8 +991,8 @@ static void prv_postpone_later_today(ActionMenu *action_menu,
   // 2 hours from time of creation otherwise
 
   time_t utc_sec = rtc_get_time();
-  struct tm local_tm;
-  localtime_r(&utc_sec, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&utc_sec, &local_tm);
 
   if (local_tm.tm_hour < 10) {
     local_tm.tm_hour = 12;
@@ -1006,7 +1006,7 @@ static void prv_postpone_later_today(ActionMenu *action_menu,
     local_tm.tm_hour += 2;
     local_tm.tm_sec = 0;
   }
-  time_t new_time = mktime(&local_tm);
+  time_t new_time = pbl_mktime(&local_tm);
 
   prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
 }
@@ -1019,12 +1019,12 @@ static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem 
 
   // The new time is 9am the following day
   time_t tomorrow_utc = rtc_get_time() + PBL_SEC_PER_DAY;
-  struct tm local_tm;
-  localtime_r(&tomorrow_utc, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&tomorrow_utc, &local_tm);
   local_tm.tm_hour = 9;
   local_tm.tm_min = 0;
   local_tm.tm_sec = 0;
-  time_t new_time = mktime(&local_tm);
+  time_t new_time = pbl_mktime(&local_tm);
 
   prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
 }
@@ -1032,8 +1032,8 @@ static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem 
 static ActionMenuLevel *prv_create_postpone_level(TimelineItemAction *action,
                                                   ActionMenuLevel *root_level) {
   time_t utc_sec = rtc_get_time();
-  struct tm local_tm;
-  localtime_r(&utc_sec, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&utc_sec, &local_tm);
 
   // Only show the "later today" option if it is before 8pm
   const bool show_later_today = local_tm.tm_hour >= 20 ? false : true;

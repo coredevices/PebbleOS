@@ -22,7 +22,7 @@ static TimezoneInfo s_tzinfo = {{0}};
 // TODO: Unused right now
 void rtc_init(void);
 void rtc_init_timers(void);
-void rtc_set_time_tm(struct tm* time_tm);
+void rtc_set_time_tm(struct pbl_tm* time_tm);
 
 
 void rtc_next_tick_alarm_init(void);
@@ -43,10 +43,10 @@ const char *rtc_get_time_string(char *buffer) {
   return NULL;
 }
 
-void rtc_get_time_tm(struct tm *time_tm) {
+void rtc_get_time_tm(struct pbl_tm *time_tm) {
   if (time_tm) {
     time_t temp = rtc_get_time();
-    gmtime_r(&temp, time_tm);
+    pbl_gmtime_r(&temp, time_tm);
   }
 }
 
@@ -71,7 +71,7 @@ void rtc_timezone_clear(void) {
   memset(&s_tzinfo, 0, sizeof(s_tzinfo));
 }
 
-bool rtc_sanitize_struct_tm(struct tm *t) {
+bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
   return false;
 }
 

@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#include <pbl/util/time.h>
+
 /**
  * @defgroup services_clock Clock
  * @ingroup services
@@ -100,7 +102,7 @@ void clock_hourly_chime_arm(void);
  *
  * @param[out] time_tm Current local time.
  */
-void clock_get_time_tm(struct tm *time_tm);
+void clock_get_time_tm(struct pbl_tm *time_tm);
 
 /**
  * @ingroup services_clock
@@ -363,7 +365,7 @@ void clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t ti
  * @param[out] buffer Output buffer, at least @ref TIME_STRING_DATE_LENGTH bytes.
  * @param buf_size Size of @p buffer.
  * @param timestamp Time to format.
- * @return Length of the formatted string, as returned by strftime().
+ * @return Length of the formatted string, as returned by pbl_strftime_r().
  */
 size_t clock_get_date(char *buffer, int buf_size, time_t timestamp);
 
@@ -371,14 +373,14 @@ size_t clock_get_date(char *buffer, int buf_size, time_t timestamp);
  * @ingroup services_clock
  * @brief Same as clock_get_date(), from a broken-down time.
  *
- * Avoids a localtime_r() round trip in tick handlers, which already get a @c struct @c tm.
+ * Avoids a pbl_localtime_r() round trip in tick handlers, which already get a @c struct @c pbl_tm.
  *
  * @param[out] buffer Output buffer, at least @ref TIME_STRING_DATE_LENGTH bytes.
  * @param buf_size Size of @p buffer.
  * @param time_tm Local time to format.
- * @return Length of the formatted string, as returned by strftime().
+ * @return Length of the formatted string, as returned by pbl_strftime_r().
  */
-size_t clock_get_date_tm(char *buffer, int buf_size, const struct tm *time_tm);
+size_t clock_get_date_tm(char *buffer, int buf_size, const struct pbl_tm *time_tm);
 
 /**
  * @ingroup services_clock
@@ -387,7 +389,7 @@ size_t clock_get_date_tm(char *buffer, int buf_size, const struct tm *time_tm);
  * @param[out] buffer Output buffer, at least @ref TIME_STRING_DAY_DATE_LENGTH bytes.
  * @param buf_size Size of @p buffer.
  * @param timestamp Time to format.
- * @return Length of the formatted string, as returned by strftime().
+ * @return Length of the formatted string, as returned by pbl_strftime_r().
  */
 size_t clock_get_day_date(char *buffer, int buf_size, time_t timestamp);
 

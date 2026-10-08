@@ -310,10 +310,10 @@ size_t health_graph_format_weekday_prefix(HealthGraphCard *graph_card, char *buf
     strncat(buffer, i18n_get(": ", graph_card), buffer_size - pos - 1);
     return strlen(buffer);
   } else {
-    struct tm local_tm = (struct tm){
+    struct pbl_tm local_tm = (struct pbl_tm){
       .tm_wday = positive_modulo(graph_card->selection, PBL_DAY_PER_WEEK),
     };
-    return strftime(buffer, buffer_size, i18n_get("%a: ", graph_card), &local_tm);
+    return pbl_strftime_r(buffer, buffer_size, i18n_get("%a: ", graph_card), &local_tm);
   }
 }
 

@@ -11,7 +11,7 @@ void rtc_init(void) {
 void rtc_init_timers(void) {
 }
 
-bool rtc_sanitize_struct_tm(struct tm *t) {
+bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
   return false;
 }
 
@@ -26,11 +26,11 @@ time_t rtc_get_time(void) {
   return 0;
 }
 
-// Wrappers for the above functions that take struct tm instead of time_t
-void rtc_set_time_tm(struct tm *time_tm) {
+// Wrappers for the above functions that take struct pbl_tm instead of time_t
+void rtc_set_time_tm(struct pbl_tm *time_tm) {
 }
 
-void rtc_get_time_tm(struct tm *time_tm) {
+void rtc_get_time_tm(struct pbl_tm *time_tm) {
 }
 
 void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {

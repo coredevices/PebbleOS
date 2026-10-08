@@ -35,7 +35,7 @@
 
 static GContext s_ctx;
 
-void clock_get_time_tm(struct tm *time_tm) {
+void clock_get_time_tm(struct pbl_tm *time_tm) {
   rtc_get_time_tm(time_tm);
 }
 

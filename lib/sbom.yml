@@ -5,7 +5,7 @@
 
 components:
   - name: egnite-mktime
-    path: c/time/mktime.c
+    paths: [util/mktime.c, util/mktime.LICENSE]
     supplier: egnite Software GmbH
     description: mktime() from Nut/OS
     license: BSD-3-Clause

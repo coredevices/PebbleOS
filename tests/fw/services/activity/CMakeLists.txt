@@ -7,8 +7,6 @@ pbl_clar_test(test_activity
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     fw/services/regular_timer/service.c
     fw/services/activity/activity.c
     fw/services/activity/activity_metrics.c
@@ -25,6 +23,8 @@ pbl_clar_test(test_activity
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   DEFINES DUMA_DISABLED CAPABILITY_HAS_HEALTH_TRACKING=1 CONFIG_HRM CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES=25
   OVERRIDES dummy_board
 )
@@ -32,8 +32,6 @@ pbl_clar_test(test_activity
 pbl_clar_test(test_activity_insights
   SOURCES
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     fw/services/activity/activity_insights.c
     fw/services/activity/insights_settings.c
     fw/services/timeline/attribute.c
@@ -44,6 +42,8 @@ pbl_clar_test(test_activity_insights
     tests/fakes/fake_settings_file.c
     tests/fakes/fake_kernel_services_notifications.c
     tests/fakes/fake_rtc.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   OVERRIDES dummy_board
 )
 
@@ -66,8 +66,6 @@ pbl_clar_test(test_activity_algorithm_kraepelin
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
-    lib/c/time/mktime.c
     fw/services/regular_timer/service.c
     fw/services/activity/kraepelin/activity_algorithm_kraepelin.c
     fw/services/filesystem/flash_translation.c

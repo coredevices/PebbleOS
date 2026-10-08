@@ -52,7 +52,7 @@ void test_clock_time__utc_to_local(void) {
 }
 
 void test_clock_time__timezone_abbr(void) {
-  char abbr[TZ_LEN];
+  char abbr[PBL_TZ_LEN];
   time_get_timezone_abbr(abbr, SUMMER_UTC);
   cl_assert_equal_s(abbr, "PDT");
   time_get_timezone_abbr(abbr, WINTER_UTC);
@@ -67,7 +67,7 @@ void test_clock_time__uk_abbr(void) {
   };
   time_util_update_timezone(&tz);
 
-  char abbr[TZ_LEN];
+  char abbr[PBL_TZ_LEN];
   time_get_timezone_abbr(abbr, SUMMER_UTC);
   cl_assert_equal_s(abbr, "BST");
   time_get_timezone_abbr(abbr, WINTER_UTC);
@@ -89,8 +89,8 @@ void test_clock_time__lord_howe_half_hour_dst(void) {
 
 void test_clock_time__localtime(void) {
   const time_t t = SUMMER_UTC;
-  struct tm tm;
-  cl_assert(localtime_r(&t, &tm) == &tm);
+  struct pbl_tm tm;
+  cl_assert(pbl_localtime_r(&t, &tm) == &tm);
   cl_assert_equal_i(tm.tm_year, 126);
   cl_assert_equal_i(tm.tm_mon, 6);
   cl_assert_equal_i(tm.tm_mday, 1);

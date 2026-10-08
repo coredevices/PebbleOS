@@ -25,7 +25,6 @@ pbl_clar_test(test_ancs_pebble_actions
     fw/services/timeline/timeline_actions.c
     fw/kernel/rand.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_spi_flash.c
   OVERRIDES dummy_board
@@ -41,6 +40,5 @@ pbl_clar_test(test_timeline_actions
     fw/services/timeline/timeline.c
     fw/services/timeline/timeline_actions.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
   OVERRIDES dummy_board
 )

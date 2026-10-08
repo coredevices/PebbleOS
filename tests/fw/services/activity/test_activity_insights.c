@@ -44,7 +44,7 @@ bool activity_is_initialized(void) {
 #include <fake_settings_file.h>
 
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
-static struct tm s_init_time_tm = {
+static struct pbl_tm s_init_time_tm = {
   // Thursday, Jan 1, 2015, 10:00am
   .tm_hour = 10,
   .tm_mday = 1,
@@ -373,9 +373,9 @@ void notification_storage_store(TimelineItem *notification) {
 }
 
 // Helpers
-static void prv_set_time(const struct tm *input) {
-  struct tm time_tm = *input;
-  time_t utc_sec = mktime(&time_tm);
+static void prv_set_time(const struct pbl_tm *input) {
+  struct pbl_tm time_tm = *input;
+  time_t utc_sec = pbl_mktime(&time_tm);
   rtc_set_time(utc_sec);
 
   s_activity_activation_delay_insight_bitmask = 0;
@@ -648,7 +648,7 @@ void test_activity_insights__sleep_summary(void) {
   prv_set_sleep_history_avg();
 
   // Let's start at 11:30pm
-  struct tm start_tm = {
+  struct pbl_tm start_tm = {
     // Thursday, Jan 1, 2015, 11:30pm
     .tm_hour = 23,
     .tm_min = 30,
@@ -821,7 +821,7 @@ void test_activity_insights__sleep_summary_no_history(void) {
 // the windows that used to trigger the day 1 / day 4 / day 10 nags produces no ANCS
 // notifications.
 void test_activity_insights__activation_delay_insights_time_trigger(void) {
-  time_t now = mktime(&s_init_time_tm);
+  time_t now = pbl_mktime(&s_init_time_tm);
   prv_set_activation_time(now);
 
   activity_insights_process_minute_data(now);
@@ -859,7 +859,7 @@ void test_activity_insights__activation_delay_insights_time_trigger(void) {
 // See the note above: the activation-delay nag was removed in aaf2f45f3, so the 15-minute
 // retry window that used to fire the day 1 nag now produces no notification either.
 void test_activity_insights__activation_delay_insights_fifteen_interval_trigger(void) {
-  time_t now = mktime(&s_init_time_tm);
+  time_t now = pbl_mktime(&s_init_time_tm);
   prv_set_activation_time(now);
 
   activity_insights_process_minute_data(now);

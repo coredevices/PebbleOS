@@ -70,7 +70,7 @@ static uint8_t s_alg_next_orientation;
 static uint8_t s_alg_next_light;
 static bool s_alg_next_plugged_in;
 
-static struct tm s_start_time_tm = {.tm_hour = 17, .tm_mday = 1, .tm_mon = 0, .tm_year = 115};
+static struct pbl_tm s_start_time_tm = {.tm_hour = 17, .tm_mday = 1, .tm_mon = 0, .tm_year = 115};
 
 // ============================================================================================
 // Misc stubs
@@ -395,7 +395,7 @@ static void prv_feed_minute_data(uint32_t num_minutes, AlgMinuteDLSSample *minut
 // =============================================================================================
 // Start of unit tests
 void test_activity_algorithm_kraepelin__initialize(void) {
-  time_t utc_sec = mktime(&s_start_time_tm);
+  time_t utc_sec = pbl_mktime(&s_start_time_tm);
   fake_rtc_init(100 /*initial_ticks*/, utc_sec);
 
   fake_spi_flash_init(0, 0x1000000);

@@ -110,14 +110,14 @@ pbl_clar_test(test_timeline_list_view
     fw/services/timeline/timeline_layout.c
     fw/services/timeline/timeline_resources.c
     fw/shell/system_theme.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_settings_file.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     tests/fixtures/screen_grid.c
     tests/stubs/stubs_evented_timer.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -233,13 +233,13 @@ pbl_clar_test(test_timeline_no_events
     fw/services/timeline/timeline_layout.c
     fw/services/timeline/timeline_resources.c
     fw/shell/system_theme.c
-    lib/c/time/mktime.c
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_settings_file.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     tests/stubs/stubs_evented_timer.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

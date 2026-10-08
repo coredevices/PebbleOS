@@ -295,7 +295,7 @@ static int prv_future_past_direction(int **dest_arr, const int *curr_arr) {
 
 // Increase the day in `cron_tm` to fit into the wday set in `cron`.
 // This doesn't take mday into account because that's way too hard and we won't need it.
-static bool prv_adjust_for_wday_spec(const struct pbl_cron_job *cron, struct tm *cron_tm) {
+static bool prv_adjust_for_wday_spec(const struct pbl_cron_job *cron, struct pbl_tm *cron_tm) {
   // If we're allowing any wday, we're not adjusting.
   if (cron->wday == PBL_CRON_WDAY_ANY || cron->wday == 0) {
     return false;
@@ -305,8 +305,8 @@ static bool prv_adjust_for_wday_spec(const struct pbl_cron_job *cron, struct tm 
   bool adjusted = false;
 
   // We need to update cron_tm's tm_wday for proper checking.
-  cron_tm->tm_mday += 1; // Adjustment because struct tm has mday 1-indexed for whatever reason
-  mktime(cron_tm);
+  cron_tm->tm_mday += 1; // Adjustment because struct pbl_tm has mday 1-indexed for whatever reason
+  pbl_mktime(cron_tm);
   cron_tm->tm_mday -= 1;
   // We have 1 week to find a fitting date
   for (int l = 0; l < PBL_DAY_PER_WEEK; l++) {
@@ -322,9 +322,9 @@ static bool prv_adjust_for_wday_spec(const struct pbl_cron_job *cron, struct tm 
 }
 
 static time_t prv_get_execute_time_from_epoch(const struct pbl_cron_job *job, time_t local_epoch) {
-  struct tm current_tm;
-  // We work off of each element, so we need a struct tm.
-  localtime_r(&local_epoch, &current_tm);
+  struct pbl_tm current_tm;
+  // We work off of each element, so we need a struct pbl_tm.
+  pbl_localtime_r(&local_epoch, &current_tm);
 
   // Adjust to be zero-indexed
   current_tm.tm_mday -= 1;
@@ -336,7 +336,7 @@ static time_t prv_get_execute_time_from_epoch(const struct pbl_cron_job *job, ti
     current_tm.tm_sec = 1;
   }
   // Cron tm is based on the current tm
-  struct tm cron_tm = current_tm;
+  struct pbl_tm cron_tm = current_tm;
   // Don't listen to this stuff (yet)
   cron_tm.tm_gmtoff = 0;
   cron_tm.tm_isdst = 0;
@@ -442,7 +442,7 @@ static time_t prv_get_execute_time_from_epoch(const struct pbl_cron_job *job, ti
   // Decide the DSTny (Adjust for DST transitions)
   cron_tm.tm_gmtoff = time_get_gmtoffset();
   cron_tm.tm_isdst = 0; // We'll do the DST adjust ourselves
-  time_t t = mktime(&cron_tm);
+  time_t t = pbl_mktime(&cron_tm);
 
   // Apply offset seconds
   t += job->offset_seconds;

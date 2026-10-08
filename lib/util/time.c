@@ -46,7 +46,7 @@ int pbl_time_minute_of_day_adjust(int minute, int delta) {
   return minute;
 }
 
-void pbl_time_breakdown(time_t t, struct tm *tm) {
+void pbl_time_breakdown(time_t t, struct pbl_tm *tm) {
   int32_t days = t / PBL_SEC_PER_DAY;
   int32_t rem = t % PBL_SEC_PER_DAY;
   while (rem < 0) {

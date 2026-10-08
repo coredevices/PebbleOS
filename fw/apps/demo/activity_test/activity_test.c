@@ -714,12 +714,12 @@ static void prv_test_activity_summary(void *context) {
   activity_prefs_activity_insights_set_enabled(true);
 
   // Set to the trigger time
-  struct tm time_tm = {};
+  struct pbl_tm time_tm = {};
   const time_t now = rtc_get_time();
-  localtime_r(&now, &time_tm);
+  pbl_localtime_r(&now, &time_tm);
   time_tm.tm_hour = 20;
   time_tm.tm_min = 25;
-  rtc_set_time(mktime(&time_tm));
+  rtc_set_time(pbl_mktime(&time_tm));
 
   // Set the step history
   activity_test_set_steps_history();

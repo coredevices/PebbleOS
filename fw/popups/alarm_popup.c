@@ -355,13 +355,13 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 
   Dialog *dialog = actionable_dialog_get_dialog(s_alarm_popup_data->alarm_popup);
   char display_time[16];
-  struct tm alarm_tm;
+  struct pbl_tm alarm_tm;
   const time_t alarm_time = event->alarm_time;
-  localtime_r(&alarm_time, &alarm_tm);
+  pbl_localtime_r(&alarm_time, &alarm_tm);
   if (clock_is_24h_style()) {
-    strftime(display_time, 16, "%H:%M", &alarm_tm);
+    pbl_strftime_r(display_time, 16, "%H:%M", &alarm_tm);
   } else {
-    strftime(display_time, 16, "%I:%M %p", &alarm_tm);
+    pbl_strftime_r(display_time, 16, "%I:%M %p", &alarm_tm);
   }
   dialog_set_text(dialog, display_time);
   dialog_set_icon(dialog, RESOURCE_ID_ALARM_CLOCK_LARGE);

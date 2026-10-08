@@ -262,7 +262,7 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
   prv_timeline_remove_alarm(file, alarm->id);
 
   // We allocate some larger variables on the heap to reduce stack usage
-  struct tm *local_alarm_time = kernel_malloc_check(sizeof(struct tm));
+  struct pbl_tm *local_alarm_time = kernel_malloc_check(sizeof(struct pbl_tm));
   uint8_t *settings_file_buffer = kernel_malloc_check(ALARM_ENTRY_SIZE);
   AppInstallEntry *entry = kernel_malloc_check(sizeof(AppInstallEntry));
   if (!app_install_get_entry_for_install_id(APP_ID_ALARMS, entry)) {
@@ -276,7 +276,7 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
   for (int i = 0; alarm_time <= current_time + PBL_SEC_PER_DAY * 3; i++) {
     if (last_alarm != alarm_time) {
       last_alarm = alarm_time;
-      localtime_r(&alarm_time, local_alarm_time);
+      pbl_localtime_r(&alarm_time, local_alarm_time);
       if (alarm->config.scheduled_days[local_alarm_time->tm_wday]) {
         Uuid *pinid = (Uuid *)&settings_file_buffer[num_pin_adds * UUID_SIZE];
         status_t rv = prv_add_pin(alarm->id, &alarm->config, alarm_time, pinid);
@@ -652,9 +652,9 @@ static AlarmId prv_get_next_free_alarm_id(SettingsFile *file) {
 // ----------------------------------------------------------------------------------------------
 static int prv_get_day_for_just_once_alarm(int hour, int minute) {
   // Figure out what day the alarm should happen
-  struct tm local_time;
+  struct pbl_tm local_time;
   const time_t current_time = rtc_get_time();
-  localtime_r(&current_time, &local_time);
+  pbl_localtime_r(&current_time, &local_time);
 
   if (hour < local_time.tm_hour || (hour == local_time.tm_hour && minute <= local_time.tm_min)) {
     // The time is before or equal to the current time. Schedule the alarm for tomorrow
@@ -1259,8 +1259,8 @@ void alarm_handle_clock_change(void) {
         // Also check if current time is within the smart alarm window past the deadline
         // This handles cases where counter < 28 but we're legitimately past the alarm time
         time_t now = rtc_get_time();
-        struct tm now_tm;
-        localtime_r(&now, &now_tm);
+        struct pbl_tm now_tm;
+        pbl_localtime_r(&now, &now_tm);
         int current_minutes = now_tm.tm_hour * 60 + now_tm.tm_min;
         int alarm_minutes =
             s_most_recent_alarm_config.hour * 60 + s_most_recent_alarm_config.minute;

@@ -118,9 +118,9 @@ static void prv_update_glance_for_next_alarm(LauncherAppGlanceAlarms *alarms_gla
     if (!is_alarm_for_today) {
       // Get a string for the abbreviated day of the week in the user's locale
       char day_buffer[TIME_STRING_REQUIRED_LENGTH] = {};
-      struct tm alarm_time;
-      localtime_r(&alarm_time_epoch, &alarm_time);
-      strftime(day_buffer, sizeof(day_buffer), "%a", &alarm_time);
+      struct pbl_tm alarm_time;
+      pbl_localtime_r(&alarm_time_epoch, &alarm_time);
+      pbl_strftime_r(day_buffer, sizeof(day_buffer), "%a", &alarm_time);
 
       snprintf(alarms_glance->subtitle, alarm_subtitle_size, "%s, %s", day_buffer, time_buffer);
     } else {

@@ -361,7 +361,7 @@ static void prv_run_component_display(AppData *data) {
             temp_c, temp_c_frac, comp_detail);
 }
 
-static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   switch (data->state) {

@@ -85,6 +85,9 @@ pbl_clar_test(test_weather_app_layout
     fw/services/timeline/timeline_resources.c
     fw/apps/system/weather/weather_types.c
     tests/fixtures/resources/timeline_resource_table.auto.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
+    fw/services/clock/time.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

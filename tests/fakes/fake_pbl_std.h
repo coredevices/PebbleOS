@@ -4,18 +4,18 @@
 #pragma once
 #include <time.h>
 
-struct tm *pbl_override_localtime(const time_t *timep) {
-  static struct tm local_tm;
-  localtime_r(timep, &local_tm);
+struct pbl_tm *pbl_override_localtime(const time_t *timep) {
+  static struct pbl_tm local_tm;
+  pbl_localtime_r(timep, &local_tm);
   return &local_tm;
 }
 
-struct tm *pbl_override_gmtime(const time_t *timep) {
-  static struct tm local_tm;
-  gmtime_r(timep, &local_tm);
+struct pbl_tm *pbl_override_gmtime(const time_t *timep) {
+  static struct pbl_tm local_tm;
+  pbl_gmtime_r(timep, &local_tm);
   return &local_tm;
 }
 
-time_t pbl_override_mktime(struct tm *tb) {
-  return mktime(tb);
+time_t pbl_override_mktime(struct pbl_tm *tb) {
+  return pbl_mktime(tb);
 }

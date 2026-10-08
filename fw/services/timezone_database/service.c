@@ -97,9 +97,9 @@ bool timezone_database_load_region_info(uint16_t region_id, TimezoneInfo *tz_inf
 
   //! Struct for reading data from a raw database of timezone information
   struct PBL_PACKED {
-    int16_t gmt_offset_minutes; //!< timezone offset from UTC time (in minutes)
-    char tz_abbr[TZ_LEN - 1];   //!< timezone abbreviation (without terminating nul)
-    int8_t dst_id;              //!< daylight savings time index identifier
+    int16_t gmt_offset_minutes;   //!< timezone offset from UTC time (in minutes)
+    char tz_abbr[PBL_TZ_LEN - 1]; //!< timezone abbreviation (without terminating nul)
+    int8_t dst_id;                //!< daylight savings time index identifier
   } tz_data;
 
   // Load the timezone information for the region_id, excluding the country + city_name itself

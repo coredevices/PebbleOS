@@ -41,7 +41,7 @@ typedef struct HealthAppData {
 //! Tick timer service callback
 //! @param tick_time Pointer to time structure
 //! @param units_changed The time units changed
-static void prv_tick_timer_handler(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_tick_timer_handler(struct pbl_tm *tick_time, TimeUnits units_changed) {
   HealthAppData *health_app_data = app_state_get_user_data();
   health_data_update_step_derived_metrics(health_app_data->health_data);
   health_card_view_mark_dirty(health_app_data->health_card_view);

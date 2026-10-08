@@ -9,6 +9,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
@@ -33,9 +34,9 @@ PBL_WEAK bool clock_is_24h_style() {
 }
 
 static size_t prv_format_time(char *buffer, int buf_size, const char *format, time_t timestamp) {
-  struct tm time_tm;
-  localtime_r(&timestamp, &time_tm);
-  const size_t ret_val = strftime(buffer, buf_size, i18n_get(format, buffer), &time_tm);
+  struct pbl_tm time_tm;
+  pbl_localtime_r(&timestamp, &time_tm);
+  const size_t ret_val = pbl_strftime_r(buffer, buf_size, i18n_get(format, buffer), &time_tm);
   i18n_free(format, buffer);
   return ret_val;
 }
@@ -83,8 +84,8 @@ size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minu
 }
 
 size_t clock_copy_time_string_timestamp(char *buffer, uint8_t size, time_t timestamp) {
-  struct tm time;
-  localtime_r(&timestamp, &time);
+  struct pbl_tm time;
+  pbl_localtime_r(&timestamp, &time);
   return clock_format_time(buffer, size, time.tm_hour, time.tm_min, true);
 }
 
