@@ -25,6 +25,11 @@
 // also takes a tighter ratio -- see WEATHER_APP_LAYOUT_DISC_RATIO_NUM.
 #define WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS PBL_ROUND
 
+// Widest int16_t temperature followed by a UTF-8 degree sign (U+00B0)
+#define WEATHER_TEMP_STR_MAX "-32768\xC2\xB0"
+
+#define WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH (2 * (sizeof(WEATHER_TEMP_STR_MAX) - 1) + sizeof(" / "))
+
 typedef struct WeatherAppLayout {
   Layer *root_layer;
   Layer *content_layer;
@@ -84,12 +89,12 @@ typedef struct WeatherAppLayout {
     // updates)
     char top_label[24];
     char top_temp[15];
-    char top_highlow[15];
+    char top_highlow[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH];
     char top_uv[12];     // UV bar numeral
     char top_phrase[32]; // condition line
     char top_desc[128];  // forecast description (warning/wind/precip)
     char bot_label[24];
-    char bot_highlow[15];
+    char bot_highlow[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH];
     bool bot_valid;
     AnimationProgress progress;
     bool dir_down;

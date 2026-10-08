@@ -324,15 +324,11 @@ static void prv_move_day_icons_to_content(WeatherAppLayout *layout) {
 #endif
 
 // One hi/lo formatter for both styles — spaced " / " (classic) and tight "/"
-// (newspaper footer). Per-side scratch keeps output byte-identical across all
-// four known/unknown combinations (char[12] holds "-32768°" with room).
-// snprintf truncation IS the intended bound here (exactly the old per-branch
-// behavior); GCC's format-truncation heuristic can't see the value ranges.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation"
-static void prv_fill_high_low_buffer(int high, int low, bool tight, char *buffer,
+// (newspaper footer).
+static void prv_fill_high_low_buffer(int16_t high, int16_t low, bool tight, char *buffer,
                                      size_t buffer_size) {
-  char hs[12], ls[12];
+  char hs[sizeof(WEATHER_TEMP_STR_MAX)];
+  char ls[sizeof(WEATHER_TEMP_STR_MAX)];
   if (high == WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP) {
     snprintf(hs, sizeof(hs), "--\xC2\xB0");
   } else {
@@ -345,7 +341,6 @@ static void prv_fill_high_low_buffer(int high, int low, bool tight, char *buffer
   }
   snprintf(buffer, buffer_size, tight ? "%s/%s" : "%s / %s", hs, ls);
 }
-#pragma GCC diagnostic pop
 #define prv_fill_high_low_temp_buffer(h, l, b, n) \
   prv_fill_high_low_buffer((h), (l), false, (b), (n))
 
@@ -1116,7 +1111,7 @@ static void prv_draw_top_half_text(const WeatherAppLayout *layout, GPoint *curre
   const WeatherLocationForecast *forecast = layout->forecast;
 
   char temp_buffer[15] = {0};
-  char highlow_buffer[15] = {0};
+  char highlow_buffer[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH] = {0};
   char desc_buffer[128] = {0};
   char uv_buffer[12] = {0};
   prv_build_forecast_desc(forecast, layout, desc_buffer, sizeof(desc_buffer));
@@ -1207,7 +1202,7 @@ static void prv_draw_bottom_half_text(const WeatherAppLayout *layout, GPoint *cu
   const WeatherLocationForecast *next = layout->next_forecast;
   if (!next)
     return;
-  char text_buffer[15] = {0};
+  char text_buffer[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH] = {0};
   prv_fill_high_low_buffer(next->today_high, next->today_low, true /* tight on both shapes now */,
                            text_buffer, sizeof(text_buffer));
   prv_draw_bottom_rows(layout, current_offset, content_width, context,
