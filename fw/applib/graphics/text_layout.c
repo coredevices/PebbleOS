@@ -11,35 +11,33 @@
 //!      - The character iterator uses a UTF-8 iterator to advance through the
 //!        UTF-8 encoded unicode codepoints.
 
-#include "text.h"
-#include "text_layout_private.h"
-
 #include "arabic_shaping.h"
+#include "bidi.h"
 #include "graphics.h"
 #include "graphics_private.h"
 #include "gtypes.h"
-#include "bidi.h"
+#include "text.h"
+#include "text_layout_private.h"
 #include "text_render.h"
 #include "text_resources.h"
 #include "utf8.h"
 
-#include <applib/fonts/codepoint.h>
-#include <applib/fonts/fonts.h>
-#include <kernel/ui/kernel_ui.h>
-#include <process_state/app_state/app_state.h>
-#include <applib/applib_malloc.auto.h>
-#include <process_state/app_state/app_state.h>
+#include <limits.h>
+#include <stdint.h>
+
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/util/hash.h>
 #include <pbl/util/iterator.h>
 #include <pbl/util/math.h>
-
-#include <process_management/process_manager.h>
-
-#include <stdint.h>
-#include <limits.h>
 #include <pbl/util/testing.h>
+
+#include <applib/applib_malloc.auto.h>
+#include <applib/fonts/codepoint.h>
+#include <applib/fonts/fonts.h>
+#include <kernel/ui/kernel_ui.h>
+#include <process_management/process_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <system/passert.h>
 
 static bool prv_char_iter_next_start_of_word(Iterator *char_iter);
 

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 
 #include <board/board.h>
-#include <pbl/logging/logging.h>
-
-#include <stdio.h>
-#include <pbl/services/time.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

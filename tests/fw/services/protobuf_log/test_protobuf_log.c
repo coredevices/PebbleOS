@@ -1,37 +1,34 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include "protobuf_log_test_helpers.h"
-
-#include <pbl/services/protobuf_log/protobuf_log.h>
-#include <pbl/services/protobuf_log/protobuf_log_private.h>
-#include <pbl/services/protobuf_log/protobuf_log_test.h>
-#include <pbl/services/protobuf_log/protobuf_log_hr.h>
-#include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
-#include <pbl/services/activity/activity.h>
-
-#include <applib/data_logging.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/size.h>
-
-#include <stubs_passert.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_serial.h>
-
-#include <fake_rtc.h>
 
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/protobuf_log/protobuf_log.h>
+#include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
+#include <pbl/services/protobuf_log/protobuf_log_hr.h>
+#include <pbl/services/protobuf_log/protobuf_log_private.h>
+#include <pbl/services/protobuf_log/protobuf_log_test.h>
 #include <pbl/services/time.h>
+#include <pbl/util/size.h>
 #include <pbl/util/units.h>
+
+#include <applib/data_logging.h>
+#include <clar.h>
+#include <fake_rtc.h>
+#include <stubs_logging.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_serial.h>
 
 #define WRITE_TO_FILE 0
 

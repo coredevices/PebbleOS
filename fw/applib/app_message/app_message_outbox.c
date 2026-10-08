@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/applib_malloc.auto.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
+
 #include <applib/app_message/app_message_internal.h>
 #include <applib/app_outbox.h>
+#include <applib/applib_malloc.auto.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
 
 static void prv_outbox_prepare(AppMessageCtxOutbox *outbox);
 

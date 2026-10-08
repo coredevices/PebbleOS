@@ -1,15 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "event_service_client.h"
-#include <applib/applib_malloc.auto.h>
 #include "plugin_service.h"
-#include "plugin_service_private.h"
-#include <syscall/syscall.h>
 
+#include "event_service_client.h"
+#include "plugin_service_private.h"
+
+#include <pbl/logging/logging.h>
+
+#include <applib/applib_malloc.auto.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-#include <pbl/logging/logging.h>
+#include <syscall/syscall.h>
 #include <system/passert.h>
 
 // ---------------------------------------------------------------------------------------------------------------

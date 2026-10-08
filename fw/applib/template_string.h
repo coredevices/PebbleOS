@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
 #include <sys/types.h>
 
 //! Variables that change how a template string is evaluated

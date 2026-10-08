@@ -3,13 +3,13 @@
 
 #include "profiler.h"
 
-#include <system/passert.h>
+#include <inttypes.h>
+#include <stdio.h>
+
 #include <pbl/util/size.h>
 
 #include <cmsis_core.h>
-
-#include <inttypes.h>
-#include <stdio.h>
+#include <system/passert.h>
 
 #if defined(CONFIG_SHELL) && defined(CONFIG_PROFILER)
 #include <pbl/shell/shell.h>

@@ -1,21 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/audio_endpoint_private.h>
-
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/list.h>
 
+#include <clar.h>
+#include <fake_new_timer.h>
+#include <fake_session.h>
+#include <fake_system_task.h>
 #include <stubs_bt_lock.h>
 #include <stubs_hexdump.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
-#include <fake_session.h>
-#include <fake_system_task.h>
-#include <fake_new_timer.h>
 
 extern void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
                                                  size_t size);

@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/util/size.h>
+
 #include <applib/app.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
@@ -15,7 +17,6 @@
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/util/size.h>
 
 typedef enum {
   TestPattern_Crosshair,
@@ -226,6 +227,7 @@ const PebbleProcessMd *mfg_display_app_get_info(void) {
 
 #if defined(CONFIG_SHELL) && defined(CONFIG_MFG)
 #include <errno.h>
+
 #include <pbl/shell/shell.h>
 
 static void prv_change_pattern(void *data) {

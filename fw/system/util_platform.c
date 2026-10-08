@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <console/dbgserial.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
-
 #include <pbl/util/assert.h>
 #include <pbl/util/logging.h>
+
+#include <console/dbgserial.h>
+#include <system/passert.h>
 
 void util_log(const char *filename, int line, const char *string) {
   pbl_log(LOG_LEVEL_INFO, filename, line, "%s", string);

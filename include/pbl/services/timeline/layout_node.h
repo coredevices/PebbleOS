@@ -3,13 +3,14 @@
 
 #pragma once
 
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/layout_layer.h>
+#include <pbl/services/timeline/timeline_resources.h>
+
 #include <applib/graphics/text.h>
 #include <applib/ui/kino/kino_layer.h>
 #include <apps/system/timeline/text_node.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/timeline/attribute.h>
-#include <pbl/services/timeline/layout_layer.h>
-#include <pbl/services/timeline/timeline_resources.h>
 #include <shell/system_theme.h>
 
 /**

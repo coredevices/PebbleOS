@@ -3,11 +3,10 @@
 
 #include "ble_app_support.h"
 
-#include <comm/ble/gap_le_scan.h>
 #include <comm/ble/gap_le_connect.h>
+#include <comm/ble/gap_le_scan.h>
 #include <comm/ble/gatt_client_operations.h>
 #include <comm/ble/gatt_client_subscriptions.h>
-
 #include <process_state/app_state/app_state.h>
 
 //! @see ble_scan.c

@@ -5,10 +5,10 @@
 
 // Fakes
 /////////////
-#include <fake_system_task.h>
-#include <fake_regular_timer.h>
 #include <fake_blobdb.h>
 #include <fake_pbl_malloc.h>
+#include <fake_regular_timer.h>
+#include <fake_system_task.h>
 
 // Stubs
 /////////////
@@ -19,8 +19,8 @@
 // FW Includes
 ///////////////
 #include <pbl/services/blob_db/api.h>
-#include <pbl/services/blob_db/util.h>
 #include <pbl/services/blob_db/sync.h>
+#include <pbl/services/blob_db/util.h>
 #include <pbl/util/size.h>
 
 // Writebacks counter

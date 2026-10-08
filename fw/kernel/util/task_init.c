@@ -3,10 +3,10 @@
 
 #include "task_init.h"
 
+#include <stdlib.h>
+
 #include <pbl/drivers/rng.h>
 #include <pbl/drivers/rtc.h>
-
-#include <stdlib.h>
 
 void task_init(void) {
   uint32_t seed;

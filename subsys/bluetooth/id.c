@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/id.h>
-#include <system/passert.h>
 
 #include <host/ble_hs_id.h>
 #include <services/gap/ble_svc_gap.h>
+#include <system/passert.h>
 
 void pbl_bt_id_set_local_device_name(const char device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE]) {
   int rc = ble_svc_gap_device_name_set(device_name);

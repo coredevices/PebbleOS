@@ -1,20 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <kernel/events.h>
 #include <pbl/services/evented_timer.h>
-#include <kernel/pebble_tasks.h>
 
+#include <clar.h>
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
 #include <stubs_events.h>
 #include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_mutex.h>
+#include <stubs_passert.h>
 #include <stubs_reboot_reason.h>
 #include <stubs_syscall_internal.h>
-#include <fake_pbl_malloc.h>
-#include <fake_new_timer.h>
 
 // NOTE: This must match the definition of EventedTimer in kernel/services/evented_timer.c
 typedef struct EventedTimer {

@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/qr_code.h>
@@ -11,8 +13,6 @@
 #include <process_state/app_state/app_state.h>
 #include <services/bluetooth/bluetooth_ctl.h>
 #include <services/bluetooth/local_id.h>
-
-#include <string.h>
 
 typedef struct {
   Window window;

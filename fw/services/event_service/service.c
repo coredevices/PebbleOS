@@ -1,20 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/event_service.h>
+
 #include <applib/event_service_client.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/kernel/mutex.h>
-#include <pbl/services/event_service.h>
-#include <syscall/syscall_internal.h>
 #include <syscall/syscall.h>
-#include <pbl/logging/logging.h>
+#include <syscall/syscall_internal.h>
 #include <system/passert.h>
-
-#include <string.h>
 
 PBL_LOG_MODULE_DEFINE(service_event_service, CONFIG_SERVICE_EVENT_SERVICE_LOG_LEVEL);
 

@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <mfg/mfg_info.h>
 #include <pbl/drivers/flash.h>
+
 #include <flash_region/flash_region.h>
+#include <mfg/mfg_info.h>
 
 #define CURRENT_DATA_VERSION 0
 

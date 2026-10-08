@@ -4,13 +4,14 @@
 #include "battery_state_service.h"
 
 #include "event_service_client.h"
-#include <kernel/events.h>
-#include <pbl/services/event_service.h>
-#include <syscall/syscall.h>
-#include <system/passert.h>
 
+#include <pbl/services/event_service.h>
+
+#include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 // ----------------------------------------------------------------------------------------------------
 static BatteryStateServiceState *prv_get_state(PebbleTask task) {

@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <resource/resource.h>
-
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
+
+#include <resource/resource.h>
 
 ResAppNum sys_get_current_resource_num(void);
 

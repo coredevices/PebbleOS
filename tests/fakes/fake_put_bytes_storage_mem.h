@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include <pbl/services/put_bytes/put_bytes.h>
-#include <system/firmware_storage.h>
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/services/put_bytes/put_bytes.h>
+
+#include <system/firmware_storage.h>
 
 uint32_t fake_pb_storage_mem_get_max_size(PutBytesObjectType object_type);
 

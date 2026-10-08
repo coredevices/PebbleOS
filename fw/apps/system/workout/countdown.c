@@ -3,8 +3,8 @@
 
 #include "countdown.h"
 
-#include <applib/ui/ui.h>
 #include <applib/ui/kino/kino_layer.h>
+#include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 

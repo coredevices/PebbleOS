@@ -1,16 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/app_message/app_message_internal.h>
-#include <clar.h>
 #include <pbl/services/app_message/app_message_sender.h>
-#include <pbl/services/comm_session/session_internal.h>
+#include <pbl/services/app_outbox_service.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session.h>
-#include <process_management/app_install_manager.h>
-#include <pbl/services/app_outbox_service.h>
-#include <pbl/util/math.h>
+#include <pbl/services/comm_session/session_internal.h>
 #include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
+
+#include <applib/app_message/app_message_internal.h>
+#include <clar.h>
+#include <process_management/app_install_manager.h>
 
 extern const SessionSendJobImpl s_app_message_send_job_impl;
 extern void comm_session_send_queue_cleanup(CommSession *session);

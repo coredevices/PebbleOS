@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/event_service_client.h>
 #include "connection_service.h"
+
+#include <applib/event_service_client.h>
 
 typedef struct ConnectionServiceState {
   ConnectionHandlers handlers;

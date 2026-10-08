@@ -1,8 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/compositor_display.h>
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
 #include <applib/graphics/bitblt.h>
 #include <applib/graphics/framebuffer.h>
@@ -19,11 +22,8 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
 #include <system/profiler.h>
-#include <pbl/util/math.h>
-#include <pbl/util/testing.h>
 
 PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 

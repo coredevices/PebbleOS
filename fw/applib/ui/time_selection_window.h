@@ -5,11 +5,12 @@
 
 #include "date_time_selection_window_private.h"
 
+#include <pbl/services/clock.h>
+
 #include <applib/ui/selection_layer.h>
 #include <applib/ui/status_bar_layer.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <pbl/services/clock.h>
 
 #define TIME_SELECTION_WINDOW_MAX_RANGE_LENGTH 64
 

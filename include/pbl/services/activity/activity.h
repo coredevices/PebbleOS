@@ -6,11 +6,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <applib/accel_service_private.h>
-#include <applib/health_service.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
+
+#include <applib/accel_service_private.h>
+#include <applib/health_service.h>
 
 /**
  * @defgroup services_activity Activity

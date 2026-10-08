@@ -1,26 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/voice/transcription.h>
-#include <pbl/services/voice_endpoint.h>
-#include <pbl/services/audio_endpoint.h>
-
-#include <pbl/services/voice_endpoint_private.h>
-
-#include <fake_session.h>
-#include <fake_system_task.h>
-
-#include <stubs_bt_lock.h>
-#include <stubs_hexdump.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_rand_ptr.h>
-
 #include <stdlib.h>
 #include <string.h>
+
+#include <pbl/services/audio_endpoint.h>
+#include <pbl/services/voice/transcription.h>
+#include <pbl/services/voice_endpoint.h>
+#include <pbl/services/voice_endpoint_private.h>
+
+#include <clar.h>
+#include <fake_session.h>
+#include <fake_system_task.h>
+#include <stubs_bt_lock.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_rand_ptr.h>
 
 extern void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
                                                  size_t size);

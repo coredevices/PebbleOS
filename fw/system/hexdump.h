@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/util/hexdump.h>
-#include <pbl/logging/logging.h>
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/util/hexdump.h>
 
 void hexdump_log(int level, const uint8_t *data, size_t length);
 void hexdump_log_src(const char *src_filename, int src_line_number, int level, const uint8_t *data,

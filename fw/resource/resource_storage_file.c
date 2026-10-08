@@ -1,14 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "resource_storage_impl.h"
 #include "resource_storage_file.h"
 
-#include <kernel/util/sleep.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/logging/logging.h>
+#include "resource_storage_impl.h"
 
 #include <stdint.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/filesystem/pfs.h>
+
+#include <kernel/util/sleep.h>
 
 extern const FileResourceData g_file_resource_stores[];
 extern const uint32_t g_num_file_resource_stores;

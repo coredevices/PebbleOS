@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/ui/property_animation.h>
 #include <pbl/kernel/compiler.h>
+
+#include <applib/ui/property_animation.h>
 
 bool PBL_WEAK property_animation_from(PropertyAnimation *property_animation, void *from,
                                       size_t size, bool set) {

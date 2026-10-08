@@ -6,13 +6,14 @@
 
 #if defined(CONFIG_PBLBOOT) || defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 
+#include <string.h>
+
+#include <pbl/drivers/display/display.h>
+
 #include <board/display.h>
 #include <board/splash.h>
-#include <pbl/drivers/display/display.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/util/sleep.h>
-
-#include <string.h>
 
 // Platform-specific colors: PebbleOS uses ARGB2222 (GColor8), not raw RGB332
 #if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)

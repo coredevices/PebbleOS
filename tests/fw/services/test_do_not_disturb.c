@@ -1,25 +1,29 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/notifications/do_not_disturb.h>
-
-#include <applib/ui/action_toggle.h>
-#include <kernel/events.h>
-#include <resource/resource.h>
-#include <pbl/cron/cron.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/notifications/alerts_preferences_private.h>
-#include <pbl/services/settings/settings_file.h>
-
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/cron/cron.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/system_task.h>
+
+#include <applib/ui/action_toggle.h>
 #include <clar.h>
+#include <kernel/events.h>
+#include <resource/resource.h>
 
 // Stubs
+#include <pbl/util/units.h>
+
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
+#include <fake_spi_flash.h>
 #include <stubs_alerts.h>
 #include <stubs_analytics.h>
 #include <stubs_app_state.h>
@@ -39,12 +43,6 @@
 #include <stubs_vibe_score_info.h>
 #include <stubs_vibes.h>
 #include <stubs_window_manager.h>
-
-#include <fake_new_timer.h>
-#include <fake_pbl_malloc.h>
-#include <fake_rtc.h>
-#include <fake_spi_flash.h>
-#include <pbl/util/units.h>
 
 #define PREF_KEY_DND_MANUALLY_ENABLED "dndManuallyEnabled"
 

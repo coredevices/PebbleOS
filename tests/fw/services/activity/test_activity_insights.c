@@ -1,20 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/insights_settings.h>
 #include <pbl/services/filesystem/pfs.h>
-#include <pbl/kernel/compiler.h>
-
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <clar.h>
 
 // Stubs
+#include <pbl/services/time.h>
+#include <pbl/util/time.h>
+#include <pbl/util/units.h>
+
 #include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_app_state.h>
@@ -28,9 +32,6 @@
 #include <stubs_pebble_tasks.h>
 #include <stubs_rand_ptr.h>
 #include <stubs_system_task.h>
-#include <pbl/services/time.h>
-#include <pbl/util/time.h>
-#include <pbl/util/units.h>
 
 bool activity_is_initialized(void) {
   return true;

@@ -7,14 +7,15 @@
 
 // TODO: PBL-28902 Timeline card layouts integration tests
 
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/gpath.h>
-#include <applib/ui/status_bar_layer.h>
-#include <applib/ui/kino/kino_layer.h>
-#include <apps/system/timeline/text_node.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>
+
+#include <applib/graphics/gpath.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/kino/kino_layer.h>
+#include <applib/ui/status_bar_layer.h>
+#include <apps/system/timeline/text_node.h>
 
 /**
  * @defgroup services_timeline_timeline_layout Timeline layouts

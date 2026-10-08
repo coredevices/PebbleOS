@@ -4,8 +4,8 @@
 #include "menu_overflow.h"
 
 #include <applib/app.h>
-#include <applib/ui/ui.h>
 #include <applib/ui/menu_layer.h>
+#include <applib/ui/ui.h>
 
 static Window *window;
 static MenuLayer *menu_layer;

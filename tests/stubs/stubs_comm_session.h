@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/app_session_capabilities.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/comm_session/app_session_capabilities.h>
 
 void PBL_WEAK comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {
 }

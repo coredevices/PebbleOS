@@ -1,17 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <string.h>
 
 #include <pbl/services/time.h>
 #include <pbl/util/units.h>
 
+#include <clar.h>
 #include <fake_rtc.h>
-
 #include <stubs_logging.h>
 #include <stubs_passert.h>
-
-#include <string.h>
 
 // 2026-07-01 12:00:00 UTC
 #define SUMMER_UTC ((time_t)1782907200)

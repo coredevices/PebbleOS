@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/bluetooth/local_addr.h>
+#include <stdbool.h>
 
 #include <pbl/bluetooth/types.h>
-
-#include <stdbool.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_addr.h>
 
 #include <clar.h>
 

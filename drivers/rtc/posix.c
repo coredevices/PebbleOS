@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <string.h>
-#include <sys/time.h>
 
 #include <pbl/drivers/rtc.h>
-
 #include <pbl/services/time.h>
+
+#include <sys/time.h>
 
 // Wall time follows the host clock, plus whatever offset the firmware sets.
 

@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <shell/shell_event_loop.h>
+#include <pbl/services/idle_watchdog.h>
 
 #include <popups/bluetooth_pairing_ui.h>
-
-#include <pbl/services/idle_watchdog.h>
+#include <shell/shell_event_loop.h>
 
 void shell_event_loop_init(void) {
   prf_idle_watchdog_init();

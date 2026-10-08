@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/poll.h>
-
 #include "kernel.h"
+
+#include <pbl/kernel/poll.h>
 
 void pbl_poll_group_init(struct pbl_poll_group *g) {
   *g = (struct pbl_poll_group)PBL_POLL_GROUP_INITIALIZER;

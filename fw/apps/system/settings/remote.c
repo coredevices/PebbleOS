@@ -2,22 +2,24 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "remote.h"
+
 #include "bluetooth.h"
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/i18n/i18n.h>
+
 #include <applib/ui/action_menu_window_private.h>
-#include <applib/ui/text_layer.h>
-#include <applib/ui/ui.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/system_icons.h>
 #include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
 
 enum {

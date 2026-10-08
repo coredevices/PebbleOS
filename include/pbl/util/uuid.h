@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include <pbl/util/list.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
+#include <pbl/util/list.h>
 
 /**
  * @defgroup util_uuid UUID

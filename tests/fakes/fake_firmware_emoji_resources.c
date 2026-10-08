@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <resource/resource.h>
-#include <resource/resource_ids.auto.h>
+#include <stdio.h>
 
 #include <clar_asserts.h>
-
-#include <stdio.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 #define EMOJI_SUFFIX "~color.pbf"

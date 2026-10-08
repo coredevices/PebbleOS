@@ -4,19 +4,19 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <applib/accel_service.h>
-#include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
+#include <applib/accel_service.h>
 #include <clar.h>
+#include <system/passert.h>
 
 // Stubs
 #include <stubs_hexdump.h>
@@ -64,12 +64,13 @@ bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
   return s_hrm_activity_tracking_enabled;
 }
 
-#include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#include <dirent.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <time.h>
 
 extern char *strdup(const char *s);
 

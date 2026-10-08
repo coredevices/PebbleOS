@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/util/uuid.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/settings/settings_file.h>
-#include <pbl/kernel/mutex.h>
 #include <pbl/services/timeline/item.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_blob_db_timeline_item_storage Timeline item storage

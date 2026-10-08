@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <resource/timeline_resource_ids.auto.h>
-
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/gcolor_definitions.h>
 #include <pbl/services/weather/weather_types.h>
 #include <pbl/util/size.h>
+
+#include <applib/graphics/gcolor_definitions.h>
+#include <applib/graphics/gtypes.h>
+#include <resource/timeline_resource_ids.auto.h>
 
 // Do NOT add entries to the following arrays. See weather_type_tuples.def
 static const char *s_weather_type_names[] = {

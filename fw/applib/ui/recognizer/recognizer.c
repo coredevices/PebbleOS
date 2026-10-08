@@ -2,16 +2,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "recognizer.h"
+
 #include "recognizer_impl.h"
 #include "recognizer_list.h"
 #include "recognizer_manager.h"
 #include "recognizer_private.h"
 
-#include <applib/applib_malloc.auto.h>
-#include <system/passert.h>
+#include <stddef.h>
+
 #include <pbl/util/list.h>
 
-#include <stddef.h>
+#include <applib/applib_malloc.auto.h>
+#include <system/passert.h>
 
 _Static_assert(RECOGNIZER_INSTANCE_SIZE >= sizeof(Recognizer),
                "RECOGNIZER_INSTANCE_SIZE too small for Recognizer");

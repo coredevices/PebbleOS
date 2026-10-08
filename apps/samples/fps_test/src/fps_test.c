@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "test_bitmaps.h"
+
 #include <pebble.h>
 
 typedef struct AppData {

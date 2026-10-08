@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/services/app_outbox_service.h>
+
 #include <applib/app_outbox.h>
 #include <applib/event_service_client.h>
-#include <pbl/services/app_outbox_service.h>
 #include <clar.h>
 
 extern void app_outbox_service_deinit(void);
@@ -15,7 +16,6 @@ extern uint32_t app_outbox_service_max_message_length(AppOutboxServiceTag tag);
 
 #include <fake_kernel_malloc.h>
 #include <fake_pebble_tasks.h>
-
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>

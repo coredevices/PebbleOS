@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+
 #include <pbl/services/ecompass.h>
 #include <pbl/util/math.h>
 
@@ -9,8 +11,6 @@
 #include <stubs_logging.h>
 #include <stubs_pbl_malloc.h>
 #include <stubs_serial.h>
-
-#include <stdint.h>
 
 typedef struct {
   int16_t raw_samples[4][3];

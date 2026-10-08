@@ -1,20 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/settings/settings_file.h>
-#include <pbl/services/settings/settings_raw_iter.h>
-#include <system/hexdump.h>
-
-#include <clar.h>
-
-#include <pbl/services/filesystem/pfs.h>
-#include <flash_region/flash_region.h>
-
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/settings/settings_raw_iter.h>
+
+#include <clar.h>
+#include <flash_region/flash_region.h>
+#include <system/hexdump.h>
+
 // Stubs
 ////////////////////////////////////
+#include <fake_rtc.h>
+#include <fake_spi_flash.h>
 #include <stubs_analytics.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
@@ -27,8 +28,6 @@
 #include <stubs_sleep.h>
 #include <stubs_system_reset.h>
 #include <stubs_task_wdt.h>
-#include <fake_rtc.h>
-#include <fake_spi_flash.h>
 
 // Tests
 ////////////////////////////////////

@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <applib/app_glance.h>
 #include <pbl/drivers/rtc.h>
-#include <kernel/pbl_malloc.h>
-#include <resource/resource_ids.auto.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/uuid.h>
 
+#include <applib/app_glance.h>
+#include <clar.h>
+#include <kernel/pbl_malloc.h>
+#include <resource/resource_ids.auto.h>
+
 // Fakes
 ////////////////////////////////////////////////////////////////
 
-#include <fake_settings_file.h>
 #include <fake_events.h>
+#include <fake_settings_file.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////

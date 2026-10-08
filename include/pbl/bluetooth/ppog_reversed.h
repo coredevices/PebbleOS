@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
-
 #include <stdint.h>
+
+#include <pbl/bluetooth/types.h>
 
 /**
  * @defgroup bluetooth_ppog_reversed Reversed PPoGATT

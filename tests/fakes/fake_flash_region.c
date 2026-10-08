@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/flash.h>
-#include <flash_region/flash_region.h>
-
 #include <stdint.h>
+
+#include <pbl/drivers/flash.h>
+
+#include <flash_region/flash_region.h>
 
 static void prv_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t min_end,
                                     uint32_t max_end) {

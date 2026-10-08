@@ -1,12 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "transform.h"
-#include "scale_segmented.h"
 #include "unfold.h"
 
-#include <applib/applib_malloc.auto.h>
+#include "scale_segmented.h"
+#include "transform.h"
+
 #include <pbl/util/trig.h>
+
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gdraw_command_private.h>
 #include <syscall/syscall.h>
 

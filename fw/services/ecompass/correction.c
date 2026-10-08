@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/ecompass.h>
+#include <stdint.h>
 
-#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/ecompass.h>
 #include <pbl/util/math.h>
 
-#include <stdint.h>
+#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 

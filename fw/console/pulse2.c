@@ -3,38 +3,38 @@
 
 #ifdef CONFIG_PULSE_EVERYWHERE
 
-#include <pbl/kernel/irq.h>
-#include <pbl/kernel/sched.h>
 #include "pulse.h"
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse2_transport_impl.h"
 #include "pulse_internal.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <pbl/crc/crc.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/msgq.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/sched.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/mcu/interrupts.h>
+#include <pbl/task_wdt/task_wdt.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <console/cobs.h>
 #include <console/console_internal.h>
 #include <console/control_protocol.h>
 #include <console/control_protocol_impl.h>
 #include <console/dbgserial.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/task_wdt/task_wdt.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <pbl/mcu/interrupts.h>
-#include <pbl/kernel/mutex.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/crc/crc.h>
-#include <pbl/util/math.h>
-#include <pbl/util/byteorder.h>
-#include <pbl/util/size.h>
-
-#include <pbl/kernel/msgq.h>
-#include <pbl/kernel/thread.h>
-#include <pbl/kernel/sem.h>
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
 
 #define LCP_PROTOCOL_NUMBER (0xC021)
 

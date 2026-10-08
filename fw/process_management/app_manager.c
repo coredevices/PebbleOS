@@ -2,9 +2,20 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "app_manager.h"
+
 #include "process_loader.h"
 
 // Pebble stuff
+#include <pbl/kernel/mutex.h>
+#include <pbl/mcu/privilege.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/app_inbox_service.h>
+#include <pbl/services/app_outbox_service.h>
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
+#include <pbl/services/vibe_pattern.h>
+
 #include <applib/app_launch_reason.h>
 #include <applib/app_message/app_message_internal.h>
 #include <applib/fonts/fonts.h>
@@ -17,8 +28,6 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/util/segment.h>
 #include <kernel/util/task_init.h>
-#include <pbl/kernel/mutex.h>
-#include <pbl/mcu/privilege.h>
 #include <popups/health_tracking_ui.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
@@ -28,25 +37,19 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/services/compositor/compositor_transitions.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/light.h>
-#include <pbl/services/app_inbox_service.h>
-#include <pbl/services/app_outbox_service.h>
-#include <pbl/services/vibe_pattern.h>
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/speaker/speaker_service.h>
 #endif
+#include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
+
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
-#include <shell/system_shell.h>
 #include <shell/system_app_state_machine.h>
+#include <shell/system_shell.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
 
 // FreeRTOS stuff
 
@@ -54,12 +57,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <pbl/util/testing.h>
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
-#include <pbl/shell/shell.h>
-
 #include <errno.h>
+
+#include <pbl/shell/shell.h>
 #endif
 
 #define RETURN_CRASH_TIMEOUT_TICKS (60 * RTC_TICKS_HZ)

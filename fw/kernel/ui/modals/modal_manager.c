@@ -3,29 +3,29 @@
 
 #include "modal_manager.h"
 
+#include <pbl/kernel/sem.h>
+#include <pbl/services/compositor/compositor_transitions.h>
+
+#include <applib/touch_service.h>
+#include <applib/touch_service_private.h>
 #include <applib/ui/app_window_click_glue.h>
 #include <applib/ui/click_internal.h>
 #include <applib/ui/recognizer/recognizer_list.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
-#include <applib/touch_service.h>
-#include <applib/touch_service_private.h>
 #include <applib/ui/window.h>
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
 #include <applib/ui/window_stack_animation.h>
 #include <applib/ui/window_stack_private.h>
-#include <kernel/events.h>
 #include <kernel/event_loop.h>
+#include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/compositor/compositor_transitions.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
 #include <system/passert.h>
 #include <system/profiler.h>
-
-#include <pbl/kernel/sem.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>

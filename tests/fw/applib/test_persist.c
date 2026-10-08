@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/persist.h>
+
 #include <applib/persist.h>
+#include <clar.h>
 #include <flash_region/flash_region.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_md.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/persist.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
 
 // Stubs
 ////////////////////////////////////

@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/protocol.h>
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/services/comm_session/protocol.h>
 
 /**
  * @defgroup services_comm_session_session_receive_router Receive router

@@ -1,22 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
+#include <pbl/services/runlevel.h>
+
 #include <applib/app.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
-#include <applib/ui/window_private.h>
 #include <applib/ui/app_window_stack.h>
+#include <applib/ui/window_private.h>
 #include <board/board.h>
 #include <kernel/event_loop.h>
 #include <kernel/panic.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/runlevel.h>
 #include <system/reset.h>
-
-#include <stdio.h>
 
 static const uint8_t sad_watch[] = {
   0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x20, 0x00,

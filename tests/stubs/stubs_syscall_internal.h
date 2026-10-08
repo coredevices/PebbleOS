@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <kernel/pebble_tasks.h>
-#include <system/passert.h>
-
-#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
+
+#include <kernel/pebble_tasks.h>
+#include <system/passert.h>
 
 static bool s_syscall_did_fail;
 

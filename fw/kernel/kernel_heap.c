@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "kernel_heap.h"
+
 #include <pbl/mcu/interrupts.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/util/heap.h>

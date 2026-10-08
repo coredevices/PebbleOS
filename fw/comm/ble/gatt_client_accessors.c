@@ -1,15 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/logging/logging.h>
-
 #include "gatt_client_accessors.h"
 
 #include "gap_le_connection.h"
 
-#include <comm/bt_lock.h>
-
 #include <pbl/btutil/bt_uuid.h>
+#include <pbl/logging/logging.h>
+
+#include <comm/bt_lock.h>
 
 // -------------------------------------------------------------------------------------------------
 // Helpers to calculate the pbl_bt_service_t, pbl_bt_characteristic_t and pbl_bt_descriptor_t

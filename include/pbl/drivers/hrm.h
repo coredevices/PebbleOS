@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <board/board.h>
+#include <stdbool.h>
 
 #include <pbl/services/hrm/hrm_activity_scene.h>
 #include <pbl/services/hrm/hrm_manager.h>
 
-#include <stdbool.h>
+#include <board/board.h>
 
 /**
  * @defgroup drivers_hrm Heart rate monitor

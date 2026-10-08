@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @defgroup mcu_mpu MPU

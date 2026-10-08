@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
-#include <pbl/kernel/sched.h>
 #include "pulse_logging.h"
 
 #include "logging_private.h"
-#include <kernel/pebble_tasks.h>
 
-#include <console/pulse_protocol_impl.h>
-#include <kernel/events.h>
+#include <ctype.h>
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/mcu/privilege.h>
-#include <pbl/kernel/compiler.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
 
-#include <ctype.h>
+#include <console/pulse_protocol_impl.h>
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
 
 //! This is the format for a PULSEv2 log message when sent out over the wire.
 typedef struct PBL_PACKED MessageContents {

@@ -1,21 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "gtypes.h"
 #include "gbitmap_pbi.h"
 #include "gbitmap_png.h"
+#include "gtypes.h"
+
+#include <stddef.h>
+#include <string.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/applib_resource_private.h>
 #include <applib/graphics/graphics.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <syscall/syscall.h>
-
-#include <string.h>
-#include <stddef.h>
-#include <pbl/util/testing.h>
+#include <system/passert.h>
 
 uint8_t gbitmap_get_bits_per_pixel(GBitmapFormat format) {
   switch (format) {

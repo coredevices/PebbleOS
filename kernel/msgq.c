@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "kernel.h"
+
 #include <string.h>
 
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/poll.h>
-
-#include "kernel.h"
 
 void pbl_msgq_init(struct pbl_msgq *q, void *buf, size_t msg_size, uint32_t max_msgs) {
   KERNEL_ASSERT(buf != NULL && msg_size > 0 && max_msgs > 0);

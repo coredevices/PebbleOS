@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdbool.h>
+
 #include <pbl/drivers/flash.h>
 #include <pbl/services/new_timer/new_timer.h>
 
 #include <clar.h>
 
-#include <stdbool.h>
-
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_sem.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
+#include <stubs_sem.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////

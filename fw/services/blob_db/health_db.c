@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/blob_db/health_db.h>
+#include <stdio.h>
+#include <string.h>
 
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/hr_util.h>
 #include <pbl/services/blob_db/api.h>
+#include <pbl/services/blob_db/health_db.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
-#include <system/hexdump.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/units.h>
-
-#include <stdio.h>
-#include <string.h>
 #include <pbl/services/time.h>
 #include <pbl/util/time.h>
+#include <pbl/util/units.h>
+
+#include <system/hexdump.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

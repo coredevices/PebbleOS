@@ -4,14 +4,14 @@
 #include <clar.h>
 
 // #include <comm/remote.h>
-#include <process_management/app_run_state.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <system/passert.h>
+#include <stdlib.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/comm_session/protocol.h>
 #include <pbl/util/list.h>
 
-#include <stdlib.h>
+#include <process_management/app_run_state.h>
+#include <system/passert.h>
 
 // Stubs
 ///////////////////////////////////////

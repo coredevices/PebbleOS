@@ -3,21 +3,19 @@
 
 #include "events.h"
 
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
-#include <kernel/pbl_malloc.h>
-
-#include <pbl/services/app_outbox_service.h>
-#include <syscall/syscall.h>
-
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/poll.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/app_outbox_service.h>
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <pbl/kernel/compiler.h>
+#include <kernel/pbl_malloc.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 #define MAX_KERNEL_EVENTS           32
 #define MAX_FROM_APP_EVENTS         10

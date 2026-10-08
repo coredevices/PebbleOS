@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "delay.h"
+
 #include <pbl/kernel/compiler.h>
 
 #ifdef CONFIG_SOC_NRF52

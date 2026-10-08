@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
 
 /**
  * @addtogroup services_audio_endpoint

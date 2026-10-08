@@ -3,9 +3,11 @@
 
 #pragma once
 
-#include <applib/ui/ui.h>
-#include <pbl/util/units.h>
 #include <stdbool.h>
+
+#include <pbl/util/units.h>
+
+#include <applib/ui/ui.h>
 
 typedef enum {
   DayPickerKindEveryday = 0,

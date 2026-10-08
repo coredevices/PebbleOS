@@ -5,11 +5,12 @@
 
 #include "display.h"
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <pbl/drivers/button_id.h>
 
 #include <bf0_hal_pinmux.h>
-#include <pbl/drivers/button_id.h>
 
 #define GPIO_Port_NULL NULL
 #define GPIO_Pin_NULL  0U
@@ -119,12 +120,12 @@ typedef struct {
   const MagConfig mag_config;
 } BoardConfigMag;
 
-#include <pbl/drivers/flash/qspi_flash_definitions.h>
-#include <pbl/drivers/qspi_definitions.h>
-#include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
+#include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
+#include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
+#include <pbl/drivers/uart/sf32lb.h>
 
 typedef const struct UARTDevice UARTDevice;
 typedef const struct I2CBus I2CBus;

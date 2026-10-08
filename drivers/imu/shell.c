@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+#include <inttypes.h>
+
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/mag.h>
 #include <pbl/shell/shell.h>
-
-#include <errno.h>
-#include <inttypes.h>
 
 #include <kernel/util/sleep.h>
 

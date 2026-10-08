@@ -1,18 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/util/size.h>
 
 #include <applib/ui/layer.h>
-#include <applib/ui/window.h>
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_impl.h>
 #include <applib/ui/recognizer/recognizer_list.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/recognizer_private.h>
-#include <pbl/util/size.h>
+#include <applib/ui/window.h>
+#include <clar.h>
 
 // Stubs
+#include "test_recognizer_impl.h"
+
 #include <stubs_app_state.h>
 #include <stubs_gbitmap.h>
 #include <stubs_graphics.h>
@@ -24,7 +26,6 @@
 #include <stubs_process_manager.h>
 #include <stubs_ui_window.h>
 #include <stubs_unobstructed_area.h>
-#include "test_recognizer_impl.h"
 
 static RecognizerList *s_app_list;
 static Layer *s_active_layer;

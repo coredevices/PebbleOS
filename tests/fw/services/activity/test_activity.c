@@ -1,52 +1,54 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/types.h>
-#include <applib/accel_service.h>
-#include <applib/data_logging.h>
-#include <applib/health_service.h>
-#include <applib/health_service_private.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
-#include <kernel/events.h>
-#include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/types.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
-#include <shell/prefs.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/kernel/compiler.h>
+#include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
-
-#include <sys/stat.h>
-
-#include <clar.h>
-#include <pbl/services/time.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
+
+#include <applib/accel_service.h>
+#include <applib/data_logging.h>
+#include <applib/health_service.h>
+#include <applib/health_service_private.h>
+#include <clar.h>
+#include <kernel/events.h>
+#include <shell/prefs.h>
+#include <sys/stat.h>
+#include <system/passert.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
 
 // Stubs
+#include <pbl/util/testing.h>
+
 #include <stubs_activity_insights.h>
 #include <stubs_alarm.h>
-#include <stubs_app_manager.h>
+#include <stubs_ambient_light.h>
 #include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
+#include <stubs_app_manager.h>
 #include <stubs_battery.h>
 #include <stubs_event_loop.h>
-#include <stubs_irq.h>
 #include <stubs_health_db.h>
 #include <stubs_hexdump.h>
 #include <stubs_i18n.h>
+#include <stubs_irq.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
@@ -57,8 +59,6 @@
 #include <stubs_timeline_peek.h>
 #include <stubs_worker_manager.h>
 #include <stubs_workout_service.h>
-#include <stubs_ambient_light.h>
-#include <pbl/util/testing.h>
 
 void prefs_sync_init(void) {
 }

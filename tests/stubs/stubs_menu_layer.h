@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/ui/menu_layer.h>
 #include <pbl/kernel/compiler.h>
+
+#include <applib/ui/menu_layer.h>
 
 void PBL_WEAK menu_cell_basic_draw(GContext *ctx, const Layer *cell_layer, const char *title,
                                    const char *subtitle, GBitmap *icon) {

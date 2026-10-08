@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "ble_scan.h"
 #include "ble_central.h"
 #include "ble_client.h"
+#include "ble_scan.h"
 
 #include <applib/event_service_client.h>
 

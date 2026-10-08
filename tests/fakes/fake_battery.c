@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fake_battery.h"
+
 #include <kernel/events.h>
 
 static int s_millivolts = 0;

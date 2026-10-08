@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <mfg/mfg_serials.h>
 #include <applib/app_watch_info.h>
 #include <applib/graphics/gtypes.h>
+#include <mfg/mfg_serials.h>
 
 static const char *expected_serial_number = "2DQ0135B3424";
 

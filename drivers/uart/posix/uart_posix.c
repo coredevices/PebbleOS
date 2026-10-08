@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "uart_posix_bottom.h"
+
 #include <stddef.h>
 
 #include <pbl/drivers/uart/posix.h>
-#include <pbl_arch_posix.h>
 
-#include "uart_posix_bottom.h"
+#include <pbl_arch_posix.h>
 
 static UARTDevice *s_devices[UART_POSIX_NUM_CHANNELS];
 

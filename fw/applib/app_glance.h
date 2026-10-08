@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/services/app_glances/app_glance_service.h>
+#include <stdint.h>
 #include <time.h>
 
-#include <stdint.h>
+#include <pbl/services/app_glances/app_glance_service.h>
 
 //! @addtogroup Foundation
 //! @{

@@ -5,13 +5,13 @@
 
 #include <apps/core/panic_window.h>
 #include <apps/sdk/app.h>
-#include <apps/system_app_ids.h>
 #include <apps/system/launcher/launcher.h>
+#include <apps/system_app_ids.h>
 #include <kernel/panic.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
-#include <shell/system_app_state_machine.h>
 #include <shell/sdk/watchface.h>
+#include <shell/system_app_state_machine.h>
 
 //! Whether to return to the watchface instead of the launcher upon exiting an app.
 static bool s_rooted_in_watchface = false;

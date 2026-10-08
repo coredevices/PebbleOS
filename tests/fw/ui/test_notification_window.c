@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stdio.h>
+
+#include <pbl/services/timeline/notification_layout.h>
+#include <pbl/util/trig.h>
 
 #include <applib/preferred_content_size.h>
 #include <applib/ui/window_private.h>
 #include <apps/system/settings/notifications_private.h>
+#include <clar.h>
 #include <popups/notifications/notification_window.h>
 #include <popups/notifications/notification_window_private.h>
 #include <resource/timeline_resource_ids.auto.h>
-#include <pbl/services/timeline/notification_layout.h>
-#include <pbl/util/trig.h>
-
-#include <stdio.h>
 
 // Stubs
 /////////////////////
@@ -21,6 +21,8 @@
 #include <stubs_alarm_layout.h>
 #include <stubs_alerts.h>
 // stubs_alerts_preferences.h intentionally omitted; see local replacements below
+#include <pbl/services/notifications/alerts_preferences_private.h>
+
 #include <stubs_analytics.h>
 #include <stubs_ancs_filtering.h>
 #include <stubs_app_install_manager.h>
@@ -78,15 +80,13 @@
 #include <stubs_timeline_item.h>
 #include <stubs_timeline_layer.h>
 #include <stubs_timeline_peek.h>
-#include <stubs_vibes.h>
 #include <stubs_vibe_client.h>
 #include <stubs_vibe_score.h>
 #include <stubs_vibe_score_info.h>
+#include <stubs_vibes.h>
 #include <stubs_weather_layout.h>
 #include <stubs_window_manager.h>
 #include <stubs_window_stack.h>
-
-#include <pbl/services/notifications/alerts_preferences_private.h>
 
 // Local replacements for stubs_alerts_preferences.h so the notification status
 // bar style is settable per test (a strong override cannot share a TU with the
@@ -154,12 +154,13 @@ uint32_t interpolate_moook_soft_duration(int32_t num_frames_mid) {
 // Fakes
 /////////////////////
 
+#include "../../fixtures/load_test_resources.h"
+
 #include <fake_animation.h>
 #include <fake_app_state.h>
 #include <fake_content_indicator.h>
 #include <fake_graphics_context.h>
 #include <fake_spi_flash.h>
-#include "../../fixtures/load_test_resources.h"
 
 typedef struct NotificationWindowTestData {
   uint32_t icon_id;

@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/comm_session/session.h>
-#include <mfg/mfg_info.h>
-
 #include <string.h>
+
+#include <pbl/services/comm_session/session.h>
+
+#include <mfg/mfg_info.h>
 
 #define MFG_COLOR_KEY "mfg_color"
 

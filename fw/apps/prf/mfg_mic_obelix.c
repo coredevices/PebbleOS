@@ -3,22 +3,23 @@
 
 #include <stdio.h>
 
+#include <pbl/drivers/audio.h>
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/logging/logging.h>
+
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
+#include <applib/ui/window_private.h>
 #include <apps/prf/mfg_test_result.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
 #include <board/board.h>
+#include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/drivers/audio.h>
-#include <pbl/drivers/pmic/npm1300.h>
-#include <flash_region/flash_region.h>
-#include <pbl/drivers/flash.h>
-#include <applib/ui/window_private.h>
 
 #define PCM_BUFFER_SIZE 1024
 

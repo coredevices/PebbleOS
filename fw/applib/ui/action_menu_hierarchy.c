@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "action_menu_hierarchy.h"
+
 #include "action_menu_window_private.h"
 
 #include <applib/applib_malloc.auto.h>

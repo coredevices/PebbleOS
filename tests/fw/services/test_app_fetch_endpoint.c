@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/app_fetch_endpoint.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
-
 #include <stdio.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/app_fetch_endpoint.h>
+#include <pbl/services/comm_session/session.h>
+
+#include <clar.h>
 
 // Fakes
 ////////////////////////////////////

@@ -1,22 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include <kernel/event_loop.h>
-#include <kernel/events.h>
-#include <kernel/pebble_tasks.h>
 #include <pbl/drivers/display/display.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_event.h>
 #include <pbl/services/touch/touch_session.h>
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
+#include <clar.h>
 #include <fake_events.h>
+#include <kernel/event_loop.h>
+#include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
 
 // Stubs
 #include <stubs_analytics.h>

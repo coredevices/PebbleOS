@@ -6,14 +6,15 @@
 #include "graphics.h"
 #include "graphics_private.h"
 
-#include <applib/applib_malloc.auto.h>
-#include <applib/app_logging.h>
-#include <system/passert.h>
+#include <string.h>
+
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/trig.h>
 
-#include <string.h>
+#include <applib/app_logging.h>
+#include <applib/applib_malloc.auto.h>
+#include <system/passert.h>
 
 #define GPATH_ERROR "Unable to allocate memory for GPath call"
 

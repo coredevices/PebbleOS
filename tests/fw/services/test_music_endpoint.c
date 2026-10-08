@@ -1,21 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/comm_session/session_remote_os.h>
 #include <pbl/services/music.h>
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/music_endpoint_types.h>
 #include <pbl/services/music_internal.h>
+#include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
-
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_remote_os.h>
-
+#include <clar.h>
 #include <kernel/events.h>
-
-#include <pbl/util/size.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////
@@ -24,16 +20,15 @@
 #include <fake_rtc.h>
 #include <fake_session.h>
 #include <fake_system_task.h>
-
-#include <stubs_app_manager.h>
 #include <stubs_app_install_manager.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
+#include <stubs_app_manager.h>
 #include <stubs_bt_lock.h>
 #include <stubs_hexdump.h>
 #include <stubs_imaging.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
 #include <stubs_serial.h>
 #include <stubs_tick.h>
 

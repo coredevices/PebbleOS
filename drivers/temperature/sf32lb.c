@@ -4,8 +4,8 @@
 #include <pbl/drivers/temperature.h>
 
 #include <board/board.h>
-#include <system/passert.h>
 #include <kernel/util/delay.h>
+#include <system/passert.h>
 
 #define SLOPE_NUM (2971) // approximate slope molecule
 #define SLOPE_DEN (40)   // approximate slope denominator

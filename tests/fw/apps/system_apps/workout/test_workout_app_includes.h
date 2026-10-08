@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/ui/window_private.h>
 #include <pbl/util/size.h>
 
+#include <applib/ui/window_private.h>
 #include <clar.h>
 
 // Fakes
 /////////////////////
 
 #include <fake_content_indicator.h>
-#include <fake_rtc.h>
 #include <fake_pbl_std.h>
 #include <fake_regular_timer.h>
+#include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_workout_service.h>
 #include <fixtures/load_test_resources.h>
@@ -20,8 +20,8 @@
 // Stubs
 /////////////////////
 
-#include <stubs_activity.h>
 #include <stubs_action_menu.h>
+#include <stubs_activity.h>
 #include <stubs_analytics.h>
 #include <stubs_animation_timing.h>
 #include <stubs_app_install_manager.h>

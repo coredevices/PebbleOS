@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <limits.h>
+#include <stddef.h>
 
-#include <applib/app_message/app_message_internal.h>
-#include <kernel/events.h>
-#include <pbl/logging/logging.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
-#include <stddef.h>
-#include <limits.h>
+#include <applib/app_message/app_message_internal.h>
+#include <clar.h>
+#include <kernel/events.h>
 
 extern AppTimer *app_message_outbox_get_ack_nack_timer(void);
 
 // Stubs
 ////////////////////////////////////
+#include <fake_pbl_malloc.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
 #include <stubs_rand_ptr.h>
-#include <fake_pbl_malloc.h>
 
 // Fakes
 ////////////////////////////////////

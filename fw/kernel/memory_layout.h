@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/mcu/mpu.h>
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/mcu/mpu.h>
 
 #define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
 

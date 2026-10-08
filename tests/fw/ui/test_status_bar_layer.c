@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/ui/status_bar_layer.h>
 #include <pbl/util/list.h>
-#include <resource/resource_ids.auto.h>
-#include <resource/resource.h>
 
+#include <applib/ui/status_bar_layer.h>
 #include <clar.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
 
 // Fakes
 ////////////////////////////////////

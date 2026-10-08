@@ -3,9 +3,9 @@
 
 #include "fake_bt_advert.h"
 
-#include <pbl/bluetooth/advert.h>
-
 #include <string.h>
+
+#include <pbl/bluetooth/advert.h>
 
 #include <clar_asserts.h>
 

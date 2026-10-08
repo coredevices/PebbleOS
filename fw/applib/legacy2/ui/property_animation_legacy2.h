@@ -3,8 +3,9 @@
 
 #pragma once
 #include "animation_legacy2.h"
-#include <applib/ui/property_animation.h>
+
 #include <applib/graphics/gtypes.h>
+#include <applib/ui/property_animation.h>
 
 //////////////////////
 // Legacy2 Property Animations

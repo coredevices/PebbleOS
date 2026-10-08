@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/graphics/text.h>
 #include <inttypes.h>
+
+#include <applib/graphics/text.h>
 
 #define FONT_HEIGHT 10
 

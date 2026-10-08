@@ -1,13 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/string_list.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
-
-#include <stdbool.h>
-#include <string.h>
+#include <pbl/util/string_list.h>
 
 size_t pbl_string_list_count(struct pbl_string_list *list) {
   if (!list || list->serialized_byte_length == 0) {

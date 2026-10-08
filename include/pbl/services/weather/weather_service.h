@@ -3,12 +3,12 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <time.h>
+
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/weather/weather_types.h>
 #include <pbl/util/list.h>
-#include <time.h>
-
-#include <stdint.h>
 
 /**
  * @defgroup services_weather Weather

@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/util/time.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+
+#include <pbl/util/time.h>
 
 /**
  * @defgroup services_time Time

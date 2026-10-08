@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <clar.h>
-
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <shell/system_app_state_machine.h>

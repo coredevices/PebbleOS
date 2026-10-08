@@ -5,10 +5,10 @@
 
 #include "metrics.h"
 
-#include <pbl/services/activity/hr_util.h>
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/services/activity/hr_util.h>
 
 typedef struct WorkoutData {
   int32_t steps;

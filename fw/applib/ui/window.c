@@ -1,10 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "status_bar_layer.h"
 #include "window_private.h"
 
+#include <pbl/logging/logging.h>
+
 #include <applib/app_logging.h>
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
+#include <applib/legacy2/ui/status_bar_legacy2.h>
 #include <applib/ui/app_window_click_glue.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/click.h>
@@ -13,17 +18,12 @@
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/window_manager.h>
 #include <applib/ui/window_stack.h>
-#include <applib/applib_malloc.auto.h>
-#include <applib/legacy2/ui/status_bar_legacy2.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <syscall/syscall.h>
-
-#include "status_bar_layer.h"
+#include <system/passert.h>
 
 typedef enum {
   WindowHandlerOffsetLoad = offsetof(WindowHandlers, load),

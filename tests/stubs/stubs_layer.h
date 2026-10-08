@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <applib/ui/layer.h>
+#include "stubs_unobstructed_area.h"
 
 #include <pbl/kernel/compiler.h>
 
-#include "stubs_unobstructed_area.h"
+#include <applib/ui/layer.h>
 
 PBL_WEAK void layer_init(Layer *layer, const GRect *frame) {
 }

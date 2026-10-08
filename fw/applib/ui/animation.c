@@ -1,29 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
 #include "animation_private.h"
-
 #include "animation_timing.h"
 #include "property_animation_private.h"
 
-#include <applib/legacy2/ui/animation_legacy2.h>
-#include <applib/legacy2/ui/animation_private_legacy2.h>
+#include <string.h>
+
+#include <pbl/kernel/irq.h>
+#include <pbl/services/animation_service.h>
+#include <pbl/util/math.h>
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
-
-#include <process_state/app_state/app_state.h>
-
+#include <applib/legacy2/ui/animation_legacy2.h>
+#include <applib/legacy2/ui/animation_private_legacy2.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/memory_layout.h>
-
-#include <pbl/services/animation_service.h>
-
+#include <process_state/app_state/app_state.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-
-#include <string.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>

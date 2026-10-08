@@ -1,8 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/timeline/weather_layout.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline_layout.h>
+#include <pbl/services/timeline/weather_layout.h>
+#include <pbl/util/size.h>
+#include <pbl/util/string.h>
 
 #include <applib/graphics/gtypes.h>
 #include <applib/preferred_content_size.h>
@@ -10,11 +15,6 @@
 #include <apps/system/timeline/text_node.h>
 #include <font_resource_keys.auto.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/size.h>
-#include <pbl/util/string.h>
 
 #define WEATHER_CARD_TITLE_LENGTH 30 // We're limited to one line for this layout
 

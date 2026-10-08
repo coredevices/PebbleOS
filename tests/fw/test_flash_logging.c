@@ -1,17 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 
-#include <flash_region/flash_region.h>
-#include <debug/flash_logging.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
+#include <clar.h>
+#include <debug/flash_logging.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-
+#include <flash_region/flash_region.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>
@@ -19,13 +22,7 @@
 #include <stubs_serial.h>
 #include <stubs_sleep.h>
 #include <stubs_task_wdt.h>
-
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
 
 void test_flash_logging__initialize(void) {
   fake_spi_flash_init(0, BOARD_NOR_FLASH_SIZE);

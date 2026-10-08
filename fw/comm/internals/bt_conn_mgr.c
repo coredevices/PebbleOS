@@ -2,20 +2,20 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/responsiveness.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/list.h>
+#include <pbl/util/math.h>
 
 #include <comm/ble/gap_le_connect_params.h>
 #include <comm/ble/gap_le_connection.h>
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
-#include <pbl/drivers/rtc.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/regular_timer.h>
-#include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/list.h>
-#include <pbl/util/math.h>
 
 //! The Bluetooth Connection Manager is responsible for managing the power
 //! state of the active bluetooth connections. Sub-modules using bluetooth are
@@ -367,9 +367,9 @@ enum pbl_bt_response_time_state conn_mgr_get_latency_for_le_connection(GAPLEConn
 }
 
 #ifdef CONFIG_SHELL
-#include <pbl/shell/shell.h>
-
 #include <errno.h>
+
+#include <pbl/shell/shell.h>
 
 static int prv_cmd_le_mode(const struct pbl_shell *sh, size_t argc, char **argv) {
   unsigned long state;

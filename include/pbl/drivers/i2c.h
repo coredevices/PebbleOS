@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <board/board.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <board/board.h>
 
 /**
  * @defgroup drivers_i2c I2C

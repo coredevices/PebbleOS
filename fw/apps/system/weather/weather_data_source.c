@@ -4,13 +4,14 @@
 //! the only one that includes the firmware weather headers.
 #include "weather_data_source.h"
 
+#include <string.h>
+
+#include <pbl/services/blob_db/watch_app_prefs_db.h>
+#include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h> // SerializedWeatherAppPrefs
-#include <pbl/services/blob_db/weather_db.h>
-#include <pbl/services/blob_db/watch_app_prefs_db.h>
-#include <kernel/pbl_malloc.h> // task_zalloc_check / task_free
 
-#include <string.h>
+#include <kernel/pbl_malloc.h> // task_zalloc_check / task_free
 
 static void prv_copy_str(char *dst, size_t dst_size, const char *src) {
   if (!src) {

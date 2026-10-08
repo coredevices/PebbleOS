@@ -3,9 +3,11 @@
 
 #pragma once
 
-#include <board/board.h>
-#include <pbl/drivers/qspi_definitions.h>
 #include "qspi_flash_part_definitions.h"
+
+#include <pbl/drivers/qspi_definitions.h>
+
+#include <board/board.h>
 
 /**
  * @defgroup drivers_flash_qspi_flash_definitions QSPI flash device

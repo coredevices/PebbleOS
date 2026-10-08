@@ -3,20 +3,21 @@
 
 #include "mfg_hrm.h"
 
+#include <stdbool.h>
+#include <stdio.h>
+
+#include <pbl/drivers/hrm.h>
+#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/util/units.h>
+
 #include <applib/app.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <pbl/drivers/hrm.h>
 #include <kernel/pbl_malloc.h>
-#include <process_state/app_state/app_state.h>
 #include <process_management/pebble_process_md.h>
-#include <pbl/services/hrm/hrm_manager.h>
-
-#include <stdbool.h>
-#include <stdio.h>
-#include <pbl/util/units.h>
+#include <process_state/app_state/app_state.h>
 
 #ifdef CONFIG_HRM
 

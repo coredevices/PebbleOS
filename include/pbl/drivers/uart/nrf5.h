@@ -3,13 +3,12 @@
 
 #pragma once
 
-#include <pbl/drivers/uart.h>
-
-#include <board/board.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <pbl/drivers/uart.h>
+
+#include <board/board.h>
 #include <nrfx_uarte.h>
 
 /**

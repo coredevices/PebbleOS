@@ -5,16 +5,17 @@
 
 #include "ble_app_support.h"
 
-#include <applib/applib_malloc.auto.h>
+#include <stdint.h>
+
+#include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
+#include <pbl/util/math.h>
+
+#include <applib/applib_malloc.auto.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-
-#include <stdint.h>
 
 // TODO:
 // - device name

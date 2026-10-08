@@ -2,11 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "gdraw_command_list.h"
+
 #include "gdraw_command_private.h"
+
+#include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <system/passert.h>
-#include <pbl/util/testing.h>
 
 bool gdraw_command_list_copy(void *buffer, size_t buffer_length, GDrawCommandList *src) {
   size_t src_size = gdraw_command_list_get_data_size(src);

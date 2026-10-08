@@ -3,13 +3,14 @@
 
 #include "flash_region.h"
 
-#include <pbl/drivers/flash.h>
-#include <pbl/task_wdt/task_wdt.h>
-#include <kernel/util/sleep.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-
 #include <inttypes.h>
+
+#include <pbl/drivers/flash.h>
+#include <pbl/logging/logging.h>
+#include <pbl/task_wdt/task_wdt.h>
+
+#include <kernel/util/sleep.h>
+#include <system/passert.h>
 
 //! Do some upkeep in between erases to keep the rest of the system stable since erases block
 //! the current task for so long.

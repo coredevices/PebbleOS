@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
+#include <stdint.h>
+
 #include <pbl/util/math_fixed.h>
 
-#include <stdint.h>
+#include <applib/graphics/gtypes.h>
 
 //! @file animation_interpolate.h
 //! Routines for interpolating between values and points. Useful for animations.

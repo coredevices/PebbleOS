@@ -4,7 +4,6 @@
 #pragma once
 
 #include <stdint.h>
-
 #include <time.h>
 
 void activity_insights_recalculate_stats(void) {

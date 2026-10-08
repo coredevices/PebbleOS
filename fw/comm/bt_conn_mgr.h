@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/bluetooth/responsiveness.h>
-
 #include <inttypes.h>
+
+#include <pbl/bluetooth/responsiveness.h>
 
 struct Remote;
 

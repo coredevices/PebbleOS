@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/sched.h>
-#include <pbl/kernel/types.h>
 #include <stdint.h>
 
-#include <board/board.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
-#include <flash_region/flash_region.h>
-#include <kernel/events.h>
-#include <pbl/mcu/interrupts.h>
-#include <system/passert.h>
-#include <pbl/services/time.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/sched.h>
+#include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+#include <pbl/mcu/interrupts.h>
 #include <pbl/services/regular_timer.h>
+#include <pbl/services/time.h>
 
 #include <bf0_hal_rtc.h>
-#include <pbl/kernel/compiler.h>
+#include <board/board.h>
+#include <flash_region/flash_region.h>
+#include <kernel/events.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
 

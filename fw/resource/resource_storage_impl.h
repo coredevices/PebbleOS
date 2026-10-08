@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-
 #include "resource.h"
 #include "resource_storage.h"
+
+#include <pbl/kernel/compiler.h>
 
 //! @file resource_storage_impl.h
 //!

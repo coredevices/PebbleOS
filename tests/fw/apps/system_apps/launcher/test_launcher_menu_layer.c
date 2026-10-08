@@ -1,30 +1,31 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/app_glances/app_glance_service.h>
+#include <pbl/services/blob_db/app_glance_db.h>
+#include <pbl/util/size.h>
+#include <pbl/util/testing.h>
 
 #include <applib/ui/vibes.h>
 #include <applib/ui/window_private.h>
 #include <apps/system/launcher/default/menu_layer.h>
 #include <apps/system/launcher/default/menu_layer_private.h>
-#include <shell/prefs.h>
+#include <clar.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/app_glances/app_glance_service.h>
-#include <pbl/services/blob_db/app_glance_db.h>
-#include <pbl/util/size.h>
-#include <pbl/util/testing.h>
+#include <shell/prefs.h>
 
 static GContext s_ctx;
 
 // Fakes
 /////////////////////
 
+#include <pbl/services/timeline/timeline_resources.h>
+
 #include <fake_content_indicator.h>
 #include <fake_settings_file.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
 #include <fixtures/screen_grid.h>
-#include <pbl/services/timeline/timeline_resources.h>
 
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
 #define TIMELINE_RESOURCE_TEST_FAKE_PNG (9999 | 0x80000000)
@@ -181,20 +182,20 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 // Stubs
 /////////////////////
 
-#include <stubs_app_cache.h>
 #include <stubs_alarm.h>
 #include <stubs_alerts.h>
 #include <stubs_analytics.h>
+#include <stubs_app_cache.h>
 #include <stubs_app_manager.h>
-#include <stubs_app_window_stack.h>
 #include <stubs_app_timer.h>
+#include <stubs_app_window_stack.h>
 #include <stubs_bluetooth_ctl.h>
 #include <stubs_bootbits.h>
 #include <stubs_click.h>
 #include <stubs_clock.h>
 #include <stubs_do_not_disturb.h>
-#include <stubs_events.h>
 #include <stubs_event_service_client.h>
+#include <stubs_events.h>
 #include <stubs_health_util.h>
 #include <stubs_i18n.h>
 #include <stubs_kino_player.h>
@@ -205,15 +206,15 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include <stubs_mutex.h>
 #include <stubs_notification_storage.h>
 #include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
 #include <stubs_pebble_process_info.h>
 #include <stubs_pebble_tasks.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_serial.h>
 #include <stubs_session.h>
 #include <stubs_sleep.h>
 #include <stubs_status_bar_layer.h>
-#include <stubs_system_theme.h>
 #include <stubs_syscalls.h>
+#include <stubs_system_theme.h>
 #include <stubs_task_wdt.h>
 #include <stubs_tick.h>
 #include <stubs_time.h>

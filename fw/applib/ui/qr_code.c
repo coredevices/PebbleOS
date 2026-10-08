@@ -7,9 +7,8 @@
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
-#include <system/passert.h>
-
 #include <qrcodegen_ext.h>
+#include <system/passert.h>
 
 static inline enum qrcodegen_Ecc prv_ecc_to_qrcodegen(QRCodeECC ecc) {
   switch (ecc) {

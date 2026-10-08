@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/gdraw_command_image.h>
 #include <pbl/util/uuid.h>
+
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gtypes.h>
 
 /**
  * @defgroup services_timeline_timeline_resources Timeline resources

@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/touch/touch_sensor.h>
-#include <pbl_arch_posix.h>
+#include "touch_sdl_bottom.h"
 
+#include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/touch/touch.h>
+
 #include <board/board.h>
-#include "touch_sdl_bottom.h"
+#include <pbl_arch_posix.h>
 
 static bool s_enabled;
 static bool s_pressed;

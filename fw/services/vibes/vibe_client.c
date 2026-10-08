@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/vibes/vibe_client.h>
-
+#include <pbl/logging/logging.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/services/vibes/vibe_score_info.h>
-#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DEFINE(service_vibes, CONFIG_SERVICE_VIBES_LOG_LEVEL);
 

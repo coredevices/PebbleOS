@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/get_bytes/get_bytes_storage.h>
 #include <pbl/drivers/flash.h>
-#include <kernel/pbl_malloc.h>
+#include <pbl/services/get_bytes/get_bytes_storage.h>
+
 #include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
 
 bool gb_storage_flash_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                             GetBytesStorageInfo *info) {

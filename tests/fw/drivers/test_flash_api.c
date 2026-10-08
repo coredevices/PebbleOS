@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/flash/flash_impl.h>
+
 #include <clar.h>
 #include <fake_new_timer.h>
-#include <stubs_sem.h>
 #include <stubs_analytics.h>
 #include <stubs_irq.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
 #include <stubs_pebble_tasks.h>
+#include <stubs_sem.h>
 #include <stubs_sleep.h>
 #include <stubs_task_wdt.h>
 #include <stubs_worker_manager.h>
-
-#include <pbl/drivers/flash.h>
-#include <pbl/drivers/flash/flash_impl.h>
 
 void flash_api_reset_for_test(void);
 TimerID flash_api_get_erase_poll_timer_for_test(void);

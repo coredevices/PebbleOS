@@ -5,8 +5,8 @@
 
 #include "gdraw_command_list.h"
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 //! @file graphics/gdraw_command_image.h
 //! Defines the functions to manipulate \ref GDrawCommandImage objects

@@ -3,11 +3,11 @@
 
 #ifdef CONFIG_SHELL
 
+#include <errno.h>
+
 #include <pbl/shell/shell.h>
 
 #include <kernel/remote_input.h>
-
-#include <errno.h>
 
 static int prv_press(const struct pbl_shell *sh, const char *button_str, const char *presses_str,
                      const char *hold_ms_str, const char *gap_ms_str) {

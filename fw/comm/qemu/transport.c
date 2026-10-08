@@ -1,24 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/util/math.h>
+
+#include <comm/bt_lock.h>
+#include <comm/qemu/serial.h>
+#include <comm/qemu/serial_private.h>
+#include <comm/qemu/settings.h>
+#include <comm/qemu/transport.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-
-#include <pbl/services/comm_session/session_transport.h>
-
 #include <system/passert.h>
-#include <pbl/logging/logging.h>
-
-#include <comm/bt_lock.h>
-
-#include <comm/qemu/serial.h>
-#include <comm/qemu/serial_private.h>
-
-#include <pbl/util/math.h>
-
-#include <comm/qemu/transport.h>
-#include <comm/qemu/settings.h>
 
 typedef struct {
   CommSession *session;

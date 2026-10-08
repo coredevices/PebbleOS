@@ -3,9 +3,9 @@
 
 #include "pcm_stream.h"
 
-#include <kernel/pbl_malloc.h>
-
 #include <string.h>
+
+#include <kernel/pbl_malloc.h>
 
 bool pcm_stream_init(PcmStreamState *s, uint32_t size_bytes) {
   memset(s, 0, sizeof(*s));

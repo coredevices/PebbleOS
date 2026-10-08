@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "test_workout_app_includes.h"
+
 #include <apps/system/workout/summary.h>
 #include <apps/system/workout/utils.h>
-
-#include "test_workout_app_includes.h"
 
 // Fakes
 /////////////////////

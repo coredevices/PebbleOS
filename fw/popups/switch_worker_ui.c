@@ -5,14 +5,15 @@
 
 #include <stdio.h>
 
+#include <pbl/services/app_cache.h>
+#include <pbl/services/i18n/i18n.h>
+
 #include <applib/ui/action_bar_layer.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/process_manager.h>
 #include <process_management/worker_manager.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/app_cache.h>
 
 typedef struct {
   AppInstallId new_worker_id;

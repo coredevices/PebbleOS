@@ -2,7 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "activity_tracker.h"
+
 #include "menu.h"
+
+#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_timer.h>
 #include <applib/ui/kino/kino_reel.h>
@@ -14,7 +17,6 @@
 #include <process_management/app_menu_data_source.h>
 #include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/i18n/i18n.h>
 
 typedef struct SettingsActivityTrackerData {
   OptionMenu option_menu;

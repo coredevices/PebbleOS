@@ -5,8 +5,8 @@
 
 #include "recognizer.h"
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct RecognizerImpl {
   //! Handle touch event

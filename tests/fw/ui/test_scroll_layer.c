@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <applib/ui/scroll_layer.h>
-
 #include <clar.h>
 
 // Stubs

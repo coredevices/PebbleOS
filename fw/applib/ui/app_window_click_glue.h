@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <process_management/app_manager.h>
 #include <applib/ui/click_internal.h>
+#include <process_management/app_manager.h>
 
 ////////////////////////////////////////////////
 // App + Click Recognizer + Window = Glue code

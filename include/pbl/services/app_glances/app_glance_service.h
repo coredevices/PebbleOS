@@ -3,10 +3,11 @@
 
 #pragma once
 
+#include <time.h>
+
+#include <pbl/kernel/compiler.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
 #include <pbl/services/timeline/attribute.h>
-#include <pbl/kernel/compiler.h>
-#include <time.h>
 #include <pbl/util/uuid.h>
 
 /**

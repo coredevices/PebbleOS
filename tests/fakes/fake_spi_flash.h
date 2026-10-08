@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <setjmp.h>
+#include <stdint.h>
 
 /*!
   Initialize the fake SPI flash region.

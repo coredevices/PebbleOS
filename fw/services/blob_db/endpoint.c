@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdbool.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/blob_db/endpoint_private.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
-
-#include <kernel/pebble_tasks.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/comm_session/session.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/logging/logging.h>
+
+#include <kernel/pebble_tasks.h>
+#include <system/hexdump.h>
 #include <system/passert.h>
 #include <system/status_codes.h>
-#include <system/hexdump.h>
-#include <pbl/kernel/compiler.h>
-
-#include <stdbool.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

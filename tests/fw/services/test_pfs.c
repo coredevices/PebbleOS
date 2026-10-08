@@ -1,22 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <pbl/drivers/flash.h>
-#include <flash_region/flash_region.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/filesystem/flash_translation.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
+#include <pbl/services/filesystem/flash_translation.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-
-#include <fake_spi_flash.h>
 #include <fake_rtc.h>
+#include <fake_spi_flash.h>
+#include <flash_region/flash_region.h>
 #include <stubs_analytics.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
@@ -27,6 +25,7 @@
 #include <stubs_serial.h>
 #include <stubs_sleep.h>
 #include <stubs_task_wdt.h>
+#include <system/passert.h>
 
 #define PFS_SECTOR_SIZE 4096
 

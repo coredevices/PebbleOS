@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_comm_session_protocol Pebble Protocol framing

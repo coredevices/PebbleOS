@@ -6,11 +6,12 @@
 #include "api.h"
 #include "timeline_item_storage.h"
 
-#include <system/status_codes.h>
+#include <stdint.h>
+
 #include <pbl/services/timeline/item.h>
 #include <pbl/util/iterator.h>
 
-#include <stdint.h>
+#include <system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_pin_db Pin database

@@ -2,26 +2,26 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "gh3x2x_tuning_service.h"
+#include "nimble_store.h"
 
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/bluetooth/init.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/types.h>
+#include <pbl/logging/logging.h>
+
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <host/ble_hs_stop.h>
 #include <host/util/util.h>
 #include <kernel/pebble_tasks.h>
 #include <nimble/nimble_port.h>
-#include <pbl/kernel/types.h>
-#include <pbl/kernel/sem.h>
-#include <pbl/kernel/thread.h>
-#include <services/dis/ble_svc_dis.h>
 #include <services/bas/ble_svc_bas.h>
+#include <services/dis/ble_svc_dis.h>
 #include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-
-#include "nimble_store.h"
 
 PBL_LOG_MODULE_DEFINE(bt, CONFIG_BT_LOG_LEVEL);
 

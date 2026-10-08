@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
-#include <pbl/kernel/sched.h>
 #include "kernel_applib_state.h"
 
-#include <applib/ui/layer.h>
-#include <pbl/mcu/interrupts.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/sched.h>
+#include <pbl/mcu/interrupts.h>
+
+#include <applib/ui/layer.h>
 
 static PBL_MUTEX_DEFINE(s_log_state_mutex);
 static bool s_log_state_mutex_ready;

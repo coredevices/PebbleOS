@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "event_service_client.h"
 #include "battery_state_service.h"
+#include "event_service_client.h"
 
 typedef struct BatteryStateServiceState {
   BatteryStateHandler handler;

@@ -6,10 +6,10 @@
 //! @file firmware_storage.h
 //! Utilities for reading a firmware image stored in flash.
 
-#include <pbl/kernel/compiler.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
 
 #ifndef CONFIG_PBLBOOT
 typedef struct PBL_PACKED FirmwareDescription {

@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include <resource/resource.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/generic_attr.h>
 #include <pbl/util/misc.h>
+
+#include <resource/resource.h>
 
 /**
  * @defgroup services_vibes Vibe scores

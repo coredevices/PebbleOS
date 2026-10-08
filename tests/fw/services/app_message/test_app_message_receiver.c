@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/comm_session/session_receive_router.h>
 
 #include <applib/app_inbox.h>
 #include <applib/app_message/app_message_internal.h>
 #include <applib/app_message/app_message_receiver.h>
+#include <clar.h>
 #include <comm/bt_conn_mgr.h>
-#include <pbl/services/comm_session/session_receive_router.h>
 #include <kernel/events.h>
 #include <process_management/app_install_types.h>
 
@@ -23,7 +23,6 @@ static const ReceiverImplementation *s_rcv_imp = &g_app_message_receiver_impleme
 
 #include <fake_kernel_malloc.h>
 #include <fake_system_task.h>
-
 #include <stubs_analytics.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>

@@ -1,13 +1,15 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <system/passert.h>
 #include "nimble_type_conversions.h"
 
-#include <pbl/btutil/bt_uuid.h>
-#include <host/ble_gap.h>
 #include <string.h>
+
+#include <pbl/btutil/bt_uuid.h>
 #include <pbl/logging/logging.h>
+
+#include <host/ble_gap.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

@@ -1,16 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
-#include <pbl/services/protobuf_log/protobuf_log.h>
-#include <pbl/services/protobuf_log/protobuf_log_private.h>
+#include <stdbool.h>
 
 #include <pbl/services/activity/activity.h>
+#include <pbl/services/protobuf_log/protobuf_log.h>
+#include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
+#include <pbl/services/protobuf_log/protobuf_log_private.h>
 
 #include <event.pb.h>
 #include <system/passert.h>
-
-#include <stdbool.h>
 
 // -----------------------------------------------------------------------------------------
 // Convert ActivitySessionType to the internal protobuf representation.

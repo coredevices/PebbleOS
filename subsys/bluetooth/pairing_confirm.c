@@ -1,11 +1,13 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+
 #include <pbl/bluetooth/pairing_confirm.h>
+#include <pbl/logging/logging.h>
+
 #include <host/ble_hs.h>
 #include <host/ble_sm.h>
-#include <stdint.h>
-#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

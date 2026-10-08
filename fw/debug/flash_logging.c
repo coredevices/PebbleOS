@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <debug/flash_logging.h>
-
 #include <pbl/drivers/flash.h>
-#include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/system_task.h>
-#include <syscall/syscall.h>
-#include <pbl/logging/logging.h>
-#include <system/version.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/system_task.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
+
+#include <debug/flash_logging.h>
+#include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
+#include <syscall/syscall.h>
+#include <system/version.h>
 
 // Notes:
 //

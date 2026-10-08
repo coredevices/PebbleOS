@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <applib/bluetooth/ble_client.h>
-#include <pbl/kernel/compiler.h>
-
 #include "gap_le_task.h"
 
 #include <pbl/bluetooth/mtu.h>
+#include <pbl/kernel/compiler.h>
+
+#include <applib/bluetooth/ble_client.h>
 
 struct GAPLEConnection;
 

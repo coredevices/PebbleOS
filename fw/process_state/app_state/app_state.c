@@ -1,30 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <process_state/app_state/app_state.h>
+#include <pbl/drivers/button_id.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/touch/touch.h>
 
 #include <applib/app_message/app_message_internal.h>
 #include <applib/event_service_client.h>
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics.h>
 #include <applib/pbl_std/locale.h>
+#include <applib/touch_service_private.h>
 #include <applib/ui/animation_private.h>
 #include <applib/ui/app_window_stack.h>
+#include <applib/ui/click_internal.h>
 #include <applib/ui/layer.h>
 #include <applib/ui/recognizer/recognizer_list.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
-#include <applib/ui/click_internal.h>
 #include <applib/ui/window_stack.h>
-#include <applib/touch_service_private.h>
-#include <pbl/services/touch/touch.h>
-#include <pbl/drivers/button_id.h>
 #include <kernel/util/segment.h>
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
 #include <process_management/process_loader.h>
+#include <process_state/app_state/app_state.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
 #include <tinymt32.h>
 
 #if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)

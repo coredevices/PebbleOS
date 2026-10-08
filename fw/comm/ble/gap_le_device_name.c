@@ -2,12 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "gap_le_device_name.h"
+
 #include <pbl/bluetooth/gap_le_device_name.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 
 pbl_bt_bonding_id_t prv_get_bonding_id_and_name_from_address_safe(void *ctx, char *device_name) {
   pbl_bt_bonding_id_t bonding_id = PBL_BT_BONDING_ID_INVALID;

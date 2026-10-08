@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stdio.h>
 
-#include <applib/graphics/graphics.h>
-#include <applib/graphics/framebuffer.h>
-#include <applib/ui/bitmap_layer.h>
-#include <applib/ui/window_private.h>
 #include <pbl/util/size.h>
 
-#include <stdio.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/bitmap_layer.h>
+#include <applib/ui/window_private.h>
+#include <clar.h>
 
 // Helper Functions
 ////////////////////////////////////
 
-#include "test_graphics.h"
 #include "../graphics/util.h"
+#include "test_graphics.h"
 
 #if (CONFIG_SCREEN_COLOR_DEPTH_BITS == 1)
 #include "1bit/test_framebuffer.h"
@@ -29,6 +29,7 @@
 ////////////////////////////////////
 
 #include "graphics_common_stubs.h"
+
 #include <stubs_applib_resource.h>
 
 // Setup

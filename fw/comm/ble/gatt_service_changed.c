@@ -5,15 +5,13 @@
 
 #include "gap_le_connection.h"
 
-#include <comm/bt_lock.h>
-
-#include <kernel/pbl_malloc.h>
-
+#include <pbl/bluetooth/gatt.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
 
-#include <pbl/bluetooth/gatt.h>
+#include <comm/bt_lock.h>
+#include <kernel/pbl_malloc.h>
 
 extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
     const struct pbl_bt_device_internal *device);
@@ -224,9 +222,9 @@ void pbl_bt_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *con
 }
 
 #ifdef CONFIG_SHELL
-#include <pbl/shell/shell.h>
-
 #include <errno.h>
+
+#include <pbl/shell/shell.h>
 
 static int prv_cmd_svc_changed(const struct pbl_shell *sh, size_t argc, char **argv) {
   prv_send_service_changed_indication(gap_le_connection_any());

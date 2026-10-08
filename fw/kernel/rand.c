@@ -20,8 +20,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <kernel/pebble_tasks.h>
 #include <pbl/util/rand32.h>
+
+#include <kernel/pebble_tasks.h>
 #include <system/passert.h>
 #include <tinymt32.h>
 

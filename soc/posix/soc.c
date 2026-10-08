@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pthread.h>
 #include <stdint.h>
-#include <unistd.h>
 
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/init.h>
-#include <pbl_arch_posix.h>
 
 #include <kernel/util/idle.h>
+#include <pbl_arch_posix.h>
 #include <posix_host.h>
+#include <pthread.h>
+#include <unistd.h>
 
 uint32_t SystemCoreClock = 64000000;
 

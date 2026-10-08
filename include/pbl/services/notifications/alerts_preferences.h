@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include "alerts_private.h"
+
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "alerts_private.h"
 
 /**
  * @defgroup services_notifications_alerts_preferences Alert preferences

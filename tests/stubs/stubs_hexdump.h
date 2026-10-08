@@ -3,12 +3,13 @@
 
 #pragma once
 
-#include <system/hexdump.h>
-#include <pbl/logging/logging.h>
-
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
+
+#include <pbl/logging/logging.h>
+
+#include <system/hexdump.h>
 
 void hexdump_using_serial(int level, const char *src_filename, int src_line_number,
                           const char *line_buffer) {

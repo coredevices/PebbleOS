@@ -5,11 +5,12 @@
 
 #include "display.h"
 
-#include <cmsis_core.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
+
+#include <cmsis_core.h>
 
 // Compatibility type for gpio.h (QEMU has no real GPIO peripheral struct)
 typedef void GPIO_TypeDef;

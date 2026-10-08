@@ -2,8 +2,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "ams.h"
+
 #include "ams_analytics.h"
 #include "ams_util.h"
+
+#include <string.h>
+
+#include <pbl/btutil/bt_device.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/music_internal.h>
+#include <pbl/util/units.h>
 
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_client_accessors.h>
@@ -11,21 +20,10 @@
 #include <comm/ble/gatt_client_subscriptions.h>
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
-
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-
-#include <pbl/services/music_internal.h>
-
-#include <pbl/logging/logging.h>
 #include <system/hexdump.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/units.h>
-
-#include <pbl/btutil/bt_device.h>
-
-#include <string.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

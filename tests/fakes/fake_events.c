@@ -2,9 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fake_events.h"
-#include <kernel/pbl_malloc.h>
 
 #include <string.h>
+
+#include <kernel/pbl_malloc.h>
 
 static PebbleEvent s_last_pebble_event;
 static uint32_t s_fake_event_count = 0;

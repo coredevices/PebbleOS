@@ -3,12 +3,11 @@
 
 #pragma once
 
-#include <pbl/util/list.h>
-
-#include <pbl/kernel/sem.h>
-
 #include <errno.h>
 #include <stdlib.h>
+
+#include <pbl/kernel/sem.h>
+#include <pbl/util/list.h>
 
 //! Counting semaphore fake. A yield callback stands in for the other task:
 //! it runs while a take would block and returns the ticks it consumed.

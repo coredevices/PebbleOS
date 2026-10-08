@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "test_health_app_includes.h"
+
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
+
 #include <apps/system/health/data.h>
 #include <apps/system/health/data_private.h>
 #include <apps/system/health/sleep_summary_card.h>
-
-#include "test_health_app_includes.h"
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
 
 // Setup and Teardown
 ////////////////////////////////////

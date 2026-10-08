@@ -2,11 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/mcu/mpu.h>
-
 #include <pbl/util/size.h>
 
 #include <cmsis_core.h>
-
 #include <kernel.h>
 
 // On SF32LB52 the SiFli vendor code (system_bf0_ap.c) programs its own MPU

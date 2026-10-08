@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "property_animation_private.h"
 #include "animation_interpolate.h"
 #include "animation_private.h"
 #include "animation_timing.h"
-#include <applib/legacy2/ui/property_animation_legacy2.h>
+#include "layer.h"
+#include "property_animation_private.h"
+
+#include <pbl/util/size.h>
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
+#include <applib/legacy2/ui/property_animation_legacy2.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-#include "layer.h"
 
 /////////////////////
 // Property Animation

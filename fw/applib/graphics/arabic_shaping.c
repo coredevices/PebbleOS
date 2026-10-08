@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "arabic_shaping.h"
+
 #include <pbl/kernel/compiler.h>
 
 // Caps codepoints per shaping call. Sized to match walk_line's 128-byte

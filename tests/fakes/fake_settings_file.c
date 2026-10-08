@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/settings/settings_file.h>
-#include <system/status_codes.h>
-#include <pbl/crc/crc.h>
-
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
+
+#include <pbl/crc/crc.h>
+#include <pbl/services/settings/settings_file.h>
 
 #include <clar_asserts.h>
+#include <system/status_codes.h>
 
 struct {
   bool open;

@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <applib/app_timer.h>
-#include <applib/ui/text_layer.h>
-#include <applib/ui/status_bar_layer.h>
-#include <applib/ui/kino/kino_layer.h>
-#include <applib/ui/window.h>
-
 #include <stdbool.h>
+
+#include <applib/app_timer.h>
+#include <applib/ui/kino/kino_layer.h>
+#include <applib/ui/status_bar_layer.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window.h>
 
 #define DIALOG_MAX_MESSAGE_LEN 140
 #define DIALOG_IS_ANIMATED     true

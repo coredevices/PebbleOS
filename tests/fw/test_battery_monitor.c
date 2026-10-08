@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/battery/battery_state.h>
-#include <pbl/services/battery/battery_curve.h>
 
 #include <clar.h>
 
 // Stubs
 ////////////////////////////////////
+#include <pbl/logging/logging.h>
+
+#include <fake_battery.h>
+#include <fake_new_timer.h>
+#include <fake_rtc.h>
+#include <fake_system_task.h>
+#include <kernel/events.h>
 #include <stubs_analytics.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
 #include <stubs_serial.h>
-#include <fake_new_timer.h>
-#include <fake_battery.h>
-#include <fake_system_task.h>
-#include <fake_rtc.h>
-
-#include <kernel/events.h>
-#include <pbl/logging/logging.h>
 #include <system/reboot_reason.h>
 
 static bool s_entered_standby;

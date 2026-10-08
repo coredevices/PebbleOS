@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <board/board.h>
-
 #include <stdbool.h>
+
+#include <board/board.h>
 
 /**
  * @defgroup drivers_i2c_hal I2C HAL

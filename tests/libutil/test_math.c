@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/trig.h>
-#include <pbl/util/math.h>
-
-#include <math.h>
 #include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
+
+#include <pbl/util/math.h>
+#include <pbl/util/trig.h>
 
 #include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 #include <stubs_logging.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
 
 // Tests
 ///////////////////////////////////////////////////////////

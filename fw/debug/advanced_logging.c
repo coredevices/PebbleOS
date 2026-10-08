@@ -5,10 +5,10 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/mutex.h>
-#include <system/passert.h>
+#include <pbl/services/system_task.h>
 #include <pbl/util/shared_cbuf.h>
 
-#include <pbl/services/system_task.h>
+#include <system/passert.h>
 
 static struct pbl_shared_cbuf s_buffer;
 static struct pbl_shared_cbuf_client s_buffer_client;

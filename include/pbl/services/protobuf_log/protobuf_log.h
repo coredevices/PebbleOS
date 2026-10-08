@@ -3,16 +3,17 @@
 
 #pragma once
 
-#include <pbl/services/hrm/hrm_manager.h>
-#include <pbl/services/data_logging/dls_private.h>
-#include <system/version.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <pbl/services/data_logging/dls_private.h>
+#include <pbl/services/hrm/hrm_manager.h>
+
+#include <system/version.h>
+
 // Generated from fw/services/protobuf_log/proto
-#include <measurements.pb.h>
 #include <event.pb.h>
+#include <measurements.pb.h>
 
 /**
  * @defgroup services_protobuf_log Protobuf log

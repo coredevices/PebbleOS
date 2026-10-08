@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <pbl/drivers/mic.h>
-#include <pbl/services/new_timer/new_timer.h>
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/drivers/mic.h>
+#include <pbl/services/new_timer/new_timer.h>
 
 /**
  * @defgroup drivers_mic_qemu QEMU microphone

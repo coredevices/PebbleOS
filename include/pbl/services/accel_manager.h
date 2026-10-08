@@ -5,10 +5,10 @@
 
 #include "accel_manager_types.h"
 
-#include <kernel/pebble_tasks.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <kernel/pebble_tasks.h>
 
 /**
  * @defgroup services_accel_manager Accelerometer manager

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <kernel/events.h>
-
 #include <stddef.h>
+
+#include <kernel/events.h>
 
 #define SHELL_PREFS_FILE_NAME "shellpref"
 // TODO: PBL-42170 Improve settings file to better utilize large sector sizes

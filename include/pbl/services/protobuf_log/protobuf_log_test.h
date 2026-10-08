@@ -4,9 +4,10 @@
 #pragma once
 
 #include "protobuf_log.h"
-#include <pbl/services/activity/activity.h>
 
 #include <stdint.h>
+
+#include <pbl/services/activity/activity.h>
 
 /**
  * @defgroup services_protobuf_log_protobuf_log_test Payload decoding

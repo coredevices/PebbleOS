@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de> */
 /* SPDX-License-Identifier: MIT */
 
-#include <pbl/util/utf8.h>
-
 #include <stdint.h>
+
+#include <pbl/util/utf8.h>
 
 // clang-format off
 static const uint8_t s_utf8d[] = {

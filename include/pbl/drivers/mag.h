@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup drivers_mag Magnetometer

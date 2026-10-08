@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/notifications/ancs/nexmo.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
+#include <pbl/services/notifications/ancs/nexmo.h>
+#include <pbl/util/testing.h>
 
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
-
-#include <pbl/logging/logging.h>
-#include <pbl/util/testing.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

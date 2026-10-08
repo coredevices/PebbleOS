@@ -1,24 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/graphics.h>
-#include <applib/graphics/graphics_private.h>
-#include <applib/graphics/bitblt.h>
-#include <applib/graphics/bitblt_private.h>
-#include <applib/graphics/1_bit/framebuffer.h>
-#include <applib/graphics/gtypes.h>
-
-#include <clar.h>
 #include "util.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
+#include <applib/graphics/1_bit/framebuffer.h>
+#include <applib/graphics/bitblt.h>
+#include <applib/graphics/bitblt_private.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/graphics_private.h>
+#include <applib/graphics/gtypes.h>
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include <stubs_applib_resource.h>
 #include "test_graphics.h"
+
+#include <stubs_applib_resource.h>
 
 extern void prv_apply_tint_color(GColor *color, GColor tint_color);
 

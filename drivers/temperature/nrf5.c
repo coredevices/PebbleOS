@@ -3,10 +3,9 @@
 
 #include <pbl/drivers/temperature.h>
 
-#include <kernel/util/delay.h>
-
-#include <nrfx.h>
 #include <hal/nrf_temp.h>
+#include <kernel/util/delay.h>
+#include <nrfx.h>
 
 #define CONVERSION_TIMEOUT_US 100U
 

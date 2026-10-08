@@ -3,12 +3,13 @@
 
 #include "phone_formatting.h"
 
-#include <applib/graphics/utf8.h>
-#include <pbl/util/math.h>
-
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <pbl/util/math.h>
+
+#include <applib/graphics/utf8.h>
 
 // Turn every word after the first one into an initial.
 // e.g. Katharine Claire Berry -> Katharine C. B.

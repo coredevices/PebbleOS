@@ -1,11 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/util/interval_timer.h>
-
-#include <fakes/fake_rtc.h>
-
 #include <clar.h>
+#include <fakes/fake_rtc.h>
+#include <kernel/util/interval_timer.h>
 
 void passert_failed_no_message(const char *filename, int line_number) {
 }

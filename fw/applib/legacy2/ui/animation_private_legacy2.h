@@ -4,7 +4,6 @@
 #pragma once
 
 #include <process_management/app_manager.h>
-
 #include <syscall/syscall.h>
 
 typedef struct {

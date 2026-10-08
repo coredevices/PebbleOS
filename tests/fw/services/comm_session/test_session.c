@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
 #include <pbl/bluetooth/comm.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
 #include <pbl/services/comm_session/session_transport.h>
+
+#include <clar.h>
 #include <kernel/events.h>
 
 extern void comm_session_set_capabilities(CommSession *session,
@@ -122,10 +123,10 @@ static const TransportImplementation s_transport_imp = {
 // Fakes
 ///////////////////////////////////////////////////////////
 
+#include <fake_app_manager.h>
 #include <fake_kernel_malloc.h>
 #include <fake_session_send_buffer.h>
 #include <fake_system_task.h>
-#include <fake_app_manager.h>
 
 static void prv_system_task_cb(void *data) {
   CommSession *session = (CommSession *)data;

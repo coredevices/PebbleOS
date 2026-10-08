@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/util/size.h>
 
 #include <applib/health_service_private.h>
-#include <pbl/services/activity/activity.h>
+#include <clar.h>
 #include <shell/prefs_syscalls.h>
-#include <pbl/util/size.h>
 
 // Stubs
 #include <stubs_app_manager.h>
@@ -16,12 +16,13 @@
 #include <stubs_worker_manager.h>
 
 // Fakes
-#include <fake_rtc.h>
-#include <fake_pbl_std.h>
-#include <pbl/util/testing.h>
 #include <pbl/services/time.h>
+#include <pbl/util/testing.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
+
+#include <fake_pbl_std.h>
+#include <fake_rtc.h>
 
 bool sys_activity_is_initialized(void) {
   return true;

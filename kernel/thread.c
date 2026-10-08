@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <string.h>
-
 #include "kernel.h"
+
+#include <string.h>
 
 #define STACK_FILL 0xa5a5a5a5u
 

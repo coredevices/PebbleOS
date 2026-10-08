@@ -3,12 +3,13 @@
 
 #pragma once
 
-#include <board/board.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <pbl/drivers/audio.h>
 #include <pbl/util/circular_buffer.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <board/board.h>
 
 /**
  * @defgroup drivers_speaker_sf32lb52 SF32LB52 audio

@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include <pbl/services/system_task.h>
 #include "fake_pebble_tasks.h"
 
+#include <stdint.h>
+#include <string.h>
+
+#include <pbl/services/system_task.h>
 #include <pbl/util/list.h>
 
 #include <clar_asserts.h>
-
-#include <string.h>
-#include <stdint.h>
 
 typedef struct {
   ListNode node;

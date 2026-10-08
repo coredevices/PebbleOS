@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
 
 /**
  * @defgroup services_shared_prf_storage Shared PRF storage

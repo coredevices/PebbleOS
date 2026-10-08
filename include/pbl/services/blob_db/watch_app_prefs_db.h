@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <apps/system/send_text/prefs.h>
-#include <apps/system/reminders/reminder_prefs.h>
 #include <pbl/services/weather/weather_service_private.h>
+
+#include <apps/system/reminders/reminder_prefs.h>
+#include <apps/system/send_text/prefs.h>
 #include <system/status_codes.h>
 
 /**

@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/compositor/default/compositor_slide_transitions.h>
-
+#include <pbl/logging/logging.h>
 #include <pbl/services/compositor/compositor_private.h>
 #include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/compositor/default/compositor_slide_transitions.h>
 
-#include <apps/system/timeline/common.h>
 #include <applib/graphics/bitblt.h>
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/animation_interpolate.h>
+#include <apps/system/timeline/common.h>
 #include <popups/timeline/peek.h>
-#include <pbl/logging/logging.h>
 
 // TODO: PBL-31388 Factor out vertical compositor slide animations
 // This does a similar transition to the legacy modal slide transition

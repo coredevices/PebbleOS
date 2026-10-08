@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/kernel/sem.h>
+#include <stdint.h>
+
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
-
-#include <stdint.h>
+#include <pbl/kernel/sem.h>
 
 /**
  * @defgroup drivers_i2c_definitions I2C bus definitions

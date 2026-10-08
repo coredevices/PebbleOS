@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/button.h>
 #include <pbl/drivers/debounced_button.h>
+#include <pbl/drivers/exti.h>
+#include <pbl/util/bitops.h>
 
 #include <board/board.h>
-#include <pbl/drivers/button.h>
-#include <pbl/drivers/exti.h>
 #include <kernel/events.h>
+#include <nrfx.h>
 #include <system/bootbits.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
-#include <pbl/util/bitops.h>
-
-#include <nrfx.h>
 
 // We want TIM4 to run at 32KHz
 static const uint32_t TIMER_FREQUENCY_HZ = 31250;

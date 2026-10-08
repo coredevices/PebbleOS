@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <applib/app_inbox.h>
-#include <kernel/events.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/util/list.h>
+
+#include <applib/app_inbox.h>
+#include <clar.h>
+#include <kernel/events.h>
 
 extern bool app_inbox_service_has_inbox_for_tag(AppInboxServiceTag tag);
 extern bool app_inbox_service_has_inbox_for_storage(uint8_t *storage);
@@ -19,7 +19,6 @@ extern size_t app_inbox_service_num_success_for_tag(AppInboxServiceTag tag);
 
 #include <fake_kernel_malloc.h>
 #include <fake_pebble_tasks.h>
-
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>

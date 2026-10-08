@@ -3,12 +3,12 @@
 
 #include "text_node.h"
 
-#include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/math.h>
 
 #include <applib/graphics/graphics.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 //! The max text node traversal draw depth.
 //! The deepest layout as of this commit is 4, belonging to the calendar layout glance time.

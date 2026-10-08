@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include <applib/app_timer.h>
+#include <string.h>
+
 #include <pbl/logging/logging.h>
 
-#include <string.h>
+#include <applib/app_timer.h>
 
 typedef struct FakeAppTimer {
   uint32_t timeout_ms;

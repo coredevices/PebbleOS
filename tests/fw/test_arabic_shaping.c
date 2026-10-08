@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <applib/graphics/arabic_shaping.h>
 #include <applib/graphics/utf8.h>
-
 #include <clar.h>
-
-#include <string.h>
 
 ///////////////////////////////////////////////////////////
 // Stubs

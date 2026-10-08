@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 
-#include <resource/timeline_resource_ids.auto.h>
 #include <pbl/kernel/compiler.h>
+
+#include <resource/timeline_resource_ids.auto.h>
 
 // Chunked dictionary 1/2 sent by ANCS (w/header)
 // 00 97 00 00 00 00 13 00  63 6f 6d 2e 61 70 70 6c   ........ com.appl

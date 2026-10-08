@@ -1,30 +1,31 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/health_service.h>
-#include <applib/app.h>
-#include <applib/app_logging.h>
-#include <applib/fonts/fonts.h>
-#include <applib/persist.h>
-#include <applib/ui/ui.h>
-#include <applib/ui/dialogs/expandable_dialog.h>
-#include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
-#include <process_state/app_state/app_state.h>
-#include <pbl/services/activity/activity_algorithm.h>
-#include <pbl/services/activity/activity_insights.h>
-#include <pbl/services/data_logging/data_logging_service.h>
-#include <shell/prefs.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/size.h>
-#include <pbl/util/string.h>
-#include <pbl/util/trig.h>
-
 #include "activity_demo.h"
 
 #include <stdio.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/activity/activity_algorithm.h>
+#include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/util/size.h>
+#include <pbl/util/string.h>
 #include <pbl/util/time.h>
+#include <pbl/util/trig.h>
 #include <pbl/util/units.h>
+
+#include <applib/app.h>
+#include <applib/app_logging.h>
+#include <applib/fonts/fonts.h>
+#include <applib/health_service.h>
+#include <applib/persist.h>
+#include <applib/ui/dialogs/expandable_dialog.h>
+#include <applib/ui/ui.h>
+#include <apps/system_app_ids.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <shell/prefs.h>
 
 #define CURRENT_STEP_AVG 500
 #define DAILY_STEP_AVG   1000

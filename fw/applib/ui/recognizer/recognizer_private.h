@@ -7,11 +7,11 @@
 #include "recognizer_impl.h"
 #include "recognizer_manager.h"
 
-#include <pbl/services/touch/touch_event.h>
-#include <pbl/util/list.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/touch/touch_event.h>
+#include <pbl/util/list.h>
 
 typedef void (*RecognizerOnRemoveCb)(Recognizer *recognizer, void *context);
 

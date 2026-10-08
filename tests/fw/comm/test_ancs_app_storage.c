@@ -1,39 +1,39 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <applib/persist_map.h>
-#include <applib/persist_private.h>
-#include <comm/ble/app_profiles/ancs_app_storage.h>
-#include <pbl/drivers/crc.h>
-#include <kernel/services/file.h>
-#include <system/filesystem.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/size.h>
-
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/drivers/crc.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
+
+#include <applib/persist_map.h>
+#include <applib/persist_private.h>
+#include <clar.h>
+#include <comm/ble/app_profiles/ancs_app_storage.h>
+#include <kernel/services/file.h>
+#include <system/filesystem.h>
+
 // Stubs
 ////////////////////////////////////
 
-#include <stubs_passert.h>
-#include <stubs_serial.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_serial.h>
 #include <stubs_system_reset.h>
 #include <stubs_task_wdt.h>
 
 // Fakes
 ////////////////////////////////////
 
+#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <fake_new_timer.h>
-#include <fake_pbl_malloc.h>
 
 // Tests
 ////////////////////////////////////

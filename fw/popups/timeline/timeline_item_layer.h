@@ -3,12 +3,13 @@
 
 #pragma once
 
+#include <pbl/services/timeline/item.h>
+#include <pbl/services/timeline/timeline_layout.h>
+
 #include <applib/graphics/text.h>
 #include <applib/ui/layer.h>
 #include <applib/ui/property_animation_private.h>
 #include <kernel/events.h>
-#include <pbl/services/timeline/item.h>
-#include <pbl/services/timeline/timeline_layout.h>
 
 //! The timeline item layer is a mock UI used to display timeline items
 //! until actual layouts are implemented. It is somewhat related to the

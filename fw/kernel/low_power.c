@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/low_power.h>
+#include <stdbool.h>
+
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/runlevel.h>
 
 #include <apps/prf/low_power.h>
 #include <kernel/event_loop.h>
+#include <kernel/low_power.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/util/standby.h>
 #include <mfg/mfg_mode/mfg_factory_mode.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/services/runlevel.h>
-
-#include <stdbool.h>
 
 static bool s_low_power_active, s_prev_low_power_active;
 static TimerID s_toggle_timer = TIMER_INVALID_ID;

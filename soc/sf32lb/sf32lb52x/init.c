@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <drivers/watchdog.h>
 #include <pbl/kernel/init.h>
-#include <system/passert.h>
 
 #include <bf0_hal.h>
+#include <drivers/watchdog.h>
+#include <system/passert.h>
 
 #define HCPU_FREQ_MHZ    240
 #define PWRKEY_RESET_CNT (32000 * 15)

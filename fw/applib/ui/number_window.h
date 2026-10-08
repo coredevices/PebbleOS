@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "action_bar_layer.h"
 #include "layer.h"
 #include "text_layer.h"
-#include "action_bar_layer.h"
 #include "window.h"
 
 //! @file number_window.h

@@ -5,10 +5,10 @@
 
 #include "gdraw_command_frame.h"
 
-#include <applib/graphics/gtypes.h>
-
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <applib/graphics/gtypes.h>
 
 //! @file graphics/gdraw_command_sequence.h
 //! Defines the functions to manipulate \ref GDrawCommandSequence objects

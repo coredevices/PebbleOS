@@ -1,27 +1,27 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/accel_manager.h>
+#include <inttypes.h>
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/vibe.h>
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/mcu/interrupts.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
+#include <pbl/mcu/interrupts.h>
+#include <pbl/services/accel_manager.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/system_task.h>
 #include <pbl/services/imu/units.h>
+#include <pbl/services/system_task.h>
 #include <pbl/services/vibe_pattern.h>
-#include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/util/math.h>
 #include <pbl/util/shared_cbuf.h>
 
-#include <inttypes.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_accel_manager, CONFIG_SERVICE_ACCEL_MANAGER_LOG_LEVEL);
 

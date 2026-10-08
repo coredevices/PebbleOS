@@ -2,48 +2,43 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "process_manager.h"
+
 #include "app_install_manager.h"
 #include "app_manager.h"
+#include "pebble_process_md.h"
 #include "worker_manager.h"
 
-#include <applib/app_logging.h>
-#include <applib/accel_service_private.h>
-#include <applib/platform.h>
-#include <applib/ui/dialogs/dialog.h>
-#include <applib/ui/dialogs/expandable_dialog.h>
-
-#include <process_state/app_state/app_state.h>
-#include <process_state/worker_state/worker_state.h>
-
-#include "pebble_process_md.h"
-#include <kernel/pebble_tasks.h>
+#include <pbl/kernel/debug.h>
 #include <pbl/kernel/types.h>
-#include <resource/resource_ids.auto.h>
-#include <pbl/services/animation_service.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
-#include <pbl/services/evented_timer.h>
-#include <pbl/services/event_service.h>
-#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/animation_service.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/event_service.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/persist.h>
 #include <pbl/services/voice/voice.h>
-#include <shell/normal/watchface.h>
-
-#include <syscall/syscall.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-
-#include <kernel/pbl_malloc.h>
-#include <kernel/ui/modals/modal_manager.h>
 #include <pbl/util/heap.h>
 
-#include <syscall/syscall_internal.h>
-
+#include <applib/accel_service_private.h>
+#include <applib/app_logging.h>
+#include <applib/platform.h>
+#include <applib/ui/dialogs/dialog.h>
+#include <applib/ui/dialogs/expandable_dialog.h>
 #include <apps/system/app_fetch_ui.h>
-
-#include <pbl/kernel/debug.h>
+#include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <process_state/app_state/app_state.h>
+#include <process_state/worker_state/worker_state.h>
+#include <resource/resource_ids.auto.h>
+#include <shell/normal/watchface.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
 
 static TimerID s_deinit_timer_id = TIMER_INVALID_ID;
 

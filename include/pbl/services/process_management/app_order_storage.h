@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <process_management/app_install_manager.h>
 #include <pbl/kernel/compiler.h>
+
+#include <process_management/app_install_manager.h>
 
 /**
  * @defgroup services_process_management_app_order_storage App menu order storage

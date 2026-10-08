@@ -3,8 +3,8 @@
 
 #include "bitmap_layer.h"
 
-#include <applib/graphics/graphics.h>
 #include <applib/applib_malloc.auto.h>
+#include <applib/graphics/graphics.h>
 #include <process_management/process_manager.h>
 
 void bitmap_layer_update_proc(BitmapLayer *image, GContext *ctx) {

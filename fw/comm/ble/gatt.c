@@ -2,14 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/gatt.h>
-
+#include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/logging/logging.h>
+
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_service_changed.h>
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
-
-#include <pbl/bluetooth/pebble_pairing_service.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

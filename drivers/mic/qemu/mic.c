@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/new_timer/new_timer.h>
 
 #include <board/board.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-
-#include <string.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_qemu, CONFIG_DRIVER_MIC_LOG_LEVEL);
 

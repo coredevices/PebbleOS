@@ -5,25 +5,26 @@
 
 #ifdef CONFIG_SPEAKER
 
-#include <pbl/services/speaker/note_sequence.h>
 #include "pcm_stream.h"
 #include "track_player.h"
 
+#include <string.h>
+
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/rtc.h>
-#include <board/board.h>
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/speaker/note_sequence.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 
-#include <string.h>
+#include <board/board.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 

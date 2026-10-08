@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/app_logging.h>
-#include <applib/graphics/gbitmap_sequence.h>
-#include <applib/graphics/graphics.h>
-
-#include <clar.h>
 #include "util.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
 #include <pbl/util/size.h>
 
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
+#include <applib/app_logging.h>
+#include <applib/graphics/gbitmap_sequence.h>
+#include <applib/graphics/graphics.h>
+#include <clar.h>
 
 // Test files are Creative Commons 0 (ie. Public Domain) from
 // http://opengameart.org/content/game-character-blue-flappy-bird-sprite-sheets
@@ -32,16 +32,16 @@
 
 // Fakes
 ////////////////////////////////////
-#include <fake_resource_syscalls.h>
 #include <fake_app_timer.h>
+#include <fake_resource_syscalls.h>
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_applib_resource.h>
 #include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
 #define CUSTOM_LOG_INTERNAL
-#include <stubs_logging.h>
 #include <stubs_heap.h>
+#include <stubs_logging.h>
 #include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>
 #include <stubs_pebble_tasks.h>

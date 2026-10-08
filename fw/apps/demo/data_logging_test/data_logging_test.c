@@ -3,20 +3,21 @@
 
 #include "data_logging_test.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_private.h>
+
 #include <applib/app.h>
+#include <applib/app_logging.h>
+#include <applib/app_timer.h>
 #include <applib/data_logging.h>
 #include <applib/ui/app_window_stack.h>
-#include <applib/ui/window.h>
 #include <applib/ui/text_layer.h>
-#include <applib/app_timer.h>
-#include <applib/app_logging.h>
-
-#include <stdio.h>
-#include <string.h>
+#include <applib/ui/window.h>
 
 /*
  *  Incremental STM CRC32 implemented in software

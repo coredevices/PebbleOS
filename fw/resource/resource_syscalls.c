@@ -3,9 +3,10 @@
 
 #include "resource.h"
 
+#include <pbl/logging/logging.h>
+
 #include <process_management/app_manager.h>
 #include <syscall/syscall_internal.h>
-#include <pbl/logging/logging.h>
 
 //! @file resource_syscalls.c
 //! The landing place for untrusted code to use resources.

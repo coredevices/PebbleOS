@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/graphics/graphics.h>
 #include <pbl/kernel/compiler.h>
+
+#include <applib/graphics/graphics.h>
 
 void PBL_WEAK graphics_fill_circle(GContext *ctx, GPoint p, uint16_t radius) {
 }

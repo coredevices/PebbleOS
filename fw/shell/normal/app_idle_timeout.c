@@ -3,11 +3,12 @@
 
 #include "app_idle_timeout.h"
 
-#include <kernel/event_loop.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
+
+#include <kernel/event_loop.h>
 #include <shell/normal/watchface.h>
 #include <shell/system_shell.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
 
 TimerID s_timer;

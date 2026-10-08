@@ -1,25 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/util/uuid.h>
+#include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/timeline/timeline.h>
-#include <apps/system/timeline/model.h>
 #include <pbl/util/size.h>
+#include <pbl/util/uuid.h>
+
+#include <apps/system/timeline/model.h>
+#include <clar.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include <fake_spi_flash.h>
+#include <pbl/services/time.h>
+
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
-#include <pbl/services/time.h>
+#include <fake_spi_flash.h>
 
 static TimezoneInfo tz = {
   .tm_gmtoff = -8 * 60 * 60, // PST

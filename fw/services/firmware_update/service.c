@@ -1,22 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdbool.h>
+
+#include <pbl/kernel/sem.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/firmware_update.h>
+#include <pbl/services/runlevel.h>
+#include <pbl/util/math.h>
 
 #include <apps/core/progress_ui.h>
 #include <kernel/system_message.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_manager.h>
-#include <process_management/app_manager.h>
-#include <pbl/services/battery/battery_monitor.h>
-#include <pbl/services/runlevel.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-
-#include <pbl/kernel/sem.h>
-
-#include <stdbool.h>
 
 PBL_LOG_MODULE_DEFINE(service_firmware_update, CONFIG_SERVICE_FIRMWARE_UPDATE_LOG_LEVEL);
 

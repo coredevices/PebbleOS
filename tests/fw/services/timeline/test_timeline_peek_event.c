@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/events.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/services/timeline/peek.h>
 #include <pbl/services/timeline/timeline.h>
-#include <pbl/logging/logging.h>
 
 #include <clar.h>
+#include <kernel/events.h>
 #include <pebble_asserts.h>
 
 // Stubs
@@ -49,14 +49,15 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
+#include <pbl/util/units.h>
+
+#include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-#include <fake_spi_flash.h>
 #include <fake_settings_file.h>
-#include <fake_events.h>
-#include <pbl/util/units.h>
+#include <fake_spi_flash.h>
 
 bool calendar_layout_verify(bool existing_attributes[]) {
   return true;

@@ -8,10 +8,10 @@
 // bluetooth/gap_le_connect.h. These stubs mirror the current declarations in
 // fw/comm/bluetooth_analytics.h.
 
-#include <pbl/bluetooth/gap_le_connect.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/bluetooth/gap_le_connect.h>
 
 struct pbl_bt_slave_conn_event_stats;
 

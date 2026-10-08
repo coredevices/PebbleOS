@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+
 #include <pbl/mcu/fpu.h>
 
 #include <cmsis_core.h>
-
-#include <stdint.h>
 
 void mcu_fpu_cleanup(void) {
   // The lazy stacking mechanism for the Cortex M4 starts stacking FPU

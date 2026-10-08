@@ -1,21 +1,22 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <board/board.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/exti.h>
+#include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/rtc.h>
-#include <pbl/drivers/gpio.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/logging/logging.h>
-#include <system/status_codes.h>
+#include <pbl/util/bits.h>
+#include <pbl/util/math.h>
+
+#include <board/board.h>
 #include <kernel/util/delay.h>
 #include <kernel/util/sleep.h>
-#include <pbl/util/math.h>
-#include <pbl/util/bits.h>
+#include <system/status_codes.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 

@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pebble.h>
 #include <inttypes.h>
+
+#include <pebble.h>
 
 #define ACCEL_RAW_DATA 0
 #define TIMEOUT_MS     1000

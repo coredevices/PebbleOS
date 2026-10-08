@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "system_app_ids.auto.h"
+
 #include <resource/resource_ids.auto.h>
 
 extern const PebbleProcessMd *simplicity_get_app_info(void);

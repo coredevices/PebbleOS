@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef enum BootBitValue {
   BOOT_BIT_INITIALIZED = 0x1 << 0,

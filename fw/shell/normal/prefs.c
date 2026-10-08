@@ -2,47 +2,47 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "quick_launch.h"
-#include <shell/normal/quick_launch.h>
-#include <shell/normal/watchface.h>
-#include <shell/normal/prefs_sync.h>
-#include <shell/prefs.h>
-#include <shell/prefs_private.h>
-#include <shell/system_theme.h>
 
+#include <pbl/drivers/ambient_light.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/accel_manager.h>
+#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/touch/touch.h>
+#include <pbl/services/touch/touch_nav_service.h>
+#include <pbl/util/units.h>
+
+#include <applib/graphics/gtypes.h>
 #include <apps/system/timeline/timeline.h>
 #include <apps/system/toggle/quiet_time.h>
 #include <board/board.h>
-#include <applib/graphics/gtypes.h>
-#include <pbl/drivers/ambient_light.h>
-#include <pbl/kernel/mutex.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
-#include <pbl/services/accel_manager.h>
-#include <pbl/services/touch/touch.h>
-#include <pbl/services/touch/touch_nav_service.h>
-#include <pbl/services/hrm/hrm_manager.h>
-#include <pbl/services/i18n/i18n.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/util/units.h>
+#include <shell/normal/prefs_sync.h>
+#include <shell/normal/quick_launch.h>
+#include <shell/normal/watchface.h>
+#include <shell/prefs.h>
+#include <shell/prefs_private.h>
+#include <shell/system_theme.h>
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include <pbl/services/orientation_manager.h>
 #endif
+#include <stdbool.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/timeline/peek.h>
-#include <kernel/events.h>
-#include <kernel/event_loop.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
 
-#include <pbl/services/activity/activity.h>
-#include <pbl/services/activity/activity_insights.h>
-
-#include <pbl/services/analytics/analytics.h>
-
-#include <stdbool.h>
+#include <kernel/event_loop.h>
+#include <kernel/events.h>
+#include <system/passert.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 

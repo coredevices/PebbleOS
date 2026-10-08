@@ -3,13 +3,13 @@
 
 #include "flash_demo.h"
 
+#include <pbl/drivers/flash.h>
+#include <pbl/logging/logging.h>
+
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window.h>
-
-#include <pbl/drivers/flash.h>
 #include <flash_region/flash_region.h>
-#include <pbl/logging/logging.h>
 
 static Window *window;
 

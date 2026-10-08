@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
+
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -13,9 +13,10 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include <fakes/fake_rtc.h>
 #include <pbl/services/time.h>
 #include <pbl/util/units.h>
+
+#include <fakes/fake_rtc.h>
 
 // Tests
 ////////////////////////////////////////////////////////////////

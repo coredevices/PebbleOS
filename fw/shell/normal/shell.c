@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <shell/system_shell.h>
+#include <pbl/services/compositor/compositor_transitions.h>
 
 #include <apps/system_app_ids.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
-#include <pbl/services/compositor/compositor_transitions.h>
+#include <shell/system_shell.h>
 
 #define WATCHFACE_SHUTTER_COLOR GColorWhite
 #define HEALTH_SHUTTER_COLOR    PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite)

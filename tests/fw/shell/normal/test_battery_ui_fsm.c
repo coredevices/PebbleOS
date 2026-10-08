@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/services/battery/battery_curve.h>
+#include <pbl/util/ratio.h>
+
 #include <applib/ui/vibes.h>
 #include <apps/system_app_ids.h>
+#include <clar.h>
 #include <kernel/low_power.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/util/standby.h>
 #include <process_management/app_manager.h>
-#include <pbl/services/battery/battery_curve.h>
 #include <shell/normal/battery_ui.h>
-#include <pbl/util/ratio.h>
 
 extern void battery_ui_reset_fsm_for_tests(void);
 

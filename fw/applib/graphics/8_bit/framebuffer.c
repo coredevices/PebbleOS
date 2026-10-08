@@ -1,15 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/framebuffer.h>
+#include <stdint.h>
+#include <string.h>
 
+#include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gtypes.h>
 #include <board/display.h>
 #include <system/passert.h>
 #include <system/profiler.h>
-
-#include <stdint.h>
-#include <string.h>
 
 volatile const int FrameBuffer_MaxX = DISP_COLS;
 volatile const int FrameBuffer_MaxY = DISP_ROWS;

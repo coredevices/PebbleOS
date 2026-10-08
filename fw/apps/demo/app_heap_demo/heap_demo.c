@@ -2,12 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "heap_demo.h"
+
+#include <stdio.h>
+
 #include <applib/app.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
-
-#include <stdio.h>
 
 // This app allocated approximately 75% of memory available to it.
 // The idea is to run it multiple times to show that all data is being freed on

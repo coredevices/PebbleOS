@@ -15,19 +15,19 @@
 
 #include "weather.h"
 
-#include <pbl/services/i18n/i18n.h>
 #include "clock_face.h"
-#include "warning_dialog.h"
-#include "weather_report.h"
 #include "expanded_view.h"
 #include "forecast_list.h"
 #include "globe_view.h"
-#include "saved_locations.h"
-#include "weather_types.h"
-#include "weather_math.h"
-#include "weather_data_source.h"
-
 #include "pebble_compat.h"
+#include "saved_locations.h"
+#include "warning_dialog.h"
+#include "weather_data_source.h"
+#include "weather_math.h"
+#include "weather_report.h"
+#include "weather_types.h"
+
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline.h> // UUID_WEATHER_DATA_SOURCE
 #include <pbl/util/units.h>
 

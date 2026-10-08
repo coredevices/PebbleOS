@@ -3,11 +3,10 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/session_remote_version.h>
-
-#include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/services/comm_session/session_remote_version.h>
 
 /**
  * @defgroup services_bluetooth_bluetooth_persistent_storage Bonding database

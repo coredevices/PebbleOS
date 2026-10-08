@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <string.h>
 
 #include <pbl/util/generic_attr.h>
 
-#include <string.h>
+#include <clar.h>
 
 enum {
   AttrIdTranscription = 0x02,

@@ -1,36 +1,36 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/events.h>
-#include <shell/shell_event_loop.h>
-#include <shell/prefs_private.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/workout_service.h>
+#include <pbl/services/app_inbox_service.h>
+#include <pbl/services/app_outbox_service.h>
+#include <pbl/services/blob_db/api.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/imaging.h>
+#include <pbl/services/music.h>
+#include <pbl/services/music_endpoint.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
+#include <pbl/services/stationary.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/timeline/event.h>
 
-#include <apps/system_app_ids.h>
 #include <apps/system/timeline/timeline.h>
+#include <apps/system_app_ids.h>
+#include <kernel/events.h>
 #include <popups/alarm_popup.h>
 #include <popups/bluetooth_pairing_ui.h>
 #include <popups/notifications/notification_window.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
-#include <pbl/services/blob_db/api.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-#include <pbl/services/activity/activity.h>
-#include <pbl/services/activity/workout_service.h>
-#include <pbl/services/app_inbox_service.h>
-#include <pbl/services/app_outbox_service.h>
-#include <pbl/services/imaging.h>
-#include <pbl/services/music.h>
-#include <pbl/services/music_endpoint.h>
-#include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/stationary.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/timeline/event.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/battery_ui.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
+#include <shell/prefs_private.h>
+#include <shell/shell_event_loop.h>
 
 extern void shell_prefs_init(void);
 

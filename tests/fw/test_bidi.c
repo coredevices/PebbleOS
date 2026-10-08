@@ -1,13 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Khalid Nuaim (kaluaim) */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/bidi.h>
-
-#include <clar.h>
+#include <string.h>
 
 #include <pbl/util/size.h>
 
-#include <string.h>
+#include <applib/graphics/bidi.h>
+#include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

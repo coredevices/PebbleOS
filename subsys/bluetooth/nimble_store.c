@@ -1,21 +1,23 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "nimble_type_conversions.h"
+
+#include <string.h>
+
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/util/list.h>
+
 #include <host/ble_hs.h>
 #include <host/ble_store.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/kernel/mutex.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <string.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/list.h>
-
-#include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

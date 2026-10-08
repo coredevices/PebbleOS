@@ -2,15 +2,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "weather_app_layout.h"
-#include <pbl/services/i18n/i18n.h>
-#include "weather_math.h"
-#include <applib/graphics/gdraw_command_transforms.h>
-#include <shell/prefs.h>
+
 #include "resource_ids.pin.h"
+#include "weather_math.h"
 
 #include <string.h>
 #include <time.h>
+
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/i18n/i18n.h>
+
+#include <applib/graphics/gdraw_command_transforms.h>
+#include <shell/prefs.h>
 
 #define WEATHER_APP_LAYOUT_TOP_PADDING PBL_IF_RECT_ELSE(4, 0)
 // Small rect (flint/asterix, 144x168): the emery 200x228 grid does not fit.

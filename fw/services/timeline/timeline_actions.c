@@ -1,7 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/blob_db/reminder_db.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/event_service.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/notifications/action_chaining_window.h>
+#include <pbl/services/notifications/alerts_preferences.h>
+#include <pbl/services/notifications/ancs/ancs_notifications.h>
+#include <pbl/services/notifications/notification_constants.h>
+#include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_actions.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/size.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/units.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/event_service_client.h>
@@ -25,24 +42,7 @@
 #include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
 #include <popups/notifications/notification_window.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/event_service.h>
-#include <pbl/services/evented_timer.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/notifications/action_chaining_window.h>
-#include <pbl/services/notifications/alerts_preferences.h>
-#include <pbl/services/notifications/ancs/ancs_notifications.h>
-#include <pbl/services/notifications/notification_constants.h>
-#include <pbl/services/notifications/notification_storage.h>
-#include <pbl/services/timeline/timeline.h>
-#include <pbl/services/timeline/timeline_resources.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-#include <pbl/util/testing.h>
-#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

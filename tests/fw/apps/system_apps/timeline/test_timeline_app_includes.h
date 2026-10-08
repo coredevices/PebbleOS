@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/ui/window_private.h>
 #include <pbl/util/size.h>
 
+#include <applib/ui/window_private.h>
 #include <clar.h>
 
 // Fakes
@@ -27,7 +27,6 @@
 #include <stubs_alerts_preferences.h>
 #include <stubs_analytics.h>
 #include <stubs_ancs.h>
-#include <stubs_animation_timing.h>
 #include <stubs_animation_timing.h>
 #include <stubs_app.h>
 #include <stubs_app_cache.h>

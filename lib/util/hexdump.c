@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/hexdump.h>
-
 #include <stdio.h>
 #include <string.h>
+
+#include <pbl/util/hexdump.h>
 
 // offset + gap + 8 hex bytes + gap + 8 hex bytes + gap + 8 ascii bytes
 // + mini gap + 8 ascii bytes + null:

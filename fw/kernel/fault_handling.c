@@ -4,28 +4,26 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
-#include <kernel/core_dump.h>
-#include <kernel/fault_handling.h>
-#include <logging/logging_private.h>
-#include <process_management/process_manager.h>
-#include <process_management/app_manager.h>
-#include <process_management/worker_manager.h>
-
-#include <applib/app_logging.h>
-#include <kernel/memory_layout.h>
+#include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/mcu/privilege.h>
 #include <pbl/services/system_task.h>
+#include <pbl/util/heap.h>
+#include <pbl/util/size.h>
+
+#include <applib/app_logging.h>
+#include <kernel/core_dump.h>
+#include <kernel/fault_handling.h>
+#include <kernel/memory_layout.h>
+#include <logging/logging_private.h>
+#include <process_management/app_manager.h>
+#include <process_management/process_manager.h>
+#include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
-#include <pbl/util/size.h>
-#include <pbl/logging/logging.h>
 #include <system/reboot_reason.h>
-#include <syscall/syscall.h>
-
-#include <pbl/util/heap.h>
 
 #ifndef CONFIG_ARCH_POSIX
 #include <cmsis_core.h>

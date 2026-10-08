@@ -5,19 +5,20 @@
 
 #include "app_glance_structured.h"
 
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
-#include <process_management/app_install_manager.h>
-#include <resource/resource_ids.auto.h>
+#include <stdio.h>
+
+#include <pbl/kernel/compiler.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_types.h>
-#include <system/passert.h>
-#include <pbl/kernel/compiler.h>
 #include <pbl/util/struct.h>
 
-#include <stdio.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/app_install_manager.h>
+#include <resource/resource_ids.auto.h>
+#include <system/passert.h>
 
 // Max size of the temperature and phrase displayed together
 #define WEATHER_APP_GLANCE_MAX_STRING_BUFFER_SIZE (WEATHER_SERVICE_MAX_SHORT_PHRASE_BUFFER_SIZE + 5)

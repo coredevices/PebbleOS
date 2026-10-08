@@ -4,11 +4,11 @@
 #pragma once
 
 // All graphics/UI includes needed for tests. Add here if more are needed.
-#include <applib/ui/layer.h>
-#include <applib/ui/window.h>
-#include <applib/ui/menu_layer.h>
-
 #include <stdint.h>
+
+#include <applib/ui/layer.h>
+#include <applib/ui/menu_layer.h>
+#include <applib/ui/window.h>
 
 //! GFX test struct
 typedef struct GfxTest {

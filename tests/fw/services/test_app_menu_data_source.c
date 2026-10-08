@@ -1,27 +1,27 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/app_cache.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/build_id.h>
+#include <pbl/util/size.h>
 
 #include <applib/ui/menu_layer.h>
+#include <clar.h>
+#include <fixtures/load_test_resources.h>
 #include <flash_region/flash_region.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_menu_data_source.h>
 #include <resource/resource.h>
 #include <resource/resource_storage.h>
 #include <resource/resource_storage_file.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/app_cache.h>
-#include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/util/build_id.h>
-#include <pbl/util/size.h>
-#include <fixtures/load_test_resources.h>
 
 // access it directly just to test things out
-#include <shell/system_app_registry_list.auto.h>
-
 #include <stdio.h>
+
+#include <shell/system_app_registry_list.auto.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -42,7 +42,6 @@
 #include <stubs_fonts.h>
 #include <stubs_gbitmap.h>
 #include <stubs_graphics.h>
-#include <stubs_graphics.h>
 #include <stubs_graphics_context.h>
 #include <stubs_heap.h>
 #include <stubs_hexdump.h>
@@ -59,7 +58,6 @@
 #include <stubs_pin_db.h>
 #include <stubs_process_loader.h>
 #include <stubs_process_manager.h>
-#include <stubs_process_manager.h>
 #include <stubs_put_bytes.h>
 #include <stubs_quick_launch.h>
 #include <stubs_rand_ptr.h>
@@ -73,8 +71,9 @@
 
 // Fake Includes
 ////////////////////////////////////
-#include <fake_spi_flash.h>
 #include <pbl/services/time.h>
+
+#include <fake_spi_flash.h>
 
 // Test reset function for app_order_storage cached state
 extern void app_order_storage_reset_for_tests(void);

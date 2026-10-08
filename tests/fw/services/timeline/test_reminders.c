@@ -1,13 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/timeline/reminders.h>
-
-#include <kernel/events.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/timeline/reminders.h>
 
 #include <clar.h>
+#include <kernel/events.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -15,13 +14,14 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 
+#include <pbl/services/time.h>
+
+#include <fake_cron.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
-#include <fake_cron.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 #include <stubs_layout_layer.h>
-#include <pbl/services/time.h>
 static time_t now = 0;
 static int num_events_put = 0;
 

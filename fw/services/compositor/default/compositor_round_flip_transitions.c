@@ -1,13 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/compositor/default/compositor_round_flip_transitions.h>
-
+#include <pbl/kernel/compiler.h>
 #include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/compositor/default/compositor_round_flip_transitions.h>
+#include <pbl/util/trig.h>
 
 #include <applib/graphics/framebuffer.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/trig.h>
 #include <system/passert.h>
 
 //! Packed so we can squeeze this into a void* as the animation context

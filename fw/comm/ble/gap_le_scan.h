@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
-
 #include <stdbool.h>
+
+#include <pbl/bluetooth/types.h>
 
 //! @internal
 //! The number of reports that the circular reports buffer can contain.

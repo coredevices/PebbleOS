@@ -1,34 +1,33 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/activity/activity_insights.h>
+#include <stdio.h>
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/health_util.h>
+#include <pbl/services/activity/hr_util.h>
 #include <pbl/services/activity/insights_settings.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
+#include <pbl/services/timeline/health_layout.h>
+#include <pbl/services/timeline/timeline.h>
+#include <pbl/services/timeline/weather_layout.h>
+#include <pbl/util/math.h>
+#include <pbl/util/stats.h>
+#include <pbl/util/string.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/units.h>
 
 #include <applib/event_service_client.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/timeline_resource_ids.auto.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/activity/health_util.h>
-#include <pbl/services/activity/hr_util.h>
-#include <pbl/services/settings/settings_file.h>
-#include <pbl/services/timeline/health_layout.h>
-#include <pbl/services/timeline/timeline.h>
-#include <pbl/services/timeline/weather_layout.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/testing.h>
-#include <pbl/util/math.h>
-#include <pbl/util/stats.h>
-#include <pbl/util/string.h>
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
-
-#include <stdio.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

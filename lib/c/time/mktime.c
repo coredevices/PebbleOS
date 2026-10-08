@@ -30,10 +30,9 @@
  * For additional information see http://www.ethernut.de/
  */
 
-#include <stdint.h>
-
-#include <time.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <time.h>
 
 /*
  * ChkAdd evaluates to TRUE if dest = src1 + src2 has overflowed

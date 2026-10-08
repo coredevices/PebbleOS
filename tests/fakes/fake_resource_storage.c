@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <resource/resource_storage_flash.h>
-#include <resource/resource_storage_impl.h>
-#include <resource/resource.h>
-
-#include <stdio.h>
 #include <inttypes.h>
+#include <stdio.h>
+
+#include <pbl/util/string.h>
 
 #include <flash_region/flash_region.h>
-#include <pbl/util/string.h>
+#include <resource/resource.h>
+#include <resource/resource_storage_flash.h>
+#include <resource/resource_storage_impl.h>
 
 void resource_storage_get_file_name(char *name, size_t buf_length, ResAppNum resource_bank) {
   concat_str_int("res_bank", resource_bank, name, buf_length);

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/notifications/notification_image.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/notifications/notification_image.h>
 
 void PBL_WEAK notification_image_service_init(void) {
 }

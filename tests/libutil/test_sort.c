@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 #include <pbl/util/size.h>
 #include <pbl/util/sort.h>
 
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h>
+#include <clar.h>
 
 static int prv_cmp(int32_t a, int32_t b) {
   if (a < b) {

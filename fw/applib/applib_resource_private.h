@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "applib_resource.h"
+
 #include <resource/resource.h>
 
 //! Checks if a passed pointer refers to builtin or memory-mapped data and manages reference

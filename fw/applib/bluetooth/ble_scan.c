@@ -5,12 +5,9 @@
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
-
-#include <process_state/app_state/app_state.h>
 #include <comm/ble/gap_le_scan.h>
-
 #include <kernel/events.h>
-
+#include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
 
 void ble_scan_handle_event(PebbleEvent *e) {

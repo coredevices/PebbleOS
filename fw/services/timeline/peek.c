@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/timeline/peek.h>
-
 #include <pbl/drivers/rtc.h>
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/timeline/timeline.h>
-#include <shell/prefs.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
+#include <pbl/services/timeline/peek.h>
+#include <pbl/services/timeline/timeline.h>
 #include <pbl/util/units.h>
+
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <shell/prefs.h>
 
 typedef struct TimelinePeekEventData {
   bool initialized;

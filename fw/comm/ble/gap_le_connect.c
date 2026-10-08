@@ -3,24 +3,25 @@
 
 #include "gap_le_connect.h"
 
-#include <comm/bluetooth_analytics.h>
-#include <comm/bt_conn_mgr.h>
-#include <comm/bt_lock.h>
 #include "gap_le_advert.h"
 #include "gap_le_connect_params.h"
 #include "gap_le_connection.h"
 #include "gap_le_task.h"
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+
+#include <comm/bluetooth_analytics.h>
+#include <comm/bt_conn_mgr.h>
+#include <comm/bt_lock.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

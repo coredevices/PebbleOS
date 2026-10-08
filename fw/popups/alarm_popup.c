@@ -3,36 +3,38 @@
 
 #include "alarm_popup.h"
 
+#include <stdio.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/alarms/alarm.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/vibes/vibe_client.h>
+#include <pbl/services/vibes/vibe_score.h>
+#include <pbl/util/units.h>
+
+#include <applib/ui/dialogs/actionable_dialog.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
-#include <applib/ui/dialogs/actionable_dialog.h>
 #include <applib/ui/vibes.h>
 #include <kernel/event_loop.h>
 #include <kernel/low_power.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/logging/logging.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/light.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/alarms/alarm.h>
-#include <pbl/util/units.h>
-
-#include <stdio.h>
-
-#include <pbl/services/vibes/vibe_client.h>
-#include <pbl/services/vibes/vibe_score.h>
 
 #ifdef CONFIG_SPEAKER
-#include <applib/event_service_client.h>
-#include <kernel/events.h>
+#include <time.h>
+
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/speaker/speaker_finish_reason.h>
 #include <pbl/services/speaker/speaker_service.h>
+
+#include <applib/event_service_client.h>
+#include <kernel/events.h>
 #include <services/alarms/alarm_tones.h>
-#include <time.h>
 #endif
 
 PBL_LOG_MODULE_DECLARE(service_alerts, CONFIG_SERVICE_ALERTS_LOG_LEVEL);

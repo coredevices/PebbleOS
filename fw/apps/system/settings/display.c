@@ -2,24 +2,26 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "display.h"
+
 #include "menu.h"
 #include "notifications_private.h"
 #include "option_menu.h"
 #include "window.h"
 
-#include <applib/ui/ui.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 #include <pbl/drivers/ambient_light.h>
-#include <kernel/pbl_malloc.h>
-#include <process_state/app_state/app_state.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
+#include <pbl/util/size.h>
+
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-
-#include <stdbool.h>
-#include <stdio.h>
 
 // Forward decl so the parent menu can push the Backlight submenu.
 static void prv_backlight_submenu_push(void);

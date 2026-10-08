@@ -2,13 +2,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "activity_detail_card.h"
-#include "detail_card.h"
-#include <pbl/services/activity/health_util.h>
 
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/i18n/i18n.h>
+#include "detail_card.h"
 
 #include <stdio.h>
+
+#include <pbl/services/activity/health_util.h>
+#include <pbl/services/i18n/i18n.h>
+
+#include <kernel/pbl_malloc.h>
 
 typedef struct HealthActivityDetailCard {
   int32_t daily_avg;

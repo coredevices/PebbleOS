@@ -7,7 +7,12 @@
 //! to exist because systems that were common to both PRF and normal firmware wouldn't try to
 //! use something that only exists in normal, but we're not quite there yet.
 
+#include <pbl/services/light.h>
+#include <pbl/services/notifications/alerts_private.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+#include <pbl/services/persist.h>
 #include <pbl/util/uuid.h>
+
 #include <board/board.h>
 #include <kernel/events.h>
 #include <popups/crashed_ui.h>
@@ -16,10 +21,6 @@
 #include <process_management/pebble_process_md.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/resource_storage_file.h>
-#include <pbl/services/light.h>
-#include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/notifications/alerts_private.h>
-#include <pbl/services/persist.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
 
@@ -90,8 +91,8 @@ bool phone_call_is_using_ANCS(void) {
   return true;
 }
 
-#include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/app_cache.h>
+#include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/blob_db/pin_db.h>
 
 status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {

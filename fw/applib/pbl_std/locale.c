@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "locale.h"
+
 #include <applib/i18n.h>
 #include <process_state/app_state/app_state.h>
 

@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <shell/normal/quick_launch.h>
 #include <pbl/kernel/compiler.h>
+
+#include <shell/normal/quick_launch.h>
 
 void PBL_WEAK quick_launch_remove_app(const Uuid *uuid) {
 }

@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include <applib/fonts/codepoint.h>
 #include "utf8.h"
 
 #include <stdbool.h>
 #include <stddef.h>
+
+#include <applib/fonts/codepoint.h>
 
 //! Arabic letter contextual form types
 typedef enum {

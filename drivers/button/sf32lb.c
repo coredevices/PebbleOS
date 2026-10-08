@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/button.h>
+#include <pbl/drivers/gpio.h>
 
 #include <board/board.h>
-#include <pbl/drivers/gpio.h>
 #include <kernel/events.h>
 #include <system/passert.h>
 

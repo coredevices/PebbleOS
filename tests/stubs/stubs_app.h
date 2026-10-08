@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/app.h>
 #include <pbl/kernel/compiler.h>
+
+#include <applib/app.h>
 
 void PBL_WEAK app_request_render(void) {
 }

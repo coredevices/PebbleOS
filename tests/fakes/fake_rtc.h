@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/drivers/rtc.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+
+#include <pbl/drivers/rtc.h>
 
 void fake_rtc_init(RtcTicks initial_ticks, time_t initial_time);
 

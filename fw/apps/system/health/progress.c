@@ -3,9 +3,9 @@
 
 #include "progress.h"
 
-#include <applib/graphics/gpath_builder.h>
-
 #include <pbl/logging/logging.h>
+
+#include <applib/graphics/gpath_builder.h>
 
 // Scales a total shape offset to an individual segment offset.
 // @param total_offset should not be larger than the segment's percent of total

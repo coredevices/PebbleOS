@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/activity/health_util.h>
-
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/activity/activity.h>
-#include <shell/prefs.h>
-#include <time.h>
-#include <pbl/util/units.h>
-
 #include <limits.h>
 #include <stdio.h>
+#include <time.h>
+
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/health_util.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/units.h>
+
+#include <shell/prefs.h>
 
 static void prv_convert_duration_to_hours_and_minutes(int duration_s, int *hours, int *minutes) {
   *hours = (duration_s / PBL_SEC_PER_HOUR) ?: INT_MIN;

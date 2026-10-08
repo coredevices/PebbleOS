@@ -1,21 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdbool.h>
+
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notification_storage_private.h>
-
-#include <flash_region/flash_region.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-
-#include <stdbool.h>
+#include <flash_region/flash_region.h>
 
 // Stubs
 ////////////////////////////////////
-#include <fake_spi_flash.h>
 #include <fake_rtc.h>
+#include <fake_spi_flash.h>
 #include <stubs_analytics.h>
 #include <stubs_hexdump.h>
 #include <stubs_layout_layer.h>

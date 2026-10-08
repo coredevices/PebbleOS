@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include <kernel/pebble_tasks.h>
-#include <pbl/kernel/compiler.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#include <pbl/kernel/compiler.h>
 #include <pbl/mcu/mpu.h>
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
+#include <kernel/pebble_tasks.h>
 
 //! Any function defined with this macro will be privileged.
 //! Privileges are raised upon entry to the syscall, and dropped

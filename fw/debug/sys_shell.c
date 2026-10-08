@@ -3,29 +3,28 @@
 
 #ifdef CONFIG_SHELL
 
+#include <errno.h>
+#include <inttypes.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/shell/shell.h>
 
 #include <kernel/event_loop.h>
 #include <kernel/util/delay.h>
 #include <kernel/util/factory_reset.h>
 #include <kernel/util/sleep.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <process_management/worker_manager.h>
 #include <system/bootbits.h>
 #include <system/passert.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 
-#include <errno.h>
-#include <inttypes.h>
-#include <stdint.h>
-#include <string.h>
-
 // The delay audit counts Cortex-M cycles.
 #if !defined(CONFIG_RELEASE) && defined(CONFIG_CPU_CORTEX_M)
 #define AUDIT_DELAY 1
 #include <cmsis_core.h>
-
 #include <system/profiler.h>
 #endif
 

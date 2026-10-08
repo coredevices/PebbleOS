@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/ambient_light.h>
-
-#include <board/board.h>
-#include <pbl/kernel/mutex.h>
-#include <system/passert.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/drivers/ambient_light.h>
+#include <pbl/kernel/mutex.h>
+
+#include <board/board.h>
+#include <system/passert.h>
 
 // Refcount framework for prime/release/suspend/resume. Drivers receive only
 // the resulting (active, sampling) booleans via ambient_light_driver_set_state.

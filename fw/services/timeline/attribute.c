@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/timeline/attribute.h>
-
-#include <pbl/services/timeline/attribute_private.h>
-
-#include <system/passert.h>
-#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/attribute_private.h>
 #include <pbl/util/math.h>
+
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 

@@ -2,14 +2,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "clock_face.h"
-#include <applib/ui/app_window_stack.h>
-#include <applib/ui/animation_interpolate.h>
+
+#include "pebble_compat.h"
 #include "weather_math.h"
 #include "weather_types.h"
-#include "pebble_compat.h"
-#include <pbl/services/clock.h> // clock_is_24h_style
-#include <applib/graphics/raw_image.h>
+
 #include <time.h>
+
+#include <pbl/services/clock.h> // clock_is_24h_style
+
+#include <applib/graphics/raw_image.h>
+#include <applib/ui/animation_interpolate.h>
+#include <applib/ui/app_window_stack.h>
 
 // ---- Layout ----
 #define LOCATION_BAR_H                18

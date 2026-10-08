@@ -2,20 +2,23 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fps_test.h"
+
 #include "fps_test_bitmaps.h"
+
+#include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
+
 #include <applib/app.h>
 #include <applib/graphics/graphics.h>
-#include <applib/graphics/text.h>
 #include <applib/graphics/gtypes.h>
+#include <applib/graphics/text.h>
 #include <applib/ui/app_window_stack.h>
-#include <applib/ui/window.h>
 #include <applib/ui/bitmap_layer.h>
 #include <applib/ui/menu_layer.h>
+#include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
 #include <system/profiler.h>
-#include <pbl/util/size.h>
 
 typedef struct AppData {
   Window window;

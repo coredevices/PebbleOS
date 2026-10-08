@@ -3,6 +3,9 @@
 
 #include "option_menu_demo.h"
 
+#include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
+
 #include <applib/app.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/option_menu_window.h>
@@ -10,8 +13,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/size.h>
 
 const char *s_strings[] = {
   "One",

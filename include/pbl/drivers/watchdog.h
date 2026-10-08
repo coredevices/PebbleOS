@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdbool.h>
+
 #include <pbl/drivers/mcu_reboot_reason.h>
 
 /**

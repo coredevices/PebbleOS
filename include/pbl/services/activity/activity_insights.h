@@ -4,9 +4,9 @@
 #pragma once
 
 #include "activity_private.h"
-#include <time.h>
 
 #include <stdint.h>
+#include <time.h>
 
 /**
  * @defgroup services_activity_activity_insights Activity insights

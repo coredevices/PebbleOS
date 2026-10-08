@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <comm/ble/gap_le_advert.h>
-#include <comm/ble/gap_le_connection.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
+#include <comm/ble/gap_le_advert.h>
+#include <comm/ble/gap_le_connection.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
 #include <fake_bt_advert.h>
 #include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_system_task.h>
-#include <fake_pbl_malloc.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

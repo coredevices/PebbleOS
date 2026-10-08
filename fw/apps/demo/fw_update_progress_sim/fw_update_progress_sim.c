@@ -3,18 +3,18 @@
 
 #include "fw_update_progress_sim.h"
 
+#include <stdint.h>
+#include <stdio.h>
+
 #include <applib/app.h>
 #include <applib/app_timer.h>
 #include <applib/fonts/fonts.h>
-#include <applib/ui/ui.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/progress_layer.h>
 #include <applib/ui/text_layer.h>
+#include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-
-#include <stdio.h>
-#include <stdint.h>
 
 #define UPDATE_FREQ_MS       75
 #define COMPLETE_PAUSE_MS    1000

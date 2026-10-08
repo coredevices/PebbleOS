@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <applib/graphics/gtypes.h>
-
 #include <clar.h>
 #include <stubs_app_state.h>
 #include <stubs_heap.h>

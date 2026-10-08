@@ -3,16 +3,14 @@
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RELEASE)
 
-#include <pbl/services/shared_prf_storage/shared_prf_storage_debug.h>
-
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/btutil/sm_util.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-#include <pbl/util/string.h>
-
-#include <pbl/bluetooth/types.h>
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/btutil/sm_util.h>
+#include <pbl/services/shared_prf_storage/shared_prf_storage_debug.h>
 #include <pbl/shell/shell.h>
+#include <pbl/util/string.h>
 
 void shared_prf_storage_dump_contents(const struct pbl_shell *sh) {
   pbl_shell_print(sh, "---Shared PRF Contents---");

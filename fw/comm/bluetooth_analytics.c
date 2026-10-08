@@ -3,15 +3,15 @@
 
 #include "bluetooth_analytics.h"
 
-#include <comm/ble/gap_le_connection.h>
-#include <comm/bt_lock.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/logging/logging.h>
-
 #include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/comm_session/session.h>
+
+#include <comm/ble/gap_le_connection.h>
+#include <comm/bt_lock.h>
 
 typedef struct {
   uint32_t slave_latency_events;

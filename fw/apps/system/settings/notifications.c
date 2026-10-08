@@ -6,18 +6,19 @@
 #include "option_menu.h"
 #include "window.h"
 
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/notifications/alerts_private.h>
+#include <pbl/util/size.h>
+#include <pbl/util/units.h>
+
 #include <applib/event_service_client.h>
 #include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/notifications/alerts_preferences_private.h>
-#include <pbl/services/notifications/alerts_private.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-#include <pbl/util/units.h>
 
 // Offset between vibe intensity menu item index and vibe intensity enum values
 #define INTENSITY_ROW_OFFSET 1

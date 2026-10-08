@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+
+#include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_monitor.h>
+#include <pbl/services/firmware_update.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/ratio.h>
+#include <pbl/util/testing.h>
 
 #include <board/board.h>
 #include <kernel/low_power.h>
 #include <kernel/util/standby.h>
-#include <pbl/services/firmware_update.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/ratio.h>
-
-#include <stdint.h>
-#include <pbl/util/testing.h>
 
 PBL_LOG_MODULE_DEFINE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 

@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "weather_data_shared.h"
+
 #include <pbl/drivers/rtc.h>
-#include <clar.h>
-
 #include <pbl/kernel/compiler.h>
-#include <pbl/util/pstring.h>
-
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/weather/weather_types.h>
-#include "weather_data_shared.h"
+#include <pbl/util/pstring.h>
+
+#include <clar.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -27,9 +27,9 @@
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
-#include <stubs_task_wdt.h>
 #include <stubs_pebble_tasks.h>
 #include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
 
 bool weather_service_supported_by_phone(void) {
   return true;

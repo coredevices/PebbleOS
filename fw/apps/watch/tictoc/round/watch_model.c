@@ -3,15 +3,16 @@
 
 #include "watch_model.h"
 
+#include <ctype.h>
+#include <time.h>
+
 #include <pbl/util/trig.h>
+
 #include <applib/app_watch_info.h>
 #include <applib/pbl_std/pbl_std.h>
 #include <applib/tick_timer_service.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
-#include <time.h>
-
-#include <ctype.h>
 
 // TODO: Add seconds as an option
 static void prv_calculate_hand_angles(struct tm *tick_time, int32_t *hour_angle,

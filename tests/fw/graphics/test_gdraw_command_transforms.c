@@ -1,28 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include "8bit/test_framebuffer.h"
+#include "test_graphics.h"
+#include "util.h"
+#include "weather_app_resources.h"
 
+#include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gdraw_command_private.h>
+#include <applib/graphics/gdraw_command_transforms.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/graphics_line.h>
 #include <applib/graphics/gtypes.h>
-#include <applib/graphics/framebuffer.h>
 #include <applib/ui/animation.h>
-#include <applib/ui/animation_timing.h>
 #include <applib/ui/animation_interpolate.h>
-
-#include <applib/graphics/gdraw_command_transforms.h>
-
-#include "util.h"
-#include "test_graphics.h"
-#include "8bit/test_framebuffer.h"
-#include "weather_app_resources.h"
+#include <applib/ui/animation_timing.h>
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_applib_resource.h>
+#include <stdio.h>
+
 #include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
 #include <stubs_heap.h>
 #include <stubs_logging.h>
 #include <stubs_memory_layout.h>
@@ -30,8 +30,6 @@
 #include <stubs_pbl_malloc.h>
 #include <stubs_resources.h>
 #include <stubs_syscalls.h>
-
-#include <stdio.h>
 
 // stubs
 

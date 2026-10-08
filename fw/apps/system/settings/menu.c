@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "menu.h"
+
 #include "activity_tracker.h"
 #include "bluetooth.h"
 #include "display.h"
-#include "menu.h"
 #include "notifications.h"
 #include "quick_launch.h"
 #include "quiet_time.h"

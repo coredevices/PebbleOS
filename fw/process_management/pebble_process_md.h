@@ -3,16 +3,16 @@
 
 #pragma once
 
+#include "pebble_process_info.h"
+
+#include <stdbool.h>
+
+#include <pbl/util/build_id.h>
+#include <pbl/util/uuid.h>
+
 #include <applib/platform.h>
 #include <kernel/pebble_tasks.h>
 #include <resource/resource.h>
-#include <pbl/util/build_id.h>
-
-#include "pebble_process_info.h"
-
-#include <pbl/util/uuid.h>
-
-#include <stdbool.h>
 
 typedef void (*PebbleMain)(void);
 

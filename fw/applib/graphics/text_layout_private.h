@@ -5,13 +5,15 @@
 
 //! Private layout interface (ie for unit testing)
 
-#include <pbl/util/iterator.h>
-#include <applib/fonts/codepoint.h>
-#include "text.h"
 #include "gtypes.h"
+#include "text.h"
 #include "utf8.h"
 
 #include <stdint.h>
+
+#include <pbl/util/iterator.h>
+
+#include <applib/fonts/codepoint.h>
 
 typedef struct {
   const Utf8Bounds *utf8_bounds; //<! start and end of utf-8 codepoints

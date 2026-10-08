@@ -5,9 +5,10 @@
 
 #include "app_glance.h"
 
+#include <pbl/util/uuid.h>
+
 #include <applib/ui/kino/kino_reel.h>
 #include <apps/system/timeline/text_node.h>
-#include <pbl/util/uuid.h>
 
 #define LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE \
   (GSize(ATTRIBUTE_ICON_TINY_SIZE_PX, ATTRIBUTE_ICON_TINY_SIZE_PX))

@@ -5,15 +5,16 @@
 
 #include <stdio.h>
 
+#include <pbl/logging/logging.h>
+
 #include <applib/accel_service.h>
 #include <applib/app.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/system_resource.h>
-#include <pbl/logging/logging.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct {
   Window window;

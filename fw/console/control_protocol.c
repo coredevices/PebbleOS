@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <console/control_protocol.h>
-#include <console/control_protocol_impl.h>
-
-#include <console/pulse2_transport_impl.h>
-#include <kernel/events.h>
-#include <kernel/util/sleep.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/util/math.h>
-#include <pbl/util/byteorder.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
+
+#include <console/control_protocol.h>
+#include <console/control_protocol_impl.h>
+#include <console/pulse2_transport_impl.h>
+#include <kernel/events.h>
+#include <kernel/util/sleep.h>
+#include <system/passert.h>
 
 #define MAX_CONFIGURE      (10)
 #define MAX_TERMINATE      (2)

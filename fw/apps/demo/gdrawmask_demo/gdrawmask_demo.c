@@ -3,17 +3,18 @@
 
 #include "gdrawmask_demo.h"
 
+#include <pbl/util/size.h>
+#include <pbl/util/trig.h>
+#include <pbl/util/units.h>
+
 #include <applib/app.h>
 #include <applib/app_light.h>
-#include <process_state/app_state/app_state.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <pbl/util/size.h>
-#include <pbl/util/trig.h>
-#include <pbl/util/units.h>
 
 typedef struct {
   Window window;

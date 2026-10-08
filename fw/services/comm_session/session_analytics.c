@@ -1,12 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/comm_session/session_analytics.h>
-
 #include <pbl/drivers/rtc.h>
-
-#include <pbl/services/comm_session/session_internal.h>
 #include <pbl/services/analytics/analytics.h>
+#include <pbl/services/comm_session/session_analytics.h>
+#include <pbl/services/comm_session/session_internal.h>
 
 CommSessionTransportType comm_session_analytics_get_transport_type(CommSession *session) {
   return session->transport_imp->get_type(session->transport);

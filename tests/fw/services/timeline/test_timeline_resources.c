@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/struct.h>
 
+#include <clar.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/timeline/timeline_resources.h>
 #include <system/passert.h>
-#include <pbl/util/struct.h>
 
 // Stubs
 /////////////////////////

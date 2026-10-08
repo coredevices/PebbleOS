@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/logging/logging.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/system_task.h>
 
 PBL_LOG_MODULE_DEFINE(service_health_sync_endpoint, CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT_LOG_LEVEL);
 

@@ -3,9 +3,9 @@
 
 #include "app_window_click_glue.h"
 
-#include <process_state/app_state/app_state.h>
 #include <applib/ui/click_internal.h>
 #include <applib/ui/window.h>
+#include <process_state/app_state/app_state.h>
 
 ////////////////////////////////////////////////
 // App + Click Recognizer + Window : Glue code

@@ -2,7 +2,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "layer.h"
+
 #include "layer_private.h"
+
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
@@ -16,13 +24,7 @@
 #include <kernel/pebble_tasks.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-
-#include <string.h>
-#include <pbl/util/testing.h>
-#include <pbl/kernel/compiler.h>
 
 void layer_init(Layer *layer, const GRect *frame) {
   *layer = (Layer){};

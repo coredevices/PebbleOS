@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup util_generic_attr Generic attributes

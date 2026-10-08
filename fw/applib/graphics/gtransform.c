@@ -1,11 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "gtypes.h"
 #include "gtransform.h"
-#include <pbl/util/trig.h>
+
+#include "gtypes.h"
 
 #include <string.h>
+
+#include <pbl/util/trig.h>
 
 //////////////////////////////////////
 /// Creating Transforms

@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/phone_pp.h>
-
-#include <kernel/events.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/phone_call_util.h>
-#include <system/hexdump.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/util/math.h>
-
 #include <stdbool.h>
 #include <string.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/phone_call_util.h>
+#include <pbl/services/phone_pp.h>
+#include <pbl/util/math.h>
+
+#include <kernel/events.h>
+#include <system/hexdump.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_phone_pp, CONFIG_SERVICE_PHONE_PP_LOG_LEVEL);
 

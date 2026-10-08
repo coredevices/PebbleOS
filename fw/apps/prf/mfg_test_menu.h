@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include <apps/prf/mfg_test_result.h>
 #include <process_management/pebble_process_md.h>
-
-#include <stdbool.h>
 
 const PebbleProcessMd *mfg_test_menu_semi_finished_app_get_info(void);
 const PebbleProcessMd *mfg_test_menu_finished_app_get_info(void);

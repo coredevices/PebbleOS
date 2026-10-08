@@ -4,11 +4,11 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/analytics/backend.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
 #include <pbl/util/uuid.h>

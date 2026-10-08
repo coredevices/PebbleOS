@@ -1,14 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <comm/ble/kernel_le_client/ams/ams.h>
-
-#include <comm/bt_conn_mgr.h>
-
 #include <pbl/services/music.h>
 #include <pbl/services/music_internal.h>
 
 #include <clar.h>
+#include <comm/ble/kernel_le_client/ams/ams.h>
+#include <comm/bt_conn_mgr.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////
@@ -18,7 +16,6 @@
 #include <fake_gatt_client_subscriptions.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-
 #include <stubs_app_install_manager.h>
 #include <stubs_app_manager.h>
 #include <stubs_bt_lock.h>

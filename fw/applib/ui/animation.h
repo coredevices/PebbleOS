@@ -2,9 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include <stdint.h>
-#include <stdbool.h>
 #include "animation_interpolate.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <pbl/drivers/rtc.h>
 #include <pbl/util/list.h>
 

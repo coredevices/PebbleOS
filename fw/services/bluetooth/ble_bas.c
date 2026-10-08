@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/event_service_client.h>
 #include <pbl/bluetooth/bas.h>
+
+#include <applib/event_service_client.h>
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>

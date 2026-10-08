@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/comm_session/session_internal.h>
+#include <pbl/util/uuid.h>
 
 #include <applib/app_message/app_message_internal.h>
+#include <applib/dict.h>
+#include <clar.h>
 #include <process_management/app_run_state.h>
 #include <process_management/launcher_app_message.h>
-#include <pbl/services/comm_session/session_internal.h>
 #include <system/passert.h>
-#include <applib/dict.h>
-#include <pbl/util/uuid.h>
 
 extern void launcher_app_message_reset(void);
 extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *session,

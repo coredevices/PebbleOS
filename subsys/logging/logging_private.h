@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
-
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 
 typedef struct PBL_PACKED LogBinaryMessage {
   uint32_t timestamp;

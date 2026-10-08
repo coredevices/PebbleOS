@@ -1,19 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/fault_handling.h>
-#include <logging/logging_private.h>
-#include <system/die.h>
-#include <system/reboot_reason.h>
+#include <inttypes.h>
+
 #include <pbl/util/bitops.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
 #include <cmsis_core.h>
-
-#include <inttypes.h>
-
+#include <kernel/fault_handling.h>
 #include <kernel/pebble_tasks.h>
+#include <logging/logging_private.h>
+#include <system/die.h>
+#include <system/reboot_reason.h>
 
 void fault_handler_dump_stacked_args(char buffer[80], unsigned int *stacked_args) {
   unsigned int stacked_r0 = ((unsigned long)stacked_args[0]);

@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <applib/fonts/codepoint.h>
-
 #include <clar.h>
 
 ///////////////////////////////////////////////////////////

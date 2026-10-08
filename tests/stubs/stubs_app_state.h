@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/app_glances/app_glance_service.h>
+#include <pbl/util/heap.h>
+
 #include <applib/graphics/graphics.h>
 #include <applib/ui/animation_private.h>
 #include <applib/ui/click_internal.h>
@@ -10,9 +14,6 @@
 #include <applib/ui/window_stack_private.h>
 #include <applib/unobstructed_area_service_private.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/app_glances/app_glance_service.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/heap.h>
 
 static Heap s_app_heap;
 

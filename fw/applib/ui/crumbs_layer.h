@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include <applib/graphics/graphics.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/layer.h>
-#include <applib/graphics/graphics.h>
 
 typedef struct {
   Layer layer;

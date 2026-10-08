@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include <applib/graphics/gtypes.h>
 #include <applib/graphics/gpath.h>
+#include <applib/graphics/gtypes.h>
 #include <applib/ui/layer.h>
 
 typedef struct PathLayer {

@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/framebuffer.h>
-#include <applib/graphics/graphics.h>
-#include <applib/ui/time_range_selection_window.h>
-#include <applib/ui/time_selection_window.h>
-#include <applib/ui/app_window_stack.h>
-#include <apps/system/settings/notifications_private.h>
-#include <resource/resource.h>
-#include <shell/system_theme.h>
-#include <system/passert.h>
-#include <applib/graphics/raw_image.h>
+#include <stdio.h>
+
 #include <pbl/util/hash.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/raw_image.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/time_range_selection_window.h>
+#include <applib/ui/time_selection_window.h>
+#include <apps/system/settings/notifications_private.h>
 #include <clar.h>
-
-#include <stdio.h>
+#include <resource/resource.h>
+#include <shell/system_theme.h>
+#include <system/passert.h>
 
 // Helper Functions
 /////////////////////
@@ -28,9 +28,10 @@
 // Fakes
 /////////////////////
 
+#include "../../fixtures/load_test_resources.h"
+
 #include <fake_graphics_context.h>
 #include <fake_spi_flash.h>
-#include "../../fixtures/load_test_resources.h"
 
 static GContext s_ctx;
 

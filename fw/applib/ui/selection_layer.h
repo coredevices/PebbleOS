@@ -6,6 +6,7 @@
 #include "click.h"
 #include "layer.h"
 #include "property_animation.h"
+
 #include <applib/fonts/fonts.h>
 
 #define SELECTION_LAYER_DEFAULT_CELL_HEIGHT PBL_IF_RECT_ELSE(34, 40)

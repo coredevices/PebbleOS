@@ -6,15 +6,16 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <pbl/services/battery/battery_curve.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+
 #include <applib/ui/dialogs/dialog_private.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/ui.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/battery/battery_curve.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 
 typedef void (*DialogUpdateFn)(Dialog *, void *);
 

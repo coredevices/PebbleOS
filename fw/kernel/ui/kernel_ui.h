@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include <pbl/services/timeline/timeline_actions.h>
+
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/content_indicator_private.h>
-#include <pbl/services/timeline/timeline_actions.h>
 
 void kernel_ui_init(void);
 

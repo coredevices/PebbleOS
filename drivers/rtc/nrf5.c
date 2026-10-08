@@ -1,24 +1,19 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
-#include <pbl/kernel/types.h>
-#include <pbl/drivers/rtc.h>
+#include <inttypes.h>
 
 #include <pbl/drivers/exti.h>
-
-#include <pbl/mcu/interrupts.h>
-
-#include <pbl/services/regular_timer.h>
-
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
-
+#include <pbl/mcu/interrupts.h>
+#include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 
 #include <hal/nrf_rtc.h>
-
-#include <inttypes.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rtc_nrf5, CONFIG_DRIVER_RTC_LOG_LEVEL);
 

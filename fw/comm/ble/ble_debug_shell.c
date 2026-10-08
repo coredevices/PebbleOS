@@ -3,15 +3,15 @@
 
 #ifdef CONFIG_SHELL
 
+#include <errno.h>
+#include <stdint.h>
+
 #include <pbl/bluetooth/gatt_discovery.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/shell/shell.h>
 
 #include <comm/ble/gap_le_connection.h>
 #include <comm/bt_lock.h>
-
-#include <errno.h>
-#include <stdint.h>
 
 // Not in a header, only used from within the gatt_service_changed module
 extern void gatt_client_discovery_discover_range(GAPLEConnection *connection,

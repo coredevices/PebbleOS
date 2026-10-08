@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include <time.h>
+
 #include <applib/graphics/gtypes.h>
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
-#include <time.h>
 
 /**
  * @defgroup services_notifications_ancs_ancs_notifications_util ANCS utilities

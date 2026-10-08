@@ -3,6 +3,10 @@
 
 #include "action_menu_demo.h"
 
+#include <string.h>
+
+#include <pbl/util/size.h>
+
 #include <applib/app.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/action_menu_hierarchy.h>
@@ -15,9 +19,6 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-
-#include <string.h>
 
 static struct {
   // main window

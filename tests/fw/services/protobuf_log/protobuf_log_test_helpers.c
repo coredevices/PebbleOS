@@ -3,10 +3,10 @@
 
 #include "protobuf_log_test_helpers.h"
 
-#include <pbl/services/protobuf_log/protobuf_log_private.h>
-
 #include <stdint.h>
 #include <stdio.h>
+
+#include <pbl/services/protobuf_log/protobuf_log_private.h>
 
 #define TMP_FILE    "tmp_protoc_bytes"
 #define TINTIN_PATH "/Users/thoffman/dev/tintin"

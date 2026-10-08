@@ -4,13 +4,14 @@
 #pragma once
 
 #include "app_install_types.h"
+#include "pebble_process_md.h"
+
+#include <pbl/drivers/rtc.h>
+#include <pbl/util/list.h>
 
 #include <applib/graphics/gtypes.h>
-#include <pbl/drivers/rtc.h>
 #include <kernel/events.h>
-#include "pebble_process_md.h"
 #include <resource/resource.h>
-#include <pbl/util/list.h>
 
 //////////////////////////////////////////////////////////////////////////////
 // This module is responsible for keeping track of what apps are installed,

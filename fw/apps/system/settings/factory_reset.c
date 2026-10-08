@@ -3,6 +3,10 @@
 
 #include "factory_reset.h"
 
+#include "bluetooth.h"
+
+#include <pbl/services/i18n/i18n.h>
+
 #include <applib/app_timer.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/action_bar_layer.h>
@@ -14,8 +18,6 @@
 #include <kernel/ui/system_icons.h>
 #include <kernel/util/factory_reset.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
-#include "bluetooth.h"
 
 #define MESSAGE_BUF_SIZE 96
 

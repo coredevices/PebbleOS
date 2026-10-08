@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <applib/graphics/graphics.h>
 #include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
 
 #if !FAKE_GRAPHICS_CONTEXT_C
 #include <fw/graphics/util.h>

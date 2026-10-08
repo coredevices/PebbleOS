@@ -1,27 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/get_bytes/get_bytes_private.h>
-
-#include <comm/bluetooth_analytics.h>
-#include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
-#include <pbl/services/get_bytes/get_bytes_storage.h>
-#include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/math.h>
-#include <pbl/util/byteorder.h>
-
-#include <pbl/bluetooth/conn_event_stats.h>
-#include <pbl/kernel/types.h>
-
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/bluetooth/conn_event_stats.h>
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/types.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/services/get_bytes/get_bytes_private.h>
+#include <pbl/services/get_bytes/get_bytes_storage.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
 #include <pbl/util/units.h>
+
+#include <comm/bluetooth_analytics.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
 

@@ -4,8 +4,9 @@
 #pragma once
 
 #include <pbl/drivers/button_id.h>
-#include <process_management/app_install_types.h>
 #include <pbl/util/uuid.h>
+
+#include <process_management/app_install_types.h>
 
 bool quick_launch_is_enabled(ButtonId button);
 AppInstallId quick_launch_get_app(ButtonId button);

@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <stdint.h>
 #include "weather_types.h"
+
+#include <stdint.h>
 
 #define WEATHER_APP_LAYOUT_LOCATION_BAR_HEIGHT (18)
 // Main-screen bar is taller than the forecast-list bar for readability.

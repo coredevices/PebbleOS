@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/filesystem/app_file.h>
-
 #include <string.h>
 
-#include <system/passert.h>
+#include <pbl/services/filesystem/app_file.h>
+
 #include <resource/resource_storage.h>
+#include <system/passert.h>
 
 void app_file_name_make(char *restrict buffer, size_t buffer_len, AppInstallId app_id,
                         const char *restrict suffix, size_t suffix_len) {

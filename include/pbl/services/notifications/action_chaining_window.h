@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/ui/window_stack.h>
 #include <pbl/services/timeline/item.h>
+
+#include <applib/ui/window_stack.h>
 
 /**
  * @defgroup services_notifications_action_chaining_window Action chaining window

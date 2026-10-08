@@ -1,31 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <board/board.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/services/light.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
-#include <system/passert.h>
 
+#include <board/board.h>
+#include <clar.h>
 #include <fake_new_timer.h>
+#include <system/passert.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include <stubs_fonts.h>
-#include <stubs_events.h>
-#include <stubs_print.h>
-#include <stubs_passert.h>
-#include <stubs_analytics.h>
 #include <stubs_ambient_light.h>
+#include <stubs_analytics.h>
 #include <stubs_battery_monitor.h>
-#include <stubs_low_power.h>
-#include <stubs_serial.h>
+#include <stubs_events.h>
+#include <stubs_fonts.h>
 #include <stubs_logging.h>
+#include <stubs_low_power.h>
 #include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_print.h>
 #include <stubs_rtc.h>
+#include <stubs_serial.h>
 
 // the time that the backlight remains on but there is zero user interaction
 extern const uint32_t INACTIVE_LIGHT_TIMEOUT_MS;

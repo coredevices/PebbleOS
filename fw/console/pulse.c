@@ -9,6 +9,15 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/crc/crc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+#include <pbl/shell/shell.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+
 #include <console/cobs.h>
 #include <console/console_internal.h>
 #include <console/dbgserial.h>
@@ -16,16 +25,7 @@
 #include <console/pulse_llc.h>
 #include <console/pulse_protocol_impl.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/kernel/mutex.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/crc/crc.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-
-#include <pbl/shell/shell.h>
 
 #define FRAME_POOL_SIZE (3)
 

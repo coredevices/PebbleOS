@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <services/light/als_screen_compensation.h>
-
 #include <pbl/drivers/ambient_light.h> // AMBIENT_LIGHT_LEVEL_MAX
+
+#include <services/light/als_screen_compensation.h>
 
 #define ALS_COMP_UNITY_Q8 (256u)
 

@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/graphics.h>
-
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
 
 //! @file graphics/gdraw_command.h
 //! Defines the basic functions available to manipulate Pebble Draw Commands

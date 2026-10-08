@@ -2,15 +2,19 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdio.h>
+#include <string.h>
+
+#include <pbl/services/bluetooth/pairability.h>
+#include <pbl/util/size.h>
 
 #include <applib/app.h>
 #include <applib/battery_state_service.h>
+#include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window_private.h>
-#include <applib/ui/dialogs/confirmation_dialog.h>
 #include <apps/prf/mfg_adv.h>
-#include <apps/prf/mfg_test_aging.h>
 #include <apps/prf/mfg_info_qr.h>
+#include <apps/prf/mfg_test_aging.h>
 #include <apps/prf/mfg_test_menu.h>
 #include <apps/prf/mfg_utilities.h>
 #include <kernel/event_loop.h>
@@ -20,12 +24,8 @@
 #include <mfg/mfg_serials.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/bluetooth/pairability.h>
 #include <system/bootbits.h>
 #include <system/reset.h>
-#include <pbl/util/size.h>
-
-#include <string.h>
 
 // "XXXXXX - 100%"
 #define DEVICE_INFO_SUBTITLE_SIZE (MFG_SERIAL_NUMBER_SIZE + 8)

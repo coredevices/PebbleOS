@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "nimble_type_conversions.h"
+
 #include <pbl/bluetooth/gatt.h>
+#include <pbl/logging/logging.h>
 
 #include <host/ble_gatt.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
 #include <services/gatt/ble_svc_gatt.h>
-#include <pbl/logging/logging.h>
-
-#include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

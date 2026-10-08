@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/clock.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/clock.h>
 
 void PBL_WEAK clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 }

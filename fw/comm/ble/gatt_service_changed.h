@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 //! @file
 //! This module contains the "Generic Attribute Profile Service" code, both the server and

@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/applib_malloc.auto.h>
 #include "applib_resource_private.h"
+
+#include <applib/applib_malloc.auto.h>
 #include <board/board.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_storage_builtin.h>

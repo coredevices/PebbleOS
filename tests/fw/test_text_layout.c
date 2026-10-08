@@ -2,33 +2,32 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/util/iterator.h>
-#include <applib/graphics/utf8.h>
+
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
 #include <applib/graphics/text_layout_private.h>
-#include <applib/graphics/graphics.h>
-#include <applib/graphics/framebuffer.h>
-
+#include <applib/graphics/utf8.h>
 #include <clar.h>
 
 ///////////////////////////////////////////////////////////
 // Stubs
 
+#include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_fonts.h>
+#include <stubs_heap.h>
+#include <stubs_hexdump.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
-#include <stubs_hexdump.h>
-#include <stubs_heap.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_pbl_malloc.h>
-
-#include <stubs_applib_resource.h>
-#include <stubs_app_state.h>
-#include <stubs_fonts.h>
-#include <stubs_text_resources.h>
-#include <stubs_text_render.h>
+#include <stubs_pebble_tasks.h>
 #include <stubs_reboot_reason.h>
 #include <stubs_resources.h>
 #include <stubs_syscalls.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_text_render.h>
+#include <stubs_text_resources.h>
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 #define FONT_LINE_DELTA 2

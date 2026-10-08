@@ -1,23 +1,22 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_impl.h>
-
 #include <pbl/logging/logging.h>
 
+#include <fcntl.h>
 #include <flash_region/flash_region.h>
 #include <posix_host.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <system/passert.h>
 #include <system/status_codes.h>
+#include <unistd.h>
 
 // External flash, as a file mapped into memory. Writes and erases land in
 // the file right away, so its contents survive a restart.

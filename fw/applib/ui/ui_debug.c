@@ -4,10 +4,11 @@
 #if defined(CONFIG_UI_DEBUG) && defined(CONFIG_SHELL)
 
 #include "ui.h"
-#include <applib/ui/app_window_stack.h>
-#include <kernel/ui/modals/modal_manager.h>
 
 #include <pbl/shell/shell.h>
+
+#include <applib/ui/app_window_stack.h>
+#include <kernel/ui/modals/modal_manager.h>
 
 extern void text_layer_update_proc(TextLayer *text_layer, GContext *ctx);
 extern void action_bar_update_proc(ActionBarLayer *action_bar, GContext *ctx);

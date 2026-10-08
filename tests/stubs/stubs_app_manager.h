@@ -3,10 +3,11 @@
 
 #pragma once
 
+#include <pbl/kernel/compiler.h>
+
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
-#include <pbl/kernel/compiler.h>
 
 bool PBL_WEAK app_manager_is_initialized(void) {
   return true;

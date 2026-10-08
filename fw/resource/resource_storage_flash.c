@@ -2,16 +2,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "resource_storage_flash.h"
+
 #include "resource_storage_impl.h"
 
+#include <stdlib.h>
+
 #include <pbl/drivers/flash.h>
-#include <resource/resource_version.auto.h>
-#include <pbl/services/process_management/app_storage.h>
-#include <system/bootbits.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/size.h>
 
-#include <stdlib.h>
+#include <resource/resource_version.auto.h>
+#include <system/bootbits.h>
 
 static const SystemResourceBank s_resource_banks[] = {
   {

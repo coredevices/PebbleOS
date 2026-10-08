@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/dict.h>
+#include <stdbool.h>
+#include <string.h>
+
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
+#include <applib/dict.h>
 #include <clar.h>
-
-#include <string.h>
-#include <stdbool.h>
 #include <strings.h>
 
 // Stubs

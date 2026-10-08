@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 void dbgserial_putstr(const char *str) {
   printf("%s\n", str);

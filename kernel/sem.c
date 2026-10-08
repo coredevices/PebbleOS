@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/sem.h>
-
 #include "kernel.h"
+
+#include <pbl/kernel/sem.h>
 
 void pbl_sem_init(struct pbl_sem *s, uint32_t initial, uint32_t limit) {
   KERNEL_ASSERT(limit > 0 && initial <= limit);

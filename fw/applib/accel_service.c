@@ -4,12 +4,14 @@
 #include "accel_service.h"
 
 #include "accel_service_private.h"
-#include <applib/applib_malloc.auto.h>
 #include "event_service_client.h"
+
+#include <pbl/services/accel_manager.h>
+
+#include <applib/applib_malloc.auto.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-#include <pbl/services/accel_manager.h>
 #include <syscall/syscall.h>
 #include <system/passert.h>
 

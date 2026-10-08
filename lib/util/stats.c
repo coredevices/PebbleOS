@@ -1,13 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/stats.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include <pbl/util/math.h>
 #include <pbl/util/sort.h>
-
-#include <stdbool.h>
-#include <stdlib.h>
+#include <pbl/util/stats.h>
 
 // ------------------------------------------------------------------------------------------------
 // Returns the median of a given array

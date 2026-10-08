@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
-
 #include <stdio.h>
+
+#include <applib/graphics/gtypes.h>
 #include <sys/wait.h>
 #include <unistd.h>
 

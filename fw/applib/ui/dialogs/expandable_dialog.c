@@ -3,6 +3,9 @@
 
 #include "expandable_dialog.h"
 
+#include <stdint.h>
+#include <string.h>
+
 #include <applib/applib_malloc.auto.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gtypes.h>
@@ -15,9 +18,6 @@
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
 #include <system/passert.h>
-
-#include <stdint.h>
-#include <string.h>
 
 static void prv_show_action_bar_icon(ExpandableDialog *expandable_dialog, ButtonId button_id) {
   ActionBarLayer *action_bar = &expandable_dialog->action_bar;

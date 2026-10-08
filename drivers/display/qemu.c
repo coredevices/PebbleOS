@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/drivers/display/display.h>
 
 #include <board/board.h>
 #include <system/passert.h>
-
-#include <string.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

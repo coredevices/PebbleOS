@@ -2,9 +2,24 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "bluetooth.h"
+
 #include "menu.h"
 #include "remote.h"
 #include "window.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/bluetooth/pairability.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/string.h>
 
 #include <applib/app.h>
 #include <applib/app_focus_service.h>
@@ -13,30 +28,16 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/ui.h>
-#include <comm/bt_lock.h>
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gap_le_device_name.h>
+#include <comm/bt_lock.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/system_icons.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/app_idle_timeout.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
 #include <shell/system_theme.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/string.h>
-
-#include <pbl/bluetooth/types.h>
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/btutil/bt_device.h>
-
-#include <stdio.h>
-#include <string.h>
 
 #define HEADER_BUFFER_SIZE 22
 

@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/blob_db/api.h>
-
-#include <stddef.h>
+#include <inttypes.h>
 #include <stdbool.h>
+#include <stddef.h>
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/contacts_db.h>
@@ -21,9 +22,6 @@
 
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
-
-#include <inttypes.h>
 
 PBL_LOG_MODULE_DEFINE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

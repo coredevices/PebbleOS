@@ -7,17 +7,18 @@
 
 #include "menu.h"
 
+#include <stddef.h>
+#include <stdio.h>
+
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/notifications/alerts_preferences.h>
+#include <pbl/services/speaker/speaker_service.h>
+
 #include <applib/fonts/fonts.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/system_icons.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/notifications/alerts_preferences.h>
-#include <pbl/services/speaker/speaker_service.h>
-
-#include <stddef.h>
-#include <stdio.h>
 
 #define VOLUME_STEP               5
 #define BUTTON_REPEAT_INTERVAL_MS 100

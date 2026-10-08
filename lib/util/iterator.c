@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/iterator.h>
+#include <stdbool.h>
 
 #include <pbl/util/assert.h>
-
-#include <stdbool.h>
+#include <pbl/util/iterator.h>
 
 void iter_init(Iterator *iter, IteratorCallback next, IteratorCallback prev, IteratorState state) {
   *iter = (Iterator){.next = next, .prev = prev, .state = state};

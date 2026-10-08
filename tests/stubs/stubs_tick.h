@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/kernel/types.h>
-
 #include <stdint.h>
+
+#include <pbl/kernel/types.h>
 
 pbl_tick_t pbl_ms_to_ticks(uint32_t ms) {
   return ((uint64_t)ms * PBL_TICK_HZ) / 1000;

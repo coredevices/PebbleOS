@@ -2,12 +2,14 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "kino_reel_gbitmap.h"
+
 #include "kino_reel_gbitmap_private.h"
 
-#include <applib/graphics/gtypes.h>
-#include <applib/applib_malloc.auto.h>
-#include <syscall/syscall.h>
 #include <pbl/util/struct.h>
+
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/gtypes.h>
+#include <syscall/syscall.h>
 
 static void prv_destructor(KinoReel *reel) {
   KinoReelImplGBitmap *bitmap_reel = (KinoReelImplGBitmap *)reel;

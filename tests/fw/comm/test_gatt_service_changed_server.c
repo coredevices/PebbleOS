@@ -1,14 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <comm/ble/gatt_service_changed.h>
-#include <comm/ble/gap_le_connection.h>
-
-#include <kernel/events.h>
+#include <pbl/btutil/bt_device.h>
 
 #include <clar.h>
-
-#include <pbl/btutil/bt_device.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gatt_service_changed.h>
+#include <kernel/events.h>
 
 extern void gatt_service_changed_server_init(void);
 
@@ -16,8 +14,8 @@ extern void gatt_service_changed_server_init(void);
 ///////////////////////////////////////////////////////////
 
 #include <fake_bt_gatt.h>
-#include <fake_pbl_malloc.h>
 #include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_system_task.h>
 

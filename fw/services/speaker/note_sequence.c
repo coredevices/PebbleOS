@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/speaker/note_sequence.h>
-
 #include <string.h>
+
+#include <pbl/services/speaker/note_sequence.h>
 
 // 256-entry sine wave lookup table (one full cycle, 16-bit signed amplitude)
 // Values represent sin(2*pi*i/256) * 32767

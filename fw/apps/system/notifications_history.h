@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/services/timeline/item.h>
-#include <pbl/util/list.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/timeline/item.h>
+#include <pbl/util/list.h>
 
 typedef struct NotificationHistoryEntry {
   Uuid id;

@@ -1,26 +1,27 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/drivers/rtc.h>
 
 #include <applib/ui/layer.h>
-#include <applib/ui/window.h>
+#include <applib/ui/recognizer/pan.h>
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_impl.h>
 #include <applib/ui/recognizer/recognizer_list.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
-#include <applib/ui/recognizer/pan.h>
 #include <applib/ui/recognizer/recognizer_private.h>
 #include <applib/ui/recognizer/swipe.h>
 #include <applib/ui/recognizer/tap.h>
 #include <applib/ui/recognizer/touch_nav.h>
-
-#include <pbl/drivers/rtc.h>
+#include <applib/ui/window.h>
+#include <clar.h>
 
 // Fakes
 #include <fake_rtc.h>
 
 // Stubs
+#include <pbl/util/units.h>
+
 #include <stubs_app_install_manager.h>
 #include <stubs_app_state.h>
 #include <stubs_gbitmap.h>
@@ -33,7 +34,6 @@
 #include <stubs_process_manager.h>
 #include <stubs_ui_window.h>
 #include <stubs_unobstructed_area.h>
-#include <pbl/util/units.h>
 
 // ---------------------------------------------------------------------------------------------
 // Collaborator stubs the recognizer manager needs (mirrors test_recognizer_manager.c).

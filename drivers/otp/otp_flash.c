@@ -3,8 +3,8 @@
 
 #include <string.h>
 
-#include <pbl/drivers/otp.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/drivers/otp.h>
 
 #define FLASH_ERASE_VAL 0xFFU
 #define OTP_SLOT_SIZE   32U

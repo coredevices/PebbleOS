@@ -3,10 +3,9 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-
-#include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_shared_prf_storage_v2_sprf Legacy shared PRF storage layout

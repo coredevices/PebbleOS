@@ -3,10 +3,9 @@
 
 #include "test_recognizer_impl.h"
 
-#include <clar_asserts.h>
-
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_impl.h>
+#include <clar_asserts.h>
 
 static const int TEST_PATTERN = 0xA5A5A5A5;
 

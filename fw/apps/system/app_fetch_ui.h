@@ -3,13 +3,14 @@
 
 #pragma once
 
-#include <process_management/app_install_types.h>
-#include <process_management/launch_config.h>
-#include <process_management/pebble_process_md.h>
+#include <stdbool.h>
+
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/wakeup.h>
 
-#include <stdbool.h>
+#include <process_management/app_install_types.h>
+#include <process_management/launch_config.h>
+#include <process_management/pebble_process_md.h>
 
 typedef struct AppFetchUIArgs {
   LaunchConfigCommon common;

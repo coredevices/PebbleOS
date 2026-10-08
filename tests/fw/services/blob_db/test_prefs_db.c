@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/util/uuid.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/blob_db/prefs_db.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/util/uuid.h>
+
+#include <clar.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
 
@@ -14,12 +14,14 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
+#include <fake_kernel_services_notifications.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <fake_kernel_services_notifications.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
+#include <stubs_activity.h>
+#include <stubs_ambient_light.h>
 #include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_event_loop.h>
@@ -34,8 +36,6 @@
 #include <stubs_system_theme.h>
 #include <stubs_task_wdt.h>
 #include <stubs_timeline_peek.h>
-#include <stubs_ambient_light.h>
-#include <stubs_activity.h>
 
 void prefs_sync_init(void) {
 }

@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/util/string.h>
 
 #include <clar.h>
-
 #include <stubs_logging.h>
 #include <stubs_passert.h>
-
-#include <string.h>
 
 void test_string__initialize(void) {
 }

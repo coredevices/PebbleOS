@@ -3,21 +3,22 @@
 
 #include "watchface.h"
 
-#include <apps/system_app_ids.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/notifications/do_not_disturb.h>
+
+#include <applib/app_launch_reason.h>
+#include <applib/app_timer.h>
+#include <applib/ui/click_internal.h>
 #include <apps/system/launcher/launcher.h>
 #include <apps/system/settings/quick_launch_setup_menu.h>
 #include <apps/system/timeline/timeline.h>
+#include <apps/system_app_ids.h>
 #include <kernel/event_loop.h>
 #include <kernel/low_power.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
-#include <pbl/services/compositor/compositor_transitions.h>
-#include <applib/app_timer.h>
-#include <applib/app_launch_reason.h>
-#include <applib/ui/click_internal.h>
-#include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
 
 #define QUICK_LAUNCH_HOLD_MS (400)

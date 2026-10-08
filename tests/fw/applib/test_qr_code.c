@@ -1,20 +1,19 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/layer.h>
 #include <applib/ui/qr_code.h>
-
 #include <clar.h>
 #include <util.h>
 
-#include <string.h>
-
 // Helper Functions
 ////////////////////////////////////
-#include <test_graphics.h>
 #include <8bit/test_framebuffer.h>
+#include <test_graphics.h>
 
 // Stubs
 ////////////////////////////////////

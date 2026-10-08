@@ -26,22 +26,22 @@ Pebble App project.
 */
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
-#include <applib/accel_service.h>
-#include <pbl/util/trig.h>
-#include <pbl/services/hrm/hrm_manager_private.h>
-#include <pbl/services/activity/activity.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/util/math.h>
 #include <pbl/util/math_fixed.h>
 #include <pbl/util/size.h>
-
-#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
+#include <pbl/util/trig.h>
 #include <pbl/util/units.h>
+
+#include <applib/accel_service.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

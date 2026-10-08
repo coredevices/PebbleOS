@@ -3,6 +3,17 @@
 
 #include "bluetooth_pairing_ui.h"
 
+#include <string.h>
+
+#include <pbl/bluetooth/pairing_confirm.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/size.h>
+
 #include <applib/fonts/fonts.h>
 #include <applib/ui/kino/kino_layer.h>
 #include <applib/ui/kino/kino_reel.h>
@@ -10,25 +21,13 @@
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
 #include <comm/bt_lock.h>
-#include <kernel/events.h>
 #include <kernel/event_loop.h>
+#include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/ui/system_icons.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/light.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/kernel/sem.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-
-#include <pbl/util/size.h>
-
-#include <pbl/bluetooth/pairing_confirm.h>
-
-#include <string.h>
-#include <pbl/kernel/compiler.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>

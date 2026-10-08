@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <applib/fonts/fonts_private.h>
-#include <applib/graphics/text_resources.h>
-#include <applib/fonts/codepoint.h>
-
 #include <inttypes.h>
 #include <stdbool.h>
+
+#include <applib/fonts/codepoint.h>
+#include <applib/fonts/fonts_private.h>
+#include <applib/graphics/text_resources.h>
 
 #define HORIZ_ADVANCE_PX (2)
 

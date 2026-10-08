@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/music_internal.h>
-
-#include <applib/graphics/gtypes.h>
-#include <apps/system/music.h>
-#include <pbl/services/imaging.h>
 #include <pbl/drivers/rtc.h>
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/imaging.h>
+#include <pbl/services/music_internal.h>
 #include <pbl/util/math.h>
+
+#include <applib/graphics/gtypes.h>
+#include <apps/system/music.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
@@ -641,6 +641,7 @@ void command_print_now_playing(void) {
 
 #ifdef CONFIG_SHELL
 #include <inttypes.h>
+
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_music(const struct pbl_shell *sh, size_t argc, char **argv) {

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "rotbmp_pair_layer.h"
+
 #include <pbl/logging/logging.h>
 
 static void set_compositing(RotBmpPairLayer *pair) {

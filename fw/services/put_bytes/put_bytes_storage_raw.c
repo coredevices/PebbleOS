@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/put_bytes/put_bytes_storage_raw.h>
-
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/put_bytes/put_bytes_storage_raw.h>
+#include <pbl/util/math.h>
+
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_storage_flash.h>
-#include <pbl/services/comm_session/session.h>
 #include <system/firmware_storage.h>
-#include <pbl/util/math.h>
 
 typedef struct MemoryLayout {
   //! The start address of the object's section in flash (inclusive)

@@ -1,15 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdbool.h>
+
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/notifications/alerts_private.h>
 
 #include <clar.h>
 
-#include <stdbool.h>
-
 // Stubs
 /////////////////////////////////
+#include <fake_rtc.h>
 #include <stubs_analytics.h>
 #include <stubs_events.h>
 #include <stubs_firmware_update.h>
@@ -22,9 +23,8 @@
 #include <stubs_pebble_tasks.h>
 #include <stubs_sleep.h>
 #include <stubs_task_wdt.h>
-#include <stubs_vibes.h>
 #include <stubs_vibe_score_info.h>
-#include <fake_rtc.h>
+#include <stubs_vibes.h>
 
 // Overrides
 /////////////////////////////////

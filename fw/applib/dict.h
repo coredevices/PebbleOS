@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
 
 //! @file dict.h Generic key/value serializer and parser.

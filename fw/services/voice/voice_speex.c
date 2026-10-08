@@ -1,22 +1,20 @@
 /* SPDX-FileCopyrightText: 2025 Joshua Jun */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
+#include <string.h>
+
+#include <pbl/drivers/mic.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/voice/voice_speex.h>
 
 #include <board/board.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
-#include <pbl/drivers/mic.h>
-
 #include <speex/speex.h>
 #include <speex/speex_bits.h>
 #include <speex/speex_header.h>
 #include <speex/speex_stereo.h>
-
-#include <string.h>
-#include <inttypes.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 

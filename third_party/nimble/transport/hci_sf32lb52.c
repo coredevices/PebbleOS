@@ -6,27 +6,27 @@
 #include <drivers/uart.h>
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
-#include <bf0_hal.h>
-#include <kernel/pebble_tasks.h>
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <system/hexdump.h>
 #include <pbl/logging/logging.h>
+
+#include <bf0_hal.h>
+#include <kernel/pebble_tasks.h>
+#include <system/hexdump.h>
 #include <system/passert.h>
 
 // NOTE: transport.h needs os_mbuf.h to be included first
 // clang-format off
 #include <os/os_mbuf.h>
 // clang-format on
+#include <ipc_queue.h>
 #include <nimble/hci_common.h>
 #include <nimble/transport.h>
 #include <nimble/transport/hci_h4.h>
 #include <nimble/transport_impl.h>
 #include <os/os_mempool.h>
-
-#include <ipc_queue.h>
 
 PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 

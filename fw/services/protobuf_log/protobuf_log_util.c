@@ -3,10 +3,9 @@
 
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_util.h>
+#include <pbl/util/uuid.h>
 
 #include <pb_encode.h>
-
-#include <pbl/util/uuid.h>
 
 bool protobuf_log_util_encode_uuid(pb_ostream_t *stream, const pb_field_t *field,
                                    void *const *arg) {

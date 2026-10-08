@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <pbl/util/list.h>
-#include <pbl/kernel/compiler.h>
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/list.h>
 
 /**
  * @defgroup util_shared_cbuf Shared circular buffer

@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
+
 #include <pbl/drivers/gpio.h>
 
 #include <board/board.h>
-
-#include <stddef.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

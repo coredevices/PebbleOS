@@ -1,25 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/bluetooth/comm.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/util/math.h>
 
 #include <comm/bt_lock.h>
-
 #include <console/pulse_protocol_impl.h>
-
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-
-#include <pbl/services/comm_session/session_transport.h>
-
 #include <system/passert.h>
-#include <pbl/logging/logging.h>
-
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/math.h>
-
-#include <string.h>
 
 #define PULSE_PP_OPCODE_DATA  (1)
 #define PULSE_PP_OPCODE_OPEN  (2)

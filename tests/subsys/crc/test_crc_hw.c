@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include "crc_reference.h"
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/crc.h>
 
-#include "crc_reference.h"
+#include <clar.h>
 
 static uint8_t s_data[1031];
 static bool s_hw_available;

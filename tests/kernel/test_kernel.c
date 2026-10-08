@@ -1,17 +1,16 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/kernel/kernel.h>
-
-#include <kernel_test.h>
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/kernel.h>
+
+#include <clar.h>
+#include <kernel_test.h>
 
 // The kernel on the POSIX arch: threads are pthreads that run one at
 // a time under the kernel's scheduling decisions, and time only moves when a

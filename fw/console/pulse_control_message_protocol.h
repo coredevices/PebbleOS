@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/util/byteorder.h>
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/util/byteorder.h>
 
 #define PULSE_CONTROL_MESSAGE_PROTOCOL (0x0001)
 

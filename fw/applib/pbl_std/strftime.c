@@ -13,18 +13,21 @@
 // support, and is practically useless, we don't support it. I don't think this will break
 // anything, but it's worth noting.
 
+#include "timelocal.h"
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "timelocal.h"
-#include <applib/i18n.h>
+
 #include <pbl/services/i18n/i18n.h>
-#include <syscall/syscall.h>
 #include <pbl/util/math.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
+
+#include <applib/i18n.h>
+#include <syscall/syscall.h>
 
 #define INTFMT_PADSPACE (0)
 #define INTFMT_PADZERO  (1)

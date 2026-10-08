@@ -42,14 +42,14 @@
 //! without speeding up or slowing down the signal during replay.
 
 #include <pbl/drivers/accel.h>
-
-#include <comm/qemu/serial.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/util/math.h>
 #include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
+
+#include <comm/qemu/serial.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(imu, CONFIG_DRIVER_IMU_LOG_LEVEL);
 

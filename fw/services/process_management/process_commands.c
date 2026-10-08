@@ -3,14 +3,14 @@
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
 
-#include <pbl/shell/shell.h>
-
 #include <errno.h>
 #include <inttypes.h>
 
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/shell/shell.h>
+
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
-#include <pbl/services/blob_db/app_db.h>
 
 static int prv_parse_id(const struct pbl_shell *sh, const char *str, AppInstallId *id) {
   long val;

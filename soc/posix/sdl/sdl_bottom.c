@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "sdl_bottom.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <posix_host.h>
-#include "sdl_bottom.h"
 
 #define MAX_HANDLERS 8
 

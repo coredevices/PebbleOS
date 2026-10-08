@@ -3,11 +3,12 @@
 
 #include "time_selection_window.h"
 
-#include <applib/ui/option_menu_window.h>
-#include <pbl/services/clock.h>
-#include <shell/system_theme.h>
-
 #include <stdio.h>
+
+#include <pbl/services/clock.h>
+
+#include <applib/ui/option_menu_window.h>
+#include <shell/system_theme.h>
 
 typedef struct TimeSelectionSizeConfig {
   const char *subtitle_font_key;

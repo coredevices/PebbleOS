@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "pebble_process_info.h"
+
 #include "pebble_process_md.h"
 
 #include <stdbool.h>

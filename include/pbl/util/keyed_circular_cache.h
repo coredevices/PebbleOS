@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/util/order.h>
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/util/order.h>
 
 /**
  * @defgroup util_keyed_circular_cache Keyed circular cache

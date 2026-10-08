@@ -2,7 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fonts.h"
+
 #include "fonts_private.h"
+
+#include <string.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/applib_resource.h>
@@ -12,10 +18,6 @@
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
 #include <system/passert.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/size.h>
-
-#include <string.h>
 
 GFont fonts_get_fallback_font(void) {
   // No font key for the fallback font

@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <comm/ble/kernel_le_client/ams/ams_util.h>
-
 #include <clar.h>
+#include <comm/ble/kernel_le_client/ams/ams_util.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <trigger_alarm.h>
-#include <applib/ui/vibes.h>
-
-#include <applib/app.h>
-#include <process_state/app_state/app_state.h>
-#include <applib/ui/app_window_stack.h>
-#include <applib/ui/window_stack.h>
-#include <kernel/events.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/logging/logging.h>
+
+#include <applib/app.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/vibes.h>
+#include <applib/ui/window_stack.h>
+#include <kernel/events.h>
+#include <process_state/app_state/app_state.h>
+#include <trigger_alarm.h>
 
 Window s_window;
 static AppTimer *s_app_timer;

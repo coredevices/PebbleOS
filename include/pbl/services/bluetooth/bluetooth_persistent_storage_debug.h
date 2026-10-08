@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/btutil/sm_util.h>
 
 /**

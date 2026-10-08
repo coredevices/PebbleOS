@@ -3,17 +3,18 @@
 
 #pragma once
 
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
+
 #include <console/dbgserial.h>
 #include <system/die.h>
 #include <system/reboot_reason.h>
 #include <system/status_codes.h>
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
-#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup logging Logging

@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <system/status_codes.h>
 #include <pbl/services/timeline/item.h>
+
+#include <system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_notif_db Notification database

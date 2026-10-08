@@ -3,14 +3,14 @@
 
 #include "kernel_ui.h"
 
+#include <pbl/services/compositor/compositor.h>
+#include <pbl/util/testing.h>
+
+#include <applib/ui/animation_private.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/pebble_tasks.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/compositor/compositor.h>
 #include <system/passert.h>
-
-#include <applib/ui/animation_private.h>
-#include <pbl/util/testing.h>
 
 static GContext s_kernel_graphics_context;
 

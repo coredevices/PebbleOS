@@ -1,22 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/graphics.h>
-#include <applib/graphics/bitblt.h>
-#include <applib/graphics/bitblt_private.h>
-#include <applib/graphics/8_bit/framebuffer.h>
-
-#include <clar.h>
 #include "util.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
+#include <applib/graphics/8_bit/framebuffer.h>
+#include <applib/graphics/bitblt.h>
+#include <applib/graphics/bitblt_private.h>
+#include <applib/graphics/graphics.h>
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include <stubs_applib_resource.h>
 #include "test_graphics.h"
+
+#include <stubs_applib_resource.h>
 
 static GContext ctx;
 static FrameBuffer framebuffer;

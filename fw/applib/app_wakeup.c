@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/app_wakeup.h>
-
 #include "event_service_client.h"
+
+#include <pbl/services/wakeup.h>
+
+#include <applib/app_wakeup.h>
+#include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <pbl/services/wakeup.h>
-#include <kernel/events.h>
 
 static void do_handle(PebbleEvent *e, void *context) {
   WakeupHandler wakeup_handler = app_state_get_wakeup_handler();

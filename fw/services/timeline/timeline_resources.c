@@ -2,6 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/uuid.h>
 
 #include <applib/graphics/gdraw_command_private.h>
 #include <applib/ui/kino/kino_reel.h>
@@ -11,9 +14,6 @@
 #include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
 #include <system/passert.h>
-#include <pbl/util/byteorder.h>
-#include <pbl/util/uuid.h>
-#include <pbl/util/testing.h>
 
 #define RESOURCE_MAX_SIZE (700)
 

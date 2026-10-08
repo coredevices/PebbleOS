@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
 #include "serial_console.h"
 
-#include <console/dbgserial_input.h>
-#include <console/pulse_protocol_impl.h>
 #include "console_internal.h"
 #include "shell_dbgserial.h"
 
-#include <console/pulse_internal.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+
+#include <console/dbgserial_input.h>
+#include <console/pulse_internal.h>
+#include <console/pulse_protocol_impl.h>
 #include <system/passert.h>
 
 SerialConsoleState s_serial_console_state = SERIAL_CONSOLE_STATE_LOGGING;

@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/display/display.h>
+#include <pbl/drivers/touch/touch_sensor.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/event_service.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_event.h>
 #include <pbl/services/touch/touch_session.h>
 
-#include <pbl/drivers/display/display.h>
-#include <pbl/drivers/touch/touch_sensor.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
-#include <pbl/services/event_service.h>
-#include <pbl/services/analytics/analytics.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/mutex.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);

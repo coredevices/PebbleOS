@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <pthread.h>
 #include <stdbool.h>
+
+#include <pthread.h>
 
 struct pbl_thread;
 

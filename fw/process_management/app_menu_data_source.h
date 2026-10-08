@@ -9,14 +9,15 @@
 //! installed. This should only be used by system apps such as the Launcher or the Watchface
 //! Selector apps, as it integrates tightly with app_install_manager.
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/process_management/app_order_storage.h>
+#include <pbl/util/list.h>
+
 #include <applib/ui/kino/kino_reel.h>
 #include <applib/ui/menu_layer.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_info.h>
 #include <process_management/pebble_process_md.h>
-#include <pbl/services/process_management/app_order_storage.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/list.h>
 
 struct AppMenuDataSource;
 

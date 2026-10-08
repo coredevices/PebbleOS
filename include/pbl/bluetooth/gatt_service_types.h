@@ -3,12 +3,11 @@
 
 #pragma once
 
-#include <pbl/util/uuid.h>
-
 #include <stddef.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup bluetooth_gatt_service_types GATT service description

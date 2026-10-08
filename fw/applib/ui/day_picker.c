@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/ui/day_picker.h>
+#include <string.h>
+
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/units.h>
 
 #include <applib/pbl_std/timelocal.h>
 #include <applib/ui/app_window_stack.h>
+#include <applib/ui/day_picker.h>
 #include <applib/ui/menu_layer.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/i18n/i18n.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 #include <system/passert.h>
-
-#include <string.h>
-#include <pbl/util/units.h>
 
 #define DAY_PICKER_CELL_HEIGHT \
   PBL_IF_RECT_ELSE(menu_cell_small_cell_height(), menu_cell_basic_cell_height())

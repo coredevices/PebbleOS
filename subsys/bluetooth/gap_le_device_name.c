@@ -1,18 +1,19 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "nimble_gattc_op_queue.h"
+#include "nimble_type_conversions.h"
+
 #include <pbl/bluetooth/gap_le_device_name.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/system_task.h>
+
 #include <comm/bt_lock.h>
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>
 #include <host/ble_uuid.h>
 #include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
-#include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
-
-#include "nimble_gattc_op_queue.h"
-#include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

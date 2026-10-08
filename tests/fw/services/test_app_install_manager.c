@@ -1,30 +1,29 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-#include <pebble_asserts.h>
+#include <stdio.h>
+
+#include <pbl/services/app_cache.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_storage.h>
+#include <pbl/services/time.h>
+#include <pbl/util/build_id.h>
+#include <pbl/util/units.h>
 
 #include <apps/system_app_ids.h>
+#include <clar.h>
+#include <fixtures/load_test_resources.h>
 #include <flash_region/flash_region.h>
+#include <pebble_asserts.h>
 #include <process_management/app_install_manager.h>
-#include <pbl/services/process_management/app_storage.h>
 #include <process_management/pebble_process_info.h>
 #include <process_management/pebble_process_md.h>
 #include <resource/resource.h>
 #include <resource/resource_storage.h>
 #include <resource/resource_storage_file.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/app_cache.h>
-#include <pbl/services/blob_db/app_db.h>
-#include <pbl/util/build_id.h>
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
-
-#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <fixtures/load_test_resources.h>
 
 // Stub Includes
 ////////////////////////////////////
@@ -55,8 +54,8 @@
 
 // Fake Includes
 ////////////////////////////////////
-#include <fake_spi_flash.h>
 #include <fake_rtc.h>
+#include <fake_spi_flash.h>
 
 // Stubs
 ////////////////////////////////////

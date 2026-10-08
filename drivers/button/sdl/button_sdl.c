@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "button_sdl_bottom.h"
+
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/debounced_button.h>
-#include <pbl_arch_posix.h>
 
 #include <kernel/events.h>
-#include "button_sdl_bottom.h"
+#include <pbl_arch_posix.h>
 
 static const ButtonId s_buttons[] = {
   [BUTTON_SDL_BACK] = BUTTON_ID_BACK,

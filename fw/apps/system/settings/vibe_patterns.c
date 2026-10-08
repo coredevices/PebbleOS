@@ -2,11 +2,14 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "vibe_patterns.h"
+
 #include "speaker_volume_window.h"
 #include "window.h"
 
-#include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
@@ -15,12 +18,11 @@
 #include <pbl/services/vibes/vibe_intensity.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/services/vibes/vibe_score_info.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/util/string.h>
 
-#include <stdio.h>
-#include <string.h>
+#include <applib/ui/ui.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 typedef enum VibeSettingsRow {
 #ifdef CONFIG_SPEAKER

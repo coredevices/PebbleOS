@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "kernel.h"
+
 #include <string.h>
 
-#include <pbl/kernel/idle.h>
-
-#include "kernel.h"
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/idle.h>
 
 #define NUM_PRIO CONFIG_KERNEL_NUM_PRIORITIES
 _Static_assert(NUM_PRIO <= 32, "the ready bitmap is 32 bits wide");

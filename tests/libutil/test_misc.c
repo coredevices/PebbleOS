@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/util/misc.h>
+
+#include <clar.h>
 
 struct pair {
   int16_t a;

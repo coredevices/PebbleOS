@@ -5,10 +5,11 @@
 
 #include "attribute.h"
 
+#include <pbl/util/uuid.h>
+
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/layer.h>
-#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_timeline_layout_layer Layout layers

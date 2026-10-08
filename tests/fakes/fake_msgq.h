@@ -3,14 +3,13 @@
 
 #pragma once
 
-#include <pbl/util/circular_buffer.h>
-#include <pbl/util/list.h>
-
-#include <pbl/kernel/msgq.h>
-
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <pbl/kernel/msgq.h>
+#include <pbl/util/circular_buffer.h>
+#include <pbl/util/list.h>
 
 //! Message queue fake backed by a ring buffer. A yield callback stands in for
 //! the other task while a put or get would block; it returns the ticks used.

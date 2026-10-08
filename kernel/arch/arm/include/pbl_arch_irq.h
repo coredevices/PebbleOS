@@ -5,9 +5,9 @@
 
 #include <stdint.h>
 
-#include <soc_irqs.h>
-
 #include <pbl/kernel/compiler.h>
+
+#include <soc_irqs.h>
 
 struct arch_irq_prio {
   uint16_t irq;

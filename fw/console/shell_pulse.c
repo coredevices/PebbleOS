@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+#include <string.h>
+
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/shell/backend.h>
 #include <pbl/shell/shell.h>
 
-#include <pbl/drivers/rtc.h>
-#include <pbl/logging/logging.h>
-
 #include <console/pulse_internal.h>
 #include <console/pulse_protocol_impl.h>
-#include <pbl/kernel/compiler.h>
-
-#include <errno.h>
-#include <string.h>
 
 #define PROMPT_RESP_ACK     (100)
 #define PROMPT_RESP_DONE    (101)

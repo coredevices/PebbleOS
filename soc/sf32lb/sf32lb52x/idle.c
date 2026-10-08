@@ -3,26 +3,26 @@
 
 #include <inttypes.h>
 
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/util/math.h>
+
 #include <board/board.h>
 #include <drivers/flash.h>
 #include <drivers/rtc.h>
 #include <drivers/sf32lb52/rc10k.h>
 #include <kernel/util/idle.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/soc/sf32lb/sleep.h>
-#include <pbl/util/math.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
 #endif
 
-#include <bf0_hal.h>
-
-#include <ipc_queue.h>
-
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/section.h>
+
+#include <bf0_hal.h>
+#include <ipc_queue.h>
 
 // HAL tick counter (milliseconds) - used by HAL timeout functions
 extern __IO uint32_t uwTick;

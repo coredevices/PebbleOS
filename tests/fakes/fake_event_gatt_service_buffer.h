@@ -5,9 +5,10 @@
 
 #include "fake_events.h"
 #include "fake_pbl_malloc.h"
-#include <kernel/events.h>
 
 #include <string.h>
+
+#include <kernel/events.h>
 
 //! Strong override of the PBL_WEAK fake_events.c implementation, for tests that
 //! exercise the GATT client service-change event (which carries a heap-allocated

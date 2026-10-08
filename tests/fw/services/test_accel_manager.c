@@ -1,34 +1,31 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stdio.h>
 
+#include <pbl/drivers/accel.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/event_service.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+
+#include <clar.h>
 #include <fake_app_manager.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_system_task.h>
-
 #include <stubs_analytics.h>
 #include <stubs_gettext.h>
 #include <stubs_logging.h>
-#include <stubs_logging.h>
+#include <stubs_msgq.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
 #include <stubs_persist.h>
-#include <stubs_msgq.h>
 #include <stubs_resources.h>
 #include <stubs_serial.h>
 #include <stubs_syscall_internal.h>
 #include <stubs_worker_manager.h>
-
-#include <pbl/drivers/accel.h>
-#include <pbl/services/event_service.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-
-#include <stdio.h>
-#include <pbl/kernel/compiler.h>
 
 // helpers from accel manager
 extern void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *num,

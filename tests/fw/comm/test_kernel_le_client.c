@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/util/size.h>
+
 #include <clar.h>
 #include <comm/ble/gap_le_advert.h>
 #include <comm/ble/gap_le_task.h>
@@ -8,13 +10,11 @@
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/ble/kernel_le_client/test/test_definition.h>
 #include <kernel/events.h>
-#include <pbl/util/size.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <fake_system_task.h>
-
 #include <stubs_logging.h>
 #include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>

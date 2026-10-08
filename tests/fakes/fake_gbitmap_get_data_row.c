@@ -3,9 +3,9 @@
 
 #include "fake_gbitmap_get_data_row.h"
 
-#include <applib/graphics/gtypes.h>
-
 #include <stdint.h>
+
+#include <applib/graphics/gtypes.h>
 
 bool s_fake_data_row_handling = false;
 bool s_fake_data_row_handling_disable_vertical_flip = false;

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <string.h>
 
-#include <applib/app_watch_info.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/system_task.h>
 
-#include <string.h>
+#include <applib/app_watch_info.h>
+#include <clar.h>
 
 extern void factory_registry_protocol_msg_callback(CommSession *session, const uint8_t *data,
                                                    size_t length_bytes);

@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include <pbl/kernel/compiler.h>
+
 #include <applib/graphics/gtypes.h>
 #include <apps/system/timeline/peek_layer.h>
-#include <pbl/kernel/compiler.h>
 
 PeekLayer *PBL_WEAK peek_layer_create(GRect frame) {
   return NULL;

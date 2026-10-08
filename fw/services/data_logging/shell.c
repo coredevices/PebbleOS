@@ -2,12 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
-#include <pbl/shell/shell.h>
-
 #include <inttypes.h>
 
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_list.h>
+#include <pbl/shell/shell.h>
 
 static bool prv_list_cb(DataLoggingSession *session, void *data) {
   const struct pbl_shell *sh = data;

@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
 #include <stdint.h>
 
-#include <system/passert.h>
+#include <pbl/kernel/irq.h>
 
 #include <hal/nrf_clock.h>
+#include <system/passert.h>
 
 static uint8_t prv_refcnt;
 

@@ -1,17 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <string.h>
 
 #include <applib/ui/layer.h>
-#include <applib/ui/window.h>
-#include <applib/ui/window_manager.h>
-#include <applib/ui/window_private.h>
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/recognizer_private.h>
-
-#include <string.h>
+#include <applib/ui/window.h>
+#include <applib/ui/window_manager.h>
+#include <applib/ui/window_private.h>
+#include <clar.h>
 
 // Stubs
 #include <stubs_app_install_manager.h>

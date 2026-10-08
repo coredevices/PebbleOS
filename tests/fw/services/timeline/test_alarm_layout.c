@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/clock.h>
 #include <pbl/services/alarms/alarm.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/timeline/alarm_layout.h>
 #include <pbl/services/timeline/attribute.h>
+
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/util/ratio.h>
+
+#include <clar.h>
 
 void test_ratio__to_percent(void) {
   cl_assert_equal_i(pbl_ratio32_to_percent(0), 0);

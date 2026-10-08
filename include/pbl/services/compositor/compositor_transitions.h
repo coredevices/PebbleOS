@@ -5,8 +5,8 @@
 
 #include <pbl/services/compositor/default/compositor_dot_transitions.h>
 #include <pbl/services/compositor/default/compositor_launcher_app_transitions.h>
-#include <pbl/services/compositor/default/compositor_slide_transitions.h>
 #include <pbl/services/compositor/default/compositor_shutter_transitions.h>
+#include <pbl/services/compositor/default/compositor_slide_transitions.h>
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
 #include <pbl/services/compositor/legacy/compositor_modal_slide_transitions.h>
 #else

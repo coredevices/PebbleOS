@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/list.h>
-#include <pbl/util/assert.h>
-#include <pbl/util/logging.h>
-
 #include <stddef.h>
 #include <stdio.h>
+
+#include <pbl/util/assert.h>
+#include <pbl/util/list.h>
+#include <pbl/util/logging.h>
 
 void list_init(ListNode *node) {
   node->next = NULL;

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <syscall/syscall_internal.h>
-
 #include <pbl/services/alarms/alarm.h>
+
+#include <syscall/syscall_internal.h>
 
 DEFINE_SYSCALL(bool, sys_alarm_get_next_enabled, time_t *timestamp_out) {
   if (PRIVILEGE_WAS_ELEVATED) {

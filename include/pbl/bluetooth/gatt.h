@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/gatt_discovery.h>
 #include <pbl/bluetooth/hci_types.h>
+#include <pbl/bluetooth/types.h>
 
 #include <comm/ble/gap_le_connection.h>
 

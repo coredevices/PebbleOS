@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <board/board.h>
 #include <pbl/drivers/exti.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/touch/touch_sensor.h>
-#include <kernel/events.h>
-#include <kernel/util/sleep.h>
 #include <pbl/kernel/types.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/touch/touch.h>
 #include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/util/math.h>
+#include <pbl/services/touch/touch.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/math.h>
 
+#include <board/board.h>
 #include <cst816_fw.h>
+#include <kernel/events.h>
+#include <kernel/util/sleep.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 

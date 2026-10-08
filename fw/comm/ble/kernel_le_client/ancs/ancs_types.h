@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/pstring.h>
-#include <pbl/util/size.h>
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/pstring.h>
+#include <pbl/util/size.h>
 
 //! Dumping ground for ANCS types
 

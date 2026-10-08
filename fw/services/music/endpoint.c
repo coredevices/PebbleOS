@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/music_endpoint.h>
-#include <pbl/services/music_endpoint_types.h>
-
-#include <comm/ble/kernel_le_client/ams/ams.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_remote_os.h>
+#include <pbl/services/music_endpoint.h>
+#include <pbl/services/music_endpoint_types.h>
 #include <pbl/services/music_internal.h>
-#include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
+
+#include <comm/ble/kernel_le_client/ams/ams.h>
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 

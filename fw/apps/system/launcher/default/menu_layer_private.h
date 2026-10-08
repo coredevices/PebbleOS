@@ -4,6 +4,7 @@
 #pragma once
 
 #include <pbl/util/math.h>
+
 #include <board/display.h>
 
 // Smallest cell heights of any content size, bounding how many rows can be visible at once

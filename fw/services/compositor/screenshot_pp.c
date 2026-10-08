@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/compositor/screenshot_pp.h>
-
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session_send_buffer.h>
 #include <pbl/services/compositor/compositor.h>
+#include <pbl/services/compositor/screenshot_pp.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/byteorder.h>
 
 #include <applib/graphics/framebuffer.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
-#include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/byteorder.h>
 
 PBL_LOG_MODULE_DECLARE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 

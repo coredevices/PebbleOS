@@ -5,10 +5,11 @@
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
-#include <applib/graphics/gtypes.h>
+#include <stddef.h>
+
 #include <pbl/util/math.h>
 
-#include <stddef.h>
+#include <applib/graphics/gtypes.h>
 
 // gcolor_get_luminance() returns a 2-bit value (0..3); scale to 0..255.
 #define ALS_COMP_LUM_TO_255(l) ((uint32_t)(l) * 85u)

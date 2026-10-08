@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
-#include <board/board.h>
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/drivers/flash/qspi_flash.h>
 #include <pbl/drivers/flash/qspi_flash_part_definitions.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/mcu/cache.h>
+
+#include <board/board.h>
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/mcu/cache.h>
 #include <system/passert.h>
 #include <system/status_codes.h>
 

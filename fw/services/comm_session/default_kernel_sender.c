@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <comm/bt_lock.h>
 #include <pbl/drivers/rtc.h>
-#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
 #include <pbl/services/comm_session/session_send_queue.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/testing.h>
-#include <pbl/util/math.h>
 #include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
-#include <pbl/kernel/sem.h>
+#include <comm/bt_lock.h>
+#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 

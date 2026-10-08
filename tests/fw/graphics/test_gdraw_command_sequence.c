@@ -1,20 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <applib/graphics/gdraw_command.h>
-#include <applib/graphics/gdraw_command_list.h>
-#include <applib/graphics/gdraw_command_frame.h>
-#include <applib/graphics/gdraw_command_private.h>
-#include <applib/graphics/gdraw_command_sequence.h>
-
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/graphics.h>
-#include <applib/graphics/gpath.h>
-
 #include <pbl/util/size.h>
 
+#include <applib/graphics/gdraw_command.h>
+#include <applib/graphics/gdraw_command_frame.h>
+#include <applib/graphics/gdraw_command_list.h>
+#include <applib/graphics/gdraw_command_private.h>
+#include <applib/graphics/gdraw_command_sequence.h>
+#include <applib/graphics/gpath.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
+#include <clar.h>
 #include <stubs_applib_resource.h>
 #include <stubs_memory_layout.h>
 #include <stubs_passert.h>

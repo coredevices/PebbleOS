@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/compositor/legacy/compositor_app_slide_transitions.h>
-
 #include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/compositor/legacy/compositor_app_slide_transitions.h>
 
 #include <applib/graphics/bitblt.h>
 #include <applib/graphics/framebuffer.h>

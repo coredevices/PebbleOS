@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <flash_region/flash_region.h>
-#include <syscall/syscall.h>
-#include <pbl/services/wakeup.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
-#include <process_management/app_install_manager.h>
-#include <pbl/kernel/compiler.h>
+#include <pbl/services/wakeup.h>
 
 #include <clar.h>
+#include <flash_region/flash_region.h>
+#include <process_management/app_install_manager.h>
+#include <syscall/syscall.h>
 
 // Fakes
 //////////////////////////////////////////////////////////
@@ -25,19 +25,19 @@
 // Stubs
 //////////////////////////////////////////////////////////
 #include <stubs_analytics.h>
-#include <stubs_events.h>
-#include <stubs_logging.h>
-#include <stubs_print.h>
-#include <stubs_serial.h>
-#include <stubs_passert.h>
-#include <stubs_sleep.h>
-#include <stubs_mutex.h>
-#include <stubs_hexdump.h>
-#include <stubs_pebble_process_md.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_task_wdt.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
+#include <stubs_events.h>
+#include <stubs_hexdump.h>
+#include <stubs_logging.h>
 #include <stubs_memory_layout.h>
+#include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pebble_process_md.h>
+#include <stubs_print.h>
+#include <stubs_rand_ptr.h>
+#include <stubs_serial.h>
+#include <stubs_sleep.h>
+#include <stubs_task_wdt.h>
 
 #define SETTINGS_FILE_NAME "wakeup"
 #define SETTINGS_FILE_SIZE 2048

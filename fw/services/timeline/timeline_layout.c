@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline_layout.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/size.h>
+#include <pbl/util/string.h>
+#include <pbl/util/units.h>
 
 #include <applib/preferred_content_size.h>
 #include <applib/ui/ui.h>
-#include <apps/system/timeline/text_node.h>
 #include <apps/system/timeline/layer.h>
+#include <apps/system/timeline/text_node.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <popups/timeline/peek.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/timeline_resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/timeline/timeline_resources.h>
 #include <shell/system_theme.h>
-#include <pbl/util/size.h>
-#include <pbl/util/string.h>
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
 
 #define ARROW_SIZE_PX                                                                         \
   PREFERRED_CONTENT_SIZE_SWITCH(                                                              \

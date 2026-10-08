@@ -1,26 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/hash.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics.h>
+#include <applib/graphics/raw_image.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/content_indicator.h>
 #include <applib/ui/content_indicator_private.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window_private.h>
+#include <clar.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/timeline/timeline_resources.h>
 #include <shell/system_theme.h>
-#include <applib/graphics/raw_image.h>
-#include <pbl/util/hash.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-
-#include <clar.h>
-
-#include <stdio.h>
 
 static GContext s_ctx;
 

@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <trng/trng.h>
+#include <string.h>
 
 #include <pbl/drivers/rng.h>
-#include <system/passert.h>
 
-#include <string.h>
+#include <system/passert.h>
+#include <trng/trng.h>
 
 struct trng_dev {
   uint8_t unused;

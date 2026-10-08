@@ -7,18 +7,19 @@
 #include <pbl/drivers/battery/qemu.h>
 #endif
 
-#include <board/board.h>
 #include <pbl/drivers/battery.h>
-#include <kernel/events.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
-#include <syscall/syscall_internal.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/util/math.h>
 #include <pbl/util/ratio.h>
+
+#include <board/board.h>
+#include <kernel/events.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -334,6 +335,7 @@ void pbl_analytics_external_collect_battery(void) {
 
 #ifdef CONFIG_SHELL
 #include <errno.h>
+
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) {

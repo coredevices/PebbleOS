@@ -3,18 +3,16 @@
 
 #include "fake_bt_gatt.h"
 
+#include <string.h>
+
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/gatt_discovery.h>
-#include <comm/ble/gap_le_connection.h>
-
-#include <kernel/pbl_malloc.h>
-
-#include <clar_asserts.h>
-
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/util/uuid.h>
 
-#include <string.h>
+#include <clar_asserts.h>
+#include <comm/ble/gap_le_connection.h>
+#include <kernel/pbl_malloc.h>
 
 // A long-ish nominal watchdog period; the value is irrelevant to the tests,
 // which fire the timer explicitly through stub_new_timer_fire.

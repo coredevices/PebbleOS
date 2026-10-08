@@ -3,12 +3,13 @@
 
 #include "rotate_bitmap_layer.h"
 
+#include <pbl/util/math.h>
+#include <pbl/util/trig.h>
+
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
-#include <pbl/util/trig.h>
-#include <applib/applib_malloc.auto.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
 
 void rot_bitmap_layer_update_proc(RotBitmapLayer *image, GContext *ctx) {
   const GColor corner_clip_color = image->corner_clip_color;

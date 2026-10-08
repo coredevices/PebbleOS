@@ -1,20 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdbool.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-
-#include <clar_asserts.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <pbl/drivers/flash.h>
-#include <flash_region/flash_region.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 
+#include <clar_asserts.h>
+#include <fake_spi_flash.h>
+#include <fcntl.h>
+#include <flash_region/flash_region.h>
 #include <stubs_analytics.h>
 #include <stubs_hexdump.h>
 #include <stubs_logging.h>
@@ -27,7 +25,8 @@
 #include <stubs_serial.h>
 #include <stubs_sleep.h>
 #include <stubs_task_wdt.h>
-#include <fake_spi_flash.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,
                                                   uint32_t min_end, uint32_t max_end) {

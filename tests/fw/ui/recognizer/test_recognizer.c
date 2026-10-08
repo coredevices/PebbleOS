@@ -1,19 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/util/size.h>
 
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_impl.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/recognizer_private.h>
-#include <pbl/util/size.h>
+#include <clar.h>
 
 // Stubs
+#include "test_recognizer_impl.h"
+
+#include <stubs_logging.h>
 #include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>
-#include <stubs_logging.h>
-#include "test_recognizer_impl.h"
 
 static bool s_manager_state_change = false;
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {

@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <clar_asserts.h>
+#include "fake_events.h"
 
 #include <applib/event_service_client.h>
-#include "fake_events.h"
+#include <clar_asserts.h>
 
 static EventServiceInfo s_event_handler[PEBBLE_NUM_EVENTS];
 

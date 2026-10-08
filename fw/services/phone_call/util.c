@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/phone_call_util.h>
 
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/i18n/i18n.h>
-
-#include <string.h>
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   PebblePhoneCaller *caller = kernel_zalloc(sizeof(PebblePhoneCaller));

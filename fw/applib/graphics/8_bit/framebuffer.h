@@ -3,12 +3,13 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
-#include <pbl/kernel/compiler.h>
-
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
+
+#include <pbl/kernel/compiler.h>
+
+#include <applib/graphics/gtypes.h>
 
 #define FRAMEBUFFER_BYTES_PER_ROW DISP_COLS
 #define FRAMEBUFFER_SIZE_BYTES    DISPLAY_FRAMEBUFFER_BYTES

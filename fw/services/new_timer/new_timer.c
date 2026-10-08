@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/msgq.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
+#include <pbl/task_wdt/task_wdt.h>
 
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/task_timer_manager.h>
 #include <kernel/util/task_init.h>
-#include <kernel/pebble_tasks.h>
-#include <pbl/logging/logging.h>
-
-#include <pbl/kernel/msgq.h>
-#include <pbl/kernel/thread.h>
-#include <pbl/kernel/sem.h>
-#include <pbl/task_wdt/task_wdt.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_new_timer, CONFIG_SERVICE_NEW_TIMER_LOG_LEVEL);

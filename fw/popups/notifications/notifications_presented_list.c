@@ -3,10 +3,11 @@
 
 #include "notifications_presented_list.h"
 
-#include <pbl/util/list.h>
-#include <kernel/pbl_malloc.h>
-
 #include <stdbool.h>
+
+#include <pbl/util/list.h>
+
+#include <kernel/pbl_malloc.h>
 
 // currently focused notification id
 static NotifList *s_current_notif;

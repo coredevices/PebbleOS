@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/app_watch_info.h>
-#include <pbl/drivers/flash.h>
-#include <flash_region/flash_region.h>
-#include <system/firmware_storage.h>
-#include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/build_id.h>
-#include <pbl/util/string.h>
+#include "version.h"
 
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
 
-#include "version.h"
-
+#include <pbl/drivers/flash.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/build_id.h>
+#include <pbl/util/string.h>
 #include <pbl/version.h>
+
+#include <applib/app_watch_info.h>
+#include <flash_region/flash_region.h>
+#include <system/firmware_storage.h>
+#include <system/passert.h>
 
 //! This symbol and its contents are provided by the linker script, see the
 //! .note.gnu.build-id section in fw/fw_common.ld

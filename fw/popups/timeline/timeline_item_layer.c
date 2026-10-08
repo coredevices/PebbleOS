@@ -3,6 +3,14 @@
 
 #include "timeline_item_layer.h"
 
+#include <stdint.h>
+#include <time.h>
+
+#include <pbl/services/timeline/layout_layer.h>
+#include <pbl/services/timeline/timeline_actions.h>
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
+
 #include <applib/graphics/graphics.h>
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/window.h>
@@ -12,14 +20,7 @@
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/timeline/layout_layer.h>
-#include <pbl/services/timeline/timeline_actions.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-
-#include <stdint.h>
-#include <time.h>
-#include <pbl/util/testing.h>
 
 ///////////////////////////////////////////////////////////
 // Drawing functions

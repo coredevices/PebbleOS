@@ -2,8 +2,8 @@
 #ifndef OS_SUPPORT_CUSTOM_H
 #define OS_SUPPORT_CUSTOM_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /* Forward declare PebbleOS functions */
 extern void *kernel_zalloc_check(size_t size);

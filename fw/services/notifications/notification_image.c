@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/mutex.h>
 #include <pbl/services/notifications/notification_image.h>
 
 #include <applib/graphics/gtypes.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/kernel/mutex.h>
 
 //! Responses are delivered on KernelMain while the card that requested and renders the image runs
 //! on KernelMain (modal) or the App task (notification history), so the slot needs a lock. It is

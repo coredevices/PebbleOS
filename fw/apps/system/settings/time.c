@@ -1,10 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "time.h"
+
 #include "menu.h"
 #include "option_menu.h"
-#include "time.h"
 #include "window.h"
+
+#include <stdio.h>
+#include <time.h>
+
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/timezone_database.h>
+#include <pbl/util/string.h>
 
 #include <applib/app.h>
 #include <applib/ui/action_menu_window_private.h>
@@ -14,15 +23,7 @@
 #include <applib/ui/time_selection_window.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/util/string.h>
-
-#include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/timezone_database.h>
 #include <shell/prefs.h>
-
-#include <stdio.h>
-#include <time.h>
 
 // 9 (TZ) continents: Africa, America, Antarctica, Asia, Atlantic, Australia,
 // Europe, Indian, Pacific

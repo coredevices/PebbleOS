@@ -1,22 +1,23 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "uart_posix_bottom.h"
+
 #include <errno.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <pthread.h>
 #include <signal.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <posix_host.h>
+#include <pthread.h>
 #include <sys/socket.h>
 #include <termios.h>
 #include <unistd.h>
-
-#include <posix_host.h>
-#include "uart_posix_bottom.h"
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0

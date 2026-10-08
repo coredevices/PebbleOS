@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/services/timeline/notification_jumboji_table.h>
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-
-#include <stdio.h>
 
 // Stubs
 /////////////////////

@@ -1,14 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "animation.h"
 #include "animation_interpolate.h"
+
+#include "animation.h"
 #include "animation_private.h"
+
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
 
 int64_t interpolate_int64_linear(int32_t normalized, int64_t from, int64_t to) {
   return from + ((normalized * (to - from)) / ANIMATION_NORMALIZED_MAX);

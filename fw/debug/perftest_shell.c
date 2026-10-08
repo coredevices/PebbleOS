@@ -3,26 +3,26 @@
 
 #if defined(CONFIG_SHELL) && defined(CONFIG_PERFORMANCE_TESTS)
 
+#include <errno.h>
+#include <inttypes.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/services/compositor/compositor.h>
 #include <pbl/shell/shell.h>
 #include <pbl/task_wdt/task_wdt.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <kernel/event_loop.h>
-#include <pbl/services/compositor/compositor.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
 #include <system/profiler.h>
-
-#include <errno.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
 
 // Average this many iterations of the text test for getting useful perf numbers.
 #define PERFTEST_TEXT_ITERATIONS 5

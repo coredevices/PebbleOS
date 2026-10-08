@@ -1,10 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <applib/graphics/graphics.h>
 #include <applib/ui/bitmap_layer.h>
+#include <clar.h>
 
 // Stubs
 /////////////////////

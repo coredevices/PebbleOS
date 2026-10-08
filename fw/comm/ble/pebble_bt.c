@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/bluetooth/pebble_bt.h>
-
 #include <stddef.h>
 #include <string.h>
+
+#include <pbl/bluetooth/pebble_bt.h>
 
 void pbl_bt_pebble_uuid_expand(Uuid *uuid, uint32_t value) {
   static const uint8_t pebble_base_uuid_last_12_bytes[] = {

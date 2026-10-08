@@ -4,18 +4,19 @@
 #pragma once
 
 #include "test_graphics.h"
-#include <applib/graphics/gbitmap_png.h>
-#include <applib/graphics/raw_image.h>
-#include <pbl/util/math.h>
 
-#include <clar.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <unistd.h>
 
+#include <pbl/util/math.h>
+
+#include <applib/graphics/gbitmap_png.h>
+#include <applib/graphics/raw_image.h>
+#include <clar.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #define PATH_STRING_LENGTH 512
 

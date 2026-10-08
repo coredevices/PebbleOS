@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <apps/system/timeline/text_node.h>
-
 #include <clar.h>
 #include <pebble_asserts.h>
 

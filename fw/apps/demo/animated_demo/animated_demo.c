@@ -3,16 +3,16 @@
 
 #include "animated_demo.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include <applib/app.h>
-#include <process_state/app_state/app_state.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <system/passert.h>
-
-#include <string.h>
-#include <stdio.h>
 
 typedef struct AnimatedDemoData {
   Window window;

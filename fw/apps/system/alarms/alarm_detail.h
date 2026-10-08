@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <pbl/services/alarms/alarm.h>
 #include "alarm_editor.h"
+
+#include <pbl/services/alarms/alarm.h>
 
 void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
                               AlarmEditorCompleteCallback alarm_editor_callback,

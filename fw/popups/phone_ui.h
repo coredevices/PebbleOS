@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include <kernel/events.h>
+#include <stdbool.h>
+
 #include <pbl/services/phone_call_util.h>
 
-#include <stdbool.h>
+#include <kernel/events.h>
 
 void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_call_ui,
                                    PhoneCallSource source);

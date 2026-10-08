@@ -11,10 +11,11 @@
 #include <pbl/util/uuid.h>
 
 // FIXME PBL-1629: move needed declarations into applib
-#include <logging/logging_private.h>
-
 #include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
+
+#include <logging/logging_private.h>
 
 //! @addtogroup Foundation
 //! @{

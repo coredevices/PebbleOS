@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/util/buffer.h>
 
 #include <applib/ui/content_indicator.h>
 #include <applib/ui/content_indicator_private.h>
-#include <pbl/util/buffer.h>
+#include <clar.h>
 
 // Fakes
 ////////////////////////////////////

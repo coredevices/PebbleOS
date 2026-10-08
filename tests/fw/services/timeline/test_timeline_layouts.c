@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <apps/system/timeline/pin_window.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/timeline/sports_layout.h>
 #include <pbl/services/timeline/weather_layout.h>
 
+#include <apps/system/timeline/pin_window.h>
 #include <clar.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 // Fakes
 /////////////////////

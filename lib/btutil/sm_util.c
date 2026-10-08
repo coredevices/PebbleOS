@@ -1,13 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/btutil/sm_util.h>
-#include <pbl/btutil/bt_device.h>
-
-#include <pbl/bluetooth/sm_types.h>
-
 #include <stdbool.h>
 #include <string.h>
+
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/btutil/bt_device.h>
+#include <pbl/btutil/sm_util.h>
 
 // -------------------------------------------------------------------------------------------------
 bool sm_is_pairing_info_equal_identity(const struct pbl_bt_sm_pairing_info *a,

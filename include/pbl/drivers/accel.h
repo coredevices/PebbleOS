@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/services/imu/units.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/imu/units.h>
 
 /**
  * @defgroup drivers_accel Accelerometer

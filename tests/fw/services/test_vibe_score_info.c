@@ -6,10 +6,10 @@
 #include <clar.h>
 #include <resource/resource_ids.auto.h>
 // stub
+#include <string.h>
+
 #include <stubs_logging.h>
 #include <stubs_passert.h>
-
-#include <string.h>
 
 // unit test code
 void test_vibe_score_info__initialize(void) {

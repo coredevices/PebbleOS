@@ -6,22 +6,22 @@
 //! instead of <pebble.h>. Over-inclusive on purpose; the linker drops unused.
 #pragma once
 
-#include <stdint.h>
 #include <stddef.h>
-#include <string.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 // --- UI framework (umbrella: window, layer, text/bitmap/menu/scroll layers,
 //     animation, click, app_window_stack, vibes, ...) ---
-#include <applib/ui/ui.h>
 #include <applib/ui/app_window_stack.h>
+#include <applib/ui/ui.h>
 #include <applib/ui/window_stack.h>
 
 // --- Graphics ---
-#include <applib/graphics/graphics.h>
 #include <applib/graphics/gbitmap_png.h>
-#include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_frame.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
 
 // --- Fonts ---
@@ -38,12 +38,12 @@
 #include <applib/persist.h>
 
 // --- Process / app state / heap ---
-#include <process_state/app_state/app_state.h>
 #include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 
 // --- Resources (real generated ids; replaces the stored-app pinned header) ---
-#include <resource/resource_ids.auto.h>
 #include <applib/applib_resource.h> // app-facing ResHandle resource API
+#include <resource/resource_ids.auto.h>
 
 // NOTE: the firmware weather headers (weather_service.h / weather_types.h /
 // weather_db.h) are intentionally NOT included here — they define WeatherType
@@ -53,9 +53,10 @@
 // weather.c use the app's types + the neutral WxDsForecast struct.
 
 // --- Misc utils the ported code uses ---
+#include <time.h>
+
 #include <pbl/services/clock.h>
 #include <pbl/util/trig.h> // sin_lookup / cos_lookup / TRIG_MAX_ANGLE / TRIG_MAX_RATIO
-#include <time.h>
 
 // --- Window-stack call-site shims: the SDK names map 1:1 to the app-window
 //     variants firmware apps must use. ---

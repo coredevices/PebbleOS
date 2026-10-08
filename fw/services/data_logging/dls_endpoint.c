@@ -1,24 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/data_logging/dls_private.h>
-#include <pbl/services/data_logging/dls_endpoint.h>
-#include <pbl/services/data_logging/dls_list.h>
-#include <pbl/services/data_logging/dls_storage.h>
+#include <inttypes.h>
 
+#include <pbl/crc/crc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/crc/crc.h>
+#include <pbl/services/data_logging/dls_endpoint.h>
+#include <pbl/services/data_logging/dls_list.h>
+#include <pbl/services/data_logging/dls_private.h>
+#include <pbl/services/data_logging/dls_storage.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
 
-#include <inttypes.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 

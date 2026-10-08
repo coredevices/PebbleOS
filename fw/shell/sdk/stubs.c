@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <board/board.h>
+#include <stdlib.h>
+
 #include <pbl/drivers/backlight.h>
-#include <process_management/pebble_process_md.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/timeline/peek.h>
-#include <resource/resource_ids.auto.h>
-#include <shell/prefs.h>
+#include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <stdlib.h>
-#include <pbl/util/units.h>
+#include <board/board.h>
+#include <process_management/pebble_process_md.h>
+#include <resource/resource_ids.auto.h>
+#include <shell/prefs.h>
 
 void app_idle_timeout_start(uint32_t timeout_ms) {
 }

@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <board/display.h>
-#include <applib/graphics/gtypes.h>
-
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <applib/graphics/gtypes.h>
+#include <board/display.h>
 
 /**
  * @defgroup drivers_display Display

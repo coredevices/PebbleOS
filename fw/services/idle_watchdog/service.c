@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/idle_watchdog.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/system_task.h>
 
 #include <applib/event_service_client.h>
 #include <comm/ble/gap_le_connection.h>
-#include <pbl/services/regular_timer.h>
-#include <pbl/services/system_task.h>
-#include <system/reboot_reason.h>
 #include <kernel/util/standby.h>
+#include <system/reboot_reason.h>
 
 #define PRF_IDLE_TIMEOUT_MINUTES 10
 static RegularTimerInfo s_is_idle_timer;

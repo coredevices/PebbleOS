@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <applib/ui/animation.h>
 #include <pbl/util/math.h>
 #include <pbl/util/math_fixed.h>
+
+#include <applib/ui/animation.h>
 
 //! @file animation_timing.h
 

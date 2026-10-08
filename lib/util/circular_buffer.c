@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/circular_buffer.h>
+#include <string.h>
 
 #include <pbl/util/assert.h>
+#include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
-
-#include <string.h>
 
 static uint16_t get_write_length_available(CircularBuffer *buffer) {
   return buffer->buffer_size - buffer->data_length;

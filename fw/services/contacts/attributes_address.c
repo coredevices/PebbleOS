@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/contacts/attributes_address.h>
-
 #include <pbl/services/timeline/attribute_group.h>
 
 #define GROUP_TYPE AttributeGroupType_Address

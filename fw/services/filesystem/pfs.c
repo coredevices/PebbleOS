@@ -1,30 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/filesystem/pfs.h>
-
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/filesystem/flash_translation.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/task_wdt/task_wdt.h>
+#include <pbl/util/math.h>
+
 #include <flash_region/filesystem_regions.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/sleep.h>
-#include <pbl/kernel/mutex.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/services/filesystem/flash_translation.h>
 #include <system/hexdump.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/crc/crc.h>
-#include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
 
@@ -2240,6 +2240,7 @@ void test_override_last_written_page(uint16_t start_page) {
 
 #ifdef CONFIG_SHELL
 #include <errno.h>
+
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_format(const struct pbl_shell *sh, size_t argc, char **argv) {

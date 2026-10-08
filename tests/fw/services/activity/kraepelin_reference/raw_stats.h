@@ -3,8 +3,8 @@
 #include <pebble_worker.h>
 #endif
 #include "constants_worker.h"
-#include "helper_worker.h"
 #include "fourier.h"
+#include "helper_worker.h"
 
 // #include <math.h>
 typedef signed long long sfxp;

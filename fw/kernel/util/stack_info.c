@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/debug.h>
-
 #include <pbl/mcu/interrupts.h>
 
 extern uint32_t __isr_stack_start__[];

@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/debounced_connection_service.h>
-
 #include <pbl/services/comm_session/session.h>
+#include <pbl/services/debounced_connection_service.h>
 #include <pbl/services/regular_timer.h>
+
 #include <syscall/syscall_internal.h>
 
 #ifndef CONFIG_RECOVERY_FW
-#include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
 #endif

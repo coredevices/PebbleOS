@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mcu.h>
-
 #include <string.h>
+
+#include <pbl/drivers/mcu.h>
 
 static const uint8_t s_serial[] = {'Q', 'E', 'M', 'U', '0', '0', '0', '0'};
 

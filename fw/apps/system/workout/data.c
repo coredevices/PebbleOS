@@ -3,10 +3,10 @@
 
 #include "data.h"
 
+#include <stdio.h>
+
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
-
-#include <stdio.h>
 
 void workout_data_update(void *data) {
   if (!data) {

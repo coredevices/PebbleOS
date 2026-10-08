@@ -29,17 +29,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
+#include <pbl/util/list.h>
+
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource.h>
 #include <shell/normal/language_ui.h>
 #include <shell/prefs.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/list.h>
 
 PBL_LOG_MODULE_DEFINE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
 

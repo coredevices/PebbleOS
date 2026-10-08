@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <pbl/services/audio_endpoint.h>
-#include <pbl/services/voice/transcription.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/uuid.h>
-
 #include <inttypes.h>
 #include <stdlib.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/audio_endpoint.h>
+#include <pbl/services/voice/transcription.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_voice_endpoint Voice endpoint

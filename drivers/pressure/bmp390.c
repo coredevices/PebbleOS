@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <board/board.h>
-#include <pbl/drivers/pressure.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/pressure.h>
 #include <pbl/logging/logging.h>
+
+#include <board/board.h>
 
 PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 

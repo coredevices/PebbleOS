@@ -4,6 +4,7 @@
 #pragma once
 
 #include "pebble_compat.h"
+
 #include <pbl/util/bitops.h>
 
 // Format-safe framebuffer row pixel access, shared by every raw-blit routine in

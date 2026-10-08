@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/timeline/generic_layout.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/timeline/generic_layout.h>
 
 LayoutLayer *PBL_WEAK generic_layout_create(const LayoutLayerConfig *config) {
   return NULL;

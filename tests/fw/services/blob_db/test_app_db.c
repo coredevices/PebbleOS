@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/services/filesystem/pfs.h>
 
+#include <clar.h>
 #include <process_management/app_install_types.h>
 #include <process_management/pebble_process_info.h>
 #include <process_management/pebble_process_md.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/blob_db/app_db.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////

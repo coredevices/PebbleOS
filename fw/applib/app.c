@@ -3,13 +3,14 @@
 
 #include "app.h"
 
-#include <applib/ui/app_window_stack.h>
-#include <applib/ui/window_stack.h>
-#include <applib/ui/window_private.h>
+#include <pbl/logging/logging.h>
 #include <pbl/mcu/fpu.h>
+
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/window_private.h>
+#include <applib/ui/window_stack.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <pbl/logging/logging.h>
 #include <system/profiler.h>
 
 static void prv_render_app(void) {

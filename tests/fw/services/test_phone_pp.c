@@ -1,26 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/phone_pp.h>
-#include <pbl/services/phone_call_util.h>
-
 #include <pbl/services/comm_session/session.h>
-#include <kernel/events.h>
+#include <pbl/services/phone_call_util.h>
+#include <pbl/services/phone_pp.h>
 
+#include <clar.h>
 #include <fake_events.h>
 #include <fake_session.h>
 #include <fake_system_task.h>
-
+#include <kernel/events.h>
 #include <stubs_bt_lock.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_hexdump.h>
-#include <stubs_serial.h>
+#include <stubs_i18n.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
-#include <stubs_i18n.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
+#include <stubs_serial.h>
 
 extern void phone_protocol_msg_callback(CommSession *session, const uint8_t *iter, size_t length);
 

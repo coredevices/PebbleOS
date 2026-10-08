@@ -3,15 +3,15 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <applib/graphics/gtypes.h>
-#include <applib/ui/click.h>
 #include <applib/ui/action_bar_layer.h>
+#include <applib/ui/click.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/scroll_layer.h>
 #include <applib/ui/window_stack.h>
 #include <resource/resource_ids.auto.h>
-
-#include <stdint.h>
 
 #define DIALOG_MAX_HEADER_LEN 30
 

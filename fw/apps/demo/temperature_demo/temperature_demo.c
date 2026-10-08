@@ -1,22 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "temperature_demo.h"
+
+#include <stdio.h>
+
+#include <pbl/drivers/temperature.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/units.h>
+
 #include <applib/app.h>
 #include <applib/app_logging.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/simple_menu_layer.h>
 #include <applib/ui/ui.h>
-#include <pbl/drivers/temperature.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-
-#include "temperature_demo.h"
-
-#include <stdio.h>
-#include <pbl/util/units.h>
 
 #define USE_FAKE_DATA 0
 

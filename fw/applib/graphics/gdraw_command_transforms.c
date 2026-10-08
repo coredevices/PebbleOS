@@ -3,15 +3,16 @@
 
 #include "gdraw_command_transforms.h"
 
+#include <pbl/util/math_fixed.h>
+#include <pbl/util/testing.h>
+#include <pbl/util/trig.h>
+
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gdraw_command_private.h>
-#include <pbl/util/trig.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/animation_timing.h>
 #include <system/passert.h>
-#include <pbl/util/math_fixed.h>
-#include <pbl/util/testing.h>
 
 ////////////////////
 // scale

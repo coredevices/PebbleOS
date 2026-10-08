@@ -3,11 +3,11 @@
 
 #include "fake_GAPAPI.h"
 
-#include <bluetopia_interface.h>
-#include <pbl/bluetooth/advert.h>
-
 #include <string.h>
 
+#include <pbl/bluetooth/advert.h>
+
+#include <bluetopia_interface.h>
 #include <clar_asserts.h>
 
 static bool s_is_le_advertising_enabled;

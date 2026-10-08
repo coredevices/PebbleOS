@@ -3,12 +3,13 @@
 
 #include "date_selection_window.h"
 
-#include <applib/ui/option_menu_window.h>
+#include <stdio.h>
+
 #include <pbl/services/clock.h>
-#include <shell/system_theme.h>
 #include <pbl/util/time.h>
 
-#include <stdio.h>
+#include <applib/ui/option_menu_window.h>
+#include <shell/system_theme.h>
 
 // ---------------------------------------------------------------------------
 // Layout configuration

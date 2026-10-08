@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/buffer.h>
+#include <string.h>
 
 #include <pbl/util/assert.h>
-
-#include <string.h>
+#include <pbl/util/buffer.h>
 
 void pbl_buffer_init(struct pbl_buffer *buffer, size_t capacity) {
   buffer->length = capacity;

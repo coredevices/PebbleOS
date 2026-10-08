@@ -1,25 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/services/blob_db/pin_db.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/notifications/notification_image.h>
 #include <pbl/services/timeline/notification_jumboji_table.h>
 #include <pbl/services/timeline/notification_layout.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/string.h>
+#include <pbl/util/testing.h>
 
 #include <applib/graphics/gtypes.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/timeline_resource_ids.auto.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/notifications/alerts_preferences_private.h>
-#include <pbl/services/notifications/notification_image.h>
-#include <pbl/services/timeline/timeline_resources.h>
 #include <shell/system_theme.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-#include <pbl/util/string.h>
-#include <pbl/util/testing.h>
 
 // NOTIFICATION
 // Title -> Sender/App

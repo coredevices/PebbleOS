@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <resource/resource_ids.auto.h>
-#include <resource/resource_storage.h>
-#include <resource/resource_storage_impl.h>
-
 #include <limits.h>
 
 #include <clar.h>
 #include <fixtures/load_test_resources.h>
+#include <resource/resource_ids.auto.h>
+#include <resource/resource_storage.h>
+#include <resource/resource_storage_impl.h>
 
 // Fakes
 #include <fake_app_manager.h>
@@ -17,6 +16,7 @@
 // Stubs
 #include <stubs_analytics.h>
 #include <stubs_logging.h>
+#include <stubs_memory_layout.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>
@@ -25,7 +25,6 @@
 #include <stubs_serial.h>
 #include <stubs_sleep.h>
 #include <stubs_task_wdt.h>
-#include <stubs_memory_layout.h>
 
 static const uint8_t pug[] = {
   0x08, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x3c, 0x00, 0x3e, 0x00,

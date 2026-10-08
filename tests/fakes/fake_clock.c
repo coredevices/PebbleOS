@@ -1,21 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/math.h>
-#include <pbl/util/time.h>
-
-#include <stubs_i18n.h>
-
 #include <inttypes.h>
-#include <memory.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/math.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
+
+#include <memory.h>
+#include <stubs_i18n.h>
 
 PBL_WEAK const char *string_strip_leading_whitespace(const char *string) {
   const char *result_string = string;

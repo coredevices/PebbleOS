@@ -1,15 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/heap.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <pbl/util/assert.h>
-#include <pbl/util/math.h>
+#include <pbl/util/heap.h>
 #include <pbl/util/logging.h>
-
-#include <stddef.h>
-#include <string.h>
-#include <stdio.h>
+#include <pbl/util/math.h>
 
 // With AddressSanitizer, only what is allocated is addressable. This file is
 // not instrumented itself, as it walks block headers and free memory.

@@ -3,11 +3,12 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/imu/units.h>
-#include <kernel/pebble_tasks.h>
 
-#include <stdbool.h>
+#include <kernel/pebble_tasks.h>
 
 //! @addtogroup Foundation
 //! @{

@@ -2,7 +2,20 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "send_text.h"
+
 #include "prefs.h"
+
+#include <string.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/blob_db/ios_notif_pref_db.h>
+#include <pbl/services/blob_db/watch_app_prefs_db.h>
+#include <pbl/services/contacts/contacts.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/notifications/notification_constants.h>
+#include <pbl/services/send_text_service.h>
+#include <pbl/services/timeline/timeline.h>
+#include <pbl/services/timeline/timeline_actions.h>
 
 #include <applib/app.h>
 #include <applib/app_exit_reason.h>
@@ -12,18 +25,7 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/blob_db/ios_notif_pref_db.h>
-#include <pbl/services/blob_db/watch_app_prefs_db.h>
-#include <pbl/services/contacts/contacts.h>
-#include <pbl/services/notifications/notification_constants.h>
-#include <pbl/services/send_text_service.h>
-#include <pbl/services/timeline/timeline.h>
-#include <pbl/services/timeline/timeline_actions.h>
 #include <shell/prefs.h>
-#include <pbl/logging/logging.h>
-
-#include <string.h>
 
 #define SEND_TEXT_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(SMS_REPLY_COLOR, GColorBlack)
 

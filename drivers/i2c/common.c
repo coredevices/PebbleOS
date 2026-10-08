@@ -4,16 +4,16 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/hal.h>
-
-#include <board/board.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/drivers/rtc.h>
-#include <pbl/kernel/types.h>
-#include <kernel/util/sleep.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/cache.h>
+#include <pbl/services/analytics/analytics.h>
+
+#include <board/board.h>
+#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 #ifdef CONFIG_PMIC

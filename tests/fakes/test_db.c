@@ -3,9 +3,9 @@
 
 #include "test_db.h"
 
-#include <string.h>
-
 #include "ram_storage.h"
+
+#include <string.h>
 
 #include <kernel/pbl_malloc.h>
 

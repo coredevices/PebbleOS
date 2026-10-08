@@ -5,9 +5,9 @@
 
 #include "ancs_types.h"
 
-#include <pbl/services/notifications/notifications.h>
-
 #include <stdbool.h>
+
+#include <pbl/services/notifications/notifications.h>
 
 int ancs_util_get_notif_attr_response_len(const uint8_t *data, const size_t length);
 

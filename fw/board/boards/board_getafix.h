@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/backlight/aw9364e.h>
+#include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/touch/cst816/touch_sensor_definitions.h>
 #include <pbl/services/imu/units.h>

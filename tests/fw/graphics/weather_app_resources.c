@@ -2,12 +2,14 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "weather_app_resources.h"
-#include <kernel/pbl_malloc.h>
-#include <applib/graphics/gdraw_command_private.h>
-#include <applib/ui/animation.h>
-#include <pbl/util/size.h>
 
 #include <string.h>
+
+#include <pbl/util/size.h>
+
+#include <applib/graphics/gdraw_command_private.h>
+#include <applib/ui/animation.h>
+#include <kernel/pbl_malloc.h>
 
 #if defined(UNITTEST)
 #include <stdio.h>

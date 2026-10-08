@@ -2,17 +2,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/irq.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/system_task.h>
+
 #include <applib/app.h>
 #include <applib/ui/ui.h>
 #include <kernel/core_dump.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/util/sleep.h>
 #include <process_management/pebble_process_md.h>
-#include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
 
 #define NUM_MENU_ITEMS 13

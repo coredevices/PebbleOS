@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/kernel/compiler.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_bluetooth_bluetooth_persistent_storage_v2_impl Bonding storage format

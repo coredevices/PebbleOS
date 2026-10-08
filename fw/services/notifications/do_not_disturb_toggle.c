@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/notifications/do_not_disturb_toggle.h>
 
 #include <applib/ui/action_toggle.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

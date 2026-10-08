@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <apps/system_app_ids.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/app_inbox_service.h>
+#include <pbl/services/app_outbox_service.h>
+#include <pbl/services/compositor/compositor.h>
+
 #include <apps/system/timeline/timeline.h>
+#include <apps/system_app_ids.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <popups/notifications/notification_window.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_manager.h>
-#include <pbl/services/compositor/compositor.h>
-#include <pbl/services/activity/activity.h>
-#include <pbl/services/app_inbox_service.h>
-#include <pbl/services/app_outbox_service.h>
 #include <shell/prefs.h>
 #include <shell/sdk/watchface.h>
 #include <shell/shell_event_loop.h>

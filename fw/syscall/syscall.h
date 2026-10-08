@@ -3,11 +3,22 @@
 
 #pragma once
 
+#include <pbl/bluetooth/types.h>
+#include <pbl/drivers/mag.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/app_glances/app_glance_service.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/wakeup.h>
+#include <pbl/util/time.h>
+
 #include <applib/app_comm.h>
 #include <applib/app_exit_reason.h>
 #include <applib/app_inbox.h>
-#include <applib/app_outbox.h>
 #include <applib/app_logging.h>
+#include <applib/app_outbox.h>
 #include <applib/app_timer.h>
 #include <applib/app_watch_info.h>
 #include <applib/app_worker.h>
@@ -15,29 +26,13 @@
 #include <applib/data_logging.h>
 #include <applib/event_service_client.h>
 #include <applib/fonts/fonts.h>
-#include <applib/tick_timer_service.h>
 #include <applib/graphics/gtypes.h>
+#include <applib/tick_timer_service.h>
 #include <applib/ui/window_stack_animation.h>
-
 #include <comm/ble/gap_le_scan.h>
-
-#include <pbl/drivers/mag.h>
-#include <pbl/drivers/rtc.h>
-
 #include <kernel/events.h>
 #include <logging/logging_private.h>
-#include <pbl/services/wakeup.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/evented_timer.h>
-#include <pbl/services/activity/activity.h>
-#include <pbl/services/app_glances/app_glance_service.h>
-
 #include <process_management/pebble_process_info.h>
-
-#include <pbl/kernel/compiler.h>
-
-#include <pbl/bluetooth/types.h>
-#include <pbl/util/time.h>
 
 //! @internal
 //! Just a dummy syscall that we use in the user mode test app. Remove eventually.

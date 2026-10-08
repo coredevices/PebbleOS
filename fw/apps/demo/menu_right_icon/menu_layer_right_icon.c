@@ -3,15 +3,16 @@
 
 #include "menu_layer_right_icon.h"
 
+#include <stdio.h>
+
+#include <pbl/logging/logging.h>
+
 #include <applib/app.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-
-#include <stdio.h>
 
 #define NUM_MENU_SECTIONS 1
 #define NUM_MENU_ITEMS    4

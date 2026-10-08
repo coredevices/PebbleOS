@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/slist.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <pbl/util/slist.h>
 
 #include <clar.h>
 #include <stubs_passert.h>

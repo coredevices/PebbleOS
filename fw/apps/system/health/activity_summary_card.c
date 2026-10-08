@@ -2,19 +2,21 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "activity_summary_card.h"
-#include "activity_summary_card_segments.h"
+
 #include "activity_detail_card.h"
+#include "activity_summary_card_segments.h"
 #include "progress.h"
 #include "ui.h"
+
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/size.h>
+#include <pbl/util/units.h>
 
 #include <applib/pbl_std/pbl_std.h>
 #include <applib/ui/kino/kino_reel.h>
 #include <board/display.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/util/size.h>
-#include <pbl/util/units.h>
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)

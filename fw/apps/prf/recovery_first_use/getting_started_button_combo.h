@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <kernel/events.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/bitops.h>
+
+#include <kernel/events.h>
 
 //! @file
 //!

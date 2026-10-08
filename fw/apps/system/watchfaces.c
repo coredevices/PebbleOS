@@ -3,6 +3,8 @@
 
 #include "watchfaces.h"
 
+#include <pbl/services/i18n/i18n.h>
+
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/simple_dialog.h>
@@ -11,11 +13,10 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_management/app_menu_data_source.h>
-#include <shell/normal/app_idle_timeout.h>
-#include <shell/normal/watchface.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
+#include <shell/normal/app_idle_timeout.h>
+#include <shell/normal/watchface.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
 

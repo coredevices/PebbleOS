@@ -2,9 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
+#include "order.h"
+
 #include <stdbool.h>
 #include <stdint.h>
-#include "order.h"
 
 /**
  * @defgroup util_slist Singly linked list

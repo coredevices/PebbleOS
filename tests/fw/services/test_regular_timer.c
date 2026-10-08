@@ -1,13 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/services/regular_timer.h>
 
+#include <clar.h>
 #include <fake_new_timer.h>
 #include <fake_rtc.h>
-
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>

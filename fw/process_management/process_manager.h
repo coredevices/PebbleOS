@@ -3,19 +3,20 @@
 
 #pragma once
 
+#include "launch_config.h"
+
+#include <stdbool.h>
+
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/thread.h>
-#include "launch_config.h"
+#include <pbl/services/accel_manager.h>
+#include <pbl/services/compositor/compositor.h>
 
 #include <applib/app_exit_reason.h>
 #include <applib/platform.h>
 #include <kernel/events.h>
 #include <process_management/app_install_types.h>
 #include <process_management/pebble_process_md.h>
-#include <pbl/services/accel_manager.h>
-#include <pbl/services/compositor/compositor.h>
-
-#include <stdbool.h>
 
 // Used to identify invalid or system app when using app_bank calls
 #define INVALID_BANK_ID    ~0

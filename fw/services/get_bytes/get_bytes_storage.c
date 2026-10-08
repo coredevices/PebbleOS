@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/get_bytes/get_bytes_storage.h>
+#include <pbl/util/size.h>
 
 #include <kernel/pbl_malloc.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
 
 //! Skeleton implementation struct
 typedef struct GetBytesStorageImplementation {

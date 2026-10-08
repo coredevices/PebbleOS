@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <inttypes.h>
+#include <stdbool.h>
 #include <time.h>
 
 /**

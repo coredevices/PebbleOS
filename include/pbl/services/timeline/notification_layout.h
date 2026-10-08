@@ -7,9 +7,10 @@
 #include "layout_layer.h"
 #include "timeline_layout.h"
 
-#include <applib/ui/kino/kino_layer.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/timeline_resources.h>
+
+#include <applib/ui/kino/kino_layer.h>
 
 /**
  * @defgroup services_timeline_notification_layout Notification layout

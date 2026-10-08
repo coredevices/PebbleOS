@@ -6,12 +6,13 @@
 #include "window_private.h"
 #include "window_stack.h"
 
+#include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/util/math.h>
+
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/graphics_private.h>
 #include <applib/graphics/gtypes.h>
 #include <kernel/ui/kernel_ui.h>
-#include <pbl/services/compositor/compositor_transitions.h>
-#include <pbl/util/math.h>
 
 // Window transition implementations
 //////////////////////////////////////

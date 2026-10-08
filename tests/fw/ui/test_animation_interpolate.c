@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/ui/animation_interpolate.h>
-#include <applib/ui/animation.h>
 #include <pbl/util/size.h>
 
+#include <applib/ui/animation.h>
+#include <applib/ui/animation_interpolate.h>
 #include <clar.h>
-
 #include <stubs/stubs_logging.h>
 #include <stubs/stubs_passert.h>
 

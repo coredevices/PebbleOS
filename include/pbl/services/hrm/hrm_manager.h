@@ -3,13 +3,14 @@
 
 #pragma once
 
-#include <pbl/services/accel_manager_types.h>
-#include <process_management/app_install_types.h>
-#include <pbl/util/units.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/accel_manager_types.h>
+#include <pbl/util/units.h>
+
 #include <kernel/pebble_tasks.h>
+#include <process_management/app_install_types.h>
 
 /**
  * @defgroup services_hrm Heart rate monitor

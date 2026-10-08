@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/services/touch/touch_event.h>
-
 #include <stdbool.h>
+
+#include <pbl/services/touch/touch_event.h>
 
 //! Callback for touch events.
 //! @param event The touch event data

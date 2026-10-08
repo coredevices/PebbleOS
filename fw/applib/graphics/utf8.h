@@ -1,11 +1,12 @@
 #pragma once
 
-#include <applib/fonts/codepoint.h>
-#include <pbl/util/iterator.h>
-
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#include <pbl/util/iterator.h>
+
+#include <applib/fonts/codepoint.h>
 
 typedef uint8_t utf8_t;
 

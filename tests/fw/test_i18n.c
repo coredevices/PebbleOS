@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-#include <fixtures/load_test_resources.h>
-
-#include <kernel/events.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <resource/resource_ids.auto.h>
+
+#include <clar.h>
+#include <fixtures/load_test_resources.h>
 #include <flash_region/flash_region.h>
+#include <kernel/events.h>
+#include <resource/resource_ids.auto.h>
 
 #define I18N_FIXTURE_PATH "i18n"
 
@@ -23,6 +23,7 @@
 #include <stubs_hexdump.h>
 #include <stubs_language_ui.h>
 #include <stubs_logging.h>
+#include <stubs_memory_layout.h>
 #include <stubs_mutex.h>
 #include <stubs_pbl_malloc.h>
 #include <stubs_pebble_tasks.h>
@@ -30,7 +31,6 @@
 #include <stubs_sleep.h>
 #include <stubs_system_reset.h>
 #include <stubs_task_wdt.h>
-#include <stubs_memory_layout.h>
 
 // Fakes
 /////////////////////////

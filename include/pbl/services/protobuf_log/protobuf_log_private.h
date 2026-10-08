@@ -3,14 +3,14 @@
 
 #pragma once
 
-#include <pb_decode.h>
-#include <pb_encode.h>
-
 #include "protobuf_log.h"
+
+#include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
 
-#include <stdint.h>
+#include <pb_decode.h>
+#include <pb_encode.h>
 
 /**
  * @defgroup services_protobuf_log_protobuf_log_private Protobuf log internals

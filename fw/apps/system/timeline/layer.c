@@ -1,10 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "animations.h"
 #include "layer.h"
+
+#include "animations.h"
 #include "model.h"
 #include "relbar.h"
+
+#include <stdint.h>
+#include <time.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/timeline/layout_layer.h>
+#include <pbl/services/timeline/timeline_layout.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/struct.h>
+#include <pbl/util/trig.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gpath.h>
@@ -19,19 +33,7 @@
 #include <popups/timeline/peek_animations.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/timeline/layout_layer.h>
-#include <pbl/services/timeline/timeline_layout.h>
-#include <pbl/services/timeline/timeline_resources.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-#include <pbl/util/struct.h>
-#include <pbl/util/trig.h>
-
-#include <stdint.h>
-#include <time.h>
 
 #define PAST_TOP_MARGIN_EXTRA   PBL_IF_RECT_ELSE(10, 38)
 #define FUTURE_TOP_MARGIN_EXTRA PBL_IF_RECT_ELSE(10, 18)

@@ -1,24 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "text.h"
 #include "text_resources.h"
 
-#include <syscall/syscall.h>
+#include "text.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/fonts/fonts_private.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/logging/logging.h>
-#include <pbl/kernel/compiler.h>
+#include <syscall/syscall.h>
 #include <system/passert.h>
 #include <system/profiler.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
 
 #define RLE4_UNITS_BIT_WIDTH (4)
 #define RLE4_UNITS_PER_BYTE  (8 / RLE4_UNITS_BIT_WIDTH)

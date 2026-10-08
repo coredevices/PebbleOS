@@ -3,11 +3,12 @@
 
 #pragma once
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/app_message/app_message_sender.h>
+#include <pbl/util/uuid.h>
+
 #include <applib/app_message/app_message.h>
 #include <applib/app_timer.h>
-#include <pbl/services/app_message/app_message_sender.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/uuid.h>
 
 typedef struct CommSession CommSession;
 

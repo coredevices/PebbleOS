@@ -7,7 +7,6 @@
 // This huge list is mainly due to the inclusion of timeline_actions.c which handles both UI and
 // a large portion of action logic, which will hopefully be fixed eventually
 
-#include <applib/ui/action_menu_window_private.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/filesystem/pfs.h>
@@ -17,6 +16,7 @@
 #include <pbl/services/timeline/timeline_actions.h>
 #include <pbl/util/size.h>
 
+#include <applib/ui/action_menu_window_private.h>
 #include <stubs_action_chaining_window.h>
 #include <stubs_action_menu.h>
 #include <stubs_analytics.h>

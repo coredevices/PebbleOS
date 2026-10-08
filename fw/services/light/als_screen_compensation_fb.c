@@ -5,9 +5,10 @@
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
+#include <pbl/services/compositor/compositor.h>
+
 #include <applib/graphics/gtypes.h>
 #include <board/board.h>
-#include <pbl/services/compositor/compositor.h>
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include <shell/prefs.h>
 #endif

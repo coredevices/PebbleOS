@@ -1,21 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/thread.h>
-#include <time.h>
-
 #include "syscall.h"
 
 #include "syscall_internal.h"
 
+#include <time.h>
+
 #include <pbl/drivers/rtc.h>
-#include <pbl/mcu/privilege.h>
+#include <pbl/kernel/thread.h>
 #include <pbl/kernel/types.h>
-#include <process_management/worker_manager.h>
-#include <logging/logging_private.h>
 #include <pbl/logging/logging.h>
-#include <pbl/util/string.h>
+#include <pbl/mcu/privilege.h>
 #include <pbl/services/time.h>
+#include <pbl/util/string.h>
+
+#include <logging/logging_private.h>
+#include <process_management/worker_manager.h>
 
 DEFINE_SYSCALL(int, sys_test, int arg) {
   uint32_t ipsr = 0;

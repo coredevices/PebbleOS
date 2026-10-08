@@ -3,8 +3,9 @@
 
 #include <time.h>
 
-#include <clar.h>
 #include <pbl/kernel/compiler.h>
+
+#include <clar.h>
 
 // Exercise the production module macros with this suite's explicit Kconfig symbols.
 #undef UNITTEST
@@ -13,7 +14,6 @@
 
 #include <kernel/pebble_tasks.h>
 #include <logging/logging_private.h>
-
 #include <stubs_passert.h>
 
 PBL_LOG_MODULE_DEFINE(test_runtime, CONFIG_TEST_RUNTIME_LOG_LEVEL);

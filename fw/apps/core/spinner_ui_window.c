@@ -3,9 +3,10 @@
 
 #include "spinner_ui_window.h"
 
+#include <pbl/util/trig.h>
+
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
-#include <pbl/util/trig.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/layer.h>
 #include <applib/ui/property_animation.h>

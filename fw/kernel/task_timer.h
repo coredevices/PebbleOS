@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/kernel/mutex.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/kernel/mutex.h>
 
 //! task_timer.h
 //!

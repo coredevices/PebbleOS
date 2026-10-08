@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/voice/voice.h>
-
-#include <pbl/shell/shell.h>
-
 #include <errno.h>
 #include <string.h>
+
+#include <pbl/services/voice/voice.h>
+#include <pbl/shell/shell.h>
 
 static VoiceSessionId s_session_id = VOICE_SESSION_ID_INVALID;
 

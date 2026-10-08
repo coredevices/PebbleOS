@@ -5,9 +5,9 @@
 
 #include "protobuf_log.h"
 
-#include <pbl/services/activity/activity.h>
-
 #include <stdbool.h>
+
+#include <pbl/services/activity/activity.h>
 
 /**
  * @defgroup services_protobuf_log_protobuf_log_activity_sessions Activity session log

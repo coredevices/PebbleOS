@@ -1,28 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/irq.h>
-#include <pbl/kernel/sched.h>
-#include "pulse_logging.h"
-
-#include <kernel/pebble_tasks.h>
 #include "logging_private.h"
-#include <kernel/util/stack_info.h>
-
-#include <console/serial_console.h>
-#include <debug/advanced_logging.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/logging/logging.h>
-
-#include <pbl/mcu/interrupts.h>
-#include <pbl/mcu/privilege.h>
-
-#include <pbl/util/byteorder.h>
-#include <pbl/util/string.h>
+#include "pulse_logging.h"
 
 #include <ctype.h>
 #include <stdio.h>
 #include <time.h>
+
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/sched.h>
+#include <pbl/logging/logging.h>
+#include <pbl/mcu/interrupts.h>
+#include <pbl/mcu/privilege.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/string.h>
+
+#include <console/serial_console.h>
+#include <debug/advanced_logging.h>
+#include <kernel/pebble_tasks.h>
+#include <kernel/util/stack_info.h>
 
 #ifndef PBL_LOG_LEVEL
 #define PBL_LOG_LEVEL LOG_LEVEL_DEBUG
@@ -166,6 +164,7 @@ void kernel_pbl_log_from_fault_handler_fmt(const char *src_filename, uint16_t sr
 
 #ifdef CONFIG_SHELL
 #include <errno.h>
+
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_level(const struct pbl_shell *sh, size_t argc, char **argv) {

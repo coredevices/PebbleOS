@@ -3,12 +3,13 @@
 
 #include "crumbs_layer.h"
 
-#include <applib/applib_malloc.auto.h>
-#include <shell/system_theme.h>
-#include <applib/ui/property_animation.h>
-#include <process_management/process_manager.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/trig.h>
+
+#include <applib/applib_malloc.auto.h>
+#include <applib/ui/property_animation.h>
+#include <process_management/process_manager.h>
+#include <shell/system_theme.h>
 
 typedef struct CrumbsLayerSizeConfig {
   int layer_width;

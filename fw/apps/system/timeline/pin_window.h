@@ -3,9 +3,8 @@
 
 #pragma once
 
-#include <popups/timeline/timeline_item_layer.h>
-
 #include <applib/ui/ui.h>
+#include <popups/timeline/timeline_item_layer.h>
 
 typedef struct TimelinePinWindow TimelinePinWindow;
 

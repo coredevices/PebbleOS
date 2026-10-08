@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/evented_timer.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/evented_timer.h>
 
 void PBL_WEAK evented_timer_init(void) {
 }

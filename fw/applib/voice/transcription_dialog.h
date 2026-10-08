@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <applib/app_timer.h>
-#include <applib/ui/property_animation.h>
-#include <applib/ui/dialogs/expandable_dialog.h>
-
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <applib/app_timer.h>
+#include <applib/ui/dialogs/expandable_dialog.h>
+#include <applib/ui/property_animation.h>
 
 //! Callback from the dialog
 typedef void (*TranscriptionConfirmationCallback)(void *callback_context);

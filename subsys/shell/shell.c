@@ -1,9 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/shell/backend.h>
-#include <pbl/shell/shell.h>
-
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -11,6 +8,8 @@
 #include <string.h>
 
 #include <pbl/services/system_task.h>
+#include <pbl/shell/backend.h>
+#include <pbl/shell/shell.h>
 
 #define ESC_NONE  0
 #define ESC_START 1

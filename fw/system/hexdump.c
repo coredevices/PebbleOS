@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <system/hexdump.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/hexdump.h>
+
+#include <system/hexdump.h>
 
 void hexdump_log(int level, const uint8_t *data, size_t length) {
   PBL_HEXDUMP(level, data, length);

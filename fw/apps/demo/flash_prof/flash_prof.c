@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <process_management/pebble_process_md.h>
-#include <applib/app.h>
-#include <pbl/logging/logging.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
-#include <flash_region/flash_region.h>
-#include <system/passert.h>
-#include <kernel/pbl_malloc.h>
+#include <pbl/logging/logging.h>
+
+#include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/number_window.h>
 #include <applib/ui/window_stack.h>
+#include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
+#include <process_management/pebble_process_md.h>
+#include <system/passert.h>
 
 static NumberWindow number_window;
 

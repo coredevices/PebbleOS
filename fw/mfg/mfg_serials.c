@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdio.h>
-
 #include "mfg_serials.h"
+
+#include <stdio.h>
 
 #include <pbl/util/size.h>
 
@@ -99,6 +99,7 @@ MfgSerialsResult mfg_write_hw_version(const char *hwver, size_t hwver_size, uint
 #if defined(CONFIG_IS_BIGBOARD)
 
 #include <stdio.h>
+
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 
@@ -149,6 +150,7 @@ void mfg_write_bigboard_serial_number(void) {
 
 #if defined(CONFIG_SHELL) && defined(CONFIG_RECOVERY_FW)
 #include <errno.h>
+
 #include <pbl/shell/shell.h>
 
 static int prv_print_feedback(const struct pbl_shell *sh, const MfgSerialsResult result,

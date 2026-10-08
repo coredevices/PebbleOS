@@ -7,10 +7,11 @@
 #include "arabic_shaping.h"
 #include "utf8.h"
 
-#include <applib/fonts/codepoint.h>
+#include <string.h>
+
 #include <pbl/util/size.h>
 
-#include <string.h>
+#include <applib/fonts/codepoint.h>
 
 // Bidirectional character classes, coarsened from UAX 9 to the ones that
 // change the outcome for a single line of text.

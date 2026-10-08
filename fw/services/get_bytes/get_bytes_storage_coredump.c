@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/get_bytes/get_bytes_storage_file.h>
-#include <pbl/services/get_bytes/get_bytes_private.h>
-
 #include <pbl/drivers/flash.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/get_bytes/get_bytes_private.h>
+#include <pbl/services/get_bytes/get_bytes_storage_file.h>
+
 #include <flash_region/flash_region.h>
 #include <kernel/core_dump.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
 #include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);

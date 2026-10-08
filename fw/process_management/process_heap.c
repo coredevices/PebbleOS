@@ -3,11 +3,12 @@
 
 #include "process_heap.h"
 
+#include <pbl/util/heap.h>
+
 #include <applib/app_logging.h>
 #include <process_management/pebble_process_info.h>
 #include <process_management/pebble_process_md.h>
 #include <system/passert.h>
-#include <pbl/util/heap.h>
 
 static void prv_warn_on_double_free(void *ptr) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Double free detected on pointer <%p>", ptr);

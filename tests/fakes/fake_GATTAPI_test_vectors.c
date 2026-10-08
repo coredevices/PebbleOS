@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fake_GATTAPI_test_vectors.h"
+
 #include "fake_GATTAPI.h"
 
 #include <pbl/btutil/bt_uuid.h>

@@ -4,17 +4,18 @@
 #pragma once
 
 #include "gdraw_command.h"
-#include "gdraw_command_list.h"
-#include "gdraw_command_image.h"
 #include "gdraw_command_frame.h"
+#include "gdraw_command_image.h"
+#include "gdraw_command_list.h"
 #include "gdraw_command_sequence.h"
 
-#include <applib/graphics/gtypes.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
 #include <pbl/util/misc.h>
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <pbl/kernel/compiler.h>
+#include <applib/graphics/gtypes.h>
 
 #define GDRAW_COMMAND_VERSION (1)
 

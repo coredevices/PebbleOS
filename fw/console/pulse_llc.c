@@ -4,12 +4,12 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <console/pulse_llc.h>
-#include <console/pulse_protocol_impl.h>
-
-#include <console/pulse_internal.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/math.h>
+
+#include <console/pulse_internal.h>
+#include <console/pulse_llc.h>
+#include <console/pulse_protocol_impl.h>
 
 #define LLC_INMSG_LINK_ESTABLISHMENT_REQUEST (1)
 #define LLC_INMSG_LINK_CLOSE_REQUEST         (3)

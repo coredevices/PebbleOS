@@ -3,9 +3,8 @@
 
 #pragma once
 
-#include <pbl/logging/logging.h>
-
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 
 #ifdef CONFIG_LOG_HASHED
 #include <pbl/logging/log_hashing.h>

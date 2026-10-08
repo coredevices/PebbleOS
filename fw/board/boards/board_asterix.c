@@ -1,31 +1,31 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <nrfx_i2s.h>
-
-#include <board/board.h>
-#include <pbl/kernel/irq.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/definitions.h>
+#include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
-#include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
-#include <pbl/drivers/i2c/nrf5.h>
-#include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
+#include <pbl/drivers/uart/nrf5.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
+
+#include <board/board.h>
 #include <flash_region/flash_region.h>
+#include <nrfx_i2s.h>
 
 // QSPI
 #include <hal/nrf_clock.h>
 #include <hal/nrf_gpio.h>
 #include <nrfx_gpiote.h>
-#include <nrfx_twim.h>
 #include <nrfx_pdm.h>
+#include <nrfx_twim.h>
 
 static QSPIPortState s_qspi_port_state;
 static QSPIPort QSPI_PORT = {

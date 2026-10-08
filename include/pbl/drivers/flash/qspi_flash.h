@@ -8,6 +8,7 @@
 
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/flash/qspi_flash_part_definitions.h>
+
 #include <system/status_codes.h>
 
 /**

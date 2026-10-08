@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <getopt.h>
-#include <libgen.h>
 #include <limits.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
 #include <time.h>
-#include <unistd.h>
 
+#include <getopt.h>
+#include <libgen.h>
 #include <posix_host.h>
+#include <pthread.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #define MAX_OPTIONS 16
 #define MAX_HOOKS   16

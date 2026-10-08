@@ -3,6 +3,10 @@
 
 #pragma once
 
+#include <pbl/services/app_glances/app_glance_service.h>
+#include <pbl/services/timeline/timeline_actions.h>
+#include <pbl/util/heap.h>
+
 #include <applib/accel_service_private.h>
 #include <applib/app_focus_service.h>
 #include <applib/app_inbox.h>
@@ -28,9 +32,6 @@
 #include <applib/ui/window_stack_private.h>
 #include <applib/unobstructed_area_service_private.h>
 #include <logging/logging_private.h>
-#include <pbl/services/app_glances/app_glance_service.h>
-#include <pbl/services/timeline/timeline_actions.h>
-#include <pbl/util/heap.h>
 
 struct _reent;
 

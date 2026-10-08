@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <pbl/logging/logging.h>
-
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 
 /**
  * @defgroup logging_log_hashing Log hashing

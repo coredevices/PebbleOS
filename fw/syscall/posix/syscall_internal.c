@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <syscall/syscall_internal.h>
-
 #include <pbl/logging/logging.h>
+
+#include <syscall/syscall_internal.h>
 
 // A native build runs everything at one privilege level: syscalls are plain
 // calls and every buffer is trusted.

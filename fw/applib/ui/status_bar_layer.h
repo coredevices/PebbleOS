@@ -2,11 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include <applib/app_timer.h>
-#include <applib/ui/animation.h>
-#include <applib/graphics/gtypes.h>
 #include "layer.h"
+
+#include <applib/app_timer.h>
 #include <applib/event_service_client.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/animation.h>
 
 //! @file status_bar_layer.h
 //! @addtogroup UI

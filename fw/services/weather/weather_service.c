@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/blob_db/watch_app_prefs_db.h>
+#include <pbl/services/blob_db/weather_db.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/services/time.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h>
+#include <pbl/util/units.h>
 
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/kernel/mutex.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/comm_session/session_remote_version.h>
-#include <pbl/services/blob_db/watch_app_prefs_db.h>
-#include <pbl/services/blob_db/weather_db.h>
-#include <pbl/logging/logging.h>
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(service_weather, CONFIG_SERVICE_WEATHER_LOG_LEVEL);
 

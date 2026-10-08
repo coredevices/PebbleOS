@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/services.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/runlevel.h>
-
+#include <pbl/services/services.h>
 #include <pbl/services/services_common.h>
 #include <pbl/services/services_normal.h>
-#include <pbl/logging/logging.h>
+
 #include <system/passert.h>
 
 void services_early_init(void) {

@@ -3,13 +3,13 @@
 
 #pragma once
 
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
 #include <pbl/logging/logging.h>
 #include <pbl/util/string.h>
-
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
 
 bool g_pbl_log_enabled = false;
 int g_pbl_log_level = 0;

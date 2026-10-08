@@ -1,18 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "recognizer_manager.h"
+
 #include "recognizer.h"
 #include "recognizer_list.h"
-#include "recognizer_manager.h"
 #include "recognizer_private.h"
+
+#include <stddef.h>
+
+#include <pbl/services/touch/touch_event.h>
+#include <pbl/util/testing.h>
 
 #include <applib/ui/layer.h>
 #include <applib/ui/window.h>
-#include <pbl/services/touch/touch_event.h>
 #include <system/passert.h>
-
-#include <stddef.h>
-#include <pbl/util/testing.h>
 
 PBL_T_STATIC bool prv_process_all_recognizers(RecognizerManager *manager,
                                               RecognizerListIteratorCb iter_cb, void *context) {

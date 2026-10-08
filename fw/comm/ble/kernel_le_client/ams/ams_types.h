@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/math.h>
-
-#include <stdint.h>
 
 //! Dumping ground for Apple Media Service types
 //! All these values come from the Appendix in the specification:

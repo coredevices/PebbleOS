@@ -7,10 +7,10 @@
 //!
 //! Stores information about the physical watch that is encoded during the manufacturing process.
 
+#include <string.h>
+
 #include <applib/app_watch_info.h>
 #include <applib/graphics/gtypes.h>
-
-#include <string.h>
 
 // If you give these functions enough space, they will add the null-terminator for you
 

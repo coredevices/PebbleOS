@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/activity/activity_private.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/activity/activity_private.h>
 #include <pbl/util/time.h>
 
 bool PBL_WEAK activity_tracking_on(void) {

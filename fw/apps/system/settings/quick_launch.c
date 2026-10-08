@@ -7,12 +7,15 @@
 //! This file is also responsible for saving / storing the uuid of each quicklaunch app as well as
 //! whether or not the quicklaunch app is enabled.
 
+#include "quick_launch.h"
+
 #include "menu.h"
 #include "option_menu.h"
-#include "quick_launch.h"
 #include "quick_launch_app_menu.h"
 #include "quick_launch_setup_menu.h"
 #include "window.h"
+
+#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
@@ -21,7 +24,6 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_menu_data_source.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
 #include <shell/normal/quick_launch.h>
 #include <system/passert.h>
 

@@ -3,12 +3,11 @@
 
 #ifdef CONFIG_SHELL
 
-#include <pbl/shell/shell.h>
-
 #include <errno.h>
 #include <string.h>
 
 #include <pbl/services/runlevel.h>
+#include <pbl/shell/shell.h>
 #include <pbl/util/size.h>
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_sys);

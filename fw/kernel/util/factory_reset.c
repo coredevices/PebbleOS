@@ -1,25 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/util/factory_reset.h>
-
 #include <pbl/drivers/rtc.h>
-#include <pbl/task_wdt/task_wdt.h>
-#include <flash_region/filesystem_regions.h>
-#include <kernel/event_loop.h>
-#include <kernel/util/standby.h>
-#include <process_management/worker_manager.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
+#include <pbl/services/runlevel.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/system_task.h>
-#include <pbl/services/runlevel.h>
+#include <pbl/task_wdt/task_wdt.h>
+
+#include <flash_region/filesystem_regions.h>
+#include <kernel/event_loop.h>
+#include <kernel/util/factory_reset.h>
+#include <kernel/util/sleep.h>
+#include <kernel/util/standby.h>
+#include <process_management/worker_manager.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <system/bootbits.h>
 #include <system/firmware_storage.h>
-#include <pbl/logging/logging.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
-#include <kernel/util/sleep.h>
 
 #if !defined(CONFIG_RECOVERY_FW)
 #include <pbl/services/blob_db/pin_db.h>

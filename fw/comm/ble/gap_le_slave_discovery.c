@@ -1,32 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <board/board.h>
-
 #include "gap_le_slave_discovery.h"
+
 #include "gap_le_advert.h"
-
-#include <applib/bluetooth/ble_ad_parse.h>
-
-#include <comm/bt_lock.h>
-
-#include <pbl/version.h>
-
-#include <mfg/mfg_info.h>
-
-#include <mfg/mfg_serials.h>
-
-#include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
-
-#include <system/passert.h>
-#include <system/version.h>
 
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/bluetooth/ble_hrm.h>
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/version.h>
+
+#include <applib/bluetooth/ble_ad_parse.h>
+#include <board/board.h>
+#include <comm/bt_lock.h>
+#include <mfg/mfg_info.h>
+#include <mfg/mfg_serials.h>
+#include <system/passert.h>
+#include <system/version.h>
 
 static GAPLEAdvertisingJobRef s_discovery_advert_job;
 

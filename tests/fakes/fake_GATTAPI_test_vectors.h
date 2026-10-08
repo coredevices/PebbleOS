@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/util/uuid.h>
-
 #include <stdint.h>
+
+#include <pbl/util/uuid.h>
 
 // These structures are only used in the unit tests:
 

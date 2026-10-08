@@ -5,10 +5,11 @@
 
 #include "protobuf_log.h"
 
-#include <pbl/services/hrm/hrm_manager.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/hrm/hrm_manager.h>
+
 #include <sys/types.h>
 
 /**

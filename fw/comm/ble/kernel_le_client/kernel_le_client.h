@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <kernel/events.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+
+#include <kernel/events.h>
 
 //! @file kernel_le_client.h
 //! Module that is responsible of connecting to the BLE gateway (aka "the phone") in order to:

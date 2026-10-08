@@ -1,21 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include <pbl/util/heap.h>
 
 #include <applib/app_heap_util.h>
-
 #include <clar.h>
-
 #include <fake_pebble_tasks.h>
-#include <stubs_serial.h>
-#include <stubs_passert.h>
-#include <stubs_logging.h>
 #include <stubs_app_state.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_serial.h>
 #include <stubs_worker_state.h>
-
-#include <stdlib.h>
-#include <string.h>
 
 #define BLOCK_SIZE sizeof(unsigned long)
 

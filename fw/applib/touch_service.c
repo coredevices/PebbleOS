@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "touch_service.h"
+
 #include "touch_service_private.h"
 
 #include <applib/event_service_client.h>

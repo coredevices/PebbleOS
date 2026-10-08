@@ -9,14 +9,15 @@
 #include "swipe.h"
 #include "tap.h"
 
-#include <applib/graphics/gtypes.h>
-#include <applib/ui/layer.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <pbl/drivers/button_id.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/services/touch/touch_event.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/layer.h>
 
 //! Touch-nav routing bridge (per-task).
 //!

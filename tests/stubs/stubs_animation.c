@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
+
+#include <pbl/kernel/compiler.h>
 
 #include <applib/ui/animation.h>
 #include <applib/ui/animation_private.h>
 #include <applib/ui/property_animation.h>
 #include <applib/ui/property_animation_private.h>
-#include <pbl/kernel/compiler.h>
+#include <sys/time.h>
 
 Animation *PBL_WEAK animation_create(void) {
   Animation *animation = malloc(sizeof(AnimationPrivate));

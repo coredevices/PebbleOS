@@ -3,23 +3,23 @@
 
 #ifdef CONFIG_SHELL
 
-#include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/logging/logging.h>
-#include <pbl/shell/shell.h>
-#include <pbl/task_wdt/task_wdt.h>
-
-#include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/system_task.h>
-#include <pbl/util/math.h>
-#include <system/passert.h>
-#include <pbl/util/rand32.h>
-
 #include <errno.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
+
+#include <pbl/drivers/flash.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/system_task.h>
+#include <pbl/shell/shell.h>
+#include <pbl/task_wdt/task_wdt.h>
+#include <pbl/util/math.h>
+#include <pbl/util/rand32.h>
+
+#include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 #ifdef TEST_FLASH_LOCK_PROTECTION
 #include <pbl/drivers/watchdog.h>

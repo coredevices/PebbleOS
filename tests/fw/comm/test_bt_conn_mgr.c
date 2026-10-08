@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/regular_timer.h>
 
+#include <clar.h>
 #include <comm/ble/gap_le_connection.h>
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_conn_mgr_impl.h>
-#include <pbl/services/regular_timer.h>
 
 // Fakes
 #include <fake_gap_le_connect_params.h>
 #include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_system_task.h>
-#include <fake_pbl_malloc.h>
 
 // Stubs
 #include <stubs_bluetopia_interface.h>

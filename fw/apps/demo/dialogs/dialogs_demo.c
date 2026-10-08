@@ -3,27 +3,28 @@
 
 #include "dialogs_demo.h"
 
+#include <stdio.h>
+#include <string.h>
+
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/size.h>
+
 #include <applib/app.h>
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_transforms.h>
 #include <applib/ui/app_window_stack.h>
-#include <applib/ui/dialogs/dialog.h>
-#include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/dialogs/actionable_dialog.h>
+#include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
+#include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/window.h>
 #include <applib/voice/transcription_dialog.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_menu_data_source.h>
-#include <shell/normal/watchface.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
+#include <shell/normal/watchface.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-
-#include <stdio.h>
-#include <string.h>
 
 typedef struct DialogsData {
   Window window;

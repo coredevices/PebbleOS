@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/gatt_service_types.h>
+#include <pbl/bluetooth/types.h>
 
 /**
  * @defgroup bluetooth_gatt_discovery GATT service discovery

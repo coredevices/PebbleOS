@@ -1,16 +1,17 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pthread.h>
+#include "posix.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include <pbl/kernel/idle.h>
 
 #include <kernel.h>
 #include <kernel_test.h>
-#include "posix.h"
+#include <pthread.h>
+#include <unistd.h>
 
 // Unit test harness: time only moves when the test ticks it, or when every
 // thread is idle.

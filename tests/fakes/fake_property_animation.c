@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/ui/property_animation_private.h>
 #include <applib/ui/layer.h>
+#include <applib/ui/property_animation_private.h>
 
 static const PropertyAnimationImplementation s_frame_layer_implementation = {
   .accessors = {

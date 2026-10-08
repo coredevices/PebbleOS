@@ -3,10 +3,10 @@
 
 #pragma once
 #include "gcontext.h"
-#include "gtypes.h"
 #include "graphics_bitmap.h"
 #include "graphics_circle.h"
 #include "graphics_line.h"
+#include "gtypes.h"
 
 //! @file graphics/graphics.h
 //! Defines the base graphics subsystem including the screen buffer. Users of these

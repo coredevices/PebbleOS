@@ -1,22 +1,20 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include <pbl/services/comm_session/session.h>
 #include <pbl/services/imaging.h>
 
 #include <applib/graphics/gtypes.h>
-#include <pbl/services/comm_session/session.h>
-
-#include <stdlib.h>
-#include <string.h>
+#include <clar.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////
 
 #include <fake_session.h>
 #include <fake_system_task.h>
-
 #include <stubs_bt_lock.h>
 #include <stubs_hexdump.h>
 #include <stubs_logging.h>

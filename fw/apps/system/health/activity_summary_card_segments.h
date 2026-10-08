@@ -4,6 +4,7 @@
 #pragma once
 
 #include "progress.h"
+
 #include <board/display.h>
 
 //! 5 main segments + 2 real corners + 2 endcaps implemented as corners (for bw)

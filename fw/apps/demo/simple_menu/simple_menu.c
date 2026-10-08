@@ -3,14 +3,15 @@
 
 #include "simple_menu.h"
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/poll_remote.h>
+#include <pbl/util/size.h>
+
 #include <applib/app.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/poll_remote.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
 
 typedef struct {
   Window window;

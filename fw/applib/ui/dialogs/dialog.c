@@ -3,10 +3,10 @@
 
 #include "dialog.h"
 
-#include <applib/ui/window.h>
-#include <applib/applib_malloc.auto.h>
-
 #include <string.h>
+
+#include <applib/applib_malloc.auto.h>
+#include <applib/ui/window.h>
 
 void dialog_set_fullscreen(Dialog *dialog, bool is_fullscreen) {
   window_set_fullscreen(&dialog->window, is_fullscreen);

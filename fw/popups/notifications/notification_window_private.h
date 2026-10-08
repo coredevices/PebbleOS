@@ -3,11 +3,12 @@
 
 #pragma once
 
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/timeline/swap_layer.h>
+
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/status_bar_layer.h>
 #include <apps/system/timeline/peek_layer.h>
-#include <pbl/services/evented_timer.h>
-#include <pbl/services/timeline/swap_layer.h>
 
 typedef struct NotificationWindowData {
   Window window;

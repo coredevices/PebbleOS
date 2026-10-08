@@ -1,15 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <pbl/services/comm_session/app_session_capabilities.h>
+#include <pbl/services/comm_session/session.h>
+
 #include <applib/app_message/app_message_internal.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
-#include <pbl/services/comm_session/app_session_capabilities.h>
-#include <pbl/services/comm_session/session.h>
 #include <syscall/syscall_internal.h>
-
-#include <stdbool.h>
-#include <stdint.h>
 
 static bool prv_is_endpoint_allowed(uint16_t endpoint_id) {
   return (endpoint_id == APP_MESSAGE_ENDPOINT_ID);

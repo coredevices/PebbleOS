@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
-#include <pbl/services/regular_timer.h>
-
-#include <pbl/kernel/mutex.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/util/math.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-
 #include <time.h>
+
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/util/math.h>
+
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_regular_timer, CONFIG_SERVICE_REGULAR_TIMER_LOG_LEVEL);
 

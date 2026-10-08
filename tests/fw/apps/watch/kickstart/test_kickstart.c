@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <apps/watch/kickstart/kickstart.h>
-#include <popups/timeline/peek.h>
-
-#include <applib/ui/window_private.h>
-#include <fw/graphics/util.h>
 #include <pbl/util/size.h>
 
+#include <applib/ui/window_private.h>
+#include <apps/watch/kickstart/kickstart.h>
 #include <clar.h>
+#include <fw/graphics/util.h>
+#include <popups/timeline/peek.h>
 
 extern void prv_window_load_handler(Window *window);
 extern void prv_window_unload_handler(Window *window);

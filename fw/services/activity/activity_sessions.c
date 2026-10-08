@@ -1,23 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/data_logging.h>
-#include <applib/health_service.h>
-#include <kernel/events.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/services/alarms/alarm.h>
-#include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/util/size.h>
-
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
+#include <pbl/services/alarms/alarm.h>
 #include <pbl/services/time.h>
+#include <pbl/util/size.h>
 #include <pbl/util/units.h>
+
+#include <applib/data_logging.h>
+#include <applib/health_service.h>
+#include <kernel/events.h>
+#include <syscall/syscall.h>
+#include <syscall/syscall_internal.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

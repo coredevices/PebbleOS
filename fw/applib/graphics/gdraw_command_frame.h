@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <applib/graphics/gdraw_command_list.h>
-
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <applib/graphics/gdraw_command_list.h>
 
 //! @file graphics/gdraw_command_frame.h
 //! Defines the functions to manipulate \ref GDrawCommandFrame objects

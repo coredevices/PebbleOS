@@ -1,15 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/pbl_std/pbl_std.h>
-#include <applib/pbl_std/locale.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
+#include <applib/pbl_std/locale.h>
+#include <applib/pbl_std/pbl_std.h>
 #include <clar.h>
 
 // Stubs
 //////////////////////////////////////////////////////////
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
+
+#include <stubs_app_state.h>
 #include <stubs_heap.h>
 #include <stubs_hexdump.h>
 #include <stubs_logging.h>
@@ -23,10 +27,7 @@
 #include <stubs_syscall_internal.h>
 #include <stubs_system_reset.h>
 #include <stubs_task_wdt.h>
-#include <stubs_app_state.h>
 #include <stubs_worker_state.h>
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
 
 // Overrides
 //////////////////////////////////////////////////////////

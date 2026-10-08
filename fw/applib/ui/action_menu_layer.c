@@ -2,7 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "action_menu_layer.h"
+
 #include "action_menu_window_private.h"
+
+#include <pbl/util/math.h>
+#include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/fonts/fonts.h>
@@ -18,8 +22,6 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-#include <pbl/util/testing.h>
 
 #define INDICATOR                "»"
 #define GLYPH_SCRATCH_SIZE       32

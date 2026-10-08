@@ -5,10 +5,10 @@
 
 #include "recognizer_list.h"
 
-#include <pbl/services/touch/touch_event.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/touch/touch_event.h>
 
 //! @addtogroup UI
 //! @{

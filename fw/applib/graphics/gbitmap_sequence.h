@@ -3,12 +3,13 @@
 
 #pragma once
 
-#include <upng.h>
 #include "gtypes.h"
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
+
+#include <upng.h>
 
 typedef struct GBitmapSequencePNGDecoderData {
   upng_t *upng;

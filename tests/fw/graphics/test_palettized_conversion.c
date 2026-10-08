@@ -1,28 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/graphics.h>
-#include <applib/graphics/gbitmap_png.h>
-
-#include <clar.h>
 #include "util.h"
 
 #include <string.h>
 
+#include <applib/graphics/gbitmap_png.h>
+#include <applib/graphics/graphics.h>
+#include <clar.h>
+
 // Stubs
 ////////////////////////////////////
-#include <stubs_applib_resource.h>
 #include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
 #include <stubs_heap.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>
 #include <stubs_print.h>
 #include <stubs_resources.h>
-#include <stubs_syscalls.h>
 #include <stubs_serial.h>
+#include <stubs_syscalls.h>
 #include <stubs_ui_window.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
 
 extern uint8_t prv_byte_reverse(uint8_t b);
 

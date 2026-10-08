@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <trigger_alarm.h>
+#include <pbl/drivers/rtc.h>
 
 #include <applib/app.h>
-#include <process_state/app_state/app_state.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window_stack.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/events.h>
-#include <pbl/drivers/rtc.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <trigger_alarm.h>
 
 typedef struct {
   Window window;

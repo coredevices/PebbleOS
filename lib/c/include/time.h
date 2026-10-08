@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
 #include <sys/types.h> // time_t and size_t
 
 #define TZ_LEN 6

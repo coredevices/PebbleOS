@@ -2,11 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "time_range_selection_window.h"
+
 #include "date_time_selection_window_private.h"
 
-#include <process_management/process_manager.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
+
+#include <process_management/process_manager.h>
 #include <shell/system_theme.h>
 
 typedef struct TimeSelectionSizeConfig {

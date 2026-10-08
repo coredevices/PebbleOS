@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include <pbl/util/uuid.h>
-#include <pbl/services/alarms/alarm.h>
-#include <system/status_codes.h>
-
 #include <stddef.h>
+
+#include <pbl/services/alarms/alarm.h>
+#include <pbl/util/uuid.h>
+
+#include <system/status_codes.h>
 
 /**
  * @defgroup services_alarms_alarm_pin Alarm pins

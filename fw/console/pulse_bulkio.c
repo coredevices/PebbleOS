@@ -1,18 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <console/pulse_bulkio_domain_handler.h>
-#include <console/pulse_protocol_impl.h>
-
 #include <stdint.h>
 
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/system_task.h>
-#include <system/passert.h>
-#include <pbl/kernel/compiler.h>
 #include <pbl/crc/crc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
+
+#include <console/pulse_bulkio_domain_handler.h>
+#include <console/pulse_protocol_impl.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 // Defines how many PULSE file descriptors may be open concurrently
 // This is shared across all supported domains

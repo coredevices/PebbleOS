@@ -7,8 +7,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <applib/app_inbox.h>
 #include <pbl/kernel/compiler.h>
+
+#include <applib/app_inbox.h>
 
 /**
  * @defgroup services_app_inbox_service App inbox service

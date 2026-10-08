@@ -1,16 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <flash_region/flash_region.h>
-
 #include <clar.h>
+#include <flash_region/flash_region.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
 #include <stubs_logging.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_passert.h>
+#include <stubs_pebble_tasks.h>
 #include <stubs_sleep.h>
 #include <stubs_task_wdt.h>
 

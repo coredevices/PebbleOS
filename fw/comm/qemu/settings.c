@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <comm/qemu/settings.h>
-#include <system/passert.h>
-
 #include <stdio.h>
 
 #include <board/board.h>
+#include <comm/qemu/settings.h>
+#include <system/passert.h>
 
 // QEMU RTC backup registers at RTC_BASE + 0x40
 #define QEMU_RTC_BACKUP_BASE (QEMU_RTC_BASE + 0x40)

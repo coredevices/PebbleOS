@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
+#include <stdbool.h>
+#include <string.h>
+
 #include <pbl/drivers/crc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
-
-#include <inttypes.h>
-#include <stdbool.h>
-#include <string.h>
 
 #include <bf0_hal.h>
 #include <bf0_hal_crc.h>

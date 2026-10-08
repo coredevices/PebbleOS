@@ -5,9 +5,10 @@
 
 #include "peek.h"
 
+#include <pbl/services/timeline/timeline_layout.h>
+
 #include <applib/ui/animation.h>
 #include <applib/ui/window.h>
-#include <pbl/services/timeline/timeline_layout.h>
 
 typedef struct PeekLayout {
   TimelineLayoutInfo info;

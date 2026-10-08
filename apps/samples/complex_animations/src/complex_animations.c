@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pebble.h>
-
 #include <stdlib.h>
+
+#include <pebble.h>
 
 static Window *window;
 

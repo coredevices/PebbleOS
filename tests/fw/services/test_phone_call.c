@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <kernel/events.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/phone_call.h>
 #include <pbl/services/phone_call_util.h>
 #include <pbl/util/testing.h>
+
+#include <clar.h>
+#include <kernel/events.h>
 
 extern PBL_T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context);
 extern PBL_T_STATIC void prv_handle_mobile_app_event(PebbleEvent *e, void *context);

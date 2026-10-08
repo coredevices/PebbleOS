@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/timeline/calendar_layout.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/timeline/calendar_layout.h>
 
 LayoutLayer *PBL_WEAK calendar_layout_create(const LayoutLayerConfig *config) {
   return NULL;

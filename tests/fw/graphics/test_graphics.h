@@ -3,12 +3,11 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/graphics.h>
 #include <applib/graphics/framebuffer.h>
-
-#include <stubs_compiled_with_legacy2_sdk.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
 #include <stubs_app_state.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
 
 #define GRAPHICS_FIXTURE_PATH     "graphics"
 #define GRAPHICS_FIXTURE_OUT_PATH ".."

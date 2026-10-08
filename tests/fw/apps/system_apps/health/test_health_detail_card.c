@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "test_health_app_includes.h"
+
 #include <apps/system/health/detail_card.h>
 #include <apps/system/health/progress.h>
-
-#include "test_health_app_includes.h"
 
 #define BG_COLOR         PBL_IF_COLOR_ELSE(GColorBlueMoon, GColorWhite)
 #define FILL_COLOR       PBL_IF_COLOR_ELSE(GColorKellyGreen, GColorDarkGray)

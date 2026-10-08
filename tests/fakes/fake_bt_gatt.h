@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
-#include <pbl/bluetooth/gatt_service_types.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/util/uuid.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/bluetooth/gatt_service_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/uuid.h>
 
 //! High-level description of a remote GATT service used by the unit tests. The
 //! fake converts these into the packed struct pbl_bt_gatt_service blobs the firmware expects

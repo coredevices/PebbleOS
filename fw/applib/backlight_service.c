@@ -2,9 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "backlight_service.h"
-#include "backlight_service_private.h"
 
+#include "backlight_service_private.h"
 #include "event_service_client.h"
+
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>

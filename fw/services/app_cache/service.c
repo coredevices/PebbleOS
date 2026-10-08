@@ -1,27 +1,27 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <time.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
+#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_storage.h>
+#include <pbl/services/settings/settings_file.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/list.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/settings/settings_file.h>
-#include <pbl/services/settings/settings_file.h>
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/list.h>
-#include <pbl/util/math.h>
-#include <time.h>
-#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 

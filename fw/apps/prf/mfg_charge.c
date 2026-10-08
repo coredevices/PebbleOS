@@ -3,16 +3,17 @@
 
 #include "mfg_charge.h"
 
+#include <stdio.h>
+
+#include <pbl/drivers/battery.h>
+#include <pbl/logging/logging.h>
+
 #include <applib/app.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/ui.h>
 #include <apps/prf/mfg_test_result.h>
-#include <pbl/drivers/battery.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
-
-#include <stdio.h>
 
 typedef enum {
   ChargeStateWaitPlug = 0,

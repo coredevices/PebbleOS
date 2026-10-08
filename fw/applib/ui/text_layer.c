@@ -2,7 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "text_layer.h"
+
 #include "text_layer_flow.h"
+
+#include <stddef.h>
+#include <string.h>
+
+#include <pbl/logging/logging.h>
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
@@ -12,11 +18,7 @@
 #include <applib/preferred_content_size.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/system_theme.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-
-#include <string.h>
-#include <stddef.h>
 
 static GTextLayoutCacheRef prv_text_layer_get_cache_handle(TextLayer *text_layer) {
   PBL_ASSERTN(text_layer);

@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
 #include <pbl/kernel/compiler.h>
+
+#include <applib/graphics/gtypes.h>
 
 bool PBL_WEAK gcolor_equal(GColor8 x, GColor8 y) {
   return ((x.argb == y.argb) || ((x.a == 0) && (y.a == 0)));

@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-#include <pebble_asserts.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/util/size.h>
 
 #include <applib/ui/action_menu_layer.h>
 #include <applib/ui/menu_layer.h>
@@ -12,11 +12,10 @@
 #include <applib/ui/recognizer/recognizer_list.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
-#include <shell/system_theme.h>
-#include <pbl/util/size.h>
-
+#include <clar.h>
 #include <fake_rtc.h>
-#include <pbl/drivers/rtc.h>
+#include <pebble_asserts.h>
+#include <shell/system_theme.h>
 
 // Stubs
 /////////////////////

@@ -25,9 +25,9 @@
  * SUCH DAMAGE.
  */
 
-#include <stddef.h>
-
 #include "timelocal.h"
+
+#include <stddef.h>
 
 #include <pbl/services/i18n/i18n.h>
 

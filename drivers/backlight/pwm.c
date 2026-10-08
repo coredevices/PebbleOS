@@ -3,9 +3,9 @@
 
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/gpio.h>
+#include <pbl/drivers/pwm.h>
 
 #include <board/board.h>
-#include <pbl/drivers/pwm.h>
 
 //! The counter reload value. The timer will count from 0 to this value and then reset again.
 static const uint32_t TIMER_PERIOD_RESOLUTION = 1024;

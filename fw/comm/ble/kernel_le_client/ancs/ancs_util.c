@@ -2,15 +2,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "ancs_util.h"
+
 #include "ancs_types.h"
 
-#include <syscall/syscall.h>
+#include <stdint.h>
 
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/util/size.h>
 
-#include <stdint.h>
+#include <syscall/syscall.h>
+#include <system/passert.h>
 
 bool ancs_util_is_complete_notif_attr_response(const uint8_t *data, const size_t length,
                                                bool *out_error) {

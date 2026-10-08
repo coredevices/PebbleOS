@@ -7,26 +7,26 @@
 #ifdef CONFIG_BATTERY_QEMU
 #include <pbl/drivers/battery/qemu.h>
 #endif
-#include <comm/qemu/serial.h>
-#include <comm/qemu/serial_private.h>
+#include <stdbool.h>
+
 #include <pbl/drivers/uart.h>
-#include <kernel/events.h>
-#include <popups/timeline/peek.h>
-#include <process_management/app_manager.h>
-#include <shell/system_theme.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/hrm/hrm_manager.h>
-#include <system/hexdump.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/size.h>
 
+#include <comm/qemu/serial.h>
+#include <comm/qemu/serial_private.h>
 #include <comm/qemu/transport.h>
-
-#include <stdbool.h>
+#include <kernel/events.h>
+#include <popups/timeline/peek.h>
+#include <process_management/app_manager.h>
+#include <shell/system_theme.h>
+#include <system/hexdump.h>
+#include <system/passert.h>
 
 static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags);
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <progress.h>
+#include <pbl/logging/logging.h>
 
 #include <applib/app.h>
 #include <applib/fonts/fonts.h>
@@ -9,7 +9,7 @@
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
+#include <progress.h>
 
 static unsigned int s_progress_count = 0;
 

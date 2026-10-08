@@ -3,11 +3,12 @@
 
 #include "ble_ibeacon.h"
 
-#include <applib/applib_malloc.auto.h>
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
 #include <pbl/util/byteorder.h>
 
-#include <string.h>
-#include <pbl/kernel/compiler.h>
+#include <applib/applib_malloc.auto.h>
 
 // -----------------------------------------------------------------------------
 //! Apple's iBeacon AD DATA format.

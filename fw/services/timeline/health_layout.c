@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/timeline/health_layout.h>
 #include <pbl/services/timeline/timeline_layout.h>
 
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/activity/activity_insights.h>
 
 //////////////////////////////////////////
 //  Card Mode

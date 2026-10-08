@@ -5,8 +5,8 @@
 
 #include "fake_graphics_context.h"
 
-#include <applib/graphics/graphics.h>
 #include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
 
 extern GContext *s_app_state_get_graphics_context;
 

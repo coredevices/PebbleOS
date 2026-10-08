@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <applib/pbl_std/locale.h>
-
 #include <time.h>
+
+#include <applib/pbl_std/locale.h>
 
 struct tm *app_state_get_gmtime_tm(void);
 struct tm *app_state_get_localtime_tm(void);

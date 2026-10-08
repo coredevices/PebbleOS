@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/panic.h>
+#include <pbl/logging/logging.h>
 
 #include <kernel/event_loop.h>
+#include <kernel/panic.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <shell/system_app_state_machine.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
 
 static uint32_t s_current_error = 0;

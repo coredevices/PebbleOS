@@ -1,22 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/vibe_pattern.h>
+#include <pbl/util/size.h>
 
+#include <applib/ui/vibes.h>
+#include <clar.h>
 #include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-
+#include <stubs_analytics.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
-#include <stubs_analytics.h>
-
-#include <pbl/services/vibe_pattern.h>
-#include <applib/ui/vibes.h>
-#include <pbl/util/size.h>
 
 // declarations
 bool sys_vibe_pattern_enqueue_step_raw(uint32_t step_duration_ms, int32_t strength);

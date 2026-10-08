@@ -3,6 +3,7 @@
 
 #pragma once
 #include "animation.h"
+
 #include <applib/graphics/gtypes.h>
 
 //////////////////////

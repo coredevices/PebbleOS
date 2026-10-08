@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-#include <kernel/events.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/meta_endpoint.h>
 #include <pbl/services/comm_session/session_receive_router.h>
 #include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/services/comm_session/test_endpoint_ids.h>
-#include <pbl/logging/logging.h>
+
+#include <clar.h>
+#include <kernel/events.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -60,10 +61,10 @@ void bt_persistent_storage_set_cached_system_capabilities(
 // Fakes
 ///////////////////////////////////////////////////////////
 
+#include <fake_app_manager.h>
 #include <fake_kernel_malloc.h>
 #include <fake_session_send_buffer.h>
 #include <fake_system_task.h>
-#include <fake_app_manager.h>
 
 MetaResponseInfo s_last_meta_response_info;
 

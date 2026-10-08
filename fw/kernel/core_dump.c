@@ -19,45 +19,40 @@
 // (-std=c11), so declare it explicitly for non-Pebble libcs.
 extern char *itoa(int value, char *str, int base);
 
-#include <kernel/core_dump.h>
-#include <kernel/core_dump_private.h>
-
-#include <console/dbgserial.h>
-#include <logging/logging_private.h>
-#include <logging/pulse_logging.h>
-
 #include <pbl/drivers/flash.h>
-#include <pbl/mcu/mpu.h>
-#include <pbl/drivers/watchdog.h>
 #include <pbl/drivers/rtc.h>
-
-#include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
-#include <mfg/mfg_serials.h>
-
-#include <pebbleos/chip_id.h>
-#include <pbl/services/comm_session/session.h>
-
-#include <system/bootbits.h>
-#include <system/passert.h>
-#include <system/reset.h>
-#include <pbl/logging/logging.h>
-#include <system/version.h>
-
+#include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/mcu/mpu.h>
+#include <pbl/services/comm_session/session.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
+
+#include <console/dbgserial.h>
+#include <flash_region/flash_region.h>
+#include <kernel/core_dump.h>
+#include <kernel/core_dump_private.h>
+#include <kernel/pbl_malloc.h>
+#include <logging/logging_private.h>
+#include <logging/pulse_logging.h>
+#include <mfg/mfg_serials.h>
+#include <pebbleos/chip_id.h>
+#include <system/bootbits.h>
+#include <system/passert.h>
+#include <system/reset.h>
+#include <system/version.h>
 
 #ifdef CONFIG_SOC_NRF52
 #include <nrf52840.h>
 #endif
 
+#include <stdint.h>
+
 #include <pbl/kernel/debug.h>
 
 #include <cmsis_core.h>
-
-#include <stdint.h>
 
 //! Evaluates to 1 iff execution will use the process stack when returning from
 //! the exception.

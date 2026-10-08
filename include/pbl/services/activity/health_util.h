@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <apps/system/timeline/text_node.h>
-
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
+
+#include <apps/system/timeline/text_node.h>
 
 /**
  * @defgroup services_activity_health_util Health formatting helpers

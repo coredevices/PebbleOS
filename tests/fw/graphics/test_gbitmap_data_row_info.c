@@ -1,15 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <applib/graphics/gtypes.h>
-
 #include <stdio.h>
 
+#include <applib/graphics/gtypes.h>
+#include <clar.h>
+
 // stubs
-#include <stubs_applib_resource.h>
 #include <stubs_app_state.h>
+#include <stubs_applib_resource.h>
 #include <stubs_graphics_context.h>
 #include <stubs_heap.h>
 #include <stubs_logging.h>

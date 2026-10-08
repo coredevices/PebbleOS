@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/mutex.h>
-
 #include "kernel.h"
+
+#include <pbl/kernel/mutex.h>
 
 void pbl_mutex_init(struct pbl_mutex *m) {
   *m = (struct pbl_mutex)PBL_MUTEX_INITIALIZER;

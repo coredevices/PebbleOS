@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fake_system_app_registry_apps.h"
+
 #include <resource/resource_ids.auto.h>
 
 const PebbleProcessMd *tictoc_get_app_info() {

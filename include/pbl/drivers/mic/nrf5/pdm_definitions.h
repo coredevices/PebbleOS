@@ -3,13 +3,14 @@
 
 #pragma once
 
-#include <board/board.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <pbl/drivers/mic.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/util/circular_buffer.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <board/board.h>
 
 /**
  * @defgroup drivers_mic_nrf5 nRF5 PDM microphone

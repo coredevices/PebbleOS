@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <errno.h>
 
-#include <process_management/process_manager.h>
-#include <process_management/app_install_manager.h>
-#include <process_management/pebble_process_info.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/util/size.h>
+
+#include <clar.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/pebble_process_info.h>
+#include <process_management/process_manager.h>
 
 // Fakes
 #include <fake_pebble_tasks.h>
@@ -24,9 +24,9 @@
 #include <stubs_dls.h>
 #include <stubs_evented_timer.h>
 #include <stubs_expandable_dialog.h>
-#include <stubs_irq.h>
 #include <stubs_heap.h>
 #include <stubs_i18n.h>
+#include <stubs_irq.h>
 #include <stubs_logging.h>
 #include <stubs_modal_manager.h>
 #include <stubs_new_timer.h>

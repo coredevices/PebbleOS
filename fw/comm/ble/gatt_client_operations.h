@@ -14,9 +14,9 @@
 //! ATT handles. These pieces of information is what Bluetopia cares about
 //! when asked to perform a GATT operation.
 
-#include <pbl/bluetooth/types.h>
-
 #include "gap_le_task.h"
+
+#include <pbl/bluetooth/types.h>
 
 #define GATT_MTU_MINIMUM (23)
 

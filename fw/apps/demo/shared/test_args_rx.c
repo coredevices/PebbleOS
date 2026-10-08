@@ -2,10 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "test_args_rx.h"
+
 #include "test_args_tx.h"
 
-#include <process_management/process_manager.h>
 #include <pbl/logging/logging.h>
+
+#include <process_management/process_manager.h>
 
 static void s_main(void) {
   const TestArgsData *args = process_manager_get_current_process_args();

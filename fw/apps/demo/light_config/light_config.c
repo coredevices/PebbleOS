@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+
+#include <pbl/services/light.h>
+
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/number_window.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/light.h>
-
-#include <stdint.h>
 
 static void selected_pwm_percentage(NumberWindow *nw, void *ctx) {
   uint8_t val = number_window_get_value(nw);

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "touch_event.h"
 #include "gesture_event.h"
+#include "touch_event.h"
 
 #include <stdbool.h>
 

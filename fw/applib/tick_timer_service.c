@@ -2,20 +2,19 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "tick_timer_service.h"
-#include "tick_timer_service_private.h"
 
 #include "event_service_client.h"
+#include "tick_timer_service_private.h"
 
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/tick_timer.h>
+
 #include <kernel/events.h>
 #include <kernel/kernel_applib_state.h>
-
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-
 #include <syscall/syscall.h>
 #include <system/passert.h>
 

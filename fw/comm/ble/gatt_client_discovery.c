@@ -2,22 +2,22 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "gatt_client_discovery.h"
-#include "gatt_service_changed.h"
+
 #include "gap_le_connection.h"
+#include "gatt_client_accessors.h"
+#include "gatt_service_changed.h"
 
-#include <comm/bt_lock.h>
+#include <inttypes.h>
+
+#include <pbl/bluetooth/gatt_discovery.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
+
 #include <comm/bt_conn_mgr.h>
-
+#include <comm/bt_lock.h>
 #include <kernel/core_dump.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include "gatt_client_accessors.h"
-#include <pbl/logging/logging.h>
-#include <pbl/drivers/rtc.h>
-
-#include <pbl/bluetooth/gatt_discovery.h>
-
-#include <inttypes.h>
 
 // TODO: virtualize the gatt_client_discovery_discover_all() call
 

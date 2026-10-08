@@ -1,16 +1,17 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <board/board.h>
+#include <inttypes.h>
+
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/i2c.h>
-#include <kernel/util/sleep.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
-#include <system/passert.h>
 
-#include <inttypes.h>
+#include <board/board.h>
+#include <kernel/util/sleep.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 

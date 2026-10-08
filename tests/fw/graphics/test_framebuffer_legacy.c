@@ -1,20 +1,21 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/graphics.h>
-#include <applib/graphics/framebuffer.h>
-
-#include <clar.h>
 #include "util.h"
+
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <clar.h>
 
 // Helper Functions
 ////////////////////////////////////
-#include "test_graphics.h"
 #include "8bit/test_framebuffer.h"
+#include "test_graphics.h"
 
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
+
 #include <stubs_applib_resource.h>
 
 // The legacy 3.x framebuffer must be byte-for-byte identical to the chalk

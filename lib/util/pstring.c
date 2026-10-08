@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/pstring.h>
-
 #include <stddef.h>
 #include <string.h>
+
+#include <pbl/util/pstring.h>
 
 void pbl_pstring16_to_cstring(const struct pbl_pstring16 *pstring, char *string_out) {
   memcpy(string_out, pstring->str_value, pstring->str_length);

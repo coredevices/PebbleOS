@@ -4,8 +4,9 @@
 #pragma once
 
 #include "activity.h"
-#include <pbl/services/filesystem/pfs.h>
+
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/filesystem/pfs.h>
 
 /**
  * @defgroup services_activity_insights_settings Insights settings

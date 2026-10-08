@@ -1,25 +1,23 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/speaker/speaker_service.h>
+#include <string.h>
 
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/services/speaker/speaker_service.h>
 
-#include <string.h>
-
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_analytics.h>
-#include <stubs_rtc.h>
-#include <stubs_do_not_disturb.h>
+#include <clar.h>
+#include <fake_events.h>
 #include <fake_mutex.h>
 #include <fake_pbl_malloc.h>
-#include <fake_system_task.h>
-#include <fake_events.h>
 #include <fake_pebble_tasks.h>
+#include <fake_system_task.h>
+#include <stubs_analytics.h>
+#include <stubs_do_not_disturb.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_rtc.h>
 
 // Alerts preferences: speaker unmuted, no volume cap
 bool alerts_preferences_get_speaker_muted(void) {

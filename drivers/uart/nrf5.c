@@ -1,13 +1,12 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/uart.h>
-
+#include <pbl/drivers/uart/nrf5.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
 
 #include <nrfx_uarte.h>
+#include <system/passert.h>
 #ifdef NRF_PPI_BASE
 #include <nrfx_ppi.h>
 #else

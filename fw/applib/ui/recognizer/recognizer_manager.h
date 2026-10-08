@@ -5,10 +5,10 @@
 
 #include "recognizer.h"
 
-#include <applib/ui/layer.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <applib/ui/layer.h>
 
 typedef enum RecognizerManagerState {
   RecognizerManagerState_WaitForTouchdown,

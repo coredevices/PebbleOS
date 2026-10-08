@@ -5,8 +5,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <bf0_hal_efuse.h>
 #include <pbl/bluetooth/id_addr.h>
+
+#include <bf0_hal_efuse.h>
 
 #define UID_SIZE  8U
 #define UID_MAGIC 0xA5U

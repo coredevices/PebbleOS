@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "nimble_type_conversions.h"
+
 #include <pbl/bluetooth/pebble_pairing_service.h>
+#include <pbl/logging/logging.h>
+
 #include <comm/ble/gap_le_connection.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_store.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-
-#include "nimble_type_conversions.h"
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

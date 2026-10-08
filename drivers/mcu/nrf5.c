@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mcu.h>
-
 #include <string.h>
 
-#include <nrfx.h>
+#include <pbl/drivers/mcu.h>
+
 #include <hal/nrf_ficr.h>
+#include <nrfx.h>
 
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
   const uint32_t id[2] = {

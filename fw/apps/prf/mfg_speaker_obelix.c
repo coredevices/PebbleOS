@@ -1,18 +1,19 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/audio.h>
+#include <pbl/drivers/pmic/npm1300.h>
+
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
-#include <kernel/pbl_malloc.h>
 #include <board/board.h>
-#include <pbl/drivers/pmic/npm1300.h>
+#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/drivers/audio.h>
 
 typedef struct {
   Window window;

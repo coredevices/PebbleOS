@@ -3,12 +3,12 @@
 
 #include "date_time_selection_window_private.h"
 
+#include <stdio.h>
+
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
-#include <pbl/util/time.h>
 #include <pbl/util/math.h>
-
-#include <stdio.h>
+#include <pbl/util/time.h>
 
 static const int MIN_SELECTABLE_YEAR = 2010;
 static const int MAX_SELECTABLE_YEAR = 2037; // Work around Y2038 problem

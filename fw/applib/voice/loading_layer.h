@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <applib/ui/animation.h>
 #include <applib/ui/progress_layer.h>
-
-#include <stdint.h>
 
 #define LOADING_LAYER_DEFAULT_SIZE {79, PROGRESS_SUGGESTED_HEIGHT}
 

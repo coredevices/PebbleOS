@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <string.h>
 
 #include <pbl/util/byteorder.h>
 
-#include <string.h>
+#include <clar.h>
 
 void test_byteorder__be16(void) {
   const uint8_t wire[] = {0x12, 0x34};

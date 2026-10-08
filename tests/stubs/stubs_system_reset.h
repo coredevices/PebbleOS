@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <system/passert.h>
-
 #include "stubs_passert.h"
+
+#include <system/passert.h>
 
 void system_reset_prepare(void) {
 }

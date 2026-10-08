@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <apps/system/workout/utils.h>
-
-#include <clar.h>
-
 #include <pbl/services/activity/activity.h>
+
+#include <apps/system/workout/utils.h>
+#include <clar.h>
 
 // ---------------------------------------------------------------------------------------
 #include <stubs_attribute.h>

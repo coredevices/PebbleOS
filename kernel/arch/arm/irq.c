@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <cmsis_core.h>
-
 #include <kernel.h>
 
 extern const void *const arch_vector_table[];

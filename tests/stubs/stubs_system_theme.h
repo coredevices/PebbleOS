@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include <shell/system_theme.h>
+#include <stdlib.h>
+
 #include <pbl/kernel/compiler.h>
 
-#include <stdlib.h>
+#include <shell/system_theme.h>
 
 const char *PBL_WEAK system_theme_get_font_key(TextStyleFont font) {
   return NULL;

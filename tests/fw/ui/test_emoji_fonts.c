@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/framebuffer.h>
-#include <applib/graphics/graphics.h>
-#include <resource/resource.h>
-#include <resource/resource_ids.auto.h>
-#include <applib/graphics/raw_image.h>
+#include <stdio.h>
+
 #include <pbl/util/size.h>
 
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/raw_image.h>
 #include <clar.h>
-
-#include <stdio.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
 
 // Fakes
 /////////////////////

@@ -4,8 +4,8 @@
 #include <pbl/drivers/rng.h>
 #include <pbl/kernel/irq.h>
 
-#include <nrfx.h>
 #include <hal/nrf_rng.h>
+#include <nrfx.h>
 
 #define CACHE_SIZE 32U
 

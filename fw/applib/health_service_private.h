@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include "health_service.h"
 #include "event_service_client.h"
+#include "health_service.h"
+
 #include <pbl/services/activity/activity.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>

@@ -2,39 +2,23 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "event_loop.h"
+
 #include "events.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <applib/app_launch_reason.h>
-#include <applib/graphics/graphics.h>
-#include <applib/ui/ui.h>
-#include <comm/ble/kernel_le_client/kernel_le_client.h>
-#include <console/serial_console.h>
+#include <pbl/cron/cron.h>
 #include <pbl/drivers/button.h>
-#include <pbl/task_wdt/task_wdt.h>
-#include <kernel/core_dump.h>
-#include <kernel/kernel_applib_state.h>
-#include <kernel/low_power.h>
-#include <kernel/panic.h>
-#include <kernel/ui/modals/modal_manager.h>
-#include <kernel/util/factory_reset.h>
 #include <pbl/mcu/fpu.h>
-#include <process_management/app_install_manager.h>
-#include <process_management/app_manager.h>
-#include <process_management/app_run_state.h>
-#include <process_management/process_manager.h>
-#include <process_management/worker_manager.h>
 #include <pbl/services/analytics/analytics.h>
-#include <pbl/services/battery/battery_state.h>
 #include <pbl/services/battery/battery_monitor.h>
+#include <pbl/services/battery/battery_state.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/compositor/compositor.h>
-#include <pbl/cron/cron.h>
 #include <pbl/services/debounced_connection_service.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/services/event_service.h>
@@ -45,28 +29,47 @@
 #include <pbl/services/music_internal.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/put_bytes/put_bytes.h>
+#include <pbl/task_wdt/task_wdt.h>
+
+#include <applib/app_launch_reason.h>
+#include <applib/graphics/graphics.h>
+#include <applib/ui/ui.h>
+#include <comm/ble/kernel_le_client/kernel_le_client.h>
+#include <console/serial_console.h>
+#include <kernel/core_dump.h>
+#include <kernel/kernel_applib_state.h>
+#include <kernel/low_power.h>
+#include <kernel/panic.h>
+#include <kernel/ui/modals/modal_manager.h>
+#include <kernel/util/factory_reset.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
+#include <process_management/app_run_state.h>
+#include <process_management/process_manager.h>
+#include <process_management/worker_manager.h>
 #ifdef CONFIG_TOUCH
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_session.h>
 #endif
-#include <pbl/services/vibe_pattern.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/stationary.h>
-#include <pbl/services/wakeup.h>
 #include <pbl/services/runlevel.h>
+#include <pbl/services/stationary.h>
+#include <pbl/services/vibe_pattern.h>
+#include <pbl/services/wakeup.h>
+#include <pbl/util/struct.h>
+
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
 #include <shell/shell_event_loop.h>
 #include <system/bootbits.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
 #include <system/testinfra.h>
-#include <pbl/util/struct.h>
-#include <pbl/kernel/compiler.h>
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;

@@ -6,9 +6,9 @@
 #include <pbl/shell/shell.h>
 
 #ifdef CONFIG_TOUCH
+#include <pbl/drivers/rtc.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/timeline/item.h>
-#include <pbl/drivers/rtc.h>
 
 static int prv_cmd_test(const struct pbl_shell *sh, size_t argc, char **argv) {
   AttributeList attr_list = {};

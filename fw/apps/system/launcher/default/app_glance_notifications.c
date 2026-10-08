@@ -5,17 +5,17 @@
 
 #include "app_glance_structured.h"
 
-#include <apps/system/notifications_history.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/util/string.h>
+#include <pbl/util/struct.h>
 
+#include <apps/system/notifications_history.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
-#include <pbl/services/notifications/notification_storage.h>
-#include <pbl/services/timeline/attribute.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/string.h>
-#include <pbl/util/struct.h>
 
 typedef struct LauncherAppGlanceNotifications {
   char title[APP_NAME_SIZE_BYTES];

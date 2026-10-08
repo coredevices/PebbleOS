@@ -7,6 +7,7 @@
 #pragma once
 
 #include "click.h"
+
 #include <applib/app_timer.h>
 
 /**

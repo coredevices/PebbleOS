@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/compositor/default/compositor_shutter_transitions.h>
-
 #include <pbl/services/compositor/compositor_transitions.h>
+#include <pbl/services/compositor/default/compositor_shutter_transitions.h>
 
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gpath.h>

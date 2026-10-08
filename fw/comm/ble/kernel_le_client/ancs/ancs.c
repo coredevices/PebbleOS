@@ -2,32 +2,30 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "ancs.h"
+
 #include "ancs_app_name_storage.h"
+#include "ancs_definition.h"
 #include "ancs_types.h"
 #include "ancs_util.h"
-#include "ancs_definition.h"
 
-#include <comm/ble/gatt_client_subscriptions.h>
-#include <comm/ble/gatt_client_operations.h>
+#include <string.h>
 
-#include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
-
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/regular_timer.h>
-
-#include <system/hexdump.h>
-#include <system/passert.h>
-#include <pbl/logging/logging.h>
-
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/testing.h>
 #include <pbl/util/buffer.h>
 #include <pbl/util/size.h>
-
-#include <string.h>
+#include <pbl/util/testing.h>
 #include <pbl/util/units.h>
+
+#include <comm/ble/gatt_client_operations.h>
+#include <comm/ble/gatt_client_subscriptions.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <system/hexdump.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

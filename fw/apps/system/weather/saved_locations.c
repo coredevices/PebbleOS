@@ -2,10 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "saved_locations.h"
-#include <pbl/services/i18n/i18n.h>
 
 #include "weather_data_source.h"
 #include "weather_types.h"
+
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h> // integer_sqrt — the launcher's chord-inset math
 
 #define SAVED_LOCATIONS_ROW_HEIGHT              44

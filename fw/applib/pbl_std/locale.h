@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <pbl/services/i18n/i18n.h>
 #include <locale.h>
+
+#include <pbl/services/i18n/i18n.h>
 
 typedef struct {
   char sys_locale[ISO_LOCALE_LENGTH];

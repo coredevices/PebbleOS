@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/slist.h>
-#include <pbl/util/logging.h>
-
 #include <stddef.h>
 #include <stdio.h>
+
+#include <pbl/util/logging.h>
+#include <pbl/util/slist.h>
 
 void slist_init(SingleListNode *node) {
   node->next = NULL;

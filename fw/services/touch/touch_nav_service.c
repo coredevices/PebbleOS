@@ -5,12 +5,13 @@
 
 #ifdef CONFIG_TOUCH
 
+#include <pbl/services/touch/touch.h>
+
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/recognizer/touch_nav.h>
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <pbl/services/touch/touch.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>

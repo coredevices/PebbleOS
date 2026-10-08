@@ -3,14 +3,13 @@
 
 #pragma once
 
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/btutil/sm_util.h>
 #include <pbl/util/list.h>
 
 #include <kernel/pbl_malloc.h>
 #include <system/passert.h>
-
-#include <pbl/bluetooth/bonding_sync.h>
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/btutil/sm_util.h>
 
 typedef struct {
   ListNode node;

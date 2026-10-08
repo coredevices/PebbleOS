@@ -1,29 +1,28 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <kernel/util/segment.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/process_management/app_storage.h>
-#include <process_management/pebble_process_info.h>
-#include <process_management/pebble_process_md.h>
-#include <process_management/process_loader.h>
-#include <resource/resource.h>
-#include <resource/resource_storage.h>
-#include <pbl/util/math.h>
-#include <pbl/crc/crc.h>
-
 #include <inttypes.h>
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 
+#include <pbl/crc/crc.h>
+#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_storage.h>
+#include <pbl/util/math.h>
+
+#include <clar.h>
+#include <kernel/util/segment.h>
+#include <process_management/pebble_process_info.h>
+#include <process_management/pebble_process_md.h>
+#include <process_management/process_loader.h>
+#include <resource/resource.h>
+#include <resource/resource_storage.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
+#include <sys/stat.h>
 
 // An image over 64 KiB, laid out the way the SDK lays one out: the header, then code and data,
 // then the relocation table past load_size.

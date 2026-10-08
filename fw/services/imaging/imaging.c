@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/imaging.h>
+#include <inttypes.h>
+#include <string.h>
 
-#include <applib/graphics/gtypes.h>
-#include <kernel/kernel_heap.h>
-#include <kernel/pbl_malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
+#include <pbl/services/imaging.h>
 #include <pbl/util/heap.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
-#include <inttypes.h>
-#include <string.h>
+#include <applib/graphics/gtypes.h>
+#include <kernel/kernel_heap.h>
+#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
 

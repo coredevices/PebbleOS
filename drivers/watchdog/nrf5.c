@@ -2,12 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/watchdog.h>
-
 #include <pbl/logging/logging.h>
 
-#include <nrfx.h>
-#include <helpers/nrfx_reset_reason.h>
 #include <hal/nrf_wdt.h>
+#include <helpers/nrfx_reset_reason.h>
+#include <nrfx.h>
 
 void watchdog_init(void) {
   // No effect if the bootloader already started it: a running WDT keeps its configuration.

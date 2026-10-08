@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <shell/system_app_state_machine.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/battery/battery_monitor.h>
 
 #include <apps/core/panic_window.h>
 #include <apps/system/battery_critical.h>
-#include <apps/system_app_ids.h>
 #include <apps/system/launcher/launcher.h>
+#include <apps/system_app_ids.h>
 #include <apps/watch/low_power/face.h>
-#include <shell/normal/watchface.h>
 #include <kernel/low_power.h>
 #include <kernel/panic.h>
-#include <pbl/services/battery/battery_monitor.h>
-#include <pbl/logging/logging.h>
 #include <process_management/app_manager.h>
+#include <shell/normal/watchface.h>
+#include <shell/system_app_state_machine.h>
 
 //! @file system_app_state_machine.c
 //!

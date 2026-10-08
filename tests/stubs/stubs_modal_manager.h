@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include <pbl/kernel/compiler.h>
+
 #include <applib/ui/window_stack_private.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <pbl/kernel/compiler.h>
 
 WindowStack *PBL_WEAK modal_manager_get_window_stack(ModalPriority priority) {
   return NULL;

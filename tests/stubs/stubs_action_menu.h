@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <applib/ui/action_menu_window.h>
 #include <applib/ui/action_menu_hierarchy.h>
+#include <applib/ui/action_menu_window.h>
 
 void *action_menu_get_context(ActionMenu *action_menu) {
   return NULL;

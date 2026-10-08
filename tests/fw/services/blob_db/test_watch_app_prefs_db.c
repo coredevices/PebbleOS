@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/weather/weather_service_private.h>
 #include <pbl/util/uuid.h>
+
+#include <clar.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
+#include <fake_kernel_services_notifications.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <fake_kernel_services_notifications.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////

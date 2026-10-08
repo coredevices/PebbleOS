@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+
+#include <clar.h>
 
 void test_gmtime__epoch(void) {
   const time_t t = 0;

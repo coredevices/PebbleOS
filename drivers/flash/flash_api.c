@@ -1,27 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/flash.h>
-#include <pbl/drivers/flash/flash_internal.h>
-
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_impl.h>
-#include <pbl/task_wdt/task_wdt.h>
-#include <flash_region/flash_region.h>
+#include <pbl/drivers/flash/flash_internal.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/kernel/types.h>
-#include <process_management/worker_manager.h>
-#include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <kernel/util/sleep.h>
-
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/types.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
+
+#include <flash_region/flash_region.h>
+#include <kernel/util/sleep.h>
+#include <process_management/worker_manager.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 

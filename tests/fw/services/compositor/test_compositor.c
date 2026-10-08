@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <pbl/services/compositor/compositor.h>
 
 #include <applib/graphics/gcontext.h>
 #include <applib/graphics/gtypes.h>
+#include <clar.h>
 #include <kernel/events.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <pbl/services/compositor/compositor.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/services/speaker/note_sequence.h>
-#include <pbl/services/speaker/speaker_pcm_format.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/speaker/note_sequence.h>
+#include <pbl/services/speaker/speaker_pcm_format.h>
 
 /** @brief A raw PCM sample that can be pitch-shifted when played by a track. */
 typedef struct {

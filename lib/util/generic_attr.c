@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/generic_attr.h>
-
 #include <string.h>
+
+#include <pbl/util/generic_attr.h>
 
 struct pbl_generic_attr *pbl_generic_attr_find(struct pbl_generic_attr_list *attr_list, uint8_t id,
                                                size_t size) {

@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <system/bootbits.h>
 #include <inttypes.h>
 #include <stdbool.h>
+
+#include <system/bootbits.h>
 
 void boot_bit_clear(BootBitValue bit) {
   return;

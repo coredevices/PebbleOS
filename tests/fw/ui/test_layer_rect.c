@@ -3,7 +3,6 @@
 
 #include <applib/ui/layer.h>
 #include <applib/ui/layer_private.h>
-
 #include <clar.h>
 #include <pebble_asserts.h>
 

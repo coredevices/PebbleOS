@@ -3,13 +3,12 @@
 
 #include "fake_HCIAPI.h"
 
-#include <bluetopia_interface.h>
-
-#include <HCIAPI.h>
+#include <stdlib.h>
 
 #include <pbl/util/list.h>
 
-#include <stdlib.h>
+#include <HCIAPI.h>
+#include <bluetopia_interface.h>
 
 typedef struct {
   ListNode node;

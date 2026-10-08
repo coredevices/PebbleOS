@@ -5,8 +5,9 @@
 
 #include "menu.h"
 
-#include <kernel/pbl_malloc.h>
 #include <pbl/services/i18n/i18n.h>
+
+#include <kernel/pbl_malloc.h>
 
 static void prv_menu_unload(OptionMenu *option_menu, void *context) {
   SettingsOptionMenuData *data = context;

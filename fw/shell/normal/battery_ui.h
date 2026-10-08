@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
 #include <pbl/services/battery/battery_monitor.h>
+
+#include <applib/graphics/gtypes.h>
 
 typedef enum BatteryUIWarningLevel {
   BatteryUIWarningLevel_None = -1,

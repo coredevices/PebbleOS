@@ -2,7 +2,21 @@
 BasedOnStyle: Google
 ColumnLimit: 100
 PointerAlignment: Right
-SortIncludes: Never
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Local headers
+  - Regex: '^"'
+    Priority: 2
+  # C standard library
+  - Regex: '^<(assert|complex|ctype|errno|fenv|float|inttypes|iso646|limits|locale|math|setjmp|signal|stdalign|stdarg|stdatomic|stdbool|stddef|stdint|stdio|stdlib|stdnoreturn|string|tgmath|threads|time|uchar|wchar|wctype)\.h>'
+    Priority: 3
+  # PebbleOS headers
+  - Regex: '^<pbl/'
+    Priority: 4
+  # Third-party
+  - Regex: '^<'
+    Priority: 5
 AllowAllArgumentsOnNextLine: false
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None

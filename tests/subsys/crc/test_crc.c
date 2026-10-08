@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/crc/crc.h>
-
 #include "crc_reference.h"
 
 #include <string.h>
+
+#include <pbl/crc/crc.h>
+
+#include <clar.h>
 
 static const char s_check[] = "123456789";
 static uint8_t s_data[1031];

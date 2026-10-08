@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/util/time.h>
-
 #include <pbl/util/units.h>
 
 static const uint8_t s_mon_lengths[2][PBL_MONTH_PER_YEAR] = {

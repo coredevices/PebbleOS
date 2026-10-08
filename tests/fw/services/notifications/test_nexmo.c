@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/notifications/ancs/nexmo.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
+#include <pbl/services/notifications/ancs/nexmo.h>
 #include <pbl/services/timeline/attributes_actions.h>
+
+#include <clar.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////

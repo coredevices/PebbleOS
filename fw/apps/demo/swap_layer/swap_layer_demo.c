@@ -3,6 +3,16 @@
 
 #include "swap_layer_demo.h"
 
+#include <string.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/timeline/notification_layout.h>
+#include <pbl/services/timeline/swap_layer.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/size.h>
+#include <pbl/util/units.h>
+
 #include <applib/app.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
@@ -16,17 +26,8 @@
 #include <popups/phone_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/timeline/notification_layout.h>
-#include <pbl/services/timeline/swap_layer.h>
-#include <pbl/services/timeline/timeline_resources.h>
 #include <shell/normal/watchface.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-
-#include <string.h>
-#include <pbl/util/units.h>
 
 #define MINUTES(m) ((m) * PBL_SEC_PER_MIN)
 #define HOURS(m)   ((m) * PBL_SEC_PER_MIN * PBL_MIN_PER_HOUR)

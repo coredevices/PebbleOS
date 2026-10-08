@@ -2,14 +2,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "click.h"
-#include "click_internal.h"
 
+#include "click_internal.h"
 #include "window_stack_private.h"
 
-#include <process_state/app_state/app_state.h>
+#include <stddef.h>
+
 #include <pbl/util/size.h>
 
-#include <stddef.h>
+#include <process_state/app_state/app_state.h>
 
 //! The time that the user has to hold the button before repetition kicks in.
 static const uint32_t CLICK_REPETITION_DELAY_MS = 400;

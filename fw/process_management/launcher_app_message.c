@@ -4,12 +4,13 @@
 #include "launcher_app_message.h"
 
 #include "app_run_state.h"
-#include <applib/app_message/app_message_internal.h>
-#include <process_management/app_install_manager.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 
+#include <pbl/logging/logging.h>
+
+#include <applib/app_message/app_message_internal.h>
 #include <applib/dict.h>
+#include <process_management/app_install_manager.h>
+#include <system/passert.h>
 
 #define LAUNCHER_MESSAGE_ENDPOINT_ID (0x31)
 

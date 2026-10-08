@@ -3,6 +3,10 @@
 
 #include "pebble_colors.h"
 
+#include <stdio.h>
+
+#include <pbl/logging/logging.h>
+
 #include <applib/app.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
@@ -12,9 +16,6 @@
 #include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
-
-#include <stdio.h>
 
 #define ALPHA_0   0x00
 #define ALPHA_33  0x40

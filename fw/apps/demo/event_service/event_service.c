@@ -1,7 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <text_layout.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <pbl/logging/logging.h>
 
 #include <applib/accel_service.h>
 #include <applib/app.h>
@@ -11,10 +14,7 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/logging/logging.h>
-
-#include <stdio.h>
-#include <string.h>
+#include <text_layout.h>
 
 typedef struct {
   Window window;

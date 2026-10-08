@@ -4,20 +4,21 @@
 #include "window_stack.h"
 
 #include "app_window_click_glue.h"
-#include <applib/ui/recognizer/recognizer_manager.h>
 #include "window_manager.h"
 #include "window_private.h"
 #include "window_stack_animation.h"
 #include "window_stack_private.h"
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/compositor/compositor.h>
+#include <pbl/util/struct.h>
+
 #include <applib/applib_malloc.auto.h>
+#include <applib/ui/recognizer/recognizer_manager.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/compositor/compositor.h>
 #include <syscall/syscall.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/struct.h>
 
 // Private API
 ////////////////////////////////////

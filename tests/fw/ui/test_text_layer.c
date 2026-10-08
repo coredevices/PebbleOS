@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <applib/ui/text_layer.h>
+#include <clar.h>
 
 // Stubs
 /////////////////////

@@ -3,11 +3,11 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/hr_util.h>
-
-#include <stdint.h>
-#include <stdbool.h>
 
 bool workout_service_is_workout_ongoing(void);
 

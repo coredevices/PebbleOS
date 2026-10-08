@@ -2,11 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/mcu/mpu.h>
-
 #include <pbl/util/size.h>
 
 #include <cmsis_core.h>
-
 #include <kernel.h>
 
 // ARMv7-M has a 3-bit AP field, so every MpuPermissions value maps to a

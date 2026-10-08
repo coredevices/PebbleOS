@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "exit.h"
+
 #include <applib/app_logging.h>
 
 // Verify that applications can actually call stdlib's exit().

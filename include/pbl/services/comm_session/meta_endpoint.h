@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/session.h>
-#include <pbl/kernel/compiler.h>
-
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/comm_session/session.h>
 
 /**
  * @defgroup services_comm_session_meta_endpoint Meta endpoint

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/util/bitops.h>
+
+#include <clar.h>
 
 void test_bitops__bitset8(void) {
   uint8_t set[3] = {0};

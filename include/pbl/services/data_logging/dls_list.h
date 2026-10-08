@@ -4,10 +4,11 @@
 #pragma once
 
 #include "dls_private.h"
-#include <applib/data_logging.h>
 
 #include <stdint.h>
 #include <time.h>
+
+#include <applib/data_logging.h>
 
 /**
  * @defgroup services_data_logging_dls_list Session list

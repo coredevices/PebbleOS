@@ -2,17 +2,40 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "phone_ui.h"
+
 #include "phone_formatting.h"
 
-#include <applib/fonts/fonts.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/blob_db/ios_notif_pref_db.h>
+#include <pbl/services/evented_timer.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
+#include <pbl/services/notifications/alerts.h>
+#include <pbl/services/notifications/notification_constants.h>
+#include <pbl/services/phone_call.h>
+#include <pbl/services/regular_timer.h>
+#include <pbl/services/timeline/timeline.h>
+#include <pbl/services/timeline/timeline_actions.h>
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/services/vibes/vibe_client.h>
+#include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/math.h>
 #include <pbl/util/trig.h>
+#include <pbl/util/units.h>
+
+#include <applib/fonts/fonts.h>
 #include <applib/ui/action_bar_layer.h>
 #include <applib/ui/kino/kino_layer.h>
-#include <applib/ui/kino/kino_reel_pdci.h>
 #include <applib/ui/kino/kino_reel/morph_square.h>
 #include <applib/ui/kino/kino_reel/transform.h>
 #include <applib/ui/kino/kino_reel/unfold.h>
+#include <applib/ui/kino/kino_reel_pdci.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
@@ -21,33 +44,10 @@
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/ui/system_icons.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/notifications/notifications_presented_list.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/evented_timer.h>
-#include <pbl/services/regular_timer.h>
-#include <pbl/services/light.h>
-#include <pbl/services/blob_db/ios_notif_pref_db.h>
-#include <pbl/services/notifications/alerts.h>
-#include <pbl/services/notifications/notification_constants.h>
-#include <pbl/services/phone_call.h>
-#include <pbl/services/timeline/timeline.h>
-#include <pbl/services/timeline/timeline_actions.h>
-#include <pbl/services/timeline/timeline_resources.h>
 #include <shell/system_theme.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/units.h>
-
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <pbl/services/vibes/vibe_client.h>
-#include <pbl/services/vibes/vibe_score.h>
-#include <time.h>
 
 #define DECLINE_DELAY_MS       2000
 #define SMS_REPLY_DELAY_MS     1200

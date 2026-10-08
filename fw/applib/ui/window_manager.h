@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <kernel/ui/modals/modal_manager.h>
 #include "window.h"
+
+#include <kernel/ui/modals/modal_manager.h>
 
 //! @internal
 //! Returns a boolean indicating whether or not the passed window resides

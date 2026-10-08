@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/session_send_buffer.h>
-
 #include <stdbool.h>
+
+#include <pbl/services/comm_session/session_send_buffer.h>
 
 void fake_session_send_buffer_init(void);
 

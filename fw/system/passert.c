@@ -3,20 +3,20 @@
 
 #include "passert.h"
 
-#include <system/reboot_reason.h>
-#include <kernel/fault_handling.h>
-#include <kernel/kernel_heap.h>
-
-#include <kernel/pebble_tasks.h>
-#include <syscall/syscall.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/heap.h>
-
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/debug.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/heap.h>
+
+#include <kernel/fault_handling.h>
+#include <kernel/kernel_heap.h>
+#include <kernel/pebble_tasks.h>
+#include <syscall/syscall.h>
+#include <system/reboot_reason.h>
 
 #define CORE_NUMBER 0
 

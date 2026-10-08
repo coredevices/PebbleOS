@@ -3,6 +3,32 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+#include <time.h>
+
+#include <pbl/bluetooth/types.h>
+#include <pbl/drivers/battery.h>
+#include <pbl/drivers/button_id.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/msgq.h>
+#include <pbl/services/battery/battery_monitor.h>
+#include <pbl/services/blob_db/api.h>
+#include <pbl/services/bluetooth/bluetooth_ctl.h>
+#include <pbl/services/comm_session/session_remote_os.h>
+#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/imu/units.h>
+#include <pbl/services/music.h>
+#include <pbl/services/notifications/notifications.h>
+#include <pbl/services/put_bytes/put_bytes.h>
+#include <pbl/services/timeline/peek.h>
+#include <pbl/services/timeline/reminders.h>
+#include <pbl/services/touch/gesture_event.h>
+#include <pbl/services/touch/touch_event.h>
+#include <pbl/services/voice/voice.h>
+#include <pbl/services/wakeup.h>
+
 #include <applib/accel_service.h>
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
@@ -11,38 +37,11 @@
 #include <applib/health_service.h>
 #include <applib/plugin_service.h>
 #include <applib/tick_timer_service.h>
-#include <applib/voice/dictation_session.h>
 #include <applib/ui/click.h>
+#include <applib/voice/dictation_session.h>
 #include <apps/system/app_fetch_ui.h>
-#include <pbl/drivers/battery.h>
-#include <pbl/drivers/button_id.h>
-#include <process_management/app_install_types.h>
-#include <pbl/services/battery/battery_monitor.h>
-#include <pbl/services/bluetooth/bluetooth_ctl.h>
-#include <pbl/services/comm_session/session_remote_os.h>
-#include <pbl/services/comm_session/session_remote_version.h>
-#include <pbl/services/hrm/hrm_manager.h>
-#include <pbl/services/put_bytes/put_bytes.h>
-#include <pbl/services/touch/touch_event.h>
-#include <pbl/services/touch/gesture_event.h>
-#include <pbl/services/imu/units.h>
-#include <pbl/services/blob_db/api.h>
-#include <pbl/services/music.h>
-#include <pbl/services/notifications/notifications.h>
-#include <pbl/services/voice/voice.h>
-#include <pbl/services/wakeup.h>
-#include <pbl/services/timeline/peek.h>
-#include <pbl/services/timeline/reminders.h>
 #include <kernel/pebble_tasks.h>
-#include <pbl/kernel/compiler.h>
-
-#include <pbl/kernel/msgq.h>
-
-#include <pbl/bluetooth/types.h>
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <time.h>
+#include <process_management/app_install_types.h>
 
 typedef struct PebblePhoneCaller PebblePhoneCaller;
 

@@ -1,21 +1,21 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
+#include <pbl/util/size.h>
+
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics.h>
+#include <applib/graphics/raw_image.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/status_bar_layer.h>
+#include <clar.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_install_types.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
-#include <applib/graphics/raw_image.h>
-#include <pbl/util/size.h>
-
-#include <clar.h>
-
-#include <stdio.h>
 
 // Fakes
 /////////////////////

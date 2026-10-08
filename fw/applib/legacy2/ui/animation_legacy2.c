@@ -1,16 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "animation_private_legacy2.h"
 #include "animation_legacy2.h"
 
-#include <applib/ui/animation_timing.h>
-#include <process_state/app_state/app_state.h>
-#include <kernel/kernel_applib_state.h>
-#include <kernel/pbl_malloc.h>
-#include <system/passert.h>
+#include "animation_private_legacy2.h"
+
 #include <pbl/util/math.h>
 #include <pbl/util/order.h>
+
+#include <applib/ui/animation_timing.h>
+#include <kernel/kernel_applib_state.h>
+#include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
+#include <system/passert.h>
 
 ///////////////////
 // Base AnimationLegacy2

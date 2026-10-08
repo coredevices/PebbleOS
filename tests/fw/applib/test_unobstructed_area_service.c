@@ -1,10 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <applib/unobstructed_area_service_private.h>
 #include <clar.h>
 #include <pebble_asserts.h>
-
-#include <applib/unobstructed_area_service_private.h>
 
 // Stubs
 /////////////////////

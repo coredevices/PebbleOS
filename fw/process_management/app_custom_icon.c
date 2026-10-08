@@ -5,15 +5,16 @@
 
 #include "app_install_manager_private.h"
 
-#include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/logging/logging.h>
+#include <stddef.h>
+#include <string.h>
+
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session.h>
 #include <pbl/util/math.h>
 
-#include <string.h>
-#include <stddef.h>
+#include <apps/system_app_ids.h>
+#include <kernel/pbl_malloc.h>
 
 // We no longer have icons in the launcher, so we don't really need this anymore.
 // However, we may decide to put it back in, so let's keep the code around just in case.

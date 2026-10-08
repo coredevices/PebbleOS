@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/services/vibes/vibe_client.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/services/vibes/vibe_client.h>
 
 /**
  * @defgroup services_vibes_vibe_score_info Vibe score catalog

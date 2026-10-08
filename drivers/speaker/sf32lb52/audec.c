@@ -2,15 +2,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/mcu/cache.h>
-#include <system/passert.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/misc.h>
-#include <pbl/services/system_task.h>
-#include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
+#include <pbl/logging/logging.h>
+#include <pbl/mcu/cache.h>
+#include <pbl/services/system_task.h>
+#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/util/misc.h>
+
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_speaker_sf32lb, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
 

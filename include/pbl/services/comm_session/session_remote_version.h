@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup services_comm_session_session_remote_version Remote version

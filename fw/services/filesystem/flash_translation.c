@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/filesystem/flash_translation.h>
-
 #include <pbl/drivers/flash.h>
-#include <flash_region/filesystem_regions.h>
-#include <flash_region/flash_region.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/logging/logging.h>
-#include <system/passert.h>
+#include <pbl/services/filesystem/flash_translation.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
+
+#include <flash_region/filesystem_regions.h>
+#include <flash_region/flash_region.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
 

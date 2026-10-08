@@ -5,16 +5,17 @@
 
 #include "menu_layer.h"
 
+#include <pbl/kernel/compiler.h>
+
 #include <applib/app.h>
 #include <applib/app_focus_service.h>
 #include <applib/event_service_client.h>
 #include <applib/ui/app_window_stack.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
+#include <process_state/app_state/app_state.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/prefs.h>
-#include <process_state/app_state/app_state.h>
-#include <pbl/kernel/compiler.h>
 
 typedef struct LauncherAppWindowData {
   Window window;

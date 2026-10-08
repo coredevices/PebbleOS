@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/hash.h>
-
 #include <stdint.h>
+
+#include <pbl/util/hash.h>
 
 // Based on DJB2 Hash
 uint32_t hash(const uint8_t *bytes, const uint32_t length) {

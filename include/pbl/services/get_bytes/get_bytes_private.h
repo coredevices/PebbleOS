@@ -7,9 +7,10 @@
 
 #include <stdint.h>
 
-#include <kernel/core_dump_private.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/comm_session/session.h>
+
+#include <kernel/core_dump_private.h>
 
 /**
  * @defgroup services_get_bytes_get_bytes_private Get bytes protocol

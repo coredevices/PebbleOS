@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include <applib/dict.h>
 #include <applib/app_message/app_message.h>
+#include <applib/dict.h>
 
 //! @file app_sync.h
 

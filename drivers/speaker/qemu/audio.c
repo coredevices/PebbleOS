@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <cmsis_core.h>
+#include <stdint.h>
+
 #include <pbl/drivers/speaker/qemu/audio.h>
 #include <pbl/kernel/irq.h>
-
 #include <pbl/services/system_task.h>
 
-#include <stdint.h>
+#include <cmsis_core.h>
 
 // QEMU audio device register offsets (must match pebble-audio QEMU device)
 #define AUDIO_CTRL       0x00

@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/bluetooth/gatt.h>
-
 #include "gatt_client_operations.h"
+
+#include <pbl/bluetooth/gatt.h>
+#include <pbl/util/list.h>
 
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/util/list.h>
 #include <system/passert.h>
 
 // -------------------------------------------------------------------------------------------------

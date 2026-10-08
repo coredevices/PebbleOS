@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/time.h>
-
 #include <string.h>
 #include <time.h>
+
+#include <pbl/util/time.h>
 
 struct tm *gmtime_r(const time_t *timep, struct tm *result) {
   result->tm_gmtoff = 0;

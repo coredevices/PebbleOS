@@ -1,22 +1,19 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <stdlib.h>
 
 #include <pbl/services/tick_timer.h>
 
 #include <applib/tick_timer_service.h>
-#include <kernel/events.h>
-#include <syscall/syscall.h>
-
+#include <clar.h>
 #include <fake_pebble_tasks.h>
 #include <fake_regular_timer.h>
-
+#include <kernel/events.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
-
-#include <stdlib.h>
+#include <syscall/syscall.h>
 
 // The App task's queue to KernelMain.
 static PebbleEvent s_queue[8];

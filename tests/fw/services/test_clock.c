@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/services/clock.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/timezone_database.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/vibes/vibe_score.h>
-#include <resource/resource_ids.auto.h>
+
+#include <clar.h>
 #include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
 #include <resource/resource_version.auto.h>
 
 // Fixture
@@ -18,19 +18,22 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include <fake_rtc.h>
 #include <fake_events.h>
+#include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 
 // Stubs
 ////////////////////////////////////
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
+
 #include <stubs_alerts_preferences.h>
 #include <stubs_analytics.h>
-#include <stubs_vibe_score_info.h>
 #include <stubs_hexdump.h>
 #include <stubs_language_ui.h>
 #include <stubs_logging.h>
+#include <stubs_memory_layout.h>
 #include <stubs_mutex.h>
 #include <stubs_pbl_malloc.h>
 #include <stubs_regular_timer.h>
@@ -39,9 +42,7 @@
 #include <stubs_sleep.h>
 #include <stubs_system_reset.h>
 #include <stubs_task_wdt.h>
-#include <stubs_memory_layout.h>
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
+#include <stubs_vibe_score_info.h>
 
 static bool s_prefs_24h_style;
 

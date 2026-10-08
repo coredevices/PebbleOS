@@ -1,15 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/iterator.h>
 #include "utf8_test_data.h"
-#include <applib/graphics/utf8.h>
-
-#include <clar.h>
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <pbl/util/iterator.h>
+
+#include <applib/graphics/utf8.h>
+#include <clar.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

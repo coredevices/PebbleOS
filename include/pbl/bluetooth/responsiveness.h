@@ -3,12 +3,11 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <inttypes.h>
-
-#include <pbl/bluetooth/types.h>
+#include <stdint.h>
 
 #include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
 
 /**

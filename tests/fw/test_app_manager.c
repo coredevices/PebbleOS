@@ -1,25 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <process_management/app_manager.h>
+#include <pbl/mcu/mpu.h>
+#include <pbl/services/blob_db/app_db.h>
+#include <pbl/services/vibe_pattern.h>
+#include <pbl/util/heap.h>
 
 #include <applib/app_comm.h>
 #include <applib/graphics/framebuffer.h>
 #include <applib/ui/window_stack.h>
 #include <applib/ui/window_stack_private.h>
-#include <pbl/mcu/mpu.h>
+#include <clar.h>
 #include <kernel/util/segment.h>
 #include <popups/crashed_ui.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <process_management/app_run_state.h>
 #include <process_management/process_manager.h>
-#include <pbl/services/vibe_pattern.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/blob_db/app_db.h>
-#include <pbl/util/heap.h>
 
 // Fakes
 #include <fake_new_timer.h>

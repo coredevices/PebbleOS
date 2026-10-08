@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "test_timeline_app_includes.h"
+
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/units.h>
+
 #include <apps/system/timeline/timeline.h>
+#include <fixtures/screen_grid.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/timeline/timeline_resources.h>
-
-#include "test_timeline_app_includes.h"
-#include <fixtures/screen_grid.h>
-#include <pbl/util/units.h>
 
 // Setup and Teardown
 ////////////////////////////////////

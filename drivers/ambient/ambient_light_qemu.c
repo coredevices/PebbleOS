@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
+
 #include <pbl/drivers/ambient_light.h>
 
 #include <board/board.h>
 #include <system/passert.h>
-
-#include <inttypes.h>
 
 static uint32_t s_dark_threshold;
 

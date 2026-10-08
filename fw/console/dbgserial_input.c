@@ -3,9 +3,10 @@
 
 #include "dbgserial_input.h"
 
-#include <board/board.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
+
+#include <board/board.h>
 
 #if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
 

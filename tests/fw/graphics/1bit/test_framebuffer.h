@@ -3,17 +3,16 @@
 
 #pragma once
 
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/framebuffer.h>
+#include "../test_graphics.h"
 
-#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 
-#include <sys/types.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/gtypes.h>
 #include <sys/stat.h>
-
-#include "../test_graphics.h"
+#include <sys/types.h>
+#include <unistd.h>
 
 typedef struct stat STAT_T;
 

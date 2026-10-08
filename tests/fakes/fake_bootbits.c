@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "fake_bootbits.h"
+
 #include <inttypes.h>
 #include <stdbool.h>
-#include "fake_bootbits.h"
 
 static uint32_t s_bootbits = 0;
 

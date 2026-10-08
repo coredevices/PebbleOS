@@ -1,16 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <kernel/pbl_malloc.h>
-
 #include <pbl/drivers/rtc.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
+
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
-
-#include <pbl/logging/logging.h>
-
-#include <pbl/util/math.h>
-#include <pbl/util/byteorder.h>
+#include <kernel/pbl_malloc.h>
 
 // -----------------------------------------------------------------------------------------
 void qemu_serial_private_init_state(QemuSerialGlobals *state) {

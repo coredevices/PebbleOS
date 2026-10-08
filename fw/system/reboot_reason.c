@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/sched.h>
 #include "reboot_reason.h"
 
-#include <pbl/mcu/interrupts.h>
+#include <pbl/kernel/sched.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+#include <pbl/mcu/interrupts.h>
 
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>

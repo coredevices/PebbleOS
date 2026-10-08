@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "touch_sdl_bottom.h"
+
 #include <stdbool.h>
 
 #include <posix_host.h>
 #include <sdl_bottom.h>
-#include "touch_sdl_bottom.h"
 
 // The mouse is a finger. Scrolling, with a wheel or two fingers on a
 // trackpad, drags a finger from the pointer, and lifts it once the scrolling

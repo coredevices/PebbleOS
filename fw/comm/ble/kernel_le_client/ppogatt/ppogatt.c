@@ -2,33 +2,31 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "ppogatt.h"
+
 #include "ppogatt_internal.h"
 
-#include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gatt_client_operations.h>
-#include <comm/bt_lock.h>
+#include <inttypes.h>
 
-#include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/bluetooth/gatt.h>
-
-#include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
+#include <pbl/bluetooth/ppog_reversed.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
-
-#include <system/hexdump.h>
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
-#include <pbl/kernel/compiler.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 
-#include <inttypes.h>
-
-#include <pbl/drivers/rtc.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gatt_client_operations.h>
+#include <comm/bt_lock.h>
+#include <kernel/event_loop.h>
+#include <kernel/pbl_malloc.h>
+#include <system/hexdump.h>
+#include <system/passert.h>
 
 //! See https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=22511665
 //! for detailed information regarding the PPoGATT protocol state machine.

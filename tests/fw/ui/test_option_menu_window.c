@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/ui/option_menu_window.h>
-#include <shell/system_theme.h>
-#include <resource/resource.h>
-#include <resource/resource_ids.auto.h>
 #include <pbl/services/timeline/timeline_resources.h>
 
+#include <applib/ui/option_menu_window.h>
 #include <clar.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 // Fakes
 /////////////////////
@@ -20,6 +20,8 @@
 
 // Stubs
 /////////////////////
+
+#include <pbl/util/units.h>
 
 #include <stubs_analytics.h>
 #include <stubs_animation_timing.h>
@@ -49,7 +51,6 @@
 #include <stubs_vibes.h>
 #include <stubs_window_manager.h>
 #include <stubs_window_stack.h>
-#include <pbl/util/units.h>
 
 // Setup and Teardown
 ////////////////////////////////////

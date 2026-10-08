@@ -3,9 +3,11 @@
 
 #pragma once
 #include <stdbool.h>
+
 #include <pbl/drivers/exti.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
+
 #include <applib/app_timer.h>
 
 /**

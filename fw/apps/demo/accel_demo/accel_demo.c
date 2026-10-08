@@ -3,16 +3,17 @@
 
 #include "accel_demo.h"
 
+#include <inttypes.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <pbl/util/size.h>
+
 #include <applib/accel_service.h>
 #include <applib/app.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/util/size.h>
-
-#include <inttypes.h>
-#include <stdio.h>
-#include <string.h>
 
 typedef struct {
   Window rate_window;

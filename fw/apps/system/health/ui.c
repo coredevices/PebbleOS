@@ -3,12 +3,14 @@
 
 #include "ui.h"
 
-#include <applib/pbl_std/pbl_std.h>
-#include <board/display.h>
+#include <time.h>
+
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/string.h>
-#include <time.h>
+
+#include <applib/pbl_std/pbl_std.h>
+#include <board/display.h>
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)

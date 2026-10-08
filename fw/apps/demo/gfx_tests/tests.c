@@ -3,15 +3,16 @@
 
 #include "tests.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
+
 #include <applib/ui/app_window_stack.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
 #include <system/profiler.h>
-
-#include <stdlib.h>
-#include <stdio.h>
 
 typedef struct {
   Window menu_window;

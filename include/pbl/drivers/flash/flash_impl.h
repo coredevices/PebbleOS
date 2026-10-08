@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/flash.h>
+
 #include <system/status_codes.h>
 
 /**

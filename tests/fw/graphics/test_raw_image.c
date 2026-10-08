@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <applib/graphics/raw_image.h>
+#include <clar.h>
 
 // Make sure that row stride, bit depth is all being used correctly.
 // Really, these are just some simple cases and sanity checks.

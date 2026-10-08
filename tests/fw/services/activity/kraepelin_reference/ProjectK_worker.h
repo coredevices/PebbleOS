@@ -1,11 +1,11 @@
 #pragma once
 
-#include <applib/accel_service.h>
-
 #include "constants_worker.h"
-#include "helper_worker.h"
 #include "fourier.h"
+#include "helper_worker.h"
 #include "raw_stats.h"
+
+#include <applib/accel_service.h>
 
 #if PEBBLE_APP
 static void write_blk_buf_to_persist();

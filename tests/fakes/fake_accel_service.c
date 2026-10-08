@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <applib/accel_service_private.h>
 #include <pbl/services/accel_manager.h>
+
+#include <applib/accel_service_private.h>
 #include <system/passert.h>
 
 static AccelDataHandler s_handler;

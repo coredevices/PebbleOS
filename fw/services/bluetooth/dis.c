@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/bluetooth/dis.h>
-
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/dis.h>
+
 #include <board/board.h>
-#include <process_management/pebble_process_info.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
+#include <process_management/pebble_process_info.h>
 #include <system/version.h>
 
 _Static_assert(PBL_BT_DIS_MODEL_NUMBER_LEN >= MFG_HW_VERSION_SIZE + 1, "Size mismatch");

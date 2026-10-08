@@ -9,6 +9,8 @@
 #ifdef CONFIG_MAG
 #include <apps/prf/mfg_mag.h>
 #endif
+#include <pbl/util/size.h>
+
 #include <apps/prf/mfg_als.h>
 #include <apps/prf/mfg_backlight.h>
 #include <apps/prf/mfg_button.h>
@@ -22,15 +24,14 @@
 #include <apps/prf/mfg_qr_results.h>
 #include <apps/prf/mfg_speaker_asterix.h>
 #include <apps/prf/mfg_speaker_obelix.h>
-#include <apps/prf/mfg_touch.h>
 #include <apps/prf/mfg_test_menu.h>
 #include <apps/prf/mfg_test_result.h>
+#include <apps/prf/mfg_touch.h>
 #include <apps/prf/mfg_vibration.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/util/size.h>
 
 typedef const PebbleProcessMd *(*MfgTestGetInfoFn)(void);
 

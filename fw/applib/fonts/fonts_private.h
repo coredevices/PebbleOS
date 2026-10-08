@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <resource/resource.h>
 #include <pbl/kernel/compiler.h>
+
+#include <resource/resource.h>
 
 //
 // Definitions only for font loading and text rendering

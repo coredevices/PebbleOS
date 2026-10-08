@@ -2,17 +2,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/bluetooth/ble_hrm.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/size.h>
 
 #include <applib/graphics/gcolor_definitions.h>
 #include <applib/ui/dialogs/actionable_dialog.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
-#include <kernel/ui/modals/modal_manager.h>
 #include <applib/ui/vibes.h>
+#include <kernel/ui/modals/modal_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
-
-#include <pbl/util/size.h>
 
 #define BLE_HRM_CONFIRMATION_TIMEOUT_MS (2000)
 

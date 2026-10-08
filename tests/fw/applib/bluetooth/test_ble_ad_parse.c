@@ -1,18 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/bluetooth/ble_ad_parse.h>
-
-#include <system/hexdump.h>
-
-#include <clar.h>
-
 #include <pbl/btutil/bt_uuid.h>
+
+#include <applib/bluetooth/ble_ad_parse.h>
+#include <clar.h>
+#include <system/hexdump.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_ble_syscalls.h>
 #include <stubs_ble_syscalls.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>

@@ -3,14 +3,15 @@
 
 #include "persist.h"
 
-#include <kernel/memory_layout.h>
-#include <process_management/process_manager.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/services/persist.h>
 #include <pbl/services/settings/settings_file.h>
+#include <pbl/util/math.h>
+
+#include <kernel/memory_layout.h>
+#include <process_management/process_manager.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
-#include <pbl/util/math.h>
-#include <pbl/kernel/compiler.h>
 
 _Static_assert(PERSIST_DATA_MAX_LENGTH <= SETTINGS_VAL_MAX_LEN,
                "PERSIST_DATA_MAX_LENGTH is larger than the max length that "

@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/task_wdt/task_wdt.h>
-
 #include <errno.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -11,14 +9,15 @@
 #include <string.h>
 
 #include <pbl/drivers/watchdog.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/math.h>
-
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/types.h>
+#include <pbl/logging/logging.h>
+#include <pbl/task_wdt/task_wdt.h>
+#include <pbl/util/math.h>
+
 #include <system/die.h>
 #include <system/passert.h>
 #include <system/reboot_reason.h>

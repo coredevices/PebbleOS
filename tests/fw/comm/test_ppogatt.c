@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <comm/ble/kernel_le_client/ppogatt/ppogatt.h>
-#include <comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/services/regular_timer.h>
-
 #include <pbl/util/size.h>
 
 #include <clar.h>
+#include <comm/ble/kernel_le_client/ppogatt/ppogatt.h>
+#include <comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

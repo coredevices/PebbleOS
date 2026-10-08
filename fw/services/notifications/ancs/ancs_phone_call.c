@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/notifications/ancs/ancs_phone_call.h>
-
-#include <applib/graphics/utf8.h>
-#include <kernel/events.h>
-#include <pbl/services/regular_timer.h>
-#include <pbl/services/phone_call_util.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+
+#include <pbl/services/notifications/ancs/ancs_phone_call.h>
+#include <pbl/services/phone_call_util.h>
+#include <pbl/services/regular_timer.h>
+
+#include <applib/graphics/utf8.h>
+#include <kernel/events.h>
 
 static RegularTimerInfo s_missed_call_timer_id;
 

@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
+#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor.h>
+#include <pbl/util/bitops.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gcolor_definitions.h>
 #include <applib/graphics/gtypes.h>
-#include <pbl/util/bitops.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/kernel/irq.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-
-#include <string.h>
 
 //! This variable is used when we are flushing s_framebuffer out to the display driver.
 //! It's set to the current row index that we are DMA'ing out to the display.

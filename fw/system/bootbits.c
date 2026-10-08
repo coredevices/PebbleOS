@@ -1,22 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <system/bootbits.h>
-
+#include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
-#include <flash_region/flash_region.h>
 #include <pbl/logging/logging.h>
+
+#include <flash_region/flash_region.h>
+#include <system/bootbits.h>
 #include <system/version.h>
-#include <pbl/crc/crc.h>
 
 #ifdef CONFIG_SOC_SF32LB52
 #include <bf0_hal.h>
 #endif
 
 #if MICRO_FAMILY_STM32F4
-#include <stm32f4xx.h>
 #include <pbl/kernel/compiler.h>
+
+#include <stm32f4xx.h>
 #endif
 
 #if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)

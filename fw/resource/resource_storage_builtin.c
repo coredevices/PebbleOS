@@ -2,12 +2,14 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "resource_storage_builtin.h"
+
 #include "resource_storage_impl.h"
 
-#include <kernel/memory_layout.h>
+#include <string.h>
+
 #include <pbl/services/process_management/app_storage.h>
 
-#include <string.h>
+#include <kernel/memory_layout.h>
 
 extern const BuiltInResourceData g_builtin_resources[];
 extern const uint32_t g_num_builtin_resources;

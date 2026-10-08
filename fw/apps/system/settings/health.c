@@ -1,18 +1,20 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "health.h"
+
 #include "menu.h"
 #include "option_menu.h"
 #include "window.h"
 
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/size.h>
+
 #include <applib/ui/option_menu_window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/activity/activity.h>
 #include <shell/prefs.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
 
 typedef struct SettingsHealthData {
   SettingsCallbacks callbacks;

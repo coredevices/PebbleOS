@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/layer.h>
-
-#include <stdbool.h>
 
 // Forward declare ScrollLayer to avoid cyclic header include for scroll_layer <-> content_indicator
 struct ScrollLayer;

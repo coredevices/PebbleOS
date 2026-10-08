@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <unistd.h>
-
 #include <pbl/services/system_task.h>
+
+#include <unistd.h>
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   cb(data);

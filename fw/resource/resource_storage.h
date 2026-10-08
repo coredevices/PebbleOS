@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include "resource.h"
+
 #include <inttypes.h>
 #include <stdbool.h>
-
-#include "resource.h"
 
 typedef enum {
   InvalidResourceStore = 0,

@@ -1,8 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-#include <fixtures/load_test_resources.h>
+#include <pbl/util/size.h>
 
 #include <applib/fonts/fonts_private.h>
 #include <applib/graphics/framebuffer.h>
@@ -12,13 +11,14 @@
 #include <applib/graphics/text_resources.h>
 #include <applib/ui/layer.h>
 #include <applib/ui/window_private.h>
+#include <clar.h>
+#include <fixtures/load_test_resources.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/util/size.h>
 
 // Helper Functions
 ////////////////////////////////////
-#include "test_graphics.h"
 #include "8bit/test_framebuffer.h"
+#include "test_graphics.h"
 #include "util.h"
 
 ///////////////////////////////////////////////////////////

@@ -3,18 +3,18 @@
 
 #include "pbl_malloc.h"
 
-#include <pbl/kernel/compiler.h>
-
 #include "kernel_heap.h"
 #include "pebble_tasks.h"
+
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/heap.h>
 
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <system/passert.h>
-#include <pbl/util/heap.h>
-
-#include <string.h>
 
 Heap *task_heap_get_for_current_task(void) {
   if (pebble_task_get_current() == PebbleTask_App) {

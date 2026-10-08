@@ -3,9 +3,10 @@
 
 #include "app_launch.h"
 
-#include <comm/ble/gatt_client_operations.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session.h>
+
+#include <comm/ble/gatt_client_operations.h>
 #include <system/passert.h>
 
 //! See https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+GATT+Services

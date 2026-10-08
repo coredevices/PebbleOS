@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <process_management/pebble_process_md.h>
 #include <process_management/app_install_types.h>
+#include <process_management/pebble_process_md.h>
 
 //! Get the very first app we should run at startup.
 const PebbleProcessMd *system_app_state_machine_system_start(void);

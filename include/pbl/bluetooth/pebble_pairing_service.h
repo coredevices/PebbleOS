@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/responsiveness.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup bluetooth_pebble_pairing_service Pebble Pairing Service

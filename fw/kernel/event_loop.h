@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <kernel/events.h>
-
 #include <stdbool.h>
+
+#include <kernel/events.h>
 
 //! Adds an event to the launcher's queue that will call the callback with
 //! arbitrary data as argument. Make sure that data points to memory that lives

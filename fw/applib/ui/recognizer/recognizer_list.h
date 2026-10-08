@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/util/list.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/util/list.h>
 
 struct Recognizer;
 

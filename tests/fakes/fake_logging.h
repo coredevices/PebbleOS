@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <clar.h>
-
-#include <regex.h>
-
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+
 #include <pbl/util/string.h>
+
+#include <clar.h>
+#include <regex.h>
 
 // make sure we can unit-test log output
 #define CUSTOM_LOG_INTERNAL

@@ -1,19 +1,19 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+#include <string.h>
+
+#include <pbl/services/imaging.h>
+#include <pbl/services/music.h>
+#include <pbl/util/size.h>
+
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/window_private.h>
-#include <pbl/services/imaging.h>
-#include <pbl/services/music.h>
-#include <pbl/util/size.h>
-#include <shell/system_theme.h>
-
 #include <clar.h>
-
-#include <stdio.h>
-#include <string.h>
+#include <shell/system_theme.h>
 
 // Fakes
 /////////////////////

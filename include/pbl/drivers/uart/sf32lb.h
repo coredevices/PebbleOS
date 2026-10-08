@@ -6,8 +6,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <board/board.h>
 #include <pbl/drivers/uart.h>
+
+#include <board/board.h>
 
 /**
  * @defgroup drivers_uart_sf32lb SF32LB

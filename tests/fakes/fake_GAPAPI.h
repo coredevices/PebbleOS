@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <GAPAPI.h>
-
-#include <pbl/bluetooth/types.h>
-#include <comm/ble/gap_le_advert.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/bluetooth/types.h>
+
+#include <GAPAPI.h>
+#include <comm/ble/gap_le_advert.h>
 
 //! Provided to simulate stopping advertising because of an inbound connection.
 void gap_le_set_advertising_disabled(void);

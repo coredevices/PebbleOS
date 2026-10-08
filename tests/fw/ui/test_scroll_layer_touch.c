@@ -1,22 +1,20 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-#include <pebble_asserts.h>
+#include <pbl/drivers/rtc.h>
 
-#include <applib/ui/scroll_layer.h>
-#include <applib/ui/scroll_layer_private.h>
+#include <applib/ui/animation_private.h>
+#include <applib/ui/property_animation_private.h>
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_list.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/swipe.h>
 #include <applib/ui/recognizer/touch_nav.h>
-
-#include <applib/ui/animation_private.h>
-#include <applib/ui/property_animation_private.h>
-
+#include <applib/ui/scroll_layer.h>
+#include <applib/ui/scroll_layer_private.h>
+#include <clar.h>
 #include <fake_rtc.h>
-#include <pbl/drivers/rtc.h>
+#include <pebble_asserts.h>
 
 // Stubs
 /////////////////////

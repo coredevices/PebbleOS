@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/music.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/music.h>
 
 void PBL_WEAK music_get_now_playing(char *title, char *artist, char *album) {
 }

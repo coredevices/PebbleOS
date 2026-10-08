@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/app_timer.h>
+#include <pbl/services/evented_timer.h>
 
 #include <applib/app_logging.h>
-#include <pbl/services/evented_timer.h>
+#include <applib/app_timer.h>
 #include <syscall/syscall_internal.h>
 
 //! @file fw/applib/app_timer.c

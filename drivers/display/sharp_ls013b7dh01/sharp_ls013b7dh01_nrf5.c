@@ -1,24 +1,22 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/display/sharp_ls013b7dh01/sharp_ls013b7dh01.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <board/board.h>
+#include <pbl/drivers/display/sharp_ls013b7dh01/sharp_ls013b7dh01.h>
 #include <pbl/drivers/gpio.h>
-#include <kernel/events.h>
-#include <system/passert.h>
+#include <pbl/kernel/sem.h>
 #include <pbl/util/bitops.h>
 
+#include <board/board.h>
 #include <hal/nrf_gpiote.h>
 #include <hal/nrf_rtc.h>
+#include <kernel/events.h>
 #include <nrfx_gppi.h>
 #include <nrfx_spim.h>
-
-#include <pbl/kernel/sem.h>
+#include <system/passert.h>
 
 #define DISP_MODE_WRITE 0x01U
 #define DISP_MODE_CLEAR 0x04U

@@ -3,12 +3,12 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/uuid.h>
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
 
 /**
  * @defgroup bluetooth_types Types

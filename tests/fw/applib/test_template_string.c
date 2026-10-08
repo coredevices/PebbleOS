@@ -1,15 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <applib/template_string.h>
-#include <applib/template_string_private.h>
+#include <limits.h>
+#include <string.h>
 
 #include <pbl/util/size.h>
 
-#include <limits.h>
-#include <string.h>
+#include <applib/template_string.h>
+#include <applib/template_string_private.h>
+#include <clar.h>
 
 #define DEBUG_PRINTING 1
 #if DEBUG_PRINTING
@@ -41,8 +40,8 @@ static const char *s_error_strings[] = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fakes & Stubs
 
-#include <stubs_passert.h>
 #include <stubs_i18n.h>
+#include <stubs_passert.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Test setup

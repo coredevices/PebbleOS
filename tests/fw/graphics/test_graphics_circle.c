@@ -1,20 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/graphics_circle.h>
+#include <stdio.h>
+
 #include <pbl/util/trig.h>
 
+#include <applib/graphics/graphics_circle.h>
 #include <clar.h>
 #include <pebble_asserts.h>
 
-#include <stdio.h>
-
 // stubs
-#include <stubs_process_manager.h>
-#include <stubs_passert.h>
-#include <stubs_logging.h>
 #include <stubs_app_state.h>
 #include <stubs_heap.h>
+#include <stubs_logging.h>
+#include <stubs_passert.h>
+#include <stubs_process_manager.h>
 
 GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
   return NULL;

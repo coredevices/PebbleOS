@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/build_id.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+
+#include <pbl/util/build_id.h>
 
 bool build_id_contains_gnu_build_id(const ElfExternalNote *note) {
   const uint32_t NT_GNU_BUILD_ID = 3;

@@ -5,18 +5,19 @@
 
 #include "pulse_protocol_impl.h"
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/byteorder.h>
+
 #include <console/control_protocol.h>
 #include <console/control_protocol_impl.h>
 #include <console/pulse.h>
 #include <console/pulse2_transport_impl.h>
 #include <console/pulse_control_message_protocol.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/byteorder.h>
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 
 static bool s_layer_up = false;
 

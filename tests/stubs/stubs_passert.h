@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <stdarg.h>
-#include <stdio.h>
 #include <setjmp.h>
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 void passert_failed(const char *filename, int line_number, const char *message, ...) {
   if (clar_expecting_passert) {

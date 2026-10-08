@@ -3,8 +3,18 @@
 
 #ifdef CONFIG_PULSE_EVERYWHERE
 
-#include "pulse_protocol_impl.h"
 #include "pulse2_reliable_retransmit_timer.h"
+#include "pulse_protocol_impl.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/byteorder.h>
 
 #include <console/control_protocol.h>
 #include <console/control_protocol_impl.h>
@@ -13,17 +23,7 @@
 #include <console/pulse_control_message_protocol.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/system_task.h>
 #include <system/passert.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/byteorder.h>
-
-#include <pbl/kernel/sem.h>
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
 
 //! Modulus for sequence numbers
 #define MODULUS               (128u)

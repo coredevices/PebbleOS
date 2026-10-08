@@ -3,6 +3,7 @@
 
 #pragma once
 #include "pebble_process_info.h"
+
 #include <stdbool.h>
 
 //! Inspects the app metadata whether the app supports app messaging.

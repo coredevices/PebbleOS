@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <applib/graphics/raw_image.h>
 #include <applib/ui/kino/kino_reel.h>
 #include <applib/ui/kino/kino_reel_custom.h>
 #include <applib/ui/kino/kino_reel_gbitmap.h>
 #include <applib/ui/kino/kino_reel_gbitmap_sequence.h>
 #include <applib/ui/kino/kino_reel_pdci.h>
 #include <applib/ui/kino/kino_reel_pdcs.h>
-#include <applib/graphics/raw_image.h>
-
 #include <clar.h>
 
 // Fakes
@@ -44,8 +43,8 @@ const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_i
 
 // Helper Functions
 ////////////////////////////////////
-#include "../graphics/test_graphics.h"
 #include "../graphics/8bit/test_framebuffer.h"
+#include "../graphics/test_graphics.h"
 
 static FrameBuffer *fb = NULL;
 

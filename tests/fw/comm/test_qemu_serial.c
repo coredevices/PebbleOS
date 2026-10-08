@@ -6,20 +6,20 @@
 #include <string.h>
 #include <time.h>
 
-#include <comm/qemu/serial.h>
-#include <comm/qemu/serial_private.h>
 #include <pbl/util/byteorder.h>
 
 #include <clar.h>
+#include <comm/qemu/serial.h>
+#include <comm/qemu/serial_private.h>
 
 extern bool qemu_test_add_byte_from_isr(QemuSerialGlobals *state, uint8_t byte);
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_passert.h>
 #include <stubs_logging.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_mutex.h>
+#include <stubs_passert.h>
+#include <stubs_pbl_malloc.h>
 
 // Globals
 QemuSerialGlobals s_state;

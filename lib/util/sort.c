@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/sort.h>
-
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
+
+#include <pbl/util/sort.h>
 
 static void prv_swap(void *a, void *b, size_t elem_size) {
   uint8_t *a_ptr = (uint8_t *)a;

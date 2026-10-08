@@ -4,16 +4,16 @@
 #include <errno.h>
 // Ahead of pthread.h, which needs struct timespec from the host's time.h,
 // not the firmware's.
-#include <sys/time.h>
-#include <pthread.h>
-#include <unistd.h>
+#include "posix.h"
 
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/init.h>
 
 #include <kernel.h>
 #include <pbl_arch_posix.h>
-#include "posix.h"
+#include <pthread.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 // Native application: interrupts come from host threads, which take the CPU
 // whenever no kernel thread holds it, as an interrupt between instructions.

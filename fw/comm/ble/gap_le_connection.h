@@ -3,19 +3,17 @@
 
 #pragma once
 
-#include <comm/bt_conn_mgr_impl.h>
-
-#include <pbl/drivers/rtc.h>
-
 #include "gatt_client_accessors.h"
 #include "gatt_client_discovery.h"
 #include "gatt_client_subscriptions.h"
 
-#include <pbl/services/new_timer/new_timer.h>
-
-#include <pbl/bluetooth/types.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/drivers/rtc.h>
+#include <pbl/services/new_timer/new_timer.h>
+
+#include <comm/bt_conn_mgr_impl.h>
 
 // FIXME: Including this header results in a compile time failure because the
 // chain eventually includes a Bluetopia API. Figure out why this is problematic

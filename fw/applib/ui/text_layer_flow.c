@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "text_layer_flow.h"
+
 #include "scroll_layer.h"
 
 static bool prv_is_container_layer(const Layer *layer) {

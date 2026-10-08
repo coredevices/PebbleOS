@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <pbl/util/assert.h>
 #include <pbl/util/logging.h>
 #include <pbl/util/rand32.h>
-
-#include <stdio.h>
-#include <stdlib.h>
 
 // Below are some default implementations for system-specific functions required by libutil.
 // These functions assume a working C standard library is linked into the program.

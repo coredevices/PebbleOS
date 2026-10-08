@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <board/board.h>
-#include <pbl/drivers/audio.h>
-#include <pbl/util/circular_buffer.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <pbl/drivers/audio.h>
+#include <pbl/util/circular_buffer.h>
+
+#include <board/board.h>
 #include <nrfx_i2s.h>
 
 /**

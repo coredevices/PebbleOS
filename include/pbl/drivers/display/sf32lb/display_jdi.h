@@ -5,10 +5,9 @@
 
 #include <stdint.h>
 
-#include <board/board.h>
-
 #include <bf0_hal.h>
 #include <bf0_hal_lcdc.h>
+#include <board/board.h>
 
 /**
  * @defgroup drivers_display_sf32lb SF32LB JDI display

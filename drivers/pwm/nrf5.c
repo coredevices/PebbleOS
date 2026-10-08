@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/pwm.h>
-#include <system/passert.h>
 
 #include <nrfx.h>
+#include <system/passert.h>
 
 void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
   nrfx_pwm_config_t config =

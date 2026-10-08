@@ -1,19 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/protobuf_log/protobuf_log_hr.h>
-#include <pbl/services/protobuf_log/protobuf_log.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/protobuf_log/protobuf_log.h>
+#include <pbl/services/protobuf_log/protobuf_log_hr.h>
+#include <pbl/util/size.h>
+#include <pbl/util/testing.h>
 
 #include <measurements.pb.h>
 #include <system/passert.h>
-
-#include <pbl/util/size.h>
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <pbl/util/testing.h>
 
 // -----------------------------------------------------------------------------------------
 // Convert HRMQuality to the internal protobuf representation.

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "gdraw_command_sequence.h"
+
 #include "gdraw_command_private.h"
 
 #include <applib/applib_malloc.auto.h>

@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/timezone_database.h>
-#include <pbl/services/clock.h>
-
 #include "../timezone_fixture.auto.h"
 
+#include <string.h>
+
+#include <pbl/services/clock.h>
+#include <pbl/services/time.h>
+#include <pbl/services/timezone_database.h>
+
+#include <clar.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
-
-#include <string.h>
-#include <pbl/services/time.h>
 
 //! Find a region ID for the given region name.
 //! @return a valid, matching region ID, or -1 if no region was found

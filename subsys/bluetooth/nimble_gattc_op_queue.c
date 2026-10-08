@@ -3,10 +3,11 @@
 
 #include "nimble_gattc_op_queue.h"
 
+#include <pbl/util/list.h>
+
 #include <comm/bt_lock.h>
 #include <kernel/pbl_malloc.h>
 #include <nimble/nimble_port.h>
-#include <pbl/util/list.h>
 
 typedef struct {
   ListNode node;

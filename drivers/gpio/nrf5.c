@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/gpio.h>
-#include <system/passert.h>
 
 #include <hal/nrf_gpio.h>
+#include <system/passert.h>
 
 void gpio_input_init(const InputConfig *pin_config) {
   nrf_gpio_pin_dir_set(pin_config->gpio_pin, NRF_GPIO_PIN_DIR_INPUT);

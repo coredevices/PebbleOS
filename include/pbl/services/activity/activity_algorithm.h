@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <pbl/services/activity/activity.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/activity/activity.h>
 
 /**
  * @defgroup services_activity_activity_algorithm Activity algorithm interface

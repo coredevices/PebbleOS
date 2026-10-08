@@ -3,9 +3,8 @@
 
 #include "ble_central.h"
 
-#include <process_state/app_state/app_state.h>
-
 #include <comm/ble/gap_le_connect.h>
+#include <process_state/app_state/app_state.h>
 
 static enum pbl_bt_errno prv_bt_errno_for_event(const PebbleBLEConnectionEvent *e) {
   if (e->connected) {

@@ -1,16 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/timeline/generic_layout.h>
 #include <pbl/services/timeline/timeline_layout.h>
+#include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/ui.h>
 #include <font_resource_keys.auto.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/clock.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/size.h>
 
 //////////////////////////////////////////
 //  Card Mode

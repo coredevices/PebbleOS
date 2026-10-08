@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/vibe.h>
+#include <string.h>
 
-#include <board/board.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/vibe.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 
-#include <string.h>
+#include <board/board.h>
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_drv2604, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 

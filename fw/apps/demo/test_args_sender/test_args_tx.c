@@ -1,15 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <test_args_tx.h>
-#include <test_args_rx.h>
+#include <pbl/logging/logging.h>
 
 #include <applib/app.h>
 #include <kernel/event_loop.h>
-#include <process_management/app_manager.h>
 #include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
-#include <pbl/logging/logging.h>
+#include <test_args_rx.h>
+#include <test_args_tx.h>
 
 static TestArgsData s_data;
 

@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include <system/passert.h>
-#include <pbl/util/list.h>
-
-#include <pbl/kernel/mutex.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <pbl/kernel/mutex.h>
+#include <pbl/util/list.h>
+
+#include <system/passert.h>
 
 typedef struct FakePebbleMutex {
   ListNode node;

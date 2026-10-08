@@ -1,11 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "system.h"
+
+#include "certifications.h"
 #include "factory_reset.h"
 #include "menu.h"
 #include "option_menu.h"
-#include "system.h"
 #include "window.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include <pbl/drivers/ambient_light.h>
+#include <pbl/services/blob_db/api.h>
+#include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
+#include <pbl/services/stationary.h>
+#include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/time.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
@@ -15,7 +32,6 @@
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
-#include <pbl/drivers/ambient_light.h>
 #include <kernel/core_dump.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
@@ -25,28 +41,12 @@
 #include <mfg/mfg_serials.h>
 #include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/light.h>
-#include <pbl/services/system_task.h>
-#include <pbl/services/stationary.h>
 #include <shell/normal/battery_ui.h>
 #include <shell/prefs.h>
 #include <shell/system_app_ids.auto.h>
 #include <system/bootbits.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-#include <pbl/services/time.h>
-#include <pbl/util/time.h>
 #include <system/version.h>
-
-#include <pbl/services/blob_db/api.h>
-
-#include <stdio.h>
-#include <string.h>
-
-#include "certifications.h"
 
 enum {
   SystemInformationItemBtAddress = 0,

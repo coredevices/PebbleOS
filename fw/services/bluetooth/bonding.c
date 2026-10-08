@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/types.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/local_addr.h>
+
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gap_le_device_name.h>
 #include <comm/bt_lock.h>
-
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/bluetooth/local_addr.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
-
-#include <pbl/bluetooth/bonding_sync.h>
-#include <pbl/bluetooth/types.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

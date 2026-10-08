@@ -3,9 +3,10 @@
 
 #include "peek_animations.h"
 
-#include <applib/graphics/gtypes.h>
-#include <applib/graphics/graphics.h>
 #include <pbl/util/size.h>
+
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
 
 #define LINE_WIDTH   (2)
 #define LINE_SPACING (10)

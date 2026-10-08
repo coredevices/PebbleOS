@@ -2,19 +2,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <clar.h>
-
-#include <shell/normal/app_idle_timeout.h>
-
 #include <kernel/event_loop.h>
+#include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
 #include <shell/system_shell.h>
 
 // Stubs
 /////////////////////////////////////////////////////////////////////////
+#include <fake_new_timer.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
-
-#include <fake_new_timer.h>
 
 static int s_watchface_launch_count;
 

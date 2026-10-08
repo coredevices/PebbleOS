@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
+#include <string.h>
 
 #include <pbl/util/base64.h>
 
-#include <string.h>
+#include <clar.h>
 
 static void prv_check(const char *input, const char *expected) {
   char out[64];

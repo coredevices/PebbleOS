@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/notif_db.h>
+#include <pbl/services/notifications/notification_storage.h>
 
 #include <kernel/pbl_malloc.h>
-#include <pbl/services/notifications/notification_storage.h>
-#include <pbl/logging/logging.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

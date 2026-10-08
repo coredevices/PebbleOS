@@ -3,12 +3,11 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/bluetooth/dis.h>
-
 #include <stdbool.h>
+
+#include <pbl/bluetooth/dis.h>
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup bluetooth Bluetooth

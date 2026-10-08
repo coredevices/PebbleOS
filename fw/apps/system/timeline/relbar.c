@@ -1,15 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "layer.h"
-#include "animations.h"
 #include "relbar.h"
 
-#include <applib/graphics/graphics.h>
-#include <pbl/services/timeline/timeline_layout.h>
-#include <pbl/logging/logging.h>
+#include "animations.h"
+#include "layer.h"
 
 #include <stdint.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/timeline/timeline_layout.h>
+
+#include <applib/graphics/graphics.h>
 
 #define TIMELINE_FAT_PIN_SIZE (timeline_layer_get_fat_pin_height())
 #define SIDEBAR_WIDTH         (timeline_layer_get_ideal_sidebar_width())

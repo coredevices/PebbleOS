@@ -2,31 +2,26 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/gatt.h>
-
-#include <comm/ble/gatt_client_subscriptions.h>
-#include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gap_le_task.h>
-#include <comm/ble/gatt_service_changed.h>
-
-#include <clar.h>
-
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/bt_uuid.h>
-
 #include <pbl/kernel/sem.h>
+
+#include <clar.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_task.h>
+#include <comm/ble/gatt_client_subscriptions.h>
+#include <comm/ble/gatt_service_changed.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include <fake_events.h>
-#include <fake_pbl_malloc.h>
 #include <fake_bt_gatt.h>
+#include <fake_event_gatt_service_buffer.h>
+#include <fake_events.h>
 #include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
 #include <fake_sem.h>
 #include <fake_system_task.h>
-
-#include <fake_event_gatt_service_buffer.h>
-
 #include <stubs_regular_timer.h>
 
 static enum pbl_bt_errno s_write_descriptor_cccd_result;

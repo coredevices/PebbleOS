@@ -1,14 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "graphics_private.h"
+
 #include "bitblt_private.h"
 #include "graphics.h"
-#include "graphics_private.h"
 #include "gtypes.h"
-#include <system/passert.h>
+
 #include <pbl/util/bitops.h>
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
+
+#include <system/passert.h>
 
 // ## Point setting/blending functions
 

@@ -3,13 +3,13 @@
 
 #ifdef CONFIG_SHELL
 
-#include <pbl/shell/shell.h>
-
 #include "console_internal.h"
-#include <pbl/services/new_timer/new_timer.h>
 
 #include <errno.h>
 #include <stdint.h>
+
+#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/shell/shell.h>
 
 static TimerID s_rx_disable_timer = TIMER_INVALID_ID;
 

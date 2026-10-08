@@ -1,17 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/notifications/ancs/ancs_filtering.h>
+#include <string.h>
 
 #include <pbl/drivers/rtc.h>
-#include <kernel/pbl_malloc.h>
-#include <pbl/services/notifications/alerts_preferences.h>
-#include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/notifications/alerts_preferences.h>
+#include <pbl/services/notifications/ancs/ancs_filtering.h>
+#include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/pstring.h>
-
-#include <string.h>
 #include <pbl/util/units.h>
+
+#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

@@ -1,17 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
-
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h>
-#include <pbl/services/settings/settings_file.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/event_service.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
+
+#include <clar.h>
 #include <flash_region/flash_region.h>
 
 // Stubs
@@ -20,14 +19,13 @@
 typedef struct GAPLEConnection GAPLEConnection;
 
 #include <fake_bonding_sync.h>
-#include <fake_rtc.h>
-#include <fake_spi_flash.h>
-#include <fake_system_task.h>
 #include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
 #include <fake_shared_prf_storage.h>
-
+#include <fake_spi_flash.h>
+#include <fake_system_task.h>
 #include <stubs_bluetopia_interface.h>
 #include <stubs_bt_lock.h>
 #include <stubs_gap_le_advert.h>

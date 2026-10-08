@@ -3,13 +3,12 @@
 
 #include "fake_gatt_client_operations.h"
 
-#include <comm/ble/gatt_client_operations.h>
+#include <string.h>
 
 #include <pbl/util/list.h>
 
 #include <clar_asserts.h>
-
-#include <string.h>
+#include <comm/ble/gatt_client_operations.h>
 
 typedef struct {
   ListNode node;

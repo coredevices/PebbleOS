@@ -113,13 +113,13 @@
  *  2.5 printf(3S) man page.
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include <stdint.h>
-#include <limits.h>
-#include <stddef.h>
 #include <ctype.h>
+#include <limits.h>
+#include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 // Not using 64-bit division for Dialog Bluetooth. This saves *gobs* of memory.
 #ifdef ARCH_NO_NATIVE_LONG_DIVIDE

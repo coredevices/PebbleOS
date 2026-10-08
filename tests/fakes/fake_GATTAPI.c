@@ -3,9 +3,9 @@
 
 #include "fake_GATTAPI.h"
 
-#include <clar_asserts.h>
-
 #include <string.h>
+
+#include <clar_asserts.h>
 
 static GATT_Connection_Event_Callback_t s_connection_event_callback;
 static unsigned int s_stack_id;

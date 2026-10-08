@@ -3,19 +3,18 @@
 
 #ifdef CONFIG_SHELL
 
-#include <comm/ble/gap_le_connection.h>
-#include <comm/bt_lock.h>
+#include <string.h>
 
+#include <pbl/bluetooth/id.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-
-#include <pbl/bluetooth/id.h>
-#include <pbl/bluetooth/types.h>
 #include <pbl/shell/shell.h>
 
-#include <string.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/bt_lock.h>
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_bt);
 PBL_SHELL_CMD_REGISTER(bt, sub_bt, "Bluetooth", NULL);

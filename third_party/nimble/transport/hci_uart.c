@@ -4,13 +4,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <board/board.h>
-#include <kernel/pebble_tasks.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/logging.h>
+
+#include <board/board.h>
+#include <kernel/pebble_tasks.h>
 #include <system/passert.h>
 
 // clang-format off

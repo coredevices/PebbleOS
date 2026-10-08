@@ -3,12 +3,13 @@
 
 #include "notifications_history.h"
 
-#include <kernel/pbl_malloc.h>
+#include <string.h>
+
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/string.h>
 
-#include <string.h>
+#include <kernel/pbl_malloc.h>
 
 static int prv_compare_entries(const NotificationHistoryEntry *a,
                                const NotificationHistoryEntry *b) {

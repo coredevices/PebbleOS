@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/timeline/calendar_layout_resources.h>
-
-#include <pbl/util/size.h>
-
 #include <stddef.h>
+
+#include <pbl/services/timeline/calendar_layout_resources.h>
+#include <pbl/util/size.h>
 
 _Static_assert(offsetof(CalendarIconImage, size) == offsetof(GDrawCommandImage, size), "");
 _Static_assert(sizeof(CalendarIconImage) == offsetof(GDrawCommandImage, command_list.commands), "");

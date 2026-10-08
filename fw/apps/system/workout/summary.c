@@ -2,16 +2,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "summary.h"
+
 #include "countdown.h"
 #include "selection.h"
 #include "utils.h"
+
+#include <pbl/services/i18n/i18n.h>
 
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/kino/kino_layer.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/i18n/i18n.h>
 
 #define BACKGROUND_COLOR PBL_IF_COLOR_ELSE(GColorYellow, GColorWhite)
 #define TEXT_COLOR       (gcolor_legible_over(BACKGROUND_COLOR))

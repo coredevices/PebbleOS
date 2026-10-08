@@ -1,9 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
+#include <pbl/util/hash.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/testing.h>
+
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics.h>
+#include <applib/graphics/raw_image.h>
 #include <applib/ui/action_menu_hierarchy.h>
 #include <applib/ui/action_menu_layer.h>
 #include <applib/ui/action_menu_window.h>
@@ -12,27 +20,20 @@
 #include <applib/ui/content_indicator.h>
 #include <applib/ui/content_indicator_private.h>
 #include <apps/system/settings/notifications_private.h>
+#include <clar.h>
 #include <resource/resource.h>
 #include <shell/system_theme.h>
 #include <system/passert.h>
-#include <applib/graphics/raw_image.h>
-#include <pbl/util/hash.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-
-#include <clar.h>
-
-#include <stdio.h>
-#include <pbl/util/testing.h>
 
 static GContext s_ctx;
 
 // Fakes
 /////////////////////
 
+#include "../../fixtures/load_test_resources.h"
+
 #include <fake_content_indicator.h>
 #include <fake_spi_flash.h>
-#include "../../fixtures/load_test_resources.h"
 
 GContext *graphics_context_get_current_context(void) {
   return &s_ctx;

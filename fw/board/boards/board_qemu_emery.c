@@ -1,15 +1,16 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <board/board.h>
 #include <pbl/kernel/irq.h>
 
+#include <board/board.h>
+
 // UART device for debug serial
-#include <pbl/drivers/uart/qemu.h>
-#include <pbl/drivers/speaker/qemu/audio.h>
 #include <pbl/drivers/backlight.h>
-#include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/drivers/hrm/qemu.h>
+#include <pbl/drivers/mic/qemu/mic_definitions.h>
+#include <pbl/drivers/speaker/qemu/audio.h>
+#include <pbl/drivers/uart/qemu.h>
 
 static UARTDeviceState s_dbg_uart_state = {};
 

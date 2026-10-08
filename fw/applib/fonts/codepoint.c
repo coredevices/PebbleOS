@@ -3,9 +3,9 @@
 
 #include "codepoint.h"
 
-#include <pbl/util/size.h>
-
 #include <stddef.h>
+
+#include <pbl/util/size.h>
 
 #define MAX_LATIN_CODEPOINT              0x02AF
 #define MIN_ARABIC_CODEPOINT             0x0600

@@ -3,10 +3,11 @@
 
 #include "worker.h"
 
-#include <process_management/worker_manager.h>
-#include <applib/event_service_client.h>
-#include <syscall/syscall.h>
 #include <pbl/logging/logging.h>
+
+#include <applib/event_service_client.h>
+#include <process_management/worker_manager.h>
+#include <syscall/syscall.h>
 
 // -------------------------------------------------------------------------------------------------
 static bool prv_handle_event(PebbleEvent *event) {

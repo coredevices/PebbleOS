@@ -4,12 +4,13 @@
 #include "test_alarm_common.h"
 
 // Stubs
+#include <pbl/util/units.h>
+
 #include <stubs_activity.h>
 #include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
 #include <stubs_clock.h>
 #include <stubs_pbl_malloc.h>
-#include <pbl/util/units.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables

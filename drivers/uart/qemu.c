@@ -3,9 +3,9 @@
 
 #include <pbl/drivers/uart.h>
 #include <pbl/drivers/uart/qemu.h>
+#include <pbl/kernel/irq.h>
 
 #include <board/board.h>
-#include <pbl/kernel/irq.h>
 #include <system/passert.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))

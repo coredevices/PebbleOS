@@ -2,15 +2,18 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "graphics_circle.h"
-#include "graphics_circle_private.h"
+
 #include "graphics.h"
+#include "graphics_circle_private.h"
 #include "graphics_private.h"
-#include <kernel/pbl_malloc.h>
-#include <system/passert.h>
+
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
-#include <pbl/util/trig.h>
 #include <pbl/util/testing.h>
+#include <pbl/util/trig.h>
+
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 #if PBL_COLOR
 static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {

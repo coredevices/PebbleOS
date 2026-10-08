@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include "gtypes.h"
 #include "gpath.h"
+#include "gtypes.h"
 
 //! @addtogroup Graphics
 //! @{

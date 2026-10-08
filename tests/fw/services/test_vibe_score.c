@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/services/vibes/vibe_score.h>
 
 #include <clar.h>
-#include <string.h>
 
 // stub
 #include <stubs_logging.h>

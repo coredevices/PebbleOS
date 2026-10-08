@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/util/circular_cache.h>
+#include <string.h>
 
 #include <pbl/util/assert.h>
-
-#include <string.h>
+#include <pbl/util/circular_cache.h>
 
 void circular_cache_init(CircularCache *c, uint8_t *buffer, size_t item_size, int total_items,
                          Comparator compare_cb) {

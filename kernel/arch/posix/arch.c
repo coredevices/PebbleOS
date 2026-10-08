@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pthread.h>
+#include "posix.h"
+
 #include <string.h>
 
 #include <kernel.h>
-#include "posix.h"
+#include <pthread.h>
 
 // The thread state is host memory, not firmware heap.
 #undef malloc

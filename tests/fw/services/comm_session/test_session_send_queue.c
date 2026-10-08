@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
 #include <pbl/services/comm_session/session_internal.h>
 #include <pbl/services/comm_session/session_send_queue.h>
 #include <pbl/util/math.h>
+
+#include <clar.h>
 
 extern void comm_session_send_queue_cleanup(CommSession *session);
 
@@ -13,7 +13,6 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <fake_kernel_malloc.h>
-
 #include <stubs_bt_lock.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>

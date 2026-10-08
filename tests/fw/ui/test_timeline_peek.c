@@ -1,35 +1,36 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/graphics/bitblt.h>
-#include <applib/graphics/framebuffer.h>
-#include <applib/graphics/graphics.h>
-#include <applib/ui/app_window_stack.h>
-#include <applib/ui/text_layer.h>
-#include <applib/ui/window_private.h>
-#include <popups/timeline/peek_private.h>
-#include <resource/resource.h>
-#include <resource/resource_ids.auto.h>
+#include <stdio.h>
+
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/buffer.h>
-#include <applib/graphics/raw_image.h>
 #include <pbl/util/hash.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/trig.h>
 
+#include <applib/graphics/bitblt.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/raw_image.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window_private.h>
 #include <clar.h>
-
-#include <stdio.h>
+#include <popups/timeline/peek_private.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
 
 // Fakes
 /////////////////////
 
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
+
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
-#include <pbl/services/time.h>
-#include <pbl/util/units.h>
 
 void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs) {
   snprintf(buffer, buf_size, "In 5 minutes");

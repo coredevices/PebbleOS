@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "weather_types.h"
+
 #include "resource_ids.pin.h"
 
 static int weather_type_slot_index(WeatherType weather_type) {

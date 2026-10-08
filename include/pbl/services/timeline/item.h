@@ -6,13 +6,13 @@
 #include "attribute.h"
 #include "layout_layer.h"
 
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/uuid.h>
-
-#include <time.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <time.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 /**
  * @defgroup services_timeline_item Timeline items

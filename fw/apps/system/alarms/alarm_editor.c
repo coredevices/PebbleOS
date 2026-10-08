@@ -3,6 +3,14 @@
 
 #include "alarm_editor.h"
 
+#include <string.h>
+
+#include <pbl/services/activity/activity.h>
+#include <pbl/services/alarms/alarm.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/util/size.h>
+#include <pbl/util/units.h>
+
 #include <applib/pbl_std/timelocal.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/day_picker.h>
@@ -11,15 +19,8 @@
 #include <apps/system/settings/option_menu.h>
 #include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/activity/activity.h>
-#include <pbl/services/alarms/alarm.h>
 #include <shell/prefs.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
-
-#include <string.h>
-#include <pbl/util/units.h>
 
 typedef struct {
   OptionMenu *alarm_type_menu;

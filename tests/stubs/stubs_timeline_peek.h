@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include <popups/timeline/peek.h>
-#include <pbl/services/timeline/peek.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/timeline/peek.h>
 #include <pbl/util/units.h>
+
+#include <popups/timeline/peek.h>
 
 unsigned int PBL_WEAK timeline_peek_get_concurrent_height(unsigned int num_concurrent) {
   return 0;

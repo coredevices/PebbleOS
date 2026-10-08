@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
-#include <comm/ble/gap_le_advert.h>
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <pbl/bluetooth/types.h>
+
+#include <comm/ble/gap_le_advert.h>
 
 //! Byte buffers mirroring what the controller would hold. Sized to the maximum
 //! advertising report length, matching PBL_BT_AD_REPORT_DATA_MAX_LENGTH.

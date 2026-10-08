@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/btutil/bt_device.h>
-#include <pbl/bluetooth/types.h>
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+
+#include <pbl/bluetooth/types.h>
+#include <pbl/btutil/bt_device.h>
 
 struct pbl_bt_device bt_device_init_with_address(struct pbl_bt_addr address, bool is_random) {
   struct pbl_bt_device_internal device = {

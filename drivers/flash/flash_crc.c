@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+
+#include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/logging/logging.h>
 
 #include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
-#include <pbl/crc/crc.h>
-
-#include <stdint.h>
 
 PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 

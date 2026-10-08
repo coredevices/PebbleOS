@@ -9,6 +9,7 @@
 //! to customize the title and icon of certain stock apps, like the "Sports" app.
 
 #include "pebble_process_md.h"
+
 #include <applib/graphics/gtypes.h>
 #include <process_management/app_install_types.h>
 

@@ -3,21 +3,19 @@
 
 #include "fake_session.h"
 
-#include <comm/bt_lock.h>
+#include <string.h>
 
-#include <kernel/pbl_malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/circular_buffer.h>
-#include <system/hexdump.h>
-
-#include <clar_asserts.h>
-
 #include <pbl/util/list.h>
 
-#include <string.h>
+#include <clar_asserts.h>
+#include <comm/bt_lock.h>
+#include <kernel/pbl_malloc.h>
+#include <system/hexdump.h>
 
 extern void fake_system_task_callbacks_invoke_pending(void);
 

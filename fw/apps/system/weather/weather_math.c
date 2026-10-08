@@ -2,9 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "weather_math.h"
-#include <applib/ui/animation_interpolate.h>
+
 #include <string.h>
 #include <time.h>
+
+#include <applib/ui/animation_interpolate.h>
 
 int64_t weather_interpolate_moook_soft1(int32_t n, int64_t from, int64_t to) {
   return interpolate_moook_soft(n, from, to, 1);

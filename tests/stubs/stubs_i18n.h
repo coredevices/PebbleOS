@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/kernel/compiler.h>
-
 #include <string.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/i18n/i18n.h>
 
 const char *PBL_WEAK i18n_get(const char *msgid, const void *owner) {
   // If a string wasn't found, we want to return the original string.

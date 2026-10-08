@@ -1,27 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
-#include <comm/ble/gap_le_connect.h>
-#include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gap_le_task.h>
-
-#include <kernel/events.h>
+#include <pbl/bluetooth/sm_types.h>
+#include <pbl/btutil/bt_device.h>
 #include <pbl/services/analytics/analytics.h>
 
 #include <clar.h>
-
-#include <pbl/bluetooth/bonding_sync.h>
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/btutil/bt_device.h>
+#include <comm/ble/gap_le_connect.h>
+#include <comm/ble/gap_le_connection.h>
+#include <comm/ble/gap_le_task.h>
+#include <kernel/events.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
 
-#include <fake_events.h>
 #include <fake_GAPAPI.h>
-#include <fake_bluetooth_persistent_storage.h>
 #include <fake_HCIAPI.h>
+#include <fake_bluetooth_persistent_storage.h>
+#include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_system_task.h>
@@ -29,10 +27,10 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
+#include <stubs_bluetooth_analytics.h>
 #include <stubs_bluetopia_interface.h>
 #include <stubs_bt_lock.h>
 #include <stubs_gap_le_advert.h>
-#include <stubs_bluetooth_analytics.h>
 #include <stubs_gatt_client_discovery.h>
 #include <stubs_gatt_client_subscriptions.h>
 #include <stubs_hexdump.h>

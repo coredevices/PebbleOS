@@ -3,14 +3,14 @@
 
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <pbl/kernel/compiler.h>
 #include <pbl/util/heap.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <pbl/kernel/compiler.h>
 
 typedef struct {
   ListNode list_node;

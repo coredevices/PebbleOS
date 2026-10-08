@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
-
 #include <stdbool.h>
+
+#include <pbl/bluetooth/types.h>
 
 /**
  * @defgroup btutil Bluetooth utilities

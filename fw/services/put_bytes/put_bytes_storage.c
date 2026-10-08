@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/logging/logging.h>
 #include <pbl/services/put_bytes/put_bytes_storage_internal.h>
+#include <pbl/util/size.h>
 
 #include <kernel/pbl_malloc.h>
-#include <pbl/logging/logging.h>
 #include <system/passert.h>
-#include <pbl/util/size.h>
 
 PBL_LOG_MODULE_DECLARE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
 

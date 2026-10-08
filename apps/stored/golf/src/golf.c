@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 //! The app is driven by pebble protocol app_messages, used indirectly through app_sync.
-#include <pebble.h>
-
 #include "golf_resources.h"
+
+#include <pebble.h>
 
 //! TODO: Fixme once i18n support is available for 3rd party apps
 #define i18n_get(a, b) a

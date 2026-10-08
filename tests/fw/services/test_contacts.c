@@ -1,19 +1,18 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/attributes_address.h>
 #include <pbl/services/contacts/contacts.h>
-#include <pbl/services/blob_db/contacts_db.h>
-
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/size.h>
+
+#include <clar.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include <fake_spi_flash.h>
 #include <fake_rtc.h>
+#include <fake_spi_flash.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -21,9 +20,9 @@
 #include <stubs_fonts.h>
 #include <stubs_hexdump.h>
 #include <stubs_layout_layer.h>
-#include <stubs_passert.h>
 #include <stubs_logging.h>
 #include <stubs_mutex.h>
+#include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>
 #include <stubs_pebble_tasks.h>
 #include <stubs_rand_ptr.h>

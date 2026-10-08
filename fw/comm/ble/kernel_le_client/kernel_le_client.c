@@ -16,13 +16,8 @@
 #include <comm/ble/kernel_le_client/test/test_definition.h>
 #endif
 
-#include <kernel/event_loop.h>
-#include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
-
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 
 #include <comm/ble/gap_le_connect.h>
 #include <comm/ble/gap_le_slave_reconnect.h>
@@ -30,6 +25,10 @@
 #include <comm/ble/gatt_client_discovery.h>
 #include <comm/ble/gatt_client_operations.h>
 #include <comm/ble/gatt_client_subscriptions.h>
+#include <kernel/event_loop.h>
+#include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
+#include <system/passert.h>
 
 #define MAX_SERVICE_INSTANCES (8)
 

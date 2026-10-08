@@ -3,9 +3,9 @@
 
 #include "segment.h"
 
-#include <system/passert.h>
-
 #include <stdalign.h>
+
+#include <system/passert.h>
 
 // Remove once the Bamboo build agents build unit tests with a more
 // C11-compliant compiler (i.e. clang >= 3.5)

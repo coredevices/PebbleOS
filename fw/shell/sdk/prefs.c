@@ -1,16 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <applib/preferred_content_size.h>
-#include <apps/system_app_ids.h>
-#include <board/board.h>
 #include <pbl/kernel/mutex.h>
-#include <process_management/app_install_manager.h>
-#include <process_management/process_manager.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/insights_settings.h>
 #include <pbl/services/settings/settings_file.h>
+
+#include <applib/preferred_content_size.h>
+#include <apps/system_app_ids.h>
+#include <board/board.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/process_manager.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
 

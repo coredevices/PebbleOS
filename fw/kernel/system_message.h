@@ -3,9 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/firmware_update.h>
-
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/firmware_update.h>
 
 typedef enum SystemMessageType {
   SysMsgFirmwareAvailable_Deprecated = 0x00,

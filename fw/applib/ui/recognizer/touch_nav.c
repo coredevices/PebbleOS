@@ -10,16 +10,17 @@
 #include "swipe.h"
 #include "tap.h"
 
-#include <applib/graphics/gtypes.h>
-#include <applib/ui/layer.h>
+#include <stddef.h>
+
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
+
+#include <applib/graphics/gtypes.h>
+#include <applib/ui/layer.h>
 #include <syscall/syscall.h>
 #include <system/passert.h>
-
-#include <stddef.h>
 
 // All four directions are accepted by the system swipe recognizer; the bridge maps each one.
 #define TOUCH_NAV_SWIPE_MASK \

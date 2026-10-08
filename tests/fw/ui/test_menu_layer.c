@@ -1,27 +1,27 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <clar.h>
-#include <pebble_asserts.h>
+#include <pbl/drivers/rtc.h>
 
+#include <applib/ui/animation_private.h>
+#include <applib/ui/content_indicator_private.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/menu_layer_private.h>
-#include <applib/ui/scroll_layer_private.h>
-#include <applib/ui/content_indicator_private.h>
+#include <applib/ui/property_animation_private.h>
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_list.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
-
-#include <applib/ui/animation_private.h>
-#include <applib/ui/property_animation_private.h>
-
+#include <applib/ui/scroll_layer_private.h>
+#include <clar.h>
 #include <fake_app_timer.h>
 #include <fake_rtc.h>
-#include <pbl/drivers/rtc.h>
+#include <pebble_asserts.h>
 
 // Stubs
 /////////////////////
+#include <pbl/util/testing.h>
+
 #include <stubs_app_state.h>
 #include <stubs_click.h>
 #include <stubs_graphics.h>
@@ -30,11 +30,10 @@
 #include <stubs_passert.h>
 #include <stubs_pbl_malloc.h>
 #include <stubs_pebble_tasks.h>
-#include <stubs_ui_window.h>
 #include <stubs_process_manager.h>
+#include <stubs_ui_window.h>
 #include <stubs_unobstructed_area.h>
 #include <stubs_vibes.h>
-#include <pbl/util/testing.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH). menu_layer.c resolves the per-task touch-nav state

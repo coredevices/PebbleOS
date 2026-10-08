@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <pbl/services/weather/weather_service.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/services/weather/weather_service.h>
 
 WeatherLocationForecast *PBL_WEAK weather_service_create_default_forecast(void) {
   return NULL;

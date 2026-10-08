@@ -1,18 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+
+#include <pbl/logging/logging.h>
+#include <pbl/services/analytics/analytics.h>
+#include <pbl/services/app_inbox_service.h>
+#include <pbl/services/comm_session/session.h>
+#include <pbl/services/comm_session/session_receive_router.h>
+#include <pbl/util/math.h>
+
 #include <applib/app_message/app_message_internal.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_receive_router.h>
-#include <pbl/services/app_inbox_service.h>
-#include <pbl/logging/logging.h>
-#include <pbl/util/math.h>
-
-#include <stdint.h>
 
 PBL_LOG_MODULE_DECLARE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
 

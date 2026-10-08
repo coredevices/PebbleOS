@@ -2,26 +2,29 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "forecast_list.h"
-#include <pbl/services/i18n/i18n.h>
+
 #include "expanded_view.h"
-#include <applib/ui/app_window_stack.h>
-#include <applib/ui/status_bar_layer.h> // status-bar height/offset constants (top time)
 #include "weather_math.h"
+
+#include <time.h>
+
+#include <pbl/kernel/compiler.h>
 #include <pbl/services/clock.h> // clock_copy_time_string — notification-style top time
-#include <applib/graphics/gdraw_command_transforms.h>
-#include <applib/graphics/gdraw_command.h>
-#include <applib/graphics/gdraw_command_list.h>
-#include <applib/graphics/gdraw_command_image.h>
-#include <applib/graphics/gpath.h> // octagonal animated-sun body (matches static PDC)
-#include <applib/applib_malloc.auto.h>
-#include <applib/ui/animation.h>
-#include <applib/ui/animation_interpolate.h>
-#include <applib/ui/animation_timing.h>
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math_fixed.h>
 #include <pbl/util/trig.h>
 
-#include <time.h>
-#include <pbl/kernel/compiler.h>
+#include <applib/applib_malloc.auto.h>
+#include <applib/graphics/gdraw_command.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gdraw_command_list.h>
+#include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/graphics/gpath.h> // octagonal animated-sun body (matches static PDC)
+#include <applib/ui/animation.h>
+#include <applib/ui/animation_interpolate.h>
+#include <applib/ui/animation_timing.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/status_bar_layer.h> // status-bar height/offset constants (top time)
 
 // The redesigned animated 5-day forecast — today header (large animated condition icon +
 // current temp / date / phrase), the day fan, and the hi/lo dot graph — renders on the

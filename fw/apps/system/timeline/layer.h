@@ -6,14 +6,15 @@
 #include "common.h"
 #include "peek_layer.h"
 
-#include <applib/graphics/text.h>
-#include <applib/ui/animation.h>
-#include <applib/ui/layer.h>
+#include <stdbool.h>
+
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/services/timeline/timeline_layout_animations.h>
 
-#include <stdbool.h>
+#include <applib/graphics/text.h>
+#include <applib/ui/animation.h>
+#include <applib/ui/layer.h>
 
 #define TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER (TIMELINE_NUM_VISIBLE_ITEMS + 2)
 

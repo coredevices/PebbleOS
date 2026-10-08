@@ -3,12 +3,13 @@
 
 #include "selection_layer.h"
 
+#include <pbl/logging/logging.h>
+
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
 #include <process_management/process_manager.h>
 #include <shell/system_theme.h>
-#include <pbl/logging/logging.h>
 
 // Look and feel
 #define DEFAULT_CELL_PADDING   10

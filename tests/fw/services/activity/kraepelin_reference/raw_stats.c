@@ -26,6 +26,7 @@ Pebble App project.
 */
 
 #include "raw_stats.h"
+
 #include <pbl/logging/logging.h>
 
 /* RAW STATISTICS */

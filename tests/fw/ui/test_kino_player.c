@@ -3,12 +3,11 @@
 
 #include <applib/ui/kino/kino_player.h>
 #include <applib/ui/kino/kino_reel.h>
+#include <applib/ui/kino/kino_reel_custom.h>
 #include <applib/ui/kino/kino_reel_gbitmap.h>
 #include <applib/ui/kino/kino_reel_gbitmap_sequence.h>
 #include <applib/ui/kino/kino_reel_pdci.h>
 #include <applib/ui/kino/kino_reel_pdcs.h>
-#include <applib/ui/kino/kino_reel_custom.h>
-
 #include <clar.h>
 
 // Fakes

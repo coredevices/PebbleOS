@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "bitblt.h"
+
 #include "bitblt_private.h"
 
-#include <pbl/util/math.h>
-
 #include <pbl/util/bitops.h>
+#include <pbl/util/math.h>
 
 void bitblt_into_1bit_setup_compositing_mode(GCompOp *compositing_mode, GColor tint_color) {
   if ((*compositing_mode == GCompOpTint) || (*compositing_mode == GCompOpTintLuminance)) {

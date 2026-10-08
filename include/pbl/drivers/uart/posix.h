@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <board/board.h>
 #include <pbl/drivers/uart.h>
+
+#include <board/board.h>
 
 /**
  * @defgroup drivers_uart_posix POSIX

@@ -6,6 +6,14 @@
 #include "alarm_detail.h"
 #include "alarm_editor.h"
 
+#include <string.h>
+
+#include <pbl/services/alarms/alarm.h>
+#include <pbl/services/clock.h>
+#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/timeline/timeline.h>
+#include <pbl/util/units.h>
+
 #include <applib/app.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/app_window_stack.h>
@@ -16,15 +24,8 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/alarms/alarm.h>
-#include <pbl/services/timeline/timeline.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
-#include <pbl/util/units.h>
-
-#include <string.h>
 
 // Alarms app versions
 // 0: Initial version or never opened

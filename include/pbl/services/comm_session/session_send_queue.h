@@ -3,10 +3,10 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <pbl/services/comm_session/session.h>
 #include <pbl/util/list.h>
-
-#include <stdint.h>
 
 /**
  * @defgroup services_comm_session_session_send_queue Send queue

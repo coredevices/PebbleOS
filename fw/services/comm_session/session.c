@@ -1,33 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/bluetooth/comm.h>
+#include <stdint.h>
 
+#include <pbl/bluetooth/comm.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_analytics.h>
 #include <pbl/services/comm_session/session_internal.h>
+#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/services/comm_session/session_send_buffer.h>
 #include <pbl/services/comm_session/session_transport.h>
+#include <pbl/services/data_logging/dls_private.h>
+#include <pbl/services/system_task.h>
 
 #include <applib/app_comm.h>
 #include <comm/ble/kernel_le_client/app_launch/app_launch.h>
 #include <comm/bt_lock.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/comm_session/session_remote_version.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
-
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-
 #include <process_management/app_manager.h>
-
-#include <pbl/services/system_task.h>
-#include <pbl/services/data_logging/dls_private.h>
-
-#include <pbl/logging/logging.h>
-#include <system/passert.h>
 #include <syscall/syscall_internal.h>
-
-#include <stdint.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 

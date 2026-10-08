@@ -4,14 +4,13 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <cmsis_core.h>
-
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/mcu/mpu.h>
 
+#include <cmsis_core.h>
 #include <kernel.h>
-#include <pbl/kernel/compiler.h>
 
 #ifdef CONFIG_CPU_HAS_FPU
 #define HAS_FPU 1

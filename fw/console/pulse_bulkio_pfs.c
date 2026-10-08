@@ -3,14 +3,15 @@
 
 #include "pulse_bulkio_domain_handler.h"
 
-#include <pbl/services/filesystem/pfs.h>
-#include <system/passert.h>
-#include <system/status_codes.h>
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/math.h>
-
 #include <stdint.h>
 #include <string.h>
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/filesystem/pfs.h>
+#include <pbl/util/math.h>
+
+#include <system/passert.h>
+#include <system/status_codes.h>
 
 typedef struct PBL_PACKED PFSStatResp {
   uint8_t flags;

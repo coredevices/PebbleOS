@@ -2,26 +2,29 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "scroll_layer.h"
+
 #include "scroll_layer_private.h"
 
+#include <pbl/util/math.h>
+
 #include <applib/applib_malloc.auto.h>
-#include <applib/graphics/gtypes.h>
 #include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
 #include <applib/ui/content_indicator_private.h>
 #include <applib/ui/shadows.h>
 #include <applib/ui/window.h>
 #include <process_management/app_manager.h>
 #include <system/passert.h>
-#include <pbl/util/math.h>
 
 #ifdef CONFIG_TOUCH
-#include <applib/ui/recognizer/touch_nav.h>
-#include <applib/ui/recognizer/recognizer_manager.h>
-#include <applib/ui/recognizer/pan.h>
-#include <applib/ui/recognizer/swipe.h>
-#include <kernel/pebble_tasks.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/util/testing.h>
+
+#include <applib/ui/recognizer/pan.h>
+#include <applib/ui/recognizer/recognizer_manager.h>
+#include <applib/ui/recognizer/swipe.h>
+#include <applib/ui/recognizer/touch_nav.h>
+#include <kernel/pebble_tasks.h>
 
 // Provided by the owning task; forward-declared (as in menu_layer.c) to avoid pulling kernel
 // app-state / modal-manager headers into this applib translation unit.

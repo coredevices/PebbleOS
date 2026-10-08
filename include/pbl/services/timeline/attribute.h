@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include <pbl/util/string_list.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <pbl/util/string_list.h>
 
 /**
  * @defgroup services_timeline_attribute Timeline attributes
