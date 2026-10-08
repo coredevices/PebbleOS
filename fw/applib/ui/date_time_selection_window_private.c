@@ -10,8 +10,6 @@
 
 #include <stdio.h>
 
-#pragma GCC diagnostic ignored "-Wformat-truncation"
-
 static const int MIN_SELECTABLE_YEAR = 2010;
 static const int MAX_SELECTABLE_YEAR = 2037; // Work around Y2038 problem
 
@@ -58,7 +56,7 @@ int date_time_selection_step_year(int year, int delta) {
 char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *buf) {
   switch (index) {
     case TimeInputIndexHour: {
-      unsigned hour = data->hour;
+      unsigned hour = data->hour % 24;
       if (!clock_is_24h_style()) {
         hour = hour % 12;
         if (hour == 0) {
@@ -69,7 +67,7 @@ char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *b
       return buf;
     }
     case TimeInputIndexMinute:
-      snprintf(buf, 3, "%02u", data->minute);
+      snprintf(buf, 3, "%02u", data->minute % 60);
       return buf;
     case TimeInputIndexAMPM: // We should only get this in 12h style
       if (data->hour < 12) {
