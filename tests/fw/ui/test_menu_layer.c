@@ -587,9 +587,7 @@ static void prv_menu_cell_is_part_of_hierarchy_draw_row(GContext *ctx, const Lay
 
 int prv_num_sublayers(const Layer *l) {
   int result = 0;
-  Layer *child = l->first_child;
-  while (l) {
-    l = l->next_sibling;
+  for (const Layer *child = l->first_child; child; child = child->next_sibling) {
     result++;
   }
   return result;
@@ -598,8 +596,8 @@ int prv_num_sublayers(const Layer *l) {
 void test_menu_layer__menu_cell_is_part_of_hierarchy(void) {
   menu_layer_init(&s_menu_layer_hierarchy, &GRect(10, 10, 100, 180));
   Layer *layer = &s_menu_layer_hierarchy.scroll_layer.content_sublayer;
-  // two layers (inverter + shadow)
-  cl_assert_equal_i(2, prv_num_sublayers(layer));
+  // just the inverter
+  cl_assert_equal_i(1, prv_num_sublayers(layer));
   menu_layer_set_callbacks(&s_menu_layer_hierarchy, NULL,
                            &(MenuLayerCallbacks){
                              .draw_row = prv_menu_cell_is_part_of_hierarchy_draw_row,
@@ -607,9 +605,9 @@ void test_menu_layer__menu_cell_is_part_of_hierarchy(void) {
                            });
   menu_layer_reload_data(&s_menu_layer_hierarchy);
   GContext ctx = {};
-  cl_assert_equal_i(2, prv_num_sublayers(layer));
+  cl_assert_equal_i(1, prv_num_sublayers(layer));
   layer->update_proc(layer, &ctx);
-  cl_assert_equal_i(2, prv_num_sublayers(layer));
+  cl_assert_equal_i(1, prv_num_sublayers(layer));
 }
 
 void test_menu_layer__center_focused_updates_height_on_reload(void) {
