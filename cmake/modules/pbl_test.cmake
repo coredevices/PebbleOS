@@ -23,6 +23,7 @@ set(PBL_TEST_PLATFORMS default obelix gabbro asterix)
 # build never sees.
 set(PBL_TEST_C_FLAGS
   -std=c11
+  -Werror=gnu-variable-sized-type-not-at-end
   -Wall
   -Werror
   -Wno-error=unused-variable
