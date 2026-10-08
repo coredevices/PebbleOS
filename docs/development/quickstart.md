@@ -112,8 +112,9 @@ There are three ways to get the `.pbz` onto a watch:
    starts the update and shows its progress on the watch card.
 2. **Send it with the `pebble` tool.** With the
    [Developer Connection](https://developer.repebble.com/guides/tools-and-resources/developer-connection/)
-   enabled in the Pebble mobile app, the SDK's `pebble` tool installs the
-   bundle over Bluetooth through the phone:
+   enabled in the Pebble mobile app, the
+   [`pebble` tool](https://developer.repebble.com/sdk/) from the Pebble SDK
+   installs the bundle over Bluetooth through the phone:
 
    ```shell
    pebble fw install build-asterix/normal_asterix_<version>.pbz --phone <phone-ip>
