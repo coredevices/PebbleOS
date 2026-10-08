@@ -151,6 +151,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__initialize(void) {
   s_house_path = gpath_create(&s_house_path_info);
   s_bolt_path = gpath_create(&s_bolt_path_info);
   s_duplicates_path = gpath_create(&s_duplicates_path_info);
+  s_single_duplicate_path = gpath_create(&s_single_duplicate_path_info);
   s_crossing_path = gpath_create(&s_crossing_path_info);
   s_infinite_path = gpath_create(&s_infinite_path_info);
   s_aa_clipping_path = gpath_create(&s_aa_clipping_path_info);
@@ -162,6 +163,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__cleanup(void) {
   gpath_destroy(s_house_path);
   gpath_destroy(s_bolt_path);
   gpath_destroy(s_duplicates_path);
+  gpath_destroy(s_single_duplicate_path);
   gpath_destroy(s_infinite_path);
   gpath_destroy(s_crossing_path);
   gpath_destroy(s_aa_clipping_path);
