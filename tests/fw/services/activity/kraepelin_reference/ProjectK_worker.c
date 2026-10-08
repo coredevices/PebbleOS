@@ -37,15 +37,15 @@ static const int16_t N_SMP_EPOCH =
 static const int16_t FFT_PWR_TWO = 7;    // 2^7 = 128 elements > 125 to allow fft
 static const int16_t SIZE_EPOCH = 128;   // 2^7 = 128 points, zero padding by 13 samples
 static const int16_t SIZE_BLK_HEAD = 16; // # of bytes in head, all non-acti data including timemood
-static const int16_t SIZE_BLK_TIME = 4;  // # of bytes for storing timestamp
 static const int16_t SIZE_SUMM = 2;      // number of bytes in individual summary
+static const int16_t N_SUMM_BLK = 120;   // 120, number of summaries in a appmessage block
+                                         // ^-->NEEDS TO BE DIVISIBLE by N_STEPC_BLK
+#if PEBBLE_APP
+static const int16_t SIZE_BLK_TIME = 4; // # of bytes for storing timestamp
 static const int16_t N_BLK_PERSIST =
     12; // 12 < 14, # blocks, ie: # key-value pairs in persist storage
-static const int16_t N_SUMM_BLK = 120; // 120, number of summaries in a appmessage block
-                                       // ^-->NEEDS TO BE DIVISIBLE by N_STEPC_BLK
-
-static const int16_t N_STEPC_BLK = 10;         // 4 number of step count recording per block
-static const int16_t N_MIN_VMC_0_NONWEAR = 60; // 4 number of step count recording per block
+static const int16_t N_STEPC_BLK = 10; // 4 number of step count recording per block
+#endif
 
 /* METRIC MANIPULATION */
 static const int16_t LVL_SCL = 8;   // the number of milligs between discrete levels
@@ -56,15 +56,7 @@ static const uint8_t N_ANG = 16;    // for orient_encode, # of angles possible c
  * overflow boundary for 16 bit *signed* ints */
 static const int16_t FFT_SCL =
     2; // 125*500/2 = 25000 prevent overflow on the transforms, assuming +-250
-static const int16_t MAX_VM = 1000;   // make smaller to prevent overflow on the FFT
-static const uint32_t VMCPM_SCL = 10; // scaled needed to prevent overflow in adding
-static const uint32_t PIM_LVL_THRES =
-    5; /* mean # levels thres PIM, 2 lvl -> 5*0.008G = 0.056G
-        * we do this to match the actigraph, and this seems to be the *minimum* level (==3)that
-        * rejects noise when the pebble is perfectly still */
-
-/* METRIC STORAGE SCALING*/
-static const uint32_t STEPC_SCL = 25; // step resolution, scale count to stuff into uint8_t
+static const int16_t MAX_VM = 1000; // make smaller to prevent overflow on the FFT
 
 /* AXIS AND ORIENTATION VARIABLES */
 static const int16_t N_AXIS = 3;
@@ -72,8 +64,9 @@ static const int16_t N_AXIS = 3;
 /* BEHAVIOUR CONSTS */
 // REMEMBER, CURRENTLY THIS IS ONLY CHECKED ONCE PER EACH BLOCK, SO IT WANT
 // CHECKED MORE OFTEN THEN MUST PUT IN MINUTE HANDLER!!
+#if PEBBLE_APP
 static const uint16_t SUMM_BTWN_TRANSMIT_SERVER = 120; // 300 = 5 hours
-static const uint16_t SUMM_BTWN_WEAR_REMINDER = 60;    // 60 = 1 hours
+#endif
 
 /* ARRAY POINTERS : storage and work arrays */
 static int16_t *pt_ary[3];

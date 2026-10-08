@@ -37,7 +37,6 @@ static char s_test_file_a[TEST_FILE_A_SIZE];
 
 // b - 0K file for appending
 static const char *const TEST_FILE_B_NAME = "b";
-static const size_t TEST_FILE_B_SIZE = 0;
 static const size_t TEST_FILE_B_APPEND_SIZE = 8000;
 static char s_test_file_b[TEST_FILE_B_APPEND_SIZE];
 
