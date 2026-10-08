@@ -32,7 +32,7 @@ function(pbl_link_native)
   )
   target_sources(pebbleos PRIVATE $<TARGET_OBJECTS:pbl_host>)
 
-  if(APPLE)
+  if(APPLE OR EMSCRIPTEN)
     target_link_libraries(pebbleos PRIVATE pbl_interface ${static_libs} ${PBL_LIBC_LIBS})
   else()
     target_link_libraries(pebbleos PRIVATE pbl_interface
@@ -42,7 +42,22 @@ function(pbl_link_native)
   target_link_options(pebbleos PRIVATE ${link_options})
   # As on the target, code nothing calls is dropped, along with what only it
   # refers to.
-  if(APPLE)
+  if(EMSCRIPTEN)
+    # A page: kernel threads are fibers, which need Asyncify, and the system
+    # resources are preloaded where the flash driver looks for them.
+    set_target_properties(pebbleos PROPERTIES SUFFIX .html)
+    target_link_options(pebbleos PRIVATE
+      -sASYNCIFY
+      -sASYNCIFY_STACK_SIZE=65536
+      -sSTACK_SIZE=1048576
+      -sINITIAL_MEMORY=134217728
+      -sALLOW_MEMORY_GROWTH
+      --preload-file ${PBL_PBPACK}@/system_resources.pbpack
+      --shell-file ${PBL_BASE}/soc/posix/emscripten/shell.html
+    )
+    set_property(TARGET pebbleos APPEND PROPERTY LINK_DEPENDS
+      ${PBL_PBPACK} ${PBL_BASE}/soc/posix/emscripten/shell.html)
+  elseif(APPLE)
     # Packed structs hold pointers at unaligned offsets, which chained fixups
     # cannot rebase.
     target_link_options(pebbleos PRIVATE -Wl,-dead_strip -Wl,-no_fixup_chains)

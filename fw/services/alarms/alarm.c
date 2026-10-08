@@ -338,7 +338,8 @@ static void prv_assign_alarm(Alarm *alarm, struct pbl_cron_job *cron) {
   s_next_alarm = *alarm;
   s_next_alarm_time = pbl_cron_job_schedule(&s_next_alarm_cron);
   PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)", alarm->id,
-               alarm->config.hour, alarm->config.minute, s_next_alarm_time, alarm->config.is_smart);
+               alarm->config.hour, alarm->config.minute, (long)s_next_alarm_time,
+               alarm->config.is_smart);
 }
 
 // ----------------------------------------------------------------------------------------------

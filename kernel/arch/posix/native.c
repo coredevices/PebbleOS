@@ -25,13 +25,18 @@ void posix_add_zombie(pthread_t tid) {
   pthread_detach(tid);
 }
 
-void pbl_posix_boot(int (*entry)(void)) {
+static void *prv_boot(void *arg) {
+  int (*entry)(void) = arg;
   pthread_mutex_lock(&posix_cpu);
   pbl_soc_early_init();
   entry();
   KERNEL_ASSERT(false);
-  for (;;) {
-  }
+  return NULL;
+}
+
+void pbl_posix_start(int (*entry)(void)) {
+  pthread_t tid;
+  pthread_create(&tid, NULL, prv_boot, (void *)entry);
 }
 
 void pbl_posix_irq_run(void (*isr)(void *), void *arg) {

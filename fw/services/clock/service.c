@@ -73,7 +73,7 @@ typedef struct PBL_PACKED {
   char region_name[TIMEZONE_NAME_LENGTH]; // timezone name string
 } TimezoneCBData;
 
-#if !UNITTEST && __SIZEOF_POINTER__ == 4
+#if !UNITTEST && !defined(CONFIG_LIBC_HOST)
 _Static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
 #endif
 
@@ -549,7 +549,7 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
       i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
       strncpy(number_buffer, "", number_buffer_size);
     } else if (difference <= PBL_SEC_PER_HOUR) {
-      snprintf(number_buffer, number_buffer_size, "%ld", difference / PBL_SEC_PER_MIN);
+      snprintf(number_buffer, number_buffer_size, "%ld", (long)(difference / PBL_SEC_PER_MIN));
       i18n_get_with_buffer(" MIN. TO", word_buffer, word_buffer_size);
     } else {
       prv_copy_time_string_timestamp(number_buffer, number_buffer_size, word_buffer,

@@ -291,7 +291,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
   time_t timestamp = timeline_item_get_tz_timestamp(&hdr->common);
   time_t end_timestamp = timestamp + hdr->common.duration * PBL_SEC_PER_MIN;
   if (end_timestamp < (int)(now - storage->max_item_age)) {
-    PBL_LOG_WRN("Rejecting stale timeline item %ld seconds old", now - timestamp);
+    PBL_LOG_WRN("Rejecting stale timeline item %ld seconds old", (long)(now - timestamp));
     return E_INVALID_OPERATION;
   }
 

@@ -6,3 +6,11 @@ config ARCH_POSIX
 	help
 	  Kernel threads run as POSIX threads of a host process, one at a
 	  time. Selected by the SoC.
+
+config ARCH_POSIX_FIBERS
+	bool
+	depends on ARCH_POSIX
+	help
+	  Kernel threads are Emscripten fibers on a single host thread,
+	  which runs the kernel until it idles. Selected by hosts without
+	  threads to spare, such as a browser.

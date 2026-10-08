@@ -164,8 +164,8 @@ static void timer_callback(void *data) {
     // Keep the logging to detect large time jumps (multiple minutes skipped)
     const time_t now_ts = rtc_get_ticks() / PBL_TICK_HZ;
     if ((now_ts - s_last_minute_fire_ts) > MISSING_MINUTE_CB_LOG_THRESHOLD_S) {
-      PBL_LOG_WRN("Large time jump detected. Previous ts: %lu, Now ts: %lu", s_last_minute_fire_ts,
-                  now_ts);
+      PBL_LOG_WRN("Large time jump detected. Previous ts: %lu, Now ts: %lu",
+                  (long)s_last_minute_fire_ts, (long)now_ts);
     }
     s_last_minute_fire_ts = now_ts;
 

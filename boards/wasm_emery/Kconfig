@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_WASM_EMERY
+    bool
+    default y
+
+# The same virtual watch as native_emery, running in a browser.
+config BOARD_NATIVE_EMERY
+    bool
+    default y

@@ -13,4 +13,11 @@
 #undef PBL_EXTERNALLY_VISIBLE_IMPL
 #define PBL_EXTERNALLY_VISIBLE_IMPL
 
+#ifdef __EMSCRIPTEN__
+// WebAssembly has no return address to read; Emscripten's emulation walks
+// the JavaScript stack, slowly.
+#undef PBL_RETURN_ADDRESS_IMPL
+#define PBL_RETURN_ADDRESS_IMPL(level) ((void *)0)
+#endif
+
 /** @endcond */

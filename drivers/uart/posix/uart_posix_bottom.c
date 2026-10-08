@@ -212,6 +212,10 @@ void uart_posix_bottom_start(enum uart_posix_channel id) {
     prv_tcp_listen(id);
     prv_start_thread(prv_tcp_thread, (void *)(intptr_t)id);
   } else if (id == UART_POSIX_CONSOLE) {
+#ifdef __EMSCRIPTEN__
+    // A page has no terminal to read.
+    return;
+#endif
     prv_terminal_raw();
     prv_start_thread(prv_terminal_thread, NULL);
   }

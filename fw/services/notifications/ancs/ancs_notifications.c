@@ -215,7 +215,7 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   // PBL-12726: Added a check to see if the timstamp is coming from a location based reminder
   // This work-around is causing more trouble than the problem it was solving...
   if (timestamp < (now - MAXIMUM_NOTIFY_TIME) && timestamp != INVALID_TIME) {
-    PBL_LOG_DBG("Not presenting stale notif (ts=%ld)", timestamp);
+    PBL_LOG_DBG("Not presenting stale notif (ts=%ld)", (long)timestamp);
     return true;
   }
 

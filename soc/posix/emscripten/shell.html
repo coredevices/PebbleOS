@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PebbleOS</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 32px 0; display: flex; flex-direction: column; align-items: center;
+         gap: 16px; background: #111; color: #ccc;
+         font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #canvas { width: 400px; height: 456px; image-rendering: pixelated; outline: none;
+            border-radius: 12px; box-shadow: 0 0 0 10px #222, 0 12px 40px #000; background: #000; }
+  #status { min-height: 1.4em; }
+  #log { width: min(720px, calc(100vw - 32px)); height: 30vh; margin: 0; padding: 8px; overflow: auto;
+         background: #000; border-radius: 6px; white-space: pre-wrap; }
+  .hint { color: #777; }
+</style>
+</head>
+<body>
+<canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+<div id="status">Loading…</div>
+<div class="hint">Click the screen, then: arrows = up / down / select / back, Enter = select,
+  Esc = back. The mouse is a finger; scroll to drag.</div>
+<pre id="log"></pre>
+<script>
+  const log = document.getElementById('log');
+  const canvas = document.getElementById('canvas');
+  canvas.addEventListener('click', () => canvas.focus());
+  function print(text) {
+    const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
+    log.textContent += text + '\n';
+    if (log.textContent.length > 200000) log.textContent = log.textContent.slice(-150000);
+    if (atBottom) log.scrollTop = log.scrollHeight;
+  }
+  var Module = {
+    canvas,
+    print,
+    printErr: print,
+    setStatus: (text) => { document.getElementById('status').textContent = text; },
+    onRuntimeInitialized: () => canvas.focus(),
+  };
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>

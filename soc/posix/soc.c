@@ -7,6 +7,7 @@
 
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/init.h>
+#include <pbl/kernel/sched.h>
 #include <pbl_arch_posix.h>
 
 #include <kernel/util/idle.h>
@@ -23,6 +24,9 @@ static uint64_t prv_monotonic_ms(void) {
 
 // Catches up on every tick that passed while the kernel held the CPU.
 static void prv_tick_isr(void *arg) {
+  if (!pbl_kernel_is_started()) {
+    return;
+  }
   uint64_t now = prv_monotonic_ms() - s_tick_start_ms;
   while (s_ticks_announced < now) {
     s_ticks_announced++;
@@ -30,6 +34,19 @@ static void prv_tick_isr(void *arg) {
   }
 }
 
+#ifdef CONFIG_ARCH_POSIX_FIBERS
+// One host thread: the main loop ticks, then runs the kernel until it idles.
+static void prv_kernel_poll(void) {
+  pbl_posix_irq_run(prv_tick_isr, NULL);
+  pbl_posix_run();
+}
+
+POSIX_HOST_HOOK(.poll = prv_kernel_poll)
+
+void pbl_soc_early_init(void) {
+  s_tick_start_ms = prv_monotonic_ms();
+}
+#else
 static void *prv_tick_thread(void *arg) {
   for (;;) {
     usleep(1000000 / PBL_TICK_HZ);
@@ -43,6 +60,7 @@ void pbl_soc_early_init(void) {
   pthread_t tid;
   pthread_create(&tid, NULL, prv_tick_thread, NULL);
 }
+#endif
 
 void pbl_soc_idle(pbl_tick_t max_ticks) {
   if (!idle_is_allowed() || !pbl_idle_confirm()) {
@@ -58,12 +76,7 @@ bool pbl_soc_tick_enable(void) {
 void pbl_analytics_external_collect_cpu_stats(void) {
 }
 
-static void *prv_firmware_thread(void *arg) {
-  extern int pbl_fw_main(void);
-  pbl_posix_boot(pbl_fw_main);
-}
-
 void posix_fw_start(void) {
-  pthread_t tid;
-  pthread_create(&tid, NULL, prv_firmware_thread, NULL);
+  extern int pbl_fw_main(void);
+  pbl_posix_start(pbl_fw_main);
 }

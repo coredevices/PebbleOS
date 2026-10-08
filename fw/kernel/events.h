@@ -817,9 +817,10 @@ typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
   PebbleEventType type : 8;
 } PebbleEvent;
 
-// Guard the on-target size. The bound assumes 4-byte pointers, so it only
-// applies to the firmware target; the host unit-test build has wider pointers.
-#if __SIZEOF_POINTER__ == 4
+// Guard the on-target size. The bound assumes 4-byte pointers and the
+// firmware C library's 32-bit time_t, so it only applies to the firmware
+// target; host builds have wider pointers or time_t.
+#if __SIZEOF_POINTER__ == 4 && !defined(CONFIG_LIBC_HOST)
 _Static_assert(sizeof(PebbleEvent) <= 12, "PebbleEvent grew; check the event union layout");
 #endif
 

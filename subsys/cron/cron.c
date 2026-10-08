@@ -99,7 +99,7 @@ void pbl_cron_handle_clock_change(int32_t utc_time_delta, int32_t gmt_offset_del
     if (!job->absolute && (must_recalc || change_diff >= job->clock_change_tolerance)) {
       job->cached_execute_time = pbl_cron_job_get_execute_time(job);
     }
-    PBL_LOG_DBG("Cron job rescheduled for %ld", job->cached_execute_time);
+    PBL_LOG_DBG("Cron job rescheduled for %ld", (long)job->cached_execute_time);
 
     newlist = list_sorted_add(newlist, &job->list_node, prv_sort, true);
   }
@@ -137,8 +137,8 @@ time_t pbl_cron_job_schedule(struct pbl_cron_job *job) {
   if (!prv_is_scheduled(job)) {
     s_scheduled_jobs = list_sorted_add(s_scheduled_jobs, &job->list_node, prv_sort, true);
   }
-  PBL_LOG_DBG("Cron job scheduled for %ld (%+ld)", job->cached_execute_time,
-              (job->cached_execute_time - now));
+  PBL_LOG_DBG("Cron job scheduled for %ld (%+ld)", (long)job->cached_execute_time,
+              (long)(job->cached_execute_time - now));
 
   prv_arm_wakeup();
   pbl_mutex_unlock(&s_list_mutex);
@@ -156,7 +156,7 @@ void pbl_cron_job_schedule_at(struct pbl_cron_job *job, time_t utc_time) {
   job->absolute = true;
   job->cached_execute_time = utc_time;
   s_scheduled_jobs = list_sorted_add(s_scheduled_jobs, &job->list_node, prv_sort, true);
-  PBL_LOG_DBG("Cron job scheduled at %ld", job->cached_execute_time);
+  PBL_LOG_DBG("Cron job scheduled at %ld", (long)job->cached_execute_time);
 
   prv_arm_wakeup();
   pbl_mutex_unlock(&s_list_mutex);
@@ -180,7 +180,7 @@ time_t pbl_cron_job_schedule_after(struct pbl_cron_job *job, struct pbl_cron_job
 
   // insert after in the list, which guarantees it gets executed after
   list_insert_after(&job->list_node, &new_job->list_node);
-  PBL_LOG_DBG("Cron job scheduled for %ld", job->cached_execute_time);
+  PBL_LOG_DBG("Cron job scheduled for %ld", (long)job->cached_execute_time);
 
   prv_arm_wakeup();
   pbl_mutex_unlock(&s_list_mutex);
