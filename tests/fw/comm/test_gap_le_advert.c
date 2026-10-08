@@ -597,6 +597,7 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
   job = gap_le_advert_schedule(ad, &advert_term,
                                sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
+  cl_assert(job != NULL);
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
 
   // Simulate stopping advertising because of inbound connection:
@@ -677,11 +678,13 @@ void test_gap_le_advert__unschedule_job_types(void) {
   job_b = gap_le_advert_schedule(
       ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm), unscheduled_callback,
       s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
+  cl_assert(job_b != NULL);
 
   GAPLEAdvertisingJobRef job_c;
   job_c = gap_le_advert_schedule(
       ad, &advert_term, sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm), unscheduled_callback,
       s_unscheduled_cb_data, GAPLEAdvertisingJobTagReconnection);
+  cl_assert(job_c != NULL);
 
   // run some Ad cycling
   for (int i = 0; i < 3; i++) {

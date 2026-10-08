@@ -88,12 +88,14 @@ void test_timezone_database__load_dst_rule_los_angeles(void) {
 
   TimezoneInfo tz_info;
   bool result = timezone_database_load_region_info(america_los_angeles_region, &tz_info);
+  cl_assert(result);
   cl_assert_equal_s("P*T", tz_info.tm_zone);
   cl_assert_equal_i(-8 * 60 * 60, tz_info.tm_gmtoff);
 
   TimezoneDSTRule start;
   TimezoneDSTRule end;
   result = timezone_database_load_dst_rule(tz_info.dst_id, &start, &end);
+  cl_assert(result);
 
   cl_assert_equal_i(start.ds_label, 'D');
   cl_assert_equal_i(start.month, 2);
