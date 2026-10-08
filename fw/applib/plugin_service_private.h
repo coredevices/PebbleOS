@@ -4,7 +4,6 @@
 #pragma once
 #include "event_service_client.h"
 #include "plugin_service.h"
-#include "pbl/kernel/compiler.h"
 
 // We dynamically allocate one of these for every service we subscribe to
 typedef struct {
@@ -13,7 +12,7 @@ typedef struct {
   PluginServiceHandler handler; // handler for this service
 } PluginServiceEntry;
 
-typedef struct PBL_PACKED PluginServiceState {
+typedef struct PluginServiceState {
   bool subscribed_to_app_event_service : 1; // Set on first plugin_service_subscribe by this app
   EventServiceInfo event_service_info;
   ListNode subscribed_services; // Linked list of PluginServiceEntrys

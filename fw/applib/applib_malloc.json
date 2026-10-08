@@ -221,7 +221,7 @@
         "dependencies": ["Layer"]
     }, {
         "name": "EventServiceInfo",
-        "size_3x_padding": 20,
+        "size_3x_padding": 17,
         "size_3x": 37,
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
     }, {
@@ -255,14 +255,14 @@
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
     }, {
         "name": "VoiceWindow",
-        "size_3x_padding": 36,
+        "size_3x_padding": 31,
         "size_3x": 2384,
         "dependencies": ["TranscriptionDialog", "Layer", "Layer", "StatusBarLayer", "TextLayer", 
                          "KinoLayer", "Window", "EventServiceInfo"],
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
     }, {
         "name": "DictationSession",
-        "size_3x_padding": 1196,
+        "size_3x_padding": 1194,
         "size_3x": 1284,
         "dependencies": ["EventServiceInfo", "EventServiceInfo"],
         "_comment": ["Enough padding to enable RAM allocation of required resources up-front if ",

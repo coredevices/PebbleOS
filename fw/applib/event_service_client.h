@@ -4,11 +4,10 @@
 #pragma once
 
 #include "kernel/events.h"
-#include "pbl/kernel/compiler.h"
 
 typedef void (*EventServiceEventHandler)(PebbleEvent *e, void *context);
 
-typedef struct PBL_PACKED {
+typedef struct {
   ListNode list_node;
   PebbleEventType type;
   EventServiceEventHandler handler;
