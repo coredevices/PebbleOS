@@ -190,11 +190,13 @@ def test_airplane_mode(dut, watch, phones):
 
 def _wait_idle_parameters(phone, timeout=60.0):
     """The watch's request for idle parameters, or, from a controller that
-    takes it without asking the host, the parameters it applied."""
+    takes it without asking the host, the parameters it applied. It may
+    ask for a faster link first, while the session sets up."""
     deadline = time.monotonic() + timeout
     while True:
-        if phone.link.parameter_requests:
-            return phone.link.parameter_requests[0]
+        idle = [r for r in phone.link.parameter_requests if r.latency]
+        if idle:
+            return idle[0]
         applied = phone.link.connection_parameters
         if applied.peripheral_latency:
             return applied

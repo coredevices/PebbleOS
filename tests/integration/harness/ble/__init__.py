@@ -52,8 +52,9 @@ TICK_S = 0.5
 SCAN_TIMEOUT_S = 15.0
 CONNECT_TIMEOUT_S = 15.0
 CONNECT_ATTEMPTS = 3
-# The link's parameters (ms), kept for the whole connection.
-CONNECTION_INTERVAL_MS = 15
+# The link's parameters (ms), kept for the whole connection. At 15 ms, the
+# lab's getafix often fails to establish the link (0x3e).
+CONNECTION_INTERVAL_MS = 30
 SUPERVISION_TIMEOUT_MS = 6000
 ESTABLISH_S = 0.3
 ESTABLISH_TIMEOUT_S = 5.0
