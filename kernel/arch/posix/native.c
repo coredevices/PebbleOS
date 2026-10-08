@@ -1,12 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-// clang-format off
-#include <errno.h>
-#include <sys/time.h>
-// Ahead of pthread.h, which needs struct timespec from the host's time.h,
-// not the firmware's.
 #include "posix.h"
+
+#include <errno.h>
 
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/init.h>
@@ -14,8 +11,8 @@
 #include <kernel.h>
 #include <pbl_arch_posix.h>
 #include <pthread.h>
+#include <sys/time.h>
 #include <unistd.h>
-// clang-format on
 
 // Native application: interrupts come from host threads, which take the CPU
 // whenever no kernel thread holds it, as an interrupt between instructions.
