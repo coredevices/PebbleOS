@@ -761,11 +761,9 @@ void test_animation__property_gpoint(void) {
   animation_schedule(h);
 
   int max_loops = 20;
-  int num_loops = 0;
   uint64_t start_ms = prv_now_ms();
   uint64_t time_ms;
   while (s_stopped_handler_calls.num_calls == 0) {
-    num_loops++;
     prv_fire_animation_timer();
     time_ms = prv_now_ms();
     DPRINTF("%" PRIu64 ": value at: (%d, %d)\n", time_ms - start_ms, value.x, value.y);

@@ -379,7 +379,7 @@ void test_alarm__alarm_set_get_enabled(void) {
 }
 
 void test_alarm__alarm_delete(void) {
-  AlarmId id1, id2, id3, id4, id5, id6, id7;
+  AlarmId id1, id2, id4;
   id1 = alarm_create(&(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_EVERYDAY});
   id2 = alarm_create(&(AlarmInfo){.hour = 4, .minute = 14, .kind = ALARM_KIND_EVERYDAY});
   alarm_delete(id1);
@@ -388,14 +388,14 @@ void test_alarm__alarm_delete(void) {
   alarm_delete(id2);
   prv_assert_alarm_config_absent(id2);
   assert_alarm_pins_absent(id2);
-  id3 = alarm_create(&(AlarmInfo){.hour = 13, .minute = 13, .kind = ALARM_KIND_WEEKDAYS});
+  alarm_create(&(AlarmInfo){.hour = 13, .minute = 13, .kind = ALARM_KIND_WEEKDAYS});
   id4 = alarm_create(&(AlarmInfo){.hour = 14, .minute = 14, .kind = ALARM_KIND_WEEKDAYS});
-  id5 = alarm_create(&(AlarmInfo){.hour = 15, .minute = 15, .kind = ALARM_KIND_WEEKDAYS});
-  id6 = alarm_create(&(AlarmInfo){.hour = 16, .minute = 16, .kind = ALARM_KIND_WEEKDAYS});
+  alarm_create(&(AlarmInfo){.hour = 15, .minute = 15, .kind = ALARM_KIND_WEEKDAYS});
+  alarm_create(&(AlarmInfo){.hour = 16, .minute = 16, .kind = ALARM_KIND_WEEKDAYS});
   alarm_delete(id4);
   prv_assert_alarm_config_absent(id4);
   assert_alarm_pins_absent(id4);
-  id7 = alarm_create(&(AlarmInfo){.hour = 17, .minute = 17, .kind = ALARM_KIND_WEEKENDS});
+  alarm_create(&(AlarmInfo){.hour = 17, .minute = 17, .kind = ALARM_KIND_WEEKENDS});
 
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
     alarm_delete(i);
@@ -441,9 +441,8 @@ void test_alarm__get_string_for_kind(void) {
 }
 
 void test_alarm__handle_clock_change(void) {
-  AlarmId id1, id2;
-  id1 = alarm_create(&(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_WEEKENDS});
-  id2 = alarm_create(&(AlarmInfo){.hour = 13, .minute = 14, .kind = ALARM_KIND_WEEKDAYS});
+  alarm_create(&(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_WEEKENDS});
+  alarm_create(&(AlarmInfo){.hour = 13, .minute = 14, .kind = ALARM_KIND_WEEKDAYS});
 
   s_current_hour = 12;
   s_current_minute = 14;
