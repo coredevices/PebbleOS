@@ -18,7 +18,7 @@ from harness.helpers.pairing import (
 from harness.helpers.ui import Button
 
 pytestmark = [
-    pytest.mark.integration_boards("qemu_emery"),
+    pytest.mark.integration_boards("qemu_emery", "getafix@dvt2"),
     pytest.mark.variants("normal", "prf"),
 ]
 

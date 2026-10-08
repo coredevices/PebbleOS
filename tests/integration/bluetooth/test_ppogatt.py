@@ -15,7 +15,7 @@ from harness.ble.ppogatt import SN_MOD
 from harness.errors import Unsupported, WatchTimeout
 from harness.helpers.ui import Ui
 
-pytestmark = pytest.mark.integration_boards("qemu_emery")
+pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 BOTH = pytest.mark.variants("normal", "prf")
 
 SESSION_OPENED = (

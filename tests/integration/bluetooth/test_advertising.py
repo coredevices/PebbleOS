@@ -17,7 +17,7 @@ from harness.ble.scanner import Scanner
 from harness.errors import WatchTimeout
 from harness.helpers.ui import TRANSITION_S, Button
 
-pytestmark = pytest.mark.integration_boards("qemu_emery")
+pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 
 VENDOR_ID = 0x0EEA
 FLAGS = 0x06

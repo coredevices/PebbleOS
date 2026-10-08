@@ -27,7 +27,7 @@ SCOPE_MARKERS = {
     "variants": "variants(*names): only on these firmware variants (normal, prf); "
     "unmarked tests are for normal",
     "integration_boards": "integration_boards(*names): with --integration, only on "
-    "these boards; with none, never",
+    "these boards (board or board@revision); with none, never",
 }
 
 
@@ -269,8 +269,11 @@ def _applies(item, config):
         "integration_boards"
     ):
         boards = _marker_args(item, "integration_boards")
-        if board not in boards:
-            return f"integration run, board {board} not in {sorted(boards)}"
+        target = (
+            build.board_target if build is not None and board == build.board else None
+        )
+        if board not in boards and target not in boards:
+            return f"integration run, board {target or board} not in {sorted(boards)}"
     symbols = _marker_args(item, "requires_config")
     if symbols and build is not None and board == build.board:
         missing = sorted(s for s in symbols if not build.config.get(s))

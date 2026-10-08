@@ -9,7 +9,7 @@ import time
 
 import pytest
 
-pytestmark = pytest.mark.integration_boards("qemu_emery")
+pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 
 TIME_ENDPOINT = 0x000B
 SET_LOCALTIME = 0x02

@@ -21,7 +21,7 @@ from harness.helpers.blobdb import (
 )
 from harness.helpers.ui import Button, Ui
 
-pytestmark = pytest.mark.integration_boards("qemu_emery")
+pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 
 MUSIC_ENDPOINT = 0x0020
 PHONE_ENDPOINT = 0x0021

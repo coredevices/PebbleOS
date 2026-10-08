@@ -250,8 +250,9 @@ pbl itest --collect-only -q --board obelix --device-type hardware
 ```
 
 CI runs with `--integration`, which also honours `integration_boards`: a test
-marked `integration_boards("qemu_emery")` runs anywhere it applies, but CI
-runs it only on qemu_emery; `integration_boards()` keeps it out of CI. Use it
+marked `integration_boards("qemu_emery", "getafix@dvt2")` runs anywhere it
+applies, but CI runs it only on qemu_emery and on the lab's getafix@dvt2 (a
+board, or a board at a revision); `integration_boards()` keeps it out of CI. Use it
 for tests that do not depend on the board, or that take too long for every
 pull request.
 

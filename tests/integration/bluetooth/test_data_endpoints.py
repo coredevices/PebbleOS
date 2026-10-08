@@ -12,7 +12,7 @@ import time
 import pytest
 from harness.helpers.ui import protocol_screenshot
 
-pytestmark = pytest.mark.integration_boards("qemu_emery")
+pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 
 PING_ENDPOINT = 2001
 HEALTH_SYNC_ENDPOINT = 911
