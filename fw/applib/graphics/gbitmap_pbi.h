@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
 
 //! @addtogroup Foundation
