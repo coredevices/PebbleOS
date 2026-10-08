@@ -118,6 +118,15 @@ static Attribute attributes[] = {
   {.id = AttributeIdTitle, .cstring = "John Doe"},
 };
 
+static void prv_assert_attributes_equal(const AttributeList *list, const Attribute *expected,
+                                        size_t num_expected) {
+  cl_assert_equal_i(list->num_attributes, num_expected);
+  for (size_t i = 0; i < num_expected; i++) {
+    cl_assert_equal_i(list->attributes[i].id, expected[i].id);
+    cl_assert_equal_s(list->attributes[i].cstring, expected[i].cstring);
+  }
+}
+
 void test_contacts__get_contact_by_uuid(void) {
   const Uuid uuid = (Uuid){CONTACT_1_UUID};
 
@@ -133,8 +142,15 @@ void test_contacts__get_contact_by_uuid(void) {
   cl_assert(contact);
   cl_assert_equal_m(&contact->id, &uuid, UUID_SIZE);
   cl_assert_equal_i(contact->flags, 0);
-  cl_assert_equal_i(contact->attr_list.num_attributes, 1);
-  cl_assert_equal_i(contact->addr_list.num_addresses, 1);
+  prv_assert_attributes_equal(&contact->attr_list, attributes, ARRAY_LENGTH(attributes));
+  cl_assert_equal_i(contact->addr_list.num_addresses, ARRAY_LENGTH(addresses));
+  for (size_t i = 0; i < ARRAY_LENGTH(addresses); i++) {
+    const Address *address = &contact->addr_list.addresses[i];
+    cl_assert_equal_m(&address->id, &addresses[i].id, UUID_SIZE);
+    cl_assert_equal_i(address->type, addresses[i].type);
+    prv_assert_attributes_equal(&address->attr_list, addresses[i].attr_list.attributes,
+                                addresses[i].attr_list.num_attributes);
+  }
 
   contacts_free_contact(contact);
 }
