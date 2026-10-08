@@ -17,8 +17,14 @@
 
 #define GPATH_ERROR "Unable to allocate memory for GPath call"
 
-void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallback cb,
-                              void *user_data);
+#if PBL_COLOR
+static void prv_fill_points_with_cb_aa(GContext *ctx, const GPointUnaligned *points,
+                                       size_t num_points, int32_t rotation, GPoint offset,
+                                       GPathDrawFilledCallback cb, void *user_data);
+#endif
+static void prv_fill_points_with_cb(GContext *ctx, const GPointUnaligned *points, size_t num_points,
+                                    int32_t rotation, GPoint offset, GPathDrawFilledCallback cb,
+                                    void *user_data);
 
 typedef struct Intersection {
   Fixed_S16_3 x;
@@ -49,7 +55,8 @@ void gpath_destroy(GPath *gpath) {
   applib_free(gpath);
 }
 
-static GPoint rotate_offset_point(const GPoint *orig, int32_t rotation, const GPoint *offset) {
+static GPoint rotate_offset_point(const GPointUnaligned *orig, int32_t rotation,
+                                  const GPoint *offset) {
   int32_t cosine = cos_lookup(rotation);
   int32_t sine = sin_lookup(rotation);
   GPoint result;
@@ -113,16 +120,30 @@ static void prv_gpath_draw_filled_cb(GContext *ctx, int16_t y, Fixed_S16_3 x_ran
                           });
 }
 
-void gpath_draw_filled(GContext *ctx, GPath *path) {
+static void prv_fill_points(GContext *ctx, const GPointUnaligned *points, size_t num_points,
+                            int32_t rotation, GPoint offset) {
 #if PBL_COLOR
   // This algorithm makes sense only in 8bit mode...
   if (ctx->draw_state.antialiased) {
-    prv_fill_path_with_cb_aa(ctx, path, prv_gpath_draw_filled_cb, NULL);
+    prv_fill_points_with_cb_aa(ctx, points, num_points, rotation, offset, prv_gpath_draw_filled_cb,
+                               NULL);
     return;
   }
 #endif
 
-  gpath_draw_filled_with_cb(ctx, path, prv_gpath_draw_filled_cb, NULL);
+  prv_fill_points_with_cb(ctx, points, num_points, rotation, offset, prv_gpath_draw_filled_cb,
+                          NULL);
+}
+
+void gpath_draw_filled(GContext *ctx, GPath *path) {
+  if (!path) {
+    return;
+  }
+  prv_fill_points(ctx, path->points, path->num_points, path->rotation, path->offset);
+}
+
+void gpath_fill_internal(GContext *ctx, const GPointUnaligned *points, size_t num_points) {
+  prv_fill_points(ctx, points, num_points, 0, GPointZero);
 }
 
 void gpath_draw_outline(GContext *ctx, GPath *path) {
@@ -133,19 +154,32 @@ void gpath_draw_outline_open(GContext *ctx, GPath *path) {
   gpath_draw_stroke(ctx, path, true);
 }
 
-void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {
-  if (!path || path->num_points < 2) {
+static void prv_draw_stroke(GContext *ctx, const GPointUnaligned *points, size_t num_points,
+                            int32_t rotation, GPoint offset, bool open) {
+  if (!points || num_points < 2) {
     return;
   }
   // for each line segment (do not draw line returning to the first point if open is true)
-  for (uint32_t i = 0; i < (open ? (path->num_points - 1) : path->num_points); ++i) {
-    int i2 = (i + 1) % path->num_points;
+  for (uint32_t i = 0; i < (open ? (num_points - 1) : num_points); ++i) {
+    int i2 = (i + 1) % num_points;
 
-    GPoint rot_start = rotate_offset_point(&path->points[i], path->rotation, &path->offset);
-    GPoint rot_end = rotate_offset_point(&path->points[i2], path->rotation, &path->offset);
+    GPoint rot_start = rotate_offset_point(&points[i], rotation, &offset);
+    GPoint rot_end = rotate_offset_point(&points[i2], rotation, &offset);
 
     graphics_draw_line(ctx, rot_start, rot_end);
   }
+}
+
+void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {
+  if (!path) {
+    return;
+  }
+  prv_draw_stroke(ctx, path->points, path->num_points, path->rotation, path->offset, open);
+}
+
+void gpath_draw_outline_internal(GContext *ctx, const GPointUnaligned *points, size_t num_points,
+                                 bool open) {
+  prv_draw_stroke(ctx, points, num_points, 0, GPointZero, open);
 }
 
 void gpath_rotate_to(GPath *path, int32_t angle) {
@@ -197,8 +231,9 @@ GRect gpath_outer_rect(GPath *path) {
 }
 
 #if PBL_COLOR
-void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallback cb,
-                              void *user_data) {
+static void prv_fill_points_with_cb_aa(GContext *ctx, const GPointUnaligned *points,
+                                       size_t num_points, int32_t rotation, GPoint offset,
+                                       GPathDrawFilledCallback cb, void *user_data) {
   /*
    * Filling gpaths with antialiasing for integral-coordinates based paths:
    *
@@ -221,11 +256,11 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
    */
 
   // Protect against apps calling with no points to draw (Upright watchface)
-  if (!path || path->num_points < 2) {
+  if (!points || num_points < 2) {
     return;
   }
 
-  GPointPrecise *rot_points = applib_malloc(path->num_points * sizeof(GPointPrecise));
+  GPointPrecise *rot_points = applib_malloc(num_points * sizeof(GPointPrecise));
   if (!rot_points) {
     return;
   }
@@ -238,15 +273,15 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
   Intersection *intersections_down = NULL;
 
   rot_points[0] = rot_end =
-      GPointPreciseFromGPoint(rotate_offset_point(&path->points[0], path->rotation, &path->offset));
+      GPointPreciseFromGPoint(rotate_offset_point(&points[0], rotation, &offset));
   min_x = max_x = rot_points[0].x.integer;
   min_y = max_y = rot_points[0].y.integer;
 
   // begin finding the last path segment's direction going backwards through the path
   // we must go backwards because we find intersections going forwards
-  for (int i = path->num_points - 1; i > 0; --i) {
-    rot_points[i] = rot_start = GPointPreciseFromGPoint(
-        rotate_offset_point(&path->points[i], path->rotation, &path->offset));
+  for (int i = num_points - 1; i > 0; --i) {
+    rot_points[i] = rot_start =
+        GPointPreciseFromGPoint(rotate_offset_point(&points[i], rotation, &offset));
     if (min_x > rot_points[i].x.integer) {
       min_x = rot_points[i].x.integer;
     }
@@ -281,9 +316,9 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
   }
 
   // x-intersections of path segments whose direction is up
-  intersections_up = applib_zalloc(path->num_points * sizeof(Intersection));
+  intersections_up = applib_zalloc(num_points * sizeof(Intersection));
   // x-intersections of path segments whose direction is down
-  intersections_down = applib_zalloc(path->num_points * sizeof(Intersection));
+  intersections_down = applib_zalloc(num_points * sizeof(Intersection));
 
   // If either malloc failed, log message and cleanup
   if (!intersections_up || !intersections_down) {
@@ -318,9 +353,9 @@ void prv_fill_path_with_cb_aa(GContext *ctx, GPath *path, GPathDrawFilledCallbac
     rot_end = rot_points[0];
 
     // find the intersections
-    for (uint32_t j = 0; j < path->num_points; ++j) {
+    for (uint32_t j = 0; j < num_points; ++j) {
       rot_start = rot_points[j];
-      if (j + 1 < path->num_points) {
+      if (j + 1 < num_points) {
         rot_end = rot_points[j + 1];
       } else {
         // wrap to the first point
@@ -408,14 +443,15 @@ cleanup:
 }
 #endif // PBL_COLOR
 
-void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallback cb,
-                               void *user_data) {
+static void prv_fill_points_with_cb(GContext *ctx, const GPointUnaligned *points, size_t num_points,
+                                    int32_t rotation, GPoint offset, GPathDrawFilledCallback cb,
+                                    void *user_data) {
   // Protect against apps calling with no points to draw (Upright watchface)
-  if (!path || path->num_points < 2) {
+  if (!points || num_points < 2) {
     return;
   }
 
-  GPoint *rot_points = applib_malloc(path->num_points * sizeof(GPoint));
+  GPoint *rot_points = applib_malloc(num_points * sizeof(GPoint));
   if (!rot_points) {
     APP_LOG(APP_LOG_LEVEL_ERROR, GPATH_ERROR);
     return;
@@ -428,15 +464,14 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
   int16_t *intersections_up = NULL;
   int16_t *intersections_down = NULL;
 
-  rot_points[0] = rot_end = rotate_offset_point(&path->points[0], path->rotation, &path->offset);
+  rot_points[0] = rot_end = rotate_offset_point(&points[0], rotation, &offset);
   min_x = max_x = rot_points[0].x;
   min_y = max_y = rot_points[0].y;
 
   // begin finding the last path segment's direction going backwards through the path
   // we must go backwards because we find intersections going forwards
-  for (int i = path->num_points - 1; i > 0; --i) {
-    rot_points[i] = rot_start =
-        rotate_offset_point(&path->points[i], path->rotation, &path->offset);
+  for (int i = num_points - 1; i > 0; --i) {
+    rot_points[i] = rot_start = rotate_offset_point(&points[i], rotation, &offset);
     if (min_x > rot_points[i].x) {
       min_x = rot_points[i].x;
     }
@@ -471,9 +506,9 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
   }
 
   // x-intersections of path segments whose direction is up
-  intersections_up = applib_zalloc(path->num_points * sizeof(int16_t));
+  intersections_up = applib_zalloc(num_points * sizeof(int16_t));
   // x-intersections of path segments whose direction is down
-  intersections_down = applib_zalloc(path->num_points * sizeof(int16_t));
+  intersections_down = applib_zalloc(num_points * sizeof(int16_t));
 
   // If either malloc failed, log message and cleanup
   if (!intersections_up || !intersections_down) {
@@ -502,9 +537,9 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
     rot_end = rot_points[0];
 
     // find the intersections
-    for (uint32_t j = 0; j < path->num_points; ++j) {
+    for (uint32_t j = 0; j < num_points; ++j) {
       rot_start = rot_points[j];
-      if (j + 1 < path->num_points) {
+      if (j + 1 < num_points) {
         rot_end = rot_points[j + 1];
       } else {
         // wrap to the first point
@@ -552,6 +587,15 @@ cleanup:
   applib_free(rot_points);
   applib_free(intersections_up);
   applib_free(intersections_down);
+}
+
+void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallback cb,
+                               void *user_data) {
+  if (!path) {
+    return;
+  }
+  prv_fill_points_with_cb(ctx, path->points, path->num_points, path->rotation, path->offset, cb,
+                          user_data);
 }
 
 void gpath_fill_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points) {

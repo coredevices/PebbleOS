@@ -181,6 +181,17 @@ void gpath_draw_filled_with_cb(GContext *ctx, GPath *path, GPathDrawFilledCallba
                                void *user_data);
 
 //! @internal
+//! GPoint that may be stored at any address, e.g. inside a serialized draw command.
+typedef GPoint GPointUnaligned PBL_ALIGNED(1);
+
+//! @internal
+void gpath_fill_internal(GContext *ctx, const GPointUnaligned *points, size_t num_points);
+
+//! @internal
+void gpath_draw_outline_internal(GContext *ctx, const GPointUnaligned *points, size_t num_points,
+                                 bool open);
+
+//! @internal
 void gpath_fill_precise_internal(GContext *ctx, GPointPrecise *points, size_t num_points);
 
 //! @internal

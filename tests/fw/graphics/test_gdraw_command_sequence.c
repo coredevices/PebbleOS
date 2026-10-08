@@ -29,9 +29,10 @@ void graphics_context_set_fill_color(GContext *ctx, GColor color) {
 }
 void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width) {
 }
-void gpath_draw_stroke(GContext *ctx, GPath *path, bool open) {
+void gpath_draw_outline_internal(GContext *ctx, const GPointUnaligned *points, size_t num_points,
+                                 bool open) {
 }
-void gpath_draw_filled(GContext *ctx, GPath *path) {
+void gpath_fill_internal(GContext *ctx, const GPointUnaligned *points, size_t num_points) {
 }
 void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {
 }
