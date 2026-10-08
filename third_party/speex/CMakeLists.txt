@@ -56,8 +56,6 @@ list(APPEND speex_defines
   "NB_DEC_STACK=(1500*sizeof(spx_sig_t))"
 )
 set(speex_cflags
-  -Wno-implicit-function-declaration
-  -Wno-builtin-declaration-mismatch
   -Wno-unused-but-set-variable
   -Wno-unused-variable
 )
