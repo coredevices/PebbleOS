@@ -26,7 +26,7 @@ set(PBL_TEST_C_FLAGS
   -Wall
   -Werror
   -Wno-error=unused-variable
-  -Wno-error=unused-function
+  -Werror=unused-function
   -Wno-error=missing-braces
   -Wno-error=unused-const-variable
   -Wno-enum-conversion
