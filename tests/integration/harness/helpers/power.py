@@ -10,6 +10,7 @@ VBAT, so the harness can also power the watch on, off and through a cycle.
 import contextlib
 import json
 import os
+import re
 import threading
 import time
 from dataclasses import dataclass
@@ -31,6 +32,9 @@ MIN_SAMPLE_RATIO = 0.95
 IDLE_MEASURE_S = 60
 IDLE_SETTLE_S = 10
 IDLE_MARGIN_S = 5
+# How far, and how often, the supply is lowered at a time.
+VOLTAGE_STEP_DOWN_MV = 50
+VOLTAGE_STEP_S = 0.05
 # Samples averaged into each row of the saved CSV (1 ms).
 CSV_DECIMATION = 100
 
@@ -148,14 +152,21 @@ class Ppk2:
         # losing the calibration.
         ppk._parse_metadata(metadata)
         ppk.use_source_meter()
-        ppk.set_source_voltage(voltage_mv)
         self.port = candidate
-        self.voltage_mv = voltage_mv
+        vdd = re.search(r"^VDD: (\d+)$", metadata, re.MULTILINE)
+        self.voltage_mv = int(vdd.group(1)) if vdd else voltage_mv
         self._ppk = ppk
         self._lock = threading.Lock()
+        self.set_voltage(voltage_mv)
 
     def set_voltage(self, voltage_mv):
+        # A large step down resets the PPK2 (it drops off USB); small ones do not.
         with self._lock:
+            current = self.voltage_mv
+            while current - voltage_mv > VOLTAGE_STEP_DOWN_MV:
+                current -= VOLTAGE_STEP_DOWN_MV
+                self._ppk.set_source_voltage(current)
+                time.sleep(VOLTAGE_STEP_S)
             self._ppk.set_source_voltage(voltage_mv)
         self.voltage_mv = voltage_mv
 
