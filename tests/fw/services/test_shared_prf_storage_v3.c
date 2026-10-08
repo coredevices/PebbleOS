@@ -301,10 +301,9 @@ void test_shared_prf_storage_v3__ble_pairing(void) {
                     pairing_info_out.local_encryption_info.ediv);
   cl_assert_equal_i(PAIRING_INFO.local_encryption_info.div,
                     pairing_info_out.local_encryption_info.div);
-  cl_assert_equal_i(PAIRING_INFO.identity.opaque.opaque_64,
-                    pairing_info_out.identity.opaque.opaque_64);
-  cl_assert_equal_i(PAIRING_INFO.remote_encryption_info.rand,
-                    pairing_info_out.remote_encryption_info.rand);
+  cl_assert(PAIRING_INFO.identity.opaque.opaque_64 == pairing_info_out.identity.opaque.opaque_64);
+  cl_assert(PAIRING_INFO.remote_encryption_info.rand ==
+            pairing_info_out.remote_encryption_info.rand);
   cl_assert_equal_i(PAIRING_INFO.remote_encryption_info.ediv,
                     pairing_info_out.remote_encryption_info.ediv);
   cl_assert_equal_i(
