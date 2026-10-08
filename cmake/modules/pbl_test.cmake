@@ -26,7 +26,6 @@ set(PBL_TEST_C_FLAGS
   -Werror=gnu-variable-sized-type-not-at-end
   -Wall
   -Werror
-  -Wno-error=unused-variable
   -Werror=unused-function
   -Wno-error=missing-braces
   -Werror=unused-const-variable
@@ -35,6 +34,7 @@ set(PBL_TEST_C_FLAGS
   -gdwarf-4
   -Werror=macro-redefined
   -O0
+  -Werror=unused-variable
   -fdata-sections
   -Werror=gnu-folding-constant
   -Werror=constant-conversion
