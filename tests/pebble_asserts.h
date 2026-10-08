@@ -74,29 +74,32 @@
     }                                                                                \
   } while (0)
 
-#define cl_assert_equal_edc(a, b)                                                                  \
-  do {                                                                                             \
-    EllipsisDrawConfig edc_a = (a);                                                                \
-    EllipsisDrawConfig edc_b = (b);                                                                \
-    bool success = ((edc_a.start_quadrant.angle == edc_b.start_quadrant.angle) &&                  \
-                    (edc_a.start_quadrant.quadrant == edc_b.start_quadrant.quadrant) &&            \
-                    (edc_a.full_quadrants == edc_b.full_quadrants) &&                              \
-                    (edc_a.end_quadrant.angle == edc_b.end_quadrant.angle) &&                      \
-                    (edc_a.end_quadrant.quadrant == edc_b.end_quadrant.quadrant));                 \
-    if (!success) {                                                                                \
-      char error_msg[256] = {0};                                                                   \
-      sprintf(error_msg,                                                                           \
-              "EllipsisDrawConfig edc_a and edc_b are not equal:\n"                                \
-              "    edc_a: start_quadrant: angle: %d quadrant: %d\n"                                \
-              "           end_quadrant:   angle: %d quadrant: %d\n"                                \
-              "           full_quadrants: %d\n"                                                    \
-              "    edc_b: start_quadrant: angle: %d quadrant: %d\n"                                \
-              "           end_quadrant:   angle: %d quadrant: %d\n"                                \
-              "           full_quadrants: %d\n",                                                   \
-              edc_a.start_quadrant.angle, edc_a.start_quadrant.quadrant, edc_a.end_quadrant.angle, \
-              edc_a.end_quadrant.quadrant, edc_a.full_quadrants, edc_b.start_quadrant.angle,       \
-              edc_b.start_quadrant.quadrant, edc_b.end_quadrant.angle,                             \
-              edc_b.end_quadrant.quadrant, edc_b.full_quadrants);                                  \
-      clar__assert(0, __FILE__, __LINE__, "Expression is not true: ", error_msg, 1);               \
-    }                                                                                              \
+/* Fits the cl_assert_equal_edc() message with every %d at full width */
+#define CL_ASSERT_EDC_MSG_SIZE 512
+
+#define cl_assert_equal_edc(a, b)                                                            \
+  do {                                                                                       \
+    EllipsisDrawConfig edc_a = (a);                                                          \
+    EllipsisDrawConfig edc_b = (b);                                                          \
+    bool success = ((edc_a.start_quadrant.angle == edc_b.start_quadrant.angle) &&            \
+                    (edc_a.start_quadrant.quadrant == edc_b.start_quadrant.quadrant) &&      \
+                    (edc_a.full_quadrants == edc_b.full_quadrants) &&                        \
+                    (edc_a.end_quadrant.angle == edc_b.end_quadrant.angle) &&                \
+                    (edc_a.end_quadrant.quadrant == edc_b.end_quadrant.quadrant));           \
+    if (!success) {                                                                          \
+      char error_msg[CL_ASSERT_EDC_MSG_SIZE] = {0};                                          \
+      snprintf(error_msg, sizeof(error_msg),                                                 \
+               "EllipsisDrawConfig edc_a and edc_b are not equal:\n"                         \
+               "    edc_a: start_quadrant: angle: %d quadrant: %d\n"                         \
+               "           end_quadrant:   angle: %d quadrant: %d\n"                         \
+               "           full_quadrants: %d\n"                                             \
+               "    edc_b: start_quadrant: angle: %d quadrant: %d\n"                         \
+               "           end_quadrant:   angle: %d quadrant: %d\n"                         \
+               "           full_quadrants: %d\n",                                            \
+               edc_a.start_quadrant.angle, edc_a.start_quadrant.quadrant,                    \
+               edc_a.end_quadrant.angle, edc_a.end_quadrant.quadrant, edc_a.full_quadrants,  \
+               edc_b.start_quadrant.angle, edc_b.start_quadrant.quadrant,                    \
+               edc_b.end_quadrant.angle, edc_b.end_quadrant.quadrant, edc_b.full_quadrants); \
+      clar__assert(0, __FILE__, __LINE__, "Expression is not true: ", error_msg, 1);         \
+    }                                                                                        \
   } while (0)
