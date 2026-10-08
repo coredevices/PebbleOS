@@ -30,6 +30,8 @@ static void prv_assert_session_task(void) {
 // Data event context. state is NULL once the subscription is dropped
 typedef struct AccelSubscriptionToken {
   AccelServiceState *state;
+  //! Buffer the running handler started with, NULL outside one. Freed only once it returns
+  AccelRawData *handed_raw_data;
 } AccelSubscriptionToken;
 
 // Assert that a session's data subscription is changed on the task its events run on
@@ -122,6 +124,8 @@ static bool prv_do_data_handle_chunk(AccelSubscriptionToken *token) {
                     state->raw_data[i].z);
   }
 
+  // Kept until the handler returns, since a raw handler reads it directly
+  token->handed_raw_data = state->raw_data;
   if (state->raw_data_handler_deprecated) {
     state->raw_data_handler_deprecated(state->raw_data, num_samples);
 
@@ -143,10 +147,18 @@ static bool prv_do_data_handle_chunk(AccelSubscriptionToken *token) {
     state->data_handler(data, num_samples);
   }
 
-  // The handler unsubscribed or subscribed again, which may also have deleted the state
+  AccelRawData *handed_raw_data = token->handed_raw_data;
+  token->handed_raw_data = NULL;
+  // Dropped in the handler, so the state may be gone and the token owns the buffer it handed out
   if (!token->state) {
+    applib_free(handed_raw_data);
     applib_free(token);
     return false;
+  }
+
+  // Free the buffer the handler started with if it swapped it out
+  if (handed_raw_data && handed_raw_data != state->raw_data) {
+    applib_free(handed_raw_data);
   }
 
   // Tell accel_manager that it can put more data in now
@@ -177,11 +189,19 @@ int accel_service_set_samples_per_update(uint32_t samples_per_update) {
 }
 
 // ----------------------------------------------------------------------------------------------
+// Frees the sample buffer, unless the running handler started with it
+static void prv_free_raw_data(AccelServiceState *state) {
+  if (state->raw_data != state->token->handed_raw_data) {
+    applib_free(state->raw_data);
+  }
+  state->raw_data = NULL;
+}
+
+// ----------------------------------------------------------------------------------------------
 // Removes the subscription and its buffer. The data event still out for it frees the token
 static void prv_drop_subscription(AccelServiceState *state) {
   bool queued = sys_accel_manager_data_unsubscribe(state->manager_state);
-  applib_free(state->raw_data);
-  state->raw_data = NULL;
+  prv_free_raw_data(state);
   state->token->state = NULL;
   if (!queued) {
     applib_free(state->token);
@@ -480,7 +500,7 @@ int accel_session_set_samples_per_update(AccelServiceState *state, uint32_t samp
     return result;
   }
 
-  applib_free(state->raw_data);
+  prv_free_raw_data(state);
   state->raw_data = new_buf;
   state->samples_per_update = samples_per_update;
   return 0;

@@ -220,10 +220,47 @@ static void prv_resizing_handler(AccelData *data, uint32_t num_samples) {
   accel_service_set_samples_per_update(2);
 }
 
+static int16_t s_read_after_change;
+
 static void prv_deleting_raw_handler(AccelRawData *data, uint32_t num_samples, uint64_t timestamp) {
   s_raw_data_handler_calls++;
   accel_session_data_unsubscribe(s_session);
   accel_session_delete(s_session);
+  s_read_after_change = data[0].x;
+}
+
+static void prv_rebatching_raw_handler(AccelRawData *data, uint32_t num_samples,
+                                       uint64_t timestamp) {
+  s_raw_data_handler_calls++;
+  accel_service_set_samples_per_update(2);
+  s_read_after_change = data[0].x;
+}
+
+static void prv_unsubscribing_raw_handler(AccelRawData *data, uint32_t num_samples,
+                                          uint64_t timestamp) {
+  s_raw_data_handler_calls++;
+  accel_data_service_unsubscribe();
+  s_read_after_change = data[0].x;
+}
+
+static void prv_resubscribing_raw_handler(AccelRawData *data, uint32_t num_samples,
+                                          uint64_t timestamp) {
+  s_raw_data_handler_calls++;
+  accel_raw_data_service_subscribe(1, prv_raw_data_handler);
+  s_read_after_change = data[0].x;
+}
+
+static void prv_twice_rebatching_raw_handler(AccelRawData *data, uint32_t num_samples,
+                                             uint64_t timestamp) {
+  s_raw_data_handler_calls++;
+  accel_service_set_samples_per_update(2);
+  accel_service_set_samples_per_update(3);
+  s_read_after_change = data[0].x;
+}
+
+static void prv_rebatching_deprecated_handler(AccelRawData *data, uint32_t num_samples) {
+  accel_service_set_samples_per_update(2);
+  s_read_after_change = data[0].x;
 }
 
 void test_accel_service__initialize(void) {
@@ -245,6 +282,7 @@ void test_accel_service__initialize(void) {
   s_timestamps[0] = 0;
   s_timestamps[1] = 0;
   s_session = NULL;
+  s_read_after_change = 0;
   stub_pebble_tasks_set_current(PebbleTask_App);
 }
 
@@ -597,6 +635,68 @@ void test_accel_service__a_kernel_session_deleted_in_its_handler_is_freed_at_onc
 
   cl_assert_equal_i(s_raw_data_handler_calls, 1);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
+}
+
+//! A raw handler can still read its buffer after changing its batch size
+void test_accel_service__a_raw_handler_keeps_its_buffer_after_changing_its_batch_size(void) {
+  accel_raw_data_service_subscribe(1, prv_rebatching_raw_handler);
+  s_app_state.raw_data[0].x = 7;
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_read_after_change, 7);
+}
+
+//! The same when the raw handler unsubscribes
+void test_accel_service__a_raw_handler_keeps_its_buffer_after_unsubscribing(void) {
+  accel_raw_data_service_subscribe(1, prv_unsubscribing_raw_handler);
+  s_app_state.raw_data[0].x = 7;
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_read_after_change, 7);
+}
+
+//! The same when the raw handler subscribes again, which replaces the subscription and its buffer
+void test_accel_service__a_raw_handler_keeps_its_buffer_after_subscribing_again(void) {
+  accel_raw_data_service_subscribe(1, prv_resubscribing_raw_handler);
+  s_app_state.raw_data[0].x = 7;
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_read_after_change, 7);
+}
+
+//! The same after two changes in one handler
+void test_accel_service__a_raw_handler_keeps_its_buffer_after_two_changes(void) {
+  accel_raw_data_service_subscribe(1, prv_twice_rebatching_raw_handler);
+  s_app_state.raw_data[0].x = 7;
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_read_after_change, 7);
+}
+
+//! The deprecated raw handler is handed the buffer itself too
+void test_accel_service__a_deprecated_raw_handler_keeps_its_buffer_after_a_change(void) {
+  accel_data_service_subscribe__deprecated(1, prv_rebatching_deprecated_handler);
+  s_app_state.raw_data[0].x = 7;
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_read_after_change, 7);
+}
+
+//! The same when a kernel session's raw handler deletes the session
+void test_accel_service__a_raw_handler_keeps_its_buffer_after_deleting_its_session(void) {
+  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  s_session = accel_session_create();
+  accel_session_raw_data_subscribe(s_session, ACCEL_SAMPLING_25HZ, 1, prv_deleting_raw_handler);
+  s_session->raw_data[0].x = 7;
+
+  prv_deliver(1);
+
+  cl_assert_equal_i(s_read_after_change, 7);
 }
 
 // Which task changes a kernel session
