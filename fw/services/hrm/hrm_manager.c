@@ -138,14 +138,21 @@ PBL_T_STATIC uint32_t prv_get_dropped_events_count(void) {
 static void prv_handle_accel_data(void *data) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_NewTimers);
 
+  // Held across the manager calls so a disable on KernelBG can't free accel_state under them
+  pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
+
+  // A stale event, from a subscription dropped or replaced on KernelBG
+  if (!s_manager_state.accel_state || (uintptr_t)data != s_manager_state.accel_subscription) {
+    pbl_mutex_unlock(&s_manager_state.accel_data_lock);
+    return;
+  }
+
   bool more;
   do {
     uint64_t timestamp_ms;
     uint32_t generation;
     uint32_t num_new_samples =
         sys_accel_manager_get_num_samples(s_manager_state.accel_state, &timestamp_ms, &generation);
-
-    pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
 
     // Only read as many as we have space to store
     const size_t MAX_BUFFERED_SAMPLES = ARRAY_LENGTH(s_manager_state.accel_data.data);
@@ -160,12 +167,36 @@ static void prv_handle_accel_data(void *data) {
 
     s_manager_state.accel_data.num_samples += num_samples_to_copy;
 
-    pbl_mutex_unlock(&s_manager_state.accel_data_lock);
-
     // Always consume all samples that were prepared, even if we couldn't store them all
     sys_accel_manager_consume_samples(s_manager_state.accel_state, num_new_samples, generation,
                                       &more);
   } while (more);
+
+  pbl_mutex_unlock(&s_manager_state.accel_data_lock);
+}
+
+// Retires the subscription under accel_data_lock, then drops it outside, since that reconfigures
+// the driver
+static void prv_accel_unsubscribe(void) {
+  pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
+  AccelManagerState *accel_state = s_manager_state.accel_state;
+  s_manager_state.accel_state = NULL;
+  pbl_mutex_unlock(&s_manager_state.accel_data_lock);
+  sys_accel_manager_data_unsubscribe(accel_state);
+}
+
+// Posts nothing until it has a buffer, so the subscription is published before the buffer is set
+static void prv_accel_subscribe(void) {
+  uint32_t subscription = s_manager_state.accel_subscription + 1;
+  AccelManagerState *accel_state =
+      sys_accel_manager_data_subscribe(ACCEL_SAMPLING_25HZ, prv_handle_accel_data,
+                                       (void *)(uintptr_t)subscription, PebbleTask_NewTimers);
+  pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
+  s_manager_state.accel_state = accel_state;
+  s_manager_state.accel_subscription = subscription;
+  pbl_mutex_unlock(&s_manager_state.accel_data_lock);
+  sys_accel_manager_set_sample_buffer(accel_state, s_manager_state.accel_manager_buffer,
+                                      HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE);
 }
 
 PBL_T_STATIC bool prv_can_turn_sensor_on(void) {
@@ -261,16 +292,10 @@ static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
   // Only subscribe if not already subscribed (prevents leak if hrm_is_enabled is out of sync)
   if (s_manager_state.accel_state) {
     PBL_LOG_WRN("HRM: accel already subscribed, unsubscribing first");
-    sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
-    s_manager_state.accel_state = NULL;
+    prv_accel_unsubscribe();
   }
 
-  s_manager_state.accel_state = sys_accel_manager_data_subscribe(
-      ACCEL_SAMPLING_25HZ, prv_handle_accel_data, NULL, PebbleTask_NewTimers);
-
-  sys_accel_manager_set_sample_buffer(s_manager_state.accel_state,
-                                      s_manager_state.accel_manager_buffer,
-                                      HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE);
+  prv_accel_subscribe();
 
   if (features == 0) {
     // Shouldn't happen (we only get here when a subscriber is due), but default to BPM.
@@ -286,8 +311,7 @@ static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
       PBL_LOG_ERR("HRM failed to enable (attempt %d/%d)", s_manager_state.enable_failure_count,
                   HRM_MAX_ENABLE_FAILURES);
     }
-    sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
-    s_manager_state.accel_state = NULL;
+    prv_accel_unsubscribe();
     return false;
   }
 
@@ -315,8 +339,7 @@ static void prv_sensor_disable(void) {
   s_manager_state.sensor_on_since_ticks = 0;
 
   if (s_manager_state.accel_state) {
-    sys_accel_manager_data_unsubscribe(s_manager_state.accel_state);
-    s_manager_state.accel_state = NULL;
+    prv_accel_unsubscribe();
   }
 }
 

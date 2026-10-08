@@ -141,9 +141,11 @@ struct HRMManagerState {
 
   /** Accelerometer manager subscription, while the sensor is on. */
   AccelManagerState *accel_state;
+  /** Number of the current subscription, passed as its data events' context. */
+  uint32_t accel_subscription;
   /** Accelerometer manager sample buffer. */
   AccelRawData accel_manager_buffer[HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE];
-  /** Lock protecting @ref accel_data. */
+  /** Lock protecting @ref accel_data and the accelerometer subscription. */
   struct pbl_mutex accel_data_lock;
   /** Accelerometer samples for the driver. */
   HRMAccelData accel_data;

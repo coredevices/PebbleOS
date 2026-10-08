@@ -74,7 +74,7 @@ void hrm_set_activity_scene(HRMDevice *dev, HRMActivityScene scene) {
 // Accel manager fake
 // -----------------------------------------------------------------------------
 
-// Hands out one static subscription
+// Every subscription gets the same address, the way the heap can hand back a block just freed
 struct AccelManagerState {
   int unused;
 };
@@ -284,6 +284,31 @@ void test_hrm_manager__subscription(void) {
   fake_system_task_callbacks_invoke_pending();
   cl_assert(prv_get_subscriber_state_from_ref(session_ref) == NULL);
   cl_assert_equal_b(hrm_is_enabled(HRM), false);
+}
+
+// An accel data event queued before the sensor turned off, or before it turned on again with a new
+// subscription at the same address, is skipped rather than reading a dropped subscription or
+// consuming the new one's samples
+void test_hrm_manager__stale_accel_event_is_skipped(void) {
+  AppInstallId app_id = 1;
+  HRMSessionRef session_ref =
+      sys_hrm_manager_app_subscribe(app_id, 1, PBL_SEC_PER_MIN, HRMFeature_BPM);
+  fake_system_task_callbacks_invoke_pending();
+  void *stale_context = s_accel_data_cb_context;
+  sys_hrm_manager_unsubscribe(session_ref);
+  fake_system_task_callbacks_invoke_pending();
+  s_accel_data_cb(stale_context);
+  cl_assert_equal_i(s_accel_consume_calls, 0);
+  session_ref = sys_hrm_manager_app_subscribe(app_id, 1, PBL_SEC_PER_MIN, HRMFeature_BPM);
+  fake_system_task_callbacks_invoke_pending();
+
+  s_accel_data_cb(stale_context);
+  cl_assert_equal_i(s_accel_consume_calls, 0);
+  s_accel_data_cb(s_accel_data_cb_context);
+
+  cl_assert_equal_i(s_accel_consume_calls, 1);
+  sys_hrm_manager_unsubscribe(session_ref);
+  fake_system_task_callbacks_invoke_pending();
 }
 
 // Batches already waiting behind the first are handled in the same event, rather than sitting until
