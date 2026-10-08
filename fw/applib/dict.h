@@ -209,7 +209,7 @@ typedef struct {
 //! @param ... The sizes of each of the values that need to be
 //! stored in the dictionary.
 //! @return The total number of bytes of storage needed.
-uint32_t dict_calc_buffer_size(const uint8_t tuple_count, ...);
+uint32_t dict_calc_buffer_size(uint32_t tuple_count, ...);
 
 //! Calculates the size of data that has been written to the dictionary.
 //! AKA, the "dictionary size". Note that this is most likely different
