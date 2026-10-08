@@ -11,7 +11,6 @@ add_compile_options(
   -Wpointer-arith
   -Wno-unused-parameter
   -Wno-missing-field-initializers
-  -Wno-address-of-packed-member
 )
 
 if(CONFIG_ARCH_POSIX)
