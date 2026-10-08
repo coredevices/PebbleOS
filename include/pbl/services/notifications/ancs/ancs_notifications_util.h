@@ -5,7 +5,6 @@
 
 #include "applib/graphics/gtypes.h"
 #include "comm/ble/kernel_le_client/ancs/ancs_types.h"
-#include "pbl/kernel/compiler.h"
 #include <time.h>
 
 /**
@@ -29,7 +28,7 @@
 #define IOS_FACETIME_APP_ID "com.apple.facetime"
 
 /** @brief Presentation of a known iOS app. */
-typedef struct PBL_PACKED ANCSAppMetadata {
+typedef struct ANCSAppMetadata {
   /** Bundle identifier, NULL for the generic entry used for unknown apps. */
   const char *app_id;
   /** Timeline resource id of the app icon. */
