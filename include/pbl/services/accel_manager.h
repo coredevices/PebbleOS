@@ -28,6 +28,11 @@
 /**
  * @brief Called when a subscriber's sample buffer is full.
  *
+ * No further callback is posted until sys_accel_manager_consume_samples() is called, so each call
+ * must end with one, even of 0 samples, unless the subscription has been dropped meanwhile. It
+ * handles the next batch itself while the consume reports more. The buffer can hold fewer samples
+ * than requested if it was changed meanwhile.
+ *
  * @param context Context given to sys_accel_manager_data_subscribe().
  */
 typedef void (*AccelDataReadyCallback)(void *context);
@@ -99,7 +104,7 @@ AccelManagerState *sys_accel_manager_data_subscribe(AccelSamplingRate rate,
  * @brief Remove a subscription and free it.
  *
  * @param state Subscription to remove.
- * @return true if a data callback had been posted and not yet processed.
+ * @return true if a data callback was posted and hasn't been consumed yet, including one running.
  */
 bool sys_accel_manager_data_unsubscribe(AccelManagerState *state);
 
@@ -130,6 +135,9 @@ uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
 /**
  * @brief Set the buffer that receives a subscription's samples.
  *
+ * Empties the buffer and bumps its generation. An event already out stays out until its consume,
+ * which then sees the new generation.
+ *
  * @param state Subscription.
  * @param buffer Buffer of at least @p samples_per_update samples, owned by the caller. Can be NULL
  *               when @p samples_per_update is 0.
@@ -146,20 +154,28 @@ int sys_accel_manager_set_sample_buffer(AccelManagerState *state, AccelRawData *
  *
  * @param state Subscription.
  * @param[out] timestamp_ms Timestamp of the first buffered sample, in milliseconds.
+ * @param[out] generation Buffer generation, to pass to sys_accel_manager_consume_samples().
  * @return Number of buffered samples.
  */
-uint32_t sys_accel_manager_get_num_samples(AccelManagerState *state, uint64_t *timestamp_ms);
+uint32_t sys_accel_manager_get_num_samples(AccelManagerState *state, uint64_t *timestamp_ms,
+                                           uint32_t *generation);
 
 /**
- * @brief Release a subscription's buffered samples and refill its buffer.
+ * @brief Finish handling a data callback, so the next one can be posted.
  *
- * Samples not consumed are dropped.
+ * With the current generation and @p samples above 0, the buffer is emptied and samples not
+ * consumed are dropped. With @p samples 0 or an older generation, the buffer is kept.
  *
  * @param state Subscription.
  * @param samples Number of samples processed by the subscriber.
- * @return true if @p samples matched the number of buffered samples.
+ * @param generation Generation from sys_accel_manager_get_num_samples().
+ * @param[out] more true if the refilled buffer already holds the next batch. The running callback
+ *                  handles it, since no new one is posted for it.
+ * @return false if @p samples is from the current generation and didn't match the number of
+ *         buffered samples.
  */
-bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t samples);
+bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t samples,
+                                       uint32_t generation, bool *more);
 
 /**
  * @brief Make shake detection sensitive enough to trigger on small movements.

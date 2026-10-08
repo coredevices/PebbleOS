@@ -138,29 +138,34 @@ PBL_T_STATIC uint32_t prv_get_dropped_events_count(void) {
 static void prv_handle_accel_data(void *data) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_NewTimers);
 
-  uint64_t timestamp_ms;
-  uint32_t num_new_samples =
-      sys_accel_manager_get_num_samples(s_manager_state.accel_state, &timestamp_ms);
+  bool more;
+  do {
+    uint64_t timestamp_ms;
+    uint32_t generation;
+    uint32_t num_new_samples =
+        sys_accel_manager_get_num_samples(s_manager_state.accel_state, &timestamp_ms, &generation);
 
-  pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
+    pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
 
-  // Only read as many as we have space to store
-  const size_t MAX_BUFFERED_SAMPLES = ARRAY_LENGTH(s_manager_state.accel_data.data);
-  uint32_t num_samples_to_copy = num_new_samples;
-  if ((s_manager_state.accel_data.num_samples + num_new_samples) > MAX_BUFFERED_SAMPLES) {
-    num_samples_to_copy = MAX_BUFFERED_SAMPLES - s_manager_state.accel_data.num_samples;
-  }
+    // Only read as many as we have space to store
+    const size_t MAX_BUFFERED_SAMPLES = ARRAY_LENGTH(s_manager_state.accel_data.data);
+    uint32_t num_samples_to_copy = num_new_samples;
+    if ((s_manager_state.accel_data.num_samples + num_new_samples) > MAX_BUFFERED_SAMPLES) {
+      num_samples_to_copy = MAX_BUFFERED_SAMPLES - s_manager_state.accel_data.num_samples;
+    }
 
-  void *write_ptr = &s_manager_state.accel_data.data[s_manager_state.accel_data.num_samples];
-  memcpy(write_ptr, s_manager_state.accel_manager_buffer,
-         num_samples_to_copy * sizeof(AccelRawData));
+    void *write_ptr = &s_manager_state.accel_data.data[s_manager_state.accel_data.num_samples];
+    memcpy(write_ptr, s_manager_state.accel_manager_buffer,
+           num_samples_to_copy * sizeof(AccelRawData));
 
-  s_manager_state.accel_data.num_samples += num_samples_to_copy;
+    s_manager_state.accel_data.num_samples += num_samples_to_copy;
 
-  pbl_mutex_unlock(&s_manager_state.accel_data_lock);
+    pbl_mutex_unlock(&s_manager_state.accel_data_lock);
 
-  // Always consume all samples that were prepared, even if we couldn't store them all
-  sys_accel_manager_consume_samples(s_manager_state.accel_state, num_new_samples);
+    // Always consume all samples that were prepared, even if we couldn't store them all
+    sys_accel_manager_consume_samples(s_manager_state.accel_state, num_new_samples, generation,
+                                      &more);
+  } while (more);
 }
 
 PBL_T_STATIC bool prv_can_turn_sensor_on(void) {

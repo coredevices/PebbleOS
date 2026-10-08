@@ -20,7 +20,6 @@
 #include <fake_rtc.h>
 #include <fake_system_task.h>
 #include <services/hrm/hrm_manager.h>
-#include <stubs_accel_manager.h>
 #include <stubs_analytics.h>
 #include <stubs_event_service_client.h>
 #include <stubs_logging.h>
@@ -69,6 +68,59 @@ bool hrm_is_enabled(HRMDevice *dev) {
 void hrm_set_activity_scene(HRMDevice *dev, HRMActivityScene scene) {
   (void)dev;
   (void)scene;
+}
+
+// -----------------------------------------------------------------------------
+// Accel manager fake
+// -----------------------------------------------------------------------------
+
+// Hands out one static subscription
+struct AccelManagerState {
+  int unused;
+};
+static AccelManagerState s_accel_state;
+static AccelDataReadyCallback s_accel_data_cb;
+static void *s_accel_data_cb_context;
+static int s_accel_consume_calls;
+static int s_accel_waiting_batches;
+
+AccelManagerState *sys_accel_manager_data_subscribe(AccelSamplingRate rate,
+                                                    AccelDataReadyCallback data_cb, void *context,
+                                                    PebbleTask handler_task) {
+  s_accel_data_cb = data_cb;
+  s_accel_data_cb_context = context;
+  return &s_accel_state;
+}
+
+bool sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
+  return false;
+}
+
+uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
+                                                    uint32_t min_rate_mhz) {
+  return 0;
+}
+
+int sys_accel_manager_set_sample_buffer(AccelManagerState *state, AccelRawData *buffer,
+                                        uint32_t samples_per_update) {
+  return 0;
+}
+
+uint32_t sys_accel_manager_get_num_samples(AccelManagerState *state, uint64_t *timestamp_ms,
+                                           uint32_t *generation) {
+  *timestamp_ms = 0;
+  *generation = 0;
+  return HRM_MANAGER_ACCEL_MANAGER_SAMPLES_PER_UPDATE;
+}
+
+bool sys_accel_manager_consume_samples(AccelManagerState *state, uint32_t samples,
+                                       uint32_t generation, bool *more) {
+  s_accel_consume_calls++;
+  *more = s_accel_waiting_batches > 0;
+  if (*more) {
+    s_accel_waiting_batches--;
+  }
+  return true;
 }
 
 // -----------------------------------------------------------------------------
@@ -185,6 +237,10 @@ void test_hrm_manager__initialize(void) {
   s_num_cb_events_1 = 0;
   s_num_cb_events_2 = 0;
   memset(&s_hrm_state, 0, sizeof(s_hrm_state));
+  s_accel_data_cb = NULL;
+  s_accel_data_cb_context = NULL;
+  s_accel_consume_calls = 0;
+  s_accel_waiting_batches = 0;
   s_activity_prefs_blood_oxygen_is_enabled = false;
   hrm_manager_init();
   hrm_manager_enable(true);
@@ -228,6 +284,20 @@ void test_hrm_manager__subscription(void) {
   fake_system_task_callbacks_invoke_pending();
   cl_assert(prv_get_subscriber_state_from_ref(session_ref) == NULL);
   cl_assert_equal_b(hrm_is_enabled(HRM), false);
+}
+
+// Batches already waiting behind the first are handled in the same event, rather than sitting until
+// the next driver batch
+void test_hrm_manager__accel_event_drains_waiting_batches(void) {
+  HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(1, 1, PBL_SEC_PER_MIN, HRMFeature_BPM);
+  fake_system_task_callbacks_invoke_pending();
+  s_accel_waiting_batches = 2;
+
+  s_accel_data_cb(s_accel_data_cb_context);
+
+  cl_assert_equal_i(s_accel_consume_calls, 3);
+  sys_hrm_manager_unsubscribe(session_ref);
+  fake_system_task_callbacks_invoke_pending();
 }
 
 // When the union of subscriber features changes while the sensor is on, the manager must restart

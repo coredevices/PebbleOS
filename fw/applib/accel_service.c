@@ -27,6 +27,17 @@ static void prv_assert_session_task(void) {
   PBL_ASSERTN(prv_is_session_task());
 }
 
+// Data event context. state is NULL once the subscription is dropped
+typedef struct AccelSubscriptionToken {
+  AccelServiceState *state;
+} AccelSubscriptionToken;
+
+// Assert that a session's data subscription is changed on the task its events run on
+static void prv_assert_handler_task(AccelServiceState *state) {
+  PBL_ASSERTN(state->handler_task == PebbleTask_Unknown ||
+              state->handler_task == pebble_task_get_current());
+}
+
 // --------------------------------------------------------------------------------------------
 // Return the session ref for the given task. This should ONLY be used by 3rd party tasks
 // (app or worker).
@@ -72,18 +83,32 @@ static void prv_do_double_tap_handle(PebbleEvent *e, void *context) {
   state->double_tap_handler((AccelAxisType)e->accel_tap.axis, e->accel_tap.direction);
 }
 
-// -----------------------------------------------------------------------------------------------
-// Handle a chunk of data received for a data subscription. Called by prv_do_data_handle.
-static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time_interval_ms) {
-  uint32_t num_samples = 0;
-
-  uint64_t timestamp_ms;
-  num_samples = sys_accel_manager_get_num_samples(state->manager_state, &timestamp_ms);
-  // Nothing to deliver until a full batch is in, and with a batch size of 0 there never is one
-  if (state->samples_per_update == 0 || num_samples < state->samples_per_update) {
-    return 0;
+// ---------------------------------------------------------------------------------------------
+// Handles one batch. Returns true if the manager already has the next one for this event
+static bool prv_do_data_handle_chunk(AccelSubscriptionToken *token) {
+  AccelServiceState *state = token->state;
+  // The subscription was dropped after this event was posted
+  if (!state) {
+    applib_free(token);
+    return false;
   }
 
+  uint64_t timestamp_ms;
+  uint32_t generation;
+  bool more;
+  uint32_t num_samples =
+      sys_accel_manager_get_num_samples(state->manager_state, &timestamp_ms, &generation);
+  // The batch size is 0 or the buffer changed since this event was posted, so just release it. A
+  // full batch at the new size comes round on the next pass
+  if (state->samples_per_update == 0 || num_samples < state->samples_per_update) {
+    sys_accel_manager_consume_samples(state->manager_state, 0, generation, &more);
+    return more;
+  }
+
+  PBL_ASSERTN(state->data_handler != NULL || state->raw_data_handler != NULL ||
+              state->raw_data_handler_deprecated != NULL);
+
+  uint16_t time_interval_ms = 1000 / state->sampling_rate;
   uint32_t time_since_last_sample =
       (state->prev_timestamp_ms != 0) ? timestamp_ms - state->prev_timestamp_ms : 0;
   state->prev_timestamp_ms = timestamp_ms;
@@ -97,7 +122,6 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
                     state->raw_data[i].z);
   }
 
-  state->subscription_changed = false;
   if (state->raw_data_handler_deprecated) {
     state->raw_data_handler_deprecated(state->raw_data, num_samples);
 
@@ -119,42 +143,25 @@ static uint32_t prv_do_data_handle_chunk(AccelServiceState *state, uint16_t time
     state->data_handler(data, num_samples);
   }
 
-  // The handler unsubscribed or subscribed again, so these samples belong to a subscription
-  // that's gone and there's nothing left to consume.
-  if (state->subscription_changed) {
-    return 0;
+  // The handler unsubscribed or subscribed again, which may also have deleted the state
+  if (!token->state) {
+    applib_free(token);
+    return false;
   }
 
   // Tell accel_manager that it can put more data in now
-  bool success = sys_accel_manager_consume_samples(state->manager_state, num_samples);
+  bool success =
+      sys_accel_manager_consume_samples(state->manager_state, num_samples, generation, &more);
   PBL_ASSERTN(success);
-  return num_samples;
+  return more;
 }
 
 // ---------------------------------------------------------------------------------------------
 // Called by sys_accel_manager when we have data available for this subscriber
 static void prv_do_data_handle(void *context) {
-  AccelServiceState *state = (AccelServiceState *)context;
-
-  if (state->manager_state == NULL) {
-    if (state->deferred_free) {
-      PBL_LOG_DBG("Deferred free");
-      kernel_free(state);
-    }
-    // event queue is handled kernel-side, so an event may fire after we've unsubscribed
-    return;
+  // Process in chunks to limit the amount of stack space we use up
+  while (prv_do_data_handle_chunk(context)) {
   }
-
-  PBL_ASSERTN(state->data_handler != NULL || state->raw_data_handler != NULL ||
-              state->raw_data_handler_deprecated != NULL);
-
-  uint16_t time_interval_ms = 1000 / state->sampling_rate;
-
-  // Process in chunks to limit the amount of stack space we use up.
-  uint32_t num_processed;
-  do {
-    num_processed = prv_do_data_handle_chunk(state, time_interval_ms);
-  } while (num_processed);
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -170,21 +177,89 @@ int accel_service_set_samples_per_update(uint32_t samples_per_update) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_shared_subscribe(AccelServiceState *state, AccelSamplingRate sampling_rate,
-                                 uint32_t samples_per_update, PebbleTask handler_task) {
-  // Subscribing again replaces the current subscription. The new one is added before the old
-  // one is removed, so the manager is never left without a subscriber in between.
-  AccelManagerState *old_manager_state = state->manager_state;
-  state->manager_state =
-      sys_accel_manager_data_subscribe(sampling_rate, prv_do_data_handle, state, handler_task);
-  state->subscription_changed = true;
-  state->sampling_rate = sampling_rate;
-  if (old_manager_state && sys_accel_manager_data_unsubscribe(old_manager_state)) {
-    // A data event for the old subscription still points at this state, as on unsubscribe
-    state->deferred_free |= state->kernel_session;
+// Removes the subscription and its buffer. The data event still out for it frees the token
+static void prv_drop_subscription(AccelServiceState *state) {
+  bool queued = sys_accel_manager_data_unsubscribe(state->manager_state);
+  applib_free(state->raw_data);
+  state->raw_data = NULL;
+  state->token->state = NULL;
+  if (!queued) {
+    applib_free(state->token);
   }
+  state->manager_state = NULL;
+  state->token = NULL;
+  state->handler_task = PebbleTask_Unknown;
+}
 
-  accel_session_set_samples_per_update((AccelServiceState *)state, samples_per_update);
+// ----------------------------------------------------------------------------------------------
+// Clamps the batch size and allocates its buffer. A batch size of 0 needs no buffer, and
+// applib_malloc(0) returns NULL
+static bool prv_alloc_raw_data(uint32_t *samples_per_update, AccelRawData **raw_data) {
+  uint32_t max_samples_per_update = sys_accel_manager_get_max_samples_per_update();
+  if (*samples_per_update > max_samples_per_update) {
+    APP_LOG(LOG_LEVEL_WARNING, "%d samples per update requested, max is %d",
+            (int)*samples_per_update, (int)max_samples_per_update);
+    *samples_per_update = max_samples_per_update;
+  }
+  *raw_data = NULL;
+  if (*samples_per_update == 0) {
+    return true;
+  }
+  // This is a packed array of simple types and therefore shouldn't have compatibility padding
+  *raw_data = applib_malloc(*samples_per_update * sizeof(AccelRawData));
+  if (!*raw_data) {
+    APP_LOG(LOG_LEVEL_ERROR, "Not enough memory to subscribe");
+    return false;
+  }
+  return true;
+}
+
+// ----------------------------------------------------------------------------------------------
+// Subscribing again replaces the current subscription. The new one is set up in full before the
+// old one is removed, so a failure leaves the current one as it is, and the manager is never left
+// without a subscriber in between.
+static void prv_shared_subscribe(AccelServiceState *state, AccelSamplingRate sampling_rate,
+                                 uint32_t samples_per_update, AccelDataHandler data_handler,
+                                 AccelRawDataHandler raw_data_handler,
+                                 AccelRawDataHandler__deprecated raw_data_handler_deprecated) {
+  prv_assert_handler_task(state);
+  // No handler to deliver to, so treat it as a batch size of 0
+  if (!data_handler && !raw_data_handler && !raw_data_handler_deprecated) {
+    samples_per_update = 0;
+  }
+  AccelRawData *raw_data;
+  if (!prv_alloc_raw_data(&samples_per_update, &raw_data)) {
+    return;
+  }
+  AccelSubscriptionToken *token = applib_malloc(sizeof(AccelSubscriptionToken));
+  if (!token) {
+    APP_LOG(LOG_LEVEL_ERROR, "Not enough memory to subscribe");
+    applib_free(raw_data);
+    return;
+  }
+  *token = (AccelSubscriptionToken){.state = state};
+
+  PebbleTask handler_task = pebble_task_get_current();
+  AccelManagerState *manager_state =
+      sys_accel_manager_data_subscribe(sampling_rate, prv_do_data_handle, token, handler_task);
+  if (sys_accel_manager_set_sample_buffer(manager_state, raw_data, samples_per_update) != 0) {
+    sys_accel_manager_data_unsubscribe(manager_state);
+    applib_free(raw_data);
+    applib_free(token);
+    return;
+  }
+  if (state->manager_state) {
+    prv_drop_subscription(state);
+  }
+  state->manager_state = manager_state;
+  state->token = token;
+  state->handler_task = handler_task;
+  state->sampling_rate = sampling_rate;
+  state->raw_data = raw_data;
+  state->samples_per_update = samples_per_update;
+  state->data_handler = data_handler;
+  state->raw_data_handler = raw_data_handler;
+  state->raw_data_handler_deprecated = raw_data_handler_deprecated;
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -203,13 +278,7 @@ void accel_raw_data_service_subscribe(uint32_t samples_per_update, AccelRawDataH
 void accel_data_service_subscribe__deprecated(uint32_t samples_per_update,
                                               AccelRawDataHandler__deprecated handler) {
   AccelServiceState *session = accel_service_private_get_session(PebbleTask_Unknown);
-  AccelServiceState *state = (AccelServiceState *)session;
-
-  state->raw_data_handler_deprecated = handler;
-  state->raw_data_handler = NULL;
-  state->data_handler = NULL;
-
-  prv_shared_subscribe(state, ACCEL_SAMPLING_25HZ, samples_per_update, pebble_task_get_current());
+  prv_shared_subscribe(session, ACCEL_SAMPLING_25HZ, samples_per_update, NULL, NULL, handler);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -262,6 +331,7 @@ int accel_service_peek(AccelData *accel_data) {
 void accel_service_state_init(AccelServiceState *state) {
   *state = (AccelServiceState){
     .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
+    .handler_task = PebbleTask_Unknown,
     .accel_shake_info =
         {
           .type = PEBBLE_ACCEL_SHAKE_EVENT,
@@ -298,8 +368,8 @@ AccelServiceState *accel_session_create(void) {
   AccelServiceState *state = kernel_malloc_check(sizeof(AccelServiceState));
 
   *state = (AccelServiceState){
-    .kernel_session = true,
     .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
+    .handler_task = PebbleTask_Unknown,
     .accel_shake_info =
         {
           .type = PEBBLE_ACCEL_SHAKE_EVENT,
@@ -322,11 +392,8 @@ void accel_session_delete(AccelServiceState *session) {
   // we better have unsubscribed at this point
   PBL_ASSERTN(session->manager_state == NULL);
 
-  // A deferred free means one lingering event was posted. We will free the session once the event
-  // gets drained in 'prv_do_data_handle'
-  if (!session->deferred_free) {
-    kernel_free(session);
-  }
+  // A data event still queued for the session only reads its token
+  kernel_free(session);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -357,21 +424,13 @@ void accel_session_double_tap_unsubscribe(AccelServiceState *state) {
 // -----------------------------------------------------------------------------------------------
 void accel_session_data_subscribe(AccelServiceState *state, uint32_t samples_per_update,
                                   AccelDataHandler handler) {
-  state->data_handler = handler;
-  state->raw_data_handler = NULL;
-  state->raw_data_handler_deprecated = NULL;
-
-  prv_shared_subscribe(state, ACCEL_SAMPLING_25HZ, samples_per_update, pebble_task_get_current());
+  prv_shared_subscribe(state, ACCEL_SAMPLING_25HZ, samples_per_update, handler, NULL, NULL);
 }
 
 // -----------------------------------------------------------------------------------------------
 void accel_session_raw_data_subscribe(AccelServiceState *state, AccelSamplingRate sampling_rate,
                                       uint32_t samples_per_update, AccelRawDataHandler handler) {
-  state->raw_data_handler = handler;
-  state->raw_data_handler_deprecated = NULL;
-  state->data_handler = NULL;
-
-  prv_shared_subscribe(state, sampling_rate, samples_per_update, pebble_task_get_current());
+  prv_shared_subscribe(state, sampling_rate, samples_per_update, NULL, handler, NULL);
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -379,16 +438,8 @@ void accel_session_data_unsubscribe(AccelServiceState *state) {
   if (!state->manager_state) {
     return;
   }
-  if (sys_accel_manager_data_unsubscribe(state->manager_state)) {
-    // A queued data event still points at this state. Only a session from accel_session_create()
-    // is heap memory, so only that one is freed when the event drains.
-    state->deferred_free = state->kernel_session;
-  }
-
-  applib_free(state->raw_data);
-  state->manager_state = NULL;
-  state->subscription_changed = true;
-  state->raw_data = NULL;
+  prv_assert_handler_task(state);
+  prv_drop_subscription(state);
   state->data_handler = NULL;
   state->raw_data_handler = NULL;
   state->raw_data_handler_deprecated = NULL;
@@ -400,6 +451,7 @@ int accel_session_set_sampling_rate(AccelServiceState *state, AccelSamplingRate 
       (!state->data_handler && !state->raw_data_handler && !state->raw_data_handler_deprecated)) {
     return -1;
   }
+  prv_assert_handler_task(state);
   int result = sys_accel_manager_set_sampling_rate(state->manager_state, rate);
   // A rate the manager rejects leaves the driver sampling at the old rate, so the old rate stays.
   if (result == 0) {
@@ -410,25 +462,14 @@ int accel_session_set_sampling_rate(AccelServiceState *state, AccelSamplingRate 
 
 // -----------------------------------------------------------------------------------------------
 int accel_session_set_samples_per_update(AccelServiceState *state, uint32_t samples_per_update) {
-  uint32_t max_samples_per_update = sys_accel_manager_get_max_samples_per_update();
-  if (samples_per_update > max_samples_per_update) {
-    APP_LOG(LOG_LEVEL_WARNING, "%d samples per update requested, max is %d",
-            (int)samples_per_update, (int)max_samples_per_update);
-    samples_per_update = max_samples_per_update;
-  }
   if (!state->manager_state || (samples_per_update > 0 && !state->data_handler &&
                                 !state->raw_data_handler && !state->raw_data_handler_deprecated)) {
     return -1;
   }
-  // A batch size of 0 needs no buffer, and applib_malloc(0) returns NULL
-  AccelRawData *new_buf = NULL;
-  if (samples_per_update > 0) {
-    // This is a packed array of simple types and therefore shouldn't have compatibility padding
-    new_buf = applib_malloc(samples_per_update * sizeof(AccelRawData));
-    if (!new_buf) {
-      APP_LOG(LOG_LEVEL_ERROR, "Not enough memory to subscribe");
-      return -1;
-    }
+  prv_assert_handler_task(state);
+  AccelRawData *new_buf;
+  if (!prv_alloc_raw_data(&samples_per_update, &new_buf)) {
+    return -1;
   }
 
   int result =

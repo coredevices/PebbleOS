@@ -12,13 +12,10 @@ typedef struct AccelServiceState {
   // Configuration for our data callback subscription to the accel manager
   AccelManagerState *manager_state;
   AccelSamplingRate sampling_rate;
-  bool deferred_free;
-  //! True for a session from accel_session_create(). The app and worker states live inside their
-  //! process state, so this module never frees them.
-  bool kernel_session;
-  //! Set by every subscribe and unsubscribe, so a data handler that does either can be told
-  //! apart from one that doesn't.
-  bool subscription_changed;
+  //! Context of the current subscription's data events
+  struct AccelSubscriptionToken *token;
+  //! Task the data events run on, PebbleTask_Unknown while not subscribed
+  PebbleTask handler_task;
   uint16_t samples_per_update;
   AccelRawData *raw_data; // of size samples_per_update
 
@@ -79,7 +76,7 @@ void accel_session_double_tap_subscribe(AccelServiceState *session, AccelTapHand
 void accel_session_double_tap_unsubscribe(AccelServiceState *session);
 
 //! Subscribe to the accelerometer data event service by session ref. Used by kernel clients
-//! only.
+//! only. Subscribing again must be on the task that subscribed.
 //! @param session An accel session created by accel_session_create()
 //! @param handler A callback to be executed on accelerometer data events
 //! @param samples_per_update the number of samples to buffer, between 0 and 25.
@@ -87,7 +84,7 @@ void accel_session_data_subscribe(AccelServiceState *session, uint32_t samples_p
                                   AccelDataHandler handler);
 
 //! Subscribe to the accelerometer data event service by session ref. Used by kernel clients
-//! only.
+//! only. Subscribing again must be on the task that subscribed.
 //! @param session An accel session created by accel_session_create()
 //! @param sampling_rate the desired sampling_rate
 //! @param samples_per_update the number of samples to buffer, between 0 and 25.
@@ -97,17 +94,18 @@ void accel_session_raw_data_subscribe(AccelServiceState *session, AccelSamplingR
                                       uint32_t samples_per_update, AccelRawDataHandler handler);
 
 //! Unsubscribe from the accelerometer data event service. Used by kernel clients
-//! only.
+//! only. Must be called on the task that subscribed.
 //! @param session An accel session created by accel_session_create()
 void accel_session_data_unsubscribe(AccelServiceState *session);
 
 //! Change the accelerometer sampling rate. Used by kernel clients only.
+//! Must be called on the task that subscribed.
 //! @param session An accel session created by accel_session_create()
 //! @param rate The sampling rate in Hz (10Hz, 25Hz, 50Hz, and 100Hz possible)
 int accel_session_set_sampling_rate(AccelServiceState *session, AccelSamplingRate rate);
 
 //! Change the number of samples buffered between each accelerometer data event. Used by kernel
-//! clients only.
+//! clients only. Must be called on the task that subscribed.
 //! @param session An accel session created by accel_session_create()
 //! @param num_samples the number of samples to buffer, between 0 and 25.
 int accel_session_set_samples_per_update(AccelServiceState *session, uint32_t num_samples);

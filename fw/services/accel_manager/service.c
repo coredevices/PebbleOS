@@ -51,7 +51,8 @@ typedef struct AccelManagerState {
   uint64_t timestamp_ms;    // timestamp of first item in the buffer
   AccelRawData *raw_buffer; // raw buffer allocated by subscriber
   uint8_t num_samples;      // number of samples in raw_buffer
-  bool event_posted;        // True if we've posted a "data ready" callback event
+  bool event_posted;        // True while a data event is queued or running
+  uint32_t generation;      // bumped on every buffer change
 } AccelManagerState;
 
 typedef struct {
@@ -591,6 +592,7 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelManagerState *stat
     state->raw_buffer = (samples_per_update > 0) ? buffer : NULL;
     state->samples_per_update = samples_per_update;
     state->num_samples = 0;
+    state->generation++;
     prv_update_driver_config();
   }
   pbl_mutex_unlock(&s_accel_manager_mutex);
@@ -603,40 +605,50 @@ DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_max_samples_per_update, void) {
 }
 
 DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples, AccelManagerState *state,
-               uint64_t *timestamp_ms) {
+               uint64_t *timestamp_ms, uint32_t *generation) {
   prv_assert_state_from_user(state);
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(timestamp_ms, sizeof(*timestamp_ms));
+    syscall_assert_userspace_buffer(generation, sizeof(*generation));
   }
 
   pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
 
   uint32_t result = state->num_samples;
   *timestamp_ms = state->timestamp_ms;
+  *generation = state->generation;
 
   pbl_mutex_unlock(&s_accel_manager_mutex);
   return result;
 }
 
-DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples, AccelManagerState *state,
-               uint32_t samples) {
+DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples, AccelManagerState *state, uint32_t samples,
+               uint32_t generation, bool *more) {
   prv_assert_state_from_user(state);
+  if (PRIVILEGE_WAS_ELEVATED) {
+    syscall_assert_userspace_buffer(more, sizeof(*more));
+  }
   bool success = true;
   pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
 
-  if (samples > state->num_samples) {
-    PBL_LOG_ERR("Consuming more samples than exist %d vs %d!", (int)samples,
-                (int)state->num_samples);
-    success = false;
-  } else if (samples != state->num_samples) {
-    PBL_LOG_DBG("Dropping %d accel samples", (int)(state->num_samples - samples));
-    success = false;
+  // Samples from a buffer that's been replaced, or none at all, leave the current buffer as it is
+  if (generation == state->generation && samples > 0) {
+    if (samples > state->num_samples) {
+      PBL_LOG_ERR("Consuming more samples than exist %d vs %d!", (int)samples,
+                  (int)state->num_samples);
+      success = false;
+    } else if (samples != state->num_samples) {
+      PBL_LOG_DBG("Dropping %d accel samples", (int)(state->num_samples - samples));
+      success = false;
+    }
+    state->num_samples = 0;
   }
 
-  state->event_posted = false;
-  state->num_samples = 0;
   // Fill it again from circular buffer
-  prv_dispatch_data(state->task != pebble_task_get_current() /* post_event */);
+  prv_dispatch_data(false /* post_event */);
+  // A batch that's already in goes to the running callback, so no event is posted for it
+  *more = state->samples_per_update > 0 && state->num_samples >= state->samples_per_update;
+  state->event_posted = *more;
 
   pbl_mutex_unlock(&s_accel_manager_mutex);
   return success;

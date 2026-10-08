@@ -99,9 +99,17 @@ bool accel_get_double_tap_detection_enabled(void) {
   return false;
 }
 
+// Data events for a NewTimers subscriber land here, so a test can count them
+static int s_posted_events;
+static bool s_new_timer_queue_full;
+
 void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
 }
 bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {
+  if (s_new_timer_queue_full) {
+    return false;
+  }
+  s_posted_events++;
   return true;
 }
 
@@ -113,10 +121,13 @@ void test_accel_manager__initialize(void) {
   s_sampling_interval_us = 1000000 / ACCEL_SAMPLING_25HZ;
   s_num_samples = 0;
   s_force_sampling_interval = false;
+  s_posted_events = 0;
+  s_new_timer_queue_full = false;
 }
 
 void test_accel_manager__cleanup(void) {
   test_accel_manager_reset();
+  fake_system_task_callbacks_cleanup();
 }
 
 static void prv_noop_sample_handler(void *context) {
@@ -294,9 +305,21 @@ static AccelManagerState *prv_subscribe_on_new_timers(void) {
 // Consumes the full batch in a subscription's buffer and returns its timestamp
 static uint64_t prv_consume_timestamp(AccelManagerState *state) {
   uint64_t timestamp_ms;
-  uint32_t num_samples = sys_accel_manager_get_num_samples(state, &timestamp_ms);
-  sys_accel_manager_consume_samples(state, num_samples);
+  uint32_t generation;
+  bool more;
+  uint32_t num_samples = sys_accel_manager_get_num_samples(state, &timestamp_ms, &generation);
+  sys_accel_manager_consume_samples(state, num_samples, generation, &more);
   return timestamp_ms;
+}
+
+// Consumes the full batch in a subscription's buffer and returns whether the next one is in
+static bool prv_consume(AccelManagerState *state) {
+  uint64_t timestamp_ms;
+  uint32_t generation;
+  bool more;
+  uint32_t num_samples = sys_accel_manager_get_num_samples(state, &timestamp_ms, &generation);
+  sys_accel_manager_consume_samples(state, num_samples, generation, &more);
+  return more;
 }
 
 //! A subscriber with no buffer, or a batch size of 0, has its data dropped. Left in the shared
@@ -318,4 +341,131 @@ void test_accel_manager__a_subscriber_without_a_buffer_doesnt_hold_back_timestam
   }
 
   cl_assert_equal_i(timestamp_ms, (num_samples - 1) * (1000 / ACCEL_SAMPLING_25HZ));
+}
+
+//! A buffer change while an event is out posts no second event for the subscription
+void test_accel_manager__a_buffer_change_with_an_event_out_posts_no_second_event(void) {
+  AccelRawData buffer[2];
+  AccelRawData new_buffer[2];
+  AccelManagerState *state = prv_subscribe_on_new_timers();
+  sys_accel_manager_set_sample_buffer(state, buffer, 2);
+  prv_feed(2);
+  sys_accel_manager_set_sample_buffer(state, new_buffer, 2);
+
+  prv_feed(2);
+
+  cl_assert_equal_i(s_posted_events, 1);
+}
+
+//! A consume from an old buffer's event keeps the new buffer's samples
+void test_accel_manager__a_consume_with_an_old_generation_keeps_the_new_samples(void) {
+  AccelRawData buffer[2];
+  AccelRawData new_buffer[2];
+  AccelManagerState *state = prv_subscribe_on_new_timers();
+  sys_accel_manager_set_sample_buffer(state, buffer, 2);
+  prv_feed(2);
+  uint64_t timestamp_ms;
+  uint32_t old_generation;
+  sys_accel_manager_get_num_samples(state, &timestamp_ms, &old_generation);
+  sys_accel_manager_set_sample_buffer(state, new_buffer, 2);
+  prv_feed(2);
+
+  bool more;
+  bool result = sys_accel_manager_consume_samples(state, 2, old_generation, &more);
+
+  cl_assert(result);
+  uint32_t generation;
+  uint32_t num_samples = sys_accel_manager_get_num_samples(state, &timestamp_ms, &generation);
+  cl_assert_equal_i(num_samples, 2);
+}
+
+//! A consume of 0 releases the event and keeps the samples, so the next full batch posts
+void test_accel_manager__a_consume_of_0_releases_the_event_and_keeps_the_samples(void) {
+  AccelRawData buffer[3];
+  AccelRawData new_buffer[3];
+  AccelManagerState *state = prv_subscribe_on_new_timers();
+  sys_accel_manager_set_sample_buffer(state, buffer, 3);
+  prv_feed(3);
+  sys_accel_manager_set_sample_buffer(state, new_buffer, 3);
+  prv_feed(1);
+  uint64_t timestamp_ms;
+  uint32_t generation;
+  bool more;
+  sys_accel_manager_get_num_samples(state, &timestamp_ms, &generation);
+  sys_accel_manager_consume_samples(state, 0, generation, &more);
+
+  prv_feed(2);
+
+  cl_assert_equal_i(s_posted_events, 2);
+}
+
+//! A batch already waiting goes to the running callback, without waiting on free queue space
+void test_accel_manager__a_consume_hands_a_waiting_batch_to_the_running_callback(void) {
+  AccelRawData buffer[2];
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  sys_accel_manager_set_sample_buffer(state, buffer, 2);
+  prv_feed(4);
+
+  bool result = prv_consume(state);
+
+  cl_assert(result);
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+}
+
+//! While the running callback has a batch, the driver posts no second event for it
+void test_accel_manager__a_waiting_batch_holds_off_the_next_event(void) {
+  AccelRawData buffer[2];
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  sys_accel_manager_set_sample_buffer(state, buffer, 2);
+  prv_feed(4);
+  prv_consume(state);
+
+  prv_feed(2);
+
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+}
+
+//! Once nothing is waiting, the consume releases the event and the next full batch posts one
+void test_accel_manager__a_consume_with_nothing_waiting_releases_the_event(void) {
+  AccelRawData buffer[2];
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  sys_accel_manager_set_sample_buffer(state, buffer, 2);
+  prv_feed(4);
+  prv_consume(state);
+  bool result = prv_consume(state);
+  cl_assert(!result);
+
+  prv_feed(2);
+
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 2);
+}
+
+//! A consume posts no other subscriber's event, since that could wait on their queue under the lock
+void test_accel_manager__a_consume_posts_no_other_subscribers_event(void) {
+  AccelRawData buffer[2];
+  AccelRawData other_buffer[2];
+  AccelManagerState *other = prv_subscribe_on_new_timers();
+  sys_accel_manager_set_sample_buffer(other, other_buffer, 2);
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  sys_accel_manager_set_sample_buffer(state, buffer, 2);
+  s_new_timer_queue_full = true;
+  prv_feed(2);
+  s_new_timer_queue_full = false;
+
+  prv_consume(state);
+
+  cl_assert_equal_i(s_posted_events, 0);
+}
+
+//! A NewTimers subscriber gets a waiting batch straight away too, not at the next driver batch
+void test_accel_manager__a_consume_on_new_timers_hands_over_a_waiting_batch(void) {
+  AccelRawData buffer[2];
+  AccelManagerState *state = prv_subscribe_on_new_timers();
+  sys_accel_manager_set_sample_buffer(state, buffer, 2);
+  prv_feed(4);
+
+  bool result = prv_consume(state);
+
+  cl_assert(result);
+  cl_assert_equal_i(s_posted_events, 1);
 }
