@@ -9,8 +9,6 @@
 
 #include <stdio.h>
 
-#pragma GCC diagnostic ignored "-Wformat-truncation"
-
 typedef struct TimeSelectionSizeConfig {
   const char *subtitle_font_key;
 

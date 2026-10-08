@@ -32,8 +32,8 @@ typedef struct TimeSelectionWindowData {
   const char *range_text;
   int range_duration_m;
 
-  //! Range buffer. Large enough for just the two time strings
-  char range_buf[2 * TIME_STRING_TIME_LENGTH];
+  //! Range buffer. Large enough for the two time strings and the separator
+  char range_buf[2 * (TIME_STRING_TIME_LENGTH - 1) + sizeof(" - ")];
   //! Range subtitle buffer. Large enough for the range label
   char range_subtitle_buf[TIME_SELECTION_WINDOW_MAX_RANGE_LENGTH];
   char cell_buf[3];
