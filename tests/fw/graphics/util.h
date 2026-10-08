@@ -45,7 +45,7 @@ bool tests_write_gbitmap_to_pbi(GBitmap *bmp, const char *filename) {
 }
 
 // Used to work around __func__ not being a string literal (necessary for macro concatenation)
-static const char *namecat(const char *str1, const char *str2) {
+static inline const char *namecat(const char *str1, const char *str2) {
   char *filename = malloc(PATH_STRING_LENGTH);
   filename[0] = '\0';
   strcat(filename, str1);
@@ -445,7 +445,7 @@ GBitmap *setup_pbi_test(const char *filename) {
   return gbitmap_create_with_data(pbi_data);
 }
 
-static GBitmap *setup_png_test(const char *filename) {
+static inline GBitmap *setup_png_test(const char *filename) {
   uint8_t *png_data = NULL;
   size_t png_size = 0;
   png_size = load_file(filename, &png_data);

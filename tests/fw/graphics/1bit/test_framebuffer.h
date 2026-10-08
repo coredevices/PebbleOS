@@ -23,8 +23,9 @@ typedef struct stat STAT_T;
 
 #define IMAGE_DWORDS_PER_LINE 6
 
-static void print_framebuffer_as_literal(const char *unit_name, const FrameBuffer *framebuffer,
-                                         int col, int row, int cols, int rows) {
+static inline void print_framebuffer_as_literal(const char *unit_name,
+                                                const FrameBuffer *framebuffer, int col, int row,
+                                                int cols, int rows) {
   printf("\n-- %s image --\n", unit_name);
   printf("  uint32_t image[] = {\n");
   int num_words = 0;
@@ -48,13 +49,13 @@ static void print_framebuffer_as_literal(const char *unit_name, const FrameBuffe
   printf("\n  };\n");
 }
 
-static void fread_pbi_header(FILE *file, GBitmap *bitmap) {
+static inline void fread_pbi_header(FILE *file, GBitmap *bitmap) {
   fread(&bitmap->row_size_bytes, sizeof(bitmap->row_size_bytes), 1, file);
   fread(&bitmap->info_flags, sizeof(bitmap->info_flags), 1, file);
   fread(&bitmap->bounds, sizeof(bitmap->bounds), 1, file);
 }
 
-static uint32_t *fread_pbi(FILE *file, GBitmap *bitmap) {
+static inline uint32_t *fread_pbi(FILE *file, GBitmap *bitmap) {
   fread_pbi_header(file, bitmap);
   size_t image_size = bitmap->row_size_bytes / 4 * bitmap->bounds.size.h;
   uint32_t *buffer = bitmap->addr = (uint32_t *)malloc(image_size * 4);
@@ -65,7 +66,7 @@ static uint32_t *fread_pbi(FILE *file, GBitmap *bitmap) {
   return NULL;
 }
 
-static uint32_t *read_pbi(const char *filename, GBitmap *bitmap) {
+static inline uint32_t *read_pbi(const char *filename, GBitmap *bitmap) {
   char res_path[strlen(CLAR_FIXTURE_PATH) + 1 + strlen(GRAPHICS_FIXTURE_PATH) + 1 +
                 strlen(filename) + 1];
   sprintf(res_path, "%s/%s/%s", CLAR_FIXTURE_PATH, GRAPHICS_FIXTURE_PATH, filename);
@@ -79,13 +80,13 @@ static uint32_t *read_pbi(const char *filename, GBitmap *bitmap) {
   return buffer;
 }
 
-static void free_pbi(GBitmap *bitmap) {
+static inline void free_pbi(GBitmap *bitmap) {
   if (bitmap->addr) {
     free(bitmap->addr);
   }
 }
 
-static void fwrite_screenshot_from_framebuffer(FILE *file, const FrameBuffer *framebuffer) {
+static inline void fwrite_screenshot_from_framebuffer(FILE *file, const FrameBuffer *framebuffer) {
   uint16_t row_size_bytes = (FrameBuffer_MaxX + 31) / 32 * 4;
   uint16_t info_flags = 1 << 1;
   GRect bounds = GRect(0, 0, FrameBuffer_MaxX, FrameBuffer_MaxY);
@@ -96,8 +97,8 @@ static void fwrite_screenshot_from_framebuffer(FILE *file, const FrameBuffer *fr
          file);
 }
 
-static bool write_screenshot_from_framebuffer(const char *filename,
-                                              const FrameBuffer *framebuffer) {
+static inline bool write_screenshot_from_framebuffer(const char *filename,
+                                                     const FrameBuffer *framebuffer) {
   FILE *file = fopen(filename, "w");
   if (!file) {
     printf("\ncould not open %s for writing a screenshot\n", filename);
@@ -108,8 +109,8 @@ static bool write_screenshot_from_framebuffer(const char *filename,
   return true;
 }
 
-static bool framebuffer_eq_image_raw(const FrameBuffer *framebuffer, uint32_t *image, int col,
-                                     int row, int cols, int rows) {
+static inline bool framebuffer_eq_image_raw(const FrameBuffer *framebuffer, uint32_t *image,
+                                            int col, int row, int cols, int rows) {
   for (int j = row; j < row + rows && j < FrameBuffer_MaxY; j++) {
     for (int i = col; i < col + cols && i < FRAMEBUFFER_WORDS_PER_ROW; i++) {
       int fb_index = j * FRAMEBUFFER_WORDS_PER_ROW + i;
@@ -128,21 +129,22 @@ static bool framebuffer_eq_image_raw(const FrameBuffer *framebuffer, uint32_t *i
   return true;
 }
 
-static bool framebuffer_eq_image(const char *unit_name, const FrameBuffer *framebuffer,
-                                 uint32_t *image, int col, int row, int cols, int rows) {
+static inline bool framebuffer_eq_image(const char *unit_name, const FrameBuffer *framebuffer,
+                                        uint32_t *image, int col, int row, int cols, int rows) {
 #ifndef TEST_GRAPHICS_SILENT
   print_framebuffer_as_literal(unit_name, framebuffer, col, row, cols, rows);
 #endif
   return framebuffer_eq_image_raw(framebuffer, image, col, row, cols, rows);
 }
 
-static bool framebuffer_eq(const char *unit_name, const FrameBuffer *framebuffer,
-                           FrameBuffer *other) {
+static inline bool framebuffer_eq(const char *unit_name, const FrameBuffer *framebuffer,
+                                  FrameBuffer *other) {
   return framebuffer_eq_image(unit_name, framebuffer, other->buffer, 0, 0,
                               FRAMEBUFFER_WORDS_PER_ROW, FrameBuffer_MaxY);
 }
 
-static bool framebuffer_eq_screenshot_raw(const FrameBuffer *framebuffer, const char *filename) {
+static inline bool framebuffer_eq_screenshot_raw(const FrameBuffer *framebuffer,
+                                                 const char *filename) {
   GBitmap bitmap;
   FILE *file = fopen(filename, "r");
   if (!file) {
@@ -161,7 +163,7 @@ static bool framebuffer_eq_screenshot_raw(const FrameBuffer *framebuffer, const 
   return true;
 }
 
-static bool framebuffer_eq_screenshot(const FrameBuffer *framebuffer, const char *filename) {
+static inline bool framebuffer_eq_screenshot(const FrameBuffer *framebuffer, const char *filename) {
   char ref_path[strlen(CLAR_FIXTURE_PATH) + 1 + strlen(GRAPHICS_FIXTURE_PATH) + 1 +
                 strlen(filename) + 1];
   sprintf(ref_path, "%s/%s/%s", CLAR_FIXTURE_PATH, GRAPHICS_FIXTURE_PATH, filename);
@@ -181,7 +183,8 @@ static bool framebuffer_eq_screenshot(const FrameBuffer *framebuffer, const char
   return true;
 }
 
-static bool framebuffer_is_empty(const char *unit_name, FrameBuffer *framebuffer, GColor color) {
+static inline bool framebuffer_is_empty(const char *unit_name, FrameBuffer *framebuffer,
+                                        GColor color) {
   for (int j = 0; j < FrameBuffer_MaxY; j++) {
     for (int i = 0; i < FRAMEBUFFER_WORDS_PER_ROW; i++) {
       int fb_index = j * FRAMEBUFFER_WORDS_PER_ROW + i;

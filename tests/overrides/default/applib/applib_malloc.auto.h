@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void *applib_zalloc(size_t size) {
+static inline void *applib_zalloc(size_t size) {
   void *result = malloc(size);
   if (result) {
     memset(result, 0, size);

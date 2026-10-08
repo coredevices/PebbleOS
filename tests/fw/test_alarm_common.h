@@ -138,7 +138,8 @@ static void prv_fake_pin_get_val(SettingsFile *file, void *buf, size_t len) {
   memcpy(buf, &s_current_fake_pin_record->header, len);
 }
 
-static void prv_fake_pin_record_add(Uuid id, Uuid parent, time_t timestamp, LayoutId layout) {
+static inline void prv_fake_pin_record_add(Uuid id, Uuid parent, time_t timestamp,
+                                           LayoutId layout) {
   for (size_t i = 0; i < ARRAY_LENGTH(s_fake_pin_records); ++i) {
     if (!s_fake_pin_records[i].exists) {
       s_fake_pin_records[i] = (FakePinRecord){
