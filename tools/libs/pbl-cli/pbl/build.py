@@ -116,9 +116,10 @@ class BuildDir:
         return self._cache
 
     def tool(self, name):
-        """The path CMake cached for an SDK tool (PBL_<NAME>), or None."""
+        """The path CMake cached for an SDK tool (PBL_<NAME>), or None, also
+        when the build was configured on another host."""
         value = self.cache.get(f"PBL_{name.upper()}")
-        if not value or value.endswith("-NOTFOUND"):
+        if not value or not os.path.isfile(value):
             return None
         return value
 
