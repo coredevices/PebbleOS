@@ -2176,9 +2176,105 @@ static void prv_feed_walk_minutes(int num_minutes) {
 }
 
 // ---------------------------------------------------------------------------------------
+// Feed inactive minutes, ending any walk activity in progress.
+static void prv_feed_idle_minutes(int num_minutes) {
+  time_t now = rtc_get_time();
+  for (int i = 0; i < num_minutes; i++) {
+    kalg_activities_update(s_kalg_state, now, 0 /*steps*/, 0 /*vmc*/, 0 /*orientation*/,
+                           true /*definitely_not_worn*/, 100 /*resting_calories*/,
+                           0 /*active_calories*/, 0 /*distance_mm*/, false /*shutting_down*/,
+                           prv_activity_session_callback, NULL);
+    now += PBL_SEC_PER_MIN;
+    rtc_set_time(now);
+  }
+}
+
+// Fixed start time so the tests below don't depend on the order they run in
+#define WALK_TEST_START_UTC 1787618400
+
+// ---------------------------------------------------------------------------------------
+// A walk in progress when a workout starts must not resume once it stops, or it gets logged
+// spanning the whole workout.
+void test_kraepelin_algorithm__walk_does_not_span_workout(void) {
+  s_kalg_state = kernel_zalloc(kalg_state_size());
+  kalg_init(s_kalg_state, prv_stats_cb);
+  s_num_captured_activity_sessions = 0;
+  rtc_set_time(WALK_TEST_START_UTC);
+
+  // Too short to be registered before the workout starts
+  prv_feed_walk_minutes(6);
+  cl_assert_equal_i(s_num_captured_activity_sessions, 0);
+
+  kalg_enable_activity_tracking(s_kalg_state, false);
+  prv_feed_walk_minutes(35);
+  kalg_enable_activity_tracking(s_kalg_state, true);
+
+  // Too short to be registered on its own, but long enough if it bridged the workout
+  prv_feed_walk_minutes(5);
+  prv_feed_idle_minutes(8);
+
+  cl_assert_equal_i(s_num_captured_activity_sessions, 0);
+
+  kalg_deinit(s_kalg_state);
+  kernel_free(s_kalg_state);
+  s_kalg_state = NULL;
+}
+
+// ---------------------------------------------------------------------------------------
+// A registered walk must not be updated after tracking is re-enabled, or it overwrites the
+// session already committed when the workout started.
+void test_kraepelin_algorithm__registered_walk_not_resumed(void) {
+  s_kalg_state = kernel_zalloc(kalg_state_size());
+  kalg_init(s_kalg_state, prv_stats_cb);
+  s_num_captured_activity_sessions = 0;
+  rtc_set_time(WALK_TEST_START_UTC);
+
+  prv_feed_walk_minutes(12);
+  cl_assert_equal_i(s_num_captured_activity_sessions, 1);
+  const KAlgTestActivitySession before = s_captured_activity_sessions[0];
+
+  kalg_enable_activity_tracking(s_kalg_state, false);
+  prv_feed_walk_minutes(35);
+  kalg_enable_activity_tracking(s_kalg_state, true);
+  prv_feed_walk_minutes(12);
+
+  cl_assert_equal_i(s_num_captured_activity_sessions, 2);
+  cl_assert_equal_i(s_captured_activity_sessions[0].start_utc, before.start_utc);
+  cl_assert_equal_i(s_captured_activity_sessions[0].len_minutes, before.len_minutes);
+  cl_assert(s_captured_activity_sessions[1].start_utc != before.start_utc);
+
+  kalg_deinit(s_kalg_state);
+  kernel_free(s_kalg_state);
+  s_kalg_state = NULL;
+}
+
+// ---------------------------------------------------------------------------------------
+// A walk in progress must not survive a backwards time jump with its stale start time.
+void test_kraepelin_algorithm__walk_reset_on_time_travel(void) {
+  s_kalg_state = kernel_zalloc(kalg_state_size());
+  kalg_init(s_kalg_state, prv_stats_cb);
+  s_num_captured_activity_sessions = 0;
+  rtc_set_time(WALK_TEST_START_UTC);
+
+  prv_feed_walk_minutes(12);
+  cl_assert_equal_i(s_num_captured_activity_sessions, 1);
+
+  const time_t jumped_utc = rtc_get_time() - PBL_SEC_PER_HOUR;
+  rtc_set_time(jumped_utc);
+  prv_feed_walk_minutes(12);
+
+  cl_assert_equal_i(s_num_captured_activity_sessions, 2);
+  cl_assert(s_captured_activity_sessions[1].start_utc >= jumped_utc - PBL_SEC_PER_MIN);
+
+  kalg_deinit(s_kalg_state);
+  kernel_free(s_kalg_state);
+  s_kalg_state = NULL;
+}
+
+// ---------------------------------------------------------------------------------------
 // The HRM subscription taken by an auto-detected activity must be released when activity
-// tracking is disabled, even though the activity itself stays in progress. Otherwise starting a
-// workout leaves a never-expiring 1-second subscription behind that pins the sensor on.
+// tracking is disabled. Otherwise starting a workout leaves a never-expiring 1-second
+// subscription behind that pins the sensor on.
 void test_kraepelin_algorithm__hrm_released_when_tracking_disabled(void) {
   s_kalg_state = kernel_zalloc(kalg_state_size());
   kalg_init(s_kalg_state, prv_stats_cb);

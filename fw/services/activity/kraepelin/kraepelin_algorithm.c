@@ -406,20 +406,8 @@ static void prv_reset_step_activity_state(KAlgStepActivityState *state) {
 
 // ----------------------------------------------------------------------------------------
 static void prv_reset_state(KAlgState *state) {
-  // Release the HRM unconditionally. The state reset below skips in-progress activities, but the
-  // subscription must not outlive the reset: a state machine that stops running can never reach
-  // prv_reset_step_activity_state, leaving the sensor pinned on until reboot.
-  prv_release_step_activity_hrm(&state->walk_state);
-  prv_release_step_activity_hrm(&state->run_state);
-
-  // Only reset step activity states if they're not currently in progress to avoid
-  // race conditions with the minute handler
-  if (state->walk_state.start_time == KALG_START_TIME_NONE) {
-    prv_reset_step_activity_state(&state->walk_state);
-  }
-  if (state->run_state.start_time == KALG_START_TIME_NONE) {
-    prv_reset_step_activity_state(&state->run_state);
-  }
+  prv_reset_step_activity_state(&state->walk_state);
+  prv_reset_step_activity_state(&state->run_state);
   state->sleep_state = (KAlgSleepActivityState){};
   state->deep_sleep_state = (KAlgDeepSleepActivityState){};
   state->not_worn_state = (KAlgNotWornState){};
