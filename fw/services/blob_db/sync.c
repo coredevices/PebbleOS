@@ -183,19 +183,17 @@ status_t blob_db_sync_db(BlobDBId db_id) {
   }
   PBL_LOG_DBG("Starting BlobDB db sync: %d", db_id);
 
+  if (blob_db_sync_get_session_for_id(db_id)) {
+    return E_BUSY;
+  }
+
   BlobDBDirtyItem *dirty_list = blob_db_get_dirty_list(db_id);
   if (!dirty_list) {
     blob_db_endpoint_send_sync_done(db_id);
     return S_NO_ACTION_REQUIRED;
   }
 
-  BlobDBSyncSession *session = blob_db_sync_get_session_for_id(db_id);
-  if (session) {
-    // already have a session in progress!
-    return E_BUSY;
-  }
-
-  session = prv_create_sync_session(db_id, dirty_list, BlobDBSyncSessionTypeDB);
+  BlobDBSyncSession *session = prv_create_sync_session(db_id, dirty_list, BlobDBSyncSessionTypeDB);
 
   prv_send_writeback(session);
 
