@@ -238,7 +238,7 @@ static void prv_click_provider(void *ctx) {
 
 // The location bar's HH:MM needs a once-a-minute tick. Never overlaps clock_face's
 // subscription — nothing stacks on top of this window.
-static void prv_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_minute_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
   (void)tick_time;
   (void)units_changed;
   if (s_report)

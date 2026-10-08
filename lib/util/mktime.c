@@ -34,6 +34,8 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/util/time.h>
+
 /*
  * ChkAdd evaluates to TRUE if dest = src1 + src2 has overflowed
  */
@@ -49,10 +51,10 @@
 #define _LEAP_YEAR_ADJUST 17L // leap years between 1900 and 1970
 #define _MAX_YEAR         138L
 
-time_t mktime(struct tm *tb) {
+time_t pbl_mktime(struct pbl_tm *tb) {
   const int16_t _days[] = {-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333, 364};
   time_t tmptm1, tmptm2, tmptm3;
-  struct tm *tbtemp;
+  struct pbl_tm *tbtemp;
 
   /*
    * First, make sure tm_year is reasonably close to being in range.
@@ -169,8 +171,8 @@ time_t mktime(struct tm *tb) {
    * Convert this second count back into a time block structure.
    * If localtime returns NULL, return an error.
    */
-  struct tm tm;
-  if ((tbtemp = gmtime_r((time_t *)&tmptm1, &tm)) == NULL)
+  struct pbl_tm tm;
+  if ((tbtemp = pbl_gmtime_r((time_t *)&tmptm1, &tm)) == NULL)
     goto err_mktime;
 
   /***** HERE: tmptm1 holds number of elapsed seconds, adjusted *****/

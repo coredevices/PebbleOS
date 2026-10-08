@@ -31,7 +31,6 @@ pbl_clar_test(test_health_card_view
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/activity_detail_card.c
@@ -42,6 +41,8 @@ pbl_clar_test(test_health_card_view
     fw/apps/system/health/sleep_summary_card.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/card_view.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -78,12 +79,13 @@ pbl_clar_test(test_health_activity_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/activity_detail_card.c
     fw/apps/system/health/activity_summary_card.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -120,12 +122,13 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/sleep_detail_card.c
     fw/apps/system/health/sleep_summary_card.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -162,12 +165,13 @@ pbl_clar_test(test_health_hr_summary_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/hr_detail_card.c
     fw/apps/system/health/hr_summary_card.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -204,11 +208,12 @@ pbl_clar_test(test_health_activity_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/activity_detail_card.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -245,11 +250,12 @@ pbl_clar_test(test_health_sleep_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/sleep_detail_card.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -286,11 +292,12 @@ pbl_clar_test(test_health_hr_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
     fw/apps/system/health/hr_detail_card.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -327,10 +334,11 @@ pbl_clar_test(test_health_detail_card
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     fw/services/timeline/timeline_resources.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     fw/apps/system/health/detail_card.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

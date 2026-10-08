@@ -189,7 +189,7 @@ static void prv_save_rtc_time_state(RtcIntervalTicks current_rtc_ticks) {
 
 /*** Logic that ought be refactored into rtc_common, were it not stm32-only. ***/
 
-bool rtc_sanitize_struct_tm(struct tm *t) {
+bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
   // These values come from time_t (which suffers from the 2038 problem) and our hardware which
   // only stores a 2 digit year, so we only represent values after 2000.
 
@@ -206,18 +206,18 @@ bool rtc_sanitize_struct_tm(struct tm *t) {
 }
 
 bool rtc_sanitize_time_t(time_t *t) {
-  struct tm time_struct;
-  gmtime_r(t, &time_struct);
+  struct pbl_tm time_struct;
+  pbl_gmtime_r(t, &time_struct);
 
   const bool result = rtc_sanitize_struct_tm(&time_struct);
-  *t = mktime(&time_struct);
+  *t = pbl_mktime(&time_struct);
 
   return result;
 }
 
-void rtc_get_time_tm(struct tm *time_tm) {
+void rtc_get_time_tm(struct pbl_tm *time_tm) {
   time_t t = rtc_get_time();
-  localtime_r(&t, time_tm);
+  pbl_localtime_r(&t, time_tm);
 }
 
 const char *rtc_get_time_string(char *buffer) {
@@ -225,10 +225,10 @@ const char *rtc_get_time_string(char *buffer) {
 }
 
 const char *time_t_to_string(char *buffer, time_t t) {
-  struct tm time;
-  localtime_r(&t, &time);
+  struct pbl_tm time;
+  pbl_localtime_r(&t, &time);
 
-  strftime(buffer, TIME_STRING_BUFFER_SIZE, "%c", &time);
+  pbl_strftime_r(buffer, TIME_STRING_BUFFER_SIZE, "%c", &time);
 
   return buffer;
 }

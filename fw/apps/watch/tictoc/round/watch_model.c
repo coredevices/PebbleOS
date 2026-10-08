@@ -15,14 +15,14 @@
 #include <syscall/syscall.h>
 
 // TODO: Add seconds as an option
-static void prv_calculate_hand_angles(struct tm *tick_time, int32_t *hour_angle,
+static void prv_calculate_hand_angles(struct pbl_tm *tick_time, int32_t *hour_angle,
                                       int32_t *minute_angle) {
   *hour_angle = (tick_time->tm_hour % 12) * TRIG_MAX_ANGLE / 12 +
                 tick_time->tm_min * TRIG_MAX_ANGLE / 60 / 12;
   *minute_angle = tick_time->tm_min * TRIG_MAX_ANGLE / 60;
 }
 
-static ClockFace prv_local_clock_face_default(struct tm *tick_time) {
+static ClockFace prv_local_clock_face_default(struct pbl_tm *tick_time) {
   int32_t hour_angle, minute_angle;
   prv_calculate_hand_angles(tick_time, &hour_angle, &minute_angle);
 
@@ -56,7 +56,7 @@ static ClockFace prv_configure_non_local_clock_face(int32_t utc_offset, const ch
                                                     GColor text_color, GColor hand_color,
                                                     uint32_t bg_bitmap_id, ClockLocation location) {
   time_t t = rtc_get_time();
-  struct tm *tick_time = pbl_override_gmtime(&t);
+  struct pbl_tm *tick_time = pbl_override_gmtime(&t);
   // TODO: Make this work with non integer hour offsets
   tick_time->tm_hour += utc_offset; // TODO check if this works properly
   int32_t hour_angle, minute_angle;
@@ -100,7 +100,7 @@ static ClockFace prv_configure_non_local_clock_face(int32_t utc_offset, const ch
 
 // Configure the text displayed on the clock.
 static ClockText prv_configure_clock_text(ClockTextType type, ClockTextLocation location,
-                                          GColor color, struct tm *tick_time) {
+                                          GColor color, struct pbl_tm *tick_time) {
   ClockText text = (ClockText){
     .location = location,
     .color = color,
@@ -112,12 +112,12 @@ static ClockText prv_configure_clock_text(ClockTextType type, ClockTextLocation 
   switch (type) {
     case CLOCK_TEXT_TYPE_TIME:
       // TODO: Return system configured format
-      strftime(text.buffer, sizeof(text.buffer), "$l:%M%P", tick_time);
+      pbl_strftime_r(text.buffer, sizeof(text.buffer), "$l:%M%P", tick_time);
       break;
     case CLOCK_TEXT_TYPE_DATE:
     default:
       // TODO: Return localized format
-      strftime(text.buffer, sizeof(text.buffer), "%a %d", tick_time);
+      pbl_strftime_r(text.buffer, sizeof(text.buffer), "%a %d", tick_time);
       break;
   }
 
@@ -129,7 +129,7 @@ static ClockText prv_configure_clock_text(ClockTextType type, ClockTextLocation 
   return text;
 }
 
-static ClockModel prv_clock_model_default(struct tm *tick_time) {
+static ClockModel prv_clock_model_default(struct pbl_tm *tick_time) {
   // Create a generic model and configure a default clock.
   ClockModel model;
   model.local_clock = prv_local_clock_face_default(tick_time);
@@ -287,7 +287,7 @@ static ClockModel prv_clock_model_default(struct tm *tick_time) {
   return model;
 }
 
-static void prv_handle_time_update(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_time_update(struct pbl_tm *tick_time, TimeUnits units_changed) {
   ClockModel model = prv_clock_model_default(tick_time);
   watch_model_handle_change(&model);
 }
@@ -309,7 +309,7 @@ void watch_model_start_intro() {
 
 void watch_model_init(void) {
   const time_t t = rtc_get_time();
-  struct tm *tick_time = pbl_override_localtime(&t);
+  struct pbl_tm *tick_time = pbl_override_localtime(&t);
   ClockModel model = prv_clock_model_default(tick_time);
   watch_model_handle_change(&model);
 }

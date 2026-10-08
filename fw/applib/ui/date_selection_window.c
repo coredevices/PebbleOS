@@ -148,7 +148,7 @@ static void prv_text_layer_init(Layer *window_layer, TextLayer *text_layer, cons
 // ---------------------------------------------------------------------------
 
 void date_selection_window_set_to_current_date(DateSelectionWindowData *window) {
-  struct tm now;
+  struct pbl_tm now;
   clock_get_time_tm(&now);
   // Clamp the year to the selectable range so that dates outside the valid
   // window (e.g. year 2000 after an RTC reset) are snapped to the nearest

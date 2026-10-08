@@ -50,8 +50,8 @@ static void prv_log_timestamp(void) {
   time_t time_seconds;
   uint16_t time_ms;
   rtc_get_time_ms(&time_seconds, &time_ms);
-  struct tm time_seconds_calendar;
-  gmtime_r(&time_seconds, &time_seconds_calendar);
+  struct pbl_tm time_seconds_calendar;
+  pbl_gmtime_r(&time_seconds, &time_seconds_calendar);
 
   sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", time_seconds_calendar.tm_hour,
             time_seconds_calendar.tm_min, time_seconds_calendar.tm_sec, time_ms);

@@ -5,7 +5,6 @@ pbl_clar_test(test_activity
   MODULES settings time
   SOURCES
     fw/applib/health_service.c
-    lib/c/time/mktime.c
     fw/services/regular_timer/service.c
     fw/services/activity/activity.c
     fw/services/activity/activity_metrics.c
@@ -16,6 +15,8 @@ pbl_clar_test(test_activity
     tests/fakes/fake_accel_service.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   DEFINES DUMA_DISABLED CAPABILITY_HAS_HEALTH_TRACKING=1 CONFIG_HRM CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES=25
   OVERRIDES dummy_board
 )
@@ -23,7 +24,6 @@ pbl_clar_test(test_activity
 pbl_clar_test(test_activity_insights
   MODULES time rand
   SOURCES
-    lib/c/time/mktime.c
     fw/services/activity/activity_insights.c
     fw/services/activity/insights_settings.c
     fw/services/timeline/attribute.c
@@ -32,6 +32,8 @@ pbl_clar_test(test_activity_insights
     tests/fakes/fake_settings_file.c
     tests/fakes/fake_kernel_services_notifications.c
     tests/fakes/fake_rtc.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   OVERRIDES dummy_board
 )
 
@@ -52,7 +54,6 @@ pbl_clar_test(test_kraepelin_algorithm
 pbl_clar_test(test_activity_algorithm_kraepelin
   MODULES settings time
   SOURCES
-    lib/c/time/mktime.c
     fw/services/regular_timer/service.c
     fw/services/activity/kraepelin/activity_algorithm_kraepelin.c
     tests/fakes/fake_accel_service.c

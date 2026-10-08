@@ -26,18 +26,18 @@ PBL_WEAK void app_state_init(void) {
 PBL_WEAK void app_state_deinit(void) {
 }
 
-PBL_WEAK struct tm *app_state_get_gmtime_tm(void) {
-  static struct tm gmtime_tm = {};
+PBL_WEAK struct pbl_tm *app_state_get_gmtime_tm(void) {
+  static struct pbl_tm gmtime_tm = {};
   return &gmtime_tm;
 }
 
-PBL_WEAK struct tm *app_state_get_localtime_tm(void) {
-  static struct tm localtime_tm = {};
+PBL_WEAK struct pbl_tm *app_state_get_localtime_tm(void) {
+  static struct pbl_tm localtime_tm = {};
   return &localtime_tm;
 }
 
 PBL_WEAK char *app_state_get_localtime_zone(void) {
-  static char localtime_zone[TZ_LEN] = {};
+  static char localtime_zone[PBL_TZ_LEN] = {};
   return localtime_zone;
 }
 

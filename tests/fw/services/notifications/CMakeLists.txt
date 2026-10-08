@@ -33,7 +33,6 @@ pbl_clar_test(test_ancs_notifications_util
   MODULES time
   SOURCES
     fw/services/notifications/ancs/ancs_notifications_util.c
-    lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
 )
 

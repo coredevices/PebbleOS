@@ -52,7 +52,7 @@ typedef struct {
   uint32_t seconds_remaining;
 } AppData;
 
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   ChargeTestState next_state = data->test_state;

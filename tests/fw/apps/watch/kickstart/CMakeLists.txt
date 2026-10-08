@@ -28,9 +28,10 @@ pbl_clar_test(test_kickstart
     fw/applib/ui/window.c
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     fw/apps/watch/kickstart/kickstart.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

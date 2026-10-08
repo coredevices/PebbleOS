@@ -6,6 +6,8 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/i18n/i18n.h>
 
+#include <applib/i18n.h>
+
 const char *PBL_WEAK i18n_get(const char *msgid, const void *owner) {
   // If a string wasn't found, we want to return the original string.
   // However, if we have a context, this string needs to not show the context.
@@ -47,6 +49,10 @@ size_t PBL_WEAK sys_i18n_get_length(const char *string) {
 
 void PBL_WEAK sys_i18n_get_locale(char *buf) {
   strncpy(buf, "en_US", ISO_LOCALE_LENGTH);
+}
+
+const char *PBL_WEAK app_get_system_locale(void) {
+  return "en_US";
 }
 
 void PBL_WEAK i18n_enable(bool enable) {

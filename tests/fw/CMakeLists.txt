@@ -83,7 +83,6 @@ pbl_clar_test(test_alarm
   SOURCES
     fw/services/alarms/alarm.c
     fw/services/alarms/alarm_pin.c
-    lib/c/time/mktime.c
     subsys/cron/cron.c
     fw/services/blob_db/timeline_item_storage.c
   DEFINES CAPABILITY_HAS_HEALTH_TRACKING=0
@@ -95,12 +94,13 @@ pbl_clar_test(test_alarm_smart
   SOURCES
     fw/services/alarms/alarm.c
     fw/services/alarms/alarm_pin.c
-    lib/c/time/mktime.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
     subsys/cron/cron.c
     fw/services/blob_db/timeline_item_storage.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_rtc.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   DEFINES CAPABILITY_HAS_HEALTH_TRACKING=1
   OVERRIDES dummy_board
 )
@@ -154,6 +154,7 @@ pbl_clar_test(test_data_logging
     tests/fakes/fake_session.c
     tests/fakes/fake_rtc.c
     fw/applib/data_logging.c
+    fw/services/clock/time.c
   OVERRIDES dummy_board
 )
 

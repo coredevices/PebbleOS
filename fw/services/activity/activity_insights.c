@@ -818,7 +818,7 @@ static void prv_do_sleep_reward(time_t now_utc) {
 // Format a time given in seconds after midnight
 static void prv_strcat_formatted_time(int32_t time_seconds, char *out_buf, size_t buf_length,
                                       const void *i18n_owner) {
-  struct tm time = (struct tm){
+  struct pbl_tm time = (struct pbl_tm){
     .tm_hour = time_seconds / PBL_SEC_PER_HOUR,
     .tm_min = (time_seconds % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN
   };
@@ -827,7 +827,7 @@ static void prv_strcat_formatted_time(int32_t time_seconds, char *out_buf, size_
       clock_is_24h_style() ? i18n_get("%H:%M", i18n_owner) : i18n_get("%l:%M%p", i18n_owner);
 
   char time_str_buf[TIME_BUFFER_LENGTH];
-  strftime(time_str_buf, TIME_BUFFER_LENGTH, format, &time);
+  pbl_strftime_r(time_str_buf, TIME_BUFFER_LENGTH, format, &time);
   safe_strcat(out_buf, string_strip_leading_whitespace(time_str_buf), buf_length);
 }
 

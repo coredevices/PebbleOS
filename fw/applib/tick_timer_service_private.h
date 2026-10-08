@@ -11,7 +11,7 @@ typedef struct TickTimerServiceState {
   TimeUnits tick_units;
   bool first_tick;
   bool last_is_24h;
-  struct tm last_time;
+  struct pbl_tm last_time;
 
   EventServiceInfo tick_service_info;
 } TickTimerServiceState;

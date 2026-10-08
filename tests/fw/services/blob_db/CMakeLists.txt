@@ -8,7 +8,6 @@ pbl_clar_test(test_timeline
     fw/services/blob_db/sync_util.c
     fw/services/blob_db/timeline_item_storage.c
     fw/services/timeline/timeline.c
-    lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
   OVERRIDES dummy_board
@@ -21,7 +20,6 @@ pbl_clar_test(test_pin_db
     fw/services/blob_db/sync_util.c
     fw/services/blob_db/timeline_item_storage.c
     fw/services/blob_db/util.c
-    lib/c/time/mktime.c
     tests/fakes/fake_blobdb.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_session.c

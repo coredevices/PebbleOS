@@ -48,7 +48,6 @@ pbl_clar_test(test_attribute
 pbl_clar_test(test_timeline_model
   MODULES settings timeline_item time rand
   SOURCES
-    lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
     fw/services/blob_db/timeline_item_storage.c
     fw/services/timeline/timeline.c
@@ -70,6 +69,7 @@ pbl_clar_test(test_alarm_layout
     fw/services/alarms/alarm.c
     fw/services/timeline/alarm_layout.c
     fw/services/timeline/attribute.c
+    fw/services/clock/time.c
   PLATFORMS obelix gabbro
   DEFINES CAPABILITY_HAS_HEALTH_TRACKING=0
   OVERRIDES dummy_board
@@ -95,7 +95,6 @@ pbl_clar_test(test_timeline_layouts
     fw/applib/ui/window.c
     fw/apps/system/timeline/text_node.c
     fw/system/hexdump.c
-    lib/c/time/mktime.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
@@ -118,9 +117,10 @@ pbl_clar_test(test_timeline_layouts
     fw/services/weather/weather_types.c
     fw/shell/system_theme.c
     fw/shell/system_theme_style.c
-    lib/c/time/mktime.c
     tests/stubs/stubs_clock.c
     tests/stubs/stubs_timeline_layout.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

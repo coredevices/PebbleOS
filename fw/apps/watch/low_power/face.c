@@ -29,7 +29,7 @@ typedef struct {
 
 static LowPowerFaceData *s_low_power_data;
 
-static void prv_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_minute_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
   char *time_format;
 
   if (clock_is_24h_style()) {
@@ -38,8 +38,8 @@ static void prv_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     time_format = "%I:%M";
   }
 
-  strftime(s_low_power_data->time_text, sizeof(s_low_power_data->time_text), time_format,
-           tick_time);
+  pbl_strftime_r(s_low_power_data->time_text, sizeof(s_low_power_data->time_text), time_format,
+                 tick_time);
 
   // Remove leading zero from hour in case of 12h mode
   if (!clock_is_24h_style() && (s_low_power_data->time_text[0] == '0')) {
@@ -128,7 +128,7 @@ static void init(void) {
 
   // Because of the delay before the tick timer service first calls prv_minute_tick,
   // we call it ourselves to update the time right away
-  struct tm current_time;
+  struct pbl_tm current_time;
   clock_get_time_tm(&current_time);
   prv_minute_tick(&current_time, MINUTE_UNIT | HOUR_UNIT | DAY_UNIT);
 

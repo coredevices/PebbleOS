@@ -41,8 +41,8 @@ int sys_test(int arg);
 time_t sys_get_time(void);
 void sys_get_time_ms(time_t *t, uint16_t *out_ms);
 RtcTicks sys_get_ticks(void);
-struct tm *sys_gmtime_r(const time_t *timep, struct tm *result);
-struct tm *sys_localtime_r(const time_t *timep, struct tm *result);
+struct pbl_tm *sys_gmtime_r(const time_t *timep, struct pbl_tm *result);
+struct pbl_tm *sys_localtime_r(const time_t *timep, struct pbl_tm *result);
 void sys_copy_timezone_abbr(char *timezone_abbr, time_t time);
 time_t sys_time_start_of_today(void);
 
@@ -181,7 +181,7 @@ DataLoggingResult sys_data_logging_log(DataLoggingSessionRef logging_session, co
                                        uint32_t num_items);
 
 bool sys_clock_is_24h_style(void);
-size_t sys_strftime(char *s, size_t maxsize, const char *format, const struct tm *tim_p,
+size_t sys_strftime(char *s, size_t maxsize, const char *format, const struct pbl_tm *tim_p,
                     char *locale);
 
 BatteryChargeState sys_battery_get_charge_state(void);

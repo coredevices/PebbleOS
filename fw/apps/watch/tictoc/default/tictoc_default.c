@@ -34,7 +34,7 @@ typedef struct {
   Time last_time;
 } TicTocData;
 
-static void prv_minute_tick_handler(struct tm *tick_time, TimeUnits changed) {
+static void prv_minute_tick_handler(struct pbl_tm *tick_time, TimeUnits changed) {
   TicTocData *data = app_state_get_user_data();
 
   // Store time
@@ -136,7 +136,7 @@ static void prv_init() {
   window_set_user_data(&data->window, data);
   app_window_stack_push(&data->window, true);
 
-  struct tm time_struct;
+  struct pbl_tm time_struct;
   rtc_get_time_tm(&time_struct);
   prv_minute_tick_handler(&time_struct, MINUTE_UNIT);
 

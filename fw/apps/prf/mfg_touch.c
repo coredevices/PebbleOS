@@ -80,7 +80,7 @@ static void prv_complete_test(AppData *data, bool passed) {
   layer_mark_dirty(&data->window.layer);
 }
 
-static void prv_handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
   AppData *data = app_state_get_user_data();
 
   if (data->test_complete) {

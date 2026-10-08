@@ -23,6 +23,7 @@ pbl_clar_test(test_gap_le_advert
     fw/services/regular_timer/service.c
     tests/fakes/fake_bt_advert.c
     tests/fakes/fake_rtc.c
+    fw/services/clock/time.c
   OVERRIDES dummy_board
 )
 
@@ -32,6 +33,7 @@ pbl_clar_test(test_bt_conn_mgr
     fw/services/regular_timer/service.c
     tests/fakes/fake_gap_le_connect_params.c
     tests/fakes/fake_rtc.c
+    fw/services/clock/time.c
 )
 
 pbl_clar_test(test_gatt_client_accessors
@@ -105,7 +107,6 @@ pbl_clar_test(test_gatt_service_changed_server
 pbl_clar_test(test_ancs_util
   MODULES time
   SOURCES
-    lib/c/time/mktime.c
     fw/comm/ble/kernel_le_client/ancs/ancs_util.c
     tests/fakes/fake_rtc.c
 )
@@ -113,7 +114,6 @@ pbl_clar_test(test_ancs_util
 pbl_clar_test(test_ancs
   MODULES timeline_item time rand
   SOURCES
-    lib/c/time/mktime.c
     fw/comm/ble/kernel_le_client/ancs/ancs_util.c
     fw/comm/ble/kernel_le_client/ancs/ancs.c
     fw/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c
@@ -139,6 +139,7 @@ pbl_clar_test(test_ppogatt_v0
   SOURCE test_ppogatt.c
   MODULES rand
   SOURCES
+    fw/services/clock/time.c
     fw/system/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
@@ -152,6 +153,7 @@ pbl_clar_test(test_ppogatt_v1
   SOURCE test_ppogatt.c
   MODULES rand
   SOURCES
+    fw/services/clock/time.c
     fw/system/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c

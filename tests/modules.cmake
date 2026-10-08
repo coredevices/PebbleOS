@@ -6,7 +6,6 @@
 pbl_test_module(time
   SOURCES
     fw/services/clock/time.c
-    lib/c/time/gmtime.c
 )
 
 pbl_test_module(rand

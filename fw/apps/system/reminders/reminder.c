@@ -194,11 +194,11 @@ static void prv_handle_dictation_event(PebbleEvent *e, void *context) {
       // rounded up to the nearest 15 min.
       // Ex: a reminder created at 10:08 AM with no specified time is due at 11:15 AM
       time_t utc_sec = rtc_get_time() + PBL_SEC_PER_HOUR + (15 * PBL_SEC_PER_MIN);
-      struct tm local_tm;
-      localtime_r(&utc_sec, &local_tm);
+      struct pbl_tm local_tm;
+      pbl_localtime_r(&utc_sec, &local_tm);
       local_tm.tm_min -= (local_tm.tm_min % 15);
       local_tm.tm_sec = 0;
-      data->timestamp = mktime(&local_tm);
+      data->timestamp = pbl_mktime(&local_tm);
     }
 
     // If the user doesn't accept the transcription, try again.

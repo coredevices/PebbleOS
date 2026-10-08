@@ -61,6 +61,10 @@ pbl_clar_test(test_status_bar_layer
     tests/fakes/fake_gbitmap_png.c
     fw/applib/ui/layer.c
     fw/applib/ui/status_bar_layer.c
+    fw/services/clock/time.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
+    tests/fakes/fake_rtc.c
   DEFINES FONT_KEY_GOTHIC_14="RESOURCE_ID_GOTHIC_14"
 )
 
@@ -319,6 +323,7 @@ pbl_clar_test(test_notification_window
     tests/fakes/fake_graphics_context.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     tests/stubs/stubs_clock.c
+    fw/services/clock/time.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -438,6 +443,9 @@ pbl_clar_test(test_selection_windows
     fw/shell/system_theme.c
     fw/shell/system_theme_style.c
     tests/fakes/fake_clock.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
+    fw/services/clock/time.c
   PLATFORMS obelix gabbro asterix
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -487,6 +495,8 @@ pbl_clar_test(test_timeline_peek
     tests/stubs/stubs_clock.c
     tests/stubs/stubs_timeline_layout.c
     tests/stubs/stubs_timeline_peek.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
@@ -517,6 +527,9 @@ pbl_clar_test(test_option_menu_window
     fw/shell/system_theme_style.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_graphics_context.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
+    fw/services/clock/time.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

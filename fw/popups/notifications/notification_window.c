@@ -856,8 +856,8 @@ static void prv_mute_notification_1_hour(ActionMenu *action_menu,
 static void prv_mute_notification_today(ActionMenu *action_menu,
                                         const ActionMenuItem *action_menu_item, void *context) {
   time_t now = rtc_get_time();
-  struct tm now_tm;
-  localtime_r(&now, &now_tm);
+  struct pbl_tm now_tm;
+  pbl_localtime_r(&now, &now_tm);
   const int seconds_until_midnight =
       (24 * 3600) - (now_tm.tm_hour * 3600 + now_tm.tm_min * 60 + now_tm.tm_sec);
   prv_mute_notification_timed(action_menu_item, seconds_until_midnight);

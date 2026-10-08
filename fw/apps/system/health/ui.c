@@ -57,10 +57,10 @@ void health_ui_draw_text_in_box(GContext *ctx, const char *text, const GRect dra
 // callers can position their body rows relative to it.
 static GRect prv_render_typical_pill(GContext *ctx, Layer *layer, int pill_height) {
   time_t now = rtc_get_time();
-  struct tm time_tm;
-  localtime_r(&now, &time_tm);
+  struct pbl_tm time_tm;
+  pbl_localtime_r(&now, &time_tm);
   char weekday[8];
-  strftime(weekday, sizeof(weekday), "%a", &time_tm);
+  pbl_strftime_r(weekday, sizeof(weekday), "%a", &time_tm);
   toupper_str(weekday);
 
   char typical_text[32];

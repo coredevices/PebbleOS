@@ -22,9 +22,9 @@ void app_state_init(void);
 
 void app_state_deinit(void);
 
-struct tm *app_state_get_gmtime_tm(void);
+struct pbl_tm *app_state_get_gmtime_tm(void);
 
-struct tm *app_state_get_localtime_tm(void);
+struct pbl_tm *app_state_get_localtime_tm(void);
 
 char *app_state_get_localtime_zone(void);
 

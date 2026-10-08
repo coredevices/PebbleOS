@@ -49,7 +49,6 @@ pbl_clar_test(test_cron
   SOURCES
     tests/fakes/fake_rtc.c
     subsys/cron/cron.c
-    lib/c/time/mktime.c
 )
 
 pbl_clar_test(test_contacts
@@ -129,6 +128,7 @@ pbl_clar_test(test_regular_timer
   SOURCES
     fw/services/regular_timer/service.c
     tests/fakes/fake_rtc.c
+    fw/services/clock/time.c
 )
 
 pbl_clar_test(test_debounced_connection_service
@@ -137,6 +137,7 @@ pbl_clar_test(test_debounced_connection_service
     tests/fakes/fake_rtc.c
     tests/fakes/fake_session.c
     fw/services/debounced_connection_service/service.c
+    fw/services/clock/time.c
 )
 
 pbl_clar_test(test_timeline_item
@@ -149,12 +150,13 @@ pbl_clar_test(test_clock
   MODULES resources time
   SOURCES
     fw/services/i18n/i18n.c
-    lib/c/time/mktime.c
     tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_events.c
     fw/services/timezone_database/service.c
     fw/services/clock/service.c
+    fw/applib/pbl_std/strftime.c
+    fw/applib/pbl_std/timelocal.c
   OVERRIDES dummy_board
 )
 
@@ -326,7 +328,6 @@ pbl_clar_test(test_do_not_disturb
     fw/services/notifications/alerts_preferences.c
     fw/services/notifications/do_not_disturb.c
     subsys/cron/cron.c
-    lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )
@@ -399,6 +400,5 @@ pbl_clar_test(test_app_glance_service
 pbl_clar_test(test_clock_time
   MODULES time
   SOURCES
-    lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
 )

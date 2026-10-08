@@ -70,14 +70,14 @@ static void prv_unobstructed_area_change_handler(AnimationProgress progress, voi
   prv_update_layer_positions();
 }
 
-static void prv_minute_tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_minute_tick_handler(struct pbl_tm *tick_time, TimeUnits units_changed) {
   TicTocData *data = app_state_get_user_data();
 
-  strftime(data->date_text, sizeof(data->date_text), i18n_get("%B %e", data), tick_time);
+  pbl_strftime_r(data->date_text, sizeof(data->date_text), i18n_get("%B %e", data), tick_time);
   text_layer_set_text(&data->text_date_layer, data->date_text);
 
-  strftime(data->time_text, sizeof(data->time_text), clock_is_24h_style() ? "%R" : "%I:%M",
-           tick_time);
+  pbl_strftime_r(data->time_text, sizeof(data->time_text), clock_is_24h_style() ? "%R" : "%I:%M",
+                 tick_time);
 
   // Handle lack of non-padded hour format string for twelve hour clock.
   char *start_time_text = data->time_text;
@@ -123,7 +123,7 @@ static void prv_init(void) {
 
   tick_timer_service_subscribe(MINUTE_UNIT, prv_minute_tick_handler);
 
-  struct tm time_struct;
+  struct pbl_tm time_struct;
   rtc_get_time_tm(&time_struct);
   prv_minute_tick_handler(&time_struct, MINUTE_UNIT);
 

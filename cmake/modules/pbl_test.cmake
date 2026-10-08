@@ -34,10 +34,8 @@ set(PBL_TEST_C_FLAGS
 )
 
 # Headers every test sees, in the order the compiler must find them:
-# lib/c/include first, since its time.h deliberately shadows the
-# host's, then the overrides, fakes and stubs ahead of the firmware.
+# the overrides, fakes and stubs ahead of the firmware.
 set(PBL_TEST_INCLUDES_HEAD
-  lib/c/include
   include
 )
 set(PBL_TEST_INCLUDES_TAIL

@@ -54,8 +54,8 @@ void health_data_destroy(HealthData *health_data) {
 
 void health_data_update_quick(HealthData *health_data) {
   const time_t now = rtc_get_time();
-  struct tm local_tm;
-  localtime_r(&now, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&now, &local_tm);
 
   // Get the current steps
   health_service_private_get_metric_history(HealthMetricStepCount, 1, health_data->step_data);
@@ -71,8 +71,8 @@ void health_data_update_quick(HealthData *health_data) {
 
 void health_data_update(HealthData *health_data) {
   const time_t now = rtc_get_time();
-  struct tm local_tm;
-  localtime_r(&now, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&now, &local_tm);
 
   //! Step / activity related data
   // Get the step totals for today and the past 6 days
@@ -209,8 +209,8 @@ static int32_t prv_health_data_get_n_average_chunks(HealthData *health_data, int
 int32_t health_data_steps_get_current_average(HealthData *health_data) {
   // get the current minutes into today
   time_t utc_sec = rtc_get_time();
-  struct tm local_tm;
-  localtime_r(&utc_sec, &local_tm);
+  struct pbl_tm local_tm;
+  pbl_localtime_r(&utc_sec, &local_tm);
   int32_t today_min = local_tm.tm_hour * PBL_MIN_PER_HOUR + local_tm.tm_min;
   const int k_minutes_per_step_avg = PBL_MIN_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES;
 

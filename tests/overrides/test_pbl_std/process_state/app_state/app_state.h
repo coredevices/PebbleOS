@@ -7,8 +7,8 @@
 
 #include <applib/pbl_std/locale.h>
 
-struct tm *app_state_get_gmtime_tm(void);
-struct tm *app_state_get_localtime_tm(void);
+struct pbl_tm *app_state_get_gmtime_tm(void);
+struct pbl_tm *app_state_get_localtime_tm(void);
 char *app_state_get_localtime_zone(void);
 
 LocaleInfo *app_state_get_locale_info(void);

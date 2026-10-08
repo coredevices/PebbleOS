@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <pbl/util/time.h>
+
 /*
  * C Standard Library functions for consumption by 3rd party apps
  *
@@ -27,7 +29,21 @@
 //! @addtogroup StandardC Standard C
 //! @{
 //!   @addtogroup StandardTime Time
+//! \brief Standard system time functions
+//!
+//! This module contains standard time functions and formatters for printing.
+//! Note that Pebble now supports both local time and UTC time
+//! (including timezones and daylight savings time).
+//! Most of these functions are part of the C standard library which is documented at
+//! https://sourceware.org/newlib/libc.html#Timefns
 //! @{
+
+//! Obtain the number of seconds and milliseconds part since the epoch.
+//!   This is a non-standard C function provided for convenience.
+//! @param tloc if provided receives the current UTC Unix Time seconds portion
+//! @param out_ms if provided receives the current Unix Time milliseconds portion
+//! @return Current Unix Time milliseconds portion
+uint16_t time_ms(time_t *tloc, uint16_t *out_ms);
 
 //! Obtain the number of seconds since epoch.
 //! Note that the epoch is not adjusted for Timezones and Daylight Savings.
@@ -56,24 +72,24 @@ double pbl_override_difftime(time_t end, time_t beginning);
 //! @return The number of seconds since epoch, January 1st 1970
 time_t pbl_override_time_legacy(time_t *tloc);
 
-//! convert the time value pointed at by clock to a struct tm which contains the time
+//! convert the time value pointed at by clock to a struct pbl_tm which contains the time
 //! adjusted for the local timezone
 //! @param timep A pointer to an object of type time_t that contains a time value
-//! @return A pointer to a struct tm containing the broken out time value adjusted
+//! @return A pointer to a struct pbl_tm containing the broken out time value adjusted
 //!   for the local timezone
-struct tm *pbl_override_localtime(const time_t *timep);
+struct pbl_tm *pbl_override_localtime(const time_t *timep);
 
-//! convert the time value pointed at by clock to a struct tm
+//! convert the time value pointed at by clock to a struct pbl_tm
 //!   which contains the time expressed in Coordinated Universal Time (UTC)
 //! @param timep A pointer to an object of type time_t that contains a time value
-//! @return A pointer to a struct tm containing Coordinated Universal Time (UTC)
-struct tm *pbl_override_gmtime(const time_t *timep);
+//! @return A pointer to a struct pbl_tm containing Coordinated Universal Time (UTC)
+struct pbl_tm *pbl_override_gmtime(const time_t *timep);
 
 //! convert the broken-down time structure to a timestamp
 //!   expressed in Coordinated Universal Time (UTC)
 //! @param tb A pointer to an object of type tm that contains broken-down time
 //! @return The number of seconds since epoch, January 1st 1970
-time_t pbl_override_mktime(struct tm *tb);
+time_t pbl_override_mktime(struct pbl_tm *tb);
 
 //! Returns the current local time in Unix Timestamp Format with milliseconds
 //! The time_ms() method, in contrast, returns the UTC time instead of local time.
@@ -88,10 +104,10 @@ uint16_t pbl_override_time_ms_legacy(time_t *t_loc, uint16_t *out_ms);
 //! @param s A preallocation char array of size max
 //! @param maxsize the size of the array s
 //! @param format a formatting string
-//! @param tm_p A pointer to a struct tm containing a broken out time value
+//! @param tm_p A pointer to a struct pbl_tm containing a broken out time value
 //! @return The number of bytes placed in the array s, not including the null byte,
 //!   0 if the value does not fit.
-size_t pbl_strftime(char *s, size_t maxsize, const char *format, const struct tm *tm_p);
+size_t pbl_strftime(char *s, size_t maxsize, const char *format, const struct pbl_tm *tm_p);
 
 //!   @} // end addtogroup StandardTime
 //! @} // end addtogroup StandardC

@@ -64,7 +64,7 @@ static void prv_update_ui(SdkAppData *data) {
   prv_update_info(data);
 }
 
-static void prv_handle_tick_timer(struct tm *tick_time, TimeUnits units_changed) {
+static void prv_handle_tick_timer(struct pbl_tm *tick_time, TimeUnits units_changed) {
   prv_update_ui(app_state_get_user_data());
 }
 

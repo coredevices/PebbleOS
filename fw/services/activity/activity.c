@@ -1988,8 +1988,8 @@ void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int
     // current_avg. The last key is set to daily_avg - current_avg so that the total daily_avg will
     // always be at daily_avg
     const time_t now = rtc_get_time();
-    struct tm local_tm;
-    localtime_r(&now, &local_tm);
+    struct pbl_tm local_tm;
+    pbl_localtime_r(&now, &local_tm);
     enum pbl_weekday day_of_week = local_tm.tm_wday;
 
     uint16_t step_avg_array[ACTIVITY_STEP_AVERAGES_PER_KEY] = {};

@@ -98,7 +98,7 @@ static void prv_health_service_deinit_cache(HealthServiceState *state) {
 // ----------------------------------------------------------------------------------------------
 // returns a time_t of a given time that represents midnight of the given local time.
 static time_t prv_get_midnight_of_local_time(time_t now) {
-  struct tm *local_tm = pbl_override_gmtime(&now);
+  struct pbl_tm *local_tm = pbl_override_gmtime(&now);
   local_tm->tm_hour = 0;
   local_tm->tm_min = 0;
   local_tm->tm_sec = 0;
@@ -235,7 +235,7 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
 
   // What day of the week is it now?
   const time_t now_utc = sys_get_time();
-  struct tm *local_tm = pbl_override_localtime(&now_utc);
+  struct pbl_tm *local_tm = pbl_override_localtime(&now_utc);
 
   // Compute weekly, weekday, and daily stats
   *stats = (HealthServiceMetricStats){};
@@ -361,7 +361,7 @@ static bool prv_get_intraday_averages(HealthServiceState *state, HealthMetric me
 static HealthValue prv_sum_intraday_averages(ActivityMetricAverages *averages, time_t time_start,
                                              time_t time_end) {
   PBL_ASSERTN((time_end - time_start) <= PBL_SEC_PER_DAY);
-  struct tm *local_tm = pbl_override_localtime(&time_start);
+  struct pbl_tm *local_tm = pbl_override_localtime(&time_start);
 
   // Add up the metric averages for the passed in time range
   time_t chunk_start_time = time_start;
@@ -569,7 +569,7 @@ static HealthValue prv_compute_aggregate_averaged_using_daily_totals(
   // What day of the week is the scope for? For now, we will use the day of the week that
   // time_start falls on. In the future, we could be better about blending weekday with weekend
   // if the time range spans both
-  struct tm *local_tm = pbl_override_localtime(&time_start);
+  struct pbl_tm *local_tm = pbl_override_localtime(&time_start);
   bool is_weekend = prv_is_weekend(local_tm->tm_wday);
 
   // Compute all stats
@@ -1067,7 +1067,7 @@ HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_s
       ((time_end - time_start) < PBL_SEC_PER_DAY)) {
     // For now, we will use the day of the week that time_start falls on. In the future, we could
     // be better about blending weekday with weekend if the time range spans both
-    struct tm *local_tm = pbl_override_localtime(&time_start);
+    struct pbl_tm *local_tm = pbl_override_localtime(&time_start);
     bool is_weekend = prv_is_weekend(local_tm->tm_wday);
 
     ActivityMetricAverages averages;

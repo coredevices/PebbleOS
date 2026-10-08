@@ -143,7 +143,7 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
       i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
     };
     time_t t = rtc_get_time() + (time_t)day_offset * PBL_SEC_PER_DAY;
-    struct tm *lt = localtime(&t); // compat maps to pbl_override_localtime
+    struct pbl_tm *lt = localtime(&t); // compat maps to pbl_override_localtime
     int w = (lt && lt->tm_wday >= 0 && lt->tm_wday < 7) ? lt->tm_wday : 0;
     i18n_get_with_buffer(kWday[w], buf, bufsize);
   }
@@ -155,7 +155,7 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
 // same pair the sunset computation uses).
 static int prv_location_local_hour(const WxDsForecast *ds) {
   time_t now = rtc_get_time();
-  struct tm *lt = localtime(&now);
+  struct pbl_tm *lt = localtime(&now);
   if (!lt)
     return -1;
   int hour = lt->tm_hour;
@@ -246,7 +246,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     // delta on the same city. Consistency with the clock outranks the saved-city refinement
     // (which the clock doesn't have either).
     time_t now_t = rtc_get_time();
-    struct tm *lt_h = localtime(&now_t);
+    struct pbl_tm *lt_h = localtime(&now_t);
     const int hour = lt_h ? lt_h->tm_hour : -1;
     if (ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&
         ds->hourly_type[hour] <= WeatherType_RainAndSnow) {

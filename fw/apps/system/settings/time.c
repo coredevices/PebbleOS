@@ -239,13 +239,13 @@ static void prv_cycle_clock_timezone_source(void) {
 static void prv_time_picker_complete(TimeSelectionWindowData *picker, void *context) {
   // Build a new UTC timestamp: keep today's local date, update hours/minutes.
   // Seconds are reset to zero when manually setting the time.
-  struct tm now;
+  struct pbl_tm now;
   clock_get_time_tm(&now);
   now.tm_hour = picker->time_data.hour;
   now.tm_min = picker->time_data.minute;
   now.tm_sec = 0;
-  // mktime interprets struct tm as local time and returns a UTC epoch
-  time_t new_utc = mktime(&now);
+  // mktime interprets struct pbl_tm as local time and returns a UTC epoch
+  time_t new_utc = pbl_mktime(&now);
   clock_set_time(new_utc);
 
   const bool animated = true;
@@ -279,13 +279,13 @@ static void prv_time_picker_push(SettingsTimeData *data) {
 
 static void prv_date_picker_complete(DateSelectionWindowData *picker, void *context) {
   // Build a new UTC timestamp: keep today's local time-of-day (hour/min/sec), update year/month/day
-  struct tm now;
+  struct pbl_tm now;
   clock_get_time_tm(&now);
   now.tm_year = picker->date.year;
   now.tm_mon = picker->date.month;
   now.tm_mday = picker->date.day;
   // mktime normalises any out-of-range fields and converts local → UTC
-  time_t new_utc = mktime(&now);
+  time_t new_utc = pbl_mktime(&now);
   clock_set_time(new_utc);
 
   const bool animated = true;
@@ -363,7 +363,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     }
     case TimeRow_SetTime: {
       title = i18n_noop("Set Time");
-      struct tm local_now;
+      struct pbl_tm local_now;
       clock_get_time_tm(&local_now);
       clock_format_time(time_buf, sizeof(time_buf), local_now.tm_hour, local_now.tm_min, true);
       subtitle = time_buf;
@@ -371,9 +371,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     }
     case TimeRow_SetDate: {
       title = i18n_noop("Set Date");
-      struct tm local_now;
+      struct pbl_tm local_now;
       clock_get_time_tm(&local_now);
-      strftime(date_buf, sizeof(date_buf), "%Y-%m-%d", &local_now);
+      pbl_strftime_r(date_buf, sizeof(date_buf), "%Y-%m-%d", &local_now);
       subtitle = date_buf;
       break;
     }
