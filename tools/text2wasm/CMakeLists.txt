@@ -91,7 +91,6 @@ target_compile_definitions(pebble_renderer PRIVATE
 )
 target_compile_options(pebble_renderer PRIVATE
   -O2
-  -Wno-error=incompatible-pointer-types
 )
 target_link_options(pebble_renderer PRIVATE
   -O2
