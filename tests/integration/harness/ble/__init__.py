@@ -51,7 +51,10 @@ REQUESTED_MTU = 339
 TICK_S = 0.5
 SCAN_TIMEOUT_S = 15.0
 CONNECT_TIMEOUT_S = 15.0
-CONNECT_ATTEMPTS = 3
+# Right after it boots, the watch fails to establish links for a moment.
+CONNECT_ATTEMPTS = 5
+CONNECT_BACKOFF_S = 0.5
+ATTACH_ATTEMPTS = 3
 # The link's parameters (ms), kept for the whole connection. At 15 ms, the
 # lab's getafix often fails to establish the link (0x3e).
 CONNECTION_INTERVAL_MS = 30
@@ -413,7 +416,7 @@ class BleLink:
         the watch starts it as soon as the link is encrypted."""
         from bumble.device import Peer
 
-        for attempt in range(1, CONNECT_ATTEMPTS + 1):
+        for attempt in range(1, ATTACH_ATTEMPTS + 1):
             self._connection = await self._connect(address)
             self._disconnected.clear()
             self._connection.on("disconnection", self._on_disconnection)
@@ -427,7 +430,7 @@ class BleLink:
                 # The watch never saw the link, e.g. it stopped advertising
                 # as the connection was made.
                 logger.info("BLE: no answer on the link (attempt %d)", attempt)
-                if attempt == CONNECT_ATTEMPTS:
+                if attempt == ATTACH_ATTEMPTS:
                     raise WatchTimeout(
                         f"no answer from {address} on the link"
                     ) from None
@@ -450,6 +453,8 @@ class BleLink:
         from bumble.hci import Phy
 
         for attempt in range(1, CONNECT_ATTEMPTS + 1):
+            if attempt > 1:
+                await asyncio.sleep(CONNECT_BACKOFF_S * (attempt - 1))
             logger.info("BLE: connecting to %s (attempt %d)", address, attempt)
             try:
                 connection = await self._device.connect(
