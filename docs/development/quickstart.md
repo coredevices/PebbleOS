@@ -103,16 +103,29 @@ pbl -b build-asterix bundle
 
 ## 7. Install it on the watch
 
-Copy the `.pbz` to the phone paired with the watch. In the Pebble mobile
-app, enable `Settings -> Show debug options`, then go back to the Devices
-tab, tap your watch, choose `Firmware Update Debug -> Sideload FW`, and
-select the file. The app starts the update and shows its progress on the
-watch card in the Devices tab.
+There are three ways to get the `.pbz` onto a watch:
 
-If you have a firmware development kit connected over SWD or serial,
-`pbl -b build-asterix flash` writes the firmware directly instead. Both
-routes, and the first-time resource flashing a dev kit needs, are in
-{doc}`building_fw`.
+1. **Sideload it in the Pebble mobile app.** Copy the `.pbz` to the phone
+   paired with the watch. In the app, enable `Settings -> Show debug
+   options`, then go back to the Devices tab, tap your watch, choose
+   `Firmware Update Debug -> Sideload FW`, and select the file. The app
+   starts the update and shows its progress on the watch card.
+2. **Send it with the `pebble` tool.** With the
+   [Developer Connection](https://developer.repebble.com/guides/tools-and-resources/developer-connection/)
+   enabled in the Pebble mobile app, the SDK's `pebble` tool installs the
+   bundle over Bluetooth through the phone:
+
+   ```shell
+   pebble fw install build-asterix/normal_asterix_<version>.pbz --phone <phone-ip>
+   ```
+
+   Use `--cloudpebble` instead of `--phone` when the phone is connected
+   through the CloudPebble proxy. `--slot 0|1` picks the slot for
+   multi-slot bundles.
+3. **Flash it with a firmware development kit.** With the kit connected
+   over SWD or serial, `pbl -b build-asterix flash` writes the firmware
+   directly, without the phone. This route, and the first-time resource
+   flashing a dev kit needs, are in {doc}`building_fw`.
 
 ```{note}
 Holding Back + Up + Select reboots the watch into the recovery firmware
