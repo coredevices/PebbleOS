@@ -1,6 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+pbl_clar_test(test_music_volume
+  SOURCES
+    fw/apps/system/music_volume.c
+    fw/applib/ui/recognizer/recognizer.c
+    tests/fw/ui/recognizer/test_recognizer_impl.c
+)
+
 pbl_clar_test(test_music
   SOURCES
     fw/applib/fonts/codepoint.c

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "music.h"
+#include "music_volume.h"
 
 #include "applib/app.h"
 #include "applib/event_service_client.h"
@@ -10,6 +11,7 @@
 #include "applib/fonts/fonts.h"
 #include "applib/preferred_content_size.h"
 #include "applib/tick_timer_service.h"
+#include "applib/touch_service.h"
 #include "applib/ui/app_window_stack.h"
 #include "applib/ui/property_animation.h"
 #include "applib/ui/ui.h"
@@ -44,6 +46,11 @@
 // backdrop when art is available, the plain background otherwise); on rect it applies only while
 // art is showing, with the stock layout otherwise.
 #define MUSIC_ROUND_MEDIA_LAYOUT (PBL_ROUND && MUSIC_ALBUM_ART_SUPPORTED)
+#if MUSIC_ROUND_MEDIA_LAYOUT && defined(CONFIG_TOUCH)
+#define MUSIC_CIRCULAR_VOLUME 1
+#else
+#define MUSIC_CIRCULAR_VOLUME 0
+#endif
 
 #if PBL_ROUND
 // Unified round media layout: a full-screen backdrop, a progress arc along the bezel whose gap
@@ -336,6 +343,12 @@ typedef struct {
   AppTimer *action_bar_revert_timer;
   AppTimer *volume_repeat_timer;
   bool volume_is_up;
+#if MUSIC_CIRCULAR_VOLUME
+  Recognizer *volume_recognizer;
+  int32_t volume_touch_steps;
+  bool volume_touch_visible;
+  bool volume_touch_up;
+#endif
 
   MusicNoMusicWindow *no_music_window;
 
@@ -382,6 +395,16 @@ static void prv_do_haptic_feedback_vibe(MusicAppData *data) {
 static void prv_handle_volume_icon_timer(void *context) {
   MusicAppData *data = context;
   data->volume_icon_timer = NULL;
+#if MUSIC_CIRCULAR_VOLUME
+  if (recognizer_has_triggered(data->volume_recognizer) &&
+      recognizer_is_active(data->volume_recognizer)) {
+    data->volume_icon_timer =
+        app_timer_register(VOLUME_ICON_TIMEOUT_MS, prv_handle_volume_icon_timer, data);
+    return;
+  }
+  data->volume_touch_visible = false;
+  layer_mark_dirty(&data->album_art_layer);
+#endif
   prv_update_cassette_icon(data, true);
 }
 
@@ -403,9 +426,56 @@ static void prv_change_volume(bool volume_is_up) {
   }
 
   MusicAppData *data = app_state_get_user_data();
+#if MUSIC_CIRCULAR_VOLUME
+  if (data->volume_touch_visible) {
+    music_command_send(volume_is_up ? MusicCommandVolumeUp : MusicCommandVolumeDown);
+    return;
+  }
+#endif
   prv_show_volume_image(volume_is_up ? &data->image_volume_up : &data->image_volume_down);
   music_command_send(volume_is_up ? MusicCommandVolumeUp : MusicCommandVolumeDown);
 }
+
+#if MUSIC_CIRCULAR_VOLUME
+static bool prv_volume_touch_filter(const Recognizer *recognizer, const TouchEvent *event) {
+  // Only touchdown is zoned; a captured rotation may cross the action bar.
+  if (event->type != TouchEvent_Touchdown) {
+    return true;
+  }
+  MusicAppData *data = recognizer_get_user_data(recognizer);
+  const GPoint point = GPoint(event->x, event->y);
+  return !event->non_navigational && touch_service_is_enabled() && music_has_now_playing() &&
+         music_is_command_supported(MusicCommandVolumeUp) &&
+         music_is_command_supported(MusicCommandVolumeDown) &&
+         !grect_contains_point(&data->action_bar.layer.frame, &point);
+}
+
+static void prv_volume_touch_event(const Recognizer *recognizer, RecognizerEvent event) {
+  MusicAppData *data = recognizer_get_user_data(recognizer);
+  if (event == RecognizerEvent_Started) {
+    data->volume_touch_steps = 0;
+    data->volume_touch_visible = true;
+  }
+  if (event == RecognizerEvent_Started || event == RecognizerEvent_Updated) {
+    const int32_t steps = music_volume_recognizer_get_steps(recognizer);
+    while (data->volume_touch_steps != steps) {
+      const bool up = steps > data->volume_touch_steps;
+      data->volume_touch_up = up;
+      prv_change_volume(up);
+      data->volume_touch_steps += up ? 1 : -1;
+    }
+    if (data->volume_icon_timer) {
+      app_timer_reschedule(data->volume_icon_timer, VOLUME_ICON_TIMEOUT_MS);
+    } else {
+      data->volume_icon_timer =
+          app_timer_register(VOLUME_ICON_TIMEOUT_MS, prv_handle_volume_icon_timer, data);
+    }
+    layer_mark_dirty(&data->album_art_layer);
+  } else if (data->volume_icon_timer) {
+    app_timer_reschedule(data->volume_icon_timer, VOLUME_ICON_TIMEOUT_MS);
+  }
+}
+#endif
 
 static Animation *prv_create_layer_upwards_animation(Layer *layer, int16_t offset) {
   GPoint target = GPoint(0, -layer->bounds.size.h - offset);
@@ -1191,14 +1261,13 @@ static void prv_round_clock_update_proc(Layer *layer, GContext *ctx) {
 
 //! Fill part of the bezel arc band. Degrees run clockwise from 12 o'clock and the range may pass
 //! through 360 (the fill is split there).
-static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_deg,
-                               int32_t to_deg) {
+static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_deg, int32_t to_deg,
+                               uint16_t thickness) {
   if (to_deg <= from_deg) {
     return;
   }
   // The radial primitive stops half a pixel inside its bounds; overlap the display's clip edge.
   const GRect ring_bounds = grect_inset(*bounds, GEdgeInsets(-1));
-  const uint16_t thickness = ART_ROUND_RING_THICKNESS + 1;
   if (to_deg <= 360) {
     graphics_fill_radial(ctx, ring_bounds, GOvalScaleModeFitCircle, thickness,
                          DEG_TO_TRIGANGLE(from_deg), DEG_TO_TRIGANGLE(to_deg));
@@ -1210,36 +1279,69 @@ static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_
   }
 }
 
+static void prv_draw_round_readout(MusicAppData *data, GContext *ctx, const char *text,
+                                   GTextOverflowMode overflow_mode) {
+  const GRect box =
+      GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 30);
+  const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  if (data->has_album_art) {
+    prv_draw_outlined_text(ctx, text, font, box, overflow_mode, GTextAlignmentCenter);
+  } else {
+    graphics_context_set_text_color(ctx, GColorBlack);
+    graphics_draw_text(ctx, text, font, box, overflow_mode, GTextAlignmentCenter, NULL);
+  }
+}
+
+#if MUSIC_CIRCULAR_VOLUME
+static void prv_draw_round_volume(MusicAppData *data, GContext *ctx, const GRect *bounds) {
+  const uint16_t thickness = ART_ROUND_RING_THICKNESS + 1;
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, ART_ROUND_ARC_END_DEG, thickness);
+  char volume[32];
+  if (music_is_volume_reporting_supported()) {
+    const uint8_t percent = MIN(music_get_volume_percent(), 100);
+    const int32_t sweep = ART_ROUND_ARC_END_DEG - ART_ROUND_ARC_START_DEG;
+    const int32_t end = ART_ROUND_ARC_START_DEG + percent * sweep / 100;
+    graphics_context_set_fill_color(ctx, shell_prefs_get_theme_highlight_color());
+    prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, end, thickness);
+    snprintf(volume, sizeof(volume), "%s %u%%", i18n_get("Volume", data), percent);
+  } else {
+    snprintf(volume, sizeof(volume), "%s %s", i18n_get("Volume", data),
+             data->volume_touch_up ? "+" : "-");
+  }
+  prv_draw_round_readout(data, ctx, volume, GTextOverflowModeTrailingEllipsis);
+}
+#endif
+
 // Progress arc along the bezel (its gap hugging the action bar) plus a small centred
 // elapsed/total line: the round replacements for the stock bar and time labels.
 static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
   MusicAppData *data = app_state_get_user_data();
+#if MUSIC_CIRCULAR_VOLUME
+  if (data->volume_touch_visible) {
+    prv_draw_round_volume(data, ctx, bounds);
+    return;
+  }
+#endif
   if (!(data->temporarily_show_progress || shell_prefs_get_music_show_progress_bar()) ||
       !music_is_progress_reporting_supported()) {
     return;
   }
   graphics_context_set_fill_color(ctx, GColorBlack);
-  prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, ART_ROUND_ARC_END_DEG);
+  prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, ART_ROUND_ARC_END_DEG,
+                     ART_ROUND_RING_THICKNESS + 1);
   if (data->track_length > 0) {
     const int32_t sweep = ART_ROUND_ARC_END_DEG - ART_ROUND_ARC_START_DEG;
     const int32_t end =
         ART_ROUND_ARC_START_DEG +
         MIN((int32_t)(((int64_t)sweep * data->track_pos) / data->track_length), sweep);
     graphics_context_set_fill_color(ctx, GColorRed);
-    prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, end);
+    prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, end, ART_ROUND_RING_THICKNESS + 1);
   }
   if (data->position_buffer[0] && data->length_buffer[0]) {
     char times[24];
     snprintf(times, sizeof(times), "%s / %s", data->position_buffer, data->length_buffer);
-    const GRect box =
-        GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 30);
-    GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    if (data->has_album_art) {
-      prv_draw_outlined_text(ctx, times, font, box, GTextOverflowModeFill, GTextAlignmentCenter);
-    } else {
-      graphics_context_set_text_color(ctx, GColorBlack);
-      graphics_draw_text(ctx, times, font, box, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
-    }
+    prv_draw_round_readout(data, ctx, times, GTextOverflowModeFill);
   }
 }
 #endif
@@ -1608,6 +1710,14 @@ static void prv_init_ui(Window *window) {
   progress_layer_set_corner_radius(&data->track_pos_bar, config->track_corner_radius);
   layer_add_child(&window->layer, (Layer *)&data->track_pos_bar);
 
+#if MUSIC_CIRCULAR_VOLUME
+  data->volume_recognizer = music_volume_recognizer_create(prv_volume_touch_event, data,
+                                                           GPoint(DISP_COLS / 2, DISP_ROWS / 2),
+                                                           DISP_COLS / 4, DISP_COLS / 2 - 4);
+  recognizer_set_touch_filter(data->volume_recognizer, prv_volume_touch_filter);
+  window_attach_recognizer(window, data->volume_recognizer);
+#endif
+
   ActionBarLayer *action_bar = &data->action_bar;
   data->action_bar_state = ActionBarStateSkip;
   action_bar_layer_init(action_bar);
@@ -1691,6 +1801,10 @@ static void prv_music_event_handler(PebbleEvent *event, void *context) {
       prv_apply_art_appearance(data);
       return;
     case PebbleMediaEventTypeVolumeChanged:
+#if MUSIC_CIRCULAR_VOLUME
+      layer_mark_dirty(&data->album_art_layer);
+#endif
+      // fall through
     case PebbleMediaEventTypeServerConnected:
     case PebbleMediaEventTypeServerDisconnected:
     case PebbleMediaEventTypeTrackPosChanged:
@@ -1764,6 +1878,10 @@ static void prv_handle_deinit(void) {
 
   MusicAppData *data = app_state_get_user_data();
   event_service_client_unsubscribe(&data->pref_change_event_info);
+#if MUSIC_CIRCULAR_VOLUME
+  window_detach_recognizer(&data->window, data->volume_recognizer);
+  recognizer_destroy(data->volume_recognizer);
+#endif
   prv_title_marquee_stop(data);
   if (data->album_art_request_timer) {
     app_timer_cancel(data->album_art_request_timer);
