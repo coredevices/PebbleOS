@@ -9,7 +9,7 @@ import time
 
 import pytest
 
-pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
+pytestmark = pytest.mark.integration_boards("qemu_emery")
 
 TIME_ENDPOINT = 0x000B
 SET_LOCALTIME = 0x02

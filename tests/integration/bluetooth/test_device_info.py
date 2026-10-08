@@ -10,7 +10,6 @@ import re
 import pytest
 
 pytestmark = [
-    pytest.mark.bluetooth,
     pytest.mark.integration_boards("qemu_emery"),
     pytest.mark.variants("normal", "prf"),
 ]

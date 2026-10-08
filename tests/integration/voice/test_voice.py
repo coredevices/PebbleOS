@@ -16,7 +16,6 @@ from harness.helpers.voice import (
 )
 
 pytestmark = [
-    pytest.mark.voice,
     pytest.mark.requires_config(
         "CONFIG_SHELL", "CONFIG_SERVICE_VOICE", "CONFIG_SERVICE_VOICE_ENDPOINT"
     ),

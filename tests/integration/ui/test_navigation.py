@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import pytest
 from harness.helpers.ui import Button
-
-pytestmark = pytest.mark.ui
 
 
 def test_launcher_opens(ui):

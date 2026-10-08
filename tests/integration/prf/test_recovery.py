@@ -8,7 +8,7 @@ import pytest
 from harness.helpers.snapshot import Region
 from harness.helpers.ui import Button, Ui
 
-pytestmark = [pytest.mark.variants("prf"), pytest.mark.smoke]
+pytestmark = pytest.mark.variants("prf")
 
 # The watch's name under the QR code: its address is random on the emulator.
 NAME_BAND_H = 28

@@ -30,17 +30,6 @@ SCOPE_MARKERS = {
     "these boards; with none, never",
 }
 
-# What a test covers; select with -m.
-CATEGORY_MARKERS = {
-    "smoke": "quick checks that the firmware boots and answers",
-    "ui": "drives the UI and compares screenshots",
-    "notifications": "notification delivery and presentation",
-    "voice": "dictation through the voice and audio endpoints",
-    "bluetooth": "pairing and connecting with a phone",
-    "power": "measures current consumption (needs a PPK2)",
-    "slow": "takes more than a minute",
-}
-
 
 # What tests need of the setup, by the fixtures they use.
 FIXTURE_NEEDS = {
@@ -199,7 +188,7 @@ def pytest_configure(config):
     for name in ("transitions", "pebble.pulse2"):
         logging.getLogger(name).setLevel(logging.WARNING)
 
-    for name, help in {**SCOPE_MARKERS, **CATEGORY_MARKERS}.items():
+    for name, help in SCOPE_MARKERS.items():
         config.addinivalue_line("markers", f"{name}: {help}")
 
     build_dir = config.getoption("build_dir") or os.path.join(TOPDIR, "build")

@@ -35,9 +35,10 @@ the rest of the results.
 Anything `pbl itest` does not recognize goes straight to pytest, which it
 runs from `tests/integration`, so the usual selection options work:
 
-- `-m smoke`, `-m "ui and not slow"`: by category
+- `bluetooth`, `--ignore=bluetooth`: by area
 - `-k settings`: by name
 - `ui/test_navigation.py::test_settings`: a single file or test
+- `--integration`: what CI runs, see below
 - `--collect-only -q`: list the tests without running them
 
 `pbl itest` is only a convenience; the same run is
@@ -249,9 +250,8 @@ runs it only on qemu_emery; `integration_boards()` keeps it out of CI. Use it
 for tests that do not depend on the board, or that take too long for every
 pull request.
 
-What a test covers is a category marker: `smoke`, `ui`, `notifications`,
-`voice`, `power` and `slow`. The full list is in `harness/plugin.py`; markers are
-strict, so a new one must be added there.
+The markers are in `harness/plugin.py`; they are strict, so a new one must
+be added there.
 
 ## Writing a test
 
@@ -260,11 +260,7 @@ Tests are grouped by area in subdirectories of `tests/integration`
 needs:
 
 ```python
-import pytest
-
 from harness.helpers.ui import Button
-
-pytestmark = pytest.mark.ui
 
 
 def test_settings(ui, snapshot):
@@ -338,7 +334,7 @@ ports of which only one answers; `auto` finds it:
 
 ```shell
 pbl -b build-obelix itest --device-serial /dev/tty.usbserial-1 \
-    --ppk2 auto --ppk2-voltage 3800 -m power
+    --ppk2 auto --ppk2-voltage 3800 power
 ```
 
 With a PPK2 the harness powers the watch on before the session, and
@@ -400,8 +396,8 @@ pbl -b build-prf itest --no-build --bt-hci virtual --main-build "$PWD/build-main
 The emulator has no bootloader, so it only checks the transfer. A watch
 installs it, boots it, and goes back to PRF when the phone asks; it has to
 be running PRF to start with, as set up for a release check (the
-bootloader and PRF alone on the flash). `slow` covers the idle shutdown,
-about 12 minutes each way.
+bootloader and PRF alone on the flash). The idle shutdown tests take about
+12 minutes each, so CI does not run them.
 
 Left for a person: the Back+Up+Select hold that reboots into PRF,
 charging a watch, the MFG menu's tests (checked in the factory), and the

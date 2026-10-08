@@ -12,7 +12,7 @@ import time
 import pytest
 from harness.helpers.ui import protocol_screenshot
 
-pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
+pytestmark = pytest.mark.integration_boards("qemu_emery")
 
 PING_ENDPOINT = 2001
 HEALTH_SYNC_ENDPOINT = 911
@@ -225,7 +225,6 @@ def test_file_transfer(prompt, phone):
     assert status != GET_BYTES_OK and data is None
 
 
-@pytest.mark.slow
 def test_poll_remote(phone):
     """The phone has the watch ask it to check for mail every minute."""
     since = phone.inbox.mark()

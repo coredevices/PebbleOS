@@ -17,7 +17,7 @@ class ITest(PblCommand):
             "Run the pytest integration tests in tests/integration against the "
             "build, on the emulator or a real device. Anything this command "
             "does not recognize is passed straight to pytest, from "
-            "tests/integration, e.g. --device-serial TTY, -m smoke, -k settings "
+            "tests/integration, e.g. --device-serial TTY, --integration, -k settings "
             "or ui/test_navigation.py.",
             accepts_unknown_args=True,
         )

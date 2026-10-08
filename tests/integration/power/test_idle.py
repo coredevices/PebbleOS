@@ -7,7 +7,7 @@ import warnings
 import pytest
 from harness.fixtures import dut_scope_within
 
-pytestmark = [pytest.mark.power, pytest.mark.slow, pytest.mark.device_types("hardware")]
+pytestmark = pytest.mark.device_types("hardware")
 
 # How long a watch with no bonding advertises fast (20 ms) for discovery,
 # before slowing down to 1022.5 ms (comm/ble/gap_le_slave_discovery.c).

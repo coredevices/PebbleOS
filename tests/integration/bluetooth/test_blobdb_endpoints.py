@@ -26,7 +26,7 @@ from harness.helpers.blobdb import (
 )
 from harness.helpers.ui import Button, Ui
 
-pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
+pytestmark = pytest.mark.integration_boards("qemu_emery")
 
 TIMELINE_ACTION_ENDPOINT = 0x2CB0
 BLOBDB2_ENDPOINT = 0xB2DB

@@ -13,7 +13,7 @@ from harness.ble import ParameterRequest
 from harness.errors import HarnessError, WatchTimeout
 from harness.helpers.pairing import CONFIRM, FAILED, SUCCESS, SUCCESS_SHOWN_S
 
-pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
+pytestmark = pytest.mark.integration_boards("qemu_emery")
 BOTH = pytest.mark.variants("normal", "prf")
 
 OTHER_PHONE_ADDRESS = "F0:BB:1E:00:00:02"

@@ -4,7 +4,7 @@
 import pytest
 from harness.helpers.ui import Button, Swipe
 
-pytestmark = [pytest.mark.ui, pytest.mark.requires_config("CONFIG_SERVICE_TOUCH")]
+pytestmark = pytest.mark.requires_config("CONFIG_SERVICE_TOUCH")
 
 
 @pytest.fixture

@@ -10,7 +10,6 @@ from harness.helpers.ui import Ui
 
 pytestmark = [
     pytest.mark.variants("prf"),
-    pytest.mark.power,
     pytest.mark.device_types("hardware"),
 ]
 

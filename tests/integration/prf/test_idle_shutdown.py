@@ -6,7 +6,6 @@ from harness.errors import WatchTimeout
 
 pytestmark = [
     pytest.mark.variants("prf"),
-    pytest.mark.slow,
     pytest.mark.integration_boards(),
 ]
 

@@ -13,7 +13,6 @@ from harness.helpers.remote_input import RemoteInputAck, RemoteInputButton, Stat
 from harness.helpers.ui import Button, Ui
 
 pytestmark = [
-    pytest.mark.bluetooth,
     pytest.mark.integration_boards("qemu_emery"),
     pytest.mark.variants("normal", "prf"),
 ]
