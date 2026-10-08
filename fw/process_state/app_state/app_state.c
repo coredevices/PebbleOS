@@ -89,8 +89,6 @@ typedef struct {
 
   LocaleInfo locale_info;
 
-  ContentIndicatorsBuffer content_indicators_buffer;
-
   bool app_framebuffer_render_pending;
 
   AppFocusState app_focus_state;
@@ -134,6 +132,8 @@ typedef struct {
   TimelineItemActionSource current_timeline_item_action_source;
 
   GBitmap *legacy2_framebuffer;
+
+  ContentIndicatorsBuffer content_indicators_buffer;
 } AppState;
 
 KERNEL_READONLY_DATA static AppState *s_app_state_ptr;
