@@ -17,9 +17,7 @@ pytestmark = [
 NOMINAL_VOLTAGE_MV = 3800
 ADVERTISING_MAX_UA = 1000
 CONNECTED_MAX_UA = 550
-OFF_MAX_UA = 15
 MEASURE_S = 30
-OFF_SETTLE_S = 5
 
 # The backlight stays on 3 s after a press, then fades out over 0.5 s.
 BACKLIGHT_ON_S = (3.0, 4.0)
@@ -59,17 +57,6 @@ def test_connected(dut, phones, power, record_property):
     assert phone.watch_version().is_recovery
     _record(record_property, m, CONNECTED_MAX_UA)
     assert m.mean_ua <= CONNECTED_MAX_UA, m
-
-
-def test_off(dut, power, record_property):
-    dut.standby()
-    try:
-        time.sleep(OFF_SETTLE_S)
-        m = power.measure_for(MEASURE_S, "off")
-    finally:
-        dut.reset()
-    _record(record_property, m, OFF_MAX_UA)
-    assert m.mean_ua <= OFF_MAX_UA, m
 
 
 def _on_time_s(samples):

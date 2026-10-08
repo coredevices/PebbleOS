@@ -20,7 +20,6 @@ SHELL = {
     "reset": "sys reset",
     "rx_disable": "sys rx_disable {seconds}",
     "set_time": "time set {timestamp}",
-    "standby": "mfg standby",
     "version": "version",
     "windows": "ui windows",
 }
@@ -34,7 +33,6 @@ PROMPT = {
     "reset": "reset",
     "rx_disable": "console disable rx {seconds}",
     "set_time": "set time {timestamp}",
-    "standby": "enter standby",
     "version": "version",
     "windows": "window stack",
 }
