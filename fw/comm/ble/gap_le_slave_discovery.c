@@ -12,6 +12,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/local_id.h>
+#include <pbl/util/size.h>
 #include <pbl/version.h>
 
 #include <applib/bluetooth/ble_ad_parse.h>
@@ -36,7 +37,7 @@ static void prv_job_unschedule_callback(GAPLEAdvertisingJobRef job, bool complet
 //! We don't want to be advertising at a high rate infinitely. When duration
 //! is 0, a short period of high-rate advertising will be used. When this short
 //! period is completed, an indefinite, low-rate job will be scheduled.
-static void prv_schedule_ad_job(void) {
+static void prv_schedule_ad_job(bool fast) {
   struct pbl_bt_ad_data *ad = ble_ad_create();
 
   // Advertisement part:
@@ -127,9 +128,10 @@ static void prv_schedule_ad_job(void) {
     },
   };
 
-  s_discovery_advert_job = gap_le_advert_schedule(
-      ad, advert_terms, sizeof(advert_terms) / sizeof(GAPLEAdvertisingJobTerm),
-      prv_job_unschedule_callback, NULL, GAPLEAdvertisingJobTagDiscovery);
+  const size_t first_term = fast ? 0 : 1;
+  s_discovery_advert_job =
+      gap_le_advert_schedule(ad, &advert_terms[first_term], ARRAY_LENGTH(advert_terms) - first_term,
+                             prv_job_unschedule_callback, NULL, GAPLEAdvertisingJobTagDiscovery);
 
   ble_ad_destroy(ad);
 }
@@ -152,7 +154,7 @@ void gap_le_slave_set_discoverable(bool discoverable) {
     // Always stop and re-start, so we start with the high rate again:
     gap_le_advert_unschedule(s_discovery_advert_job);
     if (discoverable) {
-      prv_schedule_ad_job();
+      prv_schedule_ad_job(true);
     }
   }
   bt_unlock();
@@ -175,3 +177,29 @@ void gap_le_slave_discovery_deinit(void) {
   }
   bt_unlock();
 }
+
+#ifdef CONFIG_SHELL
+#include <errno.h>
+
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_adv_slow(const struct pbl_shell *sh, size_t argc, char **argv) {
+  int rv = 0;
+
+  bt_lock();
+  {
+    if (s_discovery_advert_job) {
+      gap_le_advert_unschedule(s_discovery_advert_job);
+      prv_schedule_ad_job(false);
+    } else {
+      pbl_shell_error(sh, "not discoverable");
+      rv = -EINVAL;
+    }
+  }
+  bt_unlock();
+  return rv;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, adv_slow, NULL, "Advertise for discovery at the slow rate",
+                     prv_cmd_adv_slow, 0, 0);
+#endif
