@@ -8,6 +8,7 @@
 #include "system/passert.h"
 #include "pbl/util/math.h"
 
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS != 1
 inline static void prv_inverter_layer_update_proc_color(GContext *ctx) {
   // ctx->draw_state.drawing_box is the correct rect when this function gets
   // called through layer_render_tree(),
@@ -27,8 +28,7 @@ inline static void prv_inverter_layer_update_proc_color(GContext *ctx) {
 
   graphics_context_mark_dirty_rect(ctx, ctx->draw_state.drawing_box);
 }
-
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
+#else
 inline static void prv_inverter_layer_update_proc_bw(GContext *ctx) {
   // For 1Bit, just revert to the 2.x code.
   GBitmap sub_bitmap;
