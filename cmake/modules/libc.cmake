@@ -5,7 +5,7 @@
 # PBL_LIBC_LINK_FLAGS and PBL_LIBC_LIBS for the firmware link, and adds
 # the flags that make the toolchain libc match what the firmware expects:
 # 32-bit time_t, the integer-only printf aliases, and the POSIX/BSD names
-# that -std=c11 would otherwise hide.
+# that -std=c23 would otherwise hide.
 
 # newlib defaults time_t to 64-bit; keep it 32-bit (long) to match the
 # firmware's RTC/storage and its %ld format strings.

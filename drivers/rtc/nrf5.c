@@ -358,7 +358,7 @@ void rtc_systick_resume(void) {
 
 //! Our RTC tick counter can overflow if nobody asks about it.  This
 //! repeating callback allows us to make sure this doesn't happen.
-static void prv_rtc_resync_timer_callback() {
+static void prv_rtc_resync_timer_callback(void *data) {
   rtc_get_ticks();
 }
 

@@ -20,7 +20,7 @@ set(PBL_TEST_PLATFORMS default obelix gabbro asterix)
 
 # The tests build for the host with clang, at -O0 with symbols.
 set(PBL_TEST_C_FLAGS
-  -std=c11
+  -std=c23
   -Wall
   -Werror
   -g3

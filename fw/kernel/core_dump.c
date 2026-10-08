@@ -16,7 +16,7 @@
 #include <string.h>
 
 // itoa is a Pebble/newlib extension; newlib hides it under strict-ANSI
-// (-std=c11), so declare it explicitly for non-Pebble libcs.
+// (-std=c23), so declare it explicitly for non-Pebble libcs.
 extern char *itoa(int value, char *str, int base);
 
 #include <kernel/core_dump.h>

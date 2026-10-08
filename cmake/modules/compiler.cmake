@@ -3,7 +3,7 @@
 #
 # Compiler and linker flags shared by every firmware object.
 
-add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=c11>)
+add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=c23>)
 
 add_compile_options(
   -Wall

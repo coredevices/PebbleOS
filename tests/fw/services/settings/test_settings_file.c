@@ -45,7 +45,7 @@ void test_settings_file__cleanup(void) {
 
 #include <stdio.h>
 
-#define PRIb8 "%d%d%d%d%d%d%d%d"
+#define BIN8_FMT "%d%d%d%d%d%d%d%d"
 #define TO_BINARY(byte)                                                                       \
   (byte & 0x80 ? 1 : 0), (byte & 0x40 ? 1 : 0), (byte & 0x20 ? 1 : 0), (byte & 0x10 ? 1 : 0), \
       (byte & 0x08 ? 1 : 0), (byte & 0x04 ? 1 : 0), (byte & 0x02 ? 1 : 0), (byte & 0x01 ? 1 : 0)
@@ -60,7 +60,7 @@ void settings_file_dump(SettingsFile *file) {
        settings_raw_iter_next(&file->iter)) {
     SettingsRecordHeader hdr = file->iter.hdr;
     printf("Record { last_modified: %d, ", hdr.last_modified);
-    printf("flags: " PRIb8 ", ", TO_BINARY(hdr.flags));
+    printf("flags: " BIN8_FMT ", ", TO_BINARY(hdr.flags));
     printf("key_hash: %" PRIu8 ", key_len: %d, val_len: %d }\n", hdr.key_hash, hdr.key_len,
            hdr.val_len);
   }
