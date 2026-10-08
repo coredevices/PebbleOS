@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "pbl/util/build_id.h"
@@ -30,9 +31,15 @@ uint32_t __kernel_bg_stack_start__[4096 / sizeof(uint32_t)];
 uint32_t __isr_stack_start__[1024 / sizeof(uint32_t)];
 
 const struct {
-  ElfExternalNote note;
+  uint32_t name_length;
+  uint32_t data_length;
+  uint32_t type;
   uint8_t data[4 + BUILD_ID_EXPECTED_LEN];
 } TINTIN_BUILD_ID = {
-  .note = {.name_length = 4, .data_length = BUILD_ID_EXPECTED_LEN, .type = 3},
+  .name_length = 4,
+  .data_length = BUILD_ID_EXPECTED_LEN,
+  .type = 3,
   .data = {'G', 'N', 'U', '\0'},
 };
+
+_Static_assert(offsetof(__typeof__(TINTIN_BUILD_ID), data) == offsetof(ElfExternalNote, data), "");
