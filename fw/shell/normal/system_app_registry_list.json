@@ -703,6 +703,16 @@
       "ifdefs": [
         "CONFIG_TOUCH"
       ]
+    },
+    {
+      "id": -103,
+      "enum": "BUTTON_LOCK_TOGGLE",
+      "md_fn": "button_lock_toggle_get_app_info"
+    },
+    {
+      "id": -104,
+      "enum": "BUTTON_LOCK_AUTO_TOGGLE",
+      "md_fn": "button_lock_auto_toggle_get_app_info"
     }
   ],
   "resource_apps": [

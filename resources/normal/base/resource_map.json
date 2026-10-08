@@ -2540,6 +2540,11 @@
       "file": "normal/base/images/Pebble_80x80_Touch.svg"
     },
     {
+      "type": "pdc",
+      "name": "BUTTON_LOCK",
+      "file": "../third_party/resources/iconography/icons/25px_Permissions_lock.svg"
+    },
+    {
       "type": "png",
       "name": "WX_SUNNY_TINY",
       "file": "normal/base/images/wx_sunny_day_25x25.png"

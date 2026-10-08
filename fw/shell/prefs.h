@@ -263,6 +263,53 @@ void shell_prefs_set_theme_highlight_color(GColor color);
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void);
 void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable);
 
+//! How long the button lock's unlock gesture must be held, in ms.
+uint32_t shell_prefs_get_button_lock_hold_ms(void);
+void shell_prefs_set_button_lock_hold_ms(uint32_t hold_ms);
+
+//! Button combos that lock and unlock the button lock from anywhere. Only
+//! pairs that are free: Back + Select is the hardware reset combo, Back + Up
+//! and Up + Down are Quick Launch combos.
+typedef enum ButtonLockCombo {
+  ButtonLockComboOff,
+  ButtonLockComboBackDown,
+  ButtonLockComboUpSelect,
+  ButtonLockComboSelectDown,
+
+  ButtonLockComboCount,
+} ButtonLockCombo;
+
+ButtonLockCombo shell_prefs_get_button_lock_combo(void);
+void shell_prefs_set_button_lock_combo(ButtonLockCombo combo);
+
+//! Which situations the button lock auto-locks in.
+typedef enum ButtonLockAutoScope {
+  ButtonLockAutoScopeGeneralUse,
+  ButtonLockAutoScopeDuringActivity,
+  ButtonLockAutoScopeBoth,
+
+  ButtonLockAutoScopeCount,
+} ButtonLockAutoScope;
+
+//! Idle duration in ms before the button lock engages on its own; 0 disables
+//! auto-lock. Owned by the Settings UI, which is the only explicit activation.
+//! Setting this to 0 also clears the paused pref.
+uint32_t shell_prefs_get_button_lock_auto_ms(void);
+void shell_prefs_set_button_lock_auto_ms(uint32_t auto_ms);
+
+//! Pauses auto-lock while keeping the configured duration. Owned by the
+//! Auto-Lock Quick Launch action.
+bool shell_prefs_get_button_lock_auto_paused(void);
+void shell_prefs_set_button_lock_auto_paused(bool paused);
+
+ButtonLockAutoScope shell_prefs_get_button_lock_auto_scope(void);
+void shell_prefs_set_button_lock_auto_scope(ButtonLockAutoScope scope);
+
+//! Whether auto-lock is suppressed while the charger is plugged in. Only blocks
+//! engaging; an already engaged lock stays locked.
+bool shell_prefs_get_button_lock_auto_not_charging(void);
+void shell_prefs_set_button_lock_auto_not_charging(bool enabled);
+
 typedef enum MenuScrollVibeBehavior {
   MenuScrollNoVibe,
   MenuScrollVibeOnWrapAround,

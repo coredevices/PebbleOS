@@ -42,6 +42,7 @@
 #include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/battery_ui.h>
+#include <shell/normal/button_lock.h>
 #include <shell/prefs.h>
 #include <shell/system_app_ids.auto.h>
 #include <system/bootbits.h>
@@ -151,6 +152,7 @@ typedef enum {
   SystemMenuItemInformation,
   SystemMenuItemCertification,
   SystemMenuItemStationaryToggle,
+  SystemMenuItemButtonLock,
   SystemMenuItemDebugging,
   SystemMenuItemShutDown,
   SystemMenuItemFactoryReset,
@@ -161,10 +163,280 @@ static const char *s_item_titles[SystemMenuItem_Count] = {
   [SystemMenuItemInformation] = i18n_noop("Information"),
   [SystemMenuItemCertification] = i18n_noop("Certification"),
   [SystemMenuItemStationaryToggle] = i18n_noop("Stand-By Mode"),
+  [SystemMenuItemButtonLock] = i18n_noop("Button Lock"),
   [SystemMenuItemDebugging] = i18n_noop("Debugging"),
   [SystemMenuItemShutDown] = i18n_noop("Shut Down"),
   [SystemMenuItemFactoryReset] = i18n_noop("Factory Reset"),
 };
+
+// Button Lock Settings
+/////////////////////////////
+
+typedef struct {
+  SettingsCallbacks callbacks;
+} SettingsButtonLockData;
+
+static const uint32_t s_button_lock_hold_values[] = {1000, 2000, 3000, 5000};
+
+static const char *s_button_lock_hold_labels[] = {
+  i18n_noop("1 Second"),
+  i18n_noop("2 Seconds"),
+  i18n_noop("3 Seconds"),
+  i18n_noop("5 Seconds"),
+};
+
+static const char *s_button_lock_combo_labels[] = {
+  [ButtonLockComboOff] = i18n_noop("Off"),
+  [ButtonLockComboBackDown] = i18n_noop("Back + Down"),
+  [ButtonLockComboUpSelect] = i18n_noop("Up + Center"),
+  [ButtonLockComboSelectDown] = i18n_noop("Center + Down"),
+};
+
+static const uint32_t s_button_lock_auto_values[] = {0, 10000, 30000, 60000, 300000};
+
+static const char *s_button_lock_auto_labels[] = {
+  i18n_noop("Off"),      i18n_noop("10 Seconds"), i18n_noop("30 Seconds"),
+  i18n_noop("1 Minute"), i18n_noop("5 Minutes"),
+};
+
+static const char *s_button_lock_scope_labels[] = {
+  [ButtonLockAutoScopeGeneralUse] = i18n_noop("General Use"),
+  [ButtonLockAutoScopeDuringActivity] = i18n_noop("During Activity"),
+  [ButtonLockAutoScopeBoth] = i18n_noop("Both"),
+};
+
+static int prv_button_lock_get_selection_index(void) {
+  const uint32_t hold_ms = shell_prefs_get_button_lock_hold_ms();
+  for (size_t i = 0; i < ARRAY_LENGTH(s_button_lock_hold_values); i++) {
+    if (s_button_lock_hold_values[i] == hold_ms) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+static int prv_button_lock_auto_get_selection_index(void) {
+  const uint32_t auto_ms = shell_prefs_get_button_lock_auto_ms();
+  for (size_t i = 0; i < ARRAY_LENGTH(s_button_lock_auto_values); i++) {
+    if (s_button_lock_auto_values[i] == auto_ms) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+//! Refresh the submenu: changing the lock combo or the auto-lock duration
+//! shows or hides the rows below them.
+static void prv_button_lock_settings_changed(void) {
+  settings_menu_reload_data(SettingsMenuItemSystem);
+  settings_menu_mark_dirty(SettingsMenuItemSystem);
+}
+
+static void prv_button_lock_hold_menu_select(OptionMenu *option_menu, int selection,
+                                             void *context) {
+  shell_prefs_set_button_lock_hold_ms(s_button_lock_hold_values[selection]);
+  prv_button_lock_settings_changed();
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_button_lock_hold_menu_push(SettingsButtonLockData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_button_lock_hold_menu_select,
+  };
+  const char *title = PBL_IF_RECT_ELSE(i18n_noop("HOLD DURATION"), i18n_noop("Hold Duration"));
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            prv_button_lock_get_selection_index(), &callbacks,
+                            ARRAY_LENGTH(s_button_lock_hold_labels), true /* icons_enabled */,
+                            s_button_lock_hold_labels, data);
+}
+
+static void prv_button_lock_combo_menu_select(OptionMenu *option_menu, int selection,
+                                              void *context) {
+  shell_prefs_set_button_lock_combo((ButtonLockCombo)selection);
+  prv_button_lock_settings_changed();
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_button_lock_combo_menu_push(SettingsButtonLockData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_button_lock_combo_menu_select,
+  };
+  const char *title = PBL_IF_RECT_ELSE(i18n_noop("LOCK COMBO"), i18n_noop("Lock Combo"));
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            (int)shell_prefs_get_button_lock_combo(), &callbacks,
+                            ARRAY_LENGTH(s_button_lock_combo_labels), true /* icons_enabled */,
+                            s_button_lock_combo_labels, data);
+}
+
+static void prv_button_lock_auto_menu_select(OptionMenu *option_menu, int selection,
+                                             void *context) {
+  shell_prefs_set_button_lock_auto_ms(s_button_lock_auto_values[selection]);
+  prv_button_lock_settings_changed();
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_button_lock_auto_menu_push(SettingsButtonLockData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_button_lock_auto_menu_select,
+  };
+  const char *title = PBL_IF_RECT_ELSE(i18n_noop("AUTO-LOCK"), i18n_noop("Auto-Lock"));
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            prv_button_lock_auto_get_selection_index(), &callbacks,
+                            ARRAY_LENGTH(s_button_lock_auto_labels), true /* icons_enabled */,
+                            s_button_lock_auto_labels, data);
+}
+
+static void prv_button_lock_scope_menu_select(OptionMenu *option_menu, int selection,
+                                              void *context) {
+  shell_prefs_set_button_lock_auto_scope((ButtonLockAutoScope)selection);
+  prv_button_lock_settings_changed();
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_button_lock_scope_menu_push(SettingsButtonLockData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_button_lock_scope_menu_select,
+  };
+  const char *title = PBL_IF_RECT_ELSE(i18n_noop("APPLIES TO"), i18n_noop("Applies To"));
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            (int)shell_prefs_get_button_lock_auto_scope(), &callbacks,
+                            ARRAY_LENGTH(s_button_lock_scope_labels), true /* icons_enabled */,
+                            s_button_lock_scope_labels, data);
+}
+
+enum SettingsButtonLockItem {
+  SettingsButtonLockHoldDuration,
+  SettingsButtonLockCombo,
+  SettingsButtonLockAutoLock,
+  SettingsButtonLockScope,
+  SettingsButtonLockNotCharging,
+  NumSettingsButtonLockItems,
+};
+
+//! Auto-lock needs an unlock gesture, a Quick Launch one or the lock combo,
+//! since that is the only way to release the lock, and its details are
+//! pointless while auto-lock is off.
+static bool prv_button_lock_item_is_visible(uint16_t item) {
+  if ((item == SettingsButtonLockHoldDuration) || (item == SettingsButtonLockCombo)) {
+    return true;
+  }
+  if (!button_lock_has_unlock_gesture()) {
+    return false;
+  }
+  if (item == SettingsButtonLockAutoLock) {
+    return true;
+  }
+  return shell_prefs_get_button_lock_auto_ms() != 0;
+}
+
+static uint16_t prv_button_lock_item_from_row(uint16_t row) {
+  uint16_t visible_row = 0;
+  for (uint16_t item = 0; item < NumSettingsButtonLockItems; item++) {
+    if (!prv_button_lock_item_is_visible(item)) {
+      continue;
+    }
+    if (visible_row == row) {
+      return item;
+    }
+    visible_row++;
+  }
+  WTF;
+}
+
+static uint16_t prv_button_lock_num_rows_cb(SettingsCallbacks *context) {
+  uint16_t rows = 0;
+  for (uint16_t item = 0; item < NumSettingsButtonLockItems; item++) {
+    if (prv_button_lock_item_is_visible(item)) {
+      rows++;
+    }
+  }
+  return rows;
+}
+
+static void prv_button_lock_select_click_cb(SettingsCallbacks *context, uint16_t row) {
+  SettingsButtonLockData *data = (SettingsButtonLockData *)context;
+  switch (prv_button_lock_item_from_row(row)) {
+    case SettingsButtonLockHoldDuration:
+      prv_button_lock_hold_menu_push(data);
+      break;
+    case SettingsButtonLockCombo:
+      prv_button_lock_combo_menu_push(data);
+      break;
+    case SettingsButtonLockAutoLock:
+      prv_button_lock_auto_menu_push(data);
+      break;
+    case SettingsButtonLockScope:
+      prv_button_lock_scope_menu_push(data);
+      break;
+    case SettingsButtonLockNotCharging:
+      shell_prefs_set_button_lock_auto_not_charging(
+          !shell_prefs_get_button_lock_auto_not_charging());
+      prv_button_lock_settings_changed();
+      break;
+    default:
+      WTF;
+  }
+}
+
+static void prv_button_lock_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
+                                        const Layer *cell_layer, uint16_t row, bool selected) {
+  SettingsButtonLockData *data = (SettingsButtonLockData *)context;
+  const char *title = NULL;
+  const char *subtitle = NULL;
+  switch (prv_button_lock_item_from_row(row)) {
+    case SettingsButtonLockHoldDuration:
+      title = i18n_noop("Hold Duration");
+      subtitle = s_button_lock_hold_labels[prv_button_lock_get_selection_index()];
+      break;
+    case SettingsButtonLockCombo:
+      title = i18n_noop("Lock Combo");
+      subtitle = s_button_lock_combo_labels[shell_prefs_get_button_lock_combo()];
+      break;
+    case SettingsButtonLockAutoLock:
+      title = i18n_noop("Auto-Lock");
+      // Surface the Quick Launch action's pause here, so the row never claims
+      // auto-lock is active when the user switched it off from the watchface.
+      subtitle = shell_prefs_get_button_lock_auto_paused()
+                     ? i18n_noop("Paused")
+                     : s_button_lock_auto_labels[prv_button_lock_auto_get_selection_index()];
+      break;
+    case SettingsButtonLockScope:
+      title = i18n_noop("Applies To");
+      subtitle = s_button_lock_scope_labels[shell_prefs_get_button_lock_auto_scope()];
+      break;
+    case SettingsButtonLockNotCharging:
+      title = i18n_noop("Not While Charging");
+      subtitle =
+          shell_prefs_get_button_lock_auto_not_charging() ? i18n_noop("On") : i18n_noop("Off");
+      break;
+    default:
+      WTF;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+}
+
+static void prv_button_lock_deinit_cb(SettingsCallbacks *context) {
+  SettingsButtonLockData *data = (SettingsButtonLockData *)context;
+  i18n_free_all(data);
+  app_free(data);
+}
+
+static void prv_button_lock_submenu_push(void) {
+  SettingsButtonLockData *data = app_malloc_check(sizeof(*data));
+  *data = (SettingsButtonLockData){};
+
+  data->callbacks = (SettingsCallbacks){
+    .deinit = prv_button_lock_deinit_cb,
+    .draw_row = prv_button_lock_draw_row_cb,
+    .select_click = prv_button_lock_select_click_cb,
+    .num_rows = prv_button_lock_num_rows_cb,
+  };
+
+  const char *title = i18n_noop("Button Lock");
+  Window *window =
+      settings_window_create_with_title(SettingsMenuItemSystem, title, &data->callbacks);
+  app_window_stack_push(window, true /* animated */);
+}
 
 // Common status bar component is used across all windows that need them.
 // This will init it and set the correct style to be used within the settings
@@ -1293,6 +1565,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     case SystemMenuItemStationaryToggle:
       subtitle = stationary_get_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
+    case SystemMenuItemButtonLock:
+      subtitle = i18n_get(s_button_lock_hold_labels[prv_button_lock_get_selection_index()], data);
+      break;
     case SystemMenuItemShutDown:
     case SystemMenuItemInformation:
     case SystemMenuItemCertification:
@@ -1322,6 +1597,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     case SystemMenuItemStationaryToggle:
       stationary_set_enabled(!stationary_get_enabled());
+      break;
+    case SystemMenuItemButtonLock:
+      prv_button_lock_submenu_push();
       break;
     case SystemMenuItemShutDown:
       launcher_task_add_callback(prv_shutdown_cb, 0);

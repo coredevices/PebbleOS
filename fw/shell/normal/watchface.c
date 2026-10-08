@@ -19,6 +19,7 @@
 #include <popups/timeline/peek.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
+#include <shell/normal/button_lock.h>
 #include <system/passert.h>
 
 #define QUICK_LAUNCH_HOLD_MS (400)
@@ -182,6 +183,10 @@ static void prv_launch_quick_launch_app(AppInstallId app_id, ButtonId button,
                                         AppLaunchReason timeline_reason,
                                         AppQuickLaunchAction action) {
   if ((app_id == INSTALL_ID_INVALID) || (app_id == APP_ID_QUICK_LAUNCH_NOTHING)) {
+    return;
+  }
+  if (app_id == APP_ID_BUTTON_LOCK_TOGGLE) {
+    button_lock_engage();
     return;
   }
 
