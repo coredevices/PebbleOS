@@ -26,6 +26,7 @@ PROMPT_TIMEOUT_S = 30.5
 SUCCESS_SHOWN_S = 5.0
 POLL_S = 0.2
 _FIELD = re.compile(r"^(State|Device|Code): ?(.*)$")
+_MAC = re.compile(r"^0x([0-9A-Fa-f]{12})$")
 
 
 @dataclasses.dataclass
@@ -120,6 +121,12 @@ class WatchPairing:
             if time.monotonic() > deadline:
                 raise WatchTimeout(f"the watch did not read the name {name!r}")
             time.sleep(POLL_S)
+
+    def address(self):
+        """The watch's address, as ``bt mac`` prints it."""
+        response = self.dut.prompt(self.dut.command("bt_mac"))
+        (octets,) = (m.group(1) for line in response if (m := _MAC.match(line.strip())))
+        return ":".join(octets[i : i + 2] for i in range(0, 12, 2)).upper()
 
     def unpair(self):
         """Forget every phone, so that the watch takes a new pairing."""
