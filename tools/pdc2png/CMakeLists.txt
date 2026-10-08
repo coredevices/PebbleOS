@@ -77,4 +77,3 @@ target_compile_definitions(pdc2png PRIVATE
   UZLIB_CONF_PARANOID_CHECKS=1
   UZLIB_CONF_LENGTHS_IN_STATE=1
 )
-target_compile_options(pdc2png PRIVATE -Wno-gnu-variable-sized-type-not-at-end)

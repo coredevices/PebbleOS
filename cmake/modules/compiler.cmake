@@ -16,8 +16,7 @@ add_compile_options(
 if(CONFIG_ARCH_POSIX)
   # Firmware code was never written for a host compiler; keep its
   # diagnostics visible but do not fail on them.
-  # The firmware is written in GNU C, which clang flags as extensions.
-  add_compile_options(-Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end)
+  add_compile_options(-Wno-unknown-warning-option)
   # Enums as small as the ARM EABI makes them, for the same struct layouts.
   set(pbl_arch_flags
     -fno-common
