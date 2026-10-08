@@ -35,6 +35,9 @@ set(PBL_TEST_C_FLAGS
   -Werror=macro-redefined
   -O0
   -fdata-sections
+  -Werror=gnu-folding-constant
+  -Werror=constant-conversion
+  -Werror=format-overflow
   -ffunction-sections
   -fno-common
   -ffp-contract=off
