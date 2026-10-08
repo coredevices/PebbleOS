@@ -745,7 +745,7 @@ typedef struct PebbleWorkoutEvent {
   PebbleWorkoutEventType type;
 } PebbleWorkoutEvent;
 
-typedef struct PBL_PACKED {
+typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
   union PBL_PACKED {
     PebblePanicEvent panic;
     PebbleButtonEvent button;
