@@ -95,6 +95,11 @@ pbl_clar_test(test_music_endpoint
     fw/services/music/service.c
 )
 
+pbl_clar_test(test_ping
+  SOURCES
+    fw/services/ping/service.c
+)
+
 pbl_clar_test(test_imaging
   SOURCES
     tests/fakes/fake_session.c
