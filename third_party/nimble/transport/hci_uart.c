@@ -23,7 +23,8 @@
 
 PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
-#define RX_RING_SIZE 1024U
+#define RX_RING_SIZE     1024U
+#define EVT_POOL_POLL_MS 5U
 
 static struct pbl_thread *s_hci_task_handle;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, 1024);
@@ -57,9 +58,12 @@ static os_error_t prv_acl_put_signal(struct os_mempool_ext *mpe, void *data, voi
 }
 
 static void *prv_alloc_evt(int discardable) {
-  void *buf = ble_transport_alloc_evt(discardable);
-  if (buf == NULL) {
-    PBL_LOG_ERR("EVT alloc failed (discardable=%d)", discardable);
+  void *buf;
+
+  // The H4 state machine drops a discardable event without a buffer, but takes
+  // NULL for any other as a fatal framing error: wait for the host to free one.
+  while ((buf = ble_transport_alloc_evt(discardable)) == NULL && !discardable) {
+    pbl_thread_sleep(PBL_MSEC(EVT_POOL_POLL_MS));
   }
 
   return buf;
