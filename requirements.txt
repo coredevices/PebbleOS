@@ -33,6 +33,7 @@ libpebble2>=0.0.16
 
 # Integration tests (tests/integration)
 pytest
+pytest-xdist
 numpy
 ppk2-api
 # Its software controller asks the peripheral for the LTK since 0.0.235.

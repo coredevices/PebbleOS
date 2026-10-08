@@ -44,7 +44,10 @@ def build(request):
 
 @pytest.fixture(scope="session")
 def results_dir(request):
-    return results_dir_for(request.config)
+    """Where the device keeps its files: one per pytest-xdist worker."""
+    base = results_dir_for(request.config)
+    worker = os.environ.get("PYTEST_XDIST_WORKER")
+    return os.path.join(base, worker) if worker else base
 
 
 @pytest.fixture(scope="session")

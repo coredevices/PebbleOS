@@ -40,6 +40,9 @@ runs from `tests/integration`, so the usual selection options work:
 - `ui/test_navigation.py::test_settings`: a single file or test
 - `--integration`: what CI runs, see below
 - `--collect-only -q`: list the tests without running them
+- `-n 4`: run on four emulators or native watches at once, one per
+  pytest-xdist worker; most of a test's time is spent waiting on the watch,
+  so this scales past the CPU count. Not on a real watch.
 
 `pbl itest` is only a convenience; the same run is
 
@@ -223,6 +226,8 @@ Everything a run produces goes to `BUILD/itest` (or `--results-dir`):
 - `<test>/<name>.json`, `<name>.csv`: current measurements
 - `qemu.log`, `uart1.log`, `flash.log`: the emulator's and the flasher's
   output
+- with `-n`, the session-wide files are in a directory per worker (`gw0`,
+  `gw1`, ...)
 
 ## Selecting tests by device
 

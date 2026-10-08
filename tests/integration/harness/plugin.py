@@ -215,6 +215,9 @@ def pytest_configure(config):
     except HarnessError as e:
         raise pytest.UsageError(str(e)) from None
 
+    if device_type == "hardware" and getattr(config.option, "numprocesses", None):
+        raise pytest.UsageError("-n runs a device per worker: not on hardware")
+
     # Always leave a JUnit report with the rest of the results.
     if not config.option.xmlpath and not config.option.collectonly:
         config.option.xmlpath = os.path.join(results_dir_for(config), "junit.xml")
