@@ -26,23 +26,23 @@ void test_dict__initialize(void) {
 void test_dict__cleanup(void) {
 }
 
-static const uint32_t SOME_DATA_KEY = 0xb00bf00b;
+#define SOME_DATA_KEY 0xb00bf00bU
 static const uint8_t SOME_DATA[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-static const uint32_t SOME_STRING_KEY = 0xbeefbabe;
+#define SOME_STRING_KEY 0xbeefbabeU
 static const char *SOME_STRING = "Hello World";
 
-static const uint32_t SOME_NULL_KEY = 0x0;
+#define SOME_NULL_KEY 0x0U
 
-static const uint32_t SOME_EMPTY_STRING_KEY = 0x1;
+#define SOME_EMPTY_STRING_KEY 0x1U
 static const char *SOME_EMPTY_STRING = "";
 
-static const uint32_t SOME_UINT8_KEY = 0x88888888;
-static const uint32_t SOME_UINT16_KEY = 0x16161616;
-static const uint32_t SOME_UINT32_KEY = 0x32323232;
-static const uint32_t SOME_INT8_KEY = 0x11888888;
-static const uint32_t SOME_INT16_KEY = 0x11161616;
-static const uint32_t SOME_INT32_KEY = 0x11323232;
+#define SOME_UINT8_KEY  0x88888888U
+#define SOME_UINT16_KEY 0x16161616U
+#define SOME_UINT32_KEY 0x32323232U
+#define SOME_INT8_KEY   0x11888888U
+#define SOME_INT16_KEY  0x11161616U
+#define SOME_INT32_KEY  0x11323232U
 
 void test_dict__calc_size(void) {
   uint32_t size;

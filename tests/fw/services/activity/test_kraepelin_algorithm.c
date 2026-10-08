@@ -242,10 +242,10 @@ static void prv_assert_activity_present(KAlgTestActivitySession *sessions, int n
 
 // ==================================================================================
 // Functions used for collecting stats and writing them out to a csv
-static const int k_stats_max_columns = 32;
+#define STATS_MAX_COLUMNS 32
 typedef struct {
   ListNode node;
-  uint32_t values[k_stats_max_columns];
+  uint32_t values[STATS_MAX_COLUMNS];
 } StatsRow;
 typedef enum {
   StatsEpochTypeNonStepping = 0,
@@ -254,13 +254,13 @@ typedef enum {
 } StatsEpochType;
 
 static int s_stats_num_columns = 0;
-static char *s_stats_column_names[k_stats_max_columns];
+static char *s_stats_column_names[STATS_MAX_COLUMNS];
 static StatsRow *s_stat_rows;
 
 // ---------------------------------------------------------------------------------------
 static void prv_stats_reinit(void) {
   // Delete stuff from prior stats run
-  cl_assert(s_stats_num_columns < k_stats_max_columns);
+  cl_assert(s_stats_num_columns < STATS_MAX_COLUMNS);
   for (int i = 0; i < s_stats_num_columns; i++) {
     free(s_stats_column_names[i]);
     s_stats_column_names[i] = NULL;

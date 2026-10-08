@@ -25,9 +25,7 @@
 // The test data and descriptions in this file are captured using the FrontLine
 // Bluetooth sniffer.
 
-static const size_t s_buffer_size =
-    sizeof(struct pbl_bt_ad_data) + (2 * PBL_BT_AD_REPORT_DATA_MAX_LENGTH);
-static uint8_t s_buffer[s_buffer_size];
+static uint8_t s_buffer[sizeof(struct pbl_bt_ad_data) + (2 * PBL_BT_AD_REPORT_DATA_MAX_LENGTH)];
 static struct pbl_bt_ad_data *const s_ad_data = (struct pbl_bt_ad_data *)s_buffer;
 
 static void set_ad_data(uint8_t *data, size_t length) {
@@ -36,7 +34,7 @@ static void set_ad_data(uint8_t *data, size_t length) {
 }
 
 void test_ble_ad_parse__initialize(void) {
-  memset(s_ad_data, 0, sizeof(s_buffer_size));
+  memset(s_buffer, 0, sizeof(s_buffer));
 }
 
 // -----------------------------------------------------------------------------

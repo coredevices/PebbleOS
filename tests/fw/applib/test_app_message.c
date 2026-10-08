@@ -52,8 +52,8 @@ extern void app_message_monitor_reset(void);
 ////////////////////////////////////
 static const uint16_t ENDPOINT_ID = 0x30;
 
-static const uint16_t MAX_SIZE_INBOUND = 32;
-static const uint16_t MAX_SIZE_OUTBOUND = 32;
+#define MAX_SIZE_INBOUND  32
+#define MAX_SIZE_OUTBOUND 32
 
 static const char *TEST_DATA =
     "01234567890123456789012345678901234567890123456789"

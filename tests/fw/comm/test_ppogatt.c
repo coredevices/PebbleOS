@@ -113,18 +113,18 @@ extern uint32_t ppogatt_client_count(void);
 extern void ppogatt_trigger_rx_ack_send_timeout(void);
 extern TransportDestination ppogatt_get_destination(Transport *transport);
 
-static const uint8_t s_num_service_instances = 2;
-static pbl_bt_characteristic_t s_characteristics[s_num_service_instances]
-                                                [PPoGATTCharacteristicNum] = {
-                                                  [0] =
-                                                      {
-                                                        [PPoGATTCharacteristicData] = 01,
-                                                        [PPoGATTCharacteristicMeta] = 02,
-                                                      },
-                                                  [1] = {
-                                                    [PPoGATTCharacteristicData] = 11,
-                                                    [PPoGATTCharacteristicMeta] = 12,
-                                                  },
+#define NUM_SERVICE_INSTANCES 2
+static pbl_bt_characteristic_t s_characteristics[NUM_SERVICE_INSTANCES][PPoGATTCharacteristicNum] =
+    {
+      [0] =
+          {
+            [PPoGATTCharacteristicData] = 01,
+            [PPoGATTCharacteristicMeta] = 02,
+          },
+      [1] = {
+        [PPoGATTCharacteristicData] = 11,
+        [PPoGATTCharacteristicMeta] = 12,
+      },
 };
 
 static const pbl_bt_characteristic_t s_unknown_characteristics = 0x55;
@@ -342,13 +342,13 @@ void test_ppogatt__cleanup(void) {
 }
 
 void prv_notify_services_discovered(int num_services_to_register) {
-  for (int i = 0; i < s_num_service_instances && i < num_services_to_register; i++) {
+  for (int i = 0; i < NUM_SERVICE_INSTANCES && i < num_services_to_register; i++) {
     ppogatt_handle_service_discovered(s_characteristics[i]);
   }
 }
 
 void test_ppogatt__find_pebble_app_and_3rd_party_app(void) {
-  prv_notify_services_discovered(s_num_service_instances);
+  prv_notify_services_discovered(NUM_SERVICE_INSTANCES);
 
   // Assert GATT reads requests to Meta characteristics happened:
   fake_gatt_client_op_assert_read(s_characteristics[0][PPoGATTCharacteristicMeta],
