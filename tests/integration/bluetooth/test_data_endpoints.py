@@ -12,7 +12,7 @@ import time
 import pytest
 from harness.helpers.ui import protocol_screenshot
 
-pytestmark = pytest.mark.bluetooth
+pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
 
 PING_ENDPOINT = 2001
 HEALTH_SYNC_ENDPOINT = 911

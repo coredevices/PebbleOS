@@ -12,7 +12,11 @@ import pytest
 from harness.helpers.remote_input import RemoteInputAck, RemoteInputButton, Status
 from harness.helpers.ui import Button, Ui
 
-pytestmark = [pytest.mark.bluetooth, pytest.mark.variants("normal", "prf")]
+pytestmark = [
+    pytest.mark.bluetooth,
+    pytest.mark.integration_boards("qemu_emery"),
+    pytest.mark.variants("normal", "prf"),
+]
 
 META_ENDPOINT = 0x0000
 VERSION_ENDPOINT = 0x0010

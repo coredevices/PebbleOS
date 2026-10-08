@@ -243,6 +243,12 @@ what would run on one without a build for it:
 pbl itest --collect-only -q --board obelix --device-type hardware
 ```
 
+CI runs with `--integration`, which also honours `integration_boards`: a test
+marked `integration_boards("qemu_emery")` runs anywhere it applies, but CI
+runs it only on qemu_emery; `integration_boards()` keeps it out of CI. Use it
+for tests that do not depend on the board, or that take too long for every
+pull request.
+
 What a test covers is a category marker: `smoke`, `ui`, `notifications`,
 `voice`, `power` and `slow`. The full list is in `harness/plugin.py`; markers are
 strict, so a new one must be added there.

@@ -15,7 +15,7 @@ from harness.ble.ppogatt import SN_MOD
 from harness.errors import Unsupported, WatchTimeout
 from harness.helpers.ui import Ui
 
-pytestmark = pytest.mark.bluetooth
+pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
 BOTH = pytest.mark.variants("normal", "prf")
 
 SESSION_OPENED = (

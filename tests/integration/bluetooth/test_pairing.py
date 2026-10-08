@@ -17,7 +17,11 @@ from harness.helpers.pairing import (
 )
 from harness.helpers.ui import Button
 
-pytestmark = [pytest.mark.bluetooth, pytest.mark.variants("normal", "prf")]
+pytestmark = [
+    pytest.mark.bluetooth,
+    pytest.mark.integration_boards("qemu_emery"),
+    pytest.mark.variants("normal", "prf"),
+]
 
 
 def _prompt_for(phone, pairing, watch):

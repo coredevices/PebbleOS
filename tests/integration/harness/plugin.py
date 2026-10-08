@@ -26,6 +26,8 @@ SCOPE_MARKERS = {
     "requires_config": "requires_config(*symbols): only when these Kconfig symbols are set",
     "variants": "variants(*names): only on these firmware variants (normal, prf); "
     "unmarked tests are for normal",
+    "integration_boards": "integration_boards(*names): with --integration, only on "
+    "these boards; with none, never",
 }
 
 # What a test covers; select with -m.
@@ -80,6 +82,11 @@ def pytest_addoption(parser):
         "--board",
         help="Select tests for this board instead of the build's, e.g. to "
         "list them with --collect-only without a build",
+    )
+    group.addoption(
+        "--integration",
+        action="store_true",
+        help="Run as CI does: integration_boards limits tests to those boards",
     )
     group.addoption(
         "--device-type",
@@ -266,6 +273,12 @@ def _applies(item, config):
         variants = _marker_args(item, "variants") or {"normal"}
         if build.variant not in variants:
             return f"variant {build.variant} not in {sorted(variants)}"
+    if config.getoption("integration") and item.get_closest_marker(
+        "integration_boards"
+    ):
+        boards = _marker_args(item, "integration_boards")
+        if board not in boards:
+            return f"integration run, board {board} not in {sorted(boards)}"
     symbols = _marker_args(item, "requires_config")
     if symbols and build is not None and board == build.board:
         missing = sorted(s for s in symbols if not build.config.get(s))

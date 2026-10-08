@@ -18,7 +18,7 @@ from harness.errors import WatchTimeout
 from harness.helpers.pairing import SUCCESS_SHOWN_S
 from harness.helpers.ui import TRANSITION_S, Button
 
-pytestmark = pytest.mark.bluetooth
+pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
 
 VENDOR_ID = 0x0EEA
 FLAGS = 0x06

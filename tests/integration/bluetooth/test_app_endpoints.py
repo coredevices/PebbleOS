@@ -13,7 +13,7 @@ import pytest
 from harness.helpers.blobdb import BlobDB, Database, Status
 from harness.helpers.ui import Button, Ui
 
-pytestmark = pytest.mark.bluetooth
+pytestmark = [pytest.mark.bluetooth, pytest.mark.integration_boards("qemu_emery")]
 
 APP_MESSAGE_ENDPOINT = 0x0030
 LAUNCHER_ENDPOINT = 0x0031

@@ -9,7 +9,11 @@ import re
 
 import pytest
 
-pytestmark = [pytest.mark.bluetooth, pytest.mark.variants("normal", "prf")]
+pytestmark = [
+    pytest.mark.bluetooth,
+    pytest.mark.integration_boards("qemu_emery"),
+    pytest.mark.variants("normal", "prf"),
+]
 
 GAP_SERVICE = "1800"
 DEVICE_NAME = "2A00"

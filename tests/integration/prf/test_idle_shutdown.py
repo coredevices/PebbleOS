@@ -4,7 +4,11 @@
 import pytest
 from harness.errors import WatchTimeout
 
-pytestmark = [pytest.mark.variants("prf"), pytest.mark.slow]
+pytestmark = [
+    pytest.mark.variants("prf"),
+    pytest.mark.slow,
+    pytest.mark.integration_boards(),
+]
 
 # PRF turns off after 10 minutes unplugged with no phone connected
 # (services/idle_watchdog), checked on a multi-minute timer.
