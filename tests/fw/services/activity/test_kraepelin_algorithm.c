@@ -309,25 +309,7 @@ static void prv_stats_cb(uint32_t num_stats, const char **names, int32_t *values
   }
 }
 
-// ---------------------------------------------------------------------------------------
-// Set a specific column in the last row by name
-static void prv_stats_set_last_row_value(const char *name, uint32_t value) {
-  if (s_stat_rows == NULL) {
-    return;
-  }
-  StatsRow *stats = (StatsRow *)list_get_tail(&s_stat_rows->node);
-  cl_assert(stats != NULL);
-  bool found = 0;
-  for (int i = 0; i < s_stats_num_columns; i++) {
-    if (strcmp(s_stats_column_names[i], name) == 0) {
-      found = true;
-      stats->values[i] = value;
-      break;
-    }
-  }
-  cl_assert(found);
-}
-
+#ifdef STATS_FILE_NAME
 // ---------------------------------------------------------------------------------------
 // Write out accumulated stats to a csv file
 static void prv_stats_write(const char *filename, bool create, const char *test_name,
@@ -376,6 +358,7 @@ static void prv_stats_write(const char *filename, bool create, const char *test_
   cl_assert_equal_i(0, fclose(file));
   printf("Stats written to file: %s", filename);
 }
+#endif
 
 // ---------------------------------------------------------------------------------------
 // Run samples through the algorithm integrated into the firmware

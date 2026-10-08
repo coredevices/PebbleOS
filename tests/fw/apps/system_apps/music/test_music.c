@@ -330,12 +330,12 @@ static void prv_launch_app_and_render(void) {
   window_render(window, &s_ctx);
 }
 
+#if MUSIC_ALBUM_ART_SUPPORTED
 static void prv_render(void) {
   MusicAppData *data = app_state_get_user_data();
   window_render(&data->window, &s_ctx);
 }
 
-#if MUSIC_ALBUM_ART_SUPPORTED
 // Hand the app the cover the imaging service would have delivered: art-square-sized (the size the
 // app requests for this platform), 4-bit palette.
 static void prv_receive_album_art(void) {

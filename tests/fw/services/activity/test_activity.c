@@ -20,6 +20,7 @@
 #include "shell/prefs.h"
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
+#include "pbl/kernel/compiler.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -325,30 +326,6 @@ static void prv_assert_equal_metric_history(ActivityMetric metric,
 #define ASSERT_EQUAL_METRIC_HISTORY(metric, expected) \
   prv_assert_equal_metric_history((metric), (expected), __FILE__, __LINE__)
 
-static void prv_assert_dls_activity_record_present(ActivitySessionDataLoggingRecord *record,
-                                                   char *file, int line) {
-  for (int i = 0; i < s_num_dls_activity_records; i++) {
-    if (!memcmp(record, &s_dls_activity_records[i], sizeof(*record))) {
-      return;
-    }
-  }
-  printf("\nFound records:");
-  for (int i = 0; i < s_num_dls_activity_records; i++) {
-    printf("\ntype: %d, start_utc: %" PRIu32 ", elapsed: %" PRIu32 ", utc_to_local: %" PRIu32 " ",
-           (int)s_dls_activity_records[i].activity, (uint32_t)s_dls_activity_records[i].start_utc,
-           s_dls_activity_records[i].elapsed_sec, s_dls_activity_records[i].utc_to_local);
-  }
-  printf("\nLooking for: type: %d, start_utc: %" PRIu32 ", elapsed: %" PRIu32
-         ", "
-         "utc_to_local: %" PRIu32 " ",
-         (int)record->activity, (uint32_t)record->start_utc, record->elapsed_sec,
-         record->utc_to_local);
-  clar__assert(false, file, line, "Missing activity record", "", true);
-}
-
-#define ASSERT_ACTIVITY_DLS_RECORD_PRESENT(record) \
-  prv_assert_dls_activity_record_present((record), __FILE__, __LINE__)
-
 // Assert that given number of activity sessions are present
 static void prv_assert_num_activities(uint32_t num_expected, char *file, int line) {
   ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT];
@@ -393,32 +370,8 @@ static void prv_assert_step_activity_present(ActivitySession *exp_session, char 
   clar__assert(false, file, line, "Missing activity record", "", true);
 }
 
-// Assert that a particular sleep activity session is present in the sessions list
-static void prv_assert_sleep_activity_present(ActivitySession *exp_session, char *file, int line) {
-  ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT];
-  uint32_t num_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
-  activity_get_sessions(&num_sessions, sessions);
-  for (int i = 0; i < num_sessions; i++) {
-    if (sessions[i].type == exp_session->type && sessions[i].start_utc == exp_session->start_utc &&
-        sessions[i].length_min == exp_session->length_min) {
-      return;
-    }
-  }
-  printf("\nFound activities:");
-  for (int i = 0; i < num_sessions; i++) {
-    printf("\nFound:       type: %d, start_utc: %d, len: %" PRIu16 " ", (int)sessions[i].type,
-           (int)sessions[i].start_utc, sessions[i].length_min);
-  }
-  printf("\nLooking for: type: %d, start_utc: %d, len: %" PRIu16 " ", (int)exp_session->type,
-         (int)exp_session->start_utc, exp_session->length_min);
-  clar__assert(false, file, line, "Missing sleep activity record", "", true);
-}
-
 #define ASSERT_STEP_ACTIVITY_SESSION_PRESENT(session) \
   prv_assert_step_activity_present((session), __FILE__, __LINE__)
-
-#define ASSERT_SLEEP_ACTIVITY_SESSION_PRESENT(session) \
-  prv_assert_sleep_activity_present((session), __FILE__, __LINE__)
 
 #define ASSERT_NUM_ACTIVITY_SESSIONS(num_sessions) \
   prv_assert_num_activities((num_sessions), __FILE__, __LINE__)
@@ -1781,13 +1734,6 @@ void test_activity__get_minute_history(void) {
   }
 }
 
-// ---------------------------------------------------------------------------------------
-// Return the index of the step averages slot that contains the given minute
-static uint16_t prv_step_avg_slot(int hour, int min) {
-  int minutes = hour * PBL_MIN_PER_HOUR + min;
-  return minutes / (PBL_MIN_PER_DAY / ACTIVITY_NUM_METRIC_AVERAGES);
-}
-
 // Used by the test_activity__step_averages() method to figure out what steps/min we should
 // feed in for the given 15-minute time slot
 int prv_expected_steps_per_min(int slot, int multiplier) {
@@ -1828,7 +1774,7 @@ void prv_assert_known_settings(void) {
 // --------------------------------------------------------------------------------------
 // Save the current settings file format with known data to the local file system so that it can
 // be checked in and used for migration tests.
-static void prv_save_known_settings_file(const char *filename) {
+PBL_UNUSED static void prv_save_known_settings_file(const char *filename) {
   // Let's include 3 days of history by start at s_init_time_tm - 3 days
   struct tm time_tm = s_init_time_tm;
   time_t utc_sec = mktime(&time_tm);

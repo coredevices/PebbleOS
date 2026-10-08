@@ -67,12 +67,6 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   s_launcher_task_callback_data = data;
 }
 
-static void prv_process_and_assert_sent_request_data(bool expect_request_data_sent) {
-  s_data_sent = false;
-  s_launcher_task_callback(s_launcher_task_callback_data);
-  cl_assert_equal_b(s_data_sent, expect_request_data_sent);
-}
-
 static void prv_receive_v3_response(uint8_t major, uint8_t minor, uint8_t bugfix,
                                     CommSessionCapability protocol_capabilities) {
   union {
