@@ -11,6 +11,13 @@
 
 #define FAKE_STORAGE_MAX_SIZE (512 * 1024)
 
+#ifdef CONFIG_PBLBOOT
+#define FAKE_STORAGE_START_OFFSET 0U
+#else
+// put_bytes_storage_raw.c reserves room for the FirmwareDescription
+#define FAKE_STORAGE_START_OFFSET sizeof(FirmwareDescription)
+#endif
+
 typedef struct FakePutBytesStorageData {
   PutBytesStorageInfo *info;
   bool last_is_success;
@@ -30,7 +37,7 @@ static bool fake_pb_storage_mem_init(PutBytesStorage *storage, PutBytesObjectTyp
                                      uint32_t append_offset) {
   // This fake only supports one put bytes storage to be init'd at a time.
   PBL_ASSERTN(!s_storage_data.total_size);
-  size_t buffer_size = total_size + sizeof(FirmwareDescription);
+  size_t buffer_size = total_size + FAKE_STORAGE_START_OFFSET;
   memset(s_storage_data.buffer, 0, sizeof(s_storage_data.buffer));
   s_storage_data.total_size = buffer_size;
   PutBytesStorageInfo *info_copy = NULL;
@@ -41,8 +48,7 @@ static bool fake_pb_storage_mem_init(PutBytesStorage *storage, PutBytesObjectTyp
   s_storage_data.info = info_copy;
   storage->impl_data = &s_storage_data;
 
-  // put_bytes_storage_raw.c is weird, it reserves space at the beginning for FirmwareDescription:
-  storage->current_offset = sizeof(FirmwareDescription);
+  storage->current_offset = FAKE_STORAGE_START_OFFSET;
   return true;
 }
 
@@ -119,11 +125,14 @@ bool fake_pb_storage_mem_get_last_success(void) {
 }
 
 void fake_pb_storage_mem_assert_contents_written(const uint8_t contents[], size_t size) {
-  cl_assert_equal_m(contents, s_storage_data.buffer + sizeof(FirmwareDescription), size);
+  cl_assert_equal_m(contents, s_storage_data.buffer + FAKE_STORAGE_START_OFFSET, size);
 }
 
+#ifndef CONFIG_PBLBOOT
 void fake_pb_storage_mem_assert_fw_description_written(const FirmwareDescription *fw_descr) {
   cl_assert_equal_m(fw_descr, s_storage_data.buffer, sizeof(*fw_descr));
 }
+#endif
 
 #undef FAKE_STORAGE_MAX_SIZE
+#undef FAKE_STORAGE_START_OFFSET

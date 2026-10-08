@@ -767,19 +767,34 @@ void test_put_bytes__commit_message_crc_mismatch(void) {
   assert_nack_count(1);
 }
 
-void test_put_bytes__commit_message_fw_description_is_written(void) {
+static bool s_written_after_commit;
+
+static void prv_flag_write(void) {
+  s_written_after_commit = true;
+}
+
+void test_put_bytes__commit_message_fw_description(void) {
   prv_receive_init_and_put_fw_object();
+  s_written_after_commit = false;
+  fake_pb_storage_register_cb_before_write(prv_flag_write);
   prv_receive_commit(s_last_response_cookie, EXPECTED_CRC);
   fake_comm_session_process_send_next();
   fake_system_task_callbacks_invoke_pending();
+  fake_pb_storage_register_cb_before_write(NULL);
 
-  // Assert the FW description got written at the beginning of the storage:
+#ifdef CONFIG_PBLBOOT
+  cl_assert(!s_written_after_commit);
+  const uint8_t chunk[] = {0xaa, 0xbb, 0xcc, 0xdd};
+  fake_pb_storage_mem_assert_contents_written(chunk, sizeof(chunk));
+#else
+  cl_assert(s_written_after_commit);
   const FirmwareDescription fw_descr = {
     .description_length = sizeof(FirmwareDescription),
     .firmware_length = VALID_OBJECT_SIZE,
     .checksum = EXPECTED_CRC,
   };
   fake_pb_storage_mem_assert_fw_description_written(&fw_descr);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

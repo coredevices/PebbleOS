@@ -19,6 +19,8 @@ bool fake_pb_storage_mem_get_last_success(void);
 
 void fake_pb_storage_mem_assert_contents_written(const uint8_t contents[], size_t size);
 
+#ifndef CONFIG_PBLBOOT
 void fake_pb_storage_mem_assert_fw_description_written(const FirmwareDescription *fw_descr);
+#endif
 
 void fake_pb_storage_register_cb_before_write(void (*cb_before_write)(void));
