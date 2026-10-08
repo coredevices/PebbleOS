@@ -1,7 +1,8 @@
 name: Rebase onto target branch
 description: >
-  Check out the PR head and rebase it onto the current target branch so
-  CI runs against up-to-date code. Fails if the rebase does not apply
+  Check out the PR head and rebase it onto the target branch tip the
+  merge ref was created from, so CI runs against up-to-date code and
+  every job of a run uses the same base. Fails if the rebase does not apply
   cleanly. No-op on non-PR events. Requires a full checkout
   (fetch-depth: 0) of the default (merge) ref, so this action resolves
   from the merged tree regardless of the PR branch contents.
@@ -38,7 +39,11 @@ runs:
         # Deterministic committer dates so every job rebasing the same
         # commits onto the same base produces identical commit hashes
         # (e.g. git describe must match across matrix jobs).
-        if ! git rebase --committer-date-is-author-date "origin/${GITHUB_BASE_REF}"; then
+        # The merge ref's first parent pins the base for the whole run;
+        # origin/<base> may move between jobs.
+        base=$(git rev-parse "${GITHUB_SHA}^1")
+
+        if ! git rebase --committer-date-is-author-date "${base}"; then
           git rebase --abort || true
           echo "::error::Cannot rebase onto ${GITHUB_BASE_REF}. Rebase your branch locally, resolve conflicts and push again."
           exit 1
