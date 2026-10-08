@@ -287,6 +287,4 @@ pbl_library_compile_options(
   -Wno-unused-function
   -Wno-unused-variable
   -Wno-misleading-indentation
-  -Wno-error=maybe-uninitialized
-  -Wno-error=implicit-fallthrough
 )
