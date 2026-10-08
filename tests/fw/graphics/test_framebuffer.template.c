@@ -37,8 +37,8 @@ void test_framebuffer_${BIT_DEPTH_NAME}__framebuffer_clear(void) {
     cl_assert(framebuffer.buffer[i] == GColorWhite.argb);
   }
   GRect expected_dirty = GRect(0, 0, DISP_COLS, DISP_ROWS);
-#else
   cl_assert(!memcmp(&framebuffer.dirty_rect, &expected_dirty, sizeof(GRect)));
+#else
   cl_assert(false);
 #endif
 
