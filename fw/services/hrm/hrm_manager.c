@@ -49,7 +49,7 @@ static void prv_update_enable_timer_cb(void *context);
 
 static bool prv_match_session_ref(ListNode *found_node, void *data) {
   const HRMSubscriberState *state = (HRMSubscriberState *)found_node;
-  return (state->session_ref == (HRMSessionRef)data);
+  return (state->session_ref == (HRMSessionRef)(uintptr_t)data);
 }
 
 PBL_T_STATIC HRMSubscriberState *prv_get_subscriber_state_from_ref(HRMSessionRef session) {
@@ -468,7 +468,7 @@ static void prv_system_task_hrm_handler(void *context) {
     // without corresponding events, or during concurrent access.
     PBL_LOG_WRN(
         "HRM: system task handler called with no event in buffer "
-        "(available=%u, needed=%u)",
+        "(available=%u, needed=%zu)",
         available_bytes, sizeof(PebbleHRMEvent));
     pbl_mutex_unlock(&s_manager_state.lock);
     return;
