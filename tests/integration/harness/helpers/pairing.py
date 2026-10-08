@@ -104,6 +104,8 @@ class WatchPairing:
                 # Back, as the watchface ignores it if the window goes first.
                 self.ui.press(Button.BACK)
                 self.wait(timeout=max(deadline - time.monotonic(), TRANSITION_S))
+                # It leaves the stack before its transition ends, which drops input.
+                time.sleep(TRANSITION_S)
                 return
             if time.monotonic() > deadline:
                 raise WatchTimeout(
