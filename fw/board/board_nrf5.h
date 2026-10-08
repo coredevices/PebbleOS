@@ -10,15 +10,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
 #include <hal/nrf_gpio.h>
 #include <nrfx_spim.h>
 #include <nrfx_gpiote.h>
 #include <nrfx_timer.h>
 #include <nrfx_pwm.h>
 #include <nrfx_pdm.h>
-#pragma GCC diagnostic pop
 
 #define GPIO_Port_NULL (NULL)
 #define GPIO_Pin_NULL  ((uint16_t)-1)

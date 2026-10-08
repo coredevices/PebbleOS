@@ -3,10 +3,7 @@
 
 #pragma once
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
 #include <nrfx_twim.h>
-#pragma GCC diagnostic pop
 
 /**
  * @defgroup drivers_i2c_nrf5 nRF5 I2C
