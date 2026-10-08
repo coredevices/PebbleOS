@@ -62,6 +62,7 @@ void test_char_iterator__test_string_empty(void) {
   char_iter_init(&char_iter, &char_iter_state, &text_box_params, utf8_bounds.start);
   Utf8IterState *utf8_iter_state = (Utf8IterState *)&char_iter_state.utf8_iter_state;
 
+  cl_assert(utf8_iter_state->codepoint == 0);
   cl_assert(!iter_next(&char_iter));
   cl_assert(!iter_next(&char_iter));
   cl_assert(!iter_next(&char_iter));
@@ -84,6 +85,7 @@ void test_char_iterator__decode_test_string_length_one(void) {
   char_iter_init(&char_iter, &char_iter_state, &text_box_params_single_byte,
                  utf8_bounds_single_byte.start);
 
+  cl_assert(utf8_iter_state->codepoint == 'A');
   cl_assert(!iter_next(&char_iter));
   cl_assert(!iter_next(&char_iter));
   cl_assert(!iter_next(&char_iter));
@@ -100,6 +102,7 @@ void test_char_iterator__decode_test_string_length_one(void) {
   char_iter_init(&char_iter, &char_iter_state, &text_box_params_multi_byte,
                  utf8_bounds_multi_byte.start);
 
+  cl_assert(utf8_iter_state->codepoint == 0xf0);
   cl_assert(!iter_next(&char_iter));
   cl_assert(!iter_next(&char_iter));
   cl_assert(!iter_next(&char_iter));
