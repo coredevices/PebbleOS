@@ -16,7 +16,6 @@
 
 PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 
-static PBL_SEM_DEFINE(s_erase_mutex, 0, 1);
 static struct FlashRegionEraseState {
   uint32_t next_erase_addr;
   uint32_t end_addr;
@@ -29,6 +28,8 @@ static void prv_erase_next_async(void *ignored);
 PBL_T_STATIC void prv_lock_erase_mutex(void);
 PBL_T_STATIC void prv_unlock_erase_mutex(void);
 #if !UNITTEST
+static PBL_SEM_DEFINE(s_erase_mutex, 0, 1);
+
 void flash_erase_init(void) {
   pbl_sem_give(&s_erase_mutex);
 }
