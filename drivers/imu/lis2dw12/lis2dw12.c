@@ -318,39 +318,33 @@ static void prv_lis2dw12_drain_fifo(void) {
 
 static void prv_lis2dw12_dispatch_shake(uint8_t wake_up_src) {
   AccelDriverSample sample = {0};
-  IMUCoordinateAxis axis = AXIS_Z;
-  int16_t val = 0;
-  bool found = false;
+  bool sample_valid = false;
+  uint8_t axes = 0U;
+
+  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
+    if ((wake_up_src & LIS2DW12_WAKE_UP_SRC_AXIS_WU(LIS2DW12->axis_map[a])) != 0U) {
+      axes |= PBL_BIT(a);
+    }
+  }
 
   if (LIS2DW12->state->num_samples > 0U) {
     prv_lis2dw12_drain_fifo();
     if (LIS2DW12->state->last_sample_valid) {
       sample = LIS2DW12->state->last_sample;
+      sample_valid = true;
     }
   } else {
     uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES];
 
     if (prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw))) {
       prv_raw_to_mg(raw, &sample);
+      sample_valid = true;
     } else {
       PBL_LOG_ERR("Failed to read sample");
     }
   }
 
-  const int16_t vals[] = {[AXIS_X] = sample.x, [AXIS_Y] = sample.y, [AXIS_Z] = sample.z};
-  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
-    if ((wake_up_src & LIS2DW12_WAKE_UP_SRC_AXIS_WU(LIS2DW12->axis_map[a])) == 0U) {
-      continue;
-    }
-
-    if (!found || ABS(vals[a]) > ABS(val)) {
-      axis = a;
-      val = vals[a];
-      found = true;
-    }
-  }
-
-  accel_cb_shake_detected(axis, (val < 0) ? -1 : 1);
+  accel_cb_shake_detected(axes, sample_valid ? &sample : NULL);
 }
 
 static void prv_lis2dw12_recover(void);

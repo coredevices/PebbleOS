@@ -379,31 +379,24 @@ static void prv_lsm6dso_recover(void);
 static uint32_t prv_ms_since_last_fifo_read(void);
 
 static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
-  uint8_t raw[LSM6DSO_SAMPLE_SIZE_BYTES] = {0U};
-  IMUCoordinateAxis axis = AXIS_Z;
-  int16_t val = 0;
-  bool found = false;
+  uint8_t raw[LSM6DSO_SAMPLE_SIZE_BYTES];
+  AccelDriverSample sample = {0};
+  uint8_t axes = 0U;
+
+  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
+    if ((wake_up_src & LSM6DSO_WAKE_UP_SRC_AXIS_WU(LSM6DSO->axis_map[a])) != 0U) {
+      axes |= PBL_BIT(a);
+    }
+  }
 
   if (!prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, sizeof(raw))) {
     PBL_LOG_ERR("Failed to read sample");
+    accel_cb_shake_detected(axes, NULL);
+    return;
   }
 
-  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
-    int16_t v;
-
-    if ((wake_up_src & LSM6DSO_WAKE_UP_SRC_AXIS_WU(LSM6DSO->axis_map[a])) == 0U) {
-      continue;
-    }
-
-    v = prv_axis_raw_mg(a, raw);
-    if (!found || ABS(v) > ABS(val)) {
-      axis = a;
-      val = v;
-      found = true;
-    }
-  }
-
-  accel_cb_shake_detected(axis, (val < 0) ? -1 : 1);
+  prv_raw_to_mg(raw, &sample);
+  accel_cb_shake_detected(axes, &sample);
 }
 
 //! INT1 servicing pass kind, logged by the no-action diagnostic

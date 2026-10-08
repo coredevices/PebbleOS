@@ -204,10 +204,10 @@ extern void accel_cb_new_samples(AccelRawBatch const *batch);
  * Implemented by the service. Filtering out shakes caused by the vibration motor is up to the
  * implementer.
  *
- * @param axis Axis the shake was detected on.
- * @param direction Positive or negative to tell the direction along @p axis.
+ * @param axes Axes whose wake-up threshold was exceeded, bit @c n set for IMUCoordinateAxis @c n.
+ * @param sample Sample read right after the shake, or NULL if it could not be read.
  */
-extern void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction);
+extern void accel_cb_shake_detected(uint8_t axes, const AccelDriverSample *sample);
 
 /**
  * @brief Report a detected double tap to the service.

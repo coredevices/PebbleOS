@@ -19,6 +19,7 @@
 #include <pbl/logging/logging.h>
 #include "system/passert.h"
 #include "pbl/util/math.h"
+#include <pbl/util/bits.h>
 #include "pbl/util/shared_cbuf.h"
 
 #include <inttypes.h>
@@ -842,7 +843,7 @@ static bool prv_shake_caused_by_vibe(void) {
   return vibes_get_time_since_last_vibe_ms() < ACCEL_VIBE_SHAKE_HOLDOFF_MS;
 }
 
-void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
+void accel_cb_shake_detected(uint8_t axes, const AccelDriverSample *sample) {
   if (!s_enabled) {
     return;
   }
@@ -852,15 +853,38 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
     return;
   }
 
+  const AccelDriverSample data = (sample != NULL) ? *sample : (AccelDriverSample){0};
+  const int16_t vals[] = {[AXIS_X] = data.x, [AXIS_Y] = data.y, [AXIS_Z] = data.z};
+  IMUCoordinateAxis axis = AXIS_Z;
+  int16_t val = 0;
+  bool found = false;
+
+  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
+    if ((axes & PBL_BIT(a)) == 0U) {
+      continue;
+    }
+
+    if (!found || ABS(vals[a]) > ABS(val)) {
+      axis = a;
+      val = vals[a];
+      found = true;
+    }
+  }
+
+  const int32_t direction = (val < 0) ? -1 : 1;
+
 #if !defined(CONFIG_RECOVERY_FW)
   extern bool shell_prefs_get_accel_shake_log_info_enabled(void);
   if (shell_prefs_get_accel_shake_log_info_enabled()) {
-    PBL_LOG_INFO("Shake detected; axis=%d, direction=%" PRId32, axis, direction);
+    PBL_LOG_INFO("Shake detected; axis=%d, direction=%" PRId32 ", axes=%u, x=%d, y=%d, z=%d", axis,
+                 direction, axes, data.x, data.y, data.z);
   } else {
-    PBL_LOG_DBG("Shake detected; axis=%d, direction=%" PRId32, axis, direction);
+    PBL_LOG_DBG("Shake detected; axis=%d, direction=%" PRId32 ", axes=%u, x=%d, y=%d, z=%d", axis,
+                direction, axes, data.x, data.y, data.z);
   }
 #else
-  PBL_LOG_DBG("Shake detected; axis=%d, direction=%" PRId32, axis, direction);
+  PBL_LOG_DBG("Shake detected; axis=%d, direction=%" PRId32 ", axes=%u, x=%d, y=%d, z=%d", axis,
+              direction, axes, data.x, data.y, data.z);
 #endif
 
   PebbleEvent e = {
@@ -874,6 +898,15 @@ void accel_cb_shake_detected(IMUCoordinateAxis axis, int32_t direction) {
   event_put(&e);
 
   PBL_ANALYTICS_ADD(accel_shake_count, 1);
+  if ((axes & PBL_BIT(AXIS_X)) != 0U) {
+    PBL_ANALYTICS_ADD(accel_shake_x_count, 1);
+  }
+  if ((axes & PBL_BIT(AXIS_Y)) != 0U) {
+    PBL_ANALYTICS_ADD(accel_shake_y_count, 1);
+  }
+  if ((axes & PBL_BIT(AXIS_Z)) != 0U) {
+    PBL_ANALYTICS_ADD(accel_shake_z_count, 1);
+  }
 }
 
 void accel_cb_double_tap_detected(IMUCoordinateAxis axis, int32_t direction) {

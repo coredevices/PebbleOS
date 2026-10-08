@@ -155,3 +155,8 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(display_flush_time_ms)
 // Time the touch controller spent in active scan, estimated from the wake
 // window following each interrupt.
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(touch_driver_awake_time_ms)
+// Shakes per axis that exceeded the wake-up threshold; a shake can count on
+// several axes.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(accel_shake_x_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(accel_shake_y_count)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(accel_shake_z_count)

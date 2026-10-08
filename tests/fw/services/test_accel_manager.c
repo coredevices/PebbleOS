@@ -4,6 +4,7 @@
 #include "clar.h"
 
 #include "fake_app_manager.h"
+#include "fake_events.h"
 #include "fake_new_timer.h"
 #include "fake_pbl_malloc.h"
 #include "fake_pebble_tasks.h"
@@ -24,6 +25,7 @@
 
 #include <pbl/drivers/accel.h>
 #include "pbl/services/event_service.h"
+#include "pbl/util/bits.h"
 #include "pbl/util/math.h"
 #include "pbl/util/size.h"
 
@@ -268,4 +270,37 @@ void test_accel_manager__batched_samples(void) {
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
   sys_accel_manager_set_sample_buffer(main_session, fake_buf, 3);
   cl_assert_equal_i(s_num_samples, 7); /* 300ms / (1000ms / 25 samps) */
+}
+
+static void prv_assert_shake(IMUCoordinateAxis axis, int32_t direction) {
+  PebbleEvent e = fake_event_get_last();
+  cl_assert_equal_i(e.type, PEBBLE_ACCEL_SHAKE_EVENT);
+  cl_assert_equal_i(e.accel_tap.axis, axis);
+  cl_assert_equal_i(e.accel_tap.direction, direction);
+}
+
+void test_accel_manager__shake_single_axis(void) {
+  const AccelDriverSample sample = {.x = 900, .y = -300, .z = 100};
+
+  accel_cb_shake_detected(PBL_BIT(AXIS_Y), &sample);
+  prv_assert_shake(AXIS_Y, -1);
+}
+
+void test_accel_manager__shake_largest_flagged_axis(void) {
+  const AccelDriverSample sample = {.x = 1000, .y = 200, .z = -600};
+
+  accel_cb_shake_detected(PBL_BIT(AXIS_Y) | PBL_BIT(AXIS_Z), &sample);
+  prv_assert_shake(AXIS_Z, -1);
+}
+
+void test_accel_manager__shake_without_sample(void) {
+  accel_cb_shake_detected(PBL_BIT(AXIS_Y) | PBL_BIT(AXIS_Z), NULL);
+  prv_assert_shake(AXIS_Y, 1);
+}
+
+void test_accel_manager__shake_without_axes(void) {
+  const AccelDriverSample sample = {.x = -1000, .y = 0, .z = 0};
+
+  accel_cb_shake_detected(0U, &sample);
+  prv_assert_shake(AXIS_Z, 1);
 }
