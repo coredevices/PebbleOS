@@ -26,6 +26,7 @@ class HardwareAdapter(DeviceAdapter):
     """A real watch, optionally flashed and powered by the harness."""
 
     type = "hardware"
+    _console_holder = None
 
     def default_connections(self):
         # The first serial port is the debug console; any further ones are
@@ -47,11 +48,36 @@ class HardwareAdapter(DeviceAdapter):
             command += ["--tty", self.config.serial[0]]
         return command
 
+    def connect(self):
+        self._hold_console()
+        super().connect()
+
+    def _hold_console(self):
+        """Keep the debug port open, RTS released, while the harness runs.
+        RTS resets the watch, and the OS asserts it whenever the port is
+        first opened: without this, every reconnect restarted the watch."""
+        if self._console_holder is not None or not self.config.serial:
+            return
+        import serial
+
+        holder = serial.Serial()
+        holder.port = self.config.serial[0]
+        holder.rts = False
+        holder.open()
+        self._console_holder = holder
+
+    def _release_console(self):
+        if self._console_holder is not None:
+            self._console_holder.close()
+            self._console_holder = None
+
     def _run_repowered(self, command, what):
         """Run ``command`` against the watch. With a power supply the watch
         is repowered and ``command`` started right away, before the firmware
         can deep sleep, which leaves its debug UART reachable only at random;
         missing the boot ROM's window that way is retried."""
+        # sftool drives RTS itself.
+        self._release_console()
         supply = self.config.power_supply
         attempts = REPOWERED_ATTEMPTS if supply is not None else 1
         log = os.path.join(self.config.results_dir, f"{what}.log")
@@ -143,7 +169,7 @@ class HardwareAdapter(DeviceAdapter):
             time.sleep(POWER_ON_SETTLE_S)
 
     def _close_device(self):
-        pass
+        self._release_console()
 
     def _hard_reset(self):
         supply = self.config.power_supply
