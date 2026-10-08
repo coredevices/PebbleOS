@@ -582,8 +582,8 @@ static int prv_flash_benchmark(const struct pbl_shell *sh, size_t sz) {
   } while (ticks_elapsed < 300);
 
   uint32_t us_per_tick = ticks_elapsed * 1000000 / (iters * RTC_TICKS_HZ);
-  pbl_shell_print(sh, "  -> %d bytes: %d iters in %lld ticks = %" PRIu32 " us/iter", (int)sz, iters,
-                  ticks_elapsed, us_per_tick);
+  pbl_shell_print(sh, "  -> %d bytes: %d iters in %" PRIu64 " ticks = %" PRIu32 " us/iter", (int)sz,
+                  iters, ticks_elapsed, us_per_tick);
 
   kernel_free(buf);
 
