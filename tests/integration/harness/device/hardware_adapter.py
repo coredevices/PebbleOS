@@ -102,6 +102,16 @@ class HardwareAdapter(DeviceAdapter):
             regions.append((address, FLASH_SUBSECTOR_SIZE))
         self._erase_regions(regions, "invalidate", "booting PRF")
 
+    def boot_recovery(self):
+        """Boot PRF again, e.g. after a test installed the normal firmware."""
+        # sftool needs the serial port the connections hold.
+        self.disconnect()
+        self.invalidate_firmware_slots()
+        if not self._hard_reset():
+            raise HarnessError("booting PRF needs a power supply (--ppk2)")
+        self.connect()
+        self.wait_ready()
+
     def erase_filesystem(self):
         """Erase the filesystem (bondings, settings, apps and data), and the
         bonding kept for PRF, which the firmware restores from otherwise."""

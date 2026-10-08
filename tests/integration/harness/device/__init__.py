@@ -192,6 +192,10 @@ class DeviceAdapter(ABC):
             self._virtual_link.stop()
             self._virtual_link = None
 
+    def boot_recovery(self):
+        """Boot PRF again, e.g. after a test installed the normal firmware."""
+        raise Unsupported(f"the {self.type} device cannot boot PRF again")
+
     def wipe(self):
         """Erase the watch's filesystem and boot it afresh: no bondings,
         default settings, no apps or data."""

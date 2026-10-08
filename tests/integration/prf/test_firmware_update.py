@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+from harness.errors import HarnessError
 from harness.helpers.firmware import install_firmware
 
 pytestmark = pytest.mark.variants("prf")
@@ -15,7 +16,21 @@ def _running(prompt):
     return "\n".join(prompt("version")).split("Recovery FW:")[0]
 
 
-def test_install_firmware(dut, build, phones, main_bundle):
+@pytest.fixture
+def back_to_recovery(dut, build):
+    """PRF running again after the test, whatever it left installed."""
+    yield
+    if build.emulated:
+        return
+    try:
+        running = _running(dut.prompt)
+    except HarnessError:
+        running = ""
+    if "recov:1" not in running:
+        dut.boot_recovery()
+
+
+def test_install_firmware(dut, build, phones, main_bundle, back_to_recovery):
     """Install the normal firmware from the phone; on a watch, it boots, and
     'Reset to PRF' from the phone brings recovery back."""
     phone = phones().connect()
