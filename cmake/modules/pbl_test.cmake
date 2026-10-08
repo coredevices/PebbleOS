@@ -18,35 +18,22 @@ define_property(GLOBAL PROPERTY PBL_TEST_OBJECTS
 
 set(PBL_TEST_PLATFORMS default obelix gabbro asterix)
 
-# The tests build for the host with clang, at -O0 with symbols, and
-# promote nothing to an error: they exercise code paths the firmware
-# build never sees.
+# The tests build for the host with clang, at -O0 with symbols.
 set(PBL_TEST_C_FLAGS
   -std=c11
-  -Werror=gnu-variable-sized-type-not-at-end
   -Wall
   -Werror
-  -Werror=unused-function
-  -Wno-error=missing-braces
-  -Werror=unused-const-variable
   -Wno-enum-conversion
   -g3
   -gdwarf-4
-  -Werror=macro-redefined
   -O0
-  -Werror=unused-variable
   -fdata-sections
-  -Werror=gnu-folding-constant
-  -Werror=constant-conversion
-  -Werror=format-overflow
   -ffunction-sections
   -fno-common
   -ffp-contract=off
-  -Werror=unused-but-set-variable
   -fexcess-precision=standard
   # clang errors on the true == true assertions some tests compile.
   -Wno-tautological-compare
-  -Wno-error
 )
 
 # Headers every test sees, in the order the compiler must find them:
