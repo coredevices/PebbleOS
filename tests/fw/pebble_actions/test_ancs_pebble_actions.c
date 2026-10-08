@@ -56,7 +56,6 @@ static void prv_support_sms_replies(void) {
   // Store the preference in our DB
   char *key = "com.apple.MobileSMS";
   int key_len = strlen(key);
-  const int flags = 0;
   const int num_attributes = 0;
   const int num_actions = 1;
   const int action_id = 12;
@@ -93,7 +92,6 @@ static void prv_support_sms_replies_no_emoji(void) {
   // Store the preference in our DB
   char *key = "com.apple.MobileSMS";
   int key_len = strlen(key);
-  const int flags = 0;
   const int num_attributes = 0;
   const int num_actions = 1;
   const int action_id = 12;
@@ -173,9 +171,6 @@ void test_ancs_pebble_actions__test_sms_reply(void) {
   cl_assert_equal_i(response_action->attr_list.attributes[1].id, AttributeIdEmojiSupported);
   cl_assert_equal_i(response_action->attr_list.attributes[1].uint8, 1);
 
-  ActionMenuItem menu_item = (ActionMenuItem){
-    .action_data = &notif->action_group.actions[1],
-  };
   s_expected_send_data = s_sms_action_data;
   timeline_actions_invoke_action(&notif->action_group.actions[1], notif, NULL /*complete_cb*/,
                                  NULL /*cb_data*/);

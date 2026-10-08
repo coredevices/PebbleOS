@@ -2467,8 +2467,6 @@ static void prv_fake_hr_event_handler(PebbleEvent *e) {
 // ---------------------------------------------------------------------------------------
 // Test that some HRM events aren't passed on from activity service
 void test_activity__hrm_ignore(void) {
-  int32_t median, total_weight;
-
   s_num_hr_events = 0;
 
   // Start activity tracking. This method assumes it can be called from any task, so we must

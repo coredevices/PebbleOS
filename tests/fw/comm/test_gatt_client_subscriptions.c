@@ -789,8 +789,6 @@ void test_gatt_client_subscriptions__consume_but_buffer_client_buffer_null(void)
 }
 
 void test_gatt_client_subscriptions__notification_consume_without_notification(void) {
-  pbl_bt_characteristic_t characteristic = prv_get_indicatable_characteristic();
-
   uint16_t value_length;
   GATTBufferedNotificationHeader header = {
     .characteristic = PBL_BT_CHARACTERISTIC_INVALID,

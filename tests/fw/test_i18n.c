@@ -190,8 +190,8 @@ void test_i18n__ctxt_get_with_buffer(void) {
 
 void test_i18n__reset_language(void) {
   // allocate some crap, to test that freeing works
-  const char *first = i18n_get("Music", (void *)0x12345);
-  const char *second = i18n_get("abcd", (void *)0x12345);
+  i18n_get("Music", (void *)0x12345);
+  i18n_get("abcd", (void *)0x12345);
   shell_prefs_set_language_english(true);
   i18n_set_resource(RESOURCE_ID_STRINGS);
   // reinitialize

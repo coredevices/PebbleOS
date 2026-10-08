@@ -1489,7 +1489,6 @@ static void prv_stopped_handler_unschedule(Animation *animation, bool finished, 
 // --------------------------------------------------------------------------------------
 // Test that animation_unschedule can be called from the stopped handler
 void test_animation__unschedule_from_stopped_handler(void) {
-  Animation *h;
   const int duration = 100;
 
   const AnimationHandlers handlers = {
@@ -1691,7 +1690,6 @@ void test_animation__sequence_unschedule_from_child(void) {
   const int duration_a = 300;
   const int duration_b = 500;
   const int play_count_b = 2;
-  int duration_total = duration_a + play_count_b * duration_b;
 
   // Create 2 animations
   Animation *a = prv_create_test_animation();

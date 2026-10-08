@@ -268,9 +268,6 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
     goto done;
   }
 
-  uint8_t actual_bmp_palette_size = gbitmap_get_palette_size(gbitmap_get_format(actual_bmp));
-  uint8_t expected_bmp_palette_size = gbitmap_get_palette_size(gbitmap_get_format(expected_bmp));
-
   uint8_t *expected_bmp_data = (uint8_t *)expected_bmp->addr;
 
   uint8_t actual_bmp_bpp = gbitmap_get_bits_per_pixel(gbitmap_get_format(actual_bmp));

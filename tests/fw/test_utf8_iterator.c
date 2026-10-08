@@ -119,7 +119,7 @@ void test_utf8_iterator__decode_valid_string_backwards(void) {
   utf8_iter_init(&utf8_iter, &utf8_iter_state, &utf8_bounds, utf8_bounds.end);
 
   // Tests
-  int i = sizeof(s_valid_test_codepoints) / sizeof(s_valid_test_codepoints[0]);
+  int i = NUM_VALID_CODEPOINTS;
   while (iter_prev(&utf8_iter)) {
     cl_assert(utf8_iter_state.current >= utf8_bounds.start);
     cl_assert(i > 0);

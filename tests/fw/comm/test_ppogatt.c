@@ -164,11 +164,6 @@ static const PPoGATTMetaV1 s_meta_v1_app_inferred = {
   .pp_session_type = PPoGATTSessionType_InferredFromUuid,
 };
 
-static PPoGATTPacket s_reset_complete = (const PPoGATTPacket){
-  .sn = 0,
-  .type = PPoGATTPacketTypeResetComplete,
-};
-
 static PPoGATTPacket s_server_reset_request = (const PPoGATTPacket){
   .sn = 0,
   .type = PPoGATTPacketTypeResetRequest,
@@ -457,7 +452,6 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
   // Client created:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
-  Transport *client = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
 
   // Rediscovery:
   ppogatt_invalidate_all_references();
@@ -472,7 +466,6 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
   // Still one client:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
-  Transport *client2 = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
 }
 
 void test_ppogatt__invalidate_characteristic_refs_immediately_after_update(void) {

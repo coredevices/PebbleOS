@@ -75,7 +75,6 @@ void test_text_render__convert_1bit_to_8bit_144x168(void) {
   const int row_1bit_size_words = 1 + (size.w - 1) / 32;
 
   GBitmap *bitmap = gbitmap_create_blank(size, GBitmapFormat8Bit);
-  uintptr_t base = (uintptr_t)bitmap->addr;
 
   int dest_x = 0;
   int dest_y = 0;
@@ -111,7 +110,6 @@ void test_text_render__convert_1bit_to_8bit_180x180(void) {
   const int row_1bit_size_words = 1 + (size.w - 1) / 32;
 
   GBitmap *bitmap = gbitmap_create_blank(size, GBitmapFormat8Bit);
-  uintptr_t base = (uintptr_t)bitmap->addr;
 
   int dest_x = 0;
   int dest_y = 0;

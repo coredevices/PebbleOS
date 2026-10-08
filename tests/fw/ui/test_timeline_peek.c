@@ -324,7 +324,7 @@ void test_timeline_peek__peek_visibility(void) {
   cl_assert(layer->frame.origin.y >= DISP_ROWS);
 
   // Peek service shows the peek UI. Not animated for this unit test.
-  TimelineItem *item = prv_set_timeline_item(
+  prv_set_timeline_item(
       &(TimelinePeekItemConfig){
         .title = "CoreUX Design x Eng",
         .subtitle = "ConfRM-Missile Command",

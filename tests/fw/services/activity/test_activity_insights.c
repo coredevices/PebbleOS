@@ -136,7 +136,6 @@ void activity_sessions_prv_get_sleep_bounds_utc(time_t now_utc, time_t *enter_ut
   uint32_t num_sessions = MAX_ACTIVITY_SESSIONS;
 
   activity_get_sessions(&num_sessions, activity_sessions);
-  uint32_t total_seconds = 0;
   *enter_utc = 0;
   *exit_utc = 0;
   for (uint32_t i = 0; i < num_sessions; i++) {

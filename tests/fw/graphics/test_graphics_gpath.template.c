@@ -172,7 +172,6 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__cleanup(void) {
 // tests
 void test_graphics_gpath_${BIT_DEPTH_NAME}__filled(void) {
   GContext ctx;
-  Layer layer;
 
   prv_reset();
   s_current_path = s_house_path;
@@ -183,7 +182,6 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled(void) {
 
 void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped(void) {
   GContext ctx;
-  Layer layer;
 
   prv_reset();
   test_graphics_context_init(&ctx, fb);
@@ -221,7 +219,6 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped(void) {
 // outside with no clipping -- results should be identical to the regular filled test
 void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_outside(void) {
   GContext ctx;
-  Layer layer;
 
   printf("-- top\n");
   prv_reset();
@@ -268,7 +265,6 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_outside(void) {
 // AA section
 void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_aa(void) {
   GContext ctx;
-  Layer layer;
 
   // House path - tests horizontal line edge case
   prv_reset();
@@ -292,7 +288,6 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_aa(void) {
 
 void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped_aa(void) {
   GContext ctx;
-  Layer layer;
 
   prv_reset();
   test_graphics_context_init(&ctx, fb);
@@ -337,7 +332,6 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   //   performing them in both 1bit and 8bit would create differences on the edges
   //   and fail unit tests as a result
   GContext ctx;
-  Layer layer;
 
   // Bolt path - test antialiased edges
   prv_reset();
@@ -425,7 +419,6 @@ void test_graphics_gpath_8bit__clipping_aa(void) {
   // NOTE: This test verifies correct clipping of anti-aliased edges on gpaths, therefore
   //         it works only on 8bit
   GContext ctx;
-  Layer layer;
 
   prv_reset();
   test_graphics_context_init(&ctx, fb);

@@ -51,8 +51,6 @@ static uint8_t s_free_count = 0;
 
 static uint8_t s_malloc_count = 0;
 
-static void *s_ptr = NULL;
-
 static uint8_t s_app_state;
 
 static uint64_t s_flags = 0;

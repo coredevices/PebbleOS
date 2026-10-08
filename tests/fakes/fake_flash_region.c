@@ -25,8 +25,6 @@ static void prv_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint
     sector_end -= SECTOR_SIZE_BYTES;
   }
 
-  int erase_count = 0;
-
   // Do the upkeep immediately just in case we've spent awhile running without feeding the
   // watchdog before doing this erase operation.
 

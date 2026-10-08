@@ -64,7 +64,6 @@ void test_framebuffer_duma__draw_within_framebuffer(void) {
   // This should touch all valid bytes in the framebuffer
   for (int y = DISP_ROWS - 1; y >= 0; y--) {
     GColor color = color_table[y % NUM_COLORS];
-    int16_t row_offset = DISP_COLS * y;
     GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(&ctx.dest_bitmap, y);
     for (int x = row_info.min_x; x < row_info.max_x; x++) {
       // Use direct framebuffer access to prove framebuffer-correct positioning

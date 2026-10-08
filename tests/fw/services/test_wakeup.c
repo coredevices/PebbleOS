@@ -66,8 +66,6 @@ void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) 
   s_popup_occurred = true;
 }
 
-static PebbleProcessMd s_test_app_md = {.uuid = TEST_UUID};
-
 bool clock_is_timezone_set(void) {
   return false;
 }

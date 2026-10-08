@@ -915,13 +915,10 @@ void test_health__activities_iterate(void) {
   // oldest to most-recent (looking at each session's start): 3, 2, 1, 0
   // most-recent to oldest (looking at each session's end): 1, 0, 3, 2
 
-  const int num_sleep_sessions = 4;
   const int num_restfulsleep_sessions = 2;
   const int num_run_sessions = 1;
   const int num_walk_sessions = 1;
   const int num_open_sessions = 1;
-  const int num_sessions = num_sleep_sessions + num_restfulsleep_sessions + num_run_sessions +
-                           num_walk_sessions + num_open_sessions;
 
   // result from mocked sys_activity_get_sessions_values is still false
   health_service_activities_iterate(HealthActivityMaskAll, now - (100 * PBL_SEC_PER_MIN), now,

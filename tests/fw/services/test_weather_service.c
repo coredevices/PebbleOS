@@ -182,9 +182,6 @@ void test_weather_service__get_default_location_forecast_from_watch_app_prefs_db
   // no blob db events were fired during unit test, therefore forecast cache never updated
   cl_assert(!forecast);
 
-  const int default_location_index = 0;
-  const WeatherDBKey *default_location_key = weather_shared_data_get_key(0);
-
   PebbleEvent insert_event = (PebbleEvent){
     .type = PEBBLE_BLOBDB_EVENT,
     .blob_db = {

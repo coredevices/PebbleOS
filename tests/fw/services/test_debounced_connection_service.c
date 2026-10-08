@@ -25,7 +25,6 @@
 // Fakes
 ///////////////////////////////////////////////////////////
 
-static TimerID s_debounce_timer;
 static bool s_default_connection_state;
 static unsigned int s_event_count = 0;
 static PebbleEvent s_cached_event;

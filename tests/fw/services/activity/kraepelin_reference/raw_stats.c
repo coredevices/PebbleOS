@@ -444,8 +444,6 @@ uint16_t score_fftmag_hz_rng_l2(int16_t *d, int16_t dlenpwr_ary, int16_t lhz_i, 
 
 int16_t score_fftmag_max_hz_harm(int16_t *d, int16_t dlenpwr_ary, int16_t max_mag_hz) {
   int16_t dlen_ary = pow_int(2, dlenpwr_ary);
-  int16_t next_max_mag_hz =
-      (d[max_mag_hz + 1] > d[max_mag_hz - 1]) ? (max_mag_hz + 1) : (max_mag_hz - 1);
 
   int32_t num = 0;
   for (int16_t i = 1; i < 4; i++) {

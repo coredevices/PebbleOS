@@ -264,9 +264,9 @@ void test_imaging__no_image(void) {
 
 void test_imaging__truncated_header_rejected(void) {
   uint8_t buf[64];
-  const size_t len = prv_build_response(
-      buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0, sizeof(s_pixels), 4,
-      2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, sizeof(s_pixels));
+  prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst | ImagingResponseFlagLast, 0,
+                     sizeof(s_pixels), 4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette),
+                     s_pixels, sizeof(s_pixels));
   // Truncate inside the image header, inside the palette, and inside the response header
   prv_receive(buf, sizeof(ImagingResponseHeader) + 3);
   prv_receive(buf, sizeof(ImagingResponseHeader) + 6 + 1);

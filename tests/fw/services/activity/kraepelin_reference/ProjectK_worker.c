@@ -80,13 +80,17 @@ static uint16_t i_smp = 0; // the index of the sample, relative to the epoch
 static int16_t mean_ary[3];
 static uint32_t pim_ary[3];
 static uint32_t stepc;
+#if PEBBLE_APP
 static uint32_t x1000_kcal_blk;
+#endif
 static uint32_t stepc_prev_5sec = 0;
 static uint32_t stepc_prev_10sec = 0;
 // static uint32_t stepc_daily;
 
 /* BEHAVIOUR VARIABLES */
+#if PEBBLE_APP
 static uint16_t summ_since_trans_server = 0;
+#endif
 
 static bool s_pim_filter_primed = false;
 
