@@ -100,6 +100,7 @@ class NativeAdapter(DeviceAdapter):
 
     def _hard_reset(self):
         self._stop()
+        self._power_cycle_bluetooth()
         self._start()
         return True
 

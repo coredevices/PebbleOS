@@ -15,6 +15,7 @@ from harness.errors import HarnessError
 MICRO_FLASH_IMAGE = "qemu_micro_flash.bin"
 SPI_FLASH_IMAGE = "qemu_spi_flash.bin"
 ABS_MAX = 32767
+HCI_DRAIN_S = 0.2
 
 
 def _free_port():
@@ -198,7 +199,12 @@ class QemuAdapter(DeviceAdapter):
             monitor.close()
 
     def _hard_reset(self):
+        self._monitor("stop")
+        # Let the controller take what the stopped firmware already sent.
+        time.sleep(HCI_DRAIN_S)
+        self._power_cycle_bluetooth()
         self._monitor("system_reset")
+        self._monitor("cont")
         return True
 
     def default_connections(self):

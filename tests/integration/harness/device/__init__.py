@@ -177,6 +177,12 @@ class DeviceAdapter(ABC):
         self.ble_controller = self._virtual_link.host_controller
         return self._virtual_link.watch_port
 
+    def _power_cycle_bluetooth(self):
+        """Reset the virtual controller with the watch, as a watch's own
+        controller would be."""
+        if self._virtual_link is not None:
+            self._virtual_link.power_cycle_watch()
+
     def _stop_bluetooth(self):
         if self._virtual_link is not None:
             self._virtual_link.stop()
