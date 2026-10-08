@@ -258,6 +258,10 @@ class BumblePhone(Phone):
             watch,
             dut.ble_controller,
             keystore=keystore,
+            snoop=os.path.join(
+                os.path.dirname(keystore),
+                f"btsnoop-{address.replace(':', '')}-{{instance}}.log",
+            ),
             confirm_pairing=dut.confirm_pairing,
             address=address,
             name=name,

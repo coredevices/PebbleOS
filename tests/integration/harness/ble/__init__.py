@@ -116,6 +116,7 @@ class BleLink:
         mtu=REQUESTED_MTU,
         accept_parameters=False,
         forward_meta=PPOG_FORWARD_META,
+        snoop=None,
     ):
         if ppogatt not in (REVERSED, FORWARD):
             raise HarnessError(f"no PPoGATT mode {ppogatt!r}")
@@ -137,6 +138,9 @@ class BleLink:
         self.mtu = mtu
         self.accept_parameters = accept_parameters
         self.forward_meta = forward_meta
+        #: Where to write the HCI traffic as btsnoop logs, one per power-on;
+        #: ``{instance}`` numbers them.
+        self.snoop = snoop
         #: The watch's connection parameter update requests, granted or not.
         self.parameter_requests = []
         self.on_reset = None
@@ -204,6 +208,13 @@ class BleLink:
         from bumble.transport import open_transport
 
         self._transport = await open_transport(self.controller)
+        if self.snoop:
+            from bumble.snoop import create_snooper
+            from bumble.transport.common import SnoopingTransport
+
+            self._transport = SnoopingTransport.create_with(
+                self._transport, create_snooper(f"btsnoop:file:{self.snoop}")
+            )
         config = DeviceConfiguration(name=self.name, address=Address(self.address))
         device = Device.from_config_with_hci(
             config, self._transport.source, self._transport.sink
