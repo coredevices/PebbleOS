@@ -192,7 +192,7 @@ void stub_new_timer_set_executing(TimerID timer_id, bool set) {
 void *stub_new_timer_callback_data(TimerID timer_id) {
   StubTimer *timer = prv_find_timer(timer_id);
   if (timer == NULL) {
-    return false;
+    return NULL;
   }
   return timer->cb_data;
 }

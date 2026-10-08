@@ -196,7 +196,7 @@ bool animation_set_handlers(Animation *animation_h, AnimationHandlers callbacks,
 void *animation_get_context(Animation *animation_h) {
   AnimationPrivate *animation = (AnimationPrivate *)animation_h;
   if (!animation) {
-    return false;
+    return NULL;
   }
   return animation->context;
 }

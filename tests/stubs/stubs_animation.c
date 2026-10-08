@@ -142,7 +142,7 @@ bool PBL_WEAK animation_set_handlers(Animation *animation, AnimationHandlers cal
 
 void *PBL_WEAK animation_get_context(Animation *animation) {
   if (!animation) {
-    return false;
+    return NULL;
   }
   return ((AnimationPrivate *)animation)->context;
 }

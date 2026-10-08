@@ -846,7 +846,7 @@ static Animation *prv_call_using_vargs(CreateFromArrayFunc func, Animation *anim
 
   // A and B must not be NULL
   if (!animation_a || !animation_b) {
-    return false;
+    return NULL;
   }
   animation_array[0] = animation_a;
   animation_array[1] = animation_b;
@@ -1778,7 +1778,7 @@ Animation *animation_clone(Animation *animation_h) {
 
   AnimationPrivate *animation = prv_find_animation_by_handle(state, animation_h, false /*quiet*/);
   if (!animation) {
-    return false;
+    return NULL;
   }
 
   return prv_animation_clone(state, animation);
