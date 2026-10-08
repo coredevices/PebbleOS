@@ -36,7 +36,7 @@ add_executable(pebble_renderer
   "${PEBBLEOS_ROOT}/fw/applib/graphics/text_render.c"
   "${PEBBLEOS_ROOT}/fw/applib/graphics/utf8.c"
   "${PEBBLEOS_ROOT}/fw/applib/graphics/text_layout.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/rtl_support.c"
+  "${PEBBLEOS_ROOT}/fw/applib/graphics/bidi.c"
   "${PEBBLEOS_ROOT}/fw/applib/graphics/arabic_shaping.c"
   "${PEBBLEOS_ROOT}/fw/applib/graphics/perimeter.c"
   "${PEBBLEOS_ROOT}/fw/applib/graphics/text_resources.c"
