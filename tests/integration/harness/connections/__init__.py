@@ -100,35 +100,47 @@ class Connection(ABC):
 
 
 # The version response the harness answers with: an Android phone app, with
-# every protocol capability.
+# every protocol capability but settings sync, whose write-backs it would
+# leave unanswered and the watch retry for minutes.
 PHONE_OS_ANDROID = 2
-PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF
+SETTINGS_SYNC_SUPPORT = 1 << 23
+PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~SETTINGS_SYNC_SUPPORT
+
+
+def _phone_app_version():
+    from libpebble2.protocol.system import AppVersionResponse, PhoneAppVersion
+
+    return PhoneAppVersion(
+        message=AppVersionResponse(
+            protocol_version=0xFFFFFFFF,
+            session_caps=0x80000000,
+            platform_flags=PHONE_OS_ANDROID,
+            response_version=2,
+            major_version=3,
+            minor_version=0,
+            bugfix_version=0,
+            # The firmware reads the flags little-endian; libpebble2 packs
+            # them big-endian.
+            protocol_caps=int.from_bytes(PHONE_CAPABILITIES.to_bytes(8, "little")),
+        )
+    )
 
 
 def start_protocol(transport):
     """A running libpebble2 connection over ``transport``, identified to the
     firmware as the phone app so private endpoints answer."""
     from libpebble2.communication import PebbleConnection
-    from libpebble2.protocol.system import AppVersionResponse, PhoneAppVersion
 
-    pebble = PebbleConnection(transport)
+    class PhoneConnection(PebbleConnection):
+        # libpebble2 answers the firmware's request with its own capabilities.
+        def _app_version_response(self, packet):
+            self.send_packet(_phone_app_version())
+
+    pebble = PhoneConnection(transport)
     pebble.connect()
     pebble.run_async()
     # The firmware asks only once per session, which outlives host connections.
-    pebble.send_packet(
-        PhoneAppVersion(
-            message=AppVersionResponse(
-                protocol_version=0xFFFFFFFF,
-                session_caps=0x80000000,
-                platform_flags=PHONE_OS_ANDROID,
-                response_version=2,
-                major_version=3,
-                minor_version=0,
-                bugfix_version=0,
-                protocol_caps=PHONE_CAPABILITIES,
-            )
-        )
-    )
+    pebble.send_packet(_phone_app_version())
     return pebble
 
 
