@@ -3,6 +3,8 @@
 
 #include "clar.h"
 
+#include <string.h>
+
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
 #include "pbl/util/size.h"
 
@@ -54,6 +56,16 @@ static const uint8_t s_ios_pref_db_insert_dict[] = {
 
 const uint8_t key[] = {0x01, 0x02, 0x03};
 
+typedef union {
+  struct pbl_string_list list;
+  uint8_t storage[PBL_STRING_LIST_SIZE(1, 16)];
+} FilteringRules;
+
+static void prv_set_rules(FilteringRules *rules, const char *data, uint16_t length) {
+  rules->list.serialized_byte_length = length;
+  memcpy(rules->list.data, data, length);
+}
+
 void test_ios_notif_pref_db__initialize(void) {
 }
 
@@ -95,16 +107,9 @@ void test_ios_notif_pref_db__read_flags(void) {
 
 void test_ios_notif_pref_db__store_prefs(void) {
   // Create an attribute list and action group
-  struct {
-    struct pbl_string_list list;
-    char data[9];
-  } filtering_rules = {
-    .list =
-        {
-          .serialized_byte_length = 9,
-        },
-    .data = {0x01, 0x00, 0x00, 0x00, 's', 'p', 'a', 'm', '\0'},
-  };
+  FilteringRules filtering_rules;
+  prv_set_rules(&filtering_rules, (const char[]){0x01, 0x00, 0x00, 0x00, 's', 'p', 'a', 'm', '\0'},
+                9);
 
   AttributeList attr_list;
   attribute_list_init_list(0, &attr_list);
@@ -138,7 +143,8 @@ void test_ios_notif_pref_db__store_prefs(void) {
       attribute_get_string_list(&notif_prefs->attr_list, AttributeIdNotificationFilteringRules);
   cl_assert(rules);
   cl_assert_equal_i(rules->serialized_byte_length, filtering_rules.list.serialized_byte_length);
-  cl_assert_equal_m(rules->data, filtering_rules.data, filtering_rules.list.serialized_byte_length);
+  cl_assert_equal_m(rules->data, filtering_rules.list.data,
+                    filtering_rules.list.serialized_byte_length);
 
   // Update the current entry with a new attribute
   attribute_list_add_uint32(&attr_list, AttributeIdLastUpdated, 123456);
@@ -161,7 +167,8 @@ void test_ios_notif_pref_db__store_prefs(void) {
   rules = attribute_get_string_list(&notif_prefs->attr_list, AttributeIdNotificationFilteringRules);
   cl_assert(rules);
   cl_assert_equal_i(rules->serialized_byte_length, filtering_rules.list.serialized_byte_length);
-  cl_assert_equal_m(rules->data, filtering_rules.data, filtering_rules.list.serialized_byte_length);
+  cl_assert_equal_m(rules->data, filtering_rules.list.data,
+                    filtering_rules.list.serialized_byte_length);
   Attribute *updated = attribute_find(&notif_prefs->attr_list, AttributeIdLastUpdated);
   cl_assert(updated);
   cl_assert_equal_i(updated->uint32, 123456);

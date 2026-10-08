@@ -3,6 +3,8 @@
 
 #include "clar.h"
 
+#include <string.h>
+
 #include "pbl/services/notifications/alerts_preferences.h"
 #include "pbl/services/notifications/ancs/ancs_filtering.h"
 #include "pbl/services/blob_db/ios_notif_pref_db.h"
@@ -52,16 +54,17 @@ static uint8_t title_data[] = {
 };
 static ANCSAttribute *s_title_attr = (ANCSAttribute *)&title_data;
 
-static struct {
+typedef union {
   struct pbl_string_list list;
-  char data[1];
-} s_empty_filtering_rules = {
-  .list =
-      {
-        .serialized_byte_length = 1,
-      },
-  .data = {0},
-};
+  uint8_t storage[PBL_STRING_LIST_SIZE(1, 16)];
+} FilteringRules;
+
+static void prv_set_rules(FilteringRules *rules, const char *data, uint16_t length) {
+  rules->list.serialized_byte_length = length;
+  memcpy(rules->list.data, data, length);
+}
+
+static FilteringRules s_empty_filtering_rules;
 
 status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
                                        TimelineItemActionGroup *action_group) {
@@ -100,6 +103,7 @@ void test_ancs_filtering__initialize(void) {
   s_performed_store = false;
   s_expected_attributes = NULL;
   s_expected_actions = NULL;
+  prv_set_rules(&s_empty_filtering_rules, "", 1);
 }
 
 void test_ancs_filtering__cleanup(void) {
@@ -412,17 +416,10 @@ void test_ancs_filtering__matches_text_rule_body_case_insensitive(void) {
                                 's',  ' ',  'S', 'P', 'A', 'M', ' ', 'n', 'o'};
   ANCSAttribute *body_attr = (ANCSAttribute *)&body_data;
 
-  struct {
-    struct pbl_string_list list;
-    char data[9];
-  } filtering_rules = {
-    .list =
-        {
-          .serialized_byte_length = 9,
-        },
-    // count=1, type=text, field=body, case=insensitive, pattern="spam\0"
-    .data = {0x01, 0x00, 0x02, 0x00, 's', 'p', 'a', 'm', '\0'},
-  };
+  FilteringRules filtering_rules;
+  // count=1, type=text, field=body, case=insensitive, pattern="spam\0"
+  prv_set_rules(&filtering_rules, (const char[]){0x01, 0x00, 0x02, 0x00, 's', 'p', 'a', 'm', '\0'},
+                9);
 
   iOSNotifPrefs prefs = {
     .attr_list = {
@@ -437,18 +434,11 @@ void test_ancs_filtering__matches_text_rule_body_case_insensitive(void) {
 }
 
 void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
-  struct {
-    struct pbl_string_list list;
-    char data[9];
-  } filtering_rules = {
-    .list =
-        {
-          .serialized_byte_length = 9,
-        },
-    // count=1, type=text, field=title, case=sensitive, pattern="Apple\0"
-    .data = {0x01, 0x00, 0x01, 0x01, 'A', 'p', 'p', 'l', 'e'},
-  };
-  filtering_rules.data[8] = '\0';
+  FilteringRules filtering_rules;
+  // count=1, type=text, field=title, case=sensitive, pattern="Apple\0"
+  prv_set_rules(&filtering_rules, (const char[]){0x01, 0x00, 0x01, 0x01, 'A', 'p', 'p', 'l', 'e'},
+                9);
+  filtering_rules.list.data[8] = '\0';
 
   iOSNotifPrefs prefs = {
     .attr_list = {
@@ -463,17 +453,10 @@ void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
 }
 
 void test_ancs_filtering__does_not_match_regex_rule(void) {
-  struct {
-    struct pbl_string_list list;
-    char data[9];
-  } filtering_rules = {
-    .list =
-        {
-          .serialized_byte_length = 9,
-        },
-    // count=1, type=regex, field=any, case=insensitive, pattern=".*\0"
-    .data = {0x01, 0x01, 0x00, 0x00, '.', '*', '\0', 0x00, 0x00},
-  };
+  FilteringRules filtering_rules;
+  // count=1, type=regex, field=any, case=insensitive, pattern=".*\0"
+  prv_set_rules(&filtering_rules,
+                (const char[]){0x01, 0x01, 0x00, 0x00, '.', '*', '\0', 0x00, 0x00}, 9);
   filtering_rules.list.serialized_byte_length = 7;
 
   iOSNotifPrefs prefs = {
@@ -496,17 +479,10 @@ void test_ancs_filtering__matches_text_rule_title_via_subtitle(void) {
   };
   ANCSAttribute *subtitle_attr = (ANCSAttribute *)&subtitle_data;
 
-  struct {
-    struct pbl_string_list list;
-    char data[11];
-  } filtering_rules = {
-    .list =
-        {
-          .serialized_byte_length = 11,
-        },
-    // count=1, type=text, field=title, case=insensitive, pattern="server\0"
-    .data = {0x01, 0x00, 0x01, 0x00, 's', 'e', 'r', 'v', 'e', 'r', '\0'},
-  };
+  FilteringRules filtering_rules;
+  // count=1, type=text, field=title, case=insensitive, pattern="server\0"
+  prv_set_rules(&filtering_rules,
+                (const char[]){0x01, 0x00, 0x01, 0x00, 's', 'e', 'r', 'v', 'e', 'r', '\0'}, 11);
 
   iOSNotifPrefs prefs = {
     .attr_list = {
@@ -520,6 +496,6 @@ void test_ancs_filtering__matches_text_rule_title_via_subtitle(void) {
   // "server" is in the subtitle, not the title: a title rule must match it.
   cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, NULL));
   // A body rule must not consider the subtitle.
-  filtering_rules.data[2] = 0x02;
+  filtering_rules.list.data[2] = 0x02;
   cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, NULL));
 }
