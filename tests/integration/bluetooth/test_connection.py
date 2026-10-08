@@ -120,10 +120,10 @@ def test_connectivity_status(watch, phones):
     assert not pairing.result()
 
 
-@BOTH
+@pytest.mark.variants("prf")
 def test_declined_second_phone_leaves_bond(dut, watch, phones):
-    """Another phone does not get in without the user: declining it keeps
-    the bonded phone."""
+    """The recovery firmware asks the user before another phone gets in:
+    declining it keeps the bonded phone."""
     phone = _bonded(watch, phones)
     phone.disconnect()
 

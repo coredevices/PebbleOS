@@ -15,7 +15,8 @@
 /**
  * @brief Allow or refuse new LE pairings.
  *
- * Does nothing in the NimBLE backend.
+ * When disabled, pairing requests from peers that are not bonded are
+ * rejected. Bonded peers can still re-encrypt and re-pair.
  *
  * @param enabled true to accept pairing requests.
  */

@@ -3,6 +3,7 @@
 
 #include "nimble_gattc_op_queue.h"
 #include "nimble_type_conversions.h"
+#include "pairability_priv.h"
 
 #include <stdio.h>
 
@@ -325,6 +326,30 @@ static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
               event->notify_tx.status, event->notify_tx.attr_handle, event->notify_tx.indication);
 }
 
+static int prv_handle_pairing_request_event(struct ble_gap_event *event) {
+  struct ble_gap_conn_desc desc;
+  struct ble_store_value_sec value_sec;
+  int rc;
+
+  if (pairability_is_enabled()) {
+    return 0;
+  }
+
+  rc = ble_gap_conn_find(event->pairing_request.conn_handle, &desc);
+  if (rc != 0) {
+    return BLE_SM_ERR_UNSPECIFIED;
+  }
+
+  // Bonded peers are handled by the repeat pairing policy
+  struct ble_store_key_sec key_sec = {.peer_addr = desc.peer_id_addr};
+  if (ble_store_read_peer_sec(&key_sec, &value_sec) == 0) {
+    return 0;
+  }
+
+  PBL_LOG_INFO("Pairing request rejected: not pairable");
+  return BLE_SM_ERR_PAIR_NOT_SUPP;
+}
+
 static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
   // In recovery mode there is no UI that allows to manually delete a pairing,
   // so we unconditionally enable repeat pairing. In main firmware, only allow
@@ -409,6 +434,9 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
       PBL_LOG_DBG("BLE_GAP_EVENT_NOTIFY_TX");
       prv_handle_notification_tx_event(event);
       break;
+    case BLE_GAP_EVENT_PAIRING_REQUEST:
+      PBL_LOG_DBG("BLE_GAP_EVENT_PAIRING_REQUEST");
+      return prv_handle_pairing_request_event(event);
     case BLE_GAP_EVENT_REPEAT_PAIRING:
       PBL_LOG_DBG("BLE_GAP_EVENT_REPEAT_PAIRING");
       return prv_handle_repeat_pairing_event(event);
