@@ -51,7 +51,10 @@ class NativeAdapter(DeviceAdapter):
             stdout=self._log,
             stderr=subprocess.STDOUT,
         )
-        deadline = time.monotonic() + 10
+        self._wait_console(10)
+
+    def _wait_console(self, timeout):
+        deadline = time.monotonic() + timeout
         while True:
             if self._process.poll() is not None:
                 raise HarnessError(
@@ -67,6 +70,17 @@ class NativeAdapter(DeviceAdapter):
                         "the firmware did not open its console port"
                     ) from None
                 time.sleep(0.05)
+
+    def connect(self):
+        # A firmware restarting itself re-executes: its ports close a moment.
+        deadline = time.monotonic() + self.config.base_timeout
+        while True:
+            try:
+                return super().connect()
+            except OSError:
+                if self._process is None or time.monotonic() > deadline:
+                    raise
+                self._wait_console(max(deadline - time.monotonic(), 0))
 
     def _stop(self):
         if self._process is None:
