@@ -100,6 +100,10 @@ typedef struct MusicAppSizeConfig {
 #define ANIMATION_FRAME_MS (1000 / 28)
 
 #define CONTENT_VERTICAL_OFFSET PBL_IF_RECT_ELSE(0, 5)
+
+// Longest time formatted from a uint32_t millisecond count: UINT32_MAX ms is 1193:02:47
+#define MUSIC_TIME_STR_MAX "1193:02:47"
+
 static const MusicAppSizeConfig s_music_size_config_medium = {
   .music_time_font_key = FONT_KEY_GOTHIC_14,
   .no_music_font_key = FONT_KEY_GOTHIC_18_BOLD,
@@ -269,10 +273,10 @@ typedef struct {
   StatusBarLayer status_layer;
 
   TextLayer position_text_layer;
-  char position_buffer[9]; // 9 will fit "00:00:00"
+  char position_buffer[sizeof(MUSIC_TIME_STR_MAX)];
 
   TextLayer length_text_layer;
-  char length_buffer[9];
+  char length_buffer[sizeof(MUSIC_TIME_STR_MAX)];
 
   Animation *transition;
   AppTimer *volume_icon_timer;
@@ -964,11 +968,11 @@ static void prv_update_now_playing(MusicAppData *data) {
   prv_update_layout(data);
 }
 
-static void prv_copy_time_period(char *buffer, size_t n, uint32_t period_s) {
+static void prv_copy_time_period(char *buffer, size_t n, uint32_t period_ms) {
+  uint32_t period_s = period_ms / 1000;
   uint32_t hours = period_s / PBL_SEC_PER_HOUR;
   uint32_t minutes = (period_s % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
   uint32_t seconds = period_s % PBL_SEC_PER_MIN;
-#pragma GCC diagnostic ignored "-Wformat-truncation"
   if (hours > 0) {
     snprintf(buffer, n, "%" PRIu32 ":%02" PRIu32 ":%02" PRIu32, hours, minutes, seconds);
   } else {
@@ -993,10 +997,8 @@ static void prv_update_track_progress(MusicAppData *data) {
       percent = MIN((unsigned int)(((uint64_t)data->track_pos * 100) / data->track_length), 100);
     }
     progress_layer_set_progress(&data->track_pos_bar, percent);
-    prv_copy_time_period(data->position_buffer, sizeof(data->position_buffer),
-                         data->track_pos / 1000);
-    prv_copy_time_period(data->length_buffer, sizeof(data->length_buffer),
-                         data->track_length / 1000);
+    prv_copy_time_period(data->position_buffer, sizeof(data->position_buffer), data->track_pos);
+    prv_copy_time_period(data->length_buffer, sizeof(data->length_buffer), data->track_length);
   }
 #if MUSIC_ROUND_MEDIA_LAYOUT
   // The arc and times draw on the backdrop layer; refresh it with each progress update.
@@ -1229,7 +1231,7 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
     prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, end);
   }
   if (data->position_buffer[0] && data->length_buffer[0]) {
-    char times[24];
+    char times[2 * (sizeof(MUSIC_TIME_STR_MAX) - 1) + sizeof(" / ")];
     snprintf(times, sizeof(times), "%s / %s", data->position_buffer, data->length_buffer);
     const GRect box =
         GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 30);
