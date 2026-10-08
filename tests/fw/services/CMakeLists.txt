@@ -134,6 +134,11 @@ pbl_clar_test(test_phone_pp
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_ping
+  SOURCES
+    fw/services/ping/service.c
+)
+
 pbl_clar_test(test_phone_call
   SOURCES
     fw/services/phone_call/service.c

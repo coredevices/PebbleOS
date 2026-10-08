@@ -22,6 +22,7 @@ PBL_LOG_MODULE_DEFINE(service_ping, CONFIG_SERVICE_PING_LOG_LEVEL);
 
 static time_t s_last_send_time;
 static bool s_is_ping_kernel_bg_callback_scheduled;
+static bool s_is_ping_dialog_shown;
 
 // ---------------------------------------------------------------------------------------------------------
 // Ping Pong structures
@@ -81,9 +82,18 @@ void ping_send_if_due(void) {
   s_is_ping_kernel_bg_callback_scheduled = true;
 }
 
+static void prv_dialog_unload(void *context) {
+  s_is_ping_dialog_shown = false;
+}
+
 static void prv_push_window(void *data) {
+  if (s_is_ping_dialog_shown) {
+    return;
+  }
+
   SimpleDialog *s_dialog = simple_dialog_create("Ping");
   Dialog *dialog = simple_dialog_get_dialog(s_dialog);
+  dialog_set_callbacks(dialog, &(DialogCallbacks){.unload = prv_dialog_unload}, NULL);
 
   dialog_set_background_color(dialog, GColorCobaltBlue);
   dialog_set_text_color(dialog, GColorWhite);
@@ -91,6 +101,7 @@ static void prv_push_window(void *data) {
 
   WindowStack *stack = modal_manager_get_window_stack(ModalPriorityGeneric);
   simple_dialog_push(s_dialog, stack);
+  s_is_ping_dialog_shown = true;
 }
 
 void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
