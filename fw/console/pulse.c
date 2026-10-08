@@ -51,7 +51,7 @@ static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(PULSE_MAX_SEND_SIZE + PULSE
 typedef void (*ProtocolHandlerFunc)(void *packet, size_t length);
 typedef void (*LinkStateChangedHandlerFunc)(PulseLinkState link_state);
 
-typedef struct PBL_PACKED ProtocolHandler {
+typedef struct ProtocolHandler {
   uint8_t number;
   ProtocolHandlerFunc handler;
   LinkStateChangedHandlerFunc link_state_handler;
