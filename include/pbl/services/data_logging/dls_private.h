@@ -241,7 +241,7 @@ typedef struct PBL_PACKED {
 } DataLoggingSendDataMessage;
 
 /** @brief Largest item size, and largest dls_log() write, for buffered sessions. */
-static const uint32_t DLS_SESSION_MAX_BUFFERED_ITEM_SIZE = 300;
+#define DLS_SESSION_MAX_BUFFERED_ITEM_SIZE 300U
 
 /**
  * @brief Size of a buffered session's buffer.
