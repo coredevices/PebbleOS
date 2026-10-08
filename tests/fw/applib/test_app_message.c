@@ -167,7 +167,7 @@ static void prv_in_dropped_callback(AppMessageResult reason, void *context) {
 static void prv_send_ack_nack(uint16_t endpoint_id, const uint8_t *data, unsigned int length,
                               bool nack) {
   const int o = offsetof(AppMessage, payload[0].push.dictionary);
-  cl_assert_equal_i(length, o + dict_calc_buffer_size(1, MAX_DATA_SIZE));
+  cl_assert_equal_i(length, o + dict_calc_buffer_size(1, (size_t)MAX_DATA_SIZE));
   CommSession *session = s_fake_app_comm_session;
   AppMessage *message = (AppMessage *)data;
   AppMessage ack = {
@@ -193,7 +193,7 @@ static void prv_ack_sent_callback(uint16_t endpoint_id, const uint8_t *data, uns
 }
 
 static void prv_receive_test_data(uint8_t transaction_id, const bool oversized) {
-  const uint16_t dict_length = dict_calc_buffer_size(1, MAX_DATA_SIZE);
+  const uint16_t dict_length = dict_calc_buffer_size(1, (size_t)MAX_DATA_SIZE);
   const uint16_t message_length =
       offsetof(AppMessage, payload[0].push.dictionary) + +dict_length + (oversized ? 20 : 0);
   uint8_t buffer[message_length];

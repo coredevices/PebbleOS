@@ -207,7 +207,7 @@ typedef struct {
 //! The size of the header for each Tuple is 7 bytes.
 //! @param tuple_count The total number of key/value pairs in the dictionary.
 //! @param ... The sizes of each of the values that need to be
-//! stored in the dictionary.
+//! stored in the dictionary, as size_t (e.g. sizeof expressions).
 //! @return The total number of bytes of storage needed.
 uint32_t dict_calc_buffer_size(uint32_t tuple_count, ...);
 

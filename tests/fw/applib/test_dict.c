@@ -48,9 +48,9 @@ void test_dict__calc_size(void) {
   uint32_t size;
   size = dict_calc_buffer_size(0);
   cl_assert(size == sizeof(Dictionary));
-  size = dict_calc_buffer_size(1, 1);
+  size = dict_calc_buffer_size(1, (size_t)1);
   cl_assert(size == sizeof(Dictionary) + sizeof(Tuple) + 1);
-  size = dict_calc_buffer_size(3, 10, 100, 1000);
+  size = dict_calc_buffer_size(3, (size_t)10, (size_t)100, (size_t)1000);
   cl_assert(size == sizeof(Dictionary) + (3 * sizeof(Tuple)) + 10 + 100 + 1000);
 }
 
@@ -94,7 +94,7 @@ void test_dict__write_read(void) {
   const uint32_t size =
       dict_calc_buffer_size(key_count, sizeof(SOME_DATA), strlen(SOME_STRING) + 1, sizeof(uint8_t),
                             sizeof(uint16_t), sizeof(uint32_t), sizeof(int8_t), sizeof(int16_t),
-                            sizeof(int32_t), 0, strlen(SOME_EMPTY_STRING) + 1);
+                            sizeof(int32_t), (size_t)0, strlen(SOME_EMPTY_STRING) + 1);
   const uint32_t surplus = 16; // allocate more than needed, see comment with the `final_size` test
   uint8_t buffer[size + surplus];
 
