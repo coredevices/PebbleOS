@@ -153,7 +153,7 @@ void test_gatt_service_changed_client__handle_gatt_profile_service_missing_servi
 void test_gatt_service_changed_client__handle_indication_non_service_changed(void) {
   fake_gatt_put_discovery_indication_gatt_profile_service(
       TEST_GATT_CONNECTION_ID, true /* has_service_changed_characteristic */);
-  const uint8_t value;
+  const uint8_t value = 0;
   const bool handled =
       gatt_service_changed_client_handle_indication(&s_connection, 0xfffe, &value, sizeof(value));
   cl_assert_equal_b(handled, false);

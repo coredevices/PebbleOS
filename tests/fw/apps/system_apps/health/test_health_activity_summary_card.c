@@ -76,7 +76,7 @@ void test_health_activity_summary_card__render_no_data(void) {
 
 void test_health_activity_summary_card__no_current_steps(void) {
   HealthData health_data = {
-    .step_data = 0,
+    .step_data = {0},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -93,7 +93,7 @@ void test_health_activity_summary_card__no_current_steps(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical1(void) {
   HealthData health_data = {
-    .step_data = 170,
+    .step_data = {170},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -110,7 +110,7 @@ void test_health_activity_summary_card__render_current_behind_typical1(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical2(void) {
   HealthData health_data = {
-    .step_data = 320,
+    .step_data = {320},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -127,7 +127,7 @@ void test_health_activity_summary_card__render_current_behind_typical2(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical3(void) {
   HealthData health_data = {
-    .step_data = 460,
+    .step_data = {460},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -144,7 +144,7 @@ void test_health_activity_summary_card__render_current_behind_typical3(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical4(void) {
   HealthData health_data = {
-    .step_data = 699,
+    .step_data = {699},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -161,7 +161,7 @@ void test_health_activity_summary_card__render_current_behind_typical4(void) {
 
 void test_health_activity_summary_card__render_current_behind_typical5(void) {
   HealthData health_data = {
-    .step_data = 837,
+    .step_data = {837},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -178,7 +178,7 @@ void test_health_activity_summary_card__render_current_behind_typical5(void) {
 
 void test_health_activity_summary_card__render_current_equals_typical(void) {
   HealthData health_data = {
-    .step_data = 837,
+    .step_data = {837},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -195,7 +195,7 @@ void test_health_activity_summary_card__render_current_equals_typical(void) {
 
 void test_health_activity_summary_card__render_current_above_typical1(void) {
   HealthData health_data = {
-    .step_data = 340,
+    .step_data = {340},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -212,7 +212,7 @@ void test_health_activity_summary_card__render_current_above_typical1(void) {
 
 void test_health_activity_summary_card__render_current_above_typical2(void) {
   HealthData health_data = {
-    .step_data = 400,
+    .step_data = {400},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -229,7 +229,7 @@ void test_health_activity_summary_card__render_current_above_typical2(void) {
 
 void test_health_activity_summary_card__render_current_above_typical3(void) {
   HealthData health_data = {
-    .step_data = 780,
+    .step_data = {780},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -246,7 +246,7 @@ void test_health_activity_summary_card__render_current_above_typical3(void) {
 
 void test_health_activity_summary_card__render_current_above_typical4(void) {
   HealthData health_data = {
-    .step_data = 866,
+    .step_data = {866},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -263,7 +263,7 @@ void test_health_activity_summary_card__render_current_above_typical4(void) {
 
 void test_health_activity_summary_card__render_current_above_typical5(void) {
   HealthData health_data = {
-    .step_data = 970,
+    .step_data = {970},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,

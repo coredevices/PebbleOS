@@ -571,7 +571,7 @@ static bool prv_list_iterator(Recognizer *recognizer, void *context) {
   const char *names[] = {"R1", "R2", "R3"};
   cl_assert(s_list_idx < ARRAY_LENGTH(names));
   char s[20];
-  snprintf(s, sizeof(s), "%s != %s", recognizer->subscriber.data, names[s_list_idx]);
+  snprintf(s, sizeof(s), "%s != %s", (const char *)recognizer->subscriber.data, names[s_list_idx]);
   cl_assert_(strcmp(recognizer->subscriber.data, names[s_list_idx++]) == 0, s);
 
   return (s_list_idx < *((int *)context));

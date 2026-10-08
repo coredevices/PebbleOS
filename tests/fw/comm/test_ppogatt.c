@@ -369,7 +369,7 @@ void test_ppogatt__find_pebble_app_and_3rd_party_app(void) {
 }
 
 void test_ppogatt__handles_unknown_read_response(void) {
-  uint8_t data;
+  uint8_t data = 0;
   ppogatt_handle_read_or_notification(s_unknown_characteristics, &data, sizeof(data),
                                       PBL_BT_GATT_ERROR_SUCCESS);
   // No crashes / asserts etc.

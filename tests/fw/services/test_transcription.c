@@ -21,7 +21,7 @@ static bool prv_cb_return_true(void *w, void *data) {
 }
 
 static bool prv_cb_return_false(void *w, void *data) {
-  return (s_count++ != (int)data);
+  return (s_count++ != (int)(intptr_t)data);
 }
 
 void test_transcription__validate(void) {

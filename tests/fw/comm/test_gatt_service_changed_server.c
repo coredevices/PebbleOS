@@ -205,7 +205,8 @@ void test_gatt_service_changed_server__indication_carries_connection_and_full_ra
   // The service layer must hand the driver the connection currently subscribed,
   // and a "rediscover everything" range (0x0001 - 0xFFFF) so the remote cache is
   // fully invalidated after the firmware update.
-  cl_assert(bt_device_equal(fake_gatt_get_service_changed_last_device(), &s_connection->device));
+  cl_assert(
+      bt_device_internal_equal(fake_gatt_get_service_changed_last_device(), &s_connection->device));
   const struct pbl_bt_att_handle_range range = fake_gatt_get_service_changed_last_range();
   cl_assert_equal_i(range.start, 0x0001);
   cl_assert_equal_i(range.end, 0xFFFF);
