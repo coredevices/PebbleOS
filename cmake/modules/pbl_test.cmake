@@ -86,12 +86,14 @@ function(_pbl_test_platform_defines platform out_defines out_bitdepth)
     set(defines CONFIG_FLASH_GD25LQ255E=1 CONFIG_PLATFORM_FLINT=1 CONFIG_BOARD_ASTERIX=1)
   elseif(platform STREQUAL "obelix")
     set(bitdepth 8)
-    set(defines CONFIG_FLASH_GD25Q256E=1 CONFIG_PLATFORM_EMERY=1 CONFIG_BOARD_OBELIX=1)
+    set(defines CONFIG_FLASH_GD25Q256E=1 CONFIG_PBLBOOT=1 CONFIG_FIRMWARE_SLOT=0
+                CONFIG_PLATFORM_EMERY=1 CONFIG_BOARD_OBELIX=1)
   elseif(platform STREQUAL "gabbro")
     # The round-display getafix board is the gabbro platform's closest
     # real-board analog.
     set(bitdepth 8)
-    set(defines CONFIG_FLASH_GD25Q256E=1 CONFIG_PLATFORM_GABBRO=1 CONFIG_BOARD_GETAFIX=1)
+    set(defines CONFIG_FLASH_GD25Q256E=1 CONFIG_PBLBOOT=1 CONFIG_FIRMWARE_SLOT=0
+                CONFIG_PLATFORM_GABBRO=1 CONFIG_BOARD_GETAFIX=1)
   else()
     message(FATAL_ERROR "Unknown test platform '${platform}'")
   endif()
