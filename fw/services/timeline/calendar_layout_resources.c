@@ -5,6 +5,14 @@
 
 #include "pbl/util/size.h"
 
+#include <stddef.h>
+
+_Static_assert(offsetof(CalendarIconImage, size) == offsetof(GDrawCommandImage, size), "");
+_Static_assert(sizeof(CalendarIconImage) == offsetof(GDrawCommandImage, command_list.commands), "");
+_Static_assert(offsetof(CalendarIconPath, fill_color) == offsetof(GDrawCommand, fill_color), "");
+_Static_assert(offsetof(CalendarIconPath, radius) == offsetof(GDrawCommand, radius), "");
+_Static_assert(sizeof(CalendarIconPath) == offsetof(GDrawCommand, points), "");
+
 // FIXME: PBL-28898 GPath algorithm requires strange coordinates for pixel perfection
 // The paths here result in pixel perfect icons with the current gpath filled algorithm,
 // but when gpath filled is fixed to correctly match its coordinates, these MUST be updated.
@@ -14,10 +22,7 @@ CalendarStartIcon g_calendar_start_icon = {
       {
         .version = 1,
         .size = {9, 9},
-        .command_list =
-            {
-              .num_commands = 1,
-            },
+        .num_commands = 1,
       },
   .command =
       {
@@ -33,10 +38,7 @@ CalendarEndIcon g_calendar_end_icon = {
       {
         .version = 1,
         .size = {9, 9},
-        .command_list =
-            {
-              .num_commands = 1,
-            },
+        .num_commands = 1,
       },
   .command =
       {

@@ -351,7 +351,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .constructor = prv_icon_node_constructor,
   };
   static const IconLabelContext s_glance_start_icon_label_context = {
-    .image = &g_calendar_start_icon.image,
+    .image = (GDrawCommandImage *)&g_calendar_start_icon,
     .callback = PBL_IF_RECT_ELSE(prv_format_glance_start_time, prv_set_glance_time_line_round),
     .buffer_size = PBL_IF_RECT_ELSE(TIME_STRING_TIME_LENGTH, CALENDAR_TIME_LINE_LENGTH),
     .one_line = true,
@@ -368,7 +368,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .extent.margin.h = PBL_IF_ROUND_ELSE(-2, 0), // glance start time margin height
   };
   static const IconLabelContext s_glance_end_icon_label_context = {
-    .image = &g_calendar_end_icon.image,
+    .image = (GDrawCommandImage *)&g_calendar_end_icon,
     .callback = prv_format_glance_end_time,
     .buffer_size = MAX(TIME_STRING_TIME_LENGTH, TIME_STRING_DATE_LENGTH),
     .one_line = true,
@@ -442,7 +442,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.margin.h = 15, // location margin height
   };
   static const IconLabelContext s_start_icon_label_context = {
-    .image = &g_calendar_start_icon.image,
+    .image = (GDrawCommandImage *)&g_calendar_start_icon,
     .callback = prv_format_start_time,
     .buffer_size = CALENDAR_TIME_LINE_LENGTH,
   };
@@ -452,7 +452,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .context = (void *)&s_start_icon_label_context,
   };
   static const IconLabelContext s_end_icon_label_context = {
-    .image = &g_calendar_end_icon.image,
+    .image = (GDrawCommandImage *)&g_calendar_end_icon,
     .callback = prv_format_end_time,
     .buffer_size = CALENDAR_TIME_LINE_LENGTH,
   };
