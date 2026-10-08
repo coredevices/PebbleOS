@@ -187,7 +187,7 @@ jobs:
           path: build-main
 
       - name: Integration tests
-        run: pbl itest --no-build ${{ matrix.options }}
+        run: pbl itest --no-build -n 4 ${{ matrix.options }}
 
       - name: Publish integration test report
         uses: mikepenz/action-junit-report@v6
