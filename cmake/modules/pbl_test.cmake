@@ -28,7 +28,7 @@ set(PBL_TEST_C_FLAGS
   -Wno-error=unused-variable
   -Wno-error=unused-function
   -Wno-error=missing-braces
-  -Wno-error=unused-const-variable
+  -Werror=unused-const-variable
   -Wno-enum-conversion
   -g3
   -gdwarf-4
@@ -37,6 +37,7 @@ set(PBL_TEST_C_FLAGS
   -ffunction-sections
   -fno-common
   -ffp-contract=off
+  -Werror=unused-but-set-variable
   -fexcess-precision=standard
   # clang errors on the true == true assertions some tests compile.
   -Wno-tautological-compare
