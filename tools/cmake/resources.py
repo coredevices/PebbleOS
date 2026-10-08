@@ -399,6 +399,7 @@ def cmd_tzdata_header(args):
     import generate_c_byte_array
 
     with open(args.output, "w") as f:
+        f.write("#include <stdint.h>\n\n")
         generate_c_byte_array.write(f, _tzdata(args.input), "s_timezone_database")
 
 
