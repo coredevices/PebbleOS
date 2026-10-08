@@ -286,9 +286,13 @@ static GlyphData *prv_decompress_glyph_data(GlyphData *g, uint8_t *src) {
   return g;
 }
 
+static GlyphData *prv_line_cache_glyph(LineCacheData *data) {
+  return (GlyphData *)&data->header;
+}
+
 static bool prv_load_glyph_bitmap(Codepoint codepoint, const FontResource *font_res,
                                   LineCacheData *data) {
-  GlyphData *g = &data->glyph_data;
+  GlyphData *g = prv_line_cache_glyph(data);
 
   const size_t bitmap_offset = (FONT_VERSION(font_res->md.version) == FONT_VERSION_1)
                                    ? sizeof(GlyphHeaderDataV1)
@@ -388,14 +392,14 @@ static PBL_ALWAYS_INLINE const GlyphData *prv_get_glyph_metadata_from_spi(
         !prv_load_glyph_bitmap(codepoint, font_res, cached)) {
       return NULL;
     }
-    return &cached->glyph_data;
+    return prv_line_cache_glyph(cached);
   }
 
   // We missed the cache, so we need to build a new cache entry.
   LineCacheData *data = &font_cache->cache_data_scratch;
   data->is_bitmap_loaded = false;
   data->resource_offset = prv_get_glyph_data_offset(codepoint, font_cache, font_res);
-  GlyphData *g = &data->glyph_data;
+  GlyphData *g = prv_line_cache_glyph(data);
 
   if (data->resource_offset == 0) {
     PBL_LOG_DBG("offset for cp: %" PRIx32 " is NULL", codepoint);
@@ -456,7 +460,7 @@ static PBL_ALWAYS_INLINE const GlyphData *prv_get_glyph_metadata_from_spi(
 
   // We return `final_data` though, because that has the actual metadata info that needs to be
   // used.
-  return &final_data->glyph_data;
+  return prv_line_cache_glyph(final_data);
 }
 
 static void prv_check_font_cache(FontCache *font_cache, const FontResource *font_res) {

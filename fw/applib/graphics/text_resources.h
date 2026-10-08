@@ -87,11 +87,8 @@ typedef struct {
   //! Whether the bitmap data in this structure is valid.
   bool is_bitmap_loaded;
 
-  union {
-    //! Glyph data without a bitmap
-    GlyphHeaderData header_data;
-    GlyphData glyph_data;
-  };
+  //! GlyphData header; its bitmap follows it only in FontCache.glyph_buffer
+  GlyphHeaderData header;
 } LineCacheData;
 
 #define LINE_CACHE_SIZE 30
