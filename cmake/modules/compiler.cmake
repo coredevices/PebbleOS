@@ -13,9 +13,10 @@ add_compile_options(
   -Wno-missing-field-initializers
 )
 
+add_compile_options(-Werror)
+
 if(CONFIG_ARCH_POSIX)
-  # Firmware code was never written for a host compiler; keep its
-  # diagnostics visible but do not fail on them.
+  # Host clang does not know some of the GCC-only flags shared with ARM.
   add_compile_options(-Wno-unknown-warning-option)
   # Enums as small as the ARM EABI makes them, for the same struct layouts.
   set(pbl_arch_flags
@@ -46,7 +47,6 @@ if(CONFIG_ARCH_POSIX)
     pbl_host_compile_options(${pbl_sanitize_flags})
   endif()
 else()
-  add_compile_options(-Werror)
   set(pbl_arch_flags
     -fvar-tracking-assignments
     -mthumb
