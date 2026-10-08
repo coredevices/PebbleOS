@@ -29,6 +29,7 @@ class FullExport(Export):
         super().__init__(v, app_only, worker_only, deprecated)
 
         self.full_definition = None
+        self.impl_name = v.get("implName", self.name)
 
     def complete(self):
         return self.full_definition is not None
