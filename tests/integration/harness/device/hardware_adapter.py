@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 import os
 import shlex
 import subprocess
@@ -9,10 +10,14 @@ import time
 from harness.device import DeviceAdapter
 from harness.errors import HarnessError
 
+logger = logging.getLogger(__name__)
+
 # How long the firmware takes to come back after power is applied.
 POWER_ON_SETTLE_S = 1.0
 # How long the watch is left unpowered when repowering it.
 POWER_OFF_S = 1.0
+# How often a command run on a repowered watch is tried.
+REPOWERED_ATTEMPTS = 3
 # The smallest erasable unit, all a slot header needs.
 FLASH_SUBSECTOR_SIZE = 0x1000
 
@@ -45,25 +50,32 @@ class HardwareAdapter(DeviceAdapter):
     def _run_repowered(self, command, what):
         """Run ``command`` against the watch. With a power supply the watch
         is repowered and ``command`` started right away, before the firmware
-        can deep sleep, which leaves its debug UART reachable only at random."""
+        can deep sleep, which leaves its debug UART reachable only at random;
+        missing the boot ROM's window that way is retried."""
         supply = self.config.power_supply
+        attempts = REPOWERED_ATTEMPTS if supply is not None else 1
         log = os.path.join(self.config.results_dir, f"{what}.log")
         with open(log, "w") as f:
-            f.write(shlex.join(command) + "\n")
-            f.flush()
-            if supply is not None:
-                supply.power_off()
-                time.sleep(POWER_OFF_S)
-                supply.power_on()
-            result = subprocess.run(
-                command,
-                cwd=self.build.topdir,
-                stdout=f,
-                stderr=subprocess.STDOUT,
-                check=False,
-            )
-        if result.returncode != 0:
-            raise HarnessError(f"{what} failed ({result.returncode}); see {log}")
+            for attempt in range(attempts):
+                f.write(shlex.join(command) + "\n")
+                f.flush()
+                if supply is not None:
+                    supply.power_off()
+                    time.sleep(POWER_OFF_S)
+                    supply.power_on()
+                result = subprocess.run(
+                    command,
+                    cwd=self.build.topdir,
+                    stdout=f,
+                    stderr=subprocess.STDOUT,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    return
+                logger.warning(
+                    "%s failed (%d), attempt %d", what, result.returncode, attempt + 1
+                )
+        raise HarnessError(f"{what} failed ({result.returncode}); see {log}")
 
     def flash(self):
         if self.build.variant == "prf":
