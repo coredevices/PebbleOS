@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 /**
  * @defgroup services_bluetooth_pairability Pairability
  * @ingroup services_bluetooth
