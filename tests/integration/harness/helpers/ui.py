@@ -304,10 +304,24 @@ class Ui:
             time.sleep(STACK_POLL_S)
         return stack
 
+    def _close_modals(self, deadline):
+        """Press Back until no modal covers the app; discreet ones stay."""
+        closed = False
+        while modals := self.modal_stack():
+            if time.monotonic() > deadline:
+                raise WatchTimeout(f"modals still up: {modals}")
+            self.press(Button.BACK)
+            closed = True
+            time.sleep(TRANSITION_S)
+        if closed:
+            # The last one leaves the stack before its transition ends.
+            time.sleep(TRANSITION_S)
+
     def go_home(self, timeout=15.0):
         """Bring up the TicToc watchface: launched over the Pebble protocol
         when a connection carries it, else by pressing Back until the window
-        stack stops changing (which leaves the default watchface up)."""
+        stack stops changing (which leaves the default watchface up). Modals
+        left over, such as a dialog, are closed."""
         if self.dut.has(Capability.PROTOCOL):
             self.launch_app(TICTOC_UUID)
             if not self.dut.has(Capability.PROMPT):
@@ -319,6 +333,7 @@ class Ui:
                     raise WatchTimeout(f"TicToc did not come up: {self.window_stack()}")
                 time.sleep(STACK_POLL_S)
             time.sleep(TRANSITION_S)
+            self._close_modals(deadline)
             return
 
         deadline = time.monotonic() + timeout
@@ -329,6 +344,7 @@ class Ui:
             self.press(Button.BACK)
             after = self._stack_after(stack, BACK_SETTLE_S)
             if after == stack:
+                self._close_modals(deadline)
                 return
             if time.monotonic() > deadline:
                 raise WatchTimeout(f"still not home after {timeout}s: {after}")
