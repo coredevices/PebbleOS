@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <pbl/logging/logging.h>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
