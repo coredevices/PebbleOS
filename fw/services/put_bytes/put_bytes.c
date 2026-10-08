@@ -60,9 +60,8 @@ typedef struct PBL_PACKED {
     };
     uint32_t cookie;
   };
-  //! Note: 'filename' can be variable length so this field can't be safely accessed directly
-  //! but rather should be recovered by the size of the blob this request is packed in
-  InitRequestExtraInfo extra_info;
+  //! Optionally followed by InitRequestExtraInfo, at the end of the message since 'filename' is
+  //! variable length
 } InitRequest;
 
 typedef struct PBL_PACKED {
@@ -694,7 +693,7 @@ static void prv_do_init(void) {
   }
 
   uint32_t append_offset = 0;
-  if (s_pb_state.receiver.length > offsetof(InitRequest, extra_info)) {
+  if (s_pb_state.receiver.length > sizeof(InitRequest)) {
     // We compute the offset this way because filename installs can be variable length. In the
     // future, if we used this feature for files, this would allow for the same struct construction
     // on the mobile side
