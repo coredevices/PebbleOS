@@ -3,6 +3,7 @@
 
 #pragma once
 
+// clang-format off
 #include "display.h"
 
 #include <stdbool.h>
@@ -16,6 +17,7 @@
 #include <nrfx_pwm.h>
 #include <nrfx_spim.h>
 #include <nrfx_timer.h>
+// clang-format on
 
 #define GPIO_Port_NULL (NULL)
 #define GPIO_Pin_NULL  ((uint16_t)-1)
@@ -173,6 +175,7 @@ typedef const struct AudioDevice AudioDevice;
 void board_early_init(void);
 void board_init(void);
 
-#include "board_definitions.h"
-
+// clang-format off
 #include <pbl/drivers/i2c/definitions.h>
+#include "board_definitions.h"
+// clang-format on

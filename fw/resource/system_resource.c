@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+// clang-format off
 #include "system_resource.h"
 
 #include <pbl/logging/logging.h>
@@ -8,7 +9,6 @@
 
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text_resources.h>
-#include <font_resource_table.auto.h>
 #include <kernel/event_loop.h>
 #include <kernel/memory_layout.h>
 #include <kernel/panic.h>
@@ -17,8 +17,10 @@
 #include <resource/resource_ids.auto.h>
 #include <resource/resource_storage.h>
 #include <resource/resource_version.auto.h>
+#include <font_resource_table.auto.h>
 #include <syscall/syscall_internal.h>
 #include <system/passert.h>
+// clang-format on
 
 void system_resource_init(void) {
   if (!resource_init_app(SYSTEM_APP, &SYSTEM_RESOURCE_VERSION)) {

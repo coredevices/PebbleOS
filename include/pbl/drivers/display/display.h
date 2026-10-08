@@ -3,11 +3,13 @@
 
 #pragma once
 
+// clang-format off
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <applib/graphics/gtypes.h>
 #include <board/display.h>
+#include <applib/graphics/gtypes.h>
+// clang-format on
 
 /**
  * @defgroup drivers_display Display

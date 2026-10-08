@@ -1,15 +1,17 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/i2c/definitions.h>
+// clang-format off
 #include <pbl/drivers/i2c/hal.h>
 #include <pbl/drivers/i2c/sf32lb.h>
+#include <pbl/drivers/i2c/definitions.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
 
 #include <system/passert.h>
+// clang-format on
 
 // Block deep sleep while a transfer is in flight. The flag keeps the release
 // exactly-once across the IRQ, kickoff-failure and abort paths.

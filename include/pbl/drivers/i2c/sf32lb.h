@@ -3,12 +3,13 @@
 
 #pragma once
 
-#include "definitions.h"
-
+// clang-format off
 #include <stdbool.h>
 #include <stdint.h>
 
 #include <board/board.h>
+#include "definitions.h"
+// clang-format on
 
 /**
  * @defgroup drivers_i2c_sf32lb SF32LB I2C

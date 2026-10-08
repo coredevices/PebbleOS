@@ -1,15 +1,17 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+// clang-format off
 #include <string.h>
 
-#include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/hal.h>
+#include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/kernel/sem.h>
 
 #include <nrfx.h>
 #include <system/passert.h>
+// clang-format on
 
 #define I2C_IRQ_PRIORITY                (0xc)
 #define I2C_NORMAL_MODE_CLOCK_SPEED_MAX (100000)

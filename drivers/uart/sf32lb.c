@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/uart.h>
+// clang-format off
 #include <pbl/drivers/uart/sf32lb.h>
+#include <pbl/drivers/uart.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
@@ -11,6 +12,7 @@
 #include <bf0_hal_dma.h>
 #include <bf0_hal_uart.h>
 #include <system/passert.h>
+// clang-format on
 
 static void prv_init(UARTDevice *dev, uint32_t mode) {
   HAL_StatusTypeDef ret;

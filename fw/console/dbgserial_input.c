@@ -1,12 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+// clang-format off
 #include "dbgserial_input.h"
 
-#include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
 
 #include <board/board.h>
+#include <pbl/drivers/uart.h>
+// clang-format on
 
 #if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
 
