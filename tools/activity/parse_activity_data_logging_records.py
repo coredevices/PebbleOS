@@ -250,7 +250,7 @@ class ParseAccelSamplesFile:
             print("\n\n")
             print("// ----------------------------------------------------------------")
             print(
-                f"// Sample captured: {datetime.datetime.fromtimestamp(self.session_start_time_local, tz=datetime.timezone.utc)} local"
+                f"// Sample captured: {datetime.datetime.fromtimestamp(self.session_start_time_local, tz=datetime.UTC)} local"
             )
             print(
                 f"AccelRawData *activity_sample_{self.sample_prefix}_{self.session_id:d}(int *len) {{"
@@ -307,7 +307,7 @@ class ParseAccelSamplesFile:
         self.offset += pack_size
 
         logger.debug(
-            f"Got timestamp: {datetime.datetime.fromtimestamp(session_start_time_local, tz=datetime.timezone.utc)}, session {session_id:d}, flags: 0x{flags:x}, num_entries: {num_entries:d}, "
+            f"Got timestamp: {datetime.datetime.fromtimestamp(session_start_time_local, tz=datetime.UTC)}, session {session_id:d}, flags: 0x{flags:x}, num_entries: {num_entries:d}, "
             f"num_samples: {num_samples:d}"
         )
 
@@ -493,7 +493,7 @@ class ParseMinuteStatsFile:
         self.offset += hdr_pack_size
 
         logger.debug(
-            f"Got blob: local time: {datetime.datetime.fromtimestamp(time_local, tz=datetime.timezone.utc)}, utc time: {datetime.datetime.fromtimestamp(time_utc, tz=datetime.timezone.utc)}, num_samples: {num_samples:d}"
+            f"Got blob: local time: {datetime.datetime.fromtimestamp(time_local, tz=datetime.UTC)}, utc time: {datetime.datetime.fromtimestamp(time_utc, tz=datetime.UTC)}, num_samples: {num_samples:d}"
         )
 
         # See if this is a continuation of a previous session, or a new one
@@ -509,7 +509,7 @@ class ParseMinuteStatsFile:
         else:
             printing_on = False
 
-        timestamp = datetime.datetime.fromtimestamp(time_local, tz=datetime.timezone.utc)
+        timestamp = datetime.datetime.fromtimestamp(time_local, tz=datetime.UTC)
         if self.session_start_time_utc is None:
             if self.format == "c":
                 self.session_minute_idx = 0
@@ -519,7 +519,7 @@ class ParseMinuteStatsFile:
                     "// ----------------------------------------------------------------"
                 )
                 print(
-                    f"// Sample captured at: {timestamp} local, {datetime.datetime.fromtimestamp(time_utc, tz=datetime.timezone.utc)} GMT"
+                    f"// Sample captured at: {timestamp} local, {datetime.datetime.fromtimestamp(time_utc, tz=datetime.UTC)} GMT"
                 )
                 print(
                     "AlgDlsMinuteData *activity_sample_{}(int *len) {{".format(timestamp.strftime("%Y_%m_%d_%H_%M_%S"))
@@ -621,7 +621,7 @@ class ParseMinuteStatsFile:
 
         # Print header info
         logger.debug(
-            f"Got blob: local time: {datetime.datetime.fromtimestamp(time_local, tz=datetime.timezone.utc)}, utc time: {datetime.datetime.fromtimestamp(time_utc, tz=datetime.timezone.utc)}, num_samples: {num_samples:d}"
+            f"Got blob: local time: {datetime.datetime.fromtimestamp(time_local, tz=datetime.UTC)}, utc time: {datetime.datetime.fromtimestamp(time_utc, tz=datetime.UTC)}, num_samples: {num_samples:d}"
         )
 
         # See if this is a continuation of a previous session, or a new one
@@ -637,7 +637,7 @@ class ParseMinuteStatsFile:
         else:
             printing_on = False
 
-        timestamp = datetime.datetime.fromtimestamp(time_local, tz=datetime.timezone.utc)
+        timestamp = datetime.datetime.fromtimestamp(time_local, tz=datetime.UTC)
         if self.session_start_time_utc is None:
             if self.format == "c":
                 self.session_minute_idx = 0
@@ -647,7 +647,7 @@ class ParseMinuteStatsFile:
                     "// ----------------------------------------------------------------"
                 )
                 print(
-                    f"// Sample captured at: {timestamp} local, {datetime.datetime.fromtimestamp(time_utc, tz=datetime.timezone.utc)} GMT"
+                    f"// Sample captured at: {timestamp} local, {datetime.datetime.fromtimestamp(time_utc, tz=datetime.UTC)} GMT"
                 )
                 print(
                     "AlgDlsMinuteData *activity_sample_{}(int *len) {{".format(timestamp.strftime("%Y_%m_%d_%H_%M_%S"))

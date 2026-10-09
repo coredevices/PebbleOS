@@ -46,7 +46,7 @@ def boot_priority(tag=None, commit_timestamp=None):
             | (commit_timestamp & 0xFFFFFFFF)
         )
 
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     return (PRIORITY_BAND_DEV << 56) | (int(now.timestamp()) & 0xFFFFFFFF)
 
 

@@ -279,7 +279,7 @@ def cmd_generate(args):
         "version": 1,
         "metadata": {
             "timestamp": datetime.datetime.fromtimestamp(
-                timestamp, datetime.timezone.utc
+                timestamp, datetime.UTC
             ).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "manufacturer": {"name": SUPPLIER},
             "component": product,

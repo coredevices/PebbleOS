@@ -1,3 +1,9 @@
+target-version = "py311"
+
+[per-file-target-version]
+# Loaded by the toolchain's gdb-py, which embeds Python 3.8.
+"tools/gdb_scripts/**" = "py38"
+
 [lint]
 exclude = [
     "sdk/waf/waflib/**/*.py"
