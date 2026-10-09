@@ -473,7 +473,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 // -----------------------------------------------------------------------------------------------------------
 // This is designed to be called from the task itself, in privilege mode, after it exits. It is
 // called from app_task_exit for app tasks and worker_task_exit from worker tasks
-PBL_NORETURN void process_manager_task_exit(void) {
+[[noreturn]] void process_manager_task_exit(void) {
   PebbleTask task = pebble_task_get_current();
   ProcessContext *context = prv_get_context_for_task(task);
 

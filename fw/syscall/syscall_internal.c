@@ -236,7 +236,7 @@ PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged_resume(void
         [regs_off] "i"(offsetof(McuUnprivilegedCallContext, saved_r4_r11)));
 }
 
-PBL_NORETURN void syscall_failed(void) {
+[[noreturn]] void syscall_failed(void) {
   register uint32_t lr __asm("lr");
   uint32_t saved_lr = lr;
 

@@ -26,7 +26,7 @@ ProcessContext *worker_manager_get_task_context(void);
 
 //! Exit the worker. Do some cleanup to make sure things close nicely.
 //! Called from the worker task
-PBL_NORETURN void worker_task_exit(void);
+[[noreturn]] void worker_task_exit(void);
 
 void worker_manager_put_launch_worker_event(AppInstallId id);
 

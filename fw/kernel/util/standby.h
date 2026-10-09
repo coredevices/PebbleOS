@@ -8,6 +8,6 @@
 #include <system/reboot_reason.h>
 
 #if !UNITTEST
-PBL_NORETURN
+[[noreturn]]
 #endif
 void enter_standby(RebootReasonCode reason);

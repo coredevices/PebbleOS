@@ -196,7 +196,7 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
 #endif
 }
 
-static PBL_NORETURN void prv_reset(void) {
+[[noreturn]] static void prv_reset(void) {
   dbgserial_flush();
   system_hard_reset();
 }
@@ -460,7 +460,7 @@ static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
 
 // -----------------------------------------------------------------------------------------------
 // Trigger a core dump
-PBL_NORETURN void core_dump_reset(bool is_forced) {
+[[noreturn]] void core_dump_reset(bool is_forced) {
   // Big problem if we re-enter here - it likely means we encountered an
   // exception during the core dump
   if (s_core_dump_initiated) {

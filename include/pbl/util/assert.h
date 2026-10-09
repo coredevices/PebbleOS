@@ -31,7 +31,7 @@
  * @param filename Source file name.
  * @param line Source line number.
  */
-PBL_NORETURN void util_assertion_failed(const char *filename, int line);
+[[noreturn]] void util_assertion_failed(const char *filename, int line);
 
 /**
  * @brief Assert that an expression is true.

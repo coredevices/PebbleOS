@@ -16,7 +16,7 @@
 // a time under the kernel's scheduling decisions, and time only moves when a
 // test delivers ticks or every thread is blocked.
 
-PBL_NORETURN void pbl_kernel_assert_failed(const char *filename, int line) {
+[[noreturn]] void pbl_kernel_assert_failed(const char *filename, int line) {
   fprintf(stderr, "kernel assert at %s:%d\n", filename, line);
   abort();
 }

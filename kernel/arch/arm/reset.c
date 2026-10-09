@@ -5,7 +5,7 @@
 
 #include <kernel.h>
 
-PBL_NAKED PBL_NORETURN void Reset_Handler(void) {
+[[noreturn]] PBL_NAKED void Reset_Handler(void) {
   __asm volatile(
 #ifdef CONFIG_CPU_CORTEX_M_HAS_SPLIM
       "  ldr r0, =__isr_stack_start__ \n"

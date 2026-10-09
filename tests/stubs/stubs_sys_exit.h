@@ -5,7 +5,7 @@
 
 #include <clar.h>
 
-PBL_NORETURN void sys_exit(void) {
+[[noreturn]] void sys_exit(void) {
   cl_assert(false);
   while (true) {
   }

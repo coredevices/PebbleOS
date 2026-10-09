@@ -18,7 +18,7 @@
 // The subsystem on the POSIX kernel: time only moves when every thread is
 // blocked, so the watchdog thread's periodic sleep drives the clock.
 
-PBL_NORETURN void pbl_kernel_assert_failed(const char *filename, int line) {
+[[noreturn]] void pbl_kernel_assert_failed(const char *filename, int line) {
   fprintf(stderr, "kernel assert at %s:%d\n", filename, line);
   abort();
 }
@@ -76,7 +76,7 @@ void reboot_reason_clear(void) {
   memset(&s_reason, 0, sizeof(s_reason));
 }
 
-PBL_NORETURN void reset_due_to_software_failure(void) {
+[[noreturn]] void reset_due_to_software_failure(void) {
   s_reset = true;
   s_reset_ms = prv_now_ms();
   pbl_test_kernel_stop();

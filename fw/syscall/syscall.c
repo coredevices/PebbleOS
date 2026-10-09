@@ -86,7 +86,7 @@ DEFINE_SYSCALL(struct tm *, sys_localtime_r, const time_t *timep, struct tm *res
 }
 
 //! System call to exit an application gracefully.
-DEFINE_SYSCALL(PBL_NORETURN void, sys_exit, void) {
+DEFINE_SYSCALL([[noreturn]] void, sys_exit, void) {
   process_manager_task_exit();
 }
 

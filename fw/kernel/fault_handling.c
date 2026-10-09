@@ -126,7 +126,7 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
   convert_to_process_offset(s_current_app_crash_info.lr_known, &s_current_app_crash_info.lr, task);
 }
 
-static PBL_NORETURN void kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
+[[noreturn]] static void kernel_fault(RebootReasonCode reason_code, uint32_t lr) {
   RebootReason reason = {.code = reason_code, .extra = {.value = lr}};
   reboot_reason_set(&reason);
   if (reason_code == RebootReasonCode_Assert) {
@@ -140,7 +140,7 @@ static PBL_NORETURN void kernel_fault(RebootReasonCode reason_code, uint32_t lr)
 // TODO: Can we tell if it was the worker and not the app?
 extern void sys_app_fault(uint32_t lr);
 
-PBL_NORETURN void trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
+[[noreturn]] void trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
   if (mcu_state_is_privileged()) {
     kernel_fault(reason_code, lr);
   } else {
@@ -148,7 +148,7 @@ PBL_NORETURN void trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
   }
 }
 
-PBL_NORETURN void trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
+[[noreturn]] void trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
   // OOM on a process's own heap is the app's fault, not the kernel's: kill just
   // that process even when privileged (Moddable apps run privileged inside the
   // moddable_createMachine syscall). Only kernel-heap OOM reboots.
@@ -206,7 +206,7 @@ static void prv_kill_user_process(uint32_t stashed_lr) {
   pbl_thread_suspend(NULL);
 }
 
-DEFINE_SYSCALL(PBL_NORETURN void, sys_app_fault, uint32_t stashed_lr) {
+DEFINE_SYSCALL([[noreturn]] void, sys_app_fault, uint32_t stashed_lr) {
   // This is the privileged side of handling a failed assert/croak from unprivileged code.
   // Always run on the current task.
 

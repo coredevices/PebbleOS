@@ -27,7 +27,7 @@
  *   uint32_t value;
  * } Record;
  *
- * PBL_NORETURN void fatal(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
+ * [[noreturn]] void fatal(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
  *
  * if (PBL_UNLIKELY(len > MAX_LEN)) {
  *   return -EINVAL;
@@ -41,9 +41,6 @@
 
 /** @brief Never inline the function. */
 #define PBL_NOINLINE PBL_NOINLINE_IMPL
-
-/** @brief The function does not return. Combine with the void return type. */
-#define PBL_NORETURN PBL_NORETURN_IMPL
 
 /** @brief The function has no prologue/epilogue; its body must be pure assembly. */
 #define PBL_NAKED PBL_NAKED_IMPL

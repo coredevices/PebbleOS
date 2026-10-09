@@ -10,7 +10,7 @@
 
 extern void sys_app_fault(uint32_t lr);
 
-PBL_NORETURN void syscall_failed(void) {
+[[noreturn]] void syscall_failed(void) {
   PBL_LOG_WRN("Bad syscall!");
   sys_app_fault((uint32_t)(uintptr_t)PBL_RETURN_ADDRESS(0));
   for (;;) {

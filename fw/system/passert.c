@@ -20,7 +20,7 @@
 
 #define CORE_NUMBER 0
 
-static PBL_NORETURN void handle_passert_failed_vargs(const char *filename, int line_number,
+[[noreturn]] static void handle_passert_failed_vargs(const char *filename, int line_number,
                                                      uintptr_t lr, const char *expr,
                                                      const char *fmt, va_list fmt_args) {
   char buffer[160];
@@ -35,7 +35,7 @@ static PBL_NORETURN void handle_passert_failed_vargs(const char *filename, int l
   trigger_fault(RebootReasonCode_Assert, lr);
 }
 
-static PBL_NORETURN void handle_passert_failed(const char *filename, int line_number, uintptr_t lr,
+[[noreturn]] static void handle_passert_failed(const char *filename, int line_number, uintptr_t lr,
                                                const char *expr, const char *fmt, ...) {
   va_list fmt_args;
   va_start(fmt_args, fmt);
@@ -45,7 +45,7 @@ static PBL_NORETURN void handle_passert_failed(const char *filename, int line_nu
   va_end(fmt_args);
 }
 
-PBL_NORETURN void passert_failed(const char *filename, int line_number, const char *message, ...) {
+[[noreturn]] void passert_failed(const char *filename, int line_number, const char *message, ...) {
   va_list fmt_args;
   va_start(fmt_args, message);
 
@@ -55,7 +55,7 @@ PBL_NORETURN void passert_failed(const char *filename, int line_number, const ch
   va_end(fmt_args);
 }
 
-PBL_NORETURN void passert_failed_hashed(uint32_t packed_loghash, ...) {
+[[noreturn]] void passert_failed_hashed(uint32_t packed_loghash, ...) {
   uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
   PBL_LOG_ALWAYS("ASSERTION at LR 0x%" PRIxPTR, saved_lr);
 
@@ -69,7 +69,7 @@ PBL_NORETURN void passert_failed_hashed(uint32_t packed_loghash, ...) {
   trigger_fault(RebootReasonCode_Assert, saved_lr);
 }
 
-PBL_NORETURN void passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...) {
+[[noreturn]] void passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...) {
   PBL_LOG_ALWAYS("ASSERTION at LR 0x%" PRIx32, lr);
 
   va_list fmt_args;
@@ -82,30 +82,30 @@ PBL_NORETURN void passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_log
   trigger_fault(RebootReasonCode_Assert, lr);
 }
 
-PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr) {
+[[noreturn]] void passert_failed_hashed_no_message_with_lr(uint32_t lr) {
   PBL_LOG_ALWAYS("ASSERTION at LR 0x%" PRIx32, lr);
 
   trigger_fault(RebootReasonCode_Assert, lr);
 }
 
-PBL_NORETURN void passert_failed_hashed_no_message(void) {
+[[noreturn]] void passert_failed_hashed_no_message(void) {
   passert_failed_hashed_no_message_with_lr((uint32_t)(uintptr_t)PBL_RETURN_ADDRESS(0));
 }
 
-PBL_NORETURN void passert_failed_no_message_with_lr(const char *filename, int line_number,
+[[noreturn]] void passert_failed_no_message_with_lr(const char *filename, int line_number,
                                                     uint32_t lr) {
   handle_passert_failed(filename, line_number, lr, "ASSERTN", NULL);
 }
 
-PBL_NORETURN void passert_failed_no_message(const char *filename, int line_number) {
+[[noreturn]] void passert_failed_no_message(const char *filename, int line_number) {
   handle_passert_failed(filename, line_number, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", NULL);
 }
 
-PBL_NORETURN void pbl_kernel_assert_failed(const char *filename, int line) {
+[[noreturn]] void pbl_kernel_assert_failed(const char *filename, int line) {
   handle_passert_failed(filename, line, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", NULL);
 }
 
-PBL_NORETURN void wtf(void) {
+[[noreturn]] void wtf(void) {
   uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
   PBL_LOG_ALWAYS("*** WTF %p", (void *)saved_lr);
   trigger_fault(RebootReasonCode_Assert, saved_lr);
@@ -141,7 +141,7 @@ void assert_failed(uint8_t *file, uint32_t line) {
                         "STM32 peripheral library tripped an assert");
 }
 
-PBL_NORETURN void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
+[[noreturn]] void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
   unsigned int used = 0, free_bytes = 0, max_free = 0;
   if (heap_ptr) {
     heap_calc_totals(heap_ptr, &used, &free_bytes, &max_free);
@@ -157,12 +157,12 @@ PBL_NORETURN void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
 }
 
 #ifdef CONFIG_SOC_NRF52
-PBL_NORETURN void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
+[[noreturn]] void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info) {
   PBL_LOG_ALWAYS("nRF error %ld (pc %ld, info %ld)", id, pc, info);
   trigger_fault(RebootReasonCode_Assert, pc);
 }
 
-PBL_NORETURN void app_error_handler_bare(uint32_t error_code) {
+[[noreturn]] void app_error_handler_bare(uint32_t error_code) {
   app_error_fault_handler(error_code, (uint32_t)PBL_RETURN_ADDRESS(0), 0);
 }
 #endif
