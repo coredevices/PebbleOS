@@ -13,3 +13,10 @@ pbl_clar_test(test_flash_erase
   PLATFORMS obelix
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_accel_qemu
+  SOURCES
+    drivers/imu/qemu.c
+    tests/fakes/fake_rtc.c
+  OVERRIDES dummy_board
+)
