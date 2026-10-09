@@ -146,8 +146,7 @@ static const char *s_syncable_notif_prefs[] = {
   "dndWeekdayScheduleEnabled",
   "dndWeekendSchedule",
   "dndWeekendScheduleEnabled",
-  QT_SCHEDULE_SLOT_X(QT_SYNC_KEY_ENTRY)
-  "notifWindowTimeout",
+  QT_SCHEDULE_SLOT_X(QT_SYNC_KEY_ENTRY) "notifWindowTimeout",
   "notifTextSize",
   "notifDesignStyle",
   "notifVibeDelay",
@@ -163,9 +162,7 @@ static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_p
 //! Expected QT schedule keys, from the same definition as both tables, for
 //! the sync-coverage check in settings_blob_db_init.
 #define QT_SYNC_CHECK_ENTRY(i) "qtSchedule" #i,
-static const char *const s_qt_schedule_sync_keys[] = {
-  QT_SCHEDULE_SLOT_X(QT_SYNC_CHECK_ENTRY)
-};
+static const char *const s_qt_schedule_sync_keys[] = {QT_SCHEDULE_SLOT_X(QT_SYNC_CHECK_ENTRY)};
 #undef QT_SYNC_CHECK_ENTRY
 
 static bool s_initialized = false;

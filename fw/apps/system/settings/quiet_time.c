@@ -15,8 +15,8 @@
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
-#include <applib/ui/action_menu_window_private.h>
 #include <applib/app_timer.h>
+#include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/day_picker.h>
 #include <applib/ui/menu_layer.h>
@@ -498,7 +498,7 @@ static void prv_schedule_appear_cb(SettingsCallbacks *context) {
 }
 
 static void prv_schedule_selection_changed_cb(SettingsCallbacks *context, uint16_t new_row,
-                                                uint16_t old_row) {
+                                              uint16_t old_row) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
   if (old_row == 0) {
     data->show_limit_reached_text = false;

@@ -82,9 +82,7 @@ static bool s_do_not_disturb_smart_dnd_enabled = false;
 // Storage keys, generated from QT_SCHEDULE_SLOT_X so they match the sync
 // allowlist in settings_blob_db.c by construction.
 #define QT_STORAGE_KEY_ENTRY(i) "qtSchedule" #i,
-static const char *const s_qt_schedule_keys[] = {
-  QT_SCHEDULE_SLOT_X(QT_STORAGE_KEY_ENTRY)
-};
+static const char *const s_qt_schedule_keys[] = {QT_SCHEDULE_SLOT_X(QT_STORAGE_KEY_ENTRY)};
 #undef QT_STORAGE_KEY_ENTRY
 _Static_assert(ARRAY_LENGTH(s_qt_schedule_keys) == MAX_QUIET_TIME_SCHEDULES,
                "QT_SCHEDULE_SLOT_X must cover every QT schedule slot");
@@ -833,9 +831,9 @@ static void prv_mirror_legacy_schedule_to_qt(SettingsFile *file, const char *mat
     }
     // Same existence rule as prv_migrate_qt_schedules: a defaulted, disabled
     // legacy schedule leaves the slot unused instead of materialising it.
-    const bool is_used = (s_dnd_schedule[type].schedule.from_hour != 0 ||
-                          s_dnd_schedule[type].schedule.to_hour != 0 ||
-                          s_dnd_schedule[type].enabled);
+    const bool is_used =
+        (s_dnd_schedule[type].schedule.from_hour != 0 ||
+         s_dnd_schedule[type].schedule.to_hour != 0 || s_dnd_schedule[type].enabled);
     if (!is_used && !s_qt_schedule[qt_index].is_used) {
       return;
     }
