@@ -183,15 +183,18 @@ typedef struct {
 // - Caller ID text area
 // - Status text area
 // Extra vertical space on larger displays is distributed to improve spacing
-#define PHONE_EXTRA_HEIGHT PBL_IF_RECT_ELSE((DISP_ROWS - 168), 0)
+#define PHONE_EXTRA_HEIGHT     PBL_IF_RECT_ELSE((DISP_ROWS - 168), 0)
+#define PHONE_ICON_POS_Y_ROUND (22 + ((DISP_ROWS > 180) ? 10 : 0))
 
 // Default style: icon near top, text below
-#define PHONE_ICON_POS_Y_DEFAULT      PBL_IF_RECT_ELSE((25 + PHONE_EXTRA_HEIGHT / 4), 22)
+#define PHONE_ICON_POS_Y_DEFAULT \
+  PBL_IF_RECT_ELSE((25 + PHONE_EXTRA_HEIGHT / 4), PHONE_ICON_POS_Y_ROUND)
 #define PHONE_CALLER_ID_POS_Y_DEFAULT PBL_IF_RECT_ELSE((102 + PHONE_EXTRA_HEIGHT / 2), 93)
 #define PHONE_STATUS_POS_Y_DEFAULT    PBL_IF_RECT_ELSE((142 + PHONE_EXTRA_HEIGHT * 3 / 4), 144)
 
 // Large style: more compact icon placement, larger text area
-#define PHONE_ICON_POS_Y_LARGE      PBL_IF_RECT_ELSE((11 + PHONE_EXTRA_HEIGHT / 4), 22)
+#define PHONE_ICON_POS_Y_LARGE \
+  PBL_IF_RECT_ELSE((11 + PHONE_EXTRA_HEIGHT / 4), PHONE_ICON_POS_Y_ROUND)
 #define PHONE_CALLER_ID_POS_Y_LARGE PBL_IF_RECT_ELSE((80 + PHONE_EXTRA_HEIGHT / 2), 88)
 #define PHONE_STATUS_POS_Y_LARGE    PBL_IF_RECT_ELSE((138 + PHONE_EXTRA_HEIGHT * 3 / 4), 144)
 
@@ -422,6 +425,17 @@ static void prv_set_caller_id_text(PebblePhoneCaller *caller) {
     s_phone_ui_data->caller_id_text_layer.layer.bounds.origin.y = DOUBLE_LINE_BOUND_OFFSET;
   }
   const int16_t content_height = lines * fonts_get_font_height(caller_id_font);
+#if PBL_ROUND
+  if (DISP_ROWS > 180) {
+    // Bounds origin shifts both the layer and its text box.
+    const int16_t text_offset = fonts_get_font_cap_offset(caller_id_font) +
+                                2 * s_phone_ui_data->caller_id_text_layer.layer.bounds.origin.y;
+    s_phone_ui_data->caller_id_text_layer.layer.frame.origin.y =
+        prv_has_long_name(caller_id_font)
+            ? s_phone_ui_data->style->caller_id_pos_y
+            : (DISP_ROWS - fonts_get_font_height(caller_id_font)) / 2 - text_offset;
+  }
+#endif
   s_phone_ui_data->caller_id_text_layer.layer.bounds.size.h = content_height;
   s_phone_ui_data->caller_id_text_layer.layer.frame.size.h =
       MAX(s_phone_ui_data->style->caller_id_height, content_height);
