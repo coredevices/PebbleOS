@@ -183,26 +183,6 @@
 #define PBL_NO_SANITIZE_ADDRESS PBL_NO_SANITIZE_ADDRESS_IMPL
 
 /**
- * @brief Add, detecting overflow. Prefer the typed helpers of pbl/util/math.h.
- *
- * @param a First operand.
- * @param b Second operand.
- * @param r Where the result goes, wrapped around on overflow.
- * @return true if the result overflowed the type of @p r.
- */
-#define PBL_ADD_OVERFLOW(a, b, r) PBL_ADD_OVERFLOW_IMPL(a, b, r)
-
-/**
- * @brief Multiply, detecting overflow. Prefer the typed helpers of pbl/util/math.h.
- *
- * @param a First operand.
- * @param b Second operand.
- * @param r Where the result goes, wrapped around on overflow.
- * @return true if the result overflowed the type of @p r.
- */
-#define PBL_MUL_OVERFLOW(a, b, r) PBL_MUL_OVERFLOW_IMPL(a, b, r)
-
-/**
  * @brief Reverse the bytes of a 16-bit value.
  *
  * @param x Value.
