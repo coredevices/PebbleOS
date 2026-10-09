@@ -940,6 +940,10 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
       }
       QuietTimeScheduleConfig _tmp;
       if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) {
+        if (_tmp.is_used && !quiet_time_schedule_is_valid(&_tmp)) {
+          PBL_LOG_WRN("QT slot %d has invalid contents, ignoring phone write", i);
+          goto done;
+        }
         s_qt_schedule[i] = _tmp;
         matched_key = qt_key;
       }

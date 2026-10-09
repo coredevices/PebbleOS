@@ -1378,6 +1378,47 @@ void test_do_not_disturb__phone_qt_schedule_synced(void) {
   cl_assert_equal_i(s_num_dnd_events_put, 1);
 }
 
+//! Phone-originated qtSchedule* writes with out-of-range contents are ignored.
+void test_do_not_disturb__phone_qt_schedule_validated(void) {
+  QuietTimeScheduleConfig before;
+  quiet_time_get_schedule(0, &before);
+  cl_assert(before.is_used == false);
+
+  // Unknown kind.
+  QuietTimeScheduleConfig bad_kind = {
+    .is_used = true,
+    .kind = (QuietTimeKind)7,
+    .from_hour = 22,
+    .to_hour = 7,
+    .enabled = true,
+  };
+  prv_simulate_phone_write("qtSchedule0", &bad_kind, sizeof(bad_kind));
+
+  // Out-of-range hour.
+  QuietTimeScheduleConfig bad_hour = {
+    .is_used = true,
+    .kind = QT_KIND_EVERYDAY,
+    .from_hour = 25,
+    .to_hour = 7,
+    .enabled = true,
+  };
+  prv_simulate_phone_write("qtSchedule0", &bad_hour, sizeof(bad_hour));
+
+  // Enabled custom slot with no days.
+  QuietTimeScheduleConfig no_days = {
+    .is_used = true,
+    .kind = QT_KIND_CUSTOM,
+    .from_hour = 22,
+    .to_hour = 7,
+    .enabled = true,
+  };
+  prv_simulate_phone_write("qtSchedule0", &no_days, sizeof(no_days));
+
+  QuietTimeScheduleConfig after;
+  quiet_time_get_schedule(0, &after);
+  cl_assert(after.is_used == false);
+}
+
 //! quiet_time_set_schedule rejects invalid configs instead of storing them.
 void test_do_not_disturb__set_schedule_rejects_invalid(void) {
   int idx = prv_create_qt_schedule(QT_KIND_EVERYDAY, 22, 0, 7, 0, false);
