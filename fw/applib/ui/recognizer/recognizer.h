@@ -87,7 +87,7 @@ typedef struct Recognizer Recognizer;
 //! @param name name of the storage variable to declare
 //! @param impl_data_size size of the implementation-specific data
 #define RECOGNIZER_STATIC_STORAGE(name, impl_data_size) \
-  _Alignas(void *) uint8_t name[RECOGNIZER_INSTANCE_SIZE + (impl_data_size)]
+  alignas(void *) uint8_t name[RECOGNIZER_INSTANCE_SIZE + (impl_data_size)]
 
 typedef enum RecognizerState {
   RecognizerState_Failed,

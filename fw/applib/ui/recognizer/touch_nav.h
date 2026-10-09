@@ -151,9 +151,9 @@ typedef struct TouchNavState {
   const TouchNavOps *ops;
 
   //! The (tap, pan, swipe) system recognizer set, by value.
-  _Alignas(void *) uint8_t tap_storage[TAP_RECOGNIZER_STATIC_SIZE];
-  _Alignas(void *) uint8_t pan_storage[PAN_RECOGNIZER_STATIC_SIZE];
-  _Alignas(void *) uint8_t swipe_storage[SWIPE_RECOGNIZER_STATIC_SIZE];
+  alignas(void *) uint8_t tap_storage[TAP_RECOGNIZER_STATIC_SIZE];
+  alignas(void *) uint8_t pan_storage[PAN_RECOGNIZER_STATIC_SIZE];
+  alignas(void *) uint8_t swipe_storage[SWIPE_RECOGNIZER_STATIC_SIZE];
   Recognizer *tap;
   Recognizer *pan;
   Recognizer *swipe;
@@ -161,9 +161,9 @@ typedef struct TouchNavState {
   //! The unified widget (tap, pan, swipe) recognizer set, by value. One set per twin drives every
   //! migrated Tier-1 widget through its \ref TouchNavWidgetOps vtable; the set is scoped by a
   //! filter that only matches a Touchdown resolving to a migrated (ops-bearing) widget.
-  _Alignas(void *) uint8_t widget_tap_storage[TAP_RECOGNIZER_STATIC_SIZE];
-  _Alignas(void *) uint8_t widget_pan_storage[PAN_RECOGNIZER_STATIC_SIZE];
-  _Alignas(void *) uint8_t widget_swipe_storage[SWIPE_RECOGNIZER_STATIC_SIZE];
+  alignas(void *) uint8_t widget_tap_storage[TAP_RECOGNIZER_STATIC_SIZE];
+  alignas(void *) uint8_t widget_pan_storage[PAN_RECOGNIZER_STATIC_SIZE];
+  alignas(void *) uint8_t widget_swipe_storage[SWIPE_RECOGNIZER_STATIC_SIZE];
   Recognizer *widget_tap;
   Recognizer *widget_pan;
   Recognizer *widget_swipe;

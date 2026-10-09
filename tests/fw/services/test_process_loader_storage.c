@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
-#include <stdalign.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +44,7 @@ static size_t s_image_len;
 static size_t s_read_offset;
 static char s_opened_name[APP_FILENAME_MAX_LENGTH];
 // The loader splits the segment on max_align_t boundaries, so the RAM starts on one
-static _Alignas(max_align_t) uint8_t s_ram[RAM_SIZE];
+alignas(max_align_t) static uint8_t s_ram[RAM_SIZE];
 
 // Fakes
 ////////////////////////////////////
