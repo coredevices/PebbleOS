@@ -17,6 +17,12 @@ Agent notes:
   `sendkey` rather than the interactive QEMU window.
 - Phone-dependent features get their data from `./pbl feed <feed>` (e.g.
   `./pbl feed weather`); feeds live in `tools/libs/pbl-cli/pbl/feeds/`.
+- The emulated accelerometer has no FIFO. While a subscriber wants batches,
+  it sends one sample per tick at the configured rate, stepping through what
+  the host sent and then repeating the last one (0, 0, -1000 before any). It
+  never reports a shake or tap, and the emulated heart rate monitor never
+  produces a reading. Check driver FIFO, shake, tap, and heart rate changes
+  on hardware.
 
 ## Touch
 
