@@ -514,7 +514,7 @@ void hrm_init(HRMDevice *dev) {
   }
 #else
   gh3026_reset_pin_ctrl(0);
-  gpio_input_init_pull_up_down(&dev->int_input, GPIO_PuPd_DOWN);
+  pbl_gpio_configure(&dev->int_input, PBL_GPIO_INPUT | PBL_GPIO_PULL_DOWN);
 #endif
 
   dev->state->is_wear = false;

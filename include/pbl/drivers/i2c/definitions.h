@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/gpio.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
@@ -119,9 +120,9 @@ struct I2CBus {
   const struct I2CBusHal *const hal;
 #ifdef CONFIG_SOC_NRF52
   /** SCL pin. */
-  AfConfig scl_gpio;
+  struct pbl_gpio scl_gpio;
   /** SDA pin. */
-  AfConfig sda_gpio;
+  struct pbl_gpio sda_gpio;
 #endif
   /** Bus name, for logging. */
   const char *name;

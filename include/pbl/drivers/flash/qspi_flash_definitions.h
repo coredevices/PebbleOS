@@ -64,8 +64,6 @@ typedef const struct QSPIFlash {
   QSPIFlashReadMode read_mode;
   /** Write mode. */
   QSPIFlashWriteMode write_mode;
-  /** Reset pin. */
-  OutputConfig reset_gpio;
 } QSPIFlash;
 
 /** @} */

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <pbl/drivers/gpio.h>
+
 /**
  * @defgroup drivers_backlight_aw9364e AW9364E
  * @ingroup drivers_backlight
@@ -15,7 +17,7 @@
 /** @brief AW9364E configuration. */
 typedef struct LedControllerAW9364E {
   /** Enable line, also used for the dimming pulses. */
-  OutputConfig gpio;
+  struct pbl_gpio gpio;
 } LedControllerAW9364E;
 
 /** @} */

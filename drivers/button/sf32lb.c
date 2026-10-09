@@ -21,12 +21,7 @@ bool button_is_pressed(ButtonId id) {
     id = BUTTON_ID_UP;
   }
 
-  const InputConfig config = {
-    .gpio = BOARD_CONFIG_BUTTON.buttons[id].port,
-    .gpio_pin = BOARD_CONFIG_BUTTON.buttons[id].pin,
-  };
-  uint32_t bit = gpio_input_read(&config);
-  return (BOARD_CONFIG_BUTTON.buttons[id].active_high) ? bit : !bit;
+  return pbl_gpio_get(&BOARD_CONFIG_BUTTON.buttons[id].gpio) > 0;
 }
 
 uint8_t button_get_state_bits(void) {
@@ -39,11 +34,7 @@ uint8_t button_get_state_bits(void) {
 
 void button_init(void) {
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    const InputConfig config = {
-      .gpio = BOARD_CONFIG_BUTTON.buttons[i].port,
-      .gpio_pin = BOARD_CONFIG_BUTTON.buttons[i].pin,
-    };
-    gpio_input_init_pull_up_down(&config, BOARD_CONFIG_BUTTON.buttons[i].pull);
+    pbl_gpio_configure(&BOARD_CONFIG_BUTTON.buttons[i].gpio, PBL_GPIO_INPUT);
   }
 }
 

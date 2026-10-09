@@ -4,6 +4,7 @@
 // clang-format off
 #include <string.h>
 
+#include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c/hal.h>
 #include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/nrf5.h>
@@ -30,8 +31,8 @@ static void prv_twim_evt_handler(nrfx_twim_evt_t const *evt, void *ctx) {
 }
 
 static void prv_twim_init(I2CBus *bus) {
-  nrfx_twim_config_t config =
-      NRFX_TWIM_DEFAULT_CONFIG(bus->scl_gpio.gpio_pin, bus->sda_gpio.gpio_pin);
+  nrfx_twim_config_t config = NRFX_TWIM_DEFAULT_CONFIG(pbl_gpio_nrf5_pin(&bus->scl_gpio),
+                                                       pbl_gpio_nrf5_pin(&bus->sda_gpio));
   config.frequency = bus->hal->frequency;
   config.hold_bus_uninit = true;
 
