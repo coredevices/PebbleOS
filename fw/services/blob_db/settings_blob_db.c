@@ -18,6 +18,7 @@
 #include <kernel/pbl_malloc.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -127,7 +128,10 @@ static const char *s_syncable_settings[] = {
 
 static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);
 
-//! Notification preferences from notifpref file that should be synced
+//! Notification preferences from notifpref file that should be synced.
+//! The qtSchedule* entries come from QT_SCHEDULE_SLOT_X, the same definition
+//! as the storage keys, so the allowlist covers every slot by construction.
+#define QT_SYNC_KEY_ENTRY(i) "qtSchedule" #i,
 static const char *s_syncable_notif_prefs[] = {
   "mask",
   "dndInterruptionsMask",
@@ -142,11 +146,7 @@ static const char *s_syncable_notif_prefs[] = {
   "dndWeekdayScheduleEnabled",
   "dndWeekendSchedule",
   "dndWeekendScheduleEnabled",
-  "qtSchedule0",
-  "qtSchedule1",
-  "qtSchedule2",
-  "qtSchedule3",
-  "qtSchedule4",
+  QT_SCHEDULE_SLOT_X(QT_SYNC_KEY_ENTRY)
   "notifWindowTimeout",
   "notifTextSize",
   "notifDesignStyle",
@@ -156,12 +156,17 @@ static const char *s_syncable_notif_prefs[] = {
   "dndTouchBacklight",
   "dndAutoDismiss",
 };
+#undef QT_SYNC_KEY_ENTRY
 
 static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
 
-// The five qtSchedule* entries above must stay in sync with MAX_QUIET_TIME_SCHEDULES.
-_Static_assert(ARRAY_LENGTH(s_syncable_notif_prefs) >= MAX_QUIET_TIME_SCHEDULES,
-               "s_syncable_notif_prefs must include a key for every QT schedule slot");
+//! Expected QT schedule keys, from the same definition as both tables, for
+//! the sync-coverage check in settings_blob_db_init.
+#define QT_SYNC_CHECK_ENTRY(i) "qtSchedule" #i,
+static const char *const s_qt_schedule_sync_keys[] = {
+  QT_SCHEDULE_SLOT_X(QT_SYNC_CHECK_ENTRY)
+};
+#undef QT_SYNC_CHECK_ENTRY
 
 static bool s_initialized = false;
 
@@ -315,6 +320,15 @@ static void prv_settings_change_callback(SettingsFile *file, const void *key, in
 void settings_blob_db_init(void) {
   if (s_initialized) {
     return;
+  }
+
+  // Every QT schedule slot must be syncable. The expected keys come from
+  // QT_SCHEDULE_SLOT_X, the same definition as both tables, so this only
+  // fires if the macro invocation above was removed or edited wrong.
+  for (int i = 0; i < (int)ARRAY_LENGTH(s_qt_schedule_sync_keys); i++) {
+    PBL_ASSERT(prv_is_notif_pref((const uint8_t *)s_qt_schedule_sync_keys[i],
+                                 strlen(s_qt_schedule_sync_keys[i])),
+               "QT schedule slot %d missing from sync allowlist", i);
   }
 
   settings_file_set_change_callback(prv_settings_change_callback);

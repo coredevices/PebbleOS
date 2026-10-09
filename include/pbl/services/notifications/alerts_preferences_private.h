@@ -288,6 +288,10 @@ void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out)
 
 void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig *config);
 
+//! One definition for every QT schedule slot index. Generates both the
+//! storage keys and the sync-allowlist entries so the two cannot drift apart.
+#define QT_SCHEDULE_SLOT_X(X) X(0) X(1) X(2) X(3) X(4)
+
 /**
  * @brief Lock the alerts preferences mutex.
  *
