@@ -338,7 +338,7 @@ void alerts_preferences_init(void) {
   // by older firmware.
 #define RESTORE_PREF(key, var)                                                              \
   do {                                                                                      \
-    __typeof__(var) _tmp;                                                                   \
+    typeof(var) _tmp;                                                                       \
     if (settings_file_get(&file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS ||     \
         settings_file_get(&file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
       var = _tmp;                                                                           \
@@ -763,7 +763,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
     size_t _pref_strlen = strlen(pref_key);                                           \
     if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) &&       \
         memcmp(key, pref_key, _pref_strlen) == 0) {                                   \
-      __typeof__(var) _tmp;                                                           \
+      typeof(var) _tmp;                                                               \
       if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
         var = _tmp;                                                                   \
         matched_key = pref_key;                                                       \

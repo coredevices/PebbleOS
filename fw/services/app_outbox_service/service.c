@@ -148,7 +148,7 @@ static void prv_schedule_sent_handler(AppOutboxSentHandler sent_handler, void *c
 //! @note This executes on App Task
 static void prv_schedule_consumer_message_handler(AppOutboxConsumer *consumer,
                                                   AppOutboxMessage *message) {
-  void (*callback)(void *) = (__typeof__(callback))consumer->message_handler;
+  void (*callback)(void *) = (typeof(callback))consumer->message_handler;
   PebbleEvent event = {
     .type = PEBBLE_APP_OUTBOX_MSG_EVENT,
     .app_outbox_msg = {

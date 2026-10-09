@@ -222,7 +222,7 @@ void test_process_manager__initialize(void) {
   s_app_db_get_app_entry_for_install_id__entry = (AppDBEntry){};
   s_process_metadata_get_res_bank_num__result = 123;
   s_app_manager_launch_new_app__callcount = 0;
-  s_app_manager_launch_new_app__config = (__typeof__(s_app_manager_launch_new_app__config)){};
+  s_app_manager_launch_new_app__config = (typeof(s_app_manager_launch_new_app__config)){};
   s_event_put__event = NULL;
   s_pbl_msgq_get__interrupted_count = 0;
   s_pbl_msgq_get__event = (PebbleEvent){};

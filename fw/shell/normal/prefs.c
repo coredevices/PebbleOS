@@ -987,7 +987,7 @@ typedef struct {
 // after dereferencing the void* argument using the right type for that pref
 #define PREFS_MACRO(name, var)                                        \
   static bool prv_set_##var##_cb(const void *value, size_t val_len) { \
-    return prv_set_##var((__typeof__(var) *)value);                   \
+    return prv_set_##var((typeof(var) *)value);                       \
   }
 #include "prefs_values.h.inc"
 #undef PREFS_MACRO

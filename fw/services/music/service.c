@@ -293,22 +293,22 @@ static void prv_update_string_and_put_event(const char *value, size_t value_leng
 
 void music_update_player_name(const char *player_name, size_t player_name_length) {
   // TODO: actually do something with this
-  off_t o = offsetof(__typeof__(s_music_ctx), player_name);
+  off_t o = offsetof(typeof(s_music_ctx), player_name);
   prv_update_string_and_put_event(player_name, player_name_length, o);
 }
 
 void music_update_track_title(const char *title, size_t title_length) {
-  off_t o = offsetof(__typeof__(s_music_ctx), title);
+  off_t o = offsetof(typeof(s_music_ctx), title);
   prv_update_string_and_put_event(title, title_length, o);
 }
 
 void music_update_track_artist(const char *artist, size_t artist_length) {
-  off_t o = offsetof(__typeof__(s_music_ctx), artist);
+  off_t o = offsetof(typeof(s_music_ctx), artist);
   prv_update_string_and_put_event(artist, artist_length, o);
 }
 
 void music_update_track_album(const char *album, size_t album_length) {
-  off_t o = offsetof(__typeof__(s_music_ctx), album);
+  off_t o = offsetof(typeof(s_music_ctx), album);
   prv_update_string_and_put_event(album, album_length, o);
 }
 
@@ -476,7 +476,7 @@ static void *prv_implementation_function_for_offset(off_t offset) {
 }
 
 void music_command_send(MusicCommand command) {
-  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), command_send);
+  const off_t o = offsetof(typeof(*s_music_ctx.implementation), command_send);
   void (*command_send)(MusicCommand) = prv_implementation_function_for_offset(o);
   if (command_send) {
     command_send(command);
@@ -484,7 +484,7 @@ void music_command_send(MusicCommand command) {
 }
 
 void music_request_reduced_latency(bool reduced_latency) {
-  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), request_reduced_latency);
+  const off_t o = offsetof(typeof(*s_music_ctx.implementation), request_reduced_latency);
   void (*request_reduced_latency)(bool) = prv_implementation_function_for_offset(o);
   if (request_reduced_latency) {
     request_reduced_latency(reduced_latency);
@@ -492,7 +492,7 @@ void music_request_reduced_latency(bool reduced_latency) {
 }
 
 void music_request_low_latency_for_period(uint32_t period_ms) {
-  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), request_low_latency_for_period);
+  const off_t o = offsetof(typeof(*s_music_ctx.implementation), request_low_latency_for_period);
   void (*request_low_latency_for_period)(uint32_t) = prv_implementation_function_for_offset(o);
   if (request_low_latency_for_period) {
     request_low_latency_for_period(period_ms);
@@ -507,7 +507,7 @@ bool music_skip_seeks_within_track(void) {
 }
 
 bool music_is_command_supported(MusicCommand command) {
-  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), is_command_supported);
+  const off_t o = offsetof(typeof(*s_music_ctx.implementation), is_command_supported);
   bool (*func_ptr)(MusicCommand) = prv_implementation_function_for_offset(o);
   if (!func_ptr) {
     return false;
@@ -525,12 +525,12 @@ static bool prv_call_implementation_bool_return_void_args(off_t offset) {
 
 bool music_needs_user_to_start_playback_on_phone(void) {
   const off_t o =
-      offsetof(__typeof__(*s_music_ctx.implementation), needs_user_to_start_playback_on_phone);
+      offsetof(typeof(*s_music_ctx.implementation), needs_user_to_start_playback_on_phone);
   return prv_call_implementation_bool_return_void_args(o);
 }
 
 static bool prv_is_capability_supported(MusicServerCapability capability) {
-  const off_t o = offsetof(__typeof__(*s_music_ctx.implementation), get_capability_bitset);
+  const off_t o = offsetof(typeof(*s_music_ctx.implementation), get_capability_bitset);
   MusicServerCapability (*func_ptr)(void) = prv_implementation_function_for_offset(o);
   if (!func_ptr) {
     return false;

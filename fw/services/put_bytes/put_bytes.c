@@ -331,7 +331,7 @@ static void prv_cleanup(void) {
   PBL_LOG_DBG("Put bytes cleanup. Tok: %" PRIu32, s_pb_state.token);
 
   prv_deinit_put_job_queue();
-  s_pb_state.receiver = (__typeof__(s_pb_state.receiver)){};
+  s_pb_state.receiver = (typeof(s_pb_state.receiver)){};
 
   if (s_pb_state.timer_id) {
     new_timer_delete(s_pb_state.timer_id);

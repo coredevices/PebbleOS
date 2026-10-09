@@ -682,7 +682,7 @@ static void prv_mutate_whitelist(const struct pbl_bt_device_internal *device, bo
   // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.15:
   uint8_t status = 0;
   const uint8_t addr_type = device->is_random_address ? 0x01 : 0x00;
-  __typeof__(&HCI_LE_Add_Device_To_White_List) mutator =
+  typeof(&HCI_LE_Add_Device_To_White_List) mutator =
       (is_adding ? HCI_LE_Add_Device_To_White_List : HCI_LE_Remove_Device_From_White_List);
   const int r = mutator(stack_id, addr_type, BTDeviceAddressToBDADDR(device->address), &status);
   if (r) {

@@ -58,7 +58,7 @@ static struct {
 static void prv_rx_reset(void) {
   kernel_free(s_rx.pixels);
   kernel_free(s_rx.palette);
-  s_rx = (__typeof__(s_rx)){0};
+  s_rx = (typeof(s_rx)){0};
 }
 
 void imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {

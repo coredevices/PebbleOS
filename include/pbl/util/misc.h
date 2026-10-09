@@ -49,11 +49,11 @@
  * @param a First lvalue, evaluated more than once.
  * @param b Second lvalue, evaluated more than once.
  */
-#define PBL_SWAP(a, b)                 \
-  do {                                 \
-    __typeof__(a) _pbl_swap_tmp = (a); \
-    (a) = (b);                         \
-    (b) = _pbl_swap_tmp;               \
+#define PBL_SWAP(a, b)             \
+  do {                             \
+    typeof(a) _pbl_swap_tmp = (a); \
+    (a) = (b);                     \
+    (b) = _pbl_swap_tmp;           \
   } while (0)
 
 /**

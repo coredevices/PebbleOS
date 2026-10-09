@@ -572,7 +572,7 @@ static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_i
   }
   client->in.next_expected_data_sn = 0;
   // FIXME: Use SN for RR / RC (https://pebbletechnology.atlassian.net/browse/PBL-12424)
-  client->out = (__typeof__(client->out)){};
+  client->out = (typeof(client->out)){};
 
   if (prv_client_supports_enhanced_throughput_features(client)) {
     // Set our desired window sizes
