@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config REGULATOR
+    bool
+    help
+      Power rail class (pbl/drivers/regulator.h), selected by the drivers
+      that provide regulators.
+
+config REGULATOR_NPM1300
+    bool "Nordic nPM1300 regulators"
+    default y
+    depends on MFD_NPM1300
+    select REGULATOR
+    help
+      Support for the BUCK and LDSW rails of the Nordic nPM1300 PMIC.

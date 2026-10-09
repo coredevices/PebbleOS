@@ -83,7 +83,6 @@ typedef struct {
 } BoardConfigButton;
 
 typedef struct {
-  ExtiConfig pmic_int;
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
   //! Approximate hours of battery life

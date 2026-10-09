@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig MFD
+    bool "Multi-function devices"
+    help
+      Drivers for the core of chips that bundle several functions, each
+      handled by a child device in its own subsystem.
+
+if MFD
+
+config MFD_NPM1300
+    bool "Nordic nPM1300"
+    help
+      Support for the core of the Nordic nPM1300 PMIC: register access
+      and its charger, GPIO and regulator cells.
+
+endif # MFD

@@ -14,11 +14,6 @@
  * @{
  */
 
-#ifdef CONFIG_BOARD_OBELIX
-/** @brief The reset line is driven by nPM1300 GPIO2 instead of @ref TouchSensor::reset. */
-#define RESET_PIN_CTRLBY_NPM1300 1
-#endif
-
 /** @brief CST816 board configuration. */
 typedef struct {
   /** I2C device in normal operation. */

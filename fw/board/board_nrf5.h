@@ -100,9 +100,6 @@ typedef struct {
 // Power Configuration
 /////////////////////////////////////////////////////////////////////////////
 typedef struct {
-  const GpioteConfig pmic_int;
-  const struct pbl_gpio pmic_int_gpio;
-
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
 

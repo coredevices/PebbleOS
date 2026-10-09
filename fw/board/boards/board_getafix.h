@@ -5,7 +5,6 @@
 
 #include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
-#include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/touch/cst816/touch_sensor_definitions.h>
 #include <pbl/services/imu/units.h>
 
@@ -20,14 +19,12 @@ extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
 extern const LIS2DW12Config *const LIS2DW12;
 extern const struct pbl_i2c_dev *const I2C_MMC5603NJ;
-extern const struct pbl_i2c_dev *const I2C_NPM1300;
 extern const struct pbl_i2c_dev *const I2C_W1160;
 #ifdef CONFIG_BOARD_GETAFIX_DVT2
 extern const struct pbl_i2c_dev *const I2C_AW86225;
 #else
 extern const struct pbl_i2c_dev *const I2C_AW8623X;
 #endif
-extern const Npm1300Config NPM1300_CONFIG;
 extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;

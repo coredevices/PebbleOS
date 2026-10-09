@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
 #include <pbl/kernel/irq.h>
 
@@ -307,9 +309,19 @@ PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", I2C3, 400000, PAD_PA31, I2C3_SCL, PAD_PA30
                       nullptr);
 PBL_IRQ_CONNECT(I2C3, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c3, 0);
 
-static const struct pbl_i2c_dev s_i2c_npm1300 = PBL_I2C_DEV(&s_i2c3.bus, 0x6B);
+PBL_NPM1300_DEFINE(s_npm1300, &s_i2c3.bus, 0x6B);
+PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
+                           {.peripheral = hwp_gpio1, .gpio_pin = 44});
 
-const struct pbl_i2c_dev *const I2C_NPM1300 = &s_i2c_npm1300;
+const struct pbl_npm1300_charger *const NPM1300_CHARGER = &s_npm1300_charger;
+
+PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck1, "npm1300_buck1", &s_npm1300, PBL_NPM1300_BUCK1, 1800,
+                             false, false);
+PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_NPM1300_LDSW1, 1800,
+                             true, true);
+// Microphone supply
+PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 0,
+                             false, false);
 
 static const struct pbl_i2c_dev s_i2c_w1160 = PBL_I2C_DEV(&s_i2c3.bus, 0x48);
 
@@ -331,17 +343,14 @@ const BoardConfigActuator BOARD_CONFIG_VIBE = {
 
 const Npm1300Config NPM1300_CONFIG = {
   // 70mA = 1C (max limit from datasheet)
-  .chg_current_ma = 70,        .dischg_limit_ma = 200, .term_current_pct = 10,
-  .thermistor_beta = 3380,     .ntc_hot_celsius = 45,  .vbus_current_lim0 = 500,
-  .vbus_current_startup = 500,
+  .chg_current_ma = 70,     .dischg_limit_ma = 200,
+  .term_current_pct = 10,   .vterm_mv = 4450,
+  .vterm_reduced_mv = 4000, .ntc_kohm = 10,
+  .thermistor_beta = 3380,  .ntc_hot_celsius = 45,
+  .vbus_current_lim0 = 500, .vbus_current_startup = 500,
 };
 
 const BoardConfigPower BOARD_CONFIG_POWER = {
-  .pmic_int =
-      {
-        .peripheral = hwp_gpio1,
-        .gpio_pin = 44,
-      },
   .low_power_threshold = 5U,
   .battery_capacity_hours = 150U,
 };
@@ -410,6 +419,7 @@ static const MicDevice mic_device = {
 #endif
   .sample_rate = 16000,
   .channel_depth = 16,
+  .vdd = &s_npm1300_ldsw2.reg,
 };
 const MicDevice *MIC = &mic_device;
 PBL_IRQ_CONNECT(PDM1, 5, pdm1_data_handler, MIC, 0);

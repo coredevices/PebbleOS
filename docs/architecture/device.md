@@ -71,6 +71,32 @@ calls `pbl_device_init()` on the devices it uses itself.
 Hardware needed before the kernel runs, such as clocks
 (`pbl_soc_early_init()`), stays outside the model, as in Linux.
 
+## Multi-function devices
+
+A chip with several unrelated functions, such as the nPM1300 PMIC (charger,
+GPIOs, regulators), is one core device plus one child device per function
+(cell), laid out as in Linux: the core lives in `drivers/mfd` and each cell
+in the subsystem of its class.
+
+| Part | Driver | Device |
+| --- | --- | --- |
+| Core | `drivers/mfd/npm1300.c` | `struct pbl_npm1300` |
+| Charger | `drivers/pmic/npm1300.c` | `struct pbl_npm1300_charger` |
+| GPIOs | `drivers/gpio/npm1300.c` | `struct pbl_npm1300_gpio` (a `struct pbl_gpio_port`) |
+| Rails | `drivers/regulator/npm1300.c` | `struct pbl_npm1300_regulator` (a `struct pbl_regulator`) |
+
+The core sits on its I2C bus and owns the register access under a lock, so
+a read-modify-write in one cell cannot interleave with another. Its init
+ends with `pbl_device_init_children()`, so a device that depends on the
+PMIC can rely on its cells being up. Cells reach the core with
+`pbl_npm1300_from_cell()`.
+
+Board-level facts live in the board, which instantiates the core and the
+cells it uses: each rail is a `PBL_NPM1300_REGULATOR_DEFINE()` with its
+voltage, mode and whether it is always on; consumers point at the regulator
+(`MicDevice.vdd`) and switch it through its use count, and a PMIC pin is an
+ordinary `PBL_GPIO(&s_npm1300_gpio.port, ...)`.
+
 ## Adding a driver
 
 1. Define the driver struct embedding the class struct, the class ops and

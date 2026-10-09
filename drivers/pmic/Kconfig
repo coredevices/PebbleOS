@@ -9,9 +9,11 @@ menuconfig PMIC
 if PMIC
 
 config PMIC_NPM1300
-    bool "Nordic nPM1300"
+    bool "Nordic nPM1300 charger"
+    default y
+    depends on MFD_NPM1300
     help
-      Support for the Nordic nPM1300 PMIC.
+      Support for the charger of the Nordic nPM1300 PMIC.
 
 module = DRIVER_PMIC
 module-str = PMIC

@@ -16,7 +16,6 @@
 #include <pbl/drivers/mag.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
-#include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pressure.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
@@ -137,10 +136,6 @@ static void init_drivers(void) {
 
   battery_init();
   vibe_init();
-
-#ifdef CONFIG_PMIC
-  pmic_init();
-#endif
 
   flash_init();
   flash_sleep_when_idle(true);

@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
+#include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>

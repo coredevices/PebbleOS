@@ -29,4 +29,11 @@ config GPIO_QEMU
     help
       Support for the QEMU GPIO peripheral.
 
+config GPIO_NPM1300
+    bool "Nordic nPM1300 GPIO"
+    default y
+    depends on MFD_NPM1300
+    help
+      Support for the GPIOs of the Nordic nPM1300 PMIC.
+
 endif # GPIO
