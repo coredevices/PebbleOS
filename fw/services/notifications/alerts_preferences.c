@@ -761,6 +761,24 @@ int alerts_preferences_qt_get_num_active(void) {
   return count;
 }
 
+bool quiet_time_schedule_is_valid(const QuietTimeScheduleConfig *config) {
+  if (config->kind >= QT_KIND_COUNT)
+    return false;
+  if (config->from_hour >= 24 || config->to_hour >= 24)
+    return false;
+  if (config->from_minute >= 60 || config->to_minute >= 60)
+    return false;
+  if (config->kind == QT_KIND_CUSTOM) {
+    bool any_day = false;
+    for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
+      any_day |= config->scheduled_days[i];
+    }
+    if (!any_day)
+      return false;
+  }
+  return true;
+}
+
 bool alerts_preferences_check_and_set_first_use_complete(FirstUseSource source) {
   if (s_first_use_complete & (1 << source)) {
     return true;

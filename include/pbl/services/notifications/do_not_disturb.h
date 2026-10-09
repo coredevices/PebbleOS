@@ -61,6 +61,7 @@ typedef enum {
   QT_KIND_WEEKDAYS,
   QT_KIND_WEEKENDS,
   QT_KIND_CUSTOM,
+  QT_KIND_COUNT,
 } QuietTimeKind;
 
 //! QuietTimeScheduleConfig stores a single quiet time schedule slot.
@@ -162,8 +163,13 @@ void quiet_time_for_each_schedule(QuietTimeScheduleCallback cb, void *context);
 void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out);
 void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config);
 
+//! Validate a schedule config: kind in range, hours/minutes in range, and
+//! QT_KIND_CUSTOM with at least one day selected. Unused (zeroed) slots are
+//! exempt at the call site, so deletes still sync.
+bool quiet_time_schedule_is_valid(const QuietTimeScheduleConfig *config);
+
 //! Create a new quiet time schedule. Returns the slot index, or -1 if all slots are full.
-//! Rejects QT_KIND_CUSTOM with no days selected (returns -1).
+//! Rejects invalid configs (see quiet_time_schedule_is_valid).
 int quiet_time_create_schedule(const QuietTimeScheduleConfig *config);
 
 //! Delete a quiet time schedule slot

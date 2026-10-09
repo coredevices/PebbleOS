@@ -1378,6 +1378,61 @@ void test_do_not_disturb__phone_qt_schedule_synced(void) {
   cl_assert_equal_i(s_num_dnd_events_put, 1);
 }
 
+//! quiet_time_set_schedule rejects invalid configs instead of storing them.
+void test_do_not_disturb__set_schedule_rejects_invalid(void) {
+  int idx = prv_create_qt_schedule(QT_KIND_EVERYDAY, 22, 0, 7, 0, false);
+  quiet_time_delete_schedule(idx);
+
+  QuietTimeScheduleConfig config;
+  quiet_time_get_schedule(idx, &config);
+  cl_assert(config.is_used == false);
+
+  // Custom with no days selected.
+  config.kind = QT_KIND_CUSTOM;
+  config.from_hour = 22;
+  config.to_hour = 7;
+  config.enabled = true;
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+  quiet_time_set_schedule(idx, &config);
+  quiet_time_get_schedule(idx, &config);
+  cl_assert(config.is_used == false);
+
+  // Out-of-range hour.
+  config.kind = QT_KIND_EVERYDAY;
+  config.from_hour = 25;
+  quiet_time_set_schedule(idx, &config);
+  quiet_time_get_schedule(idx, &config);
+  cl_assert(config.is_used == false);
+}
+
+//! A used+enabled slot with an empty day set schedules no cron jobs: a zero
+//! wday mask means PBL_CRON_WDAY_ANY, so the slot is skipped entirely.
+void test_do_not_disturb__empty_day_set_schedules_no_cron(void) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    quiet_time_delete_schedule(i);
+  }
+  do_not_disturb_handle_clock_change();
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+
+  // Bypass the public API validation to simulate a pre-validation record.
+  QuietTimeScheduleConfig config = {
+    .is_used = true,
+    .kind = QT_KIND_CUSTOM,
+    .from_hour = 22,
+    .to_hour = 7,
+    .enabled = true,
+  };
+  memset(config.scheduled_days, 0, sizeof(config.scheduled_days));
+  alerts_preferences_qt_set_schedule(0, &config);
+  do_not_disturb_handle_clock_change();
+
+  cl_assert(do_not_disturb_is_active() == false);
+  cl_assert_equal_i(pbl_cron_get_job_count(), 0);
+  cl_assert_equal_i(pbl_cron_get_next_execute_time(), 0);
+
+  quiet_time_delete_schedule(0);
+}
+
 //! A phone write to a legacy schedule key lands on the mirrored QT slot while
 //! that slot still mirrors it, and stops applying once the user replaces the
 //! slot with another kind.

@@ -274,9 +274,10 @@ static void prv_schedule_boundary_job(struct pbl_cron_job *job, int slot, bool i
 static void prv_schedule_qt_slot_jobs(int slot, const QuietTimeScheduleConfig *s) {
   bool days[PBL_DAY_PER_WEEK];
   quiet_time_get_scheduled_days(s, days);
+  const uint8_t start_mask = prv_qt_wday_mask(days);
   const int from_min = s->from_hour * 60 + s->from_minute;
   const int to_min = prv_schedule_end_minutes(s);
-  uint8_t end_mask = prv_qt_wday_mask(days);
+  uint8_t end_mask = start_mask;
   if (from_min > to_min) {
     // Wrapping window: the end belongs to the day after each start day.
     end_mask = 0;
@@ -286,8 +287,12 @@ static void prv_schedule_qt_slot_jobs(int slot, const QuietTimeScheduleConfig *s
       }
     }
   }
+  if (start_mask == 0 && end_mask == 0) {
+    // No days selected: a zero mask means PBL_CRON_WDAY_ANY, so skip both jobs.
+    return;
+  }
   prv_schedule_boundary_job(&s_qt_jobs[slot][0], slot, false, s->from_hour, s->from_minute,
-                            prv_qt_wday_mask(days));
+                            start_mask);
   prv_schedule_boundary_job(&s_qt_jobs[slot][1], slot, true, to_min / 60, to_min % 60, end_mask);
 }
 
@@ -414,6 +419,8 @@ void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out) {
 void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config) {
   if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES)
     return;
+  if (!quiet_time_schedule_is_valid(config))
+    return;
   QuietTimeScheduleConfig stored = *config;
   stored.is_used = true;
   alerts_preferences_qt_set_schedule(index, &stored);
@@ -421,14 +428,8 @@ void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config) {
 }
 
 int quiet_time_create_schedule(const QuietTimeScheduleConfig *config) {
-  if (config->kind == QT_KIND_CUSTOM) {
-    bool any_day = false;
-    for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
-      any_day |= config->scheduled_days[i];
-    }
-    if (!any_day)
-      return -1;
-  }
+  if (!quiet_time_schedule_is_valid(config))
+    return -1;
   for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
     QuietTimeScheduleConfig existing;
     alerts_preferences_qt_get_schedule(i, &existing);
