@@ -128,6 +128,17 @@ uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
                                                     uint32_t min_rate_mHz);
 
 /**
+ * @brief Sample at the driver rate closest to @p interval_us, without subsampling.
+ *
+ * Every driver sample is delivered as long as no other subscriber asks for a faster rate.
+ *
+ * @param state Subscription to reconfigure.
+ * @param interval_us Requested sampling interval, in microseconds.
+ * @return Resulting sampling interval, in microseconds.
+ */
+uint32_t accel_manager_set_native_sampling_interval(AccelManagerState *state, uint32_t interval_us);
+
+/**
  * @brief Set the buffer that receives a subscription's samples.
  *
  * @param state Subscription.

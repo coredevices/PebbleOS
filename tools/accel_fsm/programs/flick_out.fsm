@@ -1,0 +1,34 @@
+; Wrist flick out and back: the face turns away from the user and back, fast,
+; ending face up (e.g. to wake the backlight).
+;
+; Watch axes (Pebble): X to 3 o'clock, along the forearm; Y to 12 o'clock;
+; Z out of the face, about -1 g face up. A flick rotates the wrist around X,
+; moving gravity between Z and Y: turning the face away raises Y, on either
+; wrist. flick_in.fsm is the same program on -Y.
+;
+; Starting point, to tune on recordings: thresholds in g, timers in ms. The
+; hysteresis is added to thresholds in "greater than" conditions and subtracted
+; in "less than" ones, so the levels in the comments are effective values.
+frame watch
+odr 26
+thresh 1 0.1        ; flick axis: neutral <= 0.0, turning > 0.2
+thresh 2 0.4        ; flick axis: peak > 0.5, held and back at 0.3
+thresh 3 -0.3       ; Z: face up <= -0.4
+hyst 0.1
+mask A +Y
+mask B +Z
+timer TI1 40ms      ; minimum time held turned away (rejects bumps)
+timer TI3 190ms     ; neutral -> peak
+timer TI4 310ms     ; peak -> back, then back -> face up
+code:
+  SELMA
+  SELTHR1
+  NOP|LNTH1         ; at or below neutral
+  NOP|GNTH1         ; turning away
+  TI3|GNTH2         ; ... fast enough to reach the peak
+  LNTH2|TI1         ; ... and held long enough not to be a bump
+  TI4|LNTH2         ; back, fast
+  SELMB
+  SELTHR3
+  TI4|LNTH1         ; face up
+  CONTREL

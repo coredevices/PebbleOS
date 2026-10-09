@@ -579,6 +579,21 @@ uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
   return ONLY_SUPPORTED_JITTERFREE_RATE_MILLIHZ;
 }
 
+uint32_t accel_manager_set_native_sampling_interval(AccelManagerState *state,
+                                                    uint32_t interval_us) {
+  pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
+
+  state->sampling_interval_us = interval_us;
+  prv_update_driver_config();
+  state->sampling_interval_us = accel_get_sampling_interval();
+  prv_setup_subsampling(state->sampling_interval_us);
+  const uint32_t result = state->sampling_interval_us;
+
+  pbl_mutex_unlock(&s_accel_manager_mutex);
+
+  return result;
+}
+
 DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelManagerState *state,
                AccelRawData *buffer, uint32_t samples_per_update) {
   prv_assert_state_from_user(state);
