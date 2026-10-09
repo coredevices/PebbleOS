@@ -256,6 +256,15 @@ board, or a board at a revision); `integration_boards()` keeps it out of CI. Use
 for tests that do not depend on the board, or that take too long for every
 pull request.
 
+The lab's watches run the suite nightly, normal and recovery firmware. A
+maintainer can run it on a pull request by adding the `ci:hw-itest` label;
+each time the label is added, the pull request runs once more. The run
+executes the pull request's own code on the lab machine, so review all of
+it first, including tooling and Python requirements. On someone else's
+pull request, approve the head commit before adding the label: a label
+from anyone other than the author is refused unless they approved the
+commit that would run.
+
 The markers are in `harness/plugin.py`; they are strict, so a new one must
 be added there.
 
