@@ -1542,6 +1542,30 @@ void test_do_not_disturb__phone_legacy_schedule_mirrors_qt_slot(void) {
   quiet_time_delete_schedule(0);
 }
 
+//! A legacy phone write for a defaulted, disabled schedule must not
+//! materialise a QT slot.
+void test_do_not_disturb__legacy_mirror_leaves_unused_slots_alone(void) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    quiet_time_delete_schedule(i);
+  }
+  const bool disabled = false;
+  const DoNotDisturbSchedule defaults = {0};
+
+  // Reset to the fresh-device state, then touch the enabled flag the way a
+  // first phone sync does. Neither write may create a slot.
+  prv_simulate_phone_write("dndWeekendSchedule", &defaults, sizeof(defaults));
+  prv_simulate_phone_write("dndWeekendScheduleEnabled", &disabled, sizeof(disabled));
+  QuietTimeScheduleConfig slot1;
+  quiet_time_get_schedule(1, &slot1);
+  cl_assert(slot1.is_used == false);
+
+  prv_simulate_phone_write("dndWeekdaySchedule", &defaults, sizeof(defaults));
+  prv_simulate_phone_write("dndWeekdayScheduleEnabled", &disabled, sizeof(disabled));
+  QuietTimeScheduleConfig slot0;
+  quiet_time_get_schedule(0, &slot0);
+  cl_assert(slot0.is_used == false);
+}
+
 //! A truncated phone write (e.g. an older layout) must not corrupt the slot:
 //! the previous value is kept and no DND event fires.
 void test_do_not_disturb__phone_qt_schedule_size_mismatch_ignored(void) {

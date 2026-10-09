@@ -843,8 +843,16 @@ static void prv_mirror_legacy_schedule_to_qt(SettingsFile *file, const char *mat
     if (s_qt_schedule[qt_index].is_used && s_qt_schedule[qt_index].kind != qt_kind) {
       return;
     }
+    // Same existence rule as prv_migrate_qt_schedules: a defaulted, disabled
+    // legacy schedule leaves the slot unused instead of materialising it.
+    const bool is_used = (s_dnd_schedule[type].schedule.from_hour != 0 ||
+                          s_dnd_schedule[type].schedule.to_hour != 0 ||
+                          s_dnd_schedule[type].enabled);
+    if (!is_used && !s_qt_schedule[qt_index].is_used) {
+      return;
+    }
     QuietTimeScheduleConfig qt_config = {
-      .is_used = true,
+      .is_used = is_used,
       .kind = qt_kind,
       .from_hour = s_dnd_schedule[type].schedule.from_hour,
       .from_minute = s_dnd_schedule[type].schedule.from_minute,
