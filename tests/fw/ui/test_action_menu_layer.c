@@ -85,6 +85,10 @@ static void prv_touch_nav_setup(void) {
 // Fakes / stubs for action_menu_layer.c dependencies
 ////////////////////////
 
+PreferredContentSize system_theme_get_content_size(void) {
+  return PreferredContentSizeDefault;
+}
+
 static GContext s_gcontext;
 GContext *graphics_context_get_current_context(void) {
   return &s_gcontext;

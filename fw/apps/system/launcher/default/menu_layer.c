@@ -23,57 +23,8 @@
 ////////////////////////
 // Styles
 
-static const LauncherMenuLayerStyle s_styles[NumPreferredContentSizes] = {
-  //! @note this is the same as Medium until Small is designed
-  [PreferredContentSizeSmall] =
-      {
-        .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
-        .subtitle_font_key = FONT_KEY_GOTHIC_14,
-#if PBL_RECT
-        .cell_height = LAUNCHER_MENU_LAYER_MIN_CELL_HEIGHT,
-#else
-        .focused_cell_height = LAUNCHER_MENU_LAYER_MIN_FOCUSED_CELL_HEIGHT,
-        .unfocused_cell_height = LAUNCHER_MENU_LAYER_MIN_UNFOCUSED_CELL_HEIGHT,
-#endif
-      },
-  [PreferredContentSizeMedium] =
-      {
-        .title_font_key = FONT_KEY_GOTHIC_18_BOLD,
-        .subtitle_font_key = FONT_KEY_GOTHIC_14,
-#if PBL_RECT
-        .cell_height = LAUNCHER_MENU_LAYER_MIN_CELL_HEIGHT,
-#else
-        .focused_cell_height = LAUNCHER_MENU_LAYER_MIN_FOCUSED_CELL_HEIGHT,
-        .unfocused_cell_height = LAUNCHER_MENU_LAYER_MIN_UNFOCUSED_CELL_HEIGHT,
-#endif
-      },
-  [PreferredContentSizeLarge] =
-      {
-        .title_font_key = FONT_KEY_GOTHIC_24_BOLD,
-        .subtitle_font_key = FONT_KEY_GOTHIC_18,
-        .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
-#if PBL_RECT
-        .cell_height = 50,
-#else
-        .focused_cell_height = 55,
-        .unfocused_cell_height = 45,
-#endif
-      },
-  [PreferredContentSizeExtraLarge] = {
-    .title_font_key = FONT_KEY_GOTHIC_28_BOLD,
-    .subtitle_font_key = FONT_KEY_GOTHIC_24,
-    .title_margin_h = PBL_IF_RECT_ELSE(-3, 0),
-#if PBL_RECT
-    .cell_height = 60,
-#else
-    .focused_cell_height = 66,
-    .unfocused_cell_height = 56,
-#endif
-  },
-};
-
 const LauncherMenuLayerStyle *launcher_menu_layer_get_style(void) {
-  return &s_styles[system_theme_get_content_size()];
+  return &system_theme_get_style()->launcher;
 }
 
 #if PBL_ROUND
@@ -189,7 +140,8 @@ static void prv_menu_layer_draw_row(GContext *ctx, const Layer *cell_layer, Menu
 static int16_t prv_menu_layer_get_cell_height(PBL_UNUSED MenuLayer *menu_layer,
                                               PBL_UNUSED MenuIndex *cell_index, void *context) {
   LauncherMenuLayer *launcher_menu_layer = context;
-  const LauncherMenuLayerStyle *style = &s_styles[launcher_menu_layer->content_size];
+  const LauncherMenuLayerStyle *style =
+      &system_theme_get_style_for_size(launcher_menu_layer->content_size)->launcher;
 #if PBL_RECT
   return style->cell_height;
 #elif PBL_ROUND
@@ -254,7 +206,8 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
   GRect menu_layer_frame = frame;
 #if PBL_ROUND
-  const LauncherMenuLayerStyle *style = &s_styles[launcher_menu_layer->content_size];
+  const LauncherMenuLayerStyle *style =
+      &system_theme_get_style_for_size(launcher_menu_layer->content_size)->launcher;
   const int top_bottom_inset =
       (frame.size.h - style->focused_cell_height -
        (2 * prv_num_unfocused_rows_per_side(style) * style->unfocused_cell_height)) /

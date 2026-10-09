@@ -382,12 +382,8 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("Recurring"),
     .use_i18n = true,
-    .text.font_key = PREFERRED_CONTENT_SIZE_SWITCH(
-        PreferredContentSizeDefault,
-        /* small */ PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),
-        /* medium */ PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),
-        /* large */ FONT_KEY_GOTHIC_18_BOLD,
-        /* extralarge */ FONT_KEY_GOTHIC_18_BOLD),
+    .text.style = LayoutContentSizeDefault,
+    .text.style_font = TextStyleFont_CalendarRecurring,
     .text.extent.offset.y = PBL_IF_RECT_ELSE(4, 1), // recurring offset y
     .text.extent.margin.h = PBL_IF_RECT_ELSE(4, 1), // recurring margin height
   };

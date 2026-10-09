@@ -7,20 +7,9 @@
 
 #include <applib/preferred_content_size.h>
 #include <process_management/app_menu_data_source.h>
+#include <shell/system_theme_style.h>
 
-//! Fonts and cell geometry of the launcher for one content size
-typedef struct LauncherMenuLayerStyle {
-  const char *title_font_key;
-  const char *subtitle_font_key;
-  //! Vertical margin between the title and the subtitle
-  int16_t title_margin_h;
-#if PBL_RECT
-  int16_t cell_height;
-#else
-  int16_t focused_cell_height;
-  int16_t unfocused_cell_height;
-#endif
-} LauncherMenuLayerStyle;
+typedef SystemThemeLauncherStyle LauncherMenuLayerStyle;
 
 typedef struct LauncherMenuLayer {
   Layer container_layer;

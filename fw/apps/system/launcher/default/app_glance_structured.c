@@ -433,6 +433,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   }
 
   GRect glance_frame = (GRect){.origin = offset, .size = structured_glance->glance.size};
+  const LauncherMenuLayerStyle *style = launcher_menu_layer_get_style();
 #if PBL_ROUND && PBL_DISPLAY_HEIGHT >= 200
   // For a circle: x = R - sqrt(R^2 - (y - R)^2), where R = display_size / 2
   const int16_t radius = PBL_DISPLAY_HEIGHT / 2;
@@ -447,16 +448,14 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   // Clamp to avoid negative sqrt when row is outside the circle (during scroll animations)
   const int32_t sqrt_arg = MAX(0, radius_sq - y_offset_sq);
   const int16_t circle_inset = radius - integer_sqrt(sqrt_arg);
-  // Add base inset for padding from the actual circle edge
-  // Extra 2px shift for non-center rows to push content slightly more inward
-  const int16_t base_inset = 10;
-  const int16_t horizontal_inset = base_inset + circle_inset;
-#elif PBL_DISPLAY_HEIGHT >= 200 && PBL_RECT
-  const int16_t horizontal_inset = 10;
+  // The style's insets pad the glance from the actual circle edge
+  const int16_t left_inset = style->glance_left_inset + circle_inset;
+  const int16_t right_inset = style->glance_right_inset + circle_inset;
 #else
-  const int16_t horizontal_inset = PBL_IF_RECT_ELSE(6, 23);
+  const int16_t left_inset = style->glance_left_inset;
+  const int16_t right_inset = style->glance_right_inset;
 #endif
-  glance_frame = grect_inset_internal(glance_frame, horizontal_inset, 0);
+  glance_frame = grect_inset(glance_frame, GEdgeInsets(0, right_inset, 0, left_inset));
   // A row dragged to the display edge can be entirely outside the circle; grect_inset then
   // returns GRectZero (origin included), so drawing would misplace the icon at (0, 0)
   if (grect_is_empty(&glance_frame)) {
