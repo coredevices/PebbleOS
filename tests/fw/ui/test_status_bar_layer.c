@@ -35,7 +35,7 @@
 // Stubs
 ////////////////////////////////////
 GContext *graphics_context_get_current_context(void) {
-  return NULL;
+  return nullptr;
 }
 
 // Setup
@@ -43,7 +43,7 @@ GContext *graphics_context_get_current_context(void) {
 
 ResourceCallbackHandle resource_watch(ResAppNum app_num, uint32_t resource_id,
                                       ResourceChangedCallback callback, void *data) {
-  return (ResourceCallbackHandle){0};
+  return (ResourceCallbackHandle){};
 }
 
 // Helpers

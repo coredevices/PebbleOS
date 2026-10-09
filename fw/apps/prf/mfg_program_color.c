@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdio.h>
 
 #include <pbl/util/size.h>
@@ -21,9 +20,9 @@
 
 #ifdef CONFIG_BOARD_ASTERIX
 const char *const s_model = "P2D";
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
 const char *const s_model = "PT2";
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
 const char *const s_model = "PR2";
 #else
 const char *const s_model = "Unknown";
@@ -47,7 +46,7 @@ const ColorTable s_color_table[] = {
     .name = "WHITE",
     .short_name = "WH",
   }
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY,
     .name = "BLACK/GREY",
@@ -68,7 +67,7 @@ const ColorTable s_color_table[] = {
     .name = "SILVER/GREY",
     .short_name = "SG",
   },
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
   {
     .color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20,
     .name = "BLACK-20MM",
@@ -275,7 +274,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
   mfg_test_result_report(MfgTestId_ProgramColor, true,
                          s_color_table[app_data->selected_color_index].color);
   text_layer_set_text(&app_data->status, "PROGRAMMED!");
-  app_timer_register(3000, prv_close_timer_callback, NULL);
+  app_timer_register(3000, prv_close_timer_callback, nullptr);
 }
 
 static void prv_config_provider(void *data) {

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup bluetooth_comm Comm session scheduling
  * @ingroup bluetooth

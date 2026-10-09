@@ -9,7 +9,6 @@
 #include "gdraw_command_list.h"
 #include "gdraw_command_sequence.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>

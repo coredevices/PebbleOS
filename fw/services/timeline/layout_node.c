@@ -23,7 +23,7 @@ static GTextNodeText *prv_create_text_node_attribute(const LayoutLayer *layout,
                                                      AttributeId attr_id) {
   const char *attr_str = attribute_get_string(layout->attributes, attr_id, "");
   if (IS_EMPTY_STRING(attr_str) && attr_id != AttributeIdUnused) {
-    return NULL;
+    return nullptr;
   }
   GTextNodeText *text_node = graphics_text_node_create_text(0);
   text_node->text = (char *)attr_str;
@@ -96,7 +96,7 @@ static GTextNodeText *prv_create_text_attribute_node_from_config(
 
 static GTextNodeText *prv_create_text_buffer_node_from_config(
     const LayoutLayer *layout, const LayoutNodeTextBufferConfig *config) {
-  GTextNodeText *text_node = NULL;
+  GTextNodeText *text_node = nullptr;
   const char *str = config->use_i18n ? i18n_get(config->str, layout) : config->str;
   if (!IS_EMPTY_STRING(str)) {
     text_node = prv_create_text_node_buffer(str);
@@ -127,7 +127,7 @@ static GTextNodeTextDynamic *prv_create_text_dynamic_node_from_config(
   // Request a buffer sized to hold both a TextDynamicContext (used in the node's callback) as well
   // as the size requested by the provided LayoutNodeTextDynamicConfig
   GTextNodeTextDynamic *text_node = graphics_text_node_create_text_dynamic(
-      sizeof(TextDynamicContext) + config->buffer_size, prv_text_dynamic_node_callback, NULL);
+      sizeof(TextDynamicContext) + config->buffer_size, prv_text_dynamic_node_callback, nullptr);
   if (text_node) {
     TextDynamicContext *context = (TextDynamicContext *)text_node->buffer;
     *context = (TextDynamicContext){
@@ -151,7 +151,7 @@ static GTextNodeTextDynamic *prv_create_text_dynamic_node_from_config(
 
 static GTextNodeText *prv_create_text_node_from_config(const LayoutLayer *layout,
                                                        const LayoutNodeTextConfig *config) {
-  GTextNodeText *text_node = prv_create_text_node_buffer(NULL);
+  GTextNodeText *text_node = prv_create_text_node_buffer(nullptr);
   prv_set_text_node_text_parameters_from_config(text_node, layout, config);
   return text_node;
 }
@@ -223,7 +223,7 @@ GTextNodeVertical *layout_create_headings_paragraphs_node(
   struct pbl_string_list *paragraphs = attribute_get_string_list(attributes, AttributeIdParagraphs);
   const size_t num_headings = pbl_string_list_count(headings);
   if (num_headings == 0) {
-    return NULL;
+    return nullptr;
   }
 
   const LayoutNodeTextConfig s_heading_config = {
@@ -316,7 +316,7 @@ static GTextNode *prv_metric_constructor(const LayoutLayer *layout,
   const LayoutNodeConfig *const icon_config_node =
       (context->index == 0) ? &timeline_icon_config.node : &icon_config.extent.node;
   const LayoutNodeConfig *const vertical_config_nodes[] = {
-    PBL_IF_ROUND_ELSE(icon_config_node, NULL),
+    PBL_IF_ROUND_ELSE(icon_config_node, nullptr),
     &name_config.text.extent.node,
     &value_config.text.extent.node,
   };
@@ -340,10 +340,10 @@ static GTextNode *prv_metric_constructor(const LayoutLayer *layout,
       layout, PBL_IF_ROUND_ELSE(&vertical_config.container.extent.node,
                                 &horizontal_config.container.extent.node));
   if (context->index > 0) {
-    PBL_UNUSED const int metric_margin_top = PBL_IF_RECT_ELSE(0, 5);
-    PBL_UNUSED const int metric_margin_h_rect = 14;
-    PBL_UNUSED const int metric_margin_h_round_inner = 20;
-    PBL_UNUSED const int metric_margin_h_round_page = 24;
+    [[maybe_unused]] const int metric_margin_top = PBL_IF_RECT_ELSE(0, 5);
+    [[maybe_unused]] const int metric_margin_h_rect = 14;
+    [[maybe_unused]] const int metric_margin_h_round_inner = 20;
+    [[maybe_unused]] const int metric_margin_h_round_page = 24;
     const int metric_margin_h =
         PBL_IF_RECT_ELSE(metric_margin_h_rect,
                          // special case for the first metric after a page break
@@ -375,7 +375,7 @@ GTextNodeVertical *layout_create_metrics_node(const LayoutLayer *layout_ref) {
   // TODO: Remove TimelineLayout requirement
   TimelineLayout *layout = (TimelineLayout *)layout_ref;
   if (layout->metric_icon_layers) {
-    return NULL;
+    return nullptr;
   }
 
   const AttributeList *attributes = layout_ref->attributes;
@@ -383,13 +383,13 @@ GTextNodeVertical *layout_create_metrics_node(const LayoutLayer *layout_ref) {
   struct pbl_string_list *values = attribute_get_string_list(attributes, AttributeIdMetricValues);
   Uint32List *icons = attribute_get_uint32_list(attributes, AttributeIdMetricIcons);
   if (!icons) {
-    return NULL;
+    return nullptr;
   }
 
   // String list access is out-of-bounds safe, so use the Uint32List num_values
   const size_t num_metrics = icons->num_values;
   if (!num_metrics) {
-    return NULL;
+    return nullptr;
   }
 
   if (num_metrics > 1) {
@@ -447,7 +447,7 @@ static GTextNode *prv_create_icon_node_from_config(const LayoutLayer *layout,
   KinoReel *icon_reel = kino_reel_create_with_resource_system(config->res_info->res_app_num,
                                                               config->res_info->res_id);
   if (!icon_reel) {
-    return NULL;
+    return nullptr;
   }
 
   KinoLayer *icon_layer = kino_layer_create((GRect){.size = kino_reel_get_size(icon_reel)});
@@ -463,7 +463,7 @@ static GTextNode *prv_create_icon_node_from_config(const LayoutLayer *layout,
 GTextNode *layout_create_text_node_from_config(const LayoutLayer *layout,
                                                const LayoutNodeConfig *config) {
   if (!config) {
-    return NULL;
+    return nullptr;
   }
   switch (config->type) {
     case LayoutNodeType_TextAttribute:
@@ -501,7 +501,7 @@ GTextNode *layout_create_text_node_from_config(const LayoutLayer *layout,
       return prv_create_headings_paragraphs_node(layout,
                                                  (LayoutNodeHeadingsParagraphsConfig *)config);
   }
-  return NULL;
+  return nullptr;
 }
 
 static void prv_kino_layer_wrapper_callback(GContext *ctx, const GRect *box,

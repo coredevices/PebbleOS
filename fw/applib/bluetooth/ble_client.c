@@ -87,11 +87,11 @@ static void prv_handle_service_change(const PebbleBLEGATTClientEvent *e) {
       // either communicate to the App all the handles which have changed or
       // allow the getters for removed services to still work for the duration
       // of the callback. For now just force a full handle flush and then resync the app
-      handler(info.device.opaque, BLEClientServicesInvalidateAll, NULL, 0, info.status);
+      handler(info.device.opaque, BLEClientServicesInvalidateAll, nullptr, 0, info.status);
       prv_handle_services_added(handler, info.device, info.status);
       break;
     case PebbleServicesInvalidateAll:
-      handler(info.device.opaque, BLEClientServicesInvalidateAll, NULL, 0, info.status);
+      handler(info.device.opaque, BLEClientServicesInvalidateAll, nullptr, 0, info.status);
       break;
     default:
       WTF;
@@ -104,7 +104,7 @@ typedef void (*GenericReadHandler)(pbl_bt_characteristic_t characteristic, const
 
 static void prv_consume_read_response(const PebbleBLEGATTClientEvent *e,
                                       GenericReadHandler handler) {
-  uint8_t *value = NULL;
+  uint8_t *value = nullptr;
   uint16_t value_length = e->value_length;
   const uintptr_t object_ref = e->object_ref;
   enum pbl_bt_gatt_error gatt_error = e->gatt_error;
@@ -130,12 +130,12 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *e,
 
 static void prv_consume_notifications(const PebbleBLEGATTClientEvent *e,
                                       GenericReadHandler handler) {
-  uint8_t *value = NULL;
+  uint8_t *value = nullptr;
   enum pbl_bt_gatt_error gatt_error = e->gatt_error;
 
   uint16_t heap_buffer_size = 0;
   uint16_t value_length = 0;
-  bool has_more = sys_ble_client_get_notification_value_length(NULL, &value_length);
+  bool has_more = sys_ble_client_get_notification_value_length(nullptr, &value_length);
   while (has_more) {
     if (heap_buffer_size < value_length) {
       const uint16_t new_heap_buffer_size = MIN(value_length, 64 /* arbitrary min size.. */);
@@ -235,7 +235,7 @@ static enum pbl_bt_errno prv_set_handler(void *new_handler, off_t struct_offset_
   BLEGenericHandler *handler_storage =
       (BLEGenericHandler *)(((uint8_t *)ble_app_state) + struct_offset_bytes);
 
-  const bool had_previous_handler = (*handler_storage == NULL);
+  const bool had_previous_handler = (*handler_storage == nullptr);
   *handler_storage = (BLEGenericHandler)new_handler;
 
   if (had_previous_handler) {

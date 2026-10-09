@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -30,8 +29,8 @@ typedef struct FrameBuffer {
   GRect dirty_rect; //<! Smallest rect covering all dirty pixels.
   uint8_t buffer[FRAMEBUFFER_SIZE_BYTES];
 } FrameBuffer;
-_Static_assert(sizeof(FrameBuffer) == offsetof(FrameBuffer, buffer) + FRAMEBUFFER_SIZE_BYTES,
-               "FrameBuffer must not have tail padding");
+static_assert(sizeof(FrameBuffer) == offsetof(FrameBuffer, buffer) + FRAMEBUFFER_SIZE_BYTES,
+              "FrameBuffer must not have tail padding");
 #endif
 
 uint8_t *framebuffer_get_line(FrameBuffer *f, uint16_t y);

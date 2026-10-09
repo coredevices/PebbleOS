@@ -166,7 +166,7 @@ static void prv_render_color_glyph(GContext *ctx, const GlyphData *glyph,
     }
     const bool row_visible = (dest_y >= clipped->origin.y);
     const GBitmapDataRowInfo row =
-        row_visible ? gbitmap_get_data_row_info(dest_bitmap, dest_y) : (GBitmapDataRowInfo){0};
+        row_visible ? gbitmap_get_data_row_info(dest_bitmap, dest_y) : (GBitmapDataRowInfo){};
 
     // Raw rows are byte-aligned
     d.bits_left = 0;

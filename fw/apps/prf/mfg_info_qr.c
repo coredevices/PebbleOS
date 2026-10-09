@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -32,12 +31,12 @@ static const ColorTable s_color_table[] = {
 #ifdef CONFIG_BOARD_ASTERIX
   {.color = WATCH_INFO_COLOR_COREDEVICES_P2D_BLACK, .short_name = "BK"},
   {.color = WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE, .short_name = "WH"},
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
   {.color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY, .short_name = "BG"},
   {.color = WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED, .short_name = "BR"},
   {.color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_BLUE, .short_name = "SB"},
   {.color = WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY, .short_name = "SG"},
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
   {.color = WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20, .short_name = "BK20"},
   {.color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14, .short_name = "SV14"},
   {.color = WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_20, .short_name = "SV20"},

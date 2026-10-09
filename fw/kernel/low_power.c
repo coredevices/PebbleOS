@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
-
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/runlevel.h>
 
@@ -50,7 +48,7 @@ static void prv_low_power_transition(bool active) {
   // will cause repeated low power on/off requests. Require that a few seconds
   // elapse without further transitions before acting upon it to give us some
   // time to settle on one state or the other.
-  new_timer_start(s_toggle_timer, 3000, prv_low_power_toggle_timer_callback, NULL, 0 /*flags*/);
+  new_timer_start(s_toggle_timer, 3000, prv_low_power_toggle_timer_callback, nullptr, 0 /*flags*/);
 
   // FIXME PBL-XXXXX: This should be in a shell/prf/battery_ui_fsm.c
 #ifdef CONFIG_RECOVERY_FW

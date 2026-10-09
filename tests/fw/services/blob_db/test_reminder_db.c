@@ -179,7 +179,7 @@ void test_reminder_db__basic_test(void) {
 
   // add 1 back so it's clean
   cl_assert(S_SUCCESS == reminder_db_insert_item(&item1));
-  TimelineItem temp = {{{0}}};
+  TimelineItem temp = {};
   cl_assert(S_SUCCESS == reminder_db_read((uint8_t *)&item1.header.id, sizeof(Uuid),
                                           (uint8_t *)&temp, sizeof(CommonTimelineItemHeader)));
 
@@ -189,7 +189,7 @@ void test_reminder_db__basic_test(void) {
   memset(&temp, 0, sizeof(TimelineItem));
   cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
   cl_assert(uuid_equal(&item1.header.id, &temp.header.id));
-  temp.attr_list.attributes = NULL;
+  temp.attr_list.attributes = nullptr;
   cl_assert(memcmp(&item1, &temp, sizeof(TimelineItem)) == 0);
   cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
   cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) == 0);
@@ -198,7 +198,7 @@ void test_reminder_db__basic_test(void) {
   memset(&temp, 0, sizeof(TimelineItem));
   cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
   cl_assert(uuid_equal(&item2.header.id, &temp.header.id));
-  temp.attr_list.attributes = NULL;
+  temp.attr_list.attributes = nullptr;
   cl_assert(memcmp(&item2, &temp, sizeof(TimelineItem)) == 0);
   cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
   cl_assert(reminder_db_get_len((uint8_t *)&item2.header.id, sizeof(Uuid)) == 0);
@@ -207,7 +207,7 @@ void test_reminder_db__basic_test(void) {
   memset(&temp, 0, sizeof(TimelineItem));
   cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
   if (uuid_equal(&item3.header.id, &temp.header.id)) {
-    temp.attr_list.attributes = NULL;
+    temp.attr_list.attributes = nullptr;
     timeline_item_free_allocated_buffer(&temp);
     cl_assert(memcmp(&item3, &temp, sizeof(TimelineItem)) == 0);
     cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
@@ -215,19 +215,19 @@ void test_reminder_db__basic_test(void) {
 
     memset(&temp, 0, sizeof(TimelineItem));
     cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
-    temp.attr_list.attributes = NULL;
+    temp.attr_list.attributes = nullptr;
     cl_assert(memcmp(&item4, &temp, sizeof(TimelineItem)) == 0);
     cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
     cl_assert(reminder_db_get_len((uint8_t *)&item4.header.id, sizeof(Uuid)) == 0);
   } else {
-    temp.attr_list.attributes = NULL;
+    temp.attr_list.attributes = nullptr;
     cl_assert(memcmp(&item4, &temp, sizeof(TimelineItem)) == 0);
     cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
     cl_assert(reminder_db_get_len((uint8_t *)&item4, sizeof(Uuid)) == 0);
 
     memset(&temp, 0, sizeof(TimelineItem));
     cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
-    temp.attr_list.attributes = NULL;
+    temp.attr_list.attributes = nullptr;
     cl_assert(memcmp(&item3, &temp, sizeof(TimelineItem)) == 0);
     cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
     cl_assert(reminder_db_get_len((uint8_t *)&item3.header.id, sizeof(Uuid)) == 0);
@@ -287,7 +287,7 @@ void test_reminder_db__bad_item(void) {
 }
 
 void test_reminder_db__read_nonexistant(void) {
-  TimelineItem item = {{{0}}};
+  TimelineItem item = {};
   cl_assert_equal_i(E_DOES_NOT_EXIST, reminder_db_read_item(&item, &bad_item.common.id));
 }
 
@@ -301,23 +301,23 @@ void test_reminder_db__find_by_timestamp_title(void) {
   TimelineItem reminder;
 
   // Test non-matching title and timestamp
-  cl_assert_equal_b(reminder_db_find_by_timestamp_title(0, "nonexistent title", NULL, &reminder),
+  cl_assert_equal_b(reminder_db_find_by_timestamp_title(0, "nonexistent title", nullptr, &reminder),
                     false);
 
   // Test matching timestamp, but not title
   cl_assert_equal_b(reminder_db_find_by_timestamp_title(title_item1.header.timestamp,
-                                                        "nonexistent title", NULL, &reminder),
+                                                        "nonexistent title", nullptr, &reminder),
                     false);
 
   // Test matching title, but not timestamp
   cl_assert_equal_b(reminder_db_find_by_timestamp_title(
-                        0, title_item1.attr_list.attributes[0].cstring, NULL, &reminder),
+                        0, title_item1.attr_list.attributes[0].cstring, nullptr, &reminder),
                     false);
 
   // Confirm proper item is returned for search criteria
   cl_assert_equal_b(reminder_db_find_by_timestamp_title(title_item1.header.timestamp,
                                                         title_item1.attr_list.attributes[0].cstring,
-                                                        NULL, &reminder),
+                                                        nullptr, &reminder),
                     true);
   cl_assert(uuid_equal(&reminder.header.id, &title_item1.header.id));
 }

@@ -34,7 +34,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
   // Draw Reel
   KinoReel *reel = kino_player_get_reel(&kino_layer->player);
-  if (reel == NULL) {
+  if (reel == nullptr) {
     return;
   }
 
@@ -96,7 +96,7 @@ KinoLayer *kino_layer_create(GRect frame) {
 }
 
 void kino_layer_destroy(KinoLayer *kino_layer) {
-  if (kino_layer == NULL) {
+  if (kino_layer == nullptr) {
     return;
   }
 
@@ -108,7 +108,7 @@ Layer *kino_layer_get_layer(KinoLayer *kino_layer) {
   if (kino_layer) {
     return &kino_layer->layer;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -185,7 +185,7 @@ GAlign kino_layer_get_alignment(KinoLayer *kino_layer) {
 
 GRect kino_layer_get_reel_bounds(KinoLayer *kino_layer) {
   KinoPlayer *player = kino_layer_get_player(kino_layer);
-  KinoReel *reel = player ? kino_player_get_reel(player) : NULL;
+  KinoReel *reel = player ? kino_player_get_reel(player) : nullptr;
   if (!reel) {
     return GRectZero;
   }

@@ -123,7 +123,7 @@ static void prv_timer_cb(void *data) {
 // Start/reschedule the timer that feeds the FIFO/s_latest_reading out of the
 // samples received from the host
 static void prv_reschedule_timer(void) {
-  bool success = new_timer_start(s_timer_id, s_sampling_interval_ms, prv_timer_cb, NULL,
+  bool success = new_timer_start(s_timer_id, s_sampling_interval_ms, prv_timer_cb, nullptr,
                                  TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
   s_timer_running = true;

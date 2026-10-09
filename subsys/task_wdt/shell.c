@@ -31,13 +31,13 @@ static int prv_cmd_stall(const struct pbl_shell *sh, size_t argc, char **argv) {
   const char *thread = argv[1];
 
   if (strcmp(thread, "main") == 0) {
-    launcher_task_add_callback(prv_stall, NULL);
+    launcher_task_add_callback(prv_stall, nullptr);
   } else if (strcmp(thread, "timers") == 0) {
-    new_timer_start(new_timer_create(), 10, prv_stall, NULL, 0);
+    new_timer_start(new_timer_create(), 10, prv_stall, nullptr, 0);
   } else if (strcmp(thread, "bg") == 0) {
-    system_task_add_callback(prv_stall, NULL);
+    system_task_add_callback(prv_stall, nullptr);
   } else if (strcmp(thread, "irq") == 0) {
-    system_task_add_callback(prv_stall_irq, NULL);
+    system_task_add_callback(prv_stall_irq, nullptr);
   } else {
     pbl_shell_error(sh, "unknown thread '%s', pick main | bg | timers | irq", thread);
     return -EINVAL;
@@ -47,10 +47,11 @@ static int prv_cmd_stall(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 static const struct pbl_shell_cmd sub_wdt[] = {
-  PBL_SHELL_CMD_ARG(stall, NULL, "Spin a thread forever <main|bg|timers|irq>", prv_cmd_stall, 2, 0),
+  PBL_SHELL_CMD_ARG(stall, nullptr, "Spin a thread forever <main|bg|timers|irq>", prv_cmd_stall, 2,
+                    0),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(wdt, sub_wdt, "Task watchdog", NULL);
+PBL_SHELL_CMD_REGISTER(wdt, sub_wdt, "Task watchdog", nullptr);
 
 #endif

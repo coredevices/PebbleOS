@@ -42,14 +42,15 @@ static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuI
   AppData *app_data = (AppData *)data;
   switch (cell_index->row) {
     case 0:
-      menu_cell_basic_draw_icon_right(ctx, cell_layer, "First Item", NULL, &app_data->checked_icon);
+      menu_cell_basic_draw_icon_right(ctx, cell_layer, "First Item", nullptr,
+                                      &app_data->checked_icon);
       break;
     case 1:
-      menu_cell_basic_draw_icon_right(ctx, cell_layer, "Second Item", NULL,
+      menu_cell_basic_draw_icon_right(ctx, cell_layer, "Second Item", nullptr,
                                       &app_data->checked_icon);
       break;
     case 2:
-      menu_cell_basic_draw(ctx, cell_layer, "Third Item", NULL, &app_data->checked_icon);
+      menu_cell_basic_draw(ctx, cell_layer, "Third Item", nullptr, &app_data->checked_icon);
       break;
     case 3:
       menu_cell_basic_draw_icon_right(ctx, cell_layer, "Fourth Item", "with a subtitle",

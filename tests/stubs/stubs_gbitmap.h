@@ -17,19 +17,19 @@ GBitmapFormat gbitmap_get_format(const GBitmap *bitmap) {
 }
 
 GBitmap *gbitmap_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
-  return NULL;
+  return nullptr;
 }
 
 GBitmap *gbitmap_create_with_data(const uint8_t *data) {
-  return NULL;
+  return nullptr;
 }
 
 GBitmap *gbitmap_create_blank(GSize size, GBitmapFormat format) {
-  return NULL;
+  return nullptr;
 }
 
 GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
-  return (GBitmapDataRowInfo){0};
+  return (GBitmapDataRowInfo){};
 }
 
 uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) {

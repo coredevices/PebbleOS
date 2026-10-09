@@ -38,21 +38,21 @@ void graphics_line_draw_precise_stroked(GContext *ctx, GPointPrecise p0, GPointP
 }
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
-  return NULL;
+  return nullptr;
 }
 
 void test_gdraw_command_resources__load_pdci(void) {
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, TEST_PDC_FILE);
   cl_assert(resource_id != UINT32_MAX);
   GDrawCommandImage *image = gdraw_command_image_create_with_resource(resource_id);
-  cl_assert(image != NULL);
+  cl_assert(image != nullptr);
 }
 
 void test_gdraw_command_resources__load_pdcs(void) {
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, TEST_PDC_FILE);
   cl_assert(resource_id != UINT32_MAX);
   GDrawCommandSequence *sequence = gdraw_command_sequence_create_with_resource(resource_id);
-  cl_assert(sequence != NULL);
+  cl_assert(sequence != nullptr);
 }
 
 // Test that loading an invalid PDC file fails
@@ -62,9 +62,9 @@ void test_gdraw_command_resources__load_invalid(void) {
 
   // Test Command_Image
   GDrawCommandImage *image = gdraw_command_image_create_with_resource(resource_id);
-  cl_assert(image == NULL);
+  cl_assert(image == nullptr);
 
   // Test Command Sequence
   GDrawCommandSequence *sequence = gdraw_command_sequence_create_with_resource(resource_id);
-  cl_assert(sequence == NULL);
+  cl_assert(sequence == nullptr);
 }

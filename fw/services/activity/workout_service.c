@@ -271,7 +271,7 @@ PBL_T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
   workout_utils_send_abandoned_workout_notification();
 
   s_workout_data.current_workout->workout_abandoned_timer = evented_timer_register(
-      WORKOUT_ABANDON_WORKOUT_TIMEOUT_MS, false, prv_abandon_workout_timer_callback, NULL);
+      WORKOUT_ABANDON_WORKOUT_TIMEOUT_MS, false, prv_abandon_workout_timer_callback, nullptr);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -339,7 +339,7 @@ void workout_service_workout_event_handler(PebbleWorkoutEvent *event) {
     } else if (event->type == PebbleWorkoutEvent_FrontendClosed) {
       s_workout_data.current_workout->workout_abandoned_timer =
           evented_timer_register(WORKOUT_ABANDONED_NOTIFICATION_TIMEOUT_MS, false,
-                                 prv_abandoned_notification_timer_callback, NULL);
+                                 prv_abandoned_notification_timer_callback, nullptr);
     }
   }
 unlock:
@@ -597,7 +597,7 @@ bool workout_service_stop_workout(void) {
     prv_put_event(PebbleWorkoutEvent_Stopped);
 
     kernel_free(s_workout_data.current_workout);
-    s_workout_data.current_workout = NULL;
+    s_workout_data.current_workout = nullptr;
   }
   prv_unlock();
 
@@ -613,7 +613,7 @@ bool workout_service_stop_workout(void) {
 // ---------------------------------------------------------------------------------------
 bool workout_service_is_workout_ongoing(void) {
   prv_lock();
-  bool rv = (s_workout_data.current_workout != NULL);
+  bool rv = (s_workout_data.current_workout != nullptr);
   prv_unlock();
   return rv;
 }

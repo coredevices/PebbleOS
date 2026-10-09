@@ -33,7 +33,7 @@
 
 static void prv_set(const char *file_name, int file_len, const char *key, size_t key_len,
                     const void *val, size_t val_len) {
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   cl_assert_equal_i(settings_file_open(&file, file_name, file_len), S_SUCCESS);
   cl_assert_equal_i(settings_file_set(&file, key, key_len, val, val_len), S_SUCCESS);
   settings_file_close(&file);
@@ -51,7 +51,7 @@ static void prv_set_notification_text_size(PreferredContentSize size) {
 }
 
 static bool prv_notification_text_size_stored(void) {
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   cl_assert_equal_i(settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN),
                     S_SUCCESS);
   const bool exists =

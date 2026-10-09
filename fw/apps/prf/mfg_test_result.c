@@ -119,7 +119,7 @@ void mfg_test_result_report(MfgTestId test, bool passed, uint32_t value) {
 
 const MfgTestResult *mfg_test_result_get(MfgTestId test) {
   if (test >= MfgTestIdCount) {
-    return NULL;
+    return nullptr;
   }
 
 #ifdef CONFIG_MFG

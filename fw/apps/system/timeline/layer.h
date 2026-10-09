@@ -6,8 +6,6 @@
 #include "common.h"
 #include "peek_layer.h"
 
-#include <stdbool.h>
-
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/services/timeline/timeline_layout_animations.h>

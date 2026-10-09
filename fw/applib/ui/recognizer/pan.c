@@ -232,8 +232,8 @@ Recognizer *pan_recognizer_create(RecognizerEventCb event_cb, void *user_data, P
 
 Recognizer *pan_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data,
                                        PanAxis axis) {
-  _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(PanRecognizerData) <= PAN_RECOGNIZER_STATIC_SIZE,
-                 "PAN_RECOGNIZER_STATIC_SIZE too small for a static pan recognizer");
+  static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(PanRecognizerData) <= PAN_RECOGNIZER_STATIC_SIZE,
+                "PAN_RECOGNIZER_STATIC_SIZE too small for a static pan recognizer");
   PanRecognizerData data = {
     .config = {
       .axis_lock = axis,

@@ -64,7 +64,7 @@ static bool prv_image_size_eq_rect_size(KinoReelTransformData *data, GRect rect)
 
 static void prv_free_list_copy(KinoReelTransformData *data) {
   applib_free(data->list_copy);
-  data->list_copy = NULL;
+  data->list_copy = nullptr;
 }
 
 static GDrawCommandList *prv_get_or_create_list_copy(KinoReelTransformData *data,
@@ -107,7 +107,7 @@ static uint32_t prv_get_duration(KinoReelTransformData *data) {
     //
     // If we have a 'to_reel' then ignore infinite duration requests because we will never get to
     // it and burn a lot of power along the way!
-    if ((data->to_reel == NULL) || (from_duration != PLAY_DURATION_INFINITE)) {
+    if ((data->to_reel == nullptr) || (from_duration != PLAY_DURATION_INFINITE)) {
       duration = MAX(duration, from_duration);
     }
   }
@@ -185,7 +185,7 @@ static void prv_draw_command_list_processed(GContext *ctx, GDrawCommandList *lis
   GPoint draw_box_origin = ctx->draw_state.drawing_box.origin;
   graphics_context_move_draw_box(ctx, offset);
   gdraw_command_list_draw_processed(
-      ctx, list, NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, NULL));
+      ctx, list, NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
   ctx->draw_state.drawing_box.origin = draw_box_origin;
 }
 
@@ -269,7 +269,7 @@ static GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
     KinoReel *reel = prv_get_current_reel(data);
     return kino_reel_get_gdraw_command_list(reel);
   }
-  return NULL;
+  return nullptr;
 }
 
 static const KinoReelImpl s_kino_reel_impl_transform = {
@@ -285,7 +285,7 @@ static const KinoReelImpl s_kino_reel_impl_transform = {
 KinoReel *kino_reel_transform_create(const TransformImpl *impl, void *context) {
   KinoReelTransformData *data = applib_malloc(sizeof(KinoReelTransformData));
   if (!data) {
-    return NULL;
+    return nullptr;
   }
 
   *data = (KinoReelTransformData){
@@ -306,7 +306,7 @@ void *kino_reel_transform_get_context(KinoReel *reel) {
   if (data) {
     return data->context;
   }
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_transform_set_from_reel(KinoReel *reel, KinoReel *from_reel, bool take_ownership) {
@@ -327,7 +327,7 @@ KinoReel *kino_reel_transform_get_from_reel(KinoReel *reel) {
   if (data) {
     return data->from_reel;
   }
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_transform_set_to_reel(KinoReel *reel, KinoReel *to_reel, bool take_ownership) {
@@ -348,7 +348,7 @@ KinoReel *kino_reel_transform_get_to_reel(KinoReel *reel) {
   if (data) {
     return data->to_reel;
   }
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_transform_set_layer_frame(KinoReel *reel, GRect layer_frame) {

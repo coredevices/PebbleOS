@@ -27,7 +27,7 @@ static void pass_initial_values_app_task_callback(void *data) {
   AppSync *s = data;
   Tuple *tuple = dict_read_first(&s->current_iter);
   while (tuple) {
-    update_key_callback(tuple->key, tuple, NULL, s);
+    update_key_callback(tuple->key, tuple, nullptr, s);
     tuple = dict_read_next(&s->current_iter);
   }
 }
@@ -57,7 +57,7 @@ void app_sync_init(AppSync *s, uint8_t *buffer, const uint16_t buffer_size,
                    const Tuplet *const keys_and_initial_values, const uint8_t count,
                    AppSyncTupleChangedCallback tuple_changed_callback,
                    AppSyncErrorCallback error_callback, void *context) {
-  PBL_ASSERTN(buffer != NULL);
+  PBL_ASSERTN(buffer != nullptr);
   PBL_ASSERTN(buffer_size > 0);
   s->buffer = buffer;
   s->buffer_size = buffer_size;
@@ -77,19 +77,19 @@ void app_sync_init(AppSync *s, uint8_t *buffer, const uint16_t buffer_size,
 }
 
 void app_sync_deinit(AppSync *s) {
-  app_message_set_context(NULL);
-  app_message_register_outbox_sent(NULL);
-  app_message_register_outbox_failed(NULL);
-  app_message_register_inbox_received(NULL);
-  app_message_register_inbox_dropped(NULL);
-  s->current = NULL;
+  app_message_set_context(nullptr);
+  app_message_register_outbox_sent(nullptr);
+  app_message_register_outbox_failed(nullptr);
+  app_message_register_inbox_received(nullptr);
+  app_message_register_inbox_dropped(nullptr);
+  s->current = nullptr;
 }
 
 AppMessageResult app_sync_set(AppSync *s, const Tuplet *const updated_keys_and_values,
                               const uint8_t count) {
   DictionaryIterator *iter;
   AppMessageResult result = app_message_outbox_begin(&iter);
-  if (iter == NULL) {
+  if (iter == nullptr) {
     return result;
   }
   for (unsigned int i = 0; i < count; ++i) {

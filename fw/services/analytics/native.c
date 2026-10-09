@@ -42,8 +42,8 @@ struct PBL_PACKED native_heartbeat_record {
 };
 
 /* The record is logged as a raw byte blob, so it must have no padding. */
-_Static_assert(sizeof(struct native_heartbeat_record) ==
-                   sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
+static_assert(sizeof(struct native_heartbeat_record) ==
+                  sizeof(uint8_t) + sizeof(uint64_t) + BUILD_ID_EXPECTED_LEN
 #define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key)               +sizeof(uint32_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key)                 +sizeof(int32_t)
 #define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale) +sizeof(uint32_t) + sizeof(uint16_t)
@@ -57,8 +57,8 @@ _Static_assert(sizeof(struct native_heartbeat_record) ==
 #undef PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_TIMER
 #undef PBL_ANALYTICS_METRIC_DEFINE_STRING
-               ,
-               "native_heartbeat_record must be packed (no padding)");
+              ,
+              "native_heartbeat_record must be packed (no padding)");
 
 /* Type-specific internal index enums (dense, no gaps) */
 
@@ -296,12 +296,12 @@ void pbl_analytics__native_heartbeat(void) {
   prv_record_metrics(&record, true);
   pbl_mutex_unlock(&s_mutex);
 
-  if (s_dls_session == NULL) {
+  if (s_dls_session == nullptr) {
     Uuid system_uuid = UUID_SYSTEM;
 
     s_dls_session = dls_create(DlsSystemTagAnalyticsNativeHeartbeat, DATA_LOGGING_BYTE_ARRAY,
                                sizeof(struct native_heartbeat_record), false, false, &system_uuid);
-    if (s_dls_session == NULL) {
+    if (s_dls_session == nullptr) {
       PBL_LOG_WRN("Native analytics DLS session unavailable");
       return;
     }
@@ -423,6 +423,6 @@ static int prv_cmd_metrics(const struct pbl_shell *sh, size_t argc, char **argv)
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_analytics, metrics, NULL, "Dump the current metrics", prv_cmd_metrics, 0,
-                     0);
+PBL_SHELL_SUBCMD_ADD(sub_analytics, metrics, nullptr, "Dump the current metrics", prv_cmd_metrics,
+                     0, 0);
 #endif

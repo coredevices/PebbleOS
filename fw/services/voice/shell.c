@@ -43,10 +43,10 @@ static int prv_cmd_cancel(const struct pbl_shell *sh, size_t argc, char **argv) 
 }
 
 static const struct pbl_shell_cmd sub_voice[] = {
-  PBL_SHELL_CMD_ARG(start, NULL, "Start a session [dictation|nlp]", prv_cmd_start, 1, 1),
-  PBL_SHELL_CMD(stop, NULL, "Stop recording and wait for the result", prv_cmd_stop),
-  PBL_SHELL_CMD(cancel, NULL, "Cancel the session", prv_cmd_cancel),
+  PBL_SHELL_CMD_ARG(start, nullptr, "Start a session [dictation|nlp]", prv_cmd_start, 1, 1),
+  PBL_SHELL_CMD(stop, nullptr, "Stop recording and wait for the result", prv_cmd_stop),
+  PBL_SHELL_CMD(cancel, nullptr, "Cancel the session", prv_cmd_cancel),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(voice, sub_voice, "Voice dictation", NULL);
+PBL_SHELL_CMD_REGISTER(voice, sub_voice, "Voice dictation", nullptr);

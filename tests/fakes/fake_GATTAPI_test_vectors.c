@@ -466,9 +466,9 @@ void fake_gatt_put_discovery_indication_gatt_profile_service(
                    },
              }},
     .NumberOfIncludedService = 0,
-    .IncludedServiceList = NULL,
+    .IncludedServiceList = nullptr,
     .NumberOfCharacteristics = has_service_changed_characteristic ? 1 : 0,
-    .CharacteristicInformationList = has_service_changed_characteristic ? characteristics : NULL,
+    .CharacteristicInformationList = has_service_changed_characteristic ? characteristics : nullptr,
   };
 
   GATT_Service_Discovery_Event_Data_t event = {

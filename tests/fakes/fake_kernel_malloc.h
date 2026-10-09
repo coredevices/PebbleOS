@@ -35,7 +35,7 @@ Allocation *s_head;
 
 void *kernel_malloc(size_t bytes) {
   if (bytes > s_largest_free_block_bytes) {
-    return NULL;
+    return nullptr;
   }
 
   char *memory = malloc(bytes + 12);
@@ -77,7 +77,7 @@ void *kernel_malloc_check(size_t bytes) {
 char *kernel_strdup(const char *s) {
   char *r = kernel_malloc_check(strlen(s) + 1);
   if (!r) {
-    return NULL;
+    return nullptr;
   }
   strcpy(r, s);
   return r;
@@ -95,18 +95,18 @@ static bool prv_find_allocation_filter_cb(ListNode *found_node, void *data) {
 // Split into its own function to make it easy to set a breakpoint on it when debugging
 // using `./waf test --debug_test`
 static void prv_double_free_assert(Allocation *a) {
-  cl_assert_(a != NULL, "Couldn't find allocation! Double free?");
+  cl_assert_(a != nullptr, "Couldn't find allocation! Double free?");
 }
 
 void kernel_free(void *ptr) {
-  if (ptr == NULL) {
+  if (ptr == nullptr) {
     return;
   }
 
   if (s_stats_enabled) {
     Allocation *a = (Allocation *)list_find((ListNode *)s_head, prv_find_allocation_filter_cb, ptr);
     prv_double_free_assert(a);
-    list_remove(&a->node, (ListNode **)&s_head, NULL);
+    list_remove(&a->node, (ListNode **)&s_head, nullptr);
     free(a);
   }
 
@@ -164,7 +164,7 @@ void fake_kernel_malloc_mark_assert_equal(void) {
 void fake_kernel_malloc_init(void) {
   s_largest_free_block_bytes = ~0;
   s_heap_mark = 0;
-  s_head = NULL;
+  s_head = nullptr;
 }
 
 void fake_kernel_malloc_deinit(void) {
@@ -174,5 +174,5 @@ void fake_kernel_malloc_deinit(void) {
     free(a);
     a = next;
   }
-  s_head = NULL;
+  s_head = nullptr;
 }

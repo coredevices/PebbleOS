@@ -257,7 +257,7 @@ static GATTClientSubscriptionNode *prv_find_subscription_and_connection_for_cccd
   pbl_bt_characteristic_t characteristic_ref =
       gatt_client_descriptor_get_characteristic_and_connection(cccd_ref, connection_out);
   if (!*connection_out) {
-    return NULL;
+    return nullptr;
   }
   return prv_find_subscription_for_characteristic(characteristic_ref, *connection_out);
 }
@@ -313,7 +313,7 @@ void gatt_client_subscriptions_handle_write_cccd_response(pbl_bt_descriptor_t cc
 // -------------------------------------------------------------------------------------------------
 
 static bool prv_check_buffer(GAPLEClient client) {
-  if (s_circular_buffer[client] == NULL) {
+  if (s_circular_buffer[client] == nullptr) {
     PBL_LOG_ERR("App attempted to consume notifications without buffer.");
     return false;
   }
@@ -442,7 +442,7 @@ static void prv_release_buffer(GAPLEClient client) {
     if (s_circular_buffer_retain_count[client] == 0) {
       // Last subscription for this client to require the circular buffer, go ahead and clean it up:
       kernel_free(s_circular_buffer[client]);
-      s_circular_buffer[client] = NULL;
+      s_circular_buffer[client] = nullptr;
       // if the buffer is destroyed, there are no more events
       s_is_notification_event_pending[client] = false;
     }
@@ -457,7 +457,7 @@ static bool prv_retain_buffer(GAPLEClient client) {
   {
     if (s_circular_buffer_retain_count[client] == 0) {
       // First subscription for this client to require the circular buffer, go ahead and create it:
-      PBL_ASSERTN(s_circular_buffer[client] == NULL);
+      PBL_ASSERTN(s_circular_buffer[client] == nullptr);
       const size_t size = sizeof(CircularBuffer) + GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE;
       // TODO: Use app_malloc for the storage when client is app
       // https://pebbletechnology.atlassian.net/browse/PBL-14151
@@ -540,7 +540,7 @@ static bool prv_sanitize_subscription_type(BLESubscription *subscription_type,
 
 static void prv_remove_subscription(GAPLEConnection *connection,
                                     GATTClientSubscriptionNode *subscription) {
-  list_remove(&subscription->node, (ListNode **)&connection->gatt_subscriptions, NULL);
+  list_remove(&subscription->node, (ListNode **)&connection->gatt_subscriptions, nullptr);
   kernel_free(subscription);
 }
 
@@ -750,7 +750,7 @@ void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *con
       }
       node = next;
     }
-    connection->gatt_subscriptions = NULL;
+    connection->gatt_subscriptions = nullptr;
   }
   bt_unlock();
 }

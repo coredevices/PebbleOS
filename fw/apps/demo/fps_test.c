@@ -43,7 +43,7 @@ static void prv_redraw_timer_cb(void *cb_data) {
   AppData *data = app_state_get_user_data();
 
   layer_mark_dirty(&data->window.layer);
-  app_timer_register(0, prv_redraw_timer_cb, NULL);
+  app_timer_register(0, prv_redraw_timer_cb, nullptr);
 }
 
 /*****************************************************************************************
@@ -118,7 +118,7 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, char const *tit
   if (title) {
     graphics_context_set_text_color_2bit(ctx, GColor2White);
     graphics_draw_text(ctx, title, title_font, box, GTextOverflowModeFill, GTextAlignmentLeft,
-                       NULL);
+                       nullptr);
   }
 }
 
@@ -192,7 +192,7 @@ static void prv_window_load(Window *window) {
   const GRect menu_layer_rect =
       GRect(navbar_width, 0, full_rect->size.w - navbar_width, full_rect->size.h);
   menu_layer_init(&data->action_list1, &menu_layer_rect);
-  menu_layer_set_callbacks(&data->action_list1, NULL,
+  menu_layer_set_callbacks(&data->action_list1, nullptr,
                            &(MenuLayerCallbacks){
                              .get_num_rows = prv_get_num_rows,
                              .draw_row = prv_draw_row_1,
@@ -204,7 +204,7 @@ static void prv_window_load(Window *window) {
   layer_add_child(&window->layer, menu_layer_get_layer(&data->action_list1));
 
   menu_layer_init(&data->action_list2, &menu_layer_rect);
-  menu_layer_set_callbacks(&data->action_list2, NULL,
+  menu_layer_set_callbacks(&data->action_list2, nullptr,
                            &(MenuLayerCallbacks){
                              .get_num_rows = prv_get_num_rows,
                              .draw_row = prv_draw_row_2,
@@ -219,9 +219,9 @@ static void prv_window_load(Window *window) {
   layer_add_child(&window->layer, menu_layer_get_layer(&data->action_list2));
 
   // start infinite update loop
-  prv_redraw_timer_cb(NULL);
+  prv_redraw_timer_cb(nullptr);
   // run application for a given time, than terminate
-  app_timer_register(5000, prv_pop_all_windows_cb, NULL);
+  app_timer_register(5000, prv_pop_all_windows_cb, nullptr);
 }
 
 static void prv_window_unload(Window *window) {

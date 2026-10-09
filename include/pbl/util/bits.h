@@ -103,7 +103,6 @@
  * @param set Set the bit if true, clear it otherwise.
  */
 #define PBL_WRITE_BIT(var, bit, set) \
-  ((var) =                           \
-       (set) ? ((var) | ((__typeof__(var))1 << (bit))) : ((var) & ~((__typeof__(var))1 << (bit))))
+  ((var) = (set) ? ((var) | ((typeof(var))1 << (bit))) : ((var) & ~((typeof(var))1 << (bit))))
 
 /** @} */

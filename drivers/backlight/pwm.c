@@ -14,7 +14,7 @@ static const uint32_t TIMER_PERIOD_RESOLUTION = 1024;
 static const uint32_t PWM_OUTPUT_FREQUENCY_HZ = 256;
 
 void backlight_init(void) {
-  if (BACKLIGHT_PWM.ctl.gpio != NULL) {
+  if (BACKLIGHT_PWM.ctl.gpio != nullptr) {
     gpio_output_init(&BACKLIGHT_PWM.ctl, GPIO_OType_PP);
     gpio_output_set(&BACKLIGHT_PWM.ctl, false);
   }
@@ -26,11 +26,11 @@ void backlight_init(void) {
 void backlight_set_brightness(uint8_t brightness) {
   if (brightness == 0) {
     pwm_enable(&BACKLIGHT_PWM.pwm, false);
-    if (BACKLIGHT_PWM.ctl.gpio != NULL) {
+    if (BACKLIGHT_PWM.ctl.gpio != nullptr) {
       gpio_output_set(&BACKLIGHT_PWM.ctl, false);
     }
   } else {
-    if (BACKLIGHT_PWM.ctl.gpio != NULL) {
+    if (BACKLIGHT_PWM.ctl.gpio != nullptr) {
       gpio_output_set(&BACKLIGHT_PWM.ctl, true);
     }
 

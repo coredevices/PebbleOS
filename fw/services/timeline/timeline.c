@@ -174,7 +174,7 @@ static TimelineNode *prv_find_first(TimelineNode *head, TimelineIterDirection di
 }
 
 static void prv_remove_node(TimelineNode **head, TimelineNode *node) {
-  list_remove((ListNode *)node, (ListNode **)head, NULL);
+  list_remove((ListNode *)node, (ListNode **)head, nullptr);
   task_free(node);
 }
 
@@ -367,14 +367,14 @@ static bool prv_iter_dummy(IteratorState state) {
 
 static bool prv_iter_next(IteratorState state) {
   TimelineIterState *timeline_iter_state = (TimelineIterState *)state;
-  if (timeline_iter_state->node == NULL) {
+  if (timeline_iter_state->node == nullptr) {
     return false;
   }
   // keep a copy of the original node in case we go to the end without finding a new valid node
   TimelineNode *orig = timeline_iter_state->node;
   do {
     timeline_iter_state->node = (TimelineNode *)timeline_iter_state->node->node.next;
-    if (timeline_iter_state->node == NULL) {
+    if (timeline_iter_state->node == nullptr) {
       timeline_iter_state->node = orig;
       return false;
     }
@@ -399,13 +399,13 @@ static bool prv_iter_next(IteratorState state) {
 static bool prv_iter_prev(IteratorState state) {
   TimelineIterState *timeline_iter_state = (TimelineIterState *)state;
   // at the past-most item
-  if (timeline_iter_state->node == NULL) {
+  if (timeline_iter_state->node == nullptr) {
     return false;
   }
   TimelineNode *orig = timeline_iter_state->node;
   do {
     timeline_iter_state->node = (TimelineNode *)timeline_iter_state->node->node.prev;
-    if (timeline_iter_state->node == NULL) {
+    if (timeline_iter_state->node == nullptr) {
       timeline_iter_state->node = orig;
       return false;
     }
@@ -453,7 +453,7 @@ static void prv_put_outgoing_call_event(uint32_t call_identifier, const char *ca
       .type = PhoneEventType_Outgoing,
       .source = PhoneCallSource_ANCS_Legacy,
       .call_identifier = call_identifier,
-      .caller = phone_call_util_create_caller(caller_id, NULL),
+      .caller = phone_call_util_create_caller(caller_id, nullptr),
     }
   };
 
@@ -507,7 +507,7 @@ TimelineIterDirection timeline_direction_for_item(TimelineItem *item, TimelineNo
 }
 
 bool timeline_nodes_equal(TimelineNode *a, TimelineNode *b) {
-  if (a == NULL || b == NULL) {
+  if (a == nullptr || b == nullptr) {
     return (a == b);
   }
   return (uuid_equal(&a->id, &b->id) && (a->timestamp == b->timestamp));
@@ -580,7 +580,7 @@ status_t timeline_iter_init(Iterator *iter, TimelineIterState *iter_state, Timel
       prv_should_show_all_day_events(*head, timestamp, iter_state->midnight, direction);
   TimelineNode *node = prv_find_first(*head, direction, timestamp, iter_state->midnight,
                                       iter_state->show_all_day_events);
-  if (node == NULL) {
+  if (node == nullptr) {
     iter_init(iter, prv_iter_dummy, prv_iter_dummy, iter_state);
     return S_NO_MORE_ITEMS;
   }
@@ -624,7 +624,7 @@ void timeline_iter_deinit(Iterator *iter, TimelineIterState *iter_state, Timelin
     node = (TimelineNode *)node->node.next;
     prv_remove_node(head, old);
   }
-  *head = NULL;
+  *head = nullptr;
 
   // free the currently allocated item in the iterator
   timeline_item_free_allocated_buffer(&iter_state->pin);
@@ -859,7 +859,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     case TimelineItemActionTypeAncsDial: {
       const char *caller_id = attribute_get_string(&item->attr_list, AttributeIdTitle, "Unknown");
       prv_put_outgoing_call_event(item->header.ancs_uid, caller_id);
-      notifications_handle_notification_action_result(NULL);
+      notifications_handle_notification_action_result(nullptr);
       ancs_perform_action(item->header.ancs_uid, ActionIDPositive);
       break;
     }
@@ -882,7 +882,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
         return;
       }
 
-      // FALLTHROUGH
+      [[fallthrough]];
     case TimelineItemActionTypeGeneric:
     case TimelineItemActionTypeResponse:
     case TimelineItemActionTypeAncsResponse:
@@ -954,5 +954,5 @@ const char *timeline_get_private_data_source(Uuid *parent_id) {
       return s_data_sources[i].name;
     }
   }
-  return NULL;
+  return nullptr;
 }

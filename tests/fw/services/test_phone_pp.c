@@ -50,7 +50,7 @@ static CommSession *s_session;
 void test_phone_pp__initialize(void) {
   fake_event_init();
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
+  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
   pp_get_phone_state_set_enabled(false);
 }
@@ -64,7 +64,7 @@ void test_phone_pp__incoming_no_caller_id(void) {
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
   fake_system_task_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Incoming, true /* check_cookie */,
-                        true /* check_name_number */, "Unknown", NULL);
+                        true /* check_name_number */, "Unknown", nullptr);
 }
 
 void test_phone_pp__incoming_no_name(void) {
@@ -101,7 +101,7 @@ void test_phone_pp__start(void) {
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
   fake_system_task_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Start, true /* check_cookie */,
-                        false /* check_name_number */, NULL, NULL);
+                        false /* check_name_number */, nullptr, nullptr);
 }
 
 void test_phone_pp__end(void) {
@@ -109,7 +109,7 @@ void test_phone_pp__end(void) {
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
   fake_system_task_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_End, true /* check_cookie */, false /* check_name_number */,
-                        NULL, NULL);
+                        nullptr, nullptr);
 }
 
 static void prv_assert_answer_call_sent_cb(uint16_t endpoint_id, const uint8_t *data,
@@ -157,7 +157,7 @@ void test_phone_pp__get_phone_call_state_response_no_calls(void) {
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
   fake_system_task_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_End, false /* check_cookie */, false /* check_name_number */,
-                        NULL, NULL);
+                        nullptr, nullptr);
 }
 
 void test_phone_pp__get_phone_call_state_response_one_started_call(void) {
@@ -166,7 +166,7 @@ void test_phone_pp__get_phone_call_state_response_one_started_call(void) {
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
   fake_system_task_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Start, true /* check_cookie */,
-                        false /* check_name_number */, NULL, NULL);
+                        false /* check_name_number */, nullptr, nullptr);
 }
 
 void test_phone_pp__get_phone_call_state_response_two_started_calls(void) {
@@ -176,7 +176,7 @@ void test_phone_pp__get_phone_call_state_response_two_started_calls(void) {
   fake_system_task_callbacks_invoke_pending();
   // TODO: assert the first event as well
   prv_assert_last_event(PhoneEventType_Start, true /* check_cookie */,
-                        false /* check_name_number */, NULL, NULL);
+                        false /* check_name_number */, nullptr, nullptr);
 }
 
 void test_phone_pp__get_phone_call_state_response_disabled(void) {

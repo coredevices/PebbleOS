@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/services/touch/touch_event.h>
 
 //! Callback for touch events.

@@ -6,7 +6,7 @@
 #include <clar.h>
 
 void test_bitops__bitset8(void) {
-  uint8_t set[3] = {0};
+  uint8_t set[3] = {};
 
   pbl_bitset8_set(set, 0);
   pbl_bitset8_set(set, 9);
@@ -29,7 +29,7 @@ void test_bitops__bitset8(void) {
 }
 
 void test_bitops__bitset32(void) {
-  uint32_t set[2] = {0};
+  uint32_t set[2] = {};
 
   pbl_bitset32_set(set, 31);
   pbl_bitset32_set(set, 32);

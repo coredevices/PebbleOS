@@ -448,7 +448,7 @@ static void prv_put_alarm_event(void) {
   }
 
   AlarmConfig *config =
-      s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : NULL;
+      s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : nullptr;
   const bool is_smart = (config && config->is_smart && activity_tracking_on());
   PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_ALARM_CLOCK_EVENT,
@@ -464,7 +464,7 @@ static void prv_put_alarm_event(void) {
 // ----------------------------------------------------------------------------------------------
 static bool prv_record_alarm_op(AlarmId id, AlarmConfig *config, void *context) {
   // Add a pin to the timeline (will show up in the past)
-  prv_add_pin(id, config, rtc_get_time(), NULL);
+  prv_add_pin(id, config, rtc_get_time(), nullptr);
 
   return false;
 }
@@ -480,7 +480,7 @@ static void prv_clear_snooze_timer(void) {
 static void prv_process_most_recent_alarm(void) {
   // Only processes the most recent alarm since it modifies the alarm config
   AlarmConfig *config =
-      s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : NULL;
+      s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : nullptr;
   const bool user_snoozed = s_user_snoozed;
   s_user_snoozed = false;
   bool trigger = true;
@@ -503,7 +503,7 @@ static void prv_process_most_recent_alarm(void) {
     if (!s_most_recent_alarm_recorded) {
       s_most_recent_alarm_recorded = true;
       // Read from flash since the in-memory cache can be modified
-      prv_alarm_operation(s_most_recent_alarm_id, prv_record_alarm_op, NULL);
+      prv_alarm_operation(s_most_recent_alarm_id, prv_record_alarm_op, nullptr);
     }
   }
 }
@@ -516,7 +516,7 @@ static void prv_snooze_kernel_bg_callback(void *unused) {
 // ----------------------------------------------------------------------------------------------
 static void prv_snooze_timer_callback(void *unused) {
   PBL_LOG_INFO("Snooze timeout");
-  system_task_add_callback(prv_snooze_kernel_bg_callback, NULL);
+  system_task_add_callback(prv_snooze_kernel_bg_callback, nullptr);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1105,7 +1105,7 @@ bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
     .sound_enabled = config.sound_enabled,
     .vibrate_enabled = !config.vibrate_disabled,
     .tone = config.tone,
-    .scheduled_days = NULL,
+    .scheduled_days = nullptr,
   };
 
 cleanup:
@@ -1120,7 +1120,7 @@ static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated) {
   s_user_snoozed = user_initiated;
   PBL_LOG_INFO("Snoozing for %d minutes", snooze_delay_s / PBL_SEC_PER_MIN);
   bool success = new_timer_start(s_snooze_timer_id, snooze_delay_s * PBL_MSEC_PER_SEC,
-                                 prv_snooze_timer_callback, NULL, 0 /* flags*/);
+                                 prv_snooze_timer_callback, nullptr, 0 /* flags*/);
   PBL_ASSERTN(success);
 }
 
@@ -1306,7 +1306,7 @@ void alarm_handle_clock_change(void) {
   prv_file_close_and_unlock(&file);
 
   if (record_alarm_id != ALARM_INVALID_ID) {
-    prv_alarm_operation(record_alarm_id, prv_record_alarm_op, NULL);
+    prv_alarm_operation(record_alarm_id, prv_record_alarm_op, nullptr);
   }
 }
 
@@ -1323,7 +1323,7 @@ static void prv_language_change_kernel_bg_callback(void *unused) {
 static EventServiceInfo s_language_change_event_info;
 
 static void prv_language_change_event_handler(PebbleEvent *event, void *context) {
-  system_task_add_callback(prv_language_change_kernel_bg_callback, NULL);
+  system_task_add_callback(prv_language_change_kernel_bg_callback, nullptr);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1392,7 +1392,7 @@ void alarm_service_enable_alarms(bool enable) {
 
 // ----------------------------------------------------------------------------------------------
 const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
-  const char *alarm_day_text = NULL;
+  const char *alarm_day_text = nullptr;
   switch (kind) {
     case ALARM_KIND_EVERYDAY:
       alarm_day_text = all_caps ?
@@ -1497,5 +1497,5 @@ static int prv_cmd_alarm(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_CMD_REGISTER(alarm, NULL, "Fire an alarm event", prv_cmd_alarm);
+PBL_SHELL_CMD_REGISTER(alarm, nullptr, "Fire an alarm event", prv_cmd_alarm);
 #endif

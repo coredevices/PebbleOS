@@ -5,8 +5,6 @@
 
 #include "launch_config.h"
 
-#include <stdbool.h>
-
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/services/accel_manager.h>
@@ -121,7 +119,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config);
 void process_manager_close_process(PebbleTask task, bool gracefully);
 
 //! Called from the task itself, as it exits and reenters privileged mode
-PBL_NORETURN void process_manager_task_exit(void);
+[[noreturn]] void process_manager_task_exit(void);
 
 //! Prod the given process into exiting. Returns true if it is safe to kill that task and clean it
 //! up using

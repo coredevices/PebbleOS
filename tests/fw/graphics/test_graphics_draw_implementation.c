@@ -41,7 +41,7 @@ static unsigned int s_raw_drawing_function_counters[NumGDrawRawFunctionTypes];
 // Setup and Teardown
 ////////////////////////////////////
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 // Setup
 void test_graphics_draw_implementation__initialize(void) {

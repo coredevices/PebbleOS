@@ -237,8 +237,7 @@ const char *time_t_to_string(char *buffer, time_t t) {
 //! timezone index and the daylight_savings_time into the same register set
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
-  _Static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t),
-                 "RTC Set Timezone invalid data size");
+  static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t), "RTC Set Timezone invalid data size");
 
   retained_write(RTC_TIMEZONE_ABBR_START, raw[0]);
   retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, raw[1]);
@@ -329,7 +328,7 @@ void rtc_enable_synthetic_systick(void) {
   // Now that the RTC is awake, we can switch from SysTick to RTC interrupt
   // ticks.  We need to do this so that we actually get ticks in wfi, since
   // nRF5 stops SysTick in sleep.
-  _Static_assert(RTC_TICKS_HZ == PBL_TICK_HZ);
+  static_assert(RTC_TICKS_HZ == PBL_TICK_HZ);
   if (!s_did_init_rtc) {
     rtc_init();
   }

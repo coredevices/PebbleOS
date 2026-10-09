@@ -59,7 +59,7 @@ bool circular_buffer_write(CircularBuffer *buffer, const void *data, uint16_t le
 
 uint16_t circular_buffer_write_prepare(CircularBuffer *buffer, uint8_t **data_out) {
   if (!get_write_length_available(buffer) || buffer->write_in_progress) {
-    *data_out = NULL;
+    *data_out = nullptr;
     return 0;
   }
   buffer->write_in_progress = true;

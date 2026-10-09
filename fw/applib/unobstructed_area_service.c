@@ -160,7 +160,7 @@ void unobstructed_area_service_subscribe(UnobstructedAreaState *state,
 void unobstructed_area_service_unsubscribe(UnobstructedAreaState *state) {
   PBL_ASSERTN(state);
   state->handlers = (UnobstructedAreaHandlers){};
-  state->context = NULL;
+  state->context = nullptr;
   state->is_subscribed = false;
 }
 

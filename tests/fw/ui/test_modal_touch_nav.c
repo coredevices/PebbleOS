@@ -126,7 +126,7 @@ bool compositor_is_animating(void) {
   return false;
 }
 void *compositor_modal_transition_to_modal_get(bool dest) {
-  return NULL;
+  return nullptr;
 }
 void compositor_modal_render_ready(void) {
 }
@@ -225,7 +225,7 @@ static void prv_kernel_touchdown(void) {
     .y = 90,
     .non_navigational = true,
   };
-  cl_assert(s_kernel_handler != NULL);
+  cl_assert(s_kernel_handler != nullptr);
   s_kernel_handler(&e, s_kernel_ctx);
 }
 
@@ -238,11 +238,11 @@ static RecognizerManager *prv_kernel_manager(void) {
 
 void test_modal_touch_nav__initialize(void) {
   fake_rtc_init(0, 0);
-  s_last_click_configured_window = NULL;
+  s_last_click_configured_window = nullptr;
   s_app_idle = false;
   s_nav_enabled = true;
-  s_kernel_handler = NULL;
-  s_kernel_ctx = NULL;
+  s_kernel_handler = nullptr;
+  s_kernel_ctx = nullptr;
   recognizer_manager_init(&s_app_recognizer_manager);
 
   WindowStack *stack = app_state_get_window_stack();
@@ -373,7 +373,7 @@ void test_modal_touch_nav__reset_after_last_modal(void) {
 
   window_stack_remove(modal_window, false);
   modal_manager_event_loop_upkeep();
-  cl_assert_equal_p(manager->window, NULL);
+  cl_assert_equal_p(manager->window, nullptr);
   cl_assert_equal_i(manager->state, RecognizerManagerState_WaitForTouchdown);
 }
 
@@ -390,7 +390,7 @@ void test_modal_touch_nav__unfocusable_does_not_grab(void) {
   modal_manager_event_loop_upkeep();
 
   // The unfocusable modal did not bind the manager...
-  cl_assert_equal_p(manager->window, NULL);
+  cl_assert_equal_p(manager->window, nullptr);
 
   // ...and the dispatcher stays gated (no focused modal), so a gesture ticks nothing.
   prv_kernel_touchdown();

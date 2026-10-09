@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -16,7 +15,7 @@ void stubs_syscall_init(void) {
   s_syscall_did_fail = false;
 }
 
-PBL_NORETURN void syscall_failed(void) {
+[[noreturn]] void syscall_failed(void) {
   s_syscall_did_fail = true;
   printf("Warning: Syscall failed!\n");
 

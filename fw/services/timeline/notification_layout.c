@@ -191,7 +191,7 @@ PBL_T_STATIC ResourceId prv_get_emoji_icon_by_string(const EmojiEntry *table, co
 }
 
 static ResourceId prv_get_emoji_icon(NotificationLayout *layout) {
-  const char *body = attribute_get_string(layout->layout.attributes, AttributeIdBody, NULL);
+  const char *body = attribute_get_string(layout->layout.attributes, AttributeIdBody, nullptr);
   return prv_get_emoji_icon_by_string(s_emoji_table, body);
 }
 
@@ -306,7 +306,7 @@ static GTextNode *prv_create_image_node(const LayoutLayer *layout_ref,
                                         const LayoutNodeConstructorConfig *config) {
   NotificationLayout *layout = (NotificationLayout *)layout_ref;
   if (!prv_image_aspect(layout)) {
-    return NULL;
+    return nullptr;
   }
   return &graphics_text_node_create_custom(prv_image_node_callback, layout)->node;
 }
@@ -424,9 +424,9 @@ static PBL_NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool 
     .extent.margin.h = 2 * NOTIFICATION_IMAGE_PADDING,
   };
 #endif
-  const LayoutNodeConfig *reminder_timestamp_node_config = NULL;
-  const LayoutNodeConfig *notification_timestamp_node_config = NULL;
-  const LayoutNodeConfig *header_node_config = NULL;
+  const LayoutNodeConfig *reminder_timestamp_node_config = nullptr;
+  const LayoutNodeConfig *notification_timestamp_node_config = nullptr;
+  const LayoutNodeConfig *header_node_config = nullptr;
 
   if (is_reminder) {
     reminder_timestamp_node_config = &reminder_timestamp_config.text.extent.node;
@@ -437,7 +437,7 @@ static PBL_NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool 
   // Only jumboji drops the timestamp: an enlarged emoji replaces it. Incoming (modal)
   // notifications keep it on round too, matching rect.
   if (!layout->info.show_notification_timestamp && use_body_icon) {
-    notification_timestamp_node_config = NULL;
+    notification_timestamp_node_config = nullptr;
   }
   const LayoutNodeConfig *const vertical_config_nodes[] = {
     reminder_timestamp_node_config,
@@ -463,9 +463,9 @@ static PBL_NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool 
 
 static void prv_destroy_view(NotificationLayout *layout) {
   graphics_text_node_destroy(layout->view_node);
-  layout->view_node = NULL;
+  layout->view_node = nullptr;
   kino_layer_destroy(layout->detail_icon_layer);
-  layout->detail_icon_layer = NULL;
+  layout->detail_icon_layer = nullptr;
 }
 
 //! Do common init related tasks
@@ -674,7 +674,7 @@ static void prv_layout_init(NotificationLayout *layout, const LayoutLayerConfig 
 LayoutLayer *notification_layout_create(const LayoutLayerConfig *config) {
   NotificationLayout *layout = task_zalloc_check(sizeof(NotificationLayout));
   if (!layout) {
-    return NULL;
+    return nullptr;
   }
   prv_layout_init(layout, config);
   return (LayoutLayer *)layout;

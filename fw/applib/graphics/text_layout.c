@@ -52,7 +52,7 @@ static bool prv_codepoint_is_invisible(Codepoint cp) {
 //! alignment flips part way down. '\n' cannot appear as a UTF-8 continuation
 //! byte, so a plain byte scan is safe here.
 static utf8_t *prv_paragraph_start(const Utf8Bounds *bounds, const utf8_t *line_start) {
-  if (bounds == NULL || bounds->start == NULL || line_start == NULL) {
+  if (bounds == nullptr || bounds->start == nullptr || line_start == nullptr) {
     return (utf8_t *)line_start;
   }
   for (const utf8_t *ptr = line_start; ptr > bounds->start; ptr--) {
@@ -256,7 +256,7 @@ bool word_init(GContext *ctx, Word *word, const TextBoxParams *const text_box_pa
   // like the renderer.
   bool skip_ligature_member = false;
   const utf8_t *bounds_end =
-      (text_box_params->utf8_bounds != NULL) ? text_box_params->utf8_bounds->end : NULL;
+      (text_box_params->utf8_bounds != nullptr) ? text_box_params->utf8_bounds->end : nullptr;
 
   do {
     utf8_t *curr_pos = utf8_iter_state->current;
@@ -300,7 +300,7 @@ void word_iter_init(Iterator *word_iter, WordIterState *word_iter_state, GContex
 
   word_init(ctx, &word_iter_state->current, text_box_params, start);
 
-  iter_init(word_iter, (IteratorCallback)word_iter_next, NULL, (IteratorState)word_iter_state);
+  iter_init(word_iter, (IteratorCallback)word_iter_next, nullptr, (IteratorState)word_iter_state);
 }
 
 void line_iter_init(Iterator *line_iter, LineIterState *line_iter_state, GContext *ctx) {
@@ -310,7 +310,7 @@ void line_iter_init(Iterator *line_iter, LineIterState *line_iter_state, GContex
   word_iter_init(&line_iter_state->word_iter, word_iter_state, ctx, &ctx->text_draw_state.text_box,
                  ctx->text_draw_state.text_box.utf8_bounds->start);
 
-  iter_init(line_iter, (IteratorCallback)line_iter_next, NULL, (IteratorState)line_iter_state);
+  iter_init(line_iter, (IteratorCallback)line_iter_next, nullptr, (IteratorState)line_iter_state);
 }
 
 ////////////////////////////////////////////////////////////
@@ -403,7 +403,7 @@ bool line_iter_next(IteratorState state) {
   line_iter_state->current->width_px = 0; // needs to be reset per line
   line_iter_state->current->max_width_px = text_box_params->box.size.w;
   line_iter_state->current->suffix_codepoint = 0;
-  line_iter_state->current->start = NULL;
+  line_iter_state->current->start = nullptr;
 
   return true;
 }
@@ -514,7 +514,7 @@ bool word_trim_preceding_codepoint(GContext *ctx, Word *word, const Codepoint co
 
   if (!is_advanced) {
     PBL_ASSERTN(*word->end == NULL_CODEPOINT);
-    word->start = NULL;
+    word->start = nullptr;
     return false;
   }
 
@@ -586,15 +586,15 @@ void update_dimensions_char_visitor_cb(GContext *ctx, const TextBoxParams *const
 // fold a Lam-Alef (even across an intervening harakat) into one ligature advance
 // and pick the same joining context the renderer shapes with.
 static Codepoint prv_peek_next_letter(utf8_t *pos, const utf8_t *end) {
-  if (pos == NULL) {
+  if (pos == nullptr) {
     return 0;
   }
-  utf8_t *after = NULL;
+  utf8_t *after = nullptr;
   utf8_peek_codepoint(pos, &after);
-  while (after != NULL && (end == NULL || after < end) && *after != '\0' && *after != '\n') {
-    utf8_t *next = NULL;
+  while (after != nullptr && (end == nullptr || after < end) && *after != '\0' && *after != '\n') {
+    utf8_t *next = nullptr;
     Codepoint cp = utf8_peek_codepoint(after, &next);
-    if (cp == 0 || next == NULL) {
+    if (cp == 0 || next == nullptr) {
       break;
     }
     if (!arabic_is_transparent(cp)) {
@@ -653,7 +653,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
   }
 
   if (available_horiz_px < suffix_width_px) {
-    return NULL;
+    return nullptr;
   }
 
   // BiDi support: the line is split into runs of a single direction, the runs
@@ -661,8 +661,8 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
   // reversed and mirrored before being drawn.
   bool is_rendering = (char_visitor_cb == render_chars_char_visitor_cb);
 
-  if (is_rendering && line->start != NULL && text_box_params->utf8_bounds != NULL &&
-      text_box_params->utf8_bounds->end != NULL &&
+  if (is_rendering && line->start != nullptr && text_box_params->utf8_bounds != nullptr &&
+      text_box_params->utf8_bounds->end != nullptr &&
       text_box_params->utf8_bounds->end > line->start &&
       bidi_is_needed(line->start, text_box_params->utf8_bounds->end)) {
 // Run descriptor for BiDi reordering
@@ -708,9 +708,9 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       // counted, so skip it on the following iteration.
       bool skip_ligature_member = false;
       while (segment_end < run_end && *segment_end != '\0' && *segment_end != '\n') {
-        utf8_t *seg_next = NULL;
+        utf8_t *seg_next = nullptr;
         Codepoint seg_cp = utf8_peek_codepoint(segment_end, &seg_next);
-        if (seg_cp == 0 || seg_next == NULL)
+        if (seg_cp == 0 || seg_next == nullptr)
           break;
 
         // Skip invisible codepoints (ZWJ, variation selectors, skin tone modifiers)
@@ -800,7 +800,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
 
     // Pass 3: Render segments in (possibly reordered) visual order
     int walked_width_px = 0;
-    utf8_t *last_visited_char = NULL;
+    utf8_t *last_visited_char = nullptr;
     utf8_t rtl_buffer[128];
     const size_t rtl_buffer_size = sizeof(rtl_buffer);
 
@@ -842,9 +842,9 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
 
           utf8_t *rptr = rtl_buffer;
           while (*rptr != '\0') {
-            utf8_t *rnext = NULL;
+            utf8_t *rnext = nullptr;
             Codepoint rcp = utf8_peek_codepoint(rptr, &rnext);
-            if (rcp == 0 || rnext == NULL)
+            if (rcp == 0 || rnext == nullptr)
               break;
             if (prv_codepoint_is_invisible(rcp)) {
               rptr = rnext;
@@ -860,14 +860,14 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
             // draws one glyph and advances once, matching the measurement.
             Codepoint rnext_cp = 0;
             if (*rnext != '\0') {
-              utf8_t *rpeek = NULL;
+              utf8_t *rpeek = nullptr;
               rnext_cp = utf8_peek_codepoint(rnext, &rpeek);
             }
             bool rconsumed_next = false;
             rcp = emoji_shape_pair(rcp, rnext_cp, &rconsumed_next);
             if (rconsumed_next) {
-              utf8_t *rskip = NULL;
-              if (utf8_peek_codepoint(rnext, &rskip) != 0 && rskip != NULL) {
+              utf8_t *rskip = nullptr;
+              if (utf8_peek_codepoint(rnext, &rskip) != 0 && rskip != nullptr) {
                 rnext = rskip;
               }
             }
@@ -883,7 +883,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(rcp)) {
-              text_resources_get_glyph(&ctx->font_cache, rcp, text_box_params->font, NULL);
+              text_resources_get_glyph(&ctx->font_cache, rcp, text_box_params->font, nullptr);
               render_glyph(ctx, rcp, text_box_params->font, cursor);
             }
 
@@ -898,9 +898,9 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
         Codepoint prev_seg_cp = 0;
         bool skip_pair_member = false;
         while (sptr < seg->end) {
-          utf8_t *snext = NULL;
+          utf8_t *snext = nullptr;
           Codepoint scp = utf8_peek_codepoint(sptr, &snext);
-          if (scp == 0 || snext == NULL)
+          if (scp == 0 || snext == nullptr)
             break;
           if (prv_codepoint_is_invisible(scp)) {
             sptr = snext;
@@ -933,7 +933,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
             cursor.origin.x += walked_width_px;
 
             if (!codepoint_is_zero_width(draw_cp)) {
-              text_resources_get_glyph(&ctx->font_cache, draw_cp, text_box_params->font, NULL);
+              text_resources_get_glyph(&ctx->font_cache, draw_cp, text_box_params->font, nullptr);
               render_glyph(ctx, draw_cp, text_box_params->font, cursor);
             }
 
@@ -948,7 +948,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       }
 
       // Track last visited char (furthest position in original text)
-      if (last_visited_char == NULL || seg->start > last_visited_char) {
+      if (last_visited_char == nullptr || seg->start > last_visited_char) {
         last_visited_char = seg->start;
       }
     }
@@ -962,7 +962,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       };
       cursor.origin.x += walked_width_px;
       text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font,
-                               NULL);
+                               nullptr);
       render_glyph(ctx, line->suffix_codepoint, text_box_params->font, cursor);
     }
 
@@ -986,7 +986,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
   }
 
   const utf8_t *text_end =
-      (text_box_params->utf8_bounds != NULL) ? text_box_params->utf8_bounds->end : NULL;
+      (text_box_params->utf8_bounds != nullptr) ? text_box_params->utf8_bounds->end : nullptr;
 
   int walked_width_px = 0;
   Codepoint prev_shaped_cp = 0;      // previous codepoint, for Arabic joining context
@@ -999,7 +999,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       prv_shaped_glyph_advance(ctx, text_box_params, prev_shaped_cp, current_codepoint, peek_cp,
                                &consumed_next, &current_draw_cp);
 
-  utf8_t *last_visited_char = NULL;
+  utf8_t *last_visited_char = nullptr;
 
   while (walked_width_px + next_glyph_width_px + suffix_width_px <= available_horiz_px) {
     GRect cursor = {
@@ -1016,7 +1016,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
       if (is_render && !codepoint_is_zero_width(current_draw_cp) &&
           !codepoint_is_unicode_space(current_draw_cp)) {
         // Pre-load here so the deeper render_glyph() is a cache hit, not a deep flash read.
-        text_resources_get_glyph(&ctx->font_cache, current_draw_cp, text_box_params->font, NULL);
+        text_resources_get_glyph(&ctx->font_cache, current_draw_cp, text_box_params->font, nullptr);
       }
 
       char_visitor_cb(ctx, text_box_params, line, cursor, current_draw_cp);
@@ -1102,7 +1102,7 @@ utf8_t *walk_line(GContext *ctx, Line *line, const TextBoxParams *const text_box
     if (char_visitor_cb) {
       if (is_render) {
         text_resources_get_glyph(&ctx->font_cache, line->suffix_codepoint, text_box_params->font,
-                                 NULL);
+                                 nullptr);
       }
       char_visitor_cb(ctx, text_box_params, line, cursor, line->suffix_codepoint);
     }
@@ -1236,7 +1236,7 @@ static inline void prv_walk_lines_down(Iterator *const line_iter, TextLayout *co
 
   const TextLayoutFlowData *flow_data = graphics_text_layout_get_flow_data(layout);
   const bool uses_paging = flow_data->paging.page_on_screen.size_h != 0;
-  const bool uses_perimeter = flow_data->perimeter.impl != NULL;
+  const bool uses_perimeter = flow_data->perimeter.impl != nullptr;
   const GPoint perimeter_paging_offset =
       uses_paging ? gpoint_sub(flow_data->paging.origin_on_screen, line->origin) : GPointZero;
   Word prev_line_word = WORD_EMPTY;
@@ -1392,7 +1392,7 @@ bool line_add_word(GContext *ctx, Line *line, Word *word,
       return false;
     }
     // If there is word text left (we have \n's at the end of the text), we're done
-    if (word->start == NULL) {
+    if (word->start == nullptr) {
       return false;
     }
   }
@@ -1412,7 +1412,7 @@ bool line_add_word(GContext *ctx, Line *line, Word *word,
     line->suffix_codepoint = HYPHEN_CODEPOINT;
     utf8_t *last_visited = walk_line(ctx, line, text_box_params,
                                      (CharVisitorCallback)update_dimensions_char_visitor_cb);
-    last_visited = (last_visited == NULL) ? (word->start) : last_visited;
+    last_visited = (last_visited == nullptr) ? (word->start) : last_visited;
 
     // Trim the word
     int suffix_width_px = prv_codepoint_get_horizontal_advance(
@@ -1448,8 +1448,8 @@ static void prv_line_justify(Line *line, const TextBoxParams *const text_box_par
   // If alignment is left (default) and the paragraph reads RTL, switch to right.
   // Gated the same way as the render path, so a script the renderer leaves in
   // logical order is not right-aligned on its own.
-  if (effective_alignment == GTextAlignmentLeft && line->start != NULL &&
-      text_box_params->utf8_bounds != NULL && text_box_params->utf8_bounds->end != NULL &&
+  if (effective_alignment == GTextAlignmentLeft && line->start != nullptr &&
+      text_box_params->utf8_bounds != nullptr && text_box_params->utf8_bounds->end != nullptr &&
       bidi_is_needed(line->start, text_box_params->utf8_bounds->end)) {
     if (bidi_paragraph_is_rtl(prv_paragraph_start(text_box_params->utf8_bounds, line->start),
                               text_box_params->utf8_bounds->end)) {
@@ -1475,7 +1475,7 @@ bool line_add_words(Line *line, Iterator *word_iter, LastLineCallback last_line_
 
   line->start = word_iter_state->current.start;
 
-  bool is_text_remaining = (line->start != NULL);
+  bool is_text_remaining = (line->start != nullptr);
 
   // PBL-22083 : max_width_px == 0 eats a character that should appear on next line
   while (is_text_remaining && line->max_width_px > 0) {
@@ -1487,7 +1487,7 @@ bool line_add_words(Line *line, Iterator *word_iter, LastLineCallback last_line_
     if (!is_added) {
       word_iter_state->current = next_word;
       // Check if word was trimmed until the null termination
-      if (next_word.start == NULL) {
+      if (next_word.start == nullptr) {
         is_text_remaining = false;
       } else {
         is_text_remaining = true;
@@ -1558,7 +1558,7 @@ static inline void prv_text_walk_lines(GContext *ctx, TextLayout *const layout,
   if (is_ellipsis_on_overflow) {
     callbacks->last_line_cb = set_ellipsis_on_overflow_last_line_cb;
   } else {
-    callbacks->last_line_cb = NULL;
+    callbacks->last_line_cb = nullptr;
   }
 
   ctx->text_draw_state.line = (Line){
@@ -1637,7 +1637,7 @@ GSize app_graphics_text_layout_get_content_size_with_attributes(
 GSize app_graphics_text_layout_get_content_size(const char *text, GFont const font, const GRect box,
                                                 const GTextOverflowMode overflow_mode,
                                                 const GTextAlignment alignment) {
-  APP_TEXT_GET_CONTENT_SIZE(text, font, box, overflow_mode, alignment, NULL);
+  APP_TEXT_GET_CONTENT_SIZE(text, font, box, overflow_mode, alignment, nullptr);
 }
 
 uint16_t graphics_text_layout_get_text_height(GContext *ctx, const char *text, GFont const font,
@@ -1649,8 +1649,8 @@ uint16_t graphics_text_layout_get_text_height(GContext *ctx, const char *text, G
     .origin = (GPoint){.x = 0, .y = 0},
     .size = (GSize){.w = bounds_width, .h = LAYOUT_HEIGHT_IGNORE}
   };
-  GSize size =
-      graphics_text_layout_get_max_used_size(ctx, text, font, box, overflow_mode, alignment, NULL);
+  GSize size = graphics_text_layout_get_max_used_size(ctx, text, font, box, overflow_mode,
+                                                      alignment, nullptr);
   return size.h;
 }
 
@@ -1658,7 +1658,7 @@ GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GF
                                              const GRect box, const GTextOverflowMode overflow_mode,
                                              const GTextAlignment alignment,
                                              GTextLayoutCacheRef const layout) {
-  TextLayoutExtended stack_layout = {0}; // Default use extended layout
+  TextLayoutExtended stack_layout = {}; // Default use extended layout
   TextLayout *text_layout = layout ? (TextLayout *)layout : (TextLayout *)&stack_layout;
   prv_graphics_text_layout_update(ctx, text, font, box, overflow_mode, alignment, text_layout);
   return text_layout->max_used_size;
@@ -1713,17 +1713,17 @@ void graphics_draw_text(GContext *ctx, const char *text, GFont const font, GRect
 void graphics_text_layout_cache_init(GTextLayoutCacheRef *layout) {
   if (process_manager_compiled_with_legacy2_sdk()) {
     *layout = applib_type_malloc(TextLayout);
-    *((TextLayout *)*layout) = (TextLayout){0};
+    *((TextLayout *)*layout) = (TextLayout){};
   } else {
     *layout = applib_type_malloc(TextLayoutExtended);
-    *((TextLayoutExtended *)*layout) = (TextLayoutExtended){0};
+    *((TextLayoutExtended *)*layout) = (TextLayoutExtended){};
   }
 }
 
 void graphics_text_layout_cache_deinit(GTextLayoutCacheRef *layout) {
   TextLayout *text_layout = (TextLayout *)*layout;
   applib_free(text_layout);
-  *layout = NULL;
+  *layout = nullptr;
 }
 
 GTextAttributes *graphics_text_attributes_create(void) {
@@ -1751,7 +1751,7 @@ static TextLayoutExtended *prv_get_writable_extended_layout(GTextLayoutCacheRef 
 
 static TextLayoutExtended *prv_get_readable_extended_layout(GTextLayoutCacheRef layout) {
   if (!layout || process_manager_compiled_with_legacy2_sdk()) {
-    return NULL;
+    return nullptr;
   }
   return (TextLayoutExtended *)layout;
 }
@@ -1772,7 +1772,7 @@ void graphics_text_attributes_restore_default_text_flow(GTextLayoutCacheRef layo
   if (!extended) {
     return;
   }
-  extended->flow_data.perimeter.impl = NULL;
+  extended->flow_data.perimeter.impl = nullptr;
 }
 
 // this way, we don't need to pull in all the dependencies when doing unit-tests
@@ -1789,10 +1789,10 @@ void graphics_text_attributes_enable_screen_text_flow(GTextLayoutCacheRef layout
 
 #if defined(USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT)
   // on rectangular screens, we can just leave the perimeter blank when we don't need an inset
-  const GPerimeter *shortcut_perimeter = PBL_IF_ROUND_ELSE(g_perimeter_for_display, NULL);
+  const GPerimeter *shortcut_perimeter = PBL_IF_ROUND_ELSE(g_perimeter_for_display, nullptr);
   const GPerimeter *perimeter = inset > 0 ? g_perimeter_for_display : shortcut_perimeter;
 #else
-  const GPerimeter *perimeter = NULL;
+  const GPerimeter *perimeter = nullptr;
 #endif
 
   extended->flow_data.perimeter = (TextLayoutFlowDataPerimeter){
@@ -1829,7 +1829,7 @@ const TextLayoutFlowData *graphics_text_layout_get_flow_data(GTextLayoutCacheRef
   } else {
     static const TextLayoutFlowData s_default_data = {
       // yes, this is basically just an empty struct but I want to be explicit here:
-      .perimeter.impl = NULL,            // no perimeter/inset configured
+      .perimeter.impl = nullptr,         // no perimeter/inset configured
       .paging.page_on_screen.size_h = 0, // no paging or origin
     };
     return &s_default_data;

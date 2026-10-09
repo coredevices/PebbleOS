@@ -3,7 +3,6 @@
 
 #include "mfg_hrm.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 
 #include <pbl/drivers/hrm.h>

@@ -5,7 +5,6 @@
 
 #include "gdraw_command_frame.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <applib/graphics/gtypes.h>

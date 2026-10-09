@@ -26,8 +26,8 @@ static void prv_draw_vertical_lines(GContext *ctx, unsigned int num_lines,
 
 void peek_animations_draw_compositor_foreground_speed_lines(GContext *ctx, GPoint offset) {
   static const uint16_t s_upper_heights[] = {48, 73, 78, 48, 48, 48, 61, 48};
-  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_upper_heights), NULL /* offsets_y */, s_upper_heights,
-                          LINE_WIDTH, LINE_SPACING, offset);
+  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_upper_heights), nullptr /* offsets_y */,
+                          s_upper_heights, LINE_WIDTH, LINE_SPACING, offset);
 
   static const uint16_t s_lower_offsets_y[] = {24, 24, 0, 19, 7, 0, 0, 24};
   static const uint16_t s_lower_heights[] = {48, 48, 72, 53, 65, 72, 72, 48};
@@ -38,8 +38,8 @@ void peek_animations_draw_compositor_foreground_speed_lines(GContext *ctx, GPoin
 
 void peek_animations_draw_compositor_background_speed_lines(GContext *ctx, GPoint offset) {
   static const uint16_t s_heights[] = {0, DISP_ROWS, DISP_ROWS, 0, 0, 0, DISP_ROWS};
-  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_heights), NULL /* offsets_y */, s_heights, LINE_WIDTH,
-                          LINE_SPACING, offset);
+  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_heights), nullptr /* offsets_y */, s_heights,
+                          LINE_WIDTH, LINE_SPACING, offset);
 }
 
 void peek_animations_draw_timeline_speed_lines(GContext *ctx, GPoint offset) {

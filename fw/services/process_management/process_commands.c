@@ -98,14 +98,14 @@ static int prv_cmd_worker_launch(const struct pbl_shell *sh, size_t argc, char *
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_app);
-PBL_SHELL_CMD_REGISTER(app, sub_app, "Installed apps", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_app, list, NULL, "List installed apps", prv_cmd_app_list, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_app, launch, NULL, "Launch an app <id>", prv_cmd_app_launch, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_app, remove, NULL, "Remove an app <id>", prv_cmd_app_remove, 2, 0);
+PBL_SHELL_CMD_REGISTER(app, sub_app, "Installed apps", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_app, list, nullptr, "List installed apps", prv_cmd_app_list, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_app, launch, nullptr, "Launch an app <id>", prv_cmd_app_launch, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_app, remove, nullptr, "Remove an app <id>", prv_cmd_app_remove, 2, 0);
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_worker);
-PBL_SHELL_CMD_REGISTER(worker, sub_worker, "Background workers", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_worker, launch, NULL, "Launch the worker of an app <id>",
+PBL_SHELL_CMD_REGISTER(worker, sub_worker, "Background workers", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_worker, launch, nullptr, "Launch the worker of an app <id>",
                      prv_cmd_worker_launch, 2, 0);
 
 #endif

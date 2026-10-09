@@ -12,7 +12,7 @@
 
 static void do_handle(PebbleEvent *e, void *context) {
   WakeupHandler wakeup_handler = app_state_get_wakeup_handler();
-  if (wakeup_handler != NULL) {
+  if (wakeup_handler != nullptr) {
     wakeup_handler(e->wakeup.wakeup_info.wakeup_id, e->wakeup.wakeup_info.wakeup_reason);
   }
 }
@@ -61,7 +61,7 @@ bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie) {
 
 bool app_wakeup_query(WakeupId wakeup_id, time_t *timestamp) {
   time_t scheduled_time = sys_wakeup_query(wakeup_id);
-  if (timestamp != NULL) {
+  if (timestamp != nullptr) {
     *timestamp = scheduled_time;
   }
 

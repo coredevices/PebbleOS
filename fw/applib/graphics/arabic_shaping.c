@@ -159,7 +159,7 @@ static const ArabicShapingEntry s_shaping_table[] = {
 static const ArabicShapingEntry *prv_find_shaping_entry(Codepoint cp) {
   // Quick bounds check
   if (cp < 0x0621 || cp > 0x064A) {
-    return NULL;
+    return nullptr;
   }
 
   // Linear search (table is small, ~37 entries)
@@ -169,16 +169,16 @@ static const ArabicShapingEntry *prv_find_shaping_entry(Codepoint cp) {
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 bool arabic_is_shapeable(Codepoint cp) {
-  return prv_find_shaping_entry(cp) != NULL;
+  return prv_find_shaping_entry(cp) != nullptr;
 }
 
 // Check if an Arabic letter connects to the left (has initial/medial forms)
 static bool prv_connects_left(const ArabicShapingEntry *entry) {
-  if (entry == NULL) {
+  if (entry == nullptr) {
     return false;
   }
   return (entry->flags & JOIN_DUAL) == JOIN_DUAL;
@@ -186,7 +186,7 @@ static bool prv_connects_left(const ArabicShapingEntry *entry) {
 
 // Check if an Arabic letter connects to the right (has final/medial forms)
 static bool prv_connects_right(const ArabicShapingEntry *entry) {
-  if (entry == NULL) {
+  if (entry == nullptr) {
     return false;
   }
   return (entry->flags & JOIN_RIGHT_ONLY) != 0;
@@ -194,7 +194,7 @@ static bool prv_connects_right(const ArabicShapingEntry *entry) {
 
 // Get the presentation form codepoint for a letter based on its context
 static Codepoint prv_get_shaped_codepoint(const ArabicShapingEntry *entry, ArabicForm form) {
-  if (entry == NULL) {
+  if (entry == nullptr) {
     return 0;
   }
 
@@ -222,15 +222,15 @@ static Codepoint prv_get_shaped_codepoint(const ArabicShapingEntry *entry, Arabi
 
 Codepoint arabic_shape_codepoint(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp) {
   const ArabicShapingEntry *entry = prv_find_shaping_entry(curr_cp);
-  if (entry == NULL) {
+  if (entry == nullptr) {
     return curr_cp;
   }
 
   const ArabicShapingEntry *prev_entry = prv_find_shaping_entry(prev_cp);
   const ArabicShapingEntry *next_entry = prv_find_shaping_entry(next_cp);
 
-  bool prev_connects = (prev_entry != NULL) && prv_connects_left(prev_entry);
-  bool next_connects = (next_entry != NULL) && prv_connects_right(next_entry);
+  bool prev_connects = (prev_entry != nullptr) && prv_connects_left(prev_entry);
+  bool next_connects = (next_entry != nullptr) && prv_connects_right(next_entry);
 
   bool can_connect_right = prv_connects_right(entry);
   bool can_connect_left = prv_connects_left(entry);
@@ -267,14 +267,14 @@ static const LamAlefLigature s_lam_alef[] = {
 
 static const LamAlefLigature *prv_find_lam_alef(Codepoint curr, Codepoint next) {
   if (curr != 0x0644) {
-    return NULL;
+    return nullptr;
   }
   for (size_t i = 0; i < sizeof(s_lam_alef) / sizeof(s_lam_alef[0]); i++) {
     if (s_lam_alef[i].alef == next) {
       return &s_lam_alef[i];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next_cp,
@@ -283,9 +283,9 @@ Codepoint arabic_shape_pair(Codepoint prev_cp, Codepoint curr_cp, Codepoint next
 
   // Lam-Alef ligature: curr (Lam) + next (an Alef variant) becomes one glyph.
   const LamAlefLigature *lig = prv_find_lam_alef(curr_cp, next_cp);
-  if (lig != NULL) {
+  if (lig != nullptr) {
     const ArabicShapingEntry *prev_entry = prv_find_shaping_entry(prev_cp);
-    bool prev_connects = (prev_entry != NULL) && prv_connects_left(prev_entry);
+    bool prev_connects = (prev_entry != nullptr) && prv_connects_left(prev_entry);
     *consumed_next = true;
     return prev_connects ? lig->final_form : lig->isolated;
   }
@@ -300,7 +300,7 @@ bool arabic_is_transparent(Codepoint cp) {
 }
 
 size_t arabic_shape_text(const utf8_t *src, size_t src_len, utf8_t *dest, size_t dest_size) {
-  if (src == NULL || dest == NULL || src_len == 0 || dest_size == 0) {
+  if (src == nullptr || dest == nullptr || src_len == 0 || dest_size == 0) {
     return 0;
   }
 
@@ -312,9 +312,9 @@ size_t arabic_shape_text(const utf8_t *src, size_t src_len, utf8_t *dest, size_t
   const utf8_t *end = src + src_len;
 
   while (ptr < end && *ptr != '\0' && num_codepoints < MAX_SHAPE_CODEPOINTS) {
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     Codepoint cp = utf8_peek_codepoint(ptr, &next);
-    if (cp == 0 || next == NULL) {
+    if (cp == 0 || next == nullptr) {
       break;
     }
     codepoints[num_codepoints++] = cp;

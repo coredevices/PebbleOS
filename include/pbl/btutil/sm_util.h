@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup btutil_sm_util Pairing information helpers
  * @ingroup btutil

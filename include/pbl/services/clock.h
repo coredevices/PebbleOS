@@ -4,7 +4,6 @@
 #pragma once
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <time.h>
 
 /**

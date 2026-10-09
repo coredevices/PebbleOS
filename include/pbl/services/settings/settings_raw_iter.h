@@ -4,7 +4,6 @@
 #pragma once
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 #include <pbl/kernel/compiler.h>
@@ -42,8 +41,8 @@ typedef struct PBL_PACKED {
   uint16_t flags;
 } SettingsFileHeader;
 
-_Static_assert(sizeof((SettingsFileHeader){}.magic) == sizeof(SETTINGS_FILE_MAGIC),
-               "The magic has been broken!");
+static_assert(sizeof((SettingsFileHeader){}.magic) == sizeof(SETTINGS_FILE_MAGIC),
+              "The magic has been broken!");
 
 /** @brief Record header, key and value are completely written. */
 #define SETTINGS_FLAG_WRITE_COMPLETE (1 << 0)
@@ -69,8 +68,8 @@ _Static_assert(sizeof((SettingsFileHeader){}.magic) == sizeof(SETTINGS_FILE_MAGI
 /** @brief Value length of the all-ones header that marks the end of the records. */
 #define SETTINGS_EOF_MARKER ((1 << VAL_LEN_BITS) - 1)
 
-_Static_assert(KEY_LEN_BITS + VAL_LEN_BITS + FLAGS_BITS == 24,
-               "The record header bitfields must add up to 24!");
+static_assert(KEY_LEN_BITS + VAL_LEN_BITS + FLAGS_BITS == 24,
+              "The record header bitfields must add up to 24!");
 
 /** @brief Record header. */
 typedef struct PBL_PACKED {

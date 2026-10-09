@@ -105,7 +105,7 @@ static struct pbl_bt_device_internal prv_dummy_device(uint8_t octet) {
 
 static struct pbl_bt_device_internal prv_connected_dummy_device(uint8_t octet) {
   struct pbl_bt_device_internal device = prv_dummy_device(octet);
-  gap_le_connection_add(&device, NULL, true /* local_is_master */, TIMER_INVALID_ID);
+  gap_le_connection_add(&device, nullptr, true /* local_is_master */, TIMER_INVALID_ID);
   s_connection = gap_le_connection_by_device(&device);
   s_connection->gatt_connection_id = TEST_GATT_CONNECTION_ID;
   return device;
@@ -164,7 +164,7 @@ static void prv_assert_notification_event_ext(pbl_bt_characteristic_t characteri
     if (should_consume) {
       uint16_t value_length = assert_value_length;
       gatt_client_subscriptions_consume_notification(&characteristic_out, buffer, &value_length,
-                                                     GAPLEClientKernel, NULL);
+                                                     GAPLEClientKernel, nullptr);
       cl_assert_equal_i(memcmp(buffer, value, value_length), 0);
       cl_assert_equal_i(characteristic_out, characteristic);
     }
@@ -179,7 +179,7 @@ static void prv_assert_notification_event_ext(pbl_bt_characteristic_t characteri
     if (should_consume) {
       uint16_t value_length = assert_value_length;
       gatt_client_subscriptions_consume_notification(&characteristic_out, buffer, &value_length,
-                                                     GAPLEClientApp, NULL);
+                                                     GAPLEClientApp, nullptr);
       cl_assert_equal_i(memcmp(buffer, value, value_length), 0);
       cl_assert_equal_i(characteristic_out, characteristic);
     }
@@ -578,7 +578,8 @@ void test_gatt_client_subscriptions__notification_single_subscriber(void) {
   fake_event_clear_last();
 
   // Nothing to be read before getting the notification:
-  bool has_notification = gatt_client_subscriptions_get_notification_header(GAPLEClientApp, NULL);
+  bool has_notification =
+      gatt_client_subscriptions_get_notification_header(GAPLEClientApp, nullptr);
   cl_assert_equal_b(has_notification, false);
 
   const uint8_t value[] = {0xAA, 0xBB, 0xCC};
@@ -589,7 +590,7 @@ void test_gatt_client_subscriptions__notification_single_subscriber(void) {
                                 true /* app */);
 
   // Nothing to be read after "consuming" it:
-  has_notification = gatt_client_subscriptions_get_notification_header(GAPLEClientApp, NULL);
+  has_notification = gatt_client_subscriptions_get_notification_header(GAPLEClientApp, nullptr);
   cl_assert_equal_b(has_notification, false);
 }
 
@@ -604,12 +605,13 @@ void test_gatt_client_subscriptions__zero_length_notification(void) {
   prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
   fake_event_clear_last();
 
-  gatt_client_subscriptions_handle_server_notification(s_connection, s_handle, NULL, 0);
+  gatt_client_subscriptions_handle_server_notification(s_connection, s_handle, nullptr, 0);
 
-  prv_assert_notification_event(characteristic, NULL, 0, false /* kernel */, true /* app */);
+  prv_assert_notification_event(characteristic, nullptr, 0, false /* kernel */, true /* app */);
 
   // Nothing to be read after "consuming" it:
-  bool has_notification = gatt_client_subscriptions_get_notification_header(GAPLEClientApp, NULL);
+  bool has_notification =
+      gatt_client_subscriptions_get_notification_header(GAPLEClientApp, nullptr);
   cl_assert_equal_b(has_notification, false);
 }
 
@@ -665,7 +667,7 @@ static pbl_tick_t prv_consume_in_time_yield_cb(struct pbl_sem *queue) {
   uint8_t *value_out = (uint8_t *)malloc(GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE);
   uint16_t value_length = GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE;
   gatt_client_subscriptions_consume_notification(&characteristic_out, value_out, &value_length,
-                                                 GAPLEClientApp, NULL);
+                                                 GAPLEClientApp, nullptr);
   free(value_out);
   return pbl_ms_to_ticks(5);
 }
@@ -863,7 +865,7 @@ void test_gatt_client_subscriptions__cleanup_by_connection(void) {
   prv_assert_no_event();
 
   // there should be no more subscriptions
-  cl_assert(s_connection->gatt_subscriptions == NULL);
+  cl_assert(s_connection->gatt_subscriptions == nullptr);
   prv_assert_no_pending_events_to_kernel_and_app();
 
   fake_kernel_malloc_mark_assert_equal();
@@ -883,7 +885,7 @@ void test_gatt_client_subscriptions__cleanup_by_att_handle_range(void) {
                                           GAPLEClientKernel);
   cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
-  cl_assert(s_connection->gatt_subscriptions != NULL);
+  cl_assert(s_connection->gatt_subscriptions != nullptr);
 
   uint16_t start;
   uint16_t end;
@@ -897,14 +899,14 @@ void test_gatt_client_subscriptions__cleanup_by_att_handle_range(void) {
   // should have no effect since service is not in this range
   gatt_client_subscription_cleanup_by_att_handle_range(s_connection, &bogus_range);
   prv_assert_no_event();
-  cl_assert(s_connection->gatt_subscriptions != NULL);
+  cl_assert(s_connection->gatt_subscriptions != nullptr);
 
   // should actually remove everything
   gatt_client_subscription_cleanup_by_att_handle_range(s_connection, &range);
   prv_assert_no_event();
 
   // there should be no more subscriptions
-  cl_assert(s_connection->gatt_subscriptions == NULL);
+  cl_assert(s_connection->gatt_subscriptions == nullptr);
   prv_assert_no_pending_events_to_kernel_and_app();
 
   fake_kernel_malloc_mark_assert_equal();

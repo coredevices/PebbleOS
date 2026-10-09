@@ -31,7 +31,7 @@
 
 // A button must be stable for 20 samples (40ms) to be accepted.
 static const uint32_t s_num_debounce_samples = 20;
-static GPT_HandleTypeDef s_tim_hdl = {0};
+static GPT_HandleTypeDef s_tim_hdl = {};
 static bool s_timer_enabled = false;
 
 static void prv_timer_handler(void);
@@ -199,6 +199,6 @@ static int prv_cmd_button_raw(const struct pbl_shell *sh, size_t argc, char **ar
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_button, raw, NULL, "Inject a raw event <id> <0=up|1=down>",
+PBL_SHELL_SUBCMD_ADD(sub_button, raw, nullptr, "Inject a raw event <id> <0=up|1=down>",
                      prv_cmd_button_raw, 3, 0);
 #endif

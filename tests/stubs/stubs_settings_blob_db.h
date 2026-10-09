@@ -25,7 +25,7 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
 }
 
 BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
-  return NULL;
+  return nullptr;
 }
 
 status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {

@@ -342,7 +342,7 @@ void test_timeline_item__string_list(void) {
   cl_assert_equal_s("ab", pbl_string_list_get_at(list, 0));
   cl_assert_equal_s("", pbl_string_list_get_at(list, 1));
   cl_assert_equal_s("", pbl_string_list_get_at(list, 2));
-  cl_assert_equal_s(NULL, pbl_string_list_get_at(list, 3));
+  cl_assert_equal_s(nullptr, pbl_string_list_get_at(list, 3));
 
   // 4 strings (first and last two are empty)
   list->serialized_byte_length = 4;
@@ -379,11 +379,11 @@ static TimelineItemAction s_basic_action_list[] = {
 
 void test_timeline_item__find_action_with_id(void) {
   // Make sure we're resilient to NULL items
-  cl_assert_equal_p(timeline_item_find_action_with_id(NULL, 0), NULL);
+  cl_assert_equal_p(timeline_item_find_action_with_id(nullptr, 0), nullptr);
 
   // Make sure we can handle timeline items with no actions
   TimelineItem item = {};
-  cl_assert_equal_p(timeline_item_find_action_with_id(&item, 0), NULL);
+  cl_assert_equal_p(timeline_item_find_action_with_id(&item, 0), nullptr);
 
   // Make sure we actually find the items we're looking for
   item.action_group.num_actions = ARRAY_LENGTH(s_basic_action_list);
@@ -391,19 +391,21 @@ void test_timeline_item__find_action_with_id(void) {
   cl_assert_equal_p(timeline_item_find_action_with_id(&item, 0), &s_basic_action_list[0]);
   cl_assert_equal_p(timeline_item_find_action_with_id(&item, 1), &s_basic_action_list[1]);
   cl_assert_equal_p(timeline_item_find_action_with_id(&item, 2), &s_basic_action_list[2]);
-  cl_assert_equal_p(timeline_item_find_action_with_id(&item, 3), NULL);
+  cl_assert_equal_p(timeline_item_find_action_with_id(&item, 3), nullptr);
 
   item.header.id = UUID_INVALID;
-  cl_assert_equal_p(timeline_item_find_action_with_id(&item, 0), NULL);
+  cl_assert_equal_p(timeline_item_find_action_with_id(&item, 0), nullptr);
 }
 
 void test_timeline_item__find_action_by_type(void) {
   // Make sure we're resilient to NULL items
-  cl_assert_equal_p(timeline_item_find_action_by_type(NULL, TimelineItemActionTypeGeneric), NULL);
+  cl_assert_equal_p(timeline_item_find_action_by_type(nullptr, TimelineItemActionTypeGeneric),
+                    nullptr);
 
   // Make sure we can handle timeline items with no actions
   TimelineItem item = {};
-  cl_assert_equal_p(timeline_item_find_action_by_type(&item, TimelineItemActionTypeGeneric), NULL);
+  cl_assert_equal_p(timeline_item_find_action_by_type(&item, TimelineItemActionTypeGeneric),
+                    nullptr);
 
   // Make sure we actually find the items we're looking for
   item.action_group.num_actions = ARRAY_LENGTH(s_basic_action_list);
@@ -414,19 +416,20 @@ void test_timeline_item__find_action_by_type(void) {
                     &s_basic_action_list[1]);
   cl_assert_equal_p(timeline_item_find_action_by_type(&item, TimelineItemActionTypeOpenPin),
                     &s_basic_action_list[2]);
-  cl_assert_equal_p(timeline_item_find_action_by_type(&item, TimelineItemActionTypeRemove), NULL);
+  cl_assert_equal_p(timeline_item_find_action_by_type(&item, TimelineItemActionTypeRemove),
+                    nullptr);
 
   item.header.id = UUID_INVALID;
-  cl_assert_equal_p(timeline_item_find_action_by_type(&item, 0), NULL);
+  cl_assert_equal_p(timeline_item_find_action_by_type(&item, 0), nullptr);
 }
 
 void test_timeline_item__find_dismiss_action(void) {
   // Make sure we're resilient to NULL items
-  cl_assert_equal_p(timeline_item_find_dismiss_action(NULL), NULL);
+  cl_assert_equal_p(timeline_item_find_dismiss_action(nullptr), nullptr);
 
   // Make sure we can handle timeline items with no actions
   TimelineItem item = {};
-  cl_assert_equal_p(timeline_item_find_dismiss_action(&item), NULL);
+  cl_assert_equal_p(timeline_item_find_dismiss_action(&item), nullptr);
 
   // Copy the action list since it's easiest to just modify it
   TimelineItemAction *action_list = malloc(sizeof(s_basic_action_list));
@@ -435,7 +438,7 @@ void test_timeline_item__find_dismiss_action(void) {
   item.action_group.actions = action_list;
 
   // Make sure we don't return anything if the action doesn't exist
-  cl_assert_equal_p(timeline_item_find_dismiss_action(&item), NULL);
+  cl_assert_equal_p(timeline_item_find_dismiss_action(&item), nullptr);
 
   // Make sure we find both dismiss and ancs negative actions
   action_list[1].type = TimelineItemActionTypeDismiss;
@@ -445,17 +448,17 @@ void test_timeline_item__find_dismiss_action(void) {
   cl_assert_equal_p(timeline_item_find_dismiss_action(&item), &action_list[1]);
 
   item.header.id = UUID_INVALID;
-  cl_assert_equal_p(timeline_item_find_dismiss_action(&item), NULL);
+  cl_assert_equal_p(timeline_item_find_dismiss_action(&item), nullptr);
   free(action_list);
 }
 
 void test_timeline_item__find_reply_action(void) {
   // Make sure we're resilient to NULL items
-  cl_assert_equal_p(timeline_item_find_reply_action(NULL), NULL);
+  cl_assert_equal_p(timeline_item_find_reply_action(nullptr), nullptr);
 
   // Make sure we can handle timeline items with no actions
   TimelineItem item = {};
-  cl_assert_equal_p(timeline_item_find_reply_action(&item), NULL);
+  cl_assert_equal_p(timeline_item_find_reply_action(&item), nullptr);
 
   // Copy the action list since it's easiest to just modify it
   TimelineItemAction *action_list = malloc(sizeof(s_basic_action_list));
@@ -464,7 +467,7 @@ void test_timeline_item__find_reply_action(void) {
   item.action_group.actions = action_list;
 
   // Make sure we don't return anything if the action doesn't exist
-  cl_assert_equal_p(timeline_item_find_reply_action(&item), NULL);
+  cl_assert_equal_p(timeline_item_find_reply_action(&item), nullptr);
 
   // Make sure we find both response and ancs response actions
   action_list[1].type = TimelineItemActionTypeResponse;
@@ -474,6 +477,6 @@ void test_timeline_item__find_reply_action(void) {
   cl_assert_equal_p(timeline_item_find_reply_action(&item), &action_list[1]);
 
   item.header.id = UUID_INVALID;
-  cl_assert_equal_p(timeline_item_find_reply_action(&item), NULL);
+  cl_assert_equal_p(timeline_item_find_reply_action(&item), nullptr);
   free(action_list);
 }

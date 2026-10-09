@@ -12,8 +12,6 @@
 //
 // NEW PREFERENCES DO __NOT__ BELONG HERE WITHOUT A VERY GOOD REASON.
 
-#include <stdbool.h>
-
 #include <pbl/util/uuid.h>
 
 #include <applib/graphics/gtypes.h>

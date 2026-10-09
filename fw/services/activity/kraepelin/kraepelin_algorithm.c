@@ -24,7 +24,6 @@ THE SOFTWARE.
 This license is taken to apply to any other files in the Project Kraepelin
 Pebble App project.
 */
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1199,7 +1198,7 @@ static uint32_t prv_analyze_epoch(KAlgState *state) {
   }
 
   // 5 sec proportional integral mode (pim), used by the steps calculation
-  uint32_t pim_epoch[KALG_N_AXES] = {0};
+  uint32_t pim_epoch[KALG_N_AXES] = {};
 
   // Calculate the axis metrics
   for (int16_t axis = 0; axis < KALG_N_AXES; axis++) {
@@ -1284,7 +1283,7 @@ uint32_t kalg_state_size(void) {
 // -----------------------------------------------------------------------------------------
 // Init the state, return true on success
 bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
-  PBL_ASSERTN(state != NULL);
+  PBL_ASSERTN(state != nullptr);
   *state = (KAlgState){
     .stats_cb = stats_cb,
   };
@@ -1299,7 +1298,7 @@ bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
 // Release resources held by the state. Must be called before the caller frees it, otherwise the
 // HRM subscriptions outlive the only references to them and pin the sensor on until reboot.
 void kalg_deinit(KAlgState *state) {
-  PBL_ASSERTN(state != NULL);
+  PBL_ASSERTN(state != nullptr);
   prv_release_step_activity_hrm(&state->walk_state);
   prv_release_step_activity_hrm(&state->run_state);
 }
@@ -1307,12 +1306,12 @@ void kalg_deinit(KAlgState *state) {
 // ------------------------------------------------------------------------------------
 uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num_samples,
                               uint32_t *consumed_samples) {
-  PBL_ASSERTN(state != NULL);
+  PBL_ASSERTN(state != nullptr);
   uint32_t new_steps = 0;
   *consumed_samples = 0;
 
   // We do an FFT in place on the accel_samples array, so make sure our constraints are correct
-  _Static_assert(KALG_N_SAMPLES_EPOCH < KALG_FFT_WIDTH, "Invalid array sizes");
+  static_assert(KALG_N_SAMPLES_EPOCH < KALG_FFT_WIDTH, "Invalid array sizes");
 
   // Format the accel data for the algorithm - it wants the x, y and z values in separate arrays
   for (uint32_t i = 0; i < num_samples; i++) {
@@ -1336,7 +1335,7 @@ uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num
 
 // ------------------------------------------------------------------------------------
 void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bool *still) {
-  PBL_ASSERTN(state != NULL);
+  PBL_ASSERTN(state != nullptr);
   // -----------------------------------------
   // Compute the orientation
   // We want to fit the encoding into a byte, so
@@ -1372,7 +1371,7 @@ void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bo
 
 // ------------------------------------------------------------------------------------
 uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
-  PBL_ASSERTN(state != NULL);
+  PBL_ASSERTN(state != nullptr);
   uint32_t new_steps = 0;
 
   if (state->num_samples) {
@@ -2050,7 +2049,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
                activity_prefs_hrm_activity_tracking_is_enabled()) {
       state->hrm_session = hrm_manager_subscribe_with_callback(
           INSTALL_ID_INVALID, hrm_interval_s, KALG_ACTIVITY_HRM_EXPIRE_S, HRMFeature_BPM,
-          false /*low_latency*/, prv_hrm_subscription_cb, NULL);
+          false /*low_latency*/, prv_hrm_subscription_cb, nullptr);
       // A new auto-detected activity just enabled HR: switch the algorithm to a motion-tuned scene.
       prv_update_activity_hrm_scene(alg_state);
     }

@@ -33,15 +33,15 @@ static void prv_tick_isr(void *arg) {
 static void *prv_tick_thread(void *arg) {
   for (;;) {
     usleep(1000000 / PBL_TICK_HZ);
-    pbl_posix_irq_run(prv_tick_isr, NULL);
+    pbl_posix_irq_run(prv_tick_isr, nullptr);
   }
-  return NULL;
+  return nullptr;
 }
 
 void pbl_soc_early_init(void) {
   s_tick_start_ms = prv_monotonic_ms();
   pthread_t tid;
-  pthread_create(&tid, NULL, prv_tick_thread, NULL);
+  pthread_create(&tid, nullptr, prv_tick_thread, nullptr);
 }
 
 void pbl_soc_idle(pbl_tick_t max_ticks) {
@@ -65,5 +65,5 @@ static void *prv_firmware_thread(void *arg) {
 
 void posix_fw_start(void) {
   pthread_t tid;
-  pthread_create(&tid, NULL, prv_firmware_thread, NULL);
+  pthread_create(&tid, nullptr, prv_firmware_thread, nullptr);
 }

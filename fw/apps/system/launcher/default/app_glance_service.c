@@ -53,7 +53,7 @@ static void prv_reset_slice_expiration_timer(LauncherAppGlanceService *service) 
 
   if (service->slice_expiration_timer) {
     app_timer_cancel(service->slice_expiration_timer);
-    service->slice_expiration_timer = NULL;
+    service->slice_expiration_timer = nullptr;
   }
 
   // Set the next slice expiration time to "never"
@@ -125,8 +125,8 @@ static void prv_slice_expiration_timer_cb(void *data) {
 /////////////////////
 // Glance cache
 
-_Static_assert((offsetof(LauncherAppGlanceCacheEntry, node) == 0),
-               "ListNode is not the first field of LauncherAppGlanceCacheEntry");
+static_assert((offsetof(LauncherAppGlanceCacheEntry, node) == 0),
+              "ListNode is not the first field of LauncherAppGlanceCacheEntry");
 
 static void prv_glance_cache_destroy_entry(LauncherAppGlanceService *service,
                                            LauncherAppGlanceCacheEntry *entry) {
@@ -141,7 +141,7 @@ static void prv_glance_cache_destroy_entry(LauncherAppGlanceService *service,
     // Set the glance reel player's reel to NULL if it belongs to the glance we're going to destroy
     KinoPlayer *glance_reel_player = &service->glance_reel_player;
     if (glance_reel && (glance_reel == kino_player_get_reel(glance_reel_player))) {
-      kino_player_set_reel(glance_reel_player, NULL, false /* take_ownership */);
+      kino_player_set_reel(glance_reel_player, nullptr, false /* take_ownership */);
     }
   }
 
@@ -161,7 +161,7 @@ static bool prv_glance_cache_deinit_foreach_cb(ListNode *node, void *context) {
 static void prv_glance_cache_deinit(LauncherAppGlanceService *service) {
   if (service) {
     list_foreach(service->glance_cache, prv_glance_cache_deinit_foreach_cb, service);
-    service->glance_cache = NULL;
+    service->glance_cache = nullptr;
   }
 }
 
@@ -178,7 +178,7 @@ static void prv_glance_cache_put(LauncherAppGlanceService *service, const Uuid *
   if (cache_entry_count == LAUNCHER_APP_GLANCE_SERVICE_CACHE_NUM_ENTRIES) {
     LauncherAppGlanceCacheEntry *cache_entry_to_destroy =
         (LauncherAppGlanceCacheEntry *)list_get_tail(service->glance_cache);
-    list_remove(&cache_entry_to_destroy->node, &service->glance_cache, NULL);
+    list_remove(&cache_entry_to_destroy->node, &service->glance_cache, nullptr);
     prv_glance_cache_destroy_entry(service, cache_entry_to_destroy);
   }
 
@@ -255,7 +255,7 @@ static LauncherAppGlance *prv_load_glance_for_node(const AppMenuNode *node,
     },
   };
 
-  LauncherAppGlance *glance = NULL;
+  LauncherAppGlance *glance = nullptr;
 
   // Check if the UUID matches a known system glance
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_system_glance_factories); i++) {
@@ -288,7 +288,7 @@ static LauncherAppGlanceCacheEntry *prv_find_glance_entry_in_cache(
 
 static LauncherAppGlance *prv_find_glance_in_cache(LauncherAppGlanceService *service, Uuid *uuid) {
   const LauncherAppGlanceCacheEntry *entry = prv_find_glance_entry_in_cache(service, uuid);
-  return NULL_SAFE_FIELD_ACCESS(entry, glance, NULL);
+  return NULL_SAFE_FIELD_ACCESS(entry, glance, nullptr);
 }
 
 //! Request a glance for an icon ID from an "MRU linked list" (list sorted by accesses so that
@@ -296,19 +296,19 @@ static LauncherAppGlance *prv_find_glance_in_cache(LauncherAppGlanceService *ser
 static LauncherAppGlance *prv_fetch_from_cache_or_load_glance_for_node(
     AppMenuNode *node, LauncherAppGlanceService *service) {
   if (!service || !node) {
-    return NULL;
+    return nullptr;
   }
 
   Uuid *uuid = &node->uuid;
 
-  LauncherAppGlance *glance = NULL;
+  LauncherAppGlance *glance = nullptr;
 
   // Try to find the requested glance in the cache
   LauncherAppGlanceCacheEntry *cache_entry = prv_find_glance_entry_in_cache(service, uuid);
   if (cache_entry) {
     // Move the found cache entry to the front of the cache list (to mark it as "MRU")
     // This makes it easy to remove the "LRU" entry later by simply removing the tail
-    list_remove(&cache_entry->node, &service->glance_cache, NULL);
+    list_remove(&cache_entry->node, &service->glance_cache, nullptr);
     service->glance_cache = list_insert_before(service->glance_cache, &cache_entry->node);
     glance = cache_entry->glance;
   }
@@ -318,7 +318,7 @@ static LauncherAppGlance *prv_fetch_from_cache_or_load_glance_for_node(
     glance = prv_load_glance_for_node(node, service);
     if (!glance) {
       // Just bail out and don't modify the cache if we fail
-      return NULL;
+      return nullptr;
     }
 
     // Add the new glance to the cache

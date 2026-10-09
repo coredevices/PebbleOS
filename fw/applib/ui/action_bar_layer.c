@@ -75,7 +75,7 @@ static void prv_register_redraw_timer(ActionBarLayer *layer);
 static void prv_timed_redraw(void *context) {
   ActionBarLayer *action_bar = context;
   layer_mark_dirty(&action_bar->layer);
-  action_bar->redraw_timer = NULL;
+  action_bar->redraw_timer = nullptr;
   int64_t now = prv_get_precise_time();
   for (int i = 0; i < NUM_ACTION_BAR_ITEMS; ++i) {
     if ((action_bar->state_change_times[i] != 0 &&
@@ -240,7 +240,7 @@ static void prv_publish_touch_nav_snapshot(ActionBarLayer *action_bar) {
   (void)action_bar; // No touch bridge in this build: nothing to publish.
 #else
   if (!action_bar->window) {
-    sys_touch_set_action_bar(NULL, 0);
+    sys_touch_set_action_bar(nullptr, 0);
     return;
   }
   uint8_t icon_mask = 0;
@@ -287,7 +287,7 @@ void action_bar_layer_deinit(ActionBarLayer *action_bar_layer) {
 }
 
 void action_bar_layer_destroy(ActionBarLayer *action_bar_layer) {
-  if (action_bar_layer == NULL) {
+  if (action_bar_layer == nullptr) {
     return;
   }
   action_bar_layer_deinit(action_bar_layer);
@@ -383,7 +383,7 @@ void action_bar_layer_set_icon(ActionBarLayer *action_bar, ButtonId button_id,
 }
 
 void action_bar_layer_clear_icon(ActionBarLayer *action_bar, ButtonId button_id) {
-  action_bar_layer_set_icon(action_bar, button_id, NULL);
+  action_bar_layer_set_icon(action_bar, button_id, nullptr);
 }
 
 void action_bar_layer_set_icon_press_animation(ActionBarLayer *action_bar, ButtonId button_id,
@@ -410,12 +410,12 @@ void action_bar_layer_add_to_window(ActionBarLayer *action_bar, struct Window *w
 }
 
 void action_bar_layer_remove_from_window(ActionBarLayer *action_bar) {
-  if (action_bar == NULL || action_bar->window == NULL) {
+  if (action_bar == nullptr || action_bar->window == nullptr) {
     return;
   }
   layer_remove_from_parent(&action_bar->layer);
-  window_set_click_config_provider_with_context(action_bar->window, NULL, NULL);
-  action_bar->window = NULL;
+  window_set_click_config_provider_with_context(action_bar->window, nullptr, nullptr);
+  action_bar->window = nullptr;
   // Clear the touch-nav snapshot so a stale bar does not route taps after removal.
   prv_publish_touch_nav_snapshot(action_bar);
 }

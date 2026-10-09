@@ -113,7 +113,7 @@ static OptionMenu *prv_push_color_menu(void) {
   }
   OptionMenu *const option_menu = settings_option_menu_create(
       title, OptionMenuContentType_SingleLine, selected, &callbacks,
-      ARRAY_LENGTH(s_color_definitions), true /* icons_enabled */, color_names, NULL);
+      ARRAY_LENGTH(s_color_definitions), true /* icons_enabled */, color_names, nullptr);
 
   if (option_menu) {
     if (selected == 0) {
@@ -132,10 +132,10 @@ static OptionMenu *prv_push_color_menu(void) {
 static Window *prv_create_color_menu(void) {
 #ifdef CONFIG_THEMING
   OptionMenu *option_menu = prv_push_color_menu();
-  return option_menu ? &option_menu->window : NULL;
+  return option_menu ? &option_menu->window : nullptr;
 #else
   WTF;
-  return NULL;
+  return nullptr;
 #endif
 }
 

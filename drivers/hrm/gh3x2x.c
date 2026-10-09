@@ -108,7 +108,7 @@ static void gh3026_int_irq_callback(void) {
   hal_gh3x2x_int_handler_call_back();
 
   if (s_hrm_int_flag == false) {
-    if (system_task_add_callback_from_isr(gh3026_int_callback_function, NULL)) {
+    if (system_task_add_callback_from_isr(gh3026_int_callback_function, nullptr)) {
       s_hrm_int_flag = true;
     }
   }
@@ -137,7 +137,7 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
 #define GH3X2X_HR_MAX_PLAUSIBLE_BPM 240
 
 void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
-  HRMData hrm_data = {0};
+  HRMData hrm_data = {};
 
   PBL_LOG_DBG("GH3X2X BPM %" PRIu8 " (quality=%" PRIu8 ", wear=%u)", bpm, quality,
               HRM->state->is_wear);
@@ -171,7 +171,7 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
 
 void gh3x2x_spo2_result_report(uint8_t pct, uint8_t confidence, uint8_t valid_level,
                                int32_t invalid_flg, int32_t r_val) {
-  HRMData hrm_data = {0};
+  HRMData hrm_data = {};
 
   // Surface the full algorithm result so we can tell a real reading from a rejected one. Fires on
   // every SpO2 sample, so keep it at DBG.
@@ -214,7 +214,7 @@ void gh3x2x_hrv_result_report(const int32_t *rri, int32_t confidence, int32_t va
   PBL_LOG_DBG("GH3X2X HRV n=%" PRId32 " (conf=%" PRId32 ", wear=%u)", valid_num, confidence,
               HRM->state->is_wear);
   if (!HRM->state->is_wear) {
-    HRMData hrm_data = {0};
+    HRMData hrm_data = {};
     hrm_data.features = HRMFeature_HRV;
     hrm_data.hrv_quality = HRMQuality_OffWrist;
     hrm_manager_new_data_cb(&hrm_data);
@@ -228,7 +228,7 @@ void gh3x2x_hrv_result_report(const int32_t *rri, int32_t confidence, int32_t va
       // Not a plausible RR interval; don't let the uint16_t cast wrap it into one
       continue;
     }
-    HRMData hrm_data = {0};
+    HRMData hrm_data = {};
     hrm_data.features = HRMFeature_HRV;
     hrm_data.hrv_ppi_ms = (uint16_t)rri[i];
     if (confidence >= 98) {
@@ -276,20 +276,20 @@ static void gh3x2x_timer_callback(void *data) {
 }
 
 static void gh3x2x_timer_start_handle(void *arg) {
-  if (HRM == NULL || HRM->state->timer != NULL) {
+  if (HRM == nullptr || HRM->state->timer != nullptr) {
     return;
   }
   if (HRM->state->timer_period_ms == 0) {
     return;
   }
-  HRM->state->timer =
-      app_timer_register_repeatable(HRM->state->timer_period_ms, gh3x2x_timer_callback, NULL, true);
+  HRM->state->timer = app_timer_register_repeatable(HRM->state->timer_period_ms,
+                                                    gh3x2x_timer_callback, nullptr, true);
 }
 
 static void gh3x2x_timer_stop_handle(void *arg) {
   if (HRM && HRM->state->timer) {
     app_timer_cancel(HRM->state->timer);
-    HRM->state->timer = NULL;
+    HRM->state->timer = nullptr;
   }
 }
 
@@ -312,7 +312,7 @@ void gh3x2x_timer_stop(void) {
 }
 
 static void gh3x2x_ble_data_recv_handle(void *context) {
-  if (context == NULL) {
+  if (context == nullptr) {
     return;
   }
 
@@ -325,7 +325,7 @@ static void gh3x2x_ble_data_recv_handle(void *context) {
 }
 
 bool gh3x2x_ble_data_recv(void *context) {
-  if (context == NULL) {
+  if (context == nullptr) {
     return false;
   }
 
@@ -341,12 +341,12 @@ bool gh3x2x_ble_data_recv(void *context) {
 void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
 #ifdef CONFIG_MFG
   HRMDevice *p_dev = HRM;
-  if (p_dev == NULL || p_dev->state->enabled == false) {
+  if (p_dev == nullptr || p_dev->state->enabled == false) {
     return;
   }
 
   GH3x2xFTData *p_factory = p_dev->state->factory;
-  if (p_factory == NULL) {
+  if (p_factory == nullptr) {
     return;
   }
   uint32_t mode = p_factory->test_mode;
@@ -382,7 +382,7 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
   uint32_t i;
   uint32_t ppg_avg[HRM_PPG_CH_NUM];
   uint64_t total[HRM_PPG_CH_NUM];
-  HRMData hrm_data = {0};
+  HRMData hrm_data = {};
   memset(total, 0, sizeof(total));
   for (idx = 0; idx < HRM_PPG_CH_NUM; ++idx) {
     // calcu total values for 80 samples ppg raw data
@@ -436,14 +436,14 @@ void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
   uint32_t *ppg_data;
   GH3x2xFTData *p_factory = (GH3x2xFTData *)malloc(
       sizeof(GH3x2xFTData) + sizeof(uint32_t) * HRM_PPG_FACTORY_TEST_FIFO_LEN * HRM_PPG_CH_NUM);
-  if (p_factory == NULL) {
+  if (p_factory == nullptr) {
     PBL_LOG_ERR("malloc failed.");
     return;
   }
   memset(p_factory, 0, sizeof(GH3x2xFTData));
   p_factory->drop_count = 30;
   p_factory->test_mode = mode;
-  if (dev->state->factory != NULL) {
+  if (dev->state->factory != nullptr) {
     free(dev->state->factory);
   }
   ppg_data = (uint32_t *)(p_factory + 1);
@@ -464,7 +464,7 @@ static void gh3x2x_ft_ctr_start_handle(void *data) {
 }
 
 void gh3x2x_start_ft_ctr(void) {
-  system_task_add_callback(gh3x2x_ft_ctr_start_handle, NULL);
+  system_task_add_callback(gh3x2x_ft_ctr_start_handle, nullptr);
 }
 
 // shoud be called in system task
@@ -473,7 +473,7 @@ static void gh3x2x_ft_leakage_start_handle(void *data) {
 }
 
 void gh3x2x_start_ft_leakage(void) {
-  system_task_add_callback(gh3x2x_ft_leakage_start_handle, NULL);
+  system_task_add_callback(gh3x2x_ft_leakage_start_handle, nullptr);
 }
 
 // shoud be called in system task
@@ -481,9 +481,9 @@ static void gh3x2x_factory_test_disable_handle(void *data) {
   HRMDevice *dev = (HRMDevice *)data;
   dev->state->enabled = false;
   Gh3x2xDemoStopSampling(0xFFFFFFFF);
-  if (dev->state->factory != NULL) {
+  if (dev->state->factory != nullptr) {
     free(dev->state->factory);
-    dev->state->factory = NULL;
+    dev->state->factory = nullptr;
   }
 }
 

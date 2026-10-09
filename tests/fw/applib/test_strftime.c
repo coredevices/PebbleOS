@@ -98,11 +98,11 @@ const char *i18n_get(const char *msgid, const void *owner) {
 }
 
 void i18n_get_with_buffer(const char *string, char *buffer, size_t length) {
-  strncpy(buffer, i18n_get(string, NULL), length);
+  strncpy(buffer, i18n_get(string, nullptr), length);
 }
 
 size_t i18n_get_length(const char *string) {
-  return strlen(i18n_get(string, NULL));
+  return strlen(i18n_get(string, nullptr));
 }
 
 void i18n_free(const char *original, const void *owner) {
@@ -1328,7 +1328,7 @@ static const ISO8601TestData s_iso8601_data[] = {
 void test_strftime__full_iso8601(void) {
   char tmbuf[512];
 
-  struct tm wrk = {0};
+  struct tm wrk = {};
 
   for (int i = 0; i < ARRAY_LENGTH(s_iso8601_data); i++) {
     gmtime_r(&s_iso8601_data[i].stamp, &wrk);
@@ -1626,10 +1626,10 @@ void test_strftime__i18n(void) {
   s_i18n_translate = false;
   s_i18n_locale_other = false;
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
   tmbuf[0] = '\0';
   localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
@@ -1641,10 +1641,10 @@ void test_strftime__i18n(void) {
   s_i18n_translate = true;
   s_i18n_locale_other = false;
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Hola Hola Hola Hola");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Hola");
   tmbuf[0] = '\0';
   localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
@@ -1656,10 +1656,10 @@ void test_strftime__i18n(void) {
   s_i18n_translate = false;
   s_i18n_locale_other = true;
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
   tmbuf[0] = '\0';
   localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
@@ -1671,10 +1671,10 @@ void test_strftime__i18n(void) {
   s_i18n_translate = true;
   s_i18n_locale_other = true;
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Hola Hola Hola Hola");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Hola");
   tmbuf[0] = '\0';
   localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
@@ -1700,7 +1700,7 @@ void test_strftime__i18n_month_abbr_context(void) {
   };
 
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, nullptr);
   cl_assert_equal_s(tmbuf, "May May May");
   tmbuf[0] = '\0';
   localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, i18n_get_locale());
@@ -1708,7 +1708,7 @@ void test_strftime__i18n_month_abbr_context(void) {
 
   s_i18n_translate_may = true;
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, NULL);
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, nullptr);
   cl_assert_equal_s(tmbuf, "Mai. Mai. Mai");
   tmbuf[0] = '\0';
   localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, i18n_get_locale());

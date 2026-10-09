@@ -109,7 +109,7 @@ static const AppDBEntry bg_counter_app = {
         .major = 5,
         .minor = 13,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
 };
 
@@ -131,7 +131,7 @@ static const AppDBEntry menu_layer_app = {
         .major = 5,
         .minor = 13,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
 };
 
@@ -153,7 +153,7 @@ static const AppDBEntry big_time_app = {
         .major = 5,
         .minor = 17,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
 };
 
@@ -242,7 +242,7 @@ void test_app_menu_data_source__initialize(void) {
 extern ListNode *s_head_callback_node_list;
 
 void test_app_menu_data_source__cleanup(void) {
-  s_head_callback_node_list = NULL;
+  s_head_callback_node_list = nullptr;
   app_install_manager_flush_recent_communication_timestamps();
 }
 
@@ -531,8 +531,8 @@ void test_app_menu_data_source__complete_sorted_order(void) {
     BIG_TIME_APP_ID,
   };
 
-  _Static_assert(MENU_LAYER_APP_ID < BIG_TIME_APP_ID,
-                 "MENU_LAYER_APP_ID is unexpectedly >= BIG_TIME_APP_ID.");
+  static_assert(MENU_LAYER_APP_ID < BIG_TIME_APP_ID,
+                "MENU_LAYER_APP_ID is unexpectedly >= BIG_TIME_APP_ID.");
 
   const uint8_t num_entries = ARRAY_LENGTH(storage_order);
   prv_write_order_to_file(storage_order, num_entries);
@@ -635,7 +635,7 @@ void test_app_menu_data_source__app_node_comparator_equality_cases(void) {
     APP_ID_ALARMS,        APP_ID_WATCHFACES, APP_ID_WORKOUT,
   };
 
-  AppMenuNode *app_list = NULL;
+  AppMenuNode *app_list = nullptr;
   const uint16_t num_apps = ARRAY_LENGTH(app_menu_nodes);
   for (uint16_t i = 0; i < num_apps; i++) {
     app_list = (AppMenuNode *)list_sorted_add(&app_list->node, &app_menu_nodes[i].node,

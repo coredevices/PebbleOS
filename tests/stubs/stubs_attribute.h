@@ -7,7 +7,7 @@
 
 const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
                                  char *default_value) {
-  return NULL;
+  return nullptr;
 }
 
 uint8_t attribute_get_uint8(const AttributeList *attr_list, AttributeId id, uint8_t default_value) {

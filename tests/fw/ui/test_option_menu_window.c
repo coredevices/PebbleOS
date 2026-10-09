@@ -116,7 +116,7 @@ static void prv_create_menu_and_render(MenuConfig *config) {
   const OptionMenuCallbacks callbacks = {
     .draw_row = config->callbacks.draw_row ?: prv_menu_draw_row,
     .get_num_rows = config->callbacks.get_num_rows ?: prv_menu_get_num_rows,
-    .get_cell_height = config->callbacks.get_cell_height ?: NULL,
+    .get_cell_height = config->callbacks.get_cell_height ?: nullptr,
   };
   option_menu_set_callbacks(&s_data.option_menu, &callbacks, config);
 

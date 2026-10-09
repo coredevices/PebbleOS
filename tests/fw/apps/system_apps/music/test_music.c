@@ -203,12 +203,12 @@ void accel_tap_service_unsubscribe(void) {
 }
 
 VibeScore *vibe_score_create_with_resource(uint32_t resource_id) {
-  return NULL;
+  return nullptr;
 }
 
 PropertyAnimation *property_animation_create_bounds_origin(struct Layer *layer, GPoint *from,
                                                            GPoint *to) {
-  return NULL;
+  return nullptr;
 }
 
 void property_animation_update_grect(PropertyAnimation *property_animation,
@@ -276,7 +276,7 @@ void test_music__initialize(void) {
   s_music_progress_supported = false;
   s_music_now_playing_generation = 0;
 
-  s_album_art = NULL;
+  s_album_art = nullptr;
   s_album_art_current = false;
   s_album_art_lock_depth = 0;
 
@@ -308,7 +308,7 @@ void test_music__cleanup(void) {
     free(s_album_art->addr);
     free(s_album_art->palette);
     free(s_album_art);
-    s_album_art = NULL;
+    s_album_art = nullptr;
   }
 }
 
@@ -340,7 +340,7 @@ static void prv_render(void) {
 // app requests for this platform), 4-bit palette.
 static void prv_receive_album_art(void) {
   s_album_art = get_gbitmap_from_pbi("test_music__art_cover_" PLATFORM_NAME ".pbi");
-  cl_assert(s_album_art != NULL);
+  cl_assert(s_album_art != nullptr);
   s_album_art_current = true;
 }
 #endif
@@ -448,26 +448,26 @@ void test_music__album_art_failure_retries_are_bounded_per_generation(void) {
     .type = PEBBLE_MEDIA_EVENT,
     .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
   };
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   prv_album_art_retry_timer(app_state_get_user_data());
   cl_assert_equal_i(s_imaging_request_count, 2);
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   prv_album_art_retry_timer(app_state_get_user_data());
   cl_assert_equal_i(s_imaging_request_count, 3);
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   prv_album_art_retry_timer(app_state_get_user_data());
   cl_assert_equal_i(s_imaging_request_count, 3);
 
   prv_set_now_playing("Track Two", "Artist");
   s_music_now_playing_generation = 2;
   event.media.type = PebbleMediaEventTypeNowPlayingChanged;
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   prv_album_art_request_timer(app_state_get_user_data());
   cl_assert_equal_i(s_imaging_request_count, 4);
 
   s_album_art_current = true;
   event.media.type = PebbleMediaEventTypeAlbumArtUpdated;
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   prv_album_art_retry_timer(app_state_get_user_data());
   cl_assert_equal_i(s_imaging_request_count, 4);
 #endif
@@ -488,10 +488,10 @@ void test_music__album_art_requests_coalesce_now_playing_updates(void) {
   };
   prv_set_now_playing("Track Two", "Artist");
   s_music_now_playing_generation = 2;
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   prv_set_now_playing("Track Two", "New Artist");
   s_music_now_playing_generation = 3;
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   cl_assert_equal_i(s_imaging_request_count, 1);
 
   prv_album_art_request_timer(app_state_get_user_data());
@@ -514,7 +514,7 @@ void test_music__album_art_success_does_not_duplicate_request(void) {
     .type = PEBBLE_MEDIA_EVENT,
     .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
   };
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
   cl_assert_equal_i(s_imaging_request_count, 1);
 #endif
 }
@@ -557,7 +557,7 @@ void test_music__album_art_shown_when_received(void) {
     .type = PEBBLE_MEDIA_EVENT,
     .media = {.type = PebbleMediaEventTypeAlbumArtUpdated},
   };
-  prv_music_event_handler(&event, NULL);
+  prv_music_event_handler(&event, nullptr);
 
   prv_render();
   cl_check(
@@ -589,7 +589,7 @@ void test_music__album_art_pref_toggled_off(void) {
       .key_len = sizeof(MUSIC_SHOW_ALBUM_ART_PREF_KEY),
     },
   };
-  prv_pref_change_handler(&event, NULL);
+  prv_pref_change_handler(&event, nullptr);
 
   prv_render();
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_NAMED_PBI_FILE("test_music__playing")));

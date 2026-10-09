@@ -3,6 +3,4 @@
 
 #pragma once
 
-#import <stdbool.h>
-
 bool fake_gap_le_is_initialized(void);

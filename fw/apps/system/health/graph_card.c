@@ -70,7 +70,7 @@ static void prv_draw_title(HealthGraphCard *graph_card, GContext *ctx) {
 
   const GSize text_size = graphics_text_layout_get_max_used_size(
       ctx, graph_card->title, graph_card->title_font, drawing_box, GTextOverflowModeWordWrap,
-      GTextAlignmentCenter, NULL);
+      GTextAlignmentCenter, nullptr);
 
   // increase drawing box y offset if we're only drawing one line of text
   if (text_size.h < 30) {
@@ -79,7 +79,7 @@ static void prv_draw_title(HealthGraphCard *graph_card, GContext *ctx) {
 #endif
 
   graphics_draw_text(ctx, graph_card->title, graph_card->title_font, drawing_box,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 static void prv_draw_day_labels_background(HealthGraphCard *graph_card, GContext *ctx) {
@@ -212,7 +212,7 @@ static void prv_draw_day_bars(HealthGraphCard *graph_card, GContext *ctx) {
     const GColor inactive_legend_color = GColorBlack;
     graphics_context_set_text_color(ctx, is_active ? active_legend_color : inactive_legend_color);
     graphics_draw_text(ctx, char_buffer, graph_card->legend_font, box, GTextOverflowModeWordWrap,
-                       GTextAlignmentCenter, NULL);
+                       GTextAlignmentCenter, nullptr);
 
     // Move the box cursor to the next bar
     box.origin.x = next_x;
@@ -272,7 +272,7 @@ static void prv_draw_avg_info_text(HealthGraphCard *graph_card, GContext *ctx, i
   const GRect *bounds = &graph_card->layer.bounds;
   const GRect avg_text_box = {{offset_x, offset_y}, {bounds->size.w, height}};
   graphics_draw_text(ctx, graph_card->info_avg, graph_card->legend_font, avg_text_box,
-                     GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentLeft, nullptr);
 }
 
 static void prv_draw_custom_info_text(HealthGraphCard *graph_card, GContext *ctx, char *text,
@@ -281,7 +281,7 @@ static void prv_draw_custom_info_text(HealthGraphCard *graph_card, GContext *ctx
   const GRect info_text_box = {{offset_x, info_offset_y}, {bounds->size.w, info_height}};
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, text, graph_card->legend_font, info_text_box, GTextOverflowModeWordWrap,
-                     GTextAlignmentLeft, NULL);
+                     GTextAlignmentLeft, nullptr);
 }
 
 static bool prv_is_selection_last_weekday(HealthGraphCard *graph_card) {

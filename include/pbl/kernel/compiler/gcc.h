@@ -7,9 +7,7 @@
 
 #define PBL_ALWAYS_INLINE_IMPL          inline __attribute__((__always_inline__))
 #define PBL_NOINLINE_IMPL               __attribute__((__noinline__))
-#define PBL_NORETURN_IMPL               __attribute__((__noreturn__))
 #define PBL_NAKED_IMPL                  __attribute__((__naked__))
-#define PBL_DEPRECATED_IMPL             __attribute__((__deprecated__))
 #define PBL_CONST_FUNC_IMPL             __attribute__((__const__))
 #define PBL_PURE_FUNC_IMPL              __attribute__((__pure__))
 #define PBL_OPTIMIZE_IMPL(level)        __attribute__((__optimize__(level)))
@@ -18,7 +16,6 @@
 #define PBL_PACKED_IMPL                 __attribute__((__packed__))
 #define PBL_ALIGNED_IMPL(bytes)         __attribute__((__aligned__(bytes)))
 #define PBL_USED_IMPL                   __attribute__((__used__))
-#define PBL_UNUSED_IMPL                 __attribute__((__unused__))
 #define PBL_WEAK_IMPL                   __attribute__((__weak__))
 #define PBL_ALIAS_IMPL(sym)             __attribute__((__alias__(sym)))
 #define PBL_EXTERNALLY_VISIBLE_IMPL     __attribute__((__externally_visible__))
@@ -26,7 +23,6 @@
 #define PBL_NOCOMMON_IMPL               __attribute__((__nocommon__))
 #define PBL_LIKELY_IMPL(x)              __builtin_expect(!!(x), 1)
 #define PBL_UNLIKELY_IMPL(x)            __builtin_expect(!!(x), 0)
-#define PBL_UNREACHABLE_IMPL()          __builtin_unreachable()
 #define PBL_RETURN_ADDRESS_IMPL(level)  __builtin_return_address(level)
 #define PBL_TYPES_COMPATIBLE_IMPL(a, b) __builtin_types_compatible_p(a, b)
 #define PBL_CHOOSE_EXPR_IMPL(c, a, b)   __builtin_choose_expr(c, a, b)
@@ -34,8 +30,6 @@
 #define PBL_POPCOUNT_IMPL(x)            __builtin_popcount(x)
 #define PBL_BSWAP16_IMPL(x)             __builtin_bswap16(x)
 #define PBL_BSWAP32_IMPL(x)             __builtin_bswap32(x)
-#define PBL_ADD_OVERFLOW_IMPL(a, b, r)  __builtin_add_overflow(a, b, r)
-#define PBL_MUL_OVERFLOW_IMPL(a, b, r)  __builtin_mul_overflow(a, b, r)
 
 #define PBL_NO_SANITIZE_ADDRESS_IMPL __attribute__((__no_sanitize_address__))
 

@@ -31,7 +31,7 @@ static size_t s_line_len;
 static void prv_send(int message_type, const char *msg, size_t len) {
 #ifdef CONFIG_PULSE_EVERYWHERE
   PromptResponseContents *contents = pulse_reliable_send_begin(PULSE2_RELIABLE_PROMPT_PROTOCOL);
-  if (contents == NULL) {
+  if (contents == nullptr) {
     return;
   }
 #else
@@ -79,7 +79,7 @@ static void prv_done(const struct pbl_shell *sh, int ret) {
   if (s_line_len > 0) {
     prv_flush();
   }
-  prv_send(PROMPT_RESP_DONE, NULL, 0);
+  prv_send(PROMPT_RESP_DONE, nullptr, 0);
 }
 
 static const struct pbl_shell_backend_api s_api = {
@@ -87,7 +87,7 @@ static const struct pbl_shell_backend_api s_api = {
   .done = prv_done,
 };
 
-PBL_SHELL_DEFINE(shell_pulse, NULL, &s_api, NULL);
+PBL_SHELL_DEFINE(shell_pulse, nullptr, &s_api, nullptr);
 
 #ifdef CONFIG_PULSE_EVERYWHERE
 
@@ -111,17 +111,17 @@ void pulse_prompt_handler(void *packet, size_t length) {
   PromptCommand *command = packet;
 
   if (s_latest_cookie == command->cookie) {
-    prv_send(pbl_shell_is_busy(&shell_pulse) ? PROMPT_RESP_ACK : PROMPT_RESP_DONE, NULL, 0);
+    prv_send(pbl_shell_is_busy(&shell_pulse) ? PROMPT_RESP_ACK : PROMPT_RESP_DONE, nullptr, 0);
     return;
   }
 
-  prv_send(PROMPT_RESP_ACK, NULL, 0);
+  prv_send(PROMPT_RESP_ACK, nullptr, 0);
   s_latest_cookie = command->cookie;
 
   int ret = pbl_shell_execute_line(&shell_pulse, command->command, length - sizeof(*command));
   if (ret < 0) {
     PBL_LOG_WRN("Dropping shell command (%d)", ret);
-    prv_send(PROMPT_RESP_DONE, NULL, 0);
+    prv_send(PROMPT_RESP_DONE, nullptr, 0);
   }
 }
 

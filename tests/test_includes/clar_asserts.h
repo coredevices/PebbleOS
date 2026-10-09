@@ -4,7 +4,6 @@
 #pragma once
 
 #include <setjmp.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -78,16 +77,16 @@ void cl_fixture_cleanup(const char *fixture_name);
 /**
  * Assertion macros with no error message
  */
-#define cl_must_pass(expr) cl_must_pass_(expr, NULL)
-#define cl_must_fail(expr) cl_must_fail_(expr, NULL)
-#define cl_assert(expr)    cl_assert_(expr, NULL)
+#define cl_must_pass(expr) cl_must_pass_(expr, nullptr)
+#define cl_must_fail(expr) cl_must_fail_(expr, nullptr)
+#define cl_assert(expr)    cl_assert_(expr, nullptr)
 
 /**
  * Check macros with no error message
  */
-#define cl_check_pass(expr) cl_check_pass_(expr, NULL)
-#define cl_check_fail(expr) cl_check_fail_(expr, NULL)
-#define cl_check(expr)      cl_check_(expr, NULL)
+#define cl_check_pass(expr) cl_check_pass_(expr, nullptr)
+#define cl_check_fail(expr) cl_check_fail_(expr, nullptr)
+#define cl_check(expr)      cl_check_(expr, nullptr)
 
 /**
  * Forced failure/warning
@@ -144,7 +143,7 @@ void cl_fixture_cleanup(const char *fixture_name);
       } while (0);                                                                               \
     }                                                                                            \
     clar__assert(clar_passert_occurred, __FILE__, __LINE__, "Expected passert_failed(): " #expr, \
-                 NULL, 0);                                                                       \
+                 nullptr, 0);                                                                    \
     clar_passert_occurred = false;                                                               \
     clar_expecting_passert = false;                                                              \
   }

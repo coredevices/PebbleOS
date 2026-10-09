@@ -200,7 +200,7 @@ static int prv_search_regions_by_name(const char *region_name, int region_name_l
 }
 
 static int prv_search_links_by_name(const char *region_name, int region_name_length) {
-  char name_asciz[256] = {0};
+  char name_asciz[256] = {};
   memcpy(name_asciz, region_name, region_name_length);
 
   const int link_section_offset =

@@ -6,8 +6,6 @@
 #include "gesture_event.h"
 #include "touch_event.h"
 
-#include <stdbool.h>
-
 /**
  * @defgroup services_touch Touch
  * @ingroup services

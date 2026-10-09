@@ -102,7 +102,7 @@ static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle
   } else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
     uint8_t flags;
 
-    rc = ble_hs_mbuf_to_flat(ctxt->om, &flags, sizeof(flags), NULL);
+    rc = ble_hs_mbuf_to_flat(ctxt->om, &flags, sizeof(flags), nullptr);
     if (rc != 0) {
       return rc;
     }
@@ -168,7 +168,7 @@ void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t 
   }
 
   uint16_t attr_handle;
-  rc = ble_gatts_find_chr(pebble_pairing_svc[0].uuid, chr_uuid, NULL, &attr_handle);
+  rc = ble_gatts_find_chr(pebble_pairing_svc[0].uuid, chr_uuid, nullptr, &attr_handle);
   if (rc != 0) {
     PBL_LOG_ERR("prv_notify_chr_updated: failed to find characteristic handle");
     return;

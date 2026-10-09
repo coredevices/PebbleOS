@@ -5,7 +5,6 @@
 
 #include "alerts_private.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 /**

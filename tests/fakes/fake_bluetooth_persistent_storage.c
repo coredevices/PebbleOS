@@ -78,9 +78,9 @@ pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
     const struct pbl_bt_sm_pairing_info *pairing_info, bool is_gateway, const char *device_name,
     bool requires_address_pinning, uint8_t flags) {
   const struct pbl_bt_sm_key *IRK =
-      pairing_info->is_remote_identity_info_valid ? &pairing_info->irk : NULL;
+      pairing_info->is_remote_identity_info_valid ? &pairing_info->irk : nullptr;
   const struct pbl_bt_device_internal *device =
-      pairing_info->is_remote_identity_info_valid ? &pairing_info->identity : NULL;
+      pairing_info->is_remote_identity_info_valid ? &pairing_info->identity : nullptr;
   if (!device_name) {
     device_name = "Device";
   }
@@ -94,7 +94,7 @@ void fake_bt_persistent_storage_reset(void) {
     free(bonding);
     bonding = next;
   }
-  s_head = NULL;
+  s_head = nullptr;
   s_next_id = 1;
 }
 

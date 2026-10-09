@@ -44,7 +44,7 @@ static int prv_device_name_read_op_start(void *ctx) {
   const uint16_t conn_handle = *(uint16_t *)ctx;
 
   int rc = ble_gattc_read_by_uuid(conn_handle, 1, UINT16_MAX, (ble_uuid_t *)&s_device_name_chr_uuid,
-                                  prv_device_name_read_event_cb, NULL);
+                                  prv_device_name_read_event_cb, nullptr);
   if (rc != 0) {
     PBL_LOG_ERR("Pairing device name read failed to start (rc=0x%04x)", (uint16_t)rc);
   }
@@ -242,7 +242,7 @@ static void prv_handle_conn_update_req_event(struct ble_gap_event *event) {
 static void prv_handle_passkey_event(struct ble_gap_event *event) {
   char passkey_str[7];
   uint32_t passkey = 0;
-  const char *device_name = NULL;
+  const char *device_name = nullptr;
   struct pbl_bt_pairing_confirm_ctx *ctx =
       (struct pbl_bt_pairing_confirm_ctx *)((uintptr_t)event->passkey.conn_handle);
 
@@ -467,7 +467,8 @@ bool pbl_bt_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_int
     return false;
   }
 
-  rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER, &advp, prv_handle_gap_event, NULL);
+  rc = ble_gap_adv_start(own_addr_type, nullptr, BLE_HS_FOREVER, &advp, prv_handle_gap_event,
+                         nullptr);
   if (rc != 0) {
     PBL_LOG_ERR("Failed to start advertising (0x%04x)", (uint16_t)rc);
     return false;

@@ -10,5 +10,5 @@ unsigned int bt_stack_id(void) {
 }
 
 BTContext *bluetopia_get_context(void) {
-  return NULL;
+  return nullptr;
 }

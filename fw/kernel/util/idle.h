@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 //! Enable or disable idle
 void idle_set_enabled(bool enable);
 

@@ -78,7 +78,7 @@ AnimationProgress animation_timing_curve(AnimationProgress time_normalized, Anim
 
 KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_ownership,
                                            GRect screen_frame) {
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {
@@ -101,7 +101,7 @@ uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
 // Setup and Teardown
 ////////////////////////////////////
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 void test_expandable_dialog__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
@@ -155,8 +155,8 @@ void test_expandable_dialog__dismiss_tutorial_portuguese_orphan(void) {
 
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
       "Dismiss First Use", RESOURCE_ID_QUICK_DISMISS, tutorial_msg,
-      gcolor_legible_over(GColorLightGray), GColorLightGray, NULL,
-      RESOURCE_ID_ACTION_BAR_ICON_CHECK, NULL);
+      gcolor_legible_over(GColorLightGray), GColorLightGray, nullptr,
+      RESOURCE_ID_ACTION_BAR_ICON_CHECK, nullptr);
 
   // Scroll down to the last page where we will observe the orphan avoidance effect
   const uint32_t num_times_to_scroll_down = 2;

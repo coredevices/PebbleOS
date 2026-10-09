@@ -66,7 +66,7 @@ void prv_node_reset(ProfilerNode *node) {
 void profiler_init(void) {
   g_profiler.end = 0;
   g_profiler.start = 0;
-  g_profiler.nodes = NULL;
+  g_profiler.nodes = nullptr;
   for (uint32_t i = 0; i < ARRAY_LENGTH(s_profiler_nodes); i++) {
     prv_node_reset(s_profiler_nodes[i]);
     prv_profiler_node_add(s_profiler_nodes[i]);
@@ -104,9 +104,9 @@ void profiler_node_stop(ProfilerNode *node, uint32_t dwt_cyc_cnt) {
 uint32_t profiler_cycles_to_us(uint32_t cycles) {
 #if defined(CONFIG_SOC_NRF52)
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
-#elif defined(CONFIG_QEMU)
+#elifdef CONFIG_QEMU
   uint32_t mhz = SystemCoreClock / 1000000;
 #else
   RCC_ClocksTypeDef clocks;
@@ -135,9 +135,9 @@ uint32_t profiler_get_total_duration(bool in_us) {
   if (in_us) {
 #if defined(CONFIG_SOC_NRF52)
     uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
     uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
-#elif defined(CONFIG_QEMU)
+#elifdef CONFIG_QEMU
     uint32_t mhz = SystemCoreClock / 1000000;
 #else
     RCC_ClocksTypeDef clocks;
@@ -158,11 +158,11 @@ void profiler_print_stats(void) {
   uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
   uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
-#elif defined(CONFIG_QEMU)
+#elifdef CONFIG_QEMU
   uint32_t mhz = SystemCoreClock / 1000000;
   char buf[80];
   PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
@@ -179,18 +179,18 @@ void profiler_print_stats(void) {
            ")",
            total, total / mhz, g_profiler.start, g_profiler.end);
 
-  ListNode *sorted = NULL;
+  ListNode *sorted = nullptr;
   ListNode *tail = list_get_tail(g_profiler.nodes);
-  while (tail != NULL) {
+  while (tail != nullptr) {
     ListNode *new_tail = list_pop_tail(tail);
     sorted = list_sorted_add(sorted, tail, &prv_node_compare, false);
     tail = new_tail;
   }
 
-  if (sorted != NULL) {
+  if (sorted != nullptr) {
     PROF_LOG(buf, sizeof(buf), "%-24s %-8s %-11s %-15s %-8s %-7s", "Name", "Count", "Cycles",
              "Time (us)", "Avg (us)", "% CPU");
-    while (sorted != NULL) {
+    while (sorted != nullptr) {
       ProfilerNode *node = (ProfilerNode *)sorted;
       uint32_t percent = (((int64_t)node->total) * 100) / total;
 
@@ -203,7 +203,7 @@ void profiler_print_stats(void) {
     }
   }
 
-  while (sorted != NULL) {
+  while (sorted != nullptr) {
     ListNode *new_head = list_pop_head(sorted);
     list_append(g_profiler.nodes, sorted);
     sorted = new_head;
@@ -229,11 +229,11 @@ static int prv_cmd_stats(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 static const struct pbl_shell_cmd sub_profiler[] = {
-  PBL_SHELL_CMD(start, NULL, "Reset and start profiling", prv_cmd_start),
-  PBL_SHELL_CMD(stop, NULL, "Stop profiling and log the stats", prv_cmd_stop),
-  PBL_SHELL_CMD(stats, NULL, "Log the stats", prv_cmd_stats),
+  PBL_SHELL_CMD(start, nullptr, "Reset and start profiling", prv_cmd_start),
+  PBL_SHELL_CMD(stop, nullptr, "Stop profiling and log the stats", prv_cmd_stop),
+  PBL_SHELL_CMD(stats, nullptr, "Log the stats", prv_cmd_stats),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(profiler, sub_profiler, "Profiler", NULL);
+PBL_SHELL_CMD_REGISTER(profiler, sub_profiler, "Profiler", nullptr);
 #endif

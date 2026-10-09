@@ -71,11 +71,11 @@ static bool prv_content_indicator_iterate(ContentIndicatorIteratorCb iterator_cb
 ContentIndicator *content_indicator_create(void) {
   ContentIndicator *content_indicator = applib_type_zalloc(ContentIndicator);
   if (!content_indicator) {
-    return NULL;
+    return nullptr;
   }
   if (!prv_content_indicator_init(content_indicator)) {
     applib_free(content_indicator);
-    return NULL;
+    return nullptr;
   }
   return content_indicator;
 }
@@ -94,10 +94,10 @@ static bool prv_content_indicator_find_for_scroll_layer_cb(ContentIndicator *con
 
 ContentIndicator *content_indicator_get_for_scroll_layer(ScrollLayer *scroll_layer) {
   if (!scroll_layer) {
-    return NULL;
+    return nullptr;
   }
 
-  ContentIndicator *content_indicator = NULL;
+  ContentIndicator *content_indicator = nullptr;
   prv_content_indicator_iterate(prv_content_indicator_find_for_scroll_layer_cb, scroll_layer,
                                 &content_indicator);
   return content_indicator;
@@ -105,7 +105,7 @@ ContentIndicator *content_indicator_get_for_scroll_layer(ScrollLayer *scroll_lay
 
 ContentIndicator *content_indicator_get_or_create_for_scroll_layer(ScrollLayer *scroll_layer) {
   if (!scroll_layer) {
-    return NULL;
+    return nullptr;
   }
 
   ContentIndicator *content_indicator = content_indicator_get_for_scroll_layer(scroll_layer);
@@ -134,7 +134,7 @@ static void prv_content_indicator_reset_direction(ContentIndicatorDirectionData 
   // Cancel the timeout timer, if necessary
   if (direction_data->timeout_timer) {
     app_timer_cancel(direction_data->timeout_timer);
-    direction_data->timeout_timer = NULL;
+    direction_data->timeout_timer = nullptr;
   }
 
   ContentIndicatorConfig *config = &direction_data->config;

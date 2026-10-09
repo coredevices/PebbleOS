@@ -9,13 +9,13 @@
 #ifdef CONFIG_LOG_HASHED
 #include <pbl/logging/log_hashing.h>
 
-PBL_NORETURN void passert_failed_hashed(uint32_t packed_loghash, ...);
+[[noreturn]] void passert_failed_hashed(uint32_t packed_loghash, ...);
 
-PBL_NORETURN void passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...);
+[[noreturn]] void passert_failed_hashed_with_lr(uint32_t lr, uint32_t packed_loghash, ...);
 
-PBL_NORETURN void passert_failed_hashed_no_message(void);
+[[noreturn]] void passert_failed_hashed_no_message(void);
 
-PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr);
+[[noreturn]] void passert_failed_hashed_no_message_with_lr(uint32_t lr);
 
 #define PBL_ASSERT(expr, msg, ...)                                         \
   do {                                                                     \
@@ -40,7 +40,7 @@ PBL_NORETURN void passert_failed_hashed_no_message_with_lr(uint32_t lr);
   } while (0)
 
 #else
-PBL_NORETURN void passert_failed(const char *filename, int line_number, const char *message, ...);
+[[noreturn]] void passert_failed(const char *filename, int line_number, const char *message, ...);
 
 #define PBL_ASSERT(expr, ...)                               \
   do {                                                      \
@@ -65,12 +65,12 @@ PBL_NORETURN void passert_failed(const char *filename, int line_number, const ch
 
 #endif
 
-PBL_NORETURN void passert_failed_no_message(const char *filename, int line_number);
+[[noreturn]] void passert_failed_no_message(const char *filename, int line_number);
 
-PBL_NORETURN void passert_failed_no_message_with_lr(const char *filename, int line_number,
+[[noreturn]] void passert_failed_no_message_with_lr(const char *filename, int line_number,
                                                     uint32_t lr);
 
-PBL_NORETURN void wtf(void);
+[[noreturn]] void wtf(void);
 
 #define WTF wtf()
 
@@ -120,6 +120,6 @@ void passert_check_not_task(enum PebbleTask unexpected_task);
 
 typedef struct Heap Heap;
 
-PBL_NORETURN void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr);
+[[noreturn]] void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr);
 
 #define PBL_CROAK_OOM(bytes, saved_lr, heap_ptr) croak_oom(bytes, saved_lr, heap_ptr)

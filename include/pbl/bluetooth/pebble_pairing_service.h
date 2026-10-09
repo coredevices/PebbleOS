@@ -83,7 +83,7 @@ struct PBL_PACKED pbl_bt_pps_connectivity_status {
   };
 };
 
-_Static_assert(sizeof(struct pbl_bt_pps_connectivity_status) == 4, "");
+static_assert(sizeof(struct pbl_bt_pps_connectivity_status) == 4, "");
 
 /** @brief Value written to the Trigger Pairing characteristic. */
 struct PBL_PACKED pbl_bt_pps_trigger_request {
@@ -251,11 +251,11 @@ struct PBL_PACKED pbl_bt_pps_conn_params_write {
   (offsetof(struct pbl_bt_pps_conn_params_write, remote_param_mgmt_settings) + \
    PBL_BT_PPS_REMOTE_PARAM_MGMT_SETTINGS_SIZE_WITH_PARAM_SETS)
 
-_Static_assert(PBL_BT_RESPONSE_TIME_NUM == 3, "");
-_Static_assert(sizeof(struct pbl_bt_pps_conn_params_read_notif) <= 20, "Larger than minimum MTU!");
-_Static_assert(PBL_BT_PPS_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS <= 20, "Larger than minimum MTU!");
-_Static_assert(sizeof(struct pbl_bt_pps_conn_params_write) <= 20, "Larger than minimum MTU!");
-_Static_assert(sizeof(struct pbl_bt_pps_connectivity_status) <= 20, "Larger than minimum MTU!");
+static_assert(PBL_BT_RESPONSE_TIME_NUM == 3, "");
+static_assert(sizeof(struct pbl_bt_pps_conn_params_read_notif) <= 20, "Larger than minimum MTU!");
+static_assert(PBL_BT_PPS_CONN_PARAMS_WRITE_SIZE_WITH_PARAM_SETS <= 20, "Larger than minimum MTU!");
+static_assert(sizeof(struct pbl_bt_pps_conn_params_write) <= 20, "Larger than minimum MTU!");
+static_assert(sizeof(struct pbl_bt_pps_connectivity_status) <= 20, "Larger than minimum MTU!");
 
 /** @brief LE connection state kept by the firmware (see @c comm/ble/gap_le_connection.h). */
 typedef struct GAPLEConnection GAPLEConnection;

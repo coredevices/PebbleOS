@@ -14,7 +14,7 @@
 
 static void prv_change_reel(TimelineLayout *layout, KinoReel *reel) {
   // we most likely don't want that callback any more
-  kino_layer_set_callbacks(&layout->icon_layer, (KinoLayerCallbacks){}, NULL);
+  kino_layer_set_callbacks(&layout->icon_layer, (KinoLayerCallbacks){}, nullptr);
   kino_layer_set_reel(&layout->icon_layer, reel, true);
 }
 
@@ -87,7 +87,7 @@ static void prv_pin_to_card_first_half_stopped(KinoLayer *layer, bool finished, 
     prv_pin_to_card_second_half(timeline_layout, timeline_layout->transition_layout);
   }
 
-  timeline_layout->transition_layout = NULL;
+  timeline_layout->transition_layout = nullptr;
 }
 
 void timeline_layout_transition_pin_to_card(TimelineLayout *pin_timeline_layout,

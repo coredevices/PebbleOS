@@ -160,7 +160,7 @@ static void prv_migrate_notification_content_size(SettingsFile *file) {
   }
 
   s_notification_content_size = PreferredContentSizeDefault;
-  SettingsFile shell_prefs = {{0}};
+  SettingsFile shell_prefs = {};
   if (settings_file_open(&shell_prefs, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
     uint8_t text_style;
     // Shell pref keys are stored with their NUL terminator.
@@ -323,7 +323,7 @@ static void prv_migrate_vibe_intensity_to_vibe_scores(SettingsFile *file) {
 }
 
 void alerts_preferences_init(void) {
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
     return;
   }
@@ -335,7 +335,7 @@ void alerts_preferences_init(void) {
   // by older firmware.
 #define RESTORE_PREF(key, var)                                                              \
   do {                                                                                      \
-    __typeof__(var) _tmp;                                                                   \
+    typeof(var) _tmp;                                                                       \
     if (settings_file_get(&file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS ||     \
         settings_file_get(&file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
       var = _tmp;                                                                           \
@@ -408,7 +408,7 @@ void alerts_preferences_init(void) {
 #define SET_PREF(key, value) prv_set_pref(key, strlen(key), &value, sizeof(value))
 static void prv_set_pref(const void *key, size_t key_len, const void *value, size_t value_len) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
     goto cleanup;
   }
@@ -562,7 +562,7 @@ VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client) {
 }
 
 void alerts_preferences_set_vibe_score_for_client(VibeClient client, VibeScoreId id) {
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (client) {
     case VibeClient_Notifications: {
       s_vibe_score_notifications = id;
@@ -731,11 +731,11 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
 
   const uint8_t *key = event->key;
   int key_len = event->key_len;
-  const char *matched_key = NULL;
+  const char *matched_key = nullptr;
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
     pbl_mutex_unlock(&s_mutex);
     return;
@@ -750,7 +750,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
     size_t _pref_strlen = strlen(pref_key);                                           \
     if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) &&       \
         memcmp(key, pref_key, _pref_strlen) == 0) {                                   \
-      __typeof__(var) _tmp;                                                           \
+      typeof(var) _tmp;                                                               \
       if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
         var = _tmp;                                                                   \
         matched_key = pref_key;                                                       \

@@ -15,7 +15,7 @@ void PBL_WEAK kino_player_set_callbacks(KinoPlayer *player, KinoPlayerCallbacks 
 }
 
 KinoReel *PBL_WEAK kino_player_get_reel(KinoPlayer *player) {
-  return NULL;
+  return nullptr;
 }
 
 void PBL_WEAK kino_player_play(KinoPlayer *player) {

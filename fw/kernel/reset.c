@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
+
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
@@ -18,8 +20,6 @@
 #endif
 
 #ifdef CONFIG_SOC_SF32LB52
-#include <pbl/kernel/compiler.h>
-
 #include <bf0_hal.h>
 #endif
 
@@ -28,7 +28,7 @@ void system_reset_prepare(void) {
   flash_stop();
 }
 
-PBL_NORETURN void system_reset(void) {
+[[noreturn]] void system_reset(void) {
   static bool failure_occurred = false;
 
   bool already_failed = failure_occurred;
@@ -57,17 +57,17 @@ void system_reset_callback(void *data) {
   (void)data;
 }
 
-PBL_NORETURN void system_hard_reset(void) {
+[[noreturn]] void system_hard_reset(void) {
   // Don't do anything fancy here. We may be in a context where nothing works, not even
   // interrupts. Just reset us.
 
 #ifdef CONFIG_SOC_SF32LB52
   HAL_PMU_Reboot();
-#elif defined(CONFIG_SOC_POSIX)
+#elifdef CONFIG_SOC_POSIX
   posix_host_reboot();
 #else
   NVIC_SystemReset();
 #endif
 
-  PBL_UNREACHABLE();
+  unreachable();
 }

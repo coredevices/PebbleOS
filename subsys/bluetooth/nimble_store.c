@@ -76,7 +76,7 @@ static BleStoreValueSec *prv_nimble_store_find_sec(const int obj_type,
                                          (void *)&key_sec->peer_addr);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 static int prv_nimble_store_read_sec(const int obj_type, const struct ble_store_key_sec *key_sec,
@@ -87,7 +87,7 @@ static int prv_nimble_store_read_sec(const int obj_type, const struct ble_store_
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
 
   s = prv_nimble_store_find_sec(obj_type, key_sec);
-  if (s == NULL) {
+  if (s == nullptr) {
     ret = BLE_HS_ENOENT;
     goto unlock;
   }
@@ -110,9 +110,9 @@ static BleStoreValueSec *prv_nimble_store_upsert_sec(const int obj_type,
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
 
   s = prv_nimble_store_find_sec(obj_type, &key_sec);
-  if (s == NULL) {
+  if (s == nullptr) {
     s = kernel_zalloc_check(sizeof(BleStoreValueSec));
-    if (*sec_list == NULL) {
+    if (*sec_list == nullptr) {
       *sec_list = (ListNode *)s;
     } else {
       list_append(*sec_list, (ListNode *)s);
@@ -269,7 +269,7 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
 
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
   s = prv_nimble_store_find_sec(obj_type, key_sec);
-  if (s == NULL) {
+  if (s == nullptr) {
     pbl_mutex_unlock(&s_store_mutex);
     return BLE_HS_ENOENT;
   }
@@ -279,7 +279,7 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
   // Previously we relied on pbl_bt_handle_host_removed_bonding() to remove
   // the entry as a side-effect, but that reads the identity from SPRF which
   // may already be erased by a prior iteration, causing an infinite loop.
-  list_remove((ListNode *)s, sec_list, NULL);
+  list_remove((ListNode *)s, sec_list, nullptr);
   pbl_mutex_unlock(&s_store_mutex);
 
   kernel_free(s);
@@ -331,7 +331,7 @@ static int prv_nimble_store_read_cccd(const struct ble_store_key_cccd *key_cccd,
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
 
   s = prv_nimble_store_find_cccd(key_cccd);
-  if (s == NULL) {
+  if (s == nullptr) {
     ret = BLE_HS_ENOENT;
     goto unlock;
   }
@@ -352,9 +352,9 @@ static void prv_nimble_store_insert_cccd(const struct ble_store_value_cccd *valu
   ble_store_key_from_value_cccd(&key_cccd, value_cccd);
 
   s = prv_nimble_store_find_cccd(&key_cccd);
-  if (s == NULL) {
+  if (s == nullptr) {
     s = kernel_zalloc_check(sizeof(BleStoreValueCCCD));
-    if (s_cccds == NULL) {
+    if (s_cccds == nullptr) {
       s_cccds = s;
     } else {
       list_append((ListNode *)s_cccds, (ListNode *)s);
@@ -400,12 +400,12 @@ static int prv_nimble_store_delete_cccd(const struct ble_store_key_cccd *key_ccc
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
 
   s = prv_nimble_store_find_cccd(key_cccd);
-  if (s == NULL) {
+  if (s == nullptr) {
     ret = BLE_HS_ENOENT;
     goto unlock;
   }
 
-  list_remove((ListNode *)s, (ListNode **)&s_cccds, NULL);
+  list_remove((ListNode *)s, (ListNode **)&s_cccds, nullptr);
   kernel_free(s);
 
 unlock:
@@ -494,13 +494,13 @@ static bool prv_store_value_free(ListNode *node, void *context) {
 void nimble_store_unload(void) {
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
 
-  list_foreach((ListNode *)s_peer_value_secs, prv_store_value_free, NULL);
-  list_foreach((ListNode *)s_our_value_secs, prv_store_value_free, NULL);
-  list_foreach((ListNode *)s_cccds, prv_store_value_free, NULL);
+  list_foreach((ListNode *)s_peer_value_secs, prv_store_value_free, nullptr);
+  list_foreach((ListNode *)s_our_value_secs, prv_store_value_free, nullptr);
+  list_foreach((ListNode *)s_cccds, prv_store_value_free, nullptr);
 
-  s_peer_value_secs = NULL;
-  s_our_value_secs = NULL;
-  s_cccds = NULL;
+  s_peer_value_secs = nullptr;
+  s_our_value_secs = nullptr;
+  s_cccds = nullptr;
 
   pbl_mutex_unlock(&s_store_mutex);
 }
@@ -580,14 +580,14 @@ void pbl_bt_handle_host_removed_bonding(const struct pbl_bt_bonding *bonding) {
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
 
   s_sec = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_OUR_SEC, &key_sec);
-  if (s_sec != NULL) {
-    list_remove((ListNode *)s_sec, (ListNode **)&s_our_value_secs, NULL);
+  if (s_sec != nullptr) {
+    list_remove((ListNode *)s_sec, (ListNode **)&s_our_value_secs, nullptr);
     kernel_free(s_sec);
   }
 
   s_sec = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_PEER_SEC, &key_sec);
-  if (s_sec != NULL) {
-    list_remove((ListNode *)s_sec, (ListNode **)&s_peer_value_secs, NULL);
+  if (s_sec != nullptr) {
+    list_remove((ListNode *)s_sec, (ListNode **)&s_peer_value_secs, nullptr);
     kernel_free(s_sec);
   }
 
@@ -618,8 +618,8 @@ void pbl_bt_handle_host_removed_cccd(const struct pbl_bt_cccd *cccd) {
   pbl_mutex_lock(&s_store_mutex, PBL_FOREVER);
 
   s = prv_nimble_store_find_cccd(&key_cccd);
-  if (s != NULL) {
-    list_remove((ListNode *)s, (ListNode **)&s_cccds, NULL);
+  if (s != nullptr) {
+    list_remove((ListNode *)s, (ListNode **)&s_cccds, nullptr);
     kernel_free(s);
   }
 

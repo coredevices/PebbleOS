@@ -34,18 +34,18 @@ typedef struct LauncherAppGlanceMusic {
 
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(music_glance, icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(music_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(music_glance, title, NULL);
+  return NULL_SAFE_FIELD_ACCESS(music_glance, title, nullptr);
 }
 
 static void prv_music_glance_subtitle_dynamic_text_node_update(
-    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
-    size_t buffer_size, void *user_data) {
+    [[maybe_unused]] GContext *ctx, [[maybe_unused]] GTextNode *node,
+    [[maybe_unused]] const GRect *box, [[maybe_unused]] const GTextNodeDrawConfig *config,
+    [[maybe_unused]] bool render, char *buffer, size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceMusic *music_glance = launcher_app_glance_structured_get_data(structured_glance);
   if (music_glance) {
@@ -125,7 +125,7 @@ static void prv_update_glance_for_music_state(LauncherAppGlanceStructured *struc
     // Get the artist and title strings for the music playing or paused
     char artist_buffer[MUSIC_BUFFER_LENGTH] = {};
     char title_buffer[MUSIC_BUFFER_LENGTH] = {};
-    music_get_now_playing(title_buffer, artist_buffer, NULL /* album_buffer */);
+    music_get_now_playing(title_buffer, artist_buffer, nullptr /* album_buffer */);
 
     // Only populate the glance with music info if we have both an artist string and a title string
     if (!IS_EMPTY_STRING(artist_buffer) && !IS_EMPTY_STRING(title_buffer)) {

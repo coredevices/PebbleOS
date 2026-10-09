@@ -68,12 +68,12 @@ const BoardConfig BOARD_CONFIG = {
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons =
       {
-        [BUTTON_ID_BACK] = {"Back", NULL, 0, GPIO_PuPd_NOPULL, true},
-        [BUTTON_ID_UP] = {"Up", NULL, 1, GPIO_PuPd_UP, false},
-        [BUTTON_ID_SELECT] = {"Select", NULL, 2, GPIO_PuPd_UP, false},
-        [BUTTON_ID_DOWN] = {"Down", NULL, 3, GPIO_PuPd_UP, false},
+        [BUTTON_ID_BACK] = {"Back", nullptr, 0, GPIO_PuPd_NOPULL, true},
+        [BUTTON_ID_UP] = {"Up", nullptr, 1, GPIO_PuPd_UP, false},
+        [BUTTON_ID_SELECT] = {"Select", nullptr, 2, GPIO_PuPd_UP, false},
+        [BUTTON_ID_DOWN] = {"Down", nullptr, 3, GPIO_PuPd_UP, false},
       },
-  .timer = NULL,
+  .timer = nullptr,
   .timer_irqn = TIMER0_IRQn,
 };
 

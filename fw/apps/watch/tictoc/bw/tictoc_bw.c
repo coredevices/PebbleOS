@@ -131,7 +131,7 @@ static void prv_init(void) {
 
   // Subscribe to unobstructed area changes
   UnobstructedAreaHandlers unobstructed_handlers = {.change = prv_unobstructed_area_change_handler};
-  app_unobstructed_area_service_subscribe(unobstructed_handlers, NULL);
+  app_unobstructed_area_service_subscribe(unobstructed_handlers, nullptr);
 
   // Set initial positions based on unobstructed area
   prv_update_layer_positions();

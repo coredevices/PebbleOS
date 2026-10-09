@@ -23,7 +23,7 @@
 #define PEEK_TIMEOUT_MS 11 * 1000
 
 static CompassServiceConfig **prv_get_config(PebbleTask task) {
-  CompassServiceConfig **config = NULL;
+  CompassServiceConfig **config = nullptr;
 
   if (task == PebbleTask_Unknown) {
     task = pebble_task_get_current();
@@ -39,7 +39,7 @@ static CompassServiceConfig **prv_get_config(PebbleTask task) {
     WTF;
   }
 
-  if (*config == NULL) {
+  if (*config == nullptr) {
     // Note that config will never be NULL after grabbing it from an app,
     // worker, or kernel state.  However, the value pointed to it may be
     // NULL.
@@ -60,7 +60,7 @@ static void prv_do_data_handle(PebbleEvent *e, void *context) {
   };
 
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
-  if (config->compass_cb != NULL) {
+  if (config->compass_cb != nullptr) {
     if (ABS(config->last_angle - data.magnetic_heading) > config->compass_filter) {
       config->compass_cb(data);
       config->last_angle = data.magnetic_heading;
@@ -75,9 +75,9 @@ static void prv_peek_timeout_callback(void *data) {
 
 int compass_service_peek(CompassHeadingData *data) {
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
-  if ((config->peek_timer == NULL) && !sys_ecompass_service_subscribed()) {
+  if ((config->peek_timer == nullptr) && !sys_ecompass_service_subscribed()) {
     // If we haven't initialized the compass yet by subscribing, do that now.
-    compass_service_subscribe(NULL);
+    compass_service_subscribe(nullptr);
   }
 
   sys_ecompass_get_last_heading(data);
@@ -87,8 +87,8 @@ int compass_service_peek(CompassHeadingData *data) {
   }
 
   // 11 second timer to turn off compass, reset timeout every peek
-  if (config->peek_timer == NULL) {
-    config->peek_timer = app_timer_register(PEEK_TIMEOUT_MS, prv_peek_timeout_callback, NULL);
+  if (config->peek_timer == nullptr) {
+    config->peek_timer = app_timer_register(PEEK_TIMEOUT_MS, prv_peek_timeout_callback, nullptr);
   } else {
     app_timer_reschedule(config->peek_timer, PEEK_TIMEOUT_MS);
   }
@@ -109,7 +109,7 @@ int compass_service_set_heading_filter(CompassHeading filter) {
 void compass_service_subscribe(CompassHeadingHandler handler) {
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
 
-  *config = (const CompassServiceConfig){0};
+  *config = (const CompassServiceConfig){};
   config->compass_cb = handler;
 
   config->info =
@@ -122,5 +122,5 @@ void compass_service_unsubscribe(void) {
   CompassServiceConfig **config = prv_get_config(PebbleTask_Unknown);
   event_service_client_unsubscribe(&(*config)->info);
   task_free(*config);
-  *config = NULL;
+  *config = nullptr;
 }

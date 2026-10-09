@@ -312,7 +312,7 @@ static void prv_transition_animation_second_update(Animation *animation,
 }
 
 static void prv_transition_animation_init(Animation *animation) {
-  Animation *anim_array[2] = {NULL};
+  Animation *anim_array[2] = {nullptr};
   size_t anim_count = 0;
   uint32_t duration = 0;
 
@@ -354,7 +354,7 @@ static void prv_transition_animation_update_stub(GContext *ctx, Animation *anima
 const CompositorTransition *compositor_shutter_transition_get(
     CompositorTransitionDirection direction, GColor color) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   s_data = (CompositorShutterTransitionData){};

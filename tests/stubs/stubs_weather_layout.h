@@ -7,7 +7,7 @@
 #include <pbl/services/timeline/weather_layout.h>
 
 LayoutLayer *PBL_WEAK weather_layout_create(const LayoutLayerConfig *config) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK weather_layout_verify(bool existing_attributes[]) {

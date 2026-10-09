@@ -279,18 +279,18 @@ static void prv_load_icons(void) {
   for (int i = 0; i < (int)s_list->num_days; i++) {
     if (s_list->pdc_icons[i]) {
       gdraw_command_image_destroy(s_list->pdc_icons[i]);
-      s_list->pdc_icons[i] = NULL;
+      s_list->pdc_icons[i] = nullptr;
     }
     GDrawCommandImage *raw = gdraw_command_image_create_with_resource(
         prv_official_weather_pdc_res(s_list->days[i].current_weather_type));
-    s_list->pdc_icons[i] = raw ? gdraw_command_image_clone(raw) : NULL;
+    s_list->pdc_icons[i] = raw ? gdraw_command_image_clone(raw) : nullptr;
     if (raw)
       gdraw_command_image_destroy(raw);
   }
   // Larger today icon for the summary header: official SMALL (50px) PDC scaled down.
   if (s_list->today_pdc) {
     gdraw_command_image_destroy(s_list->today_pdc);
-    s_list->today_pdc = NULL;
+    s_list->today_pdc = nullptr;
   }
   if (s_list->num_days > 0) {
     GDrawCommandImage *traw = gdraw_command_image_create_with_resource(
@@ -307,7 +307,7 @@ static void prv_load_icons(void) {
   for (int i = 0; i < (int)s_list->num_days; i++) {
     if (s_list->icons[i]) {
       gbitmap_destroy(s_list->icons[i]);
-      s_list->icons[i] = NULL;
+      s_list->icons[i] = nullptr;
     }
     s_list->icons[i] =
         gbitmap_create_with_resource(prv_icon_res(s_list->days[i].current_weather_type));
@@ -361,7 +361,7 @@ static void prv_scroll_to_ms(int target, uint32_t duration_ms, bool button_scrol
   if (s_list->anim) {
     animation_unschedule(s_list->anim);
     animation_destroy(s_list->anim);
-    s_list->anim = NULL;
+    s_list->anim = nullptr;
   }
   s_list->scroll_from = s_list->scroll_offset_px;
   s_list->scroll_to = target;
@@ -397,7 +397,7 @@ static Animation *prv_start_anim(uint32_t dur_ms, AnimationCurve curve,
   animation_set_curve(a, curve);
   animation_set_implementation(a, impl);
   if (stopped) {
-    animation_set_handlers(a, (AnimationHandlers){.stopped = stopped}, NULL);
+    animation_set_handlers(a, (AnimationHandlers){.stopped = stopped}, nullptr);
   }
   animation_schedule(a);
   return a;
@@ -558,11 +558,11 @@ static void prv_clear_fly(void) {
   s_list->flying_icon = false;
   if (s_list->fly_pdc) {
     gdraw_command_image_destroy(s_list->fly_pdc);
-    s_list->fly_pdc = NULL;
+    s_list->fly_pdc = nullptr;
   }
   if (s_list->fly_lookup) {
     applib_free(s_list->fly_lookup);
-    s_list->fly_lookup = NULL;
+    s_list->fly_lookup = nullptr;
   }
 }
 
@@ -625,7 +625,7 @@ static void prv_squash_in_update(Animation *anim, AnimationProgress progress) {
     s_list->squash_mode = 0;
     if (s_list->squash_scratch) {
       free(s_list->squash_scratch);
-      s_list->squash_scratch = NULL;
+      s_list->squash_scratch = nullptr;
     }
     // The hero icon has landed on the card's icon spot — drop it, then reveal the card (pushed
     // un-animated so its static icon takes over exactly where the flown icon settled).
@@ -666,7 +666,7 @@ static void prv_start_squash(int mode) {
   s_list->squash_in_anim = prv_start_anim(
       (mode == SQUASH_DOWN_EXIT) ? interpolate_moook_soft_duration(8)  // ~495ms
                                  : interpolate_moook_soft_duration(3), // 330ms (unchanged)
-      AnimationCurveLinear, &s_squash_in_impl, NULL);
+      AnimationCurveLinear, &s_squash_in_impl, nullptr);
   layer_mark_dirty(s_list->canvas);
 }
 
@@ -688,7 +688,7 @@ static void prv_start_up_to_card(void) {
   // LARGE (80x80) weather PDC — the SAME resource the card draws, so the hand-off is seamless.
   GDrawCommandImage *raw =
       gdraw_command_image_create_with_resource(weather_type_icon_large_resource(prv_header_type()));
-  GDrawCommandImage *pdc = raw ? gdraw_command_image_clone(raw) : NULL;
+  GDrawCommandImage *pdc = raw ? gdraw_command_image_clone(raw) : nullptr;
   if (raw)
     gdraw_command_image_destroy(raw);
   if (!pdc) {
@@ -716,7 +716,7 @@ static void prv_free_jelly_lookups(void) {
   for (size_t i = 0; i < sizeof(s_list->jelly_lookup) / sizeof(s_list->jelly_lookup[0]); i++) {
     if (s_list->jelly_lookup[i]) {
       applib_free(s_list->jelly_lookup[i]);
-      s_list->jelly_lookup[i] = NULL;
+      s_list->jelly_lookup[i] = nullptr;
     }
   }
 }
@@ -743,7 +743,7 @@ static void prv_header_anim_stopped(Animation *anim, bool finished, void *contex
   s_list->header_hasted = false;
   // At rest there must be NO residual deformation and NO zoom lines.
   s_list->fx_active = false;
-  s_list->anim = NULL;
+  s_list->anim = nullptr;
   prv_free_jelly_lookups(); // don't hold the 6 lookups while at rest
   layer_mark_dirty(s_list->canvas);
 }
@@ -758,12 +758,12 @@ static void prv_start_header_transition(bool to_scrolled) {
   if (from == to)
     return;
   // A transition already running => this is an interrupting press (Timeline "hasted").
-  s_list->header_hasted = (s_list->anim != NULL);
+  s_list->header_hasted = (s_list->anim != nullptr);
   if (s_list->anim) {
     // Capture first: unschedule fires .stopped, which NULLs s_list->anim — destroying via the
     // field afterwards destroyed NULL and leaked the unscheduled animation on every haste.
     Animation *old = s_list->anim;
-    s_list->anim = NULL;
+    s_list->anim = nullptr;
     animation_unschedule(old);
     animation_destroy(old);
   }
@@ -852,14 +852,14 @@ static void prv_clock_stage1_end_squash(void) {
   s_list->squash_mode = 0;
   if (s_list->squash_scratch) {
     free(s_list->squash_scratch);
-    s_list->squash_scratch = NULL;
+    s_list->squash_scratch = nullptr;
   }
 }
 
 static void prv_clock_stage1_stopped(Animation *anim, bool finished, void *context) {
   if (!s_list)
     return;
-  s_list->clock_anim = NULL;
+  s_list->clock_anim = nullptr;
   prv_clock_stage1_end_squash();
   if (!finished) { // BACK cancelled — snap back to the scrolled screen
     s_list->clock_fx = 0;
@@ -888,7 +888,7 @@ static void prv_clock_stage2_update(Animation *anim, AnimationProgress progress)
 static void prv_clock_stage2_stopped(Animation *anim, bool finished, void *context) {
   if (!s_list)
     return;
-  s_list->clock_anim = NULL;
+  s_list->clock_anim = nullptr;
   s_list->fx_shake_dx = s_list->fx_shake_dy = 0;
   if (finished && s_list->on_clock_request_cb) {
     s_list->on_clock_request_cb(s_list->on_clock_request_ctx); // push the clock (spiral) on top
@@ -924,7 +924,7 @@ static void prv_start_clock_stage1(void) {
   s_list->fx_active = false; // uniform exit — no per-icon jelly
   if (s_list->anim) {        // capture-first: .stopped NULLs the field during unschedule
     Animation *old = s_list->anim;
-    s_list->anim = NULL;
+    s_list->anim = nullptr;
     animation_unschedule(old);
     animation_destroy(old);
   }
@@ -1019,14 +1019,14 @@ static void prv_report_stage1_update(Animation *anim, AnimationProgress progress
 static void prv_report_stage1_stopped(Animation *anim, bool finished, void *context) {
   (void)anim;
   (void)context;
-  s_select_exit_anim = NULL;
+  s_select_exit_anim = nullptr;
   if (!s_list)
     return;
   if (s_list->squash_mode == SQUASH_LEFT_EXIT) { // free scratch on finish AND cancel
     s_list->squash_mode = 0;
     if (s_list->squash_scratch) {
       free(s_list->squash_scratch);
-      s_list->squash_scratch = NULL;
+      s_list->squash_scratch = nullptr;
     }
   }
   if (!finished) { // only unload cancels (inputs are guarded)
@@ -1058,7 +1058,7 @@ static void prv_report_stage2_update(Animation *anim, AnimationProgress progress
 static void prv_report_stage2_stopped(Animation *anim, bool finished, void *context) {
   (void)anim;
   (void)context;
-  s_report_anim = NULL;
+  s_report_anim = nullptr;
   if (!s_list)
     return;
   if (!finished) {
@@ -1093,7 +1093,7 @@ static void prv_report_stage3_update(Animation *anim, AnimationProgress progress
 static void prv_report_stage3_stopped(Animation *anim, bool finished, void *context) {
   (void)anim;
   (void)context;
-  s_report_anim = NULL;
+  s_report_anim = nullptr;
   if (!s_list)
     return;
   if (!finished) { // only unload cancels; it clears the done cb + fly itself
@@ -1113,13 +1113,13 @@ static void prv_start_report_stage3(void) {
   prv_clear_fly(); // the fly slot carries the paper clone + fan lookup (idempotent)
   GDrawCommandImage *raw =
       gdraw_command_image_create_with_resource(RESOURCE_ID_WEATHER_REPORT_PAPER);
-  s_list->fly_pdc = raw ? gdraw_command_image_clone(raw) : NULL; // flash PDC is read-only
+  s_list->fly_pdc = raw ? gdraw_command_image_clone(raw) : nullptr; // flash PDC is read-only
   if (raw)
     gdraw_command_image_destroy(raw);
   // Frozen fan start-ray (Timeline picks a random ray per unfold; RTC seconds vary plenty).
   s_list->report_angle = (int32_t)(rtc_get_time() % TRIG_MAX_ANGLE);
   if (!s_list->fly_pdc) { // resource missing: skip straight to the handoff
-    prv_report_stage4_stopped(NULL, true, NULL);
+    prv_report_stage4_stopped(nullptr, true, nullptr);
     return;
   }
   s_report_anim = prv_start_anim(R5_REPORT_SHOW_MS, AnimationCurveLinear, &s_report_stage3_impl,
@@ -1140,7 +1140,7 @@ static void prv_report_stage4_update(Animation *anim, AnimationProgress progress
 static void prv_report_stage4_stopped(Animation *anim, bool finished, void *context) {
   (void)anim;
   (void)context;
-  s_report_anim = NULL;
+  s_report_anim = nullptr;
   if (!s_list)
     return;
   // BOTH shapes: round drives the same squash now, so it must also be torn down here —
@@ -1150,7 +1150,7 @@ static void prv_report_stage4_stopped(Animation *anim, bool finished, void *cont
     s_list->squash_mode = 0;
     if (s_list->squash_scratch) {
       free(s_list->squash_scratch);
-      s_list->squash_scratch = NULL;
+      s_list->squash_scratch = nullptr;
     }
   }
   prv_clear_fly();
@@ -1160,8 +1160,8 @@ static void prv_report_stage4_stopped(Animation *anim, bool finished, void *cont
   prv_apply_deferred_refresh();
   void (*done)(void *) = s_select_exit_done;
   void *dctx = s_select_exit_ctx;
-  s_select_exit_done = NULL;
-  s_select_exit_ctx = NULL;
+  s_select_exit_done = nullptr;
+  s_select_exit_ctx = nullptr;
   if (finished && done)
     done(dctx); // -> weather.c: arm the report's squash-in + push
   layer_mark_dirty(s_list->canvas);
@@ -1175,12 +1175,12 @@ static void prv_start_report_stage4(void) {
   // DISTANCE lookup — free it so prv_draw_exiting_paper builds its own in the slot.
   if (s_list->fly_lookup) {
     applib_free(s_list->fly_lookup);
-    s_list->fly_lookup = NULL;
+    s_list->fly_lookup = nullptr;
   }
   s_report_anim = prv_start_anim(240, AnimationCurveLinear, // the moook table IS the easing
                                  &s_report_stage4_impl, prv_report_stage4_stopped);
   if (!s_report_anim) { // OOM: skip the flourish, hand off directly
-    prv_report_stage4_stopped(NULL, true, NULL);
+    prv_report_stage4_stopped(nullptr, true, nullptr);
   }
 }
 
@@ -1241,12 +1241,12 @@ static void prv_draw_unfolding_paper(GContext *ctx) {
   GRect intermediate = grect_scalar_expand(to, 8); // deflate 8, no bounce (day-sep exact)
   GSize size = nsz;
   AnimationProgress seg = animation_timing_segmented(up, 0, 2, effect_dur);
-  gdraw_command_list_scale_segmented_to(list, size, from, intermediate, seg, NULL,
+  gdraw_command_list_scale_segmented_to(list, size, from, intermediate, seg, nullptr,
                                         s_list->fly_lookup, point_dur, false);
   size = intermediate.size;
   seg = animation_timing_segmented(up, 1, 2, effect_dur);
-  gdraw_command_list_scale_segmented_to(list, size, intermediate, to, seg, NULL, s_list->fly_lookup,
-                                        point_dur, true);
+  gdraw_command_list_scale_segmented_to(list, size, intermediate, to, seg, nullptr,
+                                        s_list->fly_lookup, point_dur, true);
   const AnimationProgress sw = animation_timing_curve(
       animation_timing_clip(4 * up), AnimationCurveEaseInOut); // fat stroke decays, first 25%
   gdraw_command_list_scale_stroke_width(
@@ -1281,7 +1281,7 @@ static void prv_draw_report_caption(GContext *ctx, int dx, bool settled) {
   graphics_draw_text(ctx, i18n_get("WEATHER REPORT", s_list),
                      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
                      GRect(dx, R5_SCREEN_CY + 46 + dy, mb.size.w, 24),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 // Stage 4 — the paper takes its bow: the smiley's Timeline exit, rotated LEFT. One real
@@ -1353,9 +1353,9 @@ static void prv_draw_exiting_paper(GContext *ctx) {
 // delay_by_distance lookup pulls from middle-x + the leading edge (top when going up-screen, bottom
 // when going down), so as fx_progress advances the leading points reach `to` first while the
 // trailing points still lag near `from` — that gap IS the across-the-travel stretch.
-PBL_UNUSED static bool prv_draw_jelly_icon(GContext *ctx, GDrawCommandImage *src, GPoint end_origin,
-                                           GSize isz, int travel,
-                                           GPointIndexLookup **lookup_cache) {
+[[maybe_unused]] static bool prv_draw_jelly_icon(GContext *ctx, GDrawCommandImage *src,
+                                                 GPoint end_origin, GSize isz, int travel,
+                                                 GPointIndexLookup **lookup_cache) {
   if (!src)
     return false;
   GDrawCommandImage *clone = gdraw_command_image_clone(src);
@@ -1508,7 +1508,7 @@ static void prv_draw_flying_content(GContext *ctx) {
 // (R5_ICON_CY - R5_SECTION_TRAVEL). At rest / at the destination the two edges coincide => circle.
 //
 // Returns the capsule rect for column centre-x `cx`; *is_capsule_out is true while stretched.
-PBL_UNUSED static GRect prv_fx_disc_capsule(int cx, bool *is_capsule_out) {
+[[maybe_unused]] static GRect prv_fx_disc_capsule(int cx, bool *is_capsule_out) {
   if (is_capsule_out)
     *is_capsule_out = false;
   const bool going_up = (s_list->header_to == R5_HEADER_TRAVEL); // DOWN press -> section travels up
@@ -1565,7 +1565,7 @@ static void prv_draw_stat_pill(GContext *ctx, const char *label, int y, int W, G
   const int th = fonts_get_font_height(lf);
   graphics_draw_text(ctx, label, lf,
                      GRect(inset, y + (R5_STAT_PILL_H - th) / 2 - 3, W - 2 * inset, th),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 // One row of five per-day precip-% values, each centred under its day column.
@@ -1582,7 +1582,7 @@ static void prv_draw_stat_row(GContext *ctx, const WeatherLocationForecast *fan,
     else
       snprintf(buf, sizeof(buf), "%d%%", v);
     graphics_draw_text(ctx, buf, vfont, GRect(col_x[i] - cw / 2, y, cw, 16),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
   }
 }
 
@@ -2015,7 +2015,7 @@ static void prv_draw_today_anim(GContext *ctx, const WeatherLocationForecast *to
   // prv_header_type() == current_weather_type, so this is a no-op there.
   const unsigned t = (unsigned)prv_header_type();
   const PrecipStyle *st =
-      (t < (sizeof(kFallStyles) / sizeof(kFallStyles[0]))) ? kFallStyles[t] : NULL;
+      (t < (sizeof(kFallStyles) / sizeof(kFallStyles[0]))) ? kFallStyles[t] : nullptr;
   if (st) {
     prv_draw_animated_precip(ctx, GPoint(x, y), s_list->sun_phase, st);
     return;
@@ -2091,7 +2091,7 @@ static void prv_draw_temp_centered(GContext *ctx, int temp, GFont font, int cx, 
   char b[8];
   snprintf(b, sizeof(b), "%d\xC2\xB0", temp);
   graphics_draw_text(ctx, b, font, GRect(cx - 26, y, 52, 16), GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 
 // Fold min/max over the masked entries of v[0..n); *have tracks whether any seen yet.
@@ -2138,7 +2138,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   {
     static char s_time_str[16];
     static time_t s_time_min = -1;
-    const time_t cur_min = time(NULL) / 60;
+    const time_t cur_min = time(nullptr) / 60;
     if (cur_min != s_time_min) {
       clock_copy_time_string(s_time_str, sizeof(s_time_str));
       s_time_min = cur_min;
@@ -2159,14 +2159,14 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
                          ? (int)interpolate_moook_soft(s_list->clock_swap_p, 0, W, 3)
                          : 0;
       graphics_draw_text(ctx, loc, sb_font, GRect(sx, sb_ty, W, sb_fh),
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
       if (s_list->clock_swap_active) {
         graphics_draw_text(ctx, s_time_str, sb_font, GRect(sx - W, sb_ty, W, sb_fh),
-                           GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                           GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
       }
     } else {
       graphics_draw_text(ctx, s_time_str, sb_font, GRect(0, sb_ty, W, sb_fh),
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
   }
 #endif
@@ -2212,7 +2212,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   // refresh) — the 6 localtime+strftime pairs this draw used to run per frame were real work
   // on a 12.5-30fps path, so both live in caches keyed on the next-midnight timestamp.
   {
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     if (now >= s_list->date_cache_expiry || s_list->today_header_dirty) {
       struct tm *lt = localtime(&now);
       if (lt) {
@@ -2344,7 +2344,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, tnow, fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS),
                      GRect(112, 22 - hs, 120, 44), // -hs: ride the header scroll off the top
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 #else
   // Emery: FLAT BLACK LECO on the white page — the Timeline sloth-screen grammar: black
   // type directly on the field, white reserved for fills inside the black-inked artwork.
@@ -2353,7 +2353,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   graphics_draw_text(
       ctx, tnow, fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS),
       GRect(W - R5_TODAY_X - 120, R5_TODAY_Y - 2 - hs, 120, 44), // -2: LECO parks low
-      GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
 #endif
   char cond[32];
   snprintf(cond, sizeof(cond), "%s",
@@ -2371,13 +2371,13 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   const int cond_l = PBL_IF_ROUND_ELSE(110, W / 2), cond_r = PBL_IF_ROUND_ELSE(230, W - R5_TODAY_X);
   GFont cond_font = (GFont)s_list->today_cond_font; // measured once on data change, not per frame
   graphics_draw_text(ctx, cond, cond_font, GRect(cond_l, R5_DAYDATE_Y - hs, cond_r - cond_l, 16),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
   graphics_context_set_text_color(ctx, GColorBlack); // black on the page
   // Date: left box, left-aligned (the today icon above is centred over this string).
   graphics_draw_text(ctx, daydate, day_font, // day_font IS GOTHIC_14_BOLD — no re-lookup
                      GRect(PBL_IF_ROUND_ELSE(30, R5_TODAY_X), R5_DAYDATE_Y - hs,
                            PBL_IF_ROUND_ELSE(95, W / 2 - R5_TODAY_X), 16),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
 
   // Hairline rule separating the today header from the 5-day fan (timeline-card idiom).
   graphics_context_set_stroke_color(ctx, GColorLightGray);
@@ -2396,7 +2396,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     if (!R5_DAYNAME_SCROLL_HIDE || ss * 4 < R5_SECTION_TRAVEL) {
       graphics_draw_text(ctx, weekday, day_font,
                          GRect(cx - box_w / 2, R5_DAYNAME_Y - ss + bow, box_w, 22),
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
 
     GColor bg = weather_type_disc_color(f->current_weather_type);
@@ -2633,13 +2633,13 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
       snprintf(hs, sizeof(hs), "%d\xC2\xB0", fan[i].today_high);
       graphics_draw_text(ctx, hs, small_font,
                          GRect(col_high[i] - box_w / 2, y_hi[i] - R5_DOT_R - 17, box_w, 16),
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
     if (okl[i]) {
       snprintf(ls, sizeof(ls), "%d\xC2\xB0", fan[i].today_low);
       graphics_draw_text(ctx, ls, small_font,
                          GRect(col_low[i] - box_w / 2, y_lo[i] + R5_DOT_R + 1, box_w, 16),
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
   }
   // Bottom-gap banner stats, slid up into the gap the lifting section opens.
@@ -2672,7 +2672,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     return;
   }
   if (PBL_IF_ROUND_ELSE(
-          s_list->squash_mode && s_list->squash_captured && s_list->squash_scratch != NULL,
+          s_list->squash_mode && s_list->squash_captured && s_list->squash_scratch != nullptr,
           false)) {
     // Capture-once (gabbro smoothness step 2): the squash snapshot is already filled, and
     // prv_render_squash_in below overwrites every pixel from it — re-rendering the scene
@@ -2824,7 +2824,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, weekday_label, s_list->day_font,
                        GRect(day_label_x, ty, DAY_LABEL_W, 20), GTextOverflowModeTrailingEllipsis,
-                       GTextAlignmentLeft, NULL);
+                       GTextAlignmentLeft, nullptr);
 
     // Hi over lo, right-aligned — the day's actual numbers, not a phrase that
     // truncates to nothing in this narrow column. Bold hi / regular lo carries
@@ -2838,7 +2838,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       snprintf(temp_str, sizeof(temp_str), "--");
     }
     graphics_draw_text(ctx, temp_str, s_list->day_font, GRect(temp_x, ry + 1, temp_w, 20),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
     if (f->today_low != WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP) {
       snprintf(temp_str, sizeof(temp_str), "%d\xC2\xB0", f->today_low);
     } else {
@@ -2846,7 +2846,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     }
     graphics_draw_text(ctx, temp_str, s_list->condition_font,
                        GRect(temp_x, ry + rh / 2 - 2, temp_w, 20),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
   }
 
   // Scroll indicator
@@ -2874,10 +2874,10 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   graphics_draw_text(
       ctx, loc, bar_font,
       GRect(bar_inset + 4, LOCATION_BAR_Y + 1, W - (bar_inset * 2) - 52, LOCATION_BAR_H),
-      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   // Digital time: right-aligned (matches main screen)
   char time_str[8];
-  time_t now = time(NULL);
+  time_t now = time(nullptr);
   struct tm *lt = localtime(&now);
   if (clock_is_24h_style()) {
     strftime(time_str, sizeof(time_str), "%H:%M", lt);
@@ -2888,7 +2888,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   }
   graphics_draw_text(ctx, time_str, bar_font,
                      GRect(W - bar_inset - 50, LOCATION_BAR_Y + 1, 48, LOCATION_BAR_H),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
 }
 
 // ---- Touch input (Emery only) ----
@@ -2965,7 +2965,7 @@ static void prv_clock_swap_stopped(Animation *anim, bool finished, void *context
   (void)context;
   if (s_list) {
     if (s_list->clock_swap_anim == anim)
-      s_list->clock_swap_anim = NULL;
+      s_list->clock_swap_anim = nullptr;
     s_list->clock_swap_active = false;
     s_list->clock_loc_show = false; // the slot now rests on the time
     if (s_list->canvas)
@@ -2980,7 +2980,7 @@ static void prv_clock_loc_timer_cb(void *ctx) {
   (void)ctx;
   if (!s_list)
     return;
-  s_list->clock_loc_timer = NULL;
+  s_list->clock_loc_timer = nullptr;
   if (!s_list->clock_loc_show || s_list->clock_swap_anim)
     return;
   s_list->clock_swap_active = true;
@@ -2997,7 +2997,7 @@ static void prv_clock_loc_timer_cb(void *ctx) {
   animation_set_duration(s_list->clock_swap_anim, interpolate_moook_soft_duration(3));
   animation_set_curve(s_list->clock_swap_anim, AnimationCurveLinear); // the moook shapes it
   animation_set_handlers(s_list->clock_swap_anim,
-                         (AnimationHandlers){.stopped = prv_clock_swap_stopped}, NULL);
+                         (AnimationHandlers){.stopped = prv_clock_swap_stopped}, nullptr);
   animation_schedule(s_list->clock_swap_anim);
 }
 
@@ -3011,11 +3011,11 @@ void forecast_list_replay_location_intro(void) {
     return;
   if (s_list->clock_loc_timer) {
     app_timer_cancel(s_list->clock_loc_timer);
-    s_list->clock_loc_timer = NULL;
+    s_list->clock_loc_timer = nullptr;
   }
   if (s_list->clock_swap_anim) { // null-first: .stopped only destroys
     Animation *a = s_list->clock_swap_anim;
-    s_list->clock_swap_anim = NULL;
+    s_list->clock_swap_anim = nullptr;
     animation_unschedule(a);
   }
   s_list->clock_swap_active = false;
@@ -3032,7 +3032,7 @@ static void prv_clock_loc_hold(void) {
   if (!s_list || !s_list->clock_loc_show || s_list->clock_loc_timer || s_list->clock_swap_active) {
     return;
   }
-  s_list->clock_loc_timer = app_timer_register(2000, prv_clock_loc_timer_cb, NULL);
+  s_list->clock_loc_timer = app_timer_register(2000, prv_clock_loc_timer_cb, nullptr);
 }
 #endif
 
@@ -3110,7 +3110,7 @@ static void prv_select_exit_stopped(Animation *anim, bool finished, void *contex
   (void)anim;
   (void)finished;
   (void)context;
-  s_select_exit_anim = NULL;
+  s_select_exit_anim = nullptr;
   if (!s_list)
     return;
 #if PBL_ROUND
@@ -3127,8 +3127,8 @@ static void prv_select_exit_stopped(Animation *anim, bool finished, void *contex
   }
   void (*done)(void *) = s_select_exit_done;
   void *ctx = s_select_exit_ctx;
-  s_select_exit_done = NULL;
-  s_select_exit_ctx = NULL;
+  s_select_exit_done = nullptr;
+  s_select_exit_ctx = nullptr;
   if (done)
     done(ctx);
 }
@@ -3172,7 +3172,7 @@ void forecast_list_start_select_exit(void (*done_cb)(void *ctx), void *ctx) {
   if (!s_list->squash_mode) {
     if (s_list->anim) { // capture-first, same defensive kill as prv_start_clock_stage1
       Animation *old = s_list->anim;
-      s_list->anim = NULL;
+      s_list->anim = nullptr;
       animation_unschedule(old);
       animation_destroy(old);
     }
@@ -3289,13 +3289,13 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
 #define SCROLL_VEL_MAX   96 // maximum:  6 px/frame
 #define SCROLL_VEL_ACCEL 2  // added to velocity each tick
 
-static AppTimer *s_list_hold_timer = NULL;
+static AppTimer *s_list_hold_timer = nullptr;
 static bool s_list_hold_down = false;
 static int s_list_velocity = 0;
 static int s_list_subpx = 0;
 
 static void prv_list_tick_cb(void *ctx) {
-  s_list_hold_timer = NULL;
+  s_list_hold_timer = nullptr;
   if (!s_list)
     return;
 
@@ -3319,7 +3319,7 @@ static void prv_list_tick_cb(void *ctx) {
     if (s_list->anim) {
       animation_unschedule(s_list->anim);
       animation_destroy(s_list->anim);
-      s_list->anim = NULL;
+      s_list->anim = nullptr;
     }
     s_list->scroll_offset_px = next;
     s_list->scroll_to = next;
@@ -3327,7 +3327,7 @@ static void prv_list_tick_cb(void *ctx) {
     layer_mark_dirty(s_list->canvas);
   }
 
-  s_list_hold_timer = app_timer_register(SCROLL_TICK_MS, prv_list_tick_cb, NULL);
+  s_list_hold_timer = app_timer_register(SCROLL_TICK_MS, prv_list_tick_cb, nullptr);
 }
 
 static void prv_list_raw(ButtonId btn, bool pressed) {
@@ -3337,14 +3337,14 @@ static void prv_list_raw(ButtonId btn, bool pressed) {
     s_list_subpx = 0;
     if (s_list_hold_timer) {
       app_timer_cancel(s_list_hold_timer);
-      s_list_hold_timer = NULL;
+      s_list_hold_timer = nullptr;
     }
     // 300ms hold threshold before continuous scroll begins
-    s_list_hold_timer = app_timer_register(300, prv_list_tick_cb, NULL);
+    s_list_hold_timer = app_timer_register(300, prv_list_tick_cb, nullptr);
   } else {
     if (s_list_hold_timer) {
       app_timer_cancel(s_list_hold_timer);
-      s_list_hold_timer = NULL;
+      s_list_hold_timer = nullptr;
     }
   }
 }
@@ -3372,8 +3372,9 @@ static void prv_click_provider(void *context) {
   // The legacy continuous hold-to-scroll spins prv_list_tick_cb against scroll_offset_px,
   // which is meaningless for the single-screen 5-day view (max scroll 0) and would consume
   // a held DOWN press alongside the header transition. Disabled for CONFIG_TOUCH.
-  window_raw_click_subscribe(BUTTON_ID_UP, prv_list_raw_up_press, prv_list_raw_up_rel, NULL);
-  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_list_raw_down_press, prv_list_raw_down_rel, NULL);
+  window_raw_click_subscribe(BUTTON_ID_UP, prv_list_raw_up_press, prv_list_raw_up_rel, nullptr);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_list_raw_down_press, prv_list_raw_down_rel,
+                             nullptr);
 #endif
 }
 
@@ -3415,9 +3416,9 @@ static void prv_sun_tick(void *ctx) {
   (void)ctx;
   if (!s_list)
     return;
-  s_list->sun_timer = NULL;
+  s_list->sun_timer = nullptr;
   if (prv_sun_step()) {
-    s_list->sun_timer = app_timer_register(R5_SUN_PERIOD_MS, prv_sun_tick, NULL);
+    s_list->sun_timer = app_timer_register(R5_SUN_PERIOD_MS, prv_sun_tick, nullptr);
   }
 }
 #else
@@ -3432,7 +3433,7 @@ static void prv_icon_drv_stop_cb(void *ctx) { // 0ms hop: never unschedule from 
   (void)ctx;
   if (s_list && s_list->icon_drv) {
     Animation *a = s_list->icon_drv;
-    s_list->icon_drv = NULL;
+    s_list->icon_drv = nullptr;
     animation_unschedule(a);
     animation_destroy(a);
   }
@@ -3463,7 +3464,7 @@ static void prv_icon_drv_update(Animation *anim, AnimationProgress p) {
     alive = prv_sun_step();
   }
   if (!alive)
-    app_timer_register(0, prv_icon_drv_stop_cb, NULL);
+    app_timer_register(0, prv_icon_drv_stop_cb, nullptr);
 }
 static const AnimationImplementation s_icon_drv_impl = {.update = prv_icon_drv_update};
 #endif
@@ -3486,7 +3487,7 @@ static void prv_icon_driver_start(void) {
   animation_schedule(a);
 #else
   if (!s_list->sun_timer) {
-    s_list->sun_timer = app_timer_register(R5_SUN_PERIOD_MS, prv_sun_tick, NULL);
+    s_list->sun_timer = app_timer_register(R5_SUN_PERIOD_MS, prv_sun_tick, nullptr);
   }
 #endif
 }
@@ -3541,7 +3542,7 @@ static void prv_hslide_in_stopped(Animation *anim, bool finished, void *context)
   (void)anim;
   (void)finished;
   (void)context;
-  s_hslide_anim = NULL; // property animation auto-destroys after a normal stop
+  s_hslide_anim = nullptr; // property animation auto-destroys after a normal stop
   if (s_list && s_list->canvas) {
     GRect home = layer_get_frame(s_list->canvas);
     home.origin.x = 0;
@@ -3594,7 +3595,7 @@ static void prv_window_appear(Window *window) {
       Animation *anim = (Animation *)pa;
       animation_set_duration(anim, WEATHER_HSLIDE_MS);
       animation_set_custom_interpolation(anim, weather_interpolate_moook_soft1);
-      animation_set_handlers(anim, (AnimationHandlers){.stopped = prv_hslide_in_stopped}, NULL);
+      animation_set_handlers(anim, (AnimationHandlers){.stopped = prv_hslide_in_stopped}, nullptr);
       s_hslide_anim = anim;
       animation_schedule(anim);
     } else {
@@ -3614,7 +3615,7 @@ static void prv_window_appear(Window *window) {
       // now typed the same way — see expanded_view's matching change.) Rect: identical.
       GDrawCommandImage *raw = gdraw_command_image_create_with_resource(
           weather_type_icon_large_resource(prv_header_type()));
-      GDrawCommandImage *pdc = raw ? gdraw_command_image_clone(raw) : NULL;
+      GDrawCommandImage *pdc = raw ? gdraw_command_image_clone(raw) : nullptr;
       if (raw)
         gdraw_command_image_destroy(raw);
       if (pdc) {
@@ -3639,11 +3640,11 @@ static void prv_window_unload(Window *window) {
 #endif
   if (s_list && s_list->clock_loc_timer) {
     app_timer_cancel(s_list->clock_loc_timer);
-    s_list->clock_loc_timer = NULL;
+    s_list->clock_loc_timer = nullptr;
   }
   if (s_list && s_list->clock_swap_anim) { // null-first: .stopped only destroys
     Animation *a = s_list->clock_swap_anim;
-    s_list->clock_swap_anim = NULL;
+    s_list->clock_swap_anim = nullptr;
     animation_unschedule(a);
   }
   s_list->clock_loc_show = false;
@@ -3651,21 +3652,21 @@ static void prv_window_unload(Window *window) {
   if (s_list && s_list->on_pop_cb) {
     void (*cb)(void *) = s_list->on_pop_cb;
     void *ctx = s_list->on_pop_ctx;
-    s_list->on_pop_cb = NULL;
-    s_list->on_pop_ctx = NULL;
+    s_list->on_pop_cb = nullptr;
+    s_list->on_pop_ctx = nullptr;
     cb(ctx);
   }
 
   if (s_list->anim) { // capture-first: .stopped NULLs the field during unschedule
     Animation *old = s_list->anim;
-    s_list->anim = NULL;
+    s_list->anim = nullptr;
     animation_unschedule(old);
     animation_destroy(old);
   }
 #ifdef CONFIG_TOUCH
   if (s_list->clock_anim) {
     Animation *old = s_list->clock_anim;
-    s_list->clock_anim = NULL;
+    s_list->clock_anim = nullptr;
     animation_unschedule(old);
     animation_destroy(old);
   }
@@ -3674,17 +3675,17 @@ static void prv_window_unload(Window *window) {
   // layer on the next animation frame.
   if (s_hslide_anim) {
     Animation *a = s_hslide_anim;
-    s_hslide_anim = NULL;
+    s_hslide_anim = nullptr;
     animation_unschedule(a);
   }
 #endif
   // The select-exit slide is module-level, not per-instance: clear the done callback FIRST
   // (unschedule fires .stopped, which would otherwise invoke it mid-teardown), then cancel.
-  s_select_exit_done = NULL;
-  s_select_exit_ctx = NULL;
+  s_select_exit_done = nullptr;
+  s_select_exit_ctx = nullptr;
   if (s_select_exit_anim) {
     Animation *a = s_select_exit_anim;
-    s_select_exit_anim = NULL;
+    s_select_exit_anim = nullptr;
     animation_unschedule(a);
     animation_destroy(a);
   }
@@ -3694,7 +3695,7 @@ static void prv_window_unload(Window *window) {
   // or the scratch (67.6KB on round) leaks and a scheduled animation outlives its window.
   if (s_report_anim) { // capture-first: the synchronous .stopped sees the NULLed handle
     Animation *a = s_report_anim;
-    s_report_anim = NULL;
+    s_report_anim = nullptr;
     animation_unschedule(a);
     animation_destroy(a);
   }
@@ -3702,23 +3703,23 @@ static void prv_window_unload(Window *window) {
   if (s_list->squash_in_anim) {
     animation_unschedule(s_list->squash_in_anim);
     animation_destroy(s_list->squash_in_anim);
-    s_list->squash_in_anim = NULL;
+    s_list->squash_in_anim = nullptr;
   }
   if (s_list->squash_scratch) {
     free(s_list->squash_scratch);
-    s_list->squash_scratch = NULL;
+    s_list->squash_scratch = nullptr;
   }
 #endif
 
 #ifdef CONFIG_TOUCH
   if (s_list->sun_timer) {
     app_timer_cancel(s_list->sun_timer);
-    s_list->sun_timer = NULL;
+    s_list->sun_timer = nullptr;
   }
 #if PBL_ROUND
   if (s_list->icon_drv) {
     Animation *a = s_list->icon_drv;
-    s_list->icon_drv = NULL;
+    s_list->icon_drv = nullptr;
     animation_unschedule(a);
     animation_destroy(a);
   }
@@ -3726,20 +3727,20 @@ static void prv_window_unload(Window *window) {
   for (int i = 0; i < MAX_ROWS; i++) {
     if (s_list->pdc_icons[i]) {
       gdraw_command_image_destroy(s_list->pdc_icons[i]);
-      s_list->pdc_icons[i] = NULL;
+      s_list->pdc_icons[i] = nullptr;
     }
   }
   if (s_list->today_pdc) {
     gdraw_command_image_destroy(s_list->today_pdc);
-    s_list->today_pdc = NULL;
+    s_list->today_pdc = nullptr;
   }
   if (s_list->fly_pdc) {
     gdraw_command_image_destroy(s_list->fly_pdc);
-    s_list->fly_pdc = NULL;
+    s_list->fly_pdc = nullptr;
   }
   if (s_list->fly_lookup) {
     applib_free(s_list->fly_lookup);
-    s_list->fly_lookup = NULL;
+    s_list->fly_lookup = nullptr;
   }
   prv_free_jelly_lookups();
 #endif
@@ -3747,16 +3748,16 @@ static void prv_window_unload(Window *window) {
   for (int i = 0; i < MAX_ROWS; i++) {
     if (s_list->icons[i]) {
       gbitmap_destroy(s_list->icons[i]);
-      s_list->icons[i] = NULL;
+      s_list->icons[i] = nullptr;
     }
   }
   layer_destroy(s_list->canvas);
-  s_list->canvas = NULL;
+  s_list->canvas = nullptr;
 
   window_destroy(window);
   i18n_free_all(s_list);
   free(s_list);
-  s_list = NULL;
+  s_list = nullptr;
 }
 
 // ---- Public API ----

@@ -80,4 +80,4 @@
 FLASH_REGION_SIZE_CHECK(SUBSECTOR_SIZE_BYTES)
 
 // make sure the total size is what we expect (16mb)
-_Static_assert(BOARD_NOR_FLASH_SIZE == 0x1000000, "Flash size should be 16mb");
+static_assert(BOARD_NOR_FLASH_SIZE == 0x1000000, "Flash size should be 16mb");

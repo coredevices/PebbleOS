@@ -5,7 +5,6 @@
 
 #include "gtypes.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <upng.h>

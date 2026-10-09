@@ -129,20 +129,20 @@ bool vibe_score_validate(VibeScore *score, uint32_t data_size) {
 VibeScore *vibe_score_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   uint32_t data_size;
   if (!prv_vibe_score_resource_is_valid(app_num, resource_id, VIBE_SIGNATURE, &data_size)) {
-    return NULL;
+    return nullptr;
   }
 
   VibeScore *vibe_score = applib_zalloc(data_size);
   if (!vibe_score || sys_resource_load_range(app_num, resource_id, VIBE_DATA_OFFSET,
                                              (uint8_t *)vibe_score, data_size) != data_size) {
     applib_free(vibe_score);
-    return NULL;
+    return nullptr;
   }
 
   // Validate the loaded command sequence
   if (!vibe_score_validate(vibe_score, data_size)) {
     applib_free(vibe_score);
-    return NULL;
+    return nullptr;
   }
 
   return vibe_score;

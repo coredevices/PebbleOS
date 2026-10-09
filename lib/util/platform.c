@@ -25,7 +25,7 @@ PBL_WEAK void util_dbgserial_str(const char *string) {
   printf("%s\n", string);
 }
 
-PBL_WEAK PBL_NORETURN void util_assertion_failed(const char *filename, int line) {
+[[noreturn]] PBL_WEAK void util_assertion_failed(const char *filename, int line) {
   util_log(filename, line, "*** UTIL ASSERT FAILED");
   exit(EXIT_FAILURE);
 }

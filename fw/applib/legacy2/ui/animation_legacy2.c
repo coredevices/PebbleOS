@@ -53,8 +53,8 @@ static void animation_legacy2_private_run(AnimationLegacy2Scheduler *animation_l
 // When such a time comes that more ranges are required, the spare two
 // bits in AnimationLegacy2.curve can be utilized.
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-_Static_assert(sizeof(AnimationLegacy2) <= 40, "Breaking back-compatibility!");
-_Static_assert(sizeof(AnimationLegacy2Scheduler) <= 16, "Breaking back-compatibility!");
+static_assert(sizeof(AnimationLegacy2) <= 40, "Breaking back-compatibility!");
+static_assert(sizeof(AnimationLegacy2Scheduler) <= 16, "Breaking back-compatibility!");
 #endif
 
 // Pack a function pointer into 28 bits. We do this by dropping bits
@@ -87,7 +87,7 @@ struct AnimationLegacy2 *animation_legacy2_create(void) {
 }
 
 void animation_legacy2_destroy(AnimationLegacy2 *animation) {
-  if (animation == NULL) {
+  if (animation == nullptr) {
     return;
   }
   animation_legacy2_unschedule(animation);
@@ -95,12 +95,12 @@ void animation_legacy2_destroy(AnimationLegacy2 *animation) {
 }
 
 void animation_legacy2_init(struct AnimationLegacy2 *animation) {
-  PBL_ASSERTN(animation != NULL);
+  PBL_ASSERTN(animation != nullptr);
   *animation = (AnimationLegacy2){};
   animation->duration_ms = 250;
   animation->curve = AnimationCurveEaseInOut;
-  animation->handlers = (AnimationLegacy2Handlers){NULL, NULL};
-  animation->context = NULL;
+  animation->handlers = (AnimationLegacy2Handlers){nullptr, nullptr};
+  animation->context = nullptr;
   animation->is_completed = false;
 }
 
@@ -131,21 +131,21 @@ inline static uint32_t animation_legacy2_get_ms_since_system_start(void) {
 
 static void animation_legacy2_timer_callback(
     AnimationLegacy2Scheduler *animation_legacy2_scheduler) {
-  animation_legacy2_scheduler->timer_handle = NULL;
+  animation_legacy2_scheduler->timer_handle = nullptr;
   animation_legacy2_private_run(animation_legacy2_scheduler);
 }
 
 static void animation_legacy2_reschedule_timer(
     AnimationLegacy2Scheduler *animation_legacy2_scheduler, uint32_t rate_control_delay_ms) {
   AnimationLegacy2 *animation = (AnimationLegacy2 *)animation_legacy2_scheduler->head;
-  if (animation == NULL) {
+  if (animation == nullptr) {
     return;
   }
   const uint32_t now = animation_legacy2_get_ms_since_system_start();
   const int32_t delta_ms = serial_distance32(now, animation->abs_start_time_ms);
   const uint32_t interval_ms = MAX(delta_ms, 0) + rate_control_delay_ms;
 
-  if (animation_legacy2_scheduler->timer_handle != NULL) {
+  if (animation_legacy2_scheduler->timer_handle != nullptr) {
     app_timer_reschedule(animation_legacy2_scheduler->timer_handle, interval_ms);
     // Ignore the return value of reschedule. If it fails it probably means the callback is already
     // fired and we're waiting for the handler to be called. This will end up rescheduling us for
@@ -154,14 +154,14 @@ static void animation_legacy2_reschedule_timer(
     animation_legacy2_scheduler->timer_handle =
         app_timer_register(interval_ms, (AppTimerCallback)animation_legacy2_timer_callback,
                            animation_legacy2_scheduler);
-    PBL_ASSERTN(animation_legacy2_scheduler->timer_handle != NULL);
+    PBL_ASSERTN(animation_legacy2_scheduler->timer_handle != nullptr);
   }
 }
 
 static void animation_legacy2_private_schedule(
     AnimationLegacy2 *animation, AnimationLegacy2Scheduler *animation_legacy2_scheduler) {
-  PBL_ASSERTN(animation != NULL);
-  PBL_ASSERTN(animation->implementation->update != NULL);
+  PBL_ASSERTN(animation != nullptr);
+  PBL_ASSERTN(animation->implementation->update != nullptr);
 
   if (animation_legacy2_is_scheduled(animation)) {
     animation_legacy2_unschedule(animation);
@@ -169,7 +169,7 @@ static void animation_legacy2_private_schedule(
 
   const uint32_t now = animation_legacy2_get_ms_since_system_start();
   animation->abs_start_time_ms = now + animation->delay_ms;
-  if (animation->implementation->setup != NULL) {
+  if (animation->implementation->setup != nullptr) {
     animation->implementation->setup(animation);
   }
 
@@ -193,16 +193,16 @@ static void animation_legacy2_private_schedule(
 void animation_legacy2_private_unschedule(AnimationLegacy2 *animation,
                                           AnimationLegacy2Scheduler *animation_legacy2_scheduler,
                                           const bool finished) {
-  if (animation == NULL || !animation_legacy2_is_scheduled(animation)) {
+  if (animation == nullptr || !animation_legacy2_is_scheduled(animation)) {
     return;
   }
 
-  PBL_ASSERTN(animation->implementation != NULL);
+  PBL_ASSERTN(animation->implementation != nullptr);
 
   const bool was_old_head = (animation == (AnimationLegacy2 *)animation_legacy2_scheduler->head);
-  list_remove(&animation->list_node, &animation_legacy2_scheduler->head, NULL);
+  list_remove(&animation->list_node, &animation_legacy2_scheduler->head, nullptr);
   // Reschedule the timer if we're removing the head animation:
-  if (was_old_head && animation_legacy2_scheduler->head != NULL) {
+  if (was_old_head && animation_legacy2_scheduler->head != nullptr) {
     animation_legacy2_reschedule_timer(animation_legacy2_scheduler, 0);
   }
   // Reset these fields, before calling .stopped(), so that this animation
@@ -212,7 +212,7 @@ void animation_legacy2_private_unschedule(AnimationLegacy2 *animation,
   if (animation->handlers.stopped) {
     animation->handlers.stopped(animation, finished, animation->context);
   }
-  if (animation->implementation->teardown != NULL) {
+  if (animation->implementation->teardown != nullptr) {
     animation->implementation->teardown(animation);
   }
 }
@@ -231,7 +231,7 @@ void animation_legacy2_private_unschedule_all(AppTaskCtxIdx idx) {
 void animation_legacy2_private_init_scheduler(
     AnimationLegacy2Scheduler *animation_legacy2_scheduler) {
   *animation_legacy2_scheduler = (AnimationLegacy2Scheduler){
-    .timer_handle = NULL,
+    .timer_handle = nullptr,
     .last_delay_ms = ANIMATION_TARGET_FRAME_INTERVAL_MS_LEGACY2,
     .last_frame_time = animation_legacy2_get_ms_since_system_start()
   };

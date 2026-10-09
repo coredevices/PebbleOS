@@ -261,7 +261,7 @@ static bool prv_each_inspect_keys(SettingsFile *file, SettingsRecordInfo *info, 
 
   SettingsFileEachKeyHelper *key_helper = context;
 
-  if (key_helper->keys != NULL) {
+  if (key_helper->keys != nullptr) {
     info->get_key(file, (uint8_t *)&key_helper->keys[key_helper->key_count], sizeof(WeatherDBKey));
   }
 
@@ -279,7 +279,7 @@ status_t weather_db_get_num_keys(uint16_t *val_out) {
 
   SettingsFileEachKeyHelper key_helper = {
     .key_count = 0,
-    .keys = NULL,
+    .keys = nullptr,
   };
   settings_file_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
   *val_out = key_helper.key_count;

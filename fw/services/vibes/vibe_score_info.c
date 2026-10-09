@@ -42,7 +42,7 @@ static const VibeScoreInfo *prv_vibe_score_find_info(VibeScoreId id) {
       return &S_VIBE_MAP[x];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 uint32_t vibe_score_info_get_resource_id(VibeScoreId id) {

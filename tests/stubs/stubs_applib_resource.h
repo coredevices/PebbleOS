@@ -27,5 +27,5 @@ void applib_resource_munmap_or_free(void *bytes) {
 // link against fake_applib_resource.c in your test
 void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id, size_t offset,
                                    size_t num_bytes, bool used_aligned) {
-  return NULL;
+  return nullptr;
 }

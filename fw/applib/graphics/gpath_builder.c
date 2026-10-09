@@ -88,7 +88,7 @@ GPathBuilder *gpath_builder_create(uint32_t max_points) {
   GPathBuilder *result = applib_malloc(required_size);
 
   if (!result) {
-    return NULL;
+    return nullptr;
   }
 
   memset(result, 0, required_size);
@@ -102,7 +102,7 @@ void gpath_builder_destroy(GPathBuilder *builder) {
 
 GPath *gpath_builder_create_path(GPathBuilder *builder) {
   if (builder->num_points <= 1) {
-    return NULL;
+    return nullptr;
   }
 
   uint32_t num_points = builder->num_points;
@@ -118,7 +118,7 @@ GPath *gpath_builder_create_path(GPathBuilder *builder) {
   GPath *result = applib_malloc(sizeof(GPath) + size_of_points);
 
   if (!result) {
-    return NULL;
+    return nullptr;
   }
 
   memset(result, 0, sizeof(GPath));

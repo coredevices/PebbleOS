@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -219,10 +218,10 @@ typedef uintptr_t pbl_bt_characteristic_t;
 /** @brief Opaque reference to a descriptor object. */
 typedef uintptr_t pbl_bt_descriptor_t;
 
-_Static_assert(sizeof(pbl_bt_descriptor_t) == sizeof(uintptr_t),
-               "pbl_bt_descriptor_t is invalid size");
-_Static_assert(sizeof(pbl_bt_characteristic_t) == sizeof(uintptr_t),
-               "pbl_bt_characteristic_t is invalid size");
+static_assert(sizeof(pbl_bt_descriptor_t) == sizeof(uintptr_t),
+              "pbl_bt_descriptor_t is invalid size");
+static_assert(sizeof(pbl_bt_characteristic_t) == sizeof(uintptr_t),
+              "pbl_bt_characteristic_t is invalid size");
 
 /** @brief Invalid service reference. */
 #define PBL_BT_SERVICE_INVALID ((pbl_bt_service_t)0)
@@ -341,8 +340,8 @@ struct PBL_PACKED pbl_bt_device_internal {
 /** @brief Invalid (all zero) struct pbl_bt_device_internal. */
 #define PBL_BT_DEVICE_INTERNAL_INVALID ((const struct pbl_bt_device_internal){})
 
-_Static_assert(sizeof(struct pbl_bt_device_internal) == sizeof(struct pbl_bt_device),
-               "struct pbl_bt_device_internal should be equal in size to struct pbl_bt_device");
+static_assert(sizeof(struct pbl_bt_device_internal) == sizeof(struct pbl_bt_device),
+              "struct pbl_bt_device_internal should be equal in size to struct pbl_bt_device");
 
 struct pbl_bt_ad_data;
 

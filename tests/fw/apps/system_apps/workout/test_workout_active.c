@@ -111,8 +111,8 @@ static char *prv_get_custom_metric_label_string(void) {
 static WorkoutController s_sports_controller = {
   .is_paused = prv_is_sports_paused,
   .pause = prv_sports_pause,
-  .stop = NULL,
-  .update_data = NULL,
+  .stop = nullptr,
+  .update_data = nullptr,
   .metric_to_string = prv_metric_to_string,
   .get_metric_value = prv_sports_get_value,
   .get_distance_string = health_util_get_distance_string,

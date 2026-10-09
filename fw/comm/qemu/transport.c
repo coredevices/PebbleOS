@@ -172,7 +172,7 @@ static void prv_close_session(void) {
   bt_lock();
 
   comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
-  s_transport.session = NULL;
+  s_transport.session = nullptr;
 
   PebbleEvent e = {
     .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
@@ -185,7 +185,7 @@ static void prv_close_session(void) {
 
 // -----------------------------------------------------------------------------------------
 bool qemu_transport_is_connected(void) {
-  return (s_transport.session != NULL) && s_emulated_session_connected;
+  return (s_transport.session != nullptr) && s_emulated_session_connected;
 }
 
 // -----------------------------------------------------------------------------------------

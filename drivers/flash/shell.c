@@ -28,7 +28,7 @@
 #endif
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_flash);
-PBL_SHELL_CMD_REGISTER(flash, sub_flash, "Flash", NULL);
+PBL_SHELL_CMD_REGISTER(flash, sub_flash, "Flash", nullptr);
 
 static int prv_parse_range(const struct pbl_shell *sh, const char *addr_str, const char *len_str,
                            uint32_t *addr, uint32_t *len) {
@@ -63,7 +63,7 @@ static bool prv_is_really_erased(const struct pbl_shell *sh, uint32_t addr, bool
     flash_read_bytes(buffer, i_addr, sizeof(buffer));
     for (uint32_t j = 0; j < sizeof(buffer); j++) {
       if (buffer[j] != 0xFF) {
-        if (sh != NULL) {
+        if (sh != nullptr) {
           pbl_shell_print(sh, "(sub)sector at 0x%" PRIX32 " not really erased, is_subsector: %d",
                           addr, is_subsector);
         } else {
@@ -146,7 +146,7 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
   }
 
   uint8_t *buffer = kernel_malloc(MIN(MAX_READ_FLASH_SIZE, length));
-  if (buffer == NULL) {
+  if (buffer == nullptr) {
     pbl_shell_error(sh, "unable to allocate read buffer");
     return -ENOMEM;
   }
@@ -377,7 +377,7 @@ static int prv_cmd_sec_wipe(const struct pbl_shell *sh, size_t argc, char **argv
 static int prv_cmd_sec_info(const struct pbl_shell *sh, size_t argc, char **argv) {
   const FlashSecurityRegisters *info = flash_security_registers_info();
 
-  if (info->sec_regs == NULL) {
+  if (info->sec_regs == nullptr) {
     pbl_shell_print(sh, "no security registers");
     return 0;
   }
@@ -419,29 +419,29 @@ static int prv_cmd_sec_lock(const struct pbl_shell *sh, size_t argc, char **argv
 }
 
 static const struct pbl_shell_cmd sub_flash_sec[] = {
-  PBL_SHELL_CMD_ARG(read, NULL, "Read a security register <addr>", prv_cmd_sec_read, 2, 0),
-  PBL_SHELL_CMD_ARG(write, NULL, "Write a security register <addr> <value>", prv_cmd_sec_write, 3,
-                    0),
-  PBL_SHELL_CMD_ARG(erase, NULL, "Erase a security register <addr>", prv_cmd_sec_erase, 2, 0),
-  PBL_SHELL_CMD(wipe, NULL, "Erase all security registers", prv_cmd_sec_wipe),
-  PBL_SHELL_CMD(info, NULL, "Show the security registers", prv_cmd_sec_info),
-  PBL_SHELL_CMD_ARG(lock, NULL, "Lock a security register forever <addr> <password>",
+  PBL_SHELL_CMD_ARG(read, nullptr, "Read a security register <addr>", prv_cmd_sec_read, 2, 0),
+  PBL_SHELL_CMD_ARG(write, nullptr, "Write a security register <addr> <value>", prv_cmd_sec_write,
+                    3, 0),
+  PBL_SHELL_CMD_ARG(erase, nullptr, "Erase a security register <addr>", prv_cmd_sec_erase, 2, 0),
+  PBL_SHELL_CMD(wipe, nullptr, "Erase all security registers", prv_cmd_sec_wipe),
+  PBL_SHELL_CMD(info, nullptr, "Show the security registers", prv_cmd_sec_info),
+  PBL_SHELL_CMD_ARG(lock, nullptr, "Lock a security register forever <addr> <password>",
                     prv_cmd_sec_lock, 3, 0),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_SUBCMD_ADD(sub_flash, sec, sub_flash_sec, "Security registers", NULL, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_flash, sec, sub_flash_sec, "Security registers", nullptr, 0, 0);
 #endif
 
-PBL_SHELL_SUBCMD_ADD(sub_flash, read, NULL, "Write raw flash bytes to the console <addr> <len>",
+PBL_SHELL_SUBCMD_ADD(sub_flash, read, nullptr, "Write raw flash bytes to the console <addr> <len>",
                      prv_cmd_read, 3, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, mode, NULL, "Switch the flash mode <mode>", prv_cmd_mode, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, fill, NULL,
+PBL_SHELL_SUBCMD_ADD(sub_flash, mode, nullptr, "Switch the flash mode <mode>", prv_cmd_mode, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_flash, fill, nullptr,
                      "Fill with an incrementing pattern <addr> <len> <start>", prv_cmd_fill, 4, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, validate, NULL, "Erase, write and read back a test sector",
+PBL_SHELL_SUBCMD_ADD(sub_flash, validate, nullptr, "Erase, write and read back a test sector",
                      prv_cmd_validate, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, erased_sectors, NULL, "List erased sectors [1 = show subsectors]",
-                     prv_cmd_erased_sectors, 1, 1);
+PBL_SHELL_SUBCMD_ADD(sub_flash, erased_sectors, nullptr,
+                     "List erased sectors [1 = show subsectors]", prv_cmd_erased_sectors, 1, 1);
 #else
 static uint32_t prv_xorshift32(uint32_t seed) {
   seed ^= seed << 13;
@@ -489,7 +489,7 @@ static void prv_flash_stress_callback(void *data) {
     PBL_LOG_ALWAYS("flash stress test: erasing flash address %" PRIx32, sector_address);
     flash_erase_sector_blocking(sector_address);
     s_flash_stress_last_sector = sector_address;
-    if (!prv_is_really_erased(NULL, sector_address, false)) {
+    if (!prv_is_really_erased(nullptr, sector_address, false)) {
       PBL_LOG_ALWAYS("flash stress test: flash address %" PRIx32 " erase failed!", sector_address);
       miscompare = -1;
       goto bailout;
@@ -606,9 +606,10 @@ static int prv_cmd_benchmark(const struct pbl_shell *sh, size_t argc, char **arg
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_flash, stress, NULL, "Write/read stress test in the background <count>",
+PBL_SHELL_SUBCMD_ADD(sub_flash, stress, nullptr, "Write/read stress test in the background <count>",
                      prv_cmd_stress, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, benchmark, NULL, "Benchmark flash reads", prv_cmd_benchmark, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_flash, benchmark, nullptr, "Benchmark flash reads", prv_cmd_benchmark, 0,
+                     0);
 #endif
 
 #ifdef TEST_FLASH_LOCK_PROTECTION
@@ -616,7 +617,7 @@ void flash_expect_program_failure(bool expect_failure);
 
 // Write over every region of the flash: if PRF still boots afterwards, the protected regions held.
 static int prv_cmd_lock_test(const struct pbl_shell *sh, size_t argc, char **argv) {
-  static uint8_t buf[2048] = {0};
+  static uint8_t buf[2048] = {};
 
   __disable_irq();
 
@@ -645,13 +646,13 @@ static int prv_cmd_lock_test(const struct pbl_shell *sh, size_t argc, char **arg
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_flash, lock_test, NULL, "Write over the whole flash to test the locks",
+PBL_SHELL_SUBCMD_ADD(sub_flash, lock_test, nullptr, "Write over the whole flash to test the locks",
                      prv_cmd_lock_test, 0, 0);
 #endif
 
-PBL_SHELL_SUBCMD_ADD(sub_flash, erase, NULL, "Erase the sectors covering <addr> <len>",
+PBL_SHELL_SUBCMD_ADD(sub_flash, erase, nullptr, "Erase the sectors covering <addr> <len>",
                      prv_cmd_erase, 3, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, crc, NULL, "Legacy CRC of <addr> <len>", prv_cmd_crc, 3, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, dump, NULL, "Hex dump <addr> <len>", prv_cmd_dump, 3, 0);
+PBL_SHELL_SUBCMD_ADD(sub_flash, crc, nullptr, "Legacy CRC of <addr> <len>", prv_cmd_crc, 3, 0);
+PBL_SHELL_SUBCMD_ADD(sub_flash, dump, nullptr, "Hex dump <addr> <len>", prv_cmd_dump, 3, 0);
 
 #endif

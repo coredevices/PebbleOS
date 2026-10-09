@@ -193,10 +193,10 @@ static void prv_notif_queue_reset(void) {
   ListNode *cur;
   while (head) {
     cur = head;
-    list_remove(cur, &head, NULL);
+    list_remove(cur, &head, nullptr);
     kernel_free(cur);
   }
-  s_ancs_client->queue = NULL;
+  s_ancs_client->queue = nullptr;
 }
 
 static void prv_notif_queue_push_common(NotificationQueueNode *node) {
@@ -235,13 +235,13 @@ static void prv_notif_queue_push_action(uint32_t uid, ActionId action_id) {
 // Never the in-flight head or a user action. Returns true if one was freed.
 static bool prv_evict_oldest_attr_request(void) {
   const NotificationQueueNode *in_flight =
-      (s_ancs_client->state != ANCSClientStateIdle) ? s_ancs_client->queue : NULL;
+      (s_ancs_client->state != ANCSClientStateIdle) ? s_ancs_client->queue : nullptr;
   NotificationQueueNode *node = s_ancs_client->queue;
   while (node) {
     NotificationQueueNode *next = (NotificationQueueNode *)list_get_next((ListNode *)node);
     if (node != in_flight && node->op == NotificationQueueOpGetAttributes) {
       PBL_LOG_WRN("ANCS queue full, evicting oldest notif (uid=%" PRIu32 ")", node->uid);
-      list_remove((ListNode *)node, (ListNode **)&s_ancs_client->queue, NULL);
+      list_remove((ListNode *)node, (ListNode **)&s_ancs_client->queue, nullptr);
       kernel_free(node);
       return true;
     }
@@ -276,7 +276,7 @@ static void prv_notif_queue_push_attr_request(uint32_t uid, ANCSProperty propert
 static void prv_notif_queue_pop(void) {
   NotificationQueueNode *temp = s_ancs_client->queue;
   if (temp) {
-    list_remove((ListNode *)s_ancs_client->queue, (ListNode **)&s_ancs_client->queue, NULL);
+    list_remove((ListNode *)s_ancs_client->queue, (ListNode **)&s_ancs_client->queue, nullptr);
     kernel_free(temp);
   }
 }
@@ -287,7 +287,7 @@ static void prv_notif_queue_next(void) {
     return;
   }
 
-  if (s_ancs_client->queue == NULL) {
+  if (s_ancs_client->queue == nullptr) {
     // empty
     return;
   }
@@ -305,7 +305,7 @@ PBL_T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
     .op = NotificationQueueOpGetAttributes,
     .uid = uid,
   };
-  return prv_notif_queue_find(&key) != NULL;
+  return prv_notif_queue_find(&key) != nullptr;
 }
 #endif
 
@@ -321,7 +321,7 @@ static void prv_reset_and_idle(void) {
 }
 
 static void prv_reset_and_retry(void *unused) {
-  if (s_ancs_client == NULL) {
+  if (s_ancs_client == nullptr) {
     return;
   }
 
@@ -366,7 +366,7 @@ static void prv_op_timeout_launcher_task_cb(void *unused) {
 
 static void prv_op_timeout_cb(void *unused) {
   // Hop to KernelMain; ANCS state is single-threaded there.
-  launcher_task_add_callback(prv_op_timeout_launcher_task_cb, NULL);
+  launcher_task_add_callback(prv_op_timeout_launcher_task_cb, nullptr);
 }
 
 static void prv_op_timeout_stop(void) {
@@ -766,7 +766,7 @@ static void prv_handle_app_attributes_response(const uint8_t *data, size_t lengt
     }
   }
 
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
 
   if (length == 0) {
     goto fail;
@@ -861,7 +861,7 @@ static void prv_get_app_attributes(const ANCSAttribute *app_id) {
 
   if (!success) {
     PBL_LOG_WRN("Failed to fetch app attributes for notification");
-    ANCSAttribute *empty_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+    ANCSAttribute *empty_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
     // we failed to fetch the app, but we got a notification
     prv_put_ancs_message(empty_attrs);
     prv_reset_and_next();
@@ -901,7 +901,7 @@ static void prv_get_notification_attributes(uint32_t uid) {
       // Waiting on the retry timer, not a response.
       prv_op_timeout_stop();
       prv_set_state(ANCSClientStateRetrying);
-      evented_timer_register(ANCS_RETRY_TIME_MS, false, prv_reset_and_retry, NULL);
+      evented_timer_register(ANCS_RETRY_TIME_MS, false, prv_reset_and_retry, nullptr);
     }
   }
 }
@@ -1034,7 +1034,7 @@ bool ancs_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
 // Handling inbound GATT Notifications
 
 static void prv_handle_ns_notification(uint32_t length, const uint8_t *notification) {
-  PBL_ASSERTN(notification != NULL);
+  PBL_ASSERTN(notification != nullptr);
 
   if (length != sizeof(NSNotification)) {
     PBL_LOG_ERR("Received invalid ANCS NS Notification length=<%" PRIu32 ">", length);
@@ -1102,7 +1102,7 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
 }
 
 static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
-  PBL_ASSERTN(data != NULL);
+  PBL_ASSERTN(data != nullptr);
 
   if (length < 1) {
     PBL_LOG_ERR("Received ANCS DS notification of length 0");
@@ -1256,7 +1256,7 @@ void ancs_handle_ios9_or_newer_detected(void) {
 // Lifecycle
 
 void ancs_create(void) {
-  PBL_ASSERTN(s_ancs_client == NULL);
+  PBL_ASSERTN(s_ancs_client == nullptr);
   s_ancs_client = (ANCSClient *)kernel_zalloc_check(sizeof(ANCSClient));
   pbl_buffer_init(&s_ancs_client->reassembly_ctx.buffer,
                   sizeof(s_ancs_client->reassembly_ctx.buffer_storage));
@@ -1274,6 +1274,6 @@ void ancs_destroy(void) {
 
   prv_reset_and_flush();
   kernel_free(s_ancs_client);
-  s_ancs_client = NULL;
+  s_ancs_client = nullptr;
   prv_put_ancs_disconnected_event();
 }

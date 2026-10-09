@@ -32,7 +32,7 @@
 extern void retained_write(uint8_t id, uint32_t value);
 extern uint32_t retained_read(uint8_t id);
 
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
 /* sf32lb52 rtc backup register 2/5/6/7/8/9 is freely usable */
 #define RTC_BKP_BOOTBIT_DR                2
 #define REBOOT_REASON_REGISTER_1          5

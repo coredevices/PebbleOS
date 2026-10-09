@@ -5,14 +5,13 @@
 
 #include "display.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
 
 typedef void GPIO_TypeDef;
 
-#define GPIO_Port_NULL NULL
+#define GPIO_Port_NULL nullptr
 #define GPIO_Pin_NULL  0U
 
 typedef enum {

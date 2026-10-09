@@ -53,13 +53,13 @@ static void prv_install_resources(void) {
   // The build's resources sit next to the executable.
   char default_path[PATH_MAX];
   const char *path = s_resources_path;
-  if (path == NULL) {
+  if (path == nullptr) {
     snprintf(default_path, sizeof(default_path), "%s/system_resources.pbpack",
              posix_host_exe_dir());
     path = default_path;
   }
   FILE *f = fopen(path, "rb");
-  if (f == NULL) {
+  if (f == nullptr) {
     PBL_LOG_WRN("cannot open resources %s", path);
     return;
   }
@@ -72,7 +72,7 @@ static void prv_install_resources(void) {
 }
 
 status_t flash_impl_init(bool coredump_mode) {
-  if (s_flash != NULL) {
+  if (s_flash != nullptr) {
     return S_SUCCESS;
   }
   int fd = open(s_flash_path, O_RDWR | O_CREAT, 0644);
@@ -83,7 +83,7 @@ status_t flash_impl_init(bool coredump_mode) {
   bool blank = st.st_size == 0;
   PBL_ASSERT(ftruncate(fd, PRV_CAPACITY) == 0, "cannot size flash file");
 
-  s_flash = mmap(NULL, PRV_CAPACITY, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  s_flash = mmap(nullptr, PRV_CAPACITY, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   close(fd);
   PBL_ASSERT(s_flash != MAP_FAILED, "cannot map flash file");
   if (blank) {
@@ -238,7 +238,7 @@ status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
   return S_SUCCESS;
 }
 
-static const FlashSecurityRegisters s_security_regs = {0};
+static const FlashSecurityRegisters s_security_regs = {};
 
 const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
   return &s_security_regs;

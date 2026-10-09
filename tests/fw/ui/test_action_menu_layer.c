@@ -64,7 +64,7 @@ struct Layer *window_get_root_layer(const Window *window) {
   return &s_root_layer;
 }
 RecognizerList *window_get_recognizer_list(Window *window) {
-  return NULL;
+  return nullptr;
 }
 RecognizerManager *window_get_recognizer_manager(Window *window) {
   return &s_recognizer_manager;
@@ -73,7 +73,7 @@ RecognizerManager *window_get_recognizer_manager(Window *window) {
 static TouchNavOps s_bridge_ops;
 
 static void prv_touch_nav_setup(void) {
-  s_bridge_ops = (TouchNavOps){0};
+  s_bridge_ops = (TouchNavOps){};
   layer_init(&s_root_layer, &GRect(0, 0, 300, 400));
   recognizer_list_init(&s_global_list);
   recognizer_manager_init(&s_recognizer_manager);
@@ -244,7 +244,7 @@ static void prv_init_glyph_grid(void) {
                                     .select = prv_record_select,
                                     .selection_changed = prv_record_selection_changed,
                                   },
-                                  NULL);
+                                  nullptr);
   action_menu_layer_set_short_items(&s_aml, s_emoji_items, ARRAY_LENGTH(s_emoji_items), 0);
 }
 
@@ -290,9 +290,9 @@ static GPoint prv_tap_point_for_row(MenuLayer *ml, uint16_t row) {
 
 static void prv_reset_counters(void) {
   s_select_count = 0;
-  s_last_selected_item = NULL;
+  s_last_selected_item = nullptr;
   s_selection_changed_count = 0;
-  s_last_changed_item = NULL;
+  s_last_changed_item = nullptr;
 }
 
 static void prv_init_aml_with_wide_items(void) {
@@ -304,7 +304,7 @@ static void prv_init_aml_with_wide_items(void) {
                                     .select = prv_record_select,
                                     .selection_changed = prv_record_selection_changed,
                                   },
-                                  NULL);
+                                  nullptr);
   action_menu_layer_set_items(&s_aml, s_wide_items, ARRAY_LENGTH(s_wide_items), 0, 0);
   prv_reset_counters();
 }
@@ -365,7 +365,7 @@ void test_action_menu_layer__tap_short_row_adopts_first_column(void) {
                                     .select = prv_record_select,
                                     .selection_changed = prv_record_selection_changed,
                                   },
-                                  NULL);
+                                  nullptr);
   // 5 items in columns of 3: row 0 = items 0-2, row 1 = items 3-4.
   action_menu_layer_set_short_items(&s_aml, s_short_items, ARRAY_LENGTH(s_short_items), 0);
   prv_reset_counters();

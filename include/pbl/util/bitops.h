@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 /**
@@ -15,7 +14,7 @@
  * <tt>index % width</tt>. No bounds checking is done.
  *
  * @code{.c}
- * uint32_t active[2] = {0};
+ * uint32_t active[2] = {};
  *
  * pbl_bitset32_set(active, 40);
  * if (pbl_bitset32_get(active, 40)) {

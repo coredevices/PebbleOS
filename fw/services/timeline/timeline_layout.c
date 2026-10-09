@@ -183,7 +183,7 @@ void timeline_layout_deinit(TimelineLayout *timeline_layout) {
     }
     task_free(timeline_layout->metric_icon_layers);
     timeline_layout->num_metric_icon_layers = 0;
-    timeline_layout->metric_icon_layers = NULL;
+    timeline_layout->metric_icon_layers = nullptr;
   }
   animation_unschedule(timeline_layout->transition_animation);
   timeline_layout_deinit_view(timeline_layout);
@@ -219,12 +219,12 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
                                     GRect *frame) {
   const GSize size = timeline_resources_get_gsize(TimelineResourceSizeTiny);
   const bool is_future = (scroll_direction == TimelineScrollDirectionDown);
-  PBL_UNUSED const int offset_y_rect = -5;
+  [[maybe_unused]] const int offset_y_rect = -5;
   // Center the icon vertically at screen center (offsets differ by content size/style)
   const bool use_large_style = (system_theme_get_content_size() >= PreferredContentSizeLarge);
   // s_style_large: future_top_margin=39, past layout origin=117, icon_offset_y=3
   // s_style_medium: future_top_margin=39, past layout origin=61, icon_offset_y=0
-  PBL_UNUSED const int offset_y_round =
+  [[maybe_unused]] const int offset_y_round =
       use_large_style ? (is_future ? 76 : -2) : (is_future ? 40 : 17);
   const GPoint origin = {
     .x = bounds->size.w - size.w + 2,
@@ -264,7 +264,7 @@ static void prv_init_icon(TimelineLayout *timeline_layout, const GRect *icon_fra
     kino_reel_destroy(icon_reel);
     icon_reel = prv_create_kino_reel_with_timeline_resource(
         timeline_layout, icon_res_size, fallback_resource, TIMELINE_RESOURCE_NOTIFICATION_FLAG,
-        NULL /* app_id */);
+        nullptr /* app_id */);
     if (!icon_reel) {
       return;
     }
@@ -341,7 +341,7 @@ const LayoutColors *timeline_layout_get_colors(const LayoutLayer *layout_ref) {
 ////////////////////////
 
 void timeline_layout_init_view(TimelineLayout *layout, LayoutLayerMode mode) {
-  GTextNode *view_node = NULL;
+  GTextNode *view_node = nullptr;
   switch (mode) {
     case LayoutLayerModeCard:
       view_node = layout->impl->card_view_constructor(layout);
@@ -364,7 +364,7 @@ void timeline_layout_deinit_view(TimelineLayout *layout) {
     layout->impl->card_view_deinitializer(layout);
   }
   graphics_text_node_destroy(layout->view_node);
-  layout->view_node = NULL;
+  layout->view_node = nullptr;
 }
 
 static GTextNode *prv_create_all_day_text_node(const TimelineLayout *layout) {
@@ -463,7 +463,7 @@ static GTextNode *prv_create_time_text_node(const TimelineLayout *layout) {
 
 static const char *prv_get_secondary_text(const TimelineLayout *layout) {
   const AttributeList *attributes = layout->layout_layer.attributes;
-  return attribute_get_string(attributes, AttributeIdShortSubtitle, NULL)
+  return attribute_get_string(attributes, AttributeIdShortSubtitle, nullptr)
              ?: attribute_get_string(attributes, layout->impl->attributes.secondary_id, "");
 }
 
@@ -491,7 +491,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
       is_peek ? GVerticalAlignmentCenter
               : PBL_IF_ROUND_ELSE((is_future ? GVerticalAlignmentBottom : GVerticalAlignmentTop),
                                   GVerticalAlignmentTop);
-  GTextNode *time_text_node = !is_peek ? prv_create_time_text_node(layout) : NULL;
+  GTextNode *time_text_node = !is_peek ? prv_create_time_text_node(layout) : nullptr;
   if (time_text_node) {
 #if PBL_RECT
     // A long time may run into the sidebar's arrow instead of being cut short
@@ -502,7 +502,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
 
   const char *secondary_text = prv_get_secondary_text(layout);
   const bool is_fat = (layout->layout_layer.mode == LayoutLayerModePinnedFat);
-  PBL_UNUSED const bool is_thin = (layout->layout_layer.mode == LayoutLayerModePinnedThin);
+  [[maybe_unused]] const bool is_thin = (layout->layout_layer.mode == LayoutLayerModePinnedThin);
   const TimelineLayoutStyle *style = prv_get_style();
   const bool thin_can_have_secondary = style->thin_can_have_secondary;
   const bool has_secondary =
@@ -529,10 +529,10 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     GTextNodeText *primary_node = (GTextNodeText *)layout_create_text_node_from_config(
         &layout->layout_layer, &s_primary_config.extent.node);
     const char *primary_text =
-        layout->impl->get_primary_text ? layout->impl->get_primary_text(layout) : NULL;
+        layout->impl->get_primary_text ? layout->impl->get_primary_text(layout) : nullptr;
     primary_node->text =
         primary_text
-            ?: attribute_get_string(attributes, AttributeIdShortTitle, NULL)
+            ?: attribute_get_string(attributes, AttributeIdShortTitle, nullptr)
             ?: attribute_get_string(attributes, layout->impl->attributes.primary_id, "");
     primary_node->line_spacing_delta = style->primary_line_spacing_delta;
     int num_primary_lines = is_fat ? 2 : 1;
@@ -656,7 +656,7 @@ static void prv_get_card_view_bounds(TimelineLayout *layout, GRect *box_out) {
 static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, GSize *size_out) {
   const bool is_card = (layout->layout_layer.mode == LayoutLayerModeCard);
   const bool is_peek = (layout->layout_layer.mode == LayoutLayerModePeek);
-  const bool PBL_UNUSED paging = PBL_IF_ROUND_ELSE((is_card || is_peek), false);
+  [[maybe_unused]] const bool paging = PBL_IF_ROUND_ELSE((is_card || is_peek), false);
   GRect box;
   (is_card ? prv_get_card_view_bounds : prv_get_pin_view_bounds)(layout, &box);
   graphics_context_set_text_color(
@@ -678,7 +678,7 @@ static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, 
 
 void timeline_layout_render_view(TimelineLayout *layout, GContext *ctx) {
   const bool render = true;
-  prv_render_view(layout, ctx, render, NULL);
+  prv_render_view(layout, ctx, render, nullptr);
 }
 
 void timeline_layout_get_size(TimelineLayout *layout, GContext *ctx, GSize *size_out) {

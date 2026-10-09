@@ -286,15 +286,15 @@ ActivityScalarStore activity_metrics_prv_steps_per_minute(void) {
 
 // =========================================================================================
 // PFS stubs
-static PFSFileChangedCallback pfs_watch_cb = NULL;
+static PFSFileChangedCallback pfs_watch_cb = nullptr;
 PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
                                  uint8_t event_flags, void *data) {
   pfs_watch_cb = callback;
-  return NULL;
+  return nullptr;
 }
 
 void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
-  pfs_watch_cb = NULL;
+  pfs_watch_cb = nullptr;
 }
 
 // =========================================================================================
@@ -617,11 +617,11 @@ void test_activity_insights__disable_activity_reward(void) {
   ActivityInsightSettings disabled_activity;
   activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD, &disabled_activity);
   disabled_activity.enabled = false,
-  settings_file_set(NULL, /* fake settings file don't care */
+  settings_file_set(nullptr, /* fake settings file don't care */
                     ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD,
                     strlen(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD), &disabled_activity,
                     sizeof(disabled_activity));
-  pfs_watch_cb(NULL); // Update the settings cache
+  pfs_watch_cb(nullptr); // Update the settings cache
   prv_minute_update(ACTIVE_MINUTES);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }
@@ -1100,7 +1100,7 @@ static void prv_push_session_notification(ActivitySessionType type, int32_t acti
       .distance_meters = 2000,
     },
   };
-  activity_insights_push_activity_session_notification(rtc_get_time(), &session, 120, NULL);
+  activity_insights_push_activity_session_notification(rtc_get_time(), &session, 120, nullptr);
 }
 
 // A manual "Workout" (Open) session should report its active calories, just like Run and Walk.

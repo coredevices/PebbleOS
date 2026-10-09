@@ -21,7 +21,7 @@
 
 GFont fonts_get_fallback_font(void) {
   // No font key for the fallback font
-  return sys_font_get_system_font(NULL);
+  return sys_font_get_system_font(nullptr);
 }
 
 GFont fonts_get_system_font(const char *font_key) {
@@ -33,7 +33,7 @@ GFont fonts_get_system_font(const char *font_key) {
   GFont res = sys_font_get_system_font(font_key);
 
   // maybe they wanted a renamed font
-  if (NULL == res && 0 == strncmp(font_key, bitham_alias, bitham_alias_len)) {
+  if (nullptr == res && 0 == strncmp(font_key, bitham_alias, bitham_alias_len)) {
     char new_font_key[bitham_prefix_len - bitham_alias_len + strlen(font_key) + 1];
     memcpy(new_font_key, bitham_prefix, bitham_prefix_len);
     strcpy(new_font_key + bitham_prefix_len, font_key + bitham_alias_len);
@@ -41,7 +41,7 @@ GFont fonts_get_system_font(const char *font_key) {
     res = sys_font_get_system_font(new_font_key);
   }
 
-  if (NULL == res) {
+  if (nullptr == res) {
     PBL_LOG_DBG("Getting fallback font instead");
     res = fonts_get_fallback_font();
     PBL_ASSERTN(res);
@@ -53,7 +53,7 @@ GFont fonts_get_system_font(const char *font_key) {
 GFont fonts_load_custom_font(ResHandle handle) {
   GFont res =
       fonts_load_custom_font_system(sys_get_current_resource_num(), (uint32_t)(uintptr_t)handle);
-  if (res == NULL) {
+  if (res == nullptr) {
     PBL_LOG_WRN("Getting fallback font instead");
     res = sys_font_get_system_font("RESOURCE_ID_GOTHIC_14");
   }
@@ -63,13 +63,13 @@ GFont fonts_load_custom_font(ResHandle handle) {
 GFont fonts_load_custom_font_system(ResAppNum app_num, uint32_t resource_id) {
   if (resource_id == 0) {
     PBL_LOG_ERR("Tried to load a font from a NULL resource");
-    return NULL;
+    return nullptr;
   }
 
   FontInfo *font_info = applib_type_malloc(FontInfo);
-  if (font_info == NULL) {
+  if (font_info == nullptr) {
     PBL_LOG_ERR("Couldn't malloc space for new font");
-    return NULL;
+    return nullptr;
   }
 
   bool result =
@@ -78,7 +78,7 @@ GFont fonts_load_custom_font_system(ResAppNum app_num, uint32_t resource_id) {
   if (!result) {
     // couldn't init the font
     applib_free(font_info);
-    return NULL;
+    return nullptr;
   }
 
   return font_info;
@@ -120,7 +120,7 @@ FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
       }
     }
   }
-  return NULL;
+  return nullptr;
 }
 #endif
 

@@ -41,7 +41,7 @@ void event_service_client_subscribe(EventServiceInfo *service_info) {
 
 //! Delivers a comm session open/close event the way the event service would.
 static void prv_put_comm_session_event(bool is_open, bool is_system) {
-  cl_assert(s_comm_session_subscription != NULL);
+  cl_assert(s_comm_session_subscription != nullptr);
   PebbleEvent event = {
     .type = PEBBLE_COMM_SESSION_EVENT,
     .bluetooth.comm_session_event = {
@@ -294,7 +294,7 @@ void test_remote_input__running_sequence_blocks_button_set(void) {
 
 void test_remote_input__endpoint_acks_a_button_set_command(void) {
   const uint8_t msg[] = {0x02, (1 << BUTTON_ID_BACK) | (1 << BUTTON_ID_SELECT)};
-  remote_input_protocol_msg_callback(NULL, msg, sizeof(msg));
+  remote_input_protocol_msg_callback(nullptr, msg, sizeof(msg));
 
   cl_assert_equal_i(1, s_ack_count);
   cl_assert_equal_i(2, s_ack_length);
@@ -433,7 +433,7 @@ void test_remote_input__rejects_unknown_swipe_direction(void) {
 void test_remote_input__endpoint_acks_a_button_command(void) {
   // command=button, button=down, presses=2, hold=0x0032, gap=0x000a
   const uint8_t msg[] = {0x00, 0x03, 0x02, 0x00, 0x32, 0x00, 0x0a};
-  remote_input_protocol_msg_callback(NULL, msg, sizeof(msg));
+  remote_input_protocol_msg_callback(nullptr, msg, sizeof(msg));
 
   cl_assert_equal_i(1, s_ack_count);
   cl_assert_equal_i(2, s_ack_length);
@@ -448,7 +448,7 @@ void test_remote_input__endpoint_acks_a_button_command(void) {
 void test_remote_input__endpoint_acks_a_swipe_command(void) {
   // command=swipe, direction=left, duration=0 (watch default)
   const uint8_t msg[] = {0x01, 0x02, 0x00, 0x00};
-  remote_input_protocol_msg_callback(NULL, msg, sizeof(msg));
+  remote_input_protocol_msg_callback(nullptr, msg, sizeof(msg));
 
   cl_assert_equal_i(RemoteInputResult_Ok, s_ack[1]);
   prv_run_sequence();
@@ -459,15 +459,15 @@ void test_remote_input__endpoint_acks_a_swipe_command(void) {
 
 void test_remote_input__endpoint_rejects_malformed_messages(void) {
   const uint8_t truncated[] = {0x00, 0x03};
-  remote_input_protocol_msg_callback(NULL, truncated, sizeof(truncated));
+  remote_input_protocol_msg_callback(nullptr, truncated, sizeof(truncated));
   cl_assert_equal_i(RemoteInputResult_Invalid, s_ack[1]);
 
   const uint8_t unknown_command[] = {0x7f, 0x00, 0x00, 0x00};
-  remote_input_protocol_msg_callback(NULL, unknown_command, sizeof(unknown_command));
+  remote_input_protocol_msg_callback(nullptr, unknown_command, sizeof(unknown_command));
   cl_assert_equal_i(0x7f, s_ack[0]);
   cl_assert_equal_i(RemoteInputResult_Invalid, s_ack[1]);
 
-  remote_input_protocol_msg_callback(NULL, unknown_command, 0);
+  remote_input_protocol_msg_callback(nullptr, unknown_command, 0);
   cl_assert_equal_i(RemoteInputResult_Invalid, s_ack[1]);
 
   cl_assert_equal_i(0, s_event_count);

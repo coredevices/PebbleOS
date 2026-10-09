@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <applib/touch_service.h>
@@ -28,7 +27,7 @@ void event_service_client_subscribe(EventServiceInfo *info) {
 void event_service_client_unsubscribe(EventServiceInfo *info) {
   s_unsubscribe_count++;
   cl_assert_equal_p(info, s_subscribed_info);
-  s_subscribed_info = NULL;
+  s_subscribed_info = nullptr;
 }
 
 // Task / state plumbing so prv_get_state() resolves to our test state
@@ -109,7 +108,7 @@ static void prv_order_raw_handler(const TouchEvent *event, void *context) {
 }
 
 static void prv_deliver_touch(TouchEventType type, int16_t x, int16_t y) {
-  cl_assert(s_subscribed_info != NULL);
+  cl_assert(s_subscribed_info != nullptr);
   PebbleEvent e = {
     .type = PEBBLE_TOUCH_EVENT,
     .touch = {
@@ -128,10 +127,10 @@ static void prv_deliver_touch(TouchEventType type, int16_t x, int16_t y) {
 void test_touch_service__initialize(void) {
   s_subscribe_count = 0;
   s_unsubscribe_count = 0;
-  s_subscribed_info = NULL;
+  s_subscribed_info = nullptr;
   s_touch_reset_count = 0;
-  s_system_rec = (HandlerRecord){0};
-  s_raw_rec = (HandlerRecord){0};
+  s_system_rec = (HandlerRecord){};
+  s_raw_rec = (HandlerRecord){};
   touch_service_state_init(&s_state);
 }
 
@@ -178,7 +177,7 @@ void test_touch_service__slots_are_independent(void) {
 
   // Unsubscribing the app clears only the raw slot.
   touch_service_unsubscribe();
-  cl_assert(s_state.raw_handler == NULL);
+  cl_assert(s_state.raw_handler == nullptr);
   cl_assert(s_state.system_handler == prv_system_handler);
 
   // A delivered event now reaches only the system slot.
@@ -188,8 +187,8 @@ void test_touch_service__slots_are_independent(void) {
 
   // Re-subscribe the app, then clear the system slot: the raw slot survives.
   touch_service_subscribe(prv_raw_handler, &s_raw_marker);
-  touch_service_set_system_handler(NULL, NULL);
-  cl_assert(s_state.system_handler == NULL);
+  touch_service_set_system_handler(nullptr, nullptr);
+  cl_assert(s_state.system_handler == nullptr);
   cl_assert(s_state.raw_handler == prv_raw_handler);
 
   prv_deliver_touch(TouchEvent_Touchdown, 7, 8);
@@ -216,7 +215,7 @@ void test_touch_service__subscription_created_once(void) {
   cl_assert(s_state.subscribed);
 
   // Dropping the last slot unsubscribes exactly once.
-  touch_service_set_system_handler(NULL, NULL);
+  touch_service_set_system_handler(nullptr, nullptr);
   cl_assert_equal_i(s_subscribe_count, 1);
   cl_assert_equal_i(s_unsubscribe_count, 1);
   cl_assert(!s_state.subscribed);

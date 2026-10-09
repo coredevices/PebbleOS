@@ -405,7 +405,7 @@ static void timer_callback(void *cb_data) {
 
   layer_mark_dirty(&data->window.layer);
 
-  app_timer_register(1000 / TARGET_FPS, timer_callback, NULL);
+  app_timer_register(1000 / TARGET_FPS, timer_callback, nullptr);
 }
 
 static void init(void) {
@@ -489,7 +489,7 @@ static void init(void) {
   update_state(data, APP_STATE_FILL_NON_AA);
   data->stroke_width = 1;
   data->moving = true;
-  app_timer_register(33, timer_callback, NULL);
+  app_timer_register(33, timer_callback, nullptr);
 }
 
 static void deinit(void) {

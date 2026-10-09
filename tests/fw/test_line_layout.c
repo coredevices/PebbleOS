@@ -67,7 +67,7 @@ void line_reset(Line *line, utf8_t *start) {
 void test_line_layout__lam_alef_width_counts_ligature_once(void) {
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = {0};
+  Line line = {};
 
   bool success = false;
   const Utf8Bounds utf8_bounds = utf8_get_bounds(&success, "\xD8\xA8\xD9\x84\xD8\xA7"); // بلا
@@ -94,7 +94,7 @@ void test_line_layout__lam_alef_width_counts_ligature_once(void) {
 void test_line_layout__lam_alef_width_transparent_to_harakat(void) {
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = {0};
+  Line line = {};
 
   bool success = false;
   const Utf8Bounds utf8_bounds =
@@ -118,7 +118,7 @@ void test_line_layout__test_line_add_word_no_overflow(void) {
   // Allocate mutable types
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = {0};
+  Line line = {};
 
   // Allocate immutable types
   bool success = false;
@@ -154,7 +154,7 @@ void test_line_layout__test_line_add_word_exact_bounds(void) {
   // Allocate mutable types
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = {0};
+  Line line = {};
 
   // Allocate immutable types
   bool success = false;
@@ -187,9 +187,9 @@ void test_line_layout__test_line_add_word_exact_bounds(void) {
 
 void test_line_layout__test_line_add_word_horizontal_overflow(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
-  Line line = (Line){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
+  Line line = (Line){};
 
   // Allocate immutable types
   bool success = false;
@@ -226,9 +226,9 @@ void test_line_layout__test_line_add_word_horizontal_overflow(void) {
 
 void test_line_layout__test_line_add_word_ideographs(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
-  Line line = (Line){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
+  Line line = (Line){};
 
   // Allocate immutable types
   bool success = false;
@@ -266,7 +266,7 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   cl_assert(line.width_px == 3 * HORIZ_ADVANCE_PX);
 
   // reset line
-  line = (Line){0};
+  line = (Line){};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -281,7 +281,7 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   cl_assert(line.width_px == 1 * HORIZ_ADVANCE_PX);
 
   // reset line
-  line = (Line){0};
+  line = (Line){};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -296,7 +296,7 @@ void test_line_layout__test_line_add_word_ideographs(void) {
   cl_assert(line.width_px == 3 * HORIZ_ADVANCE_PX);
 
   // reset line
-  line = (Line){0};
+  line = (Line){};
   line.max_width_px = text_box_params.box.size.w;
   line.height_px = text_box_params.box.size.h;
 
@@ -319,7 +319,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   // Allocate mutable types
   Iterator word_iter = ITERATOR_EMPTY;
   WordIterState word_iter_state = WORD_ITER_STATE_EMPTY;
-  Line line = {0};
+  Line line = {};
 
   // Allocate immutable types
   bool success = false;
@@ -343,7 +343,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 3);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 3);
   cl_assert(line.origin.x == 0);
@@ -357,7 +357,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 1);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 1);
   cl_assert(line.origin.x == 0);
@@ -370,7 +370,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 0);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 0);
   cl_assert(line.origin.x == 0);
@@ -383,7 +383,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 0);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 0);
   cl_assert(line.origin.x == 0);
@@ -396,7 +396,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 2);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 3);
   cl_assert(line.origin.x == 0);
@@ -409,7 +409,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 11);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 4);
   cl_assert(line.origin.x == 0);
@@ -422,7 +422,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 8);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 4);
   cl_assert(line.origin.x == 0);
@@ -435,7 +435,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 5);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 4);
   cl_assert(line.origin.x == 0);
@@ -448,7 +448,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 2);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(false == line_add_words(&line, &word_iter, NULL));
+  cl_assert(false == line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 2);
   cl_assert(line.origin.x == 0);
@@ -459,7 +459,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
 void test_line_layout__test_walk_lines_down(void) {
   // Allocate mutable types
   Iterator line_iter = ITERATOR_EMPTY;
-  LineIterState line_iter_state = {0};
+  LineIterState line_iter_state = {};
 
   // Allocate immutable types
   bool success = false;
@@ -483,7 +483,7 @@ void test_line_layout__test_walk_lines_down(void) {
   int count = 0;
   while (true) {
     bool is_text_remaining =
-        line_add_words(&s_ctx.text_draw_state.line, &line_iter_state.word_iter, NULL);
+        line_add_words(&s_ctx.text_draw_state.line, &line_iter_state.word_iter, nullptr);
     count++;
     if (!is_text_remaining) {
       // Exit after 2 lines

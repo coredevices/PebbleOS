@@ -19,23 +19,23 @@ static TimelineItem *prv_create_abandoned_workout_notification(void) {
       "Still sweating? Your workout is active and will be ended soon. "
       "Open the workout to keep it going.");
 
-  AttributeList notif_attr_list = {0};
+  AttributeList notif_attr_list = {};
   attribute_list_add_uint32(&notif_attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_ACTIVITY);
   attribute_list_add_cstring(&notif_attr_list, AttributeIdBody, i18n_get(msg, &notif_attr_list));
   attribute_list_add_uint8(&notif_attr_list, AttributeIdBgColor,
                            PBL_IF_COLOR_ELSE(GColorYellowARGB8, GColorDarkGrayARGB8));
 
-  AttributeList dismiss_attr_list = {0};
+  AttributeList dismiss_attr_list = {};
   attribute_list_add_cstring(&dismiss_attr_list, AttributeIdTitle,
                              i18n_get("Dismiss", &notif_attr_list));
 
-  AttributeList end_workout_attr_list = {0};
+  AttributeList end_workout_attr_list = {};
   attribute_list_add_cstring(&end_workout_attr_list, AttributeIdTitle,
                              i18n_get("End Workout", &notif_attr_list));
   attribute_list_add_uint32(&end_workout_attr_list, AttributeIdLaunchCode,
                             WorkoutLaunchArg_EndWorkout);
 
-  AttributeList open_workout_attr_list = {0};
+  AttributeList open_workout_attr_list = {};
   attribute_list_add_cstring(&open_workout_attr_list, AttributeIdTitle,
                              i18n_get("Open Workout", &notif_attr_list));
 

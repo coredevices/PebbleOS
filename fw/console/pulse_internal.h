@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define PULSE_KEEPALIVE_TIMEOUT_DECISECONDS (30)

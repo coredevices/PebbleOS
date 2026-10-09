@@ -16,7 +16,7 @@
 
 uint16_t als_compensation_region_luminance(const GBitmap *fb, int16_t rx, int16_t ry, int16_t rw,
                                            int16_t rh) {
-  if (fb == NULL || rw <= 0 || rh <= 0) {
+  if (fb == nullptr || rw <= 0 || rh <= 0) {
     return 256; // empty/unmeasured region -> unity gain
   }
 

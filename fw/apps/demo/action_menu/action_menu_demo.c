@@ -53,7 +53,7 @@ static void prv_result_window_unload(Window *window) {
 static void prv_action_menu_did_close_cb(ActionMenu *action_menu, const ActionMenuItem *item,
                                          void *context) {
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
-  action_menu_hierarchy_destroy(root_level, NULL, NULL);
+  action_menu_hierarchy_destroy(root_level, nullptr, nullptr);
 }
 
 static void prv_action_callback(ActionMenu *action_menu, const ActionMenuItem *action,
@@ -69,27 +69,27 @@ static void prv_action_callback(ActionMenu *action_menu, const ActionMenuItem *a
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   // First Level
   ActionMenuLevel *first_level = action_menu_level_create(10);
-  action_menu_level_add_action(first_level, "First!", prv_action_callback, NULL);
-  action_menu_level_add_action(first_level, "Second!", prv_action_callback, NULL);
+  action_menu_level_add_action(first_level, "First!", prv_action_callback, nullptr);
+  action_menu_level_add_action(first_level, "Second!", prv_action_callback, nullptr);
 
   // More Levels
   ActionMenuLevel *more_level = action_menu_level_create(1);
-  action_menu_level_add_action(more_level, "That's it, folks!", prv_action_callback, NULL);
+  action_menu_level_add_action(more_level, "That's it, folks!", prv_action_callback, nullptr);
   action_menu_level_add_child(first_level, more_level, "More...");
 
   // Levels with multiple lines of text
   ActionMenuLevel *multiline_level = action_menu_level_create(5);
   action_menu_level_add_action(multiline_level, "Sorry, I can't talk right now.",
-                               prv_action_callback, NULL);
+                               prv_action_callback, nullptr);
   action_menu_level_add_action(multiline_level,
                                "I can't talk just now, please text me if this is an emergency.",
-                               prv_action_callback, NULL);
+                               prv_action_callback, nullptr);
   action_menu_level_add_action(multiline_level,
                                "In a meeting, I will call you back when the meeting is over.",
-                               prv_action_callback, NULL);
+                               prv_action_callback, nullptr);
   action_menu_level_add_action(multiline_level, "On my way, I will text you when I'm nearby.",
-                               prv_action_callback, NULL);
-  action_menu_level_add_action(multiline_level, "I am busy.", prv_action_callback, NULL);
+                               prv_action_callback, nullptr);
+  action_menu_level_add_action(multiline_level, "I am busy.", prv_action_callback, nullptr);
   action_menu_level_add_child(first_level, multiline_level, "Canned Responses");
 
   // Level with multi-column values of various row lengths
@@ -100,19 +100,19 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
   ActionMenuLevel *multicolumn_one = action_menu_level_create(2);
   action_menu_level_set_display_mode(multicolumn_one, ActionMenuLevelDisplayModeThin);
   for (size_t i = 0; i < 2; i++) {
-    action_menu_level_add_action(multicolumn_one, thin_values[i], prv_action_callback, NULL);
+    action_menu_level_add_action(multicolumn_one, thin_values[i], prv_action_callback, nullptr);
   }
   // ah ah ah
   ActionMenuLevel *multicolumn_two = action_menu_level_create(5);
   action_menu_level_set_display_mode(multicolumn_two, ActionMenuLevelDisplayModeThin);
   for (size_t i = 0; i < 5; i++) {
-    action_menu_level_add_action(multicolumn_two, thin_values[i], prv_action_callback, NULL);
+    action_menu_level_add_action(multicolumn_two, thin_values[i], prv_action_callback, nullptr);
   }
   // ah ah ah
   ActionMenuLevel *multicolumn_many = action_menu_level_create(ARRAY_LENGTH(thin_values));
   action_menu_level_set_display_mode(multicolumn_many, ActionMenuLevelDisplayModeThin);
   for (size_t i = 0; i < ARRAY_LENGTH(thin_values); i++) {
-    action_menu_level_add_action(multicolumn_many, thin_values[i], prv_action_callback, NULL);
+    action_menu_level_add_action(multicolumn_many, thin_values[i], prv_action_callback, nullptr);
   }
   // ah ah ah
 
@@ -125,7 +125,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 
   ActionMenuConfig config = {
     .root_level = first_level,
-    .context = NULL,
+    .context = nullptr,
     .colors.background = GColorOxfordBlue,
     .colors.foreground = GColorOrange,
     .did_close = prv_action_menu_did_close_cb,

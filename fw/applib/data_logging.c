@@ -11,7 +11,7 @@
 
 DataLoggingSessionRef data_logging_create(uint32_t tag, DataLoggingItemType item_type,
                                           uint16_t item_length, bool resume) {
-  void *buffer = NULL;
+  void *buffer = nullptr;
 
   // For workers, dls_create_current_process() will create the buffer for us. All others must
   // allocate the buffer in their own heap (before going into privileged mode).
@@ -19,14 +19,14 @@ DataLoggingSessionRef data_logging_create(uint32_t tag, DataLoggingItemType item
     buffer = applib_malloc(DLS_SESSION_MIN_BUFFER_SIZE);
     if (!buffer) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "insufficient memory");
-      return NULL;
+      return nullptr;
     }
   }
 
   // Create the session
   DataLoggingSessionRef session =
       sys_data_logging_create(tag, item_type, item_length, buffer, resume);
-  if (session == NULL && buffer != NULL) {
+  if (session == nullptr && buffer != nullptr) {
     applib_free(buffer);
   }
 

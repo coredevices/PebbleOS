@@ -17,7 +17,7 @@
  * @ref pbl_string_list::serialized_byte_length does not count the final terminator.
  *
  * @code{.c}
- * uint8_t storage[PBL_STRING_LIST_SIZE(3, 16)] = {0};
+ * uint8_t storage[PBL_STRING_LIST_SIZE(3, 16)] = {};
  * struct pbl_string_list *list = (struct pbl_string_list *)storage;
  *
  * pbl_string_list_add_string(list, sizeof(storage), "Yes", 16);

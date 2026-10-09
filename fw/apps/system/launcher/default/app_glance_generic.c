@@ -47,7 +47,7 @@ typedef struct LauncherAppGlanceGeneric {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceGeneric *generic_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(generic_glance, displayed_icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(generic_glance, displayed_icon, nullptr);
 }
 
 static void prv_generic_glance_destroy_displayed_icon(LauncherAppGlanceGeneric *generic_glance) {
@@ -60,12 +60,12 @@ static void prv_generic_glance_destroy_displayed_icon(LauncherAppGlanceGeneric *
 static KinoReel *prv_create_glance_icon(const AppResourceInfo *res_info,
                                         bool legacy_icon_size_limit) {
   if (!res_info) {
-    return NULL;
+    return nullptr;
   }
 
   KinoReel *icon = kino_reel_create_with_resource_system(res_info->res_app_num, res_info->res_id);
   if (!icon) {
-    return NULL;
+    return nullptr;
   }
 
   const GSize size = kino_reel_get_size(icon);
@@ -75,7 +75,7 @@ static KinoReel *prv_create_glance_icon(const AppResourceInfo *res_info,
   if ((size.w > max_size.w) || (size.h > max_size.h)) {
     // The icon is too big
     kino_reel_destroy(icon);
-    return NULL;
+    return nullptr;
   }
 
   return icon;
@@ -158,7 +158,7 @@ static void prv_cancel_subtitle_reeval_timer(LauncherAppGlanceGeneric *generic_g
 
   if (generic_glance->slice_subtitle_template_string_reeval_timer) {
     app_timer_cancel(generic_glance->slice_subtitle_template_string_reeval_timer);
-    generic_glance->slice_subtitle_template_string_reeval_timer = NULL;
+    generic_glance->slice_subtitle_template_string_reeval_timer = nullptr;
   }
 
   // Set the next re-evaluation time to "never"
@@ -172,7 +172,7 @@ static void prv_subtitle_reeval_timer_cb(void *data) {
       launcher_app_glance_structured_get_data(structured_glance);
 
   // Reset the timer
-  generic_glance->slice_subtitle_template_string_reeval_timer = NULL;
+  generic_glance->slice_subtitle_template_string_reeval_timer = nullptr;
   prv_cancel_subtitle_reeval_timer(generic_glance);
 
   // Notify the service that the glance changed
@@ -235,14 +235,14 @@ static void prv_current_slice_updated(LauncherAppGlance *glance) {
     // glance is for a system app (where it doesn't matter) or for apps that were compiled with
     // an SDK that supports app glances (which is newer than the first SDK that supported published
     // resources as proved by the following asserts)
-    _Static_assert((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR >
-                    TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) ||
-                       ((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR ==
-                         TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) &&
-                        (APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR >=
-                         TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR)),
-                   "App glance min supported SDK version must be equal to or newer than first "
-                   "timeline/published resource PBW supported SDK version");
+    static_assert((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR >
+                   TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) ||
+                      ((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR ==
+                        TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) &&
+                       (APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR >=
+                        TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR)),
+                  "App glance min supported SDK version must be equal to or newer than first "
+                  "timeline/published resource PBW supported SDK version");
     timeline_resources_get_id_system(timeline_res_id, LAUNCHER_APP_GLANCE_GENERIC_ICON_SIZE_TYPE,
                                      resource_info.res_app_num, &resource_info);
   }
@@ -259,13 +259,13 @@ static void prv_current_slice_updated(LauncherAppGlance *glance) {
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceGeneric *generic_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(generic_glance, title_buffer, NULL);
+  return NULL_SAFE_FIELD_ACCESS(generic_glance, title_buffer, nullptr);
 }
 
 static void prv_generic_glance_dynamic_text_node_update(
-    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
-    size_t buffer_size, void *user_data) {
+    [[maybe_unused]] GContext *ctx, [[maybe_unused]] GTextNode *node,
+    [[maybe_unused]] const GRect *box, [[maybe_unused]] const GTextNodeDrawConfig *config,
+    [[maybe_unused]] bool render, char *buffer, size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   if (!structured_glance) {
     return;
@@ -278,11 +278,11 @@ static void prv_generic_glance_dynamic_text_node_update(
   // Evaluate the subtitle as a template string
   const char *subtitle_template_string =
       structured_glance->glance.current_slice.icon_and_subtitle.template_string;
-  TemplateStringEvalConditions template_string_reeval_conditions = {0};
+  TemplateStringEvalConditions template_string_reeval_conditions = {};
   const TemplateStringVars template_string_vars = (TemplateStringVars){
     .current_time = rtc_get_time(),
   };
-  TemplateStringError template_string_error = {0};
+  TemplateStringError template_string_error = {};
   template_string_evaluate(subtitle_template_string, buffer, buffer_size,
                            &template_string_reeval_conditions, &template_string_vars,
                            &template_string_error);
@@ -325,7 +325,7 @@ LauncherAppGlance *launcher_app_glance_generic_create(const AppMenuNode *node,
                                                       const KinoReel *fallback_icon,
                                                       uint32_t fallback_icon_resource_id) {
   if (!node) {
-    return NULL;
+    return nullptr;
   }
 
   LauncherAppGlanceGeneric *generic_glance = app_zalloc_check(sizeof(*generic_glance));
@@ -369,6 +369,6 @@ LauncherAppGlance *launcher_app_glance_generic_create(const AppMenuNode *node,
     }
     return &structured_glance->glance;
   } else {
-    return NULL;
+    return nullptr;
   }
 }

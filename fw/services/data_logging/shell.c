@@ -34,11 +34,11 @@ static int prv_cmd_send(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 static const struct pbl_shell_cmd sub_dls[] = {
-  PBL_SHELL_CMD(list, NULL, "List the sessions", prv_cmd_list),
-  PBL_SHELL_CMD(wipe, NULL, "Erase all sessions", prv_cmd_wipe),
-  PBL_SHELL_CMD(send, NULL, "Send all sessions to the phone", prv_cmd_send),
+  PBL_SHELL_CMD(list, nullptr, "List the sessions", prv_cmd_list),
+  PBL_SHELL_CMD(wipe, nullptr, "Erase all sessions", prv_cmd_wipe),
+  PBL_SHELL_CMD(send, nullptr, "Send all sessions to the phone", prv_cmd_send),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(dls, sub_dls, "Data logging", NULL);
+PBL_SHELL_CMD_REGISTER(dls, sub_dls, "Data logging", nullptr);
 #endif

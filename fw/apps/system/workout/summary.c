@@ -74,7 +74,7 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, KinoReel *icon
   GRect name_rect = GRect(name_x, name_y, drawing_rect.size.w, 32);
 
   graphics_context_set_text_color(ctx, TEXT_COLOR);
-  graphics_draw_text(ctx, name, font, name_rect, overflow_mode, alignment, NULL);
+  graphics_draw_text(ctx, name, font, name_rect, overflow_mode, alignment, nullptr);
 }
 
 static void prv_base_layer_update_proc(struct Layer *layer, GContext *ctx) {

@@ -318,7 +318,7 @@ static void prv_lis2dw12_drain_fifo(void) {
 }
 
 static void prv_lis2dw12_dispatch_shake(uint8_t wake_up_src) {
-  AccelDriverSample sample = {0};
+  AccelDriverSample sample = {};
   IMUCoordinateAxis axis = AXIS_Z;
   int16_t val = 0;
   bool found = false;

@@ -119,8 +119,8 @@ Recognizer *tap_recognizer_create(RecognizerEventCb event_cb, void *user_data) {
 }
 
 Recognizer *tap_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data) {
-  _Static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(TapRecognizerData) <= TAP_RECOGNIZER_STATIC_SIZE,
-                 "TAP_RECOGNIZER_STATIC_SIZE too small for a static tap recognizer");
+  static_assert(RECOGNIZER_INSTANCE_SIZE + sizeof(TapRecognizerData) <= TAP_RECOGNIZER_STATIC_SIZE,
+                "TAP_RECOGNIZER_STATIC_SIZE too small for a static tap recognizer");
   TapRecognizerData data = {
     .config = {
       .taps_required = 1,

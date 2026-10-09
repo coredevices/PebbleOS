@@ -38,34 +38,36 @@ void test_recognizer__create_with_data(void) {
   RecognizerImpl s_test_impl = {.handle_touch_event = dummy, .cancel = dummy, .reset = dummy};
   Recognizer *r = recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
                                               sizeof(s_test_impl_data), dummy, &sub_data);
-  cl_assert(r != NULL);
+  cl_assert(r != nullptr);
   cl_assert_equal_p(r->impl, &s_test_impl);
   cl_assert_equal_m(r->impl_data, &s_test_impl_data, sizeof(s_test_impl_data));
   cl_assert_equal_p(r->subscriber.event, dummy);
   cl_assert_equal_p(r->subscriber.data, &sub_data);
   cl_assert_equal_i(r->state, RecognizerState_Possible);
   cl_assert_equal_i(r->flags, 0);
-  cl_assert_equal_p(r->simultaneous_with_cb, NULL);
-  cl_assert_equal_p(r->fail_after, NULL);
+  cl_assert_equal_p(r->simultaneous_with_cb, nullptr);
+  cl_assert_equal_p(r->fail_after, nullptr);
 
+  cl_assert_passert(recognizer_create_with_data(nullptr, &s_test_impl_data,
+                                                sizeof(s_test_impl_data), dummy, nullptr));
   cl_assert_passert(
-      recognizer_create_with_data(NULL, &s_test_impl_data, sizeof(s_test_impl_data), dummy, NULL));
+      recognizer_create_with_data(&s_test_impl, nullptr, sizeof(s_test_impl_data), dummy, nullptr));
   cl_assert_passert(
-      recognizer_create_with_data(&s_test_impl, NULL, sizeof(s_test_impl_data), dummy, NULL));
-  cl_assert_passert(recognizer_create_with_data(&s_test_impl, &s_test_impl_data, 0, dummy, NULL));
-  cl_assert_equal_p(NULL, recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
-                                                      sizeof(s_test_impl_data), NULL, NULL));
-  s_test_impl.handle_touch_event = NULL;
+      recognizer_create_with_data(&s_test_impl, &s_test_impl_data, 0, dummy, nullptr));
+  cl_assert_equal_p(nullptr,
+                    recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
+                                                sizeof(s_test_impl_data), nullptr, nullptr));
+  s_test_impl.handle_touch_event = nullptr;
   cl_assert_passert(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
-                                                sizeof(s_test_impl_data), dummy, NULL));
+                                                sizeof(s_test_impl_data), dummy, nullptr));
   s_test_impl.handle_touch_event = dummy;
-  s_test_impl.reset = NULL;
+  s_test_impl.reset = nullptr;
   cl_assert_passert(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
-                                                sizeof(s_test_impl_data), dummy, NULL));
+                                                sizeof(s_test_impl_data), dummy, nullptr));
   s_test_impl.reset = dummy;
-  s_test_impl.cancel = NULL;
+  s_test_impl.cancel = nullptr;
   cl_assert_passert(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
-                                                sizeof(s_test_impl_data), dummy, NULL));
+                                                sizeof(s_test_impl_data), dummy, nullptr));
 
   recognizer_destroy(r);
 }
@@ -170,7 +172,7 @@ void test_recognizer__transition_state(void) {
 void test_recognizer__set_failed(void) {
   bool failed = false;
   s_test_impl_data.failed = &failed;
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   recognizer_set_failed(r);
   cl_assert_equal_i(r->state, RecognizerState_Failed);
@@ -219,7 +221,7 @@ void test_recognizer__reset(void) {
   s_test_impl_data.reset = &reset;
   s_test_impl_data.cancelled = &cancelled;
 
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
   recognizer_reset(r);
   cl_assert_equal_i(r->state, RecognizerState_Possible);
   cl_assert_equal_b(reset, true);
@@ -263,8 +265,8 @@ void test_recognizer__reset(void) {
 }
 
 void test_recognizer__reset_preserves_owned(void) {
-  RecognizerList list = {NULL};
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  RecognizerList list = {nullptr};
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   recognizer_add_to_list(r, &list);
   cl_assert(r->is_owned);
@@ -279,15 +281,15 @@ void test_recognizer__reset_preserves_owned(void) {
   recognizer_remove_from_list(r, &list);
   cl_assert(!r->is_owned);
   cl_assert(!list_contains(list.node, &r->node));
-  cl_assert_equal_p(list.node, NULL);
+  cl_assert_equal_p(list.node, nullptr);
 }
 
 void test_recognizer__reset_owned_not_freed_on_destroy(void) {
   bool impl_destroyed = false;
   s_test_impl_data.destroyed = &impl_destroyed;
 
-  RecognizerList list = {NULL};
-  Recognizer *r = test_recognizer_create(&s_test_impl_data, NULL);
+  RecognizerList list = {nullptr};
+  Recognizer *r = test_recognizer_create(&s_test_impl_data, nullptr);
   test_recognizer_enable_on_destroy();
 
   recognizer_add_to_list(r, &list);
@@ -301,7 +303,7 @@ void test_recognizer__reset_owned_not_freed_on_destroy(void) {
 
   // Detaching first leaves no freed-but-linked node behind
   recognizer_remove_from_list(r, &list);
-  cl_assert_equal_p(list.node, NULL);
+  cl_assert_equal_p(list.node, nullptr);
   recognizer_destroy(r);
   cl_assert_equal_b(impl_destroyed, true);
 }
@@ -344,7 +346,7 @@ void test_recognizer__init_static(void) {
   RECOGNIZER_STATIC_STORAGE(storage, sizeof(impl_data));
   Recognizer *r = recognizer_init_static_with_data(storage, &impl, &impl_data, sizeof(impl_data),
                                                    prv_static_event, &sub_destroyed);
-  cl_assert(r != NULL);
+  cl_assert(r != nullptr);
   cl_assert_equal_p(r, (Recognizer *)storage);
   cl_assert_equal_i(r->state, RecognizerState_Possible);
   cl_assert(r->is_static);
@@ -362,10 +364,10 @@ void test_recognizer__init_static(void) {
   cl_assert_equal_p(r->impl, &impl);
 
   // Invalid args are still rejected
-  cl_assert_passert(recognizer_init_static_with_data(NULL, &impl, &impl_data, sizeof(impl_data),
-                                                     prv_static_event, NULL));
-  cl_assert_equal_p(NULL, recognizer_init_static_with_data(storage, &impl, &impl_data,
-                                                           sizeof(impl_data), NULL, NULL));
+  cl_assert_passert(recognizer_init_static_with_data(nullptr, &impl, &impl_data, sizeof(impl_data),
+                                                     prv_static_event, nullptr));
+  cl_assert_equal_p(nullptr, recognizer_init_static_with_data(storage, &impl, &impl_data,
+                                                              sizeof(impl_data), nullptr, nullptr));
 }
 
 void test_recognizer__cancel(void) {
@@ -460,7 +462,7 @@ void test_recognizer__handle_touch_events(void) {
 
   // Should not pass null touch events
   r->state = RecognizerState_Possible;
-  cl_assert_passert(recognizer_handle_touch_event(r, NULL));
+  cl_assert_passert(recognizer_handle_touch_event(r, nullptr));
 }
 
 void test_recognizer__handle_touch_events_fail_after(void) {
@@ -473,7 +475,7 @@ void test_recognizer__handle_touch_events_fail_after(void) {
   s_test_impl_data.last_touch_event = &last_touch_event;
 
   NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, &rec_event);
-  NEW_RECOGNIZER(fail) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(fail) = test_recognizer_create(&s_test_impl_data, nullptr);
   recognizer_set_fail_after(r, fail);
 
   new_state = RecognizerState_Completed;
@@ -524,32 +526,32 @@ static bool prv_simultaneous_with_cb(const Recognizer *recognizer,
 }
 
 void test_recognizer__set_simultaneous_with(void) {
-  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, NULL);
-  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, nullptr);
+  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   s_simultaneous = false;
-  cl_assert(!recognizer_should_evaluate_simultaneously(NULL, NULL));
-  cl_assert(!recognizer_should_evaluate_simultaneously(r1, NULL));
-  cl_assert(!recognizer_should_evaluate_simultaneously(NULL, r2));
+  cl_assert(!recognizer_should_evaluate_simultaneously(nullptr, nullptr));
+  cl_assert(!recognizer_should_evaluate_simultaneously(r1, nullptr));
+  cl_assert(!recognizer_should_evaluate_simultaneously(nullptr, r2));
   cl_assert(!recognizer_should_evaluate_simultaneously(r1, r2));
 
   recognizer_set_simultaneous_with(r1, prv_simultaneous_with_cb);
-  cl_assert(!recognizer_should_evaluate_simultaneously(NULL, NULL));
-  cl_assert(!recognizer_should_evaluate_simultaneously(r1, NULL));
-  cl_assert(!recognizer_should_evaluate_simultaneously(NULL, r2));
+  cl_assert(!recognizer_should_evaluate_simultaneously(nullptr, nullptr));
+  cl_assert(!recognizer_should_evaluate_simultaneously(r1, nullptr));
+  cl_assert(!recognizer_should_evaluate_simultaneously(nullptr, r2));
   cl_assert(!recognizer_should_evaluate_simultaneously(r1, r2));
 
   s_simultaneous = true;
-  cl_assert(!recognizer_should_evaluate_simultaneously(NULL, NULL));
-  cl_assert(!recognizer_should_evaluate_simultaneously(r1, NULL));
-  cl_assert(!recognizer_should_evaluate_simultaneously(NULL, r2));
+  cl_assert(!recognizer_should_evaluate_simultaneously(nullptr, nullptr));
+  cl_assert(!recognizer_should_evaluate_simultaneously(r1, nullptr));
+  cl_assert(!recognizer_should_evaluate_simultaneously(nullptr, r2));
   cl_assert(recognizer_should_evaluate_simultaneously(r1, r2));
 }
 
 void test_recognizer__add_remove_list(void) {
-  RecognizerList list = {NULL};
-  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, NULL);
-  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, NULL);
+  RecognizerList list = {nullptr};
+  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, nullptr);
+  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   recognizer_add_to_list(r1, &list);
   recognizer_add_to_list(r2, &list);
@@ -583,7 +585,7 @@ void test_recognizer__list_iterate(void) {
   NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, "R2");
   NEW_RECOGNIZER(r3) = test_recognizer_create(&s_test_impl_data, "R3");
 
-  RecognizerList list = {NULL};
+  RecognizerList list = {nullptr};
   recognizer_add_to_list(r1, &list);
   recognizer_add_to_list(r2, &list);
   recognizer_add_to_list(r3, &list);
@@ -600,9 +602,9 @@ void test_recognizer__list_iterate(void) {
 }
 
 void test_recognizer__set_fail_after_rejects_cycles(void) {
-  NEW_RECOGNIZER(a) = test_recognizer_create(&s_test_impl_data, NULL);
-  NEW_RECOGNIZER(b) = test_recognizer_create(&s_test_impl_data, NULL);
-  NEW_RECOGNIZER(c) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(a) = test_recognizer_create(&s_test_impl_data, nullptr);
+  NEW_RECOGNIZER(b) = test_recognizer_create(&s_test_impl_data, nullptr);
+  NEW_RECOGNIZER(c) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   recognizer_set_fail_after(a, b);
   recognizer_set_fail_after(b, c);
@@ -616,17 +618,17 @@ void test_recognizer__set_fail_after_rejects_cycles(void) {
   // Transitive cycle rejected too: c -> a would close a -> b -> c -> a, and every member of the
   // ring would wait forever on another's failure.
   recognizer_set_fail_after(c, a);
-  cl_assert_equal_p(c->fail_after, NULL);
+  cl_assert_equal_p(c->fail_after, nullptr);
 }
 
 void test_recognizer__get_impl_data_rejects_bad_input(void) {
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
   static const RecognizerImpl s_other_impl = {};
 
   // NULL recognizer: reachable from the SDK typed getters with app input; reject, don't assert.
-  cl_assert_equal_p(recognizer_get_impl_data(NULL, r->impl), NULL);
+  cl_assert_equal_p(recognizer_get_impl_data(nullptr, r->impl), nullptr);
   // Wrong impl: NULL rather than the raw impl_data of a different recognizer type.
-  cl_assert_equal_p(recognizer_get_impl_data(r, &s_other_impl), NULL);
+  cl_assert_equal_p(recognizer_get_impl_data(r, &s_other_impl), nullptr);
   // Matching impl still resolves.
-  cl_assert(recognizer_get_impl_data(r, r->impl) != NULL);
+  cl_assert(recognizer_get_impl_data(r, r->impl) != nullptr);
 }

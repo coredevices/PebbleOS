@@ -14,7 +14,7 @@ DEFINE_SYSCALL(DataLoggingSessionRef, sys_data_logging_create, uint32_t tag,
   // Apps allocate the circular buffer themselves in their own heap and hand the
   // pointer to the kernel via this syscall. Without validation, a malicious app
   // could point at kernel memory and turn dls_log into an arbitrary kernel write.
-  if (PRIVILEGE_WAS_ELEVATED && buffer != NULL) {
+  if (PRIVILEGE_WAS_ELEVATED && buffer != nullptr) {
     syscall_assert_userspace_buffer(buffer, DLS_SESSION_MIN_BUFFER_SIZE);
   }
   return dls_create_current_process(tag, item_type, item_size, buffer, resume);
@@ -42,7 +42,7 @@ DEFINE_SYSCALL(DataLoggingResult, sys_data_logging_log, DataLoggingSessionRef se
     PBL_LOG_WRN("log: Invalid session %p", session);
     return DATA_LOGGING_INVALID_PARAMS;
   }
-  if (data == NULL) {
+  if (data == nullptr) {
     PBL_LOG_WRN("log: NULL data pointer");
     return DATA_LOGGING_INVALID_PARAMS;
   }

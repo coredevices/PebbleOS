@@ -106,7 +106,7 @@ struct PropertyAnimationLegacy2 *property_animation_legacy2_create(
 }
 
 void property_animation_legacy2_destroy(struct PropertyAnimationLegacy2 *property_animation) {
-  if (property_animation == NULL) {
+  if (property_animation == nullptr) {
     return;
   }
   animation_legacy2_unschedule(&property_animation->animation);

@@ -80,10 +80,10 @@ void test_compass_cal__sphere_fit(void) {
   int rv;
   for (int i = 0; i < num_entries; i++) {
     for (int j = 0; j < 4; j++) {
-      rv = ecomp_corr_add_raw_mag_sample(s_sample_data[i].raw_samples[j], NULL, solution);
+      rv = ecomp_corr_add_raw_mag_sample(s_sample_data[i].raw_samples[j], nullptr, solution);
       if (j != 3) {
         // add the same sample twice to make sure close values are thrown away
-        rv = ecomp_corr_add_raw_mag_sample(s_sample_data[i].raw_samples[j], NULL, solution);
+        rv = ecomp_corr_add_raw_mag_sample(s_sample_data[i].raw_samples[j], nullptr, solution);
         cl_assert_equal_i(rv, MagCalStatusNoSolution);
       }
     }
@@ -201,12 +201,12 @@ void test_compass_cal__weak_field_converges(void) {
     .steps_per_leg = 12,
   };
 
-  int16_t solution[3] = {0};
+  int16_t solution[3] = {};
   int locked_at = -1;
   for (int n = 0; n < 6000; n++) {
     int16_t sample[3];
     prv_next_sample(&sim, sample);
-    int rv = ecomp_corr_add_raw_mag_sample(sample, NULL, solution);
+    int rv = ecomp_corr_add_raw_mag_sample(sample, nullptr, solution);
     if (n < 300) {
       // the first window still runs the strict gates: no solution possible,
       // which is what the old fixed-threshold code produced indefinitely
@@ -240,12 +240,12 @@ void test_compass_cal__normal_field_converges_quickly(void) {
     .steps_per_leg = 12,
   };
 
-  int16_t solution[3] = {0};
+  int16_t solution[3] = {};
   int locked_at = -1;
   for (int n = 0; n < 1200; n++) {
     int16_t sample[3];
     prv_next_sample(&sim, sample);
-    int rv = ecomp_corr_add_raw_mag_sample(sample, NULL, solution);
+    int rv = ecomp_corr_add_raw_mag_sample(sample, nullptr, solution);
     if (rv == MagCalStatusNewLockedSolutionAvail) {
       locked_at = n;
       break;
@@ -274,7 +274,7 @@ void test_compass_cal__degenerate_sets_rejected(void) {
       (int16_t)(-455 + prv_noise()),
       (int16_t)(620 + prv_noise()),
     };
-    int rv = ecomp_corr_add_raw_mag_sample(sample, NULL, solution);
+    int rv = ecomp_corr_add_raw_mag_sample(sample, nullptr, solution);
     cl_assert_equal_i(rv, MagCalStatusNoSolution);
   }
 
@@ -290,7 +290,7 @@ void test_compass_cal__degenerate_sets_rejected(void) {
   for (int n = 0; n < 3000; n++) {
     int16_t sample[3];
     prv_next_sample(&sim, sample);
-    int rv = ecomp_corr_add_raw_mag_sample(sample, NULL, solution);
+    int rv = ecomp_corr_add_raw_mag_sample(sample, nullptr, solution);
     cl_assert_equal_i(rv, MagCalStatusNoSolution);
   }
 }

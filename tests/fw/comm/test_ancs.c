@@ -45,7 +45,7 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 }
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
-  return NULL;
+  return nullptr;
 }
 
 // Fakes
@@ -746,12 +746,12 @@ void test_ancs__alive_check_escalates_when_wedged(void) {
   cl_assert_equal_i(prv_get_queue_depth(), 2);
 
   // First busy alive check: defer, don't escalate yet.
-  prv_is_ancs_alive_launcher_task_cb(NULL);
+  prv_is_ancs_alive_launcher_task_cb(nullptr);
   cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
   cl_assert_equal_i(prv_get_queue_depth(), 2);
 
   // Second consecutive busy alive check: force flush + resubscribe.
-  prv_is_ancs_alive_launcher_task_cb(NULL);
+  prv_is_ancs_alive_launcher_task_cb(nullptr);
   cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
   cl_assert_equal_i(prv_get_queue_depth(), 0);
 }

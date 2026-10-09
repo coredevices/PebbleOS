@@ -110,7 +110,7 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
   bool r = attributes_actions_parse_serial_data(num_attributes, num_actions, data, size,
                                                 &string_alloc_size, attributes_per_action);
   if (!r) {
-    return NULL;
+    return nullptr;
   }
 
   const size_t alloc_size = attributes_actions_get_required_buffer_size(
@@ -120,7 +120,7 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
       kernel_zalloc(sizeof(PebbleSysNotificationActionResult) + alloc_size);
   if (!action_result) {
     PBL_LOG_WRN("Failed to allocate memory for action result");
-    return NULL;
+    return nullptr;
   }
 
   uint8_t *buffer = (uint8_t *)action_result + sizeof(PebbleSysNotificationActionResult);
@@ -141,13 +141,14 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
 
 cleanup:
   kernel_free(action_result);
-  return NULL;
+  return nullptr;
 }
 
 void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionType type,
                                             uint8_t action_id, const AttributeList *attributes,
                                             bool do_async) {
-  size_t attr_data_size = (attributes != NULL) ? attribute_list_get_serialized_size(attributes) : 0;
+  size_t attr_data_size =
+      (attributes != nullptr) ? attribute_list_get_serialized_size(attributes) : 0;
   InvokeActionMsgCbData *invoke_action_data =
       kernel_zalloc_check(sizeof(InvokeActionMsgCbData) + attr_data_size);
 
@@ -159,7 +160,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   }
   invoke_action_data->msg.action_id = action_id;
   invoke_action_data->msg.item_id = *id;
-  if (attributes != NULL) {
+  if (attributes != nullptr) {
     invoke_action_data->msg.num_attributes = attributes->num_attributes;
     size_t added_data_size = attribute_list_serialize(
         attributes, invoke_action_data->msg.data, invoke_action_data->msg.data + attr_data_size);
@@ -217,7 +218,7 @@ void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const 
 
   PBL_LOG_DBG("Action Endpoint Response: 0x%02X", header->response);
 
-  PebbleSysNotificationActionResult *action_result = NULL;
+  PebbleSysNotificationActionResult *action_result = nullptr;
 
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, length);
 

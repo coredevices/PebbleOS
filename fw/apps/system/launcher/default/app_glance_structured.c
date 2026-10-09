@@ -33,8 +33,8 @@ typedef struct GenericGlanceIconDrawCommandProcessor {
 
 static void prv_structured_glance_icon_draw_command_processor_process_command(
     GDrawCommandProcessor *processor, GDrawCommand *processed_command,
-    PBL_UNUSED size_t processed_command_max_size, PBL_UNUSED const GDrawCommandList *list,
-    PBL_UNUSED const GDrawCommand *command) {
+    [[maybe_unused]] size_t processed_command_max_size,
+    [[maybe_unused]] const GDrawCommandList *list, [[maybe_unused]] const GDrawCommand *command) {
   GenericGlanceIconDrawCommandProcessor *processor_with_data =
       (GenericGlanceIconDrawCommandProcessor *)processor;
   const GColor8 *luminance_tint_lookup_table = processor_with_data->luminance_tint_lookup_table;
@@ -61,8 +61,8 @@ typedef struct GenericGlanceIconBitmapProcessor {
 } GenericGlanceIconBitmapProcessor;
 
 static void prv_structured_glance_icon_bitmap_processor_pre_func(
-    GBitmapProcessor *processor, GContext *ctx, PBL_UNUSED const GBitmap **bitmap_to_use,
-    PBL_UNUSED GRect *global_grect_to_use) {
+    GBitmapProcessor *processor, GContext *ctx, [[maybe_unused]] const GBitmap **bitmap_to_use,
+    [[maybe_unused]] GRect *global_grect_to_use) {
   GenericGlanceIconBitmapProcessor *processor_with_data =
       (GenericGlanceIconBitmapProcessor *)processor;
   // Save the current compositing mode and tint color
@@ -74,8 +74,8 @@ static void prv_structured_glance_icon_bitmap_processor_pre_func(
 }
 
 static void prv_structured_glance_icon_bitmap_processor_post_func(
-    GBitmapProcessor *processor, GContext *ctx, PBL_UNUSED const GBitmap *bitmap_used,
-    PBL_UNUSED const GRect *global_clipped_grect_used) {
+    GBitmapProcessor *processor, GContext *ctx, [[maybe_unused]] const GBitmap *bitmap_used,
+    [[maybe_unused]] const GRect *global_clipped_grect_used) {
   GenericGlanceIconBitmapProcessor *processor_with_data =
       (GenericGlanceIconBitmapProcessor *)processor;
   // Restore the saved compositing mode and tint color
@@ -134,11 +134,11 @@ void launcher_app_glance_structured_draw_icon(LauncherAppGlanceStructured *struc
   kino_reel_draw_processed(icon, ctx, origin, &structured_glance_icon_processor);
 }
 
-static void prv_structured_glance_icon_node_draw_cb(GContext *ctx, const GRect *rect,
-                                                    PBL_UNUSED const GTextNodeDrawConfig *config,
-                                                    bool render, GSize *size_out, void *user_data) {
+static void prv_structured_glance_icon_node_draw_cb(
+    GContext *ctx, const GRect *rect, [[maybe_unused]] const GTextNodeDrawConfig *config,
+    bool render, GSize *size_out, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
-  KinoReel *icon = NULL;
+  KinoReel *icon = nullptr;
   if (structured_glance && structured_glance->impl && structured_glance->impl->get_icon) {
     icon = structured_glance->impl->get_icon(structured_glance);
   }
@@ -172,7 +172,7 @@ static GTextNode *prv_structured_glance_create_text_node(
     LauncherAppGlanceStructured *structured_glance, GFont font, size_t buffer_size,
     GTextNodeTextDynamicUpdate update) {
   if (!structured_glance) {
-    return NULL;
+    return nullptr;
   }
   GTextNodeTextDynamic *dynamic_text_node =
       graphics_text_node_create_text_dynamic(buffer_size, update, structured_glance);
@@ -187,11 +187,11 @@ static GTextNode *prv_structured_glance_create_text_node(
 }
 
 static void prv_structured_glance_title_dynamic_text_node_update(
-    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
-    size_t buffer_size, void *user_data) {
+    [[maybe_unused]] GContext *ctx, [[maybe_unused]] GTextNode *node,
+    [[maybe_unused]] const GRect *box, [[maybe_unused]] const GTextNodeDrawConfig *config,
+    [[maybe_unused]] bool render, char *buffer, size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
-  const char *title = NULL;
+  const char *title = nullptr;
   if (structured_glance && structured_glance->impl && structured_glance->impl->get_title) {
     title = structured_glance->impl->get_title(structured_glance);
   }
@@ -362,7 +362,7 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   title_node->offset.y -= 1;
   graphics_text_node_container_add_child(&vertical_node->container, title_node);
 
-  GTextNode *subtitle_node = NULL;
+  GTextNode *subtitle_node = nullptr;
   if (structured_glance->impl && structured_glance->impl->create_subtitle_node) {
     subtitle_node = structured_glance->impl->create_subtitle_node(structured_glance);
   }
@@ -426,7 +426,7 @@ static PBL_NOINLINE GTextNode *prv_create_structured_glance_node(
 }
 
 static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
-                               PBL_UNUSED KinoReelProcessor *processor) {
+                               [[maybe_unused]] KinoReelProcessor *processor) {
   LauncherAppGlanceStructured *structured_glance = kino_reel_custom_get_data(reel);
   if (!structured_glance) {
     return;
@@ -466,7 +466,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   GTextNode *structured_glance_node =
       prv_create_structured_glance_node(structured_glance, &glance_frame);
   if (structured_glance_node) {
-    graphics_text_node_draw(structured_glance_node, ctx, &glance_frame, NULL, NULL);
+    graphics_text_node_draw(structured_glance_node, ctx, &glance_frame, nullptr, nullptr);
   }
   graphics_text_node_destroy(structured_glance_node);
 }
@@ -520,7 +520,7 @@ LauncherAppGlanceStructured *launcher_app_glance_structured_create(
     void *data) {
   PBL_ASSERTN(uuid);
   LauncherAppGlanceStructured *structured_glance = app_zalloc_check(sizeof(*structured_glance));
-  const LauncherAppGlanceHandlers *base_handlers = impl ? &impl->base_handlers : NULL;
+  const LauncherAppGlanceHandlers *base_handlers = impl ? &impl->base_handlers : nullptr;
   structured_glance->impl = impl;
   structured_glance->data = data;
   structured_glance->icon_max_size = LAUNCHER_APP_GLANCE_STRUCTURED_ICON_MAX_SIZE;
@@ -537,7 +537,7 @@ LauncherAppGlanceStructured *launcher_app_glance_structured_create(
 }
 
 void *launcher_app_glance_structured_get_data(LauncherAppGlanceStructured *structured_glance) {
-  return NULL_SAFE_FIELD_ACCESS(structured_glance, data, NULL);
+  return NULL_SAFE_FIELD_ACCESS(structured_glance, data, nullptr);
 }
 
 void launcher_app_glance_structured_notify_service_glance_changed(

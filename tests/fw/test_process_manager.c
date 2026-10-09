@@ -203,7 +203,7 @@ int process_metadata_get_res_bank_num(const PebbleProcessMd *md) {
 static PebbleEvent *s_event_put__event;
 void event_put(PebbleEvent *event) {
   s_event_put__event = event;
-  cl_assert(event != NULL);
+  cl_assert(event != nullptr);
 }
 
 void event_put_from_app(PebbleEvent *event) {
@@ -217,13 +217,13 @@ void event_reset_from_process_queue(PebbleTask task) {
 }
 
 void test_process_manager__initialize(void) {
-  s_app_install_get_md__result = NULL;
+  s_app_install_get_md__result = nullptr;
   s_app_db_get_app_entry_for_install_id__result = E_DOES_NOT_EXIST;
   s_app_db_get_app_entry_for_install_id__entry = (AppDBEntry){};
   s_process_metadata_get_res_bank_num__result = 123;
   s_app_manager_launch_new_app__callcount = 0;
-  s_app_manager_launch_new_app__config = (__typeof__(s_app_manager_launch_new_app__config)){};
-  s_event_put__event = NULL;
+  s_app_manager_launch_new_app__config = (typeof(s_app_manager_launch_new_app__config)){};
+  s_event_put__event = nullptr;
   s_pbl_msgq_get__interrupted_count = 0;
   s_pbl_msgq_get__event = (PebbleEvent){};
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
@@ -245,7 +245,7 @@ static const Uuid s_uuid_b = {0x49, 0x82, 0x77, 0x22, 0x00, 0x11, 0x22, 0x33,
 //! by a previous install leaves a stale binary at that ID. Launching must notice and refetch
 //! rather than silently running the wrong app.
 void test_process_manager__stale_cache_entry_is_refetched(void) {
-  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {}}};
   s_stale_md.common.uuid = s_uuid_b;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_stale_md;
 
@@ -255,14 +255,14 @@ void test_process_manager__stale_cache_entry_is_refetched(void) {
 
   process_manager_launch_process(&(ProcessLaunchConfig){.id = 1});
 
-  cl_assert(s_event_put__event != NULL);
+  cl_assert(s_event_put__event != nullptr);
   cl_assert_equal_i(s_event_put__event->type, PEBBLE_APP_FETCH_REQUEST_EVENT);
   cl_assert_equal_i(s_event_put__event->app_fetch_request.id, 1);
   cl_assert_equal_i(s_app_manager_launch_new_app__callcount, 0);
 }
 
 void test_process_manager__matching_cache_entry_launches(void) {
-  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {}}};
   s_good_md.common.uuid = s_uuid_a;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
 
@@ -271,13 +271,13 @@ void test_process_manager__matching_cache_entry_launches(void) {
 
   process_manager_launch_process(&(ProcessLaunchConfig){.id = 1});
 
-  cl_assert(s_event_put__event == NULL);
+  cl_assert(s_event_put__event == nullptr);
   cl_assert_equal_i(s_app_manager_launch_new_app__callcount, 1);
 }
 
 //! A requested forced close has to reach the app manager, or it's treated as a crash
 void test_process_manager__requested_kill_reaches_the_app_manager(void) {
-  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {}}};
   s_good_md.common.uuid = s_uuid_a;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
@@ -293,7 +293,7 @@ void test_process_manager__requested_kill_reaches_the_app_manager(void) {
 
 //! An app that isn't cached yet goes through the fetch UI, so the request has to survive it
 void test_process_manager__requested_kill_survives_a_fetch(void) {
-  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {}}};
   s_stale_md.common.uuid = s_uuid_b;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_stale_md;
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
@@ -302,10 +302,10 @@ void test_process_manager__requested_kill_survives_a_fetch(void) {
   process_manager_launch_process(
       &(ProcessLaunchConfig){.id = 1, .forcefully = true, .kill_requested = true});
 
-  cl_assert(s_event_put__event != NULL);
+  cl_assert(s_event_put__event != nullptr);
   cl_assert_equal_i(s_event_put__event->type, PEBBLE_APP_FETCH_REQUEST_EVENT);
   const AppFetchUIArgs *fetch_args = s_event_put__event->app_fetch_request.fetch_args;
-  cl_assert(fetch_args != NULL);
+  cl_assert(fetch_args != nullptr);
   cl_assert(fetch_args->forcefully);
   cl_assert(fetch_args->kill_requested);
 }

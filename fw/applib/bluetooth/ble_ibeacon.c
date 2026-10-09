@@ -65,7 +65,7 @@ BLEiBeacon *ble_ibeacon_create_from_ad_data(const struct pbl_bt_ad_data *ad, int
   if (ibeacon && !ble_ibeacon_parse(ad, rssi, ibeacon)) {
     // Failed to parse.
     applib_free(ibeacon);
-    ibeacon = NULL;
+    ibeacon = nullptr;
   }
   return ibeacon;
 }

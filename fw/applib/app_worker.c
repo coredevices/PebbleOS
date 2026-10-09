@@ -26,18 +26,18 @@ AppWorkerResult app_worker_kill(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // Subscribe to the app_message service
 bool app_worker_message_subscribe(AppWorkerMessageHandler handler) {
-  return plugin_service_subscribe(NULL, (PluginServiceHandler)(void *)handler);
+  return plugin_service_subscribe(nullptr, (PluginServiceHandler)(void *)handler);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // Unsubscribe from a specific plug-in service by uuid.
 bool app_worker_message_unsubscribe(void) {
-  return plugin_service_unsubscribe(NULL);
+  return plugin_service_unsubscribe(nullptr);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // Send an event to all registered subscribers of the given plugin service identified by UUID.
 void app_worker_send_message(uint8_t type, AppWorkerMessage *data) {
-  _Static_assert(sizeof(AppWorkerMessage) == sizeof(PluginEventData), "These must match!");
-  plugin_service_send_event(NULL, type, (PluginEventData *)data);
+  static_assert(sizeof(AppWorkerMessage) == sizeof(PluginEventData), "These must match!");
+  plugin_service_send_event(nullptr, type, (PluginEventData *)data);
 }

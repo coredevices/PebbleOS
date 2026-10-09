@@ -39,7 +39,7 @@ static void start_factory_reset(void *data) {
 
 static void prv_lockout_back_button(Window *window) {
   window_set_overrides_back_button(window, true);
-  window_set_click_config_provider(window, NULL);
+  window_set_click_config_provider(window, nullptr);
 }
 
 static void confirm_click_handler(ClickRecognizerRef recognizer, Window *window) {
@@ -63,7 +63,7 @@ static void confirm_click_handler(ClickRecognizerRef recognizer, Window *window)
   // give it a chance to animate
   const uint32_t factory_reset_start_delay = 100;
   app_timer_register(PEEK_LAYER_UNFOLD_DURATION + factory_reset_start_delay, start_factory_reset,
-                     NULL);
+                     nullptr);
 }
 
 //! Wipe registry + Enter Standby (for factory)
@@ -83,7 +83,8 @@ static void decline_click_handler(ClickRecognizerRef recognizer, Window *window)
 
 static void config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler)confirm_click_handler);
-  window_long_click_subscribe(BUTTON_ID_UP, 1200, (ClickHandler)confirm_long_click_handler, NULL);
+  window_long_click_subscribe(BUTTON_ID_UP, 1200, (ClickHandler)confirm_long_click_handler,
+                              nullptr);
   window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)decline_click_handler);
   (void)window;
 }

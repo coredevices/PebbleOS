@@ -25,7 +25,7 @@
 #endif
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_als);
-PBL_SHELL_CMD_REGISTER(als, sub_als, "Ambient light sensor", NULL);
+PBL_SHELL_CMD_REGISTER(als, sub_als, "Ambient light sensor", nullptr);
 
 #ifndef CONFIG_RECOVERY_FW
 // Let the sensor settle after a backlight-off transition before reading.
@@ -47,7 +47,7 @@ static int prv_cmd_backlight_test(const struct pbl_shell *sh, size_t argc, char 
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_backlight, test, NULL, "Turn the light on and print its state",
+PBL_SHELL_SUBCMD_ADD(sub_backlight, test, nullptr, "Turn the light on and print its state",
                      prv_cmd_backlight_test, 0, 0);
 
 // Print raw, compensated, and lux values in one shot. Forces the backlight off
@@ -73,8 +73,8 @@ static int prv_cmd_als_lux(const struct pbl_shell *sh, size_t argc, char **argv)
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_als, lux, NULL, "Read raw, compensated and lux values", prv_cmd_als_lux, 0,
-                     0);
+PBL_SHELL_SUBCMD_ADD(sub_als, lux, nullptr, "Read raw, compensated and lux values", prv_cmd_als_lux,
+                     0, 0);
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
@@ -98,7 +98,7 @@ static void prv_als_frozen_cb(void *unused) {
 static void prv_als_flush_cb(void *unused) {
   FrameBuffer *fb = compositor_get_framebuffer();
   framebuffer_dirty_all(fb);
-  compositor_display_update(NULL);
+  compositor_display_update(nullptr);
   s_als_flush_done = true;
 }
 
@@ -107,7 +107,7 @@ static void prv_als_fill_solid(uint8_t px) {
   FrameBuffer *fb = compositor_get_framebuffer();
   memset(fb->buffer, px, FRAMEBUFFER_SIZE_BYTES);
   s_als_flush_done = false;
-  launcher_task_add_callback(prv_als_flush_cb, NULL);
+  launcher_task_add_callback(prv_als_flush_cb, nullptr);
   while (!s_als_flush_done) {
     psleep(2);
   }
@@ -146,7 +146,7 @@ static int prv_cmd_als_curve(const struct pbl_shell *sh, size_t argc, char **arg
 
   animation_private_pause();
   s_als_frozen = false;
-  compositor_freeze(prv_als_frozen_cb, NULL);
+  compositor_freeze(prv_als_frozen_cb, nullptr);
   while (!s_als_frozen) {
     psleep(2);
   }
@@ -171,7 +171,7 @@ static int prv_cmd_als_curve(const struct pbl_shell *sh, size_t argc, char **arg
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_als, curve, NULL, "Measure the screen transmittance curve",
+PBL_SHELL_SUBCMD_ADD(sub_als, curve, nullptr, "Measure the screen transmittance curve",
                      prv_cmd_als_curve, 0, 0);
 #endif // CONFIG_ALS_SCREEN_COMPENSATION
 #endif // CONFIG_RECOVERY_FW

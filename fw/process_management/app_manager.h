@@ -6,8 +6,6 @@
 #include "launch_config.h"
 #include "process_manager.h"
 
-#include <stdbool.h>
-
 #include <pbl/kernel/types.h>
 #include <pbl/services/compositor/compositor.h>
 
@@ -104,4 +102,4 @@ void app_manager_get_framebuffer_size(GSize *size);
 
 //! Exit the application. Do some cleanup to make sure things close nicely.
 //! Called from the app task
-PBL_NORETURN void app_task_exit(void);
+[[noreturn]] void app_task_exit(void);

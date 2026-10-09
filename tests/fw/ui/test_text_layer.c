@@ -19,7 +19,7 @@
 #include <stubs_unobstructed_area.h>
 
 GFont fonts_get_system_font(const char *font_key) {
-  return NULL;
+  return nullptr;
 }
 
 void graphics_context_set_fill_color(GContext *ctx, GColor color) {
@@ -142,7 +142,7 @@ void test_text_layer__enable_text_flow_does_nothing_outside_view_hierarchy(void)
   text_layer_enable_screen_text_flow_and_paging(&text_layer, 8);
   // nothing called
   cl_assert_mocks_called((MockValues){});
-  cl_assert(text_layer.layout_cache == NULL);
+  cl_assert(text_layer.layout_cache == nullptr);
 }
 
 void test_text_layer__enable_text_flow(void) {

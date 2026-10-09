@@ -58,7 +58,7 @@ typedef enum {
   DeleteReasonCount,
 } DeleteReason;
 
-_Static_assert(DeleteReasonCount <= CommSessionCloseReason_TransportSpecificEnd + 1, "");
+static_assert(DeleteReasonCount <= CommSessionCloseReason_TransportSpecificEnd + 1, "");
 
 typedef enum {
   AckTimeoutState_Inactive = 0,
@@ -413,7 +413,7 @@ static void prv_ack_timeout_kernelmain_cb(void *unused) {
 //! Never block on bt_lock from the timer task (it stalls every other timer in
 //! the system); bounce to KernelMain, where the rest of the PPoG state machine runs.
 static void prv_timer_callback(void *unused) {
-  launcher_task_add_callback(prv_ack_timeout_kernelmain_cb, NULL);
+  launcher_task_add_callback(prv_ack_timeout_kernelmain_cb, nullptr);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -421,7 +421,7 @@ static void prv_timer_callback(void *unused) {
 static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry_timer) {
   PPoGATTClient *client = kernel_malloc(sizeof(PPoGATTClient));
   if (!client) {
-    return NULL;
+    return nullptr;
   }
   *client = (PPoGATTClient){};
   client->app_uuid = UUID_INVALID;
@@ -454,10 +454,10 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   }
 
   if (client->role == PPoGATTRoleReversed && s_reversed_active_conn == client->rev.connection) {
-    s_reversed_active_conn = NULL;
+    s_reversed_active_conn = nullptr;
   }
 
-  list_remove(&client->node, (ListNode **)&s_ppogatt_head, NULL);
+  list_remove(&client->node, (ListNode **)&s_ppogatt_head, nullptr);
   new_timer_delete(client->rx_ack_timer);
   new_timer_delete(client->send_retry_timer);
   kernel_free(client);
@@ -535,7 +535,7 @@ static bool prv_client_filter_callback(ListNode *found_node, void *data) {
 
 static bool prv_is_client_valid(const PPoGATTClient *client) {
   return (list_find((ListNode *)s_ppogatt_head, prv_client_filter_callback, (void *)client) !=
-          NULL);
+          nullptr);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -568,11 +568,11 @@ static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_i
     DeleteReason reason =
         self_initiated ? DeleteReason_ResetSelfInitiated : DeleteReason_ResetRemoteInitiated;
     comm_session_close(client->session, (CommSessionCloseReason)reason);
-    client->session = NULL;
+    client->session = nullptr;
   }
   client->in.next_expected_data_sn = 0;
   // FIXME: Use SN for RR / RC (https://pebbletechnology.atlassian.net/browse/PBL-12424)
-  client->out = (__typeof__(client->out)){};
+  client->out = (typeof(client->out)){};
 
   if (prv_client_supports_enhanced_throughput_features(client)) {
     // Set our desired window sizes
@@ -639,7 +639,7 @@ static void prv_start_reset(PPoGATTClient *client) {
 
     bt_lock();
     GAPLEConnection *connection = prv_get_connection(client);
-    PBL_ASSERTN(connection != NULL);
+    PBL_ASSERTN(connection != nullptr);
     bt_unlock();
 
     pbl_bt_gap_le_disconnect(&connection->device);
@@ -1066,7 +1066,7 @@ void ppogatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
 
       // assume one client
       PPoGATTClient *client = s_ppogatt_head;
-      if (client != NULL) {
+      if (client != nullptr) {
         meta = client->characteristics.meta;
         data = client->characteristics.data;
       }
@@ -1324,7 +1324,7 @@ void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics)
 
 bool ppogatt_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
   bt_lock();
-  bool can_handle = (prv_find_client_with_characteristic(characteristic, NULL) != NULL);
+  bool can_handle = (prv_find_client_with_characteristic(characteristic, nullptr) != nullptr);
   bt_unlock();
   return can_handle;
 }
@@ -1336,7 +1336,7 @@ void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
   bt_lock();
   {
     const bool is_subscribed = (subscription_type != BLESubscriptionNone);
-    PPoGATTClient *client = prv_find_client_with_characteristic(characteristic, NULL);
+    PPoGATTClient *client = prv_find_client_with_characteristic(characteristic, nullptr);
     if (!client && is_subscribed) {
       PBL_LOG_ERR("PPoGATT Client could be found, unsubscribing");
       // Attempt to unsubscribe to avoid wasting bandwidth.
@@ -1400,7 +1400,7 @@ static PPoGATTPacket *prv_lazily_allocate_packet_if_needed(const PPoGATTClient *
   if (!packet) {
     const uint16_t max_payload_size = prv_get_max_payload_size(client);
     if (max_payload_size == 0) {
-      return NULL;
+      return nullptr;
     }
     packet = (PPoGATTPacket *)kernel_malloc_check(sizeof(PPoGATTPacket) + max_payload_size);
     *heap_packet_in_out = packet;
@@ -1417,7 +1417,7 @@ static const PPoGATTPacket *prv_prepare_next_reset_packet(const PPoGATTClient *c
   if (!packet) {
     PBL_LOG_WRN("Couldn't allocate reset packet: role=%u state=%u type=%u", client->role,
                 client->state, (unsigned)client->out.reset_packet_to_send.type);
-    return NULL;
+    return nullptr;
   }
 
   if (client->out.reset_packet_to_send.type == PPoGATTPacketTypeResetRequest) {
@@ -1515,7 +1515,7 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
     }
 
     if (client->out.send_rx_ack_now) {
-      if (new_timer_scheduled(client->rx_ack_timer, NULL)) {
+      if (new_timer_scheduled(client->rx_ack_timer, nullptr)) {
         new_timer_stop(client->rx_ack_timer);
       }
 
@@ -1524,7 +1524,7 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
       return (const PPoGATTPacket *)&client->out.ack_packet_to_send;
     }
 
-    if (!new_timer_scheduled(client->rx_ack_timer, NULL)) {
+    if (!new_timer_scheduled(client->rx_ack_timer, nullptr)) {
       new_timer_start(client->rx_ack_timer, PPOGATT_MAX_DATA_ACK_LATENCY_MS, rx_ack_timer_cb,
                       client, 0);
     }
@@ -1533,20 +1533,20 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
 
   // Data packets:
   if (client->state != StateConnectedOpen) {
-    return NULL;
+    return nullptr;
   };
   if (prv_num_packets_in_flight(client) >= client->out.tx_window_size) {
     // Max number of data packets in flight, try again when we got some of them Ack'd.
-    return NULL;
+    return nullptr;
   }
   uint16_t read_space = comm_session_send_queue_get_length(client->session);
   if (read_space == 0) {
-    return NULL;
+    return nullptr;
   }
 
   const uint16_t max_payload_size = prv_get_max_payload_size(client);
   if (!max_payload_size) {
-    return NULL;
+    return nullptr;
   }
 
   // Bytes that are awaiting an Ack, have already been handed to Bluetopia, but are still
@@ -1563,7 +1563,7 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
 
     if (payload_size == 0) {
       // No data to send
-      return NULL;
+      return nullptr;
     }
 
     // Cap to the size that the GATT MTU allows:
@@ -1572,7 +1572,7 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
 
   PPoGATTPacket *packet = prv_lazily_allocate_packet_if_needed(client, heap_packet_in_out);
   if (!packet) {
-    return NULL;
+    return nullptr;
   }
   packet->type = PPoGATTPacketTypeData;
   packet->sn = client->out.next_data_sn;
@@ -1614,8 +1614,8 @@ static void prv_send_next_packets(PPoGATTClient *client) {
   client->send_in_progress = true;
 
   uint16_t payload_size = 0;
-  const PPoGATTPacket *packet = NULL;
-  PPoGATTPacket *heap_packet = NULL;
+  const PPoGATTPacket *packet = nullptr;
+  PPoGATTPacket *heap_packet = nullptr;
 
   // Cap the number of times we loop here, to avoid blocking the task for too long.
   uint8_t loop_count = 0;
@@ -1640,7 +1640,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
         if (client->send_retry_count++ == 0) {
           PBL_LOG_WRN("Reversed PPoG out of buffers, retrying");
         }
-        if (!new_timer_scheduled(client->send_retry_timer, NULL)) {
+        if (!new_timer_scheduled(client->send_retry_timer, nullptr)) {
           new_timer_start(client->send_retry_timer, PPOGATT_SEND_RETRY_DELAY_MS,
                           prv_send_retry_timer_cb, client, 0);
         }
@@ -1831,7 +1831,7 @@ TransportDestination ppogatt_get_destination(Transport *transport) {
 }
 
 bool ppogatt_has_client_for_uuid(const Uuid *uuid) {
-  return (prv_find_client_with_uuid(uuid) != NULL);
+  return (prv_find_client_with_uuid(uuid) != nullptr);
 }
 
 uint32_t ppogatt_client_count(void) {

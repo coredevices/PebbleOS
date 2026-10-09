@@ -20,14 +20,15 @@ function(pbl_link_native)
     target_sources(pebbleos PRIVATE $<TARGET_OBJECTS:${lib}>)
   endforeach()
 
-  # The host side keeps none of the firmware's include paths and flags.
+  # The host side keeps none of the firmware's include paths and flags. It
+  # builds as gnu23 rather than c23 to keep the POSIX APIs it talks to visible.
   get_property(host_sources GLOBAL PROPERTY PBL_HOST_SOURCES)
   get_property(host_includes GLOBAL PROPERTY PBL_HOST_INCLUDE_DIRS)
   get_property(host_options GLOBAL PROPERTY PBL_HOST_COMPILE_OPTIONS)
   add_library(pbl_host OBJECT ${host_sources})
   set_target_properties(pbl_host PROPERTIES
     INCLUDE_DIRECTORIES "${host_includes}"
-    COMPILE_OPTIONS "-g;-Wall;-Wextra;-Wno-unused-parameter;${host_options}"
+    COMPILE_OPTIONS "-std=gnu23;-g;-Wall;-Wextra;-Wno-unused-parameter;${host_options}"
     COMPILE_DEFINITIONS ""
   )
   target_sources(pebbleos PRIVATE $<TARGET_OBJECTS:pbl_host>)

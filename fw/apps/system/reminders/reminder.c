@@ -44,21 +44,21 @@ typedef struct ReminderAppData {
 } ReminderAppData;
 
 static void prv_create_reminder(ReminderAppData *data) {
-  AttributeList pin_attr_list = {0};
+  AttributeList pin_attr_list = {};
   attribute_list_add_uint32(&pin_attr_list, AttributeIdIconTiny,
                             TIMELINE_RESOURCE_NOTIFICATION_REMINDER);
   attribute_list_add_cstring(&pin_attr_list, AttributeIdTitle, data->reminder_str);
   attribute_list_add_uint8(&pin_attr_list, AttributeIdBgColor, GColorChromeYellowARGB8);
 
-  AttributeList completed_attr_list = {0};
+  AttributeList completed_attr_list = {};
   attribute_list_add_cstring(&completed_attr_list, AttributeIdTitle,
                              i18n_get("Completed", &pin_attr_list));
 
-  AttributeList postpone_attr_list = {0};
+  AttributeList postpone_attr_list = {};
   attribute_list_add_cstring(&postpone_attr_list, AttributeIdTitle,
                              i18n_get("Postpone", &pin_attr_list));
 
-  AttributeList remove_attr_list = {0};
+  AttributeList remove_attr_list = {};
   attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle,
                              i18n_get("Remove", &pin_attr_list));
 
@@ -258,7 +258,7 @@ static PBL_NOINLINE void prv_init(void) {
   };
   event_service_client_subscribe(&data->event_service_info);
 
-  data->voice_window = voice_window_create(NULL, 0, VoiceEndpointSessionTypeNLP);
+  data->voice_window = voice_window_create(nullptr, 0, VoiceEndpointSessionTypeNLP);
   voice_window_set_confirmation_enabled(data->voice_window, false);
 
   // Let the main window manage the voice window
@@ -300,5 +300,5 @@ const PebbleProcessMd *reminder_app_get_info(void) {
     .icon_resource_id = RESOURCE_ID_GENERIC_REMINDER_TINY,
   };
 
-  return is_visible_in_launcher ? (const PebbleProcessMd *)&s_reminder_app_info : NULL;
+  return is_visible_in_launcher ? (const PebbleProcessMd *)&s_reminder_app_info : nullptr;
 }

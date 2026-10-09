@@ -195,8 +195,8 @@ static const struct {
   },
 };
 
-_Static_assert(AlarmTone_Chime + 1 == ALARM_TONE_COUNT,
-               "alarm_tones table must cover every AlarmTone enum value");
+static_assert(AlarmTone_Chime + 1 == ALARM_TONE_COUNT,
+              "alarm_tones table must cover every AlarmTone enum value");
 
 void alarm_tones_get(AlarmTone tone, const SpeakerNote **notes_out, uint32_t *count_out) {
   if ((unsigned)tone >= ALARM_TONE_COUNT) {

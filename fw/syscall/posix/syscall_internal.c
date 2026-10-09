@@ -10,7 +10,7 @@
 
 extern void sys_app_fault(uint32_t lr);
 
-PBL_NORETURN void syscall_failed(void) {
+[[noreturn]] void syscall_failed(void) {
   PBL_LOG_WRN("Bad syscall!");
   sys_app_fault((uint32_t)(uintptr_t)PBL_RETURN_ADDRESS(0));
   for (;;) {
@@ -25,7 +25,7 @@ bool syscall_internal_check_return_address(void *ret_addr) {
 }
 
 const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
-  return NULL;
+  return nullptr;
 }
 
 uint16_t syscall_app_stack_free_bytes(void) {

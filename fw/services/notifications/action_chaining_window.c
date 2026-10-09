@@ -29,8 +29,8 @@ static void prv_draw_header(GContext *ctx, const Layer *cell_layer, uint16_t sec
                             void *callback_context) {
   ChainingWindowData *data = callback_context;
   const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-  menu_cell_basic_draw_custom(ctx, cell_layer, font, data->title, font, NULL, font, NULL, NULL,
-                              false, GTextOverflowModeWordWrap);
+  menu_cell_basic_draw_custom(ctx, cell_layer, font, data->title, font, nullptr, font, nullptr,
+                              nullptr, false, GTextOverflowModeWordWrap);
 }
 #endif
 
@@ -60,10 +60,10 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell
   Attribute *title_attr = attribute_find(attrs, AttributeIdTitle);
   Attribute *subtitle_attr = attribute_find(attrs, AttributeIdSubtitle);
 
-  const char *title = title_attr ? title_attr->cstring : NULL;
-  const char *subtitle = subtitle_attr ? subtitle_attr->cstring : NULL;
+  const char *title = title_attr ? title_attr->cstring : nullptr;
+  const char *subtitle = subtitle_attr ? subtitle_attr->cstring : nullptr;
 
-  menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, title, subtitle, nullptr);
 }
 
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,

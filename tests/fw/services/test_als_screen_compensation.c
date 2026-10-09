@@ -36,7 +36,7 @@ GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) 
 }
 
 static GBitmap prv_make_bitmap(uint8_t *pixels, int16_t w, int16_t h) {
-  GBitmap b = {0};
+  GBitmap b = {};
   b.addr = pixels;
   b.row_size_bytes = (uint16_t)w;
   b.info.format = GBitmapFormat8Bit;
@@ -137,5 +137,5 @@ void test_als_screen_compensation__region_empty_is_unity(void) {
   GBitmap b = prv_make_bitmap(px, 4, 4);
   // Zero-area region and NULL bitmap both yield unity (256 == no-op gain).
   cl_assert_equal_i(als_compensation_region_luminance(&b, 0, 0, 0, 4), 256);
-  cl_assert_equal_i(als_compensation_region_luminance(NULL, 0, 0, 4, 4), 256);
+  cl_assert_equal_i(als_compensation_region_luminance(nullptr, 0, 0, 4, 4), 256);
 }

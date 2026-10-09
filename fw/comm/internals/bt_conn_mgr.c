@@ -83,7 +83,7 @@ static const char *prv_consumer_name(enum pbl_bt_consumer consumer) {
     [PBL_BT_CONSUMER_UNIT_TESTS] = "UnitTests",
   };
 
-  if (consumer >= PBL_BT_CONSUMER_NUM || s_consumer_names[consumer] == NULL) {
+  if (consumer >= PBL_BT_CONSUMER_NUM || s_consumer_names[consumer] == nullptr) {
     return "?";
   }
   return s_consumer_names[consumer];
@@ -100,7 +100,7 @@ static enum pbl_bt_response_time_state prv_determine_latency_for_connection(
   enum pbl_bt_consumer responsible_consumer = PBL_BT_CONSUMER_NONE;
 
   ConnectionStateRequest *curr_request = requests;
-  while (curr_request != NULL) {
+  while (curr_request != nullptr) {
     if (curr_request->req_state > state) {
       // reset our tracker, we have found a higher power mode requested
       timeout = curr_request->timeout;
@@ -155,10 +155,10 @@ void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
   bt_lock_assert_held(true);
 
   ConnectionStateRequest *curr_request = hdl->conn_mgr_info->requests;
-  while (curr_request != NULL) {
+  while (curr_request != nullptr) {
     if (curr_request->granted_handler && curr_request->req_state <= granted_state) {
       prv_schedule_granted_handler(curr_request->granted_handler);
-      curr_request->granted_handler = NULL;
+      curr_request->granted_handler = nullptr;
     }
     curr_request = (ConnectionStateRequest *)list_get_next(&curr_request->list_node);
   }
@@ -223,12 +223,12 @@ static void prv_bt_le_gateway_response_latency_watchdog_handler(void *data) {
 
   ConnectionStateRequest *curr_request = conn_mgr_info->requests;
   uint32_t curr_ticks = rtc_get_ticks();
-  while (curr_request != NULL) {
+  while (curr_request != nullptr) {
     ConnectionStateRequest *next =
         (ConnectionStateRequest *)list_get_next(&curr_request->list_node);
     if (conn_mgr_info->curr_requested_state == curr_request->req_state) {
       if (curr_ticks >= curr_request->timeout) {
-        list_remove(&curr_request->list_node, (ListNode **)&conn_mgr_info->requests, NULL);
+        list_remove(&curr_request->list_node, (ListNode **)&conn_mgr_info->requests, nullptr);
         kernel_free(curr_request);
       }
     }
@@ -264,7 +264,7 @@ static bool prv_find_source(ListNode *found_node, void *data) {
 void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
                                          enum pbl_bt_response_time_state state,
                                          uint16_t max_period_secs) {
-  conn_mgr_set_ble_conn_response_time_ext(hdl, consumer, state, max_period_secs, NULL);
+  conn_mgr_set_ble_conn_response_time_ext(hdl, consumer, state, max_period_secs, nullptr);
 }
 
 void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
@@ -290,7 +290,7 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_c
 
   bool is_already_granted = (gap_le_connect_params_get_actual_state(hdl) >= state);
 
-  if (consumer_request == NULL) {
+  if (consumer_request == nullptr) {
     if (state == PBL_BT_RESPONSE_TIME_MAX) {
       // No changes: there was no previous node and the new state is the default "low power" one.
       goto handle_current_state;
@@ -318,7 +318,7 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_c
   consumer_request->timeout = rtc_get_ticks() + max_period_secs * RTC_TICKS_HZ;
   consumer_request->req_state = state;
   consumer_request->consumer = consumer;
-  consumer_request->granted_handler = is_already_granted ? NULL : granted_handler;
+  consumer_request->granted_handler = is_already_granted ? nullptr : granted_handler;
 
 handle_current_state:
 
@@ -349,21 +349,21 @@ void bt_conn_mgr_info_deinit(ConnectionMgrInfo **info) {
   }
 
   ListNode *curr_request = (ListNode *)(*info)->requests;
-  while (curr_request != NULL) {
+  while (curr_request != nullptr) {
     ListNode *temp = list_get_next(curr_request);
-    list_remove(curr_request, NULL, NULL);
+    list_remove(curr_request, nullptr, nullptr);
     kernel_free(curr_request);
     curr_request = temp;
   }
 
   kernel_free(*info);
-  *info = NULL;
+  *info = nullptr;
 }
 
 enum pbl_bt_response_time_state conn_mgr_get_latency_for_le_connection(GAPLEConnection *hdl,
                                                                        uint16_t *secs_to_wait) {
   bt_lock_assert_held(true);
-  return prv_determine_latency_for_connection(hdl->conn_mgr_info->requests, secs_to_wait, NULL);
+  return prv_determine_latency_for_connection(hdl->conn_mgr_info->requests, secs_to_wait, nullptr);
 }
 
 #ifdef CONFIG_SHELL
@@ -385,6 +385,6 @@ static int prv_cmd_le_mode(const struct pbl_shell *sh, size_t argc, char **argv)
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, le_mode, NULL, "Set the LE response time <0-2>", prv_cmd_le_mode, 2,
+PBL_SHELL_SUBCMD_ADD(sub_bt, le_mode, nullptr, "Set the LE response time <0-2>", prv_cmd_le_mode, 2,
                      0);
 #endif

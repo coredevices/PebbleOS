@@ -36,7 +36,7 @@
 #include <stubs_task_wdt.h>
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
-  return NULL;
+  return nullptr;
 }
 
 static TimelineItem item1 = {

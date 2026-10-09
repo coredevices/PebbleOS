@@ -97,8 +97,8 @@ static ActivityInsightSettings s_activity_reward_settings;
 static ActivityInsightSettings s_activity_summary_settings;
 static ActivityInsightSettings s_activity_session_settings;
 
-static PFSCallbackHandle s_pfs_cb_handle = NULL; // Required for handling settings file changes
-static EventServiceInfo s_blobdb_event_info;     // Used to detect pin deletion events
+static PFSCallbackHandle s_pfs_cb_handle = nullptr; // Required for handling settings file changes
+static EventServiceInfo s_blobdb_event_info;        // Used to detect pin deletion events
 
 // Timestamp and UUID of the last time we added a new summary pin - stored to flash to allow
 // us to continue to update the pin across reboots
@@ -291,7 +291,7 @@ static const char *prv_get_variant(const InsightCopyVariants *set, int variant) 
   } else if (variant < set->num_variants) {
     return set->variants[variant];
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -330,12 +330,12 @@ static void prv_build_notification_attr_list(AttributeList *attr_list, const cha
 // Generates a new timeline item for a reward notification
 static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
     time_t notif_time, const RewardNotifConfig *notif_config) {
-  AttributeList notif_attr_list = {0};
+  AttributeList notif_attr_list = {};
   prv_build_notification_attr_list(
       &notif_attr_list, i18n_get(notif_config->text_body, &notif_attr_list), notif_config->icon,
       notif_config->insight_type, ActivitySessionType_None);
 
-  AttributeList positive_attr_list = {0};
+  AttributeList positive_attr_list = {};
   attribute_list_add_cstring(&positive_attr_list, AttributeIdTitle,
                              i18n_get(notif_config->text_positive_action, &notif_attr_list));
   attribute_list_add_cstring(&positive_attr_list, AttributeIdBody,
@@ -343,7 +343,7 @@ static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
   attribute_list_add_uint32(&positive_attr_list, AttributeIdIconLarge,
                             notif_config->icon_positive_response);
 
-  AttributeList neutral_attr_list = {0};
+  AttributeList neutral_attr_list = {};
   attribute_list_add_cstring(&neutral_attr_list, AttributeIdTitle,
                              i18n_get(notif_config->text_neutral_action, &notif_attr_list));
   attribute_list_add_cstring(&neutral_attr_list, AttributeIdBody,
@@ -351,7 +351,7 @@ static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
   attribute_list_add_uint32(&neutral_attr_list, AttributeIdIconLarge,
                             notif_config->icon_neutral_response);
 
-  AttributeList negative_attr_list = {0};
+  AttributeList negative_attr_list = {};
   attribute_list_add_cstring(&negative_attr_list, AttributeIdTitle,
                              i18n_get(notif_config->text_negative_action, &notif_attr_list));
   attribute_list_add_cstring(&negative_attr_list, AttributeIdBody,
@@ -410,7 +410,7 @@ static void prv_push_notification(TimelineItem *item, const Uuid *parent_id) {
 // Generates a new notification and pushes it to the notification window
 static void prv_push_reward_notification(time_t notif_time, const RewardNotifConfig *notif_config) {
   TimelineItem *item = prv_create_reward_notification(notif_time, notif_config);
-  prv_push_notification(item, NULL);
+  prv_push_notification(item, nullptr);
 }
 
 typedef struct ResponseItem {
@@ -434,10 +434,10 @@ static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
     time_t pin_time_utc, time_t now_utc, uint32_t duration_m, LayoutId layout_id,
     AttributeList *pin_attr_list, HealthCardType health_card_type, int num_responses,
     ResponseItem *response_items) {
-  AttributeList open_attr_list = {0};
+  AttributeList open_attr_list = {};
   prv_set_open_app_action(&open_attr_list, health_card_type, pin_attr_list);
 
-  AttributeList remove_attr_list = {0};
+  AttributeList remove_attr_list = {};
   attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle,
                              i18n_get("Remove", pin_attr_list));
 
@@ -488,7 +488,7 @@ static TimelineItem *prv_create_pin(time_t pin_time_utc, time_t now_utc, uint32_
                                     LayoutId layout_id, AttributeList *pin_attr_list,
                                     HealthCardType health_card_type) {
   return prv_create_pin_with_response_items(pin_time_utc, now_utc, duration_m, layout_id,
-                                            pin_attr_list, health_card_type, 0, NULL);
+                                            pin_attr_list, health_card_type, 0, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -514,7 +514,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
                                                          ActivityScalarStore cur_val,
                                                          ActivityScalarStore average,
                                                          const SummaryPinConfig *config) {
-  AttributeList pin_attr_list = {0};
+  AttributeList pin_attr_list = {};
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
                              i18n_get(config->short_title, &pin_attr_list));
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortSubtitle, config->short_subtitle);
@@ -666,7 +666,7 @@ PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
   } result;
 
   // Note: we ignore history[0] since it's the current day
-  pbl_stats_calculate(op, &history[1], ACTIVITY_HISTORY_DAYS - 1, prv_stats_filter, NULL,
+  pbl_stats_calculate(op, &history[1], ACTIVITY_HISTORY_DAYS - 1, prv_stats_filter, nullptr,
                       &result.mean);
 
   *stats = (ActivityInsightMetricHistoryStats){
@@ -1261,7 +1261,7 @@ static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConf
 static void prv_create_and_push_notification(const NotificationConfig *config) {
   TimelineItem *item = prv_create_notification(config);
   prv_push_notification(
-      item, (config->open_pin.enabled && config->open_pin.uuid ? config->open_pin.uuid : NULL));
+      item, (config->open_pin.enabled && config->open_pin.uuid ? config->open_pin.uuid : nullptr));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1353,7 +1353,7 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
   // Enough to fit any filled out format string above and i18n variants
   const int max_notif_length = 256;
   const char *fmt = prv_get_variant(&s_tier_config[tier], variant);
-  if (fmt == NULL) {
+  if (fmt == nullptr) {
     return;
   }
 
@@ -1463,7 +1463,7 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
   // Enough to fit any filled out format string above and i18n variants
   const int max_notif_length = 256;
   const char *fmt = prv_get_variant(&s_tier_config[tier], variant);
-  if (fmt == NULL) {
+  if (fmt == nullptr) {
     // invalid variant
     return;
   }
@@ -1879,7 +1879,7 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
                  sizeof(s_session_pin_state.start_utc));
 
   if (s_activity_session_settings.session.show_notification) {
-    activity_insights_push_activity_session_notification(now_utc, session, 0, NULL);
+    activity_insights_push_activity_session_notification(now_utc, session, 0, nullptr);
   }
 }
 
@@ -2006,7 +2006,7 @@ void activity_insights_init(time_t now_utc) {
   activity_insights_settings_init();
 
   // Cache the settings so we don't hit flash every minute
-  prv_reload_settings(NULL);
+  prv_reload_settings(nullptr);
 
   // Subscribe to pin removal events
   s_blobdb_event_info = (EventServiceInfo){
@@ -2200,17 +2200,17 @@ static void prv_test_push_nap_session(void *unused) {
 }
 
 void activity_insights_test_push_summary_pins(void) {
-  system_task_add_callback(prv_test_push_summary_pins, NULL);
+  system_task_add_callback(prv_test_push_summary_pins, nullptr);
 }
 
 void activity_insights_test_push_rewards(void) {
-  system_task_add_callback(prv_test_push_rewards, NULL);
+  system_task_add_callback(prv_test_push_rewards, nullptr);
 }
 
 void activity_insights_test_push_walk_run_sessions(void) {
-  system_task_add_callback(prv_test_push_walk_run_session, NULL);
+  system_task_add_callback(prv_test_push_walk_run_session, nullptr);
 }
 
 void activity_insights_test_push_nap_session(void) {
-  system_task_add_callback(prv_test_push_nap_session, NULL);
+  system_task_add_callback(prv_test_push_nap_session, nullptr);
 }

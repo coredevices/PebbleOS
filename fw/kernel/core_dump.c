@@ -196,7 +196,7 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
 #endif
 }
 
-static PBL_NORETURN void prv_reset(void) {
+[[noreturn]] static void prv_reset(void) {
   dbgserial_flush();
   system_hard_reset();
 }
@@ -299,7 +299,7 @@ static uint32_t prv_flash_start_address(bool new) {
 }
 
 // -------------------------------------------------------------------------------------------------
-_Static_assert(CORE_DUMP_NUM_REGISTERS == PBL_THREAD_REG_COUNT, "register layout mismatch");
+static_assert(CORE_DUMP_NUM_REGISTERS == PBL_THREAD_REG_COUNT, "register layout mismatch");
 
 // Called for each thread during the pbl_thread_foreach() walk.
 static void prv_thread_info_cb(const struct pbl_thread_info *task_info, void *data) {
@@ -460,7 +460,7 @@ static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
 
 // -----------------------------------------------------------------------------------------------
 // Trigger a core dump
-PBL_NORETURN void core_dump_reset(bool is_forced) {
+[[noreturn]] void core_dump_reset(bool is_forced) {
   // Big problem if we re-enter here - it likely means we encountered an
   // exception during the core dump
   if (s_core_dump_initiated) {
@@ -635,7 +635,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // structures. In that case, the core dump will at least contain the RAM and registers info and
   // perhaps some of the threads. The format of the binary core dump is streamable and is read until
   // we reach a chunk key of 0xFFFFFFFF (what gets placed into flash after an erase).
-  pbl_thread_foreach(prv_thread_info_cb, NULL);
+  pbl_thread_foreach(prv_thread_info_cb, nullptr);
 
   // If we core dumped from an ISR, we make up a special "ISR" thread to hold the registers
   if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
@@ -649,7 +649,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
       // registers [r0-r12, sp, lr, pc, sr]
       task_info.regs[i] = s_saved_registers.core_reg[i];
     }
-    prv_thread_info_cb(&task_info, NULL);
+    prv_thread_info_cb(&task_info, nullptr);
   }
 
 #if defined(CONFIG_SOC_SF32LB52)

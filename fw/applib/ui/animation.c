@@ -56,7 +56,7 @@ InterpolateInt64Function animation_private_current_interpolate_override(void) {
   if (animation && animation->curve == AnimationCurveCustomInterpolationFunction) {
     return animation->custom_interpolation_function;
   }
-  return NULL;
+  return nullptr;
 }
 
 // ------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ static bool prv_handle_list_filter(ListNode *node, void *data) {
 static AnimationPrivate *prv_find_animation_by_handle(AnimationState *state, Animation *handle,
                                                       bool quiet) {
   if (!handle) {
-    return NULL;
+    return nullptr;
   }
 
   // Default to state for the current task
@@ -88,7 +88,7 @@ static AnimationPrivate *prv_find_animation_by_handle(AnimationState *state, Ani
     if (!quiet) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Animation %d does not exist", (int)(uintptr_t)handle);
     }
-    return NULL;
+    return nullptr;
   }
   return (AnimationPrivate *)node;
 }
@@ -110,7 +110,7 @@ static AnimationPrivate *prv_find_animation_by_parent_child_idx(AnimationState *
                                                                 AnimationPrivate *parent,
                                                                 int child_idx) {
   if (!parent) {
-    return NULL;
+    return nullptr;
   }
 
   // Default to state for the current task
@@ -125,7 +125,7 @@ static AnimationPrivate *prv_find_animation_by_parent_child_idx(AnimationState *
     node = list_find(state->scheduled_head, prv_parent_list_filter, &info);
   }
   if (!node) {
-    return NULL;
+    return nullptr;
   }
   return (AnimationPrivate *)node;
 }
@@ -145,7 +145,7 @@ static void prv_iter_remove(AnimationState *state, AnimationPrivate *animation) 
 static void prv_unlink_and_free(AnimationState *state, AnimationPrivate *animation) {
   // It's an error if it's scheduled
   PBL_ASSERTN(list_contains(state->unscheduled_head, &animation->list_node));
-  list_remove(&animation->list_node, &state->unscheduled_head /* &head */, NULL /* &tail */);
+  list_remove(&animation->list_node, &state->unscheduled_head /* &head */, nullptr /* &tail */);
 
   PBL_LOG_DBG("destroying %d (%p) ", (int)(uintptr_t)animation->handle, animation);
   applib_free(animation);
@@ -277,7 +277,7 @@ static void prv_backup_start_time(AnimationState *state, AnimationPrivate *paren
       animation->abs_start_time_ms -= delta;
 
       // Put back into sorted order
-      list_remove(&animation->list_node, &state->scheduled_head, NULL /* &tail */);
+      list_remove(&animation->list_node, &state->scheduled_head, nullptr /* &tail */);
       state->scheduled_head = list_sorted_add(state->scheduled_head, &animation->list_node,
                                               prv_scheduler_comparator, true /*ascending*/);
     }
@@ -288,7 +288,7 @@ static void prv_backup_start_time(AnimationState *state, AnimationPrivate *paren
 // -------------------------------------------------------------------------------------------
 static void prv_reschedule_timer(AnimationState *state, uint32_t rate_control_delay_ms) {
   AnimationPrivate *animation = (AnimationPrivate *)state->scheduled_head;
-  if (animation == NULL) {
+  if (animation == nullptr) {
     return;
   }
   const uint32_t now = prv_get_ms_since_system_start();
@@ -364,7 +364,7 @@ void prv_unschedule_animation(AnimationState *state, AnimationPrivate *animation
         // When children unschedule themselves after running, their teardown isn't allowed to run
         // (because the parent might repeat). So, this is a chance to finally run the child's
         // teardown handler.
-        if (animation->implementation->teardown != NULL) {
+        if (animation->implementation->teardown != nullptr) {
           animation->implementation->teardown(animation->handle);
         }
         animation->did_setup = false;
@@ -378,7 +378,7 @@ void prv_unschedule_animation(AnimationState *state, AnimationPrivate *animation
 
   // Unschedule the passed in animation
   PBL_LOG_DBG("unscheduling %d (%p)", (int)(uintptr_t)animation->handle, animation);
-  PBL_ASSERTN(animation->implementation != NULL);
+  PBL_ASSERTN(animation->implementation != nullptr);
 
   const bool was_old_head = (&animation->list_node == state->scheduled_head);
 
@@ -387,11 +387,11 @@ void prv_unschedule_animation(AnimationState *state, AnimationPrivate *animation
 
   // Move from the scheduled to the unscheduled list
   PBL_ASSERTN(list_contains(state->scheduled_head, &animation->list_node));
-  list_remove(&animation->list_node, &state->scheduled_head, NULL);
+  list_remove(&animation->list_node, &state->scheduled_head, nullptr);
   state->unscheduled_head = list_insert_before(state->unscheduled_head, &animation->list_node);
 
   // Reschedule the timer if we're removing the head animation:
-  if (was_old_head && state->scheduled_head != NULL) {
+  if (was_old_head && state->scheduled_head != nullptr) {
     prv_reschedule_timer(state, 0);
   }
 
@@ -413,7 +413,7 @@ void prv_unschedule_animation(AnimationState *state, AnimationPrivate *animation
     animation->handlers.stopped(animation->handle, finished, animation->context);
   }
   if (teardown && animation->did_setup) {
-    if (animation->implementation->teardown != NULL) {
+    if (animation->implementation->teardown != nullptr) {
       animation->implementation->teardown(animation->handle);
     }
     animation->did_setup = false;
@@ -444,7 +444,7 @@ static void prv_schedule_low_level_animation(AnimationState *state, const uint32
     animation->abs_start_time_ms = 1;
   }
   if (!animation->did_setup) {
-    if (animation->implementation->setup != NULL) {
+    if (animation->implementation->setup != nullptr) {
       animation->implementation->setup(animation->handle);
     }
     animation->did_setup = true;
@@ -457,7 +457,7 @@ static void prv_schedule_low_level_animation(AnimationState *state, const uint32
 
   // Move from the unscheduled to the scheduled list
   PBL_ASSERTN(list_contains(state->unscheduled_head, &animation->list_node));
-  list_remove(&animation->list_node, &state->unscheduled_head /* &head */, NULL /* &tail */);
+  list_remove(&animation->list_node, &state->unscheduled_head /* &head */, nullptr /* &tail */);
   const bool ascending = true;
   state->scheduled_head = list_sorted_add(state->scheduled_head, &animation->list_node,
                                           prv_scheduler_comparator, ascending);
@@ -481,7 +481,7 @@ static bool prv_schedule_animation(AnimationState *state, const uint32_t now,
                                    AnimationPrivate *animation, int32_t add_delay_ms) {
   bool success = true;
   int child_idx;
-  PBL_ASSERTN(animation != NULL);
+  PBL_ASSERTN(animation != nullptr);
 
   if (animation->play_count == 0) {
     // Play count of 0, no need to schedule it.
@@ -603,7 +603,7 @@ static bool prv_schedule_animation(AnimationState *state, const uint32_t now,
 
   } else {
     PBL_ASSERTN(animation->type == AnimationTypePrimitive);
-    PBL_ASSERTN(animation->implementation->update != NULL);
+    PBL_ASSERTN(animation->implementation->update != nullptr);
   }
 
   if (now != earliest_start_time) {
@@ -648,7 +648,7 @@ void animation_private_update(AnimationState *state, AnimationPrivate *animation
                               AnimationProgress progress_raw) {
   PBL_ASSERTN(animation);
 
-  if (state == NULL) {
+  if (state == nullptr) {
     state = prv_animation_state_get(PebbleTask_Current);
   }
 
@@ -657,7 +657,7 @@ void animation_private_update(AnimationState *state, AnimationPrivate *animation
 
   state->aux->current_animation = animation;
   animation->implementation->update(animation->handle, distance_normalized);
-  state->aux->current_animation = NULL;
+  state->aux->current_animation = nullptr;
 }
 
 static uint32_t prv_get_time_normalized_raw(const AnimationPrivate *animation, uint32_t now) {
@@ -786,7 +786,7 @@ static void prv_run(AnimationState *state, uint32_t now, AnimationPrivate *top_l
       // This is to ensure unit test fails in case of bad behaviour - no need to execute in
       // in normal FW since this case should not exist with defer_delete check
       AnimationPrivate *animation_p = animation_private_animation_find(animation->handle);
-      PBL_ASSERTN(animation_p != NULL);
+      PBL_ASSERTN(animation_p != nullptr);
       // Make sure this is an animation in the scheduled list
       PBL_ASSERTN(list_contains(state->scheduled_head, &animation->list_node));
 #endif
@@ -825,7 +825,7 @@ static void prv_run(AnimationState *state, uint32_t now, AnimationPrivate *top_l
   }
 
   // We are done iterating
-  state->aux->iter_next = NULL;
+  state->aux->iter_next = nullptr;
 }
 
 // -------------------------------------------------------------------------------------------
@@ -841,7 +841,7 @@ static Animation *prv_call_using_vargs(CreateFromArrayFunc func, Animation *anim
 
   // A and B must not be NULL
   if (!animation_a || !animation_b) {
-    return NULL;
+    return nullptr;
   }
   animation_array[0] = animation_a;
   animation_array[1] = animation_b;
@@ -851,7 +851,7 @@ static Animation *prv_call_using_vargs(CreateFromArrayFunc func, Animation *anim
     animation_array[array_len++] = animation_c;
     while (array_len < max_args) {
       void *arg = va_arg(args, void *);
-      if (arg == NULL) {
+      if (arg == nullptr) {
         break;
       }
       animation_array[array_len++] = arg;
@@ -876,7 +876,7 @@ static Animation *prv_complex_init(Animation *parent_h, Animation **animation_ar
   AnimationState *state = prv_animation_state_get(PebbleTask_Current);
   if (array_len > ANIMATION_MAX_CHILDREN) {
     // Exceed max # of children allowed?
-    return NULL;
+    return nullptr;
   }
 
   bool success = true;
@@ -919,12 +919,12 @@ static Animation *prv_complex_init(Animation *parent_h, Animation **animation_ar
       AnimationPrivate *component =
           prv_find_animation_by_handle(state, animation_array[i], false /*quiet*/);
       if (component) {
-        component->parent = NULL;
+        component->parent = nullptr;
         component->child_idx = 0;
       }
     }
     prv_unlink_and_free(state, parent);
-    parent_h = NULL;
+    parent_h = nullptr;
   }
 
   return parent_h;
@@ -935,12 +935,12 @@ static Animation *prv_complex_create(Animation **animation_array, uint32_t array
                                      AnimationType type) {
   if (array_len > ANIMATION_MAX_CHILDREN) {
     // Exceed max # of children allowed?
-    return NULL;
+    return nullptr;
   }
 
   AnimationPrivate *parent = applib_type_malloc(AnimationPrivate);
   if (!parent) {
-    return NULL;
+    return nullptr;
   }
   Animation *parent_h = animation_private_animation_init(parent);
   parent->implementation = &s_complex_implementation;
@@ -951,7 +951,7 @@ static Animation *prv_complex_create(Animation **animation_array, uint32_t array
 // -------------------------------------------------------------------------------------------
 static Animation *prv_animation_clone(AnimationState *state, AnimationPrivate *from) {
   Animation *clone_h;
-  AnimationPrivate *clone = NULL;
+  AnimationPrivate *clone = nullptr;
   bool success = true;
 
   // If this is a complex animation, create the children
@@ -972,7 +972,7 @@ static Animation *prv_animation_clone(AnimationState *state, AnimationPrivate *f
       children[child_idx] = prv_animation_clone(state, child);
 
       // Bail if we couldn't create the child
-      if (children[child_idx] == NULL) {
+      if (children[child_idx] == nullptr) {
         num_children = child_idx;
         success = false;
         break;
@@ -988,7 +988,7 @@ static Animation *prv_animation_clone(AnimationState *state, AnimationPrivate *f
       for (int i = 0; i < num_children; i++) {
         animation_destroy(children[i]);
       }
-      return NULL;
+      return nullptr;
     }
 
   } else {
@@ -1003,7 +1003,7 @@ static Animation *prv_animation_clone(AnimationState *state, AnimationPrivate *f
       clone = applib_type_malloc(AnimationPrivate);
     }
     if (!clone) {
-      return NULL;
+      return nullptr;
     }
     clone_h = animation_private_animation_init(clone);
   }
@@ -1026,8 +1026,8 @@ static Animation *prv_animation_clone(AnimationState *state, AnimationPrivate *f
 // -------------------------------------------------------------------------------------------
 void animation_private_state_init(AnimationState *state) {
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-  _Static_assert(sizeof(AnimationState) <= sizeof(AnimationLegacy2Scheduler),
-                 "Animation state larger than allowed for 2.0 compatibility");
+  static_assert(sizeof(AnimationState) <= sizeof(AnimationLegacy2Scheduler),
+                "Animation state larger than allowed for 2.0 compatibility");
 #endif
 
   // If this a legacy 2.0 application, instantiate the 2.0 legacy animation support
@@ -1066,7 +1066,7 @@ void animation_private_state_deinit(AnimationState *state) {
 // Return true if the animation globals were instantiated using the legacy 2.x animation
 // manager
 bool animation_private_using_legacy_2(AnimationState *state) {
-  if (state == NULL) {
+  if (state == nullptr) {
     state = prv_animation_state_get(PebbleTask_Current);
   }
   return (state->signature != ANIMATION_STATE_3_X_SIGNATURE);
@@ -1075,7 +1075,7 @@ bool animation_private_using_legacy_2(AnimationState *state) {
 // -------------------------------------------------------------------------------------------
 // Return the animation pointer for the given handle
 AnimationPrivate *animation_private_animation_find(Animation *handle) {
-  return prv_find_animation_by_handle(NULL, handle, false /*quiet*/);
+  return prv_find_animation_by_handle(nullptr, handle, false /*quiet*/);
 }
 
 // -------------------------------------------------------------------------------------------
@@ -1106,7 +1106,7 @@ void animation_private_timer_callback(void *context) {
 
   if (!s_paused) {
     // Run all animations for this time interval
-    prv_run(state, now, NULL /*top-level animation*/, 0 /*top-level start time*/,
+    prv_run(state, now, nullptr /*top-level animation*/, 0 /*top-level start time*/,
             true /*do_update*/);
   }
 
@@ -1124,14 +1124,14 @@ void animation_private_timer_callback(void *context) {
 
 // -------------------------------------------------------------------------------------------
 Animation *animation_create(void) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return (Animation *)animation_legacy2_create();
   }
   AnimationPrivate *animation = applib_type_malloc(AnimationPrivate);
   if (!animation) {
-    return NULL;
+    return nullptr;
   }
 
   return animation_private_animation_init(animation);
@@ -1311,15 +1311,15 @@ bool animation_set_handlers(Animation *animation_h, AnimationHandlers handlers, 
 
 // -------------------------------------------------------------------------------------------
 AnimationHandlers animation_get_handlers(Animation *animation_h) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     AnimationHandlers *handlers = (AnimationHandlers *)&((AnimationLegacy2 *)animation_h)->handlers;
     return *handlers;
   }
-  AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
+  AnimationPrivate *animation = prv_find_animation_by_handle(nullptr, animation_h, false /*quiet*/);
   if (!animation) {
-    return (AnimationHandlers){0};
+    return (AnimationHandlers){};
   }
 
   return animation->handlers;
@@ -1348,30 +1348,30 @@ bool animation_set_implementation(Animation *animation_h,
 
 // -------------------------------------------------------------------------------------------
 const AnimationImplementation *animation_get_implementation(Animation *animation_h) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return (const AnimationImplementation *)((AnimationLegacy2 *)animation_h)->implementation;
   }
 
-  AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
+  AnimationPrivate *animation = prv_find_animation_by_handle(nullptr, animation_h, false /*quiet*/);
   if (!animation) {
-    return NULL;
+    return nullptr;
   }
   return animation->implementation;
 }
 
 // -------------------------------------------------------------------------------------------
 void *animation_get_context(Animation *animation_h) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return ((AnimationLegacy2 *)animation_h)->context;
   }
 
-  AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
+  AnimationPrivate *animation = prv_find_animation_by_handle(nullptr, animation_h, false /*quiet*/);
   if (!animation) {
-    return NULL;
+    return nullptr;
   }
   return animation->context;
 }
@@ -1397,13 +1397,13 @@ bool animation_set_delay(Animation *animation_h, uint32_t delay_ms) {
 
 // -------------------------------------------------------------------------------------------
 uint32_t animation_get_delay(Animation *animation_h) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return ((AnimationLegacy2 *)animation_h)->delay_ms;
   }
 
-  AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
+  AnimationPrivate *animation = prv_find_animation_by_handle(nullptr, animation_h, false /*quiet*/);
   if (!animation) {
     return 0;
   }
@@ -1413,13 +1413,13 @@ uint32_t animation_get_delay(Animation *animation_h) {
 
 // -------------------------------------------------------------------------------------------
 uint32_t animation_get_abs_start_time_ms(Animation *animation_h) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return ((AnimationLegacy2 *)animation_h)->abs_start_time_ms;
   }
 
-  AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
+  AnimationPrivate *animation = prv_find_animation_by_handle(nullptr, animation_h, false /*quiet*/);
   if (!animation) {
     return 0;
   }
@@ -1486,13 +1486,13 @@ bool animation_set_curve(Animation *animation_h, AnimationCurve curve) {
 
 // -------------------------------------------------------------------------------------------
 AnimationCurve animation_get_curve(Animation *animation_h) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return ((AnimationLegacy2 *)animation_h)->curve;
   }
 
-  AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
+  AnimationPrivate *animation = prv_find_animation_by_handle(nullptr, animation_h, false /*quiet*/);
   if (!animation) {
     return AnimationCurveDefault;
   }
@@ -1545,22 +1545,22 @@ bool animation_set_custom_interpolation(Animation *animation_h,
 
 // -------------------------------------------------------------------------------------------
 static void *prv_animation_get_custom_function(Animation *animation_h, AnimationCurve curve) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     if (curve != AnimationCurveCustomFunction) {
       // 2.x doesn't support AnimationCurveCustomInterpolationFunction
-      return NULL;
+      return nullptr;
     }
     // We need to enable other applib modules like scroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return animation_legacy2_get_custom_curve((AnimationLegacy2 *)animation_h);
   }
 
-  AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
+  AnimationPrivate *animation = prv_find_animation_by_handle(nullptr, animation_h, false /*quiet*/);
   if (!animation) {
-    return NULL;
+    return nullptr;
   }
 
-  return (animation->curve == curve) ? animation->custom_function : NULL;
+  return (animation->curve == curve) ? animation->custom_function : nullptr;
 }
 
 // -------------------------------------------------------------------------------------------
@@ -1723,7 +1723,7 @@ bool animation_get_elapsed(Animation *animation_h, int32_t *elapsed_ms) {
 
 // -------------------------------------------------------------------------------------------
 Animation *animation_sequence_create_from_array(Animation **animation_array, uint32_t array_len) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
   Animation *seq = prv_complex_create(animation_array, array_len, AnimationTypeSequence);
   return seq;
 }
@@ -1731,14 +1731,14 @@ Animation *animation_sequence_create_from_array(Animation **animation_array, uin
 // -------------------------------------------------------------------------------------------
 Animation *animation_sequence_init_from_array(Animation *parent, Animation **animation_array,
                                               uint32_t array_len) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
   return prv_complex_init(parent, animation_array, array_len, AnimationTypeSequence);
 }
 
 // -------------------------------------------------------------------------------------------
 Animation *animation_sequence_create(Animation *animation_a, Animation *animation_b,
                                      Animation *animation_c, ...) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
   va_list args;
   va_start(args, animation_c);
   Animation *animation = prv_call_using_vargs(animation_sequence_create_from_array, animation_a,
@@ -1749,7 +1749,7 @@ Animation *animation_sequence_create(Animation *animation_a, Animation *animatio
 
 // -------------------------------------------------------------------------------------------
 Animation *animation_spawn_create_from_array(Animation **animation_array, uint32_t array_len) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
   Animation *spawn = prv_complex_create(animation_array, array_len, AnimationTypeSpawn);
   return spawn;
 }
@@ -1757,7 +1757,7 @@ Animation *animation_spawn_create_from_array(Animation **animation_array, uint32
 // -------------------------------------------------------------------------------------------
 Animation *animation_spawn_create(Animation *animation_a, Animation *animation_b,
                                   Animation *animation_c, ...) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
   va_list args;
   va_start(args, animation_c);
   Animation *animation = prv_call_using_vargs(animation_spawn_create_from_array, animation_a,
@@ -1773,7 +1773,7 @@ Animation *animation_clone(Animation *animation_h) {
 
   AnimationPrivate *animation = prv_find_animation_by_handle(state, animation_h, false /*quiet*/);
   if (!animation) {
-    return NULL;
+    return nullptr;
   }
 
   return prv_animation_clone(state, animation);
@@ -1859,11 +1859,11 @@ static int prv_cmd_anim_resume(const struct pbl_shell *sh, size_t argc, char **a
 }
 
 static const struct pbl_shell_cmd sub_ui_anim[] = {
-  PBL_SHELL_CMD(info, NULL, "Dump the scheduled animations", prv_cmd_anim_info),
-  PBL_SHELL_CMD(pause, NULL, "Pause all animations", prv_cmd_anim_pause),
-  PBL_SHELL_CMD(resume, NULL, "Resume all animations", prv_cmd_anim_resume),
+  PBL_SHELL_CMD(info, nullptr, "Dump the scheduled animations", prv_cmd_anim_info),
+  PBL_SHELL_CMD(pause, nullptr, "Pause all animations", prv_cmd_anim_pause),
+  PBL_SHELL_CMD(resume, nullptr, "Resume all animations", prv_cmd_anim_resume),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_SUBCMD_ADD(sub_ui, anim, sub_ui_anim, "Animations", NULL, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_ui, anim, sub_ui_anim, "Animations", nullptr, 0, 0);
 #endif

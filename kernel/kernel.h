@@ -51,7 +51,7 @@ void sched_inherit(struct pbl_thread *owner, pbl_prio_t prio);
 void sched_disinherit(struct pbl_thread *owner);
 
 //! C entry from the reset vector: sets up RAM, then the SoC, then main().
-PBL_NORETURN void kernel_prep_c(void);
+[[noreturn]] void kernel_prep_c(void);
 
 //! Resets the interrupt lock nesting when the first thread starts.
 void irq_reset(void);

@@ -74,7 +74,7 @@ AnimationProgress animation_timing_scaled(AnimationProgress time_normalized,
 
 KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_ownership,
                                            GRect screen_frame) {
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {
@@ -93,7 +93,7 @@ bool kino_reel_scale_segmented_set_delay_by_distance(KinoReel *reel, GPoint targ
 // Setup and Teardown
 ////////////////////////////////////
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 static GBitmap *s_dest_bitmap;
 
 // To easily render multiple windows in a single canvas, we'll use an 8-bit bitmap for color
@@ -138,7 +138,7 @@ void test_simple_dialog__cleanup(void) {
   free(fb);
 
   gbitmap_destroy(s_dest_bitmap);
-  s_dest_bitmap = NULL;
+  s_dest_bitmap = nullptr;
 }
 
 // Helpers

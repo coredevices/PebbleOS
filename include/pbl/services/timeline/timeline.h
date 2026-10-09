@@ -27,7 +27,7 @@
  * @code{.c}
  * TimelineNode *timeline = NULL;
  * Iterator iter;
- * TimelineIterState state = {0};
+ * TimelineIterState state = {};
  *
  * timeline_init(&timeline);
  * if (timeline_iter_init(&iter, &state, &timeline, TimelineIterDirectionFuture, rtc_get_time()) ==

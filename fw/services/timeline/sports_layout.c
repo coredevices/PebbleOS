@@ -18,14 +18,14 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
-_Static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
-               "Sports layout requires that all Home attributes are directly after Away");
-_Static_assert(AttributeIdNameAway + 1 == AttributeIdNameHome,
-               "Sports layout requires that all Home attributes are directly after Away");
-_Static_assert(AttributeIdRecordAway + 1 == AttributeIdRecordHome,
-               "Sports layout requires that all Home attributes are directly after Away");
-_Static_assert(AttributeIdScoreAway + 1 == AttributeIdScoreHome,
-               "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
+              "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdNameAway + 1 == AttributeIdNameHome,
+              "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdRecordAway + 1 == AttributeIdRecordHome,
+              "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdScoreAway + 1 == AttributeIdScoreHome,
+              "Sports layout requires that all Home attributes are directly after Away");
 
 //////////////////////////////////////////
 //  Card Mode
@@ -142,7 +142,7 @@ static GTextNode *prv_broadcaster_header_constructor(const LayoutLayer *layout_r
   const char *broadcaster =
       attribute_get_string(layout_ref->attributes, AttributeIdBroadcaster, "");
   if (IS_EMPTY_STRING(broadcaster)) {
-    return NULL;
+    return nullptr;
   }
   static const LayoutNodeTextBufferConfig s_broadcaster_header_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
@@ -222,7 +222,8 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout_ref, int team_o
   AttributeList *attributes = layout->timeline_layout.layout_layer.attributes;
 
   const bool is_pregame = (layout->state == GameStatePreGame);
-  const bool has_record = (attribute_find(attributes, AttributeIdRecordAway + team_offset) != NULL);
+  const bool has_record =
+      (attribute_find(attributes, AttributeIdRecordAway + team_offset) != nullptr);
 
   const AttributeId large_attr = !is_pregame ? AttributeIdScoreAway : AttributeIdNameAway;
   const AttributeId small_attr = !is_pregame  ? AttributeIdNameAway

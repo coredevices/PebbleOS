@@ -273,9 +273,9 @@ size_t attribute_list_get_serialized_size(const AttributeList *attr_list) {
 }
 
 size_t attribute_list_serialize(const AttributeList *attr_list, uint8_t *buffer, uint8_t *buf_end) {
-  PBL_ASSERTN(attr_list != NULL);
-  PBL_ASSERTN(buffer != NULL);
-  PBL_ASSERTN(buf_end != NULL);
+  PBL_ASSERTN(attr_list != nullptr);
+  PBL_ASSERTN(buffer != nullptr);
+  PBL_ASSERTN(buf_end != nullptr);
 
   uint8_t *buf_start = buffer;
 
@@ -491,7 +491,7 @@ void attribute_list_init_list(uint8_t num_attributes, AttributeList *list_out) {
 }
 
 void attribute_list_destroy_list(AttributeList *list) {
-  PBL_ASSERTN(list != NULL);
+  PBL_ASSERTN(list != nullptr);
   kernel_free(list->attributes);
 }
 
@@ -536,8 +536,8 @@ bool attribute_check_serialized_list(const uint8_t *cursor, const uint8_t *val_e
 }
 
 void attribute_init_string(Attribute *attribute, char *buffer, AttributeId attribute_id) {
-  PBL_ASSERTN(attribute != NULL);
-  PBL_ASSERTN(buffer != NULL);
+  PBL_ASSERTN(attribute != nullptr);
+  PBL_ASSERTN(buffer != nullptr);
 
   attribute->cstring = buffer;
   attribute->id = attribute_id;
@@ -545,10 +545,10 @@ void attribute_init_string(Attribute *attribute, char *buffer, AttributeId attri
 
 Attribute *attribute_find(const AttributeList *attr_list, AttributeId id) {
   if (!attr_list) {
-    return NULL;
+    return nullptr;
   }
   if (id == AttributeIdUnused) {
-    return NULL;
+    return nullptr;
   }
 
   for (int i = 0; i < attr_list->num_attributes; i++) {
@@ -556,12 +556,12 @@ Attribute *attribute_find(const AttributeList *attr_list, AttributeId id) {
       return &attr_list->attributes[i];
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
                                  char *default_value) {
-  PBL_ASSERTN(attr_list != NULL);
+  PBL_ASSERTN(attr_list != nullptr);
   if (id == AttributeIdUnused) {
     return default_value;
   }
@@ -572,14 +572,14 @@ const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
 }
 
 struct pbl_string_list *attribute_get_string_list(const AttributeList *attr_list, AttributeId id) {
-  PBL_ASSERTN(attr_list != NULL);
+  PBL_ASSERTN(attr_list != nullptr);
 
   Attribute *attribute = attribute_find(attr_list, id);
-  return attribute ? attribute->string_list : NULL;
+  return attribute ? attribute->string_list : nullptr;
 }
 
 uint8_t attribute_get_uint8(const AttributeList *attr_list, AttributeId id, uint8_t default_value) {
-  PBL_ASSERTN(attr_list != NULL);
+  PBL_ASSERTN(attr_list != nullptr);
 
   //  HB TODO: test the type of id!
   Attribute *attribute = attribute_find(attr_list, id);
@@ -588,7 +588,7 @@ uint8_t attribute_get_uint8(const AttributeList *attr_list, AttributeId id, uint
 
 uint32_t attribute_get_uint32(const AttributeList *attr_list, AttributeId id,
                               uint32_t default_value) {
-  PBL_ASSERTN(attr_list != NULL);
+  PBL_ASSERTN(attr_list != nullptr);
 
   //  HB TODO: test the type of id!
   Attribute *attribute = attribute_find(attr_list, id);
@@ -596,8 +596,8 @@ uint32_t attribute_get_uint32(const AttributeList *attr_list, AttributeId id,
 }
 
 Uint32List *attribute_get_uint32_list(const AttributeList *attr_list, AttributeId id) {
-  PBL_ASSERTN(attr_list != NULL);
+  PBL_ASSERTN(attr_list != nullptr);
   PBL_ASSERTN(prv_attribute_type(id) == AttributeTypeUint32List);
   Attribute *attribute = attribute_find(attr_list, id);
-  return attribute ? attribute->uint32_list : NULL;
+  return attribute ? attribute->uint32_list : nullptr;
 }

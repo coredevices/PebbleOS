@@ -78,7 +78,7 @@ static void do_callbacks(ListNode *list, uint16_t elapsed) {
       // NOTE: We do not support callers that free the memory for the regular timer structure
       // from their callback procedure!
       if (reg_timer->pending_delete) {
-        list_remove(&reg_timer->list_node, NULL, NULL);
+        list_remove(&reg_timer->list_node, nullptr, nullptr);
       }
 
     } else {
@@ -97,7 +97,7 @@ static void prv_arm_locked(time_t now, uint16_t ms, time_t next) {
   uint32_t timeout_ms = (uint32_t)(next - now - 1) * 1000 + (1000 - MIN(ms, 999));
   // The timer runs on the system tick, which drifts from the RTC in deep sleep.
   timeout_ms += SECOND_BOUNDARY_MARGIN_MS + timeout_ms / 1024;
-  bool success = new_timer_start(s_timer_id, timeout_ms, timer_callback, NULL, 0 /*flags*/);
+  bool success = new_timer_start(s_timer_id, timeout_ms, timer_callback, nullptr, 0 /*flags*/);
   PBL_ASSERTN(success);
   s_next_fire = next;
   s_armed = true;
@@ -292,7 +292,7 @@ bool regular_timer_remove_callback(RegularTimerInfo *cb) {
     if (cb->is_executing) {
       cb->pending_delete = true;
     } else {
-      list_remove(&cb->list_node, NULL, NULL);
+      list_remove(&cb->list_node, nullptr, nullptr);
       timer_removed = true;
     }
   }

@@ -28,7 +28,7 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) 
 }
 
 const char *app_custom_get_title(AppInstallId app_id) {
-  return NULL;
+  return nullptr;
 }
 
 void crashed_ui_show_worker_crash(AppInstallId install_id) {
@@ -59,7 +59,7 @@ void app_idle_timeout_touch_up(void) {
 }
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
-  return NULL;
+  return nullptr;
 }
 
 void alarm_set_snooze_delay(int delay_ms) {
@@ -77,7 +77,7 @@ void persist_service_client_close(const Uuid *uuid) {
 }
 
 SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
-  return NULL;
+  return nullptr;
 }
 
 status_t persist_service_delete_file(const Uuid *uuid) {
@@ -280,7 +280,7 @@ void shell_prefs_set_language(ShellLanguage language) {
 }
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
-  return NULL;
+  return nullptr;
 }
 
 int16_t timeline_peek_get_origin_y(void) {

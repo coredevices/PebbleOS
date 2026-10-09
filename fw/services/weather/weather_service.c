@@ -109,7 +109,7 @@ static bool prv_get_location_index(Uuid *location, SerializedWeatherAppPrefs *pr
 static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry, void *context) {
   WeatherDBIteratorContext *iterator_context = context;
   SerializedWeatherAppPrefs *prefs = iterator_context->serialized_prefs;
-  char key_string_buffer[UUID_STRING_BUFFER_LENGTH] = {0};
+  char key_string_buffer[UUID_STRING_BUFFER_LENGTH] = {};
   size_t location_index;
 
   if (!prv_get_location_index(key, prefs, &location_index)) {
@@ -161,7 +161,7 @@ static bool prv_get_default_location_key(WeatherDBKey *key_out) {
 static void prv_update_default_location_cache(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   weather_service_destroy_default_forecast(s_default_forecast);
-  s_default_forecast = NULL;
+  s_default_forecast = nullptr;
 
   WeatherDBKey default_location_key;
   if (!prv_get_default_location_key(&default_location_key)) {
@@ -194,7 +194,7 @@ cleanup:
 
 WeatherLocationForecast *weather_service_create_default_forecast(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  WeatherLocationForecast *forecast = NULL;
+  WeatherLocationForecast *forecast = nullptr;
   if (s_default_forecast) {
     forecast = task_zalloc_check(sizeof(WeatherLocationForecast));
     *forecast = *s_default_forecast;
@@ -269,7 +269,7 @@ WeatherDataListNode *weather_service_locations_list_create(size_t *count_out) {
   WeatherDBIteratorContext context = (WeatherDBIteratorContext){};
   SerializedWeatherAppPrefs *prefs = watch_app_prefs_get_weather();
   if (!prefs) {
-    return NULL;
+    return nullptr;
   }
   context.serialized_prefs = prefs;
   weather_db_for_each(prv_add_to_list_if_valid, &context);

@@ -28,7 +28,6 @@
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include <pbl/services/orientation_manager.h>
 #endif
-#include <stdbool.h>
 
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
@@ -183,8 +182,8 @@ static uint8_t s_text_style = PreferredContentSizeDefault;
 #define PREF_KEY_SYSTEM_TEXT_SIZE "systemTextSize"
 static uint8_t s_system_text_size = PreferredContentSizeDefault;
 #if !UNITTEST
-_Static_assert(sizeof(PreferredContentSize) == sizeof(s_system_text_size),
-               "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
+static_assert(sizeof(PreferredContentSize) == sizeof(s_system_text_size),
+              "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
 #define PREF_KEY_LANG_ENGLISH "langEnglish"
@@ -278,16 +277,16 @@ static uint8_t s_alarms_app_opened = 0;
 #define PREF_KEY_ACTIVITY_HRM_PREFERENCES "hrmPreferences"
 static ActivityHRMSettings s_activity_hrm_preferences = ACTIVITY_HRM_DEFAULT_PREFERENCES;
 #if !UNITTEST
-_Static_assert(sizeof(ActivityHRMSettings) == 3,
-               "ActivityHRMSettings changed size; prv_migrate_activity_hrm_prefs() only widens "
-               "records whose fields were appended!");
+static_assert(sizeof(ActivityHRMSettings) == 3,
+              "ActivityHRMSettings changed size; prv_migrate_activity_hrm_prefs() only widens "
+              "records whose fields were appended!");
 #endif
 
 #define PREF_KEY_ACTIVITY_SPO2_PREFERENCES "spo2Preferences"
 static ActivitySpO2Settings s_activity_spo2_preferences = ACTIVITY_SPO2_DEFAULT_PREFERENCES;
 #if !UNITTEST
-_Static_assert(sizeof(ActivitySpO2Settings) == 1,
-               "sizeof(ActivitySpO2Settings) grew, stored records need migrating!");
+static_assert(sizeof(ActivitySpO2Settings) == 1,
+              "sizeof(ActivitySpO2Settings) grew, stored records need migrating!");
 #endif
 
 // Blood oxygen on/off. Synced from the phone (and the on-watch toggle) as a
@@ -831,7 +830,7 @@ static void prv_timeline_peek_set_enabled_callback(void *data) {
 
 static bool prv_set_s_timeline_peek_enabled(bool *enabled) {
   s_timeline_peek_enabled = *enabled;
-  launcher_task_add_callback(prv_timeline_peek_set_enabled_callback, NULL);
+  launcher_task_add_callback(prv_timeline_peek_set_enabled_callback, nullptr);
   return true;
 }
 
@@ -987,7 +986,7 @@ typedef struct {
 // after dereferencing the void* argument using the right type for that pref
 #define PREFS_MACRO(name, var)                                        \
   static bool prv_set_##var##_cb(const void *value, size_t val_len) { \
-    return prv_set_##var((__typeof__(var) *)value);                   \
+    return prv_set_##var((typeof(var) *)value);                       \
   }
 #include "prefs_values.h.inc"
 #undef PREFS_MACRO
@@ -1080,7 +1079,7 @@ void shell_prefs_init(void) {
     s_motion_sensitivity = BOARD_CONFIG_ACCEL.default_motion_sensitivity;
   }
 
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
     return;
   }
@@ -1137,7 +1136,7 @@ void shell_prefs_init(void) {
   // device follows the new board default.
   if (!s_als_threshold_migrated_v1) {
     s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-    SettingsFile mfile = {{0}};
+    SettingsFile mfile = {};
     if (settings_file_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       settings_file_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
                            sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
@@ -1152,7 +1151,7 @@ void shell_prefs_init(void) {
   // the device follows the new lux board defaults.
   if (!s_als_threshold_migrated_v2) {
     s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-    SettingsFile v2file = {{0}};
+    SettingsFile v2file = {};
     if (settings_file_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       settings_file_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
                            sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
@@ -1201,7 +1200,7 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
     }
   }
   PBL_LOG_WRN("Unrecognized key: %s", (const char *)key);
-  return NULL;
+  return nullptr;
 }
 
 // ------------------------------------------------------------------------------------
@@ -1216,7 +1215,7 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
   status_t rv = E_ERROR;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {{0}};
+    SettingsFile file = {};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator, so we add 1 to key_len
       rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
@@ -1239,7 +1238,7 @@ static void prv_pref_set(const char *key, const void *value, size_t val_len) {
   const PrefsTableEntry *entry = prv_prefs_entry((const uint8_t *)key, strlen(key));
 
   // validate the key and value length
-  PBL_ASSERT(entry != NULL, "Key %s not found", key);
+  PBL_ASSERT(entry != nullptr, "Key %s not found", key);
   PBL_ASSERT(val_len == entry->value_len,
              "Attempt to set %s using invalid value_len of %" PRIu32 "", entry->key,
              (uint32_t)val_len);
@@ -1293,7 +1292,7 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   bool success = false;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {{0}};
+    SettingsFile file = {};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator
       // Use strlen(entry->key) + 1 to match how it was written, since key_len from
@@ -1645,7 +1644,7 @@ bool quick_launch_is_enabled(ButtonId button) {
 }
 
 AppInstallId quick_launch_get_app(ButtonId button) {
-  Uuid *uuid = NULL;
+  Uuid *uuid = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       uuid = &s_quick_launch_up.uuid;
@@ -1672,7 +1671,7 @@ void quick_launch_set_app(ButtonId button, AppInstallId app_id) {
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       key = PREF_KEY_QUICK_LAUNCH_UP;
@@ -1696,7 +1695,7 @@ void quick_launch_set_app(ButtonId button, AppInstallId app_id) {
 void quick_launch_set_enabled(ButtonId button, bool enabled) {
   QuickLaunchPreference pref;
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       pref = s_quick_launch_up;
@@ -1749,7 +1748,7 @@ bool quick_launch_single_click_is_enabled(ButtonId button) {
 }
 
 AppInstallId quick_launch_single_click_get_app(ButtonId button) {
-  Uuid *uuid = NULL;
+  Uuid *uuid = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       uuid = &s_quick_launch_single_click_up.uuid;
@@ -1770,7 +1769,7 @@ void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP;
@@ -1788,7 +1787,7 @@ void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
 void quick_launch_single_click_set_enabled(ButtonId button, bool enabled) {
   QuickLaunchPreference pref;
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       pref = s_quick_launch_single_click_up;
@@ -1881,7 +1880,7 @@ AppInstallId watchface_get_default_install_id(void) {
   AppInstallEntry entry;
   if (app_id == INSTALL_ID_INVALID || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
-    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
+    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, nullptr);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
   }
   return app_id;

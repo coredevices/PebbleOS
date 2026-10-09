@@ -45,7 +45,7 @@ static void prv_add_attribute(uint8_t id, time_t timestamp, AttributeId attribut
         },
     .attr_list = {
       .num_attributes = value ? 1 : 0,
-      .attributes = value ? &attribute : NULL,
+      .attributes = value ? &attribute : nullptr,
     },
   };
   notifications_history_add_item(&s_history, &item);
@@ -192,7 +192,7 @@ void test_notifications_history__equal_timestamps_use_insertion_order(void) {
 }
 
 void test_notifications_history__missing_sender_and_ios_remain_individual(void) {
-  prv_add(1, 100, NULL);
+  prv_add(1, 100, nullptr);
   prv_add(2, 200, "   ");
   prv_add_ios(3, 300, "Anna");
 
@@ -237,7 +237,7 @@ void test_notifications_history__removing_notifications_updates_and_removes_grou
 
 void test_notifications_history__mixed_grouped_and_individual_notifications(void) {
   prv_add(1, 100, "Anna");
-  prv_add(2, 400, NULL);
+  prv_add(2, 400, nullptr);
   prv_add(3, 300, "Anna");
   prv_add(4, 200, "Bob");
 

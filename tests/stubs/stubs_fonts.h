@@ -14,9 +14,9 @@ uint8_t fonts_get_font_height(GFont font) {
 }
 
 GFont fonts_get_system_font(const char *font_key) {
-  return NULL;
+  return nullptr;
 }
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
-  return NULL;
+  return nullptr;
 }

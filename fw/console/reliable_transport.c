@@ -6,7 +6,6 @@
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse_protocol_impl.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -72,10 +71,10 @@ static PulseControlMessageProtocol s_reliable_pcmp = {
   .send_fn = pulse_reliable_send,
 };
 
-_Static_assert(sizeof((ReliablePacket){0}.i) == 6, "sizeof ReliablePacket.i is wrong");
-_Static_assert(sizeof((ReliablePacket){0}.s) == 2, "sizeof ReliablePacket.s is wrong");
-_Static_assert(sizeof((ReliablePacket){0}.i) == sizeof(ReliablePacket),
-               "Something is really wrong here");
+static_assert(sizeof((ReliablePacket){}.i) == 6, "sizeof ReliablePacket.i is wrong");
+static_assert(sizeof((ReliablePacket){}.s) == 2, "sizeof ReliablePacket.s is wrong");
+static_assert(sizeof((ReliablePacket){}.i) == sizeof(ReliablePacket),
+              "Something is really wrong here");
 
 static bool s_layer_up = false;
 static ReliableInfoBuffer *s_tx_buffer;
@@ -142,7 +141,7 @@ void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length
     return;
   }
 
-  if (length < sizeof((ReliablePacket){0}.s)) {
+  if (length < sizeof((ReliablePacket){}.s)) {
     PBL_LOG_DBG("Received malformed command packet");
     prv_bounce_ncp_state();
     return;
@@ -219,7 +218,7 @@ void pulse2_reliable_transport_on_response_packet(void *raw_packet, size_t lengt
     return;
   }
 
-  if (length < sizeof((ReliablePacket){0}.s)) {
+  if (length < sizeof((ReliablePacket){}.s)) {
     PBL_LOG_DBG("Received malformed response packet");
     prv_bounce_ncp_state();
     return;
@@ -276,14 +275,14 @@ void *pulse_reliable_send_begin(const uint16_t app_protocol) {
   // We will deadlock if we ever have to wait on s_tx_lock from the PULSE task.
   PBL_ASSERT_NOT_TASK(PebbleTask_PULSE);
   if (!s_layer_up) {
-    return NULL;
+    return nullptr;
   }
   pbl_sem_take(&s_tx_lock, PBL_FOREVER);
   if (!s_layer_up) {
     // Transport went down while waiting for the lock
     PBL_LOG_DBG("Transport went down while waiting for lock");
     pbl_sem_give(&s_tx_lock);
-    return NULL;
+    return nullptr;
   }
   s_tx_buffer->app_protocol = app_protocol;
   return &s_tx_buffer->information[0];

@@ -46,7 +46,7 @@ void pbl_poll_group_add(struct pbl_poll_group *g, struct pbl_msgq *q) {
 }
 
 struct pbl_msgq *pbl_poll_group_wait(struct pbl_poll_group *g, pbl_timeout_t timeout) {
-  return NULL;
+  return nullptr;
 }
 
 bool pbl_poll_group_is_empty(const struct pbl_poll_group *g) {

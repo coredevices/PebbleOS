@@ -25,14 +25,14 @@ ConfirmationDialog *confirmation_dialog_create(const char *dialog_name) {
   if (!gbitmap_init_with_resource(&confirmation_dialog->confirm_icon,
                                   RESOURCE_ID_ACTION_BAR_ICON_CHECK)) {
     task_free(confirmation_dialog);
-    return NULL;
+    return nullptr;
   }
 
   if (!gbitmap_init_with_resource(&confirmation_dialog->decline_icon,
                                   RESOURCE_ID_ACTION_BAR_ICON_X)) {
     gbitmap_deinit(&confirmation_dialog->confirm_icon);
     task_free(confirmation_dialog);
-    return NULL;
+    return nullptr;
   }
 
   // In order to create a custom ActionDialog type, we need to create an action bar
@@ -52,22 +52,22 @@ ConfirmationDialog *confirmation_dialog_create(const char *dialog_name) {
 }
 
 Dialog *confirmation_dialog_get_dialog(ConfirmationDialog *confirmation_dialog) {
-  if (confirmation_dialog == NULL) {
-    return NULL;
+  if (confirmation_dialog == nullptr) {
+    return nullptr;
   }
   return actionable_dialog_get_dialog(&confirmation_dialog->action_dialog);
 }
 
 ActionBarLayer *confirmation_dialog_get_action_bar(ConfirmationDialog *confirmation_dialog) {
-  if (confirmation_dialog == NULL) {
-    return NULL;
+  if (confirmation_dialog == nullptr) {
+    return nullptr;
   }
   return &confirmation_dialog->action_bar;
 }
 
 void confirmation_dialog_set_click_config_provider(ConfirmationDialog *confirmation_dialog,
                                                    ClickConfigProvider click_config_provider) {
-  if (confirmation_dialog == NULL) {
+  if (confirmation_dialog == nullptr) {
     return;
   }
   ActionBarLayer *action_bar = &confirmation_dialog->action_bar;
@@ -83,7 +83,7 @@ void app_confirmation_dialog_push(ConfirmationDialog *confirmation_dialog) {
 }
 
 void confirmation_dialog_pop(ConfirmationDialog *confirmation_dialog) {
-  if (confirmation_dialog == NULL) {
+  if (confirmation_dialog == nullptr) {
     return;
   }
 

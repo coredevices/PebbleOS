@@ -45,7 +45,7 @@ typedef struct PBL_PACKED {
 
 static ArgsForMock s_last_args_for_mock;
 static GContext context;
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 /////////////////////////////////////
 /// FUNCTION OVERRIDES
@@ -814,7 +814,7 @@ void test_graphics_context_${BIT_DEPTH_NAME}__lock_framebuffer_fails_from_8BitCi
   GContext ctx = {.dest_bitmap.info.format = GBitmapFormat8BitCircular};
   GBitmap *bmp = graphics_capture_frame_buffer_format(&ctx, GBitmapFormat8Bit);
   cl_assert(ctx.lock == false);
-  cl_assert_equal_p(bmp, NULL);
+  cl_assert_equal_p(bmp, nullptr);
 };
 
 void test_graphics_context_${BIT_DEPTH_NAME}__lock_framebuffer_1Bit_on_8BitCircular_must_fail(void) {
@@ -822,7 +822,7 @@ void test_graphics_context_${BIT_DEPTH_NAME}__lock_framebuffer_1Bit_on_8BitCircu
   GContext ctx = {.dest_bitmap.info.format = GBitmapFormat8BitCircular};
   GBitmap *bmp = graphics_capture_frame_buffer_format(&ctx, GBitmapFormat1Bit);
   cl_assert(ctx.lock == false);
-  cl_assert_equal_p(bmp, NULL);
+  cl_assert_equal_p(bmp, nullptr);
 };
 
 void test_graphics_context_${BIT_DEPTH_NAME}__lock_framebuffer_2BitPalette_must_fail(void) {
@@ -830,5 +830,5 @@ void test_graphics_context_${BIT_DEPTH_NAME}__lock_framebuffer_2BitPalette_must_
   GContext ctx = {.dest_bitmap.info.format = GBitmapFormat8Bit};
   GBitmap *bmp = graphics_capture_frame_buffer_format(&ctx, GBitmapFormat2BitPalette);
   cl_assert(ctx.lock == false);
-  cl_assert_equal_p(bmp, NULL);
+  cl_assert_equal_p(bmp, nullptr);
 }

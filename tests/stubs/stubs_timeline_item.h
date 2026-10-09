@@ -15,7 +15,7 @@ TimelineItem *PBL_WEAK timeline_item_create_with_attributes(time_t timestamp, ui
                                                             TimelineItemType type, LayoutId layout,
                                                             AttributeList *attr_list,
                                                             TimelineItemActionGroup *action_group) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK timeline_item_action_is_ancs(const TimelineItemAction *action) {
@@ -27,7 +27,7 @@ bool PBL_WEAK timeline_item_action_is_dismiss(const TimelineItemAction *action) 
 }
 
 TimelineItemAction *PBL_WEAK timeline_item_find_dismiss_action(const TimelineItem *item) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK timeline_item_is_ancs_notif(const TimelineItem *item) {

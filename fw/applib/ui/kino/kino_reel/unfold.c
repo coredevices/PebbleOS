@@ -43,7 +43,7 @@ KinoReel *kino_reel_unfold_create(KinoReel *from_reel, bool take_ownership, GRec
 
   AngleLookupContext *ctx = applib_malloc(sizeof(AngleLookupContext));
   if (!ctx) {
-    return NULL;
+    return nullptr;
   }
   *ctx = (AngleLookupContext){
     .angle = angle,

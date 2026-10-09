@@ -162,7 +162,7 @@ void pbl_bt_cb_gatt_client_operations_handle_response(
   }
 
 cleanup:
-  list_remove(event->context, (ListNode **)&s_client_event_ctxs[data->client], NULL);
+  list_remove(event->context, (ListNode **)&s_client_event_ctxs[data->client], nullptr);
   kernel_free(event->context);
 unlock:
   bt_unlock();
@@ -216,7 +216,7 @@ static enum pbl_bt_errno prv_read(uintptr_t obj_ref, GAPLEClient client,
   if (ret_val != PBL_BT_ERRNO_OK) {
     // Clean up the context we created if the driver call failed
     bt_lock();
-    list_remove(&data->node, (ListNode **)&s_client_event_ctxs[client], NULL);
+    list_remove(&data->node, (ListNode **)&s_client_event_ctxs[client], nullptr);
     kernel_free(data);
     bt_unlock();
   }
@@ -259,7 +259,7 @@ static enum pbl_bt_errno prv_write(uintptr_t obj_ref, const uint8_t *value, size
   if (ret_val != PBL_BT_ERRNO_OK) {
     // Clean up the context we created if the driver call failed
     bt_lock();
-    list_remove(&data->node, (ListNode **)&s_client_event_ctxs[client], NULL);
+    list_remove(&data->node, (ListNode **)&s_client_event_ctxs[client], nullptr);
     kernel_free(data);
     bt_unlock();
   }
@@ -286,7 +286,7 @@ void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[]
     if (value_out) {
       memcpy(value_out, read_response->value, read_response->length);
     }
-    list_remove(&read_response->node, (ListNode **)&s_read_responses[client], NULL);
+    list_remove(&read_response->node, (ListNode **)&s_read_responses[client], nullptr);
     kernel_free(read_response);
   }
   bt_unlock();
@@ -351,8 +351,8 @@ void gatt_client_op_cleanup(GAPLEClient client) {
   bt_lock();
   {
     // Free all memory associated with outstanding operations
-    list_foreach(&s_client_event_ctxs[client]->node, prv_deinit_ctx_list, NULL);
-    s_client_event_ctxs[client] = NULL;
+    list_foreach(&s_client_event_ctxs[client]->node, prv_deinit_ctx_list, nullptr);
+    s_client_event_ctxs[client] = nullptr;
 
     ReadResponseData *read_response = s_read_responses[client];
     while (read_response) {
@@ -360,7 +360,7 @@ void gatt_client_op_cleanup(GAPLEClient client) {
       kernel_free(read_response);
       read_response = next_read_response;
     }
-    s_read_responses[client] = NULL;
+    s_read_responses[client] = nullptr;
   }
   bt_unlock();
 }

@@ -75,7 +75,7 @@ typedef struct BTPairingUIData {
 } BTPairingUIData;
 
 //! This pointer and the data it points to should only be accessed from KernelMain
-static BTPairingUIData *s_data_ptr = NULL;
+static BTPairingUIData *s_data_ptr = nullptr;
 
 static void prv_handle_pairing_complete(bool success);
 
@@ -204,7 +204,7 @@ static void prv_add_prf_layers(GRect pair_text_area, BTPairingUIData *data) {
   AnimationHandlers handlers = {
     .stopped = prv_info_text_animation_stopped,
   };
-  animation_set_handlers(animation, handlers, NULL);
+  animation_set_handlers(animation, handlers, nullptr);
 }
 
 static void prv_initialize_info_text(BTPairingUIData *data) {
@@ -250,7 +250,7 @@ static void prv_adjust_background_frame_for_state(BTPairingUIData *data) {
   GAlign alignment;
   const int16_t width_of_sidebar = data->action_bar_layer.layer.frame.size.w;
   const int16_t window_width = data->window.layer.bounds.size.w;
-  const int16_t config_width PBL_UNUSED = window_width - width_of_sidebar + 10;
+  [[maybe_unused]] const int16_t config_width = window_width - width_of_sidebar + 10;
   int16_t x_offset, y_offset, width;
 
   switch (data->ui_state) {
@@ -336,7 +336,7 @@ static void prv_exit_awaiting_user_confirmation(BTPairingUIData *data) {
 
   // Disable all buttons in this screen:
   action_bar_layer_remove_from_window(&data->action_bar_layer);
-  action_bar_layer_set_click_config_provider(&data->action_bar_layer, NULL);
+  action_bar_layer_set_click_config_provider(&data->action_bar_layer, nullptr);
 }
 
 static void prv_confirm_click_handler(ClickRecognizerRef recognizer, void *ctx) {
@@ -475,7 +475,7 @@ static void prv_window_unload(Window *window) {
     kernel_free(data);
   }
 
-  s_data_ptr = NULL;
+  s_data_ptr = nullptr;
 }
 
 static void prv_show_failure_kernel_main_cb(void *unused) {
@@ -484,7 +484,7 @@ static void prv_show_failure_kernel_main_cb(void *unused) {
 
 static void prv_pairing_timeout_timer_callback(void *unused) {
   PBL_LOG_WRN("SSP timeout fired!");
-  launcher_task_add_callback(prv_show_failure_kernel_main_cb, NULL);
+  launcher_task_add_callback(prv_show_failure_kernel_main_cb, nullptr);
 }
 
 static void prv_pop_window(void) {
@@ -498,7 +498,7 @@ static void prv_pop_window_kernel_main_cb(void *unused) {
 }
 
 static void prv_pop_window_timer_callback(void *unused) {
-  launcher_task_add_callback(prv_pop_window_kernel_main_cb, NULL);
+  launcher_task_add_callback(prv_pop_window_kernel_main_cb, nullptr);
 }
 
 static void prv_push_pairing_window(void) {
@@ -590,7 +590,7 @@ static void prv_handle_pairing_complete(bool success) {
 
   // On failure, leave the message on screen for 60 seconds, on success, only for 5 seconds:
   const uint32_t timeout_ms = (success ? 5 : 60) * 1000;
-  new_timer_start(data->timer, timeout_ms, prv_pop_window_timer_callback, NULL, 0 /* flags */);
+  new_timer_start(data->timer, timeout_ms, prv_pop_window_timer_callback, nullptr, 0 /* flags */);
 
   window_set_click_config_provider(&data->window, prv_success_or_failure_click_config_provider);
 
@@ -610,7 +610,7 @@ void bluetooth_pairing_ui_handle_event(PebbleBluetoothPairEvent *event) {
         prv_handle_pairing_complete(event->success);
       } else {
         PBL_LOG_ERR("Got complete event for unknown process %p vs %p", (void *)event->ctx,
-                    s_data_ptr ? (void *)s_data_ptr->ctx : NULL);
+                    s_data_ptr ? (void *)s_data_ptr->ctx : nullptr);
       }
       break;
 
@@ -654,10 +654,10 @@ void pbl_bt_cb_pairing_confirm_handle_request(const struct pbl_bt_pairing_confir
       (PebbleBluetoothPairingConfirmationInfo *)cursor;
   cursor += sizeof(PebbleBluetoothPairingConfirmationInfo);
 
-  char *device_name_copy = NULL;
+  char *device_name_copy = nullptr;
   prv_copy_string_and_move_cursor(device_name, &device_name_copy, &cursor);
 
-  char *confirmation_token_copy = NULL;
+  char *confirmation_token_copy = nullptr;
   prv_copy_string_and_move_cursor(confirmation_token, &confirmation_token_copy, &cursor);
 
   *confirmation_info = (PebbleBluetoothPairingConfirmationInfo){
@@ -710,7 +710,7 @@ static const char *const s_ui_state_names[] = {
 };
 
 static int prv_cmd_pairing(const struct pbl_shell *sh, size_t argc, char **argv) {
-  PairingUIInfo info = {0};
+  PairingUIInfo info = {};
   pbl_sem_init(&info.done, 0, 1);
   launcher_task_add_callback(prv_get_info_cb, &info);
   pbl_sem_take(&info.done, PBL_FOREVER);
@@ -730,5 +730,5 @@ static int prv_cmd_pairing(const struct pbl_shell *sh, size_t argc, char **argv)
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, pairing, NULL, "Show the pairing prompt", prv_cmd_pairing, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, pairing, nullptr, "Show the pairing prompt", prv_cmd_pairing, 0, 0);
 #endif

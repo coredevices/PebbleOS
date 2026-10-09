@@ -37,7 +37,7 @@
 
 static GBitmap test_image;
 static GContext s_ctx;
-static FrameBuffer *s_fb = NULL;
+static FrameBuffer *s_fb = nullptr;
 
 void test_graphics_draw_bitmap__initialize(void) {
   s_fb = malloc(sizeof(FrameBuffer));
@@ -118,7 +118,7 @@ static void prv_offset_bitmap_layer_test(GPoint bounds_origin) {
 ////////////////////////////////////
 
 static GBitmap *prv_create_bitmap_from_png_file(const char *png_filename_without_extension) {
-  GBitmap *result = NULL;
+  GBitmap *result = nullptr;
 
   char png_file_path[strlen(CLAR_FIXTURE_PATH) + 1 + strlen(GRAPHICS_FIXTURE_PATH) + 1 +
                      strlen(png_filename_without_extension) + 1];
@@ -164,11 +164,11 @@ static GBitmap *prv_create_bitmap_from_pbi_file(const char *pbi_filename_without
   // Create a static GBitmap to avoid modifying the read_pbi() function to return a GBitmap
   static GBitmap result;
 
-  char pbi_filename[PATH_STRING_LENGTH] = {0};
+  char pbi_filename[PATH_STRING_LENGTH] = {};
   snprintf(pbi_filename, PATH_STRING_LENGTH, "%s.pbi", pbi_filename_without_extension);
 
   if (!read_pbi(pbi_filename, &result)) {
-    return NULL;
+    return nullptr;
   } else {
     return &result;
   }
@@ -248,7 +248,7 @@ static void prv_composite_test(const char *unit_test_name, GCompOp compositing_m
 
     framebuffer_clear(s_fb);
 
-    char test_image_filename[PATH_STRING_LENGTH] = {0};
+    char test_image_filename[PATH_STRING_LENGTH] = {};
     snprintf(test_image_filename, PATH_STRING_LENGTH, "test_graphics_draw_bitmap_%s_test_image",
              test_data->test_name);
 
@@ -270,7 +270,7 @@ static void prv_composite_test(const char *unit_test_name, GCompOp compositing_m
     prv_composite_test_draw_bitmap(&s_ctx, bitmap, offset_point, compositing_mode);
 
     // Check the result
-    char unit_test_result_image_file_base_name[PATH_STRING_LENGTH] = {0};
+    char unit_test_result_image_file_base_name[PATH_STRING_LENGTH] = {};
     snprintf(unit_test_result_image_file_base_name, PATH_STRING_LENGTH, "%s_%s", unit_test_name,
              test_data->test_name);
     cl_check(

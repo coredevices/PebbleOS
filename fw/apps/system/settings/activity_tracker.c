@@ -122,7 +122,7 @@ static void prv_draw_no_activities_cell_rect(GContext *ctx, const Layer *cell_la
   const GTextAlignment alignment = GTextAlignmentCenter;
 
   const GSize text_size = graphics_text_layout_get_max_used_size(ctx, no_activities_string, font,
-                                                                 box, overflow, alignment, NULL);
+                                                                 box, overflow, alignment, nullptr);
 
   // We want to position the text in the center of the cell vertically,
   // we divide the height of the cell by two and subtract half of the text size.
@@ -130,14 +130,14 @@ static void prv_draw_no_activities_cell_rect(GContext *ctx, const Layer *cell_la
   // So we also have to subtract half of a single line's width.
   box.origin.y = (box.size.h - text_size.h - fonts_get_font_height(font) / 2) / 2;
 
-  graphics_draw_text(ctx, no_activities_string, font, box, overflow, alignment, NULL);
+  graphics_draw_text(ctx, no_activities_string, font, box, overflow, alignment, nullptr);
 }
 #endif
 
 #if PBL_ROUND
 static void prv_draw_no_activities_cell_round(GContext *ctx, const Layer *cell_layer,
                                               const char *no_activities_string) {
-  menu_cell_basic_draw(ctx, cell_layer, no_activities_string, NULL, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, no_activities_string, nullptr, nullptr);
 }
 #endif
 
@@ -159,7 +159,7 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
     return;
   }
 
-  const char *title = NULL;
+  const char *title = nullptr;
   if (row == 0) {
     title = i18n_get("None", data);
   } else {
@@ -167,7 +167,7 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
     title = node->name;
   }
 
-  option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame, title, false, NULL);
+  option_menu_system_draw_row(option_menu, ctx, cell_layer, text_frame, title, false, nullptr);
 }
 
 static uint16_t prv_row_height_cb(OptionMenu *option_menu, uint16_t row, bool is_selected,
@@ -203,7 +203,7 @@ static void prv_unload_cb(OptionMenu *option_menu, void *context) {
   app_menu_data_source_deinit(data->data_source);
 
   app_free(data->data_source);
-  data->data_source = NULL;
+  data->data_source = nullptr;
 
   option_menu_deinit(&data->option_menu);
 

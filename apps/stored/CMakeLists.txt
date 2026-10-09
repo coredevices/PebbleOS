@@ -89,7 +89,7 @@ function(pbl_stored_app name)
     COMMAND ${generate} appinfo
             --input ${CMAKE_CURRENT_SOURCE_DIR}/${name}/appinfo.json
             --output ${app_bin}/appinfo.auto.c
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}/appinfo.json
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}/appinfo.json ${PBL_BASE}/tools/generate_appinfo.py
     WORKING_DIRECTORY ${PBL_BASE}
     VERBATIM
   )

@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,7 +142,7 @@ bool PBL_WEAK animation_set_handlers(Animation *animation, AnimationHandlers cal
 
 void *PBL_WEAK animation_get_context(Animation *animation) {
   if (!animation) {
-    return NULL;
+    return nullptr;
   }
   return ((AnimationPrivate *)animation)->context;
 }
@@ -204,7 +203,7 @@ bool PBL_WEAK animation_set_auto_destroy(Animation *animation, bool auto_destroy
 PropertyAnimation *PBL_WEAK property_animation_create_layer_frame(struct Layer *layer,
                                                                   GRect *from_frame,
                                                                   GRect *to_frame) {
-  return property_animation_create(NULL, layer, from_frame, to_frame);
+  return property_animation_create(nullptr, layer, from_frame, to_frame);
 }
 
 PropertyAnimation *PBL_WEAK
@@ -265,7 +264,7 @@ Animation *PBL_WEAK property_animation_get_animation(PropertyAnimation *property
 }
 
 InterpolateInt64Function PBL_WEAK animation_private_current_interpolate_override(void) {
-  return NULL;
+  return nullptr;
 }
 
 void PBL_WEAK property_animation_update_int16(PropertyAnimation *property_animation,

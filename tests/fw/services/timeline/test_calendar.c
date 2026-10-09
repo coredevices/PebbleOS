@@ -64,7 +64,7 @@ bool weather_layout_verify(bool existing_attributes[]) {
 }
 
 const TimelineEventImpl *timeline_peek_get_event_service(void) {
-  return NULL;
+  return nullptr;
 }
 
 // Helpers

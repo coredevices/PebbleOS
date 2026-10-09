@@ -98,7 +98,7 @@ void stationary_handle_battery_connection_change_event(void) {
   if (battery_is_usb_connected()) {
   } else {
   }
-  prv_update_stationary_enabled(NULL);
+  prv_update_stationary_enabled(nullptr);
 }
 
 //! A movement of the watch will make the watch wake up. In this state, the watch
@@ -141,7 +141,7 @@ static void prv_stationary_check_launcher_task_cb(void *unused_data) {
 //! the call was made. The current position is updated at this time
 static void prv_stationary_check_timer_cb(void *unused_data) {
   //! All stationary events need to be handled by kernel main
-  launcher_task_add_callback(prv_stationary_check_launcher_task_cb, NULL);
+  launcher_task_add_callback(prv_stationary_check_launcher_task_cb, nullptr);
 }
 
 bool stationary_get_enabled(void) {
@@ -158,7 +158,7 @@ void stationary_set_enabled(bool enabled) {
   } else {
   }
 
-  launcher_task_add_callback(prv_update_stationary_enabled, NULL);
+  launcher_task_add_callback(prv_update_stationary_enabled, nullptr);
 }
 
 void stationary_run_level_enable(bool enable) {
@@ -171,7 +171,7 @@ void stationary_run_level_enable(bool enable) {
     return;
   }
   s_stationary_mode_inhibit = inhibit;
-  launcher_task_add_callback(prv_update_stationary_enabled, NULL);
+  launcher_task_add_callback(prv_update_stationary_enabled, nullptr);
 }
 
 void stationary_wake_up(void) {

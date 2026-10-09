@@ -113,7 +113,7 @@ HealthServiceState *app_state_get_health_service_state(void) {
 
 HealthServiceState *worker_state_get_health_service_state(void) {
   cl_fail("should never be called");
-  return NULL;
+  return nullptr;
 }
 
 void event_service_client_subscribe(EventServiceInfo *service_info) {
@@ -281,7 +281,7 @@ DataLoggingSession *dls_create(uint32_t tag, DataLoggingItemType item_type, uint
     return (DataLoggingSession *)DataLoggingSession_ActivitySessions;
 
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -915,7 +915,7 @@ static void prv_sleep_sessions_using_health_service(uint32_t *session_entries,
   s_health_sessions_awake_time = 0;
   s_health_sessions_sleep_time = 0;
   health_service_activities_iterate(HealthActivityMaskAll, now - (2 * PBL_SEC_PER_DAY), now,
-                                    direction, prv_activity_iterate_cb, NULL);
+                                    direction, prv_activity_iterate_cb, nullptr);
   PBL_LOG_DBG("Found %" PRIu32 " activities", s_health_sessions_count);
   *session_entries = s_health_sessions_count;
 }
@@ -1774,7 +1774,7 @@ void prv_assert_known_settings(void) {
 // --------------------------------------------------------------------------------------
 // Save the current settings file format with known data to the local file system so that it can
 // be checked in and used for migration tests.
-PBL_UNUSED static void prv_save_known_settings_file(const char *filename) {
+[[maybe_unused]] static void prv_save_known_settings_file(const char *filename) {
   // Let's include 3 days of history by start at s_init_time_tm - 3 days
   struct tm time_tm = s_init_time_tm;
   time_t utc_sec = mktime(&time_tm);
@@ -1831,13 +1831,13 @@ PBL_UNUSED static void prv_save_known_settings_file(const char *filename) {
   cl_assert(fd >= S_SUCCESS);
   size_t size = pfs_get_file_size(fd);
   uint8_t *buf = malloc(size);
-  cl_assert(buf != NULL);
+  cl_assert(buf != nullptr);
   cl_assert(pfs_read(fd, buf, size) == size);
   pfs_close(fd);
 
   // Save it to the local file system
   FILE *file = fopen(out_path, "wb");
-  cl_assert(file != NULL);
+  cl_assert(file != nullptr);
   cl_assert_equal_i(fwrite(buf, size, 1, file), 1);
   fclose(file);
   free(buf);
@@ -2329,11 +2329,11 @@ static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, HRMQuality qualit
         .bpm.bpm = bpm,
         .bpm.quality = quality,
       };
-      prv_hrm_subscription_cb(&hrm_event, NULL);
+      prv_hrm_subscription_cb(&hrm_event, nullptr);
       s_num_hrm_callbacks++;
     }
     if ((rtc_get_time() % PBL_SEC_PER_MIN) == 0) {
-      prv_minute_system_task_cb(NULL);
+      prv_minute_system_task_cb(nullptr);
     }
   }
 }
@@ -2433,7 +2433,7 @@ void test_activity__hrm_median(void) {
   prv_advance_time_hr(3 /*sec*/, 100 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
   prv_advance_time_hr(1 /*sec*/, 51 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
   prv_advance_time_hr(8 /*sec*/, 120 /*hr*/, HRMQuality_Worst, true /*force_continuous*/);
-  prv_minute_system_task_cb(NULL);
+  prv_minute_system_task_cb(nullptr);
   activity_metrics_prv_get_median_hr_bpm(&median, &total_weight);
   cl_assert_equal_i(median, 51);
 
@@ -2514,7 +2514,7 @@ void test_activity__prv_set_metric(void) {
   activity_start_tracking(false /*test_mode*/);
   fake_system_task_callbacks_invoke_pending();
 
-  int32_t metric_values[ACTIVITY_HISTORY_DAYS] = {0};
+  int32_t metric_values[ACTIVITY_HISTORY_DAYS] = {};
 
   // Set today's value
   activity_metrics_prv_set_metric(ActivityMetricStepCount, PBL_THURSDAY, 1111);
@@ -2772,7 +2772,7 @@ static void prv_set_median_hr_for_minutes(int bpm, int num_minutes) {
   memset(activity_private_state()->hr.weights, 100, num_samples);
 
   for (int i = 0; i < num_minutes; i++) {
-    prv_minute_system_task_cb(NULL);
+    prv_minute_system_task_cb(nullptr);
   }
 }
 
@@ -2865,7 +2865,7 @@ void test_activity__update_time_in_hr_zones(void) {
   time_t utc_sec = rtc_get_time();
   utc_sec += PBL_SEC_PER_DAY;
   rtc_set_time(utc_sec);
-  prv_minute_system_task_cb(NULL);
+  prv_minute_system_task_cb(nullptr);
   cl_assert_equal_b(prv_is_hr_elevated(), true); // stays elevated
   activity_get_metric(ActivityMetricHeartRateZone1Minutes, 1, &zone1_minutes);
   cl_assert_equal_i(zone1_minutes, 0);

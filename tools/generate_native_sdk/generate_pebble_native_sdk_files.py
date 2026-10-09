@@ -6,6 +6,7 @@
 
 import argparse
 import os
+import re
 import shutil
 from functools import cmp_to_key
 from os import path
@@ -31,19 +32,80 @@ SRC_DIR = "src"
 INCLUDE_DIR = "include"
 LIB_DIR = "lib"
 
-COMPILER_HEADERS = (
-    "pbl/kernel/compiler.h",
-    "pbl/kernel/compiler/gcc.h",
-    "pbl/kernel/compiler/clang.h",
+COMPILER_INCLUDE_RE = re.compile(
+    r'^#include [<"]pbl/kernel/compiler\.h[>"]\n', re.MULTILINE
 )
 
 
-def copy_compiler_headers(pbl_root_dir, sdk_include_dir):
-    include_dir = path.join(pbl_root_dir, "include")
-    for header in COMPILER_HEADERS:
-        dest = path.join(sdk_include_dir, header)
-        os.makedirs(path.dirname(dest), exist_ok=True)
-        shutil.copy(path.join(include_dir, header), dest)
+def _compiler_macros(pbl_root_dir):
+    """Map each pbl/kernel/compiler.h macro to its GCC spelling.
+
+    Only macros that are plain aliases are supported: an object-like macro
+    becomes its definition, a function-like one is renamed to the builtin it
+    forwards its arguments to.
+    """
+    include_dir = path.join(pbl_root_dir, "include", "pbl", "kernel")
+    with open(path.join(include_dir, "compiler.h")) as f:
+        frontend = f.read()
+    with open(path.join(include_dir, "compiler", "gcc.h")) as f:
+        backend = f.read()
+
+    impls = {}
+    for m in re.finditer(
+        r"^#define (\w+_IMPL)(\(([^)]*)\))?[ \t]+(.+)$", backend, re.MULTILINE
+    ):
+        impls[m.group(1)] = (m.group(3), m.group(4).strip())
+
+    macros = {}
+    for m in re.finditer(
+        r"^#define (PBL_\w+)(\(([^)]*)\))? (PBL_\w+_IMPL)\b", frontend, re.MULTILINE
+    ):
+        name, params, impl = m.group(1), m.group(3), m.group(4)
+        impl_params, body = impls[impl]
+        if params is None:
+            macros[name] = body
+            continue
+        call = re.fullmatch(r"(\w+)\((.*)\)", body)
+        args = [a.strip() for a in (impl_params or "").split(",")]
+        if call and [a.strip() for a in call.group(2).split(",")] == args:
+            macros[name] = call.group(1)
+        else:
+            macros[name] = None
+    return macros
+
+
+def expand_compiler_macros(pbl_root_dir, sdk_include_dir):
+    """Rewrite the compiler.h macros SDK headers use into GCC spellings.
+
+    Exported declarations are copied verbatim from the firmware, which builds
+    with a newer C standard than apps do, so the SDK does not ship
+    pbl/kernel/compiler.h.
+    """
+    # SDKs generated before this shipped the headers themselves.
+    shutil.rmtree(path.join(sdk_include_dir, "pbl"), ignore_errors=True)
+
+    macros = _compiler_macros(pbl_root_dir)
+    token_re = re.compile(
+        r"\b(" + "|".join(sorted(macros, key=len, reverse=True)) + r")\b"
+    )
+
+    def replace(m):
+        expansion = macros[m.group(1)]
+        if expansion is None:
+            raise RuntimeError(f"{m.group(1)} cannot be expanded for the SDK")
+        return expansion
+
+    for root, _, files in os.walk(sdk_include_dir):
+        for name in files:
+            if not name.endswith(".h"):
+                continue
+            header = path.join(root, name)
+            with open(header) as f:
+                text = f.read()
+            new = token_re.sub(replace, COMPILER_INCLUDE_RE.sub("", text))
+            if new != text:
+                with open(header, "w") as f:
+                    f.write(new)
 
 
 PEBBLE_APP_H_TEXT = """\
@@ -259,8 +321,6 @@ if __name__ == "__main__":
         path.join(sdk_include_dir, "pebble_warn_unsupported_functions.h"),
     )
 
-    copy_compiler_headers(pbl_root_dir, sdk_include_dir)
-
     generate_shim_files(
         shim_config,
         pbl_root_dir,
@@ -271,3 +331,5 @@ if __name__ == "__main__":
         internal_sdk_build=options.internal_sdk_build,
         autoconf=options.autoconf,
     )
+
+    expand_compiler_macros(pbl_root_dir, sdk_include_dir)

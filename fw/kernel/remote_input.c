@@ -20,7 +20,6 @@
 #include <applib/ui/recognizer/swipe.h>
 #endif
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define REMOTE_INPUT_ENDPOINT 0xf00d
@@ -226,10 +225,10 @@ RemoteInputResult remote_input_button_set(uint8_t buttons) {
 #define REMOTE_INPUT_SWIPE_TRAVEL_NUM 3
 #define REMOTE_INPUT_SWIPE_TRAVEL_DEN 5
 
-_Static_assert((MIN(DISP_COLS, DISP_ROWS) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
-                       REMOTE_INPUT_SWIPE_TRAVEL_DEN >=
-                   SWIPE_MIN_LENGTH_PX,
-               "swipe travel is below the swipe recognizer's minimum length");
+static_assert((MIN(DISP_COLS, DISP_ROWS) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
+                      REMOTE_INPUT_SWIPE_TRAVEL_DEN >=
+                  SWIPE_MIN_LENGTH_PX,
+              "swipe travel is below the swipe recognizer's minimum length");
 
 typedef struct SwipeContext {
   int16_t x;

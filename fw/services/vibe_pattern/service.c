@@ -38,7 +38,7 @@ typedef struct {
 #define HISTORY_CLEAR_ALL 0
 
 static PBL_MUTEX_DEFINE(s_vibe_history_mutex);
-static VibeHistory *s_vibe_history = NULL;
+static VibeHistory *s_vibe_history = nullptr;
 static bool s_vibe_history_enabled = false;
 static bool s_vibe_service_enabled = true;
 
@@ -91,7 +91,7 @@ static void prv_vibe_history_start_event(void) {
     return;
   }
   VibeHistory *vibe = kernel_malloc(sizeof(VibeHistory));
-  if (vibe == NULL) {
+  if (vibe == nullptr) {
     s_vibe_history_enabled = false;
     return;
   }
@@ -103,7 +103,7 @@ static void prv_vibe_history_start_event(void) {
   vibe->time_end = END_NOT_SET;
 
   pbl_mutex_lock(&s_vibe_history_mutex, PBL_FOREVER);
-  if (s_vibe_history == NULL) {
+  if (s_vibe_history == nullptr) {
     s_vibe_history = vibe;
   } else {
     list_append((ListNode *)s_vibe_history, (ListNode *)vibe);
@@ -167,7 +167,7 @@ static RtcTicks s_last_vibe_active_tick = 0;
 static int32_t s_vibe_strength_default = VIBE_STRENGTH_MAX;
 
 static PBL_MUTEX_DEFINE(s_vibe_pattern_mutex);
-static VibePatternStep *s_vibe_queue_head = NULL;
+static VibePatternStep *s_vibe_queue_head = nullptr;
 
 //! Analytics: Track time-weighted average strength
 static uint64_t s_strength_time_product_sum;  // Sum of (strength_pct × time_ms)
@@ -275,7 +275,7 @@ static uint32_t prv_next_timeout_ms(uint32_t step_duration_ms) {
 }
 
 static void prv_timer_callback(void *data) {
-  if (s_vibe_queue_head == NULL) {
+  if (s_vibe_queue_head == nullptr) {
     PBL_LOG_ERR("Tried to handle a vibe event with a null vibe queue");
     return;
   }
@@ -287,11 +287,12 @@ static void prv_timer_callback(void *data) {
   s_vibe_queue_head = (VibePatternStep *)list_pop_head((ListNode *)s_vibe_queue_head);
   kernel_free(removed_node);
 
-  if (s_vibe_queue_head != NULL) {
+  if (s_vibe_queue_head != nullptr) {
     // move to the next step
     prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
     const uint32_t next_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
-    bool success = new_timer_start(s_pattern_timer, next_ms, prv_timer_callback, NULL, 0 /*flags*/);
+    bool success =
+        new_timer_start(s_pattern_timer, next_ms, prv_timer_callback, nullptr, 0 /*flags*/);
     PBL_ASSERTN(success);
   } else {
     // I'm done with the active pattern
@@ -340,7 +341,7 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
   }
 
   VibePatternStep *step = kernel_malloc(sizeof(VibePatternStep));
-  if (step == NULL) {
+  if (step == nullptr) {
     PBL_LOG_ERR("Couldn't malloc for a vibe step");
     pbl_mutex_unlock(&s_vibe_pattern_mutex);
     return false;
@@ -350,7 +351,7 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
   step->duration_ms = MIN(duration_ms, MAX_VIBE_DURATION_MS);
   step->strength = strength;
 
-  if (s_vibe_queue_head == NULL) {
+  if (s_vibe_queue_head == nullptr) {
     // Fresh queue: take the explicitly-set owner, else default by task.
     if (s_pending_owner != VibePatternOwner_Other) {
       s_pattern_owner = s_pending_owner;
@@ -380,10 +381,10 @@ DEFINE_SYSCALL(bool, sys_vibe_pattern_enqueue_step, uint32_t duration_ms, bool o
 
 DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
   pbl_mutex_lock(&s_vibe_pattern_mutex, PBL_FOREVER);
-  if (s_vibe_queue_head == NULL || s_pattern_in_progress) {
+  if (s_vibe_queue_head == nullptr || s_pattern_in_progress) {
     // either no vibes queued or I've already started
     PBL_LOG_DBG("vibe_pattern: start ignored, queued=%d, in_progress=%d, enabled=%d",
-                s_vibe_queue_head != NULL, s_pattern_in_progress, s_vibe_service_enabled);
+                s_vibe_queue_head != nullptr, s_pattern_in_progress, s_vibe_service_enabled);
     pbl_mutex_unlock(&s_vibe_pattern_mutex);
     return;
   }
@@ -409,7 +410,8 @@ DEFINE_SYSCALL(void, sys_vibe_pattern_trigger_start, void) {
   prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
   s_pattern_in_progress = true;
   const uint32_t first_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
-  bool success = new_timer_start(s_pattern_timer, first_ms, prv_timer_callback, NULL, 0 /*flags*/);
+  bool success =
+      new_timer_start(s_pattern_timer, first_ms, prv_timer_callback, nullptr, 0 /*flags*/);
   PBL_ASSERTN(success);
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
 }

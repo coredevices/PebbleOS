@@ -28,7 +28,7 @@ static const char *prv_color_short_name(WatchInfoColor color) {
       return "BK";
     case WATCH_INFO_COLOR_COREDEVICES_P2D_WHITE:
       return "WH";
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
     case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_GREY:
       return "BG";
     case WATCH_INFO_COLOR_COREDEVICES_PT2_BLACK_RED:
@@ -37,7 +37,7 @@ static const char *prv_color_short_name(WatchInfoColor color) {
       return "SB";
     case WATCH_INFO_COLOR_COREDEVICES_PT2_SILVER_GREY:
       return "SG";
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
     case WATCH_INFO_COLOR_COREDEVICES_PR2_BLACK_20:
       return "BK20";
     case WATCH_INFO_COLOR_COREDEVICES_PR2_SILVER_14:

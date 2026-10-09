@@ -56,11 +56,11 @@ static bool prv_should_skip_short_interval(void) {
 static void prv_advert_job_unscheduled_callback(GAPLEAdvertisingJobRef job, bool completed,
                                                 void *data) {
   // bt_lock() is still held for us by gap_le_advert
-  s_reconnect_advert_job = NULL;
+  s_reconnect_advert_job = nullptr;
 }
 
 static bool prv_is_advertising_for_reconnection(void) {
-  return (s_reconnect_advert_job != NULL);
+  return (s_reconnect_advert_job != nullptr);
 }
 
 static ReconnectType prv_current_reconnect_type(void) {
@@ -153,7 +153,7 @@ static void prv_evaluate(ReconnectType prev_type) {
     }
 
     s_reconnect_advert_job =
-        gap_le_advert_schedule(ad, terms, num_terms, prv_advert_job_unscheduled_callback, NULL,
+        gap_le_advert_schedule(ad, terms, num_terms, prv_advert_job_unscheduled_callback, nullptr,
                                GAPLEAdvertisingJobTagReconnection);
 
     if (use_hrm_payload) {
@@ -219,7 +219,7 @@ static void prv_hrm_reconnect_timeout_kernel_main_callback(void *data) {
 }
 
 static void prv_hrm_reconnect_timeout_timer_callback(void *data) {
-  launcher_task_add_callback(prv_hrm_reconnect_timeout_kernel_main_callback, NULL);
+  launcher_task_add_callback(prv_hrm_reconnect_timeout_kernel_main_callback, nullptr);
 }
 
 // -----------------------------------------------------------------------------

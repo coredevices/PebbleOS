@@ -11,7 +11,7 @@ const char *PBL_WEAK i18n_get(const char *msgid, const void *owner) {
   // However, if we have a context, this string needs to not show the context.
   // So we just find EOT and if it's present return the next character.
   const char *message = strchr(msgid, '\4');
-  if (message == NULL) {
+  if (message == nullptr) {
     // No context, the whole string is the message.
     return msgid;
   }

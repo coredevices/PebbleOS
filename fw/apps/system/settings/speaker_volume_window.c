@@ -38,8 +38,8 @@ static void prv_play_preview(SpeakerVolumeWindowData *data) {
 }
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
-  _Static_assert(offsetof(Window, layer) == 0, "");
-  _Static_assert(offsetof(SpeakerVolumeWindowData, window) == 0, "");
+  static_assert(offsetof(Window, layer) == 0, "");
+  static_assert(offsetof(SpeakerVolumeWindowData, window) == 0, "");
   SpeakerVolumeWindowData *data = (SpeakerVolumeWindowData *)layer;
 
   graphics_context_set_fill_color(ctx, GColorWhite);
@@ -54,7 +54,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   title_frame.origin.y = PBL_IF_ROUND_ELSE(24, 16);
   title_frame.size.h = 30;
   graphics_draw_text(ctx, i18n_get("Volume", data), fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-                     title_frame, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     title_frame, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 
   char value_text[8];
   snprintf(value_text, sizeof(value_text), "%d%%", (int)data->value);
@@ -65,7 +65,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   value_frame.origin.y = (layer->bounds.size.h - value_height) / 2;
   value_frame.size.h = value_height + 4; // slack so nothing clips
   graphics_draw_text(ctx, value_text, value_font, value_frame, GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 
 static void prv_set_value(SpeakerVolumeWindowData *data, int new_value) {

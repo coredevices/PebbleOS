@@ -9,7 +9,7 @@ bool gbitmap_png_data_is_png(uint8_t *data, size_t data_size) {
 }
 
 GBitmap *gbitmap_create_from_png_data(const uint8_t *png_data, size_t png_data_size) {
-  return NULL;
+  return nullptr;
 }
 
 bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t data_size) {

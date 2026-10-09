@@ -277,7 +277,7 @@ void test_app_glance_db__blob_read_with_invalid_key_length_or_null_val_out_fails
                     E_INVALID_ARGUMENT);
 
   // Trying to read the basic glance blob back with a NULL glance_out argument should fail
-  uint8_t *invalid_glance_out = NULL;
+  uint8_t *invalid_glance_out = nullptr;
   cl_assert_equal_i(app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                        invalid_glance_out, glance_size),
                     E_INVALID_ARGUMENT);
@@ -530,19 +530,20 @@ void test_app_glance_db__reading_nonexistent_glance_returns_does_not_exist(void)
 void test_app_glance_db__reading_glance_with_invalid_arguments_fails(void) {
   // NULL UUID fails
   AppGlance glance_out = {};
-  cl_assert_equal_i(app_glance_db_read_glance(NULL, &glance_out), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_read_glance(nullptr, &glance_out), E_INVALID_ARGUMENT);
 
   // NULL glance_out fails
-  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, NULL), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, nullptr), E_INVALID_ARGUMENT);
 }
 
 void test_app_glance_db__inserting_glance_with_invalid_arguments_fails(void) {
   // NULL UUID fails
   const AppGlance glance = {};
-  cl_assert_equal_i(app_glance_db_insert_glance(NULL, &glance), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_insert_glance(nullptr, &glance), E_INVALID_ARGUMENT);
 
   // NULL glance fails
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, NULL), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, nullptr),
+                    E_INVALID_ARGUMENT);
 
   // Glance with too many slices fails
   const AppGlance glance_with_too_many_slices = (AppGlance){
@@ -585,10 +586,10 @@ void test_app_glance_db__read_glance_creation_time(void) {
 void test_app_glance_db__read_glance_creation_time_with_invalid_arguments_fails(void) {
   // NULL UUID fails
   time_t time_out;
-  cl_assert_equal_i(app_glance_db_read_creation_time(NULL, &time_out), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_read_creation_time(nullptr, &time_out), E_INVALID_ARGUMENT);
 
   // NULL time_out fails
-  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, NULL),
+  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, nullptr),
                     E_INVALID_ARGUMENT);
 }
 

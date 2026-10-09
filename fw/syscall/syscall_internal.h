@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -23,7 +22,7 @@
         "svc 2 \n"                                                                  \
         "b __" #funcName "\n");                                                     \
   }                                                                                 \
-  PBL_EXTERNALLY_VISIBLE retType PBL_USED __##funcName(__VA_ARGS__)
+  retType PBL_EXTERNALLY_VISIBLE PBL_USED __##funcName(__VA_ARGS__)
 
 //! Useful function for checking syscall privileges.
 //! @return True if the most recent syscall originated from userspace, resulting in a privilege
@@ -36,7 +35,7 @@ bool syscall_internal_check_return_address(void *ret_addr);
 
 //! Call this from privileged mode whenever a syscall did something wrong. This will kick out the
 //! misbehaving app.
-PBL_NORETURN void syscall_failed(void);
+[[noreturn]] void syscall_failed(void);
 
 //! Call this from privileged mode when entering a syscall to ensure that provided
 //! pointers are in the app's memory space, rather than in the kernel. If the buffer is not,
@@ -78,7 +77,7 @@ const MpuRegion *syscall_get_stack_guard_region(PebbleTask task);
 #define PRIVILEGE_WAS_ELEVATED (0)
 #endif
 
-#elif defined(CONFIG_ARCH_POSIX)
+#elifdef CONFIG_ARCH_POSIX
 
 // A native build has a single privilege level: syscalls are plain calls.
 #undef DEFINE_SYSCALL

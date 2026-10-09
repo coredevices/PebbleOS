@@ -21,12 +21,12 @@ char *otp_get_slot(const uint8_t index) {
   status_t ret;
 
   if (index >= NUM_OTP_SLOTS) {
-    return NULL;
+    return nullptr;
   }
 
   info = flash_security_registers_info();
   if (info->num_sec_regs == 0U) {
-    return NULL;
+    return nullptr;
   }
 
   for (uint8_t i = 0U; i < OTP_SLOT_SIZE; i++) {
@@ -38,7 +38,7 @@ char *otp_get_slot(const uint8_t index) {
                                          (uint8_t *)&s_slot[index][i]);
     }
     if (ret != S_SUCCESS) {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -46,7 +46,7 @@ char *otp_get_slot(const uint8_t index) {
 }
 
 uint8_t *otp_get_lock(const uint8_t index) {
-  return NULL;
+  return nullptr;
 }
 
 bool otp_is_locked(const uint8_t index) {
@@ -107,7 +107,7 @@ OtpWriteResult otp_write_slot(const uint8_t index, const char *value) {
   }
 
   existing_val = otp_get_slot(index);
-  if ((existing_val == NULL) || (memcmp(existing_val, value, len + 1) != 0)) {
+  if ((existing_val == nullptr) || (memcmp(existing_val, value, len + 1) != 0)) {
     return OtpWriteFailCorrupt;
   }
 

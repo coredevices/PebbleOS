@@ -51,8 +51,8 @@ void test_word_iterator__initialize(void) {
 
 void test_word_iterator__test_string_empty(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
 
   // Allocate immutable types
   bool success = false;
@@ -74,8 +74,8 @@ void test_word_iterator__test_string_empty(void) {
 
 void test_word_iterator__test_unprintable(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
 
   // Allocate immutable types
   bool success = false;
@@ -97,8 +97,8 @@ void test_word_iterator__test_unprintable(void) {
 
 void test_word_iterator__test_string_single_word(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
 
   // Allocate immutable types
   bool success = false;
@@ -120,8 +120,8 @@ void test_word_iterator__test_string_single_word(void) {
 
 void test_word_iterator__test_string_consecutive_newlines(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
 
   // Allocate immutable types
   bool success = false;
@@ -171,8 +171,8 @@ void test_word_iterator__test_string_consecutive_newlines(void) {
 void test_word_iterator__test_em_space_word_break(void) {
   // EM SPACE (U+2003, UTF-8: \xe2\x80\x83) should act as a word break,
   // so the first word is "AB" (not "AB<em space>CD").
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
   FontInfo font_info = {.max_height = 10};
 
   bool success = false;
@@ -197,8 +197,8 @@ void test_word_iterator__test_em_space_word_break(void) {
 
 void test_word_iterator__test_no_break_space_no_word_break(void) {
   // NO-BREAK SPACE (U+00A0, UTF-8: \xc2\xa0) should NOT act as a word break
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
   FontInfo font_info = {.max_height = 10};
 
   bool success = false;
@@ -221,8 +221,8 @@ void test_word_iterator__test_no_break_space_no_word_break(void) {
 
 void test_word_iterator__test_string_terminating_newlines(void) {
   // Allocate mutable types
-  Iterator word_iter = (Iterator){0};
-  WordIterState word_iter_state = (WordIterState){0};
+  Iterator word_iter = (Iterator){};
+  WordIterState word_iter_state = (WordIterState){};
 
   // Allocate immutable types
   bool success = false;

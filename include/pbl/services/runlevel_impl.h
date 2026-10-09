@@ -25,12 +25,12 @@
  */
 
 /** @cond INTERNAL_HIDDEN */
-#define RUNLEVEL(number, name)                                                    \
-  _Static_assert(0 <= number && number <= 31,                                     \
-                 "The numeric value of runlevel " #name " (" #number              \
-                 ")"                                                              \
-                 " is out of range. Only runlevels in the range 0 <= level <= 31" \
-                 " are supported.");
+#define RUNLEVEL(number, name)                                                   \
+  static_assert(0 <= number && number <= 31,                                     \
+                "The numeric value of runlevel " #name " (" #number              \
+                ")"                                                              \
+                " is out of range. Only runlevels in the range 0 <= level <= 31" \
+                " are supported.");
 #include "runlevel.def"
 #undef RUNLEVEL
 /** @endcond */

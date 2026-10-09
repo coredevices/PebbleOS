@@ -174,7 +174,7 @@ void timeline_resources_get_id(const TimelineResourceInfo *timeline_res, Timelin
 
 fail:
   if (!prv_get_sys_resource(timeline_res->fallback_id, size, res_info_out)) {
-    *res_info_out = (AppResourceInfo){0};
+    *res_info_out = (AppResourceInfo){};
   }
 }
 
@@ -186,7 +186,7 @@ DEFINE_SYSCALL(void, sys_timeline_resources_get_id, const TimelineResourceInfo *
   }
   if (!timeline_res || !res_info || (size >= TimelineResourceSizeCount)) {
     if (res_info) {
-      *res_info = (AppResourceInfo){0};
+      *res_info = (AppResourceInfo){};
     }
     return;
   }

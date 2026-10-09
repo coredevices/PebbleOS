@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/services/notifications/notifications.h>
 
 #include <applib/fonts/fonts.h>

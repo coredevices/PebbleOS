@@ -48,7 +48,7 @@ void pbl_posix_irq_run(void (*isr)(void *), void *arg) {
 
 void pbl_posix_cpu_wait(uint64_t timeout_us) {
   struct timeval now;
-  gettimeofday(&now, NULL);
+  gettimeofday(&now, nullptr);
   uint64_t ns = (uint64_t)now.tv_usec * 1000 + timeout_us * 1000;
   struct timespec deadline = {
     .tv_sec = now.tv_sec + (time_t)(ns / 1000000000),

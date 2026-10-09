@@ -6,11 +6,11 @@
 #include <pbl/services/timeline/calendar_layout_resources.h>
 #include <pbl/util/size.h>
 
-_Static_assert(offsetof(CalendarIconImage, size) == offsetof(GDrawCommandImage, size), "");
-_Static_assert(sizeof(CalendarIconImage) == offsetof(GDrawCommandImage, command_list.commands), "");
-_Static_assert(offsetof(CalendarIconPath, fill_color) == offsetof(GDrawCommand, fill_color), "");
-_Static_assert(offsetof(CalendarIconPath, radius) == offsetof(GDrawCommand, radius), "");
-_Static_assert(sizeof(CalendarIconPath) == offsetof(GDrawCommand, points), "");
+static_assert(offsetof(CalendarIconImage, size) == offsetof(GDrawCommandImage, size), "");
+static_assert(sizeof(CalendarIconImage) == offsetof(GDrawCommandImage, command_list.commands), "");
+static_assert(offsetof(CalendarIconPath, fill_color) == offsetof(GDrawCommand, fill_color), "");
+static_assert(offsetof(CalendarIconPath, radius) == offsetof(GDrawCommand, radius), "");
+static_assert(sizeof(CalendarIconPath) == offsetof(GDrawCommand, points), "");
 
 // FIXME: PBL-28898 GPath algorithm requires strange coordinates for pixel perfection
 // The paths here result in pixel perfect icons with the current gpath filled algorithm,

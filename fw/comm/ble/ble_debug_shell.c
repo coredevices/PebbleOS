@@ -122,17 +122,18 @@ static int prv_cmd_log_level(const struct pbl_shell *sh, size_t argc, char **arg
 }
 
 static const struct pbl_shell_cmd sub_bt_disc[] = {
-  PBL_SHELL_CMD_ARG(start, NULL, "Discover a handle range <start> <end>", prv_cmd_disc_start, 3, 0),
-  PBL_SHELL_CMD(stop, NULL, "Stop the discovery", prv_cmd_disc_stop),
+  PBL_SHELL_CMD_ARG(start, nullptr, "Discover a handle range <start> <end>", prv_cmd_disc_start, 3,
+                    0),
+  PBL_SHELL_CMD(stop, nullptr, "Stop the discovery", prv_cmd_disc_stop),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, conn_params, NULL,
+PBL_SHELL_SUBCMD_ADD(sub_bt, conn_params, nullptr,
                      "Request connection parameters <min_1.25ms> <max_1.25ms> <latency> "
                      "<timeout_10ms>",
                      prv_cmd_conn_params, 5, 0);
-PBL_SHELL_SUBCMD_ADD(sub_bt, disc, sub_bt_disc, "GATT discovery", NULL, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_bt, log_level, NULL, "Get or set the BLE log level [level]",
+PBL_SHELL_SUBCMD_ADD(sub_bt, disc, sub_bt_disc, "GATT discovery", nullptr, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, log_level, nullptr, "Get or set the BLE log level [level]",
                      prv_cmd_log_level, 1, 1);
 
 #endif

@@ -110,7 +110,7 @@ bool plugin_service_unsubscribe(Uuid *uuid) {
     return true;
   }
 
-  list_remove(found, NULL, NULL);
+  list_remove(found, nullptr, nullptr);
   applib_free(found);
   return true;
 }

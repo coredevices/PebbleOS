@@ -99,7 +99,7 @@ void layer_deinit(Layer *layer) {
 }
 
 void layer_destroy(Layer *layer) {
-  if (layer == NULL) {
+  if (layer == nullptr) {
     return;
   }
   layer_deinit(layer);
@@ -174,7 +174,7 @@ static PBL_ALWAYS_INLINE Layer *prv_layer_tree_traverse_next(Layer *stack[], int
   }
 
   // no more siblings on root level of stack
-  return NULL;
+  return nullptr;
 }
 
 Layer *__layer_tree_traverse_next__test_accessor(Layer *stack[], int const max_depth,
@@ -254,11 +254,11 @@ void layer_render_tree(Layer *node, GContext *ctx) {
 }
 
 void layer_property_changed_tree(Layer *node) {
-  layer_process_tree(node, NULL, layer_property_changed_tree_node);
+  layer_process_tree(node, nullptr, layer_property_changed_tree_node);
 }
 
 void layer_set_update_proc(Layer *layer, LayerUpdateProc update_proc) {
-  PBL_ASSERTN(layer != NULL);
+  PBL_ASSERTN(layer != nullptr);
   layer->update_proc = update_proc;
 }
 
@@ -370,11 +370,11 @@ struct Window *layer_get_window(const Layer *layer) {
   if (layer) {
     return layer->window;
   }
-  return NULL;
+  return nullptr;
 }
 
 void layer_remove_from_parent(Layer *child) {
-  if (!child || child->parent == NULL) {
+  if (!child || child->parent == nullptr) {
     return;
   }
 #ifdef CONFIG_TOUCH
@@ -396,9 +396,9 @@ void layer_remove_from_parent(Layer *child) {
     }
     node->next_sibling = child->next_sibling;
   }
-  child->parent = NULL;
-  layer_set_window(child, NULL);
-  child->next_sibling = NULL;
+  child->parent = nullptr;
+  layer_set_window(child, nullptr);
+  child->next_sibling = nullptr;
 }
 
 void layer_remove_child_layers(Layer *parent) {
@@ -412,19 +412,19 @@ void layer_remove_child_layers(Layer *parent) {
 }
 
 void layer_add_child(Layer *parent, Layer *child) {
-  PBL_ASSERTN(parent != NULL);
-  PBL_ASSERTN(child != NULL);
+  PBL_ASSERTN(parent != nullptr);
+  PBL_ASSERTN(child != nullptr);
   if (child->parent) {
     layer_remove_from_parent(child);
   }
-  PBL_ASSERTN(child->next_sibling == NULL);
+  PBL_ASSERTN(child->next_sibling == nullptr);
   child->parent = parent;
   layer_set_window(child, parent->window);
   if (child->window) {
     window_schedule_render(child->window);
   }
   Layer *sibling = parent->first_child;
-  if (sibling == NULL) {
+  if (sibling == nullptr) {
     parent->first_child = child;
     return;
   }
@@ -447,13 +447,13 @@ void layer_add_child(Layer *parent, Layer *child) {
 // Below means higher up in the hierarchy so it gets drawn earlier,
 // and as a result the one below gets occluded by what's draw on top of it.
 void layer_insert_below_sibling(Layer *layer_to_insert, Layer *below_layer) {
-  if (below_layer->parent == NULL) {
+  if (below_layer->parent == nullptr) {
     return;
   }
   if (layer_to_insert->parent) {
     layer_remove_from_parent(layer_to_insert);
   }
-  PBL_ASSERTN(layer_to_insert->next_sibling == NULL);
+  PBL_ASSERTN(layer_to_insert->next_sibling == nullptr);
   layer_to_insert->parent = below_layer->parent;
   layer_set_window(layer_to_insert, below_layer->window);
   if (layer_to_insert->window) {
@@ -474,13 +474,13 @@ void layer_insert_below_sibling(Layer *layer_to_insert, Layer *below_layer) {
 // Above means lower down in the hierarchy so it gets drawn later,
 // and as a result the drawn on top of what's below it.
 void layer_insert_above_sibling(Layer *layer_to_insert, Layer *above_layer) {
-  if (above_layer->parent == NULL) {
+  if (above_layer->parent == nullptr) {
     return;
   }
   if (layer_to_insert->parent) {
     layer_remove_from_parent(layer_to_insert);
   }
-  PBL_ASSERTN(layer_to_insert->next_sibling == NULL);
+  PBL_ASSERTN(layer_to_insert->next_sibling == nullptr);
   layer_to_insert->parent = above_layer->parent;
   layer_set_window(layer_to_insert, above_layer->window);
   if (layer_to_insert->window) {
@@ -520,7 +520,7 @@ bool layer_get_clips(const Layer *layer) {
 void *layer_get_data(const Layer *layer) {
   if (!layer->has_data) {
     PBL_LOG_ERR("Layer was not allocated with a data region.");
-    return NULL;
+    return nullptr;
   }
   return ((DataLayer *)layer)->data;
 }
@@ -613,7 +613,7 @@ static bool prv_find_layer_containing_point(const Layer *node, LayerTouchIterato
 
 PBL_T_MOCKABLE Layer *layer_find_layer_containing_point(const Layer *node, const GPoint *point) {
   if (!node || !point) {
-    return NULL;
+    return nullptr;
   }
   LayerTouchIteratorCtx iter_ctx = {
     .pos = *point,
@@ -648,11 +648,11 @@ void layer_detach_recognizer(Layer *layer, Recognizer *recognizer) {
 RecognizerList *layer_get_recognizer_list(const Layer *layer) {
 #ifdef CONFIG_TOUCH
   if (!layer) {
-    return NULL;
+    return nullptr;
   }
   return (RecognizerList *)&layer->recognizer_list;
 #else
-  return NULL;
+  return nullptr;
 #endif
 }
 

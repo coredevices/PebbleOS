@@ -31,7 +31,7 @@ extern const int TIMELINE_ACTION_ENDPOINT;
 ///////////////////////////////////////////////////////////
 #include <fake_spi_flash.h>
 
-static const uint8_t *s_expected_send_data = NULL;
+static const uint8_t *s_expected_send_data = nullptr;
 static bool s_sent_action = false;
 
 bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
@@ -40,7 +40,7 @@ bool comm_session_has_capability(CommSession *session, CommSessionCapability cap
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
                             size_t length, uint32_t timeout_ms) {
-  if (s_expected_send_data == NULL) {
+  if (s_expected_send_data == nullptr) {
     return false;
   }
 
@@ -128,7 +128,7 @@ static void prv_support_sms_replies_no_emoji(void) {
 // Tests
 ///////////////////////////////////////////////////////////
 void test_ancs_pebble_actions__initialize(void) {
-  s_expected_send_data = NULL;
+  s_expected_send_data = nullptr;
   s_sent_action = false;
 
   fake_spi_flash_init(0, 0x1000000);
@@ -142,8 +142,8 @@ void test_ancs_pebble_actions__cleanup(void) {
 void test_ancs_pebble_actions__test_sms_reply(void) {
   prv_support_sms_replies();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {0};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
+  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
 
   const size_t header_len = sizeof(GetNotificationAttributesMsg);
   bool error = false;
@@ -155,7 +155,7 @@ void test_ancs_pebble_actions__test_sms_reply(void) {
   cl_assert(!error);
 
   time_t timestamp = 0;
-  ANCSAppMetadata app_metadata = {0};
+  ANCSAppMetadata app_metadata = {};
   const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->length);
   TimelineItem *notif = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
@@ -173,16 +173,16 @@ void test_ancs_pebble_actions__test_sms_reply(void) {
   cl_assert_equal_i(response_action->attr_list.attributes[1].uint8, 1);
 
   s_expected_send_data = s_sms_action_data;
-  timeline_actions_invoke_action(&notif->action_group.actions[1], notif, NULL /*complete_cb*/,
-                                 NULL /*cb_data*/);
+  timeline_actions_invoke_action(&notif->action_group.actions[1], notif, nullptr /*complete_cb*/,
+                                 nullptr /*cb_data*/);
   cl_assert(s_sent_action);
 }
 
 void test_ancs_pebble_actions__test_sms_reply_no_emoji(void) {
   prv_support_sms_replies_no_emoji();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {0};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
+  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
 
   const size_t header_len = sizeof(GetNotificationAttributesMsg);
   bool error = false;
@@ -194,7 +194,7 @@ void test_ancs_pebble_actions__test_sms_reply_no_emoji(void) {
   cl_assert(!error);
 
   time_t timestamp = 0;
-  ANCSAppMetadata app_metadata = {0};
+  ANCSAppMetadata app_metadata = {};
   const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->length);
   TimelineItem *notif = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
@@ -212,16 +212,16 @@ void test_ancs_pebble_actions__test_sms_reply_no_emoji(void) {
   cl_assert_equal_i(response_action->attr_list.attributes[1].uint8, 0);
 
   s_expected_send_data = s_sms_action_data;
-  timeline_actions_invoke_action(&notif->action_group.actions[1], notif, NULL /*complete_cb*/,
-                                 NULL /*cb_data*/);
+  timeline_actions_invoke_action(&notif->action_group.actions[1], notif, nullptr /*complete_cb*/,
+                                 nullptr /*cb_data*/);
   cl_assert(s_sent_action);
 }
 
 void test_ancs_pebble_actions__test_sms_replies_unsupported(void) {
   prv_support_sms_replies();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {0};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
+  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
 
   const size_t header_len = sizeof(GetNotificationAttributesMsg);
   bool error = false;
@@ -233,10 +233,10 @@ void test_ancs_pebble_actions__test_sms_replies_unsupported(void) {
   cl_assert(!error);
 
   time_t timestamp = 0;
-  ANCSAppMetadata app_metadata = {0};
+  ANCSAppMetadata app_metadata = {};
 
   TimelineItem *item = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
-                                                     NULL, timestamp, ANCSProperty_None);
+                                                     nullptr, timestamp, ANCSProperty_None);
 
   cl_assert(item);
   cl_assert_equal_i(item->action_group.num_actions, 1);
@@ -246,8 +246,8 @@ void test_ancs_pebble_actions__test_sms_replies_unsupported(void) {
 void test_ancs_pebble_actions__test_group_sms(void) {
   prv_support_sms_replies();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {0};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
+  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
 
   const size_t header_len = sizeof(GetNotificationAttributesMsg);
   bool error = false;
@@ -259,7 +259,7 @@ void test_ancs_pebble_actions__test_group_sms(void) {
   cl_assert(!error);
 
   time_t timestamp = 0;
-  ANCSAppMetadata app_metadata = {0};
+  ANCSAppMetadata app_metadata = {};
   const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->length);
   TimelineItem *item = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
@@ -274,8 +274,8 @@ void test_ancs_pebble_actions__test_group_sms(void) {
 }
 
 // void test_ancs_pebble_actions__test_email(void) {
-// ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {0};
-// ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+// ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
+// ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
 
 // const size_t header_len = sizeof(GetNotificationAttributesMsg);
 // bool error = false;
@@ -290,7 +290,7 @@ void test_ancs_pebble_actions__test_group_sms(void) {
 // cl_assert(!error);
 
 // time_t timestamp = 0;
-// ANCSAppMetadata app_metadata = {0};
+// ANCSAppMetadata app_metadata = {};
 // TimelineItem *item = ancs_item_create_and_populate(notif_attributes,
 //                                                    app_attrs,
 //                                                    &app_metadata,

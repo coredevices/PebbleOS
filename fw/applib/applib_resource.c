@@ -36,13 +36,14 @@ size_t applib_resource_load_byte_range(ResHandle h, uint32_t start_offset, uint8
 void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id, size_t offset,
                                    size_t num_bytes, bool used_aligned) {
   if (num_bytes == 0) {
-    return NULL;
+    return nullptr;
   }
 
-  const uint8_t *mapped_data =
-      (app_num == SYSTEM_APP) ? sys_resource_read_only_bytes(SYSTEM_APP, resource_id, NULL) : NULL;
+  const uint8_t *mapped_data = (app_num == SYSTEM_APP)
+                                   ? sys_resource_read_only_bytes(SYSTEM_APP, resource_id, nullptr)
+                                   : nullptr;
 
-  uint8_t *result = NULL;
+  uint8_t *result = nullptr;
 
   if (mapped_data) {
     applib_resource_track_mmapped(mapped_data);
@@ -55,7 +56,7 @@ void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id, size
     if (!result ||
         sys_resource_load_range(app_num, resource_id, offset, result, num_bytes) != num_bytes) {
       applib_free(result);
-      return NULL;
+      return nullptr;
     }
   }
 

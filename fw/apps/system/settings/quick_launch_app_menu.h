@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <applib/ui/window.h>
 #include <shell/normal/quick_launch.h>
 

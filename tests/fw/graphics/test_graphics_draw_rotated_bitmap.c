@@ -37,7 +37,7 @@
 ////////////////////////////////////
 static GBitmap *test_image_bw;
 static GBitmap *test_image_color;
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
 extern bool get_bitmap_bit(GBitmap *bmp, int x, int y);
@@ -50,10 +50,10 @@ void test_graphics_draw_rotated_bitmap__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
   framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
   test_image_bw = get_gbitmap_from_pbi("test_rotated_bitmap_no_litter.Xbit.pbi");
-  cl_assert(test_image_bw != NULL);
+  cl_assert(test_image_bw != nullptr);
 
   test_image_color = get_gbitmap_from_pbi("test_rotated_bitmap_redstar.Xbit.pbi");
-  cl_assert(test_image_color != NULL);
+  cl_assert(test_image_color != nullptr);
 }
 
 void test_graphics_draw_rotated_bitmap__cleanup(void) {
@@ -84,7 +84,7 @@ static void setup_test_rotate_bitmap(GContext *ctx, FrameBuffer *fb, GRect clip_
   };
   setup_test_context(
       ctx, (CTX_FLAG_DS_CLIP_BOX | CTX_FLAG_DS_DRAWING_BOX | CTX_FLAG_DS_COMPOSITING_MODE),
-      &draw_state, NULL);
+      &draw_state, nullptr);
 }
 
 #define ORIGIN_RECT_NO_CLIP GRect(0, 0, DISP_COLS, DISP_ROWS)
@@ -305,7 +305,7 @@ void test_graphics_draw_rotated_bitmap__data_row_handling(void) {
   framebuffer_clear(fb);
 
   GBitmap *test_image = get_gbitmap_from_pbi("stamp.Xbit.pbi");
-  cl_assert(test_image != NULL);
+  cl_assert(test_image != nullptr);
 
   // PBL-24705 grect_center_point is off by 1
   GPoint center = GPoint(DISP_COLS / 2 - 1, DISP_ROWS / 2 - 1);

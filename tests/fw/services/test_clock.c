@@ -72,7 +72,7 @@ bool alerts_should_vibrate_for_type(AlertType type) {
 
 VibeScore *vibe_score_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   s_vibe_create_count++;
-  return NULL;
+  return nullptr;
 }
 
 void vibe_score_do_vibe(VibeScore *score) {
@@ -82,7 +82,7 @@ void vibe_score_destroy(VibeScore *score) {
 }
 
 static void prv_clock_reset(int32_t gmtoff) {
-  TimezoneInfo tzinfo = {{0}};
+  TimezoneInfo tzinfo = {};
   tzinfo.dst_id = 0;
   tzinfo.dst_start = tzinfo.dst_end = 0;
   tzinfo.tm_gmtoff = gmtoff;
@@ -254,7 +254,7 @@ void test_clock__basic_timezone_gmtoffset(void) {
   static const int32_t max_gmtoff = 12 * PBL_SEC_PER_HOUR;
   static const int32_t gmtoff_slide = PBL_SEC_PER_MIN;
 
-  TimezoneInfo tzinfo = {{0}};
+  TimezoneInfo tzinfo = {};
   strcpy(tzinfo.tm_zone, "UNK");
   tzinfo.dst_id = 0;
   tzinfo.dst_start = tzinfo.dst_end = 0;
@@ -281,7 +281,7 @@ void test_clock__basic_timezone_dst(void) {
   static const int32_t max_dstoff = 12 * PBL_SEC_PER_HOUR;
   static const int32_t dstoff_slide = PBL_SEC_PER_MIN;
   static const int32_t dstrange = PBL_SEC_PER_HOUR;
-  TimezoneInfo tzinfo = {{0}};
+  TimezoneInfo tzinfo = {};
   strcpy(tzinfo.tm_zone, "UNK");
   tzinfo.dst_id = 0;
   tzinfo.tm_gmtoff = 0;
@@ -594,7 +594,7 @@ void test_clock__clock_to_timestamp(void) {
   static const int32_t max_gmtoff = 12 * PBL_SEC_PER_HOUR;
   static const int32_t gmtoff_slide = PBL_SEC_PER_MIN;
 
-  TimezoneInfo tzinfo = {{0}};
+  TimezoneInfo tzinfo = {};
   tzinfo.dst_id = 0;
   tzinfo.dst_start = tzinfo.dst_end = 0;
   tzinfo.timezone_id = 0;
@@ -1493,7 +1493,7 @@ void test_clock__month_named_abbrev_date(void) {
 }
 
 void test_clock__relative_daypart_string(void) {
-  const char *daypart_string = NULL;
+  const char *daypart_string = nullptr;
 
   const char morning[] = "this morning";                  // anything before 12pm of the current day
   const char afternoon[] = "this afternoon";              // 12pm today

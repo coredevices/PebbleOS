@@ -43,7 +43,7 @@
 
 static int prv_get_rendered_text_height(const char *text, const GRect *text_box) {
   GContext *ctx = graphics_context_get_current_context();
-  TextLayoutExtended layout = {0};
+  TextLayoutExtended layout = {};
   graphics_text_attributes_enable_screen_text_flow((GTextLayoutCacheRef)&layout,
                                                    TEXT_FLOW_INSET_PX);
   return graphics_text_layout_get_max_used_size(ctx, text, TEXT_FONT, *text_box, TEXT_OVERFLOW,

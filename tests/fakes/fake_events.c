@@ -9,7 +9,7 @@
 
 static PebbleEvent s_last_pebble_event;
 static uint32_t s_fake_event_count = 0;
-static FakeEventCallback s_fake_event_cb = NULL;
+static FakeEventCallback s_fake_event_cb = nullptr;
 
 PBL_WEAK void *fake_event_get_buffer_slot(PebbleEvent *event) {
   switch (event->type) {
@@ -22,7 +22,7 @@ PBL_WEAK void *fake_event_get_buffer_slot(PebbleEvent *event) {
     default:
       break; // Nothing to do!
   }
-  return NULL;
+  return nullptr;
 }
 
 void event_put(PebbleEvent *event) {
@@ -38,7 +38,7 @@ void event_put_isr(PebbleEvent *event) {
 }
 
 struct pbl_msgq *event_kernel_to_kernel_event_queue(void) {
-  return NULL;
+  return nullptr;
 }
 
 void event_queue_cleanup_and_reset(struct pbl_msgq *queue) {
@@ -55,7 +55,7 @@ PebbleEvent fake_event_get_last(void) {
 
 void fake_event_clear_last(void) {
   void *slot = fake_event_get_buffer_slot(&s_last_pebble_event);
-  void *buf = NULL;
+  void *buf = nullptr;
   if (slot) {
     memcpy(&buf, slot, sizeof(buf));
   }

@@ -31,7 +31,7 @@ static void timer_callback(void *cb_data) {
   prv_populate_amb_read_str(&data->ambient_reading[0]);
   layer_mark_dirty(window_get_root_layer(data->window));
 
-  app_timer_register(500, timer_callback, NULL);
+  app_timer_register(500, timer_callback, nullptr);
 }
 
 static void handle_init(void) {
@@ -54,7 +54,7 @@ static void handle_init(void) {
   app_state_set_user_data(data);
   app_window_stack_push(data->window, true);
 
-  app_timer_register(10, timer_callback, NULL);
+  app_timer_register(10, timer_callback, nullptr);
 }
 
 static void handle_deinit(void) {

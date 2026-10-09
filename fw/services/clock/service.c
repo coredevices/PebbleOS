@@ -74,7 +74,7 @@ typedef struct PBL_PACKED {
 } TimezoneCBData;
 
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-_Static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
+static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
 #endif
 
 #if !defined(CONFIG_RECOVERY_FW)
@@ -250,7 +250,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
 PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info) {
   int orig_gmt_offset = time_get_gmtoffset();
   time_t orig_utc_time = rtc_get_time();
-  TimezoneInfo tz_adjust_info = {{0}};
+  TimezoneInfo tz_adjust_info = {};
 
   if (clock_is_timezone_set()) { // We'll need to update timezone stamps.
     time_t tz_adjust_time;
@@ -311,7 +311,7 @@ static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
   }
   time_t utc_time = tz_data->utc_time;
   if (clock_timezone_source_is_manual()) {
-    prv_update_time_info_and_generate_event(&utc_time, NULL);
+    prv_update_time_info_and_generate_event(&utc_time, nullptr);
   } else {
     prv_update_time_info_and_generate_event(&utc_time, &tz_info);
   }
@@ -327,7 +327,7 @@ static void prv_handle_set_time_msg(time_t new_time) {
     new_time = prv_migrate_local_time_to_UTC(new_time);
   }
 
-  prv_update_time_info_and_generate_event(&new_time, NULL);
+  prv_update_time_info_and_generate_event(&new_time, nullptr);
 }
 
 void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsigned int length) {
@@ -457,7 +457,7 @@ void clock_get_time_tm(struct tm *time_tm) {
 
 size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minutes,
                          bool add_space) {
-  if (size == 0 || buffer == NULL) {
+  if (size == 0 || buffer == nullptr) {
     return 0;
   }
 
@@ -683,7 +683,7 @@ void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
       int gmt_offset_m = time_get_gmtoffset() / PBL_SEC_PER_MIN;
       int hour_offset = gmt_offset_m / PBL_MIN_PER_HOUR;
 
-      char min_buf[4] = {0};
+      char min_buf[4] = {};
       int min_offset_percent = ((ABS(gmt_offset_m) % PBL_MIN_PER_HOUR) * 100) / PBL_MIN_PER_HOUR;
       if (min_offset_percent) {
         snprintf(min_buf, sizeof(min_buf), ".%d", min_offset_percent);
@@ -702,11 +702,11 @@ int16_t clock_get_timezone_region_id(void) {
 void clock_set_timezone_by_region_id(uint16_t region_id) {
   TimezoneInfo tz_info;
   prv_clock_get_timezone_info_from_region_id(region_id, rtc_get_time(), &tz_info);
-  prv_update_time_info_and_generate_event(NULL, &tz_info);
+  prv_update_time_info_and_generate_event(nullptr, &tz_info);
 }
 
 void clock_set_time(time_t utc_time) {
-  prv_update_time_info_and_generate_event(&utc_time, NULL);
+  prv_update_time_info_and_generate_event(&utc_time, nullptr);
 }
 
 void clock_get_friendly_date(char *buffer, int buf_size, time_t timestamp) {
@@ -766,7 +766,7 @@ static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t 
   time_t last_week_midnight = time_util_get_midnight_of(rtc_get_time() - PBL_SEC_PER_WEEK);
   time_t next_week_midnight = time_util_get_midnight_of(rtc_get_time() + PBL_SEC_PER_WEEK);
 
-  const char *time_fmt = NULL;
+  const char *time_fmt = nullptr;
   int style;
   if (clock_is_24h_style()) {
     if (capitalized) {
@@ -1018,7 +1018,7 @@ static const daypart_message daypart_messages[] = {
 const char *clock_get_relative_daypart_string(time_t current_timestamp,
                                               uint32_t hours_in_the_future) {
   struct tm current_tm;
-  const char *message = NULL;
+  const char *message = nullptr;
   localtime_r(&current_timestamp, &current_tm);
 
   // Look for the furthest time in the future that we are "above"
@@ -1051,7 +1051,7 @@ static int prv_cmd_set(const struct pbl_shell *sh, size_t argc, char **argv) {
   }
 
   time_t t = val;
-  prv_update_time_info_and_generate_event(&t, NULL);
+  prv_update_time_info_and_generate_event(&t, nullptr);
 
   char time_buffer[26];
   pbl_shell_print(sh, "Time is now <%s>", rtc_get_time_string(time_buffer));
@@ -1079,10 +1079,10 @@ static int prv_cmd_show(const struct pbl_shell *sh, size_t argc, char **argv) {
 #endif
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_time);
-PBL_SHELL_CMD_REGISTER(time, sub_time, "Time and timezone", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_time, set, NULL, "Set the time <unix_timestamp>", prv_cmd_set, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_time, tz_clear, NULL, "Clear the timezone", prv_cmd_tz_clear, 0, 0);
+PBL_SHELL_CMD_REGISTER(time, sub_time, "Time and timezone", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_time, set, nullptr, "Set the time <unix_timestamp>", prv_cmd_set, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_time, tz_clear, nullptr, "Clear the timezone", prv_cmd_tz_clear, 0, 0);
 #ifndef CONFIG_RECOVERY_FW
-PBL_SHELL_SUBCMD_ADD(sub_time, show, NULL, "Show the time and timezone", prv_cmd_show, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_time, show, nullptr, "Show the time and timezone", prv_cmd_show, 0, 0);
 #endif
 #endif

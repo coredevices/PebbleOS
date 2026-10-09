@@ -46,7 +46,7 @@ const char *vibe_intensity_get_string_for_intensity(VibeIntensity intensity) {
       return i18n_noop("Standard - High");
     }
     default: {
-      return NULL;
+      return nullptr;
     }
   }
 }

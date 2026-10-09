@@ -3,7 +3,6 @@
 
 #include "test_db.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #include <pbl/services/blob_db/api.h>

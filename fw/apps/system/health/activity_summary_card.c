@@ -114,7 +114,7 @@ static void prv_render_current_steps(GContext *ctx, Layer *base_layer) {
       PBL_IF_RECT_ELSE(PBL_IF_BW_ELSE(85, 83), 88) + HEALTH_Y_OFFSET + HEALTH_Y_OFFSET / 6;
   graphics_context_set_text_color(ctx, CURRENT_TEXT_COLOR);
   graphics_draw_text(ctx, buffer, font, GRect(0, y, base_layer->bounds.size.w, 40),
-                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
 }
 
 static void prv_render_typical_steps(GContext *ctx, Layer *base_layer) {

@@ -48,7 +48,7 @@ static void prv_generate_responses_from_phone(void) {
 BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id, time_t last_updated, const void *key,
                                             int key_len, const void *val, int val_len) {
   BlobDBSyncSession *session = blob_db_sync_get_session_for_id(db_id);
-  cl_assert(session != NULL);
+  cl_assert(session != nullptr);
   if (s_num_until_timeout != 0 && s_num_writebacks >= s_num_until_timeout) {
     // Don't respond - simulates timeout (message lost/no response from phone)
   } else {
@@ -83,7 +83,7 @@ void test_blob_db_sync__no_dirty(void) {
   uint8_t num_ids;
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 0);
-  cl_assert(blob_db_get_dirty_list(BlobDBIdTest) == NULL);
+  cl_assert(blob_db_get_dirty_list(BlobDBIdTest) == nullptr);
 
   // insert one
   char *key = "key";
@@ -92,13 +92,13 @@ void test_blob_db_sync__no_dirty(void) {
                                               (uint8_t *)value, strlen(value)));
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 1);
-  cl_assert(blob_db_get_dirty_list(BlobDBIdTest) != NULL);
+  cl_assert(blob_db_get_dirty_list(BlobDBIdTest) != nullptr);
 
   // mark it synced
   cl_assert_equal_i(S_SUCCESS, blob_db_mark_synced(BlobDBIdTest, (uint8_t *)key, strlen(key)));
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 0);
-  cl_assert(blob_db_get_dirty_list(BlobDBIdTest) == NULL);
+  cl_assert(blob_db_get_dirty_list(BlobDBIdTest) == nullptr);
 }
 
 static bool prv_list_key_comparator(ListNode *cur_node, void *data) {
@@ -113,7 +113,7 @@ void test_blob_db_sync__dirty_list(void) {
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 0);
   BlobDBDirtyItem *dirty_list = blob_db_get_dirty_list(BlobDBIdTest);
-  cl_assert(dirty_list == NULL);
+  cl_assert(dirty_list == nullptr);
   blob_db_util_free_dirty_list(dirty_list);
 
   char *keys[] = {"key1", "key2", "key3", "key4", "key5"};
@@ -133,7 +133,7 @@ void test_blob_db_sync__dirty_list(void) {
   cl_assert_equal_i(list_count(&dirty_list->node), ARRAY_LENGTH(keys));
 
   for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
-    cl_assert(list_find(&dirty_list->node, prv_list_key_comparator, keys[i]) != NULL);
+    cl_assert(list_find(&dirty_list->node, prv_list_key_comparator, keys[i]) != nullptr);
   }
 
   blob_db_util_free_dirty_list(dirty_list);
@@ -144,7 +144,7 @@ void test_blob_db_sync__dirty_list(void) {
     dirty_list = blob_db_get_dirty_list(BlobDBIdTest);
     cl_assert_equal_i(list_count(&dirty_list->node), ARRAY_LENGTH(keys) - synced_idx);
     for (int i = synced_idx; i < ARRAY_LENGTH(keys); ++i) {
-      cl_assert(list_find(&dirty_list->node, prv_list_key_comparator, keys[i]) != NULL);
+      cl_assert(list_find(&dirty_list->node, prv_list_key_comparator, keys[i]) != nullptr);
     }
     blob_db_util_free_dirty_list(dirty_list);
   }
@@ -235,7 +235,7 @@ void test_blob_db_sync__timeout_and_retry(void) {
 
   // Cancel the timed-out session so we can start a fresh sync
   BlobDBSyncSession *session = blob_db_sync_get_session_for_id(BlobDBIdTest);
-  cl_assert(session != NULL);
+  cl_assert(session != nullptr);
   blob_db_sync_cancel(session);
 
   s_num_until_timeout = 0;
@@ -277,7 +277,7 @@ static BlobDBSyncSession *prv_start_sync_with_two_keys(void) {
 
   cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
   BlobDBSyncSession *session = blob_db_sync_get_session_for_id(BlobDBIdTest);
-  cl_assert(session != NULL);
+  cl_assert(session != nullptr);
   return session;
 }
 
@@ -294,14 +294,14 @@ void test_blob_db_sync__stale_timeout_callback_after_cancel(void) {
   cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
 
   blob_db_sync_cancel(session);
-  cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == NULL);
+  cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == nullptr);
 
   s_num_writebacks = 0;
   fake_system_task_callbacks_invoke_pending();
 
   // The stale callback must not resurrect the session or send anything.
   cl_assert_equal_i(s_num_writebacks, 0);
-  cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == NULL);
+  cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == nullptr);
 }
 
 void test_blob_db_sync__stale_abandon_callback_after_cancel(void) {
@@ -323,7 +323,7 @@ void test_blob_db_sync__stale_abandon_callback_after_cancel(void) {
   // Session goes away before the abandon callback runs; it must not free twice.
   blob_db_sync_cancel(session);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == NULL);
+  cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == nullptr);
 }
 
 // A stale id must never resolve to a *different* session that happened to reuse

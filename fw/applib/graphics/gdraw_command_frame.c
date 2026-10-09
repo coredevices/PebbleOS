@@ -36,7 +36,7 @@ void gdraw_command_frame_draw_processed(GContext *ctx, GDrawCommandSequence *seq
 
 void gdraw_command_frame_draw(GContext *ctx, GDrawCommandSequence *sequence,
                               GDrawCommandFrame *frame, GPoint offset) {
-  gdraw_command_frame_draw_processed(ctx, sequence, frame, offset, NULL);
+  gdraw_command_frame_draw_processed(ctx, sequence, frame, offset, nullptr);
 }
 
 void gdraw_command_frame_set_duration(GDrawCommandFrame *frame, uint32_t duration) {
@@ -66,7 +66,7 @@ size_t gdraw_command_frame_get_data_size(GDrawCommandFrame *frame) {
 
 GDrawCommandList *gdraw_command_frame_get_command_list(GDrawCommandFrame *frame) {
   if (!frame) {
-    return NULL;
+    return nullptr;
   }
 
   return &frame->command_list;

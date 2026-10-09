@@ -64,6 +64,6 @@ static int prv_cmd_button_read(const struct pbl_shell *sh, size_t argc, char **a
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_button, read, NULL, "Read the state of button <id>", prv_cmd_button_read,
-                     2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_button, read, nullptr, "Read the state of button <id>",
+                     prv_cmd_button_read, 2, 0);
 #endif

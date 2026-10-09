@@ -29,7 +29,7 @@ static void prv_rc10k_cal_timer_cb(void *data) {
 void rc10k_init(void) {
   static RegularTimerInfo s_cal_timer = {.cb = prv_rc10k_cal_timer_cb};
 
-  prv_rc10k_cal_timer_cb(NULL);
+  prv_rc10k_cal_timer_cb(nullptr);
   regular_timer_add_minutes_callback(&s_cal_timer);
 }
 

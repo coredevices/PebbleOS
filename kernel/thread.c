@@ -10,7 +10,7 @@
 static uint32_t s_next_id;
 
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) {
-  KERNEL_ASSERT(attr->stack != NULL && attr->stack_size >= 128);
+  KERNEL_ASSERT(attr->stack != nullptr && attr->stack_size >= 128);
   KERNEL_ASSERT(attr->prio <= PBL_PRIO_MAX);
 
   // A struct is only reusable once its previous thread is gone.
@@ -40,7 +40,7 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
 
 void pbl_thread_abort(struct pbl_thread *t) {
   pbl_irq_lock();
-  bool self = (t == NULL || t == pbl_cur);
+  bool self = (t == nullptr || t == pbl_cur);
   sched_thread_remove(self ? pbl_cur : t);
   if (!self) {
     arch_thread_aborted(t);

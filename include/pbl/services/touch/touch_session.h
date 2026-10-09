@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup services_touch_touch_session Touch interaction session
  * @ingroup services_touch

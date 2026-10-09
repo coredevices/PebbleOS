@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/util/uuid.h>
 
 //! @addtogroup Foundation

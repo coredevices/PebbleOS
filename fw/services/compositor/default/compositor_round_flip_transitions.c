@@ -20,7 +20,7 @@ typedef struct PBL_PACKED {
   };
 } RoundFlipTransitionAnimationConfiguration;
 
-_Static_assert(sizeof(RoundFlipTransitionAnimationConfiguration) == sizeof(void *), "");
+static_assert(sizeof(RoundFlipTransitionAnimationConfiguration) == sizeof(void *), "");
 
 void compositor_round_flip_transitions_flip_animation_update(GContext *ctx,
                                                              uint32_t distance_normalized,
@@ -94,7 +94,7 @@ static void prv_configure_round_flip_transition_animation(Animation *animation,
 
   animation_set_curve(animation, AnimationCurveLinear);
   animation_set_duration(animation, ROUND_FLIP_ANIMATION_DURATION_MS);
-  animation_set_handlers(animation, (AnimationHandlers){0}, config.data);
+  animation_set_handlers(animation, (AnimationHandlers){}, config.data);
   // If the visual elements will move to the right, we will just play the left animation backwards
   const bool should_animate_backwards = (direction == CompositorTransitionDirectionRight);
   animation_set_reverse(animation, should_animate_backwards);
@@ -110,7 +110,7 @@ static void prv_round_flip_transition_to_launcher_animation_init(Animation *anim
 
 const CompositorTransition *compositor_round_flip_transition_get(bool flip_to_the_right) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   if (flip_to_the_right) {

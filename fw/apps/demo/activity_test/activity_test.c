@@ -292,7 +292,7 @@ static void prv_test_steps(void *context) {
   bool passed = false;
 
   // Reset all stored data
-  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, NULL, NULL);
+  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, nullptr, nullptr);
 
   // Fill the steps pipeline then capture step count before
   activity_test_feed_samples(s_walk_30_steps, ARRAY_LENGTH(s_walk_30_steps));
@@ -322,7 +322,7 @@ static void prv_test_30_min_walk(void *context) {
   activity_prefs_activity_insights_set_enabled(true);
 
   // Reset all stored data
-  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, NULL, NULL);
+  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, nullptr, nullptr);
 
   int32_t before;
   activity_get_metric(ActivityMetricStepCount, 1, &before);
@@ -357,7 +357,7 @@ static void prv_test_sleep(void *context) {
   int32_t value;
 
   // Reset all stored data
-  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, NULL, NULL);
+  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, nullptr, nullptr);
 
   // Change into awake state and capture the sleep before
   // Walk long enough to overlap with a periodic sleep recomputation
@@ -440,7 +440,7 @@ static void prv_test_sleep_time_change(void *context) {
   bool passed = true;
 
   // Reset all stored data
-  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, NULL, NULL);
+  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, nullptr, nullptr);
 
   // Walk a little
   prv_feed_steps_min(15);
@@ -535,7 +535,7 @@ static void prv_test_nap(void *context) {
   PBL_LOG_DBG("test start time changed to: %d", (int)test_start_utc);
 
   // Reset all stored data
-  activity_test_reset(false /* reset_settings */, true /*tracking_on*/, NULL, NULL);
+  activity_test_reset(false /* reset_settings */, true /*tracking_on*/, nullptr, nullptr);
 
   // Walk a little first
   prv_feed_steps_min(15);
@@ -598,7 +598,7 @@ static void prv_test_sleep_reward(void *context) {
   };
 
   // Reset all stored data
-  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, &sleep_history, NULL);
+  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, &sleep_history, nullptr);
 
   for (int i = 0; i < 3; ++i) {
     // Change into awake state and capture the sleep before
@@ -643,7 +643,7 @@ static void prv_test_activity_reward(void *context) {
   };
 
   // Reset all stored data
-  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, NULL, &step_history);
+  activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, nullptr, &step_history);
 
   // Walk for about 30 minutes (this should give us over 2500 steps)
   const int k_num_minutes = 30;
@@ -689,7 +689,7 @@ static void prv_test_sleep_summary(void *context) {
   };
 
   // Reset all stored data
-  activity_test_reset(false /*reset_settings*/, true /*tracking_on*/, &sleep_history, NULL);
+  activity_test_reset(false /*reset_settings*/, true /*tracking_on*/, &sleep_history, nullptr);
 
   // Change into awake state and capture the sleep before
   // Walk long enough to overlap with a periodic sleep recomputation

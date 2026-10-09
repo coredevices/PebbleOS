@@ -6,5 +6,5 @@
 #include <pbl/services/vibes/vibe_client.h>
 
 VibeScore *vibe_client_get_score(VibeClient client) {
-  return NULL;
+  return nullptr;
 }

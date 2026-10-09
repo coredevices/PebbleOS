@@ -18,7 +18,7 @@ typedef struct {
   };
 } AppSlideTransitionAnimationConfiguration;
 
-_Static_assert(sizeof(AppSlideTransitionAnimationConfiguration) == sizeof(void *), "");
+static_assert(sizeof(AppSlideTransitionAnimationConfiguration) == sizeof(void *), "");
 
 void compositor_app_slide_transition_animation_update(GContext *ctx, uint32_t distance_normalized,
                                                       CompositorTransitionDirection dir) {
@@ -61,7 +61,7 @@ static void prv_configure_transition_animation(Animation *animation,
     .direction = direction,
   };
 
-  animation_set_handlers(animation, (AnimationHandlers){0}, config.data);
+  animation_set_handlers(animation, (AnimationHandlers){}, config.data);
   animation_set_custom_interpolation(animation, interpolate_moook);
   animation_set_duration(animation, interpolate_moook_duration());
 }
@@ -76,7 +76,7 @@ static void prv_transition_to_launcher_animation_init(Animation *animation) {
 
 const CompositorTransition *compositor_app_slide_transition_get(bool flip_to_the_right) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   if (flip_to_the_right) {

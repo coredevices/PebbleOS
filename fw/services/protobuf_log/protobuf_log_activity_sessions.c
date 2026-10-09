@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
-
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
@@ -84,7 +82,7 @@ static bool prv_encode_intervals(pb_ostream_t *stream, const pb_field_t *field, 
 ProtobufLogRef protobuf_log_activity_sessions_create(void) {
   ProtobufLogConfig log_config = {.type = ProtobufLogType_Events, .events = {}};
 
-  return protobuf_log_create(&log_config, NULL /*transport*/, 0 /*max_encoded_msg_size*/);
+  return protobuf_log_create(&log_config, nullptr /*transport*/, 0 /*max_encoded_msg_size*/);
 }
 
 // TODO: Actually make sense of this. It is completely wrong.

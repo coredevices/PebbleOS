@@ -59,8 +59,8 @@ typedef struct PBL_PACKED {
 // The most we try to fit into a data chunk. This value must be small enough to fit within the 7
 // bytes reserved for it within the DLSChunkHeader.
 #define DLS_MAX_CHUNK_SIZE_BYTES 100
-_Static_assert(DLS_MAX_CHUNK_SIZE_BYTES < DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED,
-               "DLS_MAX_CHUNK_SIZE_BYTES must be less than DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED");
+static_assert(DLS_MAX_CHUNK_SIZE_BYTES < DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED,
+              "DLS_MAX_CHUNK_SIZE_BYTES must be less than DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED");
 
 // Forward declarations
 static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size);
@@ -212,7 +212,7 @@ static bool prv_make_file_system_space(uint32_t needed) {
   // Make sure we have at least 'needed' bytes free in the file system
   uint32_t used_space = prv_get_total_file_system_bytes();
   if (used_space + needed >= DLS_MAX_DATA_BYTES) {
-    dls_list_for_each_session(prv_compact_session_cb, NULL);
+    dls_list_for_each_session(prv_compact_session_cb, nullptr);
 
     used_space = prv_get_total_file_system_bytes();
     if (used_space + needed >= DLS_MAX_DATA_BYTES) {
@@ -430,7 +430,7 @@ static bool prv_write_data(DataLoggingSessionStorage *storage, const void *data,
 // Migrate a session's data to a new file, removing already consumed bytes from the front
 static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) {
   bool success;
-  uint8_t *tmp_buf = NULL;
+  uint8_t *tmp_buf = nullptr;
 
   // Must be called with the file closed
   PBL_ASSERTN(session->storage.fd == DLS_INVALID_FILE);
@@ -840,7 +840,7 @@ void dls_storage_rebuild(void) {
   PFSFileListEntry *head = dir_list;
   int num_sessions_restored = 0;
   while (head) {
-    DataLoggingSession *session = NULL;
+    DataLoggingSession *session = nullptr;
 
     int fd = pfs_open(head->name, OP_FLAG_READ | OP_FLAG_WRITE, FILE_TYPE_STATIC,
                       DLS_FILE_INIT_SIZE_BYTES);
@@ -883,7 +883,7 @@ void dls_storage_rebuild(void) {
     // last byte of data (which becomes the write offset). We pass NULL into the buffer argument
     // of dls_storage_read() to tell it to compute these for us.
     uint32_t write_offset;
-    int32_t num_bytes = dls_storage_read(session, NULL, 0 /*numbytes*/, &write_offset);
+    int32_t num_bytes = dls_storage_read(session, nullptr, 0 /*numbytes*/, &write_offset);
     if (num_bytes < 0) {
       goto bad_session;
     }

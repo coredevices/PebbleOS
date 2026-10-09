@@ -4,7 +4,6 @@
 #pragma once
 
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -251,11 +250,11 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
  */
 #if defined(CONFIG_FLASH_LOG_LEVEL_ERROR)
 #define FLASH_LOG_LEVEL LOG_LEVEL_ERROR
-#elif defined(CONFIG_FLASH_LOG_LEVEL_WARNING)
+#elifdef CONFIG_FLASH_LOG_LEVEL_WARNING
 #define FLASH_LOG_LEVEL LOG_LEVEL_WARNING
-#elif defined(CONFIG_FLASH_LOG_LEVEL_DEBUG)
+#elifdef CONFIG_FLASH_LOG_LEVEL_DEBUG
 #define FLASH_LOG_LEVEL LOG_LEVEL_DEBUG
-#elif defined(CONFIG_FLASH_LOG_LEVEL_DEBUG_VERBOSE)
+#elifdef CONFIG_FLASH_LOG_LEVEL_DEBUG_VERBOSE
 #define FLASH_LOG_LEVEL LOG_LEVEL_DEBUG_VERBOSE
 #else
 #define FLASH_LOG_LEVEL LOG_LEVEL_INFO
@@ -345,10 +344,10 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 // PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL) (see
 // Kconfig.template.log_level). Kconfig never yields LOG_LEVEL_ALWAYS (0) for a
 // module, so 0 marks a file without one; those use DEFAULT_LOG_LEVEL.
-PBL_UNUSED static const int16_t _pbl_log_module_level;
-PBL_UNUSED static const char *const _pbl_log_module_name;
+[[maybe_unused]] static const int16_t _pbl_log_module_level;
+[[maybe_unused]] static const char *const _pbl_log_module_name;
 // Runtime level of modules with CONFIG_<module>_LOG_LEVEL_RUNTIME, NULL otherwise.
-PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
+[[maybe_unused]] static int16_t *const _pbl_log_module_runtime_level;
 
 #define _PBL_LOG_PLACEHOLDER_1            0,
 #define _PBL_LOG_IS_ENABLED(cfg)          _PBL_LOG_IS_ENABLED1(cfg)
@@ -363,14 +362,14 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
 // The MODULE map entry gives the loghash dict generator the
 // file -> module mapping; the module name costs nothing at runtime.
 #define _PBL_LOG_MODULE_STATIC(name, level)                                                   \
-  PBL_UNUSED static const int16_t _pbl_log_module_level = (level);                            \
-  PBL_UNUSED static const char *const _pbl_log_module_name = #name;                           \
+  [[maybe_unused]] static const int16_t _pbl_log_module_level = (level);                      \
+  [[maybe_unused]] static const char *const _pbl_log_module_name = #name;                     \
   PBL_USED PBL_NOCOMMON PBL_SECTION(".log_strings") static const char _pbl_log_module_map[] = \
       "MODULE:" __FILE__ ":" #name
 #else
-#define _PBL_LOG_MODULE_STATIC(name, level)                        \
-  PBL_UNUSED static const int16_t _pbl_log_module_level = (level); \
-  PBL_UNUSED static const char *const _pbl_log_module_name = #name
+#define _PBL_LOG_MODULE_STATIC(name, level)                              \
+  [[maybe_unused]] static const int16_t _pbl_log_module_level = (level); \
+  [[maybe_unused]] static const char *const _pbl_log_module_name = #name
 #endif
 
 // Runtime modules keep every message and filter on a shared level variable,
@@ -381,9 +380,10 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
   _PBL_LOG_MODULE_DECLARE_1(name, level)
 
 #define _PBL_LOG_MODULE_DECLARE_0(name, level) _PBL_LOG_MODULE_STATIC(name, level)
-#define _PBL_LOG_MODULE_DECLARE_1(name, level)                                                     \
-  extern int16_t _pbl_log_runtime_level_##name;                                                    \
-  PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level = &_pbl_log_runtime_level_##name; \
+#define _PBL_LOG_MODULE_DECLARE_1(name, level)                           \
+  extern int16_t _pbl_log_runtime_level_##name;                          \
+  [[maybe_unused]] static int16_t *const _pbl_log_module_runtime_level = \
+      &_pbl_log_runtime_level_##name;                                    \
   _PBL_LOG_MODULE_STATIC(name, LOG_LEVEL_DEBUG_VERBOSE)
 /** @endcond */
 
@@ -411,10 +411,11 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
 #define PBL_LOG_MODULE_DECLARE(name, level) \
   _PBL_LOG_CAT(_PBL_LOG_MODULE_DECLARE_, _PBL_LOG_IS_ENABLED(level##_RUNTIME))(name, level)
 /** @cond INTERNAL_HIDDEN */
-#define _PBL_LOG_FN(fn, filtered_fn) (_pbl_log_module_runtime_level != NULL ? filtered_fn : fn)
+#define _PBL_LOG_FN(fn, filtered_fn) (_pbl_log_module_runtime_level != nullptr ? filtered_fn : fn)
 /** @endcond */
 #else
-#define PBL_LOG_MODULE_DEFINE(name, level) PBL_UNUSED static const int16_t _pbl_log_module_level = 0
+#define PBL_LOG_MODULE_DEFINE(name, level) \
+  [[maybe_unused]] static const int16_t _pbl_log_module_level = 0
 #define PBL_LOG_MODULE_DECLARE(name, level) PBL_LOG_MODULE_DEFINE(name, level)
 /** @cond INTERNAL_HIDDEN */
 // Host builds may not fold the selection and lack the filtered functions.
@@ -456,7 +457,7 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
  */
 #define PBL_SHOULD_LOG(level)                                                             \
   ((level) <= (_pbl_log_module_level != 0 ? _pbl_log_module_level : DEFAULT_LOG_LEVEL) && \
-   (_pbl_log_module_runtime_level == NULL ||                                              \
+   (_pbl_log_module_runtime_level == nullptr ||                                           \
     (level) <= __atomic_load_n(_pbl_log_module_runtime_level, __ATOMIC_RELAXED)))
 
 /**
@@ -504,7 +505,7 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
 #define PBL_LOG_COLOR(level, color, fmt, ...)                                         \
   do {                                                                                \
     if (PBL_SHOULD_LOG(level)) {                                                      \
-      if (_pbl_log_module_name != NULL) {                                             \
+      if (_pbl_log_module_name != nullptr) {                                          \
         _PBL_LOG_FN(pbl_log, pbl_log_filtered)(level, __FILE__, __LINE__, "%s: " fmt, \
                                                _pbl_log_module_name, ##__VA_ARGS__);  \
       } else {                                                                        \
@@ -516,7 +517,7 @@ PBL_UNUSED static int16_t *const _pbl_log_module_runtime_level;
 #define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                                              \
   do {                                                                                          \
     if (PBL_SHOULD_LOG(level)) {                                                                \
-      if (_pbl_log_module_name != NULL) {                                                       \
+      if (_pbl_log_module_name != nullptr) {                                                    \
         _PBL_LOG_FN(pbl_log_sync, pbl_log_filtered_sync)(level, __FILE__, __LINE__, "%s: " fmt, \
                                                          _pbl_log_module_name, ##__VA_ARGS__);  \
       } else {                                                                                  \

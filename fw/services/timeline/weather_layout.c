@@ -52,7 +52,7 @@ static const char *prv_get_kind_title(const TimelineLayout *layout) {
     case WeatherPinKind_Sunset:
       return i18n_get("Sunset", layout);
     default:
-      return NULL;
+      return nullptr;
   }
 }
 

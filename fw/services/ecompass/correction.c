@@ -99,7 +99,7 @@ static bool sphere_fit(int16_t *solution) {
 
   // determine average value of x, y, & z coordinates
   // and shift by this factor to prevent overflow.
-  int32_t shift_factor[N_AXIS] = {0};
+  int32_t shift_factor[N_AXIS] = {};
   for (int j = 0; j < N_AXIS; j++) {
     for (int i = 0; i < N_SAMPS; i++) {
       shift_factor[j] += s_samples[i][j];
@@ -292,7 +292,7 @@ static MagCalStatus check_correction_value(int16_t *solution, int16_t *saved_sol
   int x_delta, y_delta, z_delta;
 
   // is the new solution close to what we already have saved?
-  if (saved_solution != NULL) {
+  if (saved_solution != nullptr) {
     x_delta = ABS(saved_solution[0] - solution[0]);
     y_delta = ABS(saved_solution[1] - solution[1]);
     z_delta = ABS(saved_solution[2] - solution[2]);
@@ -315,7 +315,7 @@ static MagCalStatus check_correction_value(int16_t *solution, int16_t *saved_sol
     z_delta = min_max_diff(s_calib_val[2], 3);
     if ((x_delta < max_delta_thresh) && (y_delta < max_delta_thresh) &&
         (z_delta < max_delta_thresh)) {
-      int corrs[N_AXIS] = {0};
+      int corrs[N_AXIS] = {};
       for (int i = 0; i < N_AXIS; i++) {
         for (int j = 0; j < N_COMP_SAMPS; j++) {
           corrs[i] += s_calib_val[i][j];

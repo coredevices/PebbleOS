@@ -33,7 +33,7 @@ static void prv_dismiss_notification(const TimelineItem *notification) {
   const TimelineItemAction *action = timeline_item_find_dismiss_action(notification);
 
   if (action) {
-    timeline_invoke_action(notification, action, NULL);
+    timeline_invoke_action(notification, action, nullptr);
   } else {
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&notification->header.id, uuid_buffer);
@@ -368,7 +368,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
   if (is_notification_from_phone_app && has_missed_call_property) {
     TimelineItem *missed_call_pin = ancs_item_create_and_populate(
         notif_attributes, app_attributes, app_metadata, app_notif_prefs, timestamp, properties);
-    if (missed_call_pin == NULL) {
+    if (missed_call_pin == nullptr) {
       goto cleanup;
     }
     timeline_add_missed_call_pin(missed_call_pin, uid);
@@ -419,7 +419,7 @@ void ancs_notifications_handle_access_denied(void) {
   attribute_list_add_uint8(&attr_list, AttributeIdBgColor, GColorOrangeARGB8);
 
   TimelineItem *item = timeline_item_create_with_attributes(
-      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, NULL);
+      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, nullptr);
   i18n_free_all(&attr_list);
   attribute_list_destroy_list(&attr_list);
   if (!item) {

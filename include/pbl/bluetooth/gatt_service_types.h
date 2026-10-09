@@ -57,9 +57,9 @@ struct pbl_bt_gatt_descriptor {
   uint8_t att_handle_offset;
 };
 
-_Static_assert(offsetof(struct pbl_bt_gatt_descriptor, uuid) ==
-                   offsetof(struct pbl_bt_gatt_object_header, uuid),
-               "");
+static_assert(offsetof(struct pbl_bt_gatt_descriptor, uuid) ==
+                  offsetof(struct pbl_bt_gatt_object_header, uuid),
+              "");
 
 /** @brief A characteristic of a remote service, followed by its descriptors. */
 struct pbl_bt_gatt_characteristic {
@@ -78,9 +78,9 @@ struct pbl_bt_gatt_characteristic {
   struct pbl_bt_gatt_descriptor descriptors[];
 };
 
-_Static_assert(offsetof(struct pbl_bt_gatt_characteristic, uuid) ==
-                   offsetof(struct pbl_bt_gatt_object_header, uuid),
-               "");
+static_assert(offsetof(struct pbl_bt_gatt_characteristic, uuid) ==
+                  offsetof(struct pbl_bt_gatt_object_header, uuid),
+              "");
 
 /** @brief A remote service, followed by its characteristics and included service handles. */
 struct pbl_bt_gatt_service {
@@ -119,9 +119,9 @@ struct pbl_bt_gatt_service {
   struct pbl_bt_gatt_characteristic characteristics[];
 };
 
-_Static_assert(offsetof(struct pbl_bt_gatt_service, uuid) ==
-                   offsetof(struct pbl_bt_gatt_object_header, uuid),
-               "");
+static_assert(offsetof(struct pbl_bt_gatt_service, uuid) ==
+                  offsetof(struct pbl_bt_gatt_object_header, uuid),
+              "");
 
 /**
  * @brief Size in bytes of a struct pbl_bt_gatt_service blob.

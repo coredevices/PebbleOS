@@ -11,7 +11,7 @@
     GRect rect_b = (b);                                                                        \
     bool success = grect_equal(&rect_a, &rect_b);                                              \
     if (!success) {                                                                            \
-      char error_msg[256] = {0};                                                               \
+      char error_msg[256] = {};                                                                \
       sprintf(error_msg,                                                                       \
               "grect_equal(rect_a, rect_b)\n"                                                  \
               "    rect_a: {%d,%d,%d,%d}\n"                                                    \
@@ -28,7 +28,7 @@
     GPoint pt_b = (b);                                                               \
     bool success = gpoint_equal(&pt_a, &pt_b);                                       \
     if (!success) {                                                                  \
-      char error_msg[256] = {0};                                                     \
+      char error_msg[256] = {};                                                      \
       sprintf(error_msg,                                                             \
               "gpoint_equal(pt_a, pt_b)\n"                                           \
               "    pt_a: {%d,%d}\n"                                                  \
@@ -44,7 +44,7 @@
     GSize size_b = (b);                                                              \
     bool success = gsize_equal(&size_a, &size_b);                                    \
     if (!success) {                                                                  \
-      char error_msg[256] = {0};                                                     \
+      char error_msg[256] = {};                                                      \
       sprintf(error_msg,                                                             \
               "gsize_equal(size_a, size_b)\n"                                        \
               "    size_a: {%d,%d}\n"                                                \
@@ -60,9 +60,9 @@
     Uuid uuid_b = (b);                                                               \
     bool success = uuid_equal(&uuid_a, &uuid_b);                                     \
     if (!success) {                                                                  \
-      char error_msg[256] = {0};                                                     \
-      char uuid_a_buf[UUID_STRING_BUFFER_LENGTH] = {0};                              \
-      char uuid_b_buf[UUID_STRING_BUFFER_LENGTH] = {0};                              \
+      char error_msg[256] = {};                                                      \
+      char uuid_a_buf[UUID_STRING_BUFFER_LENGTH] = {};                               \
+      char uuid_b_buf[UUID_STRING_BUFFER_LENGTH] = {};                               \
       uuid_to_string(&uuid_a, uuid_a_buf);                                           \
       uuid_to_string(&uuid_b, uuid_b_buf);                                           \
       sprintf(error_msg,                                                             \
@@ -87,7 +87,7 @@
                     (edc_a.end_quadrant.angle == edc_b.end_quadrant.angle) &&                \
                     (edc_a.end_quadrant.quadrant == edc_b.end_quadrant.quadrant));           \
     if (!success) {                                                                          \
-      char error_msg[CL_ASSERT_EDC_MSG_SIZE] = {0};                                          \
+      char error_msg[CL_ASSERT_EDC_MSG_SIZE] = {};                                           \
       snprintf(error_msg, sizeof(error_msg),                                                 \
                "EllipsisDrawConfig edc_a and edc_b are not equal:\n"                         \
                "    edc_a: start_quadrant: angle: %d quadrant: %d\n"                         \

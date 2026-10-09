@@ -117,7 +117,7 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
         .handle_service_removed = ppogatt_handle_service_removed,
         .invalidate_all_references = ppogatt_invalidate_all_references,
         .can_handle_characteristic = ppogatt_can_handle_characteristic,
-        .handle_write_response = NULL,
+        .handle_write_response = nullptr,
         .handle_subscribe = ppogatt_handle_subscribe,
         .handle_read_or_notification = ppogatt_handle_read_or_notification,
       },
@@ -163,7 +163,7 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
         .handle_service_removed = app_launch_handle_service_removed,
         .invalidate_all_references = app_launch_invalidate_all_references,
         .can_handle_characteristic = app_launch_can_handle_characteristic,
-        .handle_read_or_notification = NULL,
+        .handle_read_or_notification = nullptr,
       },
   [KernelLEClientDIS] = {
     .debug_name = "DIS",
@@ -173,8 +173,8 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
     .handle_service_discovered = dis_handle_service_discovered,
     .handle_service_removed = dis_handle_service_removed,
     .invalidate_all_references = dis_invalidate_all_references,
-    .can_handle_characteristic = NULL,
-    .handle_read_or_notification = NULL,
+    .can_handle_characteristic = nullptr,
+    .handle_read_or_notification = nullptr,
   },
 #endif // UNITTEST
 };
@@ -278,7 +278,7 @@ static const KernelLEClient *prv_client_for_characteristic(pbl_bt_characteristic
       return client;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 typedef void (*ConsumeFuncPtr)(pbl_bt_characteristic_t characteristic_ref, uint8_t *value_out,
@@ -290,7 +290,7 @@ typedef void (*ReadNotifyHandler)(pbl_bt_characteristic_t characteristic, const 
 static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
                                       const KernelLEClient *client) {
   const uint16_t value_length = event->value_length;
-  uint8_t *buffer = NULL;
+  uint8_t *buffer = nullptr;
 
   if (value_length) {
     // This is ugly and causes double-copying the data...
@@ -369,7 +369,7 @@ static void prv_handle_gatt_event(const PebbleBLEGATTClientEvent *event) {
   if (!client) {
     // Read responses still need to be consumed, even if the client has disappeared:
     if (event->subtype == PebbleBLEGATTClientEventTypeCharacteristicRead && event->value_length) {
-      gatt_client_consume_read_response(event->object_ref, NULL, event->value_length,
+      gatt_client_consume_read_response(event->object_ref, nullptr, event->value_length,
                                         GAPLEClientKernel);
     }
     goto log_error;
@@ -519,7 +519,7 @@ void kernel_le_client_init(void) {
 // -------------------------------------------------------------------------------------------------
 void kernel_le_client_deinit(void) {
   // Cleanup clients: their code must execute on KernelMain, so add callback:
-  launcher_task_add_callback(prv_cleanup_clients_kernel_main_cb, NULL);
+  launcher_task_add_callback(prv_cleanup_clients_kernel_main_cb, nullptr);
 
   gap_le_slave_reconnect_stop();
   gap_le_connect_cancel_all(GAPLEClientKernel);

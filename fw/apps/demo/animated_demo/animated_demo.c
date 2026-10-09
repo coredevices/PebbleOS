@@ -57,9 +57,9 @@ static void click_handler(ClickRecognizerRef recognizer, Window *window) {
   // Does nothing if prop_animation is NULL
   if (data->prop_animation) {
     animation_unschedule(property_animation_get_animation(data->prop_animation));
-    property_animation_init_layer_frame(data->prop_animation, layer, NULL, &to_rect);
+    property_animation_init_layer_frame(data->prop_animation, layer, nullptr, &to_rect);
   } else {
-    data->prop_animation = property_animation_create_layer_frame(layer, NULL, &to_rect);
+    data->prop_animation = property_animation_create_layer_frame(layer, nullptr, &to_rect);
   }
   Animation *animation = property_animation_get_animation(data->prop_animation);
   PBL_ASSERTN(animation);

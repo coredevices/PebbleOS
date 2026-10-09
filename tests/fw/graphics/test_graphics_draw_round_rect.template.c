@@ -24,7 +24,7 @@
 #include "graphics_common_stubs.h"
 #include <stubs_applib_resource.h>
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 // Setup
 void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__initialize(void) {

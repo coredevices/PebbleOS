@@ -81,8 +81,8 @@ struct LauncherAppGlanceStructured {
   int32_t icon_horizontal_margin;
 };
 
-_Static_assert((offsetof(LauncherAppGlanceStructured, glance) == 0),
-               "LauncherAppGlance is not the first field of LauncherAppGlanceStructured");
+static_assert((offsetof(LauncherAppGlanceStructured, glance) == 0),
+              "LauncherAppGlance is not the first field of LauncherAppGlanceStructured");
 
 //! Create a structured launcher app glance for the provided app menu node.
 //! @param uuid The UUID of the app for which to initialize this structured glance

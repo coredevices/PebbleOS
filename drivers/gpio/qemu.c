@@ -19,7 +19,7 @@ void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
 }
 
 void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
-  if (pin_config == NULL) {
+  if (pin_config == nullptr) {
     return;
   }
   uint32_t output = REG32(QEMU_GPIO_BASE + GPIO_OUTPUT);
@@ -42,7 +42,7 @@ void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef
 }
 
 bool gpio_input_read(const InputConfig *input_cfg) {
-  if (input_cfg == NULL) {
+  if (input_cfg == nullptr) {
     return false;
   }
   uint32_t state = REG32(QEMU_GPIO_BASE + GPIO_STATE);

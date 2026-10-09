@@ -89,7 +89,7 @@ DEFINE_SYSCALL(uint32_t, sys_process_events_waiting, PebbleTask task) {
 // validating the prev/next pointers, an app can craft them to point into kernel
 // memory and use list_remove as a 4-byte arbitrary-write primitive (`*a = b; *b = a`).
 static void prv_assert_list_node_in_userspace(const ListNode *node) {
-  if (node != NULL) {
+  if (node != nullptr) {
     syscall_assert_userspace_buffer(node, sizeof(*node));
   }
 }
@@ -158,7 +158,7 @@ DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *sta
   }
 
   // Remove from handlers list
-  list_remove(&handler->list_node, NULL, NULL);
+  list_remove(&handler->list_node, nullptr, nullptr);
 
   if (list_find(&state->list_node, event_service_filter, (void *)handler->type)) {
     // there are other handlers for this task, don't unsubscribe it

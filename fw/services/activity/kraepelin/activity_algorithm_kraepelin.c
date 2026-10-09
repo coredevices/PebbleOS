@@ -79,7 +79,7 @@ typedef struct {
   struct pbl_shared_cbuf_client dls_minute_data_client;
   AlgMinuteRecord cbuf_record; // space for tmp record here to decrease stack requirements
 } AlgState;
-static AlgState *s_alg_state = NULL;
+static AlgState *s_alg_state = nullptr;
 
 // ----------------------------------------------------------------------------------------------
 static bool prv_lock(void) {
@@ -106,7 +106,7 @@ static PBL_NOINLINE SettingsFile *prv_minute_data_file_open(void) {
   SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
   if (settings_file_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != S_SUCCESS) {
     PBL_LOG_ERR("No minute data file");
-    return NULL;
+    return nullptr;
   }
   return file;
 }
@@ -256,7 +256,7 @@ bool activity_algorithm_dump_minute_data_to_log(void) {
   }
 
   bool success = false;
-  SettingsFile *file = NULL;
+  SettingsFile *file = nullptr;
 
   // Open the minute data file
   file = prv_minute_data_file_open();
@@ -339,10 +339,10 @@ static SettingsFile *prv_validate_and_trim_minute_file(SettingsFile *file, uint1
   s_alg_state->num_minute_records = 0;
 
   // Open settings file containing our minute data
-  if (file == NULL) {
+  if (file == nullptr) {
     need_close = true;
     file = prv_minute_data_file_open();
-    if (file == NULL) {
+    if (file == nullptr) {
       goto exit;
     }
   }
@@ -376,7 +376,7 @@ static SettingsFile *prv_validate_and_trim_minute_file(SettingsFile *file, uint1
 exit:
   if (file && (need_close || nuke_file)) {
     prv_minute_data_file_close(file);
-    file = NULL;
+    file = nullptr;
   }
 
   if (nuke_file) {
@@ -466,7 +466,7 @@ exit:
 // -------------------------------------------------------------------------------------
 static DataLoggingSession *prv_get_dls_minute_session(void) {
   // Open up the data logging session if we don't have one
-  if (s_alg_state->dls_session == NULL) {
+  if (s_alg_state->dls_session == nullptr) {
     // We don't need to be buffered since we are logging from the KernelBG task and this
     // saves having to allocate another buffer from the kernel heap.
     const bool buffered = false;
@@ -480,7 +480,7 @@ static DataLoggingSession *prv_get_dls_minute_session(void) {
       // times because each time you reboot, you get new sessions created and reach the limit
       // of the max # of sessions allowed.
       PBL_LOG_WRN("Error creating activity logging session");
-      return NULL;
+      return nullptr;
     }
   }
   return s_alg_state->dls_session;
@@ -581,9 +581,9 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
 static void prv_send_minute_data(uint16_t uncertain_m, time_t sleep_start_utc, uint16_t sleep_len_m,
                                  bool to_file, bool force_send) {
   // If writing to DLS, make sure we can open up the session we need first
-  DataLoggingSession *dls_session = NULL;
-  AlgMinuteFileRecord *file_record = NULL;
-  AlgMinuteDLSRecord *dls_record = NULL;
+  DataLoggingSession *dls_session = nullptr;
+  AlgMinuteFileRecord *file_record = nullptr;
+  AlgMinuteDLSRecord *dls_record = nullptr;
 
   if (to_file) {
     file_record = &s_alg_state->file_record;
@@ -600,7 +600,7 @@ static void prv_send_minute_data(uint16_t uncertain_m, time_t sleep_start_utc, u
   // While we have whole minute records available for sending, send them.
   while (prv_prepare_minute_data(uncertain_m, sleep_start_utc, sleep_len_m, file_record, dls_record,
                                  force_send)) {
-    PBL_ASSERTN((file_record == NULL) != (dls_record == NULL));
+    PBL_ASSERTN((file_record == nullptr) != (dls_record == nullptr));
     if (file_record) {
       prv_write_minute_file_record(file_record);
     }
@@ -703,7 +703,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
   // Now, go through and fix up the labels on the sleep sessions that should be categorized as
   // naps
   ActivitySession *session = sessions;
-  ActivitySession *most_recent_nap_session = NULL;
+  ActivitySession *most_recent_nap_session = nullptr;
   for (unsigned i = 0; i < num_input_sessions; i++, session++) {
     const unsigned start_minute = time_util_get_minute_of_day(session->start_utc);
     const time_t end_utc = session->start_utc + (session->length_min * PBL_SEC_PER_MIN);
@@ -747,7 +747,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
     // always follow the container session that they belong to. This is assumption is valid given
     // the way that the algorithm identifies sleep sessions.
     if (session->type == ActivitySessionType_RestfulSleep) {
-      if (most_recent_nap_session == NULL) {
+      if (most_recent_nap_session == nullptr) {
         continue;
       }
       if ((session->start_utc < most_recent_nap_session->start_utc) ||
@@ -797,7 +797,7 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   pbl_shared_cbuf_add_client(&s_alg_state->minute_data_cbuf, &s_alg_state->dls_minute_data_client);
 
   // Init the algorithm state
-  kalg_init(k_state, NULL);
+  kalg_init(k_state, nullptr);
 
   // Count # of records in minute file
   uint32_t num_records;
@@ -845,7 +845,7 @@ bool activity_algorithm_deinit(void) {
   kernel_free(s_alg_state->k_state);
 
   kernel_free(s_alg_state);
-  s_alg_state = NULL;
+  s_alg_state = nullptr;
   return true;
 }
 
@@ -965,7 +965,7 @@ static void prv_activity_update_states(time_t utc_sec, AlgMinuteRecord *record_o
   kalg_activities_update(s_alg_state->k_state, utc_sec, m_rec->base.steps, m_rec->base.vmc,
                          m_rec->base.orientation, not_worn, m_rec->resting_calories,
                          m_rec->active_calories, minute_distance_mm, shutting_down,
-                         prv_create_activity_session_cb, NULL);
+                         prv_create_activity_session_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------
@@ -1218,7 +1218,7 @@ bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32
   }
 
   bool success = true;
-  SettingsFile *file = NULL;
+  SettingsFile *file = nullptr;
   uint32_t array_size = *num_records;
 
   // Open the minute data file
@@ -1295,7 +1295,7 @@ bool activity_algorithm_minute_file_info(bool compact_first, uint32_t *num_recor
     return false;
   }
   bool success = false;
-  SettingsFile *file = NULL;
+  SettingsFile *file = nullptr;
 
   file = prv_minute_data_file_open();
   if (file && compact_first) {

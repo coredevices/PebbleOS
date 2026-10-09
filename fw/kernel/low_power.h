@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 //! Standby while in Low Power Mode
 void low_power_standby(void);
 

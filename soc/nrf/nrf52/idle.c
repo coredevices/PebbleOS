@@ -133,5 +133,6 @@ static int prv_cmd_cpustats(const struct pbl_shell *sh, size_t argc, char **argv
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_sys, cpustats, NULL, "Show CPU sleep statistics", prv_cmd_cpustats, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys, cpustats, nullptr, "Show CPU sleep statistics", prv_cmd_cpustats, 0,
+                     0);
 #endif

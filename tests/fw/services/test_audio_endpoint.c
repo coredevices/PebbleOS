@@ -62,7 +62,7 @@ Transport *s_transport;
 
 void test_audio_endpoint__initialize(void) {
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
+  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
   s_session = fake_transport_set_connected(s_transport, true);
 
   s_session_id = audio_endpoint_setup_transfer(prv_test_stop_transfer_callback);
@@ -71,7 +71,7 @@ void test_audio_endpoint__initialize(void) {
 
 void test_audio_endpoint__session_control(void) {
   // Test that it is not possible to start another transfer session if one is already on-going:
-  AudioEndpointSessionId session_id = audio_endpoint_setup_transfer(NULL);
+  AudioEndpointSessionId session_id = audio_endpoint_setup_transfer(nullptr);
   cl_assert(session_id == AUDIO_ENDPOINT_SESSION_INVALID_ID);
 
   audio_endpoint_stop_transfer(s_session_id);
@@ -104,7 +104,7 @@ void test_audio_endpoint__remote_stop_transfer(void) {
 void test_audio_endpoint__cleanup(void) {
   fake_comm_session_cleanup();
   fake_system_task_callbacks_cleanup();
-  s_transport = NULL;
+  s_transport = nullptr;
 
   fake_pbl_malloc_check_net_allocs();
   fake_pbl_malloc_clear_tracking();

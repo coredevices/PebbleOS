@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <applib/app_timer.h>
 #include <applib/ui/kino/kino_layer.h>
 #include <applib/ui/status_bar_layer.h>

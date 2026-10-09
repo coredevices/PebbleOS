@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/services/phone_call_util.h>
 
 #include <kernel/events.h>

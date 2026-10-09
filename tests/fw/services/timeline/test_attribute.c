@@ -246,7 +246,7 @@ void test_attribute__attributes_add_to_list(void) {
   static const uint32_t value_uint32 = 123123423;
   static const uint8_t value_uint8 = 17;
 
-  AttributeList list = {0};
+  AttributeList list = {};
 
   attribute_list_add_cstring(&list, AttributeIdTitle, "Title1");
   cl_assert_equal_s(attribute_get_string(&list, AttributeIdTitle, ""), "Title1");
@@ -272,7 +272,7 @@ void test_attribute__attributes_add_to_list(void) {
 }
 
 void test_attribute__attribute_list_copy(void) {
-  AttributeList list = {0};
+  AttributeList list = {};
   attribute_list_add_cstring(&list, AttributeIdTitle, "Title");
   attribute_list_add_cstring(&list, AttributeIdSubtitle, "Subtitle");
   attribute_list_add_cstring(&list, AttributeIdBody, "Body");
@@ -282,7 +282,7 @@ void test_attribute__attribute_list_copy(void) {
   cl_assert_equal_i(size_list, (5 + 1) + (8 + 1) + (4 + 1) + 3 * sizeof(Attribute));
   uint8_t *buffer = kernel_malloc_check(size_list);
   uint8_t *buffer_orig = buffer;
-  AttributeList list2 = {0};
+  AttributeList list2 = {};
   cl_assert(attribute_list_copy(&list2, &list, buffer, buffer + size_list));
   // check that we haven't modified buffer
   cl_assert(buffer == buffer_orig);
@@ -333,7 +333,7 @@ static void prv_check_app_glance_subtitle_in_attribute_list_deserializes(
                     true);
   // Check that the app glance subtitle string we deserialized matches the string we expect
   cl_assert_equal_s(attribute_get_string(&deserialization_result_attribute_list,
-                                         AttributeIdSubtitleTemplateString, NULL),
+                                         AttributeIdSubtitleTemplateString, nullptr),
                     expected_app_glance_subtitle_after_deserializing);
 }
 
@@ -391,7 +391,7 @@ void test_attribute__app_glance_subtitle_in_attribute_list(void) {
       app_glance_subtitle_attribute_list_serialized,
       app_glance_subtitle_attribute_list_serialized_size, num_attributes,
       attribute_get_string(&app_glance_subtitle_attribute_list, AttributeIdSubtitleTemplateString,
-                           NULL));
+                           nullptr));
 }
 
 void test_attribute__too_long_app_glance_subtitle_in_attribute_list(void) {
@@ -624,7 +624,7 @@ void test_attribute__image_aspect_ratio_deserializes(void) {
                                  attribute_data_buffer + buffer_size, &cursor, end, &result),
       true);
   cl_assert_equal_i(attribute_get_uint8(&result, AttributeIdImageAspectRatio, 0), 12);
-  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, NULL), "Next");
+  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, nullptr), "Next");
 }
 
 void test_attribute__unknown_attribute_id_does_not_overflow(void) {
@@ -636,7 +636,7 @@ void test_attribute__unknown_attribute_id_does_not_overflow(void) {
     0x00,
     1,
   };
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, serialized + sizeof(serialized), 1,
                                                     has_attribute),
                     true);
@@ -672,7 +672,7 @@ void test_attribute__unknown_attribute_id_is_skipped(void) {
   cl_assert(buffer_size > 0);
   cl_assert(buffer_size_cursor == end);
 
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, num_attributes, has_attribute),
                     true);
   cl_assert_equal_b(has_attribute[AttributeIdTitle], true);
@@ -685,8 +685,8 @@ void test_attribute__unknown_attribute_id_is_skipped(void) {
                                     attribute_buffer, data_buffer, buffer_size, &result),
                     true);
   cl_assert_equal_i(result.num_attributes, 2);
-  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, NULL), "Title");
-  cl_assert_equal_s(attribute_get_string(&result, AttributeIdSubtitle, NULL), "Sub");
+  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, nullptr), "Title");
+  cl_assert_equal_s(attribute_get_string(&result, AttributeIdSubtitle, nullptr), "Sub");
 }
 
 void test_attribute__truncated_unknown_attribute_is_rejected(void) {
@@ -700,7 +700,7 @@ void test_attribute__truncated_unknown_attribute_is_rejected(void) {
   cl_assert(attribute_get_buffer_size_for_serialized_attributes(num_attributes, &buffer_size_cursor,
                                                                 end) < 0);
 
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, num_attributes, has_attribute),
                     false);
 
@@ -721,7 +721,7 @@ void test_attribute__truncated_header_is_rejected(void) {
   const uint8_t *buffer_size_cursor = serialized;
   cl_assert(attribute_get_buffer_size_for_serialized_attributes(1, &buffer_size_cursor, end) < 0);
 
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, 1, has_attribute), false);
 }
 
@@ -775,12 +775,12 @@ void test_attribute__unknown_attribute_keeps_actions(void) {
                     true);
 
   cl_assert_equal_i(attr_list.num_attributes, 1);
-  cl_assert_equal_s(attribute_get_string(&attr_list, AttributeIdTitle, NULL), "Pin");
+  cl_assert_equal_s(attribute_get_string(&attr_list, AttributeIdTitle, nullptr), "Pin");
   cl_assert_equal_i(action_group.num_actions, 1);
   cl_assert_equal_i(action_group.actions[0].id, 0x07);
   cl_assert_equal_i(action_group.actions[0].attr_list.num_attributes, 1);
   cl_assert_equal_s(
-      attribute_get_string(&action_group.actions[0].attr_list, AttributeIdTitle, NULL), "Go");
+      attribute_get_string(&action_group.actions[0].attr_list, AttributeIdTitle, nullptr), "Go");
   kernel_free(buffer);
 }
 
@@ -793,7 +793,7 @@ void test_attribute__weather_pin_kind_deserializes(void) {
   };
   const uint8_t num_attributes = 2;
   const uint8_t *end = serialized + sizeof(serialized);
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, num_attributes, has_attribute),
                     true);
   cl_assert_equal_b(has_attribute[AttributeIdWeatherPinKind], true);

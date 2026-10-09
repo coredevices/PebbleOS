@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <string.h>
 
 #include <pbl/logging/logging.h>
@@ -125,7 +124,7 @@ void pp_decline_call(uint32_t cookie) {
 }
 
 void pp_get_phone_state(void) {
-  prv_send_phone_command_to_handset(PhoneCmdGetStateRequest, NULL, 0);
+  prv_send_phone_command_to_handset(PhoneCmdGetStateRequest, nullptr, 0);
 }
 
 void pp_get_phone_state_set_enabled(bool enabled) {
@@ -141,7 +140,7 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length, PebbleEve
   PebbleCallInfo call_info;
   call_info = (PebbleCallInfo){};
 
-  PebblePhoneCaller *caller = NULL;
+  PebblePhoneCaller *caller = nullptr;
   PhoneEventType type = ~0;
 
   switch (msg_type) {

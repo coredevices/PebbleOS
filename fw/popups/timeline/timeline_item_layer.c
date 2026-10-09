@@ -115,10 +115,11 @@ static void prv_update_scroll_offset(TimelineItemLayer *item_layer, int16_t new_
   }
 
   if (item_layer->animation) {
-    property_animation_init(item_layer->animation, &implementation, item_layer, NULL, &new_offset);
+    property_animation_init(item_layer->animation, &implementation, item_layer, nullptr,
+                            &new_offset);
   } else {
     item_layer->animation =
-        property_animation_create(&implementation, item_layer, NULL, &new_offset);
+        property_animation_create(&implementation, item_layer, nullptr, &new_offset);
     PBL_ASSERTN(item_layer->animation);
     animation_set_auto_destroy(property_animation_get_animation(item_layer->animation), false);
   }
@@ -254,7 +255,7 @@ void timeline_item_layer_deinit(TimelineItemLayer *item_layer) {
   layer_deinit(&item_layer->layer);
   if (item_layer->timeline_layout) {
     layout_destroy((LayoutLayer *)item_layer->timeline_layout);
-    item_layer->timeline_layout = NULL;
+    item_layer->timeline_layout = nullptr;
   }
 }
 

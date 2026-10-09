@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -132,7 +131,8 @@ void display_init(void) {
   config.frequency = NRFX_MHZ_TO_HZ(1);
   config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
 
-  nrfx_err_t err = nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, NULL);
+  nrfx_err_t err =
+      nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, nullptr);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP);

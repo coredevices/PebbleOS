@@ -53,7 +53,7 @@ typedef struct {
 } AppData;
 
 static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame_count) {
-  if (audio_data == NULL || frame_count == 0) {
+  if (audio_data == nullptr || frame_count == 0) {
     return;
   }
 
@@ -137,7 +137,7 @@ static void prv_recording_start(void) {
   mic_init(MIC);
   // set to maximum make it's more audible in testing
   mic_set_volume(MIC, 100);
-  mic_start(MIC, prv_mic_data_handler, NULL, app_data->pcm, PCM_BUFFER_SIZE);
+  mic_start(MIC, prv_mic_data_handler, nullptr, app_data->pcm, PCM_BUFFER_SIZE);
   app_data->mic_recording = true;
 }
 
@@ -193,7 +193,7 @@ static void prv_timer_callback(void *cb_data) {
     return;
   }
 
-  app_timer_register(500, prv_timer_callback, NULL);
+  app_timer_register(500, prv_timer_callback, nullptr);
 }
 
 static void prv_handle_init(void) {
@@ -226,7 +226,7 @@ static void prv_handle_init(void) {
   layer_add_child(&window->layer, &status->layer);
 
   app_window_stack_push(window, true /* Animated */);
-  app_timer_register(500, prv_timer_callback, NULL);
+  app_timer_register(500, prv_timer_callback, nullptr);
 
   // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
   (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);

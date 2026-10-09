@@ -28,5 +28,5 @@ static void prv_test(Layer *layer, GContext *ctx) {
   GColor color = {.argb = (uint8_t)rand()};
   graphics_context_set_text_color(ctx, color);
   graphics_draw_text(ctx, text_test_str, s_font, layer->bounds, GTextOverflowModeWordWrap,
-                     GTextAlignmentLeft, NULL);
+                     GTextAlignmentLeft, nullptr);
 }

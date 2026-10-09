@@ -284,7 +284,7 @@ static AnimTestHandlerEntry *prv_last_handler_entry(AnimTestHandlerHistory *hist
     }
   }
   if (last_entry == -1) {
-    return NULL;
+    return nullptr;
   } else {
     return &history->entries[last_entry];
   }
@@ -349,14 +349,14 @@ static void prv_stopped_handler_reschedule(Animation *animation, bool finished, 
 // --------------------------------------------------------------------------------------
 // setup handler
 void prv_setup_handler(Animation *animation) {
-  prv_add_handler_entry(&s_setup_handler_calls, animation, false, NULL);
+  prv_add_handler_entry(&s_setup_handler_calls, animation, false, nullptr);
   DPRINTF("%" PRIu64 " ms: Executing setup handler for %p\n", prv_now_ms(), (void *)animation);
 }
 
 // --------------------------------------------------------------------------------------
 // teardown handler
 void prv_teardown_handler(Animation *animation) {
-  prv_add_handler_entry(&s_teardown_handler_calls, animation, false, NULL);
+  prv_add_handler_entry(&s_teardown_handler_calls, animation, false, nullptr);
   DPRINTF("%" PRIu64 " ms: Executing teardown handler for %p\n", prv_now_ms(), (void *)animation);
 }
 
@@ -470,7 +470,7 @@ static Animation *prv_create_test_animation(void) {
   };
 
   h = animation_create();
-  cl_assert(h != NULL);
+  cl_assert(h != nullptr);
   void *context = h;
   animation_set_handlers(h, handlers, context);
   animation_set_implementation(h, &implementation);
@@ -595,7 +595,7 @@ void test_animation__property_layer_frame(void) {
 
   subject = (void *)0x11223344;
   property_animation_set_subject(prop_h, &subject);
-  subject = NULL;
+  subject = nullptr;
   property_animation_get_subject(prop_h, &subject);
   cl_assert(subject == (void *)0x11223344);
 
@@ -833,7 +833,7 @@ void test_animation__property_gtransform(void) {
   end_value = GTransformFromNumbers(100, 200, 300, 400, 500, 600);
   mid_value = GTransformFromNumbers(50, 101, 151, 202, 252, 303);
   value = end_value;
-  prop_h = property_animation_create(&implementation, &value, &start_value, NULL);
+  prop_h = property_animation_create(&implementation, &value, &start_value, nullptr);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &value;
   animation_set_handlers(h, handlers, context);
@@ -904,7 +904,7 @@ void test_animation__property_fixed_s32_16(void) {
   end_value = ((Fixed_S32_16){.integer = 100, .fraction = 0});
   mid_value = ((Fixed_S32_16){.integer = 50, .fraction = 0});
   value = end_value;
-  prop_h = property_animation_create(&implementation, &value, &start_value, NULL);
+  prop_h = property_animation_create(&implementation, &value, &start_value, nullptr);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &value;
   animation_set_handlers(h, handlers, context);
@@ -975,7 +975,7 @@ void test_animation__property_uint32(void) {
   end_value = 100;
   mid_value = 50;
   value = end_value;
-  prop_h = property_animation_create(&implementation, &value, &start_value, NULL);
+  prop_h = property_animation_create(&implementation, &value, &start_value, nullptr);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &value;
   animation_set_handlers(h, handlers, context);
@@ -1046,7 +1046,7 @@ void test_animation__property_gcolor8(void) {
   end_value = (GColor8){.a = 3, .r = 3, .g = 3, .b = 3};
   mid_value = (GColor8){.a = 1, .r = 1, .g = 1, .b = 1};
   value = end_value;
-  prop_h = property_animation_create(&implementation, &value, &start_value, NULL);
+  prop_h = property_animation_create(&implementation, &value, &start_value, nullptr);
   Animation *h = property_animation_get_animation(prop_h);
   void *context = &value;
   animation_set_handlers(h, handlers, context);
@@ -1335,7 +1335,7 @@ void test_animation__auto_destroy(void) {
   }
 
   // This should return a NULL context now if the animation got destroyed
-  cl_assert(animation_get_context(h) == NULL);
+  cl_assert(animation_get_context(h) == nullptr);
 
   // Make sure no animations exist
   cl_assert_equal_i(prv_count_animations(), 0);
@@ -1401,7 +1401,7 @@ void test_animation__auto_destroy_reschedule(void) {
   cl_assert_equal_point(layer.frame.origin, to_r.origin);
 
   // This should return a NULL context now if the animation got destroyed
-  cl_assert(animation_get_context(h) == NULL);
+  cl_assert(animation_get_context(h) == nullptr);
 
   // Make sure no animations exist
   cl_assert_equal_i(prv_count_animations(), 0);
@@ -1433,7 +1433,7 @@ static void prv_test_destroy_from_stopped_handler(bool auto_destroy) {
   };
 
   h = animation_create();
-  cl_assert(h != NULL);
+  cl_assert(h != nullptr);
   void *context = h;
   animation_set_handlers(h, handlers, context);
   animation_set_implementation(h, &implementation);
@@ -1456,7 +1456,7 @@ static void prv_test_destroy_from_stopped_handler(bool auto_destroy) {
   cl_assert_equal_i(prv_last_update_distance(h), ANIMATION_NORMALIZED_MAX);
 
   // This should return NULL now if the animation got destroyed
-  cl_assert(animation_private_animation_find(h) == NULL);
+  cl_assert(animation_private_animation_find(h) == nullptr);
 
   // Make sure no animations exist
   cl_assert_equal_i(prv_count_animations(), 0);
@@ -1591,8 +1591,8 @@ void test_animation__simple_sequence(void) {
   animation_set_play_count(b, play_count_b);
 
   // Create a sequence
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
 
   // Setup started/stopped handlers for the sequence
   const AnimationHandlers handlers = {
@@ -1695,15 +1695,15 @@ void test_animation__sequence_unschedule_from_child(void) {
   animation_set_duration(a, duration_a);
 
   // Setup stopped handler for the first child that unschedules the parent
-  const AnimationHandlers special_handlers = {.started = NULL, .stopped = prv_unschedule_parent};
-  animation_set_handlers(a, special_handlers, NULL);
+  const AnimationHandlers special_handlers = {.started = nullptr, .stopped = prv_unschedule_parent};
+  animation_set_handlers(a, special_handlers, nullptr);
 
   Animation *b = prv_create_test_animation();
   animation_set_duration(b, duration_b);
   animation_set_play_count(b, play_count_b);
 
   // Create a sequence
-  Animation *seq = animation_sequence_create(a, b, NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
   const AnimationHandlers handlers = {
     .started = prv_started_handler,
     .stopped = prv_stopped_handler
@@ -1753,16 +1753,16 @@ void test_animation__simple_sequence_set_elapsed(void) {
   animation_set_play_count(b, play_count_b);
 
   // Create a sequence out of them.
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
 
   // Create a shorter animation to play in parallel
   Animation *c = prv_create_test_animation();
-  cl_assert(c != NULL);
+  cl_assert(c != nullptr);
   animation_set_duration(c, duration_c);
 
-  Animation *complex = animation_spawn_create(seq, c, NULL);
-  cl_assert(complex != NULL);
+  Animation *complex = animation_spawn_create(seq, c, nullptr);
+  cl_assert(complex != nullptr);
   animation_set_handlers(complex, handlers, complex);
 
   prv_clear_handler_histories();
@@ -1881,12 +1881,12 @@ void test_animation__sequence_unschedule(void) {
   animation_set_duration(c, duration_c);
 
   // Create a spawn out of b and c
-  Animation *spawn = animation_spawn_create(b, c, NULL);
-  cl_assert(spawn != NULL);
+  Animation *spawn = animation_spawn_create(b, c, nullptr);
+  cl_assert(spawn != nullptr);
 
   // Create a sequence by putting a in front
   // We now have a -> (b | c)
-  Animation *seq = animation_sequence_create(a, spawn, NULL);
+  Animation *seq = animation_sequence_create(a, spawn, nullptr);
 
   // Make it repeat
   animation_set_play_count(seq, repeat_count);
@@ -1980,7 +1980,7 @@ void test_animation__complex_reverse(void) {
   animation_set_reverse(b, true);
 
   // Create a sequence
-  Animation *seq = animation_sequence_create(a, b, NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
   animation_set_play_count(seq, repeat_count);
 
   prv_clear_handler_histories();
@@ -2073,12 +2073,12 @@ void test_animation__complex_clone(void) {
   animation_set_duration(c, duration_c);
 
   // Create a spawn out of b and c
-  Animation *spawn = animation_spawn_create(b, c, NULL);
-  cl_assert(spawn != NULL);
+  Animation *spawn = animation_spawn_create(b, c, nullptr);
+  cl_assert(spawn != nullptr);
 
   // Create a sequence by putting a in front and repeat it 5 times
   // We now have a -> (b | c)
-  Animation *seq = animation_sequence_create(a, spawn, NULL);
+  Animation *seq = animation_sequence_create(a, spawn, nullptr);
   animation_set_play_count(seq, repeat_count);
 
   // Now, clone it
@@ -2093,31 +2093,31 @@ void test_animation__complex_clone(void) {
 
   // Start A
   prv_advance_to_ms_with_timers(start_ms + 1);
-  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, NULL), 1);
-  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, NULL), 0);
+  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, nullptr), 1);
+  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, nullptr), 0);
 
   // Execute to the start of B and C
   prv_advance_to_ms_with_timers(start_ms + duration_a + 2 * MIN_FRAME_INTERVAL_MS);
-  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, NULL), 3);
-  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, NULL), 1);
+  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, nullptr), 3);
+  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, nullptr), 1);
 
   // Execute to the end of B & C
   prv_advance_to_ms_with_timers(start_ms + duration_total + 1 * MIN_FRAME_INTERVAL_MS);
-  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, NULL), 3);
-  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, NULL), 3);
+  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, nullptr), 3);
+  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, nullptr), 3);
 
   // If we keep going, we should repeat the whole sequence another time
   prv_advance_to_ms_with_timers(start_ms + 2 * (duration_total + 4 * MIN_FRAME_INTERVAL_MS));
-  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, NULL), 7);
-  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, NULL), 6);
+  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, nullptr), 7);
+  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, nullptr), 6);
 
   // Unschedule the top-level
   animation_unschedule(clone);
 
   // Keep going, nothing new should happen except stop handlers for each component
   prv_advance_to_ms_with_timers(start_ms + 5 * (duration_total + 3 * MIN_FRAME_INTERVAL_MS));
-  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, NULL), 7);
-  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, NULL), 7);
+  cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, nullptr), 7);
+  cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, nullptr), 7);
 #endif
 }
 
@@ -2159,19 +2159,19 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
         break;
 
       case 2:
-        spawn_a = animation_spawn_create(a0, a1, a2, a3, NULL);
+        spawn_a = animation_spawn_create(a0, a1, a2, a3, nullptr);
         animation_set_handlers(spawn_a, handlers, (void *)spawn_a);
         break;
 
       case 3:
-        spawn_b = animation_spawn_create(b0, b1, b2, b3, NULL);
+        spawn_b = animation_spawn_create(b0, b1, b2, b3, nullptr);
         animation_set_handlers(spawn_b, handlers, (void *)spawn_a);
         break;
     }
   }
 
   // Create the sequence
-  Animation *seq = animation_sequence_create(spawn_a, spawn_b, NULL);
+  Animation *seq = animation_sequence_create(spawn_a, spawn_b, nullptr);
 
   // Schedule it
   prv_clear_handler_histories();
@@ -2267,8 +2267,8 @@ void test_animation__sequence_delay(void) {
   animation_set_delay(b, delay_b);
 
   // Create a sequence
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
   animation_set_delay(seq, delay_seq);
 
   prv_clear_handler_histories();
@@ -2352,8 +2352,8 @@ void test_animation__spawn_delay(void) {
   animation_set_delay(b, delay_b);
 
   // Create a spawn
-  Animation *spawn = animation_spawn_create(a, b, NULL);
-  cl_assert(spawn != NULL);
+  Animation *spawn = animation_spawn_create(a, b, nullptr);
+  cl_assert(spawn != nullptr);
   animation_set_delay(spawn, delay_spawn);
 
   prv_clear_handler_histories();
@@ -2434,8 +2434,8 @@ void test_animation__sequence_with_0_component(void) {
   animation_set_play_count(b, 0);
 
   // Create a sequence
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
   animation_set_play_count(seq, play_count_seq);
 
   // Check the duration
@@ -2504,8 +2504,8 @@ void test_animation__spawn_with_0_component(void) {
   animation_set_play_count(b, 0);
 
   // Create a spawn that repeats
-  Animation *spawn = animation_spawn_create(a, b, NULL);
-  cl_assert(spawn != NULL);
+  Animation *spawn = animation_spawn_create(a, b, nullptr);
+  cl_assert(spawn != nullptr);
   animation_set_play_count(spawn, play_count_spawn);
 
   // Check the duration
@@ -2572,8 +2572,8 @@ void test_animation__sequence_with_0_play_count(void) {
   animation_set_duration(b, duration_b);
 
   // Create a sequence
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
   animation_set_play_count(seq, play_count_seq);
 
   // Check the duration
@@ -2632,7 +2632,7 @@ void test_animation__nested_sequence_with_0_play_count(void) {
   Animation *b = prv_create_test_animation();
   animation_set_duration(b, duration_b);
 
-  Animation *inner_seq = animation_sequence_create(a, b, NULL);
+  Animation *inner_seq = animation_sequence_create(a, b, nullptr);
   animation_set_play_count(inner_seq, 0);
   animation_set_handlers(inner_seq, handlers, inner_seq);
 
@@ -2643,7 +2643,7 @@ void test_animation__nested_sequence_with_0_play_count(void) {
   Animation *d = prv_create_test_animation();
   animation_set_duration(d, duration_d);
 
-  Animation *seq = animation_sequence_create(inner_seq, c, d, NULL);
+  Animation *seq = animation_sequence_create(inner_seq, c, d, nullptr);
   animation_set_handlers(seq, handlers, seq);
 
   // Play it
@@ -2709,8 +2709,8 @@ void test_animation__spawn_with_0_play_count(void) {
   animation_set_duration(b, duration_b);
 
   // Create a spawn
-  Animation *spawn = animation_sequence_create(a, b, NULL);
-  cl_assert(spawn != NULL);
+  Animation *spawn = animation_sequence_create(a, b, nullptr);
+  cl_assert(spawn != nullptr);
   animation_set_play_count(spawn, play_count_spawn);
 
   // Check the duration
@@ -2778,8 +2778,8 @@ void test_animation__sequence_get_duration(void) {
   animation_set_play_count(b, play_count_b);
 
   // Create a sequence
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
   animation_set_delay(seq, delay_seq);
   animation_set_play_count(seq, play_count_seq);
 
@@ -2837,8 +2837,8 @@ void test_animation__spawn_get_duration(void) {
   animation_set_play_count(b, play_count_b);
 
   // Create a spawn
-  Animation *spawn = animation_spawn_create(a, b, NULL);
-  cl_assert(spawn != NULL);
+  Animation *spawn = animation_spawn_create(a, b, nullptr);
+  cl_assert(spawn != nullptr);
   animation_set_delay(spawn, delay_spawn);
   animation_set_play_count(spawn, play_count_spawn);
 
@@ -2876,14 +2876,14 @@ void test_animation__unschedule_all(void) {
   // Create a sequence
   Animation *a = prv_create_test_animation();
   Animation *b = prv_create_test_animation();
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
 
   // Create a spawn
   Animation *c = prv_create_test_animation();
   Animation *d = prv_create_test_animation();
-  Animation *spawn = animation_spawn_create(c, d, NULL);
-  cl_assert(spawn != NULL);
+  Animation *spawn = animation_spawn_create(c, d, nullptr);
+  cl_assert(spawn != nullptr);
 
   // Create a primitive one
   Animation *e = prv_create_test_animation();
@@ -2919,18 +2919,18 @@ void test_animation__reuse_components(void) {
   // Create a sequence out of a and b
   Animation *a = prv_create_test_animation();
   Animation *b = prv_create_test_animation();
-  Animation *seq = animation_sequence_create(a, b, NULL);
-  cl_assert(seq != NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
+  cl_assert(seq != nullptr);
 
   // Try to create a spawn out of b and c
   Animation *c = prv_create_test_animation();
-  Animation *spawn = animation_spawn_create(c, b, NULL);
-  cl_assert(spawn == NULL);
+  Animation *spawn = animation_spawn_create(c, b, nullptr);
+  cl_assert(spawn == nullptr);
 
   // We should be able to create one out of c and d
   Animation *d = prv_create_test_animation();
-  spawn = animation_spawn_create(c, d, NULL);
-  cl_assert(spawn != NULL);
+  spawn = animation_spawn_create(c, d, nullptr);
+  cl_assert(spawn != nullptr);
 
   animation_destroy(seq);
   animation_destroy(spawn);
@@ -3133,10 +3133,10 @@ void test_animation__sequence_of_already_scheduled_started(void) {
   animation_set_delay(b, delay_b);
 
   // Should be an error trying to use a scheduled animation not in the first position
-  Animation *seq = animation_sequence_create(b, a, NULL);
-  cl_assert(seq == NULL);
+  Animation *seq = animation_sequence_create(b, a, nullptr);
+  cl_assert(seq == nullptr);
 
-  seq = animation_sequence_create(a, b, NULL);
+  seq = animation_sequence_create(a, b, nullptr);
   animation_set_delay(seq, delay_seq); // This delay not applicable since a was already scheduled
   animation_set_handlers(seq, handlers, seq);
   animation_schedule(seq);
@@ -3228,7 +3228,7 @@ void test_animation__sequence_of_already_scheduled_not_started(void) {
   animation_set_duration(b, duration_b);
   animation_set_delay(b, delay_b);
 
-  Animation *seq = animation_sequence_create(a, b, NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
   animation_set_handlers(seq, handlers, seq);
   animation_schedule(seq);
 
@@ -3311,7 +3311,7 @@ void test_animation__sequence_of_already_completed(void) {
   animation_set_duration(b, duration_b);
   animation_set_delay(b, delay_b);
 
-  Animation *seq = animation_sequence_create(a, b, NULL);
+  Animation *seq = animation_sequence_create(a, b, nullptr);
   animation_set_delay(seq, delay_seq);
   animation_set_handlers(seq, handlers, seq);
   animation_schedule(seq);
@@ -3411,7 +3411,7 @@ void test_animation__spawn_of_already_scheduled(void) {
 
   // Create the spawn using a, b, c, and d
   prv_advance_to_ms_with_timers(start_ms + 680);
-  Animation *spawn = animation_spawn_create(a, b, c, d, NULL);
+  Animation *spawn = animation_spawn_create(a, b, c, d, nullptr);
   animation_set_delay(spawn, delay_spawn);
   animation_set_handlers(spawn, handlers, spawn);
   animation_schedule(spawn);
@@ -3525,7 +3525,7 @@ void prv_test_unschedule_all_in_stopped_handler(bool auto_destroy) {
     .stopped = prv_stopped_unschedule_all_handler,
   };
 
-  void *context = NULL;
+  void *context = nullptr;
 
   Animation *a = prv_create_test_animation();
   animation_set_duration(a, duration_a);
@@ -3573,23 +3573,23 @@ void test_animation__custom_functions(void) {
   InterpolateInt64Function interpolation = (void *)2;
 
   Animation *a = prv_create_test_animation();
-  cl_assert_equal_p(animation_get_custom_curve(a), NULL);
-  cl_assert_equal_p(animation_get_custom_interpolation(a), NULL);
+  cl_assert_equal_p(animation_get_custom_curve(a), nullptr);
+  cl_assert_equal_p(animation_get_custom_interpolation(a), nullptr);
   cl_assert_equal_i(animation_get_curve(a), AnimationCurveDefault);
 
   animation_set_custom_curve(a, curve);
   cl_assert_equal_p(animation_get_custom_curve(a), curve);
-  cl_assert_equal_p(animation_get_custom_interpolation(a), NULL);
+  cl_assert_equal_p(animation_get_custom_interpolation(a), nullptr);
   cl_assert_equal_i(animation_get_curve(a), AnimationCurveCustomFunction);
 
   animation_set_custom_interpolation(a, interpolation);
-  cl_assert_equal_p(animation_get_custom_curve(a), NULL);
+  cl_assert_equal_p(animation_get_custom_curve(a), nullptr);
   cl_assert_equal_p(animation_get_custom_interpolation(a), interpolation);
   cl_assert_equal_i(animation_get_curve(a), AnimationCurveCustomInterpolationFunction);
 
   animation_set_curve(a, AnimationCurveDefault);
-  cl_assert_equal_p(animation_get_custom_curve(a), NULL);
-  cl_assert_equal_p(animation_get_custom_interpolation(a), NULL);
+  cl_assert_equal_p(animation_get_custom_curve(a), nullptr);
+  cl_assert_equal_p(animation_get_custom_interpolation(a), nullptr);
   cl_assert_equal_i(animation_get_curve(a), AnimationCurveDefault);
 
   animation_destroy(a);
@@ -3601,19 +3601,19 @@ void test_animation__current_interpolate_override(void) {
   InterpolateInt64Function interpolation = (void *)2;
 
   AnimationState *state = kernel_applib_get_animation_state();
-  cl_assert_equal_p(state->aux->current_animation, NULL);
-  cl_assert_equal_p(animation_private_current_interpolate_override(), NULL);
+  cl_assert_equal_p(state->aux->current_animation, nullptr);
+  cl_assert_equal_p(animation_private_current_interpolate_override(), nullptr);
 
   Animation *a = prv_create_test_animation();
   AnimationPrivate *a_p = animation_private_animation_find(a);
   state->aux->current_animation = a_p;
-  cl_assert_equal_p(animation_private_current_interpolate_override(), NULL);
+  cl_assert_equal_p(animation_private_current_interpolate_override(), nullptr);
 
   animation_set_custom_interpolation(a, interpolation);
   cl_assert_equal_p(animation_private_current_interpolate_override(), interpolation);
 
   animation_set_custom_curve(a, curve);
-  cl_assert_equal_p(animation_private_current_interpolate_override(), NULL);
+  cl_assert_equal_p(animation_private_current_interpolate_override(), nullptr);
 
   animation_destroy(a);
 }

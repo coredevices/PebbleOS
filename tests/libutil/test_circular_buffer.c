@@ -166,7 +166,7 @@ void test_circular_buffer__direct_write(void) {
 
   contiguous_num_bytes_left = circular_buffer_write_prepare(&buffer, &data_out);
   cl_assert_equal_i(contiguous_num_bytes_left, 0);
-  cl_assert_equal_p(data_out, NULL);
+  cl_assert_equal_p(data_out, nullptr);
 
   const uint16_t copy_out_size = 8;
   uint8_t copy_out[copy_out_size];
@@ -187,14 +187,14 @@ void test_circular_buffer__direct_write(void) {
 
   contiguous_num_bytes_left = circular_buffer_write_prepare(&buffer, &data_out);
   cl_assert_equal_i(contiguous_num_bytes_left, 0);
-  cl_assert_equal_p(data_out, NULL);
+  cl_assert_equal_p(data_out, nullptr);
 }
 
 void test_circular_buffer__read_or_copy_returns_false_when_length_is_too_long(void) {
   CircularBuffer buffer;
   uint8_t storage[1];
   circular_buffer_init(&buffer, storage, sizeof(storage));
-  uint8_t *data_out = NULL;
+  uint8_t *data_out = nullptr;
   bool caller_should_free = false;
   cl_assert_equal_b(false, circular_buffer_read_or_copy(&buffer, &data_out, sizeof(storage) + 1,
                                                         malloc, &caller_should_free));
@@ -205,7 +205,7 @@ void test_circular_buffer__read_or_copy_doesnt_copy_when_already_contiguously_st
   uint8_t storage[8];
   circular_buffer_init(&buffer, storage, sizeof(storage));
   circular_buffer_write(&buffer, (uint8_t *)"01234567", sizeof(storage));
-  uint8_t *data_out = NULL;
+  uint8_t *data_out = nullptr;
   bool caller_should_free = true;
   cl_assert_equal_b(true, circular_buffer_read_or_copy(&buffer, &data_out, sizeof(storage), malloc,
                                                        &caller_should_free));
@@ -214,7 +214,7 @@ void test_circular_buffer__read_or_copy_doesnt_copy_when_already_contiguously_st
 }
 
 static void *prv_oom_malloc(size_t length) {
-  return NULL;
+  return nullptr;
 }
 
 void test_circular_buffer__read_or_copy_does_copy_when_not_contiguously_stored(void) {
@@ -225,7 +225,7 @@ void test_circular_buffer__read_or_copy_does_copy_when_not_contiguously_stored(v
   circular_buffer_consume(&buffer, 1);
   circular_buffer_write(&buffer, (uint8_t *)"8", 1);
 
-  uint8_t *data_out = NULL;
+  uint8_t *data_out = nullptr;
   bool caller_should_free = false;
   cl_assert_equal_b(true, circular_buffer_read_or_copy(&buffer, &data_out, sizeof(storage), malloc,
                                                        &caller_should_free));
@@ -236,7 +236,7 @@ void test_circular_buffer__read_or_copy_does_copy_when_not_contiguously_stored(v
   // Test OOM scenario:
   cl_assert_equal_b(false, circular_buffer_read_or_copy(&buffer, &data_out, sizeof(storage),
                                                         prv_oom_malloc, &caller_should_free));
-  cl_assert_equal_p(data_out, NULL);
+  cl_assert_equal_p(data_out, nullptr);
   cl_assert_equal_b(false, caller_should_free);
 }
 

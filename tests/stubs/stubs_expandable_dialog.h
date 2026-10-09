@@ -13,7 +13,7 @@ typedef struct ExpandableDialog {
 } ExpandableDialog;
 
 ExpandableDialog *expandable_dialog_create(const char *dialog_name) {
-  return NULL;
+  return nullptr;
 }
 
 ExpandableDialog *expandable_dialog_create_with_params(const char *dialog_name, uint32_t icon,
@@ -22,11 +22,11 @@ ExpandableDialog *expandable_dialog_create_with_params(const char *dialog_name, 
                                                        DialogCallbacks *callbacks,
                                                        uint32_t select_icon,
                                                        ClickHandler select_click_handler) {
-  return NULL;
+  return nullptr;
 }
 Dialog *expandable_dialog_get_dialog(ExpandableDialog *expandable_dialog) {
-  if (expandable_dialog == NULL) {
-    return NULL;
+  if (expandable_dialog == nullptr) {
+    return nullptr;
   }
   return &expandable_dialog->dialog;
 }

@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
@@ -25,14 +24,14 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg);
 void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions);
 
 //! Starts running pbl_cur; never returns.
-void arch_start(void) PBL_NORETURN;
+[[noreturn]] void arch_start(void);
 
 //! Asks for a context switch. From a thread it happens once interrupts are
 //! unlocked; from an ISR, when the ISR returns.
 void arch_switch_request(void);
 
 //! Ends the calling thread; never returns.
-void arch_thread_exit(void) PBL_NORETURN;
+[[noreturn]] void arch_thread_exit(void);
 
 //! Another thread has been aborted and will never be switched to again.
 void arch_thread_aborted(struct pbl_thread *t);

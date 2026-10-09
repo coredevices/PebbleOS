@@ -300,7 +300,7 @@ bool touch_handle_injected_update(TouchInjectPhase phase, int16_t x, int16_t y) 
     s_injecting = true;
     // Arm before the touchdown is queued: both land on KernelMain in order, so the gate sees an
     // armed session rather than dropping the gesture as unarmed idle-watchface contact.
-    launcher_task_add_callback(prv_arm_session_cb, NULL);
+    launcher_task_add_callback(prv_arm_session_cb, nullptr);
   } else if (!s_injecting) {
     // The gesture lost the sensor (reset, or touch switched off and back on). Refusing here is
     // what lets the caller abort, rather than having this sample taken as a new touchdown from

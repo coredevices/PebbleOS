@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <limits.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/services/accel_manager.h>
@@ -273,15 +272,15 @@ void test_accel_service__initialize(void) {
   s_refuse_buffer = false;
   s_live_subscriptions = 0;
   s_fewest_live_subscriptions = INT_MAX;
-  s_current = NULL;
-  s_data_cb = NULL;
-  s_data_cb_context = NULL;
+  s_current = nullptr;
+  s_data_cb = nullptr;
+  s_data_cb_context = nullptr;
   s_consume_calls = 0;
   s_data_handler_calls = 0;
   s_raw_data_handler_calls = 0;
   s_timestamps[0] = 0;
   s_timestamps[1] = 0;
-  s_session = NULL;
+  s_session = nullptr;
   s_read_after_change = 0;
   stub_pebble_tasks_set_current(PebbleTask_App);
 }
@@ -456,7 +455,7 @@ void test_accel_service__a_batch_size_of_0_allocates_no_buffer(void) {
   int result = accel_service_set_samples_per_update(0);
 
   cl_assert_equal_i(result, 0);
-  cl_assert(s_app_state.raw_data == NULL);
+  cl_assert(s_app_state.raw_data == nullptr);
 }
 
 //! A data event at a batch size of 0 doesn't call the handler

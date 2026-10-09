@@ -32,7 +32,7 @@ static RegularTimerInfo s_second_timer_info = {.cb = &timer_tick_event_publisher
 static RegularTimerInfo s_minute_timer_info = {.cb = &timer_tick_event_publisher};
 
 static void prv_update_timer_locked(void) {
-  RegularTimerInfo *timer = NULL;
+  RegularTimerInfo *timer = nullptr;
   if (s_num_subscribers > 0) {
     timer = (s_second_tasks != 0) ? &s_second_timer_info : &s_minute_timer_info;
   }

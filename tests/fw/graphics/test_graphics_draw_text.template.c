@@ -50,7 +50,7 @@
 // Fakes
 #include <fake_gbitmap_get_data_row.h>
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 // Setup
 void test_graphics_draw_text_${BIT_DEPTH_NAME}__initialize(void) {
@@ -84,123 +84,123 @@ static void prv_setup_resources(void) {
 void draw_text_single_line_ellipsis_clip_across_nx_zero_y_offset(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(-44, 0, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_across_ny_descender(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(0, -25, 100, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 // Ellipsis Tests
 void draw_text_single_line_ellipsis_clip_across_ny(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, -18, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_across_y(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, 20, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_across_nx(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(-44, 4, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_across_x(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(34, 4, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_outside_ny(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, -40, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_outside_y(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, 40, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_outside_nx(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(-80, 4, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_ellipsis_clip_outside_x(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(80, 4, 72, 32),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 // Word Wrap Tests
 void draw_text_single_line_wordwrap_clip_across_ny(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, -18, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_across_ny_second_line(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, -46, 72, 50),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_across_y(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, 20, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_across_y_second_line(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, -10, 72, 50),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_across_nx(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(-44, 4, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_across_x(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(34, 4, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_outside_ny(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, -40, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_outside_y(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(4, 40, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_outside_nx(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(-80, 4, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void draw_text_single_line_wordwrap_clip_outside_x(Layer* me, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, s_text_buffer, &s_font_info, GRect(80, 4, 72, 32),
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 
 void canvas_layer_update_callback(Layer* me, GContext* ctx) {
@@ -347,35 +347,35 @@ void test_graphics_draw_text_${BIT_DEPTH_NAME}__clipping_letters(void) {
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_0_0, RECT_TEXT_0_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_TEXT_0_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_jja00.${BIT_DEPTH_NAME}.pbi"));
 
   // Test when clipping/drawing are at (2, 0) and text bounds is at (0, 0)
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_2_0, RECT_TEXT_2_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_TEXT_0_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_jja20.${BIT_DEPTH_NAME}.pbi"));
 
   // Test when clipping/drawing and text bounds are all at (2, 0)
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_2_0, RECT_TEXT_2_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_TEXT_2_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_jja22.${BIT_DEPTH_NAME}.pbi"));
 
   // Test when clipping/drawing and text bounds are all at (2, 0)
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_2_0, RECT_TEXT_2_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "ajj", &s_font_info, RECT_TEXT_2_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_ajj22.${BIT_DEPTH_NAME}.pbi"));
 
   // Test when clipping/drawing and text bounds are all at (2, 0) - no negative offset
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_2_0, RECT_TEXT_2_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "aaa", &s_font_info, RECT_TEXT_2_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_aaa22.${BIT_DEPTH_NAME}.pbi"));
 }
 
@@ -399,76 +399,76 @@ void test_graphics_draw_text_${BIT_DEPTH_NAME}__zero(void) {
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_0_0, RECT_TEXT_0_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NULL,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_0_0, RECT_TEXT_0_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NULL_W,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_w", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_0_0, RECT_TEXT_0_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NULL_H,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_h", fb, GColorWhite));
 
   // Test negative text bounds size - ensure nothing is rendered
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_0_0, RECT_TEXT_0_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NEG,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_neg", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_0_0, RECT_TEXT_0_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NEG_W,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_neg_w", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_TEXT_0_0, RECT_TEXT_0_0, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NEG_H,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_neg_h", fb, GColorWhite));
 
   // Test null context boxes - ensure nothing is rendered
   setup_test_aa_sw(&ctx, fb, RECT_NULL, RECT_NULL, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_TEXT_0_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_null", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_NULL_W, RECT_NULL_W, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_TEXT_0_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_null", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_NULL_H, RECT_NULL_H, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_TEXT_0_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_null", fb, GColorWhite));
 
   // Test negative context boxes - ensure nothing is rendered
   setup_test_aa_sw(&ctx, fb, RECT_NEG, RECT_NEG, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_TEXT_0_0,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_null", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_NEG, RECT_NEG, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NEG,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_null", fb, GColorWhite));
 
   setup_test_aa_sw(&ctx, fb, RECT_NEG, RECT_NEG, false, 1);
   graphics_context_set_text_color(&ctx, GColorBlack);
   graphics_draw_text(&ctx, "jja", &s_font_info, RECT_NULL,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(framebuffer_is_empty("draw_text_null_null", fb, GColorWhite));
 }
 
@@ -487,16 +487,16 @@ void test_graphics_draw_text_8bit__color(void) {
   graphics_fill_rect(&ctx, &GRect(0, 0, 144, 168));
   graphics_context_set_text_color(&ctx, GColorBlue);
   graphics_draw_text(&ctx, "blue100", &s_font_info, GRect(10, 10, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   ctx.draw_state.text_color.a = 2;
   graphics_draw_text(&ctx, "blue66", &s_font_info, GRect(10, 40, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   ctx.draw_state.text_color.a = 1;
   graphics_draw_text(&ctx, "blue33", &s_font_info, GRect(10, 70, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   ctx.draw_state.text_color.a = 0;
   graphics_draw_text(&ctx, "blue0", &s_font_info, GRect(10, 100, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_color_assign.8bit.pbi"));
 
   setup_test_aa_sw(&ctx, fb, GRect(0, 0, 144, 168), GRect(0, 0, 144, 168), false, 1);
@@ -505,16 +505,16 @@ void test_graphics_draw_text_8bit__color(void) {
   graphics_context_set_compositing_mode(&ctx, GCompOpSet);
   graphics_context_set_text_color(&ctx, GColorBlue);
   graphics_draw_text(&ctx, "blue100", &s_font_info, GRect(10, 10, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   ctx.draw_state.text_color.a = 2;
   graphics_draw_text(&ctx, "blue66", &s_font_info, GRect(10, 40, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   ctx.draw_state.text_color.a = 1;
   graphics_draw_text(&ctx, "blue33", &s_font_info, GRect(10, 70, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   ctx.draw_state.text_color.a = 0;
   graphics_draw_text(&ctx, "blue0", &s_font_info, GRect(10, 100, 100, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_color_set.8bit.pbi"));
 }
 
@@ -548,6 +548,6 @@ void test_graphics_draw_text_8bit__data_row_offsets(void) {
 
   graphics_draw_text(&ctx, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR"
                            "STUVWXYZabcdefghijklmnopqrstuvwxyz", &s_font_info, RECT_TEXT_0_0,
-                           GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                           GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_text_data_row_offsets.8bit.pbi"));
 }

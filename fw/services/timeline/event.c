@@ -55,7 +55,7 @@ static void prv_update_status_async(void) {
     return; // we already have a cb scheduled
   }
 
-  system_task_add_callback(prv_update_status_system_task_callback, NULL);
+  system_task_add_callback(prv_update_status_system_task_callback, nullptr);
 }
 
 static void prv_new_timer_callback(void *unused) {
@@ -76,7 +76,7 @@ static uint32_t prv_calc_timeout(const TimelineItem *item) {
 static void prv_set_timer(unsigned int timeout_ms) {
   if (!timeout_ms) {
     PBL_LOG_ERR("Not setting timer");
-  } else if (new_timer_start(s_timer, timeout_ms, prv_new_timer_callback, NULL, 0)) {
+  } else if (new_timer_start(s_timer, timeout_ms, prv_new_timer_callback, nullptr, 0)) {
     PBL_LOG_DBG("Set timer for %u", timeout_ms);
   } else {
     PBL_LOG_ERR("Could not start timer.");
@@ -150,7 +150,8 @@ static void prv_update_status(void) {
     if (has_item) {
       timeline_item_deserialize_header(&item, state->filter_header);
     }
-    const uint32_t other_timeout_ms = state->impl->update(has_item ? &item : NULL, &state->context);
+    const uint32_t other_timeout_ms =
+        state->impl->update(has_item ? &item : nullptr, &state->context);
     if (other_timeout_ms) {
       timeout_ms = timeout_ms ? MIN(timeout_ms, other_timeout_ms) : other_timeout_ms;
     }
@@ -169,7 +170,7 @@ static void prv_update_status(void) {
   pbl_mutex_unlock(&s_mutex);
 }
 
-static void prv_init(void *PBL_UNUSED data) {
+static void prv_init([[maybe_unused]] void *data) {
   s_initialized = true;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
@@ -185,7 +186,7 @@ static void prv_init(void *PBL_UNUSED data) {
 }
 
 void timeline_event_init(void) {
-  system_task_add_callback(prv_init, NULL);
+  system_task_add_callback(prv_init, nullptr);
 }
 
 void timeline_event_deinit(void) {

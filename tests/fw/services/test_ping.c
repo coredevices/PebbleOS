@@ -35,7 +35,7 @@ bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const ui
 }
 
 CommSession *comm_session_get_system_session(void) {
-  return NULL;
+  return nullptr;
 }
 
 bool battery_is_usb_connected(void) {
@@ -79,12 +79,12 @@ void dialog_set_text(Dialog *dialog, const char *text) {
 }
 
 WindowStack *modal_manager_get_window_stack(ModalPriority priority) {
-  return NULL;
+  return nullptr;
 }
 
 static void prv_run_callbacks(void) {
   for (int i = 0; i < s_num_callbacks; i++) {
-    s_callbacks[i](NULL);
+    s_callbacks[i](nullptr);
   }
   s_num_callbacks = 0;
 }
@@ -95,7 +95,7 @@ static void prv_dismiss_dialog(void) {
 
 static void prv_receive_ping(uint8_t cookie) {
   const uint8_t ping[] = {0x00, 0x00, 0x00, 0x00, cookie, 0x00};
-  ping_protocol_msg_callback(NULL, ping, sizeof(ping));
+  ping_protocol_msg_callback(nullptr, ping, sizeof(ping));
 }
 
 void test_ping__initialize(void) {

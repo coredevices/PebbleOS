@@ -143,7 +143,7 @@ void mfg_write_bigboard_serial_number(void) {
 
   // Create a "more unique" serial number using rand():
   if (prv_get_more_unique_serial(serial_number)) {
-    mfg_write_serial_number(serial_number, MFG_SERIAL_NUMBER_SIZE, NULL);
+    mfg_write_serial_number(serial_number, MFG_SERIAL_NUMBER_SIZE, nullptr);
   }
 }
 #endif
@@ -230,10 +230,10 @@ static int prv_cmd_pcbaserial(const struct pbl_shell *sh, size_t argc, char **ar
   return prv_print_feedback(sh, result, index, "PCBA Serial");
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_mfg, serial, NULL, "Read or write the serial number [serial]",
+PBL_SHELL_SUBCMD_ADD(sub_mfg, serial, nullptr, "Read or write the serial number [serial]",
                      prv_cmd_serial, 1, 1);
-PBL_SHELL_SUBCMD_ADD(sub_mfg, hwver, NULL, "Read or write the HW version [hwver]", prv_cmd_hwver, 1,
-                     1);
-PBL_SHELL_SUBCMD_ADD(sub_mfg, pcbaserial, NULL, "Read or write the PCBA serial number [serial]",
+PBL_SHELL_SUBCMD_ADD(sub_mfg, hwver, nullptr, "Read or write the HW version [hwver]", prv_cmd_hwver,
+                     1, 1);
+PBL_SHELL_SUBCMD_ADD(sub_mfg, pcbaserial, nullptr, "Read or write the PCBA serial number [serial]",
                      prv_cmd_pcbaserial, 1, 1);
 #endif

@@ -128,7 +128,7 @@ void ppog_reversed_service_init(void) {
   PBL_ASSERTN(rc == 0);
   // Called on every pbl_bt_start, but the listener list is only cleared on
   // nimble_port_init, so tolerate EALREADY.
-  rc = ble_gap_event_listener_register(&s_gap_event_listener, prv_handle_gap_event, NULL);
+  rc = ble_gap_event_listener_register(&s_gap_event_listener, prv_handle_gap_event, nullptr);
   PBL_ASSERTN(rc == 0 || rc == BLE_HS_EALREADY);
 }
 

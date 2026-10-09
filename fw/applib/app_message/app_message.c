@@ -118,12 +118,12 @@ AppMessageOutboxFailed app_message_register_outbox_failed(AppMessageOutboxFailed
 
 void app_message_deregister_callbacks(void) {
   AppMessageCtx *app_message_ctx = app_state_get_app_message_ctx();
-  app_message_ctx->inbox.received_callback = NULL;
-  app_message_ctx->inbox.dropped_callback = NULL;
-  app_message_ctx->inbox.user_context = NULL;
-  app_message_ctx->outbox.sent_callback = NULL;
-  app_message_ctx->outbox.failed_callback = NULL;
-  app_message_ctx->outbox.user_context = NULL;
+  app_message_ctx->inbox.received_callback = nullptr;
+  app_message_ctx->inbox.dropped_callback = nullptr;
+  app_message_ctx->inbox.user_context = nullptr;
+  app_message_ctx->outbox.sent_callback = nullptr;
+  app_message_ctx->outbox.failed_callback = nullptr;
+  app_message_ctx->outbox.user_context = nullptr;
 }
 
 static bool prv_supports_8k(void) {
@@ -163,7 +163,7 @@ AppMessageResult app_message_open(const uint32_t size_inbound, const uint32_t si
   // It's probably not super-bad if this isn't true, but we'll have type casts between different
   // sizes without over/underflow verification.
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-  _Static_assert(sizeof(size_t) == sizeof(uint32_t), "sizeof(size_t) != sizeof(uint32_t)");
+  static_assert(sizeof(size_t) == sizeof(uint32_t), "sizeof(size_t) != sizeof(uint32_t)");
 #endif
 
   AppMessageCtx *app_message_ctx = app_state_get_app_message_ctx();

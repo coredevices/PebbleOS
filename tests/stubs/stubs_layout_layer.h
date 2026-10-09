@@ -4,7 +4,7 @@
 #include <pbl/services/timeline/layout_layer.h>
 
 LayoutLayer *layout_create(LayoutId id, const LayoutLayerConfig *config) {
-  return NULL;
+  return nullptr;
 }
 
 bool layout_verify(bool existing_attributes[], LayoutId id) {

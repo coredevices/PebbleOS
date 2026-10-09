@@ -30,12 +30,12 @@ static BatteryStateServiceState *prv_get_state(PebbleTask task) {
 
 static void do_handle(PebbleEvent *e, void *context) {
   BatteryStateServiceState *state = prv_get_state(PebbleTask_Unknown);
-  PBL_ASSERTN(state->handler != NULL);
+  PBL_ASSERTN(state->handler != nullptr);
   state->handler(sys_battery_get_charge_state());
 }
 
 void battery_state_service_init(void) {
-  event_service_init(PEBBLE_BATTERY_STATE_CHANGE_EVENT, NULL, NULL);
+  event_service_init(PEBBLE_BATTERY_STATE_CHANGE_EVENT, nullptr, nullptr);
 }
 
 void battery_state_service_subscribe(BatteryStateHandler handler) {
@@ -51,7 +51,7 @@ BatteryChargeState battery_state_service_peek(void) {
 void battery_state_service_unsubscribe(void) {
   BatteryStateServiceState *state = prv_get_state(PebbleTask_Unknown);
   event_service_client_unsubscribe(&state->bss_info);
-  state->handler = NULL;
+  state->handler = nullptr;
 }
 
 void battery_state_service_state_init(BatteryStateServiceState *state) {

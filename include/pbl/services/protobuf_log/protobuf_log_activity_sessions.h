@@ -5,8 +5,6 @@
 
 #include "protobuf_log.h"
 
-#include <stdbool.h>
-
 #include <pbl/services/activity/activity.h>
 
 /**

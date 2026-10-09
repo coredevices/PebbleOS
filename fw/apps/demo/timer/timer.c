@@ -10,7 +10,7 @@
 #include <process_state/app_state/app_state.h>
 #include <system/passert.h>
 
-static AppTimer *s_timer = NULL;
+static AppTimer *s_timer = nullptr;
 
 static void shouldnt_happen(void *context) {
   WTF;
@@ -26,7 +26,7 @@ static void prv_window_load(Window *window) {
   int dummy_data = 0;
   // Wait much longer than it should take to cancel the timer.
   AppTimer *timer = app_timer_register(1000 /*ms*/, shouldnt_happen, &dummy_data);
-  PBL_ASSERTN(timer != NULL);
+  PBL_ASSERTN(timer != nullptr);
   // Try to cancel it twice.  This used to crash, but should not crash anymore.
   // In particular, we're looking to see that at least if we don't do more app_heap
   // allocations, we will be able to detect that we're effectively trying to
@@ -36,7 +36,7 @@ static void prv_window_load(Window *window) {
 
   timer = app_timer_register(1 /*ms*/, stupid_cancel, &s_timer);
   s_timer = timer;
-  PBL_ASSERTN(timer != NULL);
+  PBL_ASSERTN(timer != nullptr);
 }
 
 static const WindowHandlers s_main_menu_handlers = {
@@ -45,7 +45,7 @@ static const WindowHandlers s_main_menu_handlers = {
 
 static void handle_init(void) {
   Window *window = window_create();
-  if (window == NULL) {
+  if (window == nullptr) {
     return;
   }
   window_init(window, "");

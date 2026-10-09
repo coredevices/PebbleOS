@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -77,9 +76,9 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 }
 
 static char *get_expected_msg(void) {
-  cl_assert(s_msg.msg_arr != NULL);
+  cl_assert(s_msg.msg_arr != nullptr);
   cl_assert(s_msg.curr_msg_idx < s_msg.num_items);
-  char *expected_msg = NULL;
+  char *expected_msg = nullptr;
   if (s_msg.num_processed != 0) {
     expected_msg = s_msg.msg_arr[s_msg.curr_msg_idx - 1];
   }
@@ -402,7 +401,7 @@ void test_flash_logging__multi_writes_per_log(void) {
     }
 
     // try to write something past the end to ensure it doesn't take
-    uint8_t buf[128] = {0};
+    uint8_t buf[128] = {};
     rv = flash_logging_write(&buf[0], addr, sizeof(buf));
     cl_assert(!rv);
   }

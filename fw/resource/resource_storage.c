@@ -54,7 +54,7 @@ static uint32_t prv_read(ResourceStoreEntry *entry, uint32_t offset, void *data,
 
 static void prv_get_manifest(ResourceStoreEntry *entry, ResourceManifest *manifest) {
   if (prv_read(entry, 0, manifest, sizeof(ResourceManifest)) != sizeof(ResourceManifest)) {
-    *manifest = (ResourceManifest){0};
+    *manifest = (ResourceManifest){};
   }
 }
 
@@ -81,7 +81,7 @@ static uint32_t prv_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes, uint3
 
 PBL_T_STATIC uint32_t prv_get_store_length(ResourceStoreEntry *entry, ResourceManifest *manifest) {
   // Get the resource entry for the last entry
-  ResTableEntry res_entry = {0};
+  ResTableEntry res_entry = {};
   if (!prv_read_res_table_entry(&res_entry, entry, manifest->num_resources - 1)) {
     return 0;
   }
@@ -147,7 +147,7 @@ static void prv_get_store_entry(ResAppNum app_num, uint32_t resource_id,
   }
   PBL_LOG_WRN("get_store_entry(%" PRIu32 ",%" PRIu32 ") failed to find appropriate store", app_num,
               resource_id);
-  entry->impl = NULL;
+  entry->impl = nullptr;
 }
 
 static bool prv_validate_entry(ResourceStoreEntry *entry, ResourceManifest *manifest,
@@ -158,7 +158,7 @@ static bool prv_validate_entry(ResourceStoreEntry *entry, ResourceManifest *mani
     return false;
   }
 
-  ResTableEntry table_entry = {0};
+  ResTableEntry table_entry = {};
   if (!prv_read_res_table_entry(&table_entry, entry, entry->id - 1)) {
     return false;
   }
@@ -207,7 +207,7 @@ static bool prv_get_manifest_by_id(ResAppNum app_num, uint32_t resource_id,
 ResourceVersion resource_storage_get_version(ResAppNum app_num, uint32_t resource_id) {
   ResourceManifest manifest;
   if (!prv_get_manifest_by_id(app_num, resource_id, &manifest)) {
-    return (ResourceVersion){0};
+    return (ResourceVersion){};
   }
   return manifest.version;
 }
@@ -249,12 +249,12 @@ void resource_storage_get_resource(ResAppNum app_num, uint32_t resource_id,
                                    ResourceStoreEntry *entry) {
   prv_get_store_entry(app_num, resource_id, entry);
   if (!entry->impl) {
-    *entry = (ResourceStoreEntry){0};
+    *entry = (ResourceStoreEntry){};
     return;
   }
 
   if (!entry->impl->get_resource(entry)) {
-    *entry = (ResourceStoreEntry){0};
+    *entry = (ResourceStoreEntry){};
     return;
   }
   PBL_ASSERTN(entry->length != ENTRY_LENGTH_UNSET);
@@ -265,7 +265,7 @@ ResourceCallbackHandle resource_watch(ResAppNum app_num, uint32_t resource_id,
   ResourceStoreEntry entry;
   prv_get_store_entry(app_num, resource_id, &entry);
   if (!entry.impl) {
-    return NULL;
+    return nullptr;
   }
   return entry.impl->watch(&entry, callback, data);
 }
@@ -358,7 +358,7 @@ ResourceCallbackHandle resource_storage_generic_watch(ResourceStoreEntry *entry,
                                                       ResourceChangedCallback callback,
                                                       void *data) {
   PBL_LOG_WRN("resource_watch not supported for resource type %d.", entry->impl->type);
-  return NULL;
+  return nullptr;
 }
 
 bool resource_storage_generic_unwatch(ResourceCallbackHandle cb_handle) {

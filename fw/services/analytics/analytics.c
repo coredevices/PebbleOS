@@ -85,7 +85,7 @@ static void prv_heartbeat_system_task_cb(void *data) {
 }
 
 static void prv_heartbeat_timer_cb(void *data) {
-  system_task_add_callback(prv_heartbeat_system_task_cb, NULL);
+  system_task_add_callback(prv_heartbeat_system_task_cb, nullptr);
 }
 
 void pbl_analytics_init(void) {
@@ -95,7 +95,7 @@ void pbl_analytics_init(void) {
 
   s_heartbeat_timer = new_timer_create();
 
-  new_timer_start(s_heartbeat_timer, HEARTBEAT_PERIOD_SEC * 1000, prv_heartbeat_timer_cb, NULL,
+  new_timer_start(s_heartbeat_timer, HEARTBEAT_PERIOD_SEC * 1000, prv_heartbeat_timer_cb, nullptr,
                   TIMER_START_FLAG_REPEATING);
 }
 
@@ -198,12 +198,12 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t 
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_heartbeat(const struct pbl_shell *sh, size_t argc, char **argv) {
-  system_task_add_callback(prv_heartbeat_system_task_cb, NULL);
+  system_task_add_callback(prv_heartbeat_system_task_cb, nullptr);
   return 0;
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_analytics);
-PBL_SHELL_CMD_REGISTER(analytics, sub_analytics, "Analytics", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_analytics, heartbeat, NULL, "Collect a heartbeat now", prv_cmd_heartbeat,
-                     0, 0);
+PBL_SHELL_CMD_REGISTER(analytics, sub_analytics, "Analytics", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_analytics, heartbeat, nullptr, "Collect a heartbeat now",
+                     prv_cmd_heartbeat, 0, 0);
 #endif

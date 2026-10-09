@@ -37,7 +37,7 @@ void *keyed_circular_cache_get(KeyedCircularCache *c, KeyedCircularCacheKey key)
       return prv_get_item_at_index(c, idx);
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 void keyed_circular_cache_push(KeyedCircularCache *c, KeyedCircularCacheKey key,

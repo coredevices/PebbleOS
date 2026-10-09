@@ -26,8 +26,8 @@ static Uuid s_default_watchface = UUID_INVALID_INIT;
 #define PREF_KEY_CONTENT_SIZE "contentSize"
 static uint8_t s_content_size;
 #if !UNITTEST
-_Static_assert(sizeof(PreferredContentSize) == sizeof(s_content_size),
-               "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
+static_assert(sizeof(PreferredContentSize) == sizeof(s_content_size),
+              "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
 #ifdef CONFIG_APP_SCALING
@@ -158,7 +158,7 @@ AppInstallId watchface_get_default_install_id(void) {
   AppInstallEntry entry;
   if ((app_id == INSTALL_ID_INVALID) || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
-    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
+    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, nullptr);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
   }
   return app_id;
@@ -275,7 +275,7 @@ void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval)
 #endif
 
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
-  static ActivityInsightSettings s_settings = {0};
+  static ActivityInsightSettings s_settings = {};
   return &s_settings;
 }
 

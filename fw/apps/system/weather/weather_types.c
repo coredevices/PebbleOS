@@ -41,23 +41,23 @@ uint32_t weather_type_icon_small_resource(WeatherType weather_type) {
 #if PBL_DISPLAY_HEIGHT >= 200
   // Every SMALL id sits exactly one above its TINY twin — except Sun, whose
   // SMALL is a separate legacy asset. Asserts pin the id-order invariant.
-  _Static_assert(RESOURCE_ID_IMAGE_PARTLY_CLOUDY_SMALL == RESOURCE_ID_IMAGE_PARTLY_CLOUDY_TINY + 1,
-                 "id order");
-  _Static_assert(RESOURCE_ID_IMAGE_CLOUDY_DAY_SMALL == RESOURCE_ID_IMAGE_CLOUDY_DAY_TINY + 1,
-                 "id order");
-  _Static_assert(RESOURCE_ID_IMAGE_LIGHT_SNOW_SMALL == RESOURCE_ID_IMAGE_LIGHT_SNOW_TINY + 1,
-                 "id order");
-  _Static_assert(RESOURCE_ID_IMAGE_LIGHT_RAIN_SMALL == RESOURCE_ID_IMAGE_LIGHT_RAIN_TINY + 1,
-                 "id order");
-  _Static_assert(RESOURCE_ID_IMAGE_HEAVY_RAIN_SMALL == RESOURCE_ID_IMAGE_HEAVY_RAIN_TINY + 1,
-                 "id order");
-  _Static_assert(RESOURCE_ID_IMAGE_HEAVY_SNOW_SMALL == RESOURCE_ID_IMAGE_HEAVY_SNOW_TINY + 1,
-                 "id order");
-  _Static_assert(
+  static_assert(RESOURCE_ID_IMAGE_PARTLY_CLOUDY_SMALL == RESOURCE_ID_IMAGE_PARTLY_CLOUDY_TINY + 1,
+                "id order");
+  static_assert(RESOURCE_ID_IMAGE_CLOUDY_DAY_SMALL == RESOURCE_ID_IMAGE_CLOUDY_DAY_TINY + 1,
+                "id order");
+  static_assert(RESOURCE_ID_IMAGE_LIGHT_SNOW_SMALL == RESOURCE_ID_IMAGE_LIGHT_SNOW_TINY + 1,
+                "id order");
+  static_assert(RESOURCE_ID_IMAGE_LIGHT_RAIN_SMALL == RESOURCE_ID_IMAGE_LIGHT_RAIN_TINY + 1,
+                "id order");
+  static_assert(RESOURCE_ID_IMAGE_HEAVY_RAIN_SMALL == RESOURCE_ID_IMAGE_HEAVY_RAIN_TINY + 1,
+                "id order");
+  static_assert(RESOURCE_ID_IMAGE_HEAVY_SNOW_SMALL == RESOURCE_ID_IMAGE_HEAVY_SNOW_TINY + 1,
+                "id order");
+  static_assert(
       RESOURCE_ID_IMAGE_GENERIC_WEATHER_SMALL == RESOURCE_ID_IMAGE_GENERIC_WEATHER_TINY + 1,
       "id order");
-  _Static_assert(RESOURCE_ID_IMAGE_RAIN_AND_SNOW_SMALL == RESOURCE_ID_IMAGE_RAIN_AND_SNOW_TINY + 1,
-                 "id order");
+  static_assert(RESOURCE_ID_IMAGE_RAIN_AND_SNOW_SMALL == RESOURCE_ID_IMAGE_RAIN_AND_SNOW_TINY + 1,
+                "id order");
   if (weather_type_slot_index(weather_type) == 7) {
     return RESOURCE_ID_IMAGE_SUNNY_DAY_SMALL; // the one exception (slot 7 = Sun)
   }

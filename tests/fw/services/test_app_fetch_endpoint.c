@@ -83,13 +83,13 @@ Transport *s_transport;
 
 void test_app_fetch_endpoint__initialize(void) {
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
+  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
   fake_transport_set_connected(s_transport, true /* connected */);
 }
 
 void test_app_fetch_endpoint__cleanup(void) {
   fake_transport_destroy(s_transport);
-  s_transport = NULL;
+  s_transport = nullptr;
   fake_comm_session_cleanup();
   fake_system_task_callbacks_cleanup();
 }

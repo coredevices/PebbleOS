@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
@@ -108,9 +107,9 @@ typedef struct PBL_PACKED {
  */
 #define ALG_DLS_MINUTES_RECORD_VERSION 14
 
-_Static_assert((ALG_DLS_MINUTES_RECORD_VERSION & (1 << 2)) > 0,
-               "Android 3.10-4.0 requires bit 2 to be set");
-_Static_assert(ALG_DLS_MINUTES_RECORD_VERSION <= 225, "iOS requires version less that 255");
+static_assert((ALG_DLS_MINUTES_RECORD_VERSION & (1 << 2)) > 0,
+              "Android 3.10-4.0 requires bit 2 to be set");
+static_assert(ALG_DLS_MINUTES_RECORD_VERSION <= 225, "iOS requires version less that 255");
 
 /** @brief Data logging minute sample. */
 typedef struct PBL_PACKED {

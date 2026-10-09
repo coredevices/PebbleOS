@@ -8,7 +8,7 @@
 #include <pbl/services/timeline/item.h>
 
 iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length) {
-  return NULL;
+  return nullptr;
 }
 
 void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
@@ -52,7 +52,7 @@ status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
 }
 
 BlobDBDirtyItem *ios_notif_pref_db_get_dirty_list(void) {
-  return NULL;
+  return nullptr;
 }
 
 status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {

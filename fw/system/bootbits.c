@@ -87,7 +87,7 @@ uint32_t boot_version_read(void) {
   return retained_read(BOOTLOADER_VERSION_REGISTER);
 }
 
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
 void boot_bit_init(void) {
   if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
     HAL_Set_backup(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
@@ -129,7 +129,7 @@ struct pb_version {
   uint8_t tweak;
 } PBL_PACKED;
 
-_Static_assert(sizeof(struct pb_version) == 8, "pb_version struct must be 8 bytes");
+static_assert(sizeof(struct pb_version) == 8, "pb_version struct must be 8 bytes");
 
 uint32_t boot_version_read(void) {
   struct pb_version version_data;

@@ -23,7 +23,7 @@
 
 #include <stubs_applib_resource.h>
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 #define COLOR(x)   ((GColor){.argb = GColor##x##ARGB8})
 #define NUM_COLORS 4

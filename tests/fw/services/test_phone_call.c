@@ -100,7 +100,7 @@ static void prv_put_comm_session_event(bool app_connected) {
       .is_open = app_connected,
     }
   };
-  prv_handle_mobile_app_event(&comm_session_event, NULL);
+  prv_handle_mobile_app_event(&comm_session_event, nullptr);
 }
 
 static void prv_put_phone_event(PhoneEventType type, PhoneCallSource source,
@@ -111,10 +111,10 @@ static void prv_put_phone_event(PhoneEventType type, PhoneCallSource source,
       .type = type,
       .source = source,
       .call_identifier = call_identifier,
-      .caller = NULL,
+      .caller = nullptr,
     }
   };
-  prv_handle_phone_event(&phone_event, NULL);
+  prv_handle_phone_event(&phone_event, nullptr);
 }
 
 static void prv_put_incoming_call_event(PhoneCallSource source, bool app_connected) {
@@ -141,7 +141,7 @@ static void prv_ancs_disconnect(void) {
   PebbleEvent ancs_event = {
     .type = PEBBLE_ANCS_DISCONNECTED_EVENT,
   };
-  prv_handle_ancs_disconnected_event(&ancs_event, NULL);
+  prv_handle_ancs_disconnected_event(&ancs_event, nullptr);
 }
 
 ///////////////////////////////////////////////////////////

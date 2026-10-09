@@ -52,7 +52,7 @@ struct pbl_poll_group {
 };
 
 /** @brief Static initializer for an empty group. */
-#define PBL_POLL_GROUP_INITIALIZER {.members = NULL, .capacity = 0}
+#define PBL_POLL_GROUP_INITIALIZER {.members = nullptr, .capacity = 0}
 
 /**
  * @brief Define an empty group, usable without pbl_poll_group_init().

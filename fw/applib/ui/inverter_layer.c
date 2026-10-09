@@ -61,7 +61,7 @@ void inverter_layer_update_proc(InverterLayer *inverter, GContext *ctx) {
 }
 
 void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {
-  if (inverter == NULL) {
+  if (inverter == nullptr) {
     return;
   }
   *inverter = (InverterLayer){};
@@ -81,14 +81,14 @@ InverterLayer *inverter_layer_create(GRect frame) {
 }
 
 void inverter_layer_deinit(InverterLayer *inverter_layer) {
-  if (inverter_layer == NULL) {
+  if (inverter_layer == nullptr) {
     return;
   }
   layer_deinit(&inverter_layer->layer);
 }
 
 void inverter_layer_destroy(InverterLayer *inverter_layer) {
-  if (inverter_layer == NULL) {
+  if (inverter_layer == nullptr) {
     return;
   }
   inverter_layer_deinit(inverter_layer);
@@ -96,8 +96,8 @@ void inverter_layer_destroy(InverterLayer *inverter_layer) {
 }
 
 Layer *inverter_layer_get_layer(InverterLayer *inverter_layer) {
-  if (inverter_layer == NULL) {
-    return NULL;
+  if (inverter_layer == nullptr) {
+    return nullptr;
   }
   return &inverter_layer->layer;
 }

@@ -108,7 +108,7 @@ static void prv_erase_complete(void *ignored, status_t result);
 
 static void prv_handle_erase(Command *cmd, size_t length) {
   if (length != sizeof(cmd->erase)) {
-    prv_respond_malformed_command(cmd, length, NULL);
+    prv_respond_malformed_command(cmd, length, nullptr);
     return;
   }
 
@@ -138,7 +138,7 @@ static void prv_handle_erase(Command *cmd, size_t length) {
     uint32_t end_address = cmd->erase.address + cmd->erase.length;
     flash_erase_optimal_range(cmd->erase.address, cmd->erase.address, end_address,
                               (end_address + SECTOR_SIZE_BYTES - 1) & SECTOR_ADDR_MASK,
-                              prv_erase_complete, NULL);
+                              prv_erase_complete, nullptr);
   }
 }
 
@@ -163,7 +163,7 @@ static void prv_erase_complete(void *ignored, status_t result) {
 
 static void prv_handle_write(Command *cmd, size_t command_length) {
   if (command_length <= sizeof(cmd->write)) {
-    prv_respond_malformed_command(cmd, command_length, NULL);
+    prv_respond_malformed_command(cmd, command_length, nullptr);
     return;
   }
 
@@ -188,7 +188,7 @@ static void prv_handle_write(Command *cmd, size_t command_length) {
 
 static void prv_handle_crc(Command *cmd, size_t length) {
   if (length != sizeof(cmd->crc)) {
-    prv_respond_malformed_command(cmd, length, NULL);
+    prv_respond_malformed_command(cmd, length, nullptr);
     return;
   }
 
@@ -213,7 +213,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
 
 static void prv_handle_query_region(Command *cmd, size_t length) {
   if (length != sizeof(cmd->region)) {
-    prv_respond_malformed_command(cmd, length, NULL);
+    prv_respond_malformed_command(cmd, length, nullptr);
     return;
   }
 
@@ -257,7 +257,7 @@ static void prv_handle_query_region(Command *cmd, size_t length) {
 
 static void prv_handle_finalize_region(Command *cmd, size_t length) {
   if (length != sizeof(cmd->region)) {
-    prv_respond_malformed_command(cmd, length, NULL);
+    prv_respond_malformed_command(cmd, length, nullptr);
     return;
   }
 

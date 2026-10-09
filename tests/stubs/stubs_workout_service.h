@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/hr_util.h>
 

@@ -29,7 +29,7 @@ static GAPLEAdvertisingJobRef s_discovery_advert_job;
 //! Handles unscheduling of the discovery advertisement job.
 static void prv_job_unschedule_callback(GAPLEAdvertisingJobRef job, bool completed, void *cb_data) {
   // Cleanup:
-  s_discovery_advert_job = NULL;
+  s_discovery_advert_job = nullptr;
 }
 
 // -----------------------------------------------------------------------------
@@ -131,7 +131,7 @@ static void prv_schedule_ad_job(bool fast) {
   const size_t first_term = fast ? 0 : 1;
   s_discovery_advert_job =
       gap_le_advert_schedule(ad, &advert_terms[first_term], ARRAY_LENGTH(advert_terms) - first_term,
-                             prv_job_unschedule_callback, NULL, GAPLEAdvertisingJobTagDiscovery);
+                             prv_job_unschedule_callback, nullptr, GAPLEAdvertisingJobTagDiscovery);
 
   ble_ad_destroy(ad);
 }
@@ -141,7 +141,7 @@ bool gap_le_slave_is_discoverable(void) {
   bool is_discoverable = false;
   bt_lock();
   {
-    is_discoverable = (s_discovery_advert_job != NULL);
+    is_discoverable = (s_discovery_advert_job != nullptr);
   }
   bt_unlock();
   return is_discoverable;
@@ -200,6 +200,6 @@ static int prv_cmd_adv_slow(const struct pbl_shell *sh, size_t argc, char **argv
   return rv;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, adv_slow, NULL, "Advertise for discovery at the slow rate",
+PBL_SHELL_SUBCMD_ADD(sub_bt, adv_slow, nullptr, "Advertise for discovery at the slow rate",
                      prv_cmd_adv_slow, 0, 0);
 #endif

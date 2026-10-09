@@ -7,7 +7,7 @@
 
 #define MAX_OPEN_FILES 512
 
-static FILE *resource_files[MAX_OPEN_FILES] = {NULL};
+static FILE *resource_files[MAX_OPEN_FILES] = {nullptr};
 static const uint32_t resource_start_index = 1; // must start at 1 so font resources work
 static uint32_t resource_index = resource_start_index;
 
@@ -59,7 +59,7 @@ bool sys_resource_bytes_are_readonly(void *bytes) {
 
 const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
                                             size_t *num_bytes_out) {
-  return NULL;
+  return nullptr;
 }
 
 uint32_t sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
@@ -75,7 +75,7 @@ void fake_resource_syscalls_cleanup(void) {
     FILE *resource_file = resource_files[i];
     if (resource_file) {
       fclose(resource_file);
-      resource_files[i] = NULL;
+      resource_files[i] = nullptr;
     }
   }
 

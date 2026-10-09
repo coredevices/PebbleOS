@@ -29,7 +29,7 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
   gdraw_command_image_draw_processed(
       ctx, dci_reel->image, offset,
-      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, NULL));
+      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
 }
 
 static GSize prv_get_size(KinoReel *reel) {
@@ -46,14 +46,14 @@ static GDrawCommandImage *prv_get_gdraw_command_image(KinoReel *reel) {
   if (reel) {
     return ((KinoReelImplPDCI *)reel)->image;
   }
-  return NULL;
+  return nullptr;
 }
 
 static GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
   if (reel) {
     return gdraw_command_image_get_command_list(((KinoReelImplPDCI *)reel)->image);
   }
-  return NULL;
+  return nullptr;
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_PDCI = {
@@ -84,8 +84,8 @@ KinoReel *kino_reel_pdci_create_with_resource(uint32_t resource_id) {
 
 KinoReel *kino_reel_pdci_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   GDrawCommandImage *image = gdraw_command_image_create_with_resource_system(app_num, resource_id);
-  if (image == NULL) {
-    return NULL;
+  if (image == nullptr) {
+    return nullptr;
   }
   return kino_reel_pdci_create(image, true);
 }

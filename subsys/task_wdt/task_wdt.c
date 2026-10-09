@@ -3,7 +3,6 @@
 
 #include <errno.h>
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -25,10 +24,10 @@
 PBL_LOG_MODULE_DEFINE(task_wdt, CONFIG_TASK_WDT_LOG_LEVEL);
 
 #define NUM_CHANNELS CONFIG_TASK_WDT_CHANNELS
-_Static_assert(NUM_CHANNELS <= 8, "the reboot reason records the channels as 8-bit masks");
+static_assert(NUM_CHANNELS <= 8, "the reboot reason records the channels as 8-bit masks");
 #ifdef CONFIG_WATCHDOG
-_Static_assert(CONFIG_TASK_WDT_CHECK_PERIOD_MS < CONFIG_WATCHDOG_TIMEOUT_MS / 2,
-               "the hardware watchdog must outlast the check period");
+static_assert(CONFIG_TASK_WDT_CHECK_PERIOD_MS < CONFIG_WATCHDOG_TIMEOUT_MS / 2,
+              "the hardware watchdog must outlast the check period");
 #endif
 
 struct channel {
@@ -157,7 +156,7 @@ static pbl_tick_t prv_report(const struct expired *expired, size_t num_expired, 
     PBL_LOG_SYNC_WRN("<%s> not fed for %" PRIu32 " ms: PC %p LR %p", pbl_thread_name(e->thread),
                      e->since_feed_ms, (void *)regs.pc, (void *)regs.lr);
 
-    void *work = e->callback ? e->callback(e->id, e->user_data) : NULL;
+    void *work = e->callback ? e->callback(e->id, e->user_data) : nullptr;
     if (work) {
       PBL_LOG_SYNC_WRN("<%s> running %p", pbl_thread_name(e->thread), work);
     }

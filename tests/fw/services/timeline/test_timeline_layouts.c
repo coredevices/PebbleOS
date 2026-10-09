@@ -116,7 +116,7 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
 ////////////////////////////////////
 
 static GContext s_ctx;
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 GContext *graphics_context_get_current_context(void) {
   return &s_ctx;
@@ -176,7 +176,7 @@ static void prv_render_layout(LayoutId layout_id, time_t timestamp, uint16_t dur
   window_set_on_screen(window, true, true);
 
   for (int i = 0; i < num_down_clicks; i++) {
-    prv_handle_down_click(NULL, &pin_window.item_detail_layer);
+    prv_handle_down_click(nullptr, &pin_window.item_detail_layer);
 
     // Aint nobody got time for animations; advance the scrolling property animation to completion
     int16_t to = 0;
@@ -207,7 +207,7 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
     return;
   }
 
-  AttributeList attr_list = (AttributeList){0};
+  AttributeList attr_list = (AttributeList){};
   if (config->title) {
     attribute_list_add_cstring(&attr_list, AttributeIdTitle, config->title);
   }
@@ -419,7 +419,7 @@ void test_timeline_layouts__weather_pin_kind(void) {
 }
 
 static void prv_construct_and_render_sports_layout(GameState state, size_t num_down_clicks) {
-  AttributeList attr_list = (AttributeList){0};
+  AttributeList attr_list = (AttributeList){};
   attribute_list_add_cstring(&attr_list, AttributeIdTitle, "Warriors at Bulls");
   attribute_list_add_uint8(&attr_list, AttributeIdSportsGameState, state);
   attribute_list_add_cstring(&attr_list, AttributeIdNameAway, "GSW");

@@ -463,11 +463,11 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   // completion path; the kickoff-failure path below stops it via the same
   // terminate call.
   new_timer_start(s_silent_loss_timer, DISPLAY_SILENT_LOSS_TIMEOUT_MS, prv_silent_loss_handler,
-                  NULL, 0);
+                  nullptr, 0);
   HAL_StatusTypeDef status = prv_display_update_start();
   if (status != HAL_OK) {
     prv_handle_send_failure("update", status);
-    prv_display_update_terminate(NULL);
+    prv_display_update_terminate(nullptr);
   }
 }
 

@@ -47,7 +47,7 @@
 ///////////////////////////////////////////////////////////
 // Tests
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 static GContext ctx;
 
 #define NUM_STEPS (5)
@@ -111,7 +111,7 @@ void test_graphics_draw_text_flow__initialize(void) {
 void test_graphics_draw_text_flow__cleanup(void) {
   free(fb);
   gbitmap_destroy(s_dest_bitmap);
-  s_dest_bitmap = NULL;
+  s_dest_bitmap = nullptr;
 }
 
 #define RECT_TEXT_0_0 GRect(0, 0, DISP_COLS, DISP_ROWS)
@@ -178,7 +178,7 @@ void test_graphics_draw_text_flow__flow_no_paging(void) {
       .perimeter.inset = 8,
     },
   };
-  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
+  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, nullptr);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -189,7 +189,7 @@ void test_graphics_draw_text_flow__flow_no_paging_draw_box(void) {
       .perimeter.inset = 8,
     },
   };
-  render_steps(&layout, RenderMoveDrawBox, DELTA, DISP_ROWS, NULL);
+  render_steps(&layout, RenderMoveDrawBox, DELTA, DISP_ROWS, nullptr);
   // should result in the very same output as if you did a placement via text box
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, "test_graphics_draw_text_flow__flow_no_paging.pbi"));
 }
@@ -203,7 +203,7 @@ void test_graphics_draw_text_flow__with_origin_zero(void) {
       .paging.origin_on_screen = {0, 0},
     },
   };
-  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
+  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, nullptr);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -216,7 +216,7 @@ void test_graphics_draw_text_flow__with_origin_non_zero(void) {
       .paging.origin_on_screen = {DELTA, 2 * DELTA},
     },
   };
-  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, NULL);
+  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, nullptr);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -230,7 +230,7 @@ void test_graphics_draw_text_flow__with_paging(void) {
           {.origin_y = 25, .size_h = 100}, // setting a page height != enables positioning
     },
   };
-  render_steps(&layout, RenderMoveTextBox, DELTA, 1000, NULL);
+  render_steps(&layout, RenderMoveTextBox, DELTA, 1000, nullptr);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 

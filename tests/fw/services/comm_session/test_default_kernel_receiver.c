@@ -44,7 +44,7 @@ typedef enum {
   NumHandlers
 } FakeProtocolHandlers;
 
-static int s_handler_call_count[NumHandlers] = {0};
+static int s_handler_call_count[NumHandlers] = {};
 
 typedef struct {
   size_t len;
@@ -134,7 +134,7 @@ void test_default_kernel_receiver__prepare_write_finish_single(void) {
 
   Receiver *receiver = g_default_kernel_receiver_implementation.prepare(
       FAKE_COMM_SESSION, &s_endpoints[0], strlen(data));
-  cl_assert(receiver != NULL);
+  cl_assert(receiver != nullptr);
 
   g_default_kernel_receiver_implementation.write(receiver, (uint8_t *)data, strlen(data));
   prv_assert_no_handler_calls();
@@ -164,7 +164,7 @@ void test_default_kernel_receiver__prepare_write_finish_multiple_sessions(void) 
   for (int i = 0; i < NumHandlers; i++) {
     receiver[i] = g_default_kernel_receiver_implementation.prepare(session[i], &s_endpoints[i],
                                                                    strlen(data[i]));
-    cl_assert(receiver[i] != NULL);
+    cl_assert(receiver[i] != nullptr);
 
     for (int j = 0; j < strlen(data[i]); j++) {
       g_default_kernel_receiver_implementation.write(receiver[i], (uint8_t *)&data[i][j], 1);
@@ -203,7 +203,7 @@ void test_default_kernel_receiver__same_session_batched(void) {
   for (int i = 0; i < batch_num; i++) {
     Receiver *receiver =
         g_default_kernel_receiver_implementation.prepare(FAKE_COMM_SESSION, &s_endpoints[0], 1);
-    cl_assert(receiver != NULL);
+    cl_assert(receiver != nullptr);
 
     g_default_kernel_receiver_implementation.write(receiver, (uint8_t *)&data, 1);
 
@@ -238,7 +238,7 @@ void test_default_kernel_receiver__batch_drains_one_per_callback(void) {
   for (int i = 0; i < batch_num; i++) {
     Receiver *receiver =
         g_default_kernel_receiver_implementation.prepare(FAKE_COMM_SESSION, &s_endpoints[0], 1);
-    cl_assert(receiver != NULL);
+    cl_assert(receiver != nullptr);
     g_default_kernel_receiver_implementation.write(receiver, (uint8_t *)&data, 1);
     g_default_kernel_receiver_implementation.finish(receiver);
     data += 1;
@@ -269,7 +269,7 @@ void test_default_kernel_receiver__receiver_cleanup(void) {
 
   Receiver *receiver = g_default_kernel_receiver_implementation.prepare(
       FAKE_COMM_SESSION, &s_endpoints[0], strlen(data));
-  cl_assert(receiver != NULL);
+  cl_assert(receiver != nullptr);
 
   g_default_kernel_receiver_implementation.write(receiver, (uint8_t *)data, strlen(data));
   prv_assert_no_handler_calls();
@@ -287,7 +287,7 @@ void test_default_kernel_receiver__race_condition(void) {
 
   Receiver *receiver = g_default_kernel_receiver_implementation.prepare(
       FAKE_COMM_SESSION, &s_endpoints[0], strlen(data));
-  cl_assert(receiver != NULL);
+  cl_assert(receiver != nullptr);
 
   g_default_kernel_receiver_implementation.write(receiver, (uint8_t *)data, strlen(data));
   prv_assert_no_handler_calls();

@@ -486,7 +486,7 @@ void test_bitblt__1bit_to_8bit_compor(void) {
   };
 
   memset(dest_data, GColorBlue.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpOr, GColorLightGray);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpOr, GColorLightGray);
 
   cl_check(gbitmap_pbi_eq(&dest_bitmap, "test_bitblt__1bit_to_8bit_compor-expect.8bit.pbi"));
 
@@ -518,38 +518,38 @@ void test_bitblt__1bit_to_8bit_comptint(void) {
 
   // Destination White
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorWhite);
   cl_check(gbitmap_pbi_eq(
       &dest_bitmap,
       "test_bitblt__1bit_to_8bit_comptint_white_cross_white_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorBlack);
   cl_check(gbitmap_pbi_eq(
       &dest_bitmap,
       "test_bitblt__1bit_to_8bit_comptint_white_cross_black_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorWhite.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorLightGray);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorLightGray);
   cl_check(gbitmap_pbi_eq(
       &dest_bitmap,
       "test_bitblt__1bit_to_8bit_comptint_white_cross_lightgray_corners-expect.8bit.pbi"));
 
   // Destination Black
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorWhite);
   cl_check(gbitmap_pbi_eq(
       &dest_bitmap,
       "test_bitblt__1bit_to_8bit_comptint_black_cross_white_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorBlack);
   cl_check(gbitmap_pbi_eq(
       &dest_bitmap,
       "test_bitblt__1bit_to_8bit_comptint_black_cross_black_corners-expect.8bit.pbi"));
 
   memset(dest_data, GColorBlack.argb, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorLightGray);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorLightGray);
   cl_check(gbitmap_pbi_eq(
       &dest_bitmap,
       "test_bitblt__1bit_to_8bit_comptint_black_cross_lightgray_corners-expect.8bit.pbi"));
@@ -837,33 +837,33 @@ void test_bitblt__1bit_to_1bit_comptint(void) {
 
   // Destination White
   memset(dest_data, 0b11111111, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorClear);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorClear);
   cl_check(gbitmap_pbi_eq(&dest_bitmap,
                           "test_bitblt__1bit_to_1bit_comptint_white_on_white-expect.1bit.pbi"));
 
   memset(dest_data, 0b11111111, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorWhite);
   cl_check(gbitmap_pbi_eq(&dest_bitmap,
                           "test_bitblt__1bit_to_1bit_comptint_white_on_white-expect.1bit.pbi"));
 
   memset(dest_data, 0b11111111, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorBlack);
   cl_check(gbitmap_pbi_eq(&dest_bitmap,
                           "test_bitblt__1bit_to_1bit_comptint_black_on_white-expect.1bit.pbi"));
 
   // Destination Black
   memset(dest_data, 0b00000000, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorClear);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorClear);
   cl_check(gbitmap_pbi_eq(&dest_bitmap,
                           "test_bitblt__1bit_to_1bit_comptint_black_on_black-expect.1bit.pbi"));
 
   memset(dest_data, 0b00000000, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorWhite);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorWhite);
   cl_check(gbitmap_pbi_eq(&dest_bitmap,
                           "test_bitblt__1bit_to_1bit_comptint_white_on_black-expect.1bit.pbi"));
 
   memset(dest_data, 0b00000000, sizeof(dest_data));
-  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){0}, GCompOpTint, GColorBlack);
+  bitblt_bitmap_into_bitmap(&dest_bitmap, src_bitmap, (GPoint){}, GCompOpTint, GColorBlack);
   cl_check(gbitmap_pbi_eq(&dest_bitmap,
                           "test_bitblt__1bit_to_1bit_comptint_black_on_black-expect.1bit.pbi"));
 

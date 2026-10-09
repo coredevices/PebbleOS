@@ -6,7 +6,6 @@
 #include "attribute.h"
 #include "layout_layer.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
@@ -29,13 +28,13 @@
  * Building a pin with an action that opens its app:
  *
  * @code{.c}
- * AttributeList attr_list = {0};
+ * AttributeList attr_list = {};
  * attribute_list_add_cstring(&attr_list, AttributeIdTitle, "Workout");
  * attribute_list_add_cstring(&attr_list, AttributeIdBody, "45 min run");
  * attribute_list_add_resource_id(&attr_list, AttributeIdIconPin,
  *                                TIMELINE_RESOURCE_TIMELINE_SPORTS);
  *
- * AttributeList open_attrs = {0};
+ * AttributeList open_attrs = {};
  * attribute_list_add_cstring(&open_attrs, AttributeIdTitle, "Open");
  * attribute_list_add_uint32(&open_attrs, AttributeIdLaunchCode, 42);
  * TimelineItemActionGroup action_group = {

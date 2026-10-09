@@ -215,6 +215,6 @@ static int prv_cmd_button_raw(const struct pbl_shell *sh, size_t argc, char **ar
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_button, raw, NULL, "Inject a raw event <id> <0=up|1=down>",
+PBL_SHELL_SUBCMD_ADD(sub_button, raw, nullptr, "Inject a raw event <id> <0=up|1=down>",
                      prv_cmd_button_raw, 3, 0);
 #endif

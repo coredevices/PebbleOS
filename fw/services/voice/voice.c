@@ -152,7 +152,7 @@ static void prv_cancel_session(void) {
 }
 
 static void prv_start_result_timeout(void) {
-  new_timer_start(s_timeout, TIMEOUT_SESSION_RESULT, prv_session_result_timeout, NULL, 0);
+  new_timer_start(s_timeout, TIMEOUT_SESSION_RESULT, prv_session_result_timeout, nullptr, 0);
 }
 
 static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id) {
@@ -197,7 +197,7 @@ static bool prv_start_recording(void) {
 
   if (frame_buffer && frame_size_samples > 0) {
     PBL_LOG_DBG("Starting microphone with frame buffer");
-    if (!mic_start(MIC, &prv_audio_data_handler, NULL, frame_buffer, frame_size_samples)) {
+    if (!mic_start(MIC, &prv_audio_data_handler, nullptr, frame_buffer, frame_size_samples)) {
       PBL_LOG_ERR("Failed to start microphone for voice session");
       return false;
     }
@@ -254,12 +254,12 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
     if (!prv_start_recording()) {
       PBL_LOG_ERR("Voice session setup failed while starting recording");
       prv_cancel_session();
-      prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusErrorGeneric, NULL);
+      prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusErrorGeneric, nullptr);
       return;
     }
 
     // Indicate to the UI that we have started recording
-    prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusSuccess, NULL);
+    prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusSuccess, nullptr);
   }
 }
 
@@ -279,7 +279,7 @@ static void prv_session_result_timeout(void *data) {
   prv_reset();
   PBL_LOG_WRN("Timeout waiting for session result");
 
-  prv_send_event(VoiceEventTypeSessionResult, VoiceStatusTimeout, NULL);
+  prv_send_event(VoiceEventTypeSessionResult, VoiceStatusTimeout, nullptr);
 
   pbl_mutex_unlock(&s_lock);
 }
@@ -301,7 +301,7 @@ static void prv_session_setup_timeout(void *data) {
   prv_cancel_session();
   PBL_LOG_WRN("Timeout waiting for session setup result ");
 
-  prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusTimeout, NULL);
+  prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusTimeout, nullptr);
 
   pbl_mutex_unlock(&s_lock);
 }
@@ -399,13 +399,13 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   PBL_LOG_INFO("Send session setup message. Session type: %d", session_type);
   PBL_LOG_DBG("Calling voice_endpoint_setup_session");
   voice_endpoint_setup_session(session_type, s_session_id, &transfer_info,
-                               s_from_app ? &s_app_uuid : NULL);
+                               s_from_app ? &s_app_uuid : nullptr);
 
   if (s_timeout == TIMER_INVALID_ID) {
     s_timeout = new_timer_create();
   }
   s_timeout_generation = s_session_generation;
-  new_timer_start(s_timeout, TIMEOUT_SESSION_SETUP, prv_session_setup_timeout, NULL, 0);
+  new_timer_start(s_timeout, TIMEOUT_SESSION_SETUP, prv_session_setup_timeout, nullptr, 0);
 
   PBL_LOG_DBG("Audio transfer setup complete, handling subsystem started");
   prv_handle_subsystem_started(SessionState_AudioEndpointSetupReceived);
@@ -491,7 +491,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
     VoiceEventType event_type = (s_state <= SessionState_StartSession)
                                     ? VoiceEventTypeSessionSetup
                                     : VoiceEventTypeSessionResult;
-    prv_send_event(event_type, VoiceStatusErrorGeneric, NULL);
+    prv_send_event(event_type, VoiceStatusErrorGeneric, nullptr);
     goto done;
   }
 
@@ -512,7 +512,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
     prv_cancel_session();
     VoiceStatus status = prv_get_status_from_result(result);
     PBL_LOG_WRN("Error occurred setting up session: %d", result);
-    prv_send_event(VoiceEventTypeSessionSetup, status, NULL);
+    prv_send_event(VoiceEventTypeSessionSetup, status, nullptr);
     goto done;
   }
 
@@ -528,7 +528,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
           "Received session setup result for non-app session when an app "
           "session result was expected");
     }
-    prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusErrorGeneric, NULL);
+    prv_send_event(VoiceEventTypeSessionSetup, VoiceStatusErrorGeneric, nullptr);
     goto done;
   }
 
@@ -596,7 +596,7 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
     VoiceEventType event_type = (s_state <= SessionState_StartSession)
                                     ? VoiceEventTypeSessionSetup
                                     : VoiceEventTypeSessionResult;
-    prv_send_event(event_type, VoiceStatusErrorGeneric, NULL);
+    prv_send_event(event_type, VoiceStatusErrorGeneric, nullptr);
     return false;
   }
 
@@ -605,14 +605,14 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
         "Received session result for wrong session (Expected: "
         "%" PRIu16 "; Received: %" PRIu16,
         s_session_id, session_id);
-    prv_send_event(VoiceEventTypeSessionResult, VoiceStatusErrorGeneric, NULL);
+    prv_send_event(VoiceEventTypeSessionResult, VoiceStatusErrorGeneric, nullptr);
     return false;
   }
 
   if (result != VoiceEndpointResultSuccess) {
     VoiceStatus status = prv_get_status_from_result(result);
     PBL_LOG_WRN("Error occurred processing result: %d", result);
-    prv_send_event(VoiceEventTypeSessionResult, status, NULL);
+    prv_send_event(VoiceEventTypeSessionResult, status, nullptr);
     return false;
   }
 
@@ -629,7 +629,7 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
           "Received session result for non-app session when an app "
           "session result was expected");
     }
-    prv_send_event(VoiceEventTypeSessionResult, VoiceStatusErrorGeneric, NULL);
+    prv_send_event(VoiceEventTypeSessionResult, VoiceStatusErrorGeneric, nullptr);
     return false;
   }
 
@@ -684,7 +684,7 @@ void voice_handle_nlp_result(VoiceEndpointResult result, AudioEndpointSessionId 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   const bool app_initiated = false;
-  Uuid *app_uuid = NULL;
+  Uuid *app_uuid = nullptr;
   if (!prv_handle_dictation_nlp_result_common(result, session_id, app_initiated, app_uuid)) {
     goto unlock;
   }

@@ -10,7 +10,7 @@
 #include <applib/legacy2/ui/property_animation_legacy2.h>
 
 static void prv_update_rect_compatible(Animation *a, const AnimationProgress progress) {
-  bool uses_legacy2_animations = animation_private_using_legacy_2(NULL);
+  bool uses_legacy2_animations = animation_private_using_legacy_2(nullptr);
   if (uses_legacy2_animations) {
     property_animation_legacy2_update_grect((PropertyAnimationLegacy2 *)a, progress);
   } else {
@@ -43,18 +43,18 @@ static void prv_transition_setup_window_callbacks(Animation *animation) {
   window_transition_context_appearance_call_all(context);
 
   // make sure we don't render the to_window accidentally at a default origin
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // on 2.x we don't need to consider any easing
     animation_get_implementation(animation)->update(animation, 0);
   } else {
-    animation_private_update(NULL, animation_private_animation_find(animation), 0);
+    animation_private_update(nullptr, animation_private_animation_find(animation), 0);
   }
 }
 
 static void prv_transition_teardown_destroy_animation(Animation *a) {
   // needed for compatibility with 2.x apps: manually free animation + clear pointer
   WindowTransitioningContext *ctx = animation_get_context(a);
-  ctx->animation = NULL;
+  ctx->animation = nullptr;
   animation_destroy(a);
 }
 
@@ -77,7 +77,7 @@ static Animation *prv_window_transition_move(WindowTransitioningContext *ctx,
   GRect window_to_start = window_to_end;
   window_to_start.origin.x += start_delta_x;
 
-  PropertyAnimation *prop_animation = property_animation_create(&impl, ctx, NULL, NULL);
+  PropertyAnimation *prop_animation = property_animation_create(&impl, ctx, nullptr, nullptr);
 
   property_animation_set_from_grect(prop_animation, &window_to_start);
   property_animation_set_to_grect(prop_animation, &window_to_end);

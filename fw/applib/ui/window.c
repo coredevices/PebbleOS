@@ -136,7 +136,7 @@ void window_render(Window *window, GContext *ctx) {
 }
 
 void window_call_handler(Window *window, WindowHandlerOffset handler_offset) {
-  if (window == NULL) {
+  if (window == nullptr) {
     return;
   }
   WindowHandler handler =
@@ -165,7 +165,7 @@ GRect window_calc_frame(bool fullscreen) {
 // Either this function should set the window not on screen, or we should provide
 // an alternate function for initializing the window that takes a frame dimension too.
 void window_init(Window *window, const char *debug_name) {
-  if (window == NULL) {
+  if (window == nullptr) {
     PBL_LOG_ERR("Tried to init a NULL window");
     return;
   }
@@ -185,7 +185,7 @@ void window_init(Window *window, const char *debug_name) {
   window->background_color = GColorWhite;
   window->in_click_config_provider = false;
   window->is_waiting_for_click_config = false;
-  window->parent_window_stack = NULL;
+  window->parent_window_stack = nullptr;
 }
 
 Window *window_create(void) {
@@ -197,7 +197,7 @@ Window *window_create(void) {
 }
 
 void window_destroy(Window *window) {
-  if (window == NULL) {
+  if (window == nullptr) {
     return;
   }
   window_deinit(window);
@@ -274,7 +274,7 @@ void window_set_click_config_provider_with_context(Window *window,
 }
 
 void window_set_click_config_provider(Window *window, ClickConfigProvider click_config_provider) {
-  window_set_click_config_provider_with_context(window, click_config_provider, NULL);
+  window_set_click_config_provider_with_context(window, click_config_provider, nullptr);
 }
 
 void window_set_click_context(ButtonId button_id, void *context) {
@@ -422,7 +422,7 @@ void window_unload(Window *window) {
 // TODO PBL-1769: deal with window unload. In app deinit? When low memory?
 
 void window_set_on_screen(Window *window, bool new_on_screen, bool call_window_appear_handlers) {
-  PBL_ASSERTN(window != NULL); // This tripped me up for about a day
+  PBL_ASSERTN(window != nullptr); // This tripped me up for about a day
   if (new_on_screen == window->on_screen) {
     return;
   }
@@ -554,7 +554,7 @@ bool window_has_status_bar(Window *window) {
     return true;
   }
 
-  StatusBarLayer *status_bar = NULL;
+  StatusBarLayer *status_bar = nullptr;
   layer_process_tree(&window->layer, &status_bar, prv_find_status_bar_layer);
   return status_bar && !layer_get_hidden(&status_bar->layer);
 }
@@ -575,7 +575,7 @@ void window_detach_recognizer(Window *window, Recognizer *recognizer) {
 
 RecognizerList *window_get_recognizer_list(Window *window) {
   if (!window) {
-    return NULL;
+    return nullptr;
   }
   return layer_get_recognizer_list(window_get_root_layer(window));
 }
@@ -583,7 +583,7 @@ RecognizerList *window_get_recognizer_list(Window *window) {
 RecognizerManager *window_get_recognizer_manager(Window *window) {
 #ifdef CONFIG_TOUCH
   if (!window || !window->parent_window_stack) {
-    return NULL;
+    return nullptr;
   }
   if (window_manager_is_app_window(window)) {
     return app_state_get_recognizer_manager();
@@ -591,7 +591,7 @@ RecognizerManager *window_get_recognizer_manager(Window *window) {
   // A non-app (modal) window routes to the kernel (modal) recognizer manager.
   return modal_manager_get_recognizer_manager();
 #else
-  return NULL;
+  return nullptr;
 #endif
 }
 
@@ -614,6 +614,6 @@ void window_lost_input_focus(Window *window) {
     return;
   }
   recognizer_manager_cancel_and_reset(manager);
-  recognizer_manager_set_window(manager, NULL);
+  recognizer_manager_set_window(manager, nullptr);
 #endif
 }

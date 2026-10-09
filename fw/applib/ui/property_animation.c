@@ -58,7 +58,7 @@ static inline PropertyAnimationPrivate *prv_find_property_animation(PropertyAnim
 // -----------------------------------------------------------------------------------------
 void property_animation_update_int16(PropertyAnimation *property_animation_h,
                                      const uint32_t distance_normalized) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_update_int16((PropertyAnimationLegacy2 *)property_animation_h,
@@ -80,7 +80,7 @@ void property_animation_update_int16(PropertyAnimation *property_animation_h,
 // -----------------------------------------------------------------------------------------
 void property_animation_update_uint32(PropertyAnimation *property_animation_h,
                                       const uint32_t distance_normalized) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
 
   PropertyAnimationPrivate *property_animation = prv_find_property_animation(property_animation_h);
   if (!property_animation) {
@@ -96,7 +96,7 @@ void property_animation_update_uint32(PropertyAnimation *property_animation_h,
 // -----------------------------------------------------------------------------------------
 void property_animation_update_gpoint(PropertyAnimation *property_animation_h,
                                       const uint32_t distance_normalized) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_update_gpoint((PropertyAnimationLegacy2 *)property_animation_h,
@@ -121,7 +121,7 @@ void property_animation_update_gpoint(PropertyAnimation *property_animation_h,
 // -----------------------------------------------------------------------------------------
 void property_animation_update_grect(PropertyAnimation *property_animation_h,
                                      const uint32_t distance_normalized) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_update_grect((PropertyAnimationLegacy2 *)property_animation_h,
@@ -154,7 +154,7 @@ void property_animation_update_grect(PropertyAnimation *property_animation_h,
 // -----------------------------------------------------------------------------------------
 void property_animation_update_gtransform(PropertyAnimation *property_animation_h,
                                           const uint32_t distance_normalized) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
 
   PropertyAnimationPrivate *property_animation = prv_find_property_animation(property_animation_h);
   if (!property_animation) {
@@ -190,7 +190,7 @@ void property_animation_update_gtransform(PropertyAnimation *property_animation_
 // -----------------------------------------------------------------------------------------
 void property_animation_update_gcolor8(PropertyAnimation *property_animation_h,
                                        const uint32_t distance_normalized) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
 
   PropertyAnimationPrivate *property_animation = prv_find_property_animation(property_animation_h);
   if (!property_animation) {
@@ -214,7 +214,7 @@ void property_animation_update_gcolor8(PropertyAnimation *property_animation_h,
 // -----------------------------------------------------------------------------------------
 void property_animation_update_fixed_s32_16(PropertyAnimation *property_animation_h,
                                             const uint32_t distance_normalized) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
 
   PropertyAnimationPrivate *property_animation = prv_find_property_animation(property_animation_h);
   if (!property_animation) {
@@ -311,7 +311,7 @@ static void prv_init(PropertyAnimationPrivate *property_animation,
 // -----------------------------------------------------------------------------------------
 PropertyAnimation *property_animation_create(const PropertyAnimationImplementation *implementation,
                                              void *subject, void *from_value, void *to_value) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return (PropertyAnimation *)property_animation_legacy2_create(
@@ -320,7 +320,7 @@ PropertyAnimation *property_animation_create(const PropertyAnimationImplementati
 
   PropertyAnimationPrivate *property_animation = applib_type_malloc(PropertyAnimationPrivate);
   if (!property_animation) {
-    return NULL;
+    return nullptr;
   }
   memset(property_animation, 0, sizeof(*property_animation));
   Animation *handle = animation_private_animation_init(&property_animation->animation);
@@ -331,11 +331,11 @@ PropertyAnimation *property_animation_create(const PropertyAnimationImplementati
 // -----------------------------------------------------------------------------------------
 // Create a new property animation structure, copying just the property animation unique fields
 PropertyAnimationPrivate *property_animation_private_clone(PropertyAnimationPrivate *from) {
-  PBL_ASSERTN(!animation_private_using_legacy_2(NULL));
+  PBL_ASSERTN(!animation_private_using_legacy_2(nullptr));
 
   PropertyAnimationPrivate *property_animation = applib_type_malloc(PropertyAnimationPrivate);
   if (!property_animation) {
-    return NULL;
+    return nullptr;
   }
   memset(property_animation, 0, sizeof(*property_animation));
   uint8_t *dst = (uint8_t *)property_animation;
@@ -350,7 +350,7 @@ PropertyAnimationPrivate *property_animation_private_clone(PropertyAnimationPriv
 bool property_animation_init(PropertyAnimation *animation_h,
                              const PropertyAnimationImplementation *implementation, void *subject,
                              void *from_value, void *to_value) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_init((PropertyAnimationLegacy2 *)animation_h,
@@ -373,7 +373,7 @@ bool property_animation_init(PropertyAnimation *animation_h,
 // -----------------------------------------------------------------------------------------
 PropertyAnimation *property_animation_create_layer_frame(struct Layer *layer, GRect *from_frame,
                                                          GRect *to_frame) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     return (PropertyAnimation *)property_animation_legacy2_create_layer_frame(layer, from_frame,
@@ -393,7 +393,7 @@ PropertyAnimation *property_animation_create_layer_bounds(struct Layer *layer, G
 // -----------------------------------------------------------------------------------------
 bool property_animation_init_layer_frame(PropertyAnimation *animation_h, struct Layer *layer,
                                          GRect *from_frame, GRect *to_frame) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_init_layer_frame((PropertyAnimationLegacy2 *)animation_h, layer,
@@ -410,7 +410,7 @@ PropertyAnimation *property_animation_create_bounds_origin(Layer *layer, GPoint 
   // no legacy2 support as this was never exposed on 2.x
 
   PropertyAnimation *result =
-      property_animation_create(&s_bounds_layer_implementation, layer, NULL, NULL);
+      property_animation_create(&s_bounds_layer_implementation, layer, nullptr, nullptr);
 
   GRect value = layer->bounds;
   if (from) {
@@ -447,14 +447,14 @@ static const PropertyAnimationImplementation s_dirty_layer_implementation = {
 PropertyAnimation *property_animation_create_mark_dirty(struct Layer *layer) {
   // no legacy2 support as this was never exposed on 2.x
   PropertyAnimation *result =
-      property_animation_create(&s_dirty_layer_implementation, layer, NULL, NULL);
+      property_animation_create(&s_dirty_layer_implementation, layer, nullptr, nullptr);
 
   return result;
 }
 
 // -----------------------------------------------------------------------------------------
 void property_animation_destroy(PropertyAnimation *property_animation_h) {
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     property_animation_legacy2_destroy((PropertyAnimationLegacy2 *)property_animation_h);
@@ -474,7 +474,7 @@ bool property_animation_subject(PropertyAnimation *property_animation_h, void **
     return false;
   }
 
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     if (set) {
@@ -504,7 +504,7 @@ bool property_animation_from(PropertyAnimation *property_animation_h, void *valu
     return false;
   }
 
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     PropertyAnimationLegacy2 *legacy = (PropertyAnimationLegacy2 *)property_animation_h;
@@ -540,7 +540,7 @@ bool property_animation_to(PropertyAnimation *property_animation_h, void *value,
     return false;
   }
 
-  if (animation_private_using_legacy_2(NULL)) {
+  if (animation_private_using_legacy_2(nullptr)) {
     // We need to enable other applib modules like sroll_layer, menu_layer, etc. which are
     // compiled to use the 3.0 animation API to work with 2.0 apps.
     PropertyAnimationLegacy2 *legacy = (PropertyAnimationLegacy2 *)property_animation_h;

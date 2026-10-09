@@ -129,7 +129,7 @@ static const Uuid *prv_get_uuid(const CommSession *session) {
   if (session->transport_imp->get_uuid) {
     return session->transport_imp->get_uuid(session->transport);
   }
-  return NULL;
+  return nullptr;
 }
 
 static const char *prv_string_for_destination(TransportDestination destination) {
@@ -142,7 +142,7 @@ static const char *prv_string_for_destination(TransportDestination destination) 
       return "H";
     default:
       WTF;
-      return NULL;
+      return nullptr;
   }
 }
 
@@ -177,7 +177,7 @@ CommSession *comm_session_open(Transport *transport, const TransportImplementati
         if (!existing_system_session->transport_imp->close) {
           // iAP sessions cannot be closed from the watch' side :(
           PBL_LOG_ERR("System session already exists and cannot be closed");
-          return NULL;
+          return nullptr;
         }
         // Last system session to connect wins:
         // This is to work-around a race condition that happens when iOS still has the PPoGATT
@@ -195,7 +195,7 @@ CommSession *comm_session_open(Transport *transport, const TransportImplementati
   CommSession *session = kernel_malloc(sizeof(CommSession));
   if (!session) {
     PBL_LOG_ERR("Not enough memory for new CommSession");
-    return NULL;
+    return nullptr;
   }
   *session = (const CommSession){
     .transport = transport,
@@ -240,7 +240,7 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
 
     // TODO: PBL-1771: find a more graceful way to handle this
 #ifndef CONFIG_RECOVERY_FW
-    system_task_add_callback(dls_private_handle_disconnect, NULL);
+    system_task_add_callback(dls_private_handle_disconnect, nullptr);
 #endif
   }
 
@@ -253,14 +253,14 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   // Cleanup:
   comm_session_receive_router_cleanup(session);
   comm_session_send_queue_cleanup(session);
-  list_remove(&session->node, (ListNode **)&s_session_head, NULL);
+  list_remove(&session->node, (ListNode **)&s_session_head, nullptr);
   kernel_free(session);
 }
 
 void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
                                      enum pbl_bt_response_time_state state,
                                      uint16_t max_period_secs) {
-  comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, NULL);
+  comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, nullptr);
 }
 
 void comm_session_set_responsiveness_ext(CommSession *session, enum pbl_bt_consumer consumer,
@@ -396,12 +396,12 @@ static bool prv_find_session_by_app_uuid_comparator(ListNode *found_node, void *
 
 static CommSession *prv_get_app_session(void) {
   const PebbleProcessMd *md = app_manager_get_current_app_md();
-  if (md == NULL) {
-    return NULL;
+  if (md == nullptr) {
+    return nullptr;
   }
   const Uuid *app_uuid = &md->uuid;
   if (uuid_is_system(app_uuid) || uuid_is_invalid(app_uuid)) {
-    return NULL;
+    return nullptr;
   }
   FindByAppUUIDContext ctx = (FindByAppUUIDContext){
     .app_uuid = app_uuid,
@@ -438,8 +438,8 @@ static CommSession *prv_find_session_by_type(CommSessionTransportType session_ty
 
 static CommSession *prv_get_system_session(void) {
   // Attempt to explicitly find and return a session that isn't QEMU or PULSE
-  CommSession *session =
-      (CommSession *)list_find((ListNode *)s_session_head, prv_find_session_is_system_filter, NULL);
+  CommSession *session = (CommSession *)list_find((ListNode *)s_session_head,
+                                                  prv_find_session_is_system_filter, nullptr);
   if (session) {
     return session;
   }
@@ -462,7 +462,7 @@ static CommSession *prv_get_session_by_type(CommSessionType type) {
       return prv_get_app_session();
     case CommSessionTypeInvalid:
     default:
-      return NULL;
+      return nullptr;
   }
 }
 
@@ -487,7 +487,7 @@ CommSession *comm_session_get_system_session(void) {
 
 CommSession *comm_session_get_current_app_session(void) {
   const PebbleProcessMd *md = app_manager_get_current_app_md();
-  if (md != NULL && md->allow_js) {
+  if (md != nullptr && md->allow_js) {
     return comm_session_get_system_session();
   }
   return comm_session_get_by_type(CommSessionTypeApp);
@@ -497,10 +497,10 @@ void comm_session_sanitize_app_session(CommSession **session_in_out) {
   CommSession *permitted_session = comm_session_get_current_app_session();
   if (!permitted_session) {
     // No session connected that can serve the currently running app
-    *session_in_out = NULL;
+    *session_in_out = nullptr;
     return;
   }
-  if (*session_in_out == NULL) {
+  if (*session_in_out == nullptr) {
     // NULL means "auto select" the session
     *session_in_out = permitted_session;
     return;
@@ -508,7 +508,7 @@ void comm_session_sanitize_app_session(CommSession **session_in_out) {
   if (*session_in_out != permitted_session) {
     // Don't allow the app to send data to any arbitrary session, this can happen if the session
     // got disconnected in the mean time.
-    *session_in_out = NULL;
+    *session_in_out = nullptr;
     return;
   }
 }
@@ -536,14 +536,14 @@ bool comm_session_is_system(CommSession *session) {
 
 //! Must (only) be called when going out of airplane mode (enabling Bluetooth).
 void comm_session_init(void) {
-  PBL_ASSERTN(s_session_head == NULL);
+  PBL_ASSERTN(s_session_head == nullptr);
 }
 
 //! Must (only) be called when going into airplane mode (disabling Bluetooth).
 void comm_session_deinit(void) {
   // If this assert fires, it means a Transport has not cleaned up properly after itself by closing
   // all the CommSessions it has opened.
-  PBL_ASSERTN(s_session_head == NULL);
+  PBL_ASSERTN(s_session_head == nullptr);
 }
 
 DEFINE_SYSCALL(void, sys_app_comm_set_responsiveness, SniffInterval interval) {

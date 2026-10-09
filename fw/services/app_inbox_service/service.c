@@ -57,8 +57,8 @@ typedef struct AppInboxConsumerInfo {
   uint8_t *end;
 } AppInboxConsumerInfo;
 
-_Static_assert(sizeof(AppInboxServiceTag) <= sizeof(void *),
-               "AppInboxServiceTag should fit inside a void *");
+static_assert(sizeof(AppInboxServiceTag) <= sizeof(void *),
+              "AppInboxServiceTag should fit inside a void *");
 
 static AppInboxNode *s_app_inbox_head;
 
@@ -345,7 +345,7 @@ bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
 
     if (has_error) {
       kernel_free(new_node);
-      new_node = NULL;
+      new_node = nullptr;
     } else {
       new_node->tag = tag;
       new_node->message_handler = message_handler;
@@ -359,7 +359,7 @@ bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
   }
   prv_unlock();
 
-  return (new_node != NULL);
+  return (new_node != nullptr);
 }
 
 uint32_t app_inbox_service_unregister_by_storage(uint8_t *storage) {
@@ -368,7 +368,7 @@ uint32_t app_inbox_service_unregister_by_storage(uint8_t *storage) {
   {
     AppInboxNode *node = prv_find_inbox_by_storage(storage);
     if (node) {
-      list_remove((ListNode *)node, (ListNode **)&s_app_inbox_head, NULL);
+      list_remove((ListNode *)node, (ListNode **)&s_app_inbox_head, nullptr);
       num_messages_lost = node->num_failed + node->num_success + (node->writer ? 1 : 0);
       kernel_free(node);
     }
@@ -386,13 +386,13 @@ void app_inbox_service_unregister_all(void) {
       kernel_free(node);
       node = next;
     }
-    s_app_inbox_head = NULL;
+    s_app_inbox_head = nullptr;
   }
   prv_unlock();
 }
 
 static bool prv_is_inbox_being_written(AppInboxNode *inbox) {
-  return (inbox->writer != NULL);
+  return (inbox->writer != nullptr);
 }
 
 static size_t prv_get_space_remaining(AppInboxNode *inbox) {
@@ -499,7 +499,7 @@ unlock:
 }
 
 static void prv_finish(AppInboxNode *inbox) {
-  inbox->writer = NULL;
+  inbox->writer = nullptr;
   inbox->buffer.current_offset = 0;
 }
 
@@ -556,7 +556,7 @@ unlock:
 bool app_inbox_service_has_inbox_for_tag(AppInboxServiceTag tag) {
   bool has_inbox;
   prv_lock();
-  has_inbox = (prv_find_inbox_by_tag(tag) != NULL);
+  has_inbox = (prv_find_inbox_by_tag(tag) != nullptr);
   prv_unlock();
   return has_inbox;
 }
@@ -564,7 +564,7 @@ bool app_inbox_service_has_inbox_for_tag(AppInboxServiceTag tag) {
 bool app_inbox_service_has_inbox_for_storage(uint8_t *storage) {
   bool has_inbox;
   prv_lock();
-  has_inbox = (prv_find_inbox_by_storage(storage) != NULL);
+  has_inbox = (prv_find_inbox_by_storage(storage) != nullptr);
   prv_unlock();
   return has_inbox;
 }
@@ -574,7 +574,7 @@ bool app_inbox_service_is_being_written_for_tag(AppInboxServiceTag tag) {
   prv_lock();
   AppInboxNode *inbox = prv_find_inbox_by_tag(tag);
   if (inbox) {
-    is_written = (inbox->writer != NULL);
+    is_written = (inbox->writer != nullptr);
   }
   prv_unlock();
   return is_written;

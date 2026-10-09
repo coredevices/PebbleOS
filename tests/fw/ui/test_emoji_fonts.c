@@ -74,10 +74,10 @@ void test_emoji_fonts__initialize(void) {
 
 void test_emoji_fonts__cleanup(void) {
   free(fb);
-  fb = NULL;
+  fb = nullptr;
 
   gbitmap_destroy(s_dest_bitmap);
-  s_dest_bitmap = NULL;
+  s_dest_bitmap = nullptr;
 }
 
 // Helpers

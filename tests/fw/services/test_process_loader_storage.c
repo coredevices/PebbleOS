@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
-#include <stdalign.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,14 +37,14 @@
 // Larger than any image here, so the tests reach the loader's own checks
 #define RAM_SIZE (160 * 1024)
 
-const void *const g_pbl_system_tbl[] = {NULL};
+const void *const g_pbl_system_tbl[] = {nullptr};
 
 static uint8_t s_image[RAM_SIZE];
 static size_t s_image_len;
 static size_t s_read_offset;
 static char s_opened_name[APP_FILENAME_MAX_LENGTH];
 // The loader splits the segment on max_align_t boundaries, so the RAM starts on one
-static _Alignas(max_align_t) uint8_t s_ram[RAM_SIZE];
+alignas(max_align_t) static uint8_t s_ram[RAM_SIZE];
 
 // Fakes
 ////////////////////////////////////
@@ -157,7 +156,7 @@ static void *prv_load_from_resource(PebbleProcessMdResource *md, MemorySegment *
 }
 
 static void *prv_load_from_flash(PebbleProcessMdFlash *md, MemorySegment *segment) {
-  process_metadata_init_with_flash_header(md, prv_header(), 1, PebbleTask_App, NULL);
+  process_metadata_init_with_flash_header(md, prv_header(), 1, PebbleTask_App, nullptr);
   *segment = (MemorySegment){s_ram, s_ram + sizeof(s_ram)};
   return process_loader_load(&md->common, PebbleTask_App, segment);
 }
@@ -179,7 +178,7 @@ void test_process_loader_storage__app_info_accepts_an_image_over_64k(void) {
 
   PebbleProcessInfo info;
   const AppStorageGetAppInfoResult result =
-      app_storage_get_process_info(&info, NULL, 1, PebbleTask_App);
+      app_storage_get_process_info(&info, nullptr, 1, PebbleTask_App);
 
   cl_assert_equal_i(result, GET_APP_INFO_SUCCESS);
   cl_assert_equal_i(process_info_get_virtual_size(&info), WIDE_VIRTUAL_SIZE);
@@ -227,7 +226,7 @@ void test_process_loader_storage__refuses_a_virtual_size_past_the_segment(void) 
   MemorySegment segment;
   void *entry = prv_load_from_resource(&md, &segment);
 
-  cl_assert_equal_p(entry, NULL);
+  cl_assert_equal_p(entry, nullptr);
 }
 
 void test_process_loader_storage__loads_an_existing_sdk_app(void) {
@@ -239,7 +238,7 @@ void test_process_loader_storage__loads_an_existing_sdk_app(void) {
   MemorySegment segment;
   void *entry = prv_load_from_resource(&md, &segment);
 
-  cl_assert(entry != NULL);
+  cl_assert(entry != nullptr);
   // The heap starts on the first boundary at or past the static size
   const uint8_t *heap_start = segment.start;
   cl_assert(heap_start >= &s_ram[prv_header()->virtual_size]);
@@ -257,7 +256,7 @@ void test_process_loader_storage__ignores_the_high_bytes_in_a_0x10_00_image(void
   MemorySegment segment;
   void *entry = prv_load_from_resource(&md, &segment);
 
-  cl_assert(entry != NULL);
+  cl_assert(entry != nullptr);
   cl_assert((uint8_t *)segment.start < &s_ram[0x10000]);
 }
 
@@ -267,9 +266,9 @@ void test_process_loader_storage__loads_legacy_app_and_worker_from_flash(void) {
   for (size_t i = 0; i < sizeof(tasks) / sizeof(tasks[0]); ++i) {
     const PebbleTask task = tasks[i];
     PebbleProcessMdFlash md;
-    process_metadata_init_with_flash_header(&md, prv_header(), 1, task, NULL);
+    process_metadata_init_with_flash_header(&md, prv_header(), 1, task, nullptr);
     MemorySegment segment = {s_ram, s_ram + sizeof(s_ram)};
-    cl_assert(process_loader_load(&md.common, task, &segment) != NULL);
+    cl_assert(process_loader_load(&md.common, task, &segment) != nullptr);
     char expected_name[APP_FILENAME_MAX_LENGTH];
     app_storage_get_file_name(expected_name, sizeof(expected_name), 1, task);
     cl_assert_equal_s(s_opened_name, expected_name);
@@ -284,7 +283,7 @@ void test_process_loader_storage__accepts_legacy_entry_at_0x82(void) {
   prv_set_crc();
   PebbleProcessMdFlash md;
   MemorySegment segment;
-  cl_assert(prv_load_from_flash(&md, &segment) != NULL);
+  cl_assert(prv_load_from_flash(&md, &segment) != nullptr);
 }
 
 void test_process_loader_storage__accepts_legacy_relocation_at_0x82(void) {
@@ -299,7 +298,7 @@ void test_process_loader_storage__accepts_legacy_relocation_at_0x82(void) {
   prv_set_crc();
   PebbleProcessMdFlash md;
   MemorySegment segment;
-  cl_assert(prv_load_from_flash(&md, &segment) != NULL);
+  cl_assert(prv_load_from_flash(&md, &segment) != nullptr);
   uint32_t relocated;
   memcpy(&relocated, &s_ram[0x82], sizeof(relocated));
   cl_assert_equal_i(relocated, (uint32_t)(uintptr_t)&s_ram[value]);
@@ -310,7 +309,7 @@ void test_process_loader_storage__refuses_entry_in_wide_header(void) {
   prv_header()->offset = 0x82;
   PebbleProcessMdFlash md;
   MemorySegment segment;
-  cl_assert_equal_p(prv_load_from_flash(&md, &segment), NULL);
+  cl_assert_equal_p(prv_load_from_flash(&md, &segment), nullptr);
 }
 
 void test_process_loader_storage__refuses_relocation_in_wide_header(void) {
@@ -319,7 +318,7 @@ void test_process_loader_storage__refuses_relocation_in_wide_header(void) {
   memcpy(&s_image[WIDE_LOAD_SIZE], &slot, sizeof(slot));
   PebbleProcessMdFlash md;
   MemorySegment segment;
-  cl_assert_equal_p(prv_load_from_flash(&md, &segment), NULL);
+  cl_assert_equal_p(prv_load_from_flash(&md, &segment), nullptr);
 }
 
 void test_process_loader_storage__loads_small_image_with_large_bss(void) {
@@ -331,7 +330,7 @@ void test_process_loader_storage__loads_small_image_with_large_bss(void) {
   prv_set_crc();
   PebbleProcessMdFlash md;
   MemorySegment segment;
-  cl_assert(prv_load_from_flash(&md, &segment) != NULL);
+  cl_assert(prv_load_from_flash(&md, &segment) != nullptr);
   cl_assert_equal_p(segment.start, &s_ram[WIDE_VIRTUAL_SIZE]);
 }
 

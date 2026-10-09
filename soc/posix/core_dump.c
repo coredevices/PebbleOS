@@ -16,7 +16,7 @@ void coredump_assert(int line) {
   abort();
 }
 
-PBL_NORETURN void core_dump_reset(bool is_forced) {
+[[noreturn]] void core_dump_reset(bool is_forced) {
   fprintf(stderr, "core dump requested, aborting\n");
   abort();
 }

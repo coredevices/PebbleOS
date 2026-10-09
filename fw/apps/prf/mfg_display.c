@@ -83,7 +83,7 @@ static void prv_draw_border(Layer *layer, GContext *ctx, uint8_t radial_padding_
     char identifier[] = {'A' + radial_padding_size - 2, 0};
     graphics_context_set_text_color(ctx, GColorWhite);
     graphics_draw_text(ctx, identifier, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-                       identifier_area, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                       identifier_area, GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
   }
 }
 
@@ -280,6 +280,6 @@ static int prv_cmd_display(const struct pbl_shell *sh, size_t argc, char **argv)
   return -EINVAL;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_mfg, display, NULL, "Show a test pattern <pattern>", prv_cmd_display, 2,
+PBL_SHELL_SUBCMD_ADD(sub_mfg, display, nullptr, "Show a test pattern <pattern>", prv_cmd_display, 2,
                      0);
 #endif

@@ -30,7 +30,7 @@ extern uint32_t *app_state_get_rand_ptr(void);
 extern uint32_t *worker_state_get_rand_ptr(void);
 
 // Kernel random seed
-static tinymt32_t s_kernel_rand = {{0}};
+static tinymt32_t s_kernel_rand = {};
 
 static tinymt32_t *prv_get_seed_ptr(void) {
   switch (pebble_task_get_current()) {
@@ -76,9 +76,9 @@ int rand(void) {
 }
 
 int rand_r(unsigned int *seedp) { // Please don't use this
-  PBL_ASSERTN(seedp != NULL);
+  PBL_ASSERTN(seedp != nullptr);
 
-  tinymt32_t state = {{0}};
+  tinymt32_t state = {};
   prv_seed(&state, *seedp);
   *seedp = prv_next(&state) & 0x7FFFFFFF;
   return *seedp;

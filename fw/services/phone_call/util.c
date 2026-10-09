@@ -11,7 +11,7 @@
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   PebblePhoneCaller *caller = kernel_zalloc(sizeof(PebblePhoneCaller));
   if (!caller) {
-    return NULL;
+    return nullptr;
   }
 
   if ((!name || !strlen(name)) && (!number || !strlen(number))) {

@@ -273,10 +273,10 @@ static void prv_destroy_layout(TimelineLayer *layer, int index) {
   timeline_layout->is_being_destroyed = true;
   layer_remove_from_parent((Layer *)timeline_layout);
   layout_destroy((LayoutLayer *)timeline_layout);
-  layer->layouts[index] = NULL;
+  layer->layouts[index] = nullptr;
 
   app_free(layer->layouts_info[index]);
-  layer->layouts_info[index] = NULL;
+  layer->layouts_info[index] = nullptr;
 }
 
 static void prv_destroy_nonvisible_items(TimelineLayer *layer) {
@@ -284,7 +284,7 @@ static void prv_destroy_nonvisible_items(TimelineLayer *layer) {
     TimelineLayout *timeline_layout = layer->layouts[s_nonvisible_items[i]];
     if (timeline_layout) {
       prv_destroy_layout(layer, s_nonvisible_items[i]);
-      layer->layouts[s_nonvisible_items[i]] = NULL;
+      layer->layouts[s_nonvisible_items[i]] = nullptr;
     }
   }
 }
@@ -393,7 +393,7 @@ Animation *timeline_layer_create_day_sep_hide(TimelineLayer *timeline_layer) {
   GRect to = timeline_layer->day_separator.layer.frame;
   to.origin = GPoint(0, frame.size.h * timeline_layer->move_delta); // all the way off screen
   PropertyAnimation *prop_anim =
-      property_animation_create_layer_frame((Layer *)&timeline_layer->day_separator, NULL, &to);
+      property_animation_create_layer_frame((Layer *)&timeline_layer->day_separator, nullptr, &to);
   Animation *anim = property_animation_get_animation(prop_anim);
   animation_set_duration(anim, TIMELINE_UP_DOWN_ANIMATION_DURATION_MS);
   animation_set_custom_interpolation(anim, timeline_animation_interpolate_moook_soft);
@@ -584,9 +584,9 @@ Animation *timeline_layer_create_up_down_animation(TimelineLayer *layer, uint32_
 
   Animation *mode_change = animation_create();
   animation_set_implementation(mode_change, &s_mode_change_impl);
-  animation_set_handlers(mode_change, (AnimationHandlers){0}, layer);
+  animation_set_handlers(mode_change, (AnimationHandlers){}, layer);
 
-  return animation_spawn_create(animation, mode_change, NULL);
+  return animation_spawn_create(animation, mode_change, nullptr);
 }
 
 #if PBL_ROUND
@@ -735,8 +735,8 @@ void timeline_layer_move_data(TimelineLayer *layer, int delta) {
       layer->layouts[i] = layer->layouts[i + 1];
       layer->layouts_info[i] = layer->layouts_info[i + 1];
     }
-    layer->layouts[TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER - 1] = NULL;
-    layer->layouts_info[TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER - 1] = NULL;
+    layer->layouts[TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER - 1] = nullptr;
+    layer->layouts_info[TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER - 1] = nullptr;
   } else if (delta == -1) {
     if (layer->layouts[s_nonvisible_items[1]]) {
       prv_destroy_layout(layer, s_nonvisible_items[1]);
@@ -745,8 +745,8 @@ void timeline_layer_move_data(TimelineLayer *layer, int delta) {
       layer->layouts[i] = layer->layouts[i - 1];
       layer->layouts_info[i] = layer->layouts_info[i - 1];
     }
-    layer->layouts[0] = NULL;
-    layer->layouts_info[0] = NULL;
+    layer->layouts[0] = nullptr;
+    layer->layouts_info[0] = nullptr;
   }
 
   layer->move_delta = delta * prv_get_scroll_delta(layer);
@@ -762,7 +762,7 @@ TimelineLayout *timeline_layer_get_current_layout(TimelineLayer *timeline_layer)
 void timeline_layer_reset(TimelineLayer *layer) {
   // reset the animation
   animation_unschedule(layer->animation);
-  layer->animation = NULL;
+  layer->animation = nullptr;
 
   // reset the day separator
   layer_set_hidden((Layer *)&layer->day_separator, true);

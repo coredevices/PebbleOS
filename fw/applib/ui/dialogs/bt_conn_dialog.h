@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <applib/event_service_client.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 

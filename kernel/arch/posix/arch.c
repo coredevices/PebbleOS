@@ -28,7 +28,7 @@ static void prv_exit(struct posix_thread *pt) {
   pthread_cond_destroy(&pt->wake);
   free(pt);
   pthread_mutex_unlock(&posix_cpu);
-  pthread_exit(NULL);
+  pthread_exit(nullptr);
 }
 
 void posix_park(struct posix_thread *pt) {
@@ -49,12 +49,12 @@ static void prv_release_cpu(void *arg) {
 static void *prv_thread_main(void *arg) {
   struct posix_thread *pt = arg;
   pthread_mutex_lock(&posix_cpu);
-  pthread_cleanup_push(prv_release_cpu, NULL);
+  pthread_cleanup_push(prv_release_cpu, nullptr);
   posix_park(pt);
   pt->entry(pt->arg);
-  pbl_thread_abort(NULL);
+  pbl_thread_abort(nullptr);
   pthread_cleanup_pop(1);
-  return NULL;
+  return nullptr;
 }
 
 void arch_init(void) {
@@ -62,8 +62,8 @@ void arch_init(void) {
 
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   struct posix_thread *pt = calloc(1, sizeof(*pt));
-  KERNEL_ASSERT(pt != NULL);
-  pthread_cond_init(&pt->wake, NULL);
+  KERNEL_ASSERT(pt != nullptr);
+  pthread_cond_init(&pt->wake, nullptr);
   pt->entry = entry;
   pt->arg = arg;
   t->backend.arch.pt = pt;
@@ -79,7 +79,7 @@ void posix_run(struct pbl_thread *t) {
   pt->run = true;
   if (!pt->created) {
     pt->created = true;
-    pthread_create(&pt->tid, NULL, prv_thread_main, pt);
+    pthread_create(&pt->tid, nullptr, prv_thread_main, pt);
   } else {
     pthread_cond_signal(&pt->wake);
   }
@@ -95,7 +95,7 @@ void posix_switch(void) {
   struct posix_thread *pt = prev->backend.arch.pt;
   posix_run(next);
   if (prev->backend.state == PBL_THREAD_DEAD) {
-    prev->backend.arch.pt = NULL;
+    prev->backend.arch.pt = nullptr;
     posix_add_zombie(pt->tid);
     prv_exit(pt);
   }
@@ -110,7 +110,7 @@ void arch_switch_request(void) {
 void arch_thread_exit(void) {
   // pbl_thread_abort() already switched away and ended this pthread.
   pthread_mutex_unlock(&posix_cpu);
-  pthread_exit(NULL);
+  pthread_exit(nullptr);
 }
 
 void arch_thread_aborted(struct pbl_thread *t) {
@@ -124,7 +124,7 @@ void arch_thread_aborted(struct pbl_thread *t) {
     pt->aborted = true;
     pthread_cond_signal(&pt->wake);
   }
-  t->backend.arch.pt = NULL;
+  t->backend.arch.pt = nullptr;
 }
 
 bool arch_in_isr(void) {
@@ -142,7 +142,7 @@ void arch_irq_enable(void) {
 
 void arch_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs) {
   (void)t;
-  *regs = (struct pbl_thread_saved_regs){0};
+  *regs = (struct pbl_thread_saved_regs){};
 }
 
 void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_REG_COUNT]) {

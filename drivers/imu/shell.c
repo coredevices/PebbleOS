@@ -34,8 +34,8 @@ static int prv_accel_info(const struct pbl_shell *sh, size_t argc, char **argv) 
 }
 
 static const struct pbl_shell_cmd sub_accel[] = {
-  PBL_SHELL_CMD(read, NULL, "Read one sample", prv_accel_read),
-  PBL_SHELL_CMD(info, NULL, "Show the driver state", prv_accel_info),
+  PBL_SHELL_CMD(read, nullptr, "Read one sample", prv_accel_read),
+  PBL_SHELL_CMD(info, nullptr, "Show the driver state", prv_accel_info),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
@@ -59,17 +59,17 @@ static int prv_mag_read(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 static const struct pbl_shell_cmd sub_mag[] = {
-  PBL_SHELL_CMD(read, NULL, "Read one sample", prv_mag_read),
+  PBL_SHELL_CMD(read, nullptr, "Read one sample", prv_mag_read),
   PBL_SHELL_SUBCMD_SET_END,
 };
 #endif
 
 static const struct pbl_shell_cmd sub_imu[] = {
-  PBL_SHELL_CMD(accel, sub_accel, "Accelerometer", NULL),
+  PBL_SHELL_CMD(accel, sub_accel, "Accelerometer", nullptr),
 #ifdef CONFIG_MAG
-  PBL_SHELL_CMD(mag, sub_mag, "Magnetometer", NULL),
+  PBL_SHELL_CMD(mag, sub_mag, "Magnetometer", nullptr),
 #endif
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(imu, sub_imu, "IMU drivers", NULL);
+PBL_SHELL_CMD_REGISTER(imu, sub_imu, "IMU drivers", nullptr);

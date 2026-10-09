@@ -615,7 +615,7 @@ void test_resource__watch(void) {
   load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "pug");
 
   ResourceCallbackHandle cb_handle =
-      resource_watch(SYSTEM_APP, RESOURCE_ID_PUG, prv_res_changed_callback, NULL);
+      resource_watch(SYSTEM_APP, RESOURCE_ID_PUG, prv_res_changed_callback, nullptr);
   cl_assert(cb_handle);
 
   // Callback should get invoked if resource was written to
@@ -644,10 +644,10 @@ void test_resource__overflow_data_section_length(void) {
 
   ResourceStoreImplementation impl = {
     .type = ResourceStoreTypeAppFile,
-    .get_crc = NULL,
-    .write = NULL,
+    .get_crc = nullptr,
+    .write = nullptr,
     .read = &prv_mock_resource_storage_app_read,
-    .clear = NULL
+    .clear = nullptr
   };
 
   ResourceStoreEntry entry = {

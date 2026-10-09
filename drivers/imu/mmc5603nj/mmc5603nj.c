@@ -283,7 +283,7 @@ static bool prv_configure_polling(void) {
       PBL_LOG_ERR("MMC5603NJ: Failed to create polling timer");
       return false;
     }
-    new_timer_start(s_polling_timer, polling_interval_ms, prv_mmc5603nj_polling_callback, NULL,
+    new_timer_start(s_polling_timer, polling_interval_ms, prv_mmc5603nj_polling_callback, nullptr,
                     TIMER_START_FLAG_REPEATING);
   }
   s_polling_interval_ms = polling_interval_ms;

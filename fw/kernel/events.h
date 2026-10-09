@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -336,13 +335,12 @@ typedef struct PBL_PACKED { // 9 bytes
   uint8_t subtype : BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS;
 } PebbleBLEGATTClientServiceEvent;
 
-_Static_assert((1 << BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS) >= PebbleBLEGATTClientEventTypeNum,
-               "Not enough bits to represent all PebbleBLEGATTClientEventTypes");
+static_assert((1 << BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS) >= PebbleBLEGATTClientEventTypeNum,
+              "Not enough bits to represent all PebbleBLEGATTClientEventTypes");
 
 #ifdef __arm__
-_Static_assert(
-    sizeof(PebbleBLEGATTClientServiceEvent) == sizeof(PebbleBLEGATTClientServiceEvent),
-    "PebbleBLEGATTClientEvent and PebbleBLEGATTClientServiceEvent must be the same size");
+static_assert(sizeof(PebbleBLEGATTClientServiceEvent) == sizeof(PebbleBLEGATTClientServiceEvent),
+              "PebbleBLEGATTClientEvent and PebbleBLEGATTClientServiceEvent must be the same size");
 #endif
 
 #define PebbleEventToBTDeviceInternal(e) \
@@ -686,8 +684,8 @@ typedef struct PBL_PACKED {
 } PebbleUnobstructedAreaEvent;
 
 #if !__clang__
-_Static_assert(sizeof(PebbleUnobstructedAreaEvent) == 9,
-               "PebbleUnobstructedAreaEvent size mismatch.");
+static_assert(sizeof(PebbleUnobstructedAreaEvent) == 9,
+              "PebbleUnobstructedAreaEvent size mismatch.");
 #endif
 
 typedef struct PBL_PACKED PebbleAppGlanceEvent {
@@ -703,7 +701,7 @@ typedef struct PBL_PACKED {
 } PebbleTimelinePeekEvent;
 
 #if !__clang__
-_Static_assert(sizeof(PebbleTimelinePeekEvent) == 8, "PebbleTimelinePeekEvent size mismatch.");
+static_assert(sizeof(PebbleTimelinePeekEvent) == 8, "PebbleTimelinePeekEvent size mismatch.");
 #endif
 
 typedef enum PebbleAppCacheEventType {
@@ -718,7 +716,7 @@ typedef struct PBL_PACKED PebbleAppCacheEvent {
 } PebbleAppCacheEvent;
 
 #if !__clang__
-_Static_assert(sizeof(PebbleAppCacheEvent) == 5, "PebbleTimelinePeekEvent size mismatch.");
+static_assert(sizeof(PebbleAppCacheEvent) == 5, "PebbleTimelinePeekEvent size mismatch.");
 #endif
 
 typedef enum PebbleActivityEventType {
@@ -819,7 +817,7 @@ typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
 // Guard the on-target size. The bound assumes 4-byte pointers, so it only
 // applies to the firmware target; the host unit-test build has wider pointers.
 #if __SIZEOF_POINTER__ == 4
-_Static_assert(sizeof(PebbleEvent) <= 12, "PebbleEvent grew; check the event union layout");
+static_assert(sizeof(PebbleEvent) <= 12, "PebbleEvent grew; check the event union layout");
 #endif
 
 void events_init(void);

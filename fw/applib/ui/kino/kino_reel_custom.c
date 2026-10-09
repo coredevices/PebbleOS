@@ -73,7 +73,7 @@ GDrawCommandImage *prv_get_gdraw_command_image(KinoReel *reel) {
     return custom_reel->impl->get_gdraw_command_image(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
@@ -82,7 +82,7 @@ GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
     return custom_reel->impl->get_gdraw_command_list(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GDrawCommandSequence *prv_get_gdraw_command_sequence(KinoReel *reel) {
@@ -91,7 +91,7 @@ GDrawCommandSequence *prv_get_gdraw_command_sequence(KinoReel *reel) {
     return custom_reel->impl->get_gdraw_command_sequence(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GBitmap *prv_get_gbitmap(KinoReel *reel) {
@@ -100,7 +100,7 @@ GBitmap *prv_get_gbitmap(KinoReel *reel) {
     return custom_reel->impl->get_gbitmap(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GBitmapSequence *prv_get_gbitmap_sequence(KinoReel *reel) {
@@ -109,7 +109,7 @@ GBitmapSequence *prv_get_gbitmap_sequence(KinoReel *reel) {
     return custom_reel->impl->get_gbitmap_sequence(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_CUSTOM = {
@@ -146,7 +146,7 @@ static bool prv_kino_reel_custom_is_custom(KinoReel *reel) {
 
 void *kino_reel_custom_get_data(KinoReel *reel) {
   if (!prv_kino_reel_custom_is_custom(reel)) {
-    return NULL;
+    return nullptr;
   }
   KinoReelImplCustom *custom_reel = (KinoReelImplCustom *)reel;
   return custom_reel->data;

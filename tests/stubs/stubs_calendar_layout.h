@@ -7,7 +7,7 @@
 #include <pbl/services/timeline/calendar_layout.h>
 
 LayoutLayer *PBL_WEAK calendar_layout_create(const LayoutLayerConfig *config) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK calendar_layout_verify(bool existing_attributes[]) {

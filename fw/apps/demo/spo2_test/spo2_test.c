@@ -113,7 +113,7 @@ static void prv_disable_spo2(AppData *app_data) {
 
 static void prv_init(void) {
   AppData *app_data = app_malloc_check(sizeof(*app_data));
-  *app_data = (AppData){0};
+  *app_data = (AppData){};
   app_state_set_user_data(app_data);
 
   Window *window = &app_data->window;
@@ -190,5 +190,6 @@ const PebbleProcessMd *spo2_test_get_app_info(void) {
     // so it sits behind the developer prompt and stays out of the way for normal users.
     .common.visibility = ProcessVisibilityHidden,
   };
-  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd *)&s_spo2_test_app_info : NULL;
+  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd *)&s_spo2_test_app_info
+                                            : nullptr;
 }

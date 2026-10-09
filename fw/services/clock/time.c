@@ -12,7 +12,7 @@
 #include <syscall/syscall_internal.h>
 
 // timezone abbreviation
-static char s_timezone_abbr[TZ_LEN] = {0}; // longest timezone abbreviation is 5 char + null
+static char s_timezone_abbr[TZ_LEN] = {}; // longest timezone abbreviation is 5 char + null
 static int32_t s_timezone_gmtoffset = 0;
 static int32_t s_dst_adjust = PBL_SEC_PER_HOUR;
 static time_t s_dst_start = 0;

@@ -71,7 +71,7 @@ static void menu_select_callback(int index, void *ctx) {
         psleep(100);
       }
       s_pending_count++;
-      system_task_add_callback(send_bluetooth, NULL);
+      system_task_add_callback(send_bluetooth, nullptr);
     }
     PBL_LOG_INFO("Bluetooth disconnected");
 
@@ -104,7 +104,8 @@ static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
-  data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
+  data->menu_layer =
+      simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, nullptr);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 }
 
@@ -121,7 +122,7 @@ static void handle_init(void) {
   s_app_data = data;
 
   data->window = window_create();
-  if (data->window == NULL) {
+  if (data->window == nullptr) {
     return;
   }
   window_init(data->window, "");

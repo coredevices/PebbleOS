@@ -299,5 +299,5 @@ static int prv_cmd_mpu(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_sys, mpu, NULL, "Dump the MPU regions", prv_cmd_mpu, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys, mpu, nullptr, "Dump the MPU regions", prv_cmd_mpu, 0, 0);
 #endif

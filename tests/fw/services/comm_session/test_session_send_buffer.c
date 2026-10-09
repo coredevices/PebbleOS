@@ -92,7 +92,8 @@ void test_session_send_buffer__cleanup(void) {
 }
 
 void test_session_send_buffer__null_session(void) {
-  cl_assert_equal_p(NULL, comm_session_send_buffer_begin_write(NULL, ENDPOINT_ID, 1, TIMEOUT_MS));
+  cl_assert_equal_p(nullptr,
+                    comm_session_send_buffer_begin_write(nullptr, ENDPOINT_ID, 1, TIMEOUT_MS));
 }
 
 void test_session_send_buffer__begin_write_with_more_than_max_payload(void) {
@@ -101,13 +102,13 @@ void test_session_send_buffer__begin_write_with_more_than_max_payload(void) {
   size_t max_length = comm_session_send_buffer_get_max_payload_length(&s_session);
   SendBuffer *write_sb =
       comm_session_send_buffer_begin_write(&s_session, ENDPOINT_ID, max_length + 1, TIMEOUT_MS);
-  cl_assert_equal_p(write_sb, NULL);
+  cl_assert_equal_p(write_sb, nullptr);
 }
 
 pbl_tick_t prv_session_closed_yield_cb(struct pbl_sem *handle) {
   if (s_valid_session) {
     comm_session_send_queue_cleanup(s_valid_session);
-    s_valid_session = NULL;
+    s_valid_session = nullptr;
   }
   return 10;
 }
@@ -138,7 +139,7 @@ void test_session_send_buffer__not_enough_space_in_time(void) {
   // Try to begin writing again, requesting only one byte:
   SendBuffer *write_sb2 = comm_session_send_buffer_begin_write(
       &s_session, ENDPOINT_ID, 1 /* required_free_length */, TIMEOUT_MS);
-  cl_assert_equal_p(write_sb2, NULL);
+  cl_assert_equal_p(write_sb2, nullptr);
 
   prv_cleanup_send_buffer(write_sb);
 }
@@ -174,8 +175,8 @@ void test_session_send_buffer__multiple_smaller_messages(void) {
   }
 
   // Can't write another message:
-  cl_assert_equal_p(NULL, comm_session_send_buffer_begin_write(&s_session, ENDPOINT_ID,
-                                                               1 /* length */, TIMEOUT_MS));
+  cl_assert_equal_p(nullptr, comm_session_send_buffer_begin_write(&s_session, ENDPOINT_ID,
+                                                                  1 /* length */, TIMEOUT_MS));
 
   for (int i = 0; i < ARRAY_LENGTH(write_sb); ++i) {
     if (!write_sb[i]) {
@@ -238,7 +239,7 @@ void test_session_send_buffer__writing_but_then_session_closed(void) {
   // Try to begin writing again, requesting only one byte:
   write_sb = comm_session_send_buffer_begin_write(&s_session, ENDPOINT_ID,
                                                   1 /* required_free_length */, TIMEOUT_MS);
-  cl_assert_equal_p(write_sb, NULL);
+  cl_assert_equal_p(write_sb, nullptr);
 
   // ..send_buffer_destroy() is already called in the yield cb
 }

@@ -55,7 +55,8 @@ static CompositorTransitionDirection prv_health_close_direction(void) {
 
 static const CompositorTransition *prv_get_action_compositor_animation(
     CompositorTransitionDirection direction) {
-  return PBL_IF_RECT_ELSE(compositor_shutter_transition_get(direction, ACTION_SHUTTER_COLOR), NULL);
+  return PBL_IF_RECT_ELSE(compositor_shutter_transition_get(direction, ACTION_SHUTTER_COLOR),
+                          nullptr);
 }
 
 const CompositorTransition *shell_get_watchface_compositor_animation(
@@ -78,7 +79,7 @@ static const CompositorTransition *prv_app_launcher_transition_animation(
 
 const CompositorTransition *shell_get_close_compositor_animation(AppInstallId current_app_id,
                                                                  AppInstallId next_app_id) {
-  const CompositorTransition *res = NULL;
+  const CompositorTransition *res = nullptr;
   AppInstallEntry *app_entry = kernel_zalloc_check(sizeof(AppInstallEntry));
 
   if (app_install_get_entry_for_install_id(next_app_id, app_entry) &&
@@ -110,7 +111,7 @@ done:
 const CompositorTransition *shell_get_open_compositor_animation(AppInstallId current_app_id,
                                                                 AppInstallId next_app_id,
                                                                 const LaunchConfigCommon *config) {
-  const CompositorTransition *res = NULL;
+  const CompositorTransition *res = nullptr;
   AppInstallEntry *app_entry = kernel_zalloc_check(sizeof(AppInstallEntry));
 
   if (app_install_get_entry_for_install_id(current_app_id, app_entry)) {

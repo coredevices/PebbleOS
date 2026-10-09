@@ -89,4 +89,4 @@
 
 // Static asserts
 FLASH_REGION_SIZE_CHECK(SUBSECTOR_SIZE_BYTES)
-_Static_assert(BOARD_NOR_FLASH_SIZE == 0x2000000, "Flash size should be 32mb");
+static_assert(BOARD_NOR_FLASH_SIZE == 0x2000000, "Flash size should be 32mb");

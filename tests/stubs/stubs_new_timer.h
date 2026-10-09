@@ -28,5 +28,5 @@ void new_timer_delete(TimerID timer) {
 }
 
 void *new_timer_debug_get_current_callback(void) {
-  return NULL;
+  return nullptr;
 }

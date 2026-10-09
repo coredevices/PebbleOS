@@ -78,7 +78,7 @@ static ExpandedViewData *s_ev;
 // System-app statics persist across launches (the fw image is not reloaded), and a
 // crashed run never reaches unload — clear them before the next run reads them.
 void expanded_view_reset(void) {
-  s_ev = NULL;
+  s_ev = nullptr;
 }
 
 // ---- Sunset computation (fixed-point) -------------------------------------
@@ -198,7 +198,7 @@ static void prv_build_time(char *out, size_t n) {
 #define EV_STATUS_FONT FONT_KEY_GOTHIC_18_BOLD
 
 void expanded_view_format_updated(const WeatherLocationForecast *f, char *out, size_t n) {
-  struct tm *lt = NULL;
+  struct tm *lt = nullptr;
   if (f && f->time_updated_utc > 0) {
     time_t t = f->time_updated_utc;
     lt = localtime(&t);
@@ -246,7 +246,7 @@ static void prv_set_from_forecast(const WeatherLocationForecast *f, int16_t lat_
 
   if (s_ev->icon) {
     gdraw_command_image_destroy(s_ev->icon);
-    s_ev->icon = NULL;
+    s_ev->icon = nullptr;
   }
   if (!f) {
     s_ev->high = s_ev->low = WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP;
@@ -360,10 +360,10 @@ static void prv_draw_gauge(GContext *ctx, int cx, int cy, int r, const char *lab
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, vbuf, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
                      GRect(cx - r + 2, cy - 12, 2 * r - 4, 24), GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
   graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
                      GRect(cx - 36, cy - r - 16, 72, 16), GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 #endif // !PBL_ROUND
 
@@ -404,7 +404,7 @@ static void prv_draw_precip_pill(GContext *ctx, int W, int tdx, int precip, cons
   graphics_draw_text(
       ctx, label, lf,
       GRect(inset + tdx, EV_PRECIP_PILL_Y + (EV_PRECIP_PILL_H - th) / 2 - 3, W - 2 * inset, th),
-      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 #endif // PBL_ROUND
@@ -417,12 +417,12 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
   if (status) {
     graphics_draw_text(ctx, status, fonts_get_system_font(EV_STATUS_FONT),
                        GRect(tdx, EV_STATUS_Y, W, 20), GTextOverflowModeTrailingEllipsis,
-                       GTextAlignmentCenter, NULL);
+                       GTextAlignmentCenter, nullptr);
   }
   // Title = "Sunset H:MM" (Header font on emery = GOTHIC_24_BOLD).
   graphics_draw_text(ctx, sunset, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
                      GRect(4 + tdx, EV_SUNSET_Y, W - 8, 30), GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
   // Subtitle = "high/low°" (LECO_36, big) — OPTICALLY centred: the trailing degree sign is
   // excluded from the width measure (it reads as an appendage, so true centring of the full
   // string looks left-shifted), then the full string draws left-aligned from that origin with
@@ -449,7 +449,7 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
     // appendage; true centring of the full string looks left-shifted). Round briefly used
     // true centring while dials flanked this row — the dials are gone, so the override is too.
     graphics_draw_text(ctx, temp, tf, GRect(tdx + (W - bsz.w) / 2, EV_TEMP_Y, W, 46),
-                       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+                       GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
   }
   // UV + precipitation meters at the bottom. The UV dial takes the WHO
   // severity color for its value; rain stays water-blue.
@@ -496,7 +496,7 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, meters, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
                        GRect(tdx, EV_METERS_Y, W, 22), GTextOverflowModeTrailingEllipsis,
-                       GTextAlignmentCenter, NULL);
+                       GTextAlignmentCenter, nullptr);
   } else {
     prv_draw_gauge(ctx, W / 4 + EV_GAUGE_INSET + tdx, EV_GAUGE_CY, EV_GAUGE_R,
                    i18n_get("UV", owner), uv, 11, "", uv < 0, prv_uv_severity_color(uv));
@@ -527,17 +527,17 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   if (s_ev->swap_active) {
     // Body without the status bar; the last-updated -> time swap is drawn on top: both slide RIGHT,
     // "Last updated" exiting off the right while the time swoops in from the left, trailing it.
-    expanded_view_draw_glance_content(ctx, W, tdx, NULL, s_ev->sunset_str, s_ev->temp_str, s_ev->uv,
-                                      s_ev->precip, s_ev->wind, s_ev);
+    expanded_view_draw_glance_content(ctx, W, tdx, nullptr, s_ev->sunset_str, s_ev->temp_str,
+                                      s_ev->uv, s_ev->precip, s_ev->wind, s_ev);
     char time_str[10];
     prv_build_time(time_str, sizeof(time_str));
     const int sx = (int)interpolate_moook_soft(s_ev->swap_p, 0, W, 3);
     GFont f = fonts_get_system_font(EV_STATUS_FONT);
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, s_ev->updated_str, f, GRect(sx, EV_STATUS_Y, W, 20),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     graphics_draw_text(ctx, time_str, f, GRect(sx - W, EV_STATUS_Y, W, 20),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
   } else {
     char time_str[10];
     const char *status = s_ev->updated_str;
@@ -590,7 +590,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
 static void prv_slide_out_stopped(Animation *anim, bool finished, void *context) {
   if (!s_ev)
     return;
-  s_ev->slide_anim = NULL; // property animation auto-destroys after a normal stop
+  s_ev->slide_anim = nullptr; // property animation auto-destroys after a normal stop
   if (finished && s_ev->on_select) {
     s_ev->on_select(s_ev->on_select_ctx); // push globe (slide-in-right) + dismiss this card
   }
@@ -611,7 +611,7 @@ static void prv_start_slide_out_left(void) {
   Animation *a = (Animation *)pa;
   animation_set_duration(a, WEATHER_HSLIDE_MS);
   animation_set_custom_interpolation(a, weather_interpolate_moook_soft1);
-  animation_set_handlers(a, (AnimationHandlers){.stopped = prv_slide_out_stopped}, NULL);
+  animation_set_handlers(a, (AnimationHandlers){.stopped = prv_slide_out_stopped}, nullptr);
   s_ev->slide_anim = a;
   animation_schedule(a);
 }
@@ -620,7 +620,7 @@ static void prv_start_slide_out_left(void) {
 // and slides home with the same moook bounce — the mirror of the SELECT slide-out-left.
 static void prv_slide_in_stopped(Animation *anim, bool finished, void *context) {
   if (s_ev)
-    s_ev->slide_anim = NULL; // property animation auto-destroys after a normal stop
+    s_ev->slide_anim = nullptr; // property animation auto-destroys after a normal stop
 }
 
 static void prv_start_slide_in_left(void) {
@@ -637,7 +637,7 @@ static void prv_start_slide_in_left(void) {
   Animation *a = (Animation *)pa;
   animation_set_duration(a, WEATHER_HSLIDE_MS);
   animation_set_custom_interpolation(a, weather_interpolate_moook_soft1);
-  animation_set_handlers(a, (AnimationHandlers){.stopped = prv_slide_in_stopped}, NULL);
+  animation_set_handlers(a, (AnimationHandlers){.stopped = prv_slide_in_stopped}, nullptr);
   s_ev->slide_anim = a;
   animation_schedule(a);
 }
@@ -705,7 +705,7 @@ static void prv_text_in_update(Animation *anim, AnimationProgress progress) {
 static void prv_text_in_stopped(Animation *anim, bool finished, void *context) {
   if (s_ev) {
     s_ev->text_active = false;
-    s_ev->text_anim = NULL;
+    s_ev->text_anim = nullptr;
     if (s_ev->canvas)
       layer_mark_dirty(s_ev->canvas);
   }
@@ -723,7 +723,7 @@ static void prv_start_text_in(void) {
   animation_set_duration(s_ev->text_anim, interpolate_moook_soft_duration(3));
   animation_set_curve(s_ev->text_anim, AnimationCurveLinear); // interpolate_moook_soft shapes it
   animation_set_handlers(s_ev->text_anim, (AnimationHandlers){.stopped = prv_text_in_stopped},
-                         NULL);
+                         nullptr);
   animation_schedule(s_ev->text_anim);
 }
 
@@ -740,7 +740,7 @@ static void prv_swap_stopped(Animation *anim, bool finished, void *context) {
   if (s_ev) {
     s_ev->swap_active = false;
     s_ev->show_updated = false; // the status bar now rests on the time
-    s_ev->swap_anim = NULL;
+    s_ev->swap_anim = nullptr;
     if (s_ev->canvas)
       layer_mark_dirty(s_ev->canvas);
   }
@@ -757,14 +757,15 @@ static void prv_start_swap(void) {
   animation_set_implementation(s_ev->swap_anim, &s_swap_impl);
   animation_set_duration(s_ev->swap_anim, interpolate_moook_soft_duration(3));
   animation_set_curve(s_ev->swap_anim, AnimationCurveLinear); // interpolate_moook_soft shapes it
-  animation_set_handlers(s_ev->swap_anim, (AnimationHandlers){.stopped = prv_swap_stopped}, NULL);
+  animation_set_handlers(s_ev->swap_anim, (AnimationHandlers){.stopped = prv_swap_stopped},
+                         nullptr);
   animation_schedule(s_ev->swap_anim);
 }
 
 static void prv_updated_timer_cb(void *ctx) {
   if (!s_ev)
     return;
-  s_ev->updated_timer = NULL;
+  s_ev->updated_timer = nullptr;
   prv_start_swap();
 }
 
@@ -778,7 +779,7 @@ static void prv_window_appear(Window *window) {
 #endif
   // Hold "Last updated ..." for 2s, then swap it out for the time (once).
   if (!s_ev->updated_timer && s_ev->show_updated && !s_ev->swap_active) {
-    s_ev->updated_timer = app_timer_register(2000, prv_updated_timer_cb, NULL);
+    s_ev->updated_timer = app_timer_register(2000, prv_updated_timer_cb, nullptr);
   }
   // Play the entrance animation (latched off after the first appearance so button-nav re-appears
   // don't replay it). Static = no entrance (the forecast's hero icon-fly already animated it in).
@@ -826,7 +827,7 @@ static void prv_window_disappear(Window *window) {
 static void prv_window_unload(Window *window) {
   if (s_ev && s_ev->updated_timer) {
     app_timer_cancel(s_ev->updated_timer);
-    s_ev->updated_timer = NULL;
+    s_ev->updated_timer = nullptr;
   }
   if (s_ev && s_ev->swap_anim) {
     animation_unschedule(s_ev->swap_anim); // fires prv_swap_stopped -> destroys + NULLs it
@@ -840,18 +841,18 @@ static void prv_window_unload(Window *window) {
   if (s_ev) {
     if (s_ev->icon) {
       gdraw_command_image_destroy(s_ev->icon);
-      s_ev->icon = NULL;
+      s_ev->icon = nullptr;
     }
     if (s_ev->canvas) {
       layer_destroy(s_ev->canvas);
-      s_ev->canvas = NULL;
+      s_ev->canvas = nullptr;
     }
   }
   window_destroy(window);
   if (s_ev) {
     i18n_free_all(s_ev);
     free(s_ev);
-    s_ev = NULL;
+    s_ev = nullptr;
   }
 }
 
@@ -880,7 +881,7 @@ void expanded_view_push(const WeatherLocationForecast *today, int16_t lat_e2, in
   s_ev->window = window_create();
   if (!s_ev->window) {
     free(s_ev);
-    s_ev = NULL;
+    s_ev = nullptr;
     return;
   }
   window_set_window_handlers(s_ev->window, (WindowHandlers){

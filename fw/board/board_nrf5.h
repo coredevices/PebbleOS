@@ -6,7 +6,6 @@
 // clang-format off
 #include "display.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
@@ -19,7 +18,7 @@
 #include <nrfx_timer.h>
 // clang-format on
 
-#define GPIO_Port_NULL (NULL)
+#define GPIO_Port_NULL (nullptr)
 #define GPIO_Pin_NULL  ((uint16_t)-1)
 
 typedef struct {

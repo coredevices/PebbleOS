@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/services/timeline/item.h>
@@ -27,11 +26,11 @@
  * Posting a notification created on the watch:
  *
  * @code{.c}
- * AttributeList attr_list = {0};
+ * AttributeList attr_list = {};
  * attribute_list_add_cstring(&attr_list, AttributeIdTitle, "Title");
  * attribute_list_add_cstring(&attr_list, AttributeIdBody, "Body text");
  *
- * AttributeList dismiss_attrs = {0};
+ * AttributeList dismiss_attrs = {};
  * attribute_list_add_cstring(&dismiss_attrs, AttributeIdTitle, "Dismiss");
  * TimelineItemActionGroup action_group = {
  *   .num_actions = 1,

@@ -5,15 +5,14 @@
 
 #include "pebble_process_md.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 // The high bytes sit where the 0x10.0x00 header ended, which the build ID note's alignment
 // already left as padding, so the note and everything after it stay where they were.
-_Static_assert(offsetof(PebbleProcessInfo, load_size_hi) == PROCESS_INFO_CRC_START_OFFSET,
-               "load_size_hi must start where the 0x10.0x00 header ended");
-_Static_assert(sizeof(PebbleProcessInfo) % 4 == 0,
-               "the header must end on the word boundary the build ID note starts at");
+static_assert(offsetof(PebbleProcessInfo, load_size_hi) == PROCESS_INFO_CRC_START_OFFSET,
+              "load_size_hi must start where the 0x10.0x00 header ended");
+static_assert(sizeof(PebbleProcessInfo) % 4 == 0,
+              "the header must end on the word boundary the build ID note starts at");
 
 int version_compare(Version a, Version b) {
   if (a.major != b.major) {

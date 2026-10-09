@@ -176,7 +176,8 @@ static void prv_send_ack_nack(uint16_t endpoint_id, const uint8_t *data, unsigne
   };
 
   if (endpoint_id == ENDPOINT_ID) {
-    app_message_app_protocol_msg_callback(session, (const uint8_t *)&ack, sizeof(AppMessage), NULL);
+    app_message_app_protocol_msg_callback(session, (const uint8_t *)&ack, sizeof(AppMessage),
+                                          nullptr);
   } else {
     cl_fail("Unhandled endpoint");
   }
@@ -206,7 +207,7 @@ static void prv_receive_test_data(uint8_t transaction_id, const bool oversized) 
   PBL_LOG_DBG("message->transaction_id = %" PRIu32, message->transaction_id);
 
   CommSession *session = s_fake_app_comm_session;
-  app_message_app_protocol_msg_callback(session, buffer, message_length, NULL);
+  app_message_app_protocol_msg_callback(session, buffer, message_length, nullptr);
 }
 
 static void prv_receive_ack_nack_callback(uint16_t endpoint_id, const uint8_t *data,
@@ -286,7 +287,7 @@ void prv_send_data(uint16_t endpoint_id, const uint8_t *data, uint16_t length) {
     cl_assert_equal_i(length, max_length);
   }
 
-  cl_assert_equal_p(s_sent_data, NULL);
+  cl_assert_equal_p(s_sent_data, nullptr);
   s_sent_data = kernel_malloc(length);
   cl_assert(s_sent_data);
   memcpy(s_sent_data, data, length);
@@ -337,7 +338,7 @@ static void prv_process_sent_data(void) {
   cl_assert(s_remote_receive_handler);
   s_remote_receive_handler(s_sent_endpoint_id, s_sent_data, s_sent_data_length);
   kernel_free(s_sent_data);
-  s_sent_data = NULL;
+  s_sent_data = nullptr;
 }
 
 void sys_get_app_uuid(Uuid *uuid) {
@@ -349,8 +350,8 @@ static void (*s_process_manager_callback)(void *data);
 static void *s_process_manager_callback_data;
 void sys_current_process_schedule_callback(CallbackEventCallback async_cb, void *ctx) {
   // Expecting the stub to be called only once durning a test:
-  cl_assert_equal_p(s_process_manager_callback, NULL);
-  cl_assert_equal_p(s_process_manager_callback_data, NULL);
+  cl_assert_equal_p(s_process_manager_callback, nullptr);
+  cl_assert_equal_p(s_process_manager_callback_data, nullptr);
 
   s_process_manager_callback = async_cb;
   s_process_manager_callback_data = ctx;
@@ -377,10 +378,10 @@ void test_app_message__initialize(void) {
   app_message_init();
   app_message_set_context(&s_context);
   cl_assert_equal_i(app_message_open(MAX_SIZE_INBOUND, MAX_SIZE_OUTBOUND), APP_MSG_OK);
-  cl_assert_equal_p(app_message_register_outbox_sent(prv_out_sent_callback), NULL);
-  cl_assert_equal_p(app_message_register_outbox_failed(prv_out_failed_callback), NULL);
-  cl_assert_equal_p(app_message_register_inbox_dropped(prv_in_dropped_callback), NULL);
-  cl_assert_equal_p(app_message_register_inbox_received(prv_in_received_callback), NULL);
+  cl_assert_equal_p(app_message_register_outbox_sent(prv_out_sent_callback), nullptr);
+  cl_assert_equal_p(app_message_register_outbox_failed(prv_out_failed_callback), nullptr);
+  cl_assert_equal_p(app_message_register_inbox_dropped(prv_in_dropped_callback), nullptr);
+  cl_assert_equal_p(app_message_register_inbox_received(prv_in_received_callback), nullptr);
 
   s_out_sent_call_count = 0;
   s_out_failed_call_count = 0;
@@ -390,12 +391,12 @@ void test_app_message__initialize(void) {
   s_in_dropped_is_called = false;
   s_ack_received_for_id_1 = false;
   s_nack_received_for_id_2 = false;
-  s_remote_receive_handler = NULL;
+  s_remote_receive_handler = nullptr;
   s_dropped_reason = APP_MSG_OK;
   s_failure_result = APP_MSG_OK;
 
-  s_process_manager_callback = NULL;
-  s_process_manager_callback_data = NULL;
+  s_process_manager_callback = nullptr;
+  s_process_manager_callback_data = nullptr;
 
   s_is_connected = true;
 
@@ -412,7 +413,7 @@ void test_app_message__cleanup(void) {
   cl_assert_equal_b(app_message_is_closed_outbound(), true);
   fake_app_timer_deinit();
   kernel_free(s_sent_data);
-  s_sent_data = NULL;
+  s_sent_data = nullptr;
 }
 
 // Test OUTBOUND (watch->phone):
@@ -585,7 +586,7 @@ void test_app_message__send_disconnected(void) {
   s_process_manager_callback(s_process_manager_callback_data);
 
   // Check that the ack/nack timer is removed:
-  cl_assert_equal_p(app_message_outbox_get_ack_nack_timer(), NULL);
+  cl_assert_equal_p(app_message_outbox_get_ack_nack_timer(), nullptr);
 
   cl_assert_equal_i(1, s_out_failed_call_count);
   cl_assert_equal_i(s_failure_result, APP_MSG_NOT_CONNECTED);
@@ -736,7 +737,7 @@ void test_app_message__begin_while_already_begun(void) {
 }
 
 void test_app_message__begin_null_iterator(void) {
-  cl_assert_equal_i(app_message_outbox_begin(NULL), APP_MSG_INVALID_ARGS);
+  cl_assert_equal_i(app_message_outbox_begin(nullptr), APP_MSG_INVALID_ARGS);
 }
 
 void test_app_message__send_while_not_begun(void) {

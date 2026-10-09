@@ -83,7 +83,7 @@
 ////////////////////////////////////
 
 static GContext s_ctx;
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership) {
   return from_reel;
@@ -413,7 +413,7 @@ void test_weather_app_layout__render_no_next_forecast(void) {
     .current_weather_phrase = "Sunny",
   };
 
-  prv_create_layout_and_render(&today, NULL);
+  prv_create_layout_and_render(&today, nullptr);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 

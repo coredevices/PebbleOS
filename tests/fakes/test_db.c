@@ -55,7 +55,7 @@ bool prv_dirty_items_each_cb(RamStorageEntry *entry, void *context) {
 }
 
 BlobDBDirtyItem *test_db_get_dirty_list(void) {
-  BlobDBDirtyItem *dirty_items = NULL;
+  BlobDBDirtyItem *dirty_items = nullptr;
   ram_storage_each(&s_test_db.ram_storage, prv_dirty_items_each_cb, &dirty_items);
   return dirty_items;
 }

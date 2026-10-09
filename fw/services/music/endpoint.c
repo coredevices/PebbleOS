@@ -34,7 +34,7 @@ static const uint8_t *prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
                                                           const char **out_str,
                                                           size_t *out_length) {
   if (!out_str || !out_length) {
-    return NULL;
+    return nullptr;
   }
 
   *out_length = *iter;
@@ -43,7 +43,7 @@ static const uint8_t *prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
   iter += 1 + *out_length;
   if (iter > iter_end) {
     PBL_LOG_WRN("Invalid music message");
-    return NULL;
+    return nullptr;
   }
   return iter;
 }

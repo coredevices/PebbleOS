@@ -60,12 +60,12 @@ static void prv_pool_init(void) {
   for (size_t i = 0; i < CONFIG_TASK_TIMER_POOL_SIZE - 1; i++) {
     s_task_timer_pool[i].list_node.next = &s_task_timer_pool[i + 1].list_node;
   }
-  s_task_timer_pool[CONFIG_TASK_TIMER_POOL_SIZE - 1].list_node.next = NULL;
+  s_task_timer_pool[CONFIG_TASK_TIMER_POOL_SIZE - 1].list_node.next = nullptr;
   s_task_timer_pool_free_head = &s_task_timer_pool[0];
 }
 
 static TaskTimer *prv_timer_alloc(void) {
-  TaskTimer *timer = NULL;
+  TaskTimer *timer = nullptr;
   pbl_mutex_lock(&s_task_timer_pool_mutex, PBL_FOREVER);
   if (s_task_timer_pool_free_head) {
     timer = s_task_timer_pool_free_head;
@@ -172,10 +172,10 @@ bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer_id, uint32_t 
   // Remove it from its current list
   if (timer->expire_time) {
     PBL_ASSERTN(list_contains(manager->running_timers, &timer->list_node));
-    list_remove(&timer->list_node, &manager->running_timers /* &head */, NULL /* &tail */);
+    list_remove(&timer->list_node, &manager->running_timers /* &head */, nullptr /* &tail */);
   } else {
     PBL_ASSERTN(list_contains(manager->idle_timers, &timer->list_node));
-    list_remove(&timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
+    list_remove(&timer->list_node, &manager->idle_timers /* &head */, nullptr /* &tail */);
   }
 
   // Set timer variables
@@ -210,7 +210,7 @@ bool task_timer_scheduled(TaskTimerManager *manager, TaskTimerID timer_id, uint3
   bool retval = (timer->expire_time != 0);
 
   // Figure out expire timer?
-  if (expire_ms_p != NULL && retval) {
+  if (expire_ms_p != nullptr && retval) {
     RtcTicks current_ticks = rtc_get_ticks();
     if (timer->expire_time > current_ticks) {
       *expire_ms_p = ((timer->expire_time - current_ticks) * 1000) / PBL_TICK_HZ;
@@ -235,7 +235,7 @@ bool task_timer_stop(TaskTimerManager *manager, TaskTimerID timer_id) {
   // Move it to the idle list if it's currently running
   if (timer->expire_time) {
     PBL_ASSERTN(list_contains(manager->running_timers, &timer->list_node));
-    list_remove(&timer->list_node, &manager->running_timers /* &head */, NULL /* &tail */);
+    list_remove(&timer->list_node, &manager->running_timers /* &head */, nullptr /* &tail */);
     manager->idle_timers = list_insert_before(manager->idle_timers, &timer->list_node);
   }
 
@@ -266,7 +266,7 @@ void task_timer_delete(TaskTimerManager *manager, TaskTimerID timer_id) {
   if (timer->expire_time) {
     timer->expire_time = 0;
     PBL_ASSERTN(list_contains(manager->running_timers, &timer->list_node));
-    list_remove(&timer->list_node, &manager->running_timers /* &head */, NULL /* &tail */);
+    list_remove(&timer->list_node, &manager->running_timers /* &head */, nullptr /* &tail */);
     manager->idle_timers = list_insert_before(manager->idle_timers, &timer->list_node);
   }
   timer->repeating = false; // In case it's currently executing, make sure we don't reschedule it
@@ -278,7 +278,7 @@ void task_timer_delete(TaskTimerManager *manager, TaskTimerID timer_id) {
     pbl_mutex_unlock(&manager->mutex);
   } else {
     PBL_ASSERTN(list_contains(manager->idle_timers, &timer->list_node));
-    list_remove(&timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
+    list_remove(&timer->list_node, &manager->idle_timers /* &head */, nullptr /* &tail */);
     pbl_mutex_unlock(&manager->mutex);
     prv_timer_free(timer);
   }
@@ -294,8 +294,8 @@ void task_timer_manager_init(TaskTimerManager *manager, struct pbl_sem *semaphor
   pbl_mutex_init(&manager->mutex);
 
   // The above shift assumes next_id is a 32-bit int and there are fewer than 16 tasks.
-  _Static_assert(sizeof(((TaskTimerManager *)0)->next_id) == 4, "next_id is not the right width");
-  _Static_assert(NumPebbleTask < 16, "Too many tasks");
+  static_assert(sizeof(((TaskTimerManager *)0)->next_id) == 4, "next_id is not the right width");
+  static_assert(NumPebbleTask < 16, "Too many tasks");
 }
 
 pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) {
@@ -309,7 +309,7 @@ pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
     pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
 
     TaskTimer *next_timer = (TaskTimer *)manager->running_timers;
-    if (next_timer != NULL) {
+    if (next_timer != nullptr) {
       next_expiry_time = next_timer->expire_time;
       RtcTicks current_time = rtc_get_ticks();
 
@@ -348,7 +348,7 @@ pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
     // Run the timer callback now
     manager->current_cb = next_timer->cb_data;
     next_timer->cb(next_timer->cb_data);
-    manager->current_cb = NULL;
+    manager->current_cb = nullptr;
 
     // Update state after the callback
     pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
@@ -358,7 +358,7 @@ pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
     // callback (next_timer->expire_time != 0)
     if (next_timer->repeating && !next_timer->expire_time) {
       next_timer->expire_time = next_expiry_time + next_timer->period_ticks;
-      list_remove(&next_timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
+      list_remove(&next_timer->list_node, &manager->idle_timers /* &head */, nullptr /* &tail */);
       manager->running_timers = list_sorted_add(manager->running_timers, &next_timer->list_node,
                                                 prv_timer_expire_compare_func, true);
     }
@@ -366,7 +366,7 @@ pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
     // If it's been marked for deletion, take care of that now
     if (next_timer->defer_delete) {
       PBL_ASSERTN(list_contains(manager->idle_timers, &next_timer->list_node));
-      list_remove(&next_timer->list_node, &manager->idle_timers /* &head */, NULL /* &tail */);
+      list_remove(&next_timer->list_node, &manager->idle_timers /* &head */, nullptr /* &tail */);
       pbl_mutex_unlock(&manager->mutex);
 
       prv_timer_free(next_timer);

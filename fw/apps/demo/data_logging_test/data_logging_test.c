@@ -90,7 +90,7 @@ static void log_moar_data(struct DataLoggingInfo *info) {
 }
 
 static void handle_timer(void *ck) {
-  if (s_data.info[0].logging_session == NULL) {
+  if (s_data.info[0].logging_session == nullptr) {
     // Sessions closed.
     return;
   }
@@ -114,7 +114,7 @@ static void handle_timer(void *ck) {
 static void close_sessions(void) {
   for (int i = 0; i < 3; ++i) {
     data_logging_finish(s_data.info[i].logging_session);
-    s_data.info[i].logging_session = NULL;
+    s_data.info[i].logging_session = nullptr;
   }
   text_layer_set_text(&s_data.log_layer, "Closed all logging sessions.");
 }

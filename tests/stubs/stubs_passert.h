@@ -5,10 +5,9 @@
 
 #include <setjmp.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdio.h>
 
-void passert_failed(const char *filename, int line_number, const char *message, ...) {
+[[noreturn]] void passert_failed(const char *filename, int line_number, const char *message, ...) {
   if (clar_expecting_passert) {
     clar_passert_occurred = true;
     longjmp(clar_passert_jmp_buf, 1);
@@ -29,16 +28,17 @@ void passert_failed(const char *filename, int line_number, const char *message, 
     ;
 }
 
-void util_assertion_failed(const char *filename, int line) {
-  passert_failed(filename, line, NULL);
+[[noreturn]] void util_assertion_failed(const char *filename, int line) {
+  passert_failed(filename, line, nullptr);
 }
 
-void passert_failed_no_message(const char *filename, int line_number) {
-  passert_failed(filename, line_number, NULL);
+[[noreturn]] void passert_failed_no_message(const char *filename, int line_number) {
+  passert_failed(filename, line_number, nullptr);
 }
 
-void passert_failed_no_message_with_lr(const char *filename, int line_number, uint32_t lr) {
-  passert_failed(filename, line_number, NULL);
+[[noreturn]] void passert_failed_no_message_with_lr(const char *filename, int line_number,
+                                                    uint32_t lr) {
+  passert_failed(filename, line_number, nullptr);
 }
 
 void croak(const char *filename, int line_number, const char *fmt, ...) {
@@ -49,13 +49,13 @@ void croak(const char *filename, int line_number, const char *fmt, ...) {
 
 typedef struct Heap Heap;
 
-void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
+[[noreturn]] void croak_oom(size_t bytes, int saved_lr, Heap *heap_ptr) {
   cl_fail("CROAK OOM");
   while (1)
     ;
 }
 
-void wtf(void) {
+[[noreturn]] void wtf(void) {
   cl_fail("WTF");
   while (1)
     ;

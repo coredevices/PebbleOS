@@ -78,7 +78,7 @@ static bool prv_match_contains(const char *haystack, size_t haystack_len, const 
 static char *prv_attr_to_cstring(const ANCSAttribute *attr, size_t *len_out) {
   if (!attr || (attr->length == 0)) {
     *len_out = 0;
-    return NULL;
+    return nullptr;
   }
   char *str = kernel_zalloc_check(attr->length + 1);
   pbl_pstring16_to_cstring(&attr->pstr, str);
@@ -200,14 +200,14 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
 
   // The app name should be the display name
   // If there is no display name (Apple Pay) then fallback to the title
-  const ANCSAttribute *app_name_attr = NULL;
+  const ANCSAttribute *app_name_attr = nullptr;
   if (display_name && display_name->length > 0) {
     app_name_attr = display_name;
   } else if (title && title->length > 0) {
     app_name_attr = title;
   }
 
-  char *app_name_buff = NULL;
+  char *app_name_buff = nullptr;
   if (app_name_attr) {
     const char *existing_name = "";
     if (app_notif_prefs) {
@@ -245,12 +245,12 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
     list_dirty = true;
   }
 
-  struct pbl_string_list *rules_attr = NULL;
+  struct pbl_string_list *rules_attr = nullptr;
   if (app_notif_prefs) {
     rules_attr = attribute_get_string_list(&app_notif_prefs->attr_list,
                                            AttributeIdNotificationFilteringRules);
   }
-  struct pbl_string_list *default_rules = NULL;
+  struct pbl_string_list *default_rules = nullptr;
   if (!rules_attr) {
     default_rules = kernel_zalloc_check(sizeof(struct pbl_string_list) + sizeof(uint8_t));
     default_rules->serialized_byte_length = sizeof(uint8_t);
@@ -261,7 +261,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
   }
 
   // Add / update the "last seen" timestamp
-  Attribute *last_updated = NULL;
+  Attribute *last_updated = nullptr;
   if (app_notif_prefs) {
     last_updated = attribute_find(&app_notif_prefs->attr_list, AttributeIdLastUpdated);
   }
@@ -275,7 +275,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
 
   if (list_dirty) {
     // We don't change or add actions at this time
-    TimelineItemActionGroup *new_action_group = NULL;
+    TimelineItemActionGroup *new_action_group = nullptr;
     if (app_notif_prefs) {
       new_action_group = &app_notif_prefs->action_group;
     }

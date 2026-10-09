@@ -37,7 +37,7 @@ static TickTimerServiceState *prv_get_state(PebbleTask task) {
 
 static void do_handle(PebbleEvent *e, void *context) {
   TickTimerServiceState *state = prv_get_state(PebbleTask_Unknown);
-  PBL_ASSERTN(state->handler != NULL);
+  PBL_ASSERTN(state->handler != nullptr);
 
   TimeUnits units_changed = 0;
   struct tm currtime;
@@ -79,7 +79,7 @@ static void do_handle(PebbleEvent *e, void *context) {
 
 void tick_timer_service_init(void) {
   TickTimerServiceState *state = prv_get_state(PebbleTask_Unknown);
-  state->handler = NULL;
+  state->handler = nullptr;
   event_service_init(PEBBLE_TICK_EVENT, &tick_timer_add_subscriber, &tick_timer_remove_subscriber);
 }
 
@@ -100,7 +100,7 @@ void tick_timer_service_unsubscribe(void) {
   TickTimerServiceState *state = prv_get_state(PebbleTask_Unknown);
   sys_tick_timer_unsubscribe();
   event_service_client_unsubscribe(&state->tick_service_info);
-  state->handler = NULL;
+  state->handler = nullptr;
   if (pebble_task_get_current() == PebbleTask_App && sys_app_is_watchface()) {
     PBL_ANALYTICS_SET_UNSIGNED(app_tick_timer_second_subscribed, 0);
   }

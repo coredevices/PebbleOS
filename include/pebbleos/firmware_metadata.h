@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
@@ -146,11 +145,11 @@ struct PBL_PACKED FirmwareMetadata {
 /** @brief Firmware image metadata. */
 typedef struct FirmwareMetadata FirmwareMetadata;
 
-_Static_assert(sizeof(struct FirmwareMetadata) ==
-                   (sizeof(uint32_t) + FW_METADATA_VERSION_SHORT_BYTES +
-                    FW_METADATA_VERSION_TAG_BYTES + sizeof(uint8_t) + sizeof(uint8_t) +
-                    sizeof(uint8_t)),
-               "FirmwareMetadata bitfields not packed correctly");
+static_assert(sizeof(struct FirmwareMetadata) ==
+                  (sizeof(uint32_t) + FW_METADATA_VERSION_SHORT_BYTES +
+                   FW_METADATA_VERSION_TAG_BYTES + sizeof(uint8_t) + sizeof(uint8_t) +
+                   sizeof(uint8_t)),
+              "FirmwareMetadata bitfields not packed correctly");
 
 /**
  * @brief Value of @ref FirmwareMetadata::is_recovery_firmware for this build.
@@ -170,21 +169,21 @@ _Static_assert(sizeof(struct FirmwareMetadata) ==
  */
 #ifdef CONFIG_BOARD_ASTERIX
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleAsterix)
-#elif defined(CONFIG_BOARD_OBELIX_DVT)
+#elifdef CONFIG_BOARD_OBELIX_DVT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixDVT)
-#elif defined(CONFIG_BOARD_OBELIX_PVT)
+#elifdef CONFIG_BOARD_OBELIX_PVT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixPVT)
-#elif defined(CONFIG_BOARD_OBELIX_BB2)
+#elifdef CONFIG_BOARD_OBELIX_BB2
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard2)
-#elif defined(CONFIG_BOARD_GETAFIX_DVT)
+#elifdef CONFIG_BOARD_GETAFIX_DVT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT)
-#elif defined(CONFIG_BOARD_GETAFIX_DVT2)
+#elifdef CONFIG_BOARD_GETAFIX_DVT2
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT2)
 #elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
-#elif defined(CONFIG_BOARD_QEMU_FLINT)
+#elifdef CONFIG_BOARD_QEMU_FLINT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleFlintEmu)
-#elif defined(CONFIG_BOARD_QEMU_GABBRO)
+#elifdef CONFIG_BOARD_QEMU_GABBRO
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGabbroEmu)
 #else
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformUnknown)

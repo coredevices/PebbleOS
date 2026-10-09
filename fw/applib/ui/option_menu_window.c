@@ -69,7 +69,7 @@ static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t sectio
 }
 
 uint16_t option_menu_default_cell_height(OptionMenuContentType content_type, bool selected) {
-  const OptionMenuStyle *const PBL_UNUSED style = prv_get_style();
+  [[maybe_unused]] const OptionMenuStyle *const style = prv_get_style();
   const int16_t cell_height =
       PBL_IF_ROUND_ELSE(selected ? MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT
                                  : MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
@@ -300,7 +300,7 @@ void option_menu_deinit(OptionMenu *option_menu) {
 OptionMenu *option_menu_create(void) {
   OptionMenu *option_menu = applib_type_malloc(OptionMenu);
   if (!option_menu) {
-    return NULL;
+    return nullptr;
   }
   option_menu_init(option_menu);
   return option_menu;
@@ -322,7 +322,7 @@ void option_menu_system_draw_row(OptionMenu *option_menu, GContext *ctx, const L
       GTextAlignmentLeft, option_menu->icons_enabled ? GTextAlignmentRight : GTextAlignmentCenter);
   GFont const title_font = option_menu->title_font;
   const GSize text_size = graphics_text_layout_get_max_used_size(
-      ctx, title, title_font, *cell_frame, overflow_mode, text_alignment, NULL);
+      ctx, title, title_font, *cell_frame, overflow_mode, text_alignment, nullptr);
   GRect text_frame = *cell_frame;
   const int min_text_height = fonts_get_font_height(title_font);
   text_frame.size = text_size;
@@ -336,6 +336,6 @@ void option_menu_system_draw_row(OptionMenu *option_menu, GContext *ctx, const L
   text_frame.origin.y -= fonts_get_font_cap_offset(title_font);
 
   if (title) {
-    graphics_draw_text(ctx, title, title_font, text_frame, overflow_mode, text_alignment, NULL);
+    graphics_draw_text(ctx, title, title_font, text_frame, overflow_mode, text_alignment, nullptr);
   }
 }

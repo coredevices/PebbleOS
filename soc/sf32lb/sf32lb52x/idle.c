@@ -407,6 +407,7 @@ static int prv_cmd_wfi(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_sys, cpustats, NULL, "Show CPU sleep statistics", prv_cmd_cpustats, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_sys, wfi, NULL, "Force plain WFI when idle <0|1>", prv_cmd_wfi, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys, cpustats, nullptr, "Show CPU sleep statistics", prv_cmd_cpustats, 0,
+                     0);
+PBL_SHELL_SUBCMD_ADD(sub_sys, wfi, nullptr, "Force plain WFI when idle <0|1>", prv_cmd_wfi, 2, 0);
 #endif

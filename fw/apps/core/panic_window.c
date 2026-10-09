@@ -60,7 +60,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   snprintf(text_buffer, sizeof(text_buffer), "0x%" PRIx32, launcher_panic_get_current_error());
 
   graphics_draw_text(ctx, text_buffer, error_code_face, text_dest_rect, GTextOverflowModeWordWrap,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 
 static void prv_panic_reset_callback(void *data) {
@@ -74,7 +74,7 @@ static void prv_panic_reset_callback(void *data) {
 }
 
 static void prv_panic_button_click_handler(ClickRecognizerRef recognizer, void *context) {
-  launcher_task_add_callback(prv_panic_reset_callback, NULL);
+  launcher_task_add_callback(prv_panic_reset_callback, nullptr);
 }
 
 static void prv_panic_click_config_provider(void *context) {

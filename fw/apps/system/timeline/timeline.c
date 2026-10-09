@@ -140,7 +140,7 @@ PBL_T_STATIC void prv_init_peek_layer(TimelineAppData *data);
 static void prv_launch_watchface(void *data) {
 #ifdef CONFIG_SHELL_SDK
   // FIXME: We don't want to show off our unfinished animations in the sdkshell
-  watchface_launch_default(NULL);
+  watchface_launch_default(nullptr);
 #else
 
   const bool is_future = (s_app_data->timeline_model.direction == TimelineIterDirectionFuture);
@@ -267,7 +267,7 @@ static Animation *prv_create_peek_exit_anim(TimelineAppData *data, TimelineAppSt
     TimelineLayout *first_timeline_layout =
         timeline_layer_get_current_layout(&data->timeline_layer);
     if (!first_timeline_layout) {
-      return NULL;
+      return nullptr;
     }
 
     prv_init_peek_layer(data);
@@ -278,7 +278,7 @@ static Animation *prv_create_peek_exit_anim(TimelineAppData *data, TimelineAppSt
     peek_layer_set_icon_with_size(peek_layer, &first_timeline_layout->icon_info,
                                   TimelineResourceSizeTiny, icon_from);
   } else {
-    return NULL;
+    return nullptr;
   }
 
   GRect icon_to;
@@ -311,7 +311,7 @@ static Animation *prv_create_sidebar_animation(TimelineAppData *data, bool open)
 }
 
 static void prv_exit(TimelineAppData *data) {
-  PBL_UNUSED const TimelineAppState prev_state = data->state;
+  [[maybe_unused]] const TimelineAppState prev_state = data->state;
   if (!prv_set_state(data, TimelineAppStateExit)) {
     return;
   }
@@ -387,7 +387,7 @@ static Animation *prv_animate_to_pin_window(TimelineAppData *data) {
   Layer *layer = &data->timeline_layer.layer;
   GPoint to_origin = GPoint(-layer->bounds.size.w, 0);
   Animation *animation =
-      (Animation *)property_animation_create_bounds_origin(layer, NULL, &to_origin);
+      (Animation *)property_animation_create_bounds_origin(layer, nullptr, &to_origin);
   animation_set_handlers(animation,
                          (AnimationHandlers){
                            .stopped = prv_move_timeline_layer_stopped,
@@ -433,7 +433,7 @@ static bool prv_pin_in_card(TimelineAppData *data, Uuid *uuid) {
   }
 
   TimelineIterState *current_state = timeline_model_get_current_state();
-  if (current_state == NULL) {
+  if (current_state == nullptr) {
     return false;
   }
 
@@ -463,7 +463,7 @@ static void prv_update_timeline_layer(TimelineAppData *data) {
     return;
   }
   animation_unschedule(data->current_animation);
-  data->current_animation = NULL;
+  data->current_animation = nullptr;
   timeline_layer_reset(timeline_layer);
 
   if (timeline_model_is_empty() && prv_set_state(data, TimelineAppStateNoEvents)) {
@@ -498,7 +498,7 @@ static void prv_hide_day_sep_stopped(Animation *animation, bool finished, void *
     return;
   }
 
-  data->current_animation = NULL;
+  data->current_animation = nullptr;
   prv_update_timeline_layer(data);
 
   Animation *move_animation = timeline_layer_create_up_down_animation(
@@ -645,7 +645,7 @@ static void prv_up_down_click_handler(ClickRecognizerRef recognizer, void *conte
   if (timeline_layer_should_animate_day_separator(&data->timeline_layer) &&
       prv_set_state(data, TimelineAppStateShowDaySeparator)) {
     Animation *day_sep_show = timeline_layer_create_day_sep_show(&data->timeline_layer);
-    move_animation = animation_spawn_create(move_animation, day_sep_show, NULL);
+    move_animation = animation_spawn_create(move_animation, day_sep_show, nullptr);
     animation_set_handlers(move_animation,
                            (AnimationHandlers){
                              .stopped = prv_day_sep_show_stopped,
@@ -726,7 +726,7 @@ static void prv_intro_anim_stopped(Animation *anim, bool finished, void *context
     return;
   }
 
-  data->current_animation = NULL;
+  data->current_animation = nullptr;
   prv_update_timeline_layer(data);
 
   if (data->state == TimelineAppStateDaySeparator) {
@@ -772,9 +772,9 @@ static Animation *prv_create_intro_animation(TimelineAppData *data, uint32_t dur
 
   Animation *speed_lines = data->launch_into_deep_pin
                                ? timeline_layer_create_speed_lines_animation(&data->timeline_layer)
-                               : NULL;
+                               : nullptr;
 
-  return animation_spawn_create(peek_out, sidebar_slide, speed_lines, NULL);
+  return animation_spawn_create(peek_out, sidebar_slide, speed_lines, nullptr);
 }
 
 #if ANIMATION_SLIDE
@@ -965,7 +965,7 @@ static void prv_setup_first_pin_peek(TimelineAppData *data) {
 
 static void PBL_NOINLINE prv_setup_peek(TimelineAppData *data) {
   TimelineIterState *state = timeline_model_get_current_state();
-  TimelineItem *first_pin = state ? &state->pin : NULL;
+  TimelineItem *first_pin = state ? &state->pin : nullptr;
   EventServiceEventHandler focus_handler = prv_open_did_focus_handler;
 
   // we'll only show the first pin peek if timeline peek (aka quick view) isn't enabled
@@ -1086,7 +1086,7 @@ static void prv_back_from_card_stopped(Animation *animation, bool finished, void
 
   window_set_background_color(&data->timeline_window, GColorWhite);
 
-  data->current_animation = NULL;
+  data->current_animation = nullptr;
   prv_update_timeline_layer(data);
 
   Animation *layer_bounce =
@@ -1105,7 +1105,7 @@ Animation *timeline_animate_back_from_card(void) {
   PBL_ASSERTN(data);
 
   if (!prv_set_state(data, TimelineAppStatePopCard)) {
-    return NULL;
+    return nullptr;
   }
 
   // Animation structure:
@@ -1174,7 +1174,7 @@ static bool PBL_NOINLINE prv_setup_timeline_app(void) {
     // Activating the full app flag if we entered this code using "timeline full" UUID,
     // or if the argument force_full is set.
     data->full_app_view = true;
-    if (args != NULL) {
+    if (args != nullptr) {
       data->force_display_day_sep = args->force_display_day_sep_on_start;
     } else {
       data->force_display_day_sep = false;
@@ -1183,7 +1183,7 @@ static bool PBL_NOINLINE prv_setup_timeline_app(void) {
 
   if (uuid_equal(&app_uuid, &(Uuid)TIMELINE_PAST_UUID_INIT)) {
     data->timeline_model.direction = TimelineIterDirectionPast;
-  } else if (args == NULL) {
+  } else if (args == nullptr) {
     data->timeline_model.direction = TimelineIterDirectionFuture;
   } else {
     data->timeline_model.direction = args->direction;
@@ -1210,7 +1210,7 @@ static bool PBL_NOINLINE prv_setup_timeline_app(void) {
   if (launch_into_pin) {
     while (!uuid_equal(&timeline_model_get_current_state()->pin.header.id, &args->pin_id)) {
       data->launch_into_deep_pin = true;
-      if (!timeline_model_iter_next(NULL, NULL)) {
+      if (!timeline_model_iter_next(nullptr, nullptr)) {
         // for some reason we can't find the pin we were asked to launch into
         char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
         uuid_to_string(&args->pin_id, uuid_buffer);
@@ -1218,7 +1218,7 @@ static bool PBL_NOINLINE prv_setup_timeline_app(void) {
         launch_into_pin = false;
         data->launch_into_deep_pin = false;
         // we couldn't find the launch pin, go back to the present
-        while (timeline_model_iter_prev(NULL, NULL)) {
+        while (timeline_model_iter_prev(nullptr, nullptr)) {
         }
         break;
       }

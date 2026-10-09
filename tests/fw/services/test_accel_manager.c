@@ -57,7 +57,7 @@ bool shell_prefs_get_accel_shake_log_info_enabled(void) {
   return false;
 }
 struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
-  return NULL;
+  return nullptr;
 }
 
 // fake accel.h impl
@@ -164,7 +164,7 @@ static void prv_run_accel_test(int *sample_arr, int num_items) {
     }
 
     sessions[i] =
-        sys_accel_manager_data_subscribe(sample_arr[i], prv_noop_sample_handler, NULL, tasks[i]);
+        sys_accel_manager_data_subscribe(sample_arr[i], prv_noop_sample_handler, nullptr, tasks[i]);
 
     // buffer size of 1
     sys_accel_manager_set_sample_buffer(sessions[i], fake_buf, 1);
@@ -244,7 +244,7 @@ void test_accel_manager__jitterfree(void) {
   AccelRawData fake_buf[1];
 
   AccelManagerState *state = sys_accel_manager_data_subscribe(
-      ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, NULL, PebbleTask_KernelMain);
+      ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, nullptr, PebbleTask_KernelMain);
   uint32_t resulting_mhz = accel_manager_set_jitterfree_sampling_rate(state, 12500);
   sys_accel_manager_set_sample_buffer(state, fake_buf, ARRAY_LENGTH(fake_buf));
 
@@ -263,12 +263,12 @@ void test_accel_manager__batched_samples(void) {
 
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
   AccelManagerState *main_session = sys_accel_manager_data_subscribe(
-      ACCEL_SAMPLING_10HZ, prv_noop_sample_handler, NULL, PebbleTask_KernelMain);
+      ACCEL_SAMPLING_10HZ, prv_noop_sample_handler, nullptr, PebbleTask_KernelMain);
   sys_accel_manager_set_sample_buffer(main_session, fake_buf, 11);
 
   stub_pebble_tasks_set_current(PebbleTask_Worker);
   AccelManagerState *worker_session = sys_accel_manager_data_subscribe(
-      ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, NULL, PebbleTask_KernelMain);
+      ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, nullptr, PebbleTask_KernelMain);
   sys_accel_manager_set_sample_buffer(worker_session, fake_buf, 22);
 
   cl_assert_equal_i(s_num_samples, 22);
@@ -295,7 +295,8 @@ static void prv_feed(int count) {
 static AccelManagerState *prv_subscribe_on(PebbleTask task) {
   s_now_us = 0;
   stub_pebble_tasks_set_current(task);
-  return sys_accel_manager_data_subscribe(ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, NULL, task);
+  return sys_accel_manager_data_subscribe(ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, nullptr,
+                                          task);
 }
 
 static AccelManagerState *prv_subscribe_on_new_timers(void) {
@@ -328,7 +329,7 @@ static bool prv_consume(AccelManagerState *state) {
 void test_accel_manager__a_subscriber_without_a_buffer_doesnt_hold_back_timestamps(void) {
   prv_subscribe_on_new_timers();
   AccelManagerState *idle = prv_subscribe_on_new_timers();
-  sys_accel_manager_set_sample_buffer(idle, NULL, 0);
+  sys_accel_manager_set_sample_buffer(idle, nullptr, 0);
   AccelRawData buffer[1];
   AccelManagerState *state = prv_subscribe_on_new_timers();
   sys_accel_manager_set_sample_buffer(state, buffer, 1);

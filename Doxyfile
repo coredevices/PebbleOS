@@ -2487,9 +2487,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __attribute__(x)= \
                          PBL_ALWAYS_INLINE= \
                          PBL_NOINLINE= \
-                         PBL_NORETURN= \
                          PBL_NAKED= \
-                         PBL_DEPRECATED= \
                          PBL_CONST_FUNC= \
                          PBL_PURE_FUNC= \
                          PBL_OPTIMIZE(level)= \
@@ -2498,7 +2496,6 @@ PREDEFINED             = __attribute__(x)= \
                          PBL_PACKED= \
                          PBL_ALIGNED(bytes)= \
                          PBL_USED= \
-                         PBL_UNUSED= \
                          PBL_WEAK= \
                          PBL_ALIAS(sym)= \
                          PBL_EXTERNALLY_VISIBLE= \

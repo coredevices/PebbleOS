@@ -12,7 +12,7 @@
 
 static const unsigned ANCS_APP_NAME_STORAGE_SIZE = 30;
 
-static CircularCache *s_cache = NULL;
+static CircularCache *s_cache = nullptr;
 
 typedef struct {
   ANCSAttribute *app_id;
@@ -23,7 +23,7 @@ static int prv_comparator(void *a, void *b) {
   AncsAppNameStorageEntry *entry_a = (AncsAppNameStorageEntry *)a;
   AncsAppNameStorageEntry *entry_b = (AncsAppNameStorageEntry *)b;
 
-  if (entry_a->app_id == NULL || entry_b->app_id == NULL) {
+  if (entry_a->app_id == nullptr || entry_b->app_id == nullptr) {
     return -1;
   }
 
@@ -57,7 +57,7 @@ void ancs_app_name_storage_deinit(void) {
     circular_cache_flush(s_cache);
     kernel_free(s_cache->cache);
     kernel_free(s_cache);
-    s_cache = NULL;
+    s_cache = nullptr;
   }
 }
 
@@ -89,6 +89,6 @@ ANCSAttribute *ancs_app_name_storage_get(const ANCSAttribute *app_id) {
   if (found) {
     return found->app_name;
   } else {
-    return NULL;
+    return nullptr;
   }
 }

@@ -22,7 +22,7 @@ static const struct pbl_shell_backend_api s_api = {
   .write = prv_write,
 };
 
-PBL_SHELL_DEFINE(shell_dbgserial, "pebble> ", &s_api, NULL);
+PBL_SHELL_DEFINE(shell_dbgserial, "pebble> ", &s_api, nullptr);
 
 void shell_dbgserial_start_from_isr(void) {
   serial_console_set_state(SERIAL_CONSOLE_STATE_PROMPT);

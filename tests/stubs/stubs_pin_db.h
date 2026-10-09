@@ -70,7 +70,7 @@ status_t PBL_WEAK pin_db_is_dirty(bool *is_dirty_out) {
 }
 
 BlobDBDirtyItem *PBL_WEAK pin_db_get_dirty_list(void) {
-  return NULL;
+  return nullptr;
 }
 
 status_t PBL_WEAK pin_db_mark_synced(const uint8_t *key, int key_len) {

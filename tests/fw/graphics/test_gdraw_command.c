@@ -28,15 +28,15 @@ static GColor s_fill_color;
 static GColor s_stroke_color;
 static uint8_t s_stroke_width;
 static uint16_t s_path_num_points;
-static GPoint *s_stroke_points = NULL;
-static GPoint *s_fill_points = NULL;
+static GPoint *s_stroke_points = nullptr;
+static GPoint *s_fill_points = nullptr;
 static bool s_path_open;
 static uint16_t s_radius;
 
 struct PreciseLine {
   GPointPrecise p0;
   GPointPrecise p1;
-} *s_precise_lines = NULL;
+} *s_precise_lines = nullptr;
 static int s_num_precise_lines;
 
 static int s_path_stroke_count;
@@ -50,7 +50,7 @@ static GPoint s_offset;
 static GPoint *prv_copy_points(const GPointUnaligned *points, uint16_t num_points, GPoint offset) {
   s_path_num_points = num_points;
   GPoint *copied_points = malloc(num_points * sizeof(GPoint));
-  cl_assert(copied_points != NULL);
+  cl_assert(copied_points != nullptr);
   for (int i = 0; i < num_points; i++) {
     copied_points[i] = gpoint_add(points[i], offset);
   }
@@ -132,11 +132,11 @@ void prv_reset(void) {
   s_path_num_points = 0;
   if (s_stroke_points) {
     free(s_stroke_points);
-    s_stroke_points = NULL;
+    s_stroke_points = nullptr;
   }
   if (s_fill_points) {
     free(s_fill_points);
-    s_fill_points = NULL;
+    s_fill_points = nullptr;
   }
   s_path_open = false;
   s_radius = 0;
@@ -147,11 +147,11 @@ void prv_reset(void) {
   s_path_fill_precise_count = 0;
   s_circle_stroke_count = 0;
   s_circle_fill_count = 0;
-  s_offset = (GPoint){0};
+  s_offset = (GPoint){};
 
   if (s_precise_lines) {
     free(s_precise_lines);
-    s_precise_lines = NULL;
+    s_precise_lines = nullptr;
   }
   s_num_precise_lines = 0;
 }
@@ -164,15 +164,15 @@ void test_gdraw_command__initialize(void) {
 void test_gdraw_command__cleanup(void) {
   if (s_stroke_points) {
     free(s_stroke_points);
-    s_stroke_points = NULL;
+    s_stroke_points = nullptr;
   }
   if (s_fill_points) {
     free(s_fill_points);
-    s_fill_points = NULL;
+    s_fill_points = nullptr;
   }
   if (s_precise_lines) {
     free(s_precise_lines);
-    s_precise_lines = NULL;
+    s_precise_lines = nullptr;
   }
 }
 
@@ -190,7 +190,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   };
   GPoint points[] = {{3, 97}, {5, 5}};
   memcpy(command->points, points, sizeof(points));
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
 
   cl_assert_equal_i(s_stroke_color.argb, GColorRedARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorBlueARGB8);
@@ -205,7 +205,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   prv_reset();
   // set stroke width to zero - fill should be drawn, but not outline
   gdraw_command_set_stroke_width(command, 0);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorBlueARGB8);
   cl_assert_equal_i(s_stroke_width, 0);
@@ -214,7 +214,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   cl_assert_equal_i(s_path_fill_count, 1);
   cl_assert_equal_i(s_path_stroke_count, 0);
   cl_assert(prv_compare_points(points, s_fill_points, s_path_num_points));
-  cl_assert_equal_p(s_stroke_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
 
   prv_reset();
   // make fill color transparent (nothing should be drawn because the stroke width is zero and the
@@ -222,7 +222,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   GColor color = gdraw_command_get_fill_color(command);
   color.a = 0;
   gdraw_command_set_fill_color(command, color);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_stroke_width, 0);
@@ -230,13 +230,13 @@ void test_gdraw_command__draw_command_stroke(void) {
   cl_assert_equal_b(s_path_open, false);
   cl_assert_equal_i(s_path_fill_count, 0);
   cl_assert_equal_i(s_path_stroke_count, 0);
-  cl_assert_equal_p(s_stroke_points, NULL);
-  cl_assert_equal_p(s_fill_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
+  cl_assert_equal_p(s_fill_points, nullptr);
 
   prv_reset();
   // set stroke width to non-zero value. stroke should be drawn, but no fill
   gdraw_command_set_stroke_width(command, 2);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorRedARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_stroke_width, 2);
@@ -245,7 +245,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   cl_assert_equal_i(s_path_fill_count, 0);
   cl_assert_equal_i(s_path_stroke_count, 1);
   cl_assert(prv_compare_points(points, s_stroke_points, s_path_num_points));
-  cl_assert_equal_p(s_fill_points, NULL);
+  cl_assert_equal_p(s_fill_points, nullptr);
 
   prv_reset();
   // set stroke color to be transparent and restore fill - fill should be drawn, but no outline
@@ -254,7 +254,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   color = gdraw_command_get_stroke_color(command);
   color.a = 0;
   gdraw_command_set_stroke_color(command, color);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorGreenARGB8);
   cl_assert_equal_i(s_stroke_width, 0);
@@ -262,7 +262,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   cl_assert_equal_b(s_path_open, false);
   cl_assert_equal_i(s_path_fill_count, 1);
   cl_assert_equal_i(s_path_stroke_count, 0);
-  cl_assert_equal_p(s_stroke_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
   cl_assert(prv_compare_points(points, s_fill_points, s_path_num_points));
 
   prv_reset();
@@ -271,7 +271,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   GPoint points2[] = {{23, 45}, {67, 13}};
   gdraw_command_set_point(command, 0, points2[0]);
   gdraw_command_set_point(command, 1, points2[1]);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorPurpleARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorGreenARGB8);
   cl_assert_equal_i(s_stroke_width, 2);
@@ -285,7 +285,7 @@ void test_gdraw_command__draw_command_stroke(void) {
   prv_reset();
   // set path to be open
   gdraw_command_set_path_open(command, true);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorPurpleARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorGreenARGB8);
   cl_assert_equal_i(s_stroke_width, 2);
@@ -306,8 +306,8 @@ void test_gdraw_command__draw_command_stroke(void) {
   cl_assert_equal_b(s_path_open, false);
   cl_assert_equal_i(s_path_fill_count, 0);
   cl_assert_equal_i(s_path_stroke_count, 0);
-  cl_assert_equal_p(s_stroke_points, NULL);
-  cl_assert_equal_p(s_fill_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
+  cl_assert_equal_p(s_fill_points, nullptr);
 
   free(command);
 }
@@ -329,7 +329,7 @@ void test_gdraw_command__draw_precise_path(void) {
     {.x.raw_value = 2, .y.raw_value = 7}
   };
   memcpy(command->precise_points, points, sizeof(points));
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
 
   cl_assert_equal_i(1, s_path_fill_precise_count);
   cl_assert(prv_compare_points((GPoint *)points, s_fill_points, s_path_num_points));
@@ -341,7 +341,7 @@ void test_gdraw_command__draw_precise_path(void) {
   prv_reset();
   // change to open path and ensure that only draws 2 lines
   command->path_open = true;
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(1, s_path_stroke_precise_count);
   cl_assert_equal_b(true, s_path_open);
   cl_assert(prv_compare_points((GPoint *)points, s_stroke_points, s_path_num_points));
@@ -362,7 +362,7 @@ void test_gdraw_command__draw_circle(void) {
   };
   GPoint center = {15, 17};
   command->points[0] = center;
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
 
   cl_assert_equal_i(s_stroke_color.argb, GColorGreenARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorOrangeARGB8);
@@ -377,7 +377,7 @@ void test_gdraw_command__draw_circle(void) {
   prv_reset();
   // set stroke width to zero - fill should be drawn, but not outline
   gdraw_command_set_stroke_width(command, 0);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorOrangeARGB8);
   cl_assert_equal_i(s_stroke_width, 0);
@@ -385,7 +385,7 @@ void test_gdraw_command__draw_circle(void) {
   cl_assert_equal_b(s_radius, 300);
   cl_assert_equal_i(s_circle_fill_count, 1);
   cl_assert_equal_i(s_circle_stroke_count, 0);
-  cl_assert_equal_p(s_stroke_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
   cl_assert(prv_compare_points(&center, s_fill_points, s_path_num_points));
 
   prv_reset();
@@ -394,7 +394,7 @@ void test_gdraw_command__draw_circle(void) {
   GColor color = gdraw_command_get_fill_color(command);
   color.a = 0;
   gdraw_command_set_fill_color(command, color);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_stroke_width, 0);
@@ -402,13 +402,13 @@ void test_gdraw_command__draw_circle(void) {
   cl_assert_equal_b(s_radius, 0);
   cl_assert_equal_i(s_circle_fill_count, 0);
   cl_assert_equal_i(s_circle_stroke_count, 0);
-  cl_assert_equal_p(s_stroke_points, NULL);
-  cl_assert_equal_p(s_fill_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
+  cl_assert_equal_p(s_fill_points, nullptr);
 
   prv_reset();
   // set stroke width to non-zero value. stroke should be drawn, but no fill
   gdraw_command_set_stroke_width(command, 2);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorGreenARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_stroke_width, 2);
@@ -417,7 +417,7 @@ void test_gdraw_command__draw_circle(void) {
   cl_assert_equal_i(s_circle_fill_count, 0);
   cl_assert_equal_i(s_circle_stroke_count, 1);
   cl_assert(prv_compare_points(&center, s_stroke_points, s_path_num_points));
-  cl_assert_equal_p(s_fill_points, NULL);
+  cl_assert_equal_p(s_fill_points, nullptr);
 
   prv_reset();
   // set stroke color to be transparent and restore fill - fill should be drawn, but no outline
@@ -426,7 +426,7 @@ void test_gdraw_command__draw_circle(void) {
   color = gdraw_command_get_stroke_color(command);
   color.a = 0;
   gdraw_command_set_stroke_color(command, color);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorRedARGB8);
   cl_assert_equal_i(s_stroke_width, 0);
@@ -434,14 +434,14 @@ void test_gdraw_command__draw_circle(void) {
   cl_assert_equal_b(s_path_open, false);
   cl_assert_equal_i(s_circle_fill_count, 1);
   cl_assert_equal_i(s_circle_stroke_count, 0);
-  cl_assert_equal_p(s_stroke_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
   cl_assert(prv_compare_points(&center, s_fill_points, s_path_num_points));
 
   prv_reset();
   // restore stroke color and set radius to zero - only a stroke should be drawn
   gdraw_command_set_stroke_color(command, GColorPurple);
   gdraw_command_set_radius(command, 0);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorPurpleARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_stroke_width, 2);
@@ -450,13 +450,13 @@ void test_gdraw_command__draw_circle(void) {
   cl_assert_equal_i(s_circle_fill_count, 0);
   cl_assert_equal_i(s_circle_stroke_count, 1);
   cl_assert(prv_compare_points(&center, s_stroke_points, s_path_num_points));
-  cl_assert_equal_p(s_fill_points, NULL);
+  cl_assert_equal_p(s_fill_points, nullptr);
 
   prv_reset();
   // restore radius and set hidden - nothing should be drawn
   gdraw_command_set_radius(command, 300);
   gdraw_command_set_hidden(command, true);
-  gdraw_command_draw(NULL, command);
+  gdraw_command_draw(nullptr, command);
   cl_assert_equal_i(s_stroke_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_fill_color.argb, GColorClearARGB8);
   cl_assert_equal_i(s_stroke_width, 0);
@@ -464,8 +464,8 @@ void test_gdraw_command__draw_circle(void) {
   cl_assert_equal_b(s_radius, 0);
   cl_assert_equal_i(s_circle_fill_count, 0);
   cl_assert_equal_i(s_circle_stroke_count, 0);
-  cl_assert_equal_p(s_stroke_points, NULL);
-  cl_assert_equal_p(s_fill_points, NULL);
+  cl_assert_equal_p(s_stroke_points, nullptr);
+  cl_assert_equal_p(s_fill_points, nullptr);
 
   free(command);
 }
@@ -626,7 +626,7 @@ void test_gdraw_command__validate_image(void) {
 }
 
 void test_gdraw_command__clone_image(void) {
-  cl_assert_equal_p(gdraw_command_image_clone(NULL), NULL);
+  cl_assert_equal_p(gdraw_command_image_clone(nullptr), nullptr);
 
   size_t size = sizeof(GDrawCommandImage) + (3 * sizeof(GDrawCommand)) + (sizeof(GPoint) * 6);
 
@@ -707,13 +707,13 @@ void test_gdraw_command__draw_frame(void) {
 
   GContext *ctx = (GContext *)123; // just a fake internal guard != NULL
 
-  gdraw_command_frame_draw(ctx, NULL, frame, GPoint(0, 0));
+  gdraw_command_frame_draw(ctx, nullptr, frame, GPoint(0, 0));
   cl_assert_equal_i(s_path_num_points, 2);
   cl_assert(prv_compare_points(points, s_stroke_points, s_path_num_points));
   cl_assert(prv_compare_points(points, s_fill_points, s_path_num_points));
 
   prv_reset();
-  gdraw_command_frame_draw(ctx, NULL, frame, GPoint(-1, 1));
+  gdraw_command_frame_draw(ctx, nullptr, frame, GPoint(-1, 1));
   cl_assert_equal_i(s_path_num_points, 2);
   points[0] = GPoint(0, 2);
   points[1] = GPoint(1, -1);
@@ -731,7 +731,7 @@ static bool prv_iterate(GDrawCommand *command, uint32_t index, void *context) {
 
 void test_gdraw_command__iterate(void) {
   GDrawCommandList *command_list = prv_create_command_list_3();
-  void *end = gdraw_command_list_iterate_private(command_list, prv_iterate, NULL);
+  void *end = gdraw_command_list_iterate_private(command_list, prv_iterate, nullptr);
   cl_assert_equal_i(s_iterations, 3);
   GDrawCommand *command = gdraw_command_list_get_command(command_list, 2);
   void *expected_end = command->points + command->num_points;

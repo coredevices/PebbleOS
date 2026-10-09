@@ -23,5 +23,5 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 };
 
 static const BoardConfigMag BOARD_CONFIG_MAG = {
-  .mag_config = {{0}},
+  .mag_config = {},
 };

@@ -40,18 +40,18 @@ PebbleTask pebble_task_get_current(void) {
 }
 
 struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
-  return NULL;
+  return nullptr;
 }
 
 const char *pebble_task_get_name(PebbleTask task) {
-  return NULL;
+  return nullptr;
 }
 
 void pebble_task_unregister(PebbleTask task) {
 }
 
 struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
-  return NULL;
+  return nullptr;
 }
 
 //! System install ids are negative, app-db (third-party) install ids are positive
@@ -153,13 +153,13 @@ void test_menu_layer_system_cells__initialize(void) {
 
 void test_menu_layer_system_cells__cleanup(void) {
   free(fb);
-  fb = NULL;
+  fb = nullptr;
 
   gbitmap_deinit(&s_tictoc_icon_bitmap);
   gbitmap_deinit(&s_smart_alarm_icon_bitmap);
 
   gbitmap_destroy(s_dest_bitmap);
-  s_dest_bitmap = NULL;
+  s_dest_bitmap = nullptr;
 }
 
 // Helpers
@@ -173,7 +173,7 @@ typedef struct {
 } MenuLayerSystemCellTestColumnData;
 
 static const MenuLayerSystemCellTestColumnData s_menu_system_basic_cell_test_column_data[] = {
-  {NULL, NULL, NULL}, // Use the default fonts
+  {nullptr, nullptr, nullptr}, // Use the default fonts
 };
 
 static const MenuLayerSystemCellTestColumnData s_menu_system_cell_layer_test_column_data[] = {
@@ -197,16 +197,16 @@ typedef struct {
 #define DEFAULT_ICON_ALIGN PBL_IF_RECT_ELSE(MenuCellLayerIconAlign_Left, MenuCellLayerIconAlign_Top)
 
 static const MenuLayerSystemCellTestRowData s_menu_system_cell_test_row_data[] = {
-  {"Star Wars", NULL, NULL, NULL, DEFAULT_ICON_ALIGN},
-  {"The Lord of the Rings", "The Fellowship of the Ring", NULL, NULL, DEFAULT_ICON_ALIGN},
-  {"The Lord of the Rings", NULL, NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
-  {"The Matrix", "Revolutions", NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
-  {"8:00 AM", "Weekdays", "OFF", NULL, DEFAULT_ICON_ALIGN},
-  {"8:00 AM", "Weekdays", NULL, &s_tictoc_icon_bitmap, MenuCellLayerIconAlign_Right},
+  {"Star Wars", nullptr, nullptr, nullptr, DEFAULT_ICON_ALIGN},
+  {"The Lord of the Rings", "The Fellowship of the Ring", nullptr, nullptr, DEFAULT_ICON_ALIGN},
+  {"The Lord of the Rings", nullptr, nullptr, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
+  {"The Matrix", "Revolutions", nullptr, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN},
+  {"8:00 AM", "Weekdays", "OFF", nullptr, DEFAULT_ICON_ALIGN},
+  {"8:00 AM", "Weekdays", nullptr, &s_tictoc_icon_bitmap, MenuCellLayerIconAlign_Right},
   {"8:00 AM", "Weekdays", "OFF", &s_smart_alarm_icon_bitmap, MenuCellLayerIconAlign_TopLeft, false,
    &(GBoxModel){.offset = {0, 5}, .margin = {6, 0}}, PBL_IF_ROUND_ELSE(-6, 0), true},
-  {"The Lord of the Rings", NULL, NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
-  {"The Matrix", "Revolutions", NULL, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
+  {"The Lord of the Rings", nullptr, nullptr, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
+  {"The Matrix", "Revolutions", nullptr, &s_tictoc_icon_bitmap, DEFAULT_ICON_ALIGN, true},
 };
 
 // We render all of the row data's for each of the following heights
@@ -297,10 +297,12 @@ static void prv_draw_cell(MenuCellType cell_type, const GRect *cell_bounds,
   s_cell_is_highlighted = is_selected;
 
   const MenuCellLayerConfig config = {
-    .title_font = column_data->title_font ? fonts_get_system_font(column_data->title_font) : NULL,
+    .title_font =
+        column_data->title_font ? fonts_get_system_font(column_data->title_font) : nullptr,
     .subtitle_font =
-        column_data->subtitle_font ? fonts_get_system_font(column_data->subtitle_font) : NULL,
-    .value_font = column_data->value_font ? fonts_get_system_font(column_data->value_font) : NULL,
+        column_data->subtitle_font ? fonts_get_system_font(column_data->subtitle_font) : nullptr,
+    .value_font =
+        column_data->value_font ? fonts_get_system_font(column_data->value_font) : nullptr,
     .title = row_data->title,
     .subtitle = row_data->subtitle,
     .value = row_data->value,
@@ -558,8 +560,8 @@ static unsigned int prv_count_basic_cell_foreground(int16_t cell_height, const c
   Layer layer;
   layer_init(&layer, &s_ctx.draw_state.clip_box);
   layer.is_highlighted = selected;
-  menu_cell_basic_draw_custom(&s_ctx, &layer, NULL, title, NULL, NULL, subtitle_font, subtitle,
-                              icon, false, GTextOverflowModeFill);
+  menu_cell_basic_draw_custom(&s_ctx, &layer, nullptr, title, nullptr, nullptr, subtitle_font,
+                              subtitle, icon, false, GTextOverflowModeFill);
 
   unsigned int foreground_pixels = 0;
   for (int16_t y = 0; y < bitmap->bounds.size.h; y++) {
@@ -583,11 +585,11 @@ void test_menu_layer_system_cells__basic_height_preserves_accents_and_descenders
        size++) {
     system_theme_set_content_size(size);
     for (int selected = 0; selected <= 1; selected++) {
-      GBitmap *icon = PBL_IF_RECT_ELSE(&s_tictoc_icon_bitmap, NULL);
+      GBitmap *icon = PBL_IF_RECT_ELSE(&s_tictoc_icon_bitmap, nullptr);
       const unsigned int reference_pixels =
-          prv_count_basic_cell_foreground(128, titles[size], "ÿģĳ,", NULL, icon, selected);
+          prv_count_basic_cell_foreground(128, titles[size], "ÿģĳ,", nullptr, icon, selected);
       const unsigned int actual_pixels = prv_count_basic_cell_foreground(
-          menu_cell_basic_cell_height(), titles[size], "ÿģĳ,", NULL, icon, selected);
+          menu_cell_basic_cell_height(), titles[size], "ÿģĳ,", nullptr, icon, selected);
       cl_assert(reference_pixels > 0);
       cl_assert_equal_i(actual_pixels, reference_pixels);
     }
@@ -605,10 +607,10 @@ void test_menu_layer_system_cells__caption_rows_preserve_accents_and_descenders(
     const int16_t saved_height =
         MAX(0, fonts_get_font_height(subtitle_font) - fonts_get_font_height(caption_font));
     const unsigned int reference_pixels =
-        prv_count_basic_cell_foreground(128, titles[size], "ÿgj,", caption_font, NULL, true);
+        prv_count_basic_cell_foreground(128, titles[size], "ÿgj,", caption_font, nullptr, true);
     const unsigned int actual_pixels =
         prv_count_basic_cell_foreground(menu_cell_basic_cell_height() - saved_height, titles[size],
-                                        "ÿgj,", caption_font, NULL, true);
+                                        "ÿgj,", caption_font, nullptr, true);
     cl_assert(reference_pixels > 0);
     cl_assert_equal_i(actual_pixels, reference_pixels);
   }

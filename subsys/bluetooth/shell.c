@@ -12,6 +12,6 @@ static int prv_cmd_host_reset(const struct pbl_shell *sh, size_t argc, char **ar
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, host_reset, NULL, "Reset the host stack", prv_cmd_host_reset, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, host_reset, nullptr, "Reset the host stack", prv_cmd_host_reset, 0, 0);
 
 #endif

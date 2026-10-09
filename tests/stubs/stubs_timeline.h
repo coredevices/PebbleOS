@@ -36,7 +36,7 @@ void PBL_WEAK timeline_action_endpoint_send_displayed_item(const Uuid *id) {
 }
 
 Animation *PBL_WEAK timeline_animate_back_from_card(void) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK timeline_get_originator_id(const TimelineItem *item, Uuid *id) {

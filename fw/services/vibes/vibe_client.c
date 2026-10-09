@@ -21,7 +21,7 @@ VibeScore *vibe_client_get_score(VibeClient client) {
   PBL_LOG_DBG("Vibe score: client=%d, score=%d, disabled=%d", client, id,
               id == VibeScoreId_Disabled);
   if (id == VibeScoreId_Disabled) {
-    return NULL;
+    return nullptr;
   }
   VibeScore *score = vibe_score_create_with_resource(vibe_score_info_get_resource_id(id));
   if (!score) {

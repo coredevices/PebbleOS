@@ -7,9 +7,9 @@
 
 #if defined(CONFIG_FLASH_QEMU) || defined(CONFIG_FLASH_POSIX)
 #include "flash_region_qemu.h"
-#elif defined(CONFIG_FLASH_GD25LQ255E)
+#elifdef CONFIG_FLASH_GD25LQ255E
 #include "flash_region_gd25lq255e.h"
-#elif defined(CONFIG_FLASH_GD25Q256E)
+#elifdef CONFIG_FLASH_GD25Q256E
 #include "flash_region_gd25q256e.h"
 #endif
 

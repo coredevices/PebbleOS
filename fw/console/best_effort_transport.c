@@ -5,7 +5,6 @@
 
 #include "pulse_protocol_impl.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 

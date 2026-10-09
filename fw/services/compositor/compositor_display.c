@@ -74,7 +74,7 @@ static bool prv_flush_get_next_line_cb(DisplayRow *row) {
     } else {
       row->data = fb_line;
     }
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
     // Draw rounded corners by modifying the framebuffer directly.
     // The display driver does in-place format conversion and expects row.data
     // to point into the compositor's framebuffer. We save and restore corners.

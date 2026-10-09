@@ -77,14 +77,14 @@ void test_recognizer_lifecycle__cleanup(void) {
 
 void test_recognizer_lifecycle__get_manager_routing(void) {
   // NULL window -> NULL
-  cl_assert_equal_p(window_get_recognizer_manager(NULL), NULL);
+  cl_assert_equal_p(window_get_recognizer_manager(nullptr), nullptr);
 
   Window window = {};
   layer_init(&window.layer, &GRectZero);
 
   // Window with no parent stack -> NULL
-  window.parent_window_stack = NULL;
-  cl_assert_equal_p(window_get_recognizer_manager(&window), NULL);
+  window.parent_window_stack = nullptr;
+  cl_assert_equal_p(window_get_recognizer_manager(&window), nullptr);
 
   // App window (parent stack is the app's window stack) -> the app manager
   window.parent_window_stack = app_state_get_window_stack();
@@ -119,7 +119,7 @@ void test_recognizer_lifecycle__became_and_lost_focus(void) {
   window_became_input_focus(&window);
   cl_assert_equal_p(s_manager.window, &window);
   cl_assert_equal_i(s_manager.state, RecognizerManagerState_WaitForTouchdown);
-  cl_assert_equal_p(s_manager.active_layer, NULL);
+  cl_assert_equal_p(s_manager.active_layer, nullptr);
 
   // Losing focus on a window that is not the current one is a no-op
   s_manager.window = &window;
@@ -128,5 +128,5 @@ void test_recognizer_lifecycle__became_and_lost_focus(void) {
 
   // Losing focus on the current window clears the window pointer
   window_lost_input_focus(&window);
-  cl_assert_equal_p(s_manager.window, NULL);
+  cl_assert_equal_p(s_manager.window, nullptr);
 }

@@ -76,7 +76,7 @@ void test_health_activity_summary_card__render_no_data(void) {
 
 void test_health_activity_summary_card__no_current_steps(void) {
   HealthData health_data = {
-    .step_data = {0},
+    .step_data = {},
     .step_averages = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
                       10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,

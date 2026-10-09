@@ -8,7 +8,6 @@
 #include "pulse2_transport_impl.h"
 #include "pulse_internal.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -228,8 +227,8 @@ static pbl_tick_t prv_poll_timer(uint8_t *const sequence_number) {
       timeout = 0;
       *sequence_number = s_reliable_timer_sequence_number;
     } else {
-      _Static_assert(1000 * RTC_TICKS_HZ / 1000 == RTC_TICKS_HZ,
-                     "RtcTicks uses different units than FreeRTOS ticks");
+      static_assert(1000 * RTC_TICKS_HZ / 1000 == RTC_TICKS_HZ,
+                    "RtcTicks uses different units than FreeRTOS ticks");
       timeout = timer_expiry_tick - now;
     }
   }
@@ -244,7 +243,7 @@ static void prv_pulse_task_feed_watchdog(void) {
 }
 
 static void prv_pulse_task_main(void *unused) {
-  s_wdt_channel = pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, NULL, NULL);
+  s_wdt_channel = pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr, nullptr);
   PBL_ASSERTN(s_wdt_channel >= 0);
 
   CobsDecodeContext frame_decode_ctx;

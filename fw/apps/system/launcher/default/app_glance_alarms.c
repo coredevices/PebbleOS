@@ -32,19 +32,19 @@ typedef struct LauncherAppGlanceAlarms {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceAlarms *alarms_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(alarms_glance, icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(alarms_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceAlarms *alarms_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(alarms_glance, title, NULL);
+  return NULL_SAFE_FIELD_ACCESS(alarms_glance, title, nullptr);
 }
 
 static void prv_alarms_glance_subtitle_dynamic_text_node_update(
-    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
-    size_t buffer_size, void *user_data) {
+    [[maybe_unused]] GContext *ctx, [[maybe_unused]] GTextNode *node,
+    [[maybe_unused]] const GRect *box, [[maybe_unused]] const GTextNodeDrawConfig *config,
+    [[maybe_unused]] bool render, char *buffer, size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceAlarms *alarms_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -133,7 +133,7 @@ static void prv_update_glance_for_next_alarm(LauncherAppGlanceAlarms *alarms_gla
   prv_set_glance_icon(alarms_glance, new_icon_resource_id);
 }
 
-static void prv_alarm_clock_event_handler(PBL_UNUSED PebbleEvent *event, void *context) {
+static void prv_alarm_clock_event_handler([[maybe_unused]] PebbleEvent *event, void *context) {
   LauncherAppGlanceStructured *structured_glance = context;
   LauncherAppGlanceAlarms *alarms_glance =
       launcher_app_glance_structured_get_data(structured_glance);

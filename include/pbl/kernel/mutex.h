@@ -47,7 +47,7 @@ struct pbl_mutex {
 };
 
 /** @brief Static initializer for an unlocked mutex. */
-#define PBL_MUTEX_INITIALIZER {.owner = NULL, .count = 0, .lock_lr = 0}
+#define PBL_MUTEX_INITIALIZER {.owner = nullptr, .count = 0, .lock_lr = 0}
 
 /**
  * @brief Define an unlocked mutex, usable without pbl_mutex_init().

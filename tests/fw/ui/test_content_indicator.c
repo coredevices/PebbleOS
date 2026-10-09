@@ -86,7 +86,7 @@ void test_content_indicator__create_should_add_to_buffer(void) {
   }
 
   // Creating more content indicators than the buffer can hold should return NULL
-  cl_assert_equal_p(content_indicator_create(), NULL);
+  cl_assert_equal_p(content_indicator_create(), nullptr);
 }
 
 void test_content_indicator__init_should_add_to_buffer(void) {
@@ -211,7 +211,7 @@ void test_content_indicator__should_only_be_created_for_scroll_layer_upon_client
   ScrollLayer scroll_layer;
   // Trying to access the ContentIndicator for this ScrollLayer should return NULL because we
   // haven't tried to access it as the client yet
-  cl_assert_equal_p(content_indicator_get_for_scroll_layer(&scroll_layer), NULL);
+  cl_assert_equal_p(content_indicator_get_for_scroll_layer(&scroll_layer), nullptr);
   // And the buffer should still be empty
   cl_assert_equal_i(buffer->bytes_written, 0);
 
@@ -253,7 +253,7 @@ void test_content_indicator__pass_null_config_to_reset_direction_data(void) {
 
   // Direction data should be emptied and layer's update proc should return to original when NULL
   // config is passed
-  cl_assert(content_indicator_configure_direction(&content_indicator, direction, NULL));
+  cl_assert(content_indicator_configure_direction(&content_indicator, direction, nullptr));
   cl_assert_equal_p(dummy_config.layer->update_proc, s_content_indicator_dummy_layer_update_proc);
   cl_assert(!direction_data[direction].config.layer);
 

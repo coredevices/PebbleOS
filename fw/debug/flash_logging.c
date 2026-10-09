@@ -114,20 +114,20 @@ typedef enum {
 // Static asserts to make sure user has configured flash logging correctly for
 // the platform of interest
 
-_Static_assert((MAX_POSSIBLE_LOG_GENS >= 4) && (MAX_POSSIBLE_LOG_GENS < MAX_LOG_FILE_ID),
-               "Invalid number of log generation numbers");
-_Static_assert(MAX_POSSIBLE_LOG_GENS < MAX_PAGE_CHUNK_ID,
-               "Invalid number of chunk ids for serial distance to work");
-_Static_assert((LOG_REGION_SIZE / ERASE_UNIT_SIZE) >= 2,
-               "Need to have at least 2 eraseable units for flash logging to work");
-_Static_assert((LOG_REGION_SIZE % LOG_PAGE_SIZE) == 0,
-               "The log page size must be divisible by the log region size");
-_Static_assert(((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0) &&
-                   ((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0),
-               "Space for flash logging must be aligned on an erase region boundary");
-_Static_assert(LOG_PAGE_SIZE <= ERASE_UNIT_SIZE, "Log pages must fit within an erase unit");
-_Static_assert((ERASE_UNIT_SIZE % LOG_PAGE_SIZE) == 0,
-               "The log page size must be divisible by the erase unit size");
+static_assert((MAX_POSSIBLE_LOG_GENS >= 4) && (MAX_POSSIBLE_LOG_GENS < MAX_LOG_FILE_ID),
+              "Invalid number of log generation numbers");
+static_assert(MAX_POSSIBLE_LOG_GENS < MAX_PAGE_CHUNK_ID,
+              "Invalid number of chunk ids for serial distance to work");
+static_assert((LOG_REGION_SIZE / ERASE_UNIT_SIZE) >= 2,
+              "Need to have at least 2 eraseable units for flash logging to work");
+static_assert((LOG_REGION_SIZE % LOG_PAGE_SIZE) == 0,
+              "The log page size must be divisible by the log region size");
+static_assert(((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0) &&
+                  ((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0),
+              "Space for flash logging must be aligned on an erase region boundary");
+static_assert(LOG_PAGE_SIZE <= ERASE_UNIT_SIZE, "Log pages must fit within an erase unit");
+static_assert((ERASE_UNIT_SIZE % LOG_PAGE_SIZE) == 0,
+              "The log page size must be divisible by the erase unit size");
 
 //! Given the current address and amount to increment it by, handles wrapping
 //! and computes the valid flash address

@@ -271,7 +271,7 @@ static void prv_free_buffers(AudioDeviceState *state) {
   // Free circular buffer storage
   if (state->circ_buffer_storage) {
     kernel_free(state->circ_buffer_storage);
-    state->circ_buffer_storage = NULL;
+    state->circ_buffer_storage = nullptr;
   }
 }
 
@@ -290,7 +290,7 @@ bool audec_init(AudioDevice *audio_device) {
   haudcodec->Init.dac_cfg.opmode = 1;
   haudcodec->Init.adc_cfg.opmode = 1;
   haudcodec->bufSize = CFG_AUDIO_PLAYBACK_PIPE_SIZE * 2;
-  state->audec_queue_buf[HAL_AUDCODEC_DAC_CH0] = NULL;
+  state->audec_queue_buf[HAL_AUDCODEC_DAC_CH0] = nullptr;
   state->volume = MAX_VOLUME;
 
   HAL_PMU_EnableAudio(1);
@@ -306,7 +306,7 @@ bool audec_init(AudioDevice *audio_device) {
     }
   }
 
-  if (haudcodec->buf[HAL_AUDCODEC_DAC_CH0] == NULL) {
+  if (haudcodec->buf[HAL_AUDCODEC_DAC_CH0] == nullptr) {
     // Over-allocate so the DMA buffer can start on a cache-line boundary.
     // Each half is consumed by DMA while the CPU fills the other half;
     // dcache_flush() of one half must not touch lines that belong to the
@@ -417,7 +417,7 @@ void audec_stop(AudioDevice *audio_device) {
   prv_bf0_disable_pll(state);
 
   pbl_irq_disable(audio_device->audec_dma_irq);
-  state->trans_cb = NULL;
+  state->trans_cb = nullptr;
   HAL_AUDCODEC_DMAStop(haudcodec, HAL_AUDCODEC_DAC_CH0);
   haudcodec->channel_ref &= ~(1 << HAL_AUDCODEC_DAC_CH0);
   haudcodec->State[HAL_AUDCODEC_DAC_CH0] = HAL_AUDCODEC_STATE_READY;

@@ -91,20 +91,20 @@ static bool prv_descriptor_free_cb(ListNode *node, void *context) {
 
 static bool prv_characteristic_free_cb(ListNode *node, void *context) {
   GATTServiceDiscoveryCharacteristicNode *chr_node = (GATTServiceDiscoveryCharacteristicNode *)node;
-  list_foreach(chr_node->descriptors, prv_descriptor_free_cb, NULL);
+  list_foreach(chr_node->descriptors, prv_descriptor_free_cb, nullptr);
   kernel_free(node);
   return true;
 }
 
 static bool prv_service_free_cb(ListNode *node, void *context) {
   GATTServiceDiscoveryServiceNode *service_node = (GATTServiceDiscoveryServiceNode *)node;
-  list_foreach(service_node->characteristics, prv_characteristic_free_cb, NULL);
+  list_foreach(service_node->characteristics, prv_characteristic_free_cb, nullptr);
   kernel_free(node);
   return true;
 }
 
 static void prv_free_discovery_context(GATTServiceDiscoveryContext *context) {
-  list_foreach(context->services, prv_service_free_cb, NULL);
+  list_foreach(context->services, prv_service_free_cb, nullptr);
   kernel_free(context);
 }
 
@@ -136,7 +136,7 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
   GATTServiceDiscoveryCharacteristicNode *chr_node =
       (GATTServiceDiscoveryCharacteristicNode *)service_node->characteristics;
   uint8_t *end_ptr = (uint8_t *)gatt_service->characteristics;
-  while (chr_node != NULL) {
+  while (chr_node != nullptr) {
     struct pbl_bt_gatt_characteristic *gatt_characteristic =
         (struct pbl_bt_gatt_characteristic *)end_ptr;
     *gatt_characteristic = (struct pbl_bt_gatt_characteristic){
@@ -149,7 +149,7 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
     GATTServiceDiscoveryDescriptorNode *dsc_node =
         (GATTServiceDiscoveryDescriptorNode *)chr_node->descriptors;
     uint16_t dsc_index = 0;
-    while (dsc_node != NULL) {
+    while (dsc_node != nullptr) {
       struct pbl_bt_gatt_descriptor *gatt_descriptor = &gatt_characteristic->descriptors[dsc_index];
       *gatt_descriptor = (struct pbl_bt_gatt_descriptor){
         .att_handle_offset = dsc_node->descriptor.handle - gatt_service->att_handle,
@@ -196,20 +196,20 @@ static bool prv_find_dsc_uuid(GATTServiceDiscoveryContext *context, const ble_uu
                               uint16_t *chr_handle, uint16_t *dsc_handle) {
   GATTServiceDiscoveryServiceNode *service_node = (GATTServiceDiscoveryServiceNode *)list_find(
       context->services, prv_find_svc_by_uuid, (void *)svc_uuid);
-  if (service_node == NULL) {
+  if (service_node == nullptr) {
     return false;
   }
 
   GATTServiceDiscoveryCharacteristicNode *chr_node =
       (GATTServiceDiscoveryCharacteristicNode *)list_find(service_node->characteristics,
                                                           prv_find_chr_by_uuid, (void *)chr_uuid);
-  if (chr_node == NULL) {
+  if (chr_node == nullptr) {
     return false;
   }
 
   GATTServiceDiscoveryDescriptorNode *dsc_node = (GATTServiceDiscoveryDescriptorNode *)list_find(
       chr_node->descriptors, prv_find_dsc_by_uuid, (void *)dsc_uuid);
-  if (dsc_node == NULL) {
+  if (dsc_node == nullptr) {
     return false;
   }
 
@@ -282,7 +282,7 @@ static uint16_t prv_get_last_dsc_handle(GATTServiceDiscoveryContext *context) {
   const GATTServiceDiscoveryCharacteristicNode *next_chr =
       (GATTServiceDiscoveryCharacteristicNode *)list_get_next(context->current_characteristic);
 
-  if (next_chr != NULL) {
+  if (next_chr != nullptr) {
     return MIN(next_chr->characteristic.def_handle, next_chr->characteristic.val_handle) - 1;
   } else {
     return ((GATTServiceDiscoveryServiceNode *)context->current_service)->service.end_handle;
@@ -357,7 +357,7 @@ static GATTServiceDiscoveryServiceNode *prv_get_current_service(
 }
 
 static void prv_list_append_or_set(ListNode **list, ListNode *node) {
-  if (*list == NULL) {
+  if (*list == nullptr) {
     *list = node;
   } else {
     list_append(*list, node);
@@ -396,16 +396,16 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
       context->current_characteristic = list_get_next(context->current_characteristic);
 
-      if (context->current_characteristic != NULL) {
+      if (context->current_characteristic != nullptr) {
         prv_discover_next_dscs(conn_handle, context);
       } else {
         context->current_service = list_get_next(context->current_service);
-        while (context->current_service != NULL) {
+        while (context->current_service != nullptr) {
           GATTServiceDiscoveryServiceNode *service_node = prv_get_current_service(context);
 
           context->current_characteristic = list_get_head(service_node->characteristics);
 
-          if (context->current_characteristic != NULL) {
+          if (context->current_characteristic != nullptr) {
             prv_discover_next_dscs(conn_handle, context);
             return 0;
           }
@@ -461,7 +461,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
       context->current_service = list_get_next(context->current_service);
 
-      if (context->current_service != NULL) {
+      if (context->current_service != nullptr) {
         // we have another service to discover characteristics for
         prv_discover_next_chrs(conn_handle, context);
       } else {
@@ -471,7 +471,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
         GATTServiceDiscoveryServiceNode *service_node = prv_get_current_service(context);
         context->current_characteristic = list_get_head(service_node->characteristics);
 
-        if (context->current_characteristic != NULL) {
+        if (context->current_characteristic != nullptr) {
           prv_discover_next_dscs(conn_handle, context);
         } else {
           // No characteristics found, discovery complete
@@ -522,7 +522,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
     case BLE_HS_EDONE:
       PBL_LOG_DBG("Service discovery complete");
 
-      if (context->services != NULL) {
+      if (context->services != nullptr) {
         // got services, start discovering characteristics
         context->current_service = list_get_head(context->services);
         prv_discover_next_chrs(conn_handle, context);

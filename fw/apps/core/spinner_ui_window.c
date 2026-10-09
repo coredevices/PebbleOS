@@ -141,7 +141,8 @@ static void prv_window_load_handler(Window *window) {
   // See comment about loops above (animation section)
   const int animation_duration_ms = LOOP_DURATION_MS * LOOPS_PER_ANIMATION;
   const int animation_delay_ms = 0;
-  data->spinner_animation = property_animation_create_layer_frame(&data->anim_layer, NULL, NULL);
+  data->spinner_animation =
+      property_animation_create_layer_frame(&data->anim_layer, nullptr, nullptr);
   if (data->spinner_animation) {
     Animation *animation = property_animation_get_animation(data->spinner_animation);
     animation_set_duration(animation, animation_duration_ms);

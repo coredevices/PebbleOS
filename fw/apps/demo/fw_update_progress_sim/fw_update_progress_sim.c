@@ -92,7 +92,7 @@ static void prv_window_unload_handler(Window *window) {
   FwUpdateProgressSimData *data = window_get_user_data(window);
   if (data && data->timer) {
     app_timer_cancel(data->timer);
-    data->timer = NULL;
+    data->timer = nullptr;
   }
 }
 

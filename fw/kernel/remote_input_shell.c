@@ -21,17 +21,17 @@ static int prv_press(const struct pbl_shell *sh, const char *button_str, const c
     return -EINVAL;
   }
 
-  if (presses_str != NULL && pbl_shell_strtoul(presses_str, &presses) != 0) {
+  if (presses_str != nullptr && pbl_shell_strtoul(presses_str, &presses) != 0) {
     pbl_shell_error(sh, "invalid count '%s'", presses_str);
     return -EINVAL;
   }
 
-  if (hold_ms_str != NULL && pbl_shell_strtoul(hold_ms_str, &hold_ms) != 0) {
+  if (hold_ms_str != nullptr && pbl_shell_strtoul(hold_ms_str, &hold_ms) != 0) {
     pbl_shell_error(sh, "invalid hold time '%s'", hold_ms_str);
     return -EINVAL;
   }
 
-  if (gap_ms_str != NULL && pbl_shell_strtoul(gap_ms_str, &gap_ms) != 0) {
+  if (gap_ms_str != nullptr && pbl_shell_strtoul(gap_ms_str, &gap_ms) != 0) {
     pbl_shell_error(sh, "invalid delay '%s'", gap_ms_str);
     return -EINVAL;
   }
@@ -50,11 +50,11 @@ static int prv_press(const struct pbl_shell *sh, const char *button_str, const c
 }
 
 static int prv_cmd_click(const struct pbl_shell *sh, size_t argc, char **argv) {
-  return prv_press(sh, argv[1], NULL, NULL, NULL);
+  return prv_press(sh, argv[1], nullptr, nullptr, nullptr);
 }
 
 static int prv_cmd_hold(const struct pbl_shell *sh, size_t argc, char **argv) {
-  return prv_press(sh, argv[1], NULL, argv[2], NULL);
+  return prv_press(sh, argv[1], nullptr, argv[2], nullptr);
 }
 
 static int prv_cmd_multi(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -62,12 +62,12 @@ static int prv_cmd_multi(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_button);
-PBL_SHELL_CMD_REGISTER(button, sub_button, "Buttons", NULL);
+PBL_SHELL_CMD_REGISTER(button, sub_button, "Buttons", nullptr);
 
-PBL_SHELL_SUBCMD_ADD(sub_button, click, NULL, "Click a button <btn>", prv_cmd_click, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_button, hold, NULL, "Press a button for a while <btn> <hold_ms>",
+PBL_SHELL_SUBCMD_ADD(sub_button, click, nullptr, "Click a button <btn>", prv_cmd_click, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_button, hold, nullptr, "Press a button for a while <btn> <hold_ms>",
                      prv_cmd_hold, 3, 0);
-PBL_SHELL_SUBCMD_ADD(sub_button, multi, NULL,
+PBL_SHELL_SUBCMD_ADD(sub_button, multi, nullptr,
                      "Press a button repeatedly <btn> <count> <hold_ms> <delay_ms>", prv_cmd_multi,
                      5, 0);
 

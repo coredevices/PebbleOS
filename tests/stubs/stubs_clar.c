@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <setjmp.h>
-#include <stdbool.h>
 
 bool clar_expecting_passert = false;
 bool clar_passert_occurred = false;

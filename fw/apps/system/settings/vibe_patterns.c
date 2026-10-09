@@ -58,8 +58,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
                             uint16_t row, bool selected) {
   SettingsVibePatternsData *data = (SettingsVibePatternsData *)context;
 
-  const char *title = NULL;
-  const char *subtitle = NULL;
+  const char *title = nullptr;
+  const char *subtitle = nullptr;
 
   VibeClient client = VibeClient_Notifications;
   switch (row) {
@@ -67,14 +67,15 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     case VibeSettingsRow_MuteSpeaker: {
       title = i18n_noop("Mute Speaker");
       subtitle = alerts_preferences_get_speaker_muted() ? i18n_noop("On") : i18n_noop("Off");
-      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data),
+                           nullptr);
       return;
     }
     case VibeSettingsRow_SpeakerVolume: {
       title = i18n_noop("Volume");
       snprintf(data->volume_subtitle, sizeof(data->volume_subtitle), "%u%%",
                alerts_preferences_get_speaker_volume());
-      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), data->volume_subtitle, NULL);
+      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), data->volume_subtitle, nullptr);
       return;
     }
 #endif
@@ -120,10 +121,10 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   if (!subtitle) {
     subtitle = vibe_score_info_get_name(alerts_preferences_get_vibe_score_for_client(client));
     if (subtitle && IS_EMPTY_STRING(subtitle)) {
-      subtitle = NULL;
+      subtitle = nullptr;
     }
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
 }
 
 static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_row,

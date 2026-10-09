@@ -252,7 +252,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
     dls_record.step_data = session->step_data;
   }
 
-  if (state->activity_dls_session == NULL) {
+  if (state->activity_dls_session == nullptr) {
     // We don't need to be buffered since we are logging from the KernelBG task and this
     // saves having to allocate another buffer from the kernel heap.
     const bool buffered = false;
@@ -513,7 +513,7 @@ static void prv_log_activities(time_t now_utc) {
     uint32_t session_len_sec = session->length_min * PBL_SEC_PER_MIN;
     time_t session_exit_utc = session->start_utc + session_len_sec;
 
-    ActivityClassParams *params = NULL;
+    ActivityClassParams *params = nullptr;
     switch (session->type) {
       case ActivitySessionType_Sleep:
       case ActivitySessionType_Nap:

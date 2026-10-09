@@ -32,8 +32,9 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
   graphics_context_set_compositing_mode(ctx, op);
 
-  graphics_draw_bitmap_in_rect_processed(ctx, bitmap_reel->bitmap, &bounds,
-                                         NULL_SAFE_FIELD_ACCESS(processor, bitmap_processor, NULL));
+  graphics_draw_bitmap_in_rect_processed(
+      ctx, bitmap_reel->bitmap, &bounds,
+      NULL_SAFE_FIELD_ACCESS(processor, bitmap_processor, nullptr));
 
   // Restore previous compositing mode
   graphics_context_set_compositing_mode(ctx, prev_compositing_mode);
@@ -73,7 +74,7 @@ static GBitmap *prv_get_gbitmap(KinoReel *reel) {
   if (reel) {
     return ((KinoReelImplGBitmap *)reel)->bitmap;
   }
-  return NULL;
+  return nullptr;
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_GBITMAP = {
@@ -108,8 +109,8 @@ KinoReel *kino_reel_gbitmap_create_with_resource(uint32_t resource_id) {
 
 KinoReel *kino_reel_gbitmap_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   GBitmap *bitmap = gbitmap_create_with_resource_system(app_num, resource_id);
-  if (bitmap == NULL) {
-    return NULL;
+  if (bitmap == nullptr) {
+    return nullptr;
   }
   return kino_reel_gbitmap_create(bitmap, true);
 }

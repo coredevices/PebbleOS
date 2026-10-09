@@ -54,7 +54,7 @@ static void prv_close_file_and_unlock_mutex(void) {
 static void *prv_get_prefs(const char *pref_key) {
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv != S_SUCCESS) {
-    return NULL;
+    return nullptr;
   }
 
   const int len =
@@ -66,7 +66,7 @@ static void *prv_get_prefs(const char *pref_key) {
                            len);
     if (rv != S_SUCCESS) {
       task_free(prefs);
-      prefs = NULL;
+      prefs = nullptr;
     }
   }
 
@@ -83,7 +83,7 @@ SerializedWeatherAppPrefs *watch_app_prefs_get_weather(void) {
 }
 
 SerializedReminderAppPrefs *watch_app_prefs_get_reminder(void) {
-  SerializedReminderAppPrefs *result = NULL;
+  SerializedReminderAppPrefs *result = nullptr;
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
   if (s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid) {
     result = task_zalloc(sizeof(*result));

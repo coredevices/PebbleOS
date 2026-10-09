@@ -171,7 +171,7 @@ static bool prv_each_free_up_space(SettingsFile *file, SettingsRecordInfo *info,
   if ((info->key_len != sizeof(AppInstallId)) || (info->val_len != sizeof(AppCacheEntry))) {
     PBL_LOG_WRN("Invalid cache entry with key_len: %u and val_len: %u, flushing", info->key_len,
                 info->val_len);
-    system_task_add_callback(prv_delete_cache_callback, NULL);
+    system_task_add_callback(prv_delete_cache_callback, nullptr);
     return false; // stop iterating, delete the file and binaries
   }
 
@@ -227,7 +227,7 @@ status_t app_cache_app_launched(AppInstallId app_id) {
       goto unlock;
     }
 
-    AppCacheEntry entry = {0};
+    AppCacheEntry entry = {};
     rv = settings_file_get(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
                            sizeof(AppCacheEntry));
 
@@ -324,7 +324,7 @@ static bool prv_remove_matching_resource_file_callback(SettingsFile *file, Setti
       // the AppInstallId of the file matches the one in the cache so we can remove this
       // entry from the resource_list (since we don't want to delete it)
       // note: resource_list may be updated if we happen to remove the first entry in the list
-      list_remove(&(iter->list_node), (ListNode **)resource_list, NULL);
+      list_remove(&(iter->list_node), (ListNode **)resource_list, nullptr);
       kernel_free(iter); // free up the memory for the node we just removed
       break;             // we can quit now that we've found a match for this id
     }
@@ -422,7 +422,7 @@ status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
     settings_file_close(&file);
 
     // cleanup the cache if we need to
-    system_task_add_callback(prv_cleanup_app_cache_if_needed, NULL);
+    system_task_add_callback(prv_cleanup_app_cache_if_needed, nullptr);
   }
 unlock:
   pbl_mutex_unlock(&s_app_cache_mutex);

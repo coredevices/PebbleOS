@@ -3,8 +3,6 @@
 
 #include "touch_sdl_bottom.h"
 
-#include <stdbool.h>
-
 #include <posix_host.h>
 #include <sdl_bottom.h>
 

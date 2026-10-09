@@ -55,8 +55,8 @@ typedef struct PBL_PACKED MovementData {
   uint32_t distance;
   uint32_t active_seconds;
 } MovementData;
-_Static_assert(offsetof(MovementData, version) == 0, "Version not at the start of MovementData");
-_Static_assert(sizeof(MovementData) % sizeof(uint32_t) == 0, "MovementData size is invalid");
+static_assert(offsetof(MovementData, version) == 0, "Version not at the start of MovementData");
+static_assert(sizeof(MovementData) % sizeof(uint32_t) == 0, "MovementData size is invalid");
 
 typedef struct PBL_PACKED SleepData {
   uint32_t version;
@@ -70,8 +70,8 @@ typedef struct PBL_PACKED SleepData {
   uint32_t typical_fall_asleep_time;
   uint32_t typical_wakeup_time;
 } SleepData;
-_Static_assert(offsetof(SleepData, version) == 0, "Version not at the start of SleepData");
-_Static_assert(sizeof(SleepData) % sizeof(uint32_t) == 0, "SleepData size is invalid");
+static_assert(offsetof(SleepData, version) == 0, "Version not at the start of SleepData");
+static_assert(sizeof(SleepData) % sizeof(uint32_t) == 0, "SleepData size is invalid");
 
 // The phone doesn't send us Zone0 minutes
 typedef struct PBL_PACKED HeartRateZoneData {
@@ -80,10 +80,10 @@ typedef struct PBL_PACKED HeartRateZoneData {
   uint32_t num_zones;
   uint32_t minutes_in_zone[HRZone_Max];
 } HeartRateZoneData;
-_Static_assert(offsetof(HeartRateZoneData, version) == 0,
-               "Version not at the start of HeartRateZoneData");
-_Static_assert(sizeof(HeartRateZoneData) % sizeof(uint32_t) == 0,
-               "HeartRateZoneData size is invalid");
+static_assert(offsetof(HeartRateZoneData, version) == 0,
+              "Version not at the start of HeartRateZoneData");
+static_assert(sizeof(HeartRateZoneData) % sizeof(uint32_t) == 0,
+              "HeartRateZoneData size is invalid");
 
 static status_t prv_file_open_and_lock(SettingsFile *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
@@ -104,8 +104,8 @@ static void prv_file_close_and_unlock(SettingsFile *file) {
 }
 
 static bool prv_key_is_valid(const uint8_t *key, int key_len) {
-  return key_len != 0 &&                         // invalid length
-         strchr((const char *)key, '_') != NULL; // invalid key
+  return key_len != 0 &&                            // invalid length
+         strchr((const char *)key, '_') != nullptr; // invalid key
 }
 
 static bool prv_value_is_valid(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
@@ -271,7 +271,7 @@ bool health_db_get_typical_step_averages(enum pbl_weekday day, ActivityMetricAve
   }
 
   // Default results
-  _Static_assert(
+  static_assert(
       ((ACTIVITY_METRIC_AVERAGES_UNKNOWN >> 8) & 0xFF) == (ACTIVITY_METRIC_AVERAGES_UNKNOWN & 0xFF),
       "Cannot use memset");
   memset(averages->average, ACTIVITY_METRIC_AVERAGES_UNKNOWN & 0xFF, sizeof(averages->average));

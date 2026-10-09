@@ -55,7 +55,7 @@ void cc2564A_bad_le_connection_complete_handle(
 }
 
 const GAP_LE_Pairing_Capabilities_t *gap_le_pairing_capabilities(void) {
-  return NULL;
+  return nullptr;
 }
 
 void gap_le_device_name_request(uintptr_t stack_id, GAPLEConnection *connection) {
@@ -167,7 +167,8 @@ void test_gap_le_connect__initialize(void) {
 
   // Register slave connection event callback for tests involving Pebble as slave:
   // This normally happens in gap_le_advert.c. Taking a shortcut to avoid dragging in more code.
-  GAP_LE_Advertising_Enable(1, TRUE, NULL, NULL, gap_le_connect_bluetopia_connection_callback, 0);
+  GAP_LE_Advertising_Enable(1, TRUE, nullptr, nullptr, gap_le_connect_bluetopia_connection_callback,
+                            0);
   fake_event_init();
   fake_bt_persistent_storage_reset();
   gap_le_connection_init();
@@ -212,13 +213,13 @@ void test_gap_le_connect__register_max_intents(void) {
 }
 
 void test_gap_le_connect__register_null_device(void) {
-  enum pbl_bt_errno e = gap_le_connect_connect(NULL, true /* auto_reconnect */,
+  enum pbl_bt_errno e = gap_le_connect_connect(nullptr, true /* auto_reconnect */,
                                                false /* is_pairing_required */, GAPLEClientApp);
   cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
 }
 
 void test_gap_le_connect__unregister_null_device(void) {
-  enum pbl_bt_errno e = gap_le_connect_cancel(NULL, GAPLEClientApp);
+  enum pbl_bt_errno e = gap_le_connect_cancel(nullptr, GAPLEClientApp);
   cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
 }
 

@@ -83,7 +83,7 @@ static CommSession *s_fake_app_session = (CommSession *)~0;
 static uint64_t s_unwritten_value = ~0;
 
 void test_app_session_capabilities__initialize(void) {
-  s_app_session_ptr = NULL;
+  s_app_session_ptr = nullptr;
   s_close_called = false;
   s_get_called = false;
   s_open_status = S_SUCCESS;

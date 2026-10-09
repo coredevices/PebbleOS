@@ -19,7 +19,7 @@ static bool prv_has_send_text_reply_action(void) {
   }
 
   bool has_reply_action =
-      (timeline_item_action_group_find_reply_action(&notif_prefs->action_group) != NULL);
+      (timeline_item_action_group_find_reply_action(&notif_prefs->action_group) != nullptr);
 
   ios_notif_pref_db_free_prefs(notif_prefs);
   return has_reply_action;

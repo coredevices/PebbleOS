@@ -4,7 +4,6 @@
 #pragma once
 
 // clang-format off
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <board/board.h>

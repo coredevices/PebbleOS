@@ -35,7 +35,7 @@ static void prv_touch_isr(void *arg) {
   if (!s_enabled || s_callback_scheduled) {
     return;
   }
-  if (system_task_add_callback_from_isr(prv_process_touch_update, NULL)) {
+  if (system_task_add_callback_from_isr(prv_process_touch_update, nullptr)) {
     s_callback_scheduled = true;
   }
 }

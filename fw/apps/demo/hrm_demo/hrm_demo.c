@@ -281,7 +281,7 @@ static void prv_init(void) {
   app_message_register_outbox_sent(prv_message_sent_cb);
   app_message_register_outbox_failed(prv_message_failed_cb);
 
-  app_timer_register(1000, prv_remote_notify_timer_cb, NULL);
+  app_timer_register(1000, prv_remote_notify_timer_cb, nullptr);
 
   app_window_stack_push(window, true);
 }
@@ -306,5 +306,6 @@ const PebbleProcessMd *hrm_demo_get_app_info(void) {
     .common.main_func = &prv_main,
   };
   // Only show in launcher if HRM is present
-  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd *)&s_hrm_demo_app_info : NULL;
+  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd *)&s_hrm_demo_app_info
+                                            : nullptr;
 }

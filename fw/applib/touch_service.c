@@ -22,14 +22,14 @@ static TouchServiceState *prv_get_state(void) {
     case PebbleTask_App:
       // Touch is reserved for watchapps; watchfaces must not consume it.
       if (sys_app_is_watchface()) {
-        return NULL;
+        return nullptr;
       }
       return app_state_get_touch_service_state();
     case PebbleTask_KernelMain:
       return kernel_applib_get_touch_service_state();
     case PebbleTask_Worker:
       // Touch is not available to background workers — they have no UI.
-      return NULL;
+      return nullptr;
     default:
       WTF;
   }
@@ -53,7 +53,7 @@ static void prv_handle_touch_event(PebbleEvent *e, void *context) {
 //! Bring the shared event-service subscription in line with the slots: keep it
 //! while either slot is occupied, drop it once both are empty.
 static void prv_update_subscription(TouchServiceState *state) {
-  const bool want = (state->system_handler != NULL) || (state->raw_handler != NULL);
+  const bool want = (state->system_handler != nullptr) || (state->raw_handler != nullptr);
   if (want && !state->subscribed) {
     state->event_info = (EventServiceInfo){
       .type = PEBBLE_TOUCH_EVENT,
@@ -85,7 +85,7 @@ void touch_service_subscribe(TouchServiceHandler handler, void *context) {
   state->raw_handler = handler;
   state->raw_context = context;
   sys_touch_reset();
-  sys_touch_set_raw_subscribed(handler != NULL);
+  sys_touch_set_raw_subscribed(handler != nullptr);
   prv_update_subscription(state);
 }
 
@@ -95,8 +95,8 @@ void touch_service_unsubscribe(void) {
     return;
   }
   // Clear only the app-facing raw slot; the system slot persists.
-  state->raw_handler = NULL;
-  state->raw_context = NULL;
+  state->raw_handler = nullptr;
+  state->raw_context = nullptr;
   sys_touch_set_raw_subscribed(false);
   prv_update_subscription(state);
 }
@@ -110,5 +110,5 @@ void app_touch_navigation_enable(bool enable) {
 }
 
 void touch_service_state_init(TouchServiceState *state) {
-  *state = (TouchServiceState){0};
+  *state = (TouchServiceState){};
 }

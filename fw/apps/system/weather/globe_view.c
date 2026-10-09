@@ -296,13 +296,13 @@ static int32_t selected_city_longitude_e2(GlobeView *view);
 
 static SavedLocationEntry *saved_entry_for_index(GlobeView *view, int index) {
   if (!view || index < 0 || index >= view->saved_entry_count)
-    return NULL;
+    return nullptr;
   return &view->saved_entries[index];
 }
 
 static SavedLocationEntry *selected_saved_entry(GlobeView *view) {
   if (!view || view->saved_entry_count <= 0)
-    return NULL;
+    return nullptr;
   if (view->selected_city_index < 0) {
     view->selected_city_index = 0;
   } else if (view->selected_city_index >= view->saved_entry_count) {
@@ -699,9 +699,9 @@ static void draw_intro_world_frame(GContext *ctx, GlobeView *view, GPoint origin
     if (frame) {
       GDrawCommandList *list = gdraw_command_frame_get_command_list(frame);
       if (list) {
-        gdraw_command_list_iterate(list, color_highlight_bw_command, NULL);
+        gdraw_command_list_iterate(list, color_highlight_bw_command, nullptr);
         gdraw_command_frame_draw(ctx, view->bw_sequence, frame, origin);
-        gdraw_command_list_iterate(list, restore_bw_command, NULL);
+        gdraw_command_list_iterate(list, restore_bw_command, nullptr);
         return;
       }
     }
@@ -962,31 +962,31 @@ static void *prv_load_inflated(uint32_t res_id, uint32_t *out_size) {
   ResHandle handle = resource_get_handle(res_id);
   size_t csize = resource_size(handle);
   if (csize <= sizeof(uint32_t))
-    return NULL;
+    return nullptr;
   uint8_t *cbuf = malloc_try(csize);
   if (!cbuf)
-    return NULL;
-  void *out = NULL;
+    return nullptr;
+  void *out = nullptr;
   uint32_t inflated_size = 0;
   if (resource_load(handle, cbuf, csize) == csize) {
     memcpy(&inflated_size, cbuf, sizeof(inflated_size)); // LE prefix
     out = malloc_try(inflated_size);
     TINF_DATA *d = malloc_try(sizeof(*d));
     if (out && d) {
-      uzlib_uncompress_init(d, NULL, 0);
+      uzlib_uncompress_init(d, nullptr, 0);
       d->source = cbuf + sizeof(uint32_t);
       d->source_limit = cbuf + csize;
-      d->source_read_cb = NULL;
+      d->source_read_cb = nullptr;
       d->dest_start = out;
       d->dest = out;
       d->dest_limit = (uint8_t *)out + inflated_size;
       if (uzlib_uncompress(d) < 0 || d->dest != d->dest_limit) {
         free(out);
-        out = NULL;
+        out = nullptr;
       }
     } else {
       free(out);
-      out = NULL;
+      out = nullptr;
     }
     free(d);
   }
@@ -1025,7 +1025,7 @@ static void unload_cubemap_resource(GlobeView *view) {
     return;
 
   free(view->cubemap_data);
-  view->cubemap_data = NULL;
+  view->cubemap_data = nullptr;
   view->cubemap_size = 0;
 }
 
@@ -1056,7 +1056,7 @@ static void unload_starfield_resource(GlobeView *view) {
     return;
 
   free(view->starfield_data);
-  view->starfield_data = NULL;
+  view->starfield_data = nullptr;
   view->starfield_size = 0;
 }
 
@@ -1073,7 +1073,7 @@ static void ensure_visual_resources(GlobeView *view) {
     GDrawCommandSequence *seq = prv_load_inflated(RESOURCE_ID_GLOBE_BW_SEQUENCE, &seq_size);
     if (seq && !gdraw_command_sequence_validate(seq, seq_size)) {
       applib_free(seq);
-      seq = NULL;
+      seq = nullptr;
     }
     view->bw_sequence = seq;
     if (view->bw_sequence) {
@@ -1134,11 +1134,11 @@ static void release_visual_resources(GlobeView *view) {
   unload_starfield_resource(view);
   if (view->bw_sequence) {
     gdraw_command_sequence_destroy(view->bw_sequence);
-    view->bw_sequence = NULL;
+    view->bw_sequence = nullptr;
   }
   if (view->cradle_pdc) {
     gdraw_command_image_destroy(view->cradle_pdc);
-    view->cradle_pdc = NULL;
+    view->cradle_pdc = nullptr;
   }
 }
 
@@ -1542,7 +1542,7 @@ PBL_NOINLINE static bool project_lat_lon_to_globe_point(GlobeView *view, int32_t
                                                         int32_t longitude_e2, GPoint center,
                                                         int radius, GPoint *point_out) {
   return project_lat_lon_to_globe_point_with_depth(view, latitude_e2, longitude_e2, center, radius,
-                                                   GLOBE_ROT_SCALE / 10, point_out, NULL);
+                                                   GLOBE_ROT_SCALE / 10, point_out, nullptr);
 }
 
 static int nearest_centered_city_index(GlobeView *view, int radius_px) {
@@ -2081,7 +2081,7 @@ static void cancel_animation_slot(Animation **slot) {
   Animation *anim = *slot;
   if (!anim)
     return;
-  *slot = NULL;
+  *slot = nullptr;
   animation_unschedule(anim);
   animation_destroy(anim);
 }
@@ -2089,7 +2089,7 @@ static void cancel_animation_slot(Animation **slot) {
 static void cancel_timer_slot(AppTimer **slot) {
   if (*slot) {
     app_timer_cancel(*slot);
-    *slot = NULL;
+    *slot = nullptr;
   }
 }
 
@@ -2190,7 +2190,7 @@ static void format_selected_label(GlobeView *view, char *buffer, size_t buffer_s
     while (country_len > 0 && country_start[country_len - 1] == ' ')
       country_len--;
 
-    const char *abbr = NULL;
+    const char *abbr = nullptr;
     if (country_len == 13 && strncmp(country_start, "United States", 13) == 0)
       abbr = "USA";
     else if (country_len == 14 && strncmp(country_start, "United Kingdom", 14) == 0)
@@ -2358,7 +2358,7 @@ static void city_anim_stopped(Animation *anim, bool finished, void *context) {
 
   bool owns_anim = view->city_anim == anim;
   if (owns_anim) {
-    view->city_anim = NULL;
+    view->city_anim = nullptr;
   }
 
 #ifdef CONFIG_TOUCH
@@ -2407,7 +2407,7 @@ static void bounce_anim_stopped(Animation *anim, bool finished, void *context) {
 
   bool owns_anim = view->bounce_anim == anim;
   if (owns_anim) {
-    view->bounce_anim = NULL;
+    view->bounce_anim = nullptr;
   }
   view->bounce_progress = 0;
   mark_dynamic_globe_dirty(view);
@@ -2437,7 +2437,7 @@ static void lock_pulse_anim_stopped(Animation *anim, bool finished, void *contex
 
   bool owns_anim = view->lock_pulse_anim == anim;
   if (owns_anim) {
-    view->lock_pulse_anim = NULL;
+    view->lock_pulse_anim = nullptr;
   }
   view->lock_pulse_progress = 0;
   mark_dynamic_globe_dirty(view);
@@ -2760,7 +2760,7 @@ static void globe_coast_timer_handler(void *context) {
   if (!view)
     return;
 
-  view->coast_timer = NULL;
+  view->coast_timer = nullptr;
   if (!view->coast_active || view->touch_active || !view->is_revealed || view->is_revealing) {
     view->coast_active = false;
     view->coast_velocity_x_q8 = 0;
@@ -2867,7 +2867,7 @@ static void reveal_anim_stopped(Animation *anim, bool finished, void *context) {
 
   bool owns_anim = view->reveal_anim == anim;
   if (owns_anim) {
-    view->reveal_anim = NULL;
+    view->reveal_anim = nullptr;
   }
   view->is_revealing = false;
 
@@ -2971,7 +2971,7 @@ static void globe_idle_timer_handler(void *context) {
   GlobeView *view = (GlobeView *)context;
   if (!view)
     return;
-  view->idle_timer = NULL;
+  view->idle_timer = nullptr;
   if (!view->is_animating || view->is_revealed || view->is_revealing) {
     return;
   }
@@ -2996,11 +2996,11 @@ static void animation_timer_handler(void *context) {
 
   if (!view || !view->is_animating || view->is_revealed) {
     if (view)
-      view->animation_timer = NULL;
+      view->animation_timer = nullptr;
     return;
   }
 
-  view->animation_timer = NULL;
+  view->animation_timer = nullptr;
 
   if (!view->is_revealing) {
     if (view->intro_selection_ms > GLOBE_FRAME_INTERVAL_MS) {
@@ -3087,7 +3087,7 @@ static void draw_city_label(GContext *ctx, GlobeView *view, GRect bounds) {
   graphics_draw_text(ctx, label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
                      GRect(label_rect.origin.x + 4, label_rect.origin.y + 3, label_rect.size.w - 8,
                            label_rect.size.h - 3),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 static void draw_intro_title(GContext *ctx, GlobeView *view, GRect bounds, int globe_y,
@@ -3102,7 +3102,7 @@ static void draw_intro_title(GContext *ctx, GlobeView *view, GRect bounds, int g
       ctx, i18n_get("CITY SELECT", view),
       fonts_get_system_font(GLOBE_SMALL_RECT ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_28_BOLD),
       GRect(0, -2, bounds.size.w, header_height + 2), GTextOverflowModeTrailingEllipsis,
-      GTextAlignmentCenter, NULL);
+      GTextAlignmentCenter, nullptr);
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, GRect(0, header_height - 2, bounds.size.w, 2), 0, GCornerNone);
 #else
@@ -3117,7 +3117,7 @@ static void draw_intro_title(GContext *ctx, GlobeView *view, GRect bounds, int g
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, title, font,
                      GRect(0, title_y - 4, bounds.size.w, GLOBE_INTRO_TITLE_HEIGHT + 8),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
   // Divider under the title (round port of the rect city-select redesign): the same
   // 2px black rule, FULL WIDTH — the round framebuffer clips each row to the glass,
   // so drawing edge to edge lands it bezel-to-bezel. Rides title_y like the title.
@@ -3196,7 +3196,7 @@ static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bou
       fonts_get_system_font(GLOBE_SMALL_RECT ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_18_BOLD),
       GRect(text_x, y + (GLOBE_SMALL_RECT ? 2 : 3), bounds.size.w - text_x, bar_h - 3),
       GTextOverflowModeTrailingEllipsis,
-      GLOBE_SMALL_RECT ? GTextAlignmentLeft : GTextAlignmentCenter, NULL);
+      GLOBE_SMALL_RECT ? GTextAlignmentLeft : GTextAlignmentCenter, nullptr);
 #else
   // Uppercase to match the rect city-select redesign's footer treatment.
   const char *label = i18n_get("SAVED LOCATIONS", view);
@@ -3239,7 +3239,7 @@ static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bou
   graphics_context_set_text_color(ctx, label_color);
   graphics_draw_text(ctx, label, font,
                      GRect(text_x, y + 3, bounds.size.w - text_x, GLOBE_SAVED_LABEL_HEIGHT - 3),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
 #endif
 }
 
@@ -3567,14 +3567,14 @@ static void window_disappear_handler(Window *window) {
 GlobeView *globe_view_create(void) {
   GlobeView *view = malloc(sizeof(GlobeView));
   if (!view)
-    return NULL;
+    return nullptr;
   memset(view, 0, sizeof(*view));
 
   // Create window
   view->window = window_create();
   if (!view->window) {
     free(view);
-    return NULL;
+    return nullptr;
   }
 
   // Configure window
@@ -3593,7 +3593,7 @@ GlobeView *globe_view_create(void) {
   if (!view->canvas_layer) {
     window_destroy(view->window);
     free(view);
-    return NULL;
+    return nullptr;
   }
   *(GlobeView **)layer_get_data(view->canvas_layer) = view;
   layer_set_update_proc(view->canvas_layer, canvas_layer_draw);
@@ -3604,7 +3604,7 @@ GlobeView *globe_view_create(void) {
     layer_destroy(view->canvas_layer);
     window_destroy(view->window);
     free(view);
-    return NULL;
+    return nullptr;
   }
   *(GlobeView **)layer_get_data(view->space_layer) = view;
   layer_set_update_proc(view->space_layer, space_layer_draw);
@@ -3618,7 +3618,7 @@ GlobeView *globe_view_create(void) {
     layer_destroy(view->canvas_layer);
     window_destroy(view->window);
     free(view);
-    return NULL;
+    return nullptr;
   }
   *(GlobeView **)layer_get_data(view->globe_layer) = view;
   layer_set_update_proc(view->globe_layer, globe_layer_draw);
@@ -3632,7 +3632,7 @@ GlobeView *globe_view_create(void) {
     layer_destroy(view->canvas_layer);
     window_destroy(view->window);
     free(view);
-    return NULL;
+    return nullptr;
   }
 
   // BW: white-on-clear text sinks into the dithered globe — give the label a
@@ -3788,27 +3788,27 @@ void globe_view_destroy(GlobeView *view) {
 
   if (view->city_label_layer) {
     text_layer_destroy(view->city_label_layer);
-    view->city_label_layer = NULL;
+    view->city_label_layer = nullptr;
   }
   if (view->globe_layer) {
     layer_destroy(view->globe_layer);
-    view->globe_layer = NULL;
+    view->globe_layer = nullptr;
   }
   if (view->space_layer) {
     layer_destroy(view->space_layer);
-    view->space_layer = NULL;
+    view->space_layer = nullptr;
   }
 
   // Destroy canvas layer
   if (view->canvas_layer) {
     layer_destroy(view->canvas_layer);
-    view->canvas_layer = NULL;
+    view->canvas_layer = nullptr;
   }
 
   // Destroy window
   if (view->window) {
     window_destroy(view->window);
-    view->window = NULL;
+    view->window = nullptr;
   }
 
   i18n_free_all(view);
@@ -3867,7 +3867,7 @@ void globe_view_stop_animation(GlobeView *view) {
   // must cancel this before the layer is torn down, exactly like rect's drop-in.
   if (view->entry_drop_anim) {
     Animation *a = view->entry_drop_anim;
-    view->entry_drop_anim = NULL;
+    view->entry_drop_anim = nullptr;
     animation_unschedule(a);
     animation_destroy(a);
   }
@@ -3908,7 +3908,7 @@ static void prv_drop_stopped(Animation *anim, bool finished, void *context) {
   (void)finished;
   GlobeView *view = (GlobeView *)context;
   if (view && view->entry_drop_anim == anim) {
-    view->entry_drop_anim = NULL; // auto-destroyed after a normal stop
+    view->entry_drop_anim = nullptr; // auto-destroyed after a normal stop
   }
 }
 
@@ -3954,7 +3954,7 @@ static void prv_slide_out_right_stopped(Animation *anim, bool finished, void *co
   if (!view)
     return;
   if (view->entry_drop_anim == anim)
-    view->entry_drop_anim = NULL;
+    view->entry_drop_anim = nullptr;
   if (finished && view->back_callback) {
     view->back_callback(view->back_context); // dismiss globe + slide card in from the left
   }

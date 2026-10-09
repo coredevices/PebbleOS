@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 
 bool app_message_receiver_open(size_t buffer_size);

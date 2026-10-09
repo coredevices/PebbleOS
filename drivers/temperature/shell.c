@@ -11,4 +11,4 @@ static int prv_cmd_temp(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_CMD_REGISTER(temp, NULL, "Read the temperature", prv_cmd_temp);
+PBL_SHELL_CMD_REGISTER(temp, nullptr, "Read the temperature", prv_cmd_temp);

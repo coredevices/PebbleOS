@@ -16,6 +16,6 @@ void util_dbgserial_str(const char *string) {
   dbgserial_putstr(string);
 }
 
-PBL_NORETURN void util_assertion_failed(const char *filename, int line) {
+[[noreturn]] void util_assertion_failed(const char *filename, int line) {
   passert_failed_no_message(filename, line);
 }

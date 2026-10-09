@@ -18,7 +18,7 @@ void prepare_for_software_failure(void) {
 #endif
 }
 
-PBL_NORETURN void reset_due_to_software_failure(void) {
+[[noreturn]] void reset_due_to_software_failure(void) {
   prepare_for_software_failure();
 
 #ifndef CONFIG_WATCHDOG

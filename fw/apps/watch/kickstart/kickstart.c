@@ -301,7 +301,7 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
 #endif
 
   graphics_context_set_text_color(ctx, color);
-  graphics_draw_text(ctx, steps_buffer, font, bounds, GTextOverflowModeFill, alignment, NULL);
+  graphics_draw_text(ctx, steps_buffer, font, bounds, GTextOverflowModeFill, alignment, nullptr);
 }
 
 static void prv_draw_time(GContext *ctx, GFont time_font, GFont am_pm_font, GRect bounds,
@@ -338,7 +338,7 @@ static void prv_draw_time(GContext *ctx, GFont time_font, GFont am_pm_font, GRec
   bounds.origin.y = 72;
 #endif
 
-  graphics_text_node_draw(&container->node, ctx, &bounds, NULL, NULL);
+  graphics_text_node_draw(&container->node, ctx, &bounds, nullptr, nullptr);
   graphics_text_node_destroy(&container->node);
 }
 
@@ -371,7 +371,7 @@ static void prv_draw_bpm(GContext *ctx, int32_t current_bpm, GFont font, GBitmap
   const GTextAlignment alignment = PBL_IF_BW_ELSE(GTextAlignmentLeft, GTextAlignmentRight);
 
   graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorRed, GColorWhite));
-  graphics_draw_text(ctx, bpm_text, font, bounds, GTextOverflowModeFill, alignment, NULL);
+  graphics_draw_text(ctx, bpm_text, font, bounds, GTextOverflowModeFill, alignment, nullptr);
 }
 #endif
 

@@ -80,7 +80,7 @@ void dialog_add_status_bar_layer(Dialog *dialog, GRect status_layer_frame) {
 }
 
 GDrawCommandImage *dialog_create_icon(Dialog *dialog) {
-  return NULL;
+  return nullptr;
 }
 
 bool dialog_init_icon_layer(Dialog *dialog, GDrawCommandImage *image, GPoint origin,

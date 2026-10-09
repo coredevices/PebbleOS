@@ -219,7 +219,7 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
   AppStorageGetAppInfoResult result;
   AppInstallId app_id = process_metadata_get_code_bank_num(app_md);
 
-  result = app_storage_get_process_info(&info, NULL, app_id, task);
+  result = app_storage_get_process_info(&info, nullptr, app_id, task);
 
   if (result != GET_APP_INFO_SUCCESS) {
     // Failed to load the app out of flash, this function will have already printed an error.
@@ -283,12 +283,12 @@ void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
                           MemorySegment *destination) {
   if (app_md->process_storage == ProcessStorageFlash) {
     if (!prv_load_from_flash(app_md, task, destination)) {
-      return NULL;
+      return nullptr;
     }
   } else if (app_md->process_storage == ProcessStorageResource) {
     PebbleProcessMdResource *res_app_md = (PebbleProcessMdResource *)app_md;
     if (!prv_load_from_resource(res_app_md, task, destination)) {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -299,8 +299,8 @@ void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
   size_t loaded_size = process_metadata_get_size_bytes(app_md);
   if (loaded_size) {
     void *main_func = prv_offset_to_address(destination, (uintptr_t)app_md->main_func);
-    if (!memory_segment_split(destination, NULL, loaded_size)) {
-      return NULL;
+    if (!memory_segment_split(destination, nullptr, loaded_size)) {
+      return nullptr;
     }
     // Set the THUMB bit on the function pointer.
     return (void *)((uintptr_t)main_func | 1);

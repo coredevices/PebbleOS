@@ -6,7 +6,6 @@
 #include "activity.h"
 #include "hr_util.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>

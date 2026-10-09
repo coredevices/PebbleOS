@@ -3,7 +3,6 @@
 
 #include "display_sdl_bottom.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -36,7 +35,7 @@ static uint32_t prv_argb2222_to_argb8888(uint8_t c) {
 
 void display_sdl_bottom_update(const uint8_t *fb, int width, int height) {
   pthread_mutex_lock(&s_lock);
-  if (s_fb == NULL) {
+  if (s_fb == nullptr) {
     s_fb = malloc(sizeof(uint32_t) * width * height);
     s_width = width;
     s_height = height;
@@ -55,7 +54,7 @@ static void prv_poll(void) {
     pthread_mutex_unlock(&s_lock);
     return;
   }
-  if (s_window == NULL) {
+  if (s_window == nullptr) {
     s_window = SDL_CreateWindow("PebbleOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 s_width * s_scale, s_height * s_scale, 0);
     SDL_RaiseWindow(s_window);
@@ -65,21 +64,21 @@ static void prv_poll(void) {
     s_texture = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
                                   s_width, s_height);
   }
-  SDL_UpdateTexture(s_texture, NULL, s_fb, s_width * (int)sizeof(uint32_t));
+  SDL_UpdateTexture(s_texture, nullptr, s_fb, s_width * (int)sizeof(uint32_t));
   s_dirty = false;
   pthread_mutex_unlock(&s_lock);
 
   SDL_RenderClear(s_renderer);
-  SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
+  SDL_RenderCopy(s_renderer, s_texture, nullptr, nullptr);
   SDL_RenderPresent(s_renderer);
 }
 
 static void prv_exit(void) {
-  if (s_screenshot_path == NULL) {
+  if (s_screenshot_path == nullptr) {
     return;
   }
   pthread_mutex_lock(&s_lock);
-  if (s_fb != NULL) {
+  if (s_fb != nullptr) {
     SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(
         s_fb, s_width, s_height, 32, s_width * (int)sizeof(uint32_t), SDL_PIXELFORMAT_ARGB8888);
     if (SDL_SaveBMP(surface, s_screenshot_path) != 0) {

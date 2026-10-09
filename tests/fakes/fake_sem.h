@@ -29,7 +29,7 @@ static bool prv_fake_sem_find(ListNode *node, void *context) {
 
 static FakeSem *prv_fake_sem_get(struct pbl_sem *s) {
   FakeSem *fake = (FakeSem *)list_find((ListNode *)s_fake_sem_list, prv_fake_sem_find, s);
-  if (fake == NULL) {
+  if (fake == nullptr) {
     fake = malloc(sizeof(FakeSem));
     *fake = (FakeSem){.sem = s, .count = s->initial, .limit = s->limit ? s->limit : 1};
     s_fake_sem_list = (FakeSem *)list_prepend((ListNode *)s_fake_sem_list, (ListNode *)fake);
@@ -44,7 +44,7 @@ void fake_sem_reset(void) {
     free(iter);
     iter = next;
   }
-  s_fake_sem_list = NULL;
+  s_fake_sem_list = nullptr;
 }
 
 void fake_sem_set_yield_callback(struct pbl_sem *s, FakeSemYieldCallback yield_cb) {
@@ -60,7 +60,7 @@ void pbl_sem_init(struct pbl_sem *s, uint32_t initial, uint32_t limit) {
 
 void pbl_sem_deinit(struct pbl_sem *s) {
   FakeSem *fake = prv_fake_sem_get(s);
-  list_remove((ListNode *)fake, (ListNode **)&s_fake_sem_list, NULL);
+  list_remove((ListNode *)fake, (ListNode **)&s_fake_sem_list, nullptr);
   free(fake);
 }
 

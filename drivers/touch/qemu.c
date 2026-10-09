@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/touch/touch_sensor.h>
@@ -44,7 +43,7 @@ static void prv_touch_irq_handler(void) {
   REG32(QEMU_TOUCH_BASE + TOUCH_INTSTAT) = INT_TOUCH_EVENT;
 
   if (!s_callback_scheduled) {
-    if (system_task_add_callback_from_isr(prv_process_touch_update, NULL)) {
+    if (system_task_add_callback_from_isr(prv_process_touch_update, nullptr)) {
       s_callback_scheduled = true;
     }
   }

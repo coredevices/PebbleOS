@@ -47,7 +47,7 @@ const FirmwareMetadata TINTIN_METADATA PBL_SECTION(".pbl_fw_version") = {
 };
 
 bool version_copy_running_fw_metadata(FirmwareMetadata *out_metadata) {
-  if (out_metadata == NULL) {
+  if (out_metadata == nullptr) {
     return false;
   }
   memcpy(out_metadata, &TINTIN_METADATA, sizeof(FirmwareMetadata));

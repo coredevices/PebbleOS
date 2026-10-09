@@ -6,7 +6,6 @@
 #include "loading_layer.h"
 #include "transcription_dialog.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <applib/app_timer.h>

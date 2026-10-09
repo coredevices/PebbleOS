@@ -107,9 +107,9 @@ const struct pbl_kernel_debug_layout pbl_kernel_debug_layout PBL_USED = {
   .ctx_fp_extra = NUM_EXTRA_FP_REGS * sizeof(uint32_t),
 };
 
-_Static_assert(offsetof(struct pbl_thread, backend.sp) == 0, "saved SP must be first");
-_Static_assert(offsetof(struct pbl_thread, backend.arch.mpu) == 4, "MPU words must follow the SP");
-_Static_assert(NUM_MPU_REGIONS == PBL_THREAD_MAX_MEM_REGIONS, "region count mismatch");
+static_assert(offsetof(struct pbl_thread, backend.sp) == 0, "saved SP must be first");
+static_assert(offsetof(struct pbl_thread, backend.arch.mpu) == 4, "MPU words must follow the SP");
+static_assert(NUM_MPU_REGIONS == PBL_THREAD_MAX_MEM_REGIONS, "region count mismatch");
 
 static inline bool prv_fp_active(uint32_t exc_return) {
   return (exc_return & EXC_RETURN_FP_INACTIVE) == 0;
@@ -118,7 +118,7 @@ static inline bool prv_fp_active(uint32_t exc_return) {
 // ---- threads ----------------------------------------------------------------
 
 static void prv_thread_return(void) {
-  pbl_thread_abort(NULL);
+  pbl_thread_abort(nullptr);
 }
 
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
@@ -144,13 +144,13 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
 // i.e. it would wipe the slot programmed just before it.
 void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
   for (unsigned int i = 0; i < NUM_MPU_REGIONS; i++) {
-    const MpuRegion *r = regions ? regions[i] : NULL;
+    const MpuRegion *r = regions ? regions[i] : nullptr;
     uint32_t rbar = 0;
     uint32_t attr = 0;
 #ifndef CONFIG_ARMV8_M_MAINLINE
     rbar = MPU_RBAR_VALID_Msk | (FIRST_MPU_REGION + i);
 #endif
-    if (r != NULL) {
+    if (r != nullptr) {
       KERNEL_ASSERT(r->region_num == FIRST_MPU_REGION + i);
       uint32_t base_reg;
       mpu_get_register_settings(r, &base_reg, &attr);
@@ -296,7 +296,7 @@ static uintptr_t prv_original_sp(const uint32_t *frame, uint32_t exc_return) {
 // Boards without a dedicated syscall stack run syscalls on the caller's.
 PBL_WEAK uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
   (void)base_out;
-  return NULL;
+  return nullptr;
 }
 
 // Moves the exception frame onto the thread's syscall stack, if it has one,
@@ -305,7 +305,7 @@ static uint32_t *prv_relocate_to_syscall_stack(uint32_t *frame, uint32_t exc_ret
                                                uintptr_t orig_sp) {
   uintptr_t base = 0;
   uint32_t *top = pbl_kernel_syscall_stack(&base);
-  if (top == NULL) {
+  if (top == nullptr) {
     return &frame[5];
   }
 

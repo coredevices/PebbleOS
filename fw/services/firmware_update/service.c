@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
-
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_monitor.h>
@@ -49,7 +47,7 @@ typedef struct {
   };
 } FwUpdateCurrentCompletionStatus;
 
-static FwUpdateCurrentCompletionStatus s_current_completion_status = {0};
+static FwUpdateCurrentCompletionStatus s_current_completion_status = {};
 
 //
 // Start handlers for legacy percentage status handling. Someday, we can hopefully

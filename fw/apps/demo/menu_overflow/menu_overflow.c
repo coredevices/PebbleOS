@@ -57,7 +57,7 @@ static void prv_menu_draw_row_callback(GContext *ctx, const Layer *cell_layer,
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, row_names[cell_index->section][cell_index->row],
                      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GRect(4, 2, 136, 22),
-                     GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
 }
 
 ////////////////////
@@ -67,7 +67,7 @@ static void init(void) {
   window = window_create();
 
   menu_layer = menu_layer_create(window_get_root_layer(window)->bounds);
-  menu_layer_set_callbacks(menu_layer, NULL,
+  menu_layer_set_callbacks(menu_layer, nullptr,
                            &(MenuLayerCallbacks){
                              .get_num_sections = prv_menu_get_num_sections_callback,
                              .get_num_rows = prv_menu_get_num_rows_callback,

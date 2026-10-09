@@ -61,12 +61,12 @@ typedef struct {
   //   time_sample_collected = s_last_empty_timestamp_ms + timestamp_delta_ms
   uint16_t timestamp_delta_ms;
 } AccelManagerBufferData;
-_Static_assert(offsetof(AccelManagerBufferData, rawdata) == 0,
-               "AccelRawData must be first entry in AccelManagerBufferData struct");
+static_assert(offsetof(AccelManagerBufferData, rawdata) == 0,
+              "AccelRawData must be first entry in AccelManagerBufferData struct");
 
 // Statics
 //! List of all registered consumers of accel data. Points to AccelManagerState objects.
-static ListNode *s_data_subscribers = NULL;
+static ListNode *s_data_subscribers = nullptr;
 //! Mutex locking all accel_manager state
 static PBL_MUTEX_DEFINE(s_accel_manager_mutex);
 
@@ -457,7 +457,7 @@ DEFINE_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, AccelSampl
       .samples_per_update = accel_get_max_num_samples(),
     };
 
-    bool no_subscribers_before = (s_data_subscribers == NULL);
+    bool no_subscribers_before = (s_data_subscribers == nullptr);
     s_data_subscribers = list_insert_before(s_data_subscribers, &state->list_node);
     if (no_subscribers_before) {
       sys_vibe_history_start_collecting();
@@ -482,10 +482,10 @@ DEFINE_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, AccelSampl
 // is one we handed out. The list is short (one entry per active subscriber) so the
 // walk is cheap. Caller must hold s_accel_manager_mutex.
 static bool prv_state_is_valid_subscriber(const AccelManagerState *state) {
-  if (state == NULL) {
+  if (state == nullptr) {
     return false;
   }
-  for (ListNode *node = s_data_subscribers; node != NULL; node = node->next) {
+  for (ListNode *node = s_data_subscribers; node != nullptr; node = node->next) {
     if ((const AccelManagerState *)node == state) {
       return true;
     }
@@ -514,7 +514,7 @@ DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *stat
     event_outstanding = state->event_posted;
     // Remove this subscriber and free up its state variables
     pbl_shared_cbuf_remove_subsampled_client(&s_buffer, &state->buffer_client);
-    list_remove(&state->list_node, &s_data_subscribers /* &head */, NULL /* &tail */);
+    list_remove(&state->list_node, &s_data_subscribers /* &head */, nullptr /* &tail */);
     kernel_free(state);
 
     if (!s_data_subscribers) {
@@ -589,7 +589,7 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelManagerState *stat
 
   pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
   {
-    state->raw_buffer = (samples_per_update > 0) ? buffer : NULL;
+    state->raw_buffer = (samples_per_update > 0) ? buffer : nullptr;
     state->samples_per_update = samples_per_update;
     state->num_samples = 0;
     state->generation++;
@@ -945,7 +945,7 @@ void test_accel_manager_reset(void) {
     state = (AccelManagerState *)state->list_node.next;
     kernel_free(free_state);
   }
-  s_data_subscribers = NULL;
+  s_data_subscribers = nullptr;
   s_shake_subscribers_count = 0;
   s_double_tap_subscribers_count = 0;
   s_motion_backlight_subscribed = false;

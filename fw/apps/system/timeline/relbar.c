@@ -121,7 +121,7 @@ static int prv_get_overlap_line_length(TimelineLayer *layer, GRect *first_icon_f
 // Create previous rel bar animation
 static Animation *prv_create_prev_rel_bar_animation(TimelineLayer *layer, uint32_t duration,
                                                     InterpolateInt64Function interpolate) {
-  Animation *prev_rel_bar_anim = NULL;
+  Animation *prev_rel_bar_anim = nullptr;
   prv_rel_bar_reset_offsets(&layer->relbar_layer, RelationshipBarOffsetTypePrev);
   int16_t prev_from_rel_bar_value = 0;
   int16_t prev_to_rel_bar_value = 0;
@@ -132,7 +132,7 @@ static Animation *prv_create_prev_rel_bar_animation(TimelineLayer *layer, uint32
   };
 
   if (layer->relbar_layer.prev_rel_bar.rel_bar_type == RelationshipBarTypeOverlap) {
-    const int overlap_line_length = prv_get_overlap_line_length(layer, NULL, NULL);
+    const int overlap_line_length = prv_get_overlap_line_length(layer, nullptr, nullptr);
     layer->relbar_layer.prev_rel_bar.anim_offset = overlap_line_length;
     prev_from_rel_bar_value = overlap_line_length;
     prev_to_rel_bar_value = 0;
@@ -161,7 +161,7 @@ static Animation *prv_create_prev_rel_bar_animation(TimelineLayer *layer, uint32
 // Create current rel bar animation
 static Animation *prv_create_curr_rel_bar_animation(TimelineLayer *layer, uint32_t duration,
                                                     InterpolateInt64Function interpolate) {
-  Animation *curr_rel_bar_anim = NULL;
+  Animation *curr_rel_bar_anim = nullptr;
   prv_rel_bar_reset_offsets(&layer->relbar_layer, RelationshipBarOffsetTypeCurr);
   int16_t curr_from_rel_bar_value = 0;
   int16_t curr_to_rel_bar_value = 0;
@@ -174,7 +174,7 @@ static Animation *prv_create_curr_rel_bar_animation(TimelineLayer *layer, uint32
 
   if (layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeOverlap) {
     curr_from_rel_bar_value = REL_BAR_CURR_OVERLAP_START_OFFSET;
-    curr_to_rel_bar_value = prv_get_overlap_line_length(layer, NULL, NULL);
+    curr_to_rel_bar_value = prv_get_overlap_line_length(layer, nullptr, nullptr);
     curr_rel_bar_anim = (Animation *)property_animation_create(
         &curr_implementation, layer, &curr_from_rel_bar_value, &curr_to_rel_bar_value);
   } else if ((layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeBackToBack) ||
@@ -457,7 +457,8 @@ void prv_rel_bar_show(void *context) {
 
   layer_set_hidden(&layer->relbar_layer.layer, false);
   if (layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeOverlap) {
-    layer->relbar_layer.curr_rel_bar.anim_offset = prv_get_overlap_line_length(layer, NULL, NULL);
+    layer->relbar_layer.curr_rel_bar.anim_offset =
+        prv_get_overlap_line_length(layer, nullptr, nullptr);
   } else if ((layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeBackToBack) ||
              (layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeFreeTime)) {
     layer->relbar_layer.curr_rel_bar.anim_offset = REL_BAR_BACK_TO_BACK_OFFSET;
@@ -510,7 +511,7 @@ Animation *timeline_relbar_layer_create_animation(TimelineLayer *layer, uint32_t
           evented_timer_register(REL_BAR_TIMER_DELAY(duration), false, prv_rel_bar_show, layer);
 
       // Don't schedule animation
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -537,21 +538,21 @@ Animation *timeline_relbar_layer_create_animation(TimelineLayer *layer, uint32_t
   }
 
   // Create previous rel bar animation
-  Animation *prev_rel_bar_anim = NULL;
+  Animation *prev_rel_bar_anim = nullptr;
 
   if (prev_anim_needed) {
     prev_rel_bar_anim = prv_create_prev_rel_bar_animation(layer, duration, interpolate);
   }
 
-  Animation *curr_rel_bar_anim = NULL;
+  Animation *curr_rel_bar_anim = nullptr;
 
   if (curr_anim_needed) {
     curr_rel_bar_anim = prv_create_curr_rel_bar_animation(layer, duration, interpolate);
   }
 
-  Animation *rel_bar_anim = NULL;
+  Animation *rel_bar_anim = nullptr;
   if (prev_rel_bar_anim && curr_rel_bar_anim) {
-    rel_bar_anim = animation_spawn_create(prev_rel_bar_anim, curr_rel_bar_anim, NULL);
+    rel_bar_anim = animation_spawn_create(prev_rel_bar_anim, curr_rel_bar_anim, nullptr);
   } else if (prev_rel_bar_anim) {
     rel_bar_anim = prev_rel_bar_anim;
   } else {
@@ -572,7 +573,8 @@ Animation *timeline_relbar_layer_create_animation(TimelineLayer *layer, uint32_t
 void timeline_relbar_layer_reset(TimelineLayer *layer) {
   prv_update_rel_bars(layer);
   if (layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeOverlap) {
-    layer->relbar_layer.curr_rel_bar.anim_offset = prv_get_overlap_line_length(layer, NULL, NULL);
+    layer->relbar_layer.curr_rel_bar.anim_offset =
+        prv_get_overlap_line_length(layer, nullptr, nullptr);
   } else if ((layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeBackToBack) ||
              (layer->relbar_layer.curr_rel_bar.rel_bar_type == RelationshipBarTypeFreeTime)) {
     layer->relbar_layer.curr_rel_bar.anim_offset = REL_BAR_BACK_TO_BACK_OFFSET;

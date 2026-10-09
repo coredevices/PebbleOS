@@ -6,7 +6,6 @@
 #include "resource.h"
 
 #include <inttypes.h>
-#include <stdbool.h>
 
 typedef enum {
   InvalidResourceStore = 0,

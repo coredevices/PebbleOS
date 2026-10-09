@@ -116,7 +116,7 @@ static const int s_tuesday = 1426550400;
 // Wednesday, March 18, 2015, 00:00 UTC
 static const int s_wednesday = 1426636800;
 
-static TimelineItem *s_last_timeline_item_added = NULL;
+static TimelineItem *s_last_timeline_item_added = nullptr;
 static Uuid s_last_timeline_item_removed_uuid = {};
 
 typedef struct {
@@ -186,7 +186,7 @@ int prv_hours_and_minutes_to_seconds(int hour, int minute) {
 }
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
-  return NULL;
+  return nullptr;
 }
 
 status_t pin_db_insert_item_without_event(TimelineItem *item) {
@@ -219,11 +219,11 @@ status_t pin_db_each(TimelineItemStorageEachCallback each, void *data) {
       .get_val = prv_fake_pin_get_val,
       .val_len = sizeof(SerializedTimelineItemHeader),
     };
-    if (!each(NULL, &info, data)) {
+    if (!each(nullptr, &info, data)) {
       break;
     }
   }
-  s_current_fake_pin_record = NULL;
+  s_current_fake_pin_record = nullptr;
   return S_SUCCESS;
 }
 

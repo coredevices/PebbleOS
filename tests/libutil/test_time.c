@@ -77,7 +77,7 @@ void test_time__weekday(void) {
 
 static void prv_assert_breakdown(time_t t, int year, int mon, int mday, int hour, int min, int sec,
                                  int wday, int yday) {
-  struct tm tm = {0};
+  struct tm tm = {};
   pbl_time_breakdown(t, &tm);
   cl_assert_equal_i(tm.tm_year, year - PBL_TM_YEAR_ORIGIN);
   cl_assert_equal_i(tm.tm_mon, mon);

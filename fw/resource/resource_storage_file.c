@@ -95,7 +95,7 @@ static uint32_t resource_storage_file_read(ResourceStoreEntry *entry, uint32_t o
 
 static const uint8_t *resource_storage_file_readonly_bytes_unsupported(ResourceStoreEntry *entry,
                                                                        bool has_privileged_access) {
-  return NULL;
+  return nullptr;
 }
 
 static bool resource_storage_file_find_resource(ResourceStoreEntry *entry, ResAppNum app_num,
@@ -122,7 +122,7 @@ static ResourceCallbackHandle resource_storage_file_watch(ResourceStoreEntry *en
                                                           void *data) {
   const FileResourceData *file = entry->store_data;
   if (!file) {
-    return NULL;
+    return nullptr;
   }
   PFSCallbackHandle cb_handle = pfs_watch_file(file->name, callback, FILE_CHANGED_EVENT_ALL, data);
   return cb_handle;
@@ -150,7 +150,7 @@ static void resource_storage_file_init(void) {
     for (uint32_t resource_id = g_file_resource_stores[i].first_resource_id;
          resource_id <= g_file_resource_stores[i].last_resource_id; resource_id++) {
       // TODO PBL-21402
-      if (!resource_storage_check(SYSTEM_APP, resource_id, NULL)) {
+      if (!resource_storage_check(SYSTEM_APP, resource_id, nullptr)) {
         PBL_LOG_ERR("System resource file %" PRIu32 " corrupt!!!", resource_id);
       }
 

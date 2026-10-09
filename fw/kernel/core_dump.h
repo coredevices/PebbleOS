@@ -3,15 +3,13 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/build_id.h>
 
 #include <system/status_codes.h>
 
 //! NOTE: This function performs a hard reset after the core dump and never returns
-PBL_NORETURN void core_dump_reset(bool is_forced);
+[[noreturn]] void core_dump_reset(bool is_forced);
 
 bool is_unread_coredump_available(void);
 

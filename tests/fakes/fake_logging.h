@@ -31,14 +31,14 @@ static void log_internal(uint8_t log_level, const char *src_filename, int src_li
 
   // compare log message against array of expectations
   if (s_log_internal__expected) {
-    if (*s_log_internal__expected == NULL) {
+    if (*s_log_internal__expected == nullptr) {
       cl_assert_equal_s("Did not expect another logged string, but got", buffer);
       cl_fail("Should only happen if the log statement exactly matches the message above.");
     }
     cl_assert_equal_s(*s_log_internal__expected, buffer);
     s_log_internal__expected++;
   } else if (s_log_internal__expected_regex) {
-    if (*s_log_internal__expected_regex == NULL) {
+    if (*s_log_internal__expected_regex == nullptr) {
       cl_assert_equal_s("Did not expect another logged string, but got", buffer);
       cl_fail("Should only happen if the log statement exactly matches the message above.");
     }
@@ -48,7 +48,7 @@ static void log_internal(uint8_t log_level, const char *src_filename, int src_li
     cl_assert_equal_i(0, regcomp(&regex, *s_log_internal__expected_regex, REG_EXTENDED));
 
     // Match regex:
-    const int rv = regexec(&regex, buffer, 0, NULL, 0);
+    const int rv = regexec(&regex, buffer, 0, nullptr, 0);
     if (rv) {
       // Check REG_... #defines in regex.h for what these values mean.
       char msgbuf[256];

@@ -57,7 +57,7 @@ pbl_tick_t pbl_uptime_ticks(void) {
 
 #include <kernel/memory_layout.h>
 const MpuRegion *memory_layout_get_app_region(void) {
-  return NULL;
+  return nullptr;
 }
 bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf, size_t length) {
   return true;
@@ -189,7 +189,7 @@ void test_data_logging__initialize(void) {
   //                                         TransportDestinationSystem);
   fake_comm_session_init();
   Transport *transport =
-      fake_transport_create(TransportDestinationSystem, NULL, prv_transport_sent_data_cb);
+      fake_transport_create(TransportDestinationSystem, nullptr, prv_transport_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
 }
 
@@ -411,8 +411,8 @@ static void prv_do_recovery_test(int num_sessions) {
 
   // Clear the logging sessions from RAM
   dls_list_remove_all();
-  DataLoggingSessionRef logging_session = dls_list_get_next(NULL);
-  cl_assert(logging_session == NULL);
+  DataLoggingSessionRef logging_session = dls_list_get_next(nullptr);
+  cl_assert(logging_session == nullptr);
 
   // Reset regular timer. dls_init() will add the same timer info again
   regular_timer_deinit();
@@ -425,13 +425,13 @@ static void prv_do_recovery_test(int num_sessions) {
   // Check the sessions
   for (int i = 0; i < num_sessions; i++) {
     logging_session = dls_list_get_next(logging_session);
-    cl_assert(logging_session != NULL);
+    cl_assert(logging_session != nullptr);
 
     uint32_t tag = dls_test_get_tag(logging_session);
     prv_check_session_data(logging_session, crcs[tag], num_bytes[tag]);
   }
   logging_session = dls_list_get_next(logging_session);
-  cl_assert(logging_session == NULL);
+  cl_assert(logging_session == nullptr);
 }
 
 void test_data_logging__recover_one(void) {
@@ -486,8 +486,9 @@ void test_data_logging__invalid_params(void) {
   fake_system_task_callbacks_invoke_pending();
 
   // Log to the session after it's closed.
-  cl_assert_equal_i(data_logging_log(session, NULL, 4), DATA_LOGGING_INVALID_PARAMS);
-  cl_assert_equal_i(data_logging_log(NULL, data, ARRAY_LENGTH(data)), DATA_LOGGING_INVALID_PARAMS);
+  cl_assert_equal_i(data_logging_log(session, nullptr, 4), DATA_LOGGING_INVALID_PARAMS);
+  cl_assert_equal_i(data_logging_log(nullptr, data, ARRAY_LENGTH(data)),
+                    DATA_LOGGING_INVALID_PARAMS);
 
   // Finish the session without a crash
   data_logging_finish(0);

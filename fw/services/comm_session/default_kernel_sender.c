@@ -102,7 +102,7 @@ static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoin
   const size_t num_bytes_allocated_after = (s_default_kernel_sender_bytes_allocated +
                                             sizeof(PebbleProtocolHeader) + payload_buffer_length);
   if (num_bytes_allocated_after > DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED) {
-    return NULL;
+    return nullptr;
   }
   const size_t allocation_size = (sizeof(SendBuffer) + payload_buffer_length);
   s_default_kernel_sender_bytes_allocated = num_bytes_allocated_after;
@@ -197,16 +197,16 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
                                                  size_t required_payload_length,
                                                  uint32_t timeout_ms) {
   if (!session) {
-    return NULL;
+    return nullptr;
   }
   if (required_payload_length > DEFAULT_KERNEL_SENDER_MAX_PAYLOAD_SIZE) {
     PBL_LOG_WRN("Message for endpoint_id %u exceeds maximum length (length=%" PRIu32 ")",
                 endpoint_id, (uint32_t)required_payload_length);
-    return NULL;
+    return nullptr;
   }
 
   RtcTicks start_ticks = rtc_get_ticks();
-  SendBuffer *sb = NULL;
+  SendBuffer *sb = nullptr;
 
   while (true) {
     bool is_timeout = false;
@@ -216,7 +216,7 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
     {
       if (!comm_session_is_valid(session)) {
         bt_unlock();
-        return NULL;
+        return nullptr;
       }
       sb = prv_create_send_buffer(session, endpoint_id, required_payload_length);
       is_current_task_send_next_task = comm_session_is_current_task_send_next_task(session);
@@ -248,7 +248,7 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
       PBL_LOG_WRN("Failed to get send buffer (bytes=%" PRIu32 ", endpoint_id=%" PRIu16
                   ", to=%" PRIu32 ")",
                   (uint32_t)required_payload_length, endpoint_id, (uint32_t)is_timeout);
-      return NULL;
+      return nullptr;
     }
   } // while(true)
 }

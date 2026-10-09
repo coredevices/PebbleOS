@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 //! Host end of a UART: the console is the terminal unless given a TCP port;

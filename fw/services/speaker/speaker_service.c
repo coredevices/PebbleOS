@@ -225,11 +225,11 @@ static void prv_free_tracks(void) {
     track_deinit(&s_state.tracks[i]);
     if (s_state.track_notes_buf[i]) {
       kernel_free(s_state.track_notes_buf[i]);
-      s_state.track_notes_buf[i] = NULL;
+      s_state.track_notes_buf[i] = nullptr;
     }
     if (s_state.track_sample_data[i]) {
       kernel_free(s_state.track_sample_data[i]);
-      s_state.track_sample_data[i] = NULL;
+      s_state.track_sample_data[i] = nullptr;
     }
   }
   s_state.num_tracks = 0;
@@ -271,7 +271,7 @@ static void prv_stop_internal(SpeakerFinishReason reason) {
     note_seq_deinit(&s_state.note_seq);
     if (s_state.note_buf) {
       kernel_free(s_state.note_buf);
-      s_state.note_buf = NULL;
+      s_state.note_buf = nullptr;
     }
   } else if (source_type == SpeakerSourceStream) {
     pcm_stream_deinit(&s_state.pcm_stream);
@@ -409,12 +409,12 @@ static uint32_t prv_read_and_convert_pcm(int16_t *out, uint32_t max_out_samples)
 
   uint32_t tail = MIN(s_state.pcm_tail_samples, input_samples);
   s_state.pcm_tail_samples -= tail;
-  return prv_convert_pcm(out, NULL, tail);
+  return prv_convert_pcm(out, nullptr, tail);
 }
 
 //! Underrun: run silence through the interpolator so the delayed samples play out.
 static uint32_t prv_pcm_silence(int16_t *out, uint32_t max_out_samples) {
-  return prv_convert_pcm(out, NULL, prv_pcm_input_samples(max_out_samples));
+  return prv_convert_pcm(out, nullptr, prv_pcm_input_samples(max_out_samples));
 }
 
 //! Caller must hold s_lock.
@@ -513,7 +513,7 @@ static void prv_refill_realtime_locked(void) {
       prv_pcm_input_samples(SPEAKER_REFILL_SAMPLES) * prv_pcm_bytes_per_sample();
   while (s_state.state == SpeakerStatePlaying &&
          pcm_stream_available(&s_state.pcm_stream) >= bytes_needed &&
-         audio_write((AudioDevice *)AUDIO, NULL, 0) >= sizeof(s_state.refill_buf)) {
+         audio_write((AudioDevice *)AUDIO, nullptr, 0) >= sizeof(s_state.refill_buf)) {
     prv_refill_locked();
   }
 }
@@ -707,11 +707,11 @@ alloc_fail:
   for (uint32_t i = 0; i < num_tracks; i++) {
     if (s_state.track_notes_buf[i]) {
       kernel_free(s_state.track_notes_buf[i]);
-      s_state.track_notes_buf[i] = NULL;
+      s_state.track_notes_buf[i] = nullptr;
     }
     if (s_state.track_sample_data[i]) {
       kernel_free(s_state.track_sample_data[i]);
-      s_state.track_sample_data[i] = NULL;
+      s_state.track_sample_data[i] = nullptr;
     }
   }
   pbl_mutex_unlock(&s_lock);

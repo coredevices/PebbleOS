@@ -182,6 +182,7 @@ static int prv_cmd_level(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_log);
-PBL_SHELL_CMD_REGISTER(log, sub_log, "Logging", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_log, level, NULL, "Get or set the log level [level]", prv_cmd_level, 1, 1);
+PBL_SHELL_CMD_REGISTER(log, sub_log, "Logging", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_log, level, nullptr, "Get or set the log level [level]", prv_cmd_level, 1,
+                     1);
 #endif

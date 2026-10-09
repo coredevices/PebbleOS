@@ -113,7 +113,7 @@ void factory_reset_fast(void *unused) {
 
   prv_factory_reset_non_pfs_data();
 
-  pfs_remove_files(NULL);
+  pfs_remove_files(nullptr);
 
   prv_factory_reset_post(false /* should_shutdown */);
 }

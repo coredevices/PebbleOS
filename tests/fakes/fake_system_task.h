@@ -19,13 +19,13 @@ typedef struct {
   void *data;
 } SystemTaskCallbackNode;
 
-static ListNode *s_system_task_callback_head = NULL;
+static ListNode *s_system_task_callback_head = nullptr;
 static bool s_invoke_as_current = false;
 static uint32_t system_task_available_space = ~(uint32_t)0;
 
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   SystemTaskCallbackNode *node = (SystemTaskCallbackNode *)malloc(sizeof(SystemTaskCallbackNode));
-  cl_assert(node != NULL);
+  cl_assert(node != nullptr);
   list_init(&node->node);
 
   cl_assert(cb);
@@ -84,10 +84,10 @@ void fake_system_task_callbacks_invoke(int num_to_invoke) {
     if (node->callback) {
       s_fake_system_task_current_cb = node->callback;
       node->callback(node->data);
-      s_fake_system_task_current_cb = NULL;
+      s_fake_system_task_current_cb = nullptr;
     }
     SystemTaskCallbackNode *prev = (SystemTaskCallbackNode *)list_get_prev(&node->node);
-    list_remove(&node->node, &s_system_task_callback_head, NULL);
+    list_remove(&node->node, &s_system_task_callback_head, nullptr);
     free(node);
     node = prev;
 
@@ -110,11 +110,11 @@ void fake_system_task_callbacks_cleanup(void) {
   SystemTaskCallbackNode *node = (SystemTaskCallbackNode *)s_system_task_callback_head;
   while (node) {
     SystemTaskCallbackNode *next = (SystemTaskCallbackNode *)list_get_next(&node->node);
-    list_remove(&node->node, &s_system_task_callback_head, NULL);
+    list_remove(&node->node, &s_system_task_callback_head, nullptr);
     free(node);
     node = next;
   }
-  cl_assert(s_system_task_callback_head == NULL);
+  cl_assert(s_system_task_callback_head == nullptr);
 }
 
 void system_task_watchdog_feed(void) {

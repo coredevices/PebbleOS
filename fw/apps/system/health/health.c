@@ -78,7 +78,7 @@ static void prv_show_insights_onboarding_dialog(void) {
       "Psst! Want smart tips about your activity and sleep? "
       "You can enable Insights in the mobile app.");
   ExpandableDialog *dialog = expandable_dialog_create_with_params(
-      "Insights Onboarding", RESOURCE_ID_HEALTH_ICON_MOON, text, GColorBlack, GColorWhite, NULL,
+      "Insights Onboarding", RESOURCE_ID_HEALTH_ICON_MOON, text, GColorBlack, GColorWhite, nullptr,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, expandable_dialog_close_cb);
   app_expandable_dialog_push(dialog);
 }

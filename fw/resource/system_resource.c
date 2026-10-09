@@ -47,7 +47,7 @@ bool system_resource_is_valid(void) {
 FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] KERNEL_READONLY_DATA;
 
 static GFont prv_load_system_font(const char *font_key) {
-  if (font_key == NULL) {
+  if (font_key == nullptr) {
     PBL_LOG_DBG("GETTING FALLBACK FONT");
     // load fallback font
     if (!s_system_fonts_info_table[NUM_SYSTEM_FONTS].loaded) {
@@ -67,7 +67,7 @@ static GFont prv_load_system_font(const char *font_key) {
         if (!text_resources_init_font(SYSTEM_APP, resource, extension,
                                       &s_system_fonts_info_table[i])) {
           // Can't initialize the font for some reason
-          return NULL;
+          return nullptr;
         }
         resource_get_and_cache(SYSTEM_APP, resource);
         resource_get_and_cache(SYSTEM_APP, extension);
@@ -77,7 +77,7 @@ static GFont prv_load_system_font(const char *font_key) {
   }
 
   // Didn't find the given font, invalid key.
-  return NULL;
+  return nullptr;
 }
 
 GFont system_resource_get_font(const char *font_key) {

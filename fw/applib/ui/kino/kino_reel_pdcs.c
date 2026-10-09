@@ -72,14 +72,14 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
   gdraw_command_frame_draw_processed(
       ctx, dcs_reel->sequence, dcs_reel->current_frame, offset,
-      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, NULL));
+      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
 }
 
 static GDrawCommandSequence *prv_get_gdraw_command_sequence(KinoReel *reel) {
   if (reel) {
     return ((KinoReelImplPDCS *)reel)->sequence;
   }
-  return NULL;
+  return nullptr;
 }
 
 static GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
@@ -88,7 +88,7 @@ static GDrawCommandList *prv_get_gdraw_command_list(KinoReel *reel) {
     return gdraw_command_frame_get_command_list(
         gdraw_command_sequence_get_frame_by_elapsed(dcs_reel->sequence, dcs_reel->elapsed_ms));
   }
-  return NULL;
+  return nullptr;
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_PDCS = {
@@ -125,8 +125,8 @@ KinoReel *kino_reel_pdcs_create_with_resource(uint32_t resource_id) {
 KinoReel *kino_reel_pdcs_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   GDrawCommandSequence *sequence =
       gdraw_command_sequence_create_with_resource_system(app_num, resource_id);
-  if (sequence == NULL) {
-    return NULL;
+  if (sequence == nullptr) {
+    return nullptr;
   }
   return kino_reel_pdcs_create(sequence, true);
 }

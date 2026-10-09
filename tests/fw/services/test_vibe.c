@@ -184,7 +184,7 @@ void test_vibe__custom_pattern_with_null_amplitudes(void) {
   const uint32_t durations[] = {100};
   const VibePatternWithAmplitudes pattern = {
     .durations = durations,
-    .amplitudes = NULL,
+    .amplitudes = nullptr,
     .num_segments = ARRAY_LENGTH(durations),
   };
   // Should return without crashing (early return on null amplitudes)
@@ -196,7 +196,7 @@ void test_vibe__custom_pattern_with_null_amplitudes(void) {
 void test_vibe__custom_pattern_with_amplitudes_null_durations(void) {
   const uint32_t amplitudes[] = {80};
   const VibePatternWithAmplitudes pattern = {
-    .durations = NULL,
+    .durations = nullptr,
     .amplitudes = amplitudes,
     .num_segments = 1,
   };

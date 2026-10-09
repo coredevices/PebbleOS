@@ -201,7 +201,7 @@ static void summ_datalog() {
   /* >>>>> START MODIFY BLOCK HEADER, TIMESTAMP AND MOOD <<<<< */
   // add the timestamp at the top of first block and reset the mood index
   if (i_summ_blk == 0) {
-    write_time_to_array_head(time(NULL), blk_buf);
+    write_time_to_array_head(time(nullptr), blk_buf);
     blk_buf[4] = CUR_PK_VERSION;
   }
 
@@ -281,7 +281,7 @@ static void epoch_analysis() {
   }
 
   /* WEAR TIME CALCULATION, NO THRESHOLD */
-  uint32_t pim_5sec_ary[3] = {0};
+  uint32_t pim_5sec_ary[3] = {};
 
   // If this is the first epoch after an init, we need to prime the butterworth filter used
   // by prv_pim_filter to avoid getting jumps in VMC due to the discontinuity

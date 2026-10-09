@@ -79,7 +79,7 @@ static void menu_select_callback(int index, void *ctx) {
     // stuck timer callback
     TimerID timer = new_timer_create();
     PBL_LOG_INFO("Entering infinite loop in Timer callback");
-    bool success = new_timer_start(timer, 100, stuck_timer_callback, NULL, 0 /*flags*/);
+    bool success = new_timer_start(timer, 100, stuck_timer_callback, nullptr, 0 /*flags*/);
     PBL_ASSERTN(success);
 
   } else if (index == 2) {
@@ -161,7 +161,7 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 11) {
     PBL_LOG_INFO("Infinite Loop on system task");
-    system_task_add_callback(stuck_system_task_callback, NULL);
+    system_task_add_callback(stuck_system_task_callback, nullptr);
 
   } else if (index == 12) {
     PBL_LOG_INFO("Generate hard-fault");
@@ -243,7 +243,8 @@ static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
-  data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
+  data->menu_layer =
+      simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, nullptr);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 }
 
@@ -260,7 +261,7 @@ static void handle_init(void) {
   s_app_data = data;
 
   data->window = window_create();
-  if (data->window == NULL) {
+  if (data->window == nullptr) {
     return;
   }
   window_init(data->window, "");

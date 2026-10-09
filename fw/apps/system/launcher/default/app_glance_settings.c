@@ -115,17 +115,17 @@ typedef struct LauncherAppGlanceSettings {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(settings_glance, icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(settings_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(settings_glance, title, NULL);
+  return NULL_SAFE_FIELD_ACCESS(settings_glance, title, nullptr);
 }
 
 static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
-                                           PBL_UNUSED const GTextNodeDrawConfig *config,
+                                           [[maybe_unused]] const GTextNodeDrawConfig *config,
                                            bool render, GSize *size_out, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
@@ -150,8 +150,8 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
 }
 
 static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
-                                          PBL_UNUSED const GTextNodeDrawConfig *config, bool render,
-                                          GSize *size_out, void *user_data) {
+                                          [[maybe_unused]] const GTextNodeDrawConfig *config,
+                                          bool render, GSize *size_out, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -209,9 +209,9 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
 }
 
 static void prv_battery_percent_dynamic_text_node_update(
-    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
-    size_t buffer_size, void *user_data) {
+    [[maybe_unused]] GContext *ctx, [[maybe_unused]] GTextNode *node,
+    [[maybe_unused]] const GRect *box, [[maybe_unused]] const GTextNodeDrawConfig *config,
+    [[maybe_unused]] bool render, char *buffer, size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
@@ -355,7 +355,7 @@ static void prv_refresh_glance_content(LauncherAppGlanceSettings *settings_glanc
 }
 
 static bool prv_is_pebble_app_connected(void) {
-  return (comm_session_get_system_session() != NULL);
+  return (comm_session_get_system_session() != nullptr);
 }
 
 static void prv_event_handler(PebbleEvent *event, void *context) {

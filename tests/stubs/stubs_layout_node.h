@@ -7,5 +7,5 @@
 
 GTextNode *layout_create_text_node_from_config(const LayoutLayer *layout,
                                                const LayoutNodeConfig *config) {
-  return NULL;
+  return nullptr;
 }

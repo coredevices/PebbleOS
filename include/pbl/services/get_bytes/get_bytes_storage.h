@@ -4,7 +4,6 @@
 #pragma once
 
 #include <inttypes.h>
-#include <stdbool.h>
 
 #include <pbl/services/get_bytes/get_bytes.h>
 

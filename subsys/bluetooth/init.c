@@ -199,7 +199,7 @@ bool pbl_bt_start(struct pbl_bt_config *config) {
 err:
   s_driver_state = DriverStateStopping;
   (void)(pbl_sem_take(&s_host_stopped, PBL_NO_WAIT) == 0);
-  rc = ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
+  rc = ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, nullptr);
   if (rc == BLE_HS_EALREADY) {
     s_driver_state = DriverStateStopped;
     return false;
@@ -222,7 +222,7 @@ void pbl_bt_stop(void) {
 
   s_driver_state = DriverStateStopping;
   (void)(pbl_sem_take(&s_host_stopped, PBL_NO_WAIT) == 0);
-  ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, NULL);
+  ble_hs_stop(&s_listener, prv_ble_hs_stop_cb, nullptr);
   f_rc = (pbl_sem_take(&s_host_stopped, PBL_MSEC(s_bt_stack_start_stop_timeout_ms)) == 0);
   PBL_ASSERT(f_rc, "NimBLE host stop timed out");
   s_driver_state = DriverStateStopped;

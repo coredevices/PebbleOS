@@ -109,7 +109,7 @@ typedef struct {
 #endif
 } AlarmPopupData;
 
-AlarmPopupData *s_alarm_popup_data = NULL;
+AlarmPopupData *s_alarm_popup_data = nullptr;
 
 static void prv_stop_animation_kernel_main_cb(void *callback_context) {
   if (s_alarm_popup_data) {
@@ -127,7 +127,7 @@ static void prv_stop_vibes(void) {
     s_alarm_popup_data->vibe_timer = TIMER_INVALID_ID;
     if (s_alarm_popup_data->vibe_score) {
       vibe_score_destroy(s_alarm_popup_data->vibe_score);
-      s_alarm_popup_data->vibe_score = NULL;
+      s_alarm_popup_data->vibe_score = nullptr;
     }
   }
   vibes_cancel();
@@ -219,7 +219,7 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
     if (s_alarm_popup_data->vibe_count < s_alarm_popup_data->max_vibes) {
       s_alarm_popup_data->vibe_count++;
       PBL_LOG_DBG("Alarm vibe: play %d/%d, fixed_pulse=%d", s_alarm_popup_data->vibe_count,
-                  s_alarm_popup_data->max_vibes, s_alarm_popup_data->vibe_score == NULL);
+                  s_alarm_popup_data->max_vibes, s_alarm_popup_data->vibe_score == nullptr);
       vibes_cancel();
       if (s_alarm_popup_data->vibe_score) {
         vibe_score_do_vibe(s_alarm_popup_data->vibe_score);
@@ -233,7 +233,7 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
 #endif
     } else {
       prv_stop_vibes();
-      launcher_task_add_callback(prv_stop_animation_kernel_main_cb, NULL);
+      launcher_task_add_callback(prv_stop_animation_kernel_main_cb, nullptr);
       // Auto-dismiss the alarm after the vibration period ends
       alarm_dismiss_alarm();
       if (s_alarm_popup_data && s_alarm_popup_data->alarm_popup) {
@@ -244,7 +244,7 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
 }
 
 static void prv_vibe(void *unused) {
-  launcher_task_add_callback(prv_vibe_kernel_main_cb, NULL);
+  launcher_task_add_callback(prv_vibe_kernel_main_cb, nullptr);
 }
 
 static void prv_start_vibes(void) {
@@ -265,7 +265,7 @@ static void prv_start_vibes(void) {
     PBL_LOG_WRN("No usable alarm vibe score; falling back to fixed pulse");
     if (s_alarm_popup_data->vibe_score) {
       vibe_score_destroy(s_alarm_popup_data->vibe_score);
-      s_alarm_popup_data->vibe_score = NULL;
+      s_alarm_popup_data->vibe_score = nullptr;
     }
     vibe_repeat_interval_ms =
         low_power_is_active() ? (PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC / TINTIN_LPM_VIBES_PER_MINUTE)
@@ -275,8 +275,8 @@ static void prv_start_vibes(void) {
   PBL_LOG_DBG("Alarm vibe: start, low_power=%d, interval=%ums, max=%d", low_power_is_active(),
               vibe_repeat_interval_ms, s_alarm_popup_data->max_vibes);
   s_alarm_popup_data->vibe_timer = new_timer_create();
-  prv_vibe(NULL);
-  new_timer_start(s_alarm_popup_data->vibe_timer, vibe_repeat_interval_ms, prv_vibe, NULL,
+  prv_vibe(nullptr);
+  new_timer_start(s_alarm_popup_data->vibe_timer, vibe_repeat_interval_ms, prv_vibe, nullptr,
                   TIMER_START_FLAG_REPEATING);
 }
 
@@ -331,7 +331,7 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
     gbitmap_destroy(s_alarm_popup_data->action_bar_snooze);
     gbitmap_destroy(s_alarm_popup_data->action_bar_dismiss);
     task_free(s_alarm_popup_data);
-    s_alarm_popup_data = NULL;
+    s_alarm_popup_data = nullptr;
   }
 }
 
@@ -369,11 +369,11 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   DialogCallbacks callback = {
     .unload = prv_cleanup_alarm_popup,
   };
-  dialog_set_callbacks(dialog, &callback, NULL);
+  dialog_set_callbacks(dialog, &callback, nullptr);
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
 
   // The alarm id isn't carried in the event (PebbleEvent must stay <= 12 bytes
-  // — see _Static_assert in events.c). Fall back to the most-recently-fired
+  // — see static_assert in events.c). Fall back to the most-recently-fired
   // alarm tracked in the alarm service. Synthetic events (trigger_alarm demo)
   // get ALARM_INVALID_ID and skip the per-alarm config lookup.
   const AlarmId alarm_id = alarm_get_most_recent_id();
@@ -388,7 +388,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
     // The paired-tone piggyback assumes the timer runs at the score's cycle
     // length; in fallback-pulse mode (score == NULL) it doesn't, so let the
     // sound loop on its own.
-    prv_start_sound(alarm_id, vibe_on && (s_alarm_popup_data->vibe_score != NULL));
+    prv_start_sound(alarm_id, vibe_on && (s_alarm_popup_data->vibe_score != nullptr));
   }
 #endif
 

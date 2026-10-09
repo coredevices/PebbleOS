@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -75,8 +74,8 @@ void touch_sensor_set_enabled(bool enabled) {
 // setup and teardown
 void test_touch__initialize(void) {
   fake_event_init();
-  s_add_subscriber_cb = NULL;
-  s_remove_subscriber_cb = NULL;
+  s_add_subscriber_cb = nullptr;
+  s_remove_subscriber_cb = nullptr;
   s_touch_sensor_enable_count = 0;
   s_touch_sensor_disable_count = 0;
   s_touch_sensor_enabled = false;
@@ -155,8 +154,8 @@ void test_touch__reset_clears_state(void) {
 }
 
 void test_touch__subscriber_enables_sensor(void) {
-  cl_assert(s_add_subscriber_cb != NULL);
-  cl_assert(s_remove_subscriber_cb != NULL);
+  cl_assert(s_add_subscriber_cb != nullptr);
+  cl_assert(s_remove_subscriber_cb != nullptr);
 
   s_add_subscriber_cb(PebbleTask_App);
   cl_assert_equal_i(s_touch_sensor_enable_count, 1);
@@ -414,21 +413,21 @@ void test_touch__wake_gate_latches_across_gesture(void) {
 
   // PositionUpdate and Liftoff carry the latch, regardless of their gate arg.
   TouchEvent pu = {.type = TouchEvent_PositionUpdate};
-  touch_wake_gate_stamp(&pu, (TouchWakeGateResult){0});
+  touch_wake_gate_stamp(&pu, (TouchWakeGateResult){});
   cl_assert(pu.non_navigational);
 
   TouchEvent lo = {.type = TouchEvent_Liftoff};
-  touch_wake_gate_stamp(&lo, (TouchWakeGateResult){0});
+  touch_wake_gate_stamp(&lo, (TouchWakeGateResult){});
   cl_assert(lo.non_navigational);
 
   // A fresh navigational Touchdown clears the latch for the next gesture.
-  TouchWakeGateResult nav = {0};
+  TouchWakeGateResult nav = {};
   TouchEvent td2 = {.type = TouchEvent_Touchdown};
   touch_wake_gate_stamp(&td2, nav);
   cl_assert(!td2.non_navigational);
 
   TouchEvent pu2 = {.type = TouchEvent_PositionUpdate};
-  touch_wake_gate_stamp(&pu2, (TouchWakeGateResult){0});
+  touch_wake_gate_stamp(&pu2, (TouchWakeGateResult){});
   cl_assert(!pu2.non_navigational);
 }
 

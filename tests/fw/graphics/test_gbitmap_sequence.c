@@ -99,26 +99,26 @@ void test_gbitmap_sequence__color_2bit_bouncing_ball(void) {
       gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(bitmap_sequence), GBitmapFormat8Bit);
   cl_assert(bitmap);
 
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(1)));
 
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(2)));
 
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(3)));
 
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(4)));
 
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(5)));
 
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(6)));
 
   // Test loop around
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(1)));
 #endif
 }
@@ -260,28 +260,28 @@ void test_gbitmap_sequence__color_8bit_bounds(void) {
 
   // Shift the bounds when updating
   gbitmap_set_bounds(bitmap, shift_bounds);
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   // set the original bounds to do whole-image comparison
   gbitmap_set_bounds(bitmap, orig_bounds);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(1)));
 
   gbitmap_set_bounds(bitmap, shift_bounds);
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   gbitmap_set_bounds(bitmap, orig_bounds);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(2)));
 
   gbitmap_set_bounds(bitmap, shift_bounds);
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   gbitmap_set_bounds(bitmap, orig_bounds);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(3)));
 
   gbitmap_set_bounds(bitmap, shift_bounds);
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   gbitmap_set_bounds(bitmap, orig_bounds);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(4)));
 
   gbitmap_set_bounds(bitmap, shift_bounds);
-  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   gbitmap_set_bounds(bitmap, orig_bounds);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(5)));
 #endif
@@ -299,15 +299,15 @@ void test_gbitmap_sequence__color_8bit_yoshi(void) {
   GBitmap *bitmap =
       gbitmap_create_blank(gbitmap_sequence_get_bitmap_size(bitmap_sequence), GBitmapFormat8Bit);
 
-  status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_assert_equal_b(status, true);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(1)));
 
-  status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_assert_equal_b(status, true);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(2)));
 
-  status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+  status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_assert_equal_b(status, true);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(3)));
 #endif
@@ -327,7 +327,7 @@ void test_gbitmap_sequence__1bit_to_1bit_notification(void) {
   for (int i = 0; i < ARRAY_LENGTH(check_frames); ++i) {
     // Advance to the next frame we're interested in.
     for (; current_frame < check_frames[i]; ++current_frame) {
-      bool status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL);
+      bool status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
       cl_assert_equal_b(status, true);
     }
 
@@ -383,13 +383,13 @@ void test_gbitmap_sequence__dispose_op_previous(void) {
 
   for (int loop = 0; loop < 2; loop++) {
     for (int i = 0; i < ARRAY_LENGTH(frames); i++) {
-      cl_assert(gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL));
+      cl_assert(gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr));
       prv_check_pixels(bitmap, frames[i]);
     }
   }
 
   cl_assert(gbitmap_sequence_restart(bitmap_sequence));
-  cl_assert(gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, NULL));
+  cl_assert(gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr));
   prv_check_pixels(bitmap, frames[0]);
 
   cl_assert_equal_i(s_dispose_previous_warnings, 1);

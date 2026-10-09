@@ -58,7 +58,7 @@ static BLEHRMSharingRequest *s_last_sharing_request;
 static int s_ble_hrm_push_sharing_request_window_call_count;
 void ble_hrm_push_sharing_request_window(BLEHRMSharingRequest *sharing_request) {
   ++s_ble_hrm_push_sharing_request_window_call_count;
-  cl_assert_equal_p(s_last_sharing_request, NULL);
+  cl_assert_equal_p(s_last_sharing_request, nullptr);
   s_last_sharing_request = sharing_request;
 }
 
@@ -84,7 +84,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
                                                   uint16_t expire_s, HRMFeature features,
                                                   bool low_latency, HRMSubscriberCallback callback,
                                                   void *context) {
-  cl_assert_equal_p(NULL, callback); // we're using the event service
+  cl_assert_equal_p(nullptr, callback); // we're using the event service
   cl_assert_equal_i(features, HRMFeature_BPM);
   cl_assert(!low_latency); // the relay copes with batched FIFO drains; keep the cheap cadence
   ++s_hrm_manager_subscribe_with_callback_call_count;
@@ -100,7 +100,7 @@ GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal
       return s_connections[i];
     }
   }
-  return NULL;
+  return nullptr;
 }
 struct pbl_bt_device_internal *device_from_le_connection(GAPLEConnection *conn) {
   return &conn->device;
@@ -144,7 +144,7 @@ static void prv_assert_event_service_subscribed(bool is_subscribed) {
   if (is_subscribed) {
     cl_assert(info->handler);
   } else {
-    cl_assert_equal_p(NULL, info->handler);
+    cl_assert_equal_p(nullptr, info->handler);
   }
 }
 
@@ -160,8 +160,8 @@ void test_ble_hrm__cleanup(void) {
   fake_pbl_malloc_check_net_allocs();
 
   // Assert all regular timers are deregistered:
-  cl_assert_equal_p(s_seconds_callbacks.next, NULL);
-  cl_assert_equal_p(s_minutes_callbacks.next, NULL);
+  cl_assert_equal_p(s_seconds_callbacks.next, nullptr);
+  cl_assert_equal_p(s_minutes_callbacks.next, nullptr);
 }
 
 #define TEST_DEVICE_NAME "iPhone Martijn"
@@ -174,7 +174,7 @@ static const struct pbl_bt_device_internal *s_device_b;
 void test_ble_hrm__initialize(void) {
   fake_pbl_malloc_clear_tracking();
   for (int i = 0; i < ARRAY_LENGTH(s_connections); ++i) {
-    s_connections[i] = NULL;
+    s_connections[i] = nullptr;
   }
   s_activity_prefs_heart_rate_is_enabled = true;
   s_pbl_bt_hrm_service_is_enabled = true;
@@ -189,7 +189,7 @@ void test_ble_hrm__initialize(void) {
   s_last_session_ref = ~0;
   s_next_session_ref = 1234;
   s_last_disconnected = (struct pbl_bt_device_internal){};
-  s_last_sharing_request = NULL;
+  s_last_sharing_request = nullptr;
   s_last_ble_hrm_measurement = (struct pbl_bt_hrm_service_measurement){};
   fake_event_service_init();
 
@@ -225,7 +225,7 @@ void test_ble_hrm__init_deinit_no_subscriptions(void) {
 static void prv_assert_permissions_ui_and_respond(bool is_granted) {
   cl_assert(s_last_sharing_request);
   ble_hrm_handle_sharing_request_response(is_granted, s_last_sharing_request);
-  s_last_sharing_request = NULL;
+  s_last_sharing_request = nullptr;
 }
 
 void test_ble_hrm__sub_unsub(void) {
@@ -344,12 +344,12 @@ void test_ble_hrm__revoke_all(void) {
 }
 
 void test_ble_hrm__revoke_after_disconnection(void) {
-  ble_hrm_revoke_sharing_permission_for_connection(NULL);
+  ble_hrm_revoke_sharing_permission_for_connection(nullptr);
 
-  s_connections[0] = NULL;
+  s_connections[0] = nullptr;
   ble_hrm_revoke_sharing_permission_for_connection(&s_conn_a);
 
-  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(NULL));
+  cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(nullptr));
 
   // Shouldn't crash or anything
 }
@@ -359,7 +359,7 @@ void test_ble_hrm__grant_after_disconnection(void) {
   pbl_bt_cb_hrm_service_update_subscription(s_device_a, true);
 
   // Fake disconnection:
-  s_connections[0] = NULL;
+  s_connections[0] = nullptr;
 
   // Grabt permission after disconnection.
   // Request object should be freed and thing shouldn't crash.
@@ -379,7 +379,7 @@ void test_ble_hrm__decline_permission_dont_ask_again_even_after_reconnecting(voi
   pbl_bt_cb_hrm_service_update_subscription(s_device_a, true);
 
   // No sharing request UI:
-  cl_assert_equal_p(NULL, s_last_sharing_request);
+  cl_assert_equal_p(nullptr, s_last_sharing_request);
 
   // Fake disconnection:
   ble_hrm_handle_disconnection(&s_conn_a);
@@ -388,7 +388,7 @@ void test_ble_hrm__decline_permission_dont_ask_again_even_after_reconnecting(voi
   pbl_bt_cb_hrm_service_update_subscription(s_device_a, true);
 
   // No sharing request UI:
-  cl_assert_equal_p(NULL, s_last_sharing_request);
+  cl_assert_equal_p(nullptr, s_last_sharing_request);
 
   // Still declined:
   cl_assert_equal_b(false, ble_hrm_is_sharing_to_connection(&s_conn_a));

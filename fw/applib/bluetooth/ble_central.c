@@ -27,7 +27,7 @@ void ble_central_handle_event(PebbleEvent *e) {
 
 enum pbl_bt_errno ble_central_set_connection_handler(BLEConnectionHandler handler) {
   BLEAppState *ble_app_state = app_state_get_ble_app_state();
-  const bool is_subscribed = (ble_app_state->connection_handler != NULL);
+  const bool is_subscribed = (ble_app_state->connection_handler != nullptr);
   ble_app_state->connection_handler = handler;
   if (handler) {
     if (!is_subscribed) {

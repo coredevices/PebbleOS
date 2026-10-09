@@ -57,7 +57,7 @@ typedef struct KinoReel KinoReel;
 
 KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_ownership,
                                            GRect screen_frame) {
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_scale_segmented_set_deflate_effect(KinoReel *reel, int16_t expand) {

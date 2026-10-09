@@ -22,7 +22,7 @@
 #include <system/passert.h>
 
 #define NEW_LOG_HEADER "NL" NEW_LOG_VERSION
-_Static_assert((CORE_ID_MAIN_MCU & PACKED_CORE_MASK) == CORE_ID_MAIN_MCU, "Core number invalid");
+static_assert((CORE_ID_MAIN_MCU & PACKED_CORE_MASK) == CORE_ID_MAIN_MCU, "Core number invalid");
 #define str(s)  xstr(s)
 #define xstr(s) #s
 
@@ -35,9 +35,9 @@ static const char prv_NewLogHeader[] PBL_NOCOMMON PBL_USED PBL_SECTION(".log_str
 
 // Confirm the size calculations. If these fail, update tools/loghashing/check_elf_log_strings.py
 // We can't currently handle 64 bit values.
-_Static_assert(sizeof(long int) <= 4, "long int larger than expected");
-_Static_assert(sizeof(size_t) <= 4, "size_t larger than expected");
-_Static_assert(sizeof(ptrdiff_t) <= 4, "ptrdiff_t larger than expected");
+static_assert(sizeof(long int) <= 4, "long int larger than expected");
+static_assert(sizeof(size_t) <= 4, "size_t larger than expected");
+static_assert(sizeof(ptrdiff_t) <= 4, "ptrdiff_t larger than expected");
 
 #endif
 
@@ -120,7 +120,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 // (privileged) tasks (which is guarded by a mutex). Returns NULL if a logging operation is already
 // in progress
 static LogState *prv_get_log_state() {
-  LogState *log_state = NULL;
+  LogState *log_state = nullptr;
 
   PebbleTask task = pebble_task_get_current();
   if (task == PebbleTask_App) {
@@ -131,7 +131,7 @@ static LogState *prv_get_log_state() {
 
   if (log_state) {
     if (log_state->in_progress) {
-      return NULL;
+      return nullptr;
     }
     log_state->in_progress = true;
     return log_state;

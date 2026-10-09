@@ -3,7 +3,6 @@
 
 #pragma once
 #include <inttypes.h>
-#include <stdbool.h>
 
 /**
  * @defgroup drivers_battery Battery

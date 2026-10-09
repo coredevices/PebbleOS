@@ -230,7 +230,7 @@ PFSCallbackHandle activity_insights_settings_watch(PFSFileChangedCallback callba
     return 0; // Return invalid handle
   }
   return pfs_watch_file(ACTIVITY_INSIGHTS_SETTINGS_FILENAME, callback, FILE_CHANGED_EVENT_CLOSED,
-                        NULL);
+                        nullptr);
 }
 
 void activity_insights_settings_unwatch(PFSCallbackHandle cb_handle) {

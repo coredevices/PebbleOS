@@ -38,7 +38,7 @@ void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
 typedef uint16_t ResourceId;
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
-  return NULL;
+  return nullptr;
 }
 
 // Helper Functions
@@ -46,7 +46,7 @@ const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_i
 #include "../graphics/8bit/test_framebuffer.h"
 #include "../graphics/test_graphics.h"
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 // Setup
 void test_kino_reel__initialize(void) {
@@ -135,7 +135,7 @@ void test_kino_reel__verify_pdci_get_list(void) {
   GDrawCommandList *list = kino_reel_get_gdraw_command_list(kino_reel);
   GDrawCommandList *list_direct =
       gdraw_command_image_get_command_list(kino_reel_get_gdraw_command_image(kino_reel));
-  cl_assert(list == list_direct && list != NULL);
+  cl_assert(list == list_direct && list != nullptr);
 }
 
 void test_kino_reel__verify_pdcs_get_list(void) {
@@ -153,7 +153,7 @@ void test_kino_reel__verify_pdcs_get_list(void) {
   GDrawCommandList *list1_direct =
       gdraw_command_frame_get_command_list(gdraw_command_sequence_get_frame_by_elapsed(
           kino_reel_get_gdraw_command_sequence(kino_reel), 0));
-  cl_assert(list1 != NULL);
+  cl_assert(list1 != nullptr);
   cl_assert(list1 == list1_direct);
 
   // Test that after elapsed, frame has changed and new list is correct
@@ -162,7 +162,7 @@ void test_kino_reel__verify_pdcs_get_list(void) {
   GDrawCommandList *list2_direct =
       gdraw_command_frame_get_command_list(gdraw_command_sequence_get_frame_by_elapsed(
           kino_reel_get_gdraw_command_sequence(kino_reel), 100));
-  cl_assert(list2 != NULL);
+  cl_assert(list2 != nullptr);
   cl_assert(list2 != list1);
   cl_assert(list2 == list2_direct);
 }
@@ -179,7 +179,7 @@ void test_kino_reel__draw_processed(void) {
   const KinoReelImpl dummy_impl = (KinoReelImpl){
     .draw_processed = prv_dummy_impl_draw_processed,
   };
-  KinoReel *kino_reel = kino_reel_custom_create(&dummy_impl, NULL);
+  KinoReel *kino_reel = kino_reel_custom_create(&dummy_impl, nullptr);
   GContext ctx;
   kino_reel_draw_processed(kino_reel, &ctx, GPointZero, &s_dummy_processor);
 }

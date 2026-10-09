@@ -37,6 +37,6 @@ void notify_system_ready_for_communication(void) {
   if (s_ready_log_timer == TIMER_INVALID_ID) {
     s_ready_log_timer = new_timer_create();
   }
-  new_timer_start(s_ready_log_timer, 500, prv_emit_ready_log, NULL, 0);
+  new_timer_start(s_ready_log_timer, 500, prv_emit_ready_log, nullptr, 0);
 #endif
 }

@@ -34,14 +34,14 @@ void app_order_storage_reset_for_tests(void) {
 AppMenuOrderStorage *app_order_read_order(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
 
-  AppMenuOrderStorage *storage = NULL;
+  AppMenuOrderStorage *storage = nullptr;
   bool delete_file = false;
   pbl_mutex_lock(&s_data.order_mutex, PBL_FOREVER);
 
   // Early exit if we already know the file doesn't exist
   if (s_data.file_known_missing) {
     pbl_mutex_unlock(&s_data.order_mutex);
-    return NULL;
+    return nullptr;
   }
 
   int fd;
@@ -49,7 +49,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
     PBL_LOG_DBG("App menu order file does not exist");
     s_data.file_known_missing = true;
     pbl_mutex_unlock(&s_data.order_mutex);
-    return NULL;
+    return nullptr;
   }
 
   // Check if it is an valid file
@@ -80,7 +80,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   if ((rd_sz = pfs_read(fd, (uint8_t *)storage->id_list, read_size)) != read_size) {
     PBL_LOG_ERR("Corrupted ordered install_id list (Rd %d of %d bytes)", rd_sz, read_size);
     app_free(storage);
-    storage = NULL;
+    storage = nullptr;
     delete_file = true;
     goto cleanup;
   }

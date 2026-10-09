@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 void fake_battery_init(int millivolts, bool usb_connected, bool charging);
 
 void fake_battery_set_millivolts(int millivolts);
