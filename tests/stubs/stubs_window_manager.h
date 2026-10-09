@@ -10,15 +10,15 @@
 #include <applib/ui/window_stack_private.h>
 
 Window *PBL_WEAK window_manager_get_top_window(void) {
-  return NULL;
+  return nullptr;
 }
 
 WindowStack *PBL_WEAK window_manager_get_window_stack(void) {
-  return NULL;
+  return nullptr;
 }
 
 ClickManager *PBL_WEAK window_manager_get_window_click_manager(void) {
-  return NULL;
+  return nullptr;
 }
 
 bool window_manager_is_window_visible(Window *window) {

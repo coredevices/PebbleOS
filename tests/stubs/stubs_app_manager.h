@@ -26,7 +26,7 @@ void PBL_WEAK app_manager_put_launch_app_event(const AppLaunchEventConfig *confi
 }
 
 ProcessContext *PBL_WEAK app_manager_get_task_context(void) {
-  return NULL;
+  return nullptr;
 }
 
 void PBL_WEAK app_manager_close_current_app(bool gracefully) {
@@ -58,7 +58,7 @@ ButtonId PBL_WEAK app_manager_get_launch_button(void) {
 }
 
 const PebbleProcessMd *PBL_WEAK app_manager_get_current_app_md(void) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK app_manager_is_app_supported(const PebbleProcessMd *app_md) {

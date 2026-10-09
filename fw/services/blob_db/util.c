@@ -10,7 +10,7 @@ void blob_db_util_free_dirty_list(BlobDBDirtyItem *dirty_list) {
   ListNode *cur;
   while (head) {
     cur = head;
-    list_remove(cur, &head, NULL);
+    list_remove(cur, &head, nullptr);
     kernel_free(cur);
   }
 }

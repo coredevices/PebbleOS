@@ -16,14 +16,14 @@
 #include <system/passert.h>
 
 static GTextLayoutCacheRef prv_text_layer_legacy2_get_cache_handle(TextLayerLegacy2 *text_layer) {
-  if (text_layer == NULL) {
-    return NULL;
+  if (text_layer == nullptr) {
+    return nullptr;
   }
-  return text_layer->should_cache_layout ? text_layer->layout_cache : NULL;
+  return text_layer->should_cache_layout ? text_layer->layout_cache : nullptr;
 }
 
 void text_layer_legacy2_update_proc(TextLayerLegacy2 *text_layer, GContext *ctx) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return;
   }
   const GColor bg_color = get_native_color(text_layer->background_color);
@@ -73,23 +73,23 @@ void text_layer_legacy2_destroy(TextLayerLegacy2 *text_layer) {
 }
 
 void text_layer_legacy2_deinit(TextLayerLegacy2 *text_layer) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return;
   }
   layer_deinit(&text_layer->layer);
   graphics_text_layout_cache_deinit(&text_layer->layout_cache);
-  text_layer->layout_cache = NULL;
+  text_layer->layout_cache = nullptr;
 }
 
 Layer *text_layer_legacy2_get_layer(TextLayerLegacy2 *text_layer) {
-  if (text_layer == NULL) {
-    return NULL;
+  if (text_layer == nullptr) {
+    return nullptr;
   }
   return &text_layer->layer;
 }
 
 void text_layer_legacy2_set_size(TextLayerLegacy2 *text_layer, const GSize max_size) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return;
   }
   layer_set_frame(&text_layer->layer, &(GRect){text_layer->layer.frame.origin, max_size});
@@ -97,14 +97,14 @@ void text_layer_legacy2_set_size(TextLayerLegacy2 *text_layer, const GSize max_s
 }
 
 GSize text_layer_legacy2_get_size(TextLayerLegacy2 *text_layer) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return GSizeZero;
   }
   return text_layer->layer.frame.size;
 }
 
 void text_layer_legacy2_set_text(TextLayerLegacy2 *text_layer, const char *text) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return;
   }
   text_layer->text = text;
@@ -112,14 +112,14 @@ void text_layer_legacy2_set_text(TextLayerLegacy2 *text_layer, const char *text)
 }
 
 const char *text_layer_legacy2_get_text(TextLayerLegacy2 *text_layer) {
-  if (text_layer == NULL) {
-    return NULL;
+  if (text_layer == nullptr) {
+    return nullptr;
   }
   return text_layer->text;
 }
 
 void text_layer_legacy2_set_background_color_2bit(TextLayerLegacy2 *text_layer, GColor2 color) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return;
   }
   GColor native_color = get_native_color(color);
@@ -132,7 +132,7 @@ void text_layer_legacy2_set_background_color_2bit(TextLayerLegacy2 *text_layer, 
 }
 
 void text_layer_legacy2_set_text_color_2bit(TextLayerLegacy2 *text_layer, GColor2 color) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return;
   }
   GColor8 native_color = get_native_color(color);
@@ -146,7 +146,7 @@ void text_layer_legacy2_set_text_color_2bit(TextLayerLegacy2 *text_layer, GColor
 
 void text_layer_legacy2_set_text_alignment(TextLayerLegacy2 *text_layer,
                                            GTextAlignment text_alignment) {
-  if (text_layer == NULL || text_alignment == text_layer->text_alignment) {
+  if (text_layer == nullptr || text_alignment == text_layer->text_alignment) {
     return;
   }
   text_layer->text_alignment = text_alignment;
@@ -155,7 +155,7 @@ void text_layer_legacy2_set_text_alignment(TextLayerLegacy2 *text_layer,
 
 void text_layer_legacy2_set_overflow_mode(TextLayerLegacy2 *text_layer,
                                           GTextOverflowMode overflow_mode) {
-  if (text_layer == NULL || overflow_mode == text_layer->overflow_mode) {
+  if (text_layer == nullptr || overflow_mode == text_layer->overflow_mode) {
     return;
   }
   text_layer->overflow_mode = overflow_mode;
@@ -163,7 +163,7 @@ void text_layer_legacy2_set_overflow_mode(TextLayerLegacy2 *text_layer,
 }
 
 void text_layer_legacy2_set_font(TextLayerLegacy2 *text_layer, GFont font) {
-  if (text_layer == NULL || font == text_layer->font) {
+  if (text_layer == nullptr || font == text_layer->font) {
     return;
   }
   text_layer->font = font;
@@ -172,7 +172,7 @@ void text_layer_legacy2_set_font(TextLayerLegacy2 *text_layer, GFont font) {
 
 void text_layer_legacy2_set_should_cache_layout(TextLayerLegacy2 *text_layer,
                                                 bool should_cache_layout) {
-  if (text_layer == NULL || should_cache_layout == text_layer->should_cache_layout) {
+  if (text_layer == nullptr || should_cache_layout == text_layer->should_cache_layout) {
     return;
   }
 
@@ -183,12 +183,12 @@ void text_layer_legacy2_set_should_cache_layout(TextLayerLegacy2 *text_layer,
     graphics_text_layout_cache_init(&text_layer->layout_cache);
   } else {
     graphics_text_layout_cache_deinit(&text_layer->layout_cache);
-    text_layer->layout_cache = NULL;
+    text_layer->layout_cache = nullptr;
   }
 }
 
 GSize text_layer_legacy2_get_content_size(GContext *ctx, TextLayerLegacy2 *text_layer) {
-  if (text_layer == NULL) {
+  if (text_layer == nullptr) {
     return GSizeZero;
   } else if (!text_layer->should_cache_layout) {
     text_layer_legacy2_set_should_cache_layout(text_layer, true);

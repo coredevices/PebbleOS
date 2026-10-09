@@ -81,7 +81,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
 }
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
-  return NULL;
+  return nullptr;
 }
 
 // Setup
@@ -170,10 +170,10 @@ static bool prv_items_iterator_callback(void *data, const CommonTimelineItemHead
   if (item) {
     context->item_count++;
     cl_assert(uuid_equal(&item->header.id, &context->recent_id));
-    cl_assert_equal_s(attribute_get_string(&item->attr_list, AttributeIdTitle, NULL),
+    cl_assert_equal_s(attribute_get_string(&item->attr_list, AttributeIdTitle, nullptr),
                       context->expected_title);
-    cl_assert_equal_s(attribute_get_string(&item->attr_list, AttributeIdSender, NULL), "");
-    cl_assert(attribute_get_string(&item->attr_list, AttributeIdBody, NULL) == NULL);
+    cl_assert_equal_s(attribute_get_string(&item->attr_list, AttributeIdSender, nullptr), "");
+    cl_assert(attribute_get_string(&item->attr_list, AttributeIdBody, nullptr) == nullptr);
   } else {
     context->header_count++;
     cl_assert(uuid_equal(&header->id, &context->older_id));

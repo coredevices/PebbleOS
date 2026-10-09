@@ -40,7 +40,7 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_ind
 static void draw_header(GContext *ctx, const Layer *cell_layer, uint16_t section_index,
                         void *callback_context) {
   const char *title = ((SimpleMenuLayer *)callback_context)->sections[section_index].title;
-  if (title == NULL) {
+  if (title == nullptr) {
     return;
   }
   menu_cell_basic_header_draw(ctx, cell_layer, title);
@@ -52,7 +52,7 @@ static void select_click(MenuLayer *menu_layer, MenuIndex *cell_index, void *cal
 
   SimpleMenuLayerSelectCallback cb =
       simple_menu->sections[cell_index->section].items[cell_index->row].callback;
-  if (cb != NULL) {
+  if (cb != nullptr) {
     cb(cell_index->row, simple_menu->callback_context);
   }
 }
@@ -99,7 +99,7 @@ void simple_menu_layer_deinit(SimpleMenuLayer *menu_layer) {
 }
 
 void simple_menu_layer_destroy(SimpleMenuLayer *menu_layer) {
-  if (menu_layer == NULL) {
+  if (menu_layer == nullptr) {
     return;
   }
   simple_menu_layer_deinit(menu_layer);

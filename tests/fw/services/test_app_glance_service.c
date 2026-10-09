@@ -78,13 +78,13 @@ void test_app_glance_service__get_current_slice_basic(void) {
   AppGlanceSliceInternal slice_out;
 
   // Requesting the current slice with a NULL UUID should return false
-  cl_assert_equal_b(app_glance_service_get_current_slice(NULL, &slice_out), false);
+  cl_assert_equal_b(app_glance_service_get_current_slice(nullptr, &slice_out), false);
 
   // Requesting the current slice with an invalid UUID should return false
   cl_assert_equal_b(app_glance_service_get_current_slice(&UUID_INVALID, &slice_out), false);
 
   // Requesting the current slice with a NULL slice_out argument should return false
-  cl_assert_equal_b(app_glance_service_get_current_slice(&APP_GLANCE_TEST_UUID, NULL), false);
+  cl_assert_equal_b(app_glance_service_get_current_slice(&APP_GLANCE_TEST_UUID, nullptr), false);
 
   // Insert a glance
   const AppGlance glance = (AppGlance){
@@ -112,7 +112,7 @@ void test_app_glance_service__get_current_slice_basic(void) {
 
   // Check that we get back nothing for the current slice if we set the time to exactly when the
   // only slice in the glance expires
-  prv_check_expected_slice_data(NULL, expected_slice_data->expiration_time);
+  prv_check_expected_slice_data(nullptr, expected_slice_data->expiration_time);
 }
 
 void test_app_glance_service__get_current_slice_from_glance_with_multiple_unsorted_slices(void) {
@@ -155,7 +155,7 @@ void test_app_glance_service__get_current_slice_from_glance_with_multiple_unsort
   prv_check_expected_slice_data(expected_slice_data, expected_slice_data->expiration_time - 5);
 
   // Finally, check that after all slices have expired we get back nothing for the current slice
-  prv_check_expected_slice_data(NULL, expected_slice_data->expiration_time);
+  prv_check_expected_slice_data(nullptr, expected_slice_data->expiration_time);
 }
 
 void test_app_glance_service__slice_with_no_expiration(void) {

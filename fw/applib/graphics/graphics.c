@@ -640,7 +640,7 @@ GBitmap *graphics_capture_frame_buffer_format(GContext *ctx, GBitmapFormat forma
     APP_LOG(APP_LOG_LEVEL_WARNING,
             "Frame buffer has already been captured; it cannot be captured again until "
             "graphics_release_frame_buffer has been called.");
-    return NULL;
+    return nullptr;
   }
   ctx->lock = true;
 
@@ -650,7 +650,7 @@ GBitmap *graphics_capture_frame_buffer_format(GContext *ctx, GBitmapFormat forma
     return native;
   }
 
-  GBitmap *result = NULL;
+  GBitmap *result = nullptr;
   if (format == GBitmapFormat1Bit && native->info.format == GBitmapFormat8Bit) {
     // Create a new blank gbitmap in the correct format.
     const GBitmap *native_framebuffer = graphics_context_get_bitmap(ctx);

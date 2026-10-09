@@ -28,7 +28,7 @@ AnimationState *kernel_applib_get_animation_state(void) {
 
 // Get the current task. If FreeRTOS has not been initialized yet, set to KernelMain
 static PebbleTask prv_get_current_task(void) {
-  if (pebble_task_get_thread(PebbleTask_KernelMain) == NULL) {
+  if (pebble_task_get_thread(PebbleTask_KernelMain) == nullptr) {
     return PebbleTask_KernelMain;
   } else {
     return pebble_task_get_current();
@@ -47,7 +47,7 @@ LogState *kernel_applib_get_log_state(void) {
   // trying to grab the s_log_state_mutex mutex below and tried to log an error.
   PebbleTask task = prv_get_current_task();
   if (s_log_state_task_entered[task]) {
-    return NULL;
+    return nullptr;
   }
   s_log_state_task_entered[task] = true;
 
@@ -60,7 +60,7 @@ LogState *kernel_applib_get_log_state(void) {
   //  possibly multiple tasks using logging without mutex support
   // In phase 3, we log after locking the mutex only.
   // Note, if we are in an ISR or critical section in any of these phases, we cannot use a mutex
-  if ((pebble_task_get_thread(PebbleTask_KernelMain) == NULL) || mcu_state_is_isr() ||
+  if ((pebble_task_get_thread(PebbleTask_KernelMain) == nullptr) || mcu_state_is_isr() ||
       pbl_irq_is_locked() || (!pbl_kernel_is_running())) {
     // phase 1 || in an ISR || in a critical section
     use_mutex = false;
@@ -98,7 +98,7 @@ LogState *kernel_applib_get_log_state(void) {
 
 exit_fail:
   s_log_state_task_entered[task] = false;
-  return NULL;
+  return nullptr;
 }
 
 // --------------------------------------------------------------------------------------------

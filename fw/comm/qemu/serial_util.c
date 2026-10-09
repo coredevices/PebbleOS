@@ -162,7 +162,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
     *protocol = state->hdr.protocol;
     return state->msg_buffer;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 

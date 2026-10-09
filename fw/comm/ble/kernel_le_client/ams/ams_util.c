@@ -94,7 +94,7 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
 
 uint8_t ams_util_csv_parse(const char *csv_value, uint32_t csv_length, void *context,
                            AMSUtilCSVCallback callback) {
-  if (csv_value == NULL || csv_length == 0) {
+  if (csv_value == nullptr || csv_length == 0) {
     return 0;
   }
 

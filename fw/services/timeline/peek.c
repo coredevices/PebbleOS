@@ -32,7 +32,7 @@ typedef struct PeekUpdateContext {
 
 static void prv_put_peek_event(PeekUpdateContext *update, TimelineItemId *item_id,
                                TimelinePeekTimeType time_type) {
-  TimelineItemId *item_id_copy = NULL;
+  TimelineItemId *item_id_copy = nullptr;
   if (item_id) {
     item_id_copy = kernel_malloc_check(sizeof(TimelineItemId));
     *item_id_copy = *item_id;
@@ -140,7 +140,7 @@ static int prv_peek_comparator(SerializedTimelineItemHeader *new_header,
 
 static uint32_t prv_calc_timeout(CommonTimelineItemHeader *item,
                                  TimelinePeekTimeType *time_type_out) {
-  if (item == NULL) {
+  if (item == nullptr) {
     goto none;
   }
 
@@ -187,7 +187,7 @@ static int prv_peek_compare_and_save_next_timeout(SerializedTimelineItemHeader *
   const int rv = prv_peek_comparator(new_header, old_header, context);
   CommonTimelineItemHeader *next_header = &((rv > 0) ? new_header : old_header)->common;
   PeekUpdateContext **update = (PeekUpdateContext **)context;
-  const uint32_t next_timeout_ms = prv_calc_timeout(next_header, NULL);
+  const uint32_t next_timeout_ms = prv_calc_timeout(next_header, nullptr);
   const uint32_t old_next_timeout_ms = (*update)->next_timeout_ms;
   if (!old_next_timeout_ms || (next_timeout_ms && (next_timeout_ms < old_next_timeout_ms))) {
     (*update)->next_timeout_ms = next_timeout_ms;
@@ -199,7 +199,7 @@ static uint32_t prv_peek_update(TimelineItem *item, void **context) {
   TimelinePeekTimeType time_type;
   PeekUpdateContext *update = *(PeekUpdateContext **)context;
   const uint32_t timeout_ms = prv_calc_timeout(&item->header, &time_type);
-  prv_put_peek_event(update, timeout_ms ? &item->header.id : NULL, time_type);
+  prv_put_peek_event(update, timeout_ms ? &item->header.id : nullptr, time_type);
   const uint32_t next_timeout_ms = update->next_timeout_ms;
   return next_timeout_ms ? MIN(next_timeout_ms, timeout_ms) : timeout_ms;
 }

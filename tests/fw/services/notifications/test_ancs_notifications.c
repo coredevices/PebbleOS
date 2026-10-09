@@ -24,7 +24,7 @@
 #include <stubs_uuid.h>
 
 iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length) {
-  return NULL;
+  return nullptr;
 }
 
 void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {

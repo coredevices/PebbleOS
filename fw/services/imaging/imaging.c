@@ -84,8 +84,9 @@ static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *rea
   PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size, largest_free);
 
   prv_rx_reset();
-  ImagingTransferFailedHandler handler =
-      (type < ARRAY_LENGTH(s_transfer_failed_handlers)) ? s_transfer_failed_handlers[type] : NULL;
+  ImagingTransferFailedHandler handler = (type < ARRAY_LENGTH(s_transfer_failed_handlers))
+                                             ? s_transfer_failed_handlers[type]
+                                             : nullptr;
   if (handler) {
     handler(token);
   }
@@ -99,7 +100,7 @@ static uint8_t prv_response_type(const ImagingResponseHeader *hdr) {
 }
 
 static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
-  ImagingReceivedHandler handler = (type < ARRAY_LENGTH(s_handlers)) ? s_handlers[type] : NULL;
+  ImagingReceivedHandler handler = (type < ARRAY_LENGTH(s_handlers)) ? s_handlers[type] : nullptr;
   if (handler) {
     handler(token, bitmap);
   } else if (bitmap) {
@@ -218,13 +219,13 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       pbl_mutex_unlock(&s_lock);
     }
     prv_rx_reset();
-    prv_deliver(hdr->token, type, NULL);
+    prv_deliver(hdr->token, type, nullptr);
     return;
   }
 
   if (hdr->flags & ImagingResponseFlagNoImage) {
     prv_rx_reset();
-    prv_deliver(hdr->token, type, NULL);
+    prv_deliver(hdr->token, type, nullptr);
     return;
   }
 
@@ -260,7 +261,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     }
 
     ImagingWillReceiveHandler will_receive =
-        (type < ARRAY_LENGTH(s_will_receive_handlers)) ? s_will_receive_handlers[type] : NULL;
+        (type < ARRAY_LENGTH(s_will_receive_handlers)) ? s_will_receive_handlers[type] : nullptr;
     if (will_receive) {
       will_receive(hdr->token);
     }
@@ -331,8 +332,8 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     bmp->palette = s_rx.palette;
     // Ownership of the pixel and palette buffers moves into the bitmap.
     const uint8_t token = s_rx.token;
-    s_rx.pixels = NULL;
-    s_rx.palette = NULL;
+    s_rx.pixels = nullptr;
+    s_rx.palette = nullptr;
     prv_rx_reset();
     prv_deliver(token, type, bmp);
   }
@@ -353,7 +354,7 @@ void imaging_handle_comm_session_event(const PebbleCommSessionEvent *event) {
     prv_rx_reset();
   }
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  s_latched_session = NULL;
+  s_latched_session = nullptr;
   s_unsupported_types = 0;
   pbl_mutex_unlock(&s_lock);
 }

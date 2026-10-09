@@ -129,12 +129,12 @@ static void prv_toggle_dnd_from_action_menu(ActionMenu *action_menu, const Actio
 
 static TimelineItem *prv_get_current_notification(NotificationWindowData *data) {
   if (!notifications_presented_list_current()) {
-    return NULL;
+    return nullptr;
   }
 
   LayoutLayer *current = swap_layer_get_current_layout(&data->swap_layer);
   if (!current) {
-    return NULL;
+    return nullptr;
   }
 
   TimelineItem *item = (TimelineItem *)layout_get_context(current);
@@ -307,7 +307,7 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
   NotificationWindowData *data = context;
   data->first_notif_loaded = true;
   peek_layer_destroy(data->peek_layer);
-  data->peek_layer = NULL;
+  data->peek_layer = nullptr;
   TimelineItem *item = prv_get_current_notification(data);
   layer_set_hidden((Layer *)&data->action_button_layer,
                    !prv_should_provide_action_menu_for_item(data, item));
@@ -367,9 +367,9 @@ static void prv_hide_peek_layer(void *context) {
       prv_create_anim_frame((Layer *)data->peek_layer, peek_frame_animation_dy, false /* scroll */);
   Animation *swap_up =
       prv_create_anim_frame((Layer *)&data->swap_layer, swap_frame_animation_dy, true /* scroll */);
-  Animation *spawn = animation_spawn_create(peek_up, swap_up, NULL);
+  Animation *spawn = animation_spawn_create(peek_up, swap_up, nullptr);
   AnimationHandlers anim_handlers = {
-    .started = NULL,
+    .started = nullptr,
     .stopped = prv_peek_anim_stopped,
   };
   animation_set_handlers(spawn, anim_handlers, data);
@@ -430,7 +430,7 @@ static void prv_show_peek_for_notification(NotificationWindowData *data, Uuid *i
     // The backing record couldn't be read, so there is nothing to peek at. The
     // caller declines to push the window in this case; don't strand the layer.
     peek_layer_destroy(data->peek_layer);
-    data->peek_layer = NULL;
+    data->peek_layer = nullptr;
     return;
   }
 
@@ -514,7 +514,7 @@ PBL_T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t r
 
   // if no layers, don't return one
   if (uuid_is_invalid(id)) {
-    return NULL;
+    return nullptr;
   }
 
   NotificationType type = notifications_presented_list_get_type(id);
@@ -563,7 +563,7 @@ PBL_T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t r
 
 cleanup:
   timeline_item_destroy(item);
-  return NULL;
+  return nullptr;
 }
 
 //////////////////////
@@ -595,7 +595,7 @@ static void prv_refresh_pop_timer_with_timeout(NotificationWindowData *data, uin
     return;
   }
 
-  if (data->action_menu == NULL) {
+  if (data->action_menu == nullptr) {
     // If the user has an action menu open, then we don't want to refresh the pop timeout,
     // as they are still interacting with the Notification stack
     data->pop_timer_is_final = final;
@@ -751,7 +751,7 @@ static void prv_snooze_reminder_cb(ActionMenu *action_menu, const ActionMenuItem
   // Dismiss reminder
   const TimelineItemAction *action = timeline_item_find_dismiss_action(item);
   if (action) {
-    timeline_invoke_action(item, action, NULL);
+    timeline_invoke_action(item, action, nullptr);
   }
 }
 
@@ -786,7 +786,7 @@ static void prv_mute_notification(const ActionMenuItem *action_menu_item, uint8_
 
     TimelineItemAction *dismiss = timeline_item_find_dismiss_action(item);
     if (dismiss) {
-      timeline_invoke_action(item, dismiss, NULL);
+      timeline_invoke_action(item, dismiss, nullptr);
     }
     prv_push_muted_dialog();
   } else {
@@ -828,7 +828,7 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item,
   const int app_id_len = strlen(app_id);
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)app_id, app_id_len);
   Attribute *expiration_attr =
-      notif_prefs ? attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration) : NULL;
+      notif_prefs ? attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration) : nullptr;
   if (notif_prefs && expiration_attr) {
     const uint32_t expiration_time = rtc_get_time() + duration_seconds;
     expiration_attr->uint32 = expiration_time;
@@ -838,7 +838,7 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item,
 
     TimelineItemAction *dismiss = timeline_item_find_dismiss_action(item);
     if (dismiss) {
-      timeline_invoke_action(item, dismiss, NULL);
+      timeline_invoke_action(item, dismiss, nullptr);
     }
     prv_push_muted_dialog();
   } else {
@@ -875,7 +875,7 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
                                                         TimelineItemActionSource source) {
   // Determine action menu properties
   int num_timeline_actions = 0;
-  TimelineItemAction *dismiss_action = NULL;
+  TimelineItemAction *dismiss_action = nullptr;
 
   for (int i = 0; i < item->action_group.num_actions; i++) {
     TimelineItemAction *action = &item->action_group.actions[i];
@@ -1002,7 +1002,7 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
 static void prv_action_menu_did_close(ActionMenu *action_menu, const ActionMenuItem *item,
                                       void *context) {
   NotificationWindowData *data = &s_notification_window_data;
-  data->action_menu = NULL;
+  data->action_menu = nullptr;
 }
 
 static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -1027,7 +1027,7 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
                              : TimelineItemActionSourceNotificationApp);
 
   config.root_level = prv_create_action_menu_for_item(item, window_data, source);
-  if (config.root_level == NULL) {
+  if (config.root_level == nullptr) {
     PBL_LOG_ERR("Couldn't create notification action menu");
     return;
   }
@@ -1037,7 +1037,7 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
 }
 
 static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *data) {
-  prv_dismiss_all(data, NULL);
+  prv_dismiss_all(data, nullptr);
 }
 
 static void prv_back_button_single_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -1049,7 +1049,7 @@ static void prv_click_config_provider(void *data) {
   NotificationWindowData *window_data = data;
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_single_click_handler);
   if (window_data->allow_dismiss_all) {
-    window_long_click_subscribe(BUTTON_ID_SELECT, 1000, prv_select_long_click_handler, NULL);
+    window_long_click_subscribe(BUTTON_ID_SELECT, 1000, prv_select_long_click_handler, nullptr);
   }
   window_set_click_context(BUTTON_ID_SELECT, data);
 
@@ -1137,14 +1137,14 @@ static void prv_window_unload(Window *window) {
   // clean up peek layer
   if (data->peek_layer) {
     peek_layer_destroy(data->peek_layer);
-    data->peek_layer = NULL;
+    data->peek_layer = nullptr;
   }
   animation_unschedule(data->peek_animation);
 
   swap_layer_deinit(&data->swap_layer);
   notification_image_clear();
   status_bar_layer_deinit(&data->status_layer);
-  notifications_presented_list_deinit(prv_handle_presented_notif_deinit, NULL);
+  notifications_presented_list_deinit(prv_handle_presented_notif_deinit, nullptr);
   gbitmap_deinit(&data->dnd_icon);
   layer_deinit(&data->dnd_icon_layer);
 
@@ -1152,7 +1152,7 @@ static void prv_window_unload(Window *window) {
 
   i18n_free_all(data);
   s_in_use = false;
-  timeline_action_endpoint_send_displayed_item(NULL);
+  timeline_action_endpoint_send_displayed_item(nullptr);
 }
 
 //////////////////////
@@ -1174,14 +1174,15 @@ static void prv_imaging_notification_received(uint8_t token, GBitmap *bitmap) {
   // Delivery lands on KernelMain, which is where the modal renders; the notification history app
   // owns its window on the App task and has to mark it dirty there.
   if (s_notification_window_data.is_modal) {
-    prv_redraw_current_layout(NULL);
+    prv_redraw_current_layout(nullptr);
   } else {
-    process_manager_send_callback_event_to_process(PebbleTask_App, prv_redraw_current_layout, NULL);
+    process_manager_send_callback_event_to_process(PebbleTask_App, prv_redraw_current_layout,
+                                                   nullptr);
   }
 }
 
 static void prv_imaging_notification_transfer_failed(uint8_t token) {
-  prv_imaging_notification_received(token, NULL);
+  prv_imaging_notification_received(token, nullptr);
 }
 
 static void prv_maybe_request_notification_image(LayoutLayer *layout, TimelineItem *item) {
@@ -1314,14 +1315,14 @@ static void prv_init_notification_window(bool is_modal, bool allow_dismiss_all) 
   data->allow_dismiss_all = allow_dismiss_all;
   data->notification_app_id = UUID_INVALID;
   data->peek_layer_timer = EVENTED_TIMER_INVALID_ID;
-  data->peek_animation = NULL;
-  data->peek_layer = NULL;
+  data->peek_animation = nullptr;
+  data->peek_layer = nullptr;
   data->peek_icon_info = (TimelineResourceInfo){
     .res_id = TIMELINE_RESOURCE_INVALID,
-    .app_id = NULL,
+    .app_id = nullptr,
     .fallback_id = TIMELINE_RESOURCE_INVALID
   };
-  data->action_menu = NULL;
+  data->action_menu = nullptr;
   data->dnd_icon_visible = false;
   if (data->pending_vibe) {
     prv_log_notification_vibe("dropped on init", &data->pending_vibe_id);
@@ -1483,7 +1484,7 @@ void notification_window_service_init(void) {
   notification_image_service_init();
 #if NOTIFICATION_IMAGE_SUPPORTED
   imaging_register_handler(ImagingImageTypeNotification, prv_imaging_notification_received);
-  imaging_register_transfer_handlers(ImagingImageTypeNotification, NULL,
+  imaging_register_transfer_handlers(ImagingImageTypeNotification, nullptr,
                                      prv_imaging_notification_transfer_failed);
 #endif
 }

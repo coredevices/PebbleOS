@@ -211,7 +211,7 @@ static void ble_ad_parse_ad_data(const struct pbl_bt_ad_data *ad_data,
       return; // corrupted
     }
 
-    bool (*parse_func)(const BLEAdElement *, const BLEAdParseCallbacks *, void *) = NULL;
+    bool (*parse_func)(const BLEAdElement *, const BLEAdParseCallbacks *, void *) = nullptr;
 
     switch (elem->header.type) {
       case BLEAdTypeService16BitUUIDPartial ... BLEAdTypeService128BitUUIDComplete:
@@ -477,7 +477,7 @@ static uint8_t *prv_length_ptr_if_fits_or_null(uint8_t *length, size_t size_to_w
   const uint8_t used = *length & (~BLE_AD_DATA_FINALIZED);
   const uint8_t left = PBL_BT_AD_REPORT_DATA_MAX_LENGTH - used;
   // Return pointer to the pointer if size_to_write will fit, or NULL otherwise:
-  return (left >= size_to_write) ? length : NULL;
+  return (left >= size_to_write) ? length : nullptr;
 }
 
 // -----------------------------------------------------------------------------

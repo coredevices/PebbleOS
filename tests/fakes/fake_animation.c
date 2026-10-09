@@ -49,7 +49,7 @@ static Animation *prv_create_from_vararg(Animation *animation_a, Animation *anim
     animation_array[array_len++] = animation_c;
     while (array_len < ANIMATION_MAX_CREATE_VARGS) {
       void *arg = va_arg(args, void *);
-      if (arg == NULL) {
+      if (arg == nullptr) {
         break;
       }
       animation_array[array_len++] = arg;
@@ -100,12 +100,12 @@ static void prv_each(AnimationPrivate *animation, AnimationEachCallback callback
 }
 
 static void prv_free(AnimationPrivate *animation, uintptr_t context) {
-  list_remove(&animation->list_node, NULL, NULL);
+  list_remove(&animation->list_node, nullptr, nullptr);
   free(animation);
 }
 
 bool animation_destroy(Animation *animation) {
-  prv_each((AnimationPrivate *)animation, prv_free, (uintptr_t)NULL);
+  prv_each((AnimationPrivate *)animation, prv_free, 0);
   return true;
 }
 
@@ -155,7 +155,7 @@ bool animation_schedule(Animation *animation_h) {
   if (!animation->scheduled) {
     prv_each(animation, prv_call_scheduled, true);
     // If your test is failing, build out this fake so that this is an async start
-    prv_each(animation, prv_call_started, (uintptr_t)NULL);
+    prv_each(animation, prv_call_started, 0);
   }
   return true;
 }
@@ -196,7 +196,7 @@ bool animation_set_handlers(Animation *animation_h, AnimationHandlers callbacks,
 void *animation_get_context(Animation *animation_h) {
   AnimationPrivate *animation = (AnimationPrivate *)animation_h;
   if (!animation) {
-    return NULL;
+    return nullptr;
   }
   return animation->context;
 }
@@ -248,7 +248,7 @@ void fake_animation_cleanup(void) {
     free(current);
   }
 
-  s_animations = NULL;
+  s_animations = nullptr;
 }
 
 void fake_animation_complete(Animation *animation) {

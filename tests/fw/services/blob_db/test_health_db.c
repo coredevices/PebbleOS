@@ -31,7 +31,7 @@ status_t pfs_remove(const char *name) {
 
 status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
                         int val_len) {
-  return settings_file_set(NULL, key, key_len, val, val_len);
+  return settings_file_set(nullptr, key, key_len, val, val_len);
 }
 
 RtcTicks rtc_get_ticks(void) {

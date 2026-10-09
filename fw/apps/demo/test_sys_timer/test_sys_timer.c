@@ -114,17 +114,17 @@ static void menu_callback_prefix(int index, void *ctx) {
     }
   }
 
-  if (s_app_data->app_timer != NULL) {
+  if (s_app_data->app_timer != nullptr) {
     app_timer_cancel(s_app_data->app_timer);
     s_app_data->app_timer = 0;
   }
 
   // Cancel and delete old regular timers if present
   for (int i = 0; i < NUM_MAX_TIMERS; i++) {
-    if (s_app_data->reg_timers[i].cb != NULL) {
+    if (s_app_data->reg_timers[i].cb != nullptr) {
       PBL_LOG_DBG("STT deleting previous regular timer %d", i);
       regular_timer_remove_callback(&s_app_data->reg_timers[i]);
-      s_app_data->reg_timers[i].cb = NULL;
+      s_app_data->reg_timers[i].cb = nullptr;
     }
   }
 }
@@ -374,7 +374,7 @@ static void prv_window_load(Window *window) {
   GRect bounds = window_layer->bounds;
 
   data->menu_layer =
-      simple_menu_layer_create(bounds, data->window, sections, ARRAY_LENGTH(sections), NULL);
+      simple_menu_layer_create(bounds, data->window, sections, ARRAY_LENGTH(sections), nullptr);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 }
 
@@ -391,7 +391,7 @@ static void handle_init(void) {
   s_app_data = data;
 
   data->window = window_create();
-  if (data->window == NULL) {
+  if (data->window == nullptr) {
     return;
   }
   window_init(data->window, "");

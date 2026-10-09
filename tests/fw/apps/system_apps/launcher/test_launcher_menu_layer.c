@@ -272,7 +272,7 @@ void process_manager_send_callback_event_to_process(PebbleTask task, void (*call
 // Setup and Teardown
 ////////////////////////////////////
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 GContext *graphics_context_get_current_context(void) {
   return &s_ctx;
@@ -333,7 +333,7 @@ void prv_launcher_menu_layer_set_selection_index(LauncherMenuLayer *launcher_men
 
 void prv_render_launcher_menu_layer(uint16_t selected_index) {
   AppMenuDataSource data_source = {};
-  app_menu_data_source_init(&data_source, NULL, NULL);
+  app_menu_data_source_init(&data_source, nullptr, nullptr);
   app_menu_data_source_enable_icons(&data_source, RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON);
 
   LauncherMenuLayer launcher_menu_layer = {};
@@ -434,7 +434,7 @@ static void prv_insert_glances_for_app_selected_and_apps_above_and_below_with_gl
 
 void test_launcher_menu_layer__content_size_change_keeps_selection(void) {
   AppMenuDataSource data_source = {};
-  app_menu_data_source_init(&data_source, NULL, NULL);
+  app_menu_data_source_init(&data_source, nullptr, nullptr);
   app_menu_data_source_enable_icons(&data_source, RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON);
 
   LauncherMenuLayer launcher_menu_layer = {};

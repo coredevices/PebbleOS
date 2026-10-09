@@ -33,7 +33,7 @@ static uint32_t prv_get_max_data_length(const struct pbl_shared_cbuf *buffer,
                                         struct pbl_shared_cbuf_client **max_client) {
   ListNode *iter = buffer->clients;
   if (!iter) {
-    *max_client = NULL;
+    *max_client = nullptr;
     return 0;
   }
 
@@ -55,7 +55,7 @@ static uint32_t prv_get_max_data_length(const struct pbl_shared_cbuf *buffer,
 void pbl_shared_cbuf_init(struct pbl_shared_cbuf *buffer, uint8_t *storage, uint16_t storage_size) {
   buffer->buffer = storage;
   buffer->buffer_size = storage_size;
-  buffer->clients = NULL;
+  buffer->clients = nullptr;
   buffer->write_index = 0;
 }
 
@@ -72,7 +72,7 @@ bool pbl_shared_cbuf_add_client(struct pbl_shared_cbuf *buffer,
 void pbl_shared_cbuf_remove_client(struct pbl_shared_cbuf *buffer,
                                    struct pbl_shared_cbuf_client *client) {
   UTIL_ASSERT(list_contains(buffer->clients, &client->list_node));
-  list_remove(&client->list_node, &buffer->clients, NULL);
+  list_remove(&client->list_node, &buffer->clients, nullptr);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ bool pbl_shared_cbuf_write_reserve(struct pbl_shared_cbuf *buffer, uint16_t leng
     *seg2 = &buffer->buffer[0];
   } else {
     *seg1_length = length;
-    *seg2 = NULL;
+    *seg2 = nullptr;
   }
   return true;
 }

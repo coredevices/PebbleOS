@@ -276,9 +276,9 @@ void do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSource source) {
     prv_push_manual_dnd_first_use_dialog(source);
   } else {
     if (source == ManualDNDFirstUseSourceSettingsMenu) {
-      prv_toggle_manual_dnd_from_settings_menu(NULL);
+      prv_toggle_manual_dnd_from_settings_menu(nullptr);
     } else {
-      prv_toggle_manual_dnd_from_action_menu(NULL);
+      prv_toggle_manual_dnd_from_action_menu(nullptr);
     }
   }
 }
@@ -291,7 +291,7 @@ void do_not_disturb_toggle_smart_dnd(void) {
   if (!alerts_preferences_check_and_set_first_use_complete(FirstUseSourceSmartDND)) {
     prv_push_smart_dnd_first_use_dialog();
   } else {
-    prv_toggle_smart_dnd(NULL);
+    prv_toggle_smart_dnd(nullptr);
   }
 }
 

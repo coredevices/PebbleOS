@@ -11,7 +11,7 @@
 static EventServiceInfo s_event_handler[PEBBLE_NUM_EVENTS];
 
 void event_service_client_subscribe(EventServiceInfo *service_info) {
-  cl_assert_equal_p(s_event_handler[service_info->type].handler, NULL);
+  cl_assert_equal_p(s_event_handler[service_info->type].handler, nullptr);
   s_event_handler[service_info->type] = *service_info;
 }
 

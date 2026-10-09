@@ -66,6 +66,6 @@ static int prv_cmd_gapdb(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, gapdb, NULL, "Dump the bonding database", prv_cmd_gapdb, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, gapdb, nullptr, "Dump the bonding database", prv_cmd_gapdb, 0, 0);
 
 #endif

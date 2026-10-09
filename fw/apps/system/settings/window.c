@@ -277,7 +277,7 @@ static Window *prv_create(SettingsMenuItem category, const char *title_override,
 }
 
 Window *settings_window_create(SettingsMenuItem category, SettingsCallbacks *callbacks) {
-  return prv_create(category, NULL, callbacks);
+  return prv_create(category, nullptr, callbacks);
 }
 
 Window *settings_window_create_with_title(SettingsMenuItem category, const char *title,

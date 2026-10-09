@@ -59,7 +59,7 @@ bool attribute_group_parse_serial_data(AttributeGroupType type, uint8_t num_attr
                                        uint8_t num_group_type_elements, const uint8_t *data,
                                        size_t size, size_t *string_alloc_size_out,
                                        uint8_t *attributes_per_group_type_element_out) {
-  PBL_ASSERTN(data != NULL && string_alloc_size_out != NULL);
+  PBL_ASSERTN(data != nullptr && string_alloc_size_out != nullptr);
 
   *string_alloc_size_out = 0;
 
@@ -165,7 +165,7 @@ static AttributeList *prv_deserialize_action(TimelineItemAction *action, const u
                                              const uint8_t *payload_end, const uint8_t *buffer,
                                              const uint8_t *buf_end) {
   if (*cursor + sizeof(SerializedActionHeader) > payload_end) {
-    return NULL;
+    return nullptr;
   }
   SerializedActionHeader *serialized_action = (SerializedActionHeader *)*cursor;
   *cursor += sizeof(SerializedActionHeader);
@@ -180,7 +180,7 @@ static AttributeList *prv_deserialize_address(Address *address, const uint8_t **
                                               const uint8_t *payload_end, const uint8_t *buffer,
                                               const uint8_t *buf_end) {
   if (*cursor + sizeof(SerializedAddressHeader) > payload_end) {
-    return NULL;
+    return nullptr;
   }
   SerializedAddressHeader *serialized_address = (SerializedAddressHeader *)*cursor;
   *cursor += sizeof(SerializedAddressHeader);
@@ -229,7 +229,7 @@ static bool prv_deserialize_group_element(AttributeGroupType type, void *group_p
 bool attribute_group_deserialize(AttributeGroupType type, AttributeList *attr_list, void *group_ptr,
                                  uint8_t *buffer, uint8_t *buf_end, const uint8_t *payload,
                                  size_t payload_size) {
-  PBL_ASSERTN(payload != NULL);
+  PBL_ASSERTN(payload != nullptr);
 
   const uint8_t *payload_end = payload + payload_size;
   const uint8_t *cursor = payload;
@@ -329,7 +329,7 @@ static uint8_t *prv_serialize_group_element(AttributeGroupType type, void *group
 
 size_t attribute_group_serialize_payload(AttributeGroupType type, AttributeList *attr_list,
                                          void *group_ptr, uint8_t *buffer, size_t buffer_size) {
-  PBL_ASSERTN(buffer != NULL);
+  PBL_ASSERTN(buffer != nullptr);
 
   uint8_t *buf_start = buffer;
   uint8_t *buf_end = buffer + buffer_size;

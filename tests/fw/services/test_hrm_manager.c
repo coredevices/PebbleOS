@@ -149,7 +149,7 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
     case PebbleTask_App:
       return FAKE_APP_QUEUE;
     case PebbleTask_KernelBackground:
-      return NULL;
+      return nullptr;
     default:
       WTF;
   }
@@ -237,8 +237,8 @@ void test_hrm_manager__initialize(void) {
   s_num_cb_events_1 = 0;
   s_num_cb_events_2 = 0;
   memset(&s_hrm_state, 0, sizeof(s_hrm_state));
-  s_accel_data_cb = NULL;
-  s_accel_data_cb_context = NULL;
+  s_accel_data_cb = nullptr;
+  s_accel_data_cb_context = nullptr;
   s_accel_consume_calls = 0;
   s_accel_waiting_batches = 0;
   s_activity_prefs_blood_oxygen_is_enabled = false;
@@ -282,7 +282,7 @@ void test_hrm_manager__subscription(void) {
 
   sys_hrm_manager_unsubscribe(session_ref);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(prv_get_subscriber_state_from_ref(session_ref) == NULL);
+  cl_assert(prv_get_subscriber_state_from_ref(session_ref) == nullptr);
   cl_assert_equal_b(hrm_is_enabled(HRM), false);
 }
 
@@ -371,7 +371,7 @@ void test_hrm_manager__same_path_superset_keeps_running(void) {
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   HRMSessionRef hrv_ref = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, PBL_SEC_PER_MIN, 0, HRMFeature_BPM | HRMFeature_HRV,
-      false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+      false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM | HRMFeature_HRV);
   cl_assert_equal_i(s_hrm_state.enable_count, 2);
@@ -432,7 +432,7 @@ void test_hrm_manager__pref_mask_exempts_foreground_app(void) {
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   HRMSessionRef bg_ref = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_b(hrm_is_enabled(HRM), false);
 
@@ -471,13 +471,13 @@ void test_hrm_manager__spo2_preempts_green(void) {
   s_activity_prefs_blood_oxygen_is_enabled = true;
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   HRMSessionRef green_ref = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
 
   HRMSessionRef spo2_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, PBL_SEC_PER_HOUR, 0, HRMFeature_SpO2,
-                                          false /*low_latency*/, prv_fake_hrm_2_cb, NULL);
+                                          false /*low_latency*/, prv_fake_hrm_2_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_SpO2);
 
@@ -505,15 +505,15 @@ void test_hrm_manager__has_continuous_green_subscriber(void) {
 
   HRMSessionRef slow_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, PBL_SEC_PER_MIN, 0, HRMFeature_BPM,
-                                          false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+                                          false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   cl_assert(!hrm_manager_has_continuous_green_subscriber());
 
   HRMSessionRef spo2_ref = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   cl_assert(!hrm_manager_has_continuous_green_subscriber());
 
   HRMSessionRef live_ref = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+      INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   cl_assert(hrm_manager_has_continuous_green_subscriber());
 
   // Heart rate monitoring off masks the background BPM subscriber out.
@@ -543,14 +543,14 @@ void test_hrm_manager__app_cleanup(void) {
       sys_hrm_manager_app_subscribe(app_id, update_interval_s, expire_s, features);
   cl_assert(sys_hrm_manager_get_app_subscription(app_id) == session_ref);
   uint16_t ret_expire_s;
-  sys_hrm_manager_get_subscription_info(session_ref, NULL, NULL, &ret_expire_s, NULL);
+  sys_hrm_manager_get_subscription_info(session_ref, nullptr, nullptr, &ret_expire_s, nullptr);
   cl_assert_equal_i(ret_expire_s, 0);
 
   // Now, call the process cleanup. This should place an expiration time on the subscription
   hrm_manager_process_cleanup(PebbleTask_App, app_id);
   cl_assert(sys_hrm_manager_get_app_subscription(app_id) == session_ref);
 
-  sys_hrm_manager_get_subscription_info(session_ref, NULL, NULL, &ret_expire_s, NULL);
+  sys_hrm_manager_get_subscription_info(session_ref, nullptr, nullptr, &ret_expire_s, nullptr);
   cl_assert_equal_i(ret_expire_s, HRM_MANAGER_APP_EXIT_EXPIRATION_SEC);
 
   sys_hrm_manager_unsubscribe(session_ref);
@@ -570,12 +570,12 @@ void test_hrm_manager__app_cleanup_preserves_shorter_expiration(void) {
   HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(app_id, update_interval_s, shorter_expire_s, features);
   uint16_t ret_expire_s;
-  sys_hrm_manager_get_subscription_info(session_ref, NULL, NULL, &ret_expire_s, NULL);
+  sys_hrm_manager_get_subscription_info(session_ref, nullptr, nullptr, &ret_expire_s, nullptr);
   cl_assert_equal_i(ret_expire_s, shorter_expire_s);
 
   hrm_manager_process_cleanup(PebbleTask_App, app_id);
 
-  sys_hrm_manager_get_subscription_info(session_ref, NULL, NULL, &ret_expire_s, NULL);
+  sys_hrm_manager_get_subscription_info(session_ref, nullptr, nullptr, &ret_expire_s, nullptr);
   cl_assert_equal_i(ret_expire_s, shorter_expire_s);
 
   sys_hrm_manager_unsubscribe(session_ref);
@@ -612,7 +612,7 @@ void test_hrm_manager__app_expiration(void) {
   cl_assert_equal_i(s_events_received[2].hrm.event_type, HRMEvent_SubscriptionExpiring);
 
   // Subscription should be gone
-  cl_assert(prv_get_subscriber_state_from_ref(session_ref) == NULL);
+  cl_assert(prv_get_subscriber_state_from_ref(session_ref) == nullptr);
   cl_assert(sys_hrm_manager_get_app_subscription(app_id) == HRM_INVALID_SESSION_REF);
 }
 
@@ -622,7 +622,7 @@ void test_hrm_manager__kernel_expiration(void) {
   const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
-                                          false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+                                          false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
 
@@ -649,7 +649,7 @@ void test_hrm_manager__kernel_expiration(void) {
   // Send more data, the subscription should go away now
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(prv_get_subscriber_state_from_ref(session_ref) == NULL);
+  cl_assert(prv_get_subscriber_state_from_ref(session_ref) == nullptr);
 }
 
 void test_hrm_manager__subscribe_multiple(void) {
@@ -671,14 +671,14 @@ void test_hrm_manager__subscribe_multiple(void) {
     cl_assert(prv_get_subscriber_state_from_app_id(PebbleTask_App, app_ids[i]));
   }
 
-  cl_assert(prv_get_subscriber_state_from_ref(HRM_INVALID_SESSION_REF) == NULL);
-  cl_assert(prv_get_subscriber_state_from_app_id(PebbleTask_App, INSTALL_ID_INVALID) == NULL);
+  cl_assert(prv_get_subscriber_state_from_ref(HRM_INVALID_SESSION_REF) == nullptr);
+  cl_assert(prv_get_subscriber_state_from_app_id(PebbleTask_App, INSTALL_ID_INVALID) == nullptr);
 
   // Unsubscribe, HRM should be disabled after
   for (int i = 0; i < num_refs; ++i) {
     sys_hrm_manager_unsubscribe(session_refs[i]);
-    cl_assert(prv_get_subscriber_state_from_ref(session_refs[i]) == NULL);
-    cl_assert(prv_get_subscriber_state_from_app_id(PebbleTask_App, app_ids[i]) == NULL);
+    cl_assert(prv_get_subscriber_state_from_ref(session_refs[i]) == nullptr);
+    cl_assert(prv_get_subscriber_state_from_app_id(PebbleTask_App, app_ids[i]) == nullptr);
   }
   cl_assert_equal_b(hrm_is_enabled(HRM), false);
 }
@@ -768,7 +768,7 @@ void test_hrm_manager__system_task_data_callback(void) {
   const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
-                                          false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+                                          false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
 
   fake_system_task_callbacks_invoke_pending();
   prv_fake_send_new_data();
@@ -798,11 +798,11 @@ void test_hrm_manager__multiple_system_task_data_callbacks(void) {
   const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref_1 =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
-                                          false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+                                          false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
   HRMSessionRef session_ref_2 =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
-                                          false /*low_latency*/, prv_fake_hrm_2_cb, NULL);
+                                          false /*low_latency*/, prv_fake_hrm_2_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
   prv_fake_send_new_data();
 
@@ -1159,7 +1159,7 @@ void test_hrm_manager__immediate_off_wrist(void) {
   const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
-                                          false /*low_latency*/, prv_fake_hrm_1_cb, NULL);
+                                          false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
 
   // Send OffWrist data immediately (no prior good readings)

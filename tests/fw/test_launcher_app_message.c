@@ -110,14 +110,14 @@ void test_launcher_app_message__initialize(void) {
   launcher_app_message_reset();
   s_last_cmd = APP_RUN_STATE_INVALID_COMMAND;
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
+  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
 }
 
 void test_launcher_app_message__cleanup(void) {
   fake_transport_destroy(s_transport);
-  s_transport = NULL;
-  s_session = NULL;
+  s_transport = nullptr;
+  s_session = nullptr;
   fake_comm_session_cleanup();
   fake_system_task_callbacks_cleanup();
 }

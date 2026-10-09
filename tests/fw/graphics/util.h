@@ -152,7 +152,7 @@ GBitmap *get_gbitmap_from_pbi(const char *filename) {
   FILE *file = fopen(full_path, "r");
   if (!file) {
     printf("Unable to open file: %s\n", full_path);
-    return NULL;
+    return nullptr;
   }
 
   GBitmap *bmp = malloc(sizeof(*bmp));
@@ -253,7 +253,7 @@ GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize size, GBitma
 // Note that if both passed bitmaps are NULL, this test will succeed!
 bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename) {
   bool rc = false;
-  GBitmap *diff_bmp = NULL;
+  GBitmap *diff_bmp = nullptr;
   if (!actual_bmp && !expected_bmp) {
     return true;
   } else if (!actual_bmp || !expected_bmp) {
@@ -368,7 +368,7 @@ bool gbitmap_pbi_eq_with_bounds(GBitmap *bmp, const char *filename, const GRect 
 }
 
 bool gbitmap_pbi_eq(GBitmap *bmp, const char *filename) {
-  return gbitmap_pbi_eq_with_bounds(bmp, filename, NULL);
+  return gbitmap_pbi_eq_with_bounds(bmp, filename, nullptr);
 }
 
 size_t load_file(const char *filename, uint8_t **data) {
@@ -376,7 +376,7 @@ size_t load_file(const char *filename, uint8_t **data) {
   snprintf(full_path, sizeof(full_path), "%s/%s", TEST_IMAGES_PATH, filename);
 
   FILE *file = fopen(full_path, "rb");
-  if (file == NULL) {
+  if (file == nullptr) {
     printf("Error: couldn't open file: %s\n", filename);
     cl_assert(false);
   }
@@ -435,7 +435,7 @@ void setup_test_context(GContext *ctx, uint32_t flags, GDrawState *draw_state, b
 }
 
 GBitmap *setup_pbi_test(const char *filename) {
-  uint8_t *pbi_data = NULL;
+  uint8_t *pbi_data = nullptr;
   size_t pbi_size = 0;
   pbi_size = load_file(filename, &pbi_data);
   cl_assert(pbi_size > 0);
@@ -444,7 +444,7 @@ GBitmap *setup_pbi_test(const char *filename) {
 }
 
 static inline GBitmap *setup_png_test(const char *filename) {
-  uint8_t *png_data = NULL;
+  uint8_t *png_data = nullptr;
   size_t png_size = 0;
   png_size = load_file(filename, &png_data);
   cl_assert(png_size > 0);
@@ -467,5 +467,5 @@ void setup_test_aa_sw(GContext *ctx, FrameBuffer *fb, GRect clip_box, GRect draw
   setup_test_context(ctx,
                      (CTX_FLAG_DS_CLIP_BOX | CTX_FLAG_DS_DRAWING_BOX | CTX_FLAG_DS_ANTIALIASED |
                       CTX_FLAG_DS_STROKE_WIDTH),
-                     &draw_state, NULL);
+                     &draw_state, nullptr);
 }

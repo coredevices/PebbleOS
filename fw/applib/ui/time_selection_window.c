@@ -215,7 +215,7 @@ void time_selection_window_configure(TimeSelectionWindowData *time_selection_win
 }
 
 static void prv_text_layer_init(Layer *window_layer, TextLayer *text_layer, const GFont font) {
-  text_layer_init_with_parameters(text_layer, &GRectZero, NULL, font, GColorBlack, GColorClear,
+  text_layer_init_with_parameters(text_layer, &GRectZero, nullptr, font, GColorBlack, GColorClear,
                                   GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
   layer_add_child(window_layer, &text_layer->layer);
   layer_set_hidden(&text_layer->layer, true);

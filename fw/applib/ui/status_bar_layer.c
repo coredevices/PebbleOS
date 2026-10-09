@@ -93,7 +93,7 @@ static void prv_set_mode(StatusBarLayer *status_bar_layer, StatusBarLayerMode mo
   if (prv_mode_is_clock(mode)) {
     status_bar_layer->previous_min_of_day = -1;
   } else {
-    status_bar_layer->marquee = NULL;
+    status_bar_layer->marquee = nullptr;
   }
 }
 
@@ -137,7 +137,8 @@ void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
   GContext *ctx = graphics_context_get_current_context();
   const GSize current_framebuffer_size = graphics_context_get_framebuffer_size(ctx);
 
-  layer_init(&status_bar_layer->layer, &GRect(0, 0, current_framebuffer_size.w, prv_height(NULL)));
+  layer_init(&status_bar_layer->layer,
+             &GRect(0, 0, current_framebuffer_size.w, prv_height(nullptr)));
   status_bar_layer->layer.update_proc = prv_status_bar_layer_render;
   status_bar_layer->layer.property_changed_proc = prv_status_bar_property_changed;
 
@@ -363,13 +364,13 @@ static void prv_marquee_stop(StatusBarLayer *status_bar_layer) {
     app_timer_cancel(marquee->timer);
   }
   applib_free(marquee);
-  status_bar_layer->marquee = NULL;
+  status_bar_layer->marquee = nullptr;
 }
 
 static void prv_marquee_cb(void *context) {
   StatusBarLayer *status_bar_layer = context;
   StatusBarMarquee *marquee = status_bar_layer->marquee;
-  marquee->timer = NULL;
+  marquee->timer = nullptr;
 
   const uint32_t span = marquee->span;
   const uint32_t fwd_ms = span * MARQUEE_MS_PER_PX;
@@ -449,7 +450,7 @@ static bool prv_render_round_title(GContext *ctx, const StatusBarTextFormat *tex
 
   const GSize text_size = graphics_text_layout_get_max_used_size(
       ctx, text, text_format->font, GRect(0, 0, INT16_MAX, height), GTextOverflowModeFill,
-      GTextAlignmentLeft, NULL);
+      GTextAlignmentLeft, nullptr);
   const int16_t span = MAX(text_size.w - vis_w, 0);
 
   if (status_bar_layer && (!status_bar_layer->marquee || span != status_bar_layer->marquee->span)) {
@@ -468,7 +469,7 @@ static bool prv_render_round_title(GContext *ctx, const StatusBarTextFormat *tex
     return false;
   }
 
-  const StatusBarMarquee *marquee = status_bar_layer ? status_bar_layer->marquee : NULL;
+  const StatusBarMarquee *marquee = status_bar_layer ? status_bar_layer->marquee : nullptr;
   if (marquee && marquee->timer) {
     const GRect saved_clip = ctx->draw_state.clip_box;
     GRect clip = GRect(ctx->draw_state.drawing_box.origin.x + vis_min_x, saved_clip.origin.y, vis_w,
@@ -477,11 +478,11 @@ static bool prv_render_round_title(GContext *ctx, const StatusBarTextFormat *tex
     ctx->draw_state.clip_box = clip;
     graphics_draw_text(ctx, text, text_format->font,
                        GRect(vis_min_x - marquee->offset, y, text_size.w, height),
-                       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+                       GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
     ctx->draw_state.clip_box = saved_clip;
   } else {
     graphics_draw_text(ctx, text, text_format->font, GRect(vis_min_x, y, vis_w, height),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
   }
   return true;
 }
@@ -539,12 +540,12 @@ static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayer
       const GRect box =
           GRect(x_start + k_outline_offsets[i].x, y + k_outline_offsets[i].y, width, font_height);
       graphics_draw_text(ctx, data, font, box, text_format.overflow_mode,
-                         text_format.text_alignment, NULL);
+                         text_format.text_alignment, nullptr);
     }
     graphics_context_set_text_color(ctx, config->foreground_color);
   }
   graphics_draw_text(ctx, data, font, text_box, text_format.overflow_mode,
-                     text_format.text_alignment, NULL);
+                     text_format.text_alignment, nullptr);
 }
 
 // Renders all of StatusBarLayer when layer_mark_dirty triggers LayerUpdateProc
@@ -579,7 +580,7 @@ static void prv_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig 
   if (config->mode != StatusBarLayerModeCustomText) { // draw center text
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
     StatusBarLayer *marquee_owner =
-        (status_bar_layer && !prv_mode_is_clock(config->mode)) ? status_bar_layer : NULL;
+        (status_bar_layer && !prv_mode_is_clock(config->mode)) ? status_bar_layer : nullptr;
     prv_status_bar_layer_render_text(ctx, config, marquee_owner, true /* is_title */, x_offset_l,
                                      x_offset_r, y_offset_top, y_offset_bottom,
                                      config->title_text_buffer);
@@ -591,7 +592,7 @@ static void prv_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig 
   // find width of info text
   GSize max_used_size = graphics_text_layout_get_max_used_size(
       ctx, config->info_text_buffer, info_font, GRect(0, 0, 100, prv_height(config)),
-      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
   // use the width found to render the info text
   int16_t info_text_left_offset =
       (int16_t)(x_offset_r - max_used_size.w - STATUS_BAR_LAYER_INFO_PADDING);
@@ -609,7 +610,7 @@ static void prv_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig 
 }
 
 void status_bar_layer_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig *config) {
-  prv_render(ctx, bounds, config, NULL);
+  prv_render(ctx, bounds, config, nullptr);
 }
 
 bool layer_is_status_bar_layer(Layer *layer) {
@@ -626,6 +627,6 @@ int16_t status_layer_get_title_text_width(StatusBarLayer *status_bar_layer) {
   GContext *ctx = graphics_context_get_current_context();
   return graphics_text_layout_get_max_used_size(
              ctx, time_text_buffer, text_format.font, status_bar_layer->layer.bounds,
-             text_format.overflow_mode, text_format.text_alignment, NULL)
+             text_format.overflow_mode, text_format.text_alignment, nullptr)
       .w;
 }

@@ -46,7 +46,7 @@ static void prv_maybe_run_settings_dbs_compaction_migration(void) {
   if (shell_prefs_get_settings_dbs_compacted_v1()) {
     return;
   }
-  system_task_add_callback(prv_settings_dbs_compaction_migration_cb, NULL);
+  system_task_add_callback(prv_settings_dbs_compaction_migration_cb, nullptr);
 }
 
 void shell_event_loop_init(void) {

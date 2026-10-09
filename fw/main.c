@@ -297,18 +297,18 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   clear_reset_loop_detection_bits();
 
-  PBL_ASSERTN(pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, NULL, NULL) >= 0);
+  PBL_ASSERTN(pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr, nullptr) >= 0);
 
   // Leave the board with stop and sleep mode debugging enabled for at least 10
   // seconds to give OpenOCD time to start and still able to connect when it is
   // ready to flash in the new image via JTAG
   s_lowpower_timer = new_timer_create();
-  new_timer_start(s_lowpower_timer, 10 * 1000, prv_low_power_debug_config_callback, NULL,
+  new_timer_start(s_lowpower_timer, 10 * 1000, prv_low_power_debug_config_callback, nullptr,
                   0 /*flags*/);
 
 #ifndef CONFIG_MFG
   s_uptime_timer = new_timer_create();
-  new_timer_start(s_uptime_timer, 15 * 60 * 1000, uptime_callback, NULL, 0 /*flags*/);
+  new_timer_start(s_uptime_timer, 15 * 60 * 1000, uptime_callback, nullptr, 0 /*flags*/);
 #else
   boot_bit_set(BOOT_BIT_FW_STABLE);
 #endif

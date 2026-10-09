@@ -169,7 +169,7 @@ static void prv_invalidate_current_page(void) {
     //
     // We've run out of blank pages. Delete the entire region and roll around to the front.
     // This will take some time.
-    prv_erase_region_and_save(NULL);
+    prv_erase_region_and_save(nullptr);
     s_valid_page_idx = 0;
   }
 }
@@ -305,7 +305,7 @@ void shared_prf_storage_init(void) {
 
     // Keep a write offset, this won't work when we try to roll over to the other 25% of the sectors
     if (s_valid_page_idx == SPRF_PAGE_IDX_INVALID) {
-      prv_erase_region_and_save(NULL);
+      prv_erase_region_and_save(nullptr);
     } else if (s_valid_page_idx > (SPRF_MAX_NUM_PAGES_MULT(SPRF_NUM_PAGES))) {
       prv_erase_region_and_save(&data);
     }

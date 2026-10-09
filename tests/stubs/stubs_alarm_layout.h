@@ -7,7 +7,7 @@
 #include <pbl/services/timeline/alarm_layout.h>
 
 LayoutLayer *PBL_WEAK alarm_layout_create(const LayoutLayerConfig *config) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK alarm_layout_verify(bool existing_attributes[]) {

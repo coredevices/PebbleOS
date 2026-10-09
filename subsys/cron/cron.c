@@ -33,7 +33,7 @@ static TimerID s_wakeup_timer = TIMER_INVALID_ID;
 
 //! Arm (or stop) the wakeup timer for the head job. s_list_mutex must be held.
 static void prv_arm_wakeup(void) {
-  if (s_scheduled_jobs == NULL) {
+  if (s_scheduled_jobs == nullptr) {
     new_timer_stop(s_wakeup_timer);
     return;
   }
@@ -47,8 +47,8 @@ static void prv_arm_wakeup(void) {
     timeout_ms -= timeout_ms / CRON_ARM_EARLY_DIVISOR;
     timeout_ms += CRON_ARM_MARGIN_MS;
   }
-  new_timer_start(s_wakeup_timer, (uint32_t)MIN(timeout_ms, UINT32_MAX), prv_timer_callback, NULL,
-                  0 /*flags*/);
+  new_timer_start(s_wakeup_timer, (uint32_t)MIN(timeout_ms, UINT32_MAX), prv_timer_callback,
+                  nullptr, 0 /*flags*/);
 }
 
 // -------------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ static int prv_sort(void *a, void *b) {
 // -------------------------------------------------------------------------------------------
 static void prv_timer_callback(void *data) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
-  while (s_scheduled_jobs != NULL &&
+  while (s_scheduled_jobs != nullptr &&
          ((struct pbl_cron_job *)s_scheduled_jobs)->cached_execute_time <= rtc_get_time()) {
     struct pbl_cron_job *job = (struct pbl_cron_job *)s_scheduled_jobs;
     // Remove the job from the list, it's done.
@@ -90,8 +90,8 @@ void pbl_cron_handle_clock_change(int32_t utc_time_delta, int32_t gmt_offset_del
   // Because it's ABS, it'll be unsigned. This makes the compiler behave.
   const uint32_t change_diff = ABS(utc_time_delta);
   // Need to re-build the list somewhere else
-  ListNode *newlist = NULL;
-  while (s_scheduled_jobs != NULL) {
+  ListNode *newlist = nullptr;
+  while (s_scheduled_jobs != nullptr) {
     struct pbl_cron_job *job = (struct pbl_cron_job *)s_scheduled_jobs;
     s_scheduled_jobs = list_pop_head(s_scheduled_jobs);
     // Re-calculate the execute time.
@@ -109,16 +109,16 @@ void pbl_cron_handle_clock_change(int32_t utc_time_delta, int32_t gmt_offset_del
   pbl_mutex_unlock(&s_list_mutex);
 
   // We want to run any tasks we've skipped over.
-  prv_timer_callback(NULL);
+  prv_timer_callback(nullptr);
 }
 
 void pbl_cron_handle_clock_correction(void) {
-  prv_timer_callback(NULL);
+  prv_timer_callback(nullptr);
 }
 
 // --------------------------------------------------------------------------------------------
 void pbl_cron_init(void) {
-  s_scheduled_jobs = NULL;
+  s_scheduled_jobs = nullptr;
 
   if (s_wakeup_timer == TIMER_INVALID_ID) {
     s_wakeup_timer = new_timer_create();
@@ -151,7 +151,7 @@ void pbl_cron_job_schedule_at(struct pbl_cron_job *job, time_t utc_time) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
 
   if (prv_is_scheduled(job)) {
-    list_remove(&job->list_node, &s_scheduled_jobs, NULL);
+    list_remove(&job->list_node, &s_scheduled_jobs, nullptr);
   }
   job->absolute = true;
   job->cached_execute_time = utc_time;
@@ -203,7 +203,7 @@ bool pbl_cron_job_unschedule(struct pbl_cron_job *job) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
 
   if (prv_is_scheduled(job)) {
-    list_remove(&job->list_node, &s_scheduled_jobs, NULL);
+    list_remove(&job->list_node, &s_scheduled_jobs, nullptr);
     removed = true;
     prv_arm_wakeup();
   }
@@ -219,13 +219,13 @@ void pbl_cron_clear_all_jobs(void) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
 
   // Iterate over all the jobs to remove them all.
-  for (ListNode *iter = s_scheduled_jobs; iter != NULL;) {
+  for (ListNode *iter = s_scheduled_jobs; iter != nullptr;) {
     struct pbl_cron_job *job = (struct pbl_cron_job *)iter;
     iter = list_get_next(iter);
     // Remove the job from the list.
-    list_remove(&job->list_node, NULL, NULL);
+    list_remove(&job->list_node, nullptr, nullptr);
   }
-  s_scheduled_jobs = NULL;
+  s_scheduled_jobs = nullptr;
   prv_arm_wakeup();
 
   pbl_mutex_unlock(&s_list_mutex);
@@ -246,7 +246,7 @@ uint32_t pbl_cron_get_job_count(void) {
 }
 
 void pbl_cron_wakeup(void) {
-  prv_timer_callback(NULL);
+  prv_timer_callback(nullptr);
 }
 
 time_t pbl_cron_get_next_execute_time(void) {

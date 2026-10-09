@@ -46,8 +46,8 @@ typedef struct {
 KERNEL_READONLY_DATA static WorkerState *s_worker_state_ptr;
 
 bool worker_state_configure(MemorySegment *worker_state_ram) {
-  s_worker_state_ptr = memory_segment_split(worker_state_ram, NULL, sizeof(WorkerState));
-  return s_worker_state_ptr != NULL;
+  s_worker_state_ptr = memory_segment_split(worker_state_ram, nullptr, sizeof(WorkerState));
+  return s_worker_state_ptr != nullptr;
 }
 
 void worker_state_init(void) {
@@ -135,5 +135,6 @@ static int prv_cmd_heap_worker(const struct pbl_shell *sh, size_t argc, char **a
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_sys_heap, worker, NULL, "Dump the worker heap", prv_cmd_heap_worker, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys_heap, worker, nullptr, "Dump the worker heap", prv_cmd_heap_worker, 0,
+                     0);
 #endif

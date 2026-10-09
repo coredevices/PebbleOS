@@ -566,7 +566,7 @@ VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client) {
 }
 
 void alerts_preferences_set_vibe_score_for_client(VibeClient client, VibeScoreId id) {
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (client) {
     case VibeClient_Notifications: {
       s_vibe_score_notifications = id;
@@ -744,7 +744,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
 
   const uint8_t *key = event->key;
   int key_len = event->key_len;
-  const char *matched_key = NULL;
+  const char *matched_key = nullptr;
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 

@@ -78,7 +78,7 @@ static void prv_app_throttle_start(void) {
   }
 
   pbl_thread_prio_set(app, PBL_PRIO_IDLE);
-  new_timer_start(s_throttle_timer, APP_THROTTLE_TIME_MS, prv_app_throttle_end, NULL, 0);
+  new_timer_start(s_throttle_timer, APP_THROTTLE_TIME_MS, prv_app_throttle_end, nullptr, 0);
 }
 
 //! The system task is starved when it is ready to run but does not get the
@@ -86,14 +86,14 @@ static void prv_app_throttle_start(void) {
 //! the app hogs the CPU. Parking the app briefly resolves both.
 static void *prv_wdt_expired(int channel_id, void *user_data) {
   if (s_throttle_timer != TIMER_INVALID_ID &&
-      (system_task_is_ready_to_run() || s_current_cb != NULL)) {
+      (system_task_is_ready_to_run() || s_current_cb != nullptr)) {
     prv_app_throttle_start();
   }
   return s_current_cb;
 }
 
 static void system_task_main(void *paramater) {
-  s_wdt_channel = pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, NULL);
+  s_wdt_channel = pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, nullptr);
   PBL_ASSERTN(s_wdt_channel >= 0);
   task_init();
 
@@ -113,7 +113,7 @@ static void system_task_main(void *paramater) {
       s_current_cb = event.cb;
       event.cb(event.data);
       mcu_fpu_cleanup();
-      s_current_cb = NULL;
+      s_current_cb = nullptr;
       if (event.raised_priority) {
         system_task_enable_raised_priority(false);
       }

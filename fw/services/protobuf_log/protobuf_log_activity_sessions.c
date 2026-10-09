@@ -82,7 +82,7 @@ static bool prv_encode_intervals(pb_ostream_t *stream, const pb_field_t *field, 
 ProtobufLogRef protobuf_log_activity_sessions_create(void) {
   ProtobufLogConfig log_config = {.type = ProtobufLogType_Events, .events = {}};
 
-  return protobuf_log_create(&log_config, NULL /*transport*/, 0 /*max_encoded_msg_size*/);
+  return protobuf_log_create(&log_config, nullptr /*transport*/, 0 /*max_encoded_msg_size*/);
 }
 
 // TODO: Actually make sense of this. It is completely wrong.

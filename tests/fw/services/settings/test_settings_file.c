@@ -356,7 +356,7 @@ static RecordResult write_and_change_record_aborting_after_bytes(int after_n_byt
     // in any way.
 
     // Simulate a reboot by clearing out PFS's state.
-    fake_spi_flash_force_future_failure(0, NULL);
+    fake_spi_flash_force_future_failure(0, nullptr);
     extern void pfs_reset_all_state(void);
     pfs_reset_all_state();
     pfs_init(false);

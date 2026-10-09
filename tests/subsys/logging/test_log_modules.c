@@ -46,11 +46,11 @@ void kernel_applib_release_log_state(LogState *state) {
 }
 
 LogState *app_state_get_log_state(void) {
-  return NULL;
+  return nullptr;
 }
 
 LogState *worker_state_get_log_state(void) {
-  return NULL;
+  return nullptr;
 }
 
 uint32_t sys_stack_free_bytes(void) {

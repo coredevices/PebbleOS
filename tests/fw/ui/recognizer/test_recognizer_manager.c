@@ -38,7 +38,7 @@ RecognizerList *app_state_get_recognizer_list(void) {
 
 RecognizerList *window_get_recognizer_list(Window *window) {
   if (!window) {
-    return NULL;
+    return nullptr;
   }
   return layer_get_recognizer_list(&window->layer);
 }
@@ -49,7 +49,7 @@ RecognizerManager *window_get_recognizer_manager(Window *window) {
 
 struct Layer *window_get_root_layer(const Window *window) {
   if (!window) {
-    return NULL;
+    return nullptr;
   }
   return &((Window *)window)->layer;
 }
@@ -92,7 +92,7 @@ static void prv_clear_recognizers_processed(ListNode **list) {
     free(node);
     node = next;
   }
-  *list = NULL;
+  *list = nullptr;
 }
 
 static void prv_compare_recognizers_processed(int indices[], uint32_t count, ListNode **list) {
@@ -138,9 +138,9 @@ static void prv_sub_event_handler(const Recognizer *recognizer, RecognizerEvent 
 // setup and teardown
 void test_recognizer_manager__initialize(void) {
   s_test_impl_data = (TestImplData){};
-  s_app_list = NULL;
-  s_active_layer = NULL;
-  s_manager = NULL;
+  s_app_list = nullptr;
+  s_active_layer = nullptr;
+  s_manager = nullptr;
   s_dummy_impl = (RecognizerImpl){
     .handle_touch_event = prv_handle_touch_event,
     .cancel = prv_cancel,
@@ -173,7 +173,7 @@ static Recognizer **prv_create_recognizers(int count) {
   cl_assert(recognizers);
   for (int i = 0; i < count; i++) {
     recognizers[i] =
-        recognizer_create_with_data(&s_dummy_impl, &i, sizeof(i), prv_sub_event_handler, NULL);
+        recognizer_create_with_data(&s_dummy_impl, &i, sizeof(i), prv_sub_event_handler, nullptr);
     cl_assert(recognizers[i]);
   }
   return recognizers;
@@ -197,7 +197,7 @@ void test_recognizer_manager__process_all_recognizers(void) {
   recognizer_manager_init(&manager);
 
   // ensure this runs without crashing even if there are no recognizer lists
-  prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL);
+  prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr);
 
   RecognizerList app_list = {};
   s_app_list = &app_list;
@@ -216,16 +216,16 @@ void test_recognizer_manager__process_all_recognizers(void) {
   manager.active_layer = &layer_c;
 
   // ensure that this runs without crashing even if all the lists are empty
-  prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL);
+  prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr);
 
   // One recognizer attached to the active layer
   recognizer_add_to_list(recognizers[0], &layer_c.recognizer_list);
-  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL));
+  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr));
   prv_compare_recognizers_processed((int[]){0}, 1, &s_recognizers_handled);
 
   // Two recognizers attached to the active layer - processed in order that they were added
   recognizer_add_to_list(recognizers[1], &layer_c.recognizer_list);
-  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL));
+  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr));
   prv_compare_recognizers_processed((int[]){0, 1}, 2, &s_recognizers_handled);
 
   // Recognizers that attached to layers other than the active layer and its ancestors will not be
@@ -233,27 +233,27 @@ void test_recognizer_manager__process_all_recognizers(void) {
   recognizer_add_to_list(recognizers[2], &layer_a.recognizer_list);
   recognizer_add_to_list(recognizers[3], &layer_a.recognizer_list);
   recognizer_add_to_list(recognizers[4], &layer_b.recognizer_list);
-  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL));
+  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr));
   prv_compare_recognizers_processed((int[]){0, 1}, 2, &s_recognizers_handled);
 
   // Recognizers attached to children of active layer will not be evaluated
   manager.active_layer = &layer_a;
-  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL));
+  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr));
   prv_compare_recognizers_processed((int[]){2, 3}, 2, &s_recognizers_handled);
 
   // Recognizers attached to active layer will be processed before those attached to their ancestors
   manager.active_layer = &layer_b;
-  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL));
+  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr));
   prv_compare_recognizers_processed((int[]){4, 2, 3}, 3, &s_recognizers_handled);
 
   // Recognizers attached to window processed before layer recognizers
   recognizer_add_to_list(recognizers[5], window_get_recognizer_list(&window));
-  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL));
+  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr));
   prv_compare_recognizers_processed((int[]){5, 4, 2, 3}, 4, &s_recognizers_handled);
 
   // Recognizers attached to app processed before window and layer recognizers
   recognizer_add_to_list(recognizers[6], &app_list);
-  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, NULL));
+  cl_assert(prv_process_all_recognizers(&manager, prv_handle_dummy_touch_event, nullptr));
   prv_compare_recognizers_processed((int[]){6, 5, 4, 2, 3}, 5, &s_recognizers_handled);
 
   prv_destroy_recognizers(recognizers, k_rec_count);
@@ -264,14 +264,14 @@ bool prv_dispatch_touch_event(Recognizer *recognizer, void *context);
 void test_recognizer_manager__dispatch_touch_event(void) {
   bool handled = false;
   s_test_impl_data.handled = &handled;
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   // Copied from recognizer_manager.c
   TouchEvent t;
   struct ProcessTouchCtx {
     Recognizer *triggered;
     const TouchEvent *touch_event;
-  } ctx = {.triggered = NULL, .touch_event = &t};
+  } ctx = {.triggered = nullptr, .touch_event = &t};
 
   cl_assert(prv_dispatch_touch_event(r, &ctx));
   cl_assert(handled);
@@ -298,7 +298,7 @@ void test_recognizer_manager__dispatch_touch_event(void) {
   cl_assert(prv_dispatch_touch_event(r, &ctx));
   cl_assert(handled);
   cl_assert_equal_p(ctx.triggered, r);
-  ctx.triggered = NULL;
+  ctx.triggered = nullptr;
   handled = false;
 
   r->state = RecognizerState_Updated;
@@ -306,9 +306,9 @@ void test_recognizer_manager__dispatch_touch_event(void) {
   cl_assert(handled);
   cl_assert_equal_p(ctx.triggered, r);
   handled = false;
-  ctx.triggered = NULL;
+  ctx.triggered = nullptr;
 
-  NEW_RECOGNIZER(s) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(s) = test_recognizer_create(&s_test_impl_data, nullptr);
   s->state = RecognizerState_Started;
   r->state = RecognizerState_Possible;
   ctx.triggered = s;
@@ -324,8 +324,8 @@ void test_recognizer_manager__dispatch_touch_event(void) {
 bool prv_fail_recognizer(Recognizer *recognizer, void *context);
 
 void test_recognizer_manager__fail_recognizer(void) {
-  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, NULL);
-  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, nullptr);
+  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, nullptr);
   r2->state = RecognizerState_Started;
 
   // copied from recognizer_manager.c
@@ -407,7 +407,7 @@ void test_recognizer_manager__handle_touch_event(void) {
 
   // No active recognizers because manager is waiting for a touchdown event
   recognizer_manager_handle_touch_event(&e, &manager);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_handled);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_handled);
 
   // Touchdown event occurs, active layer is found and all applicable recognizers receive events
   // while none have started recognizing
@@ -498,8 +498,8 @@ void test_recognizer_manager__handle_touch_event(void) {
   s_next_state = RecognizerState_Completed;
   s_idx_to_change = 3;
   recognizer_manager_handle_touch_event(&e, &manager);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_handled);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_reset);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_handled);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_reset);
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
 
   // Layer A's recognizer's gesture completes immediately. All recognizers receive the touch event
@@ -529,7 +529,7 @@ void test_recognizer_manager__handle_touch_event(void) {
   s_idx_to_change = 1;
   recognizer_manager_handle_touch_event(&e, &manager);
   prv_compare_recognizers_processed((int[]){4, 0, 3, 1}, 4, &s_recognizers_handled);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_reset);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_reset);
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersTriggered);
   cl_assert_equal_i(recognizers[0]->state, RecognizerState_Failed);
   cl_assert_equal_i(recognizers[1]->state, RecognizerState_Started);
@@ -567,8 +567,8 @@ void test_recognizer_manager__cancel_and_reset(void) {
   // State, active layer and triggered are cleared and recognizers reset, but the window is
   // untouched
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
-  cl_assert_equal_p(manager.active_layer, NULL);
-  cl_assert_equal_p(manager.triggered, NULL);
+  cl_assert_equal_p(manager.active_layer, nullptr);
+  cl_assert_equal_p(manager.triggered, nullptr);
   cl_assert_equal_p(manager.window, &window);
   cl_assert_equal_i(recognizers[0]->state, RecognizerState_Possible);
 
@@ -620,7 +620,7 @@ void test_recognizer_manager__self_reset(void) {
   recognizer_manager_handle_touch_event(&e, &manager);
   prv_compare_recognizers_processed((int[]){4, 0, 3, 1}, 4, &s_recognizers_handled);
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersActive);
-  cl_assert_equal_p(manager.triggered, NULL);
+  cl_assert_equal_p(manager.triggered, nullptr);
   cl_assert_equal_i(recognizers[3]->state, RecognizerState_Possible);
   // Clear the reset bookkeeping accumulated by the self-reset before the next step
   prv_clear_recognizers_processed(&s_recognizers_reset);
@@ -638,10 +638,10 @@ void test_recognizer_manager__self_reset(void) {
   e.type = TouchEvent_Touchdown;
   e.non_navigational = true;
   recognizer_manager_handle_touch_event(&e, &manager);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_handled);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_handled);
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
-  cl_assert_equal_p(manager.triggered, NULL);
-  cl_assert_equal_p(manager.active_layer, NULL);
+  cl_assert_equal_p(manager.triggered, nullptr);
+  cl_assert_equal_p(manager.active_layer, nullptr);
   cl_assert_equal_i(recognizers[3]->state, RecognizerState_Possible);
 
   // A navigational Touchdown from idle proceeds normally
@@ -731,7 +731,7 @@ void test_recognizer_manager__self_reset_different_layer(void) {
 }
 
 void test_recognizer_manager__orphan_reregistration(void) {
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   RecognizerManager manager;
   recognizer_manager_init(&manager);
@@ -745,9 +745,9 @@ void test_recognizer_manager__orphan_reregistration(void) {
 
   // Attach the recognizer while the layer has no window: the manager is NULL so it is not
   // registered
-  s_manager = NULL;
+  s_manager = nullptr;
   layer_attach_recognizer(&layer_a, r);
-  cl_assert_equal_p(recognizer_get_manager(r), NULL);
+  cl_assert_equal_p(recognizer_get_manager(r), nullptr);
 
   // Adding the layer to the window re-registers the orphaned recognizer via layer_set_window
   s_manager = &manager;
@@ -756,8 +756,8 @@ void test_recognizer_manager__orphan_reregistration(void) {
 }
 
 void test_recognizer_manager__deregister_recognizer(void) {
-  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, NULL);
-  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r1) = test_recognizer_create(&s_test_impl_data, nullptr);
+  NEW_RECOGNIZER(r2) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   Window window = {};
   layer_init(&window.layer, &GRectZero);
@@ -828,31 +828,31 @@ void test_recognizer_manager__deregister_recognizer(void) {
 }
 
 void test_recognizer_manager__null_manager_register(void) {
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
-  recognizer_set_manager(r, NULL);
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
+  recognizer_set_manager(r, nullptr);
 
   // A NULL manager is a soft no-op (layer attached before it is added to a window)
-  recognizer_manager_register_recognizer(NULL, r);
-  recognizer_manager_deregister_recognizer(NULL, r);
-  cl_assert_equal_p(recognizer_get_manager(r), NULL);
+  recognizer_manager_register_recognizer(nullptr, r);
+  recognizer_manager_deregister_recognizer(nullptr, r);
+  cl_assert_equal_p(recognizer_get_manager(r), nullptr);
 
   // The assert on the recognizer argument is preserved
   RecognizerManager manager;
   recognizer_manager_init(&manager);
-  cl_assert_passert(recognizer_manager_register_recognizer(&manager, NULL));
-  cl_assert_passert(recognizer_manager_deregister_recognizer(&manager, NULL));
+  cl_assert_passert(recognizer_manager_register_recognizer(&manager, nullptr));
+  cl_assert_passert(recognizer_manager_deregister_recognizer(&manager, nullptr));
 }
 
 void test_recognizer_manager__null_manager_state_change(void) {
-  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, NULL);
+  NEW_RECOGNIZER(r) = test_recognizer_create(&s_test_impl_data, nullptr);
 
   // Must not crash with a NULL manager or a NULL changed recognizer
-  recognizer_manager_handle_state_change(NULL, r);
-  recognizer_manager_handle_state_change(NULL, NULL);
+  recognizer_manager_handle_state_change(nullptr, r);
+  recognizer_manager_handle_state_change(nullptr, nullptr);
 
   RecognizerManager manager;
   recognizer_manager_init(&manager);
-  recognizer_manager_handle_state_change(&manager, NULL);
+  recognizer_manager_handle_state_change(&manager, nullptr);
 }
 
 void test_recognizer_manager__cancel_touches(void) {
@@ -913,24 +913,24 @@ void test_recognizer_manager__handle_state_change(void) {
   recognizer_manager_handle_state_change(&manager, r[0]);
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersActive);
   cl_assert_equal_p(manager.active_layer, &layer_a);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_reset);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_reset);
 
   r[1]->state = RecognizerState_Failed;
   recognizer_manager_handle_state_change(&manager, r[1]);
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
-  cl_assert_equal_p(manager.active_layer, NULL);
+  cl_assert_equal_p(manager.active_layer, nullptr);
   prv_compare_recognizers_processed((int[]){0, 1}, 2, &s_recognizers_reset);
 
   manager.active_layer = &layer_a;
   manager.state = RecognizerManagerState_RecognizersActive;
-  manager.triggered = NULL;
+  manager.triggered = nullptr;
   r[0]->state = RecognizerState_Started;
   r[1]->state = RecognizerState_Possible;
   recognizer_manager_handle_state_change(&manager, r[0]);
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersTriggered);
   cl_assert_equal_p(manager.triggered, r[0]);
   cl_assert_equal_p(manager.active_layer, &layer_a);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_reset);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_reset);
   cl_assert_equal_i(r[0]->state, RecognizerState_Started);
   cl_assert_equal_i(r[1]->state, RecognizerState_Failed);
 
@@ -939,13 +939,13 @@ void test_recognizer_manager__handle_state_change(void) {
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersTriggered);
   cl_assert_equal_p(manager.triggered, r[0]);
   cl_assert_equal_p(manager.active_layer, &layer_a);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_reset);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_reset);
 
   r[0]->state = RecognizerState_Completed;
   recognizer_manager_handle_state_change(&manager, r[0]);
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
-  cl_assert_equal_p(manager.triggered, NULL);
-  cl_assert_equal_p(manager.active_layer, NULL);
+  cl_assert_equal_p(manager.triggered, nullptr);
+  cl_assert_equal_p(manager.active_layer, nullptr);
   prv_compare_recognizers_processed((int[]){0, 1}, 2, &s_recognizers_reset);
   cl_assert_equal_i(r[0]->state, RecognizerState_Possible);
   cl_assert_equal_i(r[1]->state, RecognizerState_Possible);
@@ -953,11 +953,11 @@ void test_recognizer_manager__handle_state_change(void) {
   r[0]->state = RecognizerState_Completed;
   manager.active_layer = &layer_a;
   manager.state = RecognizerManagerState_RecognizersActive;
-  manager.triggered = NULL;
+  manager.triggered = nullptr;
   recognizer_manager_handle_state_change(&manager, r[0]);
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
-  cl_assert_equal_p(manager.triggered, NULL);
-  cl_assert_equal_p(manager.active_layer, NULL);
+  cl_assert_equal_p(manager.triggered, nullptr);
+  cl_assert_equal_p(manager.active_layer, nullptr);
   prv_compare_recognizers_processed((int[]){0, 1}, 2, &s_recognizers_reset);
   cl_assert_equal_i(r[0]->state, RecognizerState_Possible);
   cl_assert_equal_i(r[1]->state, RecognizerState_Possible);
@@ -968,8 +968,8 @@ void test_recognizer_manager__handle_state_change(void) {
   manager.triggered = r[0];
   recognizer_manager_handle_state_change(&manager, r[0]);
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
-  cl_assert_equal_p(manager.triggered, NULL);
-  cl_assert_equal_p(manager.active_layer, NULL);
+  cl_assert_equal_p(manager.triggered, nullptr);
+  cl_assert_equal_p(manager.active_layer, nullptr);
   prv_compare_recognizers_processed((int[]){0, 1}, 2, &s_recognizers_reset);
 
   recognizer_set_simultaneous_with(r[0], prv_simultaneous_with_cb);
@@ -982,7 +982,7 @@ void test_recognizer_manager__handle_state_change(void) {
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersTriggered);
   cl_assert_equal_p(manager.triggered, r[0]);
   cl_assert_equal_p(manager.active_layer, &layer_a);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_reset);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_reset);
   cl_assert_equal_i(r[0]->state, RecognizerState_Started);
   cl_assert_equal_i(r[1]->state, RecognizerState_Completed);
 
@@ -996,7 +996,7 @@ void test_recognizer_manager__handle_state_change(void) {
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersTriggered);
   cl_assert_equal_p(manager.triggered, r[0]);
   cl_assert_equal_p(manager.active_layer, &layer_a);
-  prv_compare_recognizers_processed(NULL, 0, &s_recognizers_reset);
+  prv_compare_recognizers_processed(nullptr, 0, &s_recognizers_reset);
   cl_assert_equal_i(r[0]->state, RecognizerState_Started);
   cl_assert_equal_i(r[1]->state, RecognizerState_Completed);
 }
@@ -1023,7 +1023,7 @@ void test_recognizer_manager__layer_deinit_invalidates_active_layer(void) {
   manager.state = RecognizerManagerState_RecognizersActive;
   manager.active_layer = &child;
   layer_deinit(&parent);
-  cl_assert_equal_p(manager.active_layer, NULL);
+  cl_assert_equal_p(manager.active_layer, nullptr);
   cl_assert_equal_i(manager.state, RecognizerManagerState_WaitForTouchdown);
 
   // A layer unrelated to the active chain must NOT disturb an in-flight gesture.
@@ -1038,7 +1038,7 @@ void test_recognizer_manager__layer_deinit_invalidates_active_layer(void) {
   cl_assert_equal_p(manager.active_layer, &active);
   cl_assert_equal_i(manager.state, RecognizerManagerState_RecognizersActive);
 
-  s_manager = NULL;
+  s_manager = nullptr;
 }
 
 void test_recognizer_manager__completed_trigger_spares_simultaneous(void) {
@@ -1046,7 +1046,7 @@ void test_recognizer_manager__completed_trigger_spares_simultaneous(void) {
   recognizer_manager_init(&manager);
   RecognizerList list = {};
   manager.global_list = &list;
-  manager.window = NULL; // stubs return NULL lists/root for a NULL window
+  manager.window = nullptr; // stubs return NULL lists/root for a NULL window
 
   // T completes on the Touchdown itself (tap-like), so the trigger is already inactive during the
   // fail-others pass of the same event.
@@ -1057,9 +1057,9 @@ void test_recognizer_manager__completed_trigger_spares_simultaneous(void) {
 
   // List order is the essence: the simultaneous r1 is examined BEFORE r2, whose failure in the
   // same pass must not overwrite the fact that r1 is still active.
-  NEW_RECOGNIZER(r1) = test_recognizer_create(&plain_data, NULL);
-  NEW_RECOGNIZER(r2) = test_recognizer_create(&plain_data, NULL);
-  NEW_RECOGNIZER(t) = test_recognizer_create(&t_data, NULL);
+  NEW_RECOGNIZER(r1) = test_recognizer_create(&plain_data, nullptr);
+  NEW_RECOGNIZER(r2) = test_recognizer_create(&plain_data, nullptr);
+  NEW_RECOGNIZER(t) = test_recognizer_create(&t_data, nullptr);
   recognizer_set_simultaneous_with(r1, prv_simultaneous_with_cb);
   recognizer_add_to_list(r1, &list);
   recognizer_add_to_list(r2, &list);

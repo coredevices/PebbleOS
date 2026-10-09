@@ -81,7 +81,7 @@ AppMessageResult app_message_outbox_open(AppMessageCtxOutbox *outbox, size_t siz
 
   // ... and extra space header for app outbox message (not counting towards the transmission size):
   outbox->app_outbox_message = applib_zalloc(sizeof(AppMessageAppOutboxData) + size_outbound);
-  if (outbox->app_outbox_message == NULL) {
+  if (outbox->app_outbox_message == nullptr) {
     return APP_MSG_OUT_OF_MEMORY;
   }
   outbox->transmission_size_limit = size_outbound;
@@ -102,7 +102,7 @@ static void prv_outbox_prepare(AppMessageCtxOutbox *outbox) {
 static void prv_stop_timer(AppMessageCtxOutbox *outbox) {
   if (outbox->ack_nack_timer) {
     app_timer_cancel(outbox->ack_nack_timer);
-    outbox->ack_nack_timer = NULL;
+    outbox->ack_nack_timer = nullptr;
   }
 }
 
@@ -117,7 +117,7 @@ void app_message_outbox_close(AppMessageCtxOutbox *outbox) {
 
   outbox->transmission_size_limit = 0;
   applib_free(outbox->app_outbox_message);
-  outbox->app_outbox_message = NULL;
+  outbox->app_outbox_message = nullptr;
 
   // Finish by moving to the next phase.
   outbox->phase = OUT_CLOSED;
@@ -143,12 +143,12 @@ static bool prv_is_awaiting_ack(AppMessagePhaseOut phase) {
 
 AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
-  if (iterator == NULL) {
+  if (iterator == nullptr) {
     return APP_MSG_INVALID_ARGS;
   }
 
   AppMessagePhaseOut phase = outbox->phase;
-  *iterator = NULL;
+  *iterator = nullptr;
   if (prv_is_message_pending(phase)) {
     PBL_LOG_ERR("Can't call app_message_outbox_begin() now, wait for sent_callback!");
 
@@ -180,7 +180,7 @@ AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
 
 static void ack_nack_timer_callback(void *data) {
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
-  outbox->ack_nack_timer = NULL;
+  outbox->ack_nack_timer = nullptr;
   if (!prv_is_awaiting_ack(outbox->phase)) {
     // Reply was received and handled in the mean time, or app message was closed.
     return;
@@ -245,15 +245,16 @@ AppMessageResult app_message_outbox_send(void) {
 
   outbox->phase = OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK;
 
-  app_outbox_message->session = NULL;
+  app_outbox_message->session = nullptr;
   app_outbox_message->endpoint_id = APP_MESSAGE_ENDPOINT_ID;
 
   PBL_ASSERTN(!outbox->ack_nack_timer);
-  outbox->ack_nack_timer = app_timer_register(ACK_NACK_TIME_OUT_MS, ack_nack_timer_callback, NULL);
+  outbox->ack_nack_timer =
+      app_timer_register(ACK_NACK_TIME_OUT_MS, ack_nack_timer_callback, nullptr);
 
   app_outbox_send((const uint8_t *)app_outbox_message,
                   sizeof(AppMessageAppOutboxData) + transmission_size,
-                  app_message_outbox_handle_app_outbox_message_sent, NULL);
+                  app_message_outbox_handle_app_outbox_message_sent, nullptr);
 
   return APP_MSG_OK;
 }
@@ -292,5 +293,5 @@ void app_message_out_handle_ack_nack_received(const AppMessageHeader *header) {
 
 AppTimer *app_message_outbox_get_ack_nack_timer(void) {
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
-  return outbox ? outbox->ack_nack_timer : NULL;
+  return outbox ? outbox->ack_nack_timer : nullptr;
 }

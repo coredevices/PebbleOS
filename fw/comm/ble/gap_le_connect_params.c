@@ -253,7 +253,7 @@ static void prv_watchdog_system_task_callback(void *ctx) {
     connection->param_update_info.is_request_pending = false;
     // Retry with most recently requested latency:
     const enum pbl_bt_response_time_state state =
-        conn_mgr_get_latency_for_le_connection(connection, NULL);
+        conn_mgr_get_latency_for_le_connection(connection, nullptr);
     if (connection->param_update_info.attempts > 0) {
       PBL_LOG_INFO("Conn param request timed out: re-requesting %u", state);
     }
@@ -291,7 +291,7 @@ void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {
 enum pbl_bt_response_time_state gap_le_connect_params_get_actual_state(
     GAPLEConnection *connection) {
   for (enum pbl_bt_response_time_state state = 0; state < PBL_BT_RESPONSE_TIME_NUM; ++state) {
-    if (prv_do_actual_params_match_desired_state(connection, state, NULL)) {
+    if (prv_do_actual_params_match_desired_state(connection, state, nullptr)) {
       return state;
     }
   }
@@ -300,7 +300,7 @@ enum pbl_bt_response_time_state gap_le_connect_params_get_actual_state(
 
 static void prv_evaluate(GAPLEConnection *connection,
                          enum pbl_bt_response_time_state desired_state) {
-  if (prv_do_actual_params_match_desired_state(connection, desired_state, NULL)) {
+  if (prv_do_actual_params_match_desired_state(connection, desired_state, nullptr)) {
     conn_mgr_handle_desired_state_granted(connection, desired_state);
 
     // If the deferred KernelBG callback is already queued or waiting on bt_lock at this point,
@@ -322,7 +322,7 @@ static void prv_evaluate(GAPLEConnection *connection,
 //! This is used when the set of desired request params are changed through Pebble Pairing Service.
 void gap_le_connect_params_re_evaluate(GAPLEConnection *connection) {
   const enum pbl_bt_response_time_state desired_state =
-      conn_mgr_get_latency_for_le_connection(connection, NULL);
+      conn_mgr_get_latency_for_le_connection(connection, nullptr);
   prv_evaluate(connection, desired_state);
 }
 
@@ -347,7 +347,7 @@ void pbl_bt_handle_le_conn_params_update_event(
   }
 
   const enum pbl_bt_response_time_state desired_state =
-      conn_mgr_get_latency_for_le_connection(connection, NULL);
+      conn_mgr_get_latency_for_le_connection(connection, nullptr);
 
   // Cache the BLE connection parameters
   connection->conn_params = *params;

@@ -158,7 +158,7 @@ static void prv_handle_init(void) {
 
   prv_da7212_play_tone();
 
-  app_timer_register(5000, prv_timer_callback, NULL);
+  app_timer_register(5000, prv_timer_callback, nullptr);
 }
 
 static void s_main(void) {

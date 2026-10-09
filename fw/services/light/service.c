@@ -199,7 +199,7 @@ static void prv_als_prime_for_interaction(void) {
     ambient_light_prime();
   }
   new_timer_start(s_als_prime_release_timer_id, ALS_PRIME_HOLDOFF_MS,
-                  prv_als_prime_release_callback, NULL, 0 /* flags */);
+                  prv_als_prime_release_callback, nullptr, 0 /* flags */);
 }
 
 static uint32_t prv_get_als_level(void) {
@@ -396,7 +396,7 @@ static void prv_change_state(BacklightState new_state) {
       new_brightness = prv_backlight_get_intensity();
 
       // Schedule the timer to move us from the ON_TIMED state to the ON_FADING state
-      new_timer_start(s_timer_id, backlight_get_timeout_ms(), light_timer_callback, NULL,
+      new_timer_start(s_timer_id, backlight_get_timeout_ms(), light_timer_callback, nullptr,
                       0 /* flags */);
       break;
     case LIGHT_STATE_ON_FADING:
@@ -417,7 +417,7 @@ static void prv_change_state(BacklightState new_state) {
         new_brightness = s_fade_levels[s_fade_level_idx++];
 
         // Reschedule the timer so we step down the brightness again.
-        new_timer_start(s_timer_id, s_fade_step_ms, light_timer_callback, NULL, 0 /* flags */);
+        new_timer_start(s_timer_id, s_fade_step_ms, light_timer_callback, nullptr, 0 /* flags */);
       }
       break;
     case LIGHT_STATE_OFF:

@@ -80,7 +80,7 @@ enum pbl_bt_errno ble_scan_stop(void) {
     return PBL_BT_ERRNO_OTHER;
   }
   event_service_client_unsubscribe(&ble_app_state->scan_service_info);
-  ble_app_state->scan_handler = NULL;
+  ble_app_state->scan_handler = nullptr;
   return PBL_BT_ERRNO_OK;
 }
 

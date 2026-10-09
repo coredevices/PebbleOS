@@ -48,7 +48,7 @@ void event_put(PebbleEvent *event) {
 ///////////////////////////////////////////////////////////
 static void init(bool connected) {
   if (connected) {
-    s_transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
+    s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
     s_session = fake_transport_set_connected(s_transport, true);
   }
 

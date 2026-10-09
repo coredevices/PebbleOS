@@ -17,7 +17,7 @@ enum pbl_bt_errno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *conne
   };
 
   int rv = GATT_Start_Service_Discovery_Handle_Range(bt_stack_id(), connection->gatt_connection_id,
-                                                     &hdl, 0, NULL, NULL, 0);
+                                                     &hdl, 0, nullptr, nullptr, 0);
   return 0;
 }
 

@@ -103,7 +103,7 @@ void action_bar_layer_legacy2_deinit(ActionBarLayerLegacy2 *action_bar_layer) {
 }
 
 void action_bar_layer_legacy2_destroy(ActionBarLayerLegacy2 *action_bar_layer) {
-  if (action_bar_layer == NULL) {
+  if (action_bar_layer == nullptr) {
     return;
   }
   action_bar_layer_legacy2_deinit(action_bar_layer);
@@ -131,7 +131,7 @@ static void action_bar_legacy2_raw_up_down_handler(ClickRecognizerRef recognizer
 
   // is_highlighted will cause the icon in the action bar to render normal or inverted:
   action_bar_legacy2_set_highlighted(action_bar, index, is_highlighted);
-  if (icon == NULL) {
+  if (icon == nullptr) {
     return;
   } else {
     layer_mark_dirty(&action_bar->layer);
@@ -193,7 +193,7 @@ void action_bar_layer_legacy2_set_icon(ActionBarLayerLegacy2 *action_bar, Button
 }
 
 void action_bar_layer_legacy2_clear_icon(ActionBarLayerLegacy2 *action_bar, ButtonId button_id) {
-  action_bar_layer_legacy2_set_icon(action_bar, button_id, NULL);
+  action_bar_layer_legacy2_set_icon(action_bar, button_id, nullptr);
 }
 
 void action_bar_layer_legacy2_add_to_window(ActionBarLayerLegacy2 *action_bar,
@@ -212,12 +212,12 @@ void action_bar_layer_legacy2_add_to_window(ActionBarLayerLegacy2 *action_bar,
 }
 
 void action_bar_layer_legacy2_remove_from_window(ActionBarLayerLegacy2 *action_bar) {
-  if (action_bar == NULL || action_bar->window == NULL) {
+  if (action_bar == nullptr || action_bar->window == nullptr) {
     return;
   }
   layer_remove_from_parent(&action_bar->layer);
-  window_set_click_config_provider_with_context(action_bar->window, NULL, NULL);
-  action_bar->window = NULL;
+  window_set_click_config_provider_with_context(action_bar->window, nullptr, nullptr);
+  action_bar->window = nullptr;
 }
 
 void action_bar_layer_legacy2_set_background_color_2bit(ActionBarLayerLegacy2 *action_bar,

@@ -32,7 +32,7 @@ extern ActionResultData *prv_invoke_action(ActionMenu *action_menu,
 
 // Fakes / Helpers
 ///////////////////////////////////////////////////////////
-static const uint8_t *s_expected_send_data = NULL;
+static const uint8_t *s_expected_send_data = nullptr;
 static bool s_sent_action = false;
 static size_t s_sent_length = 0;
 static bool s_window_state_supported = false;
@@ -43,7 +43,7 @@ bool comm_session_has_capability(CommSession *session, CommSessionCapability cap
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
                             size_t length, uint32_t timeout_ms) {
-  if (s_expected_send_data == NULL) {
+  if (s_expected_send_data == nullptr) {
     return false;
   }
 
@@ -60,7 +60,7 @@ bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const ui
 // Setup
 /////////////////////////
 void test_timeline_actions__initialize(void) {
-  s_expected_send_data = NULL;
+  s_expected_send_data = nullptr;
   s_sent_action = false;
   s_sent_length = 0;
   s_window_state_supported = false;
@@ -90,7 +90,7 @@ void test_timeline_actions__response(void) {
   };
 
   s_expected_send_data = s_sms_reply_action_data;
-  prv_invoke_action(NULL, &item.action_group.actions[0], &item, "Yo, what's up?");
+  prv_invoke_action(nullptr, &item.action_group.actions[0], &item, "Yo, what's up?");
   cl_assert(s_sent_action);
 }
 
@@ -111,7 +111,7 @@ void test_timeline_actions__send_text(void) {
   };
 
   s_expected_send_data = s_send_text_data;
-  prv_invoke_action(NULL, &item.action_group.actions[0], &item, "Yo, what's up?");
+  prv_invoke_action(nullptr, &item.action_group.actions[0], &item, "Yo, what's up?");
   cl_assert(s_sent_action);
 }
 
@@ -132,7 +132,7 @@ void test_timeline_actions__nothing_displayed(void) {
                               0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
   s_window_state_supported = true;
   s_expected_send_data = expected;
-  timeline_action_endpoint_send_displayed_item(NULL);
+  timeline_action_endpoint_send_displayed_item(nullptr);
   cl_assert(s_sent_action);
   cl_assert_equal_i(s_sent_length, sizeof(expected));
 }
@@ -140,6 +140,6 @@ void test_timeline_actions__nothing_displayed(void) {
 void test_timeline_actions__displayed_item_needs_phone_support(void) {
   const uint8_t expected[] = {0x04};
   s_expected_send_data = expected;
-  timeline_action_endpoint_send_displayed_item(NULL);
+  timeline_action_endpoint_send_displayed_item(nullptr);
   cl_assert(!s_sent_action);
 }

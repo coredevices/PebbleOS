@@ -30,7 +30,7 @@ void mfg_enter_mfg_mode(void) {
 void mfg_enter_mfg_mode_and_launch_app(void) {
   if (!s_mfg_mode) {
     mfg_enter_mfg_mode();
-    launcher_task_add_callback(prv_launch_mfg_app, NULL);
+    launcher_task_add_callback(prv_launch_mfg_app, nullptr);
   }
 }
 
@@ -46,5 +46,5 @@ static int prv_cmd_enter(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_mfg, enter, NULL, "Enter manufacturing mode", prv_cmd_enter, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_mfg, enter, nullptr, "Enter manufacturing mode", prv_cmd_enter, 0, 0);
 #endif

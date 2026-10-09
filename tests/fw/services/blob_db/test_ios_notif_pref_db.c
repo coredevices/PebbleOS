@@ -184,7 +184,7 @@ void test_ios_notif_pref_db__store_empty_prefs(void) {
   // Store empty prefs
   char *key = "key1";
   int key_len = strlen(key);
-  ios_notif_pref_db_store_prefs((uint8_t *)key, key_len, NULL, NULL);
+  ios_notif_pref_db_store_prefs((uint8_t *)key, key_len, nullptr, nullptr);
 
   // Read them back
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)key, key_len);
@@ -222,7 +222,7 @@ void test_ios_notif_pref_db__is_dirty_insert_locally(void) {
   // Insert a bunch of known apps "from the watch"
   // These should be dirty (the phone is the source of truth)
   for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
-    ios_notif_pref_db_store_prefs((uint8_t *)keys[i], key_len, NULL, NULL);
+    ios_notif_pref_db_store_prefs((uint8_t *)keys[i], key_len, nullptr, nullptr);
   }
 
   bool is_dirty = false;

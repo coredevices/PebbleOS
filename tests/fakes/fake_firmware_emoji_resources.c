@@ -15,7 +15,7 @@
 
 static FILE *prv_open_emoji(ResAppNum app_num, uint32_t id) {
   if (app_num != SYSTEM_APP) {
-    return NULL;
+    return nullptr;
   }
   const char *path;
   switch (id) {
@@ -32,7 +32,7 @@ static FILE *prv_open_emoji(ResAppNum app_num, uint32_t id) {
       path = FIRMWARE_EMOJI_DIR "/EMOJI_28" EMOJI_SUFFIX;
       break;
     default:
-      return NULL;
+      return nullptr;
   }
   FILE *file = fopen(path, "rb");
   cl_assert_(file, path);

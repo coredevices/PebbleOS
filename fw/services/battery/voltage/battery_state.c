@@ -365,7 +365,7 @@ static int prv_cmd_chargeopt(const struct pbl_shell *sh, size_t argc, char **arg
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_battery, status, NULL, "Print the battery state", prv_cmd_status, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_battery, chargeopt, NULL, "Force charging <enable|disable>",
+PBL_SHELL_SUBCMD_ADD(sub_battery, status, nullptr, "Print the battery state", prv_cmd_status, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_battery, chargeopt, nullptr, "Force charging <enable|disable>",
                      prv_cmd_chargeopt, 2, 0);
 #endif

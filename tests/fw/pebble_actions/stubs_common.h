@@ -54,7 +54,7 @@
 #include <stubs_window_stack.h>
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
-  return NULL;
+  return nullptr;
 }
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
@@ -85,7 +85,7 @@ void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer 
 }
 
 void *event_service_claim_buffer(PebbleEvent *e) {
-  return NULL;
+  return nullptr;
 }
 
 void event_service_free_claimed_buffer(void *ref) {
@@ -106,7 +106,7 @@ size_t pbl_string_list_count(struct pbl_string_list *list) {
 }
 
 char *pbl_string_list_get_at(struct pbl_string_list *list, size_t index) {
-  return NULL;
+  return nullptr;
 }
 
 bool alerts_preferences_check_and_set_first_use_complete(int source) {

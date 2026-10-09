@@ -32,13 +32,13 @@ typedef struct LauncherAppGlanceWorkout {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWorkout *workout_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(workout_glance, icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(workout_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWorkout *workout_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(workout_glance, title, NULL);
+  return NULL_SAFE_FIELD_ACCESS(workout_glance, title, nullptr);
 }
 
 static void prv_workout_glance_subtitle_dynamic_text_node_update(
@@ -123,7 +123,8 @@ static void prv_timer_callback(void *data) {
   if (workout_service_is_workout_ongoing()) {
     // Manual workout is going on - get the type and duration
     workout_service_get_current_workout_type(&workout_type);
-    workout_service_get_current_workout_info(NULL, &workout_duration_s, NULL, NULL, NULL);
+    workout_service_get_current_workout_info(nullptr, &workout_duration_s, nullptr, nullptr,
+                                             nullptr);
   } else if (has_automatic_session) {
     // Automatic workout is going on - get the type and duration
     workout_type = automatic_session.type;

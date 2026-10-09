@@ -31,7 +31,7 @@ static bool prv_fake_msgq_find(ListNode *node, void *context) {
 
 static FakeMsgq *prv_fake_msgq_get(struct pbl_msgq *q) {
   FakeMsgq *fake = (FakeMsgq *)list_find((ListNode *)s_fake_msgq_list, prv_fake_msgq_find, q);
-  if (fake == NULL) {
+  if (fake == nullptr) {
     fake = malloc(sizeof(FakeMsgq));
     const size_t size = q->msg_size * q->max_msgs;
     *fake = (FakeMsgq){.q = q, .storage = malloc(size)};
@@ -49,7 +49,7 @@ void fake_msgq_reset(void) {
     free(iter);
     iter = next;
   }
-  s_fake_msgq_list = NULL;
+  s_fake_msgq_list = nullptr;
 }
 
 void fake_msgq_set_yield_callback(struct pbl_msgq *q, FakeMsgqYieldCallback yield_cb) {
@@ -64,7 +64,7 @@ void pbl_msgq_init(struct pbl_msgq *q, void *buf, size_t msg_size, uint32_t max_
 
 void pbl_msgq_deinit(struct pbl_msgq *q) {
   FakeMsgq *fake = prv_fake_msgq_get(q);
-  list_remove((ListNode *)fake, (ListNode **)&s_fake_msgq_list, NULL);
+  list_remove((ListNode *)fake, (ListNode **)&s_fake_msgq_list, nullptr);
   free(fake->storage);
   free(fake);
 }

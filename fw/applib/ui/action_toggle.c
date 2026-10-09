@@ -152,7 +152,7 @@ static void prv_push_prompt_dialog(ActionToggleContext *ctx) {
   };
   prv_setup_state_config(ctx, &config, ActionToggleDialogType_Prompt);
   ActionableDialog *actionable_dialog = actionable_dialog_create(config.window_name);
-  actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarConfirm, NULL);
+  actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarConfirm, nullptr);
   actionable_dialog_set_click_config_provider(actionable_dialog, prv_prompt_click_config_provider);
   prv_setup_dialog(actionable_dialog_get_dialog(actionable_dialog), &config, (void *)ctx);
   actionable_dialog_push(actionable_dialog, prv_get_window_stack());

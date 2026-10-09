@@ -14,7 +14,7 @@ void bitmap_layer_update_proc(BitmapLayer *image, GContext *ctx) {
     graphics_fill_rect(ctx, &image->layer.bounds);
   }
   graphics_context_set_compositing_mode(ctx, image->compositing_mode);
-  if (image->bitmap != NULL) {
+  if (image->bitmap != nullptr) {
     const GSize size = image->bitmap->bounds.size;
     const bool clips = true; // bitmap layer not allowed to draw outside of its frame
     GRect rect = (GRect){{0, 0}, size};
@@ -55,7 +55,7 @@ void bitmap_layer_deinit(BitmapLayer *bitmap_layer) {
 }
 
 void bitmap_layer_destroy(BitmapLayer *bitmap_layer) {
-  if (bitmap_layer == NULL) {
+  if (bitmap_layer == nullptr) {
     return;
   }
   bitmap_layer_deinit(bitmap_layer);
@@ -71,7 +71,7 @@ const GBitmap *bitmap_layer_get_bitmap(BitmapLayer *bitmap_layer) {
 }
 
 void bitmap_layer_set_bitmap(BitmapLayer *image, const GBitmap *bitmap) {
-  if (image == NULL) {
+  if (image == nullptr) {
     return;
   }
   image->bitmap = bitmap;

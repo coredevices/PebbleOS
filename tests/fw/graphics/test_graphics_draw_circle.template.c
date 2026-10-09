@@ -27,7 +27,7 @@
 #include "graphics_common_stubs.h"
 #include <stubs_applib_resource.h>
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 // Setup
 void test_graphics_draw_circle_${BIT_DEPTH_NAME}__initialize(void) {
@@ -533,7 +533,7 @@ void test_graphics_draw_circle_${BIT_DEPTH_NAME}__arc_stroked(void){
   // Incorrect angles (angle_start > angle_end) - should result in empty image
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, RADIUS_BIG * 2);
   graphics_draw_arc_internal(&ctx, CENTER_OF_ORIGIN_RECT, RADIUS_BIG, angle_end, angle_start);
-  cl_check(framebuffer_is_empty(NULL, ctx.parent_framebuffer, GColorWhite));
+  cl_check(framebuffer_is_empty(nullptr, ctx.parent_framebuffer, GColorWhite));
 
   // table with most popular angles to test
   typedef struct {

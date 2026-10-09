@@ -220,7 +220,7 @@ status_t app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *en
 }
 
 const PebbleProcessMd *app_fetch_ui_get_app_info(void) {
-  return NULL;
+  return nullptr;
 }
 
 void app_message_close(void) {
@@ -273,12 +273,12 @@ const char *pebble_task_get_name(PebbleTask task) {
 }
 
 struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
-  return NULL;
+  return nullptr;
 }
 
 void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task, MemorySegment *segment) {
   if (app_md == (PebbleProcessMd *)&s_borked_app) {
-    return NULL;
+    return nullptr;
   } else {
     return __APP_RAM__;
   }
@@ -319,7 +319,7 @@ void speaker_service_stop_for_task(PebbleTask task) {
 }
 
 Heap *worker_state_get_heap(void) {
-  return NULL;
+  return nullptr;
 }
 
 void pbl_msgq_init(struct pbl_msgq *q, void *buf, size_t msg_size, uint32_t max_msgs) {
@@ -353,7 +353,7 @@ void compositor_reset_app_framebuffer_ownership(void) {
 }
 
 const char *app_install_get_custom_app_name(AppInstallId install_id) {
-  return NULL;
+  return nullptr;
 }
 
 void status_bar_push_text(const char *text) {
@@ -362,12 +362,12 @@ void status_bar_push_text(const char *text) {
 const CompositorTransition *shell_get_open_compositor_animation(AppInstallId current_app_id,
                                                                 AppInstallId next_app_id,
                                                                 const LaunchConfigCommon *config) {
-  return NULL;
+  return nullptr;
 }
 
 const CompositorTransition *shell_get_close_compositor_animation(AppInstallId current_app_id,
                                                                  AppInstallId next_app_id) {
-  return NULL;
+  return nullptr;
 }
 
 // Both crash UI paths relaunch the default watchface once
@@ -394,7 +394,7 @@ void test_app_manager__initialize(void) {
 }
 
 void test_app_manager__start_first(void) {
-  cl_assert(app_manager_get_current_app_md() == NULL);
+  cl_assert(app_manager_get_current_app_md() == nullptr);
 
   app_manager_start_first_app();
 

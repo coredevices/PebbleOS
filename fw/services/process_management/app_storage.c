@@ -112,7 +112,7 @@ bool app_storage_app_exists(AppInstallId id) {
   pfs_close(fd);
 
   // now check resource bank
-  return resource_storage_check((ResAppNum)id, 0, NULL);
+  return resource_storage_check((ResAppNum)id, 0, nullptr);
 }
 
 void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_id,

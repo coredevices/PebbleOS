@@ -31,8 +31,8 @@ RtcTicks rtc_get_ticks(void) {
 }
 
 bool s_performed_store = false;
-AttributeList *s_expected_attributes = NULL;
-TimelineItemActionGroup *s_expected_actions = NULL;
+AttributeList *s_expected_attributes = nullptr;
+TimelineItemActionGroup *s_expected_actions = nullptr;
 
 static uint8_t app_id_data[] = {
   0x00,                 // id
@@ -102,8 +102,8 @@ static void prv_compare_notif_prefs(iOSNotifPrefs *prefs1, iOSNotifPrefs *prefs2
 void test_ancs_filtering__initialize(void) {
   s_now = 1;
   s_performed_store = false;
-  s_expected_attributes = NULL;
-  s_expected_actions = NULL;
+  s_expected_attributes = nullptr;
+  s_expected_actions = nullptr;
   prv_set_rules(&s_empty_filtering_rules, "", 1);
 }
 
@@ -135,7 +135,7 @@ void test_ancs_filtering__record_app_no_action_needed(void) {
 
 void test_ancs_filtering__record_app_no_prefs_yet(void) {
   // No existing prefs yet, we should insert all the defaults
-  iOSNotifPrefs *existing_prefs = NULL;
+  iOSNotifPrefs *existing_prefs = nullptr;
 
   AttributeList attr_list = {
     .num_attributes = 5,
@@ -385,7 +385,7 @@ void test_ancs_filtering__should_ignore_because_timed_muted(void) {
 }
 
 void test_ancs_filtering__record_app_no_display_name(void) {
-  iOSNotifPrefs *existing_prefs = NULL;
+  iOSNotifPrefs *existing_prefs = nullptr;
 
   // No display name so we expect the app name to be the title
   AttributeList expected_attributes = {
@@ -400,7 +400,7 @@ void test_ancs_filtering__record_app_no_display_name(void) {
   };
   s_expected_attributes = &expected_attributes;
 
-  ancs_filtering_record_app(&existing_prefs, s_app_id_attr, NULL, s_title_attr);
+  ancs_filtering_record_app(&existing_prefs, s_app_id_attr, nullptr, s_title_attr);
   cl_assert(s_performed_store);
 
   // Make sure the our existing prefs got updated
@@ -431,7 +431,7 @@ void test_ancs_filtering__matches_text_rule_body_case_insensitive(void) {
     },
   };
 
-  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, NULL, body_attr));
+  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, nullptr, body_attr));
 }
 
 void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
@@ -450,7 +450,7 @@ void test_ancs_filtering__matches_text_rule_title_case_sensitive(void) {
     },
   };
 
-  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, NULL, NULL));
+  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, nullptr, nullptr));
 }
 
 void test_ancs_filtering__does_not_match_regex_rule(void) {
@@ -469,7 +469,7 @@ void test_ancs_filtering__does_not_match_regex_rule(void) {
     },
   };
 
-  cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, NULL, NULL));
+  cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, nullptr, nullptr));
 }
 
 void test_ancs_filtering__matches_text_rule_title_via_subtitle(void) {
@@ -495,8 +495,8 @@ void test_ancs_filtering__matches_text_rule_title_via_subtitle(void) {
   };
 
   // "server" is in the subtitle, not the title: a title rule must match it.
-  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, NULL));
+  cl_assert(ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, nullptr));
   // A body rule must not consider the subtitle.
   filtering_rules.list.data[2] = 0x02;
-  cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, NULL));
+  cl_assert(!ancs_filtering_matches_rules(&prefs, s_title_attr, subtitle_attr, nullptr));
 }

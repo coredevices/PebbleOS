@@ -30,7 +30,7 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
   }
 
   // Leave this NULL to do your own printing.
-  const char *reason_string = NULL;
+  const char *reason_string = nullptr;
   switch (reason.code) {
     // Normal stuff
     case RebootReasonCode_Unknown:

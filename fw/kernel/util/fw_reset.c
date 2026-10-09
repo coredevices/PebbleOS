@@ -79,7 +79,7 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
       break;
 
     case ResetCmdFactoryReset:
-      launcher_task_add_callback(prv_launch_factory_reset_app, NULL);
+      launcher_task_add_callback(prv_launch_factory_reset_app, nullptr);
       factory_reset(false /* should_shutdown */);
       break;
 

@@ -100,6 +100,6 @@ cleanup:
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_ui);
-PBL_SHELL_CMD_REGISTER(ui, sub_ui, "User interface debugging", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_ui, windows, NULL, "Show the app window stack", prv_cmd_windows, 0, 0);
+PBL_SHELL_CMD_REGISTER(ui, sub_ui, "User interface debugging", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_ui, windows, nullptr, "Show the app window stack", prv_cmd_windows, 0, 0);
 #endif

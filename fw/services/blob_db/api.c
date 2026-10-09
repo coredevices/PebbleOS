@@ -188,7 +188,7 @@ static bool prv_db_valid(BlobDBId db_id) {
 
 void blob_db_event_put(BlobDBEventType type, BlobDBId db_id, const uint8_t *key, int key_len) {
   // copy key for event
-  uint8_t *key_bytes = NULL;
+  uint8_t *key_bytes = nullptr;
   if (key_len > 0) {
     key_bytes = kernel_malloc(key_len);
     memcpy(key_bytes, key, key_len);
@@ -313,7 +313,7 @@ status_t blob_db_flush(BlobDBId db_id) {
     status_t rv = db->flush();
     if (rv == S_SUCCESS) {
       PBL_LOG_INFO("Flushing BlobDB with Id %d", db_id);
-      blob_db_event_put(BlobDBEventTypeFlush, db_id, NULL, 0);
+      blob_db_event_put(BlobDBEventTypeFlush, db_id, nullptr, 0);
     }
     return rv;
   }
@@ -323,7 +323,7 @@ status_t blob_db_flush(BlobDBId db_id) {
 
 BlobDBDirtyItem *blob_db_get_dirty_list(BlobDBId db_id) {
   if (!prv_db_valid(db_id)) {
-    return NULL;
+    return nullptr;
   }
 
   const BlobDB *db = &s_blob_dbs[db_id];
@@ -331,7 +331,7 @@ BlobDBDirtyItem *blob_db_get_dirty_list(BlobDBId db_id) {
     return db->get_dirty_list();
   }
 
-  return NULL;
+  return nullptr;
 }
 
 status_t blob_db_mark_synced(BlobDBId db_id, uint8_t *key, int key_len) {

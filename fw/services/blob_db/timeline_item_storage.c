@@ -418,7 +418,7 @@ static bool prv_flush_filter_cb(void *key, size_t key_len, void *val, size_t val
 
 status_t timeline_item_storage_flush(TimelineItemStorage *storage) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = settings_file_rewrite_filtered(&storage->file, prv_flush_filter_cb, NULL);
+  status_t rv = settings_file_rewrite_filtered(&storage->file, prv_flush_filter_cb, nullptr);
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }

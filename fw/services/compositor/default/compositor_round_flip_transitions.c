@@ -110,7 +110,7 @@ static void prv_round_flip_transition_to_launcher_animation_init(Animation *anim
 
 const CompositorTransition *compositor_round_flip_transition_get(bool flip_to_the_right) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   if (flip_to_the_right) {

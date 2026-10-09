@@ -37,7 +37,7 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_
 
 void test_analytics_native__initialize(void) {
   s_dls_create_count = 0;
-  s_dls_create_result = NULL;
+  s_dls_create_result = nullptr;
   s_dls_log_count = 0;
 }
 

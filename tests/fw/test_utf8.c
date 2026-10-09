@@ -28,7 +28,7 @@ void test_utf8__decode_test_string_valid(void) {
   utf8_t *valid_test_string_utf8 = (utf8_t *)s_valid_test_string;
 
   for (int i = 0; i < NUM_VALID_CODEPOINTS; ++i) {
-    uint32_t decoded_codepoint = utf8_peek_codepoint(valid_test_string_utf8, NULL);
+    uint32_t decoded_codepoint = utf8_peek_codepoint(valid_test_string_utf8, nullptr);
     uint32_t actual_codepoint = s_valid_test_codepoints[i];
     cl_assert_equal_i(decoded_codepoint, actual_codepoint);
     valid_test_string_utf8 = utf8_get_next(valid_test_string_utf8);
@@ -43,7 +43,7 @@ void test_utf8__decode_malformed_test_string(void) {
   utf8_t *malformed_test_string_utf8 = (utf8_t *)s_malformed_test_string;
 
   for (int i = 0; i < (UTF8_TEST_MALFORMED_CODEPOINT_INDEX - 1); i++) {
-    uint32_t decoded_codepoint = utf8_peek_codepoint(malformed_test_string_utf8, NULL);
+    uint32_t decoded_codepoint = utf8_peek_codepoint(malformed_test_string_utf8, nullptr);
     uint32_t actual_codepoint = s_valid_test_codepoints[i];
     cl_assert_equal_i(decoded_codepoint, actual_codepoint);
     malformed_test_string_utf8 = utf8_get_next(malformed_test_string_utf8);
@@ -51,7 +51,7 @@ void test_utf8__decode_malformed_test_string(void) {
 
   // When we decode the invalid codepoint, it should return an invalid stream
   // error and set the pointer to the stream to be null
-  cl_assert_equal_i(utf8_peek_codepoint(malformed_test_string_utf8, NULL), 0);
+  cl_assert_equal_i(utf8_peek_codepoint(malformed_test_string_utf8, nullptr), 0);
   cl_assert_(*malformed_test_string_utf8 == 0xcd,
              "Failed to invalidate an invalid UTF-8 test string");
 }
@@ -65,7 +65,7 @@ void test_utf8__decode_all_gothic_codepoints(void) {
   utf8_t *valid_gothic_codepoints_utf8 = (utf8_t *)s_valid_gothic_codepoints_string;
 
   for (int i = 0; i < NUM_GOTHIC_CODEPOINTS; i++) {
-    uint32_t decoded_codepoint = utf8_peek_codepoint(valid_gothic_codepoints_utf8, NULL);
+    uint32_t decoded_codepoint = utf8_peek_codepoint(valid_gothic_codepoints_utf8, nullptr);
     uint32_t actual_codepoint = s_valid_gothic_codepoints[i];
     cl_assert_equal_i(decoded_codepoint, actual_codepoint);
     valid_gothic_codepoints_utf8 = utf8_get_next(valid_gothic_codepoints_utf8);

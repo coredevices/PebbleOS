@@ -35,7 +35,7 @@
 // Stubs
 ////////////////////////////////////
 GContext *graphics_context_get_current_context(void) {
-  return NULL;
+  return nullptr;
 }
 
 // Setup

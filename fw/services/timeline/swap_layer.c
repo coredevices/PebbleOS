@@ -115,7 +115,7 @@ static LayoutLayer *prv_fetch_next_layout(SwapLayer *swap_layer, int8_t rel_chan
         swap_layer->callbacks.get_layout_handler(swap_layer, rel_change, swap_layer->context);
     // if there is no layout, we return NULL
     if (!layout) {
-      return NULL;
+      return nullptr;
     }
 
     // Calculate the size of the layout we were given and set the frame.
@@ -126,7 +126,7 @@ static LayoutLayer *prv_fetch_next_layout(SwapLayer *swap_layer, int8_t rel_chan
                                  });
     return layout;
   }
-  return NULL;
+  return nullptr;
 }
 
 static void prv_announce_layout_will_appear(SwapLayer *swap_layer, LayoutLayer *layout) {
@@ -301,12 +301,13 @@ static void prv_frame_scroll_complete(Animation *animation, bool finished, void 
 static Animation *prv_create_anim_frame_scroll(Layer *layer, uint32_t duration, int16_t dy,
                                                ScrollAnimationCurve *curve) {
   if (!layer) {
-    return NULL;
+    return nullptr;
   }
 
   GRect to_origin = layer->frame;
   to_origin.origin.y += dy;
-  Animation *result = (Animation *)property_animation_create_layer_frame(layer, NULL, &to_origin);
+  Animation *result =
+      (Animation *)property_animation_create_layer_frame(layer, nullptr, &to_origin);
   animation_set_handlers(result,
                          (AnimationHandlers){
                            .stopped = prv_frame_scroll_complete,
@@ -345,7 +346,7 @@ static void prv_swap_up_complete(Animation *animation, bool finished, void *cont
   // shift all of the indexes
   swap_layer->next = swap_layer->current;
   swap_layer->current = swap_layer->previous;
-  swap_layer->previous = NULL;
+  swap_layer->previous = nullptr;
 
   // let the client know we have moved to another layer
   prv_announce_layout_did_appear(swap_layer, swap_layer->current, -1);
@@ -367,11 +368,12 @@ static Animation *prv_create_swap_up_animation(SwapLayer *swap_layer, bool full_
   }
 
   Animation *prev_down =
-      prv_create_anim_frame_scroll((Layer *)swap_layer->previous, SWAP_MS, dy, NULL);
+      prv_create_anim_frame_scroll((Layer *)swap_layer->previous, SWAP_MS, dy, nullptr);
   Animation *current_down =
-      prv_create_anim_frame_scroll((Layer *)swap_layer->current, SWAP_MS, dy, NULL);
-  Animation *next_down = prv_create_anim_frame_scroll((Layer *)swap_layer->next, SWAP_MS, dy, NULL);
-  return animation_spawn_create(prev_down, current_down, next_down, NULL);
+      prv_create_anim_frame_scroll((Layer *)swap_layer->current, SWAP_MS, dy, nullptr);
+  Animation *next_down =
+      prv_create_anim_frame_scroll((Layer *)swap_layer->next, SWAP_MS, dy, nullptr);
+  return animation_spawn_create(prev_down, current_down, next_down, nullptr);
 }
 
 static bool prv_setup_swap_up(SwapLayer *swap_layer) {
@@ -409,7 +411,7 @@ static void prv_swap_down_complete(Animation *animation, bool finished, void *co
 
   // remove the previous layer
   prv_remove_old_layout(swap_layer, swap_layer->previous);
-  swap_layer->previous = NULL;
+  swap_layer->previous = nullptr;
 
   // let the client know we have moved to another layer
   prv_announce_layout_did_appear(swap_layer, swap_layer->current, +1);
@@ -435,7 +437,7 @@ static Animation *prv_create_swap_down_animation(SwapLayer *swap_layer) {
   // and perform the creation correctly.
   Animation *next_up =
       prv_create_anim_frame_scroll((Layer *)swap_layer->next, SWAP_MS, dy, &swap_down_scroll_curve);
-  return animation_spawn_create(prev_up, current_up, next_up, NULL);
+  return animation_spawn_create(prev_up, current_up, next_up, nullptr);
 }
 
 static bool prv_setup_swap_down(SwapLayer *swap_layer) {
@@ -448,7 +450,7 @@ static bool prv_setup_swap_down(SwapLayer *swap_layer) {
   // in the swap down complete
   swap_layer->previous = swap_layer->current;
   swap_layer->current = swap_layer->next;
-  swap_layer->next = NULL;
+  swap_layer->next = nullptr;
 
   return true;
 }
@@ -468,11 +470,12 @@ static void prv_scroll(SwapLayer *swap_layer, int16_t dy, AnimationCurve curve) 
 #endif
   Animation *animation;
   if (swap_layer->next) {
-    Animation *next = prv_create_anim_frame_scroll((Layer *)swap_layer->next, SCROLL_MS, dy, NULL);
+    Animation *next =
+        prv_create_anim_frame_scroll((Layer *)swap_layer->next, SCROLL_MS, dy, nullptr);
 #if PBL_RECT
     animation_set_curve(next, curve);
 #endif
-    animation = animation_spawn_create(current, next, NULL);
+    animation = animation_spawn_create(current, next, nullptr);
   } else {
     animation = current;
   }
@@ -546,7 +549,7 @@ static int16_t prv_get_max_scroll_dy(SwapLayer *swap_layer) {
   int16_t max_dy = swap_layer->current->layer.frame.size.h - swap_layer->layer.frame.size.h;
 
   // we are peeking the next notification if we have a next.
-  if (swap_layer->next != NULL) {
+  if (swap_layer->next != nullptr) {
     max_dy += PEEK_PX;
   } else {
 #if PBL_ROUND
@@ -705,12 +708,12 @@ static void prv_raw_click_handler(ClickRecognizerRef recognizer, void *context) 
 
 static void prv_swap_layer_click_config_provider(void *context) {
   // Use raw clicks to avoid single click delay which results from having multi-click enabled
-  window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_click_handler, NULL, context);
+  window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_click_handler, nullptr, context);
   window_single_repeating_click_subscribe(BUTTON_ID_UP, SCROLL_REPEAT_MS, prv_single_click_handler);
   window_multi_click_subscribe(BUTTON_ID_UP, 2, 2, 100, false, prv_up_multi_click_handler);
 
   // Use raw clicks to avoid single click delay which results from having multi-click enabled
-  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_click_handler, NULL, context);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_click_handler, nullptr, context);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, SCROLL_REPEAT_MS,
                                           prv_single_click_handler);
   window_multi_click_subscribe(BUTTON_ID_DOWN, 2, 2, 100, false, prv_down_multi_click_handler);
@@ -741,13 +744,13 @@ static void prv_swap_layer_reset(SwapLayer *swap_layer) {
   prv_finish_animation(swap_layer);
 
   prv_remove_old_layout(swap_layer, swap_layer->previous);
-  swap_layer->previous = NULL;
+  swap_layer->previous = nullptr;
 
   prv_remove_old_layout(swap_layer, swap_layer->current);
-  swap_layer->current = NULL;
+  swap_layer->current = nullptr;
 
   prv_remove_old_layout(swap_layer, swap_layer->next);
-  swap_layer->next = NULL;
+  swap_layer->next = nullptr;
 }
 
 void swap_layer_reload_data(SwapLayer *swap_layer) {
@@ -979,7 +982,7 @@ static void prv_swap_touch_emit(SwapLayer *swap_layer, ButtonId button) {
 // prv_get_current_notification_offset dereferences current, so gate the whole gesture on a present
 // layout. A declined gesture never Starts the pan, so no base offset is latched or applied.
 static bool prv_swap_ops_can_start(void *w) {
-  return ((SwapLayer *)w)->current != NULL;
+  return ((SwapLayer *)w)->current != nullptr;
 }
 
 static void prv_swap_ops_pan_started(void *w) {
@@ -1186,7 +1189,7 @@ SwapLayer *swap_layer_create(GRect frame) {
 }
 
 void swap_layer_destroy(SwapLayer *swap_layer) {
-  if (swap_layer == NULL) {
+  if (swap_layer == nullptr) {
     return;
   }
   swap_layer_deinit(swap_layer);

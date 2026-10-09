@@ -26,7 +26,7 @@ void gap_le_set_advertising_disabled(void) {
 
 int GAP_LE_Advertising_Disable(unsigned int BluetoothStackID) {
   s_is_le_advertising_enabled = false;
-  s_le_adv_connection_event_callback = NULL;
+  s_le_adv_connection_event_callback = nullptr;
   s_le_adv_connection_callback_param = 0;
   s_min_advertising_interval_ms = 0;
   s_max_advertising_interval_ms = 0;
@@ -136,12 +136,12 @@ int GAP_LE_Create_Connection(unsigned int BluetoothStackID, unsigned int ScanInt
 }
 
 void prv_fake_gap_le_create_connection_event_put(GAP_LE_Event_Data_t *event) {
-  cl_assert(s_le_create_connection_event_callback != NULL);
+  cl_assert(s_le_create_connection_event_callback != nullptr);
   s_le_create_connection_event_callback(1, event, s_le_create_connection_callback_param);
 }
 
 void prv_fake_gap_le_adv_connection_event_put(GAP_LE_Event_Data_t *event) {
-  cl_assert(s_le_adv_connection_event_callback != NULL);
+  cl_assert(s_le_adv_connection_event_callback != nullptr);
   s_le_adv_connection_event_callback(1, event, s_le_adv_connection_callback_param);
 }
 
@@ -354,13 +354,13 @@ Boolean_t GAP_LE_Resolve_Address(unsigned int BluetoothStackID, Encryption_Key_t
 void fake_GAPAPI_init(void) {
   memset(&s_encrypted_device, 0, sizeof(s_encrypted_device));
   s_is_le_advertising_enabled = false;
-  s_le_adv_connection_event_callback = NULL;
+  s_le_adv_connection_event_callback = nullptr;
   s_le_adv_connection_callback_param = 0;
   s_min_advertising_interval_ms = 0;
   s_max_advertising_interval_ms = 0;
   memset(&s_ad_data, 0, sizeof(s_ad_data));
   s_ad_data_length = 0;
-  s_le_create_connection_event_callback = NULL;
+  s_le_create_connection_event_callback = nullptr;
   s_le_create_connection_callback_param = 0;
   memset(&s_scan_resp_data, 0, sizeof(s_scan_resp_data));
   s_scan_resp_data_length = 0;

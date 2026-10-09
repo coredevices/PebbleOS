@@ -119,8 +119,8 @@ static void prv_render_bpm(GContext *ctx, Layer *base_layer) {
 
   graphics_text_node_draw(
       &container->node, ctx,
-      &GRect(0, offset_y, base_layer->bounds.size.w, fonts_get_font_height(data->bpm_font)), NULL,
-      NULL);
+      &GRect(0, offset_y, base_layer->bounds.size.w, fonts_get_font_height(data->bpm_font)),
+      nullptr, nullptr);
   graphics_text_node_destroy(&container->node);
 }
 
@@ -144,7 +144,7 @@ static void prv_render_timstamp(GContext *ctx, Layer *base_layer) {
 
   graphics_context_set_text_color(ctx, TEXT_COLOR);
   graphics_draw_text(ctx, buffer, data->timestamp_font, rect, GTextOverflowModeWordWrap,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 
 static void prv_render_hrm_disabled(GContext *ctx, Layer *base_layer) {
@@ -159,7 +159,7 @@ static void prv_render_hrm_disabled(GContext *ctx, Layer *base_layer) {
 
   graphics_context_set_text_color(ctx, TEXT_COLOR);
   graphics_draw_text(ctx, text, data->timestamp_font, rect, GTextOverflowModeWordWrap,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 
 static void prv_base_layer_update_proc(Layer *base_layer, GContext *ctx) {

@@ -31,7 +31,7 @@ void test_transcription__validate(void) {
   result = transcription_validate(validate_test, test_size);
   cl_assert_equal_p(result, true);
 
-  result = transcription_validate(NULL, test_size);
+  result = transcription_validate(nullptr, test_size);
   cl_assert_equal_p(result, false);
 
   result = transcription_validate(validate_test, test_size - 1);
@@ -114,11 +114,11 @@ void test_transcription__iterate_words(void) {
   uint8_t *end = words_test + sizeof(words_test);
   uint8_t *result;
   result = transcription_iterate_words((TranscriptionWord *)words_test, 3,
-                                       (TranscriptionWordIterateCb)prv_cb_return_true, NULL);
+                                       (TranscriptionWordIterateCb)prv_cb_return_true, nullptr);
   cl_assert_equal_p(result, end);
 
   result = transcription_iterate_words((TranscriptionWord *)words_test, 2,
-                                       (TranscriptionWordIterateCb)prv_cb_return_true, NULL);
+                                       (TranscriptionWordIterateCb)prv_cb_return_true, nullptr);
   cl_assert_equal_p(result, &words_test[15]);
 
   s_count = 0;
@@ -136,7 +136,7 @@ void test_transcription__iterate_words(void) {
                                        (TranscriptionWordIterateCb)prv_cb_return_false, (void *)2);
   cl_assert_equal_p(result, &words_test[15]);
 
-  result = transcription_iterate_words((TranscriptionWord *)words_test, 3, NULL, NULL);
+  result = transcription_iterate_words((TranscriptionWord *)words_test, 3, nullptr, nullptr);
   cl_assert_equal_p(result, end);
 }
 
@@ -207,12 +207,12 @@ void test_transcription__iterate_sentences(void) {
   uint8_t *result;
   result =
       transcription_iterate_sentences((TranscriptionSentence *)sentence_test, 2,
-                                      (TranscriptionSentenceIterateCb)prv_cb_return_true, NULL);
+                                      (TranscriptionSentenceIterateCb)prv_cb_return_true, nullptr);
   cl_assert_equal_p(result, end);
 
   result =
       transcription_iterate_sentences((TranscriptionSentence *)sentence_test, 1,
-                                      (TranscriptionSentenceIterateCb)prv_cb_return_true, NULL);
+                                      (TranscriptionSentenceIterateCb)prv_cb_return_true, nullptr);
   cl_assert_equal_p(result, &sentence_test[21]);
 
   s_count = 0;
@@ -229,9 +229,10 @@ void test_transcription__iterate_sentences(void) {
 
   result =
       transcription_iterate_sentences((TranscriptionSentence *)sentence_test, 0,
-                                      (TranscriptionSentenceIterateCb)prv_cb_return_false, NULL);
+                                      (TranscriptionSentenceIterateCb)prv_cb_return_false, nullptr);
   cl_assert_equal_p(result, sentence_test);
 
-  result = transcription_iterate_sentences((TranscriptionSentence *)sentence_test, 2, NULL, NULL);
+  result =
+      transcription_iterate_sentences((TranscriptionSentence *)sentence_test, 2, nullptr, nullptr);
   cl_assert_equal_p(result, end);
 }

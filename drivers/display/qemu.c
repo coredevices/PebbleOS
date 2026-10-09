@@ -87,8 +87,8 @@ bool display_update_in_progress(void) {
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  PBL_ASSERTN(nrcb != NULL);
-  PBL_ASSERTN(uccb != NULL);
+  PBL_ASSERTN(nrcb != nullptr);
+  PBL_ASSERTN(uccb != nullptr);
 
   uint32_t fb_addr = DISPLAY->fb_addr;
   uint16_t width = DISPLAY->width;

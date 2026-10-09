@@ -39,7 +39,7 @@ void vibes_cancel(void) {
 }
 
 void vibes_enqueue_custom_pattern(VibePattern pattern) {
-  if (pattern.durations == NULL) {
+  if (pattern.durations == nullptr) {
     PBL_LOG_ERR("tried to enqueue a null pattern");
     return;
   }
@@ -54,7 +54,7 @@ void vibes_enqueue_custom_pattern(VibePattern pattern) {
 }
 
 void vibes_enqueue_custom_pattern_with_amplitudes(VibePatternWithAmplitudes pattern) {
-  if (pattern.durations == NULL || pattern.amplitudes == NULL) {
+  if (pattern.durations == nullptr || pattern.amplitudes == nullptr) {
     PBL_LOG_ERR("tried to enqueue a null pattern");
     return;
   }

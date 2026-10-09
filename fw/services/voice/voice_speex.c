@@ -142,19 +142,19 @@ void voice_speex_deinit(void) {
 
   if (s_encoder.enc_state) {
     speex_encoder_destroy(s_encoder.enc_state);
-    s_encoder.enc_state = NULL;
+    s_encoder.enc_state = nullptr;
   }
 
   speex_bits_destroy(&s_encoder.bits);
 
   if (s_encoder.frame_buffer) {
     kernel_free(s_encoder.frame_buffer);
-    s_encoder.frame_buffer = NULL;
+    s_encoder.frame_buffer = nullptr;
   }
 
   if (s_encoder.encoded_buffer) {
     kernel_free(s_encoder.encoded_buffer);
-    s_encoder.encoded_buffer = NULL;
+    s_encoder.encoded_buffer = nullptr;
   }
 
   memset(&s_encoder, 0, sizeof(s_encoder));
@@ -187,7 +187,7 @@ int voice_speex_get_frame_size(void) {
 }
 
 int16_t *voice_speex_get_frame_buffer(void) {
-  return s_encoder.initialized ? (int16_t *)s_encoder.frame_buffer : NULL;
+  return s_encoder.initialized ? (int16_t *)s_encoder.frame_buffer : nullptr;
 }
 
 size_t voice_speex_get_frame_buffer_size(void) {

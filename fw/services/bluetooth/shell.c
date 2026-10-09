@@ -17,7 +17,7 @@
 #include <comm/bt_lock.h>
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_bt);
-PBL_SHELL_CMD_REGISTER(bt, sub_bt, "Bluetooth", NULL);
+PBL_SHELL_CMD_REGISTER(bt, sub_bt, "Bluetooth", nullptr);
 
 static int prv_cmd_mac(const struct pbl_shell *sh, size_t argc, char **argv) {
   char addr_hex_str[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE];
@@ -27,21 +27,21 @@ static int prv_cmd_mac(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, mac, NULL, "Print the local address", prv_cmd_mac, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, mac, nullptr, "Print the local address", prv_cmd_mac, 0, 0);
 
 static int prv_cmd_name(const struct pbl_shell *sh, size_t argc, char **argv) {
   bt_local_id_set_device_name(argv[1]);
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, name, NULL, "Set the device name <name>", prv_cmd_name, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, name, nullptr, "Set the device name <name>", prv_cmd_name, 2, 0);
 
 static int prv_cmd_prefs_wipe(const struct pbl_shell *sh, size_t argc, char **argv) {
   bt_persistent_storage_delete_all_pairings();
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, prefs_wipe, NULL, "Delete all pairings", prv_cmd_prefs_wipe, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, prefs_wipe, nullptr, "Delete all pairings", prv_cmd_prefs_wipe, 0, 0);
 
 static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) {
   char chip_info[64];
@@ -70,7 +70,7 @@ static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) 
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, status, NULL, "Show the Bluetooth status", prv_cmd_status, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, status, nullptr, "Show the Bluetooth status", prv_cmd_status, 0, 0);
 
 #ifndef CONFIG_RELEASE
 static int prv_cmd_sprf_nuke(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -84,11 +84,11 @@ static int prv_cmd_sprf_nuke(const struct pbl_shell *sh, size_t argc, char **arg
 }
 
 static const struct pbl_shell_cmd sub_bt_sprf[] = {
-  PBL_SHELL_CMD(nuke, NULL, "Wipe the shared PRF storage", prv_cmd_sprf_nuke),
+  PBL_SHELL_CMD(nuke, nullptr, "Wipe the shared PRF storage", prv_cmd_sprf_nuke),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, sprf, sub_bt_sprf, "Shared PRF storage", NULL, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_bt, sprf, sub_bt_sprf, "Shared PRF storage", nullptr, 0, 0);
 #endif
 
 #endif

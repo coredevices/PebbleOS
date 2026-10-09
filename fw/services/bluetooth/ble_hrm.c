@@ -67,8 +67,8 @@ static bool prv_free_permission_for_each_cb(ListNode *node, void *unused) {
 }
 
 static void prv_free_all_permissions(void) {
-  list_foreach((ListNode *)s_permissions_head, prv_free_permission_for_each_cb, NULL);
-  s_permissions_head = NULL;
+  list_foreach((ListNode *)s_permissions_head, prv_free_permission_for_each_cb, nullptr);
+  s_permissions_head = nullptr;
 }
 
 static bool prv_find_permission_by_device_filter_cb(ListNode *found_node, void *data) {
@@ -194,7 +194,7 @@ static void prv_start_hrm_kernel_main(void *unused) {
   // phone, so don't pay for the low-latency cadence over a whole streaming session.
   s_ble_hrm_session.manager_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1 /*update_interval_s*/, 0 /*expire_s*/, HRMFeature_BPM,
-      false /*low_latency*/, NULL, NULL);
+      false /*low_latency*/, nullptr, nullptr);
 }
 
 static void prv_stop_hrm_kernel_main(void *unused) {
@@ -205,9 +205,9 @@ static void prv_stop_hrm_kernel_main(void *unused) {
 
 static void prv_execute_on_kernel_main(CallbackEventCallback cb) {
   if (pebble_task_get_current() != PebbleTask_KernelMain) {
-    launcher_task_add_callback(cb, NULL);
+    launcher_task_add_callback(cb, nullptr);
   } else {
-    cb(NULL);
+    cb(nullptr);
   }
 }
 
@@ -336,7 +336,7 @@ static void prv_revoke_gap_le_connection_for_each_cb(GAPLEConnection *connection
 
 void ble_hrm_revoke_all(void) {
   bt_lock();
-  gap_le_connection_for_each(prv_revoke_gap_le_connection_for_each_cb, NULL);
+  gap_le_connection_for_each(prv_revoke_gap_le_connection_for_each_cb, nullptr);
   bt_unlock();
 
   // Counting as one -- it's one user action.

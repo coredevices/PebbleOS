@@ -61,7 +61,7 @@ static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
                                                      const PebbleProtocolEndpoint *endpoint,
                                                      size_t total_payload_size) {
   if (total_payload_size == 0) {
-    return NULL; // Ignore zero-length messages
+    return nullptr; // Ignore zero-length messages
   }
 
   size_t size_needed = sizeof(DefaultReceiverImpl) + total_payload_size;
@@ -70,7 +70,7 @@ static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
   if (!receiver) {
     PBL_LOG_WRN("Could not allocate receiver, handler:%p size:%d", endpoint->handler,
                 (int)size_needed);
-    return NULL;
+    return nullptr;
   }
 
   const bool should_use_kernel_main =
@@ -121,13 +121,13 @@ static bool prv_drain_one_pending(SingleListNode **head) {
     prv_wipe_receiver_data(impl);
     kernel_free(impl);
   }
-  return (*head != NULL);
+  return (*head != nullptr);
 }
 
 static void prv_default_kernel_receiver_bg_cb(void *data) {
   if (prv_drain_one_pending(&s_pending_bg_head)) {
     // Reschedule rather than loop so the watchdog gets fed between handlers.
-    system_task_add_callback(prv_default_kernel_receiver_bg_cb, NULL);
+    system_task_add_callback(prv_default_kernel_receiver_bg_cb, nullptr);
     return;
   }
 
@@ -137,13 +137,13 @@ static void prv_default_kernel_receiver_bg_cb(void *data) {
   // window above isn't stranded.
   if (s_pending_bg_head) {
     s_bg_callback_pending = true;
-    system_task_add_callback(prv_default_kernel_receiver_bg_cb, NULL);
+    system_task_add_callback(prv_default_kernel_receiver_bg_cb, nullptr);
   }
 }
 
 static void prv_default_kernel_receiver_main_cb(void *data) {
   if (prv_drain_one_pending(&s_pending_main_head)) {
-    launcher_task_add_callback(prv_default_kernel_receiver_main_cb, NULL);
+    launcher_task_add_callback(prv_default_kernel_receiver_main_cb, nullptr);
     return;
   }
 
@@ -151,7 +151,7 @@ static void prv_default_kernel_receiver_main_cb(void *data) {
 
   if (s_pending_main_head) {
     s_main_callback_pending = true;
-    launcher_task_add_callback(prv_default_kernel_receiver_main_cb, NULL);
+    launcher_task_add_callback(prv_default_kernel_receiver_main_cb, nullptr);
   }
 }
 
@@ -171,13 +171,13 @@ static void prv_default_kernel_receiver_finish(Receiver *receiver) {
     prv_append_to_pending_list(impl, &s_pending_main_head);
     if (!s_main_callback_pending) {
       s_main_callback_pending = true;
-      launcher_task_add_callback(prv_default_kernel_receiver_main_cb, NULL);
+      launcher_task_add_callback(prv_default_kernel_receiver_main_cb, nullptr);
     }
   } else {
     prv_append_to_pending_list(impl, &s_pending_bg_head);
     if (!s_bg_callback_pending) {
       s_bg_callback_pending = true;
-      system_task_add_callback(prv_default_kernel_receiver_bg_cb, NULL);
+      system_task_add_callback(prv_default_kernel_receiver_bg_cb, nullptr);
     }
   }
 }

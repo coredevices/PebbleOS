@@ -23,7 +23,7 @@ bool transcription_validate(const Transcription *transcription, size_t size) {
 
   uint8_t *end = (uint8_t *)transcription + size;
 
-  uint8_t *cursor = NULL;
+  uint8_t *cursor = nullptr;
   const TranscriptionSentence *sentence = transcription->sentences;
 
   for (size_t i = 0; i < transcription->sentence_count; i++) {
@@ -60,7 +60,7 @@ void *transcription_iterate_sentences(const TranscriptionSentence *sentence, siz
       break;
     }
 
-    sentence = transcription_iterate_words(sentence->words, sentence->word_count, NULL, NULL);
+    sentence = transcription_iterate_words(sentence->words, sentence->word_count, nullptr, nullptr);
   }
   return (void *)sentence;
 }

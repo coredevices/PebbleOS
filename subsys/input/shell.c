@@ -29,7 +29,7 @@ static void prv_dump_cb(const struct pbl_input_event *evt, void *user_data) {
                evt->value, evt->sync);
 }
 
-PBL_INPUT_CALLBACK_DEFINE(prv_dump_cb, NULL);
+PBL_INPUT_CALLBACK_DEFINE(prv_dump_cb, nullptr);
 
 static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
   if (strcmp(argv[1], "on") == 0) {
@@ -80,10 +80,10 @@ static int prv_cmd_report(const struct pbl_shell *sh, size_t argc, char **argv) 
 }
 
 static const struct pbl_shell_cmd sub_input[] = {
-  PBL_SHELL_CMD_ARG(dump, NULL, "Log every event <on|off>", prv_cmd_dump, 2, 0),
-  PBL_SHELL_CMD_ARG(report, NULL, "Report an event <key|abs|ges> <code> <value> [sync=1]",
+  PBL_SHELL_CMD_ARG(dump, nullptr, "Log every event <on|off>", prv_cmd_dump, 2, 0),
+  PBL_SHELL_CMD_ARG(report, nullptr, "Report an event <key|abs|ges> <code> <value> [sync=1]",
                     prv_cmd_report, 4, 1),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(input, sub_input, "Input events", NULL);
+PBL_SHELL_CMD_REGISTER(input, sub_input, "Input events", nullptr);

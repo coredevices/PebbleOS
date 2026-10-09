@@ -292,7 +292,7 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
   const int height = size.h;
   const GRect box = (GRect){offset, GSize(max_width, height + 2)};
   graphics_context_set_text_color(context, font_color);
-  graphics_draw_text(context, text, font, box, GTextOverflowModeFill, alignment, NULL);
+  graphics_draw_text(context, text, font, box, GTextOverflowModeFill, alignment, nullptr);
   return height;
 }
 
@@ -665,7 +665,7 @@ void weather_app_layout_draw_uv_bar(GContext *ctx, GPoint gc, int by, int uv_val
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, label, fonts_get_system_font(hdr_font),
                      GRect(gc.x + hdr_dx, by + hdr_dy, c ? 96 : 70, 20), GTextOverflowModeFill,
-                     GTextAlignmentLeft, NULL);
+                     GTextAlignmentLeft, nullptr);
   const int filled = uv_value < 10 ? uv_value : 10;
   const int pitch = c ? WX_UVC_SQ_PITCH : ((uv_value > 10) ? 12 : 13);
   for (int i = 0; i < 10; i++) {
@@ -689,7 +689,7 @@ void weather_app_layout_draw_uv_bar(GContext *ctx, GPoint gc, int by, int uv_val
   // value box in, never the digit itself.
   graphics_draw_text(ctx, uv_text, fonts_get_system_font(WX_UV_NUM_FONT),
                      GRect(gc.x + num_dx, by + num_dy, num_w, 44), GTextOverflowModeFill,
-                     GTextAlignmentRight, NULL);
+                     GTextAlignmentRight, nullptr);
 }
 #endif // PBL_ROUND
 
@@ -795,7 +795,7 @@ static void prv_fin_anim_update(Animation *anim, AnimationProgress progress) {
 static void prv_fin_anim_stopped(Animation *anim, bool finished, void *context) {
   WeatherAppLayout *layout = (WeatherAppLayout *)context;
   if (layout) {
-    layout->fin_animation = NULL;
+    layout->fin_animation = nullptr;
     if (finished && layout->fin_layer) {
       layer_set_frame(layout->fin_layer, layout->fin_anim.to);
     }
@@ -914,7 +914,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
   // carries it like every other row. Font/size unchanged (G28_BOLD caps).
   graphics_draw_text(ctx, caps, layout->location_font,
                      GRect(off->x + gcx - 100, off->y + WEATHER_APP_LAYOUT_ROUND_LABEL_Y, 200, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
   // Temp / hi-lo / condition: a left column whose edge FOLLOWS THE CURVE OF THE
   // SCREEN (design review) — each line starts from prv_round_rail solved at
   // its own ink-top row, the same parabola the description rides, so the stack
@@ -924,20 +924,20 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
       GRect(off->x + prv_round_rail(WEATHER_APP_LAYOUT_ROUND_TEMP_Y + 11) +
                 WEATHER_APP_LAYOUT_ROUND_TEMP_BEAR,
             off->y + WEATHER_APP_LAYOUT_ROUND_TEMP_Y, WEATHER_APP_LAYOUT_ROUND_LABEL_W, 38),
-      GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+      GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
   graphics_draw_text(
       ctx, t->highlow, layout->high_low_phrase_font,
       GRect(off->x + prv_round_rail(WEATHER_APP_LAYOUT_ROUND_HIGHLOW_Y + 6) +
                 WEATHER_APP_LAYOUT_ROUND_HILO_BEAR,
             off->y + WEATHER_APP_LAYOUT_ROUND_HIGHLOW_Y, WEATHER_APP_LAYOUT_ROUND_LABEL_W, 20),
-      GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+      GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
   if (t->phrase && t->phrase[0]) {
     graphics_draw_text(
         ctx, t->phrase, layout->metrics_value_font,
         GRect(off->x + prv_round_rail(WEATHER_APP_LAYOUT_ROUND_PHRASE_Y + 7) +
                   WEATHER_APP_LAYOUT_ROUND_PHRASE_BEAR,
               off->y + WEATHER_APP_LAYOUT_ROUND_PHRASE_Y, WEATHER_APP_LAYOUT_ROUND_PHRASE_W, 20),
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   }
   // Emery's sentence, verbatim -- "Light winds. SW at 12mph. Precipitation 20%."
   // It wraps to two lines at this measure, which is why it gets DESC_H and the
@@ -947,7 +947,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
                        GRect(off->x + prv_round_rail(WEATHER_APP_LAYOUT_ROUND_DESC_Y + 5),
                              off->y + WEATHER_APP_LAYOUT_ROUND_DESC_Y,
                              WEATHER_APP_LAYOUT_ROUND_DESC_W, WEATHER_APP_LAYOUT_ROUND_DESC_H),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   }
 
   // The UV bar. Same gate as emery: it draws only on the STATIC render, so it
@@ -1023,7 +1023,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
       desc_y = band_top;
     graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, t->desc, layout->metrics_font, GRect(off->x, desc_y, cw, dsz.h + 2),
-                       GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
     // Center the UV box between the description's ink bottom and the y195
     // divider — per page, since one- and two-line descriptions end at
     // different depths (same optical rule as the fin below the divider).
@@ -1061,7 +1061,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
     // Gothic 18's V tapers properly (metrics_value_font is G18 on rect).
     graphics_draw_text(ctx, i18n_get("UV INDEX", layout), layout->metrics_value_font,
                        GRect(off->x + 24, by + 2, 70, 20), GTextOverflowModeFill,
-                       GTextAlignmentLeft, NULL);
+                       GTextAlignmentLeft, nullptr);
     // Fully filled the instant the box appears — no tick-in (the box no longer
     // rides any animation; it just renders in once the transition settles).
     const int filled = uvv < 10 ? uvv : 10;
@@ -1089,7 +1089,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
     graphics_context_set_fill_color(ctx, GColorBlack);
     graphics_draw_text(ctx, t->uv, layout->temperature_font,
                        GRect(off->x + cw - 52, by - 5, 46, 44), GTextOverflowModeFill,
-                       GTextAlignmentRight, NULL);
+                       GTextAlignmentRight, nullptr);
   }
 #endif
 }
@@ -1156,10 +1156,10 @@ static void prv_draw_bottom_rows(const WeatherAppLayout *layout, GPoint *off, in
   const int r_w = r_icon_left - 4 - off->x;
   graphics_draw_text(ctx, rcaps, layout->tomorrow_font,
                      GRect(off->x, off->y + WEATHER_APP_LAYOUT_ROUND_FOOT_LABEL_DY, r_w, 20),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   graphics_draw_text(ctx, highlow, layout->tomorrow_font,
                      GRect(off->x, off->y + WEATHER_APP_LAYOUT_ROUND_FOOT_TEMP_DY, r_w, 20),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
 #else
   // The NEWSPAPER FOOTER SLOT (rect)  // Rect: the NEWSPAPER FOOTER SLOT (brought back from the
   // front-page-spread version): one compact row under the rule — next-day label + tight temps on
@@ -1179,7 +1179,7 @@ static void prv_draw_bottom_rows(const WeatherAppLayout *layout, GPoint *off, in
   const GSize lsz = graphics_text_layout_get_content_size(
       caps, foot_font, GRect(0, 0, 200, 20), GTextOverflowModeFill, GTextAlignmentLeft);
   graphics_draw_text(ctx, caps, foot_font, GRect(off->x, row_y, lsz.w + 2, 20),
-                     GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
   // Derived from the frame the bitmap actually rests in, so the ellipsis point
   // can never drift away from the icon. On rect this is 190-25-3 = 162, exactly
   // what the old cw-based formula produced; on round it self-syncs to 177.
@@ -1187,7 +1187,7 @@ static void prv_draw_bottom_rows(const WeatherAppLayout *layout, GPoint *off, in
       WEATHER_APP_LAYOUT_RECT_SMALL ? (off->x + cw + 4) : layout->tomorrow_icon_rest_frame.origin.x;
   const int tx = off->x + lsz.w + PBL_IF_RECT_ELSE(10, 5);
   graphics_draw_text(ctx, highlow, foot_font, GRect(tx, row_y, icon_left - 4 - tx, 20),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
 #endif
 }
 
@@ -1197,7 +1197,7 @@ static void prv_draw_snapshot_bot(const WeatherAppLayout *layout, GPoint *off, i
   if (!layout->text_anim.bot_valid)
     return;
   prv_draw_bottom_rows(layout, off, cw, ctx, layout->text_anim.bot_label,
-                       layout->text_anim.bot_highlow, NULL, 6);
+                       layout->text_anim.bot_highlow, nullptr, 6);
 }
 
 static void prv_draw_bottom_half_text(const WeatherAppLayout *layout, GPoint *current_offset,
@@ -1734,7 +1734,7 @@ static void prv_reload_icon(GBitmap **slot, BitmapLayer *bl, const WeatherLocati
                             bool tiny) {
   if (*slot) {
     gbitmap_destroy(*slot);
-    *slot = NULL;
+    *slot = nullptr;
   }
   if (f) {
     *slot = gbitmap_create_with_resource(
@@ -1752,7 +1752,7 @@ static void prv_icon_anim_update(Animation *anim, AnimationProgress progress) {
 static void prv_icon_anim_stopped(Animation *anim, bool finished, void *context) {
   WeatherAppLayout *layout = (WeatherAppLayout *)context;
   if (layout && layout->icon_animation) {
-    layout->icon_animation = NULL;
+    layout->icon_animation = nullptr;
     layout->text_anim.active = false;
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
     prv_move_day_icons_to_content(layout);
@@ -1772,7 +1772,7 @@ static void prv_icon_anim_stopped(Animation *anim, bool finished, void *context)
       // The tiny scaler bitmap is no longer needed.
       if (layout->outgoing_weather_icon) {
         gbitmap_destroy(layout->outgoing_weather_icon);
-        layout->outgoing_weather_icon = NULL;
+        layout->outgoing_weather_icon = nullptr;
       }
     }
     // Snap incoming icon to exact today rest position
@@ -1843,7 +1843,7 @@ static void prv_animate_fin_in(WeatherAppLayout *layout, uint32_t total_ms) {
     return;
   if (layout->fin_animation) {
     animation_unschedule(layout->fin_animation);
-    layout->fin_animation = NULL;
+    layout->fin_animation = nullptr;
   }
 
   Layer *fin = layout->fin_layer;
@@ -2025,7 +2025,7 @@ static void prv_restore_fin_rest(WeatherAppLayout *layout) {
     return;
   if (layout->fin_animation) {
     animation_unschedule(layout->fin_animation);
-    layout->fin_animation = NULL;
+    layout->fin_animation = nullptr;
   }
   if (layout->next_forecast || !layout->fin_allowed) {
     layer_set_hidden(layout->fin_layer, true);
@@ -2060,21 +2060,21 @@ void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
   layout->tomorrow_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
 #endif
 
-  layout->fin_pdc = NULL;
-  layout->fin_layer = NULL;
-  layout->fin_animation = NULL;
+  layout->fin_pdc = nullptr;
+  layout->fin_layer = nullptr;
+  layout->fin_animation = nullptr;
   // Real timeline 'fin' flag (END_OF_TIMELINE PDC, from Pebble_50x50_Fin.svg).
   // A system-app PDC is mmap'd READ-ONLY in flash, so clone it into a writable
   // heap copy before any draw (same trap as the weather-icons sequence).
   GDrawCommandImage *fin_raw =
       gdraw_command_image_create_with_resource(RESOURCE_ID_END_OF_TIMELINE);
-  layout->fin_pdc = fin_raw ? gdraw_command_image_clone(fin_raw) : NULL;
+  layout->fin_pdc = fin_raw ? gdraw_command_image_clone(fin_raw) : nullptr;
   if (fin_raw) {
     gdraw_command_image_destroy(fin_raw); // munmaps the read-only flash mapping
   }
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
-  layout->weather_icon_pdc_sequence = NULL;
-  layout->current_weather_escape_layer = NULL;
+  layout->weather_icon_pdc_sequence = nullptr;
+  layout->current_weather_escape_layer = nullptr;
   layout->anim_params.current_root_overlay = false;
 #endif
 
@@ -2084,14 +2084,14 @@ void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
   // Location bar: full-width strip at the very top of the screen.
   // Taller than the forecast-list bar (MAIN_BAR_HEIGHT vs LOCATION_BAR_HEIGHT)
   // for better readability on the main screen.
-  layout->city_layer = NULL;
-  layout->location_bar_layer = NULL; // no bar on either shape -- content owns
-                                     // the whole screen (round joined rect
-                                     // in the report-page port)
+  layout->city_layer = nullptr;
+  layout->location_bar_layer = nullptr; // no bar on either shape -- content owns
+                                        // the whole screen (round joined rect
+                                        // in the report-page port)
   // Added to root_layer last (after fin_layer) so it renders on top of everything.
 
   // Down-arrow removed — location bar provides sufficient bottom UI.
-  layout->down_arrow_layer = NULL;
+  layout->down_arrow_layer = nullptr;
 
   // Content layer fills the root below the location bar.
   const int content_layer_side_padding = PBL_IF_RECT_ELSE(5, 12);
@@ -2192,7 +2192,7 @@ void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
   // same clone-into-RAM pattern for its writable sequence.)
   GDrawCommandSequence *pdc_raw =
       gdraw_command_sequence_create_with_resource(RESOURCE_ID_WEATHER_ICONS_PDC);
-  layout->weather_icon_pdc_sequence = pdc_raw ? gdraw_command_sequence_clone(pdc_raw) : NULL;
+  layout->weather_icon_pdc_sequence = pdc_raw ? gdraw_command_sequence_clone(pdc_raw) : nullptr;
   if (pdc_raw) {
     gdraw_command_sequence_destroy(pdc_raw); // munmaps the read-only flash mapping
   }
@@ -2243,15 +2243,15 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
 
   if (layout->current_weather_icon) {
     gbitmap_destroy(layout->current_weather_icon);
-    layout->current_weather_icon = NULL;
+    layout->current_weather_icon = nullptr;
   }
   if (layout->tomorrow_weather_icon) {
     gbitmap_destroy(layout->tomorrow_weather_icon);
-    layout->tomorrow_weather_icon = NULL;
+    layout->tomorrow_weather_icon = nullptr;
   }
 
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
-  bitmap_layer_set_bitmap(layout->current_weather_icon_layer, NULL);
+  bitmap_layer_set_bitmap(layout->current_weather_icon_layer, nullptr);
   layer_set_frame(bitmap_layer_get_layer(layout->current_weather_icon_layer),
                   layout->today_icon_rest_frame);
 #else
@@ -2262,7 +2262,7 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
     layer_set_frame(bitmap_layer_get_layer(layout->current_weather_icon_layer),
                     layout->today_icon_rest_frame);
   } else {
-    bitmap_layer_set_bitmap(layout->current_weather_icon_layer, NULL);
+    bitmap_layer_set_bitmap(layout->current_weather_icon_layer, nullptr);
   }
 #endif
 
@@ -2271,7 +2271,7 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
         weather_type_get_icon_res_tiny(next_forecast->current_weather_type));
     bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, layout->tomorrow_weather_icon);
   } else {
-    bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, NULL);
+    bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, nullptr);
   }
 
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
@@ -2293,12 +2293,12 @@ void weather_app_layout_deinit(WeatherAppLayout *layout) {
   i18n_free_all(layout);
   if (layout->icon_animation) {
     Animation *anim = layout->icon_animation;
-    layout->icon_animation = NULL;
+    layout->icon_animation = nullptr;
     animation_unschedule(anim);
   }
   if (layout->fin_animation) {
     animation_unschedule(layout->fin_animation);
-    layout->fin_animation = NULL;
+    layout->fin_animation = nullptr;
   }
   if (layout->current_weather_icon) {
     gbitmap_destroy(layout->current_weather_icon);
@@ -2349,7 +2349,7 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
   // Cancel any running animation
   if (layout->icon_animation) {
     Animation *old = layout->icon_animation;
-    layout->icon_animation = NULL;
+    layout->icon_animation = nullptr;
     bool was_down = layout->anim_params.animate_down;
     if (layout->anim_params.tomorrow_reparented || layout->anim_params.tomorrow_incoming) {
       Layer *tmr = bitmap_layer_get_layer(layout->tomorrow_weather_icon_layer);
@@ -2414,12 +2414,12 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
     if (layout->outgoing_weather_icon)
       gbitmap_destroy(layout->outgoing_weather_icon);
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
-    bitmap_layer_set_bitmap(layout->current_weather_icon_layer, NULL);
+    bitmap_layer_set_bitmap(layout->current_weather_icon_layer, nullptr);
 #endif
     layout->outgoing_weather_icon =
         new_today ? gbitmap_create_with_resource(
                         weather_type_get_icon_res_today(new_today->current_weather_type))
-                  : NULL;
+                  : nullptr;
     // Frame set to arc start position below, after circle_center is computed.
     layer_set_hidden(layout->outgoing_weather_icon_layer, false);
     // current_weather_icon_layer already holds the old today bitmap — keep it as-is.
@@ -2432,20 +2432,20 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
     layout->outgoing_weather_icon =
         layout->forecast ? gbitmap_create_with_resource(weather_type_get_icon_res_today(
                                layout->forecast->current_weather_type))
-                         : NULL;
+                         : nullptr;
 #else
     layout->outgoing_weather_icon = layout->current_weather_icon;
-    layout->current_weather_icon = NULL;
+    layout->current_weather_icon = nullptr;
 #endif
     layer_set_frame(layout->outgoing_weather_icon_layer, layout->today_icon_rest_frame);
     layer_set_hidden(layout->outgoing_weather_icon_layer, false);
 
     if (layout->current_weather_icon) {
       gbitmap_destroy(layout->current_weather_icon);
-      layout->current_weather_icon = NULL;
+      layout->current_weather_icon = nullptr;
     }
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
-    bitmap_layer_set_bitmap(layout->current_weather_icon_layer, NULL);
+    bitmap_layer_set_bitmap(layout->current_weather_icon_layer, nullptr);
 #else
     prv_reload_icon(&layout->current_weather_icon, layout->current_weather_icon_layer, new_today,
                     false);
@@ -2499,14 +2499,14 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
 #else
     if (layout->tomorrow_weather_icon) {
       gbitmap_destroy(layout->tomorrow_weather_icon);
-      layout->tomorrow_weather_icon = NULL;
+      layout->tomorrow_weather_icon = nullptr;
     }
     if (new_next) {
       layout->tomorrow_weather_icon = gbitmap_create_with_resource(
           weather_type_get_icon_res_tiny(new_next->current_weather_type));
       bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, layout->tomorrow_weather_icon);
     } else {
-      bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, NULL);
+      bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, nullptr);
     }
 #endif
   }

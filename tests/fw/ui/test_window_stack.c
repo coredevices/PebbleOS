@@ -127,7 +127,7 @@ bool compositor_is_animating(void) {
 }
 
 void *compositor_modal_transition_to_modal_get(bool dest) {
-  return NULL;
+  return nullptr;
 }
 
 void compositor_modal_render_ready(void) {
@@ -305,7 +305,7 @@ static void prv_pop_window_unload(Window *window) {
 ////////////////////////////////////
 
 void test_window_stack__initialize(void) {
-  s_last_click_configured_window = NULL;
+  s_last_click_configured_window = nullptr;
 
   WindowStack *stack = app_state_get_window_stack();
   *stack = (WindowStack){};
@@ -928,7 +928,7 @@ void test_window_stack__modal_and_app(void) {
   cl_assert_equal_p(s_last_click_configured_window, window2);
 
   // Switch to modal happens via the compositor
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   // Call the upkeep function so the change in state is handled
   modal_manager_event_loop_upkeep();
 
@@ -951,7 +951,7 @@ void test_window_stack__modal_and_app(void) {
   cl_assert_equal_i(window2->on_screen, false);
 
   // Switch to app happens via the compositor
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   // Call the upkeep function so the change in state is handled
   modal_manager_event_loop_upkeep();
 
@@ -1012,7 +1012,7 @@ void test_window_stack__transparent_modal_and_app(void) {
   cl_assert_equal_p(s_last_click_configured_window, window2);
 
   // Switch to modal happens via the compositor
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   // Call the upkeep function so the change in state is handled
   modal_manager_event_loop_upkeep();
 
@@ -1035,7 +1035,7 @@ void test_window_stack__transparent_modal_and_app(void) {
   cl_assert_equal_i(window2->on_screen, false);
 
   // Switch to app happens via the compositor
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   // Call the upkeep function so the change in state is handled
   modal_manager_event_loop_upkeep();
 
@@ -1096,7 +1096,7 @@ void test_window_stack__unfocusable_modal_and_app(void) {
   cl_assert_equal_p(s_last_click_configured_window, window1);
 
   // Switch to modal happens via the compositor
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   // Call the upkeep function so the change in state is handled
   modal_manager_event_loop_upkeep();
 
@@ -1117,7 +1117,7 @@ void test_window_stack__unfocusable_modal_and_app(void) {
   cl_assert_equal_i(window2->on_screen, false);
 
   // Switch to app happens via the compositor
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   // Call the upkeep function so the change in state is handled
   modal_manager_event_loop_upkeep();
 

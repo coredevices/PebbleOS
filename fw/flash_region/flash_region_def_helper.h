@@ -3,7 +3,7 @@
 
 enum {
 #define FLASH_REGION_LIST(name, size, arg) FlashRegion_##name,
-  FLASH_REGION_DEF(FLASH_REGION_LIST, NULL) FlashRegion__COUNT
+  FLASH_REGION_DEF(FLASH_REGION_LIST, nullptr) FlashRegion__COUNT
 };
 
 #define FLASH_REGION_ADDR_HELPER(name, size, tgt) +(FlashRegion_##name < (tgt) ? (size) : 0)

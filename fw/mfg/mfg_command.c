@@ -91,14 +91,14 @@ static int prv_cmd_model(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_mfg);
-PBL_SHELL_CMD_REGISTER(mfg, sub_mfg, "Manufacturing", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_mfg, standby, NULL, "Enter standby", prv_cmd_standby, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_mfg, consumer, NULL, "Factory reset into the consumer PRF",
+PBL_SHELL_CMD_REGISTER(mfg, sub_mfg, "Manufacturing", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_mfg, standby, nullptr, "Enter standby", prv_cmd_standby, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_mfg, consumer, nullptr, "Factory reset into the consumer PRF",
                      prv_cmd_consumer, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_mfg, color, NULL, "Read or write the watch color [color]", prv_cmd_color,
-                     1, MFG_WRITE_OPT);
-PBL_SHELL_SUBCMD_ADD(sub_mfg, rtcfreq, NULL, "Read or write the RTC frequency [freq]",
+PBL_SHELL_SUBCMD_ADD(sub_mfg, color, nullptr, "Read or write the watch color [color]",
+                     prv_cmd_color, 1, MFG_WRITE_OPT);
+PBL_SHELL_SUBCMD_ADD(sub_mfg, rtcfreq, nullptr, "Read or write the RTC frequency [freq]",
                      prv_cmd_rtcfreq, 1, MFG_WRITE_OPT);
-PBL_SHELL_SUBCMD_ADD(sub_mfg, model, NULL, "Read or write the model [model]", prv_cmd_model, 1,
+PBL_SHELL_SUBCMD_ADD(sub_mfg, model, nullptr, "Read or write the model [model]", prv_cmd_model, 1,
                      MFG_WRITE_OPT);
 #endif

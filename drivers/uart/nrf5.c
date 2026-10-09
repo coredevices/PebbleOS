@@ -53,7 +53,7 @@ void uart_init(UARTDevice *dev) {
     .mode = NRF_TIMER_MODE_COUNTER,
     .bit_width = NRF_TIMER_BIT_WIDTH_32,
     .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
-    .p_context = NULL,
+    .p_context = nullptr,
   };
   err = nrfx_timer_init(&dev->counter, &tconfig, _timer_event_handler);
   PBL_ASSERTN(err == NRFX_SUCCESS);
@@ -254,7 +254,7 @@ void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
   dev->state->rx_int_enabled = enabled;
 
   // A running receiver keeps the high-frequency clock on: stop it while nobody listens.
-  if (dev->state->rx_dma_buffer != NULL && enabled != dev->state->rx_dma_running) {
+  if (dev->state->rx_dma_buffer != nullptr && enabled != dev->state->rx_dma_running) {
     if (enabled) {
       prv_rx_dma_start(dev);
     } else {
@@ -371,7 +371,7 @@ void uart_stop_rx_dma(UARTDevice *dev) {
   if (dev->state->rx_dma_running) {
     prv_rx_dma_stop(dev);
   }
-  dev->state->rx_dma_buffer = NULL;
+  dev->state->rx_dma_buffer = nullptr;
 }
 
 void uart_clear_rx_dma_buffer(UARTDevice *dev) {

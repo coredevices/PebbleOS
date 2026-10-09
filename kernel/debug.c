@@ -8,7 +8,7 @@
 #define STACK_FILL 0xa5a5a5a5u
 
 void pbl_thread_foreach(pbl_thread_info_fn fn, void *ctx) {
-  for (struct pbl_thread *t = pbl_all_threads; t != NULL; t = t->backend.all_next) {
+  for (struct pbl_thread *t = pbl_all_threads; t != nullptr; t = t->backend.all_next) {
     struct pbl_thread_info info = {
       .thread = t,
       .name = t->name,
@@ -46,7 +46,7 @@ size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
   if (total_run_time) {
     *total_run_time = pbl_uptime_ticks();
   }
-  for (struct pbl_thread *t = pbl_all_threads; t != NULL && n < max; t = t->backend.all_next) {
+  for (struct pbl_thread *t = pbl_all_threads; t != nullptr && n < max; t = t->backend.all_next) {
     struct pbl_thread_stack_info stack;
     pbl_thread_stack_info(t, &stack);
     out[n++] = (struct pbl_thread_stats){
@@ -64,7 +64,7 @@ size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
 
 size_t pbl_thread_count(void) {
   size_t n = 0;
-  for (struct pbl_thread *t = pbl_all_threads; t != NULL; t = t->backend.all_next) {
+  for (struct pbl_thread *t = pbl_all_threads; t != nullptr; t = t->backend.all_next) {
     n++;
   }
   return n;

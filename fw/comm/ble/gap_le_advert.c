@@ -167,11 +167,11 @@ static void prv_link_job(GAPLEAdvertisingJob *job) {
 static void prv_unlink_job(GAPLEAdvertisingJob *job) {
   if (job->node.next == &job->node) {
     // Last job left...
-    job->node.next = NULL;
-    job->node.prev = NULL;
-    s_jobs = NULL;
+    job->node.next = nullptr;
+    job->node.prev = nullptr;
+    s_jobs = nullptr;
   } else {
-    list_remove(&job->node, (ListNode **)&s_jobs, NULL);
+    list_remove(&job->node, (ListNode **)&s_jobs, nullptr);
   }
 }
 
@@ -235,7 +235,7 @@ static void prv_increment_elapsed_time_for_job(GAPLEAdvertisingJob **job_ptr, bo
       PBL_LOG_DBG("Unscheduled advertising completed job: %s", prv_string_for_debug_tag(job->tag));
       kernel_free(job->terms);
       kernel_free(job);
-      *job_ptr = NULL;
+      *job_ptr = nullptr;
     }
   }
 }
@@ -278,7 +278,7 @@ unlock:
 //! Runs once per second on the NewTimers task; never block on bt_lock there
 //! (it stalls every other timer in the system) — bounce to KernelMain.
 static void prv_cycle_timer_callback(void *unused) {
-  launcher_task_add_callback(prv_cycle_kernelmain_cb, NULL);
+  launcher_task_add_callback(prv_cycle_kernelmain_cb, nullptr);
 }
 
 // -----------------------------------------------------------------------------
@@ -379,12 +379,12 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *paylo
   // Sanity check payload:
   if (!payload || payload->ad_data_length > PBL_BT_AD_REPORT_DATA_MAX_LENGTH ||
       payload->scan_resp_data_length > PBL_BT_AD_REPORT_DATA_MAX_LENGTH) {
-    return NULL;
+    return nullptr;
   }
 
   // Each job must have at least 1 term
-  if (num_terms == 0 || terms == NULL) {
-    return NULL;
+  if (num_terms == 0 || terms == nullptr) {
+    return nullptr;
   }
 
   for (int i = 0; i < num_terms; i++) {
@@ -393,7 +393,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *paylo
     if (is_loop_around) {
       if (i == 0) {
         PBL_LOG_ERR("Loop-around term cannot be the first term");
-        return NULL;
+        return nullptr;
       }
       continue;
     }
@@ -433,7 +433,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *paylo
     } else {
       kernel_free(job->terms);
       kernel_free(job);
-      job = NULL;
+      job = nullptr;
     }
   }
   bt_unlock();
@@ -471,7 +471,7 @@ void gap_le_advert_unschedule(GAPLEAdvertisingJobRef job) {
       // In case the payload pointer of a future jobs ends up being the same, ensure the adv data
       // will get updated in that case:
       if (s_current_ad_data == &job->payload) {
-        s_current_ad_data = NULL;
+        s_current_ad_data = nullptr;
       }
     }
   }
@@ -543,9 +543,9 @@ void gap_le_advert_init(void) {
     }
 
     s_deinit_in_progress = false;
-    s_jobs = NULL;
-    s_current = NULL;
-    s_current_ad_data = NULL;
+    s_jobs = nullptr;
+    s_current = nullptr;
+    s_current_ad_data = nullptr;
     s_cycle_regular_timer = (const RegularTimerInfo){
       .cb = prv_cycle_timer_callback,
     };
@@ -629,7 +629,7 @@ void pbl_bt_handle_host_resynced(void) {
     // The controller's advertising state was wiped by the host re-sync, so any
     // cached pointer to ad data we already pushed is stale and any prior
     // adv-enable failed mid-flight.
-    s_current_ad_data = NULL;
+    s_current_ad_data = nullptr;
     s_is_advertising = false;
 
     if (s_current && !s_is_connected) {

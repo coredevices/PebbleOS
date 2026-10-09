@@ -124,7 +124,7 @@ static void prv_menu_layer_select([[maybe_unused]] MenuLayer *menu_layer, MenuIn
     return;
   }
   // Disable all clicking on the window so the user can't scroll anymore
-  window_set_click_config_provider(window, NULL);
+  window_set_click_config_provider(window, nullptr);
 
   // Capture what app we should launch - we'll actually launch it as part of an app task callback
   // we register in our .draw_row callback so that we don't launch the app until after we finish
@@ -341,7 +341,7 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
 Layer *launcher_menu_layer_get_layer(LauncherMenuLayer *launcher_menu_layer) {
   if (!launcher_menu_layer) {
-    return NULL;
+    return nullptr;
   }
 
   return &launcher_menu_layer->container_layer;

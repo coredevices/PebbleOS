@@ -9,8 +9,8 @@
 
 static Contact *prv_deserialize_contact(SerializedContact *serialized_contact,
                                         const size_t serialized_contact_data_len) {
-  if (serialized_contact_data_len == 0 || serialized_contact == NULL) {
-    return NULL;
+  if (serialized_contact_data_len == 0 || serialized_contact == nullptr) {
+    return nullptr;
   }
 
   size_t string_alloc_size;
@@ -20,7 +20,7 @@ static Contact *prv_deserialize_contact(SerializedContact *serialized_contact,
       serialized_contact->data, serialized_contact_data_len, &string_alloc_size,
       attributes_per_address);
   if (!r) {
-    return NULL;
+    return nullptr;
   }
 
   const size_t alloc_size = attributes_address_get_buffer_size(
@@ -39,7 +39,7 @@ static Contact *prv_deserialize_contact(SerializedContact *serialized_contact,
   if (!attributes_address_deserialize(&contact->attr_list, &contact->addr_list, buffer, buf_end,
                                       serialized_contact->data, serialized_contact_data_len)) {
     kernel_free(contact);
-    return NULL;
+    return nullptr;
   }
 
   contact->id = serialized_contact->uuid;
@@ -48,7 +48,7 @@ static Contact *prv_deserialize_contact(SerializedContact *serialized_contact,
 }
 
 Contact *contacts_get_contact_by_uuid(const Uuid *uuid) {
-  SerializedContact *serialized_contact = NULL;
+  SerializedContact *serialized_contact = nullptr;
   const int serialized_contact_data_len =
       contacts_db_get_serialized_contact(uuid, &serialized_contact);
 

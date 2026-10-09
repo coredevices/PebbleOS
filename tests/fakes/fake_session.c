@@ -86,7 +86,7 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   if (session->temp_write_buffer) {
     kernel_free(session->temp_write_buffer);
   }
-  list_remove(&session->node, (ListNode **)&s_session_head, NULL);
+  list_remove(&session->node, (ListNode **)&s_session_head, nullptr);
   kernel_free(session);
   ++s_session_close_call_count;
 }
@@ -193,18 +193,18 @@ size_t comm_session_send_buffer_get_max_payload_length(const CommSession *sessio
 SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
                                                  size_t required_free_length, uint32_t timeout_ms) {
   if (!session) {
-    return NULL;
+    return nullptr;
   }
   if (!comm_session_is_valid(session)) {
-    return NULL;
+    return nullptr;
   }
   if (required_free_length + sizeof(PebbleProtocolHeader) >
       circular_buffer_get_write_space_remaining(&session->send_buffer)) {
-    return NULL;
+    return nullptr;
   }
   if (session->temp_write_buffer) {
     // Already writing, fake doesn't support multiple tasks trying to write at the same time
-    return NULL;
+    return nullptr;
   }
   session->temp_write_buffer = (uint8_t *)kernel_malloc(session->max_out_payload_length);
   session->bytes_written = 0;
@@ -237,7 +237,7 @@ void comm_session_send_buffer_end_write(SendBuffer *sb) {
   circular_buffer_write(&session->send_buffer, session->temp_write_buffer, session->bytes_written);
 
   kernel_free(session->temp_write_buffer);
-  session->temp_write_buffer = NULL;
+  session->temp_write_buffer = nullptr;
   session->endpoint_id = ~0;
   session->bytes_written = 0;
 }
@@ -249,7 +249,7 @@ static pbl_bt_responsiveness_granted_cb_t s_last_responsiveness_granted_handler;
 void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
                                      enum pbl_bt_response_time_state state,
                                      uint16_t max_period_secs) {
-  comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, NULL);
+  comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, nullptr);
 }
 
 void comm_session_set_responsiveness_ext(CommSession *session, enum pbl_bt_consumer consumer,
@@ -365,7 +365,7 @@ static const TransportImplementation s_fake_transport_implementation = {
 
 Transport *fake_transport_create(TransportDestination destination, const Uuid *app_uuid,
                                  FakeTransportSentCallback sent_cb) {
-  if (app_uuid == NULL) {
+  if (app_uuid == nullptr) {
     cl_assert_(TransportDestinationSystem == destination ||
                    TransportDestinationHybrid == TransportDestinationSystem,
                "When passing NULL app_uuid, the destination can only be System or Hybrid");
@@ -390,15 +390,15 @@ Transport *fake_transport_create(TransportDestination destination, const Uuid *a
 CommSession *fake_transport_set_connected(Transport *transport, bool connected) {
   FakeTransport *fake_transport = (FakeTransport *)transport;
   if (connected) {
-    cl_assert_equal_p(fake_transport->session, NULL);
+    cl_assert_equal_p(fake_transport->session, nullptr);
     fake_transport->session =
         comm_session_open(transport, &s_fake_transport_implementation, fake_transport->destination);
     return fake_transport->session;
   } else {
     cl_assert(fake_transport->session);
     comm_session_close(fake_transport->session, 0);
-    fake_transport->session = NULL;
-    return NULL;
+    fake_transport->session = nullptr;
+    return nullptr;
   }
 }
 
@@ -430,7 +430,7 @@ void fake_transport_assert_nothing_sent(Transport *transport) {
   cl_assert(transport);
   FakeTransport *fake_transport = (FakeTransport *)transport;
   DataNode *data_node = fake_transport->sent_data;
-  cl_assert_equal_p(data_node, NULL);
+  cl_assert_equal_p(data_node, nullptr);
 }
 
 void fake_transport_destroy(Transport *transport) {
@@ -443,7 +443,7 @@ void fake_transport_destroy(Transport *transport) {
     // Causes clean up of CommSession:
     fake_transport_set_connected((Transport *)fake_transport, false /* connected */);
   }
-  list_remove((ListNode *)fake_transport, (ListNode **)&s_fake_transport_head, NULL);
+  list_remove((ListNode *)fake_transport, (ListNode **)&s_fake_transport_head, nullptr);
   DataNode *data_node = fake_transport->sent_data;
   while (data_node) {
     DataNode *next_data_node = (DataNode *)data_node->node.next;
@@ -467,13 +467,13 @@ bool fake_comm_session_send_buffer_write_raw_by_transport(Transport *transport, 
 // Fake life cycle
 
 void fake_comm_session_init(void) {
-  cl_assert_(s_fake_transport_head == NULL,
+  cl_assert_(s_fake_transport_head == nullptr,
              "Didn't clean up the fake transports? \
              Call fake_comm_session_cleanup() if you don't want to clean them up manually.");
 
   s_session_close_call_count = 0;
   s_session_open_call_count = 0;
-  s_last_responsiveness_granted_handler = NULL;
+  s_last_responsiveness_granted_handler = nullptr;
 }
 
 void fake_comm_session_cleanup(void) {

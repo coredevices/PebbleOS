@@ -339,8 +339,8 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
                             uint16_t row, bool selected) {
   SettingsNotificationsData *data = ((SettingsOptionMenuData *)context)->context;
-  const char *subtitle = NULL;
-  const char *title = NULL;
+  const char *subtitle = nullptr;
+  const char *title = nullptr;
 
   switch (row) {
     case NotificationsItemFilter:
@@ -396,7 +396,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       WTF;
   }
 
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
 }
 
 static void prv_deinit_cb(SettingsCallbacks *context) {

@@ -156,7 +156,7 @@ static pbl_tick_t prv_report(const struct expired *expired, size_t num_expired, 
     PBL_LOG_SYNC_WRN("<%s> not fed for %" PRIu32 " ms: PC %p LR %p", pbl_thread_name(e->thread),
                      e->since_feed_ms, (void *)regs.pc, (void *)regs.lr);
 
-    void *work = e->callback ? e->callback(e->id, e->user_data) : NULL;
+    void *work = e->callback ? e->callback(e->id, e->user_data) : nullptr;
     if (work) {
       PBL_LOG_SYNC_WRN("<%s> running %p", pbl_thread_name(e->thread), work);
     }

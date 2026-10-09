@@ -47,7 +47,7 @@ static void prv_session_deinit(bool call_stop_handler) {
   }
 
   s_session.id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-  s_session.stop_transfer = NULL;
+  s_session.stop_transfer = nullptr;
   bt_unlock();
 
   if (s_dropped_frames > 0) {
@@ -72,13 +72,13 @@ static void prv_start_active_mode(void *data) {
   CommSession *comm_session = comm_session_get_system_session();
   comm_session_set_responsiveness_ext(
       comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT, PBL_BT_RESPONSE_TIME_MIN,
-      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS, NULL /* granted_handler */);
+      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS, nullptr /* granted_handler */);
 }
 
 //! Never block on bt_lock from the timer task (comm_session_set_responsiveness_ext
 //! takes it); defer to KernelBG.
 static void prv_active_mode_timer_cb(void *data) {
-  system_task_add_callback(prv_start_active_mode, NULL);
+  system_task_add_callback(prv_start_active_mode, nullptr);
 }
 
 AudioEndpointSessionId audio_endpoint_setup_transfer(
@@ -96,11 +96,11 @@ AudioEndpointSessionId audio_endpoint_setup_transfer(
 
   // restart active mode before it expires, this way it will never be off during the transfer
   new_timer_start(s_session.active_mode_trigger, ACTIVE_MODE_TIMEOUT - ACTIVE_MODE_START_BUFFER,
-                  prv_active_mode_timer_cb, NULL, TIMER_START_FLAG_REPEATING);
+                  prv_active_mode_timer_cb, nullptr, TIMER_START_FLAG_REPEATING);
 
   bt_unlock();
 
-  prv_start_active_mode(NULL);
+  prv_start_active_mode(nullptr);
 
   return s_session.id;
 }

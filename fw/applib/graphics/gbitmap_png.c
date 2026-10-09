@@ -100,7 +100,7 @@ GBitmap *gbitmap_create_from_png_data(const uint8_t *png_data, size_t png_data_s
 }
 
 bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t data_size) {
-  GColor8 *palette = NULL;
+  GColor8 *palette = nullptr;
   bool retval = false;
 
   upng_t *upng = upng_create();
@@ -142,7 +142,7 @@ bool gbitmap_init_with_png_data(GBitmap *bitmap, const uint8_t *data, size_t dat
       upng_buffer[i] = palette[upng_buffer[i]].argb; // De-palettize the image data
     }
     applib_free(palette); // Free the palette to avoid storing it as part of GBitmap
-    palette = NULL;
+    palette = nullptr;
   }
 
   // Set the image or pixel data
@@ -219,17 +219,17 @@ static uint16_t prv_gbitmap_png_create_palette_for_color(upng_t *upng, GColor8 *
     return 0;
   }
 
-  rgb *rgb_palette = NULL;
+  rgb *rgb_palette = nullptr;
   uint16_t palette_entries = upng_get_palette(upng, &rgb_palette);
 
-  uint8_t *alpha_palette = NULL;
+  uint8_t *alpha_palette = nullptr;
   uint16_t alpha_palette_entries = upng_get_alpha_palette(upng, &alpha_palette);
 
   // To make palette entries consistent with PBI, pad to the bitdepth number of colors
   uint32_t padded_palette_size = (1 << upng_get_bpp(upng));
 
   GColor8 *palette = (GColor8 *)applib_malloc(padded_palette_size * sizeof(GColor8));
-  if (palette == NULL) {
+  if (palette == nullptr) {
     return 0;
   }
   memset(palette, 0, padded_palette_size * sizeof(GColor8));
@@ -273,7 +273,7 @@ bool gbitmap_png_is_format_supported(upng_t *upng) {
 int32_t gbitmap_png_get_transparent_gray_value(upng_t *upng) {
   int32_t transparent_gray = -1; // default to invalid value
   // Handle grayscale transparency value (1 single transparent gray)
-  uint8_t *alpha_palette = NULL;
+  uint8_t *alpha_palette = nullptr;
   uint16_t alpha_palette_entries = upng_get_alpha_palette(upng, &alpha_palette);
   if (alpha_palette_entries == 2) {
     transparent_gray = pbl_be16_to_cpu(*(uint16_t *)alpha_palette);

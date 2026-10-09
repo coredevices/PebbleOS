@@ -18,7 +18,7 @@
 PBL_LOG_MODULE_DEFINE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
 
 // Callback for settings changes (used by settings_sync)
-static SettingsFileChangeCallback s_change_callback = NULL;
+static SettingsFileChangeCallback s_change_callback = nullptr;
 
 static status_t bootup_check(SettingsFile *file);
 static void compute_stats(SettingsFile *file);
@@ -113,7 +113,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   if (alloc_used_space >= max_used_space && actual_size < max_space_total) {
     PBL_LOG_DBG("Re-writing settings file %s to increase its size from %d to %d.", name,
                 actual_size, max_space_total);
-    status = settings_file_rewrite_filtered(file, NULL, NULL);
+    status = settings_file_rewrite_filtered(file, nullptr, nullptr);
     if (status < 0) {
       PBL_LOG_ERR("Could not resize file %s (error %" PRId32 "). Creating new one", name, status);
       return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
@@ -141,7 +141,7 @@ status_t settings_file_open_growable(SettingsFile *file, const char *name, int m
 void settings_file_close(SettingsFile *file) {
   settings_raw_iter_deinit(&file->iter);
   kernel_free(file->name);
-  file->name = NULL;
+  file->name = nullptr;
 }
 
 static int record_size(SettingsRecordHeader *hdr) {
@@ -320,7 +320,7 @@ status_t settings_file_compact(SettingsFile *file) {
       file->alloc_used_space = target;
     }
   }
-  status_t status = settings_file_rewrite_filtered(file, NULL, NULL);
+  status_t status = settings_file_rewrite_filtered(file, nullptr, nullptr);
   if (status < 0) {
     // rewrite_filtered fails before the swap if it fails at all; the on-disk
     // file is still at old_alloc, so put the in-memory book-keeping back.
@@ -484,7 +484,7 @@ static status_t prv_grow(SettingsFile *file, int needed_used_space) {
 
   int old_alloc = file->alloc_used_space;
   file->alloc_used_space = new_alloc;
-  status_t status = settings_file_rewrite_filtered(file, NULL, NULL);
+  status_t status = settings_file_rewrite_filtered(file, nullptr, nullptr);
   if (status < 0) {
     file->alloc_used_space = old_alloc;
   }
@@ -625,11 +625,11 @@ static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *
 }
 
 status_t settings_file_mark_all_dirty(SettingsFile *file) {
-  return settings_file_rewrite(file, prv_mark_all_dirty_rewrite_cb, NULL);
+  return settings_file_rewrite(file, prv_mark_all_dirty_rewrite_cb, nullptr);
 }
 
 status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
-  return settings_file_set(file, key, key_len, NULL, 0);
+  return settings_file_set(file, key, key_len, nullptr, 0);
 }
 
 static void prv_get_key(SettingsFile *file, void *key, size_t key_len) {

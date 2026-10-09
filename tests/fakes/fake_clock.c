@@ -60,7 +60,7 @@ size_t clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp) {
 
 size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minutes,
                          bool add_space) {
-  if (size == 0 || buffer == NULL) {
+  if (size == 0 || buffer == nullptr) {
     return 0;
   }
 

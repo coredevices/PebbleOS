@@ -40,7 +40,7 @@ const char* time_t_to_string(char* buffer, time_t t);
 ////////////////////////////////////
 //! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
 const char *rtc_get_time_string(char *buffer) {
-  return NULL;
+  return nullptr;
 }
 
 void rtc_get_time_tm(struct tm *time_tm) {
@@ -76,7 +76,7 @@ bool rtc_sanitize_struct_tm(struct tm *t) {
 }
 
 bool rtc_sanitize_time_t(time_t *t) {
-  return rtc_sanitize_struct_tm(NULL);
+  return rtc_sanitize_struct_tm(nullptr);
 }
 
 uint16_t rtc_get_timezone_id(void) {

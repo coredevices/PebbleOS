@@ -31,17 +31,17 @@
 // produces no real animation). The animation_* primitives come from tests/fakes/fake_animation.c.
 
 GContext *graphics_context_get_current_context(void) {
-  return NULL;
+  return nullptr;
 }
 
 GSize layout_get_size(GContext *ctx, LayoutLayer *layout) {
   return GSizeZero;
 }
 const LayoutColors *layout_get_colors(const LayoutLayer *layout) {
-  return NULL;
+  return nullptr;
 }
 void *layout_get_context(LayoutLayer *layout) {
-  return NULL;
+  return nullptr;
 }
 
 bool gbitmap_init_with_resource(GBitmap *bitmap, uint32_t resource_id) {
@@ -51,7 +51,7 @@ void gbitmap_deinit(GBitmap *bitmap) {
 }
 
 void *applib_malloc(size_t bytes) {
-  return NULL;
+  return nullptr;
 }
 void applib_free(void *ptr) {
 }
@@ -68,7 +68,7 @@ static int s_scroll_animations;
 PropertyAnimation *property_animation_create_layer_frame(struct Layer *layer, GRect *from,
                                                          GRect *to) {
   s_scroll_animations++;
-  return NULL;
+  return nullptr;
 }
 bool property_animation_to(PropertyAnimation *property_animation, void *to, size_t size, bool set) {
   return false;
@@ -154,7 +154,7 @@ struct Layer *window_get_root_layer(const Window *window) {
   return &s_root_layer;
 }
 RecognizerList *window_get_recognizer_list(Window *window) {
-  return NULL;
+  return nullptr;
 }
 RecognizerManager *window_get_recognizer_manager(Window *window) {
   return &s_manager;
@@ -215,7 +215,7 @@ static void prv_advance_ms(uint32_t ms) {
 void test_swap_layer_touch__initialize(void) {
   fake_rtc_init(0, 0);
   s_nav_enabled = true;
-  s_active_layer = NULL;
+  s_active_layer = nullptr;
   s_scroll_animations = 0;
   s_interaction_count = 0;
   s_emit_count = 0;
@@ -411,7 +411,7 @@ void test_swap_layer_touch__touch_disabled_not_registered(void) {
   FakeSwap fs;
   prv_build_swap(&fs, 168, 400, false);
   swap_layer_touch_register(&fs.swap);
-  cl_assert(s_touch_nav_state.swap_head == NULL);
+  cl_assert(s_touch_nav_state.swap_head == nullptr);
   cl_assert(!fs.swap.touch_registered);
 }
 
@@ -421,15 +421,15 @@ void test_swap_layer_touch__registered_and_deregistered(void) {
   prv_build_swap(&fs, 168, 400, false);
 
   swap_layer_touch_register(&fs.swap);
-  cl_assert(s_touch_nav_state.swap_head != NULL);
+  cl_assert(s_touch_nav_state.swap_head != nullptr);
   cl_assert(fs.swap.touch_registered);
 
   // Re-registering is idempotent: no duplicate node, no second recognizer set.
   swap_layer_touch_register(&fs.swap);
-  cl_assert(s_touch_nav_state.swap_head->next == NULL);
+  cl_assert(s_touch_nav_state.swap_head->next == nullptr);
 
   swap_layer_touch_deregister(&fs.swap);
-  cl_assert(s_touch_nav_state.swap_head == NULL);
+  cl_assert(s_touch_nav_state.swap_head == nullptr);
   cl_assert(!fs.swap.touch_registered);
 }
 
@@ -442,7 +442,7 @@ void test_swap_layer_touch__release_deregisters(void) {
   // Covered by a higher modal: release drops the registry membership (which, in the system-slot
   // bridge architecture, is what releases touch — there is no raw subscription to clear).
   swap_layer_touch_release(&fs.swap);
-  cl_assert(s_touch_nav_state.swap_head == NULL);
+  cl_assert(s_touch_nav_state.swap_head == nullptr);
   cl_assert(!fs.swap.touch_registered);
 }
 
@@ -517,7 +517,7 @@ void test_swap_layer_touch__pan_declined_when_no_current(void) {
   FakeSwap fs = {};
   layer_init(&fs.swap.layer, &GRect(0, 0, 144, 168));
   fs.swap.callbacks.interaction_handler = prv_count_interaction;
-  cl_assert(fs.swap.current == NULL); // no notification loaded yet (registration before layout)
+  cl_assert(fs.swap.current == nullptr); // no notification loaded yet (registration before layout)
   layer_add_child(&s_root_layer, &fs.swap.layer);
   s_active_layer = &fs.swap.layer;
   swap_layer_touch_register(&fs.swap);
@@ -607,7 +607,7 @@ void test_swap_layer_touch__tap_and_swipe_inert_when_no_current(void) {
   FakeSwap fs = {};
   layer_init(&fs.swap.layer, &GRect(0, 0, 144, 168));
   fs.swap.callbacks.interaction_handler = prv_count_interaction;
-  cl_assert(fs.swap.current == NULL); // no notification loaded yet
+  cl_assert(fs.swap.current == nullptr); // no notification loaded yet
   layer_add_child(&s_root_layer, &fs.swap.layer);
   s_active_layer = &fs.swap.layer;
   swap_layer_touch_register(&fs.swap);
@@ -651,5 +651,5 @@ void test_swap_layer_touch__deregister_mid_gesture_clears_target(void) {
   // gone from the registry.
   swap_layer_touch_deregister(&fs.swap);
   cl_assert(!swap_layer_touch_is_gesture_target(&fs.swap));
-  cl_assert(s_touch_nav_state.swap_head == NULL);
+  cl_assert(s_touch_nav_state.swap_head == nullptr);
 }

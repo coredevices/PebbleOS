@@ -104,7 +104,7 @@ static void prv_cinstr_write_read(QSPIFlash *dev, uint8_t instr, const void *dat
   nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
   // Accessing registers with offset > 0x600 below, requires workaround for Anomaly 215
   prv_workaround_215_apply();
-  if (data != NULL) {
+  if (data != nullptr) {
     nrf_qspi_cinstrdata_set(NRF_QSPI, conf.length, data);
   }
   nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
@@ -113,21 +113,21 @@ static void prv_cinstr_write_read(QSPIFlash *dev, uint8_t instr, const void *dat
   }
   nrf_qspi_event_clear(NRF_QSPI, NRF_QSPI_EVENT_READY);
 
-  if (buf != NULL) {
+  if (buf != nullptr) {
     nrf_qspi_cinstrdata_get(NRF_QSPI, conf.length, buf);
   }
 }
 
 static inline void prv_cinstr(QSPIFlash *dev, uint8_t instr) {
-  prv_cinstr_write_read(dev, instr, NULL, NULL, 0U);
+  prv_cinstr_write_read(dev, instr, nullptr, nullptr, 0U);
 }
 
 static inline void prv_cinstr_read(QSPIFlash *dev, uint8_t instr, void *buf, size_t len) {
-  prv_cinstr_write_read(dev, instr, NULL, buf, len);
+  prv_cinstr_write_read(dev, instr, nullptr, buf, len);
 }
 
 static inline void prv_cinstr_write(QSPIFlash *dev, uint8_t instr, const void *data, size_t len) {
-  prv_cinstr_write_read(dev, instr, data, NULL, len);
+  prv_cinstr_write_read(dev, instr, data, nullptr, len);
 }
 
 static void prv_read(QSPIFlash *dev, void *buf, size_t len, uint32_t addr) {

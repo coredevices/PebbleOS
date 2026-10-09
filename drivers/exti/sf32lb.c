@@ -27,7 +27,7 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
   HAL_ASSERT(gpio_pin < GPIO1_PIN_NUM);
 
   if (gpio_pin >= GPIO1_PIN_NUM) {
-    return (GPIO_TypeDef *)NULL;
+    return (GPIO_TypeDef *)nullptr;
   }
 
   // There are many groups of similar registers in the GPIO, and because of register length
@@ -43,7 +43,8 @@ static GPIO_TypeDef *prv_gpio_get_instance(GPIO_TypeDef *hgpio, uint16_t gpio_pi
 static void prv_insert_handler(GPIO_TypeDef *hgpio, uint8_t gpio_pin, ExtiHandlerCallback cb) {
   // Find the handler index for this pin
   uint8_t index = 0;
-  while (index < EXTI_MAX_GPIO1_PIN_NUM && s_exti_gpio1_handler_configs[index].callback != NULL) {
+  while (index < EXTI_MAX_GPIO1_PIN_NUM &&
+         s_exti_gpio1_handler_configs[index].callback != nullptr) {
     index++;
   }
   if (index >= EXTI_MAX_GPIO1_PIN_NUM) {
@@ -111,7 +112,7 @@ void exti_disable(ExtiConfig cfg) {
 
 void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *hgpio, uint16_t GPIO_Pin) {
   for (uint8_t index = 0; index < EXTI_MAX_GPIO1_PIN_NUM; index++) {
-    if (s_exti_gpio1_handler_configs[index].callback != NULL &&
+    if (s_exti_gpio1_handler_configs[index].callback != nullptr &&
         s_exti_gpio1_handler_configs[index].gpio_pin == GPIO_Pin) {
       s_exti_gpio1_handler_configs[index].callback();
       return;

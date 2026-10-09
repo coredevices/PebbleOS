@@ -333,7 +333,7 @@ static void prv_check_app_glance_subtitle_in_attribute_list_deserializes(
                     true);
   // Check that the app glance subtitle string we deserialized matches the string we expect
   cl_assert_equal_s(attribute_get_string(&deserialization_result_attribute_list,
-                                         AttributeIdSubtitleTemplateString, NULL),
+                                         AttributeIdSubtitleTemplateString, nullptr),
                     expected_app_glance_subtitle_after_deserializing);
 }
 
@@ -391,7 +391,7 @@ void test_attribute__app_glance_subtitle_in_attribute_list(void) {
       app_glance_subtitle_attribute_list_serialized,
       app_glance_subtitle_attribute_list_serialized_size, num_attributes,
       attribute_get_string(&app_glance_subtitle_attribute_list, AttributeIdSubtitleTemplateString,
-                           NULL));
+                           nullptr));
 }
 
 void test_attribute__too_long_app_glance_subtitle_in_attribute_list(void) {
@@ -624,7 +624,7 @@ void test_attribute__image_aspect_ratio_deserializes(void) {
                                  attribute_data_buffer + buffer_size, &cursor, end, &result),
       true);
   cl_assert_equal_i(attribute_get_uint8(&result, AttributeIdImageAspectRatio, 0), 12);
-  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, NULL), "Next");
+  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, nullptr), "Next");
 }
 
 void test_attribute__unknown_attribute_id_does_not_overflow(void) {
@@ -685,8 +685,8 @@ void test_attribute__unknown_attribute_id_is_skipped(void) {
                                     attribute_buffer, data_buffer, buffer_size, &result),
                     true);
   cl_assert_equal_i(result.num_attributes, 2);
-  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, NULL), "Title");
-  cl_assert_equal_s(attribute_get_string(&result, AttributeIdSubtitle, NULL), "Sub");
+  cl_assert_equal_s(attribute_get_string(&result, AttributeIdTitle, nullptr), "Title");
+  cl_assert_equal_s(attribute_get_string(&result, AttributeIdSubtitle, nullptr), "Sub");
 }
 
 void test_attribute__truncated_unknown_attribute_is_rejected(void) {
@@ -775,12 +775,12 @@ void test_attribute__unknown_attribute_keeps_actions(void) {
                     true);
 
   cl_assert_equal_i(attr_list.num_attributes, 1);
-  cl_assert_equal_s(attribute_get_string(&attr_list, AttributeIdTitle, NULL), "Pin");
+  cl_assert_equal_s(attribute_get_string(&attr_list, AttributeIdTitle, nullptr), "Pin");
   cl_assert_equal_i(action_group.num_actions, 1);
   cl_assert_equal_i(action_group.actions[0].id, 0x07);
   cl_assert_equal_i(action_group.actions[0].attr_list.num_attributes, 1);
   cl_assert_equal_s(
-      attribute_get_string(&action_group.actions[0].attr_list, AttributeIdTitle, NULL), "Go");
+      attribute_get_string(&action_group.actions[0].attr_list, AttributeIdTitle, nullptr), "Go");
   kernel_free(buffer);
 }
 

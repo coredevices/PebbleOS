@@ -53,7 +53,7 @@ static void prv_schedule_evaluation(void) {
   // https://pebbletechnology.atlassian.net/browse/PBL-22884
   // Because this pretty much only happens in response to user input, don't bother limiting this,
   // and always evaluate, even though the state might not have changed:
-  system_task_add_callback(evaluate_pairing_refcount, NULL);
+  system_task_add_callback(evaluate_pairing_refcount, nullptr);
 }
 
 void bt_pairability_use(void) {

@@ -33,12 +33,12 @@ static int prv_cmd_rx_disable(const struct pbl_shell *sh, size_t argc, char **ar
 
   pbl_shell_print(sh, "console RX disabled for %lu seconds", seconds);
 
-  new_timer_start(s_rx_disable_timer, seconds * 1000, prv_rx_disable_timer_cb, NULL, 0);
+  new_timer_start(s_rx_disable_timer, seconds * 1000, prv_rx_disable_timer_cb, nullptr, 0);
 
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_sys, rx_disable, NULL, "Disable the console RX <seconds>",
+PBL_SHELL_SUBCMD_ADD(sub_sys, rx_disable, nullptr, "Disable the console RX <seconds>",
                      prv_cmd_rx_disable, 2, 0);
 
 #endif

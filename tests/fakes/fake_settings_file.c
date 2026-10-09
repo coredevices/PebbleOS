@@ -22,9 +22,9 @@ struct {
 void fake_settings_file_reset(void) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
     free(s_settings_file.values[i]);
-    s_settings_file.values[i] = NULL;
+    s_settings_file.values[i] = nullptr;
     free(s_settings_file.keys[i]);
-    s_settings_file.keys[i] = NULL;
+    s_settings_file.keys[i] = nullptr;
     s_settings_file.val_lens[i] = 0;
     s_settings_file.key_lens[i] = 0;
     s_settings_file.dirty[i] = false;
@@ -52,7 +52,7 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
   memcpy(val_copy, val, val_len);
   memcpy(key_copy, key, key_len);
   const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
-  if (s_settings_file.values[key_crc8] != NULL) {
+  if (s_settings_file.values[key_crc8] != nullptr) {
     cl_assert(memcmp(key, s_settings_file.keys[key_crc8], key_len) == 0);
   }
 
@@ -80,8 +80,8 @@ status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_le
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     free(s_settings_file.values[key_crc8]);
     free(s_settings_file.keys[key_crc8]);
-    s_settings_file.values[key_crc8] = NULL;
-    s_settings_file.keys[key_crc8] = NULL;
+    s_settings_file.values[key_crc8] = nullptr;
+    s_settings_file.keys[key_crc8] = nullptr;
     s_settings_file.val_lens[key_crc8] = 0;
     s_settings_file.key_lens[key_crc8] = 0;
     s_settings_file.dirty[key_crc8] = false;
@@ -118,7 +118,7 @@ void settings_file_close(SettingsFile *file) {
 
 bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len) {
   const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
-  return (s_settings_file.values[key_crc8] != NULL &&
+  return (s_settings_file.values[key_crc8] != nullptr &&
           memcmp(s_settings_file.keys[key_crc8], key, key_len) == 0);
 }
 
@@ -155,7 +155,7 @@ static void prv_get_val(SettingsFile *file, void *val, size_t val_len) {
 
 status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
-    if (s_settings_file.keys[i] != NULL && s_settings_file.values[i] != NULL) {
+    if (s_settings_file.keys[i] != nullptr && s_settings_file.values[i] != nullptr) {
       s_cur_itr = i;
 
       SettingsRecordInfo info = {
@@ -183,7 +183,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
                                         SettingsFileRewriteFilterCallback filter_cb,
                                         void *context) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
-    if (s_settings_file.keys[i] == NULL || s_settings_file.values[i] == NULL) {
+    if (s_settings_file.keys[i] == nullptr || s_settings_file.values[i] == nullptr) {
       continue;
     }
     if (!filter_cb || filter_cb(s_settings_file.keys[i], s_settings_file.key_lens[i],
@@ -191,9 +191,9 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
       continue;
     }
     free(s_settings_file.values[i]);
-    s_settings_file.values[i] = NULL;
+    s_settings_file.values[i] = nullptr;
     free(s_settings_file.keys[i]);
-    s_settings_file.keys[i] = NULL;
+    s_settings_file.keys[i] = nullptr;
     s_settings_file.val_lens[i] = 0;
     s_settings_file.key_lens[i] = 0;
     s_settings_file.dirty[i] = false;

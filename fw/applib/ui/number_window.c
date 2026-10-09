@@ -33,7 +33,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
     is_increased = true;
   }
   if (is_increased) {
-    if (nf->callbacks.incremented != NULL) {
+    if (nf->callbacks.incremented != nullptr) {
       nf->callbacks.incremented(nf, nf->callback_context);
     }
     update_output_value(nf);
@@ -48,7 +48,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) 
     is_decreased = true;
   }
   if (is_decreased) {
-    if (nf->callbacks.decremented != NULL) {
+    if (nf->callbacks.decremented != nullptr) {
       nf->callbacks.decremented(nf, nf->callback_context);
     }
     update_output_value(nf);
@@ -56,7 +56,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) 
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
-  if (nf->callbacks.selected != NULL) {
+  if (nf->callbacks.selected != nullptr) {
     nf->callbacks.selected(nf, nf->callback_context);
   }
 }
@@ -117,7 +117,7 @@ void prv_update_proc(Layer *layer, GContext *ctx) {
   frame.size.h = 48;
 
   graphics_draw_text(ctx, value_output_buffer, fonts_get_system_font(NUMBER_FONT_KEY), frame,
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 }
 
 void number_window_set_label(NumberWindow *nw, const char *label) {
@@ -214,7 +214,7 @@ static void number_window_deinit(NumberWindow *number_window) {
 }
 
 void number_window_destroy(NumberWindow *number_window) {
-  if (number_window == NULL) {
+  if (number_window == nullptr) {
     return;
   }
   number_window_deinit(number_window);

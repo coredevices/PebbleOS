@@ -296,12 +296,12 @@ void pbl_analytics__native_heartbeat(void) {
   prv_record_metrics(&record, true);
   pbl_mutex_unlock(&s_mutex);
 
-  if (s_dls_session == NULL) {
+  if (s_dls_session == nullptr) {
     Uuid system_uuid = UUID_SYSTEM;
 
     s_dls_session = dls_create(DlsSystemTagAnalyticsNativeHeartbeat, DATA_LOGGING_BYTE_ARRAY,
                                sizeof(struct native_heartbeat_record), false, false, &system_uuid);
-    if (s_dls_session == NULL) {
+    if (s_dls_session == nullptr) {
       PBL_LOG_WRN("Native analytics DLS session unavailable");
       return;
     }
@@ -423,6 +423,6 @@ static int prv_cmd_metrics(const struct pbl_shell *sh, size_t argc, char **argv)
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_analytics, metrics, NULL, "Dump the current metrics", prv_cmd_metrics, 0,
-                     0);
+PBL_SHELL_SUBCMD_ADD(sub_analytics, metrics, nullptr, "Dump the current metrics", prv_cmd_metrics,
+                     0, 0);
 #endif

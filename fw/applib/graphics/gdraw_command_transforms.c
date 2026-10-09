@@ -138,7 +138,7 @@ GPointIndexLookup *gdraw_command_list_create_index_lookup(GDrawCommandList *list
   const bool is_precise = false;
   GPoint *const points = gdraw_command_list_collect_points(list, is_precise, &num_points);
   if (!points) {
-    return NULL;
+    return nullptr;
   }
 
   gpoint_sort(points, num_points, comparator, context, reverse);

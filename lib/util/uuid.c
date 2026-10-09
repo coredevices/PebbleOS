@@ -28,7 +28,7 @@ void uuid_generate(Uuid *uuid_out) {
 }
 
 bool uuid_equal(const Uuid *uu1, const Uuid *uu2) {
-  if (uu1 == NULL || uu2 == NULL) {
+  if (uu1 == nullptr || uu2 == nullptr) {
     return false;
   }
   return memcmp(uu1, uu2, sizeof(Uuid)) == 0;

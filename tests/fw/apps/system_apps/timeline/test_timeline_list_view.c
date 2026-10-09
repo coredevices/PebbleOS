@@ -54,7 +54,7 @@ typedef struct ListViewConfig {
 
 static void prv_add_timeline_item(const TimelineItemConfig *config, bool past, uint8_t pin_index) {
   PBL_ASSERTN(config);
-  TimelineItem *item = NULL;
+  TimelineItem *item = nullptr;
   const time_t now = rtc_get_time();
   const time_t timestamp = now + ((past ? -1 : 1) * config->relative_timestamp);
   if (config) {
@@ -66,7 +66,7 @@ static void prv_add_timeline_item(const TimelineItemConfig *config, bool past, u
     }
     attribute_list_add_uint32(&list, AttributeIdIconPin, config->icon);
     item = timeline_item_create_with_attributes(timestamp, config->duration, TimelineItemTypePin,
-                                                LayoutIdGeneric, &list, NULL);
+                                                LayoutIdGeneric, &list, nullptr);
     attribute_list_destroy_list(&list);
     PBL_ASSERTN(item);
     item->header.all_day = config->all_day;

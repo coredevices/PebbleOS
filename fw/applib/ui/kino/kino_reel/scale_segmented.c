@@ -141,7 +141,7 @@ KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_owners
                                            GRect screen_frame) {
   ScaleSegmentedData *data = applib_malloc(sizeof(ScaleSegmentedData));
   if (!data) {
-    return NULL;
+    return nullptr;
   }
 
   *data = (ScaleSegmentedData){

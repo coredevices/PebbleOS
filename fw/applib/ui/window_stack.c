@@ -36,7 +36,7 @@ static WindowStackItem *prv_find_window_stack_item_for_window(WindowStack *windo
                                                               Window *window) {
   if (!window_stack) {
     // Window can't be on a NULL window stack.
-    return NULL;
+    return nullptr;
   }
 
   WindowStackItem *item = (WindowStackItem *)list_find(window_stack->list_head,
@@ -81,11 +81,11 @@ static void prv_unload_removed_windows(WindowStack *window_stack) {
     // NULL windows since our animation subsystem can't cope with these
     // unschedules in some cases (See PBL-25460 for more details)
     if (context->window_to == items_to_unload[i]->window) {
-      context->window_to = NULL;
+      context->window_to = nullptr;
     }
 
     if (context->window_from == items_to_unload[i]->window) {
-      context->window_from = NULL;
+      context->window_from = nullptr;
     }
 
     // Reset the recognizer manager before the window is destroyed so it drops any dangling pointer
@@ -195,17 +195,17 @@ static void prv_insert_with_function(WindowStack *window_stack_to, Window *windo
   if (window_stack_from) {
     ListNode *node =
         list_find(window_stack_from->removed_list_head, prv_filter_window_item_for_window, window);
-    if (node != NULL) {
-      list_remove(node, &window_stack_from->removed_list_head, NULL);
+    if (node != nullptr) {
+      list_remove(node, &window_stack_from->removed_list_head, nullptr);
     }
   }
 
-  WindowStackItem *item = NULL;
+  WindowStackItem *item = nullptr;
   if (window_stack_contains_window(window_stack_from, window)) {
     // If the item is on the list of window items, then we remove it as we're going to
     // re-insert it.
     item = prv_find_window_stack_item_for_window(window_stack_from, window);
-    list_remove(&item->list_node, &window_stack_from->list_head, NULL);
+    list_remove(&item->list_node, &window_stack_from->list_head, nullptr);
   } else {
     // If the item is not yet on the window stack's list, then we allocate space for it
     // on the heap.
@@ -219,7 +219,7 @@ static void prv_insert_with_function(WindowStack *window_stack_to, Window *windo
 
   inserter(item);
 
-  if (window_from == NULL || !window_manager_is_window_visible(window_from)) {
+  if (window_from == nullptr || !window_manager_is_window_visible(window_from)) {
     prv_transition_to(window_from, window, transition_insert);
   }
 
@@ -233,7 +233,7 @@ static Window *prv_remove_item(WindowStackItem *pop_item,
   WindowStack *window_stack = pop_item->window->parent_window_stack;
   // Do a transition from element that needs to be removed only if it was on the
   // top of the visible window stack.
-  Window *window_from = NULL;
+  Window *window_from = nullptr;
 
   // If this window is currently transitioning and it is a modal window
   if ((window_stack->transition_context.window_to == pop_item->window) &&
@@ -250,14 +250,14 @@ static Window *prv_remove_item(WindowStackItem *pop_item,
     // We don't intentionally clean up the .pop_transition of a previous element if
     // a client actively messes with the window stack; they need to take care of this
     // in any potential custom transition.  The default transitions cannot handle this.
-    window_from = NULL;
+    window_from = nullptr;
   }
 
   // Remove the item from the window stack
-  list_remove(&pop_item->list_node, &window_stack->list_head, NULL);
+  list_remove(&pop_item->list_node, &window_stack->list_head, nullptr);
 
   WindowStackItem *stack_item = (WindowStackItem *)window_stack->list_head;
-  Window *window_to = stack_item ? stack_item->window : NULL;
+  Window *window_to = stack_item ? stack_item->window : nullptr;
 
   // Add the removed item to the 'removed' list
   window_stack->removed_list_head =
@@ -291,8 +291,9 @@ static Window *prv_remove_item(WindowStackItem *pop_item,
 ////////////////////////////////////
 
 Window *window_stack_get_top_window(WindowStack *window_stack) {
-  WindowStackItem *item = (WindowStackItem *)NULL_SAFE_FIELD_ACCESS(window_stack, list_head, NULL);
-  return NULL_SAFE_FIELD_ACCESS(item, window, NULL);
+  WindowStackItem *item =
+      (WindowStackItem *)NULL_SAFE_FIELD_ACCESS(window_stack, list_head, nullptr);
+  return NULL_SAFE_FIELD_ACCESS(item, window, nullptr);
 }
 
 void window_stack_push(WindowStack *window_stack, Window *window, bool animated) {
@@ -332,19 +333,19 @@ void window_stack_insert_next(WindowStack *window_stack, Window *window) {
 Window *window_stack_pop(WindowStack *window_stack, bool animated) {
   // Transition NULL will default to the registered pop_transition to the stack item
   const WindowTransitionImplementation *transition =
-      animated ? NULL : &g_window_transition_none_implementation;
+      animated ? nullptr : &g_window_transition_none_implementation;
   return window_stack_pop_with_transition(window_stack, transition);
 }
 
 Window *window_stack_pop_with_transition(WindowStack *window_stack,
                                          const WindowTransitionImplementation *transition) {
-  if (window_stack->list_head == NULL) {
+  if (window_stack->list_head == nullptr) {
     PBL_LOG_DBG("Nothing to pop.");
-    return NULL;
+    return nullptr;
   }
 
   WindowStackItem *pop_item = (WindowStackItem *)window_stack->list_head;
-  Window *window = NULL;
+  Window *window = nullptr;
   if (pop_item) {
     window = prv_remove_item(pop_item, transition);
   }
@@ -352,7 +353,7 @@ Window *window_stack_pop_with_transition(WindowStack *window_stack,
 }
 
 void window_stack_pop_all(WindowStack *window_stack, const bool animated) {
-  if (window_stack->list_head == NULL) {
+  if (window_stack->list_head == nullptr) {
     return;
   }
 
@@ -364,10 +365,10 @@ void window_stack_pop_all(WindowStack *window_stack, const bool animated) {
     // an unload handler pushes a window onto the stack, but that window is subsequently
     // popped from the stack on another iteration of the while loop.
     next_item = prv_next_item(top_item);
-    if (next_item == NULL) {
+    if (next_item == nullptr) {
       break;
     }
-    list_remove(&next_item->list_node, &window_stack->list_head, NULL);
+    list_remove(&next_item->list_node, &window_stack->list_head, nullptr);
 
     window_stack->removed_list_head =
         list_insert_before(window_stack->removed_list_head, &next_item->list_node);
@@ -379,13 +380,13 @@ void window_stack_pop_all(WindowStack *window_stack, const bool animated) {
 }
 
 bool window_stack_remove(Window *window, bool animated) {
-  if (window == NULL) {
+  if (window == nullptr) {
     return false;
   }
 
   WindowStackItem *item =
       prv_find_window_stack_item_for_window(window->parent_window_stack, window);
-  if (item == NULL) {
+  if (item == nullptr) {
     return false;
   }
 
@@ -394,26 +395,26 @@ bool window_stack_remove(Window *window, bool animated) {
                : &g_window_transition_none_implementation;
 
   window = prv_remove_item(item, transition);
-  return window != NULL;
+  return window != nullptr;
 }
 
 bool window_stack_remove_with_transition(Window *window,
                                          const WindowTransitionImplementation *transition) {
-  if (window == NULL) {
+  if (window == nullptr) {
     return false;
   }
 
   WindowStack *stack = window->parent_window_stack;
   WindowStackItem *item = prv_find_window_stack_item_for_window(stack, window);
-  if (item == NULL) {
+  if (item == nullptr) {
     return false;
   }
   window = prv_remove_item(item, transition);
-  return window != NULL;
+  return window != nullptr;
 }
 
 bool window_stack_contains_window(WindowStack *window_stack, Window *window) {
-  return (prv_find_window_stack_item_for_window(window_stack, window) != NULL);
+  return (prv_find_window_stack_item_for_window(window_stack, window) != nullptr);
 }
 
 uint32_t window_stack_count(WindowStack *window_stack) {
@@ -455,12 +456,12 @@ void window_transition_context_disappear(WindowTransitioningContext *context) {
   Window *window_from = context->window_from;
   if (!window_from || window_manager_is_window_visible(window_from)) {
     PBL_LOG_DBG("No windows to unload from stack.");
-    context->window_from = NULL;
+    context->window_from = nullptr;
     return;
   }
 
   // Remove window reference from context to prevent future calls to it (e.g. "is dirty?")
-  context->window_from = NULL;
+  context->window_from = nullptr;
 
   if (!window_manager_is_window_visible(window_from)) {
     window_set_on_screen(window_from, false /* not new */, true /* call handlers */);
@@ -505,7 +506,7 @@ void window_transition_context_appear(WindowTransitioningContext *context) {
 /////////////////////////////
 
 size_t window_stack_dump(WindowStack *stack, WindowStackDump **dump) {
-  *dump = NULL;
+  *dump = nullptr;
   size_t count = window_stack_count(stack);
   size_t idx = 0;
   if (count > 0) {

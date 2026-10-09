@@ -68,7 +68,7 @@ static void prv_schedule_call_watchdog(int poll_interval_ms) {
   // iOS 9 since we can rely on ANCS to tell us when the phone stops ringing
   if (s_call_source == PhoneCallSource_ANCS_Legacy) {
     // Schedule/reschedule the watchdog
-    if (!new_timer_start(s_call_watchdog, poll_interval_ms, prv_timer_callback, NULL,
+    if (!new_timer_start(s_call_watchdog, poll_interval_ms, prv_timer_callback, nullptr,
                          TIMER_START_FLAG_REPEATING)) {
       PBL_LOG_ERR("Could not start the phone call watchdog timer");
       prv_handle_call_end(true /* Treat this as a disconnection */);
@@ -213,7 +213,7 @@ PBL_T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
     return;
   }
 
-  if (!(event.type == PhoneEventType_Incoming && new_timer_scheduled(s_call_watchdog, NULL))) {
+  if (!(event.type == PhoneEventType_Incoming && new_timer_scheduled(s_call_watchdog, nullptr))) {
     // Be careful not to spam the logs with the new iOS polling implementation
     PBL_LOG_DBG("PebblePhoneEvent: %d, Call in progress: %s, Connected: %s", event.type,
                 s_call_in_progress ? "T" : "F", s_mobile_app_is_connected ? "T" : "F");
@@ -296,7 +296,7 @@ void phone_call_service_init() {
   };
   event_service_client_subscribe(&ancs_disconnected_event_info);
 
-  s_mobile_app_is_connected = (comm_session_get_system_session() != NULL);
+  s_mobile_app_is_connected = (comm_session_get_system_session() != nullptr);
 
   s_call_watchdog = new_timer_create();
 }

@@ -17,7 +17,7 @@
 #include <syscall/syscall.h>
 
 PBL_T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {
-  if (previous == NULL || current == NULL) {
+  if (previous == nullptr || current == nullptr) {
     return;
   }
 
@@ -122,7 +122,7 @@ void health_data_update(HealthData *health_data) {
   if (!activity_get_sessions(&health_data->num_activity_sessions, health_data->activity_sessions)) {
     PBL_LOG_ERR("Fetching activity sessions failed");
   } else {
-    ActivitySession *previous_session = NULL;
+    ActivitySession *previous_session = nullptr;
     for (unsigned int i = 0; i < health_data->num_activity_sessions; i++) {
       ActivitySession *session = &health_data->activity_sessions[i];
       prv_merge_adjacent_sessions(session, previous_session);

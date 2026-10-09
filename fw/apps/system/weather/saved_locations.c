@@ -46,14 +46,14 @@ static void prv_glance_destroy_icons(void) {
   for (int i = 0; i < GLANCE_WEATHER_TYPES; i++) {
     if (s_glance_icons[i]) {
       gbitmap_destroy(s_glance_icons[i]);
-      s_glance_icons[i] = NULL;
+      s_glance_icons[i] = nullptr;
     }
   }
 }
 
 static GBitmap *prv_glance_icon(uint8_t type) {
   if (type >= GLANCE_WEATHER_TYPES)
-    return NULL;
+    return nullptr;
   if (!s_glance_icons[type]) {
     s_glance_icons[type] = gbitmap_create_with_resource(weather_type_icon_tiny_resource(type));
   }
@@ -158,9 +158,10 @@ static int16_t prv_get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index,
 static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
                                 const SavedLocationEntry *glance) {
   const char *title = glance->label[0] ? glance->label : i18n_get("Location", s_view);
-  const char *subtitle = glance->is_current_location ? i18n_get("Current Location", s_view) : NULL;
+  const char *subtitle =
+      glance->is_current_location ? i18n_get("Current Location", s_view) : nullptr;
   if (glance->temp == (int16_t)WX_DS_UNKNOWN_TEMP) {
-    menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
+    menu_cell_basic_draw(ctx, cell_layer, title, subtitle, nullptr);
     return;
   }
 
@@ -205,7 +206,7 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
   const int text_y = (bounds.size.h - 28) / 2 - 3;
   graphics_draw_text(ctx, temp_text, font,
                      GRect(bounds.origin.x + bounds.size.w - temp_w - 4, text_y, temp_w, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
 
   // Rows show the CITY only — the synced name is "New York, United States",
   // which truncates to an unreadable "New York, Un..." in a row this wide. The
@@ -231,7 +232,7 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
   if (title_w <= 0)
     return;
   graphics_draw_text(ctx, title, font, GRect(bounds.origin.x + title_x, text_y, title_w, 30),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
 }
 
 static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
@@ -240,7 +241,7 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell
   const int row = cell_index->row;
   if (s_entry_count <= 0) {
     menu_cell_basic_draw(ctx, cell_layer, i18n_get("No Locations", s_view),
-                         i18n_get("Add them in the app", s_view), NULL);
+                         i18n_get("Add them in the app", s_view), nullptr);
     return;
   }
   if (row < 0 || row >= s_entry_count)
@@ -447,14 +448,14 @@ static void prv_window_unload(Window *window) {
 
   if (view->menu_layer) {
     menu_layer_destroy(view->menu_layer);
-    view->menu_layer = NULL;
+    view->menu_layer = nullptr;
   }
   prv_glance_destroy_icons();
 #ifdef CONFIG_TOUCH
   touch_service_unsubscribe();
 #endif
   window_destroy(view->window);
-  s_view = NULL;
+  s_view = nullptr;
   i18n_free_all(view);
   free(view);
 }
@@ -502,13 +503,13 @@ void saved_locations_push(const SavedLocationsConfig *config) {
   prv_refresh_entries();
 
   view->active_ds_index = config ? config->active_ds_index : -1;
-  view->select_callback = config ? config->select_callback : NULL;
-  view->select_context = config ? config->select_context : NULL;
+  view->select_callback = config ? config->select_callback : nullptr;
+  view->select_context = config ? config->select_context : nullptr;
 
   view->window = window_create();
   if (!view->window) {
     free(view);
-    s_view = NULL;
+    s_view = nullptr;
     return;
   }
   window_set_user_data(view->window, view);
@@ -535,7 +536,7 @@ void saved_locations_push(const SavedLocationsConfig *config) {
   if (!view->menu_layer) {
     window_destroy(view->window);
     free(view);
-    s_view = NULL;
+    s_view = nullptr;
     return;
   }
 

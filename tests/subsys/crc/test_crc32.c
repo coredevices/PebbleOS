@@ -24,7 +24,7 @@
 static uint32_t crc;
 
 void test_crc32__initialize(void) {
-  crc = pbl_crc32(0, NULL, 0);
+  crc = pbl_crc32(0, nullptr, 0);
 }
 
 void test_crc32__null(void) {
@@ -56,7 +56,7 @@ void test_crc32__residue(void) {
   message[11] = (crc >> 8) & 0xff;
   message[12] = (crc >> 16) & 0xff;
   message[13] = (crc >> 24) & 0xff;
-  assert_equal_hex(pbl_crc32(pbl_crc32(0, NULL, 0), message, 14), PBL_CRC32_RESIDUE);
+  assert_equal_hex(pbl_crc32(pbl_crc32(0, nullptr, 0), message, 14), PBL_CRC32_RESIDUE);
 }
 
 void test_crc32__null_residue(void) {

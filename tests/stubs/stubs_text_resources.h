@@ -37,7 +37,7 @@ const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codep
   if (location_out) {
     *location_out = (GlyphLocation){};
   }
-  return NULL;
+  return nullptr;
 }
 
 bool text_resources_glyph_is_color(const GlyphLocation *location) {

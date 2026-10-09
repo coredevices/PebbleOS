@@ -71,7 +71,7 @@ static void prv_show_dialog(void *context) {
   kernel_free(data->app_ids);
   kernel_free(data);
 
-  ExpandableDialog *ex_dialog = expandable_dialog_create(NULL);
+  ExpandableDialog *ex_dialog = expandable_dialog_create(nullptr);
   Dialog *dialog = expandable_dialog_get_dialog(ex_dialog);
   dialog_set_text_buffer(dialog, missed_message, true);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_TINY);

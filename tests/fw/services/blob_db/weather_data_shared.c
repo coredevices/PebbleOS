@@ -173,7 +173,7 @@ void weather_shared_data_cleanup(void) {
   for (int i = 0; i < WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES; i++) {
     if (s_entries[i]) {
       task_free(s_entries[i]);
-      s_entries[i] = NULL;
+      s_entries[i] = nullptr;
     }
   }
 

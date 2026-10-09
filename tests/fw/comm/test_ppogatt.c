@@ -48,16 +48,16 @@ uint16_t gap_le_connection_get_gatt_mtu(const struct pbl_bt_device_internal *dev
 }
 
 GAPLEConnection *gap_le_connection_get_gateway(void) {
-  return NULL;
+  return nullptr;
 }
 
 GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *device) {
-  return NULL;
+  return nullptr;
 }
 
 GAPLEConnection *gatt_client_characteristic_get_connection(
     pbl_bt_characteristic_t characteristic_ref) {
-  return NULL;
+  return nullptr;
 }
 
 // The bt_lock-held write path (see prv_send_next_packets) is only taken when
@@ -507,13 +507,13 @@ void test_ppogatt__cleanup_client_when_meta_read_gets_error_response(void) {
 
   // A failing meta read is now retriable (commit 8651be8fb): the first failure
   // schedules a retry rather than deleting the client.
-  ppogatt_handle_read_or_notification(meta, NULL, 0, PBL_BT_GATT_ERROR_INVALID_HANDLE);
+  ppogatt_handle_read_or_notification(meta, nullptr, 0, PBL_BT_GATT_ERROR_INVALID_HANDLE);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   // Exhaust the remaining retries; the client is deleted only after
   // PPOGATT_META_READ_RETRY_COUNT_MAX failures.
   for (int i = 1; i < PPOGATT_META_READ_RETRY_COUNT_MAX; i++) {
-    prv_fail_meta_read_retry(meta, NULL, 0, PBL_BT_GATT_ERROR_INVALID_HANDLE);
+    prv_fail_meta_read_retry(meta, nullptr, 0, PBL_BT_GATT_ERROR_INVALID_HANDLE);
   }
   cl_assert_equal_i(ppogatt_client_count(), 0);
 }
@@ -758,7 +758,7 @@ void test_ppogatt__ignore_data_during_reset(void) {
 
 void test_ppogatt__ignore_zero_length_notification(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicData], NULL, 0,
+  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicData], nullptr, 0,
                                       PBL_BT_GATT_ERROR_SUCCESS);
   // No crash etc, client still alive:
   cl_assert_equal_i(ppogatt_client_count(), 1);
@@ -786,7 +786,7 @@ void test_ppogatt__close(void) {
 
   ppogatt_close(client);
 
-  cl_assert_equal_p(NULL, ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid));
+  cl_assert_equal_p(nullptr, ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid));
 }
 
 void test_ppogatt__missing_inbound_packet(void) {

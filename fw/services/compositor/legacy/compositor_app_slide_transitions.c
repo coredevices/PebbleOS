@@ -76,7 +76,7 @@ static void prv_transition_to_launcher_animation_init(Animation *animation) {
 
 const CompositorTransition *compositor_app_slide_transition_get(bool flip_to_the_right) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   if (flip_to_the_right) {

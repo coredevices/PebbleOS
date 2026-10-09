@@ -96,7 +96,8 @@ extern void blob_db_set_accepting_messages(bool enabled);
 void test_blob_db_endpoint__initialize(void) {
   blob_db_set_accepting_messages(true);
   fake_comm_session_init();
-  Transport *transport = fake_transport_create(TransportDestinationSystem, NULL, prv_sent_data_cb);
+  Transport *transport =
+      fake_transport_create(TransportDestinationSystem, nullptr, prv_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
   system_task_set_available_space(system_task_queue_size);
 }
@@ -931,7 +932,7 @@ static const uint8_t s_dirty_dbs_response[] = {
 
 void test_blob_db_endpoint__handle_dirty_dbs_request(void) {
   s_expected_data = s_dirty_dbs_response;
-  blob_db_protocol_msg_callback(NULL, s_dirty_dbs_request, sizeof(s_dirty_dbs_request));
+  blob_db_protocol_msg_callback(nullptr, s_dirty_dbs_request, sizeof(s_dirty_dbs_request));
 }
 
 static const uint8_t s_start_sync_request[] = {
@@ -949,5 +950,5 @@ static const uint8_t s_start_sync_response[] = {
 
 void test_blob_db_endpoint__handle_start_sync_request(void) {
   s_expected_data = s_start_sync_response;
-  blob_db_protocol_msg_callback(NULL, s_start_sync_request, sizeof(s_start_sync_request));
+  blob_db_protocol_msg_callback(nullptr, s_start_sync_request, sizeof(s_start_sync_request));
 }

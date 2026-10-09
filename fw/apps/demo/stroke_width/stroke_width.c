@@ -266,7 +266,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   if (data->operation == OP_ROTATE2) {
     int line_length = 60;
     time_t now;
-    uint16_t now_ms = time_ms(&now, NULL);
+    uint16_t now_ms = time_ms(&now, nullptr);
 
     uint32_t seconds = pbl_override_localtime(&now)->tm_sec;
     uint32_t miliseconds = seconds * 1000 + now_ms;
@@ -299,7 +299,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   if (data->operation == OP_ROTATE3) {
     int line_length = 60;
     time_t now;
-    uint16_t now_ms = time_ms(&now, NULL);
+    uint16_t now_ms = time_ms(&now, nullptr);
 
     uint32_t seconds = pbl_override_localtime(&now)->tm_sec;
     uint32_t miliseconds = seconds * 1000 + now_ms;
@@ -377,7 +377,7 @@ void timer_callback(void *d) {
 
   layer_mark_dirty(data->canvas_layer);
 
-  timer = app_timer_register(30, timer_callback, NULL);
+  timer = app_timer_register(30, timer_callback, nullptr);
 }
 
 static void main_window_unload(Window *window) {
@@ -412,7 +412,7 @@ static void init(void) {
   const bool animated = true;
   app_window_stack_push(s_window, animated);
 
-  timer = app_timer_register(30, timer_callback, NULL);
+  timer = app_timer_register(30, timer_callback, nullptr);
 }
 
 static void deinit(void) {

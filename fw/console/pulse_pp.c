@@ -111,7 +111,7 @@ extern void comm_session_set_capabilities(CommSession *session,
                                           CommSessionCapability capability_flags);
 
 bool pulse_transport_is_connected(void) {
-  return (s_transport.session != NULL);
+  return (s_transport.session != nullptr);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ void pulse_transport_set_connected(bool is_connected) {
     comm_session_set_capabilities(s_transport.session, capabilities);
   } else {
     comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
-    s_transport.session = NULL;
+    s_transport.session = nullptr;
   }
 
   if (send_event) {
@@ -220,12 +220,12 @@ void pulse_pp_transport_handle_received_data(void *data, size_t length) {
       prv_pulse_pp_handle_data(&packet->data[0], length - sizeof(PulsePPPacket));
       break;
     case PULSE_PP_OPCODE_OPEN:
-      prv_pulse_pp_send(PULSE_PP_OPCODE_OPEN, NULL, 0);
+      prv_pulse_pp_send(PULSE_PP_OPCODE_OPEN, nullptr, 0);
       prv_pulse_pp_transport_set_connected(true);
       break;
     case PULSE_PP_OPCODE_CLOSE:
       prv_pulse_pp_transport_set_connected(false);
-      prv_pulse_pp_send(PULSE_PP_OPCODE_CLOSE, NULL, 0);
+      prv_pulse_pp_send(PULSE_PP_OPCODE_CLOSE, nullptr, 0);
       break;
     default:
       prv_pulse_pp_send(PULSE_PP_OPCODE_UNKNOWN, &packet->opcode, sizeof(packet->opcode));

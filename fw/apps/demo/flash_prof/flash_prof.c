@@ -45,7 +45,7 @@ static void handle_init(void) {
                      (NumberWindowCallbacks){
                        .selected = (NumberWindowCallback)do_timed_read,
                      },
-                     NULL);
+                     nullptr);
   number_window_set_min(&number_window, 1000);
   number_window_set_max(&number_window, 1000000);
   number_window_set_step_size(&number_window, 1000);

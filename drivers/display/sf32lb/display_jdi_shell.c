@@ -14,11 +14,11 @@ static int prv_cmd_drop_complete(const struct pbl_shell *sh, size_t argc, char *
 }
 
 static const struct pbl_shell_cmd sub_display[] = {
-  PBL_SHELL_CMD(drop_complete, NULL, "Drop the next LCDC transfer-complete callback",
+  PBL_SHELL_CMD(drop_complete, nullptr, "Drop the next LCDC transfer-complete callback",
                 prv_cmd_drop_complete),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(display, sub_display, "Display", NULL);
+PBL_SHELL_CMD_REGISTER(display, sub_display, "Display", nullptr);
 
 #endif

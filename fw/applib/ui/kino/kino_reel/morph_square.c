@@ -44,7 +44,7 @@ static const TransformImpl MORPH_SQUARE_TRANSFORM_IMPL = {
 KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership) {
   MorphSquareData *data = applib_malloc(sizeof(MorphSquareData));
   if (!data) {
-    return NULL;
+    return nullptr;
   }
 
   GRect frame = {GPointZero, kino_reel_get_size(from_reel)};

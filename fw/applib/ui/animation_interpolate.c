@@ -130,17 +130,17 @@ static int64_t prv_interpolate_moook(int32_t normalized, int64_t from, int64_t t
 
 int64_t interpolate_moook_in(int32_t normalized, int64_t from, int64_t to, int32_t num_frames_to) {
   return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
-                               ARRAY_LENGTH(s_delta_moook_in), NULL, num_frames_to, 0, true);
+                               ARRAY_LENGTH(s_delta_moook_in), nullptr, num_frames_to, 0, true);
 }
 
 int64_t interpolate_moook_in_only(int32_t normalized, int64_t from, int64_t to) {
   return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
-                               ARRAY_LENGTH(s_delta_moook_in), NULL, 0, 0, true);
+                               ARRAY_LENGTH(s_delta_moook_in), nullptr, 0, 0, true);
 }
 
 int64_t interpolate_moook_out(int32_t normalized, int64_t from, int64_t to, int32_t num_frames_from,
                               bool bounce_back) {
-  return prv_interpolate_moook(normalized, from, to, NULL, num_frames_from, s_delta_moook_out,
+  return prv_interpolate_moook(normalized, from, to, nullptr, num_frames_from, s_delta_moook_out,
                                ARRAY_LENGTH(s_delta_moook_out), 0, bounce_back);
 }
 

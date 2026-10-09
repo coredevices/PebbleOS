@@ -405,7 +405,7 @@ void expandable_dialog_set_select_action(ExpandableDialog *expandable_dialog, ui
                                          ClickHandler select_click_handler) {
   if (expandable_dialog->select_icon) {
     gbitmap_destroy(expandable_dialog->select_icon);
-    expandable_dialog->select_icon = NULL;
+    expandable_dialog->select_icon = nullptr;
   }
 
   if (resource_id != RESOURCE_ID_INVALID) {

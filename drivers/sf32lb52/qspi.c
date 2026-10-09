@@ -89,7 +89,7 @@ static int prv_write_nor(QSPIFlash *dev, uint32_t addr, uint8_t *buf, uint32_t s
   uint32_t taddr, start, remain, fill;
   uint8_t *tbuf;
   int res;
-  uint8_t *local_buf = NULL;
+  uint8_t *local_buf = nullptr;
 
   hflash = &dev->qspi->state->ctx.handle;
 
@@ -196,7 +196,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
 
   if (dev->qspi->state->initialized) {
     if (coredump_mode) {
-      dev->qspi->state->ctx.handle.dma = NULL;
+      dev->qspi->state->ctx.handle.dma = nullptr;
     } else {
       dev->qspi->state->ctx.handle.dma = &dev->qspi->state->hdma;
     }

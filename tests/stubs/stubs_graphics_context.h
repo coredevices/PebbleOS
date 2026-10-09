@@ -19,7 +19,7 @@ void graphics_context_init(GContext *ctx, FrameBuffer *framebuffer,
 }
 
 GContext *graphics_context_get_current_context(void) {
-  return NULL;
+  return nullptr;
 }
 
 void graphics_context_set_antialiased(GContext *ctx, bool enable) {
@@ -51,7 +51,7 @@ void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
 }
 
 GBitmap *graphics_context_get_bitmap(GContext *ctx) {
-  return NULL;
+  return nullptr;
 }
 
 void graphics_context_mark_dirty_rect(GContext *ctx, GRect rect) {

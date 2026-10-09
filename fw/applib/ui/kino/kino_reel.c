@@ -23,14 +23,14 @@ KinoReel *kino_reel_create_with_resource(uint32_t resource_id) {
 
 KinoReel *kino_reel_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   if (resource_id == RESOURCE_ID_INVALID) {
-    return NULL;
+    return nullptr;
   }
 
   // The first 4 bytes for media data files contains the type signature (except legacy PBI)
   uint32_t data_signature;
   if (sys_resource_load_range(app_num, resource_id, 0, (uint8_t *)&data_signature,
                               sizeof(data_signature)) != sizeof(data_signature)) {
-    return NULL;
+    return nullptr;
   }
 
   switch (pbl_be32_to_cpu(data_signature)) {
@@ -54,7 +54,7 @@ KinoReel *kino_reel_create_with_resource_system(ResAppNum app_num, uint32_t reso
       return kino_reel_gbitmap_create_with_resource_system(app_num, resource_id);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_destroy(KinoReel *reel) {
@@ -71,7 +71,7 @@ void kino_reel_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
 }
 
 void kino_reel_draw(KinoReel *reel, GContext *ctx, GPoint offset) {
-  kino_reel_draw_processed(reel, ctx, offset, NULL);
+  kino_reel_draw_processed(reel, ctx, offset, nullptr);
 }
 
 GSize kino_reel_get_size(KinoReel *reel) {
@@ -119,7 +119,7 @@ GDrawCommandImage *kino_reel_get_gdraw_command_image(KinoReel *reel) {
     return reel->impl->get_gdraw_command_image(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GDrawCommandList *kino_reel_get_gdraw_command_list(KinoReel *reel) {
@@ -127,7 +127,7 @@ GDrawCommandList *kino_reel_get_gdraw_command_list(KinoReel *reel) {
     return reel->impl->get_gdraw_command_list(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GDrawCommandSequence *kino_reel_get_gdraw_command_sequence(KinoReel *reel) {
@@ -135,7 +135,7 @@ GDrawCommandSequence *kino_reel_get_gdraw_command_sequence(KinoReel *reel) {
     return reel->impl->get_gdraw_command_sequence(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GBitmap *kino_reel_get_gbitmap(KinoReel *reel) {
@@ -143,7 +143,7 @@ GBitmap *kino_reel_get_gbitmap(KinoReel *reel) {
     return reel->impl->get_gbitmap(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 GBitmapSequence *kino_reel_get_gbitmap_sequence(KinoReel *reel) {
@@ -151,7 +151,7 @@ GBitmapSequence *kino_reel_get_gbitmap_sequence(KinoReel *reel) {
     return reel->impl->get_gbitmap_sequence(reel);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 KinoReelType kino_reel_get_type(KinoReel *reel) {

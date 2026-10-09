@@ -94,7 +94,7 @@ static LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_pos
 
   int8_t new_idx = data->idx + rel_position;
   if (0 > new_idx || new_idx >= NUM_NOTIFS) {
-    return NULL;
+    return nullptr;
   }
 
   return data->layout_layers[new_idx];
@@ -131,7 +131,7 @@ static void prv_show_incoming_call(void *data) {
 }
 
 static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  launcher_task_add_callback(prv_show_incoming_call, NULL);
+  launcher_task_add_callback(prv_show_incoming_call, nullptr);
 }
 
 static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -143,7 +143,7 @@ static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *c
 static void prv_click_config_provider(void *context) {
   SwapLayerDemoData *data = context;
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_single_click_handler);
-  window_long_click_subscribe(BUTTON_ID_SELECT, 0, prv_select_long_click_handler, NULL);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 0, prv_select_long_click_handler, nullptr);
   window_set_click_context(BUTTON_ID_SELECT, data);
 }
 
@@ -235,7 +235,7 @@ static void handle_init(void) {
     uint32_t timestamp = (rtc_get_time() + notif.time_offset);
 
     TimelineItem *notification = timeline_item_create_with_attributes(
-        timestamp, 0, notif.type, notif.layout_id, &attr_list, NULL);
+        timestamp, 0, notif.type, notif.layout_id, &attr_list, nullptr);
 
     const LayoutLayerConfig config = {
       .frame = &window->layer.frame,

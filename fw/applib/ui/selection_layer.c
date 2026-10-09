@@ -301,7 +301,7 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
 
         GRect rect = GRect(current_x_offset, y_offset, selection_layer->cell_widths[i], height);
         graphics_draw_text(ctx, text, selection_layer->font, rect, GTextOverflowModeFill,
-                           GTextAlignmentCenter, NULL);
+                           GTextAlignmentCenter, nullptr);
       }
     }
     // Update the x-offset so we are ready for the next cell
@@ -419,7 +419,8 @@ static Animation *prv_create_bump_settle_animation(SelectionLayer *selection_lay
 static void prv_run_value_change_animation(SelectionLayer *selection_layer) {
   Animation *bump_text = prv_create_bump_text_animation(selection_layer);
   Animation *bump_settle = prv_create_bump_settle_animation(selection_layer);
-  selection_layer->value_change_animation = animation_sequence_create(bump_text, bump_settle, NULL);
+  selection_layer->value_change_animation =
+      animation_sequence_create(bump_text, bump_settle, nullptr);
   animation_schedule(selection_layer->value_change_animation);
 }
 
@@ -507,7 +508,7 @@ static void prv_run_slide_animation(SelectionLayer *selection_layer) {
   Animation *over_animation = prv_create_slide_animation(selection_layer);
   Animation *settle_animation = prv_create_slide_settle_animation(selection_layer);
   selection_layer->next_cell_animation =
-      animation_sequence_create(over_animation, settle_animation, NULL);
+      animation_sequence_create(over_animation, settle_animation, nullptr);
 
   animation_schedule(selection_layer->next_cell_animation);
 }

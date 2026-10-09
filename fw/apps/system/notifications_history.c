@@ -41,7 +41,7 @@ static const char *prv_group_sender_for_item(const TimelineItem *item, char *buf
 
   if (timeline_item_is_ancs_notif(item) ||
       !uuid_equal(&item->header.parent_id, &s_android_notifications_source)) {
-    return NULL;
+    return nullptr;
   }
 
   const char *sender = attribute_get_string(&item->attr_list, AttributeIdSender, "");
@@ -64,7 +64,7 @@ static const char *prv_group_sender_for_item(const TimelineItem *item, char *buf
     }
   }
 
-  return IS_EMPTY_STRING(start) ? NULL : start;
+  return IS_EMPTY_STRING(start) ? nullptr : start;
 }
 
 static NotificationHistoryRow *prv_find_group(NotificationHistory *history, const char *sender) {
@@ -75,7 +75,7 @@ static NotificationHistoryRow *prv_find_group(NotificationHistory *history, cons
     }
     row = (NotificationHistoryRow *)list_get_next(&row->node);
   }
-  return NULL;
+  return nullptr;
 }
 
 static void prv_insert_row_sorted(NotificationHistory *history, NotificationHistoryRow *row) {
@@ -156,7 +156,7 @@ void notifications_history_deinit(NotificationHistory *history) {
     prv_free_row(row);
     row = next;
   }
-  history->rows = NULL;
+  history->rows = nullptr;
 }
 
 void notifications_history_add_header(NotificationHistory *history,
@@ -177,7 +177,7 @@ void notifications_history_add_item(NotificationHistory *history, const Timeline
     return;
   }
   char buffer[ATTRIBUTE_TITLE_MAX_LEN + 1];
-  const char *sender = NULL;
+  const char *sender = nullptr;
   if (history->group_by_sender && (item->header.timestamp >= history->grouping_cutoff)) {
     sender = prv_group_sender_for_item(item, buffer, sizeof(buffer));
   }
@@ -190,7 +190,7 @@ void notifications_history_add_item(NotificationHistory *history, const Timeline
   if (!row) {
     row = prv_create_group(sender);
   } else {
-    list_remove(&row->node, (ListNode **)&history->rows, NULL);
+    list_remove(&row->node, (ListNode **)&history->rows, nullptr);
   }
 
   NotificationHistoryMember *member = prv_create_member(history, &item->header);
@@ -205,7 +205,7 @@ bool notifications_history_remove(NotificationHistory *history, const Uuid *id) 
   while (row) {
     if (!row->is_group) {
       if (uuid_equal(&row->notification.id, id)) {
-        list_remove(&row->node, (ListNode **)&history->rows, NULL);
+        list_remove(&row->node, (ListNode **)&history->rows, nullptr);
         prv_free_row(row);
         return true;
       }
@@ -216,15 +216,15 @@ bool notifications_history_remove(NotificationHistory *history, const Uuid *id) 
       }
       if (member) {
         const bool removed_latest = (member == row->group.members);
-        list_remove(&member->node, (ListNode **)&row->group.members, NULL);
+        list_remove(&member->node, (ListNode **)&row->group.members, nullptr);
         app_free(member);
         row->group.count--;
 
         if (row->group.count == 0) {
-          list_remove(&row->node, (ListNode **)&history->rows, NULL);
+          list_remove(&row->node, (ListNode **)&history->rows, nullptr);
           prv_free_row(row);
         } else if (removed_latest) {
-          list_remove(&row->node, (ListNode **)&history->rows, NULL);
+          list_remove(&row->node, (ListNode **)&history->rows, nullptr);
           prv_insert_row_sorted(history, row);
         }
         return true;

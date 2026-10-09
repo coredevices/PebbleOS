@@ -274,7 +274,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
   mfg_test_result_report(MfgTestId_ProgramColor, true,
                          s_color_table[app_data->selected_color_index].color);
   text_layer_set_text(&app_data->status, "PROGRAMMED!");
-  app_timer_register(3000, prv_close_timer_callback, NULL);
+  app_timer_register(3000, prv_close_timer_callback, nullptr);
 }
 
 static void prv_config_provider(void *data) {

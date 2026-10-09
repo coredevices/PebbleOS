@@ -201,7 +201,7 @@ void test_pfs__open(void) {
   fd = pfs_open("toobig", OP_FLAG_READ, 0, 0);
   cl_assert(fd == E_DOES_NOT_EXIST);
 
-  fd = pfs_open(NULL, OP_FLAG_READ, 0, 0);
+  fd = pfs_open(nullptr, OP_FLAG_READ, 0, 0);
   cl_assert(fd == E_INVALID_ARGUMENT);
 
   fd = pfs_open("newfile2", OP_FLAG_WRITE, FILE_TYPE_STATIC, 8000);
@@ -255,13 +255,13 @@ void test_pfs__page_lookup_cache(void) {
 }
 
 void test_pfs__write(void) {
-  int rv = pfs_write(-1, NULL, 0);
+  int rv = pfs_write(-1, nullptr, 0);
   cl_assert(rv == E_INVALID_ARGUMENT);
 
-  rv = pfs_write(1000000, NULL, 0);
+  rv = pfs_write(1000000, nullptr, 0);
   cl_assert(rv == E_INVALID_ARGUMENT);
 
-  rv = pfs_write(0, NULL, 0);
+  rv = pfs_write(0, nullptr, 0);
   cl_assert(rv == E_INVALID_ARGUMENT);
 
   uint8_t buf[10];
@@ -269,7 +269,7 @@ void test_pfs__write(void) {
   for (int i = 0; i < sizeof(buf); i++) {
     buf[i] = i;
   }
-  rv = pfs_write(fd, NULL, sizeof(buf));
+  rv = pfs_write(fd, nullptr, sizeof(buf));
   cl_assert(rv == E_INVALID_ARGUMENT);
   rv = pfs_write(fd, buf, sizeof(buf) / 2);
   int off = sizeof(buf) / 2;
@@ -414,10 +414,10 @@ void test_pfs__seek_walks_forward_from_current_page(void) {
 void test_pfs__read(void) {
   const int rd_len = 10;
 
-  int rv = pfs_read(-1, NULL, rd_len);
+  int rv = pfs_read(-1, nullptr, rd_len);
   cl_assert(rv == E_INVALID_ARGUMENT);
 
-  rv = pfs_read(0, NULL, rd_len);
+  rv = pfs_read(0, nullptr, rd_len);
   cl_assert(rv == E_INVALID_ARGUMENT);
 
   int fd = pfs_open("newfile", OP_FLAG_WRITE, FILE_TYPE_STATIC, rd_len);
@@ -434,7 +434,7 @@ void test_pfs__read(void) {
   cl_assert(rv == E_RANGE);
   rv = pfs_seek(fd, 0, FSeekSet);
   cl_assert(rv == 0);
-  rv = pfs_read(fd, NULL, rd_len);
+  rv = pfs_read(fd, nullptr, rd_len);
   cl_assert(rv == E_INVALID_ARGUMENT);
   rv = pfs_read(fd, buf, rd_len + 1);
   cl_assert(rv == E_RANGE);
@@ -458,7 +458,7 @@ void test_pfs__close(void) {
 }
 
 void test_pfs__remove(void) {
-  cl_assert(pfs_remove(NULL) == E_INVALID_ARGUMENT);
+  cl_assert(pfs_remove(nullptr) == E_INVALID_ARGUMENT);
 
   char *fname = "abc";
   int fd = pfs_open(fname, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10 * 1024);
@@ -758,7 +758,7 @@ void test_pfs__watch_file_callbacks(void) {
   const char *file_name = "newfile";
 
   PFSCallbackHandle cb_handle =
-      pfs_watch_file(file_name, prv_file_changed_callback, FILE_CHANGED_EVENT_ALL, NULL);
+      pfs_watch_file(file_name, prv_file_changed_callback, FILE_CHANGED_EVENT_ALL, nullptr);
 
   // Callback should get invoked if we close with write access
   s_watch_file_callback_called_count = 0;
@@ -909,7 +909,7 @@ void test_pfs__file_list(void) {
 
   // Get a directory listing with no filtering
   PFSFileListEntry *dir_list;
-  dir_list = pfs_create_file_list(NULL);
+  dir_list = pfs_create_file_list(nullptr);
 
   // Should have 4 entries in it
   cl_assert_equal_i(list_count(&dir_list->list_node), 4);

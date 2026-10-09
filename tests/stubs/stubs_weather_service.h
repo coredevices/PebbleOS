@@ -7,7 +7,7 @@
 #include <pbl/services/weather/weather_service.h>
 
 WeatherLocationForecast *PBL_WEAK weather_service_create_default_forecast(void) {
-  return NULL;
+  return nullptr;
 }
 
 void PBL_WEAK weather_service_destroy_default_forecast(WeatherLocationForecast *forecast) {

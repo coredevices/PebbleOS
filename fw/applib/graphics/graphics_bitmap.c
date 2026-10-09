@@ -74,11 +74,11 @@ call_processor_post_function_and_return:
 }
 
 void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap, const GRect *rect_ref) {
-  graphics_draw_bitmap_in_rect_processed(ctx, src_bitmap, rect_ref, NULL);
+  graphics_draw_bitmap_in_rect_processed(ctx, src_bitmap, rect_ref, nullptr);
 }
 
 void graphics_draw_bitmap_in_rect_by_value(GContext *ctx, const GBitmap *src_bitmap, GRect rect) {
-  graphics_draw_bitmap_in_rect_processed(ctx, src_bitmap, &rect, NULL);
+  graphics_draw_bitmap_in_rect_processed(ctx, src_bitmap, &rect, nullptr);
 }
 
 typedef struct DivResult {
@@ -138,7 +138,7 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
   }
 
   GBitmap *dest_bitmap = graphics_capture_frame_buffer(ctx);
-  if (dest_bitmap == NULL) {
+  if (dest_bitmap == nullptr) {
     return;
   }
 

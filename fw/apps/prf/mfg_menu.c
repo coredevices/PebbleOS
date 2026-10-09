@@ -38,7 +38,7 @@ typedef struct {
 } MfgMenuAppData;
 
 static uint16_t s_menu_position = 0;
-static const PebbleProcessMd *s_last_test_menu = NULL;
+static const PebbleProcessMd *s_last_test_menu = nullptr;
 
 //! Callback to run from the kernel main task
 static void prv_launch_app_cb(void *data) {
@@ -170,7 +170,8 @@ static void prv_window_load(Window *window) {
 
   data->menu_section = (SimpleMenuSection){.num_items = num_items, .items = menu_items};
 
-  data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
+  data->menu_layer =
+      simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, nullptr);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 
   // Set the menu layer back to it's previous highlight position

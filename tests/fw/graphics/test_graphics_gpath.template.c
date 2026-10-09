@@ -24,7 +24,7 @@
 
 static const int16_t SCREEN_WIDTH = 144;
 static const int16_t SCREEN_HEIGHT = 168;
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 static const GPathInfo s_house_path_info = {
   .num_points = 11,
@@ -101,14 +101,14 @@ static const GPathInfo s_aa_clipping_path_info = {
 static bool s_outline_mode = false;
 static int s_path_angle = 0;
 
-static GPath *s_house_path = NULL;
-static GPath *s_bolt_path = NULL;
-static GPath *s_duplicates_path = NULL;
-static GPath *s_single_duplicate_path = NULL;
-static GPath *s_crossing_path = NULL;
-static GPath *s_infinite_path = NULL;
-static GPath *s_current_path = NULL;
-static GPath *s_aa_clipping_path = NULL;
+static GPath *s_house_path = nullptr;
+static GPath *s_bolt_path = nullptr;
+static GPath *s_duplicates_path = nullptr;
+static GPath *s_single_duplicate_path = nullptr;
+static GPath *s_crossing_path = nullptr;
+static GPath *s_infinite_path = nullptr;
+static GPath *s_current_path = nullptr;
+static GPath *s_aa_clipping_path = nullptr;
 
 static void prv_filled_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
@@ -176,7 +176,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled(void) {
   prv_reset();
   s_current_path = s_house_path;
   test_graphics_context_init(&ctx, fb);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled.${BIT_DEPTH_NAME}.pbi"));
 }
 
@@ -187,7 +187,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped(void) {
   test_graphics_context_init(&ctx, fb);
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_top_clipped.${BIT_DEPTH_NAME}.pbi"));
 
@@ -195,7 +195,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped(void) {
   test_graphics_context_init(&ctx, fb);
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_bottom_clipped.${BIT_DEPTH_NAME}.pbi"));
 
@@ -203,7 +203,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped(void) {
   test_graphics_context_init(&ctx, fb);
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_left_clipped.${BIT_DEPTH_NAME}.pbi"));
 
@@ -211,7 +211,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped(void) {
   test_graphics_context_init(&ctx, fb);
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_right_clipped.${BIT_DEPTH_NAME}.pbi"));
 }
@@ -227,7 +227,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_outside(void) {
   gpath_move_to(s_house_path, GPoint(SCREEN_WIDTH / 2, 0));
   ctx.draw_state.drawing_box = GRect(0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT);
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled.${BIT_DEPTH_NAME}.pbi"));
 
   printf("-- bottom\n");
@@ -237,7 +237,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_outside(void) {
   gpath_move_to(s_house_path, GPoint(SCREEN_WIDTH / 2, SCREEN_HEIGHT));
   ctx.draw_state.drawing_box = GRect(0, -SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT);
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled.${BIT_DEPTH_NAME}.pbi"));
 
   printf("-- left\n");
@@ -248,7 +248,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_outside(void) {
   gpath_move_to(s_house_path, GPoint(0, SCREEN_HEIGHT / 2));
   ctx.draw_state.drawing_box = GRect(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled.${BIT_DEPTH_NAME}.pbi"));
 
   printf("-- right\n");
@@ -258,7 +258,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_outside(void) {
   gpath_move_to(s_house_path, GPoint(SCREEN_WIDTH, SCREEN_HEIGHT / 2));
   ctx.draw_state.drawing_box = GRect(-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled.${BIT_DEPTH_NAME}.pbi"));
 }
 
@@ -271,7 +271,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_aa(void) {
   s_current_path = s_house_path;
   test_graphics_context_init(&ctx, fb);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled_aa.${BIT_DEPTH_NAME}.pbi"));
 
   // Special case for two points that are duplicates...
@@ -280,7 +280,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_aa(void) {
   s_current_path = s_single_duplicate_path;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_single_duplicate_aa.${BIT_DEPTH_NAME}.pbi"));
 
@@ -294,7 +294,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped_aa(void) {
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_top_clipped_aa.${BIT_DEPTH_NAME}.pbi"));
 
@@ -303,7 +303,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped_aa(void) {
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_bottom_clipped_aa.${BIT_DEPTH_NAME}.pbi"));
 
@@ -312,7 +312,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped_aa(void) {
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_left_clipped_aa.${BIT_DEPTH_NAME}.pbi"));
 
@@ -321,7 +321,7 @@ void test_graphics_gpath_${BIT_DEPTH_NAME}__filled_clipped_aa(void) {
   s_current_path = s_house_path;
   ctx.draw_state.clip_box = GRect(SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
         "gpath_filled_right_clipped_aa.${BIT_DEPTH_NAME}.pbi"));
 }
@@ -339,7 +339,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   s_current_path = s_bolt_path;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
                           "gpath_filled_bolt_aa.8bit.pbi"));
 
@@ -349,7 +349,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   s_current_path = s_duplicates_path;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
                           "gpath_filled_duplicates_aa.8bit.pbi"));
 
@@ -358,7 +358,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   s_current_path = s_crossing_path;
   test_graphics_context_init(&ctx, fb);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled_crossing_aa.8bit.pbi"));
 
   // Infinite path - shows an example where path seems to be crossing itself but
@@ -368,7 +368,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   gpath_move_to(s_infinite_path, GPoint(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
   test_graphics_context_init(&ctx, fb);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled_infinite_aa.8bit.pbi"));
 
   // An angle of infinite path - here we see the spacing between the parts
@@ -378,7 +378,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   s_path_angle = 45;
   test_graphics_context_init(&ctx, fb);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled_infinite_45_aa.8bit.pbi"));
 
   // Another angle of infinite path
@@ -388,7 +388,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   s_path_angle = 70;
   test_graphics_context_init(&ctx, fb);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled_infinite_70_aa.8bit.pbi"));
 
   // House path - two edge cases for tipping points of the path
@@ -398,7 +398,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   s_path_angle = 20;
   test_graphics_context_init(&ctx, fb);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled_house_20_aa.8bit.pbi"));
 
   // This case demonstrates tipping point that is also the starting point of the path
@@ -408,7 +408,7 @@ void test_graphics_gpath_8bit__filled_bolt_aa(void) {
   s_path_angle = 105;
   test_graphics_context_init(&ctx, fb);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "gpath_filled_house_105_aa.8bit.pbi"));
   
   // Safety
@@ -426,7 +426,7 @@ void test_graphics_gpath_8bit__clipping_aa(void) {
   s_path_angle = 17;
   ctx.draw_state.clip_box = GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
   graphics_context_set_antialiased(&ctx, true);
-  prv_filled_update_proc(NULL, &ctx);
+  prv_filled_update_proc(nullptr, &ctx);
   // NOTE: Expected result of this test is to have an antialiased stripe go through the screen,
   //         where antialiased edges are being nicely cut off on top and bottom of the stripe
   //         (antialiased gradient would dive into the stripe near screen edges), also top

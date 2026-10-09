@@ -4,11 +4,11 @@
 #include <applib/ui/kino/kino_reel.h>
 
 KinoReel *kino_reel_create_with_resource(uint32_t resource_id) {
-  return NULL;
+  return nullptr;
 }
 
 KinoReel *kino_reel_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
-  return NULL;
+  return nullptr;
 }
 
 void kino_reel_destroy(KinoReel *reel) {
@@ -38,23 +38,23 @@ GSize kino_reel_get_size(KinoReel *reel) {
 }
 
 GDrawCommandImage *kino_reel_get_gdraw_command_image(KinoReel *reel) {
-  return NULL;
+  return nullptr;
 }
 
 GDrawCommandList *kino_reel_get_gdraw_command_list(KinoReel *reel) {
-  return NULL;
+  return nullptr;
 }
 
 GDrawCommandSequence *kino_reel_get_gdraw_command_sequence(KinoReel *reel) {
-  return NULL;
+  return nullptr;
 }
 
 GBitmap *kino_reel_get_gbitmap(KinoReel *reel) {
-  return NULL;
+  return nullptr;
 }
 
 GBitmapSequence *kino_reel_get_gbitmap_sequence(KinoReel *reel) {
-  return NULL;
+  return nullptr;
 }
 
 KinoReelType kino_reel_get_type(KinoReel *reel) {
@@ -62,11 +62,11 @@ KinoReelType kino_reel_get_type(KinoReel *reel) {
 }
 
 KinoReel *kino_reel_custom_create(const KinoReelImpl *custom_impl, void *data) {
-  return NULL;
+  return nullptr;
 }
 
 void *kino_reel_custom_get_data(KinoReel *reel) {
-  return NULL;
+  return nullptr;
 }
 
 size_t kino_reel_get_data_size(const KinoReel *reel) {

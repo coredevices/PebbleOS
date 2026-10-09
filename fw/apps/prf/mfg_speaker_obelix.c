@@ -96,7 +96,7 @@ static void s_main(void) {
   (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
   prv_handle_init();
   prv_play_audio();
-  app_timer_register(5000, prv_timer_callback, NULL);
+  app_timer_register(5000, prv_timer_callback, nullptr);
   app_event_loop();
   audio_stop(AUDIO);
   // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)

@@ -196,7 +196,7 @@ GBitmap *gbitmap_create_as_sub_bitmap(const GBitmap *base_bitmap, GRect sub_rect
 
 static GColor *prv_allocate_palette(GBitmapFormat format) {
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
-  GColor *palette = NULL;
+  GColor *palette = nullptr;
   uint8_t palette_size = gbitmap_get_palette_size(format);
   if (palette_size > 0) {
     palette = applib_zalloc(palette_size * sizeof(GColor));
@@ -242,7 +242,7 @@ static GBitmap *prv_gbitmap_create_blank(GSize size, GBitmapFormat format) {
   if (bitmap) {
     if (!prv_gbitmap_allocate_data_for_size(bitmap, size, format)) {
       applib_free(bitmap);
-      return NULL;
+      return nullptr;
     }
 
 #if PBL_ROUND
@@ -299,7 +299,7 @@ PBL_T_STATIC GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize
       bitmap->info.is_palette_heap_allocated = true;
     } else {
       gbitmap_destroy(bitmap);
-      bitmap = NULL;
+      bitmap = nullptr;
     }
   }
 
@@ -308,11 +308,11 @@ PBL_T_STATIC GBitmap *prv_gbitmap_create_blank_internal_no_platform_checks(GSize
 
 GBitmap *gbitmap_create_blank(GSize size, GBitmapFormat format) {
   if (process_manager_compiled_with_legacy2_sdk() && format != GBitmapFormat1Bit) {
-    return NULL;
+    return nullptr;
   }
 
   if (!prv_platform_supports_format(size, format)) {
-    return NULL;
+    return nullptr;
   }
 
   return prv_gbitmap_create_blank_internal_no_platform_checks(size, format);
@@ -327,11 +327,11 @@ GBitmap *gbitmap_create_blank_with_palette(GSize size, GBitmapFormat format, GCo
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
 
   if (!prv_platform_supports_format(size, format)) {
-    return NULL;
+    return nullptr;
   }
 
   if (!prv_is_palettized_format(format)) {
-    return NULL;
+    return nullptr;
   }
 
   GBitmap *bitmap = prv_gbitmap_create_blank(size, format);
@@ -352,7 +352,7 @@ PBL_T_STATIC uint8_t prv_byte_reverse(uint8_t b) {
 
 GBitmap *gbitmap_create_palettized_from_1bit(const GBitmap *src_bitmap) {
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
-  GBitmap *bitmap = NULL;
+  GBitmap *bitmap = nullptr;
   if (src_bitmap && gbitmap_get_format(src_bitmap) == GBitmapFormat1Bit) {
     // Allocate the full size of the image up until the end of the bounds.
     // This eliminates edge cases where the bounds may start within a byte,
@@ -395,12 +395,12 @@ GBitmap *gbitmap_create_with_resource(uint32_t resource_id) {
 GBitmap *gbitmap_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   GBitmap *bitmap = prv_allocate_gbitmap();
   if (!bitmap) {
-    return NULL;
+    return nullptr;
   }
 
   if (!gbitmap_init_with_resource_system(bitmap, app_num, resource_id)) {
     applib_free(bitmap);
-    return NULL;
+    return nullptr;
   }
 
   return bitmap;
@@ -514,7 +514,7 @@ GBitmapFormat gbitmap_get_format(const GBitmap *bitmap) {
 
 uint8_t *gbitmap_get_data(const GBitmap *bitmap) {
   if (!bitmap) {
-    return NULL;
+    return nullptr;
   }
   return bitmap->addr;
 }
@@ -532,7 +532,7 @@ void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format, uint
 GColor *gbitmap_get_palette(const GBitmap *bitmap) {
   PBL_ASSERTN(!process_manager_compiled_with_legacy2_sdk());
   if (!bitmap) {
-    return NULL;
+    return nullptr;
   }
   return bitmap->palette;
 }
@@ -565,13 +565,13 @@ void gbitmap_deinit(GBitmap *bitmap) {
   if (gbitmap_get_info(bitmap).is_bitmap_heap_allocated) {
     applib_resource_munmap_or_free(bitmap->addr);
   }
-  bitmap->addr = NULL;
+  bitmap->addr = nullptr;
 
   if (!process_manager_compiled_with_legacy2_sdk()) {
     if (gbitmap_get_info(bitmap).is_palette_heap_allocated) {
       applib_free(bitmap->palette);
     }
-    bitmap->palette = NULL;
+    bitmap->palette = nullptr;
   }
 }
 

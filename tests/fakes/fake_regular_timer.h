@@ -44,7 +44,7 @@ bool regular_timer_pending_deletion(RegularTimerInfo *cb) {
 bool regular_timer_remove_callback(RegularTimerInfo *cb) {
   bool timer_removed = false;
   if (regular_timer_is_scheduled(cb)) {
-    list_remove(&cb->list_node, NULL, NULL);
+    list_remove(&cb->list_node, nullptr, nullptr);
     timer_removed = true;
   }
 

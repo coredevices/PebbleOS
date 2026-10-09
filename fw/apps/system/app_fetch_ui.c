@@ -77,7 +77,7 @@ static void prv_app_fetch_launch_app(AppFetchUIData *data) {
   };
   ext->common.transition = compositor_dot_transition_app_fetch_get();
   if ((data->next_app_args.common.reason == APP_LAUNCH_WAKEUP) &&
-      (data->next_app_args.common.args != NULL)) {
+      (data->next_app_args.common.args != nullptr)) {
     ext->common.args = &data->next_app_args.wakeup_info;
   }
 

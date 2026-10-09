@@ -12,7 +12,7 @@
 
 static Heap *get_task_heap(void) {
   PebbleTask task = pebble_task_get_current();
-  Heap *heap = NULL;
+  Heap *heap = nullptr;
 
   if (task == PebbleTask_App) {
     heap = app_state_get_heap();

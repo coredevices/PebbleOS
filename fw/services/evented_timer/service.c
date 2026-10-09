@@ -46,7 +46,7 @@ static bool prv_id_list_filter(ListNode *node, void *data) {
 
 static EventedTimer *prv_find_timer(TimerID timer_id) {
   if (timer_id == EVENTED_TIMER_INVALID_ID) {
-    return NULL;
+    return nullptr;
   }
 
   // Look for this timer in our linked list
@@ -98,7 +98,7 @@ DEFINE_SYSCALL(void, sys_evented_timer_consume, TimerID timer_id, EventedTimerCa
   if (timer->repeating) {
     pbl_mutex_unlock(&s_mutex);
   } else {
-    list_remove(&timer->list_node, &s_timer_list_head, NULL);
+    list_remove(&timer->list_node, &s_timer_list_head, nullptr);
     pbl_mutex_unlock(&s_mutex);
     new_timer_delete(timer->sys_timer_id);
     kernel_free(timer);
@@ -190,7 +190,7 @@ void evented_timer_clear_process_timers(PebbleTask task) {
     ListNode *next = list_get_next(iter);
 
     if (timer->target_task == task) {
-      list_remove(iter, &s_timer_list_head, NULL);
+      list_remove(iter, &s_timer_list_head, nullptr);
       // The delete operation will stop it for us
       new_timer_delete(timer->sys_timer_id);
       kernel_free(timer);
@@ -308,14 +308,14 @@ void evented_timer_cancel(EventedTimerID timer_id) {
   }
 
   new_timer_delete(timer->sys_timer_id); // This automatically stops the timer for us first
-  list_remove(&timer->list_node, &s_timer_list_head, NULL);
+  list_remove(&timer->list_node, &s_timer_list_head, nullptr);
   kernel_free(timer);
 
   pbl_mutex_unlock(&s_mutex);
 }
 
 bool evented_timer_exists(EventedTimerID timer_id) {
-  return prv_find_timer(timer_id) != NULL;
+  return prv_find_timer(timer_id) != nullptr;
 }
 
 bool evented_timer_is_current_task(EventedTimerID timer_id) {
@@ -333,6 +333,6 @@ void *evented_timer_get_data(EventedTimerID timer_id) {
   if (timer) {
     return timer->callback_data;
   } else {
-    return NULL;
+    return nullptr;
   }
 }

@@ -30,7 +30,7 @@ bool PBL_WEAK sys_resource_bytes_are_readonly(void *bytes) {
 
 const uint8_t *PBL_WEAK sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
                                                      size_t *num_bytes_out) {
-  return NULL;
+  return nullptr;
 }
 
 uint32_t PBL_WEAK sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
@@ -46,7 +46,7 @@ void PBL_WEAK sys_font_reload_font(FontInfo *fontinfo) {
 }
 
 GFont PBL_WEAK sys_font_get_system_font(const char *key) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK sys_accel_manager_data_unsubscribe(AccelManagerState *state) {

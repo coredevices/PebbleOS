@@ -111,7 +111,7 @@ static void prv_app_button_down_handler(PebbleEvent *e, void *context) {
   if (e->button.button_id == BUTTON_ID_BACK &&
       !app_window_stack_get_top_window()->overrides_back_button) {
     // a transition of NULL means we will use the stored pop transition for this stack item
-    window_stack_pop_with_transition(app_window_stack, NULL /* transition */);
+    window_stack_pop_with_transition(app_window_stack, nullptr /* transition */);
     return;
   }
 

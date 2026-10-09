@@ -184,13 +184,13 @@ static void reschedule_ack_timeout(void) {
   RtcTicks ticks_until_timeout = soonest_ack_timeout - current_ticks;
   uint32_t ms_until_timeout = ((uint64_t)ticks_until_timeout * 1000) / RTC_TICKS_HZ;
 
-  bool success =
-      new_timer_start(s_endpoint_data.ack_timer, ms_until_timeout, ack_timer_cb, NULL, 0 /*flags*/);
+  bool success = new_timer_start(s_endpoint_data.ack_timer, ms_until_timeout, ack_timer_cb, nullptr,
+                                 0 /*flags*/);
   PBL_ASSERTN(success);
 }
 
 static void dls_endpoint_print_message(uint8_t *message, int num_bytes) {
-  PBL_ASSERTN(message != NULL);
+  PBL_ASSERTN(message != nullptr);
 
   switch (message[0]) {
     case DataLoggingEndpointCmdClose: {
@@ -311,7 +311,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 
 static void prv_dls_endpoint_handle_ack(uint8_t session_id) {
   DataLoggingSession *session = dls_list_find_by_session_id(session_id);
-  if (session == NULL) {
+  if (session == nullptr) {
     PBL_LOG_WRN("Received ack for non-existent session id: %" PRIu8, session_id);
     return;
   }
@@ -464,7 +464,7 @@ static void prv_handle_report_cmd(const uint8_t *session_ids, size_t num_session
     PBL_LOG_DBG("Phone reported session %u opened", session_id);
 
     // If the phone thinks we're open and we're not, send a close message.
-    if (logging_session == NULL) {
+    if (logging_session == nullptr) {
       dls_endpoint_close_session(session_id);
     }
   }
@@ -472,7 +472,7 @@ static void prv_handle_report_cmd(const uint8_t *session_ids, size_t num_session
   // If the bluetooth connection is flaky, a session reopen could take a few seconds, so we will
   // chain them and only do 1 re-open per system callback so that we don't trigger a watchdog
   // timeout.
-  DataLoggingReopenEntry *head = NULL;
+  DataLoggingReopenEntry *head = nullptr;
   dls_list_for_each_session(dls_endpoint_add_reopen_sessions_cb, (void *)&head);
 
   // Re-open the first one and reschedule the next one

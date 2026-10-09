@@ -54,7 +54,7 @@ static void prv_arm_watchdog(GAPLEConnection *connection) {
     s_watchdog_timer = new_timer_create();
   }
   s_watchdog_connection = connection;
-  new_timer_start(s_watchdog_timer, WATCHDOG_TIMEOUT_MS, prv_watchdog_timeout_cb, NULL, 0);
+  new_timer_start(s_watchdog_timer, WATCHDOG_TIMEOUT_MS, prv_watchdog_timeout_cb, nullptr, 0);
 }
 
 // Frees the watchdog timer so no allocation outlives the discovery it guards.
@@ -149,7 +149,7 @@ void fake_gatt_init(void) {
   s_start_ret_code = 0;
   s_stop_ret_code = 0;
   prv_disarm_watchdog();
-  s_watchdog_connection = NULL;
+  s_watchdog_connection = nullptr;
   s_service_changed_indication_count = 0;
   s_service_changed_last_device = (struct pbl_bt_device_internal){};
   s_service_changed_last_range = (struct pbl_bt_att_handle_range){};
@@ -167,7 +167,7 @@ void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
   // driver no longer has a valid GAPLEConnection to hand the firmware, so it
   // drops the late indication rather than delivering a dangling pointer.
   GAPLEConnection *connection = gap_le_connection_by_gatt_id(connection_id);
-  if (connection == NULL || !s_is_discovery_running) {
+  if (connection == nullptr || !s_is_discovery_running) {
     return;
   }
 
@@ -235,7 +235,7 @@ void fake_gatt_put_discovery_complete_event(uint8_t status, unsigned int connect
   prv_disarm_watchdog();
 
   GAPLEConnection *connection = gap_le_connection_by_gatt_id(connection_id);
-  cl_assert(connection != NULL);
+  cl_assert(connection != nullptr);
 
   // A non-success status is surfaced as a discovery error in the enum pbl_bt_errno space,
   // which the firmware forwards verbatim into the client event.

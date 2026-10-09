@@ -54,5 +54,5 @@ void app_message_receiver_close(void) {
   }
 
   app_inbox_destroy_and_deregister(*inbox);
-  *inbox = NULL;
+  *inbox = nullptr;
 }

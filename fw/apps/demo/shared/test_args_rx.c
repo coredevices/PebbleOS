@@ -11,7 +11,7 @@
 
 static void s_main(void) {
   const TestArgsData *args = process_manager_get_current_process_args();
-  if (args == NULL) {
+  if (args == nullptr) {
     PBL_LOG_DBG("Got no args.");
   } else {
     PBL_LOG_DBG("Got argument 0x%x", args->data);

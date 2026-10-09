@@ -165,7 +165,7 @@ static void prv_enter_low_power(void *ignored) {
 static void prv_exit_low_power(void) {
 #ifndef CONFIG_RECOVERY_FW
   modal_manager_set_min_priority(ModalPriorityMin);
-  watchface_launch_default(NULL);
+  watchface_launch_default(nullptr);
   vibe_intensity_set(vibe_intensity_get());
 #else
   app_manager_close_current_app(true);
@@ -272,7 +272,7 @@ void battery_ui_handle_shut_down(void) {
   if (s_state != BatteryCharging) {
     enter_standby(RebootReasonCode_ShutdownMenuItem);
   } else {
-    prv_transition(BatteryShutdownCharging, NULL);
+    prv_transition(BatteryShutdownCharging, nullptr);
   }
 }
 

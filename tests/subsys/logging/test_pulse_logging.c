@@ -137,7 +137,7 @@ void test_pulse_logging__isr_simple(void) {
 
   cl_assert_equal_i(s_num_event_puts, 1);
 
-  s_last_event.callback.callback(NULL);
+  s_last_event.callback.callback(nullptr);
   cl_assert_equal_i(s_num_packets_sent, 1);
   cl_assert_equal_i(s_num_bytes_sent, LOG_METADATA_LENGTH + 4);
   cl_assert_equal_s(s_log_message_buffer, "Test");
@@ -147,7 +147,7 @@ void test_pulse_logging__isr_simple(void) {
 
   cl_assert_equal_i(s_num_event_puts, 2);
 
-  s_last_event.callback.callback(NULL);
+  s_last_event.callback.callback(nullptr);
   cl_assert_equal_i(s_num_packets_sent, 2);
   cl_assert_equal_i(s_num_bytes_sent, LOG_METADATA_LENGTH + 20);
   cl_assert_equal_s(s_log_message_buffer, "TestTestTestTestTest");
@@ -164,7 +164,7 @@ void test_pulse_logging__isr_truncate(void) {
 
   cl_assert_equal_i(s_num_event_puts, 1);
 
-  s_last_event.callback.callback(NULL);
+  s_last_event.callback.callback(nullptr);
   cl_assert_equal_i(s_num_packets_sent, 1);
   cl_assert_equal_i(s_num_bytes_sent, LOG_METADATA_LENGTH + 128);
   cl_assert_equal_s(s_log_message_buffer,
@@ -203,7 +203,7 @@ void test_pulse_logging__isr_buffer_full(void) {
 
   pulse_logging_log(LOG_LEVEL_DEBUG, "", 0, "TestTestTestTestTestTestTestTestTestTestG");
 
-  s_last_event.callback.callback(NULL);
+  s_last_event.callback.callback(nullptr);
   cl_assert_equal_i(s_num_packets_sent, 7);
   cl_assert_equal_s(s_log_message_buffer, "ISR Message Dropped!");
 }

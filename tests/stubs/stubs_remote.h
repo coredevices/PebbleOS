@@ -6,7 +6,7 @@
 typedef void *RemoteRef;
 
 RemoteRef remote_get_active() {
-  return NULL;
+  return nullptr;
 }
 
 bool remote_is_connected(void) {

@@ -19,7 +19,7 @@ void pbl_bt_id_copy_local_identity_address(struct pbl_bt_addr *addr_out) {
   rc = ble_hs_id_infer_auto(0, &own_addr_type);
   PBL_ASSERTN(rc == 0);
 
-  rc = ble_hs_id_copy_addr(own_addr_type, (uint8_t *)&addr_out->octets, NULL);
+  rc = ble_hs_id_copy_addr(own_addr_type, (uint8_t *)&addr_out->octets, nullptr);
   PBL_ASSERTN(rc == 0);
 }
 

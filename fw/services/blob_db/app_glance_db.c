@@ -81,7 +81,7 @@ static void prv_init_icon_and_subtitle_slice_from_attr_list(const AttributeList 
   slice_out->icon_and_subtitle.icon_resource_id =
       attribute_get_uint32(attr_list, AttributeIdIcon, INVALID_RESOURCE);
   strncpy(slice_out->icon_and_subtitle.template_string,
-          attribute_get_string(attr_list, AttributeIdSubtitleTemplateString, NULL),
+          attribute_get_string(attr_list, AttributeIdSubtitleTemplateString, nullptr),
           ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN + 1);
 }
 
@@ -195,7 +195,7 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
   // true because technically we did successfully deserialize the AttributeList
   if (!num_attributes) {
     *attr_list_out = (AttributeList){};
-    *attr_list_data_buffer_out = NULL;
+    *attr_list_data_buffer_out = nullptr;
     return true;
   }
 
@@ -226,7 +226,7 @@ static bool prv_deserialize_attribute_list(const SerializedAppGlanceSliceHeader 
   } else {
     // No buffer needed, but set the output pointer to NULL because we might blindly free it below
     // if we fail to alloc memory for the attribute_buffer
-    *attr_list_data_buffer_out = NULL;
+    *attr_list_data_buffer_out = nullptr;
   }
 
   // Allocate buffer for the Attribute's
@@ -273,7 +273,7 @@ static bool prv_deserialize_slice(SerializedAppGlanceSliceHeader *serialized_sli
 
   // Deserialize the serialized slice's attribute list
   AttributeList attr_list = {};
-  char *attr_list_data_buffer = NULL;
+  char *attr_list_data_buffer = nullptr;
   if (!prv_deserialize_attribute_list(serialized_slice, &attr_list, &attr_list_data_buffer)) {
     deserialization_context->deserialization_failed = true;
     return false;
@@ -356,7 +356,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
   // Allocate a buffer for data about each slice's attribute list, but only if we have at least
   // one slice because allocating 0 bytes would return NULL and that is a return value we want to
   // reserve for the case when we've run out of memory
-  SliceSerializationAttributeListData *attr_lists = NULL;
+  SliceSerializationAttributeListData *attr_lists = nullptr;
   if (glance->num_slices > 0) {
     attr_lists = kernel_zalloc(sizeof(SliceSerializationAttributeListData) * glance->num_slices);
     if (!attr_lists) {
@@ -473,7 +473,7 @@ static bool prv_is_serialized_slice_valid(const SerializedAppGlanceSliceHeader *
 
   // Deserialize the AttributeList from `serialized_slice`
   AttributeList attr_list = {};
-  char *attr_list_data_buffer = NULL;
+  char *attr_list_data_buffer = nullptr;
   if (!prv_deserialize_attribute_list(serialized_slice, &attr_list, &attr_list_data_buffer)) {
     PBL_LOG_WRN("Failed to deserialize an AttributeList from a serialized slice");
     return false;
@@ -528,7 +528,7 @@ status_t app_glance_db_insert_glance(const Uuid *uuid, const AppGlance *glance) 
     return E_INVALID_ARGUMENT;
   }
 
-  SerializedAppGlanceHeader *serialized_glance = NULL;
+  SerializedAppGlanceHeader *serialized_glance = nullptr;
   size_t serialized_glance_size = 0;
   status_t rv = prv_serialize_glance(glance, &serialized_glance, &serialized_glance_size);
   if (rv == S_SUCCESS) {
@@ -724,7 +724,7 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
         .app_fetch_request = {
           .id = app_id,
           .with_ui = false,
-          .fetch_args = NULL,
+          .fetch_args = nullptr,
         },
       };
       event_put(&e);
@@ -772,7 +772,7 @@ int app_glance_db_get_len(const uint8_t *key, int key_len) {
 }
 
 status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
-  if ((key_len != UUID_SIZE) || val_out == NULL) {
+  if ((key_len != UUID_SIZE) || val_out == nullptr) {
     return E_INVALID_ARGUMENT;
   }
 

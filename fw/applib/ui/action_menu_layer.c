@@ -112,12 +112,12 @@ static void prv_draw_scaled_glyph(GContext *ctx, const char *label, GFont font, 
     .info = {.format = GBitmapFormat8Bit},
     .bounds = bounds,
   };
-  ctx->parent_framebuffer = NULL;
+  ctx->parent_framebuffer = nullptr;
   ctx->draw_state.clip_box = bounds;
   ctx->draw_state.drawing_box = bounds;
   ctx->draw_state.text_color = GColorWhite;
   graphics_draw_text(ctx, label, font, bounds, GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
   ctx->dest_bitmap = saved_bitmap;
   ctx->draw_state = saved_state;
   ctx->parent_framebuffer = saved_framebuffer;
@@ -212,7 +212,7 @@ static void prv_draw_glyph_columns(GContext *ctx, const GRect *bounds, GFont fon
           (cell.size.h - fonts_get_font_height(font)) / 2 - fonts_get_font_cap_offset(font);
       graphics_context_set_text_color(ctx, GColorWhite);
       graphics_draw_text(ctx, items[i].label, font, text, GTextOverflowModeTrailingEllipsis,
-                         GTextAlignmentCenter, NULL);
+                         GTextAlignmentCenter, nullptr);
     }
   }
 }
@@ -287,14 +287,14 @@ static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
     }
 
     graphics_draw_text(ctx, items[i].label, font, r, GTextOverflowModeTrailingEllipsis,
-                       GTextAlignmentCenter, NULL);
+                       GTextAlignmentCenter, nullptr);
     r.origin.x += r.size.w;
   }
 }
 
 static const ActionMenuItem *prv_get_item_for_index(ActionMenuLayer *aml, int idx) {
   if (!aml->num_items && !aml->num_short_items) {
-    return NULL;
+    return nullptr;
   }
 
   PBL_ASSERTN(idx >= 0);
@@ -327,7 +327,7 @@ static int16_t prv_get_item_line_height(ActionMenuLayer *aml, int idx) {
   const int nudge = menu_cell_basic_horizontal_inset();
   if (!item->is_leaf) {
     const GSize indicator_size = graphics_text_layout_get_max_used_size(
-        ctx, INDICATOR, font, box, GTextOverflowModeWordWrap, GTextAlignmentRight, NULL);
+        ctx, INDICATOR, font, box, GTextOverflowModeWordWrap, GTextAlignmentRight, nullptr);
     box.size.w -= (indicator_size.w + nudge);
   }
 #endif
@@ -364,7 +364,7 @@ static const PropertyAnimationImplementation s_item_animation_implementation = {
 
 static void prv_unschedule_item_animation(ActionMenuLayer *aml) {
   animation_unschedule(aml->item_animation.animation);
-  aml->item_animation.animation = NULL;
+  aml->item_animation.animation = nullptr;
 }
 
 static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool *draw_top_shading,
@@ -388,7 +388,7 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
     // when there are that number of lines in view and no more lines remaining below.
     const int16_t max_scroll_distance = item_height - max_visible_item_height;
     ActionMenuItemAnimation *item_animation = &aml->item_animation;
-    if (item_animation->animation == NULL) {
+    if (item_animation->animation == nullptr) {
       const int16_t DELAY_PER_LINE = 600; /* milliseconds to delay per line */
 
       // Top offset represents when the text has scrolled to its minimum y value so the last line of
@@ -400,7 +400,7 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
 
       // Create the animation that will scroll us up in the cell
       PropertyAnimation *animation = property_animation_create(
-          &s_item_animation_implementation, (void *)aml, NULL, &item_animation->top_offset_y);
+          &s_item_animation_implementation, (void *)aml, nullptr, &item_animation->top_offset_y);
 
       animation_set_duration((Animation *)animation, DELAY_PER_LINE * (item_height / line_height));
       animation_set_curve((Animation *)animation, AnimationCurveLinear);
@@ -459,7 +459,7 @@ static bool prv_should_center(ActionMenuLayer *aml) {
 static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_layer,
                                             const ActionMenuLayer *aml, const ActionMenuItem *item,
                                             bool selected, GRect *content_box) {
-  char *indicator = NULL;
+  char *indicator = nullptr;
   const int16_t horizontal_padding = menu_cell_basic_horizontal_inset();
   const GFont font = aml->layout_cache.font;
   if (!item->is_leaf) {
@@ -470,7 +470,8 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
       indicator = INDICATOR;
     } else {
       const GSize indicator_size = graphics_text_layout_get_max_used_size(
-          ctx, INDICATOR, font, *content_box, GTextOverflowModeWordWrap, GTextAlignmentRight, NULL);
+          ctx, INDICATOR, font, *content_box, GTextOverflowModeWordWrap, GTextAlignmentRight,
+          nullptr);
       content_box->size.w -= (indicator_size.w + (2 * horizontal_padding));
     }
   } else {
@@ -503,7 +504,7 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
   // Draw the menu cell specifying that we're allowing word wrapping
   const GTextOverflowMode overflow_mode = GTextOverflowModeWordWrap;
   menu_cell_basic_draw_custom(ctx, mutable_cell_layer, font, item->label, font, indicator, font,
-                              NULL, NULL, false, overflow_mode);
+                              nullptr, nullptr, false, overflow_mode);
 
   // Restore the cell layer's bounds
   mutable_cell_layer->bounds = saved_bounds;
@@ -524,13 +525,13 @@ static void prv_cell_item_content_draw_round(GContext *ctx, const Layer *cell_la
       selected ? GTextOverflowModeWordWrap : GTextOverflowModeTrailingEllipsis;
   const GTextAlignment text_alignment = GTextAlignmentCenter;
   const GSize text_size = graphics_text_layout_get_max_used_size(
-      ctx, item->label, font, *content_box, overflow_mode, text_alignment, NULL);
+      ctx, item->label, font, *content_box, overflow_mode, text_alignment, nullptr);
   GRect text_box = (GRect){.size = text_size};
   const GAlign item_label_text_alignment = GAlignCenter;
   grect_align(&text_box, content_box, item_label_text_alignment, true /* clip */);
   text_box.origin.y -= fonts_get_font_cap_offset(font);
 
-  graphics_draw_text(ctx, item->label, font, text_box, overflow_mode, text_alignment, NULL);
+  graphics_draw_text(ctx, item->label, font, text_box, overflow_mode, text_alignment, nullptr);
 }
 
 static int16_t prv_get_indicator_height(const ActionMenuLayer *aml) {
@@ -552,7 +553,7 @@ static void prv_draw_indicator_round(GContext *ctx, const ActionMenuLayer *aml,
   grect_align(&indicator_frame, &content_frame, GAlignBottom, true);
 
   graphics_draw_text(ctx, INDICATOR, aml->layout_cache.font, indicator_frame,
-                     GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 }
 #endif
 
@@ -1087,9 +1088,9 @@ static void prv_update_aml_cache(ActionMenuLayer *aml, int selected_index) {
                                                   : prv_get_item_font();
 #endif
 
-  if (aml->layout_cache.item_heights != NULL) {
+  if (aml->layout_cache.item_heights != nullptr) {
     applib_free(aml->layout_cache.item_heights);
-    aml->layout_cache.item_heights = NULL;
+    aml->layout_cache.item_heights = nullptr;
   }
 
   if (aml->num_items > 0) {
@@ -1209,7 +1210,7 @@ void action_menu_layer_deinit(ActionMenuLayer *aml) {
 ActionMenuLayer *action_menu_layer_create(GRect frame) {
   ActionMenuLayer *aml = applib_zalloc(sizeof(ActionMenuLayer));
   if (!aml) {
-    return NULL;
+    return nullptr;
   }
 
   action_menu_layer_init(aml, &frame);

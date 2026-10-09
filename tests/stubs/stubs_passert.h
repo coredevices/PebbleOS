@@ -29,16 +29,16 @@
 }
 
 [[noreturn]] void util_assertion_failed(const char *filename, int line) {
-  passert_failed(filename, line, NULL);
+  passert_failed(filename, line, nullptr);
 }
 
 [[noreturn]] void passert_failed_no_message(const char *filename, int line_number) {
-  passert_failed(filename, line_number, NULL);
+  passert_failed(filename, line_number, nullptr);
 }
 
 [[noreturn]] void passert_failed_no_message_with_lr(const char *filename, int line_number,
                                                     uint32_t lr) {
-  passert_failed(filename, line_number, NULL);
+  passert_failed(filename, line_number, nullptr);
 }
 
 void croak(const char *filename, int line_number, const char *fmt, ...) {

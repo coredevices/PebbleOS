@@ -105,7 +105,7 @@ static const TimelineResourceTestAppData *prv_get_data_for_app_with_id(AppInstal
       return data;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 static const TimelineResourceTestAppData *prv_get_data_for_app_with_uuid(const Uuid *uuid) {
@@ -115,7 +115,7 @@ static const TimelineResourceTestAppData *prv_get_data_for_app_with_uuid(const U
       return data;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 // Fakes
@@ -124,7 +124,7 @@ static const TimelineResourceTestAppData *prv_get_data_for_app_with_uuid(const U
 bool prv_validate_lut(ResAppNum res_app_num) {
   // Just check if the .resource_lut pointer for the provided res_app_num is non-NULL
   const TimelineResourceTestAppData *data = prv_get_data_for_app_with_id(res_app_num);
-  return data ? (data->resource_lut != NULL) : false;
+  return data ? (data->resource_lut != nullptr) : false;
 }
 
 uint32_t prv_get_app_resource_id(ResAppNum res_app_num, TimelineResourceId timeline_id,
@@ -225,7 +225,7 @@ void test_timeline_resources__get_id_system(void) {
   // Calling the function with valid args should return true even if no AppResourceInfo is provided
   cl_assert(timeline_resources_get_id_system(
       (TimelineResourceId)TimelineResourceTestTimelineId_AlarmClock, TimelineResourceSizeTiny,
-      TimelineResourceTestAppId_ValidApp, NULL));
+      TimelineResourceTestAppId_ValidApp, nullptr));
 
   // Calling the function with a valid system TimelineResourceId should return true and set res_info
   cl_assert(timeline_resources_get_id_system(TIMELINE_RESOURCE_AUDIO_CASSETTE,
@@ -269,8 +269,9 @@ void test_timeline_resources__get_id(void) {
   // should assert
   cl_assert_passert(
       timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeCount, &res_info));
-  cl_assert_passert(timeline_resources_get_id(NULL, TimelineResourceSizeTiny, &res_info));
-  cl_assert_passert(timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeTiny, NULL));
+  cl_assert_passert(timeline_resources_get_id(nullptr, TimelineResourceSizeTiny, &res_info));
+  cl_assert_passert(
+      timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeTiny, nullptr));
 
   // Set the TimelineResourceInfo to have the UUID of an app with an invalid LUT
   const TimelineResourceTestAppData *app_with_invalid_lut_data =

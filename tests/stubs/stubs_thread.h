@@ -28,11 +28,11 @@ void pbl_thread_sleep(pbl_timeout_t timeout) {
 }
 
 struct pbl_thread *pbl_thread_current(void) {
-  return NULL;
+  return nullptr;
 }
 
 struct pbl_thread *pbl_thread_idle(void) {
-  return NULL;
+  return nullptr;
 }
 
 void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio) {

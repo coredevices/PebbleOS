@@ -79,7 +79,7 @@ void ping_send_if_due(void) {
   }
 
   // Offload to KernelBG, because we cannot use comm_session_send_data() with bt_lock held.
-  system_task_add_callback(prv_send_ping_kernel_bg_cb, NULL);
+  system_task_add_callback(prv_send_ping_kernel_bg_cb, nullptr);
   s_is_ping_kernel_bg_callback_scheduled = true;
 }
 
@@ -91,7 +91,7 @@ static void prv_push_window(void *data) {
   SimpleDialog *s_dialog = simple_dialog_create("Ping");
   Dialog *dialog = simple_dialog_get_dialog(s_dialog);
 
-  dialog_set_callbacks(dialog, &(DialogCallbacks){.unload = prv_dialog_unload}, NULL);
+  dialog_set_callbacks(dialog, &(DialogCallbacks){.unload = prv_dialog_unload}, nullptr);
 
   dialog_set_background_color(dialog, GColorCobaltBlue);
   dialog_set_text_color(dialog, GColorWhite);
@@ -116,7 +116,7 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_
       PBL_LOG_DBG("Ping c=%" PRIu32 "", cookie);
       if (!s_is_dialog_pushed) {
         s_is_dialog_pushed = true;
-        launcher_task_add_callback(prv_push_window, NULL);
+        launcher_task_add_callback(prv_push_window, nullptr);
       }
 
       // Send the pong response
@@ -151,5 +151,5 @@ static int prv_cmd_ping(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_CMD_REGISTER(ping, NULL, "Send a ping to the phone", prv_cmd_ping);
+PBL_SHELL_CMD_REGISTER(ping, nullptr, "Send a ping to the phone", prv_cmd_ping);
 #endif

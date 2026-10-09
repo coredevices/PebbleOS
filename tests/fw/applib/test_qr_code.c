@@ -50,7 +50,7 @@ void test_qr_code__cleanup(void) {
 static void prv_render(size_t len, QRCodeECC ecc) {
   QRCode *qr_code = qr_code_create(GRect(0, 0, DISP_COLS, DISP_ROWS));
 
-  cl_assert(qr_code != NULL);
+  cl_assert(qr_code != nullptr);
   qr_code_set_data(qr_code, s_data, len);
   qr_code_set_ecc(qr_code, ecc);
   layer_render_tree(&qr_code->layer, &s_ctx);
@@ -80,7 +80,7 @@ void test_qr_code__long_high(void) {
 void test_qr_code__over_capacity(void) {
   uint8_t *before = malloc(FRAMEBUFFER_SIZE_BYTES);
 
-  cl_assert(before != NULL);
+  cl_assert(before != nullptr);
   memcpy(before, s_fb->buffer, FRAMEBUFFER_SIZE_BYTES);
   prv_render(1274, QRCodeECCHigh);
   cl_assert_equal_m(s_fb->buffer, before, FRAMEBUFFER_SIZE_BYTES);

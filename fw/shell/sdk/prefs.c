@@ -158,7 +158,7 @@ AppInstallId watchface_get_default_install_id(void) {
   AppInstallEntry entry;
   if ((app_id == INSTALL_ID_INVALID) || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
-    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
+    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, nullptr);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
   }
   return app_id;

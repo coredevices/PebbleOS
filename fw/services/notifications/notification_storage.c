@@ -131,7 +131,7 @@ static void prv_reclaim_space(size_t size_needed, int fd) {
     .fd = fd,
   };
   Iterator iter;
-  iter_init(&iter, (IteratorCallback)&prv_iter_next, NULL, &iter_state);
+  iter_init(&iter, (IteratorCallback)&prv_iter_next, nullptr, &iter_state);
   while (iter_next(&iter)) {
     uint8_t status = iter_state.header.common.status;
     if (!(status & TimelineItemStatusDeleted)) {
@@ -159,7 +159,7 @@ static bool prv_is_storage_full(size_t size_needed, size_t *size_available, int 
     .fd = fd,
   };
   Iterator iter;
-  iter_init(&iter, (IteratorCallback)&prv_iter_next, NULL, &iter_state);
+  iter_init(&iter, (IteratorCallback)&prv_iter_next, nullptr, &iter_state);
   while (iter_next(&iter)) {
     // Check header status to detect deleted notifications. Add size of deleted notifications
     uint8_t status = iter_state.header.common.status;
@@ -204,7 +204,7 @@ static bool prv_compress(size_t size_needed, int *fd) {
     .fd = *fd,
   };
   Iterator iter;
-  iter_init(&iter, (IteratorCallback)&prv_iter_next, NULL, &iter_state);
+  iter_init(&iter, (IteratorCallback)&prv_iter_next, nullptr, &iter_state);
   while (iter_next(&iter)) {
     // Check header flags to detect deleted notifications
     uint8_t status = iter_state.header.common.status;
@@ -262,7 +262,7 @@ cleanup:
 }
 
 void notification_storage_store(TimelineItem *notification) {
-  PBL_ASSERTN(notification != NULL);
+  PBL_ASSERTN(notification != nullptr);
 
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
   timeline_item_serialize_header(notification, &header);
@@ -367,7 +367,7 @@ bool notification_storage_notification_exists(const Uuid *id) {
 
 static bool prv_get_notification(TimelineItem *notification, SerializedTimelineItemHeader *header,
                                  int fd) {
-  notification->allocated_buffer = NULL; // Must be initialized in case this goes to cleanup
+  notification->allocated_buffer = nullptr; // Must be initialized in case this goes to cleanup
   // Read notification to temporary buffer
   uint8_t *read_buffer = task_zalloc_check(header->payload_length);
 
@@ -610,7 +610,7 @@ bool notification_storage_find_ancs_notification_by_timestamp(
     .fd = fd,
   };
   Iterator iter;
-  iter_init(&iter, (IteratorCallback)&prv_iter_next, NULL, &iter_state);
+  iter_init(&iter, (IteratorCallback)&prv_iter_next, nullptr, &iter_state);
   while (iter_next(&iter)) {
     // Check header flags to detect deleted notifications
     uint8_t status = iter_state.header.common.status;
@@ -639,7 +639,7 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
                                                         SerializedTimelineItemHeader *header,
                                                         void *data),
                                   void *data) {
-  if (iter_callback == NULL) {
+  if (iter_callback == nullptr) {
     return;
   }
 
@@ -657,7 +657,7 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
 
   Iterator iter;
   NotificationIterState iter_state = {.fd = fd};
-  iter_init(&iter, (IteratorCallback)prv_rewrite_iter_next, NULL, &iter_state);
+  iter_init(&iter, (IteratorCallback)prv_rewrite_iter_next, nullptr, &iter_state);
 
   int write_offset = 0;
   while (iter_next(&iter)) {
@@ -691,7 +691,7 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
 void notification_storage_iterate(bool (*iter_callback)(void *data,
                                                         SerializedTimelineItemHeader *header),
                                   void *data) {
-  if (iter_callback == NULL) {
+  if (iter_callback == nullptr) {
     return;
   }
 
@@ -703,7 +703,7 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
   Iterator iter;
   NotificationIterState iter_state = {.fd = fd};
 
-  iter_init(&iter, (IteratorCallback)prv_iter_next, NULL, &iter_state);
+  iter_init(&iter, (IteratorCallback)prv_iter_next, nullptr, &iter_state);
 
   while (iter_next(&iter)) {
     uint8_t status = iter_state.header.common.status;
@@ -763,7 +763,7 @@ void notification_storage_iterate_strings_after(
     bool (*iter_callback)(void *data, const CommonTimelineItemHeader *header,
                           const TimelineItem *item),
     void *data) {
-  if (iter_callback == NULL) {
+  if (iter_callback == nullptr) {
     return;
   }
 
@@ -774,7 +774,7 @@ void notification_storage_iterate_strings_after(
 
   Iterator iter;
   NotificationIterState iter_state = {.fd = fd};
-  iter_init(&iter, (IteratorCallback)prv_iter_next, NULL, &iter_state);
+  iter_init(&iter, (IteratorCallback)prv_iter_next, nullptr, &iter_state);
 
   while (iter_next(&iter)) {
     const uint8_t status = iter_state.header.common.status;
@@ -812,7 +812,7 @@ void notification_storage_iterate_strings_after(
       .header = iter_state.header.common,
       .attr_list = *attr_list,
     };
-    if (!iter_callback(data, &iter_state.header.common, read_strings ? &item : NULL)) {
+    if (!iter_callback(data, &iter_state.header.common, read_strings ? &item : nullptr)) {
       break;
     }
   }

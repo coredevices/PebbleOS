@@ -123,28 +123,28 @@ void PBL_LOG_x_printf_arg_check(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
   }
 
 PBL_ALWAYS_INLINE static uint32_t LOG_SECTION_OFFSET(const uint8_t level, const char *fmt) {
-  const char *p1 = NULL, *p2 = NULL, *p3 = NULL, *p4 = NULL;
-  const char *p5 = NULL, *p6 = NULL, *p7 = NULL, *p8 = NULL;
-  const char *s1 = NULL, *s2 = NULL, *s3 = NULL, *s4 = NULL;
-  const char *s5 = NULL, *s6 = NULL, *s7 = NULL;
+  const char *p1 = nullptr, *p2 = nullptr, *p3 = nullptr, *p4 = nullptr;
+  const char *p5 = nullptr, *p6 = nullptr, *p7 = nullptr, *p8 = nullptr;
+  const char *s1 = nullptr, *s2 = nullptr, *s3 = nullptr, *s4 = nullptr;
+  const char *s5 = nullptr, *s6 = nullptr, *s7 = nullptr;
 
   // Search for % characters in fmt. p1-p8 point to the character immediately succeeding the first
   // 8 % characters in fmt (or NULL, if there aren't 8 % characters in fmt).
-  p1 = strchr(fmt, '%') ? (strchr(fmt, '%') + 1) : NULL;
+  p1 = strchr(fmt, '%') ? (strchr(fmt, '%') + 1) : nullptr;
   if (p1)
-    p2 = strchr(p1, '%') ? (strchr(p1, '%') + 1) : NULL;
+    p2 = strchr(p1, '%') ? (strchr(p1, '%') + 1) : nullptr;
   if (p2)
-    p3 = strchr(p2, '%') ? (strchr(p2, '%') + 1) : NULL;
+    p3 = strchr(p2, '%') ? (strchr(p2, '%') + 1) : nullptr;
   if (p3)
-    p4 = strchr(p3, '%') ? (strchr(p3, '%') + 1) : NULL;
+    p4 = strchr(p3, '%') ? (strchr(p3, '%') + 1) : nullptr;
   if (p4)
-    p5 = strchr(p4, '%') ? (strchr(p4, '%') + 1) : NULL;
+    p5 = strchr(p4, '%') ? (strchr(p4, '%') + 1) : nullptr;
   if (p5)
-    p6 = strchr(p5, '%') ? (strchr(p5, '%') + 1) : NULL;
+    p6 = strchr(p5, '%') ? (strchr(p5, '%') + 1) : nullptr;
   if (p6)
-    p7 = strchr(p6, '%') ? (strchr(p6, '%') + 1) : NULL;
+    p7 = strchr(p6, '%') ? (strchr(p6, '%') + 1) : nullptr;
   if (p7)
-    p8 = strchr(p7, '%') ? (strchr(p7, '%') + 1) : NULL;
+    p8 = strchr(p7, '%') ? (strchr(p7, '%') + 1) : nullptr;
 
   // Check that fmt doesn't contain the escaped % symbol, '%%'. It's too hard to handle correctly
   // in every case.

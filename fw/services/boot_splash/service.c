@@ -139,9 +139,9 @@ static void prv_boot_splash_task(void *param) {
 
   // Cleanup
   kernel_free(fb);
-  s_boot_splash_fb = NULL;
-  s_boot_splash_task = NULL;
-  pbl_thread_abort(NULL);
+  s_boot_splash_fb = nullptr;
+  s_boot_splash_task = nullptr;
+  pbl_thread_abort(nullptr);
 }
 
 void boot_splash_start(void) {
@@ -170,10 +170,10 @@ void boot_splash_start(void) {
 }
 
 void boot_splash_stop(void) {
-  if (s_boot_splash_running && s_boot_splash_task != NULL) {
+  if (s_boot_splash_running && s_boot_splash_task != nullptr) {
     s_boot_splash_running = false;
     // Wait for the splash task to finish (max ~10ms delay due to short sleep intervals)
-    while (s_boot_splash_task != NULL) {
+    while (s_boot_splash_task != nullptr) {
       psleep(10);
     }
 

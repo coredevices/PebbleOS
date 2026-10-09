@@ -26,7 +26,7 @@ typedef struct {
 
 struct pbl_mutex s_resource_mutex;
 
-static CachedResource *s_resource_list = NULL;
+static CachedResource *s_resource_list = nullptr;
 
 // Last-resolved app resource; invalidated in resource_init_app().
 typedef struct {
@@ -117,7 +117,7 @@ uint32_t resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
   // check if we already have something in cache for this resource
   CachedResource *cached_resource = (CachedResource *)list_find(
       (ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)resource_id);
-  if (cached_resource == NULL) {
+  if (cached_resource == nullptr) {
     cached_resource = kernel_malloc_check(sizeof(CachedResource));
     *cached_resource = (CachedResource){};
     cached_resource->id = resource_id;
@@ -180,7 +180,7 @@ const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_
                                            size_t *num_bytes_out, bool has_privileged_access) {
   // we don't support memory-mapping for resources that don't belong to the system
   if (app_num != SYSTEM_APP) {
-    return NULL;
+    return nullptr;
   }
 
   pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
@@ -212,7 +212,7 @@ ResourceVersion resource_get_system_version(void) {
 
 bool resource_is_valid(ResAppNum app_num, uint32_t resource_id) {
   pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
-  bool rv = resource_storage_check(app_num, resource_id, NULL /* No expected version */);
+  bool rv = resource_storage_check(app_num, resource_id, nullptr /* No expected version */);
   if (rv) {
     ResourceStoreEntry entry;
     prv_get_resource(app_num, resource_id, &entry);

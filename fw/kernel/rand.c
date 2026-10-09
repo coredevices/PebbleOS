@@ -76,7 +76,7 @@ int rand(void) {
 }
 
 int rand_r(unsigned int *seedp) { // Please don't use this
-  PBL_ASSERTN(seedp != NULL);
+  PBL_ASSERTN(seedp != nullptr);
 
   tinymt32_t state = {};
   prv_seed(&state, *seedp);

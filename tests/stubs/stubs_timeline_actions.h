@@ -13,19 +13,19 @@ void PBL_WEAK timeline_actions_add_action_to_root_level(TimelineItemAction *acti
 
 ActionMenuLevel *PBL_WEAK timeline_actions_create_action_menu_root_level(
     uint8_t num_actions, uint8_t separator_index, TimelineItemActionSource source) {
-  return NULL;
+  return nullptr;
 }
 
 ActionMenu *timeline_actions_push_action_menu(ActionMenuConfig *base_config,
                                               WindowStack *window_stack) {
-  return NULL;
+  return nullptr;
 }
 
 ActionMenu *PBL_WEAK timeline_actions_push_response_menu(
     TimelineItem *item, TimelineItemAction *reply_action, GColor bg_color,
     ActionMenuDidCloseCb did_close_cb, WindowStack *window_stack, TimelineItemActionSource source,
     bool standalone_reply) {
-  return NULL;
+  return nullptr;
 };
 
 void PBL_WEAK timeline_actions_cleanup_action_menu(ActionMenu *action_menu,

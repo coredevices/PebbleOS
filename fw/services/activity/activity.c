@@ -45,7 +45,7 @@ static bool s_activity_initialized = false;
 // ------------------------------------------------------------------------------------------------
 ActivityState *activity_private_state(void) {
   if (!s_activity_initialized) {
-    return NULL;
+    return nullptr;
   }
   return &s_activity_state;
 }
@@ -256,11 +256,11 @@ static void prv_heart_rate_init(void) {
   s_activity_state.hr.toggled_sampling_at_ts = time_get_uptime_seconds();
   s_activity_state.hr.hrm_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC, 0 /*expire_s*/, HRMFeature_BPM,
-      false /*low_latency*/, prv_hrm_subscription_cb, NULL);
+      false /*low_latency*/, prv_hrm_subscription_cb, nullptr);
   PBL_ASSERTN(s_activity_state.hr.hrm_session != HRM_INVALID_SESSION_REF);
 
-  s_activity_state.hr.log_session = protobuf_log_hr_create(NULL);
-  PBL_ASSERTN(s_activity_state.hr.log_session != NULL);
+  s_activity_state.hr.log_session = protobuf_log_hr_create(nullptr);
+  PBL_ASSERTN(s_activity_state.hr.log_session != nullptr);
 #endif // CONFIG_HRM
 }
 
@@ -445,7 +445,7 @@ static void prv_spo2_init(void) {
   // Dormant until a measurement window opens (see prv_spo2_set_sampling).
   s_activity_state.spo2.hrm_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC, 0 /*expire_s*/, (HRMFeature)0,
-      false /*low_latency*/, prv_spo2_subscription_cb, NULL);
+      false /*low_latency*/, prv_spo2_subscription_cb, nullptr);
   PBL_ASSERTN(s_activity_state.spo2.hrm_session != HRM_INVALID_SESSION_REF);
 #endif // CONFIG_HRM
 }
@@ -582,7 +582,7 @@ static void prv_activity_spo2_schedule_update(void) {
     return;
   }
   s_activity_state.activity_spo2.update_pending = true;
-  system_task_add_callback(prv_activity_spo2_update_system_cb, NULL);
+  system_task_add_callback(prv_activity_spo2_update_system_cb, nullptr);
 }
 
 // Kernel BG callback for the activity SpO2 session. Only fires while we are sampling (our session
@@ -615,7 +615,7 @@ static void prv_activity_spo2_init(void) {
   // Dormant until an attempt starts (see prv_activity_spo2_set_sampling).
   s_activity_state.activity_spo2.hrm_session = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC, 0 /*expire_s*/, (HRMFeature)0,
-      false /*low_latency*/, prv_activity_spo2_subscription_cb, NULL);
+      false /*low_latency*/, prv_activity_spo2_subscription_cb, nullptr);
   PBL_ASSERTN(s_activity_state.activity_spo2.hrm_session != HRM_INVALID_SESSION_REF);
 #endif // CONFIG_HRM
 }
@@ -641,7 +641,7 @@ SettingsFile *activity_private_settings_open(void) {
       S_SUCCESS) {
     kernel_free(file);
     PBL_LOG_ERR("No settings file");
-    return NULL;
+    return nullptr;
   }
   return file;
 }
@@ -773,7 +773,7 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
   if ((version == 1) || (version == 2)) {
     // Both older versions store metric values as uint16_t, so re-create the file (at the new,
     // bigger size in the version 1 case) while widening metric records to uint32_t.
-    result = settings_file_rewrite(file, prv_settings_rewrite_cb, NULL);
+    result = settings_file_rewrite(file, prv_settings_rewrite_cb, nullptr);
     if (result != S_SUCCESS) {
       PBL_LOG_ERR("Failure %" PRIi32 " while re-writing setting file", (int32_t)result);
     }
@@ -991,19 +991,19 @@ static void prv_collect_raw_samples(AccelRawData *accel_data, uint32_t num_sampl
   ActivitySampleCollectionData *data = s_activity_state.sample_collection_data;
 
   // Create the data logging session now, if needed
-  if (data->dls_session == NULL) {
+  if (data->dls_session == nullptr) {
     Uuid system_uuid = UUID_SYSTEM;
     data->dls_session = dls_create(DlsSystemTagActivityAccelSamples, DATA_LOGGING_BYTE_ARRAY,
                                    sizeof(ActivityRawSamplesRecord), true /*buffered*/,
                                    false /*resume*/, &system_uuid);
-    if (data->dls_session == NULL) {
+    if (data->dls_session == nullptr) {
       PBL_LOG_ERR("Unable to create DLS session");
       return;
     }
   }
 
   if (finish) {
-    PBL_ASSERTN(num_samples == 0 && accel_data == NULL);
+    PBL_ASSERTN(num_samples == 0 && accel_data == nullptr);
   }
 
   // Save the samples
@@ -1212,7 +1212,7 @@ static void prv_start_tracking_cb(void *context) {
     // Subscribe to the accelerometer from KernelBG
     s_activity_state.test_mode = test_mode;
     if (!test_mode) {
-      PBL_ASSERTN(s_activity_state.accel_session == NULL);
+      PBL_ASSERTN(s_activity_state.accel_session == nullptr);
       s_activity_state.accel_session = accel_session_create();
       accel_session_raw_data_subscribe(s_activity_state.accel_session, sampling_rate,
                                        CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES, prv_accel_cb);
@@ -1259,7 +1259,7 @@ static void prv_stop_tracking_cb(void *context) {
   if (s_activity_state.accel_session) {
     accel_session_data_unsubscribe(s_activity_state.accel_session);
     accel_session_delete(s_activity_state.accel_session);
-    s_activity_state.accel_session = NULL;
+    s_activity_state.accel_session = nullptr;
   }
 
   // Close down heart rate support
@@ -1296,14 +1296,14 @@ static void prv_set_enable_cb(void *context) {
     if (enable) {
       // We just got enabled, re-start activity tracking if it should be in the started state
       if (s_activity_state.should_be_started) {
-        prv_start_tracking_cb(NULL);
+        prv_start_tracking_cb(nullptr);
       }
 
     } else {
       // We just got disabled. Turn off activity tracking if necessary and set should_be_started
       // so that it gets restarted again once we get re-enabled.
       if (s_activity_state.started) {
-        prv_stop_tracking_cb(NULL);
+        prv_stop_tracking_cb(nullptr);
         // We want to turn tracking on again once we get re-enabled, so change the state of
         // should_be_started to true (prv_stop_tracking_cb() sets it to false).
         s_activity_state.should_be_started = true;
@@ -1324,7 +1324,7 @@ static void prv_handle_activity_enabled_change(void) {
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
 
-  system_task_add_callback(prv_set_enable_cb, NULL);
+  system_task_add_callback(prv_set_enable_cb, nullptr);
 }
 
 static void prv_charger_event_cb(PebbleEvent *e, void *context) {
@@ -1474,7 +1474,7 @@ bool activity_stop_tracking(void) {
     prv_stop_tracking_early();
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
-  return system_task_add_callback(prv_stop_tracking_cb, NULL);
+  return system_task_add_callback(prv_stop_tracking_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1510,7 +1510,7 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
   if (!s_activity_initialized) {
     return false;
   }
-  if (sessions == NULL) {
+  if (sessions == nullptr) {
     return false;
   }
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
@@ -1698,13 +1698,13 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
     if (disable && s_activity_state.sample_collection_enabled) {
       // Finish up the current record
       s_activity_state.sample_collection_enabled = false;
-      prv_collect_raw_samples(NULL, 0, true /*finish*/);
+      prv_collect_raw_samples(nullptr, 0, true /*finish*/);
       ActivitySampleCollectionData *data = s_activity_state.sample_collection_data;
       if (data->dls_session) {
         dls_finish(data->dls_session);
       }
       kernel_free(data);
-      s_activity_state.sample_collection_data = NULL;
+      s_activity_state.sample_collection_data = nullptr;
       s_activity_state.sample_collection_seconds =
           rtc_get_time() - s_activity_state.sample_collection_seconds;
     }
@@ -1799,7 +1799,7 @@ bool activity_test_run_minute_callback(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  return system_task_add_callback(prv_minute_system_task_cb, NULL);
+  return system_task_add_callback(prv_minute_system_task_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1969,7 +1969,7 @@ bool activity_test_send_fake_dls_records(void) {
     return false;
   }
   // Enqueue it for KernelBG to process
-  return system_task_add_callback(prv_send_fake_dls_records_system_cb, NULL);
+  return system_task_add_callback(prv_send_fake_dls_records_system_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------

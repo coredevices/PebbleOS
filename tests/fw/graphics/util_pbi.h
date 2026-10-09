@@ -16,7 +16,7 @@ extern GBitmapDataRowInfo prv_gbitmap_get_data_row_info(const GBitmap *bitmap, u
 bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2png_path) {
   char pbi_path[PATH_STRING_LENGTH];
   char png_path[PATH_STRING_LENGTH];
-  char *ext = NULL;
+  char *ext = nullptr;
 
   strncpy(pbi_path, filepath, sizeof(pbi_path));
   ext = strrchr(pbi_path, '.');
@@ -94,7 +94,7 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
   int pid = fork();
   if (pid == 0) {
     char *args[] = {
-      "python", (char *)pbi2png_path, (char *)pbi_path, (char *)png_path, NULL,
+      "python", (char *)pbi2png_path, (char *)pbi_path, (char *)png_path, nullptr,
     };
     execvp("python", args);
 

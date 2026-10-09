@@ -21,7 +21,7 @@ PBL_WEAK void app_menu_data_source_enable_icons(AppMenuDataSource *source,
 
 PBL_WEAK AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source,
                                                              uint16_t row_index) {
-  return NULL;
+  return nullptr;
 }
 
 PBL_WEAK uint16_t app_menu_data_source_get_count(AppMenuDataSource *source) {
@@ -41,5 +41,5 @@ PBL_WEAK void app_menu_data_source_set_default_icon(AppMenuDataSource *source, u
 }
 
 PBL_WEAK GBitmap *app_menu_data_source_get_node_icon(AppMenuDataSource *source, AppMenuNode *node) {
-  return NULL;
+  return nullptr;
 }

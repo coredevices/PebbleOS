@@ -97,10 +97,10 @@ void touch_nav_registry_remove(TouchNavState *state, TouchNavWidgetType type,
   // caller cancels any in-flight gesture, so the resulting Cancelled dispatch cannot reach the
   // widget's (now torn-down) apply logic.
   if (state->latched_target == node) {
-    state->latched_target = NULL;
+    state->latched_target = nullptr;
   }
   TouchNavWidgetNode **head = prv_registry_head(state, type);
-  TouchNavWidgetNode *prev = NULL;
+  TouchNavWidgetNode *prev = nullptr;
   for (TouchNavWidgetNode *cur = *head; cur; prev = cur, cur = cur->next) {
     if (cur == node) {
       if (prev) {
@@ -108,7 +108,7 @@ void touch_nav_registry_remove(TouchNavState *state, TouchNavWidgetType type,
       } else {
         *head = cur->next;
       }
-      node->next = NULL;
+      node->next = nullptr;
       return;
     }
   }
@@ -148,7 +148,7 @@ static bool prv_registry_contains_layer(TouchNavState *state, const struct Layer
 // @return the single registered widget layer across both registries, or NULL if there is not
 // exactly one.
 static struct Layer *prv_registry_sole_widget(TouchNavState *state) {
-  struct Layer *sole = NULL;
+  struct Layer *sole = nullptr;
   uint32_t count = 0;
   for (TouchNavWidgetNode *n = state->menu_head; n; n = n->next) {
     sole = n->layer;
@@ -162,7 +162,7 @@ static struct Layer *prv_registry_sole_widget(TouchNavState *state) {
     sole = n->layer;
     count++;
   }
-  return (count == 1) ? sole : NULL;
+  return (count == 1) ? sole : nullptr;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -217,19 +217,19 @@ ButtonId touch_nav_action_bar_zone_button(const TouchNavActionBar *bar, GPoint p
 // unified set only ever drives ops-bearing (migrated) widgets.
 static TouchNavWidgetNode *prv_resolve_widget_target(TouchNavState *state) {
   if (!state || !state->manager) {
-    return NULL;
+    return nullptr;
   }
   TouchNavWidgetNode *const heads[] = {state->menu_head, state->scroll_head, state->swap_head};
   for (struct Layer *layer = state->manager->active_layer; layer; layer = layer->parent) {
     for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
       for (TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
         if (n->layer == layer) {
-          return n->ops ? n : NULL;
+          return n->ops ? n : nullptr;
         }
       }
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 // Touch filter for the unified widget set: handle a gesture only when the latched active layer
@@ -238,7 +238,7 @@ static TouchNavWidgetNode *prv_resolve_widget_target(TouchNavState *state) {
 // or an un-migrated widget's own set on this task's global recognizer list.
 static bool prv_widget_touch_filter(const Recognizer *recognizer, const TouchEvent *touch_event) {
   TouchNavState *state = recognizer_get_user_data(recognizer);
-  return prv_resolve_widget_target(state) != NULL;
+  return prv_resolve_widget_target(state) != nullptr;
 }
 
 // Unified widget dispatch. Mirrors the per-widget recognizer callbacks this replaces, but drives
@@ -303,14 +303,14 @@ static void prv_widget_recognizer_event(const Recognizer *recognizer, Recognizer
           }
         }
       }
-      state->latched_target = NULL;
+      state->latched_target = nullptr;
       state->declined = false;
       break;
     case RecognizerEvent_Cancelled:
       if (!state->declined && recognizer == state->widget_pan) {
         ops->pan_cancel(w);
       }
-      state->latched_target = NULL;
+      state->latched_target = nullptr;
       state->declined = false;
       break;
   }
@@ -495,7 +495,7 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
       // refactor. Synthesising a pan_cancel here would be a new side effect (Ф1 is a
       // no-behaviour-change rebuild), so a mid-pan wake/DnD tap unwinds the gesture silently, as it
       // always has.
-      state->latched_target = NULL;
+      state->latched_target = nullptr;
       state->declined = false;
       prv_log_push(state, TouchNavLog_Gated, 0);
       recognizer_manager_cancel_and_reset(manager);
@@ -513,7 +513,7 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
     if (manager->state == RecognizerManagerState_WaitForTouchdown) {
       // The manager declined to activate (should not happen for a navigational fresh Touchdown).
       state->route = TouchNavRoute_None;
-      state->latched_target = NULL;
+      state->latched_target = nullptr;
       state->declined = false;
       return;
     }
@@ -696,12 +696,12 @@ void touch_nav_state_deinit(TouchNavState *state) {
   recognizer_remove_from_list(state->widget_tap, global_list);
   recognizer_remove_from_list(state->widget_pan, global_list);
   recognizer_remove_from_list(state->widget_swipe, global_list);
-  state->tap = NULL;
-  state->pan = NULL;
-  state->swipe = NULL;
-  state->widget_tap = NULL;
-  state->widget_pan = NULL;
-  state->widget_swipe = NULL;
-  state->latched_target = NULL;
-  state->manager = NULL;
+  state->tap = nullptr;
+  state->pan = nullptr;
+  state->swipe = nullptr;
+  state->widget_tap = nullptr;
+  state->widget_pan = nullptr;
+  state->widget_swipe = nullptr;
+  state->latched_target = nullptr;
+  state->manager = nullptr;
 }

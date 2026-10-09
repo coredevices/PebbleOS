@@ -74,8 +74,8 @@ void touch_sensor_set_enabled(bool enabled) {
 // setup and teardown
 void test_touch__initialize(void) {
   fake_event_init();
-  s_add_subscriber_cb = NULL;
-  s_remove_subscriber_cb = NULL;
+  s_add_subscriber_cb = nullptr;
+  s_remove_subscriber_cb = nullptr;
   s_touch_sensor_enable_count = 0;
   s_touch_sensor_disable_count = 0;
   s_touch_sensor_enabled = false;
@@ -154,8 +154,8 @@ void test_touch__reset_clears_state(void) {
 }
 
 void test_touch__subscriber_enables_sensor(void) {
-  cl_assert(s_add_subscriber_cb != NULL);
-  cl_assert(s_remove_subscriber_cb != NULL);
+  cl_assert(s_add_subscriber_cb != nullptr);
+  cl_assert(s_remove_subscriber_cb != nullptr);
 
   s_add_subscriber_cb(PebbleTask_App);
   cl_assert_equal_i(s_touch_sensor_enable_count, 1);

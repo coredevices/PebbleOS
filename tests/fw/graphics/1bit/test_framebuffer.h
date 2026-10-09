@@ -62,7 +62,7 @@ static inline uint32_t *fread_pbi(FILE *file, GBitmap *bitmap) {
     fread(buffer, 4, image_size, file);
     return buffer;
   }
-  return NULL;
+  return nullptr;
 }
 
 static inline uint32_t *read_pbi(const char *filename, GBitmap *bitmap) {
@@ -72,7 +72,7 @@ static inline uint32_t *read_pbi(const char *filename, GBitmap *bitmap) {
   FILE *file = fopen(res_path, "r");
   if (!file) {
     printf("\ncould not open %s for reading\n", res_path);
-    return NULL;
+    return nullptr;
   }
   uint32_t *buffer = fread_pbi(file, bitmap);
   fclose(file);

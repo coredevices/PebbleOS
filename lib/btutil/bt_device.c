@@ -21,7 +21,7 @@ struct pbl_bt_addr bt_device_get_address(struct pbl_bt_device device) {
 }
 
 bool bt_device_address_equal(const struct pbl_bt_addr *addr1, const struct pbl_bt_addr *addr2) {
-  if (addr1 == NULL || addr2 == NULL) {
+  if (addr1 == nullptr || addr2 == nullptr) {
     return false;
   }
   return memcmp(addr1, addr2, sizeof(struct pbl_bt_addr)) == 0;
@@ -37,7 +37,7 @@ bool bt_device_address_is_invalid(const struct pbl_bt_addr *addr) {
 
 bool bt_device_internal_equal(const struct pbl_bt_device_internal *device1_int,
                               const struct pbl_bt_device_internal *device2_int) {
-  if (device1_int == NULL || device2_int == NULL) {
+  if (device1_int == nullptr || device2_int == nullptr) {
     return false;
   }
   return (device1_int->is_classic == device2_int->is_classic &&

@@ -63,7 +63,7 @@ typedef struct {
   void *data;
 } CallbackNode;
 
-static ListNode *s_app_task_callback_head = NULL;
+static ListNode *s_app_task_callback_head = nullptr;
 
 void app_task_add_callback(void (*callback)(void *data), void *data) {
   CallbackNode *node = (CallbackNode *)malloc(sizeof(CallbackNode));
@@ -103,23 +103,23 @@ void stub_app_task_callbacks_invoke_pending(void) {
     if (node->callback) {
       node->callback(node->data);
     }
-    list_remove(&node->node, &s_app_task_callback_head, NULL);
+    list_remove(&node->node, &s_app_task_callback_head, nullptr);
     free(node);
     node = prev;
   }
-  PBL_ASSERTN(s_app_task_callback_head == NULL);
+  PBL_ASSERTN(s_app_task_callback_head == nullptr);
 }
 
 void stub_app_task_callbacks_cleanup(void) {
   CallbackNode *node = (CallbackNode *)s_app_task_callback_head;
   while (node) {
     CallbackNode *next = (CallbackNode *)list_get_next(&node->node);
-    list_remove(&node->node, &s_app_task_callback_head, NULL);
+    list_remove(&node->node, &s_app_task_callback_head, nullptr);
     free(node);
     node = next;
   }
   s_app_install_id = INSTALL_ID_INVALID;
-  PBL_ASSERTN(s_app_task_callback_head == NULL);
+  PBL_ASSERTN(s_app_task_callback_head == nullptr);
 }
 
 void stub_app_set_is_running(const bool is_running) {

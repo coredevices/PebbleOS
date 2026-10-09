@@ -258,7 +258,7 @@ static PBL_NOINLINE void prv_init(void) {
   };
   event_service_client_subscribe(&data->event_service_info);
 
-  data->voice_window = voice_window_create(NULL, 0, VoiceEndpointSessionTypeNLP);
+  data->voice_window = voice_window_create(nullptr, 0, VoiceEndpointSessionTypeNLP);
   voice_window_set_confirmation_enabled(data->voice_window, false);
 
   // Let the main window manage the voice window
@@ -300,5 +300,5 @@ const PebbleProcessMd *reminder_app_get_info(void) {
     .icon_resource_id = RESOURCE_ID_GENERIC_REMINDER_TINY,
   };
 
-  return is_visible_in_launcher ? (const PebbleProcessMd *)&s_reminder_app_info : NULL;
+  return is_visible_in_launcher ? (const PebbleProcessMd *)&s_reminder_app_info : nullptr;
 }

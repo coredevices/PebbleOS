@@ -21,7 +21,7 @@ static void selected_pwm_percentage(NumberWindow *nw, void *ctx) {
 
 static void handle_init(void) {
   NumberWindow *vibe_num_window = number_window_create(
-      "Vibe Strength", (NumberWindowCallbacks){.selected = selected_pwm_percentage}, NULL);
+      "Vibe Strength", (NumberWindowCallbacks){.selected = selected_pwm_percentage}, nullptr);
   app_state_set_user_data(vibe_num_window);
 
   uint8_t scale_granularity = 5; // 5 percent at a time

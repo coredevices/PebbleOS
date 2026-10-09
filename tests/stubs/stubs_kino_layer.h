@@ -10,14 +10,14 @@ void kino_layer_deinit(KinoLayer *kino_layer) {
 }
 
 KinoLayer *kino_layer_create(GRect frame) {
-  return NULL;
+  return nullptr;
 }
 
 void kino_layer_destroy(KinoLayer *kino_layer) {
 }
 
 Layer *kino_layer_get_layer(KinoLayer *kino_layer) {
-  return NULL;
+  return nullptr;
 }
 
 void kino_layer_set_reel(KinoLayer *kino_layer, KinoReel *reel, bool take_ownership) {
@@ -30,11 +30,11 @@ void kino_layer_set_reel_with_resource_system(KinoLayer *kino_layer, ResAppNum a
 }
 
 KinoReel *kino_layer_get_reel(KinoLayer *kino_layer) {
-  return NULL;
+  return nullptr;
 }
 
 KinoPlayer *kino_layer_get_player(KinoLayer *kino_layer) {
-  return NULL;
+  return nullptr;
 }
 
 GColor kino_layer_get_background_color(KinoLayer *kino_layer) {

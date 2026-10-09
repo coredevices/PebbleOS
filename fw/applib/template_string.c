@@ -276,7 +276,7 @@ static void prv_append_string_i18n(TemplateStringState *state, const char *str) 
 }
 
 static void prv_append_number(TemplateStringState *state, const char *fmt, int value) {
-  size_t len = snprintf(NULL, 0, fmt, value);
+  size_t len = snprintf(nullptr, 0, fmt, value);
   if (state->output_remaining < len) {
     len = state->output_remaining;
   }
@@ -848,7 +848,7 @@ bool template_string_evaluate(const char *input_template_string, char *output, s
   // We have no output space, so don't bother trying to write anything.
   // By unifying these states, we can just check `output_remaining` against zero for writing.
   if (!state.output || !state.output_remaining) {
-    state.output = NULL;
+    state.output = nullptr;
     state.output_remaining = 0;
   } else {
     // Subtract 1 for the null terminator.

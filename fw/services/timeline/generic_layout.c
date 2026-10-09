@@ -59,7 +59,7 @@ static GTextNode *prv_horizontal_rule_constructor(const LayoutLayer *layout_ref,
     custom_node->node.margin.h = 12;
     return &custom_node->node;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 #endif // PBL_RECT

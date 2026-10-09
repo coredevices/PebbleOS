@@ -36,7 +36,7 @@ static void prv_reset_kernel_bg_cb(void *unused) {
 }
 
 static void prv_ui_update_reset_delay_timer_callback(void *unused) {
-  system_task_add_callback(prv_reset_kernel_bg_cb, NULL);
+  system_task_add_callback(prv_reset_kernel_bg_cb, nullptr);
 }
 
 static void prv_handle_firmware_complete_msg(void) {
@@ -46,7 +46,7 @@ static void prv_handle_firmware_complete_msg(void) {
   PBL_LOG_ALWAYS("Delaying reset by 3s so the UI can update...");
   TimerID timer = new_timer_create(); // Don't bother cleaning up this timer, we're going to reset
   PBL_ASSERTN(timer != TIMER_INVALID_ID);
-  new_timer_start(timer, timeout, prv_ui_update_reset_delay_timer_callback, NULL, 0);
+  new_timer_start(timer, timeout, prv_ui_update_reset_delay_timer_callback, nullptr, 0);
 }
 
 //! Note: For now we just call into storage directly for the status of FW installs. Someday,

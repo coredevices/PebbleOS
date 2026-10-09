@@ -27,13 +27,13 @@ typedef struct LauncherAppGlanceNotifications {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceNotifications *notifications_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(notifications_glance, icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(notifications_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceNotifications *notifications_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(notifications_glance, title, NULL);
+  return NULL_SAFE_FIELD_ACCESS(notifications_glance, title, nullptr);
 }
 
 static void prv_notifications_glance_subtitle_dynamic_text_node_update(

@@ -42,8 +42,8 @@ static void prv_unload_scores(void) {
 static void handle_init(void) {
   prv_load_scores();
 
-  NumberWindow *vibe_num_window =
-      number_window_create("Vibe Patterns", (NumberWindowCallbacks){.selected = prv_do_vibe}, NULL);
+  NumberWindow *vibe_num_window = number_window_create(
+      "Vibe Patterns", (NumberWindowCallbacks){.selected = prv_do_vibe}, nullptr);
   app_state_set_user_data(vibe_num_window);
 
   number_window_set_value(vibe_num_window, 0);

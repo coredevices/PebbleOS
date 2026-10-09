@@ -190,7 +190,7 @@ static void prv_codec_standby(void) {
 
 static void prv_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t status) {
 #if !PLAY_SINEWAVE
-  PBL_ASSERT(!(status == NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED && p_released == NULL),
+  PBL_ASSERT(!(status == NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED && p_released == nullptr),
              "I2S buffers re-used");
 
   if (status == NRFX_I2S_STATUS_NEXT_BUFFERS_NEEDED) {
@@ -199,7 +199,7 @@ static void prv_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t stat
     nrfx_i2s_next_buffers_set(&s_i2s, &s_i2s_bufs);
   }
 
-  if (p_released != NULL && p_released->p_tx_buffer != NULL) {
+  if (p_released != nullptr && p_released->p_tx_buffer != nullptr) {
     s_buf_wr = (int16_t *)p_released->p_tx_buffer;
     pbl_sem_give(&s_need_data);
   }

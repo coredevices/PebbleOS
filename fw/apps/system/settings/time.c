@@ -348,8 +348,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
                             uint16_t row, bool selected) {
   SettingsTimeData *data = (SettingsTimeData *)context;
 
-  const char *title = NULL;
-  const char *subtitle = NULL;
+  const char *title = nullptr;
+  const char *subtitle = nullptr;
   char current_timezone_region[TIMEZONE_NAME_LENGTH];
   char tz_source_buf[TIMEZONE_NAME_LENGTH + 32];
   char time_buf[TIME_STRING_TIME_LENGTH];
@@ -407,7 +407,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
   }
 
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {

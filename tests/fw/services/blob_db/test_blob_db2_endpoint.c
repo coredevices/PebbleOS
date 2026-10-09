@@ -164,7 +164,7 @@ static const uint8_t s_dirty_dbs_response[] = {
 
 void test_blob_db2_endpoint__handle_dirty_dbs_request(void) {
   s_expected_msg = s_dirty_dbs_response;
-  blob_db2_protocol_msg_callback(NULL, s_dirty_dbs_request, sizeof(s_dirty_dbs_request));
+  blob_db2_protocol_msg_callback(nullptr, s_dirty_dbs_request, sizeof(s_dirty_dbs_request));
 }
 
 static const uint8_t s_start_sync_request[] = {
@@ -183,7 +183,7 @@ static const uint8_t s_start_sync_response[] = {
 
 void test_blob_db2_endpoint__handle_start_sync_request(void) {
   s_expected_msg = s_start_sync_response;
-  blob_db2_protocol_msg_callback(NULL, s_start_sync_request, sizeof(s_start_sync_request));
+  blob_db2_protocol_msg_callback(nullptr, s_start_sync_request, sizeof(s_start_sync_request));
   cl_assert(did_sync_db);
 }
 
@@ -202,7 +202,7 @@ static const uint8_t s_start_write_response_error[] = {
 };
 
 void test_blob_db2_endpoint__handle_write_response(void) {
-  blob_db2_protocol_msg_callback(NULL, s_start_write_response_success,
+  blob_db2_protocol_msg_callback(nullptr, s_start_write_response_success,
                                  sizeof(s_start_write_response_success));
   cl_assert(did_sync_next);
 
@@ -210,7 +210,7 @@ void test_blob_db2_endpoint__handle_write_response(void) {
   // synced via blob_db_sync_next() to avoid re-sending it on every sync. The endpoint never
   // cancels a sync in response to a write/writeback error.
   did_sync_next = false;
-  blob_db2_protocol_msg_callback(NULL, s_start_write_response_error,
+  blob_db2_protocol_msg_callback(nullptr, s_start_write_response_error,
                                  sizeof(s_start_write_response_error));
   cl_assert(did_sync_next);
   cl_assert(!did_sync_cancel);
@@ -231,14 +231,14 @@ static const uint8_t s_start_writeback_response_error[] = {
 };
 
 void test_blob_db2_endpoint__handle_writeback_response(void) {
-  blob_db2_protocol_msg_callback(NULL, s_start_writeback_response_success,
+  blob_db2_protocol_msg_callback(nullptr, s_start_writeback_response_success,
                                  sizeof(s_start_writeback_response_success));
   cl_assert(did_sync_next);
 
   // As with the write response above, a rejected writeback advances the sync rather than
   // cancelling it.
   did_sync_next = false;
-  blob_db2_protocol_msg_callback(NULL, s_start_writeback_response_error,
+  blob_db2_protocol_msg_callback(nullptr, s_start_writeback_response_error,
                                  sizeof(s_start_writeback_response_error));
   cl_assert(did_sync_next);
   cl_assert(!did_sync_cancel);
@@ -252,7 +252,7 @@ static const uint8_t s_sync_done_response[] = {
 };
 
 void test_blob_db2_endpoint__handle_sync_done_response(void) {
-  blob_db2_protocol_msg_callback(NULL, s_sync_done_response, sizeof(s_sync_done_response));
+  blob_db2_protocol_msg_callback(nullptr, s_sync_done_response, sizeof(s_sync_done_response));
   // We currently don't do anything with this message
 }
 
@@ -274,7 +274,7 @@ static const uint8_t s_invalid_cmd_response[] = {
 
 void test_blob_db2_endpoint__handle_unknown_cmd_id(void) {
   s_expected_msg = s_invalid_cmd_response;
-  blob_db2_protocol_msg_callback(NULL, s_invalid_cmd, sizeof(s_invalid_cmd));
+  blob_db2_protocol_msg_callback(nullptr, s_invalid_cmd, sizeof(s_invalid_cmd));
 }
 
 static const uint8_t s_sync_done_message[] = {

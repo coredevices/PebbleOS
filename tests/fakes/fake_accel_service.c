@@ -30,8 +30,8 @@ void accel_raw_data_service_subscribe(uint32_t samples_per_update, AccelRawDataH
 }
 
 void accel_data_service_unsubscribe(void) {
-  s_handler = NULL;
-  s_raw_handler = NULL;
+  s_handler = nullptr;
+  s_raw_handler = nullptr;
 }
 
 int accel_service_set_sampling_rate(AccelSamplingRate rate) {
@@ -76,8 +76,8 @@ void accel_session_raw_data_subscribe(AccelServiceState *session, AccelSamplingR
 }
 
 void accel_session_data_unsubscribe(AccelServiceState *session) {
-  s_handler = NULL;
-  s_raw_handler = NULL;
+  s_handler = nullptr;
+  s_raw_handler = nullptr;
 }
 
 int accel_session_set_sampling_rate(AccelServiceState *session, AccelSamplingRate rate) {

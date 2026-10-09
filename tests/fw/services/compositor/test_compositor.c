@@ -49,13 +49,13 @@ bool animation_is_scheduled(Animation *animation_h) {
 static int s_count_animation_destroy = 0;
 bool animation_unschedule(Animation *animation) {
   ++s_count_animation_destroy;
-  s_scheduled_animation = NULL;
+  s_scheduled_animation = nullptr;
   return true;
 }
 
 bool animation_destroy(Animation *animation) {
   ++s_count_animation_destroy;
-  s_scheduled_animation = NULL;
+  s_scheduled_animation = nullptr;
   return true;
 }
 
@@ -133,7 +133,7 @@ void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
 }
 
 AnimationPrivate *animation_private_animation_find(Animation *handle) {
-  return NULL;
+  return nullptr;
 }
 
 static int s_count_display_update = 0;
@@ -202,7 +202,7 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 
 static void prv_run_launcher_callback(void) {
   void (*callback)(void *data) = s_launcher_callback;
-  s_launcher_callback = NULL;
+  s_launcher_callback = nullptr;
   callback(s_launcher_callback_data);
 }
 
@@ -217,7 +217,7 @@ static void prv_frozen_cb(void *data) {
 ///////////////////////////////////////////////////////////
 
 void test_compositor__initialize(void) {
-  s_animation_implementation = NULL;
+  s_animation_implementation = nullptr;
 
   s_last_event = (PebbleEvent){.type = 0};
 
@@ -226,7 +226,7 @@ void test_compositor__initialize(void) {
   s_count_animation_create = 0;
   s_count_animation_schedule = 0;
   s_count_animation_destroy = 0;
-  s_scheduled_animation = NULL;
+  s_scheduled_animation = nullptr;
 
   s_count_display_update = 0;
   s_count_compositor_init_func_a = 0;
@@ -239,10 +239,10 @@ void test_compositor__initialize(void) {
 
   s_render_pending = false;
 
-  s_launcher_callback = NULL;
-  s_launcher_callback_data = NULL;
+  s_launcher_callback = nullptr;
+  s_launcher_callback_data = nullptr;
   s_count_frozen = 0;
-  s_frozen_data = NULL;
+  s_frozen_data = nullptr;
 
   compositor_init();
 }
@@ -353,7 +353,7 @@ void test_compositor__modal_transition_cancels_deferred_app(void) {
 void test_compositor__app_no_animation(void) {
   // Start a transition. We shouldn't update the screen because the app hasn't rendered
   // yet.
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   cl_assert_equal_i(s_count_display_update, 0);
   cl_assert_equal_i(s_count_animation_create, 0);
 
@@ -369,7 +369,7 @@ void test_compositor__app_not_ready_modal_push_pop(void) {
   // in practice, but we should fix it up at some point.
 
   // Start a null window transition to an app. It should wait for the app to report ready
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   cl_assert_equal_i(s_count_display_update, 0);
   cl_assert_equal_i(s_count_animation_create, 0);
 
@@ -380,7 +380,7 @@ void test_compositor__app_not_ready_modal_push_pop(void) {
   cl_assert_equal_i(s_count_animation_create, 1);
 
   s_modal_window_present = false;
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
 
   // previous animation is unscheduled
   cl_assert_equal_i(s_count_animation_destroy, 1);
@@ -397,7 +397,7 @@ void test_compositor__app_not_ready_modal_push_pop(void) {
 void test_compositor__app_not_ready_cancelled_animation_deferred(void) {
   // Show a modal window
   s_modal_window_present = true;
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
 
   // Now pop it with a transition
   s_modal_window_present = false;
@@ -410,7 +410,7 @@ void test_compositor__app_not_ready_cancelled_animation_deferred(void) {
   // Start a null window transition to an app while the modal is popping. It should wait for the
   // app to report ready. This shouldn't cancel any animation, as the animation isn't started yet,
   // as it should be waiting for the app to render for the first time before starting.
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   cl_assert_equal_i(s_count_animation_destroy, 1);
   cl_assert_equal_i(s_app_window_render_count, 0);
 
@@ -430,7 +430,7 @@ void test_compositor__app_not_ready_cancelled_animation_deferred(void) {
 void test_compositor__cancel_modal_to_app_with_another_modal(void) {
   // Show a modal window
   s_modal_window_present = true;
-  compositor_transition(NULL);
+  compositor_transition(nullptr);
   cl_assert_equal_i(s_count_display_update, 1);
 
   // Now pop it with a transition
@@ -489,7 +489,7 @@ void test_compositor__freeze_idle_display(void) {
 
 void test_compositor__freeze_waits_for_display_update(void) {
   s_display_update_in_progress = true;
-  compositor_freeze(prv_frozen_cb, NULL);
+  compositor_freeze(prv_frozen_cb, nullptr);
   prv_run_launcher_callback();
   // The framebuffer is still being pushed to the display, so it isn't stable yet
   cl_assert_equal_i(s_count_frozen, 0);

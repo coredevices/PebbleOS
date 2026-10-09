@@ -118,7 +118,7 @@ static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Laye
 }
 
 static void prv_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  window_set_click_config_provider(&option_menu->window, NULL);
+  window_set_click_config_provider(&option_menu->window, nullptr);
 
   QuickLaunchAppMenuData *data = context;
   if (selection == 0) {

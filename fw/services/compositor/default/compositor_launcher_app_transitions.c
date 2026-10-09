@@ -191,7 +191,7 @@ static void prv_launcher_app_transition_animation_init(Animation *animation) {
 
 const CompositorTransition *compositor_launcher_app_transition_get(bool app_is_destination) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   s_data = (CompositorLauncherAppTransitionData){

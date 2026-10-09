@@ -237,10 +237,13 @@ void test_text_layout__pathological_1(void) {
 
   graphics_context_init(&gcontext, fb, GContextInitializationMode_App);
   framebuffer_clear(fb);
-  graphics_draw_text(&gcontext, "\n", font, box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-  graphics_draw_text(&gcontext, "\n\n", font, box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-  graphics_draw_text(&gcontext, "\1\n", font, box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-  graphics_draw_text(&gcontext, "", font, box, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  graphics_draw_text(&gcontext, "\n", font, box, GTextOverflowModeFill, GTextAlignmentLeft,
+                     nullptr);
+  graphics_draw_text(&gcontext, "\n\n", font, box, GTextOverflowModeFill, GTextAlignmentLeft,
+                     nullptr);
+  graphics_draw_text(&gcontext, "\1\n", font, box, GTextOverflowModeFill, GTextAlignmentLeft,
+                     nullptr);
+  graphics_draw_text(&gcontext, "", font, box, GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
 }
 
 void test_text_layout__max_used_size(void) {
@@ -313,7 +316,7 @@ void test_text_layout__enable_paging(void) {
 void test_text_layout__disable_text_flow(void) {
   TextLayoutExtended l = {.flow_data.perimeter.impl = (const GPerimeter *)(1234)};
   graphics_text_attributes_restore_default_text_flow((GTextLayoutCacheRef)&l);
-  cl_assert_equal_p(l.flow_data.perimeter.impl, NULL);
+  cl_assert_equal_p(l.flow_data.perimeter.impl, nullptr);
 }
 
 // just a fake value to have something to compare against
@@ -328,26 +331,26 @@ void test_text_layout__enable_text_flow(void) {
 
 void test_text_layout__create_destroy(void) {
   GTextAttributes *attributes = graphics_text_attributes_create();
-  cl_assert_equal_p(attributes->font, NULL);
+  cl_assert_equal_p(attributes->font, nullptr);
   cl_assert_equal_i(attributes->hash, 0);
   graphics_text_attributes_destroy(attributes);
 }
 
 void test_text_layout__get_default_flow_data(void) {
-  const TextLayoutFlowData *data1 = graphics_text_layout_get_flow_data(NULL);
-  cl_assert(data1 != NULL);
-  cl_assert_equal_p(data1->perimeter.impl, NULL);
+  const TextLayoutFlowData *data1 = graphics_text_layout_get_flow_data(nullptr);
+  cl_assert(data1 != nullptr);
+  cl_assert_equal_p(data1->perimeter.impl, nullptr);
   cl_assert_equal_i(data1->paging.page_on_screen.size_h, 0);
 
   // change SP so that we can make sure that graphics_text_layout_get_flow_data doesn't rely on it
   uint8_t change_stack[data1->paging.page_on_screen.size_h + 500];
   memset(change_stack, 0xff, 500);
 
-  const TextLayoutFlowData *data2 = graphics_text_layout_get_flow_data(NULL);
+  const TextLayoutFlowData *data2 = graphics_text_layout_get_flow_data(nullptr);
   cl_assert_equal_p(data1, data2);
 
   // values are still 0
-  cl_assert_equal_p(data2->perimeter.impl, NULL);
+  cl_assert_equal_p(data2->perimeter.impl, nullptr);
   cl_assert_equal_i(data2->paging.page_on_screen.size_h, 0);
 }
 

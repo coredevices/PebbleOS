@@ -115,13 +115,13 @@ typedef struct LauncherAppGlanceSettings {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(settings_glance, icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(settings_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(settings_glance, title, NULL);
+  return NULL_SAFE_FIELD_ACCESS(settings_glance, title, nullptr);
 }
 
 static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
@@ -355,7 +355,7 @@ static void prv_refresh_glance_content(LauncherAppGlanceSettings *settings_glanc
 }
 
 static bool prv_is_pebble_app_connected(void) {
-  return (comm_session_get_system_session() != NULL);
+  return (comm_session_get_system_session() != nullptr);
 }
 
 static void prv_event_handler(PebbleEvent *event, void *context) {

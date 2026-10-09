@@ -7,7 +7,7 @@
 #include <pbl/services/timeline/health_layout.h>
 
 LayoutLayer *PBL_WEAK health_layout_create(const LayoutLayerConfig *config) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK health_layout_verify(bool existing_attributes[]) {

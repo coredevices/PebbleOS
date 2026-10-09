@@ -102,7 +102,7 @@ const PebbleProcessMd *alarms_app_get_info(void) {
   static const PebbleProcessMdSystem s_alarms_app_info = {
     .common =
         {
-          .main_func = NULL,
+          .main_func = nullptr,
           // UUID: 67a32d95-ef69-46d4-a0b9-854cc62f97f9
           .uuid =
               {0x67, 0xa3, 0x2d, 0x95, 0xef, 0x69, 0x46, 0xd4, 0xa0, 0xb9, 0x85, 0x4c, 0xc6, 0x2f,

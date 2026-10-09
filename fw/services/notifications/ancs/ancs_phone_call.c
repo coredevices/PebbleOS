@@ -60,7 +60,7 @@ void ancs_phone_call_handle_incoming(uint32_t uid, ANCSProperty properties,
   char caller_id_str[caller_id->length + 1];
   pbl_pstring16_to_cstring(&caller_id->pstr, caller_id_str);
   prv_strip_formatting_chars(caller_id_str);
-  PebblePhoneCaller *caller = phone_call_util_create_caller(caller_id_str, NULL);
+  PebblePhoneCaller *caller = phone_call_util_create_caller(caller_id_str, nullptr);
 
   const bool ios_9 = (properties & ANCSProperty_iOS9);
 
@@ -68,7 +68,7 @@ void ancs_phone_call_handle_incoming(uint32_t uid, ANCSProperty properties,
 }
 
 void ancs_phone_call_handle_removed(uint32_t uid, bool ios_9) {
-  prv_put_call_event(PhoneEventType_Hide, uid, NULL, ios_9);
+  prv_put_call_event(PhoneEventType_Hide, uid, nullptr, ios_9);
 }
 
 bool ancs_phone_call_should_ignore_missed_calls(void) {

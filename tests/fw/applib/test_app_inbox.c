@@ -60,7 +60,7 @@ static void prv_process_callback_events_alt(bool should_execute_callback) {
     free(node);
     node = next;
   }
-  s_event_head = NULL;
+  s_event_head = nullptr;
 }
 
 static void prv_process_callback_events(void) {
@@ -173,18 +173,18 @@ void test_app_inbox__cleanup(void) {
 
 void test_app_inbox__app_inbox_create_and_register_zero_buffer_size(void) {
   void *result = app_inbox_create_and_register(0, 1, test_message_handler, test_dropped_handler);
-  cl_assert_equal_p(result, NULL);
+  cl_assert_equal_p(result, nullptr);
 }
 
 void test_app_inbox__app_inbox_create_and_register_zero_min_num_messages(void) {
   void *result =
       app_inbox_create_and_register(BUFFER_SIZE, 0, test_message_handler, test_dropped_handler);
-  cl_assert_equal_p(result, NULL);
+  cl_assert_equal_p(result, nullptr);
 }
 
 void test_app_inbox__app_inbox_create_and_register_null_message_handler(void) {
-  void *result = app_inbox_create_and_register(BUFFER_SIZE, 1, NULL, test_dropped_handler);
-  cl_assert_equal_p(result, NULL);
+  void *result = app_inbox_create_and_register(BUFFER_SIZE, 1, nullptr, test_dropped_handler);
+  cl_assert_equal_p(result, nullptr);
 }
 
 void test_app_inbox__app_inbox_create_and_register_oom(void) {
@@ -192,7 +192,7 @@ void test_app_inbox__app_inbox_create_and_register_oom(void) {
   return;
   void *result =
       app_inbox_create_and_register(BUFFER_SIZE, 1, test_message_handler, test_dropped_handler);
-  cl_assert_equal_p(result, NULL);
+  cl_assert_equal_p(result, nullptr);
 }
 
 void test_app_inbox__app_inbox_create_and_register_msg_handler_not_permitted(void) {
@@ -210,7 +210,7 @@ void test_app_inbox__app_inbox_create_and_register_drop_handler_not_permitted(vo
 void test_app_inbox__app_inbox_create_and_register_happy_case(void) {
   void *result =
       app_inbox_create_and_register(BUFFER_SIZE, 1, test_message_handler, test_dropped_handler);
-  cl_assert(result != NULL);
+  cl_assert(result != nullptr);
   cl_assert_equal_b(true, app_inbox_service_has_inbox_for_tag(AppInboxServiceTagUnitTest));
 }
 
@@ -218,7 +218,7 @@ void test_app_inbox__app_inbox_create_and_register_kernel_oom(void) {
   fake_kernel_malloc_set_largest_free_block(0);
   void *result =
       app_inbox_create_and_register(BUFFER_SIZE, 1, test_message_handler, test_dropped_handler);
-  cl_assert_equal_p(result, NULL);
+  cl_assert_equal_p(result, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,12 +269,13 @@ static void *s_inbox;
 static void prv_create_test_inbox(void) {
   s_inbox =
       app_inbox_create_and_register(BUFFER_SIZE, 1, test_message_handler, test_dropped_handler);
-  cl_assert(s_inbox != NULL);
+  cl_assert(s_inbox != nullptr);
 }
 
 void test_app_inbox__app_inbox_service_begin_null_writer(void) {
   prv_create_test_inbox();
-  cl_assert_equal_b(false, app_inbox_service_begin(AppInboxServiceTagUnitTest, BUFFER_SIZE, NULL));
+  cl_assert_equal_b(false,
+                    app_inbox_service_begin(AppInboxServiceTagUnitTest, BUFFER_SIZE, nullptr));
   cl_assert_equal_b(false, app_inbox_service_is_being_written_for_tag(AppInboxServiceTagUnitTest));
 }
 

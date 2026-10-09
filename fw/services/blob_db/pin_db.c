@@ -30,7 +30,7 @@ static TimelineItemStorage s_pin_db_storage;
 /////////////////////////
 
 status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
-  return (timeline_item_storage_delete_with_parent(&s_pin_db_storage, parent_id, NULL));
+  return (timeline_item_storage_delete_with_parent(&s_pin_db_storage, parent_id, nullptr));
 }
 
 //! Caution: CommonTimelineItemHeader .flags & .status are stored inverted and not auto-restored
@@ -80,7 +80,7 @@ static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, cons
       .app_fetch_request = {
         .id = install_id,
         .with_ui = false,
-        .fetch_args = NULL,
+        .fetch_args = nullptr,
       },
     };
     event_put(&e);
@@ -248,7 +248,7 @@ status_t pin_db_is_dirty(bool *is_dirty_out) {
 }
 
 BlobDBDirtyItem *pin_db_get_dirty_list(void) {
-  BlobDBDirtyItem *dirty_list = NULL;
+  BlobDBDirtyItem *dirty_list = nullptr;
   timeline_item_storage_each(&s_pin_db_storage, sync_util_build_dirty_list_cb, &dirty_list);
 
   return dirty_list;

@@ -57,7 +57,7 @@ static char *prv_copy_pstring_and_add_ellipsis(const struct pbl_pstring16 *pstri
 }
 
 static size_t prv_max_ellipsified_cstring_size(const ANCSAttribute *attr) {
-  if ((attr == NULL) || (attr->length == 0)) {
+  if ((attr == nullptr) || (attr->length == 0)) {
     return 0;
   }
   return (size_t)attr->length + strlen(s_utf8_ellipsis) + 1 /* zero terminator */;
@@ -80,7 +80,7 @@ static uint8_t *prv_add_action_msg_to_attribute(uint8_t *buffer, const ANCSAttri
   // The attribute becomes 'Huy Tran sent an attachment\n"Check this out!"'
   attribute_init_string(attribute, (char *)buffer, attribute_id);
 
-  const char *stripped_caption = NULL;
+  const char *stripped_caption = nullptr;
   char caption_buf[caption ? caption->length + 1 : 0];
   if (caption && caption->length > 0) {
     pbl_pstring16_to_cstring(&caption->pstr, caption_buf);
@@ -199,9 +199,9 @@ static void prv_populate_attributes(TimelineItem *item, uint8_t **buffer,
     if (ancs_notifications_util_is_group_sms(app_id, subtitle)) {
       // Promote the subtitle (group name) for Group MMS
       title = subtitle;
-      subtitle = NULL;
+      subtitle = nullptr;
     } else {
-      title = NULL;
+      title = nullptr;
     }
   }
 
@@ -346,13 +346,13 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
   if (display_name) {
     // dedupe title & display name, they often are the same
     if (pbl_pstring16_equal(&display_name->pstr, &title->pstr)) {
-      title = NULL;
+      title = nullptr;
     }
 
     // Hide display name if we have custom app metadata for this app.
     // If the app_metadata, not not have a name, then we have the generic app metadata.
     if (app_metadata->app_id) {
-      display_name = NULL;
+      display_name = nullptr;
     }
   }
 
@@ -363,17 +363,17 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
   const ANCSAttribute *positive_action =
       notif_attributes[FetchedNotifAttributeIndexPositiveActionLabel];
   if (positive_action && positive_action->length == 0) {
-    positive_action = NULL;
+    positive_action = nullptr;
   }
   const ANCSAttribute *negative_action =
       notif_attributes[FetchedNotifAttributeIndexNegativeActionLabel];
   if (negative_action && negative_action->length == 0) {
-    negative_action = NULL;
+    negative_action = nullptr;
   }
 
   // See if we support any additional actions (beyond what ANCS supports) for this type of notif
   if (app_id && app_id->length == 0) {
-    app_id = NULL;
+    app_id = nullptr;
   }
 
   // At this point we know that the attributes we have extracted are valid and the sizes thereof
@@ -478,7 +478,7 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
   if (!item) {
     // Out of memory - we do not croak on out of memory for notifications (PBL-10521)
     PBL_LOG_WRN("Ignoring ANCS notification (out of memory)");
-    return NULL;
+    return nullptr;
   }
 
   item->header.timestamp = timestamp;
@@ -488,7 +488,7 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
 
   uint8_t *buf_end = buffer + required_space_for_strings;
   prv_populate_actions(item, &buffer, buf_end, positive_action, negative_action, subtitle, app_id,
-                       notif_prefs ? &notif_prefs->action_group : NULL, properties);
+                       notif_prefs ? &notif_prefs->action_group : nullptr, properties);
 
   return item;
 }
@@ -501,8 +501,8 @@ void ancs_item_update_dismiss_action(TimelineItem *item, uint32_t uid,
   if (dismiss) {
     attribute_list_init_list(NUM_NATIVE_ANCS_ACTION_ATTRS + 1, &dismiss->attr_list);
 
-    uint8_t *string_buffer = NULL;
-    prv_fill_native_ancs_action(&string_buffer, dismiss, ActionIDNegative, attr_action_neg, NULL,
+    uint8_t *string_buffer = nullptr;
+    prv_fill_native_ancs_action(&string_buffer, dismiss, ActionIDNegative, attr_action_neg, nullptr,
                                 ANCSProperty_None);
 
     // Add ancs ID as attribute since reminder's parent needs to be the associated pin
@@ -517,7 +517,7 @@ void ancs_item_update_dismiss_action(TimelineItem *item, uint32_t uid,
 
     timeline_item_free_allocated_buffer(item);
     *item = *new_item;
-    new_item->allocated_buffer = NULL;
+    new_item->allocated_buffer = nullptr;
     timeline_item_destroy(new_item);
   }
 }

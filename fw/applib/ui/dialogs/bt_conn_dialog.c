@@ -26,7 +26,7 @@ static void prv_handle_comm_session_event(PebbleEvent *e, void *context) {
       bt_dialog->connected_handler(true, bt_dialog->context);
     }
     // handler to NULL so it won't be called again during the unload
-    bt_dialog->connected_handler = NULL;
+    bt_dialog->connected_handler = nullptr;
     dialog_pop(&bt_dialog->dialog.dialog);
   }
 }
@@ -60,7 +60,7 @@ void bt_conn_dialog_push(BtConnDialog *bt_dialog, BtConnDialogResultHandler hand
   };
   event_service_client_subscribe(&bt_dialog->pebble_app_event_sub);
 
-  WindowStack *window_stack = NULL;
+  WindowStack *window_stack = nullptr;
   if (pebble_task_get_current() == PebbleTask_App) {
     window_stack = app_state_get_window_stack();
   } else {
@@ -72,7 +72,7 @@ void bt_conn_dialog_push(BtConnDialog *bt_dialog, BtConnDialogResultHandler hand
 
 BtConnDialog *bt_conn_dialog_create(void) {
   BtConnDialog *bt_dialog = applib_malloc(sizeof(BtConnDialog));
-  bt_conn_dialog_init(bt_dialog, NULL, 0);
+  bt_conn_dialog_init(bt_dialog, nullptr, 0);
   return bt_dialog;
 }
 

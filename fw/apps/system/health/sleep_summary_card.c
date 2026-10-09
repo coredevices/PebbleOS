@@ -177,14 +177,15 @@ static void prv_render_current_sleep_text(GContext *ctx, Layer *base_layer) {
     health_util_duration_to_hours_and_minutes_text_node(current_sleep, base_layer,
                                                         data->number_font, data->unit_font,
                                                         CURRENT_TEXT_COLOR, container);
-    graphics_text_node_draw(&container->node, ctx, &rect, NULL, NULL);
+    graphics_text_node_draw(&container->node, ctx, &rect, nullptr, nullptr);
     graphics_text_node_destroy(&container->node);
   } else {
     char buffer[16];
     const GFont font = data->em_dash_font;
     snprintf(buffer, sizeof(buffer), EM_DASH);
     graphics_context_set_text_color(ctx, CURRENT_TEXT_COLOR);
-    graphics_draw_text(ctx, buffer, font, rect, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+    graphics_draw_text(ctx, buffer, font, rect, GTextOverflowModeFill, GTextAlignmentCenter,
+                       nullptr);
   }
 }
 
@@ -214,7 +215,7 @@ static void prv_render_no_sleep_data_text(GContext *ctx, Layer *base_layer) {
 
   graphics_context_set_text_color(ctx, NO_DATA_TEXT_COLOR);
   graphics_draw_text(ctx, text, data->typical_font, rect, GTextOverflowModeWordWrap,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 
 static bool prv_has_sleep_data(HealthData *health_data) {

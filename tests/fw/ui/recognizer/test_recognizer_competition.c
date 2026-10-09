@@ -51,7 +51,7 @@ RecognizerList *app_state_get_recognizer_list(void) {
 
 RecognizerList *window_get_recognizer_list(Window *window) {
   if (!window) {
-    return NULL;
+    return nullptr;
   }
   return layer_get_recognizer_list(&window->layer);
 }
@@ -62,7 +62,7 @@ RecognizerManager *window_get_recognizer_manager(Window *window) {
 
 struct Layer *window_get_root_layer(const Window *window) {
   if (!window) {
-    return NULL;
+    return nullptr;
   }
   return &((Window *)window)->layer;
 }
@@ -97,9 +97,9 @@ static void prv_sub_event_handler(const Recognizer *recognizer, RecognizerEvent 
 
 // setup and teardown
 void test_recognizer_competition__initialize(void) {
-  s_app_list = NULL;
-  s_active_layer = NULL;
-  s_manager = NULL;
+  s_app_list = nullptr;
+  s_active_layer = nullptr;
+  s_manager = nullptr;
   for (int i = 0; i < RecIdCount; i++) {
     s_last_event[i] = -1;
   }

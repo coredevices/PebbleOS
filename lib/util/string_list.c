@@ -23,7 +23,7 @@ size_t pbl_string_list_count(struct pbl_string_list *list) {
 
 char *pbl_string_list_get_at(struct pbl_string_list *list, size_t index) {
   if (!list) {
-    return NULL;
+    return nullptr;
   }
 
   char *ptr = list->data;
@@ -34,7 +34,7 @@ char *pbl_string_list_get_at(struct pbl_string_list *list, size_t index) {
   }
 
   if (index > 0) {
-    return NULL;
+    return nullptr;
   } else {
     return ptr;
   }

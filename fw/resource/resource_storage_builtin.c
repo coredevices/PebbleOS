@@ -25,7 +25,7 @@ static uint32_t resource_storage_builtin_read(ResourceStoreEntry *entry, uint32_
 }
 
 bool resource_storage_builtin_bytes_are_readonly(const void *bytes) {
-  if (bytes == NULL) {
+  if (bytes == nullptr) {
     return false;
   }
 #ifdef CONFIG_ARCH_POSIX
@@ -47,7 +47,7 @@ static const uint8_t *resource_storage_builtin_readonly_bytes(ResourceStoreEntry
                                                               bool has_privileged_access) {
   const BuiltInResourceData *builtin = entry->store_data;
   if (!builtin) {
-    return NULL;
+    return nullptr;
   }
   return builtin->address;
 }

@@ -103,7 +103,7 @@ static const uint8_t *prv_read_ptr(const uint8_t *iter, const uint8_t *iter_end,
   // >= because we will be reading more bytes after this point
   if ((buf_len == 0) || ((iter + buf_len) > iter_end)) {
     PBL_LOG_WRN("BlobDB: read invalid length");
-    return NULL;
+    return nullptr;
   }
 
   // grab pointer to start of buf
@@ -151,7 +151,7 @@ static void prv_handle_database_insert(CommSession *session, const uint8_t *data
 
   // read key length and key bytes ptr
   uint8_t key_size;
-  const uint8_t *key_bytes = NULL;
+  const uint8_t *key_bytes = nullptr;
   iter = prv_read_key_size(iter, data + length, &key_size);
   iter = prv_read_ptr(iter, data + length, &key_bytes, key_size);
 
@@ -163,7 +163,7 @@ static void prv_handle_database_insert(CommSession *session, const uint8_t *data
 
   // read value length and value bytes ptr
   uint16_t value_size;
-  const uint8_t *value_bytes = NULL;
+  const uint8_t *value_bytes = nullptr;
   iter = prv_read_value_size(iter, data + length, &value_size);
   iter = prv_read_ptr(iter, data + length, &value_bytes, value_size);
 
@@ -198,7 +198,7 @@ static void prv_handle_database_insert_with_timestamp(CommSession *session, cons
 
   // read key length and key bytes ptr
   uint8_t key_size;
-  const uint8_t *key_bytes = NULL;
+  const uint8_t *key_bytes = nullptr;
   iter = prv_read_key_size(iter, data + length, &key_size);
   iter = prv_read_ptr(iter, data + length, &key_bytes, key_size);
 
@@ -210,7 +210,7 @@ static void prv_handle_database_insert_with_timestamp(CommSession *session, cons
 
   // read value length and value bytes ptr
   uint16_t value_size;
-  const uint8_t *value_bytes = NULL;
+  const uint8_t *value_bytes = nullptr;
   iter = prv_read_value_size(iter, data + length, &value_size);
   iter = prv_read_ptr(iter, data + length, &value_bytes, value_size);
 
@@ -249,7 +249,7 @@ static void prv_handle_database_delete(CommSession *session, const uint8_t *data
 
   // Read key length and key bytes
   uint8_t key_size;
-  const uint8_t *key_bytes = NULL;
+  const uint8_t *key_bytes = nullptr;
   iter = prv_read_key_size(iter, data + length, &key_size);
   iter = prv_read_ptr(iter, data + length, &key_bytes, key_size);
 

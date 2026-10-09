@@ -19,14 +19,14 @@ static void prv_update_locale(char *locale, const char *new) {
 
 char *pbl_setlocale(int category, const char *locale) {
   LocaleInfo *info = app_state_get_locale_info();
-  if (locale == NULL) {
+  if (locale == nullptr) {
     switch (category) {
       case LC_ALL:
         return info->app_locale_strings;
       case LC_TIME:
         return info->app_locale_time;
       default:
-        return NULL;
+        return nullptr;
     }
   } else if (*locale == '\0') {
     locale = app_get_system_locale();
@@ -45,7 +45,7 @@ char *pbl_setlocale(int category, const char *locale) {
       break;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 static const struct lconv pbl_lconv = {".", "",  "",  "",  "",  "",  "",  "",  "",  "",  255, 255,

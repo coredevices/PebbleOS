@@ -56,7 +56,7 @@ struct PBL_PACKED VersionsMessage {
 };
 
 static void fixup_string(char *str, unsigned int length) {
-  if (memchr(str, 0, length) == NULL) {
+  if (memchr(str, 0, length) == nullptr) {
     memset(str, 0, length);
   }
 }
@@ -238,5 +238,5 @@ static int prv_cmd_version(const struct pbl_shell *sh, size_t argc, char **argv)
   return 0;
 }
 
-PBL_SHELL_CMD_REGISTER(version, NULL, "Show firmware and hardware versions", prv_cmd_version);
+PBL_SHELL_CMD_REGISTER(version, nullptr, "Show firmware and hardware versions", prv_cmd_version);
 #endif

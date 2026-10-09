@@ -110,7 +110,7 @@ static struct pbl_bt_ad_data *create_too_short_ad_data(void) {
 
 void test_ble_ibeacon__ibeacon_data_too_short(void) {
   struct pbl_bt_ad_data *too_short_to_ibeacon = create_too_short_ad_data();
-  bool is_ibeacon = ble_ibeacon_parse(too_short_to_ibeacon, 0, NULL);
+  bool is_ibeacon = ble_ibeacon_parse(too_short_to_ibeacon, 0, nullptr);
   cl_assert(!is_ibeacon);
   free(too_short_to_ibeacon);
 }

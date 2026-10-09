@@ -98,7 +98,7 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
   }
 
   // Allocate FFT configuration
-  kiss_fftr_cfg fft_cfg = kiss_fftr_alloc(FFT_SIZE, 0, NULL, NULL);
+  kiss_fftr_cfg fft_cfg = kiss_fftr_alloc(FFT_SIZE, 0, nullptr, nullptr);
   if (!fft_cfg) {
     PBL_LOG_ERR("Failed to allocate FFT configuration");
     return -1;
@@ -149,7 +149,7 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
 
 // Convert interleaved stereo (L/R/L/R) to non-interleaved (all L, then all R)
 static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame_count) {
-  if (audio_data == NULL || frame_count == 0) {
+  if (audio_data == nullptr || frame_count == 0) {
     return;
   }
 
@@ -281,7 +281,7 @@ static void prv_start_test(void) {
   mic_init(MIC);
   mic_set_volume(MIC, 100); // maximum volume
 
-  if (!mic_start(MIC, prv_mic_data_handler, NULL, data->pcm, PCM_BUFFER_SIZE)) {
+  if (!mic_start(MIC, prv_mic_data_handler, nullptr, data->pcm, PCM_BUFFER_SIZE)) {
     PBL_LOG_ERR("Failed to start microphone");
     mfg_test_result_report(MfgTestId_Mic, false, 0);
     data->state = TestState_Failed;
@@ -319,7 +319,7 @@ static void prv_timer_callback(void *cb_data) {
     }
   }
 
-  app_timer_register(100, prv_timer_callback, NULL);
+  app_timer_register(100, prv_timer_callback, nullptr);
 }
 
 // Initialize the app
@@ -387,7 +387,7 @@ static void prv_handle_init(void) {
   app_window_stack_push(window, true);
 
   // Start UI update timer
-  app_timer_register(100, prv_timer_callback, NULL);
+  app_timer_register(100, prv_timer_callback, nullptr);
 }
 
 static void s_main(void) {

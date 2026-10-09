@@ -120,7 +120,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 // (privileged) tasks (which is guarded by a mutex). Returns NULL if a logging operation is already
 // in progress
 static LogState *prv_get_log_state() {
-  LogState *log_state = NULL;
+  LogState *log_state = nullptr;
 
   PebbleTask task = pebble_task_get_current();
   if (task == PebbleTask_App) {
@@ -131,7 +131,7 @@ static LogState *prv_get_log_state() {
 
   if (log_state) {
     if (log_state->in_progress) {
-      return NULL;
+      return nullptr;
     }
     log_state->in_progress = true;
     return log_state;

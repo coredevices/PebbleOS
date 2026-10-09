@@ -74,7 +74,7 @@ void audio_set_volume(AudioDevice *device, int volume) {
 
 void audio_stop(AudioDevice *device) {
   s_stop_count++;
-  s_trans_cb = NULL;
+  s_trans_cb = nullptr;
 }
 
 // ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ static void prv_pump_until_idle(void) {
 void test_speaker_service__initialize(void) {
   fake_system_task_callbacks_cleanup();
   fake_event_init();
-  s_trans_cb = NULL;
+  s_trans_cb = nullptr;
   s_start_count = 0;
   s_stop_count = 0;
   s_samples_written = 0;

@@ -329,7 +329,7 @@ void pbl_bt_handle_le_connection_handle_update_irk(const struct pbl_bt_irk_chang
       PBL_LOG_WRN("Connection already has IRK!?");
     }
 
-    gap_le_connection_set_irk(connection, e->irk_valid ? &e->irk : NULL);
+    gap_le_connection_set_irk(connection, e->irk_valid ? &e->irk : nullptr);
   }
 unlock:
   bt_unlock();
@@ -404,7 +404,7 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
         break;
       }
 
-      const struct pbl_bt_sm_key *remote_irk = event->is_resolved ? &event->irk : NULL;
+      const struct pbl_bt_sm_key *remote_irk = event->is_resolved ? &event->irk : nullptr;
       GAPLEConnection *connection = gap_le_connection_add(&event->peer_address, remote_irk,
                                                           local_is_master, param_watchdog_timer);
       param_watchdog_timer = TIMER_INVALID_ID; // Timer now owned by connection
@@ -609,7 +609,7 @@ void pbl_bt_handle_le_encryption_change_event(const struct pbl_bt_encryption_cha
   }
 
   prv_apply_fuction_to_intents_matching_connection(connection, prv_send_clients_encrypted_event,
-                                                   NULL);
+                                                   nullptr);
 unlock:
   bt_unlock();
 }
@@ -641,7 +641,7 @@ static void prv_start_connecting(void) {
   };
   const int r = GAP_LE_Create_Connection(
       stack_id, 10240, 10240, fpWhiteList, 0 /* fpWhiteList ignores remote addr type */,
-      NULL /* fpWhiteList ignores remote addr */, local_addr_type, &connection_params,
+      nullptr /* fpWhiteList ignores remote addr */, local_addr_type, &connection_params,
       gap_le_connect_bluetopia_connection_callback, 0 /* callback context: unused */);
   if (r) {
     PBL_LOG_ERR("GAP_LE_Create_Connection (r=%d)", r);
@@ -721,7 +721,7 @@ static bool prv_intent_matches_connection(const GAPLEConnectionIntent *intent,
 }
 
 static void prv_intent_remove_and_free(GAPLEConnectionIntent *intent) {
-  list_remove(&intent->node, (ListNode **)&s_intents, NULL);
+  list_remove(&intent->node, (ListNode **)&s_intents, nullptr);
   kernel_free(intent);
 }
 
@@ -760,7 +760,7 @@ static bool prv_intent_filter_disconnected(ListNode *node, void *data) {
 }
 
 static bool prv_has_intents_for_disconnected_devices(void) {
-  return list_find(&s_intents->node, prv_intent_filter_disconnected, NULL);
+  return list_find(&s_intents->node, prv_intent_filter_disconnected, nullptr);
 }
 
 static uint32_t prv_intents_count(void) {
@@ -847,7 +847,7 @@ static enum pbl_bt_errno prv_register_intent(struct RegisterIntentRequest *reque
   bool is_already_encrypted = false;
   bool local_is_master = false;
 
-  const struct pbl_bt_device_internal *connected_device = NULL;
+  const struct pbl_bt_device_internal *connected_device = nullptr;
   GAPLEConnectionIntent *intent;
 
   if (request->is_bonding_based) {
@@ -873,7 +873,7 @@ static enum pbl_bt_errno prv_register_intent(struct RegisterIntentRequest *reque
     intent = prv_get_intent_by_device(request->device);
   }
 
-  const bool is_existing_intent = (intent != NULL);
+  const bool is_existing_intent = (intent != nullptr);
   if (is_existing_intent) {
     if (intent->client[c].is_used) {
       return PBL_BT_ERRNO_INVALID_STATE;
@@ -1004,7 +1004,7 @@ void gap_le_connect_handle_bonding_change(pbl_bt_bonding_id_t bonding_id, BtPers
   GAPLEConnectionIntentBonding updated_bonding;
   if (op == BtPersistBondingOpDidChange) {
     if (!bt_persistent_storage_get_ble_pairing_by_id(bonding_id, &updated_bonding.irk,
-                                                     &updated_bonding.device, NULL)) {
+                                                     &updated_bonding.device, nullptr)) {
       WTF;
     }
     updated_bonding.id = bonding_id;
@@ -1096,7 +1096,7 @@ enum pbl_bt_errno gap_le_connect_connect_by_bonding(pbl_bt_bonding_id_t bonding_
   // Get the IRK and device from the bonding storage,
   // outside of bt_lock(), because it uses flash.
   if (!bt_persistent_storage_get_ble_pairing_by_id(bonding_id, &request.bonding.irk,
-                                                   &request.bonding.device, NULL)) {
+                                                   &request.bonding.device, nullptr)) {
     return PBL_BT_ERRNO_INVALID_PARAMETER;
   }
   bt_lock();

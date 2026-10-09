@@ -40,7 +40,7 @@ bool notification_image_claim(const Uuid *item_id, uint8_t *token_out) {
     return false;
   }
   prv_free(s_bitmap);
-  s_bitmap = NULL;
+  s_bitmap = nullptr;
   s_item_id = *item_id;
   s_claimed = true;
   s_pending = true;
@@ -53,7 +53,7 @@ const GBitmap *notification_image_lock(const Uuid *item_id) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   // Held until notification_image_unlock so the bitmap can't be freed mid-draw.
   if (!s_bitmap || !item_id || !s_claimed || !uuid_equal(&s_item_id, item_id)) {
-    return NULL;
+    return nullptr;
   }
   return s_bitmap;
 }
@@ -85,7 +85,7 @@ bool notification_image_store(uint8_t token, GBitmap *bitmap) {
 void notification_image_clear(void) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   prv_free(s_bitmap);
-  s_bitmap = NULL;
+  s_bitmap = nullptr;
   s_claimed = false;
   s_pending = false;
   pbl_mutex_unlock(&s_lock);

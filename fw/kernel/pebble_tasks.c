@@ -30,7 +30,7 @@ static void prv_task_register(PebbleTask task, struct pbl_thread *thread) {
 
 static uint32_t prv_read_task_run_time(const struct pbl_thread *thread) {
   struct pbl_thread_stats stats[CONFIG_KERNEL_MAX_THREADS];
-  size_t count = pbl_thread_stats_snapshot(stats, ARRAY_LENGTH(stats), NULL);
+  size_t count = pbl_thread_stats_snapshot(stats, ARRAY_LENGTH(stats), nullptr);
   for (size_t i = 0; i < count; i++) {
     if (stats[i].thread == thread) {
       return stats[i].run_time;
@@ -41,14 +41,14 @@ static uint32_t prv_read_task_run_time(const struct pbl_thread *thread) {
 
 void pebble_task_unregister(PebbleTask task) {
   struct pbl_thread *thread = g_task_threads[task];
-  if (thread == NULL) {
+  if (thread == nullptr) {
     return;
   }
   uint32_t cycles = prv_read_task_run_time(thread);
   // Clear the handle before crediting the cycles: the collector reads
   // s_dead_task_cycles before walking the task list, so this ordering
   // ensures cycles are never seen in both buckets simultaneously.
-  g_task_threads[task] = NULL;
+  g_task_threads[task] = nullptr;
   s_dead_task_cycles[task] += cycles;
 }
 
@@ -102,7 +102,7 @@ PebbleTask pebble_task_get_current(void) {
 }
 
 PebbleTask pebble_task_get_task_for_thread(const struct pbl_thread *thread) {
-  if (thread == NULL) {
+  if (thread == nullptr) {
     return PebbleTask_Unknown;
   }
   for (int i = 0; i < (int)ARRAY_LENGTH(g_task_threads); ++i) {
@@ -119,7 +119,7 @@ struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
 
 static uint16_t prv_task_get_stack_free(PebbleTask task) {
   // If task doesn't exist, return a dummy with max value
-  if (g_task_threads[task] == NULL) {
+  if (g_task_threads[task] == nullptr) {
     return 0xFFFF;
   }
   struct pbl_thread_stack_info info;
@@ -219,7 +219,7 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
       queue = app_manager_get_task_context()->to_process_event_queue;
       break;
     case PebbleTask_KernelBackground:
-      queue = NULL;
+      queue = nullptr;
       break;
     default:
       WTF;
@@ -260,7 +260,7 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
       WTF;
   }
 
-  const MpuRegion *stack_guard_region = NULL;
+  const MpuRegion *stack_guard_region = nullptr;
 #ifndef CONFIG_ARMV8_M_MAINLINE
   // Per-task stack overflow detection: on ARMv7-M we plant a no-access
   // MPU region at the bottom of each task's stack. On ARMv8-M the kernel
@@ -317,7 +317,9 @@ void pebble_task_configure_idle_task(void) {
                               false /* allow_user_access */);
   mpu_init_region_from_region(&worker_region, memory_layout_get_worker_region(),
                               false /* allow_user_access */);
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {&app_region, &worker_region, NULL, NULL};
+  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
+    &app_region, &worker_region, nullptr, nullptr
+  };
   pbl_thread_regions_set(pbl_thread_idle(), regions);
 }
 

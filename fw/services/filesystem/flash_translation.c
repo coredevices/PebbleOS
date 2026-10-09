@@ -175,11 +175,11 @@ void ftl_write(const void *buffer, size_t size, uint32_t offset) {
 }
 
 void ftl_erase_sector(uint32_t size, uint32_t offset) {
-  prv_ftl_operation(NULL /* not needed for erase */, size, offset, FTLEraseSector);
+  prv_ftl_operation(nullptr /* not needed for erase */, size, offset, FTLEraseSector);
 }
 
 void ftl_erase_subsector(uint32_t size, uint32_t offset) {
-  prv_ftl_operation(NULL /* not needed for erase */, size, offset, FTLEraseSubsector);
+  prv_ftl_operation(nullptr /* not needed for erase */, size, offset, FTLEraseSubsector);
 }
 
 void ftl_format(void) {

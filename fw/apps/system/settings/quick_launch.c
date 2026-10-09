@@ -125,7 +125,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   PBL_ASSERTN(row < NUM_ROWS);
   const char *title = i18n_get(s_row_titles[row], data);
   char *subtitle_buf = data->app_names[row];
-  menu_cell_basic_draw(ctx, cell_layer, title, subtitle_buf, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, title, subtitle_buf, nullptr);
 }
 
 static uint16_t prv_get_initial_selection_cb(SettingsCallbacks *context) {

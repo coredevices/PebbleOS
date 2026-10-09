@@ -28,11 +28,11 @@ extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
 // Stubs
 /////
 bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
-  return (conn != NULL);
+  return (conn != nullptr);
 }
 
 GAPLEConnection *gap_le_connection_any(void) {
-  return NULL;
+  return nullptr;
 }
 
 void prv_regular_timer_spend_seconds(uint32_t seconds) {

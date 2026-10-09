@@ -105,9 +105,9 @@ static void heap_unlock(Heap *heap) {
   }
 
   // Handle any heap corruption that may have been detected while the heap was locked.
-  if (heap->corrupt_block != NULL) {
+  if (heap->corrupt_block != nullptr) {
     heap->corruption_handler(heap->corrupt_block);
-    heap->corrupt_block = NULL;
+    heap->corrupt_block = nullptr;
   }
 }
 
@@ -240,7 +240,7 @@ void *heap_malloc(Heap *const heap, unsigned long nbytes, uintptr_t client_pc) {
 
   /* Verify that the requested size is valid                           */
   if ((allocation_size < HEAP_INFO_BLOCK_SIZE(1)) || (allocation_size >= SEGMENT_SIZE_MAX)) {
-    return NULL;
+    return nullptr;
   }
 
   HeapInfo_t *allocated_block;
@@ -250,7 +250,7 @@ void *heap_malloc(Heap *const heap, unsigned long nbytes, uintptr_t client_pc) {
     HeapInfo_t *free_block = find_segment(heap, allocation_size);
     allocated_block = allocate_block(heap, allocation_size, free_block);
 
-    if (allocated_block != NULL) {
+    if (allocated_block != nullptr) {
       // We've allocated a new block, update our metrics
 
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
@@ -270,7 +270,7 @@ void *heap_malloc(Heap *const heap, unsigned long nbytes, uintptr_t client_pc) {
                   (allocated_block->Size - HEAP_INFO_BLOCK_SIZE(0)) * ALIGNMENT_SIZE);
     return &allocated_block->Data;
   }
-  return NULL;
+  return nullptr;
 }
 
 void heap_free(Heap *const heap, void *ptr, uintptr_t client_pc) {
@@ -421,7 +421,7 @@ static void prv_sanity_check_block(Heap *const heap, HeapInfo_t *block) {
 //!     @param heap the heap to search.
 //!     @param n_units number of ALIGNMENT_SIZE units this segment requires.
 static HeapInfo_t *find_segment(Heap *const heap, unsigned long n_units) {
-  HeapInfo_t *heap_info_ptr = NULL;
+  HeapInfo_t *heap_info_ptr = nullptr;
   /* If we are allocating a large segment, then start at the  */
   /* end of the heap.  Otherwise, start at the beginning of   */
   /* the heap.  If there is only one segment in the heap, then*/
@@ -498,7 +498,7 @@ static HeapInfo_t *allocate_block(Heap *const heap, unsigned long n_units,
                                   HeapInfo_t *heap_info_ptr) {
   // Make sure we can use all or part of this block for this allocation.
   if (heap_info_ptr == heap->end || heap_info_ptr->is_allocated || heap_info_ptr->Size < n_units) {
-    return NULL;
+    return nullptr;
   }
 
   /* Check to see if we need to split this into two        */
@@ -587,7 +587,7 @@ void heap_dump_malloc_instrumentation_to_dbgserial(Heap *heap) {
       num_alloc_blocks++;
       num_alloc_bytes += block_size;
     } else {
-      pc = NULL;
+      pc = nullptr;
       type = "FREE";
       num_free_blocks++;
       num_free_bytes += block_size;

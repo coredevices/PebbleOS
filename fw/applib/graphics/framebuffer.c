@@ -27,7 +27,7 @@ GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
     data_row_infos = g_gbitmap_data_row_infos;
   }
 #else
-  const GBitmapDataRowInfoInternal *data_row_infos = NULL;
+  const GBitmapDataRowInfoInternal *data_row_infos = nullptr;
 #endif
 
   return (GBitmap){

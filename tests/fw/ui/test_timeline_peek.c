@@ -179,7 +179,7 @@ typedef struct TimelinePeekItemConfig {
 } TimelinePeekItemConfig;
 
 static TimelineItem *prv_set_timeline_item(const TimelinePeekItemConfig *config, bool animated) {
-  TimelineItem *item = NULL;
+  TimelineItem *item = nullptr;
   const time_t now = rtc_get_time();
   const time_t timestamp = config ? (config->timestamp ?: now) : now;
   if (config) {
@@ -191,7 +191,7 @@ static TimelineItem *prv_set_timeline_item(const TimelinePeekItemConfig *config,
     }
     attribute_list_add_uint32(&list, AttributeIdIconPin, config->icon);
     item = timeline_item_create_with_attributes(timestamp, PBL_MIN_PER_HOUR, TimelineItemTypePin,
-                                                LayoutIdGeneric, &list, NULL);
+                                                LayoutIdGeneric, &list, nullptr);
     attribute_list_destroy_list(&list);
   }
   timeline_peek_set_item(item, timestamp >= now, config ? config->num_concurrent : 0,
@@ -318,7 +318,7 @@ void test_timeline_peek__peek_in_5_minutes(void) {
 //////////////////////
 
 void test_timeline_peek__peek_visibility(void) {
-  prv_set_timeline_item(NULL, false /* animated */);
+  prv_set_timeline_item(nullptr, false /* animated */);
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Normally it is animated, but for this unit test, we don't request `animated`
@@ -337,7 +337,7 @@ void test_timeline_peek__peek_visibility(void) {
   cl_assert(layer->frame.origin.y < DISP_ROWS);
 
   // Peek service hides the peek UI. Not animated for this unit test.
-  prv_set_timeline_item(NULL, false /* animated */);
+  prv_set_timeline_item(nullptr, false /* animated */);
   // Peek should now be off-screen.
   cl_assert(layer->frame.origin.y >= DISP_ROWS);
 }
@@ -363,7 +363,7 @@ void test_timeline_peek__peek_visible_to_hidden_outside_of_watchface(void) {
   cl_assert(layer->frame.origin.y >= DISP_ROWS);
 
   // Peek service hides the peek UI using the animated code path.
-  prv_set_timeline_item(NULL, true /* animated */);
+  prv_set_timeline_item(nullptr, true /* animated */);
   // This time we set the item to NULL, not just request invisibility. Since we're not in the
   // watchface, even though `animated` was requested, it should immediately move the position.
   cl_assert(layer->frame.origin.y >= DISP_ROWS);
@@ -377,7 +377,7 @@ void test_timeline_peek__peek_visible_to_hidden_outside_of_watchface(void) {
 }
 
 void test_timeline_peek__peek_hidden_to_visible_outside_of_watchface(void) {
-  prv_set_timeline_item(NULL, false /* animated */);
+  prv_set_timeline_item(nullptr, false /* animated */);
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Normally it is animated, but for this unit test, we don't request `animated`
@@ -438,7 +438,7 @@ void test_timeline_peek__peek_visible_leaving_and_entering_watchface(void) {
 }
 
 void test_timeline_peek__peek_hidden_leaving_and_entering_watchface(void) {
-  prv_set_timeline_item(NULL, true /* animated */);
+  prv_set_timeline_item(nullptr, true /* animated */);
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Peek should be off-screen.

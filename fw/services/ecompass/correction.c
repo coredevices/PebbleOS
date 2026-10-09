@@ -292,7 +292,7 @@ static MagCalStatus check_correction_value(int16_t *solution, int16_t *saved_sol
   int x_delta, y_delta, z_delta;
 
   // is the new solution close to what we already have saved?
-  if (saved_solution != NULL) {
+  if (saved_solution != nullptr) {
     x_delta = ABS(saved_solution[0] - solution[0]);
     y_delta = ABS(saved_solution[1] - solution[1]);
     z_delta = ABS(saved_solution[2] - solution[2]);

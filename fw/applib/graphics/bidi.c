@@ -179,14 +179,14 @@ static BidiClass prv_class(Codepoint cp) {
 //! Decode the codepoint at @p pos and return its class, setting @p next to the
 //! following codepoint. @p next is NULL when nothing could be decoded.
 static BidiClass prv_class_at(const utf8_t *pos, const utf8_t *end, utf8_t **next) {
-  *next = NULL;
-  if (pos == NULL || pos >= end || *pos == '\0') {
+  *next = nullptr;
+  if (pos == nullptr || pos >= end || *pos == '\0') {
     return BidiClassON;
   }
 
   Codepoint cp = utf8_peek_codepoint((utf8_t *)pos, next);
-  if (cp == 0 || *next == NULL || *next > end) {
-    *next = NULL;
+  if (cp == 0 || *next == nullptr || *next > end) {
+    *next = nullptr;
     return BidiClassON;
   }
   return prv_class(cp);
@@ -212,12 +212,12 @@ static BidiClass prv_prev_strong(const utf8_t *line_start, const utf8_t *pos, co
   utf8_t *cur = (utf8_t *)pos;
   while (cur > line_start) {
     cur = utf8_get_previous((utf8_t *)line_start, cur);
-    if (cur == NULL) {
+    if (cur == nullptr) {
       break;
     }
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     BidiClass cls = prv_class_at(cur, end, &next);
-    if (next == NULL) {
+    if (next == nullptr) {
       break;
     }
     if ((cls == BidiClassL) || (cls == BidiClassR) || (cls == BidiClassAL)) {
@@ -261,12 +261,12 @@ static bool prv_prev_side(const utf8_t *line_start, const utf8_t *pos, const utf
   utf8_t *cur = (utf8_t *)pos;
   while (cur > line_start) {
     cur = utf8_get_previous((utf8_t *)line_start, cur);
-    if (cur == NULL) {
+    if (cur == nullptr) {
       break;
     }
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     BidiClass cls = prv_class_at(cur, end, &next);
-    if ((next == NULL) || (cls == BidiClassB)) {
+    if ((next == nullptr) || (cls == BidiClassB)) {
       break;
     }
     if (prv_class_has_side(cls)) {
@@ -282,9 +282,9 @@ static bool prv_next_side(const utf8_t *line_start, const utf8_t *pos, const utf
                           bool para_is_rtl, bool *is_rtl) {
   utf8_t *cur = (utf8_t *)pos;
   while (cur < end && *cur != '\0') {
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     BidiClass cls = prv_class_at(cur, end, &next);
-    if ((next == NULL) || (cls == BidiClassB)) {
+    if ((next == nullptr) || (cls == BidiClassB)) {
       break;
     }
     if (prv_class_has_side(cls)) {
@@ -299,8 +299,8 @@ static bool prv_next_side(const utf8_t *line_start, const utf8_t *pos, const utf
 static utf8_t *prv_skip_terminators(utf8_t *pos, const utf8_t *end) {
   utf8_t *cur = pos;
   while (cur < end && *cur != '\0') {
-    utf8_t *next = NULL;
-    if (prv_class_at(cur, end, &next) != BidiClassET || next == NULL) {
+    utf8_t *next = nullptr;
+    if (prv_class_at(cur, end, &next) != BidiClassET || next == nullptr) {
       break;
     }
     cur = next;
@@ -318,9 +318,9 @@ static utf8_t *prv_scan_number(utf8_t *pos, const utf8_t *end, BidiClass num_cls
   utf8_t *cur = pos;
   bool after_digit = true;
   while (cur < end && *cur != '\0') {
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     BidiClass cls = prv_class_at(cur, end, &next);
-    if (next == NULL) {
+    if (next == nullptr) {
       break;
     }
     const bool is_digit =
@@ -333,12 +333,12 @@ static utf8_t *prv_scan_number(utf8_t *pos, const utf8_t *end, BidiClass num_cls
     // W4: a separator surrounded by numbers of the same class joins them. W4
     // runs before W5, so a separator that follows a terminator does not.
     if ((cls == BidiClassCS) || (cls == BidiClassES && european)) {
-      utf8_t *after = NULL;
+      utf8_t *after = nullptr;
       const BidiClass after_cls = prv_class_at(next, end, &after);
       const bool after_is_digit =
           (after_cls == num_cls) ||
           (after_arabic && ((after_cls == BidiClassEN) || (after_cls == BidiClassAN)));
-      if (after_digit && after_is_digit && after != NULL) {
+      if (after_digit && after_is_digit && after != nullptr) {
         cur = after;
         continue;
       }
@@ -362,12 +362,12 @@ static BidiClass prv_inherited_class(const utf8_t *line_start, const utf8_t *pos
   utf8_t *cur = (utf8_t *)pos;
   while (cur > line_start) {
     cur = utf8_get_previous((utf8_t *)line_start, cur);
-    if (cur == NULL) {
+    if (cur == nullptr) {
       break;
     }
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     BidiClass cls = prv_class_at(cur, end, &next);
-    if (next == NULL) {
+    if (next == nullptr) {
       break;
     }
     if (cls != BidiClassNSM) {
@@ -392,9 +392,9 @@ static uint8_t prv_level_for_dir(bool is_rtl, bool para_is_rtl) {
 //! a stretch of neutrals resolved together.
 static bool prv_resolve_span(const utf8_t *line_start, utf8_t *pos, const utf8_t *end,
                              bool para_is_rtl, uint8_t *span_level, utf8_t **span_end) {
-  utf8_t *next = NULL;
+  utf8_t *next = nullptr;
   BidiClass cls = prv_class_at(pos, end, &next);
-  if (next == NULL) {
+  if (next == nullptr) {
     return false;
   }
 
@@ -440,8 +440,8 @@ static bool prv_resolve_span(const utf8_t *line_start, utf8_t *pos, const utf8_t
   // unless W2 made that number Arabic.
   if (cls == BidiClassET) {
     utf8_t *number = prv_skip_terminators(pos, end);
-    utf8_t *after = NULL;
-    if (prv_class_at(number, end, &after) == BidiClassEN && after != NULL &&
+    utf8_t *after = nullptr;
+    if (prv_class_at(number, end, &after) == BidiClassEN && after != nullptr &&
         !prv_number_follows_arabic(line_start, number, end, para_is_rtl)) {
       *span_level = prv_number_follows_ltr(line_start, number, end, para_is_rtl)
                         ? prv_level_for_dir(false, para_is_rtl)
@@ -454,15 +454,15 @@ static bool prv_resolve_span(const utf8_t *line_start, utf8_t *pos, const utf8_t
   // Neutral stretch, up to the next strong character or number.
   utf8_t *stretch_end = pos;
   while (stretch_end < end && *stretch_end != '\0') {
-    utf8_t *stretch_next = NULL;
+    utf8_t *stretch_next = nullptr;
     BidiClass stretch_cls = prv_class_at(stretch_end, end, &stretch_next);
-    if (stretch_next == NULL || prv_class_has_side(stretch_cls) || (stretch_cls == BidiClassB)) {
+    if (stretch_next == nullptr || prv_class_has_side(stretch_cls) || (stretch_cls == BidiClassB)) {
       break;
     }
     if (stretch_cls == BidiClassET) {
       utf8_t *number = prv_skip_terminators(stretch_end, end);
-      utf8_t *after = NULL;
-      if (prv_class_at(number, end, &after) == BidiClassEN && after != NULL &&
+      utf8_t *after = nullptr;
+      if (prv_class_at(number, end, &after) == BidiClassEN && after != nullptr &&
           !prv_number_follows_arabic(line_start, number, end, para_is_rtl)) {
         break;
       }
@@ -490,7 +490,7 @@ static bool prv_resolve_span(const utf8_t *line_start, utf8_t *pos, const utf8_t
 }
 
 bool bidi_is_needed(const utf8_t *start, const utf8_t *end) {
-  if (start == NULL || end == NULL || start >= end) {
+  if (start == nullptr || end == nullptr || start >= end) {
     return false;
   }
 
@@ -525,15 +525,15 @@ bool bidi_is_needed(const utf8_t *start, const utf8_t *end) {
 }
 
 bool bidi_paragraph_is_rtl(const utf8_t *start, const utf8_t *end) {
-  if (start == NULL || end == NULL || start >= end) {
+  if (start == nullptr || end == nullptr || start >= end) {
     return false;
   }
 
   utf8_t *ptr = (utf8_t *)start;
   while (ptr < end && *ptr != '\0') {
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     BidiClass cls = prv_class_at(ptr, end, &next);
-    if (next == NULL) {
+    if (next == nullptr) {
       break;
     }
     if (cls == BidiClassB) {
@@ -553,12 +553,13 @@ bool bidi_paragraph_is_rtl(const utf8_t *start, const utf8_t *end) {
 
 utf8_t *bidi_next_run(const utf8_t *line_start, utf8_t *pos, const utf8_t *end, bool para_is_rtl,
                       uint8_t *run_level) {
-  if (line_start == NULL || pos == NULL || end == NULL || run_level == NULL || pos >= end) {
+  if (line_start == nullptr || pos == nullptr || end == nullptr || run_level == nullptr ||
+      pos >= end) {
     return pos;
   }
 
   uint8_t level = prv_level_for_dir(para_is_rtl, para_is_rtl);
-  utf8_t *cur = NULL;
+  utf8_t *cur = nullptr;
   if (!prv_resolve_span(line_start, pos, end, para_is_rtl, &level, &cur)) {
     return pos;
   }
@@ -567,18 +568,18 @@ utf8_t *bidi_next_run(const utf8_t *line_start, utf8_t *pos, const utf8_t *end, 
   // The separator itself is the whole run: resolving already stepped past it,
   // so the check below would otherwise look at the next paragraph's first
   // character and let the run continue across the break.
-  utf8_t *first = NULL;
+  utf8_t *first = nullptr;
   if (prv_class_at(pos, end, &first) == BidiClassB) {
     return cur;
   }
 
   while (cur < end && *cur != '\0') {
-    utf8_t *peek = NULL;
+    utf8_t *peek = nullptr;
     if (prv_class_at(cur, end, &peek) == BidiClassB) {
       break;
     }
     uint8_t span_level = 0;
-    utf8_t *span_end = NULL;
+    utf8_t *span_end = nullptr;
     if (!prv_resolve_span(line_start, cur, end, para_is_rtl, &span_level, &span_end)) {
       break;
     }
@@ -609,11 +610,11 @@ Codepoint bidi_mirror_codepoint(Codepoint cp) {
 }
 
 size_t bidi_reverse_run(const utf8_t *src, size_t src_len, utf8_t *dest, size_t dest_size) {
-  if (dest == NULL || dest_size == 0) {
+  if (dest == nullptr || dest_size == 0) {
     return 0;
   }
   dest[0] = '\0';
-  if (src == NULL || src_len == 0) {
+  if (src == nullptr || src_len == 0) {
     return 0;
   }
 
@@ -621,9 +622,9 @@ size_t bidi_reverse_run(const utf8_t *src, size_t src_len, utf8_t *dest, size_t 
   const utf8_t *limit = src + src_len;
   const utf8_t *end = src;
   while (end < limit && *end != '\0') {
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     Codepoint cp = utf8_peek_codepoint((utf8_t *)end, &next);
-    if (cp == 0 || next == NULL || next > limit) {
+    if (cp == 0 || next == nullptr || next > limit) {
       break;
     }
     end = next;
@@ -633,20 +634,20 @@ size_t bidi_reverse_run(const utf8_t *src, size_t src_len, utf8_t *dest, size_t 
   const utf8_t *tail = end;
   while (tail > src) {
     const utf8_t *base = utf8_get_previous((utf8_t *)src, (utf8_t *)tail);
-    if (base == NULL) {
+    if (base == nullptr) {
       break;
     }
 
     // Combining marks are emitted after the base they attach to, so a cluster
     // keeps its logical order inside the reversed run.
     while (base > src) {
-      utf8_t *next = NULL;
+      utf8_t *next = nullptr;
       Codepoint cp = utf8_peek_codepoint((utf8_t *)base, &next);
-      if (cp == 0 || next == NULL || prv_class(cp) != BidiClassNSM) {
+      if (cp == 0 || next == nullptr || prv_class(cp) != BidiClassNSM) {
         break;
       }
       const utf8_t *prev = utf8_get_previous((utf8_t *)src, (utf8_t *)base);
-      if (prev == NULL) {
+      if (prev == nullptr) {
         break;
       }
       base = prev;
@@ -656,17 +657,17 @@ size_t bidi_reverse_run(const utf8_t *src, size_t src_len, utf8_t *dest, size_t 
     // sequence the way the renderer pairs them. Step back onto the first member
     // when this one completes a pair, so the pair still names the same country
     // once the run has been reversed. An odd trailing indicator stands alone.
-    utf8_t *base_next = NULL;
+    utf8_t *base_next = nullptr;
     if (codepoint_is_regional_indicator(utf8_peek_codepoint((utf8_t *)base, &base_next)) &&
-        (base_next != NULL)) {
+        (base_next != nullptr)) {
       size_t preceding = 0;
       const utf8_t *scan = base;
       while (scan > src) {
         const utf8_t *prev = utf8_get_previous((utf8_t *)src, (utf8_t *)scan);
-        utf8_t *prev_next = NULL;
-        if ((prev == NULL) ||
+        utf8_t *prev_next = nullptr;
+        if ((prev == nullptr) ||
             !codepoint_is_regional_indicator(utf8_peek_codepoint((utf8_t *)prev, &prev_next)) ||
-            (prev_next == NULL)) {
+            (prev_next == nullptr)) {
           break;
         }
         preceding++;
@@ -674,7 +675,7 @@ size_t bidi_reverse_run(const utf8_t *src, size_t src_len, utf8_t *dest, size_t 
       }
       if ((preceding % 2) == 1) {
         const utf8_t *pair_start = utf8_get_previous((utf8_t *)src, (utf8_t *)base);
-        if (pair_start != NULL) {
+        if (pair_start != nullptr) {
           base = pair_start;
         }
       }
@@ -694,15 +695,15 @@ size_t bidi_reverse_run(const utf8_t *src, size_t src_len, utf8_t *dest, size_t 
 }
 
 bool bidi_contains_arabic(const utf8_t *start, const utf8_t *end) {
-  if (start == NULL || end == NULL || start >= end) {
+  if (start == nullptr || end == nullptr || start >= end) {
     return false;
   }
 
   utf8_t *ptr = (utf8_t *)start;
   while (ptr < end && *ptr != '\0') {
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     Codepoint cp = utf8_peek_codepoint(ptr, &next);
-    if (cp == 0 || next == NULL) {
+    if (cp == 0 || next == nullptr) {
       break;
     }
     if (arabic_is_shapeable(cp)) {

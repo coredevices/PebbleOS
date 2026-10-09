@@ -22,7 +22,7 @@ static void app_timer_callback(void *data) {
     PBL_LOG_INFO("%d Running app timer callback", i);
     vibes_short_pulse();
   }
-  s_app_timer = app_timer_register(100 /* milliseconds */, app_timer_callback, NULL);
+  s_app_timer = app_timer_register(100 /* milliseconds */, app_timer_callback, nullptr);
 }
 
 #if 0
@@ -31,7 +31,7 @@ static void sys_timer_callback(void* data) {
     PBL_LOG_INFO("%d Running sys timer callback", i);
     vibes_short_pulse();
   }
-  new_timer_start(s_sys_timer, 20, sys_timer_callback, NULL, 0);
+  new_timer_start(s_sys_timer, 20, sys_timer_callback, nullptr, 0);
 }
 #endif
 
@@ -40,7 +40,7 @@ static void handle_init(void) {
   const bool animated = true;
   app_window_stack_push(&s_window, animated);
 
-  s_app_timer = app_timer_register(100 /* milliseconds */, app_timer_callback, NULL);
+  s_app_timer = app_timer_register(100 /* milliseconds */, app_timer_callback, nullptr);
 
   s_sys_timer = new_timer_create();
   // new_timer_start(s_sys_timer, 10, sys_timer_callback, NULL, 0);

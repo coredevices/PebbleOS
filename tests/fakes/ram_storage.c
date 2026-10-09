@@ -30,7 +30,7 @@ static RamStorageEntry *prv_get_entry(RamStorageEntry *entries, const uint8_t *k
 }
 
 static void prv_delete(RamStorageEntry **entries, RamStorageEntry *entry) {
-  list_remove((ListNode *)entry, (ListNode **)entries, NULL);
+  list_remove((ListNode *)entry, (ListNode **)entries, nullptr);
   kernel_free(entry->key);
   kernel_free(entry->val);
   kernel_free(entry);
@@ -101,7 +101,7 @@ status_t ram_storage_flush(RamStorage *storage) {
 
 RamStorage ram_storage_create(void) {
   RamStorage storage;
-  storage.entries = NULL;
+  storage.entries = nullptr;
   return storage;
 }
 
@@ -111,7 +111,7 @@ static bool prv_find_dirty(ListNode *found_node, void *data) {
 }
 
 status_t ram_storage_is_dirty(RamStorage *storage, bool *is_dirty_out) {
-  *is_dirty_out = (list_find((ListNode *)storage->entries, prv_find_dirty, NULL) != NULL);
+  *is_dirty_out = (list_find((ListNode *)storage->entries, prv_find_dirty, nullptr) != nullptr);
   return S_SUCCESS;
 }
 

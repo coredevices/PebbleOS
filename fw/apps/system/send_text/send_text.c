@@ -68,7 +68,7 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
   }
 
   PebbleSysNotificationActionResult *action_result = e->sys_notification.action_result;
-  if (action_result == NULL) {
+  if (action_result == nullptr) {
     return;
   }
 
@@ -87,7 +87,7 @@ static TimelineItem *prv_create_timeline_item(const char *number) {
   iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs((uint8_t *)SEND_TEXT_NOTIF_PREF_KEY,
                                                            strlen(SEND_TEXT_NOTIF_PREF_KEY));
   if (!notif_prefs) {
-    return NULL;
+    return nullptr;
   }
 
   AttributeList attr_list = {};
@@ -251,7 +251,7 @@ static void prv_contact_list_draw_header_callback(GContext *ctx, const Layer *ce
   box.origin.y -= 2;
   graphics_context_set_text_color(ctx, GColorDarkGray);
   graphics_draw_text(ctx, i18n_get("Select Contact", data), font, box, GTextOverflowModeFill,
-                     GTextAlignmentCenter, NULL);
+                     GTextAlignmentCenter, nullptr);
 }
 #endif
 
@@ -265,7 +265,7 @@ static void prv_contact_list_draw_row_callback(GContext *ctx, const Layer *cell_
     return;
   }
 
-  menu_cell_basic_draw(ctx, cell_layer, node->name, node->display_number, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, node->name, node->display_number, nullptr);
 }
 
 static void prv_contact_list_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
@@ -386,5 +386,5 @@ const PebbleProcessMd *send_text_app_get_info(void) {
 
   // If the phone doesn't support this app, we will act as if it's not installed by returning NULL
   const bool app_supported = send_text_service_is_send_text_supported();
-  return app_supported ? (const PebbleProcessMd *)&s_send_text_app_info : NULL;
+  return app_supported ? (const PebbleProcessMd *)&s_send_text_app_info : nullptr;
 }

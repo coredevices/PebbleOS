@@ -44,7 +44,7 @@ char *app_state_get_localtime_zone(void) {
 }
 
 LocaleInfo *app_state_get_locale_info(void) {
-  return NULL;
+  return nullptr;
 }
 
 GContext *s_app_state_get_graphics_context;
@@ -70,7 +70,7 @@ AnimationState *kernel_applib_get_animation_state(void) {
 
 GBitmap *app_state_legacy2_get_2bit_framebuffer(void) {
   // Shouldn't be used, only for backwards compatibility
-  return NULL;
+  return nullptr;
 }
 
 static Layer *s_layer_tree_stack[LAYER_TREE_STACK_SIZE];
@@ -104,8 +104,8 @@ void *app_state_get_user_data(void) {
   return s_user_data;
 }
 
-static JsRuntimeContext *s_js_runtime_context = NULL;
-static uint8_t *s_runtime_context_buffer = NULL;
+static JsRuntimeContext *s_js_runtime_context = nullptr;
+static uint8_t *s_runtime_context_buffer = nullptr;
 void app_state_set_js_runtime_context(uint8_t *unaligned_buffer,
                                       JsRuntimeContext *js_runtime_context) {
   s_js_runtime_context = js_runtime_context;
@@ -120,7 +120,7 @@ JsRuntimeContext *app_state_get_js_runtime_context(void) {
   return s_js_runtime_context;
 }
 
-static JsMemoryAPIContext *s_js_memory_api_context = NULL;
+static JsMemoryAPIContext *s_js_memory_api_context = nullptr;
 void app_state_set_js_memory_api_context(JsMemoryAPIContext *context) {
   s_js_memory_api_context = context;
 }

@@ -190,5 +190,6 @@ const PebbleProcessMd *spo2_test_get_app_info(void) {
     // so it sits behind the developer prompt and stays out of the way for normal users.
     .common.visibility = ProcessVisibilityHidden,
   };
-  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd *)&s_spo2_test_app_info : NULL;
+  return (sys_hrm_manager_is_hrm_present()) ? (const PebbleProcessMd *)&s_spo2_test_app_info
+                                            : nullptr;
 }

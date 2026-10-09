@@ -141,7 +141,7 @@ static void prv_sorted_add(AppMenuDataSource *source, AppMenuNode *menu_node) {
   // just read the order, then we're building a list starting from an empty list, so just set the
   // order for the new node.
   prv_set_storage_order(source, menu_node, source->order_storage ?: app_order_read_order(),
-                        (source->order_storage == NULL));
+                        (source->order_storage == nullptr));
 
   // If we're adding the Settings app node to the list and it hasn't received a storage order,
   // then give it its default order
@@ -254,7 +254,7 @@ static void prv_do_app_icon_name_updated(AppMenuDataSource *source, AppInstallId
 
   AppMenuNode *node = prv_find_node_with_install_id(install_id, source);
   if (prv_is_app_filtered_out(&entry, source)) {
-    if (node == NULL) {
+    if (node == nullptr) {
       // Changed and still excluded:
       return;
     }
@@ -262,7 +262,7 @@ static void prv_do_app_icon_name_updated(AppMenuDataSource *source, AppInstallId
     prv_unload_node(source, node);
   } else {
     // Changed and is now included:
-    if (node == NULL) {
+    if (node == nullptr) {
       add_app_with_install_id(&entry, source);
     }
   }
@@ -310,7 +310,7 @@ static bool prv_app_enumerate_callback(AppInstallEntry *entry, void *data) {
 // loaded and cached or we will load the default system icon that is set by the client.
 static void prv_load_list_item_icon(AppMenuDataSource *source, AppMenuNode *node) {
   // Should only call this function if the icon has not been loaded
-  PBL_ASSERTN(node->icon == NULL);
+  PBL_ASSERTN(node->icon == nullptr);
 
   if (node->icon_resource_id != RESOURCE_ID_INVALID) {
     // If we have some sort of valid resource_id, try loading it
@@ -333,7 +333,7 @@ static void prv_unload_list_item_icon(const AppMenuDataSource *source, AppMenuNo
   // Don't destroy the default icon here, we'll destroy it later.
   if (node->icon && node->icon != source->default_icon) {
     gbitmap_destroy(node->icon);
-    node->icon = NULL;
+    node->icon = nullptr;
   }
 }
 
@@ -348,15 +348,15 @@ static void prv_load_list_if_needed(AppMenuDataSource *source) {
 
   app_install_enumerate_entries(prv_app_enumerate_callback, source);
 
-  if (source->order_storage != NULL) {
+  if (source->order_storage != nullptr) {
     app_free(source->order_storage);
-    source->order_storage = NULL;
+    source->order_storage = nullptr;
   }
 }
 
 static void prv_unload_node(const AppMenuDataSource *source, AppMenuNode *node) {
   prv_unload_list_item_icon(source, node);
-  list_remove((ListNode *)node, (ListNode **)&source->list, NULL);
+  list_remove((ListNode *)node, (ListNode **)&source->list, nullptr);
   app_free(node->name);
   app_free(node);
 }
@@ -394,14 +394,14 @@ static void add_app_with_install_id(const AppInstallEntry *entry, AppMenuDataSou
 static AppMenuNode *prv_find_node_with_install_id(const AppInstallId install_id,
                                                   const AppMenuDataSource *const source) {
   AppMenuNode *node = source->list;
-  while (node != NULL) {
+  while (node != nullptr) {
     if (node->install_id == install_id) {
       return node;
     } else {
       node = (AppMenuNode *)list_get_next((ListNode *)node);
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 //! @return True if there was app with install_id was found and removed from the list.
@@ -411,7 +411,7 @@ static bool remove_app_with_install_id(const AppInstallId install_id, AppMenuDat
   }
 
   AppMenuNode *node = prv_find_node_with_install_id(install_id, source);
-  if (node == NULL) {
+  if (node == nullptr) {
     return false;
   }
 
@@ -425,7 +425,7 @@ static bool remove_app_with_install_id(const AppInstallId install_id, AppMenuDat
 void app_menu_data_source_init(AppMenuDataSource *source,
                                const AppMenuDataSourceCallbacks *callbacks,
                                void *callback_context) {
-  PBL_ASSERTN(source != NULL);
+  PBL_ASSERTN(source != nullptr);
   *source = (AppMenuDataSource){
     .callback_context = callback_context,
   };
@@ -452,7 +452,7 @@ void app_menu_data_source_deinit(AppMenuDataSource *source) {
   app_install_deregister_callback(&source->app_install_callback_node);
   // Free the AppMenuNodes:
   AppMenuNode *node = source->list;
-  while (node != NULL) {
+  while (node != nullptr) {
     AppMenuNode *const next = (AppMenuNode *)list_get_next((ListNode *)node);
     prv_unload_node(source, node);
     node = next;
@@ -462,13 +462,13 @@ void app_menu_data_source_deinit(AppMenuDataSource *source) {
     gbitmap_destroy(source->default_icon);
   }
 
-  source->callbacks.changed = NULL;
+  source->callbacks.changed = nullptr;
   source->is_list_loaded = false;
 }
 
 void app_menu_data_source_enable_icons(AppMenuDataSource *source, uint32_t fallback_icon_id) {
   // should only call this once, and should be passed in a valid resource id.
-  PBL_ASSERTN(source->default_icon == NULL && fallback_icon_id != RESOURCE_ID_INVALID);
+  PBL_ASSERTN(source->default_icon == nullptr && fallback_icon_id != RESOURCE_ID_INVALID);
 
   source->show_icons = true;
   // The return value will be a valid GBitmap* or NULL (because of an OOM that shouldn't ever happen
@@ -499,7 +499,7 @@ uint16_t app_menu_data_source_get_index_of_app_with_install_id(AppMenuDataSource
   prv_load_list_if_needed(source);
   AppMenuNode *node = source->list;
   uint16_t index = 0;
-  while (node != NULL) {
+  while (node != nullptr) {
     if (node->install_id == install_id) {
       return prv_transform_index(source, index);
     }
@@ -525,5 +525,5 @@ void app_menu_data_source_draw_row(AppMenuDataSource *source, GContext *ctx, Lay
   GBitmap *bitmap = app_menu_data_source_get_node_icon(source, node);
   const GCompOp op = (gbitmap_get_format(bitmap) == GBitmapFormat1Bit) ? GCompOpTint : GCompOpSet;
   graphics_context_set_compositing_mode(ctx, op);
-  menu_cell_basic_draw(ctx, cell_layer, node->name, NULL, bitmap);
+  menu_cell_basic_draw(ctx, cell_layer, node->name, nullptr, bitmap);
 }

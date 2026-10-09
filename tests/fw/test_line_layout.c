@@ -343,7 +343,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 3);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 3);
   cl_assert(line.origin.x == 0);
@@ -357,7 +357,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 1);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 1);
   cl_assert(line.origin.x == 0);
@@ -370,7 +370,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 0);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 0);
   cl_assert(line.origin.x == 0);
@@ -383,7 +383,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 0);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 0);
   cl_assert(line.origin.x == 0);
@@ -396,7 +396,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 2);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 3);
   cl_assert(line.origin.x == 0);
@@ -409,7 +409,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 11);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 4);
   cl_assert(line.origin.x == 0);
@@ -422,7 +422,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 8);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 4);
   cl_assert(line.origin.x == 0);
@@ -435,7 +435,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 5);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(line_add_words(&line, &word_iter, NULL));
+  cl_assert(line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 4);
   cl_assert(line.origin.x == 0);
@@ -448,7 +448,7 @@ void test_line_layout__test_line_add_words_multi_line(void) {
   cl_assert(word_iter_state.current.width_px == HORIZ_ADVANCE_PX * 2);
 
   line_reset(&line, utf8_bounds.start);
-  cl_assert(false == line_add_words(&line, &word_iter, NULL));
+  cl_assert(false == line_add_words(&line, &word_iter, nullptr));
   cl_assert(line.height_px == 10);
   cl_assert(line.width_px == HORIZ_ADVANCE_PX * 2);
   cl_assert(line.origin.x == 0);
@@ -483,7 +483,7 @@ void test_line_layout__test_walk_lines_down(void) {
   int count = 0;
   while (true) {
     bool is_text_remaining =
-        line_add_words(&s_ctx.text_draw_state.line, &line_iter_state.word_iter, NULL);
+        line_add_words(&s_ctx.text_draw_state.line, &line_iter_state.word_iter, nullptr);
     count++;
     if (!is_text_remaining) {
       // Exit after 2 lines

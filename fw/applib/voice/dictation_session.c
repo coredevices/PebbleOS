@@ -55,7 +55,7 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
                                            DictationSessionStatusCallback callback, void *context) {
 #ifdef CONFIG_MIC
   if (!callback) {
-    return NULL;
+    return nullptr;
   }
 
   // Old versions of the Android app (<3.5) will allow voice replies (which also use this code-path)
@@ -67,20 +67,20 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
   if (from_app && !sys_system_pp_has_capability(CommSessionVoiceApiSupport)) {
     PBL_LOG_WRN(
         "No phone connected or phone app does not support app-initiated dictation sessions");
-    return NULL;
+    return nullptr;
   }
 
   DictationSession *session = applib_type_malloc(DictationSession);
   if (!session) {
-    return NULL;
+    return nullptr;
   }
 
-  char *buffer = NULL;
+  char *buffer = nullptr;
   if (buffer_size > 0) {
     buffer = applib_malloc(buffer_size);
     if (!buffer) {
       applib_free(session);
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -89,7 +89,7 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
   if (!voice_window) {
     applib_free(buffer);
     applib_free(session);
-    return NULL;
+    return nullptr;
   }
 
   *session = (DictationSession){
@@ -111,7 +111,7 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
     };
   }
 #else
-  DictationSession *session = NULL;
+  DictationSession *session = nullptr;
 #endif
 
   return session;

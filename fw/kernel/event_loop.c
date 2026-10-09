@@ -164,7 +164,7 @@ static void back_button_force_quit_handler(void *data) {
   // Happens on NewTimer thread -- the launcher task may still be "behind"
   // on servicing events, so do check again later once *this* event gets
   // serviced to see if this is still relevant!
-  launcher_task_add_callback(launcher_force_quit_app, NULL);
+  launcher_task_add_callback(launcher_force_quit_app, nullptr);
 }
 
 static void launcher_handle_button_event(PebbleEvent *e) {
@@ -181,7 +181,7 @@ static void launcher_handle_button_event(PebbleEvent *e) {
       // Start timer for force-quitting app
       s_force_quit_was_cancelled = false;
       bool success = new_timer_start(s_back_hold_timer, FORCE_QUIT_HOLD_MS,
-                                     back_button_force_quit_handler, NULL, 0 /*flags*/);
+                                     back_button_force_quit_handler, nullptr, 0 /*flags*/);
       PBL_ASSERTN(success);
     }
 
@@ -536,7 +536,7 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
       if (comm_session_event->is_system) {
         // tell the phone which app is running
         const Uuid *running_uuid = &app_manager_get_current_app_md()->uuid;
-        if (running_uuid != NULL) {
+        if (running_uuid != nullptr) {
           app_run_state_send_update(running_uuid, RUNNING);
         }
       }

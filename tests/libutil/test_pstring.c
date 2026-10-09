@@ -42,8 +42,8 @@ void test_pstring__equal(void) {
   cl_assert(!pbl_pstring16_equal(ps1, ps2));
   cl_assert(!pbl_pstring16_equal(ps1, ps3));
   cl_assert(!pbl_pstring16_equal(ps2, ps3));
-  cl_assert(!pbl_pstring16_equal(ps1, NULL));
-  cl_assert(!pbl_pstring16_equal(NULL, NULL));
+  cl_assert(!pbl_pstring16_equal(ps1, nullptr));
+  cl_assert(!pbl_pstring16_equal(nullptr, nullptr));
 }
 
 void test_pstring__equal_cstring(void) {
@@ -57,8 +57,8 @@ void test_pstring__equal_cstring(void) {
 
   cl_assert(pbl_pstring16_equal_cstring(ps1, str1));
   cl_assert(!pbl_pstring16_equal_cstring(ps1, str2));
-  cl_assert(!pbl_pstring16_equal_cstring(ps1, NULL));
-  cl_assert(!pbl_pstring16_equal_cstring(NULL, NULL));
+  cl_assert(!pbl_pstring16_equal_cstring(ps1, nullptr));
+  cl_assert(!pbl_pstring16_equal_cstring(nullptr, nullptr));
 }
 
 static size_t prv_append(uint8_t *cursor, const char *str, uint16_t length) {
@@ -85,7 +85,7 @@ void test_pstring__list(void) {
   cl_assert(pbl_pstring16_equal_cstring(pbl_pstring16_list_get(&list, 0), "Palo Alto"));
   cl_assert(pbl_pstring16_equal_cstring(pbl_pstring16_list_get(&list, 1), ""));
   cl_assert(pbl_pstring16_equal_cstring(pbl_pstring16_list_get(&list, 2), "Sunny"));
-  cl_assert_equal_p(pbl_pstring16_list_get(&list, 3), NULL);
+  cl_assert_equal_p(pbl_pstring16_list_get(&list, 3), nullptr);
 
   char out[16];
   pbl_pstring16_to_cstring(pbl_pstring16_list_get(&list, 2), out);
@@ -100,14 +100,14 @@ void test_pstring__list_empty(void) {
   struct pbl_pstring16_list list;
   pbl_pstring16_list_init(&list, array);
   cl_assert_equal_i(list.count, 0);
-  cl_assert_equal_p(pbl_pstring16_list_get(&list, 0), NULL);
+  cl_assert_equal_p(pbl_pstring16_list_get(&list, 0), nullptr);
 }
 
 void test_pstring__list_long_entry(void) {
   uint8_t buf[512] = {};
   struct pbl_serialized_array *array = (struct pbl_serialized_array *)buf;
   size_t offset = 0;
-  offset += prv_append(&array->data[offset], NULL, 300);
+  offset += prv_append(&array->data[offset], nullptr, 300);
   offset += prv_append(&array->data[offset], "tail", 4);
   array->data_size = offset;
 

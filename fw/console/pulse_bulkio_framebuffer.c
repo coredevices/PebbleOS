@@ -61,14 +61,14 @@ static status_t framebuffer_domain_open(uint8_t *packet_data, size_t length, voi
 static void framebuffer_domain_close_cb(void *foo) {
   FrameBuffer *fb = compositor_get_framebuffer();
   framebuffer_dirty_all(fb);
-  compositor_display_update(NULL);
+  compositor_display_update(nullptr);
 }
 
 static status_t framebuffer_domain_close(void *data) {
   animation_private_resume();
 
   // Force the compositor to redraw the framebuffer
-  launcher_task_add_callback(framebuffer_domain_close_cb, NULL);
+  launcher_task_add_callback(framebuffer_domain_close_cb, nullptr);
 
   return S_SUCCESS;
 }

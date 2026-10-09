@@ -15,7 +15,7 @@
 // Compatibility type for gpio.h (QEMU has no real GPIO peripheral struct)
 typedef void GPIO_TypeDef;
 
-#define GPIO_Port_NULL NULL
+#define GPIO_Port_NULL nullptr
 #define GPIO_Pin_NULL  0U
 
 typedef enum {

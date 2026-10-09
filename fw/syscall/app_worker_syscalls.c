@@ -13,7 +13,7 @@
 // Determine if the worker for the current app is running
 DEFINE_SYSCALL(bool, sys_app_worker_is_running, void) {
   const PebbleProcessMd *md = worker_manager_get_current_worker_md();
-  if (md == NULL) {
+  if (md == nullptr) {
     return false;
   }
   return (uuid_equal(&md->uuid, &app_manager_get_current_app_md()->uuid));
@@ -39,7 +39,7 @@ DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_launch, void) {
 
   // Is there a worker already running?
   const PebbleProcessMd *md = worker_manager_get_current_worker_md();
-  if (md != NULL) {
+  if (md != nullptr) {
     const PebbleProcessMd *app_process = app_manager_get_current_app_md();
     if (uuid_equal(&md->uuid, &app_process->uuid)) {
       return APP_WORKER_RESULT_ALREADY_RUNNING;
@@ -59,7 +59,7 @@ DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_launch, void) {
 // Kill the worker for the current app
 DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_kill, void) {
   const PebbleProcessMd *md = worker_manager_get_current_worker_md();
-  if (md == NULL) {
+  if (md == nullptr) {
     return APP_WORKER_RESULT_NOT_RUNNING;
   }
   if (!uuid_equal(&md->uuid, &app_manager_get_current_app_md()->uuid)) {

@@ -70,7 +70,7 @@ static void poll_service_timer_callback(void *data);
 
 static RegularTimerInfo s_poll_timer = {
   .cb = poll_service_timer_callback,
-  .cb_data = NULL,
+  .cb_data = nullptr,
 };
 
 static PollRemoteContext s_poll_remote_contexts[NUM_POLL_REMOTE_SERVICES];

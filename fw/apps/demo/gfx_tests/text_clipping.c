@@ -36,7 +36,7 @@ static void prv_test(Layer *layer, GContext *ctx) {
   GRect bounds = layer->bounds;
   bounds.origin.y -= 150; // Drop y by 150 pixels so some data gets clipped
   graphics_draw_text(ctx, text_test_str, s_font, bounds, GTextOverflowModeWordWrap,
-                     GTextAlignmentLeft, NULL);
+                     GTextAlignmentLeft, nullptr);
 }
 
 static void prv_teardown(Window *window) {

@@ -66,14 +66,14 @@ unlock:
 }
 
 void pbl_bt_cb_gatt_handle_notification(const struct pbl_bt_gatt_server_notif_indic_event *event) {
-  GAPLEConnection *connection = NULL;
+  GAPLEConnection *connection = nullptr;
   bt_lock();
   {
     connection = gap_le_connection_by_addr(&event->dev_address);
   }
   bt_unlock();
 
-  if (connection == NULL) {
+  if (connection == nullptr) {
     return;
   }
 
@@ -84,7 +84,7 @@ void pbl_bt_cb_gatt_handle_notification(const struct pbl_bt_gatt_server_notif_in
 }
 
 void pbl_bt_cb_gatt_handle_indication(const struct pbl_bt_gatt_server_notif_indic_event *event) {
-  GAPLEConnection *connection = NULL;
+  GAPLEConnection *connection = nullptr;
   bool done = false;
   bt_lock();
   {
@@ -95,7 +95,7 @@ void pbl_bt_cb_gatt_handle_indication(const struct pbl_bt_gatt_server_notif_indi
 
     // We are done if we got disconnected in the meantime or if this is a Service Changed indication
     // consumed by gatt_service_changed.c
-    done = (connection == NULL) ||
+    done = (connection == nullptr) ||
            gatt_service_changed_client_handle_indication(connection, event->attr_handle,
                                                          event->attr_val, event->attr_val_len);
   }

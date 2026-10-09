@@ -231,7 +231,7 @@ static void prv_perftest_text_main(void *data) {
     graphics_context_set_text_color(ctx, GColorBlack);
 
     profiler_start();
-    graphics_draw_text(ctx, s_text_test_str, font, bounds, TEXT_OVERFLOW, TEXT_ALIGNMENT, NULL);
+    graphics_draw_text(ctx, s_text_test_str, font, bounds, TEXT_OVERFLOW, TEXT_ALIGNMENT, nullptr);
     profiler_stop();
     avg += profiler_get_total_duration(true);
   }
@@ -272,7 +272,7 @@ static int prv_perftest_text(const struct pbl_shell *sh, const char *string_type
   args->y_offset_str = y_offset;
 
   s_perftest_text_running = true;
-  launcher_task_add_callback(prv_perftest_text_main, NULL);
+  launcher_task_add_callback(prv_perftest_text_main, nullptr);
   while (s_perftest_text_running) {
     pbl_thread_yield();
     watchdog_feed();
@@ -307,14 +307,14 @@ static int prv_cmd_text_all(const struct pbl_shell *sh, size_t argc, char **argv
 }
 
 static const struct pbl_shell_cmd sub_perftest[] = {
-  PBL_SHELL_CMD_ARG(line, NULL, "Time line drawing <aa|noaa> <width>", prv_cmd_line, 3, 0),
-  PBL_SHELL_CMD_ARG(text, NULL, "Time text drawing <best|worst|typical> <font_key> <y_offset>",
+  PBL_SHELL_CMD_ARG(line, nullptr, "Time line drawing <aa|noaa> <width>", prv_cmd_line, 3, 0),
+  PBL_SHELL_CMD_ARG(text, nullptr, "Time text drawing <best|worst|typical> <font_key> <y_offset>",
                     prv_cmd_text, 4, 0),
-  PBL_SHELL_CMD(line_all, NULL, "Time line drawing for all variants", prv_cmd_line_all),
-  PBL_SHELL_CMD(text_all, NULL, "Time text drawing for all variants", prv_cmd_text_all),
+  PBL_SHELL_CMD(line_all, nullptr, "Time line drawing for all variants", prv_cmd_line_all),
+  PBL_SHELL_CMD(text_all, nullptr, "Time text drawing for all variants", prv_cmd_text_all),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(perftest, sub_perftest, "Drawing performance tests", NULL);
+PBL_SHELL_CMD_REGISTER(perftest, sub_perftest, "Drawing performance tests", nullptr);
 
 #endif

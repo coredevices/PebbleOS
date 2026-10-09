@@ -54,7 +54,7 @@ void test_workout_utils__find_ongoing_activity_session(void) {
   bool found_session;
 
   // Check if it can handle NULL session
-  found_session = workout_utils_find_ongoing_activity_session(NULL);
+  found_session = workout_utils_find_ongoing_activity_session(nullptr);
   cl_assert_equal_b(found_session, false);
 
   // Make sure there are no sessions

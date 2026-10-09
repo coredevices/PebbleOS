@@ -9,7 +9,7 @@
 #include <apps/system/timeline/peek_layer.h>
 
 PeekLayer *PBL_WEAK peek_layer_create(GRect frame) {
-  return NULL;
+  return nullptr;
 }
 
 void PBL_WEAK peek_layer_destroy(PeekLayer *peek_layer) {
@@ -51,13 +51,13 @@ GSize PBL_WEAK peek_layer_get_size(PeekLayer *peek_layer) {
 }
 
 ImmutableAnimation *PBL_WEAK peek_layer_create_play_animation(PeekLayer *peek_layer) {
-  return NULL;
+  return nullptr;
 }
 
 ImmutableAnimation *PBL_WEAK peek_layer_create_play_section_animation(PeekLayer *peek_layer,
                                                                       uint32_t from_elapsed_ms,
                                                                       uint32_t to_elapsed_ms) {
-  return NULL;
+  return nullptr;
 }
 
 void PBL_WEAK peek_layer_set_background_color(PeekLayer *peek_layer, GColor color) {

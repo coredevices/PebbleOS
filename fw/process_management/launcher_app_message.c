@@ -104,7 +104,7 @@ static bool prv_receive_push_cmd(CommSession *session, AppMessagePush *push_mess
 
     // Call into app_run_state to take the action (to avoid duping code):
     const Uuid *app_uuid = &push_message->uuid;
-    app_run_state_command(NULL, (AppRunStateCommand)cmd, app_uuid);
+    app_run_state_command(nullptr, (AppRunStateCommand)cmd, app_uuid);
     tuple = dict_read_next(&iter);
   }
 

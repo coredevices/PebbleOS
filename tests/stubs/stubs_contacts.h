@@ -4,7 +4,7 @@
 #pragma once
 
 Contact *contacts_get_contact_by_uuid(const Uuid *uuid) {
-  return NULL;
+  return nullptr;
 }
 
 void contacts_free_contact(Contact *contact) {

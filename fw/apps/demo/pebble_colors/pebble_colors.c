@@ -25,7 +25,7 @@
 static Window *s_window;
 static Layer *s_canvas_layer;
 
-static uint8_t *s_color_table = NULL;
+static uint8_t *s_color_table = nullptr;
 
 // Sorted by Hue, Value, Saturation
 static uint8_t color_table_hvs[] = {
@@ -328,16 +328,16 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, &GRect(72, 0, 72, 110));
   graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(ctx, "BG", font, GRect(72, 110 - 16, 20, 16), GTextOverflowModeFill,
-                     GTextAlignmentLeft, NULL);
+                     GTextAlignmentLeft, nullptr);
 
   draw_color_rect(ctx, data, GRect(92, 0, 62, 90));
   graphics_context_set_text_color(ctx, GColorWhite);
   if (data->alpha < ALPHA_100) {
     graphics_draw_text(ctx, "FG+BG", font, GRect(92, 90 - 16, 62, 16), GTextOverflowModeFill,
-                       GTextAlignmentLeft, NULL);
+                       GTextAlignmentLeft, nullptr);
   } else {
     graphics_draw_text(ctx, "FG", font, GRect(92, 90 - 16, 62, 16), GTextOverflowModeFill,
-                       GTextAlignmentLeft, NULL);
+                       GTextAlignmentLeft, nullptr);
   }
 
   if (data->alpha < ALPHA_100) {
@@ -345,7 +345,7 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, &GRect(124, 0, 20, 40));
     graphics_context_set_text_color(ctx, GColorWhite);
     graphics_draw_text(ctx, "FG", font, GRect(124, 40 - 16, 20, 16), GTextOverflowModeFill,
-                       GTextAlignmentLeft, NULL);
+                       GTextAlignmentLeft, nullptr);
   }
 
   draw_color_wheel_box(ctx, data);

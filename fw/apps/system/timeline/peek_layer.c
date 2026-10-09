@@ -123,19 +123,19 @@ void peek_layer_init(PeekLayer *peek_layer, const GRect *frame) {
   const GTextAlignment text_alignment = GTextAlignmentCenter;
   GRect text_rect = GRect(0, NUMBER_OFFSET_Y, frame->size.w, 40);
   // number layer
-  text_layer_init_with_parameters(&peek_layer->number.text_layer, &text_rect, NULL,
+  text_layer_init_with_parameters(&peek_layer->number.text_layer, &text_rect, nullptr,
                                   fonts_get_system_font(FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM),
                                   GColorBlack, GColorClear, text_alignment,
                                   GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->number.text_layer);
   // title layer
   text_rect.origin.y = TEXT_OFFSET_Y;
-  text_layer_init_with_parameters(&peek_layer->title.text_layer, &text_rect, NULL,
+  text_layer_init_with_parameters(&peek_layer->title.text_layer, &text_rect, nullptr,
                                   fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GColorBlack,
                                   GColorClear, text_alignment, GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->title.text_layer);
   // subtitle layer
-  text_layer_init_with_parameters(&peek_layer->subtitle.text_layer, &text_rect, NULL,
+  text_layer_init_with_parameters(&peek_layer->subtitle.text_layer, &text_rect, nullptr,
                                   fonts_get_system_font(FONT_KEY_GOTHIC_18), GColorBlack,
                                   GColorClear, text_alignment, GTextOverflowModeTrailingEllipsis);
   layer_add_child((Layer *)peek_layer, (Layer *)&peek_layer->subtitle.text_layer);
@@ -173,7 +173,7 @@ void peek_layer_set_icon_with_size_invert(PeekLayer *peek_layer,
                                           TimelineResourceSize res_size, GRect icon_from,
                                           bool invert) {
   kino_layer_set_invert_colors(&peek_layer->kino_layer, invert);
-  kino_layer_set_reel(&peek_layer->kino_layer, NULL, false);
+  kino_layer_set_reel(&peek_layer->kino_layer, nullptr, false);
 
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(timeline_res, res_size, &icon_res_info);
@@ -244,7 +244,7 @@ static void prv_scale_to_did_stop(KinoLayer *kino_layer, bool finished, void *co
   // static dot too shows a second dot when the layer origin is offset (e.g. peek_offset_y)
   peek_layer->show_dot =
       prv_is_dot_size(icon_to.size) && layer_get_hidden((Layer *)&peek_layer->kino_layer);
-  kino_layer_set_callbacks(kino_layer, (KinoLayerCallbacks){}, NULL);
+  kino_layer_set_callbacks(kino_layer, (KinoLayerCallbacks){}, nullptr);
 }
 
 //! This is called after the scale to is complete
@@ -263,7 +263,7 @@ void peek_layer_set_scale_to_image(PeekLayer *peek_layer, const TimelineResource
     icon_from = kino_reel_get_elapsed(prev_reel) ? kino_reel_transform_get_to_frame(prev_reel)
                                                  : kino_reel_transform_get_from_frame(prev_reel);
   }
-  kino_layer_set_reel(&peek_layer->kino_layer, NULL, false);
+  kino_layer_set_reel(&peek_layer->kino_layer, nullptr, false);
 
   KinoReel *from_reel = kino_reel_create_with_resource_system(peek_layer->res_info.res_app_num,
                                                               peek_layer->res_info.res_id);
@@ -271,7 +271,7 @@ void peek_layer_set_scale_to_image(PeekLayer *peek_layer, const TimelineResource
     return;
   }
 
-  KinoReel *to_reel = NULL;
+  KinoReel *to_reel = nullptr;
   if (timeline_res) {
     AppResourceInfo res_info;
     timeline_resources_get_id(timeline_res, res_size, &res_info);
@@ -336,7 +336,7 @@ void peek_layer_set_scale_to_image(PeekLayer *peek_layer, const TimelineResource
 
 void peek_layer_set_scale_to(PeekLayer *peek_layer, GRect icon_to) {
   const bool align_in_frame = true;
-  peek_layer_set_scale_to_image(peek_layer, NULL, TimelineResourceSizeTiny, icon_to,
+  peek_layer_set_scale_to_image(peek_layer, nullptr, TimelineResourceSizeTiny, icon_to,
                                 align_in_frame);
 }
 
@@ -403,15 +403,15 @@ void peek_layer_set_fields_hidden(PeekLayer *peek_layer, bool hidden) {
 }
 
 void peek_layer_set_number(PeekLayer *peek_layer, const char *number) {
-  peek_layer_set_fields(peek_layer, number, NULL, NULL);
+  peek_layer_set_fields(peek_layer, number, nullptr, nullptr);
 }
 
 void peek_layer_set_title(PeekLayer *peek_layer, const char *title) {
-  peek_layer_set_fields(peek_layer, NULL, title, NULL);
+  peek_layer_set_fields(peek_layer, nullptr, title, nullptr);
 }
 
 void peek_layer_set_subtitle(PeekLayer *peek_layer, const char *subtitle) {
-  peek_layer_set_fields(peek_layer, NULL, NULL, subtitle);
+  peek_layer_set_fields(peek_layer, nullptr, nullptr, subtitle);
 }
 
 void peek_layer_set_title_font(PeekLayer *peek_layer, GFont font) {

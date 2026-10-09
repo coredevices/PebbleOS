@@ -127,13 +127,13 @@ static void prv_fill_points(GContext *ctx, const GPointUnaligned *points, size_t
   // This algorithm makes sense only in 8bit mode...
   if (ctx->draw_state.antialiased) {
     prv_fill_points_with_cb_aa(ctx, points, num_points, rotation, offset, prv_gpath_draw_filled_cb,
-                               NULL);
+                               nullptr);
     return;
   }
 #endif
 
   prv_fill_points_with_cb(ctx, points, num_points, rotation, offset, prv_gpath_draw_filled_cb,
-                          NULL);
+                          nullptr);
 }
 
 void gpath_draw_filled(GContext *ctx, GPath *path) {
@@ -270,8 +270,8 @@ static void prv_fill_points_with_cb_aa(GContext *ctx, const GPointUnaligned *poi
   GPointPrecise rot_start, rot_end;
   bool found_start_direction = false;
   bool start_is_down = false;
-  Intersection *intersections_up = NULL;
-  Intersection *intersections_down = NULL;
+  Intersection *intersections_up = nullptr;
+  Intersection *intersections_down = nullptr;
 
   rot_points[0] = rot_end =
       GPointPreciseFromGPoint(rotate_offset_point(&points[0], rotation, &offset));
@@ -462,8 +462,8 @@ static void prv_fill_points_with_cb(GContext *ctx, const GPointUnaligned *points
   GPoint rot_start, rot_end;
   bool found_start_direction = false;
   bool start_is_down = false;
-  int16_t *intersections_up = NULL;
-  int16_t *intersections_down = NULL;
+  int16_t *intersections_up = nullptr;
+  int16_t *intersections_down = nullptr;
 
   rot_points[0] = rot_end = rotate_offset_point(&points[0], rotation, &offset);
   min_x = max_x = rot_points[0].x;

@@ -43,4 +43,4 @@ static void prv_input_cb(const struct pbl_input_event *evt, void *user_data) {
   }
 }
 
-PBL_INPUT_CALLBACK_DEFINE(prv_input_cb, NULL);
+PBL_INPUT_CALLBACK_DEFINE(prv_input_cb, nullptr);

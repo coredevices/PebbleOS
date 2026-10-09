@@ -55,11 +55,11 @@ static void prv_run_until_stopped(void) {
     pthread_cond_wait(&s_stop_cond, &posix_cpu);
   }
   pthread_mutex_unlock(&posix_cpu);
-  for (struct pbl_thread *t = pbl_all_threads; t != NULL; t = t->backend.all_next) {
+  for (struct pbl_thread *t = pbl_all_threads; t != nullptr; t = t->backend.all_next) {
     struct posix_thread *pt = t->backend.arch.pt;
-    if (pt != NULL && pt->created) {
+    if (pt != nullptr && pt->created) {
       pthread_cancel(pt->tid);
-      pthread_join(pt->tid, NULL);
+      pthread_join(pt->tid, nullptr);
     }
   }
 }
@@ -68,7 +68,7 @@ void arch_start(void) {
   irq_reset();
   prv_run_until_stopped();
   // Only the test harness gets here; it re-enters through pbl_test_kernel_run().
-  pthread_exit(NULL);
+  pthread_exit(nullptr);
 }
 
 void pbl_test_kernel_run(void) {
@@ -80,7 +80,7 @@ void pbl_test_kernel_run(void) {
   prv_run_until_stopped();
   for (size_t i = 0; i < s_num_zombies; i++) {
     pthread_cancel(s_zombies[i]);
-    pthread_join(s_zombies[i], NULL);
+    pthread_join(s_zombies[i], nullptr);
   }
   s_num_zombies = 0;
   sched_reset_for_test();

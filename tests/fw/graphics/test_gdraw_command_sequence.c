@@ -47,7 +47,7 @@ void gpath_draw_outline_precise_internal(GContext *ctx, GPointPrecise *points, s
 typedef uint16_t ResourceId;
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
-  return NULL;
+  return nullptr;
 }
 
 // setup and teardown
@@ -231,13 +231,13 @@ void test_gdraw_command_sequence__get_frame_by_index(void) {
   cl_assert_equal_i(command->fill_color.argb, GColorBlackARGB8);
   cl_assert_equal_i(command->points[0].x, 7);
 
-  cl_assert_equal_p(gdraw_command_sequence_get_frame_by_index(sequence, 2), NULL);
+  cl_assert_equal_p(gdraw_command_sequence_get_frame_by_index(sequence, 2), nullptr);
 
   free(sequence);
 }
 
 void test_gdraw_command_sequence__clone(void) {
-  cl_assert_equal_p(gdraw_command_sequence_clone(NULL), NULL);
+  cl_assert_equal_p(gdraw_command_sequence_clone(nullptr), nullptr);
 
   GDrawCommandSequence *sequence;
   prv_create_test_sequence(&sequence);

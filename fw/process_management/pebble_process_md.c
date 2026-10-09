@@ -77,7 +77,7 @@ const uint8_t *process_metadata_get_build_id(const PebbleProcessMd *md) {
   if (md->process_storage == ProcessStorageFlash) {
     return ((const PebbleProcessMdFlash *)md)->build_id;
   }
-  return NULL;
+  return nullptr;
 }
 
 //////////////////////

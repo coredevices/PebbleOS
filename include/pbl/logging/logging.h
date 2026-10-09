@@ -411,7 +411,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 #define PBL_LOG_MODULE_DECLARE(name, level) \
   _PBL_LOG_CAT(_PBL_LOG_MODULE_DECLARE_, _PBL_LOG_IS_ENABLED(level##_RUNTIME))(name, level)
 /** @cond INTERNAL_HIDDEN */
-#define _PBL_LOG_FN(fn, filtered_fn) (_pbl_log_module_runtime_level != NULL ? filtered_fn : fn)
+#define _PBL_LOG_FN(fn, filtered_fn) (_pbl_log_module_runtime_level != nullptr ? filtered_fn : fn)
 /** @endcond */
 #else
 #define PBL_LOG_MODULE_DEFINE(name, level) \
@@ -457,7 +457,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
  */
 #define PBL_SHOULD_LOG(level)                                                             \
   ((level) <= (_pbl_log_module_level != 0 ? _pbl_log_module_level : DEFAULT_LOG_LEVEL) && \
-   (_pbl_log_module_runtime_level == NULL ||                                              \
+   (_pbl_log_module_runtime_level == nullptr ||                                           \
     (level) <= __atomic_load_n(_pbl_log_module_runtime_level, __ATOMIC_RELAXED)))
 
 /**
@@ -505,7 +505,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 #define PBL_LOG_COLOR(level, color, fmt, ...)                                         \
   do {                                                                                \
     if (PBL_SHOULD_LOG(level)) {                                                      \
-      if (_pbl_log_module_name != NULL) {                                             \
+      if (_pbl_log_module_name != nullptr) {                                          \
         _PBL_LOG_FN(pbl_log, pbl_log_filtered)(level, __FILE__, __LINE__, "%s: " fmt, \
                                                _pbl_log_module_name, ##__VA_ARGS__);  \
       } else {                                                                        \
@@ -517,7 +517,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 #define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)                                              \
   do {                                                                                          \
     if (PBL_SHOULD_LOG(level)) {                                                                \
-      if (_pbl_log_module_name != NULL) {                                                       \
+      if (_pbl_log_module_name != nullptr) {                                                    \
         _PBL_LOG_FN(pbl_log_sync, pbl_log_filtered_sync)(level, __FILE__, __LINE__, "%s: " fmt, \
                                                          _pbl_log_module_name, ##__VA_ARGS__);  \
       } else {                                                                                  \

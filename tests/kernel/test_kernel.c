@@ -72,8 +72,8 @@ static void prv_hi_entry(void *arg) {
 }
 
 void test_kernel__priority_preempts(void) {
-  prv_spawn(0, "lo", 1, prv_lo_entry, NULL);
-  prv_spawn(1, "hi", 3, prv_hi_entry, NULL);
+  prv_spawn(0, "lo", 1, prv_lo_entry, nullptr);
+  prv_spawn(1, "hi", 3, prv_hi_entry, nullptr);
   pbl_test_kernel_run();
   // hi runs first, sleeps, lo runs to the stop while hi is asleep
   cl_assert_equal_s(s_trace, "HL");
@@ -89,7 +89,7 @@ static void prv_sleep_then_stop(void *arg) {
 }
 
 void test_kernel__sleep_advances_virtual_time(void) {
-  prv_spawn(0, "sleeper", 2, prv_sleep_then_stop, NULL);
+  prv_spawn(0, "sleeper", 2, prv_sleep_then_stop, nullptr);
   pbl_test_kernel_run();
   cl_assert_equal_s(s_trace, "S");
 }
@@ -153,8 +153,8 @@ static void prv_giver(void *arg) {
 
 void test_kernel__semaphore_handoff_and_timeout(void) {
   pbl_sem_init(&s_sem, s_sem.initial, s_sem.limit);
-  prv_spawn(0, "taker", 3, prv_taker, NULL);
-  prv_spawn(1, "giver", 2, prv_giver, NULL);
+  prv_spawn(0, "taker", 3, prv_taker, nullptr);
+  prv_spawn(1, "giver", 2, prv_giver, nullptr);
   pbl_test_kernel_run();
   // taker blocks, giver gives and is preempted by the higher-priority taker,
   // which then times out on its second take after the giver finished
@@ -178,8 +178,8 @@ static void prv_isr_giver(void *arg) {
 
 void test_kernel__semaphore_give_from_isr(void) {
   pbl_sem_init(&s_sem, s_sem.initial, s_sem.limit);
-  prv_spawn(0, "taker", 3, prv_isr_taker, NULL);
-  prv_spawn(1, "giver", 2, prv_isr_giver, NULL);
+  prv_spawn(0, "taker", 3, prv_isr_taker, nullptr);
+  prv_spawn(1, "giver", 2, prv_isr_giver, nullptr);
   pbl_test_kernel_run();
   cl_assert_equal_s(s_trace, "igT");
 }
@@ -230,9 +230,9 @@ static void prv_pi_high(void *arg) {
 
 void test_kernel__mutex_priority_inheritance(void) {
   pbl_mutex_init(&s_mutex);
-  prv_spawn(0, "low", 1, prv_pi_low, NULL);
-  prv_spawn(1, "med", 2, prv_pi_medium, NULL);
-  prv_spawn(2, "high", 4, prv_pi_high, NULL);
+  prv_spawn(0, "low", 1, prv_pi_low, nullptr);
+  prv_spawn(1, "med", 2, prv_pi_medium, nullptr);
+  prv_spawn(2, "high", 4, prv_pi_high, nullptr);
   pbl_test_kernel_run();
   // low takes the lock; high blocks and boosts low over medium; low hands
   // the mutex to high, then medium outranks the deboosted low
@@ -252,7 +252,7 @@ static void prv_recursive(void *arg) {
 
 void test_kernel__mutex_recursive(void) {
   pbl_mutex_init(&s_mutex);
-  prv_spawn(0, "r", 2, prv_recursive, NULL);
+  prv_spawn(0, "r", 2, prv_recursive, nullptr);
   pbl_test_kernel_run();
 }
 
@@ -274,8 +274,8 @@ static void prv_timed_locker(void *arg) {
 
 void test_kernel__mutex_timeouts(void) {
   pbl_mutex_init(&s_mutex);
-  prv_spawn(0, "holder", 2, prv_holder, NULL);
-  prv_spawn(1, "locker", 3, prv_timed_locker, NULL);
+  prv_spawn(0, "holder", 2, prv_holder, nullptr);
+  prv_spawn(1, "locker", 3, prv_timed_locker, nullptr);
   pbl_test_kernel_run();
 }
 
@@ -307,8 +307,8 @@ static void prv_consumer(void *arg) {
 
 void test_kernel__msgq_blocks_full_and_empty(void) {
   pbl_msgq_init(&s_q, s_q.buf, s_q.msg_size, s_q.max_msgs);
-  prv_spawn(0, "producer", 2, prv_producer, NULL);
-  prv_spawn(1, "consumer", 3, prv_consumer, NULL);
+  prv_spawn(0, "producer", 2, prv_producer, nullptr);
+  prv_spawn(1, "consumer", 3, prv_consumer, nullptr);
   pbl_test_kernel_run();
   // producer puts 1,2 then blocks; every put wakes the higher-priority
   // consumer, which drains the message before the producer can trace it
@@ -339,7 +339,7 @@ static PBL_POLL_GROUP_DEFINE(s_group);
 
 static void prv_poll_waiter(void *arg) {
   cl_assert(pbl_poll_group_is_empty(&s_group));
-  cl_assert(pbl_poll_group_wait(&s_group, PBL_TICKS(2)) == NULL);
+  cl_assert(pbl_poll_group_wait(&s_group, PBL_TICKS(2)) == nullptr);
   struct pbl_msgq *ready = pbl_poll_group_wait(&s_group, PBL_FOREVER);
   cl_assert(ready == &s_qb);
   int v;
@@ -353,7 +353,7 @@ static void prv_poll_waiter(void *arg) {
   pbl_msgq_get(&s_qa, &v, PBL_NO_WAIT);
   cl_assert(pbl_poll_group_wait(&s_group, PBL_NO_WAIT) == &s_qb);
   pbl_msgq_get(&s_qb, &v, PBL_NO_WAIT);
-  cl_assert(pbl_poll_group_wait(&s_group, PBL_NO_WAIT) == NULL);
+  cl_assert(pbl_poll_group_wait(&s_group, PBL_NO_WAIT) == nullptr);
   pbl_test_kernel_stop();
 }
 
@@ -369,8 +369,8 @@ void test_kernel__poll_group(void) {
   pbl_poll_group_init(&s_group);
   pbl_poll_group_add(&s_group, &s_qa);
   pbl_poll_group_add(&s_group, &s_qb);
-  prv_spawn(0, "waiter", 3, prv_poll_waiter, NULL);
-  prv_spawn(1, "poster", 2, prv_poll_poster, NULL);
+  prv_spawn(0, "waiter", 3, prv_poll_waiter, nullptr);
+  prv_spawn(1, "poster", 2, prv_poll_poster, nullptr);
   pbl_test_kernel_run();
 }
 
@@ -401,7 +401,7 @@ static void prv_controller(void *arg) {
 }
 
 void test_kernel__suspend_resume_abort(void) {
-  struct pbl_thread *victim = prv_spawn(0, "victim", 2, prv_victim, NULL);
+  struct pbl_thread *victim = prv_spawn(0, "victim", 2, prv_victim, nullptr);
   prv_spawn(1, "ctl", 3, prv_controller, victim);
   pbl_test_kernel_run();
 }
@@ -419,8 +419,8 @@ static void prv_watcher(void *arg) {
 }
 
 void test_kernel__thread_exit_on_return(void) {
-  prv_spawn(0, "short", 3, prv_short_lived, NULL);
-  prv_spawn(1, "watch", 2, prv_watcher, NULL);
+  prv_spawn(0, "short", 3, prv_short_lived, nullptr);
+  prv_spawn(1, "watch", 2, prv_watcher, nullptr);
   pbl_test_kernel_run();
   cl_assert_equal_s(s_trace, "sw");
 }
@@ -442,7 +442,7 @@ static void prv_stats_entry(void *arg) {
 }
 
 void test_kernel__stats_and_stack_info(void) {
-  prv_spawn(0, "stats", 2, prv_stats_entry, NULL);
+  prv_spawn(0, "stats", 2, prv_stats_entry, nullptr);
   pbl_test_kernel_run();
 }
 
@@ -460,7 +460,7 @@ static void prv_raised(void *arg) {
 }
 
 void test_kernel__prio_set_preempts(void) {
-  struct pbl_thread *other = prv_spawn(0, "other", 1, prv_raised, NULL);
+  struct pbl_thread *other = prv_spawn(0, "other", 1, prv_raised, nullptr);
   prv_spawn(1, "raiser", 3, prv_prio_raiser, other);
   pbl_test_kernel_run();
   cl_assert_equal_s(s_trace, "aRb");
@@ -484,8 +484,8 @@ static void prv_sched_waiter(void *arg) {
 
 void test_kernel__sched_lock_defers_switch(void) {
   pbl_sem_init(&s_sem, s_sem.initial, s_sem.limit);
-  prv_spawn(0, "waiter", 3, prv_sched_waiter, NULL);
-  prv_spawn(1, "locker", 2, prv_sched_locked, NULL);
+  prv_spawn(0, "waiter", 3, prv_sched_waiter, nullptr);
+  prv_spawn(1, "locker", 2, prv_sched_locked, nullptr);
   pbl_test_kernel_run();
   cl_assert_equal_s(s_trace, "abWc");
 }

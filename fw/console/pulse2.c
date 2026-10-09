@@ -243,7 +243,7 @@ static void prv_pulse_task_feed_watchdog(void) {
 }
 
 static void prv_pulse_task_main(void *unused) {
-  s_wdt_channel = pbl_task_wdt_add(NULL, CONFIG_TASK_WDT_TIMEOUT_MS, NULL, NULL);
+  s_wdt_channel = pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr, nullptr);
   PBL_ASSERTN(s_wdt_channel >= 0);
 
   CobsDecodeContext frame_decode_ctx;

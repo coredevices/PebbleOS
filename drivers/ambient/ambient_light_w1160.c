@@ -310,5 +310,5 @@ static int prv_cmd_als_read(const struct pbl_shell *sh, size_t argc, char **argv
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_als, read, NULL, "Read the raw light level", prv_cmd_als_read, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_als, read, nullptr, "Read the raw light level", prv_cmd_als_read, 0, 0);
 #endif

@@ -105,7 +105,7 @@ void test_gatt_service_changed_server__initialize(void) {
   gatt_service_changed_server_init();
   fake_gatt_init();
   gap_le_connection_init();
-  gap_le_connection_add(&s_device, NULL, false /* local_is_master */, TIMER_INVALID_ID);
+  gap_le_connection_add(&s_device, nullptr, false /* local_is_master */, TIMER_INVALID_ID);
   s_connection = gap_le_connection_by_device(&s_device);
   cl_assert(s_connection);
   s_connection->gatt_connection_id = s_connection_id;
@@ -114,7 +114,7 @@ void test_gatt_service_changed_server__initialize(void) {
 void test_gatt_service_changed_server__cleanup(void) {
   if (s_connection) {
     gap_le_connection_remove(&s_device);
-    s_connection = NULL;
+    s_connection = nullptr;
   }
   gap_le_connection_deinit();
   stub_new_timer_cleanup();
@@ -128,7 +128,7 @@ void test_gatt_service_changed_server__unsubscribe(void) {
 
 void test_gatt_service_changed_server__subscribe_event_but_no_connection(void) {
   gap_le_connection_remove(&s_device);
-  s_connection = NULL;
+  s_connection = nullptr;
 
   prv_cccd_write(true /* is_subscribing */);
 
@@ -153,12 +153,12 @@ void test_gatt_service_changed_server__reconnect_resubscribe_stop_sending_after_
   gatt_service_changed_server_handle_fw_update();
 
   gap_le_connection_remove(&s_device);
-  s_connection = NULL;
+  s_connection = nullptr;
 
   static const int max_times = 5;
 
   for (int i = 0; i < max_times + 1; ++i) {
-    gap_le_connection_add(&s_device, NULL, false /* local_is_master */, TIMER_INVALID_ID);
+    gap_le_connection_add(&s_device, nullptr, false /* local_is_master */, TIMER_INVALID_ID);
     s_connection = gap_le_connection_by_device(&s_device);
     cl_assert(s_connection);
     s_connection->gatt_connection_id = s_connection_id;
@@ -171,7 +171,7 @@ void test_gatt_service_changed_server__reconnect_resubscribe_stop_sending_after_
     }
 
     gap_le_connection_remove(&s_device);
-    s_connection = NULL;
+    s_connection = nullptr;
   }
 }
 
@@ -185,7 +185,7 @@ void test_gatt_service_changed_server__disconnect_during_delay(void) {
 
   // Simulate disconnection:
   gap_le_connection_remove(&s_device);
-  s_connection = NULL;
+  s_connection = nullptr;
 
   // Timer fires:
   stub_new_timer_fire(t);

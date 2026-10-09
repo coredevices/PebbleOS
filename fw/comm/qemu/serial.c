@@ -242,7 +242,7 @@ static const QemuMessageHandler *prv_find_handler(uint16_t protocol_id) {
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 // -----------------------------------------------------------------------------------------
@@ -331,7 +331,7 @@ static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
       s_qemu_state.callback_pending = true;
       PebbleEvent e = {
         .type = PEBBLE_CALLBACK_EVENT,
-        .callback = {.callback = prv_process_receive_buffer, .data = NULL}
+        .callback = {.callback = prv_process_receive_buffer, .data = nullptr}
       };
       event_put_isr(&e);
     }

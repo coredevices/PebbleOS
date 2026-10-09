@@ -94,15 +94,16 @@
 
 [[noreturn]] void passert_failed_no_message_with_lr(const char *filename, int line_number,
                                                     uint32_t lr) {
-  handle_passert_failed(filename, line_number, lr, "ASSERTN", NULL);
+  handle_passert_failed(filename, line_number, lr, "ASSERTN", nullptr);
 }
 
 [[noreturn]] void passert_failed_no_message(const char *filename, int line_number) {
-  handle_passert_failed(filename, line_number, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", NULL);
+  handle_passert_failed(filename, line_number, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN",
+                        nullptr);
 }
 
 [[noreturn]] void pbl_kernel_assert_failed(const char *filename, int line) {
-  handle_passert_failed(filename, line, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", NULL);
+  handle_passert_failed(filename, line, (uintptr_t)PBL_RETURN_ADDRESS(0), "ASSERTN", nullptr);
 }
 
 [[noreturn]] void wtf(void) {

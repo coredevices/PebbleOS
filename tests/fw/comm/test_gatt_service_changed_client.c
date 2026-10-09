@@ -51,7 +51,7 @@ bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
 }
 
 GAPLEConnection *gap_le_connection_any(void) {
-  return NULL;
+  return nullptr;
 }
 
 uint16_t gaps_get_starting_att_handle(void) {
@@ -60,7 +60,7 @@ uint16_t gaps_get_starting_att_handle(void) {
 
 GAPLEConnection *gatt_client_characteristic_get_connection(
     pbl_bt_characteristic_t characteristic_ref) {
-  return NULL;
+  return nullptr;
 }
 
 pbl_bt_service_t gatt_client_att_handle_get_service(GAPLEConnection *connection,

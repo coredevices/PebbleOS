@@ -17,13 +17,14 @@ Layer *text_layer_find_first_paging_container(const TextLayer *text_layer) {
     }
     layer = layer->parent;
   }
-  return NULL;
+  return nullptr;
 }
 
 bool text_layer_calc_text_flow_paging_values(const TextLayer *text_layer,
                                              GPoint *content_origin_on_screen,
                                              GRect *page_rect_on_screen) {
-  if (text_layer == NULL || text_layer->layer.window == NULL || text_layer->layer.parent == NULL) {
+  if (text_layer == nullptr || text_layer->layer.window == nullptr ||
+      text_layer->layer.parent == nullptr) {
     return false;
   }
 

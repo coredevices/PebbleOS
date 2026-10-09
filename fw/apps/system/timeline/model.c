@@ -33,7 +33,7 @@ static int prv_adj_to_raw_idx(int adj_idx) {
 TimelineIterState *timeline_model_get_iter_state_with_timeline_idx(int index) {
   int raw_idx = prv_get_idx_for_timeline_idx(index);
   if (raw_idx == -1) {
-    return NULL;
+    return nullptr;
   } else {
     return &s_model_data->states[raw_idx];
   }
@@ -57,7 +57,7 @@ bool timeline_model_is_empty(void) {
 }
 
 int timeline_model_get_num_items(void) {
-  if (timeline_model_get_current_state() == NULL) {
+  if (timeline_model_get_current_state() == nullptr) {
     return 0;
   }
   int num = positive_modulo(s_model_data->last_index - s_model_data->first_index,
@@ -84,8 +84,8 @@ static Iterator *prv_get_iter(int index) {
 }
 
 TimelineIterState *timeline_model_get_current_state(void) {
-  if (timeline_model_get_iter_state(0)->node == NULL) {
-    return NULL;
+  if (timeline_model_get_iter_state(0)->node == nullptr) {
+    return nullptr;
   }
   return timeline_model_get_iter_state(0);
 }
@@ -200,7 +200,7 @@ void timeline_model_init(time_t timestamp, TimelineModel *model) {
       PBL_LOG_ERR("Timeline iterator failed to init!");
     }
     if (FAILED(rv) || rv == S_NO_MORE_ITEMS) {
-      timeline_model_get_iter_state(i)->node = NULL;
+      timeline_model_get_iter_state(i)->node = nullptr;
     }
     bool iter_at_final_position = true;
     for (int num_to_iter = 0; num_to_iter < i; num_to_iter++) {
@@ -219,7 +219,7 @@ void timeline_model_deinit(void) {
   for (int i = 0; i < TIMELINE_NUM_ITEMS_IN_MODEL; i++) {
     timeline_iter_deinit(&s_model_data->iters[i], &s_model_data->states[i],
                          &s_model_data->timeline);
-    s_model_data->states[i].node = NULL;
+    s_model_data->states[i].node = nullptr;
   }
   s_model_data->first_index = 0;
   s_model_data->last_index = TIMELINE_NUM_VISIBLE_ITEMS;

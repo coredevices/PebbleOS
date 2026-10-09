@@ -17,7 +17,7 @@ extern void factory_registry_protocol_msg_callback(CommSession *session, const u
 
 static int s_send_data_count = 0;
 
-static uint8_t *s_expected_response = NULL;
+static uint8_t *s_expected_response = nullptr;
 static unsigned int s_expected_response_length = 0;
 
 bool comm_session_send_data(CommSession *comm_session_ref, uint16_t endpoint_id,
@@ -45,7 +45,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
 }
 
 CommSession *comm_session_get_system_session(void) {
-  return NULL;
+  return nullptr;
 }
 
 // Tests
@@ -53,7 +53,7 @@ CommSession *comm_session_get_system_session(void) {
 
 void test_registry_endpoint__initialize(void) {
   s_send_data_count = 0;
-  s_expected_response = NULL;
+  s_expected_response = nullptr;
   s_expected_response_length = 0;
 
   s_watch_color = 0x1;
@@ -66,7 +66,7 @@ void test_registry_endpoint__pass(void) {
   s_expected_response = expected_response;
   s_expected_response_length = sizeof(expected_response);
 
-  factory_registry_protocol_msg_callback(NULL, message, sizeof(message));
+  factory_registry_protocol_msg_callback(nullptr, message, sizeof(message));
 
   cl_assert_equal_i(s_send_data_count, 1);
 }
@@ -79,7 +79,7 @@ void test_registry_endpoint__fail_write(void) {
   s_expected_response = expected_response;
   s_expected_response_length = sizeof(expected_response);
 
-  factory_registry_protocol_msg_callback(NULL, message, sizeof(message));
+  factory_registry_protocol_msg_callback(nullptr, message, sizeof(message));
 
   cl_assert_equal_i(s_send_data_count, 1);
 }
@@ -93,7 +93,7 @@ void test_registry_endpoint__fail_read_other(void) {
   s_expected_response = expected_response;
   s_expected_response_length = sizeof(expected_response);
 
-  factory_registry_protocol_msg_callback(NULL, message, sizeof(message));
+  factory_registry_protocol_msg_callback(nullptr, message, sizeof(message));
 
   cl_assert_equal_i(s_send_data_count, 1);
 }

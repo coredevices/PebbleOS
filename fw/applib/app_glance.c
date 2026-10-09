@@ -67,7 +67,7 @@ AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceS
       .current_time = current_time,
     };
     TemplateStringError template_string_error = {};
-    if (!template_string_evaluate(slice.layout.subtitle_template_string, NULL, 0, NULL,
+    if (!template_string_evaluate(slice.layout.subtitle_template_string, nullptr, 0, nullptr,
                                   &template_string_vars, &template_string_error)) {
       result |= APP_GLANCE_RESULT_INVALID_TEMPLATE_STRING;
     }

@@ -303,7 +303,7 @@ void test_reminders__scheduled_at_the_reminder_time(void) {
   cl_assert_equal_i(num_events_put, 1);
 
   // item2 is next, at 100: scheduled for exactly that time.
-  cl_assert(s_job != NULL);
+  cl_assert(s_job != nullptr);
   cl_assert_equal_i(s_job_time, 100);
   cl_assert(!fake_cron_job_fire_if_due(99));
   cl_assert_equal_i(num_events_put, 1);

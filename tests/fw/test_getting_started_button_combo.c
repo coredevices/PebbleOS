@@ -27,7 +27,7 @@ void factory_reset(bool shutdown) {
 }
 
 Window *spinner_ui_window_get(void) {
-  return NULL;
+  return nullptr;
 }
 
 void app_window_stack_push(Window *window, bool animated) {

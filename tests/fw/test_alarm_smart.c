@@ -64,8 +64,8 @@ void test_alarm_smart__initialize(void) {
   s_num_alarm_events_put = 0;
   s_num_alarms_fired = 0;
   s_defer_system_task_callbacks = false;
-  s_pending_system_task_callback = NULL;
-  s_pending_system_task_data = NULL;
+  s_pending_system_task_callback = nullptr;
+  s_pending_system_task_data = nullptr;
   s_last_vmc = 0;
   s_rand = 0;
 
@@ -80,7 +80,7 @@ void test_alarm_smart__initialize(void) {
   prv_set_time(s_thursday, 0, 0);
 
   timeline_item_destroy(s_last_timeline_item_added);
-  s_last_timeline_item_added = NULL;
+  s_last_timeline_item_added = nullptr;
   s_last_timeline_item_removed_uuid = (Uuid){};
   memset(s_fake_pin_records, 0, sizeof(s_fake_pin_records));
 

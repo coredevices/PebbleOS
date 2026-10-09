@@ -16,7 +16,7 @@
 
 static void prv_app_timer_callback(void *context) {
   Dialog *dialog = context;
-  dialog->timer = NULL;
+  dialog->timer = nullptr;
   dialog_pop(dialog);
 }
 
@@ -71,7 +71,7 @@ void dialog_load(Dialog *dialog) {
 void dialog_unload(Dialog *dialog) {
   if (dialog->timer) {
     app_timer_cancel(dialog->timer);
-    dialog->timer = NULL;
+    dialog->timer = nullptr;
   }
 
   if (dialog->show_status_layer) {
@@ -127,7 +127,7 @@ bool dialog_init_icon_layer(Dialog *dialog, KinoReel *image, GPoint icon_origin,
   const int16_t ICON_TARGET_PT_X = icon_rect.size.w;
   const int16_t ICON_TARGET_PT_Y = (icon_rect.size.h / 2);
 
-  KinoReel *reel = NULL;
+  KinoReel *reel = nullptr;
   if (animated) {
     reel = kino_reel_scale_segmented_create(image, true, icon_rect);
     kino_reel_transform_set_from_frame(reel, from);

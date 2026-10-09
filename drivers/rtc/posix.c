@@ -29,7 +29,7 @@ uint32_t RTC_ReadBackupRegister(uint32_t reg_id) {
 }
 
 void rtc_init(void) {
-  gettimeofday(&s_boot, NULL);
+  gettimeofday(&s_boot, nullptr);
 }
 
 void rtc_calibrate_frequency(uint32_t frequency) {
@@ -40,13 +40,13 @@ void rtc_init_timers(void) {
 
 void rtc_set_time(time_t time) {
   struct timeval now;
-  gettimeofday(&now, NULL);
+  gettimeofday(&now, nullptr);
   s_offset_s = (int64_t)time - now.tv_sec;
 }
 
 void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   struct timeval now;
-  gettimeofday(&now, NULL);
+  gettimeofday(&now, nullptr);
   *out_seconds = (time_t)(now.tv_sec + s_offset_s);
   *out_ms = (uint16_t)(now.tv_usec / 1000);
 }
@@ -88,7 +88,7 @@ bool rtc_sanitize_time_t(time_t *t) {
 
 RtcTicks rtc_get_ticks(void) {
   struct timeval now;
-  gettimeofday(&now, NULL);
+  gettimeofday(&now, nullptr);
   int64_t us = (int64_t)(now.tv_sec - s_boot.tv_sec) * 1000000 + (now.tv_usec - s_boot.tv_usec);
   return (RtcTicks)(us * RTC_TICKS_HZ / 1000000);
 }

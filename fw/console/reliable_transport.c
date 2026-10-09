@@ -275,14 +275,14 @@ void *pulse_reliable_send_begin(const uint16_t app_protocol) {
   // We will deadlock if we ever have to wait on s_tx_lock from the PULSE task.
   PBL_ASSERT_NOT_TASK(PebbleTask_PULSE);
   if (!s_layer_up) {
-    return NULL;
+    return nullptr;
   }
   pbl_sem_take(&s_tx_lock, PBL_FOREVER);
   if (!s_layer_up) {
     // Transport went down while waiting for the lock
     PBL_LOG_DBG("Transport went down while waiting for lock");
     pbl_sem_give(&s_tx_lock);
-    return NULL;
+    return nullptr;
   }
   s_tx_buffer->app_protocol = app_protocol;
   return &s_tx_buffer->information[0];

@@ -35,13 +35,13 @@ typedef struct LauncherAppGlanceWeather {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWeather *weather_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(weather_glance, icon, NULL);
+  return NULL_SAFE_FIELD_ACCESS(weather_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWeather *weather_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(weather_glance, title, NULL);
+  return NULL_SAFE_FIELD_ACCESS(weather_glance, title, nullptr);
 }
 
 static void prv_weather_glance_subtitle_dynamic_text_node_update(
@@ -150,7 +150,7 @@ static const LauncherAppGlanceStructuredImpl s_weather_structured_glance_impl = 
 
 LauncherAppGlance *launcher_app_glance_weather_create(const AppMenuNode *node) {
   if (!node) {
-    return NULL;
+    return nullptr;
   }
 
   LauncherAppGlanceWeather *weather_glance = app_zalloc_check(sizeof(*weather_glance));
@@ -164,7 +164,7 @@ LauncherAppGlance *launcher_app_glance_weather_create(const AppMenuNode *node) {
       &node->uuid, &s_weather_structured_glance_impl, should_consider_slices, weather_glance);
   PBL_ASSERTN(structured_glance);
 
-  prv_weather_event_handler(NULL, structured_glance);
+  prv_weather_event_handler(nullptr, structured_glance);
 
   weather_glance->weather_event_info = (EventServiceInfo){
     .type = PEBBLE_WEATHER_EVENT,

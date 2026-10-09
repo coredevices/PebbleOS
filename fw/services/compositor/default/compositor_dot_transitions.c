@@ -100,7 +100,7 @@ static void prv_collapse_animation(GContext *ctx, uint32_t distance_normalized, 
 
     GPath path = {.num_points = ARRAY_LENGTH(path_points), .points = path_points};
 
-    gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, NULL);
+    gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, nullptr);
   } else {
     // gpath that creates a solid "ring"
     GPoint path_points[] = {
@@ -109,7 +109,7 @@ static void prv_collapse_animation(GContext *ctx, uint32_t distance_normalized, 
 
     GPath path = {.num_points = ARRAY_LENGTH(path_points), .points = path_points};
 
-    gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, NULL);
+    gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, nullptr);
   }
 
   ctx->draw_state.stroke_width = sw;
@@ -322,7 +322,7 @@ static void prv_dot_transition_from_app_fetch_animation_init(Animation *animatio
 const CompositorTransition *compositor_dot_transition_timeline_get(bool timeline_is_future,
                                                                    bool timeline_is_destination) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   if (timeline_is_future) {
@@ -358,7 +358,7 @@ const CompositorTransition *compositor_dot_transition_timeline_get(bool timeline
 
 const CompositorTransition *compositor_dot_transition_app_fetch_get(void) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   static const CompositorTransition s_impl = {

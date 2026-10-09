@@ -14,7 +14,7 @@ bool PBL_WEAK notification_image_claim(const Uuid *item_id, uint8_t *token_out) 
 }
 
 const struct GBitmap *PBL_WEAK notification_image_lock(const Uuid *item_id) {
-  return NULL;
+  return nullptr;
 }
 
 void PBL_WEAK notification_image_unlock(void) {

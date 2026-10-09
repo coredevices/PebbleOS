@@ -203,7 +203,7 @@ static void prv_kill_user_process(uint32_t stashed_lr) {
   process_manager_put_kill_process_event(task, false /* gracefully */);
 
   // Wait for the kernel to kill us...
-  pbl_thread_suspend(NULL);
+  pbl_thread_suspend(nullptr);
 }
 
 DEFINE_SYSCALL([[noreturn]] void, sys_app_fault, uint32_t stashed_lr) {

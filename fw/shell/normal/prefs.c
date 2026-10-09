@@ -830,7 +830,7 @@ static void prv_timeline_peek_set_enabled_callback(void *data) {
 
 static bool prv_set_s_timeline_peek_enabled(bool *enabled) {
   s_timeline_peek_enabled = *enabled;
-  launcher_task_add_callback(prv_timeline_peek_set_enabled_callback, NULL);
+  launcher_task_add_callback(prv_timeline_peek_set_enabled_callback, nullptr);
   return true;
 }
 
@@ -1200,7 +1200,7 @@ static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len
     }
   }
   PBL_LOG_WRN("Unrecognized key: %s", (const char *)key);
-  return NULL;
+  return nullptr;
 }
 
 // ------------------------------------------------------------------------------------
@@ -1238,7 +1238,7 @@ static void prv_pref_set(const char *key, const void *value, size_t val_len) {
   const PrefsTableEntry *entry = prv_prefs_entry((const uint8_t *)key, strlen(key));
 
   // validate the key and value length
-  PBL_ASSERT(entry != NULL, "Key %s not found", key);
+  PBL_ASSERT(entry != nullptr, "Key %s not found", key);
   PBL_ASSERT(val_len == entry->value_len,
              "Attempt to set %s using invalid value_len of %" PRIu32 "", entry->key,
              (uint32_t)val_len);
@@ -1644,7 +1644,7 @@ bool quick_launch_is_enabled(ButtonId button) {
 }
 
 AppInstallId quick_launch_get_app(ButtonId button) {
-  Uuid *uuid = NULL;
+  Uuid *uuid = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       uuid = &s_quick_launch_up.uuid;
@@ -1671,7 +1671,7 @@ void quick_launch_set_app(ButtonId button, AppInstallId app_id) {
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       key = PREF_KEY_QUICK_LAUNCH_UP;
@@ -1695,7 +1695,7 @@ void quick_launch_set_app(ButtonId button, AppInstallId app_id) {
 void quick_launch_set_enabled(ButtonId button, bool enabled) {
   QuickLaunchPreference pref;
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       pref = s_quick_launch_up;
@@ -1748,7 +1748,7 @@ bool quick_launch_single_click_is_enabled(ButtonId button) {
 }
 
 AppInstallId quick_launch_single_click_get_app(ButtonId button) {
-  Uuid *uuid = NULL;
+  Uuid *uuid = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       uuid = &s_quick_launch_single_click_up.uuid;
@@ -1769,7 +1769,7 @@ void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
   };
   app_install_get_uuid_for_install_id(app_id, &pref.uuid);
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       key = PREF_KEY_QUICK_LAUNCH_SINGLE_CLICK_UP;
@@ -1787,7 +1787,7 @@ void quick_launch_single_click_set_app(ButtonId button, AppInstallId app_id) {
 void quick_launch_single_click_set_enabled(ButtonId button, bool enabled) {
   QuickLaunchPreference pref;
 
-  const char *key = NULL;
+  const char *key = nullptr;
   switch (button) {
     case BUTTON_ID_UP:
       pref = s_quick_launch_single_click_up;
@@ -1880,7 +1880,7 @@ AppInstallId watchface_get_default_install_id(void) {
   AppInstallEntry entry;
   if (app_id == INSTALL_ID_INVALID || !app_install_get_entry_for_install_id(app_id, &entry) ||
       !app_install_entry_is_watchface(&entry)) {
-    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, NULL);
+    app_install_enumerate_entries(prv_set_default_any_watchface_enumerate_callback, nullptr);
     app_id = app_install_get_id_for_uuid(&s_default_watchface);
   }
   return app_id;

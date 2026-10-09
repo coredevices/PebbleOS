@@ -26,7 +26,7 @@ ResAppNum sys_get_current_resource_num(void) {
 
 const uint8_t *sys_resource_read_only_bytes(ResAppNum app_num, uint32_t resource_id,
                                             size_t *num_bytes_out) {
-  return NULL;
+  return nullptr;
 }
 
 // Fakes

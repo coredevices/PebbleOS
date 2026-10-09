@@ -55,7 +55,7 @@ static WeatherReportData *s_report;
 static void prv_seed_day(int i) {
   const WeatherLocationForecast *today = &s_report->days[i];
   const WeatherLocationForecast *next =
-      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : NULL;
+      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : nullptr;
   weather_app_layout_set_fin_allowed(&s_report->layout,
                                      s_report->num_days > 1 && i + 1 >= (int)s_report->num_days);
   weather_app_layout_set_data(&s_report->layout, today, next);
@@ -84,7 +84,7 @@ static void prv_navigate(bool is_down) {
   s_report->current_day_index = i;
   const WeatherLocationForecast *new_today = &s_report->days[i];
   const WeatherLocationForecast *new_next =
-      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : NULL;
+      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : nullptr;
   weather_app_layout_set_fin_allowed(&s_report->layout,
                                      s_report->num_days > 1 && i + 1 >= (int)s_report->num_days);
   weather_app_layout_animate(&s_report->layout, new_today, new_next, is_down);
@@ -104,16 +104,16 @@ static Animation *s_back_slide_anim;
 // System-app statics persist across launches (the fw image is not reloaded), and a
 // crashed run never reaches unload — clear them before the next run reads them.
 void weather_report_reset(void) {
-  s_report = NULL;
-  s_slide_in_anim = NULL;
-  s_back_slide_anim = NULL;
+  s_report = nullptr;
+  s_slide_in_anim = nullptr;
+  s_back_slide_anim = nullptr;
   s_pending_static_in = false;
 }
 
 static void prv_back_slide_stopped(Animation *anim, bool finished, void *context) {
   (void)anim;
   (void)context;
-  s_back_slide_anim = NULL; // property animation auto-destroys after a normal stop
+  s_back_slide_anim = nullptr; // property animation auto-destroys after a normal stop
   if (finished) {
     forecast_list_arm_hslide_in();
     window_stack_pop(false); // un-animated: the glide already happened
@@ -134,7 +134,7 @@ static void prv_start_back_slide(void) {
   Animation *a = (Animation *)pa;
   animation_set_duration(a, WEATHER_HSLIDE_MS);
   animation_set_custom_interpolation(a, weather_interpolate_moook_soft1);
-  animation_set_handlers(a, (AnimationHandlers){.stopped = prv_back_slide_stopped}, NULL);
+  animation_set_handlers(a, (AnimationHandlers){.stopped = prv_back_slide_stopped}, nullptr);
   s_back_slide_anim = a;
   animation_schedule(a);
 }
@@ -179,12 +179,12 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
 #define HOLD_INITIAL_MS 300
 #define HOLD_MIN_MS     90
 
-static AppTimer *s_hold_timer = NULL;
+static AppTimer *s_hold_timer = nullptr;
 static bool s_hold_is_down = false;
 static int s_hold_repeat = 0;
 
 static void prv_hold_timer_cb(void *ctx) {
-  s_hold_timer = NULL;
+  s_hold_timer = nullptr;
   if (!s_report)
     return;
   prv_navigate(s_hold_is_down);
@@ -192,7 +192,7 @@ static void prv_hold_timer_cb(void *ctx) {
   int interval = HOLD_INITIAL_MS - s_hold_repeat * 50;
   if (interval < HOLD_MIN_MS)
     interval = HOLD_MIN_MS;
-  s_hold_timer = app_timer_register(interval, prv_hold_timer_cb, NULL);
+  s_hold_timer = app_timer_register(interval, prv_hold_timer_cb, nullptr);
 }
 
 static void prv_raw_up_down(ButtonId btn, bool pressed) {
@@ -203,13 +203,13 @@ static void prv_raw_up_down(ButtonId btn, bool pressed) {
     s_hold_repeat = 0;
     if (s_hold_timer) {
       app_timer_cancel(s_hold_timer);
-      s_hold_timer = NULL;
+      s_hold_timer = nullptr;
     }
-    s_hold_timer = app_timer_register(HOLD_INITIAL_MS, prv_hold_timer_cb, NULL);
+    s_hold_timer = app_timer_register(HOLD_INITIAL_MS, prv_hold_timer_cb, nullptr);
   } else {
     if (s_hold_timer) {
       app_timer_cancel(s_hold_timer);
-      s_hold_timer = NULL;
+      s_hold_timer = nullptr;
     }
   }
 }
@@ -231,8 +231,8 @@ static void prv_click_provider(void *ctx) {
   // Single tap = one day; hold UP/DOWN = accelerating scroll (raw handlers drive the hold timer).
   window_single_click_subscribe(BUTTON_ID_UP, prv_click_up_down);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_click_up_down);
-  window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_up_pressed, prv_raw_up_released, NULL);
-  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_down_pressed, prv_raw_down_released, NULL);
+  window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_up_pressed, prv_raw_up_released, nullptr);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_down_pressed, prv_raw_down_released, nullptr);
   window_single_click_subscribe(BUTTON_ID_BACK, prv_click_back);
 }
 
@@ -280,7 +280,7 @@ static void prv_slide_in_stopped(Animation *anim, bool finished, void *context) 
   (void)anim;
   (void)finished;
   (void)context;
-  s_slide_in_anim = NULL;
+  s_slide_in_anim = nullptr;
   if (s_report) {
     Layer *root = s_report->layout.root_layer;
     GRect f = layer_get_frame_by_value(root);
@@ -309,7 +309,7 @@ static void prv_start_slide_in(void) {
                                      // Timeline's day-text intro length, bounce included
   animation_set_curve(s_slide_in_anim, AnimationCurveLinear);
   animation_set_handlers(s_slide_in_anim, (AnimationHandlers){.stopped = prv_slide_in_stopped},
-                         NULL);
+                         nullptr);
   animation_schedule(s_slide_in_anim);
 }
 
@@ -331,19 +331,19 @@ static void prv_window_unload(Window *window) {
   tick_timer_service_unsubscribe();
   if (s_hold_timer) {
     app_timer_cancel(s_hold_timer);
-    s_hold_timer = NULL;
+    s_hold_timer = nullptr;
   }
   // Module-level animations: null-first, then unschedule (the synchronous .stopped
   // handlers see nulled handles and only destroy) — so a re-push can't find stale
   // handles or animate the next instance's layers. Mirrors the rect arm.
   if (s_slide_in_anim) {
     Animation *a = s_slide_in_anim;
-    s_slide_in_anim = NULL;
+    s_slide_in_anim = nullptr;
     animation_unschedule(a);
   }
   if (s_back_slide_anim) {
     Animation *a = s_back_slide_anim;
-    s_back_slide_anim = NULL;
+    s_back_slide_anim = nullptr;
     animation_unschedule(a);
   }
   if (s_report) {
@@ -353,7 +353,7 @@ static void prv_window_unload(Window *window) {
   window_destroy(window);
   if (s_report) {
     free(s_report);
-    s_report = NULL;
+    s_report = nullptr;
   }
 }
 
@@ -377,7 +377,7 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
   s_report->window = window_create();
   if (!s_report->window) {
     free(s_report);
-    s_report = NULL;
+    s_report = nullptr;
     return;
   }
   window_set_background_color(s_report->window, GColorWhite);
@@ -444,8 +444,8 @@ static Animation *s_slide_in_anim;
 // System-app statics persist across launches (the fw image is not reloaded), and a
 // crashed run never reaches unload — clear them before the next run reads them.
 void weather_report_reset(void) {
-  s_report = NULL;
-  s_slide_in_anim = NULL;
+  s_report = nullptr;
+  s_slide_in_anim = nullptr;
   s_pending_static_in = false;
 }
 
@@ -454,7 +454,7 @@ void weather_report_reset(void) {
 static void prv_seed_day(int i) {
   const WeatherLocationForecast *today = &s_report->days[i];
   const WeatherLocationForecast *next =
-      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : NULL;
+      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : nullptr;
   weather_app_layout_set_fin_allowed(&s_report->layout,
                                      s_report->num_days > 1 && i + 1 >= (int)s_report->num_days);
   weather_app_layout_set_data(&s_report->layout, today, next);
@@ -483,7 +483,7 @@ static void prv_navigate(bool is_down) {
   s_report->current_day_index = i;
   const WeatherLocationForecast *new_today = &s_report->days[i];
   const WeatherLocationForecast *new_next =
-      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : NULL;
+      (i + 1 < (int)s_report->num_days) ? &s_report->days[i + 1] : nullptr;
   weather_app_layout_set_fin_allowed(&s_report->layout,
                                      s_report->num_days > 1 && i + 1 >= (int)s_report->num_days);
   weather_app_layout_animate(&s_report->layout, new_today, new_next, is_down);
@@ -535,12 +535,12 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
 #define HOLD_INITIAL_MS 300
 #define HOLD_MIN_MS     90
 
-static AppTimer *s_hold_timer = NULL;
+static AppTimer *s_hold_timer = nullptr;
 static bool s_hold_is_down = false;
 static int s_hold_repeat = 0;
 
 static void prv_hold_timer_cb(void *ctx) {
-  s_hold_timer = NULL;
+  s_hold_timer = nullptr;
   if (!s_report)
     return;
   prv_navigate(s_hold_is_down);
@@ -548,7 +548,7 @@ static void prv_hold_timer_cb(void *ctx) {
   int interval = HOLD_INITIAL_MS - s_hold_repeat * 50;
   if (interval < HOLD_MIN_MS)
     interval = HOLD_MIN_MS;
-  s_hold_timer = app_timer_register(interval, prv_hold_timer_cb, NULL);
+  s_hold_timer = app_timer_register(interval, prv_hold_timer_cb, nullptr);
 }
 
 static void prv_raw_up_down(ButtonId btn, bool pressed) {
@@ -559,13 +559,13 @@ static void prv_raw_up_down(ButtonId btn, bool pressed) {
     s_hold_repeat = 0;
     if (s_hold_timer) {
       app_timer_cancel(s_hold_timer);
-      s_hold_timer = NULL;
+      s_hold_timer = nullptr;
     }
-    s_hold_timer = app_timer_register(HOLD_INITIAL_MS, prv_hold_timer_cb, NULL);
+    s_hold_timer = app_timer_register(HOLD_INITIAL_MS, prv_hold_timer_cb, nullptr);
   } else {
     if (s_hold_timer) {
       app_timer_cancel(s_hold_timer);
-      s_hold_timer = NULL;
+      s_hold_timer = nullptr;
     }
   }
 }
@@ -587,8 +587,8 @@ static void prv_click_provider(void *ctx) {
   // Single tap = one day; hold UP/DOWN = accelerating scroll (raw handlers drive the hold timer).
   window_single_click_subscribe(BUTTON_ID_UP, prv_click_up_down);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_click_up_down);
-  window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_up_pressed, prv_raw_up_released, NULL);
-  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_down_pressed, prv_raw_down_released, NULL);
+  window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_up_pressed, prv_raw_up_released, nullptr);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_down_pressed, prv_raw_down_released, nullptr);
   window_single_click_subscribe(BUTTON_ID_BACK, prv_click_back);
 }
 
@@ -612,7 +612,7 @@ static void prv_slide_in_stopped(Animation *anim, bool finished, void *context) 
   (void)anim;
   (void)finished;
   (void)context;
-  s_slide_in_anim = NULL;
+  s_slide_in_anim = nullptr;
   if (s_report) {
     Layer *root = s_report->layout.root_layer;
     GRect f = layer_get_frame_by_value(root);
@@ -641,7 +641,7 @@ static void prv_start_slide_in(void) {
                                      // Timeline's day-text intro length, bounce included
   animation_set_curve(s_slide_in_anim, AnimationCurveLinear);
   animation_set_handlers(s_slide_in_anim, (AnimationHandlers){.stopped = prv_slide_in_stopped},
-                         NULL);
+                         nullptr);
   animation_schedule(s_slide_in_anim);
 }
 
@@ -673,14 +673,14 @@ static void prv_window_unload(Window *window) {
 #endif
   if (s_hold_timer) {
     app_timer_cancel(s_hold_timer);
-    s_hold_timer = NULL;
+    s_hold_timer = nullptr;
   }
   // Module-level animations: null-first, then unschedule (the synchronous .stopped
   // handlers see nulled handles and only destroy) — so a re-push can't find stale
   // handles or animate the next instance's layers.
   if (s_slide_in_anim) {
     Animation *a = s_slide_in_anim;
-    s_slide_in_anim = NULL;
+    s_slide_in_anim = nullptr;
     animation_unschedule(a);
   }
   if (s_report) {
@@ -689,7 +689,7 @@ static void prv_window_unload(Window *window) {
   window_destroy(window);
   if (s_report) {
     free(s_report);
-    s_report = NULL;
+    s_report = nullptr;
   }
 }
 
@@ -711,7 +711,7 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
   s_report->window = window_create();
   if (!s_report->window) {
     free(s_report);
-    s_report = NULL;
+    s_report = nullptr;
     return;
   }
   window_set_background_color(s_report->window, GColorWhite);

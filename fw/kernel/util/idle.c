@@ -27,9 +27,10 @@ static int prv_cmd_resume_normal(const struct pbl_shell *sh, size_t argc, char *
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_sys_scheduler);
-PBL_SHELL_SUBCMD_ADD(sub_sys, scheduler, sub_sys_scheduler, "Scheduler idle control", NULL, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_sys_scheduler, force_active, NULL, "Keep the CPU out of idle",
+PBL_SHELL_SUBCMD_ADD(sub_sys, scheduler, sub_sys_scheduler, "Scheduler idle control", nullptr, 0,
+                     0);
+PBL_SHELL_SUBCMD_ADD(sub_sys_scheduler, force_active, nullptr, "Keep the CPU out of idle",
                      prv_cmd_force_active, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_sys_scheduler, resume_normal, NULL, "Allow the CPU to idle again",
+PBL_SHELL_SUBCMD_ADD(sub_sys_scheduler, resume_normal, nullptr, "Allow the CPU to idle again",
                      prv_cmd_resume_normal, 0, 0);
 #endif

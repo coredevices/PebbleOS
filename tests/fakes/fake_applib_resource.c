@@ -31,7 +31,7 @@ void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id, size
   if (!result ||
       sys_resource_load_range(app_num, resource_id, offset, result, num_bytes) != num_bytes) {
     free(result);
-    return NULL;
+    return nullptr;
   }
   return result;
 }

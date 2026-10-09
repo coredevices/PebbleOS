@@ -71,7 +71,7 @@ bool speaker_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks, uint8_
 
 static void prv_finish_event_handler(PebbleEvent *e, void *context) {
   SpeakerFinishedCallback cb = app_state_get_speaker_finish_handler();
-  if (cb == NULL) {
+  if (cb == nullptr) {
     return;
   }
   cb((SpeakerFinishReason)e->speaker.finish_reason, app_state_get_speaker_finish_ctx());
@@ -84,7 +84,7 @@ void speaker_set_finish_callback(SpeakerFinishedCallback cb, void *ctx) {
   if (cb) {
     app_state_set_speaker_finish_handler(cb);
     app_state_set_speaker_finish_ctx(ctx);
-    if (prev == NULL) {
+    if (prev == nullptr) {
       // First registration — subscribe and tell the service to post events.
       info->type = PEBBLE_SPEAKER_EVENT;
       info->handler = prv_finish_event_handler;
@@ -92,10 +92,10 @@ void speaker_set_finish_callback(SpeakerFinishedCallback cb, void *ctx) {
       sys_speaker_register_finish();
     }
   } else {
-    if (prev != NULL) {
+    if (prev != nullptr) {
       event_service_client_unsubscribe(info);
     }
-    app_state_set_speaker_finish_handler(NULL);
-    app_state_set_speaker_finish_ctx(NULL);
+    app_state_set_speaker_finish_handler(nullptr);
+    app_state_set_speaker_finish_ctx(nullptr);
   }
 }

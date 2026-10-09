@@ -35,7 +35,7 @@ static void prv_handle_watchdog_timeout_cb(void *not_used) {
 }
 
 static void prv_handle_watchdog_timeout(void *not_used) {
-  system_task_add_callback(prv_handle_watchdog_timeout_cb, NULL);
+  system_task_add_callback(prv_handle_watchdog_timeout_cb, nullptr);
 }
 
 static void prv_watchdog_feed(PebbleEvent *e, void *context) {

@@ -26,7 +26,7 @@ static bool s_kick_scheduled;
 static struct ble_npl_event s_run_event;
 
 static void prv_kick_locked(void) {
-  if (s_op_running || s_kick_scheduled || (s_ops == NULL)) {
+  if (s_op_running || s_kick_scheduled || (s_ops == nullptr)) {
     return;
   }
   s_kick_scheduled = true;
@@ -35,7 +35,7 @@ static void prv_kick_locked(void) {
 
 static void prv_pop_locked(void) {
   GattClientOp *op = (GattClientOp *)s_ops;
-  list_remove(&op->node, &s_ops, NULL);
+  list_remove(&op->node, &s_ops, nullptr);
   kernel_free(op->ctx);
   kernel_free(op);
 }
@@ -43,7 +43,7 @@ static void prv_pop_locked(void) {
 static void prv_run_cb(struct ble_npl_event *ev) {
   bt_lock();
   s_kick_scheduled = false;
-  while (!s_op_running && (s_ops != NULL)) {
+  while (!s_op_running && (s_ops != nullptr)) {
     GattClientOp *op = (GattClientOp *)s_ops;
     s_op_running = true;
     bt_unlock();
@@ -68,7 +68,7 @@ void nimble_gattc_op_queue_push(NimbleGattClientOpStartFn start, void *ctx) {
   op->ctx = ctx;
 
   bt_lock();
-  if (s_ops == NULL) {
+  if (s_ops == nullptr) {
     s_ops = &op->node;
   } else {
     list_append(s_ops, &op->node);
@@ -88,10 +88,10 @@ void nimble_gattc_op_queue_complete(void) {
 }
 
 void nimble_gattc_op_queue_init(void) {
-  ble_npl_event_init(&s_run_event, prv_run_cb, NULL);
+  ble_npl_event_init(&s_run_event, prv_run_cb, nullptr);
 
   bt_lock();
-  while (s_ops != NULL) {
+  while (s_ops != nullptr) {
     prv_pop_locked();
   }
   s_op_running = false;

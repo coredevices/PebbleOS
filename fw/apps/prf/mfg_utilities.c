@@ -102,7 +102,8 @@ static void prv_window_load(Window *window) {
   data->menu_section =
       (SimpleMenuSection){.num_items = ARRAY_LENGTH(s_menu_items), .items = s_menu_items};
 
-  data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
+  data->menu_layer =
+      simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, nullptr);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 }
 

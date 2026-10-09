@@ -39,7 +39,7 @@ static bool prv_list_find_cb(ListNode *found_list_node, void *data) {
 }
 
 static void prv_remove_node(BLEBondingNode *node) {
-  list_remove((ListNode *)node, (ListNode **)&s_ble_bonding_head, NULL);
+  list_remove((ListNode *)node, (ListNode **)&s_ble_bonding_head, nullptr);
   kernel_free(node);
 }
 
@@ -51,7 +51,7 @@ bool bonding_sync_contains_pairing_info(const struct pbl_bt_sm_pairing_info *pai
   };
   BLEBondingNode *found_node = (BLEBondingNode *)list_find((ListNode *)s_ble_bonding_head,
                                                            prv_list_find_cb, (void *)&bonding);
-  return (found_node != NULL);
+  return (found_node != nullptr);
 }
 
 void pbl_bt_handle_host_removed_bonding(const struct pbl_bt_bonding *bonding) {

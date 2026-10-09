@@ -120,7 +120,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
   title_bounds.size.h = title_height;
 
   graphics_draw_text(ctx, i18n_get(title, selection_window), title_font, title_bounds,
-                     GTextOverflowModeFill, title_alignment, NULL);
+                     GTextOverflowModeFill, title_alignment, nullptr);
 }
 
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {

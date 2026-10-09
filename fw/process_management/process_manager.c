@@ -104,7 +104,7 @@ PBL_EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
     context->safe_to_kill = true;
     process_manager_put_kill_process_event(task, false);
 
-    pbl_thread_suspend(NULL);
+    pbl_thread_suspend(nullptr);
   }
 }
 
@@ -145,8 +145,8 @@ void process_manager_init_context(ProcessContext *context, const PebbleProcessMd
                                   const void *args) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
-  PBL_ASSERTN(context->task_handle == NULL);
-  PBL_ASSERTN(context->to_process_event_queue == NULL);
+  PBL_ASSERTN(context->task_handle == nullptr);
+  PBL_ASSERTN(context->to_process_event_queue == nullptr);
 
   context->app_md = app_md;
 
@@ -227,7 +227,7 @@ static bool prv_needs_fetch(AppInstallId id, const PebbleProcessMd **md, bool is
     PBL_LOG_WRN("Stale app cache entry for id %" PRId32 ": cached %s, expected %s. Refetching.", id,
                 cached_uuid, expected_uuid);
     app_install_release_md(*md);
-    *md = NULL;
+    *md = nullptr;
     app_cache_remove_entry(id);
     return true;
   }
@@ -247,7 +247,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
     return;
   }
 
-  const PebbleProcessMd *md = NULL;
+  const PebbleProcessMd *md = nullptr;
 #if !defined(CONFIG_RECOVERY_FW)
   if (app_install_id_from_app_db(id)) {
     if (!process_manager_check_SDK_compatible(id)) {
@@ -267,7 +267,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       fetch_args->kill_requested = config->kill_requested;
 
       // if the data is wakeup info, then copy out that information.
-      if ((config->common.reason == APP_LAUNCH_WAKEUP) && (config->common.args != NULL)) {
+      if ((config->common.reason == APP_LAUNCH_WAKEUP) && (config->common.args != nullptr)) {
         fetch_args->wakeup_info = *(WakeupInfo *)config->common.args;
         fetch_args->common.args = &fetch_args->wakeup_info;
       }
@@ -312,7 +312,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
         // If the watchface is for an unsupported SDK version, we need to switch the default
         // watchface back to tictoc. Otherwise, we will be stuck in the launcher forever.
         watchface_set_default_install_id(INSTALL_ID_INVALID);
-        watchface_launch_default(NULL);
+        watchface_launch_default(nullptr);
       }
 
       // Not going to launch this, release the allocated memory
@@ -329,7 +329,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       if (app_install_get_entry_for_install_id(id, &entry) &&
           app_install_entry_is_watchface(&entry)) {
         watchface_set_default_install_id(INSTALL_ID_INVALID);
-        watchface_launch_default(NULL);
+        watchface_launch_default(nullptr);
       }
 
       ExpandableDialog *expandable_dialog = expandable_dialog_create("Unsupported App");
@@ -349,7 +349,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 #endif
 
   if (is_worker) {
-    worker_manager_launch_new_worker_with_args(md, NULL);
+    worker_manager_launch_new_worker_with_args(md, nullptr);
   } else {
     app_manager_launch_new_app(&(AppLaunchConfig){
       .md = md,
@@ -505,7 +505,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
   process_manager_put_kill_process_event(task, true);
 
   // Better to die in our sleep ...
-  pbl_thread_suspend(NULL /* self */);
+  pbl_thread_suspend(nullptr /* self */);
 
   // We don't expect someone to resume us.
   PBL_CROAK("");
@@ -568,7 +568,7 @@ void process_manager_process_cleanup(PebbleTask task) {
 
   if (context->task_handle) {
     pbl_thread_abort(context->task_handle);
-    context->task_handle = NULL;
+    context->task_handle = nullptr;
   }
 
   // cleanup memory that was used to store the Md, but only if it isn't a system application
@@ -581,7 +581,7 @@ void process_manager_process_cleanup(PebbleTask task) {
   if (context->to_process_event_queue) {
     event_queue_cleanup_and_reset(context->to_process_event_queue);
   }
-  context->to_process_event_queue = NULL;
+  context->to_process_event_queue = nullptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -634,7 +634,7 @@ uint32_t process_manager_process_events_waiting(PebbleTask task) {
 // ----------------------------------------------------------------------------------------------
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *data),
                                                     void *data) {
-  PBL_ASSERTN(callback != NULL);
+  PBL_ASSERTN(callback != nullptr);
   PebbleEvent event = {
     .type = PEBBLE_CALLBACK_EVENT,
     .callback = {
@@ -664,7 +664,7 @@ extern char __WORKER_RAM_end__[];
 
 bool process_manager_is_address_in_region(PebbleTask task, const void *address,
                                           const void *lower_bound) {
-  void *ram_start = NULL, *ram_end = NULL;
+  void *ram_start = nullptr, *ram_end = nullptr;
   if (task == PebbleTask_App) {
     ram_start = __APP_RAM__;
     ram_end = __APP_RAM_end__;

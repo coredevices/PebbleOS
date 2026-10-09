@@ -56,11 +56,11 @@ static void prv_run_next_request(void) {
 }
 
 static bool prv_ticking_seconds(void) {
-  return list_get_next(&s_seconds_callbacks) != NULL;
+  return list_get_next(&s_seconds_callbacks) != nullptr;
 }
 
 static bool prv_ticking_minutes(void) {
-  return list_get_next(&s_minutes_callbacks) != NULL;
+  return list_get_next(&s_minutes_callbacks) != nullptr;
 }
 
 void test_tick_timer__initialize(void) {

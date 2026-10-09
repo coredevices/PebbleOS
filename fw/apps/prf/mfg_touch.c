@@ -371,7 +371,7 @@ static void prv_handle_init(void) {
   text_layer_set_background_color(status, GColorWhite);
   layer_add_child(&window->layer, &status->layer);
 
-  touch_service_subscribe(prv_touch_event_handler, NULL);
+  touch_service_subscribe(prv_touch_event_handler, nullptr);
 
   tick_timer_service_subscribe(SECOND_UNIT, prv_handle_second_tick);
 }

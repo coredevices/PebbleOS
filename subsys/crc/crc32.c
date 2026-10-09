@@ -21,7 +21,7 @@ static uint32_t prv_crc32_sw(uint32_t crc, const uint8_t *bytes, size_t len) {
 }
 
 uint32_t pbl_crc32(uint32_t crc, const void *data, size_t len) {
-  if (data == NULL) {
+  if (data == nullptr) {
     return 0;
   }
 

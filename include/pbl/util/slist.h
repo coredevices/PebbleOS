@@ -61,7 +61,7 @@ typedef bool (*SingleListFilterCallback)(SingleListNode *found_node, void *data)
 typedef bool (*SingleListForEachCallback)(SingleListNode *node, void *context);
 
 /** @brief Initializer of an unlinked node. */
-#define SINGLE_LIST_NODE_NULL {.next = NULL}
+#define SINGLE_LIST_NODE_NULL {.next = nullptr}
 
 /**
  * @brief Initialize a node as unlinked.

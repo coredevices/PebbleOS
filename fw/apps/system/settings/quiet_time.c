@@ -85,7 +85,7 @@ static AlertMask prv_cycle_dnd_mask(void) {
 }
 
 static const char *prv_get_dnd_mask_subtitle(void *i18n_key) {
-  const char *title = NULL;
+  const char *title = nullptr;
   switch (alerts_get_dnd_mask()) {
     case AlertMaskAllOff:
       title = i18n_get("Quiet All Notifications", i18n_key);
@@ -242,8 +242,8 @@ static void prv_schedule_deinit_cb(SettingsCallbacks *context) {
 static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                      const Layer *cell_layer, uint16_t row, bool selected) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
-  const char *title = NULL;
-  char *subtitle = NULL;
+  const char *title = nullptr;
+  char *subtitle = nullptr;
   const uint8_t buffer_length = 80;
   subtitle = app_malloc_check(buffer_length);
 
@@ -274,7 +274,7 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     default:
       WTF;
   }
-  menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, title, subtitle, nullptr);
   app_free(subtitle);
 }
 
@@ -351,8 +351,8 @@ static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
 static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
                                       const Layer *cell_layer, uint16_t row, bool selected) {
   SettingsQuietTimeBacklightData *data = (SettingsQuietTimeBacklightData *)context;
-  const char *title = NULL;
-  const char *subtitle = NULL;
+  const char *title = nullptr;
+  const char *subtitle = nullptr;
   switch (row) {
     case QuietTimeBacklightItemMotion:
       title = i18n_noop("Motion");
@@ -372,7 +372,7 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     default:
       WTF;
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), NULL);
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
 }
 
 static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t row) {
@@ -427,8 +427,8 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
                             uint16_t row, bool selected) {
   SettingsQuietTimeData *data = (SettingsQuietTimeData *)context;
-  const char *title = NULL;
-  const char *subtitle = NULL;
+  const char *title = nullptr;
+  const char *subtitle = nullptr;
 
   switch (row) {
     case QuietTimeItemManual:
@@ -460,7 +460,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     default:
       WTF;
   }
-  menu_cell_basic_draw(ctx, cell_layer, title, subtitle, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, title, subtitle, nullptr);
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {

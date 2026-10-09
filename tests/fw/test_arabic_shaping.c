@@ -24,9 +24,9 @@ static size_t prv_shape(const char *in, Codepoint *cps, size_t max) {
   size_t count = 0;
   utf8_t *ptr = out;
   while (*ptr != '\0' && count < max) {
-    utf8_t *next = NULL;
+    utf8_t *next = nullptr;
     Codepoint cp = utf8_peek_codepoint(ptr, &next);
-    if (cp == 0 || next == NULL) {
+    if (cp == 0 || next == nullptr) {
       break;
     }
     cps[count++] = cp;

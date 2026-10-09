@@ -635,7 +635,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // structures. In that case, the core dump will at least contain the RAM and registers info and
   // perhaps some of the threads. The format of the binary core dump is streamable and is read until
   // we reach a chunk key of 0xFFFFFFFF (what gets placed into flash after an erase).
-  pbl_thread_foreach(prv_thread_info_cb, NULL);
+  pbl_thread_foreach(prv_thread_info_cb, nullptr);
 
   // If we core dumped from an ISR, we make up a special "ISR" thread to hold the registers
   if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
@@ -649,7 +649,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
       // registers [r0-r12, sp, lr, pc, sr]
       task_info.regs[i] = s_saved_registers.core_reg[i];
     }
-    prv_thread_info_cb(&task_info, NULL);
+    prv_thread_info_cb(&task_info, nullptr);
   }
 
 #if defined(CONFIG_SOC_SF32LB52)

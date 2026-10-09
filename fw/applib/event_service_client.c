@@ -36,7 +36,7 @@ bool event_service_filter(ListNode *node, void *tp) {
 }
 
 static void do_handle(EventServiceInfo *info, PebbleEvent *e) {
-  PBL_ASSERTN(info->handler != NULL);
+  PBL_ASSERTN(info->handler != nullptr);
   info->handler(e, info->context);
 }
 

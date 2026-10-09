@@ -10,7 +10,7 @@ static SendBuffer *s_stub_send_buffer = (SendBuffer *)~0;
 SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
                                                  size_t required_free_length, uint32_t timeout_ms) {
   if (!session) {
-    return NULL;
+    return nullptr;
   }
   return s_stub_send_buffer;
 }
@@ -28,7 +28,7 @@ static bool s_send_buffer_create_simulate_oom;
 SendBuffer *comm_session_send_buffer_create(bool is_system) {
   ++s_send_buffer_create_count;
   if (s_send_buffer_create_simulate_oom) {
-    return NULL;
+    return nullptr;
   } else {
     return (SendBuffer *)~0;
   }

@@ -61,7 +61,7 @@ static void prv_handle_sync(const uint8_t *msg, size_t len) {
 
   PBL_LOG_DBG("Received health SYNC request");
 
-  system_task_add_callback(prv_sync_health_system_task_cb, NULL);
+  system_task_add_callback(prv_sync_health_system_task_cb, nullptr);
 }
 
 void health_sync_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t len) {

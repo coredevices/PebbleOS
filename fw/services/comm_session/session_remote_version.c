@@ -72,7 +72,7 @@ static void prv_comm_session_perform_version_request_bg_cb(void *data) {
 static void prv_schedule_request(CommSession *session) {
   bt_lock();
   if (!comm_session_is_valid(session)) {
-    session = NULL;
+    session = nullptr;
     goto unlock;
   }
 unlock:

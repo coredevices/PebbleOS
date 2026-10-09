@@ -26,14 +26,14 @@ void test_slist__cleanup(void) {
 }
 
 void test_slist__insert_after(void) {
-  SingleListNode *tail = NULL;
+  SingleListNode *tail = nullptr;
   SingleListNode a = SINGLE_LIST_NODE_NULL, b = SINGLE_LIST_NODE_NULL;
   tail = slist_insert_after(tail, &a);
   cl_assert(tail == &a);
   tail = slist_insert_after(&a, &b);
   cl_assert(tail == &b);
   cl_assert(a.next == &b);
-  cl_assert(b.next == NULL);
+  cl_assert(b.next == nullptr);
 }
 
 void test_slist__insert_after_middle(void) {
@@ -44,7 +44,7 @@ void test_slist__insert_after_middle(void) {
   slist_insert_after(&a, &b);
   cl_assert(a.next == &b);
   cl_assert(b.next == &c);
-  cl_assert(c.next == NULL);
+  cl_assert(c.next == nullptr);
 }
 
 void test_slist__prepend(void) {
@@ -59,14 +59,14 @@ void test_slist__prepend(void) {
   cl_assert(head == &a);
   cl_assert(a.next == &b);
   cl_assert(b.next == &c);
-  cl_assert(c.next == NULL);
+  cl_assert(c.next == nullptr);
 }
 
 void test_slist__prepend_null(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL;
-  SingleListNode *head = slist_prepend(NULL, &a);
+  SingleListNode *head = slist_prepend(nullptr, &a);
   cl_assert(head == &a);
-  cl_assert(a.next == NULL);
+  cl_assert(a.next == nullptr);
 }
 
 void test_slist__append(void) {
@@ -80,12 +80,12 @@ void test_slist__append(void) {
   cl_assert(tail == &c);
   cl_assert(a.next == &b);
   cl_assert(b.next == &c);
-  cl_assert(c.next == NULL);
+  cl_assert(c.next == nullptr);
 }
 
 void test_slist__append_null(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL;
-  SingleListNode *tail = slist_append(NULL, &a);
+  SingleListNode *tail = slist_append(nullptr, &a);
   cl_assert(tail == &a);
 }
 
@@ -94,18 +94,18 @@ void test_slist__pop_head(void) {
   a.next = &b;
   SingleListNode *new_head = slist_pop_head(&a);
   cl_assert(new_head == &b);
-  cl_assert(a.next == NULL);
-  cl_assert(b.next == NULL);
+  cl_assert(a.next == nullptr);
+  cl_assert(b.next == nullptr);
 }
 
 void test_slist__pop_head_single(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL;
   SingleListNode *new_head = slist_pop_head(&a);
-  cl_assert(new_head == NULL);
+  cl_assert(new_head == nullptr);
 }
 
 void test_slist__pop_head_null(void) {
-  cl_assert(slist_pop_head(NULL) == NULL);
+  cl_assert(slist_pop_head(nullptr) == nullptr);
 }
 
 void test_slist__remove_head(void) {
@@ -117,7 +117,7 @@ void test_slist__remove_head(void) {
   SingleListNode *head = &a;
   slist_remove(&a, &head);
   cl_assert(head == &b);
-  cl_assert(a.next == NULL);
+  cl_assert(a.next == nullptr);
   cl_assert(b.next == &c);
 }
 
@@ -131,8 +131,8 @@ void test_slist__remove_middle(void) {
   slist_remove(&b, &head);
   cl_assert(head == &a);
   cl_assert(a.next == &c);
-  cl_assert(b.next == NULL);
-  cl_assert(c.next == NULL);
+  cl_assert(b.next == nullptr);
+  cl_assert(c.next == nullptr);
 }
 
 void test_slist__remove_tail(void) {
@@ -145,16 +145,16 @@ void test_slist__remove_tail(void) {
   slist_remove(&c, &head);
   cl_assert(head == &a);
   cl_assert(a.next == &b);
-  cl_assert(b.next == NULL);
-  cl_assert(c.next == NULL);
+  cl_assert(b.next == nullptr);
+  cl_assert(c.next == nullptr);
 }
 
 void test_slist__remove_only(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL;
   SingleListNode *head = &a;
   slist_remove(&a, &head);
-  cl_assert(head == NULL);
-  cl_assert(a.next == NULL);
+  cl_assert(head == nullptr);
+  cl_assert(a.next == nullptr);
 }
 
 void test_slist__remove_not_found(void) {
@@ -167,15 +167,15 @@ void test_slist__remove_not_found(void) {
   // List should be unchanged
   cl_assert(head == &a);
   cl_assert(a.next == &b);
-  cl_assert(b.next == NULL);
+  cl_assert(b.next == nullptr);
 }
 
 void test_slist__get_next(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL, b = SINGLE_LIST_NODE_NULL;
   a.next = &b;
   cl_assert(slist_get_next(&a) == &b);
-  cl_assert(slist_get_next(&b) == NULL);
-  cl_assert(slist_get_next(NULL) == NULL);
+  cl_assert(slist_get_next(&b) == nullptr);
+  cl_assert(slist_get_next(nullptr) == nullptr);
 }
 
 void test_slist__get_tail(void) {
@@ -187,7 +187,7 @@ void test_slist__get_tail(void) {
   cl_assert(slist_get_tail(&a) == &c);
   cl_assert(slist_get_tail(&b) == &c);
   cl_assert(slist_get_tail(&c) == &c);
-  cl_assert(slist_get_tail(NULL) == NULL);
+  cl_assert(slist_get_tail(nullptr) == nullptr);
 }
 
 void test_slist__is_tail(void) {
@@ -195,7 +195,7 @@ void test_slist__is_tail(void) {
   a.next = &b;
   cl_assert(!slist_is_tail(&a));
   cl_assert(slist_is_tail(&b));
-  cl_assert(!slist_is_tail(NULL));
+  cl_assert(!slist_is_tail(nullptr));
 }
 
 void test_slist__count(void) {
@@ -207,7 +207,7 @@ void test_slist__count(void) {
   cl_assert_equal_i(slist_count(&a), 3);
   cl_assert_equal_i(slist_count(&b), 2);
   cl_assert_equal_i(slist_count(&c), 1);
-  cl_assert_equal_i(slist_count(NULL), 0);
+  cl_assert_equal_i(slist_count(nullptr), 0);
 }
 
 void test_slist__contains(void) {
@@ -221,8 +221,8 @@ void test_slist__contains(void) {
   cl_assert(slist_contains(&a, &b));
   cl_assert(slist_contains(&a, &c));
   cl_assert(!slist_contains(&a, &orphan));
-  cl_assert(!slist_contains(NULL, &a));
-  cl_assert(!slist_contains(&a, NULL));
+  cl_assert(!slist_contains(nullptr, &a));
+  cl_assert(!slist_contains(&a, nullptr));
 }
 
 typedef struct SIntNode {
@@ -248,8 +248,8 @@ void test_slist__find(void) {
   cl_assert(slist_find(&a.list_node, prv_filter_value, (void *)(intptr_t)20) == &b.list_node);
   cl_assert(slist_find(&a.list_node, prv_filter_value, (void *)(intptr_t)30) == &c.list_node);
   cl_assert(slist_find(&a.list_node, prv_filter_value, (void *)(intptr_t)10) == &a.list_node);
-  cl_assert(slist_find(&a.list_node, prv_filter_value, (void *)(intptr_t)99) == NULL);
-  cl_assert(slist_find(NULL, prv_filter_value, (void *)(intptr_t)10) == NULL);
+  cl_assert(slist_find(&a.list_node, prv_filter_value, (void *)(intptr_t)99) == nullptr);
+  cl_assert(slist_find(nullptr, prv_filter_value, (void *)(intptr_t)10) == nullptr);
 }
 
 static int prv_sort_comparator(SIntNode *a, SIntNode *b) {
@@ -264,7 +264,7 @@ void test_slist__sort_ascending(void) {
   slist_init(&bar2.list_node);
   slist_init(&bar3.list_node);
 
-  SingleListNode *head = NULL;
+  SingleListNode *head = nullptr;
 
   head = slist_sorted_add(head, &bar2.list_node, (Comparator)prv_sort_comparator, true);
   cl_assert(head == &bar2.list_node);
@@ -287,7 +287,7 @@ void test_slist__sort_descending(void) {
   slist_init(&bar2.list_node);
   slist_init(&bar3.list_node);
 
-  SingleListNode *head = NULL;
+  SingleListNode *head = nullptr;
 
   head = slist_sorted_add(head, &bar2.list_node, (Comparator)prv_sort_comparator, false);
   cl_assert(head == &bar2.list_node);
@@ -316,15 +316,15 @@ void test_slist__concatenate(void) {
   cl_assert(head == &a);
   cl_assert(c.next == &d);
   cl_assert(d.next == &e);
-  cl_assert(e.next == NULL);
+  cl_assert(e.next == nullptr);
   cl_assert_equal_i(slist_count(head), 5);
 }
 
 void test_slist__concatenate_null(void) {
   SingleListNode a = SINGLE_LIST_NODE_NULL;
-  cl_assert(slist_concatenate(NULL, &a) == &a);
-  cl_assert(slist_concatenate(&a, NULL) == &a);
-  cl_assert(slist_concatenate(NULL, NULL) == NULL);
+  cl_assert(slist_concatenate(nullptr, &a) == &a);
+  cl_assert(slist_concatenate(&a, nullptr) == &a);
+  cl_assert(slist_concatenate(nullptr, nullptr) == nullptr);
 }
 
 #define CTX_VALUE 0xdeadbeef

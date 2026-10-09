@@ -27,7 +27,7 @@
 void audio_init(AudioDevice *dev) {
   REG32(dev->base_addr + AUDIO_CTRL) = 0;
   REG32(dev->base_addr + AUDIO_SAMPLERATE) = 16000;
-  dev->state->trans_cb = NULL;
+  dev->state->trans_cb = nullptr;
 }
 
 static void prv_audio_system_task_cb(void *data) {
@@ -80,7 +80,7 @@ void audio_stop(AudioDevice *dev) {
 
   pbl_irq_disable(dev->irqn);
 
-  dev->state->trans_cb = NULL;
+  dev->state->trans_cb = nullptr;
 }
 
 void qemu_audio_irq_handler(AudioDevice *dev) {

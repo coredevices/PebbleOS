@@ -17,8 +17,8 @@
 ////////////////////////////////////////////////////////////////
 extern const char *NEXMO_REAUTH_STRING;
 
-static AttributeList *s_expected_attributes = NULL;
-static TimelineItemActionGroup *s_expected_actions = NULL;
+static AttributeList *s_expected_attributes = nullptr;
+static TimelineItemActionGroup *s_expected_actions = nullptr;
 static bool s_performed_store = false;
 
 status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
@@ -46,8 +46,8 @@ void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
 }
 
 void test_nexmo__initialize(void) {
-  s_expected_attributes = NULL;
-  s_expected_actions = NULL;
+  s_expected_attributes = nullptr;
+  s_expected_actions = nullptr;
   s_performed_store = false;
   s_expected_uid = INVALID_UID;
   s_performed_dismiss = false;

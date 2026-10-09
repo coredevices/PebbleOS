@@ -67,7 +67,7 @@ static ModalPriority s_last_highest_modal_priority = ModalPriorityInvalid;
 // Private API
 ////////////////////
 static bool prv_has_visible_window(ModalContext *context, void *unused) {
-  const bool empty = (context->window_stack.list_head == NULL);
+  const bool empty = (context->window_stack.list_head == nullptr);
   const bool filtered_out = (context < &s_modal_window_stacks[s_modal_min_priority]);
   return (!empty && !filtered_out);
 }
@@ -88,7 +88,7 @@ static bool prv_has_focusable_window(ModalContext *context) {
 }
 
 static bool prv_has_visible_focusable_window(ModalContext *context, void *unused) {
-  return (prv_has_visible_window(context, NULL) && prv_has_focusable_window(context));
+  return (prv_has_visible_window(context, nullptr) && prv_has_focusable_window(context));
 }
 
 static void prv_send_will_focus_event(bool in_focus) {
@@ -207,7 +207,7 @@ void modal_touch_nav_subscribe(void) {
 
 void modal_touch_nav_unsubscribe(void) {
   recognizer_manager_cancel_and_reset(&s_modal_recognizer_manager);
-  touch_service_set_system_handler(NULL, NULL);
+  touch_service_set_system_handler(nullptr, nullptr);
 }
 #endif
 
@@ -253,7 +253,7 @@ static WindowStack *prv_find_window_stack(ModalContextFilterCallback callback, v
       return &s_modal_window_stacks[idx].window_stack;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 WindowStack *modal_manager_find_window_stack(ModalContextFilterCallback filter_cb, void *ctx) {
@@ -267,7 +267,7 @@ WindowStack *modal_manager_get_window_stack(ModalPriority priority) {
 }
 
 Window *modal_manager_get_top_window(void) {
-  WindowStack *stack = prv_find_window_stack(prv_has_visible_window, NULL);
+  WindowStack *stack = prv_find_window_stack(prv_has_visible_window, nullptr);
   return window_stack_get_top_window(stack);
 }
 
@@ -297,7 +297,7 @@ static const CompositorTransition *prv_get_compositor_transition(bool modal_is_d
   } else {
     is_top_discreet = (s_last_highest_modal_priority == ModalPriorityDiscreet);
   }
-  return is_top_discreet ? NULL : compositor_modal_transition_to_modal_get(modal_is_destination);
+  return is_top_discreet ? nullptr : compositor_modal_transition_to_modal_get(modal_is_destination);
 }
 
 static void prv_handle_app_to_modal_transition_visible(void) {
@@ -339,7 +339,7 @@ static void prv_handle_modal_to_app_transition_focus(void) {
 #ifdef CONFIG_TOUCH
   // The last focusable modal is gone; unbind the kernel recognizer manager so no gesture state or
   // active window survives into the app-focused period.
-  prv_modal_recognizer_focus(NULL);
+  prv_modal_recognizer_focus(nullptr);
 #endif
 
   prv_send_will_focus_event(true /* in_focus */);
@@ -417,7 +417,7 @@ static void prv_each_modal_stack(ModalContextIterCallback callback, void *data) 
   };
   for (ModalPriority idx = NumModalPriorities - 1; idx >= ModalPriorityMin; idx--) {
     ModalContext *context = &s_modal_window_stacks[idx];
-    if (!prv_has_visible_window(context, NULL)) {
+    if (!prv_has_visible_window(context, nullptr)) {
       continue;
     } else if (iter.first_visible_idx == ModalPriorityInvalid) {
       iter.first_visible_idx = idx;
@@ -479,7 +479,7 @@ static bool prv_update_modal_stack_callback(ModalContext *modal, IterContext *it
 #ifdef CONFIG_TOUCH
     // This modal just lost focus to a higher priority one; unbind the kernel manager so its active
     // layer and any in-flight gesture do not leak into the newly focused modal.
-    prv_modal_recognizer_focus(NULL);
+    prv_modal_recognizer_focus(nullptr);
 #endif
   }
 
@@ -594,7 +594,7 @@ bool modal_manager_is_window_focused(Window *window) {
 }
 
 static Window *prv_get_visible_focused_window(void) {
-  WindowStack *stack = prv_find_window_stack(prv_has_visible_focusable_window, NULL);
+  WindowStack *stack = prv_find_window_stack(prv_has_visible_focusable_window, nullptr);
   return window_stack_get_top_window(stack);
 }
 
@@ -689,5 +689,5 @@ static int prv_cmd_modals(const struct pbl_shell *sh, size_t argc, char **argv) 
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_ui, modals, NULL, "Show the modal window stacks", prv_cmd_modals, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_ui, modals, nullptr, "Show the modal window stacks", prv_cmd_modals, 0, 0);
 #endif

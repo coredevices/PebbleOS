@@ -39,7 +39,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
   PBL_LOG_DBG("Device name read cb: conn=%u handle=%u len=%u", conn_handle, attr->handle, name_len);
 
   char *device_name = kernel_zalloc_check(name_len + 1);
-  if (ble_hs_mbuf_to_flat(attr->om, device_name, name_len, NULL) != 0) {
+  if (ble_hs_mbuf_to_flat(attr->om, device_name, name_len, nullptr) != 0) {
     kernel_free(device_name);
     return 0;
   }
@@ -50,13 +50,14 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
   bt_lock();
 
   GAPLEConnection *connection = gap_le_connection_by_device(device);
-  if (connection == NULL) {
+  if (connection == nullptr) {
     bt_unlock();
     kernel_free(device_name);
     return 0;
   }
 
-  changed = (connection->device_name == NULL) || strcmp(connection->device_name, device_name) != 0;
+  changed =
+      (connection->device_name == nullptr) || strcmp(connection->device_name, device_name) != 0;
   if (changed) {
     if (connection->device_name) {
       kernel_free(connection->device_name);
@@ -113,6 +114,6 @@ static void prv_request_device_name_cb(GAPLEConnection *connection, void *data) 
 
 void pbl_bt_gap_le_device_name_request_all(void) {
   bt_lock();
-  gap_le_connection_for_each(prv_request_device_name_cb, NULL);
+  gap_le_connection_for_each(prv_request_device_name_cb, nullptr);
   bt_unlock();
 }

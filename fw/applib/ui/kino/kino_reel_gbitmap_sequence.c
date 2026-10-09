@@ -68,8 +68,9 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
   graphics_context_set_compositing_mode(ctx, GCompOpSet); // Enable compositing
 
-  graphics_draw_bitmap_in_rect_processed(ctx, sequence_reel->render_bitmap, &bounds,
-                                         NULL_SAFE_FIELD_ACCESS(processor, bitmap_processor, NULL));
+  graphics_draw_bitmap_in_rect_processed(
+      ctx, sequence_reel->render_bitmap, &bounds,
+      NULL_SAFE_FIELD_ACCESS(processor, bitmap_processor, nullptr));
 
   // Restore previous compositing mode
   graphics_context_set_compositing_mode(ctx, prev_compositing_mode);
@@ -79,14 +80,14 @@ static GBitmap *prv_get_gbitmap(KinoReel *reel) {
   if (reel) {
     return ((KinoReelImplGBitmapSequence *)reel)->render_bitmap;
   }
-  return NULL;
+  return nullptr;
 }
 
 static GBitmapSequence *prv_get_gbitmap_sequence(KinoReel *reel) {
   if (reel) {
     return ((KinoReelImplGBitmapSequence *)reel)->sequence;
   }
-  return NULL;
+  return nullptr;
 }
 
 static const KinoReelImpl KINO_REEL_IMPL_GBITMAPSEQUENCE = {
@@ -126,8 +127,8 @@ KinoReel *kino_reel_gbitmap_sequence_create_with_resource(uint32_t resource_id) 
 KinoReel *kino_reel_gbitmap_sequence_create_with_resource_system(ResAppNum app_num,
                                                                  uint32_t resource_id) {
   GBitmapSequence *sequence = gbitmap_sequence_create_with_resource_system(app_num, resource_id);
-  if (sequence == NULL) {
-    return NULL;
+  if (sequence == nullptr) {
+    return nullptr;
   }
   return kino_reel_gbitmap_sequence_create(sequence, true);
 }

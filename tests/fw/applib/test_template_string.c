@@ -198,7 +198,7 @@ void test_template_string__null_arguments(void) {
     cond.eval_time = EVAL_FALL_THROUGH;
     cond.force_eval_on_time = true;
     strcpy(s_output, "hurf");
-    bool ret = template_string_evaluate("test string {time_until(5)|format('%uS')}", NULL,
+    bool ret = template_string_evaluate("test string {time_until(5)|format('%uS')}", nullptr,
                                         sizeof(s_output), &cond, &vars, &err);
     cl_assert_equal_b(ret, true);
     cl_assert_equal_s(s_output, "hurf");
@@ -213,7 +213,7 @@ void test_template_string__null_arguments(void) {
 
     memset(s_output, 'Z', sizeof(s_output));
     bool ret = template_string_evaluate("test string {time_until(5)|format('%uS')}", s_output,
-                                        sizeof(s_output), NULL, &vars, &err);
+                                        sizeof(s_output), nullptr, &vars, &err);
     cl_assert_equal_b(ret, true);
     cl_assert_equal_s(s_output, "test string 5 seconds");
   }
@@ -223,8 +223,8 @@ void test_template_string__null_arguments(void) {
     TemplateStringError err = {};
     vars.current_time = 0;
 
-    bool ret = template_string_evaluate("test string {time_until(5)|format('%uS',)}", NULL, 0, NULL,
-                                        &vars, &err);
+    bool ret = template_string_evaluate("test string {time_until(5)|format('%uS',)}", nullptr, 0,
+                                        nullptr, &vars, &err);
     cl_assert_equal_b(ret, false);
     cl_assert_equal_i(err.status, TemplateStringErrorStatus_MissingArgument);
     cl_assert_equal_i(err.index_in_string, 40);

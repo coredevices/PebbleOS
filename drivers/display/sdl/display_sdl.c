@@ -40,8 +40,8 @@ bool display_update_in_progress(void) {
 }
 
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  PBL_ASSERTN(nrcb != NULL);
-  PBL_ASSERTN(uccb != NULL);
+  PBL_ASSERTN(nrcb != nullptr);
+  PBL_ASSERTN(uccb != nullptr);
 
   DisplayRow row;
   while (nrcb(&row)) {

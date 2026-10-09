@@ -20,14 +20,14 @@ static bool prv_item_init(TimelineItem *item, int num_attributes, int num_action
                           uint8_t attributes_per_action[], size_t required_size_for_strings,
                           uint8_t **string_buffer) {
   if (num_actions > 0) {
-    PBL_ASSERTN(attributes_per_action != NULL);
+    PBL_ASSERTN(attributes_per_action != nullptr);
   }
 
   const size_t alloc_size = attributes_actions_get_required_buffer_size(
       num_attributes, num_actions, attributes_per_action, required_size_for_strings);
 
   uint8_t *buffer = task_zalloc(alloc_size);
-  if (buffer == NULL) {
+  if (buffer == nullptr) {
     return false;
   }
 
@@ -35,7 +35,7 @@ static bool prv_item_init(TimelineItem *item, int num_attributes, int num_action
   attributes_actions_init(&item->attr_list, &item->action_group, &buffer, num_attributes,
                           num_actions, attributes_per_action);
 
-  if (string_buffer != NULL) {
+  if (string_buffer != nullptr) {
     *string_buffer = buffer;
   }
 
@@ -67,8 +67,8 @@ PBL_T_STATIC bool prv_deep_copy_attributes_actions(AttributeList *attr_list,
 bool timeline_item_create_from_serial_data(TimelineItem *item, uint8_t num_attributes,
                                            uint8_t num_actions, const uint8_t *data, size_t size,
                                            size_t *string_alloc_size, uint8_t **string_buffer) {
-  PBL_ASSERTN(data != NULL);
-  PBL_ASSERTN(string_alloc_size != NULL);
+  PBL_ASSERTN(data != nullptr);
+  PBL_ASSERTN(string_alloc_size != nullptr);
 
   // Determine string buffer allocation size based on serialized data
   uint8_t attributes_per_action[num_actions];
@@ -100,7 +100,7 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
 
   if (!prv_deep_copy_attributes_actions(attr_list, action_group, item)) {
     timeline_item_destroy(item);
-    return NULL;
+    return nullptr;
   }
 
   return item;
@@ -110,14 +110,14 @@ TimelineItem *timeline_item_create(int num_attributes, int num_actions,
                                    uint8_t attributes_per_action[],
                                    size_t required_size_for_strings, uint8_t **string_buffer) {
   TimelineItem *item = task_zalloc(sizeof(TimelineItem));
-  if (item == NULL) {
-    return NULL;
+  if (item == nullptr) {
+    return nullptr;
   }
 
   if (!prv_item_init(item, num_attributes, num_actions, attributes_per_action,
                      required_size_for_strings, string_buffer)) {
     task_free(item);
-    return NULL;
+    return nullptr;
   }
 
   return item;
@@ -125,18 +125,18 @@ TimelineItem *timeline_item_create(int num_attributes, int num_actions,
 
 TimelineItem *timeline_item_copy(TimelineItem *src) {
   if (!src) {
-    return NULL;
+    return nullptr;
   }
 
   TimelineItem *item_out = task_zalloc(sizeof(TimelineItem));
   if (!item_out) {
-    return NULL;
+    return nullptr;
   }
   memcpy(&item_out->header, &src->header, sizeof(CommonTimelineItemHeader));
 
   if (!prv_deep_copy_attributes_actions(&src->attr_list, &src->action_group, item_out)) {
     timeline_item_destroy(item_out);
-    return NULL;
+    return nullptr;
   }
 
   return item_out;
@@ -179,8 +179,8 @@ cleanup:
 }
 
 void timeline_item_serialize_header(TimelineItem *item, SerializedTimelineItemHeader *header) {
-  PBL_ASSERTN(item != NULL);
-  PBL_ASSERTN(header != NULL);
+  PBL_ASSERTN(item != nullptr);
+  PBL_ASSERTN(header != nullptr);
 
   size_t payload_length = timeline_item_get_serialized_payload_size(item);
 
@@ -192,8 +192,8 @@ void timeline_item_serialize_header(TimelineItem *item, SerializedTimelineItemHe
 
 void timeline_item_deserialize_header(TimelineItem *item,
                                       const SerializedTimelineItemHeader *header) {
-  PBL_ASSERTN(item != NULL);
-  PBL_ASSERTN(header != NULL);
+  PBL_ASSERTN(item != nullptr);
+  PBL_ASSERTN(header != nullptr);
 
   item->header = header->common;
   item->attr_list.num_attributes = header->num_attributes;
@@ -212,7 +212,7 @@ time_t timeline_item_get_tz_timestamp(CommonTimelineItemHeader *hdr) {
 }
 
 size_t timeline_item_serialize_payload(TimelineItem *item, uint8_t *buffer, size_t buffer_size) {
-  PBL_ASSERTN(item != NULL);
+  PBL_ASSERTN(item != nullptr);
 
   return attributes_actions_serialize_payload(&item->attr_list, &item->action_group, buffer,
                                               buffer_size);
@@ -221,9 +221,9 @@ size_t timeline_item_serialize_payload(TimelineItem *item, uint8_t *buffer, size
 bool timeline_item_deserialize_payload(TimelineItem *item, char *string_buffer,
                                        size_t string_buffer_size, const uint8_t *payload,
                                        size_t payload_size) {
-  PBL_ASSERTN(item != NULL);
-  PBL_ASSERTN(string_buffer != NULL);
-  PBL_ASSERTN(payload != NULL);
+  PBL_ASSERTN(item != nullptr);
+  PBL_ASSERTN(string_buffer != nullptr);
+  PBL_ASSERTN(payload != nullptr);
 
   uint8_t *buf_end = (uint8_t *)string_buffer + string_buffer_size;
 
@@ -232,16 +232,16 @@ bool timeline_item_deserialize_payload(TimelineItem *item, char *string_buffer,
 }
 
 void timeline_item_destroy(TimelineItem *item) {
-  if (item != NULL) {
+  if (item != nullptr) {
     timeline_item_free_allocated_buffer(item);
     task_free(item);
   }
 }
 
 void timeline_item_free_allocated_buffer(TimelineItem *item) {
-  if (item->allocated_buffer != NULL) {
+  if (item->allocated_buffer != nullptr) {
     task_free(item->allocated_buffer);
-    item->allocated_buffer = NULL;
+    item->allocated_buffer = nullptr;
   }
 }
 
@@ -291,13 +291,13 @@ static TimelineItemAction *prv_find_action(const TimelineItemActionGroup *action
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 static TimelineItemAction *prv_item_find_action(const TimelineItem *item,
                                                 ActionCompareFunc compare_func, void *data) {
   if (!prv_is_valid_item(item)) {
-    return NULL;
+    return nullptr;
   }
 
   return prv_find_action(&item->action_group, compare_func, data);
@@ -328,7 +328,7 @@ static bool prv_action_dismiss_compare_func(const TimelineItemAction *action, vo
 }
 
 TimelineItemAction *timeline_item_find_dismiss_action(const TimelineItem *item) {
-  return prv_item_find_action(item, prv_action_dismiss_compare_func, NULL);
+  return prv_item_find_action(item, prv_action_dismiss_compare_func, nullptr);
 }
 
 static bool prv_action_reply_compare_func(const TimelineItemAction *action, void *data) {
@@ -337,10 +337,10 @@ static bool prv_action_reply_compare_func(const TimelineItemAction *action, void
 }
 
 TimelineItemAction *timeline_item_find_reply_action(const TimelineItem *item) {
-  return prv_item_find_action(item, prv_action_reply_compare_func, NULL);
+  return prv_item_find_action(item, prv_action_reply_compare_func, nullptr);
 }
 
 TimelineItemAction *timeline_item_action_group_find_reply_action(
     const TimelineItemActionGroup *action_group) {
-  return prv_find_action(action_group, prv_action_reply_compare_func, NULL);
+  return prv_find_action(action_group, prv_action_reply_compare_func, nullptr);
 }

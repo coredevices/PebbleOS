@@ -66,7 +66,7 @@ bool gap_le_stop_scan(void) {
     if (s_is_scanning) {
       success = pbl_bt_stop_le_scan();
       kernel_free(s_reports_buffer);
-      s_reports_buffer = NULL;
+      s_reports_buffer = nullptr;
       s_is_scanning = false;
     }
   }

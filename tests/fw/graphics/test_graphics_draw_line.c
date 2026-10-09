@@ -27,7 +27,7 @@
 
 #include <stubs_applib_resource.h>
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 // Setup
 void test_graphics_draw_line__initialize(void) {

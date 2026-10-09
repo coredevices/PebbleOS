@@ -130,7 +130,7 @@ static void config_provider(Window *window) {
 
   // raw:
   window_raw_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)raw_down_click_handler,
-                             (ClickHandler)raw_up_click_handler, NULL);
+                             (ClickHandler)raw_up_click_handler, nullptr);
 }
 
 static void prv_window_load(Window *window) {
@@ -160,7 +160,7 @@ static void push_window(ClickAppData *data) {
 
 static void handle_init(void) {
   ClickAppData *data = (ClickAppData *)app_malloc_check(sizeof(ClickAppData));
-  if (data == NULL) {
+  if (data == nullptr) {
     PBL_CROAK("Out of memory");
   }
   app_state_set_user_data(data);

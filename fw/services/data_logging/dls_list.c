@@ -106,7 +106,7 @@ void dls_unlock_session(DataLoggingSession *session, bool inactivate) {
     pbl_mutex_unlock(&session->data->mutex);
     pbl_mutex_deinit(&session->data->mutex);
     kernel_free(session->data);
-    session->data = NULL;
+    session->data = nullptr;
 
   } else {
     pbl_mutex_unlock(&s_list_mutex);
@@ -126,7 +126,7 @@ DataLoggingStatus dls_get_session_status(DataLoggingSession *session) {
 DataLoggingSession *dls_list_find_by_session_id(uint8_t session_id) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
-  while (iter != NULL) {
+  while (iter != nullptr) {
     if (iter->comm.session_id > session_id) {
       break;
     }
@@ -138,13 +138,13 @@ DataLoggingSession *dls_list_find_by_session_id(uint8_t session_id) {
   }
 
   pbl_mutex_unlock(&s_list_mutex);
-  return (NULL);
+  return (nullptr);
 }
 
 DataLoggingSession *dls_list_find_active_session(uint32_t tag, const Uuid *app_uuid) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
-  while (iter != NULL) {
+  while (iter != nullptr) {
     if (iter->tag == tag && uuid_equal(&(iter->app_uuid), app_uuid) &&
         iter->status == DataLoggingStatusActive) {
       pbl_mutex_unlock(&s_list_mutex);
@@ -154,7 +154,7 @@ DataLoggingSession *dls_list_find_active_session(uint32_t tag, const Uuid *app_u
   }
 
   pbl_mutex_unlock(&s_list_mutex);
-  return (NULL);
+  return (nullptr);
 }
 
 void dls_list_remove_session(DataLoggingSession *logging_session) {
@@ -165,7 +165,7 @@ void dls_list_remove_session(DataLoggingSession *logging_session) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession **iter = &s_logging_sessions;
 
-  while (*iter != NULL) {
+  while (*iter != nullptr) {
     if (*iter == logging_session) {
       *iter = (*iter)->next;
       pbl_mutex_unlock(&s_list_mutex);
@@ -186,7 +186,7 @@ void dls_list_remove_all(void) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *cur = s_logging_sessions;
   DataLoggingSession *next;
-  while (cur != NULL) {
+  while (cur != nullptr) {
     next = cur->next;
     if (cur->data) {
       pbl_mutex_deinit(&cur->data->mutex);
@@ -196,7 +196,7 @@ void dls_list_remove_all(void) {
     cur = next;
   }
 
-  s_logging_sessions = NULL;
+  s_logging_sessions = nullptr;
   pbl_mutex_unlock(&s_list_mutex);
 }
 
@@ -206,7 +206,7 @@ void dls_list_insert_session(DataLoggingSession *logging_session) {
   DataLoggingSession **iter = &s_logging_sessions;
 
   for (int i = 0; i < logging_session->comm.session_id; i++) {
-    if (*iter == NULL) {
+    if (*iter == nullptr) {
       break;
     }
     PBL_ASSERTN(logging_session->comm.session_id != (*iter)->comm.session_id);
@@ -265,7 +265,7 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
   uint32_t num_sessions = prv_get_num_sessions();
   if (num_sessions >= DLS_MAX_NUM_SESSIONS) {
     PBL_LOG_WRN("Could not allocate additional DataLoggingSession objects");
-    return NULL;
+    return nullptr;
   }
 
   DataLoggingSession *logging_session = kernel_malloc_check(sizeof(DataLoggingSession));
@@ -293,7 +293,7 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
 
 DataLoggingSession *dls_list_get_next(DataLoggingSession *cur) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
-  if (cur == NULL) {
+  if (cur == nullptr) {
     // Return the head
     pbl_mutex_unlock(&s_list_mutex);
     return s_logging_sessions;
@@ -316,7 +316,7 @@ bool dls_list_for_each_session(bool(callback(DataLoggingSession *, void *)), voi
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *logging_session = s_logging_sessions;
 
-  while (logging_session != NULL) {
+  while (logging_session != nullptr) {
     // Read the next pointer first, just in case the callback ends up removing the session.
     DataLoggingSession *next_logging_session = logging_session->next;
 
@@ -332,14 +332,14 @@ bool dls_list_for_each_session(bool(callback(DataLoggingSession *, void *)), voi
 }
 
 void dls_list_init(void) {
-  s_logging_sessions = NULL;
+  s_logging_sessions = nullptr;
 }
 
 bool dls_list_is_session_valid(DataLoggingSession *logging_session) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   DataLoggingSession *iter = s_logging_sessions;
 
-  while (iter != NULL) {
+  while (iter != nullptr) {
     if (iter == logging_session) {
       pbl_mutex_unlock(&s_list_mutex);
       return true;

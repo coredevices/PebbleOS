@@ -12,11 +12,11 @@ status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_
 }
 
 BlobDBSyncSession *blob_db_sync_get_session_for_id(BlobDBId db_id) {
-  return NULL;
+  return nullptr;
 }
 
 BlobDBSyncSession *blob_db_sync_get_session_for_token(BlobDBToken token) {
-  return NULL;
+  return nullptr;
 }
 
 void blob_db_sync_next(BlobDBSyncSession *session) {

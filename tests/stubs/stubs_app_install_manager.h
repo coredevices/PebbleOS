@@ -55,7 +55,7 @@ bool PBL_WEAK app_install_entry_is_SDK_compatible(const AppInstallEntry *entry) 
 }
 
 const PBL_WEAK PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
-  return NULL;
+  return nullptr;
 }
 
 ResAppNum PBL_WEAK app_install_get_app_icon_bank(const AppInstallEntry *entry) {

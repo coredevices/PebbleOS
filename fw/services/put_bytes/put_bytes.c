@@ -203,11 +203,11 @@ static uint8_t *prv_get_next_pb_job_buffer(void) {
 
   // If pre-acking is disabled, only one request can be in flight at any given time!
   if (!enable_preack && (jobs_pending > 0)) {
-    return NULL;
+    return nullptr;
   }
 
   if (jobs_pending == put_jobs->num_allocated_pb_jobs) {
-    return NULL; // Remote has sent data without us ACKing the previous payload!
+    return nullptr; // Remote has sent data without us ACKing the previous payload!
   }
 
   return put_jobs->job[write_idx].buffer;
@@ -270,7 +270,7 @@ static void prv_deinit_put_job_queue(void) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
   for (int i = 0; i < MAX_BATCHED_PB_PUT_OPS; i++) {
     kernel_free(put_jobs->job[i].buffer);
-    put_jobs->job[i].buffer = NULL;
+    put_jobs->job[i].buffer = nullptr;
   }
 }
 
@@ -278,7 +278,7 @@ static bool prv_init_put_job_queue_if_necessary(void) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
 
   // Things are already initialized if at least the first job buffer is non-NULL
-  if (put_jobs->job[0].buffer != NULL) {
+  if (put_jobs->job[0].buffer != nullptr) {
     return true;
   }
 
@@ -375,7 +375,7 @@ static void prv_cleanup_from_system_task(void *data) {
 }
 
 static void prv_cleanup_async(void) {
-  system_task_add_callback(prv_cleanup_from_system_task, NULL);
+  system_task_add_callback(prv_cleanup_from_system_task, nullptr);
 }
 
 static void prv_fail(uint32_t token) {
@@ -482,7 +482,7 @@ static void prv_finish_fw_update_if_completed(void) {
 }
 
 static void prv_do_install(uint32_t token) {
-  struct InstallableObject *o = NULL;
+  struct InstallableObject *o = nullptr;
   for (int i = 0; i < NumObjects; ++i) {
     if (s_ready_to_install[i].token == token) {
       o = &s_ready_to_install[i];
@@ -490,7 +490,7 @@ static void prv_do_install(uint32_t token) {
     }
   }
 
-  if (token == 0 || o == NULL) {
+  if (token == 0 || o == nullptr) {
     PBL_LOG_ERR("Token does not exist; got 0x%" PRIx32, token);
     // The install's own token, not s_pb_state.token: the commit that precedes an install has
     // already cleaned the transfer state up, so that one is zero by now.
@@ -625,7 +625,7 @@ static void prv_create_timer_if_needed(void) {
 }
 
 static bool prv_setup_storage_for_init_request(const InitRequest *request, uint32_t index) {
-  PutBytesStorageInfo *storage_info = NULL;
+  PutBytesStorageInfo *storage_info = nullptr;
 
   switch (request->type) {
 #ifndef CONFIG_RECOVERY_FW
@@ -1077,8 +1077,8 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
 
   // Just in case this is called more than once
   prv_create_timer_if_needed();
-  bool success = new_timer_start(s_pb_state.timer_id, timeout_ms, prv_expect_init_timeout_cb, NULL,
-                                 0 /*flags*/);
+  bool success = new_timer_start(s_pb_state.timer_id, timeout_ms, prv_expect_init_timeout_cb,
+                                 nullptr, 0 /*flags*/);
   PBL_ASSERTN(success);
   pbl_sem_give(&s_pb_semaphore);
 }
@@ -1102,7 +1102,7 @@ static bool prv_is_message_pending_processing(void) {
 
 static void prv_receiver_reset(void) {
   s_pb_state.receiver.length = 0;
-  s_pb_state.receiver.buffer = NULL;
+  s_pb_state.receiver.buffer = nullptr;
 }
 
 static bool prv_take_lock_with_short_timeout(void) {
@@ -1138,7 +1138,7 @@ static bool prv_prepare(size_t total_payload_length) {
   s_pb_state.receiver.pos = 0;
   s_pb_state.receiver.should_nack = false;
 
-  return (s_pb_state.receiver.buffer != NULL);
+  return (s_pb_state.receiver.buffer != nullptr);
 }
 
 Receiver *prv_receiver_prepare(CommSession *session, const PebbleProtocolEndpoint *endpoint,
@@ -1147,7 +1147,7 @@ Receiver *prv_receiver_prepare(CommSession *session, const PebbleProtocolEndpoin
   // because this receiver calls the internal, static functions in this file directly).
   // It should only be used with the System session, we use comm_session_get_system_session()
   // directly, instead of passing around the session as a variable.
-  PBL_ASSERTN(endpoint->handler == NULL);
+  PBL_ASSERTN(endpoint->handler == nullptr);
 
   bool success = false;
   if (prv_take_lock_with_short_timeout()) {
@@ -1157,7 +1157,7 @@ Receiver *prv_receiver_prepare(CommSession *session, const PebbleProtocolEndpoin
 
   if (!success) {
     prv_add_nack_no_token_system_callback();
-    return NULL;
+    return nullptr;
   }
 
   // This is just symbolic, It just has to be non-NULL, really.
@@ -1232,9 +1232,9 @@ void prv_receiver_finish(Receiver *receiver) {
   if (prv_receiver_contains_put_request()) {
     // The PutRequest handler has no reliance on the receiver struct so mark processing as done
     prv_receiver_reset();
-    system_task_add_callback(prv_process_put_requests_system_task_cb, NULL);
+    system_task_add_callback(prv_process_put_requests_system_task_cb, nullptr);
   } else {
-    system_task_add_callback(prv_process_msg_system_task_callback, NULL);
+    system_task_add_callback(prv_process_msg_system_task_callback, nullptr);
   }
 
   // Don't clean up, the receiver.buffer will be re-used for the entire Put Bytes session.

@@ -304,7 +304,7 @@ static void prv_intro_animation_finished(Animation *animation) {
 }
 
 void watch_model_start_intro() {
-  prv_intro_animation_finished(NULL);
+  prv_intro_animation_finished(nullptr);
 }
 
 void watch_model_init(void) {

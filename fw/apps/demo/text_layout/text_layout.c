@@ -41,7 +41,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *callback_p
   GSize max_size = graphics_text_layout_get_max_used_size(
       app_state_get_graphics_context(), text->text, text->font,
       GRect(0, 0, text->layer.bounds.size.w, SHRT_MAX), text->overflow_mode, text->text_alignment,
-      NULL);
+      nullptr);
 
   text_layer_set_size(text, max_size);
   static const int vert_scroll_padding = 4;
@@ -63,7 +63,7 @@ static void click_config_provider(struct AppState *data) {
 
   // Configure how the SELECT button should behave:
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)select_click_handler);
-  window_long_click_subscribe(BUTTON_ID_SELECT, 0, (ClickHandler)select_click_handler, NULL);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 0, (ClickHandler)select_click_handler, nullptr);
   (void)data;
 }
 

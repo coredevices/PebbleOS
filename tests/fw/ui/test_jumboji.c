@@ -46,7 +46,7 @@ static const EmojiEntry s_emoji_table[] = JUMBOJI_TABLE(EMOJI_ENTRY);
 void test_jumboji__jumboji_table(void) {
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_emoji_table); i++) {
     const EmojiEntry *emoji = &s_emoji_table[i];
-    const Codepoint codepoint = utf8_peek_codepoint((utf8_t *)emoji->string, NULL);
+    const Codepoint codepoint = utf8_peek_codepoint((utf8_t *)emoji->string, nullptr);
     if (emoji->codepoint != codepoint) {
       printf("  ENTRY(\"%s\", 0x%05x, %s)\n", emoji->string, (unsigned int)codepoint,
              emoji->resource_name);
@@ -59,7 +59,7 @@ ResourceId prv_get_emoji_icon_by_string(const EmojiEntry *table, const char *str
 
 void test_jumboji__jumboji_detection(void) {
   // NULL is not an emoji
-  cl_check(prv_get_emoji_icon_by_string(s_emoji_table, NULL) == INVALID_RESOURCE);
+  cl_check(prv_get_emoji_icon_by_string(s_emoji_table, nullptr) == INVALID_RESOURCE);
 
   // Empty string is not an emoji
   cl_check(prv_get_emoji_icon_by_string(s_emoji_table, "") == INVALID_RESOURCE);

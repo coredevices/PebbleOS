@@ -21,7 +21,7 @@ static bool prv_dump_line_cb(uint8_t *msg, uint32_t total_length) {
   LogBinaryMessage *message = (LogBinaryMessage *)msg;
   char time_buffer[TIME_STRING_BUFFER_SIZE];
 
-  if (s_dump_sh == NULL) {
+  if (s_dump_sh == nullptr) {
     return false;
   }
 
@@ -35,11 +35,11 @@ static bool prv_dump_line_cb(uint8_t *msg, uint32_t total_length) {
 static void prv_dump_completed_cb(bool success) {
   const struct pbl_shell *sh = s_dump_sh;
 
-  if (sh == NULL) {
+  if (sh == nullptr) {
     return;
   }
 
-  s_dump_sh = NULL;
+  s_dump_sh = nullptr;
   pbl_shell_cmd_done(sh, success ? 0 : -EIO);
 }
 
@@ -104,13 +104,13 @@ static int prv_cmd_spam(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 static const struct pbl_shell_cmd sub_log_dump[] = {
-  PBL_SHELL_CMD(current, NULL, "Dump the current boot log", prv_cmd_dump_current),
-  PBL_SHELL_CMD(last, NULL, "Dump the previous boot log", prv_cmd_dump_last),
-  PBL_SHELL_CMD_ARG(gen, NULL, "Dump a boot log generation <n>", prv_cmd_dump_gen, 2, 0),
+  PBL_SHELL_CMD(current, nullptr, "Dump the current boot log", prv_cmd_dump_current),
+  PBL_SHELL_CMD(last, nullptr, "Dump the previous boot log", prv_cmd_dump_last),
+  PBL_SHELL_CMD_ARG(gen, nullptr, "Dump a boot log generation <n>", prv_cmd_dump_gen, 2, 0),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_SUBCMD_ADD(sub_log, dump, sub_log_dump, "Dump flash logs", NULL, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_log, spam, NULL, "Fill the flash log with junk", prv_cmd_spam, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_log, dump, sub_log_dump, "Dump flash logs", nullptr, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_log, spam, nullptr, "Fill the flash log with junk", prv_cmd_spam, 0, 0);
 
 #endif

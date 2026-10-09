@@ -43,17 +43,17 @@ static int prv_cmd_nav_log(const struct pbl_shell *sh, size_t argc, char **argv)
 }
 
 static const struct pbl_shell_cmd sub_touch_nav[] = {
-  PBL_SHELL_CMD(log, NULL, "Show the navigation counters and log", prv_cmd_nav_log),
-  PBL_SHELL_CMD(enable, NULL, "Enable touch navigation", prv_cmd_nav_enable),
-  PBL_SHELL_CMD(disable, NULL, "Disable touch navigation", prv_cmd_nav_disable),
+  PBL_SHELL_CMD(log, nullptr, "Show the navigation counters and log", prv_cmd_nav_log),
+  PBL_SHELL_CMD(enable, nullptr, "Enable touch navigation", prv_cmd_nav_enable),
+  PBL_SHELL_CMD(disable, nullptr, "Disable touch navigation", prv_cmd_nav_disable),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
 static const struct pbl_shell_cmd sub_touch[] = {
-  PBL_SHELL_CMD(nav, sub_touch_nav, "Touch navigation", NULL),
+  PBL_SHELL_CMD(nav, sub_touch_nav, "Touch navigation", nullptr),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(touch, sub_touch, "Touch", NULL);
+PBL_SHELL_CMD_REGISTER(touch, sub_touch, "Touch", nullptr);
 
 #endif

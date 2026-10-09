@@ -155,7 +155,7 @@ CrumbsLayer *crumbs_layer_create(GRect frame, GColor bg_color, GColor fg_color) 
 }
 
 void crumbs_layer_deinit(CrumbsLayer *crumbs_layer) {
-  if (crumbs_layer == NULL) {
+  if (crumbs_layer == nullptr) {
     return;
   }
 

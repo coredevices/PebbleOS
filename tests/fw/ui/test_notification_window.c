@@ -209,7 +209,7 @@ void clock_copy_time_string(char *buffer, uint8_t buf_size) {
 LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t rel_position, void *context) {
   // Only support one layout at a time for now
   if (rel_position != 0) {
-    return NULL;
+    return nullptr;
   }
 
   NotificationWindowData *data = context;
@@ -370,7 +370,7 @@ static void prv_render_notification_window(unsigned int num_down_scrolls) {
   for (int i = 0; i < num_down_scrolls; i++) {
     prv_attempt_scroll(swap_layer, ScrollDirectionDown, false /* is_repeating */);
     fake_animation_complete(swap_layer->animation);
-    swap_layer->animation = NULL;
+    swap_layer->animation = nullptr;
   }
 
   // Force the display of the action button
@@ -492,7 +492,7 @@ void test_notification_window__body_icon(void) {
   s_test_data = (NotificationWindowTestData){
     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_GOOGLE_HANGOUTS,
     .title = "Kevin Conley",
-    .subtitle = (PreferredContentSizeDefault >= PreferredContentSizeLarge) ? "New mail!" : NULL,
+    .subtitle = (PreferredContentSizeDefault >= PreferredContentSizeLarge) ? "New mail!" : nullptr,
     .body = "❤",
     .background_color = GColorIslamicGreen,
   };

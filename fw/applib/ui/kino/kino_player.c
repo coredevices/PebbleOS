@@ -64,7 +64,7 @@ PBL_T_STATIC void prv_play_animation_update(Animation *animation,
 
 static void prv_play_anim_stopped(Animation *anim, bool finished, void *context) {
   KinoPlayer *player = context;
-  player->animation = NULL;
+  player->animation = nullptr;
   prv_announce_did_stop(player, finished);
 }
 
@@ -105,14 +105,14 @@ void kino_player_set_reel(KinoPlayer *player, KinoReel *reel, bool take_ownershi
 }
 
 void kino_player_set_reel_with_resource(KinoPlayer *player, uint32_t resource_id) {
-  kino_player_set_reel(player, NULL, false);
+  kino_player_set_reel(player, nullptr, false);
   KinoReel *new_reel = kino_reel_create_with_resource(resource_id);
   kino_player_set_reel(player, new_reel, true);
 }
 
 void kino_player_set_reel_with_resource_system(KinoPlayer *player, ResAppNum app_num,
                                                uint32_t resource_id) {
-  kino_player_set_reel(player, NULL, false);
+  kino_player_set_reel(player, nullptr, false);
   KinoReel *new_reel = kino_reel_create_with_resource_system(app_num, resource_id);
   kino_player_set_reel(player, new_reel, true);
 }
@@ -165,7 +165,7 @@ ImmutableAnimation *kino_player_create_play_animation(KinoPlayer *player) {
     prv_create_play_animation(player, from_value, to_value);
     return (ImmutableAnimation *)player->animation;
   }
-  return NULL;
+  return nullptr;
 }
 
 ImmutableAnimation *kino_player_create_play_section_animation(KinoPlayer *player,
@@ -175,13 +175,13 @@ ImmutableAnimation *kino_player_create_play_section_animation(KinoPlayer *player
     prv_create_play_animation(player, from_elapsed_ms, to_elapsed_ms);
     return (ImmutableAnimation *)player->animation;
   }
-  return NULL;
+  return nullptr;
 }
 
 void kino_player_pause(KinoPlayer *player) {
   if (player && player->reel) {
     animation_unschedule(player->animation);
-    player->animation = NULL;
+    player->animation = nullptr;
   }
 }
 
@@ -196,7 +196,7 @@ void kino_player_rewind(KinoPlayer *player) {
 }
 
 void kino_player_draw(KinoPlayer *player, GContext *ctx, GPoint offset) {
-  kino_player_draw_processed(player, ctx, offset, NULL);
+  kino_player_draw_processed(player, ctx, offset, nullptr);
 }
 
 void kino_player_draw_processed(KinoPlayer *player, GContext *ctx, GPoint offset,
@@ -208,5 +208,5 @@ void kino_player_draw_processed(KinoPlayer *player, GContext *ctx, GPoint offset
 
 void kino_player_deinit(KinoPlayer *player) {
   player->callbacks = (KinoPlayerCallbacks){};
-  kino_player_set_reel(player, NULL, false);
+  kino_player_set_reel(player, nullptr, false);
 }

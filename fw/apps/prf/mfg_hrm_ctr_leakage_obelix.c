@@ -164,7 +164,7 @@ static void prv_result_timer_callback(void *cb_data) {
   }
 
   layer_mark_dirty(&data->window.layer);
-  app_timer_register(100, prv_result_timer_callback, NULL);
+  app_timer_register(100, prv_result_timer_callback, nullptr);
 }
 
 static void prv_update_status(void *param) {
@@ -179,7 +179,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
     app_data->test_mode = TestMode_CTR;
     snprintf(app_data->status_string, STATUS_STRING_LEN, "CTR Sampling...");
     // Start polling timer for result display timeout
-    app_timer_register(100, prv_result_timer_callback, NULL);
+    app_timer_register(100, prv_result_timer_callback, nullptr);
   } else if (app_data->test_mode != TestMode_Leakage) {
     gh3x2x_start_ft_leakage();
     app_data->test_mode = TestMode_Leakage;

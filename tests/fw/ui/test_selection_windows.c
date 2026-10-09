@@ -39,7 +39,7 @@ void clock_get_time_tm(struct tm *time_tm) {
   rtc_get_time_tm(time_tm);
 }
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 static GBitmap *s_dest_bitmap;
 
 // To easily render multiple windows in a single canvas, we'll use an 8-bit bitmap for color
@@ -119,7 +119,7 @@ void test_selection_windows__cleanup(void) {
   if (s_dest_bitmap) {
     gbitmap_destroy(s_dest_bitmap);
   }
-  s_dest_bitmap = NULL;
+  s_dest_bitmap = nullptr;
 }
 
 // Helpers
@@ -198,7 +198,7 @@ static void prv_render_time_range_selection_window(GContext *ctx,
   ctx->draw_state.drawing_box.origin = GPoint(x_offset, 0);
 
   TimeRangeSelectionWindowData selection_window;
-  time_range_selection_window_init(&selection_window, SELECTION_COLOR, NULL, NULL);
+  time_range_selection_window_init(&selection_window, SELECTION_COLOR, nullptr, nullptr);
 
   selection_window.from.hour = 16;
   selection_window.from.minute = 20;

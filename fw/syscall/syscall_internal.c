@@ -72,7 +72,7 @@ static McuUnprivilegedCallContext s_unprivileged_call_ctx[NumPebbleTask];
 static McuUnprivilegedCallContext *prv_unprivileged_call_ctx_for_current_task(void) {
   const PebbleTask task = pebble_task_get_current();
   if (task >= NumPebbleTask) {
-    return NULL;
+    return nullptr;
   }
   return &s_unprivileged_call_ctx[task];
 }
@@ -82,10 +82,10 @@ static PBL_USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, 
   (void)ctx;
 
   PBL_ASSERTN(mcu_state_is_thread_privileged());
-  PBL_ASSERTN(fn != NULL);
+  PBL_ASSERTN(fn != nullptr);
 
   McuUnprivilegedCallContext *state = prv_unprivileged_call_ctx_for_current_task();
-  PBL_ASSERTN(state != NULL);
+  PBL_ASSERTN(state != nullptr);
 
   const uint32_t thread_id = pbl_thread_id(pbl_thread_current());
   if (state->active && state->thread_id != thread_id) {
@@ -121,8 +121,9 @@ static uintptr_t prv_mcu_call_unprivileged_reentry_return_pc(void) {
 
 static McuUnprivilegedCallContext *prv_active_unprivileged_call_ctx_for_current_task(void) {
   McuUnprivilegedCallContext *state = prv_unprivileged_call_ctx_for_current_task();
-  if (state == NULL || !state->active || state->thread_id != pbl_thread_id(pbl_thread_current())) {
-    return NULL;
+  if (state == nullptr || !state->active ||
+      state->thread_id != pbl_thread_id(pbl_thread_current())) {
+    return nullptr;
   }
   return state;
 }
@@ -132,7 +133,7 @@ bool mcu_call_unprivileged_reentry_is_allowed(uint32_t caller_pc) {
     return false;
   }
 
-  return prv_active_unprivileged_call_ctx_for_current_task() != NULL;
+  return prv_active_unprivileged_call_ctx_for_current_task() != nullptr;
 }
 
 bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr) {
@@ -149,7 +150,7 @@ bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr) {
   }
 
   McuUnprivilegedCallContext *state = prv_active_unprivileged_call_ctx_for_current_task();
-  if (state == NULL) {
+  if (state == nullptr) {
     return false;
   }
 
@@ -321,7 +322,7 @@ const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
 #else
   (void)task;
 #endif
-  return NULL;
+  return nullptr;
 }
 
 // Kernel hook: top of the current task's dedicated syscall stack (base in
@@ -334,8 +335,8 @@ uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
 #ifdef CONFIG_MODDABLE_XS
     {
       const PebbleProcessMd *md = app_manager_get_current_app_md();
-      if (md != NULL && md->is_moddable_app) {
-        return NULL;
+      if (md != nullptr && md->is_moddable_app) {
+        return nullptr;
       }
     }
 #endif
@@ -345,7 +346,7 @@ uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
       stack = s_worker_syscall_stack.words;
       break;
     default:
-      return NULL;
+      return nullptr;
   }
   *base_out = (uintptr_t)&stack[0];
   return (uint32_t *)&stack[SYSCALL_STACK_WORDS];
@@ -417,7 +418,7 @@ PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege(void) {
 #else
 const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
   (void)task;
-  return NULL;
+  return nullptr;
 }
 uint16_t syscall_app_stack_free_bytes(void) {
   return 0xFFFF;

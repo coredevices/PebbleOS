@@ -43,7 +43,7 @@ static RecognizerManager *s_manager;
 
 RecognizerList *window_get_recognizer_list(Window *window) {
   // The window carries no window-level recognizers in these tests; only the task-global list.
-  return NULL;
+  return nullptr;
 }
 
 RecognizerManager *window_get_recognizer_manager(Window *window) {
@@ -52,7 +52,7 @@ RecognizerManager *window_get_recognizer_manager(Window *window) {
 
 struct Layer *window_get_root_layer(const Window *window) {
   if (!window) {
-    return NULL;
+    return nullptr;
   }
   return &((Window *)window)->layer;
 }
@@ -159,7 +159,7 @@ static TouchNavState s_state;
 void test_touch_nav__initialize(void) {
   fake_rtc_init(0, 0);
   s_nav_enabled = true;
-  s_active_layer = NULL;
+  s_active_layer = nullptr;
   s_fake = (FakeOps){};
   s_ops = (TouchNavOps){
     .is_animating = prv_is_animating,
@@ -458,7 +458,8 @@ void test_touch_nav__tier1_wins_over_raw_subscriber_gate(void) {
   s_fake.app_has_raw_subscriber = true;
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, nullptr,
+                         nullptr);
   s_active_layer = &s_child_layer;
 
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
@@ -727,7 +728,8 @@ void test_touch_nav__gated_then_navigational(void) {
 void test_touch_nav__tier1_widget_wins(void) {
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, nullptr,
+                         nullptr);
   s_active_layer = &s_child_layer;
 
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
@@ -742,8 +744,10 @@ void test_touch_nav__tier1_widget_wins(void) {
 void test_touch_nav__registry_dedupe_and_remove(void) {
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, nullptr,
+                         nullptr);
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, nullptr,
+                         nullptr);
   // Sole widget only if exactly one is registered — proves the re-add did not double-insert.
   s_active_layer = &s_child_layer;
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
@@ -757,7 +761,7 @@ void test_touch_nav__registry_dedupe_and_remove(void) {
   touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node);
   // With the widget gone the same Touchdown falls through to Tier-2.
   prv_dispatch(TouchEvent_Liftoff, 0, 0, false);
-  s_active_layer = NULL;
+  s_active_layer = nullptr;
   prv_dispatch(TouchEvent_Touchdown, 50, 90, false);
   cl_assert_equal_i(s_state.route, TouchNavRoute_Tier2);
 }
@@ -778,8 +782,9 @@ void test_touch_nav__dead_zone_dropped(void) {
 void test_touch_nav__dead_zone_sole_widget_routes_tier1(void) {
   static TouchNavWidgetNode node;
   node = (TouchNavWidgetNode){};
-  touch_nav_registry_add(&s_state, TouchNavWidgetType_Swap, &node, &s_child_layer, NULL, NULL);
-  s_active_layer = NULL; // the parent walk finds nothing, so the dead-zone branch runs
+  touch_nav_registry_add(&s_state, TouchNavWidgetType_Swap, &node, &s_child_layer, nullptr,
+                         nullptr);
+  s_active_layer = nullptr; // the parent walk finds nothing, so the dead-zone branch runs
 
   prv_dispatch(TouchEvent_Touchdown, 50, 4 /* inside the dead zone */, false);
   cl_assert_equal_i(s_state.route, TouchNavRoute_Tier1);
@@ -964,7 +969,7 @@ void test_touch_nav__action_bar_cleared_reverts_to_select(void) {
   cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_UP);
 
   // Clear (as remove_from_window would): a tap in the old UP zone is now a plain SELECT.
-  touch_nav_set_action_bar(&s_state, NULL, 0);
+  touch_nav_set_action_bar(&s_state, nullptr, 0);
   prv_tap(120, 30);
   cl_assert_equal_i(s_fake.emit_count, 2);
   cl_assert_equal_i(s_fake.last_emit, BUTTON_ID_SELECT);
@@ -1157,8 +1162,8 @@ void test_touch_nav__widget_can_start_decline_then_accept(void) {
   prv_dispatch(TouchEvent_Liftoff, 0, 0, false); // Completed: dropped
   cl_assert_equal_i(s_widget.pan_snap_calls, 0);
   cl_assert_equal_i(s_widget.pan_cancel_calls, 0);
-  cl_assert_equal_p(s_state.latched_target, NULL); // cleared on completion
-  cl_assert(!s_state.declined);                    // reset for the next gesture
+  cl_assert_equal_p(s_state.latched_target, nullptr); // cleared on completion
+  cl_assert(!s_state.declined);                       // reset for the next gesture
 
   // (d) Gesture 2: can_start now accepts -> a full pan drives the widget.
   s_widget.can_start_result = true;
@@ -1204,7 +1209,7 @@ void test_touch_nav__gated_preemption_drops_active_pan(void) {
   prv_dispatch(TouchEvent_Touchdown, 50, 90, true /* non_navigational */);
   cl_assert_equal_i(s_widget.pan_snap_calls, 0);
   cl_assert_equal_i(s_widget.pan_cancel_calls, 0);
-  cl_assert_equal_p(s_state.latched_target, NULL); // latch cleared
+  cl_assert_equal_p(s_state.latched_target, nullptr); // latch cleared
   cl_assert(!s_state.declined);
   cl_assert_equal_i(s_recognizer_manager.state, RecognizerManagerState_WaitForTouchdown);
 
@@ -1233,17 +1238,17 @@ void test_touch_nav__typed_getters_reject_wrong_type(void) {
   p = pan_recognizer_get_total_delta(s_state.tap);
   cl_assert_equal_i(p.x, zero.x);
   cl_assert_equal_i(p.y, zero.y);
-  p = pan_recognizer_get_delta_since_start(NULL);
+  p = pan_recognizer_get_delta_since_start(nullptr);
   cl_assert_equal_i(p.x, zero.x);
   cl_assert_equal_i(p.y, zero.y);
   p = pan_recognizer_get_velocity(s_state.swipe);
   cl_assert_equal_i(p.x, zero.x);
   cl_assert_equal_i(p.y, zero.y);
   cl_assert_equal_i(swipe_recognizer_get_direction(s_state.tap), SwipeDirection_None);
-  p = swipe_recognizer_get_velocity(NULL);
+  p = swipe_recognizer_get_velocity(nullptr);
   cl_assert_equal_i(p.x, zero.x);
   cl_assert_equal_i(p.y, zero.y);
-  p = tap_recognizer_get_tap_point(NULL);
+  p = tap_recognizer_get_tap_point(nullptr);
   cl_assert_equal_i(p.x, zero.x);
   cl_assert_equal_i(p.y, zero.y);
 }

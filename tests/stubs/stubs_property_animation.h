@@ -19,10 +19,10 @@ void PBL_WEAK property_animation_update_grect(PropertyAnimation *property_animat
 PropertyAnimation *PBL_WEAK property_animation_create_layer_bounds(struct Layer *layer,
                                                                    GRect *from_bounds,
                                                                    GRect *to_bounds) {
-  return NULL;
+  return nullptr;
 }
 
 PropertyAnimation *PBL_WEAK property_animation_create_bounds_origin(struct Layer *layer,
                                                                     GPoint *from, GPoint *to) {
-  return NULL;
+  return nullptr;
 }

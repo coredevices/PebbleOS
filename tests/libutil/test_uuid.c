@@ -61,6 +61,6 @@ void test_uuid__string(void) {
   uuid_to_string(&invalid, buffer);
   cl_assert_equal_s(buffer, "{ffffffff-ffff-ffff-ffff-ffffffffffff}");
 
-  uuid_to_string(NULL, buffer);
+  uuid_to_string(nullptr, buffer);
   cl_assert_equal_s(buffer, "{NULL UUID}");
 }

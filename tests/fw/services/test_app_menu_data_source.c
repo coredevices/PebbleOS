@@ -242,7 +242,7 @@ void test_app_menu_data_source__initialize(void) {
 extern ListNode *s_head_callback_node_list;
 
 void test_app_menu_data_source__cleanup(void) {
-  s_head_callback_node_list = NULL;
+  s_head_callback_node_list = nullptr;
   app_install_manager_flush_recent_communication_timestamps();
 }
 
@@ -635,7 +635,7 @@ void test_app_menu_data_source__app_node_comparator_equality_cases(void) {
     APP_ID_ALARMS,        APP_ID_WATCHFACES, APP_ID_WORKOUT,
   };
 
-  AppMenuNode *app_list = NULL;
+  AppMenuNode *app_list = nullptr;
   const uint16_t num_apps = ARRAY_LENGTH(app_menu_nodes);
   for (uint16_t i = 0; i < num_apps; i++) {
     app_list = (AppMenuNode *)list_sorted_add(&app_list->node, &app_menu_nodes[i].node,

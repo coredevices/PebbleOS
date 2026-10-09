@@ -27,7 +27,7 @@ static GPath *prv_pointed_hand_path(GContext *ctx, ClockHand *hand) {
 
   GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
   if (!points)
-    return NULL;
+    return nullptr;
 
   points[0] = GPoint(hand->thickness / -2, hand->thickness);                       // top left
   points[1] = GPoint(hand->thickness / -2, -(hand->length - hand->thickness / 2)); // bottom left
@@ -59,7 +59,7 @@ static GPath *prv_square_hand_path(GContext *ctx, ClockHand *hand) {
 
   GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
   if (!points)
-    return NULL;
+    return nullptr;
 
   points[0] = GPoint(hand->thickness / -2, hand->thickness); // top left
   points[1] = GPoint(hand->thickness / -2, -(hand->length)); // bottom left
@@ -104,7 +104,7 @@ static void prv_graphics_draw_centered_text(GContext *ctx, const GSize *max_size
   text_center.y -= text_size.h * 2 / 3;
   graphics_context_set_text_color(ctx, color);
   graphics_draw_text(ctx, text, font, (GRect){.origin = text_center, .size = text_size},
-                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+                     GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
 }
 
 static void prv_draw_watch_hand_rounded(GContext *ctx, ClockHand *hand, GPointPrecise center) {
@@ -199,7 +199,7 @@ static void prv_draw_clock_text(GContext *ctx, ClockText text, GPoint center) {
         .size = bounds->size
       };
       graphics_draw_text(ctx, text.buffer, text.font, box, GTextOverflowModeFill,
-                         GTextAlignmentRight, NULL);
+                         GTextAlignmentRight, nullptr);
       break;
     case CLOCK_TEXT_LOCATION_BOTTOM:
     default:

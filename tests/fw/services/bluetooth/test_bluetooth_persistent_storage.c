@@ -48,7 +48,7 @@ static int s_ble_bonding_change_delete_count;
 
 typedef bool (*BondingSyncFilterCb)(const struct pbl_bt_bonding *bonding, void *ctx);
 const struct pbl_bt_bonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {
-  return NULL;
+  return nullptr;
 }
 
 void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
@@ -186,7 +186,7 @@ void test_bluetooth_persistent_storage__ble_address_pinning(void) {
   };
   bonding_sync_add_bonding(&ble_bonding);
   pbl_bt_bonding_id_t id = bt_persistent_storage_store_ble_pairing(
-      &pairing_1, true /* is_gateway */, NULL, true /* requires_address_pinning */,
+      &pairing_1, true /* is_gateway */, nullptr, true /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
 
@@ -196,8 +196,8 @@ void test_bluetooth_persistent_storage__ble_address_pinning(void) {
 
   cl_assert_equal_b(bt_persistent_storage_has_pinned_ble_pairings(), false);
 
-  cl_assert_equal_b(bt_persistent_storage_set_ble_pinned_address(NULL), true);
-  cl_assert_equal_b(bt_persistent_storage_get_ble_pinned_address(NULL), false);
+  cl_assert_equal_b(bt_persistent_storage_set_ble_pinned_address(nullptr), true);
+  cl_assert_equal_b(bt_persistent_storage_get_ble_pinned_address(nullptr), false);
 }
 
 void test_bluetooth_persistent_storage__ble_store_and_get(void) {
@@ -230,7 +230,7 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
     .is_mitm_protection_enabled = true,
   };
   pbl_bt_bonding_id_t id_1 = bt_persistent_storage_store_ble_pairing(
-      &pairing_1, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing_1, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id_1 != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 1);
@@ -238,7 +238,8 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert_equal_b(bt_persistent_storage_has_pinned_ble_pairings(), false);
 
   // Read it back
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, NULL /* name */);
+  ret =
+      bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, nullptr /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_1.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_1.identity, sizeof(device_out));
@@ -290,7 +291,7 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
     .is_remote_identity_info_valid = true,
   };
   pbl_bt_bonding_id_t id_2 = bt_persistent_storage_store_ble_pairing(
-      &pairing_2, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing_2, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id_2 != PBL_BT_BONDING_ID_INVALID);
   cl_assert(id_2 != id_1);
@@ -299,10 +300,12 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
 
   // pairing_1 is gone, pairing_2 remains.
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, NULL /* name */);
+  ret =
+      bt_persistent_storage_get_ble_pairing_by_id(id_1, &irk_out, &device_out, nullptr /* name */);
   cl_assert(!ret);
 
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, NULL /* name */);
+  ret =
+      bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, nullptr /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_2.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
@@ -310,13 +313,14 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
   // Re-store the same pairing (same identity): this is an update, not an add, and must not delete
   // anything.
   pbl_bt_bonding_id_t id_X = bt_persistent_storage_store_ble_pairing(
-      &pairing_2, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing_2, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert_equal_i(id_2, id_X);
   cl_assert_equal_i(s_ble_bonding_change_update_count, 1);
   cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
 
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, NULL /* name */);
+  ret =
+      bt_persistent_storage_get_ble_pairing_by_id(id_2, &irk_out, &device_out, nullptr /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_2.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_2.identity, sizeof(device_out));
@@ -367,7 +371,7 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
     .is_remote_identity_info_valid = true,
   };
   pbl_bt_bonding_id_t id_3 = bt_persistent_storage_store_ble_pairing(
-      &pairing_3, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing_3, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id_3 != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 3);
@@ -375,13 +379,14 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
 
   // Only pairing_3 should be findable by identity. Bonding slot IDs may be reused after a delete,
   // so check by address rather than by stale id values.
-  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing_1.identity, &irk_out, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing_1.identity, &irk_out, nullptr);
   cl_assert(!ret);
 
-  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing_2.identity, &irk_out, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing_2.identity, &irk_out, nullptr);
   cl_assert(!ret);
 
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_3, &irk_out, &device_out, NULL /* name */);
+  ret =
+      bt_persistent_storage_get_ble_pairing_by_id(id_3, &irk_out, &device_out, nullptr /* name */);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing_3.irk, sizeof(irk_out));
   cl_assert_equal_m(&device_out, &pairing_3.identity, sizeof(device_out));
@@ -443,12 +448,12 @@ void test_bluetooth_persistent_storage__get_ble_by_addr(void) {
   };
 
   pbl_bt_bonding_id_t id = bt_persistent_storage_store_ble_pairing(
-      &pairing, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
 
   // Read it back
-  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing.identity, &irk_out, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_addr(&pairing.identity, &irk_out, nullptr);
   cl_assert(ret);
   cl_assert_equal_m(&irk_out, &pairing.irk, sizeof(irk_out));
 }
@@ -510,7 +515,7 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
   };
   bonding_sync_add_bonding(&ble_bonding);
   pbl_bt_bonding_id_t id = bt_persistent_storage_store_ble_pairing(
-      &pairing, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 1);
@@ -523,12 +528,12 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
   cl_assert_equal_i(fake_shared_prf_storage_get_ble_delete_count(), 2);
 
   // Try to read it back
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, nullptr);
   cl_assert(!ret);
 
   // Add the pairing again
   bonding_sync_add_bonding(&ble_bonding);
-  id = bt_persistent_storage_store_ble_pairing(&pairing, true /* is_gateway */, NULL,
+  id = bt_persistent_storage_store_ble_pairing(&pairing, true /* is_gateway */, nullptr,
                                                false /* requires_address_pinning */,
                                                false /* auto_accept_re_pairing */);
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
@@ -541,7 +546,7 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
   cl_assert_equal_i(fake_shared_prf_storage_get_ble_delete_count(), 3);
 
   // Make sure the pairing is actually still there
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, nullptr);
   cl_assert(ret);
 
   // And delete is again
@@ -550,7 +555,7 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
   cl_assert_equal_i(fake_shared_prf_storage_get_ble_delete_count(), 4);
 
   // Try to read it back
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, nullptr);
   cl_assert(!ret);
 }
 
@@ -602,7 +607,7 @@ void test_bluetooth_persistent_storage__ble_ancs_bonding(void) {
 
   // This pairing is a heart rate monitor or something similar
   pbl_bt_bonding_id_t id = bt_persistent_storage_store_ble_pairing(
-      &pairing, false /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing, false /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
 
@@ -617,7 +622,7 @@ void test_bluetooth_persistent_storage__ble_ancs_bonding(void) {
   // Store another pairing, this one is a gateway (supports ancs)
   pairing.identity.address.octets[0] = 0x12;
   pbl_bt_bonding_id_t id2 = bt_persistent_storage_store_ble_pairing(
-      &pairing, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
   cl_assert(id2 != PBL_BT_BONDING_ID_INVALID);
 
@@ -681,14 +686,14 @@ void test_bluetooth_persistent_storage__ble_device_name(void) {
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
 
   char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  bt_persistent_storage_get_ble_pairing_by_id(id, NULL, NULL, device_name_out);
+  bt_persistent_storage_get_ble_pairing_by_id(id, nullptr, nullptr, device_name_out);
 
   cl_assert_equal_i(strcmp(device_name, device_name_out), 0);
 
   // Update:
   const char *new_device_name = "New iPhone";
   bt_persistent_storage_update_ble_device_name(id, new_device_name);
-  bt_persistent_storage_get_ble_pairing_by_id(id, NULL, NULL, device_name_out);
+  bt_persistent_storage_get_ble_pairing_by_id(id, nullptr, nullptr, device_name_out);
 
   cl_assert_equal_i(strcmp(new_device_name, device_name_out), 0);
 }
@@ -735,7 +740,7 @@ void test_bluetooth_persistent_storage__delete_all(void) {
     .is_remote_identity_info_valid = true,
   };
   pbl_bt_bonding_id_t id_1 = bt_persistent_storage_store_ble_pairing(
-      &pairing_1, true /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing_1, true /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
 
   // BLE pairing 2
@@ -754,16 +759,16 @@ void test_bluetooth_persistent_storage__delete_all(void) {
     .is_remote_identity_info_valid = true,
   };
   pbl_bt_bonding_id_t id_2 = bt_persistent_storage_store_ble_pairing(
-      &pairing_2, false /* is_gateway */, NULL, false /* requires_address_pinning */,
+      &pairing_2, false /* is_gateway */, nullptr, false /* requires_address_pinning */,
       false /* auto_accept_re_pairing */);
 
   // Delete all
   bt_persistent_storage_delete_all_pairings();
 
   // Try to get the pairings
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, NULL, NULL, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_id(id_1, nullptr, nullptr, nullptr);
   cl_assert(!ret);
-  ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, NULL, NULL, NULL);
+  ret = bt_persistent_storage_get_ble_pairing_by_id(id_2, nullptr, nullptr, nullptr);
   cl_assert(!ret);
 }
 

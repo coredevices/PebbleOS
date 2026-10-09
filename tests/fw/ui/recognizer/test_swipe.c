@@ -83,7 +83,7 @@ static void prv_swipe(Recognizer *r, int16_t sx, int16_t sy, int16_t ex, int16_t
 
 // One completed swipe per accepted direction, with the correct reported direction.
 void test_swipe__completes_right(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
   prv_swipe(r, 10, 50, 70, 50);
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Completed);
   cl_assert_equal_i(s_last_event, RecognizerEvent_Completed);
@@ -93,21 +93,21 @@ void test_swipe__completes_right(void) {
 }
 
 void test_swipe__completes_left(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
   prv_swipe(r, 70, 50, 10, 50);
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Completed);
   cl_assert_equal_i(swipe_recognizer_get_direction(r), SwipeDirection_Left);
 }
 
 void test_swipe__completes_down(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
   prv_swipe(r, 50, 10, 50, 70);
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Completed);
   cl_assert_equal_i(swipe_recognizer_get_direction(r), SwipeDirection_Down);
 }
 
 void test_swipe__completes_up(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
   prv_swipe(r, 50, 70, 50, 10);
   cl_assert_equal_i(recognizer_get_state(r), RecognizerState_Completed);
   cl_assert_equal_i(swipe_recognizer_get_direction(r), SwipeDirection_Up);
@@ -115,7 +115,7 @@ void test_swipe__completes_up(void) {
 
 // A swipe shorter than the minimum length fails on liftoff.
 void test_swipe__too_short_fails(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_advance_ms(20);
@@ -128,7 +128,7 @@ void test_swipe__too_short_fails(void) {
 
 // A swipe that takes longer than the maximum duration fails early (too slow to be a flick).
 void test_swipe__too_slow_fails(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_advance_ms(400); // exceeds the 300ms max duration
@@ -139,7 +139,7 @@ void test_swipe__too_slow_fails(void) {
 
 // A path that wanders too far off the major axis (minor projection > half the major) fails early.
 void test_swipe__too_crooked_fails(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 10);
   prv_advance_ms(20);
@@ -155,7 +155,7 @@ void test_swipe__too_crooked_fails(void) {
 // the only test that exercises (and thus pins) the otherwise mutation-dead
 // fast_enough term on the liftoff branch.
 void test_swipe__slow_liftoff_after_fast_path_fails(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_advance_ms(50);
@@ -169,7 +169,7 @@ void test_swipe__slow_liftoff_after_fast_path_fails(void) {
 // A path whose floored duration is exactly the cap still completes (inclusive
 // bound). Flipping the liftoff `<=` to `<` reddens this.
 void test_swipe__duration_at_boundary_completes(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_dispatch(r, TouchEvent_PositionUpdate, 70, 50); // 60px, same tick (fast)
@@ -181,7 +181,7 @@ void test_swipe__duration_at_boundary_completes(void) {
 
 // Major-axis travel of exactly the minimum length is long enough (inclusive).
 void test_swipe__length_at_boundary_completes(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_advance_ms(20);
@@ -195,7 +195,7 @@ void test_swipe__length_at_boundary_completes(void) {
 // One pixel short of the minimum length fails. Pins the off-by-one that a
 // 20px/60px pair leaves open; flipping `>=` to `>` reddens the boundary case.
 void test_swipe__length_below_boundary_fails(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_advance_ms(20);
@@ -210,7 +210,7 @@ void test_swipe__length_below_boundary_fails(void) {
 // enough — the inclusive-pass boundary, complement of the too-crooked early
 // fail. Pins the straightness `>` against a `>=` regression.
 void test_swipe__straightness_at_boundary_completes(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 0, 0);
   prv_advance_ms(20);
@@ -225,7 +225,7 @@ void test_swipe__straightness_at_boundary_completes(void) {
 
 // A swipe whose direction is not in the accepted mask fails on liftoff.
 void test_swipe__forbidden_direction_fails(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, SwipeDirection_Right);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, SwipeDirection_Right);
 
   // A clean leftward swipe: valid shape, but Left is not in the (Right-only) mask.
   prv_swipe(r, 70, 50, 10, 50);
@@ -236,7 +236,7 @@ void test_swipe__forbidden_direction_fails(void) {
 // Liftoff reported at (0, 0) must not fabricate an up-left swipe: the gesture end is the last
 // position update, so a clean rightward path stays a rightward swipe.
 void test_swipe__liftoff_origin_ignored(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_advance_ms(20);
@@ -251,7 +251,7 @@ void test_swipe__liftoff_origin_ignored(void) {
 // dt == 0: position updates at the same tick yield zero velocity with no divide-by-zero, and the
 // swipe still completes on its geometry.
 void test_swipe__zero_dt_velocity_zero(void) {
-  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, NULL, ALL_DIRECTIONS);
+  NEW_RECOGNIZER(r) = swipe_recognizer_create(prv_event_cb, nullptr, ALL_DIRECTIONS);
 
   prv_dispatch(r, TouchEvent_Touchdown, 10, 50);
   prv_dispatch(r, TouchEvent_PositionUpdate, 40, 50); // same tick

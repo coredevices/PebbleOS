@@ -94,9 +94,9 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
 #ifdef CONFIG_SETTINGS_ICONS
   GBitmap *icon = data->icons[cell_index->row];
 #else
-  GBitmap *icon = NULL;
+  GBitmap *icon = nullptr;
 #endif
-  menu_cell_basic_draw(ctx, cell_layer, title, NULL, icon);
+  menu_cell_basic_draw(ctx, cell_layer, title, nullptr, icon);
 }
 
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
@@ -134,7 +134,7 @@ static void prv_window_load(Window *window) {
     if (SETTINGS_MENU_ICON_RESOURCES[i] != RESOURCE_ID_INVALID) {
       data->icons[i] = gbitmap_create_with_resource(SETTINGS_MENU_ICON_RESOURCES[i]);
     } else {
-      data->icons[i] = NULL;
+      data->icons[i] = nullptr;
     }
   }
 #endif

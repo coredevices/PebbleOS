@@ -36,7 +36,7 @@ uint32_t utf8_peek_codepoint(utf8_t *stream, utf8_t **next_ptr) {
   uint32_t codepoint = 0;
   uint8_t state = 0;
 
-  if (stream == NULL) {
+  if (stream == nullptr) {
     return 0;
   }
 
@@ -52,7 +52,7 @@ uint32_t utf8_peek_codepoint(utf8_t *stream, utf8_t **next_ptr) {
   }
 
   if (next_ptr) {
-    *next_ptr = NULL;
+    *next_ptr = nullptr;
   }
 
   return 0;
@@ -62,7 +62,7 @@ utf8_t *utf8_get_next(utf8_t *stream) {
   uint32_t codepoint = 0;
   uint8_t state = 0;
 
-  if (stream == NULL) {
+  if (stream == nullptr) {
     return stream;
   }
 
@@ -74,14 +74,14 @@ utf8_t *utf8_get_next(utf8_t *stream) {
   }
 
   // No valid codepoint found
-  return NULL;
+  return nullptr;
 }
 
 // see http://stackoverflow.com/questions/22257486/iterate-backwards-through-a-utf8-multibyte-string
 utf8_t *utf8_get_previous(utf8_t *start, utf8_t *stream) {
   do {
     if (stream <= start) {
-      return NULL;
+      return nullptr;
     }
     --stream;
   } while ((*stream & 0xc0) == 0x80);
@@ -94,7 +94,7 @@ utf8_t *utf8_get_previous(utf8_t *start, utf8_t *stream) {
 
 //! Return NULL if not successful in decoding text
 utf8_t *utf8_get_end(const char *text) {
-  if (text == NULL) {
+  if (text == nullptr) {
     return (utf8_t *)text;
   }
 
@@ -109,14 +109,14 @@ utf8_t *utf8_get_end(const char *text) {
 
   bool success = (state == PBL_UTF8_ACCEPT);
   if (!success) {
-    return NULL;
+    return nullptr;
   }
 
   return (utf8_t *)stream;
 }
 
 bool utf8_is_valid_string(const char *char_stream) {
-  return (utf8_get_end(char_stream) != NULL);
+  return (utf8_get_end(char_stream) != nullptr);
 }
 
 Utf8Bounds utf8_get_bounds(bool *const success, char const *text) {
@@ -126,7 +126,7 @@ Utf8Bounds utf8_get_bounds(bool *const success, char const *text) {
 
   utf8_t *end = utf8_get_end(text);
 
-  if (NULL == end) {
+  if (nullptr == end) {
     *success = false;
     return bounds;
   }
@@ -142,7 +142,7 @@ bool utf8_bounds_init(Utf8Bounds *bounds, const char *text) {
 
   utf8_t *end = utf8_get_end(text);
 
-  if (end == NULL) {
+  if (end == nullptr) {
     return false;
   }
 
@@ -162,7 +162,7 @@ bool utf8_iter_next(IteratorState state) {
 
   utf8_iter_state->current = utf8_iter_state->next;
 
-  if (utf8_iter_state->current == NULL) {
+  if (utf8_iter_state->current == nullptr) {
     return false;
   }
 
@@ -234,10 +234,10 @@ size_t utf8_copy_character(utf8_t *dest, utf8_t *origin, size_t length) {
   utf8_t *next_char = utf8_get_next(origin);
   // If next_char is NULL, we were asked to copy the last character, so just take the end of the
   // string.
-  if (next_char == NULL) {
+  if (next_char == nullptr) {
     next_char = utf8_get_end((char *)origin);
     // If we can't get the end, bail out.
-    if (next_char == NULL) {
+    if (next_char == nullptr) {
       return 0;
     }
   }

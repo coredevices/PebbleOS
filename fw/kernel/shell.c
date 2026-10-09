@@ -11,7 +11,7 @@
 #include <pbl/util/size.h>
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_sys);
-PBL_SHELL_CMD_REGISTER(sys, sub_sys, "System control", NULL);
+PBL_SHELL_CMD_REGISTER(sys, sub_sys, "System control", nullptr);
 
 static const char *s_runlevel_names[] = {
 #define RUNLEVEL(number, name) [number] = #name,
@@ -43,6 +43,7 @@ static int prv_cmd_runlevel(const struct pbl_shell *sh, size_t argc, char **argv
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_sys, runlevel, NULL, "Set the runlevel <n|list>", prv_cmd_runlevel, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys, runlevel, nullptr, "Set the runlevel <n|list>", prv_cmd_runlevel, 2,
+                     0);
 
 #endif

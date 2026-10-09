@@ -72,7 +72,7 @@ extern I18nString *prv_list_find_string(const char *string, void *owner);
 void test_i18n__music(void) {
   const char *first = i18n_get("Music", (void *)0x12345);
   cl_assert(strcmp(first, "Musique") == 0);
-  cl_assert(prv_list_find_string("Music", (void *)0x12345) != NULL);
+  cl_assert(prv_list_find_string("Music", (void *)0x12345) != nullptr);
   const char *second = i18n_get("Music", (void *)0x12345);
   cl_assert(first == second);
   const char *third = i18n_get("Music", (void *)0xdeadbeef);
@@ -80,7 +80,7 @@ void test_i18n__music(void) {
   i18n_free_all((void *)0x12345);
   cl_assert(prv_list_find_string("Music", (void *)0xdeadbeef)->translated_string == third);
   i18n_free_all((void *)0xdeadbeef);
-  cl_assert(prv_list_find_string("Music", __FILE__) == NULL);
+  cl_assert(prv_list_find_string("Music", __FILE__) == nullptr);
   // this should be a no-op
   i18n_free("Music", __FILE__);
 }
@@ -153,9 +153,9 @@ void test_i18n__ctxt_get(void) {
   cl_assert(fourth == second);
 
   i18n_free(ctxt_txt_1, __FILE__);
-  cl_assert(prv_list_find_string(ctxt_txt_1, __FILE__) == NULL);
+  cl_assert(prv_list_find_string(ctxt_txt_1, __FILE__) == nullptr);
   i18n_ctx_free("Quiet Time", "Enabled", __FILE__);
-  cl_assert(prv_list_find_string(ctxt_txt_2, __FILE__) == NULL);
+  cl_assert(prv_list_find_string(ctxt_txt_2, __FILE__) == nullptr);
 }
 
 void test_i18n__ctxt_get_length(void) {

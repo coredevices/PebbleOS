@@ -25,7 +25,7 @@ void test_vibe_intensity__cleanup(void) {
 
 void test_vibe_intensity__get_string_for_intensity(void) {
   // A bogus intensity returns NULL
-  cl_assert_equal_p(vibe_intensity_get_string_for_intensity(VibeIntensityNum), NULL);
+  cl_assert_equal_p(vibe_intensity_get_string_for_intensity(VibeIntensityNum), nullptr);
 
   cl_assert_equal_s(vibe_intensity_get_string_for_intensity(VibeIntensityLow), "Standard - Low");
   cl_assert_equal_s(vibe_intensity_get_string_for_intensity(VibeIntensityMedium),

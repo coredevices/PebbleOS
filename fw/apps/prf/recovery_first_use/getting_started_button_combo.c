@@ -36,7 +36,7 @@ static void prv_down_cb(void *data) {
   app_window_stack_push(spinner_window, false /* animated */);
 
   // Factory reset on KernelBG so the animation gets priority
-  system_task_add_callback(prv_factory_reset, NULL);
+  system_task_add_callback(prv_factory_reset, nullptr);
 }
 
 #ifdef CONFIG_RECOVERY_FW
@@ -50,7 +50,7 @@ static void prv_timeout_expired(void *data) {
 
   // Timeout expired, jump over the app thread to do the thing.
   void (*real_callback)(void *) = data;
-  process_manager_send_callback_event_to_process(PebbleTask_App, real_callback, NULL);
+  process_manager_send_callback_event_to_process(PebbleTask_App, real_callback, nullptr);
 }
 
 static void prv_update_state(GettingStartedButtonComboState *state) {

@@ -33,7 +33,7 @@ void fake_spi_flash_erase(void) {
 
 void fake_spi_flash_cleanup(void) {
   free(s_state.storage);
-  s_state.storage = NULL;
+  s_state.storage = nullptr;
   s_state = (FakeFlashState){};
 }
 
@@ -73,7 +73,7 @@ void fake_spi_flash_init(uint32_t offset, uint32_t length) {
   s_state.storage = malloc(length);
   s_state.write_count = 0;
   // Note: this is a harness failure, not a code failure.
-  cl_assert(s_state.storage != NULL);
+  cl_assert(s_state.storage != nullptr);
   memset(s_state.storage, 0xff, length);
 }
 
@@ -140,7 +140,7 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buff
   ++s_state.write_count;
 
   for (int i = 0; i < buffer_size; ++i) {
-    if (s_state.jmp_on_failure != NULL) {
+    if (s_state.jmp_on_failure != nullptr) {
       if (s_state.bytes_left_till_write_failure == 0) {
         longjmp(*s_state.jmp_on_failure, 1);
       } else {

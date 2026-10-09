@@ -64,5 +64,5 @@ static int prv_cmd_vibe(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_CMD_ARG_REGISTER(vibe, NULL, "Vibrate at <strength 0-100>", prv_cmd_vibe, 2, 0);
+PBL_SHELL_CMD_ARG_REGISTER(vibe, nullptr, "Vibrate at <strength 0-100>", prv_cmd_vibe, 2, 0);
 #endif

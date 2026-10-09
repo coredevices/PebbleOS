@@ -73,7 +73,7 @@ static void ble_gh3x2x_ble_data_recv_handle(struct os_mbuf *om) {
 
   uint8_t *p_data;
   uint8_t *p_start = (uint8_t *)malloc(data_len + sizeof(uint32_t));
-  if (p_start == NULL) {
+  if (p_start == nullptr) {
     return;
   }
   p_data = p_start;
@@ -106,7 +106,7 @@ static int gatt_svr_chr_access_gh3x2x_ble_rx(uint16_t conn_handle, uint16_t attr
 }
 
 void gh3x2x_ble_notify(const uint8_t *p_data, uint32_t data_len) {
-  if (0xffff == g_gh3x2x_ble_conn_handle || data_len == 0 || p_data == NULL) {
+  if (0xffff == g_gh3x2x_ble_conn_handle || data_len == 0 || p_data == nullptr) {
     return;
   }
 

@@ -144,7 +144,7 @@ static void prv_window_load(Window *window) {
 
   for (size_t i = 0; i < s_num_entries; i++) {
     const char *prefix = prv_get_status_prefix(s_entries[i]->test_id);
-    size_t len = snprintf(NULL, 0, "%zu. %s %s", i + 1, prefix, s_entries[i]->title) + 1;
+    size_t len = snprintf(nullptr, 0, "%zu. %s %s", i + 1, prefix, s_entries[i]->title) + 1;
     char *title = app_malloc(len);
     snprintf(title, len, "%zu. %s %s", i + 1, prefix, s_entries[i]->title);
 
@@ -161,13 +161,14 @@ static void prv_window_load(Window *window) {
 
   data->menu_section = (SimpleMenuSection){.num_items = num_items, .items = items};
 
-  data->menu_layer = simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, NULL);
+  data->menu_layer =
+      simple_menu_layer_create(bounds, data->window, &data->menu_section, 1, nullptr);
 
   if (s_last_selected >= 0) {
     if (mfg_test_result_was_reported()) {
       const MfgTestResult *result = ((size_t)s_last_selected < s_num_entries)
                                         ? mfg_test_result_get(s_entries[s_last_selected]->test_id)
-                                        : NULL;
+                                        : nullptr;
 
       if (result && result->passed) {
         // Test passed: auto-advance to next test

@@ -126,7 +126,7 @@ static status_t prv_copy_file(const char *from, const char *to) {
   status_t rv = S_SUCCESS;
   const size_t chunk_size = 128;
   uint8_t *buf = kernel_malloc(chunk_size);
-  if (buf == NULL) {
+  if (buf == nullptr) {
     rv = E_OUT_OF_MEMORY;
   } else {
     size_t remaining = size;
@@ -267,7 +267,7 @@ void persist_service_client_close(const Uuid *uuid) {
       if (store->file_open) {
         settings_file_close(&store->file);
       }
-      list_remove(&store->list_node, &s_client_stores /* &head */, NULL /* &tail */);
+      list_remove(&store->list_node, &s_client_stores /* &head */, nullptr /* &tail */);
       kernel_free(store);
     }
   }

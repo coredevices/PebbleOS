@@ -78,7 +78,7 @@ static void prv_clear_alarm_list(AlarmsAppData *data) {
     AlarmNode *old_head = data->alarm_list_head;
     data->alarm_list_head = (AlarmNode *)list_pop_head((ListNode *)old_head);
     task_free(old_head);
-    old_head = NULL;
+    old_head = nullptr;
   }
 }
 
@@ -228,13 +228,14 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
           box = GRect(0, 0, cell_layer->bounds.size.w, fonts_get_font_height(font));
 
           const char *text = i18n_get("Limit reached.", data);
-          box.size = graphics_text_layout_get_max_used_size(
-              ctx, text, font, box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+          box.size = graphics_text_layout_get_max_used_size(ctx, text, font, box,
+                                                            GTextOverflowModeTrailingEllipsis,
+                                                            GTextAlignmentCenter, nullptr);
           grect_align(&box, &cell_layer->bounds, GAlignCenter, true /* clip */);
           box.origin.y -= fonts_get_font_cap_offset(font);
 
           graphics_draw_text(ctx, text, font, box, GTextOverflowModeFill, GTextAlignmentCenter,
-                             NULL);
+                             nullptr);
           return;
         } else { // "add alarm" cell highlighted
           new_bitmap_resource = RESOURCE_ID_PLUS_ICON_DOTTED;
@@ -347,7 +348,7 @@ static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
       data);
   const char *header = i18n_get("Smart Alarm", data);
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
-      header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, GColorBlack, GColorWhite, NULL,
+      header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, GColorBlack, GColorWhite, nullptr,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_alarms_app_opened_click_handler);
 
   expandable_dialog_set_action_bar_background_color(expandable_dialog, ALARMS_APP_HIGHLIGHT_COLOR);
@@ -366,13 +367,13 @@ static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
 
 static void prv_handle_init(void) {
   AlarmsAppData *data = app_malloc_check(sizeof(*data));
-  *data = (AlarmsAppData){{.user_data = NULL}};
+  *data = (AlarmsAppData){{.user_data = nullptr}};
 
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Alarms"));
   window_set_user_data(window, data);
 
-  data->alarm_list_head = NULL;
+  data->alarm_list_head = nullptr;
   // Alarm list must be updated before menu layer is initialized
   prv_update_alarm_list(data);
 

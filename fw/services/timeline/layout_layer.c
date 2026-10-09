@@ -109,7 +109,7 @@ void *layout_get_context(LayoutLayer *layout) {
   if (layout->impl->context_getter) {
     return layout->impl->context_getter(layout);
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 

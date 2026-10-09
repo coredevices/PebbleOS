@@ -18,7 +18,7 @@ void worker_manager_close_current_worker(bool gracefully) {
 }
 
 const PebbleProcessMd *worker_manager_get_current_worker_md(void) {
-  return NULL;
+  return nullptr;
 }
 
 static ProcessContext s_worker_task_context;

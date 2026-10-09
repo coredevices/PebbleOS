@@ -147,7 +147,7 @@ static void prv_get_store_entry(ResAppNum app_num, uint32_t resource_id,
   }
   PBL_LOG_WRN("get_store_entry(%" PRIu32 ",%" PRIu32 ") failed to find appropriate store", app_num,
               resource_id);
-  entry->impl = NULL;
+  entry->impl = nullptr;
 }
 
 static bool prv_validate_entry(ResourceStoreEntry *entry, ResourceManifest *manifest,
@@ -265,7 +265,7 @@ ResourceCallbackHandle resource_watch(ResAppNum app_num, uint32_t resource_id,
   ResourceStoreEntry entry;
   prv_get_store_entry(app_num, resource_id, &entry);
   if (!entry.impl) {
-    return NULL;
+    return nullptr;
   }
   return entry.impl->watch(&entry, callback, data);
 }
@@ -358,7 +358,7 @@ ResourceCallbackHandle resource_storage_generic_watch(ResourceStoreEntry *entry,
                                                       ResourceChangedCallback callback,
                                                       void *data) {
   PBL_LOG_WRN("resource_watch not supported for resource type %d.", entry->impl->type);
-  return NULL;
+  return nullptr;
 }
 
 bool resource_storage_generic_unwatch(ResourceCallbackHandle cb_handle) {

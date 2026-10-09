@@ -25,7 +25,7 @@ static void callback(void *data) {
 
 static void deadlock(void) {
   TimerID timer = new_timer_create();
-  new_timer_start(timer, 10, callback, NULL, 0);
+  new_timer_start(timer, 10, callback, nullptr, 0);
 
   PBL_LOG_DBG("Locking mutex 1");
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);

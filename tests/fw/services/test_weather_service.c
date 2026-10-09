@@ -167,7 +167,7 @@ void test_weather_service__get_default_location_forecast_from_weather_db_update(
     .blob_db = {
       .db_id = BlobDBIdWeather,
       .type = BlobDBEventTypeFlush,
-      .key = NULL,
+      .key = nullptr,
       .key_len = 0,
     }
   };

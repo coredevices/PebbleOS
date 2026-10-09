@@ -101,8 +101,8 @@ void compositor_init(void) {
   s_animation_state = (CompositorTransitionState){};
 
   s_framebuffer_frozen = false;
-  s_frozen_callback = NULL;
-  s_frozen_callback_data = NULL;
+  s_frozen_callback = nullptr;
+  s_frozen_callback_data = nullptr;
 }
 
 // Helper functions to make implementing transitions easier
@@ -176,7 +176,7 @@ static void prv_notify_frozen(void) {
     return;
   }
   CompositorFrozenCallback callback = s_frozen_callback;
-  s_frozen_callback = NULL;
+  s_frozen_callback = nullptr;
   callback(s_frozen_callback_data);
 }
 
@@ -383,7 +383,7 @@ static void prv_animation_teardown(Animation *animation) {
 }
 
 void compositor_transition(const CompositorTransition *compositor_animation) {
-  if (s_animation_state.animation != NULL) {
+  if (s_animation_state.animation != nullptr) {
     PBL_LOG_DBG("Animation <%u> in progress, cancelling",
                 (unsigned)(uintptr_t)s_animation_state.animation);
 
@@ -497,7 +497,7 @@ void compositor_freeze(CompositorFrozenCallback callback, void *data) {
   s_frozen_callback = callback;
   s_frozen_callback_data = data;
 
-  launcher_task_add_callback(prv_compositor_freeze_cb, NULL);
+  launcher_task_add_callback(prv_compositor_freeze_cb, nullptr);
 }
 
 static void prv_compositor_unfreeze_cb(void *ignored) {
@@ -508,7 +508,7 @@ static void prv_compositor_unfreeze_cb(void *ignored) {
 void compositor_unfreeze(void) {
   s_framebuffer_frozen = false;
 
-  launcher_task_add_callback(prv_compositor_unfreeze_cb, NULL);
+  launcher_task_add_callback(prv_compositor_unfreeze_cb, nullptr);
 }
 
 static bool prv_app_framebuffer_matches_display(void) {

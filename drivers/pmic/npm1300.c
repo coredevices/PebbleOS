@@ -279,11 +279,11 @@ static void prv_clear_pending_interrupts() {
 static void prv_pmic_state_change_cb(void *null) {
   prv_clear_pending_interrupts();
   new_timer_start(s_debounce_charger_timer, CHARGER_DEBOUNCE_MS, prv_handle_charge_state_change,
-                  NULL, 0 /*flags*/);
+                  nullptr, 0 /*flags*/);
 }
 
 static void prv_npm1300_interrupt_handler(void) {
-  system_task_add_callback_from_isr(prv_pmic_state_change_cb, NULL);
+  system_task_add_callback_from_isr(prv_pmic_state_change_cb, nullptr);
 }
 
 static void prv_configure_interrupts(void) {
@@ -850,9 +850,9 @@ static int prv_cmd_pmic_regs(const struct pbl_shell *sh, size_t argc, char **arg
 }
 
 static const struct pbl_shell_cmd sub_pmic[] = {
-  PBL_SHELL_CMD(regs, NULL, "Dump the main registers", prv_cmd_pmic_regs),
+  PBL_SHELL_CMD(regs, nullptr, "Dump the main registers", prv_cmd_pmic_regs),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(pmic, sub_pmic, "PMIC", NULL);
+PBL_SHELL_CMD_REGISTER(pmic, sub_pmic, "PMIC", nullptr);
 #endif

@@ -83,7 +83,7 @@ static void prv_port_hole_transition_animation_update(GContext *ctx, Animation *
 const CompositorTransition *compositor_port_hole_transition_app_get(
     CompositorTransitionDirection direction) {
   if (compositor_transition_app_to_app_should_be_skipped()) {
-    return NULL;
+    return nullptr;
   }
 
   s_data.direction = direction;

@@ -150,7 +150,7 @@ static void draw_ui_element(GContext *ctx, GRect bounds, const char *text, bool 
   } else {
     graphics_context_set_text_color(ctx, GColorWhite);
   }
-  graphics_draw_text(ctx, text, font, bounds, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  graphics_draw_text(ctx, text, font, bounds, GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
 }
 
 static void canvas_update_proc(Layer *layer, GContext *ctx) {

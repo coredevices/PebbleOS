@@ -55,7 +55,7 @@ void rot_bitmap_layer_deinit(RotBitmapLayer *rot_bitmap_layer) {
 }
 
 void rot_bitmap_layer_destroy(RotBitmapLayer *rot_bitmap_layer) {
-  if (rot_bitmap_layer == NULL) {
+  if (rot_bitmap_layer == nullptr) {
     return;
   }
   rot_bitmap_layer_deinit(rot_bitmap_layer);

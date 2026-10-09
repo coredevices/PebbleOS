@@ -72,7 +72,7 @@ bool alerts_should_vibrate_for_type(AlertType type) {
 
 VibeScore *vibe_score_create_with_resource_system(ResAppNum app_num, uint32_t resource_id) {
   s_vibe_create_count++;
-  return NULL;
+  return nullptr;
 }
 
 void vibe_score_do_vibe(VibeScore *score) {
@@ -1493,7 +1493,7 @@ void test_clock__month_named_abbrev_date(void) {
 }
 
 void test_clock__relative_daypart_string(void) {
-  const char *daypart_string = NULL;
+  const char *daypart_string = nullptr;
 
   const char morning[] = "this morning";                  // anything before 12pm of the current day
   const char afternoon[] = "this afternoon";              // 12pm today

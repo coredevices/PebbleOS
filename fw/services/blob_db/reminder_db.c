@@ -261,7 +261,7 @@ status_t reminder_db_is_dirty(bool *is_dirty_out) {
 }
 
 BlobDBDirtyItem *reminder_db_get_dirty_list(void) {
-  BlobDBDirtyItem *dirty_list = NULL;
+  BlobDBDirtyItem *dirty_list = nullptr;
   timeline_item_storage_each(&s_storage, sync_util_build_dirty_list_cb, &dirty_list);
 
   return dirty_list;

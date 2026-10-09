@@ -402,7 +402,7 @@ static void prv_exti_cb(void) {
   }
 
   s_callback_scheduled = true;
-  if (!system_task_add_callback_from_isr_droppable_raised(prv_process_pending_messages, NULL)) {
+  if (!system_task_add_callback_from_isr_droppable_raised(prv_process_pending_messages, nullptr)) {
     s_callback_scheduled = false;
   }
 }
@@ -434,7 +434,7 @@ static void prv_watchdog_cb(void *data) {
   }
 
   s_reset_scheduled = true;
-  system_task_add_callback(prv_idle_reset_worker, NULL);
+  system_task_add_callback(prv_idle_reset_worker, nullptr);
 }
 
 void touch_sensor_set_enabled(bool enabled) {

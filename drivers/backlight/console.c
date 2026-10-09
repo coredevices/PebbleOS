@@ -37,10 +37,11 @@ static int prv_cmd_color(const struct pbl_shell *sh, size_t argc, char **argv) {
 #endif
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_backlight);
-PBL_SHELL_CMD_REGISTER(backlight, sub_backlight, "Backlight control", NULL);
+PBL_SHELL_CMD_REGISTER(backlight, sub_backlight, "Backlight control", nullptr);
 
-PBL_SHELL_SUBCMD_ADD(sub_backlight, level, NULL, "Set the brightness <0-100>", prv_cmd_level, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_backlight, level, nullptr, "Set the brightness <0-100>", prv_cmd_level, 2,
+                     0);
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-PBL_SHELL_SUBCMD_ADD(sub_backlight, color, NULL, "Set the color <rrggbb>", prv_cmd_color, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_backlight, color, nullptr, "Set the color <rrggbb>", prv_cmd_color, 2, 0);
 #endif
 #endif

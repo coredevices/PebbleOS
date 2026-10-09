@@ -25,7 +25,7 @@ bool syscall_internal_check_return_address(void *ret_addr) {
 }
 
 const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
-  return NULL;
+  return nullptr;
 }
 
 uint16_t syscall_app_stack_free_bytes(void) {

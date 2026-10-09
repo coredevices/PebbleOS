@@ -31,7 +31,7 @@ void PBL_WEAK graphics_draw_text(GContext *ctx, const char *text, GFont const fo
 }
 
 GBitmap *PBL_WEAK graphics_capture_frame_buffer(GContext *ctx) {
-  return NULL;
+  return nullptr;
 }
 
 bool PBL_WEAK graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {

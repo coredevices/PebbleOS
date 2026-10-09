@@ -54,7 +54,7 @@ void ble_hrm_push_sharing_request_window(BLEHRMSharingRequest *sharing_request) 
   Dialog *dialog = actionable_dialog_get_dialog(a_dialog);
   dialog->callback_context = sharing_request;
 
-  actionable_dialog_set_action_bar_type(a_dialog, DialogActionBarConfirmDecline, NULL);
+  actionable_dialog_set_action_bar_type(a_dialog, DialogActionBarConfirmDecline, nullptr);
   actionable_dialog_set_click_config_provider(a_dialog, prv_shutdown_click_provider);
 
   dialog_set_text_color(dialog, GColorWhite);

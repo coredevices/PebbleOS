@@ -34,7 +34,7 @@ static inline bool prv_before(pbl_tick_t a, pbl_tick_t b) {
 
 static void prv_ready_push(struct pbl_thread *t) {
   pbl_prio_t p = t->prio;
-  t->backend.next = NULL;
+  t->backend.next = nullptr;
   if (s_ready_tail[p]) {
     s_ready_tail[p]->backend.next = t;
   } else {
@@ -48,22 +48,22 @@ static void prv_ready_push(struct pbl_thread *t) {
 static void prv_ready_remove(struct pbl_thread *t) {
   pbl_prio_t p = t->prio;
   struct pbl_thread **link = &s_ready_head[p];
-  struct pbl_thread *prev = NULL;
+  struct pbl_thread *prev = nullptr;
   while (*link && *link != t) {
     prev = *link;
     link = &(*link)->backend.next;
   }
-  if (*link == NULL) {
+  if (*link == nullptr) {
     return;
   }
   *link = t->backend.next;
   if (s_ready_tail[p] == t) {
     s_ready_tail[p] = prev;
   }
-  if (s_ready_head[p] == NULL) {
+  if (s_ready_head[p] == nullptr) {
     s_ready_mask &= ~(1u << p);
   }
-  t->backend.next = NULL;
+  t->backend.next = nullptr;
 }
 
 static struct pbl_thread *prv_pick(void) {
@@ -123,7 +123,7 @@ static void prv_expire_timeouts(void) {
     t->backend.on_timeout_list = false;
     if (t->backend.waitq) {
       waitq_remove(t->backend.waitq, t);
-      t->backend.waitq = NULL;
+      t->backend.waitq = nullptr;
     }
     t->backend.wake_rc = -EAGAIN;
     prv_ready_push(t);
@@ -131,7 +131,7 @@ static void prv_expire_timeouts(void) {
 }
 
 static pbl_tick_t prv_ticks_until_next_timeout(void) {
-  if (s_timeouts == NULL) {
+  if (s_timeouts == nullptr) {
     return PBL_TICK_FOREVER;
   }
   int32_t delta = (int32_t)(s_timeouts->backend.wake_at - s_ticks);
@@ -156,7 +156,7 @@ void waitq_remove(struct pbl_waitq *wq, struct pbl_thread *t) {
   }
   if (*link) {
     *link = t->backend.next;
-    t->backend.next = NULL;
+    t->backend.next = nullptr;
   }
 }
 
@@ -164,7 +164,7 @@ struct pbl_thread *waitq_pop(struct pbl_waitq *wq) {
   struct pbl_thread *t = wq->head;
   if (t) {
     wq->head = t->backend.next;
-    t->backend.next = NULL;
+    t->backend.next = nullptr;
   }
   return t;
 }
@@ -198,7 +198,7 @@ int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout) {
 void sched_wake(struct pbl_thread *t, int rc) {
   KERNEL_ASSERT(t->backend.state == PBL_THREAD_BLOCKED);
   prv_timeout_remove(t);
-  t->backend.waitq = NULL;
+  t->backend.waitq = nullptr;
   t->backend.wake_rc = rc;
   prv_ready_push(t);
   if (t->prio > pbl_cur->prio) {
@@ -264,7 +264,7 @@ static void prv_detach(struct pbl_thread *t) {
       prv_timeout_remove(t);
       if (t->backend.waitq) {
         waitq_remove(t->backend.waitq, t);
-        t->backend.waitq = NULL;
+        t->backend.waitq = nullptr;
       }
       break;
     default:
@@ -437,7 +437,7 @@ void pbl_thread_sleep(pbl_timeout_t timeout) {
     return;
   }
   pbl_irq_lock();
-  sched_block(NULL, timeout);
+  sched_block(nullptr, timeout);
   pbl_irq_unlock();
 }
 
@@ -461,13 +461,13 @@ void pbl_kernel_tick_isr(void) {
 
 void sched_reset_for_test(void) {
   memset(&s_idle_thread, 0, sizeof(s_idle_thread));
-  pbl_cur = NULL;
-  pbl_all_threads = NULL;
+  pbl_cur = nullptr;
+  pbl_all_threads = nullptr;
   for (int i = 0; i < NUM_PRIO; i++) {
-    s_ready_head[i] = s_ready_tail[i] = NULL;
+    s_ready_head[i] = s_ready_tail[i] = nullptr;
   }
   s_ready_mask = 0;
-  s_timeouts = NULL;
+  s_timeouts = nullptr;
   s_ticks = 0;
   s_sched_lock = 0;
   s_switch_deferred = false;

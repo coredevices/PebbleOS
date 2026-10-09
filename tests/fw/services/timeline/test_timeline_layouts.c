@@ -117,7 +117,7 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
 ////////////////////////////////////
 
 static GContext s_ctx;
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 GContext *graphics_context_get_current_context(void) {
   return &s_ctx;
@@ -177,7 +177,7 @@ static void prv_render_layout(LayoutId layout_id, time_t timestamp, uint16_t dur
   window_set_on_screen(window, true, true);
 
   for (int i = 0; i < num_down_clicks; i++) {
-    prv_handle_down_click(NULL, &pin_window.item_detail_layer);
+    prv_handle_down_click(nullptr, &pin_window.item_detail_layer);
 
     // Aint nobody got time for animations; advance the scrolling property animation to completion
     int16_t to = 0;

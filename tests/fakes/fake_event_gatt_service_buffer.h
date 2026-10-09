@@ -28,7 +28,7 @@
 //! in fake_pbl_malloc.h) so the override sees the same allocation tracking list.
 void *fake_event_get_buffer_slot(PebbleEvent *event) {
   if (event->type != PEBBLE_BLE_GATT_CLIENT_EVENT) {
-    return NULL;
+    return nullptr;
   }
   void *slot = &event->bluetooth.le.gatt_client_service.info;
   void *info;
@@ -36,5 +36,5 @@ void *fake_event_get_buffer_slot(PebbleEvent *event) {
   if (info && fake_pbl_malloc_contains(info)) {
     return slot;
   }
-  return NULL;
+  return nullptr;
 }

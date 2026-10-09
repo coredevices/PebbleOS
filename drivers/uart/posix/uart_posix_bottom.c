@@ -64,9 +64,9 @@ static void prv_terminal_raw(void) {
   }
   atexit(prv_terminal_restore);
   struct sigaction sa = {.sa_handler = prv_terminal_restore_on_signal, .sa_flags = SA_RESETHAND};
-  sigaction(SIGABRT, &sa, NULL);
-  sigaction(SIGSEGV, &sa, NULL);
-  sigaction(SIGBUS, &sa, NULL);
+  sigaction(SIGABRT, &sa, nullptr);
+  sigaction(SIGSEGV, &sa, nullptr);
+  sigaction(SIGBUS, &sa, nullptr);
 
   struct termios raw = s_saved_termios;
   raw.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN);
@@ -86,7 +86,7 @@ static void *prv_terminal_thread(void *arg) {
     }
     uart_posix_rx(UART_POSIX_CONSOLE, c);
   }
-  return NULL;
+  return nullptr;
 }
 
 static void prv_socket_options(int fd) {
@@ -115,7 +115,7 @@ static void *prv_tcp_thread(void *arg) {
   const enum uart_posix_channel id = (enum uart_posix_channel)(intptr_t)arg;
   struct channel *channel = &s_channels[id];
   for (;;) {
-    int fd = accept(channel->listen_fd, NULL, NULL);
+    int fd = accept(channel->listen_fd, nullptr, nullptr);
     if (fd < 0) {
       continue;
     }
@@ -125,7 +125,7 @@ static void *prv_tcp_thread(void *arg) {
     atomic_store(&channel->client_fd, -1);
     close(fd);
   }
-  return NULL;
+  return nullptr;
 }
 
 // A connected port or an opened device: when it closes, the UART is cut off.
@@ -134,7 +134,7 @@ static void *prv_peer_thread(void *arg) {
   struct channel *channel = &s_channels[id];
   prv_receive(id, atomic_load(&channel->client_fd));
   fprintf(stderr, "uart%d: peer closed\n", (int)id);
-  return NULL;
+  return nullptr;
 }
 
 static int prv_tcp_connect(int port) {
@@ -197,13 +197,13 @@ static void prv_tcp_listen(enum uart_posix_channel id) {
 
 static void prv_start_thread(void *(*fn)(void *), void *arg) {
   pthread_t tid;
-  pthread_create(&tid, NULL, fn, arg);
+  pthread_create(&tid, nullptr, fn, arg);
   pthread_detach(tid);
 }
 
 void uart_posix_bottom_start(enum uart_posix_channel id) {
   struct channel *channel = &s_channels[id];
-  if (channel->device != NULL || (channel->connect && channel->port != 0)) {
+  if (channel->device != nullptr || (channel->connect && channel->port != 0)) {
     const int fd =
         channel->device ? prv_serial_open(channel->device) : prv_tcp_connect(channel->port);
     atomic_store(&channel->client_fd, fd);
@@ -213,7 +213,7 @@ void uart_posix_bottom_start(enum uart_posix_channel id) {
     prv_start_thread(prv_tcp_thread, (void *)(intptr_t)id);
   } else if (id == UART_POSIX_CONSOLE) {
     prv_terminal_raw();
-    prv_start_thread(prv_terminal_thread, NULL);
+    prv_start_thread(prv_terminal_thread, nullptr);
   }
 }
 
@@ -227,7 +227,7 @@ void uart_posix_bottom_write(enum uart_posix_channel id, uint8_t c) {
   if (fd < 0) {
     return;
   }
-  if (channel->device != NULL) {
+  if (channel->device != nullptr) {
     (void)write(fd, &c, 1);
   } else {
     (void)send(fd, &c, 1, MSG_NOSIGNAL);

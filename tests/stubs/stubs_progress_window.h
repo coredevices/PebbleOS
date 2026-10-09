@@ -8,7 +8,7 @@ void progress_window_init(ProgressWindow *data) {};
 void progress_window_deinit(ProgressWindow *data) {};
 
 ProgressWindow *progress_window_create(void) {
-  return NULL;
+  return nullptr;
 };
 
 void progress_window_destroy(ProgressWindow *window) {};

@@ -60,7 +60,7 @@ static void *s_launcher_task_callback_data;
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   // Simple fake, can only handle one call
-  cl_assert_equal_p(s_launcher_task_callback, NULL);
+  cl_assert_equal_p(s_launcher_task_callback, nullptr);
 
   s_launcher_task_callback = callback;
   s_launcher_task_callback_data = data;
@@ -119,8 +119,8 @@ void test_session_remote_version__initialize(void) {
 }
 
 void test_session_remote_version__cleanup(void) {
-  s_launcher_task_callback = NULL;
-  s_launcher_task_callback_data = NULL;
+  s_launcher_task_callback = nullptr;
+  s_launcher_task_callback_data = nullptr;
 
   fake_pbl_malloc_clear_tracking();
 }

@@ -67,7 +67,7 @@ typedef bool (*ListFilterCallback)(ListNode *found_node, void *data);
 typedef bool (*ListForEachCallback)(ListNode *node, void *context);
 
 /** @brief Initializer of an unlinked node. */
-#define LIST_NODE_NULL {.next = NULL, .prev = NULL}
+#define LIST_NODE_NULL {.next = nullptr, .prev = nullptr}
 
 /**
  * @brief Initialize a node as unlinked.

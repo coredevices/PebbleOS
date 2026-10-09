@@ -19,7 +19,7 @@ void test_stats__min(void) {
   const size_t num_data = ARRAY_LENGTH(data);
   const enum pbl_stats_op op = PBL_STATS_OP_MIN;
   int32_t result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result);
   cl_assert_equal_i(result, 6);
 }
 
@@ -28,7 +28,7 @@ void test_stats__max(void) {
   const size_t num_data = ARRAY_LENGTH(data);
   const enum pbl_stats_op op = PBL_STATS_OP_MAX;
   int32_t result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result);
   cl_assert_equal_i(result, 80);
 }
 
@@ -37,7 +37,7 @@ void test_stats__avg(void) {
   const size_t num_data = ARRAY_LENGTH(data);
   const enum pbl_stats_op op = PBL_STATS_OP_AVERAGE;
   int32_t result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result);
   cl_assert_equal_i(result, 40);
 }
 
@@ -46,11 +46,11 @@ void test_stats__sum(void) {
   const size_t num_data = ARRAY_LENGTH(data);
   const enum pbl_stats_op op = PBL_STATS_OP_SUM;
   int32_t result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result);
   cl_assert_equal_i(result, 362);
 }
 
-static void *s_context = NULL;
+static void *s_context = nullptr;
 
 static bool prv_filter(int index, int32_t value, void *context) {
   cl_assert_equal_p(context, &s_context);
@@ -89,7 +89,7 @@ void test_stats__median(void) {
   const size_t num_data = ARRAY_LENGTH(data);
   const enum pbl_stats_op op = PBL_STATS_OP_MEDIAN;
   int32_t result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result);
   cl_assert_equal_i(result, 34);
 }
 
@@ -109,7 +109,7 @@ void test_stats__all_basic_ops(void) {
     int32_t first_streak;
     int32_t median;
   } result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result.sum);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result.sum);
   cl_assert_equal_i(result.sum, 357);
   cl_assert_equal_i(result.avg, 23);
   cl_assert_equal_i(result.min, -5);
@@ -190,7 +190,7 @@ void test_stats__all_basic_one_value(void) {
     int32_t first_streak;
     int32_t median;
   } result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result.sum);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result.sum);
   cl_assert_equal_i(result.sum, 42);
   cl_assert_equal_i(result.avg, 42);
   cl_assert_equal_i(result.min, 42);
@@ -217,7 +217,7 @@ void test_stats__all_basic_no_values(void) {
     int32_t first_streak;
     int32_t median;
   } result;
-  pbl_stats_calculate(op, data, num_data, NULL, NULL, &result.sum);
+  pbl_stats_calculate(op, data, num_data, nullptr, nullptr, &result.sum);
   cl_assert_equal_i(result.sum, 0);
   cl_assert_equal_i(result.avg, 0);
   cl_assert_equal_i(result.min, INT32_MAX);
@@ -231,7 +231,7 @@ void test_stats__all_basic_no_values(void) {
 void test_stats__null_data(void) {
   const enum pbl_stats_op op = PBL_STATS_OP_AVERAGE;
   int32_t result = 0x73110;
-  pbl_stats_calculate(op, NULL, 0, NULL, NULL, &result);
+  pbl_stats_calculate(op, nullptr, 0, nullptr, nullptr, &result);
   cl_assert_equal_i(result, 0x73110);
 }
 

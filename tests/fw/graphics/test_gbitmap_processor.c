@@ -94,7 +94,7 @@ void test_gbitmap_processor__null_arguments(void) {
   const GRect rect = EXPECTED_RECT_IN_PRE_FUNCTION;
 
   // Passing NULL for the processor shouldn't cause any problems
-  graphics_draw_bitmap_in_rect_processed(&s_ctx, &bitmap, &rect, NULL);
+  graphics_draw_bitmap_in_rect_processed(&s_ctx, &bitmap, &rect, nullptr);
   // And it should try to draw the bitmap
   cl_assert_equal_i(s_bitblt_bitmap_into_bitmap_tiled_calls.call_count, 1);
 
@@ -258,7 +258,7 @@ static void post_function_called_even_if_pre_function_specifies_null_bitmap__pre
       (PostFunctionCalledEvenIfPreFunctionCausesNothingToBeDrawnTestProcessor *)processor;
 
   // Change the bitmap to use to NULL to cause nothing to be drawn
-  *bitmap_to_use = NULL;
+  *bitmap_to_use = nullptr;
 
   // We'll expect the bitmap we set there to be the bitmap passed into .post
   processor_with_data->expected_bitmap_in_post = *bitmap_to_use;

@@ -41,11 +41,11 @@ static int prv_cmd_test(const struct pbl_shell *sh, size_t argc, char **argv) {
 #endif
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_notif);
-PBL_SHELL_CMD_REGISTER(notif, sub_notif, "Notifications", NULL);
+PBL_SHELL_CMD_REGISTER(notif, sub_notif, "Notifications", nullptr);
 
 #ifdef CONFIG_TOUCH
-PBL_SHELL_SUBCMD_ADD(sub_notif, test, NULL, "Add a long scrollable test notification", prv_cmd_test,
-                     0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_notif, test, nullptr, "Add a long scrollable test notification",
+                     prv_cmd_test, 0, 0);
 #endif
 
 #endif

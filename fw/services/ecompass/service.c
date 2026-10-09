@@ -54,7 +54,7 @@ static bool s_compass_subscribers[NumPebbleTask] = {};
 //////////////////////////////////////////////////////////////////////////////////
 // Accel service state variables
 
-static AccelServiceState *s_accel_session = NULL;
+static AccelServiceState *s_accel_session = nullptr;
 static bool s_charger_plugged = false;
 static AccelRawData s_accel_data = {};
 
@@ -179,12 +179,12 @@ static void prv_compass_data_service_stop(PebbleTask task) {
       // If this was the last subscribed process, then stop the compass
       // service
       if (s_high_freq_calib_active) {
-        prv_calibration_time_expired_cb(NULL);
+        prv_calibration_time_expired_cb(nullptr);
         s_calib_run = false;
       }
       accel_session_data_unsubscribe(s_accel_session);
       accel_session_delete(s_accel_session);
-      s_accel_session = NULL;
+      s_accel_session = nullptr;
       mag_release();
     }
   }
@@ -196,7 +196,7 @@ static void prv_compass_data_service_start(PebbleTask task) {
   s_compass_subscribers[task] = true;
   if (++s_compass_subscribers_count == 1) {
     // If this is the first subscriber to the compass service, start sampling
-    PBL_ASSERTN(s_accel_session == NULL);
+    PBL_ASSERTN(s_accel_session == nullptr);
 
     s_accel_session = accel_session_create();
     accel_session_raw_data_subscribe(s_accel_session, ACCEL_SAMPLING_25HZ, 5,
@@ -287,7 +287,7 @@ void ecompass_service_handle(void) {
 
     int16_t new_corr[3];
     MagCalStatus cal_status = ecomp_corr_add_raw_mag_sample(
-        (int16_t *)&mag_data, (s_saved_corr_present) ? s_saved_corr : NULL, new_corr);
+        (int16_t *)&mag_data, (s_saved_corr_present) ? s_saved_corr : nullptr, new_corr);
 
     if (cal_status != MagCalStatusNoSolution) {
       PBL_LOG_INFO("%s : %d %d %d (type = %d)", "Mag Corr", (int)new_corr[0], (int)new_corr[1],
@@ -318,7 +318,7 @@ void ecompass_service_handle(void) {
     if ((cal_status == MagCalStatusNewLockedSolutionAvail) ||
         (cal_status == MagCalStatusSavedSampleMatch)) {
       if (s_high_freq_calib_active) {
-        prv_calibration_time_expired_cb(NULL);
+        prv_calibration_time_expired_cb(nullptr);
       }
       s_current_cal_status = CompassStatusCalibrated;
       for (int i = 0; i < 3; i++) {

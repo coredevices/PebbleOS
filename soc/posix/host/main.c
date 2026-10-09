@@ -101,7 +101,7 @@ static void prv_parse_options(int argc, char **argv) {
   for (size_t i = 0; i < s_num_options; i++) {
     size_t len = strlen(optstring);
     optstring[len++] = s_options[i]->flag;
-    if (s_options[i]->arg != NULL) {
+    if (s_options[i]->arg != nullptr) {
       optstring[len++] = ':';
     }
     optstring[len] = '\0';
@@ -109,13 +109,13 @@ static void prv_parse_options(int argc, char **argv) {
 
   int opt;
   while ((opt = getopt(argc, argv, optstring)) != -1) {
-    const struct posix_host_option *option = NULL;
+    const struct posix_host_option *option = nullptr;
     for (size_t i = 0; i < s_num_options; i++) {
       if (s_options[i]->flag == opt) {
         option = s_options[i];
       }
     }
-    if (option == NULL) {
+    if (option == nullptr) {
       prv_usage(argv[0]);
       exit(opt == 'h' ? 0 : 1);
     }
@@ -126,7 +126,7 @@ static void prv_parse_options(int argc, char **argv) {
 // Waits up to POLL_MS for a wake-up; returns whether to quit.
 static bool prv_wait(void) {
   struct timeval now;
-  gettimeofday(&now, NULL);
+  gettimeofday(&now, nullptr);
   uint64_t ns = (uint64_t)now.tv_usec * 1000 + (uint64_t)POLL_MS * 1000000;
   struct timespec deadline = {
     .tv_sec = now.tv_sec + (time_t)(ns / 1000000000),
@@ -148,14 +148,14 @@ static bool prv_wait(void) {
 int main(int argc, char **argv) {
   s_argv = argv;
   char exe[PATH_MAX];
-  if (realpath(argv[0], exe) != NULL) {
+  if (realpath(argv[0], exe) != nullptr) {
     snprintf(s_exe_dir, sizeof(s_exe_dir), "%s", dirname(exe));
   }
 
   prv_parse_options(argc, argv);
 
   for (size_t i = 0; i < s_num_hooks; i++) {
-    if (s_hooks[i]->init != NULL) {
+    if (s_hooks[i]->init != nullptr) {
       s_hooks[i]->init();
     }
   }
@@ -168,14 +168,14 @@ int main(int argc, char **argv) {
       break;
     }
     for (size_t i = 0; i < s_num_hooks; i++) {
-      if (s_hooks[i]->poll != NULL) {
+      if (s_hooks[i]->poll != nullptr) {
         s_hooks[i]->poll();
       }
     }
   } while (!prv_wait());
 
   for (size_t i = 0; i < s_num_hooks; i++) {
-    if (s_hooks[i]->exit != NULL) {
+    if (s_hooks[i]->exit != nullptr) {
       s_hooks[i]->exit();
     }
   }

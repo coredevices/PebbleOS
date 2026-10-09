@@ -52,7 +52,7 @@ bool is_app_resource_file_name(const char *filename) {
 //! Parses an app-file name to get the AppInstallId.
 //! Assumes the file is indeed an app-file
 AppInstallId app_file_parse_app_id(const char *filename) {
-  return (AppInstallId)strtol(filename + 1, NULL, 16); // + 1 to skip the initial '@'
+  return (AppInstallId)strtol(filename + 1, nullptr, 16); // + 1 to skip the initial '@'
 }
 
 //! Parses an app-file name to get the AppInstallId.

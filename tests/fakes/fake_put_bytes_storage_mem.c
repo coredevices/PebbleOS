@@ -40,7 +40,7 @@ static bool fake_pb_storage_mem_init(PutBytesStorage *storage, PutBytesObjectTyp
   size_t buffer_size = total_size + FAKE_STORAGE_START_OFFSET;
   memset(s_storage_data.buffer, 0, sizeof(s_storage_data.buffer));
   s_storage_data.total_size = buffer_size;
-  PutBytesStorageInfo *info_copy = NULL;
+  PutBytesStorageInfo *info_copy = nullptr;
   if (info) {
     info_copy = (PutBytesStorageInfo *)kernel_malloc_check(sizeof(PutBytesStorageInfo));
     *info_copy = *info;
@@ -56,7 +56,7 @@ uint32_t fake_pb_storage_mem_get_max_size(PutBytesObjectType object_type) {
   return FAKE_STORAGE_MAX_SIZE;
 }
 
-static void (*s_do_before_write)(void) = NULL;
+static void (*s_do_before_write)(void) = nullptr;
 static void fake_pb_storage_mem_write(PutBytesStorage *storage, uint32_t offset,
                                       const uint8_t *buffer, uint32_t length) {
   PBL_ASSERTN(s_storage_data.total_size);
@@ -64,7 +64,7 @@ static void fake_pb_storage_mem_write(PutBytesStorage *storage, uint32_t offset,
 
   if (s_do_before_write) {
     s_do_before_write();
-    s_do_before_write = NULL;
+    s_do_before_write = nullptr;
   }
 
   memcpy(s_storage_data.buffer + offset, buffer, length);
@@ -78,7 +78,7 @@ static uint32_t fake_pb_storage_mem_calculate_crc(PutBytesStorage *storage,
 
 static void prv_cleanup(void) {
   kernel_free(s_storage_data.info);
-  s_storage_data.info = NULL;
+  s_storage_data.info = nullptr;
   s_storage_data.total_size = 0;
 }
 

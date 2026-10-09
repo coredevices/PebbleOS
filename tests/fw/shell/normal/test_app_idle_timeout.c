@@ -36,7 +36,7 @@ static void prv_run_deferred(void) {
 
 const CompositorTransition *shell_get_watchface_compositor_animation(
     bool watchface_is_destination) {
-  return NULL;
+  return nullptr;
 }
 
 void watchface_launch_default(const CompositorTransition *animation) {

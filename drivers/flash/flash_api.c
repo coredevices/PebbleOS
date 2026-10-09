@@ -107,7 +107,7 @@ void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size
   // than the one being erased.
   prv_erase_pause();
   if (s_erase.suspended) {
-    new_timer_start(s_erase_suspend_timer, 5, prv_erase_suspend_timer_cb, NULL, 0);
+    new_timer_start(s_erase_suspend_timer, 5, prv_erase_suspend_timer_cb, nullptr, 0);
   }
   flash_impl_read_sync(buffer, start_addr, buffer_size);
   pbl_mutex_unlock(&s_flash_lock);
@@ -124,7 +124,7 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buff
   pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
   prv_erase_pause();
   if (s_erase.suspended) {
-    new_timer_start(s_erase_suspend_timer, 50, prv_erase_suspend_timer_cb, NULL, 0);
+    new_timer_start(s_erase_suspend_timer, 50, prv_erase_suspend_timer_cb, nullptr, 0);
   }
 
   PBL_ANALYTICS_ADD(flash_spi_write_bytes, buffer_size);
@@ -275,7 +275,7 @@ static void prv_flash_erase_timer_cb(void *context) {
   uint32_t remaining_ms = prv_flash_erase_poll();
   if (remaining_ms) {
     // Erase is in progress or suspended; poll again later.
-    new_timer_start(s_erase_poll_timer, remaining_ms, prv_flash_erase_timer_cb, NULL, 0);
+    new_timer_start(s_erase_poll_timer, remaining_ms, prv_flash_erase_timer_cb, nullptr, 0);
   }
 }
 
@@ -285,7 +285,7 @@ static void prv_flash_erase_async(uint32_t sector_addr, bool is_subsector,
       prv_flash_erase_start(sector_addr, on_complete_cb, context, is_subsector, 0);
   if (remaining_ms) {
     // Start timer that will periodically check for the erase to complete
-    new_timer_start(s_erase_poll_timer, remaining_ms, prv_flash_erase_timer_cb, NULL, 0);
+    new_timer_start(s_erase_poll_timer, remaining_ms, prv_flash_erase_timer_cb, nullptr, 0);
   }
 }
 
@@ -297,7 +297,7 @@ static void prv_flash_erase_blocking(uint32_t sector_addr, bool is_subsector) {
   uint32_t total_time_spent_waiting_ms = 0;
 
   uint32_t remaining_ms =
-      prv_flash_erase_start(sector_addr, prv_blocking_erase_complete, NULL, is_subsector, 0);
+      prv_flash_erase_start(sector_addr, prv_blocking_erase_complete, nullptr, is_subsector, 0);
   while (remaining_ms) {
     psleep(remaining_ms);
     total_time_spent_waiting_ms += remaining_ms;
@@ -309,7 +309,7 @@ static void prv_flash_erase_blocking(uint32_t sector_addr, bool is_subsector) {
     uint32_t erase_suspend_time_remaining;
     if (new_timer_scheduled(s_erase_suspend_timer, &erase_suspend_time_remaining) &&
         (erase_suspend_time_remaining == 0)) {
-      prv_erase_suspend_timer_cb(NULL);
+      prv_erase_suspend_timer_cb(nullptr);
     }
 
     // An erase can take a long time, especially if the erase needs to be
@@ -521,6 +521,6 @@ static int prv_cmd_flash_unprotect(const struct pbl_shell *sh, size_t argc, char
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_flash, unprotect, NULL, "Remove the flash write protection",
+PBL_SHELL_SUBCMD_ADD(sub_flash, unprotect, nullptr, "Remove the flash write protection",
                      prv_cmd_flash_unprotect, 0, 0);
 #endif

@@ -67,8 +67,8 @@ static enum pbl_bt_errno fake_gatt_client_write(pbl_bt_characteristic_t characte
     buffer = malloc(value_length);
     memcpy(buffer, value, value_length);
   } else {
-    cl_assert_equal_p(value, NULL);
-    buffer = NULL;
+    cl_assert_equal_p(value, nullptr);
+    buffer = nullptr;
   }
   *write = (const Write){
     .characteristic = characteristic,
@@ -132,7 +132,7 @@ void fake_gatt_client_op_deinit(void) {
     free(read);
     read = next;
   }
-  s_read_head = NULL;
+  s_read_head = nullptr;
 
   fake_gatt_client_op_clear_write_list();
 }
@@ -165,11 +165,11 @@ void fake_gatt_client_op_clear_write_list(void) {
     free(write);
     write = next;
   }
-  s_write_head = NULL;
+  s_write_head = nullptr;
 }
 
 void fake_gatt_client_op_assert_no_write(void) {
-  cl_assert_equal_p(s_write_head, NULL);
+  cl_assert_equal_p(s_write_head, nullptr);
 }
 
 static void fake_gatt_client_op_assert_write_failed(void) {

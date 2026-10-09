@@ -30,7 +30,7 @@ static const PebbleProtocolEndpoint *prv_find_endpoint(uint16_t endpoint_id) {
       return endpoint;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 static bool prv_is_endpoint_allowed_with_session(const PebbleProtocolEndpoint *endpoint,

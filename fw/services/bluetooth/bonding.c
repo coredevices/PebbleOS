@@ -59,7 +59,7 @@ void pbl_bt_cb_handle_create_bonding(const struct pbl_bt_bonding *bonding,
     PBL_LOG_INFO("flags: 0x02%x", flags);
   }
   pbl_bt_bonding_id_t bonding_id = bt_persistent_storage_store_ble_pairing(
-      &bonding->pairing_info, bonding->is_gateway, NULL, should_pin_address, flags);
+      &bonding->pairing_info, bonding->is_gateway, nullptr, should_pin_address, flags);
   if (bonding_id == PBL_BT_BONDING_ID_INVALID) {
     PBL_LOG_ERR("Failed to persist new bonding");
     return;

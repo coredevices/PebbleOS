@@ -34,14 +34,14 @@ static void poll_callback(int index, void *ctx) {
 }
 
 static const SimpleMenuItem s_menu_items[] = {
-  {"Poll Mail", "", NULL, poll_callback},
-  {"Title A", "Callback A", NULL, callback_a},
-  {"Another Title", NULL, NULL, other_callback},
-  {"Last Title", "Last subtitle", NULL, other_callback}
+  {"Poll Mail", "", nullptr, poll_callback},
+  {"Title A", "Callback A", nullptr, callback_a},
+  {"Another Title", nullptr, nullptr, other_callback},
+  {"Last Title", "Last subtitle", nullptr, other_callback}
 };
 
 static const SimpleMenuSection s_menu_sections[] = {
-  {.title = NULL, .items = s_menu_items, .num_items = ARRAY_LENGTH(s_menu_items)}
+  {.title = nullptr, .items = s_menu_items, .num_items = ARRAY_LENGTH(s_menu_items)}
 };
 
 static void prv_window_load(Window *window) {

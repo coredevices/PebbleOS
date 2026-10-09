@@ -94,9 +94,9 @@ void mic_stop(MicDevice *this) {
 
   state->is_running = false;
   new_timer_stop(state->timer);
-  state->data_handler = NULL;
-  state->handler_context = NULL;
-  state->audio_buffer = NULL;
+  state->data_handler = nullptr;
+  state->handler_context = nullptr;
+  state->audio_buffer = nullptr;
   state->audio_buffer_len = 0;
 }
 

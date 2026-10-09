@@ -165,7 +165,7 @@ extern size_t localized_strftime(char *s, size_t maxsize, const char *format,
                                  const struct tm *tim_p, const char *locale);
 
 struct tm *pbl_override_gmtime(const time_t *timep) {
-  struct tm *gmtime_tm = NULL;
+  struct tm *gmtime_tm = nullptr;
 
   if (pebble_task_get_current() == PebbleTask_App) {
     gmtime_tm = app_state_get_gmtime_tm();
@@ -178,8 +178,8 @@ struct tm *pbl_override_gmtime(const time_t *timep) {
 }
 
 struct tm *pbl_override_localtime(const time_t *timep) {
-  struct tm *localtime_tm = NULL;
-  char *localtime_zone = NULL;
+  struct tm *localtime_tm = nullptr;
+  char *localtime_zone = nullptr;
 
   if (pebble_task_get_current() == PebbleTask_App) {
     localtime_tm = app_state_get_localtime_tm();

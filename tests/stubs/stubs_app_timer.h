@@ -6,12 +6,12 @@
 #include <applib/app_timer.h>
 
 AppTimer *app_timer_register(uint32_t timeout_ms, AppTimerCallback callback, void *callback_data) {
-  return NULL;
+  return nullptr;
 }
 
 AppTimer *app_timer_register_repeatable(uint32_t timeout_ms, AppTimerCallback callback,
                                         void *callback_data, bool repeating) {
-  return NULL;
+  return nullptr;
 }
 
 bool app_timer_reschedule(AppTimer *timer, uint32_t new_timeout_ms) {

@@ -28,7 +28,7 @@ static TouchNavState *prv_current_touch_nav_state(void) {
     case PebbleTask_KernelMain:
       return modal_manager_get_touch_nav_state();
     default:
-      return NULL;
+      return nullptr;
   }
 }
 
@@ -45,7 +45,7 @@ DEFINE_SYSCALL(void, sys_touch_set_action_bar, const GRect *frame, uint8_t icon_
   if (frame) {
     local_frame = *frame;
   }
-  touch_nav_set_action_bar(state, frame ? &local_frame : NULL, icon_mask);
+  touch_nav_set_action_bar(state, frame ? &local_frame : nullptr, icon_mask);
 }
 
 // --- App opt-in (applib app_touch_navigation_enable -> app-task participation) -----------------
@@ -96,7 +96,7 @@ static void prv_persist(void *ctx, bool enable) {
 }
 
 static void prv_kernel_subscribe(void *ctx) {
-  launcher_task_add_callback(prv_kernel_subscribe_cb, NULL);
+  launcher_task_add_callback(prv_kernel_subscribe_cb, nullptr);
 }
 
 static void prv_take_system_hold(void *ctx) {
@@ -109,18 +109,18 @@ static void prv_synthesize_liftoff(void *ctx) {
 }
 
 static void prv_kernel_cancel_reset_unsub(void *ctx) {
-  launcher_task_add_callback(prv_kernel_unsubscribe_cb, NULL);
+  launcher_task_add_callback(prv_kernel_unsubscribe_cb, nullptr);
 }
 
 static void prv_app_unsubscribe(void *ctx) {
-  process_manager_send_callback_event_to_process(PebbleTask_App, prv_app_resync_cb, NULL);
+  process_manager_send_callback_event_to_process(PebbleTask_App, prv_app_resync_cb, nullptr);
 }
 
 static void prv_release_system_hold(void *ctx) {
   // Defer to KernelMain instead of releasing synchronously on the calling task: steps 3 (kernel
   // cancel_and_reset + unsubscribe) are already queued on KernelMain, so scheduling the release
   // after them makes the actual async order 2->3->5 rather than releasing the hold before 3-4 run.
-  launcher_task_add_callback(prv_kernel_release_hold_cb, NULL);
+  launcher_task_add_callback(prv_kernel_release_hold_cb, nullptr);
 }
 
 static const TouchNavTxnOps s_txn_ops = {
@@ -137,14 +137,14 @@ void touch_nav_set_enabled(bool enable) {
   touch_nav_transaction_apply(&s_txn_ops, enable);
   if (enable) {
     // Also pick up any already-running app so nav starts working without a relaunch.
-    process_manager_send_callback_event_to_process(PebbleTask_App, prv_app_subscribe_cb, NULL);
+    process_manager_send_callback_event_to_process(PebbleTask_App, prv_app_subscribe_cb, nullptr);
   }
 }
 
 void touch_nav_master_changed(void) {
   // The master pref flipped without changing the effective system state (the Touch Navigation
   // sub-pref is off): only an opted-in running app is affected, so re-evaluate its twin.
-  process_manager_send_callback_event_to_process(PebbleTask_App, prv_app_resync_cb, NULL);
+  process_manager_send_callback_event_to_process(PebbleTask_App, prv_app_resync_cb, nullptr);
 }
 
 #endif // CONFIG_TOUCH

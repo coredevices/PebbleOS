@@ -16,7 +16,7 @@ static bool prv_is_endpoint_allowed(uint16_t endpoint_id) {
 }
 
 DEFINE_SYSCALL(CommSession *, sys_app_pp_get_comm_session, void) {
-  CommSession *app_session = NULL;
+  CommSession *app_session = nullptr;
   comm_session_sanitize_app_session(&app_session);
   return app_session;
 }

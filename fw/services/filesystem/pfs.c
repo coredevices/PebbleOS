@@ -217,10 +217,10 @@ typedef struct {
   PFSFileChangedCallback callback;
 } PFSFileChangedCallbackNode;
 
-static uint8_t *s_pfs_page_flags_cache = NULL;
+static uint8_t *s_pfs_page_flags_cache = nullptr;
 static uint16_t s_pfs_page_count = 0;
 static uint32_t s_pfs_size = 0;
-static ListNode *s_head_callback_node_list = NULL;
+static ListNode *s_head_callback_node_list = nullptr;
 
 // In the interest of being able to leverage sector erases / minimize seek time
 // for large files, deploying a variable length page size may be beneficial.
@@ -323,7 +323,7 @@ static void prv_build_page_flags_cache(void) {
   // if it already exists, free it first
   if (s_pfs_page_flags_cache) {
     kernel_free(s_pfs_page_flags_cache);
-    s_pfs_page_flags_cache = NULL;
+    s_pfs_page_flags_cache = nullptr;
   }
 
   // if there are no pages in PFS, we don't need a cache
@@ -916,7 +916,7 @@ static status_t scan_to_offset(File *f, uint32_t *pg_offset) {
     vpg = f->curr_vpg;
   }
 
-  if (((f->op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) && (f->pg_cache != NULL)) {
+  if (((f->op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) && (f->pg_cache != nullptr)) {
     for (int i = 0; i < f->pg_cache_len; i++) {
       FilePageCache *pgc = &f->pg_cache[i];
       if (pgc->virtual_pg > target_vpg) {
@@ -945,13 +945,13 @@ static status_t scan_to_offset(File *f, uint32_t *pg_offset) {
 }
 
 static int mark_fd_free(int fd) {
-  if (PFS_FD(fd).file.name != NULL) {
+  if (PFS_FD(fd).file.name != nullptr) {
     kernel_free(PFS_FD(fd).file.name);
-    PFS_FD(fd).file.name = NULL;
+    PFS_FD(fd).file.name = nullptr;
   }
-  if (PFS_FD(fd).file.pg_cache != NULL) {
+  if (PFS_FD(fd).file.pg_cache != nullptr) {
     kernel_free(PFS_FD(fd).file.pg_cache);
-    PFS_FD(fd).file.pg_cache = NULL;
+    PFS_FD(fd).file.pg_cache = nullptr;
     PFS_FD(fd).file.pg_cache_len = 0;
   }
 
@@ -975,7 +975,7 @@ static AvailFdStatus get_avail_fd(const char *name, int *fdp, bool is_tmp) {
   // First search to see if the fd has already been located
   for (int fd = FD_INDEX_OFFSET; fd < FD_INDEX_OFFSET + MAX_FD_HANDLES; fd++) {
     File *f = &PFS_FD(fd).file;
-    if ((f->is_tmp == is_tmp) && (f->name != NULL)) {
+    if ((f->is_tmp == is_tmp) && (f->name != nullptr)) {
       if (strcmp(f->name, name) == 0) {
         PBL_ASSERTN(PFS_FD(fd).fd_status != FD_STATUS_FREE);
         *fdp = fd;
@@ -1030,7 +1030,7 @@ int pfs_read(int fd, void *buf_ptr, size_t size) {
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
 
   int res = E_UNKNOWN;
-  if (!FD_VALID(fd) || (buf == NULL) || (size == 0)) {
+  if (!FD_VALID(fd) || (buf == nullptr) || (size == 0)) {
     res = E_INVALID_ARGUMENT;
     goto cleanup;
   }
@@ -1117,7 +1117,7 @@ int pfs_write(int fd, const void *buf_ptr, size_t size) {
   const uint8_t *buf = buf_ptr;
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
   int res = E_UNKNOWN;
-  if (!FD_VALID(fd) || (buf == NULL) || (size == 0)) {
+  if (!FD_VALID(fd) || (buf == nullptr) || (size == 0)) {
     res = E_INVALID_ARGUMENT;
     goto cleanup;
   }
@@ -1322,7 +1322,7 @@ PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback ca
 
   // find out if we already have a string for this particular filename
   ListNode *find_str = list_find(s_head_callback_node_list, watch_list_find_str, (char *)filename);
-  if (find_str == NULL) {
+  if (find_str == nullptr) {
     node->name = kernel_strdup_check(filename);
   } else {
     node->name = ((PFSFileChangedCallbackNode *)find_str)->name;
@@ -1339,15 +1339,16 @@ void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
 
   PFSFileChangedCallbackNode *callback_node = (PFSFileChangedCallbackNode *)cb_handle;
 
-  PBL_ASSERTN(callback_node->list_node.next != NULL || callback_node->list_node.prev != NULL ||
+  PBL_ASSERTN(callback_node->list_node.next != nullptr ||
+              callback_node->list_node.prev != nullptr ||
               s_head_callback_node_list == &callback_node->list_node);
   PBL_ASSERTN(list_contains(s_head_callback_node_list, &callback_node->list_node));
-  list_remove(&callback_node->list_node, &(s_head_callback_node_list), NULL);
+  list_remove(&callback_node->list_node, &(s_head_callback_node_list), nullptr);
 
   // if no one is watching the file anymore, free the string
   ListNode *find_str =
       list_find(s_head_callback_node_list, watch_list_find_str, (char *)callback_node->name);
-  if (find_str == NULL) {
+  if (find_str == nullptr) {
     kernel_free((void *)(callback_node->name));
   }
 
@@ -1439,7 +1440,7 @@ status_t pfs_close_and_remove(int fd) {
 }
 
 status_t pfs_remove(const char *name) {
-  if (name == NULL) {
+  if (name == nullptr) {
     return E_INVALID_ARGUMENT;
   }
   size_t namelen = strlen(name);
@@ -1470,7 +1471,7 @@ cleanup:
 }
 
 PFSFileListEntry *pfs_create_file_list(PFSFilenameTestCallback callback) {
-  ListNode *head = NULL;
+  ListNode *head = nullptr;
 
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
 
@@ -1612,7 +1613,7 @@ static void update_page_cache(FilePageCache *fpc, int *cur_idx, FilePageCache *t
 static PBL_NOINLINE void allocate_page_cache(int fd) {
   File *f = &PFS_FD(fd).file;
 
-  if (f->pg_cache != NULL) {
+  if (f->pg_cache != nullptr) {
     return; // already cached
   }
 
@@ -1654,7 +1655,7 @@ static PBL_NOINLINE void allocate_page_cache(int fd) {
   // The cache is likely to be around for a while and there is no reason to
   // burn up more memory than necessary for a long duration
   f->pg_cache = kernel_malloc(sizeof(FilePageCache) * cur_idx);
-  if (f->pg_cache != NULL) { // if we are not OOM
+  if (f->pg_cache != nullptr) { // if we are not OOM
     memcpy(f->pg_cache, fpc, sizeof(FilePageCache) * cur_idx);
     f->pg_cache_len = cur_idx;
   }
@@ -1787,7 +1788,7 @@ static int file_found_or_added_to_pfs(int fd, const char *name, uint8_t op_flags
   File *file = &PFS_FD(fd).file;
 
   file_desc->fd_status = FD_STATUS_UNREFERENCED; // set to IN_USE on success
-  if ((file->name = kernel_strdup(name)) == NULL) {
+  if ((file->name = kernel_strdup(name)) == nullptr) {
     res = E_OUT_OF_MEMORY;
     goto cleanup;
   }
@@ -1812,7 +1813,7 @@ cleanup:
 }
 
 int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type, size_t start_size) {
-  size_t namelen = (name == NULL) ? 0 : strlen(name);
+  size_t namelen = (name == nullptr) ? 0 : strlen(name);
   if ((namelen < 1) || (namelen > FILE_MAX_NAME_LEN)) {
     return (E_INVALID_ARGUMENT);
   }
@@ -2169,7 +2170,7 @@ void pfs_collect_diagnostic_data(int fd, void *diagnostic_buf, size_t diagnostic
 void pfs_debug_dump(int fd, int num_bytes) {
   uint8_t *bytes = kernel_malloc(num_bytes);
 
-  if (bytes == NULL) {
+  if (bytes == nullptr) {
     PBL_LOG_ERR("malloc error");
     goto cleanup;
   }
@@ -2332,10 +2333,10 @@ static int prv_cmd_crc(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_pfs);
-PBL_SHELL_CMD_REGISTER(pfs, sub_pfs, "Filesystem", NULL);
-PBL_SHELL_SUBCMD_ADD(sub_pfs, format, NULL, "Format <erase_headers:0|1>", prv_cmd_format, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_pfs, ls, NULL, "List files", prv_cmd_ls, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_pfs, rm, NULL, "Remove a file <name>", prv_cmd_rm, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_pfs, hdr, NULL, "Dump a page header <page>", prv_cmd_hdr, 2, 0);
-PBL_SHELL_SUBCMD_ADD(sub_pfs, crc, NULL, "Print the CRC of a file <name>", prv_cmd_crc, 2, 0);
+PBL_SHELL_CMD_REGISTER(pfs, sub_pfs, "Filesystem", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, format, nullptr, "Format <erase_headers:0|1>", prv_cmd_format, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, ls, nullptr, "List files", prv_cmd_ls, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, rm, nullptr, "Remove a file <name>", prv_cmd_rm, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, hdr, nullptr, "Dump a page header <page>", prv_cmd_hdr, 2, 0);
+PBL_SHELL_SUBCMD_ADD(sub_pfs, crc, nullptr, "Print the CRC of a file <name>", prv_cmd_crc, 2, 0);
 #endif

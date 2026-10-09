@@ -41,20 +41,20 @@ typedef struct {
 } MenuDetailWindowData;
 
 static const MenuDetailRowData menu_detail_row_data_notifications[] = {
-  {"Liron Damir", "Late again. Sorry, I'll be on time in the future.", NULL},
-  {"Angela Tam", "Late again? Can you be on time for once?", NULL},
-  {"Eric Migicovsky", "Friday meeting will be held in the big room.", NULL},
-  {"Instagram", "Keep scrolling down.", NULL},
-  {"Liron Levak", "That's not my name.", NULL},
-  {"Kimberly North West Kardashian", "I broke the Internet again.", NULL},
-  {"Henry Damir", "That's not my name.", NULL},
-  {"Kevin Conley", "Wubalubadubdub!", NULL},
+  {"Liron Damir", "Late again. Sorry, I'll be on time in the future.", nullptr},
+  {"Angela Tam", "Late again? Can you be on time for once?", nullptr},
+  {"Eric Migicovsky", "Friday meeting will be held in the big room.", nullptr},
+  {"Instagram", "Keep scrolling down.", nullptr},
+  {"Liron Levak", "That's not my name.", nullptr},
+  {"Kimberly North West Kardashian", "I broke the Internet again.", nullptr},
+  {"Henry Damir", "That's not my name.", nullptr},
+  {"Kevin Conley", "Wubalubadubdub!", nullptr},
 };
 
 static const MenuDetailRowData menu_detail_row_data_days[] = {
-  {"Monday", NULL, NULL},   {"Tuesday", NULL, NULL}, {"Wednesday", NULL, NULL},
-  {"Thursday", NULL, NULL}, {"Friday", NULL, NULL},  {"Saturday", NULL, NULL},
-  {"Sunday", NULL, NULL},
+  {"Monday", nullptr, nullptr},   {"Tuesday", nullptr, nullptr}, {"Wednesday", nullptr, nullptr},
+  {"Thursday", nullptr, nullptr}, {"Friday", nullptr, nullptr},  {"Saturday", nullptr, nullptr},
+  {"Sunday", nullptr, nullptr},
 };
 
 static const MenuDetailRowData menu_detail_row_data_alarms[] = {
@@ -142,14 +142,14 @@ static void prv_menu_detail_draw_row(GContext *ctx, const Layer *cell_layer,
   const GFont title_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   switch (style) {
     case MenuLayerStyleTitle: {
-      menu_cell_basic_draw_custom(ctx, cell_layer, title_font, row_data->title, title_font, NULL,
-                                  NULL, NULL, NULL, false /* icon_on_right */,
+      menu_cell_basic_draw_custom(ctx, cell_layer, title_font, row_data->title, title_font, nullptr,
+                                  nullptr, nullptr, nullptr, false /* icon_on_right */,
                                   GTextOverflowModeWordWrap);
       break;
     }
     case MenuLayerStyleTitleAndSubtitle: {
-      char *subtitle = menu_cell_layer_is_highlighted(cell_layer) ? row_data->subtitle : NULL;
-      menu_cell_basic_draw(ctx, cell_layer, row_data->title, subtitle, NULL);
+      char *subtitle = menu_cell_layer_is_highlighted(cell_layer) ? row_data->subtitle : nullptr;
+      menu_cell_basic_draw(ctx, cell_layer, row_data->title, subtitle, nullptr);
       break;
     }
     case MenuLayerStyleTitleAndIconOnRight: {
@@ -162,8 +162,8 @@ static void prv_menu_detail_draw_row(GContext *ctx, const Layer *cell_layer,
     case MenuLayerStyleTitleAndSubtitleAndValue: {
       const GFont subtitle_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
       menu_cell_basic_draw_custom(ctx, cell_layer, title_font, row_data->title, title_font,
-                                  row_data->value, subtitle_font, row_data->subtitle, NULL, false,
-                                  GTextOverflowModeFill);
+                                  row_data->value, subtitle_font, row_data->subtitle, nullptr,
+                                  false, GTextOverflowModeFill);
       break;
     }
     case MenuLayerStyleTitleAndSubtitleAndIcon: {
@@ -266,7 +266,7 @@ static uint16_t prv_menu_chooser_get_num_rows_callback(struct MenuLayer *menu_la
 static void prv_menu_chooser_draw_row_callback(GContext *ctx, const Layer *cell_layer,
                                                MenuIndex *cell_index, void *context) {
   MenuChooserRowData row_data = menu_chooser_row_data[cell_index->row];
-  menu_cell_basic_draw(ctx, cell_layer, row_data.title, NULL, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, row_data.title, nullptr, nullptr);
 }
 
 static void prv_menu_chooser_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,

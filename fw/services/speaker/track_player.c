@@ -57,7 +57,7 @@ static void prv_advance_to_note(TrackState *s) {
   s->current_velocity = note->velocity;
   s->phase_acc = 0;
 
-  if (s->sample != NULL) {
+  if (s->sample != nullptr) {
     prv_reset_sample_stride(s, note->midi_note);
   } else {
     s->current_waveform = note->waveform;
@@ -112,7 +112,7 @@ void track_init(TrackState *s, const SpeakerTrack *track, uint32_t sample_rate) 
   s_sample_rate = sample_rate;
   s->active = (track->num_notes > 0);
 
-  if (s->sample != NULL) {
+  if (s->sample != nullptr) {
     s->sample_num_input = s->sample->num_bytes / prv_sample_bytes_per(s->sample->format);
   }
 
@@ -136,7 +136,7 @@ uint32_t track_fill(TrackState *s, int16_t *out, uint32_t max_samples) {
       to_generate = s->samples_remaining;
     }
 
-    if (s->sample != NULL) {
+    if (s->sample != nullptr) {
       for (uint32_t i = 0; i < to_generate; i++) {
         out[written + i] = prv_gen_sample_mode(s);
       }

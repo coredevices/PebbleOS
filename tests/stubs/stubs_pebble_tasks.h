@@ -10,16 +10,16 @@ PebbleTask pebble_task_get_current(void) {
 }
 
 struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
-  return NULL;
+  return nullptr;
 }
 
 const char *pebble_task_get_name(PebbleTask task) {
-  return NULL;
+  return nullptr;
 }
 
 void pebble_task_unregister(PebbleTask task) {
 }
 
 struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
-  return NULL;
+  return nullptr;
 }

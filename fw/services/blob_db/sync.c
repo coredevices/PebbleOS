@@ -16,7 +16,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 #define SYNC_TIMEOUT_SECONDS         30
 #define SYNC_ABANDON_TIMEOUT_SECONDS (5 * 60) // 5 minutes to fully abandon
 
-static BlobDBSyncSession *s_sync_sessions = NULL;
+static BlobDBSyncSession *s_sync_sessions = nullptr;
 
 //! Ids are handed out monotonically and never reused, so a stale id can never
 //! resolve to a different session that happens to reuse the same allocation.
@@ -238,7 +238,7 @@ void blob_db_sync_cancel(BlobDBSyncSession *session) {
     regular_timer_remove_callback(&session->abandon_timer);
   }
   blob_db_util_free_dirty_list(session->dirty_list);
-  list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, NULL);
+  list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, nullptr);
   kernel_free(session);
 }
 
@@ -254,7 +254,7 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
   blob_db_mark_synced(session->db_id, dirty_item->key, dirty_item->key_len);
 
   // we're done with this item, we pop it off the stack
-  list_remove((ListNode *)dirty_item, (ListNode **)&session->dirty_list, NULL);
+  list_remove((ListNode *)dirty_item, (ListNode **)&session->dirty_list, nullptr);
   kernel_free(dirty_item);
 
   if (session->dirty_list) {
@@ -279,7 +279,7 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
         // Only send the sync done when syncing an entire db
         blob_db_endpoint_send_sync_done(session->db_id);
       }
-      list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, NULL);
+      list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, nullptr);
       kernel_free(session);
     }
   }

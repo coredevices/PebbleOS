@@ -25,19 +25,19 @@ static NotifList *prv_find_listnode_for_notif(Uuid *id) {
 
 Uuid *notifications_presented_list_first(void) {
   NotifList *node = (NotifList *)list_get_head((ListNode *)s_presented_notifs);
-  return node ? &node->notif.id : NULL;
+  return node ? &node->notif.id : nullptr;
 }
 
 Uuid *notifications_presented_list_last(void) {
   NotifList *node = (NotifList *)list_get_tail((ListNode *)s_presented_notifs);
-  return node ? &node->notif.id : NULL;
+  return node ? &node->notif.id : nullptr;
 }
 
 Uuid *notifications_presented_list_relative(Uuid *id, int offset) {
   NotifList *const start_node = prv_find_listnode_for_notif(id);
   NotifList *const end_node = (NotifList *)list_get_at((ListNode *)start_node, offset);
 
-  return end_node ? &end_node->notif.id : NULL;
+  return end_node ? &end_node->notif.id : nullptr;
 }
 
 int notifications_presented_list_count(void) {
@@ -63,7 +63,7 @@ void notifications_presented_list_remove(Uuid *id) {
     }
   }
 
-  list_remove((ListNode *)node, (ListNode **)&s_presented_notifs, NULL);
+  list_remove((ListNode *)node, (ListNode **)&s_presented_notifs, nullptr);
   task_free(node);
 }
 
@@ -111,7 +111,7 @@ bool notifications_presented_list_set_current(Uuid *id) {
 
 Uuid *notifications_presented_list_current(void) {
   if (!s_current_notif) {
-    return NULL;
+    return nullptr;
   }
   return &s_current_notif->notif.id;
 }
@@ -119,7 +119,7 @@ Uuid *notifications_presented_list_current(void) {
 Uuid *notifications_presented_list_next(void) {
   NotifList *next_node = (NotifList *)list_get_next((ListNode *)s_current_notif);
   if (!next_node) {
-    return NULL;
+    return nullptr;
   }
   return &next_node->notif.id;
 }
@@ -133,16 +133,16 @@ int notifications_presented_list_current_idx(void) {
 }
 
 void notifications_presented_list_init(void) {
-  s_current_notif = NULL;
-  s_presented_notifs = NULL;
+  s_current_notif = nullptr;
+  s_presented_notifs = nullptr;
 }
 
 void notifications_presented_list_deinit(NotificationListEachCallback callback, void *cb_data) {
-  s_current_notif = NULL;
+  s_current_notif = nullptr;
 
   while (s_presented_notifs) {
     NotifList *head = s_presented_notifs;
-    list_remove((ListNode *)head, (ListNode **)&s_presented_notifs, NULL);
+    list_remove((ListNode *)head, (ListNode **)&s_presented_notifs, nullptr);
 
     if (callback) {
       callback(&head->notif.id, head->notif.type, cb_data);

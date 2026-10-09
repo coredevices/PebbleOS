@@ -104,8 +104,8 @@ static void prv_file_close_and_unlock(SettingsFile *file) {
 }
 
 static bool prv_key_is_valid(const uint8_t *key, int key_len) {
-  return key_len != 0 &&                         // invalid length
-         strchr((const char *)key, '_') != NULL; // invalid key
+  return key_len != 0 &&                            // invalid length
+         strchr((const char *)key, '_') != nullptr; // invalid key
 }
 
 static bool prv_value_is_valid(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {

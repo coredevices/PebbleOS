@@ -45,7 +45,7 @@ static void prv_close_file_and_unlock_mutex(void) {
 //////////////////////////////
 
 int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **contact_out) {
-  *contact_out = NULL;
+  *contact_out = nullptr;
 
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv != S_SUCCESS) {
@@ -122,7 +122,7 @@ int contacts_db_get_len(const uint8_t *key, int key_len) {
 }
 
 status_t contacts_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
-  if (key_len != UUID_SIZE || val_out == NULL) {
+  if (key_len != UUID_SIZE || val_out == nullptr) {
     return E_INVALID_ARGUMENT;
   }
 

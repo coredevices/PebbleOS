@@ -119,7 +119,7 @@ static bool prv_is_active_and_triggered(Recognizer *recognizer, void *context) {
 }
 
 static Recognizer *prv_any_recognizers_active_triggered(RecognizerManager *manager) {
-  Recognizer *triggered = NULL;
+  Recognizer *triggered = nullptr;
   prv_process_all_recognizers(manager, prv_is_active_and_triggered, &triggered);
   return triggered;
 }
@@ -147,7 +147,7 @@ static void prv_set_triggered(RecognizerManager *manager, Recognizer *triggered)
 static bool prv_cancel_or_fail_recognizer(Recognizer *recognizer, void *context) {
   RecognizerManager *manager = context;
   if (manager && (manager->triggered == recognizer)) {
-    prv_set_triggered(manager, NULL);
+    prv_set_triggered(manager, nullptr);
   }
   if (recognizer_get_state(recognizer) == RecognizerState_Possible) {
     recognizer_set_failed(recognizer);
@@ -158,7 +158,7 @@ static bool prv_cancel_or_fail_recognizer(Recognizer *recognizer, void *context)
 }
 
 static void prv_cancel_all_recognizers(RecognizerManager *manager) {
-  prv_process_all_recognizers(manager, prv_cancel_or_fail_recognizer, NULL);
+  prv_process_all_recognizers(manager, prv_cancel_or_fail_recognizer, nullptr);
 }
 
 static bool prv_reset_recognizer(Recognizer *recognizer, void *context) {
@@ -172,14 +172,14 @@ static void prv_reset_layer_tree_recognizers(RecognizerManager *manager, Layer *
 }
 
 static void prv_reset_all_recognizers(RecognizerManager *manager) {
-  prv_process_all_recognizers(manager, prv_reset_recognizer, NULL);
+  prv_process_all_recognizers(manager, prv_reset_recognizer, nullptr);
 }
 
 static void prv_reset(RecognizerManager *manager) {
   prv_reset_all_recognizers(manager);
-  prv_set_triggered(manager, NULL);
+  prv_set_triggered(manager, nullptr);
   manager->state = RecognizerManagerState_WaitForTouchdown;
-  manager->active_layer = NULL;
+  manager->active_layer = nullptr;
 }
 
 static void prv_fail_then_reset_if_no_active_recognizers(RecognizerManager *manager) {
@@ -205,11 +205,11 @@ void recognizer_manager_handle_touch_event(const TouchEvent *touch_event, void *
   RecognizerManager *manager = context;
 
   if (touch_event->type == TouchEvent_Touchdown) {
-    Layer *root = manager->window ? window_get_root_layer(manager->window) : NULL;
+    Layer *root = manager->window ? window_get_root_layer(manager->window) : nullptr;
     GPoint touch_pos = GPoint(touch_event->x, touch_event->y);
-    Layer *new_active_layer = root ? layer_find_layer_containing_point(root, &touch_pos) : NULL;
+    Layer *new_active_layer = root ? layer_find_layer_containing_point(root, &touch_pos) : nullptr;
     if (new_active_layer == root) {
-      new_active_layer = NULL;
+      new_active_layer = nullptr;
     }
 
     if (manager->state == RecognizerManagerState_WaitForTouchdown) {
@@ -225,7 +225,7 @@ void recognizer_manager_handle_touch_event(const TouchEvent *touch_event, void *
       }
       manager->state = RecognizerManagerState_RecognizersActive;
       manager->active_layer = new_active_layer;
-      prv_reset_layer_tree_recognizers(manager, NULL, new_active_layer);
+      prv_reset_layer_tree_recognizers(manager, nullptr, new_active_layer);
     }
   }
 
@@ -293,11 +293,11 @@ void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recogn
   }
 
   recognizer_cancel(recognizer);
-  Recognizer *triggered = recognizer_has_triggered(recognizer) ? recognizer : NULL;
+  Recognizer *triggered = recognizer_has_triggered(recognizer) ? recognizer : nullptr;
   prv_cleanup_state_change(manager, triggered);
 
   recognizer_reset(recognizer);
-  recognizer_set_manager(recognizer, NULL);
+  recognizer_set_manager(recognizer, nullptr);
 }
 
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
@@ -306,6 +306,6 @@ void recognizer_manager_handle_state_change(RecognizerManager *manager, Recogniz
   }
   PBL_ASSERTN(recognizer_get_manager(changed) == manager);
 
-  Recognizer *triggered = recognizer_has_triggered(changed) ? changed : NULL;
+  Recognizer *triggered = recognizer_has_triggered(changed) ? changed : nullptr;
   prv_cleanup_state_change(manager, triggered);
 }

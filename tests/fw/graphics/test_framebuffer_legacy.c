@@ -25,7 +25,7 @@
 #define CHALK_GUARD_PAD         76
 #define CHALK_FRAMEBUFFER_BYTES 25944
 
-static FrameBuffer *fb = NULL;
+static FrameBuffer *fb = nullptr;
 
 void test_framebuffer_legacy__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));

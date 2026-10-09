@@ -75,7 +75,7 @@ void test_alarm__initialize(void) {
   s_current_day = s_thursday;
 
   timeline_item_destroy(s_last_timeline_item_added);
-  s_last_timeline_item_added = NULL;
+  s_last_timeline_item_added = nullptr;
   s_last_timeline_item_removed_uuid = (Uuid){};
   memset(s_fake_pin_records, 0, sizeof(s_fake_pin_records));
 
@@ -470,10 +470,10 @@ void test_alarm__pin_add(void) {
   const uint32_t pin_icon_tiny = attribute_get_uint32(pin_attr_list, AttributeIdIconTiny, 0);
   cl_assert_equal_i((int)pin_icon_tiny, TIMELINE_RESOURCE_ALARM_CLOCK);
 
-  const char *pin_title = attribute_get_string(pin_attr_list, AttributeIdTitle, NULL);
+  const char *pin_title = attribute_get_string(pin_attr_list, AttributeIdTitle, nullptr);
   cl_assert_equal_s(pin_title, "Alarm");
 
-  const char *pin_subtitle = attribute_get_string(pin_attr_list, AttributeIdSubtitle, NULL);
+  const char *pin_subtitle = attribute_get_string(pin_attr_list, AttributeIdSubtitle, nullptr);
   cl_assert_equal_s(pin_subtitle, alarm_get_string_for_kind(alarm_kind, false /* all_caps */));
 
   const AlarmKind pin_alarm_kind =
@@ -488,7 +488,7 @@ void test_alarm__pin_add(void) {
 
   const AttributeList *action_attr_list = &alarm_action->attr_list;
 
-  const char *action_title = attribute_get_string(action_attr_list, AttributeIdTitle, NULL);
+  const char *action_title = attribute_get_string(action_attr_list, AttributeIdTitle, nullptr);
   cl_assert_equal_s(action_title, "Edit");
 }
 

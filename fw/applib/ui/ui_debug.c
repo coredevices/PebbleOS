@@ -22,7 +22,7 @@ extern void scroll_layer_draw_shadow_sublayer(Layer *shadow_sublayer, GContext *
 extern void window_do_layer_update_proc(Layer *layer, GContext *ctx);
 
 static const char *prv_guess_type(Layer *layer) {
-  if (layer == NULL) {
+  if (layer == nullptr) {
     return "NULL";
   };
 
@@ -49,7 +49,7 @@ static const char *prv_guess_type(Layer *layer) {
     return "ScrollLayer";
   } else if (layer->update_proc == (LayerUpdateProc)window_do_layer_update_proc) {
     return "Window";
-  } else if (layer->update_proc == NULL) {
+  } else if (layer->update_proc == nullptr) {
     return "Layer";
   } else {
     return "Custom Layer";
@@ -80,7 +80,7 @@ static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
   Window *window = modal_manager_get_top_window();
   if (!window) {
     window = app_window_stack_get_top_window();
-    if (window == NULL) {
+    if (window == nullptr) {
       return 0;
     }
   }
@@ -92,6 +92,6 @@ static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_ui, dump, NULL, "Dump the layer tree of the top window", prv_cmd_dump, 0,
-                     0);
+PBL_SHELL_SUBCMD_ADD(sub_ui, dump, nullptr, "Dump the layer tree of the top window", prv_cmd_dump,
+                     0, 0);
 #endif

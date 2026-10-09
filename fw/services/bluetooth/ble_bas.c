@@ -12,9 +12,9 @@ static EventServiceInfo s_bas_evt;
 
 static void prv_execute_on_kernel_main(CallbackEventCallback cb) {
   if (pebble_task_get_current() != PebbleTask_KernelMain) {
-    launcher_task_add_callback(cb, NULL);
+    launcher_task_add_callback(cb, nullptr);
   } else {
-    cb(NULL);
+    cb(nullptr);
   }
 }
 

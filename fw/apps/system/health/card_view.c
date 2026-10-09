@@ -242,7 +242,7 @@ static Animation *prv_create_slide_animation(Layer *layer, GRect *from_frame, GR
 static void prv_schedule_slide_animation(HealthCardView *health_card_view, Card next_card_index,
                                          bool slide_up) {
   animation_unschedule(health_card_view->slide_animation);
-  health_card_view->slide_animation = NULL;
+  health_card_view->slide_animation = nullptr;
 
   GRect window_bounds = window_get_root_layer(&health_card_view->window)->bounds;
 
@@ -267,7 +267,7 @@ static void prv_schedule_slide_animation(HealthCardView *health_card_view, Card 
                          health_card_view);
   animation_set_implementation(bg_anim, &prv_bg_animation_implementation);
 
-  health_card_view->slide_animation = animation_spawn_create(curr_out, next_in, bg_anim, NULL);
+  health_card_view->slide_animation = animation_spawn_create(curr_out, next_in, bg_anim, nullptr);
   animation_schedule(health_card_view->slide_animation);
 
   health_card_view->current_card_index = next_card_index;

@@ -132,7 +132,7 @@ GTextNodeText *graphics_text_node_create_text(size_t buffer_size) {
     *text_node = (GTextNodeText){
       .node.type = GTextNodeType_Text,
       .node.free_on_destroy = true,
-      .text = buffer_size ? (char *)(text_node + 1) : NULL,
+      .text = buffer_size ? (char *)(text_node + 1) : nullptr,
     };
   }
   return text_node;
@@ -146,7 +146,7 @@ GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(size_t buffer_size,
     *text_node = (GTextNodeTextDynamic){
       .text.node.type = GTextNodeType_TextDynamic,
       .text.node.free_on_destroy = true,
-      .text.text = buffer_size ? (char *)text_node->buffer : NULL,
+      .text.text = buffer_size ? (char *)text_node->buffer : nullptr,
       .update = update,
       .user_data = user_data,
       .buffer_size = buffer_size,
@@ -162,7 +162,7 @@ static GTextNodeContainer *prv_create_container(GTextNodeType type, size_t size,
       .node.type = type,
       .node.free_on_destroy = true,
       .max_nodes = max_nodes,
-      .nodes = max_nodes ? (GTextNode **)((uint8_t *)container_node + size) : NULL,
+      .nodes = max_nodes ? (GTextNode **)((uint8_t *)container_node + size) : nullptr,
     };
   }
   return container_node;
@@ -207,7 +207,7 @@ static void prv_destroy_text_node_container(GTextNode *node) {
     return;
   }
   GTextNodeContainer *container_node = (GTextNodeContainer *)node;
-  prv_container_each(container_node, prv_destroy_container_iter, NULL);
+  prv_container_each(container_node, prv_destroy_container_iter, nullptr);
   prv_destroy_text_node_base(&container_node->node);
 }
 
@@ -219,7 +219,7 @@ static bool prv_container_add_child(GTextNodeContainer *container_node, GTextNod
   if (num_nodes >= container_node->max_nodes) {
     return false;
   }
-  GTextNode *prev_child = (num_nodes > 0) ? container_node->nodes[num_nodes - 1] : NULL;
+  GTextNode *prev_child = (num_nodes > 0) ? container_node->nodes[num_nodes - 1] : nullptr;
   container_node->nodes[container_node->num_nodes++] = child;
   if (prev_child) {
     prev_child->sibling = child;
@@ -545,7 +545,7 @@ static void prv_draw_text_node_tree(GTextNode *root_node, GContext *gcontext, co
   for (int level = 0; level >= 0;) {
     PBL_ASSERTN(level < MAX_DRAW_DEPTH);
     GTextNodeDrawContext *ctx = &contexts[level];
-    GTextNodeDrawContext *parent_ctx = (level > 0) ? &contexts[level - 1] : NULL;
+    GTextNodeDrawContext *parent_ctx = (level > 0) ? &contexts[level - 1] : nullptr;
 
     // We have entered here either by ascending (the continue in the ascent branch below) or by
     // moving on to the next sibling (the break in the descent loop), which may have included
@@ -577,7 +577,7 @@ static void prv_draw_text_node_tree(GTextNode *root_node, GContext *gcontext, co
     // We will continue to descend until we've either found a sibling or descended beyond level 0
     for (; level >= 0; level--) {
       GTextNodeDrawContext *ctx = &contexts[level];
-      GTextNodeDrawContext *parent_ctx = (level > 0) ? &contexts[level - 1] : NULL;
+      GTextNodeDrawContext *parent_ctx = (level > 0) ? &contexts[level - 1] : nullptr;
 
       // We have entered here either by having completed drawing a node or by descending. If we
       // entered here by having completed drawing a node, we have either drawn a leaf node, an empty

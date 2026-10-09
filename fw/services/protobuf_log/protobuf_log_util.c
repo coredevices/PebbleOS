@@ -52,7 +52,7 @@ bool protobuf_log_util_encode_packed_varints(pb_ostream_t *stream, const pb_fiel
 
   // if just being called to size it up, the stream callback will be NULL
   if (!stream->callback) {
-    return pb_write(stream, NULL, packed_array_size);
+    return pb_write(stream, nullptr, packed_array_size);
   }
 
   // Write out each of the values

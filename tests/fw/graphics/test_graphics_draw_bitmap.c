@@ -37,7 +37,7 @@
 
 static GBitmap test_image;
 static GContext s_ctx;
-static FrameBuffer *s_fb = NULL;
+static FrameBuffer *s_fb = nullptr;
 
 void test_graphics_draw_bitmap__initialize(void) {
   s_fb = malloc(sizeof(FrameBuffer));
@@ -118,7 +118,7 @@ static void prv_offset_bitmap_layer_test(GPoint bounds_origin) {
 ////////////////////////////////////
 
 static GBitmap *prv_create_bitmap_from_png_file(const char *png_filename_without_extension) {
-  GBitmap *result = NULL;
+  GBitmap *result = nullptr;
 
   char png_file_path[strlen(CLAR_FIXTURE_PATH) + 1 + strlen(GRAPHICS_FIXTURE_PATH) + 1 +
                      strlen(png_filename_without_extension) + 1];
@@ -168,7 +168,7 @@ static GBitmap *prv_create_bitmap_from_pbi_file(const char *pbi_filename_without
   snprintf(pbi_filename, PATH_STRING_LENGTH, "%s.pbi", pbi_filename_without_extension);
 
   if (!read_pbi(pbi_filename, &result)) {
-    return NULL;
+    return nullptr;
   } else {
     return &result;
   }

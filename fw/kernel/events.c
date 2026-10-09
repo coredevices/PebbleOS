@@ -123,7 +123,7 @@ struct pbl_msgq *event_get_to_kernel_queue(PebbleTask task) {
     return &s_kernel_event_queue;
   } else {
     WTF;
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -355,12 +355,12 @@ static void *prv_buffer_slot(PebbleEvent *event) {
       break; // Nothing to do!
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void *event_get_buffer(PebbleEvent *event) {
   void *slot = prv_buffer_slot(event);
-  void *buffer = NULL;
+  void *buffer = nullptr;
   if (slot) {
     memcpy(&buffer, slot, sizeof(buffer));
   }

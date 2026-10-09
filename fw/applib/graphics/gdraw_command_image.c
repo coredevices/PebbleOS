@@ -19,7 +19,7 @@ GDrawCommandImage *gdraw_command_image_create_with_resource_system(ResAppNum app
                                                                    uint32_t resource_id) {
   uint32_t data_size;
   if (!gdraw_command_resource_is_valid(app_num, resource_id, PDCI_SIGNATURE, &data_size)) {
-    return NULL;
+    return nullptr;
   }
 
   GDrawCommandImage *draw_command_image =
@@ -28,7 +28,7 @@ GDrawCommandImage *gdraw_command_image_create_with_resource_system(ResAppNum app
   // Validate the loaded command image
   if (!gdraw_command_image_validate(draw_command_image, data_size)) {
     gdraw_command_image_destroy(draw_command_image);
-    return NULL;
+    return nullptr;
   }
 
   return draw_command_image;
@@ -46,7 +46,7 @@ bool gdraw_command_image_copy(void *buffer, size_t buffer_length, GDrawCommandIm
 
 GDrawCommandImage *gdraw_command_image_clone(GDrawCommandImage *image) {
   if (!image) {
-    return NULL;
+    return nullptr;
   }
 
   // potentially extracting into a generic task_ptrdup(void *, size_t)
@@ -71,11 +71,11 @@ bool gdraw_command_image_validate(GDrawCommandImage *image, size_t size) {
   }
   uint8_t *end = (uint8_t *)image + size;
 
-  return (end == gdraw_command_list_iterate_private(&image->command_list, NULL, NULL));
+  return (end == gdraw_command_list_iterate_private(&image->command_list, nullptr, nullptr));
 }
 
 void gdraw_command_image_draw(GContext *ctx, GDrawCommandImage *image, GPoint offset) {
-  gdraw_command_image_draw_processed(ctx, image, offset, NULL);
+  gdraw_command_image_draw_processed(ctx, image, offset, nullptr);
 }
 
 void gdraw_command_image_draw_processed(GContext *ctx, GDrawCommandImage *image, GPoint offset,
@@ -120,7 +120,7 @@ void gdraw_command_image_set_bounds_size(GDrawCommandImage *image, GSize size) {
 
 GDrawCommandList *gdraw_command_image_get_command_list(GDrawCommandImage *image) {
   if (!image) {
-    return NULL;
+    return nullptr;
   }
 
   return &image->command_list;

@@ -18,7 +18,7 @@ static void selected_pwm_percentage(NumberWindow *nw, void *ctx) {
 
 static void handle_init(void) {
   NumberWindow *light_num_window = number_window_create(
-      "Light Config", (NumberWindowCallbacks){.selected = selected_pwm_percentage}, NULL);
+      "Light Config", (NumberWindowCallbacks){.selected = selected_pwm_percentage}, nullptr);
   app_state_set_user_data(light_num_window);
 
   uint8_t scale_granularity = 5; // 5 percent at a time

@@ -149,7 +149,7 @@ static void prv_free_album_art_locked(void) {
     kernel_free(s_music_ctx.album_art->addr);
     kernel_free(s_music_ctx.album_art->palette);
     kernel_free(s_music_ctx.album_art);
-    s_music_ctx.album_art = NULL;
+    s_music_ctx.album_art = nullptr;
   }
 }
 
@@ -190,7 +190,7 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
 
   if (connected) {
-    if (s_music_ctx.implementation == NULL) {
+    if (s_music_ctx.implementation == nullptr) {
       change_type = Connected;
       s_music_ctx.implementation = implementation;
       PBL_LOG_INFO("Music server connected: %s", implementation->debug_name);
@@ -203,7 +203,7 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
     if (s_music_ctx.implementation == implementation) {
       // Previously registered server got disconnected
       change_type = Disconnected;
-      s_music_ctx.implementation = NULL;
+      s_music_ctx.implementation = nullptr;
       PBL_LOG_INFO("Music server disconnected: %s", implementation->debug_name);
     } else {
       PBL_LOG_ERR("Unknown server <%p> disconnected", implementation);
@@ -220,7 +220,7 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
     // now_playing no longer drops art on a track change (see music_update_now_playing), so clear it
     // explicitly here: a connect/disconnect must not leave the previous session's art on screen.
     prv_free_album_art_locked();
-    music_update_now_playing(NULL, 0, NULL, 0, NULL, 0);
+    music_update_now_playing(nullptr, 0, nullptr, 0, nullptr, 0);
     music_update_track_duration(0);
     const MusicPlayerStateUpdate state = {
       .playback_state = MusicPlayStateUnknown,
@@ -245,7 +245,7 @@ bool music_set_connected_server(const MusicServerImplementation *implementation,
 }
 
 const char *music_get_connected_server_debug_name(void) {
-  const char *debug_name = NULL;
+  const char *debug_name = nullptr;
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   if (s_music_ctx.implementation) {
     debug_name = s_music_ctx.implementation->debug_name;
@@ -466,7 +466,7 @@ MusicPlayState music_get_playback_state(void) {
 
 static void *prv_implementation_function_for_offset(off_t offset) {
   typedef void (*FuncPtr)(void);
-  FuncPtr func_ptr = NULL;
+  FuncPtr func_ptr = nullptr;
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   if (s_music_ctx.implementation) {
     func_ptr = *(FuncPtr *)(((const uint8_t *)s_music_ctx.implementation) + offset);
@@ -668,5 +668,5 @@ static int prv_cmd_music(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-PBL_SHELL_CMD_REGISTER(music, NULL, "Show what the music player plays", prv_cmd_music);
+PBL_SHELL_CMD_REGISTER(music, nullptr, "Show what the music player plays", prv_cmd_music);
 #endif

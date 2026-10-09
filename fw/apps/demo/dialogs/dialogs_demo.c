@@ -83,7 +83,7 @@ static void prv_show_confirm_dialog(DialogsData *data) {
   dialog_set_icon(dialog, data->resource_id_80);
   dialog_show_status_bar_layer(dialog, true);
 
-  actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarConfirm, NULL);
+  actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarConfirm, nullptr);
   actionable_dialog_set_click_config_provider(actionable_dialog, prv_confirm_config_provider);
   app_actionable_dialog_push(actionable_dialog);
 }
@@ -106,7 +106,7 @@ static void prv_show_decline_dialog(DialogsData *data) {
   dialog_set_background_color(dialog, GColorRed);
   dialog_set_icon(dialog, data->resource_id_80);
 
-  actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarDecline, NULL);
+  actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarDecline, nullptr);
   actionable_dialog_set_click_config_provider(actionable_dialog, prv_decline_config_provider);
   app_actionable_dialog_push(actionable_dialog);
 }
@@ -345,7 +345,7 @@ static const uint16_t NUM_ITEMS = ARRAY_LENGTH(nodes);
 
 static void prv_draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index,
                                   DialogsData *data) {
-  menu_cell_basic_draw(ctx, cell_layer, nodes[cell_index->row].label, NULL, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, nodes[cell_index->row].label, nullptr, nullptr);
 }
 
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, DialogsData *data) {

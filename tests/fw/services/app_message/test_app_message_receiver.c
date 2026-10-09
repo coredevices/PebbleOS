@@ -66,7 +66,7 @@ void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *
 }
 
 static void prv_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
-  app_message_app_protocol_msg_callback(session, data, length, NULL);
+  app_message_app_protocol_msg_callback(session, data, length, nullptr);
 }
 
 void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
@@ -89,7 +89,7 @@ static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
                                                      const PebbleProtocolEndpoint *endpoint,
                                                      size_t total_payload_size) {
   if (!s_kernel_receiver_available) {
-    return NULL;
+    return nullptr;
   }
   s_kernel_receiver_is_receiving = true;
   cl_assert_equal_p(endpoint->handler, app_message_app_protocol_system_nack_callback);
@@ -177,12 +177,12 @@ static const PebbleProtocolEndpoint s_app_message_endpoint = (const PebbleProtoc
   .handler = prv_protocol_msg_callback,
   .access_mask = PebbleProtocolAccessAny,
   .receiver_imp = &g_app_message_receiver_implementation,
-  .receiver_opt = NULL,
+  .receiver_opt = nullptr,
 };
 
 void test_app_message_receiver__receive_push_but_inbox_not_opened(void) {
   Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
-  cl_assert(r != NULL);
+  cl_assert(r != nullptr);
   cl_assert_equal_b(true, s_kernel_receiver_is_receiving);
 
   s_rcv_imp->write(r, (const uint8_t *)&s_push, sizeof(s_push));
@@ -211,7 +211,7 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened_kernel_oom(voi
   fake_kernel_malloc_set_largest_free_block(0);
 
   Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
-  cl_assert_equal_p(r, NULL);
+  cl_assert_equal_p(r, nullptr);
   cl_assert_equal_b(false, s_kernel_receiver_is_receiving);
 }
 
@@ -219,7 +219,7 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened_no_kernel_rece
   fake_kernel_malloc_mark();
   s_kernel_receiver_available = false;
   Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
-  cl_assert_equal_p(r, NULL);
+  cl_assert_equal_p(r, nullptr);
   cl_assert_equal_b(false, s_kernel_receiver_is_receiving);
   fake_kernel_malloc_mark_assert_equal();
 }
@@ -230,7 +230,7 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened_no_kernel_rece
 static Receiver *prv_create_inbox_prepare_and_write(void) {
   cl_assert_equal_b(true, app_message_receiver_open(sizeof(AppMessagePush)));
   Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
-  cl_assert(r != NULL);
+  cl_assert(r != nullptr);
 
   s_rcv_imp->write(r, (const uint8_t *)&s_push, sizeof(s_push));
   return r;
@@ -275,7 +275,7 @@ void test_app_message_receiver__receive_push_buffer_overflow(void) {
   // Write an ACK, we should be able to fit one (N)ACK in addition to the Push message:
   AppMessageAck ack = {};
   Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(ack));
-  cl_assert(r != NULL);
+  cl_assert(r != nullptr);
   s_rcv_imp->write(r, (const uint8_t *)&ack, sizeof(ack));
   s_rcv_imp->finish(r);
 
@@ -286,7 +286,7 @@ void test_app_message_receiver__receive_push_buffer_overflow(void) {
 
   // Write a Push:
   r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
-  cl_assert(r != NULL);
+  cl_assert(r != nullptr);
   s_rcv_imp->write(r, (const uint8_t *)&s_push, sizeof(s_push));
 
   // Write some more, doesn't fit in the buffer:
@@ -314,7 +314,7 @@ void test_app_message_receiver__receive_multi_chunk_push_while_open_close_toggle
   cl_assert_equal_b(true, app_message_receiver_open(sizeof(AppMessagePush)));
 
   Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
-  cl_assert(r != NULL);
+  cl_assert(r != nullptr);
 
   // Receive only first byte of the push message:
   s_rcv_imp->write(r, (const uint8_t *)&s_push, 1);

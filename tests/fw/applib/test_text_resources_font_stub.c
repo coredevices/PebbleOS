@@ -17,7 +17,7 @@ FontInfo *s_test_fallback_font;
 FontInfo *s_test_emoji_font;
 
 GFont sys_font_get_system_font(const char *key) {
-  if (key == NULL) {
+  if (key == nullptr) {
     return s_test_fallback_font;
   }
   return s_test_emoji_font;

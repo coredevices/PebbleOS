@@ -4,7 +4,7 @@
 #include "gcontext.h"
 
 GDrawMask *graphics_context_mask_create(const GContext *ctx, bool transparent) {
-  return NULL;
+  return nullptr;
 }
 
 bool graphics_context_mask_record(GContext *ctx, GDrawMask *mask) {

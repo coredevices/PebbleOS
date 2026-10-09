@@ -134,9 +134,9 @@ static void *s_wrap_context;
 // System-app statics persist across launches (the fw image is not reloaded), and a
 // crashed run never reaches unload — clear them before the next run reads them.
 void clock_face_reset(void) {
-  s_cf = NULL;
-  s_wrap_callback = NULL;
-  s_wrap_context = NULL;
+  s_cf = nullptr;
+  s_wrap_callback = nullptr;
+  s_wrap_context = nullptr;
 }
 
 // ---- Helpers ----
@@ -157,7 +157,7 @@ void clock_face_reset(void) {
 // vote from, which keeps the strokes one pixel and clean.
 static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
   if (!src)
-    return NULL;
+    return nullptr;
   const GBitmapFormat fmt = gbitmap_get_format(src);
   uint8_t bpp;
   uint32_t entries;
@@ -270,7 +270,7 @@ static void prv_load_bitmaps(void) {
   for (int i = 0; i < NUM_TYPE_SLOTS; i++) {
     if (s_cf->type_bitmaps[i]) {
       gbitmap_destroy(s_cf->type_bitmaps[i]);
-      s_cf->type_bitmaps[i] = NULL;
+      s_cf->type_bitmaps[i] = nullptr;
     }
   }
   // Load only the types this push can DRAW (the day set + the hourly reveal
@@ -337,16 +337,18 @@ static bool prv_glow_step(void) {
 static void prv_clock_glow_timer_callback(void *context) {
   (void)context;
   if (s_cf)
-    s_cf->glow_timer = NULL;
+    s_cf->glow_timer = nullptr;
   if (prv_glow_step()) {
-    s_cf->glow_timer = app_timer_register(CLOCK_GLOW_TIMER_MS, prv_clock_glow_timer_callback, NULL);
+    s_cf->glow_timer =
+        app_timer_register(CLOCK_GLOW_TIMER_MS, prv_clock_glow_timer_callback, nullptr);
   }
 }
 
 static void prv_start_clock_glow(void) {
   if (!s_cf || s_cf->glow_timer)
     return;
-  s_cf->glow_timer = app_timer_register(CLOCK_GLOW_TIMER_MS, prv_clock_glow_timer_callback, NULL);
+  s_cf->glow_timer =
+      app_timer_register(CLOCK_GLOW_TIMER_MS, prv_clock_glow_timer_callback, nullptr);
 }
 #else
 // Frame-coalesced glow (gabbro): same INFINITE-animation pattern as the forecast icon driver —
@@ -364,7 +366,7 @@ static void prv_glow_drv_stop_cb(void *context) { // 0ms hop: never unschedule i
   (void)context;
   if (s_cf && s_cf->glow_drv) {
     Animation *a = s_cf->glow_drv;
-    s_cf->glow_drv = NULL;
+    s_cf->glow_drv = nullptr;
     animation_unschedule(a);
     animation_destroy(a);
   }
@@ -387,7 +389,7 @@ static void prv_glow_drv_update(Animation *anim, AnimationProgress p) {
     alive = prv_glow_step();
   }
   if (!alive)
-    app_timer_register(0, prv_glow_drv_stop_cb, NULL);
+    app_timer_register(0, prv_glow_drv_stop_cb, nullptr);
 }
 static const AnimationImplementation s_glow_drv_impl = {.update = prv_glow_drv_update};
 
@@ -427,7 +429,7 @@ static void prv_note_clock_interaction(void) {
 static int prv_cur_hour(void) {
   static time_t cached_now;
   static int cached_hour = -1;
-  time_t now = time(NULL); // rtc read — cheap, unlike localtime
+  time_t now = time(nullptr); // rtc read — cheap, unlike localtime
   if (now != cached_now || cached_hour < 0) {
     cached_now = now;
     cached_hour = localtime(&now)->tm_hour;
@@ -576,13 +578,13 @@ static void prv_play_animation(void) {
   if (s_cf->intro_anim) {
     animation_unschedule(s_cf->intro_anim);
     animation_destroy(s_cf->intro_anim);
-    s_cf->intro_anim = NULL;
+    s_cf->intro_anim = nullptr;
   }
   s_cf->anim_progress = 0;
   // Invalidate the cached text bitmap so it is re-captured on the first draw.
   if (s_cf->temp_text_bmp) {
     gbitmap_destroy(s_cf->temp_text_bmp);
-    s_cf->temp_text_bmp = NULL;
+    s_cf->temp_text_bmp = nullptr;
   }
   s_cf->intro_anim = animation_create();
   animation_set_implementation(s_cf->intro_anim, &s_intro_impl);
@@ -653,7 +655,7 @@ static void prv_fwd_exit_update(Animation *anim, AnimationProgress progress) {
   if (s_cf->canvas)
     layer_mark_dirty(s_cf->canvas);
   if (progress >= ANIMATION_NORMALIZED_MAX && !s_cf->fwd_push_timer) {
-    s_cf->fwd_push_timer = app_timer_register(0, prv_fwd_exit_push_callback, NULL);
+    s_cf->fwd_push_timer = app_timer_register(0, prv_fwd_exit_push_callback, nullptr);
   }
 }
 static const AnimationImplementation s_fwd_exit_impl = {.update = prv_fwd_exit_update};
@@ -661,10 +663,10 @@ static const AnimationImplementation s_fwd_exit_impl = {.update = prv_fwd_exit_u
 static void prv_fwd_exit_push_callback(void *ctx) {
   if (!s_cf)
     return;
-  s_cf->fwd_push_timer = NULL;
+  s_cf->fwd_push_timer = nullptr;
   if (s_cf->fwd_scratch) {
     free(s_cf->fwd_scratch);
-    s_cf->fwd_scratch = NULL;
+    s_cf->fwd_scratch = nullptr;
   }
   // Hand off to weather.c, which dismisses this clock and jelly-rises the forecast back in.
   if (s_wrap_callback)
@@ -844,9 +846,9 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
               nbuf, tfont, GRect(0, 0, 40, 18), GTextOverflowModeFill, GTextAlignmentCenter);
           graphics_context_set_text_color(ctx, GColorBlack);
           graphics_draw_text(ctx, nbuf, tfont, GRect(ix - nsz.w / 2, iy - 11, nsz.w, 18),
-                             GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+                             GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
           graphics_draw_text(ctx, "\xC2\xB0", tfont, GRect(ix + nsz.w / 2, iy - 13, 10, 18),
-                             GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+                             GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
         }
       }
       continue; // reveal path draws both circle and content; skip the bitmap pass
@@ -901,7 +903,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
         snprintf(stg_buf, sizeof(stg_buf), "%d", s_cf->days[0].current_temp_now);
         centre_font = s_cf->temp_font;
       } else {
-        weather_fill_weekday_abbrev(s_cf->day_index, NULL, stg_buf, sizeof(stg_buf));
+        weather_fill_weekday_abbrev(s_cf->day_index, nullptr, stg_buf, sizeof(stg_buf));
         centre_font = fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
       }
       GSize nsz = graphics_text_layout_get_content_size(stg_buf, centre_font, GRect(0, 0, 100, 50),
@@ -924,7 +926,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       // Number: centred horizontally at stg_cx
       graphics_draw_text(ctx, stg_buf, centre_font,
                          GRect(stg_x + left_pad, stg_y + ty_s, nsz.w + 2, nsz.h),
-                         GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
       // Capture those pixels into a GBitmap
       GBitmap *fb = graphics_capture_frame_buffer(ctx);
       if (fb) {
@@ -1232,7 +1234,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       draw_rect = GRect(lx - 14, ly - 7, 28, 14);
     }
     graphics_draw_text(ctx, lbuf, draw_font, draw_rect, GTextOverflowModeTrailingEllipsis,
-                       label_align, NULL);
+                       label_align, nullptr);
   }
 
   // UP-to-forecast: wrap the fully-drawn clock in the whole-screen squash-stretch.
@@ -1359,7 +1361,7 @@ static void prv_window_appear(Window *window) {
   if (s_cf->reveal_anim) {
     animation_unschedule(s_cf->reveal_anim);
     animation_destroy(s_cf->reveal_anim);
-    s_cf->reveal_anim = NULL;
+    s_cf->reveal_anim = nullptr;
   }
   if (s_cf->canvas)
     layer_mark_dirty(s_cf->canvas);
@@ -1372,12 +1374,12 @@ static void prv_window_appear(Window *window) {
 static void prv_window_unload(Window *window) {
   if (s_cf->glow_timer) {
     app_timer_cancel(s_cf->glow_timer);
-    s_cf->glow_timer = NULL;
+    s_cf->glow_timer = nullptr;
   }
 #if PBL_ROUND
   if (s_cf->glow_drv) {
     Animation *a = s_cf->glow_drv;
-    s_cf->glow_drv = NULL;
+    s_cf->glow_drv = nullptr;
     animation_unschedule(a);
     animation_destroy(a);
   }
@@ -1385,29 +1387,29 @@ static void prv_window_unload(Window *window) {
   if (s_cf->intro_anim) {
     animation_unschedule(s_cf->intro_anim);
     animation_destroy(s_cf->intro_anim);
-    s_cf->intro_anim = NULL;
+    s_cf->intro_anim = nullptr;
   }
   if (s_cf->reveal_anim) {
     animation_unschedule(s_cf->reveal_anim);
     animation_destroy(s_cf->reveal_anim);
-    s_cf->reveal_anim = NULL;
+    s_cf->reveal_anim = nullptr;
   }
   if (s_cf->fwd_exit_anim) {
     animation_unschedule(s_cf->fwd_exit_anim);
     animation_destroy(s_cf->fwd_exit_anim);
-    s_cf->fwd_exit_anim = NULL;
+    s_cf->fwd_exit_anim = nullptr;
   }
   if (s_cf->fwd_push_timer) {
     app_timer_cancel(s_cf->fwd_push_timer);
-    s_cf->fwd_push_timer = NULL;
+    s_cf->fwd_push_timer = nullptr;
   }
   if (s_cf->fwd_scratch) {
     free(s_cf->fwd_scratch);
-    s_cf->fwd_scratch = NULL;
+    s_cf->fwd_scratch = nullptr;
   }
   if (s_cf->temp_text_bmp) {
     gbitmap_destroy(s_cf->temp_text_bmp);
-    s_cf->temp_text_bmp = NULL;
+    s_cf->temp_text_bmp = nullptr;
   }
   tick_timer_service_unsubscribe();
 
@@ -1418,14 +1420,14 @@ static void prv_window_unload(Window *window) {
   for (int i = 0; i < NUM_TYPE_SLOTS; i++) {
     if (s_cf->type_bitmaps[i]) {
       gbitmap_destroy(s_cf->type_bitmaps[i]);
-      s_cf->type_bitmaps[i] = NULL;
+      s_cf->type_bitmaps[i] = nullptr;
     }
   }
   layer_destroy(s_cf->canvas);
-  s_cf->canvas = NULL;
+  s_cf->canvas = nullptr;
   window_destroy(window);
   free(s_cf);
-  s_cf = NULL;
+  s_cf = nullptr;
 }
 
 // ---- Public API ----
@@ -1436,7 +1438,7 @@ void clock_face_set_wrap_callback(ClockFaceWrapCallback callback, void *context)
 }
 
 bool clock_face_is_showing(void) {
-  return s_cf != NULL;
+  return s_cf != nullptr;
 }
 
 static void prv_clock_face_push(const WeatherLocationForecast *days, size_t num_days, int day_index,
