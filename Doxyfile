@@ -2497,7 +2497,6 @@ PREDEFINED             = __attribute__(x)= \
                          PBL_PACKED= \
                          PBL_ALIGNED(bytes)= \
                          PBL_USED= \
-                         PBL_UNUSED= \
                          PBL_WEAK= \
                          PBL_ALIAS(sym)= \
                          PBL_EXTERNALLY_VISIBLE= \

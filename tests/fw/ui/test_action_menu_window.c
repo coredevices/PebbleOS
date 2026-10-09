@@ -574,8 +574,8 @@ void test_action_menu_window__emoji_picker_selection(void) {
   system_theme_set_content_size(size);
 #endif
 
-  PBL_UNUSED static const int round_rows[] = {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
-                                              1, 1, 1, 2, 2, 2, 2, 2, 2, 2};
+  [[maybe_unused]] static const int round_rows[] = {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+                                                    1, 1, 1, 2, 2, 2, 2, 2, 2, 2};
   for (int count = 0; count <= 21; ++count) {
     action_menu_layer_set_short_items(aml, root_level->items, count, 0);
     const int expected_rows = PBL_IF_ROUND_ELSE((count + 9) / 10, (count + 2) / 3);

@@ -284,9 +284,9 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
                                        const WeatherLocationForecast *new_today,
                                        const WeatherLocationForecast *new_next, bool animate_down);
 
-PBL_UNUSED static int prv_draw_text(GPoint offset, int max_width, GContext *context,
-                                    const char *text, const GFont font, GColor font_color,
-                                    GTextAlignment alignment) {
+[[maybe_unused]] static int prv_draw_text(GPoint offset, int max_width, GContext *context,
+                                          const char *text, const GFont font, GColor font_color,
+                                          GTextAlignment alignment) {
   GSize size = graphics_text_layout_get_content_size(text, font, GRect(0, 0, max_width, 1000),
                                                      GTextOverflowModeFill, alignment);
   const int height = size.h;
@@ -822,7 +822,7 @@ static void prv_fill_featured_temp_buffer(const WeatherLocationForecast *f, char
 }
 
 // Uppercase ASCII copy — the sketch spec sets headers/condition in caps.
-PBL_UNUSED static void prv_upcase_into(char *dst, size_t dst_size, const char *src) {
+[[maybe_unused]] static void prv_upcase_into(char *dst, size_t dst_size, const char *src) {
   size_t i = 0;
   for (; src && src[i] && i < dst_size - 1; i++) {
     char c = src[i];

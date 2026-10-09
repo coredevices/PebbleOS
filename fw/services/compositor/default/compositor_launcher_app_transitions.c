@@ -116,7 +116,7 @@ static void prv_manipulate_launcher_in_system_framebuffer(GContext *ctx,
 }
 
 static void prv_launcher_app_transition_animation_update(GContext *ctx,
-                                                         Animation *PBL_UNUSED animation,
+                                                         [[maybe_unused]] Animation *animation,
                                                          uint32_t distance_normalized) {
   const bool is_right = s_data.app_is_destination;
   const GRangeVertical selection_vertical_range =

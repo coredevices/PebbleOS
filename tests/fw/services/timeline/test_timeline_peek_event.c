@@ -583,7 +583,7 @@ void test_timeline_peek_event__dismiss_event(void) {
 
 void test_timeline_peek_event__first_event_with_past_event(void) {
   TimelineItem item = DEFINE_EVENT(.id = 0x01, .timestamp = 20 * PBL_SEC_PER_MIN, .duration = 70);
-  TimelineItem PBL_UNUSED item2 =
+  [[maybe_unused]] TimelineItem item2 =
       DEFINE_EVENT(.id = 0x02, .timestamp = -50 * PBL_SEC_PER_MIN, .duration = 30);
   unsigned int timeout_s = item.header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
   CHECK_EVENT(.count = 3, .item_id = item.header.id, .num_concurrent = 0,
@@ -594,7 +594,7 @@ void test_timeline_peek_event__first_event_with_past_event(void) {
 void test_timeline_peek_event__first_event_with_all_day_event_before(void) {
   // All day events show up if no timed event has yet passed
   TimelineItem item = DEFINE_EVENT(.id = 0x01, .timestamp = 20 * PBL_SEC_PER_MIN, .duration = 70);
-  TimelineItem PBL_UNUSED item2 =
+  [[maybe_unused]] TimelineItem item2 =
       DEFINE_EVENT(.id = 0x02, .timestamp = 0, .duration = PBL_MIN_PER_DAY, .all_day = true);
   unsigned int timeout_s = item.header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S;
   CHECK_EVENT(.count = 3, .item_id = item.header.id, .num_concurrent = 0,
@@ -607,9 +607,9 @@ void test_timeline_peek_event__first_event_with_all_day_event_after(void) {
   rtc_set_time(PBL_SEC_PER_HOUR);
   TimelineItem item = DEFINE_EVENT(.id = 0x01, .timestamp = PBL_SEC_PER_HOUR + 20 * PBL_SEC_PER_MIN,
                                    .duration = 70);
-  TimelineItem PBL_UNUSED item2 =
+  [[maybe_unused]] TimelineItem item2 =
       DEFINE_EVENT(.id = 0x02, .timestamp = 0, .duration = PBL_MIN_PER_DAY, .all_day = true);
-  TimelineItem PBL_UNUSED item3 = DEFINE_EVENT(.id = 0x03, .timestamp = 0, .duration = 10);
+  [[maybe_unused]] TimelineItem item3 = DEFINE_EVENT(.id = 0x03, .timestamp = 0, .duration = 10);
   unsigned int timeout_s = 600;
   CHECK_EVENT(.count = 4, .item_id = item.header.id, .num_concurrent = 0,
               .timeout_ms = timeout_s * PBL_MSEC_PER_SEC,

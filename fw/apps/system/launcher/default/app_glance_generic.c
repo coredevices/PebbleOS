@@ -263,9 +263,9 @@ static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance)
 }
 
 static void prv_generic_glance_dynamic_text_node_update(
-    PBL_UNUSED GContext *ctx, PBL_UNUSED GTextNode *node, PBL_UNUSED const GRect *box,
-    PBL_UNUSED const GTextNodeDrawConfig *config, PBL_UNUSED bool render, char *buffer,
-    size_t buffer_size, void *user_data) {
+    [[maybe_unused]] GContext *ctx, [[maybe_unused]] GTextNode *node,
+    [[maybe_unused]] const GRect *box, [[maybe_unused]] const GTextNodeDrawConfig *config,
+    [[maybe_unused]] bool render, char *buffer, size_t buffer_size, void *user_data) {
   LauncherAppGlanceStructured *structured_glance = user_data;
   if (!structured_glance) {
     return;

@@ -217,12 +217,12 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
                                     GRect *frame) {
   const GSize size = timeline_resources_get_gsize(TimelineResourceSizeTiny);
   const bool is_future = (scroll_direction == TimelineScrollDirectionDown);
-  PBL_UNUSED const int offset_y_rect = -5;
+  [[maybe_unused]] const int offset_y_rect = -5;
   // Round icon offsets follow the display geometry used by the timeline layer.
   const bool use_large_style = (PreferredContentSizeDefault >= PreferredContentSizeLarge);
   // s_style_large: future_top_margin=39, past layout origin=117, icon_offset_y=3
   // s_style_medium: future_top_margin=39, past layout origin=61, icon_offset_y=0
-  PBL_UNUSED const int offset_y_round =
+  [[maybe_unused]] const int offset_y_round =
       use_large_style ? (is_future ? 76 : -2) : (is_future ? 40 : 17);
   const GPoint origin = {
     .x = bounds->size.w - size.w + 2,
@@ -554,7 +554,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   }
 
   const char *secondary_text = prv_get_secondary_text(layout);
-  PBL_UNUSED const bool is_thin = (layout->layout_layer.mode == LayoutLayerModePinnedThin);
+  [[maybe_unused]] const bool is_thin = (layout->layout_layer.mode == LayoutLayerModePinnedThin);
   const TimelineLayoutStyle *style = prv_get_style();
   const bool thin_can_have_secondary = style->thin_can_have_secondary;
   const bool has_secondary =
@@ -717,7 +717,7 @@ static void prv_get_card_view_bounds(TimelineLayout *layout, GRect *box_out) {
 static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, GSize *size_out) {
   const bool is_card = (layout->layout_layer.mode == LayoutLayerModeCard);
   const bool is_peek = (layout->layout_layer.mode == LayoutLayerModePeek);
-  const bool PBL_UNUSED paging = PBL_IF_ROUND_ELSE((is_card || is_peek), false);
+  [[maybe_unused]] const bool paging = PBL_IF_ROUND_ELSE((is_card || is_peek), false);
   GRect box;
   (is_card ? prv_get_card_view_bounds : prv_get_pin_view_bounds)(layout, &box);
   graphics_context_set_text_color(

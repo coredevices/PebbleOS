@@ -91,9 +91,6 @@
 /** @brief Keep the symbol even if it appears unreferenced. */
 #define PBL_USED PBL_USED_IMPL
 
-/** @brief Do not warn if the symbol is unreferenced. */
-#define PBL_UNUSED PBL_UNUSED_IMPL
-
 /** @brief Emit a weak symbol, overridable by a strong definition elsewhere. */
 #define PBL_WEAK PBL_WEAK_IMPL
 

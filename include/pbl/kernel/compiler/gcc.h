@@ -17,7 +17,6 @@
 #define PBL_PACKED_IMPL                 __attribute__((__packed__))
 #define PBL_ALIGNED_IMPL(bytes)         __attribute__((__aligned__(bytes)))
 #define PBL_USED_IMPL                   __attribute__((__used__))
-#define PBL_UNUSED_IMPL                 __attribute__((__unused__))
 #define PBL_WEAK_IMPL                   __attribute__((__weak__))
 #define PBL_ALIAS_IMPL(sym)             __attribute__((__alias__(sym)))
 #define PBL_EXTERNALLY_VISIBLE_IMPL     __attribute__((__externally_visible__))

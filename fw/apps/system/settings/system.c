@@ -713,7 +713,7 @@ static int16_t prv_draw_generic_mark(GContext *ctx, GBitmap *mark, GPoint origin
 
 #if PBL_RECT
 static void prv_draw_rt_cell_rect(GContext *ctx, const Layer *cell_layer, GBitmap *mark,
-                                  const char *text, PBL_UNUSED bool is_selected) {
+                                  const char *text, [[maybe_unused]] bool is_selected) {
   int16_t x = (MARK_PADDING / 2);
   GRect box = cell_layer->bounds;
   const bool highlight = menu_cell_layer_is_highlighted(cell_layer);

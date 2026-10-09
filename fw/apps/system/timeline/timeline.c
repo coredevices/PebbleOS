@@ -311,7 +311,7 @@ static Animation *prv_create_sidebar_animation(TimelineAppData *data, bool open)
 }
 
 static void prv_exit(TimelineAppData *data) {
-  PBL_UNUSED const TimelineAppState prev_state = data->state;
+  [[maybe_unused]] const TimelineAppState prev_state = data->state;
   if (!prv_set_state(data, TimelineAppStateExit)) {
     return;
   }

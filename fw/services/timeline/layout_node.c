@@ -340,10 +340,10 @@ static GTextNode *prv_metric_constructor(const LayoutLayer *layout,
       layout, PBL_IF_ROUND_ELSE(&vertical_config.container.extent.node,
                                 &horizontal_config.container.extent.node));
   if (context->index > 0) {
-    PBL_UNUSED const int metric_margin_top = PBL_IF_RECT_ELSE(0, 5);
-    PBL_UNUSED const int metric_margin_h_rect = 14;
-    PBL_UNUSED const int metric_margin_h_round_inner = 20;
-    PBL_UNUSED const int metric_margin_h_round_page = 24;
+    [[maybe_unused]] const int metric_margin_top = PBL_IF_RECT_ELSE(0, 5);
+    [[maybe_unused]] const int metric_margin_h_rect = 14;
+    [[maybe_unused]] const int metric_margin_h_round_inner = 20;
+    [[maybe_unused]] const int metric_margin_h_round_page = 24;
     const int metric_margin_h =
         PBL_IF_RECT_ELSE(metric_margin_h_rect,
                          // special case for the first metric after a page break

@@ -1774,7 +1774,7 @@ void prv_assert_known_settings(void) {
 // --------------------------------------------------------------------------------------
 // Save the current settings file format with known data to the local file system so that it can
 // be checked in and used for migration tests.
-PBL_UNUSED static void prv_save_known_settings_file(const char *filename) {
+[[maybe_unused]] static void prv_save_known_settings_file(const char *filename) {
   // Let's include 3 days of history by start at s_init_time_tm - 3 days
   struct tm time_tm = s_init_time_tm;
   time_t utc_sec = mktime(&time_tm);

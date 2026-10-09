@@ -169,7 +169,7 @@ static void prv_update_status(void) {
   pbl_mutex_unlock(&s_mutex);
 }
 
-static void prv_init(void *PBL_UNUSED data) {
+static void prv_init([[maybe_unused]] void *data) {
   s_initialized = true;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
