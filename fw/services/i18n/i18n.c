@@ -216,7 +216,7 @@ static bool prv_get_metadata(struct DomainBinding *db) {
   }
 
   // Isolate the version value
-  char version_str[10] = {0};
+  char version_str[10] = {};
   if (!prv_get_property(header, "Project-Id-Version: ", version_str, 10)) {
     PBL_LOG_WRN("Could not parse a version from language pack");
     goto cleanup;

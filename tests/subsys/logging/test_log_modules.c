@@ -96,7 +96,7 @@ void pbl_log_advanced(const char *buffer, int length, bool async) {
 
 void test_log_modules__initialize(void) {
   PBL_LOG_MODULE_LEVEL_SET(test_runtime, CONFIG_TEST_RUNTIME_LOG_LEVEL);
-  s_state = (LogState){0};
+  s_state = (LogState){};
   s_serial_count = s_flash_count = 0;
   s_serial_level = s_flash_level = 0;
   s_serial_async = s_flash_async = false;

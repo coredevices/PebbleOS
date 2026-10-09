@@ -41,7 +41,7 @@ typedef struct {
   size_t encoded_buffer_size;
 } VoiceSpeexEncoder;
 
-static VoiceSpeexEncoder s_encoder = {0};
+static VoiceSpeexEncoder s_encoder = {};
 
 // Speex configuration
 #define SPEEX_SAMPLE_RATE         16000 // 16 kHz wideband

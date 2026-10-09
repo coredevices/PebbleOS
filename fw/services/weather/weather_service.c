@@ -109,7 +109,7 @@ static bool prv_get_location_index(Uuid *location, SerializedWeatherAppPrefs *pr
 static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry, void *context) {
   WeatherDBIteratorContext *iterator_context = context;
   SerializedWeatherAppPrefs *prefs = iterator_context->serialized_prefs;
-  char key_string_buffer[UUID_STRING_BUFFER_LENGTH] = {0};
+  char key_string_buffer[UUID_STRING_BUFFER_LENGTH] = {};
   size_t location_index;
 
   if (!prv_get_location_index(key, prefs, &location_index)) {

@@ -110,5 +110,5 @@ void app_touch_navigation_enable(bool enable) {
 }
 
 void touch_service_state_init(TouchServiceState *state) {
-  *state = (TouchServiceState){0};
+  *state = (TouchServiceState){};
 }

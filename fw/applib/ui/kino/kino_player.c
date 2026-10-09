@@ -207,6 +207,6 @@ void kino_player_draw_processed(KinoPlayer *player, GContext *ctx, GPoint offset
 }
 
 void kino_player_deinit(KinoPlayer *player) {
-  player->callbacks = (KinoPlayerCallbacks){0};
+  player->callbacks = (KinoPlayerCallbacks){};
   kino_player_set_reel(player, NULL, false);
 }

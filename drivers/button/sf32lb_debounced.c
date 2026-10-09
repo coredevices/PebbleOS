@@ -31,7 +31,7 @@
 
 // A button must be stable for 20 samples (40ms) to be accepted.
 static const uint32_t s_num_debounce_samples = 20;
-static GPT_HandleTypeDef s_tim_hdl = {0};
+static GPT_HandleTypeDef s_tim_hdl = {};
 static bool s_timer_enabled = false;
 
 static void prv_timer_handler(void);

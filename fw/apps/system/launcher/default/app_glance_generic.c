@@ -278,11 +278,11 @@ static void prv_generic_glance_dynamic_text_node_update(
   // Evaluate the subtitle as a template string
   const char *subtitle_template_string =
       structured_glance->glance.current_slice.icon_and_subtitle.template_string;
-  TemplateStringEvalConditions template_string_reeval_conditions = {0};
+  TemplateStringEvalConditions template_string_reeval_conditions = {};
   const TemplateStringVars template_string_vars = (TemplateStringVars){
     .current_time = rtc_get_time(),
   };
-  TemplateStringError template_string_error = {0};
+  TemplateStringError template_string_error = {};
   template_string_evaluate(subtitle_template_string, buffer, buffer_size,
                            &template_string_reeval_conditions, &template_string_vars,
                            &template_string_error);

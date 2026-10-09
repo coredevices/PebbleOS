@@ -766,7 +766,7 @@ static void prv_handle_app_attributes_response(const uint8_t *data, size_t lengt
     }
   }
 
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
 
   if (length == 0) {
     goto fail;
@@ -861,7 +861,7 @@ static void prv_get_app_attributes(const ANCSAttribute *app_id) {
 
   if (!success) {
     PBL_LOG_WRN("Failed to fetch app attributes for notification");
-    ANCSAttribute *empty_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {0};
+    ANCSAttribute *empty_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
     // we failed to fetch the app, but we got a notification
     prv_put_ancs_message(empty_attrs);
     prv_reset_and_next();

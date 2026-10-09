@@ -1079,7 +1079,7 @@ void shell_prefs_init(void) {
     s_motion_sensitivity = BOARD_CONFIG_ACCEL.default_motion_sensitivity;
   }
 
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
     return;
   }
@@ -1136,7 +1136,7 @@ void shell_prefs_init(void) {
   // device follows the new board default.
   if (!s_als_threshold_migrated_v1) {
     s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-    SettingsFile mfile = {{0}};
+    SettingsFile mfile = {};
     if (settings_file_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       settings_file_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
                            sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
@@ -1151,7 +1151,7 @@ void shell_prefs_init(void) {
   // the device follows the new lux board defaults.
   if (!s_als_threshold_migrated_v2) {
     s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-    SettingsFile v2file = {{0}};
+    SettingsFile v2file = {};
     if (settings_file_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       settings_file_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
                            sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
@@ -1215,7 +1215,7 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
   status_t rv = E_ERROR;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {{0}};
+    SettingsFile file = {};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator, so we add 1 to key_len
       rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
@@ -1292,7 +1292,7 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   bool success = false;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {{0}};
+    SettingsFile file = {};
     if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator
       // Use strlen(entry->key) + 1 to match how it was written, since key_len from

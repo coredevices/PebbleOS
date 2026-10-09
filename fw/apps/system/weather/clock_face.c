@@ -185,7 +185,7 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
 
   // Rank each palette entry once: 0 transparent, 1 light, 2 ink. The 50px art
   // carries gray shading; anything that quantizes to the dark half is ink.
-  uint8_t rank[16] = {0};
+  uint8_t rank[16] = {};
   for (uint32_t i = 0; i < entries; i++) {
     if (!src_pal[i].a)
       continue;

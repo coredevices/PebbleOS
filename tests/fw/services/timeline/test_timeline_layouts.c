@@ -208,7 +208,7 @@ static void prv_construct_and_render_layout(const TimelineLayoutTestConfig *conf
     return;
   }
 
-  AttributeList attr_list = (AttributeList){0};
+  AttributeList attr_list = (AttributeList){};
   if (config->title) {
     attribute_list_add_cstring(&attr_list, AttributeIdTitle, config->title);
   }
@@ -442,7 +442,7 @@ void test_timeline_layouts__weather_pin_kind(void) {
 }
 
 static void prv_construct_and_render_sports_layout(GameState state, size_t num_down_clicks) {
-  AttributeList attr_list = (AttributeList){0};
+  AttributeList attr_list = (AttributeList){};
   attribute_list_add_cstring(&attr_list, AttributeIdTitle, "Warriors at Bulls");
   attribute_list_add_uint8(&attr_list, AttributeIdSportsGameState, state);
   attribute_list_add_cstring(&attr_list, AttributeIdNameAway, "GSW");

@@ -61,7 +61,7 @@ void test_ancs_app_storage__one_app(void) {
   app_data.is_meta_changed = true;
   ancs_app_storage_save(&app_data);
 
-  ANCSAppData app_data_out = {0};
+  ANCSAppData app_data_out = {};
   ancs_app_storage_load(app_data.bundle_id, &app_data_out);
 
   cl_assert_equal_s(app_data.bundle_id, app_data_out.bundle_id);
@@ -84,7 +84,7 @@ void test_ancs_app_storage__overwrite(void) {
   app_data.is_meta_changed = true;
   ancs_app_storage_save(&app_data);
 
-  ANCSAppData app_data_out = {0};
+  ANCSAppData app_data_out = {};
   ancs_app_storage_load(app_data.bundle_id, &app_data_out);
 
   cl_assert_equal_s(app_data.bundle_id, app_data_out.bundle_id);
@@ -122,7 +122,7 @@ void test_ancs_app_storage__hash_collisions(void) {
     }
   }
 
-  ANCSAppData app_data_out = {0};
+  ANCSAppData app_data_out = {};
   for (unsigned int i = 0; i < ARRAY_LENGTH(collide_pairs); ++i) {
     for (unsigned int j = 0; j < 2; ++j) {
       char *name = collide_pairs[i][j];
@@ -162,7 +162,7 @@ void test_ancs_app_storage__iter(void) {
     ancs_app_storage_save(&apps[i]);
   }
 
-  ANCSAppData app_data_out = {0};
+  ANCSAppData app_data_out = {};
   for (unsigned int i = 0; i < ARRAY_LENGTH(apps); ++i) {
     PBL_LOG_DBG("i: %d, name: %s", i, apps[i].bundle_id);
     ancs_app_storage_load(apps[i].bundle_id, &app_data_out);

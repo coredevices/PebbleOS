@@ -116,7 +116,7 @@ static TimelineItem
                   .id =
                       {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65,
                        0x72, 0x22, 0xb1},
-                  .parent_id = {0},
+                  .parent_id = {},
                   .timestamp = 1421178061, // Tue Jan 13 11:41:01 2015 PST
                   .duration = 1,
                   .type = TimelineItemTypePin,
@@ -142,7 +142,7 @@ static TimelineItem
                   .id =
                       {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65,
                        0x72, 0x22, 0xb2},
-                  .parent_id = {0},
+                  .parent_id = {},
                   .timestamp = 1421183642, // Tue Jan 13 13:14:02 2015 PST
                   .duration = 10,
                   .type = TimelineItemTypePin,
@@ -170,7 +170,7 @@ static TimelineItem
                         0x6b,
                         0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb3
                       },
-                  .parent_id = {0},
+                  .parent_id = {},
                   .timestamp = 1421183642, // Tue Jan 13 13:14:02 2015 PST
                   .duration = 2,
                   .type = TimelineItemTypePin,
@@ -196,7 +196,7 @@ static TimelineItem
                   .id =
                       {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65,
                        0x72, 0x22, 0xb4},
-                  .parent_id = {0},
+                  .parent_id = {},
                   .timestamp = 1421183642, // Tue Jan 13 13:14:02 2015 PST
                   .duration = 30,
                   .type = TimelineItemTypePin,
@@ -222,7 +222,7 @@ static TimelineItem
                   .id =
                       {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65,
                        0x72, 0x22, 0xb5},
-                  .parent_id = {0},
+                  .parent_id = {},
                   .timestamp = 1421178061, // Tue Jan 13 11:41:01 2015 PST
                   .duration = 5,
                   .type = TimelineItemTypePin,
@@ -248,7 +248,7 @@ static TimelineItem
                   .id =
                       {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e, 0x8c, 0x31, 0x4f, 0x55, 0x65,
                        0x72, 0x22, 0xb6},
-                  .parent_id = {0},
+                  .parent_id = {},
                   .timestamp = 1421183462, // Tue Jan 13 13:11:02 PST 2015
                   .duration = 4,
                   .type = TimelineItemTypePin,
@@ -295,7 +295,7 @@ void test_timeline_model__cleanup(void) {
 static int s_correct_order[] = {0, 4, 5, 2, 1, 3};
 
 void test_timeline_model__future(void) {
-  TimelineModel model = {0};
+  TimelineModel model = {};
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
@@ -375,7 +375,7 @@ void test_timeline_model__future(void) {
 }
 
 void test_timeline_model__and_back(void) {
-  TimelineModel model = {0};
+  TimelineModel model = {};
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
@@ -454,7 +454,7 @@ void test_timeline_model__and_back(void) {
 }
 
 void test_timeline_model__graceful_delete_middle(void) {
-  TimelineModel model = {0};
+  TimelineModel model = {};
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
@@ -471,7 +471,7 @@ void test_timeline_model__graceful_delete_middle(void) {
 }
 
 void test_timeline_model__graceful_delete_first(void) {
-  TimelineModel model = {0};
+  TimelineModel model = {};
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
@@ -488,7 +488,7 @@ void test_timeline_model__graceful_delete_first(void) {
 }
 
 void test_timeline_model__graceful_delete_all(void) {
-  TimelineModel model = {0};
+  TimelineModel model = {};
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
@@ -503,7 +503,7 @@ void test_timeline_model__graceful_delete_all(void) {
 }
 
 void test_timeline_model__is_empty(void) {
-  TimelineModel model = {0};
+  TimelineModel model = {};
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
@@ -519,7 +519,7 @@ void test_timeline_model__is_empty(void) {
 }
 
 void test_timeline_model__is_empty_immediate(void) {
-  TimelineModel model = {0};
+  TimelineModel model = {};
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015

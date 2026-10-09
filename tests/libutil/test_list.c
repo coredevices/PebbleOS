@@ -166,7 +166,7 @@ static bool is_even(IntNode *node, void *data) {
 }
 
 void test_list__find_next_and_prev(void) {
-  IntNode bar[5] = {0};
+  IntNode bar[5] = {};
   ListNode *tail = NULL;
   for (int i = 0; i < 5; ++i) {
     bar[i].value = i;

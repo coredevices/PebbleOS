@@ -2514,7 +2514,7 @@ void test_activity__prv_set_metric(void) {
   activity_start_tracking(false /*test_mode*/);
   fake_system_task_callbacks_invoke_pending();
 
-  int32_t metric_values[ACTIVITY_HISTORY_DAYS] = {0};
+  int32_t metric_values[ACTIVITY_HISTORY_DAYS] = {};
 
   // Set today's value
   activity_metrics_prv_set_metric(ActivityMetricStepCount, PBL_THURSDAY, 1111);

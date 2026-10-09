@@ -21,7 +21,7 @@
 #include <stubs_unobstructed_area.h>
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
-  return (GDrawState){0};
+  return (GDrawState){};
 }
 
 bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {

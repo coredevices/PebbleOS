@@ -581,7 +581,7 @@ void test_action_menu_window__emoji_picker_selection(void) {
     const int expected_rows = PBL_IF_ROUND_ELSE((count + 9) / 10, (count + 2) / 3);
     cl_assert_equal_i(menu->callbacks.get_num_rows(menu, 0, aml), expected_rows);
 #if PBL_ROUND
-    int page_counts[3] = {0};
+    int page_counts[3] = {};
     for (int i = 0; i < count; ++i) {
       prv_set_selected_index(aml, i, false);
       const int page = menu_layer_get_selected_index(menu).row;

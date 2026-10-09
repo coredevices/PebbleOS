@@ -19,7 +19,7 @@ typedef struct {
   int num_samps;
 } LeConnectionParams;
 
-static LeConnectionParams s_le_conn_params = {0};
+static LeConnectionParams s_le_conn_params = {};
 
 void bluetooth_analytics_get_param_averages(uint16_t *params) {
   int num_samps = s_le_conn_params.num_samps;

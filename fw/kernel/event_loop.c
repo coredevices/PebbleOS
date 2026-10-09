@@ -295,7 +295,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
       // interaction session is active; unarmed contact on the idle watchface
       // stays fully inert. Release on liftoff ungated so the refcount can't
       // leak if the session expired or touch was disabled mid-touch.
-      TouchWakeGateResult gate = {0};
+      TouchWakeGateResult gate = {};
       const bool is_modal_focused = (modal_manager_get_enabled() &&
                                      !(modal_manager_get_properties() & ModalProperty_Unfocused));
       if (e->touch.event.type == TouchEvent_Touchdown) {

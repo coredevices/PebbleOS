@@ -288,7 +288,7 @@ void test_imaging__bad_dimensions_rejected(void) {
 }
 
 void test_imaging__bad_palette_rejected(void) {
-  uint8_t big_palette[17] = {0};
+  uint8_t big_palette[17] = {};
   uint8_t buf[64];
   // More palette entries than a 4-bpp image can have
   size_t len = prv_build_response(

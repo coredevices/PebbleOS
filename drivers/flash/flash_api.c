@@ -39,7 +39,7 @@ static struct FlashEraseContext {
   FlashOperationCompleteCb on_complete_cb;
   void *cb_context;
   uint32_t expected_duration;
-} s_erase = {0};
+} s_erase = {};
 
 static TimerID s_erase_poll_timer;
 static TimerID s_erase_suspend_timer;
@@ -57,7 +57,7 @@ void flash_init(void) {
 
 #if UNITTEST
 void flash_api_reset_for_test(void) {
-  s_erase = (struct FlashEraseContext){0};
+  s_erase = (struct FlashEraseContext){};
   s_flash_initialized = false;
 }
 

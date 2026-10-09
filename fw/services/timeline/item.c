@@ -247,7 +247,7 @@ void timeline_item_free_allocated_buffer(TimelineItem *item) {
 
 bool timeline_item_verify_layout_serialized(const uint8_t *val, int val_len) {
   SerializedTimelineItemHeader *hdr = (SerializedTimelineItemHeader *)val;
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
 
   // verify that the serialized attributes are well-formed
   const uint8_t *cursor = val + sizeof(SerializedTimelineItemHeader);

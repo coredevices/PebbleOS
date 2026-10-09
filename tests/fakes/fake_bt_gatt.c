@@ -151,8 +151,8 @@ void fake_gatt_init(void) {
   prv_disarm_watchdog();
   s_watchdog_connection = NULL;
   s_service_changed_indication_count = 0;
-  s_service_changed_last_device = (struct pbl_bt_device_internal){0};
-  s_service_changed_last_range = (struct pbl_bt_att_handle_range){0};
+  s_service_changed_last_device = (struct pbl_bt_device_internal){};
+  s_service_changed_last_range = (struct pbl_bt_att_handle_range){};
 }
 
 // -- discovery event injection ------------------------------------------------

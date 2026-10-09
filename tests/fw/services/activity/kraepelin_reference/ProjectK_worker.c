@@ -281,7 +281,7 @@ static void epoch_analysis() {
   }
 
   /* WEAR TIME CALCULATION, NO THRESHOLD */
-  uint32_t pim_5sec_ary[3] = {0};
+  uint32_t pim_5sec_ary[3] = {};
 
   // If this is the first epoch after an init, we need to prime the butterworth filter used
   // by prv_pim_filter to avoid getting jumps in VMC due to the discontinuity

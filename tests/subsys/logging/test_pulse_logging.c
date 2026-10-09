@@ -84,7 +84,7 @@ bool pbl_sched_is_locked(void) {
 
 void test_pulse_logging__initialize(void) {
   s_num_event_puts = 0;
-  s_last_event = (PebbleEvent){0};
+  s_last_event = (PebbleEvent){};
 
   s_num_packets_sent = 0;
   s_num_bytes_sent = 0;

@@ -27,7 +27,7 @@ static void prv_init(void) {
 }
 
 static void prv_deinit(void) {
-  SimpleMessage msg = {0};
+  SimpleMessage msg = {};
   uint8_t *buffer = app_state_get_user_data();
   pb_istream_t s = pb_istream_from_buffer(buffer, 30);
   pb_decode(&s, SimpleMessage_fields, &msg);

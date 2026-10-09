@@ -147,7 +147,7 @@ void prv_reset(void) {
   s_path_fill_precise_count = 0;
   s_circle_stroke_count = 0;
   s_circle_fill_count = 0;
-  s_offset = (GPoint){0};
+  s_offset = (GPoint){};
 
   if (s_precise_lines) {
     free(s_precise_lines);

@@ -41,10 +41,10 @@ static void prv_enter_standby(void);
 static void prv_exit_critical(void);
 
 static const PowerState power_states[] = {
-  [PowerStateGood] = {0},
+  [PowerStateGood] = {},
   [PowerStateLowPower] = {.enter = prv_enter_lpm, .exit = prv_exit_lpm},
   [PowerStateCritical] = {.enter = prv_begin_standby_timer, .exit = prv_exit_critical},
-  [PowerStatePluggedIn] = {0},
+  [PowerStatePluggedIn] = {},
   [PowerStateStandby] = {.enter = prv_enter_standby}
 };
 

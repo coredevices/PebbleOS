@@ -25,7 +25,7 @@ typedef struct FakeFlashState {
   uint32_t erase_count;
 } FakeFlashState;
 
-static FakeFlashState s_state = {0};
+static FakeFlashState s_state = {};
 
 void fake_spi_flash_erase(void) {
   memset(s_state.storage, 0xff, s_state.length);
@@ -34,7 +34,7 @@ void fake_spi_flash_erase(void) {
 void fake_spi_flash_cleanup(void) {
   free(s_state.storage);
   s_state.storage = NULL;
-  s_state = (FakeFlashState){0};
+  s_state = (FakeFlashState){};
 }
 
 //! @param offset the offset at which this fake region of flash begins.

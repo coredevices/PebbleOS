@@ -339,7 +339,7 @@ void test_health__sum_today(void) {
     HealthServiceTimeRange r_b = (b);                                                              \
     bool success = memcmp(&r_a, &r_b, sizeof(r_a)) == 0;                                           \
     if (!success) {                                                                                \
-      char error_msg[256] = {0};                                                                   \
+      char error_msg[256] = {};                                                                    \
       snprintf(error_msg, sizeof(error_msg),                                                       \
                "HealthServiceInternalTimeRange equal\n"                                            \
                "    a: {last_day_idx:%d, num_days:%d, seconds_first_day:%d, seconds_last_day:%d, " \

@@ -250,7 +250,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
 PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info) {
   int orig_gmt_offset = time_get_gmtoffset();
   time_t orig_utc_time = rtc_get_time();
-  TimezoneInfo tz_adjust_info = {{0}};
+  TimezoneInfo tz_adjust_info = {};
 
   if (clock_is_timezone_set()) { // We'll need to update timezone stamps.
     time_t tz_adjust_time;
@@ -683,7 +683,7 @@ void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
       int gmt_offset_m = time_get_gmtoffset() / PBL_SEC_PER_MIN;
       int hour_offset = gmt_offset_m / PBL_MIN_PER_HOUR;
 
-      char min_buf[4] = {0};
+      char min_buf[4] = {};
       int min_offset_percent = ((ABS(gmt_offset_m) % PBL_MIN_PER_HOUR) * 100) / PBL_MIN_PER_HOUR;
       if (min_offset_percent) {
         snprintf(min_buf, sizeof(min_buf), ".%d", min_offset_percent);

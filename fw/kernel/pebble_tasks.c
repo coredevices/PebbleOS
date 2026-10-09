@@ -17,7 +17,7 @@
 #include <system/reboot_reason.h>
 
 static struct pbl_thread s_threads[NumPebbleTask];
-struct pbl_thread *g_task_threads[NumPebbleTask] KERNEL_READONLY_DATA = {0};
+struct pbl_thread *g_task_threads[NumPebbleTask] KERNEL_READONLY_DATA = {};
 
 // Cycles consumed by tasks that have already been destroyed in each slot.
 // Captured at unregister time so the analytics heartbeat can keep accounting
@@ -178,7 +178,7 @@ void pbl_analytics_external_collect_task_cpu_stats(void) {
   s_prev_total_run_time = total_run_time;
 
   struct pbl_thread *idle_thread = pbl_thread_idle();
-  uint32_t curr_task_run_time[NumPebbleTask] = {0};
+  uint32_t curr_task_run_time[NumPebbleTask] = {};
   uint32_t curr_idle_run_time = 0;
 
   for (size_t i = 0; i < count; i++) {

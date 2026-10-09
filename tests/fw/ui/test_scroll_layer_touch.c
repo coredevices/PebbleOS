@@ -91,7 +91,7 @@ static TouchNavOps s_bridge_ops;
 
 // Bring up a real per-task touch-nav state so scroll_layer_init() registers into a live registry.
 static void prv_touch_nav_setup(void) {
-  s_bridge = (FakeBridgeOps){0};
+  s_bridge = (FakeBridgeOps){};
   s_bridge_ops = (TouchNavOps){
     .is_animating = prv_bridge_is_animating,
     .top_overrides_back = prv_bridge_top_overrides_back,
@@ -174,12 +174,12 @@ bool animation_set_handlers(Animation *animation, AnimationHandlers callbacks, v
 void test_scroll_layer_touch__initialize(void) {
   fake_rtc_init(0, 0);
   s_anim_to = GPointZero;
-  s_anim_handlers = (AnimationHandlers){0};
+  s_anim_handlers = (AnimationHandlers){};
   s_anim_handlers_context = NULL;
   s_nav_enabled = true;
   // A zeroed state has a NULL manager, so scroll_layer_init() registration is inert for tests that
   // do not opt into the touch-nav harness (prv_touch_nav_setup()).
-  s_touch_nav_state = (TouchNavState){0};
+  s_touch_nav_state = (TouchNavState){};
   scroll_layer_touch_nav_reset_all();
 }
 

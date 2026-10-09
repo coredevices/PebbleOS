@@ -199,7 +199,7 @@ static void handle_init(void) {
   for (int i = 0; i < NUM_NOTIFS; i++) {
     TestNotification notif = notifications[i];
 
-    AttributeList attr_list = {0};
+    AttributeList attr_list = {};
     if (notif.bg_color != GColorClearARGB8) {
       attribute_list_add_uint8(&attr_list, AttributeIdBgColor, notif.bg_color);
     }

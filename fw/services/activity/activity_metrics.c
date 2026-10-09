@@ -657,8 +657,8 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
     activity_metrics_prv_get_metric_info(metric, &m_info);
     if (m_info.has_history) {
       PBL_ASSERTN(m_info.value_p);
-      ActivitySettingsValueHistory old_history = {0};
-      ActivitySettingsValueHistory new_history = {0};
+      ActivitySettingsValueHistory old_history = {};
+      ActivitySettingsValueHistory new_history = {};
 
       // In case we change the length of the history, fetch the old size
       int fetch_size = sizeof(old_history);

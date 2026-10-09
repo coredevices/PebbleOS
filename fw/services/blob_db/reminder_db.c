@@ -31,7 +31,7 @@ typedef struct {
 static TimelineItemStorage s_storage;
 
 static status_t prv_read_item_header(TimelineItem *item_out, TimelineItemId *id) {
-  SerializedTimelineItemHeader hdr = {{{0}}};
+  SerializedTimelineItemHeader hdr = {};
   status_t rv = reminder_db_read((uint8_t *)id, sizeof(TimelineItemId), (uint8_t *)&hdr,
                                  sizeof(SerializedTimelineItemHeader));
   timeline_item_deserialize_header(item_out, &hdr);

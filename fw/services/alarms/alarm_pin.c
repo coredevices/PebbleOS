@@ -98,7 +98,7 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
     .actions = task_zalloc_check(sizeof(TimelineItemAction) * num_actions),
   };
 
-  AttributeList edit_attr_list = {0};
+  AttributeList edit_attr_list = {};
   prv_set_edit_action_attributes(&edit_attr_list, id);
   action_group.actions[0] = (TimelineItemAction){
     .id = (uint8_t)id, // id is guaranteed to be valid here, and we only support 10 alarms
@@ -106,7 +106,7 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
     .attr_list = edit_attr_list,
   };
 
-  AttributeList pin_attr_list = {0};
+  AttributeList pin_attr_list = {};
   prv_set_pin_attributes(&pin_attr_list, type, kind);
   TimelineItem *item = timeline_item_create_with_attributes(
       alarm_time, 0, TimelineItemTypePin, LayoutIdAlarm, &pin_attr_list, &action_group);

@@ -283,7 +283,7 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
     }
   }
 
-  apng_fctl fctl = {0}; // Defaults work for IDAT frame without fctl data
+  apng_fctl fctl = {}; // Defaults work for IDAT frame without fctl data
 
   // If this frame doesn't have fctl, use the full width & height
   if (!upng_get_apng_fctl(upng, &fctl)) {

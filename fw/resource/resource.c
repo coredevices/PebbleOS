@@ -47,7 +47,7 @@ static bool prv_resource_filter(ListNode *found_node, void *data) {
 
 static void prv_get_resource(ResAppNum app_num, uint32_t id, ResourceStoreEntry *entry) {
   if (id < 1) {
-    *entry = (ResourceStoreEntry){0};
+    *entry = (ResourceStoreEntry){};
     return;
   }
 

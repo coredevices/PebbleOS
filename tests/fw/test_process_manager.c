@@ -245,7 +245,7 @@ static const Uuid s_uuid_b = {0x49, 0x82, 0x77, 0x22, 0x00, 0x11, 0x22, 0x33,
 //! by a previous install leaves a stale binary at that ID. Launching must notice and refetch
 //! rather than silently running the wrong app.
 void test_process_manager__stale_cache_entry_is_refetched(void) {
-  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {}}};
   s_stale_md.common.uuid = s_uuid_b;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_stale_md;
 
@@ -262,7 +262,7 @@ void test_process_manager__stale_cache_entry_is_refetched(void) {
 }
 
 void test_process_manager__matching_cache_entry_launches(void) {
-  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {}}};
   s_good_md.common.uuid = s_uuid_a;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
 
@@ -277,7 +277,7 @@ void test_process_manager__matching_cache_entry_launches(void) {
 
 //! A requested forced close has to reach the app manager, or it's treated as a crash
 void test_process_manager__requested_kill_reaches_the_app_manager(void) {
-  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_good_md = {.common = {.uuid = {}}};
   s_good_md.common.uuid = s_uuid_a;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
@@ -293,7 +293,7 @@ void test_process_manager__requested_kill_reaches_the_app_manager(void) {
 
 //! An app that isn't cached yet goes through the fetch UI, so the request has to survive it
 void test_process_manager__requested_kill_survives_a_fetch(void) {
-  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {0}}};
+  static PebbleProcessMdFlash s_stale_md = {.common = {.uuid = {}}};
   s_stale_md.common.uuid = s_uuid_b;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_stale_md;
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;

@@ -54,7 +54,7 @@ void pbl_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_r
 }
 
 void pbl_thread_stack_info(const struct pbl_thread *t, struct pbl_thread_stack_info *info) {
-  *info = (struct pbl_thread_stack_info){0};
+  *info = (struct pbl_thread_stack_info){};
 }
 
 // Stubs

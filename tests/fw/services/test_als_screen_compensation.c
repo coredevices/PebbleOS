@@ -36,7 +36,7 @@ GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) 
 }
 
 static GBitmap prv_make_bitmap(uint8_t *pixels, int16_t w, int16_t h) {
-  GBitmap b = {0};
+  GBitmap b = {};
   b.addr = pixels;
   b.row_size_bytes = (uint16_t)w;
   b.info.format = GBitmapFormat8Bit;

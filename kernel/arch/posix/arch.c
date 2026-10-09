@@ -142,7 +142,7 @@ void arch_irq_enable(void) {
 
 void arch_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs) {
   (void)t;
-  *regs = (struct pbl_thread_saved_regs){0};
+  *regs = (struct pbl_thread_saved_regs){};
 }
 
 void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_REG_COUNT]) {

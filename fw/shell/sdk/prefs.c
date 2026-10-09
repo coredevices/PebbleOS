@@ -275,7 +275,7 @@ void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval)
 #endif
 
 ActivityInsightSettings *activity_prefs_get_sleep_reward_settings(void) {
-  static ActivityInsightSettings s_settings = {0};
+  static ActivityInsightSettings s_settings = {};
   return &s_settings;
 }
 

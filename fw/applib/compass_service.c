@@ -109,7 +109,7 @@ int compass_service_set_heading_filter(CompassHeading filter) {
 void compass_service_subscribe(CompassHeadingHandler handler) {
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
 
-  *config = (const CompassServiceConfig){0};
+  *config = (const CompassServiceConfig){};
   config->compass_cb = handler;
 
   config->info =

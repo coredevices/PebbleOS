@@ -113,7 +113,7 @@ static void prv_disable_spo2(AppData *app_data) {
 
 static void prv_init(void) {
   AppData *app_data = app_malloc_check(sizeof(*app_data));
-  *app_data = (AppData){0};
+  *app_data = (AppData){};
   app_state_set_user_data(app_data);
 
   Window *window = &app_data->window;

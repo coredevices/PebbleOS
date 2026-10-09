@@ -1113,10 +1113,10 @@ static void prv_draw_top_half_text(const WeatherAppLayout *layout, GPoint *curre
                                    int content_width, GContext *context) {
   const WeatherLocationForecast *forecast = layout->forecast;
 
-  char temp_buffer[15] = {0};
-  char highlow_buffer[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH] = {0};
-  char desc_buffer[128] = {0};
-  char uv_buffer[12] = {0};
+  char temp_buffer[15] = {};
+  char highlow_buffer[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH] = {};
+  char desc_buffer[128] = {};
+  char uv_buffer[12] = {};
   prv_build_forecast_desc(forecast, layout, desc_buffer, sizeof(desc_buffer));
   prv_fill_uv_value_buffer(forecast, uv_buffer, sizeof(uv_buffer));
   prv_fill_featured_temp_buffer(forecast, temp_buffer, sizeof(temp_buffer));
@@ -1205,7 +1205,7 @@ static void prv_draw_bottom_half_text(const WeatherAppLayout *layout, GPoint *cu
   const WeatherLocationForecast *next = layout->next_forecast;
   if (!next)
     return;
-  char text_buffer[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH] = {0};
+  char text_buffer[WEATHER_APP_LAYOUT_HIGH_LOW_LENGTH] = {};
   prv_fill_high_low_buffer(next->today_high, next->today_low, true /* tight on both shapes now */,
                            text_buffer, sizeof(text_buffer));
   prv_draw_bottom_rows(layout, current_offset, content_width, context,

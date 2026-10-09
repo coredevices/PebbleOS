@@ -299,7 +299,7 @@ status_t qspi_flash_read_security_register(QSPIFlash *dev, uint32_t addr, uint8_
   }
 
   /* Security register read size should aligned with 4 bytes.  */
-  uint8_t values[4] = {0};
+  uint8_t values[4] = {};
   uint32_t offset = addr % 4;
   uint32_t base_addr = addr - offset;
 

@@ -330,12 +330,12 @@ static void prv_build_notification_attr_list(AttributeList *attr_list, const cha
 // Generates a new timeline item for a reward notification
 static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
     time_t notif_time, const RewardNotifConfig *notif_config) {
-  AttributeList notif_attr_list = {0};
+  AttributeList notif_attr_list = {};
   prv_build_notification_attr_list(
       &notif_attr_list, i18n_get(notif_config->text_body, &notif_attr_list), notif_config->icon,
       notif_config->insight_type, ActivitySessionType_None);
 
-  AttributeList positive_attr_list = {0};
+  AttributeList positive_attr_list = {};
   attribute_list_add_cstring(&positive_attr_list, AttributeIdTitle,
                              i18n_get(notif_config->text_positive_action, &notif_attr_list));
   attribute_list_add_cstring(&positive_attr_list, AttributeIdBody,
@@ -343,7 +343,7 @@ static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
   attribute_list_add_uint32(&positive_attr_list, AttributeIdIconLarge,
                             notif_config->icon_positive_response);
 
-  AttributeList neutral_attr_list = {0};
+  AttributeList neutral_attr_list = {};
   attribute_list_add_cstring(&neutral_attr_list, AttributeIdTitle,
                              i18n_get(notif_config->text_neutral_action, &notif_attr_list));
   attribute_list_add_cstring(&neutral_attr_list, AttributeIdBody,
@@ -351,7 +351,7 @@ static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
   attribute_list_add_uint32(&neutral_attr_list, AttributeIdIconLarge,
                             notif_config->icon_neutral_response);
 
-  AttributeList negative_attr_list = {0};
+  AttributeList negative_attr_list = {};
   attribute_list_add_cstring(&negative_attr_list, AttributeIdTitle,
                              i18n_get(notif_config->text_negative_action, &notif_attr_list));
   attribute_list_add_cstring(&negative_attr_list, AttributeIdBody,
@@ -434,10 +434,10 @@ static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
     time_t pin_time_utc, time_t now_utc, uint32_t duration_m, LayoutId layout_id,
     AttributeList *pin_attr_list, HealthCardType health_card_type, int num_responses,
     ResponseItem *response_items) {
-  AttributeList open_attr_list = {0};
+  AttributeList open_attr_list = {};
   prv_set_open_app_action(&open_attr_list, health_card_type, pin_attr_list);
 
-  AttributeList remove_attr_list = {0};
+  AttributeList remove_attr_list = {};
   attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle,
                              i18n_get("Remove", pin_attr_list));
 
@@ -514,7 +514,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
                                                          ActivityScalarStore cur_val,
                                                          ActivityScalarStore average,
                                                          const SummaryPinConfig *config) {
-  AttributeList pin_attr_list = {0};
+  AttributeList pin_attr_list = {};
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
                              i18n_get(config->short_title, &pin_attr_list));
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortSubtitle, config->short_subtitle);

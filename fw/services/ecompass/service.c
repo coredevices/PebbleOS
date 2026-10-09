@@ -29,11 +29,11 @@ PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 #define CORRECTION_VAL_MASK     ((1 << BITS_PER_CORRECTION_VAL) - 1)
 
 static CompassStatus s_current_cal_status = CompassStatusDataInvalid;
-static int16_t s_active_corr[3] = {0};
+static int16_t s_active_corr[3] = {};
 
 static bool s_service_init = false;
 static bool s_saved_corr_present = false;
-static int16_t s_saved_corr[3] = {0};
+static int16_t s_saved_corr[3] = {};
 
 static int32_t s_last_heading = -1; // the last heading we found
 
@@ -49,14 +49,14 @@ static RegularTimerInfo s_cb_info = {.cb = prv_calibration_time_expired_cb};
 // Compass subscription state variables
 
 static uint8_t s_compass_subscribers_count = 0;
-static bool s_compass_subscribers[NumPebbleTask] = {0};
+static bool s_compass_subscribers[NumPebbleTask] = {};
 
 //////////////////////////////////////////////////////////////////////////////////
 // Accel service state variables
 
 static AccelServiceState *s_accel_session = NULL;
 static bool s_charger_plugged = false;
-static AccelRawData s_accel_data = {0};
+static AccelRawData s_accel_data = {};
 
 //////////////////////////////////////////////////////////////////////////////////
 // Private calibration handlers

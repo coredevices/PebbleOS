@@ -152,7 +152,7 @@ static void prv_draw_watch_hand(GContext *ctx, ClockHand *hand, GPointPrecise ce
 }
 
 static GPointPrecise prv_get_clock_center_point(ClockLocation location, const GRect *bounds) {
-  GPoint imprecise_center_point = {0};
+  GPoint imprecise_center_point = {};
   switch (location) {
     case CLOCK_LOCATION_TOP:
       imprecise_center_point = (GPoint){

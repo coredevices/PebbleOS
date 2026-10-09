@@ -191,7 +191,7 @@ static int prv_get_fresh_fd(PulseBulkIODomainHandler *domain_handler, PulseTrans
   for (int i = 0; i < MAX_PULSE_FDS; ++i) {
     if (s_transfer_fds[i].impl == NULL) {
       s_transfer_fds[i] =
-          (PulseTransferFD){.impl = domain_handler, .domain_state = NULL, .transfer_state = {0}};
+          (PulseTransferFD){.impl = domain_handler, .domain_state = NULL, .transfer_state = {}};
       *fd = &s_transfer_fds[i];
       return i;
     }

@@ -623,7 +623,7 @@ static status_t garbage_collect_sector(uint16_t *free_page, uint16_t sector_star
 
 //! Updates the last written page to point to next_page
 static PBL_NOINLINE void prv_update_last_written_page(uint16_t next_page) {
-  PageHeader hdr = {0};
+  PageHeader hdr = {};
 
   uint16_t prev_written_page = s_last_page_written;
   // unmark the previous page as last written (should only have one pg

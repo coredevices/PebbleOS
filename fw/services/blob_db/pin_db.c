@@ -175,7 +175,7 @@ bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {
 }
 
 status_t pin_db_read_item_header(TimelineItem *item_out, TimelineItemId *id) {
-  SerializedTimelineItemHeader hdr = {{{0}}};
+  SerializedTimelineItemHeader hdr = {};
   status_t rv = pin_db_read((uint8_t *)id, sizeof(TimelineItemId), (uint8_t *)&hdr,
                             sizeof(SerializedTimelineItemHeader));
   timeline_item_deserialize_header(item_out, &hdr);

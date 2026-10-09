@@ -157,7 +157,7 @@ status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_
                                          TimelineItemStorageFilterCallback filter_cb) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
-  NextInfo next_info = {0};
+  NextInfo next_info = {};
   next_info.current = rtc_get_time();
   next_info.max_age = storage->max_item_age;
   next_info.filter_cb = filter_cb;

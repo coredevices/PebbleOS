@@ -244,7 +244,7 @@ static void prv_scale_to_did_stop(KinoLayer *kino_layer, bool finished, void *co
   // static dot too shows a second dot when the layer origin is offset (e.g. peek_offset_y)
   peek_layer->show_dot =
       prv_is_dot_size(icon_to.size) && layer_get_hidden((Layer *)&peek_layer->kino_layer);
-  kino_layer_set_callbacks(kino_layer, (KinoLayerCallbacks){0}, NULL);
+  kino_layer_set_callbacks(kino_layer, (KinoLayerCallbacks){}, NULL);
 }
 
 //! This is called after the scale to is complete

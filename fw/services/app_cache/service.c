@@ -227,7 +227,7 @@ status_t app_cache_app_launched(AppInstallId app_id) {
       goto unlock;
     }
 
-    AppCacheEntry entry = {0};
+    AppCacheEntry entry = {};
     rv = settings_file_get(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
                            sizeof(AppCacheEntry));
 

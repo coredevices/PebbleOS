@@ -129,8 +129,8 @@ void test_touch_service__initialize(void) {
   s_unsubscribe_count = 0;
   s_subscribed_info = NULL;
   s_touch_reset_count = 0;
-  s_system_rec = (HandlerRecord){0};
-  s_raw_rec = (HandlerRecord){0};
+  s_system_rec = (HandlerRecord){};
+  s_raw_rec = (HandlerRecord){};
   touch_service_state_init(&s_state);
 }
 

@@ -61,7 +61,7 @@ static void prv_configure_transition_animation(Animation *animation,
     .direction = direction,
   };
 
-  animation_set_handlers(animation, (AnimationHandlers){0}, config.data);
+  animation_set_handlers(animation, (AnimationHandlers){}, config.data);
   animation_set_custom_interpolation(animation, interpolate_moook);
   animation_set_duration(animation, interpolate_moook_duration());
 }

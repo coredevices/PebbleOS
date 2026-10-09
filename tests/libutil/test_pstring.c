@@ -71,7 +71,7 @@ static size_t prv_append(uint8_t *cursor, const char *str, uint16_t length) {
 }
 
 void test_pstring__list(void) {
-  uint8_t buf[64] = {0};
+  uint8_t buf[64] = {};
   struct pbl_serialized_array *array = (struct pbl_serialized_array *)buf;
   size_t offset = 0;
   offset += prv_append(&array->data[offset], "Palo Alto", 9);
@@ -93,7 +93,7 @@ void test_pstring__list(void) {
 }
 
 void test_pstring__list_empty(void) {
-  uint8_t buf[16] = {0};
+  uint8_t buf[16] = {};
   struct pbl_serialized_array *array = (struct pbl_serialized_array *)buf;
   array->data_size = 8;
 
@@ -104,7 +104,7 @@ void test_pstring__list_empty(void) {
 }
 
 void test_pstring__list_long_entry(void) {
-  uint8_t buf[512] = {0};
+  uint8_t buf[512] = {};
   struct pbl_serialized_array *array = (struct pbl_serialized_array *)buf;
   size_t offset = 0;
   offset += prv_append(&array->data[offset], NULL, 300);

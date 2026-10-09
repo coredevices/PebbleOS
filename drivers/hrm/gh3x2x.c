@@ -137,7 +137,7 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
 #define GH3X2X_HR_MAX_PLAUSIBLE_BPM 240
 
 void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
-  HRMData hrm_data = {0};
+  HRMData hrm_data = {};
 
   PBL_LOG_DBG("GH3X2X BPM %" PRIu8 " (quality=%" PRIu8 ", wear=%u)", bpm, quality,
               HRM->state->is_wear);
@@ -171,7 +171,7 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t quality) {
 
 void gh3x2x_spo2_result_report(uint8_t pct, uint8_t confidence, uint8_t valid_level,
                                int32_t invalid_flg, int32_t r_val) {
-  HRMData hrm_data = {0};
+  HRMData hrm_data = {};
 
   // Surface the full algorithm result so we can tell a real reading from a rejected one. Fires on
   // every SpO2 sample, so keep it at DBG.
@@ -214,7 +214,7 @@ void gh3x2x_hrv_result_report(const int32_t *rri, int32_t confidence, int32_t va
   PBL_LOG_DBG("GH3X2X HRV n=%" PRId32 " (conf=%" PRId32 ", wear=%u)", valid_num, confidence,
               HRM->state->is_wear);
   if (!HRM->state->is_wear) {
-    HRMData hrm_data = {0};
+    HRMData hrm_data = {};
     hrm_data.features = HRMFeature_HRV;
     hrm_data.hrv_quality = HRMQuality_OffWrist;
     hrm_manager_new_data_cb(&hrm_data);
@@ -228,7 +228,7 @@ void gh3x2x_hrv_result_report(const int32_t *rri, int32_t confidence, int32_t va
       // Not a plausible RR interval; don't let the uint16_t cast wrap it into one
       continue;
     }
-    HRMData hrm_data = {0};
+    HRMData hrm_data = {};
     hrm_data.features = HRMFeature_HRV;
     hrm_data.hrv_ppi_ms = (uint16_t)rri[i];
     if (confidence >= 98) {
@@ -382,7 +382,7 @@ void gh3x2x_rawdata_notify(uint32_t *p_rawdata, uint32_t data_count) {
   uint32_t i;
   uint32_t ppg_avg[HRM_PPG_CH_NUM];
   uint64_t total[HRM_PPG_CH_NUM];
-  HRMData hrm_data = {0};
+  HRMData hrm_data = {};
   memset(total, 0, sizeof(total));
   for (idx = 0; idx < HRM_PPG_CH_NUM; ++idx) {
     // calcu total values for 80 samples ppg raw data

@@ -156,7 +156,7 @@ GBitmap *get_gbitmap_from_pbi(const char *filename) {
   }
 
   GBitmap *bmp = malloc(sizeof(*bmp));
-  *bmp = (GBitmap){0};
+  *bmp = (GBitmap){};
 
   // Read bitmap header
   fread(&bmp->row_size_bytes, sizeof(bmp->row_size_bytes), 1, file);

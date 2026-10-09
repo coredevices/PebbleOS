@@ -73,7 +73,7 @@ RecognizerManager *window_get_recognizer_manager(Window *window) {
 static TouchNavOps s_bridge_ops;
 
 static void prv_touch_nav_setup(void) {
-  s_bridge_ops = (TouchNavOps){0};
+  s_bridge_ops = (TouchNavOps){};
   layer_init(&s_root_layer, &GRect(0, 0, 300, 400));
   recognizer_list_init(&s_global_list);
   recognizer_manager_init(&s_recognizer_manager);

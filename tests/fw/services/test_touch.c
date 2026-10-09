@@ -413,21 +413,21 @@ void test_touch__wake_gate_latches_across_gesture(void) {
 
   // PositionUpdate and Liftoff carry the latch, regardless of their gate arg.
   TouchEvent pu = {.type = TouchEvent_PositionUpdate};
-  touch_wake_gate_stamp(&pu, (TouchWakeGateResult){0});
+  touch_wake_gate_stamp(&pu, (TouchWakeGateResult){});
   cl_assert(pu.non_navigational);
 
   TouchEvent lo = {.type = TouchEvent_Liftoff};
-  touch_wake_gate_stamp(&lo, (TouchWakeGateResult){0});
+  touch_wake_gate_stamp(&lo, (TouchWakeGateResult){});
   cl_assert(lo.non_navigational);
 
   // A fresh navigational Touchdown clears the latch for the next gesture.
-  TouchWakeGateResult nav = {0};
+  TouchWakeGateResult nav = {};
   TouchEvent td2 = {.type = TouchEvent_Touchdown};
   touch_wake_gate_stamp(&td2, nav);
   cl_assert(!td2.non_navigational);
 
   TouchEvent pu2 = {.type = TouchEvent_PositionUpdate};
-  touch_wake_gate_stamp(&pu2, (TouchWakeGateResult){0});
+  touch_wake_gate_stamp(&pu2, (TouchWakeGateResult){});
   cl_assert(!pu2.non_navigational);
 }
 

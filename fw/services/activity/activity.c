@@ -871,8 +871,8 @@ static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
 
     // If we are starting a new day, reset all metrics
     if (cur_day_index != s_activity_state.cur_day_index) {
-      s_activity_state.step_data = (ActivityStepData){0};
-      s_activity_state.sleep_data = (ActivitySleepData){0};
+      s_activity_state.step_data = (ActivityStepData){};
+      s_activity_state.sleep_data = (ActivitySleepData){};
       memset(&s_activity_state.hr.metrics.minutes_in_zone, 0,
              sizeof(s_activity_state.hr.metrics.minutes_in_zone));
       s_activity_state.steps_per_minute_last_steps = 0;

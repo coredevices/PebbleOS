@@ -103,7 +103,7 @@ static NextApp s_next_app;
 // ---------------------------------------------------------------------------------------------
 void app_manager_init(void) {
   s_initialized = true;
-  s_app_task_context = (ProcessContext){0};
+  s_app_task_context = (ProcessContext){};
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -470,7 +470,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   }
 
 #if !defined(CONFIG_RECOVERY_FW)
-  static AppCrashInfo crash_info = {0};
+  static AppCrashInfo crash_info = {};
   // If the same watchface crashes twice in one minute, then we show a dialog informing
   // the user that the watchface has crashed.  Any button press will dismiss
   // the dialog and show us the default system watch face.
@@ -531,7 +531,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   PBL_ANALYTICS_ADD(watchface_crash_count, 1);
   PBL_ANALYTICS_ADD(watchface_crash_revert_count, 1);
 
-  crash_info = (AppCrashInfo){0};
+  crash_info = (AppCrashInfo){};
 
   watchface_set_default_install_id(INSTALL_ID_INVALID);
   watchface_launch_default(NULL);

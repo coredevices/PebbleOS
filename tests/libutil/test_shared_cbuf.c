@@ -178,7 +178,7 @@ void test_shared_cbuf__two_clients(void) {
 void test_shared_cbuf__advance_slackers_keeps_one_byte_free(void) {
   struct pbl_shared_cbuf buffer;
   uint8_t storage[10];
-  uint8_t data[10] = {0};
+  uint8_t data[10] = {};
   pbl_shared_cbuf_init(&buffer, storage, sizeof(storage));
 
   struct pbl_shared_cbuf_client client1 = (struct pbl_shared_cbuf_client){};

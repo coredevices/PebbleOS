@@ -312,7 +312,7 @@ DictionaryResult dict_serialize_tuplets__deprecated(DictionarySerializeCallback 
   return dict_serialize_tuplets(callback, context, tuplets, tuplets_count);
 }
 
-static const uint8_t NULL_TUPLE_BUFFER[sizeof(Tuple) + sizeof(uint32_t)] = {0};
+static const uint8_t NULL_TUPLE_BUFFER[sizeof(Tuple) + sizeof(uint32_t)] = {};
 const Tuple *const NULL_TUPLE = (const Tuple *const)NULL_TUPLE_BUFFER;
 
 static uint8_t *dict_copy(DictionaryIterator *iter) {

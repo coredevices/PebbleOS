@@ -56,13 +56,13 @@ int s_times_callback_executed = 0;
 
 static void stub_evented_timer_callback(void *data) {
   s_times_callback_executed++;
-  s_last_event = (PebbleEvent){0};
+  s_last_event = (PebbleEvent){};
 }
 
 void test_evented_timer__initialize(void) {
   s_times_callback_executed = 0;
 
-  s_last_event = (PebbleEvent){0};
+  s_last_event = (PebbleEvent){};
 }
 
 void test_evented_timer__cleanup(void) {

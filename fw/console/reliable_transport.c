@@ -71,9 +71,9 @@ static PulseControlMessageProtocol s_reliable_pcmp = {
   .send_fn = pulse_reliable_send,
 };
 
-static_assert(sizeof((ReliablePacket){0}.i) == 6, "sizeof ReliablePacket.i is wrong");
-static_assert(sizeof((ReliablePacket){0}.s) == 2, "sizeof ReliablePacket.s is wrong");
-static_assert(sizeof((ReliablePacket){0}.i) == sizeof(ReliablePacket),
+static_assert(sizeof((ReliablePacket){}.i) == 6, "sizeof ReliablePacket.i is wrong");
+static_assert(sizeof((ReliablePacket){}.s) == 2, "sizeof ReliablePacket.s is wrong");
+static_assert(sizeof((ReliablePacket){}.i) == sizeof(ReliablePacket),
               "Something is really wrong here");
 
 static bool s_layer_up = false;
@@ -141,7 +141,7 @@ void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length
     return;
   }
 
-  if (length < sizeof((ReliablePacket){0}.s)) {
+  if (length < sizeof((ReliablePacket){}.s)) {
     PBL_LOG_DBG("Received malformed command packet");
     prv_bounce_ncp_state();
     return;
@@ -218,7 +218,7 @@ void pulse2_reliable_transport_on_response_packet(void *raw_packet, size_t lengt
     return;
   }
 
-  if (length < sizeof((ReliablePacket){0}.s)) {
+  if (length < sizeof((ReliablePacket){}.s)) {
     PBL_LOG_DBG("Received malformed response packet");
     prv_bounce_ncp_state();
     return;

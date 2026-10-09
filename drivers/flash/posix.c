@@ -238,7 +238,7 @@ status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
   return S_SUCCESS;
 }
 
-static const FlashSecurityRegisters s_security_regs = {0};
+static const FlashSecurityRegisters s_security_regs = {};
 
 const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
   return &s_security_regs;

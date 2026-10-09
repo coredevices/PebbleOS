@@ -20,7 +20,7 @@ static void prv_rx_isr(void *arg) {
   const struct rx *rx = arg;
   UARTDeviceState *state = rx->dev->state;
   if (state->rx_int_enabled && state->rx_irq_handler != NULL) {
-    const UARTRXErrorFlags flags = {0};
+    const UARTRXErrorFlags flags = {};
     state->rx_irq_handler(rx->dev, rx->c, &flags);
   }
 }
@@ -114,7 +114,7 @@ void uart_wait_for_tx_complete(UARTDevice *dev) {
 }
 
 UARTRXErrorFlags uart_has_errored_out(UARTDevice *dev) {
-  return (UARTRXErrorFlags){0};
+  return (UARTRXErrorFlags){};
 }
 
 void uart_clear_all_interrupt_flags(UARTDevice *dev) {

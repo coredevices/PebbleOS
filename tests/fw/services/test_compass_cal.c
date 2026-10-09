@@ -201,7 +201,7 @@ void test_compass_cal__weak_field_converges(void) {
     .steps_per_leg = 12,
   };
 
-  int16_t solution[3] = {0};
+  int16_t solution[3] = {};
   int locked_at = -1;
   for (int n = 0; n < 6000; n++) {
     int16_t sample[3];
@@ -240,7 +240,7 @@ void test_compass_cal__normal_field_converges_quickly(void) {
     .steps_per_leg = 12,
   };
 
-  int16_t solution[3] = {0};
+  int16_t solution[3] = {};
   int locked_at = -1;
   for (int n = 0; n < 1200; n++) {
     int16_t sample[3];

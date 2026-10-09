@@ -279,7 +279,7 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
       ctx, !node->info.is_smart ? GColorClear
                                 : (cell_layer->is_highlighted ? GColorWhite : GColorBlack));
 
-  char alarm_day_text[32] = {0};
+  char alarm_day_text[32] = {};
   MenuCellLayerConfig config = {
     .title = alarm_time_text,
     .value = enabled,

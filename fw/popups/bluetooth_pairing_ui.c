@@ -710,7 +710,7 @@ static const char *const s_ui_state_names[] = {
 };
 
 static int prv_cmd_pairing(const struct pbl_shell *sh, size_t argc, char **argv) {
-  PairingUIInfo info = {0};
+  PairingUIInfo info = {};
   pbl_sem_init(&info.done, 0, 1);
   launcher_task_add_callback(prv_get_info_cb, &info);
   pbl_sem_take(&info.done, PBL_FOREVER);

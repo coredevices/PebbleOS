@@ -225,7 +225,7 @@ void test_swap_layer_touch__initialize(void) {
   s_overrides_back = false;
   // A zeroed state has a NULL manager, so a register call is inert unless a test opts into the live
   // harness via prv_live_state_setup().
-  s_touch_nav_state = (TouchNavState){0};
+  s_touch_nav_state = (TouchNavState){};
   swap_layer_touch_nav_reset_all();
 }
 
@@ -246,7 +246,7 @@ typedef struct FakeSwap {
 // viewport_h: the swap layer frame height. content_h: the current notification height. If has_next,
 // a next layout is attached so the peek/max-scroll accounting includes it.
 static void prv_build_swap(FakeSwap *fs, int16_t viewport_h, int16_t content_h, bool has_next) {
-  *fs = (FakeSwap){0};
+  *fs = (FakeSwap){};
   layer_init(&fs->swap.layer, &GRect(0, 0, 144, viewport_h));
   // Wire the interaction handler so prv_announce_interaction() is observable (the #1266 timer).
   fs->swap.callbacks.interaction_handler = prv_count_interaction;
@@ -514,7 +514,7 @@ void test_swap_layer_touch__dispatch_pan_scrolls_and_post_liftoff_ignored(void) 
 // is emulated, and nothing crashes.
 void test_swap_layer_touch__pan_declined_when_no_current(void) {
   prv_live_state_setup();
-  FakeSwap fs = {0};
+  FakeSwap fs = {};
   layer_init(&fs.swap.layer, &GRect(0, 0, 144, 168));
   fs.swap.callbacks.interaction_handler = prv_count_interaction;
   cl_assert(fs.swap.current == NULL); // no notification loaded yet (registration before layout)
@@ -604,7 +604,7 @@ void test_swap_layer_touch__dispatch_swipe_left_emits_select(void) {
 // not-yet-loaded notification), matching the pre-refactor behaviour of doing nothing.
 void test_swap_layer_touch__tap_and_swipe_inert_when_no_current(void) {
   prv_live_state_setup();
-  FakeSwap fs = {0};
+  FakeSwap fs = {};
   layer_init(&fs.swap.layer, &GRect(0, 0, 144, 168));
   fs.swap.callbacks.interaction_handler = prv_count_interaction;
   cl_assert(fs.swap.current == NULL); // no notification loaded yet

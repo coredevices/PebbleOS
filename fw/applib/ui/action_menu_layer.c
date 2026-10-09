@@ -404,7 +404,7 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
 
       animation_set_duration((Animation *)animation, DELAY_PER_LINE * (item_height / line_height));
       animation_set_curve((Animation *)animation, AnimationCurveLinear);
-      animation_set_handlers((Animation *)animation, (AnimationHandlers){0}, aml);
+      animation_set_handlers((Animation *)animation, (AnimationHandlers){}, aml);
 
       // Create the animation that stalls when we have auto-scrolled up completely
       PropertyAnimation *s_animation =
@@ -412,7 +412,7 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
                                     &item_animation->top_offset_y, &item_animation->top_offset_y);
 
       animation_set_duration((Animation *)s_animation, DELAY_PER_LINE /* ms to wait */);
-      animation_set_handlers((Animation *)s_animation, (AnimationHandlers){0}, aml);
+      animation_set_handlers((Animation *)s_animation, (AnimationHandlers){}, aml);
 
       // Create the reverse animation that takes us from the scrolled up position back down
       PropertyAnimation *r_animation = property_animation_create(
@@ -422,7 +422,7 @@ static void prv_animate_cell(ActionMenuLayer *aml, GRect *label_text_frame, bool
       animation_set_duration((Animation *)r_animation,
                              (DELAY_PER_LINE / 4) * (item_height / line_height));
       animation_set_curve((Animation *)r_animation, AnimationCurveEaseInOut);
-      animation_set_handlers((Animation *)r_animation, (AnimationHandlers){0}, aml);
+      animation_set_handlers((Animation *)r_animation, (AnimationHandlers){}, aml);
 
       item_animation->animation = animation_sequence_create(
           (Animation *)animation, (Animation *)s_animation, (Animation *)r_animation);

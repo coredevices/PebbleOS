@@ -179,7 +179,7 @@ void test_reminder_db__basic_test(void) {
 
   // add 1 back so it's clean
   cl_assert(S_SUCCESS == reminder_db_insert_item(&item1));
-  TimelineItem temp = {{{0}}};
+  TimelineItem temp = {};
   cl_assert(S_SUCCESS == reminder_db_read((uint8_t *)&item1.header.id, sizeof(Uuid),
                                           (uint8_t *)&temp, sizeof(CommonTimelineItemHeader)));
 
@@ -287,7 +287,7 @@ void test_reminder_db__bad_item(void) {
 }
 
 void test_reminder_db__read_nonexistant(void) {
-  TimelineItem item = {{{0}}};
+  TimelineItem item = {};
   cl_assert_equal_i(E_DOES_NOT_EXIST, reminder_db_read_item(&item, &bad_item.common.id));
 }
 

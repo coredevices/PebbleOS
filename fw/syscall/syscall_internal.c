@@ -91,7 +91,7 @@ static PBL_USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, 
   if (state->active && state->thread_id != thread_id) {
     // Slots are indexed by PebbleTask. If a task died mid-callback and a new
     // thread reused the PebbleTask, discard the old call state first.
-    *state = (McuUnprivilegedCallContext){0};
+    *state = (McuUnprivilegedCallContext){};
   }
 
   PBL_ASSERTN(!state->active);

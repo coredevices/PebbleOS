@@ -270,7 +270,7 @@ static void prv_transcription_dialog_cb(void *context) {
 
 static void prv_show_transcription_dialog(DialogsData *data) {
   TranscriptionDialog *transcription_dialog = transcription_dialog_create();
-  static char transcription[500] = {0};
+  static char transcription[500] = {};
   uint16_t len = strlen(data->long_message);
   strncpy(transcription, data->long_message, len);
   transcription_dialog_update_text(transcription_dialog, transcription, len);

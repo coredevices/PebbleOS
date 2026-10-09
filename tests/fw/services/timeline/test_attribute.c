@@ -246,7 +246,7 @@ void test_attribute__attributes_add_to_list(void) {
   static const uint32_t value_uint32 = 123123423;
   static const uint8_t value_uint8 = 17;
 
-  AttributeList list = {0};
+  AttributeList list = {};
 
   attribute_list_add_cstring(&list, AttributeIdTitle, "Title1");
   cl_assert_equal_s(attribute_get_string(&list, AttributeIdTitle, ""), "Title1");
@@ -272,7 +272,7 @@ void test_attribute__attributes_add_to_list(void) {
 }
 
 void test_attribute__attribute_list_copy(void) {
-  AttributeList list = {0};
+  AttributeList list = {};
   attribute_list_add_cstring(&list, AttributeIdTitle, "Title");
   attribute_list_add_cstring(&list, AttributeIdSubtitle, "Subtitle");
   attribute_list_add_cstring(&list, AttributeIdBody, "Body");
@@ -282,7 +282,7 @@ void test_attribute__attribute_list_copy(void) {
   cl_assert_equal_i(size_list, (5 + 1) + (8 + 1) + (4 + 1) + 3 * sizeof(Attribute));
   uint8_t *buffer = kernel_malloc_check(size_list);
   uint8_t *buffer_orig = buffer;
-  AttributeList list2 = {0};
+  AttributeList list2 = {};
   cl_assert(attribute_list_copy(&list2, &list, buffer, buffer + size_list));
   // check that we haven't modified buffer
   cl_assert(buffer == buffer_orig);
@@ -636,7 +636,7 @@ void test_attribute__unknown_attribute_id_does_not_overflow(void) {
     0x00,
     1,
   };
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, serialized + sizeof(serialized), 1,
                                                     has_attribute),
                     true);
@@ -672,7 +672,7 @@ void test_attribute__unknown_attribute_id_is_skipped(void) {
   cl_assert(buffer_size > 0);
   cl_assert(buffer_size_cursor == end);
 
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, num_attributes, has_attribute),
                     true);
   cl_assert_equal_b(has_attribute[AttributeIdTitle], true);
@@ -700,7 +700,7 @@ void test_attribute__truncated_unknown_attribute_is_rejected(void) {
   cl_assert(attribute_get_buffer_size_for_serialized_attributes(num_attributes, &buffer_size_cursor,
                                                                 end) < 0);
 
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, num_attributes, has_attribute),
                     false);
 
@@ -721,7 +721,7 @@ void test_attribute__truncated_header_is_rejected(void) {
   const uint8_t *buffer_size_cursor = serialized;
   cl_assert(attribute_get_buffer_size_for_serialized_attributes(1, &buffer_size_cursor, end) < 0);
 
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, 1, has_attribute), false);
 }
 
@@ -793,7 +793,7 @@ void test_attribute__weather_pin_kind_deserializes(void) {
   };
   const uint8_t num_attributes = 2;
   const uint8_t *end = serialized + sizeof(serialized);
-  bool has_attribute[NumAttributeIds] = {0};
+  bool has_attribute[NumAttributeIds] = {};
   cl_assert_equal_b(attribute_check_serialized_list(serialized, end, num_attributes, has_attribute),
                     true);
   cl_assert_equal_b(has_attribute[AttributeIdWeatherPinKind], true);

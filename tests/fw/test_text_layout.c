@@ -48,12 +48,12 @@ void test_text_layout__ellipsis_overflow(void) {
   graphics_context_init(&gcontext, fb, GContextInitializationMode_App);
   framebuffer_clear(fb);
 
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}};
   TextLayoutExtended layout = (TextLayoutExtended){
     .hash = 0,
     .box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}},
-    .font = (GFont){0},
+    .font = (GFont){},
     .overflow_mode = GTextOverflowModeWordWrap,
     .alignment = GTextAlignmentLeft,
     .max_used_size = (GSize){0, 0}
@@ -79,12 +79,12 @@ void test_text_layout__ellipsis_overflow(void) {
 
 void test_text_layout__cache_vert_overflow(void) {
   GContext gcontext = (GContext){};
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){4 * HORIZ_ADVANCE_PX + 1, 2 * FONT_HEIGHT + 1}};
   TextLayoutExtended layout = (TextLayoutExtended){
     .hash = 0,
     .box = (GRect){(GPoint){0, 0}, (GSize){7 * HORIZ_ADVANCE_PX + 1, FONT_HEIGHT - 1}},
-    .font = (GFont){0},
+    .font = (GFont){},
     .overflow_mode = GTextOverflowModeWordWrap,
     .alignment = GTextAlignmentLeft,
     .max_used_size = (GSize){0, 0}
@@ -124,12 +124,12 @@ void test_text_layout__cache_vert_overflow(void) {
 
 void test_text_layout__cache_vert_overflow_first_line(void) {
   GContext gcontext = (GContext){};
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){5 * HORIZ_ADVANCE_PX + 1, 7}};
   TextLayoutExtended layout = (TextLayoutExtended){
     .hash = 0,
     .box = (GRect){(GPoint){0, 0}, (GSize){7 * HORIZ_ADVANCE_PX + 1, FONT_HEIGHT - 1}},
-    .font = (GFont){0},
+    .font = (GFont){},
     .overflow_mode = GTextOverflowModeWordWrap,
     .alignment = GTextAlignmentLeft,
     .max_used_size = (GSize){0, 0}
@@ -164,12 +164,12 @@ void test_text_layout__cache_vert_overflow_first_line(void) {
 
 void test_text_layout__cache_vert_overflow_with_newline(void) {
   GContext gcontext = (GContext){};
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){5 * HORIZ_ADVANCE_PX + 1, 2 * FONT_HEIGHT + 1}};
   TextLayoutExtended layout = (TextLayoutExtended){
     .hash = 0,
     .box = (GRect){(GPoint){0, 0}, (GSize){7 * HORIZ_ADVANCE_PX + 1, FONT_HEIGHT - 1}},
-    .font = (GFont){0},
+    .font = (GFont){},
     .overflow_mode = GTextOverflowModeWordWrap,
     .alignment = GTextAlignmentLeft,
     .max_used_size = (GSize){0, 0}
@@ -232,7 +232,7 @@ void test_text_layout__pathological_1(void) {
   FrameBuffer *fb = malloc(sizeof(FrameBuffer));
   framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
 
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){40, 250 * FONT_HEIGHT}};
 
   graphics_context_init(&gcontext, fb, GContextInitializationMode_App);
@@ -247,14 +247,14 @@ void test_text_layout__max_used_size(void) {
   char *empty_string = "";
   char *singleton = "A";
   char *doubleton = "AA";
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){3 * HORIZ_ADVANCE_PX + 1, FONT_HEIGHT + 1}};
   TextLayoutExtended layout = (TextLayoutExtended){};
   GContext gcontext = (GContext){};
 
   layout.hash = 0;
   layout.box = (GRect){(GPoint){0, 0}, (GSize){7 * HORIZ_ADVANCE_PX + 1, FONT_HEIGHT - 1}};
-  layout.font = (GFont){0};
+  layout.font = (GFont){};
   layout.overflow_mode = GTextOverflowModeWordWrap;
   layout.alignment = GTextAlignmentLeft;
   layout.max_used_size = (GSize){0, 0};
@@ -354,14 +354,14 @@ void test_text_layout__get_default_flow_data(void) {
 #include <applib/legacy2/ui/text_layer_legacy2.h>
 void test_text_layout__delta(void) {
   GContext gcontext = (GContext){};
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){
     (GPoint){0, 0}, (GSize){4 * HORIZ_ADVANCE_PX + 1, 2 * (FONT_HEIGHT + FONT_LINE_DELTA) + 1}
   };
   TextLayoutExtended layout = (TextLayoutExtended){
     .hash = 0,
     .box = (GRect){(GPoint){0, 0}, (GSize){7 * HORIZ_ADVANCE_PX + 1, FONT_HEIGHT - 1}},
-    .font = (GFont){0},
+    .font = (GFont){},
     .overflow_mode = GTextOverflowModeWordWrap,
     .alignment = GTextAlignmentLeft,
     .max_used_size = (GSize){0, 0}
@@ -448,12 +448,12 @@ void test_text_layout__special_codepoints(void) {
   graphics_context_init(&gcontext, fb, GContextInitializationMode_App);
   framebuffer_clear(fb);
 
-  GFont font = (GFont){0};
+  GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}};
   TextLayoutExtended layout = (TextLayoutExtended){
     .hash = 0,
     .box = (GRect){(GPoint){0, 0}, (GSize){20 * HORIZ_ADVANCE_PX + 1, 13}},
-    .font = (GFont){0},
+    .font = (GFont){},
     .overflow_mode = GTextOverflowModeWordWrap,
     .alignment = GTextAlignmentLeft,
     .max_used_size = (GSize){0, 0}

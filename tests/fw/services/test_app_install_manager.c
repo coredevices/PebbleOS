@@ -209,7 +209,7 @@ static const AppDBEntry bg_counter = {
         .major = 5,
         .minor = 13,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
   .icon_resource_id = 0,
 };
@@ -232,7 +232,7 @@ static const AppDBEntry menu_layer = {
         .major = 5,
         .minor = 13,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
   .icon_resource_id = 0,
 };

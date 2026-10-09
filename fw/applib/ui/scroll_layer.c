@@ -681,7 +681,7 @@ void scroll_layer_touch_fling_cleanup(ScrollLayer *scroll_layer) {
   }
   animation_set_duration(animation, ANIMATION_DEFAULT_DURATION_MS);
   animation_set_curve(animation, AnimationCurveDefault);
-  animation_set_handlers(animation, (AnimationHandlers){0}, NULL);
+  animation_set_handlers(animation, (AnimationHandlers){}, NULL);
 }
 #endif
 

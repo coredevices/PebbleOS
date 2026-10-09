@@ -372,7 +372,7 @@ GColor8 gcolor_invert(GColor8 color) {
 
 BitmapInfo gbitmap_get_info(const GBitmap *bitmap) {
   if (!bitmap) {
-    return (BitmapInfo){0};
+    return (BitmapInfo){};
   }
 
   // In 2.x, GBitmap was exposed and info_flags was only used for keeping track of heap allocation.

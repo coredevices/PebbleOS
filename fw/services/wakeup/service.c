@@ -401,7 +401,7 @@ static void prv_wakeup_settings_delete_entry(WakeupId wakeup_id) {
 }
 
 static WakeupEntry prv_wakeup_settings_get_entry(WakeupId wakeup_id) {
-  WakeupEntry entry = {{0}};
+  WakeupEntry entry = {};
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {

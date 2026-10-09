@@ -138,7 +138,7 @@ void gdraw_command_set_fill_color(GDrawCommand *command, GColor fill_color) {
 
 GColor gdraw_command_get_fill_color(GDrawCommand *command) {
   if (!command) {
-    return (GColor){0};
+    return (GColor){};
   } else {
     return command->fill_color;
   }
@@ -154,7 +154,7 @@ void gdraw_command_set_stroke_color(GDrawCommand *command, GColor stroke_color) 
 
 GColor gdraw_command_get_stroke_color(GDrawCommand *command) {
   if (!command) {
-    return (GColor){0};
+    return (GColor){};
   } else {
     return command->stroke_color;
   }

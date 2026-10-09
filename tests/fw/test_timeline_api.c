@@ -134,7 +134,7 @@ void test_timeline_api__pin_two_items(void) {
   cl_assert(timeline_add(item1));
   cl_assert(timeline_add(item2));
 
-  TimelineItem item_temp = {0};
+  TimelineItem item_temp = {};
   cl_assert_equal_i(pin_db_get(&id1, &item_temp), 0);
   cl_assert(uuid_equal(&item1->header.id, &item_temp.header.id));
   cl_assert_equal_i(pin_db_get(&id2, &item_temp), 0);
@@ -145,7 +145,7 @@ void test_timeline_api__pin_two_items(void) {
 }
 
 void test_timeline_api__item_attributes(void) {
-  AttributeList list = {0};
+  AttributeList list = {};
   attribute_list_add_cstring(&list, AttributeIdTitle, "title");
   attribute_list_add_cstring(&list, AttributeIdSubtitle, "subtitle");
   TimelineItem *item =
@@ -178,7 +178,7 @@ void test_timeline_api__item_pin_to_timeline(void) {
 }
 
 void test_timeline_api__item_attributes_pin_to_timeline(void) {
-  AttributeList list = {0};
+  AttributeList list = {};
   attribute_list_add_cstring(&list, AttributeIdTitle, "title");
   attribute_list_add_cstring(&list, AttributeIdSubtitle, "subtitle");
   TimelineItem *item =

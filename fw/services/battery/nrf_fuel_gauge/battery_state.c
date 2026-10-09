@@ -226,7 +226,7 @@ static void prv_save_state(void) {
 static void prv_schedule_update(uint32_t delay, bool force_update);
 
 static int prv_fuel_gauge_init_common(const BatteryConstants *constants, bool load_state) {
-  struct nrf_fuel_gauge_init_parameters parameters = {0};
+  struct nrf_fuel_gauge_init_parameters parameters = {};
   int ret;
 
   parameters.model = &prv_battery_model;
@@ -460,7 +460,7 @@ void battery_state_force_update(void) {
 
 void battery_state_init(void) {
   int ret;
-  struct nrf_fuel_gauge_runtime_parameters runtime_parameters = {0};
+  struct nrf_fuel_gauge_runtime_parameters runtime_parameters = {};
   BatteryConstants constants;
 
   ret = battery_get_constants(&constants);

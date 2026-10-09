@@ -1198,7 +1198,7 @@ static uint32_t prv_analyze_epoch(KAlgState *state) {
   }
 
   // 5 sec proportional integral mode (pim), used by the steps calculation
-  uint32_t pim_epoch[KALG_N_AXES] = {0};
+  uint32_t pim_epoch[KALG_N_AXES] = {};
 
   // Calculate the axis metrics
   for (int16_t axis = 0; axis < KALG_N_AXES; axis++) {

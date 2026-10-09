@@ -127,7 +127,7 @@ static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreE
 }
 
 static void resource_storage_system_bank_clear(ResourceStoreEntry *entry) {
-  uint8_t buffer[MANIFEST_SIZE] = {0};
+  uint8_t buffer[MANIFEST_SIZE] = {};
   flash_write_bytes(buffer, BANK.begin, MANIFEST_SIZE);
 }
 

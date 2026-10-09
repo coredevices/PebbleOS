@@ -332,7 +332,7 @@ static void prv_process_pending_messages(void *context) {
     return;
   }
 
-  uint8_t data[CST816_TOUCH_DATA_SIZE] = {0};
+  uint8_t data[CST816_TOUCH_DATA_SIZE] = {};
   rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
   if (!rv) {
     PBL_LOG_ERR("Failed to read touch data, trying to recover");

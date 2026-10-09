@@ -109,7 +109,7 @@ static const AppDBEntry bg_counter_app = {
         .major = 5,
         .minor = 13,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
 };
 
@@ -131,7 +131,7 @@ static const AppDBEntry menu_layer_app = {
         .major = 5,
         .minor = 13,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
 };
 
@@ -153,7 +153,7 @@ static const AppDBEntry big_time_app = {
         .major = 5,
         .minor = 17,
       },
-  .app_face_bg_color = {0},
+  .app_face_bg_color = {},
   .template_id = 0,
 };
 

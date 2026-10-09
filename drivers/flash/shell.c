@@ -616,7 +616,7 @@ void flash_expect_program_failure(bool expect_failure);
 
 // Write over every region of the flash: if PRF still boots afterwards, the protected regions held.
 static int prv_cmd_lock_test(const struct pbl_shell *sh, size_t argc, char **argv) {
-  static uint8_t buf[2048] = {0};
+  static uint8_t buf[2048] = {};
 
   __disable_irq();
 

@@ -160,7 +160,7 @@ void test_touch_nav__initialize(void) {
   fake_rtc_init(0, 0);
   s_nav_enabled = true;
   s_active_layer = NULL;
-  s_fake = (FakeOps){0};
+  s_fake = (FakeOps){};
   s_ops = (TouchNavOps){
     .is_animating = prv_is_animating,
     .top_overrides_back = prv_top_overrides_back,
@@ -172,7 +172,7 @@ void test_touch_nav__initialize(void) {
     .ctx = &s_fake,
   };
 
-  s_twin = (FakeTwin){0};
+  s_twin = (FakeTwin){};
   s_twin_ops = (TouchNavTwinOps){
     .pref_enabled = prv_twin_pref,
     .master_enabled = prv_twin_master,
@@ -457,7 +457,7 @@ void test_touch_nav__no_raw_subscriber_synthesizes_as_before(void) {
 void test_touch_nav__tier1_wins_over_raw_subscriber_gate(void) {
   s_fake.app_has_raw_subscriber = true;
   static TouchNavWidgetNode node;
-  node = (TouchNavWidgetNode){0};
+  node = (TouchNavWidgetNode){};
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
   s_active_layer = &s_child_layer;
 
@@ -726,7 +726,7 @@ void test_touch_nav__gated_then_navigational(void) {
 
 void test_touch_nav__tier1_widget_wins(void) {
   static TouchNavWidgetNode node;
-  node = (TouchNavWidgetNode){0};
+  node = (TouchNavWidgetNode){};
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
   s_active_layer = &s_child_layer;
 
@@ -741,7 +741,7 @@ void test_touch_nav__tier1_widget_wins(void) {
 // it.
 void test_touch_nav__registry_dedupe_and_remove(void) {
   static TouchNavWidgetNode node;
-  node = (TouchNavWidgetNode){0};
+  node = (TouchNavWidgetNode){};
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node, &s_child_layer, NULL, NULL);
   // Sole widget only if exactly one is registered — proves the re-add did not double-insert.
@@ -751,7 +751,7 @@ void test_touch_nav__registry_dedupe_and_remove(void) {
 
   // Removing a never-added node is a safe no-op.
   static TouchNavWidgetNode other;
-  other = (TouchNavWidgetNode){0};
+  other = (TouchNavWidgetNode){};
   touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &other);
 
   touch_nav_registry_remove(&s_state, TouchNavWidgetType_Menu, &node);
@@ -777,7 +777,7 @@ void test_touch_nav__dead_zone_dropped(void) {
 // the parent walk before the dead-zone check).
 void test_touch_nav__dead_zone_sole_widget_routes_tier1(void) {
   static TouchNavWidgetNode node;
-  node = (TouchNavWidgetNode){0};
+  node = (TouchNavWidgetNode){};
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Swap, &node, &s_child_layer, NULL, NULL);
   s_active_layer = NULL; // the parent walk finds nothing, so the dead-zone branch runs
 
@@ -1117,8 +1117,8 @@ static const TouchNavWidgetOps s_fake_widget_ops = {
 
 // Register the fake widget as a migrated (ops-bearing) node under the touched layer.
 static void prv_register_fake_widget(TouchNavWidgetNode *node) {
-  s_widget = (FakeWidget){0};
-  *node = (TouchNavWidgetNode){0};
+  s_widget = (FakeWidget){};
+  *node = (TouchNavWidgetNode){};
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, node, &s_child_layer,
                          &s_fake_widget_ops, &s_widget);
   s_active_layer = &s_child_layer;
@@ -1287,7 +1287,7 @@ void test_touch_nav__widget_touchdown_op(void) {
     .swipe = prv_w_swipe,
   };
   static TouchNavWidgetNode node2;
-  node2 = (TouchNavWidgetNode){0};
+  node2 = (TouchNavWidgetNode){};
   touch_nav_registry_add(&s_state, TouchNavWidgetType_Menu, &node2, &s_child_layer,
                          &s_ops_no_touchdown, &s_widget);
   s_widget = (FakeWidget){.can_start_result = true};

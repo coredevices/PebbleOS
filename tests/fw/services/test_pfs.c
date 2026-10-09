@@ -389,7 +389,7 @@ void test_pfs__seek_walks_forward_from_current_page(void) {
   cl_assert(fake_flash_read_count() - reads_before <= 2 * (steps + num_file_pages));
 
   const int write_off = file_size / 2 + 4090;
-  const uint8_t patch[16] = {0};
+  const uint8_t patch[16] = {};
   memcpy(&data[write_off], patch, sizeof(patch));
   cl_assert_equal_i(pfs_seek(fd, write_off - 3000, FSeekSet), write_off - 3000);
   uint8_t byte;

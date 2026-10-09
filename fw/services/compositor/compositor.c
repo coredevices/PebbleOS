@@ -98,7 +98,7 @@ void compositor_init(void) {
 
   s_deferred_render = (DeferredRender){.animation.pending = false, .app.pending = false};
 
-  s_animation_state = (CompositorTransitionState){0};
+  s_animation_state = (CompositorTransitionState){};
 
   s_framebuffer_frozen = false;
   s_frozen_callback = NULL;
@@ -371,7 +371,7 @@ static void prv_animation_teardown(Animation *animation) {
   if (s_animation_state.impl->teardown) {
     s_animation_state.impl->teardown(animation);
   }
-  s_animation_state = (CompositorTransitionState){0};
+  s_animation_state = (CompositorTransitionState){};
 
   s_deferred_render.animation.pending = false;
   if (!prv_should_render()) {
@@ -388,7 +388,7 @@ void compositor_transition(const CompositorTransition *compositor_animation) {
                 (unsigned)(uintptr_t)s_animation_state.animation);
 
     animation_destroy(s_animation_state.animation);
-    s_animation_state = (CompositorTransitionState){0};
+    s_animation_state = (CompositorTransitionState){};
 
     s_deferred_render.animation.pending = false;
     s_deferred_render.transition_complete.pending = false;

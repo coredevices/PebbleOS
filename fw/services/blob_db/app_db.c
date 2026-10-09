@@ -240,7 +240,7 @@ void app_db_init(void) {
     WTF;
   }
 
-  struct AppDBInitData data = {0};
+  struct AppDBInitData data = {};
 
   settings_file_each(&s_app_db.settings_file, prv_each_inspect_ids, &data);
 

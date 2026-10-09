@@ -413,7 +413,7 @@ void test_app_manager__start_third_party(void) {
   // We've sent the deinit event to the first app, but it's going to continue running.
   cl_assert_equal_i(s_last_to_app_event.type, PEBBLE_PROCESS_DEINIT_EVENT);
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_launch_app);
-  s_last_to_app_event = (PebbleEvent){0};
+  s_last_to_app_event = (PebbleEvent){};
 
   // Now the app sets the safe_to_kill flag to true and sends a kill event back to
   // the launcher to get the app killed again. This calls close_current_app, which ends
@@ -453,7 +453,7 @@ void test_app_manager__start_borked_app(void) {
 void test_app_manager__start_third_party_and_force_close_back_to_first(void) {
   test_app_manager__start_third_party();
 
-  s_last_to_app_event = (PebbleEvent){0};
+  s_last_to_app_event = (PebbleEvent){};
 
   // Make the app get stuck in a syscall. This will indicate that the app is running
   // privileged.
@@ -483,7 +483,7 @@ void test_app_manager__start_third_party_and_force_close_back_to_first(void) {
 // A requested forced close launches the new app, not the launcher and crash UI
 void test_app_manager__requested_forced_close_launches_the_requested_app(void) {
   test_app_manager__start_third_party();
-  s_last_to_app_event = (PebbleEvent){0};
+  s_last_to_app_event = (PebbleEvent){};
 
   // The app is inside a syscall, so it can't be stopped straight away
   stub_control_reg(0x0);

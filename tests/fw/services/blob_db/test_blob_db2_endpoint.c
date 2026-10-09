@@ -121,7 +121,7 @@ static BlobDBSyncSession s_fake_sync_session;
 
 BlobDBSyncSession *blob_db_sync_get_session_for_token(BlobDBToken token) {
   BlobDBDirtyItem *dirty_item = (BlobDBDirtyItem *)s_fake_dirty_item_storage;
-  dirty_item->node = (ListNode){0};
+  dirty_item->node = (ListNode){};
   dirty_item->last_updated = 0;
   dirty_item->key_len = sizeof(s_fake_dirty_key);
   memcpy(dirty_item->key, s_fake_dirty_key, sizeof(s_fake_dirty_key));

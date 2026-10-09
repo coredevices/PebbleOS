@@ -68,10 +68,10 @@ static inline bool watchdog_check_reset_flag(void) {
   return false;
 }
 static inline McuRebootReason watchdog_clear_reset_flag(void) {
-  return (McuRebootReason){0};
+  return (McuRebootReason){};
 }
 static inline McuRebootReason watchdog_get_reset_flag(void) {
-  return (McuRebootReason){0};
+  return (McuRebootReason){};
 }
 /** @endcond */
 

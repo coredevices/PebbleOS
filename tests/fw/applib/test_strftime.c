@@ -1328,7 +1328,7 @@ static const ISO8601TestData s_iso8601_data[] = {
 void test_strftime__full_iso8601(void) {
   char tmbuf[512];
 
-  struct tm wrk = {0};
+  struct tm wrk = {};
 
   for (int i = 0; i < ARRAY_LENGTH(s_iso8601_data); i++) {
     gmtime_r(&s_iso8601_data[i].stamp, &wrk);

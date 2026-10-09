@@ -668,7 +668,7 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
                                       FontInfo *font_info, bool need_bitmap,
                                       GlyphLocation *location_out) {
   if (location_out) {
-    *location_out = (GlyphLocation){0};
+    *location_out = (GlyphLocation){};
   }
 
   if (!font_info->loaded) {

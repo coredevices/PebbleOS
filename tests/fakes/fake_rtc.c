@@ -16,7 +16,7 @@ static RtcTicks s_rtc_auto_increment = 0;
 static time_t s_time_base = 0;
 static int16_t s_time_ms_base = 0;
 static int64_t s_time_tick_base = 0;
-static TimezoneInfo s_tzinfo = {{0}};
+static TimezoneInfo s_tzinfo = {};
 
 /*
 // TODO: Unused right now

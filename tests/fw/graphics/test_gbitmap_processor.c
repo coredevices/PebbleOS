@@ -90,7 +90,7 @@ void test_gbitmap_processor__cleanup(void) {
 #define EXPECTED_RECT_IN_PRE_FUNCTION (GRect(4, 3, 2, 1))
 
 void test_gbitmap_processor__null_arguments(void) {
-  GBitmap bitmap = {0};
+  GBitmap bitmap = {};
   const GRect rect = EXPECTED_RECT_IN_PRE_FUNCTION;
 
   // Passing NULL for the processor shouldn't cause any problems
@@ -99,7 +99,7 @@ void test_gbitmap_processor__null_arguments(void) {
   cl_assert_equal_i(s_bitblt_bitmap_into_bitmap_tiled_calls.call_count, 1);
 
   // Passing a processor with NULL functions shouldn't cause any problems
-  GBitmapProcessor processor = {0};
+  GBitmapProcessor processor = {};
   graphics_draw_bitmap_in_rect_processed(&s_ctx, &bitmap, &rect, &processor);
   // And it should once again try to draw the bitmap
   cl_assert_equal_i(s_bitblt_bitmap_into_bitmap_tiled_calls.call_count, 2);
@@ -171,7 +171,7 @@ static void prv_pre_and_post_functions__post(GBitmapProcessor *processor, GConte
 }
 
 void test_gbitmap_processor__pre_and_post_functions(void) {
-  GBitmap bitmap = {0};
+  GBitmap bitmap = {};
   const GRect rect = EXPECTED_RECT_IN_PRE_FUNCTION;
 
   // Set the compositing mode and tint color to known values
@@ -232,7 +232,7 @@ static void post_function_called_even_if_pre_function_causes_nothing_to_be_drawn
 //! causes no bitmap to be drawn
 static void prv_post_function_called_even_if_pre_function_causes_nothing_to_be_drawn_test(
     GBitmapProcessorPreFunc pre_func) {
-  GBitmap bitmap = {0};
+  GBitmap bitmap = {};
   const GRect rect = EXPECTED_RECT_IN_PRE_FUNCTION;
 
   PostFunctionCalledEvenIfPreFunctionCausesNothingToBeDrawnTestProcessor processor =

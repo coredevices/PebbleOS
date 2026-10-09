@@ -44,7 +44,7 @@ typedef enum {
   NumHandlers
 } FakeProtocolHandlers;
 
-static int s_handler_call_count[NumHandlers] = {0};
+static int s_handler_call_count[NumHandlers] = {};
 
 typedef struct {
   size_t len;

@@ -194,7 +194,7 @@ cleanup:
 //! was successful.
 bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state, const uint8_t *data,
                                  uint32_t len) {
-  GetBytesStorageInfo info = {0};
+  GetBytesStorageInfo info = {};
 
   switch (cmd) {
     case GET_BYTES_CMD_GET_NEW_COREDUMP:

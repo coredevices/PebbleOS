@@ -401,7 +401,7 @@ void test_flash_logging__multi_writes_per_log(void) {
     }
 
     // try to write something past the end to ensure it doesn't take
-    uint8_t buf[128] = {0};
+    uint8_t buf[128] = {};
     rv = flash_logging_write(&buf[0], addr, sizeof(buf));
     cl_assert(!rv);
   }

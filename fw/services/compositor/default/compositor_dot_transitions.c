@@ -285,7 +285,7 @@ static void prv_configure_dot_transition_animation(Animation *animation, GColor 
 
   animation_set_curve(animation, AnimationCurveLinear);
   animation_set_duration(animation, duration);
-  animation_set_handlers(animation, (AnimationHandlers){0}, config.data);
+  animation_set_handlers(animation, (AnimationHandlers){}, config.data);
   animation_set_reverse(animation, !collapse_starting_animation);
 }
 

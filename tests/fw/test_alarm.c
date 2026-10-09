@@ -303,47 +303,47 @@ void test_alarm__alarm_get_custom_days(void) {
 
 void test_alarm__alarm_get_string_for_custom(void) {
   bool schedule_1[7] = {true, false, false, false, false, false, true};
-  char alarm_day_text_1[32] = {0};
+  char alarm_day_text_1[32] = {};
   alarm_get_string_for_custom(schedule_1, alarm_day_text_1);
   cl_assert_equal_s(alarm_day_text_1, "Sat,Sun");
 
   bool schedule_2[7] = {true, true, true, true, true, true, true};
-  char alarm_day_text_2[32] = {0};
+  char alarm_day_text_2[32] = {};
   alarm_get_string_for_custom(schedule_2, alarm_day_text_2);
   cl_assert_equal_s(alarm_day_text_2, "Mon,Tue,Wed,Thu,Fri,Sat,Sun");
 
   bool schedule_3[7] = {false, true, false, false, false, false, false};
-  char alarm_day_text_3[32] = {0};
+  char alarm_day_text_3[32] = {};
   alarm_get_string_for_custom(schedule_3, alarm_day_text_3);
   cl_assert_equal_s(alarm_day_text_3, "Mondays");
 
   bool schedule_4[7] = {false, false, true, false, false, false, false};
-  char alarm_day_text_4[32] = {0};
+  char alarm_day_text_4[32] = {};
   alarm_get_string_for_custom(schedule_4, alarm_day_text_4);
   cl_assert_equal_s(alarm_day_text_4, "Tuesdays");
 
   bool schedule_5[7] = {false, false, false, true, false, false, false};
-  char alarm_day_text_5[32] = {0};
+  char alarm_day_text_5[32] = {};
   alarm_get_string_for_custom(schedule_5, alarm_day_text_5);
   cl_assert_equal_s(alarm_day_text_5, "Wednesdays");
 
   bool schedule_6[7] = {false, false, false, false, true, false, false};
-  char alarm_day_text_6[32] = {0};
+  char alarm_day_text_6[32] = {};
   alarm_get_string_for_custom(schedule_6, alarm_day_text_6);
   cl_assert_equal_s(alarm_day_text_6, "Thursdays");
 
   bool schedule_7[7] = {false, false, false, false, false, true, false};
-  char alarm_day_text_7[32] = {0};
+  char alarm_day_text_7[32] = {};
   alarm_get_string_for_custom(schedule_7, alarm_day_text_7);
   cl_assert_equal_s(alarm_day_text_7, "Fridays");
 
   bool schedule_8[7] = {false, false, false, false, false, false, true};
-  char alarm_day_text_8[32] = {0};
+  char alarm_day_text_8[32] = {};
   alarm_get_string_for_custom(schedule_8, alarm_day_text_8);
   cl_assert_equal_s(alarm_day_text_8, "Saturdays");
 
   bool schedule_9[7] = {true, false, false, false, false, false, false};
-  char alarm_day_text_9[32] = {0};
+  char alarm_day_text_9[32] = {};
   alarm_get_string_for_custom(schedule_9, alarm_day_text_9);
   cl_assert_equal_s(alarm_day_text_9, "Sundays");
 }

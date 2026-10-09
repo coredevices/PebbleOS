@@ -1319,7 +1319,7 @@ AnimationHandlers animation_get_handlers(Animation *animation_h) {
   }
   AnimationPrivate *animation = prv_find_animation_by_handle(NULL, animation_h, false /*quiet*/);
   if (!animation) {
-    return (AnimationHandlers){0};
+    return (AnimationHandlers){};
   }
 
   return animation->handlers;

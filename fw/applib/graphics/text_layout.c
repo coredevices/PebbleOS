@@ -1658,7 +1658,7 @@ GSize graphics_text_layout_get_max_used_size(GContext *ctx, const char *text, GF
                                              const GRect box, const GTextOverflowMode overflow_mode,
                                              const GTextAlignment alignment,
                                              GTextLayoutCacheRef const layout) {
-  TextLayoutExtended stack_layout = {0}; // Default use extended layout
+  TextLayoutExtended stack_layout = {}; // Default use extended layout
   TextLayout *text_layout = layout ? (TextLayout *)layout : (TextLayout *)&stack_layout;
   prv_graphics_text_layout_update(ctx, text, font, box, overflow_mode, alignment, text_layout);
   return text_layout->max_used_size;
@@ -1713,10 +1713,10 @@ void graphics_draw_text(GContext *ctx, const char *text, GFont const font, GRect
 void graphics_text_layout_cache_init(GTextLayoutCacheRef *layout) {
   if (process_manager_compiled_with_legacy2_sdk()) {
     *layout = applib_type_malloc(TextLayout);
-    *((TextLayout *)*layout) = (TextLayout){0};
+    *((TextLayout *)*layout) = (TextLayout){};
   } else {
     *layout = applib_type_malloc(TextLayoutExtended);
-    *((TextLayoutExtended *)*layout) = (TextLayoutExtended){0};
+    *((TextLayoutExtended *)*layout) = (TextLayoutExtended){};
   }
 }
 

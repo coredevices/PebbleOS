@@ -664,7 +664,7 @@ static void prv_modal_window_stack_info_cb(void *ctx) {
 }
 
 static int prv_cmd_modals(const struct pbl_shell *sh, size_t argc, char **argv) {
-  WindowStackInfoContext info = {0};
+  WindowStackInfoContext info = {};
   pbl_sem_init(&info.interlock, 0, 1);
 
   launcher_task_add_callback(prv_modal_window_stack_info_cb, &info);

@@ -47,7 +47,7 @@ typedef struct {
   };
 } FwUpdateCurrentCompletionStatus;
 
-static FwUpdateCurrentCompletionStatus s_current_completion_status = {0};
+static FwUpdateCurrentCompletionStatus s_current_completion_status = {};
 
 //
 // Start handlers for legacy percentage status handling. Someday, we can hopefully

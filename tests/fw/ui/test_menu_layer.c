@@ -92,7 +92,7 @@ static TouchNavOps s_bridge_ops;
 
 // Bring up a real per-task touch-nav state so menu_layer_init() registers into a live registry.
 static void prv_touch_nav_setup(void) {
-  s_bridge = (FakeBridgeOps){0};
+  s_bridge = (FakeBridgeOps){};
   s_bridge_ops = (TouchNavOps){
     .top_overrides_back = prv_bridge_top_overrides_back,
     .pop_top = prv_bridge_pop_top,
@@ -211,12 +211,12 @@ void test_menu_layer__initialize(void) {
   fake_app_timer_init();
   fake_rtc_init(0, 0);
   s_anim_to = GPointZero;
-  s_anim_handlers = (AnimationHandlers){0};
+  s_anim_handlers = (AnimationHandlers){};
   s_anim_handlers_context = NULL;
   s_nav_enabled = true;
   // A zeroed state has a NULL manager, so menu_layer_init() registration is inert for the tests
   // that do not opt into the touch-nav harness (prv_touch_nav_setup()).
-  s_touch_nav_state = (TouchNavState){0};
+  s_touch_nav_state = (TouchNavState){};
   process_manager_set_compiled_with_legacy2_sdk(false);
   menu_layer_touch_nav_reset_all();
 }

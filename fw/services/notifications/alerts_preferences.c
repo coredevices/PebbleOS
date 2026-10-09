@@ -163,7 +163,7 @@ static void prv_migrate_notification_content_size(SettingsFile *file) {
   }
 
   s_notification_content_size = PreferredContentSizeDefault;
-  SettingsFile shell_prefs = {{0}};
+  SettingsFile shell_prefs = {};
   if (settings_file_open(&shell_prefs, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
     uint8_t text_style;
     // Shell pref keys are stored with their NUL terminator.
@@ -326,7 +326,7 @@ static void prv_migrate_vibe_intensity_to_vibe_scores(SettingsFile *file) {
 }
 
 void alerts_preferences_init(void) {
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
     return;
   }
@@ -412,7 +412,7 @@ void alerts_preferences_init(void) {
 #define SET_PREF(key, value) prv_set_pref(key, strlen(key), &value, sizeof(value))
 static void prv_set_pref(const void *key, size_t key_len, const void *value, size_t value_len) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
     goto cleanup;
   }
@@ -748,7 +748,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  SettingsFile file = {{0}};
+  SettingsFile file = {};
   if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
     pbl_mutex_unlock(&s_mutex);
     return;

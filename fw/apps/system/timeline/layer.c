@@ -585,7 +585,7 @@ Animation *timeline_layer_create_up_down_animation(TimelineLayer *layer, uint32_
 
   Animation *mode_change = animation_create();
   animation_set_implementation(mode_change, &s_mode_change_impl);
-  animation_set_handlers(mode_change, (AnimationHandlers){0}, layer);
+  animation_set_handlers(mode_change, (AnimationHandlers){}, layer);
 
   return animation_spawn_create(animation, mode_change, NULL);
 }

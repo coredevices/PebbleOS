@@ -44,21 +44,21 @@ typedef struct ReminderAppData {
 } ReminderAppData;
 
 static void prv_create_reminder(ReminderAppData *data) {
-  AttributeList pin_attr_list = {0};
+  AttributeList pin_attr_list = {};
   attribute_list_add_uint32(&pin_attr_list, AttributeIdIconTiny,
                             TIMELINE_RESOURCE_NOTIFICATION_REMINDER);
   attribute_list_add_cstring(&pin_attr_list, AttributeIdTitle, data->reminder_str);
   attribute_list_add_uint8(&pin_attr_list, AttributeIdBgColor, GColorChromeYellowARGB8);
 
-  AttributeList completed_attr_list = {0};
+  AttributeList completed_attr_list = {};
   attribute_list_add_cstring(&completed_attr_list, AttributeIdTitle,
                              i18n_get("Completed", &pin_attr_list));
 
-  AttributeList postpone_attr_list = {0};
+  AttributeList postpone_attr_list = {};
   attribute_list_add_cstring(&postpone_attr_list, AttributeIdTitle,
                              i18n_get("Postpone", &pin_attr_list));
 
-  AttributeList remove_attr_list = {0};
+  AttributeList remove_attr_list = {};
   attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle,
                              i18n_get("Remove", &pin_attr_list));
 

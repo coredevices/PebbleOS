@@ -227,7 +227,7 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
   EventedTimer *new_timer = kernel_malloc_check(sizeof(EventedTimer));
 
   *new_timer = (EventedTimer){
-    .list_node = {0},
+    .list_node = {},
     .sys_timer_id = TIMER_INVALID_ID, // We set this below
     .callback = callback,
     .callback_data = data,

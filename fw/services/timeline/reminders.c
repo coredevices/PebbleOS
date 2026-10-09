@@ -93,7 +93,7 @@ status_t reminders_update_timer(void) {
   s_reminder_armed = false;
   pbl_cron_job_unschedule(&s_reminder_job);
 
-  TimelineItem item = {{{0}}};
+  TimelineItem item = {};
   status_t rv = reminder_db_next_item_header(&item);
   if (rv == S_NO_MORE_ITEMS) {
     PBL_LOG_DBG("No more reminders to add to queue.");
