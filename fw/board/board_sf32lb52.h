@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
+#include <pbl/input/input.h>
 
 #include <bf0_hal_pinmux.h>
 
@@ -91,6 +92,7 @@ typedef struct {
   uint8_t pin;
   GPIOPuPd_TypeDef pull;
   bool active_high;
+  uint16_t code;
 } ButtonConfig;
 
 typedef struct {

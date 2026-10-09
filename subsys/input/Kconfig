@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig INPUT
+    bool "Input"
+    help
+      Input events from the button and touch drivers to their listeners.
+
+if INPUT
+
+config INPUT_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The input command: dump and report events.
+
+module = INPUT
+module-str = Input
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

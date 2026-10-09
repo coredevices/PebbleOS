@@ -13,11 +13,13 @@
  * @ingroup services
  * @brief Touchscreen input: raw touch and gesture events, navigation gating and injection.
  *
- * The touch driver reports samples with touch_handle_update() and gestures with
- * touch_handle_gesture(). The service turns them into @c PEBBLE_TOUCH_EVENT (Touchdown,
- * PositionUpdate, Liftoff) and @c PEBBLE_GESTURE_EVENT events, mirroring coordinates in
- * left-hand mode. The sensor is powered while anything holds it: event service subscribers, the
- * touch backlight feature or the system navigation hold, unless touch is globally disabled.
+ * Touch drivers report samples (@c PBL_INPUT_BTN_TOUCH, @c PBL_INPUT_ABS_X and Y) and gestures
+ * (@c PBL_INPUT_EV_GES) through the @ref input subsystem, which the service passes to
+ * touch_handle_update() and touch_handle_gesture(). The service turns them into
+ * @c PEBBLE_TOUCH_EVENT (Touchdown, PositionUpdate, Liftoff) and @c PEBBLE_GESTURE_EVENT events,
+ * mirroring coordinates in left-hand mode. The sensor is powered while anything holds it: event
+ * service subscribers, the touch backlight feature or the system navigation hold, unless touch is
+ * globally disabled.
  * @{
  */
 
@@ -128,8 +130,7 @@ bool touch_service_is_globally_enabled(void);
 
 /**
  * @brief Pass a touch sample to the service.
- *
- * Called by the touch driver. Emits Touchdown or Liftoff on state changes and PositionUpdate
+ * Emits Touchdown or Liftoff on state changes and PositionUpdate
  * when a down finger moves. Dropped while touch is globally disabled or an injected gesture owns
  * the sensor.
  *
@@ -142,7 +143,7 @@ void touch_handle_update(TouchState touch_state, int16_t x, int16_t y);
 /**
  * @brief Pass a gesture to the service.
  *
- * Called by the touch driver. Dropped while touch is globally disabled or an injected gesture
+ * Dropped while touch is globally disabled or an injected gesture
  * owns the sensor.
  *
  * @param gesture Detected gesture.

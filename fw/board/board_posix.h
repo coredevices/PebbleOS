@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
+#include <pbl/input/input.h>
 
 typedef void GPIO_TypeDef;
 
@@ -51,6 +52,7 @@ typedef struct {
 
 typedef struct {
   const char *name;
+  uint16_t code;
 } ButtonConfig;
 
 typedef struct {

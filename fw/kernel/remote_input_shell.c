@@ -5,8 +5,10 @@
 
 #include <errno.h>
 
+#include <pbl/input/input.h>
 #include <pbl/shell/shell.h>
 
+#include <kernel/input_buttons.h>
 #include <kernel/remote_input.h>
 
 static int prv_press(const struct pbl_shell *sh, const char *button_str, const char *presses_str,
@@ -61,6 +63,24 @@ static int prv_cmd_multi(const struct pbl_shell *sh, size_t argc, char **argv) {
   return prv_press(sh, argv[1], argv[2], argv[3], argv[4]);
 }
 
+static int prv_cmd_raw(const struct pbl_shell *sh, size_t argc, char **argv) {
+  unsigned long button;
+  unsigned long is_down;
+
+  if (pbl_shell_strtoul(argv[1], &button) != 0 || button >= NUM_BUTTONS) {
+    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  if (pbl_shell_strtoul(argv[2], &is_down) != 0 || is_down > 1) {
+    pbl_shell_error(sh, "invalid state '%s'", argv[2]);
+    return -EINVAL;
+  }
+
+  pbl_input_report_key(input_buttons_code(button), is_down == 1, true);
+  return 0;
+}
+
 PBL_SHELL_SUBCMD_SET_CREATE(sub_button);
 PBL_SHELL_CMD_REGISTER(button, sub_button, "Buttons", NULL);
 
@@ -70,5 +90,7 @@ PBL_SHELL_SUBCMD_ADD(sub_button, hold, NULL, "Press a button for a while <btn> <
 PBL_SHELL_SUBCMD_ADD(sub_button, multi, NULL,
                      "Press a button repeatedly <btn> <count> <hold_ms> <delay_ms>", prv_cmd_multi,
                      5, 0);
+PBL_SHELL_SUBCMD_ADD(sub_button, raw, NULL, "Report a raw event <btn> <0=up|1=down>", prv_cmd_raw,
+                     3, 0);
 
 #endif

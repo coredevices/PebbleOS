@@ -6,12 +6,12 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/touch/touch_sensor.h>
+#include <pbl/input/input.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
-#include <pbl/services/touch/touch.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 
@@ -290,6 +290,18 @@ void touch_sensor_init(void) {
   touch_sensor_set_enabled(false);
 }
 
+static void prv_report_sample(bool down, int16_t x, int16_t y) {
+  pbl_input_report_key(PBL_INPUT_BTN_TOUCH, down, false);
+  pbl_input_report_abs(PBL_INPUT_ABS_X, x, false);
+  pbl_input_report_abs(PBL_INPUT_ABS_Y, y, true);
+}
+
+static void prv_report_gesture(uint16_t gesture, int16_t x, int16_t y) {
+  pbl_input_report_abs(PBL_INPUT_ABS_X, x, false);
+  pbl_input_report_abs(PBL_INPUT_ABS_Y, y, false);
+  pbl_input_report_ges(gesture, true);
+}
+
 static void prv_process_pending_messages(void *context) {
   bool rv;
   s_callback_scheduled = false;
@@ -314,7 +326,7 @@ static void prv_process_pending_messages(void *context) {
   rv = prv_read_data(CST816_GESTURE_ID, &id, 1, 1);
   if (!rv) {
     PBL_LOG_ERR("Failed to read gesture ID, trying to recover");
-    touch_handle_update(TouchState_FingerUp, 0, 0);
+    prv_report_sample(false, 0, 0);
     exti_disable(CST816->int_exti);
     touch_sensor_set_enabled(true);
     return;
@@ -324,7 +336,7 @@ static void prv_process_pending_messages(void *context) {
   rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
   if (!rv) {
     PBL_LOG_ERR("Failed to read touch data, trying to recover");
-    touch_handle_update(TouchState_FingerUp, 0, 0);
+    prv_report_sample(false, 0, 0);
     exti_disable(CST816->int_exti);
     touch_sensor_set_enabled(true);
     return;
@@ -356,10 +368,10 @@ static void prv_process_pending_messages(void *context) {
 
   switch (id) {
     case CST816_GESTURE_CLICK:
-      touch_handle_gesture(TouchGesture_Tap, point.x, point.y);
+      prv_report_gesture(PBL_INPUT_GES_TAP, point.x, point.y);
       break;
     case CST816_GESTURE_DOUBLE_CLICK:
-      touch_handle_gesture(TouchGesture_DoubleTap, point.x, point.y);
+      prv_report_gesture(PBL_INPUT_GES_DOUBLE_TAP, point.x, point.y);
       break;
     default:
       break;
@@ -372,15 +384,15 @@ static void prv_process_pending_messages(void *context) {
   } else if (id == CST816_GESTURE_PALM && !s_palm_down) {
     s_palm_down = true;
     s_palm_click_pending = true;
-    touch_handle_gesture(TouchGesture_Palm, point.x, point.y);
+    prv_report_gesture(PBL_INPUT_GES_PALM, point.x, point.y);
   }
 
   // A palm also reports a contact at its centroid, which would otherwise land
   // as a tap on whatever is underneath it.
   if (press == 0x01 && !s_palm_down) {
-    touch_handle_update(TouchState_FingerDown, point.x, point.y);
+    prv_report_sample(true, point.x, point.y);
   } else {
-    touch_handle_update(TouchState_FingerUp, point.x, point.y);
+    prv_report_sample(false, point.x, point.y);
   }
 }
 

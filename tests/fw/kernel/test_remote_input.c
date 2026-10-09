@@ -27,6 +27,14 @@
 static PebbleEvent s_events[MAX_RECORDED];
 static int s_event_count;
 
+bool pbl_in_isr(void) {
+  return false;
+}
+
+void event_put_isr(PebbleEvent *event) {
+  cl_fail("remote input reports from a thread");
+}
+
 void event_put(PebbleEvent *event) {
   cl_assert(s_event_count < MAX_RECORDED);
   s_events[s_event_count++] = *event;

@@ -10,7 +10,11 @@ pbl_clar_test(test_interval_timer
 pbl_clar_test(test_remote_input
   SOURCES
     fw/kernel/remote_input.c
-  DEFINES CONFIG_SERVICE_TOUCH
+    fw/kernel/input_buttons.c
+    subsys/input/input.c
+  DEFINES
+    CONFIG_SERVICE_TOUCH
+    PBL_NO_LINKER_SCRIPT=1
 )
 
 pbl_clar_test(test_rand

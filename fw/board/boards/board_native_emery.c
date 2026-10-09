@@ -62,10 +62,10 @@ const BoardConfig BOARD_CONFIG = {
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons = {
-    [BUTTON_ID_BACK] = {"Back"},
-    [BUTTON_ID_UP] = {"Up"},
-    [BUTTON_ID_SELECT] = {"Select"},
-    [BUTTON_ID_DOWN] = {"Down"},
+    [BUTTON_ID_BACK] = {"Back", PBL_INPUT_KEY_BACK},
+    [BUTTON_ID_UP] = {"Up", PBL_INPUT_KEY_UP},
+    [BUTTON_ID_SELECT] = {"Select", PBL_INPUT_KEY_SELECT},
+    [BUTTON_ID_DOWN] = {"Down", PBL_INPUT_KEY_DOWN},
   },
 };
 

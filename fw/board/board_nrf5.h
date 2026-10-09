@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
+#include <pbl/input/input.h>
 
 #include <hal/nrf_gpio.h>
 #include <nrfx_gpiote.h>
@@ -34,6 +35,7 @@ typedef struct {
   const char *const name; ///< Name for debugging purposes.
   GpioteConfig gpiote;
   nrf_gpio_pin_pull_t pull;
+  uint16_t code;
 } ButtonConfig;
 
 typedef struct {

@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/touch/touch_sensor.h>
+#include <pbl/input/input.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -366,6 +367,71 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
 
   pbl_mutex_unlock(&s_touch_mutex);
 }
+
+// Input reports are built by a single driver context, so the pending report needs no lock.
+static struct {
+  bool has_sample;
+  bool has_gesture;
+  bool down;
+  TouchGesture gesture;
+  int16_t x;
+  int16_t y;
+} s_report;
+
+static void prv_input_cb(const struct pbl_input_event *evt, void *user_data) {
+  switch (evt->type) {
+    case PBL_INPUT_EV_KEY:
+      if (evt->code != PBL_INPUT_BTN_TOUCH) {
+        return;
+      }
+      s_report.has_sample = true;
+      s_report.down = evt->value != 0;
+      break;
+    case PBL_INPUT_EV_ABS:
+      if (evt->code == PBL_INPUT_ABS_X) {
+        s_report.x = (int16_t)evt->value;
+      } else if (evt->code == PBL_INPUT_ABS_Y) {
+        s_report.y = (int16_t)evt->value;
+      } else {
+        return;
+      }
+      break;
+    case PBL_INPUT_EV_GES:
+      switch (evt->code) {
+        case PBL_INPUT_GES_TAP:
+          s_report.gesture = TouchGesture_Tap;
+          break;
+        case PBL_INPUT_GES_DOUBLE_TAP:
+          s_report.gesture = TouchGesture_DoubleTap;
+          break;
+        case PBL_INPUT_GES_PALM:
+          s_report.gesture = TouchGesture_Palm;
+          break;
+        default:
+          return;
+      }
+      s_report.has_gesture = true;
+      break;
+    default:
+      return;
+  }
+
+  if (!evt->sync) {
+    return;
+  }
+
+  if (s_report.has_gesture) {
+    touch_handle_gesture(s_report.gesture, s_report.x, s_report.y);
+  }
+  if (s_report.has_sample) {
+    touch_handle_update(s_report.down ? TouchState_FingerDown : TouchState_FingerUp, s_report.x,
+                        s_report.y);
+  }
+  s_report.has_sample = false;
+  s_report.has_gesture = false;
+}
+
+PBL_INPUT_CALLBACK_DEFINE(prv_input_cb, NULL);
 
 void touch_reset(void) {
   pbl_mutex_lock(&s_touch_mutex, PBL_FOREVER);

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/input/input.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -11,6 +12,7 @@
 
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
+#include <kernel/input_buttons.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/remote_input.h>
 
@@ -109,11 +111,7 @@ static RemoteInputResult prv_start_sequence(NewTimerCallback cb, void *context) 
 // Buttons
 
 static void prv_put_button_event(ButtonId button, bool down) {
-  PebbleEvent event = {
-    .type = down ? PEBBLE_BUTTON_DOWN_EVENT : PEBBLE_BUTTON_UP_EVENT,
-    .button.button_id = button,
-  };
-  event_put(&event);
+  pbl_input_report_key(input_buttons_code(button), down, true);
 }
 
 typedef struct ButtonPressContext {

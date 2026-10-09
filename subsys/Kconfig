@@ -4,6 +4,7 @@
 rsource "bluetooth/Kconfig"
 rsource "crc/Kconfig"
 rsource "cron/Kconfig"
+rsource "input/Kconfig"
 rsource "logging/Kconfig"
 rsource "shell/Kconfig"
 rsource "task_wdt/Kconfig"

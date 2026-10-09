@@ -3,6 +3,7 @@
 
 menuconfig TOUCH
     bool "Touchscreen"
+    select INPUT
     help
       Touchscreen Drivers
 

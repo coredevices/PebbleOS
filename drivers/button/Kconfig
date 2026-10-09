@@ -7,6 +7,7 @@ config BUTTON_NRF5
     bool "Nordic nRF5"
     default y if SOC_NRF52
     select HAL_NORDIC
+    select INPUT
     help
       Support for buttons on Nordic nRF5 GPIOs.
 
@@ -14,12 +15,14 @@ config BUTTON_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
     select HAL_SIFLI
+    select INPUT
     help
       Support for buttons on SiFli SF32LB GPIOs.
 
 config BUTTON_QEMU
     bool "QEMU"
     default y if SOC_QEMU
+    select INPUT
     help
       Support for the QEMU buttons.
 
@@ -27,6 +30,7 @@ config BUTTON_SDL
     bool "SDL keyboard"
     default y if SOC_POSIX
     select SDL
+    select INPUT
     help
       Buttons driven by the keyboard, through SDL, in a native build.
 

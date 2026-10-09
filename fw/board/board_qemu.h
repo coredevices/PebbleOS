@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
+#include <pbl/input/input.h>
 
 #include <cmsis_core.h>
 
@@ -80,6 +81,7 @@ typedef struct {
   uint8_t pin;
   GPIOPuPd_TypeDef pull;
   bool active_high;
+  uint16_t code;
 } ButtonConfig;
 
 typedef struct {
