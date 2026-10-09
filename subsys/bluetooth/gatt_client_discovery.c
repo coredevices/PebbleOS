@@ -44,6 +44,17 @@ static void prv_notify_complete(GAPLEConnection *connection, enum pbl_bt_errno e
   }
 }
 
+static enum pbl_bt_errno prv_status_to_errno(int status) {
+  switch (status) {
+    case BLE_HS_ETIMEOUT:
+      return PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
+    case BLE_HS_ENOTCONN:
+      return PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
+    default:
+      return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + status;
+  }
+}
+
 // -------------------------------------------------------------------------------------------------
 // Gatt Client Discovery API calls
 
@@ -95,6 +106,12 @@ static bool prv_service_free_cb(ListNode *node, void *context) {
 static void prv_free_discovery_context(GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_service_free_cb, NULL);
   kernel_free(context);
+}
+
+static void prv_discovery_failed(GATTServiceDiscoveryContext *context, int status) {
+  prv_discovery_finished();
+  prv_notify_complete(context->connection, prv_status_to_errno(status));
+  prv_free_discovery_context(context);
 }
 
 /* TODO: the way this works is kinda inefficient, really we should notify the OS after we
@@ -288,6 +305,7 @@ static void prv_discover_next_dscs(uint16_t conn_handle, GATTServiceDiscoveryCon
   if (rc != 0) {
     PBL_LOG_ERR("ble_gattc_disc_all_dscs rc=0x%04x (0x%04x -> 0x%04x)", (uint16_t)rc, start_handle,
                 end_handle);
+    prv_discovery_failed(context, rc);
   }
 }
 
@@ -299,6 +317,7 @@ static void prv_discover_next_chrs(uint16_t conn_handle, GATTServiceDiscoveryCon
   if (rc != 0) {
     PBL_LOG_ERR("ble_gattc_disc_all_chrs rc=0x%04x (0x%04x -> 0x%04x)", (uint16_t)rc,
                 service_node->service.start_handle, service_node->service.end_handle);
+    prv_discovery_failed(context, rc);
   }
 }
 
@@ -348,7 +367,6 @@ static void prv_list_append_or_set(ListNode **list, ListNode *node) {
 static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                            uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
-  enum pbl_bt_errno errno;
 
   if (s_stop_discovery_requested) {
     pbl_sem_give(&s_discovery_stopped);
@@ -389,35 +407,23 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
           if (context->current_characteristic != NULL) {
             prv_discover_next_dscs(conn_handle, context);
-            break;
+            return 0;
           }
 
           // Service has no characteristics, skip to next service
           context->current_service = list_get_next(context->current_service);
         }
 
-        if (context->current_service == NULL) {
-          // we're done!
-          prv_discovery_finished();
-          prv_convert_service_and_notify_os(conn_handle, context);
-        }
+        // we're done!
+        prv_discovery_finished();
+        prv_convert_service_and_notify_os(conn_handle, context);
       }
 
       break;
 
     default:
       PBL_LOG_ERR("Descriptor discovery error: %d", error->status);
-      if (error->status == BLE_HS_ETIMEOUT) {
-        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
-      } else if (error->status == BLE_HS_ENOTCONN) {
-        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
-      } else {
-        errno = PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + error->status;
-      }
-
-      prv_discovery_finished();
-      prv_notify_complete(context->connection, errno);
-      prv_free_discovery_context(context);
+      prv_discovery_failed(context, error->status);
       break;
   }
 
@@ -427,7 +433,6 @@ static int prv_find_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                            const struct ble_gatt_chr *chr, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
-  enum pbl_bt_errno errno;
 
   if (s_stop_discovery_requested) {
     pbl_sem_give(&s_discovery_stopped);
@@ -479,17 +484,7 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 
     default:
       PBL_LOG_ERR("Characteristic discovery error: %d", error->status);
-      if (error->status == BLE_HS_ETIMEOUT) {
-        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
-      } else if (error->status == BLE_HS_ENOTCONN) {
-        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
-      } else {
-        errno = PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + error->status;
-      }
-
-      prv_discovery_finished();
-      prv_notify_complete(context->connection, errno);
-      prv_free_discovery_context(context);
+      prv_discovery_failed(context, error->status);
       break;
   }
 
@@ -499,7 +494,6 @@ static int prv_find_chr_cb(uint16_t conn_handle, const struct ble_gatt_error *er
 static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
                                const struct ble_gatt_svc *service, void *arg) {
   GATTServiceDiscoveryContext *context = arg;
-  enum pbl_bt_errno errno;
 
   if (s_stop_discovery_requested) {
     pbl_sem_give(&s_discovery_stopped);
@@ -543,17 +537,7 @@ static int prv_find_inc_svc_cb(uint16_t conn_handle, const struct ble_gatt_error
 
     default:
       PBL_LOG_ERR("Service discovery error: %d", error->status);
-      if (error->status == BLE_HS_ETIMEOUT) {
-        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;
-      } else if (error->status == BLE_HS_ENOTCONN) {
-        errno = PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED;
-      } else {
-        errno = PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + error->status;
-      }
-
-      prv_discovery_finished();
-      prv_notify_complete(context->connection, errno);
-      prv_free_discovery_context(context);
+      prv_discovery_failed(context, error->status);
       break;
   }
   return 0;
