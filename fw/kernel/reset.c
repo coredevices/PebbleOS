@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
+
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
@@ -18,8 +20,6 @@
 #endif
 
 #ifdef CONFIG_SOC_SF32LB52
-#include <pbl/kernel/compiler.h>
-
 #include <bf0_hal.h>
 #endif
 
@@ -69,5 +69,5 @@ void system_reset_callback(void *data) {
   NVIC_SystemReset();
 #endif
 
-  PBL_UNREACHABLE();
+  unreachable();
 }

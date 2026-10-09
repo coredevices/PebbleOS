@@ -6,6 +6,7 @@
 #include "events.h"
 
 #include <inttypes.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -667,5 +668,5 @@ void launcher_main_loop(void) {
     }
   }
 
-  PBL_UNREACHABLE();
+  unreachable();
 }

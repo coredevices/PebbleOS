@@ -141,9 +141,6 @@
  */
 #define PBL_UNLIKELY(x) PBL_UNLIKELY_IMPL(x)
 
-/** @brief Mark a code path the compiler may assume is never reached. */
-#define PBL_UNREACHABLE() PBL_UNREACHABLE_IMPL()
-
 /**
  * @brief Return address of the current function or of its callers.
  *

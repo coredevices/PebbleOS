@@ -24,7 +24,6 @@
 #define PBL_NOCOMMON_IMPL               __attribute__((__nocommon__))
 #define PBL_LIKELY_IMPL(x)              __builtin_expect(!!(x), 1)
 #define PBL_UNLIKELY_IMPL(x)            __builtin_expect(!!(x), 0)
-#define PBL_UNREACHABLE_IMPL()          __builtin_unreachable()
 #define PBL_RETURN_ADDRESS_IMPL(level)  __builtin_return_address(level)
 #define PBL_TYPES_COMPATIBLE_IMPL(a, b) __builtin_types_compatible_p(a, b)
 #define PBL_CHOOSE_EXPR_IMPL(c, a, b)   __builtin_choose_expr(c, a, b)
