@@ -64,7 +64,7 @@ SoC interrupts are bound at build time; there is no runtime handler
 registration and the vector table is in flash:
 
 ```c
-PBL_IRQ_CONNECT(I2C1, 5, i2c_irq_handler, I2C1_BUS, 0);
+PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
 
 PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
   /* handler body */

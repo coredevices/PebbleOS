@@ -73,9 +73,9 @@ static int8_t s_target_strength = VIBE_STRENGTH_MAX;
 static bool prv_read_register(uint8_t addr, uint8_t *data) {
   bool ret;
 
-  i2c_use(I2C_AW8623X);
-  ret = i2c_read_register_block(I2C_AW8623X, addr, 1, data);
-  i2c_release(I2C_AW8623X);
+  pbl_i2c_use(I2C_AW8623X);
+  ret = pbl_i2c_read_register_block(I2C_AW8623X, addr, 1, data) == 0;
+  pbl_i2c_release(I2C_AW8623X);
 
   return ret;
 }
@@ -83,9 +83,9 @@ static bool prv_read_register(uint8_t addr, uint8_t *data) {
 static bool prv_write_register(uint8_t addr, uint8_t data) {
   bool ret;
 
-  i2c_use(I2C_AW8623X);
-  ret = i2c_write_register_block(I2C_AW8623X, addr, 1, &data);
-  i2c_release(I2C_AW8623X);
+  pbl_i2c_use(I2C_AW8623X);
+  ret = pbl_i2c_write_register_block(I2C_AW8623X, addr, 1, &data) == 0;
+  pbl_i2c_release(I2C_AW8623X);
 
   return ret;
 }

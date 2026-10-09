@@ -57,17 +57,17 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_drv2604, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 static bool s_initialized = false;
 
 static bool prv_read_register(uint8_t register_address, uint8_t *result) {
-  i2c_use(I2C_DRV2604);
-  bool rv = i2c_read_register(I2C_DRV2604, register_address, result);
-  i2c_release(I2C_DRV2604);
+  pbl_i2c_use(I2C_DRV2604);
+  bool rv = pbl_i2c_read_register(I2C_DRV2604, register_address, result) == 0;
+  pbl_i2c_release(I2C_DRV2604);
   return rv;
 }
 
 static bool prv_write_register(uint8_t register_address, uint8_t datum) {
-  i2c_use(I2C_DRV2604);
+  pbl_i2c_use(I2C_DRV2604);
   uint8_t block[2] = {register_address, datum};
-  bool rv = i2c_write_block(I2C_DRV2604, 2, block);
-  i2c_release(I2C_DRV2604);
+  bool rv = pbl_i2c_write_block(I2C_DRV2604, 2, block) == 0;
+  pbl_i2c_release(I2C_DRV2604);
   return rv;
 }
 

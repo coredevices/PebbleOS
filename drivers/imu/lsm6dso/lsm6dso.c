@@ -176,9 +176,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 static bool prv_lsm6dso_write(uint8_t reg, const uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LSM6DSO->i2c);
-  ret = i2c_write_register_block(&LSM6DSO->i2c, reg, len, data);
-  i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&LSM6DSO->i2c);
+  ret = pbl_i2c_write_register_block(&LSM6DSO->i2c, reg, len, data) == 0;
+  pbl_i2c_release(&LSM6DSO->i2c);
 
   return ret;
 }
@@ -186,9 +186,9 @@ static bool prv_lsm6dso_write(uint8_t reg, const uint8_t *data, uint16_t len) {
 static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LSM6DSO->i2c);
-  ret = i2c_read_register_block(&LSM6DSO->i2c, reg, len, data);
-  i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&LSM6DSO->i2c);
+  ret = pbl_i2c_read_register_block(&LSM6DSO->i2c, reg, len, data) == 0;
+  pbl_i2c_release(&LSM6DSO->i2c);
 
   return ret;
 }
@@ -196,11 +196,11 @@ static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
 static bool prv_lsm6dso_read_fifo(uint16_t samples) {
   bool ret;
 
-  i2c_use(&LSM6DSO->i2c);
-  ret = i2c_read_register_block_dma(&LSM6DSO->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
-                                    samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
-                                    LSM6DSO->state->raw_sample_buf);
-  i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&LSM6DSO->i2c);
+  ret = pbl_i2c_read_register_block_dma(&LSM6DSO->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
+                                        samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
+                                        LSM6DSO->state->raw_sample_buf) == 0;
+  pbl_i2c_release(&LSM6DSO->i2c);
 
   return ret;
 }

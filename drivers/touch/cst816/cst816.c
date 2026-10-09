@@ -91,19 +91,19 @@ static RegularTimerInfo s_watchdog_timer = {
 static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t size,
                           bool is_work_mode) {
   pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
-  I2CSlavePort *port = CST816->i2c;
+  const struct pbl_i2c_dev *port = CST816->i2c;
   uint8_t addr_size = 1;
   if (!is_work_mode) {
     port = CST816->i2c_boot;
     addr_size = 2;
   }
-  i2c_use(port);
+  pbl_i2c_use(port);
   uint8_t regad[2] = {register_address >> 8, register_address & 0xFF};
-  bool rv = i2c_write_block(port, addr_size, is_work_mode ? regad + 1 : regad);
+  bool rv = pbl_i2c_write_block(port, addr_size, is_work_mode ? regad + 1 : regad) == 0;
   if (rv) {
-    rv = i2c_read_block(port, size, result);
+    rv = pbl_i2c_read_block(port, size, result) == 0;
   }
-  i2c_release(port);
+  pbl_i2c_release(port);
   pbl_mutex_unlock(&s_i2c_lock);
   return rv;
 }
@@ -111,19 +111,19 @@ static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t s
 static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint16_t size,
                            bool is_work_mode) {
   pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
-  I2CSlavePort *port = CST816->i2c;
+  const struct pbl_i2c_dev *port = CST816->i2c;
   uint8_t addr_size = 1;
   if (!is_work_mode) {
     port = CST816->i2c_boot;
     addr_size = 2;
   }
-  i2c_use(port);
+  pbl_i2c_use(port);
   uint8_t data[size + sizeof(register_address)];
   data[0] = register_address >> 8;
   data[1] = register_address & 0xFF;
   memcpy(data + sizeof(register_address), datum, size);
-  bool rv = i2c_write_block(port, size + addr_size, is_work_mode ? data + 1 : data);
-  i2c_release(port);
+  bool rv = pbl_i2c_write_block(port, size + addr_size, is_work_mode ? data + 1 : data) == 0;
+  pbl_i2c_release(port);
   pbl_mutex_unlock(&s_i2c_lock);
   return rv;
 }

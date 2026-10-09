@@ -57,7 +57,7 @@ typedef const struct HRMDevice {
   /** Driver runtime state. */
   HRMDeviceState *state;
   /** Sensor I2C port. */
-  I2CSlavePort *i2c;
+  const struct pbl_i2c_dev *i2c;
   /** Sensor interrupt line. */
   ExtiConfig int_exti;
   /** Sensor interrupt line, as an input. */

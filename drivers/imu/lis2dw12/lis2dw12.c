@@ -160,9 +160,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 static bool prv_lis2dw12_write(uint8_t reg, const uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LIS2DW12->i2c);
-  ret = i2c_write_register_block(&LIS2DW12->i2c, reg, len, data);
-  i2c_release(&LIS2DW12->i2c);
+  pbl_i2c_use(&LIS2DW12->i2c);
+  ret = pbl_i2c_write_register_block(&LIS2DW12->i2c, reg, len, data) == 0;
+  pbl_i2c_release(&LIS2DW12->i2c);
 
   return ret;
 }
@@ -170,9 +170,9 @@ static bool prv_lis2dw12_write(uint8_t reg, const uint8_t *data, uint16_t len) {
 static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LIS2DW12->i2c);
-  ret = i2c_read_register_block(&LIS2DW12->i2c, reg, len, data);
-  i2c_release(&LIS2DW12->i2c);
+  pbl_i2c_use(&LIS2DW12->i2c);
+  ret = pbl_i2c_read_register_block(&LIS2DW12->i2c, reg, len, data) == 0;
+  pbl_i2c_release(&LIS2DW12->i2c);
 
   return ret;
 }
@@ -180,11 +180,11 @@ static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
 static bool prv_lis2dw12_read_fifo(uint8_t samples) {
   bool ret;
 
-  i2c_use(&LIS2DW12->i2c);
-  ret = i2c_read_register_block_dma(&LIS2DW12->i2c, LIS2DW12_OUT_X_L,
-                                    samples * LIS2DW12_SAMPLE_SIZE_BYTES,
-                                    LIS2DW12->state->raw_sample_buf);
-  i2c_release(&LIS2DW12->i2c);
+  pbl_i2c_use(&LIS2DW12->i2c);
+  ret = pbl_i2c_read_register_block_dma(&LIS2DW12->i2c, LIS2DW12_OUT_X_L,
+                                        samples * LIS2DW12_SAMPLE_SIZE_BYTES,
+                                        LIS2DW12->state->raw_sample_buf) == 0;
+  pbl_i2c_release(&LIS2DW12->i2c);
 
   return ret;
 }

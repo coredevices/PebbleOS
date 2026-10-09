@@ -201,18 +201,18 @@ static uint16_t prv_adc_raw(uint8_t msb, uint8_t lsbs, uint8_t lsb_mask) {
 }
 
 static bool prv_read_register(uint16_t register_address, uint8_t *result) {
-  i2c_use(I2C_NPM1300);
+  pbl_i2c_use(I2C_NPM1300);
   uint8_t regad[2] = {register_address >> 8, register_address & 0xFF};
-  bool rv = i2c_write_read_block(I2C_NPM1300, 2, regad, 1, result);
-  i2c_release(I2C_NPM1300);
+  bool rv = pbl_i2c_write_read_block(I2C_NPM1300, 2, regad, 1, result) == 0;
+  pbl_i2c_release(I2C_NPM1300);
   return rv;
 }
 
 static bool prv_write_register(uint16_t register_address, uint8_t datum) {
-  i2c_use(I2C_NPM1300);
+  pbl_i2c_use(I2C_NPM1300);
   uint8_t d[3] = {register_address >> 8, register_address & 0xFF, datum};
-  bool rv = i2c_write_block(I2C_NPM1300, 3, d);
-  i2c_release(I2C_NPM1300);
+  bool rv = pbl_i2c_write_block(I2C_NPM1300, 3, d) == 0;
+  pbl_i2c_release(I2C_NPM1300);
   return rv;
 }
 

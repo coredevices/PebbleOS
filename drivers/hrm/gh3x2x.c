@@ -67,17 +67,17 @@ void gh3026_i2c_init(void) {
 }
 
 void gh3026_i2c_write(uint8_t device_id, const uint8_t write_buffer[], uint16_t length) {
-  i2c_use(HRM->i2c);
-  i2c_write_block(HRM->i2c, length, write_buffer);
-  i2c_release(HRM->i2c);
+  pbl_i2c_use(HRM->i2c);
+  pbl_i2c_write_block(HRM->i2c, length, write_buffer);
+  pbl_i2c_release(HRM->i2c);
 }
 
 void gh3026_i2c_read(uint8_t device_id, const uint8_t write_buffer[], uint16_t write_length,
                      uint8_t read_buffer[], uint16_t read_length) {
-  i2c_use(HRM->i2c);
-  i2c_write_block(HRM->i2c, write_length, write_buffer);
-  i2c_read_block(HRM->i2c, read_length, read_buffer);
-  i2c_release(HRM->i2c);
+  pbl_i2c_use(HRM->i2c);
+  pbl_i2c_write_block(HRM->i2c, write_length, write_buffer);
+  pbl_i2c_read_block(HRM->i2c, read_length, read_buffer);
+  pbl_i2c_release(HRM->i2c);
 }
 
 static void prv_conv_fs4g_mg_to_lsb512(AccelRawData *data) {

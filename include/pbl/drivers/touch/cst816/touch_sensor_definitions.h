@@ -3,6 +3,7 @@
 #pragma once
 
 #include <pbl/drivers/gpio.h>
+#include <pbl/drivers/i2c.h>
 
 #include <board/board.h>
 
@@ -21,9 +22,9 @@
 /** @brief CST816 board configuration. */
 typedef struct {
   /** I2C device in normal operation. */
-  I2CSlavePort *i2c;
+  const struct pbl_i2c_dev *i2c;
   /** I2C device in boot (firmware update) mode. */
-  I2CSlavePort *i2c_boot;
+  const struct pbl_i2c_dev *i2c_boot;
   /** Interrupt line. */
   ExtiConfig int_exti;
   /** Reset line. */
