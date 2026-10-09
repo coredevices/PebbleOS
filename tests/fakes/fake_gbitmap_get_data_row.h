@@ -3,7 +3,5 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 extern bool s_fake_data_row_handling;
 extern bool s_fake_data_row_handling_disable_vertical_flip;

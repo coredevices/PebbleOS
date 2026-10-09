@@ -11,7 +11,6 @@
 //! in weather_db.h but absent from weather_service's v3 WeatherLocationForecast).
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define WX_DS_HOURLY 24

@@ -3,7 +3,6 @@
 
 #include "display_sdl_bottom.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 

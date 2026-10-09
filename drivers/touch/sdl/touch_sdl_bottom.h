@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 //! The display is @p width x @p height: scrolling keeps the finger on it.
 void touch_sdl_bottom_init(int width, int height);
 

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 //! Factory resets the device by wiping the flash
 //! @param should_shutdown If true, shutdown after factory resetting, otherwise reboot.
 void factory_reset(bool should_shutdown);

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 

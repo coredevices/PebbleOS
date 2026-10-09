@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 enum {
   BUTTON_SDL_BACK,
   BUTTON_SDL_UP,

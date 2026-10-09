@@ -6,8 +6,6 @@
 #include "launch_config.h"
 #include "process_manager.h"
 
-#include <stdbool.h>
-
 #include <pbl/kernel/types.h>
 #include <pbl/services/compositor/compositor.h>
 

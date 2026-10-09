@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/util/heap.h>
 
 #include <applib/accel_service_private.h>

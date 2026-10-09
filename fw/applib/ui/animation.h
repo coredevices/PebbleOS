@@ -4,7 +4,6 @@
 #pragma once
 #include "animation_interpolate.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/rtc.h>

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 //! @addtogroup Foundation
 //! @{
 //!   @addtogroup EventService

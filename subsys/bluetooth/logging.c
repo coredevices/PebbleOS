@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
 #include <stdint.h>
 
 void hc_endpoint_logging_set_level(uint8_t level) {

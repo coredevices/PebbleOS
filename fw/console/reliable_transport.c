@@ -6,7 +6,6 @@
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse_protocol_impl.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>

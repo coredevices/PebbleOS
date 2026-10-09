@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup services_bluetooth Bluetooth services
  * @ingroup services

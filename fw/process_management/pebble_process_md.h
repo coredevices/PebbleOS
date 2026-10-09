@@ -5,8 +5,6 @@
 
 #include "pebble_process_info.h"
 
-#include <stdbool.h>
-
 #include <pbl/util/build_id.h>
 #include <pbl/util/uuid.h>
 

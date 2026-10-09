@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 //! Enter manufacturing mode, but does not start the manufacturing app.
 void mfg_enter_mfg_mode(void);
 

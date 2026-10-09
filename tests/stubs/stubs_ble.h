@@ -8,7 +8,6 @@
 #include "stubs_hexdump.h"
 
 #include <inttypes.h>
-#include <stdbool.h>
 
 bool gaps_init(void) {
   return true;

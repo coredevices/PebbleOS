@@ -6,8 +6,6 @@
 #include "event_service_client.h"
 #include "touch_service.h"
 
-#include <stdbool.h>
-
 //! Per-task state for the applib touch service. Must live in task-accessible
 //! memory (app/kernel state) so syscalls that validate buffers see it
 //! as userspace-local.

@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 #include <pbl/logging/logging.h>

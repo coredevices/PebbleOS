@@ -5,8 +5,6 @@
 
 #include "api.h"
 
-#include <stdbool.h>
-
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/item.h>
 

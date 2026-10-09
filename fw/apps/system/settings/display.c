@@ -8,7 +8,6 @@
 #include "option_menu.h"
 #include "window.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 
 #include <pbl/drivers/ambient_light.h>

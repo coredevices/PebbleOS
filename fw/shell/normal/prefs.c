@@ -28,7 +28,6 @@
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include <pbl/services/orientation_manager.h>
 #endif
-#include <stdbool.h>
 
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>

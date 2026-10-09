@@ -3,7 +3,6 @@
 
 #include "mfg_hrm_ctr_leakage_obelix.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 

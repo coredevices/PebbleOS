@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
-
 #include <pbl/drivers/flash.h>
 #include <pbl/services/new_timer/new_timer.h>
 

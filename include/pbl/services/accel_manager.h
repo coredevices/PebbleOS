@@ -5,7 +5,6 @@
 
 #include "accel_manager_types.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <kernel/pebble_tasks.h>

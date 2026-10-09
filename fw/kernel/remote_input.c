@@ -22,7 +22,6 @@
 #include <applib/ui/recognizer/swipe.h>
 #endif
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define REMOTE_INPUT_ENDPOINT 0xf00d

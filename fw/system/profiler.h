@@ -15,7 +15,6 @@
  *   a specific point.
  */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 

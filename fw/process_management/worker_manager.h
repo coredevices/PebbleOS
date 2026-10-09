@@ -6,8 +6,6 @@
 #include "pebble_process_md.h"
 #include "process_manager.h"
 
-#include <stdbool.h>
-
 // Worker management functions
 void worker_manager_init(void);
 

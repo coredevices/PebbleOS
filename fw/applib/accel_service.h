@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/imu/units.h>
 

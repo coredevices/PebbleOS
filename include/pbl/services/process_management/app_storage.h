@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #include <flash_region/flash_region.h>

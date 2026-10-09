@@ -5,7 +5,6 @@
 
 #include "button_id.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 /**

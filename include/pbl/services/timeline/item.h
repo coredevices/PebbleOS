@@ -6,7 +6,6 @@
 #include "attribute.h"
 #include "layout_layer.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>

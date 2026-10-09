@@ -9,7 +9,6 @@
 #include "swipe.h"
 #include "tap.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>

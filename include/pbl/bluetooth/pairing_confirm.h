@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup bluetooth_pairing_confirm Pairing confirmation
  * @ingroup bluetooth

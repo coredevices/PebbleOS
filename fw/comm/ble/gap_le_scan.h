@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/bluetooth/types.h>
 
 //! @internal

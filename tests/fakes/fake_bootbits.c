@@ -4,7 +4,6 @@
 #include "fake_bootbits.h"
 
 #include <inttypes.h>
-#include <stdbool.h>
 
 static uint32_t s_bootbits = 0;
 

@@ -4,7 +4,6 @@
 #pragma once
 
 #include <inttypes.h>
-#include <stdbool.h>
 
 #include <applib/fonts/codepoint.h>
 #include <applib/fonts/fonts_private.h>

@@ -5,7 +5,6 @@
 
 #include "pebble_process_md.h"
 
-#include <stdbool.h>
 #include <stddef.h>
 
 // The high bytes sit where the 0x10.0x00 header ended, which the build ID note's alignment

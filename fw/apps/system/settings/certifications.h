@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <mfg/mfg_info.h>
 
 //! Which regulatory marks and/or IDs a given product should display.

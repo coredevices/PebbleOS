@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdbool.h>
-
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
 #endif

@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
-#include <stdbool.h>
 
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/new_timer/new_timer.h>

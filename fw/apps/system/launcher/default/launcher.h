@@ -5,8 +5,6 @@
 
 #include "menu_layer.h"
 
-#include <stdbool.h>
-
 #include <applib/graphics/gtypes.h>
 #include <apps/system/launcher/launcher.h>
 

@@ -4,7 +4,6 @@
 #include "movable_line.h"
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stdio.h>
 
 #include <pbl/logging/logging.h>

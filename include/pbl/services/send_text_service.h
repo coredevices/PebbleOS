@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup services_send_text_service Send text
  * @ingroup services

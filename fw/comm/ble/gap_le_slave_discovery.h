@@ -12,8 +12,6 @@
 //! to, so the "slave" part in the file name is redundant, but kept for
 //! the sake of completeness.
 
-#include <stdbool.h>
-
 //! @return True is Pebble is currently explicitly discoverable as BLE slave
 //! or false if not.
 bool gap_le_slave_is_discoverable(void);

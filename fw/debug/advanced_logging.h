@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 void advanced_logging_init(void);
 
 void pbl_log_advanced(const char *buffer, int length, bool async);

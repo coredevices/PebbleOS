@@ -7,7 +7,6 @@
 #ifdef CONFIG_BATTERY_QEMU
 #include <pbl/drivers/battery/qemu.h>
 #endif
-#include <stdbool.h>
 
 #include <pbl/drivers/uart.h>
 #include <pbl/logging/logging.h>

@@ -3,6 +3,4 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 bool pairability_is_enabled(void);

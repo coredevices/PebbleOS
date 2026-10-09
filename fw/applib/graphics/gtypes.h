@@ -16,7 +16,6 @@
 #if !(defined(SDK) || defined(UNITTEST))
 #endif
 
-#include <stdbool.h>
 #include <stdint.h>
 
 //! @addtogroup Graphics

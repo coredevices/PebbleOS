@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/wakeup.h>
 

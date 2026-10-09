@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup mcu_privilege Privilege
  * @ingroup mcu

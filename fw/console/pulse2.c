@@ -8,7 +8,6 @@
 #include "pulse2_transport_impl.h"
 #include "pulse_internal.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 typedef void *RemoteRef;
 
 RemoteRef remote_get_active() {

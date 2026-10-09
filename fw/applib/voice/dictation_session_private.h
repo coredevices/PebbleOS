@@ -6,8 +6,6 @@
 #include "dictation_session.h"
 #include "voice_window.h"
 
-#include <stdbool.h>
-
 #include <applib/event_service_client.h>
 
 struct DictationSession {

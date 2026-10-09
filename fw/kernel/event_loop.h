@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <kernel/events.h>
 
 //! Adds an event to the launcher's queue that will call the callback with

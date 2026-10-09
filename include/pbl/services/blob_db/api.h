@@ -5,7 +5,6 @@
 
 #include "api_types.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
 

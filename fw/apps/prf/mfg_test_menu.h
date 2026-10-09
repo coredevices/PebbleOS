@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 #include <apps/prf/mfg_test_result.h>
 #include <process_management/pebble_process_md.h>
 

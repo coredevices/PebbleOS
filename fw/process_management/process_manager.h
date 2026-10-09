@@ -5,8 +5,6 @@
 
 #include "launch_config.h"
 
-#include <stdbool.h>
-
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/services/accel_manager.h>

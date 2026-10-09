@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define PCM_STREAM_DEFAULT_SIZE_BYTES 8192 // 8KB

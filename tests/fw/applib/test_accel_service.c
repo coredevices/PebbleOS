@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <limits.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/services/accel_manager.h>

@@ -6,7 +6,6 @@
 // clang-format off
 #include "display.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>

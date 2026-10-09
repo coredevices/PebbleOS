@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 //! Parses a string with a real number into int32_t, using given multiplication factor.

@@ -1,7 +1,6 @@
 #include "utf8.h"
 
 #include <inttypes.h>
-#include <stdbool.h>
 
 #include <pbl/logging/logging.h>
 #include <pbl/util/iterator.h>

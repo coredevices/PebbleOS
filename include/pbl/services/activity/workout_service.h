@@ -6,8 +6,6 @@
 #include "activity.h"
 #include "hr_util.h"
 
-#include <stdbool.h>
-
 #include <kernel/events.h>
 
 /**

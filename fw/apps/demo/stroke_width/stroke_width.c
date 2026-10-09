@@ -4,7 +4,6 @@
 #include "stroke_width.h"
 
 #include <inttypes.h>
-#include <stdbool.h>
 
 #include <pbl/logging/logging.h>
 #include <pbl/util/trig.h>

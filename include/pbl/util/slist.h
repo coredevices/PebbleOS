@@ -4,7 +4,6 @@
 #pragma once
 #include "order.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 /**

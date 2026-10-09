@@ -24,7 +24,6 @@ THE SOFTWARE.
 This license is taken to apply to any other files in the Project Kraepelin
 Pebble App project.
 */
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

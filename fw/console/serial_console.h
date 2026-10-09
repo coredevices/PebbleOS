@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 void serial_console_init(void);
 
 bool serial_console_is_logging_enabled(void);

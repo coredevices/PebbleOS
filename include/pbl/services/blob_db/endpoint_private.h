@@ -5,7 +5,6 @@
 
 #include "api.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>

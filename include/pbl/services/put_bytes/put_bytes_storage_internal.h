@@ -5,8 +5,6 @@
 
 #include "put_bytes_storage.h"
 
-#include <stdbool.h>
-
 /**
  * @defgroup services_put_bytes_put_bytes_storage_internal Put bytes storage backend interface
  * @ingroup services_put_bytes_put_bytes_storage

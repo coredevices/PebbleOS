@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define DISP_BYTES_LINE DISP_COLS / 8

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 typedef enum SerialConsoleState {
   SERIAL_CONSOLE_STATE_PROMPT,
   SERIAL_CONSOLE_STATE_LOGGING,

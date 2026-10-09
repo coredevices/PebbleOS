@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-
 /**
  * @defgroup services_activity_hr_util Heart rate zones
  * @ingroup services_activity

@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/bluetooth/conn_event_stats.h>

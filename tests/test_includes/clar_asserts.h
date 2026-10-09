@@ -4,7 +4,6 @@
 #pragma once
 
 #include <setjmp.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
