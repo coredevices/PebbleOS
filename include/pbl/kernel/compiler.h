@@ -19,7 +19,8 @@
  * The only place the tree may spell compiler specifics: code outside @c pbl/kernel/compiler/ must
  * not use @c __attribute__ or @c __builtin_* directly. Each macro expands to a @c *_IMPL
  * counterpart from @c compiler/gcc.h or @c compiler/clang.h; attributes a compiler does not
- * implement expand to nothing.
+ * implement expand to nothing. What C23 standardizes, such as @c [[noreturn]], @c [[maybe_unused]]
+ * or @c unreachable(), is spelled the standard way instead.
  *
  * @code{.c}
  * typedef struct PBL_PACKED {
