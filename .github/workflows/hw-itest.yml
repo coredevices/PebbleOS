@@ -40,6 +40,7 @@ jobs:
           fetch-depth: 0
           submodules: true
           persist-credentials: false
+          allow-unsafe-pr-checkout: true
 
       - name: Fetch tags
         run: git fetch --tags --force
@@ -98,6 +99,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+          allow-unsafe-pr-checkout: true
 
       - name: Set up Python
         run: |
