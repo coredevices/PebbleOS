@@ -288,8 +288,6 @@ void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out)
 
 void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig *config);
 
-int alerts_preferences_qt_get_num_active(void);
-
 /**
  * @brief Lock the alerts preferences mutex.
  *

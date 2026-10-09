@@ -90,11 +90,6 @@ static void prv_toggle_smart_dnd(void *e_dialog) {
   prv_do_update();
 }
 
-//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
-void do_not_disturb_refresh_active_state(void) {
-  prv_do_update();
-}
-
 static void prv_toggle_manual_dnd_from_action_menu(void *e_dialog) {
   do_not_disturb_toggle_push(ActionTogglePrompt_NoPrompt, false /* set_exit_reason */);
 }
@@ -404,14 +399,6 @@ bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type) {
 
 //! Quiet Time schedule API
 
-void quiet_time_for_each_schedule(QuietTimeScheduleCallback cb, void *context) {
-  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
-    QuietTimeScheduleConfig config;
-    alerts_preferences_qt_get_schedule(i, &config);
-    cb(i, &config, context);
-  }
-}
-
 void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out) {
   alerts_preferences_qt_get_schedule(index, out);
 }
@@ -460,10 +447,6 @@ void quiet_time_set_schedule_enabled(int index, bool enabled) {
   config.enabled = enabled;
   alerts_preferences_qt_set_schedule(index, &config);
   prv_try_update_schedule_mode_callback(true);
-}
-
-int quiet_time_get_num_active(void) {
-  return alerts_preferences_qt_get_num_active();
 }
 
 const char *quiet_time_get_string_for_kind(QuietTimeKind kind) {

@@ -1323,11 +1323,12 @@ void test_do_not_disturb__phone_smart_enabled_recomputes_active_state(void) {
   // Calendar event starts; refresh posts a DND event.
   s_event_ongoing = true;
   cl_assert(do_not_disturb_is_active() == true);
-  do_not_disturb_refresh_active_state();
+  PebbleCalendarEvent calendar_event = {0};
+  do_not_disturb_handle_calendar_event(&calendar_event);
   cl_assert_equal_i(s_num_dnd_events_put, 1);
 
   s_event_ongoing = false;
-  do_not_disturb_refresh_active_state();
+  do_not_disturb_handle_calendar_event(&calendar_event);
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert_equal_i(s_num_dnd_events_put, 2);
 
@@ -1340,12 +1341,13 @@ void test_do_not_disturb__phone_smart_enabled_recomputes_active_state(void) {
   cl_assert_equal_i(s_num_pref_change_events_put, 2);
 }
 
-//! Refresh is a no-op when the active state didn't change.
-void test_do_not_disturb__refresh_active_state_noop_when_unchanged(void) {
+//! A calendar event with no state change posts no DND event.
+void test_do_not_disturb__calendar_event_noop_when_unchanged(void) {
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert_equal_i(s_num_dnd_events_put, 0);
 
-  do_not_disturb_refresh_active_state();
+  PebbleCalendarEvent calendar_event = {0};
+  do_not_disturb_handle_calendar_event(&calendar_event);
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert_equal_i(s_num_dnd_events_put, 0);
 }

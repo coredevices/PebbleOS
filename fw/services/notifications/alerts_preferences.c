@@ -751,16 +751,6 @@ void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig
   }
 }
 
-int alerts_preferences_qt_get_num_active(void) {
-  int count = 0;
-  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
-    if (s_qt_schedule[i].is_used) {
-      count++;
-    }
-  }
-  return count;
-}
-
 bool quiet_time_schedule_is_valid(const QuietTimeScheduleConfig *config) {
   if (config->kind >= QT_KIND_COUNT)
     return false;

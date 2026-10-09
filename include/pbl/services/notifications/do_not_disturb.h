@@ -134,9 +134,6 @@ bool do_not_disturb_is_smart_dnd_enabled(void);
 /** @brief Toggle smart DND, showing the first use dialog the first time. */
 void do_not_disturb_toggle_smart_dnd(void);
 
-//! Re-evaluate active DND state and post PEBBLE_DO_NOT_DISTURB_EVENT if it changed.
-void do_not_disturb_refresh_active_state(void);
-
 /**
  * @brief Get a DND schedule.
  *
@@ -152,12 +149,6 @@ void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSche
  * @return true if enabled.
  */
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type);
-
-//! Iterate over all quiet time schedules. Callback is called for each slot
-//! (0..MAX_QUIET_TIME_SCHEDULES-1) regardless of whether the slot is active.
-typedef void (*QuietTimeScheduleCallback)(int index, const QuietTimeScheduleConfig *config,
-                                          void *context);
-void quiet_time_for_each_schedule(QuietTimeScheduleCallback cb, void *context);
 
 //! Get/set an individual quiet time schedule slot
 void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out);
@@ -189,9 +180,6 @@ const char *quiet_time_get_string_for_kind(QuietTimeKind kind);
 //! (7 short day abbreviations + 6 comma separators + NUL). A single selected
 //! day uses the long form (e.g. "Wednesdays", 11 bytes incl. NUL).
 void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffer, size_t buf_len);
-
-//! Get the number of active (enabled and non-empty) schedule slots
-int quiet_time_get_num_active(void);
 
 /** @brief Initialize the DND service and arm the schedule cron jobs. */
 void do_not_disturb_init(void);
