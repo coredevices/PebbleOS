@@ -75,7 +75,7 @@ bool timeline_item_create_from_serial_data(TimelineItem *item, uint8_t num_attri
   bool r = attributes_actions_parse_serial_data(num_attributes, num_actions, data, size,
                                                 string_alloc_size, attributes_per_action);
   if (!r) {
-    return NULL;
+    return false;
   }
 
   if (!prv_item_init(item, num_attributes, num_actions, attributes_per_action, *string_alloc_size,

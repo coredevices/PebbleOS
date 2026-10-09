@@ -1180,7 +1180,7 @@ HealthMetricAlert *health_service_register_metric_alert(HealthMetric metric,
 bool health_service_cancel_metric_alert(HealthMetricAlert *alert) {
   HealthServiceState *state = prv_get_state(true);
   if (!state->cache) {
-    return NULL;
+    return false;
   }
 
   HealthMetric metric = (HealthMetric)(uintptr_t)alert;

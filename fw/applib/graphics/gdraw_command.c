@@ -19,7 +19,7 @@ bool gdraw_command_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
   if (!(sys_resource_load_range(app_num, resource_id, 0, (uint8_t *)&data_signature,
                                 sizeof(data_signature)) == sizeof(data_signature) &&
         (pbl_be32_to_cpu(data_signature) == expected_signature))) {
-    return NULL;
+    return false;
   }
 
   // Data is the second entry after the resource signature
@@ -31,7 +31,7 @@ bool gdraw_command_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
     if (sys_resource_load_range(app_num, resource_id, sizeof(expected_signature),
                                 (uint8_t *)&output_data_size,
                                 sizeof(output_data_size)) != sizeof(output_data_size)) {
-      return NULL;
+      return false;
     }
     *data_size = output_data_size;
   }
