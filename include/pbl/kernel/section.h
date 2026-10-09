@@ -49,7 +49,7 @@
  * For builds linked without the firmware linker script (@c PBL_NO_LINKER_SCRIPT), where
  * @ref PBL_SECTION is a no-op: the linker collects such a section on its own, in no particular
  * order, and names its bounds PBL_UNSORTED_SECTION_START() and PBL_UNSORTED_SECTION_END(). The
- * objects must be @ref PBL_USED.
+ * objects must be @ref PBL_USED. The section may be empty.
  *
  * @code{.c}
  * extern const struct foo foo_start[] PBL_UNSORTED_SECTION_START(foos);
@@ -77,8 +77,9 @@
 #define PBL_UNSORTED_SECTION_END(name)   __asm("section$end$__DATA_CONST$__" #name)
 #else
 #define PBL_UNSORTED_SECTION(name)       PBL_SECTION_IMPL(#name) PBL_NO_SANITIZE_ADDRESS
-#define PBL_UNSORTED_SECTION_START(name) __asm("__start_" #name)
-#define PBL_UNSORTED_SECTION_END(name)   __asm("__stop_" #name)
+// ELF linkers only define the bounds of a section that exists
+#define PBL_UNSORTED_SECTION_START(name) __asm("__start_" #name) PBL_WEAK
+#define PBL_UNSORTED_SECTION_END(name)   __asm("__stop_" #name) PBL_WEAK
 #endif
 
 /** @} */

@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+add_subdirectory(base)
 pbl_add_subdirectory_ifdef(CONFIG_SPEAKER speaker)
 pbl_add_subdirectory_ifdef(CONFIG_AMBIENT_LIGHT ambient)
 pbl_add_subdirectory_ifdef(CONFIG_TEMPERATURE temperature)

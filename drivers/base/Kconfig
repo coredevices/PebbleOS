@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Device model"
+
+module = DEVICE
+module-str = Device model
+source "subsys/logging/Kconfig.template.log_level"
+
+endmenu
