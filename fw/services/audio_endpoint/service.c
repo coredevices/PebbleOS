@@ -19,8 +19,8 @@ PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_
 #define ACTIVE_MODE_TIMEOUT      (10000)
 #define ACTIVE_MODE_START_BUFFER (100)
 
-_Static_assert(ACTIVE_MODE_TIMEOUT > ACTIVE_MODE_START_BUFFER,
-               "ACTIVE_MODE_TIMEOUT must be greater than ACTIVE_MODE_START_BUFFER");
+static_assert(ACTIVE_MODE_TIMEOUT > ACTIVE_MODE_START_BUFFER,
+              "ACTIVE_MODE_TIMEOUT must be greater than ACTIVE_MODE_START_BUFFER");
 
 typedef struct {
   AudioEndpointSessionId id;

@@ -52,7 +52,7 @@ typedef struct BinLogMessage_Version {
 /** @brief Version flag: the header has a date and time. */
 #define BINLOGMSG_VERSION_TIME_DATE (1 << 0)
 
-_Static_assert(sizeof(BinLogMessage_Version) == 1, "BinLogMessage_Version size != 1");
+static_assert(sizeof(BinLogMessage_Version) == 1, "BinLogMessage_Version size != 1");
 
 /** @brief Time of day in UTC. All fields are 0-based. */
 typedef struct Time_Full {
@@ -115,7 +115,7 @@ typedef struct MessageID {
   };
 } MessageID;
 
-_Static_assert(sizeof(MessageID) == 4, "MessageID size != 4");
+static_assert(sizeof(MessageID) == 4, "MessageID size != 4");
 
 /** @brief Common start of every header. */
 typedef struct BinLogMessage_Header {

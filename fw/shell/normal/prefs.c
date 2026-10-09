@@ -183,8 +183,8 @@ static uint8_t s_text_style = PreferredContentSizeDefault;
 #define PREF_KEY_SYSTEM_TEXT_SIZE "systemTextSize"
 static uint8_t s_system_text_size = PreferredContentSizeDefault;
 #if !UNITTEST
-_Static_assert(sizeof(PreferredContentSize) == sizeof(s_system_text_size),
-               "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
+static_assert(sizeof(PreferredContentSize) == sizeof(s_system_text_size),
+              "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
 #define PREF_KEY_LANG_ENGLISH "langEnglish"
@@ -278,16 +278,16 @@ static uint8_t s_alarms_app_opened = 0;
 #define PREF_KEY_ACTIVITY_HRM_PREFERENCES "hrmPreferences"
 static ActivityHRMSettings s_activity_hrm_preferences = ACTIVITY_HRM_DEFAULT_PREFERENCES;
 #if !UNITTEST
-_Static_assert(sizeof(ActivityHRMSettings) == 3,
-               "ActivityHRMSettings changed size; prv_migrate_activity_hrm_prefs() only widens "
-               "records whose fields were appended!");
+static_assert(sizeof(ActivityHRMSettings) == 3,
+              "ActivityHRMSettings changed size; prv_migrate_activity_hrm_prefs() only widens "
+              "records whose fields were appended!");
 #endif
 
 #define PREF_KEY_ACTIVITY_SPO2_PREFERENCES "spo2Preferences"
 static ActivitySpO2Settings s_activity_spo2_preferences = ACTIVITY_SPO2_DEFAULT_PREFERENCES;
 #if !UNITTEST
-_Static_assert(sizeof(ActivitySpO2Settings) == 1,
-               "sizeof(ActivitySpO2Settings) grew, stored records need migrating!");
+static_assert(sizeof(ActivitySpO2Settings) == 1,
+              "sizeof(ActivitySpO2Settings) grew, stored records need migrating!");
 #endif
 
 // Blood oxygen on/off. Synced from the phone (and the on-watch toggle) as a

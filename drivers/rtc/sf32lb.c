@@ -403,8 +403,8 @@ typedef struct PBL_PACKED {
 #define TZINFO_VERSION 1
 
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
-  _Static_assert(sizeof(TzinfoFlashStorage) <= SUBSECTOR_SIZE_BYTES,
-                 "TzinfoFlashStorage must fit in TZINFO flash region (4KB)");
+  static_assert(sizeof(TzinfoFlashStorage) <= SUBSECTOR_SIZE_BYTES,
+                "TzinfoFlashStorage must fit in TZINFO flash region (4KB)");
 
   // Copy to versioned buffer
   TzinfoFlashStorage storage = {

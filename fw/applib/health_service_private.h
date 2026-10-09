@@ -96,7 +96,7 @@ typedef struct {
 } HealthServiceTimeRange;
 
 // since we expect clients to allocate this struct on the stack we make sure its size is limited
-_Static_assert(sizeof(HealthServiceTimeRange) <= 160, "Helper struct too large for stack");
+static_assert(sizeof(HealthServiceTimeRange) <= 160, "Helper struct too large for stack");
 
 // Return the daily history of the given metric
 bool health_service_private_get_metric_history(HealthMetric metric, uint32_t history_len,

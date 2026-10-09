@@ -138,8 +138,8 @@ typedef struct PBL_PACKED {
   uint8_t size;
 } QemuProtocolContentSizeHeader;
 #if !UNITTEST
-_Static_assert(sizeof(PreferredContentSize) == sizeof(((QemuProtocolContentSizeHeader *)0)->size),
-               "sizeof(PreferredContentSize) grew, need to update QemuContentSize in libpebble2 !");
+static_assert(sizeof(PreferredContentSize) == sizeof(((QemuProtocolContentSizeHeader *)0)->size),
+              "sizeof(PreferredContentSize) grew, need to update QemuContentSize in libpebble2 !");
 #endif
 
 /**

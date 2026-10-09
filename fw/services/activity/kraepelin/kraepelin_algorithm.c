@@ -1312,7 +1312,7 @@ uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num
   *consumed_samples = 0;
 
   // We do an FFT in place on the accel_samples array, so make sure our constraints are correct
-  _Static_assert(KALG_N_SAMPLES_EPOCH < KALG_FFT_WIDTH, "Invalid array sizes");
+  static_assert(KALG_N_SAMPLES_EPOCH < KALG_FFT_WIDTH, "Invalid array sizes");
 
   // Format the accel data for the algorithm - it wants the x, y and z values in separate arrays
   for (uint32_t i = 0; i < num_samples; i++) {

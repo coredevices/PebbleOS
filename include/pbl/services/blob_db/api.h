@@ -80,7 +80,7 @@ typedef enum PBL_PACKED {
   /** Number of database ids. */
   NumBlobDBs,
 } BlobDBId;
-_Static_assert(sizeof(BlobDBId) == 1, "BlobDBId is larger than 1 byte");
+static_assert(sizeof(BlobDBId) == 1, "BlobDBId is larger than 1 byte");
 
 /**
  * @brief Node of a list of records that have not been synced to the phone yet.

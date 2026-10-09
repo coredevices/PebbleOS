@@ -24,7 +24,7 @@ extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 #define prv_get_basepri() __get_BASEPRI()
 #endif
 
-_Static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
+static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
 
 void reboot_reason_set(RebootReason *reason) {
 #ifdef CONFIG_SOC_NRF52

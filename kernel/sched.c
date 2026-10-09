@@ -9,7 +9,7 @@
 #include <pbl/kernel/idle.h>
 
 #define NUM_PRIO CONFIG_KERNEL_NUM_PRIORITIES
-_Static_assert(NUM_PRIO <= 32, "the ready bitmap is 32 bits wide");
+static_assert(NUM_PRIO <= 32, "the ready bitmap is 32 bits wide");
 
 struct pbl_thread *pbl_all_threads;
 

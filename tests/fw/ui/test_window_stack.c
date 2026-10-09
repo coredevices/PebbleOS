@@ -1239,8 +1239,8 @@ void test_window_stack__pop_all_modals(void) {
   modal_manager_pop_all();
   modal_manager_event_loop_upkeep();
 
-  _Static_assert(ModalPriorityMin == ModalPriorityDiscreet,
-                 "Update the test to handle priorities below discreet.");
+  static_assert(ModalPriorityMin == ModalPriorityDiscreet,
+                "Update the test to handle priorities below discreet.");
   // Discreet should not be popped
   cl_assert_equal_b(windows[ModalPriorityDiscreet]->on_screen, true);
 

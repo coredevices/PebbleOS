@@ -25,8 +25,8 @@ bool gdraw_command_resource_is_valid(ResAppNum app_num, uint32_t resource_id,
   // Data is the second entry after the resource signature
   if (data_size) {
     uint32_t output_data_size;
-    _Static_assert(PDCI_SIZE_OFFSET == PDCS_SIZE_OFFSET,
-                   "code re-use between PDCI/PDCS requires same file format header");
+    static_assert(PDCI_SIZE_OFFSET == PDCS_SIZE_OFFSET,
+                  "code re-use between PDCI/PDCS requires same file format header");
 
     if (sys_resource_load_range(app_num, resource_id, sizeof(expected_signature),
                                 (uint8_t *)&output_data_size,

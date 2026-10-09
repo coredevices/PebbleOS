@@ -61,8 +61,8 @@ typedef struct {
   //   time_sample_collected = s_last_empty_timestamp_ms + timestamp_delta_ms
   uint16_t timestamp_delta_ms;
 } AccelManagerBufferData;
-_Static_assert(offsetof(AccelManagerBufferData, rawdata) == 0,
-               "AccelRawData must be first entry in AccelManagerBufferData struct");
+static_assert(offsetof(AccelManagerBufferData, rawdata) == 0,
+              "AccelRawData must be first entry in AccelManagerBufferData struct");
 
 // Statics
 //! List of all registered consumers of accel data. Points to AccelManagerState objects.

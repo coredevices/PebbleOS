@@ -228,8 +228,8 @@ static pbl_tick_t prv_poll_timer(uint8_t *const sequence_number) {
       timeout = 0;
       *sequence_number = s_reliable_timer_sequence_number;
     } else {
-      _Static_assert(1000 * RTC_TICKS_HZ / 1000 == RTC_TICKS_HZ,
-                     "RtcTicks uses different units than FreeRTOS ticks");
+      static_assert(1000 * RTC_TICKS_HZ / 1000 == RTC_TICKS_HZ,
+                    "RtcTicks uses different units than FreeRTOS ticks");
       timeout = timer_expiry_tick - now;
     }
   }

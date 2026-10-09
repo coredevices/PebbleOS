@@ -144,8 +144,8 @@ typedef struct ScrollLayer {
 } ScrollLayer;
 
 #ifndef __clang__
-_Static_assert(offsetof(struct ScrollPaging, flags) == offsetof(Layer, flags),
-               "ScrollPaging struct alignment with shadow_sublayer broken");
+static_assert(offsetof(struct ScrollPaging, flags) == offsetof(Layer, flags),
+              "ScrollPaging struct alignment with shadow_sublayer broken");
 #endif
 
 //! @internal

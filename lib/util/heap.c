@@ -83,7 +83,7 @@ typedef struct _tagHeapInfo_t {
 //! Convert a pointer to the Data member to a pointer to the HeapInfo_t beginner
 #define HEAP_INFO_FOR_PTR(ptr) (HeapInfo_t *)(((Alignment_t *)ptr) - HEAP_INFO_BLOCK_SIZE(0))
 
-_Static_assert((offsetof(HeapInfo_t, Data) % ALIGNMENT_SIZE) == 0, "Heap not properly aligned.");
+static_assert((offsetof(HeapInfo_t, Data) % ALIGNMENT_SIZE) == 0, "Heap not properly aligned.");
 
 //! Heap is assumed corrupt if expr does not evaluate true
 #define HEAP_ASSERT_SANE(heap, expr, log_addr) \

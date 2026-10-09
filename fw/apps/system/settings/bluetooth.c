@@ -324,7 +324,7 @@ static void prv_draw_stored_remote_item_round(GContext *ctx, const Layer *cell_l
                                               const char *le_string,
                                               const char *is_sharing_heart_rate_string) {
 #ifdef CONFIG_SERVICE_BLE_HRM
-  _Static_assert(false, "FIXME: Implement round drawing code to show heart rate sharing status!");
+  static_assert(false, "FIXME: Implement round drawing code to show heart rate sharing status!");
 #endif // CONFIG_SERVICE_BLE_HRM
   menu_cell_basic_draw(ctx, cell_layer, remote_name, connected_string, NULL);
 }

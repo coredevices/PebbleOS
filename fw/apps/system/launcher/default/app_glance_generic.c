@@ -235,14 +235,14 @@ static void prv_current_slice_updated(LauncherAppGlance *glance) {
     // glance is for a system app (where it doesn't matter) or for apps that were compiled with
     // an SDK that supports app glances (which is newer than the first SDK that supported published
     // resources as proved by the following asserts)
-    _Static_assert((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR >
-                    TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) ||
-                       ((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR ==
-                         TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) &&
-                        (APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR >=
-                         TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR)),
-                   "App glance min supported SDK version must be equal to or newer than first "
-                   "timeline/published resource PBW supported SDK version");
+    static_assert((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR >
+                   TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) ||
+                      ((APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR ==
+                        TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MAJOR) &&
+                       (APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR >=
+                        TIMELINE_RESOURCE_PBW_SUPPORT_FIRST_SDK_VERSION_MINOR)),
+                  "App glance min supported SDK version must be equal to or newer than first "
+                  "timeline/published resource PBW supported SDK version");
     timeline_resources_get_id_system(timeline_res_id, LAUNCHER_APP_GLANCE_GENERIC_ICON_SIZE_TYPE,
                                      resource_info.res_app_num, &resource_info);
   }

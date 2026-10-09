@@ -20,10 +20,10 @@
 
 typedef int16_t GValue;
 
-_Static_assert(sizeof(GPoint) == sizeof(GValue[2]),
-               "TextNode requires a GPoint to be equivalent to a GValue[2]");
-_Static_assert(sizeof(GSize) == sizeof(GValue[2]),
-               "TextNode requires a GSize to be equivalent to a GValue[2]");
+static_assert(sizeof(GPoint) == sizeof(GValue[2]),
+              "TextNode requires a GPoint to be equivalent to a GValue[2]");
+static_assert(sizeof(GSize) == sizeof(GValue[2]),
+              "TextNode requires a GSize to be equivalent to a GValue[2]");
 
 typedef enum {
   GAxis_X = 0,
@@ -38,14 +38,14 @@ typedef enum {
   GAxisAlign_Max,
 } GAxisAlign;
 
-_Static_assert((((int)GAxisAlign_Min == GTextAlignmentLeft) &&
-                ((int)GAxisAlign_Center == GTextAlignmentCenter) &&
-                ((int)GAxisAlign_Max == GTextAlignmentRight)),
-               "TextNode requires GTextAlignment == the ordered set (0, 1, 2), left to right");
-_Static_assert((((int)GAxisAlign_Min == GVerticalAlignmentTop) &&
-                ((int)GAxisAlign_Center == GVerticalAlignmentCenter) &&
-                ((int)GAxisAlign_Max == GVerticalAlignmentBottom)),
-               "TextNode requires GVerticalAlignment == the ordered set (0, 1, 2), top to bottom");
+static_assert((((int)GAxisAlign_Min == GTextAlignmentLeft) &&
+               ((int)GAxisAlign_Center == GTextAlignmentCenter) &&
+               ((int)GAxisAlign_Max == GTextAlignmentRight)),
+              "TextNode requires GTextAlignment == the ordered set (0, 1, 2), left to right");
+static_assert((((int)GAxisAlign_Min == GVerticalAlignmentTop) &&
+               ((int)GAxisAlign_Center == GVerticalAlignmentCenter) &&
+               ((int)GAxisAlign_Max == GVerticalAlignmentBottom)),
+              "TextNode requires GVerticalAlignment == the ordered set (0, 1, 2), top to bottom");
 
 typedef struct {
   const GTextNodeDrawConfig *config; //!< Draw configuration passed by the user

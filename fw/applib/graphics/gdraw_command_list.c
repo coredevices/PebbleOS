@@ -220,11 +220,10 @@ typedef struct {
   } iter;
 } CollectPointsCBContext;
 
-_Static_assert(
-    (sizeof(GPoint) == sizeof(GPointPrecise)),
-    "GPointPrecise cannot be convert to GPoint in-place because of its size difference.");
+static_assert((sizeof(GPoint) == sizeof(GPointPrecise)),
+              "GPointPrecise cannot be convert to GPoint in-place because of its size difference.");
 
-_Static_assert(
+static_assert(
     (offsetof(GPoint, y) == offsetof(GPointPrecise, y)),
     "GPointPrecise cannot be convert to GPoint in-place because of its member size difference.");
 

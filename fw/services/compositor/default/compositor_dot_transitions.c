@@ -156,7 +156,7 @@ typedef struct PBL_PACKED {
   };
 } DotTransitionAnimationConfiguration;
 
-_Static_assert(sizeof(DotTransitionAnimationConfiguration) == sizeof(void *), "");
+static_assert(sizeof(DotTransitionAnimationConfiguration) == sizeof(void *), "");
 
 #if PBL_RECT
 static void prv_collapse_animation_update_rect(GContext *ctx,

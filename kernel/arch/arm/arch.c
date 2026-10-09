@@ -107,9 +107,9 @@ const struct pbl_kernel_debug_layout pbl_kernel_debug_layout PBL_USED = {
   .ctx_fp_extra = NUM_EXTRA_FP_REGS * sizeof(uint32_t),
 };
 
-_Static_assert(offsetof(struct pbl_thread, backend.sp) == 0, "saved SP must be first");
-_Static_assert(offsetof(struct pbl_thread, backend.arch.mpu) == 4, "MPU words must follow the SP");
-_Static_assert(NUM_MPU_REGIONS == PBL_THREAD_MAX_MEM_REGIONS, "region count mismatch");
+static_assert(offsetof(struct pbl_thread, backend.sp) == 0, "saved SP must be first");
+static_assert(offsetof(struct pbl_thread, backend.arch.mpu) == 4, "MPU words must follow the SP");
+static_assert(NUM_MPU_REGIONS == PBL_THREAD_MAX_MEM_REGIONS, "region count mismatch");
 
 static inline bool prv_fp_active(uint32_t exc_return) {
   return (exc_return & EXC_RETURN_FP_INACTIVE) == 0;

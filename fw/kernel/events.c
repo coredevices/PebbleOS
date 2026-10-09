@@ -103,8 +103,8 @@ void events_init(void) {
   // PBL_LOG_DBG("PebbleEvent size is %u", sizeof(PebbleEvent));
   // FIXME:
 #ifndef CONFIG_ARCH_POSIX
-  _Static_assert(sizeof(PebbleEvent) <= 12,
-                 "You made the PebbleEvent bigger! It should be no more than 12");
+  static_assert(sizeof(PebbleEvent) <= 12,
+                "You made the PebbleEvent bigger! It should be no more than 12");
 #endif
 
   pbl_poll_group_add(&s_system_event_queue_set, &s_kernel_event_queue);

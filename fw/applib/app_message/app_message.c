@@ -163,7 +163,7 @@ AppMessageResult app_message_open(const uint32_t size_inbound, const uint32_t si
   // It's probably not super-bad if this isn't true, but we'll have type casts between different
   // sizes without over/underflow verification.
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-  _Static_assert(sizeof(size_t) == sizeof(uint32_t), "sizeof(size_t) != sizeof(uint32_t)");
+  static_assert(sizeof(size_t) == sizeof(uint32_t), "sizeof(size_t) != sizeof(uint32_t)");
 #endif
 
   AppMessageCtx *app_message_ctx = app_state_get_app_message_ctx();

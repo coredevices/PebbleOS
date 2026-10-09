@@ -320,7 +320,7 @@ enum {
   MenuLayerColor_Count,
 };
 #ifndef __clang__
-_Static_assert(MenuLayerColor_Count == 2, "Bad enum MenuLayerColor");
+static_assert(MenuLayerColor_Count == 2, "Bad enum MenuLayerColor");
 #endif
 
 enum {

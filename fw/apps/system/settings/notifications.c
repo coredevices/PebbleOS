@@ -161,7 +161,7 @@ static const char *s_window_timeouts_labels[] = {
   i18n_noop("None"),
 };
 
-_Static_assert(ARRAY_LENGTH(s_window_timeouts_ms) == ARRAY_LENGTH(s_window_timeouts_labels), "");
+static_assert(ARRAY_LENGTH(s_window_timeouts_ms) == ARRAY_LENGTH(s_window_timeouts_labels), "");
 
 static int prv_window_timeout_get_selection_index(void) {
   const int DEFAULT_IDX = 3;
@@ -269,7 +269,7 @@ static const char *s_status_bar_style_labels[] = {
   [NotificationStatusBarStyle_LargeBold] = i18n_noop("Big & Bold"),
 };
 
-_Static_assert(ARRAY_LENGTH(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");
+static_assert(ARRAY_LENGTH(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");
 
 static int prv_status_bar_style_get_selection_index(void) {
   const NotificationStatusBarStyle style = alerts_preferences_get_notification_status_bar_style();
@@ -308,8 +308,8 @@ static const char *s_notification_grouping_range_labels[] = {
   [NotificationGroupingRange_All] = i18n_noop("All"),
 };
 
-_Static_assert(ARRAY_LENGTH(s_notification_grouping_range_labels) == NotificationGroupingRangeCount,
-               "");
+static_assert(ARRAY_LENGTH(s_notification_grouping_range_labels) == NotificationGroupingRangeCount,
+              "");
 
 static void prv_notification_grouping_range_menu_select(OptionMenu *option_menu, int selection,
                                                         void *context) {

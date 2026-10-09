@@ -42,9 +42,9 @@ typedef enum {
 
 // Make sure the AccelAxisType enum is compatible with the unified
 // IMUCoordinateAxis enum.
-_Static_assert(ACCEL_AXIS_X == (int)AXIS_X, "AccelAxisType incompatible with IMUCoordinateAxis");
-_Static_assert(ACCEL_AXIS_Y == (int)AXIS_Y, "AccelAxisType incompatible with IMUCoordinateAxis");
-_Static_assert(ACCEL_AXIS_Z == (int)AXIS_Z, "AccelAxisType incompatible with IMUCoordinateAxis");
+static_assert(ACCEL_AXIS_X == (int)AXIS_X, "AccelAxisType incompatible with IMUCoordinateAxis");
+static_assert(ACCEL_AXIS_Y == (int)AXIS_Y, "AccelAxisType incompatible with IMUCoordinateAxis");
+static_assert(ACCEL_AXIS_Z == (int)AXIS_Z, "AccelAxisType incompatible with IMUCoordinateAxis");
 
 #define ACCEL_DEFAULT_SAMPLING_RATE ACCEL_SAMPLING_25HZ
 #define ACCEL_MINIMUM_SAMPLING_RATE ACCEL_SAMPLING_10HZ

@@ -72,10 +72,10 @@ static PulseControlMessageProtocol s_reliable_pcmp = {
   .send_fn = pulse_reliable_send,
 };
 
-_Static_assert(sizeof((ReliablePacket){0}.i) == 6, "sizeof ReliablePacket.i is wrong");
-_Static_assert(sizeof((ReliablePacket){0}.s) == 2, "sizeof ReliablePacket.s is wrong");
-_Static_assert(sizeof((ReliablePacket){0}.i) == sizeof(ReliablePacket),
-               "Something is really wrong here");
+static_assert(sizeof((ReliablePacket){0}.i) == 6, "sizeof ReliablePacket.i is wrong");
+static_assert(sizeof((ReliablePacket){0}.s) == 2, "sizeof ReliablePacket.s is wrong");
+static_assert(sizeof((ReliablePacket){0}.i) == sizeof(ReliablePacket),
+              "Something is really wrong here");
 
 static bool s_layer_up = false;
 static ReliableInfoBuffer *s_tx_buffer;

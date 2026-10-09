@@ -32,4 +32,4 @@ typedef struct TouchEvent {
   int16_t y;
 } TouchEvent;
 
-_Static_assert(sizeof(TouchEvent) <= 9, "TouchEvent must stay small; it rides inside PebbleEvent");
+static_assert(sizeof(TouchEvent) <= 9, "TouchEvent must stay small; it rides inside PebbleEvent");

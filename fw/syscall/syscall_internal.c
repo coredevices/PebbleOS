@@ -62,10 +62,10 @@ typedef struct McuUnprivilegedCallContext {
   uint32_t thread_id;
 } McuUnprivilegedCallContext;
 
-_Static_assert(sizeof(((McuUnprivilegedCallContext *)0)->saved_r4_r11) == 32,
-               "mcu_call_unprivileged asm assumes push {r4-r11} saves 32 bytes");
-_Static_assert(sizeof(uintptr_t) == sizeof(uint32_t),
-               "mcu_call_unprivileged asm assumes 32-bit pointers");
+static_assert(sizeof(((McuUnprivilegedCallContext *)0)->saved_r4_r11) == 32,
+              "mcu_call_unprivileged asm assumes push {r4-r11} saves 32 bytes");
+static_assert(sizeof(uintptr_t) == sizeof(uint32_t),
+              "mcu_call_unprivileged asm assumes 32-bit pointers");
 
 static McuUnprivilegedCallContext s_unprivileged_call_ctx[NumPebbleTask];
 

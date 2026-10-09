@@ -42,4 +42,4 @@ const struct {
   .data = {'G', 'N', 'U', '\0'},
 };
 
-_Static_assert(offsetof(__typeof__(TINTIN_BUILD_ID), data) == offsetof(ElfExternalNote, data), "");
+static_assert(offsetof(__typeof__(TINTIN_BUILD_ID), data) == offsetof(ElfExternalNote, data), "");

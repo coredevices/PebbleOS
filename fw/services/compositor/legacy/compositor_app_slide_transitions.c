@@ -18,7 +18,7 @@ typedef struct {
   };
 } AppSlideTransitionAnimationConfiguration;
 
-_Static_assert(sizeof(AppSlideTransitionAnimationConfiguration) == sizeof(void *), "");
+static_assert(sizeof(AppSlideTransitionAnimationConfiguration) == sizeof(void *), "");
 
 void compositor_app_slide_transition_animation_update(GContext *ctx, uint32_t distance_normalized,
                                                       CompositorTransitionDirection dir) {

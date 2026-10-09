@@ -84,8 +84,8 @@ const char lipsum[] =
     "nisi orci viverra felis, vitae luctus massa dolor sit amet dolor. Cras "
     "mattis velit vitae pretium pulvinar. Pellentesque auctor, turpis at cras "
     "amet.";
-_Static_assert(sizeof(lipsum) > PERSIST_STRING_MAX_LENGTH,
-               "lipsum string is not long enough for persist tests");
+static_assert(sizeof(lipsum) > PERSIST_STRING_MAX_LENGTH,
+              "lipsum string is not long enough for persist tests");
 
 void test_persist__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);

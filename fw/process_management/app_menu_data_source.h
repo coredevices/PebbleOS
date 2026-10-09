@@ -48,7 +48,7 @@ typedef struct PBL_PACKED AppMenuNode {
 // Clang makes the size of enums like AppMenuStorageOrder larger than the minimum size needed to
 // represent all of the enum's values, so this assert doesn't make since when compiling using Clang
 #if !__clang__
-_Static_assert(
+static_assert(
     sizeof(((AppMenuNode *)0)->storage_order) >=
         sizeof(((AppMenuOrderStorage *)0)->list_length) + sizeof(AppMenuStorageOrder),
     "The size of AppMenuNode.storage_order must be at least as large as the combined size of "

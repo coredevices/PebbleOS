@@ -38,6 +38,6 @@ bool app_worker_message_unsubscribe(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // Send an event to all registered subscribers of the given plugin service identified by UUID.
 void app_worker_send_message(uint8_t type, AppWorkerMessage *data) {
-  _Static_assert(sizeof(AppWorkerMessage) == sizeof(PluginEventData), "These must match!");
+  static_assert(sizeof(AppWorkerMessage) == sizeof(PluginEventData), "These must match!");
   plugin_service_send_event(NULL, type, (PluginEventData *)data);
 }

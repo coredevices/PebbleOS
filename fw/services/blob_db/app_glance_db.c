@@ -34,7 +34,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 #define APP_GLANCE_DB_MAX_USED_SIZE \
   (APP_GLANCE_DB_GLANCE_MAX_SIZE * APP_GLANCE_DB_MAX_NUM_APP_GLANCES)
 
-_Static_assert(APP_GLANCE_DB_MAX_USED_SIZE <= SETTINGS_FILE_SIZE, "AppGlanceDB is too small!");
+static_assert(APP_GLANCE_DB_MAX_USED_SIZE <= SETTINGS_FILE_SIZE, "AppGlanceDB is too small!");
 
 static struct {
   SettingsFile settings_file;

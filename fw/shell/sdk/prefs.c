@@ -26,8 +26,8 @@ static Uuid s_default_watchface = UUID_INVALID_INIT;
 #define PREF_KEY_CONTENT_SIZE "contentSize"
 static uint8_t s_content_size;
 #if !UNITTEST
-_Static_assert(sizeof(PreferredContentSize) == sizeof(s_content_size),
-               "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
+static_assert(sizeof(PreferredContentSize) == sizeof(s_content_size),
+              "sizeof(PreferredContentSize) grew, pref needs to be migrated!");
 #endif
 
 #ifdef CONFIG_APP_SCALING

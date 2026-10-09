@@ -105,7 +105,7 @@ struct WasteTimerData {
   uint16_t count;
   uint16_t delay;
 };
-_Static_assert(sizeof(struct WasteTimerData) <= sizeof(uintptr_t), "struct WasteTimerData too big");
+static_assert(sizeof(struct WasteTimerData) <= sizeof(uintptr_t), "struct WasteTimerData too big");
 
 static void prv_waste_time_cb(void *context) {
   struct WasteTimerData data;

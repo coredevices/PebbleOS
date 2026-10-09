@@ -34,9 +34,9 @@ typedef enum PebbleTask {
 
 typedef uint16_t PebbleTaskBitset;
 
-_Static_assert((1 << (8 * sizeof(PebbleTaskBitset))) >= (1 << NumPebbleTask),
-               "The type of PebbleTaskBitset is not wide enough to "
-               "track all tasks in the PebbleTask enum");
+static_assert((1 << (8 * sizeof(PebbleTaskBitset))) >= (1 << NumPebbleTask),
+              "The type of PebbleTaskBitset is not wide enough to "
+              "track all tasks in the PebbleTask enum");
 
 void pebble_task_register(PebbleTask task, struct pbl_thread *thread);
 void pebble_task_unregister(PebbleTask task);

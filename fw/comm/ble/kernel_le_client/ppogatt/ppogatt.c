@@ -58,7 +58,7 @@ typedef enum {
   DeleteReasonCount,
 } DeleteReason;
 
-_Static_assert(DeleteReasonCount <= CommSessionCloseReason_TransportSpecificEnd + 1, "");
+static_assert(DeleteReasonCount <= CommSessionCloseReason_TransportSpecificEnd + 1, "");
 
 typedef enum {
   AckTimeoutState_Inactive = 0,

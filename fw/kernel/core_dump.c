@@ -299,7 +299,7 @@ static uint32_t prv_flash_start_address(bool new) {
 }
 
 // -------------------------------------------------------------------------------------------------
-_Static_assert(CORE_DUMP_NUM_REGISTERS == PBL_THREAD_REG_COUNT, "register layout mismatch");
+static_assert(CORE_DUMP_NUM_REGISTERS == PBL_THREAD_REG_COUNT, "register layout mismatch");
 
 // Called for each thread during the pbl_thread_foreach() walk.
 static void prv_thread_info_cb(const struct pbl_thread_info *task_info, void *data) {

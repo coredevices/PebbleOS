@@ -565,8 +565,8 @@ static void update_last_written_page(void) {
 //!     are in use
 static uint32_t prv_get_sector_page_status(uint16_t region, uint16_t *first_free_page) {
   // our bitmask needs to be large enough to describe all the pages in a sector
-  _Static_assert((sizeof(uint32_t) * 8) >= PFS_PAGES_PER_ERASE_SECTOR,
-                 "Number of PFS pages is larger than bitmask");
+  static_assert((sizeof(uint32_t) * 8) >= PFS_PAGES_PER_ERASE_SECTOR,
+                "Number of PFS pages is larger than bitmask");
 
   *first_free_page = INVALID_PAGE;
 
@@ -1963,9 +1963,9 @@ static int prv_copy_sector_to_gc_file(uint16_t *free_page, uint16_t sector_start
 
   // we rely on having 1 page to store some metadata so make sure
   // we always have enough space based on our block & erase size
-  _Static_assert((PFS_PAGES_PER_ERASE_SECTOR * (sizeof(PageHeader) + 4)) <
-                     (PFS_PAGE_SIZE - AVAIL_BYTES_OFFSET),
-                 "Too many pages per Erase sector");
+  static_assert((PFS_PAGES_PER_ERASE_SECTOR * (sizeof(PageHeader) + 4)) <
+                    (PFS_PAGE_SIZE - AVAIL_BYTES_OFFSET),
+                "Too many pages per Erase sector");
   PBL_ASSERTN(num_entries < PFS_PAGES_PER_ERASE_SECTOR);
 
   int fd = pfs_open_gc_file(space_needed, true);

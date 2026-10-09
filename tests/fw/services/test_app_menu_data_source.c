@@ -531,8 +531,8 @@ void test_app_menu_data_source__complete_sorted_order(void) {
     BIG_TIME_APP_ID,
   };
 
-  _Static_assert(MENU_LAYER_APP_ID < BIG_TIME_APP_ID,
-                 "MENU_LAYER_APP_ID is unexpectedly >= BIG_TIME_APP_ID.");
+  static_assert(MENU_LAYER_APP_ID < BIG_TIME_APP_ID,
+                "MENU_LAYER_APP_ID is unexpectedly >= BIG_TIME_APP_ID.");
 
   const uint8_t num_entries = ARRAY_LENGTH(storage_order);
   prv_write_order_to_file(storage_order, num_entries);

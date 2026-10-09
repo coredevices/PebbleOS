@@ -91,10 +91,10 @@ static void prv_send_watch_versions(CommSession *session) {
     .boot_version = pbl_cpu_to_be32(boot_version_read()),
   };
 
-  _Static_assert(sizeof(struct VersionsMessage) >=
-                     126 /* pre-v1.5 version info */ +
-                         24 /* v1.5 version info or later, added system_resources_version */,
-                 "");
+  static_assert(sizeof(struct VersionsMessage) >=
+                    126 /* pre-v1.5 version info */ +
+                        24 /* v1.5 version info or later, added system_resources_version */,
+                "");
 
   version_copy_running_fw_metadata(&versions_msg.running_fw_metadata);
   prv_fixup_running_firmware_metadata(&versions_msg.running_fw_metadata);

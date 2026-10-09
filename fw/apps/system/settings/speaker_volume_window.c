@@ -38,8 +38,8 @@ static void prv_play_preview(SpeakerVolumeWindowData *data) {
 }
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
-  _Static_assert(offsetof(Window, layer) == 0, "");
-  _Static_assert(offsetof(SpeakerVolumeWindowData, window) == 0, "");
+  static_assert(offsetof(Window, layer) == 0, "");
+  static_assert(offsetof(SpeakerVolumeWindowData, window) == 0, "");
   SpeakerVolumeWindowData *data = (SpeakerVolumeWindowData *)layer;
 
   graphics_context_set_fill_color(ctx, GColorWhite);

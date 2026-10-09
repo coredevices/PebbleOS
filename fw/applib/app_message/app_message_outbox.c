@@ -43,7 +43,7 @@ static void prv_handle_nack_or_ack_timeout(AppMessageCtxOutbox *outbox, AppMessa
 
 static void prv_handle_outbox_error_cb(void *data) {
   AppMessageResult result = (AppMessageResult)(uintptr_t)data;
-  _Static_assert(sizeof(result) <= sizeof(data), "AppMessageResult expected to fit in void *");
+  static_assert(sizeof(result) <= sizeof(data), "AppMessageResult expected to fit in void *");
   AppMessageCtxOutbox *outbox = &app_state_get_app_message_ctx()->outbox;
   if (outbox->phase != OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK) {
     APP_LOG(LOG_LEVEL_ERROR, "Outbox failure, but unexpected state: %u", outbox->phase);

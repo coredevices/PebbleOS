@@ -1784,8 +1784,8 @@ void menu_layer_set_scroll_vibe_on_blocked(MenuLayer *menu_layer, bool scroll_vi
 // usual comfortable double-tap spacing; tune on hardware if it feels too eager/sluggish.
 #define DOUBLE_TAP_WINDOW_MS 300
 
-_Static_assert(sizeof(((MenuLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
-               "MenuLayer touch_nav_node must match TouchNavWidgetNode layout");
+static_assert(sizeof(((MenuLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
+              "MenuLayer touch_nav_node must match TouchNavWidgetNode layout");
 
 static bool prv_is_app_task(void) {
   return pebble_task_get_current() == PebbleTask_App;

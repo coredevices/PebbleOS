@@ -20,7 +20,7 @@ typedef struct PBL_PACKED {
   };
 } RoundFlipTransitionAnimationConfiguration;
 
-_Static_assert(sizeof(RoundFlipTransitionAnimationConfiguration) == sizeof(void *), "");
+static_assert(sizeof(RoundFlipTransitionAnimationConfiguration) == sizeof(void *), "");
 
 void compositor_round_flip_transitions_flip_animation_update(GContext *ctx,
                                                              uint32_t distance_normalized,

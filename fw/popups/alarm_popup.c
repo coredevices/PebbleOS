@@ -373,7 +373,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
 
   // The alarm id isn't carried in the event (PebbleEvent must stay <= 12 bytes
-  // — see _Static_assert in events.c). Fall back to the most-recently-fired
+  // — see static_assert in events.c). Fall back to the most-recently-fired
   // alarm tracked in the alarm service. Synthetic events (trigger_alarm demo)
   // get ALARM_INVALID_ID and skip the per-alarm config lookup.
   const AlarmId alarm_id = alarm_get_most_recent_id();

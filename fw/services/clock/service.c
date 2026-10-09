@@ -74,7 +74,7 @@ typedef struct PBL_PACKED {
 } TimezoneCBData;
 
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-_Static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
+static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
 #endif
 
 #if !defined(CONFIG_RECOVERY_FW)

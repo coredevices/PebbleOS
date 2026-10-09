@@ -452,9 +452,9 @@ static VoiceUiState prv_get_simple_state(VoiceUiState state) {
     StateFinished,
     StateExiting,
   };
-  _Static_assert(StateExiting < ARRAY_LENGTH(state_map),
-                 "The number of states has grown, but state"
-                 "the simple state mapping has not been updated");
+  static_assert(StateExiting < ARRAY_LENGTH(state_map),
+                "The number of states has grown, but state"
+                "the simple state mapping has not been updated");
   PBL_ASSERTN(state < ARRAY_LENGTH(state_map));
 
   return state_map[state];

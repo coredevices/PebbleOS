@@ -129,7 +129,7 @@ struct pb_version {
   uint8_t tweak;
 } PBL_PACKED;
 
-_Static_assert(sizeof(struct pb_version) == 8, "pb_version struct must be 8 bytes");
+static_assert(sizeof(struct pb_version) == 8, "pb_version struct must be 8 bytes");
 
 uint32_t boot_version_read(void) {
   struct pb_version version_data;

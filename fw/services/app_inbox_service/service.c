@@ -57,8 +57,8 @@ typedef struct AppInboxConsumerInfo {
   uint8_t *end;
 } AppInboxConsumerInfo;
 
-_Static_assert(sizeof(AppInboxServiceTag) <= sizeof(void *),
-               "AppInboxServiceTag should fit inside a void *");
+static_assert(sizeof(AppInboxServiceTag) <= sizeof(void *),
+              "AppInboxServiceTag should fit inside a void *");
 
 static AppInboxNode *s_app_inbox_head;
 

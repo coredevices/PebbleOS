@@ -48,7 +48,7 @@ typedef enum {
 } SprfValidFields;
 
 #ifndef __clang__
-_Static_assert(sizeof(SprfValidFields) == 1, "SprfValidFields unexpected size");
+static_assert(sizeof(SprfValidFields) == 1, "SprfValidFields unexpected size");
 #endif
 
 /** @brief Entry header magic. */
@@ -61,7 +61,7 @@ typedef enum {
   SprfMagic_InvalidatedEntry = 0x0
 } SprfMagic;
 
-_Static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
+static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 
 /** @brief BLE root keys field. */
 typedef struct PBL_PACKED SprfRootKeys {
@@ -70,7 +70,7 @@ typedef struct PBL_PACKED SprfRootKeys {
   /** Keys indexed by @ref pbl_bt_sm_root_key_type. */
   struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
 } SprfRootKeys;
-_Static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
+static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
 
 /** @brief BLE pairing field, for the device most recently paired. */
 typedef struct PBL_PACKED SprfBlePairingData {
@@ -108,7 +108,7 @@ typedef struct PBL_PACKED SprfBlePairingData {
   /** Pairing flags. Added in version 2, always 0 in version 1. */
   uint8_t flags;
 } SprfBlePairingData;
-_Static_assert(offsetof(SprfBlePairingData, crc) == 0, "crc must be the first field");
+static_assert(offsetof(SprfBlePairingData, crc) == 0, "crc must be the first field");
 
 /** @brief BLE pairing device name field. */
 typedef struct PBL_PACKED SprfBlePairingName {
@@ -117,7 +117,7 @@ typedef struct PBL_PACKED SprfBlePairingName {
   /** Remote device name. */
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 } SprfBlePairingName;
-_Static_assert(offsetof(SprfBlePairingName, crc) == 0, "crc must be the first field");
+static_assert(offsetof(SprfBlePairingName, crc) == 0, "crc must be the first field");
 
 /** @brief Pinned address field. */
 typedef struct PBL_PACKED SprfPinnedAddress {
@@ -128,7 +128,7 @@ typedef struct PBL_PACKED SprfPinnedAddress {
   /** Reserved. */
   uint8_t rsvd[2];
 } SprfPinnedAddress;
-_Static_assert(offsetof(SprfPinnedAddress, crc) == 0, "crc must be the first field");
+static_assert(offsetof(SprfPinnedAddress, crc) == 0, "crc must be the first field");
 
 /** @brief Onboarding (getting started) field. */
 typedef struct PBL_PACKED SprfGettingStarted {
@@ -139,7 +139,7 @@ typedef struct PBL_PACKED SprfGettingStarted {
   /** Reserved. */
   uint8_t rsvd[3];
 } SprfGettingStarted;
-_Static_assert(offsetof(SprfGettingStarted, crc) == 0, "crc must be the first field");
+static_assert(offsetof(SprfGettingStarted, crc) == 0, "crc must be the first field");
 
 /** @brief Custom local device name field. */
 typedef struct PBL_PACKED SprfLocalName {
@@ -148,7 +148,7 @@ typedef struct PBL_PACKED SprfLocalName {
   /** Local device name, replacing the default "Pebble XXXX". */
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 } SprfLocalName;
-_Static_assert(offsetof(SprfLocalName, crc) == 0, "crc must be the first field");
+static_assert(offsetof(SprfLocalName, crc) == 0, "crc must be the first field");
 
 /**
  * @brief Local identity address field.
@@ -164,7 +164,7 @@ typedef struct PBL_PACKED SprfLocalIdentityAddress {
   /** Reserved. */
   uint8_t rsvd[2];
 } SprfLocalIdentityAddress;
-_Static_assert(offsetof(SprfLocalIdentityAddress, crc) == 0, "crc must be the first field");
+static_assert(offsetof(SprfLocalIdentityAddress, crc) == 0, "crc must be the first field");
 
 /** @brief Shared PRF storage entry. */
 typedef struct PBL_PACKED SharedPRFData {
@@ -197,7 +197,7 @@ typedef struct PBL_PACKED SharedPRFData {
   } main_fw_scratch;
 } SharedPRFData;
 
-_Static_assert(PBL_BT_DEVICE_NAME_BUFFER_SIZE == 20, "Changing the length will break SharedPRF");
-_Static_assert(sizeof(SharedPRFData) == 256, "SharedPRFData does not match expected size");
+static_assert(PBL_BT_DEVICE_NAME_BUFFER_SIZE == 20, "Changing the length will break SharedPRF");
+static_assert(sizeof(SharedPRFData) == 256, "SharedPRFData does not match expected size");
 
 /** @} */

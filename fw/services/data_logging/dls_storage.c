@@ -59,8 +59,8 @@ typedef struct PBL_PACKED {
 // The most we try to fit into a data chunk. This value must be small enough to fit within the 7
 // bytes reserved for it within the DLSChunkHeader.
 #define DLS_MAX_CHUNK_SIZE_BYTES 100
-_Static_assert(DLS_MAX_CHUNK_SIZE_BYTES < DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED,
-               "DLS_MAX_CHUNK_SIZE_BYTES must be less than DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED");
+static_assert(DLS_MAX_CHUNK_SIZE_BYTES < DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED,
+              "DLS_MAX_CHUNK_SIZE_BYTES must be less than DLS_CHUNK_HDR_NUM_BYTES_UNINITIALIZED");
 
 // Forward declarations
 static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size);

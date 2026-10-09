@@ -47,9 +47,9 @@ typedef struct FSRegion {
 // Bonus Fun fact: 'analytics_metric_table.h' uses this same strategy to turn our analytics list
 // into an enum, switch case statement, and AnalyticsMetricDataType array.
 
-#define FILE_SYSTEM_LAYOUT_CHECK(s, e)                                                        \
-  _Static_assert((s % SECTOR_SIZE_BYTES) == 0, "Filesystem region start not sector aligned"); \
-  _Static_assert((e % SECTOR_SIZE_BYTES) == 0, "Filesystem end region not sector aligned");
+#define FILE_SYSTEM_LAYOUT_CHECK(s, e)                                                       \
+  static_assert((s % SECTOR_SIZE_BYTES) == 0, "Filesystem region start not sector aligned"); \
+  static_assert((e % SECTOR_SIZE_BYTES) == 0, "Filesystem end region not sector aligned");
 
 #define FILE_SYSTEM_FS_REGION_ENTRY_CONSTRUCTOR(s, e) {.start = s, .end = e},
 

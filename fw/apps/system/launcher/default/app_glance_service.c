@@ -125,8 +125,8 @@ static void prv_slice_expiration_timer_cb(void *data) {
 /////////////////////
 // Glance cache
 
-_Static_assert((offsetof(LauncherAppGlanceCacheEntry, node) == 0),
-               "ListNode is not the first field of LauncherAppGlanceCacheEntry");
+static_assert((offsetof(LauncherAppGlanceCacheEntry, node) == 0),
+              "ListNode is not the first field of LauncherAppGlanceCacheEntry");
 
 static void prv_glance_cache_destroy_entry(LauncherAppGlanceService *service,
                                            LauncherAppGlanceCacheEntry *entry) {

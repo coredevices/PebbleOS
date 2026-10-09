@@ -48,7 +48,7 @@ typedef enum PBL_PACKED {
   /** Endpoint not accepting messages yet. */
   BLOB_DB_TRY_LATER = 0x0B,
 } BlobDBResponse;
-_Static_assert(sizeof(BlobDBResponse) == 1, "BlobDBResponse is larger than 1 byte");
+static_assert(sizeof(BlobDBResponse) == 1, "BlobDBResponse is larger than 1 byte");
 
 /** @brief Bit set in the command of a response. */
 #define RESPONSE_MASK (1 << 7)
@@ -99,7 +99,7 @@ typedef enum PBL_PACKED {
   /** Response to ::BLOB_DB_COMMAND_VERSION. */
   BLOB_DB_COMMAND_VERSION_RESPONSE = BLOB_DB_COMMAND_VERSION | RESPONSE_MASK,
 } BlobDBCommand;
-_Static_assert(sizeof(BlobDBCommand) == 1, "BlobDBCommand is larger than 1 byte");
+static_assert(sizeof(BlobDBCommand) == 1, "BlobDBCommand is larger than 1 byte");
 
 /**
  * @brief Parse the token and database id at the start of a message body.

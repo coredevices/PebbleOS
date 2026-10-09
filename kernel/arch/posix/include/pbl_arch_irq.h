@@ -11,7 +11,7 @@
   void ARCH_IRQ_HANDLER(_n)(void) {                           \
     _isr(_arg);                                               \
   }                                                           \
-  _Static_assert(1, "")
+  static_assert(1, "")
 
 #define ARCH_IRQ_DIRECT(_n, _irq, _prio, _flags) \
   void ARCH_IRQ_HANDLER(_n)(void);               \

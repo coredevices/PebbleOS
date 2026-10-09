@@ -1026,8 +1026,8 @@ static Animation *prv_animation_clone(AnimationState *state, AnimationPrivate *f
 // -------------------------------------------------------------------------------------------
 void animation_private_state_init(AnimationState *state) {
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-  _Static_assert(sizeof(AnimationState) <= sizeof(AnimationLegacy2Scheduler),
-                 "Animation state larger than allowed for 2.0 compatibility");
+  static_assert(sizeof(AnimationState) <= sizeof(AnimationLegacy2Scheduler),
+                "Animation state larger than allowed for 2.0 compatibility");
 #endif
 
   // If this a legacy 2.0 application, instantiate the 2.0 legacy animation support

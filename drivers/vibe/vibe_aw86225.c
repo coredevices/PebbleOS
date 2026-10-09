@@ -120,9 +120,9 @@ static bool s_playing = false;
 #define AW862XX_OUTPUT_FULL_SCALE_MV \
   (AW862XX_VBAT_REFER_MV * CONFIG_VIBE_AW86225_OUTPUT_GAIN_PERCENT / 100U)
 
-_Static_assert(CONFIG_VIBE_AW86225_RATED_VOLTAGE_MV *AW862XX_RMS_TO_PEAK_MILLI / 1000U <=
-                   AW862XX_OUTPUT_FULL_SCALE_MV,
-               "rated voltage exceeds the full-scale output");
+static_assert(CONFIG_VIBE_AW86225_RATED_VOLTAGE_MV * AW862XX_RMS_TO_PEAK_MILLI / 1000U <=
+                  AW862XX_OUTPUT_FULL_SCALE_MV,
+              "rated voltage exceeds the full-scale output");
 
 //! One full-scale LRA cycle at 12 kS/s.
 static const uint8_t s_sine_cycle[] = {

@@ -146,11 +146,11 @@ struct PBL_PACKED FirmwareMetadata {
 /** @brief Firmware image metadata. */
 typedef struct FirmwareMetadata FirmwareMetadata;
 
-_Static_assert(sizeof(struct FirmwareMetadata) ==
-                   (sizeof(uint32_t) + FW_METADATA_VERSION_SHORT_BYTES +
-                    FW_METADATA_VERSION_TAG_BYTES + sizeof(uint8_t) + sizeof(uint8_t) +
-                    sizeof(uint8_t)),
-               "FirmwareMetadata bitfields not packed correctly");
+static_assert(sizeof(struct FirmwareMetadata) ==
+                  (sizeof(uint32_t) + FW_METADATA_VERSION_SHORT_BYTES +
+                   FW_METADATA_VERSION_TAG_BYTES + sizeof(uint8_t) + sizeof(uint8_t) +
+                   sizeof(uint8_t)),
+              "FirmwareMetadata bitfields not packed correctly");
 
 /**
  * @brief Value of @ref FirmwareMetadata::is_recovery_firmware for this build.

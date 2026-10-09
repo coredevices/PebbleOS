@@ -119,8 +119,8 @@ static void scroll_layer_property_changed_proc(Layer *layer) {
 // A ScrollLayer embedded in a composite that drives its own scrolling (e.g. MenuLayer) deregisters
 // via scroll_layer_touch_nav_deregister() so the same layer never has two gesture drivers.
 
-_Static_assert(sizeof(((ScrollLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
-               "ScrollLayer touch_nav_node must match TouchNavWidgetNode layout");
+static_assert(sizeof(((ScrollLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
+              "ScrollLayer touch_nav_node must match TouchNavWidgetNode layout");
 
 static bool prv_is_app_task(void) {
   return pebble_task_get_current() == PebbleTask_App;

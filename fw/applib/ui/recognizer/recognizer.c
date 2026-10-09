@@ -15,8 +15,8 @@
 #include <applib/applib_malloc.auto.h>
 #include <system/passert.h>
 
-_Static_assert(RECOGNIZER_INSTANCE_SIZE >= sizeof(Recognizer),
-               "RECOGNIZER_INSTANCE_SIZE too small for Recognizer");
+static_assert(RECOGNIZER_INSTANCE_SIZE >= sizeof(Recognizer),
+              "RECOGNIZER_INSTANCE_SIZE too small for Recognizer");
 
 static void prv_set_state(Recognizer *recognizer, RecognizerState new_state) {
   switch (recognizer->state) {

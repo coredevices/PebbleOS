@@ -221,7 +221,7 @@ Recognizer *swipe_recognizer_create(RecognizerEventCb event_cb, void *user_data,
 
 Recognizer *swipe_recognizer_init_static(void *storage, RecognizerEventCb event_cb, void *user_data,
                                          uint8_t direction_mask) {
-  _Static_assert(
+  static_assert(
       RECOGNIZER_INSTANCE_SIZE + sizeof(SwipeRecognizerData) <= SWIPE_RECOGNIZER_STATIC_SIZE,
       "SWIPE_RECOGNIZER_STATIC_SIZE too small for a static swipe recognizer");
   SwipeRecognizerData data = {

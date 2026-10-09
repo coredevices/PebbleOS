@@ -815,8 +815,8 @@ bool swap_layer_attempt_layer_swap(SwapLayer *swap_layer, ScrollDirection direct
 // Provided by the owning shells; forward-declared to avoid pulling the kernel modal header in.
 struct TouchNavState *modal_manager_get_touch_nav_state(void);
 
-_Static_assert(sizeof(((SwapLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
-               "SwapLayer touch_nav_node must match TouchNavWidgetNode layout");
+static_assert(sizeof(((SwapLayer *)0)->touch_nav_node) == sizeof(TouchNavWidgetNode),
+              "SwapLayer touch_nav_node must match TouchNavWidgetNode layout");
 
 static bool prv_is_app_task(void) {
   return pebble_task_get_current() == PebbleTask_App;

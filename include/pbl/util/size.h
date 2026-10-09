@@ -23,7 +23,7 @@
  * @code{.c}
  * #define RATES {10, 25, 50}
  * static const uint16_t s_rates[] = RATES;
- * _Static_assert(STATIC_ARRAY_LENGTH(uint16_t, RATES) == 3, "");
+ * static_assert(STATIC_ARRAY_LENGTH(uint16_t, RATES) == 3, "");
  * @endcode
  *
  * @param type Type of the elements.

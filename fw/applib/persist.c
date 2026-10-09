@@ -13,9 +13,9 @@
 #include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
 
-_Static_assert(PERSIST_DATA_MAX_LENGTH <= SETTINGS_VAL_MAX_LEN,
-               "PERSIST_DATA_MAX_LENGTH is larger than the max length that "
-               "settings_file supports.");
+static_assert(PERSIST_DATA_MAX_LENGTH <= SETTINGS_VAL_MAX_LEN,
+              "PERSIST_DATA_MAX_LENGTH is larger than the max length that "
+              "settings_file supports.");
 
 static SettingsFile *prv_lock_and_get_store(void) {
   return persist_service_lock_and_get_store(&sys_process_manager_get_current_process_md()->uuid);

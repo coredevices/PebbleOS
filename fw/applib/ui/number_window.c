@@ -92,8 +92,8 @@ void prv_update_proc(Layer *layer, GContext *ctx) {
 
   // This is safe because Layer is the first member in Window and Window is the first member in
   // NumberWindow.
-  _Static_assert(offsetof(Window, layer) == 0, "");
-  _Static_assert(offsetof(NumberWindow, window) == 0, "");
+  static_assert(offsetof(Window, layer) == 0, "");
+  static_assert(offsetof(NumberWindow, window) == 0, "");
   NumberWindow *nw = (NumberWindow *)layer;
 
   graphics_context_set_text_color(ctx, GColorBlack);

@@ -18,14 +18,14 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
-_Static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
-               "Sports layout requires that all Home attributes are directly after Away");
-_Static_assert(AttributeIdNameAway + 1 == AttributeIdNameHome,
-               "Sports layout requires that all Home attributes are directly after Away");
-_Static_assert(AttributeIdRecordAway + 1 == AttributeIdRecordHome,
-               "Sports layout requires that all Home attributes are directly after Away");
-_Static_assert(AttributeIdScoreAway + 1 == AttributeIdScoreHome,
-               "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
+              "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdNameAway + 1 == AttributeIdNameHome,
+              "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdRecordAway + 1 == AttributeIdRecordHome,
+              "Sports layout requires that all Home attributes are directly after Away");
+static_assert(AttributeIdScoreAway + 1 == AttributeIdScoreHome,
+              "Sports layout requires that all Home attributes are directly after Away");
 
 //////////////////////////////////////////
 //  Card Mode

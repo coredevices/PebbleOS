@@ -294,8 +294,8 @@ void task_timer_manager_init(TaskTimerManager *manager, struct pbl_sem *semaphor
   pbl_mutex_init(&manager->mutex);
 
   // The above shift assumes next_id is a 32-bit int and there are fewer than 16 tasks.
-  _Static_assert(sizeof(((TaskTimerManager *)0)->next_id) == 4, "next_id is not the right width");
-  _Static_assert(NumPebbleTask < 16, "Too many tasks");
+  static_assert(sizeof(((TaskTimerManager *)0)->next_id) == 4, "next_id is not the right width");
+  static_assert(NumPebbleTask < 16, "Too many tasks");
 }
 
 pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) {

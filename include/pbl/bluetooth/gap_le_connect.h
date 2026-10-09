@@ -30,7 +30,7 @@ enum pbl_bt_addr_type {
 };
 
 #ifndef __clang__
-_Static_assert(sizeof(enum pbl_bt_addr_type) == 1, "enum pbl_bt_addr_type is not 1 byte in size");
+static_assert(sizeof(enum pbl_bt_addr_type) == 1, "enum pbl_bt_addr_type is not 1 byte in size");
 #endif
 
 /** @brief Parameters of an established connection. */

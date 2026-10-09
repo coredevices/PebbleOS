@@ -37,8 +37,8 @@ typedef enum {
   NumAppMessageSenderError,
 } AppMessageSenderError;
 
-_Static_assert((NumAppMessageSenderError - 1) <= AppOutboxStatusUserRangeEnd,
-               "AppMessageSenderError value can't be bigger than AppOutboxStatusUserRangeEnd");
+static_assert((NumAppMessageSenderError - 1) <= AppOutboxStatusUserRangeEnd,
+              "AppMessageSenderError value can't be bigger than AppOutboxStatusUserRangeEnd");
 
 /**
  * @brief Send job, stored as the @c consumer_data of the AppOutboxMessage.
@@ -58,8 +58,8 @@ typedef struct {
   size_t consumed_length;
 } AppMessageSendJob;
 
-_Static_assert(offsetof(AppMessageSendJob, send_queue_job) == 0,
-               "send_queue_job must be first member, due to the way session_send_queue.c works");
+static_assert(offsetof(AppMessageSendJob, send_queue_job) == 0,
+              "send_queue_job must be first member, due to the way session_send_queue.c works");
 
 /**
  * @brief Layout of an outbox message's @c data, in app memory.
@@ -81,8 +81,8 @@ typedef struct {
 } AppMessageAppOutboxData;
 
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-_Static_assert(sizeof(AppMessageAppOutboxData) <= 12,
-               "Can't grow AppMessageAppOutboxData beyond 12 bytes, can break apps!");
+static_assert(sizeof(AppMessageAppOutboxData) <= 12,
+              "Can't grow AppMessageAppOutboxData beyond 12 bytes, can break apps!");
 #endif
 
 /** @brief Register with the app outbox service; called once at boot. */

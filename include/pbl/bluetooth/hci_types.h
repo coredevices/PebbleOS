@@ -29,8 +29,8 @@ enum pbl_bt_hci_status {
 };
 
 #ifndef __clang__
-_Static_assert(sizeof(enum pbl_bt_hci_status) == 2,
-               "packed structs expect the status code to be 2 bytes!");
+static_assert(sizeof(enum pbl_bt_hci_status) == 2,
+              "packed structs expect the status code to be 2 bytes!");
 #endif
 
 /** @} */

@@ -27,7 +27,7 @@ time_t pbl_override_time(time_t *tloc) {
 static double prv_time_to_double(time_t time) {
   // time_t is 32bit signed int, convert it manually
 #if !UNITTEST && __SIZEOF_POINTER__ == 4
-  _Static_assert(sizeof(time_t) == 4, "Conversion depends on 32bit time_t");
+  static_assert(sizeof(time_t) == 4, "Conversion depends on 32bit time_t");
 #endif
 
   if (time == 0) {

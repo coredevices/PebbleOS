@@ -136,8 +136,7 @@ bool rtc_alarm_is_initialized(void) {
 
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
-  _Static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t),
-                 "RTC Set Timezone invalid data size");
+  static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t), "RTC Set Timezone invalid data size");
 
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 0, raw[0]);
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 1, raw[1]);

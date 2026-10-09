@@ -108,8 +108,8 @@ typedef struct {
   GAPLEConnectionIntentBonding bonding[];
 } GAPLEConnectionIntent;
 
-_Static_assert(offsetof(GAPLEConnectionIntent, node) == 0,
-               "ListNode must be the first field in GAPLEConnectionIntent");
+static_assert(offsetof(GAPLEConnectionIntent, node) == 0,
+              "ListNode must be the first field in GAPLEConnectionIntent");
 
 typedef enum {
   GAPLEConnectionEventDisconnected,

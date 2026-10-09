@@ -25,10 +25,10 @@
 PBL_LOG_MODULE_DEFINE(task_wdt, CONFIG_TASK_WDT_LOG_LEVEL);
 
 #define NUM_CHANNELS CONFIG_TASK_WDT_CHANNELS
-_Static_assert(NUM_CHANNELS <= 8, "the reboot reason records the channels as 8-bit masks");
+static_assert(NUM_CHANNELS <= 8, "the reboot reason records the channels as 8-bit masks");
 #ifdef CONFIG_WATCHDOG
-_Static_assert(CONFIG_TASK_WDT_CHECK_PERIOD_MS < CONFIG_WATCHDOG_TIMEOUT_MS / 2,
-               "the hardware watchdog must outlast the check period");
+static_assert(CONFIG_TASK_WDT_CHECK_PERIOD_MS < CONFIG_WATCHDOG_TIMEOUT_MS / 2,
+              "the hardware watchdog must outlast the check period");
 #endif
 
 struct channel {
