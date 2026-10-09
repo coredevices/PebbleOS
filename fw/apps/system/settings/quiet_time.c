@@ -22,6 +22,7 @@
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/time_range_selection_window.h>
 #include <kernel/pbl_malloc.h>
+#include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 #include <system/passert.h>
 
@@ -499,6 +500,14 @@ static void prv_schedule_appear_cb(SettingsCallbacks *context) {
   }
 }
 
+static void prv_schedule_selection_changed_cb(SettingsCallbacks *context, uint16_t new_row,
+                                                uint16_t old_row) {
+  SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
+  if (old_row == 0) {
+    data->show_limit_reached_text = false;
+  }
+}
+
 static void prv_schedule_submenu_push(void) {
   SettingsQuietTimeScheduleData *data = app_zalloc_check(sizeof(*data));
 
@@ -506,6 +515,7 @@ static void prv_schedule_submenu_push(void) {
     .deinit = prv_schedule_deinit_cb,
     .draw_row = prv_schedule_draw_row_cb,
     .select_click = prv_schedule_select_click_cb,
+    .selection_changed = prv_schedule_selection_changed_cb,
     .num_rows = prv_schedule_num_rows_cb,
     .appear = prv_schedule_appear_cb,
   };
