@@ -10,7 +10,7 @@ name = "pbl"
 version = "1.0.0"
 description = "PebbleOS developer CLI"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = ["PyYAML"]
 
 [project.scripts]

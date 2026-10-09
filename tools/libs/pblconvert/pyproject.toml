@@ -3,7 +3,7 @@ name = "pblconvert"
 version = "0.0.2"
 description = "Tools to convert files into valid Pebble resources"
 readme = "README.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
 	"lxml==3.4.4",
 	"cairosvg",
