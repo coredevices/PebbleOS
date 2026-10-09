@@ -870,6 +870,17 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
 void activity_metrics_prv_set_hrm_worn_status(time_t now_utc, bool is_offwrist);
 
 /**
+ * @brief Invalidate the current (peekable) raw HR reading because the HRM
+ * reports the watch off-wrist.
+ *
+ * ActivityMetricHeartRateRawBPM reads 0 until a valid on-wrist reading
+ * arrives. Called once per off-wrist BPM event.
+ *
+ * @param now_utc Current UTC time.
+ */
+void activity_metrics_prv_set_raw_hr_offwrist(time_t now_utc);
+
+/**
  * @brief Check whether the HRM recently reported the watch off-wrist.
  *
  * @param now_utc Current UTC time.
