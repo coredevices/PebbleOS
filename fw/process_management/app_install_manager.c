@@ -427,7 +427,7 @@ static void app_install_launcher_task_callback(void *context) {
   switch (s_install_callback_data.install_type) {
     case APP_UPGRADED:
       app_upgrade = true;
-      /* fallthrough */
+      [[fallthrough]];
     case APP_REMOVED:
       prv_app_install_delete(s_install_callback_data.install_id, s_install_callback_data.uuid,
                              app_upgrade, true /* delete cache entry */);

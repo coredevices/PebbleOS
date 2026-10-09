@@ -309,7 +309,7 @@ static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBComman
     case BLOB_DB_COMMAND_READ:
     case BLOB_DB_COMMAND_UPDATE:
       PBL_LOG_ERR("BlobDB Command not implemented");
-      // Fallthrough
+      [[fallthrough]];
     default:
       PBL_LOG_ERR("Invalid BlobDB message received, cmd is %u", cmd);
       prv_send_response(session, prv_try_read_token(data, data_length), BLOB_DB_INVALID_OPERATION);

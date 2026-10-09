@@ -193,10 +193,10 @@ static void prv_on_configure_request(PPPControlProtocol *this, struct LCPPacket 
       break;
     case LinkState_Stopped:
       this->state->restart_count = MAX_CONFIGURE;
-      // fallthrough
+      [[fallthrough]];
     case LinkState_Opened:
       prv_send_configure_request(this);
-      // fallthrough
+      [[fallthrough]];
     case LinkState_RequestSent:
     case LinkState_AckSent:
       if (prv_handle_configure_request(this, packet)) {
@@ -282,7 +282,7 @@ static void prv_on_configure_nak_or_reject(PPPControlProtocol *this, struct LCPP
       break;
     case LinkState_RequestSent:
       this->state->restart_count = MAX_CONFIGURE;
-      // fallthrough
+      [[fallthrough]];
     case LinkState_AckReceived:
     case LinkState_Opened:
       PBL_LOG_WRN("Unexpected Configure-Nak/Rej received after Ack");
@@ -403,7 +403,7 @@ void ppp_control_protocol_close(PPPControlProtocol *this, PPPCPCloseWait wait) {
     case LinkState_Opened:
       this->state->restart_count = MAX_TERMINATE;
       prv_send_terminate_request(this);
-      // fallthrough
+      [[fallthrough]];
     case LinkState_Stopping:
       prv_transition_to(this, LinkState_Closing);
       break;

@@ -882,7 +882,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
         return;
       }
 
-      // FALLTHROUGH
+      [[fallthrough]];
     case TimelineItemActionTypeGeneric:
     case TimelineItemActionTypeResponse:
     case TimelineItemActionTypeAncsResponse:

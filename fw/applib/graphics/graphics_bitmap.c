@@ -300,7 +300,7 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
             break;
           }
         }
-        /* FALLTHROUGH */
+          [[fallthrough]];
         case GCompOpAssign:
         default:
           // Do assign by default

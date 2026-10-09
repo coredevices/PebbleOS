@@ -176,7 +176,7 @@ static bool prv_metric_aggregation_implemented(HealthMetric metric, time_t time_
             return true;
           }
         }
-        /* FALLTHROUGH */
+          [[fallthrough]];
         case HealthAggregationMax:
         case HealthAggregationMin: {
           // Only supported using minute data (short time range, no scope) because

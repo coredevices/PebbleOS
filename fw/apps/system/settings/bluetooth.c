@@ -215,7 +215,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
         // the encryption set up is going on. For non-bonded devices it will work fine though.
         gap_le_device_name_request(&event->bluetooth.connection.device);
       }
-      // fall-through!
+      [[fallthrough]];
     case PBL_BT_PEBBLE_PAIRING_EVENT:
 #ifdef CONFIG_SERVICE_BLE_HRM
     case PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT:
