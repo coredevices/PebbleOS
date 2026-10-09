@@ -1783,3 +1783,50 @@ void test_health__metric_alert_registration(void) {
   alert = health_service_register_metric_alert(HealthMetricHeartRateBPM, 65);
   cl_assert(alert != NULL);
 }
+
+// --------------------------------------------------------------------------------------
+int s_spo2_event_count;
+static void prv_spo2_event_handler(HealthEventType event, void *context) {
+  if (event == HealthEventSpO2Update) {
+    s_spo2_event_count++;
+  }
+}
+
+// --------------------------------------------------------------------------------------
+// An SpO2 event caches the reading, and the peek returns it until the next event. Before
+// any event the peek reads 0, "no reading", so apps need no separate sentinel value.
+void test_health__spo2_peek(void) {
+  // Before any reading the peek reports no reading: 0.
+  cl_assert_equal_i(health_service_peek_spo2_percent(), 0);
+
+  s_spo2_event_count = 0;
+  health_service_events_subscribe(prv_spo2_event_handler, NULL);
+
+  // A reading is cached and surfaced to the peek.
+  PebbleEvent event = {
+    .type = PEBBLE_HEALTH_SERVICE_EVENT,
+    .health_event = {
+      .type = HealthEventSpO2Update,
+      .data.spo2_update = {
+        .percent = 97,
+      },
+    },
+  };
+  prv_health_event_handler(&event, NULL);
+  cl_assert_equal_i(s_spo2_event_count, 1);
+  cl_assert_equal_i(health_service_peek_spo2_percent(), 97);
+
+  // A later reading replaces the cached one rather than accumulating.
+  event.health_event.data.spo2_update.percent = 94;
+  prv_health_event_handler(&event, NULL);
+  cl_assert_equal_i(s_spo2_event_count, 2);
+  cl_assert_equal_i(health_service_peek_spo2_percent(), 94);
+
+  // An unrelated health event leaves the cached reading alone.
+  event.health_event.type = HealthEventSignificantUpdate;
+  prv_health_event_handler(&event, NULL);
+  cl_assert_equal_i(s_spo2_event_count, 2);
+  cl_assert_equal_i(health_service_peek_spo2_percent(), 94);
+
+  health_service_events_unsubscribe();
+}

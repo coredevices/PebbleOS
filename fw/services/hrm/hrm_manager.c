@@ -680,6 +680,26 @@ void hrm_manager_new_data_cb(const HRMData *data) {
   }
 #endif
 
+  if (data->features & HRMFeature_SpO2) {
+    // Broadcast SpO2 updates the BPM way: the firmware decides what counts as a reading and only
+    // valid ones reach apps, so the internal quality grades never surface in the SDK. A sample
+    // the algorithm rejected, one read off-wrist, or a zero percent reads as "no update".
+    const bool spo2_valid =
+        !data->spo2_invalid && data->spo2_percent > 0 && data->spo2_quality != HRMQuality_OffWrist;
+    if (spo2_valid) {
+      PebbleEvent health_event = {
+        .type = PEBBLE_HEALTH_SERVICE_EVENT,
+        .health_event = {
+          .type = HealthEventSpO2Update,
+          .data.spo2_update = {
+            .percent = data->spo2_percent,
+          },
+        },
+      };
+      event_put(&health_event);
+    }
+  }
+
   time_t utc_now = rtc_get_time();
   RtcTicks cur_ticks = rtc_get_ticks();
   HRMFeature kernel_bg_features_sent = 0;

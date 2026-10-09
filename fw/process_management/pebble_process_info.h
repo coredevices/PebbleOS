@@ -176,9 +176,10 @@ typedef enum {
 // app_touch_navigation_enable() opt-in for third-party touch nav (rev 108) sdk.major:0x5
 // .minor:0x6a -- Add HRV sampling API (health_service_set_hrv_sample_period) (rev 109)
 // sdk.major:0x5 .minor:0x6b -- 24-bit app load and virtual sizes (no API changes) (rev 109)
+// sdk.major:0x5 .minor:0x6c -- Add blood oxygen (SpO2) peek API to health service (rev 110)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6b
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6c
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
