@@ -9,8 +9,41 @@ on:
 permissions: {}
 
 jobs:
+  authorize:
+    if: github.event_name == 'pull_request_target' && github.event.label.name == 'ci:hw-itest'
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Check the label and the reviewed commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          SENDER: ${{ github.event.sender.login }}
+          SENDER_TYPE: ${{ github.event.sender.type }}
+        run: |
+          if [ "$SENDER_TYPE" != User ]; then
+            echo "::error::ci:hw-itest was added by $SENDER ($SENDER_TYPE), not a person"
+            exit 1
+          fi
+          if [ "$SENDER" = "$AUTHOR" ]; then
+            exit 0
+          fi
+          approved=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews" --jq \
+            '.[] | select(.user.login == env.SENDER and .state == "APPROVED" and .commit_id == env.HEAD) | .id')
+          if [ -z "$approved" ]; then
+            echo "::error::$SENDER has not approved $HEAD; approve it, then add ci:hw-itest again"
+            exit 1
+          fi
+
   build:
-    if: github.event_name == 'schedule' || github.event.label.name == 'ci:hw-itest'
+    needs: authorize
+    if: >
+      !cancelled() &&
+      (github.event_name == 'schedule' || needs.authorize.result == 'success')
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -77,6 +110,7 @@ jobs:
 
   test:
     needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: [self-hosted, "hw-${{ matrix.watch }}"]
     timeout-minutes: 120
     permissions:
