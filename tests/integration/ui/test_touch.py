@@ -17,6 +17,7 @@ def settings(ui):
     return ui
 
 
+@pytest.mark.device_types("qemu", "native")
 def test_swipe_scrolls_menu(settings):
     before = settings.screenshot()
     settings.swipe(Swipe.UP)
