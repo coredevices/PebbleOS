@@ -214,6 +214,7 @@ def parse_file(
     root_dir = os.path.join(os.path.dirname(__file__), "../..")
 
     args = [
+        "-std=c23",
         f"-I{root_dir}/include",
         f"-I{root_dir}/subsys",
         f"-I{root_dir}/fw",
