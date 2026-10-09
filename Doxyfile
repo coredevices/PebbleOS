@@ -2488,7 +2488,6 @@ PREDEFINED             = __attribute__(x)= \
                          PBL_ALWAYS_INLINE= \
                          PBL_NOINLINE= \
                          PBL_NAKED= \
-                         PBL_DEPRECATED= \
                          PBL_CONST_FUNC= \
                          PBL_PURE_FUNC= \
                          PBL_OPTIMIZE(level)= \

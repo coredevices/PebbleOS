@@ -45,9 +45,6 @@
 /** @brief The function has no prologue/epilogue; its body must be pure assembly. */
 #define PBL_NAKED PBL_NAKED_IMPL
 
-/** @brief Warn on every use of the symbol. */
-#define PBL_DEPRECATED PBL_DEPRECATED_IMPL
-
 /** @brief The function's result depends only on its arguments and it has no side effects. */
 #define PBL_CONST_FUNC PBL_CONST_FUNC_IMPL
 

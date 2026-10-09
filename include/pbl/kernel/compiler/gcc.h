@@ -8,7 +8,6 @@
 #define PBL_ALWAYS_INLINE_IMPL          inline __attribute__((__always_inline__))
 #define PBL_NOINLINE_IMPL               __attribute__((__noinline__))
 #define PBL_NAKED_IMPL                  __attribute__((__naked__))
-#define PBL_DEPRECATED_IMPL             __attribute__((__deprecated__))
 #define PBL_CONST_FUNC_IMPL             __attribute__((__const__))
 #define PBL_PURE_FUNC_IMPL              __attribute__((__pure__))
 #define PBL_OPTIMIZE_IMPL(level)        __attribute__((__optimize__(level)))
