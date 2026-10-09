@@ -179,8 +179,10 @@ bool graphics_context_get_antialiased(GContext *ctx);
 //! @param stroke_width Width in pixels of the stroke.
 //! @note If stroke width of zero is passed, it will be ignored and will not change the value
 //! stored in GContext. Currently, only odd stroke_width values are supported. If an even value
-//! is passed in, the value will be stored as is, but the drawing routines will round down to the
-//! previous integral value when drawing. Default value is 1.
+//! is passed in, the value will be stored as is, but line and circle drawing (including
+//! \ref GPath outlines) rounds it up to the next odd value when drawing.
+//! \ref graphics_draw_rect() draws a stroke width of 2 as 1, and \ref graphics_draw_arc()
+//! uses the width as given. Default value is 1.
 void graphics_context_set_stroke_width(GContext *ctx, uint8_t stroke_width);
 
 //! Instantiates and initializes a mask.

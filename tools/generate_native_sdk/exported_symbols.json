@@ -728,6 +728,14 @@
               "addedRevision": "86"
             }, {
               "type": "function",
+              "name": "health_service_peek_hrv_ppi_ms",
+              "addedRevision": "109"
+            }, {
+              "type": "function",
+              "name": "health_service_set_hrv_sample_period",
+              "addedRevision": "109"
+            }, {
+              "type": "function",
               "name": "health_service_register_metric_alert",
               "addedRevision": "83",
               "stubReturn": "NULL"
@@ -4709,14 +4717,6 @@
       "skipDefinition": true,
       "implName": "pbl_localeconv_r",
       "addedRevision": "27"
-    }, {
-      "type": "function",
-      "name": "health_service_peek_hrv_ppi_ms",
-      "addedRevision": "109"
-    }, {
-      "type": "function",
-      "name": "health_service_set_hrv_sample_period",
-      "addedRevision": "109"
     }
   ],
   "fonts": [
