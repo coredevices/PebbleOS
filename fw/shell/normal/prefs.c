@@ -323,6 +323,7 @@ static uint8_t s_timeline_peek_unsupported_face_mode = TimelinePeekUnsupportedFa
 #define PREF_KEY_COREDUMP_ON_REQUEST       "coredumpOnRequest"
 #define PREF_KEY_ACCEL_SHAKE_LOG_INFO      "accelShakeLogInfo"
 #define PREF_KEY_VIBE_LOG_INFO             "vibeLogInfo"
+#define PREF_KEY_BACKLIGHT_LOGGING         "backlightLogging"
 #define PREF_KEY_SETTINGS_DBS_COMPACTED_V1 "settingsDbsCompactedV1"
 #define PREF_KEY_ALS_THRESHOLD_MIGRATED_V1 "alsThresholdMigratedV1"
 #define PREF_KEY_ALS_THRESHOLD_MIGRATED_V2 "alsThresholdMigratedV2"
@@ -332,6 +333,7 @@ static uint8_t s_timeline_peek_unsupported_face_mode = TimelinePeekUnsupportedFa
 static bool s_coredump_on_request_enabled = false;
 static bool s_accel_shake_log_info_enabled = false;
 static bool s_vibe_log_info_enabled = false;
+static bool s_backlight_logging_enabled = false;
 static bool s_settings_dbs_compacted_v1 = false;
 static bool s_als_threshold_migrated_v1 = false;
 static bool s_als_threshold_migrated_v2 = false;
@@ -861,6 +863,15 @@ static bool prv_set_s_accel_shake_log_info_enabled(bool *enabled) {
   return true;
 }
 
+static bool prv_set_s_backlight_logging_enabled(bool *enabled) {
+  s_backlight_logging_enabled = *enabled;
+#ifdef CONFIG_SERVICE_LIGHT_LOG_LEVEL_RUNTIME
+  PBL_LOG_MODULE_LEVEL_SET(service_light,
+                           *enabled ? LOG_LEVEL_DEBUG : CONFIG_SERVICE_LIGHT_LOG_LEVEL);
+#endif
+  return true;
+}
+
 static bool prv_set_s_vibe_log_info_enabled(bool *enabled) {
   s_vibe_log_info_enabled = *enabled;
 #ifdef CONFIG_SERVICE_ALERTS_LOG_LEVEL_RUNTIME
@@ -1121,6 +1132,7 @@ void shell_prefs_init(void) {
 
   // Loading preferences bypasses their setters.
   prv_set_s_vibe_log_info_enabled(&s_vibe_log_info_enabled);
+  prv_set_s_backlight_logging_enabled(&s_backlight_logging_enabled);
 
   if (!prv_backlight_intensity_is_valid(s_backlight_intensity)) {
     s_backlight_intensity = BACKLIGHT_INTENSITY_DEFAULT;
@@ -2228,6 +2240,14 @@ bool shell_prefs_get_vibe_log_info_enabled(void) {
 
 void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_VIBE_LOG_INFO, &enabled, sizeof(enabled));
+}
+
+bool shell_prefs_get_backlight_logging_enabled(void) {
+  return s_backlight_logging_enabled;
+}
+
+void shell_prefs_set_backlight_logging_enabled(bool enabled) {
+  prv_pref_set(PREF_KEY_BACKLIGHT_LOGGING, &enabled, sizeof(enabled));
 }
 
 bool shell_prefs_get_settings_dbs_compacted_v1(void) {

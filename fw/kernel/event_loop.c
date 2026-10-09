@@ -251,7 +251,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
       const bool is_connected = e->battery_connection.is_connected;
       battery_state_handle_connection_event(is_connected);
       if (is_connected) {
-        light_enable_interaction();
+        light_enable_interaction_with_reason("charger");
       } else {
       }
 #if STATIONARY_MODE
@@ -285,7 +285,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         if (!dnd_suppresses_backlight)
 #endif
         {
-          light_enable_interaction();
+          light_enable_interaction_with_reason("wrist-motion");
         }
       }
       return;
@@ -364,7 +364,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
       if (e->gesture.event.type == GestureEvent_Palm) {
         // palm gesture turns off the backlight
         light_touch_up();
-        light_enable(false);
+        light_enable_with_reason(false, "palm-off");
         touch_session_reset();
         return;
       }
@@ -395,7 +395,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         if (!dnd_suppresses_backlight)
 #endif
         {
-          light_enable_interaction();
+          light_enable_interaction_with_reason("touch-gesture");
         }
       }
       return;

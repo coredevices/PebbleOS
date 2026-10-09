@@ -91,6 +91,14 @@ void light_enable(bool enable);
 
 /**
  * @ingroup services_light
+ * @brief Force the backlight state with a diagnostic source name.
+ * @param enable true to force on, false to release forced-on mode.
+ * @param reason Short source name for backlight logs.
+ */
+void light_enable_with_reason(bool enable, const char *reason);
+
+/**
+ * @ingroup services_light
  * @brief light_enable() that respects the user's backlight settings.
  *
  * When enabling, the light only turns on if the settings and ambient light allow it.
@@ -108,6 +116,13 @@ void light_enable_respect_settings(bool enable);
  * user's settings and the ambient light allow it.
  */
 void light_enable_interaction(void);
+
+/**
+ * @ingroup services_light
+ * @brief Trigger a timed backlight wake with a diagnostic source name.
+ * @param reason Short source name for backlight logs, e.g. "notification".
+ */
+void light_enable_interaction_with_reason(const char *reason);
 
 /**
  * @ingroup services_light

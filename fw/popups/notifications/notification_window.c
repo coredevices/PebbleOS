@@ -327,7 +327,7 @@ static void prv_peek_anim_stopped(Animation *animation, bool finished, void *con
       data->color_preempted = true;
       light_system_color_request();
     }
-    light_enable_interaction();
+    light_enable_interaction_with_reason("notification-delay");
   }
 }
 
@@ -347,7 +347,7 @@ static void prv_hide_peek_layer(void *context) {
       data->color_preempted = true;
       light_system_color_request();
     }
-    light_enable_interaction();
+    light_enable_interaction_with_reason("notification-peek");
   }
 
   // get the frame of the swap_layer and set its destination
@@ -1657,7 +1657,7 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
         data->color_preempted = true;
         light_system_color_request();
       }
-      light_enable_interaction();
+      light_enable_interaction_with_reason("notification");
     }
   }
 

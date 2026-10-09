@@ -52,7 +52,7 @@ static void prv_push_enable_in_mobile_dialog(void *context) {
 
   expandable_dialog_push(expandable_dialog, prv_get_window_stack());
 
-  light_enable_interaction();
+  light_enable_interaction_with_reason("health-popup");
 
   kernel_free(data);
 }

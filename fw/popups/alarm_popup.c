@@ -322,7 +322,7 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
 #ifdef CONFIG_SPEAKER
     prv_stop_sound();
 #endif
-    light_enable(false);
+    light_enable_with_reason(false, "alarm-off");
     // The action bar owns a redraw timer armed on button press; it must be
     // cancelled before the layer's memory goes away. actionable_dialog leaves
     // custom action bars to their owner.
@@ -392,5 +392,5 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   }
 #endif
 
-  light_enable(true);
+  light_enable_with_reason(true, "alarm-on");
 }

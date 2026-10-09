@@ -232,6 +232,10 @@ void shell_prefs_set_accel_shake_log_info_enabled(bool enabled);
 bool shell_prefs_get_vibe_log_info_enabled(void);
 void shell_prefs_set_vibe_log_info_enabled(bool enabled);
 
+// Enable backlight diagnostics at DEBUG level, including in flash logs.
+bool shell_prefs_get_backlight_logging_enabled(void);
+void shell_prefs_set_backlight_logging_enabled(bool enabled);
+
 // One-time migration flag: set to true once we have force-compacted every
 // growable settings DB at boot. Devices that pre-date the growable-files
 // change still have full-size settings files and only shrink to fit after

@@ -70,6 +70,7 @@ enum {
 #endif
   DebuggingItemAccelShakeLogInfo,
   DebuggingItemVibeLogInfo,
+  DebuggingItemBacklightLogging,
   DebuggingItemCompactSettingsDbs,
 #if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
   DebuggingItemSpO2Test,
@@ -496,6 +497,7 @@ static const char *s_debugging_titles[DebuggingItem_Count] = {
 #endif
   [DebuggingItemAccelShakeLogInfo] = i18n_noop("Shake Log Info"),
   [DebuggingItemVibeLogInfo] = i18n_noop("Vibe Log Info"),
+  [DebuggingItemBacklightLogging] = i18n_noop("Backlight Logging"),
   [DebuggingItemCompactSettingsDbs] = i18n_noop("Compact Settings DBs"),
 #if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
   [DebuggingItemSpO2Test] = i18n_noop("SpO2 Test"),
@@ -539,6 +541,9 @@ static void prv_debugging_draw_row_callback(GContext *ctx, const Layer *cell_lay
   } else if (cell_index->row == DebuggingItemVibeLogInfo) {
     subtitle_text = shell_prefs_get_vibe_log_info_enabled() ? i18n_get("Enabled", data)
                                                             : i18n_get("Disabled", data);
+  } else if (cell_index->row == DebuggingItemBacklightLogging) {
+    subtitle_text = shell_prefs_get_backlight_logging_enabled() ? i18n_get("Enabled", data)
+                                                                : i18n_get("Disabled", data);
   }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, NULL);
 }
@@ -580,6 +585,9 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer, MenuIndex *cell
       break;
     case DebuggingItemVibeLogInfo:
       shell_prefs_set_vibe_log_info_enabled(!shell_prefs_get_vibe_log_info_enabled());
+      break;
+    case DebuggingItemBacklightLogging:
+      shell_prefs_set_backlight_logging_enabled(!shell_prefs_get_backlight_logging_enabled());
       break;
     case DebuggingItemCompactSettingsDbs:
       prv_compact_settings_dbs();

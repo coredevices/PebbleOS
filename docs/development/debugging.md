@@ -51,6 +51,28 @@ lives in `tools/log_hashing/` and `tools/libs/pebble-loghash/`.
 Logs are also persisted to a circular buffer in flash;
 `tools/dehash_flash_logs.py` parses and dehashes a dump of that region.
 
+### Backlight diagnostics
+
+Enable **Settings > System > Debugging > Backlight Logging** to record individual
+backlight requests in console and flash logs. The setting defaults to disabled
+and persists across restarts. Messages use DEBUG level; the normal firmware's
+runtime light-module filter allows these messages into the logs when enabled.
+
+Requests identify their source (notifications, wrist motion, touch gestures,
+buttons, app interactions, and other system UI). Each record includes the
+result, state, brightness percentage, elapsed time for the current or last lit
+period (`on_ms`), held button/touch count, and forced-on flag. States are
+1 = on without a timeout, 2 = timed on, 3 = fading, and 4 = off. Timer refreshes
+are recorded even when brightness is unchanged; intermediate fade steps are
+omitted. Wake records also show cached ambient lux and the sensor threshold,
+and timed requests show the configured timeout. Cached lux can be stale when a
+request bypasses the ambient sensor.
+
+Enable the setting before reproducing unexpected backlight usage and collect a
+bug report afterwards. Aggregate backlight metrics show usage, but these logs
+help explain which requests kept the light on. Disable the setting when done
+to reduce flash-log traffic.
+
 ## Coredumps
 
 When the firmware crashes, it writes a coredump to SPI flash (see the

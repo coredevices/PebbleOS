@@ -461,7 +461,7 @@ static void prv_ring(void *unused) {
     vibe_score_do_vibe(s_phone_ui_data->vibe_score);
   }
   if (alerts_should_enable_backlight_for_type(AlertPhoneCall)) {
-    light_enable_interaction();
+    light_enable_interaction_with_reason("phone");
   }
 }
 

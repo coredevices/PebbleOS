@@ -270,7 +270,7 @@ static void prv_preset_menu_select(OptionMenu *option_menu, int selection, void 
   backlight_set_preset((BacklightPreset)selection);
   if (selection != BacklightPreset_Advanced) {
     // Briefly turn the light on so the user sees the new preset's brightness.
-    light_enable_interaction();
+    light_enable_interaction_with_reason("display-preview");
   }
   // Selecting (or leaving) Advanced adds/removes the Backlight Settings row.
   settings_menu_reload_data(SettingsMenuItemDisplay);

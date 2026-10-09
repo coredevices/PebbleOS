@@ -210,6 +210,10 @@ bool backlight_is_enabled(void) {
   return true;
 }
 
+bool shell_prefs_get_backlight_logging_enabled(void) {
+  return false;
+}
+
 bool backlight_is_ambient_sensor_enabled(void) {
   return false;
 }

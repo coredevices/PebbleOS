@@ -42,7 +42,7 @@ static int prv_cmd_backlight_test(const struct pbl_shell *sh, size_t argc, char 
 #else
   pbl_shell_print(sh, "als: %" PRIu32, ambient_light_get_light_level());
 #endif
-  light_enable_interaction();
+  light_enable_interaction_with_reason("console");
   pbl_shell_print(sh, "brightness: %" PRIu8 "%%", light_get_current_brightness_percent());
   return 0;
 }

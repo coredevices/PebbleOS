@@ -43,6 +43,9 @@ config ALS_BLACK_SCALE_Q8
 
 endif # ALS_SCREEN_COMPENSATION
 
+config SERVICE_LIGHT_LOG_LEVEL_RUNTIME
+    default y if !RECOVERY_FW
+
 module = SERVICE_LIGHT
 module-str = Light
 source "subsys/logging/Kconfig.template.log_level"
