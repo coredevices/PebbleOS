@@ -34,10 +34,10 @@ typedef uint64_t RtcTicks;
 #if defined(CONFIG_QEMU)
 /** @brief Tick frequency in Hz (QEMU 1000 Hz counter). */
 #define RTC_TICKS_HZ (1000u)
-#elif defined(CONFIG_SOC_POSIX)
+#elifdef CONFIG_SOC_POSIX
 /** @brief Tick frequency in Hz (host monotonic clock). */
 #define RTC_TICKS_HZ (1000u)
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
 /** @brief Tick frequency in Hz (SF32LB52 LPTIM clocked by RC10K). */
 #define RTC_TICKS_HZ (1000u)
 #else

@@ -52,9 +52,9 @@ PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 static const struct battery_model prv_battery_model = {
 #ifdef CONFIG_BOARD_ASTERIX
 #include <battery_asterix.inc>
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
 #include <battery_obelix.inc>
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
 #include <battery_getafix.inc>
 #else
 #error "Battery model not defined for this platform"

@@ -76,7 +76,7 @@ static void main_task(void *parameter);
 static void print_splash_screen(void) {
 #if defined(CONFIG_MFG)
   PBL_LOG_ALWAYS("PebbleOS - MANUFACTURING MODE");
-#elif defined(CONFIG_RECOVERY_FW)
+#elifdef CONFIG_RECOVERY_FW
   PBL_LOG_ALWAYS("PebbleOS - RECOVERY MODE");
 #else
   PBL_LOG_ALWAYS("PebbleOS");

@@ -77,7 +77,7 @@ const MpuRegion *syscall_get_stack_guard_region(PebbleTask task);
 #define PRIVILEGE_WAS_ELEVATED (0)
 #endif
 
-#elif defined(CONFIG_ARCH_POSIX)
+#elifdef CONFIG_ARCH_POSIX
 
 // A native build has a single privilege level: syscalls are plain calls.
 #undef DEFINE_SYSCALL

@@ -19,9 +19,9 @@ typedef enum PlatformType {
 // Variant boards should go before their base platforms, as they define the base platform too.
 #ifdef CONFIG_PLATFORM_EMERY
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
-#elif defined(CONFIG_PLATFORM_FLINT)
+#elifdef CONFIG_PLATFORM_FLINT
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
-#elif defined(CONFIG_PLATFORM_GABBRO)
+#elifdef CONFIG_PLATFORM_GABBRO
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
 #else
 #error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PLATFORM_* defined!"

@@ -33,7 +33,7 @@ typedef struct QSPIPortState {
   struct pbl_sem sem;
   /** Port initialized. */
   bool initialized;
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
   /** HAL flash context. */
   QSPI_FLASH_CTX_T ctx;
   /** DMA handle. */
@@ -69,7 +69,7 @@ typedef const struct QSPIPort {
   uint32_t clk_gpio;
   /** Data pins, IO0 to IO3. */
   uint32_t data_gpio[QSPI_NUM_DATA_PINS];
-#elif defined(CONFIG_SOC_SF32LB52)
+#elifdef CONFIG_SOC_SF32LB52
   /** Clock divider. */
   uint16_t clk_div;
 #endif

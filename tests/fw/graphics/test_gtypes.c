@@ -132,7 +132,7 @@ void test_gtypes__grect_crop_asserts_for_large_insets(void) {
 void test_gtypes__pbl_if_rect_else(void) {
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX)
   cl_assert_equal_i(1, PBL_IF_RECT_ELSE(1, 2));
-#elif defined(CONFIG_PLATFORM_GABBRO)
+#elifdef CONFIG_PLATFORM_GABBRO
   cl_assert_equal_i(2, PBL_IF_RECT_ELSE(1, 2));
 #else
 #error "unknown platform"
@@ -142,7 +142,7 @@ void test_gtypes__pbl_if_rect_else(void) {
 void test_gtypes__pbl_if_round_else(void) {
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX)
   cl_assert_equal_i(2, PBL_IF_ROUND_ELSE(1, 2));
-#elif defined(CONFIG_PLATFORM_GABBRO)
+#elifdef CONFIG_PLATFORM_GABBRO
   cl_assert_equal_i(1, PBL_IF_ROUND_ELSE(1, 2));
 #else
 #error "unknown platform"

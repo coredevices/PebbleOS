@@ -125,9 +125,9 @@ static const RegulatoryFlags *prv_get_regulatory_flags(void) {
 #ifdef CONFIG_BOARD_ASTERIX
   // TODO: add applicable flags
   return &s_regulatory_flags_fallback;
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
   return &s_regulatory_flags_obelix;
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
   return &s_regulatory_flags_getafix;
 #else
   return &s_regulatory_flags_fallback;
@@ -139,9 +139,9 @@ static const CertificationIds *prv_get_certification_ids(void) {
 #ifdef CONFIG_BOARD_ASTERIX
   // TODO: add real certification ids
   return &s_certification_ids_fallback;
-#elif defined(CONFIG_BOARD_OBELIX)
+#elifdef CONFIG_BOARD_OBELIX
   return &s_certification_ids_obelix;
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
   return &s_certification_ids_getafix;
 #else
   return &s_certification_ids_fallback;

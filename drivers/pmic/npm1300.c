@@ -367,12 +367,12 @@ bool pmic_init(void) {
 
   ok &= prv_write_register(NPM1300_BCHGVTERM, NPM1300_BCHGVTERM_4V35);
   ok &= prv_write_register(NPM1300_BCHGVTERMR, NPM1300_BCHGVTERMR_4V00);
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
   ok &= prv_write_register(NPM1300_ADCNTCRSEL, NPM1300_ADCNTCRSEL_10K);
 
   ok &= prv_write_register(NPM1300_BCHGVTERM, NPM1300_BCHGVTERM_4V45);
   ok &= prv_write_register(NPM1300_BCHGVTERMR, NPM1300_BCHGVTERMR_4V00);
-#elif defined(CONFIG_BOARD_ASTERIX)
+#elifdef CONFIG_BOARD_ASTERIX
   ok &= prv_write_register(NPM1300_ADCNTCRSEL, NPM1300_ADCNTCRSEL_10K);
 
   ok &= prv_write_register(NPM1300_BCHGVTERM, NPM1300_BCHGVTERM_4V20);
@@ -391,7 +391,7 @@ bool pmic_init(void) {
   ok &= prv_write_register(NPM1300_LDSW2LDOSEL, NPM1300_LDSWLDOSEL_LDO);
   ok &= prv_write_register(NPM1300_LDSW2VOUTSEL, NPM1300_LDSWVOUTSEL_3V3);
   ok &= prv_write_register(NPM1300_TASKLDSW2CLR, 1);
-#elif defined(CONFIG_BOARD_GETAFIX)
+#elifdef CONFIG_BOARD_GETAFIX
   // LDSW2 (3.3V for PDM)
   ok &= prv_write_register(NPM1300_LDSW2LDOSEL, NPM1300_LDSWLDOSEL_LDSW);
   ok &= prv_write_register(NPM1300_TASKLDSW2CLR, 1);

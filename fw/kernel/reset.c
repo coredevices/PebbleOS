@@ -63,7 +63,7 @@ void system_reset_callback(void *data) {
 
 #ifdef CONFIG_SOC_SF32LB52
   HAL_PMU_Reboot();
-#elif defined(CONFIG_SOC_POSIX)
+#elifdef CONFIG_SOC_POSIX
   posix_host_reboot();
 #else
   NVIC_SystemReset();

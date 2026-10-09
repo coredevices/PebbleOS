@@ -177,7 +177,7 @@ GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component 
 //! On platforms with round screen, the first expression will be chosen, the second otherwise.
 #define PBL_IF_ROUND_ELSE(if_true, if_false) (if_true)
 
-#elif !defined(UNITTEST)
+#elifndef UNITTEST
 #warning "Unknown screen shape"
 #endif
 
@@ -214,7 +214,7 @@ GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component 
 //! On color platforms, the first expression will be chosen, the second otherwise.
 #define COLOR_FALLBACK(color, bw)            (color)
 
-#elif !defined(UNITTEST)
+#elifndef UNITTEST
 #warning "Unknown color depth"
 #endif
 

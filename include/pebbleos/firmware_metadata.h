@@ -169,21 +169,21 @@ static_assert(sizeof(struct FirmwareMetadata) ==
  */
 #ifdef CONFIG_BOARD_ASTERIX
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleAsterix)
-#elif defined(CONFIG_BOARD_OBELIX_DVT)
+#elifdef CONFIG_BOARD_OBELIX_DVT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixDVT)
-#elif defined(CONFIG_BOARD_OBELIX_PVT)
+#elifdef CONFIG_BOARD_OBELIX_PVT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixPVT)
-#elif defined(CONFIG_BOARD_OBELIX_BB2)
+#elifdef CONFIG_BOARD_OBELIX_BB2
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleObelixBigboard2)
-#elif defined(CONFIG_BOARD_GETAFIX_DVT)
+#elifdef CONFIG_BOARD_GETAFIX_DVT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT)
-#elif defined(CONFIG_BOARD_GETAFIX_DVT2)
+#elifdef CONFIG_BOARD_GETAFIX_DVT2
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT2)
 #elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
-#elif defined(CONFIG_BOARD_QEMU_FLINT)
+#elifdef CONFIG_BOARD_QEMU_FLINT
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleFlintEmu)
-#elif defined(CONFIG_BOARD_QEMU_GABBRO)
+#elifdef CONFIG_BOARD_QEMU_GABBRO
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGabbroEmu)
 #else
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformUnknown)
