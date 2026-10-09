@@ -287,8 +287,9 @@ void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   RTC_TimeTypeDef rtc_time;
 
   if (s_initialized) {
-    while ((RTC_Handler.Instance->ISR & RTC_ISR_RSF) == (uint32_t)RESET) {
-      // Wait for RTC registers to synchronize
+    // RSF stays clear while the RTC is in init mode. Waiting for it then would deadlock if we
+    // preempted the code setting the time, so read the shadow registers as they are.
+    while ((RTC_Handler.Instance->ISR & (RTC_ISR_RSF | RTC_ISR_INITF)) == (uint32_t)RESET) {
     }
   }
 
