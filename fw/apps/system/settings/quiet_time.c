@@ -336,10 +336,7 @@ static void prv_add_day_picker_callback(DayPickerResult result, void *context) {
     quiet_time_set_schedule_enabled(index, true);
     data->selected_schedule_index = index;
     prv_schedule_refresh(data);
-    // Defer the time-range window push: the day picker pops itself *after* this
-    // callback returns, so pushing here would cause the pop to remove the
-    // time-range window instead. The schedule sub-menu's appear handler picks
-    // up the deferred push once the day picker is gone.
+    // The day picker pops itself after this returns, so defer the push.
     data->pending_time_range_push = true;
   }
 }

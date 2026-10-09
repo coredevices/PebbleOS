@@ -229,10 +229,7 @@ static void prv_migrate_qt_schedules(SettingsFile *file) {
     return;
   }
 
-  // Always write both slots, even when empty: slot 0's existence marks
-  // migration as done. A partially-migrated state (e.g. default weekday plus
-  // customised weekend) must not re-run on the next boot and clobber edits
-  // or deletes made in the new UI.
+  // Write both slots even when empty: slot 0's existence marks migration done.
   static const DoNotDisturbScheduleType s_migrated_types[2] = {
     WeekdaySchedule,
     WeekendSchedule,
@@ -821,12 +818,8 @@ static bool prv_is_dnd_state_key(const char *key) {
   return false;
 }
 
-//! Mirror a phone-originated legacy schedule write onto its QT slot. Slot
-//! types double as QT indices: migration puts the weekday schedule in slot 0
-//! and the weekend schedule in slot 1. The mirror applies while the slot is
-//! still the legacy one (unused, or kind Weekdays/Weekends); once the user
-//! replaces it with another kind, the legacy key no longer applies and the
-//! write only updates the legacy struct. Runs with the settings file open.
+//! Mirror a phone-originated legacy schedule write onto its QT slot while the
+//! slot still mirrors it (unused, or kind Weekdays/Weekends).
 static void prv_mirror_legacy_schedule_to_qt(SettingsFile *file, const char *matched_key) {
   for (int type = 0; type < NumDNDSchedules; type++) {
     if (strcmp(matched_key, s_dnd_schedule_keys[type].schedule_pref_key) != 0 &&
@@ -954,11 +947,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
     }
   }
 
-  // Legacy DND schedule keys (dndWeekdaySchedule, etc.) are already handled by
-  // the RELOAD_IF_MATCH calls above, which goto done on match. One-time
-  // migration to the qtSchedule* keys happens in prv_migrate_qt_schedules
-  // at init; the mirror below keeps the QT slots in sync with later
-  // phone-originated legacy writes.
+  // Legacy schedule keys match above; the mirror below handles QT sync.
 
 #undef RELOAD_IF_MATCH
 
