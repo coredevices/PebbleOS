@@ -19,7 +19,7 @@
  * The only place the tree may spell compiler specifics: code outside @c pbl/kernel/compiler/ must
  * not use @c __attribute__ or @c __builtin_* directly. Each macro expands to a @c *_IMPL
  * counterpart from @c compiler/gcc.h or @c compiler/clang.h; attributes a compiler does not
- * implement expand to nothing. Shipped with the SDK.
+ * implement expand to nothing.
  *
  * @code{.c}
  * typedef struct PBL_PACKED {

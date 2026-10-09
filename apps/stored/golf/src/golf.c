@@ -86,13 +86,15 @@ static void bluetooth_status_callback(bool connected) {
 }
 
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error,
-                                PBL_UNUSED void *context) {
+                                void *context) {
+  (void)context;
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Golf sync error! dict: %u, app msg: %u", dict_error,
           app_message_error);
 }
 
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple *new_tuple,
-                                        PBL_UNUSED const Tuple *old_tuple, void *context) {
+                                        const Tuple *old_tuple, void *context) {
+  (void)old_tuple;
   AppData *data = context;
   TextLayer **text = &data->text_layers[0];
   switch (key) {
@@ -122,20 +124,26 @@ static void send_golf_cmd(uint8_t cmd) {
   app_message_outbox_send();
 }
 
-static void up_click_handler(PBL_UNUSED ClickRecognizerRef recognizer, PBL_UNUSED AppData *data) {
+static void up_click_handler(ClickRecognizerRef recognizer, AppData *data) {
+  (void)recognizer;
+  (void)data;
   send_golf_cmd(CMD_PREV);
 }
 
-static void down_click_handler(PBL_UNUSED ClickRecognizerRef recognizer, PBL_UNUSED AppData *data) {
+static void down_click_handler(ClickRecognizerRef recognizer, AppData *data) {
+  (void)recognizer;
+  (void)data;
   send_golf_cmd(CMD_NEXT);
 }
 
-static void select_click_handler(PBL_UNUSED ClickRecognizerRef recognizer,
-                                 PBL_UNUSED AppData *data) {
+static void select_click_handler(ClickRecognizerRef recognizer, AppData *data) {
+  (void)recognizer;
+  (void)data;
   send_golf_cmd(CMD_SELECT);
 }
 
-static void config_provider(PBL_UNUSED AppData *data) {
+static void config_provider(AppData *data) {
+  (void)data;
   window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler)up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)down_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)select_click_handler);
@@ -162,7 +170,8 @@ static void draw_dotted_line(GContext *ctx, GPoint p0, uint16_t length, bool is_
 }
 
 static void background_update_proc(Layer *layer, GContext *ctx) {
-  PBL_UNUSED const GRect bounds = layer_get_bounds(layer);
+  const GRect bounds = layer_get_bounds(layer);
+  (void)bounds;
 
   // Draw lines to contain 'hole' and 'par' sections.
   // Magic numbers measured from design spec
