@@ -86,17 +86,17 @@ static void prv_i2s_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t 
 
 static void prv_codec_write(AudioDevice *dev, uint8_t reg, uint8_t value) {
   uint8_t data[2] = {reg, value};
-  i2c_use(dev->codec);
-  bool ok = i2c_write_block(dev->codec, sizeof(data), data);
-  i2c_release(dev->codec);
+  pbl_i2c_use(dev->codec);
+  bool ok = pbl_i2c_write_block(dev->codec, sizeof(data), data);
+  pbl_i2c_release(dev->codec);
   PBL_ASSERTN(ok);
 }
 
 static uint8_t prv_codec_read(AudioDevice *dev, uint8_t reg) {
   uint8_t value = 0;
-  i2c_use(dev->codec);
-  bool ok = i2c_read_register(dev->codec, reg, &value);
-  i2c_release(dev->codec);
+  pbl_i2c_use(dev->codec);
+  bool ok = pbl_i2c_read_register(dev->codec, reg, &value);
+  pbl_i2c_release(dev->codec);
   PBL_ASSERTN(ok);
   return value;
 }

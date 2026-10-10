@@ -9,16 +9,12 @@
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
+#include <pbl/drivers/gpio/sf32lb.h>
 
 #include <bf0_hal_pinmux.h>
 
 #define GPIO_Port_NULL NULL
 #define GPIO_Pin_NULL  0U
-
-typedef enum {
-  GPIO_OType_PP,
-  GPIO_OType_OD,
-} GPIOOType_TypeDef;
 
 typedef enum {
   GPIO_PuPd_NOPULL,
@@ -31,17 +27,6 @@ typedef struct {
   const uint32_t gpio_pin;        ///< One of GPIO_Pin_X.
   GPIOPuPd_TypeDef pull;          ///< Pull-up / pull-down configuration for the pin
 } ExtiConfig;
-
-typedef struct {
-  void *gpio;
-  uint8_t gpio_pin;
-} InputConfig;
-
-typedef struct {
-  void *gpio;
-  uint8_t gpio_pin;
-  bool active_high;
-} OutputConfig;
 
 typedef struct {
   int pad;
@@ -65,7 +50,7 @@ typedef struct {
 } PwmConfig;
 
 typedef struct {
-  const OutputConfig ctl;
+  const struct pbl_gpio ctl;
 } BoardConfigActuator;
 
 typedef struct {
@@ -87,10 +72,7 @@ typedef struct {
 
 typedef struct {
   const char *name;
-  GPIO_TypeDef *const port;
-  uint8_t pin;
-  GPIOPuPd_TypeDef pull;
-  bool active_high;
+  struct pbl_gpio gpio;
 } ButtonConfig;
 
 typedef struct {
@@ -100,7 +82,6 @@ typedef struct {
 } BoardConfigButton;
 
 typedef struct {
-  ExtiConfig pmic_int;
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
   //! Approximate hours of battery life
@@ -128,8 +109,6 @@ typedef struct {
 #include <pbl/drivers/uart/sf32lb.h>
 
 typedef const struct UARTDevice UARTDevice;
-typedef const struct I2CBus I2CBus;
-typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
@@ -137,7 +116,6 @@ typedef const struct QSPIFlash QSPIFlash;
 typedef const struct DisplayJDIDevice DisplayJDIDevice;
 typedef const struct AudioDevice AudioDevice;
 
-#include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/sf32lb.h>
 
 void board_early_init(void);

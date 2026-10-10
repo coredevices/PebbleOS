@@ -89,16 +89,16 @@ static uint16_t s_cached_value;
 static bool s_cache_valid;
 
 static bool prv_read_register(uint8_t register_address, uint8_t *result) {
-  i2c_use(I2C_W1160);
-  bool rv = i2c_read_register_block(I2C_W1160, register_address, 1, result);
-  i2c_release(I2C_W1160);
+  pbl_i2c_use(I2C_W1160);
+  bool rv = pbl_i2c_read_register_block(I2C_W1160, register_address, 1, result);
+  pbl_i2c_release(I2C_W1160);
   return rv;
 }
 
 static bool prv_write_register(uint8_t register_address, uint8_t datum) {
-  i2c_use(I2C_W1160);
-  bool rv = i2c_write_register_block(I2C_W1160, register_address, 1, &datum);
-  i2c_release(I2C_W1160);
+  pbl_i2c_use(I2C_W1160);
+  bool rv = pbl_i2c_write_register_block(I2C_W1160, register_address, 1, &datum);
+  pbl_i2c_release(I2C_W1160);
   return rv;
 }
 

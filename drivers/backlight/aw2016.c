@@ -5,6 +5,8 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
 
+#include <board/board.h>
+
 PBL_LOG_MODULE_DEFINE(driver_backlight_aw2016, CONFIG_DRIVER_BACKLIGHT_LOG_LEVEL);
 
 #define AW2016_REG_RSTR         0x00U
@@ -46,9 +48,9 @@ static uint32_t s_rgb_current_color = BACKLIGHT_COLOR_WARM_WHITE;
 static bool prv_read_register(uint8_t register_address, uint8_t *value) {
   bool ret;
 
-  i2c_use(I2C_AW2016);
-  ret = i2c_read_register_block(I2C_AW2016, register_address, 1, value);
-  i2c_release(I2C_AW2016);
+  pbl_i2c_use(I2C_AW2016);
+  ret = pbl_i2c_read_register_block(I2C_AW2016, register_address, 1, value);
+  pbl_i2c_release(I2C_AW2016);
 
   return ret;
 }
@@ -56,9 +58,9 @@ static bool prv_read_register(uint8_t register_address, uint8_t *value) {
 static bool prv_write_register(uint8_t register_address, uint8_t value) {
   bool ret;
 
-  i2c_use(I2C_AW2016);
-  ret = i2c_write_register_block(I2C_AW2016, register_address, 1, &value);
-  i2c_release(I2C_AW2016);
+  pbl_i2c_use(I2C_AW2016);
+  ret = pbl_i2c_write_register_block(I2C_AW2016, register_address, 1, &value);
+  pbl_i2c_release(I2C_AW2016);
 
   return ret;
 }

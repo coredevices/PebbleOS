@@ -176,9 +176,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 static bool prv_lsm6dso_write(uint8_t reg, const uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LSM6DSO->i2c);
-  ret = i2c_write_register_block(&LSM6DSO->i2c, reg, len, data);
-  i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&LSM6DSO->i2c);
+  ret = pbl_i2c_write_register_block(&LSM6DSO->i2c, reg, len, data);
+  pbl_i2c_release(&LSM6DSO->i2c);
 
   return ret;
 }
@@ -186,9 +186,9 @@ static bool prv_lsm6dso_write(uint8_t reg, const uint8_t *data, uint16_t len) {
 static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LSM6DSO->i2c);
-  ret = i2c_read_register_block(&LSM6DSO->i2c, reg, len, data);
-  i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&LSM6DSO->i2c);
+  ret = pbl_i2c_read_register_block(&LSM6DSO->i2c, reg, len, data);
+  pbl_i2c_release(&LSM6DSO->i2c);
 
   return ret;
 }
@@ -196,11 +196,11 @@ static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
 static bool prv_lsm6dso_read_fifo(uint16_t samples) {
   bool ret;
 
-  i2c_use(&LSM6DSO->i2c);
-  ret = i2c_read_register_block_dma(&LSM6DSO->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
-                                    samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
-                                    LSM6DSO->state->raw_sample_buf);
-  i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&LSM6DSO->i2c);
+  ret = pbl_i2c_read_register_block_dma(&LSM6DSO->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
+                                        samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
+                                        LSM6DSO->state->raw_sample_buf);
+  pbl_i2c_release(&LSM6DSO->i2c);
 
   return ret;
 }
@@ -518,7 +518,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   // Sources asserting while the pad is high produce no new edge: requeue on
   // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
   // by a persistent wake-up condition is left to the stall watchdog.
-  if (!gpio_input_read(&LSM6DSO->int1_in)) {
+  if (!pbl_gpio_get(&LSM6DSO->int1_in)) {
     return;
   }
 
@@ -541,7 +541,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   if (fifo_progress) {
     LSM6DSO->state->int1_requeued = true;
     accel_offload_work(prv_lsm6dso_int1_work_handler);
-  } else if (!action_taken && gpio_input_read(&LSM6DSO->int1_in)) {
+  } else if (!action_taken && pbl_gpio_get(&LSM6DSO->int1_in)) {
     prv_lsm6dso_recover();
   }
 }
@@ -737,10 +737,10 @@ static void prv_stall_check_work_cb(void) {
     // Shake-only mode: re-run the servicing pass if the pad is stuck high
     // (reading the INT source clears the latch); escalate to a full recovery
     // after consecutive passes that never release it.
-    if (LSM6DSO->state->shake_detection_enabled && gpio_input_read(&LSM6DSO->int1_in)) {
+    if (LSM6DSO->state->shake_detection_enabled && pbl_gpio_get(&LSM6DSO->int1_in)) {
       prv_lsm6dso_int1_work_handler();
       // A pad released by the pass is healthy; count only a still-high pad
-      if (!gpio_input_read(&LSM6DSO->int1_in)) {
+      if (!pbl_gpio_get(&LSM6DSO->int1_in)) {
         LSM6DSO->state->shake_stuck_passes = 0U;
       } else if (++LSM6DSO->state->shake_stuck_passes >= LSM6DSO_SHAKE_STUCK_PASSES_MAX) {
         PBL_LOG_WRN("INT1 pad stuck high for %" PRIu8 " shake watchdog passes, recovering",

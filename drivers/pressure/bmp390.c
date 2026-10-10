@@ -13,20 +13,22 @@ PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 #define BMP390_CHIP_ID_VALUE 0x60
 #define BMP390_PWR_CTRL      0x1B
 
-static bool prv_read_register(I2CSlavePort *i2c, uint8_t register_address, uint8_t *result) {
-  i2c_use(i2c);
-  bool rv = i2c_write_block(i2c, 1, &register_address);
+static bool prv_read_register(const struct pbl_i2c_dev *i2c, uint8_t register_address,
+                              uint8_t *result) {
+  pbl_i2c_use(i2c);
+  bool rv = pbl_i2c_write_block(i2c, 1, &register_address);
   if (rv)
-    rv = i2c_read_block(i2c, 1, result);
-  i2c_release(i2c);
+    rv = pbl_i2c_read_block(i2c, 1, result);
+  pbl_i2c_release(i2c);
   return rv;
 }
 
-static bool prv_write_register(I2CSlavePort *i2c, uint8_t register_address, uint8_t datum) {
-  i2c_use(i2c);
+static bool prv_write_register(const struct pbl_i2c_dev *i2c, uint8_t register_address,
+                               uint8_t datum) {
+  pbl_i2c_use(i2c);
   uint8_t d[2] = {register_address, datum};
-  bool rv = i2c_write_block(i2c, 2, d);
-  i2c_release(i2c);
+  bool rv = pbl_i2c_write_block(i2c, 2, d);
+  pbl_i2c_release(i2c);
   return rv;
 }
 

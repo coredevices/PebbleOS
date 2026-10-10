@@ -3,7 +3,7 @@
 
 set(sources)
 if(CONFIG_PMIC_NPM1300)
-  list(APPEND sources npm1300.c)
+  list(APPEND sources npm1300.c npm1300_gpio.c npm1300_regulator.c)
 endif()
 pbl_library()
 pbl_library_sources(${sources})

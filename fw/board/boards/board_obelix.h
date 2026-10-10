@@ -4,7 +4,6 @@
 #pragma once
 
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
-#include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/touch/cst816/touch_sensor_definitions.h>
 #include <pbl/services/imu/units.h>
 
@@ -17,15 +16,11 @@ extern UARTDevice *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
-extern I2CBus *const I2C1_BUS;
-extern I2CBus *const I2C2_BUS;
 extern const LSM6DSOConfig *const LSM6DSO;
-extern I2CSlavePort *const I2C_MMC5603NJ;
-extern I2CSlavePort *const I2C_NPM1300;
-extern I2CSlavePort *const I2C_AW86225;
-extern I2CSlavePort *const I2C_W1160;
-extern I2CSlavePort *const I2C_AW2016;
-extern const Npm1300Config NPM1300_CONFIG;
+extern const struct pbl_i2c_dev *const I2C_MMC5603NJ;
+extern const struct pbl_i2c_dev *const I2C_AW86225;
+extern const struct pbl_i2c_dev *const I2C_W1160;
+extern const struct pbl_i2c_dev *const I2C_AW2016;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 extern PwmConfig *const PWM1_CH1;
 extern DisplayJDIDevice *const DISPLAY;

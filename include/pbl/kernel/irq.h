@@ -18,7 +18,7 @@
  * of every bound line at boot, so drivers only enable and disable them:
  *
  * @code{.c}
- * PBL_IRQ_CONNECT(I2C1, 5, i2c_irq_handler, &s_i2c1_bus, 0);
+ * PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
  *
  * PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
  *   // handler body; must not call the kernel

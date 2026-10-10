@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/button_id.h>
+#include <pbl/drivers/gpio/nrf5.h>
 
 #include <hal/nrf_gpio.h>
 #include <nrfx_gpiote.h>
@@ -40,25 +41,6 @@ typedef struct {
   const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
 } ButtonComConfig;
 
-#define NRF5_GPIO_RESOURCE_EXISTS ((void *)1)
-typedef struct {
-  void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
-} InputConfig;
-
-typedef struct {
-  void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
-  bool active_high;        ///< Pin is active high or active low
-} OutputConfig;
-
-//! Alternate function pin configuration
-//! Used to configure a pin for use by a peripheral
-typedef struct {
-  void *gpio; ///< For compatibility, GPIO_RESOURCE_EXISTS if this is in use, NULL if not.
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
-} AfConfig;
-
 typedef struct {
   uint16_t value;
   uint16_t resolution;
@@ -67,7 +49,7 @@ typedef struct {
 } PwmState;
 
 typedef struct {
-  OutputConfig output;
+  struct pbl_gpio output;
   nrfx_pwm_t peripheral;
   PwmState *state;
 } PwmConfig;
@@ -78,8 +60,8 @@ typedef struct {
 } MagConfig;
 
 typedef struct {
-  AfConfig i2s_ck;
-  AfConfig i2s_sd;
+  struct pbl_gpio i2s_ck;
+  struct pbl_gpio i2s_sd;
   NRF_SPIM_Type *spi;
   uint32_t spi_clock_ctrl;
   nrf_pdm_gain_t gain;
@@ -99,7 +81,7 @@ typedef struct {
   const uint32_t ambient_light_lux_dark_offset;
   const uint32_t ambient_light_lux_num;
   const uint32_t ambient_light_lux_den;
-  const OutputConfig photo_en;
+  const struct pbl_gpio photo_en;
   const bool als_always_on;
 
   const uint8_t backlight_on_percent; // percent of max possible brightness
@@ -117,9 +99,6 @@ typedef struct {
 // Power Configuration
 /////////////////////////////////////////////////////////////////////////////
 typedef struct {
-  const GpioteConfig pmic_int;
-  const InputConfig pmic_int_gpio;
-
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
 
@@ -133,12 +112,12 @@ typedef struct {
 
 typedef struct {
   const MagConfig mag_config;
-  const InputConfig mag_int_gpio;
+  const struct pbl_gpio mag_int_gpio;
   const GpioteConfig mag_int;
 } BoardConfigMag;
 
 typedef struct {
-  const OutputConfig ctl;
+  const struct pbl_gpio ctl;
 } BoardConfigActuator;
 
 typedef struct {
@@ -153,19 +132,16 @@ typedef struct {
 typedef struct {
   nrfx_spim_t spi;
 
-  const OutputConfig mosi;
-  const OutputConfig clk;
-  const OutputConfig cs;
+  const struct pbl_gpio mosi;
+  const struct pbl_gpio clk;
+  const struct pbl_gpio cs;
 
-  const OutputConfig on_ctrl;
-  const nrf_gpio_pin_drive_t on_ctrl_otype;
+  const struct pbl_gpio on_ctrl;
 
   const NrfLowPowerPWM extcomin;
 } BoardConfigSharpDisplay;
 
 typedef const struct UARTDevice UARTDevice;
-typedef const struct I2CBus I2CBus;
-typedef const struct I2CSlavePort I2CSlavePort;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
@@ -176,6 +152,6 @@ void board_early_init(void);
 void board_init(void);
 
 // clang-format off
-#include <pbl/drivers/i2c/definitions.h>
+#include <pbl/drivers/i2c/nrf5.h>
 #include "board_definitions.h"
 // clang-format on

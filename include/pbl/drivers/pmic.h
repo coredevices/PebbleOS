@@ -16,15 +16,6 @@
  */
 
 /**
- * @brief Initialize the PMIC driver.
- *
- * Called once at startup.
- *
- * @return true on success.
- */
-bool pmic_init(void);
-
-/**
  * @brief Power off the board.
  *
  * All components lose power except the RTC, and the PMIC wakes the board on a button press.

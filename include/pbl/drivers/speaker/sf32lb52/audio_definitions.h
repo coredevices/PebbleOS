@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/audio.h>
+#include <pbl/drivers/gpio.h>
 #include <pbl/util/circular_buffer.h>
 
 #include <board/board.h>
@@ -96,7 +97,7 @@ typedef const struct AudioDevice {
   /** AUDCODEC DAC DMA interrupt. */
   IRQn_Type audec_dma_irq;
   /** Power amplifier enable output. */
-  OutputConfig pa_ctrl;
+  struct pbl_gpio pa_ctrl;
   /** Board power hooks, or NULL. */
   const BoardPowerOps *power_ops;
   /** Sample width in bits; not used by the driver. */

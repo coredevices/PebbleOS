@@ -94,11 +94,11 @@ static inline void prv_disable_spim(void) {
 }
 
 static inline void prv_enable_chip_select(void) {
-  gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, true);
+  pbl_gpio_set(&BOARD_CONFIG_DISPLAY.cs, true);
 }
 
 static inline void prv_disable_chip_select(void) {
-  gpio_output_set(&BOARD_CONFIG_DISPLAY.cs, false);
+  pbl_gpio_set(&BOARD_CONFIG_DISPLAY.cs, false);
 }
 
 static void prv_terminate_transfer(void *data) {
@@ -127,7 +127,7 @@ static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
 
 void display_init(void) {
   nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
-      BOARD_CONFIG_DISPLAY.clk.gpio_pin, BOARD_CONFIG_DISPLAY.mosi.gpio_pin,
+      pbl_gpio_nrf5_pin(&BOARD_CONFIG_DISPLAY.clk), pbl_gpio_nrf5_pin(&BOARD_CONFIG_DISPLAY.mosi),
       NRF_SPIM_PIN_NOT_CONNECTED, NRF_SPIM_PIN_NOT_CONNECTED);
   config.frequency = NRFX_MHZ_TO_HZ(1);
   config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
@@ -135,11 +135,8 @@ void display_init(void) {
   nrfx_err_t err = nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, NULL);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-  gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP);
-
-  gpio_output_init(&BOARD_CONFIG_DISPLAY.on_ctrl,
-                   (GPIOOType_TypeDef)BOARD_CONFIG_DISPLAY.on_ctrl_otype);
-  gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, true);
+  pbl_gpio_configure(&BOARD_CONFIG_DISPLAY.cs, PBL_GPIO_OUTPUT);
+  pbl_gpio_configure(&BOARD_CONFIG_DISPLAY.on_ctrl, PBL_GPIO_OUTPUT_ACTIVE);
 
   prv_extcomin_init();
 }
@@ -162,7 +159,7 @@ void display_clear(void) {
 }
 
 void display_set_enabled(bool enabled) {
-  gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, enabled);
+  pbl_gpio_set(&BOARD_CONFIG_DISPLAY.on_ctrl, enabled);
 }
 
 void display_set_rotated(bool rotated) {

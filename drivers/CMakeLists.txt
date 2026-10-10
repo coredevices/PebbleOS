@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+add_subdirectory(base)
 pbl_add_subdirectory_ifdef(CONFIG_SPEAKER speaker)
 pbl_add_subdirectory_ifdef(CONFIG_AMBIENT_LIGHT ambient)
 pbl_add_subdirectory_ifdef(CONFIG_TEMPERATURE temperature)
@@ -20,6 +21,7 @@ pbl_add_subdirectory_ifdef(CONFIG_MIC mic)
 pbl_add_subdirectory_ifdef(CONFIG_OTP otp)
 pbl_add_subdirectory_ifdef(CONFIG_PMIC pmic)
 pbl_add_subdirectory_ifdef(CONFIG_PWM pwm)
+pbl_add_subdirectory_ifdef(CONFIG_REGULATOR regulator)
 pbl_add_subdirectory_ifdef(CONFIG_RNG rng)
 pbl_add_subdirectory_ifdef(CONFIG_RTC rtc)
 pbl_add_subdirectory_ifdef(CONFIG_TOUCH touch)

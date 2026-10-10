@@ -73,9 +73,9 @@ static int8_t s_target_strength = VIBE_STRENGTH_MAX;
 static bool prv_read_register(uint8_t addr, uint8_t *data) {
   bool ret;
 
-  i2c_use(I2C_AW8623X);
-  ret = i2c_read_register_block(I2C_AW8623X, addr, 1, data);
-  i2c_release(I2C_AW8623X);
+  pbl_i2c_use(I2C_AW8623X);
+  ret = pbl_i2c_read_register_block(I2C_AW8623X, addr, 1, data);
+  pbl_i2c_release(I2C_AW8623X);
 
   return ret;
 }
@@ -83,9 +83,9 @@ static bool prv_read_register(uint8_t addr, uint8_t *data) {
 static bool prv_write_register(uint8_t addr, uint8_t data) {
   bool ret;
 
-  i2c_use(I2C_AW8623X);
-  ret = i2c_write_register_block(I2C_AW8623X, addr, 1, &data);
-  i2c_release(I2C_AW8623X);
+  pbl_i2c_use(I2C_AW8623X);
+  ret = pbl_i2c_write_register_block(I2C_AW8623X, addr, 1, &data);
+  pbl_i2c_release(I2C_AW8623X);
 
   return ret;
 }
@@ -130,11 +130,10 @@ void vibe_init(void) {
   uint8_t val;
 
   s_initialized = false;
-  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
-
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  pbl_gpio_configure(&BOARD_CONFIG_VIBE.ctl, PBL_GPIO_OUTPUT);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, true);
   psleep(AW8623X_PWR_OFF_TIME_MS);
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, false);
   psleep(AW8623X_PWR_ON_TIME_MS);
 
   // Verify chip ID

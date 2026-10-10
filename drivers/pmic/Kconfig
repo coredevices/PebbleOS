@@ -10,6 +10,7 @@ if PMIC
 
 config PMIC_NPM1300
     bool "Nordic nPM1300"
+    select REGULATOR
     help
       Support for the Nordic nPM1300 PMIC.
 

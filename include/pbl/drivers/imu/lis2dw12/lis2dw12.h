@@ -7,6 +7,8 @@
 #include <stdint.h>
 
 #include <pbl/drivers/accel.h>
+#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/i2c.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/mcu/cache.h>
@@ -38,7 +40,7 @@ typedef struct LIS2DW12State {
   uint32_t sampling_interval_us;
   /** Samples per FIFO batch requested by the subscribers, 0 when not streaming. */
   uint8_t num_samples;
-  /** Raw FIFO read buffer, filled with i2c_read_register_block_dma(). */
+  /** Raw FIFO read buffer, filled with pbl_i2c_read_register_block_dma(). */
   uint8_t raw_sample_buf[DCACHE_ROUND_UP(
       LIS2DW12_FIFO_SIZE * LIS2DW12_SAMPLE_SIZE_BYTES)] PBL_ALIGNED(DCACHE_LINE_SIZE_MAX);
   /** Watchdog timer detecting a stalled INT1 stream. */
@@ -68,11 +70,11 @@ typedef struct LIS2DW12Config {
   /** Driver state. */
   LIS2DW12State *state;
   /** I2C device. */
-  I2CSlavePort i2c;
+  struct pbl_i2c_dev i2c;
   /** INT1 interrupt line. */
   ExtiConfig int1;
   /** INT1 input, to read back the pad level. */
-  InputConfig int1_in;
+  struct pbl_gpio int1_in;
   /** Sensor axis feeding each watch axis (0: X, 1: Y, 2: Z). */
   uint8_t axis_map[3];
   /** Direction of each watch axis: 1 or -1. */

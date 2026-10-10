@@ -11,6 +11,7 @@
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
+#include <board/board.h>
 #include <kernel/events.h>
 #include <kernel/util/sleep.h>
 #include <system/passert.h>
@@ -125,27 +126,27 @@ bool mag_change_sample_rate(MagSampleRate rate) {
 // I2C read/write helpers
 
 static bool prv_mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data) {
-  i2c_use(I2C_MMC5603NJ);
-  bool rv = i2c_write_block(I2C_MMC5603NJ, 1, &reg_addr);
+  pbl_i2c_use(I2C_MMC5603NJ);
+  bool rv = pbl_i2c_write_block(I2C_MMC5603NJ, 1, &reg_addr);
   if (!rv) {
     PBL_LOG_ERR("MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
   }
-  rv = i2c_read_block(I2C_MMC5603NJ, data_len, data);
+  rv = pbl_i2c_read_block(I2C_MMC5603NJ, data_len, data);
   if (!rv) {
     PBL_LOG_ERR("MMC5603NJ: I2C data read failed for register 0x%02x", reg_addr);
   }
-  i2c_release(I2C_MMC5603NJ);
+  pbl_i2c_release(I2C_MMC5603NJ);
   return rv;
 }
 
 static bool prv_mmc5603nj_write(uint8_t reg_addr, uint8_t data) {
-  i2c_use(I2C_MMC5603NJ);
+  pbl_i2c_use(I2C_MMC5603NJ);
   uint8_t d[2] = {reg_addr, data};
-  bool rv = i2c_write_block(I2C_MMC5603NJ, 2, d);
+  bool rv = pbl_i2c_write_block(I2C_MMC5603NJ, 2, d);
   if (!rv) {
     PBL_LOG_ERR("MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
   }
-  i2c_release(I2C_MMC5603NJ);
+  pbl_i2c_release(I2C_MMC5603NJ);
   return rv;
 }
 

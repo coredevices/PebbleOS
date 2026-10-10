@@ -2,6 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #pragma once
 
+#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/i2c.h>
+
 #include <board/board.h>
 
 /**
@@ -11,21 +14,16 @@
  * @{
  */
 
-#ifdef CONFIG_BOARD_OBELIX
-/** @brief The reset line is driven by nPM1300 GPIO2 instead of @ref TouchSensor::reset. */
-#define RESET_PIN_CTRLBY_NPM1300 1
-#endif
-
 /** @brief CST816 board configuration. */
 typedef struct {
   /** I2C device in normal operation. */
-  I2CSlavePort *i2c;
+  const struct pbl_i2c_dev *i2c;
   /** I2C device in boot (firmware update) mode. */
-  I2CSlavePort *i2c_boot;
+  const struct pbl_i2c_dev *i2c_boot;
   /** Interrupt line. */
   ExtiConfig int_exti;
   /** Reset line. */
-  OutputConfig reset;
+  struct pbl_gpio reset;
   /** Maximum X coordinate. */
   uint16_t max_x;
   /** Maximum Y coordinate. */

@@ -135,23 +135,23 @@ static const uint8_t s_sine_cycle[] = {
 static uint8_t s_ram_image[AW862XX_RAM_HEADER_LEN + sizeof(s_sine_cycle)];
 
 static bool prv_read_register(uint8_t register_address, uint8_t *data) {
-  i2c_use(I2C_AW86225);
-  bool rv = i2c_read_register_block(I2C_AW86225, register_address, 1, data);
-  i2c_release(I2C_AW86225);
+  pbl_i2c_use(I2C_AW86225);
+  bool rv = pbl_i2c_read_register_block(I2C_AW86225, register_address, 1, data);
+  pbl_i2c_release(I2C_AW86225);
   return rv;
 }
 
 static bool prv_write_register(uint8_t register_address, uint8_t datum) {
-  i2c_use(I2C_AW86225);
-  bool rv = i2c_write_register_block(I2C_AW86225, register_address, 1, &datum);
-  i2c_release(I2C_AW86225);
+  pbl_i2c_use(I2C_AW86225);
+  bool rv = pbl_i2c_write_register_block(I2C_AW86225, register_address, 1, &datum);
+  pbl_i2c_release(I2C_AW86225);
   return rv;
 }
 
 static bool prv_write_register_block(uint8_t register_address, const uint8_t *data, size_t length) {
-  i2c_use(I2C_AW86225);
-  bool rv = i2c_write_register_block(I2C_AW86225, register_address, length, data);
-  i2c_release(I2C_AW86225);
+  pbl_i2c_use(I2C_AW86225);
+  bool rv = pbl_i2c_write_register_block(I2C_AW86225, register_address, length, data);
+  pbl_i2c_release(I2C_AW86225);
   return rv;
 }
 
@@ -390,11 +390,10 @@ static int prv_f0_detection(void) {
 }
 
 void vibe_init(void) {
-  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
-
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  pbl_gpio_configure(&BOARD_CONFIG_VIBE.ctl, PBL_GPIO_OUTPUT);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, true);
   psleep(AW862XX_PWR_OFF_TIME);
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, false);
   psleep(AW862XX_PWR_ON_TIME);
 
   uint8_t chip_id;

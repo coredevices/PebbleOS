@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-set(sources common.c)
+set(sources i2c.c)
 if(CONFIG_I2C_NRF5)
   list(APPEND sources nrf5.c)
 elseif(CONFIG_I2C_SF32LB)

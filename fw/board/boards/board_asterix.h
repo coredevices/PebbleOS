@@ -2,7 +2,6 @@
 
 #include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
-#include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/services/imu/units.h>
 
 #define BT_VENDOR_ID   0x0EEA
@@ -42,14 +41,12 @@ static const BoardConfigButton BOARD_CONFIG_BUTTON = {
 };
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
-  .pmic_int = {NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12)},
-  .pmic_int_gpio = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12)},
   .low_power_threshold = 2,
   .battery_capacity_hours = 450,
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 2), true}, // LRA_EN
+  .ctl = PBL_GPIO(NRF5_GPIO_P0, 2, 0), // LRA_EN
 };
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
@@ -71,10 +68,10 @@ extern UARTDevice *const DBG_UART;
 
 extern PwmState BACKLIGHT_PWM_STATE;
 static const BacklightPwmConfig BACKLIGHT_PWM = {
-  .ctl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true},
+  .ctl = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
   .pwm =
       {.state = &BACKLIGHT_PWM_STATE,
-       .output = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true},
+       .output = PBL_GPIO(NRF5_GPIO_P0, 26, 0),
        .peripheral = NRFX_PWM_INSTANCE(0)},
   .max_duty_cycle_percent = 67,
 };
@@ -82,11 +79,11 @@ static const BacklightPwmConfig BACKLIGHT_PWM = {
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
 
-  .clk = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 6), true},
-  .mosi = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 8), true},
-  .cs = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 3), true},
+  .clk = PBL_GPIO(NRF5_GPIO_P0, 6, 0),
+  .mosi = PBL_GPIO(NRF5_GPIO_P0, 8, 0),
+  .cs = PBL_GPIO(NRF5_GPIO_P1, 3, 0),
 
-  .on_ctrl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true},
+  .on_ctrl = PBL_GPIO(NRF5_GPIO_P0, 4, 0),
 
   .extcomin = {
     .rtc = NRF_RTC2,
@@ -105,12 +102,10 @@ extern QSPIFlash *const QSPI_FLASH;
 extern MicDevice *const MIC;
 extern AudioDevice *const AUDIO;
 
-extern I2CSlavePort *const I2C_NPM1300;
-extern I2CSlavePort *const I2C_DRV2604;
-extern I2CSlavePort *const I2C_OPT3001;
-extern I2CSlavePort *const I2C_DA7212;
-extern I2CSlavePort *const I2C_MMC5603NJ;
-extern I2CSlavePort *const I2C_BMP390;
+extern const struct pbl_i2c_dev *const I2C_DRV2604;
+extern const struct pbl_i2c_dev *const I2C_OPT3001;
+extern const struct pbl_i2c_dev *const I2C_DA7212;
+extern const struct pbl_i2c_dev *const I2C_MMC5603NJ;
+extern const struct pbl_i2c_dev *const I2C_BMP390;
 extern const LSM6DSOConfig *const LSM6DSO;
 
-extern const Npm1300Config NPM1300_CONFIG;

@@ -3,6 +3,7 @@
 
 menu "Drivers"
 
+rsource "base/Kconfig"
 rsource "ambient/Kconfig"
 rsource "backlight/Kconfig"
 rsource "battery/Kconfig"
@@ -21,6 +22,7 @@ rsource "otp/Kconfig"
 rsource "pmic/Kconfig"
 rsource "pressure/Kconfig"
 rsource "pwm/Kconfig"
+rsource "regulator/Kconfig"
 rsource "rng/Kconfig"
 rsource "rtc/Kconfig"
 rsource "speaker/Kconfig"

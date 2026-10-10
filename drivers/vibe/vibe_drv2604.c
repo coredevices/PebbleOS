@@ -57,23 +57,22 @@ PBL_LOG_MODULE_DEFINE(driver_vibe_drv2604, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 static bool s_initialized = false;
 
 static bool prv_read_register(uint8_t register_address, uint8_t *result) {
-  i2c_use(I2C_DRV2604);
-  bool rv = i2c_read_register(I2C_DRV2604, register_address, result);
-  i2c_release(I2C_DRV2604);
+  pbl_i2c_use(I2C_DRV2604);
+  bool rv = pbl_i2c_read_register(I2C_DRV2604, register_address, result);
+  pbl_i2c_release(I2C_DRV2604);
   return rv;
 }
 
 static bool prv_write_register(uint8_t register_address, uint8_t datum) {
-  i2c_use(I2C_DRV2604);
+  pbl_i2c_use(I2C_DRV2604);
   uint8_t block[2] = {register_address, datum};
-  bool rv = i2c_write_block(I2C_DRV2604, 2, block);
-  i2c_release(I2C_DRV2604);
+  bool rv = pbl_i2c_write_block(I2C_DRV2604, 2, block);
+  pbl_i2c_release(I2C_DRV2604);
   return rv;
 }
 
 void vibe_init(void) {
-  gpio_output_init(&BOARD_CONFIG_VIBE.ctl, GPIO_OType_PP);
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  pbl_gpio_configure(&BOARD_CONFIG_VIBE.ctl, PBL_GPIO_OUTPUT_ACTIVE);
   uint8_t rv;
   bool found = prv_read_register(DRV2604_STATUS, &rv);
   if (!found) {
@@ -101,14 +100,14 @@ void vibe_init(void) {
   for (size_t i = 0; i < sizeof(regs) / sizeof(regs[0]); i++) {
     if (!prv_write_register(regs[i][0], regs[i][1])) {
       PBL_LOG_ERR("failed to write register %02x on DRV2604", regs[i][0]);
-      gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
+      pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, false);
       return;
     }
   }
 
   // DRV2604 does not get its registers reset by disabling EN, so it's ok to
   // do that
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, false);
 
   s_initialized = true;
 }
@@ -120,10 +119,10 @@ static bool s_vibe_ctl_on = false;
  */
 void vibe_set_strength(int8_t strength) {
   int32_t strength_scale = strength * 0x7FL / 100L;
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, true);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, true);
   prv_write_register(DRV2604_MODE, DRV2604_MODE_RTP); /* exit standby, RTP mode */
   prv_write_register(DRV2604_RTP_INPUT, strength_scale);
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, s_vibe_ctl_on);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, s_vibe_ctl_on);
 }
 
 void vibe_ctl(bool on) {
@@ -139,7 +138,7 @@ void vibe_ctl(bool on) {
         DRV2604_MODE_STANDBY |
             DRV2604_MODE_RTP); /* enter standby even if the enable GPIO is not hooked up */
   }
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, on);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, on);
   s_vibe_ctl_on = on;
   if (on) {
     prv_write_register(DRV2604_MODE, DRV2604_MODE_RTP); /* exit standby, RTP mode */
@@ -154,7 +153,7 @@ void vibe_force_off(void) {
       DRV2604_MODE,
       DRV2604_MODE_STANDBY |
           DRV2604_MODE_RTP); /* enter standby even if the enable GPIO is not hooked up */
-  gpio_output_set(&BOARD_CONFIG_VIBE.ctl, false);
+  pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, false);
   s_vibe_ctl_on = false;
 }
 

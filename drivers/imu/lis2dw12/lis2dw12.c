@@ -160,9 +160,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 static bool prv_lis2dw12_write(uint8_t reg, const uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LIS2DW12->i2c);
-  ret = i2c_write_register_block(&LIS2DW12->i2c, reg, len, data);
-  i2c_release(&LIS2DW12->i2c);
+  pbl_i2c_use(&LIS2DW12->i2c);
+  ret = pbl_i2c_write_register_block(&LIS2DW12->i2c, reg, len, data);
+  pbl_i2c_release(&LIS2DW12->i2c);
 
   return ret;
 }
@@ -170,9 +170,9 @@ static bool prv_lis2dw12_write(uint8_t reg, const uint8_t *data, uint16_t len) {
 static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
   bool ret;
 
-  i2c_use(&LIS2DW12->i2c);
-  ret = i2c_read_register_block(&LIS2DW12->i2c, reg, len, data);
-  i2c_release(&LIS2DW12->i2c);
+  pbl_i2c_use(&LIS2DW12->i2c);
+  ret = pbl_i2c_read_register_block(&LIS2DW12->i2c, reg, len, data);
+  pbl_i2c_release(&LIS2DW12->i2c);
 
   return ret;
 }
@@ -180,11 +180,11 @@ static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
 static bool prv_lis2dw12_read_fifo(uint8_t samples) {
   bool ret;
 
-  i2c_use(&LIS2DW12->i2c);
-  ret = i2c_read_register_block_dma(&LIS2DW12->i2c, LIS2DW12_OUT_X_L,
-                                    samples * LIS2DW12_SAMPLE_SIZE_BYTES,
-                                    LIS2DW12->state->raw_sample_buf);
-  i2c_release(&LIS2DW12->i2c);
+  pbl_i2c_use(&LIS2DW12->i2c);
+  ret = pbl_i2c_read_register_block_dma(&LIS2DW12->i2c, LIS2DW12_OUT_X_L,
+                                        samples * LIS2DW12_SAMPLE_SIZE_BYTES,
+                                        LIS2DW12->state->raw_sample_buf);
+  pbl_i2c_release(&LIS2DW12->i2c);
 
   return ret;
 }
@@ -439,7 +439,7 @@ static void prv_lis2dw12_int1_work_handler(void) {
   // Sources asserting while the pad is high produce no new edge: requeue on
   // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
   // by a persistent wake-up condition is left to the stall watchdog.
-  if (!gpio_input_read(&LIS2DW12->int1_in)) {
+  if (!pbl_gpio_get(&LIS2DW12->int1_in)) {
     return;
   }
 
@@ -638,10 +638,10 @@ static void prv_stall_check_work_cb(void) {
     // Shake-only mode: re-run the servicing pass if the pad is stuck high
     // (reading the INT source clears the latch); escalate to a full recovery
     // after consecutive passes that never release it.
-    if (LIS2DW12->state->shake_detection_enabled && gpio_input_read(&LIS2DW12->int1_in)) {
+    if (LIS2DW12->state->shake_detection_enabled && pbl_gpio_get(&LIS2DW12->int1_in)) {
       prv_lis2dw12_int1_work_handler();
       // A pad released by the pass is healthy; count only a still-high pad
-      if (!gpio_input_read(&LIS2DW12->int1_in)) {
+      if (!pbl_gpio_get(&LIS2DW12->int1_in)) {
         LIS2DW12->state->shake_stuck_passes = 0U;
       } else if (++LIS2DW12->state->shake_stuck_passes >= LIS2DW12_SHAKE_STUCK_PASSES_MAX) {
         PBL_LOG_WRN("INT1 pad stuck high for %" PRIu8 " shake watchdog passes, recovering",

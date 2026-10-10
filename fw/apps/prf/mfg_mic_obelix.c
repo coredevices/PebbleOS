@@ -229,7 +229,7 @@ static void prv_handle_init(void) {
   app_timer_register(500, prv_timer_callback, NULL);
 
   // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
-  (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
+  (void)pbl_npm1300_set_dischg_limit_ma(NPM1300, NPM1300_DISCHG_LIMIT_MA_MAX);
 }
 
 static void prv_handler_deinit(void) {
@@ -242,7 +242,7 @@ static void prv_handler_deinit(void) {
   }
 
   // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
-  (void)NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
+  (void)pbl_npm1300_set_dischg_limit_ma(NPM1300, NPM1300_CONFIG.dischg_limit_ma);
 }
 
 static void s_main(void) {

@@ -4,7 +4,6 @@
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/i2c/definitions.h>
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
@@ -81,120 +80,62 @@ PBL_IRQ_CONNECT(SPIM3, NRFX_SPIM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_spim_3_irq_ha
 PBL_IRQ_CONNECT(GPIOTE, NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_gpiote_0_irq_handler, , 0);
 
 /* nPM1300 */
-static I2CBusState I2C_NPMC_IIC1_BUS_STATE = {};
-
-static const I2CBusHal I2C_NPMC_IIC1_BUS_HAL = {
-  .twim = NRFX_TWIM_INSTANCE(1),
-  .frequency = NRF_TWIM_FREQ_400K,
-};
-
-static const I2CBus I2C_NPMC_IIC1_BUS = {
-  .state = &I2C_NPMC_IIC1_BUS_STATE,
-  .hal = &I2C_NPMC_IIC1_BUS_HAL,
-  .scl_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 14),
-      },
-  .sda_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 15),
-      },
-  .name = "I2C_NPMC_IIC1",
-};
+PBL_I2C_NRF5_DEFINE(s_i2c_npmc_iic1, "i2c_npmc_iic1", 1, NRF_TWIM_FREQ_400K,
+                    PBL_GPIO(NRF5_GPIO_P0, 14, 0), PBL_GPIO(NRF5_GPIO_P0, 15, 0), NULL);
 PBL_IRQ_CONNECT(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
                 nrfx_twim_1_irq_handler, , 0);
 /* PERIPHERAL ID 9 */
 
-static const I2CSlavePort I2C_SLAVE_NPM1300 = {
-  .bus = &I2C_NPMC_IIC1_BUS,
-  .address = 0x6B << 1,
-};
+PBL_NPM1300_DEFINE(s_npm1300, &s_i2c_npmc_iic1.bus, 0x6B, &NPM1300_CONFIG,
+                   {NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12)});
 
-I2CSlavePort *const I2C_NPM1300 = &I2C_SLAVE_NPM1300;
+const struct pbl_npm1300 *const NPM1300 = &s_npm1300;
+
+PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck1, "npm1300_buck1", &s_npm1300, PBL_NPM1300_BUCK1, 1800,
+                             false, true);
+PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck2, "npm1300_buck2", &s_npm1300, PBL_NPM1300_BUCK2, 3000,
+                             false, true);
+PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 1800,
+                             true, true);
 
 /* peripheral I2C bus */
-static I2CBusState I2C_IIC2_BUS_STATE = {};
-
-static const I2CBusHal I2C_IIC2_BUS_HAL = {
-  .twim = NRFX_TWIM_INSTANCE(0),
-  .frequency = NRF_TWIM_FREQ_400K,
-};
-
-static const I2CBus I2C_IIC2_BUS = {
-  .state = &I2C_IIC2_BUS_STATE,
-  .hal = &I2C_IIC2_BUS_HAL,
-  .scl_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 25),
-      },
-  .sda_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 11),
-      },
-  .name = "I2C_IIC2",
-};
+PBL_I2C_NRF5_DEFINE(s_i2c_iic2, "i2c_iic2", 0, NRF_TWIM_FREQ_400K, PBL_GPIO(NRF5_GPIO_P0, 25, 0),
+                    PBL_GPIO(NRF5_GPIO_P0, 11, 0), NULL);
 PBL_IRQ_CONNECT(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
                 nrfx_twim_0_irq_handler, , 0);
 
-static const I2CSlavePort I2C_SLAVE_DRV2604 = {
-  .bus = &I2C_IIC2_BUS,
-  .address = 0x5A << 1,
-};
+static const struct pbl_i2c_dev I2C_SLAVE_DRV2604 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x5A);
 
-I2CSlavePort *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
+const struct pbl_i2c_dev *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
 
-static const I2CSlavePort I2C_SLAVE_OPT3001 = {
-  .bus = &I2C_IIC2_BUS,
-  .address = 0x44 << 1,
-};
+static const struct pbl_i2c_dev I2C_SLAVE_OPT3001 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x44);
 
-I2CSlavePort *const I2C_OPT3001 = &I2C_SLAVE_OPT3001;
+const struct pbl_i2c_dev *const I2C_OPT3001 = &I2C_SLAVE_OPT3001;
 
-static const I2CSlavePort I2C_SLAVE_DA7212 = {
-  .bus = &I2C_IIC2_BUS,
-  .address = 0x1A << 1,
-};
+static const struct pbl_i2c_dev I2C_SLAVE_DA7212 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x1A);
 
-I2CSlavePort *const I2C_DA7212 = &I2C_SLAVE_DA7212;
+const struct pbl_i2c_dev *const I2C_DA7212 = &I2C_SLAVE_DA7212;
 
-static const I2CSlavePort I2C_SLAVE_MMC5603NJ = {
-  .bus = &I2C_IIC2_BUS,
-  .address = 0x30 << 1,
-};
+static const struct pbl_i2c_dev I2C_SLAVE_MMC5603NJ = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x30);
 
-I2CSlavePort *const I2C_MMC5603NJ = &I2C_SLAVE_MMC5603NJ;
+const struct pbl_i2c_dev *const I2C_MMC5603NJ = &I2C_SLAVE_MMC5603NJ;
 
-static const I2CSlavePort I2C_SLAVE_BMP390 = {
-  .bus = &I2C_IIC2_BUS,
-  .address = 0x76 << 1,
-};
+static const struct pbl_i2c_dev I2C_SLAVE_BMP390 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x76);
 
-I2CSlavePort *const I2C_BMP390 = &I2C_SLAVE_BMP390;
+const struct pbl_i2c_dev *const I2C_BMP390 = &I2C_SLAVE_BMP390;
 
 static LSM6DSOState s_lsm6dso_state;
 
 static const LSM6DSOConfig s_lsm6dso_config = {
   .state = &s_lsm6dso_state,
-  .i2c =
-      {
-        .bus = &I2C_IIC2_BUS,
-        .address = 0x6A << 1,
-      },
+  .i2c = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x6A),
   .int1 =
       {
         .peripheral = NRFX_GPIOTE_INSTANCE(0),
         .channel = 7,
         .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
       },
-  .int1_in =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
-      },
+  .int1_in = PBL_GPIO(NRF5_GPIO_P1, 13, 0),
   .axis_map =
       {
         [AXIS_X] = 1,
@@ -230,10 +171,10 @@ MicDevice *const MIC = &s_mic_device;
 /* Speaker / audio output (DA7212 codec over I2S) */
 static AudioDeviceState s_audio_state_storage;
 static void prv_audio_power_up(void) {
-  NPM1300_OPS.dischg_limit_ma_set(NPM1300_DISCHG_LIMIT_MA_MAX);
+  pbl_npm1300_set_dischg_limit_ma(NPM1300, NPM1300_DISCHG_LIMIT_MA_MAX);
 }
 static void prv_audio_power_down(void) {
-  NPM1300_OPS.dischg_limit_ma_set(NPM1300_CONFIG.dischg_limit_ma);
+  pbl_npm1300_set_dischg_limit_ma(NPM1300, NPM1300_CONFIG.dischg_limit_ma);
 }
 static const BoardPowerOps s_audio_power_ops = {
   .power_up = prv_audio_power_up,
@@ -265,8 +206,8 @@ PBL_IRQ_CONNECT(RTC1, 7, rtc_irq_handler, , 0);
 
 const Npm1300Config NPM1300_CONFIG = {
   // 128mA = ~1C (rapid charge)
-  .chg_current_ma = 128,   .dischg_limit_ma = 200, .term_current_pct = 10,
-  .thermistor_beta = 3380, .ntc_hot_celsius = 45,
+  .chg_current_ma = 128,    .dischg_limit_ma = 200, .term_current_pct = 10,  .vterm_mv = 4200,
+  .vterm_reduced_mv = 4000, .ntc_kohm = 10,         .thermistor_beta = 3380, .ntc_hot_celsius = 45,
 };
 
 void board_early_init(void) {
@@ -287,11 +228,8 @@ void board_early_init(void) {
 }
 
 void board_init(void) {
-  i2c_init(&I2C_NPMC_IIC1_BUS);
-  i2c_init(&I2C_IIC2_BUS);
-
   uint8_t da7212_powerdown[] = {0xFD /* SYSTEM_ACTIVE */, 0};
-  i2c_use(I2C_DA7212);
-  i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
-  i2c_release(I2C_DA7212);
+  pbl_i2c_use(I2C_DA7212);
+  pbl_i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
+  pbl_i2c_release(I2C_DA7212);
 }

@@ -19,12 +19,6 @@
  * @{
  */
 
-#ifdef CONFIG_BOARD_OBELIX
-// FIXME(OBELIX): Provide proper GPIO layer abstraction
-/** @brief The sensor reset line is driven by an nPM1300 GPIO instead of an MCU pin. */
-#define GH3X2X_RESET_PIN_CTRLBY_NPM1300 1
-#endif
-
 /** @brief Number of PPG channels. */
 #define HRM_PPG_CH_NUM 6
 /** @brief Samples per channel averaged by the factory tests. */
@@ -58,13 +52,13 @@ typedef const struct HRMDevice {
   /** Driver runtime state. */
   HRMDeviceState *state;
   /** Sensor I2C port. */
-  I2CSlavePort *i2c;
+  const struct pbl_i2c_dev *i2c;
   /** Sensor interrupt line. */
   ExtiConfig int_exti;
   /** Sensor interrupt line, as an input. */
-  InputConfig int_input;
-  /** Sensor reset line. */
-  OutputConfig reset_gpio;
+  struct pbl_gpio int_input;
+  /** Sensor reset line, optional. */
+  struct pbl_gpio reset;
 } HRMDevice;
 
 /**

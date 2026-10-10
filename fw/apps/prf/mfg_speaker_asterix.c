@@ -10,6 +10,7 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
+#include <board/board.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/util/sleep.h>
 #include <process_management/pebble_process_md.h>
@@ -43,12 +44,12 @@ static void da7212_register_write(uint8_t reg, uint8_t value) {
   uint8_t data[2] = {reg, value};
   bool ret;
 
-  i2c_use(I2C_DA7212);
+  pbl_i2c_use(I2C_DA7212);
 
-  ret = i2c_write_block(I2C_DA7212, 2, data);
+  ret = pbl_i2c_write_block(I2C_DA7212, 2, data);
   PBL_ASSERTN(ret);
 
-  i2c_release(I2C_DA7212);
+  pbl_i2c_release(I2C_DA7212);
 }
 
 static void prv_da7212_play_tone(void) {

@@ -33,18 +33,18 @@ static bool s_initialized = false;
 
 static bool prv_read_register(uint8_t register_address, uint16_t *result) {
   uint8_t buf[2];
-  i2c_use(I2C_OPT3001);
-  bool rv = i2c_read_register_block(I2C_OPT3001, register_address, 2, buf);
+  pbl_i2c_use(I2C_OPT3001);
+  bool rv = pbl_i2c_read_register_block(I2C_OPT3001, register_address, 2, buf);
   *result = buf[0] << 8 | buf[1];
-  i2c_release(I2C_OPT3001);
+  pbl_i2c_release(I2C_OPT3001);
   return rv;
 }
 
 static bool prv_write_register(uint8_t register_address, uint16_t datum) {
-  i2c_use(I2C_OPT3001);
+  pbl_i2c_use(I2C_OPT3001);
   uint8_t block[3] = {register_address, datum >> 8, datum & 0xFF};
-  bool rv = i2c_write_block(I2C_OPT3001, 3, block);
-  i2c_release(I2C_OPT3001);
+  bool rv = pbl_i2c_write_block(I2C_OPT3001, 3, block);
+  pbl_i2c_release(I2C_OPT3001);
   return rv;
 }
 
