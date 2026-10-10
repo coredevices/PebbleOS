@@ -8,6 +8,7 @@
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/timeline/sports_layout.h>
 #include <pbl/services/timeline/weather_layout.h>
+#include <pbl/util/size.h>
 
 #include <apps/system/timeline/pin_window.h>
 #include <clar.h>
@@ -381,6 +382,28 @@ static const TimelineLayoutTestConfig s_weather_config = {
 
 void test_timeline_layouts__content_sizes_weather(void) {
   prv_check_pages_for_each_size(prv_render_config_page, &s_weather_config, 2, TEST_PBI_FILE);
+}
+
+void test_timeline_layouts__weather_city_clears_page_arrow(void) {
+  static const char *const locations[] = {"Las Vegas", "Llanfairpwllgwyngyll, Wales"};
+  const size_t arrow_height = TIMELINE_CARD_ARROW_HEIGHT + 1;
+  const size_t row_size = s_ctx.dest_bitmap.row_size_bytes;
+  const size_t offset = (DISP_ROWS - arrow_height) * row_size;
+  uint8_t *expected = malloc(arrow_height * row_size);
+  TimelineLayoutTestConfig config = s_weather_config;
+  for (PreferredContentSize size = PreferredContentSizeDefault - 1;
+       size <= PreferredContentSizeDefault + 1; size++) {
+    system_theme_set_content_size(size);
+    config.location_name = "";
+    prv_construct_and_render_layout(&config, 0);
+    memcpy(expected, s_ctx.dest_bitmap.addr + offset, arrow_height * row_size);
+    for (size_t i = 0; i < ARRAY_LENGTH(locations); i++) {
+      config.location_name = locations[i];
+      prv_construct_and_render_layout(&config, 0);
+      cl_assert(memcmp(expected, s_ctx.dest_bitmap.addr + offset, arrow_height * row_size) == 0);
+    }
+  }
+  free(expected);
 }
 
 static void prv_check_renders_like(const TimelineLayoutTestConfig *config,

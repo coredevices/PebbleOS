@@ -104,7 +104,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
         //! @note this is the same as Large until ExtraLarge is designed
         /* extralarge */ 1), // title margin height
   };
-  static const LayoutNodeTextAttributeConfig s_subtitle_config = {
+  const LayoutNodeTextAttributeConfig s_subtitle_config = {
     .attr_id = AttributeIdSubtitle,
     .text.font_key = PREFERRED_CONTENT_SIZE_SWITCH(
         PreferredContentSizeDefault,
@@ -116,7 +116,11 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
         /* extralarge */ FONT_KEY_LECO_36_BOLD_NUMBERS),
     .text.fixed_lines = 1, // subtitle fixed lines
     .text.alignment = LayoutTextAlignment_Center,
-    .text.extent.margin.h = IF_ICON_AT_TOP_ELSE(1, 9), // subtitle margin height
+    // Leave room for the city above the page arrow on the smaller display.
+    .text.extent.margin.h = (PBL_RECT && PBL_DISPLAY_HEIGHT < 200 &&
+                             system_theme_get_content_size() >= PreferredContentSizeLarge)
+                                ? 2
+                                : IF_ICON_AT_TOP_ELSE(1, 9),
   };
   static const LayoutNodeExtentConfig s_icon_config = {
     .node.type = LayoutNodeType_TimelineIcon,
@@ -168,7 +172,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.line_spacing_delta = -2,                            // body line spacing delta
     .text.extent.margin.h = TIMELINE_CARD_BODY_MARGIN_HEIGHT, // body margin height
   };
-  static const LayoutNodeConfig *const s_vertical_config_nodes[] = {
+  const LayoutNodeConfig *const s_vertical_config_nodes[] = {
     IF_ICON_AT_TOP_ELSE(&s_icon_config.node, &s_title_config.text.extent.node),
     IF_ICON_AT_TOP_ELSE(&s_title_config.text.extent.node, &s_subtitle_config.text.extent.node),
     IF_ICON_AT_TOP_ELSE(&s_subtitle_config.text.extent.node, &s_icon_config.node),
@@ -178,7 +182,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     &s_body_header_config.text.extent.node,
     &s_body_config.text.extent.node,
   };
-  static const LayoutNodeVerticalConfig s_vertical_config = {
+  const LayoutNodeVerticalConfig s_vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
     .container.num_nodes = ARRAY_LENGTH(s_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_vertical_config_nodes,
