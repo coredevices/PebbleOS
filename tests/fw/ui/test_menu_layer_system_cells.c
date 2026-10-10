@@ -535,9 +535,31 @@ void test_menu_layer_system_cells__third_party_app_keeps_platform_default(void) 
   system_theme_set_content_size(PreferredContentSizeDefault);
 }
 
+void test_menu_layer_system_cells__system_cell_heights(void) {
+  const int16_t expected_heights[NumPreferredContentSizes] = {
+    PBL_IF_RECT_ELSE(42, 44),
+    44,
+#if defined(CONFIG_PLATFORM_FLINT)
+    60,
+#elif defined(CONFIG_PLATFORM_EMERY)
+    61,
+#else
+    PBL_IF_RECT_ELSE(50, 61),
+#endif
+    PBL_IF_RECT_ELSE(64, 85),
+  };
+  for (PreferredContentSize size = PreferredContentSizeSmall; size < NumPreferredContentSizes;
+       size++) {
+    system_theme_set_content_size(size);
+    cl_assert_equal_i(menu_cell_basic_cell_height(), expected_heights[size]);
+  }
+  system_theme_set_content_size(PreferredContentSizeDefault);
+}
+
 static unsigned int prv_count_basic_cell_foreground(int16_t cell_height, const char *title,
                                                     const char *subtitle, GFont subtitle_font,
-                                                    GBitmap *icon, bool selected) {
+                                                    GBitmap *icon, bool selected,
+                                                    GRect *foreground_bounds) {
   const int16_t width = 144;
   GBitmap *bitmap = gbitmap_create_blank(GSize(width, 128),
                                          PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
@@ -562,12 +584,26 @@ static unsigned int prv_count_basic_cell_foreground(int16_t cell_height, const c
                               icon, false, GTextOverflowModeFill);
 
   unsigned int foreground_pixels = 0;
+  int16_t min_x = width;
+  int16_t min_y = bitmap->bounds.size.h;
+  int16_t max_x = -1;
+  int16_t max_y = -1;
   for (int16_t y = 0; y < bitmap->bounds.size.h; y++) {
     const uint8_t *row = (uint8_t *)bitmap->addr + y * bitmap->row_size_bytes;
     for (int16_t x = 0; x < width; x++) {
-      foreground_pixels +=
-          PBL_IF_COLOR_ELSE(row[x] == GColorBlackARGB8, !((row[x / 8] >> (x % 8)) & 1));
+      if (PBL_IF_COLOR_ELSE(row[x] == GColorBlackARGB8, !((row[x / 8] >> (x % 8)) & 1))) {
+        foreground_pixels++;
+        min_x = MIN(min_x, x);
+        min_y = MIN(min_y, y);
+        max_x = MAX(max_x, x);
+        max_y = MAX(max_y, y);
+      }
     }
+  }
+
+  if (foreground_bounds) {
+    *foreground_bounds =
+        foreground_pixels ? GRect(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1) : GRectZero;
   }
 
   s_ctx.dest_bitmap = previous_bitmap;
@@ -585,9 +621,9 @@ void test_menu_layer_system_cells__basic_height_preserves_accents_and_descenders
     for (int selected = 0; selected <= 1; selected++) {
       GBitmap *icon = PBL_IF_RECT_ELSE(&s_tictoc_icon_bitmap, NULL);
       const unsigned int reference_pixels =
-          prv_count_basic_cell_foreground(128, titles[size], "ÿģĳ,", NULL, icon, selected);
+          prv_count_basic_cell_foreground(128, titles[size], "ÿģĳ,", NULL, icon, selected, NULL);
       const unsigned int actual_pixels = prv_count_basic_cell_foreground(
-          menu_cell_basic_cell_height(), titles[size], "ÿģĳ,", NULL, icon, selected);
+          menu_cell_basic_cell_height(), titles[size], "ÿģĳ,", NULL, icon, selected, NULL);
       cl_assert(reference_pixels > 0);
       cl_assert_equal_i(actual_pixels, reference_pixels);
     }
@@ -605,12 +641,26 @@ void test_menu_layer_system_cells__caption_rows_preserve_accents_and_descenders(
     const int16_t saved_height =
         MAX(0, fonts_get_font_height(subtitle_font) - fonts_get_font_height(caption_font));
     const unsigned int reference_pixels =
-        prv_count_basic_cell_foreground(128, titles[size], "ÿgj,", caption_font, NULL, true);
+        prv_count_basic_cell_foreground(128, titles[size], "ÿgj,", caption_font, NULL, true, NULL);
     const unsigned int actual_pixels =
         prv_count_basic_cell_foreground(menu_cell_basic_cell_height() - saved_height, titles[size],
-                                        "ÿgj,", caption_font, NULL, true);
+                                        "ÿgj,", caption_font, NULL, true, NULL);
     cl_assert(reference_pixels > 0);
     cl_assert_equal_i(actual_pixels, reference_pixels);
   }
   system_theme_set_content_size(PreferredContentSizeDefault);
+}
+
+void test_menu_layer_system_cells__larger_two_line_cell_has_matching_padding(void) {
+#ifdef CONFIG_PLATFORM_FLINT
+  system_theme_set_content_size(PreferredContentSizeLarge);
+  const int16_t height = menu_cell_basic_cell_height();
+  GRect foreground;
+  prv_count_basic_cell_foreground(height, "Backlight", "Standard", NULL, NULL, true, &foreground);
+  cl_assert(foreground.size.h > 0);
+  cl_assert(foreground.origin.x >= menu_cell_basic_horizontal_inset());
+  cl_assert_equal_i(foreground.origin.y, foreground.origin.x);
+  cl_assert_equal_i(height - foreground.origin.y - foreground.size.h, foreground.origin.x);
+  system_theme_set_content_size(PreferredContentSizeDefault);
+#endif
 }
