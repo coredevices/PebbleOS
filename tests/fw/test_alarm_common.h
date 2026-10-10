@@ -173,7 +173,16 @@ static int s_num_alarms_fired = 0;
 
 void prv_timer_kernel_bg_callback(void *data);
 
+static bool s_defer_system_task_callbacks;
+static SystemTaskEventCallback s_pending_system_task_callback;
+static void *s_pending_system_task_data;
+
 bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+  if (s_defer_system_task_callbacks) {
+    s_pending_system_task_callback = cb;
+    s_pending_system_task_data = data;
+    return true;
+  }
   cb(data);
   if (cb == prv_timer_kernel_bg_callback) {
     s_num_alarms_fired++;

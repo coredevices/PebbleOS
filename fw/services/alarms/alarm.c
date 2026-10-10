@@ -112,7 +112,8 @@ typedef struct Alarm {
 typedef bool (*AlarmOperationCallback)(AlarmId id, AlarmConfig *config, void *context);
 
 // Forward declarations
-static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, void *context);
+static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, void *context,
+                                bool schedule_changed);
 static bool prv_reload_alarms(SettingsFile *file);
 static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *config_out);
 static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig *config);
@@ -133,6 +134,7 @@ static AlarmConfig s_most_recent_alarm_config;
 static bool s_most_recent_alarm_recorded;
 
 static TimerID s_snooze_timer_id = TIMER_INVALID_ID;
+static uintptr_t s_snooze_generation;
 static uint16_t s_snooze_delay_m = DEFAULT_SNOOZE_DELAY_M;
 
 //! Whether the pending snooze timer was armed by an explicit user snooze rather
@@ -472,6 +474,8 @@ static bool prv_record_alarm_op(AlarmId id, AlarmConfig *config, void *context) 
 // ----------------------------------------------------------------------------------------------
 static void prv_clear_snooze_timer(void) {
   new_timer_stop(s_snooze_timer_id);
+  // Invalidate callbacks already queued on KernelBG.
+  s_snooze_generation++;
   s_user_snoozed = false;
 }
 
@@ -503,20 +507,22 @@ static void prv_process_most_recent_alarm(void) {
     if (!s_most_recent_alarm_recorded) {
       s_most_recent_alarm_recorded = true;
       // Read from flash since the in-memory cache can be modified
-      prv_alarm_operation(s_most_recent_alarm_id, prv_record_alarm_op, NULL);
+      prv_alarm_operation(s_most_recent_alarm_id, prv_record_alarm_op, NULL, false);
     }
   }
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_snooze_kernel_bg_callback(void *unused) {
-  prv_process_most_recent_alarm();
+static void prv_snooze_kernel_bg_callback(void *generation) {
+  if ((uintptr_t)generation == s_snooze_generation) {
+    prv_process_most_recent_alarm();
+  }
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_snooze_timer_callback(void *unused) {
+static void prv_snooze_timer_callback(void *generation) {
   PBL_LOG_INFO("Snooze timeout");
-  system_task_add_callback(prv_snooze_kernel_bg_callback, NULL);
+  system_task_add_callback(prv_snooze_kernel_bg_callback, generation);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -749,7 +755,8 @@ AlarmId alarm_create(const AlarmInfo *info) {
 // ----------------------------------------------------------------------------------------------
 typedef bool (*AlarmOperationCallback)(AlarmId id, AlarmConfig *config, void *context);
 
-static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, void *context) {
+static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, void *context,
+                                bool schedule_changed) {
   SettingsFile file;
   if (!prv_file_open_and_lock(&file)) {
     return;
@@ -763,6 +770,13 @@ static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, voi
 
   if (!callback(id, &config, context)) {
     goto cleanup;
+  }
+
+  if (schedule_changed && id == s_most_recent_alarm_id) {
+    PBL_LOG_DBG("Canceling snooze timer because alarm was edited");
+    prv_clear_snooze_timer();
+    s_most_recent_alarm_id = ALARM_INVALID_ID;
+    s_smart_snooze_counter = 0;
   }
 
   prv_enable_alarm_config(&config, true /* enabled */);
@@ -791,7 +805,7 @@ static bool prv_set_alarm_time_op(AlarmId id, AlarmConfig *config, void *context
 
 void alarm_set_time(AlarmId id, int hour, int minute) {
   prv_assert_alarm_params(hour, minute);
-  prv_alarm_operation(id, prv_set_alarm_time_op, &(SetAlarmTimeContext){hour, minute});
+  prv_alarm_operation(id, prv_set_alarm_time_op, &(SetAlarmTimeContext){hour, minute}, true);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -801,7 +815,7 @@ static bool prv_set_alarm_smart_op(AlarmId id, AlarmConfig *config, void *contex
 }
 
 void alarm_set_smart(AlarmId id, bool smart) {
-  prv_alarm_operation(id, prv_set_alarm_smart_op, (void *)(uintptr_t)smart);
+  prv_alarm_operation(id, prv_set_alarm_smart_op, (void *)(uintptr_t)smart, true);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -811,7 +825,7 @@ static bool prv_set_sound_enabled_op(AlarmId id, AlarmConfig *config, void *cont
 }
 
 void alarm_set_sound_enabled(AlarmId id, bool enabled) {
-  prv_alarm_operation(id, prv_set_sound_enabled_op, (void *)(uintptr_t)enabled);
+  prv_alarm_operation(id, prv_set_sound_enabled_op, (void *)(uintptr_t)enabled, false);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -821,7 +835,7 @@ static bool prv_set_vibrate_enabled_op(AlarmId id, AlarmConfig *config, void *co
 }
 
 void alarm_set_vibrate_enabled(AlarmId id, bool enabled) {
-  prv_alarm_operation(id, prv_set_vibrate_enabled_op, (void *)(uintptr_t)enabled);
+  prv_alarm_operation(id, prv_set_vibrate_enabled_op, (void *)(uintptr_t)enabled, false);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -831,7 +845,7 @@ static bool prv_set_tone_op(AlarmId id, AlarmConfig *config, void *context) {
 }
 
 void alarm_set_tone(AlarmId id, AlarmTone tone) {
-  prv_alarm_operation(id, prv_set_tone_op, (void *)(uintptr_t)tone);
+  prv_alarm_operation(id, prv_set_tone_op, (void *)(uintptr_t)tone, false);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -866,7 +880,7 @@ static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context
 }
 
 void alarm_set_kind(AlarmId id, AlarmKind kind) {
-  prv_alarm_operation(id, prv_set_alarm_kind_op, (void *)(uintptr_t)kind);
+  prv_alarm_operation(id, prv_set_alarm_kind_op, (void *)(uintptr_t)kind, true);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -878,7 +892,7 @@ static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *conte
 }
 
 void alarm_set_custom(AlarmId id, const bool scheduled_days[PBL_DAY_PER_WEEK]) {
-  prv_alarm_operation(id, prv_set_alarm_custom_op, (void *)scheduled_days);
+  prv_alarm_operation(id, prv_set_alarm_custom_op, (void *)scheduled_days, true);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1115,12 +1129,12 @@ cleanup:
 
 static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated) {
   prv_clear_snooze_timer();
-  // Set before arming the timer: a stale snooze callback queued on KernelBG cannot be cancelled by
-  // new_timer_stop(), and would consume the flag if it ran while the timer was armed without it.
+  // Set the snooze kind before arming the timer.
   s_user_snoozed = user_initiated;
   PBL_LOG_INFO("Snoozing for %d minutes", snooze_delay_s / PBL_SEC_PER_MIN);
-  bool success = new_timer_start(s_snooze_timer_id, snooze_delay_s * PBL_MSEC_PER_SEC,
-                                 prv_snooze_timer_callback, NULL, 0 /* flags*/);
+  bool success =
+      new_timer_start(s_snooze_timer_id, snooze_delay_s * PBL_MSEC_PER_SEC,
+                      prv_snooze_timer_callback, (void *)s_snooze_generation, 0 /* flags*/);
   PBL_ASSERTN(success);
 }
 
@@ -1306,7 +1320,7 @@ void alarm_handle_clock_change(void) {
   prv_file_close_and_unlock(&file);
 
   if (record_alarm_id != ALARM_INVALID_ID) {
-    prv_alarm_operation(record_alarm_id, prv_record_alarm_op, NULL);
+    prv_alarm_operation(record_alarm_id, prv_record_alarm_op, NULL, false);
   }
 }
 
