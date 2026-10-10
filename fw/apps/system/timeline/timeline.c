@@ -70,7 +70,7 @@ static const uint32_t TIMELINE_SLIDE_ANIMATION_MS = 150;
 static const uint32_t PEEK_SHOW_TIME_MS = 660;
 
 static const TimelineAppStyle *prv_get_style(void) {
-  return s_styles[system_theme_get_content_size()];
+  return s_styles[PBL_IF_ROUND_ELSE(PreferredContentSizeDefault, system_theme_get_content_size())];
 }
 
 /////////////////////////////////////

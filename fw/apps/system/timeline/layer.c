@@ -119,7 +119,8 @@ static const int s_visible_items[] = {1, 2};
 static const int s_nonvisible_items[] = {0, TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER - 1};
 
 static const TimelineLayerStyle *prv_get_style(void) {
-  return s_styles[system_theme_get_content_size()];
+  // Round pin heights and icon positions depend on the display, not the font size.
+  return s_styles[PBL_IF_ROUND_ELSE(PreferredContentSizeDefault, system_theme_get_content_size())];
 }
 
 uint16_t timeline_layer_get_fat_pin_height(void) {

@@ -5,10 +5,14 @@
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 #include <pbl/util/units.h>
 
+#include <applib/graphics/gcontext.h>
+#include <applib/graphics/text_resources.h>
+#include <applib/graphics/utf8.h>
 #include <applib/preferred_content_size.h>
 #include <applib/ui/ui.h>
 #include <apps/system/timeline/layer.h>
@@ -45,8 +49,6 @@ typedef struct TimelineLayoutStyle {
   int16_t primary_list_margin_h;
   int16_t primary_secondary_peek_margin_h;
   bool thin_can_have_secondary;
-  int16_t fat_future_title_offset_y;
-  int16_t fat_past_title_offset_y;
   int16_t thin_future_title_offset_y;
   int16_t thin_past_title_offset_y;
 } TimelineLayoutStyle;
@@ -56,8 +58,6 @@ static const TimelineLayoutStyle s_style_medium = {
   .thin_time_margin_h = -8,
   .primary_list_margin_h = 6,
   .primary_line_spacing_delta = -2,
-  .fat_future_title_offset_y = 0,
-  .fat_past_title_offset_y = 0,
   .thin_future_title_offset_y = 0,
   .thin_past_title_offset_y = 0,
 };
@@ -70,8 +70,6 @@ static const TimelineLayoutStyle s_style_large = {
   // depends on whether the remaining screen space after fat permits.
   .primary_secondary_peek_margin_h = -5,
   .thin_can_have_secondary = true,
-  .fat_future_title_offset_y = 25,
-  .fat_past_title_offset_y = -30,
   .thin_future_title_offset_y = 45,
   .thin_past_title_offset_y = 10,
 };
@@ -96,7 +94,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx);
 static GTextNode *prv_create_pin_view_node(TimelineLayout *layout);
 
 static const TimelineLayoutStyle *prv_get_style(void) {
-  return s_styles[system_theme_get_content_size()];
+  return s_styles[PBL_IF_ROUND_ELSE(PreferredContentSizeDefault, system_theme_get_content_size())];
 }
 
 TimelineResourceId timeline_layout_get_icon_resource_id(LayoutLayerMode mode,
@@ -220,8 +218,8 @@ void timeline_layout_get_icon_frame(const GRect *bounds, TimelineScrollDirection
   const GSize size = timeline_resources_get_gsize(TimelineResourceSizeTiny);
   const bool is_future = (scroll_direction == TimelineScrollDirectionDown);
   PBL_UNUSED const int offset_y_rect = -5;
-  // Center the icon vertically at screen center (offsets differ by content size/style)
-  const bool use_large_style = (system_theme_get_content_size() >= PreferredContentSizeLarge);
+  // Round icon offsets follow the display geometry used by the timeline layer.
+  const bool use_large_style = (PreferredContentSizeDefault >= PreferredContentSizeLarge);
   // s_style_large: future_top_margin=39, past layout origin=117, icon_offset_y=3
   // s_style_medium: future_top_margin=39, past layout origin=61, icon_offset_y=0
   PBL_UNUSED const int offset_y_round =
@@ -340,6 +338,54 @@ const LayoutColors *timeline_layout_get_colors(const LayoutLayer *layout_ref) {
 // View
 ////////////////////////
 
+#if PBL_ROUND
+typedef struct {
+  GContext *ctx;
+  GFont font;
+  int16_t top;
+  int16_t bottom;
+} TitleMetrics;
+
+static bool prv_measure_title_glyph(int index, Codepoint codepoint, void *context) {
+  if (codepoint_is_zero_width(codepoint) || codepoint_is_unicode_space(codepoint) ||
+      codepoint == NEWLINE_CODEPOINT) {
+    return true;
+  }
+  TitleMetrics *metrics = context;
+  GlyphLocation location;
+  const GlyphData *glyph =
+      text_resources_get_glyph(&metrics->ctx->font_cache, codepoint, metrics->font, &location);
+  if (glyph && glyph->header.width_px && glyph->header.height_px) {
+    const int16_t top = glyph->header.top_offset_px + location.baseline_adjust;
+    metrics->top = MIN(metrics->top, top);
+    metrics->bottom = MAX(metrics->bottom, top + glyph->header.height_px);
+  }
+  return true;
+}
+
+static void prv_anchor_title(TimelineLayout *layout) {
+  GTextNodeContainer *container = (GTextNodeContainer *)layout->view_node;
+  GTextNode *time_node = container->nodes[0];
+  GTextNodeText *title = (GTextNodeText *)container->nodes[1];
+  const int16_t font_height = fonts_get_font_height(title->font);
+  TitleMetrics metrics = {
+    .ctx = graphics_context_get_current_context(),
+    .font = title->font,
+    .top = font_height,
+  };
+  utf8_each_codepoint(title->text, prv_measure_title_glyph, &metrics);
+  if (metrics.top >= metrics.bottom) {
+    container->node.offset.y = -container->node.cached_size.h / 2;
+    return;
+  }
+  const int16_t last_line_offset = MAX(
+      title->node.cached_size.h - title->node.margin.h - font_height - title->line_spacing_delta,
+      0);
+  const int16_t title_center = (metrics.top + metrics.bottom + last_line_offset) / 2;
+  container->node.offset.y = -time_node->cached_size.h - title->node.offset.y - title_center;
+}
+#endif
+
 void timeline_layout_init_view(TimelineLayout *layout, LayoutLayerMode mode) {
   GTextNode *view_node = NULL;
   switch (mode) {
@@ -357,6 +403,11 @@ void timeline_layout_init_view(TimelineLayout *layout, LayoutLayerMode mode) {
   }
   layout->view_node = view_node;
   timeline_layout_get_size(layout, graphics_context_get_current_context(), &layout->view_size);
+#if PBL_ROUND
+  if (mode == LayoutLayerModePinnedFat) {
+    prv_anchor_title(layout);
+  }
+#endif
 }
 
 void timeline_layout_deinit_view(TimelineLayout *layout) {
@@ -487,10 +538,12 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   GTextNodeVertical *vertical_node = graphics_text_node_create_vertical(num_vertical_nodes);
   const bool is_future = (layout->info->scroll_direction == TimelineScrollDirectionDown);
   const bool is_peek = (layout->layout_layer.mode == LayoutLayerModePeek);
+  const bool is_fat = (layout->layout_layer.mode == LayoutLayerModePinnedFat);
   vertical_node->vertical_alignment =
       is_peek ? GVerticalAlignmentCenter
-              : PBL_IF_ROUND_ELSE((is_future ? GVerticalAlignmentBottom : GVerticalAlignmentTop),
-                                  GVerticalAlignmentTop);
+              : PBL_IF_ROUND_ELSE(
+                    (is_future && !is_fat ? GVerticalAlignmentBottom : GVerticalAlignmentTop),
+                    GVerticalAlignmentTop);
   GTextNode *time_text_node = !is_peek ? prv_create_time_text_node(layout) : NULL;
   if (time_text_node) {
 #if PBL_RECT
@@ -501,7 +554,6 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   }
 
   const char *secondary_text = prv_get_secondary_text(layout);
-  const bool is_fat = (layout->layout_layer.mode == LayoutLayerModePinnedFat);
   PBL_UNUSED const bool is_thin = (layout->layout_layer.mode == LayoutLayerModePinnedThin);
   const TimelineLayoutStyle *style = prv_get_style();
   const bool thin_can_have_secondary = style->thin_can_have_secondary;
@@ -517,6 +569,13 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     const int hour_title_margin = is_fat ? style->fat_time_margin_h : style->thin_time_margin_h;
     if (time_text_node) {
       time_text_node->margin.h += hour_title_margin;
+#if PBL_RECT
+      if (!layout->info->all_day &&
+          system_theme_get_content_size() == PreferredContentSizeExtraLarge) {
+        // The 36px title font needs a tighter gap below the time header.
+        time_text_node->margin.h -= 8;
+      }
+#endif
     }
 
     static const LayoutNodeTextConfig s_primary_config = {
@@ -586,14 +645,9 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     }
   }
 
-  if (PBL_IF_ROUND_ELSE(!is_peek, false)) {
-    if (is_fat) {
-      vertical_node->container.node.offset.y =
-          is_future ? style->fat_future_title_offset_y : style->fat_past_title_offset_y;
-    } else {
-      vertical_node->container.node.offset.y =
-          is_future ? style->thin_future_title_offset_y : style->thin_past_title_offset_y;
-    }
+  if (PBL_IF_ROUND_ELSE(is_thin, false)) {
+    vertical_node->container.node.offset.y =
+        is_future ? style->thin_future_title_offset_y : style->thin_past_title_offset_y;
   }
 
   if (is_peek) {
@@ -644,6 +698,13 @@ static void prv_get_pin_view_bounds(TimelineLayout *layout, GRect *box_out) {
     box_out->size.h = thin_height;
   } else if (layout->layout_layer.mode == LayoutLayerModePinnedFat) {
     box_out->size.h -= PBL_IF_ROUND_ELSE(30, 20);
+#if PBL_ROUND
+    // The title's glyph center is anchored to the icon, including during scrolling.
+    GRect icon_frame, layout_frame;
+    layer_get_global_frame(&layout->icon_layer.layer, &icon_frame);
+    layer_get_global_frame(&layout->layout_layer.layer, &layout_frame);
+    box_out->origin.y = icon_frame.origin.y + icon_frame.size.h / 2 - layout_frame.origin.y;
+#endif
   }
 }
 
