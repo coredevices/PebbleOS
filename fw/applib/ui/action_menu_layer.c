@@ -1158,6 +1158,8 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
   menu_layer_init(&aml->menu_layer, &aml->layer.bounds);
   menu_layer_set_normal_colors(&aml->menu_layer, GColorBlack,
                                PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
+  // The action menu is drawn on black and has its own look, independent of the system accent
+  menu_layer_set_highlight_colors(&aml->menu_layer, GColorBlack, GColorWhite);
 #if PBL_ROUND
   menu_layer_pad_bottom_enable(&aml->menu_layer, false);
 #endif

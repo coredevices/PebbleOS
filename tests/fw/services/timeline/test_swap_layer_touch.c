@@ -23,6 +23,7 @@
 #include <stubs_passert.h>
 #include <stubs_pebble_tasks.h>
 #include <stubs_process_manager.h>
+#include <stubs_system_theme.h>
 #include <stubs_unobstructed_area.h>
 
 // ---------------------------------------------------------------------------------------------

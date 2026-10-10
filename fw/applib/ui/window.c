@@ -22,6 +22,7 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
+#include <shell/system_theme.h>
 #include <syscall/syscall.h>
 #include <system/passert.h>
 
@@ -182,7 +183,7 @@ void window_init(Window *window, const char *debug_name) {
   window->is_fullscreen = fullscreen;
   window->layer.window = window;
   window->layer.update_proc = window_do_layer_update_proc;
-  window->background_color = GColorWhite;
+  window->background_color = system_theme_get_bg_color();
   window->in_click_config_provider = false;
   window->is_waiting_for_click_config = false;
   window->parent_window_stack = NULL;

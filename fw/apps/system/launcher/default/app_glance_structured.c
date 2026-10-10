@@ -17,6 +17,7 @@
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 #include <system/passert.h>
 
 // Use display height to determine icon margins: larger displays use more margin
@@ -85,16 +86,9 @@ static void prv_structured_glance_icon_bitmap_processor_post_func(
 
 GColor launcher_app_glance_structured_get_highlight_color(
     LauncherAppGlanceStructured *structured_glance) {
-#if PBL_COLOR
-  if (structured_glance->glance.is_highlighted) {
-    GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-    return gcolor_legible_over(highlight_bg);
-  } else {
-    return GColorBlack;
-  }
-#else
-  return structured_glance->glance.is_highlighted ? GColorWhite : GColorBlack;
-#endif
+  return structured_glance->glance.is_highlighted ?
+      gcolor_legible_over(shell_prefs_get_theme_highlight_color()) :
+      system_theme_get_fg_color();
 }
 
 static GColor prv_get_icon_tint_color(LauncherAppGlanceStructured *structured_glance) {

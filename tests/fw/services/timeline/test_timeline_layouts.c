@@ -8,6 +8,7 @@
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/timeline/sports_layout.h>
 #include <pbl/services/timeline/weather_layout.h>
+#include <stubs_system_theme.h>
 
 #include <apps/system/timeline/pin_window.h>
 #include <clar.h>

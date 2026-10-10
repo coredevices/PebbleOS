@@ -20,6 +20,7 @@
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/prefs_sync.h>
+#include <shell/normal/dark_mode_updater.h>
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
@@ -350,12 +351,21 @@ static GColor s_theme_highlight_color = GColorVividCerulean;
 #define PREF_KEY_MUSIC_SHOW_VOLUME_CONTROLS "musicShowVolumeControls"
 #define PREF_KEY_MUSIC_SHOW_PROGRESS_BAR    "musicShowProgressBar"
 #define PREF_KEY_MUSIC_SHOW_ALBUM_ART       "musicShowAlbumArt"
+#define PREF_KEY_DARK_MODE "darkMode"
+#define PREF_KEY_DARK_MODE_SCHEDULE "darkModeSchedule"
 
 static bool s_menu_scroll_wrap_around = false;
 static MenuScrollVibeBehavior s_menu_scroll_vibe_behavior = MenuScrollNoVibe;
 static bool s_music_show_volume_controls = true;
 static bool s_music_show_progress_bar = true;
 static bool s_music_show_album_art = false;
+static uint8_t s_dark_mode = DarkModeOff;
+static DarkModeSchedule s_dark_mode_schedule = {
+  .from_hour = 19,
+  .from_minute = 0,
+  .to_hour = 7,
+  .to_minute = 0,
+};
 
 // ============================================================================================
 // Handlers for each pref that validate the new setting and store the new value in our globals.
@@ -969,6 +979,25 @@ static bool prv_set_s_music_show_progress_bar(bool *enabled) {
 
 static bool prv_set_s_music_show_album_art(bool *enabled) {
   s_music_show_album_art = *enabled;
+  return true;
+}
+
+static bool prv_set_s_dark_mode(uint8_t *mode) {
+  if (*mode >= DarkModeCount) {
+    s_dark_mode = DarkModeOn;
+    return false;
+  }
+  s_dark_mode = *mode;
+  dark_mode_updater_prefs_changed();
+  return true;
+}
+
+static bool prv_set_s_dark_mode_schedule(DarkModeSchedule *schedule) {
+  if (schedule->from_hour >= 24 || schedule->from_minute >= 60 ||
+      schedule->to_hour >= 24 || schedule->to_minute >= 60) {
+    return false;
+  }
+  s_dark_mode_schedule = *schedule;
   return true;
 }
 
@@ -2317,4 +2346,25 @@ bool shell_prefs_get_music_show_album_art(void) {
 
 void shell_prefs_set_music_show_album_art(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_ALBUM_ART, &enable, sizeof(enable));
+}
+
+DarkMode shell_prefs_get_dark_mode(void) {
+  return (DarkMode)s_dark_mode;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+  uint8_t val = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_DARK_MODE, &val, sizeof(val));
+}
+
+void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out) {
+  if (schedule_out) {
+    *schedule_out = s_dark_mode_schedule;
+  }
+}
+
+void shell_prefs_set_dark_mode_schedule(const DarkModeSchedule *schedule) {
+  if (schedule) {
+    prv_pref_set(PREF_KEY_DARK_MODE_SCHEDULE, schedule, sizeof(*schedule));
+  }
 }

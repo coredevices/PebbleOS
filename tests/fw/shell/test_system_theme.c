@@ -8,11 +8,15 @@
 // Stubs
 ///////////////
 
+#include <stubs_ambient_light.h>
 #include <stubs_analytics.h>
 #include <stubs_fonts.h>
 #include <stubs_logging.h>
 #include <stubs_passert.h>
+#include <stubs_pebble_process_md.h>
+#include <stubs_pebble_tasks.h>
 #include <stubs_process_manager.h>
+#include <stubs_rtc.h>
 #include <stubs_shell_prefs.h>
 
 // Tests
