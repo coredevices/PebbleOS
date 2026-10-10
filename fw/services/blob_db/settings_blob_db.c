@@ -18,6 +18,7 @@
 #include <kernel/pbl_malloc.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
+#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -127,7 +128,10 @@ static const char *s_syncable_settings[] = {
 
 static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);
 
-//! Notification preferences from notifpref file that should be synced
+//! Notification preferences from notifpref file that should be synced.
+//! The qtSchedule* entries come from QT_SCHEDULE_SLOT_X, the same definition
+//! as the storage keys, so the allowlist covers every slot by construction.
+#define QT_SYNC_KEY_ENTRY(i) "qtSchedule" #i,
 static const char *s_syncable_notif_prefs[] = {
   "mask",
   "dndInterruptionsMask",
@@ -142,7 +146,7 @@ static const char *s_syncable_notif_prefs[] = {
   "dndWeekdayScheduleEnabled",
   "dndWeekendSchedule",
   "dndWeekendScheduleEnabled",
-  "notifWindowTimeout",
+  QT_SCHEDULE_SLOT_X(QT_SYNC_KEY_ENTRY) "notifWindowTimeout",
   "notifTextSize",
   "notifDesignStyle",
   "notifVibeDelay",
@@ -151,8 +155,15 @@ static const char *s_syncable_notif_prefs[] = {
   "dndTouchBacklight",
   "dndAutoDismiss",
 };
+#undef QT_SYNC_KEY_ENTRY
 
 static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
+
+//! Expected QT schedule keys, from the same definition as both tables, for
+//! the sync-coverage check in settings_blob_db_init.
+#define QT_SYNC_CHECK_ENTRY(i) "qtSchedule" #i,
+static const char *const s_qt_schedule_sync_keys[] = {QT_SCHEDULE_SLOT_X(QT_SYNC_CHECK_ENTRY)};
+#undef QT_SYNC_CHECK_ENTRY
 
 static bool s_initialized = false;
 
@@ -308,12 +319,24 @@ void settings_blob_db_init(void) {
     return;
   }
 
-  // Register callback to sync settings immediately when they change
+  // Every QT schedule slot must be syncable. The expected keys come from
+  // QT_SCHEDULE_SLOT_X, the same definition as both tables, so this only
+  // fires if the macro invocation above was removed or edited wrong.
+  for (int i = 0; i < (int)ARRAY_LENGTH(s_qt_schedule_sync_keys); i++) {
+    PBL_ASSERT(prv_is_notif_pref((const uint8_t *)s_qt_schedule_sync_keys[i],
+                                 strlen(s_qt_schedule_sync_keys[i])),
+               "QT schedule slot %d missing from sync allowlist", i);
+  }
+
   settings_file_set_change_callback(prv_settings_change_callback);
 
   s_initialized = true;
   PBL_LOG_DBG("Settings BlobDB initialized (%u whitelisted settings)",
               (unsigned int)s_num_syncable_settings);
+}
+
+void settings_blob_db_reset_for_test(void) {
+  s_initialized = false;
 }
 
 status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
@@ -773,11 +796,14 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   settings_file_each(&file, prv_get_timestamp_callback, &ctx);
 
   if (ctx.found && ctx.last_modified > timestamp) {
-    // Watch data is newer - reject the insert
+    // Watch data is newer - reject the insert and push the watch's value back to
+    // the phone so its UI refreshes. Otherwise the phone treats the DataStale
+    // response as success and keeps showing its (stale) local value.
     settings_file_close(&file);
     prv_unlock_for_file(is_notif_pref);
     PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu", (unsigned long)ctx.last_modified,
                 (unsigned long)timestamp);
+    blob_db_sync_record(BlobDBIdSettings, key, key_len, ctx.last_modified);
     return E_INVALID_OPERATION;
   }
 

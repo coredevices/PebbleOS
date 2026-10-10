@@ -40,17 +40,16 @@ typedef struct DoNotDisturbData {
 
 static DoNotDisturbData s_data;
 
-//! Cron jobs for the schedule boundaries, and for midnight of the days on
-//! which the weekday/weekend schedule takes over from the other.
-static struct pbl_cron_job s_weekday_from_job;
-static struct pbl_cron_job s_weekday_to_job;
-static struct pbl_cron_job s_weekend_from_job;
-static struct pbl_cron_job s_weekend_to_job;
-static struct pbl_cron_job s_schedule_switch_job;
+static QuietTimeScheduleConfig s_qt_schedule_cache[MAX_QUIET_TIME_SCHEDULES];
+
+//! Cron jobs for each schedule slot's window start and end. The job
+//! structures are owned here and stay valid while scheduled.
+static struct pbl_cron_job s_qt_jobs[MAX_QUIET_TIME_SCHEDULES][2];
 
 static bool prv_is_smart_dnd_active(void);
 static bool prv_is_schedule_active(void);
 static void prv_update_schedule_mode(void);
+static void prv_reload_qt_schedule_cache(void);
 
 static void prv_update_active_time(bool is_active) {
   if (is_active) {
@@ -76,7 +75,6 @@ static char *prv_bool_to_string(bool active) {
 static void prv_do_update(void) {
   const bool is_active = do_not_disturb_is_active();
   if (is_active == s_data.was_active) {
-    // No change
     return;
   }
   s_data.was_active = is_active;
@@ -130,11 +128,103 @@ static void prv_push_manual_dnd_first_use_dialog(ManualDNDFirstUseSource source)
   }
 }
 
+static void prv_reload_qt_schedule_cache(void) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    alerts_preferences_qt_get_schedule(i, &s_qt_schedule_cache[i]);
+  }
+}
+
+static bool prv_is_any_qt_schedule_enabled(void) {
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (s_qt_schedule_cache[i].is_used && s_qt_schedule_cache[i].enabled) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config,
+                                   bool out_days[PBL_DAY_PER_WEEK]) {
+  switch (config->kind) {
+    case QT_KIND_EVERYDAY:
+      for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
+        out_days[i] = true;
+      }
+      break;
+    case QT_KIND_WEEKDAYS:
+      out_days[PBL_SUNDAY] = false;
+      out_days[PBL_MONDAY] = true;
+      out_days[PBL_TUESDAY] = true;
+      out_days[PBL_WEDNESDAY] = true;
+      out_days[PBL_THURSDAY] = true;
+      out_days[PBL_FRIDAY] = true;
+      out_days[PBL_SATURDAY] = false;
+      break;
+    case QT_KIND_WEEKENDS:
+      out_days[PBL_SUNDAY] = true;
+      out_days[PBL_MONDAY] = false;
+      out_days[PBL_TUESDAY] = false;
+      out_days[PBL_WEDNESDAY] = false;
+      out_days[PBL_THURSDAY] = false;
+      out_days[PBL_FRIDAY] = false;
+      out_days[PBL_SATURDAY] = true;
+      break;
+    case QT_KIND_CUSTOM:
+      memcpy(out_days, config->scheduled_days, PBL_DAY_PER_WEEK);
+      break;
+    default:
+      memset(out_days, 0, PBL_DAY_PER_WEEK);
+      break;
+  }
+}
+
+//! Effective end of a schedule's quiet window, in minutes-from-midnight. A
+//! from==to schedule means a one-minute window, never a no-op.
+static int prv_schedule_end_minutes(const QuietTimeScheduleConfig *schedule) {
+  int from_minutes = schedule->from_hour * 60 + schedule->from_minute;
+  int to_minutes = schedule->to_hour * 60 + schedule->to_minute;
+  if (from_minutes == to_minutes) {
+    to_minutes = (to_minutes + 1) % (24 * 60);
+    if (to_minutes == 0) {
+      to_minutes = 1;
+    }
+  }
+  return to_minutes;
+}
+
+//! Whether a schedule is active now. A wrapping window belongs to the day it
+//! started on: after midnight it is still yesterday's window.
+static bool prv_schedule_is_active(const struct tm *now, const QuietTimeScheduleConfig *s) {
+  bool days[PBL_DAY_PER_WEEK];
+  quiet_time_get_scheduled_days(s, days);
+  int now_m = now->tm_hour * 60 + now->tm_min;
+  int from_m = s->from_hour * 60 + s->from_minute;
+  int to_m = prv_schedule_end_minutes(s);
+  if (from_m <= to_m) {
+    return days[now->tm_wday] && now_m >= from_m && now_m < to_m;
+  }
+  int yesterday = (now->tm_wday + PBL_DAY_PER_WEEK - 1) % PBL_DAY_PER_WEEK;
+  return (days[now->tm_wday] && now_m >= from_m) || (days[yesterday] && now_m < to_m);
+}
+
+static bool prv_is_any_qt_schedule_active_now(void) {
+  struct tm time;
+  rtc_get_time_tm(&time);
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled)
+      continue;
+    if (prv_schedule_is_active(&time, &s_qt_schedule_cache[i]))
+      return true;
+  }
+  return false;
+}
+
 static void prv_try_update_schedule_mode(void *data) {
   const bool clear_override = (bool)(uintptr_t)data;
   if (clear_override) {
     s_data.manually_override_dnd = false;
   }
+  prv_reload_qt_schedule_cache();
   prv_update_schedule_mode();
   prv_do_update();
 }
@@ -143,41 +233,30 @@ static void prv_try_update_schedule_mode_callback(bool clear_manual_override) {
   system_task_add_callback(prv_try_update_schedule_mode, (void *)(uintptr_t)clear_manual_override);
 }
 
-static void prv_schedule_cron_callback(struct pbl_cron_job *job, void *data) {
+static void prv_qt_cron_callback(struct pbl_cron_job *job, void *data) {
+  const int slot = (int)(uintptr_t)data / 2;
+  const bool is_end = (bool)((int)(uintptr_t)data % 2);
+  PBL_LOG_DBG("Quiet Time slot %d %s boundary fired", slot, is_end ? "end" : "start");
   prv_try_update_schedule_mode_callback(true);
 }
 
-static DoNotDisturbScheduleType prv_current_schedule_type(void) {
-  struct tm time;
-  rtc_get_time_tm(&time);
-  return ((time.tm_wday == PBL_SATURDAY || time.tm_wday == PBL_SUNDAY) ? WeekendSchedule
-                                                                       : WeekdaySchedule);
+//! Day mask for a cron job from a scheduled-days array. tm_wday numbering
+//! matches the PBL_CRON_WDAY_ bits (Sunday is bit 0).
+static uint8_t prv_qt_wday_mask(const bool days[PBL_DAY_PER_WEEK]) {
+  uint8_t mask = 0;
+  for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
+    if (days[i]) {
+      mask |= (1 << i);
+    }
+  }
+  return mask;
 }
 
-static bool prv_is_in_schedule_period(void) {
-  const DoNotDisturbScheduleType type = prv_current_schedule_type();
-  if (!do_not_disturb_is_schedule_enabled(type)) {
-    return false;
-  }
-
-  DoNotDisturbSchedule schedule;
-  do_not_disturb_get_schedule(type, &schedule);
-  const int from = schedule.from_hour * PBL_MIN_PER_HOUR + schedule.from_minute;
-  const int to = schedule.to_hour * PBL_MIN_PER_HOUR + schedule.to_minute;
-
-  struct tm time;
-  rtc_get_time_tm(&time);
-  const int now = time.tm_hour * PBL_MIN_PER_HOUR + time.tm_min;
-
-  if (from < to) {
-    return now >= from && now < to;
-  }
-  return from != to && (now >= from || now < to);
-}
-
-static void prv_schedule_job(struct pbl_cron_job *job, int hour, int minute, uint8_t wday) {
+static void prv_schedule_boundary_job(struct pbl_cron_job *job, int slot, bool is_end, int hour,
+                                      int minute, uint8_t wday) {
   *job = (struct pbl_cron_job){
-    .cb = prv_schedule_cron_callback,
+    .cb = prv_qt_cron_callback,
+    .cb_data = (void *)(uintptr_t)(slot * 2 + (is_end ? 1 : 0)),
     .minute = minute,
     .hour = hour,
     .mday = PBL_CRON_MDAY_ANY,
@@ -187,51 +266,64 @@ static void prv_schedule_job(struct pbl_cron_job *job, int hour, int minute, uin
   pbl_cron_job_schedule(job);
 }
 
-static void prv_schedule_jobs(DoNotDisturbScheduleType type, struct pbl_cron_job *from_job,
-                              struct pbl_cron_job *to_job, uint8_t wday) {
-  DoNotDisturbSchedule schedule;
-  do_not_disturb_get_schedule(type, &schedule);
-  prv_schedule_job(from_job, schedule.from_hour, schedule.from_minute, wday);
-  prv_schedule_job(to_job, schedule.to_hour, schedule.to_minute, wday);
+static void prv_schedule_qt_slot_jobs(int slot, const QuietTimeScheduleConfig *s) {
+  bool days[PBL_DAY_PER_WEEK];
+  quiet_time_get_scheduled_days(s, days);
+  const uint8_t start_mask = prv_qt_wday_mask(days);
+  const int from_min = s->from_hour * 60 + s->from_minute;
+  const int to_min = prv_schedule_end_minutes(s);
+  uint8_t end_mask = start_mask;
+  if (from_min > to_min) {
+    // Wrapping window: the end belongs to the day after each start day.
+    end_mask = 0;
+    for (int d = 0; d < PBL_DAY_PER_WEEK; d++) {
+      if (days[d]) {
+        end_mask |= (1 << ((d + 1) % PBL_DAY_PER_WEEK));
+      }
+    }
+  }
+  if (start_mask == 0 && end_mask == 0) {
+    // No days selected: a zero mask means PBL_CRON_WDAY_ANY, so skip both jobs.
+    return;
+  }
+  prv_schedule_boundary_job(&s_qt_jobs[slot][0], slot, false, s->from_hour, s->from_minute,
+                            start_mask);
+  prv_schedule_boundary_job(&s_qt_jobs[slot][1], slot, true, to_min / 60, to_min % 60, end_mask);
 }
 
 static void prv_update_schedule_mode(void) {
-  pbl_cron_job_unschedule(&s_weekday_from_job);
-  pbl_cron_job_unschedule(&s_weekday_to_job);
-  pbl_cron_job_unschedule(&s_weekend_from_job);
-  pbl_cron_job_unschedule(&s_weekend_to_job);
-  pbl_cron_job_unschedule(&s_schedule_switch_job);
-
-  const bool weekday_enabled = do_not_disturb_is_schedule_enabled(WeekdaySchedule);
-  const bool weekend_enabled = do_not_disturb_is_schedule_enabled(WeekendSchedule);
-  if (weekday_enabled) {
-    prv_schedule_jobs(WeekdaySchedule, &s_weekday_from_job, &s_weekday_to_job,
-                      PBL_CRON_WDAY_WEEKDAYS);
-  }
-  if (weekend_enabled) {
-    prv_schedule_jobs(WeekendSchedule, &s_weekend_from_job, &s_weekend_to_job,
-                      PBL_CRON_WDAY_WEEKENDS);
-  }
-  if (weekday_enabled || weekend_enabled) {
-    prv_schedule_job(&s_schedule_switch_job, 0, 0, PBL_CRON_WDAY_MONDAY | PBL_CRON_WDAY_SATURDAY);
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    pbl_cron_job_unschedule(&s_qt_jobs[i][0]);
+    pbl_cron_job_unschedule(&s_qt_jobs[i][1]);
   }
 
-  const bool in_period = prv_is_in_schedule_period();
-  // Coming out of scheduled DND with manual DND on, turning it off
-  if (s_data.is_in_schedule_period && !in_period && do_not_disturb_is_manually_enabled()) {
-    do_not_disturb_set_manually_enabled(false);
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    if (!s_qt_schedule_cache[i].is_used || !s_qt_schedule_cache[i].enabled) {
+      continue;
+    }
+    prv_schedule_qt_slot_jobs(i, &s_qt_schedule_cache[i]);
   }
-  s_data.is_in_schedule_period = in_period;
+
+  const bool currently_active = prv_is_any_qt_schedule_active_now();
+  if (currently_active != s_data.is_in_schedule_period) {
+    if (currently_active && do_not_disturb_is_manually_enabled()) {
+      alerts_preferences_dnd_set_manually_enabled(false);
+      s_data.manually_override_dnd = false;
+    } else if (!currently_active && s_data.is_in_schedule_period &&
+               do_not_disturb_is_manually_enabled()) {
+      // Coming out of scheduled DND with manual DND on, turning it off.
+      do_not_disturb_set_manually_enabled(false);
+    } else if (!currently_active && s_data.manually_override_dnd) {
+      s_data.manually_override_dnd = false;
+    }
+    s_data.is_in_schedule_period = currently_active;
+  }
+
   PBL_LOG_DBG("%s scheduled period", s_data.is_in_schedule_period ? "In" : "Out of");
 }
 
-static bool prv_is_current_schedule_enabled() {
-  return (do_not_disturb_is_schedule_enabled(prv_current_schedule_type()));
-}
-
 static bool prv_is_schedule_active(void) {
-  return (prv_is_current_schedule_enabled() && s_data.is_in_schedule_period &&
-          !s_data.manually_override_dnd);
+  return (s_data.is_in_schedule_period && !s_data.manually_override_dnd);
 }
 
 static bool prv_is_smart_dnd_active(void) {
@@ -261,11 +353,10 @@ bool do_not_disturb_is_manually_enabled(void) {
 
 void do_not_disturb_set_manually_enabled(bool enable) {
   const bool is_auto_dnd =
-      prv_is_current_schedule_enabled() || do_not_disturb_is_smart_dnd_enabled();
+      prv_is_any_qt_schedule_enabled() || do_not_disturb_is_smart_dnd_enabled();
   const bool was_active = do_not_disturb_is_active();
 
   alerts_preferences_dnd_set_manually_enabled(enable);
-  // Turning the manual DND OFF in an active DND mode overrides the automatic mode
   if (!enable && was_active && is_auto_dnd) {
     s_data.manually_override_dnd = true;
   }
@@ -302,24 +393,140 @@ void do_not_disturb_get_schedule(DoNotDisturbScheduleType type,
   alerts_preferences_dnd_get_schedule(type, schedule_out);
 }
 
-void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule) {
-  alerts_preferences_dnd_set_schedule(type, schedule);
-  prv_try_update_schedule_mode_callback(true);
-}
-
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type) {
   return alerts_preferences_dnd_is_schedule_enabled(type);
 }
 
-void do_not_disturb_set_schedule_enabled(DoNotDisturbScheduleType type, bool scheduled) {
-  alerts_preferences_dnd_set_schedule_enabled(type, scheduled);
+//! Quiet Time schedule API
+
+void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out) {
+  alerts_preferences_qt_get_schedule(index, out);
+}
+
+void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config) {
+  if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES)
+    return;
+  if (!quiet_time_schedule_is_valid(config))
+    return;
+  QuietTimeScheduleConfig stored = *config;
+  stored.is_used = true;
+  alerts_preferences_qt_set_schedule(index, &stored);
   prv_try_update_schedule_mode_callback(true);
 }
 
-void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type) {
-  alerts_preferences_dnd_set_schedule_enabled(type,
-                                              !alerts_preferences_dnd_is_schedule_enabled(type));
+int quiet_time_create_schedule(const QuietTimeScheduleConfig *config) {
+  if (!quiet_time_schedule_is_valid(config))
+    return -1;
+  for (int i = 0; i < MAX_QUIET_TIME_SCHEDULES; i++) {
+    QuietTimeScheduleConfig existing;
+    alerts_preferences_qt_get_schedule(i, &existing);
+    if (!existing.is_used) {
+      QuietTimeScheduleConfig new_config = *config;
+      new_config.is_used = true;
+      alerts_preferences_qt_set_schedule(i, &new_config);
+      prv_try_update_schedule_mode_callback(true);
+      return i;
+    }
+  }
+  return -1;
+}
+
+void quiet_time_delete_schedule(int index) {
+  if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES)
+    return;
+  QuietTimeScheduleConfig empty = {0};
+  alerts_preferences_qt_set_schedule(index, &empty);
   prv_try_update_schedule_mode_callback(true);
+}
+
+void quiet_time_set_schedule_enabled(int index, bool enabled) {
+  if (index < 0 || index >= MAX_QUIET_TIME_SCHEDULES)
+    return;
+  QuietTimeScheduleConfig config;
+  alerts_preferences_qt_get_schedule(index, &config);
+  config.enabled = enabled;
+  alerts_preferences_qt_set_schedule(index, &config);
+  prv_try_update_schedule_mode_callback(true);
+}
+
+const char *quiet_time_get_string_for_kind(QuietTimeKind kind) {
+  switch (kind) {
+    case QT_KIND_EVERYDAY:
+      return i18n_noop("Every Day");
+    case QT_KIND_WEEKDAYS:
+      return i18n_noop("Weekdays");
+    case QT_KIND_WEEKENDS:
+      return i18n_noop("Weekends");
+    case QT_KIND_CUSTOM:
+      return i18n_noop("Custom");
+    default:
+      return "";
+  }
+}
+
+void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffer, size_t buf_len) {
+  static const char *const day_strings[] = {
+    i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"), i18n_noop("Wed"),
+    i18n_noop("Thu"), i18n_noop("Fri"), i18n_noop("Sat"),
+  };
+  static const char *const full_day_strings[] = {
+    i18n_noop("Sundays"),   i18n_noop("Mondays"), i18n_noop("Tuesdays"),  i18n_noop("Wednesdays"),
+    i18n_noop("Thursdays"), i18n_noop("Fridays"), i18n_noop("Saturdays"),
+  };
+
+  PBL_ASSERTN(buffer != NULL);
+  PBL_ASSERTN(buf_len > 0);
+  buffer[0] = '\0';
+
+  int num_days = 0;
+  int last_day_idx = 0;
+  for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
+    if (scheduled_days[i]) {
+      num_days++;
+      last_day_idx = i;
+    }
+  }
+
+  if (num_days == 0) {
+    return;
+  }
+
+  if (num_days == 1) {
+    i18n_get_with_buffer(full_day_strings[last_day_idx], buffer, buf_len);
+    return;
+  }
+
+  // Monday-first ordering: skip Sunday (index 0) and iterate Mon..Sat, then Sun.
+  size_t pos = 0;
+  bool truncated = false;
+  for (int idx = 1; idx <= PBL_DAY_PER_WEEK; idx++) {
+    int i = idx % PBL_DAY_PER_WEEK;
+    if (!scheduled_days[i]) {
+      continue;
+    }
+    char day_buf[12];
+    i18n_get_with_buffer(day_strings[i], day_buf, sizeof(day_buf));
+    size_t day_len = strlen(day_buf);
+    size_t needed = day_len + (pos > 0 ? 1 : 0);
+    if (pos + needed >= buf_len) {
+      truncated = true;
+      break;
+    }
+    if (pos > 0) {
+      buffer[pos++] = ',';
+    }
+    memcpy(buffer + pos, day_buf, day_len);
+    pos += day_len;
+  }
+  // Some days did not fit: make the truncation visible instead of silently
+  // hiding scheduled days. The marker only goes in when there is room for it
+  // (the UTF-8 ellipsis is 3 bytes plus the terminator).
+  if (truncated && buf_len >= pos + 4) {
+    buffer[pos++] = 0xE2;
+    buffer[pos++] = 0x80;
+    buffer[pos++] = 0xA6;
+  }
+  buffer[pos] = '\0';
 }
 
 void do_not_disturb_init(void) {
@@ -342,5 +549,5 @@ void do_not_disturb_handle_calendar_event(PebbleCalendarEvent *e) {
 }
 
 void do_not_disturb_manual_toggle_with_dialog(void) {
-  do_not_disturb_toggle_push(ActionTogglePrompt_Auto, false /* set_exit_reason */);
+  do_not_disturb_toggle_push(ActionTogglePrompt_NoPrompt, false /* set_exit_reason */);
 }
