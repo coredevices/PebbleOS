@@ -1,66 +1,81 @@
-/* SPDX-FileCopyrightText: 2025 SiFli Technologies(Nanjing) Co., Ltd */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/gpio.h>
+#include <errno.h>
 
-#include <board/board.h>
-#include <system/passert.h>
+#include <pbl/drivers/gpio/sf32lb.h>
 
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
-  GPIO_InitTypeDef GPIO_InitStruct;
+static const struct pbl_gpio_sf32lb *prv_port(const struct pbl_gpio_port *port) {
+  return container_of(port, const struct pbl_gpio_sf32lb, port);
+}
 
-  HAL_RCC_EnableModule(RCC_MOD_GPIO1);
+static int prv_init(const struct pbl_device *dev) {
+  HAL_RCC_EnableModule(prv_port(container_of(dev, const struct pbl_gpio_port, dev))->module);
 
-  GPIO_InitStruct.Pin = pin_config->gpio_pin;
-  if (otype == GPIO_OType_OD) {
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-  } else if (otype == GPIO_OType_PP) {
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT;
+  return 0;
+}
+
+static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
+  const struct pbl_gpio_sf32lb *gpio = prv_port(port);
+  GPIO_InitTypeDef init = {
+    .Pin = pin,
+    .Pull = GPIO_NOPULL,
+  };
+  int pull;
+
+  if (flags & PBL_GPIO_OUTPUT) {
+    init.Mode = (flags & PBL_GPIO_OPEN_DRAIN) ? GPIO_MODE_OUTPUT_OD : GPIO_MODE_OUTPUT;
+    if (flags & (PBL_GPIO_OUTPUT_INIT_HIGH | PBL_GPIO_OUTPUT_INIT_LOW)) {
+      HAL_GPIO_WritePin(gpio->regs, pin,
+                        (flags & PBL_GPIO_OUTPUT_INIT_HIGH) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    }
+  } else if (flags & PBL_GPIO_INPUT) {
+    init.Mode = GPIO_MODE_INPUT;
   } else {
-    WTF;
+    return -EINVAL;
   }
-  HAL_PIN_Set(PAD_PA00 + pin_config->gpio_pin, GPIO_A0 + pin_config->gpio_pin, PIN_NOPULL, 1);
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
 
-  HAL_GPIO_Init(pin_config->gpio, &GPIO_InitStruct);
-}
-
-void gpio_input_init(const InputConfig *input_cfg) {
-  gpio_input_init_pull_up_down(input_cfg, GPIO_PuPd_NOPULL);
-}
-
-void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef pupd) {
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  HAL_RCC_EnableModule(RCC_MOD_GPIO1);
-
-  GPIO_InitStruct.Pin = input_cfg->gpio_pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-
-  int flag = 0;
-  /* pullup/down is handled in pinmux hal. */
-  if (pupd == GPIO_PuPd_UP) {
-    flag = PIN_PULLUP;
-  } else if (pupd == GPIO_PuPd_DOWN) {
-    flag = PIN_PULLDOWN;
+  // Pulls are a pad property
+  if (flags & PBL_GPIO_PULL_UP) {
+    pull = PIN_PULLUP;
+  } else if (flags & PBL_GPIO_PULL_DOWN) {
+    pull = PIN_PULLDOWN;
   } else {
-    flag = PIN_NOPULL;
+    pull = PIN_NOPULL;
   }
 
-  HAL_PIN_Set(PAD_PA00 + input_cfg->gpio_pin, GPIO_A0 + input_cfg->gpio_pin, flag, 1);
-  HAL_GPIO_Init(input_cfg->gpio, &GPIO_InitStruct);
+  HAL_PIN_Set(gpio->pad_base + pin, gpio->func_base + pin, pull, 1);
+  HAL_GPIO_Init(gpio->regs, &init);
+
+  return 0;
 }
 
-bool gpio_input_read(const InputConfig *input_cfg) {
-  bool value = HAL_GPIO_ReadPin(input_cfg->gpio, input_cfg->gpio_pin);
-  return value;
+static int prv_get(const struct pbl_gpio_port *port, uint8_t pin) {
+  return HAL_GPIO_ReadPin(prv_port(port)->regs, pin) != GPIO_PIN_RESET;
 }
 
-void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
-  if (!pin_config->active_high) {
-    asserted = !asserted;
-  }
+static int prv_set(const struct pbl_gpio_port *port, uint8_t pin, bool level) {
+  HAL_GPIO_WritePin(prv_port(port)->regs, pin, level ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
-  HAL_GPIO_WritePin(pin_config->gpio, pin_config->gpio_pin, asserted);
+  return 0;
 }
+
+static const struct pbl_gpio_port_ops s_ops = {
+  .configure = prv_configure,
+  .get = prv_get,
+  .set = prv_set,
+};
+
+PBL_DEVICE_STATE_DEFINE(pbl_gpio_sf32lb_gpio1);
+const struct pbl_gpio_sf32lb pbl_gpio_sf32lb_gpio1 = {
+  .port =
+      {
+        .dev = PBL_DEVICE_INIT(pbl_gpio_sf32lb_gpio1, "gpio1", prv_init, NULL, NULL),
+        .ops = &s_ops,
+      },
+  .regs = hwp_gpio1,
+  .pad_base = PAD_PA00,
+  .func_base = GPIO_A0,
+  .module = RCC_MOD_GPIO1,
+};
+PBL_DEVICE_REGISTER(pbl_gpio_sf32lb_gpio1, &pbl_gpio_sf32lb_gpio1.port.dev);

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <pbl/bluetooth/init.h>
+#include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/backlight.h>
@@ -125,6 +126,7 @@ int main(void) {
 }
 
 static void init_drivers(void) {
+  pbl_device_init_all();
   board_init();
 
   // The dbgserial input support requires timer support, so it is initialized here, much later

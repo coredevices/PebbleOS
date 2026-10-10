@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/accel.h>
+#include <pbl/drivers/gpio.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/mcu/cache.h>
@@ -72,7 +73,7 @@ typedef struct LIS2DW12Config {
   /** INT1 interrupt line. */
   ExtiConfig int1;
   /** INT1 input, to read back the pad level. */
-  InputConfig int1_in;
+  struct pbl_gpio int1_in;
   /** Sensor axis feeding each watch axis (0: X, 1: Y, 2: Z). */
   uint8_t axis_map[3];
   /** Direction of each watch axis: 1 or -1. */

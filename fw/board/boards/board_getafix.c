@@ -229,8 +229,8 @@ static DisplayJDIDevice s_display = {
               .flags = PIN_NOPULL,
             },
       },
-  .vddp = {hwp_gpio1, 0, true},
-  .vlcd = {hwp_gpio1, 9, true},
+  .vddp = PBL_GPIO(SF32LB_GPIO1, 0, 0),
+  .vlcd = PBL_GPIO(SF32LB_GPIO1, 9, 0),
   .splash = {
     .data = splash_bits,
     .width = splash_width,
@@ -242,11 +242,7 @@ DisplayJDIDevice *const DISPLAY = &s_display;
 PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
 
 const LedControllerAW9364E AW9364E = {
-  .gpio = {
-    .gpio = hwp_gpio1,
-    .gpio_pin = 1,
-    .active_high = true,
-  },
+  .gpio = PBL_GPIO(SF32LB_GPIO1, 1, 0),
 };
 
 static I2CBusHalState s_i2c_bus_hal_state_1 = {
@@ -317,11 +313,7 @@ static const LIS2DW12Config s_lis2dw12_config = {
         .peripheral = hwp_gpio1,
         .gpio_pin = 26,
       },
-  .int1_in =
-      {
-        .gpio = hwp_gpio1,
-        .gpio_pin = 26,
-      },
+  .int1_in = PBL_GPIO(SF32LB_GPIO1, 26, 0),
   .axis_map =
       {
         [AXIS_X] = 0,
@@ -406,11 +398,7 @@ static const TouchSensor s_touch_cst816 = {
         .gpio_pin = 38,
         .pull = GPIO_PuPd_UP,
       },
-  .reset = {
-    .gpio = hwp_gpio1,
-    .gpio_pin = 28,
-    .active_high = false,
-  },
+  .reset = PBL_GPIO(SF32LB_GPIO1, 28, PBL_GPIO_ACTIVE_LOW),
 };
 
 const TouchSensor *CST816 = &s_touch_cst816;
@@ -489,7 +477,7 @@ I2CSlavePort *const I2C_AW8623X = &s_i2c_aw8623x;
 #endif
 
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = {hwp_gpio1, 20, false},
+  .ctl = PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW),
 };
 
 const Npm1300Config NPM1300_CONFIG = {
@@ -523,10 +511,12 @@ const BoardConfig BOARD_CONFIG = {
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons =
       {
-        [BUTTON_ID_BACK] = {"Back", hwp_gpio1, 34, GPIO_PuPd_NOPULL, true},
-        [BUTTON_ID_UP] = {"Up", hwp_gpio1, 35, GPIO_PuPd_UP, false},
-        [BUTTON_ID_SELECT] = {"Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
-        [BUTTON_ID_DOWN] = {"Down", hwp_gpio1, 37, GPIO_PuPd_UP, false},
+        [BUTTON_ID_BACK] = {"Back", PBL_GPIO(SF32LB_GPIO1, 34, 0)},
+        [BUTTON_ID_UP] = {"Up", PBL_GPIO(SF32LB_GPIO1, 35, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW)},
+        [BUTTON_ID_SELECT] =
+            {"Select", PBL_GPIO(SF32LB_GPIO1, 36, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW)},
+        [BUTTON_ID_DOWN] =
+            {"Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW)},
       },
   .timer = GPTIM2,
   .timer_irqn = GPTIM2_IRQn,

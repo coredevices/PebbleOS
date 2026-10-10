@@ -16,7 +16,7 @@ implemented under `kernel/`). The main source layers, as described on the
 - `fw/services` — system services (Bluetooth, filesystem, activity, …).
 - `fw/kernel` — task management, events, memory.
 - `drivers/` — hardware drivers (public interfaces under
-  `include/pbl/drivers`).
+  `include/pbl/drivers`), built on the [device model](device.md).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
   logging, cron, the Bluetooth backends, [CRC](crc.md), the
   [debug shell](shell.md) and the [task watchdog](task_watchdog.md), included
@@ -126,6 +126,7 @@ Longer design documents live as their own pages:
 :maxdepth: 1
 activity/index.md
 crc.md
+device.md
 kernel.md
 kernel_internals.md
 shell.md

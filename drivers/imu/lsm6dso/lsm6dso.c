@@ -518,7 +518,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   // Sources asserting while the pad is high produce no new edge: requeue on
   // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
   // by a persistent wake-up condition is left to the stall watchdog.
-  if (!gpio_input_read(&LSM6DSO->int1_in)) {
+  if (!pbl_gpio_get(&LSM6DSO->int1_in)) {
     return;
   }
 
@@ -541,7 +541,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   if (fifo_progress) {
     LSM6DSO->state->int1_requeued = true;
     accel_offload_work(prv_lsm6dso_int1_work_handler);
-  } else if (!action_taken && gpio_input_read(&LSM6DSO->int1_in)) {
+  } else if (!action_taken && pbl_gpio_get(&LSM6DSO->int1_in)) {
     prv_lsm6dso_recover();
   }
 }
@@ -737,10 +737,10 @@ static void prv_stall_check_work_cb(void) {
     // Shake-only mode: re-run the servicing pass if the pad is stuck high
     // (reading the INT source clears the latch); escalate to a full recovery
     // after consecutive passes that never release it.
-    if (LSM6DSO->state->shake_detection_enabled && gpio_input_read(&LSM6DSO->int1_in)) {
+    if (LSM6DSO->state->shake_detection_enabled && pbl_gpio_get(&LSM6DSO->int1_in)) {
       prv_lsm6dso_int1_work_handler();
       // A pad released by the pass is healthy; count only a still-high pad
-      if (!gpio_input_read(&LSM6DSO->int1_in)) {
+      if (!pbl_gpio_get(&LSM6DSO->int1_in)) {
         LSM6DSO->state->shake_stuck_passes = 0U;
       } else if (++LSM6DSO->state->shake_stuck_passes >= LSM6DSO_SHAKE_STUCK_PASSES_MAX) {
         PBL_LOG_WRN("INT1 pad stuck high for %" PRIu8 " shake watchdog passes, recovering",

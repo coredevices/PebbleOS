@@ -62,9 +62,7 @@ typedef const struct HRMDevice {
   /** Sensor interrupt line. */
   ExtiConfig int_exti;
   /** Sensor interrupt line, as an input. */
-  InputConfig int_input;
-  /** Sensor reset line. */
-  OutputConfig reset_gpio;
+  struct pbl_gpio int_input;
 } HRMDevice;
 
 /**

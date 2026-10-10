@@ -1,91 +1,166 @@
-/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include <board/board.h>
+#include <pbl/device.h>
 
 /**
  * @defgroup drivers_gpio GPIO
  * @ingroup drivers
- * @brief GPIO driver interface.
+ * @brief GPIO controller class.
  *
- * Pins are described by the board's @c OutputConfig and @c InputConfig.
+ * A GPIO controller, an SoC port or a peripheral with GPIOs on it, is a struct pbl_gpio_port
+ * device. A pin is a struct pbl_gpio: port, pin number and wiring flags (polarity, pulls, open
+ * drain), so callers deal in logical levels.
  *
  * @code{.c}
- * gpio_output_init(&dev->reset_gpio, GPIO_OType_PP);
- * gpio_output_set(&dev->reset_gpio, false);
+ * static const struct pbl_gpio s_reset = PBL_GPIO(SF32LB_GPIO1, 28, PBL_GPIO_ACTIVE_LOW);
  *
- * gpio_input_init_pull_up_down(&dev->int_input, GPIO_PuPd_UP);
- * bool level = gpio_input_read(&dev->int_input);
+ * pbl_gpio_configure(&s_reset, PBL_GPIO_OUTPUT_ACTIVE);
+ * pbl_gpio_set(&s_reset, false);
+ *
+ * pbl_gpio_configure(&dev->int_gpio, PBL_GPIO_INPUT);
+ * bool active = pbl_gpio_get(&dev->int_gpio) > 0;
  * @endcode
  * @{
  */
 
-#ifdef CONFIG_SOC_NRF52
-#include <hal/nrf_gpio.h>
-
-/** @brief Output type. */
-typedef enum {
-  /** Push-pull. */
-  GPIO_OType_PP,
-  /** Open drain. */
-  GPIO_OType_OD,
-} GPIOOType_TypeDef;
-
-/** @brief Input pull resistor. */
-typedef enum {
-  /** No pull resistor. */
-  GPIO_PuPd_NOPULL,
-  /** Pull-up. */
-  GPIO_PuPd_UP,
-  /** Pull-down. */
-  GPIO_PuPd_DOWN,
-} GPIOPuPd_TypeDef;
-
-#endif
+/**
+ * @name Wiring flags
+ * Describe the pin as routed on the board, stored in struct pbl_gpio.
+ * @{
+ */
+/** The pin is active when low. */
+#define PBL_GPIO_ACTIVE_LOW (1U << 0)
+/** Enable the pull-up. */
+#define PBL_GPIO_PULL_UP (1U << 1)
+/** Enable the pull-down. */
+#define PBL_GPIO_PULL_DOWN (1U << 2)
+/** Drive the output low only. */
+#define PBL_GPIO_OPEN_DRAIN (1U << 3)
+/** @} */
 
 /**
- * @brief Initialize a pin as an output.
- *
- * @param pin_config Pin configuration.
- * @param otype Output type, @c GPIO_OType_PP or @c GPIO_OType_OD.
+ * @name Configuration flags
+ * Passed to pbl_gpio_configure(), OR'ed with the wiring flags.
+ * @{
  */
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype);
+/** Input. */
+#define PBL_GPIO_INPUT (1U << 4)
+/** Output, keeping the current level. */
+#define PBL_GPIO_OUTPUT (1U << 5)
+/** Physical initial level low. */
+#define PBL_GPIO_OUTPUT_INIT_LOW (1U << 6)
+/** Physical initial level high. */
+#define PBL_GPIO_OUTPUT_INIT_HIGH (1U << 7)
+/** The initial level is logical: inverted on an active-low pin. */
+#define PBL_GPIO_OUTPUT_INIT_LOGICAL (1U << 8)
+
+/** Output, physically low. */
+#define PBL_GPIO_OUTPUT_LOW (PBL_GPIO_OUTPUT | PBL_GPIO_OUTPUT_INIT_LOW)
+/** Output, physically high. */
+#define PBL_GPIO_OUTPUT_HIGH (PBL_GPIO_OUTPUT | PBL_GPIO_OUTPUT_INIT_HIGH)
+/** Output, inactive. */
+#define PBL_GPIO_OUTPUT_INACTIVE (PBL_GPIO_OUTPUT_LOW | PBL_GPIO_OUTPUT_INIT_LOGICAL)
+/** Output, active. */
+#define PBL_GPIO_OUTPUT_ACTIVE (PBL_GPIO_OUTPUT_HIGH | PBL_GPIO_OUTPUT_INIT_LOGICAL)
+/** @} */
+
+struct pbl_gpio_port;
+
+/** @brief Port driver operations. Levels and flags are physical. */
+struct pbl_gpio_port_ops {
+  /** Configure a pin. Returns 0 or a negative errno. */
+  int (*configure)(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags);
+  /** Read a pin. Returns 0 or 1, or a negative errno. */
+  int (*get)(const struct pbl_gpio_port *port, uint8_t pin);
+  /** Drive a pin. Returns 0 or a negative errno. */
+  int (*set)(const struct pbl_gpio_port *port, uint8_t pin, bool level);
+};
+
+/** @brief A GPIO controller. */
+struct pbl_gpio_port {
+  /** Device. */
+  struct pbl_device dev;
+  /** Driver operations. */
+  const struct pbl_gpio_port_ops *ops;
+};
+
+/** @brief A pin as wired on the board. */
+struct pbl_gpio {
+  /** Port, NULL if not connected. */
+  const struct pbl_gpio_port *port;
+  /** Pin number on the port. */
+  uint8_t pin;
+  /** Wiring flags. */
+  uint8_t flags;
+};
 
 /**
- * @brief Assert or deassert an output.
+ * @brief Initializer for a struct pbl_gpio.
  *
- * Asserting drives the pin high if @c active_high is set in @p pin_config, low otherwise.
- *
- * @param pin_config Pin configuration.
- * @param asserted True to assert.
+ * @param _port Port.
+ * @param _pin Pin number on the port.
+ * @param _flags Wiring flags.
  */
-void gpio_output_set(const OutputConfig *pin_config, bool asserted);
+#define PBL_GPIO(_port, _pin, _flags) {.port = (_port), .pin = (_pin), .flags = (_flags)}
 
 /**
- * @brief Initialize a pin as an input without pull resistor.
+ * @brief Check whether a pin is connected.
  *
- * @param input_cfg Pin configuration.
+ * @param gpio Pin.
+ * @return True if the pin has a port.
  */
-void gpio_input_init(const InputConfig *input_cfg);
+static inline bool pbl_gpio_is_connected(const struct pbl_gpio *gpio) {
+  return gpio->port != NULL;
+}
 
 /**
- * @brief Initialize a pin as an input with a pull resistor.
+ * @brief Configure a pin.
  *
- * @param input_cfg Pin configuration.
- * @param pupd Pull resistor.
+ * @param gpio Pin, on a ready port.
+ * @param flags Configuration flags, OR'ed with the pin's wiring flags.
+ * @return 0 or a negative errno.
  */
-void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef pupd);
+int pbl_gpio_configure(const struct pbl_gpio *gpio, uint32_t flags);
 
 /**
- * @brief Read an input.
+ * @brief Read the logical level of a pin.
  *
- * @param input_cfg Pin configuration.
- * @return Pin level, true if high.
+ * @param gpio Pin.
+ * @return 1 if active, 0 if not, or a negative errno.
  */
-bool gpio_input_read(const InputConfig *input_cfg);
+int pbl_gpio_get(const struct pbl_gpio *gpio);
+
+/**
+ * @brief Drive the logical level of a pin.
+ *
+ * @param gpio Pin.
+ * @param active True to activate.
+ * @return 0 or a negative errno.
+ */
+int pbl_gpio_set(const struct pbl_gpio *gpio, bool active);
+
+/**
+ * @brief Read the physical level of a pin.
+ *
+ * @param gpio Pin.
+ * @return 1 if high, 0 if low, or a negative errno.
+ */
+int pbl_gpio_get_raw(const struct pbl_gpio *gpio);
+
+/**
+ * @brief Drive the physical level of a pin.
+ *
+ * @param gpio Pin.
+ * @param level True for high.
+ * @return 0 or a negative errno.
+ */
+int pbl_gpio_set_raw(const struct pbl_gpio *gpio, bool level);
 
 /** @} */

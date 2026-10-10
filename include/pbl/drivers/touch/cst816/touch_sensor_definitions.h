@@ -2,6 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #pragma once
 
+#include <pbl/drivers/gpio.h>
+
 #include <board/board.h>
 
 /**
@@ -25,7 +27,7 @@ typedef struct {
   /** Interrupt line. */
   ExtiConfig int_exti;
   /** Reset line. */
-  OutputConfig reset;
+  struct pbl_gpio reset;
   /** Maximum X coordinate. */
   uint16_t max_x;
   /** Maximum Y coordinate. */

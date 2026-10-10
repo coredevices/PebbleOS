@@ -135,9 +135,9 @@ static bool cst816_enter_bootmode(void) {
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 1);
   psleep(CST816_RESET_CYCLE_TIME);
 #else
-  gpio_output_set(&CST816->reset, true);
+  pbl_gpio_set(&CST816->reset, true);
   psleep(CST816_RESET_CYCLE_TIME);
-  gpio_output_set(&CST816->reset, false);
+  pbl_gpio_set(&CST816->reset, false);
   psleep(CST816_RESET_CYCLE_TIME);
 #endif
 
@@ -237,9 +237,9 @@ static void cst816_hw_reset(void) {
   NPM1300_OPS.gpio_set(Npm1300_Gpio2, 1);
   psleep(CST816_POR_DELAY_TIME);
 #else
-  gpio_output_set(&CST816->reset, true);
+  pbl_gpio_set(&CST816->reset, true);
   psleep(CST816_RESET_CYCLE_TIME);
-  gpio_output_set(&CST816->reset, false);
+  pbl_gpio_set(&CST816->reset, false);
   psleep(CST816_POR_DELAY_TIME);
 #endif
   pbl_mutex_unlock(&s_i2c_lock);
@@ -251,7 +251,7 @@ void touch_sensor_init(void) {
   bool rv;
 
 #ifndef RESET_PIN_CTRLBY_NPM1300
-  gpio_output_init(&CST816->reset, GPIO_OType_PP);
+  pbl_gpio_configure(&CST816->reset, PBL_GPIO_OUTPUT);
 #endif
 
   cst816_hw_reset();

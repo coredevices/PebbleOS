@@ -78,10 +78,13 @@ void debounced_button_init(void) {
   button_init();
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
+    const struct pbl_gpio *gpio = &BOARD_CONFIG_BUTTON.buttons[i].gpio;
     const ExtiConfig config = {
-      .peripheral = BOARD_CONFIG_BUTTON.buttons[i].port,
-      .gpio_pin = BOARD_CONFIG_BUTTON.buttons[i].pin,
-      .pull = BOARD_CONFIG_BUTTON.buttons[i].pull,
+      .peripheral = pbl_gpio_sf32lb_regs(gpio),
+      .gpio_pin = gpio->pin,
+      .pull = (gpio->flags & PBL_GPIO_PULL_UP)     ? GPIO_PuPd_UP
+              : (gpio->flags & PBL_GPIO_PULL_DOWN) ? GPIO_PuPd_DOWN
+                                                   : GPIO_PuPd_NOPULL,
     };
     exti_configure_pin(config, ExtiTrigger_RisingFalling, prv_button_interrupt_handler);
     exti_enable(config);

@@ -91,16 +91,8 @@ static const I2CBusHal I2C_NPMC_IIC1_BUS_HAL = {
 static const I2CBus I2C_NPMC_IIC1_BUS = {
   .state = &I2C_NPMC_IIC1_BUS_STATE,
   .hal = &I2C_NPMC_IIC1_BUS_HAL,
-  .scl_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 14),
-      },
-  .sda_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 15),
-      },
+  .scl_gpio = PBL_GPIO(NRF5_GPIO_P0, 14, 0),
+  .sda_gpio = PBL_GPIO(NRF5_GPIO_P0, 15, 0),
   .name = "I2C_NPMC_IIC1",
 };
 PBL_IRQ_CONNECT(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
@@ -125,16 +117,8 @@ static const I2CBusHal I2C_IIC2_BUS_HAL = {
 static const I2CBus I2C_IIC2_BUS = {
   .state = &I2C_IIC2_BUS_STATE,
   .hal = &I2C_IIC2_BUS_HAL,
-  .scl_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 25),
-      },
-  .sda_gpio =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(0, 11),
-      },
+  .scl_gpio = PBL_GPIO(NRF5_GPIO_P0, 25, 0),
+  .sda_gpio = PBL_GPIO(NRF5_GPIO_P0, 11, 0),
   .name = "I2C_IIC2",
 };
 PBL_IRQ_CONNECT(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
@@ -190,11 +174,7 @@ static const LSM6DSOConfig s_lsm6dso_config = {
         .channel = 7,
         .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
       },
-  .int1_in =
-      {
-        .gpio = NRF5_GPIO_RESOURCE_EXISTS,
-        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
-      },
+  .int1_in = PBL_GPIO(NRF5_GPIO_P1, 13, 0),
   .axis_map =
       {
         [AXIS_X] = 1,

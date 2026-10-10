@@ -98,45 +98,31 @@ static bool s_rotated_180 = true;
 static bool s_rotated_180 = false;
 #endif
 
-static void prv_power_cycle(void) {
-  OutputConfig cfg = {
-    .gpio = hwp_gpio1,
-    .active_high = true,
-  };
+static void prv_drive_low(const Pinmux *pinmux) {
+  const struct pbl_gpio gpio = PBL_GPIO(SF32LB_GPIO1, pinmux->pad - PAD_PA00, 0);
 
+  pbl_gpio_configure(&gpio, PBL_GPIO_OUTPUT_LOW);
+}
+
+static void prv_power_cycle(void) {
   // This will disable all JDI pull-ups/downs so that VLCD can fully turn off,
   // allowing for a clean power cycle.
+  prv_drive_low(&DISPLAY->pinmux.b1);
+  prv_drive_low(&DISPLAY->pinmux.vck);
+  prv_drive_low(&DISPLAY->pinmux.xrst);
+  prv_drive_low(&DISPLAY->pinmux.hck);
+  prv_drive_low(&DISPLAY->pinmux.r2);
 
-  cfg.gpio_pin = DISPLAY->pinmux.b1.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP);
-  gpio_output_set(&cfg, false);
-
-  cfg.gpio_pin = DISPLAY->pinmux.vck.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP);
-  gpio_output_set(&cfg, false);
-
-  cfg.gpio_pin = DISPLAY->pinmux.xrst.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP);
-  gpio_output_set(&cfg, false);
-
-  cfg.gpio_pin = DISPLAY->pinmux.hck.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP);
-  gpio_output_set(&cfg, false);
-
-  cfg.gpio_pin = DISPLAY->pinmux.r2.pad - PAD_PA00;
-  gpio_output_init(&cfg, GPIO_OType_PP);
-  gpio_output_set(&cfg, false);
-
-  gpio_output_set(&DISPLAY->vddp, false);
-  gpio_output_set(&DISPLAY->vlcd, false);
+  pbl_gpio_set(&DISPLAY->vddp, false);
+  pbl_gpio_set(&DISPLAY->vlcd, false);
 
   delay_us(POWER_RESET_CYCLE_DELAY_TIME_US);
 }
 
 static void prv_display_on() {
-  gpio_output_set(&DISPLAY->vlcd, true);
+  pbl_gpio_set(&DISPLAY->vlcd, true);
   delay_us(POWER_SEQ_DELAY_TIME_US);
-  gpio_output_set(&DISPLAY->vddp, true);
+  pbl_gpio_set(&DISPLAY->vddp, true);
   delay_us(POWER_SEQ_DELAY_TIME_US);
 
   LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
@@ -158,9 +144,9 @@ static void prv_display_off() {
   lptim->CR &= ~LPTIM_CR_CNTSTRT;
 
   delay_us(POWER_SEQ_DELAY_TIME_US);
-  gpio_output_set(&DISPLAY->vddp, false);
+  pbl_gpio_set(&DISPLAY->vddp, false);
   delay_us(POWER_SEQ_DELAY_TIME_US);
-  gpio_output_set(&DISPLAY->vlcd, false);
+  pbl_gpio_set(&DISPLAY->vlcd, false);
 }
 
 #define ROW_WORDS (PBL_DISPLAY_WIDTH / 4)
@@ -354,8 +340,13 @@ void display_init(void) {
 
   DisplayJDIState *state = DISPLAY->state;
 
-  gpio_output_init(&DISPLAY->vddp, GPIO_OType_PP);
-  gpio_output_init(&DISPLAY->vlcd, GPIO_OType_PP);
+  // Runs from the boot splash, before pbl_device_init_all()
+  PBL_ASSERTN(pbl_device_init(&SF32LB_GPIO1->dev) == 0 &&
+              pbl_device_init(&DISPLAY->vddp.port->dev) == 0 &&
+              pbl_device_init(&DISPLAY->vlcd.port->dev) == 0);
+
+  pbl_gpio_configure(&DISPLAY->vddp, PBL_GPIO_OUTPUT);
+  pbl_gpio_configure(&DISPLAY->vlcd, PBL_GPIO_OUTPUT);
 
   prv_power_cycle();
 

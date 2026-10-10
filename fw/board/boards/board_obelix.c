@@ -176,8 +176,8 @@ static DisplayJDIDevice s_display = {
               .flags = PIN_NOPULL,
             },
       },
-  .vddp = {hwp_gpio1, 28, true},
-  .vlcd = {hwp_gpio1, 29, false},
+  .vddp = PBL_GPIO(SF32LB_GPIO1, 28, 0),
+  .vlcd = PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
   .splash = {
     .data = splash_bits,
     .width = splash_width,
@@ -378,11 +378,7 @@ static const LSM6DSOConfig s_lsm6dso_config = {
         .peripheral = hwp_gpio1,
         .gpio_pin = 38,
       },
-  .int1_in =
-      {
-        .gpio = hwp_gpio1,
-        .gpio_pin = 38,
-      },
+  .int1_in = PBL_GPIO(SF32LB_GPIO1, 38, 0),
 #ifdef CONFIG_IS_BIGBOARD
   .axis_map =
       {
@@ -554,16 +550,13 @@ static HRMDevice s_hrm = {
         .peripheral = hwp_gpio1,
         .gpio_pin = 44,
       },
-  .int_input = {
-    .gpio = hwp_gpio1,
-    .gpio_pin = 44,
-  },
+  .int_input = PBL_GPIO(SF32LB_GPIO1, 44, 0),
 };
 
 HRMDevice *const HRM = &s_hrm;
 
 const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = {hwp_gpio1, 1, false},
+  .ctl = PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW),
 };
 
 // TODO(OBELIX): Adjust to final battery parameters
@@ -606,10 +599,12 @@ const BoardConfig BOARD_CONFIG = {
 const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons =
       {
-        [BUTTON_ID_BACK] = {"Back", hwp_gpio1, 34, GPIO_PuPd_NOPULL, true},
-        [BUTTON_ID_UP] = {"Up", hwp_gpio1, 35, GPIO_PuPd_UP, false},
-        [BUTTON_ID_SELECT] = {"Select", hwp_gpio1, 36, GPIO_PuPd_UP, false},
-        [BUTTON_ID_DOWN] = {"Down", hwp_gpio1, 37, GPIO_PuPd_UP, false},
+        [BUTTON_ID_BACK] = {"Back", PBL_GPIO(SF32LB_GPIO1, 34, 0)},
+        [BUTTON_ID_UP] = {"Up", PBL_GPIO(SF32LB_GPIO1, 35, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW)},
+        [BUTTON_ID_SELECT] =
+            {"Select", PBL_GPIO(SF32LB_GPIO1, 36, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW)},
+        [BUTTON_ID_DOWN] =
+            {"Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW)},
       },
   .timer = GPTIM2,
   .timer_irqn = GPTIM2_IRQn,
@@ -679,12 +674,7 @@ static const AudioDevice audio_device = {
   .audec_dma_channel = DMA1_Channel4,
   .audec_dma_request = DMA_REQUEST_41,
 
-  .pa_ctrl =
-      {
-        .gpio = hwp_gpio1,
-        .gpio_pin = 0,
-        .active_high = true,
-      },
+  .pa_ctrl = PBL_GPIO(SF32LB_GPIO1, 0, 0),
   .power_ops = &prv_audio_power_ops,
 };
 const AudioDevice *AUDIO = &audio_device;

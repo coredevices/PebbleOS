@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <pbl/drivers/gpio.h>
+
 /**
  * @defgroup drivers_backlight_pwm PWM backlight
  * @ingroup drivers_backlight
@@ -12,8 +14,8 @@
 
 /** @brief PWM backlight configuration. */
 typedef struct {
-  /** Optional enable output, asserted while the backlight is on; unused if its gpio is NULL. */
-  const OutputConfig ctl;
+  /** Optional enable output, active while the backlight is on. */
+  const struct pbl_gpio ctl;
   /** PWM output. */
   const PwmConfig pwm;
   /** Duty cycle at full brightness, in percent. */

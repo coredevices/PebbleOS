@@ -43,13 +43,13 @@ static const BoardConfigButton BOARD_CONFIG_BUTTON = {
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = {NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12)},
-  .pmic_int_gpio = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 12)},
+  .pmic_int_gpio = PBL_GPIO(NRF5_GPIO_P1, 12, 0),
   .low_power_threshold = 2,
   .battery_capacity_hours = 450,
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 2), true}, // LRA_EN
+  .ctl = PBL_GPIO(NRF5_GPIO_P0, 2, 0), // LRA_EN
 };
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
@@ -71,10 +71,10 @@ extern UARTDevice *const DBG_UART;
 
 extern PwmState BACKLIGHT_PWM_STATE;
 static const BacklightPwmConfig BACKLIGHT_PWM = {
-  .ctl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 8), true},
+  .ctl = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
   .pwm =
       {.state = &BACKLIGHT_PWM_STATE,
-       .output = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 26), true},
+       .output = PBL_GPIO(NRF5_GPIO_P0, 26, 0),
        .peripheral = NRFX_PWM_INSTANCE(0)},
   .max_duty_cycle_percent = 67,
 };
@@ -82,11 +82,11 @@ static const BacklightPwmConfig BACKLIGHT_PWM = {
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
 
-  .clk = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 6), true},
-  .mosi = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 8), true},
-  .cs = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(1, 3), true},
+  .clk = PBL_GPIO(NRF5_GPIO_P0, 6, 0),
+  .mosi = PBL_GPIO(NRF5_GPIO_P0, 8, 0),
+  .cs = PBL_GPIO(NRF5_GPIO_P1, 3, 0),
 
-  .on_ctrl = {NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 4), true},
+  .on_ctrl = PBL_GPIO(NRF5_GPIO_P0, 4, 0),
 
   .extcomin = {
     .rtc = NRF_RTC2,

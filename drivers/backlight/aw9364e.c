@@ -29,7 +29,7 @@
 static uint8_t s_pulse_count;
 
 void backlight_init(void) {
-  gpio_output_init(&AW9364E.gpio, GPIO_OType_PP);
+  pbl_gpio_configure(&AW9364E.gpio, PBL_GPIO_OUTPUT);
 }
 
 //! Emit dimming pulses. A low period stretched past 500us puts the chip in
@@ -38,9 +38,9 @@ void backlight_init(void) {
 static void prv_send_pulses(uint8_t count, bool from_shutdown) {
   pbl_irq_lock();
   for (uint8_t i = 0U; i < count; i++) {
-    gpio_output_set(&AW9364E.gpio, false);
+    pbl_gpio_set(&AW9364E.gpio, false);
     delay_us(AW9364E_TLO_US);
-    gpio_output_set(&AW9364E.gpio, true);
+    pbl_gpio_set(&AW9364E.gpio, true);
     delay_us((from_shutdown && i == 0U) ? AW9364E_TON_US : AW9364E_THI_US);
   }
   pbl_irq_unlock();
@@ -65,7 +65,7 @@ void backlight_set_brightness(uint8_t brightness) {
   if (pulse_count == 0U) {
     // The chip shuts itself down after EN has been low for 2.5ms; no need to
     // block here, as the turn-on path below always waits that out itself.
-    gpio_output_set(&AW9364E.gpio, false);
+    pbl_gpio_set(&AW9364E.gpio, false);
     s_pulse_count = 0U;
     return;
   }
@@ -79,7 +79,7 @@ void backlight_set_brightness(uint8_t brightness) {
     prv_send_pulses(pulse_count - s_pulse_count, false);
   } else {
     // Turning on or brightening: full shutdown, then re-train from scratch.
-    gpio_output_set(&AW9364E.gpio, false);
+    pbl_gpio_set(&AW9364E.gpio, false);
     delay_us(AW9364E_OFF_TIME_US);
     prv_send_pulses(pulse_count, true);
   }

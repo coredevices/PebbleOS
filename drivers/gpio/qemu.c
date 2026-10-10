@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stddef.h>
-
-#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/gpio/qemu.h>
+#include <pbl/util/misc.h>
 
 #include <board/board.h>
 
@@ -13,38 +12,47 @@
 #define GPIO_STATE  0x00 // r: bit per button
 #define GPIO_OUTPUT 0x04 // w: output state bits
 
-void gpio_output_init(const OutputConfig *pin_config, GPIOOType_TypeDef otype) {
-  (void)pin_config;
-  (void)otype;
+static uintptr_t prv_base(const struct pbl_gpio_port *port) {
+  return container_of(port, const struct pbl_gpio_qemu, port)->base;
 }
 
-void gpio_output_set(const OutputConfig *pin_config, bool asserted) {
-  if (pin_config == NULL) {
-    return;
-  }
-  uint32_t output = REG32(QEMU_GPIO_BASE + GPIO_OUTPUT);
-  bool drive_high = pin_config->active_high ? asserted : !asserted;
-  if (drive_high) {
-    output |= (1U << pin_config->gpio_pin);
+static int prv_set(const struct pbl_gpio_port *port, uint8_t pin, bool level) {
+  if (level) {
+    REG32(prv_base(port) + GPIO_OUTPUT) |= (1U << pin);
   } else {
-    output &= ~(1U << pin_config->gpio_pin);
+    REG32(prv_base(port) + GPIO_OUTPUT) &= ~(1U << pin);
   }
-  REG32(QEMU_GPIO_BASE + GPIO_OUTPUT) = output;
+
+  return 0;
 }
 
-void gpio_input_init(const InputConfig *input_cfg) {
-  (void)input_cfg;
-}
-
-void gpio_input_init_pull_up_down(const InputConfig *input_cfg, GPIOPuPd_TypeDef pupd) {
-  (void)input_cfg;
-  (void)pupd;
-}
-
-bool gpio_input_read(const InputConfig *input_cfg) {
-  if (input_cfg == NULL) {
-    return false;
+static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
+  if (flags & PBL_GPIO_OUTPUT_INIT_HIGH) {
+    prv_set(port, pin, true);
+  } else if (flags & PBL_GPIO_OUTPUT_INIT_LOW) {
+    prv_set(port, pin, false);
   }
-  uint32_t state = REG32(QEMU_GPIO_BASE + GPIO_STATE);
-  return (state & (1U << input_cfg->gpio_pin)) != 0;
+
+  return 0;
 }
+
+static int prv_get(const struct pbl_gpio_port *port, uint8_t pin) {
+  return (REG32(prv_base(port) + GPIO_STATE) & (1U << pin)) != 0U;
+}
+
+static const struct pbl_gpio_port_ops s_ops = {
+  .configure = prv_configure,
+  .get = prv_get,
+  .set = prv_set,
+};
+
+PBL_DEVICE_STATE_DEFINE(pbl_gpio_qemu_gpio);
+const struct pbl_gpio_qemu pbl_gpio_qemu_gpio = {
+  .port =
+      {
+        .dev = PBL_DEVICE_INIT(pbl_gpio_qemu_gpio, "gpio", NULL, NULL, NULL),
+        .ops = &s_ops,
+      },
+  .base = QEMU_GPIO_BASE,
+};
+PBL_DEVICE_REGISTER(pbl_gpio_qemu_gpio, &pbl_gpio_qemu_gpio.port.dev);
