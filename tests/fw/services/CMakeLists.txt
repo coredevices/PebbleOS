@@ -314,6 +314,20 @@ pbl_clar_test(test_app_cache
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_mic_manager
+  SOURCES
+    fw/services/mic_manager/mic_manager.c
+  OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_mic_stream
+  SOURCES
+    fw/services/mic_stream/mic_stream.c
+    fw/services/mic_manager/mic_manager.c
+    tests/fakes/fake_events.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_app_install_manager
   SOURCES
     fw/flash_region/flash_region.c
@@ -521,4 +535,15 @@ pbl_clar_test(test_clock_time
     lib/c/time/gmtime.c
     lib/c/time/mktime.c
     tests/fakes/fake_rtc.c
+)
+
+pbl_clar_test(test_mic_capture
+  SOURCES
+    fw/services/mic_capture/mic_capture.c
+    fw/services/mic_manager/mic_manager.c
+    fw/services/blob_db/app_db.c
+    tests/fakes/fake_events.c
+    tests/fakes/fake_settings_file.c
+  DEFINES CONFIG_SERVICE_MIC_CAPTURE
+  OVERRIDES dummy_board
 )

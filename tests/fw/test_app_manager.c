@@ -38,6 +38,7 @@
 #include <stubs_gettext.h>
 #include <stubs_i18n.h>
 #include <stubs_logging.h>
+#include <stubs_mic_banner.h>
 #include <stubs_modal_manager.h>
 #include <stubs_mpu.h>
 #include <stubs_mutex.h>

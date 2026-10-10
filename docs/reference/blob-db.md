@@ -67,3 +67,8 @@ in `endpoint2.c`.
 
 New databases register a `BlobDBId` and an entry in `s_blob_dbs` in
 `fw/services/blob_db/api.c`.
+
+## App microphone permissions
+
+Firmware with capability bit 27 accepts an optional permissions field appended
+to existing AppDB metadata. See [Local microphone capture](local-microphone.md).

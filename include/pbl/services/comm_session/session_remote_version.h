@@ -80,6 +80,8 @@ typedef struct PBL_PACKED {
       bool unknown_attributes_support : 1;
       /** Notification window reports the notification it displays. */
       bool notification_window_state_support : 1;
+      /** Watch supports permission-gated local PCM capture. */
+      bool local_microphone_support : 1;
     };
     /** All flags as a bitset. */
     uint64_t flags;

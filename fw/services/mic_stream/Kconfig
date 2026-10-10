@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_MIC_STREAM
+    bool "Microphone streaming for apps"
+    depends on SERVICE_MIC_MANAGER && SERVICE_VOICE && SERVICE_AUDIO_ENDPOINT && \
+               SERVICE_VOICE_ENDPOINT && SERVICE_SERVICES_NORMAL
+    default y
+    help
+      Streams the foreground app's microphone to the phone, backing the
+      mic_stream_to_phone_*() app API.
+
+if SERVICE_MIC_STREAM
+
+module = SERVICE_MIC_STREAM
+module-str = Mic stream
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

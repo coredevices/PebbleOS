@@ -29,6 +29,8 @@ typedef enum {
   VoiceEndpointSessionTypeCommand = 0x02,
   /** Natural language processing, e.g. reminders. */
   VoiceEndpointSessionTypeNLP = 0x03,
+  //! Live audio for an app; the phone decodes and hands it to the app's companion, no result
+  VoiceEndpointSessionTypeAudioStream = 0x04,
 
   /** Number of session types. */
   VoiceEndpointSessionTypeCount,
