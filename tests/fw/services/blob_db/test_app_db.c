@@ -3,6 +3,7 @@
 
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/settings/settings_file.h>
 
 #include <clar.h>
 #include <process_management/app_install_types.h>
@@ -266,4 +267,25 @@ void prv_enumerate_entries(AppInstallId install_id, AppDBEntry *entry, void *dat
 
 void test_app_db__enumerate(void) {
   app_db_enumerate_entries(prv_enumerate_entries, (void *)&some_data);
+}
+
+static void prv_assert_legacy_grant_denied(AppInstallId id, AppDBEntry *entry, void *unused) {
+  cl_assert_equal_i(0, entry->permissions);
+}
+
+void test_app_db__reads_legacy_stored_records_without_grant(void) {
+  const AppInstallId id = app_db_get_install_id_for_uuid(&app1.uuid);
+  SettingsFile file;
+  cl_assert_equal_i(S_SUCCESS, settings_file_open(&file, "appdb", 20 * 1024));
+  cl_assert_equal_i(S_SUCCESS,
+                    settings_file_set(&file, &id, sizeof(id), &app1, APP_DB_LEGACY_ENTRY_SIZE));
+  settings_file_close(&file);
+  AppDBEntry entry;
+  memset(&entry, 0xff, sizeof(entry));
+  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app1.uuid, &entry));
+  cl_assert_equal_i(0, entry.permissions);
+  cl_assert_equal_m(&app1, &entry, APP_DB_LEGACY_ENTRY_SIZE);
+  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_install_id(id, &entry));
+  cl_assert_equal_i(0, entry.permissions);
+  app_db_enumerate_entries(prv_assert_legacy_grant_denied, NULL);
 }

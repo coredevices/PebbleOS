@@ -291,6 +291,10 @@ int16_t timeline_peek_get_obstruction_origin_y(void) {
   return DISP_ROWS;
 }
 
+int16_t mic_banner_get_obstruction_origin_y(void) {
+  return DISP_ROWS;
+}
+
 void timeline_peek_handle_process_start(void) {
 }
 

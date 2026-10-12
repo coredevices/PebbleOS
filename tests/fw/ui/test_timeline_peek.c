@@ -55,6 +55,7 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_
 #include <stubs_logging.h>
 #include <stubs_memory_layout.h>
 #include <stubs_menu_cell_layer.h>
+#include <stubs_mic_banner.h>
 #include <stubs_modal_manager.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>

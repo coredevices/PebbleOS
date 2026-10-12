@@ -14,6 +14,10 @@
 #include <sys/types.h>
 #include <system/passert.h>
 
+#ifdef CONFIG_SERVICE_MIC_STREAM
+#include <pbl/services/mic_stream.h>
+#endif
+
 PBL_LOG_MODULE_DEFINE(service_voice_endpoint, CONFIG_SERVICE_VOICE_ENDPOINT_LOG_LEVEL);
 
 #define VOICE_CONTROL_ENDPOINT (11000)
@@ -158,6 +162,12 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
         }
 
         bool app_initiated = (msg->flags.app_initiated == 1);
+#ifdef CONFIG_SERVICE_MIC_STREAM
+        if (msg->session_type == VoiceEndpointSessionTypeAudioStream) {
+          mic_stream_service_handle_setup_result(result);
+          break;
+        }
+#endif
         voice_handle_session_setup_result(result, msg->session_type, app_initiated);
       } else {
         PBL_LOG_WRN("Invalid size for session setup result message");

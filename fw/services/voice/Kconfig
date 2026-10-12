@@ -6,6 +6,7 @@ config SERVICE_VOICE
     default y if MIC
     depends on SERVICE_AUDIO_ENDPOINT && SERVICE_VOICE_ENDPOINT
     select SPEEX
+    select SERVICE_MIC_MANAGER
     help
       Voice (dictation) service. Requires a microphone driver (CONFIG_MIC).
 

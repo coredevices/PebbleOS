@@ -21,6 +21,7 @@
 #include <kernel/events.h>
 #include <popups/alarm_popup.h>
 #include <popups/bluetooth_pairing_ui.h>
+#include <popups/mic_banner.h>
 #include <popups/notifications/notification_window.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
@@ -58,6 +59,9 @@ void shell_event_loop_init(void) {
   app_message_sender_init();
   watchface_init();
   timeline_peek_init();
+#ifdef CONFIG_SERVICE_MIC_STREAM
+  mic_banner_init();
+#endif
   // Start activity tracking if enabled
   if (activity_prefs_tracking_is_enabled()) {
     activity_start_tracking(false /*test_mode*/);
