@@ -33,22 +33,16 @@ typedef struct {
   ActionMenuConfig action_menu;
 } SettingsQuietTimeScheduleData;
 
-#ifdef CONFIG_TOUCH
 typedef struct {
   SettingsCallbacks callbacks;
 } SettingsQuietTimeBacklightData;
-#endif
 
 enum QuietTimeItem {
   QuietTimeItemManual,
   QuietTimeItemSchedule,
   QuietTimeItemInterruptions,
   QuietTimeItemNotifications,
-#ifdef CONFIG_TOUCH
   QuietTimeItemBacklight,
-#else
-  QuietTimeItemMotionBacklight,
-#endif
 #ifdef CONFIG_SPEAKER
   QuietTimeItemMuteSpeaker,
 #endif
@@ -62,13 +56,14 @@ enum QuietTimeScheduleItem {
   QuietTimeScheduleItem_Count,
 };
 
-#ifdef CONFIG_TOUCH
 enum QuietTimeBacklightItem {
   QuietTimeBacklightItemMotion,
+#ifdef CONFIG_TOUCH
   QuietTimeBacklightItemTouch,
+#endif
+  QuietTimeBacklightItemNotifications,
   QuietTimeBacklightItem_Count,
 };
-#endif
 
 static const AlertMask s_dnd_mask_cycle[] = {
   AlertMaskAllOff,
@@ -344,10 +339,9 @@ static void prv_cycle_dnd_notifications(void) {
 }
 
 ///////////////////////////////
-// Backlight sub-menu (touch boards)
+// Backlight sub-menu
 ///////////////////////////////
 
-#ifdef CONFIG_TOUCH
 static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
   SettingsQuietTimeBacklightData *data = (SettingsQuietTimeBacklightData *)context;
   i18n_free_all(data);
@@ -364,9 +358,16 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       title = i18n_noop("Motion");
       subtitle = alerts_preferences_dnd_get_motion_backlight() ? i18n_noop("On") : i18n_noop("Off");
       break;
+#ifdef CONFIG_TOUCH
     case QuietTimeBacklightItemTouch:
       title = i18n_noop("Touch");
       subtitle = alerts_preferences_dnd_get_touch_backlight() ? i18n_noop("On") : i18n_noop("Off");
+      break;
+#endif
+    case QuietTimeBacklightItemNotifications:
+      title = i18n_noop("Notifications");
+      subtitle =
+          alerts_preferences_dnd_get_notification_backlight() ? i18n_noop("On") : i18n_noop("Off");
       break;
     default:
       WTF;
@@ -379,8 +380,14 @@ static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t r
     case QuietTimeBacklightItemMotion:
       alerts_preferences_dnd_set_motion_backlight(!alerts_preferences_dnd_get_motion_backlight());
       break;
+#ifdef CONFIG_TOUCH
     case QuietTimeBacklightItemTouch:
       alerts_preferences_dnd_set_touch_backlight(!alerts_preferences_dnd_get_touch_backlight());
+      break;
+#endif
+    case QuietTimeBacklightItemNotifications:
+      alerts_preferences_dnd_set_notification_backlight(
+          !alerts_preferences_dnd_get_notification_backlight());
       break;
     default:
       WTF;
@@ -406,7 +413,6 @@ static void prv_backlight_submenu_push(void) {
                                                      i18n_noop("Backlight"), &data->callbacks);
   app_window_stack_push(window, true /* animated */);
 }
-#endif // CONFIG_TOUCH
 
 ///////////////////////////////
 // Top-level Quiet Time menu
@@ -441,17 +447,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       title = i18n_get("Notifications", data);
       subtitle = prv_get_dnd_notifications_subtitle(data);
       break;
-#ifdef CONFIG_TOUCH
     case QuietTimeItemBacklight:
       title = i18n_get("Backlight", data);
       break;
-#else
-    case QuietTimeItemMotionBacklight:
-      title = i18n_get("Motion Backlight", data);
-      subtitle = alerts_preferences_dnd_get_motion_backlight() ? i18n_get("On", data)
-                                                               : i18n_get("Off", data);
-      break;
-#endif
 #ifdef CONFIG_SPEAKER
     case QuietTimeItemMuteSpeaker:
       title = i18n_get("Mute Speaker", data);
@@ -479,15 +477,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
     case QuietTimeItemNotifications:
       prv_cycle_dnd_notifications();
       break;
-#ifdef CONFIG_TOUCH
     case QuietTimeItemBacklight:
       prv_backlight_submenu_push();
       break;
-#else
-    case QuietTimeItemMotionBacklight:
-      alerts_preferences_dnd_set_motion_backlight(!alerts_preferences_dnd_get_motion_backlight());
-      break;
-#endif
 #ifdef CONFIG_SPEAKER
     case QuietTimeItemMuteSpeaker:
       alerts_preferences_dnd_set_mute_speaker(!alerts_preferences_dnd_get_mute_speaker());
