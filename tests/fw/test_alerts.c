@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include <pbl/services/notifications/alerts.h>
+#include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_private.h>
 
 #include <clar.h>
@@ -139,6 +140,32 @@ void test_alerts__migration(void) {
   alerts_set_mask(AlertMaskAllOnLegacy);
 
   cl_assert(alerts_get_mask() == AlertMaskAllOn);
+}
+
+void test_alerts__dnd_notification_backlight(void) {
+  s_dnd_active = true;
+  alerts_set_mask(AlertMaskAllOn);
+  alerts_set_dnd_mask(AlertMaskPhoneCalls);
+
+  // Default: whitelisted alerts still light the screen during DND
+  cl_assert(alerts_preferences_dnd_get_notification_backlight());
+  cl_assert(alerts_should_enable_backlight_for_type(AlertPhoneCall));
+  cl_assert(!alerts_should_enable_backlight_for_type(AlertMobile));
+
+  // Off: no backlight for any alert during DND, vibe decision untouched
+  alerts_preferences_dnd_set_notification_backlight(false);
+  cl_assert(!alerts_should_enable_backlight_for_type(AlertPhoneCall));
+  cl_assert(!alerts_should_enable_backlight_for_type(AlertMobile));
+  alerts_set_notification_vibe_timestamp();
+  fake_rtc_set_ticks(rtc_get_ticks() + NOTIFICATION_VIBE_HOLDOFF_TICKS);
+  cl_assert(alerts_should_vibrate_for_type(AlertPhoneCall));
+
+  // Outside DND the toggle has no effect
+  s_dnd_active = false;
+  cl_assert(alerts_should_enable_backlight_for_type(AlertPhoneCall));
+  cl_assert(alerts_should_enable_backlight_for_type(AlertMobile));
+
+  alerts_preferences_dnd_set_notification_backlight(true);
 }
 
 void test_alerts__dnd_interruptions(void) {

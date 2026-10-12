@@ -62,7 +62,8 @@ bool alerts_should_enable_backlight_for_type(AlertType type) {
     return false;
   }
 
-  if (do_not_disturb_is_active() && !(alerts_preferences_dnd_get_mask() & type)) {
+  if (do_not_disturb_is_active() && (!alerts_preferences_dnd_get_notification_backlight() ||
+                                     !(alerts_preferences_dnd_get_mask() & type))) {
     return false;
   }
 

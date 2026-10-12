@@ -149,6 +149,7 @@ static const char *s_syncable_notif_prefs[] = {
   "notifBacklight",
   "dndMotionBacklight",
   "dndTouchBacklight",
+  "dndNotificationBacklight",
   "dndAutoDismiss",
 };
 

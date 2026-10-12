@@ -39,6 +39,9 @@ static bool s_dnd_motion_backlight = true;
 #define PREF_KEY_DND_TOUCH_BACKLIGHT "dndTouchBacklight"
 static bool s_dnd_touch_backlight = true;
 
+#define PREF_KEY_DND_NOTIFICATION_BACKLIGHT "dndNotificationBacklight"
+static bool s_dnd_notification_backlight = true;
+
 #define PREF_KEY_DND_MUTE_SPEAKER "dndMuteSpeaker"
 static bool s_dnd_mute_speaker = false;
 
@@ -356,6 +359,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_DND_SHOW_NOTIFICATIONS, s_dnd_show_notifications);
   RESTORE_PREF(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
   RESTORE_PREF(PREF_KEY_DND_TOUCH_BACKLIGHT, s_dnd_touch_backlight);
+  RESTORE_PREF(PREF_KEY_DND_NOTIFICATION_BACKLIGHT, s_dnd_notification_backlight);
   RESTORE_PREF(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
   RESTORE_PREF(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
   RESTORE_PREF(PREF_KEY_SPEAKER_VOLUME, s_speaker_volume);
@@ -635,6 +639,15 @@ bool alerts_preferences_dnd_get_touch_backlight(void) {
   return s_dnd_touch_backlight;
 }
 
+void alerts_preferences_dnd_set_notification_backlight(bool enable) {
+  s_dnd_notification_backlight = enable;
+  SET_PREF(PREF_KEY_DND_NOTIFICATION_BACKLIGHT, s_dnd_notification_backlight);
+}
+
+bool alerts_preferences_dnd_get_notification_backlight(void) {
+  return s_dnd_notification_backlight;
+}
+
 void alerts_preferences_dnd_set_mute_speaker(bool enable) {
   s_dnd_mute_speaker = enable;
   SET_PREF(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
@@ -785,6 +798,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_TEXT_SIZE, s_notification_content_size);
   RELOAD_IF_MATCH(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
   RELOAD_IF_MATCH(PREF_KEY_DND_TOUCH_BACKLIGHT, s_dnd_touch_backlight);
+  RELOAD_IF_MATCH(PREF_KEY_DND_NOTIFICATION_BACKLIGHT, s_dnd_notification_backlight);
   RELOAD_IF_MATCH(PREF_KEY_DND_MUTE_SPEAKER, s_dnd_mute_speaker);
   RELOAD_IF_MATCH(PREF_KEY_SPEAKER_MUTED, s_speaker_muted);
   RELOAD_IF_MATCH(PREF_KEY_DND_AUTO_DISMISS, s_dnd_auto_dismiss);
