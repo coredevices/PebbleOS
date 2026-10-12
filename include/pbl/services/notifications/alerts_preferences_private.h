@@ -263,29 +263,12 @@ void alerts_preferences_dnd_get_schedule(DoNotDisturbScheduleType type,
                                          DoNotDisturbSchedule *schedule_out);
 
 /**
- * @brief Store a DND schedule.
- *
- * @param type Schedule to set.
- * @param schedule New schedule.
- */
-void alerts_preferences_dnd_set_schedule(DoNotDisturbScheduleType type,
-                                         const DoNotDisturbSchedule *schedule);
-
-/**
  * @brief Get whether a DND schedule is enabled.
  *
  * @param type Schedule to check.
  * @return true if enabled.
  */
 bool alerts_preferences_dnd_is_schedule_enabled(DoNotDisturbScheduleType type);
-
-/**
- * @brief Store whether a DND schedule is enabled.
- *
- * @param type Schedule to change.
- * @param enable true to enable.
- */
-void alerts_preferences_dnd_set_schedule_enabled(DoNotDisturbScheduleType type, bool enable);
 
 /**
  * @brief Get whether calendar-aware (smart) DND is enabled.
@@ -300,6 +283,14 @@ bool alerts_preferences_dnd_is_smart_enabled(void);
  * @param enable true to enable.
  */
 void alerts_preferences_dnd_set_smart_enabled(bool enable);
+
+void alerts_preferences_qt_get_schedule(int index, QuietTimeScheduleConfig *out);
+
+void alerts_preferences_qt_set_schedule(int index, const QuietTimeScheduleConfig *config);
+
+//! One definition for every QT schedule slot index. Generates both the
+//! storage keys and the sync-allowlist entries so the two cannot drift apart.
+#define QT_SCHEDULE_SLOT_X(X) X(0) X(1) X(2) X(3) X(4)
 
 /**
  * @brief Lock the alerts preferences mutex.

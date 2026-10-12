@@ -54,6 +54,35 @@ typedef struct PBL_PACKED DoNotDisturbSchedule {
   uint8_t to_minute;
 } DoNotDisturbSchedule;
 
+#define MAX_QUIET_TIME_SCHEDULES (5)
+
+typedef enum {
+  QT_KIND_EVERYDAY = 0,
+  QT_KIND_WEEKDAYS,
+  QT_KIND_WEEKENDS,
+  QT_KIND_CUSTOM,
+  QT_KIND_COUNT,
+} QuietTimeKind;
+
+//! QuietTimeScheduleConfig stores a single quiet time schedule slot.
+//! The scheduled_days array is always present but only meaningful when kind == QT_KIND_CUSTOM.
+//! For other kinds, the day mask is derived from the kind at runtime.
+//! is_used indicates whether the slot contains a valid schedule (unused slots are zeroed out).
+//!
+//! This struct is persisted to flash and synced to the phone, so its layout
+//! is explicit: single-byte fields only, no compiler-dependent enum or bool
+//! sizes. Bump handling below if this layout ever changes.
+typedef struct PBL_PACKED QuietTimeScheduleConfig {
+  uint8_t is_used;
+  uint8_t kind;
+  uint8_t scheduled_days[PBL_DAY_PER_WEEK];
+  uint8_t from_hour;
+  uint8_t from_minute;
+  uint8_t to_hour;
+  uint8_t to_minute;
+  uint8_t enabled;
+} QuietTimeScheduleConfig;
+
 /** @brief Where manual DND was toggled from, matching the FirstUseSource values. */
 typedef enum ManualDNDFirstUseSource {
   /** Notification action menu. */
@@ -114,14 +143,6 @@ void do_not_disturb_toggle_smart_dnd(void);
 void do_not_disturb_get_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule_out);
 
 /**
- * @brief Set a DND schedule and re-evaluate the DND state.
- *
- * @param type Schedule to set.
- * @param schedule New schedule.
- */
-void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSchedule *schedule);
-
-/**
  * @brief Check whether a DND schedule is enabled.
  *
  * @param type Schedule to check.
@@ -129,22 +150,38 @@ void do_not_disturb_set_schedule(DoNotDisturbScheduleType type, DoNotDisturbSche
  */
 bool do_not_disturb_is_schedule_enabled(DoNotDisturbScheduleType type);
 
-/**
- * @brief Enable or disable a DND schedule and re-evaluate the DND state.
- *
- * @param type Schedule to change.
- * @param scheduled true to enable.
- */
-void do_not_disturb_set_schedule_enabled(DoNotDisturbScheduleType type, bool scheduled);
+//! Get/set an individual quiet time schedule slot
+void quiet_time_get_schedule(int index, QuietTimeScheduleConfig *out);
+void quiet_time_set_schedule(int index, const QuietTimeScheduleConfig *config);
 
-/**
- * @brief Toggle a DND schedule and re-evaluate the DND state.
- *
- * @param type Schedule to toggle.
- */
-void do_not_disturb_toggle_scheduled(DoNotDisturbScheduleType type);
+//! Validate a schedule config: kind in range, hours/minutes in range, and
+//! QT_KIND_CUSTOM with at least one day selected. Unused (zeroed) slots are
+//! exempt at the call site, so deletes still sync.
+bool quiet_time_schedule_is_valid(const QuietTimeScheduleConfig *config);
 
-/** @brief Initialize the DND service and arm the schedule timers. */
+//! Create a new quiet time schedule. Returns the slot index, or -1 if all slots are full.
+//! Rejects invalid configs (see quiet_time_schedule_is_valid).
+int quiet_time_create_schedule(const QuietTimeScheduleConfig *config);
+
+//! Delete a quiet time schedule slot
+void quiet_time_delete_schedule(int index);
+
+//! Enable/disable a quiet time schedule slot
+void quiet_time_set_schedule_enabled(int index, bool enabled);
+
+//! Derive the day mask for a schedule kind. For QT_KIND_CUSTOM, copies from config->scheduled_days.
+void quiet_time_get_scheduled_days(const QuietTimeScheduleConfig *config,
+                                   bool out_days[PBL_DAY_PER_WEEK]);
+
+//! Display string for a QuietTimeKind
+const char *quiet_time_get_string_for_kind(QuietTimeKind kind);
+
+//! Display string for custom scheduled days. Buffer must be at least 28 bytes
+//! (7 short day abbreviations + 6 comma separators + NUL). A single selected
+//! day uses the long form (e.g. "Wednesdays", 11 bytes incl. NUL).
+void quiet_time_get_string_for_custom(const uint8_t *scheduled_days, char *buffer, size_t buf_len);
+
+/** @brief Initialize the DND service and arm the schedule cron jobs. */
 void do_not_disturb_init(void);
 
 /** @brief Re-evaluate the schedule after the wall clock or timezone changed. */
