@@ -343,6 +343,74 @@ static void prv_sensor_disable(void) {
   }
 }
 
+// Schedule the next due, expiry, or unserved check even if the driver sends no reports.
+// Must hold s_manager_state.lock.
+static void prv_schedule_update_timer(int32_t remaining_ms) {
+  if (!prv_can_turn_sensor_on()) {
+    new_timer_stop(s_manager_state.update_enable_timer_id);
+    return;
+  }
+
+  const bool sensor_on = hrm_is_enabled(HRM);
+  if (sensor_on) {
+    remaining_ms = INT32_MAX;
+  } else if (remaining_ms <= 0) {
+    // An enable failed; don't busy-retry it on the timer task.
+    new_timer_stop(s_manager_state.update_enable_timer_id);
+    return;
+  }
+
+  const time_t utc_now = rtc_get_time();
+  const RtcTicks cur_ticks = rtc_get_ticks();
+  const int64_t unserved_timeout_ticks =
+      pbl_ms_to_ticks(HRM_MAX_UNSERVED_TIME_SEC * PBL_MSEC_PER_SEC);
+  const int64_t serve_remaining_ticks =
+      unserved_timeout_ticks - (int64_t)(cur_ticks - s_manager_state.sensor_on_since_ticks);
+  const int64_t spin_up_ticks = pbl_ms_to_ticks(HRM_SENSOR_SPIN_UP_SEC * PBL_MSEC_PER_SEC);
+  const HRMFeature prefs_allowed = prv_prefs_allowed_features();
+  bool has_subscriber = false;
+
+  HRMSubscriberState *state = (HRMSubscriberState *)s_manager_state.subscribers;
+  for (; state; state = (HRMSubscriberState *)state->list_node.next) {
+    if ((state->expire_utc && utc_now >= state->expire_utc) ||
+        !prv_subscriber_allowed_features(state, prefs_allowed)) {
+      continue;
+    }
+    has_subscriber = true;
+    if (state->expire_utc) {
+      const int64_t expiry_ms = (int64_t)(state->expire_utc - utc_now) * PBL_MSEC_PER_SEC;
+      remaining_ms = MIN((int64_t)remaining_ms, expiry_ms);
+    }
+    if (!sensor_on) {
+      continue;
+    }
+
+    const int64_t interval_ticks = pbl_ms_to_ticks(state->update_interval_s * PBL_MSEC_PER_SEC);
+    // Live readers remain due even after deferral, so only their lease needs a timer.
+    if (interval_ticks <= spin_up_ticks) {
+      continue;
+    }
+    int64_t deadline_ticks = serve_remaining_ticks;
+    if (state->last_valid_bpm_ticks) {
+      const int64_t age_ticks = cur_ticks - state->last_valid_bpm_ticks;
+      deadline_ticks = MAX(deadline_ticks, interval_ticks + unserved_timeout_ticks - age_ticks);
+      const int64_t due_ticks = interval_ticks - age_ticks - spin_up_ticks;
+      if (due_ticks > 0) {
+        deadline_ticks = MIN(deadline_ticks, due_ticks);
+      }
+    }
+    const int64_t deadline_ms = MAX(1, deadline_ticks * PBL_MSEC_PER_SEC / RTC_TICKS_HZ);
+    remaining_ms = MIN((int64_t)remaining_ms, deadline_ms);
+  }
+
+  if (has_subscriber && remaining_ms < INT32_MAX) {
+    new_timer_start(s_manager_state.update_enable_timer_id, remaining_ms,
+                    prv_update_enable_timer_cb, NULL /*context*/, 0 /*flags*/);
+  } else {
+    new_timer_stop(s_manager_state.update_enable_timer_id);
+  }
+}
+
 // Figure out if we should enable the HR sensor or not based on all subscribers and their
 // desired sampling periods. Must be called from the KernelBG task.
 static void prv_update_hrm_enable_system_cb(void *unused) {
@@ -350,6 +418,16 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   {
+    HRMSubscriberState *state = (HRMSubscriberState *)s_manager_state.subscribers;
+    while (state) {
+      HRMSubscriberState *next = (HRMSubscriberState *)state->list_node.next;
+      if (state->expire_utc && utc_now >= state->expire_utc) {
+        PBL_LOG_DBG("Subscription %" PRIu32 " expired", state->session_ref);
+        prv_remove_and_free_subscription(state);
+      }
+      state = next;
+    }
+
     bool turn_sensor_on = false;
     // How many ms until we need the sensor on again. INT32_MAX means we don't need to turn it on
     // again
@@ -377,8 +455,8 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       // subscriber. Only counts continuous on-time, so subscribers that went overdue while the
       // sensor was forced off (charging, run level) still get served first.
       const bool serve_window_expired =
-          hrm_is_enabled(HRM) && s_manager_state.sensor_on_since_ticks &&
-          ((int64_t)(cur_ticks - s_manager_state.sensor_on_since_ticks) > unserved_timeout_ticks);
+          hrm_is_enabled(HRM) &&
+          ((int64_t)(cur_ticks - s_manager_state.sensor_on_since_ticks) >= unserved_timeout_ticks);
 
       const HRMFeature prefs_allowed = prv_prefs_allowed_features();
 
@@ -446,10 +524,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       if (!hrm_is_enabled(HRM)) {
         // Sensor is off and a subscriber is due: bring it online.
         PBL_LOG_DBG("Turning on HR sensor (features 0x%x)", active_features);
-        if (prv_sensor_enable(active_features, low_latency_wanted)) {
-          // Don't need the re-enable timer to fire
-          new_timer_stop(s_manager_state.update_enable_timer_id);
-        }
+        prv_sensor_enable(active_features, low_latency_wanted);
       } else if (prv_should_reconfigure(active_features, s_manager_state.active_features,
                                         live_features)) {
         // Restart when the optical path changes (HR <-> SpO2) or the running feature set no longer
@@ -463,21 +538,13 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       // Turn off the sensor now
       PBL_LOG_DBG("Turning off HR sensor");
       prv_sensor_disable();
-
-      // If we need the sensor on again later, turn on a timer to re-enable the HRM in enough time
-      // to get a good reading for the next subscriber that needs one
-      if (remaining_ms < INT32_MAX) {
-        new_timer_start(s_manager_state.update_enable_timer_id, remaining_ms,
-                        prv_update_enable_timer_cb, NULL /*context*/, 0 /*flags*/);
-      } else {
-        new_timer_stop(s_manager_state.update_enable_timer_id);
-      }
     }
+    prv_schedule_update_timer(remaining_ms);
   }
   pbl_mutex_unlock(&s_manager_state.lock);
 }
 
-// Timer callback that we use to re-enable the HR sensor in case we turned it off for a while
+// Re-evaluate current state so a callback queued before a gate or path change is harmless.
 static void prv_update_enable_timer_cb(void *context) {
   system_task_add_callback(prv_update_hrm_enable_system_cb, NULL);
 }

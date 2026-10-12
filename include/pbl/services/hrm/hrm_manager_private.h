@@ -153,7 +153,7 @@ struct HRMManagerState {
   /** Battery state subscription, to track the charger. */
   EventServiceInfo charger_subscription;
 
-  /** Timer turning the sensor back on. */
+  /** Timer checking due, expired, and unserved subscriptions. */
   TimerID update_enable_timer_id;
 
   /** Driver reports since the last turn-off check, up to @ref HRM_CHECK_SENSOR_DISABLE_COUNT. */
