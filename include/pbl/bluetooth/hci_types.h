@@ -22,6 +22,12 @@ enum pbl_bt_hci_status {
   PBL_BT_HCI_STATUS_SUCCESS = 0x00,
   /** Unknown Connection Identifier. */
   PBL_BT_HCI_STATUS_UNKNOWN_CONNECTION_IDENTIFIER = 0x02,
+  /** Unspecified Error. */
+  PBL_BT_HCI_STATUS_UNSPECIFIED_ERROR = 0x1F,
+  /** LMP Error Transaction Collision / LL Procedure Collision. */
+  PBL_BT_HCI_STATUS_LL_PROCEDURE_COLLISION = 0x23,
+  /** Different Transaction Collision. */
+  PBL_BT_HCI_STATUS_DIFFERENT_TRANSACTION_COLLISION = 0x2A,
   /** First vendor specific status code. */
   PBL_BT_HCI_STATUS_VS_BASE = 0x50,
   /** Forces the enum to two bytes. */

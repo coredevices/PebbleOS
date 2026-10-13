@@ -3,6 +3,7 @@
 
 #include "nimble_type_conversions.h"
 
+#include <stdint.h>
 #include <string.h>
 
 #include <pbl/btutil/bt_uuid.h>
@@ -10,6 +11,7 @@
 #include <pbl/logging/logging.h>
 
 #include <host/ble_gap.h>
+#include <host/ble_hs.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -53,6 +55,18 @@ void nimble_conn_params_to_pebble(struct ble_gap_conn_desc *desc,
   params->conn_interval_1_25ms = desc->conn_itvl;
   params->slave_latency_events = desc->conn_latency;
   params->supervision_timeout_10ms = desc->supervision_timeout;
+}
+
+enum pbl_bt_hci_status nimble_hs_status_to_hci(int status) {
+  if (status == 0) {
+    return PBL_BT_HCI_STATUS_SUCCESS;
+  }
+
+  if ((status > BLE_HS_ERR_HCI_BASE) && (status <= BLE_HS_ERR_HCI_BASE + UINT8_MAX)) {
+    return (enum pbl_bt_hci_status)(status - BLE_HS_ERR_HCI_BASE);
+  }
+
+  return PBL_BT_HCI_STATUS_UNSPECIFIED_ERROR;
 }
 
 void pebble_conn_update_to_nimble(const struct pbl_bt_conn_params_update_req *req,

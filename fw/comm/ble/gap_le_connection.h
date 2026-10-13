@@ -124,6 +124,7 @@ typedef struct GAPLEConnection {
   struct {
     TimerID watchdog_timer;
     uint8_t attempts;
+    uint8_t collisions;
     bool is_request_pending;
   } param_update_info;
 
