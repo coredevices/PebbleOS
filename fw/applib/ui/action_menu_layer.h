@@ -8,6 +8,7 @@
 #include "menu_layer.h"
 
 #include <applib/graphics/graphics.h>
+#include <applib/preferred_content_size.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/window_private.h>
 #include <system/passert.h>
@@ -55,6 +56,8 @@ typedef struct {
   int num_short_items;
   //! @internal
   bool glyph_grid;
+  //! @internal
+  PreferredContentSize content_size;
   void *context;
 } ActionMenuLayer;
 
@@ -83,6 +86,11 @@ void action_menu_layer_set_short_items(ActionMenuLayer *aml, const ActionMenuIte
 //! Show short items as enlarged single glyphs where the display supports it.
 //! Takes effect on the next call to action_menu_layer_set_short_items().
 void action_menu_layer_set_glyph_grid(ActionMenuLayer *aml, bool glyph_grid);
+
+//! Render items at the given content size, or follow the system Text Size setting with
+//! NumPreferredContentSizes (the default). Item heights update on the next call to
+//! action_menu_layer_set_items() or action_menu_layer_set_short_items().
+void action_menu_layer_set_content_size(ActionMenuLayer *aml, PreferredContentSize size);
 
 void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame);
 

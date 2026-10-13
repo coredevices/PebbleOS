@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <applib/preferred_content_size.h>
 #include <applib/ui/window.h>
 #include <applib/ui/window_stack.h>
 
@@ -85,6 +86,12 @@ ActionMenu *action_menu_open(WindowStack *window_stack, ActionMenuConfig *config
 //! @param config the configuration info for this new ActionMenu
 //! @return the new ActionMenu
 ActionMenu *app_action_menu_open(ActionMenuConfig *config);
+
+//! @internal
+//! Render the ActionMenu at the given content size instead of the system Text Size setting.
+//! @param action_menu the ActionMenu
+//! @param size the content size, or NumPreferredContentSizes to follow the system setting
+void action_menu_set_content_size(ActionMenu *action_menu, PreferredContentSize size);
 
 //! Freeze the ActionMenu. The ActionMenu will no longer respond to user input.
 //! @note this API should be used when waiting for asynchronous operation.

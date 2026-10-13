@@ -139,7 +139,13 @@ void menu_cell_basic_draw_custom(GContext *ctx, const Layer *cell_layer, GFont c
 int16_t menu_cell_basic_horizontal_inset(void) {
   return 8;
 }
+int16_t menu_cell_basic_horizontal_inset_for_size(PreferredContentSize size) {
+  return 8;
+}
 int16_t menu_cell_small_cell_height(void) {
+  return 24;
+}
+int16_t menu_cell_small_cell_height_for_size(PreferredContentSize size) {
   return 24;
 }
 int16_t menu_cell_basic_cell_height(void) {

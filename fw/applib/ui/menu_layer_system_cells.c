@@ -95,8 +95,16 @@ int16_t menu_cell_small_cell_height(void) {
   return prv_get_cell_dimensions()->small_cell_height;
 }
 
+int16_t menu_cell_small_cell_height_for_size(PreferredContentSize size) {
+  return s_menu_cell_dimensions[size].small_cell_height;
+}
+
 int16_t menu_cell_basic_horizontal_inset(void) {
   return prv_get_cell_dimensions()->horizontal_inset;
+}
+
+int16_t menu_cell_basic_horizontal_inset_for_size(PreferredContentSize size) {
+  return s_menu_cell_dimensions[size].horizontal_inset;
 }
 
 #if PBL_RECT

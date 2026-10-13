@@ -99,6 +99,7 @@ uint32_t interpolate_moook_duration() {
 
 static FrameBuffer *fb = nullptr;
 static GBitmap *s_dest_bitmap;
+static PreferredContentSize s_content_size_override = NumPreferredContentSizes;
 
 // To easily render multiple windows in a single canvas, we'll use an 8-bit bitmap for color
 // displays (including round), but we can use the native format for black and white displays (1-bit)
@@ -143,6 +144,7 @@ void test_action_menu_window__cleanup(void) {
 
   gbitmap_destroy(s_dest_bitmap);
   s_dest_bitmap = nullptr;
+  s_content_size_override = NumPreferredContentSizes;
 }
 
 // Helpers
@@ -211,6 +213,9 @@ static void prv_render_action_menu_window(const ActionMenuLevel *root_level,
 
   // Set the window on screen so its window handlers will be called
   window_set_on_screen(&action_menu_window->window, true, true);
+  if (s_content_size_override < NumPreferredContentSizes) {
+    action_menu_set_content_size(action_menu_window, s_content_size_override);
+  }
 
   // Scroll down to the selected index
   ActionMenuData *data = window_get_user_data(&action_menu_window->window);
@@ -288,6 +293,16 @@ static void prv_render_action_menus_animated(SettingsContentSize content_size,
     s_ctx.draw_state.drawing_box.origin = GPoint(x_offset, y_offset);
     prv_render_action_menu_window(root_level, selected_index, animation_state, additional_crumbs);
   }
+}
+
+// Renders each size through the content size override, with the system size left at Small
+static void prv_render_action_menus_static_override(SettingsContentSize content_size,
+                                                    const ActionMenuLevel *root_level,
+                                                    unsigned int selected_index,
+                                                    unsigned int additional_crumbs) {
+  s_content_size_override = system_theme_get_content_size();
+  system_theme_set_content_size(PreferredContentSizeSmall);
+  prv_render_action_menus_static(content_size, root_level, selected_index, additional_crumbs);
 }
 
 void prv_prepare_canvas_and_render_action_menus_static(const ActionMenuLevel *root_level,
@@ -448,10 +463,7 @@ void test_action_menu_window__thin_display_mode_one_item(void) {
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
-void test_action_menu_window__wide_display_mode_with_chevron(void) {
-  if (!PBL_COLOR) {
-    return; // no monochrome baseline
-  }
+static ActionMenuLevel *prv_create_chevron_levels(void) {
   ActionMenuLevel *root_level = action_menu_level_create(3);
   ActionMenuLevel *voice_level = action_menu_level_create(1);
   action_menu_level_add_action(voice_level, "This won't be seen", prv_noop_action_callback,
@@ -467,10 +479,29 @@ void test_action_menu_window__wide_display_mode_with_chevron(void) {
   action_menu_level_add_action(emoji_level, "This won't be seen", prv_noop_action_callback,
                                nullptr);
   action_menu_level_add_child(root_level, emoji_level, "Emoji");
+  return root_level;
+}
 
+void test_action_menu_window__wide_display_mode_with_chevron(void) {
+  if (!PBL_COLOR) {
+    return; // no monochrome baseline
+  }
   const unsigned int selected_index = 1;
-  prv_prepare_canvas_and_render_action_menus_static(root_level, selected_index, 0);
+  prv_prepare_canvas_and_render_action_menus_static(prv_create_chevron_levels(), selected_index, 0);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_action_menu_window__content_size_override(void) {
+  if (!PBL_COLOR) {
+    return; // no monochrome baseline
+  }
+  const unsigned int selected_index = 1;
+  prv_prepare_canvas_and_render_for_each_size(prv_render_action_menus_static_override,
+                                              prv_create_chevron_levels(), selected_index,
+                                              1 /* num_rows */, 0 /* additional_crumbs */);
+  cl_check(gbitmap_pbi_eq(
+      s_dest_bitmap,
+      TEST_NAMED_PBI_FILE("test_action_menu_window__wide_display_mode_with_chevron")));
 }
 
 void test_action_menu_window__wide_display_mode_with_chevron_and_long_labels(void) {

@@ -32,6 +32,7 @@ typedef struct {
   Animation *level_change_anim;
   const ActionMenuItem *performed_item;
   Window *result_window;
+  PreferredContentSize content_size;
   bool frozen;
 } ActionMenuData;
 

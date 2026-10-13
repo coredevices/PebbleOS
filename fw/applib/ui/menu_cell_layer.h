@@ -9,6 +9,7 @@
 
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text.h>
+#include <applib/preferred_content_size.h>
 
 //! @file menu_layer.h
 //! @addtogroup UI
@@ -147,6 +148,10 @@ int16_t menu_cell_basic_cell_height(void);
 //! "Small" cell height in pixels.
 int16_t menu_cell_small_cell_height(void);
 
+//! @internal
+//! "Small" cell height in pixels at the given content size.
+int16_t menu_cell_small_cell_height_for_size(PreferredContentSize size);
+
 //! Default section header height in pixels
 #define MENU_CELL_BASIC_HEADER_HEIGHT ((const int16_t)16)
 
@@ -155,6 +160,11 @@ int16_t menu_cell_small_cell_height(void);
 
 //! Default cell horizontal inset in pixels.
 int16_t menu_cell_basic_horizontal_inset(void);
+
+//! @internal
+//! Default cell horizontal inset in pixels at the given content size.
+int16_t menu_cell_basic_horizontal_inset_for_size(PreferredContentSize size);
+
 #define MENU_CELL_ROUND_FOCUSED_HORIZONTAL_INSET   ((const int16_t)16)
 #define MENU_CELL_ROUND_UNFOCUSED_HORIZONTAL_INSET ((const int16_t)34)
 

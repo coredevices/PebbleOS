@@ -22,6 +22,10 @@ GFont PBL_WEAK system_theme_get_font(TextStyleFont font) {
   return nullptr;
 }
 
+GFont PBL_WEAK system_theme_get_font_for_size(PreferredContentSize size, TextStyleFont font) {
+  return nullptr;
+}
+
 GFont PBL_WEAK system_theme_get_font_for_default_size(TextStyleFont font) {
   return nullptr;
 }
