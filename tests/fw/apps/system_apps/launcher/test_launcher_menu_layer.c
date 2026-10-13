@@ -542,10 +542,10 @@ void test_launcher_menu_layer__cell_heights_at_least_minimum(void) {
     s_content_size = size;
     const LauncherMenuLayerStyle *style = launcher_menu_layer_get_style();
 #if PBL_RECT
-    cl_assert(style->cell_height >= LAUNCHER_MENU_LAYER_MIN_CELL_HEIGHT);
+    cl_assert(style->cell_height >= SYSTEM_THEME_LAUNCHER_MIN_CELL_HEIGHT);
 #else
-    cl_assert(style->focused_cell_height >= LAUNCHER_MENU_LAYER_MIN_FOCUSED_CELL_HEIGHT);
-    cl_assert(style->unfocused_cell_height >= LAUNCHER_MENU_LAYER_MIN_UNFOCUSED_CELL_HEIGHT);
+    cl_assert(style->focused_cell_height >= SYSTEM_THEME_LAUNCHER_MIN_FOCUSED_CELL_HEIGHT);
+    cl_assert(style->unfocused_cell_height >= SYSTEM_THEME_LAUNCHER_MIN_UNFOCUSED_CELL_HEIGHT);
 #endif
   }
 }
