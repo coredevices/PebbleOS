@@ -370,6 +370,17 @@ void test_music__playing_long_text(void) {
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
+void test_music__playing_emoji(void) {
+  prv_set_now_playing("Heaven \xF0\x9F\x98\x80\xF0\x9F\x8E\xB8", "The Cure \xF0\x9F\x98\x8E");
+  s_music_play_state = MusicPlayStatePlaying;
+  s_music_track_pos_ms = 75 * 1000;
+  s_music_track_length_ms = 245 * 1000;
+  s_music_progress_supported = true;
+
+  prv_launch_app_and_render();
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
 void test_music__paused(void) {
   prv_set_now_playing("Just Like Heaven", "The Cure");
   s_music_play_state = MusicPlayStatePaused;

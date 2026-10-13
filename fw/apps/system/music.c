@@ -239,8 +239,9 @@ static const ButtonId BUTTON_FORWARD = BUTTON_ID_DOWN;
 static const ButtonId BUTTON_BACKWARD = BUTTON_ID_UP;
 
 static const int16_t BOUNCEBACK_OFFSET = 6;
-// These offsets get rid of the empty space above the first line of text,
-// enabling neater animations by clipping immediately at the top of the text.
+// These offsets get rid of the empty space above the first line of text, enabling neater
+// animations by clipping immediately at the top of the text. The layers only clip while animating
+// so glyphs taller than Latin (emoji, CJK) keep their tops at rest.
 static const int16_t TITLE_BOUNDS_OFFSET = 5;
 static const int16_t ARTIST_BOUNDS_OFFSET = 3;
 static const int16_t TIME_BOUNDS_OFFSET = 2;
@@ -469,6 +470,13 @@ static Animation *prv_create_bounceback_animation(MusicAppData *data) {
 static void prv_update_track_progress(MusicAppData *data);
 static void prv_update_now_playing(MusicAppData *data);
 
+static void prv_set_text_clips(MusicAppData *data, bool clips) {
+  layer_set_clips(&data->artist_text_layer.layer, clips);
+  layer_set_clips(&data->title_text_layer.layer, clips);
+  layer_set_clips(&data->position_text_layer.layer, clips);
+  layer_set_clips(&data->length_text_layer.layer, clips);
+}
+
 static void prv_flip_animated_text(Animation *animation, bool finished, void *context) {
   MusicAppData *data = context;
   data->pause_track_pos_updates = false;
@@ -515,6 +523,7 @@ static Animation *prv_create_cassette_animation(MusicAppData *data) {
 static void prv_transition_stopped(Animation *animation, bool finished, void *context) {
   MusicAppData *data = context;
   data->transition = nullptr;
+  prv_set_text_clips(data, false);
   if (!finished) {
     return;
   }
@@ -540,6 +549,7 @@ static void prv_trigger_track_change_animation(MusicAppData *data) {
     return;
   }
   data->pause_track_pos_updates = true;
+  prv_set_text_clips(data, true);
   Animation *scroll_up = prv_create_upwards_animation(data);
   Animation *bounceback = prv_create_bounceback_animation(data);
   animation_set_handlers(scroll_up,
@@ -1044,6 +1054,7 @@ static void prv_configure_music_text_layer(TextLayer *text_layer, char *text_buf
   text_layer_init_with_parameters(text_layer, rect, text_buffer, font, GColorBlack, GColorClear,
                                   align, GTextOverflowModeFill);
   layer_set_bounds(&text_layer->layer, &GRect(0, -y_offset, rect->size.w, rect->size.h + y_offset));
+  layer_set_clips(&text_layer->layer, false);
 }
 
 // The album-art square fills the width from the top down to just above the times row. On rect
@@ -1432,6 +1443,7 @@ static void prv_title_restore(MusicAppData *data) {
   layer_set_frame(&data->title_text_layer.layer, &title_rect);
   layer_set_bounds(&data->title_text_layer.layer, &GRect(0, -TITLE_BOUNDS_OFFSET, title_rect.size.w,
                                                          title_rect.size.h + TITLE_BOUNDS_OFFSET));
+  layer_set_clips(&data->title_text_layer.layer, false);
 }
 
 // Place the artist as a centred, outlined single line over the bottom of the cover.
@@ -1444,6 +1456,7 @@ static void prv_artist_setup_art(MusicAppData *data) {
   text_layer_set_overflow_mode(&data->artist_text_layer, GTextOverflowModeTrailingEllipsis);
   layer_set_frame(&data->artist_text_layer.layer, &ar);
   layer_set_bounds(&data->artist_text_layer.layer, &GRect(0, 0, ar.size.w, ar.size.h));
+  layer_set_clips(&data->artist_text_layer.layer, true);
 }
 
 // Restore the artist to its stock layout for the no-art screen.
@@ -1457,6 +1470,7 @@ static void prv_artist_restore(MusicAppData *data) {
   layer_set_frame(&data->artist_text_layer.layer, &ar);
   layer_set_bounds(&data->artist_text_layer.layer,
                    &GRect(0, -ARTIST_BOUNDS_OFFSET, ar.size.w, ar.size.h + ARTIST_BOUNDS_OFFSET));
+  layer_set_clips(&data->artist_text_layer.layer, false);
 }
 
 //! Reflect the current art state: show/hide the cover, lay out the artist (outlined, over the art)
