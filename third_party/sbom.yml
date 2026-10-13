@@ -85,9 +85,9 @@ components:
     nested: [ext]
     supplier: The Apache Software Foundation
     description: Apache NimBLE Bluetooth LE stack with PebbleOS changes
-    commit: 56441c054f9365b337db7a76ade8a134737da4e1
+    commit: 491c74cec9bd3f82200079ad8a1941902861a440
     license: Apache-2.0
-    purl: pkg:github/coredevices/mynewt-nimble@56441c054f9365b337db7a76ade8a134737da4e1
+    purl: pkg:github/coredevices/mynewt-nimble@491c74cec9bd3f82200079ad8a1941902861a440
     url: https://github.com/coredevices/mynewt-nimble
 
   - name: nrf_fuel_gauge
