@@ -10,6 +10,7 @@
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+#include <pbl/task_wdt/task_wdt.h>
 
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
@@ -99,7 +100,15 @@ static void prv_host_task_main(void *unused) {
   ble_hs_cfg.sync_cb = prv_sync_cb;
   ble_hs_cfg.reset_cb = prv_reset_cb;
 
-  nimble_port_run();
+  PBL_ASSERTN(pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr, nullptr) >= 0);
+
+  struct ble_npl_eventq *evq = nimble_port_get_dflt_eventq();
+  while (1) {
+    pbl_task_wdt_set_waiting(true);
+    struct ble_npl_event *ev = ble_npl_eventq_get(evq, BLE_NPL_TIME_FOREVER);
+    pbl_task_wdt_set_waiting(false);
+    ble_npl_event_run(ev);
+  }
 }
 
 static void prv_ble_hs_stop_cb(int status, void *arg) {
