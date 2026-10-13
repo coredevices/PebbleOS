@@ -14,6 +14,8 @@
  *
  * The hardware is reference counted: it is powered while at least one user holds it through
  * mag_use() or mag_start_sampling(), and turned off when the last user calls mag_release().
+ * If mag_init() could not bring the hardware up, the calls do nothing: mag_read_data() returns
+ * @ref MagReadNoMag and mag_change_sample_rate() false.
  *
  * @code{.c}
  * MagData data;
