@@ -115,7 +115,6 @@ API reference, protocols, file formats and external resources.
 :caption: Getting started
 
 getting_started/index.md
-getting_started/prerequisites.md
 ```
 
 ```{toctree}

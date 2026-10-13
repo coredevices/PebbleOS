@@ -63,7 +63,7 @@ html_context = {
 # Pages that moved, served as redirects from their old URL
 pbl_redirects = {
     "development/quickstart": "getting_started/index",
-    "development/getting_started": "getting_started/prerequisites",
+    "development/getting_started": "getting_started/index",
     "development/options": "pbl/configure",
     "development/building_fw": "pbl/flash",
     "development/pbl": "pbl/index",
