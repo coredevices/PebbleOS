@@ -5,6 +5,8 @@
 
 #include <inttypes.h>
 
+#include <pbl/drivers/accel.h>
+
 /**
  * @defgroup drivers_accel_qemu QEMU accelerometer
  * @ingroup drivers_accel
@@ -21,5 +23,12 @@
  * @param len Length of @p data in bytes.
  */
 void qemu_accel_msg_callback(const uint8_t *data, uint32_t len);
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_accel pbl_accel_qemu;
+/** @endcond */
+
+/** @brief The QEMU accelerometer. */
+#define QEMU_ACCEL (&pbl_accel_qemu)
 
 /** @} */

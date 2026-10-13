@@ -13,10 +13,12 @@
 #include <pbl/mcu/cache.h>
 #include <pbl/services/regular_timer.h>
 
+#include <board/board.h>
+
 /**
  * @defgroup drivers_imu_lis2dw12 LIS2DW12
  * @ingroup drivers_imu
- * @brief ST LIS2DW12 accelerometer driver board configuration.
+ * @brief ST LIS2DW12 @ref drivers_accel driver.
  * @{
  */
 
@@ -27,8 +29,6 @@
 
 /** @brief LIS2DW12 driver state, owned by the driver. */
 typedef struct LIS2DW12State {
-  /** Driver initialized. */
-  bool initialized;
   /** Watch mounted rotated 180 degrees: X and Y are inverted. */
   bool rotated;
   /** Shake detection requested. */
@@ -64,8 +64,10 @@ typedef struct LIS2DW12State {
   bool wu_active;
 } LIS2DW12State;
 
-/** @brief LIS2DW12 board configuration. */
-typedef struct LIS2DW12Config {
+/** @brief LIS2DW12 accelerometer. */
+struct pbl_lis2dw12 {
+  /** Accelerometer, child of the I2C bus. */
+  struct pbl_accel accel;
   /** Driver state. */
   LIS2DW12State *state;
   /** I2C device. */
@@ -78,6 +80,32 @@ typedef struct LIS2DW12Config {
   uint8_t axis_map[3];
   /** Direction of each watch axis: 1 or -1. */
   int8_t axis_dir[3];
-} LIS2DW12Config;
+};
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_accel_ops pbl_lis2dw12_ops;
+/** @endcond */
+
+/**
+ * @brief Define a LIS2DW12.
+ *
+ * Only one instance is supported.
+ *
+ * @param sym Symbol of the instance; the accelerometer is @c sym.accel.
+ * @param _bus I2C bus.
+ * @param _addr 7-bit I2C address.
+ * @param ... Designated initializers of the remaining fields: @c int1, @c int1_in, @c axis_map
+ *            and @c axis_dir.
+ */
+#define PBL_LIS2DW12_DEFINE(sym, _bus, _addr, ...)                             \
+  PBL_ACCEL_STATE_DEFINE(sym);                                                 \
+  static LIS2DW12State sym##_lis2dw12_state;                                   \
+  const struct pbl_lis2dw12 sym = {                                            \
+    .accel = PBL_ACCEL_INIT(sym, "lis2dw12", &(_bus)->dev, &pbl_lis2dw12_ops), \
+    .state = &sym##_lis2dw12_state,                                            \
+    .i2c = PBL_I2C_DEV(_bus, _addr),                                           \
+    __VA_ARGS__,                                                               \
+  };                                                                           \
+  PBL_DEVICE_REGISTER(sym, &sym.accel.dev)
 
 /** @} */

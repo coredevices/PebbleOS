@@ -155,7 +155,6 @@ static void init_drivers(void) {
   touch_sensor_init();
 #endif
 
-  accel_init();
 #ifdef CONFIG_MAG
   mag_init();
 #endif

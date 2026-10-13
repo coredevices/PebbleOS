@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <pbl/drivers/backlight/pwm.h>
-#include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/services/imu/units.h>
 
 #define BT_VENDOR_ID   0x0EEA
@@ -119,4 +118,3 @@ extern const struct pbl_i2c_dev *const I2C_OPT3001;
 extern const struct pbl_i2c_dev *const I2C_DA7212;
 extern const struct pbl_i2c_dev *const I2C_MMC5603NJ;
 extern const struct pbl_i2c_dev *const I2C_BMP390;
-extern const LSM6DSOConfig *const LSM6DSO;

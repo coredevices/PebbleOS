@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/imu/qemu.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
@@ -116,3 +117,5 @@ void board_early_init(void) {
 
 void board_init(void) {
 }
+
+const struct pbl_accel *const ACCEL = QEMU_ACCEL;

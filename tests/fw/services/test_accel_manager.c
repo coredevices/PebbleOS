@@ -38,10 +38,6 @@ int32_t vibes_get_vibe_strength(void) {
 uint32_t vibes_get_time_since_last_vibe_ms(void) {
   return UINT32_MAX;
 }
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {
-}
-void accel_set_shake_sensitivity_percent(uint8_t percent) {
-}
 bool shell_prefs_get_accel_shake_log_info_enabled(void) {
   return false;
 }
@@ -49,44 +45,62 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
   return nullptr;
 }
 
-// fake accel.h impl
+// Fake accelerometer, through the real class layer
 static int s_sampling_interval_us = 1000000 / ACCEL_SAMPLING_25HZ;
 static int s_num_samples = 0;
 
 //! If true, ignore attempts to change the sampling interval
 static bool s_force_sampling_interval;
 
-uint32_t accel_set_sampling_interval(uint32_t interval_us) {
+static int prv_init(const struct pbl_accel *accel) {
+  return 0;
+}
+
+static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t interval_us,
+                                     uint32_t *actual_us) {
   if (!s_force_sampling_interval) {
     s_sampling_interval_us = interval_us;
   }
-  return accel_get_sampling_interval();
+  *actual_us = s_sampling_interval_us;
+  return 0;
 }
 
-uint32_t accel_get_sampling_interval(void) {
+static uint32_t prv_get_sampling_interval(const struct pbl_accel *accel) {
   return s_sampling_interval_us;
 }
 
-void accel_set_num_samples(uint32_t num_samples) {
+static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_samples) {
   s_num_samples = num_samples;
-}
-
-uint32_t accel_get_max_num_samples(void) {
-  return 32;
-}
-int accel_peek(AccelDriverSample *data) {
   return 0;
 }
-void accel_enable_shake_detection(bool on) {
+
+static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
+  return 32;
 }
-bool accel_get_shake_detection_enabled(void) {
-  return false;
+
+static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *sample) {
+  return 0;
 }
-void accel_enable_double_tap_detection(bool on) {
+
+static int prv_set_detection(const struct pbl_accel *accel, bool on) {
+  return 0;
 }
-bool accel_get_double_tap_detection_enabled(void) {
-  return false;
-}
+
+static const struct pbl_accel_ops s_fake_ops = {
+  .init = prv_init,
+  .set_sampling_interval = prv_set_sampling_interval,
+  .get_sampling_interval = prv_get_sampling_interval,
+  .set_num_samples = prv_set_num_samples,
+  .get_max_num_samples = prv_get_max_num_samples,
+  .peek = prv_peek,
+  .set_shake_detection = prv_set_detection,
+  .set_double_tap_detection = prv_set_detection,
+};
+
+PBL_ACCEL_STATE_DEFINE(s_fake_accel);
+static const struct pbl_accel s_fake_accel =
+    PBL_ACCEL_INIT(s_fake_accel, "accel", nullptr, &s_fake_ops);
+const struct pbl_accel *const ACCEL = &s_fake_accel;
 
 // Data events for a NewTimers subscriber land here, so a test can count them
 static int s_posted_events;
@@ -105,6 +119,7 @@ bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {
 // Unit Test Code
 
 void test_accel_manager__initialize(void) {
+  cl_assert_equal_i(pbl_device_init(&s_fake_accel.dev), 0);
   accel_manager_init();
 
   s_sampling_interval_us = 1000000 / ACCEL_SAMPLING_25HZ;
@@ -277,7 +292,9 @@ static void prv_feed(int count) {
   for (int i = 0; i < count; i++) {
     AccelDriverSample sample = {.x = i, .timestamp_us = s_now_us};
     s_now_us += 1000000 / ACCEL_SAMPLING_25HZ;
-    accel_cb_new_sample(&sample);
+    pbl_accel_lock(ACCEL);
+    pbl_accel_report_sample(ACCEL, &sample);
+    pbl_accel_unlock(ACCEL);
   }
 }
 

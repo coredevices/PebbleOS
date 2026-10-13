@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
@@ -253,31 +254,13 @@ PBL_I2C_SF32LB_DMA_DEFINE(s_i2c1, "i2c1", I2C1, 400000, PAD_PA32, I2C1_SCL, PAD_
 PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
 PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c1, 0);
 
-static LIS2DW12State s_lis2dw12_state;
+PBL_LIS2DW12_DEFINE(s_lis2dw12, &s_i2c1.bus, 0x19,
+                    .int1 = {.peripheral = hwp_gpio1, .gpio_pin = 26},
+                    .int1_in = PBL_GPIO(SF32LB_GPIO1, 26, 0),
+                    .axis_map = {[AXIS_X] = 0, [AXIS_Y] = 1, [AXIS_Z] = 2},
+                    .axis_dir = {[AXIS_X] = -1, [AXIS_Y] = 1, [AXIS_Z] = 1});
 
-static const LIS2DW12Config s_lis2dw12_config = {
-  .state = &s_lis2dw12_state,
-  .i2c = PBL_I2C_DEV(&s_i2c1.bus, 0x19),
-  .int1 =
-      {
-        .peripheral = hwp_gpio1,
-        .gpio_pin = 26,
-      },
-  .int1_in = PBL_GPIO(SF32LB_GPIO1, 26, 0),
-  .axis_map =
-      {
-        [AXIS_X] = 0,
-        [AXIS_Y] = 1,
-        [AXIS_Z] = 2,
-      },
-  .axis_dir = {
-    [AXIS_X] = -1,
-    [AXIS_Y] = 1,
-    [AXIS_Z] = 1,
-  },
-};
-
-const LIS2DW12Config *const LIS2DW12 = &s_lis2dw12_config;
+const struct pbl_accel *const ACCEL = &s_lis2dw12.accel;
 
 static const struct pbl_i2c_dev s_i2c_mmc5603nj = PBL_I2C_DEV(&s_i2c1.bus, 0x30);
 

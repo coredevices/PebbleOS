@@ -5,6 +5,7 @@
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/nrf5.h>
+#include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -126,32 +127,16 @@ static const struct pbl_i2c_dev I2C_SLAVE_BMP390 = PBL_I2C_DEV(&s_i2c_iic2.bus, 
 
 const struct pbl_i2c_dev *const I2C_BMP390 = &I2C_SLAVE_BMP390;
 
-static LSM6DSOState s_lsm6dso_state;
+PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c_iic2.bus, 0x6A,
+                   .int1 =
+                       {.peripheral = NRFX_GPIOTE_INSTANCE(0),
+                        .channel = 7,
+                        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13)},
+                   .int1_in = PBL_GPIO(NRF5_GPIO_P1, 13, 0),
+                   .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
+                   .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = 1, [AXIS_Z] = 1});
 
-static const LSM6DSOConfig s_lsm6dso_config = {
-  .state = &s_lsm6dso_state,
-  .i2c = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x6A),
-  .int1 =
-      {
-        .peripheral = NRFX_GPIOTE_INSTANCE(0),
-        .channel = 7,
-        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13),
-      },
-  .int1_in = PBL_GPIO(NRF5_GPIO_P1, 13, 0),
-  .axis_map =
-      {
-        [AXIS_X] = 1,
-        [AXIS_Y] = 0,
-        [AXIS_Z] = 2,
-      },
-  .axis_dir = {
-    [AXIS_X] = 1,
-    [AXIS_Y] = 1,
-    [AXIS_Z] = 1,
-  },
-};
-
-const LSM6DSOConfig *const LSM6DSO = &s_lsm6dso_config;
+const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
 
 PBL_IRQ_CONNECT(I2S, 5, nrfx_i2s_0_irq_handler, , 0);
 

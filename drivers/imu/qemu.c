@@ -41,9 +41,11 @@
 //! replay from a phone will work in realtime with minimal latency
 //! without speeding up or slowing down the signal during replay.
 
+#include <errno.h>
+
 #include <pbl/drivers/accel.h>
+#include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/rtc.h>
-#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -52,9 +54,6 @@
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(imu, CONFIG_DRIVER_IMU_LOG_LEVEL);
-
-static bool s_initialized;
-static PBL_MUTEX_DEFINE(s_accel_mutex);
 
 static uint32_t s_sampling_interval_ms = 0;
 static const AccelRawData s_default_sample = {.x = 0, .y = 0, .z = -1000};
@@ -99,39 +98,34 @@ static void prv_stop_timer(void) {
 // frequency. It feeds samples at the right rate into the s_latest_reading
 // global (for peek mode) and into the accel driver.
 static void prv_timer_cb(void *data) {
-  AccelDriverSample sample;
-  bool deliver;
+  const struct pbl_accel *accel = data;
 
-  pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
+  pbl_accel_lock(accel);
 
   if (s_current_rcv_sample < s_num_rcv_samples) {
     s_latest_reading = s_rcv_buffer[s_current_rcv_sample++];
   }
 
   // Keep it simple; this accelerometer has no FIFO.
-  deliver = s_num_fifo_samples > 0;
-  if (deliver) {
+  if (s_num_fifo_samples > 0) {
+    AccelDriverSample sample;
     prv_construct_driver_sample(&sample);
+    PBL_LOG_VERBOSE("Accel sample: %d, %d, %d", sample.x, sample.y, sample.z);
+    pbl_accel_report_sample(accel, &sample);
   }
 
   if (s_num_fifo_samples == 0 && s_current_rcv_sample >= s_num_rcv_samples) {
     prv_stop_timer();
   }
 
-  pbl_mutex_unlock(&s_accel_mutex);
-
-  // Handed over unlocked, since the manager locks its mutex before calling into this driver
-  if (deliver) {
-    PBL_LOG_VERBOSE("Accel sample to manager: %d, %d, %d", sample.x, sample.y, sample.z);
-    accel_cb_new_sample(&sample);
-  }
+  pbl_accel_unlock(accel);
 }
 
 // Start/reschedule the timer that feeds the FIFO/s_latest_reading out of the
 // samples received from the host
 static void prv_reschedule_timer(void) {
-  bool success = new_timer_start(s_timer_id, s_sampling_interval_ms, prv_timer_cb, nullptr,
-                                 TIMER_START_FLAG_REPEATING);
+  bool success = new_timer_start(s_timer_id, s_sampling_interval_ms, prv_timer_cb,
+                                 (void *)QEMU_ACCEL, TIMER_START_FLAG_REPEATING);
   PBL_ASSERTN(success);
   s_timer_running = true;
 }
@@ -157,7 +151,7 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
   s_num_rcv_samples = hdr->num_samples;
 #endif
   s_current_rcv_sample = 0;
-  pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
+  pbl_accel_lock(QEMU_ACCEL);
   {
     for (uint32_t i = 0; i < s_num_rcv_samples; ++i) {
       s_rcv_buffer[i].x = pbl_be16_to_cpu(hdr->samples[i].x);
@@ -173,7 +167,7 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
       prv_reschedule_timer();
     }
   }
-  pbl_mutex_unlock(&s_accel_mutex);
+  pbl_accel_unlock(QEMU_ACCEL);
 
   // Send a response, even though none of the clients care about it.
   QemuProtocolAccelResponseHeader resp = {
@@ -182,74 +176,62 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
   qemu_serial_send(QemuProtocol_Accel, (uint8_t *)&resp, sizeof(resp));
 }
 
-void accel_init(void) {
-  PBL_ASSERTN(!s_initialized);
-  s_initialized = true;
+static int prv_init(const struct pbl_accel *accel) {
   s_latest_reading = s_default_sample;
   s_timer_id = new_timer_create();
-}
 
-uint32_t accel_set_sampling_interval(uint32_t interval_us) {
-  pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
-  {
-    s_sampling_interval_ms = interval_us / 1000;
-
-    if (s_timer_running) {
-      // If timer is already running, update it's frequency
-      prv_reschedule_timer();
-    }
-  }
-  pbl_mutex_unlock(&s_accel_mutex);
-  return accel_get_sampling_interval();
-}
-
-uint32_t accel_get_sampling_interval(void) {
-  return s_sampling_interval_ms * 1000;
-}
-
-uint32_t accel_get_max_num_samples(void) {
-  return QEMU_ACCEL_RCV_BUFFER_SAMPLES;
-}
-
-void accel_set_num_samples(uint32_t num_samples) {
-  pbl_mutex_lock(&s_accel_mutex, PBL_FOREVER);
-  {
-    s_num_fifo_samples = num_samples;
-
-    // Setup our timer to fire at the right frequency. If using peek mode, then
-    // the timer still has to run if there are any samples received from the
-    // host that we need to feed into the current peek value.
-    if (num_samples > 0 || s_num_rcv_samples > 0) {
-      prv_reschedule_timer();
-    } else {
-      prv_stop_timer();
-    }
-  }
-  pbl_mutex_unlock(&s_accel_mutex);
-}
-
-int accel_peek(AccelDriverSample *data) {
-  prv_construct_driver_sample(data);
   return 0;
 }
 
-void accel_enable_shake_detection(bool on) {
+static uint32_t prv_get_sampling_interval(const struct pbl_accel *accel) {
+  return s_sampling_interval_ms * 1000;
 }
 
-bool accel_get_shake_detection_enabled(void) {
-  return false;
+static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t interval_us,
+                                     uint32_t *actual_us) {
+  s_sampling_interval_ms = interval_us / 1000;
+
+  if (s_timer_running) {
+    prv_reschedule_timer();
+  }
+
+  *actual_us = prv_get_sampling_interval(accel);
+
+  return 0;
 }
 
-void accel_enable_double_tap_detection(bool on) {
+static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
+  return QEMU_ACCEL_RCV_BUFFER_SAMPLES;
 }
 
-bool accel_get_double_tap_detection_enabled(void) {
-  return false;
+static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_samples) {
+  s_num_fifo_samples = num_samples;
+
+  // The timer also runs in peek mode while samples received from the host remain to be latched
+  if (num_samples > 0 || s_num_rcv_samples > 0) {
+    prv_reschedule_timer();
+  } else {
+    prv_stop_timer();
+  }
+
+  return 0;
 }
 
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *sample) {
+  prv_construct_driver_sample(sample);
+
+  return 0;
 }
 
-void accel_set_shake_sensitivity_percent(uint8_t percent) {
-  (void)percent;
-}
+static const struct pbl_accel_ops s_ops = {
+  .init = prv_init,
+  .set_sampling_interval = prv_set_sampling_interval,
+  .get_sampling_interval = prv_get_sampling_interval,
+  .set_num_samples = prv_set_num_samples,
+  .get_max_num_samples = prv_get_max_num_samples,
+  .peek = prv_peek,
+};
+
+PBL_ACCEL_STATE_DEFINE(pbl_accel_qemu);
+const struct pbl_accel pbl_accel_qemu = PBL_ACCEL_INIT(pbl_accel_qemu, "accel", nullptr, &s_ops);
+PBL_DEVICE_REGISTER(pbl_accel_qemu, &pbl_accel_qemu.dev);

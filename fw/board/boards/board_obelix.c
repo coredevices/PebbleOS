@@ -4,6 +4,7 @@
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
+#include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
@@ -280,45 +281,18 @@ PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", I2C2, 400000, PAD_PA32, I2C2_SCL, PAD_
 PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
 PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c2, 0);
 
-static LSM6DSOState s_lsm6dso_state;
-
-static const LSM6DSOConfig s_lsm6dso_config = {
-  .state = &s_lsm6dso_state,
-  .i2c = PBL_I2C_DEV(&s_i2c2.bus, 0x6a),
-  .int1 =
-      {
-        .peripheral = hwp_gpio1,
-        .gpio_pin = 38,
-      },
-  .int1_in = PBL_GPIO(SF32LB_GPIO1, 38, 0),
 #ifdef CONFIG_IS_BIGBOARD
-  .axis_map =
-      {
-        [AXIS_X] = 0,
-        [AXIS_Y] = 1,
-        [AXIS_Z] = 2,
-      },
-  .axis_dir = {
-    [AXIS_X] = -1,
-    [AXIS_Y] = -1,
-    [AXIS_Z] = 1,
-  },
+#define LSM6DSO_AXIS_DIR_Y (-1)
 #else
-  .axis_map =
-      {
-        [AXIS_X] = 0,
-        [AXIS_Y] = 1,
-        [AXIS_Z] = 2,
-      },
-  .axis_dir = {
-    [AXIS_X] = -1,
-    [AXIS_Y] = 1,
-    [AXIS_Z] = 1,
-  },
+#define LSM6DSO_AXIS_DIR_Y 1
 #endif
-};
 
-const LSM6DSOConfig *const LSM6DSO = &s_lsm6dso_config;
+PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6a, .int1 = {.peripheral = hwp_gpio1, .gpio_pin = 38},
+                   .int1_in = PBL_GPIO(SF32LB_GPIO1, 38, 0),
+                   .axis_map = {[AXIS_X] = 0, [AXIS_Y] = 1, [AXIS_Z] = 2},
+                   .axis_dir = {[AXIS_X] = -1, [AXIS_Y] = LSM6DSO_AXIS_DIR_Y, [AXIS_Z] = 1});
+
+const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
 
 static const struct pbl_i2c_dev s_i2c_mmc5603nj = PBL_I2C_DEV(&s_i2c2.bus, 0x30);
 

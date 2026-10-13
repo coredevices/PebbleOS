@@ -67,7 +67,9 @@ void vibe_set_strength(int8_t strength) {
   s_strength_set_count++;
 }
 
-uint32_t accel_get_max_num_samples(void) {
+const struct pbl_accel *const ACCEL = nullptr;
+
+uint32_t pbl_accel_get_max_num_samples(const struct pbl_accel *accel) {
   return 32;
 }
 

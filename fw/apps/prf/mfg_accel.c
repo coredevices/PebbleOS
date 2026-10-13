@@ -64,7 +64,7 @@ static void prv_update_display(void *context) {
   AppData *data = context;
 
   AccelDriverSample sample;
-  int ret = accel_peek(&sample);
+  int ret = pbl_accel_peek(ACCEL, &sample);
 
   if (ret != 0) {
     sniprintf(data->status_string, sizeof(data->status_string), "ACCEL ERROR:\n%d", ret);

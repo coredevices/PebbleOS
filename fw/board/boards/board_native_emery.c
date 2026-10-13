@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/imu/posix.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/drivers/uart/posix.h>
 
@@ -74,3 +75,5 @@ void board_early_init(void) {
 
 void board_init(void) {
 }
+
+const struct pbl_accel *const ACCEL = POSIX_ACCEL;

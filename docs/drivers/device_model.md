@@ -110,6 +110,21 @@ voltage, mode and whether it is always on; consumers point at the regulator
 (`MicDevice.vdd`) and switch it through its use count, and a PMIC pin is an
 ordinary `PBL_GPIO(&s_npm1300_gpio.port, ...)`.
 
+## Reporting to consumers
+
+Drivers never call into the services that consume their data. A class that
+produces data, such as the accelerometer, lets a consumer register a
+listener (`pbl_accel_set_listener()`), and its drivers report through the
+class (`pbl_accel_report_samples()`, `pbl_accel_report_event()`), as IIO
+producers push to buffers and events on Linux. Shake and double tap are
+accelerometer events, not input events: they carry the axis and direction
+they were detected on.
+
+The accelerometer serializes its driver, its reports and its listener with
+one recursive device lock. A driver runs its interrupt bottom half under it,
+and the listener may take it around its own state, so there is no second
+lock to order against it.
+
 ## Adding a driver
 
 1. Define the driver struct embedding the class struct, the class ops and

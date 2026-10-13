@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/touch/cst816/touch_sensor_definitions.h>
 #include <pbl/services/imu/units.h>
 
@@ -16,7 +15,6 @@ extern UARTDevice *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
-extern const LSM6DSOConfig *const LSM6DSO;
 extern const struct pbl_i2c_dev *const I2C_MMC5603NJ;
 extern const struct pbl_i2c_dev *const I2C_AW86225;
 extern const struct pbl_i2c_dev *const I2C_W1160;

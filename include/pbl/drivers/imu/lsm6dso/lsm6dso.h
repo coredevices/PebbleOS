@@ -13,34 +13,32 @@
 #include <pbl/mcu/cache.h>
 #include <pbl/services/regular_timer.h>
 
+#include <board/board.h>
+
 /**
  * @defgroup drivers_imu IMU
  * @ingroup drivers
- * @brief Board configuration of inertial and magnetic sensor drivers.
+ * @brief Inertial and magnetic sensor drivers.
  *
- * Accelerometer drivers implement the accelerometer driver interface and the magnetometer
- * driver implements @ref drivers_mag. The headers here describe what a board provides to each
- * of them: a configuration with bus, interrupt and axis mapping, and storage for the driver
- * state.
+ * Accelerometer drivers implement @ref drivers_accel and the magnetometer driver implements
+ * @ref drivers_mag. The headers here describe what a board provides to each of them: bus,
+ * interrupt and axis mapping.
  *
  * @code{.c}
- * static LSM6DSOState s_lsm6dso_state;
+ * PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6A,
+ *                    .int1 = ...,
+ *                    .int1_in = ...,
+ *                    .axis_map = {0, 1, 2},
+ *                    .axis_dir = {1, 1, 1});
  *
- * static const LSM6DSOConfig s_lsm6dso = {
- *   .state = &s_lsm6dso_state,
- *   .i2c = ...,
- *   .int1 = ...,
- *   .int1_in = ...,
- *   .axis_map = {0, 1, 2},
- *   .axis_dir = {1, 1, 1},
- * };
+ * const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
  * @endcode
  */
 
 /**
  * @defgroup drivers_imu_lsm6dso LSM6DSO
  * @ingroup drivers_imu
- * @brief ST LSM6DSO accelerometer driver board configuration.
+ * @brief ST LSM6DSO @ref drivers_accel driver.
  * @{
  */
 
@@ -55,8 +53,6 @@
 
 /** @brief LSM6DSO driver state, owned by the driver. */
 typedef struct LSM6DSOState {
-  /** Driver initialized. */
-  bool initialized;
   /** Watch mounted rotated 180 degrees: X and Y are inverted. */
   bool rotated;
   /** Shake detection requested. */
@@ -90,8 +86,10 @@ typedef struct LSM6DSOState {
   bool int1_requeued;
 } LSM6DSOState;
 
-/** @brief LSM6DSO board configuration. */
-typedef struct LSM6DSOConfig {
+/** @brief LSM6DSO accelerometer. */
+struct pbl_lsm6dso {
+  /** Accelerometer, child of the I2C bus. */
+  struct pbl_accel accel;
   /** Driver state. */
   LSM6DSOState *state;
   /** I2C device. */
@@ -104,6 +102,32 @@ typedef struct LSM6DSOConfig {
   uint8_t axis_map[3];
   /** Direction of each watch axis: 1 or -1. */
   int8_t axis_dir[3];
-} LSM6DSOConfig;
+};
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_accel_ops pbl_lsm6dso_ops;
+/** @endcond */
+
+/**
+ * @brief Define an LSM6DSO.
+ *
+ * Only one instance is supported.
+ *
+ * @param sym Symbol of the instance; the accelerometer is @c sym.accel.
+ * @param _bus I2C bus.
+ * @param _addr 7-bit I2C address.
+ * @param ... Designated initializers of the remaining fields: @c int1, @c int1_in, @c axis_map
+ *            and @c axis_dir.
+ */
+#define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, ...)                            \
+  PBL_ACCEL_STATE_DEFINE(sym);                                               \
+  static LSM6DSOState sym##_lsm6dso_state;                                   \
+  const struct pbl_lsm6dso sym = {                                           \
+    .accel = PBL_ACCEL_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops), \
+    .state = &sym##_lsm6dso_state,                                           \
+    .i2c = PBL_I2C_DEV(_bus, _addr),                                         \
+    __VA_ARGS__,                                                             \
+  };                                                                         \
+  PBL_DEVICE_REGISTER(sym, &sym.accel.dev)
 
 /** @} */

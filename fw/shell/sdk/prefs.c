@@ -353,6 +353,14 @@ void shell_prefs_set_vibe_log_info_enabled(bool enabled) {
   // Not used in SDK shell
 }
 
+bool shell_prefs_get_accel_shake_log_info_enabled(void) {
+  return false;
+}
+
+void shell_prefs_set_accel_shake_log_info_enabled(bool enabled) {
+  // Not used in SDK shell
+}
+
 bool shell_prefs_get_settings_dbs_compacted_v1(void) {
   return true;
 }

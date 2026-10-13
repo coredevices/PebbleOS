@@ -33,8 +33,8 @@ typedef struct {
 
 // The maximum history we need to keep is based on the maximum time between accel samples (the
 // lowest sampling rate) in milliseconds and the maximum number of accel samples per update.
-#define MAX_HISTORY_MS    (accel_get_max_num_samples() * 1000 / ACCEL_MINIMUM_SAMPLING_RATE)
-#define END_NOT_SET       0
+#define MAX_HISTORY_MS (pbl_accel_get_max_num_samples(ACCEL) * 1000 / ACCEL_MINIMUM_SAMPLING_RATE)
+#define END_NOT_SET    0
 #define HISTORY_CLEAR_ALL 0
 
 static PBL_MUTEX_DEFINE(s_vibe_history_mutex);

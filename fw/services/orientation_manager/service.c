@@ -19,7 +19,7 @@
 void prv_change_orientation(bool rotated) {
   display_set_rotated(rotated);
   button_set_rotated(rotated);
-  accel_set_rotated(rotated);
+  (void)pbl_accel_set_rotated(ACCEL, rotated);
   mag_set_rotated(rotated);
 #ifdef CONFIG_SERVICE_TOUCH
   touch_set_rotated(rotated);

@@ -14,10 +14,10 @@ static int prv_accel_read(const struct pbl_shell *sh, size_t argc, char **argv) 
   AccelDriverSample sample;
   int ret;
 
-  ret = accel_peek(&sample);
+  ret = pbl_accel_peek(ACCEL, &sample);
   if (ret != 0) {
     pbl_shell_error(sh, "read failed (%d)", ret);
-    return -EIO;
+    return ret;
   }
 
   pbl_shell_print(sh, "x=%" PRId16 " y=%" PRId16 " z=%" PRId16 " mg", sample.x, sample.y, sample.z);
@@ -25,11 +25,11 @@ static int prv_accel_read(const struct pbl_shell *sh, size_t argc, char **argv) 
 }
 
 static int prv_accel_info(const struct pbl_shell *sh, size_t argc, char **argv) {
-  pbl_shell_print(sh, "sampling interval: %" PRIu32 " us", accel_get_sampling_interval());
-  pbl_shell_print(sh, "max FIFO samples: %" PRIu32, accel_get_max_num_samples());
-  pbl_shell_print(sh, "shake detection: %s", accel_get_shake_detection_enabled() ? "on" : "off");
+  pbl_shell_print(sh, "sampling interval: %" PRIu32 " us", pbl_accel_get_sampling_interval(ACCEL));
+  pbl_shell_print(sh, "max FIFO samples: %" PRIu32, pbl_accel_get_max_num_samples(ACCEL));
+  pbl_shell_print(sh, "shake detection: %s", pbl_accel_get_shake_detection(ACCEL) ? "on" : "off");
   pbl_shell_print(sh, "double tap detection: %s",
-                  accel_get_double_tap_detection_enabled() ? "on" : "off");
+                  pbl_accel_get_double_tap_detection(ACCEL) ? "on" : "off");
   return 0;
 }
 

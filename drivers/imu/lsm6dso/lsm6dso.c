@@ -1,24 +1,31 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/exti.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/imu/units.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 
 #include <board/board.h>
 #include <kernel/util/delay.h>
 #include <kernel/util/sleep.h>
-#include <system/status_codes.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
+
+// The single instance, for interrupt and timer contexts
+static const struct pbl_lsm6dso *s_dev;
 
 // Implementation notes:
 //
@@ -44,7 +51,7 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 // Time to wait after reset (us)
 #define LSM6DSO_RESET_TIME_US 5
 
-// DRDY polling parameters for accel_peek single-shot mode
+// DRDY polling parameters for single-shot peeks
 #define LSM6DSO_DRDY_POLL_DELAY_MS   (5)   /* ms between data-ready polls */
 #define LSM6DSO_DRDY_POLL_TIMEOUT_MS (100) /* max wait (~5x 20ms at 52Hz ODR) */
 
@@ -176,9 +183,9 @@ PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 static bool prv_lsm6dso_write(uint8_t reg, const uint8_t *data, uint16_t len) {
   bool ret;
 
-  pbl_i2c_use(&LSM6DSO->i2c);
-  ret = pbl_i2c_write_register_block(&LSM6DSO->i2c, reg, len, data) == 0;
-  pbl_i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&s_dev->i2c);
+  ret = pbl_i2c_write_register_block(&s_dev->i2c, reg, len, data) == 0;
+  pbl_i2c_release(&s_dev->i2c);
 
   return ret;
 }
@@ -186,9 +193,9 @@ static bool prv_lsm6dso_write(uint8_t reg, const uint8_t *data, uint16_t len) {
 static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
   bool ret;
 
-  pbl_i2c_use(&LSM6DSO->i2c);
-  ret = pbl_i2c_read_register_block(&LSM6DSO->i2c, reg, len, data) == 0;
-  pbl_i2c_release(&LSM6DSO->i2c);
+  pbl_i2c_use(&s_dev->i2c);
+  ret = pbl_i2c_read_register_block(&s_dev->i2c, reg, len, data) == 0;
+  pbl_i2c_release(&s_dev->i2c);
 
   return ret;
 }
@@ -196,11 +203,11 @@ static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
 static bool prv_lsm6dso_read_fifo(uint16_t samples) {
   bool ret;
 
-  pbl_i2c_use(&LSM6DSO->i2c);
-  ret = pbl_i2c_read_register_block_dma(&LSM6DSO->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
+  pbl_i2c_use(&s_dev->i2c);
+  ret = pbl_i2c_read_register_block_dma(&s_dev->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
                                         samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
-                                        LSM6DSO->state->raw_sample_buf) == 0;
-  pbl_i2c_release(&LSM6DSO->i2c);
+                                        s_dev->state->raw_sample_buf) == 0;
+  pbl_i2c_release(&s_dev->i2c);
 
   return ret;
 }
@@ -228,13 +235,13 @@ static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
   uint8_t offset;
   int16_t val;
 
-  offset = LSM6DSO->axis_map[axis];
+  offset = s_dev->axis_map[axis];
 
-  val = LSM6DSO->axis_dir[axis] * (int16_t)(((int32_t)prv_raw_to_s16(&raw[offset * 2U]) *
-                                             (int32_t)CONFIG_ACCEL_LSM6DSO_SCALE_MG) /
-                                            (int32_t)LSM6DSO_S16_SCALE_RANGE);
+  val = s_dev->axis_dir[axis] * (int16_t)(((int32_t)prv_raw_to_s16(&raw[offset * 2U]) *
+                                           (int32_t)CONFIG_ACCEL_LSM6DSO_SCALE_MG) /
+                                          (int32_t)LSM6DSO_S16_SCALE_RANGE);
 
-  if (LSM6DSO->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
+  if (s_dev->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
     val *= -1;
   }
 
@@ -261,28 +268,28 @@ static uint64_t prv_get_curr_system_time_us(void) {
 static void prv_lsm6dso_process_samples(uint16_t num_samples, uint64_t timestamp_us) {
   // Each FIFO word is a tag byte followed by 6 data bytes; point the batch at the
   // first data byte and let the service step over the tags via the stride.
-  int8_t rotate = LSM6DSO->state->rotated ? -1 : 1;
+  int8_t rotate = s_dev->state->rotated ? -1 : 1;
   AccelRawBatch batch = {
-    .data = &LSM6DSO->state->raw_sample_buf[1],
+    .data = &s_dev->state->raw_sample_buf[1],
     .num_samples = num_samples,
     .stride = LSM6DSO_FIFO_WORD_SIZE_BYTES,
     .axis =
         {
           [AXIS_X] =
-              {.offset = LSM6DSO->axis_map[AXIS_X] * 2U,
-               .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_X] * rotate)},
+              {.offset = s_dev->axis_map[AXIS_X] * 2U,
+               .sign = (int8_t)(s_dev->axis_dir[AXIS_X] * rotate)},
           [AXIS_Y] =
-              {.offset = LSM6DSO->axis_map[AXIS_Y] * 2U,
-               .sign = (int8_t)(LSM6DSO->axis_dir[AXIS_Y] * rotate)},
-          [AXIS_Z] = {.offset = LSM6DSO->axis_map[AXIS_Z] * 2U, .sign = LSM6DSO->axis_dir[AXIS_Z]},
+              {.offset = s_dev->axis_map[AXIS_Y] * 2U,
+               .sign = (int8_t)(s_dev->axis_dir[AXIS_Y] * rotate)},
+          [AXIS_Z] = {.offset = s_dev->axis_map[AXIS_Z] * 2U, .sign = s_dev->axis_dir[AXIS_Z]},
         },
     .scale_num = CONFIG_ACCEL_LSM6DSO_SCALE_MG,
     .scale_den = LSM6DSO_S16_SCALE_RANGE,
     .first_timestamp_us = timestamp_us,
-    .sampling_interval_us = LSM6DSO->state->sampling_interval_us,
+    .sampling_interval_us = s_dev->state->sampling_interval_us,
   };
 
-  accel_cb_new_samples(&batch);
+  pbl_accel_report_samples(&s_dev->accel, &batch);
 }
 
 static uint8_t prv_get_bdr(uint32_t sampling_interval_us) {
@@ -331,7 +338,7 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
 
   // Accelerometer batch data rate (gyro left not batched)
   val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL3_BDR_XL_MASK,
-                       prv_get_bdr(LSM6DSO->state->sampling_interval_us));
+                       prv_get_bdr(s_dev->state->sampling_interval_us));
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL3, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write FIFO_CTRL3 register");
@@ -373,7 +380,7 @@ static void prv_lsm6dso_drain_fifo(void) {
   }
 
   prv_lsm6dso_process_samples(samples, prv_get_curr_system_time_us());
-  LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
+  s_dev->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
 static void prv_lsm6dso_recover(void);
@@ -392,7 +399,7 @@ static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
   for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
     int16_t v;
 
-    if ((wake_up_src & LSM6DSO_WAKE_UP_SRC_AXIS_WU(LSM6DSO->axis_map[a])) == 0U) {
+    if ((wake_up_src & LSM6DSO_WAKE_UP_SRC_AXIS_WU(s_dev->axis_map[a])) == 0U) {
       continue;
     }
 
@@ -404,7 +411,11 @@ static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
     }
   }
 
-  accel_cb_shake_detected(axis, (val < 0) ? -1 : 1);
+  pbl_accel_report_event(&s_dev->accel, &(const struct pbl_accel_event){
+                                          .type = PBL_ACCEL_EVENT_SHAKE,
+                                          .axis = axis,
+                                          .direction = (val < 0) ? -1 : 1,
+                                        });
 }
 
 //! INT1 servicing pass kind, logged by the no-action diagnostic
@@ -430,7 +441,7 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
   // short, then convert/dispatch below. The sample processing has no dependency
   // on these reads, so deferring it avoids stretching the gap between the FIFO
   // read and the WAKE_UP_SRC read if this task gets preempted mid-handler.
-  if (LSM6DSO->state->num_samples > 0U) {
+  if (s_dev->state->num_samples > 0U) {
     // WTM/OVR flags and DIFF must come from one burst read: a split read can
     // catch the FIFO counter mid-update and see WTM_IA set with DIFF reading 0
     ret = prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, fifo_status, 2);
@@ -454,12 +465,12 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
           return false;
         }
         timestamp_us = prv_get_curr_system_time_us();
-        LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
+        s_dev->state->last_fifo_read_tick = rtc_get_ticks();
       }
     }
   }
 
-  if (LSM6DSO->state->shake_detection_enabled) {
+  if (s_dev->state->shake_detection_enabled) {
     ret = prv_lsm6dso_read(LSM6DSO_WAKE_UP_SRC, &wake_up_src, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read WAKE_UP_SRC register");
@@ -483,12 +494,12 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
   if (shake) {
     // WU_IA stays set while the wake-up condition persists (LIR), so only
     // dispatch on its assertion to avoid flooding events
-    if (!LSM6DSO->state->wu_active) {
+    if (!s_dev->state->wu_active) {
       prv_lsm6dso_dispatch_shake(wake_up_src);
     }
     action_taken = true;
   }
-  LSM6DSO->state->wu_active = shake;
+  s_dev->state->wu_active = shake;
 
   if (!action_taken) {
     // Registers not read this pass (gated on num_samples/shake state) log as 0
@@ -496,12 +507,29 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
                 " WAKE_UP_SRC 0x%02" PRIx8 " num_samples %" PRIu16
                 " shake_en %d pass %u"
                 " last_read %" PRIu32 "ms ago)",
-                fifo_status[1], wake_up_src, LSM6DSO->state->num_samples,
-                LSM6DSO->state->shake_detection_enabled, (unsigned int)pass,
+                fifo_status[1], wake_up_src, s_dev->state->num_samples,
+                s_dev->state->shake_detection_enabled, (unsigned int)pass,
                 prv_ms_since_last_fifo_read());
   }
 
   return action_taken;
+}
+
+static void prv_work_cb(void *data) {
+  void (*work)(void) = data;
+
+  pbl_accel_lock(&s_dev->accel);
+  work();
+  pbl_accel_unlock(&s_dev->accel);
+}
+
+//! Run driver work on the timer task, with the device lock held
+static void prv_queue_work(void (*work)(void)) {
+  new_timer_add_work_callback(prv_work_cb, (void *)work);
+}
+
+static void prv_queue_work_from_isr(void (*work)(void)) {
+  new_timer_add_work_callback_from_isr(prv_work_cb, (void *)work);
 }
 
 static void prv_lsm6dso_int1_work_handler(void) {
@@ -509,22 +537,22 @@ static void prv_lsm6dso_int1_work_handler(void) {
   // Best-effort pass tagging: an ISR enqueue racing a pending requeue gets
   // labeled as a requeue; diagnostic only
   Lsm6dsoInt1Pass pass =
-      LSM6DSO->state->int1_requeued ? Lsm6dsoInt1PassRequeue : Lsm6dsoInt1PassInitial;
+      s_dev->state->int1_requeued ? Lsm6dsoInt1PassRequeue : Lsm6dsoInt1PassInitial;
   bool action_taken;
 
-  LSM6DSO->state->int1_requeued = false;
+  s_dev->state->int1_requeued = false;
   action_taken = prv_lsm6dso_service_int1(pass, &fifo_progress);
 
   // Sources asserting while the pad is high produce no new edge: requeue on
   // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
   // by a persistent wake-up condition is left to the stall watchdog.
-  if (!pbl_gpio_get(&LSM6DSO->int1_in)) {
+  if (!pbl_gpio_get(&s_dev->int1_in)) {
     return;
   }
 
   if (fifo_progress) {
-    LSM6DSO->state->int1_requeued = true;
-    accel_offload_work(prv_lsm6dso_int1_work_handler);
+    s_dev->state->int1_requeued = true;
+    prv_queue_work(prv_lsm6dso_int1_work_handler);
     return;
   }
 
@@ -539,19 +567,19 @@ static void prv_lsm6dso_int1_work_handler(void) {
   // high with nothing serviced.
   action_taken = prv_lsm6dso_service_int1(Lsm6dsoInt1PassRetry, &fifo_progress);
   if (fifo_progress) {
-    LSM6DSO->state->int1_requeued = true;
-    accel_offload_work(prv_lsm6dso_int1_work_handler);
-  } else if (!action_taken && pbl_gpio_get(&LSM6DSO->int1_in)) {
+    s_dev->state->int1_requeued = true;
+    prv_queue_work(prv_lsm6dso_int1_work_handler);
+  } else if (!action_taken && pbl_gpio_get(&s_dev->int1_in)) {
     prv_lsm6dso_recover();
   }
 }
 
 static void prv_lsm6dso_int1_irq_handler(void) {
   // A rising edge proves the pad was low, i.e. the wake-up source deasserted
-  LSM6DSO->state->wu_active = false;
+  s_dev->state->wu_active = false;
   // ... which also breaks any stuck-high streak the watchdog counted
-  LSM6DSO->state->shake_stuck_passes = 0U;
-  accel_offload_work_from_isr(prv_lsm6dso_int1_work_handler);
+  s_dev->state->shake_stuck_passes = 0U;
+  prv_queue_work_from_isr(prv_lsm6dso_int1_work_handler);
 }
 
 static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detection_enabled) {
@@ -599,7 +627,7 @@ static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detectio
     psleep(10);
   }
 
-  LSM6DSO->state->sampling_interval_us = sampling_interval_us;
+  s_dev->state->sampling_interval_us = sampling_interval_us;
 
   return true;
 }
@@ -653,16 +681,16 @@ static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) 
 static void prv_lsm6dso_recover(void) {
   uint8_t val;
 
-  LSM6DSO->state->num_recoveries++;
+  s_dev->state->num_recoveries++;
   PBL_ANALYTICS_ADD(accel_stream_recovery_count, 1);
-  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")", LSM6DSO->state->num_recoveries);
+  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")", s_dev->state->num_recoveries);
 
   if (!prv_configure_int1(false, false)) {
     return;
   }
 
   // Salvage queued samples
-  if (LSM6DSO->state->num_samples > 0U) {
+  if (s_dev->state->num_samples > 0U) {
     prv_lsm6dso_drain_fifo();
   }
 
@@ -676,80 +704,78 @@ static void prv_lsm6dso_recover(void) {
     PBL_LOG_WRN("Discarded latched INT sources during recovery (ALL_INT_SRC 0x%02" PRIx8 ")", val);
   }
 
-  if (!prv_configure_odr(LSM6DSO->state->sampling_interval_us,
-                         LSM6DSO->state->shake_detection_enabled)) {
+  if (!prv_configure_odr(s_dev->state->sampling_interval_us,
+                         s_dev->state->shake_detection_enabled)) {
     PBL_LOG_ERR("Could not configure ODR");
     return;
   }
 
-  if (LSM6DSO->state->num_samples > 0U) {
-    if (!prv_lsm6dso_enable_fifo(LSM6DSO->state->num_samples)) {
+  if (s_dev->state->num_samples > 0U) {
+    if (!prv_lsm6dso_enable_fifo(s_dev->state->num_samples)) {
       return;
     }
   }
 
-  if (!prv_configure_int1(LSM6DSO->state->shake_detection_enabled,
-                          LSM6DSO->state->num_samples > 0U)) {
+  if (!prv_configure_int1(s_dev->state->shake_detection_enabled, s_dev->state->num_samples > 0U)) {
     return;
   }
 
-  LSM6DSO->state->wu_active = false;
-  LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
+  s_dev->state->wu_active = false;
+  s_dev->state->last_fifo_read_tick = rtc_get_ticks();
 }
 
 static uint32_t prv_ms_since_last_fifo_read(void) {
-  RtcTicks ticks = rtc_get_ticks() - LSM6DSO->state->last_fifo_read_tick;
+  RtcTicks ticks = rtc_get_ticks() - s_dev->state->last_fifo_read_tick;
   return (uint32_t)((ticks * 1000) / RTC_TICKS_HZ);
 }
 
 static uint32_t prv_stall_threshold_ms(void) {
-  return MAX(LSM6DSO_STALL_MARGIN * LSM6DSO->state->int1_period_ms, LSM6DSO_STALL_MIN_MS);
+  return MAX(LSM6DSO_STALL_MARGIN * s_dev->state->int1_period_ms, LSM6DSO_STALL_MIN_MS);
 }
 
 //! Arm/disarm the INT1 stall watchdog to match the active INT1 sources.
 //! Call after num_samples or shake_detection_enabled changes.
 static void prv_update_int1_watchdog(void) {
-  regular_timer_remove_callback(&LSM6DSO->state->int1_wdt_timer);
-  LSM6DSO->state->shake_stuck_passes = 0U;
+  regular_timer_remove_callback(&s_dev->state->int1_wdt_timer);
+  s_dev->state->shake_stuck_passes = 0U;
 
-  if (LSM6DSO->state->num_samples > 0U) {
-    LSM6DSO->state->last_fifo_read_tick = rtc_get_ticks();
-    LSM6DSO->state->int1_period_ms =
-        (LSM6DSO->state->sampling_interval_us * LSM6DSO->state->num_samples) / 1000;
+  if (s_dev->state->num_samples > 0U) {
+    s_dev->state->last_fifo_read_tick = rtc_get_ticks();
+    s_dev->state->int1_period_ms =
+        (s_dev->state->sampling_interval_us * s_dev->state->num_samples) / 1000;
     regular_timer_add_multisecond_callback(
-        &LSM6DSO->state->int1_wdt_timer,
-        MAX(DIVIDE_CEIL(LSM6DSO->state->int1_period_ms, 1000UL), 1U));
-  } else if (LSM6DSO->state->shake_detection_enabled) {
-    regular_timer_add_multisecond_callback(&LSM6DSO->state->int1_wdt_timer,
+        &s_dev->state->int1_wdt_timer, MAX(DIVIDE_CEIL(s_dev->state->int1_period_ms, 1000UL), 1U));
+  } else if (s_dev->state->shake_detection_enabled) {
+    regular_timer_add_multisecond_callback(&s_dev->state->int1_wdt_timer,
                                            LSM6DSO_SHAKE_WDT_PERIOD_S);
   }
 }
 
-//! Shared by the INT1 watchdog and the accel_peek staleness trigger;
+//! Shared by the INT1 watchdog and the peek staleness trigger;
 //! re-validates the stall at execution time.
 static void prv_stall_check_work_cb(void) {
   uint32_t ms_since_last_read;
 
-  LSM6DSO->state->recovery_pending = false;
+  s_dev->state->recovery_pending = false;
 
   // Sampling may have stopped between scheduling and execution
-  if (LSM6DSO->state->num_samples == 0U) {
+  if (s_dev->state->num_samples == 0U) {
     // Shake-only mode: re-run the servicing pass if the pad is stuck high
     // (reading the INT source clears the latch); escalate to a full recovery
     // after consecutive passes that never release it.
-    if (LSM6DSO->state->shake_detection_enabled && pbl_gpio_get(&LSM6DSO->int1_in)) {
+    if (s_dev->state->shake_detection_enabled && pbl_gpio_get(&s_dev->int1_in)) {
       prv_lsm6dso_int1_work_handler();
       // A pad released by the pass is healthy; count only a still-high pad
-      if (!pbl_gpio_get(&LSM6DSO->int1_in)) {
-        LSM6DSO->state->shake_stuck_passes = 0U;
-      } else if (++LSM6DSO->state->shake_stuck_passes >= LSM6DSO_SHAKE_STUCK_PASSES_MAX) {
+      if (!pbl_gpio_get(&s_dev->int1_in)) {
+        s_dev->state->shake_stuck_passes = 0U;
+      } else if (++s_dev->state->shake_stuck_passes >= LSM6DSO_SHAKE_STUCK_PASSES_MAX) {
         PBL_LOG_WRN("INT1 pad stuck high for %" PRIu8 " shake watchdog passes, recovering",
-                    LSM6DSO->state->shake_stuck_passes);
+                    s_dev->state->shake_stuck_passes);
         prv_lsm6dso_recover();
-        LSM6DSO->state->shake_stuck_passes = 0U;
+        s_dev->state->shake_stuck_passes = 0U;
       }
     } else {
-      LSM6DSO->state->shake_stuck_passes = 0U;
+      s_dev->state->shake_stuck_passes = 0U;
     }
     return;
   }
@@ -764,27 +790,29 @@ static void prv_stall_check_work_cb(void) {
 }
 
 static void prv_int1_wdt_cb(void *data) {
-  accel_offload_work(prv_stall_check_work_cb);
+  prv_queue_work(prv_stall_check_work_cb);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accelerometer interface
 ////////////////////////////////////////////////////////////////////////////////
 
-void accel_init(void) {
+static int prv_init(const struct pbl_accel *accel) {
   bool ret;
   uint8_t val;
+
+  s_dev = container_of(accel, const struct pbl_lsm6dso, accel);
 
   // Check device ID
   ret = prv_lsm6dso_read(LSM6DSO_WHO_AM_I, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not read WHO_AM_I register");
-    return;
+    return -ENODEV;
   }
 
   if (val != LSM6DSO_WHO_AM_I_VAL) {
     PBL_LOG_ERR("Unexpected id: 0x%02X!=0x%02X", val, LSM6DSO_WHO_AM_I_VAL);
-    return;
+    return -ENODEV;
   }
 
   // Perform a software reset (so we can rely on defaults)
@@ -792,7 +820,7 @@ void accel_init(void) {
   ret = prv_lsm6dso_write(LSM6DSO_CTRL3_C, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL3_C register");
-    return;
+    return -EIO;
   }
 
   delay_us(LSM6DSO_RESET_TIME_US);
@@ -801,7 +829,7 @@ void accel_init(void) {
     ret = prv_lsm6dso_read(LSM6DSO_CTRL3_C, &val, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read CTRL3_C register");
-      return;
+      return -EIO;
     }
   } while ((val & LSM6DSO_CTRL3_C_SW_RESET) != 0U);
 
@@ -810,7 +838,7 @@ void accel_init(void) {
   ret = prv_lsm6dso_write(LSM6DSO_CTRL3_C, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL3_C register");
-    return;
+    return -EIO;
   }
 
   // Disable I3C interface
@@ -818,7 +846,7 @@ void accel_init(void) {
   ret = prv_lsm6dso_write(LSM6DSO_CTRL9_XL, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL9_XL register");
-    return;
+    return -EIO;
   }
 
   // Ultra-low-power mode (accelerometer still powered down here, as required to
@@ -827,7 +855,7 @@ void accel_init(void) {
   ret = prv_lsm6dso_write(LSM6DSO_CTRL5_C, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL5_C register");
-    return;
+    return -EIO;
   }
 
   // Configure scale (ODR off until sampling is requested)
@@ -835,7 +863,7 @@ void accel_init(void) {
   ret = prv_lsm6dso_write(LSM6DSO_CTRL1_XL, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL1_XL register");
-    return;
+    return -EIO;
   }
 
   // Slope filter for wake-up, latch interrupts and clear them on read
@@ -843,7 +871,7 @@ void accel_init(void) {
   ret = prv_lsm6dso_write(LSM6DSO_TAP_CFG0, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write TAP_CFG0 register");
-    return;
+    return -EIO;
   }
 
   // Configure wake-up threshold defaults
@@ -851,66 +879,62 @@ void accel_init(void) {
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_DUR, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_DUR register");
-    return;
+    return -EIO;
   }
 
   val = PBL_FIELD_PREP(LSM6DSO_WAKE_UP_THS_WK_THS_MASK, CONFIG_ACCEL_LSM6DSO_WK_THS_DEFAULT);
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
-    return;
+    return -EIO;
   }
 
-  LSM6DSO->state->wk_ths_curr = CONFIG_ACCEL_LSM6DSO_WK_THS_DEFAULT;
+  s_dev->state->wk_ths_curr = CONFIG_ACCEL_LSM6DSO_WK_THS_DEFAULT;
 
   // Enable INT1 external interrupt
-  exti_configure_pin(LSM6DSO->int1, ExtiTrigger_Rising, prv_lsm6dso_int1_irq_handler);
-  exti_enable(LSM6DSO->int1);
+  exti_configure_pin(s_dev->int1, ExtiTrigger_Rising, prv_lsm6dso_int1_irq_handler);
+  exti_enable(s_dev->int1);
 
-  LSM6DSO->state->int1_wdt_timer.cb = prv_int1_wdt_cb;
-  LSM6DSO->state->initialized = true;
+  s_dev->state->int1_wdt_timer.cb = prv_int1_wdt_cb;
+
+  return 0;
 }
 
-uint32_t accel_set_sampling_interval(uint32_t interval_us) {
-  if (!LSM6DSO->state->initialized) {
-    // Just pretend we can achieve any requested interval
-    LSM6DSO->state->sampling_interval_us = interval_us;
-  } else {
-    // FIXME: we should technically stop and drain the FIFO here, otherwise
-    // we may report existing samples in the FIFO buffer with an incorrect timestamp
+static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t interval_us,
+                                     uint32_t *actual_us) {
+  // FIXME: we should technically stop and drain the FIFO here, otherwise
+  // we may report existing samples in the FIFO buffer with an incorrect timestamp
 
-    const uint32_t prev_interval_us = LSM6DSO->state->sampling_interval_us;
-    if (!prv_configure_odr(interval_us, LSM6DSO->state->shake_detection_enabled)) {
-      PBL_LOG_ERR("Could not configure ODR");
-    }
-
-    // Re-arm the watchdog only on an actual ODR change (a re-arm resets the
-    // stall tracking, so repeat calls must not defer it)
-    if (LSM6DSO->state->sampling_interval_us != prev_interval_us) {
-      prv_update_int1_watchdog();
-    }
+  const uint32_t prev_interval_us = s_dev->state->sampling_interval_us;
+  if (!prv_configure_odr(interval_us, s_dev->state->shake_detection_enabled)) {
+    PBL_LOG_ERR("Could not configure ODR");
+    return -EIO;
   }
 
-  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us", LSM6DSO->state->sampling_interval_us);
+  // Re-arm the watchdog only on an actual ODR change (a re-arm resets the
+  // stall tracking, so repeat calls must not defer it)
+  if (s_dev->state->sampling_interval_us != prev_interval_us) {
+    prv_update_int1_watchdog();
+  }
 
-  return LSM6DSO->state->sampling_interval_us;
+  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us", s_dev->state->sampling_interval_us);
+
+  *actual_us = s_dev->state->sampling_interval_us;
+
+  return 0;
 }
 
-uint32_t accel_get_sampling_interval(void) {
-  return LSM6DSO->state->sampling_interval_us;
+static uint32_t prv_get_sampling_interval(const struct pbl_accel *accel) {
+  return s_dev->state->sampling_interval_us;
 }
 
-uint32_t accel_get_max_num_samples(void) {
+static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
   return LSM6DSO_FIFO_THRESHOLD;
 }
 
-void accel_set_num_samples(uint32_t num_samples) {
+static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_samples) {
   bool ret;
   uint8_t val;
-
-  if (!LSM6DSO->state->initialized) {
-    return;
-  }
 
   // Limit to FIFO threshold
   if (num_samples > LSM6DSO_FIFO_THRESHOLD) {
@@ -921,10 +945,10 @@ void accel_set_num_samples(uint32_t num_samples) {
   prv_configure_int1(false, false);
 
   // Config change invalidates any queued stall check; re-arm the peek trigger
-  LSM6DSO->state->recovery_pending = false;
+  s_dev->state->recovery_pending = false;
 
   // Salvage queued samples
-  if (LSM6DSO->state->num_samples > 0U) {
+  if (s_dev->state->num_samples > 0U) {
     prv_lsm6dso_drain_fifo();
   }
 
@@ -939,25 +963,27 @@ void accel_set_num_samples(uint32_t num_samples) {
     ret = prv_lsm6dso_enable_fifo((uint16_t)num_samples);
     if (!ret) {
       PBL_LOG_ERR("Could not enable FIFO");
-      return;
+      return -EIO;
     }
   }
 
   // Re-configure INT1
-  ret = prv_configure_int1(LSM6DSO->state->shake_detection_enabled, num_samples > 0U);
+  ret = prv_configure_int1(s_dev->state->shake_detection_enabled, num_samples > 0U);
   if (!ret) {
     PBL_LOG_ERR("Could not configure INT1");
-    return;
+    return -EIO;
   }
 
-  LSM6DSO->state->num_samples = num_samples;
+  s_dev->state->num_samples = num_samples;
   // Arm/disarm the INT1 liveness watchdog for the new source configuration
   prv_update_int1_watchdog();
 
   PBL_LOG_DBG("Set number of samples to %" PRIu32, num_samples);
+
+  return 0;
 }
 
-int accel_peek(AccelDriverSample *data) {
+static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *data) {
   int err = 0;
   bool ret;
   uint8_t ctrl1;
@@ -965,25 +991,21 @@ int accel_peek(AccelDriverSample *data) {
   uint8_t status;
   uint8_t raw[LSM6DSO_SAMPLE_SIZE_BYTES];
 
-  if (!LSM6DSO->state->initialized) {
-    return E_ERROR;
-  }
-
   // If sampling is active, the FIFO batches samples for subscribers, so the
   // cached sample can be a full watermark period old. Read the output
   // registers instead: they update at ODR independently of the FIFO.
-  if (LSM6DSO->state->num_samples > 0U) {
+  if (s_dev->state->num_samples > 0U) {
     // Self-heal: a stalled stream would otherwise freeze peek data forever
-    if (!LSM6DSO->state->recovery_pending &&
+    if (!s_dev->state->recovery_pending &&
         (prv_ms_since_last_fifo_read() >= prv_stall_threshold_ms())) {
-      LSM6DSO->state->recovery_pending = true;
-      accel_offload_work(prv_stall_check_work_cb);
+      s_dev->state->recovery_pending = true;
+      prv_queue_work(prv_stall_check_work_cb);
     }
 
     ret = prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, sizeof(raw));
     if (!ret) {
       PBL_LOG_ERR("Failed to read sample");
-      return E_ERROR;
+      return -EIO;
     }
 
     prv_raw_to_mg(raw, data);
@@ -996,7 +1018,7 @@ int accel_peek(AccelDriverSample *data) {
   ret = prv_lsm6dso_read(LSM6DSO_CTRL1_XL, &ctrl1_bck, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not read CTRL1_XL register");
-    return E_ERROR;
+    return -EIO;
   }
 
   // Enable continuous conversion at 52Hz to obtain a single measurement
@@ -1004,7 +1026,7 @@ int accel_peek(AccelDriverSample *data) {
   ret = prv_lsm6dso_write(LSM6DSO_CTRL1_XL, &ctrl1, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL1_XL register");
-    return E_ERROR;
+    return -EIO;
   }
 
   // Poll for data ready (timeout after 100ms, ~5x the expected 20ms at 52Hz ODR)
@@ -1013,13 +1035,13 @@ int accel_peek(AccelDriverSample *data) {
     ret = prv_lsm6dso_read(LSM6DSO_STATUS_REG, &status, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read STATUS_REG register");
-      err = E_ERROR;
+      err = -EIO;
       goto end;
     }
     if ((status & LSM6DSO_STATUS_REG_XLDA) == 0U) {
       if (elapsed_ms >= LSM6DSO_DRDY_POLL_TIMEOUT_MS) {
         PBL_LOG_ERR("DRDY timeout after %" PRIu32 " ms", elapsed_ms);
-        err = E_ERROR;
+        err = -EIO;
         goto end;
       }
       psleep(LSM6DSO_DRDY_POLL_DELAY_MS);
@@ -1031,7 +1053,7 @@ int accel_peek(AccelDriverSample *data) {
   ret = prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, sizeof(raw));
   if (!ret) {
     PBL_LOG_ERR("Failed to read sample");
-    err = E_ERROR;
+    err = -EIO;
     goto end;
   }
 
@@ -1046,18 +1068,14 @@ end:
   return err;
 }
 
-void accel_enable_shake_detection(bool on) {
+static int prv_set_shake_detection(const struct pbl_accel *accel, bool on) {
   bool ret;
 
-  if (!LSM6DSO->state->initialized) {
-    return;
-  }
-
   // Configure ODR (use current interval, will be adjusted if < 12.5Hz)
-  ret = prv_configure_odr(LSM6DSO->state->sampling_interval_us, on);
+  ret = prv_configure_odr(s_dev->state->sampling_interval_us, on);
   if (!ret) {
     PBL_LOG_ERR("Could not configure ODR");
-    return;
+    return -EIO;
   }
 
   if (on) {
@@ -1071,52 +1089,44 @@ void accel_enable_shake_detection(bool on) {
   }
 
   // Configure INT1
-  ret = prv_configure_int1(on, LSM6DSO->state->num_samples > 0U);
+  ret = prv_configure_int1(on, s_dev->state->num_samples > 0U);
   if (!ret) {
     PBL_LOG_ERR("Could not configure INT1");
-    return;
+    return -EIO;
   }
 
-  LSM6DSO->state->shake_detection_enabled = on;
-  LSM6DSO->state->wu_active = false;
+  s_dev->state->shake_detection_enabled = on;
+  s_dev->state->wu_active = false;
   // Arm/disarm the INT1 liveness watchdog now that shake routing changed
   prv_update_int1_watchdog();
 
   PBL_LOG_DBG("%s shake detection", on ? "Enabled" : "Disabled");
+
+  return 0;
 }
 
-bool accel_get_shake_detection_enabled(void) {
-  return LSM6DSO->state->shake_detection_enabled;
-}
-
-void accel_set_shake_sensitivity_high(bool sensitivity_high) {
+static int prv_set_shake_sensitivity_high(const struct pbl_accel *accel, bool sensitivity_high) {
   bool ret;
   uint8_t val;
-
-  if (!LSM6DSO->state->initialized) {
-    return;
-  }
 
   val = PBL_FIELD_PREP(LSM6DSO_WAKE_UP_THS_WK_THS_MASK, sensitivity_high
                                                             ? CONFIG_ACCEL_LSM6DSO_WK_THS_MIN
-                                                            : LSM6DSO->state->wk_ths_curr);
+                                                            : s_dev->state->wk_ths_curr);
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
-    return;
+    return -EIO;
   }
 
   PBL_LOG_DBG("Configured shake sensitivity to %s", sensitivity_high ? "high" : "normal");
+
+  return 0;
 }
 
-void accel_set_shake_sensitivity_percent(uint8_t percent) {
+static int prv_set_shake_sensitivity_percent(const struct pbl_accel *accel, uint8_t percent) {
   bool ret;
   uint8_t val;
   uint8_t raw;
-
-  if (!LSM6DSO->state->initialized) {
-    return;
-  }
 
   // Reverse mapping: 0 = min sensitivity (MAX threshold), 100 = max sensitivity (MIN threshold)
   // [0, 100] -> [wk_ths_max, wk_ths_min]
@@ -1127,25 +1137,32 @@ void accel_set_shake_sensitivity_percent(uint8_t percent) {
   ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_THS, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write WAKE_UP_THS register");
-    return;
+    return -EIO;
   }
 
-  LSM6DSO->state->wk_ths_curr = raw;
+  s_dev->state->wk_ths_curr = raw;
 
   PBL_LOG_DBG("Configured shake sensitivity to %" PRIu8 " (%" PRIu8 ")", percent, raw);
+
+  return 0;
 }
 
-void accel_enable_double_tap_detection(bool on) {
-  // TODO: Implement
-  PBL_LOG_WRN("Double-tap detection not implemented");
-}
-
-bool accel_get_double_tap_detection_enabled(void) {
-  // TODO: Implement
-  return false;
-}
-
-void accel_set_rotated(bool rotated) {
-  LSM6DSO->state->rotated = rotated;
+static int prv_set_rotated(const struct pbl_accel *accel, bool rotated) {
+  s_dev->state->rotated = rotated;
   PBL_LOG_DBG("Set rotated state to %s", rotated ? "true" : "false");
+
+  return 0;
 }
+
+const struct pbl_accel_ops pbl_lsm6dso_ops = {
+  .init = prv_init,
+  .set_rotated = prv_set_rotated,
+  .set_sampling_interval = prv_set_sampling_interval,
+  .get_sampling_interval = prv_get_sampling_interval,
+  .set_num_samples = prv_set_num_samples,
+  .get_max_num_samples = prv_get_max_num_samples,
+  .peek = prv_peek,
+  .set_shake_detection = prv_set_shake_detection,
+  .set_shake_sensitivity_high = prv_set_shake_sensitivity_high,
+  .set_shake_sensitivity_percent = prv_set_shake_sensitivity_percent,
+};

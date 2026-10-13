@@ -16,7 +16,12 @@ pbl_clar_test(test_flash_erase
 
 pbl_clar_test(test_accel_qemu
   SOURCES
+    drivers/base/device.c
+    drivers/imu/accel.c
     drivers/imu/qemu.c
     tests/fakes/fake_rtc.c
+  DEFINES
+    CONFIG_DEVICE_LOG_LEVEL=0
+    PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
