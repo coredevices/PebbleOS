@@ -35,6 +35,19 @@ static bool prv_is_valid_buffer(MicDeviceState *state, int16_t *buffer) {
 }
 
 static bool prv_allocate_buffers(MicDeviceState *state) {
+  // The DMA buffers have a fixed size, so take them first and let the queue
+  // shrink to what is left.
+  for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
+    size_t buffer_size = PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t);
+    state->pdm_buffers[i] = kernel_malloc(buffer_size);
+    if (!state->pdm_buffers[i]) {
+      PBL_LOG_ERR("Failed to allocate PDM buffer %d", i);
+      prv_free_buffers(state);
+      return false;
+    }
+    memset(state->pdm_buffers[i], 0, buffer_size);
+  }
+
   // The kernel heap fragments over time, so a single 10 KB contiguous alloc
   // can fail even when plenty of memory is free. Shrink the request in 32 ms
   // steps until it fits or we hit the 128 ms floor.
@@ -54,6 +67,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
     heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
     PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)",
                 (unsigned)CIRCULAR_BUF_MIN_SIZE_BYTES, max_free);
+    prv_free_buffers(state);
     return false;
   }
 
@@ -66,22 +80,6 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
 
   state->circ_buffer_storage = storage;
   state->circ_buffer_size = try_size;
-
-  // Allocate PDM buffers
-  for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
-    size_t buffer_size = PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t);
-    state->pdm_buffers[i] = kernel_malloc(buffer_size);
-    if (!state->pdm_buffers[i]) {
-      PBL_LOG_ERR("Failed to allocate PDM buffer %d", i);
-      // Free any previously allocated buffers
-      prv_free_buffers(state);
-      return false;
-    }
-    // Clear the buffer
-    memset(state->pdm_buffers[i], 0, buffer_size);
-  }
-
-  // Initialize circular buffer with allocated storage
   circular_buffer_init(&state->circ_buffer, state->circ_buffer_storage, try_size);
 
   return true;
