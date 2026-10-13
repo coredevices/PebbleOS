@@ -147,7 +147,7 @@ static uint32_t prv_get_cache_key(const FontResource *font_res, Codepoint codepo
 static uint32_t prv_get_glyph_table_offset(FontCache *font_cache, Codepoint codepoint,
                                            const FontResource *font_res) {
   int min_idx = 0;
-  int max_idx = prv_load_offset_table(codepoint, font_cache, font_res);
+  int max_idx = prv_load_offset_table(codepoint, font_cache, font_res) - 1;
 
   uint32_t offset = 0;
   while (max_idx >= min_idx) {

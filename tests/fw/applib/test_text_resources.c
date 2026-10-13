@@ -466,6 +466,51 @@ void test_text_resources__fallback_miss_yields_primary_wildcard(void) {
   cl_assert_equal_m(gothic_wildcard, g->data, glyph_get_size_bytes(g));
 }
 
+// Offset table lookups
+////////////////////////////////////
+
+static void prv_reset_font_cache(void) {
+  memset(&s_font_cache, 0, sizeof(s_font_cache));
+  keyed_circular_cache_init(&s_font_cache.line_cache, s_font_cache.cache_keys,
+                            s_font_cache.cache_data, sizeof(LineCacheData), LINE_CACHE_SIZE);
+}
+
+// Looks up codepoint in font after the same codepoint was looked up in other_font, which leaves
+// other_font's offset table bucket in the shared buffer. The result must match a lookup done on a
+// fresh cache.
+static void prv_assert_lookup_ignores_other_font(uint32_t font, uint32_t other_font,
+                                                 Codepoint codepoint) {
+  static FontInfo s_other;
+  memset(&s_other, 0, sizeof(s_other));
+  cl_assert(text_resources_init_font(0, font, 0, &s_font_info));
+  cl_assert(text_resources_init_font(0, other_font, 0, &s_other));
+
+  uint8_t expected[sizeof(GlyphHeaderData) + CACHE_GLYPH_SIZE];
+  const GlyphData *g = text_resources_get_glyph(&s_font_cache, codepoint, &s_font_info, nullptr);
+  const size_t expected_size = g ? sizeof(GlyphHeaderData) + glyph_get_size_bytes(g) : 0;
+  memcpy(expected, g, expected_size);
+
+  prv_reset_font_cache();
+  cl_assert(text_resources_get_glyph(&s_font_cache, codepoint, &s_other, nullptr) != nullptr);
+  g = text_resources_get_glyph(&s_font_cache, codepoint, &s_font_info, nullptr);
+  cl_assert_equal_b(g != nullptr, expected_size != 0);
+  cl_assert_equal_m(expected, g, expected_size);
+}
+
+// The hash bucket of U+00E4 is empty in LECO_60_NUMBERS_AM_PM, U+00E4 is first in it in
+// ROBOTO_CONDENSED_21, and its offset there points at LECO bitmap bytes
+void test_text_resources__empty_bucket_ignores_stale_offsets(void) {
+  prv_assert_lookup_ignores_other_font(RESOURCE_ID_LECO_60_NUMBERS_AM_PM,
+                                       RESOURCE_ID_ROBOTO_CONDENSED_21, 0x00E4);
+}
+
+// The hash bucket of U+0176 holds one lower codepoint in LECO_60_BOLD_NUMBERS_AM_PM, U+0176 is
+// second in it in GOTHIC_36_BOLD, and its offset there points at LECO bitmap bytes
+void test_text_resources__bucket_end_ignores_stale_offsets(void) {
+  prv_assert_lookup_ignores_other_font(RESOURCE_ID_LECO_60_BOLD_NUMBERS_AM_PM,
+                                       RESOURCE_ID_GOTHIC_36_BOLD, 0x0176);
+}
+
 // Glyph-presence-driven routing (in-font base<->extension rescue)
 ////////////////////////////////////
 
