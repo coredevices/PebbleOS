@@ -21,3 +21,5 @@ pbl_clar_test(test_kernel
   DEFINES
     CONFIG_KERNEL_IDLE_STACK_SIZE=1024
 )
+
+pbl_clar_test(test_mmio)

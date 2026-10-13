@@ -6,6 +6,7 @@
 #include <pbl/kernel/barrier.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/poll.h>
