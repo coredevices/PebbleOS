@@ -2,8 +2,7 @@
 
 `subsys/shell/` is the debug command shell. Its public API is
 `include/pbl/shell/shell.h`, and backends implement
-`include/pbl/shell/backend.h`. It is modelled on the Zephyr shell: commands
-are defined next to the code they drive, collected at link time, and served
+`include/pbl/shell/backend.h`. Commands are defined next to the code they drive, collected at link time, and served
 by any number of shell instances, one per backend.
 
 ## Commands

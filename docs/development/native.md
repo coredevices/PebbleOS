@@ -92,7 +92,7 @@ ISR and releases it, much like an interrupt arriving between instructions.
 Kernel threads are not preempted while they hold the CPU, so an interrupt
 waits for the running thread to block.
 
-Drivers come in two halves, as in Zephyr's `native_sim`: the top half is
+Drivers come in two halves: the top half is
 firmware code, and the bottom half (`*_bottom.c`, listed with
 `pbl_host_sources()`) talks to the host and sees none of the firmware headers.
 The `posix` SoC (`soc/posix`) owns the process `main()`, which knows no

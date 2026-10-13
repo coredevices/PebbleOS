@@ -2,9 +2,8 @@
 
 `subsys/task_wdt/` is the software watchdog that catches stuck threads and
 turns them into core dumps. Its public API is `include/pbl/task_wdt/task_wdt.h`.
-It is modelled on the Zephyr task watchdog: a fixed pool of channels, each
-with its own timeout and optional expiry callback, backing a single hardware
-watchdog (`include/pbl/drivers/watchdog.h`).
+It is a fixed pool of channels, each with its own timeout and optional expiry
+callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
 
 ## Model
 

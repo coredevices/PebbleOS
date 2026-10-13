@@ -145,7 +145,7 @@ same rule.
 priority levels the kernel uses, the thread limit, the TLS slot count and the
 stack alignment the MPU guard needs.
 
-`kernel/arch/arm/Kconfig` describes the CPU, as in Zephyr: each SoC selects
+`kernel/arch/arm/Kconfig` describes the CPU: each SoC selects
 its core (`CPU_CORTEX_M4`, `CPU_CORTEX_M33`, `CPU_STAR_MC1`) and features
 (`CPU_HAS_FPU`), the core selects its architecture (`ARMV7_M`,
 `ARMV8_M_MAINLINE`) and the architecture its traits (`CPU_CORTEX_M_HAS_SPLIM`).

@@ -74,8 +74,7 @@ pbl -b build-asterix flash
 
 ## Runners
 
-Device commands reach a watch through a binary runner, the same abstraction
-Zephyr uses. A board lists the ones it supports in its manifest, and the
+Device commands reach a watch through a binary runner. A board lists the ones it supports in its manifest, and the
 first one is the default; `-r/--runner` picks another.
 
 | Runner | Boards | Operations |

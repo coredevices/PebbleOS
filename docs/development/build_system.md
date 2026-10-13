@@ -1,7 +1,7 @@
 # Build system
 
-The firmware is built with [CMake](https://cmake.org), following a model
-borrowed from Zephyr. Ninja is the generator the project uses:
+The firmware is built with [CMake](https://cmake.org), with Ninja as the
+generator:
 
 ```shell
 pbl configure --board asterix
@@ -82,7 +82,7 @@ directory is added too, so generated headers are found next to their
 hand-written neighbours.
 
 Headers are global; there is no per-consumer opt-in. A library that is not
-always needed is gated behind a Kconfig symbol instead, as Zephyr does:
+always needed is gated behind a Kconfig symbol instead:
 its directory is added with `pbl_add_subdirectory_ifdef()`, and consumers
 `select` (or `imply`) the symbol in their own Kconfig, e.g. `BT`
 selects `MBEDTLS` and `SERVICE_VOICE` selects `SPEEX`.

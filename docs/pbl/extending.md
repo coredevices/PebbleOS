@@ -3,7 +3,7 @@
 ## Structure
 
 The package lives in `tools/libs/pbl-cli/`, and is a small core plus one
-module per command, in the shape of Zephyr's `west`:
+module per command:
 
 ```
 pbl/app/main.py    finds the workspace, assembles the commands, dispatches

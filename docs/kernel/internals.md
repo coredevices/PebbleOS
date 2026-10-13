@@ -112,29 +112,29 @@ strings such as "lhLHMd" for the priority-inheritance scenario.
 
 ## Compared with other kernels
 
-| | FreeRTOS (fork) | Zephyr | NuttX | ThreadX | Native |
-| --- | --- | --- | --- | --- | --- |
-| Ready queue | list per priority, `clz` optional | dumb list / scalable / multiq | list per priority | bitmap + list | bitmap + list |
-| Time slicing | per tick | configurable | configurable | per thread | per tick |
-| Timeouts | two delayed lists | single delta list | wdog list | per-timer wheel | single absolute list |
-| Wait queues | priority ordered | priority ordered | priority ordered | FIFO or priority | priority ordered |
-| Mutex PI | single level | single level | multi level | single level | single level |
-| Sem/mutex wake | wake, retry | handoff | handoff | handoff | handoff |
-| Static objects | since v9 | yes | no | yes | yes |
-| Idle | idle task hook | `k_cpu_idle` + tickless | tickless | tickless | idle thread + SoC hook |
-| Stack overflow | pattern / MPU guard | MPU guard / canary | canary | analysis | PSPLIM (v8-M), MPU guard, pattern |
-| Thread exit | must not return | returns | returns | returns | returns |
+| | FreeRTOS (fork) | NuttX | ThreadX | Native |
+| --- | --- | --- | --- | --- |
+| Ready queue | list per priority, `clz` optional | list per priority | bitmap + list | bitmap + list |
+| Time slicing | per tick | configurable | per thread | per tick |
+| Timeouts | two delayed lists | wdog list | per-timer wheel | single absolute list |
+| Wait queues | priority ordered | priority ordered | FIFO or priority | priority ordered |
+| Mutex PI | single level | multi level | single level | single level |
+| Sem/mutex wake | wake, retry | handoff | handoff | handoff |
+| Static objects | since v9 | no | yes | yes |
+| Idle | idle task hook | tickless | tickless | idle thread + SoC hook |
+| Stack overflow | pattern / MPU guard | canary | analysis | PSPLIM (v8-M), MPU guard, pattern |
+| Thread exit | must not return | returns | returns | returns |
 
 What was taken from where:
 
-- Direct handoff on semaphores and mutexes (Zephyr, ThreadX). Removes the
+- Direct handoff on semaphores and mutexes (ThreadX, NuttX). Removes the
   give-then-retry race and the spurious wakeups the fork's queue-based
   semaphores have.
 - Priority-ordered wait queues with FIFO within a priority (everyone).
 - Completed static initialisers, so nothing has to run before objects are
-  usable (Zephyr's `K_*_DEFINE`).
-- A poll group that scans members from a rotating cursor (Zephyr's `k_poll`
-  fairness), and no rule about draining members only through the group,
+  usable.
+- A poll group that scans members from a rotating cursor, for fairness, and
+  no rule about draining members only through the group,
   which the FreeRTOS queue set imposes and which this firmware's event loop
   tiptoes around.
 - Threads may return from their entry function (everyone but FreeRTOS).
@@ -148,11 +148,11 @@ Not done, on purpose or for later:
 
 - Multi-level priority inheritance (NuttX). The firmware never nests locks
   deeply enough for it to matter, and the fork did not have it either.
-- Timer wheels (ThreadX) or delta lists (Zephyr) for timeouts. The pending
+- Timer wheels (ThreadX) or delta lists for timeouts. The pending
   timeout count here is small; an O(n) insert keeps the code obvious.
 - Run-time statistics in cycles from the DWT counter instead of ticks. QEMU
   has no DWT, so it is left for a board with one.
-- Per-thread preemption threshold (ThreadX) and memory domains (Zephyr).
+- Per-thread preemption threshold (ThreadX) and memory domains.
   The MPU regions stay per thread as the firmware defines them today.
 - Multicore. Everything assumes one CPU.
 

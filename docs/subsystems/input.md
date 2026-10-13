@@ -1,9 +1,8 @@
 # Input
 
 `subsys/input/` carries input events from the drivers to the code that
-consumes them. Its public API is `include/pbl/input/input.h`. It is modelled
-on the Zephyr input subsystem: drivers report events without knowing who
-consumes them, and listeners are defined next to the code they drive and
+consumes them. Its public API is `include/pbl/input/input.h`. Drivers report
+events without knowing who consumes them, and listeners are defined next to the code they drive and
 collected at link time.
 
 ## Events
