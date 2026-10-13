@@ -10,6 +10,7 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/action_chaining_window.h>
 #include <pbl/services/notifications/alerts_preferences.h>
+#include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/notifications/notification_storage.h>
@@ -406,9 +407,13 @@ static void prv_handle_do_response_response(ActionResultData *data) {
   // Lack of an action menu means this was a standalone action, so adjust reply menu accordingly
   const TimelineItemActionSource current_item_source =
       kernel_ui_get_current_timeline_item_action_source();
-  timeline_actions_push_response_menu(item, reply_action, color, prv_cleanup_do_response_menu,
-                                      prv_get_window_stack(data), current_item_source,
-                                      data->standalone_action);
+  ActionMenu *menu = timeline_actions_push_response_menu(
+      item, reply_action, color, prv_cleanup_do_response_menu, prv_get_window_stack(data),
+      current_item_source, data->standalone_action);
+  if (current_item_source == TimelineItemActionSourceModalNotification ||
+      current_item_source == TimelineItemActionSourceNotificationApp) {
+    action_menu_set_content_size(menu, alerts_preferences_get_notification_content_size());
+  }
 
   prv_cleanup_action_result(data, true /* succeeded */);
 }

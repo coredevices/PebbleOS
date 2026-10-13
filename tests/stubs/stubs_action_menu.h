@@ -42,6 +42,10 @@ void action_menu_set_align(ActionMenuConfig *config, ActionMenuAlign align) {
   return;
 }
 
+void action_menu_set_content_size(ActionMenu *action_menu, PreferredContentSize size) {
+  return;
+}
+
 void action_menu_close(ActionMenu *action_menu, bool animated) {
   return;
 }

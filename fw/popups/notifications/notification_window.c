@@ -1034,6 +1034,8 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
 
   window_data->action_menu = timeline_actions_push_action_menu(
       &config, window_manager_get_window_stack(NOTIFICATION_PRIORITY));
+  action_menu_set_content_size(window_data->action_menu,
+                               alerts_preferences_get_notification_content_size());
 }
 
 static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *data) {

@@ -113,6 +113,10 @@ bool alerts_preferences_check_and_set_first_use_complete(int source) {
   return true;
 }
 
+PreferredContentSize alerts_preferences_get_notification_content_size(void) {
+  return NumPreferredContentSizes;
+}
+
 static TimelineItemActionSource s_current_timeline_action_source =
     TimelineItemActionSourceModalNotification;
 
