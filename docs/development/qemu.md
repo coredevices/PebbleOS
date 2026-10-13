@@ -43,7 +43,8 @@ The launched QEMU exposes:
 - The serial console over TCP on `localhost:12345` (console) and
   `localhost:12344` (pebble-tool)
 
-UART1 output is also captured to `uart1.log` in the repository root.
+UART1 output is also captured to `uart1.log` in the repository root. The
+firmware log comes over the console port instead.
 
 ## Bluetooth
 
@@ -86,6 +87,16 @@ pbl console
 
 It connects to the running QEMU over the TCP serial port and provides a
 prompt for sending commands and receiving responses.
+
+On a non-release build, the console exits when stdin closes. To capture the
+logs from a script, feed it a stdin that stays open as long as you want to
+capture:
+
+```shell
+sleep 60 | pbl console > console.log
+```
+
+It only shows logs that arrive after it connects.
 
 ## Screenshots
 
@@ -182,3 +193,6 @@ pebble install /path/to/your/file.pbw --qemu
 ```
 
 The `pebble` CLI will detect the running QEMU instance and install the application. It should start automatically.
+
+Keep `--qemu` after the .pbw. It takes an optional host, so a path after it is
+read as the host and the install fails.
