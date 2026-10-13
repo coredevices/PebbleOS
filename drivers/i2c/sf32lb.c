@@ -87,10 +87,6 @@ void pbl_i2c_sf32lb_dma_irq_handler(const struct pbl_i2c_sf32lb *i2c) {
   HAL_DMA_IRQHandler(&i2c->state->hdma_rx);
 }
 
-static void prv_begin_transfer(const struct pbl_i2c_bus *bus) {
-  prv_deepsleep_block(prv_i2c(bus));
-}
-
 static void prv_abort_transfer(const struct pbl_i2c_bus *bus) {
   const struct pbl_i2c_sf32lb *i2c = prv_i2c(bus);
 
@@ -105,6 +101,8 @@ static void prv_start_transfer(const struct pbl_i2c_bus *bus) {
   I2C_HandleTypeDef *hdl = &i2c->state->hdl;
   const struct pbl_i2c_transfer *transfer = &bus->state->transfer;
   HAL_StatusTypeDef ret;
+
+  prv_deepsleep_block(i2c);
 
   if (prv_dma_usable(i2c, transfer)) {
     // Dropping the buffer's lines now keeps a dirty one from being evicted over the DMA data.
@@ -192,7 +190,6 @@ const struct pbl_i2c_bus_ops pbl_i2c_sf32lb_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
   .is_busy = prv_is_busy,
-  .begin_transfer = prv_begin_transfer,
   .start_transfer = prv_start_transfer,
   .abort_transfer = prv_abort_transfer,
 };

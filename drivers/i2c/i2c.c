@@ -19,11 +19,6 @@ PBL_LOG_MODULE_DEFINE(driver_i2c, CONFIG_DRIVER_I2C_LOG_LEVEL);
 
 #define I2C_ERROR_TIMEOUT_MS (1000)
 
-// MFI NACKs while busy. We delay ~1ms between retries so this is approximately a 1000ms timeout.
-// The longest operation of the MFi chip is "start signature generation", which seems to take
-// 223-224 NACKs, but sometimes for unknown reasons it can take much longer.
-#define I2C_NACK_COUNT_MAX (1000)
-
 static const char *prv_name(const struct pbl_i2c_bus *bus) {
   return bus->dev.name;
 }
@@ -98,48 +93,26 @@ static int prv_wait_for_not_busy(const struct pbl_i2c_bus *bus) {
   return 0;
 }
 
-//! Start the current transfer and wait for its outcome, retrying NACKs
+//! Start the current transfer and wait for its outcome
 static int prv_run_transfer(const struct pbl_i2c_bus *bus) {
   struct pbl_i2c_bus_state *state = bus->state;
 
-  state->nack_count = 0;
+  bus->ops->start_transfer(bus);
 
-  if (bus->ops->begin_transfer != nullptr) {
-    bus->ops->begin_transfer(bus);
+  if (pbl_sem_take(&state->event_sem, PBL_TICKS(pbl_ms_to_ticks(I2C_ERROR_TIMEOUT_MS))) != 0) {
+    bus->ops->abort_transfer(bus);
+    PBL_LOG_ERR("Transfer timed out on bus %s", prv_name(bus));
+    PBL_ANALYTICS_ADD(i2c_transfer_error_count, 1);
+    return -ETIMEDOUT;
   }
 
-  while (true) {
-    bus->ops->start_transfer(bus);
-
-    if (pbl_sem_take(&state->event_sem, PBL_TICKS(pbl_ms_to_ticks(I2C_ERROR_TIMEOUT_MS))) != 0) {
-      bus->ops->abort_transfer(bus);
-      PBL_LOG_ERR("Transfer timed out on bus %s", prv_name(bus));
-      PBL_ANALYTICS_ADD(i2c_transfer_error_count, 1);
-      return -ETIMEDOUT;
-    }
-
-    if (state->event == PBL_I2C_EVENT_COMPLETE) {
-      return 0;
-    }
-
-    if (state->event == PBL_I2C_EVENT_ERROR) {
-      PBL_LOG_ERR("I2C Error on bus %s", prv_name(bus));
-      PBL_ANALYTICS_ADD(i2c_transfer_error_count, 1);
-      return -EIO;
-    }
-
-    if (state->nack_count >= I2C_NACK_COUNT_MAX) {
-      bus->ops->abort_transfer(bus);
-      PBL_LOG_ERR("I2C Error: too many NACKs received on bus %s", prv_name(bus));
-      return -EIO;
-    }
-
-    // NACK received after the start condition: the MFI chip NACKs start conditions while it
-    // is busy, so retry after a short delay. Legitimate NACKs abort the transfer once the
-    // NACK count reaches its maximum.
-    state->nack_count++;
-    psleep(2);
+  if (state->event != PBL_I2C_EVENT_COMPLETE) {
+    PBL_LOG_ERR("I2C Error on bus %s", prv_name(bus));
+    PBL_ANALYTICS_ADD(i2c_transfer_error_count, 1);
+    return -EIO;
   }
+
+  return 0;
 }
 
 //! Set up and start a transfer, wait for it to finish and clean up after it.

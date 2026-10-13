@@ -39,12 +39,8 @@
 
 /** @brief Transfer outcome reported by a bus driver. */
 enum pbl_i2c_event {
-  /** Transfer timed out. */
-  PBL_I2C_EVENT_TIMEOUT,
   /** Transfer completed. */
   PBL_I2C_EVENT_COMPLETE,
-  /** Device did not acknowledge; the transfer is retried. */
-  PBL_I2C_EVENT_NACK,
   /** Transfer failed. */
   PBL_I2C_EVENT_ERROR,
 };
@@ -81,8 +77,6 @@ struct pbl_i2c_bus_state {
   struct pbl_i2c_transfer transfer;
   /** Outcome of the current transfer. */
   enum pbl_i2c_event event;
-  /** NACKs received during the current transfer. */
-  int nack_count;
   /** Number of pbl_i2c_use() users. */
   int user_count;
   /** Signaled when the current transfer ends. */
@@ -108,9 +102,7 @@ struct pbl_i2c_bus_ops {
   void (*disable)(const struct pbl_i2c_bus *bus);
   /** Check whether the controller is busy. */
   bool (*is_busy)(const struct pbl_i2c_bus *bus);
-  /** Optional. Prepare for the current transfer, before its first start_transfer(). */
-  void (*begin_transfer)(const struct pbl_i2c_bus *bus);
-  /** Start the current transfer; called again to retry after a NACK. */
+  /** Start the current transfer. */
   void (*start_transfer)(const struct pbl_i2c_bus *bus);
   /** Abort the current transfer. */
   void (*abort_transfer)(const struct pbl_i2c_bus *bus);
