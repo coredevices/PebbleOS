@@ -165,27 +165,37 @@ class QemuAdapter(DeviceAdapter):
             command, stdout=self._qemu_log, stderr=subprocess.STDOUT
         )
 
-        # QMP answers once every chardev is up; QEMU picks the TCP ports.
+        # QMP can answer before the -serial chardevs exist; QEMU picks the
+        # TCP ports.
         deadline = time.monotonic() + 10
         while True:
-            if self._process.poll() is not None:
-                raise HarnessError(
-                    f"QEMU exited with {self._process.returncode}; see "
-                    f"{os.path.join(self.workdir, 'qemu.log')}"
-                )
-            if time.monotonic() > deadline:
-                raise HarnessError("QEMU did not answer on its QMP socket")
+            self._check_alive(deadline, "QEMU did not answer on its QMP socket")
             try:
                 qmp = _Qmp(self.qmp_socket)
                 break
             except (OSError, ValueError):
                 time.sleep(0.05)
         try:
-            chardevs = {c["label"]: c for c in qmp.execute("query-chardev")["return"]}
+            while True:
+                reply = qmp.execute("query-chardev")["return"]
+                chardevs = {c["label"]: c for c in reply}
+                if "serial1" in chardevs and "serial2" in chardevs:
+                    break
+                self._check_alive(deadline, "QEMU did not create its serial ports")
+                time.sleep(0.05)
         finally:
             qmp.close()
         self.pebble_port = _tcp_port(chardevs["serial1"])
         self.console_port = _tcp_port(chardevs["serial2"])
+
+    def _check_alive(self, deadline, timeout_message):
+        if self._process.poll() is not None:
+            raise HarnessError(
+                f"QEMU exited with {self._process.returncode}; see "
+                f"{os.path.join(self.workdir, 'qemu.log')}"
+            )
+        if time.monotonic() > deadline:
+            raise HarnessError(timeout_message)
 
     def _close_device(self):
         if self._process is not None and self._process.poll() is None:
