@@ -3,7 +3,7 @@
 `kernel/` owns every RTOS primitive the firmware uses. The public API lives in
 `include/pbl/kernel/` and is the only threading interface the rest of the tree
 may use. The implementation is PebbleOS's own; its internals are described in
-[kernel internals](kernel_internals.md).
+[kernel internals](internals.md).
 
 ## Layout
 
@@ -151,3 +151,27 @@ its core (`CPU_CORTEX_M4`, `CPU_CORTEX_M33`, `CPU_STAR_MC1`) and features
 `ARMV8_M_MAINLINE`) and the architecture its traits (`CPU_CORTEX_M_HAS_SPLIM`).
 The compiler flags and the MPU backend are derived from these symbols. QEMU boards
 pick the emulated core with `SOC_QEMU_CORTEX_M4` or `SOC_QEMU_CORTEX_M33`.
+
+## Modules
+
+```{apigroups} kernel
+```
+
+## MCU and SoC
+
+CPU core helpers (`pbl/mcu/`) wrap the architecture's interrupt, privilege,
+cache, FPU and MPU control; `pbl/soc/` holds what is specific to one SoC
+family.
+
+```{apigroups} mcu
+```
+
+```{apigroups} soc
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+
+internals.md
+```

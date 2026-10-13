@@ -173,4 +173,4 @@ pbl configure --board asterix
 pbl build
 ```
 
-See {doc}`pbl` for what it can do and how it is put together.
+See {doc}`../development/pbl` for what it can do and how it is put together.

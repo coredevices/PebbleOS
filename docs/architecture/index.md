@@ -6,7 +6,7 @@ these pages summarize and point, they do not duplicate.
 
 ## Layering
 
-PebbleOS runs on its own [kernel API](kernel.md) (`include/pbl/kernel`,
+PebbleOS runs on its own [kernel API](../kernel/index.md) (`include/pbl/kernel`,
 implemented under `kernel/`). The main source layers, as described on the
 <a href="../apidoc/index.html">API reference</a> main page:
 
@@ -16,10 +16,10 @@ implemented under `kernel/`). The main source layers, as described on the
 - `fw/services` — system services (Bluetooth, filesystem, activity, …).
 - `fw/kernel` — task management, events, memory.
 - `drivers/` — hardware drivers (public interfaces under
-  `include/pbl/drivers`), built on the [device model](device.md).
+  `include/pbl/drivers`), built on the [device model](../drivers/device_model.md).
 - `subsys/` — OS subsystems shared beyond the firmware tree; currently
-  logging, cron, the Bluetooth backends, [CRC](crc.md), [input](input.md),
-  the [debug shell](shell.md) and the [task watchdog](task_watchdog.md),
+  logging, cron, the Bluetooth backends, [CRC](../subsystems/crc.md), [input](../subsystems/input.md),
+  the [debug shell](../subsystems/shell.md) and the [task watchdog](../subsystems/task_watchdog.md),
   included via the `pbl/logging/`, `pbl/cron/`, `pbl/bluetooth/`, `pbl/crc/`,
   `pbl/input/`, `pbl/shell/` and `pbl/task_wdt/` header paths.
 
@@ -45,7 +45,7 @@ launch, coordinated through boot bits (see `BOOT_BIT_*` usage in
 Normal firmware and PRF (Pebble Recovery Firmware — the minimal fallback
 image used to reinstall the main firmware) are separate compile-time
 variants: `pbl configure --variant=prf` (see
-[build options](../development/options.md)) applies `fw/prj_prf.conf` on
+[build options](../getting_started/configuration.md)) applies `fw/prj_prf.conf` on
 top of the base config, disabling the JS engine and marking the image as
 recovery firmware.
 
@@ -75,61 +75,15 @@ the fixed app region where third-party app code, data and heap live.
 and worker regions, and `fw/linker/regions.ld` notes the MPU
 power-of-two constraints.
 
-## Bluetooth
-
-`fw/comm/ble/` is the host-side BLE layer and carries substantial design
-prose:
-
-- `gap_le_connect.c` — connection management and the "connection intent"
-  abstraction that virtualizes the link across multiple clients.
-- `gap_le_advert.c` — round-robin scheduling of multiple advertising jobs
-  onto a controller that only holds one payload at a time (the comment
-  predates the current controllers, but the scheduler it describes is still
-  in use).
-- `gap_le_connect_params.c` — a primer on connection intervals, slave
-  latency and supervision timeouts, and why the firmware deviates from the
-  spec-recommended parameter-update pause for iOS.
-
-Beneath it sits NimBLE (`third_party/nimble`), glued in by
-`subsys/bluetooth/`. The HCI transport is chosen per SoC (`BT_HCI`): the
-NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
-and a fake controller on QEMU that acknowledges every command so the host
-runs without a radio. On QEMU the phone link is the emulator's serial
-channel, `fw/comm/qemu/`.
-
-## Storage
-
-PFS, the Pebble File System, lives in `fw/services/filesystem/`. The API
-and on-flash layout are documented in `pfs.h`; the wear-leveling strategy
-(round-robin page allocation tracking the last written page) is described
-alongside the allocator in `pfs.c`.
-
-## Drivers
-
-- **Accelerometer** — `include/pbl/drivers/accel.h` explains the split
-  between the dumb low-level driver and the accel service that owns
-  buffering, clients and subsampling, so the same service code runs on any
-  accel part.
-- **Flash** — `drivers/flash/README.md` documents the two flash APIs:
-  the main one, and a coredump-only path that must work without OS services.
-
 ## Coredumps
 
 The on-flash coredump image format (header plus chunked records, including
 per-thread register sets) is documented in `fw/kernel/core_dump.c`.
 
-## Design documents
+## Components
 
-Longer design documents live as their own pages:
-
-```{toctree}
-:maxdepth: 1
-activity/index.md
-crc.md
-device.md
-input.md
-kernel.md
-kernel_internals.md
-shell.md
-task_watchdog.md
-```
+Each layer with a public interface under `include/` has its own section,
+pairing hand-written guides with the generated API reference:
+{doc}`../kernel/index`, {doc}`../subsystems/index`,
+{doc}`../drivers/index`, {doc}`../services/index` and
+{doc}`../libraries/index`.

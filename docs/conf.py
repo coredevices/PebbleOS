@@ -60,6 +60,22 @@ html_context = {
     "source_docs_path": "/docs/",
 }
 
+# Pages that moved, served as redirects from their old URL
+pbl_redirects = {
+    "development/quickstart": "getting_started/index",
+    "development/getting_started": "getting_started/prerequisites",
+    "development/options": "getting_started/configuration",
+    "development/building_fw": "getting_started/flashing",
+    "architecture/kernel": "kernel/index",
+    "architecture/kernel_internals": "kernel/internals",
+    "architecture/crc": "subsystems/crc",
+    "architecture/input": "subsystems/input",
+    "architecture/shell": "subsystems/shell",
+    "architecture/task_watchdog": "subsystems/task_watchdog",
+    "architecture/device": "drivers/device_model",
+    "architecture/activity/index": "services/activity/index",
+}
+
 # -- Options for the linkcheck builder ----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-the-linkcheck-builder
 

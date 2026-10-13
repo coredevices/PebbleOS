@@ -1,4 +1,4 @@
-# Configuration Options
+# Configuration options
 
 When configuring the build (`pbl configure ...`) there are several options you can enable or tune.
 Below you will find a list of the most relevant ones.
@@ -11,7 +11,7 @@ using the (`--board`) flag followed by:
 :`asterix`: (Core Devices) Pebble 2 Duo
 :`obelix@bb2`, `obelix@dvt`, `obelix@pvt`: (Core Devices) Pebble Time 2
 :`getafix@dvt`, `getafix@dvt2`: (Core Devices) Pebble Round 2
-:`qemu_emery`, `qemu_flint`, `qemu_gabbro`: dedicated QEMU targets (see {doc}`qemu`)
+:`qemu_emery`, `qemu_flint`, `qemu_gabbro`: dedicated QEMU targets (see {doc}`../development/qemu`)
 
 Keep in mind that some targets may not currently compile as-is.
 
@@ -31,7 +31,7 @@ this to `pbl configure`.
 
 :`-DCONFIG_MODDABLE_XS=y` / `-DCONFIG_MODDABLE_XS=n`:
 Force the Moddable SDK's XS JavaScript engine on or off, overriding
-the board defconfig. Pass to `pbl configure`. See {doc}`moddable`.
+the board defconfig. Pass to `pbl configure`. See {doc}`../development/moddable`.
 PRF (recovery) builds always disable the engine regardless of this
 value.
 

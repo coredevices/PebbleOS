@@ -14,7 +14,7 @@ binaries. Only macOS has been tried so far.
 ## Requirements
 
 A host C compiler and [SDL2](https://www.libsdl.org), both part of the
-dependencies in [](getting_started.md).
+dependencies in [](../getting_started/prerequisites.md).
 
 ## Build and run
 

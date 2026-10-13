@@ -22,7 +22,7 @@ Optimized for memory-in-pixel (MIP) displays and long battery life, it features 
 
 ````{div} home-actions
 
-```{button-ref} development/getting_started
+```{button-ref} getting_started/index
 :ref-type: doc
 :color: primary
 :class: sd-rounded-pill
@@ -43,53 +43,93 @@ Browse the sources
 :::::
 
 ::::{grid} 1 1 2 3
-:class-container: text-center
 :gutter: 3
 
-:::{grid-item-card}
-:link: development/getting_started
+:::{grid-item-card} 🚀 Getting started
+:link: getting_started/index
 :link-type: doc
 
-🚀 Prerequisites
-^^^
-
-Set up your environment to build PebbleOS from source!
+From a fresh machine to PebbleOS booting in the emulator and on a watch.
 :::
 
-:::{grid-item-card}
-:link: https://github.com/coredevices/pebbleos
+:::{grid-item-card} 🛠️ Development
+:link: development/pbl
+:link-type: doc
 
-⌚ Browse the sources
-^^^
-
-Browse the PebbleOS sources!
+The `pbl` CLI, the build system, tests, QEMU and debugging.
 :::
 
-:::{grid-item-card}
+:::{grid-item-card} 🏛️ Architecture
+:link: architecture/index
+:link-type: doc
+
+How the firmware is layered: tasks, boot, processes and memory.
+:::
+
+:::{grid-item-card} ⚙️ Kernel
+:link: kernel/index
+:link-type: doc
+
+Threads, synchronization, interrupts and scheduling.
+:::
+
+:::{grid-item-card} 🧩 Subsystems
+:link: subsystems/index
+:link-type: doc
+
+Bluetooth, logging, input, the shell and the other OS subsystems.
+:::
+
+:::{grid-item-card} 🔌 Drivers
+:link: drivers/index
+:link-type: doc
+
+The device model and every hardware driver class.
+:::
+
+:::{grid-item-card} 📡 Services
+:link: services/index
+:link-type: doc
+
+System services between drivers and apps, from activity to timeline.
+:::
+
+:::{grid-item-card} ⌚ Boards
+:link: boards/index
+:link-type: doc
+
+Supported watches and emulated boards, and how to program them.
+:::
+
+:::{grid-item-card} 📖 Reference
 :link: reference/index
 :link-type: doc
 
-📖 Reference
-^^^
-
-Look things up: protocol specifications, podcasts, developer documents and more!
+API reference, protocols, file formats and external resources.
 :::
 
 ::::
 
 ```{toctree}
 :hidden:
-:caption: 🛠️ Development
-development/getting_started.md
-development/quickstart.md
+:caption: Getting started
+
+getting_started/index.md
+getting_started/prerequisites.md
+getting_started/configuration.md
+getting_started/flashing.md
+```
+
+```{toctree}
+:hidden:
+:caption: Development
+
 development/pbl.md
-development/options.md
-development/building_fw.md
 development/build_system.md
-development/testing.md
-development/integration_tests.md
 development/qemu.md
 development/native.md
+development/testing.md
+development/integration_tests.md
 development/debugging.md
 development/moddable.md
 development/sdk_export.md
@@ -99,18 +139,27 @@ development/contributing.md
 
 ```{toctree}
 :hidden:
-:caption: 🏛️ Architecture
+:caption: Architecture
+
 architecture/index.md
+kernel/index.md
+subsystems/index.md
+drivers/index.md
+services/index.md
+libraries/index.md
 ```
 
 ```{toctree}
 :hidden:
-:caption: ⌚ Boards
+:caption: Hardware
+
 boards/index.md
 ```
 
 ```{toctree}
 :hidden:
-:caption: 📖 Reference
+:caption: Reference
+
 reference/index.md
+API reference <https://pebbleos-core.readthedocs.io/en/latest/apidoc/index.html>
 ```

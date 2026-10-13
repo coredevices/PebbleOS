@@ -1,6 +1,6 @@
-# Building firmware
+# Building and flashing
 
-Before building, make sure you've configured {doc}`pbl <../development/options>`. Then, run the following:
+Before building, make sure you've {doc}`configured <configuration>` the build. Then, run the following:
 
 ```shell
 pbl build

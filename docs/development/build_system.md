@@ -101,7 +101,7 @@ pbl_linker_sources(memory linker.ld)
 See `cmake/modules/linker.cmake` for the available hooks.
 
 Sources that must run from RAM are marked with
-`pbl_library_ramfunc(file.c ...)`; see [the kernel](../architecture/kernel.md)
+`pbl_library_ramfunc(file.c ...)`; see [the kernel](../kernel/index.md)
 for the `.ramfunc` section.
 
 ## Generated sources
