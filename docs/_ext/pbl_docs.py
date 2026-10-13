@@ -6,13 +6,17 @@
 - ``{apidoc}`group``` links to the Doxygen page of a group.
 - ``apigroups`` renders the children of a Doxygen group as a table, read
   from the ``@defgroup``/``@ingroup``/``@brief`` comments in ``include/``.
+- ``pbl-command`` renders the usage and options of a ``pbl`` command
+  from its own argument parser.
 - ``pbl_redirects`` keeps moved pages reachable at their old URL.
 """
 
+import argparse
 import hashlib
 import os
 import posixpath
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,6 +26,7 @@ from sphinx.util.docutils import SphinxDirective, SphinxRole
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = [ROOT / "include", ROOT / "docs" / "_doxygen"]
+PBL_CLI = ROOT / "tools" / "libs" / "pbl-cli"
 
 COMMENT_RE = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
 DEFGROUP_RE = re.compile(r"[@\\]defgroup\s+(\w+)\s+(.+)")
@@ -196,6 +201,74 @@ class ApiGroupsDirective(SphinxDirective):
         return ref
 
 
+def pbl_subparsers():
+    sys.path.insert(0, str(PBL_CLI))
+    from pbl.app.main import _build_parser
+    from pbl.commands import builtin_commands
+
+    parser = _build_parser(builtin_commands(), [], None)
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            return action.choices
+    raise RuntimeError("pbl has no subcommands")
+
+
+class PblCommandDirective(SphinxDirective):
+    """Usage line and options of a ``pbl`` command, without the shared
+    options every command takes."""
+
+    required_arguments = 1
+
+    def run(self):
+        name = self.arguments[0]
+        commands = self.env.app.pbl_commands
+        if name not in commands:
+            raise self.error(f"unknown pbl command {name!r}")
+        parser = commands[name]
+        formatter = parser._get_formatter()
+
+        usage = formatter._format_usage(
+            parser.usage, parser._actions, parser._mutually_exclusive_groups, ""
+        ).strip()
+        result = [nodes.literal_block(usage, usage, language="none")]
+
+        items = nodes.definition_list(classes=["pbl-options"])
+        for group in parser._action_groups:
+            if group.title == "shared options":
+                continue
+            for action in group._group_actions:
+                if isinstance(action, argparse._HelpAction):
+                    continue
+                if isinstance(action, argparse._SubParsersAction):
+                    for choice in action._choices_actions:
+                        items += self._item(choice.dest, choice.help)
+                    continue
+                items += self._item(
+                    self._invocation(formatter, action), formatter._expand_help(action)
+                )
+        if len(items):
+            result.append(items)
+        for path in (PBL_CLI / "pbl").rglob("*.py"):
+            self.env.note_dependency(str(path))
+        return result
+
+    @staticmethod
+    def _invocation(formatter, action):
+        if not action.option_strings:
+            return formatter._metavar_formatter(action, action.dest)(1)[0]
+        if action.nargs == 0:
+            return ", ".join(action.option_strings)
+        metavar = formatter._format_args(action, action.dest.upper())
+        return ", ".join(action.option_strings) + " " + metavar
+
+    @staticmethod
+    def _item(term, text):
+        item = nodes.definition_list_item()
+        item += nodes.term("", "", nodes.literal(text=term))
+        item += nodes.definition("", nodes.paragraph(text=text or ""))
+        return item
+
+
 REDIRECT_TEMPLATE = """<!DOCTYPE html>
 <html>
 <head>
@@ -229,12 +302,14 @@ def write_redirects(app, exception):
 
 def builder_inited(app):
     app.pbl_groups = scan_groups()
+    app.pbl_commands = pbl_subparsers()
 
 
 def setup(app):
     app.add_config_value("pbl_redirects", {}, "html")
     app.add_role("apidoc", ApidocRole())
     app.add_directive("apigroups", ApiGroupsDirective)
+    app.add_directive("pbl-command", PblCommandDirective)
     app.connect("builder-inited", builder_inited)
     app.connect("build-finished", write_redirects)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

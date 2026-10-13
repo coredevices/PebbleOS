@@ -64,8 +64,9 @@ html_context = {
 pbl_redirects = {
     "development/quickstart": "getting_started/index",
     "development/getting_started": "getting_started/prerequisites",
-    "development/options": "getting_started/configuration",
-    "development/building_fw": "getting_started/flashing",
+    "development/options": "pbl/configure",
+    "development/building_fw": "pbl/flash",
+    "development/pbl": "pbl/index",
     "architecture/kernel": "kernel/index",
     "architecture/kernel_internals": "kernel/internals",
     "architecture/crc": "subsystems/crc",

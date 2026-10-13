@@ -45,7 +45,7 @@ launch, coordinated through boot bits (see `BOOT_BIT_*` usage in
 Normal firmware and PRF (Pebble Recovery Firmware — the minimal fallback
 image used to reinstall the main firmware) are separate compile-time
 variants: `pbl configure --variant=prf` (see
-[build options](../getting_started/configuration.md)) applies `fw/prj_prf.conf` on
+[`pbl configure`](../pbl/configure.md)) applies `fw/prj_prf.conf` on
 top of the base config, disabling the JS engine and marking the image as
 recovery firmware.
 

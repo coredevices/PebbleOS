@@ -36,7 +36,7 @@ Activate the virtual environment (`source .venv/bin/activate`) in every new
 shell before running `pbl`.
 ```
 
-See {doc}`prerequisites` for the details and {doc}`../development/pbl` for the tool.
+See {doc}`prerequisites` for the details and {doc}`../pbl/index` for the tool.
 
 ## 3. Build for the emulator
 
@@ -51,7 +51,7 @@ pbl build
 
 `pbl configure` runs CMake into `build/` and remembers the board, so later
 commands do not need it again. Kconfig options are passed as
-`-DCONFIG_...=y` on the configure line; see {doc}`configuration` and
+`-DCONFIG_...=y` on the configure line; see {doc}`../pbl/configure` and
 {doc}`../development/build_system`.
 
 ## 4. Run it in QEMU
@@ -91,7 +91,7 @@ The app starts on the emulated watch. Pass `--keep-flash-image` to
 ## 6. Build for a watch
 
 Configure a second build directory for a real board. `asterix` is Pebble 2
-Duo; the other boards and their revisions are listed in {doc}`configuration`:
+Duo; the other boards and their revisions are listed in {doc}`../boards/index`:
 
 ```shell
 pbl -b build-asterix configure --board asterix
@@ -127,7 +127,7 @@ There are three ways to get the `.pbz` onto a watch:
 3. **Flash it with a firmware development kit.** With the kit connected
    over SWD or serial, `pbl -b build-asterix flash` writes the firmware
    directly, without the phone. This route, and the first-time resource
-   flashing a dev kit needs, are in {doc}`flashing`.
+   flashing a dev kit needs, are in {doc}`../pbl/flash`.
 
 ```{note}
 Holding Back + Up + Select reboots the watch into the recovery firmware

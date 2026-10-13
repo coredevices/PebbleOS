@@ -15,7 +15,8 @@ anything else through, so Kconfig symbols are overridden the usual way:
 pbl configure --board obelix@pvt --variant prf -DCONFIG_RELEASE=y
 ```
 
-`pbl` itself is documented in {doc}`pbl`. Plain CMake works just as well;
+The configure options are described with {doc}`../pbl/configure`, and
+`pbl` itself in {doc}`../pbl/index`. Plain CMake works just as well;
 it only saves the typing:
 
 ```shell

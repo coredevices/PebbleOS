@@ -166,7 +166,7 @@ html.dark {
   padding-bottom: 0;
 }
 
-/* API reference tables */
+/* API reference tables and pbl options */
 
 .yue table.apigroups td:first-child {
   font-weight: 600;
@@ -174,4 +174,8 @@ html.dark {
 
 .yue table.apigroups code {
   white-space: nowrap;
+}
+
+.yue dl.pbl-options dt code {
+  font-weight: 600;
 }

@@ -9,6 +9,7 @@ it at link time, and a Kconfig option selects the backend.
 bluetooth: bluetooth
 crc: crc
 input: input
+logging: logging
 shell: shell
 task_wdt: task_watchdog
 ```
@@ -20,6 +21,7 @@ task_wdt: task_watchdog
 bluetooth.md
 crc.md
 input.md
+logging.md
 shell.md
 task_watchdog.md
 ```

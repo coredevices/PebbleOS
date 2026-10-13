@@ -53,10 +53,10 @@ From a fresh machine to PebbleOS booting in the emulator and on a watch.
 :::
 
 :::{grid-item-card} 🛠️ Development
-:link: development/pbl
+:link: pbl/index
 :link-type: doc
 
-The `pbl` CLI, the build system, tests, QEMU and debugging.
+The `pbl` CLI and every command, the build system, tests, QEMU and debugging.
 :::
 
 :::{grid-item-card} 🏛️ Architecture
@@ -116,15 +116,13 @@ API reference, protocols, file formats and external resources.
 
 getting_started/index.md
 getting_started/prerequisites.md
-getting_started/configuration.md
-getting_started/flashing.md
 ```
 
 ```{toctree}
 :hidden:
 :caption: Development
 
-development/pbl.md
+pbl/index.md
 development/build_system.md
 development/qemu.md
 development/native.md

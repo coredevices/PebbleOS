@@ -1,52 +1,4 @@
-# The `pbl` CLI
-
-`pbl` is the developer command line for this repository: it configures and
-builds the firmware, puts the result on a device or an emulator, and hosts
-the operational commands around that.
-
-It is a Python package, installed along with the rest of the project's
-dependencies:
-
-```shell
-pip install -r requirements.txt
-```
-
-After that `pbl` is on the `PATH` whenever the virtual environment is
-active. Run it from anywhere inside the checkout:
-
-```shell
-pbl configure --board asterix
-pbl build
-pbl flash
-```
-
-`pbl --help` lists every command, grouped; `pbl <command> --help` shows one
-command's own options.
-
-## Shared options
-
-Two options are accepted by every command, before or after the command
-name:
-
-- `-b, --build-dir DIR` — use a different build directory. It defaults to
-  the one `pbl.yml` names (`build/`, or `build-test/` for `pbl test`), and
-  `PBL_BUILD_DIR` overrides that in turn.
-- `--dry-run` — print the commands that would run instead of running them.
-
-## Where its knowledge comes from
-
-`pbl` holds no facts about the checkout of its own:
-
-- The **workspace** is wherever `pbl.yml` is, found by walking up from the
-  current directory. That file also names the build and test directories.
-- The **build** is read back from its own byproducts: `.config` for every
-  `CONFIG_` symbol, `CMakeCache.txt` for the board, the variant and the
-  project name the artifacts are named after. Configuring is therefore the
-  only way to tell `pbl` about a build, and reconfiguring is enough to
-  change its mind.
-- The **board** contributes the rest through `boards/<board>/<board>.yml`:
-  its revisions, the binary runners it supports, and the SDL decorations
-  the emulator can draw around its screen.
+# Extending `pbl`
 
 ## Structure
 
@@ -137,11 +89,10 @@ commands:
         help: Report the firmware's size
 ```
 
-## Binary runners
+## Adding a runner
 
-Flashing and debugging a real device go through a runner, the same
-abstraction Zephyr uses. A board lists the ones it supports in its
-manifest, first one first:
+A board lists the {ref}`runners <pbl-runners>` it supports in its manifest,
+first one first:
 
 ```yaml
 runners:
@@ -150,7 +101,7 @@ runners:
 ```
 
 `pbl flash`, `reset`, `run`, `bork`, `openocd` and `debug` all dispatch to
-it, and `-r/--runner` picks a different one. Each runner contributes its
-own options (e.g. `--tty` for sftool), so they show up on all of those
-commands. New runners are modules in `pbl/runners/`, registered in that
-package's `RUNNERS` table.
+it. Each runner contributes its own options (e.g. `--tty` for sftool), so
+they show up on all of those commands. New runners are modules in
+`pbl/runners/`, registered in that package's `RUNNERS` table, and declare
+the operations they support in `capabilities()`.
