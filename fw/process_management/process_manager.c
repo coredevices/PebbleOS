@@ -766,6 +766,15 @@ PBL_SYSCALL(const PebbleProcessMd *, sys_process_manager_get_current_process_md)
 }
 
 // -------------------------------------------------------------------------------------------
+PBL_SYSCALL(ProcessAppSDKType, sys_process_manager_get_current_process_sdk_type) {
+  const PebbleProcessMd *app_md = prv_get_context()->app_md;
+  if (!app_md) {
+    return ProcessAppSDKType_System;
+  }
+  return process_metadata_get_app_sdk_type(app_md);
+}
+
+// -------------------------------------------------------------------------------------------
 PBL_SYSCALL(bool, sys_process_manager_get_current_process_uuid, (OUT, Uuid *, uuid_out)) {
   const PebbleProcessMd *app_md = prv_get_context()->app_md;
   if (!app_md) {
