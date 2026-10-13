@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <pbl/kernel/barrier.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/msgq.h>
