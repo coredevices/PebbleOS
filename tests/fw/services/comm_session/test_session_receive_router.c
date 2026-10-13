@@ -14,13 +14,9 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_analytics.h>
 #include <stubs_bt_lock.h>
 #include <stubs_bt_stack.h>
 #include <stubs_events.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_rand_ptr.h>
 #include <stubs_syscall_internal.h>
 

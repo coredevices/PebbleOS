@@ -19,16 +19,8 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_analytics.h>
-#include <stubs_hexdump.h>
 #include <stubs_layout_layer.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 
 void test_notif_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);

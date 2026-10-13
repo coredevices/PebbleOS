@@ -18,7 +18,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_analytics.h>
 #include <stubs_app_cache.h>
 #include <stubs_app_db.h>
 #include <stubs_app_glance_db.h>
@@ -27,12 +26,8 @@
 #include <stubs_evented_timer.h>
 #include <stubs_events.h>
 #include <stubs_health_db.h>
-#include <stubs_hexdump.h>
 #include <stubs_ios_notif_pref_db.h>
-#include <stubs_logging.h>
 #include <stubs_notif_db.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_pin_db.h>
 #include <stubs_prefs_db.h>
 #include <stubs_regular_timer.h>

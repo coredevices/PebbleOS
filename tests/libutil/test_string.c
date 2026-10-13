@@ -6,8 +6,6 @@
 #include <pbl/util/string.h>
 
 #include <clar.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 void test_string__initialize(void) {
 }

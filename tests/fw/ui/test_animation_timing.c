@@ -7,8 +7,6 @@
 #include <pebble_asserts.h>
 
 // stubs
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 // tests
 

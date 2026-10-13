@@ -44,11 +44,7 @@ void fake_kernel_malloc_mark_assert_equal(void) {
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_analytics.h>
 #include <stubs_bt_lock.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_rand_ptr.h>
 #include <stubs_tick.h>
 

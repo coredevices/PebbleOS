@@ -13,7 +13,6 @@
 
 #include <stubs_activity.h>
 #include <stubs_alarm_pin.h>
-#include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_clock.h>
 #include <stubs_cron.h>
@@ -21,11 +20,7 @@
 #include <stubs_events.h>
 #include <stubs_i18n.h>
 #include <stubs_layout_node.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
 #include <stubs_new_timer.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_rtc.h>
 #include <stubs_settings_file.h>
 #include <stubs_system_task.h>

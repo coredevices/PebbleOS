@@ -6,9 +6,6 @@
 #include <pbl/util/build_id.h>
 
 #include <clar.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_rtc.h>
 
 void pbl_analytics__native_heartbeat(void);

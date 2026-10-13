@@ -25,9 +25,6 @@ extern void gatt_service_changed_server_init(void);
 #include <stubs_bt_lock.h>
 #include <stubs_events.h>
 #include <stubs_gatt_client_subscriptions.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_rand_ptr.h>
 #include <stubs_regular_timer.h>
 

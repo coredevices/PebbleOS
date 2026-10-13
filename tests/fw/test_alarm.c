@@ -10,7 +10,6 @@
 #include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
 #include <stubs_clock.h>
-#include <stubs_pbl_malloc.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables

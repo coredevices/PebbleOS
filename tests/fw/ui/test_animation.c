@@ -21,13 +21,8 @@
 // Stubs
 #include <stubs_app_state.h>
 #include <stubs_app_timer.h>
-#include <stubs_heap.h>
 #include <stubs_irq.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_resources.h>
-#include <stubs_serial.h>
 #include <stubs_syscalls.h>
 #include <stubs_unobstructed_area.h>
 

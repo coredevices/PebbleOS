@@ -9,9 +9,6 @@
 ///////////////////////////////////////////////////////////
 
 #include <stubs_bt_lock.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_print.h>
 
 // Fakes

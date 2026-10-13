@@ -11,13 +11,8 @@
 ///////////////////////////////////////////////////////////
 
 #include <stubs_ble_syscalls.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_print.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_serial.h>
 
 // The test data and descriptions in this file are captured using the FrontLine
 // Bluetooth sniffer.

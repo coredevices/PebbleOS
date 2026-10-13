@@ -10,8 +10,6 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_tick.h>
 
 // Tests

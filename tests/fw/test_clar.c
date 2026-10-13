@@ -8,9 +8,6 @@
 #include <pebble_asserts.h>
 #include <stubs_app_state.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_heap.h>
-#include <stubs_passert.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_rand_ptr.h>
 
 //! Welcome to the test file for all of our additional cl_assert macros.

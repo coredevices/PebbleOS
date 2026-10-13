@@ -19,9 +19,6 @@
 ////////////////////////////////////
 #include <stubs_app_state.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_heap.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 #define BETWEEN(val, low, high) (val >= low && val <= high) ? true : false
 

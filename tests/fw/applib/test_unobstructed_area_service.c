@@ -13,10 +13,6 @@
 #include <stubs_events.h>
 #include <stubs_framebuffer.h>
 #include <stubs_graphics.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_process_manager.h>
 #include <stubs_ui_window.h>
 

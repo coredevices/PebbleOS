@@ -8,9 +8,6 @@
 
 #include <clar.h>
 #include <stubs_language_ui.h>
-#include <stubs_logging.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_serial.h>
 
 typedef struct {
   int16_t raw_samples[4][3];

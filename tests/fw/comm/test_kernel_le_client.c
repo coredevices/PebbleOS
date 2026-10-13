@@ -10,14 +10,12 @@
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/ble/kernel_le_client/test/test_definition.h>
 #include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <fake_system_task.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_rand_ptr.h>
 #include <stubs_rtc.h>
 

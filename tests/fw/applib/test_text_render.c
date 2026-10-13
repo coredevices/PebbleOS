@@ -11,9 +11,6 @@
 #include <stubs_app_state.h>
 #include <stubs_applib_resource.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_heap.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_syscalls.h>
 
 ResAppNum app_get_resource_num(void) {

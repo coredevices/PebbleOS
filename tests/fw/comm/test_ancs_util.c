@@ -13,16 +13,9 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_analytics.h>
 #include <stubs_ble.h>
 #include <stubs_bt_stack.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_serial.h>
 #include <stubs_system_reset.h>
-#include <stubs_task_wdt.h>
 
 // Test data
 ///////////////////////////////////////////////////////////

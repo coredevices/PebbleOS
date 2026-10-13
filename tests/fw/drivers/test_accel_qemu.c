@@ -11,8 +11,6 @@
 #include <fake_mutex.h>
 #include <fake_new_timer.h>
 #include <fake_rtc.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) {
 }

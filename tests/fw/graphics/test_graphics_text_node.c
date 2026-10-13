@@ -3,15 +3,13 @@
 
 #include <apps/system/timeline/text_node.h>
 #include <clar.h>
+#include <kernel/pbl_malloc.h>
 #include <pebble_asserts.h>
 
 // Stubs
 /////////////////////
 
 #include <stubs_app_state.h>
-#include <stubs_heap.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_process_manager.h>
 
 // TODO: PBL-22271 Complete timeline text node unit tests

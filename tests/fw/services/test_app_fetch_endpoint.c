@@ -22,9 +22,6 @@
 ////////////////////////////////////
 #include <stubs_app_cache.h>
 #include <stubs_bt_lock.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_rand_ptr.h>
 
 typedef struct {

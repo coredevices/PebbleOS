@@ -11,9 +11,6 @@
 #include <fake_session.h>
 #include <fake_system_task.h>
 #include <stubs_bt_lock.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 extern void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
                                                  size_t size);

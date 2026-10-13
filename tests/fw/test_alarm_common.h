@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <pbl/cron/cron.h>
@@ -26,22 +27,14 @@
 #include <resource/timeline_resource_ids.auto.h>
 
 // Stubs
-#include <stubs_analytics.h>
 #include <stubs_app_cache.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_blob_db.h>
 #include <stubs_calendar.h>
-#include <stubs_hexdump.h>
 #include <stubs_i18n.h>
 #include <stubs_layout_layer.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_rand_ptr.h>
 #include <stubs_regular_timer.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 #include <stubs_timeline_event.h>
 
 // Fakes

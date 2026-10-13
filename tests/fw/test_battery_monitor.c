@@ -16,10 +16,6 @@
 #include <fake_rtc.h>
 #include <fake_system_task.h>
 #include <kernel/events.h>
-#include <stubs_analytics.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_serial.h>
 #include <system/reboot_reason.h>
 
 static bool s_entered_standby;

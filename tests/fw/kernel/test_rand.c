@@ -12,7 +12,6 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include <stubs_passert.h>
 #include <stubs_rand_ptr.h>
 
 PebbleTask pebble_task_get_current(void) {

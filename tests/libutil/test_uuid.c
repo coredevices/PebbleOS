@@ -5,8 +5,6 @@
 
 #include <clar.h>
 #include <fake_rtc.h>
-#include <stubs_passert.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_rand_ptr.h>
 
 void test_uuid__equal(void) {

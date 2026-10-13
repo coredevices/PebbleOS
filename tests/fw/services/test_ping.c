@@ -7,8 +7,6 @@
 #include <clar.h>
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 extern void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length);
 

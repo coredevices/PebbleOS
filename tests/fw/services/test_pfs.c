@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -15,16 +16,7 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <flash_region/flash_region.h>
-#include <stubs_analytics.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_print.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 #include <system/passert.h>
 
 #define PFS_SECTOR_SIZE 4096

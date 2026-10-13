@@ -13,9 +13,6 @@
 /////////////////////////
 
 #include <stubs_kino_reel.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_resources.h>
 #include <stubs_syscalls.h>
 

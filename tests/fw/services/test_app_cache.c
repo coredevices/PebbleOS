@@ -11,6 +11,7 @@
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/size.h>
+#include <pbl/util/string.h>
 
 #include <clar.h>
 #include <process_management/app_install_manager.h>
@@ -26,15 +27,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_analytics.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 
 void app_storage_delete_app(AppInstallId id) {
   char buffer[30];

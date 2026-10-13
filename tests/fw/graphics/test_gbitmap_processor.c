@@ -11,8 +11,6 @@
 #include <stubs_graphics_circle.h>
 #include <stubs_graphics_line.h>
 #include <stubs_graphics_private.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_process_manager.h>
 
 const GDrawRawImplementation g_default_draw_implementation;

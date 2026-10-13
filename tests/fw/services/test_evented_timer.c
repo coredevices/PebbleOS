@@ -9,9 +9,6 @@
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <stubs_events.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_reboot_reason.h>
 #include <stubs_syscall_internal.h>
 

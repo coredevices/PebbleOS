@@ -5,7 +5,6 @@
 
 #include "stubs_bluetooth_pairing_ui.h"
 #include "stubs_events.h"
-#include "stubs_hexdump.h"
 
 #include <inttypes.h>
 

@@ -17,8 +17,6 @@ extern AppTimer *app_message_outbox_get_ack_nack_timer(void);
 // Stubs
 ////////////////////////////////////
 #include <fake_pbl_malloc.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_rand_ptr.h>
 
 // Fakes

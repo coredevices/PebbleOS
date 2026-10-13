@@ -8,7 +8,6 @@
 #include <pbl/services/filesystem/app_file.h>
 
 #include <clar.h>
-#include <stubs_passert.h>
 
 static void assert_file_name(const char *vector, AppInstallId app_id, const char *suffix) {
   char buf[42];

@@ -13,10 +13,6 @@
 ////////////////////////////////////
 #include <stubs_app_state.h>
 #include <stubs_applib_resource.h>
-#include <stubs_heap.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_resources.h>
 #include <stubs_syscalls.h>
 

@@ -201,6 +201,31 @@ function(_pbl_test_object out source key flags)
   )
 endfunction()
 
+# The default stubs, archived once per set of compile flags so that they
+# see the same headers as the test. Every symbol in them must be weak, so
+# that a test defining its own copy takes precedence. The assert stubs are
+# linked as an object instead, see _pbl_test_add().
+function(_pbl_test_stubs out key flags)
+  set(lib pbl_test_stubs_${key})
+  set(${out} ${lib} PARENT_SCOPE)
+  if(TARGET ${lib})
+    return()
+  endif()
+
+  file(GLOB sources CONFIGURE_DEPENDS ${PBL_BASE}/tests/stubs/default/*.c)
+  list(REMOVE_ITEM sources ${PBL_BASE}/tests/stubs/default/passert.c)
+  set(objects "")
+  foreach(source ${sources})
+    _pbl_test_object(object ${source} ${key} "${flags}")
+    list(APPEND objects ${object})
+  endforeach()
+  set_source_files_properties(${objects} PROPERTIES EXTERNAL_OBJECT TRUE GENERATED TRUE)
+  add_library(${lib} STATIC ${objects})
+  set_target_properties(${lib} PROPERTIES
+    LINKER_LANGUAGE C
+    ARCHIVE_OUTPUT_DIRECTORY ${PBL_TEST_OBJ_DIR}/${key})
+endfunction()
+
 function(pbl_test_finalize)
   get_property(ids GLOBAL PROPERTY PBL_TESTS)
   list(LENGTH ids count)
@@ -287,6 +312,8 @@ function(_pbl_test_add id)
   endforeach()
   string(MD5 key "${flags}")
 
+  _pbl_test_stubs(stubs ${key} "${flags}")
+
   set(objects "")
   foreach(source ${SOURCES})
     string(REPLACE "@PLATFORM@" "${platform}" source "${source}")
@@ -300,6 +327,10 @@ function(_pbl_test_add id)
     _pbl_test_object(object ${source} ${key} "${flags}")
     list(APPEND objects ${object})
   endforeach()
+  # libutil calls util_assertion_failed() and has a weak copy of its own,
+  # which a single-pass linker would pick over an archive already scanned.
+  _pbl_test_object(object ${PBL_BASE}/tests/stubs/default/passert.c ${key} "${flags}")
+  list(APPEND objects ${object})
 
   # clar turns the test's suite functions into a main().
   add_custom_command(
@@ -323,7 +354,7 @@ function(_pbl_test_add id)
   # DUMA catches memory corruption; a handful of tests trip over it. It
   # has to come before any system library: it overrides malloc, and once
   # the linker has bound that to libc it stops looking.
-  set(libs ${LIBS} libutil libbtutil libcrc)
+  set(libs ${LIBS} ${stubs} libutil libbtutil libcrc)
   if(NOT "DUMA_DISABLED" IN_LIST defines)
     list(APPEND libs duma pthread)
   endif()

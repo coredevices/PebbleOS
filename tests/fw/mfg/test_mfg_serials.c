@@ -8,8 +8,6 @@
 #include <clar.h>
 #include <fake_otp.h>
 #include <mfg/mfg_serials.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 // Tests
 /////////////////////////////////////////////

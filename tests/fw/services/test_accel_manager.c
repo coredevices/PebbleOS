@@ -15,15 +15,10 @@
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_system_task.h>
-#include <stubs_analytics.h>
 #include <stubs_gettext.h>
-#include <stubs_logging.h>
 #include <stubs_msgq.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_persist.h>
 #include <stubs_resources.h>
-#include <stubs_serial.h>
 #include <stubs_syscall_internal.h>
 #include <stubs_worker_manager.h>
 

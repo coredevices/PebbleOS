@@ -6,8 +6,6 @@
 #include <pbl/util/circular_buffer.h>
 
 #include <clar.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 
 void test_circular_buffer__initialize(void) {
 }

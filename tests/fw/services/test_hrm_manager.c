@@ -20,11 +20,7 @@
 #include <fake_rtc.h>
 #include <fake_system_task.h>
 #include <services/hrm/hrm_manager.h>
-#include <stubs_analytics.h>
 #include <stubs_event_service_client.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_worker_manager.h>
 
 // -----------------------------------------------------------------------------

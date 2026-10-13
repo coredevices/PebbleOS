@@ -28,7 +28,6 @@
 // Stub Includes
 ////////////////////////////////////
 #include <stubs_activity.h>
-#include <stubs_analytics.h>
 #include <stubs_app_custom_icon.h>
 #include <stubs_app_fetch_endpoint.h>
 #include <stubs_app_manager.h>
@@ -43,17 +42,10 @@
 #include <stubs_gbitmap.h>
 #include <stubs_graphics.h>
 #include <stubs_graphics_context.h>
-#include <stubs_heap.h>
-#include <stubs_hexdump.h>
 #include <stubs_i18n.h>
 #include <stubs_kino_reel.h>
-#include <stubs_logging.h>
 #include <stubs_memory_layout.h>
 #include <stubs_menu_layer.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_persist.h>
 #include <stubs_pin_db.h>
 #include <stubs_process_loader.h>
@@ -61,11 +53,8 @@
 #include <stubs_put_bytes.h>
 #include <stubs_quick_launch.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_serial.h>
 #include <stubs_shell_prefs.h>
-#include <stubs_sleep.h>
 #include <stubs_system_task.h>
-#include <stubs_task_wdt.h>
 #include <stubs_watchface.h>
 #include <stubs_worker_manager.h>
 

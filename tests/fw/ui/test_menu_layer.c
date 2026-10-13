@@ -25,11 +25,6 @@
 #include <stubs_app_state.h>
 #include <stubs_click.h>
 #include <stubs_graphics.h>
-#include <stubs_heap.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_process_manager.h>
 #include <stubs_ui_window.h>
 #include <stubs_unobstructed_area.h>

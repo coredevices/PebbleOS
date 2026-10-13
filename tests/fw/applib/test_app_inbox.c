@@ -19,9 +19,6 @@ extern size_t app_inbox_service_num_success_for_tag(AppInboxServiceTag tag);
 
 #include <fake_kernel_malloc.h>
 #include <fake_pebble_tasks.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_syscall_internal.h>
 
 #define BUFFER_SIZE                (32)

@@ -7,12 +7,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pebble_tasks.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
-
 void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
 }
 void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {

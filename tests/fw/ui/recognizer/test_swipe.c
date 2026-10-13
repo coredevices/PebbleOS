@@ -17,10 +17,6 @@
 
 #include <pbl/util/units.h>
 
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-
 // The manager is not under test here; swallow the notification.
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {
 }

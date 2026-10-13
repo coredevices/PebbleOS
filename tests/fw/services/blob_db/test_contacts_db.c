@@ -7,6 +7,7 @@
 #include <pbl/util/uuid.h>
 
 #include <clar.h>
+#include <kernel/pbl_malloc.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -19,16 +20,8 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_analytics.h>
-#include <stubs_hexdump.h>
 #include <stubs_layout_layer.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 
 #define CONTACT_1_UUID \
   0x0a, 0x04, 0x98, 0x00, 0x39, 0x18, 0x47, 0xaa, 0x9c, 0x16, 0x8e, 0xa0, 0xa8, 0x2a, 0x2e, 0xb8

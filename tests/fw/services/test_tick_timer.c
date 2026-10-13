@@ -10,9 +10,6 @@
 #include <fake_pebble_tasks.h>
 #include <fake_regular_timer.h>
 #include <kernel/events.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <syscall/syscall.h>
 
 // The App task's queue to KernelMain.

@@ -16,7 +16,6 @@
 
 // Stubs
 #include <stubs_accel_service.h>
-#include <stubs_analytics.h>
 #include <stubs_animation_service.h>
 #include <stubs_app_cache.h>
 #include <stubs_app_manager.h>
@@ -24,14 +23,10 @@
 #include <stubs_dls.h>
 #include <stubs_evented_timer.h>
 #include <stubs_expandable_dialog.h>
-#include <stubs_heap.h>
 #include <stubs_i18n.h>
 #include <stubs_irq.h>
-#include <stubs_logging.h>
 #include <stubs_modal_manager.h>
 #include <stubs_new_timer.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_pebble_process_md.h>
 #include <stubs_persist.h>
 #include <stubs_resources.h>

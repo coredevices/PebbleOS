@@ -8,8 +8,6 @@
 #include <clar.h>
 
 // stub
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 void sys_vibe_pattern_trigger_start(void) {
 }

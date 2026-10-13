@@ -7,8 +7,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////////////////////////
 #include <fake_new_timer.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 static bool s_mfg_mode_entered;
 

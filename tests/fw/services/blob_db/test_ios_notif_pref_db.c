@@ -7,6 +7,7 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
+#include <kernel/pbl_malloc.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -18,13 +19,8 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_analytics.h>
 #include <stubs_blob_db_sync.h>
 #include <stubs_layout_layer.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_pfs.h>
 #include <stubs_rand_ptr.h>
 

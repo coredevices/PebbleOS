@@ -8,7 +8,6 @@
 #include <pbl/util/slist.h>
 
 #include <clar.h>
-#include <stubs_passert.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

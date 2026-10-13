@@ -24,21 +24,13 @@
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 #include <fake_time.h>
-#include <stubs_analytics.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
 #include <stubs_events.h>
-#include <stubs_hexdump.h>
 #include <stubs_language_ui.h>
-#include <stubs_logging.h>
 #include <stubs_memory_layout.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_pebble_process_md.h>
 #include <stubs_print.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 
 #define TEST_UUID                                                                              \
   UuidMake(0xF9, 0xC6, 0xEB, 0xE4, 0x06, 0xCD, 0x46, 0xF1, 0xB1, 0x51, 0x24, 0x08, 0x74, 0xD2, \

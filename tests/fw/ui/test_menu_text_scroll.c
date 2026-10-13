@@ -6,7 +6,6 @@
 #include <fake_app_timer.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-#include <stubs_logging.h>
 
 // Stubs
 ////////////////////////////////////

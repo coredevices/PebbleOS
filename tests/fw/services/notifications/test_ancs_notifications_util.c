@@ -1,15 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 
 #include <clar.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////

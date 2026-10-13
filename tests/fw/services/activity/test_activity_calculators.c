@@ -9,7 +9,6 @@
 #include <pbl/util/units.h>
 
 #include <clar.h>
-#include <stubs_logging.h>
 
 // Fakes
 static uint8_t s_age_years;

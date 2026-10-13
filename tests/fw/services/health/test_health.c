@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/services/activity/activity.h>
 #include <pbl/util/size.h>
 
@@ -10,9 +12,6 @@
 
 // Stubs
 #include <stubs_app_manager.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_worker_manager.h>
 
 // Fakes

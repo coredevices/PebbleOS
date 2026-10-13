@@ -50,6 +50,10 @@ add_executable(pebble_renderer
   "${PEBBLEOS_ROOT}/lib/util/trig.c"
   "${PEBBLEOS_ROOT}/lib/util/iterator.c"
   "${PEBBLEOS_ROOT}/lib/util/utf8.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/heap.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/logging.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/pbl_malloc.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/pebble_tasks.c"
 )
 set_target_properties(pebble_renderer PROPERTIES
   OUTPUT_NAME renderer

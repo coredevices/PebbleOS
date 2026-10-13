@@ -6,7 +6,6 @@
 #include <pbl/util/shared_cbuf.h>
 
 #include <clar.h>
-#include <stubs_passert.h>
 
 void test_shared_cbuf__initialize(void) {
 }

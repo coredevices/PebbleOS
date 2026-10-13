@@ -18,9 +18,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 
 #define MAX_RECORDED 32
 

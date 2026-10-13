@@ -9,9 +9,6 @@
 
 #include <clar.h>
 #include <fake_rtc.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 
 static uint32_t s_timer_timeout_ms;
 

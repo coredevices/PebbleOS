@@ -9,8 +9,6 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 struct test_dev {
   struct pbl_device dev;

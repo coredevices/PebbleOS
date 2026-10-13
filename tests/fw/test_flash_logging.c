@@ -14,13 +14,8 @@
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 #include <flash_region/flash_region.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
+#include <kernel/pbl_malloc.h>
 #include <stubs_print.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 #include <system/passert.h>
 
 void test_flash_logging__initialize(void) {

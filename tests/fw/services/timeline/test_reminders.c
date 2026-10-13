@@ -45,17 +45,10 @@ void event_put(PebbleEvent *event) {
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_analytics.h>
 #include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_pin_db.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 
 extern bool get_reminder_armed(void);
 extern time_t get_reminder_timestamp(void);

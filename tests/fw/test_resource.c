@@ -14,17 +14,8 @@
 #include <fake_bootbits.h>
 
 // Stubs
-#include <stubs_analytics.h>
-#include <stubs_logging.h>
 #include <stubs_memory_layout.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_print.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 
 static const uint8_t pug[] = {
   0x08, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x3c, 0x00, 0x3e, 0x00,

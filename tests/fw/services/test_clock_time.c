@@ -8,8 +8,6 @@
 
 #include <clar.h>
 #include <fake_rtc.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 // 2026-07-01 12:00:00 UTC
 #define SUMMER_UTC ((time_t)1782907200)

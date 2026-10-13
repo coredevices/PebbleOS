@@ -19,8 +19,6 @@
 #include <process_management/process_loader.h>
 #include <resource/resource.h>
 #include <resource/resource_storage.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <sys/stat.h>
 
 // An image over 64 KiB, laid out the way the SDK lays one out: the header, then code and data,

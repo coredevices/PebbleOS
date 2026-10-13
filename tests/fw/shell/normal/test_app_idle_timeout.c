@@ -10,8 +10,6 @@
 // Stubs
 /////////////////////////////////////////////////////////////////////////
 #include <fake_new_timer.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 static int s_watchface_launch_count;
 

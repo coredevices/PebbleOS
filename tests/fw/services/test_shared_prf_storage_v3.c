@@ -13,13 +13,11 @@
 
 #include <clar.h>
 #include <flash_region/flash_region.h>
+#include <kernel/pbl_malloc.h>
 
 // Fakes
 //////////////////////////////////////////////////////////
 #include <fake_spi_flash.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 
 // Externs
 //////////////////////////////////////////////////////////

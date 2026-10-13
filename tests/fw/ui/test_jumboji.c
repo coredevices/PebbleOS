@@ -13,7 +13,6 @@
 /////////////////////
 
 #include <stubs_alerts_preferences.h>
-#include <stubs_analytics.h>
 #include <stubs_attribute.h>
 #include <stubs_clock.h>
 #include <stubs_graphics.h>
@@ -21,10 +20,7 @@
 #include <stubs_kino_layer.h>
 #include <stubs_layer.h>
 #include <stubs_layout_node.h>
-#include <stubs_logging.h>
 #include <stubs_notification_image.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_pin_db.h>
 #include <stubs_resources.h>
 #include <stubs_shell_prefs.h>

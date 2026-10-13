@@ -20,14 +20,10 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_analytics.h>
 #include <stubs_bluetopia_interface.h>
 #include <stubs_bt_lock.h>
 #include <stubs_gatt_client_discovery.h>
 #include <stubs_gatt_client_subscriptions.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 
 bool static s_is_connected_as_slave = false;
 

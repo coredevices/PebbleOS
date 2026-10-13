@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include <pbl/util/size.h>
+#include <pbl/util/string.h>
 
 #include <applib/app_logging.h>
 #include <applib/graphics/gbitmap_sequence.h>
@@ -39,21 +40,15 @@
 ////////////////////////////////////
 #include <stubs_app_state.h>
 #include <stubs_applib_resource.h>
-#define CUSTOM_LOG_INTERNAL
-#include <stubs_heap.h>
 #include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_print.h>
 #include <stubs_resources.h>
-#include <stubs_serial.h>
 #include <stubs_ui_window.h>
 
 static int s_dispose_previous_warnings;
 
-static void log_internal(uint8_t log_level, const char *src_filename, int src_line_number,
-                         const char *fmt, va_list args) {
+void stub_log_internal(uint8_t log_level, const char *src_filename, int src_line_number,
+                       const char *fmt, va_list args) {
   if ((log_level == APP_LOG_LEVEL_WARNING) && strstr(fmt, "PREVIOUS")) {
     s_dispose_previous_warnings++;
   }

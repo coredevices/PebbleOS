@@ -12,7 +12,6 @@
 
 #include <clar.h>
 #include <kernel_test.h>
-#include <stubs_passert.h>
 #include <system/reboot_reason.h>
 
 // The subsystem on the POSIX kernel: time only moves when every thread is

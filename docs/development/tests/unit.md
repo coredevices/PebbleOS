@@ -87,7 +87,8 @@ pbl_clar_test(test_crc32)
 ```
 
 `pbl_crc32()` lives in `libcrc`, one of the static libraries
-`pbl_clar_test()` always links along with `libutil` and `libbtutil`. A test
+`pbl_clar_test()` always links along with `libutil`, `libbtutil` and the
+default stubs (see below). A test
 or stub defining one of their functions, weak or not, replaces the library
 copy, since the linker only pulls an archive member for undefined symbols.
 Code that is not part of the always-linked libraries — and any fakes from
@@ -126,12 +127,20 @@ existing one costs a single translation unit.
 
 ## Fakes, stubs and header overrides
 
-Three mechanisms replace dependencies of the code under test:
+These mechanisms replace dependencies of the code under test:
 
 - **Fakes** (`tests/fakes/`): functional host implementations, e.g.
   `fake_rtc.c`, `fake_spi_flash.c`. Compile them in via `sources_ant_glob`.
 - **Stubs** (`tests/stubs/`): headers with no-op implementations, for
   dependencies the test never exercises.
+- **Default stubs** (`tests/stubs/default/`): the stubs nearly every test
+  needs (asserts, logging, malloc, mutexes, analytics, ...), archived into
+  a `pbl_test_stubs_*` library compiled with each test's own flags and
+  linked into every test. Every definition there is weak, so a test or fake
+  providing its own copy takes precedence. The library is linked ahead of
+  `libutil`, `libbtutil` and `libcrc`, so it must not stub their functions
+  or it would shadow them; the assert stubs are linked as an object so they
+  also win over the weak `util_assertion_failed()` in `libutil`.
 - **Header overrides** (`tests/overrides/`): directories mirroring the
   source tree whose headers shadow the real ones on the include path.
   `tests/overrides/default/` is always active for every test; other

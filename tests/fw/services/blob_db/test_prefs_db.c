@@ -22,19 +22,11 @@
 ////////////////////////////////////////////////////////////////
 #include <stubs_activity.h>
 #include <stubs_ambient_light.h>
-#include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_event_loop.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
 #include <stubs_mfg_info.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_sleep.h>
 #include <stubs_system_theme.h>
-#include <stubs_task_wdt.h>
 #include <stubs_timeline_peek.h>
 
 void prefs_sync_init(void) {

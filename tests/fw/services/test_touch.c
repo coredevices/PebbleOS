@@ -17,10 +17,6 @@
 #include <kernel/pebble_tasks.h>
 
 // Stubs
-#include <stubs_analytics.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 
 void kernel_free(void *p) {
 }

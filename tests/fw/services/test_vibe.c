@@ -11,9 +11,6 @@
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-#include <stubs_analytics.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 static struct pbl_mutex *s_last_locked_mutex;
 static struct pbl_mutex *s_history_mutex;

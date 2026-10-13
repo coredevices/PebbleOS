@@ -10,18 +10,9 @@
 // Stubs
 /////////////////////////////////
 #include <fake_rtc.h>
-#include <stubs_analytics.h>
 #include <stubs_events.h>
 #include <stubs_firmware_update.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
 #include <stubs_notification_storage.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 #include <stubs_vibe_score_info.h>
 #include <stubs_vibes.h>
 

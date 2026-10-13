@@ -19,19 +19,9 @@
 ////////////////////////////////////
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <stubs_analytics.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_print.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
 #include <stubs_system_reset.h>
-#include <stubs_task_wdt.h>
 
 static PebbleProcessMd __pbl_app_info;
 

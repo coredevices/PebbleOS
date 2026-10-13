@@ -10,8 +10,6 @@
 #include <kernel/pebble_tasks.h>
 
 // Stubs
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 // Fake event service
 //////////////////////////////////////////

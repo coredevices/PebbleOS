@@ -16,19 +16,10 @@
 #include <fake_app_manager.h>
 
 // Stubs
-#include <stubs_analytics.h>
 #include <stubs_bootbits.h>
-#include <stubs_logging.h>
 #include <stubs_memory_layout.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_print.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
 #include <stubs_syscalls.h>
-#include <stubs_task_wdt.h>
 
 #define WILDCARD_CODEPOINT 0x25AF
 

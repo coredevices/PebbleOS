@@ -1,6 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+#include <string.h>
+
 #include <pbl/util/size.h>
 
 #include <applib/ui/recognizer/recognizer.h>
@@ -11,10 +14,6 @@
 
 // Stubs
 #include "test_recognizer_impl.h"
-
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 
 static bool s_manager_state_change = false;
 void recognizer_manager_handle_state_change(RecognizerManager *manager, Recognizer *changed) {

@@ -14,8 +14,6 @@
 #include <clar.h>
 #include <stubs_applib_resource.h>
 #include <stubs_memory_layout.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_resources.h>
 #include <stubs_syscalls.h>
 

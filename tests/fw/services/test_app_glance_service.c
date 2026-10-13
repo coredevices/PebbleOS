@@ -26,10 +26,6 @@
 #include <stubs_app_install_manager.h>
 #include <stubs_event_service_client.h>
 #include <stubs_events.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 
 status_t pfs_remove(const char *name) {
   fake_settings_file_reset();

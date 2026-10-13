@@ -6,8 +6,6 @@
 #include <clar.h>
 #include <stubs_app_state.h>
 #include <stubs_graphics_context.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_process_manager.h>
 
 // Stubs

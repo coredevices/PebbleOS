@@ -19,7 +19,6 @@
 #include <applib/ui/action_menu_window_private.h>
 #include <stubs_action_chaining_window.h>
 #include <stubs_action_menu.h>
-#include <stubs_analytics.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_app_manager.h>
 #include <stubs_app_state.h>
@@ -30,17 +29,11 @@
 #include <stubs_events.h>
 #include <stubs_expandable_dialog.h>
 #include <stubs_gcolor.h>
-#include <stubs_hexdump.h>
 #include <stubs_i18n.h>
 #include <stubs_layout_layer.h>
-#include <stubs_logging.h>
 #include <stubs_modal_manager.h>
-#include <stubs_mutex.h>
 #include <stubs_notification_storage.h>
 #include <stubs_notifications.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_pin_db.h>
 #include <stubs_progress_window.h>
 #include <stubs_rand_ptr.h>
@@ -48,7 +41,6 @@
 #include <stubs_reminder_db.h>
 #include <stubs_rtc.h>
 #include <stubs_simple_dialog.h>
-#include <stubs_task_wdt.h>
 #include <stubs_ui_window.h>
 #include <stubs_window_manager.h>
 #include <stubs_window_stack.h>

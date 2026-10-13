@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
 #include <time.h>
 
 #include <pbl/kernel/compiler.h>
@@ -14,7 +15,6 @@
 
 #include <kernel/pebble_tasks.h>
 #include <logging/logging_private.h>
-#include <stubs_passert.h>
 
 PBL_LOG_MODULE_DEFINE(test_runtime, CONFIG_TEST_RUNTIME_LOG_LEVEL);
 

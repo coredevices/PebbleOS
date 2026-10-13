@@ -184,7 +184,6 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 
 #include <stubs_alarm.h>
 #include <stubs_alerts.h>
-#include <stubs_analytics.h>
 #include <stubs_app_cache.h>
 #include <stubs_app_manager.h>
 #include <stubs_app_timer.h>
@@ -200,22 +199,14 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 #include <stubs_i18n.h>
 #include <stubs_kino_player.h>
 #include <stubs_layer.h>
-#include <stubs_logging.h>
 #include <stubs_memory_layout.h>
 #include <stubs_music.h>
-#include <stubs_mutex.h>
 #include <stubs_notification_storage.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_pebble_process_info.h>
-#include <stubs_pebble_tasks.h>
-#include <stubs_serial.h>
 #include <stubs_session.h>
-#include <stubs_sleep.h>
 #include <stubs_status_bar_layer.h>
 #include <stubs_syscalls.h>
 #include <stubs_system_theme.h>
-#include <stubs_task_wdt.h>
 #include <stubs_tick.h>
 #include <stubs_time.h>
 #include <stubs_watchface.h>

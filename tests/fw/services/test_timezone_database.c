@@ -10,8 +10,6 @@
 #include <pbl/services/timezone_database.h>
 
 #include <clar.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 //! Find a region ID for the given region name.
 //! @return a valid, matching region ID, or -1 if no region was found

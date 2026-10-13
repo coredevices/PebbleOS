@@ -17,8 +17,6 @@
 
 // Stubs
 #include <stubs_event_service_client.h>
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 
 bool sys_vibe_history_was_vibrating(uint64_t time_search) {
   return false;

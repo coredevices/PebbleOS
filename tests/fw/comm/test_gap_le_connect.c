@@ -33,10 +33,6 @@
 #include <stubs_gap_le_advert.h>
 #include <stubs_gatt_client_discovery.h>
 #include <stubs_gatt_client_subscriptions.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_pebble_pairing_service.h>
 #include <stubs_regular_timer.h>
 #include <stubs_shared_prf_storage.h>

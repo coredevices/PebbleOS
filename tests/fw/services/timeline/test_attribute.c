@@ -8,13 +8,10 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
+#include <kernel/pbl_malloc.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 
 // Setup
 ////////////////////////////////////////////////////////////////

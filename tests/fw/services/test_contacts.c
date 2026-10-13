@@ -16,18 +16,9 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_analytics.h>
 #include <stubs_fonts.h>
-#include <stubs_hexdump.h>
 #include <stubs_layout_layer.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_rand_ptr.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 
 #define CONTACT_1_UUID \
   0x60, 0xcd, 0x45, 0x67, 0x2b, 0xcf, 0x45, 0xb3, 0x8d, 0x4c, 0x75, 0x34, 0xda, 0x6f, 0x16, 0xe3

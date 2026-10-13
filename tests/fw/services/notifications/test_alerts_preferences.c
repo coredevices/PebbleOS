@@ -11,18 +11,9 @@
 #include <clar.h>
 #include <fake_spi_flash.h>
 #include <shell/prefs_private.h>
-#include <stubs_analytics.h>
 #include <stubs_do_not_disturb.h>
 #include <stubs_events.h>
-#include <stubs_hexdump.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_rtc.h>
-#include <stubs_sleep.h>
-#include <stubs_task_wdt.h>
 #include <stubs_vibe_score_info.h>
 
 #define NOTIF_PREFS_FILE_NAME         "notifpref"

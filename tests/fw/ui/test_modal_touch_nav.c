@@ -34,11 +34,8 @@
 #include <stubs_gbitmap.h>
 #include <stubs_graphics.h>
 #include <stubs_graphics_context.h>
-#include <stubs_heap.h>
 #include <stubs_irq.h>
-#include <stubs_logging.h>
 #include <stubs_new_timer.h>
-#include <stubs_passert.h>
 #include <stubs_persist.h>
 #include <stubs_plugin_service.h>
 #include <stubs_print.h>

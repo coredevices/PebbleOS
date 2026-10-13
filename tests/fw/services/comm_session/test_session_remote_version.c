@@ -20,9 +20,6 @@ extern void session_remote_version_protocol_msg_callback(CommSession *session, c
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <stubs_bt_lock.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <stubs_rtc.h>
 
 static bool s_session_is_system;

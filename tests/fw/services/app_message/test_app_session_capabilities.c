@@ -7,9 +7,6 @@
 
 #include <clar.h>
 #include <process_management/pebble_process_md.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
 #include <system/status_codes.h>
 
 static const CommSessionCapability s_live_capabilities = (CommSessionInfiniteLogDumping);

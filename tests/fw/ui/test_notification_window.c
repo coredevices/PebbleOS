@@ -23,7 +23,6 @@
 // stubs_alerts_preferences.h intentionally omitted; see local replacements below
 #include <pbl/services/notifications/alerts_preferences_private.h>
 
-#include <stubs_analytics.h>
 #include <stubs_ancs_filtering.h>
 #include <stubs_app_install_manager.h>
 #include <stubs_app_state.h>
@@ -42,22 +41,16 @@
 #include <stubs_evented_timer.h>
 #include <stubs_generic_layout.h>
 #include <stubs_health_layout.h>
-#include <stubs_heap.h>
 #include <stubs_i18n.h>
 #include <stubs_imaging.h>
 #include <stubs_ios_notif_pref_db.h>
 #include <stubs_layer.h>
 #include <stubs_light.h>
-#include <stubs_logging.h>
 #include <stubs_memory_layout.h>
 #include <stubs_menu_cell_layer.h>
 #include <stubs_modal_manager.h>
-#include <stubs_mutex.h>
 #include <stubs_notification_storage.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
 #include <stubs_pebble_process_info.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_peek_layer.h>
 #include <stubs_pin_db.h>
 #include <stubs_print.h>
@@ -65,15 +58,12 @@
 #include <stubs_regular_timer.h>
 #include <stubs_reminder_db.h>
 #include <stubs_reminders.h>
-#include <stubs_serial.h>
 #include <stubs_session.h>
 #include <stubs_shell_prefs.h>
 #include <stubs_simple_dialog.h>
-#include <stubs_sleep.h>
 #include <stubs_sports_layout.h>
 #include <stubs_syscall_internal.h>
 #include <stubs_syscalls.h>
-#include <stubs_task_wdt.h>
 #include <stubs_time.h>
 #include <stubs_timeline.h>
 #include <stubs_timeline_actions.h>

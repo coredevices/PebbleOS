@@ -11,9 +11,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_logging.h>
-#include <stubs_passert.h>
-
 typedef void (*CallbackEventCallback)(void *data);
 
 static int s_kernel_main_schedule_count;

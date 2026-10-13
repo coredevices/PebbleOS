@@ -16,27 +16,19 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_analytics.h>
 #include <stubs_ble.h>
 #include <stubs_bt_stack.h>
 #include <stubs_codepoint.h>
 #include <stubs_i18n.h>
 #include <stubs_ios_notif_pref_db.h>
 #include <stubs_layout_layer.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
 #include <stubs_nexmo.h>
-#include <stubs_passert.h>
 #include <stubs_pebble_pairing_service.h>
-#include <stubs_pebble_tasks.h>
 #include <stubs_pin_db.h>
 #include <stubs_rand_ptr.h>
 #include <stubs_reminder_db.h>
 #include <stubs_reminders.h>
-#include <stubs_serial.h>
-#include <stubs_sleep.h>
 #include <stubs_system_reset.h>
-#include <stubs_task_wdt.h>
 #include <stubs_timeline.h>
 #include <stubs_utf8.h>
 

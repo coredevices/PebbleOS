@@ -12,8 +12,6 @@
 
 // Stubs
 /////////////
-#include <stubs_logging.h>
-#include <stubs_passert.h>
 #include <stubs_session.h>
 
 // FW Includes

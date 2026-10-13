@@ -19,13 +19,7 @@
 #include <stubs_app_install_manager.h>
 #include <stubs_app_manager.h>
 #include <stubs_bt_lock.h>
-#include <stubs_hexdump.h>
 #include <stubs_imaging.h>
-#include <stubs_logging.h>
-#include <stubs_mutex.h>
-#include <stubs_passert.h>
-#include <stubs_pbl_malloc.h>
-#include <stubs_serial.h>
 #include <stubs_tick.h>
 
 struct {
