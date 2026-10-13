@@ -12,7 +12,6 @@
 
 // Stubs
 /////////////
-#include <stubs_session.h>
 
 // FW Includes
 ///////////////

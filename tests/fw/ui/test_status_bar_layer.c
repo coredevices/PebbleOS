@@ -14,18 +14,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
-#include <stubs_applib_resource.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_event_service_client.h>
-#include <stubs_print.h>
-#include <stubs_process_manager.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
-#include <stubs_window_stack.h>
 
 // Stubs
 ////////////////////////////////////

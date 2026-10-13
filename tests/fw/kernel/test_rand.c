@@ -12,7 +12,6 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include <stubs_rand_ptr.h>
 
 PebbleTask pebble_task_get_current(void) {
   return PebbleTask_KernelMain; // System seed

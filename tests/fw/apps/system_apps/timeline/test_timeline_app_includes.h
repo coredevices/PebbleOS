@@ -28,36 +28,17 @@
 #include <stubs_ancs.h>
 #include <stubs_animation_timing.h>
 #include <stubs_app.h>
-#include <stubs_app_cache.h>
-#include <stubs_app_install_manager.h>
 #include <stubs_app_launch_reason.h>
-#include <stubs_app_manager.h>
-#include <stubs_app_timer.h>
 #include <stubs_app_window_stack.h>
 #include <stubs_blob_db.h>
-#include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
-#include <stubs_bootbits.h>
-#include <stubs_click.h>
 #include <stubs_compositor_transitions.h>
 #include <stubs_event_loop.h>
-#include <stubs_event_service_client.h>
-#include <stubs_events.h>
-#include <stubs_i18n.h>
-#include <stubs_layer.h>
-#include <stubs_memory_layout.h>
-#include <stubs_modal_manager.h>
 #include <stubs_notification_storage.h>
 #include <stubs_notifications.h>
 #include <stubs_pebble_process_info.h>
 #include <stubs_phone_call_util.h>
-#include <stubs_process_manager.h>
 #include <stubs_property_animation.h>
-#include <stubs_regular_timer.h>
-#include <stubs_reminder_db.h>
-#include <stubs_session.h>
-#include <stubs_shell_prefs.h>
-#include <stubs_syscalls.h>
 #include <stubs_system_theme.h>
 #include <stubs_timeline.h>
 #include <stubs_timeline_actions.h>
@@ -67,11 +48,8 @@
 #include <stubs_timezone_database.h>
 #include <stubs_vibe_score.h>
 #include <stubs_vibe_score_info.h>
-#include <stubs_vibes.h>
 #include <stubs_wakeup.h>
 #include <stubs_watchface.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 
 // Helper Functions
 /////////////////////

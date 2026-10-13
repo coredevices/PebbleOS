@@ -27,27 +27,17 @@
 // Stubs
 #include <stubs_accel_service.h>
 #include <stubs_animation_service.h>
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
 #include <stubs_cache.h>
 #include <stubs_compositor.h>
 #include <stubs_dialog.h>
-#include <stubs_events.h>
 #include <stubs_expandable_dialog.h>
 #include <stubs_gettext.h>
-#include <stubs_i18n.h>
-#include <stubs_modal_manager.h>
 #include <stubs_mpu.h>
 #include <stubs_persist.h>
-#include <stubs_print.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_resources.h>
 #include <stubs_simple_dialog.h>
-#include <stubs_syscall_internal.h>
 #include <stubs_thread.h>
 #include <stubs_tick.h>
 #include <stubs_timeline_peek.h>
-#include <stubs_worker_manager.h>
 
 // Fake "Apps"
 ///////////////////////////////////////////////////////////

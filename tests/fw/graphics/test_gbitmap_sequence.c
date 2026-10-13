@@ -38,12 +38,7 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
 #include <stubs_logging.h>
-#include <stubs_print.h>
-#include <stubs_resources.h>
-#include <stubs_ui_window.h>
 
 static int s_dispose_previous_warnings;
 

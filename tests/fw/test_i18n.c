@@ -20,8 +20,6 @@
 // Stubs
 ////////////////////////////////////
 #include <stubs_language_ui.h>
-#include <stubs_memory_layout.h>
-#include <stubs_system_reset.h>
 
 // Fakes
 /////////////////////////

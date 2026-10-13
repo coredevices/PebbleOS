@@ -3,8 +3,6 @@
 
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
-#include <stubs_app_state.h>
-#include <stubs_process_manager.h>
 
 void test_graphics_colors__black(void) {
   cl_assert(GColorBlack.r == 0b00);

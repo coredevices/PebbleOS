@@ -7,7 +7,6 @@
 #include <pbl/util/units.h>
 
 #include <stubs_activity.h>
-#include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
 #include <stubs_clock.h>
 

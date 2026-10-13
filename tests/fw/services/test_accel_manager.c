@@ -18,9 +18,6 @@
 #include <stubs_gettext.h>
 #include <stubs_msgq.h>
 #include <stubs_persist.h>
-#include <stubs_resources.h>
-#include <stubs_syscall_internal.h>
-#include <stubs_worker_manager.h>
 
 // helpers from accel manager
 extern void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *num,

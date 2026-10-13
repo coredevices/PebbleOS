@@ -18,9 +18,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_app_cache.h>
-#include <stubs_events.h>
-#include <stubs_rand_ptr.h>
 
 void app_install_clear_app_db(void) {
 }

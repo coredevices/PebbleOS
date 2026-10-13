@@ -13,8 +13,6 @@
 /////////////////////////
 
 #include <stubs_kino_reel.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
 
 // Test Data
 /////////////////////////

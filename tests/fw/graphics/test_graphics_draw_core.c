@@ -22,8 +22,6 @@
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
 
-#include <stubs_applib_resource.h>
-
 // Fakes
 ////////////////////////////////////
 #include <fake_gbitmap_get_data_row.h>

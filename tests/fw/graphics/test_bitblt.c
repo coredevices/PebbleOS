@@ -17,8 +17,6 @@
 #include "graphics_common_stubs.h"
 #include "test_graphics.h"
 
-#include <stubs_applib_resource.h>
-
 static GContext ctx;
 static FrameBuffer framebuffer;
 

@@ -23,7 +23,6 @@ static const ReceiverImplementation *s_rcv_imp = &g_app_message_receiver_impleme
 
 #include <fake_kernel_malloc.h>
 #include <fake_system_task.h>
-#include <stubs_syscall_internal.h>
 
 bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   cl_assert_equal_i(PEBBLE_CALLBACK_EVENT, e->type);

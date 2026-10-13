@@ -15,7 +15,6 @@
 #include <fake_system_task.h>
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
-#include <stubs_print.h>
 #include <system/passert.h>
 
 void test_flash_logging__initialize(void) {

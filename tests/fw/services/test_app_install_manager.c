@@ -27,19 +27,9 @@
 
 // Stub Includes
 ////////////////////////////////////
-#include <stubs_app_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_bootbits.h>
-#include <stubs_event_service_client.h>
-#include <stubs_events.h>
-#include <stubs_i18n.h>
-#include <stubs_memory_layout.h>
 #include <stubs_persist.h>
-#include <stubs_process_manager.h>
 #include <stubs_quick_launch.h>
-#include <stubs_rand_ptr.h>
 #include <stubs_watchface.h>
-#include <stubs_worker_manager.h>
 
 // Fake Includes
 ////////////////////////////////////

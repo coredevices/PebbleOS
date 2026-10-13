@@ -4,9 +4,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
 #include <stubs_graphics_line.h>
 
 const int FrameBuffer_MaxX = 144;

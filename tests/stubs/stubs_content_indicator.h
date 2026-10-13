@@ -4,6 +4,7 @@
 #pragma once
 
 #include <applib/ui/content_indicator.h>
+#include <applib/ui/content_indicator_private.h>
 
 void content_indicator_init_buffer(ContentIndicatorsBuffer *content_indicators_buffer) {
 }

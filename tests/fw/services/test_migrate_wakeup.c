@@ -24,12 +24,7 @@
 
 // Stubs
 //////////////////////////////////////////////////////////
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_events.h>
-#include <stubs_memory_layout.h>
 #include <stubs_pebble_process_md.h>
-#include <stubs_print.h>
-#include <stubs_rand_ptr.h>
 
 #define SETTINGS_FILE_NAME "wakeup"
 #define SETTINGS_FILE_SIZE 2048

@@ -18,9 +18,6 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <stubs_pbl_malloc.h>
-#include <stubs_print.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_system_reset.h>
 
 // Tests
 ////////////////////////////////////

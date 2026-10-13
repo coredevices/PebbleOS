@@ -27,14 +27,8 @@
 #include <resource/timeline_resource_ids.auto.h>
 
 // Stubs
-#include <stubs_app_cache.h>
-#include <stubs_app_install_manager.h>
 #include <stubs_blob_db.h>
 #include <stubs_calendar.h>
-#include <stubs_i18n.h>
-#include <stubs_layout_layer.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
 #include <stubs_timeline_event.h>
 
 // Fakes

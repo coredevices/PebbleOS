@@ -13,11 +13,6 @@
 #include <applib/graphics/graphics_private_raw.h>
 #include <applib/graphics/gtypes.h>
 #include <libgen.h>
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_memory_layout.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <util_pbi.h>

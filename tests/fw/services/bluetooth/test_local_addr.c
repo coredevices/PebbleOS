@@ -12,8 +12,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fakes / Stubs
 
-#include <stubs_bt_lock.h>
-
 static bool s_last_driver_allow_cycling;
 struct pbl_bt_addr s_last_driver_addr;
 bool s_last_driver_addr_is_null;

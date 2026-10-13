@@ -7,10 +7,6 @@
 #include <clar.h>
 
 // stubs
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_graphics_context.h>
-#include <stubs_process_manager.h>
 
 /////////////////////////////
 

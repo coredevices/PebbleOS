@@ -16,9 +16,6 @@
 #include <fake_gatt_client_subscriptions.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_manager.h>
-#include <stubs_bt_lock.h>
 #include <stubs_imaging.h>
 #include <stubs_tick.h>
 

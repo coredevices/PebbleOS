@@ -16,10 +16,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_blob_db_sync.h>
-#include <stubs_layout_layer.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
 #include <stubs_reminders.h>
 
 void reminders_handle_reminder_removed(const Uuid *reminder_id) {

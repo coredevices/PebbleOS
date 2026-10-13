@@ -29,13 +29,6 @@
 
 #include <pbl/util/units.h>
 
-#include <stubs_app_state.h>
-#include <stubs_gbitmap.h>
-#include <stubs_graphics.h>
-#include <stubs_process_manager.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
-
 static RecognizerList *s_app_list;
 static Layer *s_active_layer;
 static RecognizerManager *s_manager;

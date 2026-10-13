@@ -3,6 +3,7 @@
 
 #include "test_workout_app_includes.h"
 
+#include <applib/ui/menu_layer.h>
 #include <apps/system/workout/selection.h>
 
 typedef struct WorkoutSelectionWindow {

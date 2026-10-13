@@ -17,7 +17,6 @@
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_regular_timer.h>
-#include <stubs_bt_lock.h>
 
 void gap_le_slave_reconnect_hrm_restart(void) {
 }

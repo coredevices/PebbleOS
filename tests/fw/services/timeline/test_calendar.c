@@ -14,29 +14,16 @@
 ////////////////////////////////////////////////////////////////
 #include <stubs_ancs.h>
 #include <stubs_ancs_notifications.h>
-#include <stubs_app_cache.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_manager.h>
 #include <stubs_blob_db.h>
-#include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
 #include <stubs_event_loop.h>
-#include <stubs_event_service_client.h>
-#include <stubs_i18n.h>
-#include <stubs_layout_layer.h>
-#include <stubs_modal_manager.h>
 #include <stubs_notification_storage.h>
 #include <stubs_notifications.h>
 #include <stubs_phone_call_util.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
-#include <stubs_reminder_db.h>
-#include <stubs_session.h>
 #include <stubs_system_task.h>
 #include <stubs_text_layer_flow.h>
 #include <stubs_timeline.h>
 #include <stubs_timeline_pin_window.h>
-#include <stubs_window_stack.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////

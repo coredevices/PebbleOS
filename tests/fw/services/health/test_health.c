@@ -11,8 +11,6 @@
 #include <shell/prefs_syscalls.h>
 
 // Stubs
-#include <stubs_app_manager.h>
-#include <stubs_worker_manager.h>
 
 // Fakes
 #include <pbl/services/time.h>

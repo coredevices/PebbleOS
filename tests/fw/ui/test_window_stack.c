@@ -17,23 +17,12 @@
 
 #include <stubs_accel_service.h>
 #include <stubs_app_state.h>
-#include <stubs_app_timer.h>
 #include <stubs_ble_app_support.h>
-#include <stubs_event_service_client.h>
-#include <stubs_fonts.h>
-#include <stubs_gbitmap.h>
-#include <stubs_graphics.h>
-#include <stubs_graphics_context.h>
 #include <stubs_irq.h>
 #include <stubs_new_timer.h>
 #include <stubs_persist.h>
 #include <stubs_plugin_service.h>
-#include <stubs_print.h>
-#include <stubs_process_manager.h>
-#include <stubs_resources.h>
 #include <stubs_sem.h>
-#include <stubs_syscalls.h>
-#include <stubs_unobstructed_area.h>
 
 // Fakes
 ////////////////////////////////////

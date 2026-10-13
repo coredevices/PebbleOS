@@ -5,9 +5,6 @@
 
 #include <clar.h>
 #include <shell/prefs.h>
-#include <stubs_fonts.h>
-#include <stubs_graphics.h>
-#include <stubs_i18n.h>
 #include <stubs_text_node.h>
 
 UnitsDistance shell_prefs_get_units_distance(void) {

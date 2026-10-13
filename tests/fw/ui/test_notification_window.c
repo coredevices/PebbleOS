@@ -24,46 +24,28 @@
 #include <pbl/services/notifications/alerts_preferences_private.h>
 
 #include <stubs_ancs_filtering.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
 #include <stubs_app_window_stack.h>
 #include <stubs_bluetooth_persistent_storage.h>
-#include <stubs_bootbits.h>
 #include <stubs_buffer.h>
 #include <stubs_calendar_layout.h>
-#include <stubs_click.h>
 #include <stubs_content_indicator.h>
 #include <stubs_dialog.h>
 #include <stubs_do_not_disturb.h>
 #include <stubs_event_loop.h>
-#include <stubs_event_service_client.h>
 #include <stubs_evented_timer.h>
 #include <stubs_generic_layout.h>
 #include <stubs_health_layout.h>
-#include <stubs_i18n.h>
 #include <stubs_imaging.h>
 #include <stubs_ios_notif_pref_db.h>
-#include <stubs_layer.h>
 #include <stubs_light.h>
-#include <stubs_memory_layout.h>
 #include <stubs_menu_cell_layer.h>
-#include <stubs_modal_manager.h>
 #include <stubs_notification_storage.h>
 #include <stubs_pebble_process_info.h>
 #include <stubs_peek_layer.h>
 #include <stubs_pin_db.h>
-#include <stubs_print.h>
-#include <stubs_process_manager.h>
-#include <stubs_regular_timer.h>
-#include <stubs_reminder_db.h>
 #include <stubs_reminders.h>
-#include <stubs_session.h>
-#include <stubs_shell_prefs.h>
 #include <stubs_simple_dialog.h>
 #include <stubs_sports_layout.h>
-#include <stubs_syscall_internal.h>
-#include <stubs_syscalls.h>
 #include <stubs_time.h>
 #include <stubs_timeline.h>
 #include <stubs_timeline_actions.h>
@@ -73,10 +55,7 @@
 #include <stubs_vibe_client.h>
 #include <stubs_vibe_score.h>
 #include <stubs_vibe_score_info.h>
-#include <stubs_vibes.h>
 #include <stubs_weather_layout.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 
 // Local replacements for stubs_alerts_preferences.h so the notification status
 // bar style is settable per test (a strong override cannot share a TU with the

@@ -18,7 +18,6 @@
 // Stubs
 ////////////////////////////////////
 #include <graphics_common_stubs.h>
-#include <stubs_applib_resource.h>
 
 #define MAX_DATA_LEN 1274
 

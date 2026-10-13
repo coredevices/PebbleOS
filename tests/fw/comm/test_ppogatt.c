@@ -13,11 +13,7 @@
 ///////////////////////////////////////////////////////////
 
 #include <stubs_bt_conn_mgr.h>
-#include <stubs_bt_lock.h>
 #include <stubs_mfg_info.h>
-#include <stubs_print.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_rtc.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////

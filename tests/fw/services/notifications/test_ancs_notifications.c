@@ -9,13 +9,9 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_i18n.h>
-#include <stubs_layout_layer.h>
 #include <stubs_nexmo.h>
 #include <stubs_notifications.h>
 #include <stubs_pin_db.h>
-#include <stubs_regular_timer.h>
-#include <stubs_reminder_db.h>
 #include <stubs_timeline.h>
 #include <stubs_uuid.h>
 

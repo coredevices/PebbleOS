@@ -8,8 +8,6 @@
 #include <pebble_asserts.h>
 
 // stubs
-#include <stubs_app_state.h>
-#include <stubs_process_manager.h>
 
 /////////////////////////////
 

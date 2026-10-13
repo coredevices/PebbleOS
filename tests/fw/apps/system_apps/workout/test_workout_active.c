@@ -10,7 +10,6 @@
 #include <apps/system/workout/data.h>
 #include <apps/system/workout/dialog.h>
 #include <apps/system/workout/workout.h>
-#include <stubs_window_manager.h>
 
 bool s_hrm_is_present;
 

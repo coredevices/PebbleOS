@@ -16,7 +16,6 @@
 #include <fake_pebble_tasks.h>
 
 // Stubs
-#include <stubs_event_service_client.h>
 
 bool sys_vibe_history_was_vibrating(uint64_t time_search) {
   return false;

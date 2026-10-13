@@ -25,23 +25,7 @@
 #include <pbl/util/units.h>
 
 #include <stubs_animation_timing.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
-#include <stubs_bootbits.h>
 #include <stubs_buffer.h>
-#include <stubs_click.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_event_service_client.h>
-#include <stubs_memory_layout.h>
-#include <stubs_print.h>
-#include <stubs_process_manager.h>
-#include <stubs_shell_prefs.h>
-#include <stubs_syscalls.h>
-#include <stubs_unobstructed_area.h>
-#include <stubs_vibes.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 
 // Setup and Teardown
 ////////////////////////////////////

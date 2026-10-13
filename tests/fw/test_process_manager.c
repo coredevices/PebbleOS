@@ -10,31 +10,26 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_info.h>
 #include <process_management/process_manager.h>
+#include <syscall/syscall.h>
 
 // Fakes
 #include <fake_pebble_tasks.h>
+#include <stubs_app_cache.h>
+#include <stubs_app_manager.h>
 
 // Stubs
 #include <stubs_accel_service.h>
 #include <stubs_animation_service.h>
-#include <stubs_app_cache.h>
-#include <stubs_app_manager.h>
-#include <stubs_app_state.h>
 #include <stubs_dls.h>
 #include <stubs_evented_timer.h>
 #include <stubs_expandable_dialog.h>
-#include <stubs_i18n.h>
 #include <stubs_irq.h>
-#include <stubs_modal_manager.h>
 #include <stubs_new_timer.h>
 #include <stubs_pebble_process_md.h>
 #include <stubs_persist.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
 #include <stubs_thread.h>
 #include <stubs_tick.h>
 #include <stubs_watchface.h>
-#include <stubs_worker_manager.h>
 #include <stubs_worker_state.h>
 
 char __APP_RAM__[1024 * 128];

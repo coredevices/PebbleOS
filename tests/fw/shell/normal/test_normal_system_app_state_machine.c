@@ -8,8 +8,6 @@
 
 // Stubs
 /////////////////////////////////////////////////////////////////////////
-#include <stubs_app_install_manager.h>
-#include <stubs_app_manager.h>
 #include <stubs_watchface.h>
 
 bool battery_monitor_critical_lockout(void) {

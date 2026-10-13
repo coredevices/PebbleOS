@@ -42,23 +42,8 @@ GContext *graphics_context_get_current_context(void) {
 // Stubs
 /////////////////////
 
-#include <stubs_app_install_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
-#include <stubs_bootbits.h>
 #include <stubs_buffer.h>
-#include <stubs_click.h>
-#include <stubs_layer.h>
-#include <stubs_memory_layout.h>
-#include <stubs_print.h>
-#include <stubs_process_manager.h>
-#include <stubs_shell_prefs.h>
 #include <stubs_status_bar_layer.h>
-#include <stubs_syscall_internal.h>
-#include <stubs_syscalls.h>
-#include <stubs_vibes.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
   return to;

@@ -13,7 +13,6 @@
 #include <pbl/util/units.h>
 
 #include <memory.h>
-#include <stubs_i18n.h>
 
 PBL_WEAK const char *string_strip_leading_whitespace(const char *string) {
   const char *result_string = string;

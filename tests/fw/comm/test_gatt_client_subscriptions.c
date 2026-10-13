@@ -22,7 +22,6 @@
 #include <fake_pbl_malloc.h>
 #include <fake_sem.h>
 #include <fake_system_task.h>
-#include <stubs_regular_timer.h>
 
 static enum pbl_bt_errno s_write_descriptor_cccd_result;
 static pbl_bt_descriptor_t s_last_cccd_ref;
@@ -44,8 +43,6 @@ void fake_kernel_malloc_mark_assert_equal(void) {
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bt_lock.h>
-#include <stubs_rand_ptr.h>
 #include <stubs_tick.h>
 
 void core_dump_reset(bool is_forced) {

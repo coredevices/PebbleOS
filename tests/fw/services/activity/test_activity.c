@@ -40,17 +40,13 @@
 #include <stubs_activity_insights.h>
 #include <stubs_alarm.h>
 #include <stubs_ambient_light.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_manager.h>
 #include <stubs_battery.h>
 #include <stubs_event_loop.h>
 #include <stubs_health_db.h>
-#include <stubs_i18n.h>
 #include <stubs_irq.h>
 #include <stubs_pebble_process_info.h>
 #include <stubs_system_theme.h>
 #include <stubs_timeline_peek.h>
-#include <stubs_worker_manager.h>
 #include <stubs_workout_service.h>
 
 void prefs_sync_init(void) {

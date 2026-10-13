@@ -22,11 +22,6 @@
 // Stubs
 ////////////////////////////////////////////////////////////////
 
-#include <stubs_app_cache.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_event_service_client.h>
-#include <stubs_events.h>
-
 status_t pfs_remove(const char *name) {
   fake_settings_file_reset();
   return S_SUCCESS;

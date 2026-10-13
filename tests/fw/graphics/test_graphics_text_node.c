@@ -5,12 +5,10 @@
 #include <clar.h>
 #include <kernel/pbl_malloc.h>
 #include <pebble_asserts.h>
+#include <stubs_app_state.h>
 
 // Stubs
 /////////////////////
-
-#include <stubs_app_state.h>
-#include <stubs_process_manager.h>
 
 // TODO: PBL-22271 Complete timeline text node unit tests
 

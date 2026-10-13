@@ -8,12 +8,7 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_app_state.h>
 #include <stubs_bitblt.h>
-#include <stubs_gbitmap.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
-#include <stubs_unobstructed_area.h>
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   return (GDrawState){};

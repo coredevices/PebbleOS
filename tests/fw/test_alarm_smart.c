@@ -9,7 +9,6 @@
 
 #include <fake_new_timer.h>
 #include <fake_rtc.h>
-#include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
 
 static int s_rand = 0;

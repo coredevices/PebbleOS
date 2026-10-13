@@ -15,7 +15,6 @@
 
 #include <stubs_ble.h>
 #include <stubs_bt_stack.h>
-#include <stubs_system_reset.h>
 
 // Test data
 ///////////////////////////////////////////////////////////

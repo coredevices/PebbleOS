@@ -21,12 +21,6 @@
 ////////////////////////////////////
 #include <stdio.h>
 
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_memory_layout.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
-
 // stubs
 
 InterpolateInt64Function animation_private_current_interpolate_override(void) {

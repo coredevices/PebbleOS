@@ -18,7 +18,6 @@
 
 #include <fake_session.h>
 #include <fake_system_task.h>
-#include <stubs_bt_lock.h>
 
 // imaging.c only needs the row-size rules from the graphics code; provide them here so the test
 // controls the expected sizes without pulling in the renderer.

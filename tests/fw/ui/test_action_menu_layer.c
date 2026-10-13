@@ -16,19 +16,12 @@
 #include <fake_rtc.h>
 #include <pebble_asserts.h>
 #include <shell/system_theme.h>
+#include <stubs_app_state.h>
+#include <stubs_fonts.h>
 
 // Stubs
 /////////////////////
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
-#include <stubs_click.h>
-#include <stubs_fonts.h>
-#include <stubs_graphics.h>
-#include <stubs_process_manager.h>
 #include <stubs_system_theme.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
-#include <stubs_vibes.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH), mirroring test_menu_layer.c: menu_layer.c resolves the

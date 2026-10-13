@@ -16,7 +16,6 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <flash_region/flash_region.h>
-#include <stubs_print.h>
 #include <system/passert.h>
 
 #define PFS_SECTOR_SIZE 4096

@@ -19,22 +19,11 @@
 
 #include <stubs_activity.h>
 #include <stubs_animation_timing.h>
-#include <stubs_app_install_manager.h>
 #include <stubs_app_launch_reason.h>
-#include <stubs_app_timer.h>
 #include <stubs_app_window_stack.h>
-#include <stubs_bootbits.h>
-#include <stubs_click.h>
 #include <stubs_health_service.h>
-#include <stubs_layer.h>
-#include <stubs_memory_layout.h>
 #include <stubs_pebble_process_info.h>
-#include <stubs_shell_prefs.h>
 #include <stubs_status_bar_layer.h>
-#include <stubs_syscalls.h>
-#include <stubs_vibes.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 
 // Helper Functions
 /////////////////////

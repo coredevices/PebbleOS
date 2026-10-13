@@ -30,33 +30,18 @@
 #include <stubs_activity.h>
 #include <stubs_app_custom_icon.h>
 #include <stubs_app_fetch_endpoint.h>
-#include <stubs_app_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_bootbits.h>
 #include <stubs_build_id.h>
 #include <stubs_comm_session.h>
 #include <stubs_event_loop.h>
-#include <stubs_event_service_client.h>
-#include <stubs_events.h>
-#include <stubs_fonts.h>
-#include <stubs_gbitmap.h>
-#include <stubs_graphics.h>
-#include <stubs_graphics_context.h>
-#include <stubs_i18n.h>
 #include <stubs_kino_reel.h>
-#include <stubs_memory_layout.h>
 #include <stubs_menu_layer.h>
 #include <stubs_persist.h>
 #include <stubs_pin_db.h>
 #include <stubs_process_loader.h>
-#include <stubs_process_manager.h>
 #include <stubs_put_bytes.h>
 #include <stubs_quick_launch.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_shell_prefs.h>
 #include <stubs_system_task.h>
 #include <stubs_watchface.h>
-#include <stubs_worker_manager.h>
 
 // Fake Includes
 ////////////////////////////////////

@@ -10,8 +10,6 @@
 #include <fake_session.h>
 #include <fake_system_task.h>
 #include <kernel/events.h>
-#include <stubs_bt_lock.h>
-#include <stubs_i18n.h>
 
 extern void phone_protocol_msg_callback(CommSession *session, const uint8_t *iter, size_t length);
 

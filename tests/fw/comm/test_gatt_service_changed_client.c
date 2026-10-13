@@ -20,11 +20,7 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bt_lock.h>
-#include <stubs_events.h>
 #include <stubs_gatt_client_subscriptions.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
 
 void core_dump_reset(bool is_forced) {
 }

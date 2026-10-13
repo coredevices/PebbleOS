@@ -16,7 +16,6 @@
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
-#include <stubs_app_state.h>
 #include <stubs_worker_state.h>
 
 status_t pfs_remove(const char *name) {

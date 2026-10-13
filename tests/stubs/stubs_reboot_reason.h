@@ -3,5 +3,7 @@
 
 #pragma once
 
+#include <system/reboot_reason.h>
+
 void reboot_reason_set(RebootReason *reason) {
 }

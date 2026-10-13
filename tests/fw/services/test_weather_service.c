@@ -25,7 +25,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_events.h>
 
 static EventServiceInfo *s_event_info;
 void event_service_client_subscribe(EventServiceInfo *service_info) {

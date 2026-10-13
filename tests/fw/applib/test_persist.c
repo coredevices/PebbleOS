@@ -19,9 +19,6 @@
 ////////////////////////////////////
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <stubs_print.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_system_reset.h>
 
 static PebbleProcessMd __pbl_app_info;
 

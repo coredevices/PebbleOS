@@ -20,8 +20,6 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 // Fakes & Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <stubs_bt_lock.h>
-
 static int s_app_install_timestamp_update_count;
 void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
   ++s_app_install_timestamp_update_count;

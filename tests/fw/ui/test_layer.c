@@ -11,11 +11,6 @@
 ////////////////////////////////////
 #include <stubs_app_state.h>
 #include <stubs_bitblt.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_gbitmap.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
-#include <stubs_unobstructed_area.h>
 
 // Setup
 ////////////////////////////////////

@@ -3,7 +3,11 @@
 
 #pragma once
 
+#include <time.h>
+
 #include <pbl/util/heap.h>
+
+#include <process_state/app_state/app_state.h>
 
 static Heap s_worker_heap;
 

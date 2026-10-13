@@ -1,0 +1,18 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <pbl/kernel/compiler.h>
+
+static bool s_is_legacy2 = false;
+
+PBL_WEAK void process_manager_set_compiled_with_legacy2_sdk(bool is_legacy2) {
+  s_is_legacy2 = is_legacy2;
+}
+
+PBL_WEAK bool process_manager_compiled_with_legacy2_sdk(void) {
+#if LEGACY2_TEST
+  return true;
+#else
+  return s_is_legacy2;
+#endif
+}

@@ -19,8 +19,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_layout_layer.h>
-#include <stubs_rand_ptr.h>
 
 void test_notif_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);

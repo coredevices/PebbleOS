@@ -7,13 +7,6 @@
 
 // Stubs
 /////////////////////
-#include <stubs_app_state.h>
-#include <stubs_graphics.h>
-#include <stubs_graphics_context.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
 
 // Fakes
 /////////////////////

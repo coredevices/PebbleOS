@@ -23,16 +23,6 @@
 
 ///////////////////////////////////////////////////////////
 // Stubs
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_bootbits.h>
-#include <stubs_memory_layout.h>
-#include <stubs_print.h>
-#include <stubs_syscall_internal.h>
-#include <stubs_syscalls.h>
-#include <stubs_system_reset.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
 
 ///////////////////////////////////////////////////////////
 // Tests

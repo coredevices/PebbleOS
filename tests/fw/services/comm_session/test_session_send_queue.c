@@ -13,7 +13,6 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <fake_kernel_malloc.h>
-#include <stubs_bt_lock.h>
 
 static CommSession s_session;
 static CommSession *s_valid_session;

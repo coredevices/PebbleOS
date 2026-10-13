@@ -8,13 +8,8 @@
 // Stubs
 /////////////////////
 #include <stubs_app.h>
-#include <stubs_app_manager.h>
 #include <stubs_app_state.h>
-#include <stubs_events.h>
 #include <stubs_framebuffer.h>
-#include <stubs_graphics.h>
-#include <stubs_process_manager.h>
-#include <stubs_ui_window.h>
 
 // Fakes
 /////////////////////

@@ -21,9 +21,6 @@
 #include <fake_rtc.h>
 #include <fake_session.h>
 #include <fake_system_task.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_manager.h>
-#include <stubs_bt_lock.h>
 #include <stubs_imaging.h>
 #include <stubs_tick.h>
 

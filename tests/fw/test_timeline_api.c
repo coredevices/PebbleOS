@@ -16,23 +16,11 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_rtc.h>
+#include <stubs_app_install_manager.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_app_cache.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_manager.h>
-#include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
-#include <stubs_event_service_client.h>
-#include <stubs_events.h>
-#include <stubs_i18n.h>
-#include <stubs_layout_layer.h>
-#include <stubs_modal_manager.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
-#include <stubs_session.h>
-#include <stubs_window_stack.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////

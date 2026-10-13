@@ -4,7 +4,6 @@
 #pragma once
 
 #include "stubs_bluetooth_pairing_ui.h"
-#include "stubs_events.h"
 
 #include <inttypes.h>
 

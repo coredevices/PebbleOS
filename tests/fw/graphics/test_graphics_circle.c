@@ -8,10 +8,9 @@
 #include <applib/graphics/graphics_circle.h>
 #include <clar.h>
 #include <pebble_asserts.h>
+#include <stubs_app_state.h>
 
 // stubs
-#include <stubs_app_state.h>
-#include <stubs_process_manager.h>
 
 GBitmap *graphics_capture_frame_buffer(GContext *ctx) {
   return nullptr;

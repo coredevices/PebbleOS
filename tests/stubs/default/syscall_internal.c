@@ -1,0 +1,45 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <stddef.h>
+#include <stdio.h>
+
+#include <pbl/kernel/compiler.h>
+
+#include <kernel/pebble_tasks.h>
+#include <system/passert.h>
+
+PBL_WEAK bool s_syscall_did_fail;
+
+PBL_WEAK void stubs_syscall_init(void) {
+  s_syscall_did_fail = false;
+}
+
+PBL_WEAK [[noreturn]] void syscall_failed(void) {
+  s_syscall_did_fail = true;
+  printf("Warning: Syscall failed!\n");
+
+  // Use cl_assert_passert() if you want to catch this getting hit.
+  PBL_ASSERTN(false);
+}
+
+PBL_WEAK bool syscall_made_from_userspace(void) {
+  return true;
+}
+
+PBL_WEAK void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
+  if (!buf) {
+    syscall_failed();
+  }
+  // TODO: What else can we check here?
+  return;
+}
+
+PBL_WEAK void syscall_init_context() {
+}
+
+PBL_WEAK void syscall_redirect_syscall_exit(PebbleTask task, void (*func)(void)) {
+}
+
+PBL_WEAK void syscall_reset(PebbleTask task) {
+}

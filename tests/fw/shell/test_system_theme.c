@@ -8,10 +8,6 @@
 // Stubs
 ///////////////
 
-#include <stubs_fonts.h>
-#include <stubs_process_manager.h>
-#include <stubs_shell_prefs.h>
-
 // Tests
 ///////////////
 

@@ -184,36 +184,22 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 
 #include <stubs_alarm.h>
 #include <stubs_alerts.h>
-#include <stubs_app_cache.h>
-#include <stubs_app_manager.h>
-#include <stubs_app_timer.h>
 #include <stubs_app_window_stack.h>
 #include <stubs_bluetooth_ctl.h>
-#include <stubs_bootbits.h>
-#include <stubs_click.h>
 #include <stubs_clock.h>
 #include <stubs_do_not_disturb.h>
-#include <stubs_event_service_client.h>
-#include <stubs_events.h>
 #include <stubs_health_util.h>
-#include <stubs_i18n.h>
 #include <stubs_kino_player.h>
-#include <stubs_layer.h>
-#include <stubs_memory_layout.h>
 #include <stubs_music.h>
 #include <stubs_notification_storage.h>
 #include <stubs_pebble_process_info.h>
-#include <stubs_session.h>
 #include <stubs_status_bar_layer.h>
-#include <stubs_syscalls.h>
 #include <stubs_system_theme.h>
 #include <stubs_tick.h>
 #include <stubs_time.h>
 #include <stubs_watchface.h>
 #include <stubs_weather_service.h>
 #include <stubs_weather_types.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 #include <stubs_workout_service.h>
 #include <stubs_workout_utils.h>
 

@@ -8,7 +8,6 @@
 
 #if !FAKE_GRAPHICS_CONTEXT_C
 #include <fw/graphics/util.h>
-#include <stubs_app_state.h>
 #endif
 
 GContext *fake_graphics_context_get_context(void);

@@ -11,10 +11,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
 
 // Tests
 ////////////////////////////////////

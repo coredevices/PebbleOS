@@ -1,10 +1,4 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stubs_app_state.h>
 #include <stubs_language_ui.h>
-#include <stubs_print.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>

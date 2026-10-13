@@ -17,18 +17,12 @@
 #include <fake_app_timer.h>
 #include <fake_rtc.h>
 #include <pebble_asserts.h>
+#include <stubs_app_state.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
 
 // Stubs
 /////////////////////
 #include <pbl/util/testing.h>
-
-#include <stubs_app_state.h>
-#include <stubs_click.h>
-#include <stubs_graphics.h>
-#include <stubs_process_manager.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
-#include <stubs_vibes.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH). menu_layer.c resolves the per-task touch-nav state

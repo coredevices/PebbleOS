@@ -20,8 +20,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_layout_layer.h>
-#include <stubs_rand_ptr.h>
 
 extern const char *PREF_KEY_SEND_TEXT_APP;
 #define SEND_TEXT_KEY     ((uint8_t *)PREF_KEY_SEND_TEXT_APP)

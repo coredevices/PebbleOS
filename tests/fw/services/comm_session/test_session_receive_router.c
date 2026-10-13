@@ -14,11 +14,7 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bt_lock.h>
 #include <stubs_bt_stack.h>
-#include <stubs_events.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_syscall_internal.h>
 
 void app_launch_trigger(void) {
 }

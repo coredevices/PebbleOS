@@ -30,10 +30,6 @@
 
 #include <stubs_alerts_preferences.h>
 #include <stubs_language_ui.h>
-#include <stubs_memory_layout.h>
-#include <stubs_regular_timer.h>
-#include <stubs_session.h>
-#include <stubs_system_reset.h>
 #include <stubs_vibe_score_info.h>
 
 static bool s_prefs_24h_style;

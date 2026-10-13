@@ -152,14 +152,16 @@ These mechanisms replace dependencies of the code under test:
   `fake_rtc.c`, `fake_spi_flash.c`. Compile them in via `sources_ant_glob`.
 - **Stubs** (`tests/stubs/`): headers with no-op implementations, for
   dependencies the test never exercises.
-- **Default stubs** (`tests/stubs/default/`): the stubs nearly every test
-  needs (asserts, logging, malloc, mutexes, analytics, ...), archived into
-  a `pbl_test_stubs_*` library compiled with each test's own flags and
+- **Default stubs** (`tests/stubs/default/`): the stubs most tests need
+  (asserts, logging, malloc, app state, syscalls, resources, ...), archived
+  into a `pbl_test_stubs_*` library compiled with each test's own flags and
   linked into every test. Every definition there is weak, so a test or fake
   providing its own copy takes precedence. The library is linked ahead of
   `libutil`, `libbtutil` and `libcrc`, so it must not stub their functions
   or it would shadow them; the assert stubs are linked as an object so they
-  also win over the weak `util_assertion_failed()` in `libutil`.
+  also win over the weak `util_assertion_failed()` in `libutil`. A test
+  reaching into a stub's state, e.g. `s_syscall_did_fail`, includes the
+  matching `tests/stubs/stubs_*.h` for its declaration.
 - **Header overrides** (`tests/overrides/`): directories mirroring the
   source tree whose headers shadow the real ones on the include path.
   `tests/overrides/default/` is always active for every test; other

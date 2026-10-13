@@ -13,6 +13,7 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/time_range_selection_window.h>
 #include <applib/ui/time_selection_window.h>
+#include <applib/ui/window_private.h>
 #include <apps/system/settings/notifications_private.h>
 #include <clar.h>
 #include <resource/resource.h>
@@ -32,6 +33,7 @@
 
 #include <fake_graphics_context.h>
 #include <fake_spi_flash.h>
+#include <stubs_app_install_manager.h>
 
 static GContext s_ctx;
 
@@ -72,24 +74,10 @@ GContext *graphics_context_get_current_context(void) {
 /////////////////////
 
 #include <stubs_animation_timing.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
-#include <stubs_bootbits.h>
 #include <stubs_buffer.h>
-#include <stubs_click.h>
-#include <stubs_layer.h>
-#include <stubs_memory_layout.h>
 #include <stubs_menu_cell_layer.h>
-#include <stubs_print.h>
-#include <stubs_process_manager.h>
-#include <stubs_shell_prefs.h>
 #include <stubs_status_bar_layer.h>
-#include <stubs_syscall_internal.h>
-#include <stubs_syscalls.h>
 #include <stubs_text_layer_flow.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 
 // Setup and Teardown
 ////////////////////////////////////

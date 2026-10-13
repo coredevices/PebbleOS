@@ -10,11 +10,9 @@
 // Stubs
 /////////////////////////////////
 #include <fake_rtc.h>
-#include <stubs_events.h>
 #include <stubs_firmware_update.h>
 #include <stubs_notification_storage.h>
 #include <stubs_vibe_score_info.h>
-#include <stubs_vibes.h>
 
 // Overrides
 /////////////////////////////////

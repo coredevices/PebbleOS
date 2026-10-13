@@ -14,9 +14,6 @@
 #include <pbl/util/units.h>
 
 #include <stubs_app_state.h>
-#include <stubs_print.h>
-#include <stubs_syscall_internal.h>
-#include <stubs_system_reset.h>
 #include <stubs_worker_state.h>
 
 // Overrides

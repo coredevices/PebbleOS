@@ -9,9 +9,6 @@
 // Stubs
 ////////////////////////////////////
 #include <fake_rtc.h>
-#include <stubs_fonts.h>
-#include <stubs_layout_layer.h>
-#include <stubs_rand_ptr.h>
 
 static uint8_t s_payload_complete[] = {
   // Attribute 1

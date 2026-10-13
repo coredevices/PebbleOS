@@ -4,7 +4,6 @@
 #pragma once
 
 #include <kernel/pebble_tasks.h>
-#include <stubs_worker_manager.h>
 
 static PebbleTask s_current_task = PebbleTask_KernelMain;
 

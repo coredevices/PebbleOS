@@ -15,15 +15,11 @@
 #include <clar.h>
 #include <fake_rtc.h>
 #include <pebble_asserts.h>
+#include <stubs_app_state.h>
 
 // Stubs
 /////////////////////
-#include <stubs_app_state.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
 #include <stubs_content_indicator.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
-#include <stubs_unobstructed_area.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH). scroll_layer.c resolves the per-task touch-nav state

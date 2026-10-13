@@ -22,11 +22,7 @@ extern void gatt_service_changed_server_init(void);
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bt_lock.h>
-#include <stubs_events.h>
 #include <stubs_gatt_client_subscriptions.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
 
 uint16_t gaps_get_starting_att_handle(void) {
   return 4;

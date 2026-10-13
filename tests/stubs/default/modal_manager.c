@@ -1,0 +1,38 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <pbl/kernel/compiler.h>
+
+#include <applib/ui/window_stack_private.h>
+#include <kernel/ui/modals/modal_manager.h>
+
+WindowStack *PBL_WEAK modal_manager_get_window_stack(ModalPriority priority) {
+  return nullptr;
+}
+
+Window *PBL_WEAK modal_manager_get_top_window(void) {
+  return nullptr;
+}
+
+ClickManager *PBL_WEAK modal_manager_get_click_manager(void) {
+  return nullptr;
+}
+
+void PBL_WEAK modal_manager_pop_all(void) {
+  return;
+}
+
+bool PBL_WEAK modal_manager_get_enabled(void) {
+  return true;
+}
+
+void PBL_WEAK modal_manager_set_enabled(bool enabled) {
+  return;
+}
+
+ModalProperty PBL_WEAK modal_manager_get_properties(void) {
+  return ModalPropertyDefault;
+}
+
+PBL_WEAK void modal_window_push(Window *window, ModalPriority priority, bool animated) {
+}

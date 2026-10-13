@@ -7,10 +7,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
 #include <applib/graphics/text_resources.h>
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_memory_layout.h>
 
 static const uint8_t *font_bytes;
 static const uint8_t *extension_bytes;

@@ -19,8 +19,6 @@
 #include "graphics_common_stubs.h"
 #include "test_graphics.h"
 
-#include <stubs_applib_resource.h>
-
 extern void prv_apply_tint_color(GColor *color, GColor tint_color);
 
 static uint8_t s_dest_data[100 * 100];

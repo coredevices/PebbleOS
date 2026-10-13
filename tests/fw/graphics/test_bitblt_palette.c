@@ -15,9 +15,6 @@
 #include "graphics_common_stubs.h"
 #include "test_graphics.h"
 
-#include <stubs_applib_resource.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-
 // Setup
 ////////////////////////////////////
 static GContext ctx;

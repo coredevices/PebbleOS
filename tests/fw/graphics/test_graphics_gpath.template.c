@@ -20,7 +20,6 @@
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include <stubs_applib_resource.h>
 
 static const int16_t SCREEN_WIDTH = 144;
 static const int16_t SCREEN_HEIGHT = 168;

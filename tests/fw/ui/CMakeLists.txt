@@ -150,7 +150,6 @@ pbl_clar_test(test_window_stack
     fw/kernel/ui/modals/modal_manager.c
     tests/fakes/fake_animation.c
     tests/fakes/fake_events.c
-    tests/stubs/stubs_click.c
   OVERRIDES dummy_board
 )
 
@@ -172,7 +171,6 @@ pbl_clar_test(test_modal_touch_nav
     tests/fakes/fake_animation.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-    tests/stubs/stubs_click.c
   DEFINES CONFIG_TOUCH
   OVERRIDES dummy_board
 )
@@ -478,7 +476,6 @@ pbl_clar_test(test_timeline_peek
     fw/shell/system_theme.c
     tests/fakes/fake_clock.c
     tests/fixtures/resources/timeline_resource_table.auto.c
-    tests/stubs/stubs_app_manager.c
     tests/stubs/stubs_clock.c
     tests/stubs/stubs_timeline_layout.c
     tests/stubs/stubs_timeline_peek.c

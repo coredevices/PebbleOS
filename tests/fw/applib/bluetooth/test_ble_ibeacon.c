@@ -12,7 +12,6 @@
 ///////////////////////////////////////////////////////////
 
 #include <stubs_ble_syscalls.h>
-#include <stubs_rand_ptr.h>
 
 // The test data and descriptions in this file are captured using the FrontLine
 // Bluetooth sniffer.

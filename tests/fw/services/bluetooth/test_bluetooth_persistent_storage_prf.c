@@ -21,7 +21,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include <fake_spi_flash.h>
 #include <stubs_bluetooth_analytics.h>
 #include <stubs_bluetopia_interface.h>
-#include <stubs_bt_lock.h>
 #include <stubs_gap_le_advert.h>
 #include <stubs_gatt_client_discovery.h>
 #include <stubs_gatt_client_subscriptions.h>

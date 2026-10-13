@@ -20,17 +20,6 @@
 // Stubs
 /////////////////////
 
-#include <stubs_app_install_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
-#include <stubs_bootbits.h>
-#include <stubs_memory_layout.h>
-#include <stubs_print.h>
-#include <stubs_shell_prefs.h>
-#include <stubs_syscalls.h>
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
-
 // Helper Functions
 /////////////////////
 #include "../graphics/test_graphics.h"

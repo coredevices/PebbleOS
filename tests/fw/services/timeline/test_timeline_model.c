@@ -28,25 +28,9 @@ static TimezoneInfo tz = {
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_app_cache.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_manager.h>
 #include <stubs_blob_db.h>
-#include <stubs_blob_db_sync.h>
 #include <stubs_blob_db_sync_util.h>
 #include <stubs_calendar.h>
-#include <stubs_event_service_client.h>
-#include <stubs_events.h>
-#include <stubs_fonts.h>
-#include <stubs_i18n.h>
-#include <stubs_layout_layer.h>
-#include <stubs_modal_manager.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
-#include <stubs_resources.h>
-#include <stubs_session.h>
-#include <stubs_syscalls.h>
-#include <stubs_window_stack.h>
 
 void ancs_notifications_enable_bulk_action_mode(bool enable) {
   return;

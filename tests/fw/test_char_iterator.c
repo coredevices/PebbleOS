@@ -15,13 +15,7 @@
 ///////////////////////////////////////////////////////////
 // Stubs
 #include <stubs_app_state.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_fonts.h>
-#include <stubs_gbitmap.h>
-#include <stubs_graphics_context.h>
 #include <stubs_reboot_reason.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
 #include <stubs_text_render.h>
 #include <stubs_text_resources.h>
 

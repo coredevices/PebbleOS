@@ -22,7 +22,6 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <stubs_bt_lock.h>
 #include <stubs_irq.h>
 #include <stubs_pfs.h>
 #include <stubs_tick.h>

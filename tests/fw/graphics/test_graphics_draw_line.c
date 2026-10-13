@@ -25,8 +25,6 @@
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
 
-#include <stubs_applib_resource.h>
-
 static FrameBuffer *fb = nullptr;
 
 // Setup

@@ -6,9 +6,6 @@
 #include <applib/graphics/graphics_circle_private.h>
 #include <clar.h>
 #include <pebble_asserts.h>
-#include <stubs_app_state.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_rand_ptr.h>
 
 //! Welcome to the test file for all of our additional cl_assert macros.
 //! You will find very basic tests, and only ones that pass (because a failure

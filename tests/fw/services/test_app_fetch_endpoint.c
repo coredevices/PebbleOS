@@ -20,9 +20,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_app_cache.h>
-#include <stubs_bt_lock.h>
-#include <stubs_rand_ptr.h>
 
 typedef struct {
 } EventServiceInfo;

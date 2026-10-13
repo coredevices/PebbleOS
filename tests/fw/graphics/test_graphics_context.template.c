@@ -17,7 +17,6 @@
 // Stubs
 ////////////////////////////////////
 #include "graphics_common_stubs.h"
-#include <stubs_applib_resource.h>
 
 // Definitions
 #define SW_EVEN 4

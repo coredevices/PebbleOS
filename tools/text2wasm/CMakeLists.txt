@@ -50,8 +50,12 @@ add_executable(pebble_renderer
   "${PEBBLEOS_ROOT}/lib/util/trig.c"
   "${PEBBLEOS_ROOT}/lib/util/iterator.c"
   "${PEBBLEOS_ROOT}/lib/util/utf8.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/app_state.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/applib_resource.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/compiled_with_legacy2_sdk.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/heap.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/logging.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/memory_layout.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/pbl_malloc.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/pebble_tasks.c"
 )

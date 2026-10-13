@@ -17,20 +17,15 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_app_cache.h>
 #include <stubs_app_db.h>
 #include <stubs_app_glance_db.h>
-#include <stubs_bt_lock.h>
 #include <stubs_contacts_db.h>
 #include <stubs_evented_timer.h>
-#include <stubs_events.h>
 #include <stubs_health_db.h>
 #include <stubs_ios_notif_pref_db.h>
 #include <stubs_notif_db.h>
 #include <stubs_pin_db.h>
 #include <stubs_prefs_db.h>
-#include <stubs_regular_timer.h>
-#include <stubs_reminder_db.h>
 #include <stubs_reminders.h>
 #include <stubs_settings_blob_db.h>
 #include <stubs_watch_app_prefs_db.h>

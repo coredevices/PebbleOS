@@ -19,13 +19,8 @@
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
-#include <stubs_app_install_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_event_service_client.h>
 #include <stubs_health_db.h>
 #include <stubs_health_util.h>
-#include <stubs_i18n.h>
-#include <stubs_rand_ptr.h>
 #include <stubs_system_task.h>
 
 bool activity_is_initialized(void) {

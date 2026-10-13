@@ -35,9 +35,14 @@ add_executable(pdc2png
   ${PBL_BASE}/lib/util/math.c
   ${PBL_BASE}/lib/util/platform.c
   ${PBL_BASE}/lib/util/trig.c
+  ${PBL_BASE}/tests/stubs/default/app_state.c
+  ${PBL_BASE}/tests/stubs/default/applib_resource.c
   ${PBL_BASE}/tests/stubs/default/heap.c
   ${PBL_BASE}/tests/stubs/default/logging.c
+  ${PBL_BASE}/tests/stubs/default/memory_layout.c
   ${PBL_BASE}/tests/stubs/default/pbl_malloc.c
+  ${PBL_BASE}/tests/stubs/default/resources.c
+  ${PBL_BASE}/tests/stubs/default/syscalls.c
 )
 
 target_include_directories(pdc2png PRIVATE

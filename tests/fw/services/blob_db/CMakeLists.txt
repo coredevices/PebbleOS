@@ -125,7 +125,6 @@ pbl_clar_test(test_prefs_db
   SOURCES
     fw/services/blob_db/prefs_db.c
     fw/shell/normal/prefs.c
-    tests/stubs/stubs_i18n.c
     tests/fakes/fake_accel_service.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board

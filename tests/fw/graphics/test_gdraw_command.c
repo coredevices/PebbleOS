@@ -12,12 +12,6 @@
 #include <applib/graphics/graphics_line.h>
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
-#include <stubs_app_state.h>
-#include <stubs_applib_resource.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
-#include <stubs_memory_layout.h>
-#include <stubs_resources.h>
-#include <stubs_syscalls.h>
 
 extern size_t prv_get_list_max_command_size(GDrawCommandList *command_list);
 

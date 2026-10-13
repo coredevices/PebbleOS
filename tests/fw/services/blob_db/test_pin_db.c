@@ -18,16 +18,7 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_app_cache.h>
-#include <stubs_app_install_manager.h>
 #include <stubs_blob_db.h>
-#include <stubs_blob_db_sync.h>
-#include <stubs_bt_lock.h>
-#include <stubs_events.h>
-#include <stubs_layout_layer.h>
-#include <stubs_rand_ptr.h>
-#include <stubs_regular_timer.h>
-#include <stubs_reminder_db.h>
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
   return nullptr;

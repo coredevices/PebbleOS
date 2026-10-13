@@ -31,23 +31,10 @@ bool clock_is_24h_style(void) {
 /////////////////////
 
 #include <stubs_app.h>
-#include <stubs_app_install_manager.h>
-#include <stubs_app_timer.h>
 #include <stubs_app_window_stack.h>
-#include <stubs_bootbits.h>
-#include <stubs_click.h>
-#include <stubs_event_service_client.h>
 #include <stubs_health_service.h>
-#include <stubs_layer.h>
-#include <stubs_memory_layout.h>
 #include <stubs_pebble_process_info.h>
-#include <stubs_process_manager.h>
-#include <stubs_shell_prefs.h>
-#include <stubs_syscalls.h>
 #include <stubs_text_layer_flow.h>
-#include <stubs_vibes.h>
-#include <stubs_window_manager.h>
-#include <stubs_window_stack.h>
 
 void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
 }

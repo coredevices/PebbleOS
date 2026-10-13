@@ -24,6 +24,7 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
+#include <stubs_compiled_with_legacy2_sdk.h>
 
 static bool s_cell_is_highlighted = false;
 
@@ -65,23 +66,11 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
 // Stubs
 /////////////////////
 
-#include <stubs_app_install_manager.h>
-#include <stubs_app_state.h>
-#include <stubs_app_timer.h>
-#include <stubs_bootbits.h>
-#include <stubs_compiled_with_legacy2_sdk.h>
 #include <stubs_content_indicator.h>
-#include <stubs_memory_layout.h>
-#include <stubs_print.h>
-#include <stubs_process_manager.h>
-#include <stubs_shell_prefs.h>
 // Hide the PBL_WEAK stub so the controllable strong definition above owns the real symbol
 #define sys_process_manager_get_current_process_id \
   prv_stubbed_sys_process_manager_get_current_process_id
-#include <stubs_syscalls.h>
 #undef sys_process_manager_get_current_process_id
-#include <stubs_ui_window.h>
-#include <stubs_unobstructed_area.h>
 
 void window_long_click_subscribe(ButtonId button_id, uint16_t delay_ms, ClickHandler down_handler,
                                  ClickHandler up_handler) {

@@ -25,8 +25,6 @@ extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *s
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_bt_lock.h>
-#include <stubs_rand_ptr.h>
 
 AppRunStateCommand s_last_cmd;
 
