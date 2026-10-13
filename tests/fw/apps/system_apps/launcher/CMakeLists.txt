@@ -2,74 +2,23 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_clar_test(test_launcher_menu_layer
+  MODULES resources graphics_bitdepth gdraw png text menu_layer
   SOURCES
-    fw/applib/fonts/codepoint.c
-    fw/applib/graphics/@BITDEPTH@_bit/framebuffer.c
-    fw/applib/graphics/@BITDEPTH@_bit/bitblt_private.c
-    fw/applib/graphics/bitblt.c
-    fw/applib/graphics/gbitmap.c
-    fw/applib/graphics/gcolor_definitions.c
-    fw/applib/graphics/gdraw_command.c
-    fw/applib/graphics/gdraw_command_frame.c
-    fw/applib/graphics/gdraw_command_image.c
-    fw/applib/graphics/gdraw_command_list.c
-    fw/applib/graphics/gdraw_command_sequence.c
     fw/applib/graphics/gdraw_command_transforms.c
-    fw/applib/graphics/gpath.c
-    fw/applib/graphics/graphics.c
-    fw/applib/graphics/graphics_bitmap.c
-    fw/applib/graphics/graphics_circle.c
-    fw/applib/graphics/graphics_line.c
-    fw/applib/graphics/graphics_private.c
-    fw/applib/graphics/graphics_private_raw.c
-    fw/applib/graphics/gtypes.c
-    fw/applib/graphics/text_layout.c
-    fw/applib/graphics/bidi.c
-    fw/applib/graphics/arabic_shaping.c
     fw/applib/graphics/text_render.c
     fw/applib/graphics/text_resources.c
-    fw/applib/graphics/utf8.c
     fw/applib/ui/animation_interpolate.c
     fw/applib/ui/animation_timing.c
-    fw/applib/ui/inverter_layer.c
     fw/applib/ui/layer.c
-    fw/applib/ui/menu_layer.c
-    fw/applib/ui/scroll_layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/window.c
-    drivers/flash/flash_crc.c
-    fw/flash_region/filesystem_regions.c
-    fw/flash_region/flash_region.c
-    fw/resource/resource.c
-    fw/resource/resource_storage.c
-    fw/resource/resource_storage_builtin.c
-    fw/resource/resource_storage_file.c
-    fw/resource/resource_storage_flash.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    tests/fakes/fake_display.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_spi_flash.c
-    tests/fixtures/resources/builtin_resources.auto.c
-    tests/fixtures/resources/pfs_resource_table.c
-    fw/applib/graphics/framebuffer.c
-    fw/applib/graphics/gbitmap_png.c
-    fw/applib/graphics/gbitmap_sequence.c
     fw/applib/template_string.c
     fw/applib/ui/content_indicator.c
-    fw/applib/ui/kino/kino_reel.c
     fw/applib/ui/kino/kino_reel_custom.c
-    fw/applib/ui/kino/kino_reel_gbitmap.c
-    fw/applib/ui/kino/kino_reel_gbitmap_sequence.c
-    fw/applib/ui/kino/kino_reel_pdci.c
-    fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
-    third_party/uzlib/uzlib/src/tinflate.c
-    third_party/uzlib/uzlib/src/adler32.c
-    third_party/uzlib/uzlib/src/crc32.c
-    third_party/upng/upng/upng.c
     fw/apps/system/launcher/default/app_glance.c
     fw/apps/system/launcher/default/app_glance_alarms.c
     fw/apps/system/launcher/default/app_glance_generic.c
@@ -87,9 +36,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/board/displays/display_getafix.c
     fw/services/app_glances/app_glance_service.c
     fw/services/blob_db/app_glance_db.c
-    fw/services/filesystem/app_file.c
     fw/services/timeline/attribute.c
-    tests/fakes/fake_applib_resource.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_settings_file.c
     tests/fixtures/resources/timeline_resource_table.auto.c

@@ -8,9 +8,8 @@ pbl_clar_test(test_meta_endpoint
 )
 
 pbl_clar_test(test_session
+  MODULES rand
   SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/comm_session/session.c
     tests/fakes/fake_session_send_buffer.c
   OVERRIDES dummy_board
@@ -29,9 +28,8 @@ pbl_clar_test(test_session_send_queue
 )
 
 pbl_clar_test(test_session_receive_router
+  MODULES rand
   SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/comm_session/session.c
     fw/services/comm_session/session_receive_router.c
     tests/fakes/fake_session_send_buffer.c

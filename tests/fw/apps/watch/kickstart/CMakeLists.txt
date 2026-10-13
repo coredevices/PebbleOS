@@ -2,63 +2,23 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_clar_test(test_kickstart
+  MODULES resources graphics_bitdepth text_render png time
   SOURCES
-    fw/applib/fonts/codepoint.c
-    fw/applib/graphics/@BITDEPTH@_bit/framebuffer.c
-    fw/applib/graphics/@BITDEPTH@_bit/bitblt_private.c
-    fw/applib/graphics/bitblt.c
-    fw/applib/graphics/framebuffer.c
-    fw/applib/graphics/gbitmap.c
-    fw/applib/graphics/gbitmap_png.c
     fw/applib/graphics/gbitmap_sequence.c
-    fw/applib/graphics/gcolor_definitions.c
     fw/applib/graphics/gdraw_command.c
     fw/applib/graphics/gdraw_command_frame.c
     fw/applib/graphics/gdraw_command_image.c
     fw/applib/graphics/gdraw_command_list.c
     fw/applib/graphics/gdraw_command_sequence.c
     fw/applib/graphics/gpath.c
-    fw/applib/graphics/graphics.c
-    fw/applib/graphics/graphics_bitmap.c
-    fw/applib/graphics/graphics_circle.c
-    fw/applib/graphics/graphics_line.c
-    fw/applib/graphics/graphics_private.c
-    fw/applib/graphics/graphics_private_raw.c
     fw/applib/graphics/gtransform.c
-    fw/applib/graphics/gtypes.c
-    fw/applib/graphics/perimeter.c
-    fw/applib/graphics/text_layout.c
-    fw/applib/graphics/bidi.c
-    fw/applib/graphics/arabic_shaping.c
-    fw/applib/graphics/text_render.c
     fw/applib/graphics/text_resources.c
-    fw/applib/graphics/utf8.c
     fw/applib/ui/status_bar_layer.c
     fw/applib/ui/layer.c
-    third_party/uzlib/uzlib/src/tinflate.c
-    third_party/uzlib/uzlib/src/adler32.c
-    third_party/uzlib/uzlib/src/crc32.c
-    third_party/upng/upng/upng.c
-    fw/board/displays/display_getafix.c
-    drivers/flash/flash_crc.c
-    fw/flash_region/filesystem_regions.c
-    fw/flash_region/flash_region.c
-    fw/resource/resource.c
-    fw/resource/resource_storage.c
-    fw/resource/resource_storage_builtin.c
-    fw/resource/resource_storage_file.c
-    fw/resource/resource_storage_flash.c
-    fw/services/filesystem/app_file.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
     fw/system/hexdump.c
     tests/fakes/fake_applib_resource.c
-    tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_spi_flash.c
-    tests/fixtures/resources/builtin_resources.auto.c
-    tests/fixtures/resources/pfs_resource_table.c
     tests/stubs/stubs_animation.c
     tests/stubs/stubs_system_theme.c
     fw/applib/graphics/gpath_builder.c
@@ -69,10 +29,7 @@ pbl_clar_test(test_kickstart
     fw/apps/system/timeline/text_node.c
     fw/services/activity/health_util.c
     lib/c/time/mktime.c
-    fw/services/clock/time.c
-    lib/c/time/gmtime.c
     tests/fakes/fake_clock.c
-    tests/fakes/fake_fonts.c
     fw/apps/watch/kickstart/kickstart.c
   PLATFORMS obelix gabbro asterix
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1

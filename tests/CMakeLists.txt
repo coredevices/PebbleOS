@@ -175,6 +175,8 @@ pbl_test_broken(
   test_gap_le_connect
 )
 
+include(modules.cmake)
+
 # Every directory that declares tests.
 file(GLOB_RECURSE pbl_test_dirs CONFIGURE_DEPENDS
      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */CMakeLists.txt)

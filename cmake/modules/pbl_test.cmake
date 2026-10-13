@@ -108,10 +108,46 @@ function(_pbl_test_platform_defines platform out_defines out_bitdepth)
   set(${out_bitdepth} ${bitdepth} PARENT_SCOPE)
 endfunction()
 
+# Declare a named group of sources tests can pull in with MODULES.
+#
+#   SOURCES    as for pbl_clar_test()
+#   REQUIRES   other modules whose sources come along
+function(pbl_test_module name)
+  cmake_parse_arguments(ARG "" "" "SOURCES;REQUIRES" ${ARGN})
+  if(ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "pbl_test_module(${name}): unknown arguments ${ARG_UNPARSED_ARGUMENTS}")
+  endif()
+  get_property(defined GLOBAL PROPERTY PBL_TEST_MODULE_${name} DEFINED)
+  if(defined)
+    message(FATAL_ERROR "pbl_test_module(${name}): declared twice")
+  endif()
+  define_property(GLOBAL PROPERTY PBL_TEST_MODULE_${name})
+  set_property(GLOBAL PROPERTY PBL_TEST_MODULE_${name} "${ARG_SOURCES}")
+  set_property(GLOBAL PROPERTY PBL_TEST_MODULE_${name}_REQUIRES "${ARG_REQUIRES}")
+endfunction()
+
+# The sources of <modules> and everything they require, dependencies first.
+function(_pbl_test_module_sources out id)
+  set(sources "")
+  foreach(module ${ARGN})
+    get_property(defined GLOBAL PROPERTY PBL_TEST_MODULE_${module} DEFINED)
+    if(NOT defined)
+      message(FATAL_ERROR "${id}: unknown module '${module}'")
+    endif()
+    get_property(requires GLOBAL PROPERTY PBL_TEST_MODULE_${module}_REQUIRES)
+    _pbl_test_module_sources(required ${id} ${requires})
+    get_property(own GLOBAL PROPERTY PBL_TEST_MODULE_${module})
+    list(APPEND sources ${required} ${own})
+  endforeach()
+  list(REMOVE_DUPLICATES sources)
+  set(${out} ${sources} PARENT_SCOPE)
+endfunction()
+
 # Declare a test. <name> names both the test and, unless SOURCE says
 # otherwise, the file it is built from.
 #
 #   SOURCE     the test's own .c file
+#   MODULES    groups of sources declared with pbl_test_module()
 #   SOURCES    the firmware sources under test, relative to the repository
 #              root; @PLATFORM@ and @BITDEPTH@ expand per platform
 #   PLATFORMS  which platforms to build it for (default: 'default',
@@ -126,7 +162,7 @@ endfunction()
 #   TEST_IMAGES  the test renders against the image fixtures
 function(pbl_clar_test name)
   cmake_parse_arguments(ARG "TEST_IMAGES" "SOURCE"
-    "SOURCES;PLATFORMS;DEFINES;INCLUDES;OVERRIDES;LIBS;DEPENDS" ${ARGN})
+    "MODULES;SOURCES;PLATFORMS;DEFINES;INCLUDES;OVERRIDES;LIBS;DEPENDS" ${ARGN})
   if(ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "pbl_clar_test(${name}): unknown arguments ${ARG_UNPARSED_ARGUMENTS}")
   endif()
@@ -166,6 +202,7 @@ function(pbl_clar_test name)
     set_property(GLOBAL PROPERTY PBL_TEST_${id}_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     set_property(GLOBAL PROPERTY PBL_TEST_${id}_BINDIR ${CMAKE_CURRENT_BINARY_DIR})
     set_property(GLOBAL PROPERTY PBL_TEST_${id}_SOURCE ${ARG_SOURCE})
+    set_property(GLOBAL PROPERTY PBL_TEST_${id}_MODULES "${ARG_MODULES}")
     set_property(GLOBAL PROPERTY PBL_TEST_${id}_SOURCES "${ARG_SOURCES}")
     set_property(GLOBAL PROPERTY PBL_TEST_${id}_DEFINES "${ARG_DEFINES}")
     set_property(GLOBAL PROPERTY PBL_TEST_${id}_INCLUDES "${ARG_INCLUDES}")
@@ -238,7 +275,7 @@ function(pbl_test_finalize)
 endfunction()
 
 function(_pbl_test_add id)
-  foreach(field NAME PLATFORM DIR BINDIR SOURCE SOURCES DEFINES INCLUDES OVERRIDES LIBS DEPENDS IMAGES)
+  foreach(field NAME PLATFORM DIR BINDIR SOURCE MODULES SOURCES DEFINES INCLUDES OVERRIDES LIBS DEPENDS IMAGES)
     get_property(${field} GLOBAL PROPERTY PBL_TEST_${id}_${field})
   endforeach()
 
@@ -314,8 +351,12 @@ function(_pbl_test_add id)
 
   _pbl_test_stubs(stubs ${key} "${flags}")
 
+  _pbl_test_module_sources(module_sources ${id} ${MODULES})
+  list(APPEND module_sources ${SOURCES})
+  list(REMOVE_DUPLICATES module_sources)
+
   set(objects "")
-  foreach(source ${SOURCES})
+  foreach(source ${module_sources})
     string(REPLACE "@PLATFORM@" "${platform}" source "${source}")
     string(REPLACE "@BITDEPTH@" "${bitdepth}" source "${source}")
     if(NOT IS_ABSOLUTE ${source})

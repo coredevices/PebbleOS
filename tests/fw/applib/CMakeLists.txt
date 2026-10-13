@@ -2,12 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_clar_test(test_app_message
+  MODULES rand
   SOURCES
     fw/applib/app_message/app_message.c
     fw/applib/app_message/app_message_outbox.c
     fw/applib/app_message/app_message_inbox.c
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/process_management/pebble_process_info.c
     fw/applib/dict.c
 )
@@ -35,21 +34,13 @@ pbl_clar_test(test_cpu_cache
 )
 
 pbl_clar_test(test_persist
+  MODULES settings rand
   SOURCES
-    fw/flash_region/filesystem_regions.c
-    fw/flash_region/flash_region.c
     fw/applib/dict.c
     fw/applib/persist.c
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/services/filesystem/app_file.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
     fw/services/persist/service.c
-    fw/services/settings/settings_file.c
-    fw/services/settings/settings_raw_iter.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_spi_flash.c
     tests/fixtures/resources/builtin_resources.auto.c
   OVERRIDES dummy_board
 )
@@ -75,10 +66,9 @@ pbl_clar_test(test_strftime
 )
 
 pbl_clar_test(test_text_render
+  MODULES gtypes
   SOURCES
     fw/applib/graphics/gbitmap.c
-    fw/applib/graphics/gcolor_definitions.c
-    fw/applib/graphics/gtypes.c
     fw/applib/graphics/text_render.c
     fw/applib/fonts/codepoint.c
     tests/fakes/fake_gbitmap_png.c
@@ -86,37 +76,23 @@ pbl_clar_test(test_text_render
 )
 
 pbl_clar_test(test_text_resources
+  MODULES resources
   SOURCES
-    fw/flash_region/flash_region.c
-    fw/flash_region/filesystem_regions.c
     fw/system/hexdump.c
     fw/applib/fonts/codepoint.c
     fw/applib/fonts/fonts.c
     fw/applib/graphics/text_resources.c
-    fw/resource/resource.c
-    fw/resource/resource_storage.c
-    fw/resource/resource_storage_builtin.c
-    fw/resource/resource_storage_file.c
-    fw/resource/resource_storage_flash.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
-    fw/services/filesystem/app_file.c
-    drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_spi_flash.c
-    tests/fixtures/resources/builtin_resources.auto.c
-    tests/fixtures/resources/pfs_resource_table.c
     tests/fw/applib/test_text_resources_font_stub.c
   OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_bitmap_layer
+  MODULES gtypes
   SOURCES
     fw/applib/ui/bitmap_layer.c
     fw/applib/ui/layer.c
     tests/fakes/fake_gbitmap_png.c
-    fw/applib/graphics/gcolor_definitions.c
-    fw/applib/graphics/gtypes.c
   OVERRIDES dummy_board
 )
 
@@ -165,22 +141,13 @@ pbl_clar_test(test_dict
 )
 
 pbl_clar_test(test_qr_code
+  MODULES graphics
   SOURCES
-    fw/applib/graphics/gtypes.c
-    fw/applib/graphics/gbitmap.c
     tests/fakes/fake_gbitmap_png.c
-    fw/applib/graphics/gcolor_definitions.c
     fw/applib/graphics/8_bit/framebuffer.c
-    fw/applib/graphics/framebuffer.c
     fw/applib/ui/layer.c
     fw/applib/ui/qr_code.c
     fw/applib/graphics/8_bit/bitblt_private.c
-    fw/applib/graphics/bitblt.c
-    fw/applib/graphics/graphics_private.c
-    fw/applib/graphics/graphics_private_raw.c
-    fw/applib/graphics/graphics_circle.c
-    fw/applib/graphics/graphics_line.c
-    fw/applib/graphics/graphics.c
     third_party/qr_code_generator/QR-Code-generator/c/qrcodegen.c
     third_party/qr_code_generator/qrcodegen_ext.c
   INCLUDES

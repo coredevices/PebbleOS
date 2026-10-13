@@ -2,81 +2,25 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_clar_test(test_weather_app_layout
+  MODULES resources graphics_bitdepth gdraw text_render png text_layer
   SOURCES
-    fw/applib/fonts/codepoint.c
-    fw/applib/graphics/@BITDEPTH@_bit/framebuffer.c
-    fw/applib/graphics/@BITDEPTH@_bit/bitblt_private.c
-    fw/applib/graphics/bitblt.c
-    fw/applib/graphics/framebuffer.c
-    fw/applib/graphics/gbitmap.c
-    fw/applib/graphics/gbitmap_png.c
-    fw/applib/graphics/gbitmap_sequence.c
-    fw/applib/graphics/gcolor_definitions.c
-    fw/applib/graphics/gdraw_command.c
-    fw/applib/graphics/gdraw_command_frame.c
-    fw/applib/graphics/gdraw_command_image.c
-    fw/applib/graphics/gdraw_command_list.c
-    fw/applib/graphics/gdraw_command_sequence.c
-    fw/applib/graphics/gpath.c
-    fw/applib/graphics/graphics.c
-    fw/applib/graphics/graphics_bitmap.c
-    fw/applib/graphics/graphics_circle.c
-    fw/applib/graphics/graphics_line.c
-    fw/applib/graphics/graphics_private.c
-    fw/applib/graphics/graphics_private_raw.c
     fw/applib/graphics/gtransform.c
-    fw/applib/graphics/gtypes.c
-    fw/applib/graphics/perimeter.c
-    fw/applib/graphics/text_layout.c
-    fw/applib/graphics/bidi.c
-    fw/applib/graphics/arabic_shaping.c
-    fw/applib/graphics/text_render.c
     fw/applib/graphics/text_resources.c
-    fw/applib/graphics/utf8.c
-    fw/applib/ui/kino/kino_reel.c
-    fw/applib/ui/kino/kino_reel_gbitmap.c
-    fw/applib/ui/kino/kino_reel_gbitmap_sequence.c
-    fw/applib/ui/kino/kino_reel_pdci.c
-    fw/applib/ui/kino/kino_reel_pdcs.c
     fw/applib/ui/layer.c
     fw/apps/system/timeline/text_node.c
-    fw/board/displays/display_getafix.c
-    drivers/flash/flash_crc.c
-    fw/flash_region/filesystem_regions.c
-    fw/flash_region/flash_region.c
-    fw/resource/resource.c
-    fw/resource/resource_storage.c
-    fw/resource/resource_storage_builtin.c
-    fw/resource/resource_storage_file.c
-    fw/resource/resource_storage_flash.c
-    fw/services/filesystem/app_file.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
     fw/system/hexdump.c
-    third_party/uzlib/uzlib/src/tinflate.c
-    third_party/uzlib/uzlib/src/adler32.c
-    third_party/uzlib/uzlib/src/crc32.c
-    third_party/upng/upng/upng.c
-    tests/fakes/fake_applib_resource.c
-    tests/fakes/fake_display.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_spi_flash.c
-    tests/fixtures/resources/builtin_resources.auto.c
-    tests/fixtures/resources/pfs_resource_table.c
     tests/stubs/stubs_animation.c
     fw/applib/ui/animation_interpolate.c
     fw/applib/ui/kino/kino_layer.c
     fw/applib/ui/kino/kino_player.c
     fw/applib/ui/kino/kino_reel_custom.c
     fw/applib/ui/kino/kino_reel/transform.c
-    fw/applib/ui/text_layer.c
-    fw/applib/ui/text_layer_flow.c
     fw/applib/ui/window.c
     fw/applib/ui/scroll_layer.c
     fw/applib/ui/inverter_layer.c
     fw/applib/ui/content_indicator.c
-    tests/fakes/fake_fonts.c
     fw/applib/ui/shadows.c
     fw/applib/ui/bitmap_layer.c
     fw/applib/graphics/gdraw_command_transforms.c

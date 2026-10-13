@@ -97,12 +97,30 @@ the repository root:
 
 ```cmake
 pbl_clar_test(test_pfs
+  MODULES pfs
   SOURCES
-    fw/services/filesystem/pfs.c
+    fw/system/hexdump.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )
 ```
+
+Sources that travel together are grouped into modules in
+`tests/modules.cmake` and pulled in by name with `MODULES`. A module may
+`REQUIRES` others, whose sources come along:
+
+```cmake
+pbl_test_module(settings
+  REQUIRES pfs
+  SOURCES
+    fw/services/settings/settings_file.c
+    fw/services/settings/settings_raw_iter.c
+)
+```
+
+A module's sources are compiled with the flags of the test using it, so
+platform expansion and header overrides apply as if they were listed under
+`SOURCES`.
 
 `pbl_clar_test()` (defined in `cmake/modules/pbl_test.cmake`) builds one
 binary per test file/platform combination and registers it with ctest. Its
@@ -110,6 +128,7 @@ arguments:
 
 - `SOURCE`: the test file, when it is not `<name>.c` next to the
   `CMakeLists.txt`
+- `MODULES`: groups of sources declared with `pbl_test_module()`
 - `SOURCES`: code under test plus any fakes from `tests/fakes/`;
   `@PLATFORM@` and `@BITDEPTH@` in a path expand per platform
 - `PLATFORMS`: build the test once per listed platform (e.g.

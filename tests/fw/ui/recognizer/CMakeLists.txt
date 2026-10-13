@@ -59,9 +59,8 @@ pbl_clar_test(test_recognizer_competition
 )
 
 pbl_clar_test(test_recognizer_lifecycle
+  MODULES gtypes
   SOURCES
-    fw/applib/graphics/gtypes.c
-    fw/applib/graphics/gcolor_definitions.c
     fw/applib/ui/layer.c
     fw/applib/ui/window.c
     fw/applib/ui/window_manager.c

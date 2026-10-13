@@ -18,7 +18,5 @@ pbl_clar_test(test_remote_input
 )
 
 pbl_clar_test(test_rand
-  SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
+  MODULES rand
 )

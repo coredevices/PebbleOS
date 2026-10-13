@@ -35,9 +35,8 @@ pbl_clar_test(test_bt_conn_mgr
 )
 
 pbl_clar_test(test_gatt_client_accessors
+  MODULES rand
   SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gatt_client_accessors.c
     fw/comm/ble/gatt_client_discovery.c
@@ -50,9 +49,8 @@ pbl_clar_test(test_gatt_client_accessors
 )
 
 pbl_clar_test(test_gatt_client_discovery
+  MODULES rand
   SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gatt_client_accessors.c
     fw/comm/ble/gatt_client_discovery.c
@@ -65,9 +63,8 @@ pbl_clar_test(test_gatt_client_discovery
 )
 
 pbl_clar_test(test_gatt_client_subscriptions
+  MODULES rand
   SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gap_le_task.c
     fw/comm/ble/gatt_client_accessors.c
@@ -83,9 +80,8 @@ pbl_clar_test(test_gatt_client_subscriptions
 )
 
 pbl_clar_test(test_gatt_service_changed_client
+  MODULES rand
   SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gatt_client_discovery.c
     fw/comm/ble/gatt_service_changed.c
     fw/comm/internals/bt_conn_mgr.c
@@ -95,9 +91,8 @@ pbl_clar_test(test_gatt_service_changed_client
 )
 
 pbl_clar_test(test_gatt_service_changed_server
+  MODULES rand
   SOURCES
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     fw/comm/ble/gap_le_connection.c
     fw/comm/ble/gatt_client_discovery.c
     fw/comm/ble/gatt_service_changed.c
@@ -108,25 +103,21 @@ pbl_clar_test(test_gatt_service_changed_server
 )
 
 pbl_clar_test(test_ancs_util
+  MODULES time
   SOURCES
     lib/c/time/mktime.c
-    fw/services/clock/time.c
-    lib/c/time/gmtime.c
     fw/comm/ble/kernel_le_client/ancs/ancs_util.c
     tests/fakes/fake_rtc.c
 )
 
 pbl_clar_test(test_ancs
+  MODULES timeline_item time rand
   SOURCES
     lib/c/time/mktime.c
-    fw/services/clock/time.c
-    lib/c/time/gmtime.c
     fw/comm/ble/kernel_le_client/ancs/ancs_util.c
     fw/comm/ble/kernel_le_client/ancs/ancs.c
     fw/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c
     fw/services/regular_timer/service.c
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_events.c
     tests/fakes/fake_kernel_services_notifications.c
     tests/fakes/fake_gatt_client_subscriptions.c
@@ -136,27 +127,21 @@ pbl_clar_test(test_ancs
     fw/services/notifications/ancs/ancs_item.c
     fw/services/notifications/ancs/ancs_filtering.c
     fw/services/notifications/ancs/ancs_phone_call.c
-    fw/services/timeline/item.c
-    fw/services/timeline/attributes_actions.c
-    fw/services/timeline/attribute_group.c
-    fw/services/timeline/attribute.c
 )
 
 pbl_clar_test(test_kernel_le_client
+  MODULES rand
   SOURCES
     fw/comm/ble/kernel_le_client/kernel_le_client.c
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
 )
 
 pbl_clar_test(test_ppogatt_v0
   SOURCE test_ppogatt.c
+  MODULES rand
   SOURCES
     fw/system/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c
@@ -165,12 +150,11 @@ pbl_clar_test(test_ppogatt_v0
 
 pbl_clar_test(test_ppogatt_v1
   SOURCE test_ppogatt.c
+  MODULES rand
   SOURCES
     fw/system/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
-    fw/kernel/rand.c
-    third_party/tinymt/TinyMT/tinymt/tinymt32.c
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c
