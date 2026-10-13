@@ -9,6 +9,7 @@
 
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
+#include <pbl/util/math.h>
 
 #include <kernel/util/sleep.h>
 
@@ -146,9 +147,14 @@ static void resource_storage_file_init(void) {
 
     const uint32_t file_length = prv_file_common_get_length_and_close(fd);
 
+    // Files written for older firmware may carry fewer entries
+    const uint32_t first_resource_id = g_file_resource_stores[i].first_resource_id;
+    const uint32_t num_entries = resource_storage_get_num_entries(SYSTEM_APP, first_resource_id);
+    const uint32_t last_resource_id =
+        MIN(g_file_resource_stores[i].last_resource_id, first_resource_id + num_entries - 1);
+
     // Now check each entry in the file
-    for (uint32_t resource_id = g_file_resource_stores[i].first_resource_id;
-         resource_id <= g_file_resource_stores[i].last_resource_id; resource_id++) {
+    for (uint32_t resource_id = first_resource_id; resource_id <= last_resource_id; resource_id++) {
       // TODO PBL-21402
       if (!resource_storage_check(SYSTEM_APP, resource_id, nullptr)) {
         PBL_LOG_ERR("System resource file %" PRIu32 " corrupt!!!", resource_id);
