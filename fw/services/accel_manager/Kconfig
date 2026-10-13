@@ -17,6 +17,14 @@ config SERVICE_ACCEL_MANAGER_BATCH_SAMPLES
       callback. Sizes the shared accel buffer. Limited by the accelerometer
       FIFO depth.
 
+config SERVICE_ACCEL_MANAGER_RECORDER
+    bool "Raw accelerometer recorder"
+    default y if !RELEASE
+    depends on SHELL
+    help
+      The accelrec shell command, to record raw accelerometer samples at
+      the driver rate to a file, e.g. to develop motion gestures offline.
+
 module = SERVICE_ACCEL_MANAGER
 module-str = Accelerometer manager
 source "subsys/logging/Kconfig.template.log_level"

@@ -97,6 +97,7 @@ development/debugging.md
 development/moddable.md
 development/sdk_export.md
 development/sbom.md
+development/accel_fsm.md
 development/contributing.md
 ```
 
