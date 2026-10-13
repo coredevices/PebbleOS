@@ -7,6 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "_ext"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -22,9 +25,10 @@ release = "0.1.0"
 extensions = [
     "myst_parser",
     "sphinx_design",
+    "pbl_docs",
 ]
 
-exclude_patterns = ["_build", "_apidoc", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "_apidoc", "_ext", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
 

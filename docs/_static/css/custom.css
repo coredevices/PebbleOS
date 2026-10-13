@@ -165,3 +165,13 @@ html.dark {
   border-bottom: none;
   padding-bottom: 0;
 }
+
+/* API reference tables */
+
+.yue table.apigroups td:first-child {
+  font-weight: 600;
+}
+
+.yue table.apigroups code {
+  white-space: nowrap;
+}
