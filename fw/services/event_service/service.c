@@ -29,6 +29,7 @@ typedef struct {
 typedef struct {
   ListNode list_node;
   void *ptr;
+  PebbleEventType type;
   // There is an intent bit for each task + a special "claimed" bit
   uint16_t intents_pending;
 } EventServiceBuffer;
@@ -202,6 +203,7 @@ static bool prv_steal_buffer(void *buf, EventServiceEntry *service, PebbleEvent 
   if (intents_pending) {
     EventServiceBuffer *esb = kernel_zalloc_check(sizeof(EventServiceBuffer));
     esb->ptr = buf;
+    esb->type = e->type;
     esb->intents_pending = intents_pending;
     list_init(&esb->list_node);
     s_event_service_buffers =
@@ -275,12 +277,15 @@ static bool prv_buffer_find(ListNode *found_node, void *data) {
   return (esb->ptr == data);
 }
 
-bool event_service_is_known_buffer(const void *buf) {
+bool event_service_is_known_buffer(const void *buf, PebbleEventType type) {
   if (buf == nullptr) {
     return false;
   }
   // Cast away const for list_find's callback signature; prv_buffer_find only compares.
-  return list_find((ListNode *)s_event_service_buffers, prv_buffer_find, (void *)buf) != nullptr;
+  const EventServiceBuffer *esb = (EventServiceBuffer *)list_find(
+      (ListNode *)s_event_service_buffers, prv_buffer_find, (void *)buf);
+  const uint16_t task_bit = 1 << pebble_task_get_current();
+  return esb && (esb->type == type) && (esb->intents_pending & task_bit);
 }
 
 static EventServiceBuffer *prv_get_esb_for_event(PebbleEvent *e) {

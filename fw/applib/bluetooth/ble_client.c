@@ -55,7 +55,7 @@ DEFINE_SYSCALL(void, sys_get_service_discovery_info, const PebbleBLEGATTClientSe
     // calling us. Confirm it still references a kernel-tracked event buffer
     // — without that, an app could aim it at any kernel address and read
     // arbitrary kernel bytes back via *info.
-    if (!event_service_is_known_buffer(e->info)) {
+    if (!event_service_is_known_buffer(e->info, PEBBLE_BLE_GATT_CLIENT_EVENT)) {
       PBL_LOG_ERR("Rejecting service event with unknown info pointer %p", e->info);
       syscall_failed();
     }

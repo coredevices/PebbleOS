@@ -137,12 +137,14 @@ void event_service_free_claimed_buffer(void *ref);
 /**
  * @brief Check whether a buffer is tracked by the event service.
  *
- * True for kernel-allocated buffers attached to an in-flight event. Syscalls that dereference an
- * event's embedded data pointer use it to reject pointers fabricated by the caller.
+ * True for kernel-allocated buffers attached to an in-flight event of @p type that the current
+ * task has not handled yet. Syscalls that dereference an event's embedded data pointer use it to
+ * reject pointers fabricated by the caller.
  *
  * @param buf Buffer to check.
+ * @param type Type of the event the buffer must belong to.
  * @return true if @p buf is a tracked event buffer.
  */
-bool event_service_is_known_buffer(const void *buf);
+bool event_service_is_known_buffer(const void *buf, PebbleEventType type);
 
 /** @} */

@@ -1466,7 +1466,7 @@ DEFINE_SYSCALL(size_t, sys_voice_get_transcription_from_event, PebbleVoiceServic
     // us, so confirm it still references a buffer the kernel actually allocated
     // — otherwise an app could aim it at kernel memory and turn the strlen/memcpy
     // below into an arbitrary kernel read primitive.
-    if (!event_service_is_known_buffer(e->data)) {
+    if (!event_service_is_known_buffer(e->data, PEBBLE_VOICE_SERVICE_EVENT)) {
       PBL_LOG_ERR("Rejecting voice event with unknown data pointer %p", e->data);
       syscall_failed();
     }
