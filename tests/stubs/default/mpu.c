@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/kernel/compiler.h>
 
 #include <kernel/memory_layout.h>
@@ -51,4 +53,8 @@ PBL_WEAK MpuRegion mpu_get_region(int region_num) {
 }
 
 PBL_WEAK void mpu_set_region(const MpuRegion *region) {
+}
+
+PBL_WEAK void mpu_user_ro_write(void *dst, const void *src, size_t n) {
+  memcpy(dst, src, n);
 }

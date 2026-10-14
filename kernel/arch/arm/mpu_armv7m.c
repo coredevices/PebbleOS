@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/mcu/mpu.h>
 #include <pbl/util/size.h>
 
@@ -149,6 +151,10 @@ void mpu_set_region(const MpuRegion *region) {
 
   MPU->RBAR = base_reg;
   MPU->RASR = attr_reg;
+}
+
+void mpu_user_ro_write(void *dst, const void *src, size_t n) {
+  memcpy(dst, src, n);
 }
 
 MpuRegion mpu_get_region(int region_num) {

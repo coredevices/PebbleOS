@@ -10,6 +10,13 @@
 
 #define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
 
+// Assigns a KERNEL_READONLY_DATA variable; privileged code only.
+#define KERNEL_READONLY_DATA_SET(var, val)          \
+  do {                                              \
+    typeof(var) val_ = (val);                       \
+    mpu_user_ro_write(&(var), &val_, sizeof(val_)); \
+  } while (0)
+
 // Sizes the linker script encodes as symbol addresses; the symbols are
 // declared by the users. Builds without the linker script use fixed sizes.
 #ifdef PBL_NO_LINKER_SCRIPT

@@ -15,6 +15,9 @@
 //! threads may read it: pbl_thread_current() runs without privilege.
 extern struct pbl_thread *pbl_cur;
 
+//! Sets pbl_cur, which may live in memory unprivileged threads cannot write.
+void arch_cur_set(struct pbl_thread *t);
+
 void arch_init(void);
 
 //! Builds the initial context so that the first switch to @p t runs

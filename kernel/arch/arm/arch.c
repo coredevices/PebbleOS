@@ -51,6 +51,10 @@
 
 struct pbl_thread *pbl_cur PBL_SECTION(".kernel_unpriv_ro_bss");
 
+void arch_cur_set(struct pbl_thread *t) {
+  mpu_user_ro_write(&pbl_cur, &t, sizeof(t));
+}
+
 //! Saved context, lowest address first. Matches the layout core dump tooling
 //! learned from the FreeRTOS port so the canonical register walk is unchanged.
 struct saved_context {

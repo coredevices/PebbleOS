@@ -42,9 +42,7 @@ extern const uint32_t __stack_guard_size__[];
 extern const uint32_t __ramfunc_start[];
 #endif
 
-#ifndef CONFIG_ARMV8_M_MAINLINE
 KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
-#endif
 
 typedef enum {
   TestKind_WorkerRamWrite,
@@ -55,9 +53,7 @@ typedef enum {
   TestKind_RamfuncWrite,
   TestKind_RamfuncRead,
 #endif
-#ifndef CONFIG_ARMV8_M_MAINLINE
   TestKind_RoBssWrite,
-#endif
   TestKind_FlashWrite,
 #ifndef CONFIG_ARMV8_M_MAINLINE
   TestKind_StackGuardWrite,
@@ -67,6 +63,7 @@ typedef enum {
   TestKindCount,
 } TestKind;
 
+// clang-format off
 static const char *const s_test_titles[TestKindCount] = {
   [TestKind_WorkerRamWrite] = "Worker RAM W",
   [TestKind_WorkerRamRead] = "Worker RAM R",
@@ -76,9 +73,7 @@ static const char *const s_test_titles[TestKindCount] = {
   [TestKind_RamfuncWrite] = "Ramfunc W",
   [TestKind_RamfuncRead] = "Ramfunc R",
 #endif
-#ifndef CONFIG_ARMV8_M_MAINLINE
   [TestKind_RoBssWrite] = "RO BSS W",
-#endif
   [TestKind_FlashWrite] = "Flash W",
 #ifndef CONFIG_ARMV8_M_MAINLINE
   [TestKind_StackGuardWrite] = "Stack guard W",
@@ -86,6 +81,7 @@ static const char *const s_test_titles[TestKindCount] = {
   [TestKind_StackOverflow] = "Stack overflow",
   [TestKind_SyscallNearLimit] = "Syscall near limit",
 };
+// clang-format on
 
 static const bool s_test_expect_survive[TestKindCount] = {
   [TestKind_SyscallNearLimit] = true,
@@ -173,14 +169,11 @@ static void prv_run_test(TestKind kind) {
       break;
     }
 #endif
-#ifndef CONFIG_ARMV8_M_MAINLINE
     case TestKind_RoBssWrite: {
-      // ARMv7-M maps this as priv RW + user RO, so unprivileged writes fault.
       volatile uint32_t *p = &s_ro_bss_probe;
       *p = 0xDEADBEEF;
       break;
     }
-#endif
     case TestKind_FlashWrite: {
       volatile uint32_t *p = (volatile uint32_t *)__FLASH_start__;
       *p = 0xDEADBEEF;

@@ -65,6 +65,10 @@ void mpu_disable(void) {
 void mpu_set_region(const MpuRegion *region) {
 }
 
+void mpu_user_ro_write(void *dst, const void *src, size_t n) {
+  memcpy(dst, src, n);
+}
+
 MpuRegion mpu_get_region(int region_num) {
   return (MpuRegion){.region_num = region_num};
 }

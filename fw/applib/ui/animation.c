@@ -1781,12 +1781,12 @@ Animation *animation_clone(Animation *animation_h) {
 
 // -------------------------------------------------------------------------------------------
 void animation_private_pause(void) {
-  s_paused = true;
+  KERNEL_READONLY_DATA_SET(s_paused, true);
 }
 
 // -------------------------------------------------------------------------------------------
 void animation_private_resume(void) {
-  s_paused = false;
+  KERNEL_READONLY_DATA_SET(s_paused, false);
 }
 
 #ifdef CONFIG_SHELL

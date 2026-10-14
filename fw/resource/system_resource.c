@@ -46,13 +46,34 @@ bool system_resource_is_valid(void) {
 // Total number of fonts = NUM_SYSTEM_FONTS + 1 for the fallback font
 FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] KERNEL_READONLY_DATA;
 
+static void prv_font_changed(void *data) {
+  FontInfo *entry = data;
+  FontInfo info = *entry;
+  info.loaded = false;
+  info.extended = false;
+  mpu_user_ro_write(entry, &info, sizeof(info));
+}
+
+// Table entries are read-only to apps, so fonts are loaded into a copy that is
+// written back. The extension watch must reference the entry, not the copy.
+static bool prv_init_font(FontInfo *entry, ResAppNum app_num, uint32_t resource,
+                          uint32_t extension) {
+  FontInfo info = *entry;
+  if (extension && info.extension_changed_cb == nullptr) {
+    info.extension_changed_cb = resource_watch(app_num, extension, prv_font_changed, entry);
+  }
+  const bool ok = text_resources_init_font(app_num, resource, extension, &info);
+  mpu_user_ro_write(entry, &info, sizeof(info));
+  return ok;
+}
+
 static GFont prv_load_system_font(const char *font_key) {
   if (font_key == nullptr) {
     PBL_LOG_DBG("GETTING FALLBACK FONT");
     // load fallback font
     if (!s_system_fonts_info_table[NUM_SYSTEM_FONTS].loaded) {
-      PBL_ASSERTN(text_resources_init_font(SYSTEM_APP, RESOURCE_ID_FONT_FALLBACK_INTERNAL, 0,
-                                           &s_system_fonts_info_table[NUM_SYSTEM_FONTS]));
+      PBL_ASSERTN(prv_init_font(&s_system_fonts_info_table[NUM_SYSTEM_FONTS], SYSTEM_APP,
+                                RESOURCE_ID_FONT_FALLBACK_INTERNAL, 0));
     }
     return &s_system_fonts_info_table[NUM_SYSTEM_FONTS];
   }
@@ -64,15 +85,14 @@ static GFont prv_load_system_font(const char *font_key) {
       uint32_t extension = s_font_resource_keys[i].extension_id;
       // if the font has not been initialized yet
       if (!fontinfo->loaded) {
-        if (!text_resources_init_font(SYSTEM_APP, resource, extension,
-                                      &s_system_fonts_info_table[i])) {
+        if (!prv_init_font(fontinfo, SYSTEM_APP, resource, extension)) {
           // Can't initialize the font for some reason
           return nullptr;
         }
         resource_get_and_cache(SYSTEM_APP, resource);
         resource_get_and_cache(SYSTEM_APP, extension);
       }
-      return &s_system_fonts_info_table[i];
+      return fontinfo;
     }
   }
 
@@ -104,6 +124,6 @@ DEFINE_SYSCALL(void, sys_font_reload_font, FontInfo *fontinfo) {
     }
   }
 
-  text_resources_init_font(fontinfo->base.app_num, fontinfo->base.resource_id,
-                           fontinfo->extension.resource_id, fontinfo);
+  prv_init_font(fontinfo, fontinfo->base.app_num, fontinfo->base.resource_id,
+                fontinfo->extension.resource_id);
 }

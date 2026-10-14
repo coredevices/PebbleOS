@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/mcu/mpu.h>
 #include <pbl/util/size.h>
 
@@ -27,13 +29,16 @@ static inline uint8_t mair_index(uint32_t cache_policy) {
 //     AP=0b10 (RO priv only), the same encoding used for PrivRO. Don't
 //     rely on this for thread-stack-overflow detection -- use PSPLIM.
 //   - PrivRW_UserRO: the AP field cannot split write access by privilege.
-//     We pick AP=0b01 (R/W any privilege level), which gives the user
-//     write access too. See the MpuPermissions doc in pbl/mcu/mpu.h.
+//     We pick AP=0b11 (RO any privilege level) and privileged writers go
+//     through mpu_user_ro_write(), which disables the region around the
+//     copy so the PRIVDEFENA background map applies.
 static const uint8_t s_permission_to_ap[MpuPermissionsCount] = {
   [MpuPermissions_NoAccess] = 0x2,      [MpuPermissions_PrivRW] = 0x0,
-  [MpuPermissions_PrivRW_UserRO] = 0x1, [MpuPermissions_PrivRW_UserRW] = 0x1,
+  [MpuPermissions_PrivRW_UserRO] = 0x3, [MpuPermissions_PrivRW_UserRW] = 0x1,
   [MpuPermissions_PrivRO] = 0x2,        [MpuPermissions_PrivRO_UserRO] = 0x3,
 };
+
+static int s_user_ro_region = -1;
 
 static const uint32_t s_cache_settings[] = {
   [MpuCachePolicy_NotCacheable] =
@@ -51,7 +56,11 @@ static uint8_t get_permission_value(const MpuRegion *region) {
   return s_permission_to_ap[region->permissions];
 }
 
-static MpuPermissions decode_permission_value(uint8_t ap) {
+static MpuPermissions decode_permission_value(int region_num, uint8_t ap) {
+  if (region_num == s_user_ro_region && (ap & 0x3) == 0x3) {
+    return MpuPermissions_PrivRW_UserRO;
+  }
+
   // ARMv8-M's two-bit AP loses information: AP=0b10 could have been set
   // for either NoAccess or PrivRO. Decode to PrivRO canonically.
   switch (ap & 0x3) {
@@ -110,9 +119,41 @@ void mpu_get_register_settings(const MpuRegion *region, uint32_t *base_address_r
 void mpu_set_region(const MpuRegion *region) {
   uint32_t base_reg, attr_reg;
 
+  if (region->permissions == MpuPermissions_PrivRW_UserRO) {
+    KERNEL_ASSERT(s_user_ro_region < 0 || s_user_ro_region == region->region_num);
+    s_user_ro_region = region->region_num;
+  }
+
   mpu_get_register_settings(region, &base_reg, &attr_reg);
 
   ARM_MPU_SetRegion(region->region_num, base_reg, attr_reg);
+}
+
+void mpu_user_ro_write(void *dst, const void *src, size_t n) {
+  if (s_user_ro_region < 0) {
+    memcpy(dst, src, n);
+    return;
+  }
+
+  const uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  const uint32_t rnr = MPU->RNR;
+  MPU->RNR = (uint32_t)s_user_ro_region;
+  const uint32_t rlar = MPU->RLAR;
+  MPU->RLAR = rlar & ~MPU_RLAR_EN_Msk;
+  __DSB();
+  __ISB();
+
+  memcpy(dst, src, n);
+
+  __DSB();
+  MPU->RLAR = rlar;
+  MPU->RNR = rnr;
+  __DSB();
+  __ISB();
+
+  __set_PRIMASK(primask);
 }
 
 MpuRegion mpu_get_region(int region_num) {
@@ -130,7 +171,7 @@ MpuRegion mpu_get_region(int region_num) {
   region.executable = ((rbar >> MPU_RBAR_XN_Pos) & 0x1) == 0;
 
   access_permissions = (rbar & MPU_RBAR_AP_Msk) >> MPU_RBAR_AP_Pos;
-  region.permissions = decode_permission_value(access_permissions);
+  region.permissions = decode_permission_value(region_num, access_permissions);
 
   region.size = (rlar & MPU_RLAR_LIMIT_Msk) - region.base_address + 0x20;
   region.enabled = (rlar & MPU_RLAR_EN_Msk) != 0;

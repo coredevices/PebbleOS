@@ -98,7 +98,9 @@ object is referenced.
 
 The port defines `pbl_cur` in `.kernel_unpriv_ro_bss`, the firmware's
 unprivileged-readable kernel data, because `pbl_thread_current()` and
-`pebble_task_get_current()` run unprivileged inside apps.
+`pebble_task_get_current()` run unprivileged inside apps. The section is
+read-only to everyone on ARMv8-M, so `arch_cur_set()` writes `pbl_cur`
+through `mpu_user_ro_write()`.
 
 ## POSIX arch and tests
 

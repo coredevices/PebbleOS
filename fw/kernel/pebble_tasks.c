@@ -25,7 +25,7 @@ struct pbl_thread *g_task_threads[NumPebbleTask] KERNEL_READONLY_DATA = {};
 static uint32_t s_dead_task_cycles[NumPebbleTask];
 
 static void prv_task_register(PebbleTask task, struct pbl_thread *thread) {
-  g_task_threads[task] = thread;
+  KERNEL_READONLY_DATA_SET(g_task_threads[task], thread);
 }
 
 static uint32_t prv_read_task_run_time(const struct pbl_thread *thread) {
@@ -48,7 +48,7 @@ void pebble_task_unregister(PebbleTask task) {
   // Clear the handle before crediting the cycles: the collector reads
   // s_dead_task_cycles before walking the task list, so this ordering
   // ensures cycles are never seen in both buckets simultaneously.
-  g_task_threads[task] = nullptr;
+  KERNEL_READONLY_DATA_SET(g_task_threads[task], nullptr);
   s_dead_task_cycles[task] += cycles;
 }
 
