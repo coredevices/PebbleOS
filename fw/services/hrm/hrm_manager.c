@@ -20,6 +20,7 @@
 #include <applib/health_service.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
+#include <syscall/syscall.h>
 #include <syscall/syscall_internal.h>
 #include <system/hexdump.h>
 #include <system/passert.h>
@@ -878,8 +879,20 @@ static bool prv_wants_low_latency(PebbleTask task, uint32_t update_interval_s) {
   return (task == PebbleTask_App) && (update_interval_s <= HRM_LOW_LATENCY_MAX_INTERVAL_S);
 }
 
+static HRMSubscriberState *prv_get_owned_subscriber_state(HRMSessionRef session,
+                                                          bool from_userspace) {
+  HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session);
+  if (from_userspace && state && state->task != pebble_task_get_current()) {
+    return nullptr;
+  }
+  return state;
+}
+
 DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_app_subscribe, AppInstallId app_id,
                uint32_t update_interval_s, uint16_t expire_sec, HRMFeature features) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    app_id = sys_process_manager_get_current_process_id();
+  }
   const bool low_latency = prv_wants_low_latency(pebble_task_get_current(), update_interval_s);
   return hrm_manager_subscribe_with_callback(app_id, update_interval_s, expire_sec, features,
                                              low_latency, nullptr, nullptr);
@@ -890,7 +903,7 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_unsubscribe, HRMSessionRef session) {
   bool success = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
 
-  HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
   if (state) {
     prv_remove_and_free_subscription(state);
     system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
@@ -902,6 +915,9 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_unsubscribe, HRMSessionRef session) {
 }
 
 DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_get_app_subscription, AppInstallId app_id) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    app_id = sys_process_manager_get_current_process_id();
+  }
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   HRMSessionRef ref = HRM_INVALID_SESSION_REF;
   HRMSubscriberState *state =
@@ -935,7 +951,7 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_get_subscription_info, HRMSessionRef sessio
     }
   }
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
-  HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
   if (state) {
     if (app_id) {
       *app_id = state->app_id;
@@ -961,14 +977,14 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_get_subscription_info, HRMSessionRef sessio
 DEFINE_SYSCALL(bool, sys_hrm_manager_set_features, HRMSessionRef session, HRMFeature features) {
   bool success = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
-  HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
   if (state) {
     state->features = features;
     success = true;
+    // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
+    // optical path, and must not wait for the next sample to trigger a pass.
+    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
   }
-  // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
-  // optical path, and must not wait for the next sample to trigger a pass.
-  system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
   pbl_mutex_unlock(&s_manager_state.lock);
   return success;
 }
@@ -978,7 +994,7 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_update_interval, HRMSessionRef session,
   bool success = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
 
-  HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
   if (state) {
     state->update_interval_s = update_interval_s;
     state->expire_utc = (expire_s != 0) ? (rtc_get_time() + expire_s) : 0;
@@ -989,8 +1005,8 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_update_interval, HRMSessionRef session,
       state->low_latency = prv_wants_low_latency(state->task, update_interval_s);
     }
     success = true;
+    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
   }
-  system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
   pbl_mutex_unlock(&s_manager_state.lock);
   return success;
 }
