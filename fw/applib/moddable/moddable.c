@@ -18,6 +18,7 @@
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <moddableAppState.h>
+#include <process_management/app_manager.h>
 #include <shell/normal/watchface.h>
 #include <xsHost.h>
 #include <xsHosts.h>
@@ -84,6 +85,14 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr) {
   uint32_t flags = 0;
   uint32_t record_size = 0;
 
+  if (PRIVILEGE_WAS_ELEVATED) {
+    const PebbleProcessMd *md = app_manager_get_current_app_md();
+    if (pebble_task_get_current() != PebbleTask_App || md == nullptr || !md->is_moddable_app ||
+        app_state_get_js_memory_api_context() != nullptr) {
+      syscall_failed();
+    }
+  }
+
   ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
   app_state_set_js_memory_api_context((void *)state);
 
@@ -96,7 +105,7 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr) {
       return;
     }
 
-    prv_assert_userspace_creation_record(cr, cr->recordSize);
+    prv_assert_userspace_creation_record(cr, record_size);
     if (record_size >= kModdableCreationRecordFlagsSize)
       flags = cr->flags;
   }
