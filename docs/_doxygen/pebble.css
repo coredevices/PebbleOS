@@ -1,0 +1,42 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/* The Pebble red accent of the Sphinx documentation */
+html {
+    --primary-color: #d93a27;
+    --primary-dark-color: #b8301f;
+    --primary-light-color: #fa4a36;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light-mode) {
+        --primary-color: #fa4a36;
+        --primary-dark-color: #ff7a6a;
+        --primary-light-color: #e8432f;
+    }
+}
+
+html.dark-mode {
+    --primary-color: #fa4a36;
+    --primary-dark-color: #ff7a6a;
+    --primary-light-color: #e8432f;
+}
+
+/* The logo is the PebbleOS wordmark, so the project name is redundant */
+#projectlogo img {
+    height: 36px;
+    width: auto;
+    max-height: none;
+}
+
+#titlearea table {
+    width: 100%;
+}
+
+#projectlogo {
+    text-align: center;
+}
+
+#projectalign {
+    display: none;
+}

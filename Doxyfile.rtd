@@ -3,7 +3,8 @@
 
 # Doxygen overrides for the Read the Docs build (see .readthedocs.yaml).
 # Drops the source browser to keep the published output small and applies
-# the doxygen-awesome-css theme cloned during the RTD pre_build step.
+# the doxygen-awesome-css theme cloned during the RTD pre_build step, in its
+# sidebar layout and with the accent color of the Sphinx documentation.
 
 @INCLUDE = Doxyfile
 
@@ -12,7 +13,14 @@ HTML_OUTPUT            = apidoc
 SOURCE_BROWSER         = NO
 VERBATIM_HEADERS       = NO
 QUIET                  = YES
+PROJECT_LOGO           = docs/_static/images/logo.svg
 HTML_COLORSTYLE        = LIGHT
-HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+TREEVIEW_WIDTH         = 335
+HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css \
+                         doxygen-awesome-css/doxygen-awesome-sidebar-only.css \
+                         docs/_doxygen/pebble.css
 GENERATE_TAGFILE       = docs/_apidoc/apidoc/pebbleos.tag
 WARN_AS_ERROR          = FAIL_ON_WARNINGS
