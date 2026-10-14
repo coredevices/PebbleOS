@@ -108,6 +108,13 @@ AccelManagerState *sys_accel_manager_data_subscribe(AccelSamplingRate rate,
 bool sys_accel_manager_data_unsubscribe(AccelManagerState *state);
 
 /**
+ * @brief Remove every subscription that delivers its data to @p task.
+ *
+ * @param task Task whose subscriptions to remove.
+ */
+void accel_manager_remove_task_subscriptions(PebbleTask task);
+
+/**
  * @brief Change the sampling rate of a subscription.
  *
  * Jitter-inducing subsampling may be used to reach the requested rate.

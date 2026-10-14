@@ -102,6 +102,14 @@ bool sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
   return state->event_posted;
 }
 
+void accel_manager_remove_task_subscriptions(PebbleTask task) {
+  for (int i = 0; i < FAKE_SUBSCRIPTION_SLOTS; i++) {
+    if (s_slot_used[i]) {
+      sys_accel_manager_data_unsubscribe(&s_slots[i]);
+    }
+  }
+}
+
 uint32_t sys_accel_manager_get_max_samples_per_update(void) {
   return 25;
 }

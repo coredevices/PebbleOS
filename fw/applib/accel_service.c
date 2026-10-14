@@ -58,11 +58,8 @@ AccelServiceState *accel_service_private_get_session(PebbleTask task) {
 }
 
 void accel_service_cleanup_task_session(PebbleTask task) {
-  AccelServiceState *state = accel_service_private_get_session(task);
-  if (state->manager_state) {
-    sys_accel_manager_data_unsubscribe(state->manager_state);
-    state->manager_state = nullptr;
-  }
+  accel_manager_remove_task_subscriptions(task);
+  accel_service_private_get_session(task)->manager_state = nullptr;
 }
 
 // ----------------------------------------------------------------------------------------------

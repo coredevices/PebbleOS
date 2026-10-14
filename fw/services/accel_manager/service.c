@@ -428,6 +428,18 @@ DEFINE_SYSCALL(int, sys_accel_manager_peek, AccelData *accel_data) {
   return result;
 }
 
+static bool prv_is_supported_rate(AccelSamplingRate rate) {
+  switch (rate) {
+    case ACCEL_SAMPLING_10HZ:
+    case ACCEL_SAMPLING_25HZ:
+    case ACCEL_SAMPLING_50HZ:
+    case ACCEL_SAMPLING_100HZ:
+      return true;
+    default:
+      return false;
+  }
+}
+
 DEFINE_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, AccelSamplingRate rate,
                AccelDataReadyCallback data_cb, void *context, PebbleTask handler_task) {
   AccelManagerState *state;
@@ -443,6 +455,10 @@ DEFINE_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, AccelSampl
     handler_task = pebble_task_get_current();
     if (handler_task != PebbleTask_App && handler_task != PebbleTask_Worker) {
       syscall_failed();
+    }
+
+    if (!prv_is_supported_rate(rate)) {
+      rate = ACCEL_SAMPLING_25HZ;
     }
   }
 
@@ -498,12 +514,27 @@ static PBL_ALWAYS_INLINE void prv_assert_state_from_user(const AccelManagerState
     return;
   }
   pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
-  bool valid = prv_state_is_valid_subscriber(state);
+  bool valid = prv_state_is_valid_subscriber(state) && (state->task == pebble_task_get_current());
   pbl_mutex_unlock(&s_accel_manager_mutex);
   if (!valid) {
     PBL_LOG_ERR("Rejecting unknown AccelManagerState %p from unprivileged caller", state);
     syscall_failed();
   }
+}
+
+static void prv_remove_subscriber_locked(AccelManagerState *state) {
+  // Remove this subscriber and free up its state variables
+  pbl_shared_cbuf_remove_subsampled_client(&s_buffer, &state->buffer_client);
+  list_remove(&state->list_node, &s_data_subscribers /* &head */, nullptr /* &tail */);
+  kernel_free(state);
+
+  if (!s_data_subscribers) {
+    // If no one left using the data subscription, disable it
+    sys_vibe_history_stop_collecting();
+  }
+
+  // reconfig for the common subset of requirements among remaining subscribers
+  prv_update_driver_config();
 }
 
 DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *state) {
@@ -512,21 +543,26 @@ DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *stat
   pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
   {
     event_outstanding = state->event_posted;
-    // Remove this subscriber and free up its state variables
-    pbl_shared_cbuf_remove_subsampled_client(&s_buffer, &state->buffer_client);
-    list_remove(&state->list_node, &s_data_subscribers /* &head */, nullptr /* &tail */);
-    kernel_free(state);
-
-    if (!s_data_subscribers) {
-      // If no one left using the data subscription, disable it
-      sys_vibe_history_stop_collecting();
-    }
-
-    // reconfig for the common subset of requirements among remaining subscribers
-    prv_update_driver_config();
+    prv_remove_subscriber_locked(state);
   }
   pbl_mutex_unlock(&s_accel_manager_mutex);
   return event_outstanding;
+}
+
+void accel_manager_remove_task_subscriptions(PebbleTask task) {
+  pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
+  {
+    ListNode *node = s_data_subscribers;
+    while (node != nullptr) {
+      ListNode *next = node->next;
+      AccelManagerState *state = (AccelManagerState *)node;
+      if (state->task == task) {
+        prv_remove_subscriber_locked(state);
+      }
+      node = next;
+    }
+  }
+  pbl_mutex_unlock(&s_accel_manager_mutex);
 }
 
 DEFINE_SYSCALL(int, sys_accel_manager_set_sampling_rate, AccelManagerState *state,
@@ -534,14 +570,8 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sampling_rate, AccelManagerState *stat
   prv_assert_state_from_user(state);
 
   // Make sure the rate is one of our externally supported fixed rates
-  switch (rate) {
-    case ACCEL_SAMPLING_10HZ:
-    case ACCEL_SAMPLING_25HZ:
-    case ACCEL_SAMPLING_50HZ:
-    case ACCEL_SAMPLING_100HZ:
-      break;
-    default:
-      return -1;
+  if (!prv_is_supported_rate(rate)) {
+    return -1;
   }
 
   pbl_mutex_lock(&s_accel_manager_mutex, PBL_FOREVER);
