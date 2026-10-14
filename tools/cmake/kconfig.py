@@ -148,9 +148,14 @@ def main():
         kconf.load_config(variant_conf, replace=False)
         sources.append(variant_conf)
 
-    # An interactively edited configuration, kept across reconfigurations.
+    # An interactively edited configuration, kept across reconfigurations. It
+    # overrides the fragments above on purpose, like the -D overrides below.
     if args.fragment and os.path.exists(args.fragment):
+        kconf.warn_assign_override = False
+        kconf.warn_assign_redun = False
         kconf.load_config(args.fragment, replace=False)
+        kconf.warn_assign_override = True
+        kconf.warn_assign_redun = True
         sources.append(args.fragment)
 
     for override in args.override:
