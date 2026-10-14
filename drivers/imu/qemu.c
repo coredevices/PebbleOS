@@ -253,3 +253,7 @@ void accel_set_shake_sensitivity_high(bool sensitivity_high) {
 void accel_set_shake_sensitivity_percent(uint8_t percent) {
   (void)percent;
 }
+
+void accel_set_rotated(bool rotated) {
+  (void)rotated;
+}
