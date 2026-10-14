@@ -220,6 +220,13 @@ DEFINE_SYSCALL(size_t, sys_strftime, char *s, size_t maxsize, const char *format
       syscall_failed();
     }
     syscall_assert_userspace_buffer(tim_p, sizeof(struct pbl_tm));
+    // Workers pass the app's locale buffer, which is not theirs to read
+    const MpuRegion *region = (pebble_task_get_current() == PebbleTask_Worker)
+                                  ? memory_layout_get_worker_region()
+                                  : memory_layout_get_app_region();
+    if (locale && !memory_layout_is_buffer_in_region(region, locale, ISO_LOCALE_LENGTH)) {
+      locale = nullptr;
+    }
   }
 
   return localized_strftime(s, maxsize, format, tim_p, locale);
