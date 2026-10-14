@@ -108,6 +108,9 @@ DEFINE_SYSCALL(void, sys_event_service_client_subscribe, EventServiceInfo *handl
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(handler, sizeof(*handler));
     prv_assert_handler_list_node_in_userspace(handler);
+    if (handler->type >= PEBBLE_NUM_EVENTS) {
+      syscall_failed();
+    }
   }
 
   PebbleTask task = pebble_task_get_current();
@@ -150,6 +153,9 @@ DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *sta
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(handler, sizeof(*handler));
     prv_assert_handler_list_node_in_userspace(handler);
+    if (handler->type >= PEBBLE_NUM_EVENTS) {
+      syscall_failed();
+    }
     // The user-supplied `state` pointer flows into list_find as the list head; an app
     // could craft it (and the chain it heads) to walk into kernel memory. Re-derive
     // the head from authoritative per-process state instead of trusting the caller.

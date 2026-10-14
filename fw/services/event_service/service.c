@@ -114,6 +114,11 @@ static bool prv_event_service_send_event(struct pbl_msgq *queue, PebbleEvent *e)
 }
 
 void event_service_handle_subscription(PebbleSubscriptionEvent *subscription) {
+  if (subscription->event_type >= PEBBLE_NUM_EVENTS) {
+    PBL_LOG_WRN("Invalid subscription event type %d", subscription->event_type);
+    return;
+  }
+
   if (subscription->subscribe) {
     prv_event_service_subscribe(subscription);
   } else {
