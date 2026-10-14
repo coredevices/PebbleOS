@@ -160,6 +160,32 @@ DEFINE_SYSCALL(void, sys_event_service_client_subscribe, EventServiceInfo *handl
   }
 }
 
+static bool prv_has_handler_for_type(EventServiceInfo *state, PebbleEventType type,
+                                     bool from_userspace) {
+  ListNode *slow = &state->list_node;
+  bool advance_slow = false;
+  for (ListNode *node = &state->list_node; node != nullptr; node = node->next) {
+    if (from_userspace) {
+      syscall_assert_userspace_buffer(node, sizeof(EventServiceInfo));
+    }
+    if (event_service_filter(node, (void *)(uintptr_t)type)) {
+      return true;
+    }
+    if (advance_slow) {
+      slow = slow->next;
+    }
+    advance_slow = !advance_slow;
+    if (node->next == slow) {
+      // Cyclic list
+      if (from_userspace) {
+        syscall_failed();
+      }
+      return false;
+    }
+  }
+  return false;
+}
+
 DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *state,
                EventServiceInfo *handler) {
   PebbleTask task = pebble_task_get_current();
@@ -185,7 +211,7 @@ DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *sta
   // Remove from handlers list
   list_remove(&handler->list_node, nullptr, nullptr);
 
-  if (list_find(&state->list_node, event_service_filter, (void *)handler->type)) {
+  if (prv_has_handler_for_type(state, handler->type, PRIVILEGE_WAS_ELEVATED)) {
     // there are other handlers for this task, don't unsubscribe it
     return;
   }
