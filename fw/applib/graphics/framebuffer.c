@@ -21,7 +21,7 @@ GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   PBL_ASSERTN(!gsize_equal(size, &GSizeZero));
 #if PBL_ROUND
   const GBitmapDataRowInfoInternal *data_row_infos;
-  if (fb->size.w == LEGACY_3X_DISP_COLS && fb->size.h == LEGACY_3X_DISP_ROWS) {
+  if (size->w == LEGACY_3X_DISP_COLS && size->h == LEGACY_3X_DISP_ROWS) {
     data_row_infos = g_gbitmap_legacy_3x_data_row_infos;
   } else {
     data_row_infos = g_gbitmap_data_row_infos;
