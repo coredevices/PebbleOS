@@ -106,7 +106,7 @@ Supported watches and emulated boards, and how to program them.
 :link: reference/index
 :link-type: doc
 
-API reference, protocols and file formats.
+Protocols and file formats.
 :::
 
 ::::

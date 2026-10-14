@@ -1,14 +1,7 @@
 # Reference
 
-Lookup material: the firmware C API reference, and specifications for the
-protocols used by the firmware and its tooling.
-
-## C API reference
-
-The Doxygen-generated reference for the firmware sources (applib, services,
-kernel, drivers) is published alongside this site:
-
-<a href="../apidoc/index.html">PebbleOS API reference</a>
+Specifications of the protocols and file formats used by the firmware and
+its tooling.
 
 ## PULSEv2 protocol suite
 
