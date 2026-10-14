@@ -338,7 +338,8 @@ uint32_t vibes_get_time_since_last_vibe_ms(void) {
 bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
   pbl_mutex_lock(&s_vibe_pattern_mutex, PBL_FOREVER);
 
-  if (s_pattern_in_progress) {
+  if (s_pattern_in_progress ||
+      list_count((ListNode *)s_vibe_queue_head) >= CONFIG_SERVICE_VIBE_PATTERN_MAX_STEPS) {
     pbl_mutex_unlock(&s_vibe_pattern_mutex);
     return false;
   }
@@ -352,7 +353,7 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
 
   list_init((ListNode *)step);
   step->duration_ms = MIN(duration_ms, MAX_VIBE_DURATION_MS);
-  step->strength = strength;
+  step->strength = CLIP(strength, VIBE_STRENGTH_MIN, VIBE_STRENGTH_MAX);
 
   if (s_vibe_queue_head == nullptr) {
     // Fresh queue: take the explicitly-set owner, else default by task.

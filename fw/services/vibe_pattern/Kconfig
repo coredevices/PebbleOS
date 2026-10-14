@@ -8,6 +8,13 @@ config SERVICE_VIBE_PATTERN
 
 if SERVICE_VIBE_PATTERN
 
+config SERVICE_VIBE_PATTERN_MAX_STEPS
+    int "Maximum queued vibe pattern steps"
+    default 256
+    help
+      Number of steps that can be queued before a pattern is started. Each
+      step takes kernel heap, so this bounds what an app can allocate.
+
 config SERVICE_VIBE_PATTERN_LOG_LEVEL_RUNTIME
     default y if !RECOVERY_FW
 
