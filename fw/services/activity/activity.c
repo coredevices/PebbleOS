@@ -1340,35 +1340,6 @@ static void prv_charger_event_cb(PebbleEvent *e, void *context) {
 #endif
 }
 
-// -------------------------------------------------------------------------------------------
-// Wait for an activity_algorithm call executed on KernelBG to complete
-// The *context and *success booleans will be filled in by the callback.
-static bool prv_wait_system_task(SystemTaskEventCallback cb, void *context, bool *cb_success,
-                                 bool *cb_completed, uint32_t timeout_sec) {
-  // This call blocks on KernelBG, so it should only be called from an app or worker
-  PebbleTask task = pebble_task_get_current();
-  PBL_ASSERTN(task == PebbleTask_App || task == PebbleTask_Worker);
-
-  // Enqueue it for KernelBG to process
-  bool success = system_task_add_callback(cb, context);
-  if (!success) {
-    return false;
-  }
-
-  RtcTicks end_ticks = rtc_get_ticks() + timeout_sec * PBL_TICK_HZ;
-  while (!(*cb_completed)) {
-    // NOTE: we use while (!completed) and wait in 1 second chunks just in case the semaphore was
-    // left set from an earlier call that timed out.
-    if (rtc_get_ticks() > end_ticks) {
-      return false; // Timed out
-    }
-    const pbl_tick_t k_timeout = PBL_TICK_HZ;
-    pbl_sem_take(&s_activity_state.bg_wait_semaphore, PBL_TICKS(k_timeout));
-  }
-
-  return *cb_success;
-}
-
 // ------------------------------------------------------------------------------------------------
 // Requests executed on KernelBG on behalf of an app or worker. They are heap allocated so that
 // KernelBG never writes into memory owned by the caller, which may give up waiting.
@@ -1828,36 +1799,23 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
 
 // ------------------------------------------------------------------------------------------------
 // Get info on the sleep file
-typedef struct {
-  bool success;
-  bool completed;
-} ActivityDumpSleepLogContext;
-
-static void prv_dump_sleep_log_system_cb(void *context_param) {
-  ActivityDumpSleepLogContext *context = (ActivityDumpSleepLogContext *)context_param;
-
-  // Get the sleep info
-  if (s_activity_state.started) {
-    context->success = activity_algorithm_dump_minute_data_to_log();
-  } else {
-    context->success = false;
-  }
-
-  // Unblock the caller
-  context->completed = true;
-  pbl_sem_give(&s_activity_state.bg_wait_semaphore);
+static bool prv_dump_sleep_log_handler(ActivityBgRequest *req) {
+  return activity_algorithm_dump_minute_data_to_log();
 }
 
 bool activity_dump_sleep_log(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  // Fill in the context
-  ActivityDumpSleepLogContext context = (ActivityDumpSleepLogContext){};
-
-  // Enqueue it for KernelBG to process
-  bool success = prv_wait_system_task(prv_dump_sleep_log_system_cb, &context, &context.success,
-                                      &context.completed, 30 /*timeout_sec*/);
+  ActivityBgRequest *req = kernel_zalloc(sizeof(*req));
+  if (!req) {
+    return false;
+  }
+  if (!prv_bg_request_run(req, prv_dump_sleep_log_handler, 30 /*timeout_sec*/)) {
+    return false;
+  }
+  const bool success = req->success;
+  kernel_free(req);
   return success;
 }
 
@@ -1962,87 +1920,64 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
 // ------------------------------------------------------------------------------------------------
 // Get info on the sleep file
 typedef struct {
+  ActivityBgRequest base;
   bool compact_first;
   uint32_t num_records;
   uint32_t data_bytes;
   uint32_t minutes;
-  bool success;
-  bool completed;
-} ActivitySleepFileInfoContext;
+} ActivitySleepFileInfoRequest;
 
-static void prv_sleep_file_info_system_cb(void *context_param) {
-  ActivitySleepFileInfoContext *context = (ActivitySleepFileInfoContext *)context_param;
-
-  // Get the sleep info
-  if (s_activity_state.started) {
-    context->success = activity_algorithm_minute_file_info(
-        context->compact_first, &context->num_records, &context->data_bytes, &context->minutes);
-  } else {
-    context->success = false;
-  }
-
-  // Unblock the caller
-  context->completed = true;
-  pbl_sem_give(&s_activity_state.bg_wait_semaphore);
+static bool prv_sleep_file_info_handler(ActivityBgRequest *base) {
+  ActivitySleepFileInfoRequest *req = (ActivitySleepFileInfoRequest *)base;
+  return activity_algorithm_minute_file_info(req->compact_first, &req->num_records,
+                                             &req->data_bytes, &req->minutes);
 }
 
 bool activity_test_minute_file_info(bool compact_first, uint32_t *num_records, uint32_t *data_bytes,
                                     uint32_t *minutes) {
+  *num_records = 0;
+  *data_bytes = 0;
+  *minutes = 0;
   if (!s_activity_initialized) {
     return false;
   }
-  // Fill in the context
-  ActivitySleepFileInfoContext context = (ActivitySleepFileInfoContext){
-    .compact_first = compact_first,
-  };
-
-  // Enqueue it for KernelBG to process
-  bool success = prv_wait_system_task(prv_sleep_file_info_system_cb, &context, &context.success,
-                                      &context.completed, 30 /*timeout_sec*/);
-  if (success) {
-    *num_records = context.num_records;
-    *data_bytes = context.data_bytes;
-    *minutes = context.minutes;
-  } else {
-    *num_records = 0;
-    *data_bytes = 0;
-    *minutes = 0;
+  ActivitySleepFileInfoRequest *req = kernel_zalloc(sizeof(*req));
+  if (!req) {
+    return false;
   }
+  req->compact_first = compact_first;
+  if (!prv_bg_request_run(&req->base, prv_sleep_file_info_handler, 30 /*timeout_sec*/)) {
+    return false;
+  }
+  const bool success = req->base.success;
+  if (success) {
+    *num_records = req->num_records;
+    *data_bytes = req->data_bytes;
+    *minutes = req->minutes;
+  }
+  kernel_free(req);
   return success;
 }
 
 // ------------------------------------------------------------------------------------------------
 // Fill the sleep file
-typedef struct {
-  bool success;
-  bool completed;
-} ActivityFillSleepFileContext;
-
-static void prv_fill_minute_file_system_cb(void *context_param) {
-  ActivityFillSleepFileContext *context = (ActivityFillSleepFileContext *)context_param;
-
-  // Get the sleep info
-  if (s_activity_state.started) {
-    context->success = activity_algorithm_test_fill_minute_file();
-  } else {
-    context->success = false;
-  }
-
-  // Unblock the caller
-  context->completed = true;
-  pbl_sem_give(&s_activity_state.bg_wait_semaphore);
+static bool prv_fill_minute_file_handler(ActivityBgRequest *req) {
+  return activity_algorithm_test_fill_minute_file();
 }
 
 bool activity_test_fill_minute_file(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  // Fill in the context
-  ActivitySleepFileInfoContext context = (ActivitySleepFileInfoContext){};
-
-  // Enqueue it for KernelBG to process
-  bool success = prv_wait_system_task(prv_fill_minute_file_system_cb, &context, &context.success,
-                                      &context.completed, 300 /*timeout_sec*/);
+  ActivityBgRequest *req = kernel_zalloc(sizeof(*req));
+  if (!req) {
+    return false;
+  }
+  if (!prv_bg_request_run(req, prv_fill_minute_file_handler, 300 /*timeout_sec*/)) {
+    return false;
+  }
+  const bool success = req->success;
+  kernel_free(req);
   return success;
 }
 
