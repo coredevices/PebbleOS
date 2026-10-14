@@ -19,19 +19,27 @@ ProfilerNode *prv_find_node(ProfilerNode *find_node) {
 }
 
 DEFINE_SYSCALL(void, sys_profiler_init, void) {
+#ifdef CONFIG_PROFILER
   profiler_init();
+#endif
 }
 
 DEFINE_SYSCALL(void, sys_profiler_start, void) {
+#ifdef CONFIG_PROFILER
   profiler_start();
+#endif
 }
 
 DEFINE_SYSCALL(void, sys_profiler_stop, void) {
+#ifdef CONFIG_PROFILER
   profiler_stop();
+#endif
 }
 
 DEFINE_SYSCALL(void, sys_profiler_print_stats, void) {
+#ifdef CONFIG_PROFILER
   profiler_print_stats();
+#endif
 }
 
 DEFINE_SYSCALL(void, sys_profiler_node_start, ProfilerNode *node) {
