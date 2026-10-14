@@ -197,6 +197,10 @@ const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_
     *num_bytes_out = resource.length;
   }
 
+  if (resource.impl == nullptr) {
+    return nullptr;
+  }
+
   return resource.impl->readonly_bytes(&resource, has_privileged_access);
 }
 
