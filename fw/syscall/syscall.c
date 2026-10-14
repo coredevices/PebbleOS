@@ -55,9 +55,7 @@ DEFINE_SYSCALL(void, sys_pbl_log, LogBinaryMessage *log_message, uint32_t flags)
   // message_length` bytes straight from that address to the flash log channel
   // — a generic kernel-memory exfiltration primitive.
   if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(log_message, sizeof(*log_message));
-    syscall_assert_userspace_buffer(log_message,
-                                    sizeof(*log_message) + log_message->message_length);
+    syscall_assert_userspace_log_message(log_message);
   }
   kernel_pbl_log(log_message, flags);
 }

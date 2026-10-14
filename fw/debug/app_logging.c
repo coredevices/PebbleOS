@@ -23,11 +23,15 @@ bool app_log_is_bt_enabled(void) {
 static const uint32_t MIN_STACK_FOR_SEND_DATA = 400;
 
 DEFINE_SYSCALL(void, sys_app_log, size_t length, void *log_buffer) {
+  AppLogBinaryMessage *message = log_buffer;
+
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(log_buffer, length);
+    if (length < sizeof(*message)) {
+      syscall_failed();
+    }
+    syscall_assert_userspace_log_message(&message->log_msg);
   }
-
-  AppLogBinaryMessage *message = log_buffer;
 
   // First log to serial, we always do this.
   kernel_pbl_log_serial(&message->log_msg, 0);

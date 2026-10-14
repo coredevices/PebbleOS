@@ -16,6 +16,7 @@
 #include <applib/app_logging.h>
 #include <kernel/memory_layout.h>
 #include <kernel/pebble_tasks.h>
+#include <logging/logging_private.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_loader.h>
@@ -286,6 +287,25 @@ int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes) {
 
   memcpy(dst, src, num_bytes);
   return 0;
+}
+
+void syscall_assert_userspace_log_message(const LogBinaryMessage *log_message) {
+  syscall_assert_userspace_buffer(log_message, sizeof(*log_message));
+
+  const size_t message_length = log_message->message_length;
+  syscall_assert_userspace_buffer(log_message, sizeof(*log_message) + message_length);
+
+  if (strnlen(log_message->filename, sizeof(log_message->filename)) ==
+      sizeof(log_message->filename)) {
+    syscall_failed();
+  }
+
+  if (strnlen(log_message->message, message_length) == message_length) {
+    syscall_assert_userspace_buffer(log_message, sizeof(*log_message) + message_length + 1);
+    if (log_message->message[message_length] != '\0') {
+      syscall_failed();
+    }
+  }
 }
 
 #if SYSCALL_PRIVILEGED_STACK

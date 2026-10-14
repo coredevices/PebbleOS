@@ -50,6 +50,12 @@ int syscall_copy_from_user(void *dst, const void *src, size_t num_bytes);
 //! @return 0, or -EFAULT if @p dst is not in the app's memory space.
 int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes);
 
+struct LogBinaryMessage;
+
+//! Like syscall_assert_userspace_buffer(), for a binary log message: also checks that its message
+//! and filename are terminated within the caller's memory.
+void syscall_assert_userspace_log_message(const struct LogBinaryMessage *log_message);
+
 // Used to implement DEFINE_SYSCALL
 void syscall_internal_maybe_skip_privilege(void);
 
