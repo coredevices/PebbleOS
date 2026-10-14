@@ -17,9 +17,6 @@ extern PBL_T_STATIC void prv_handle_ancs_disconnected_event(PebbleEvent *e, void
 ///////////////////////////////////////////////////////////
 // Stubs
 ///////////////////////////////////////////////////////////
-#include <stubs_new_timer.h>
-#include <stubs_phone_call_util.h>
-#include <stubs_system_task.h>
 
 bool alerts_should_notify_for_type(AlertType type) {
   return true;

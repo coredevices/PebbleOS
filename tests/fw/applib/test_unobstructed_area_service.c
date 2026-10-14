@@ -7,12 +7,11 @@
 
 // Stubs
 /////////////////////
-#include <stubs_app.h>
 #include <stubs_app_state.h>
-#include <stubs_framebuffer.h>
 
 // Fakes
 /////////////////////
+#include <applib/graphics/framebuffer.h>
 #include <fake_event_service.h>
 
 // Statics

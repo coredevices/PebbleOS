@@ -27,8 +27,6 @@
 #include <services/activity/kraepelin/activity_algorithm_kraepelin.h>
 
 // Stubs
-#include <stubs_hr_util.h>
-#include <stubs_irq.h>
 
 // Fakes
 #include <pbl/services/time.h>

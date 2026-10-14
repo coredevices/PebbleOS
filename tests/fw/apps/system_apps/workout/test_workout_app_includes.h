@@ -20,16 +20,6 @@
 // Stubs
 /////////////////////
 
-#include <stubs_action_menu.h>
-#include <stubs_activity.h>
-#include <stubs_animation_timing.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_attribute.h>
-#include <stubs_health_service.h>
-#include <stubs_notifications.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_timeline_item.h>
-
 typedef struct KinoReel KinoReel;
 
 KinoReel *kino_reel_scale_segmented_create(KinoReel *from_reel, bool take_ownership,

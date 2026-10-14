@@ -8,9 +8,6 @@
 // Stubs
 /////////
 
-#include <stubs_alerts_preferences.h>
-#include <stubs_vibe_pattern.h>
-
 // Setup and Teardown
 //////////////////////
 

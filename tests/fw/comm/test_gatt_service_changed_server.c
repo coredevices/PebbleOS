@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/gatt.h>
 #include <pbl/btutil/bt_device.h>
 
 #include <clar.h>
@@ -21,8 +22,6 @@ extern void gatt_service_changed_server_init(void);
 
 // Stubs
 ///////////////////////////////////////////////////////////
-
-#include <stubs_gatt_client_subscriptions.h>
 
 uint16_t gaps_get_starting_att_handle(void) {
   return 4;

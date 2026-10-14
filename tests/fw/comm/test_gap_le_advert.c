@@ -20,10 +20,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bluetopia_interface.h>
-#include <stubs_gatt_client_discovery.h>
-#include <stubs_gatt_client_subscriptions.h>
-
 bool static s_is_connected_as_slave = false;
 
 bool gap_le_connect_is_connected_as_slave(void) {

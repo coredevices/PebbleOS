@@ -24,8 +24,6 @@
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 #include <fake_time.h>
-#include <stubs_language_ui.h>
-#include <stubs_pebble_process_md.h>
 
 #define TEST_UUID                                                                              \
   UuidMake(0xF9, 0xC6, 0xEB, 0xE4, 0x06, 0xCD, 0x46, 0xF1, 0xB1, 0x51, 0x24, 0x08, 0x74, 0xD2, \

@@ -13,6 +13,7 @@
 #include <clar.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
+#include <stubs_imaging.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////
@@ -21,8 +22,6 @@
 #include <fake_rtc.h>
 #include <fake_session.h>
 #include <fake_system_task.h>
-#include <stubs_imaging.h>
-#include <stubs_tick.h>
 
 void ams_music_disconnect(void) {
 }

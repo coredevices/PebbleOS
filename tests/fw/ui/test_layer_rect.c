@@ -8,7 +8,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_bitblt.h>
 
 GDrawState graphics_context_get_drawing_state(GContext *ctx) {
   return (GDrawState){};

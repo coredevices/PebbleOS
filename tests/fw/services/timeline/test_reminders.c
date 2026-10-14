@@ -44,8 +44,6 @@ void event_put(PebbleEvent *event) {
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_blob_db_sync_util.h>
-#include <stubs_pin_db.h>
 
 extern bool get_reminder_armed(void);
 extern time_t get_reminder_timestamp(void);

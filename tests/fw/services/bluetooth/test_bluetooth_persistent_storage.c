@@ -26,11 +26,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include <fake_shared_prf_storage.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <stubs_bluetopia_interface.h>
-#include <stubs_gap_le_advert.h>
-#include <stubs_gatt_client_discovery.h>
-#include <stubs_gatt_client_subscriptions.h>
-#include <stubs_pebble_pairing_service.h>
 
 static int s_ble_bonding_change_add_count;
 static int s_ble_bonding_change_update_count;

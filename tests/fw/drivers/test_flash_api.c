@@ -6,8 +6,6 @@
 
 #include <clar.h>
 #include <fake_new_timer.h>
-#include <stubs_irq.h>
-#include <stubs_sem.h>
 
 void flash_api_reset_for_test(void);
 TimerID flash_api_get_erase_poll_timer_for_test(void);

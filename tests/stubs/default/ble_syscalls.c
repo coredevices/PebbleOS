@@ -1,0 +1,10 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <stdint.h>
+
+#include <pbl/kernel/compiler.h>
+
+PBL_WEAK int8_t sys_ble_get_advertising_tx_power(void) {
+  return -55;
+}

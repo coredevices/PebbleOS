@@ -30,12 +30,6 @@ bool clock_is_24h_style(void) {
 // Stubs
 /////////////////////
 
-#include <stubs_app.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_health_service.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_text_layer_flow.h>
-
 void tick_timer_service_subscribe(TimeUnits tick_units, TickHandler handler) {
 }
 

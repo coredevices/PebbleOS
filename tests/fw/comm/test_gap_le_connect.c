@@ -27,14 +27,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bluetooth_analytics.h>
-#include <stubs_bluetopia_interface.h>
-#include <stubs_gap_le_advert.h>
-#include <stubs_gatt_client_discovery.h>
-#include <stubs_gatt_client_subscriptions.h>
-#include <stubs_pebble_pairing_service.h>
-#include <stubs_shared_prf_storage.h>
-
 // Note:
 // The unit tests for "Pebble as Master" are disabled because role switching is not implemented yet,
 // and the FW is currently "hard-wired" to be slave as a precautionary measure to prevent it from

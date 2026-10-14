@@ -18,7 +18,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_blob_db.h>
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
   return nullptr;

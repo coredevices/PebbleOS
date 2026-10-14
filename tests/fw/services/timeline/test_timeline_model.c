@@ -28,9 +28,6 @@ static TimezoneInfo tz = {
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_blob_db.h>
-#include <stubs_blob_db_sync_util.h>
-#include <stubs_calendar.h>
 
 void ancs_notifications_enable_bulk_action_mode(bool enable) {
   return;

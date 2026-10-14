@@ -1,0 +1,17 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <inttypes.h>
+#include <stddef.h>
+
+#include <pbl/kernel/compiler.h>
+
+typedef uint8_t utf8_t;
+
+PBL_WEAK uint32_t utf8_peek_codepoint(utf8_t *string, utf8_t **next_ptr) {
+  return 0;
+}
+
+PBL_WEAK size_t utf8_copy_character(utf8_t *dest, utf8_t *origin, size_t length) {
+  return 0;
+}

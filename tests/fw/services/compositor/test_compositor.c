@@ -12,9 +12,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_framebuffer.h>
-#include <stubs_timeline_peek.h>
-
 extern void prv_handle_display_update_complete(void);
 
 static int s_count_animation_create = 0;

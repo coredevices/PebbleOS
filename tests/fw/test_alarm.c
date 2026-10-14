@@ -6,10 +6,6 @@
 // Stubs
 #include <pbl/util/units.h>
 
-#include <stubs_activity.h>
-#include <stubs_blob_db_sync_util.h>
-#include <stubs_clock.h>
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables
 static int s_num_timer_register_calls = 0;

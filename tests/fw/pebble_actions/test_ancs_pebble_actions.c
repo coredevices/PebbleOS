@@ -17,11 +17,6 @@
 ///////////////////////////////////////////////////////////
 #include "stubs_common.h"
 
-#include <stubs_blob_db_sync_util.h>
-#include <stubs_codepoint.h>
-#include <stubs_nexmo.h>
-#include <stubs_utf8.h>
-
 // Externs
 ///////////////////////////////////////////////////////////
 extern const int TIMELINE_ACTION_ENDPOINT;

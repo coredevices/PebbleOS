@@ -3,7 +3,6 @@
 
 #include <clar.h>
 #include <kernel/memory_layout.h>
-#include <stubs_mpu.h>
 
 // Tests
 ///////////////////////////////////////////////////////////

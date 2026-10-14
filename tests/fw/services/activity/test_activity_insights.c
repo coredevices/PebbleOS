@@ -19,10 +19,6 @@
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
-#include <stubs_health_db.h>
-#include <stubs_health_util.h>
-#include <stubs_system_task.h>
-
 bool activity_is_initialized(void) {
   return true;
 }

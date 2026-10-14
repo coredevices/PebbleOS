@@ -1,0 +1,13 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/timeline/generic_layout.h>
+
+LayoutLayer *PBL_WEAK generic_layout_create(const LayoutLayerConfig *config) {
+  return nullptr;
+}
+
+bool PBL_WEAK generic_layout_verify(bool existing_attributes[]) {
+  return false;
+}

@@ -4,7 +4,6 @@
 #include <pbl/services/activity/hr_util.h>
 
 #include <clar.h>
-#include <stubs_activity.h>
 
 void test_hr_util__initialize(void) {
 }

@@ -15,8 +15,6 @@
 // ---------------------------------------------------------------------------------------
 #include <fake_mutex.h>
 #include <fake_rtc.h>
-#include <stubs_activity_insights.h>
-#include <stubs_evented_timer.h>
 
 extern void prv_abandon_workout_timer_callback(void *data);
 extern void prv_abandoned_notification_timer_callback(void *data);

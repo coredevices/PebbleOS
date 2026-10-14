@@ -11,18 +11,6 @@
 // Stubs
 ////////////////////////////////////////////////////////////////
 
-#include <stubs_activity.h>
-#include <stubs_alarm_pin.h>
-#include <stubs_clock.h>
-#include <stubs_cron.h>
-#include <stubs_layout_node.h>
-#include <stubs_new_timer.h>
-#include <stubs_settings_file.h>
-#include <stubs_system_task.h>
-#include <stubs_text_node.h>
-#include <stubs_timeline_event.h>
-#include <stubs_timeline_layout.h>
-
 // Functions under test
 /////////////////////////
 

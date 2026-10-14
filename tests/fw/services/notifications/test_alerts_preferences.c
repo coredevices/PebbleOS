@@ -11,8 +11,6 @@
 #include <clar.h>
 #include <fake_spi_flash.h>
 #include <shell/prefs_private.h>
-#include <stubs_do_not_disturb.h>
-#include <stubs_vibe_score_info.h>
 
 #define NOTIF_PREFS_FILE_NAME         "notifpref"
 #define NOTIF_PREFS_FILE_LEN          1024

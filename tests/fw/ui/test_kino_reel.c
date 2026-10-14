@@ -16,7 +16,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_gpath.h>
 
 void framebuffer_clear(FrameBuffer *f) {
 }

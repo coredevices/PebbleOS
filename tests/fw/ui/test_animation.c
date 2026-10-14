@@ -20,7 +20,6 @@
 ///////////////////////////////////////////////////////////
 // Stubs
 #include <stubs_app_state.h>
-#include <stubs_irq.h>
 
 // Fakes
 #include <fake_events.h>

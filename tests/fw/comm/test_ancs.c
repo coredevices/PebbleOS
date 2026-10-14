@@ -3,6 +3,7 @@
 
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
+#include <pbl/services/phone_call_util.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
@@ -15,17 +16,6 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-
-#include <stubs_ble.h>
-#include <stubs_bt_stack.h>
-#include <stubs_codepoint.h>
-#include <stubs_ios_notif_pref_db.h>
-#include <stubs_nexmo.h>
-#include <stubs_pebble_pairing_service.h>
-#include <stubs_pin_db.h>
-#include <stubs_reminders.h>
-#include <stubs_timeline.h>
-#include <stubs_utf8.h>
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);

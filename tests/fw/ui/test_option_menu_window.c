@@ -24,7 +24,6 @@
 
 #include <pbl/util/units.h>
 
-#include <stubs_animation_timing.h>
 #include <stubs_buffer.h>
 
 // Setup and Teardown

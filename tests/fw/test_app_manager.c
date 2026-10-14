@@ -18,6 +18,7 @@
 #include <process_management/app_run_state.h>
 #include <process_management/process_manager.h>
 #include <resource/resource_ids.auto.h>
+#include <stubs_thread.h>
 
 // Fakes
 #include <fake_new_timer.h>
@@ -25,19 +26,6 @@
 #include <fake_rtc.h>
 
 // Stubs
-#include <stubs_accel_service.h>
-#include <stubs_animation_service.h>
-#include <stubs_cache.h>
-#include <stubs_compositor.h>
-#include <stubs_dialog.h>
-#include <stubs_expandable_dialog.h>
-#include <stubs_gettext.h>
-#include <stubs_mpu.h>
-#include <stubs_persist.h>
-#include <stubs_simple_dialog.h>
-#include <stubs_thread.h>
-#include <stubs_tick.h>
-#include <stubs_timeline_peek.h>
 
 // Fake "Apps"
 ///////////////////////////////////////////////////////////
@@ -89,8 +77,6 @@ static PebbleProcessMdFlash s_borked_app = {
 };
 
 static PebbleEvent s_last_to_app_event;
-
-static uint32_t s_app_task_control_reg;
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -375,7 +361,7 @@ void test_app_manager__initialize(void) {
   s_last_to_app_event = (PebbleEvent){};
   s_watchface_launch_default_count = 0;
 
-  s_app_task_control_reg = 0x1; // Just leave everything as unprivileged
+  stub_control_reg(0x1); // Just leave everything as unprivileged
 }
 
 void test_app_manager__start_first(void) {

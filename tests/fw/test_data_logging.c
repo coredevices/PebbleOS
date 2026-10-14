@@ -39,7 +39,6 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <stubs_reboot_reason.h>
 pbl_tick_t pbl_uptime_ticks(void) {
   return 1337;
 }

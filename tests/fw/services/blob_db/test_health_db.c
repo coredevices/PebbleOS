@@ -16,8 +16,6 @@
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
-#include <stubs_worker_state.h>
-
 status_t pfs_remove(const char *name) {
   fake_settings_file_reset();
   return S_SUCCESS;

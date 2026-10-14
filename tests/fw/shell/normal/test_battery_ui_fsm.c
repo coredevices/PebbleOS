@@ -21,9 +21,6 @@ extern void battery_ui_reset_fsm_for_tests(void);
 // Stubs and fakes
 /////////////////////////////////////////////////////////////////////////
 
-#include <stubs_vibe_intensity.h>
-#include <stubs_vibe_pattern.h>
-
 typedef enum PowerState {
   PowerGood,
   PowerLow,

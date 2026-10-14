@@ -1,0 +1,54 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <pbl/kernel/compiler.h>
+#include <pbl/services/blob_db/health_db.h>
+#include <pbl/util/time.h>
+
+PBL_WEAK bool health_db_get_typical_value(ActivityMetric metric, enum pbl_weekday day,
+                                          int32_t *value_out) {
+  return false;
+}
+
+PBL_WEAK bool health_db_get_monthly_average_value(ActivityMetric metric, int32_t *value_out) {
+  return false;
+}
+
+PBL_WEAK bool health_db_get_typical_step_averages(enum pbl_weekday day,
+                                                  ActivityMetricAverages *averages) {
+  return false;
+}
+
+PBL_WEAK bool health_db_set_typical_values(ActivityMetric metric, enum pbl_weekday day,
+                                           uint16_t *values, int num_values) {
+  return false;
+}
+
+PBL_WEAK void health_db_init(void) {
+}
+
+PBL_WEAK status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
+                                   int val_len) {
+  return S_SUCCESS;
+}
+
+PBL_WEAK int health_db_get_len(const uint8_t *key, int key_len) {
+  return 0;
+}
+
+PBL_WEAK status_t health_db_read(const uint8_t *key, int key_len, uint8_t *val_out,
+                                 int val_out_len) {
+  return S_SUCCESS;
+}
+
+PBL_WEAK status_t health_db_delete(const uint8_t *key, int key_len) {
+  return S_SUCCESS;
+}
+
+PBL_WEAK status_t health_db_flush(void) {
+  return S_SUCCESS;
+}
+
+PBL_WEAK status_t health_db_compact(void) {
+  return S_SUCCESS;
+}

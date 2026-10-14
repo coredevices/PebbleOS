@@ -25,8 +25,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_gatt_client_subscriptions.h>
-
 void core_dump_reset(bool is_forced) {
 }
 

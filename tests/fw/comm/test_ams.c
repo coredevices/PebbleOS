@@ -16,8 +16,6 @@
 #include <fake_gatt_client_subscriptions.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-#include <stubs_imaging.h>
-#include <stubs_tick.h>
 
 struct {
   enum pbl_bt_response_time_state state;

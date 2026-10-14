@@ -14,14 +14,12 @@
 #include <applib/graphics/text_layout_private.h>
 #include <applib/graphics/utf8.h>
 #include <clar.h>
+#include <stubs_text_resources.h>
 
 ///////////////////////////////////////////////////////////
 // Stubs
 
 #include <stubs_app_state.h>
-#include <stubs_reboot_reason.h>
-#include <stubs_text_render.h>
-#include <stubs_text_resources.h>
 
 ///////////////////////////////////////////////////////////
 // Fakes

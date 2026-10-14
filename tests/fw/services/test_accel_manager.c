@@ -15,9 +15,6 @@
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_system_task.h>
-#include <stubs_gettext.h>
-#include <stubs_msgq.h>
-#include <stubs_persist.h>
 
 // helpers from accel manager
 extern void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *num,

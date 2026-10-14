@@ -9,8 +9,6 @@
 // Stubs
 /////////////////////
 #include <stubs_app_state.h>
-#include <stubs_system_theme.h>
-#include <stubs_text_layout.h>
 
 void graphics_context_set_fill_color(GContext *ctx, GColor color) {
 }

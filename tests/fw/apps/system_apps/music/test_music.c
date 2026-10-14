@@ -6,6 +6,7 @@
 
 #include <pbl/services/imaging.h>
 #include <pbl/services/music.h>
+#include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/size.h>
 
 #include <applib/fonts/fonts.h>
@@ -23,10 +24,6 @@
 
 // Stubs
 /////////////////////
-
-#include <stubs_animation_timing.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_vibe_score.h>
 
 // Music service fake
 /////////////////////

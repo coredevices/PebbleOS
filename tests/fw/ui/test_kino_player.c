@@ -16,7 +16,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_gpath.h>
 
 void graphics_context_move_draw_box(GContext *ctx, GPoint offset) {
 }

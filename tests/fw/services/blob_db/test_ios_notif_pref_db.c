@@ -20,7 +20,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_pfs.h>
 
 extern const char *iOS_NOTIF_PREF_DB_FILE_NAME;
 extern const int iOS_NOTIF_PREF_MAX_SIZE;

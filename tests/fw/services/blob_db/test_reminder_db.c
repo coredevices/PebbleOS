@@ -16,7 +16,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_reminders.h>
 
 void reminders_handle_reminder_removed(const Uuid *reminder_id) {
 }

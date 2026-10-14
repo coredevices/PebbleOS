@@ -27,9 +27,6 @@
 #include <resource/timeline_resource_ids.auto.h>
 
 // Stubs
-#include <stubs_blob_db.h>
-#include <stubs_calendar.h>
-#include <stubs_timeline_event.h>
 
 // Fakes
 #include <pbl/util/units.h>

@@ -20,8 +20,6 @@ extern void comm_session_send_next_immediately(CommSession *session);
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bt_stack.h>
-
 void comm_session_analytics_open_session(CommSession *session) {
 }
 

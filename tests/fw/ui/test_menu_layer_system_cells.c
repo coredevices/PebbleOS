@@ -66,7 +66,6 @@ AppInstallId sys_process_manager_get_current_process_id(void) {
 // Stubs
 /////////////////////
 
-#include <stubs_content_indicator.h>
 // Hide the PBL_WEAK stub so the controllable strong definition above owns the real symbol
 #define sys_process_manager_get_current_process_id \
   prv_stubbed_sys_process_manager_get_current_process_id

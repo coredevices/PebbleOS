@@ -15,14 +15,7 @@
 // Stubs
 ////////////////////////////////////
 
-#include <stubs_accel_service.h>
 #include <stubs_app_state.h>
-#include <stubs_ble_app_support.h>
-#include <stubs_irq.h>
-#include <stubs_new_timer.h>
-#include <stubs_persist.h>
-#include <stubs_plugin_service.h>
-#include <stubs_sem.h>
 
 // Fakes
 ////////////////////////////////////

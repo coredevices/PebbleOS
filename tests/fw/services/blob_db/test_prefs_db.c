@@ -20,12 +20,6 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
-#include <stubs_activity.h>
-#include <stubs_ambient_light.h>
-#include <stubs_event_loop.h>
-#include <stubs_mfg_info.h>
-#include <stubs_system_theme.h>
-#include <stubs_timeline_peek.h>
 
 void prefs_sync_init(void) {
 }

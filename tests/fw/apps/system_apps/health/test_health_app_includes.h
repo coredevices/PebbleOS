@@ -17,14 +17,6 @@
 // Stubs
 /////////////////////
 
-#include <stubs_activity.h>
-#include <stubs_animation_timing.h>
-#include <stubs_app_launch_reason.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_health_service.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_status_bar_layer.h>
-
 // Helper Functions
 /////////////////////
 

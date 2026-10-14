@@ -24,11 +24,6 @@
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <stubs_alerts.h>
-#include <stubs_dialog.h>
-#include <stubs_expandable_dialog.h>
-#include <stubs_simple_dialog.h>
-#include <stubs_vibe_score_info.h>
 
 #define PREF_KEY_DND_MANUALLY_ENABLED "dndManuallyEnabled"
 

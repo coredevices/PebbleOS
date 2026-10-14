@@ -8,9 +8,6 @@
 ///////////////////////
 
 #include <stubs_app_state.h>
-#include <stubs_graphics_circle.h>
-#include <stubs_graphics_line.h>
-#include <stubs_graphics_private.h>
 
 const GDrawRawImplementation g_default_draw_implementation;
 

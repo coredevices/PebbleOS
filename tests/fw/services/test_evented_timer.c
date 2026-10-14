@@ -8,7 +8,6 @@
 #include <fake_pbl_malloc.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
-#include <stubs_reboot_reason.h>
 
 // NOTE: This must match the definition of EventedTimer in kernel/services/evented_timer.c
 typedef struct EventedTimer {

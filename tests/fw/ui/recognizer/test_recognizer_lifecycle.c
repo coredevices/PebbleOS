@@ -14,8 +14,6 @@
 
 // Stubs
 #include <stubs_app_state.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_status_bar_layer.h>
 
 bool modal_manager_is_window_visible(Window *window) {
   return false;

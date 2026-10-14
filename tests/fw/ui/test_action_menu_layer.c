@@ -21,7 +21,6 @@
 
 // Stubs
 /////////////////////
-#include <stubs_system_theme.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH), mirroring test_menu_layer.c: menu_layer.c resolves the

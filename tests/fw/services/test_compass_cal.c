@@ -7,7 +7,6 @@
 #include <pbl/util/math.h>
 
 #include <clar.h>
-#include <stubs_language_ui.h>
 
 typedef struct {
   int16_t raw_samples[4][3];

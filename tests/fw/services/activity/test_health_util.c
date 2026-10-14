@@ -5,7 +5,6 @@
 
 #include <clar.h>
 #include <shell/prefs.h>
-#include <stubs_text_node.h>
 
 UnitsDistance shell_prefs_get_units_distance(void) {
   return UnitsDistance_Miles;

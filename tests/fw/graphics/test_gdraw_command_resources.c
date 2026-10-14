@@ -16,7 +16,6 @@
 #include <clar.h>
 #include <fake_pbl_malloc.h>
 #include <fake_resource_syscalls.h>
-#include <stubs_gpath.h>
 
 // Stubs
 void graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {

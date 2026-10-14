@@ -10,8 +10,10 @@
 #include <pbl/services/timeline/weather_layout.h>
 #include <pbl/util/size.h>
 
+#include <applib/ui/window_private.h>
 #include <apps/system/timeline/pin_window.h>
 #include <clar.h>
+#include <system/passert.h>
 
 // Fakes
 /////////////////////
@@ -72,18 +74,6 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
 
 // Stubs
 /////////////////////
-
-#include <stubs_action_menu.h>
-#include <stubs_alerts_preferences.h>
-#include <stubs_animation_timing.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_property_animation.h>
-#include <stubs_timeline.h>
-#include <stubs_timeline_actions.h>
-#include <stubs_timeline_item.h>
-#include <stubs_timeline_layer.h>
-#include <stubs_timeline_peek.h>
 
 // Helper Functions
 /////////////////////

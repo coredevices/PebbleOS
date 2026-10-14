@@ -28,10 +28,6 @@
 #include <pbl/services/time.h>
 #include <pbl/util/units.h>
 
-#include <stubs_alerts_preferences.h>
-#include <stubs_language_ui.h>
-#include <stubs_vibe_score_info.h>
-
 static bool s_prefs_24h_style;
 
 #define TIMEZONE_FIXTURE_PATH "timezones"

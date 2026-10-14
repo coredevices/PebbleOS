@@ -27,21 +27,7 @@
 
 // Stub Includes
 ////////////////////////////////////
-#include <stubs_activity.h>
-#include <stubs_app_custom_icon.h>
-#include <stubs_app_fetch_endpoint.h>
 #include <stubs_build_id.h>
-#include <stubs_comm_session.h>
-#include <stubs_event_loop.h>
-#include <stubs_kino_reel.h>
-#include <stubs_menu_layer.h>
-#include <stubs_persist.h>
-#include <stubs_pin_db.h>
-#include <stubs_process_loader.h>
-#include <stubs_put_bytes.h>
-#include <stubs_quick_launch.h>
-#include <stubs_system_task.h>
-#include <stubs_watchface.h>
 
 // Fake Includes
 ////////////////////////////////////

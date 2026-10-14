@@ -182,27 +182,6 @@ bool timeline_resources_is_system(TimelineResourceId timeline_id) {
 // Stubs
 /////////////////////
 
-#include <stubs_alarm.h>
-#include <stubs_alerts.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_bluetooth_ctl.h>
-#include <stubs_clock.h>
-#include <stubs_do_not_disturb.h>
-#include <stubs_health_util.h>
-#include <stubs_kino_player.h>
-#include <stubs_music.h>
-#include <stubs_notification_storage.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_status_bar_layer.h>
-#include <stubs_system_theme.h>
-#include <stubs_tick.h>
-#include <stubs_time.h>
-#include <stubs_watchface.h>
-#include <stubs_weather_service.h>
-#include <stubs_weather_types.h>
-#include <stubs_workout_service.h>
-#include <stubs_workout_utils.h>
-
 GColor shell_prefs_get_theme_highlight_color(void) {
   // Black and white displays always highlight in black
   return PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack);

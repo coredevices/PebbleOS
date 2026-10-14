@@ -43,7 +43,6 @@ GContext *graphics_context_get_current_context(void) {
 /////////////////////
 
 #include <stubs_buffer.h>
-#include <stubs_status_bar_layer.h>
 
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
   return to;

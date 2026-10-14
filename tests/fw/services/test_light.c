@@ -13,9 +13,6 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////
-#include <stubs_ambient_light.h>
-#include <stubs_battery_monitor.h>
-#include <stubs_low_power.h>
 
 // the time that the backlight remains on but there is zero user interaction
 extern const uint32_t INACTIVE_LIGHT_TIMEOUT_MS;

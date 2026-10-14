@@ -1,0 +1,16 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <pbl/kernel/compiler.h>
+
+#include <shell/normal/watchface.h>
+
+AppInstallId PBL_WEAK watchface_get_default_install_id(void) {
+  return 0;
+}
+
+void PBL_WEAK watchface_set_default_install_id(const AppInstallId app_id) {
+}
+
+void PBL_WEAK watchface_launch_default(const CompositorTransition *animation) {
+}

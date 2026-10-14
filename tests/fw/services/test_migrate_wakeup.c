@@ -24,7 +24,6 @@
 
 // Stubs
 //////////////////////////////////////////////////////////
-#include <stubs_pebble_process_md.h>
 
 #define SETTINGS_FILE_NAME "wakeup"
 #define SETTINGS_FILE_SIZE 2048

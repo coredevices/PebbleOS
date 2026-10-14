@@ -18,19 +18,6 @@
 #include <stubs_app_manager.h>
 
 // Stubs
-#include <stubs_accel_service.h>
-#include <stubs_animation_service.h>
-#include <stubs_dls.h>
-#include <stubs_evented_timer.h>
-#include <stubs_expandable_dialog.h>
-#include <stubs_irq.h>
-#include <stubs_new_timer.h>
-#include <stubs_pebble_process_md.h>
-#include <stubs_persist.h>
-#include <stubs_thread.h>
-#include <stubs_tick.h>
-#include <stubs_watchface.h>
-#include <stubs_worker_state.h>
 
 char __APP_RAM__[1024 * 128];
 char *__APP_RAM_end__ = &__APP_RAM__[1024 * 128];

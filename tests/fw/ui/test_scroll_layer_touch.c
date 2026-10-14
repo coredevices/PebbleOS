@@ -19,7 +19,6 @@
 
 // Stubs
 /////////////////////
-#include <stubs_content_indicator.h>
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH). scroll_layer.c resolves the per-task touch-nav state

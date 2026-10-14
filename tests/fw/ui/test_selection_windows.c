@@ -73,11 +73,7 @@ GContext *graphics_context_get_current_context(void) {
 // Stubs
 /////////////////////
 
-#include <stubs_animation_timing.h>
 #include <stubs_buffer.h>
-#include <stubs_menu_cell_layer.h>
-#include <stubs_status_bar_layer.h>
-#include <stubs_text_layer_flow.h>
 
 // Setup and Teardown
 ////////////////////////////////////

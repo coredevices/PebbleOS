@@ -12,8 +12,6 @@
 // Stubs
 /////////////////////////
 
-#include <stubs_kino_reel.h>
-
 // Test Data
 /////////////////////////
 

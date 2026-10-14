@@ -19,12 +19,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include <fake_pbl_malloc.h>
 #include <fake_regular_timer.h>
 #include <fake_spi_flash.h>
-#include <stubs_bluetooth_analytics.h>
-#include <stubs_bluetopia_interface.h>
-#include <stubs_gap_le_advert.h>
-#include <stubs_gatt_client_discovery.h>
-#include <stubs_gatt_client_subscriptions.h>
-#include <stubs_pebble_pairing_service.h>
 
 typedef bool (*BondingSyncFilterCb)(const struct pbl_bt_bonding *bonding, void *ctx);
 const struct pbl_bt_bonding *bonding_sync_find(BondingSyncFilterCb cb, void *ctx) {

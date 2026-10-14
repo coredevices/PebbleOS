@@ -14,20 +14,10 @@
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_actions.h>
+#include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/size.h>
 
 #include <applib/ui/action_menu_window_private.h>
-#include <stubs_action_chaining_window.h>
-#include <stubs_action_menu.h>
-#include <stubs_dialog.h>
-#include <stubs_evented_timer.h>
-#include <stubs_expandable_dialog.h>
-#include <stubs_gcolor.h>
-#include <stubs_notification_storage.h>
-#include <stubs_notifications.h>
-#include <stubs_pin_db.h>
-#include <stubs_progress_window.h>
-#include <stubs_simple_dialog.h>
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
   return nullptr;

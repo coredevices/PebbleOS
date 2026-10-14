@@ -35,11 +35,6 @@
 // Stubs
 /////////////////////
 
-#include <stubs_animation_timing.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_status_bar_layer.h>
-#include <stubs_system_theme.h>
-
 // Helper Functions
 /////////////////////
 

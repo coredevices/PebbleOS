@@ -14,8 +14,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_bt_stack.h>
-
 void app_launch_trigger(void) {
 }
 

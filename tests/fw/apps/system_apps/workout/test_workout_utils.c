@@ -7,9 +7,6 @@
 #include <clar.h>
 
 // ---------------------------------------------------------------------------------------
-#include <stubs_attribute.h>
-#include <stubs_notifications.h>
-#include <stubs_timeline_item.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

@@ -21,36 +21,6 @@
 // Stubs
 /////////////////////
 
-#include <stubs_action_menu.h>
-#include <stubs_activity.h>
-#include <stubs_alerts.h>
-#include <stubs_alerts_preferences.h>
-#include <stubs_ancs.h>
-#include <stubs_animation_timing.h>
-#include <stubs_app.h>
-#include <stubs_app_launch_reason.h>
-#include <stubs_app_window_stack.h>
-#include <stubs_blob_db.h>
-#include <stubs_blob_db_sync_util.h>
-#include <stubs_compositor_transitions.h>
-#include <stubs_event_loop.h>
-#include <stubs_notification_storage.h>
-#include <stubs_notifications.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_phone_call_util.h>
-#include <stubs_property_animation.h>
-#include <stubs_system_theme.h>
-#include <stubs_timeline.h>
-#include <stubs_timeline_actions.h>
-#include <stubs_timeline_layout.h>
-#include <stubs_timeline_layout_animations.h>
-#include <stubs_timeline_peek.h>
-#include <stubs_timezone_database.h>
-#include <stubs_vibe_score.h>
-#include <stubs_vibe_score_info.h>
-#include <stubs_wakeup.h>
-#include <stubs_watchface.h>
-
 // Helper Functions
 /////////////////////
 

@@ -39,7 +39,6 @@ GContext *graphics_context_get_current_context(void) {
 /////////////////////
 
 #include <stubs_buffer.h>
-#include <stubs_status_bar_layer.h>
 
 AnimationProgress animation_timing_scaled(AnimationProgress time_normalized,
                                           AnimationProgress interval_start,

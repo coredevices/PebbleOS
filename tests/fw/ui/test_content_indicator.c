@@ -16,8 +16,6 @@
 // Stubs
 ////////////////////////////////////
 
-#include <stubs_gpath.h>
-
 extern void prv_content_indicator_update_proc(Layer *layer, GContext *ctx);
 
 // Helpers

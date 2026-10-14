@@ -43,8 +43,6 @@ void fake_kernel_malloc_mark_assert_equal(void) {
 // Stubs
 ///////////////////////////////////////////////////////////
 
-#include <stubs_tick.h>
-
 void core_dump_reset(bool is_forced) {
 }
 

@@ -4,7 +4,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
-#include <stubs_graphics_line.h>
 
 const int FrameBuffer_MaxX = 144;
 const int FrameBuffer_MaxY = 85;

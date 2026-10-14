@@ -7,7 +7,6 @@
 // Stubs
 /////////////////////
 #include <stubs_app_state.h>
-#include <stubs_system_theme.h>
 
 GFont fonts_get_system_font(const char *font_key) {
   return nullptr;

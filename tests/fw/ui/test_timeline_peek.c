@@ -39,20 +39,6 @@ void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_
 // Stubs
 /////////////////////
 
-#include <stubs_activity.h>
-#include <stubs_alerts_preferences.h>
-#include <stubs_animation_timing.h>
-#include <stubs_cron.h>
-#include <stubs_event_loop.h>
-#include <stubs_menu_cell_layer.h>
-#include <stubs_pebble_process_info.h>
-#include <stubs_pin_db.h>
-#include <stubs_property_animation.h>
-#include <stubs_scroll_layer.h>
-#include <stubs_status_bar_layer.h>
-#include <stubs_timeline_event.h>
-#include <stubs_timeline_layer.h>
-
 // Helper Functions
 /////////////////////
 

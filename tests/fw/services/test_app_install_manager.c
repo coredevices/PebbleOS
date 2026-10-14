@@ -27,9 +27,6 @@
 
 // Stub Includes
 ////////////////////////////////////
-#include <stubs_persist.h>
-#include <stubs_quick_launch.h>
-#include <stubs_watchface.h>
 
 // Fake Includes
 ////////////////////////////////////

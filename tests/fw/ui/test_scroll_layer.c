@@ -6,7 +6,6 @@
 
 // Stubs
 ////////////////////////////////////
-#include <stubs_content_indicator.h>
 
 #define DEFAULT_SCROLL_HEIGHT 32
 

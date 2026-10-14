@@ -11,7 +11,6 @@
 #include <clar.h>
 #include <fake_pebble_tasks.h>
 #include <stubs_app_state.h>
-#include <stubs_worker_state.h>
 
 #define BLOCK_SIZE sizeof(unsigned long)
 
