@@ -215,3 +215,54 @@ html.dark {
 .yue dl.pbl-options dt code {
   font-weight: 600;
 }
+
+/* Board pages */
+
+.yue .board-card {
+  float: right;
+  width: 260px;
+  margin: 0 0 1.5rem 2rem;
+  padding: 1.2rem 1.2rem 0.6rem;
+  background: var(--pebble-cream);
+  border-radius: 12px;
+}
+
+.yue section:has(> .board-card) + section {
+  clear: none;
+}
+
+.yue .board-card img {
+  display: block;
+  width: 100%;
+  margin: 0 auto 1rem;
+}
+
+.yue .board-card dl.field-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.8rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.yue .board-card dl.field-list > dt,
+.yue .board-card dl.field-list > dd {
+  margin: 0;
+  padding: 0;
+}
+
+.yue .board-card dl.field-list > dd p {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .yue .board-card {
+    float: none;
+    width: auto;
+    margin: 0 0 1.5rem;
+  }
+
+  .yue .board-card img {
+    max-width: 240px;
+  }
+}
