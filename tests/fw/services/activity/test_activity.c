@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/compiler.h>
@@ -178,11 +180,16 @@ AppInstallId app_get_app_id(void) {
 // ======================================================================================
 // Queue stubs, to support the semaphore that activity.c uses to block on a kernel BG callback
 int s_queue_value = 0;
+static bool s_system_task_stalled;
 
 void pbl_sem_init(struct pbl_sem *s, uint32_t initial, uint32_t limit) {
 }
 
 int pbl_sem_take(struct pbl_sem *s, pbl_timeout_t timeout) {
+  if (s_system_task_stalled) {
+    fake_rtc_increment_ticks(PBL_TICK_HZ);
+    return -EAGAIN;
+  }
   while (s_queue_value <= 0) {
     fake_system_task_callbacks_invoke_pending();
   }
@@ -947,6 +954,7 @@ void test_activity__initialize(void) {
 
 // ---------------------------------------------------------------------------------------
 void test_activity__cleanup(void) {
+  s_system_task_stalled = false;
   activity_stop_tracking();
   fake_system_task_callbacks_invoke_pending();
 }
@@ -1737,6 +1745,56 @@ void test_activity__get_minute_history(void) {
     // Advance another minute.
     rtc_set_time(utc_sec + (i * PBL_SEC_PER_MIN));
   }
+}
+
+// ---------------------------------------------------------------------------------------
+// Requests larger than one kernel chunk are returned in full and in order
+void test_activity__get_minute_history_chunked(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  const uint32_t exp_num_records = 150;
+  HealthMinuteData minutes[exp_num_records];
+
+  time_t utc_start =
+      rtc_get_time() - (exp_num_records + ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN;
+  utc_start -= utc_start % PBL_SEC_PER_MIN;
+  const time_t exp_utc_start = utc_start;
+
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  uint32_t num_records = exp_num_records;
+  cl_assert(activity_get_minute_history(minutes, &num_records, &utc_start));
+  cl_assert_equal_i(num_records, exp_num_records);
+  cl_assert_equal_i(utc_start, exp_utc_start);
+  for (uint32_t i = 0; i < num_records; i++) {
+    cl_assert_equal_i(minutes[i].steps, (exp_utc_start + i * PBL_SEC_PER_MIN) % 255);
+  }
+}
+
+// ---------------------------------------------------------------------------------------
+// KernelBG must not write into the caller's buffers after the caller timed out
+void test_activity__get_minute_history_timeout(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  HealthMinuteData minutes[10];
+  memset(minutes, 0xA5, sizeof(minutes));
+  HealthMinuteData exp_minutes[10];
+  memset(exp_minutes, 0xA5, sizeof(exp_minutes));
+
+  time_t utc_start = rtc_get_time() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
+
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  s_system_task_stalled = true;
+  uint32_t num_records = ARRAY_LENGTH(minutes);
+  cl_assert(!activity_get_minute_history(minutes, &num_records, &utc_start));
+  cl_assert_equal_i(num_records, 0);
+  cl_assert_equal_i(utc_start, 0);
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+
+  s_system_task_stalled = false;
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_m(minutes, exp_minutes, sizeof(minutes));
 }
 
 // Used by the test_activity__step_averages() method to figure out what steps/min we should
