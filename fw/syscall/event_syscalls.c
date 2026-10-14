@@ -110,11 +110,43 @@ static void prv_assert_handler_list_node_in_userspace(const EventServiceInfo *ha
   prv_assert_list_node_in_userspace(handler->list_node.next);
 }
 
+// Event types the applib services subscribe to on behalf of apps and workers. Other types carry
+// system or other processes' data and are kernel-only.
+static bool prv_event_type_subscribable_from_user(PebbleEventType type) {
+  switch (type) {
+    case PEBBLE_ACCEL_SHAKE_EVENT:
+    case PEBBLE_ACCEL_DOUBLE_TAP_EVENT:
+    case PBL_BT_PEBBLE_CONNECTION_DEBOUNCED_EVENT:
+    case PEBBLE_BUTTON_DOWN_EVENT:
+    case PEBBLE_BUTTON_UP_EVENT:
+    case PEBBLE_COMM_SESSION_EVENT:
+    case PEBBLE_TICK_EVENT:
+    case PEBBLE_BATTERY_STATE_CHANGE_EVENT:
+    case PEBBLE_APP_WILL_CHANGE_FOCUS_EVENT:
+    case PEBBLE_APP_DID_CHANGE_FOCUS_EVENT:
+    case PEBBLE_COMPASS_DATA_EVENT:
+    case PEBBLE_PLUGIN_SERVICE_EVENT:
+    case PEBBLE_WAKEUP_EVENT:
+    case PEBBLE_VOICE_SERVICE_EVENT:
+    case PEBBLE_DICTATION_EVENT:
+    case PEBBLE_APP_OUTBOX_SENT_EVENT:
+    case PEBBLE_HEALTH_SERVICE_EVENT:
+    case PEBBLE_TOUCH_EVENT:
+    case PEBBLE_UNOBSTRUCTED_AREA_EVENT:
+    case PEBBLE_SPEAKER_EVENT:
+    case PEBBLE_BACKLIGHT_EVENT:
+      return true;
+    default:
+      return false;
+  }
+}
+
 PBL_SYSCALL(void, sys_event_service_client_subscribe,
             (IN_BUF, EventServiceInfo *, handler, sizeof(*handler))) {
   if (from_user) {
     prv_assert_handler_list_node_in_userspace(handler);
-    if (handler->type >= PEBBLE_NUM_EVENTS) {
+    if (!prv_event_type_subscribable_from_user(handler->type)) {
+      PBL_LOG_ERR("Rejecting subscription to event type %u", handler->type);
       syscall_failed();
     }
   }
@@ -184,7 +216,8 @@ PBL_SYSCALL(void, sys_event_service_client_unsubscribe, (VAL, EventServiceInfo *
 
   if (from_user) {
     prv_assert_handler_list_node_in_userspace(handler);
-    if (handler->type >= PEBBLE_NUM_EVENTS) {
+    if (!prv_event_type_subscribable_from_user(handler->type)) {
+      PBL_LOG_ERR("Rejecting subscription to event type %u", handler->type);
       syscall_failed();
     }
     // The user-supplied `state` pointer flows into list_find as the list head; an app
