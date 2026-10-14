@@ -1,11 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <pbl/drivers/rng.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
 
-#include <hal/nrf_rng.h>
-#include <nrfx.h>
+#include <hardware/nrf52_rng.h>
 
 #define CACHE_SIZE 32U
 
@@ -15,28 +18,38 @@ static uint8_t s_in;
 static uint8_t s_out;
 static bool s_inited;
 
+static inline uint32_t prv_getreg(uint32_t offset) {
+  return pbl_readl(NRF52_RNG_BASE + offset);
+}
+
+static inline void prv_putreg(uint32_t offset, uint32_t value) {
+  pbl_writel(value, NRF52_RNG_BASE + offset);
+}
+
 static void prv_rng_irq_handler(void) {
-  if (!nrf_rng_event_check(NRF_RNG, NRF_RNG_EVENT_VALRDY)) {
+  if (prv_getreg(NRF52_RNG_EVENTS_VALRDY_OFFSET) == 0U) {
     return;
   }
 
-  nrf_rng_event_clear(NRF_RNG, NRF_RNG_EVENT_VALRDY);
+  prv_putreg(NRF52_RNG_EVENTS_VALRDY_OFFSET, 0U);
+  // Read back so the clear lands before the handler returns.
+  (void)prv_getreg(NRF52_RNG_EVENTS_VALRDY_OFFSET);
 
-  s_cache[s_in] = nrf_rng_random_value_get(NRF_RNG);
+  s_cache[s_in] = prv_getreg(NRF52_RNG_VALUE_OFFSET) & RNG_VALUE_MASK;
   s_in = (s_in + 1U) % CACHE_SIZE;
   s_count++;
 
   if (s_count == CACHE_SIZE) {
-    nrf_rng_task_trigger(NRF_RNG, NRF_RNG_TASK_STOP);
+    prv_putreg(NRF52_RNG_TASKS_STOP_OFFSET, 1U);
   }
 }
 
 PBL_IRQ_CONNECT(RNG, 7, prv_rng_irq_handler, , 0);
 
 static void prv_init(void) {
-  nrf_rng_error_correction_enable(NRF_RNG);
-  nrf_rng_event_clear(NRF_RNG, NRF_RNG_EVENT_VALRDY);
-  nrf_rng_int_enable(NRF_RNG, NRF_RNG_INT_VALRDY_MASK);
+  prv_putreg(NRF52_RNG_CONFIG_OFFSET, RNG_CONFIG_DERCEN);
+  prv_putreg(NRF52_RNG_EVENTS_VALRDY_OFFSET, 0U);
+  prv_putreg(NRF52_RNG_INTENSET_OFFSET, RNG_INT_VALRDY);
   pbl_irq_enable(PBL_IRQN(RNG));
 
   s_inited = true;
@@ -59,7 +72,7 @@ bool rng_rand(uint32_t *rand_out) {
       s_count--;
     }
 
-    nrf_rng_task_trigger(NRF_RNG, NRF_RNG_TASK_START);
+    prv_putreg(NRF52_RNG_TASKS_START_OFFSET, 1U);
 
     pbl_irq_unlock();
   }
