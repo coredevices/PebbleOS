@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 #
-# Toolchain runtime linked into the firmware, see docs/others/sbom.md.
+# Toolchain runtime linked into the firmware, see docs/third_party/sbom.md.
 # Paths are relative to the toolchain root.
 
 components:

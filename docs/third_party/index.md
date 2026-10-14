@@ -35,7 +35,7 @@ keeps its vendor's license.
 
 Every component is described in `third_party/sbom.yml`: its name,
 supplier, license and, for a submodule, the commit it is checked out at.
-That metadata feeds the {doc}`../others/sbom`, and CI checks it against
+That metadata feeds the {doc}`sbom`, and CI checks it against
 the tree: a submodule without an entry, or an entry whose commit does not
 match the submodule, fails the check. Update the entry along with the
 submodule:
@@ -48,4 +48,5 @@ python3 tools/cmake/sbom.py check
 :hidden:
 
 moddable.md
+sbom.md
 ```

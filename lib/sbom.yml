@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 #
-# Third-party code kept in the library tree, see docs/others/sbom.md.
+# Third-party code kept in the library tree, see docs/third_party/sbom.md.
 
 components:
   - name: egnite-mktime

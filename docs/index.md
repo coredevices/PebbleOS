@@ -167,10 +167,3 @@ reference/index.md
 reference/kconfig.md
 API reference <https://pebbleos-core.readthedocs.io/en/latest/apidoc/index.html>
 ```
-
-```{toctree}
-:hidden:
-:caption: Others
-
-others/sbom.md
-```

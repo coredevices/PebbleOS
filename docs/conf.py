@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "_ext"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "PebbleOS"
-copyright = "2025, The PebbleOS Contributors"
+copyright = "2026, The PebbleOS Contributors"
 author = "The PebbleOS Contributors"
 release = "0.1.0"
 
@@ -57,7 +57,6 @@ html_theme_options = {
     "github_url": "https://github.com/coredevices/pebbleos",
     "nav_links": [
         {"title": "Getting started", "url": "getting_started/index"},
-        {"title": "pbl CLI", "url": "pbl/index"},
         {"title": "Architecture", "url": "architecture/index"},
         {"title": "Boards", "url": "boards/index"},
         {
@@ -88,7 +87,7 @@ pbl_redirects = {
     "development/integration_tests": "development/tests/integration",
     "development/sdk_export": "sdk/exporting",
     "reference/recognizers": "sdk/recognizers",
-    "development/sbom": "others/sbom",
+    "development/sbom": "third_party/sbom",
     "development/moddable": "third_party/moddable",
     "development/contributing": "community/contributing",
     "architecture/kernel": "kernel/index",
