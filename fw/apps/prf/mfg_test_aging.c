@@ -162,12 +162,7 @@ static void prv_cleanup_component(AppData *data) {
 
 static void prv_drain_light_enable(AppData *data, bool enable) {
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  if (enable) {
-    data->saved_backlight_color = backlight_get_color();
-    backlight_set_color(0xFFFFFF);
-  } else {
-    backlight_set_color(data->saved_backlight_color);
-  }
+  backlight_set_color(enable ? 0xFFFFFF : data->saved_backlight_color);
 #endif
   light_enable(enable);
 }
@@ -663,6 +658,9 @@ static void prv_handle_init(void) {
     .state = AgingStateWaitPlug,
 #ifdef CONFIG_SPEAKER
     .audio_playing = false,
+#endif
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+    .saved_backlight_color = backlight_get_color(),
 #endif
   };
 
