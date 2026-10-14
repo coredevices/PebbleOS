@@ -73,6 +73,10 @@ DEFINE_SYSCALL(AppWorkerResult, sys_app_worker_kill, void) {
 // ---------------------------------------------------------------------------------------------------------------
 // Launch the app for the current worker
 DEFINE_SYSCALL(void, sys_launch_app_for_worker, void) {
+  if (PRIVILEGE_WAS_ELEVATED && pebble_task_get_current() != PebbleTask_Worker) {
+    syscall_failed();
+  }
+
   app_manager_put_launch_app_event(&(AppLaunchEventConfig){
     .id = worker_manager_get_task_context()->install_id,
     .common.reason = APP_LAUNCH_WORKER,

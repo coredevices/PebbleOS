@@ -24,6 +24,9 @@ DEFINE_SYSCALL(CommSession *, sys_app_pp_get_comm_session, void) {
 DEFINE_SYSCALL(bool, sys_app_pp_send_data, CommSession *session, uint16_t endpoint_id,
                const uint8_t *data, uint16_t length) {
   if (PRIVILEGE_WAS_ELEVATED) {
+    if (pebble_task_get_current() != PebbleTask_App) {
+      syscall_failed();
+    }
     syscall_assert_userspace_buffer(data, length);
   }
   if (!prv_is_endpoint_allowed(endpoint_id)) {
