@@ -47,9 +47,7 @@ Emery platform, which apps see as a 200 × 228 color display.
 | `dvt` | Design validation units |
 | `pvt` | Production validation units |
 
-## Programming and debugging
-
-### Connecting a programmer
+## Connecting a programmer
 
 Pebble Time 2 is programmed with a {doc}`../../programmers/pblprog_sifli`, over
 the watch's debug UART:
@@ -62,45 +60,5 @@ the watch's debug UART:
 
 The programmer's page describes its connector, reset and charge switch.
 
-### Building
-
-```shell
-pbl configure --board obelix@pvt
-pbl build
-```
-
-### Flashing
-
-Pebble Time 2 is flashed with the `sftool` {ref}`runner <pbl-runners>`,
-over the programmer's serial port. The first time, write the system
-resources too:
-
-```shell
-pbl flash --tty /dev/ttyACM0 --resources
-```
-
-Later updates can leave `--resources` out. Without a programmer, install a {doc}`../../pbl/bundle` from the Pebble mobile app instead.
-
-### Console
-
-```shell
-pbl console --tty /dev/ttyACM0
-```
-
-### Debugging
-
-`pbl debug` is not available on this board, as `sftool` has no debug
-server. Use the console, the flash log buffer and coredumps described in
-{doc}`../../development/debugging`, or reproduce the problem on
-`qemu_emery`.
-
-### Recovery firmware
-
-The board boots through PebbleOS's own bootloader, which falls back to the
-recovery firmware (PRF) when the main firmware does not start. Build the
-PRF with `--variant prf`:
-
-```shell
-pbl -b build-prf configure --board obelix@pvt --variant prf
-pbl -b build-prf build
-```
+Once connected, the {doc}`pbl commands <../../pbl/index>` flash the watch
+and reach its console.

@@ -44,9 +44,7 @@ a 260 × 260 round color display.
 | `dvt` | Design validation units, with an AW8623X haptic driver |
 | `dvt2` | Second design validation build, with an AW86225 haptic driver |
 
-## Programming and debugging
-
-### Connecting a programmer
+## Connecting a programmer
 
 Pebble Round 2 is programmed with a {doc}`../../programmers/pblprog_sifli`, over
 the watch's debug UART:
@@ -59,45 +57,5 @@ the watch's debug UART:
 
 The programmer's page describes its connector, reset and charge switch.
 
-### Building
-
-```shell
-pbl configure --board getafix@dvt2
-pbl build
-```
-
-### Flashing
-
-Pebble Round 2 is flashed with the `sftool` {ref}`runner <pbl-runners>`,
-over the programmer's serial port. The first time, write the system
-resources too:
-
-```shell
-pbl flash --tty /dev/ttyACM0 --resources
-```
-
-Later updates can leave `--resources` out. Without a programmer, install a {doc}`../../pbl/bundle` from the Pebble mobile app instead.
-
-### Console
-
-```shell
-pbl console --tty /dev/ttyACM0
-```
-
-### Debugging
-
-`pbl debug` is not available on this board, as `sftool` has no debug
-server. Use the console, the flash log buffer and coredumps described in
-{doc}`../../development/debugging`, or reproduce the problem on
-`qemu_gabbro`.
-
-### Recovery firmware
-
-The board boots through PebbleOS's own bootloader, which falls back to the
-recovery firmware (PRF) when the main firmware does not start. Build the
-PRF with `--variant prf`:
-
-```shell
-pbl -b build-prf configure --board getafix@dvt2 --variant prf
-pbl -b build-prf build
-```
+Once connected, the {doc}`pbl commands <../../pbl/index>` flash the watch
+and reach its console.

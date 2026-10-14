@@ -34,9 +34,7 @@ platform, which apps see as a 144 × 168 black and white display.
 - **Speaker**: [Renesas DA7212](https://www.renesas.com/en/products/da7212) audio codec
 - **Power**: [Nordic nPM1300](https://www.nordicsemi.com/Products/nPM1300) PMIC and battery charger
 
-## Programming and debugging
-
-### Connecting a programmer
+## Connecting a programmer
 
 Pebble 2 Duo is programmed with the {doc}`../../programmers/core_b2b_v2`,
 the programmer of its firmware development kit. The mainboard has a B2B
@@ -66,55 +64,5 @@ Press the connector until it clicks: when it is not fully seated, the
 serial console shows output but does not accept input. The programmer's
 page explains its switches and firmware updates.
 
-### Building
-
-```shell
-pbl configure --board asterix
-pbl build
-```
-
-### Flashing
-
-Pebble 2 Duo is flashed through the programmer, with the `openocd`
-{ref}`runner <pbl-runners>` (the default) or `nrfutil`:
-
-```shell
-pbl flash
-pbl flash -r nrfutil
-```
-
-The first time, write the system resources once the firmware is running,
-over the programmer's serial port:
-
-```shell
-pbl image_resources --tty /dev/ttyACM0
-```
-
-Without a programmer, install a {doc}`../../pbl/bundle` from the
-Pebble mobile app instead.
-
-### Console
-
-```shell
-pbl console --tty /dev/ttyACM0
-```
-
-### Debugging
-
-The programmer's CMSIS-DAP probe gives full debugging through OpenOCD:
-
-```shell
-pbl debug
-```
-
-{doc}`../../development/debugging` describes the GDB extensions the
-firmware ships with.
-
-### Recovery firmware
-
-Build the recovery firmware (PRF) with `--variant prf`:
-
-```shell
-pbl -b build-prf configure --board asterix --variant prf
-pbl -b build-prf build
-```
+Once connected, the {doc}`pbl commands <../../pbl/index>` flash, debug and
+reach the console of the watch.
