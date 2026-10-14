@@ -505,13 +505,15 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_
   }
 
   uint32_t num_bytes = num_items * session->item_size;
-  if (session->data->buffer_storage && num_bytes > DLS_SESSION_MAX_BUFFERED_ITEM_SIZE) {
-    return (DATA_LOGGING_INVALID_PARAMS);
-  }
 
   bool active = dls_lock_session(session);
   if (!active) {
     return (DATA_LOGGING_CLOSED);
+  }
+
+  if (session->data->buffer_storage && num_bytes > DLS_SESSION_MAX_BUFFERED_ITEM_SIZE) {
+    result = DATA_LOGGING_INVALID_PARAMS;
+    goto unlock_and_exit;
   }
 
   PBL_LOG_DBG("logging %d items of size %d to session %d", (int)num_items, (int)session->item_size,
