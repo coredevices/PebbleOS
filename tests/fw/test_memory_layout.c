@@ -36,9 +36,25 @@ void test_memory_layout__cstring_in_region(void) {
   cl_assert(memory_layout_is_cstring_in_region(&region, valid_str, 10));
   // Max length is not long enough to find the null
   cl_assert(!memory_layout_is_cstring_in_region(&region, valid_str, 3));
+  // Max length equal to the string length
+  cl_assert(memory_layout_is_cstring_in_region(&region, valid_str, 6));
+  // Max length that would wrap the address space
+  cl_assert(memory_layout_is_cstring_in_region(&region, valid_str, SIZE_MAX));
 
   // Invalid string, there is a null after the y's but the y's should be after the end of the region
   cl_assert(!memory_layout_is_cstring_in_region(&region, invalid_str, 100));
   // Invalid string, no null.
   cl_assert(!memory_layout_is_cstring_in_region(&region, invalid_str, 3));
+  cl_assert(!memory_layout_is_cstring_in_region(&region, invalid_str, SIZE_MAX));
+}
+
+void test_memory_layout__buffer_in_region(void) {
+  MpuRegion region = {.base_address = 1000, .size = 1000};
+
+  cl_assert(memory_layout_is_buffer_in_region(&region, (void *)1000, 1000));
+  cl_assert(!memory_layout_is_buffer_in_region(&region, (void *)1000, 1001));
+  cl_assert(!memory_layout_is_buffer_in_region(&region, (void *)999, 10));
+  // Lengths that wrap back into the region
+  cl_assert(!memory_layout_is_buffer_in_region(&region, (void *)1500, SIZE_MAX));
+  cl_assert(!memory_layout_is_buffer_in_region(&region, (void *)1500, SIZE_MAX - 100));
 }
