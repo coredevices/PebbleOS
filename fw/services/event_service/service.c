@@ -214,10 +214,43 @@ static bool prv_steal_buffer(void *buf, EventServiceEntry *service, PebbleEvent 
   }
 }
 
+static bool prv_plugin_index_filter(ListNode *node, void *tp) {
+  return ((EventPluginUUIDEntry *)node)->service_index == (uint16_t)(uintptr_t)tp;
+}
+
+static bool prv_plugin_index_is_process(uint16_t index, const PebbleProcessMd *md) {
+  if (md == nullptr) {
+    return false;
+  }
+
+  pbl_mutex_lock(&s_plugin_list_mutex, PBL_FOREVER);
+  const EventPluginUUIDEntry *entry = (EventPluginUUIDEntry *)list_find(
+      s_plugin_list.next, prv_plugin_index_filter, (void *)(uintptr_t)index);
+  const bool match = entry && uuid_equal(&entry->uuid, &md->uuid);
+  pbl_mutex_unlock(&s_plugin_list_mutex);
+
+  return match;
+}
+
+// App/worker messages only go to the processes of the app that sent them.
+static void prv_mask_plugin_event_recipients(PebbleEvent *e) {
+  const uint16_t index = e->plugin_service.service_index;
+  if (!prv_plugin_index_is_process(index, app_manager_get_current_app_md())) {
+    e->task_mask |= (1 << PebbleTask_App);
+  }
+  if (!prv_plugin_index_is_process(index, worker_manager_get_current_worker_md())) {
+    e->task_mask |= (1 << PebbleTask_Worker);
+  }
+}
+
 void event_service_handle_event(PebbleEvent *e) {
   EventServiceEntry *service = s_event_services[e->type];
   if (service == nullptr) {
     return;
+  }
+
+  if (e->type == PEBBLE_PLUGIN_SERVICE_EVENT) {
+    prv_mask_plugin_event_recipients(e);
   }
 
   bool stolen = false;
