@@ -282,8 +282,11 @@ static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new
         // This is allocated here, but free'd in the wakeup_ui.h module
         missed_events->missed_app_ids =
             kernel_malloc(NUM_APPS_ALERT_ON_BOOT * sizeof(AppInstallId));
+        if (missed_events->missed_app_ids == nullptr) {
+          return;
+        }
       }
-      if (missed_events->missed_apps_count > NUM_APPS_ALERT_ON_BOOT) {
+      if (missed_events->missed_apps_count >= NUM_APPS_ALERT_ON_BOOT) {
         // We have more than NUM_APPS_ALERT_ON_BOOT apps that had events fire while the watch
         // was shut off. Very rare this will happen, but just down show that the apps > 16 missed
         // an event.
