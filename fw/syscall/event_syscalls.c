@@ -10,6 +10,7 @@
 #include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
+#include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
 #include <system/passert.h>
 
@@ -54,8 +55,15 @@ static bool prv_validate_event_from_user(PebbleTask task, PebbleEvent *event) {
       event->health_event = (PebbleHealthEvent){.type = HealthEventSignificantUpdate};
       event->task_mask = prv_only_to(task);
       return true;
-    case PEBBLE_PLUGIN_SERVICE_EVENT:
+    case PEBBLE_PLUGIN_SERVICE_EVENT: {
+      const int16_t index = sys_event_service_get_plugin_service_index(nullptr);
+      event->plugin_service.service_index = index;
+      // Without an index the event has no valid sender, so deliver it to no one.
+      event->task_mask = (index < 0)
+                             ? (PebbleTaskBitset)~0
+                             : (prv_only_to(PebbleTask_App) & prv_only_to(PebbleTask_Worker));
       return true;
+    }
     default:
       return false;
   }

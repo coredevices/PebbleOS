@@ -388,11 +388,16 @@ unlock:
   return result;
 }
 
-//! @param uuid the UUID of the plugin service, or NULL to use uuid of the current process
+//! @param uuid the UUID of the plugin service, or NULL to use uuid of the current process.
+//!             Unprivileged callers can only use their own UUID.
 //! @return non-negative service index, or -1 if error
 PBL_SYSCALL(int16_t, sys_event_service_get_plugin_service_index, (IN_OPT, const Uuid *, uuid)) {
+  const Uuid *own_uuid = &sys_process_manager_get_current_process_md()->uuid;
+  if (from_user && uuid != nullptr && !uuid_equal(uuid, own_uuid)) {
+    return -1;
+  }
   if (uuid == nullptr) {
-    uuid = &sys_process_manager_get_current_process_md()->uuid;
+    uuid = own_uuid;
   }
   return prv_get_plugin_index(uuid, pebble_task_get_current());
 }
