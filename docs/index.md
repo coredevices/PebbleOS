@@ -106,7 +106,7 @@ Supported watches and emulated boards, and how to program them.
 :link: reference/index
 :link-type: doc
 
-API reference, protocols, file formats and external resources.
+API reference, protocols and file formats.
 :::
 
 ::::
@@ -132,7 +132,6 @@ development/debugging.md
 development/moddable.md
 development/sdk_export.md
 development/sbom.md
-development/contributing.md
 ```
 
 ```{toctree}
@@ -153,6 +152,13 @@ libraries/index.md
 
 boards/index.md
 programmers/index.md
+```
+
+```{toctree}
+:hidden:
+:caption: Community
+
+community/contributing.md
 ```
 
 ```{toctree}

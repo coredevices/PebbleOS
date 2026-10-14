@@ -1,8 +1,7 @@
 # Reference
 
-Lookup material: the firmware C API reference, external talks and documents
-about PebbleOS, and specifications for the protocols used by the firmware
-and its tooling.
+Lookup material: the firmware C API reference, and specifications for the
+protocols used by the firmware and its tooling.
 
 ## C API reference
 
@@ -20,16 +19,6 @@ Doxygen reference.
 :maxdepth: 1
 
 recognizers.md
-```
-
-## External resources
-
-Podcasts, presentations and developer documents from the Pebble community.
-
-```{toctree}
-:maxdepth: 1
-
-external.md
 ```
 
 ## PULSEv2 protocol suite

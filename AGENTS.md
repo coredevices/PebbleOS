@@ -24,7 +24,7 @@ PebbleOS is the operating system running on Pebble smartwatches.
 
 Contributor documentation lives in `docs/` (published at
 https://pebbleos-core.readthedocs.io). Prefer pointing to or extending those
-pages over duplicating knowledge here: `docs/development/contributing.md`
+pages over duplicating knowledge here: `docs/community/contributing.md`
 (DCO, commit and AI-usage rules), `docs/pbl/` (the `pbl`
 CLI, one page per command, and `extending.md` for how to extend it), `docs/development/sdk_export.md` (SDK export
 machinery), `docs/development/qemu.md` (emulator workflow),
