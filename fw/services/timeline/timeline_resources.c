@@ -8,7 +8,6 @@
 
 #include <applib/graphics/gdraw_command_private.h>
 #include <applib/ui/kino/kino_reel.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
@@ -160,12 +159,11 @@ void timeline_resources_get_id(const TimelineResourceInfo *timeline_res, Timelin
 
     const ResAppNum res_app_num = app_install_get_app_icon_bank(&entry);
     if (!timeline_resources_get_id_system(timeline_res->res_id, size, res_app_num, res_info_out)) {
-      char *uuid_str_buffer = task_zalloc_check(UUID_STRING_BUFFER_LENGTH);
+      char uuid_str_buffer[UUID_STRING_BUFFER_LENGTH];
       uuid_to_string(timeline_res->app_id, uuid_str_buffer);
       APP_LOG(APP_LOG_LEVEL_ERROR,
               "Failed to convert published id %d to resource id for app with uuid %s",
               timeline_res->res_id, uuid_str_buffer);
-      task_free(uuid_str_buffer);
       goto fail;
     }
   }
