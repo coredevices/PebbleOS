@@ -680,8 +680,9 @@ bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t
     WTF;
   }
 
-  // check for vulnerability: lower_bound outside of task's region
-  PBL_ASSERTN(lower_bound >= ram_start);
+  if (lower_bound < ram_start) {
+    return false;
+  }
 
   const uintptr_t start = (uintptr_t)buf;
   const uintptr_t end = (uintptr_t)ram_end;
