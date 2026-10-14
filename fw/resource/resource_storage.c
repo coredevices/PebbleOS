@@ -36,7 +36,7 @@ static uint32_t prv_check_resource_bounds(ResourceStoreEntry *entry, uint32_t st
   if (entry->length < resource_offset) {
     PBL_LOG_ERR("Resource offset past its own ending.");
     return 0;
-  } else if ((resource_offset + num_bytes) > entry->length) {
+  } else if (num_bytes > entry->length - resource_offset) {
     PBL_LOG_ERR("offset + length > resource size, truncated.");
     return entry->length - resource_offset;
   } else {

@@ -146,12 +146,13 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id, 
     return 0;
   }
 
-  if (offset + num_bytes > resource.length) {
-    if (offset >= resource.length) {
-      // Can't recover from trying to read from beyond the resource. Read nothing.
-      pbl_mutex_unlock(&s_resource_mutex);
-      return 0;
-    }
+  if (offset >= resource.length) {
+    // Can't recover from trying to read from beyond the resource. Read nothing.
+    pbl_mutex_unlock(&s_resource_mutex);
+    return 0;
+  }
+
+  if (num_bytes > resource.length - offset) {
     // We want to stop the FW from doing this, so we added an assert
     // but in the name of backwards compatibility, we let the app misbehave
     num_bytes = resource.length - offset;
