@@ -142,9 +142,9 @@ generators live in `tools/cmake/`:
 
 ## Native builds
 
-A {doc}`native <../native>` build runs the firmware as a host program. The
-bottom halves of its drivers talk to the host and see none of the
-firmware's headers:
+The {doc}`native simulator <../native_simulator>` runs the firmware as a
+host program. The bottom halves of its drivers talk to the host and see
+none of the firmware's headers:
 
 `pbl_host_sources(src...)`, `pbl_host_include_directories(dir...)`, `pbl_host_compile_options(opt...)`
 : Sources, header directories and compile options of the host side.

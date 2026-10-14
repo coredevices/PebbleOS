@@ -125,7 +125,7 @@ getting_started/index.md
 pbl/index.md
 development/build_system/index.md
 development/emulator.md
-development/native.md
+development/native_simulator.md
 development/testing.md
 development/integration_tests.md
 development/debugging.md

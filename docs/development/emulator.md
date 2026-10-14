@@ -36,9 +36,9 @@ therefore not exercised: use a watch for those.
 | `qemu_emery` | Emery | Pebble Time 2 | Cortex-M33 |
 | `qemu_gabbro` | Gabbro | Pebble Round 2 | Cortex-M33 |
 
-A {doc}`native build <native>` is the other way to run the firmware on a
-desktop: it is faster to build and easier to debug with host tools, but it
-compiles for the host, so it cannot load apps.
+The {doc}`native simulator <native_simulator>` is the other way to run the
+firmware on a desktop: it is faster to build and easier to debug with host
+tools, but it compiles for the host, so it cannot load apps.
 
 ## Building and running
 

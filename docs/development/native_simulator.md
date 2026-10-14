@@ -1,44 +1,83 @@
-# Native
+# Native simulator
 
-The `native_emery` board builds PebbleOS as an application for the machine
-you are working on (Linux or macOS), with a window standing in for the
-display. It boots much faster than QEMU and runs under the host's debugger,
-sanitizers and profilers.
+The native simulator builds PebbleOS as an ordinary program for the machine
+you are working on, Linux or macOS, with a window standing in for the
+watch. It boots in a fraction of the time the emulator takes, and runs
+under the host's own debugger, sanitizers and profilers. CI builds it on
+both hosts and boots it to the launcher on every change, and the
+{doc}`integration tests <integration_tests>` run against it.
 
-```{important}
-The native port is a sketch. Drivers are emulated or stubbed, Bluetooth uses
-the fake HCI controller, and third-party apps cannot run: they are ARM
-binaries. Only macOS has been tried so far.
-```
+## What is simulated
 
-## Requirements
+The simulator reproduces a platform, but not an architecture:
 
-A host C compiler and [SDL2](https://www.libsdl.org), both part of the
-dependencies in the [getting started guide](../getting_started/index.md).
+The platform
+: The `native_emery` board is the Emery platform of Pebble Time 2: its
+  200 × 228 color display, its buttons and its touchscreen, and the same
+  firmware services, UI and apps built into the firmware.
 
-## Build and run
+Not the architecture
+: The firmware is compiled for the host CPU, with the host compiler and C
+  library, and the kernel runs its threads on host threads. That is what
+  makes it fast and debuggable, but third-party apps cannot run: their
+  `.pbw` binaries are ARM code. Use the {doc}`emulator <emulator>` to run
+  them.
+
+Below the platform, each driver has a host implementation:
+
+| Device | In the simulator |
+| --- | --- |
+| Display, buttons, touchscreen | An SDL window, the keyboard and the mouse |
+| Serial console | The terminal, or a TCP port |
+| External flash | A file, kept across runs |
+| RTC | The host clock |
+| Accelerometer | A watch lying still, face up |
+| Battery | Fixed values |
+| Ambient light | Always dark |
+| Vibration | Does nothing |
+| Microphone | Silent |
+| Bluetooth | A fake controller, or a real one over an HCI UART |
+
+Log messages are not hashed in native builds, so the console shows them
+without a dictionary.
+
+## Building and running
+
+Install a host C compiler and [SDL2](https://www.libsdl.org), both part of
+the dependencies in the {doc}`../getting_started/index`. Then configure,
+build and start the program:
 
 ```shell
-pbl configure --board=native_emery
+pbl configure --board native_emery
 pbl build
 build/pebbleos
 ```
 
-| Key                         | Button |
-| --------------------------- | ------ |
-| Up                          | Up     |
-| Down                        | Down   |
-| Right, Enter, Space         | Select |
-| Left, Backspace, Escape     | Back   |
+A reset of the watch restarts the process.
 
-The mouse drives the touchscreen: click and drag, or scroll with the wheel or
-two fingers on a trackpad, which drags a finger from the pointer.
+## Interacting
+
+### Buttons and touch
+
+| Key | Button |
+| --- | --- |
+| Up | Up |
+| Down | Down |
+| Right, Enter, Space | Select |
+| Left, Backspace, Escape | Back |
+
+The mouse drives the touchscreen: click and drag, or scroll with the wheel
+or two fingers on a trackpad, which drags a finger from the pointer.
+
+### Console
 
 The terminal is the watch's serial console: logs go there, and as on the
 watch, `Ctrl-C` opens the shell prompt and `Ctrl-D` leaves it. `Ctrl-\`
 quits.
 
-Options:
+### Options
+
+`build/pebbleos` takes these options:
 
 - `-f FILE`: file backing the external flash, `pebbleos-flash.bin` in the
   current directory by default. It keeps the watch's state across runs.
@@ -53,14 +92,16 @@ Options:
 - `-b PORT|DEVICE`: with `CONFIG_BT_HCI_UART`, connect the Bluetooth HCI
   UART to an H4 controller: a TCP port on the local host (e.g. Bumble's
   `tcp-server` transport) or a serial device, such as an nRF52840 dongle
-  running Zephyr's `hci_uart` (see [](emulator.md)).
+  running `hci_uart`, as described for the {doc}`emulator <emulator>`.
 - `-S FILE`: save the last frame to a BMP file on quitting.
 
-A reset of the watch restarts the process. A fatal error aborts it, so that a
-debugger stops right there:
+## Debugging
+
+A fatal error aborts the process, so a debugger stops right there:
 
 ```shell
 lldb build/pebbleos
+gdb build/pebbleos
 ```
 
 ## Sanitizers

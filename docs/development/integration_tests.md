@@ -20,7 +20,7 @@ pbl build
 pbl itest
 ```
 
-A native board (see [](native.md)) runs as a host process instead, on a
+A native board (see [](native_simulator.md)) runs as a host process instead, on a
 fresh flash file, serving its console and the QEMU serial protocol on TCP
 ports. Built with sanitizers, it runs the suite under them:
 
