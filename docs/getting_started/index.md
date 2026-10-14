@@ -160,13 +160,9 @@ ARM GNU toolchain, Pebble QEMU, sftool and the other tools the build runs:
 curl -LsSf https://github.com/coredevices/PebbleOS-SDK/releases/latest/download/pebbleos-sdk-installer.sh | sh
 ```
 
-The build finds the SDK on its own: it honours `PEBBLEOS_SDK_ROOT` if set
-(the SDK's `env.sh` exports it), and otherwise picks the newest
-`pebbleos-sdk-<version>` under your home directory or `/opt` that satisfies
-the version in `SDK_VERSION`. The SDK and the tools found in it are cached
-in the build directory, so a build keeps using the SDK it was configured
-with; pass `-DPEBBLEOS_SDK_ROOT=<dir>` to `pbl configure` to pick a
-specific one.
+The build finds the installed SDK on its own;
+{doc}`../development/build_system/index` explains how to pick a specific
+one.
 
 ## Build for the emulator
 
@@ -182,36 +178,16 @@ pbl build
 {doc}`../pbl/configure` runs CMake into `build/` and remembers the board,
 so later commands do not need it again.
 
-## Run it in QEMU
+## Run it in the emulator
 
 ```shell
 pbl qemu
 ```
 
 A window opens with the emulated watch and the firmware boots to the
-watchface. The terminal that launched it is the QEMU monitor. The arrow keys
-are the watch buttons: `left` is back, `right` is select, `up` and `down`
-are up and down. Quit with `quit` at the monitor prompt or by closing the
-window.
-
-With the emulator running, other shells can attach to it:
-
-```shell
-pbl console       # the firmware's debug console
-pbl screenshot    # writes build/screenshot.png
-```
-
-## Install an app on the emulator
-
-With QEMU running and the [`pebble` tool](https://github.com/coredevices/pebble-tool)
-on your `PATH`, install a `.pbw` from another shell:
-
-```shell
-pebble install /path/to/your/file.pbw --qemu
-```
-
-The app starts on the emulated watch. Pass `--keep-flash-image` to
-`pbl qemu` on later launches to keep installed apps.
+watchface; the arrow keys are the watch buttons. The
+{doc}`../development/emulation/emulator` page covers everything else you can
+do with it.
 
 ## Build for a watch
 

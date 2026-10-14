@@ -82,7 +82,11 @@ changes, and CMake regenerates whenever a `CMakeLists.txt` does, so
 ## PebbleOS SDK
 
 `cmake/modules/pebbleos_sdk.cmake` locates the installed SDK once and caches
-it as `PEBBLEOS_SDK_ROOT`. Every tool lookup then uses the SDK as its first
+it as `PEBBLEOS_SDK_ROOT`. It honours `PEBBLEOS_SDK_ROOT` from the
+environment, which the SDK's `env.sh` exports, and otherwise picks the
+newest `pebbleos-sdk-<version>` under the home directory or `/opt` that
+satisfies `SDK_VERSION`. Pass `-DPEBBLEOS_SDK_ROOT=<dir>` when configuring
+to use a specific one. Every tool lookup then uses the SDK as its first
 search path: the toolchain in `cmake/toolchain/arm-none-eabi.cmake`, and
 `PBL_QEMU`, `PBL_SFTOOL` and `PBL_GDB` for the `pbl` device commands, which
 read them back from `CMakeCache.txt`. Each is an ordinary `find_program`
