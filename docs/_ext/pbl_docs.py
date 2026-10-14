@@ -3,9 +3,8 @@
 
 """Sphinx glue between the hand-written pages and the Doxygen reference.
 
-- ``{apidoc}`group``` links to the Doxygen page of a group.
-- ``apigroups`` renders the children of a Doxygen group as a table, read
-  from the ``@defgroup``/``@ingroup``/``@brief`` comments in ``include/``.
+- ``{apidoc}`group``` links to the Doxygen page of a group, read from the
+  ``@defgroup`` comments in ``include/``.
 - ``pbl-command`` renders the usage and options of a ``pbl`` command
   from its own argument parser.
 - ``pbl_redirects`` keeps moved pages reachable at their old URL.
@@ -17,11 +16,9 @@ import os
 import posixpath
 import re
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 from docutils import nodes
-from sphinx.addnodes import pending_xref
 from sphinx.util.docutils import SphinxDirective, SphinxRole
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,29 +27,10 @@ PBL_CLI = ROOT / "tools" / "libs" / "pbl-cli"
 
 COMMENT_RE = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
 DEFGROUP_RE = re.compile(r"[@\\]defgroup\s+(\w+)\s+(.+)")
-INGROUP_RE = re.compile(r"[@\\]ingroup\s+(\w+)")
-BRIEF_RE = re.compile(
-    r"[@\\]brief\s+(.+?)(?:\n\s*\*?\s*\n|\n\s*\*?\s*[@\\]|$)", re.DOTALL
-)
-COMMAND_RE = re.compile(r"[@\\](?:c|p|ref)\s+(\S+)")
-
-
-@dataclass
-class Group:
-    name: str
-    title: str
-    parent: str | None
-    brief: str
-    header: str | None
-
-
-def _clean(text):
-    text = re.sub(r"\n\s*\*", " ", text)
-    text = COMMAND_RE.sub(r"\1", text)
-    return " ".join(text.split())
 
 
 def scan_groups():
+    """Title of every Doxygen group, by name."""
     groups = {}
     for base in SOURCES:
         for path in sorted(base.rglob("*")):
@@ -60,28 +38,8 @@ def scan_groups():
                 continue
             text = path.read_text(errors="replace")
             for comment in COMMENT_RE.findall(text):
-                for block in re.split(r"(?=[@\\]defgroup\s)", comment):
-                    m = DEFGROUP_RE.search(block)
-                    if not m:
-                        continue
-                    ingroup = INGROUP_RE.search(block)
-                    brief = BRIEF_RE.search(block)
-                    header = None
-                    if path.suffix == ".h":
-                        header = path.relative_to(ROOT / "include").as_posix()
-                        # A group spanning a directory is named after it
-                        if path.stem not in m.group(1):
-                            d = posixpath.dirname(header)
-                            while "/" in d and posixpath.basename(d) not in m.group(1):
-                                d = posixpath.dirname(d)
-                            header = d + "/"
-                    groups[m.group(1)] = Group(
-                        name=m.group(1),
-                        title=m.group(2).strip(),
-                        parent=ingroup.group(1) if ingroup else None,
-                        brief=_clean(brief.group(1)) if brief else "",
-                        header=header,
-                    )
+                for m in DEFGROUP_RE.finditer(comment):
+                    groups[m.group(1)] = m.group(2).strip()
     return groups
 
 
@@ -104,101 +62,11 @@ class ApidocRole(SphinxRole):
                 f"unknown Doxygen group {group!r}", line=self.lineno
             )
             return [self.inliner.problematic(self.rawtext, self.rawtext, msg)], [msg]
-        title = title or groups[group].title
+        title = title or groups[group]
         uri = apidoc_uri(self.env.docname, group)
         return [
             nodes.reference(self.rawtext, title, refuri=uri, classes=["apidoc"])
         ], []
-
-
-class ApiGroupsDirective(SphinxDirective):
-    """Table of the child groups of a Doxygen group.
-
-    Each content line ``group: docname`` adds a link to the guide page
-    that covers that group.
-    """
-
-    required_arguments = 1
-    has_content = True
-
-    def run(self):
-        parent = self.arguments[0]
-        groups = self.env.app.pbl_groups
-        if parent not in groups:
-            raise self.error(f"unknown Doxygen group {parent!r}")
-        guides = {}
-        for line in self.content:
-            if line.strip():
-                group, _, doc = line.partition(":")
-                guides[group.strip()] = doc.strip()
-
-        children = sorted(
-            (g for g in groups.values() if g.parent == parent),
-            key=lambda g: g.title.lower(),
-        )
-        has_guides = bool(guides)
-        headers = ["Module", "Header", "Description"] + (
-            ["Guide"] if has_guides else []
-        )
-
-        table = nodes.table(classes=["apigroups"])
-        tgroup = nodes.tgroup(cols=len(headers))
-        table += tgroup
-        for width in [20, 30, 50] + ([12] if has_guides else []):
-            tgroup += nodes.colspec(colwidth=width)
-        thead = nodes.thead()
-        tgroup += thead
-        row = nodes.row()
-        for h in headers:
-            row += nodes.entry("", nodes.paragraph(text=h))
-        thead += row
-        tbody = nodes.tbody()
-        tgroup += tbody
-
-        for g in children:
-            row = nodes.row()
-            link = nodes.reference(
-                "",
-                g.title,
-                refuri=apidoc_uri(self.env.docname, g.name),
-                classes=["apidoc"],
-            )
-            row += nodes.entry("", nodes.paragraph("", "", link))
-            header = nodes.paragraph()
-            if g.header:
-                header += nodes.literal(text=g.header)
-            row += nodes.entry("", header)
-            row += nodes.entry("", nodes.paragraph(text=g.brief))
-            if has_guides:
-                guide = nodes.paragraph()
-                if g.name in guides:
-                    xref = self._doc_ref(guides.pop(g.name))
-                    guide += xref
-                row += nodes.entry("", guide)
-            tbody += row
-
-        if guides:
-            raise self.error(
-                f"guides for groups not under {parent!r}: {', '.join(guides)}"
-            )
-
-        for g in children:
-            if g.header:
-                self.env.note_dependency(str(ROOT / "include" / g.header))
-        return [table]
-
-    def _doc_ref(self, target):
-        ref = pending_xref(
-            "",
-            refdomain="std",
-            reftype="doc",
-            reftarget=target,
-            refexplicit=True,
-            refdoc=self.env.docname,
-            refwarn=True,
-        )
-        ref += nodes.inline(text="Guide")
-        return ref
 
 
 def pbl_subparsers():
@@ -308,7 +176,6 @@ def builder_inited(app):
 def setup(app):
     app.add_config_value("pbl_redirects", {}, "html")
     app.add_role("apidoc", ApidocRole())
-    app.add_directive("apigroups", ApiGroupsDirective)
     app.add_directive("pbl-command", PblCommandDirective)
     app.connect("builder-inited", builder_inited)
     app.connect("build-finished", write_redirects)

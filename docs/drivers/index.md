@@ -14,15 +14,10 @@ Two classes carry design notes worth reading before changing them:
 - **Flash** — `drivers/flash/README.md` documents the two flash APIs:
   the main one, and a coredump-only path that must work without OS services.
 
-## Driver classes
-
-```{apigroups} drivers
-drivers_device: device_model
-```
-
 ```{toctree}
-:hidden:
 :maxdepth: 1
 
 device_model.md
 ```
+
+The {apidoc}`API reference <drivers>` documents every driver class.

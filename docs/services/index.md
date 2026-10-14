@@ -13,13 +13,10 @@ alongside the allocator in `pfs.c`.
 
 ## Service modules
 
-```{apigroups} services
-services_activity: activity/index
-```
-
 ```{toctree}
-:hidden:
 :maxdepth: 1
 
 activity/index.md
 ```
+
+The {apidoc}`API reference <services>` documents every service.

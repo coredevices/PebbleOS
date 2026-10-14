@@ -28,5 +28,4 @@ channel, `fw/comm/qemu/`.
 
 ## Modules
 
-```{apigroups} bluetooth
-```
+The {apidoc}`API reference <bluetooth>` documents every Bluetooth module.

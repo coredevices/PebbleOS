@@ -72,8 +72,7 @@ pick the emulated core with `SOC_QEMU_CORTEX_M4` or `SOC_QEMU_CORTEX_M33`.
 
 ## Modules
 
-```{apigroups} kernel
-```
+The {apidoc}`API reference <kernel>` documents every kernel module.
 
 ## MCU and SoC
 
@@ -81,9 +80,6 @@ CPU core helpers (`pbl/mcu/`) wrap the architecture's interrupt, privilege,
 cache, FPU and MPU control; `pbl/soc/` holds what is specific to one SoC
 family.
 
-```{apigroups} mcu
-```
-
-```{apigroups} soc
-```
+The API reference documents both: {apidoc}`MCU <mcu>` and
+{apidoc}`SoC <soc>`.
 

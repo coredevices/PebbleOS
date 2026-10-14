@@ -202,15 +202,7 @@ html.dark {
   padding-bottom: 0;
 }
 
-/* API reference tables and pbl options */
-
-.yue table.apigroups td:first-child {
-  font-weight: 600;
-}
-
-.yue table.apigroups code {
-  white-space: nowrap;
-}
+/* pbl options */
 
 .yue dl.pbl-options dt code {
   font-weight: 600;
