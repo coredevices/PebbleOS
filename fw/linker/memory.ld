@@ -27,8 +27,8 @@
 #define PBL_APP_RAM_SIZE \
     PBL_MAX(PBL_APP_RAM_2X_SIZE, PBL_MAX(PBL_APP_RAM_3X_SIZE, PBL_APP_RAM_4X_SIZE))
 
-/* The worker always gets 12k of RAM. */
-#define PBL_WORKER_RAM_SIZE (12 * 1024)
+#define PBL_WORKER_RAM_SIZE \
+    (CONFIG_WORKER_RAM_SEGMENT_SIZE + CONFIG_WORKER_RAM_RUNTIME_SIZE)
 
 #define PBL_RAM_SIZE \
     (CONFIG_SRAM_SIZE - PBL_WORKER_RAM_SIZE - PBL_APP_RAM_SIZE)
@@ -70,6 +70,8 @@ ASSERT(CONFIG_APP_RAM_3X_SEGMENT_SIZE % 8 == 0,
        "The app_segment size for the 3x app environment is not a multiple of eight bytes");
 ASSERT(CONFIG_APP_RAM_4X_SEGMENT_SIZE % 8 == 0,
        "The app_segment size for the 4x app environment is not a multiple of eight bytes");
+ASSERT(CONFIG_WORKER_RAM_SEGMENT_SIZE % 8 == 0,
+       "The worker segment size is not a multiple of eight bytes");
 
 /* Basic sanity checks: apps must fit, and the kernel needs at least 64k. */
 ASSERT(PBL_APP_RAM_SIZE > 0, "App RAM is too small!")
