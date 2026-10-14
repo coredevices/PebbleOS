@@ -5,6 +5,7 @@
 #include <pbl/services/event_service.h>
 
 #include <kernel/kernel_applib_state.h>
+#include <kernel/memory_layout.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
@@ -37,7 +38,13 @@ static bool prv_event_type_allowed_from_user(PebbleEventType type) {
   }
 }
 
+static const MpuRegion *prv_process_region(PebbleTask task) {
+  return (task == PebbleTask_Worker) ? memory_layout_get_worker_region()
+                                     : memory_layout_get_app_region();
+}
+
 DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent *event) {
+  PebbleTask task = pebble_task_get_current();
   PebbleEvent k_event;
 
   if (PRIVILEGE_WAS_ELEVATED) {
@@ -49,9 +56,16 @@ DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent *event) {
       syscall_failed();
     }
     event = &k_event;
+
+    if (event->type == PEBBLE_PROCESS_KILL_EVENT) {
+      event->kill.task = task;
+    } else if (event->type == PEBBLE_DICTATION_EVENT && event->dictation.text != nullptr &&
+               !memory_layout_is_cstring_in_region(prv_process_region(task), event->dictation.text,
+                                                   SIZE_MAX)) {
+      syscall_failed();
+    }
   }
 
-  PebbleTask task = pebble_task_get_current();
   if (task == PebbleTask_App || task == PebbleTask_Worker) {
     prv_put_event_from_process(task, event);
   } else {
