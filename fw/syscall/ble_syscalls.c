@@ -30,7 +30,12 @@ DEFINE_SYSCALL(bool, sys_ble_scan_is_scanning, void) {
 DEFINE_SYSCALL(bool, sys_ble_consume_scan_results, uint8_t *buffer, uint16_t *size_in_out) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(size_in_out, sizeof(*size_in_out));
-    syscall_assert_userspace_buffer(buffer, *size_in_out);
+    uint16_t size = *size_in_out;
+    syscall_assert_userspace_buffer(buffer, size);
+
+    const bool result = gap_le_consume_scan_results(buffer, &size);
+    *size_in_out = size;
+    return result;
   }
 
   return gap_le_consume_scan_results(buffer, size_in_out);

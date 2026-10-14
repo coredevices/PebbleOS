@@ -3,6 +3,8 @@
 
 #include "gap_le_scan.h"
 
+#include <string.h>
+
 #include <pbl/bluetooth/gap_le_scan.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/circular_buffer.h>
@@ -124,12 +126,13 @@ bool gap_le_consume_scan_results(uint8_t *buffer, uint16_t *size_in_out) {
     while (read_space && write_space >= sizeof(GAPLERawAdReport)) {
       // First copy the header. We know for sure this will fit into buffer,
       // because it was tested in the while() condition:
-      circular_buffer_copy(&s_circular_buffer, buffer, sizeof(GAPLERawAdReport));
-      const GAPLERawAdReport *report = (const GAPLERawAdReport *)buffer;
+      GAPLERawAdReport report;
+      circular_buffer_copy(&s_circular_buffer, (uint8_t *)&report, sizeof(report));
+      memcpy(buffer, &report, sizeof(report));
 
       // Now use the copied header to figure out how big the report actually is:
       const uint32_t payload_len =
-          report->payload.ad_data_length + report->payload.scan_resp_data_length;
+          report.payload.ad_data_length + report.payload.scan_resp_data_length;
       const uint32_t report_len = sizeof(GAPLERawAdReport) + payload_len;
 
       // There should always be at least enough bytes to read in the circular
