@@ -24,6 +24,7 @@ release = "0.1.0"
 
 extensions = [
     "myst_parser",
+    "sphinx_copybutton",
     "sphinx_design",
     "pbl_docs",
 ]
@@ -98,6 +99,9 @@ linkcheck_ignore = [
 
 # -- Options for myst_parser extension -----------------------------------------
 # https://myst-parser.readthedocs.io/en/latest/configuration.html
+
+# Leave shell prompts and console output out of the copied text
+copybutton_exclude = ".linenos, .gp, .go"
 
 myst_enable_extensions = [
     "colon_fence",

@@ -1,4 +1,5 @@
 sphinx~=9.1
 myst-parser~=5.1
 shibuya~=2026.7
+sphinx-copybutton~=0.5
 sphinx-design~=0.7
