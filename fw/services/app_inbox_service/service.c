@@ -115,9 +115,14 @@ static AppInboxServiceTag prv_tag_for_event_handlers(const AppInboxMessageHandle
   return AppInboxServiceTagInvalid;
 }
 
+static bool prv_is_inbox_owned_by_current_task(uint8_t *storage, AppInboxServiceTag tag);
+
 DEFINE_SYSCALL(bool, sys_app_inbox_service_register, uint8_t *storage, size_t storage_size,
                AppInboxMessageHandler message_handler, AppInboxDroppedHandler dropped_handler) {
   if (PRIVILEGE_WAS_ELEVATED) {
+    if (pebble_task_get_current() != PebbleTask_App) {
+      syscall_failed();
+    }
     syscall_assert_userspace_buffer(storage, storage_size);
   }
   const AppInboxServiceTag service_tag =
@@ -135,6 +140,10 @@ DEFINE_SYSCALL(bool, sys_app_inbox_service_register, uint8_t *storage, size_t st
 
 DEFINE_SYSCALL(uint32_t, sys_app_inbox_service_unregister, uint8_t *storage) {
   // No check is needed on the value of `storage `, we're not going to dereference it.
+  if (PRIVILEGE_WAS_ELEVATED &&
+      !prv_is_inbox_owned_by_current_task(storage, AppInboxServiceTagInvalid)) {
+    return 0;
+  }
   return app_inbox_service_unregister_by_storage(storage);
 }
 
@@ -146,6 +155,9 @@ DEFINE_SYSCALL(bool, sys_app_inbox_service_get_consumer_info, AppInboxServiceTag
     if (info_out) {
       syscall_assert_userspace_buffer(info_out, sizeof(*info_out));
     }
+    if (!prv_is_inbox_owned_by_current_task(nullptr, tag)) {
+      return false;
+    }
   }
   return prv_get_consumer_info(tag, info_out);
 }
@@ -155,6 +167,9 @@ static void prv_consume(AppInboxConsumerInfo *consumer_info);
 DEFINE_SYSCALL(void, sys_app_inbox_service_consume, AppInboxConsumerInfo *consumer_info) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(consumer_info, sizeof(*consumer_info));
+    if (!prv_is_inbox_owned_by_current_task(nullptr, consumer_info->tag)) {
+      syscall_failed();
+    }
   }
   prv_consume(consumer_info);
 }
@@ -187,6 +202,14 @@ static bool prv_list_filter_by_tag(ListNode *found_node, void *data) {
 static AppInboxNode *prv_find_inbox_by_tag(AppInboxServiceTag tag) {
   return (AppInboxNode *)list_find((ListNode *)s_app_inbox_head, prv_list_filter_by_tag,
                                    (void *)(uintptr_t)tag);
+}
+
+static bool prv_is_inbox_owned_by_current_task(uint8_t *storage, AppInboxServiceTag tag) {
+  prv_lock();
+  AppInboxNode *inbox = storage ? prv_find_inbox_by_storage(storage) : prv_find_inbox_by_tag(tag);
+  const bool owned = inbox && (inbox->event_handler_task == pebble_task_get_current());
+  prv_unlock();
+  return owned;
 }
 
 static AppInboxNode *prv_find_inbox_by_tag_and_log_if_not_found(AppInboxServiceTag tag) {
