@@ -135,7 +135,7 @@ static void prv_push_worker_crash_dialog(void *context) {
   // Push the worker crash actionable dialog
   actionable_dialog_push(data->actionable_dialog, prv_get_window_stack());
 
-  light_enable_interaction();
+  light_enable_interaction_with_reason("crash-popup");
 }
 
 void crashed_ui_show_worker_crash(const AppInstallId install_id) {
@@ -157,7 +157,7 @@ static void prv_push_reset_dialog(void *context) {
   expandable_dialog_show_action_bar(expandable_dialog, false);
   expandable_dialog_push(expandable_dialog, prv_get_window_stack());
 
-  light_enable_interaction();
+  light_enable_interaction_with_reason("crash-popup");
 }
 
 void crashed_ui_show_forced_core_dump(void) {

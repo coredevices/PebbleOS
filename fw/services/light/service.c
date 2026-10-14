@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
+
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/services/light.h>
@@ -63,6 +65,9 @@ static BacklightState s_light_state;
 
 //! The brightness of the display in a range between 0 and 100
 static uint8_t s_current_brightness;
+
+static RtcTicks s_on_since_ticks;
+static uint32_t s_last_on_time_ms;
 
 //! Timer to count down from the LIGHT_STATE_ON_TIMED state.
 static TimerID s_timer_id;
@@ -174,7 +179,19 @@ static uint8_t prv_dynamic_mode_floor_intensity(BacklightDynamicMode mode) {
 }
 #endif
 
-static void prv_change_state(BacklightState new_state);
+static void prv_change_state(BacklightState new_state, const char *reason);
+
+static void prv_log_event(const char *reason, const char *result) {
+  if (!shell_prefs_get_backlight_logging_enabled()) {
+    return;
+  }
+  const uint32_t on_ms = s_current_brightness > 0
+                             ? (rtc_get_ticks() - s_on_since_ticks) * 1000 / RTC_TICKS_HZ
+                             : s_last_on_time_ms;
+  PBL_LOG_DBG("Backlight %s %s: state=%u pct=%u on_ms=%" PRIu32 " buttons=%d forced=%u", reason,
+              result, s_light_state, s_current_brightness, on_ms, s_num_buttons_down,
+              s_user_controlled_state);
+}
 
 //! Timer callback: holdoff expired, drop the prime so the W1160 stops
 //! integrating in the background. Runs on the new_timer task.
@@ -236,7 +253,7 @@ static bool prv_als_is_light(void) {
 
 static void light_timer_callback(void *data) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  prv_change_state(LIGHT_STATE_ON_FADING);
+  prv_change_state(LIGHT_STATE_ON_FADING, "timeout");
   pbl_mutex_unlock(&s_mutex);
 }
 
@@ -325,6 +342,20 @@ static void prv_change_brightness(uint8_t new_brightness) {
   const bool turning_on = (s_current_brightness == 0U) && (new_brightness > 0U);
   const bool turning_off = (s_current_brightness > 0U) && (new_brightness == 0U);
 
+  if (turning_on) {
+    s_on_since_ticks = rtc_get_ticks();
+    s_last_on_time_ms = 0;
+    if (shell_prefs_get_backlight_logging_enabled()) {
+      PBL_LOG_DBG("Backlight wake: cached_lux=%" PRIu32 " threshold=%" PRIu32
+                  " als=%u allowed=%u enabled=%u",
+                  s_als_cached_level, ambient_light_get_dark_threshold(),
+                  backlight_is_ambient_sensor_enabled(), s_backlight_allowed,
+                  backlight_is_enabled());
+    }
+  } else if (turning_off) {
+    s_last_on_time_ms = (rtc_get_ticks() - s_on_since_ticks) * 1000 / RTC_TICKS_HZ;
+  }
+
   if (new_brightness == 0U) {
     PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
   } else {
@@ -380,7 +411,7 @@ static uint8_t prv_build_fade_ladder(uint8_t from, uint8_t *levels) {
   return count;
 }
 
-static void prv_change_state(BacklightState new_state) {
+static void prv_change_state(BacklightState new_state, const char *reason) {
   BacklightState old_state = s_light_state;
   s_light_state = new_state;
 
@@ -439,6 +470,14 @@ static void prv_change_state(BacklightState new_state) {
     backlight_refresh();
   }
 
+  // Log timer refreshes and fade edges, skipping the intermediate fade steps.
+  if (old_state != s_light_state || new_state != LIGHT_STATE_ON_FADING) {
+    prv_log_event(reason, "applied");
+    if (s_light_state == LIGHT_STATE_ON_TIMED && shell_prefs_get_backlight_logging_enabled()) {
+      PBL_LOG_DBG("Backlight timeout_ms=%" PRIu32, backlight_get_timeout_ms());
+    }
+  }
+
   // Notify subscribers when the backlight transitions between on and off.
   // Treat any non-OFF state as "on" so apps see a single edge per wake.
   const bool was_on = (old_state != LIGHT_STATE_OFF);
@@ -456,6 +495,7 @@ static void prv_change_state(BacklightState new_state) {
 
 static bool prv_light_allowed(void) {
   if (!s_backlight_allowed) {
+    prv_log_event("policy", "disallowed");
     return false;
   }
 
@@ -465,11 +505,16 @@ static bool prv_light_allowed(void) {
       // (we don't need it!). Grab the mutex here so that the timer state machine doesn't change
       // the light brightness while we're checking the ambient light levels.
       bool allowed = !((s_current_brightness == 0) && prv_als_is_light());
+      if (!allowed && shell_prefs_get_backlight_logging_enabled()) {
+        PBL_LOG_DBG("Backlight blocked: lux=%" PRIu32 " threshold=%" PRIu32, s_als_cached_level,
+                    ambient_light_get_dark_threshold());
+      }
       return allowed;
     } else {
       return true;
     }
   } else {
+    prv_log_event("policy", "disabled");
     return false;
   }
 }
@@ -477,6 +522,8 @@ static bool prv_light_allowed(void) {
 void light_init(void) {
   s_light_state = LIGHT_STATE_OFF;
   s_current_brightness = 0;
+  s_on_since_ticks = 0;
+  s_last_on_time_ms = 0;
   s_num_buttons_down = 0;
   s_user_controlled_state = false;
   s_touch_holding = false;
@@ -515,7 +562,9 @@ static void prv_button_pressed(bool touch) {
 
   // set the state to be on; releasing buttons will start the timer counting down
   if (prv_light_allowed()) {
-    prv_change_state(LIGHT_STATE_ON);
+    prv_change_state(LIGHT_STATE_ON, touch ? "touch-down" : "button-down");
+  } else {
+    prv_log_event(touch ? "touch-down" : "button-down", "blocked");
   }
 
   pbl_mutex_unlock(&s_mutex);
@@ -525,7 +574,7 @@ void light_button_pressed(void) {
   prv_button_pressed(false);
 }
 
-void light_button_released(void) {
+static void prv_button_released(bool touch) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   s_num_buttons_down--;
@@ -536,10 +585,16 @@ void light_button_released(void) {
 
   if (s_num_buttons_down == 0 && s_light_state == LIGHT_STATE_ON && !s_user_controlled_state) {
     // no more buttons pressed: wait for a bit and then start the fade-out timer
-    prv_change_state(LIGHT_STATE_ON_TIMED);
+    prv_change_state(LIGHT_STATE_ON_TIMED, touch ? "touch-up" : "button-up");
+  } else {
+    prv_log_event(touch ? "touch-up" : "button-up", "held");
   }
 
   pbl_mutex_unlock(&s_mutex);
+}
+
+void light_button_released(void) {
+  prv_button_released(false);
 }
 
 void light_touch_down(void) {
@@ -556,16 +611,21 @@ void light_touch_up(void) {
     return;
   }
   s_touch_holding = false;
-  light_button_released();
+  prv_button_released(true);
 }
 
 void light_enable_interaction(void) {
+  light_enable_interaction_with_reason("interaction");
+}
+
+void light_enable_interaction_with_reason(const char *reason) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   s_touch_lit = false;
 
   // if some buttons are held or light_enable is asserted, do nothing
   if (s_num_buttons_down > 0 || s_light_state == LIGHT_STATE_ON) {
+    prv_log_event(reason, "held");
     pbl_mutex_unlock(&s_mutex);
     return;
   }
@@ -573,13 +633,19 @@ void light_enable_interaction(void) {
   prv_als_prime_for_interaction();
 
   if (prv_light_allowed()) {
-    prv_change_state(LIGHT_STATE_ON_TIMED);
+    prv_change_state(LIGHT_STATE_ON_TIMED, reason);
+  } else {
+    prv_log_event(reason, "blocked");
   }
 
   pbl_mutex_unlock(&s_mutex);
 }
 
 void light_enable(bool enable) {
+  light_enable_with_reason(enable, enable ? "force-on" : "force-off");
+}
+
+void light_enable_with_reason(bool enable, const char *reason) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   s_touch_lit = false;
@@ -592,11 +658,13 @@ void light_enable(bool enable) {
   s_user_controlled_state = enable;
 
   if (enable) {
-    prv_change_state(LIGHT_STATE_ON);
+    prv_change_state(LIGHT_STATE_ON, reason);
   } else if (s_num_buttons_down == 0) {
     // reset the state if someone calls light_enable(false);
     // (unless there are buttons pressed, then leave the backlight on)
-    prv_change_state(LIGHT_STATE_OFF);
+    prv_change_state(LIGHT_STATE_OFF, reason);
+  } else {
+    prv_log_event(reason, "held");
   }
 
   pbl_mutex_unlock(&s_mutex);
@@ -612,10 +680,14 @@ void light_enable_respect_settings(bool enable) {
   if (enable) {
     prv_als_prime_for_interaction();
     if (prv_light_allowed()) {
-      prv_change_state(LIGHT_STATE_ON);
+      prv_change_state(LIGHT_STATE_ON, "force-on-settings");
+    } else {
+      prv_log_event("force-on-settings", "blocked");
     }
   } else if (s_num_buttons_down == 0) {
-    prv_change_state(LIGHT_STATE_OFF);
+    prv_change_state(LIGHT_STATE_OFF, "force-off-settings");
+  } else {
+    prv_log_event("force-off-settings", "held");
   }
 
   pbl_mutex_unlock(&s_mutex);
@@ -633,7 +705,9 @@ void light_reset_user_controlled(void) {
     s_user_controlled_state = false;
 
     if (s_num_buttons_down == 0) {
-      prv_change_state(LIGHT_STATE_OFF);
+      prv_change_state(LIGHT_STATE_OFF, "app-reset");
+    } else {
+      prv_log_event("app-reset", "held");
     }
   }
 
@@ -700,7 +774,9 @@ static void prv_light_reset_to_timed_mode(void) {
     s_user_controlled_state = false;
     prv_als_prime_for_interaction();
     if (prv_light_allowed()) {
-      prv_change_state(LIGHT_STATE_ON_TIMED);
+      prv_change_state(LIGHT_STATE_ON_TIMED, "app-timed");
+    } else {
+      prv_log_event("app-timed", "blocked");
     }
   }
 
@@ -717,9 +793,9 @@ void light_toggle_enabled(void) {
 
   backlight_set_enabled(!backlight_is_enabled());
   if (prv_light_allowed()) {
-    prv_change_state(LIGHT_STATE_ON_TIMED);
+    prv_change_state(LIGHT_STATE_ON_TIMED, "toggle-enabled");
   } else {
-    prv_change_state(LIGHT_STATE_OFF);
+    prv_change_state(LIGHT_STATE_OFF, "toggle-enabled");
   }
   pbl_mutex_unlock(&s_mutex);
 }
@@ -729,9 +805,9 @@ void light_toggle_ambient_sensor_enabled(void) {
   s_user_controlled_state = false;
   backlight_set_ambient_sensor_enabled(!backlight_is_ambient_sensor_enabled());
   if (prv_light_allowed() && !prv_als_is_light()) {
-    prv_change_state(LIGHT_STATE_ON_TIMED);
+    prv_change_state(LIGHT_STATE_ON_TIMED, "toggle-ambient");
   } else {
-    prv_change_state(LIGHT_STATE_OFF);
+    prv_change_state(LIGHT_STATE_OFF, "toggle-ambient");
     // FIXME: PBL-24793 There is an edge case of when the backlight has timed off
     // or you're toggling it from no ambient (always light on buttons) to ambient,
     // you will see it turn on and immediately off if its bright out
@@ -745,7 +821,9 @@ void light_set_dynamic_mode(BacklightDynamicMode mode) {
   backlight_set_dynamic_mode(mode);
   // Briefly turn the light on so the user sees the new mode's brightness.
   if (prv_light_allowed()) {
-    prv_change_state(LIGHT_STATE_ON_TIMED);
+    prv_change_state(LIGHT_STATE_ON_TIMED, "dynamic-mode");
+  } else {
+    prv_log_event("dynamic-mode", "blocked");
   }
   pbl_mutex_unlock(&s_mutex);
 }
@@ -753,9 +831,10 @@ void light_set_dynamic_mode(BacklightDynamicMode mode) {
 
 void light_allow(bool allowed) {
   if (s_backlight_allowed && !allowed) {
-    prv_change_state(LIGHT_STATE_OFF);
+    prv_change_state(LIGHT_STATE_OFF, "disallow");
   }
   s_backlight_allowed = allowed;
+  prv_log_event(allowed ? "allow" : "disallow", "applied");
 }
 
 DEFINE_SYSCALL(bool, sys_light_is_on, void) {
@@ -763,11 +842,11 @@ DEFINE_SYSCALL(bool, sys_light_is_on, void) {
 }
 
 DEFINE_SYSCALL(void, sys_light_enable_interaction, void) {
-  light_enable_interaction();
+  light_enable_interaction_with_reason("app-interaction");
 }
 
 DEFINE_SYSCALL(void, sys_light_enable, bool enable) {
-  light_enable(enable);
+  light_enable_with_reason(enable, enable ? "app-force-on" : "app-force-off");
 }
 
 DEFINE_SYSCALL(void, sys_light_enable_respect_settings, bool enable) {

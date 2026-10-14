@@ -7,6 +7,9 @@
 
 void PBL_WEAK light_enable_interaction(void) {
 }
+void PBL_WEAK light_enable_interaction_with_reason(const char *reason) {
+  light_enable_interaction();
+}
 void PBL_WEAK light_system_color_request(void) {
 }
 void PBL_WEAK light_system_color_release(void) {

@@ -515,7 +515,7 @@ static void prv_push_pairing_window(void) {
   modal_window_push(window, ModalPriorityCritical, true /* animated */);
 
   vibes_double_pulse();
-  light_enable_interaction();
+  light_enable_interaction_with_reason("pairing");
 
   // This timeout is 0.5s longer than the BT Spec's timeout, to decrease the chances of getting
   // a success confirmation right at the max allowed time of 30 secs:
@@ -595,7 +595,7 @@ static void prv_handle_pairing_complete(bool success) {
   window_set_click_config_provider(&data->window, prv_success_or_failure_click_config_provider);
 
   vibes_short_pulse();
-  light_enable_interaction();
+  light_enable_interaction_with_reason("pairing");
 }
 
 void bluetooth_pairing_ui_handle_event(PebbleBluetoothPairEvent *event) {

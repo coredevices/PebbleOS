@@ -18,12 +18,12 @@
 #include <stubs_battery_monitor.h>
 #include <stubs_events.h>
 #include <stubs_fonts.h>
+#define CUSTOM_LOG_INTERNAL
 #include <stubs_logging.h>
 #include <stubs_low_power.h>
 #include <stubs_mutex.h>
 #include <stubs_passert.h>
 #include <stubs_print.h>
-#include <stubs_rtc.h>
 #include <stubs_serial.h>
 
 // the time that the backlight remains on but there is zero user interaction
@@ -31,12 +31,33 @@ extern const uint32_t INACTIVE_LIGHT_TIMEOUT_MS;
 // the time duration of the fade out
 extern const uint32_t LIGHT_FADE_TIME_MS;
 // number of fade-out steps
-extern const uint32_t LIGHT_FADE_STEPS;
+extern const uint8_t LIGHT_FADE_STEPS;
 
 // Stubs
 ///////////////////////////////////////////////////////////
 
 static TimerID s_light_timer;
+static bool s_logging_enabled;
+static RtcTicks s_ticks;
+static unsigned s_log_count;
+static char s_logs[8192];
+
+RtcTicks rtc_get_ticks(void) {
+  return s_ticks;
+}
+
+bool shell_prefs_get_backlight_logging_enabled(void) {
+  return s_logging_enabled;
+}
+
+static void log_internal(uint8_t log_level, const char *src_filename, int src_line_number,
+                         const char *fmt, va_list args) {
+  cl_assert_equal_i(log_level, LOG_LEVEL_DEBUG);
+  size_t used = strlen(s_logs);
+  vsnprintf(s_logs + used, sizeof(s_logs) - used, fmt, args);
+  strncat(s_logs, "\n", sizeof(s_logs) - strlen(s_logs) - 1);
+  s_log_count++;
+}
 
 static uint8_t s_backlight_brightness;
 static bool s_backlight_enabled = true;
@@ -147,6 +168,10 @@ static void check_off(void) {
 ///////////////////////////////////////////////////////////
 
 void test_light__initialize(void) {
+  s_logging_enabled = false;
+  s_ticks = 0;
+  s_log_count = 0;
+  s_logs[0] = '\0';
   light_init();
   light_allow(true);
   s_light_timer = ((StubTimer *)s_idle_timers)->id;
@@ -338,4 +363,62 @@ void test_light__touch_lit_period_is_tracked(void) {
   check_on_timed_and_consume();
 
   cl_assert(!light_is_lit_by_touch());
+}
+
+void test_light__logging_disabled(void) {
+  light_enable_interaction_with_reason("notification");
+  check_on_timed_and_consume();
+  cl_assert_equal_i(s_log_count, 0);
+}
+
+void test_light__logging_wake_refresh_and_duration(void) {
+  s_logging_enabled = true;
+  backlight_set_timeout_ms(3000);
+  light_enable_interaction_with_reason("notification");
+  check_on_timed();
+  cl_assert(strstr(s_logs, "notification applied: state=2 pct=100 on_ms=0"));
+  cl_assert(strstr(s_logs, "Backlight timeout_ms=3000"));
+
+  s_ticks = 2 * RTC_TICKS_HZ;
+  light_enable_interaction_with_reason("wrist-motion");
+  check_on_timed();
+  cl_assert(strstr(s_logs, "wrist-motion applied: state=2 pct=100 on_ms=2000"));
+
+  s_ticks = 5 * RTC_TICKS_HZ;
+  check_on_timed_and_consume();
+  cl_assert(strstr(s_logs, "timeout applied: state=4 pct=0 on_ms=5000"));
+  // Wake metadata, two requests with timeouts, and the two fade edges.
+  cl_assert_equal_i(s_log_count, 7);
+}
+
+void test_light__logging_toggle_during_lit_period(void) {
+  light_enable(true);
+  s_ticks = 4 * RTC_TICKS_HZ;
+  s_logging_enabled = true;
+  light_enable(false);
+  check_off();
+  cl_assert(strstr(s_logs, "force-off applied: state=4 pct=0 on_ms=4000"));
+  s_logging_enabled = false;
+  const unsigned log_count = s_log_count;
+  light_enable_interaction();
+  check_on_timed_and_consume();
+  cl_assert_equal_i(s_log_count, log_count);
+}
+
+void test_light__logging_held_and_blocked_requests(void) {
+  s_logging_enabled = true;
+  light_touch_down();
+  light_enable_interaction_with_reason("notification");
+  cl_assert(strstr(s_logs, "notification held: state=1 pct=100 on_ms=0 buttons=1 forced=0"));
+  light_touch_up();
+  cl_assert(strstr(s_logs, "touch-up applied: state=2"));
+  check_on_timed_and_consume();
+  light_enable(true);
+  light_enable_interaction_with_reason("wrist-motion");
+  cl_assert(strstr(s_logs, "wrist-motion held: state=1 pct=100 on_ms=0 buttons=0 forced=1"));
+  light_enable(false);
+  backlight_set_enabled(false);
+  light_enable_interaction_with_reason("notification");
+  check_off();
+  cl_assert(strstr(s_logs, "notification blocked: state=4"));
 }
