@@ -100,8 +100,7 @@ static void prv_heap_lock(void *unused) {
 }
 
 static size_t prv_get_worker_segment_size(const PebbleProcessMd *app_md) {
-  // 12 KiB - 640 bytes workerlib static = 11648 bytes
-  return 11648;
+  return CONFIG_WORKER_RAM_SEGMENT_SIZE;
 }
 
 static size_t prv_get_worker_stack_size(const PebbleProcessMd *app_md) {
