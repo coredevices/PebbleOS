@@ -43,7 +43,76 @@ Keep code comments short and concise; extended rationale belongs in the Git
 commit message. Do not reference issue numbers in code, only in commit
 messages.
 
-## Backports
+## Git workflow
+
+### Commits
+
+Each commit is one logical change that builds and works on its own, so
+the history stays bisectable. Split unrelated changes, and fold fixes to
+a change into the commit that introduced it rather than adding fixup
+commits.
+
+The title has the form `area: description`:
+
+- `area` names the part of the tree the change touches, in lowercase, as
+  a path when that is clearer, e.g. `drivers/imu/mmc5603nj` or
+  `include/pbl/kernel`. Follow what `git log` shows for the same files.
+- `description` says what the change does, in the imperative, without a
+  trailing period.
+
+The body explains why the change is needed and anything a reviewer would
+otherwise have to work out, wrapped at 100 columns like the title. An
+issue the commit fixes is referenced there, as `Fixes #123`, never in the
+code.
+
+Every commit carries a `Signed-off-by` line, certifying the Developer
+Certificate of Origin, that matches the commit's author; `git commit -s`
+adds it. The author name must be a real name, and GitHub `noreply`
+addresses are not accepted. Work produced with generative AI is disclosed
+with a `Co-Authored-By` line, following the {doc}`../community/contributing`.
+
+```text
+services/battery: hide the percentage while charging starts
+
+The fuel gauge reports a stale value for a few seconds after the charger
+is connected. Show the charging icon alone until the first new reading
+instead of a percentage that jumps.
+
+Signed-off-by: Jane Doe <jane@example.com>
+```
+
+### Pull requests
+
+Open pull requests from a branch of your fork against `main`. Keep the
+branch rebased on `main` rather than merging it in, and rework commits
+with interactive rebase and a force push when addressing review, so the
+pull request always shows the history that will land. Pull requests are
+merged without merge commits.
+
+CI checks every commit of a pull request with gitlint, against the rules
+in `.gitlint` and `tools/gitlint/`, besides building and testing it.
+
+Labels are added from the paths a pull request touches. Some block
+merging until they are removed:
+
+- `DNM`: do not merge;
+- `pending:hw-validation`: waiting for testing on real hardware;
+- `pending:sdk-review`: waiting for a review of an SDK change;
+- `pending:submodule-merge`: a submodule points at a commit not merged
+  in its own repository yet.
+
+A pull request with no activity for 30 days is marked stale, and closed
+7 days later unless someone comments.
+
+### Checking commits locally
+
+Run gitlint over the commits of a branch before pushing:
+
+```shell
+gitlint --commits main..HEAD
+```
+
+### Backports
 
 To backport a merged pull request to a release branch, add a
 `backport-<branch>` label (e.g. `backport-4.36-branch`) to it, either
