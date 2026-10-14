@@ -1,89 +1,117 @@
 # Architecture overview
 
-A guided tour of how PebbleOS is put together, deep-linking to the design
-prose that lives in the source tree. The in-source comments are canonical —
-these pages summarize and point, they do not duplicate.
+PebbleOS is the operating system of the Pebble watches. It is a single
+firmware image, built per board, that runs the watch's own UI and services
+and hosts third-party watchfaces, apps and background workers. This page
+gives the overall picture; each layer has its own section with the details.
 
-## Layering
+## Layers
 
-PebbleOS runs on its own [kernel API](../kernel/index.md) (`include/pbl/kernel`,
-implemented under `kernel/`). The main source layers, as described on the
-<a href="../apidoc/index.html">API reference</a> main page:
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ Apps and workers          system apps, watchfaces, third-party  │
+├─────────────────────────────────────────────────────────────────┤
+│ Application framework     fw/applib: UI, graphics, app APIs     │
+├─────────────────────────────────────────────────────────────────┤
+│ Services                  fw/services: notifications, health,   │
+│                           storage, phone communication, ...     │
+├─────────────────────────────────────────────────────────────────┤
+│ Subsystems and libraries  subsys/, lib/: logging, Bluetooth,    │
+│                           shell, input, utilities               │
+├─────────────────────────────────────────────────────────────────┤
+│ Drivers                   drivers/: one class per peripheral    │
+├─────────────────────────────────────────────────────────────────┤
+│ Kernel                    kernel/: threads, sync, interrupts    │
+├─────────────────────────────────────────────────────────────────┤
+│ SoC and HAL               soc/, third_party/ vendor HALs        │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-- `fw/applib` — application framework and UI, the API surface exposed to
-  watchapps ([Application SDK](../sdk/index.md) describes how
-  functions get there).
-- `fw/services` — system services (Bluetooth, filesystem, activity, …).
-- `fw/kernel` — task management, events, memory.
-- `drivers/` — hardware drivers (public interfaces under
-  `include/pbl/drivers`), built on the [device model](../drivers/device_model.md).
-- `subsys/` — OS subsystems shared beyond the firmware tree; currently
-  logging, cron, the Bluetooth backends, [CRC](../subsystems/crc.md), [input](../subsystems/input.md),
-  the [debug shell](../subsystems/shell.md) and the [task watchdog](../subsystems/task_watchdog.md),
-  included via the `pbl/logging/`, `pbl/cron/`, `pbl/bluetooth/`, `pbl/crc/`,
-  `pbl/input/`, `pbl/shell/` and `pbl/task_wdt/` header paths.
+From the bottom up:
 
-Alongside these sit `fw/shell` (launcher/watchface UX flow),
-`fw/process_management` (app lifecycle) and `fw/comm` (phone
-communication).
+{doc}`Kernel <../kernel/index>`
+: The kernel API the rest of the firmware is written against: threads,
+  synchronization, timers, interrupts and memory. It hides the CPU
+  architecture and the RTOS underneath.
 
-## Task model
+{doc}`Drivers <../drivers/index>`
+: One driver class per kind of peripheral (display, accelerometer,
+  flash, …), each with a common interface and an implementation per part,
+  built on a shared device model.
 
-The firmware runs a fixed set of kernel threads, enumerated in
-`fw/kernel/pebble_tasks.h`: KernelMain, KernelBackground, Worker, App,
-the Bluetooth tasks (host, controller, HCI), NewTimers and
-[PULSE](../reference/pulse2/pulse2.md). `main()`
-(`fw/main.c`) performs SoC init and spawns KernelMain, which brings up
-the rest of the system.
+{doc}`Subsystems <../subsystems/index>` and {doc}`libraries <../libraries/index>`
+: Self-contained building blocks used across the firmware, such as
+  logging, the Bluetooth host integration, the debug shell, input
+  handling and generic utilities.
 
-## Boot and firmware variants
+{doc}`Services <../services/index>`
+: The system's features: they own shared resources, persist state, talk
+  to the phone and feed events to apps.
 
-The bootloader is not part of this tree; it selects which firmware image to
-launch, coordinated through boot bits (see `BOOT_BIT_*` usage in
-`fw/main.c`) and the slot metadata in `fw/system/firmware_storage.h`.
+Application framework
+: `fw/applib` is the API apps are written against, from windows and
+  layers to graphics and text. Its exported part is the
+  {doc}`Application SDK <../sdk/index>`.
 
-Normal firmware and PRF (Pebble Recovery Firmware — the minimal fallback
-image used to reinstall the main firmware) are separate compile-time
-variants: `pbl configure --variant=prf` (see
-[`pbl configure`](../pbl/configure.md)) applies `fw/prj_prf.conf` on
-top of the base config, disabling the JS engine and marking the image as
-recovery firmware.
+Apps
+: System apps (launcher, settings, notifications, health, …) are built
+  into the firmware from `fw/apps`; third-party apps and workers are
+  installed from the phone.
 
-## Processes and apps
+The public interfaces of each layer live under `include/pbl/`, documented
+in the API reference. Code PebbleOS builds on but does not maintain is
+described in {doc}`../third_party/index`.
 
-- **App identity** — an installed app is referred to by several identifiers
-  (`AppInstallId`, `AppInstallEntry`, UUID, `PebbleProcessMd`); the comment
-  at the top of `fw/process_management/app_install_manager.h` explains
-  which to use where and which are deprecated.
-- **Shell flow** — which app launches at startup and what happens when an
-  app exits is a deliberately flat state machine rooted in the launcher and
-  the watchface; see the diagrammed comment at the top of
-  `fw/shell/normal/system_app_state_machine.c`.
-- **Privilege boundary** — third-party app and worker code runs unprivileged
-  (processes built into the firmware stay privileged); anything
-  touching OS state crosses into the kernel through a `sys_*` syscall
-  (declared in `fw/syscall/syscall.h`) defined with `DEFINE_SYSCALL`
-  from `fw/syscall/syscall_internal.h`, which raises privileges on
-  entry and drops them on return unless the caller was already privileged.
+## Execution model
 
-## Memory layout
+The firmware runs a fixed set of tasks, each a kernel thread:
 
-`fw/linker/pebbleos.ld` ("Section concepts!" comment) documents the
-flash/RAM picture: VMA vs LMA, the kernel data/bss/stack/heap region, and
-the fixed app region where third-party app code, data and heap live.
-`fw/linker/memory.ld` explains how SRAM is carved between kernel, app
-and worker regions, and `fw/linker/regions.ld` notes the MPU
-power-of-two constraints.
+| Task | Role |
+| --- | --- |
+| KernelMain | The system's event loop: input, UI and most services |
+| KernelBackground | Deferred work kept off KernelMain |
+| App | The foreground app or watchface |
+| Worker | The app's background worker, if it has one |
+| Bluetooth host, controller, HCI | The Bluetooth stack |
+| NewTimers | Timer callbacks |
+| PULSE | The serial link to development tools |
 
-## Coredumps
+Services and drivers post events to KernelMain, which handles them and
+forwards what concerns the app to the app's own event queue. Only one app
+and one worker run at a time.
 
-The on-flash coredump image format (header plus chunked records, including
-per-thread register sets) is documented in `fw/kernel/core_dump.c`.
+Third-party apps and workers run unprivileged, confined by the MPU to
+their own memory; whatever needs the system goes through a syscall. System
+apps run privileged. {doc}`../sdk/how_it_works` describes the boundary.
 
-## Components
+## Boot
 
-Each layer with a public interface under `include/` has its own section,
-pairing hand-written guides with the generated API reference:
-{doc}`../kernel/index`, {doc}`../subsystems/index`,
-{doc}`../drivers/index`, {doc}`../services/index` and
-{doc}`../libraries/index`.
+A bootloader, outside this tree, starts the firmware image in flash. The
+kernel's reset handler sets up memory and the SoC, then calls `main()`
+(`fw/main.c`), which brings up the drivers and starts KernelMain.
+KernelMain initializes the services and launches the first app, normally
+the watchface. The {doc}`kernel <../kernel/index>` page details the early
+steps.
+
+## Firmware variants
+
+The same tree builds three firmwares:
+
+- **Normal**: the full firmware.
+- **Recovery (PRF)**: a minimal firmware kept in its own slot, from which
+  the phone can reinstall the normal one when it does not start. It has
+  no third-party apps and no JavaScript engine.
+- **Manufacturing**: the recovery firmware with the factory test
+  functions.
+
+The variant, and everything else that is optional, is chosen at build time
+with Kconfig, from the board's defconfig and the variant's configuration;
+see {doc}`../development/build_system/index`.
+
+## Hardware support
+
+A **board** describes one watch, or one revision of it: its SoC, its
+peripherals and the drivers they need. A **platform** is what apps see:
+display size, shape and colors, and capabilities. Boards of the same watch
+model share a platform, and the emulator provides a board for each
+platform. {doc}`../boards/index` lists them.

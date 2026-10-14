@@ -120,6 +120,14 @@ and copied to RAM at boot. Code gets there in one of three ways:
 
 Without `CONFIG_RAMFUNC` all three are no-ops and the code stays in flash.
 
+### Memory layout
+
+The linker scripts in `fw/linker/` document the memory map.
+`pebbleos.ld` explains the sections, their load and run addresses, and the
+kernel's data, stack and heap; `memory.ld` how SRAM is divided between the
+kernel, the app and the worker; and `regions.ld` the alignment the MPU
+imposes on those regions.
+
 ## Compiler abstraction
 
 `pbl/kernel/compiler.h` is the only place the tree may spell compiler
