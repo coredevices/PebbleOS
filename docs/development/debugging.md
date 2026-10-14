@@ -25,12 +25,14 @@ Start a debug session with {doc}`../pbl/debug`:
 pbl debug
 ```
 
-On QEMU boards this attaches GDB to the {doc}`emulator <emulation/emulator>` through a
-proxy (`tools/qemu/qemu_gdb_proxy.py`) that walks the kernel's thread list,
-so `info threads` and per-thread backtraces work. On real hardware,
-`pbl debug` is available on boards whose runner is OpenOCD (e.g. asterix,
-configured by `boards/asterix/support/openocd.cfg`); boards flashed via
-sftool do not support it.
+On QEMU boards this attaches GDB to the {doc}`emulator <emulation/emulator>`
+through a proxy (`tools/qemu/qemu_gdb_proxy.py`) that walks the kernel's
+thread list, so `info threads` and per-thread backtraces work. On real
+hardware, `pbl debug` is available on boards whose runner is OpenOCD (e.g.
+asterix, configured by `boards/asterix/support/openocd.cfg`); boards
+flashed via sftool do not support it. The
+{doc}`native simulator <emulation/native_simulator>` runs under the host's
+own debugger instead.
 
 ### PebbleOS GDB commands
 
@@ -46,12 +48,14 @@ Highlights (run `pbl` for the full list):
 
 - `pbl heap` / `pbl heapstats`: parse and profile the heaps
 - `pbl sbt`: stack backtrace and stack usage statistics
+- `pbl stackwizard`: recover a backtrace from a corrupted stack, e.g.
+  after a stack overflow
+- `pbl lockstats`: check the mutexes for deadlocks
 - `pbl layer-tree`: dump the UI layer hierarchy
 - `pbl app_symbols` / `pbl worker_symbols`: load symbols for the currently
   running app or worker, so app crashes can be symbolicated
 - `pbl fault_wizard`: after a hard fault, restore the faulting `$sp`/`$lr`/
   `$pc` so `bt` shows the crashing stack
-- `pbl reboot_reason`: decode the reboot reason from the RTC registers
 - `pbl log-buffer`: dump log messages still buffered in RAM
 - `pbl to_png`: render the framebuffer or a `GBitmap` to a PNG file
 
@@ -74,9 +78,9 @@ every thread, is documented in `fw/kernel/core_dump.c`.
   mode and prints a full report: backtraces for all threads, registers,
   heap and lock statistics, and build metadata.
 
-You can also open a coredump interactively with
-`arm-none-eabi-gdb-py <symbols.elf> -ex "core-file <coredump>"` and use
-the `pbl` commands above.
+You can also open a coredump interactively with the SDK's GDB,
+`pebble-gdb <symbols.elf> -ex "core-file <coredump>"`, and use the `pbl`
+commands above.
 
 ## Memory usage analysis
 
