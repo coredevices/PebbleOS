@@ -364,7 +364,7 @@ DEFINE_SYSCALL(WakeupId, sys_wakeup_schedule, time_t timestamp, int32_t reason,
     return E_INVALID_ARGUMENT;
   }
 
-  Uuid uuid = app_manager_get_current_app_md()->uuid;
+  Uuid uuid = sys_process_manager_get_current_process_md()->uuid;
 
   WakeupEntry entry = {
     .uuid = uuid,
@@ -420,7 +420,7 @@ DEFINE_SYSCALL(void, sys_wakeup_delete, WakeupId wakeup_id) {
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
   // Only allow owner to delete its own wakeup events
-  if (uuid_equal(&app_manager_get_current_app_md()->uuid, &entry.uuid)) {
+  if (uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {
     if (wakeup_id == s_wakeup_state.current_wakeup_id &&
         new_timer_scheduled(s_current_timer_id, nullptr)) {
       new_timer_stop(s_current_timer_id);
@@ -451,7 +451,7 @@ static bool prv_check_count_and_availability_callback(SettingsFile *file, Settin
     return true; // continue iterating
   }
 
-  if (uuid_equal(&app_manager_get_current_app_md()->uuid, &entry.uuid)) {
+  if (uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {
     check->wakeup_count++;
   }
   // If the wakeup_id is with the same minute as another wakeup event
@@ -510,7 +510,7 @@ static void prv_delete_events_by_uuid_callback(SettingsFile *old_file, SettingsF
   info->get_val(old_file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // If the UUID is equal, delete the entry
-  if (uuid_equal(&app_manager_get_current_app_md()->uuid, &entry.uuid)) {
+  if (uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {
     // if this is the current timer event, cancel it
     if (wakeup_id == s_wakeup_state.current_wakeup_id &&
         new_timer_scheduled(s_current_timer_id, nullptr)) {
@@ -567,7 +567,7 @@ DEFINE_SYSCALL(time_t, sys_wakeup_query, WakeupId wakeup_id) {
   }
 
   // timer doesn't belong to this app
-  if (!uuid_equal(&app_manager_get_current_app_md()->uuid, &entry.uuid)) {
+  if (!uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {
     return E_DOES_NOT_EXIST;
   }
 
