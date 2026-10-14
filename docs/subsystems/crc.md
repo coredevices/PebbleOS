@@ -20,39 +20,27 @@ The layering follows Linux's `lib/crc`. The public functions own the
 software implementations, which are always built, and decide when to hand
 work to hardware:
 
-```
-pbl_crc32() / pbl_crc32_legacy_update()      subsys/crc
-  ├── len >= CONFIG_CRC_HW_MIN_LEN ──► pbl_crc_hw_*()   driver, optional
-  └── remainder ──────────────────────► software, nybble-wide tables
+```{mermaid}
+flowchart TD
+  api["pbl_crc32() / pbl_crc32_legacy_update()<br/>subsys/crc"]
+  hw["pbl_crc_hw_*()<br/>driver, optional"]
+  sw["Software<br/>nybble-wide tables"]
+  api -- "len ≥ CONFIG_CRC_HW_MIN_LEN" --> hw
+  api -- "remainder" --> sw
+  hw -. "what it did not process" .-> sw
+
+  classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
+  classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
+  classDef base fill:#525252,stroke:#525252,color:#ffffff
+  class api app
+  class sw system
+  class hw base
 ```
 
-A driver offering acceleration selects the hidden `CONFIG_CRC_HW_ACCEL`
-symbol and implements the two functions in `include/pbl/drivers/crc.h`. Each
-takes a running value and a buffer, processes a prefix of it that is a whole
-number of 32-bit words, and returns its length in bytes. Returning less than
-the full length is always allowed: the subsystem finishes in software. A
-driver returns 0 whenever the hardware cannot be used — before it is ready,
-when its self-test failed, or for any other reason — so callers never see a
-failure.
+Hardware acceleration comes from a {doc}`CRC driver <../drivers/crc/index>`,
+which may process any part of a buffer or none of it: the subsystem always
+finishes in software, so callers never see a failure.
 
 `CONFIG_CRC_HW_MIN_LEN` keeps short buffers in software, where programming the
 peripheral costs more than it saves. CRC-8 inputs are a few bytes long and
 are never offloaded.
-
-## SF32LB
-
-`drivers/crc/sf32lb.c` (`CONFIG_CRC_SF32LB`, default on SF32LB52) drives
-the CRC1 unit. It programs the polynomial, initial value and reflection for
-every burst of up to 256 bytes under `pbl_irq_lock()`, carrying the running
-value between bursts, so the unit needs no owner. That works before the
-scheduler starts and from interrupt context, and bounds the interrupt
-latency it adds to a few microseconds.
-
-At 240 MHz a call costs about 330 cycles of setup, then about 5.4 cycles per
-byte against about 20 for the software tables. The unit breaks even around
-24 bytes and is about 3.6 times faster on large buffers, which sets the
-`CONFIG_CRC_HW_MIN_LEN` default of 32.
-
-On first use the driver checks both algorithms against fixed test vectors,
-in one burst and resumed across two, and disables itself on any mismatch,
-logging an error. The software path then serves every request.
