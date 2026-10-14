@@ -3,3 +3,4 @@ myst-parser~=5.1
 shibuya~=2026.7
 sphinx-copybutton~=0.5
 sphinx-design~=0.7
+kconfiglib~=14.1

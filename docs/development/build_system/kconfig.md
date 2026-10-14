@@ -21,6 +21,8 @@ The root `Kconfig` sources the rest of the tree:
 
 A symbol is defined next to the code it enables: a driver class's
 `Kconfig` lives in `drivers/<class>/`, a subsystem's in `subsys/<name>/`.
+{doc}`../../reference/kconfig` lists every option, with its dependencies,
+defaults and location.
 
 ## Configuration fragments
 

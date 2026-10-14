@@ -266,3 +266,21 @@ html.dark {
     max-width: 240px;
   }
 }
+
+/* Kconfig search */
+
+#__kconfig-search .input-container {
+  border-color: var(--sy-c-border);
+  box-shadow: none !important;
+}
+
+#__kconfig-search .input-container input,
+#__kconfig-search select {
+  color: var(--sy-c-text);
+  background: var(--sy-c-background);
+}
+
+#__kconfig-search .input-container button {
+  color: #ffffff;
+  background-color: var(--pebble-red);
+}

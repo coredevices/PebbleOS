@@ -27,6 +27,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "pbl_docs",
+    "kconfig",
 ]
 
 exclude_patterns = ["_build", "_apidoc", "_ext", "Thumbs.db", ".DS_Store"]
@@ -96,6 +97,12 @@ pbl_redirects = {
     "architecture/device": "drivers/device_model",
     "architecture/activity/index": "services/activity/index",
 }
+
+# -- Options for the kconfig extension ---------------------------------------
+
+kconfig_generate_db = True
+kconfig_gh_link_base_url = "https://github.com/coredevices/pebbleos"
+kconfig_gh_link_revision = "main"
 
 # -- Options for the linkcheck builder ----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-the-linkcheck-builder

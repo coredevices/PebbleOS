@@ -165,6 +165,7 @@ community/contributing.md
 :caption: Reference
 
 reference/index.md
+reference/kconfig.md
 API reference <https://pebbleos-core.readthedocs.io/en/latest/apidoc/index.html>
 ```
 
