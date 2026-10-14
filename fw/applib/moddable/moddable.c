@@ -3,6 +3,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include <stddef.h>
 
+#include <pbl/mcu/privilege.h>
 #include <pbl/services/evented_timer.h>
 
 #include <applib/app.h>
@@ -22,6 +23,7 @@
 #include <shell/normal/watchface.h>
 #include <xsHost.h>
 #include <xsHosts.h>
+#include <xsffi.h>
 #include <xsmc.h>
 
 static ExpandableDialog *prv_create_fatal_dialog(const char *message) {
@@ -64,6 +66,28 @@ void moddable_cleanup(void) {
 
   app_state_set_js_memory_api_context(nullptr);
   task_free(state);
+}
+
+typedef struct {
+  txBuildFFI build_ffi;
+  txMachine *the;
+  txAPI *api;
+} BuildFFICall;
+
+static txBuildFFI s_app_build_ffi;
+
+static void prv_build_ffi_unprivileged_cb(void *data) {
+  BuildFFICall *call = data;
+  call->build_ffi(call->the, call->api);
+}
+
+static void prv_build_ffi(txMachine *the, txAPI *api) {
+  BuildFFICall call = {
+    .build_ffi = s_app_build_ffi,
+    .the = the,
+    .api = api,
+  };
+  mcu_call_unprivileged(prv_build_ffi_unprivileged_cb, &call);
 }
 
 // Minimum recordSize for the original struct (without flags field)
@@ -162,7 +186,8 @@ DEFINE_SYSCALL(void, moddable_createMachine, ModdableCreationRecord *cr) {
   }
 
   state->the = the;
-  state->fxBuildFFI = fxBuildFFI;
+  s_app_build_ffi = (txBuildFFI)fxBuildFFI;
+  state->fxBuildFFI = fxBuildFFI ? (void *)prv_build_ffi : nullptr;
   state->eventedTimer = EVENTED_TIMER_INVALID_ID;
 
   evented_timer_register(1, false, (EventedTimerCallback)modRunMachineSetup, the);
