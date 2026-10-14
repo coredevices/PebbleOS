@@ -134,14 +134,7 @@ development/conventions.md
 
 ```{toctree}
 :hidden:
-:caption: Application SDK
-
-sdk/index.md
-```
-
-```{toctree}
-:hidden:
-:caption: Architecture
+:caption: System
 
 architecture/index.md
 kernel/index.md
@@ -149,6 +142,7 @@ subsystems/index.md
 drivers/index.md
 services/index.md
 libraries/index.md
+sdk/index.md
 ```
 
 ```{toctree}
