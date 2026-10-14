@@ -87,6 +87,7 @@ pbl_redirects = {
     "development/sdk_export": "sdk/exporting",
     "reference/recognizers": "sdk/recognizers",
     "development/sbom": "others/sbom",
+    "development/moddable": "third_party/moddable",
     "development/contributing": "community/contributing",
     "architecture/kernel": "kernel/index",
     "architecture/kernel_internals": "kernel/internals",

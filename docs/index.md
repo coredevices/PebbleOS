@@ -128,7 +128,6 @@ development/emulator.md
 development/native_simulator.md
 development/tests/index.md
 development/debugging.md
-development/moddable.md
 development/conventions.md
 ```
 
@@ -142,6 +141,7 @@ subsystems/index.md
 drivers/index.md
 services/index.md
 libraries/index.md
+third_party/index.md
 sdk/index.md
 ```
 
