@@ -19,7 +19,6 @@ Welcome to the PebbleOS documentation site!
 ```
 
 PebbleOS is a lightweight, power-efficient operating system originally developed for Pebble smartwatches and now [released open source](https://opensource.googleblog.com/2025/01/see-code-that-powered-pebble-smartwatches.html).
-It supports custom watchfaces and apps using C and JavaScript.
 Optimized for memory-in-pixel (MIP) displays and long battery life, it features Bluetooth sync, a timeline interface, and a strong developer ecosystem through an open SDK.
 
 ````{div} home-actions
