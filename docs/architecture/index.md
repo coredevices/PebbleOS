@@ -7,24 +7,23 @@ gives the overall picture; each layer has its own section with the details.
 
 ## Layers
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│ Apps and workers          system apps, watchfaces, third-party  │
-├─────────────────────────────────────────────────────────────────┤
-│ Application framework     fw/applib: UI, graphics, app APIs     │
-├─────────────────────────────────────────────────────────────────┤
-│ Services                  fw/services: notifications, health,   │
-│                           storage, phone communication, ...     │
-├─────────────────────────────────────────────────────────────────┤
-│ Subsystems and libraries  subsys/, lib/: logging, Bluetooth,    │
-│                           shell, input, utilities               │
-├─────────────────────────────────────────────────────────────────┤
-│ Drivers                   drivers/: one class per peripheral    │
-├─────────────────────────────────────────────────────────────────┤
-│ Kernel                    kernel/: threads, sync, interrupts    │
-├─────────────────────────────────────────────────────────────────┤
-│ SoC and HAL               soc/, third_party/ vendor HALs        │
-└─────────────────────────────────────────────────────────────────┘
+```{mermaid}
+block-beta
+  columns 2
+  apps["Apps and workers"]:2
+  applib["Application framework<br/>fw/applib"]:2
+  services["Services<br/>fw/services"]:2
+  subsys["Subsystems<br/>subsys/"] libs["Libraries<br/>lib/"]
+  drivers["Drivers<br/>drivers/"]:2
+  kernel["Kernel<br/>kernel/"]:2
+  soc["SoC and HAL<br/>soc/, third_party/"]:2
+
+  classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
+  classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
+  classDef base fill:#525252,stroke:#525252,color:#ffffff
+  class apps,applib app
+  class services,subsys,libs system
+  class drivers,kernel,soc base
 ```
 
 From the bottom up:

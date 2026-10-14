@@ -26,6 +26,7 @@ extensions = [
     "myst_parser",
     "sphinx_copybutton",
     "sphinx_design",
+    "sphinxcontrib.mermaid",
     "pbl_docs",
     "kconfig",
 ]
