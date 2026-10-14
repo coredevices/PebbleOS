@@ -5,3 +5,5 @@ sphinx-copybutton~=0.5
 sphinx-design~=0.7
 sphinxcontrib-mermaid~=2.1
 kconfiglib~=14.1
+matplotlib~=3.11
+numpy~=2.5

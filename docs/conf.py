@@ -27,6 +27,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.mermaid",
+    "matplotlib.sphinxext.plot_directive",
     "pbl_docs",
     "kconfig",
 ]
@@ -100,6 +101,30 @@ pbl_redirects = {
     "architecture/activity/index": "services/activity/index",
 }
 
+# -- Options for the matplotlib plot directive ---------------------------------
+
+# Plots are drawn at build time from code; show only the figure, as SVG on a
+# transparent background with neutral colors that read in both themes
+plot_include_source = False
+plot_html_show_source_link = False
+plot_html_show_formats = False
+plot_formats = ["svg"]
+plot_pre_code = "import matplotlib.pyplot as plt"
+plot_rcparams = {
+    "savefig.transparent": True,
+    "savefig.bbox": "tight",
+    "svg.fonttype": "none",
+    "font.family": "sans-serif",
+    "font.size": 10,
+    "text.color": "#8a8a8a",
+    "axes.labelcolor": "#8a8a8a",
+    "axes.edgecolor": "#8a8a8a",
+    "xtick.color": "#8a8a8a",
+    "ytick.color": "#8a8a8a",
+    "grid.color": "#8a8a8a",
+    "legend.labelcolor": "#8a8a8a",
+}
+
 # -- Options for the mermaid extension ---------------------------------------
 
 # Draw diagrams at their natural size, shrunk only to fit the page
@@ -132,7 +157,9 @@ linkcheck_ignore = [
 copybutton_exclude = ".linenos, .gp, .go"
 
 myst_enable_extensions = [
+    "amsmath",
     "colon_fence",
     "deflist",
+    "dollarmath",
     "fieldlist",
 ]
