@@ -142,7 +142,7 @@ Tests that need something no connection offers are skipped, e.g. the
 ### Bluetooth
 
 Bluetooth goes through nRF52840 dongles running Zephyr's `hci_uart`
-sample, an H4 controller on the dongle's USB serial port; see [](qemu.md)
+sample, an H4 controller on the dongle's USB serial port; see [](emulator.md)
 for building and flashing it. On macOS use the `cu.*` device.
 
 `ble:` connects to the watch as the phone app would: it pairs (or encrypts

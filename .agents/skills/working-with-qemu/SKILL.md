@@ -5,7 +5,7 @@ description: Use when building, launching, debugging, or capturing screenshots o
 
 # Working with QEMU
 
-Read `docs/development/qemu.md` — it documents the full workflow: qemu_*
+Read `docs/development/emulator.md` — it documents the full workflow: qemu_*
 boards, `./pbl qemu` (monitor sockets, serial ports, uart1.log), `./pbl
 console`, `./pbl screenshot`, programmatic key input via `sendkey`, touch
 injection via `./pbl touch`/`./pbl swipe`, and `./pbl debug`.

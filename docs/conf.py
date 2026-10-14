@@ -79,6 +79,7 @@ pbl_redirects = {
     "development/building_fw": "pbl/flash",
     "development/pbl": "pbl/index",
     "development/build_system": "development/build_system/index",
+    "development/qemu": "development/emulator",
     "development/contributing": "community/contributing",
     "architecture/kernel": "kernel/index",
     "architecture/kernel_internals": "kernel/internals",

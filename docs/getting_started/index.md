@@ -254,7 +254,8 @@ Holding Back + Up + Select reboots the watch into the recovery firmware
 ## Next steps
 
 - {doc}`../pbl/index` documents every `pbl` command.
-- {doc}`../development/qemu` covers the emulator in depth.
+- {doc}`../development/emulator` explains what the emulator models and how
+  to operate it.
 - {doc}`../development/testing` and {doc}`../development/integration_tests`
   run the test suites.
 - {doc}`../architecture/index` explains how the firmware is put together.

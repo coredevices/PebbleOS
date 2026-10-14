@@ -25,7 +25,7 @@ Start a debug session with {doc}`../pbl/debug`:
 pbl debug
 ```
 
-On QEMU boards this attaches GDB to the {doc}`emulator <./qemu>` through a
+On QEMU boards this attaches GDB to the {doc}`emulator <./emulator>` through a
 proxy (`tools/qemu/qemu_gdb_proxy.py`) that walks the kernel's thread list,
 so `info threads` and per-thread backtraces work. On real hardware,
 `pbl debug` is available on boards whose runner is OpenOCD (e.g. asterix,

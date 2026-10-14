@@ -20,8 +20,8 @@ The launched QEMU exposes:
   and {doc}`feed`
 
 UART1 output is also captured to `uart1.log` in the repository root.
-{doc}`../development/qemu` covers interacting with the emulator and
-attaching a Bluetooth controller.
+{doc}`../development/emulator` covers what the emulator models and how to
+operate it.
 
 ## Options
 
