@@ -1,9 +1,5 @@
 <p align="center">
-  <img src="docs/_static/images/logo.svg">
-</p>
-
-<p align="center">
- PebbleOS 
+  <img src="docs/_static/images/logo.svg" alt="PebbleOS" width="320">
 </p>
 
 <p align="center">
