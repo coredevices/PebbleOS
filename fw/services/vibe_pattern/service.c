@@ -450,6 +450,13 @@ static void prv_clear_pattern_locked(void) {
 }
 
 DEFINE_SYSCALL(void, sys_vibe_pattern_clear, void) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    vibe_pattern_clear_for_owner((pebble_task_get_current() == PebbleTask_Worker)
+                                     ? VibePatternOwner_Worker
+                                     : VibePatternOwner_App);
+    return;
+  }
+
   pbl_mutex_lock(&s_vibe_pattern_mutex, PBL_FOREVER);
   prv_clear_pattern_locked();
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
