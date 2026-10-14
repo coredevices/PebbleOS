@@ -7,7 +7,7 @@
 #   cmake --build build
 #
 # Pass Kconfig overrides the same way: -DCONFIG_RELEASE=y. See
-# docs/development/build_system.md.
+# docs/development/build_system/index.md.
 
 cmake_minimum_required(VERSION 3.20)
 

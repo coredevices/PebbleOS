@@ -123,7 +123,7 @@ getting_started/index.md
 :caption: Development
 
 pbl/index.md
-development/build_system.md
+development/build_system/index.md
 development/qemu.md
 development/native.md
 development/testing.md

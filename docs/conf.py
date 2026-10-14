@@ -78,6 +78,7 @@ pbl_redirects = {
     "development/options": "pbl/configure",
     "development/building_fw": "pbl/flash",
     "development/pbl": "pbl/index",
+    "development/build_system": "development/build_system/index",
     "architecture/kernel": "kernel/index",
     "architecture/kernel_internals": "kernel/internals",
     "architecture/crc": "subsystems/crc",
@@ -105,5 +106,6 @@ copybutton_exclude = ".linenos, .gp, .go"
 
 myst_enable_extensions = [
     "colon_fence",
+    "deflist",
     "fieldlist",
 ]
