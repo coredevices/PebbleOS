@@ -97,11 +97,18 @@ DEFINE_SYSCALL(GFont, sys_font_get_system_font, const char *font_key) {
   return system_resource_get_font(font_key);
 }
 
-DEFINE_SYSCALL(void, sys_font_reload_font, FontInfo *fontinfo) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    if (!memory_layout_is_pointer_in_region(memory_layout_get_readonly_bss_region(), fontinfo)) {
-      syscall_failed();
+static bool prv_is_system_font_info(const FontInfo *fontinfo) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_system_fonts_info_table); ++i) {
+    if (fontinfo == &s_system_fonts_info_table[i]) {
+      return true;
     }
+  }
+  return false;
+}
+
+DEFINE_SYSCALL(void, sys_font_reload_font, FontInfo *fontinfo) {
+  if (PRIVILEGE_WAS_ELEVATED && !prv_is_system_font_info(fontinfo)) {
+    syscall_failed();
   }
 
   text_resources_init_font(fontinfo->base.app_num, fontinfo->base.resource_id,
