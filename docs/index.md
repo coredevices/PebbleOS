@@ -126,8 +126,7 @@ pbl/index.md
 development/build_system/index.md
 development/emulator.md
 development/native_simulator.md
-development/testing.md
-development/integration_tests.md
+development/tests/index.md
 development/debugging.md
 development/moddable.md
 development/sdk_export.md

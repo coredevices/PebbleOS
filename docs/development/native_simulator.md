@@ -5,7 +5,7 @@ you are working on, Linux or macOS, with a window standing in for the
 watch. It boots in a fraction of the time the emulator takes, and runs
 under the host's own debugger, sanitizers and profilers. CI builds it on
 both hosts and boots it to the launcher on every change, and the
-{doc}`integration tests <integration_tests>` run against it.
+{doc}`integration tests <tests/integration>` run against it.
 
 ## What is simulated
 

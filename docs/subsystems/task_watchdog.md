@@ -58,7 +58,7 @@ callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
 ## Tests
 
 `tests/subsys/task_wdt/` runs the subsystem on the POSIX kernel port with
-virtual time; see `docs/development/testing.md` for how to run it.
+virtual time; see {doc}`../development/tests/unit` for how to run it.
 
 The QEMU boards carry a real hardware watchdog (the CMSDK APB watchdog,
 driven by `drivers/watchdog/qemu.c`), so both paths can be tried in

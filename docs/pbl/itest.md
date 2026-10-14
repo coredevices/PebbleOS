@@ -10,7 +10,7 @@ pbl itest -k settings
 pbl itest --device-serial /dev/ttyACM0
 ```
 
-{doc}`../development/integration_tests` covers the backends, markers and
+{doc}`../development/tests/integration` covers the backends, markers and
 writing tests.
 
 ## Options

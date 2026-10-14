@@ -152,4 +152,4 @@ none of the firmware's headers:
 ## Unit tests
 
 The unit tests are a separate CMake project, built for the host. Tests are
-declared with `pbl_clar_test()`; see {doc}`../testing`.
+declared with `pbl_clar_test()`; see {doc}`../tests/unit`.

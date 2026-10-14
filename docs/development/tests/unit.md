@@ -1,7 +1,7 @@
-# Running and writing tests
+# Unit tests
 
 Unit tests live under `tests/` and run on the host (not on device or QEMU;
-for those, see [](integration_tests.md)), using a vendored copy of the
+for those, see [](integration.md)), using a vendored copy of the
 [clar](https://github.com/clar-test/clar) test framework in `tools/clar/`. Code under test is compiled for the host together
 with fakes and stubs that replace hardware and OS dependencies.
 

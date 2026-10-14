@@ -6,7 +6,7 @@ screenshots, reading logs and measuring current. They are written in
 Python with [pytest](https://docs.pytest.org) and live in
 `tests/integration`, next to the harness that runs them
 (`tests/integration/harness`). Unit tests, which build parts of the
-firmware for the host, are described in [](testing.md).
+firmware for the host, are described in [](unit.md).
 
 ## Running
 
@@ -20,7 +20,7 @@ pbl build
 pbl itest
 ```
 
-A native board (see [](native_simulator.md)) runs as a host process instead, on a
+A native board (see [](../native_simulator.md)) runs as a host process instead, on a
 fresh flash file, serving its console and the QEMU serial protocol on TCP
 ports. Built with sanitizers, it runs the suite under them:
 
@@ -142,7 +142,7 @@ Tests that need something no connection offers are skipped, e.g. the
 ### Bluetooth
 
 Bluetooth goes through nRF52840 dongles running Zephyr's `hci_uart`
-sample, an H4 controller on the dongle's USB serial port; see [](emulator.md)
+sample, an H4 controller on the dongle's USB serial port; see [](../emulator.md)
 for building and flashing it. On macOS use the `cu.*` device.
 
 `ble:` connects to the watch as the phone app would: it pairs (or encrypts

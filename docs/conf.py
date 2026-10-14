@@ -81,6 +81,8 @@ pbl_redirects = {
     "development/build_system": "development/build_system/index",
     "development/qemu": "development/emulator",
     "development/native": "development/native_simulator",
+    "development/testing": "development/tests/unit",
+    "development/integration_tests": "development/tests/integration",
     "development/contributing": "community/contributing",
     "architecture/kernel": "kernel/index",
     "architecture/kernel_internals": "kernel/internals",

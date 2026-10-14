@@ -28,7 +28,7 @@ pages over duplicating knowledge here: `docs/community/contributing.md`
 (DCO, commit and AI-usage rules), `docs/pbl/` (the `pbl`
 CLI, one page per command, and `extending.md` for how to extend it), `docs/development/sdk_export.md` (SDK export
 machinery), `docs/development/qemu.md` (emulator workflow),
-`docs/development/integration_tests.md` (pytest suite on QEMU and devices).
+`docs/development/tests/integration.md` (pytest suite on QEMU and devices).
 
 ## Code style
 

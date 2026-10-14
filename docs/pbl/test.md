@@ -10,7 +10,7 @@ pbl test -R animation
 pbl test --coverage
 ```
 
-{doc}`../development/testing` covers selecting, writing and debugging
+{doc}`../development/tests/unit` covers selecting, writing and debugging
 tests.
 
 ## Options
