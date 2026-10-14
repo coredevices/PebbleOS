@@ -112,7 +112,7 @@ pbl_library_ramfunc(${ramfunc_sources})
 
 `pbl_library_ramfunc(src...)`
 : Place the code and read-only data of some of the current library's
-  sources in `.ramfunc`, to run from RAM; see {doc}`../../kernel/index`. A
+  sources in `.ramfunc`, to run from RAM; see {doc}`../../kernel/memory`. A
   no-op without `CONFIG_RAMFUNC`.
 
 ## Generated sources

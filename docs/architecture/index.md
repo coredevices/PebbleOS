@@ -89,8 +89,7 @@ A bootloader, outside this tree, starts the firmware image in flash. The
 kernel's reset handler sets up memory and the SoC, then calls `main()`
 (`fw/main.c`), which brings up the drivers and starts KernelMain.
 KernelMain initializes the services and launches the first app, normally
-the watchface. The {doc}`kernel <../kernel/index>` page details the early
-steps.
+the watchface. {doc}`../kernel/boot` details the early steps.
 
 ## Firmware variants
 

@@ -2,8 +2,21 @@
 
 `kernel/` owns every RTOS primitive the firmware uses. The public API lives in
 `include/pbl/kernel/` and is the only threading interface the rest of the tree
-may use. The implementation is PebbleOS's own; its internals are described in
-[kernel internals](internals.md).
+may use. The implementation is PebbleOS's own.
+
+## Topics
+
+```{toctree}
+:maxdepth: 1
+
+threads.md
+interrupts.md
+boot.md
+idle.md
+memory.md
+compiler.md
+internals.md
+```
 
 ## Layout
 
@@ -44,109 +57,6 @@ Conventions:
 - Priorities: higher is more urgent, `PBL_PRIO_IDLE` .. `PBL_PRIO_MAX`.
 - Returning from a thread entry function ends the thread.
 
-### Threads
-
-`pbl_thread_create()` takes a `struct pbl_thread_attr`: entry, priority,
-privileged flag, a caller-owned stack and up to four `MpuRegion`s that are
-switched in with the thread. `pbl_thread.tls[]` holds the per-thread pointers
-the syscall layer needs.
-
-### Introspection
-
-`debug.h` covers what core dumps, fault handling, stack checks and telemetry
-need: a thread walk with saved registers in the canonical order the core dump
-format expects, saved PC/LR/CONTROL of a blocked thread, stack bounds and
-high-water marks, and a run-time stats snapshot.
-
-### Interrupts
-
-SoC interrupts are bound at build time; there is no runtime handler
-registration and the vector table is in flash:
-
-```c
-PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
-
-PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
-  /* handler body */
-}
-```
-
-A line is named after its `PBL_SOC_IRQN_<line>` define in the SoC's
-checked-in `soc_irqs.h`, which also gives its number: `PBL_IRQN(I2C1)` is
-`PBL_SOC_IRQN_I2C1`. The defines were generated once from the vendor
-`IRQn_Type`, so the names match the CMSIS `<line>_IRQn`, and every binding
-asserts that the two numbers still agree. The SoC's line count is
-`CONFIG_NUM_IRQS`, set in `soc/*/Kconfig.defconfig`.
-
-`PBL_IRQ_CONNECT()` calls `isr(arg)` with whatever type `isr` takes (an
-empty `arg` calls `isr()`); `PBL_IRQ_DIRECT()` takes the handler body
-instead. Binding a line twice fails to link, and a line without a
-`PBL_SOC_IRQN_<line>` fails to compile.
-
-The priority is in controller units (0 is the most urgent) and is
-programmed for every connected line by `pbl_irq_init()` at boot, so drivers
-only call `pbl_irq_enable()` and `pbl_irq_disable()`. A priority more urgent
-than `PBL_IRQ_PRIO_MAX_SYSCALL` is a build error unless the line is flagged
-`PBL_IRQ_ZERO_LATENCY`, in which case the ISR must not call the kernel. An
-enabled line nobody connected lands in `arch_irq_spurious()`, which asserts.
-
-### Boot
-
-The kernel owns the reset vector. `Reset_Handler()` sets the stack limit
-registers on cores that have them and enters `kernel_prep_c()`, which copies
-`.data` (and `.ramfunc` with `CONFIG_RAMFUNC`), zeroes
-`.bss`, calls the SoC's `pbl_soc_early_init()` (`pbl/kernel/init.h`) for
-vendor system init, clocks and caches, and then calls `main()`.
-
-### Idle
-
-The SoC tickless-idle code talks to the kernel through `pbl/kernel/idle.h`:
-`pbl_soc_idle()` and `pbl_soc_tick_enable()` are implemented per SoC, and
-`pbl_idle_confirm()`, `pbl_idle_slept()` and `pbl_kernel_tick_isr()` are what
-the kernel provides in return.
-
-### Code in RAM
-
-SoCs that need code to run while flash is unavailable select
-`CONFIG_RAMFUNC`, which adds a `.ramfunc` output section loaded from flash
-and copied to RAM at boot. Code gets there in one of three ways:
-
-- a function marked `PBL_SECTION_RAM`, or a constant marked
-  `PBL_SECTION_RAM_RODATA` (`pbl/kernel/section.h`);
-- whole source files, with `pbl_library_ramfunc(file.c ...)` next to the
-  library's `pbl_library_sources()`;
-- input section patterns registered against the `ramfunc` linker hook, for
-  vendor code annotated its own way.
-
-Without `CONFIG_RAMFUNC` all three are no-ops and the code stays in flash.
-
-### Memory layout
-
-The linker scripts in `fw/linker/` document the memory map.
-`pebbleos.ld` explains the sections, their load and run addresses, and the
-kernel's data, stack and heap; `memory.ld` how SRAM is divided between the
-kernel, the app and the worker; and `regions.ld` the alignment the MPU
-imposes on those regions.
-
-## Compiler abstraction
-
-`pbl/kernel/compiler.h` is the only place the tree may spell compiler
-specifics: attributes (`PBL_PACKED`, `PBL_WEAK`, `PBL_NAKED`,
-`PBL_SECTION()`, ...) and builtins (`PBL_LIKELY()`, `PBL_RETURN_ADDRESS()`,
-`PBL_CLZ()`, ...). It only covers what C23 does not: use `[[noreturn]]`,
-`[[maybe_unused]]`, `[[deprecated]]`, `unreachable()` and
-`ckd_add()`/`ckd_mul()` directly. Every public macro is declared and documented once in the
-frontend and expands to a `*_IMPL` counterpart from the backend selected by
-the predefined macros: `compiler/gcc.h` for GCC and `compiler/clang.h` for
-Clang, which reuses the GCC definitions and blanks the attributes Clang does
-not implement. Supporting another compiler means adding a backend that
-defines the same `*_IMPL` set and a branch in the frontend; callers stay
-untouched. The unit-test hooks built on these (`PBL_T_STATIC`,
-`PBL_T_MOCKABLE`) live in `pbl/util/testing.h`. Code outside
-`include/pbl/kernel/compiler/` must not use `__attribute__` or `__builtin_*`
-directly; the header is shipped with the SDK so exported headers follow the
-same rule.
-
 ## Configuration
 
 `kernel/Kconfig` holds the tick rate, the number of priorities, the NVIC
@@ -177,9 +87,3 @@ family.
 ```{apigroups} soc
 ```
 
-```{toctree}
-:hidden:
-:maxdepth: 1
-
-internals.md
-```
