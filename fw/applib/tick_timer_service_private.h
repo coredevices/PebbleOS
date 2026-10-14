@@ -9,9 +9,9 @@
 typedef struct TickTimerServiceState {
   TickHandler handler;
   TimeUnits tick_units;
-  struct tm last_time;
   bool first_tick;
   bool last_is_24h;
+  struct tm last_time;
 
   EventServiceInfo tick_service_info;
 } TickTimerServiceState;

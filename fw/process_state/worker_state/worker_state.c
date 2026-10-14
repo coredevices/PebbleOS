@@ -18,7 +18,6 @@ typedef struct {
 
   struct tm gmtime_tm;
   struct tm localtime_tm;
-  char localtime_zone[TZ_LEN];
 
   tinymt32_t rand_seed;
 
@@ -31,6 +30,7 @@ typedef struct {
   PluginServiceState plugin_service_state;
 
   LogState log_state;
+  char localtime_zone[TZ_LEN];
 
   BatteryStateServiceState battery_state_service_state;
 
