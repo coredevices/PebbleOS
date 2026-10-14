@@ -24,6 +24,7 @@
 #include <process_management/app_manager.h>
 #include <process_management/process_loader.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 #include <system/passert.h>
 #include <tinymt32.h>
 
@@ -232,12 +233,12 @@ static const TouchNavOps s_app_touch_nav_ops = {
 // Twin subscription effects for the app task. The subscribe/reconcile state machine lives in
 // touch_nav.c; these ops bind it to the app task's touch service slot and nav state.
 static bool prv_app_twin_pref_enabled(void *ctx) {
-  return touch_nav_enabled();
+  return sys_touch_nav_enabled();
 }
 
 static bool prv_app_twin_master_enabled(void *ctx) {
   // The master "Touch" switch IS the global touch kill: an opted-in app follows it alone.
-  return touch_service_is_globally_enabled();
+  return sys_touch_service_is_enabled();
 }
 
 static void prv_app_twin_install_handler(void *ctx) {
@@ -245,11 +246,11 @@ static void prv_app_twin_install_handler(void *ctx) {
   touch_service_set_system_handler(touch_nav_dispatch, &s_app_state_ptr->touch_nav_state);
   // Mark the app twin live so the dispatch gate and touch-driven backlight treat this app as
   // navigating even when system nav (the Touch Navigation sub-pref) is off.
-  touch_set_app_nav_active(true);
+  sys_touch_set_app_nav_active(true);
 }
 
 static void prv_app_twin_remove_handler(void *ctx) {
-  touch_set_app_nav_active(false);
+  sys_touch_set_app_nav_active(false);
   recognizer_manager_cancel_and_reset(&s_app_state_ptr->recognizer_manager);
   touch_service_set_system_handler(nullptr, nullptr);
 }

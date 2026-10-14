@@ -240,9 +240,9 @@ void sys_tick_timer_unsubscribe(void);
 //! NULL \a frame clears the snapshot. Not exported to the SDK.
 void sys_touch_set_action_bar(const GRect *frame, uint8_t icon_mask);
 
-//! Set whether the calling app participates in touch navigation (the privileged side of the
-//! app_touch_navigation_enable() SDK call). Only acts on the app task.
-void sys_app_touch_navigation_enable(bool enable);
+//! Mark whether the app task's touch-nav dispatcher is installed. Only acts on the app task. Not
+//! exported to the SDK.
+void sys_touch_set_app_nav_active(bool active);
 
 bool sys_app_inbox_service_register(uint8_t *storage, size_t storage_size,
                                     AppInboxMessageHandler message_handler,

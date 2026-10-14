@@ -161,6 +161,13 @@ DEFINE_SYSCALL(bool, sys_touch_app_nav_active, void) {
   return touch_app_nav_active();
 }
 
+DEFINE_SYSCALL(void, sys_touch_set_app_nav_active, bool active) {
+  if (pebble_task_get_current() != PebbleTask_App) {
+    return;
+  }
+  touch_set_app_nav_active(active);
+}
+
 DEFINE_SYSCALL(void, sys_touch_set_raw_subscribed, bool subscribed) {
   const PebbleTask task = pebble_task_get_current();
   pbl_mutex_lock(&s_touch_mutex, PBL_FOREVER);

@@ -106,7 +106,10 @@ bool touch_service_is_enabled(void) {
 }
 
 void app_touch_navigation_enable(bool enable) {
-  sys_app_touch_navigation_enable(enable);
+  if (pebble_task_get_current() != PebbleTask_App) {
+    return;
+  }
+  app_touch_nav_set_participating(enable);
 }
 
 void touch_service_state_init(TouchServiceState *state) {

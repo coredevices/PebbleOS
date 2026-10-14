@@ -62,7 +62,7 @@ bool sys_touch_service_is_enabled(void) {
   return true;
 }
 
-void sys_app_touch_navigation_enable(bool enable) {
+void app_touch_nav_set_participating(bool enable) {
   (void)enable;
 }
 
