@@ -1370,6 +1370,70 @@ static bool prv_wait_system_task(SystemTaskEventCallback cb, void *context, bool
 }
 
 // ------------------------------------------------------------------------------------------------
+// Requests executed on KernelBG on behalf of an app or worker. They are heap allocated so that
+// KernelBG never writes into memory owned by the caller, which may give up waiting.
+typedef struct ActivityBgRequest ActivityBgRequest;
+typedef bool (*ActivityBgRequestHandler)(ActivityBgRequest *req);
+
+struct ActivityBgRequest {
+  ActivityBgRequestHandler handler;
+  bool success;
+  bool completed;
+  bool abandoned;
+};
+
+static void prv_bg_request_system_cb(void *data) {
+  ActivityBgRequest *req = data;
+  const bool success = s_activity_state.started && req->handler(req);
+
+  pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
+  const bool abandoned = req->abandoned;
+  req->success = success;
+  req->completed = true;
+  pbl_mutex_unlock(&s_activity_state.mutex);
+
+  if (abandoned) {
+    kernel_free(req);
+  } else {
+    pbl_sem_give(&s_activity_state.bg_wait_semaphore);
+  }
+}
+
+// Returns true if the request completed, in which case the caller owns and must free it.
+// Otherwise ownership is gone: it was freed here or will be freed by KernelBG.
+static bool prv_bg_request_run(ActivityBgRequest *req, ActivityBgRequestHandler handler,
+                               uint32_t timeout_sec) {
+  // This call blocks on KernelBG, so it should only be called from an app or worker
+  PebbleTask task = pebble_task_get_current();
+  PBL_ASSERTN(task == PebbleTask_App || task == PebbleTask_Worker);
+
+  req->handler = handler;
+  if (!system_task_add_callback(prv_bg_request_system_cb, req)) {
+    kernel_free(req);
+    return false;
+  }
+
+  const RtcTicks end_ticks = rtc_get_ticks() + timeout_sec * PBL_TICK_HZ;
+  while (true) {
+    pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
+    const bool completed = req->completed;
+    if (!completed && rtc_get_ticks() > end_ticks) {
+      req->abandoned = true;
+    }
+    pbl_mutex_unlock(&s_activity_state.mutex);
+
+    if (completed) {
+      return true;
+    }
+    if (req->abandoned) {
+      return false;
+    }
+    // Wait in 1 second chunks, the semaphore may be left set by an earlier request
+    pbl_sem_take(&s_activity_state.bg_wait_semaphore, PBL_TICKS(PBL_TICK_HZ));
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
 bool activity_init(void) {
   PBL_LOG_DBG("init");
   s_activity_state = (ActivityState){};
@@ -1567,28 +1631,19 @@ DEFINE_SYSCALL(bool, sys_activity_prefs_heart_rate_is_enabled, void) {
 }
 
 // ------------------------------------------------------------------------------------------------
+#define ACTIVITY_MINUTE_HISTORY_CHUNK_RECORDS 60
+
 typedef struct {
-  HealthMinuteData *minute_data;
-  uint32_t *num_records;
-  time_t *utc_start;
-  bool success;
-  bool completed;
-} ActivityGetMinuteHistoryContext;
+  ActivityBgRequest base;
+  uint32_t num_records;
+  time_t utc_start;
+  HealthMinuteData minute_data[];
+} ActivityMinuteHistoryRequest;
 
-static void prv_get_minute_history_system_cb(void *context_param) {
-  ActivityGetMinuteHistoryContext *context = (ActivityGetMinuteHistoryContext *)context_param;
-
-  // Get the minute history
-  if (s_activity_state.started) {
-    context->success = activity_algorithm_get_minute_history(
-        context->minute_data, context->num_records, context->utc_start);
-  } else {
-    context->success = false;
-  }
-
-  // Unblock the caller
-  context->completed = true;
-  pbl_sem_give(&s_activity_state.bg_wait_semaphore);
+static bool prv_get_minute_history_handler(ActivityBgRequest *base) {
+  ActivityMinuteHistoryRequest *req = (ActivityMinuteHistoryRequest *)base;
+  return activity_algorithm_get_minute_history(req->minute_data, &req->num_records,
+                                               &req->utc_start);
 }
 
 bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
@@ -1596,16 +1651,66 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
   if (!s_activity_initialized) {
     return false;
   }
-  // Fill in the context
-  ActivityGetMinuteHistoryContext context = (ActivityGetMinuteHistoryContext){
-    .minute_data = minute_data,
-    .num_records = num_records,
-    .utc_start = utc_start,
-  };
 
-  // Enqueue it for KernelBG to process
-  bool success = prv_wait_system_task(prv_get_minute_history_system_cb, &context, &context.success,
-                                      &context.completed, 30 /*timeout_sec*/);
+  const uint32_t requested = *num_records;
+  uint32_t written = 0;
+  time_t first_utc = 0;
+  time_t next_utc = *utc_start;
+  bool success = true;
+
+  // Fetch in bounded chunks into kernel memory, padding gaps between chunks with invalid records
+  while (written < requested) {
+    const uint32_t chunk = MIN(requested - written, ACTIVITY_MINUTE_HISTORY_CHUNK_RECORDS);
+    ActivityMinuteHistoryRequest *req =
+        kernel_zalloc(sizeof(*req) + chunk * sizeof(HealthMinuteData));
+    if (!req) {
+      success = (written > 0);
+      break;
+    }
+    req->num_records = chunk;
+    req->utc_start = next_utc;
+
+    if (!prv_bg_request_run(&req->base, prv_get_minute_history_handler, 30 /*timeout_sec*/)) {
+      success = (written > 0);
+      break;
+    }
+
+    bool done = !req->base.success || (req->num_records == 0);
+    if (!req->base.success) {
+      success = (written > 0);
+    } else if (req->num_records > 0) {
+      uint32_t gap = 0;
+      if (written == 0) {
+        first_utc = req->utc_start;
+      } else if (req->utc_start > next_utc) {
+        gap = (req->utc_start - next_utc) / PBL_SEC_PER_MIN;
+      }
+
+      if (req->utc_start < next_utc || gap >= requested - written) {
+        done = true;
+      } else {
+        memset(&minute_data[written], 0xFF, gap * sizeof(HealthMinuteData));
+        written += gap;
+        const uint32_t n = MIN(req->num_records, requested - written);
+        memcpy(&minute_data[written], req->minute_data, n * sizeof(HealthMinuteData));
+        written += n;
+        next_utc = first_utc + (time_t)written * PBL_SEC_PER_MIN;
+      }
+    }
+    kernel_free(req);
+
+    if (done) {
+      break;
+    }
+  }
+
+  if (success) {
+    *num_records = written;
+    *utc_start = first_utc;
+  } else {
+    *num_records = 0;
+    *utc_start = 0;
+  }
   return success;
 }
 
