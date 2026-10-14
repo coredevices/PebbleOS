@@ -43,6 +43,8 @@ typedef struct {
   HealthServiceState health_service_state;
 } WorkerState;
 
+static_assert(sizeof(WorkerState) <= CONFIG_WORKER_RAM_RUNTIME_SIZE);
+
 KERNEL_READONLY_DATA static WorkerState *s_worker_state_ptr;
 
 bool worker_state_configure(MemorySegment *worker_state_ram) {

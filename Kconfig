@@ -267,6 +267,19 @@ config APP_RAM_4X_RUNTIME_SIZE
     default APP_RAM_GABBRO_RUNTIME_SIZE if PLATFORM_GABBRO
     default 0
 
+# Worker RAM. SEGMENT is the RAM given to the worker itself (stack + text +
+# data + bss + heap) and RUNTIME is the RAM reserved for the worker runtime
+# (WorkerState). SEGMENT must be a multiple of eight bytes.
+
+config WORKER_RAM_SEGMENT_SIZE
+    int
+    default 11648
+
+config WORKER_RAM_RUNTIME_SIZE
+    int
+    default 1024 if SOC_POSIX
+    default 640
+
 config SRAM_BASE
     hex
     help
