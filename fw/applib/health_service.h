@@ -362,6 +362,8 @@ typedef enum {
   HealthEventHeartRateUpdate = 4,
   //! A new HRV peak-to-peak interval reading is available.
   HealthEventHRVUpdate = 5,
+  //! A new blood oxygen saturation (SpO2) reading is available.
+  HealthEventSpO2Update = 6,
 } HealthEventType;
 
 //! Developer-supplied event handler, called when a health-related event occurs after subscribing
@@ -398,6 +400,17 @@ uint16_t health_service_peek_hrv_ppi_ms(void);
 //! @param interval_sec desired sampling interval in seconds; 0 unsubscribes.
 //! @return true on success.
 bool health_service_set_hrv_sample_period(uint16_t interval_sec);
+
+//! Get the most recent blood oxygen saturation reading. The value is captured from
+//! \ref HealthEventSpO2Update events, so it only updates while this app is subscribed via
+//! \ref health_service_events_subscribe(). No sensor subscription is required: the watch takes
+//! SpO2 readings on its own whenever the user has blood oxygen monitoring enabled, and this
+//! surfaces those readings.
+//! Only valid readings reach apps: a sample the algorithm rejected, or one taken while the watch
+//! was off the wrist, is not delivered, so a non-zero reading is a usable one. Before any reading
+//! arrives this returns 0, which is not a valid SpO2 value.
+//! @return Blood oxygen saturation as a percentage, or 0 if no reading available.
+uint8_t health_service_peek_spo2_percent(void);
 
 //! Set the desired sampling period for heart rate readings. Normally, the system will sample the
 //! heart rate using a sampling period that is automatically chosen to provide useful information
@@ -555,12 +568,18 @@ typedef struct {
 
 //! @internal
 typedef struct {
+  uint8_t percent;
+} HealthEventSpO2UpdateData;
+
+//! @internal
+typedef struct {
   union {
     HealthEventMovementUpdateData movement_update;
     HealthEventSleepUpdateData sleep_update;
     HealthEventSignificantUpdateData significant_update;
     HealthEventHeartRateUpdateData heart_rate_update;
     HealthEventHRVUpdateData hrv_update;
+    HealthEventSpO2UpdateData spo2_update;
   };
 } HealthEventData;
 
