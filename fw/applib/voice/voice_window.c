@@ -83,8 +83,8 @@ static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to, u
                                                      void *subject);
 static void prv_handle_stop_transition(VoiceUiData *data);
 static void prv_voice_window_push(VoiceUiData *data);
-char *sys_voice_get_transcription_from_event(PebbleVoiceServiceEvent *e, char *buffer,
-                                             size_t buffer_size, size_t *sentence_len);
+size_t sys_voice_get_transcription_from_event(PebbleVoiceServiceEvent *e, char *buffer,
+                                              size_t buffer_size);
 
 static WindowStack *prv_get_window_stack(void) {
   if (pebble_task_get_current() == PebbleTask_App) {
@@ -334,14 +334,40 @@ static void prv_handle_ready_event(VoiceUiData *data, PebbleVoiceServiceEvent *e
   }
 }
 
+static char *prv_get_transcription(PebbleVoiceServiceEvent *event, char *buffer, size_t buffer_size,
+                                   size_t *sentence_len) {
+  char *allocated = nullptr;
+  if (!buffer) {
+    const size_t len = sys_voice_get_transcription_from_event(event, nullptr, 0);
+    if (len == 0) {
+      return nullptr;
+    }
+    allocated = applib_malloc(len + 1);
+    if (!allocated) {
+      return nullptr;
+    }
+    buffer = allocated;
+    buffer_size = len + 1;
+  }
+
+  const size_t len = sys_voice_get_transcription_from_event(event, buffer, buffer_size);
+  if (len == 0) {
+    applib_free(allocated);
+    return nullptr;
+  }
+
+  *sentence_len = len;
+  return buffer;
+}
+
 static bool prv_handle_dictation_success(VoiceUiData *data, PebbleVoiceServiceEvent *event) {
   if (data->buffer_size == 0) {
     // If buffer size is set to 0, the buffer was allocated when the last transcription was received
     applib_free(data->message);
     data->message = nullptr;
   }
-  data->message = sys_voice_get_transcription_from_event(event, data->message, data->buffer_size,
-                                                         &data->message_len);
+  data->message =
+      prv_get_transcription(event, data->message, data->buffer_size, &data->message_len);
   if (data->session_type == VoiceEndpointSessionTypeNLP) {
     data->timestamp = event->data->timestamp;
   }
@@ -1428,14 +1454,13 @@ void voice_window_reset(VoiceWindow *voice_window) {
 // Syscalls
 /////////////////////////////////////////////////////////////////////////////////
 
-DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServiceEvent *e,
-               char *buffer, size_t buffer_size, size_t *sentence_len) {
+DEFINE_SYSCALL(size_t, sys_voice_get_transcription_from_event, PebbleVoiceServiceEvent *e,
+               char *buffer, size_t buffer_size) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(e, sizeof(*e));
     if (buffer && (buffer_size > 0)) {
       syscall_assert_userspace_buffer(buffer, buffer_size);
     }
-    syscall_assert_userspace_buffer(sentence_len, sizeof(*sentence_len));
     // `e->data` is a kernel pointer the event service handed to the app along
     // with the event. The app can rewrite the field in its copy before calling
     // us, so confirm it still references a buffer the kernel actually allocated
@@ -1447,32 +1472,13 @@ DEFINE_SYSCALL(char *, sys_voice_get_transcription_from_event, PebbleVoiceServic
     }
   }
 
-  size_t len;
-  if (!buffer) {
-    // if the is not allocated, allocate enough to contain the string
-    len = strlen(e->data->sentence);
-  } else {
-    // if the buffer is allocated, truncate sentence to buffer size
-    len = utf8_get_size_truncate(e->data->sentence, buffer_size);
+  if (!buffer || (buffer_size == 0)) {
+    return strlen(e->data->sentence);
   }
 
-  if (len == 0) {
-    return nullptr;
-  }
+  const size_t len = utf8_get_size_truncate(e->data->sentence, buffer_size);
+  memcpy(buffer, e->data->sentence, len);
+  buffer[len] = '\0';
 
-  char *sentence;
-  if (buffer) {
-    // do not allocate a buffer is one is allocated already
-    sentence = buffer;
-  } else {
-    // allocate a buffer if one is not yet allocated
-    sentence = applib_malloc(len + 1);
-  }
-
-  memcpy(sentence, e->data->sentence, len);
-  sentence[len] = '\0'; // Ensure that string is NULL-terminated
-
-  *sentence_len = len;
-
-  return sentence;
+  return len;
 }
