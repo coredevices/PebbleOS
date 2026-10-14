@@ -41,8 +41,9 @@ static EventServiceBuffer *s_event_service_buffers = nullptr;
 // a service publishes an event to.
 typedef struct {
   ListNode list_node;
-  uint16_t service_index; // index of the service
-  Uuid uuid;              // UUID
+  uint16_t service_index;   // index of the service
+  PebbleTaskBitset holders; // tasks that requested the index
+  Uuid uuid;                // UUID
 } EventPluginUUIDEntry;
 
 static uint16_t s_next_service_index = 0;
@@ -126,6 +127,11 @@ void event_service_handle_subscription(PebbleSubscriptionEvent *subscription) {
   }
 }
 
+static bool prv_release_plugin_indexes(ListNode *node, void *context) {
+  ((EventPluginUUIDEntry *)node)->holders &= ~(PebbleTaskBitset)(uintptr_t)context;
+  return true;
+}
+
 void event_service_clear_process_subscriptions(PebbleTask task) {
   EventServiceEntry *service;
 
@@ -144,6 +150,10 @@ void event_service_clear_process_subscriptions(PebbleTask task) {
     };
     prv_event_service_unsubscribe(&event);
   }
+
+  pbl_mutex_lock(&s_plugin_list_mutex, PBL_FOREVER);
+  list_foreach(s_plugin_list.next, prv_release_plugin_indexes, (void *)(uintptr_t)(1 << task));
+  pbl_mutex_unlock(&s_plugin_list_mutex);
 }
 
 void event_service_system_init(void) {
@@ -327,29 +337,41 @@ static bool prv_service_filter(ListNode *node, void *tp) {
   return uuid_equal(&info->uuid, (Uuid *)tp);
 }
 
+static bool prv_is_unheld_entry(ListNode *node, void *unused) {
+  return ((EventPluginUUIDEntry *)node)->holders == 0;
+}
+
 // ---------------------------------------------------------------------------------------------------------------
-// TODO: We need to prune out entries from this list when they are no longer needed
 // TODO: The applib should force a restriction on the number of plugin service UUIDs that an app can
 // subscribe
 //          to at once.
-static int16_t prv_get_plugin_index(const Uuid *uuid) {
+static int16_t prv_get_plugin_index(const Uuid *uuid, PebbleTask task) {
   int16_t result = -1;
 
   pbl_mutex_lock(&s_plugin_list_mutex, PBL_FOREVER);
 
-  // Look for this service UUID
-  ListNode *found;
-  ListNode *list = &s_plugin_list;
-  found = list_find(list, prv_service_filter, (void *)uuid);
+  // Look for this service UUID, s_plugin_list is only the list head
+  ListNode *found = list_find(s_plugin_list.next, prv_service_filter, (void *)uuid);
   if (found) {
+    ((EventPluginUUIDEntry *)found)->holders |= (1 << task);
     result = ((EventPluginUUIDEntry *)found)->service_index;
     goto unlock;
   }
 
-  EventPluginUUIDEntry *entry = kernel_zalloc_check(sizeof(EventPluginUUIDEntry));
-  entry->service_index = ++s_next_service_index;
+  EventPluginUUIDEntry *entry;
+  if (s_next_service_index >= CONFIG_SERVICE_EVENT_SERVICE_MAX_PLUGIN_SERVICES) {
+    entry = (EventPluginUUIDEntry *)list_find(s_plugin_list.next, prv_is_unheld_entry, nullptr);
+    if (entry == nullptr) {
+      PBL_LOG_WRN("Too many plugin services");
+      goto unlock;
+    }
+  } else {
+    entry = kernel_zalloc_check(sizeof(EventPluginUUIDEntry));
+    entry->service_index = ++s_next_service_index;
+    list_append(&s_plugin_list, &entry->list_node);
+  }
   entry->uuid = *uuid;
-  list_append(list, &entry->list_node);
+  entry->holders = (1 << task);
   result = entry->service_index;
 
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
@@ -370,7 +392,7 @@ DEFINE_SYSCALL(int16_t, sys_event_service_get_plugin_service_index, const Uuid *
   if (uuid == nullptr) {
     uuid = &sys_process_manager_get_current_process_md()->uuid;
   }
-  return prv_get_plugin_index(uuid);
+  return prv_get_plugin_index(uuid, pebble_task_get_current());
 }
 
 DEFINE_SYSCALL(void, sys_event_service_cleanup, PebbleEvent *e) {

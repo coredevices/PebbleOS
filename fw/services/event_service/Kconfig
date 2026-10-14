@@ -8,6 +8,13 @@ config SERVICE_EVENT_SERVICE
 
 if SERVICE_EVENT_SERVICE
 
+config SERVICE_EVENT_SERVICE_MAX_PLUGIN_SERVICES
+    int "Maximum plugin services"
+    default 64
+    help
+      Number of distinct plugin service UUIDs that can be registered. Each
+      one takes kernel heap until reboot.
+
 module = SERVICE_EVENT_SERVICE
 module-str = Event service
 source "subsys/logging/Kconfig.template.log_level"
