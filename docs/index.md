@@ -50,7 +50,7 @@ Browse the sources
 :link: getting_started/index
 :link-type: doc
 
-From a fresh machine to PebbleOS booting in the emulator and on a watch.
+From a fresh machine to PebbleOS running in the emulator or on a watch.
 :::
 
 :::{grid-item-card} 🛠️ Development
