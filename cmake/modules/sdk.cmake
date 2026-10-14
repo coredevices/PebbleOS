@@ -4,7 +4,7 @@
 # The shippable SDK. pbl_native_sdk() generates the headers and libpebble.a
 # into build/sdk/<platform>; this rounds that out into a complete SDK with
 # the project templates, the shared tools and the waf app developers build
-# with. See docs/development/sdk_export.md.
+# with. See docs/sdk/building.md.
 
 function(pbl_sdk)
   # Packaging is asked for explicitly and copies a few hundred files, so it

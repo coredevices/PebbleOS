@@ -83,6 +83,8 @@ pbl_redirects = {
     "development/native": "development/native_simulator",
     "development/testing": "development/tests/unit",
     "development/integration_tests": "development/tests/integration",
+    "development/sdk_export": "sdk/exporting",
+    "reference/recognizers": "sdk/recognizers",
     "development/contributing": "community/contributing",
     "architecture/kernel": "kernel/index",
     "architecture/kernel_internals": "kernel/internals",

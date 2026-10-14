@@ -11,7 +11,7 @@ implemented under `kernel/`). The main source layers, as described on the
 <a href="../apidoc/index.html">API reference</a> main page:
 
 - `fw/applib` — application framework and UI, the API surface exposed to
-  watchapps ([SDK export](../development/sdk_export.md) describes how
+  watchapps ([Application SDK](../sdk/index.md) describes how
   functions get there).
 - `fw/services` — system services (Bluetooth, filesystem, activity, …).
 - `fw/kernel` — task management, events, memory.

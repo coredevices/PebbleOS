@@ -1,10 +1,8 @@
-# Exposing functions to the SDK
+# Exporting a function
 
-Third-party apps do not link against the firmware directly: the app SDK is
-generated from the firmware sources at build time. When you expose a new
-function to apps (i.e. anything declared in an `applib/` header that user apps
-can call), three things must change together — the firmware build alone will
-not surface it to apps:
+Exporting a function makes it callable from third-party apps. The function
+lives in `fw/applib/`, and three things must change together; the firmware
+build alone does not surface it to apps:
 
 1. **Implement the applib wrapper and syscall** — add the function to the
    appropriate `fw/applib/.../<area>.c/.h`, declare the `sys_*` syscall in
@@ -34,44 +32,7 @@ end of an older firmware's table and crashes. New exports always ship as a
 new firmware plus a new SDK build.
 ```
 
-## How the SDK generator works
-
-The generator (`tools/generate_native_sdk/generate_pebble_native_sdk_files.py`)
-runs automatically as part of the firmware build (normal variant only — PRF
-and test builds skip it). It exports the white-listed functions, `typedef`s
-and `#define`s from the firmware tree and produces the files needed to build
-native watchapps, all under `build/`:
-
-- `build/sdk/<platform>/include/pebble.h` — typedefs, defines and function
-  prototypes for apps (plus `pebble_worker.h` for background workers and a
-  few version/fonts headers). Exported declarations are copied verbatim and
-  use `pbl/kernel/compiler.h` macros rather than raw `__attribute__`; the
-  generator rewrites those into their GCC spellings, so the SDK ships no
-  firmware headers. Only macros that alias an attribute or forward their
-  arguments to a builtin can be exported.
-- `build/sdk/<platform>/lib/libpebble.a` — static library containing
-  trampolines that call the exported functions in flash
-- `build/fw/pebble.auto.c` — `g_pbl_system_tbl`, the table of function
-  pointers the trampolines use to find an exported function's address;
-  compiled into the firmware image
-
-The rest of the distribution is packaged by the firmware build's `sdk`
-target, which fills in the same `build/sdk/` tree:
-
-```shell
-pbl configure --board $BOARD
-pbl build sdk
-```
-
-`tools/cmake/sdk.py` copies the common files from `sdk/` into
-`build/sdk/common/` — the app project templates under `sdk/defaults/`, and
-the tools and resource pipeline the app build shares with the firmware —
-and bundles `sdk/waftools/` into the `waf` binary app developers use to
-build their apps. That waf is the only one left in the tree: everything it
-needs lives under `sdk/`, and it is built out of tree, so packaging leaves
-the checkout untouched.
-
-## `exported_symbols.json` format
+## `exported_symbols.json`
 
 ```json
 {

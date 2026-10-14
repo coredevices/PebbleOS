@@ -26,8 +26,9 @@ Contributor documentation lives in `docs/` (published at
 https://pebbleos-core.readthedocs.io). Prefer pointing to or extending those
 pages over duplicating knowledge here: `docs/community/contributing.md`
 (DCO, commit and AI-usage rules), `docs/pbl/` (the `pbl`
-CLI, one page per command, and `extending.md` for how to extend it), `docs/development/sdk_export.md` (SDK export
-machinery), `docs/development/qemu.md` (emulator workflow),
+CLI, one page per command, and `extending.md` for how to extend it),
+`docs/sdk/exporting.md` (SDK export machinery), `docs/development/emulator.md`
+(emulator workflow),
 `docs/development/tests/integration.md` (pytest suite on QEMU and devices).
 
 ## Code style
@@ -81,7 +82,7 @@ from another workspace because that breaks workspace isolation.
 Exposing a function to third-party apps requires three coordinated changes
 (applib wrapper + syscall, `exported_symbols.json` registration, SDK
 revision bump) — the firmware build alone won't surface it to apps. Follow
-`docs/development/sdk_export.md` whenever an `applib/` function should
+`docs/sdk/exporting.md` whenever an `applib/` function should
 become callable from user apps.
 
 ## Git rules

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Assembles the shippable SDK, next to the shims the firmware build
-already generated for it. See docs/development/sdk_export.md."""
+already generated for it. See docs/sdk/building.md."""
 
 import argparse
 import json

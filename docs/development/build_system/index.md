@@ -103,7 +103,7 @@ tools/cmake/          the generators the build shells out to
 The unit tests are a CMake project of their own, built for the host out of
 their own build directory; see {doc}`../tests/unit`. The waf under `sdk/` is
 not used to build anything here: it is packaged into the SDK for app
-developers to build their own projects with; see {doc}`../sdk_export`.
+developers to build their own projects with; see {doc}`../../sdk/building`.
 
 ```{toctree}
 :hidden:
