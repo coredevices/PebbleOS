@@ -19,6 +19,29 @@ prose:
   latency and supervision timeouts, and why the firmware deviates from the
   spec-recommended parameter-update pause for iOS.
 
+```{mermaid}
+flowchart TD
+  ble["Host BLE layer<br/>fw/comm/ble/"]
+  glue["subsys/bluetooth/"]
+  nimble["NimBLE host<br/>third_party/nimble"]
+  nrf["NimBLE controller<br/>nRF52 radio"]
+  sifli["SiFli LCPU<br/>IPC, SF32LB52"]
+  fake["Fake controller<br/>QEMU"]
+  uart["H4 controller<br/>CONFIG_BT_HCI_UART"]
+  ble --> glue --> nimble
+  nimble -- HCI --> nrf
+  nimble -- HCI --> sifli
+  nimble -- HCI --> fake
+  nimble -- HCI --> uart
+
+  classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
+  classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
+  classDef base fill:#525252,stroke:#525252,color:#ffffff
+  class ble app
+  class glue,nimble system
+  class nrf,sifli,fake,uart base
+```
+
 Beneath it sits NimBLE (`third_party/nimble`), glued in by
 `subsys/bluetooth/`. The HCI transport is chosen per SoC (`BT_HCI`): the
 NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,

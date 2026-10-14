@@ -132,6 +132,8 @@ mermaid_init_config = {
     "startOnLoad": False,
     "flowchart": {"useMaxWidth": False},
     "block": {"useMaxWidth": False},
+    "sequence": {"useMaxWidth": False},
+    "class": {"useMaxWidth": False},
 }
 
 # -- Options for the kconfig extension ---------------------------------------

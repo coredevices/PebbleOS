@@ -12,10 +12,23 @@ The model follows the Linux kernel: a device class embeds `struct pbl_device`
 in its own struct, a driver embeds the class struct in a driver-specific one,
 and `container_of()` walks back out.
 
-```
-struct pbl_device            name, init, parent, deps, state   include/pbl/device.h
-  struct pbl_gpio_port       class: ops vtable                  include/pbl/drivers/gpio.h
-    struct pbl_gpio_nrf5     driver: port index                 include/pbl/drivers/gpio/nrf5.h
+```{mermaid}
+classDiagram
+  direction LR
+  class pbl_device {
+    name, init, parent, deps, state
+    include/pbl/device.h
+  }
+  class pbl_gpio_port {
+    class: ops vtable
+    include/pbl/drivers/gpio.h
+  }
+  class pbl_gpio_nrf5 {
+    driver: port index
+    include/pbl/drivers/gpio/nrf5.h
+  }
+  pbl_gpio_nrf5 *-- pbl_gpio_port : embeds
+  pbl_gpio_port *-- pbl_device : embeds
 ```
 
 Devices are `const` and live in flash. The only RAM is what the device points

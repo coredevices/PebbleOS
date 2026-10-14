@@ -32,12 +32,19 @@ to its own memory.
 
 An app calling an SDK function goes through three steps:
 
-```text
-app code ──► libpebble.a trampoline ──► g_pbl_system_tbl[n] ──► fw/applib function
-                                                                     │
-                                                       sys_*() syscall, privileged
-                                                                     ▼
-                                                           kernel and services
+```{mermaid}
+sequenceDiagram
+  participant app as App
+  participant tramp as libpebble.a trampoline
+  participant applib as fw/applib
+  participant sys as sys_*() syscall
+  app->>tramp: SDK function call
+  tramp->>applib: jump through g_pbl_system_tbl[n]
+  Note over app,applib: unprivileged, in the app's task
+  applib->>sys: when it needs the system
+  Note over sys: privileged, checks the app's pointers
+  sys-->>applib: result
+  applib-->>app: return
 ```
 
 1. **Trampoline.** The function the app links against is a few

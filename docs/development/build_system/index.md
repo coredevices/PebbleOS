@@ -22,24 +22,27 @@ cmake --build build
 
 ## From configuration to image
 
-```text
- BOARD, VARIANT, -DCONFIG_*
-            │
-            ▼
-   tools/cmake/kconfig.py ──► .config, autoconf.h, config.cmake
-            │
-            ▼
-   CMakeLists.txt + cmake/modules/
-            │  add_subdirectory(): third_party, lib, kernel, soc,
-            │  subsys, drivers, fw (and apps/stored)
-            ▼
-   pbl_library() per directory ──► object and static libraries
-            │
-            ▼
-   pbl_resources(), generators ──► resource pack, generated headers
-            │
-            ▼
-   pbl_link_firmware() ──► pebbleos.elf, .hex, .bin, log hash dictionary
+```{mermaid}
+flowchart TD
+  in["BOARD, VARIANT, -DCONFIG_*"]
+  kconfig["tools/cmake/kconfig.py"]
+  cfg[".config, autoconf.h, config.cmake"]
+  cmake["CMakeLists.txt, cmake/modules/<br/>third_party, lib, kernel, soc, subsys, drivers, fw"]
+  libs["Object and static libraries<br/>one pbl_library() per directory"]
+  gen["Resource pack, generated headers<br/>pbl_resources(), tools/cmake/ generators"]
+  link["pbl_link_firmware()"]
+  out["pebbleos.elf, .hex, .bin,<br/>log hash dictionary"]
+  in --> kconfig --> cfg --> cmake
+  cmake --> libs --> link
+  cmake --> gen --> link
+  link --> out
+
+  classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
+  classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
+  classDef base fill:#525252,stroke:#525252,color:#ffffff
+  class in,out app
+  class kconfig,cmake,link system
+  class cfg,libs,gen base
 ```
 
 1. **Configure.** The root `CMakeLists.txt` takes the board and variant
