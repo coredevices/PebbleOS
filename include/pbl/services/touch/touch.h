@@ -6,6 +6,8 @@
 #include "gesture_event.h"
 #include "touch_event.h"
 
+#include <kernel/pebble_tasks.h>
+
 /**
  * @defgroup services_touch Touch
  * @ingroup services
@@ -106,6 +108,13 @@ void touch_set_app_nav_active(bool active);
  * @return true if at least one task holds a raw touch subscription.
  */
 bool touch_has_app_subscribers(void);
+
+/**
+ * @brief Drop the touch state an exiting app or worker left behind.
+ *
+ * @param task Task that exited.
+ */
+void touch_process_cleanup(PebbleTask task);
 
 /**
  * @brief Globally enable or disable touch.

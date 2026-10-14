@@ -79,6 +79,15 @@ static void prv_remove_subscriber_cb(PebbleTask task) {
   pbl_mutex_unlock(&s_touch_mutex);
 }
 
+void touch_process_cleanup(PebbleTask task) {
+  pbl_mutex_lock(&s_touch_mutex, PBL_FOREVER);
+  s_raw_subscriber_tasks &= (uint8_t)~(1u << task);
+  if (task == PebbleTask_App) {
+    s_app_nav_active = false;
+  }
+  pbl_mutex_unlock(&s_touch_mutex);
+}
+
 void touch_init(void) {
   event_service_init(PEBBLE_TOUCH_EVENT, &prv_add_subscriber_cb, &prv_remove_subscriber_cb);
   event_service_init(PEBBLE_GESTURE_EVENT, &prv_add_subscriber_cb, &prv_remove_subscriber_cb);

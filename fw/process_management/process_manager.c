@@ -20,6 +20,7 @@
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/persist.h>
+#include <pbl/services/touch/touch.h>
 #include <pbl/services/voice/voice.h>
 #include <pbl/util/heap.h>
 
@@ -549,6 +550,10 @@ void process_manager_process_cleanup(PebbleTask task) {
 
 #ifdef CONFIG_HRM
   hrm_manager_process_cleanup(task, context->install_id);
+#endif
+
+#ifdef CONFIG_SERVICE_TOUCH
+  touch_process_cleanup(task);
 #endif
 
 #ifndef CONFIG_RECOVERY_FW
