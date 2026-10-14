@@ -1650,6 +1650,9 @@ bool activity_get_step_averages(enum pbl_weekday day_of_week, ActivityMetricAver
 DEFINE_SYSCALL(bool, sys_activity_get_step_averages, enum pbl_weekday day_of_week,
                ActivityMetricAverages *averages) {
   if (PRIVILEGE_WAS_ELEVATED) {
+    if ((unsigned int)day_of_week > PBL_SATURDAY) {
+      syscall_failed();
+    }
     syscall_assert_userspace_buffer(averages, sizeof(*averages));
   }
 

@@ -796,6 +796,10 @@ DEFINE_SYSCALL(bool, sys_activity_get_metric, ActivityMetric metric, uint32_t hi
     if (history_len > ACTIVITY_HISTORY_DAYS) {
       history_len = ACTIVITY_HISTORY_DAYS;
     }
+    if ((unsigned int)metric >= ActivityMetricNumMetrics ||
+        (history == nullptr && history_len > 0)) {
+      syscall_failed();
+    }
     if (history) {
       syscall_assert_userspace_buffer(history, history_len * sizeof(*history));
     }
