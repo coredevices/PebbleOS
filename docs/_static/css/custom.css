@@ -96,10 +96,31 @@ html.dark {
 }
 
 .home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 2rem;
+  align-items: center;
   margin: 1.5rem 0 2.5rem;
   padding: 2.4rem 2.6rem 2.2rem;
   background: var(--pebble-cream);
   border-radius: 16px;
+}
+
+.home-hero > * {
+  grid-column: 1;
+}
+
+.home-hero > img.home-logo,
+.home-hero > .home-title {
+  grid-column: 1 / span 2;
+}
+
+.home-hero img.home-watches {
+  grid-column: 2;
+  grid-row: 3 / span 2;
+  width: 115%;
+  max-width: none;
+  margin: -1.5rem 0 -1rem -5%;
 }
 
 .home-hero img.home-logo {
@@ -136,7 +157,22 @@ html.dark {
 
 @media (max-width: 768px) {
   .home-hero {
+    grid-template-columns: minmax(0, 1fr);
     padding: 1.6rem 1rem;
+  }
+
+  .home-hero > img.home-logo,
+  .home-hero > .home-title {
+    grid-column: 1;
+  }
+
+  .home-hero img.home-watches {
+    grid-column: 1;
+    grid-row: auto;
+    order: 1;
+    width: 100%;
+    max-width: 360px;
+    margin: 1.6rem auto 0;
   }
 
   .home-hero img.home-logo {

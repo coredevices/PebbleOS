@@ -12,6 +12,8 @@
 
 <img class="home-logo" src="_static/images/logo.svg" alt="PebbleOS" />
 
+<img class="home-watches" src="_static/images/watches.webp" alt="Pebble Time 2 and Pebble Round 2" />
+
 ```{div} home-title
 Welcome to the PebbleOS documentation site!
 ```
