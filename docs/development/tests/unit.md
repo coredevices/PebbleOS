@@ -163,6 +163,30 @@ These mechanisms replace dependencies of the code under test:
   outside the library, e.g. `stubs_uuid.h` for `libutil` or the
   `tests/stubs/stubs_*.c` sources, are included or listed by the tests
   that need them.
+- **Spies** ([FFF](https://github.com/meekrosoft/fff), in
+  `third_party/fff/fff`): a test checking how its code calls a dependency
+  declares a fake with `FAKE_VOID_FUNC()` or `FAKE_VALUE_FUNC()` instead of
+  hand-writing counters and argument copies. Each fake records its
+  `call_count` and arguments (`argN_val`, `argN_history`) and returns
+  `return_val`, or runs `custom_fake` when it must write through a pointer or
+  copy something off the caller's stack. Being a strong definition, it
+  replaces the default stub. List the fakes once and reset them in
+  `initialize()`:
+
+  ```c
+  #include <fff.h>
+
+  FAKE_VOID_FUNC(settings_file_close, SettingsFile *);
+  FAKE_VALUE_FUNC(status_t, settings_file_open, SettingsFile *, const char *, int);
+
+  #define FAKES(FAKE) FAKE(settings_file_close) FAKE(settings_file_open)
+
+  void test_foo__initialize(void) {
+    FAKES(RESET_FAKE);
+    FFF_RESET_HISTORY();
+  }
+  ```
+
 - **Header overrides** (`tests/overrides/`): directories mirroring the
   source tree whose headers shadow the real ones on the include path.
   `tests/overrides/default/` is always active for every test; other

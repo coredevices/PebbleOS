@@ -43,3 +43,6 @@
 [submodule "third_party/upng/upng"]
 	path = third_party/upng/upng
 	url = https://github.com/coredevices/upng.git
+[submodule "third_party/fff/fff"]
+	path = third_party/fff/fff
+	url = https://github.com/meekrosoft/fff

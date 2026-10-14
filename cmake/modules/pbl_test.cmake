@@ -55,6 +55,7 @@ set(PBL_TEST_INCLUDES_TAIL
   third_party/upng/upng
   third_party/nanopb/nanopb
   third_party/tinymt/TinyMT/tinymt
+  third_party/fff/fff
 )
 
 function(pbl_test_init)
