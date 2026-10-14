@@ -18,6 +18,7 @@
 
 #include <kernel/events.h>
 #include <kernel/low_power.h>
+#include <kernel/pebble_tasks.h>
 #include <services/light/als_screen_compensation.h>
 #include <syscall/syscall_internal.h>
 
@@ -72,6 +73,7 @@ static int s_num_buttons_down;
 
 //! The current app is forcing the light on and off, don't muck with it.
 static bool s_user_controlled_state;
+static PebbleTask s_user_controlled_task;
 
 //! True while a touch is holding the backlight on. Lets app teardown release a
 //! touch whose liftoff was never delivered. KernelMain-only.
@@ -590,6 +592,7 @@ void light_enable(bool enable) {
   // I am reluctant to chop it out.
 
   s_user_controlled_state = enable;
+  s_user_controlled_task = pebble_task_get_current();
 
   if (enable) {
     prv_change_state(LIGHT_STATE_ON);
@@ -608,6 +611,7 @@ void light_enable_respect_settings(bool enable) {
   s_touch_lit = false;
 
   s_user_controlled_state = enable;
+  s_user_controlled_task = pebble_task_get_current();
 
   if (enable) {
     prv_als_prime_for_interaction();
@@ -621,15 +625,10 @@ void light_enable_respect_settings(bool enable) {
   pbl_mutex_unlock(&s_mutex);
 }
 
-void light_reset_user_controlled(void) {
-  // Release a touch that never saw its liftoff (app exited mid-press) so the
-  // button refcount can't leak. Call before locking; light_touch_up locks.
-  light_touch_up();
-
+void light_reset_user_controlled_by_task(PebbleTask task) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  // http://www.youtube.com/watch?v=6t_KgE6Yuqg
-  if (s_user_controlled_state) {
+  if (s_user_controlled_state && s_user_controlled_task == task) {
     s_user_controlled_state = false;
 
     if (s_num_buttons_down == 0) {

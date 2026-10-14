@@ -436,7 +436,9 @@ static void prv_app_cleanup(void) {
   app_inbox_service_unregister_all();
   app_outbox_service_cleanup_all_pending_messages();
 #endif
-  light_reset_user_controlled();
+  // Release a touch that never saw its liftoff so the button refcount can't leak.
+  light_touch_up();
+  light_reset_user_controlled_by_task(PebbleTask_App);
   light_set_system_color();
   sys_vibe_history_stop_collecting();
   // Clear only app-started vibes, so an app exit doesn't kill an alarm.

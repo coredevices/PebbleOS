@@ -299,7 +299,8 @@ void test_light__touch_hold_released_on_app_teardown(void) {
   light_touch_down();
   check_on();
 
-  light_reset_user_controlled();
+  light_touch_up();
+  light_reset_user_controlled_by_task(PebbleTask_App);
 
   check_on_timed_and_consume();
 }

@@ -9,6 +9,9 @@
 // Pebble stuff
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/privilege.h>
+#include <pbl/services/light.h>
+#include <pbl/services/speaker/speaker_service.h>
+#include <pbl/services/vibe_pattern.h>
 
 #include <kernel/memory_layout.h>
 #include <kernel/pbl_malloc.h>
@@ -288,6 +291,12 @@ void worker_manager_close_current_worker(bool gracefully) {
 
   // Perform generic process cleanup
   process_manager_process_cleanup(PebbleTask_Worker);
+
+  light_reset_user_controlled_by_task(PebbleTask_Worker);
+  vibe_pattern_clear_for_owner(VibePatternOwner_Worker);
+#ifndef CONFIG_RECOVERY_FW
+  speaker_service_stop_for_task(PebbleTask_Worker);
+#endif
 
   // Notify the app install manager that we finally exited
   app_install_notify_worker_closed();

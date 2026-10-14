@@ -38,6 +38,8 @@ typedef enum VibePatternOwner {
   VibePatternOwner_PhoneCall,
   /** Alarm vibes. */
   VibePatternOwner_Alarm,
+  /** Vibes started by the worker task; cleared on worker cleanup. */
+  VibePatternOwner_Worker,
 } VibePatternOwner;
 
 /** @brief Initialize the service. */
@@ -87,7 +89,8 @@ void vibe_service_set_enabled(bool enable);
  * @brief Set the owner of the next pattern.
  *
  * Consumed when the first step of the next pattern is queued. Without it, patterns from the app
- * task are owned by #VibePatternOwner_App and others by #VibePatternOwner_Other.
+ * and worker tasks are owned by #VibePatternOwner_App and #VibePatternOwner_Worker, and others
+ * by #VibePatternOwner_Other.
  *
  * @param owner Owner of the next pattern.
  */

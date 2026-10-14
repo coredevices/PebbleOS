@@ -359,8 +359,17 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
     if (s_pending_owner != VibePatternOwner_Other) {
       s_pattern_owner = s_pending_owner;
     } else {
-      s_pattern_owner = (pebble_task_get_current() == PebbleTask_App) ? VibePatternOwner_App
-                                                                      : VibePatternOwner_Other;
+      switch (pebble_task_get_current()) {
+        case PebbleTask_App:
+          s_pattern_owner = VibePatternOwner_App;
+          break;
+        case PebbleTask_Worker:
+          s_pattern_owner = VibePatternOwner_Worker;
+          break;
+        default:
+          s_pattern_owner = VibePatternOwner_Other;
+          break;
+      }
     }
     s_pending_owner = VibePatternOwner_Other;
     s_vibe_queue_head = step;

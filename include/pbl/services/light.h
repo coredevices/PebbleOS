@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <kernel/pebble_tasks.h>
 #include <shell/prefs.h>
 
 /**
@@ -110,11 +111,11 @@ void light_enable_interaction(void);
 
 /**
  * @ingroup services_light
- * @brief Return to the normal state machine after an app forced the light with light_enable().
+ * @brief Return to the normal state machine if @p task forced the light with light_enable().
  *
- * Also releases a touch hold that never saw its liftoff.
+ * @param task Task that exited.
  */
-void light_reset_user_controlled(void);
+void light_reset_user_controlled_by_task(PebbleTask task);
 
 /**
  * @brief Tint the backlight LED to a packed 24-bit RGB value.

@@ -225,7 +225,10 @@ const PebbleProcessMd *system_app_state_machine_get_default_app(void) {
 void launcher_cancel_force_quit(void) {
 }
 
-void light_reset_user_controlled(void) {
+void light_touch_up(void) {
+}
+
+void light_reset_user_controlled_by_task(PebbleTask task) {
 }
 
 void light_set_system_color(void) {
