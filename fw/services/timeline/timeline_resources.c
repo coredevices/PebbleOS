@@ -178,9 +178,20 @@ fail:
 
 DEFINE_SYSCALL(void, sys_timeline_resources_get_id, const TimelineResourceInfo *timeline_res,
                TimelineResourceSize size, AppResourceInfo *res_info) {
+  TimelineResourceInfo user_timeline_res;
+  Uuid user_app_id;
+
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(timeline_res, sizeof(*timeline_res));
     syscall_assert_userspace_buffer(res_info, sizeof(*res_info));
+
+    user_timeline_res = *timeline_res;
+    if (user_timeline_res.app_id) {
+      syscall_assert_userspace_buffer(user_timeline_res.app_id, sizeof(Uuid));
+      user_app_id = *user_timeline_res.app_id;
+      user_timeline_res.app_id = &user_app_id;
+    }
+    timeline_res = &user_timeline_res;
   }
   if (!timeline_res || !res_info || (size >= TimelineResourceSizeCount)) {
     if (res_info) {
