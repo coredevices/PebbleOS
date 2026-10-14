@@ -206,6 +206,44 @@ void test_weather_app_layout__render_palo_alto(void) {
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
+void test_weather_app_layout__render_wind_meters_per_second(void) {
+  s_units_distance = UnitsDistance_KM;
+  s_units_wind = UnitsWind_MetersPerSecond;
+  WeatherLocationForecast today = {
+    .location_name = "BARCELONA",
+    .today_wmo = -1,
+    .today_humidity = -1,
+    .today_visibility_m = -1,
+    .today_precip_sum_mm = -1,
+    .current_temp = 21,
+    .today_high = 24,
+    .today_low = 17,
+    .today_uv = 5,
+    .today_uv_now = 5,
+    .today_precip_mm = 20,
+    .today_wind_mph = 22,
+    .today_wind_dir_deg = 135,
+    .today_feels = 21,
+    .current_weather_type = WeatherType_PartlyCloudy,
+    .current_weather_phrase = "Partly Cloudy",
+  };
+  WeatherLocationForecast next = {
+    .location_name = "BARCELONA",
+    .today_wmo = -1,
+    .today_humidity = -1,
+    .today_visibility_m = -1,
+    .today_precip_sum_mm = -1,
+    .current_temp = 19,
+    .today_high = 22,
+    .today_low = 16,
+    .current_weather_type = WeatherType_Sun,
+    .current_weather_phrase = "Sunny",
+  };
+
+  prv_create_layout_and_render(&today, &next);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
 static void prv_render_long_strings_test(bool is_current_location) {
   WeatherLocationForecast today = {
     .location_name = "QWERTYUIO ASEDDFFGHHJ",

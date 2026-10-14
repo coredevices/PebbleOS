@@ -61,6 +61,8 @@ typedef enum UnitsWind {
   UnitsWind_FromDistance,
   UnitsWind_KmH,
   UnitsWind_Mph,
+  UnitsWind_MetersPerSecond,
+  UnitsWind_Knots,
   UnitsWindCount
 } UnitsWind;
 
