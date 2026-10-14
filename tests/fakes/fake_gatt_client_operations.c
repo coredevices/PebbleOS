@@ -37,8 +37,9 @@ enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic, GA
   return PBL_BT_ERRNO_OK;
 }
 
-void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
                                        uint16_t value_length, GAPLEClient client) {
+  return true;
 }
 
 typedef struct {

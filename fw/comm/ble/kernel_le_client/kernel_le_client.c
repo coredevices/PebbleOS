@@ -300,7 +300,8 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
       PBL_LOG_ERR("OOM for GATT read response - %d bytes", (int)value_length);
       return;
     }
-    gatt_client_consume_read_response(event->object_ref, buffer, value_length, GAPLEClientKernel);
+    PBL_ASSERTN(gatt_client_consume_read_response(event->object_ref, buffer, value_length,
+                                                  GAPLEClientKernel));
   }
 
   if (client->handle_read_or_notification) {
@@ -369,8 +370,8 @@ static void prv_handle_gatt_event(const PebbleBLEGATTClientEvent *event) {
   if (!client) {
     // Read responses still need to be consumed, even if the client has disappeared:
     if (event->subtype == PebbleBLEGATTClientEventTypeCharacteristicRead && event->value_length) {
-      gatt_client_consume_read_response(event->object_ref, nullptr, event->value_length,
-                                        GAPLEClientKernel);
+      PBL_ASSERTN(gatt_client_consume_read_response(event->object_ref, nullptr, event->value_length,
+                                                    GAPLEClientKernel));
     }
     goto log_error;
   }

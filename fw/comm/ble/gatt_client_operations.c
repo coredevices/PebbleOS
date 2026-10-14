@@ -271,25 +271,28 @@ enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic, GA
                   PebbleBLEGATTClientEventTypeCharacteristicRead);
 }
 
-void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
                                        uint16_t value_length, GAPLEClient client) {
+  bool consumed = false;
+
   bt_lock();
   {
     // For responses with 0 length, no ReadResponseData is created therefore
     // should not be attempted to be consumed.
-    PBL_ASSERTN(value_length);
-
-    PBL_ASSERTN(s_read_responses[client]);
     ReadResponseData *read_response = s_read_responses[client];
-    PBL_ASSERTN(value_length == read_response->length);
-    PBL_ASSERTN(object_ref == read_response->object_ref);
-    if (value_out) {
-      memcpy(value_out, read_response->value, read_response->length);
+    if (value_length != 0 && read_response != nullptr && value_length == read_response->length &&
+        object_ref == read_response->object_ref) {
+      if (value_out) {
+        memcpy(value_out, read_response->value, read_response->length);
+      }
+      list_remove(&read_response->node, (ListNode **)&s_read_responses[client], nullptr);
+      kernel_free(read_response);
+      consumed = true;
     }
-    list_remove(&read_response->node, (ListNode **)&s_read_responses[client], nullptr);
-    kernel_free(read_response);
   }
   bt_unlock();
+
+  return consumed;
 }
 
 enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,

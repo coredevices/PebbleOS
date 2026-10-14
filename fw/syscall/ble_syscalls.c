@@ -121,7 +121,9 @@ DEFINE_SYSCALL(void, sys_ble_client_consume_read, uintptr_t object_ref, uint8_t 
     value_length = *value_length_in_out;
   }
 
-  gatt_client_consume_read_response(object_ref, value_out, value_length, GAPLEClientApp);
+  if (!gatt_client_consume_read_response(object_ref, value_out, value_length, GAPLEClientApp)) {
+    syscall_failed();
+  }
 }
 
 DEFINE_SYSCALL(bool, sys_ble_client_consume_notification, uintptr_t *object_ref_out,

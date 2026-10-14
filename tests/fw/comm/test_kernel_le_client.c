@@ -190,9 +190,10 @@ uint8_t gatt_client_service_get_characteristics_matching_uuids(
 }
 
 static int s_read_responses_consumed_count;
-void gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
+bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
                                        uint16_t value_length, GAPLEClient client) {
   ++s_read_responses_consumed_count;
+  return true;
 }
 
 static int s_services_discovered_count;
