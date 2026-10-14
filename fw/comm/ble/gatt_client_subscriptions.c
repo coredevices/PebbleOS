@@ -619,7 +619,7 @@ static enum pbl_bt_errno prv_subscribe(pbl_bt_characteristic_t characteristic_re
 
     // Write to the Client Configuration Characteristic Descriptor on the
     // remote to change the subscription:
-    const uint16_t value = subscription_type;
+    const uint16_t value = next_prevailing_type;
 
     // Release bt_lock before writing CCCD, as this calls into NimBLE.
     // prv_write() (gatt_client_operations.c) releases its own bt_lock level before
