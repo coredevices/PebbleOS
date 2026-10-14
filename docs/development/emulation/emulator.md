@@ -58,7 +58,7 @@ quit with `quit` there or by closing the window.
 The emulated watch keeps its data in two flash images in the build
 directory: the internal flash, holding the firmware, and the external
 flash, holding the resources, the file system and with it the installed
-apps, settings and Bluetooth bondings. {doc}`../pbl/qemu` rebuilds both on
+apps, settings and Bluetooth bondings. {doc}`../../pbl/qemu` rebuilds both on
 every launch; pass `--keep-flash-image` to keep the external flash, and
 with it the watch's data:
 
@@ -86,8 +86,8 @@ The same keys can be sent from the monitor with `sendkey`, e.g.
 
 ### Touch
 
-On boards with touch, tap and swipe from a shell with {doc}`../pbl/touch`
-and {doc}`../pbl/swipe`:
+On boards with touch, tap and swipe from a shell with {doc}`../../pbl/touch`
+and {doc}`../../pbl/swipe`:
 
 ```shell
 pbl touch 130 130
@@ -105,7 +105,7 @@ pbl screenshot    # writes build/screenshot.png
 
 ### Phone data
 
-There is no phone attached, but {doc}`../pbl/feed` writes what the phone
+There is no phone attached, but {doc}`../../pbl/feed` writes what the phone
 app would, such as weather, music, notifications and calendar events, over
 the Pebble protocol port:
 
@@ -126,9 +126,9 @@ Launch with `--keep-flash-image` to keep installed apps across launches.
 
 ### Debugging
 
-The emulator always runs a GDB server. {doc}`../pbl/debug` attaches to it
+The emulator always runs a GDB server. {doc}`../../pbl/debug` attaches to it
 through a proxy that walks the kernel's thread list, so `info threads` and
-per-thread backtraces work; see {doc}`debugging`.
+per-thread backtraces work; see {doc}`../debugging`.
 
 ## Ports and sockets
 

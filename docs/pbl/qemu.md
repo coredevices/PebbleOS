@@ -20,7 +20,7 @@ The launched QEMU exposes:
   and {doc}`feed`
 
 UART1 output is also captured to `uart1.log` in the repository root.
-{doc}`../development/emulator` covers what the emulator models and how to
+{doc}`../development/emulation/emulator` covers what the emulator models and how to
 operate it.
 
 ## Options

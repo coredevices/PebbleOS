@@ -27,8 +27,8 @@ https://pebbleos-core.readthedocs.io). Prefer pointing to or extending those
 pages over duplicating knowledge here: `docs/community/contributing.md`
 (DCO, commit and AI-usage rules), `docs/pbl/` (the `pbl`
 CLI, one page per command, and `extending.md` for how to extend it),
-`docs/sdk/exporting.md` (SDK export machinery), `docs/development/emulator.md`
-(emulator workflow),
+`docs/sdk/exporting.md` (SDK export machinery),
+`docs/development/emulation/emulator.md` (emulator workflow),
 `docs/development/tests/integration.md` (pytest suite on QEMU and devices).
 
 ## Code style

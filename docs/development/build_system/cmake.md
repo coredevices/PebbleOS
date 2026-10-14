@@ -142,7 +142,7 @@ generators live in `tools/cmake/`:
 
 ## Native builds
 
-The {doc}`native simulator <../native_simulator>` runs the firmware as a
+The {doc}`native simulator <../emulation/native_simulator>` runs the firmware as a
 host program. The bottom halves of its drivers talk to the host and see
 none of the firmware's headers:
 
