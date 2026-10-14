@@ -21,36 +21,23 @@ Emery platform, which apps see as a 200 × 228 color display.
 
 ## Hardware
 
-- SiFli SF32LB52: Arm STAR-MC1 (Armv8-M) application core with FPU, and a
-  Bluetooth Low Energy controller on its own core
-- 512 KiB SRAM, 32 MiB external NOR flash (GigaDevice GD25Q256E)
-- 200 × 228, 64-color JDI memory-in-pixel display with a backlight
-- Capacitive touch panel
-- Heart rate sensor, accelerometer and gyroscope, magnetometer, ambient
-  light sensor
-- Microphone and speaker
-- Linear resonant actuator for vibration
-- Nordic nPM1300 PMIC and battery charger
-
-### Supported features
-
-| Interface | Hardware | Kconfig |
-| --- | --- | --- |
-| Display | JDI memory-in-pixel (SF32LB52 LCDC) | `CONFIG_DISPLAY_JDI_SF32LB` |
-| Backlight | Awinic AW2016 | `CONFIG_BACKLIGHT_AW2016` |
-| Touch | Hynitron CST816 | `CONFIG_TOUCH_CST816` |
-| Accelerometer | ST LSM6DSO | `CONFIG_ACCEL_LSM6DSO` |
-| Magnetometer | MEMSIC MMC5603NJ | `CONFIG_MAG_MMC5603NJ` |
-| Heart rate | Goodix GH3X2X | `CONFIG_HRM_GH3X2X` |
-| Ambient light | W1160 | `CONFIG_AMBIENT_LIGHT_W1160` |
-| Vibration | Awinic AW86225 | `CONFIG_VIBE_AW86225` |
-| Microphone | SF32LB52 PDM | `CONFIG_MIC_SF32LB` |
-| Speaker | SF32LB52 audio codec | `CONFIG_SPEAKER_SF32LB` |
-| PMIC, battery | Nordic nPM1300 | `CONFIG_MFD_NPM1300` |
-| Flash | GigaDevice GD25Q256E | `CONFIG_FLASH_GD25Q256E` |
-
-The defconfigs in `boards/obelix/` enable the rest of the configuration;
-{doc}`../../pbl/menuconfig` shows the full set for a build.
+- **SoC**: [SiFli SF32LB52](https://www.sifli.com/en/sf32lb52x), with an Arm STAR-MC1 (Armv8-M) application
+  core with FPU, a Bluetooth Low Energy controller on its own core, and
+  512 KiB SRAM
+- **Flash**: [GigaDevice GD25Q256E](https://www.gigadevice.com/product/flash/spi-nor-flash/gd25q256e), 32 MiB NOR
+- **Display**: 200 × 228, 64-color JDI memory-in-pixel, driven by the
+  SF32LB52 LCD controller
+- **Backlight**: Awinic AW2016 LED driver
+- **Touch**: Hynitron CST816 capacitive touch controller
+- **Accelerometer and gyroscope**: [ST LSM6DSO](https://www.st.com/en/mems-and-sensors/lsm6dso.html)
+- **Magnetometer**: [MEMSIC MMC5603NJ](https://www.memsic.com/magnetometer-2)
+- **Heart rate**: Goodix GH3X2X optical sensor
+- **Ambient light**: W1160
+- **Vibration**: [Awinic AW86225](https://www.awinic.com/en/productDetail/AW86225CSR) haptic driver, with a linear resonant
+  actuator
+- **Microphone**: PDM, on the SF32LB52 PDM interface
+- **Speaker**: on the SF32LB52 audio codec
+- **Power**: [Nordic nPM1300](https://www.nordicsemi.com/Products/nPM1300) PMIC and battery charger
 
 ### Revisions
 
@@ -62,6 +49,19 @@ The defconfigs in `boards/obelix/` enable the rest of the configuration;
 
 ## Programming and debugging
 
+### Connecting a programmer
+
+Pebble Time 2 is programmed with a {doc}`../../programmers/pblprog_sifli`, over
+the watch's debug UART:
+
+1. Connect the programmer's flex cable to the B2B connector on the watch
+   mainboard.
+2. Connect the programmer to the host over USB-C.
+3. Turn the `CHG` switch on to power the watch from USB while programming,
+   so it stays reachable whatever its battery level.
+
+The programmer's page describes its connector, reset and charge switch.
+
 ### Building
 
 ```shell
@@ -72,15 +72,14 @@ pbl build
 ### Flashing
 
 Pebble Time 2 is flashed with the `sftool` {ref}`runner <pbl-runners>`,
-over the serial port of a firmware development kit. The first time, write
-the system resources too:
+over the programmer's serial port. The first time, write the system
+resources too:
 
 ```shell
 pbl flash --tty /dev/ttyACM0 --resources
 ```
 
-Later updates can leave `--resources` out. Without a development kit,
-install a {doc}`../../pbl/bundle` from the Pebble mobile app instead.
+Later updates can leave `--resources` out. Without a programmer, install a {doc}`../../pbl/bundle` from the Pebble mobile app instead.
 
 ### Console
 

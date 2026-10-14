@@ -152,6 +152,7 @@ libraries/index.md
 :caption: Hardware
 
 boards/index.md
+programmers/index.md
 ```
 
 ```{toctree}

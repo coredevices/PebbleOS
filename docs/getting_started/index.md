@@ -238,7 +238,8 @@ There are two ways to get the firmware onto a watch:
    starts the update and shows its progress on the watch card.
    {doc}`../pbl/bundle` also covers sideloading over adb and with the
    `pebble` tool.
-2. **Flash it with a firmware development kit.** With the kit connected,
+2. **Flash it with a programmer.** With a
+   {doc}`programmer <../programmers/index>` connected,
    {doc}`../pbl/flash` writes the firmware directly, without the phone:
 
    ```shell
