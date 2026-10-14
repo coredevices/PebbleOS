@@ -294,8 +294,11 @@ static uintptr_t prv_original_sp(const uint32_t *frame, uint32_t exc_return) {
 #define SYSCALL_STACK_ARG_WORDS 16u
 
 // Boards without a dedicated syscall stack run syscalls on the caller's.
-PBL_WEAK uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
+PBL_WEAK uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out, uintptr_t *caller_start_out,
+                                            uintptr_t *caller_end_out) {
   (void)base_out;
+  (void)caller_start_out;
+  (void)caller_end_out;
   return nullptr;
 }
 
@@ -304,13 +307,23 @@ PBL_WEAK uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
 static uint32_t *prv_relocate_to_syscall_stack(uint32_t *frame, uint32_t exc_return,
                                                uintptr_t orig_sp) {
   uintptr_t base = 0;
-  uint32_t *top = pbl_kernel_syscall_stack(&base);
+  uintptr_t caller_start = 0;
+  uintptr_t caller_end = 0;
+  uint32_t *top = pbl_kernel_syscall_stack(&base, &caller_start, &caller_end);
   if (top == nullptr) {
     return &frame[5];
   }
 
   uint32_t *args = top - SYSCALL_STACK_ARG_WORDS;
-  memcpy(args, (const void *)orig_sp, SYSCALL_STACK_ARG_WORDS * sizeof(uint32_t));
+  size_t args_size = 0;
+  if (orig_sp >= caller_start && orig_sp < caller_end) {
+    args_size = SYSCALL_STACK_ARG_WORDS * sizeof(uint32_t);
+    if (caller_end - orig_sp < args_size) {
+      args_size = caller_end - orig_sp;
+    }
+  }
+  memset(args, 0, SYSCALL_STACK_ARG_WORDS * sizeof(uint32_t));
+  memcpy(args, (const void *)orig_sp, args_size);
 
   uint32_t frame_words = prv_fp_active(exc_return) ? 8u + NUM_BASIC_FP_REGS : 8u;
   uint32_t *dst = args - frame_words;

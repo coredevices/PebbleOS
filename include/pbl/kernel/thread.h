@@ -290,9 +290,13 @@ bool pbl_kernel_privilege_raise_allowed(uint32_t caller_pc);
  * arguments are copied onto the returned stack, so the syscall body runs there.
  *
  * @param[out] base_out Lowest address of the stack, used as the stack limit where supported.
+ * @param[out] caller_start_out Start of the caller's memory; stacked arguments are only copied
+ *                              from within [*caller_start_out, *caller_end_out).
+ * @param[out] caller_end_out End of the caller's memory.
  * @return Top of the stack, or NULL to run syscalls on the caller's stack.
  */
-uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out);
+uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out, uintptr_t *caller_start_out,
+                                   uintptr_t *caller_end_out);
 
 /**
  * @brief Notify the application that privilege is being raised for a syscall.

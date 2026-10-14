@@ -368,8 +368,10 @@ const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
 // Kernel hook: top of the current task's dedicated syscall stack (base in
 // *base_out), or NULL to keep it on the caller's stack. App + Worker only;
 // moddable apps use mcu_call_unprivileged() and stay on their own stack.
-uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
+uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out, uintptr_t *caller_start_out,
+                                   uintptr_t *caller_end_out) {
   uint32_t *stack;
+  const MpuRegion *caller_region;
   switch (pebble_task_get_current()) {
     case PebbleTask_App:
 #ifdef CONFIG_MODDABLE_XS
@@ -381,14 +383,18 @@ uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out) {
     }
 #endif
       stack = s_app_syscall_stack.words;
+      caller_region = memory_layout_get_app_region();
       break;
     case PebbleTask_Worker:
       stack = s_worker_syscall_stack.words;
+      caller_region = memory_layout_get_worker_region();
       break;
     default:
       return nullptr;
   }
   *base_out = (uintptr_t)&stack[0];
+  *caller_start_out = caller_region->base_address;
+  *caller_end_out = caller_region->base_address + caller_region->size;
   return (uint32_t *)&stack[SYSCALL_STACK_WORDS];
 }
 
