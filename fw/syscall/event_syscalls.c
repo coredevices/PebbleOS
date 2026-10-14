@@ -21,16 +21,39 @@ static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   }
 }
 
-// Event types that an unprivileged app or worker is permitted to post directly via
-// sys_send_pebble_event_to_kernel. Anything else (in particular events that carry a
-// kernel-invoked callback pointer, like PEBBLE_CALLBACK_EVENT) is forbidden — the
-// kernel would otherwise jump to an app-controlled address with kernel privileges.
-static bool prv_event_type_allowed_from_user(PebbleEventType type) {
-  switch (type) {
+static const MpuRegion *prv_process_region(PebbleTask task) {
+  return (task == PebbleTask_Worker) ? memory_layout_get_worker_region()
+                                     : memory_layout_get_app_region();
+}
+
+static PebbleTaskBitset prv_only_to(PebbleTask task) {
+  return (PebbleTaskBitset) ~(1 << task);
+}
+
+// Event types an unprivileged app or worker may post, checked and restricted to the recipients
+// the applib senders need. Anything else, in particular events carrying a callback the kernel
+// would run, is rejected.
+static bool prv_validate_event_from_user(PebbleTask task, PebbleEvent *event) {
+  switch (event->type) {
     case PEBBLE_PROCESS_KILL_EVENT:
+      event->kill.task = task;
+      event->task_mask = prv_only_to(PebbleTask_KernelMain);
+      return true;
     case PEBBLE_RENDER_READY_EVENT:
+      event->task_mask = prv_only_to(PebbleTask_KernelMain);
+      return (task == PebbleTask_App);
     case PEBBLE_DICTATION_EVENT:
+      event->task_mask = prv_only_to(task);
+      return (event->dictation.text == nullptr) ||
+             memory_layout_is_cstring_in_region(prv_process_region(task), event->dictation.text,
+                                                SIZE_MAX);
     case PEBBLE_HEALTH_SERVICE_EVENT:
+      if (event->health_event.type != HealthEventSignificantUpdate) {
+        return false;
+      }
+      event->health_event = (PebbleHealthEvent){.type = HealthEventSignificantUpdate};
+      event->task_mask = prv_only_to(task);
+      return true;
     case PEBBLE_PLUGIN_SERVICE_EVENT:
       return true;
     default:
@@ -38,25 +61,12 @@ static bool prv_event_type_allowed_from_user(PebbleEventType type) {
   }
 }
 
-static const MpuRegion *prv_process_region(PebbleTask task) {
-  return (task == PebbleTask_Worker) ? memory_layout_get_worker_region()
-                                     : memory_layout_get_app_region();
-}
-
 PBL_SYSCALL(void, sys_send_pebble_event_to_kernel, (IN, PebbleEvent *, event)) {
   PebbleTask task = pebble_task_get_current();
 
   if (from_user) {
-    if (!prv_event_type_allowed_from_user(event->type)) {
+    if (!prv_validate_event_from_user(task, event)) {
       PBL_LOG_ERR("Rejecting event type %u from unprivileged caller", event->type);
-      syscall_failed();
-    }
-
-    if (event->type == PEBBLE_PROCESS_KILL_EVENT) {
-      event->kill.task = task;
-    } else if (event->type == PEBBLE_DICTATION_EVENT && event->dictation.text != nullptr &&
-               !memory_layout_is_cstring_in_region(prv_process_region(task), event->dictation.text,
-                                                   SIZE_MAX)) {
       syscall_failed();
     }
   }
