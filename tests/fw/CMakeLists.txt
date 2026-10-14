@@ -240,3 +240,9 @@ pbl_clar_test(test_getting_started_button_combo
     fw/apps/prf/recovery_first_use/getting_started_button_combo.c
   DEFINES CONFIG_RECOVERY_FW
 )
+
+pbl_clar_test(test_event_syscalls
+  SOURCES
+    fw/syscall/event_syscalls.c
+  DEFINES UNITTEST_WITH_SYSCALL_PRIVILEGES=1
+)
