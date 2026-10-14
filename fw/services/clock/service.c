@@ -987,9 +987,10 @@ void clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t ti
   prv_clock_get_relative_time_string(buffer, buf_size, timestamp, true, max_relative_hrs, false);
 }
 
-DEFINE_SYSCALL(void, sys_clock_get_timezone, char *timezone, const size_t buffer_size) {
+DEFINE_SYSCALL(void, sys_clock_get_timezone, char *timezone, size_t buffer_size) {
   if (PRIVILEGE_WAS_ELEVATED) {
     syscall_assert_userspace_buffer(timezone, TIMEZONE_NAME_LENGTH);
+    buffer_size = MIN(buffer_size, TIMEZONE_NAME_LENGTH);
   }
   clock_get_timezone_region(timezone, buffer_size);
 }

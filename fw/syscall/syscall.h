@@ -312,7 +312,7 @@ size_t sys_i18n_get_length(const char *string);
 //! @param timezone A pointer to the buffer to copy the timezone long name into
 //! @param buffer_size Size of the allocated buffer to copy the timezone long name into
 //! @note timezone buffer should be at least TIMEZONE_NAME_LENGTH bytes
-void sys_clock_get_timezone(char *timezone, const size_t buffer_size);
+void sys_clock_get_timezone(char *timezone, size_t buffer_size);
 
 //!   @} // end addtogroup WallTime
 //! @} // end addtogroup Foundation
