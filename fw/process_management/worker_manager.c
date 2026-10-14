@@ -99,6 +99,12 @@ static void prv_heap_lock(void *unused) {
   PBL_ASSERT_TASK(PebbleTask_Worker);
 }
 
+// Undo process_manager_init_context() for a worker that never started
+static void prv_abort_launch(void) {
+  app_install_release_md(s_worker_task_context.app_md);
+  s_worker_task_context = (ProcessContext){};
+}
+
 static size_t prv_get_worker_segment_size(const PebbleProcessMd *app_md) {
   return CONFIG_WORKER_RAM_SEGMENT_SIZE;
 }
@@ -177,12 +183,14 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   if (!entry_point) {
     PBL_LOG_WRN("Tried to launch an invalid worker in bank %u!",
                 process_metadata_get_code_bank_num(app_md));
+    prv_abort_launch();
     return false;
   }
 
   // The rest of worker_ram is available for worker state to use as it sees fit.
   if (!worker_state_configure(&worker_ram)) {
     PBL_LOG_ERR("Worker state configuration failed");
+    prv_abort_launch();
     return false;
   }
   // The remaining space in worker_segment is assigned to the worker's
