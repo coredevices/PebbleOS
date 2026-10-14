@@ -276,3 +276,13 @@ html.dark {
   color: #ffffff;
   background-color: var(--pebble-red);
 }
+
+/* Mermaid diagrams */
+
+.yue pre.mermaid > svg {
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+}
+

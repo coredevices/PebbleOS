@@ -20,15 +20,26 @@ internals.md
 
 ## Layout
 
+```{mermaid}
+block-beta
+  columns 2
+  api["Public API · include/pbl/kernel/<br/>threads, mutexes, semaphores, queues, poll, IRQs"]:2
+  core["Kernel · kernel/<br/>scheduler, objects, ticks"]:2
+  arm["Cortex-M port · kernel/arch/arm/<br/>context switch, SVC, MPU, SysTick"] posix["Host port · kernel/arch/posix/<br/>native simulator, unit tests"]
+
+  classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
+  classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
+  classDef base fill:#525252,stroke:#525252,color:#ffffff
+  class api app
+  class core system
+  class arm,posix base
 ```
-include/pbl/kernel/     public API: types, irq, thread, mutex, sem, msgq, poll, sched, idle, debug
-include/pbl/kernel/backend.h   per-object private state the public structs embed
-include/pbl/kernel/compiler.h  compiler abstraction, backed by compiler/gcc.h and compiler/clang.h
-include/pbl/kernel/section.h   placement of code and data in special sections
-kernel/                 scheduler, objects, tick conversion
-kernel/arch/arm/        Cortex-M port: context switch, SVC, MPU, SysTick, idle, vector table
-kernel/arch/posix/      host port for the unit tests
-```
+
+Next to the API, `include/pbl/kernel/` holds:
+
+- `backend.h`: the private state each public object struct embeds;
+- `compiler.h`: the {doc}`compiler abstraction <compiler>`;
+- `section.h`: the placement of code and data in special sections.
 
 ## Objects
 

@@ -100,6 +100,16 @@ pbl_redirects = {
     "architecture/activity/index": "services/activity/index",
 }
 
+# -- Options for the mermaid extension ---------------------------------------
+
+# Draw diagrams at their natural size, shrunk only to fit the page
+mermaid_height = "auto"
+mermaid_init_config = {
+    "startOnLoad": False,
+    "flowchart": {"useMaxWidth": False},
+    "block": {"useMaxWidth": False},
+}
+
 # -- Options for the kconfig extension ---------------------------------------
 
 kconfig_generate_db = True
