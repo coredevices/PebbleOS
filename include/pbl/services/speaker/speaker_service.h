@@ -100,6 +100,22 @@ bool speaker_service_play_note_seq(const SpeakerNote *notes, uint32_t num_notes,
                                    SpeakerPriority pri, uint8_t vol);
 
 /**
+ * @brief Play a note sequence on behalf of a task.
+ *
+ * Same as speaker_service_play_note_seq(), and records @p owner as the owner of the playback
+ * once it starts.
+ *
+ * @param notes Notes to play, copied internally.
+ * @param num_notes Number of entries in @p notes.
+ * @param pri Priority.
+ * @param vol Volume, 0-100.
+ * @param owner Owning task, or @c PebbleTask_Unknown to keep the current owner.
+ * @return true if playback started, see speaker_service_play_note_seq().
+ */
+bool speaker_service_play_note_seq_owned(const SpeakerNote *notes, uint32_t num_notes,
+                                         SpeakerPriority pri, uint8_t vol, PebbleTask owner);
+
+/**
  * @brief Play a single tone at an exact frequency.
  *
  * @param freq_hz Tone frequency in Hz, 0 for silence.
@@ -115,15 +131,35 @@ bool speaker_service_play_tone(uint16_t freq_hz, uint16_t duration_ms, uint8_t w
                                uint8_t velocity, SpeakerPriority pri, uint8_t vol);
 
 /**
+ * @brief Play a single tone on behalf of a task.
+ *
+ * Same as speaker_service_play_tone(), and records @p owner as the owner of the playback once
+ * it starts.
+ *
+ * @param freq_hz Tone frequency in Hz, 0 for silence.
+ * @param duration_ms Tone duration in milliseconds, must be non-zero.
+ * @param waveform @c SpeakerWaveform value.
+ * @param velocity Amplitude scale 0-127, 0 for full amplitude.
+ * @param pri Priority.
+ * @param vol Volume, 0-100.
+ * @param owner Owning task, or @c PebbleTask_Unknown to keep the current owner.
+ * @return true if playback started, see speaker_service_play_tone().
+ */
+bool speaker_service_play_tone_owned(uint16_t freq_hz, uint16_t duration_ms, uint8_t waveform,
+                                     uint8_t velocity, SpeakerPriority pri, uint8_t vol,
+                                     PebbleTask owner);
+
+/**
  * @brief Play a short tone at an absolute output volume.
  *
  * Bypasses the user's speaker volume preference, so settings UIs can preview a candidate volume
  * before it is saved. Mute still applies. Plays at @ref SpeakerPriorityApp.
  *
  * @param vol Absolute output volume, 0-100.
+ * @param owner Owning task, or @c PebbleTask_Unknown to keep the current owner.
  * @return true if playback started.
  */
-bool speaker_service_play_volume_preview(uint8_t vol);
+bool speaker_service_play_volume_preview(uint8_t vol, PebbleTask owner);
 
 /**
  * @brief Play monophonic tracks in parallel, mixed together.
@@ -140,6 +176,22 @@ bool speaker_service_play_volume_preview(uint8_t vol);
  */
 bool speaker_service_play_tracks(const SpeakerTrack *tracks, uint32_t num_tracks,
                                  SpeakerPriority pri, uint8_t vol);
+
+/**
+ * @brief Play tracks on behalf of a task.
+ *
+ * Same as speaker_service_play_tracks(), and records @p owner as the owner of the playback once
+ * it starts.
+ *
+ * @param tracks Tracks to play.
+ * @param num_tracks Number of tracks, at most @c SPEAKER_MAX_TRACKS.
+ * @param pri Priority.
+ * @param vol Volume, 0-100.
+ * @param owner Owning task, or @c PebbleTask_Unknown to keep the current owner.
+ * @return true if playback started, see speaker_service_play_tracks().
+ */
+bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_tracks,
+                                       SpeakerPriority pri, uint8_t vol, PebbleTask owner);
 
 /**
  * @brief Post a @c PEBBLE_SPEAKER_EVENT with the finish reason whenever playback ends.
@@ -224,6 +276,13 @@ void speaker_service_stream_close(void);
 void speaker_service_stop(void);
 
 /**
+ * @brief Stop the playback owned by a task immediately.
+ *
+ * @param owner Owning task, or @c PebbleTask_Unknown to stop any playback.
+ */
+void speaker_service_stop_owned(PebbleTask owner);
+
+/**
  * @brief Set the playback volume.
  *
  * @param vol Volume, 0-100.
@@ -251,13 +310,6 @@ SpeakerState speaker_service_get_state(void);
  * @param task Exiting task.
  */
 void speaker_service_stop_for_task(PebbleTask task);
-
-/**
- * @brief Set the task that owns the current playback.
- *
- * @param task Owning task.
- */
-void speaker_service_set_owner_task(PebbleTask task);
 
 /**
  * @brief Check whether the speaker is muted.

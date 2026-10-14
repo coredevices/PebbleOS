@@ -23,20 +23,18 @@ DEFINE_SYSCALL(bool, sys_speaker_play_note_seq, const SpeakerNote *notes, uint32
     syscall_assert_userspace_buffer(notes, num_notes * sizeof(SpeakerNote));
   }
 
-  if (priority > SpeakerPriorityCritical) {
+  if (PRIVILEGE_WAS_ELEVATED || priority > SpeakerPriorityCritical) {
     // Apps can only use App priority
     priority = SpeakerPriorityApp;
   }
 
-  PebbleTask task = pebble_task_get_current();
-  speaker_service_set_owner_task(task);
-
-  return speaker_service_play_note_seq(notes, num_notes, (SpeakerPriority)priority, volume);
+  return speaker_service_play_note_seq_owned(notes, num_notes, (SpeakerPriority)priority, volume,
+                                             pebble_task_get_current());
 }
 
 DEFINE_SYSCALL(bool, sys_speaker_play_tone, uint16_t freq_hz, uint16_t duration_ms,
                uint8_t waveform, uint8_t velocity, uint8_t priority, uint8_t volume) {
-  if (priority > SpeakerPriorityCritical) {
+  if (PRIVILEGE_WAS_ELEVATED || priority > SpeakerPriorityCritical) {
     priority = SpeakerPriorityApp;
   }
 
@@ -48,11 +46,9 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tone, uint16_t freq_hz, uint16_t duration_
     syscall_failed();
   }
 
-  PebbleTask task = pebble_task_get_current();
-  speaker_service_set_owner_task(task);
-
-  return speaker_service_play_tone(freq_hz, duration_ms, waveform, velocity,
-                                   (SpeakerPriority)priority, volume);
+  return speaker_service_play_tone_owned(freq_hz, duration_ms, waveform, velocity,
+                                         (SpeakerPriority)priority, volume,
+                                         pebble_task_get_current());
 }
 
 DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks, uint32_t num_tracks,
@@ -90,10 +86,10 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks, uint32
         if (kernel_samples[i].num_bytes == 0) {
           syscall_failed();
         }
-        total_sample_bytes += kernel_samples[i].num_bytes;
-        if (total_sample_bytes > SPEAKER_MAX_SAMPLE_BYTES_TOTAL) {
+        if (kernel_samples[i].num_bytes > SPEAKER_MAX_SAMPLE_BYTES_TOTAL - total_sample_bytes) {
           syscall_failed();
         }
+        total_sample_bytes += kernel_samples[i].num_bytes;
         syscall_assert_userspace_buffer(kernel_samples[i].data, kernel_samples[i].num_bytes);
         kernel_tracks[i].sample = &kernel_samples[i];
       }
@@ -101,18 +97,16 @@ DEFINE_SYSCALL(bool, sys_speaker_play_tracks, const SpeakerTrack *tracks, uint32
     tracks_to_play = kernel_tracks;
   }
 
-  if (priority > SpeakerPriorityCritical) {
+  if (PRIVILEGE_WAS_ELEVATED || priority > SpeakerPriorityCritical) {
     priority = SpeakerPriorityApp;
   }
 
-  PebbleTask task = pebble_task_get_current();
-  speaker_service_set_owner_task(task);
-
-  return speaker_service_play_tracks(tracks_to_play, num_tracks, (SpeakerPriority)priority, volume);
+  return speaker_service_play_tracks_owned(tracks_to_play, num_tracks, (SpeakerPriority)priority,
+                                           volume, pebble_task_get_current());
 }
 
 DEFINE_SYSCALL(bool, sys_speaker_stream_open, uint8_t priority, uint8_t volume, uint8_t format) {
-  if (priority > SpeakerPriorityCritical) {
+  if (PRIVILEGE_WAS_ELEVATED || priority > SpeakerPriorityCritical) {
     priority = SpeakerPriorityApp;
   }
 
@@ -130,20 +124,36 @@ DEFINE_SYSCALL(uint32_t, sys_speaker_stream_write, const void *data, uint32_t nu
       syscall_failed();
     }
     syscall_assert_userspace_buffer(data, num_bytes);
+    return speaker_service_stream_write_owned(pebble_task_get_current(), data, num_bytes);
   }
 
   return speaker_service_stream_write(data, num_bytes);
 }
 
 DEFINE_SYSCALL(void, sys_speaker_stream_close, void) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    speaker_service_stream_close_owned(pebble_task_get_current());
+    return;
+  }
+
   speaker_service_stream_close();
 }
 
 DEFINE_SYSCALL(void, sys_speaker_stop, void) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    speaker_service_stop_owned(pebble_task_get_current());
+    return;
+  }
+
   speaker_service_stop();
 }
 
 DEFINE_SYSCALL(void, sys_speaker_set_volume, uint8_t volume) {
+  if (PRIVILEGE_WAS_ELEVATED) {
+    speaker_service_set_volume_owned(pebble_task_get_current(), volume);
+    return;
+  }
+
   speaker_service_set_volume(volume);
 }
 

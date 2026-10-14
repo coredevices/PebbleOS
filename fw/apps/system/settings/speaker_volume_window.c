@@ -33,8 +33,7 @@ static void prv_play_preview(SpeakerVolumeWindowData *data) {
   // Restart the preview on every step so rapid clicks aren't rejected as
   // same-priority playback.
   speaker_service_stop_for_task(PebbleTask_App);
-  speaker_service_set_owner_task(PebbleTask_App);
-  speaker_service_play_volume_preview((uint8_t)data->value);
+  speaker_service_play_volume_preview((uint8_t)data->value, PebbleTask_App);
 }
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {

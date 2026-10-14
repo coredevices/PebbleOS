@@ -177,8 +177,8 @@ static void prv_sound_highlight_handler(const ActionMenuItem *item, void *contex
   }
 
   prv_stop_sound_preview();
-  speaker_service_set_owner_task(PebbleTask_App);
-  speaker_service_play_note_seq(notes, count, SpeakerPriorityApp, ALARM_SPEAKER_VOLUME);
+  speaker_service_play_note_seq_owned(notes, count, SpeakerPriorityApp, ALARM_SPEAKER_VOLUME,
+                                      PebbleTask_App);
 }
 #endif
 
