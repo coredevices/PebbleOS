@@ -8,21 +8,11 @@
 </div>
 ```
 
-::::{grid} 2
-:reverse:
+:::::{div} home-hero
 
-:::{grid-item}
-:columns: 4
-:class: sd-m-auto
+<img class="home-logo" src="_static/images/logo.svg" alt="PebbleOS" />
 
-<img src="_static/images/logo.svg" />
-
-:::
-
-:::{grid-item}
-:columns: 8
-
-```{div} sd-fs-3 home-title
+```{div} home-title
 Welcome to the PebbleOS documentation site!
 ```
 
@@ -30,21 +20,27 @@ PebbleOS is a lightweight, power-efficient operating system originally developed
 It supports custom watchfaces and apps using C and JavaScript.
 Optimized for memory-in-pixel (MIP) displays and long battery life, it features Bluetooth sync, a timeline interface, and a strong developer ecosystem through an open SDK.
 
+````{div} home-actions
+
 ```{button-ref} development/getting_started
 :ref-type: doc
 :color: primary
-:class: sd-rounded-pill float-left
+:class: sd-rounded-pill
 
 Get started
 ```
 
-```{only} html
-[![](https://img.shields.io/github/stars/coredevices/pebbleos?style=social)](https://github.com/coredevices/pebbleos)
+```{button-link} https://github.com/coredevices/pebbleos
+:color: dark
+:outline:
+:class: sd-rounded-pill
+
+Browse the sources
 ```
 
-:::
+````
 
-::::
+:::::
 
 ::::{grid} 1 1 2 3
 :class-container: text-center

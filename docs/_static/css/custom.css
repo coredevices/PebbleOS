@@ -1,36 +1,167 @@
-html[data-theme="light"],
-html[data-theme="dark"] {
-  --pst-color-primary: #3577b9;
-  --pst-color-secondary: #6ab4ff;
-}
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
 
-#rtd-footer-container {
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("../fonts/SpaceGrotesk/SpaceGrotesk-latin-wght.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Tomorrow";
-  font-weight: 400;
-  src: url("../fonts/Tomorrow/Tomorrow-Regular.ttf");
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/Geist/Geist-latin-wght.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Tomorrow";
-  font-weight: 500;
-  src: url("../fonts/Tomorrow/Tomorrow-Medium.ttf");
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/Geist/GeistMono-latin-wght.woff2") format("woff2");
 }
 
-@font-face {
-  font-family: "Tomorrow";
+/* Palette and fonts of repebble.com */
+:root {
+  --sy-f-text: "Geist", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Space Grotesk", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, monospace;
+
+  --pebble-red: #fa4a36;
+  --pebble-cream: #f5f3f0;
+
+}
+
+/* Neutral code, as on repebble.com */
+:root,
+html.light .sd-tab-content {
+  --yue-c-code-text: var(--sy-c-bold);
+  --yue-c-code-background: var(--gray-a3);
+  --code-block-background: var(--gray-a2);
+  --code-block-caption-background: var(--gray-a3);
+  --code-block-highlight: var(--gray-a3);
+}
+
+.globaltoc .caption {
+  color: var(--pebble-red);
   font-weight: 600;
-  src: url("../fonts/Tomorrow/Tomorrow-SemiBold.ttf");
 }
 
-html {
-  --pst-font-family-heading: "Tomorrow", sans-serif;
+:root,
+html.light {
+  --accent-9: var(--pebble-red);
+  --accent-10: #e8432f;
+  --sy-c-link: #d93a27;
+  --sy-c-link-hover: #b8301f;
 }
 
-.caption, .logo__title, .home-title {
-  font-family: "Tomorrow", sans-serif;
+html.dark {
+  --accent-9: var(--pebble-red);
+  --accent-10: #ff6450;
+  --sy-c-link: var(--pebble-red);
+  --sy-c-link-hover: #ff7a6a;
+  --pebble-cream: #171717;
+}
+
+/* Landing page */
+
+.yue a.sd-btn {
+  text-decoration: none;
+}
+
+.yue a.sd-btn-primary {
+  color: #ffffff !important;
+  background: var(--pebble-red) !important;
+  border-color: var(--pebble-red) !important;
+}
+
+.yue a.sd-btn-primary:hover {
+  background: var(--accent-10) !important;
+  border-color: var(--accent-10) !important;
+}
+
+.yue a.sd-btn-outline-dark {
+  color: var(--sy-c-bold) !important;
+  background: transparent !important;
+  border-color: var(--sy-c-border) !important;
+}
+
+.yue a.sd-btn-outline-dark:hover {
+  border-color: var(--sy-c-bold) !important;
+}
+
+.home-hero {
+  margin: 1.5rem 0 2.5rem;
+  padding: 2.4rem 2.6rem 2.2rem;
+  background: var(--pebble-cream);
+  border-radius: 16px;
+}
+
+.home-hero img.home-logo {
+  display: block;
+  width: 320px;
+  max-width: 100%;
+  margin: 0 0 1.4rem;
+}
+
+.home-title {
+  font-family: var(--sy-f-heading);
+  font-weight: 600;
+  font-size: 2.1rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.6rem;
+  color: var(--sy-c-heading);
+}
+
+.home-title p {
+  margin: 0;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+.home-actions p {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .home-hero {
+    padding: 1.6rem 1rem;
+  }
+
+  .home-hero img.home-logo {
+    width: 220px;
+  }
+
+  .home-title {
+    font-size: 1.6rem;
+  }
+}
+
+.sd-card {
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.sd-card:hover {
+  border-color: var(--pebble-red) !important;
+  transform: translateY(-2px);
+}
+
+.sd-card-header {
+  font-family: var(--sy-f-heading);
+  font-weight: 600;
+  border-bottom: none;
+  padding-bottom: 0;
 }

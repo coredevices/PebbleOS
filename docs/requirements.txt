@@ -1,4 +1,4 @@
 sphinx~=9.1
 myst-parser~=5.1
-sphinx-book-theme~=1.4
+shibuya~=2026.7
 sphinx-design~=0.7

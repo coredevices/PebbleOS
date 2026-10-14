@@ -31,7 +31,8 @@ nitpicky = True
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_book_theme"
+html_theme = "shibuya"
+templates_path = ["_templates"]
 html_static_path = ["_static"]
 
 # Doxygen output built by the RTD pre_build job (see .readthedocs.yaml),
@@ -39,18 +40,20 @@ html_static_path = ["_static"]
 if os.path.isdir(os.path.join(os.path.dirname(__file__), "_apidoc")):
     html_extra_path = ["_apidoc"]
 
-html_logo = "_static/images/logo.svg"
+html_favicon = "_static/images/favicon.svg"
 html_css_files = ["css/custom.css"]
 html_theme_options = {
-    "logo": {
-        "text": "PebbleOS",
-    },
-    "repository_url": "https://github.com/coredevices/pebbleos",
-    "repository_branch": "main",
-    "path_to_docs": "docs",
-    "use_repository_button": True,
-    "use_edit_page_button": True,
-    "use_issues_button": True,
+    "light_logo": "_static/images/logo.svg",
+    "dark_logo": "_static/images/logo.svg",
+    "accent_color": "tomato",
+    "github_url": "https://github.com/coredevices/pebbleos",
+}
+html_context = {
+    "source_type": "github",
+    "source_user": "coredevices",
+    "source_repo": "pebbleos",
+    "source_version": "main",
+    "source_docs_path": "/docs/",
 }
 
 # -- Options for the linkcheck builder ----------------------------------------
