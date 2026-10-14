@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 #
-# Third-party code kept in the firmware tree, see docs/development/sbom.md.
+# Third-party code kept in the firmware tree, see docs/others/sbom.md.
 
 components:
   - name: freebsd-timelocal

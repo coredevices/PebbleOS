@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 #
-# Third-party components, see docs/development/sbom.md. Components inside a
+# Third-party components, see docs/others/sbom.md. Components inside a
 # submodule record the commit their version was taken from.
 
 components:

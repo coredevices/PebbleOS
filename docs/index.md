@@ -129,7 +129,6 @@ development/native_simulator.md
 development/tests/index.md
 development/debugging.md
 development/moddable.md
-development/sbom.md
 development/conventions.md
 ```
 
@@ -173,4 +172,11 @@ community/contributing.md
 
 reference/index.md
 API reference <https://pebbleos-core.readthedocs.io/en/latest/apidoc/index.html>
+```
+
+```{toctree}
+:hidden:
+:caption: Others
+
+others/sbom.md
 ```
