@@ -8,6 +8,13 @@ config SERVICE_EVENTED_TIMER
 
 if SERVICE_EVENTED_TIMER
 
+config SERVICE_EVENTED_TIMER_MAX_PER_PROCESS
+    int "Maximum timers per app or worker"
+    default 128
+    help
+      Number of timers an app or worker can have pending at once. Each one
+      takes kernel heap, so this bounds what a process can allocate.
+
 module = SERVICE_EVENTED_TIMER
 module-str = Evented timer
 source "subsys/logging/Kconfig.template.log_level"

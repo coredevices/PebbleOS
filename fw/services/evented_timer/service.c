@@ -210,6 +210,16 @@ EventedTimerID evented_timer_register_or_reschedule(EventedTimerID timer_id, uin
   return evented_timer_register(timeout_ms, false, callback, data);
 }
 
+static size_t prv_num_timers_for_task(PebbleTask task) {
+  size_t count = 0;
+  for (ListNode *node = s_timer_list_head; node != nullptr; node = node->next) {
+    if (((EventedTimer *)node)->target_task == task) {
+      count++;
+    }
+  }
+  return count;
+}
+
 EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
                                       EventedTimerCallback callback, void *data) {
   PebbleTask current_task = pebble_task_get_current();
@@ -223,6 +233,13 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
   }
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+
+  if (current_task != PebbleTask_KernelMain &&
+      prv_num_timers_for_task(current_task) >= CONFIG_SERVICE_EVENTED_TIMER_MAX_PER_PROCESS) {
+    pbl_mutex_unlock(&s_mutex);
+    PBL_LOG_WRN("Too many timers for %s", pebble_task_get_name(current_task));
+    return EVENTED_TIMER_INVALID_ID;
+  }
 
   EventedTimer *new_timer = kernel_malloc_check(sizeof(EventedTimer));
 
@@ -315,13 +332,18 @@ void evented_timer_cancel(EventedTimerID timer_id) {
 }
 
 bool evented_timer_exists(EventedTimerID timer_id) {
-  return prv_find_timer(timer_id) != nullptr;
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  bool exists = (prv_find_timer(timer_id) != nullptr);
+  pbl_mutex_unlock(&s_mutex);
+  return exists;
 }
 
 bool evented_timer_is_current_task(EventedTimerID timer_id) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   EventedTimer *timer = prv_find_timer(timer_id);
-  PBL_ASSERTN(timer);
-  return timer->target_task == pebble_task_get_current();
+  bool is_current_task = (timer != nullptr) && (timer->target_task == pebble_task_get_current());
+  pbl_mutex_unlock(&s_mutex);
+  return is_current_task;
 }
 
 void evented_timer_reset(void) {
@@ -329,10 +351,9 @@ void evented_timer_reset(void) {
 }
 
 void *evented_timer_get_data(EventedTimerID timer_id) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   EventedTimer *timer = prv_find_timer(timer_id);
-  if (timer) {
-    return timer->callback_data;
-  } else {
-    return nullptr;
-  }
+  void *data = timer ? timer->callback_data : nullptr;
+  pbl_mutex_unlock(&s_mutex);
+  return data;
 }

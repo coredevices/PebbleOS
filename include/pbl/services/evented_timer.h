@@ -68,7 +68,8 @@ void evented_timer_clear_process_timers(PebbleTask task);
  * @param repeating true to fire every @p timeout_ms until cancelled.
  * @param callback Callback to run.
  * @param callback_data Data passed to @p callback.
- * @return Timer handle.
+ * @return Timer handle, or @ref EVENTED_TIMER_INVALID_ID if an app or worker already has
+ *         CONFIG_SERVICE_EVENTED_TIMER_MAX_PER_PROCESS timers.
  */
 EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
                                       EventedTimerCallback callback, void *callback_data);
@@ -117,8 +118,8 @@ bool evented_timer_exists(EventedTimerID timer);
 /**
  * @brief Check whether a timer belongs to the current task.
  *
- * @param timer Existing timer; asserts otherwise.
- * @return true if the timer was registered by the current task.
+ * @param timer Timer to check.
+ * @return true if the timer exists and was registered by the current task.
  */
 bool evented_timer_is_current_task(EventedTimerID timer);
 
