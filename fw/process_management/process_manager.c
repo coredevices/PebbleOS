@@ -38,7 +38,7 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/watchface.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 static TimerID s_deinit_timer_id = TIMER_INVALID_ID;
@@ -704,11 +704,7 @@ size_t process_manager_region_bytes_from(PebbleTask task, const void *buf,
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(void, sys_get_pebble_event, PebbleEvent *event) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(event, sizeof(*event));
-  }
-
+PBL_SYSCALL(void, sys_get_pebble_event, (OUT, PebbleEvent *, event)) {
   // A forced close suspends the task to read its registers. Resuming it ends this wait with
   // -EINTR and no event, so wait again rather than hand the process an empty event.
   while (pbl_msgq_get(prv_get_context()->to_process_event_queue, event, PBL_FOREVER) != 0) {

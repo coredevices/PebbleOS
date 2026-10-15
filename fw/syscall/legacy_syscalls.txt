@@ -129,7 +129,6 @@ sys_get_current_app_sdk_platform
 sys_get_current_app_sdk_version
 sys_get_current_process_sdk_version
 sys_get_current_resource_num
-sys_get_pebble_event
 sys_get_service_discovery_info
 sys_get_ticks
 sys_get_time
