@@ -7,3 +7,9 @@ config CLK
       Clock controller class (pbl/drivers/clk.h), selected by the drivers
       that provide clocks.
 
+config CLK_SF32LB
+    bool "SiFli SF32LB RCC"
+    default y if SOC_SF32LB52
+    select CLK
+    help
+      Clock controller of the SiFli SF32LB52 HPSYS RCC.
