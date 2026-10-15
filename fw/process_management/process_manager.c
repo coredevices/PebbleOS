@@ -712,17 +712,17 @@ PBL_SYSCALL(void, sys_get_pebble_event, (OUT, PebbleEvent *, event)) {
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(AppLaunchReason, sys_process_get_launch_reason, void) {
+PBL_SYSCALL(AppLaunchReason, sys_process_get_launch_reason) {
   return prv_get_context()->launch_reason;
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(ButtonId, sys_process_get_launch_button, void) {
+PBL_SYSCALL(ButtonId, sys_process_get_launch_button) {
   return prv_get_context()->launch_button;
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(uint32_t, sys_process_get_launch_args, void) {
+PBL_SYSCALL(uint32_t, sys_process_get_launch_args) {
   if (sys_process_get_launch_reason() != APP_LAUNCH_TIMELINE_ACTION) {
     return 0;
   } else {
@@ -731,7 +731,7 @@ DEFINE_SYSCALL(uint32_t, sys_process_get_launch_args, void) {
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(AppQuickLaunchAction, sys_process_get_quick_launch_action, void) {
+PBL_SYSCALL(AppQuickLaunchAction, sys_process_get_quick_launch_action) {
   if (sys_process_get_launch_reason() != APP_LAUNCH_QUICK_LAUNCH) {
     return APP_QUICK_LAUNCH_ACTION_NONE;
   }
@@ -739,12 +739,12 @@ DEFINE_SYSCALL(AppQuickLaunchAction, sys_process_get_quick_launch_action, void) 
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(AppExitReason, sys_process_get_exit_reason, void) {
+PBL_SYSCALL(AppExitReason, sys_process_get_exit_reason) {
   return prv_get_context()->exit_reason;
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(void, sys_process_set_exit_reason, AppExitReason exit_reason) {
+PBL_SYSCALL(void, sys_process_set_exit_reason, (VAL, AppExitReason, exit_reason)) {
   // Just return if exit_reason is invalid
   if (exit_reason >= NUM_EXIT_REASONS) {
     return;
@@ -753,24 +753,17 @@ DEFINE_SYSCALL(void, sys_process_set_exit_reason, AppExitReason exit_reason) {
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(void, sys_process_get_wakeup_info, WakeupInfo *info) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(info, sizeof(*info));
-  }
+PBL_SYSCALL(void, sys_process_get_wakeup_info, (OUT, WakeupInfo *, info)) {
   *info = prv_get_context()->wakeup_info;
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(const PebbleProcessMd *, sys_process_manager_get_current_process_md, void) {
+PBL_SYSCALL(const PebbleProcessMd *, sys_process_manager_get_current_process_md) {
   return prv_get_context()->app_md;
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_process_manager_get_current_process_uuid, Uuid *uuid_out) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(uuid_out, sizeof(*uuid_out));
-  }
-
+PBL_SYSCALL(bool, sys_process_manager_get_current_process_uuid, (OUT, Uuid *, uuid_out)) {
   const PebbleProcessMd *app_md = prv_get_context()->app_md;
   if (!app_md) {
     return false;
@@ -780,12 +773,12 @@ DEFINE_SYSCALL(bool, sys_process_manager_get_current_process_uuid, Uuid *uuid_ou
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(AppInstallId, sys_process_manager_get_current_process_id, void) {
+PBL_SYSCALL(AppInstallId, sys_process_manager_get_current_process_id) {
   return prv_get_context()->install_id;
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, process_manager_compiled_with_legacy2_sdk, void) {
+PBL_SYSCALL(bool, process_manager_compiled_with_legacy2_sdk) {
   PebbleTask task = pebble_task_get_current();
   if (task != PebbleTask_App && task != PebbleTask_Worker) {
     return false;
@@ -798,7 +791,7 @@ DEFINE_SYSCALL(bool, process_manager_compiled_with_legacy2_sdk, void) {
 }
 
 // -------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, process_manager_compiled_with_legacy3_sdk, void) {
+PBL_SYSCALL(bool, process_manager_compiled_with_legacy3_sdk) {
   PebbleTask task = pebble_task_get_current();
   if (task != PebbleTask_App && task != PebbleTask_Worker) {
     return false;
@@ -810,11 +803,11 @@ DEFINE_SYSCALL(bool, process_manager_compiled_with_legacy3_sdk, void) {
   return sdk_type == ProcessAppSDKType_Legacy3x;
 }
 
-DEFINE_SYSCALL(Version, sys_get_current_process_sdk_version, void) {
+PBL_SYSCALL(Version, sys_get_current_process_sdk_version) {
   return process_metadata_get_sdk_version(sys_process_manager_get_current_process_md());
 }
 
-DEFINE_SYSCALL(PlatformType, process_manager_current_platform, void) {
+PBL_SYSCALL(PlatformType, process_manager_current_platform) {
   PebbleTask task = pebble_task_get_current();
   if (task != PebbleTask_App && task != PebbleTask_Worker) {
     return PBL_PLATFORM_TYPE_CURRENT;

@@ -24,7 +24,7 @@
 #include <process_state/worker_state/worker_state.h>
 #include <shell/prefs.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 // FreeRTOS stuff
@@ -394,7 +394,7 @@ void worker_manager_disable(void) {
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(AppInstallId, sys_worker_manager_get_current_worker_id, void) {
+PBL_SYSCALL(AppInstallId, sys_worker_manager_get_current_worker_id) {
   return worker_manager_get_current_worker_id();
 }
 

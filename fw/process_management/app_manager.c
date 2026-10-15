@@ -48,7 +48,7 @@
 #include <shell/system_app_state_machine.h>
 #include <shell/system_shell.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 // FreeRTOS stuff
@@ -891,31 +891,27 @@ bool app_manager_is_app_supported(const PebbleProcessMd *md) {
   @brief User mode access to its UUID.
   @param[out] uuid The app's UUID.
  */
-DEFINE_SYSCALL(void, sys_get_app_uuid, Uuid *uuid) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(uuid, sizeof(*uuid));
-  }
-
+PBL_SYSCALL(void, sys_get_app_uuid, (OUT, Uuid *, uuid)) {
   *uuid = app_manager_get_current_app_md()->uuid;
 }
 
-DEFINE_SYSCALL(Version, sys_get_current_app_sdk_version, void) {
+PBL_SYSCALL(Version, sys_get_current_app_sdk_version) {
   return process_metadata_get_sdk_version(app_manager_get_current_app_md());
 }
 
-DEFINE_SYSCALL(bool, sys_get_current_app_is_js_allowed, void) {
+PBL_SYSCALL(bool, sys_get_current_app_is_js_allowed) {
   return (app_manager_get_current_app_md()->allow_js);
 }
 
-DEFINE_SYSCALL(PlatformType, sys_get_current_app_sdk_platform, void) {
+PBL_SYSCALL(PlatformType, sys_get_current_app_sdk_platform) {
   return process_metadata_get_app_sdk_platform(app_manager_get_current_app_md());
 }
 
-DEFINE_SYSCALL(bool, sys_app_is_watchface, void) {
+PBL_SYSCALL(bool, sys_app_is_watchface) {
   return app_manager_is_watchface_running();
 }
 
-DEFINE_SYSCALL(ResAppNum, sys_get_current_resource_num, void) {
+PBL_SYSCALL(ResAppNum, sys_get_current_resource_num) {
   if (pebble_task_get_current() == PebbleTask_KernelMain) {
     return SYSTEM_APP;
   }
@@ -923,7 +919,7 @@ DEFINE_SYSCALL(ResAppNum, sys_get_current_resource_num, void) {
   return process_metadata_get_res_bank_num(app_manager_get_current_app_md());
 }
 
-DEFINE_SYSCALL(AppInstallId, sys_app_manager_get_current_app_id, void) {
+PBL_SYSCALL(AppInstallId, sys_app_manager_get_current_app_id) {
   return app_manager_get_current_app_id();
 }
 
