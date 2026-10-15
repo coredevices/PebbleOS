@@ -10,8 +10,7 @@
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
 
-#include <kernel/memory_layout.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/reboot_reason.h>
 #include <system/version.h>
 
@@ -110,8 +109,8 @@ static bool prv_analytics_key_in_range(enum pbl_analytics_key key) {
   return ((unsigned)key < PBL_ANALYTICS_KEY_COUNT);
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
-               int32_t signed_value) {
+PBL_SYSCALL(void, sys_pbl_analytics_set_signed, (VAL, enum pbl_analytics_key, key),
+            (VAL, int32_t, signed_value)) {
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
@@ -120,8 +119,8 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
   }
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
-               uint32_t unsigned_value) {
+PBL_SYSCALL(void, sys_pbl_analytics_set_unsigned, (VAL, enum pbl_analytics_key, key),
+            (VAL, uint32_t, unsigned_value)) {
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
@@ -130,15 +129,10 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
   }
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {
+PBL_SYSCALL(void, sys_pbl_analytics_set_string, (VAL, enum pbl_analytics_key, key),
+            (STRN, const char *, value, ANALYTICS_STRING_MAX_LEN)) {
   if (!prv_analytics_key_in_range(key)) {
     return;
-  }
-  if (PRIVILEGE_WAS_ELEVATED) {
-    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), value,
-                                            ANALYTICS_STRING_MAX_LEN)) {
-      syscall_failed();
-    }
   }
 
   for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
@@ -146,7 +140,7 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, c
   }
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {
+PBL_SYSCALL(void, sys_pbl_analytics_timer_start, (VAL, enum pbl_analytics_key, key)) {
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
@@ -155,7 +149,7 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) 
   }
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {
+PBL_SYSCALL(void, sys_pbl_analytics_timer_stop, (VAL, enum pbl_analytics_key, key)) {
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
@@ -164,7 +158,8 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {
   }
 }
 
-DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {
+PBL_SYSCALL(void, sys_pbl_analytics_add, (VAL, enum pbl_analytics_key, key),
+            (VAL, int32_t, amount)) {
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
@@ -177,19 +172,21 @@ DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t 
 
 void pbl_analytics_init(void) {
 }
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_signed, enum pbl_analytics_key key,
-               int32_t signed_value) {
+PBL_SYSCALL(void, sys_pbl_analytics_set_signed, (VAL, enum pbl_analytics_key, key),
+            (VAL, int32_t, signed_value)) {
 }
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_unsigned, enum pbl_analytics_key key,
-               uint32_t unsigned_value) {
+PBL_SYSCALL(void, sys_pbl_analytics_set_unsigned, (VAL, enum pbl_analytics_key, key),
+            (VAL, uint32_t, unsigned_value)) {
 }
-DEFINE_SYSCALL(void, sys_pbl_analytics_set_string, enum pbl_analytics_key key, const char *value) {
+PBL_SYSCALL(void, sys_pbl_analytics_set_string, (VAL, enum pbl_analytics_key, key),
+            (VAL, const char *, value)) {
 }
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_start, enum pbl_analytics_key key) {
+PBL_SYSCALL(void, sys_pbl_analytics_timer_start, (VAL, enum pbl_analytics_key, key)) {
 }
-DEFINE_SYSCALL(void, sys_pbl_analytics_timer_stop, enum pbl_analytics_key key) {
+PBL_SYSCALL(void, sys_pbl_analytics_timer_stop, (VAL, enum pbl_analytics_key, key)) {
 }
-DEFINE_SYSCALL(void, sys_pbl_analytics_add, enum pbl_analytics_key key, int32_t amount) {
+PBL_SYSCALL(void, sys_pbl_analytics_add, (VAL, enum pbl_analytics_key, key),
+            (VAL, int32_t, amount)) {
 }
 
 #endif
