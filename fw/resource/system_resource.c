@@ -18,7 +18,7 @@
 #include <resource/resource_storage.h>
 #include <resource/resource_version.auto.h>
 #include <font_resource_table.auto.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 // clang-format on
 
@@ -85,8 +85,8 @@ GFont system_resource_get_font(const char *font_key) {
   return result;
 }
 
-DEFINE_SYSCALL(GFont, sys_font_get_system_font, const char *font_key) {
-  if (font_key && PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(GFont, sys_font_get_system_font, (VAL, const char *, font_key)) {
+  if (font_key && from_user) {
     if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), font_key, 100) &&
         !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), font_key, 100)) {
       PBL_LOG_ERR("Pointer %p not in app or microflash region", font_key);
@@ -106,8 +106,8 @@ static bool prv_is_system_font_info(const FontInfo *fontinfo) {
   return false;
 }
 
-DEFINE_SYSCALL(void, sys_font_reload_font, FontInfo *fontinfo) {
-  if (PRIVILEGE_WAS_ELEVATED && !prv_is_system_font_info(fontinfo)) {
+PBL_SYSCALL(void, sys_font_reload_font, (VAL, FontInfo *, fontinfo)) {
+  if (from_user && !prv_is_system_font_info(fontinfo)) {
     syscall_failed();
   }
 
