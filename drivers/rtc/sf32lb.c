@@ -7,9 +7,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
-#include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/interrupts.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 
@@ -209,31 +207,6 @@ void rtc_init(void) {
 void rtc_init_timers(void) {
 }
 
-static RtcTicks get_ticks(void) {
-  static pbl_tick_t s_last_freertos_tick_count = 0;
-  static RtcTicks s_coarse_ticks = 0;
-
-  bool ints_enabled = mcu_state_are_interrupts_enabled();
-  if (ints_enabled) {
-    __disable_irq();
-  }
-
-  pbl_tick_t freertos_tick_count = pbl_uptime_ticks();
-  if (freertos_tick_count < s_last_freertos_tick_count) {
-    pbl_tick_t rollover_amount = -1;
-    s_coarse_ticks += rollover_amount;
-  }
-
-  s_last_freertos_tick_count = freertos_tick_count;
-  RtcTicks ret_value = freertos_tick_count + s_coarse_ticks;
-
-  if (ints_enabled) {
-    __enable_irq();
-  }
-
-  return ret_value;
-}
-
 // Internal function to set RTC time without resetting calibration state.
 // Used by the calibration code when applying corrections.
 static void prv_rtc_set_time_no_cal_reset(time_t time) {
@@ -325,7 +298,7 @@ time_t rtc_get_time(void) {
 }
 
 RtcTicks rtc_get_ticks(void) {
-  return get_ticks();
+  return pbl_uptime_ticks();
 }
 
 void rtc_alarm_init(void) {
