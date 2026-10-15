@@ -20,7 +20,7 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_accel_manager, CONFIG_SERVICE_ACCEL_MANAGER_LOG_LEVEL);
@@ -411,11 +411,7 @@ static void prv_update_last_accel_data(AccelDriverSample const *data) {
   prv_copy_accel_sample_to_accel_data(data, &s_last_accel_data);
 }
 
-DEFINE_SYSCALL(int, sys_accel_manager_peek, AccelData *accel_data) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(accel_data, sizeof(*accel_data));
-  }
-
+PBL_SYSCALL(int, sys_accel_manager_peek, (OUT, AccelData *, accel_data)) {
   PBL_ANALYTICS_ADD(accel_peek_count, 1);
 
   pbl_accel_lock(ACCEL);
@@ -444,8 +440,9 @@ static bool prv_is_supported_rate(AccelSamplingRate rate) {
   }
 }
 
-DEFINE_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, AccelSamplingRate rate,
-               AccelDataReadyCallback data_cb, void *context, PebbleTask handler_task) {
+PBL_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, (VAL, AccelSamplingRate, rate),
+            (VAL, AccelDataReadyCallback, data_cb), (VAL, void *, context),
+            (VAL, PebbleTask, handler_task)) {
   AccelManagerState *state;
 
   // `handler_task` decides where prv_call_data_callback() dispatches the
@@ -455,11 +452,8 @@ DEFINE_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, AccelSampl
   // or new_timer_add_work_callback) — handing an unprivileged app arbitrary
   // kernel-mode code execution. Force unprivileged callers onto their own
   // task so the dispatch lands in their app/worker event loop instead.
-  if (PRIVILEGE_WAS_ELEVATED) {
+  if (from_user) {
     handler_task = pebble_task_get_current();
-    if (handler_task != PebbleTask_App && handler_task != PebbleTask_Worker) {
-      syscall_failed();
-    }
 
     if (!prv_is_supported_rate(rate)) {
       rate = ACCEL_SAMPLING_25HZ;
@@ -513,8 +507,8 @@ static bool prv_state_is_valid_subscriber(const AccelManagerState *state) {
   return false;
 }
 
-static PBL_ALWAYS_INLINE void prv_assert_state_from_user(const AccelManagerState *state) {
-  if (!PRIVILEGE_WAS_ELEVATED) {
+static void prv_assert_state_from_user(const AccelManagerState *state, bool from_user) {
+  if (!from_user) {
     return;
   }
   pbl_accel_lock(ACCEL);
@@ -541,8 +535,8 @@ static void prv_remove_subscriber_locked(AccelManagerState *state) {
   prv_update_driver_config();
 }
 
-DEFINE_SYSCALL(bool, sys_accel_manager_data_unsubscribe, AccelManagerState *state) {
-  prv_assert_state_from_user(state);
+PBL_SYSCALL(bool, sys_accel_manager_data_unsubscribe, (VAL, AccelManagerState *, state)) {
+  prv_assert_state_from_user(state, from_user);
   bool event_outstanding;
   pbl_accel_lock(ACCEL);
   {
@@ -569,9 +563,9 @@ void accel_manager_remove_task_subscriptions(PebbleTask task) {
   pbl_accel_unlock(ACCEL);
 }
 
-DEFINE_SYSCALL(int, sys_accel_manager_set_sampling_rate, AccelManagerState *state,
-               AccelSamplingRate rate) {
-  prv_assert_state_from_user(state);
+PBL_SYSCALL(int, sys_accel_manager_set_sampling_rate, (VAL, AccelManagerState *, state),
+            (VAL, AccelSamplingRate, rate)) {
+  prv_assert_state_from_user(state, from_user);
 
   // Make sure the rate is one of our externally supported fixed rates
   if (!prv_is_supported_rate(rate)) {
@@ -609,15 +603,15 @@ uint32_t accel_manager_set_jitterfree_sampling_rate(AccelManagerState *state,
   return ONLY_SUPPORTED_JITTERFREE_RATE_MILLIHZ;
 }
 
-DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelManagerState *state,
-               AccelRawData *buffer, uint32_t samples_per_update) {
-  prv_assert_state_from_user(state);
+PBL_SYSCALL(int, sys_accel_manager_set_sample_buffer, (VAL, AccelManagerState *, state),
+            (VAL, AccelRawData *, buffer), (VAL, uint32_t, samples_per_update)) {
+  prv_assert_state_from_user(state, from_user);
   if (samples_per_update > pbl_accel_get_max_num_samples(ACCEL)) {
     return -1;
   }
 
   // A batch size of 0 never writes the buffer, so it's neither checked nor kept
-  if (PRIVILEGE_WAS_ELEVATED && samples_per_update > 0) {
+  if (from_user && samples_per_update > 0) {
     syscall_assert_userspace_buffer(buffer, samples_per_update * sizeof(AccelRawData));
   }
 
@@ -634,17 +628,13 @@ DEFINE_SYSCALL(int, sys_accel_manager_set_sample_buffer, AccelManagerState *stat
   return 0;
 }
 
-DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_max_samples_per_update, void) {
+PBL_SYSCALL(uint32_t, sys_accel_manager_get_max_samples_per_update) {
   return pbl_accel_get_max_num_samples(ACCEL);
 }
 
-DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples, AccelManagerState *state,
-               uint64_t *timestamp_ms, uint32_t *generation) {
-  prv_assert_state_from_user(state);
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(timestamp_ms, sizeof(*timestamp_ms));
-    syscall_assert_userspace_buffer(generation, sizeof(*generation));
-  }
+PBL_SYSCALL(uint32_t, sys_accel_manager_get_num_samples, (VAL, AccelManagerState *, state),
+            (OUT, uint64_t *, timestamp_ms), (OUT, uint32_t *, generation)) {
+  prv_assert_state_from_user(state, from_user);
 
   pbl_accel_lock(ACCEL);
 
@@ -656,12 +646,9 @@ DEFINE_SYSCALL(uint32_t, sys_accel_manager_get_num_samples, AccelManagerState *s
   return result;
 }
 
-DEFINE_SYSCALL(bool, sys_accel_manager_consume_samples, AccelManagerState *state, uint32_t samples,
-               uint32_t generation, bool *more) {
-  prv_assert_state_from_user(state);
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(more, sizeof(*more));
-  }
+PBL_SYSCALL(bool, sys_accel_manager_consume_samples, (VAL, AccelManagerState *, state),
+            (VAL, uint32_t, samples), (VAL, uint32_t, generation), (OUT, bool *, more)) {
+  prv_assert_state_from_user(state, from_user);
   bool success = true;
   pbl_accel_lock(ACCEL);
 
