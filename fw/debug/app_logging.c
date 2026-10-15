@@ -10,7 +10,7 @@
 #include <applib/app_logging.h>
 #include <kernel/util/stack_info.h>
 #include <logging/logging_private.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
 static const uint16_t APP_LOGGING_ENDPOINT = 2006;
 
@@ -22,11 +22,10 @@ bool app_log_is_bt_enabled(void) {
 
 static const uint32_t MIN_STACK_FOR_SEND_DATA = 400;
 
-DEFINE_SYSCALL(void, sys_app_log, size_t length, void *log_buffer) {
+PBL_SYSCALL(void, sys_app_log, (VAL, size_t, length), (IN_BUF, void *, log_buffer, length)) {
   AppLogBinaryMessage *message = log_buffer;
 
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(log_buffer, length);
+  if (from_user) {
     if (length < sizeof(*message)) {
       syscall_failed();
     }
