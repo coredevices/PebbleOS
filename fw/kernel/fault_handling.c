@@ -22,7 +22,7 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/reboot_reason.h>
 
 #ifndef CONFIG_ARCH_POSIX
@@ -206,7 +206,7 @@ static void prv_kill_user_process(uint32_t stashed_lr) {
   pbl_thread_suspend(nullptr);
 }
 
-DEFINE_SYSCALL([[noreturn]] void, sys_app_fault, uint32_t stashed_lr) {
+PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
   // This is the privileged side of handling a failed assert/croak from unprivileged code.
   // Always run on the current task.
 
