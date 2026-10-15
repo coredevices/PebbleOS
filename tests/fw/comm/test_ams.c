@@ -189,7 +189,7 @@ void test_ams__register_for_entity_updates(void) {
 
   // Expect to have written the command to register for the Player entity:
   fake_gatt_client_op_assert_write(entity_update, s_register_player_entity,
-                                   sizeof(s_register_player_entity), GAPLEClientKernel,
+                                   sizeof(s_register_player_entity),
                                    true /* is_response_required */);
   ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
 
@@ -197,7 +197,7 @@ void test_ams__register_for_entity_updates(void) {
 
   // Expect to have written the command to register for the Queue entity:
   fake_gatt_client_op_assert_write(entity_update, s_register_queue_entity,
-                                   sizeof(s_register_queue_entity), GAPLEClientKernel,
+                                   sizeof(s_register_queue_entity),
                                    true /* is_response_required */);
   ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
 
@@ -205,7 +205,7 @@ void test_ams__register_for_entity_updates(void) {
 
   // Expect to have written the command to register for the Track entity:
   fake_gatt_client_op_assert_write(entity_update, s_register_track_entity,
-                                   sizeof(s_register_track_entity), GAPLEClientKernel,
+                                   sizeof(s_register_track_entity),
                                    true /* is_response_required */);
   ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
 
@@ -239,7 +239,7 @@ void test_ams__register_for_entity_updates_retry_if_out_of_resources(void) {
 
   // Expect to have written the command to register for the Player entity:
   fake_gatt_client_op_assert_write(entity_update, s_register_player_entity,
-                                   sizeof(s_register_player_entity), GAPLEClientKernel,
+                                   sizeof(s_register_player_entity),
                                    true /* is_response_required */);
   ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
 }
@@ -332,7 +332,7 @@ void test_ams__send_remote_command(void) {
 
     pbl_bt_characteristic_t remote_command = s_characteristics[0][AMSCharacteristicRemoteCommand];
     const uint8_t ams_cmd = prv_ams_command_for_music_command(music_cmd);
-    fake_gatt_client_op_assert_write(remote_command, &ams_cmd, sizeof(ams_cmd), GAPLEClientKernel,
+    fake_gatt_client_op_assert_write(remote_command, &ams_cmd, sizeof(ams_cmd),
                                      true /* is_response_required */);
 
     // Simulate receiving the response:
@@ -358,7 +358,7 @@ void test_ams__send_remote_command_non_kernel_main_task(void) {
 
   pbl_bt_characteristic_t remote_command = s_characteristics[0][AMSCharacteristicRemoteCommand];
   const uint8_t ams_cmd = prv_ams_command_for_music_command(MusicCommandPlay);
-  fake_gatt_client_op_assert_write(remote_command, &ams_cmd, sizeof(ams_cmd), GAPLEClientKernel,
+  fake_gatt_client_op_assert_write(remote_command, &ams_cmd, sizeof(ams_cmd),
                                    true /* is_response_required */);
 }
 

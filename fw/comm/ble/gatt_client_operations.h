@@ -14,29 +14,22 @@
 //! ATT handles. These pieces of information is what Bluetopia cares about
 //! when asked to perform a GATT operation.
 
-#include "gap_le_task.h"
-
 #include <pbl/bluetooth/types.h>
 
 #define GATT_MTU_MINIMUM (23)
 
-enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic, GAPLEClient client);
+enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic);
 
 bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
-                                       uint16_t value_length, GAPLEClient client);
+                                       uint16_t value_length);
 
 enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                       size_t value_length, GAPLEClient client);
+                                       size_t value_length);
 
 enum pbl_bt_errno gatt_client_op_write_without_response(pbl_bt_characteristic_t characteristic,
-                                                        const uint8_t *value, size_t value_length,
-                                                        GAPLEClient client);
+                                                        const uint8_t *value, size_t value_length);
 
 enum pbl_bt_errno gatt_client_op_write_descriptor(pbl_bt_descriptor_t descriptor,
-                                                  const uint8_t *value, size_t value_length,
-                                                  GAPLEClient client);
+                                                  const uint8_t *value, size_t value_length);
 
-enum pbl_bt_errno gatt_client_op_read_descriptor(pbl_bt_descriptor_t descriptor,
-                                                 GAPLEClient client);
-
-void gatt_client_op_cleanup(GAPLEClient client);
+void gatt_client_op_cleanup(void);

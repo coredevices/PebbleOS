@@ -121,7 +121,7 @@ void ppogatt_destroy(void) {
 void ppogatt_handle_buffer_empty(void) {
 }
 
-void gatt_client_op_cleanup(GAPLEClient client) {
+void gatt_client_op_cleanup(void) {
 }
 
 void ppogatt_reset_disconnect_counter(void) {
@@ -189,7 +189,7 @@ uint8_t gatt_client_service_get_characteristics_matching_uuids(
 
 static int s_read_responses_consumed_count;
 bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
-                                       uint16_t value_length, GAPLEClient client) {
+                                       uint16_t value_length) {
   ++s_read_responses_consumed_count;
   return true;
 }

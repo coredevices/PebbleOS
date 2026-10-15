@@ -236,8 +236,7 @@ static void prv_receive_ack(pbl_bt_characteristic_t characteristic, uint8_t sn) 
 
 static void prv_assert_sent_reset_request(pbl_bt_characteristic_t characteristic) {
   fake_gatt_client_op_assert_write(characteristic, (const uint8_t *)s_client_reset_request,
-                                   s_client_reset_request_size, GAPLEClientKernel,
-                                   false /* is_response_required */);
+                                   s_client_reset_request_size, false /* is_response_required */);
 }
 
 static void prv_assert_sent_reset_complete(pbl_bt_characteristic_t characteristic) {
@@ -255,8 +254,7 @@ static void prv_assert_sent_reset_complete(pbl_bt_characteristic_t characteristi
   }
 
   fake_gatt_client_op_assert_write(characteristic, (const uint8_t *)&expected_response,
-                                   s_client_reset_complete_size, GAPLEClientKernel,
-                                   false /* is_response_required */);
+                                   s_client_reset_complete_size, false /* is_response_required */);
 
   if (s_ppogatt_version > 0) {
     s_tx_window_size = MIN(s_tx_window_size, expected_response.payload.ppogatt_max_tx_window);
@@ -272,7 +270,7 @@ static void prv_assert_sent_ack(pbl_bt_characteristic_t characteristic, uint8_t 
     .type = PPoGATTPacketTypeAck,
   };
   fake_gatt_client_op_assert_write(characteristic, (const uint8_t *)&ack, sizeof(ack),
-                                   GAPLEClientKernel, false /* is_response_required */);
+                                   false /* is_response_required */);
 }
 
 static void prv_assert_sent_data(pbl_bt_characteristic_t characteristic, uint8_t sn,
@@ -283,7 +281,7 @@ static void prv_assert_sent_data(pbl_bt_characteristic_t characteristic, uint8_t
   packet->type = PPoGATTPacketTypeData;
   memcpy(packet->payload, data, length);
   fake_gatt_client_op_assert_write(characteristic, (const uint8_t *)packet,
-                                   sizeof(PPoGATTPacket) + length, GAPLEClientKernel,
+                                   sizeof(PPoGATTPacket) + length,
                                    false /* is_response_required */);
   free(packet);
 }
@@ -333,10 +331,8 @@ void test_ppogatt__find_pebble_app_and_3rd_party_app(void) {
   prv_notify_services_discovered(NUM_SERVICE_INSTANCES);
 
   // Assert GATT reads requests to Meta characteristics happened:
-  fake_gatt_client_op_assert_read(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                  GAPLEClientKernel);
-  fake_gatt_client_op_assert_read(s_characteristics[1][PPoGATTCharacteristicMeta],
-                                  GAPLEClientKernel);
+  fake_gatt_client_op_assert_read(s_characteristics[0][PPoGATTCharacteristicMeta]);
+  fake_gatt_client_op_assert_read(s_characteristics[1][PPoGATTCharacteristicMeta]);
 
   // Simulate read responses:
   ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],

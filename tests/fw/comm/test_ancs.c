@@ -130,7 +130,7 @@ void prv_cmp_last_received_notification(TimelineItem *item) {
 // Called from inside prv_write_control_point_request.
 // If this function is called we have requested a ds_notification
 enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
-                                       const uint8_t *buffer, size_t length, GAPLEClient client) {
+                                       const uint8_t *buffer, size_t length) {
   cl_assert_equal_i(characteristic, s_characteristics[ANCSCharacteristicControl]);
 
   if (s_gatt_client_op_write_should_fail_once) {

@@ -250,7 +250,7 @@ static void prv_register_next_entity(void *unused) {
   uint8_t cmd_length = 0;
   const uint8_t *cmd_value = prv_get_registration_cmd_for_entity(entity_id, &cmd_length);
   const enum pbl_bt_errno e =
-      gatt_client_op_write(entity_update_characteristic, cmd_value, cmd_length, GAPLEClientKernel);
+      gatt_client_op_write(entity_update_characteristic, cmd_value, cmd_length);
   if (e != PBL_BT_ERRNO_OK) {
     if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
       // Need to wait for space to become available
@@ -675,8 +675,7 @@ static void prv_send_command_kernel_main_task_cb(void *data) {
   const AMSRemoteCommandID command_id = (uintptr_t)data;
   pbl_bt_characteristic_t characteristic =
       s_ams_client->characteristics[AMSCharacteristicRemoteCommand];
-  enum pbl_bt_errno error =
-      gatt_client_op_write(characteristic, (const uint8_t *)&command_id, 1, GAPLEClientKernel);
+  enum pbl_bt_errno error = gatt_client_op_write(characteristic, (const uint8_t *)&command_id, 1);
   const bool has_error = (error != PBL_BT_ERRNO_OK);
   if (has_error) {
     PBL_LOG_ERR("Couldn't write command: %d", error);

@@ -871,7 +871,7 @@ static void prv_retry_meta_read(PPoGATTClient *client) {
   // gatt_client_op_read manages bt_lock internally.
   bt_unlock();
 
-  enum pbl_bt_errno result = gatt_client_op_read(meta, GAPLEClientKernel);
+  enum pbl_bt_errno result = gatt_client_op_read(meta);
 
   // Re-acquire bt_lock before accessing client state again
   bt_lock();
@@ -1306,7 +1306,7 @@ void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics)
     // gatt_client_op_read manages bt_lock internally.
     bt_unlock();
 
-    enum pbl_bt_errno result = gatt_client_op_read(meta, GAPLEClientKernel);
+    enum pbl_bt_errno result = gatt_client_op_read(meta);
 
     // Re-acquire bt_lock before accessing client state again
     bt_lock();
@@ -1683,7 +1683,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
       // (it will manage the lock itself)
       const enum pbl_bt_errno e = gatt_client_op_write_without_response(
           client->characteristics.data, (const uint8_t *)packet,
-          sizeof(PPoGATTPacket) + payload_size, GAPLEClientKernel);
+          sizeof(PPoGATTPacket) + payload_size);
       if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
         // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
         break;

@@ -1178,8 +1178,7 @@ void ancs_handle_write_response(pbl_bt_characteristic_t characteristic,
 
 static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size) {
   const pbl_bt_characteristic_t cp = s_ancs_client->characteristics[ANCSCharacteristicControl];
-  const enum pbl_bt_errno error =
-      gatt_client_op_write(cp, (const uint8_t *)cmd, size, GAPLEClientKernel);
+  const enum pbl_bt_errno error = gatt_client_op_write(cp, (const uint8_t *)cmd, size);
 
   PBL_LOG_DBG("Writing to control point:");
   PBL_HEXDUMP(LOG_LEVEL_DEBUG, (const uint8_t *)cmd, size);

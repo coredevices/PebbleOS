@@ -13,21 +13,19 @@
 typedef struct {
   ListNode node;
   pbl_bt_characteristic_t characteristic;
-  GAPLEClient client;
 } Read;
 
 static Read *s_read_head;
 
 static enum pbl_bt_errno s_read_return_value;
 
-enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic, GAPLEClient client) {
+enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic) {
   if (s_read_return_value != PBL_BT_ERRNO_OK) {
     return s_read_return_value;
   }
   Read *read = malloc(sizeof(Read));
   *read = (const Read){
     .characteristic = characteristic,
-    .client = client,
   };
   if (s_read_head) {
     list_append((ListNode *)s_read_head, &read->node);
@@ -38,14 +36,13 @@ enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic, GA
 }
 
 bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
-                                       uint16_t value_length, GAPLEClient client) {
+                                       uint16_t value_length) {
   return true;
 }
 
 typedef struct {
   ListNode node;
   pbl_bt_characteristic_t characteristic;
-  GAPLEClient client;
   uint8_t *value;
   size_t value_length;
   bool is_response_required;
@@ -57,7 +54,7 @@ static enum pbl_bt_errno s_write_return_value;
 
 static enum pbl_bt_errno fake_gatt_client_write(pbl_bt_characteristic_t characteristic,
                                                 const uint8_t *value, size_t value_length,
-                                                GAPLEClient client, bool is_response_required) {
+                                                bool is_response_required) {
   if (s_write_return_value != PBL_BT_ERRNO_OK) {
     return s_write_return_value;
   }
@@ -73,7 +70,6 @@ static enum pbl_bt_errno fake_gatt_client_write(pbl_bt_characteristic_t characte
   }
   *write = (const Write){
     .characteristic = characteristic,
-    .client = client,
     .is_response_required = is_response_required,
     .value = buffer,
     .value_length = value_length,
@@ -87,26 +83,19 @@ static enum pbl_bt_errno fake_gatt_client_write(pbl_bt_characteristic_t characte
 }
 
 enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                       size_t value_length, GAPLEClient client) {
-  return fake_gatt_client_write(characteristic, value, value_length, client,
+                                       size_t value_length) {
+  return fake_gatt_client_write(characteristic, value, value_length,
                                 true /* is_response_required */);
 }
 
 enum pbl_bt_errno gatt_client_op_write_without_response(pbl_bt_characteristic_t characteristic,
-                                                        const uint8_t *value, size_t value_length,
-                                                        GAPLEClient client) {
-  return fake_gatt_client_write(characteristic, value, value_length, client,
+                                                        const uint8_t *value, size_t value_length) {
+  return fake_gatt_client_write(characteristic, value, value_length,
                                 false /* is_response_required */);
 }
 
 enum pbl_bt_errno gatt_client_op_write_descriptor(pbl_bt_descriptor_t descriptor,
-                                                  const uint8_t *value, size_t value_length,
-                                                  GAPLEClient client) {
-  return PBL_BT_ERRNO_OK;
-}
-
-enum pbl_bt_errno gatt_client_op_read_descriptor(pbl_bt_descriptor_t descriptor,
-                                                 GAPLEClient client) {
+                                                  const uint8_t *value, size_t value_length) {
   return PBL_BT_ERRNO_OK;
 }
 
@@ -115,7 +104,7 @@ enum pbl_bt_errno gatt_client_op_write_descriptor_cccd(pbl_bt_descriptor_t cccd,
   return PBL_BT_ERRNO_OK;
 }
 
-void gatt_client_op_cleanup(GAPLEClient client) {
+void gatt_client_op_cleanup(void) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,10 +131,9 @@ void fake_gatt_client_op_set_read_return_value(enum pbl_bt_errno e) {
   s_read_return_value = e;
 }
 
-void fake_gatt_client_op_assert_read(pbl_bt_characteristic_t characteristic, GAPLEClient client) {
+void fake_gatt_client_op_assert_read(pbl_bt_characteristic_t characteristic) {
   if (s_read_head) {
     cl_assert_equal_i(characteristic, s_read_head->characteristic);
-    cl_assert_equal_i(client, s_read_head->client);
   } else {
     cl_assert_(false, "No gatt_client_op_read() has happened at all");
   }
@@ -180,13 +168,11 @@ static void fake_gatt_client_op_assert_write_failed(void) {
 }
 
 void fake_gatt_client_op_assert_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                      size_t value_length, GAPLEClient client,
-                                      bool is_response_required) {
+                                      size_t value_length, bool is_response_required) {
   if (s_write_head) {
     cl_assert_equal_i(characteristic, s_write_head->characteristic);
     cl_assert_equal_i(s_write_head->value_length, value_length);
     cl_assert_equal_i(memcmp(value, s_write_head->value, value_length), 0);
-    cl_assert_equal_i(client, s_write_head->client);
     cl_assert_equal_b(is_response_required, s_write_head->is_response_required);
   } else {
     fake_gatt_client_op_assert_write_failed();
