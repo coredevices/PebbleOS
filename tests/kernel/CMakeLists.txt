@@ -4,6 +4,7 @@
 pbl_clar_test(test_kernel
   SOURCES
     kernel/tick.c
+    kernel/time.c
     kernel/sched.c
     kernel/thread.c
     kernel/mutex.c
@@ -13,6 +14,7 @@ pbl_clar_test(test_kernel
     kernel/irq.c
     kernel/debug.c
     kernel/arch/posix/arch.c
+    kernel/arch/posix/cycle.c
     kernel/arch/posix/test.c
   INCLUDES
     kernel

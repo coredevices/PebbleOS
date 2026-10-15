@@ -11,6 +11,7 @@ may use. The implementation is PebbleOS's own.
 
 threads.md
 interrupts.md
+time.md
 boot.md
 idle.md
 memory.md

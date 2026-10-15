@@ -5,7 +5,7 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/rng.h>
-#include <pbl/kernel/sched.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/shell/shell.h>
 

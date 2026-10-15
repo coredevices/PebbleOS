@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/kernel/sched.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/services/system_task.h>

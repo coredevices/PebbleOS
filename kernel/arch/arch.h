@@ -37,6 +37,10 @@ void arch_switch_request(void);
 void arch_thread_aborted(struct pbl_thread *t);
 
 bool arch_in_isr(void);
+
+//! Rate of arch_cycle_get_32() from <pbl_arch_cycle.h>.
+uint32_t arch_cycles_per_sec(void);
+
 void arch_irq_disable(void);
 void arch_irq_enable(void);
 

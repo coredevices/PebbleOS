@@ -13,6 +13,7 @@ pbl_library_sources(
   sem.c
   thread.c
   tick.c
+  time.c
 )
 pbl_library_sources_ifndef(CONFIG_ARCH_POSIX init.c)
 pbl_library_include_directories(. arch)

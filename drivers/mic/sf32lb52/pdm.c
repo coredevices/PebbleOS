@@ -8,7 +8,7 @@
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/kernel/sched.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/services/system_task.h>

@@ -131,6 +131,10 @@ bool arch_in_isr(void) {
   return posix_in_isr;
 }
 
+uint32_t arch_cycles_per_sec(void) {
+  return 1000000000U;
+}
+
 void arch_irq_disable(void) {
 }
 

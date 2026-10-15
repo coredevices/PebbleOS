@@ -6,7 +6,7 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/kernel/sched.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>

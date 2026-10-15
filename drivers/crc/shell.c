@@ -6,7 +6,7 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/crc.h>
-#include <pbl/kernel/sched.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/shell/shell.h>
 

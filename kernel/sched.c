@@ -17,7 +17,7 @@ static struct pbl_thread *s_ready_head[NUM_PRIO];
 static struct pbl_thread *s_ready_tail[NUM_PRIO];
 static uint32_t s_ready_mask;
 static struct pbl_thread *s_timeouts;
-static pbl_tick_t s_ticks;
+static uint64_t s_ticks;
 static uint32_t s_sched_lock;
 static bool s_switch_deferred;
 static bool s_started;
@@ -92,7 +92,7 @@ void sched_request_switch(void) {
 // ---- timeouts ---------------------------------------------------------------
 
 static void prv_timeout_add(struct pbl_thread *t, pbl_tick_t ticks) {
-  t->backend.wake_at = s_ticks + ticks;
+  t->backend.wake_at = (pbl_tick_t)s_ticks + ticks;
   struct pbl_thread **link = &s_timeouts;
   while (*link && !prv_before(t->backend.wake_at, (*link)->backend.wake_at)) {
     link = &(*link)->backend.timeout_next;
@@ -117,7 +117,7 @@ static void prv_timeout_remove(struct pbl_thread *t) {
 }
 
 static void prv_expire_timeouts(void) {
-  while (s_timeouts && !prv_before(s_ticks, s_timeouts->backend.wake_at)) {
+  while (s_timeouts && !prv_before((pbl_tick_t)s_ticks, s_timeouts->backend.wake_at)) {
     struct pbl_thread *t = s_timeouts;
     s_timeouts = t->backend.timeout_next;
     t->backend.on_timeout_list = false;
@@ -134,7 +134,7 @@ static pbl_tick_t prv_ticks_until_next_timeout(void) {
   if (s_timeouts == nullptr) {
     return PBL_TICK_FOREVER;
   }
-  int32_t delta = (int32_t)(s_timeouts->backend.wake_at - s_ticks);
+  int32_t delta = (int32_t)(s_timeouts->backend.wake_at - (pbl_tick_t)s_ticks);
   return delta > 0 ? (pbl_tick_t)delta : 0;
 }
 
@@ -249,7 +249,7 @@ void sched_thread_start(struct pbl_thread *t) {
   t->backend.base_prio = t->prio;
   t->backend.all_next = pbl_all_threads;
   pbl_all_threads = t;
-  t->backend.switched_in_at = s_ticks;
+  t->backend.switched_in_at = (uint32_t)s_ticks;
   prv_ready_push(t);
   sched_request_switch();
 }
@@ -316,11 +316,11 @@ struct pbl_thread *sched_switch_in(void) {
   struct pbl_thread *prev = pbl_cur;
   struct pbl_thread *next = prv_pick();
   if (prev != next) {
-    prev->backend.run_time += s_ticks - prev->backend.switched_in_at;
+    prev->backend.run_time += (uint32_t)s_ticks - prev->backend.switched_in_at;
     if (prev->backend.state == PBL_THREAD_RUNNING) {
       prev->backend.state = PBL_THREAD_READY;
     }
-    next->backend.switched_in_at = s_ticks;
+    next->backend.switched_in_at = (uint32_t)s_ticks;
     pbl_cur = next;
   }
   next->backend.state = PBL_THREAD_RUNNING;
@@ -385,7 +385,7 @@ void sched_start_prepare(void) {
   s_started = true;
   pbl_cur = prv_pick();
   pbl_cur->backend.state = PBL_THREAD_RUNNING;
-  pbl_cur->backend.switched_in_at = s_ticks;
+  pbl_cur->backend.switched_in_at = (uint32_t)s_ticks;
 }
 
 void pbl_kernel_start(void) {
@@ -421,8 +421,11 @@ bool pbl_sched_is_locked(void) {
   return s_sched_lock > 0;
 }
 
-pbl_tick_t pbl_uptime_ticks(void) {
-  return s_ticks;
+uint64_t pbl_uptime_ticks(void) {
+  pbl_irq_lock();
+  uint64_t ticks = s_ticks;
+  pbl_irq_unlock();
+  return ticks;
 }
 
 void pbl_thread_yield(void) {

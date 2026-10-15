@@ -1,10 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/kernel.h>
@@ -129,6 +132,92 @@ void test_kernel__tick_time_slices(void) {
   prv_spawn(1, "b", 2, prv_spin_entry, (void *)'B');
   pbl_test_kernel_run();
   cl_assert_equal_s(s_trace, "ABABABAB");
+}
+
+// ---- delays and uptime ------------------------------------------------------
+
+static void prv_sleep_rounds_up(void *arg) {
+  // 1024 Hz: 10 ms is 10.24 ticks, rounded up plus the partial tick.
+  uint64_t start = pbl_uptime_ticks();
+  pbl_sleep_ms(10);
+  cl_assert_equal_i(pbl_uptime_ticks() - start, 12);
+
+  start = pbl_uptime_ticks();
+  pbl_sleep_us(1);
+  cl_assert_equal_i(pbl_uptime_ticks() - start, 2);
+
+  start = pbl_uptime_ticks();
+  pbl_sleep_ms(0);
+  cl_assert_equal_i(pbl_uptime_ticks() - start, 0);
+
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__sleep_waits_at_least_the_request(void) {
+  prv_spawn(0, "sleeper", 2, prv_sleep_rounds_up, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_sleep_past_wrap(void *arg) {
+  for (int i = 0; i < 3; i++) {
+    pbl_thread_sleep(PBL_TICKS(INT32_MAX));
+  }
+  cl_assert(pbl_uptime_ticks() >= 3ULL * INT32_MAX);
+  cl_assert_equal_i(pbl_uptime_ms(), pbl_uptime_ticks() * 1000 / PBL_TICK_HZ);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__uptime_does_not_wrap(void) {
+  prv_spawn(0, "sleeper", 2, prv_sleep_past_wrap, nullptr);
+  pbl_test_kernel_run();
+}
+
+void test_kernel__busy_wait_waits_at_least_the_request(void) {
+  struct timespec t0, t1;
+  clock_gettime(CLOCK_MONOTONIC, &t0);
+  pbl_busy_wait_us(2000);
+  clock_gettime(CLOCK_MONOTONIC, &t1);
+  int64_t ns = (t1.tv_sec - t0.tv_sec) * 1000000000LL + (t1.tv_nsec - t0.tv_nsec);
+  cl_assert(ns >= 2000000);
+}
+
+static int s_poll_count;
+
+static bool prv_poll_ready(int after) {
+  return ++s_poll_count > after;
+}
+
+static void prv_poll_sleep(void *arg) {
+  s_poll_count = 0;
+  cl_assert_equal_i(PBL_POLL_SLEEP_MS(prv_poll_ready(3), 1, 100), 0);
+  cl_assert_equal_i(s_poll_count, 4);
+
+  // Never true: times out after at least 20 ms, with one last evaluation.
+  s_poll_count = 0;
+  uint64_t start = pbl_uptime_ms();
+  cl_assert_equal_i(PBL_POLL_SLEEP_MS(prv_poll_ready(1000), 5, 20), -ETIMEDOUT);
+  cl_assert(pbl_uptime_ms() - start >= 20);
+  cl_assert(s_poll_count >= 2 && s_poll_count <= 6);
+
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__poll_sleep(void) {
+  prv_spawn(0, "poller", 2, prv_poll_sleep, nullptr);
+  pbl_test_kernel_run();
+}
+
+void test_kernel__poll_busy(void) {
+  s_poll_count = 0;
+  cl_assert_equal_i(PBL_POLL_BUSY_US(prv_poll_ready(2), 10, 100000), 0);
+  cl_assert_equal_i(s_poll_count, 3);
+
+  struct timespec t0, t1;
+  clock_gettime(CLOCK_MONOTONIC, &t0);
+  cl_assert_equal_i(PBL_POLL_BUSY_US(false, 100, 2000), -ETIMEDOUT);
+  clock_gettime(CLOCK_MONOTONIC, &t1);
+  int64_t ns = (t1.tv_sec - t0.tv_sec) * 1000000000LL + (t1.tv_nsec - t0.tv_nsec);
+  cl_assert(ns >= 2000000);
 }
 
 // ---- semaphores -------------------------------------------------------------

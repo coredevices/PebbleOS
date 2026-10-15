@@ -3,6 +3,7 @@
 
 pbl_library_sources(
   arch.c
+  cycle.c
   mcu.c
   native.c
 )

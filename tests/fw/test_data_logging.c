@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <pbl/kernel/sched.h>
+#include <pbl/kernel/time.h>
 
 #include <fake_app_manager.h>
 #include <fake_new_timer.h>
@@ -39,7 +39,7 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-pbl_tick_t pbl_uptime_ticks(void) {
+uint64_t pbl_uptime_ticks(void) {
   return 1337;
 }
 

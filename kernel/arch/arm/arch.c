@@ -185,6 +185,15 @@ bool arch_in_isr(void) {
   return mcu_state_is_isr();
 }
 
+void arch_cycle_enable(void) {
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
+
+uint32_t arch_cycles_per_sec(void) {
+  return SystemCoreClock;
+}
+
 void arch_irq_disable(void) {
   __set_BASEPRI(PBL_IRQ_PRIO_MAX_SYSCALL);
   __DSB();
