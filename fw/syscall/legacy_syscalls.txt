@@ -61,7 +61,6 @@ sys_ble_service_get_uuid
 sys_do_not_disturb_is_active
 sys_ecompass_get_last_heading
 sys_ecompass_service_subscribed
-sys_evented_timer_consume
 sys_get_service_discovery_info
 sys_i18n_get_length
 sys_i18n_get_locale
