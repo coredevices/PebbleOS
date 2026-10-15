@@ -12,9 +12,9 @@
  *
  * SoC interrupt lines are bound to their handlers at build time; there is no runtime handler
  * registration and the vector table lives in flash. A line is named after its
- * `PBL_SOC_IRQN_<line>` define in the SoC's @c soc_irqs.h, which matches the CMSIS
- * `<line>_IRQn` name. Binding a line twice fails to link. pbl_irq_init() programs the priority
- * of every bound line at boot, so drivers only enable and disable them:
+ * `PBL_SOC_IRQN_<line>` define in the SoC's @c soc_irqs.h. Binding a line twice fails to link.
+ * pbl_irq_init() programs the priority of every bound line at boot, so drivers only enable and
+ * disable them:
  *
  * @code{.c}
  * PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
@@ -103,7 +103,7 @@ typedef uint16_t pbl_irq_t;
  * @brief Bind a SoC interrupt line to a handler at build time.
  *
  * The handler is called as @c isr(arg) with whatever type @p isr takes; an empty @p arg calls
- * @c isr(). Expands to a definition, at file scope, where the SoC's CMSIS header is included.
+ * @c isr(). Expands to a definition at file scope.
  *
  * @param line Line name, as in @c soc_irqs.h.
  * @param prio Priority in controller units, 0 being the most urgent.
@@ -112,7 +112,7 @@ typedef uint16_t pbl_irq_t;
  * @param flags 0 or @ref PBL_IRQ_ZERO_LATENCY.
  */
 #define PBL_IRQ_CONNECT(line, prio, isr, arg, flags) \
-  ARCH_IRQ_CONNECT(PBL_SOC_IRQN_##line, line##_IRQn, prio, isr, arg, flags)
+  ARCH_IRQ_CONNECT(PBL_SOC_IRQN_##line, #line, prio, isr, arg, flags)
 
 /**
  * @brief Bind a SoC interrupt line to the handler body that follows the macro.
@@ -121,8 +121,7 @@ typedef uint16_t pbl_irq_t;
  * @param prio Priority in controller units, 0 being the most urgent.
  * @param flags 0 or @ref PBL_IRQ_ZERO_LATENCY.
  */
-#define PBL_IRQ_DIRECT(line, prio, flags) \
-  ARCH_IRQ_DIRECT(PBL_SOC_IRQN_##line, line##_IRQn, prio, flags)
+#define PBL_IRQ_DIRECT(line, prio, flags) ARCH_IRQ_DIRECT(PBL_SOC_IRQN_##line, #line, prio, flags)
 
 /**
  * @brief Install the vector table and program the priority of every bound line.

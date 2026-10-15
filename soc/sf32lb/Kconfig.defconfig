@@ -51,4 +51,7 @@ config NIMBLE_BLE_TRANSPORT_ACL_COUNT
 config NUM_IRQS
     default 99
 
+config NUM_IRQ_PRIO_BITS
+    default 3
+
 endif # SOC_SF32LB52

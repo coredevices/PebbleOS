@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-//! SF32LB52x HCPU IRQ lines, from its CMSIS IRQn_Type.
+//! SF32LB52x HCPU IRQ lines.
 
 #pragma once
 

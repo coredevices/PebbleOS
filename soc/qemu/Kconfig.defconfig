@@ -33,4 +33,7 @@ config SRAM_SIZE
 config NUM_IRQS
     default 13
 
+config NUM_IRQ_PRIO_BITS
+    default 3
+
 endif # SOC_QEMU

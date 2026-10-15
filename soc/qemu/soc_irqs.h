@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-//! QEMU Pebble machine IRQ lines, from its CMSIS IRQn_Type.
+//! QEMU Pebble machine IRQ lines.
 
 #pragma once
 

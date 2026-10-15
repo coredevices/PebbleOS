@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-//! nRF52840 IRQ lines, from its CMSIS IRQn_Type.
+//! nRF52840 IRQ lines.
 
 #pragma once
 
