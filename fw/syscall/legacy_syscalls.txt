@@ -30,7 +30,6 @@ fxToNumber_
 fxToStringHandle
 fxToUnsigned_
 fxUnsigned_
-pbl_override_mktime
 sys_accel_manager_consume_samples
 sys_accel_manager_data_subscribe
 sys_accel_manager_data_unsubscribe
@@ -153,7 +152,6 @@ sys_resource_load_range
 sys_resource_read_only_bytes
 sys_resource_size
 sys_shell_prefs_get_units_distance
-sys_strftime
 sys_system_pp_has_capability
 sys_tick_timer_subscribe
 sys_tick_timer_unsubscribe
