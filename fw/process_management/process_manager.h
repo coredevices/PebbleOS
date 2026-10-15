@@ -166,10 +166,10 @@ bool process_manager_compiled_with_legacy3_sdk(void);
 //! or Basalt while being executed on Emery
 PlatformType process_manager_current_platform(void);
 
-//! Check if address is between lower_bound and the end of task's memory region.
+//! Check if [buf, buf + num_bytes) lies between lower_bound and the end of task's memory region.
 //! lower_bound is used by syscall_assert_userspace_buffer to ensure that
-//! address doesn't point into the stack frame of the executing syscall
-bool process_manager_is_address_in_region(PebbleTask task, const void *address,
-                                          const void *lower_bound);
+//! the range doesn't cover the stack frame of the executing syscall
+bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t num_bytes,
+                                        const void *lower_bound);
 
 void *process_manager_address_to_offset(PebbleTask task, void *system_address);

@@ -662,8 +662,8 @@ extern char __APP_RAM_end__[];
 extern char __WORKER_RAM__[];
 extern char __WORKER_RAM_end__[];
 
-bool process_manager_is_address_in_region(PebbleTask task, const void *address,
-                                          const void *lower_bound) {
+bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t num_bytes,
+                                        const void *lower_bound) {
   void *ram_start = nullptr, *ram_end = nullptr;
   if (task == PebbleTask_App) {
     ram_start = __APP_RAM__;
@@ -678,7 +678,9 @@ bool process_manager_is_address_in_region(PebbleTask task, const void *address,
   // check for vulnerability: lower_bound outside of task's region
   PBL_ASSERTN(lower_bound >= ram_start);
 
-  return (address >= lower_bound && address < ram_end);
+  const uintptr_t start = (uintptr_t)buf;
+  const uintptr_t end = (uintptr_t)ram_end;
+  return (start >= (uintptr_t)lower_bound) && (start <= end) && (num_bytes <= end - start);
 }
 
 // -------------------------------------------------------------------------------------------

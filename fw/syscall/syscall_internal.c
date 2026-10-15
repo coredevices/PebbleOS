@@ -257,8 +257,7 @@ void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
 
   void *user_stack_end = (void *)prv_get_syscall_sp();
 
-  if (process_manager_is_address_in_region(task, buf, user_stack_end) &&
-      process_manager_is_address_in_region(task, (uint8_t *)buf + num_bytes - 1, user_stack_end)) {
+  if (process_manager_is_range_in_region(task, buf, num_bytes, user_stack_end)) {
     return;
   }
 
