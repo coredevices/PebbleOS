@@ -19,7 +19,7 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 
@@ -351,8 +351,8 @@ static bool prv_compiled_without_utc_support(void) {
   return false;
 }
 
-DEFINE_SYSCALL(WakeupId, sys_wakeup_schedule, time_t timestamp, int32_t reason,
-               bool notify_if_missed) {
+PBL_SYSCALL(WakeupId, sys_wakeup_schedule, (VAL, time_t, timestamp), (VAL, int32_t, reason),
+            (VAL, bool, notify_if_missed)) {
   if (prv_compiled_without_utc_support()) {
     // Legacy apps get local time returned from the time() call.
     timestamp = time_local_to_utc(timestamp);
@@ -419,7 +419,7 @@ static WakeupEntry prv_wakeup_settings_get_entry(WakeupId wakeup_id) {
   return entry;
 }
 
-DEFINE_SYSCALL(void, sys_wakeup_delete, WakeupId wakeup_id) {
+PBL_SYSCALL(void, sys_wakeup_delete, (VAL, WakeupId, wakeup_id)) {
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
   // Only allow owner to delete its own wakeup events
@@ -527,7 +527,7 @@ static void prv_delete_events_by_uuid_callback(SettingsFile *old_file, SettingsF
   }
 }
 
-DEFINE_SYSCALL(void, sys_wakeup_cancel_all_for_app, void) {
+PBL_SYSCALL(void, sys_wakeup_cancel_all_for_app) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     SettingsFile wakeup_settings;
@@ -543,7 +543,7 @@ DEFINE_SYSCALL(void, sys_wakeup_cancel_all_for_app, void) {
   prv_wakeup_timer_next_pending();
 }
 
-DEFINE_SYSCALL(time_t, sys_wakeup_query, WakeupId wakeup_id) {
+PBL_SYSCALL(time_t, sys_wakeup_query, (VAL, WakeupId, wakeup_id)) {
   status_t status = E_DOES_NOT_EXIST;
   WakeupEntry entry = {};
 
