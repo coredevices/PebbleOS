@@ -1,7 +1,5 @@
 # Syscalls still defined with DEFINE_SYSCALL, whose arguments each handler
 # checks by hand. New syscalls use PBL_SYSCALL; drop names as they convert.
-animation_service_timer_event_received
-animation_service_timer_schedule
 fxAbort_
 fxArgc_
 fxArgv
