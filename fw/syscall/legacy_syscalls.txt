@@ -32,10 +32,6 @@ fxToUnsigned_
 fxUnsigned_
 sys_app_comm_set_responsiveness
 sys_app_glance_update
-sys_app_inbox_service_consume
-sys_app_inbox_service_get_consumer_info
-sys_app_inbox_service_register
-sys_app_inbox_service_unregister
 sys_app_outbox_send
 sys_battery_get_charge_state
 sys_ble_central_cancel_connect
