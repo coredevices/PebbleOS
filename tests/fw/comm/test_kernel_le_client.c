@@ -53,17 +53,15 @@ bool bt_persistent_storage_has_ble_ancs_bonding(void) {
 void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
 }
 
-void gap_le_connect_cancel_all(GAPLEClient client) {
+void gap_le_connect_cancel_all(void) {
 }
 
-enum pbl_bt_errno gap_le_connect_cancel_by_bonding(pbl_bt_bonding_id_t bonding_id,
-                                                   GAPLEClient client) {
+enum pbl_bt_errno gap_le_connect_cancel_by_bonding(pbl_bt_bonding_id_t bonding_id) {
   return PBL_BT_ERRNO_OK;
 }
 
 enum pbl_bt_errno gap_le_connect_connect_by_bonding(pbl_bt_bonding_id_t bonding_id,
-                                                    bool auto_reconnect, bool is_pairing_required,
-                                                    GAPLEClient client) {
+                                                    bool auto_reconnect, bool is_pairing_required) {
   return PBL_BT_ERRNO_OK;
 }
 

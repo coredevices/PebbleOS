@@ -18,7 +18,7 @@ extern void gatt_client_subscriptions_handle_server_notification(GAPLEConnection
                                                                  const uint8_t *att_value,
                                                                  uint16_t att_length);
 
-extern PebbleTaskBitset gap_le_connect_task_mask_for_connection(const GAPLEConnection *connection);
+extern bool gap_le_connect_has_intent_for_connection(const GAPLEConnection *connection);
 
 void pbl_bt_cb_gatt_handle_connect(const struct pbl_bt_gatt_device_connection_event *event) {
   bt_lock();
@@ -113,15 +113,13 @@ void pbl_bt_cb_gatt_handle_buffer_empty(const struct pbl_bt_gatt_device_buffer_e
   bt_lock();
   {
     const GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
-    if (!connection) {
+    if (!connection || !gap_le_connect_has_intent_for_connection(connection)) {
       goto unlock;
     }
 
-    PebbleTaskBitset task_mask = gap_le_connect_task_mask_for_connection(connection);
-
     PebbleEvent e = {
       .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-      .task_mask = task_mask,
+      .task_mask = (PebbleTaskBitset) ~(1u << PebbleTask_KernelMain),
       .bluetooth = {
         .le = {
           .gatt_client = {

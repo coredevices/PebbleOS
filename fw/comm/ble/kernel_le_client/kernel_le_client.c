@@ -475,7 +475,7 @@ void kernel_le_client_handle_event(const PebbleEvent *e) {
 static void prv_connect_gateway_bonding(pbl_bt_bonding_id_t gateway_bonding) {
   gap_le_slave_reconnect_start();
   gap_le_connect_connect_by_bonding(gateway_bonding, true /* auto_reconnect */,
-                                    true /* is_pairing_required */, GAPLEClientKernel);
+                                    true /* is_pairing_required */);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -496,7 +496,7 @@ void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersi
         !bt_persistent_storage_has_ble_ancs_bonding()) {
       gap_le_slave_reconnect_stop();
     }
-    gap_le_connect_cancel_by_bonding(bonding, GAPLEClientKernel);
+    gap_le_connect_cancel_by_bonding(bonding);
   } else if (op == BtPersistBondingOpDidAdd && bt_persistent_storage_is_ble_ancs_bonding(bonding)) {
     prv_connect_gateway_bonding(bonding);
   }
@@ -519,6 +519,6 @@ void kernel_le_client_deinit(void) {
   launcher_task_add_callback(prv_cleanup_clients_kernel_main_cb, nullptr);
 
   gap_le_slave_reconnect_stop();
-  gap_le_connect_cancel_all(GAPLEClientKernel);
+  gap_le_connect_cancel_all();
   ppogatt_destroy();
 }
