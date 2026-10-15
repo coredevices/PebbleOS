@@ -1,43 +1,60 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/watchdog.h>
-#include <pbl/logging/logging.h>
+#include <stdint.h>
 
-#include <hal/nrf_wdt.h>
-#include <helpers/nrfx_reset_reason.h>
-#include <nrfx.h>
+#include <pbl/drivers/watchdog.h>
+#include <pbl/kernel/mmio.h>
+
+#include <hardware/nrf52_power.h>
+#include <hardware/nrf52_wdt.h>
+
+static inline uint32_t prv_wdt_getreg(uint32_t offset) {
+  return pbl_readl(NRF52_WDT_BASE + offset);
+}
+
+static inline void prv_wdt_putreg(uint32_t offset, uint32_t value) {
+  pbl_writel(value, NRF52_WDT_BASE + offset);
+}
+
+static inline uint32_t prv_power_getreg(uint32_t offset) {
+  return pbl_readl(NRF52_POWER_BASE + offset);
+}
+
+static inline void prv_power_putreg(uint32_t offset, uint32_t value) {
+  pbl_writel(value, NRF52_POWER_BASE + offset);
+}
 
 void watchdog_init(void) {
   // No effect if the bootloader already started it: a running WDT keeps its configuration.
-  nrf_wdt_reload_request_enable(NRF_WDT, NRF_WDT_RR0);
-  nrf_wdt_reload_value_set(NRF_WDT, (32768ULL * CONFIG_WATCHDOG_TIMEOUT_MS) / 1000U);
+  prv_wdt_putreg(NRF52_WDT_RREN_OFFSET, prv_wdt_getreg(NRF52_WDT_RREN_OFFSET) | WDT_RREN_RR(0));
+  prv_wdt_putreg(NRF52_WDT_CRV_OFFSET, (32768ULL * CONFIG_WATCHDOG_TIMEOUT_MS) / 1000U);
 }
 
 void watchdog_start(void) {
-  nrf_wdt_task_trigger(NRF_WDT, NRF_WDT_TASK_START);
+  prv_wdt_putreg(NRF52_WDT_TASKS_START_OFFSET, 1U);
 }
 
 void watchdog_feed(void) {
-  nrf_wdt_reload_request_set(NRF_WDT, NRF_WDT_RR0);
+  prv_wdt_putreg(NRF52_WDT_RR_OFFSET(0), WDT_RR_RELOAD);
 }
 
 bool watchdog_check_reset_flag(void) {
-  return (nrfx_reset_reason_get() & NRFX_RESET_REASON_DOG_MASK) != 0;
+  return (prv_power_getreg(NRF52_POWER_RESETREAS_OFFSET) & POWER_RESETREAS_DOG) != 0U;
 }
 
 static McuRebootReason s_cached_reset_flag;
 
 McuRebootReason watchdog_clear_reset_flag(void) {
-  uint32_t reason = nrfx_reset_reason_get();
-  nrfx_reset_reason_clear(0xFFFFFFFF);
+  uint32_t reason = prv_power_getreg(NRF52_POWER_RESETREAS_OFFSET);
+  prv_power_putreg(NRF52_POWER_RESETREAS_OFFSET, 0xffffffffU);
 
   s_cached_reset_flag = (McuRebootReason){
     .brown_out_reset = 0,
-    .pin_reset = (reason & NRFX_RESET_REASON_RESETPIN_MASK) != 0,
-    .power_on_reset = (reason & NRFX_RESET_REASON_VBUS_MASK) != 0,
-    .software_reset = (reason & NRFX_RESET_REASON_SREQ_MASK) != 0,
-    .independent_watchdog_reset = (reason & NRFX_RESET_REASON_DOG_MASK) != 0,
+    .pin_reset = (reason & POWER_RESETREAS_RESETPIN) != 0U,
+    .power_on_reset = (reason & POWER_RESETREAS_VBUS) != 0U,
+    .software_reset = (reason & POWER_RESETREAS_SREQ) != 0U,
+    .independent_watchdog_reset = (reason & POWER_RESETREAS_DOG) != 0U,
     .window_watchdog_reset = 0,
     .low_power_manager_reset = 0,
   };

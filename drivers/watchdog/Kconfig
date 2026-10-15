@@ -22,7 +22,6 @@ config WATCHDOG_TIMEOUT_MS
 config WATCHDOG_NRF5
     bool "Nordic nRF5"
     default y if SOC_NRF52
-    select HAL_NORDIC
     help
       Support for the Nordic nRF5 watchdog.
 
