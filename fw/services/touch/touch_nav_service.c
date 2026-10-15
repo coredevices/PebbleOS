@@ -15,7 +15,7 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
 // --- Action-bar snapshot publish (applib -> current task's nav state) --------------------------
 
@@ -32,10 +32,8 @@ static TouchNavState *prv_current_touch_nav_state(void) {
   }
 }
 
-DEFINE_SYSCALL(void, sys_touch_set_action_bar, const GRect *frame, uint8_t icon_mask) {
-  if (PRIVILEGE_WAS_ELEVATED && frame) {
-    syscall_assert_userspace_buffer(frame, sizeof(*frame));
-  }
+PBL_SYSCALL(void, sys_touch_set_action_bar, (IN_OPT, const GRect *, frame),
+            (VAL, uint8_t, icon_mask)) {
   TouchNavState *state = prv_current_touch_nav_state();
   if (!state) {
     return;
