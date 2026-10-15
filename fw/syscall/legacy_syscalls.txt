@@ -62,9 +62,6 @@ sys_do_not_disturb_is_active
 sys_ecompass_get_last_heading
 sys_ecompass_service_subscribed
 sys_get_service_discovery_info
-sys_i18n_get_length
-sys_i18n_get_locale
-sys_i18n_get_with_buffer
 sys_light_enable
 sys_light_enable_interaction
 sys_light_enable_respect_settings
