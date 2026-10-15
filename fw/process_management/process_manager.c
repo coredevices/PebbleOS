@@ -667,8 +667,7 @@ extern char __APP_RAM_end__[];
 extern char __WORKER_RAM__[];
 extern char __WORKER_RAM_end__[];
 
-bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t num_bytes,
-                                        const void *lower_bound) {
+static uintptr_t prv_get_region_end(PebbleTask task, const void *lower_bound) {
   void *ram_start = nullptr, *ram_end = nullptr;
   if (task == PebbleTask_App) {
     ram_start = __APP_RAM__;
@@ -684,9 +683,24 @@ bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t
     return false;
   }
 
+  return (uintptr_t)ram_end;
+}
+
+bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t num_bytes,
+                                        const void *lower_bound) {
   const uintptr_t start = (uintptr_t)buf;
-  const uintptr_t end = (uintptr_t)ram_end;
+  const uintptr_t end = prv_get_region_end(task, lower_bound);
   return (start >= (uintptr_t)lower_bound) && (start <= end) && (num_bytes <= end - start);
+}
+
+size_t process_manager_region_bytes_from(PebbleTask task, const void *buf,
+                                         const void *lower_bound) {
+  const uintptr_t start = (uintptr_t)buf;
+  const uintptr_t end = prv_get_region_end(task, lower_bound);
+  if (start < (uintptr_t)lower_bound || start > end) {
+    return 0;
+  }
+  return end - start;
 }
 
 // -------------------------------------------------------------------------------------------

@@ -172,4 +172,8 @@ PlatformType process_manager_current_platform(void);
 bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t num_bytes,
                                         const void *lower_bound);
 
+//! Number of bytes from @p buf to the end of task's memory region, or 0 if buf
+//! is not between lower_bound and the end of the region.
+size_t process_manager_region_bytes_from(PebbleTask task, const void *buf, const void *lower_bound);
+
 void *process_manager_address_to_offset(PebbleTask task, void *system_address);

@@ -336,3 +336,16 @@ void test_process_manager__range_in_region_rejects_wrapping_sizes(void) {
   cl_assert(!process_manager_is_range_in_region(t, buf, SIZE_MAX - 15, lower));
   cl_assert(!process_manager_is_range_in_region(t, buf, SIZE_MAX, lower));
 }
+
+void test_process_manager__region_bytes_from(void) {
+  const PebbleTask t = PebbleTask_App;
+  char *lower = &__APP_RAM__[64];
+  char *end = __APP_RAM_end__;
+
+  cl_assert_equal_i(process_manager_region_bytes_from(t, lower, lower), end - lower);
+  cl_assert_equal_i(process_manager_region_bytes_from(t, end - 1, lower), 1);
+  cl_assert_equal_i(process_manager_region_bytes_from(t, end, lower), 0);
+  cl_assert_equal_i(process_manager_region_bytes_from(t, end + 1, lower), 0);
+  cl_assert_equal_i(process_manager_region_bytes_from(t, lower - 1, lower), 0);
+  cl_assert_equal_i(process_manager_region_bytes_from(t, nullptr, lower), 0);
+}

@@ -14,14 +14,17 @@
 //! Any function defined with this macro will be privileged.
 //! Privileges are raised upon entry to the syscall, and dropped
 //! once the syscall is exited (unless the caller was originally privileged).
-#define DEFINE_SYSCALL(retType, funcName, ...)                                      \
-  retType PBL_NAKED PBL_SECTION(".syscall_text." #funcName) funcName(__VA_ARGS__) { \
-    __asm volatile(                                                                 \
-        "push { lr } \n"                                                            \
-        "bl syscall_internal_maybe_skip_privilege \n"                               \
-        "svc 2 \n"                                                                  \
-        "b __" #funcName "\n");                                                     \
-  }                                                                                 \
+#define DEFINE_SYSCALL(retType, funcName, ...) \
+  PRV_DEFINE_SYSCALL(".syscall_text.", retType, funcName, __VA_ARGS__)
+
+#define PRV_DEFINE_SYSCALL(section, retType, funcName, ...)                \
+  retType PBL_NAKED PBL_SECTION(section #funcName) funcName(__VA_ARGS__) { \
+    __asm volatile(                                                        \
+        "push { lr } \n"                                                   \
+        "bl syscall_internal_maybe_skip_privilege \n"                      \
+        "svc 2 \n"                                                         \
+        "b __" #funcName "\n");                                            \
+  }                                                                        \
   retType PBL_EXTERNALLY_VISIBLE PBL_USED __##funcName(__VA_ARGS__)
 
 //! Useful function for checking syscall privileges.
@@ -56,6 +59,10 @@ struct LogBinaryMessage;
 //! and filename are terminated within the caller's memory.
 void syscall_assert_userspace_log_message(const struct LogBinaryMessage *log_message);
 
+//! @return The length of the NUL-terminated string at @p str, or -EFAULT if it
+//! is longer than @p max or does not end within the app's memory space.
+int syscall_user_strnlen(const char *str, size_t max);
+
 // Used to implement DEFINE_SYSCALL
 void syscall_internal_maybe_skip_privilege(void);
 
@@ -83,8 +90,8 @@ const MpuRegion *syscall_get_stack_guard_region(PebbleTask task);
 // TODO: really implement privilege escalation in unit tests. See PBL-9688
 #if defined(UNITTEST)
 
-#undef DEFINE_SYSCALL
-#define DEFINE_SYSCALL(retType, funcName, ...) retType funcName(__VA_ARGS__)
+#undef PRV_DEFINE_SYSCALL
+#define PRV_DEFINE_SYSCALL(section, retType, funcName, ...) retType funcName(__VA_ARGS__)
 
 #if !UNITTEST_WITH_SYSCALL_PRIVILEGES
 #undef PRIVILEGE_WAS_ELEVATED
@@ -94,8 +101,8 @@ const MpuRegion *syscall_get_stack_guard_region(PebbleTask task);
 #elifdef CONFIG_ARCH_POSIX
 
 // A native build has a single privilege level: syscalls are plain calls.
-#undef DEFINE_SYSCALL
-#define DEFINE_SYSCALL(retType, funcName, ...) retType funcName(__VA_ARGS__)
+#undef PRV_DEFINE_SYSCALL
+#define PRV_DEFINE_SYSCALL(section, retType, funcName, ...) retType funcName(__VA_ARGS__)
 
 #undef PRIVILEGE_WAS_ELEVATED
 #define PRIVILEGE_WAS_ELEVATED (0)

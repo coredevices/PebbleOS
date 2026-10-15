@@ -22,6 +22,7 @@
 #include <process_management/process_loader.h>
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 // Run App/Worker syscalls on a dedicated privileged stack instead of the
@@ -305,6 +306,25 @@ void syscall_assert_userspace_log_message(const LogBinaryMessage *log_message) {
     if (log_message->message[message_length] != '\0') {
       syscall_failed();
     }
+  }
+}
+
+int syscall_user_strnlen(const char *str, size_t max) {
+  size_t window = process_manager_region_bytes_from(pebble_task_get_current(), str,
+                                                    (void *)prv_get_syscall_sp());
+  if (max < window) {
+    window = max + 1;
+  }
+  const size_t len = strnlen(str, window);
+  if (len == window) {
+    return -EFAULT;
+  }
+  return (int)len;
+}
+
+void syscall_copy_out(struct syscall_copy_out *out) {
+  if (out->dst != nullptr && syscall_copy_to_user(out->dst, out->src, out->num_bytes) < 0) {
+    syscall_failed();
   }
 }
 

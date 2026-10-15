@@ -184,6 +184,10 @@ pbl_clar_test(test_process_manager
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_syscall_define
+  DEFINES UNITTEST_WITH_SYSCALL_PRIVILEGES=1
+)
+
 pbl_clar_test(test_pebble_app_info
   SOURCES
     fw/process_management/pebble_process_info.c
