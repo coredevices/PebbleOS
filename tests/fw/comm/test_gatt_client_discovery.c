@@ -5,7 +5,6 @@
 
 #include <clar.h>
 #include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gap_le_task.h>
 #include <comm/ble/gatt_client_discovery.h>
 #include <comm/ble/gatt_service_changed.h>
 #include <kernel/events.h>

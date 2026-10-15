@@ -178,7 +178,7 @@ extern uint8_t gatt_client_copy_service_refs_by_discovery_generation(
 static void prv_send_event(PebbleBLEGATTClientServiceEventInfo *info) {
   PebbleEvent e = (const PebbleEvent){
     .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-    .task_mask = 0,
+    .task_mask = (PebbleTaskBitset) ~(1u << PebbleTask_KernelMain),
     .bluetooth = {
       .le = {
         .gatt_client_service = {
@@ -188,7 +188,6 @@ static void prv_send_event(PebbleBLEGATTClientServiceEventInfo *info) {
       },
     },
   };
-  // TODO: send only to tasks that are connected virtually
   event_put(&e);
 }
 

@@ -5,7 +5,6 @@
 
 #include <clar.h>
 #include <comm/ble/gap_le_advert.h>
-#include <comm/ble/gap_le_task.h>
 #include <comm/ble/gatt_client_subscriptions.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/ble/kernel_le_client/test/test_definition.h>

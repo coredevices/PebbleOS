@@ -68,7 +68,6 @@ pbl_clar_test(test_gatt_client_subscriptions
   MODULES rand
   SOURCES
     fw/comm/ble/gap_le_connection.c
-    fw/comm/ble/gap_le_task.c
     fw/comm/ble/gatt_client_accessors.c
     fw/comm/ble/gatt_client_discovery.c
     fw/comm/ble/gatt_client_subscriptions.c
@@ -168,7 +167,6 @@ pbl_clar_test(test_gap_le_connect
   SOURCES
     fw/comm/ble/gap_le_connect.c
     fw/comm/ble/gap_le_connection.c
-    fw/comm/ble/gap_le_task.c
     fw/comm/internals/bt_conn_mgr.c
     tests/fakes/fake_events.c
     tests/fakes/fake_GAPAPI.c

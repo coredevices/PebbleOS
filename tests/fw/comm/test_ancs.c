@@ -9,7 +9,6 @@
 
 #include <clar.h>
 #include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gap_le_task.h>
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <comm/ble/kernel_le_client/ancs/ancs_definition.h>
 #include <comm/ble/kernel_le_client/ancs/ancs_util.h>
