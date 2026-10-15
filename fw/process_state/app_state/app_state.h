@@ -14,7 +14,6 @@
 #include <applib/app_wakeup.h>
 #include <applib/backlight_service_private.h>
 #include <applib/battery_state_service_private.h>
-#include <applib/bluetooth/ble_app_support.h>
 #include <applib/compass_service_private.h>
 #include <applib/connection_service_private.h>
 #include <applib/graphics/gtypes.h>
@@ -86,8 +85,6 @@ ApplibInternalEventsInfo *app_state_get_applib_internal_events_info(void);
 AnimationState *app_state_get_animation_state(void);
 
 AppMessageCtx *app_state_get_app_message_ctx(void);
-
-BLEAppState *app_state_get_ble_app_state(void);
 
 ClickManager *app_state_get_click_manager(void);
 

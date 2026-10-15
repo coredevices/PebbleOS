@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <applib/bluetooth/ble_client.h>
+#include <comm/ble/gatt_client_subscriptions.h>
 
 //! @file ancs.h Module implementing an ANCS client.
 //! See http://bit.ly/ancs-spec for Apple's documentation of ANCS
@@ -54,13 +54,11 @@ void ancs_handle_service_removed(pbl_bt_characteristic_t *characteristics,
 bool ancs_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
 
 //! Handles GATT write responses
-//! @see BLEClientWriteHandler
 //! Must only be called from KernelMain!
 void ancs_handle_write_response(pbl_bt_characteristic_t characteristic,
                                 enum pbl_bt_gatt_error error);
 
 //! Handles GATT subscriptions
-//! @see BLEClientSubscribeHandler
 //! Must only be called from KernelMain!
 void ancs_handle_subscribe(pbl_bt_characteristic_t characteristic,
                            BLESubscription subscription_type, enum pbl_bt_gatt_error error);

@@ -8,11 +8,3 @@ pbl_clar_test(test_ble_ad_parse
     fw/system/hexdump.c
     tests/fakes/fake_rtc.c
 )
-
-pbl_clar_test(test_ble_ibeacon
-  MODULES rand
-  SOURCES
-    fw/applib/bluetooth/ble_ibeacon.c
-    fw/applib/bluetooth/ble_ad_parse.c
-    tests/fakes/fake_rtc.c
-)

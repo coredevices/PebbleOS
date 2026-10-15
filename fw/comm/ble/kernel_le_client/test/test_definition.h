@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <applib/bluetooth/ble_client.h>
+#include <comm/ble/gatt_client_subscriptions.h>
 
 typedef enum {
   TestCharacteristic_One,

@@ -446,7 +446,6 @@ static void prv_app_cleanup(void) {
 #ifndef CONFIG_RECOVERY_FW
   speaker_service_stop_for_task(PebbleTask_App);
 #endif
-  ble_app_cleanup();
 
   app_comm_set_sniff_interval(SNIFF_INTERVAL_NORMAL);
 

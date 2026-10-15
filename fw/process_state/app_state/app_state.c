@@ -64,8 +64,6 @@ typedef struct {
 
   EventServiceInfo event_service_state;
 
-  BLEAppState ble_app_state;
-
   AccelServiceState accel_state;
 
   CompassServiceConfig *compass_config;
@@ -301,8 +299,6 @@ PBL_NOINLINE void app_state_init(void) {
   graphics_context_init(&s_app_state_ptr->graphics_context, &s_app_state_ptr->framebuffer,
                         init_mode);
 
-  ble_init_app_state();
-
   accel_service_state_init(app_state_get_accel_state());
 
   plugin_service_state_init(app_state_get_plugin_service());
@@ -376,10 +372,6 @@ AnimationState *app_state_get_animation_state() {
 
 AppMessageCtx *app_state_get_app_message_ctx(void) {
   return &s_app_state_ptr->app_message_ctx;
-}
-
-BLEAppState *app_state_get_ble_app_state(void) {
-  return &s_app_state_ptr->ble_app_state;
 }
 
 ClickManager *app_state_get_click_manager() {

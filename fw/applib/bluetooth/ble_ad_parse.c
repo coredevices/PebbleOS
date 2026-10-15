@@ -9,7 +9,7 @@
 #include <pbl/util/math.h>
 
 #include <applib/applib_malloc.auto.h>
-#include <syscall/syscall.h>
+#include <comm/ble/gap_le_advert.h>
 #include <system/passert.h>
 
 // -----------------------------------------------------------------------------
@@ -679,7 +679,7 @@ bool ble_ad_set_tx_power_level(struct pbl_bt_ad_data *ad) {
   BLEAdElement *element = (BLEAdElement *)element_buffer;
   element->header.length = sizeof(int8_t) + 1 /* +1 Type byte */;
   element->header.type = BLEAdTypeTxPowerLevel;
-  *((int8_t *)element->data) = sys_ble_get_advertising_tx_power();
+  *((int8_t *)element->data) = gap_le_advert_get_tx_power();
 
   return prv_write_element_to_ad_data(ad, element);
 }

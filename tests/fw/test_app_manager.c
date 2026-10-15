@@ -198,9 +198,6 @@ const PebbleProcessMd *app_fetch_ui_get_app_info(void) {
 void app_message_close(void) {
 }
 
-void ble_app_cleanup(void) {
-}
-
 void dls_inactivate_sessions(PebbleTask task) {
 }
 

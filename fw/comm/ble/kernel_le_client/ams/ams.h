@@ -5,7 +5,7 @@
 
 #include "ams_types.h"
 
-#include <applib/bluetooth/ble_client.h>
+#include <comm/ble/gatt_client_subscriptions.h>
 
 //! @file ams.h Module implementing an AMS client.
 //! See http://bit.ly/ams-spec for Apple's documentation of AMS.
@@ -57,13 +57,11 @@ void ams_handle_service_removed(pbl_bt_characteristic_t *characteristics,
 bool ams_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
 
 //! Handles GATT subscriptions
-//! @see BLEClientSubscribeHandler
 //! Must only be called from KernelMain!
 void ams_handle_subscribe(pbl_bt_characteristic_t characteristic, BLESubscription subscription_type,
                           enum pbl_bt_gatt_error error);
 
 //! Handles GATT write responses
-//! @see BLEClientWriteHandler
 //! Must only be called from KernelMain!
 void ams_handle_write_response(pbl_bt_characteristic_t characteristic,
                                enum pbl_bt_gatt_error error);

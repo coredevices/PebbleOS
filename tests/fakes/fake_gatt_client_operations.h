@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <applib/bluetooth/ble_client.h>
+#include <pbl/bluetooth/types.h>
+
 #include <comm/ble/gap_le_task.h>
 
 void fake_gatt_client_op_init(void);

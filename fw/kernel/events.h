@@ -32,13 +32,13 @@
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
 #include <applib/app_outbox.h>
-#include <applib/bluetooth/ble_client.h>
 #include <applib/health_service.h>
 #include <applib/plugin_service.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/click.h>
 #include <applib/voice/dictation_session.h>
 #include <apps/system/app_fetch_ui.h>
+#include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_install_types.h>
 

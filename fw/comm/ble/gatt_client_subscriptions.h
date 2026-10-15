@@ -6,11 +6,19 @@
 #include "gap_le_task.h"
 
 #include <pbl/bluetooth/mtu.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
 
-#include <applib/bluetooth/ble_client.h>
-
 struct GAPLEConnection;
+
+//! Subscription types for GATT characteristic notifications and indications.
+typedef enum {
+  BLESubscriptionNone = 0,
+  BLESubscriptionNotifications = (1 << 0),
+  BLESubscriptionIndications = (1 << 1),
+  //! Notifications if the server supports both.
+  BLESubscriptionAny = BLESubscriptionNotifications | BLESubscriptionIndications,
+} BLESubscription;
 
 #define MAX_ATT_WRITE_PAYLOAD_SIZE (PBL_BT_ATT_MAX_SUPPORTED_MTU - 3)
 #define GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE                              \

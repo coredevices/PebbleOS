@@ -22,11 +22,6 @@
 #include <kernel/pbl_malloc.h>
 #include <system/passert.h>
 
-// TODO:
-// - Intercept "manual" CCCD writes from the app, error for now? or translate to
-//   ble_client_subscribe calls?
-// - Filter out ANCS / AMS services -- apps shouldn't be able to muck with these
-
 // -------------------------------------------------------------------------------------------------
 // Static variables
 

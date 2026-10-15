@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <applib/bluetooth/ble_client.h>
+#include <pbl/bluetooth/types.h>
 
 typedef enum {
   AppLaunchCharacteristicAppLaunch,
