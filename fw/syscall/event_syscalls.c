@@ -10,7 +10,7 @@
 #include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
@@ -43,19 +43,14 @@ static const MpuRegion *prv_process_region(PebbleTask task) {
                                      : memory_layout_get_app_region();
 }
 
-DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent *event) {
+PBL_SYSCALL(void, sys_send_pebble_event_to_kernel, (IN, PebbleEvent *, event)) {
   PebbleTask task = pebble_task_get_current();
-  PebbleEvent k_event;
 
-  if (PRIVILEGE_WAS_ELEVATED) {
-    if (syscall_copy_from_user(&k_event, event, sizeof(k_event)) < 0) {
+  if (from_user) {
+    if (!prv_event_type_allowed_from_user(event->type)) {
+      PBL_LOG_ERR("Rejecting event type %u from unprivileged caller", event->type);
       syscall_failed();
     }
-    if (!prv_event_type_allowed_from_user(k_event.type)) {
-      PBL_LOG_ERR("Rejecting event type %u from unprivileged caller", k_event.type);
-      syscall_failed();
-    }
-    event = &k_event;
 
     if (event->type == PEBBLE_PROCESS_KILL_EVENT) {
       event->kill.task = task;
@@ -73,8 +68,8 @@ DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent *event) {
   }
 }
 
-DEFINE_SYSCALL(void, sys_current_process_schedule_callback, CallbackEventCallback async_cb,
-               void *ctx) {
+PBL_SYSCALL(void, sys_current_process_schedule_callback, (VAL, CallbackEventCallback, async_cb),
+            (VAL, void *, ctx)) {
   // No userspace buffer assertion for ctx needed, because it won't be accessed by the kernel.
 
   PebbleEvent event = {
@@ -89,16 +84,13 @@ DEFINE_SYSCALL(void, sys_current_process_schedule_callback, CallbackEventCallbac
   process_manager_send_event_to_process(task, &event);
 }
 
-DEFINE_SYSCALL(uint32_t, sys_process_events_waiting, PebbleTask task) {
+PBL_SYSCALL(uint32_t, sys_process_events_waiting, (VAL, PebbleTask, task)) {
   // process_manager_process_events_waiting -> prv_get_context_for_task
   // PBL_ASSERTN()s for anything other than App or Worker. Without this guard
   // an unprivileged app can pass any other PebbleTask value and panic the
   // kernel from a syscall. Pin the caller to its own task instead.
-  if (PRIVILEGE_WAS_ELEVATED) {
+  if (from_user) {
     task = pebble_task_get_current();
-    if (task != PebbleTask_App && task != PebbleTask_Worker) {
-      syscall_failed();
-    }
   }
   return process_manager_process_events_waiting(task);
 }
@@ -118,9 +110,9 @@ static void prv_assert_handler_list_node_in_userspace(const EventServiceInfo *ha
   prv_assert_list_node_in_userspace(handler->list_node.next);
 }
 
-DEFINE_SYSCALL(void, sys_event_service_client_subscribe, EventServiceInfo *handler) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(handler, sizeof(*handler));
+PBL_SYSCALL(void, sys_event_service_client_subscribe,
+            (IN_BUF, EventServiceInfo *, handler, sizeof(*handler))) {
+  if (from_user) {
     prv_assert_handler_list_node_in_userspace(handler);
     if (handler->type >= PEBBLE_NUM_EVENTS) {
       syscall_failed();
@@ -186,12 +178,11 @@ static bool prv_has_handler_for_type(EventServiceInfo *state, PebbleEventType ty
   return false;
 }
 
-DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *state,
-               EventServiceInfo *handler) {
+PBL_SYSCALL(void, sys_event_service_client_unsubscribe, (VAL, EventServiceInfo *, state),
+            (OUT_BUF, EventServiceInfo *, handler, sizeof(*handler))) {
   PebbleTask task = pebble_task_get_current();
 
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(handler, sizeof(*handler));
+  if (from_user) {
     prv_assert_handler_list_node_in_userspace(handler);
     if (handler->type >= PEBBLE_NUM_EVENTS) {
       syscall_failed();
@@ -211,7 +202,7 @@ DEFINE_SYSCALL(void, sys_event_service_client_unsubscribe, EventServiceInfo *sta
   // Remove from handlers list
   list_remove(&handler->list_node, nullptr, nullptr);
 
-  if (prv_has_handler_for_type(state, handler->type, PRIVILEGE_WAS_ELEVATED)) {
+  if (prv_has_handler_for_type(state, handler->type, from_user)) {
     // there are other handlers for this task, don't unsubscribe it
     return;
   }

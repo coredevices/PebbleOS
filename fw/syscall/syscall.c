@@ -3,7 +3,7 @@
 
 #include "syscall.h"
 
-#include "syscall_internal.h"
+#include "syscall_define.h"
 
 #include <time.h>
 
@@ -18,7 +18,7 @@
 #include <logging/logging_private.h>
 #include <process_management/worker_manager.h>
 
-DEFINE_SYSCALL(int, sys_test, int arg) {
+PBL_SYSCALL(int, sys_test, (VAL, int, arg)) {
   uint32_t ipsr = 0;
 #ifdef __arm__
   __asm volatile("mrs %0, ipsr" : "=r"(ipsr));
@@ -30,64 +30,51 @@ DEFINE_SYSCALL(int, sys_test, int arg) {
   return arg * 2;
 }
 
-DEFINE_SYSCALL(time_t, sys_get_time, void) {
+PBL_SYSCALL(time_t, sys_get_time) {
   return rtc_get_time();
 }
 
-DEFINE_SYSCALL(void, sys_get_time_ms, time_t *t, uint16_t *out_ms) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(t, sizeof(*t));
-    syscall_assert_userspace_buffer(out_ms, sizeof(*out_ms));
-  }
-
+PBL_SYSCALL(void, sys_get_time_ms, (OUT, time_t *, t), (OUT, uint16_t *, out_ms)) {
   rtc_get_time_ms(t, out_ms);
 }
 
-DEFINE_SYSCALL(RtcTicks, sys_get_ticks, void) {
+PBL_SYSCALL(RtcTicks, sys_get_ticks) {
   return rtc_get_ticks();
 }
 
-DEFINE_SYSCALL(void, sys_pbl_log, LogBinaryMessage *log_message, uint32_t flags) {
+PBL_SYSCALL(void, sys_pbl_log, (VAL, LogBinaryMessage *, log_message), (VAL, uint32_t, flags)) {
   // log_message points at a struct whose trailing message[] is sized by the
   // embedded message_length byte. Without a check, an app can hand us any
   // kernel address: log_level and message_length steer the formatting code,
   // and kernel_pbl_log_flash() ends up writing `sizeof(*log_message) +
   // message_length` bytes straight from that address to the flash log channel
   // — a generic kernel-memory exfiltration primitive.
-  if (PRIVILEGE_WAS_ELEVATED) {
+  if (from_user) {
     syscall_assert_userspace_log_message(log_message);
   }
   kernel_pbl_log(log_message, flags);
 }
 
-DEFINE_SYSCALL(void, sys_copy_timezone_abbr, char *timezone_abbr, time_t time) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(timezone_abbr, PBL_TZ_LEN);
-  }
+PBL_SYSCALL(void, sys_copy_timezone_abbr, (OUT_BUF, char *, timezone_abbr, PBL_TZ_LEN),
+            (VAL, time_t, time)) {
   time_get_timezone_abbr(timezone_abbr, time);
 }
 
-DEFINE_SYSCALL(struct pbl_tm *, sys_gmtime_r, const time_t *timep, struct pbl_tm *result) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(timep, sizeof(*timep));
-    syscall_assert_userspace_buffer(result, sizeof(*result));
-  }
+PBL_SYSCALL(struct pbl_tm *, sys_gmtime_r, (IN, const time_t *, timep),
+            (OUT_BUF, struct pbl_tm *, result, sizeof(*result))) {
   return pbl_gmtime_r(timep, result);
 }
 
-DEFINE_SYSCALL(struct pbl_tm *, sys_localtime_r, const time_t *timep, struct pbl_tm *result) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(timep, sizeof(*timep));
-    syscall_assert_userspace_buffer(result, sizeof(*result));
-  }
+PBL_SYSCALL(struct pbl_tm *, sys_localtime_r, (IN, const time_t *, timep),
+            (OUT_BUF, struct pbl_tm *, result, sizeof(*result))) {
   return pbl_localtime_r(timep, result);
 }
 
 //! System call to exit an application gracefully.
-DEFINE_SYSCALL([[noreturn]] void, sys_exit, void) {
+PBL_SYSCALL_NORETURN(sys_exit) {
   process_manager_task_exit();
 }
 
-DEFINE_SYSCALL(void, sys_psleep, int millis) {
+PBL_SYSCALL(void, sys_psleep, (VAL, int, millis)) {
   pbl_thread_sleep(PBL_MSEC(millis));
 }

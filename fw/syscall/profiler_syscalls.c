@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <cmsis_core.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/profiler.h>
 
 // ------------------------------------------------------------------------------------
@@ -18,32 +18,32 @@ ProfilerNode *prv_find_node(ProfilerNode *find_node) {
   return (ProfilerNode *)node;
 }
 
-DEFINE_SYSCALL(void, sys_profiler_init, void) {
+PBL_SYSCALL(void, sys_profiler_init) {
 #ifdef CONFIG_PROFILER
   profiler_init();
 #endif
 }
 
-DEFINE_SYSCALL(void, sys_profiler_start, void) {
+PBL_SYSCALL(void, sys_profiler_start) {
 #ifdef CONFIG_PROFILER
   profiler_start();
 #endif
 }
 
-DEFINE_SYSCALL(void, sys_profiler_stop, void) {
+PBL_SYSCALL(void, sys_profiler_stop) {
 #ifdef CONFIG_PROFILER
   profiler_stop();
 #endif
 }
 
-DEFINE_SYSCALL(void, sys_profiler_print_stats, void) {
+PBL_SYSCALL(void, sys_profiler_print_stats) {
 #ifdef CONFIG_PROFILER
   profiler_print_stats();
 #endif
 }
 
-DEFINE_SYSCALL(void, sys_profiler_node_start, ProfilerNode *node) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(void, sys_profiler_node_start, (VAL, ProfilerNode *, node)) {
+  if (from_user) {
     if (!list_contains(g_profiler.nodes, (ListNode *)node)) {
       // Instead of calling syscall_failed(), simply return. If PROFILE_INIT has not been
       // executed yet, there won't be any nodes in the list.
@@ -54,11 +54,11 @@ DEFINE_SYSCALL(void, sys_profiler_node_start, ProfilerNode *node) {
   node->start = DWT->CYCCNT;
 }
 
-DEFINE_SYSCALL(void, sys_profiler_node_stop, ProfilerNode *node) {
+PBL_SYSCALL(void, sys_profiler_node_stop, (VAL, ProfilerNode *, node)) {
   // Capture the cycle count as soon as possible, before we validate the node argument
   uint32_t dwt_cyc_cnt = DWT->CYCCNT;
 
-  if (PRIVILEGE_WAS_ELEVATED) {
+  if (from_user) {
     if (!list_contains(g_profiler.nodes, (ListNode *)node)) {
       // Instead of calling syscall_failed(), simply return. If PROFILE_INIT has not been
       // executed yet, there won't be any nodes in the list.

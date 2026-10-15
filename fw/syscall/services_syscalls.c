@@ -3,16 +3,13 @@
 
 #include <pbl/services/alarms/alarm.h>
 
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
-DEFINE_SYSCALL(bool, sys_alarm_get_next_enabled, time_t *timestamp_out) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(timestamp_out, sizeof(*timestamp_out));
-  }
+PBL_SYSCALL(bool, sys_alarm_get_next_enabled, (OUT, time_t *, timestamp_out)) {
   return alarm_get_next_enabled_alarm(timestamp_out);
 }
 
-DEFINE_SYSCALL(bool, sys_hrm_manager_is_hrm_present) {
+PBL_SYSCALL(bool, sys_hrm_manager_is_hrm_present) {
 #ifdef CONFIG_SERVICE_HRM
   return true;
 #else
