@@ -264,16 +264,12 @@ pbl_library_named(libxs)
 pbl_library_kind(stlib)
 pbl_library_sources(${sources})
 pbl_library_compile_options(
-  -Og
   -Dpebble
   -DmxUseDefaultSharedChunks=1
   -DkCommodettoBitmapFormat=kCommodettoBitmapMonochromeAligned
   -DkPocoRotation=0
   -DkPocoFrameBuffer=1
   -DMODGCC=1
-  -DMODINSTRUMENTATION=1
-  -DmxInstrument
-  -DmxDebug
   -fno-strict-aliasing
   -fomit-frame-pointer
   -fshort-enums
@@ -288,3 +284,17 @@ pbl_library_compile_options(
   -Wno-unused-variable
   -Wno-misleading-indentation
 )
+
+# XS debug and instrumentation add per-operation CPU overhead to every JS
+# execution, so they only belong in non-release builds. Release builds also
+# optimize for size (-Os) rather than -Og. Bounds checking is left enabled.
+if(CONFIG_RELEASE)
+  pbl_library_compile_options(-Os)
+else()
+  pbl_library_compile_options(
+    -Og
+    -DMODINSTRUMENTATION=1
+    -DmxInstrument
+    -DmxDebug
+  )
+endif()
