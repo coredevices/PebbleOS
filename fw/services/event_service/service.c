@@ -14,7 +14,7 @@
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_event_service, CONFIG_SERVICE_EVENT_SERVICE_LOG_LEVEL);
@@ -390,21 +390,14 @@ unlock:
 
 //! @param uuid the UUID of the plugin service, or NULL to use uuid of the current process
 //! @return non-negative service index, or -1 if error
-DEFINE_SYSCALL(int16_t, sys_event_service_get_plugin_service_index, const Uuid *uuid) {
-  if (PRIVILEGE_WAS_ELEVATED && uuid != nullptr) {
-    syscall_assert_userspace_buffer(uuid, sizeof(*uuid));
-  }
+PBL_SYSCALL(int16_t, sys_event_service_get_plugin_service_index, (IN_OPT, const Uuid *, uuid)) {
   if (uuid == nullptr) {
     uuid = &sys_process_manager_get_current_process_md()->uuid;
   }
   return prv_get_plugin_index(uuid, pebble_task_get_current());
 }
 
-DEFINE_SYSCALL(void, sys_event_service_cleanup, PebbleEvent *e) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(e, sizeof(PebbleEvent));
-  }
-
+PBL_SYSCALL(void, sys_event_service_cleanup, (OUT_BUF, PebbleEvent *, e, sizeof(PebbleEvent))) {
   EventServiceBuffer *esb = prv_get_esb_for_event(e);
 
   if (esb) {
