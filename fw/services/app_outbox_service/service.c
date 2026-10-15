@@ -11,7 +11,7 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_outbox_service, CONFIG_SERVICE_APP_OUTBOX_SERVICE_LOG_LEVEL);
@@ -83,13 +83,9 @@ static const AppOutboxSenderDef *prv_find_def_and_tag_by_handler(AppOutboxSentHa
 static void app_outbox_service_send(const uint8_t *data, size_t length,
                                     AppOutboxSentHandler sent_handler, void *cb_ctx);
 
-DEFINE_SYSCALL(void, sys_app_outbox_send, const uint8_t *data, size_t length,
-               AppOutboxSentHandler sent_handler, void *cb_ctx) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    // Check that data is in app space:
-    syscall_assert_userspace_buffer(data, length);
-  }
-
+PBL_SYSCALL(void, sys_app_outbox_send, (IN_BUF, const uint8_t *, data, length),
+            (VAL, size_t, length), (VAL, AppOutboxSentHandler, sent_handler),
+            (VAL, void *, cb_ctx)) {
   const AppOutboxSenderDef *def = prv_find_def_and_tag_by_handler(sent_handler, nullptr);
   if (!def) {
     PBL_LOG_ERR("AppOutbox sent_handler not allowed <%p>", sent_handler);
