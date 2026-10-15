@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK
+    bool
+    help
+      Clock controller class (pbl/drivers/clk.h), selected by the drivers
+      that provide clocks.
+
