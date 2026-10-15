@@ -10,6 +10,7 @@
 
 #include <clar.h>
 #include <drivers/hrm.h>
+#include <fff.h>
 #include <process_management/app_install_types.h>
 
 // ---------------------------------------------------------------------------------------
@@ -127,10 +128,7 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
   return true;
 }
 
-static bool s_abandoned_workout_notification_sent;
-void workout_utils_send_abandoned_workout_notification() {
-  s_abandoned_workout_notification_sent = true;
-}
+FAKE_VOID_FUNC(workout_utils_send_abandoned_workout_notification);
 
 // ---------------------------------------------------------------------------------------
 static void prv_inc_steps_and_put_event(int steps) {
@@ -187,7 +185,7 @@ void test_workout_service__initialize(void) {
   s_hrm_expiration = 0;
   s_hrm_subscribed = false;
   s_hrm_measurement_interval = HRMonitoringInterval_10Min;
-  s_abandoned_workout_notification_sent = false;
+  RESET_FAKE(workout_utils_send_abandoned_workout_notification);
 
   const bool assert_all_unlocked = true;
   fake_mutex_reset(assert_all_unlocked);
@@ -971,13 +969,13 @@ void test_workout_service__abandon_workout(void) {
   prv_inc_time(30 * PBL_SEC_PER_MIN);
 
   // Make sure notification is not sent yet and the workout is still ongoing
-  cl_assert_equal_b(s_abandoned_workout_notification_sent, false);
+  cl_assert_equal_i(workout_utils_send_abandoned_workout_notification_fake.call_count, 0);
   cl_assert_equal_b(workout_service_is_workout_ongoing(), true);
 
   // Wait 25 minutes, call evented timer callback and make sure the notification is sent
   prv_inc_time(25 * PBL_SEC_PER_MIN);
   prv_abandoned_notification_timer_callback(nullptr);
-  cl_assert_equal_b(s_abandoned_workout_notification_sent, true);
+  cl_assert_equal_i(workout_utils_send_abandoned_workout_notification_fake.call_count, 1);
 
   // Wait 5 minutes, call evented timer callback and make sure the workout was ended
   prv_inc_time(5 * PBL_SEC_PER_MIN);

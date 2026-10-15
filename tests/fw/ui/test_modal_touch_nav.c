@@ -20,6 +20,7 @@
 #include <applib/ui/window_stack.h>
 #include <applib/ui/window_stack_private.h>
 #include <clar.h>
+#include <fff.h>
 #include <kernel/ui/modals/modal_manager.h>
 
 // Stubs
@@ -43,14 +44,8 @@
 // Static Variables
 ////////////////////////////////////
 
-static Window *s_last_click_configured_window;
 static bool s_app_idle = false;
 static bool s_nav_enabled = true;
-
-// Captured kernel touch-slot handler (the gated modal dispatcher subscribed via
-// modal_touch_nav_subscribe).
-static TouchServiceHandler s_kernel_handler;
-static void *s_kernel_ctx;
 
 // The app twin of the recognizer manager; window_get_recognizer_manager routes app windows here.
 static RecognizerManager s_app_recognizer_manager;
@@ -160,9 +155,7 @@ const WindowTransitionImplementation g_window_transition_none_implementation = {
   .create_animation = window_transition_none_create_animation,
 };
 
-void app_click_config_setup_with_window(ClickManager *click_manager, struct Window *window) {
-  s_last_click_configured_window = window;
-}
+FAKE_VOID_FUNC(app_click_config_setup_with_window, ClickManager *, struct Window *);
 
 // Touch-nav collaborators for the kernel twin.
 bool sys_touch_nav_enabled(void) {
@@ -172,10 +165,9 @@ bool sys_touch_app_nav_active(void) {
   return false;
 }
 
-void touch_service_set_system_handler(TouchServiceHandler handler, void *context) {
-  s_kernel_handler = handler;
-  s_kernel_ctx = context;
-}
+// Captures the kernel touch-slot handler (the gated modal dispatcher subscribed via
+// modal_touch_nav_subscribe).
+FAKE_VOID_FUNC(touch_service_set_system_handler, TouchServiceHandler, void *);
 
 RecognizerManager *app_state_get_recognizer_manager(void) {
   return &s_app_recognizer_manager;
@@ -204,8 +196,9 @@ static void prv_kernel_touchdown(void) {
     .y = 90,
     .non_navigational = true,
   };
-  cl_assert(s_kernel_handler != nullptr);
-  s_kernel_handler(&e, s_kernel_ctx);
+  cl_assert(touch_service_set_system_handler_fake.arg0_val != nullptr);
+  touch_service_set_system_handler_fake.arg0_val(&e,
+                                                 touch_service_set_system_handler_fake.arg1_val);
 }
 
 static RecognizerManager *prv_kernel_manager(void) {
@@ -217,11 +210,10 @@ static RecognizerManager *prv_kernel_manager(void) {
 
 void test_modal_touch_nav__initialize(void) {
   fake_rtc_init(0, 0);
-  s_last_click_configured_window = nullptr;
+  RESET_FAKE(app_click_config_setup_with_window);
   s_app_idle = false;
   s_nav_enabled = true;
-  s_kernel_handler = nullptr;
-  s_kernel_ctx = nullptr;
+  RESET_FAKE(touch_service_set_system_handler);
   recognizer_manager_init(&s_app_recognizer_manager);
 
   WindowStack *stack = app_state_get_window_stack();

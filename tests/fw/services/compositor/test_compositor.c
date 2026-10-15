@@ -6,6 +6,7 @@
 #include <applib/graphics/gcontext.h>
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
+#include <fff.h>
 #include <kernel/events.h>
 #include <kernel/ui/modals/modal_manager.h>
 
@@ -82,10 +83,7 @@ Window *modal_manager_get_top_window(void) {
   return (Window *)(uintptr_t)s_modal_window_present;
 }
 
-static int s_modal_manager_render_count;
-void modal_manager_render(GContext *ctx) {
-  ++s_modal_manager_render_count;
-}
+FAKE_VOID_FUNC(modal_manager_render, GContext *);
 
 ModalProperty modal_manager_get_properties(void) {
   return s_modal_window_present ? ModalProperty_Exists : ModalPropertyDefault;
@@ -152,12 +150,7 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *event) 
   return true;
 }
 
-static const AnimationImplementation *s_animation_implementation;
-bool animation_set_implementation(Animation *animation,
-                                  const AnimationImplementation *implementation) {
-  s_animation_implementation = implementation;
-  return true;
-}
+FAKE_VALUE_FUNC(bool, animation_set_implementation, Animation *, const AnimationImplementation *);
 
 static int s_count_compositor_init_func_a = 0;
 static void prv_compositor_init_func_a(Animation *animation) {
@@ -209,7 +202,8 @@ static void prv_frozen_cb(void *data) {
 ///////////////////////////////////////////////////////////
 
 void test_compositor__initialize(void) {
-  s_animation_implementation = nullptr;
+  RESET_FAKE(animation_set_implementation);
+  animation_set_implementation_fake.return_val = true;
 
   s_last_event = (PebbleEvent){.type = 0};
 
@@ -225,7 +219,7 @@ void test_compositor__initialize(void) {
   s_count_compositor_init_func_b = 0;
 
   s_app_window_render_count = 0;
-  s_modal_manager_render_count = 0;
+  RESET_FAKE(modal_manager_render);
 
   s_display_update_in_progress = false;
 
@@ -450,7 +444,8 @@ void test_compositor__cancel_modal_to_app_with_another_modal(void) {
   cl_assert_equal_i(s_render_pending, true);
 
   // Finish the animation
-  s_animation_implementation->teardown((Animation *)(uintptr_t)s_count_animation_create);
+  animation_set_implementation_fake.arg1_val->teardown(
+      (Animation *)(uintptr_t)s_count_animation_create);
   // App should be free to render again
   cl_assert_equal_i(s_render_pending, false);
 }

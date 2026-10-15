@@ -6,6 +6,7 @@
 #include <pbl/services/battery/battery_state.h>
 
 #include <clar.h>
+#include <fff.h>
 
 // Stubs
 ////////////////////////////////////
@@ -18,7 +19,6 @@
 #include <kernel/events.h>
 #include <system/reboot_reason.h>
 
-static bool s_entered_standby;
 static bool s_in_low_power;
 static bool s_error_window_shown;
 static bool s_warning_window_shown;
@@ -28,9 +28,7 @@ bool battery_is_usb_connected_raw(void) {
   return false;
 }
 
-void low_power_standby(void) {
-  s_entered_standby = true;
-}
+FAKE_VOID_FUNC(low_power_standby);
 
 void low_power_exit(void) {
   s_in_low_power = false;
@@ -85,9 +83,7 @@ static uint32_t standby_timer_get_timeout() {
   return stub_new_timer_timeout(timer_id);
 }
 
-void enter_standby(RebootReasonCode reason) {
-  s_entered_standby = true;
-}
+FAKE_VOID_FUNC(enter_standby, RebootReasonCode);
 
 void event_put(PebbleEvent *event) {
   s_last_event_put = *event;
@@ -106,7 +102,8 @@ void test_battery_monitor__initialize(void) {
   // g_pbl_log_enabled = true;
   // g_pbl_log_level = 255;
 
-  s_entered_standby = false;
+  RESET_FAKE(low_power_standby);
+  RESET_FAKE(enter_standby);
   s_error_window_shown = false;
   s_warning_window_shown = false;
   s_in_low_power = false;
@@ -347,7 +344,9 @@ void test_battery_monitor__low_first_run(void) {
 
   cl_assert_equal_i(standby_timer_get_timeout(), 2000);
   standby_timer_trigger(1);
-  cl_assert(s_entered_standby);
+  cl_assert_equal_i(low_power_standby_fake.call_count, 0);
+  cl_assert_equal_i(enter_standby_fake.call_count, 1);
+  cl_assert_equal_i(enter_standby_fake.arg0_val, RebootReasonCode_LowBattery);
 }
 
 void test_battery_monitor__critical(void) {
@@ -366,7 +365,10 @@ void test_battery_monitor__critical(void) {
 
   cl_assert_equal_i(standby_timer_get_timeout(), 30000);
   standby_timer_trigger(1);
-  cl_assert(s_entered_standby);
+  // Low power mode is active by now, so it handles the standby
+  cl_assert(low_power_is_active());
+  cl_assert_equal_i(low_power_standby_fake.call_count, 1);
+  cl_assert_equal_i(enter_standby_fake.call_count, 0);
 }
 
 void test_battery_monitor__critical_plugged_in(void) {
@@ -391,7 +393,8 @@ void test_battery_monitor__critical_plugged_in(void) {
   fake_battery_set_connected(true);
   periodic_timer_trigger(1);
   cl_assert(!standby_timer_is_scheduled());
-  cl_assert(!s_entered_standby);
+  cl_assert_equal_i(low_power_standby_fake.call_count, 0);
+  cl_assert_equal_i(enter_standby_fake.call_count, 0);
 }
 
 void test_battery_monitor__increase_discharging(void) {
