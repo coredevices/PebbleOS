@@ -13,6 +13,7 @@
 #include <pbl/util/testing.h>
 
 #include <clar.h>
+#include <fff.h>
 
 extern SendBuffer *comm_session_send_buffer_create(bool is_system);
 extern void comm_session_send_buffer_destroy(SendBuffer *sb);
@@ -46,10 +47,7 @@ bool comm_session_is_valid(const CommSession *session) {
   return (s_valid_session == session);
 }
 
-static int s_send_next_count = 0;
-void comm_session_send_next(CommSession *session) {
-  ++s_send_next_count;
-}
+FAKE_VOID_FUNC(comm_session_send_next, CommSession *);
 
 void comm_session_send_next_immediately(CommSession *session) {
   // Pretend to send out all the data:
@@ -74,7 +72,7 @@ void test_session_send_buffer__initialize(void) {
   fake_kernel_malloc_init();
   fake_kernel_malloc_enable_stats(true);
   fake_kernel_malloc_mark();
-  s_send_next_count = 0;
+  RESET_FAKE(comm_session_send_next);
   comm_default_kernel_sender_init();
 }
 
@@ -277,10 +275,10 @@ void test_session_send_buffer__send_queue_interface(void) {
                         write_sb, fake_data_payload + second_write_length, second_write_length),
                     true);
 
-  cl_assert_equal_i(s_send_next_count, 0);
+  cl_assert_equal_i(comm_session_send_next_fake.call_count, 0);
   comm_session_send_buffer_end_write(write_sb);
   // Expect comm_session_send_next to be called to trigger the transport:
-  cl_assert_equal_i(s_send_next_count, 1);
+  cl_assert_equal_i(comm_session_send_next_fake.call_count, 1);
 
   // Exercise the transport interface:
   const SessionSendQueueJob *job = (const SessionSendQueueJob *)write_sb;

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <clar.h>
+#include <fff.h>
 #include <kernel/event_loop.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
@@ -10,8 +11,6 @@
 // Stubs
 /////////////////////////////////////////////////////////////////////////
 #include <fake_new_timer.h>
-
-static int s_watchface_launch_count;
 
 // When set, launcher task callbacks are held until prv_run_deferred() to model queueing
 static bool s_defer_callbacks;
@@ -37,9 +36,7 @@ const CompositorTransition *shell_get_watchface_compositor_animation(
   return nullptr;
 }
 
-void watchface_launch_default(const CompositorTransition *animation) {
-  s_watchface_launch_count++;
-}
+FAKE_VOID_FUNC(watchface_launch_default, const CompositorTransition *);
 
 // Module state under test
 /////////////////////////////////////////////////////////////////////////
@@ -55,7 +52,7 @@ static bool prv_is_scheduled(void) {
 /////////////////////////////////////////////////////////////////////////
 
 void test_app_idle_timeout__initialize(void) {
-  s_watchface_launch_count = 0;
+  RESET_FAKE(watchface_launch_default);
   s_defer_callbacks = false;
   app_idle_timeout_stop();
   s_app_paused = false;
@@ -163,5 +160,5 @@ void test_app_idle_timeout__start_during_hold_waits_for_liftoff(void) {
 void test_app_idle_timeout__expiry_launches_watchface(void) {
   app_idle_timeout_start(APP_IDLE_TIMEOUT_LAUNCHER_MS);
   cl_assert(stub_new_timer_fire(s_timer));
-  cl_assert_equal_i(s_watchface_launch_count, 1);
+  cl_assert_equal_i(watchface_launch_default_fake.call_count, 1);
 }

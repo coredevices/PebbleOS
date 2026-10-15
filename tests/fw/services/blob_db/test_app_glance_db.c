@@ -10,6 +10,7 @@
 
 #include <applib/app_glance.h>
 #include <clar.h>
+#include <fff.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 
@@ -32,11 +33,7 @@ bool app_cache_entry_exists(AppInstallId app_id) {
   return s_app_cache_entry_exists;
 }
 
-static int s_launch_count = 0;
-status_t app_cache_app_launched(AppInstallId app_id) {
-  s_launch_count++;
-  return S_SUCCESS;
-}
+FAKE_VALUE_FUNC(status_t, app_cache_app_launched, AppInstallId);
 
 static AppInstallId s_app_install_id = 1;
 AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
@@ -210,7 +207,7 @@ static const uint8_t s_app_glance_with_invalid_slice_total_sizes[] = {
 void test_app_glance_db__initialize(void) {
   s_app_cache_entry_exists = true;
   s_app_install_id = 1;
-  s_launch_count = 0;
+  RESET_FAKE(app_cache_app_launched);
 
   fake_event_init();
   fake_settings_file_reset();
@@ -628,5 +625,5 @@ void test_app_glance_db__insert_app_in_cache(void) {
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          s_app_glance_basic, sizeof(s_app_glance_basic)),
                     S_SUCCESS);
-  cl_assert_equal_i(s_launch_count, 1);
+  cl_assert_equal_i(app_cache_app_launched_fake.call_count, 1);
 }

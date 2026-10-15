@@ -9,18 +9,13 @@
 
 #include <clar.h>
 #include <fake_rtc.h>
-
-static uint32_t s_timer_timeout_ms;
+#include <fff.h>
 
 TimerID new_timer_create(void) {
   return 1;
 }
 
-bool new_timer_start(TimerID timer, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
-                     uint32_t flags) {
-  s_timer_timeout_ms = timeout_ms;
-  return true;
-}
+FAKE_VALUE_FUNC(bool, new_timer_start, TimerID, uint32_t, NewTimerCallback, void *, uint32_t);
 
 bool new_timer_stop(TimerID timer) {
   return true;
@@ -48,7 +43,8 @@ static const TimezoneInfo s_timezone_gmt = {
 };
 
 void test_cron__initialize(void) {
-  s_timer_timeout_ms = 0;
+  RESET_FAKE(new_timer_start);
+  new_timer_start_fake.return_val = true;
   pbl_cron_init();
 }
 
@@ -89,7 +85,7 @@ void test_cron__timer_aligned_to_execute_second(void) {
 
   cl_assert_equal_i(execute_time, 1447332300);
   // 603250 ms away, aimed early by 1/256 plus the margin.
-  cl_assert_equal_i(s_timer_timeout_ms, 603250 - 603250 / 256 + 10);
+  cl_assert_equal_i(new_timer_start_fake.arg1_val, 603250 - 603250 / 256 + 10);
   cl_assert(pbl_cron_job_unschedule(&job));
 }
 
@@ -851,13 +847,13 @@ void test_cron__schedule_at_fires_at_the_time(void) {
 
   pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 100);
   cl_assert_equal_i(job.cached_execute_time, s_2015_nov12_123456_gmt + 100);
-  cl_assert_equal_i(s_timer_timeout_ms, 100000 - 100000 / 256 + 10);
+  cl_assert_equal_i(new_timer_start_fake.arg1_val, 100000 - 100000 / 256 + 10);
 
   // The timer expiring early re-arms for what is left.
   fake_rtc_increment_time(99);
   pbl_cron_wakeup();
   cl_assert_equal_i((uintptr_t)job.cb_data, 0);
-  cl_assert_equal_i(s_timer_timeout_ms, 1000 - 1000 / 256 + 10);
+  cl_assert_equal_i(new_timer_start_fake.arg1_val, 1000 - 1000 / 256 + 10);
 
   fake_rtc_increment_time(1);
   pbl_cron_wakeup();

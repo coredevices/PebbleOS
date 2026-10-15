@@ -6,15 +6,12 @@
 #include <fake_app_timer.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
+#include <fff.h>
 
 // Stubs
 ////////////////////////////////////
 
-static int s_mark_dirty_count;
-
-void layer_mark_dirty(Layer *layer) {
-  s_mark_dirty_count++;
-}
+FAKE_VOID_FUNC(layer_mark_dirty, Layer *);
 
 // Helpers
 ////////////////////////////////////
@@ -36,7 +33,7 @@ static AppTimer *prv_timer(void) {
 
 void test_menu_text_scroll__initialize(void) {
   fake_app_timer_init();
-  s_mark_dirty_count = 0;
+  RESET_FAKE(layer_mark_dirty);
   prv_set_ms(0);
   s_content_layer = (Layer){};
   s_row_a = (Layer){.parent = &s_content_layer, .frame = GRect(0, 0, 200, 40)};
@@ -81,13 +78,13 @@ void test_menu_text_scroll__redraws_until_drawing_stops(void) {
   // Still drawing: the timer marks the menu dirty and reschedules
   prv_set_ms(33);
   cl_assert(app_timer_trigger(prv_timer()));
-  cl_assert_equal_i(s_mark_dirty_count, 1);
+  cl_assert_equal_i(layer_mark_dirty_fake.call_count, 1);
   cl_assert(prv_timer());
 
   // The row stopped drawing (e.g. scrolled away or deselected): the timer stops
   prv_set_ms(1000);
   cl_assert(app_timer_trigger(prv_timer()));
-  cl_assert_equal_i(s_mark_dirty_count, 1);
+  cl_assert_equal_i(layer_mark_dirty_fake.call_count, 1);
   cl_assert(!prv_timer());
 }
 

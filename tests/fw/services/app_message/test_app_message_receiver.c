@@ -8,6 +8,7 @@
 #include <applib/app_message/app_message_receiver.h>
 #include <clar.h>
 #include <comm/bt_conn_mgr.h>
+#include <fff.h>
 #include <kernel/events.h>
 #include <process_management/app_install_types.h>
 
@@ -41,10 +42,7 @@ AppInbox **app_state_get_app_message_inbox(void) {
   return &s_app_message_inbox;
 }
 
-static bool s_communication_timestamp_updated;
-void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
-  s_communication_timestamp_updated = true;
-}
+FAKE_VOID_FUNC(app_install_mark_prioritized, AppInstallId, bool);
 
 AppInstallId app_manager_get_current_app_id(void) {
   return INSTALL_ID_INVALID;
@@ -149,7 +147,7 @@ void test_app_message_receiver__initialize(void) {
   memset(s_app_message_pp_buffer, 0, sizeof(s_app_message_pp_buffer));
   fake_kernel_malloc_init();
   fake_kernel_malloc_enable_stats(true);
-  s_communication_timestamp_updated = false;
+  RESET_FAKE(app_install_mark_prioritized);
 }
 
 void test_app_message_receiver__cleanup(void) {
@@ -246,7 +244,7 @@ void test_app_message_receiver__receive_push(void) {
   cl_assert_equal_m(&s_push, s_app_message_pp_buffer, sizeof(s_push));
   cl_assert_equal_i(s_app_message_pp_received_length, sizeof(s_push));
 
-  cl_assert_equal_b(true, s_communication_timestamp_updated);
+  cl_assert_equal_i(app_install_mark_prioritized_fake.call_count, 1);
 
   prv_destroy_inbox();
 }
@@ -260,7 +258,7 @@ void test_app_message_receiver__receive_push_then_cleanup(void) {
 
   cl_assert_equal_i(s_app_message_pp_received_length, 0);
 
-  cl_assert_equal_b(true, s_communication_timestamp_updated);
+  cl_assert_equal_i(app_install_mark_prioritized_fake.call_count, 1);
 
   prv_destroy_inbox();
 }

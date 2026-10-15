@@ -11,6 +11,7 @@
 #include <applib/ui/window_stack.h>
 #include <applib/ui/window_stack_private.h>
 #include <clar.h>
+#include <fff.h>
 #include <kernel/util/segment.h>
 #include <popups/crashed_ui.h>
 #include <process_management/app_install_manager.h>
@@ -342,11 +343,8 @@ const CompositorTransition *shell_get_close_compositor_animation(AppInstallId cu
 }
 
 // Both crash UI paths relaunch the default watchface once
-static int s_watchface_launch_default_count;
 
-void watchface_launch_default(const CompositorTransition *animation) {
-  s_watchface_launch_default_count++;
-}
+FAKE_VOID_FUNC(watchface_launch_default, const CompositorTransition *);
 
 void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_md) {
 }
@@ -359,7 +357,7 @@ void test_app_manager__initialize(void) {
   app_manager_init();
 
   s_last_to_app_event = (PebbleEvent){};
-  s_watchface_launch_default_count = 0;
+  RESET_FAKE(watchface_launch_default);
 
   stub_control_reg(0x1); // Just leave everything as unprivileged
 }
@@ -405,7 +403,7 @@ void test_app_manager__start_third_party_and_crash_back_to_root(void) {
   app_manager_close_current_app(false /* gracefully */);
 
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_root_app);
-  cl_assert_equal_i(s_watchface_launch_default_count, 1);
+  cl_assert_equal_i(watchface_launch_default_fake.call_count, 1);
 }
 
 void test_app_manager__start_borked_app(void) {
@@ -472,7 +470,7 @@ void test_app_manager__requested_forced_close_launches_the_requested_app(void) {
   app_manager_close_current_app(false /* gracefully */);
 
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_launch_app);
-  cl_assert_equal_i(s_watchface_launch_default_count, 0);
+  cl_assert_equal_i(watchface_launch_default_fake.call_count, 0);
 }
 
 // A second launch while the requested close is pending doesn't turn it into a crash
@@ -492,7 +490,7 @@ void test_app_manager__second_launch_keeps_a_pending_request(void) {
   app_manager_close_current_app(false /* gracefully */);
 
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_root_app);
-  cl_assert_equal_i(s_watchface_launch_default_count, 0);
+  cl_assert_equal_i(watchface_launch_default_fake.call_count, 0);
 }
 
 // Same, with the app stoppable at once
@@ -506,7 +504,7 @@ void test_app_manager__requested_forced_close_outside_a_syscall_launches_the_req
   });
 
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_launch_app);
-  cl_assert_equal_i(s_watchface_launch_default_count, 0);
+  cl_assert_equal_i(watchface_launch_default_fake.call_count, 0);
 }
 
 // The request covers only that close, so a later crash is still a crash
@@ -517,7 +515,7 @@ void test_app_manager__crash_after_a_requested_forced_close_is_still_a_crash(voi
   app_manager_close_current_app(false /* gracefully */);
 
   cl_assert(app_manager_get_current_app_md() == (PebbleProcessMd *)&s_root_app);
-  cl_assert_equal_i(s_watchface_launch_default_count, 1);
+  cl_assert_equal_i(watchface_launch_default_fake.call_count, 1);
 }
 
 void test_app_manager__watchface_crash_on_close(void) {

@@ -11,6 +11,7 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <clar.h>
+#include <fff.h>
 #include <kernel_test.h>
 #include <system/reboot_reason.h>
 
@@ -32,7 +33,6 @@ static struct pbl_thread s_threads[4];
 #define GRACE_MS   CONFIG_TASK_WDT_GRACE_MS
 #define TIMEOUT_MS 2000
 
-static int s_hw_feeds;
 static RebootReason s_reason;
 
 static int s_callbacks;
@@ -57,9 +57,7 @@ void pbl_log(uint8_t log_level, const char *src_filename, int src_line_number, c
              ...) {
 }
 
-void watchdog_feed(void) {
-  s_hw_feeds++;
-}
+FAKE_VOID_FUNC(watchdog_feed);
 
 void reboot_reason_set(RebootReason *reason) {
   if (s_reason.code == RebootReasonCode_Unknown) {
@@ -114,7 +112,7 @@ static void prv_sleep_ms(uint32_t ms) {
 void test_task_wdt__initialize(void) {
   memset(s_threads, 0, sizeof(s_threads));
   memset(&s_reason, 0, sizeof(s_reason));
-  s_hw_feeds = 0;
+  RESET_FAKE(watchdog_feed);
   s_callbacks = 0;
   s_callback_channel = -1;
   s_first_callback_ms = 0;
@@ -147,7 +145,7 @@ void test_task_wdt__fed_channel_never_expires(void) {
   cl_assert(!s_reset);
   // Ten half-timeouts of feeding is 10 s: the hardware watchdog got fed
   // once per check period throughout.
-  cl_assert(s_hw_feeds >= 10 * (TIMEOUT_MS / 2) / PERIOD_MS - 1);
+  cl_assert(watchdog_feed_fake.call_count >= 10 * (TIMEOUT_MS / 2) / PERIOD_MS - 1);
 }
 
 static int s_work;
