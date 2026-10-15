@@ -19,8 +19,7 @@ config RNG_NRF5
 config RNG_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
-    select HAL_SIFLI
-    select HAL_SIFLI_RNG
+    depends on CLK_SF32LB
     help
       Support for the SiFli SF32LB RNG.
 

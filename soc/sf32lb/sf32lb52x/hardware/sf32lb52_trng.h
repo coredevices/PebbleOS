@@ -1,0 +1,51 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+#include <hardware/sf32lb52_memorymap.h>
+
+/* Register offsets */
+
+#define SF32LB52_TRNG_CTRL_OFFSET         0x0000
+#define SF32LB52_TRNG_STAT_OFFSET         0x0004
+#define SF32LB52_TRNG_CFG_OFFSET          0x0008
+#define SF32LB52_TRNG_IRQ_OFFSET          0x000c
+#define SF32LB52_TRNG_RAND_SEED_OFFSET(n) (0x0010 + ((n) << 2))
+#define SF32LB52_TRNG_RAND_NUM_OFFSET(n)  (0x0030 + ((n) << 2))
+#define SF32LB52_TRNG_CAL_CFG_OFFSET      0x0050
+#define SF32LB52_TRNG_CAL_RESULT_OFFSET   0x0054
+
+/* Register bit definitions */
+
+#define TRNG_CTRL_GEN_SEED_START       PBL_BIT(0)
+#define TRNG_CTRL_GEN_RAND_NUM_START   PBL_BIT(1)
+#define TRNG_CTRL_GEN_SEED_STOP        PBL_BIT(2)
+#define TRNG_CTRL_GEN_RAND_NUM_STOP    PBL_BIT(3)
+#define TRNG_CTRL_GEN_RAND_NUM_SUSPEND PBL_BIT(4)
+
+#define TRNG_STAT_SEED_GEN_BUSY     PBL_BIT(0)
+#define TRNG_STAT_SEED_VALID        PBL_BIT(1)
+#define TRNG_STAT_RAND_NUM_GEN_BUSY PBL_BIT(2)
+#define TRNG_STAT_RAND_NUM_VALID    PBL_BIT(3)
+
+#define TRNG_CFG_AUTO_CLOCK_ENABLE     PBL_BIT(0)
+#define TRNG_CFG_USE_EXT_SEED          PBL_BIT(1)
+#define TRNG_CFG_REJECT_THRESHOLD_MASK PBL_GENMASK(15, 8)
+
+#define TRNG_IRQ_SEED_GEN_DONE      PBL_BIT(0)
+#define TRNG_IRQ_RAND_NUM_AVAIL     PBL_BIT(1)
+#define TRNG_IRQ_PRNG_LOCKUP        PBL_BIT(2)
+#define TRNG_IRQ_SEED_GEN_DONE_MSK  PBL_BIT(16)
+#define TRNG_IRQ_RAND_NUM_AVAIL_MSK PBL_BIT(17)
+#define TRNG_IRQ_PRNG_LOCKUP_MSK    PBL_BIT(18)
+
+#define TRNG_CAL_CFG_OSC_CLK_FORCE_ON PBL_BIT(0)
+#define TRNG_CAL_CFG_OSC_CLK_SEL      PBL_BIT(1)
+#define TRNG_CAL_CFG_ENABLE           PBL_BIT(4)
+#define TRNG_CAL_CFG_DONE             PBL_BIT(5)
+#define TRNG_CAL_CFG_LENGTH_MASK      PBL_GENMASK(31, 16)
+
+#define TRNG_CAL_RESULT_PCLK_CNT_MASK PBL_GENMASK(15, 0)

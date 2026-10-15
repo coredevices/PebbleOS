@@ -1,41 +1,80 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+#include <stdint.h>
+
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/rng.h>
+#include <pbl/kernel/mmio.h>
 #include <pbl/logging/logging.h>
 
-#include <bf0_hal_rcc.h>
-#include <bf0_hal_rng.h>
+#include <hardware/sf32lb52_trng.h>
+#include <kernel/util/delay.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rng_sf32lb, CONFIG_DRIVER_RNG_LOG_LEVEL);
 
+#define TRNG_TIMEOUT_US 3000U
+
+static const struct pbl_clk s_clk = PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_TRNG);
 static bool s_inited;
-static RNG_HandleTypeDef s_rng_hdl = {
-  .Instance = hwp_trng,
-};
+
+static inline uint32_t prv_getreg(uint32_t offset) {
+  return pbl_readl(SF32LB52_TRNG_BASE + offset);
+}
+
+static inline void prv_putreg(uint32_t offset, uint32_t value) {
+  pbl_writel(value, SF32LB52_TRNG_BASE + offset);
+}
+
+static int prv_generate(uint32_t cmd, uint32_t valid, uint32_t offset, uint32_t *out) {
+  prv_putreg(SF32LB52_TRNG_CTRL_OFFSET, cmd);
+
+  for (uint32_t i = 0U; (prv_getreg(SF32LB52_TRNG_STAT_OFFSET) & valid) == 0U; i++) {
+    if (i == TRNG_TIMEOUT_US) {
+      return -ETIMEDOUT;
+    }
+
+    delay_us(1U);
+  }
+
+  *out = prv_getreg(offset);
+
+  return 0;
+}
 
 bool rng_rand(uint32_t *rand_out) {
-  HAL_StatusTypeDef status;
-
-  HAL_RCC_EnableModule(RCC_MOD_TRNG);
+  int ret;
 
   if (!s_inited) {
-    status = HAL_RNG_Init(&s_rng_hdl);
-    PBL_ASSERTN(status == HAL_OK);
+    PBL_ASSERTN(pbl_device_init(&s_clk.ctrl->dev) == 0);
+  }
 
-    status = HAL_RNG_GenerateRandomSeed(&s_rng_hdl, rand_out);
-    PBL_ASSERTN(status == HAL_OK);
+  ret = pbl_clk_enable(&s_clk);
+  if (ret != 0) {
+    return false;
+  }
+
+  if (!s_inited) {
+    uint32_t val = prv_getreg(SF32LB52_TRNG_CTRL_OFFSET);
+    prv_putreg(SF32LB52_TRNG_CTRL_OFFSET,
+               val & ~(TRNG_CTRL_GEN_SEED_STOP | TRNG_CTRL_GEN_RAND_NUM_STOP));
+
+    ret = prv_generate(TRNG_CTRL_GEN_SEED_START, TRNG_STAT_SEED_VALID,
+                       SF32LB52_TRNG_RAND_SEED_OFFSET(0), rand_out);
+    PBL_ASSERTN(ret == 0);
 
     s_inited = true;
   }
 
-  status = HAL_RNG_GenerateRandomNumber(&s_rng_hdl, rand_out);
-  if (status != HAL_OK) {
-    PBL_LOG_ERR("HAL_RNG_GenerateRandomNumber failed: %d", status);
+  ret = prv_generate(TRNG_CTRL_GEN_RAND_NUM_START, TRNG_STAT_RAND_NUM_VALID,
+                     SF32LB52_TRNG_RAND_NUM_OFFSET(0), rand_out);
+  if (ret != 0) {
+    PBL_LOG_ERR("Random number generation failed: %d", ret);
   }
 
-  HAL_RCC_DisableModule(RCC_MOD_TRNG);
+  pbl_clk_disable(&s_clk);
 
-  return status == HAL_OK;
+  return ret == 0;
 }
