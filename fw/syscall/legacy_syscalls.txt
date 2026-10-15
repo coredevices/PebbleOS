@@ -38,17 +38,6 @@ fxUnsigned_
 memory_cache_flush
 moddable_createMachine
 pbl_override_mktime
-persist_delete
-persist_exists
-persist_get_max_size
-persist_get_size
-persist_read_bool
-persist_read_data
-persist_read_int
-persist_write_bool
-persist_write_data
-persist_write_int
-persist_write_string
 preferred_content_size
 process_manager_compiled_with_legacy2_sdk
 process_manager_compiled_with_legacy3_sdk
