@@ -21,7 +21,7 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/hexdump.h>
 #include <system/passert.h>
 
@@ -888,9 +888,10 @@ static HRMSubscriberState *prv_get_owned_subscriber_state(HRMSessionRef session,
   return state;
 }
 
-DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_app_subscribe, AppInstallId app_id,
-               uint32_t update_interval_s, uint16_t expire_sec, HRMFeature features) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(HRMSessionRef, sys_hrm_manager_app_subscribe, (VAL, AppInstallId, app_id),
+            (VAL, uint32_t, update_interval_s), (VAL, uint16_t, expire_sec),
+            (VAL, HRMFeature, features)) {
+  if (from_user) {
     app_id = sys_process_manager_get_current_process_id();
   }
   const bool low_latency = prv_wants_low_latency(pebble_task_get_current(), update_interval_s);
@@ -898,12 +899,12 @@ DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_app_subscribe, AppInstallId app_id
                                              low_latency, nullptr, nullptr);
 }
 
-DEFINE_SYSCALL(bool, sys_hrm_manager_unsubscribe, HRMSessionRef session) {
+PBL_SYSCALL(bool, sys_hrm_manager_unsubscribe, (VAL, HRMSessionRef, session)) {
   HRM_LOG("Unsubscribing");
   bool success = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
 
-  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, from_user);
   if (state) {
     prv_remove_and_free_subscription(state);
     system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
@@ -914,8 +915,8 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_unsubscribe, HRMSessionRef session) {
   return success;
 }
 
-DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_get_app_subscription, AppInstallId app_id) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(HRMSessionRef, sys_hrm_manager_get_app_subscription, (VAL, AppInstallId, app_id)) {
+  if (from_user) {
     app_id = sys_process_manager_get_current_process_id();
   }
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
@@ -929,29 +930,11 @@ DEFINE_SYSCALL(HRMSessionRef, sys_hrm_manager_get_app_subscription, AppInstallId
   return ref;
 }
 
-DEFINE_SYSCALL(bool, sys_hrm_manager_get_subscription_info, HRMSessionRef session,
-               AppInstallId *app_id, uint32_t *update_interval_s, uint16_t *expire_s,
-               HRMFeature *features) {
-  // Each of these out-params is optional, but if the caller supplied one it
-  // must point into its own app/worker RAM. The app can otherwise prime
-  // *update_interval_s (via set_update_interval) and then aim the pointer at
-  // any kernel address to land a controlled uint32_t write there.
-  if (PRIVILEGE_WAS_ELEVATED) {
-    if (app_id) {
-      syscall_assert_userspace_buffer(app_id, sizeof(*app_id));
-    }
-    if (update_interval_s) {
-      syscall_assert_userspace_buffer(update_interval_s, sizeof(*update_interval_s));
-    }
-    if (expire_s) {
-      syscall_assert_userspace_buffer(expire_s, sizeof(*expire_s));
-    }
-    if (features) {
-      syscall_assert_userspace_buffer(features, sizeof(*features));
-    }
-  }
+PBL_SYSCALL(bool, sys_hrm_manager_get_subscription_info, (VAL, HRMSessionRef, session),
+            (OUT_OPT, AppInstallId *, app_id), (OUT_OPT, uint32_t *, update_interval_s),
+            (OUT_OPT, uint16_t *, expire_s), (OUT_OPT, HRMFeature *, features)) {
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
-  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, from_user);
   if (state) {
     if (app_id) {
       *app_id = state->app_id;
@@ -974,10 +957,11 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_get_subscription_info, HRMSessionRef sessio
   return (state != nullptr);
 }
 
-DEFINE_SYSCALL(bool, sys_hrm_manager_set_features, HRMSessionRef session, HRMFeature features) {
+PBL_SYSCALL(bool, sys_hrm_manager_set_features, (VAL, HRMSessionRef, session),
+            (VAL, HRMFeature, features)) {
   bool success = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
-  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, from_user);
   if (state) {
     state->features = features;
     success = true;
@@ -989,12 +973,12 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_set_features, HRMSessionRef session, HRMFea
   return success;
 }
 
-DEFINE_SYSCALL(bool, sys_hrm_manager_set_update_interval, HRMSessionRef session,
-               uint32_t update_interval_s, uint16_t expire_s) {
+PBL_SYSCALL(bool, sys_hrm_manager_set_update_interval, (VAL, HRMSessionRef, session),
+            (VAL, uint32_t, update_interval_s), (VAL, uint16_t, expire_s)) {
   bool success = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
 
-  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, PRIVILEGE_WAS_ELEVATED);
+  HRMSubscriberState *state = prv_get_owned_subscriber_state(session, from_user);
   if (state) {
     state->update_interval_s = update_interval_s;
     state->expire_utc = (expire_s != 0) ? (rtc_get_time() + expire_s) : 0;
