@@ -10,14 +10,14 @@
 
 #include <applib/fonts/fonts.h>
 #include <process_management/process_manager.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 ////////////////////
 // Helpers
 
-static PBL_ALWAYS_INLINE const char *prv_get_font_for_size(PreferredContentSize content_size,
-                                                           TextStyleFont font) {
+static const char *prv_get_font_for_size(bool from_user, PreferredContentSize content_size,
+                                         TextStyleFont font) {
   if (content_size >= NumPreferredContentSizes) {
     PBL_LOG_ERR("Requested a content size that is out of bounds (%d)", content_size);
     goto fail;
@@ -27,7 +27,7 @@ static PBL_ALWAYS_INLINE const char *prv_get_font_for_size(PreferredContentSize 
   }
   return system_theme_get_style_for_size(content_size)->fonts[font];
 fail:
-  PRIVILEGE_WAS_ELEVATED ? syscall_failed() : WTF;
+  from_user ? syscall_failed() : WTF;
 }
 
 ////////////////////
@@ -40,18 +40,18 @@ fail:
 // changed to copy the data into a caller-provided buffer. Unprivileged apps
 // are not allowed to read kernel RAM, so they will fault if they attempt to
 // dereference a pointer into kernel RAM.
-DEFINE_SYSCALL(const char *, system_theme_get_font_key, TextStyleFont font) {
-  return prv_get_font_for_size(system_theme_get_content_size(), font);
+PBL_SYSCALL(const char *, system_theme_get_font_key, (VAL, TextStyleFont, font)) {
+  return prv_get_font_for_size(from_user, system_theme_get_content_size(), font);
 }
 
 // *** WARNING WARNING WARNING ***
 // Be very careful when modifying this syscall. It currently returns a pointer
 // to constant data in flash, which unprivileged apps are allowed to read.
-DEFINE_SYSCALL(const char *, system_theme_get_font_key_for_size, PreferredContentSize content_size,
-               TextStyleFont font) {
+PBL_SYSCALL(const char *, system_theme_get_font_key_for_size,
+            (VAL, PreferredContentSize, content_size), (VAL, TextStyleFont, font)) {
   const PreferredContentSize size_on_runtime_platform =
       system_theme_convert_host_content_size_to_runtime_platform(content_size);
-  return prv_get_font_for_size(size_on_runtime_platform, font);
+  return prv_get_font_for_size(from_user, size_on_runtime_platform, font);
 }
 
 GFont system_theme_get_font(TextStyleFont font) {

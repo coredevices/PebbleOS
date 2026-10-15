@@ -143,7 +143,6 @@ sys_pbl_analytics_set_unsigned
 sys_pbl_analytics_timer_start
 sys_pbl_analytics_timer_stop
 sys_pebblekit_is_connected_debounced
-sys_shell_prefs_get_units_distance
 sys_system_pp_has_capability
 sys_tick_timer_subscribe
 sys_tick_timer_unsubscribe
@@ -172,5 +171,3 @@ sys_wakeup_cancel_all_for_app
 sys_wakeup_delete
 sys_wakeup_query
 sys_wakeup_schedule
-system_theme_get_font_key
-system_theme_get_font_key_for_size
