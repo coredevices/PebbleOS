@@ -88,14 +88,13 @@ uint32_t event_kernel_to_kernel_num_free(void) {
 
 uint16_t gatt_client_subscriptions_consume_notification(
     pbl_bt_characteristic_t *characteristic_ref_out, uint8_t *value_out,
-    uint16_t *value_length_in_out, GAPLEClient client, bool *has_more_out) {
+    uint16_t *value_length_in_out, bool *has_more_out) {
   --s_pending_notifications;
   *has_more_out = (s_pending_notifications > 0);
   return *has_more_out ? 1 : 0;
 }
 
-bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
-                                                       GATTBufferedNotificationHeader *header_out) {
+bool gatt_client_subscriptions_get_notification_header(GATTBufferedNotificationHeader *header_out) {
   if (s_pending_notifications == 0) {
     return false;
   }
@@ -103,7 +102,7 @@ bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
   return true;
 }
 
-void gatt_client_subscriptions_reschedule(GAPLEClient c) {
+void gatt_client_subscriptions_reschedule(void) {
   ++s_reschedule_count;
 }
 

@@ -577,8 +577,8 @@ void ams_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
 
   const pbl_bt_characteristic_t entity_update_characteristic =
       characteristics[AMSCharacteristicEntityUpdate];
-  const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
-      entity_update_characteristic, BLESubscriptionNotifications, GAPLEClientKernel);
+  const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(entity_update_characteristic,
+                                                                  BLESubscriptionNotifications);
   // Reject the service if subscribing fails instead of asserting (e.g. a "fake
   // AMS" without CCCD).
   if (e != PBL_BT_ERRNO_OK) {

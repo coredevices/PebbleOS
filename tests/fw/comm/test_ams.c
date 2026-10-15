@@ -120,8 +120,7 @@ void test_ams__discover_of_ams_should_subscribe_to_entity_update_characteristic(
 
   // The first instance is expected to be used.
   pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  fake_gatt_client_subscriptions_assert_subscribe(entity_update, BLESubscriptionNotifications,
-                                                  GAPLEClientKernel);
+  fake_gatt_client_subscriptions_assert_subscribe(entity_update, BLESubscriptionNotifications);
 }
 
 void test_ams__connect_to_music_service_upon_subscribing_entity_update_characteristic(void) {

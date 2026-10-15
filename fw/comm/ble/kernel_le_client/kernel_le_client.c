@@ -308,7 +308,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
 
 static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
   GATTBufferedNotificationHeader header = {};
-  bool has_more = gatt_client_subscriptions_get_notification_header(GAPLEClientKernel, &header);
+  bool has_more = gatt_client_subscriptions_get_notification_header(&header);
   const RtcTicks start_ticks = rtc_get_ticks();
   while (has_more) {
     const uint32_t ticks_spent = rtc_get_ticks() - start_ticks;
@@ -320,7 +320,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
       // Doing this might actually cause an issue if the characteristic(s) for which there are still
       // notifications pending in the buffer become invalid before the time they are processed.
       // Probably not a big deal.
-      gatt_client_subscriptions_reschedule(GAPLEClientKernel);
+      gatt_client_subscriptions_reschedule();
       return; // yield
     }
 
@@ -335,7 +335,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
     pbl_bt_characteristic_t characteristic;
     uint16_t value_length = header.value_length;
     const uint16_t next_value_length = gatt_client_subscriptions_consume_notification(
-        &characteristic, buffer, &value_length, GAPLEClientKernel, &has_more);
+        &characteristic, buffer, &value_length, &has_more);
     header.characteristic = characteristic;
     header.value_length = value_length;
 

@@ -464,8 +464,7 @@ void test_ppogatt__handle_subscribe_to_unknown_characteristic(void) {
                            PBL_BT_GATT_ERROR_SUCCESS);
 
   // Expect to unsubscribe from the unknown characteristic:
-  fake_gatt_client_subscriptions_assert_subscribe(s_unknown_characteristics, BLESubscriptionNone,
-                                                  GAPLEClientKernel);
+  fake_gatt_client_subscriptions_assert_subscribe(s_unknown_characteristics, BLESubscriptionNone);
 }
 
 void test_ppogatt__cleanup_client_when_meta_read_fails(void) {
@@ -534,7 +533,7 @@ void test_ppogatt__cleanup_client_when_data_subscription_error_response(void) {
                                       PBL_BT_GATT_ERROR_SUCCESS);
   // Expect subscribe request was made:
   fake_gatt_client_subscriptions_assert_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                                                  BLESubscriptionNotifications, GAPLEClientKernel);
+                                                  BLESubscriptionNotifications);
   // Simulate getting the subscription failure:
   ppogatt_handle_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
                            BLESubscriptionNotifications, PBL_BT_GATT_ERROR_READ_NOT_PERMITTED);
@@ -550,7 +549,7 @@ static void prv_discover_and_read_meta_and_reset(void) {
                                       PBL_BT_GATT_ERROR_SUCCESS);
   // Expect subscribe request was made:
   fake_gatt_client_subscriptions_assert_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                                                  BLESubscriptionNotifications, GAPLEClientKernel);
+                                                  BLESubscriptionNotifications);
   // Simulate getting the subscription confirmation:
   ppogatt_handle_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
                            BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
@@ -1093,7 +1092,7 @@ void test_ppogatt__mtu_zero_due_to_service_rediscovery_while_resetting(void) {
                                       PBL_BT_GATT_ERROR_SUCCESS);
   // Expect subscribe request was made:
   fake_gatt_client_subscriptions_assert_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                                                  BLESubscriptionNotifications, GAPLEClientKernel);
+                                                  BLESubscriptionNotifications);
 
   // During service re-discovery the cached characteristic handles will be stale for a brief period.
   // This will cause the gatt_client_characteristic_get_device to return

@@ -495,10 +495,10 @@ static void prv_resubscribe_to_ancs(void) {
     if (charx != PBL_BT_CHARACTERISTIC_INVALID) {
       // Unsubscribe to clear the local state (ignore errors -- the subscription
       // may already have been cleaned up)
-      gatt_client_subscriptions_subscribe(charx, BLESubscriptionNone, GAPLEClientKernel);
+      gatt_client_subscriptions_subscribe(charx, BLESubscriptionNone);
 
-      const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
-          charx, BLESubscriptionNotifications, GAPLEClientKernel);
+      const enum pbl_bt_errno e =
+          gatt_client_subscriptions_subscribe(charx, BLESubscriptionNotifications);
       if (e != PBL_BT_ERRNO_OK) {
         PBL_LOG_ERR("Failed to resubscribe to ANCS charx %d: %d", c, e);
       }
@@ -1008,8 +1008,8 @@ void ancs_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   // Subscribe to Data, then to Notification characteristics. Reject the service
   // if subscribing fails instead of asserting (e.g. a "fake ANCS" without CCCD).
   for (int c = ANCSCharacteristicData; c >= ANCSCharacteristicNotification; --c) {
-    const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(
-        characteristics[c], BLESubscriptionNotifications, GAPLEClientKernel);
+    const enum pbl_bt_errno e =
+        gatt_client_subscriptions_subscribe(characteristics[c], BLESubscriptionNotifications);
     if (e != PBL_BT_ERRNO_OK) {
       PBL_LOG_WRN("Failed to subscribe ANCS charx %d (err=%d), ignoring service", c, e);
       ancs_invalidate_all_references();

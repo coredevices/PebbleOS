@@ -9,7 +9,6 @@ typedef struct {
   ListNode node;
   pbl_bt_characteristic_t characteristic;
   BLESubscription subscription_type;
-  GAPLEClient client;
 } Subscribe;
 
 static Subscribe *s_subscribe_head;
@@ -17,13 +16,11 @@ static Subscribe *s_subscribe_head;
 static enum pbl_bt_errno s_subscribe_return_value;
 
 enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
-                                                      BLESubscription subscription_type,
-                                                      GAPLEClient client) {
+                                                      BLESubscription subscription_type) {
   Subscribe *subscribe = malloc(sizeof(Subscribe));
   *subscribe = (const Subscribe){
     .characteristic = characteristic,
     .subscription_type = subscription_type,
-    .client = client,
   };
   if (s_subscribe_head) {
     list_append((ListNode *)s_subscribe_head, &subscribe->node);
@@ -33,18 +30,14 @@ enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t ch
   return s_subscribe_return_value;
 }
 
-bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
-                                                       GATTBufferedNotificationHeader *header_out) {
+bool gatt_client_subscriptions_get_notification_header(GATTBufferedNotificationHeader *header_out) {
   return false;
 }
 
 uint16_t gatt_client_subscriptions_consume_notification(
     pbl_bt_characteristic_t *characteristic_ref_out, uint8_t *value_out,
-    uint16_t *value_length_in_out, GAPLEClient client, bool *has_more_out) {
+    uint16_t *value_length_in_out, bool *has_more_out) {
   return 0;
-}
-
-void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client) {
 }
 
 void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *connection,
@@ -73,12 +66,10 @@ void fake_gatt_client_subscriptions_set_subscribe_return_value(enum pbl_bt_errno
 }
 
 void fake_gatt_client_subscriptions_assert_subscribe(pbl_bt_characteristic_t characteristic,
-                                                     BLESubscription subscription_type,
-                                                     GAPLEClient client) {
+                                                     BLESubscription subscription_type) {
   if (s_subscribe_head) {
     cl_assert_equal_i(characteristic, s_subscribe_head->characteristic);
     cl_assert_equal_i(subscription_type, s_subscribe_head->subscription_type);
-    cl_assert_equal_i(client, s_subscribe_head->client);
   } else {
     cl_assert_(false, "No gatt_client_subscriptions_subscribe() has happened at all");
   }

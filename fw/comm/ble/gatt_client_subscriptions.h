@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "gap_le_task.h"
-
 #include <pbl/bluetooth/mtu.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
@@ -25,24 +23,23 @@ typedef enum {
   ((MAX_ATT_WRITE_PAYLOAD_SIZE + sizeof(GATTBufferedNotificationHeader)) * \
    CONFIG_BLE_GATT_SUBSCRIPTION_DEPTH)
 
-//! Data structure representing a subscription of a specific client for
-//! notifications or indications of a GATT characteristic for a specific
-//! client (GAPLEClientApp or GAPLEClientKernel). The GAPLEConnection struct has
-//! the head for each BLE connection.
+//! Data structure representing a subscription for notifications or indications
+//! of a GATT characteristic. The GAPLEConnection struct has the head for each
+//! BLE connection.
 typedef struct {
   ListNode node;
 
-  //! The characteristic to which the client is subscribed
+  //! The characteristic that is subscribed to
   pbl_bt_characteristic_t characteristic;
 
   //! Cached ATT handle of the characteristic
   uint16_t att_handle;
 
-  //! Array of subscription types for each client
-  BLESubscription subscriptions[GAPLEClientNum];
+  //! The subscription type
+  BLESubscription subscription;
 
-  //! For each client, whether it is waiting for an event to confirm the subscription
-  bool pending_confirmation[GAPLEClientNum];
+  //! Whether it is waiting for an event to confirm the subscription
+  bool pending_confirmation;
 } GATTClientSubscriptionNode;
 
 //! Data structure representing a serialized GATT notification header.
@@ -53,16 +50,13 @@ typedef struct PBL_PACKED {
 } GATTBufferedNotificationHeader;
 
 enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
-                                                      BLESubscription subscription_type,
-                                                      GAPLEClient client);
+                                                      BLESubscription subscription_type);
 
 //! Gets the length of the next notification in the buffer that was received.
-//! @param client The client for which to get the next notification header.
 //! @param[out] header_out The header of the notification, containing the value length and the
 //! characteristic reference.
 //! @return True if there is a notification in the buffer, false if not
-bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
-                                                       GATTBufferedNotificationHeader *header_out);
+bool gatt_client_subscriptions_get_notification_header(GATTBufferedNotificationHeader *header_out);
 
 //! Copies the data of the next notification and marks it as "consumed".
 //! The client *MUST* keep on calling gatt_client_subscriptions_consume_notification() in a loop
@@ -73,24 +67,17 @@ bool gatt_client_subscriptions_get_notification_header(GAPLEClient client,
 //! @param[out] value_out Buffer into which the notification's value is copied.
 //! @param[in,out] value_length_in_out Cannot be NULL. In: the size of the value_out buffer.
 //! Out: the number of bytes copied into the value_out buffer.
-//! @param client The client for which to consume the next notification.
 //! @param[out] has_more_out Cannot be NULL. Will be set to true if there are more notifications
 //! in the buffer, or to false if there are no more notifications in the buffer.
 //! @return The length of the next notification's payload, if there is any (has_more_out is true),
 //! undefined otherwise.
 uint16_t gatt_client_subscriptions_consume_notification(
     pbl_bt_characteristic_t *characteristic_ref_out, uint8_t *value_out,
-    uint16_t *value_length_in_out, GAPLEClient client, bool *has_more_out);
+    uint16_t *value_length_in_out, bool *has_more_out);
 
 //! Indicates that the client wants to pause processing notifications and yield to keep the system
 //! responsive. This puts a new event on the queue so the client can continue processing later on.
-void gatt_client_subscriptions_reschedule(GAPLEClient c);
-
-//! Unsubscribes all subscriptions associated with the client. This function
-//! assumes the connection is still alive and will write to the CCCD to
-//! "unsubscribe" from the remote as well, if the specified client was the
-//! last one to be registered for a particular characteristic.
-void gatt_client_subscriptions_cleanup_by_client(GAPLEClient client);
+void gatt_client_subscriptions_reschedule(void);
 
 //! Frees the GATTClientSubscriptionNode nodes that might have been associated
 //! with the connection as result of gatt_client_subscriptions_subscribe calls.

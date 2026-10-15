@@ -445,7 +445,7 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
     pbl_bt_characteristic_t data_char = client->characteristics.data;
     // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
     bt_unlock();
-    gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNone, GAPLEClientKernel);
+    gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNone);
     bt_lock();
   }
 
@@ -959,8 +959,8 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
   // See prv_retry_meta_read for the same pattern.
   bt_unlock();
 
-  enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNotifications,
-                                                            GAPLEClientKernel);
+  enum pbl_bt_errno e =
+      gatt_client_subscriptions_subscribe(data_char, BLESubscriptionNotifications);
 
   // Re-acquire bt_lock before accessing client state
   bt_lock();
@@ -1342,7 +1342,7 @@ void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
       // Attempt to unsubscribe to avoid wasting bandwidth.
       // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
       bt_unlock();
-      gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone, GAPLEClientKernel);
+      gatt_client_subscriptions_subscribe(characteristic, BLESubscriptionNone);
       bt_lock();
       goto unlock;
     }
