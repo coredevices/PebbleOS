@@ -4,8 +4,8 @@
 #include "preferred_content_size.h"
 
 #include <shell/system_theme.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
-DEFINE_SYSCALL(PreferredContentSize, preferred_content_size, void) {
+PBL_SYSCALL(PreferredContentSize, preferred_content_size) {
   return system_theme_get_content_size();
 }

@@ -5,9 +5,9 @@
 
 #include <pbl/mcu/cache.h>
 
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
-DEFINE_SYSCALL(void, memory_cache_flush, void *start, size_t size) {
+PBL_SYSCALL(void, memory_cache_flush, (VAL, void *, start), (VAL, size_t, size)) {
   // We need to align the address and size properly for the cache functions. It needs to be done
   // before we do syscall_assert_userspace_buffer though, because otherwise the user could
   // potentially abuse this behavior to flush+invalidate kernel memory. Theoretically that
@@ -19,7 +19,7 @@ DEFINE_SYSCALL(void, memory_cache_flush, void *start, size_t size) {
   dcache_align(&start_addr, &size);
   start = (void *)start_addr;
 
-  if (PRIVILEGE_WAS_ELEVATED) {
+  if (from_user) {
     syscall_assert_userspace_buffer(start, size);
   }
 

@@ -45,7 +45,7 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 // TODO:
@@ -1454,10 +1454,9 @@ void voice_window_reset(VoiceWindow *voice_window) {
 // Syscalls
 /////////////////////////////////////////////////////////////////////////////////
 
-DEFINE_SYSCALL(size_t, sys_voice_get_transcription_from_event, PebbleVoiceServiceEvent *e,
-               char *buffer, size_t buffer_size) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(e, sizeof(*e));
+PBL_SYSCALL(size_t, sys_voice_get_transcription_from_event, (IN, PebbleVoiceServiceEvent *, e),
+            (VAL, char *, buffer), (VAL, size_t, buffer_size)) {
+  if (from_user) {
     if (buffer && (buffer_size > 0)) {
       syscall_assert_userspace_buffer(buffer, buffer_size);
     }

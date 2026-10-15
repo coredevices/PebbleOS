@@ -5,27 +5,28 @@
 
 #include <applib/app_logging.h>
 #include <applib/app_timer.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
 //! @file fw/applib/app_timer.c
 //!
 //! Surprise! All this is is a dumb wrapper around evented_timer!
 
-DEFINE_SYSCALL(AppTimer *, app_timer_register, uint32_t timeout_ms, AppTimerCallback callback,
-               void *callback_data) {
+PBL_SYSCALL(AppTimer *, app_timer_register, (VAL, uint32_t, timeout_ms),
+            (VAL, AppTimerCallback, callback), (VAL, void *, callback_data)) {
   // No need to check callback_data, we only dereference it in userspace anyway.
   return (AppTimer *)(uintptr_t)evented_timer_register(timeout_ms, false, callback, callback_data);
 }
 
-DEFINE_SYSCALL(AppTimer *, app_timer_register_repeatable, uint32_t timeout_ms,
-               AppTimerCallback callback, void *callback_data, bool repeating) {
+PBL_SYSCALL(AppTimer *, app_timer_register_repeatable, (VAL, uint32_t, timeout_ms),
+            (VAL, AppTimerCallback, callback), (VAL, void *, callback_data),
+            (VAL, bool, repeating)) {
   // No need to check callback_data, we only dereference it in userspace anyway.
   return (AppTimer *)(uintptr_t)evented_timer_register(timeout_ms, repeating, callback,
                                                        callback_data);
 }
 
-DEFINE_SYSCALL(bool, app_timer_reschedule, AppTimer *timer, uint32_t new_timeout_ms) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(bool, app_timer_reschedule, (VAL, AppTimer *, timer), (VAL, uint32_t, new_timeout_ms)) {
+  if (from_user) {
     if (!evented_timer_exists((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)(uintptr_t)timer);
       return (false);
@@ -39,8 +40,8 @@ DEFINE_SYSCALL(bool, app_timer_reschedule, AppTimer *timer, uint32_t new_timeout
   return evented_timer_reschedule((EventedTimerID)timer, new_timeout_ms);
 }
 
-DEFINE_SYSCALL(void, app_timer_cancel, AppTimer *timer) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(void, app_timer_cancel, (VAL, AppTimer *, timer)) {
+  if (from_user) {
     if (!evented_timer_exists((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)(uintptr_t)timer);
       return;
@@ -54,8 +55,8 @@ DEFINE_SYSCALL(void, app_timer_cancel, AppTimer *timer) {
   evented_timer_cancel((EventedTimerID)timer);
 }
 
-DEFINE_SYSCALL(void *, app_timer_get_data, AppTimer *timer) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(void *, app_timer_get_data, (VAL, AppTimer *, timer)) {
+  if (from_user) {
     if (!evented_timer_exists((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Timer %u does not exist", (unsigned)(uintptr_t)timer);
       return nullptr;

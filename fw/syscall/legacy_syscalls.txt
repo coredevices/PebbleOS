@@ -2,11 +2,6 @@
 # checks by hand. New syscalls use PBL_SYSCALL; drop names as they convert.
 animation_service_timer_event_received
 animation_service_timer_schedule
-app_timer_cancel
-app_timer_get_data
-app_timer_register
-app_timer_register_repeatable
-app_timer_reschedule
 clock_is_24h_style
 clock_is_timezone_set
 clock_to_timestamp
@@ -35,10 +30,7 @@ fxToNumber_
 fxToStringHandle
 fxToUnsigned_
 fxUnsigned_
-memory_cache_flush
-moddable_createMachine
 pbl_override_mktime
-preferred_content_size
 sys_accel_manager_consume_samples
 sys_accel_manager_data_subscribe
 sys_accel_manager_data_unsubscribe
@@ -184,13 +176,11 @@ sys_vibe_pattern_enqueue_step
 sys_vibe_pattern_enqueue_step_raw
 sys_vibe_pattern_trigger_start
 sys_voice_cancel_dictation
-sys_voice_get_transcription_from_event
 sys_voice_start_dictation
 sys_voice_stop_dictation
 sys_wakeup_cancel_all_for_app
 sys_wakeup_delete
 sys_wakeup_query
 sys_wakeup_schedule
-sys_watch_info_get_color
 system_theme_get_font_key
 system_theme_get_font_key_for_size

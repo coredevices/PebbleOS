@@ -6,10 +6,10 @@
 #include <pbl/version.h>
 
 #include <mfg/mfg_info.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/version.h>
 
-DEFINE_SYSCALL(WatchInfoColor, sys_watch_info_get_color, void) {
+PBL_SYSCALL(WatchInfoColor, sys_watch_info_get_color) {
   return mfg_info_get_watch_color();
 }
 
