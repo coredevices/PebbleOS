@@ -522,7 +522,6 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
 #endif
       return;
     }
-    case PEBBLE_BLE_SCAN_EVENT:
     case PEBBLE_BLE_CONNECTION_EVENT:
     case PEBBLE_BLE_GATT_CLIENT_EVENT:
       kernel_le_client_handle_event(e);

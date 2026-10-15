@@ -8,11 +8,8 @@
 //! @file ble_ad_parse.h
 //! API to serialize and deserialize advertisement and scan response payloads.
 //!
-//! Inbound payloads, as received using the ble_scan.h public API, can be
-//! consumed/deserialized using the functions below.
-//!
 //! Outbound payloads can be created/serialized and then advertised using the
-//! gap_le_advert.h functions. At the moment, there is no public API.
+//! gap_le_advert.h functions.
 
 // -----------------------------------------------------------------------------
 // Consuming struct pbl_bt_ad_data:

@@ -5,14 +5,6 @@
 
 #include <stdint.h>
 
-bool gap_le_start_scan(void) {
-  return true;
-}
-
-bool gap_le_stop_scan(void) {
-  return true;
-}
-
 static bool s_gap_le_is_initialized = false;
 
 void gap_le_init(uint32_t stack_id) {

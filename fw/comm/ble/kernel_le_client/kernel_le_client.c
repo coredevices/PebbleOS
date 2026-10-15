@@ -454,10 +454,6 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 // -------------------------------------------------------------------------------------------------
 void kernel_le_client_handle_event(const PebbleEvent *e) {
   switch (e->type) {
-    case PEBBLE_BLE_SCAN_EVENT:
-      PBL_LOG_DBG("PEBBLE_BLE_SCAN_EVENT");
-      return;
-
     case PEBBLE_BLE_CONNECTION_EVENT:
       prv_handle_connection_event(&e->bluetooth.le.connection);
       return;
