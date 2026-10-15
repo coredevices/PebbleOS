@@ -23,7 +23,7 @@
 #include <kernel/events.h>
 #include <shell/prefs.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/notifications/alerts.h>
@@ -592,7 +592,7 @@ void clock_get_event_relative_time_string(char *number_buffer, int number_buffer
   }
 }
 
-DEFINE_SYSCALL(bool, clock_is_24h_style, void) {
+PBL_SYSCALL(bool, clock_is_24h_style) {
   return shell_prefs_get_clock_24h_style();
 }
 
@@ -600,7 +600,7 @@ void clock_set_24h_style(bool is_24h_style) {
   shell_prefs_set_clock_24h_style(is_24h_style);
 }
 
-DEFINE_SYSCALL(bool, clock_is_timezone_set, void) {
+PBL_SYSCALL(bool, clock_is_timezone_set) {
   return rtc_is_timezone_set(); // If timezone abbr isn't set
 }
 
@@ -634,7 +634,7 @@ void clock_request_time_from_phone(void) {
                          COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
-DEFINE_SYSCALL(time_t, clock_to_timestamp, WeekDay day, int hour, int minute) {
+PBL_SYSCALL(time_t, clock_to_timestamp, (VAL, WeekDay, day), (VAL, int, hour), (VAL, int, minute)) {
   time_t t = sys_get_time();
   struct pbl_tm cal;
   sys_localtime_r(&t, &cal);
@@ -987,9 +987,9 @@ void clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t ti
   prv_clock_get_relative_time_string(buffer, buf_size, timestamp, true, max_relative_hrs, false);
 }
 
-DEFINE_SYSCALL(void, sys_clock_get_timezone, char *timezone, size_t buffer_size) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(timezone, TIMEZONE_NAME_LENGTH);
+PBL_SYSCALL(void, sys_clock_get_timezone, (OUT_BUF, char *, timezone, TIMEZONE_NAME_LENGTH),
+            (VAL, size_t, buffer_size)) {
+  if (from_user) {
     buffer_size = MIN(buffer_size, TIMEZONE_NAME_LENGTH);
   }
   clock_get_timezone_region(timezone, buffer_size);
