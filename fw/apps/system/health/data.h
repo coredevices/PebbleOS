@@ -163,3 +163,8 @@ int32_t health_data_hr_get_zone2_minutes(HealthData *health_data);
 
 // Get number of minutes in Zone 3
 int32_t health_data_hr_get_zone3_minutes(HealthData *health_data);
+
+//! Read today's heart rate for each minute of the local day
+//! @param minute_bpm Filled with PBL_MIN_PER_DAY entries, 0 where there is no reading
+//! @return Number of minutes of today so far, including the current one
+uint16_t health_data_hr_get_today_bpm(uint8_t *minute_bpm);
