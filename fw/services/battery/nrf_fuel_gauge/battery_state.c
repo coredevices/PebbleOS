@@ -16,7 +16,7 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 #ifndef CONFIG_RECOVERY_FW
@@ -549,7 +549,7 @@ void battery_state_handle_connection_event(bool is_connected) {
   prv_schedule_update(RECONNECTION_DELAY_MS, true);
 }
 
-DEFINE_SYSCALL(BatteryChargeState, sys_battery_get_charge_state, void) {
+PBL_SYSCALL(BatteryChargeState, sys_battery_get_charge_state) {
   return battery_get_charge_state();
 }
 

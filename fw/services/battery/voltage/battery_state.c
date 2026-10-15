@@ -18,7 +18,7 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
@@ -264,7 +264,7 @@ PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state
   return event_state;
 }
 
-DEFINE_SYSCALL(BatteryChargeState, sys_battery_get_charge_state, void) {
+PBL_SYSCALL(BatteryChargeState, sys_battery_get_charge_state) {
   return battery_get_charge_state();
 }
 

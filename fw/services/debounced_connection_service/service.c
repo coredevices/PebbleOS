@@ -5,7 +5,7 @@
 #include <pbl/services/debounced_connection_service.h>
 #include <pbl/services/regular_timer.h>
 
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/notifications/alerts.h>
@@ -77,11 +77,11 @@ void debounced_connection_service_init(void) {
       (comm_session_get_current_app_session() != nullptr);
 }
 
-DEFINE_SYSCALL(bool, sys_mobile_app_is_connected_debounced, void) {
+PBL_SYSCALL(bool, sys_mobile_app_is_connected_debounced) {
   return s_debounced_state_is_connected[MobileAppDebounce];
 }
 
-DEFINE_SYSCALL(bool, sys_pebblekit_is_connected_debounced, void) {
+PBL_SYSCALL(bool, sys_pebblekit_is_connected_debounced) {
   return s_debounced_state_is_connected[PebbleKitDebounce];
 }
 

@@ -20,7 +20,7 @@
 #include <kernel/low_power.h>
 #include <kernel/pebble_tasks.h>
 #include <services/light/als_screen_compensation.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
 
@@ -757,31 +757,31 @@ void light_allow(bool allowed) {
   s_backlight_allowed = allowed;
 }
 
-DEFINE_SYSCALL(bool, sys_light_is_on, void) {
+PBL_SYSCALL(bool, sys_light_is_on) {
   return light_is_on();
 }
 
-DEFINE_SYSCALL(void, sys_light_enable_interaction, void) {
+PBL_SYSCALL(void, sys_light_enable_interaction) {
   light_enable_interaction();
 }
 
-DEFINE_SYSCALL(void, sys_light_enable, bool enable) {
+PBL_SYSCALL(void, sys_light_enable, (VAL, bool, enable)) {
   light_enable(enable);
 }
 
-DEFINE_SYSCALL(void, sys_light_enable_respect_settings, bool enable) {
+PBL_SYSCALL(void, sys_light_enable_respect_settings, (VAL, bool, enable)) {
   light_enable_respect_settings(enable);
 }
 
-DEFINE_SYSCALL(void, sys_light_reset_to_timed_mode, void) {
+PBL_SYSCALL(void, sys_light_reset_to_timed_mode) {
   prv_light_reset_to_timed_mode();
 }
 
-DEFINE_SYSCALL(void, sys_light_set_color_rgb888, uint32_t rgb) {
+PBL_SYSCALL(void, sys_light_set_color_rgb888, (VAL, uint32_t, rgb)) {
   light_set_color_rgb888(rgb);
 }
 
-DEFINE_SYSCALL(void, sys_light_set_system_color, void) {
+PBL_SYSCALL(void, sys_light_set_system_color) {
   light_set_system_color();
 }
 

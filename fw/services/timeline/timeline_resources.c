@@ -11,7 +11,7 @@
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 #define RESOURCE_MAX_SIZE (700)
@@ -176,21 +176,16 @@ fail:
   }
 }
 
-DEFINE_SYSCALL(void, sys_timeline_resources_get_id, const TimelineResourceInfo *timeline_res,
-               TimelineResourceSize size, AppResourceInfo *res_info) {
+PBL_SYSCALL(void, sys_timeline_resources_get_id, (IN, const TimelineResourceInfo *, timeline_res),
+            (VAL, TimelineResourceSize, size), (OUT, AppResourceInfo *, res_info)) {
   TimelineResourceInfo user_timeline_res;
   Uuid user_app_id;
 
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(timeline_res, sizeof(*timeline_res));
-    syscall_assert_userspace_buffer(res_info, sizeof(*res_info));
-
+  if (from_user && timeline_res->app_id) {
+    syscall_assert_userspace_buffer(timeline_res->app_id, sizeof(Uuid));
+    user_app_id = *timeline_res->app_id;
     user_timeline_res = *timeline_res;
-    if (user_timeline_res.app_id) {
-      syscall_assert_userspace_buffer(user_timeline_res.app_id, sizeof(Uuid));
-      user_app_id = *user_timeline_res.app_id;
-      user_timeline_res.app_id = &user_app_id;
-    }
+    user_timeline_res.app_id = &user_app_id;
     timeline_res = &user_timeline_res;
   }
   if (!timeline_res || !res_info || (size >= TimelineResourceSizeCount)) {

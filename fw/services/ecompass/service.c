@@ -12,7 +12,7 @@
 #include <applib/accel_service.h>
 #include <applib/compass_service.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
@@ -359,16 +359,12 @@ void ecompass_service_handle(void) {
 //////////////////////////////////////////////////////////////////////////////////
 // System call handlers
 
-DEFINE_SYSCALL(bool, sys_ecompass_service_subscribed, void) {
+PBL_SYSCALL(bool, sys_ecompass_service_subscribed) {
   PebbleTask task = pebble_task_get_current();
   return s_compass_subscribers[task];
 }
 
-DEFINE_SYSCALL(void, sys_ecompass_get_last_heading, CompassHeadingData *data) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(data, sizeof(*data));
-  }
-
+PBL_SYSCALL(void, sys_ecompass_get_last_heading, (OUT, CompassHeadingData *, data)) {
   *data = (CompassHeadingData){
     .magnetic_heading = s_last_heading,
     .true_heading = s_last_heading,

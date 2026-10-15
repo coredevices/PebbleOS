@@ -25,7 +25,7 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
@@ -241,7 +241,7 @@ static bool prv_is_smart_dnd_active(void) {
 //! Public Functions
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-DEFINE_SYSCALL(bool, sys_do_not_disturb_is_active, void) {
+PBL_SYSCALL(bool, sys_do_not_disturb_is_active) {
   return do_not_disturb_is_active();
 }
 
