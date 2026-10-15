@@ -100,9 +100,6 @@ sys_system_pp_has_capability
 sys_tick_timer_subscribe
 sys_tick_timer_unsubscribe
 sys_timeline_resources_get_id
-sys_voice_cancel_dictation
-sys_voice_start_dictation
-sys_voice_stop_dictation
 sys_wakeup_cancel_all_for_app
 sys_wakeup_delete
 sys_wakeup_query
