@@ -33,7 +33,7 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -1562,42 +1562,38 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_get_sessions, uint32_t *session_entries,
-               ActivitySession *sessions) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(bool, sys_activity_get_sessions, (INOUT_OPT, uint32_t *, session_entries),
+            (VAL, ActivitySession *, sessions)) {
+  if (from_user) {
     if (!session_entries) {
       // The implementation dereferences session_entries unconditionally.
       return false;
     }
-    syscall_assert_userspace_buffer(session_entries, sizeof(*session_entries));
-    // Same pattern as sys_activity_get_minute_history: snapshot *session_entries
-    // so the inner activity_get_sessions can't race us into a larger memcpy than
-    // we validated, and reject sizes whose `requested * sizeof(*sessions)` would
-    // wrap and let a much-smaller validated buffer gate a much-larger write.
+    // session_entries is a kernel copy here, so the inner activity_get_sessions
+    // can't be raced into a larger memcpy than we validated. Reject sizes whose
+    // `requested * sizeof(*sessions)` would wrap and let a much-smaller validated
+    // buffer gate a much-larger write.
     const uint32_t requested = *session_entries;
-    if (requested > SIZE_MAX / sizeof(*sessions)) {
+    size_t num_bytes;
+    if (ckd_mul(&num_bytes, (size_t)requested, sizeof(*sessions))) {
       PBL_LOG_ERR("session_entries=%" PRIu32 " would overflow size", requested);
       syscall_failed();
     }
     if (sessions) {
-      syscall_assert_userspace_buffer(sessions, requested * sizeof(*sessions));
+      syscall_assert_userspace_buffer(sessions, num_bytes);
     }
-    uint32_t entries_inout = requested;
-    bool result = activity_get_sessions(&entries_inout, sessions);
-    *session_entries = entries_inout;
-    return result;
   }
 
   return activity_get_sessions(session_entries, sessions);
 }
 
 // Expose whether Activity has been initialized to user/applib code via a syscall.
-DEFINE_SYSCALL(bool, sys_activity_is_initialized, void) {
+PBL_SYSCALL(bool, sys_activity_is_initialized) {
   return s_activity_initialized;
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_prefs_heart_rate_is_enabled, void) {
+PBL_SYSCALL(bool, sys_activity_prefs_heart_rate_is_enabled) {
   return activity_prefs_heart_rate_is_enabled();
 }
 
@@ -1686,29 +1682,19 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_get_minute_history, HealthMinuteData *minute_data,
-               uint32_t *num_records, time_t *utc_start) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(utc_start, sizeof(*utc_start));
-    syscall_assert_userspace_buffer(num_records, sizeof(*num_records));
-    // Snapshot the requested count to a kernel-stack local so that:
-    //  - the size computation below can't be tricked by an app racing the
-    //    KernelBG callback to swap *num_records after we validated it (TOCTOU);
-    //  - we can bound the multiplication against SIZE_MAX before performing it
-    //    (otherwise `*num_records * sizeof(HealthMinuteData)` wraps in uint32_t
-    //    and a tiny validated size would gate a much larger kernel write).
+PBL_SYSCALL(bool, sys_activity_get_minute_history, (VAL, HealthMinuteData *, minute_data),
+            (INOUT, uint32_t *, num_records), (INOUT, time_t *, utc_start)) {
+  if (from_user) {
+    // num_records is a kernel copy here, so an app racing the KernelBG callback
+    // can't swap it after it is validated (TOCTOU). An overflowing size would
+    // let a tiny validated buffer gate a much larger kernel write.
     const uint32_t requested = *num_records;
-    if (requested > SIZE_MAX / sizeof(HealthMinuteData)) {
+    size_t num_bytes;
+    if (ckd_mul(&num_bytes, (size_t)requested, sizeof(HealthMinuteData))) {
       PBL_LOG_ERR("num_records=%" PRIu32 " would overflow size", requested);
       syscall_failed();
     }
-    syscall_assert_userspace_buffer(minute_data, requested * sizeof(HealthMinuteData));
-    uint32_t records_inout = requested;
-    time_t start_inout = *utc_start;
-    bool result = activity_get_minute_history(minute_data, &records_inout, &start_inout);
-    *num_records = records_inout;
-    *utc_start = start_inout;
-    return result;
+    syscall_assert_userspace_buffer(minute_data, num_bytes);
   }
 
   return activity_get_minute_history(minute_data, num_records, utc_start);
@@ -1723,13 +1709,10 @@ bool activity_get_step_averages(enum pbl_weekday day_of_week, ActivityMetricAver
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_get_step_averages, enum pbl_weekday day_of_week,
-               ActivityMetricAverages *averages) {
-  if (PRIVILEGE_WAS_ELEVATED) {
-    if ((unsigned int)day_of_week > PBL_SATURDAY) {
-      syscall_failed();
-    }
-    syscall_assert_userspace_buffer(averages, sizeof(*averages));
+PBL_SYSCALL(bool, sys_activity_get_step_averages, (VAL, enum pbl_weekday, day_of_week),
+            (OUT_BUF, ActivityMetricAverages *, averages, sizeof(*averages))) {
+  if (from_user && (unsigned int)day_of_week > PBL_SATURDAY) {
+    syscall_failed();
   }
 
   return activity_get_step_averages(day_of_week, averages);

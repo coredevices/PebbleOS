@@ -20,7 +20,7 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -782,9 +782,9 @@ unlock:
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_get_metric, ActivityMetric metric, uint32_t history_len,
-               int32_t *history) {
-  if (PRIVILEGE_WAS_ELEVATED) {
+PBL_SYSCALL(bool, sys_activity_get_metric, (VAL, ActivityMetric, metric),
+            (VAL, uint32_t, history_len), (VAL, int32_t *, history)) {
+  if (from_user) {
     // activity_get_metric() unconditionally writes history_len int32_t entries
     // to `history` before later clamping to ACTIVITY_HISTORY_DAYS. A huge
     // history_len makes `history_len * sizeof(*history)` wrap to a tiny size

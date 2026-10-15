@@ -16,7 +16,7 @@
 #include <applib/health_service.h>
 #include <kernel/events.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_internal.h>
+#include <syscall/syscall_define.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -686,6 +686,6 @@ bool activity_sessions_is_session_type_ongoing(ActivitySessionType type) {
 }
 
 // ------------------------------------------------------------------------------------------------
-DEFINE_SYSCALL(bool, sys_activity_sessions_is_session_type_ongoing, ActivitySessionType type) {
+PBL_SYSCALL(bool, sys_activity_sessions_is_session_type_ongoing, (VAL, ActivitySessionType, type)) {
   return activity_sessions_is_session_type_ongoing(type);
 }
