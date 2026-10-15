@@ -5,10 +5,12 @@
 
 #include "data_private.h"
 
+#include <string.h>
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
@@ -172,6 +174,33 @@ void health_data_update_current_bpm(HealthData *health_data) {
     health_data->current_hr_bpm = health_service_peek_current_value(HealthMetricHeartRateRawBPM);
     health_data->hr_last_updated = current_hr_timestamp;
   }
+}
+
+uint16_t health_data_hr_get_today_bpm(uint8_t *minute_bpm) {
+  memset(minute_bpm, 0, PBL_MIN_PER_DAY);
+
+  const time_t midnight = time_start_of_today();
+  const time_t now = rtc_get_time();
+  const uint16_t num_minutes = time_util_get_minute_of_day(now) + 1;
+  const uint32_t num_utc_minutes = ((now - midnight) / PBL_SEC_PER_MIN) + 1;
+  if (num_utc_minutes == num_minutes) {
+    activity_get_minute_heart_rate(minute_bpm, num_minutes, midnight);
+    return num_minutes;
+  }
+
+  // The clock skipped or repeated an hour today, so move each reading to its local clock minute
+  // for it to line up with the hour labels
+  uint8_t *utc_bpm = app_malloc_check(num_utc_minutes);
+  if (activity_get_minute_heart_rate(utc_bpm, num_utc_minutes, midnight)) {
+    for (uint32_t i = 0; i < num_utc_minutes; i++) {
+      const int minute = time_util_get_minute_of_day(midnight + (time_t)i * PBL_SEC_PER_MIN);
+      if (utc_bpm[i] && minute < num_minutes) {
+        minute_bpm[minute] = utc_bpm[i];
+      }
+    }
+  }
+  app_free(utc_bpm);
+  return num_minutes;
 }
 
 void health_data_update_hr_zone_minutes(HealthData *health_data) {
