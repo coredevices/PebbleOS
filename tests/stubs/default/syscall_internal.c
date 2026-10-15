@@ -1,8 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <pbl/kernel/compiler.h>
 
@@ -33,6 +35,22 @@ PBL_WEAK void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes)
   }
   // TODO: What else can we check here?
   return;
+}
+
+PBL_WEAK int syscall_copy_from_user(void *dst, const void *src, size_t num_bytes) {
+  if (!src) {
+    return -EFAULT;
+  }
+  memcpy(dst, src, num_bytes);
+  return 0;
+}
+
+PBL_WEAK int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes) {
+  if (!dst) {
+    return -EFAULT;
+  }
+  memcpy(dst, src, num_bytes);
+  return 0;
 }
 
 PBL_WEAK void syscall_init_context() {

@@ -38,12 +38,17 @@ static bool prv_event_type_allowed_from_user(PebbleEventType type) {
 }
 
 DEFINE_SYSCALL(void, sys_send_pebble_event_to_kernel, PebbleEvent *event) {
+  PebbleEvent k_event;
+
   if (PRIVILEGE_WAS_ELEVATED) {
-    syscall_assert_userspace_buffer(event, sizeof(*event));
-    if (!prv_event_type_allowed_from_user(event->type)) {
-      PBL_LOG_ERR("Rejecting event type %u from unprivileged caller", event->type);
+    if (syscall_copy_from_user(&k_event, event, sizeof(k_event)) < 0) {
       syscall_failed();
     }
+    if (!prv_event_type_allowed_from_user(k_event.type)) {
+      PBL_LOG_ERR("Rejecting event type %u from unprivileged caller", k_event.type);
+      syscall_failed();
+    }
+    event = &k_event;
   }
 
   PebbleTask task = pebble_task_get_current();

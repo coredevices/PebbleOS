@@ -3,8 +3,10 @@
 
 #include "syscall_internal.h"
 
+#include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
@@ -252,12 +254,13 @@ PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged_resume(void
   }
 }
 
+static bool prv_is_userspace_buffer(const void *buf, size_t num_bytes) {
+  return process_manager_is_range_in_region(pebble_task_get_current(), buf, num_bytes,
+                                            (void *)prv_get_syscall_sp());
+}
+
 void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
-  PebbleTask task = pebble_task_get_current();
-
-  void *user_stack_end = (void *)prv_get_syscall_sp();
-
-  if (process_manager_is_range_in_region(task, buf, num_bytes, user_stack_end)) {
+  if (prv_is_userspace_buffer(buf, num_bytes)) {
     return;
   }
 
@@ -265,6 +268,24 @@ void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
           (char *)buf + num_bytes);
   PBL_LOG_ERR("syscall failure! %p..%p is not in app space.", buf, (char *)buf + num_bytes);
   syscall_failed();
+}
+
+int syscall_copy_from_user(void *dst, const void *src, size_t num_bytes) {
+  if (!prv_is_userspace_buffer(src, num_bytes)) {
+    return -EFAULT;
+  }
+
+  memcpy(dst, src, num_bytes);
+  return 0;
+}
+
+int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes) {
+  if (!prv_is_userspace_buffer(dst, num_bytes)) {
+    return -EFAULT;
+  }
+
+  memcpy(dst, src, num_bytes);
+  return 0;
 }
 
 #if SYSCALL_PRIVILEGED_STACK

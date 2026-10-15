@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/logging/logging.h>
 
 #include <syscall/syscall_internal.h>
@@ -18,6 +20,16 @@ extern void sys_app_fault(uint32_t lr);
 }
 
 void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
+}
+
+int syscall_copy_from_user(void *dst, const void *src, size_t num_bytes) {
+  memcpy(dst, src, num_bytes);
+  return 0;
+}
+
+int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes) {
+  memcpy(dst, src, num_bytes);
+  return 0;
 }
 
 bool syscall_internal_check_return_address(void *ret_addr) {

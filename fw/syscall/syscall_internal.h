@@ -42,6 +42,14 @@ bool syscall_internal_check_return_address(void *ret_addr);
 //! syscall_failed is called.
 void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes);
 
+//! Copy @p num_bytes from app memory at @p src to kernel memory at @p dst.
+//! @return 0, or -EFAULT if @p src is not in the app's memory space.
+int syscall_copy_from_user(void *dst, const void *src, size_t num_bytes);
+
+//! Copy @p num_bytes from kernel memory at @p src to app memory at @p dst.
+//! @return 0, or -EFAULT if @p dst is not in the app's memory space.
+int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes);
+
 // Used to implement DEFINE_SYSCALL
 void syscall_internal_maybe_skip_privilege(void);
 
