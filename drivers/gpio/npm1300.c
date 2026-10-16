@@ -16,7 +16,6 @@
 #define NPM1300_GPIO_MODE_INPUT       0U
 #define NPM1300_GPIO_MODE_OUTPUT_HIGH 8U
 #define NPM1300_GPIO_MODE_OUTPUT_LOW  9U
-#define NPM1300_GPIO_NUM_PINS         5U
 
 static const struct pbl_npm1300_gpio *prv_gpio(const struct pbl_gpio_port *port) {
   return container_of(port, const struct pbl_npm1300_gpio, port);

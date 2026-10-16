@@ -59,15 +59,15 @@ static const struct pbl_gpio_port_ops s_ops = {
   .set = prv_set,
 };
 
-#define GPIO_NRF5_DEFINE(sym, _name, _index)                                                \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                             \
-  const struct pbl_gpio_nrf5 sym = {                                                        \
-    .port = {.dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr, nullptr), .ops = &s_ops}, \
-    .index = (_index),                                                                      \
-  };                                                                                        \
+#define GPIO_NRF5_DEFINE(sym, _name, _index, _num_pins)                                   \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                           \
+  const struct pbl_gpio_nrf5 sym = {                                                      \
+    .port = PBL_GPIO_PORT_INIT(sym, _name, nullptr, nullptr, &s_ops, _num_pins, nullptr), \
+    .index = (_index),                                                                    \
+  };                                                                                      \
   PBL_DEVICE_REGISTER(sym, &sym.port.dev)
 
-GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p0, "gpio_p0", 0);
+GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p0, "gpio_p0", 0, P0_PIN_NUM);
 #ifdef NRF_P1
-GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p1, "gpio_p1", 1);
+GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p1, "gpio_p1", 1, P1_PIN_NUM);
 #endif

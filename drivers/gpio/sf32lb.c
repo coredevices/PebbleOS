@@ -68,11 +68,8 @@ static const struct pbl_gpio_port_ops s_ops = {
 
 PBL_DEVICE_STATE_DEFINE(pbl_gpio_sf32lb_gpio1);
 const struct pbl_gpio_sf32lb pbl_gpio_sf32lb_gpio1 = {
-  .port =
-      {
-        .dev = PBL_DEVICE_INIT(pbl_gpio_sf32lb_gpio1, "gpio1", prv_init, nullptr, nullptr),
-        .ops = &s_ops,
-      },
+  .port = PBL_GPIO_PORT_INIT(pbl_gpio_sf32lb_gpio1, "gpio1", prv_init, nullptr, &s_ops,
+                             PAD_PA44 - PAD_PA00 + 1, nullptr),
   .regs = hwp_gpio1,
   .pad_base = PAD_PA00,
   .func_base = GPIO_A0,

@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/device.h>
+#include <pbl/drivers/intc.h>
 
 /**
  * @defgroup drivers_gpio GPIO
@@ -25,6 +26,17 @@
  *
  * pbl_gpio_configure(&dev->int_gpio, PBL_GPIO_INPUT);
  * bool active = pbl_gpio_get(&dev->int_gpio) > 0;
+ * @endcode
+ *
+ * A port that can interrupt has a child interrupt controller whose line numbers are the pin
+ * numbers. Drivers whose pin is described as a GPIO, such as buttons, get its line with
+ * pbl_gpio_to_irq():
+ *
+ * @code{.c}
+ * struct pbl_irq_spec irq;
+ *
+ * pbl_gpio_to_irq(&dev->gpio, PBL_IRQ_TYPE_EDGE_BOTH, &irq);
+ * pbl_intc_request(&irq, prv_handler, dev);
  * @endcode
  * @{
  */
@@ -72,6 +84,9 @@
 
 struct pbl_gpio_port;
 
+/** @brief Class of the GPIO ports. */
+extern const struct pbl_device_class pbl_gpio_port_class;
+
 /** @brief Port driver operations. Levels and flags are physical. */
 struct pbl_gpio_port_ops {
   /** Configure a pin. Returns 0 or a negative errno. */
@@ -88,7 +103,30 @@ struct pbl_gpio_port {
   struct pbl_device dev;
   /** Driver operations. */
   const struct pbl_gpio_port_ops *ops;
+  /** Number of pins. */
+  uint8_t num_pins;
+  /** Interrupt controller of the pins, NULL if the port cannot interrupt. */
+  const struct pbl_intc *intc;
 };
+
+/**
+ * @brief Initializer for a struct pbl_gpio_port.
+ *
+ * @param sym Symbol of the port instance, with its state defined by PBL_DEVICE_STATE_DEFINE().
+ * @param _name Name.
+ * @param _init Device init function, or NULL.
+ * @param _parent Parent device, or NULL.
+ * @param _ops Driver operations.
+ * @param _num_pins Number of pins.
+ * @param _intc Interrupt controller of the pins, or NULL.
+ */
+#define PBL_GPIO_PORT_INIT(sym, _name, _init, _parent, _ops, _num_pins, _intc)               \
+  {                                                                                          \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_gpio_port_class), \
+    .ops = (_ops),                                                                           \
+    .num_pins = (_num_pins),                                                                 \
+    .intc = (_intc),                                                                         \
+  }
 
 /** @brief A pin as wired on the board. */
 struct pbl_gpio {
@@ -124,7 +162,7 @@ static inline bool pbl_gpio_is_connected(const struct pbl_gpio *gpio) {
  *
  * @param gpio Pin, on a ready port.
  * @param flags Configuration flags, OR'ed with the pin's wiring flags.
- * @return 0 or a negative errno.
+ * @return 0, @c -EINVAL if the pin is not on the port, or another negative errno.
  */
 int pbl_gpio_configure(const struct pbl_gpio *gpio, uint32_t flags);
 
@@ -161,5 +199,15 @@ int pbl_gpio_get_raw(const struct pbl_gpio *gpio);
  * @return 0 or a negative errno.
  */
 int pbl_gpio_set_raw(const struct pbl_gpio *gpio, bool level);
+
+/**
+ * @brief Get the interrupt line of a pin.
+ *
+ * @param gpio Pin.
+ * @param type Trigger type, physical.
+ * @param[out] spec Line.
+ * @return 0, or @c -ENOTSUP if the port cannot interrupt.
+ */
+int pbl_gpio_to_irq(const struct pbl_gpio *gpio, uint32_t type, struct pbl_irq_spec *spec);
 
 /** @} */

@@ -48,11 +48,7 @@ static const struct pbl_gpio_port_ops s_ops = {
 
 PBL_DEVICE_STATE_DEFINE(pbl_gpio_qemu_gpio);
 const struct pbl_gpio_qemu pbl_gpio_qemu_gpio = {
-  .port =
-      {
-        .dev = PBL_DEVICE_INIT(pbl_gpio_qemu_gpio, "gpio", nullptr, nullptr, nullptr),
-        .ops = &s_ops,
-      },
+  .port = PBL_GPIO_PORT_INIT(pbl_gpio_qemu_gpio, "gpio", nullptr, nullptr, &s_ops, 32U, nullptr),
   .base = QEMU_GPIO_BASE,
 };
 PBL_DEVICE_REGISTER(pbl_gpio_qemu_gpio, &pbl_gpio_qemu_gpio.port.dev);
