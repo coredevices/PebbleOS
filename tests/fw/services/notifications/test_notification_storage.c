@@ -225,6 +225,26 @@ void test_notification_storage__basic(void) {
   cl_assert_equal_b(notification_storage_get(&invalid_uuid, &r), false);
 }
 
+void test_notification_storage__count_excludes_removed_notifications(void) {
+  TimelineItem first = {
+    .header = {
+      .id = UuidMake(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      .type = TimelineItemTypeNotification,
+      .layout = LayoutIdGeneric,
+    },
+  };
+  TimelineItem second = first;
+  second.header.id = UuidMake(2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+  cl_assert_equal_i(notification_storage_get_count(), 0);
+  notification_storage_store(&first);
+  notification_storage_store(&second);
+  cl_assert_equal_i(notification_storage_get_count(), 2);
+
+  notification_storage_remove(&first.header.id);
+  cl_assert_equal_i(notification_storage_get_count(), 1);
+}
+
 void test_notification_storage__iterate_strings_after_skips_old_and_deleted_payloads(void) {
   TimelineItem older = {
     .header =

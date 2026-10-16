@@ -143,6 +143,7 @@ size_t sys_strftime(char *s, size_t maxsize, const char *format, const struct pb
                     char *locale);
 
 BatteryChargeState sys_battery_get_charge_state(void);
+uint16_t sys_notification_service_get_count(void);
 
 bool sys_activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history);
 bool sys_activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
