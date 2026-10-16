@@ -24,7 +24,7 @@ struct KinoLayer {
   GAlign alignment;
   KinoLayerCallbacks callbacks;
   void *context;
-  bool invert_colors;
+  GDrawCommandProcessor *draw_command_processor;
 };
 
 void kino_layer_init(KinoLayer *kino_layer, const GRect *frame);
@@ -39,6 +39,9 @@ Layer *kino_layer_get_layer(KinoLayer *kino_layer);
 
 void kino_layer_set_reel(KinoLayer *kino_layer, KinoReel *reel, bool take_ownership);
 void kino_layer_set_invert_colors(KinoLayer *kino_layer, bool invert);
+
+//! Sets a processor applied to draw commands of the reel. Replaces color inversion.
+void kino_layer_set_draw_command_processor(KinoLayer *kino_layer, GDrawCommandProcessor *processor);
 
 //! @internal
 void kino_layer_set_reel_with_resource(KinoLayer *kino_layer, uint32_t resource_id);
