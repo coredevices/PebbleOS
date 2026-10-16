@@ -1,0 +1,37 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+#include <hardware/sf32lb52_memorymap.h>
+
+/* Register offsets, of bank n (pins 32n to 32n + 31) */
+
+#define SF32LB52_GPIO_BANK_OFFSET(n) ((n) * 0x80)
+
+#define SF32LB52_GPIO_DIR_OFFSET   0x0000
+#define SF32LB52_GPIO_DOR_OFFSET   0x0004
+#define SF32LB52_GPIO_DOSR_OFFSET  0x0008
+#define SF32LB52_GPIO_DOCR_OFFSET  0x000c
+#define SF32LB52_GPIO_DOER_OFFSET  0x0010
+#define SF32LB52_GPIO_DOESR_OFFSET 0x0014
+#define SF32LB52_GPIO_DOECR_OFFSET 0x0018
+#define SF32LB52_GPIO_IER_OFFSET   0x001c
+#define SF32LB52_GPIO_IESR_OFFSET  0x0020
+#define SF32LB52_GPIO_IECR_OFFSET  0x0024
+#define SF32LB52_GPIO_ITR_OFFSET   0x0028
+#define SF32LB52_GPIO_ITSR_OFFSET  0x002c
+#define SF32LB52_GPIO_ITCR_OFFSET  0x0030
+#define SF32LB52_GPIO_IPHR_OFFSET  0x0034
+#define SF32LB52_GPIO_IPHSR_OFFSET 0x0038
+#define SF32LB52_GPIO_IPHCR_OFFSET 0x003c
+#define SF32LB52_GPIO_IPLR_OFFSET  0x0040
+#define SF32LB52_GPIO_IPLSR_OFFSET 0x0044
+#define SF32LB52_GPIO_IPLCR_OFFSET 0x0048
+#define SF32LB52_GPIO_ISR_OFFSET   0x004c
+
+/* Register bit definitions: one bit per pin of the bank */
+
+#define GPIO_PIN_BIT(n) PBL_BIT((n) % 32U)
