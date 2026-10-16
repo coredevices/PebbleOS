@@ -15,7 +15,6 @@
 #include <pbl/drivers/otp.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
-#include <pbl/drivers/temperature.h>
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
@@ -147,8 +146,6 @@ static void init_drivers(void) {
 #ifdef CONFIG_TOUCH
   touch_sensor_init();
 #endif
-
-  temperature_init();
 
   rtc_init_timers();
   rtc_alarm_init();

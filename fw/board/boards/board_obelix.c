@@ -10,6 +10,7 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/kernel/irq.h>
 
@@ -481,3 +482,5 @@ void board_init(void) {
   mic_init(MIC);
   audio_init(AUDIO);
 }
+
+const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;

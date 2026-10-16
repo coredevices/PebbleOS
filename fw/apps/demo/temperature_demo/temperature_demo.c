@@ -71,9 +71,16 @@ static void click_config_provider(void *context) {
 }
 
 // -------------------------------------------------------------------------------
+static int32_t prv_read_temp(void) {
+  int32_t temp;
+
+  return (pbl_temp_read(DIE_TEMP, &temp) == 0) ? temp : INT32_MIN;
+}
+
+// -------------------------------------------------------------------------------
 static void cur_temp_update_text(TemperatureDemoAppData *data) {
   // Show current temp
-  int cur_temp = temperature_read();
+  int cur_temp = prv_read_temp();
   snprintf(data->cur_temp_text, sizeof(data->cur_temp_text), "%d", cur_temp);
   text_layer_set_text(data->cur_temp_layer, data->cur_temp_text);
 
@@ -86,7 +93,7 @@ static void cur_temp_update_text(TemperatureDemoAppData *data) {
 
 // -------------------------------------------------------------------------------
 static void handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
-  int32_t reading = temperature_read();
+  int32_t reading = prv_read_temp();
   memmove(s_temp_readings, s_temp_readings + 1, (READ_HISTORY_ENTRIES - 1) * sizeof(int32_t));
   s_temp_readings[READ_HISTORY_ENTRIES - 1] = reading;
   cur_temp_update_text(s_data);

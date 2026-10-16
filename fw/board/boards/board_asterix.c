@@ -16,6 +16,7 @@
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
+#include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/vibe/drv2604.h>
 #include <pbl/kernel/irq.h>
@@ -229,3 +230,5 @@ void board_init(void) {
   pbl_i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
   pbl_i2c_release(I2C_DA7212);
 }
+
+const struct pbl_temp *const DIE_TEMP = NRF5_TEMP;
