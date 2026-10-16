@@ -61,6 +61,22 @@ TEST_DEV_REGISTERED(s_noinit, 'n', nullptr, nullptr, nullptr);
 TEST_DEV(s_cycle_a, 'x', prv_init, nullptr, nullptr);
 TEST_DEV(s_cycle_b, 'y', prv_init, nullptr, PBL_DEVICE_DEPS(&s_cycle_a.dev));
 
+// Two registered devices of a class and an unregistered one
+static PBL_DEVICE_CLASS_DEFINE(s_port_class, "port");
+static PBL_DEVICE_CLASS_DEFINE(s_empty_class, "empty");
+
+#define TEST_CLASS_DEV(sym, _name)                                                      \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                         \
+  static struct test_dev sym = {                                                        \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, nullptr, nullptr, &s_port_class), \
+  }
+
+TEST_CLASS_DEV(s_port_a, "port_a");
+PBL_DEVICE_REGISTER(s_port_a, &s_port_a.dev);
+TEST_CLASS_DEV(s_port_b, "port_b");
+PBL_DEVICE_REGISTER(s_port_b, &s_port_b.dev);
+TEST_CLASS_DEV(s_port_unregistered, "port_c");
+
 static struct test_dev *const s_all[] = {
   &s_sensor, &s_gpio,   &s_pmic,   &s_i2c,     &s_mfd_child,
   &s_mfd,    &s_absent, &s_noinit, &s_cycle_a, &s_cycle_b,
@@ -143,4 +159,32 @@ void test_device__cycle_asserts(void) {
   s_cycle_a.dev.deps = PBL_DEVICE_DEPS(&s_cycle_b.dev);
   cl_assert_passert(pbl_device_init(&s_cycle_a.dev));
   s_cycle_a.dev.deps = nullptr;
+}
+
+void test_device__class_foreach(void) {
+  const struct pbl_device *dev;
+  int count = 0;
+  bool a = false, b = false;
+
+  PBL_DEVICE_CLASS_FOREACH(&s_port_class, dev) {
+    cl_assert_equal_p(dev->cls, &s_port_class);
+    a |= (dev == &s_port_a.dev);
+    b |= (dev == &s_port_b.dev);
+    count++;
+  }
+
+  cl_assert_equal_i(count, 2);
+  cl_assert(a && b);
+
+  PBL_DEVICE_CLASS_FOREACH(&s_empty_class, dev) {
+    cl_fail("empty class has a device");
+  }
+}
+
+void test_device__find(void) {
+  cl_assert_equal_p(pbl_device_find(&s_port_class, "port_b"), &s_port_b.dev);
+  cl_assert_equal_p(pbl_device_find(&s_port_class, "port_c"), nullptr);
+  cl_assert_equal_p(pbl_device_find(&s_port_class, "s_gpio"), nullptr);
+  cl_assert_equal_p(pbl_device_find(&s_empty_class, "port_a"), nullptr);
+  cl_assert_equal_p(s_port_unregistered.dev.cls, &s_port_class);
 }

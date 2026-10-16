@@ -23,6 +23,10 @@
  *
  * An init returning @c -ENODEV means the device is not present: that is not logged as an error.
  *
+ * A device class (GPIO port, clock controller, ...) defines a struct pbl_device_class and tags
+ * its devices with it through its init macro, so tooling can list them or find one by name with
+ * PBL_DEVICE_CLASS_FOREACH() and pbl_device_find().
+ *
  * @code{.c}
  * struct foo {
  *   struct pbl_device dev;
@@ -64,6 +68,20 @@ struct pbl_device_state {
   int res;
 };
 
+/** @brief A device class. */
+struct pbl_device_class {
+  /** Name. */
+  const char *name;
+};
+
+/**
+ * @brief Define a device class.
+ *
+ * @param sym Symbol of the class.
+ * @param _name Name.
+ */
+#define PBL_DEVICE_CLASS_DEFINE(sym, _name) const struct pbl_device_class sym = {.name = (_name)}
+
 /** @brief A hardware device. */
 struct pbl_device {
   /** Name, for logs. */
@@ -74,6 +92,8 @@ struct pbl_device {
   const struct pbl_device *parent;
   /** Optional, NULL-terminated. Further devices initialized first. */
   const struct pbl_device *const *deps;
+  /** Optional. Class of the device. */
+  const struct pbl_device_class *cls;
   /** Runtime state. */
   struct pbl_device_state *state;
 };
@@ -89,6 +109,28 @@ struct pbl_device {
 #define PBL_DEVICE_STATE_DEFINE(sym) static struct pbl_device_state sym##_device_state
 
 /**
+ * @brief Initializer for the struct pbl_device of device instance @p sym, in class @p _cls.
+ *
+ * For the init macros of device classes.
+ *
+ * @param sym Symbol of the device instance, with its state defined by PBL_DEVICE_STATE_DEFINE().
+ * @param _name Name.
+ * @param _init Init function, or NULL.
+ * @param _parent Parent device, or NULL.
+ * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
+ * @param _cls Class.
+ */
+#define PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, _deps, _cls) \
+  {                                                                    \
+    .name = (_name),                                                   \
+    .init = (_init),                                                   \
+    .parent = (_parent),                                               \
+    .deps = (_deps),                                                   \
+    .cls = (_cls),                                                     \
+    .state = &sym##_device_state,                                      \
+  }
+
+/**
  * @brief Initializer for the struct pbl_device of device instance @p sym.
  *
  * @param sym Symbol of the device instance, with its state defined by PBL_DEVICE_STATE_DEFINE().
@@ -98,13 +140,7 @@ struct pbl_device {
  * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
 #define PBL_DEVICE_INIT(sym, _name, _init, _parent, _deps) \
-  {                                                        \
-    .name = (_name),                                       \
-    .init = (_init),                                       \
-    .parent = (_parent),                                   \
-    .deps = (_deps),                                       \
-    .state = &sym##_device_state,                          \
-  }
+  PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, _deps, nullptr)
 
 #ifdef PBL_NO_LINKER_SCRIPT
 #define PBL_DEVICE_TABLE_SECTION PBL_UNSORTED_SECTION(pbl_devices)
@@ -155,5 +191,34 @@ int pbl_device_init_all(void);
  * @return Number of devices that failed or are not present.
  */
 int pbl_device_init_children(const struct pbl_device *parent);
+
+/**
+ * @brief Get the next registered device of a class.
+ *
+ * @param cls Class.
+ * @param prev Previous device, or NULL for the first one.
+ * @return Device, or NULL after the last one.
+ */
+const struct pbl_device *pbl_device_class_next(const struct pbl_device_class *cls,
+                                               const struct pbl_device *prev);
+
+/**
+ * @brief Iterate over the registered devices of a class.
+ *
+ * @param cls Class.
+ * @param dev Loop variable, a const struct pbl_device pointer.
+ */
+#define PBL_DEVICE_CLASS_FOREACH(cls, dev)                              \
+  for ((dev) = pbl_device_class_next((cls), nullptr); (dev) != nullptr; \
+       (dev) = pbl_device_class_next((cls), (dev)))
+
+/**
+ * @brief Find a registered device of a class by name.
+ *
+ * @param cls Class.
+ * @param name Name.
+ * @return Device, or NULL if there is none.
+ */
+const struct pbl_device *pbl_device_find(const struct pbl_device_class *cls, const char *name);
 
 /** @} */

@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <stddef.h>
+#include <string.h>
 
 #include <pbl/device.h>
 #include <pbl/logging/logging.h>
@@ -103,4 +104,36 @@ int pbl_device_init_children(const struct pbl_device *parent) {
   }
 
   return failures;
+}
+
+const struct pbl_device *pbl_device_class_next(const struct pbl_device_class *cls,
+                                               const struct pbl_device *prev) {
+  const struct pbl_device *const *dev = __pbl_devices_start;
+
+  if (prev != nullptr) {
+    while (dev < __pbl_devices_end && *dev != prev) {
+      dev++;
+    }
+    dev++;
+  }
+
+  for (; dev < __pbl_devices_end; dev++) {
+    if ((*dev)->cls == cls) {
+      return *dev;
+    }
+  }
+
+  return nullptr;
+}
+
+const struct pbl_device *pbl_device_find(const struct pbl_device_class *cls, const char *name) {
+  const struct pbl_device *dev;
+
+  PBL_DEVICE_CLASS_FOREACH(cls, dev) {
+    if (strcmp(dev->name, name) == 0) {
+      return dev;
+    }
+  }
+
+  return nullptr;
 }
