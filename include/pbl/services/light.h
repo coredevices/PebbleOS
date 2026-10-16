@@ -229,6 +229,22 @@ bool light_is_lit_by_touch(void);
  */
 uint32_t light_get_ambient_lux(void);
 
+/**
+ * @ingroup services_light
+ * @brief Get the ambient light level below which the backlight turns on.
+ *
+ * @return Threshold, in the units of light_get_ambient_lux().
+ */
+uint32_t light_get_dark_threshold(void);
+
+/**
+ * @ingroup services_light
+ * @brief Set the ambient light level below which the backlight turns on.
+ *
+ * @param threshold Threshold, in the units of light_get_ambient_lux().
+ */
+void light_set_dark_threshold(uint32_t threshold);
+
 /** @} */
 
 /** @} */

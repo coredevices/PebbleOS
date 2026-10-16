@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -14,6 +13,7 @@
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/light_level.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
@@ -69,7 +69,7 @@ uint32_t light_get_ambient_lux(void) {
   return s_alg_next_light << 4;
 }
 
-AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level) {
+AmbientLightLevel light_level_to_enum(uint32_t light_level) {
   // Just return a predictable result to validate the unit tests
   return (light_level / ALG_RAW_LIGHT_SENSOR_DIVIDE_BY) % AMBIENT_LIGHT_LEVEL_ENUM_COUNT;
 }
@@ -440,8 +440,8 @@ static void prv_assert_minute_data(HealthMinuteData *actual, AlgMinuteDLSSample 
   cl_assert_equal_i(actual->steps, expected->base.steps);
   cl_assert_equal_i(actual->orientation, expected->base.orientation);
   cl_assert_equal_i(actual->vmc, expected->base.vmc);
-  cl_assert_equal_i(actual->light, ambient_light_level_to_enum(expected->base.light *
-                                                               ALG_RAW_LIGHT_SENSOR_DIVIDE_BY));
+  cl_assert_equal_i(actual->light,
+                    light_level_to_enum(expected->base.light * ALG_RAW_LIGHT_SENSOR_DIVIDE_BY));
   cl_assert_equal_i(actual->heart_rate_bpm, expected->heart_rate_bpm);
 }
 
@@ -927,9 +927,8 @@ void test_activity_algorithm_kraepelin__minute_data_steps_during_sleep(void) {
     }
     cl_assert_equal_i(retrieve[i].orientation, minute_data[i].base.orientation);
     cl_assert_equal_i(retrieve[i].vmc, minute_data[i].base.vmc);
-    cl_assert_equal_i(
-        retrieve[i].light,
-        ambient_light_level_to_enum(minute_data[i].base.light * ALG_RAW_LIGHT_SENSOR_DIVIDE_BY));
+    cl_assert_equal_i(retrieve[i].light, light_level_to_enum(minute_data[i].base.light *
+                                                             ALG_RAW_LIGHT_SENSOR_DIVIDE_BY));
     cl_assert_equal_i(retrieve[i].heart_rate_bpm, minute_data[i].heart_rate_bpm);
   }
 }

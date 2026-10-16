@@ -6,8 +6,8 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <pbl/drivers/ambient_light.h>
 #include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/light_level.h>
 
 //! @addtogroup Foundation
 //! @{

@@ -13,7 +13,6 @@
 
 PBL_LOG_MODULE_DEFINE(driver_ambient_opt3001, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 
-static uint32_t s_sensor_light_dark_threshold;
 static bool s_initialized = false;
 
 #define OPT3001_RESULT                 0x00
@@ -55,14 +54,7 @@ static bool prv_configure(uint8_t mode) {
                                 PBL_FIELD_PREP(OPT3001_CONFIG_MODE_MASK, mode));
 }
 
-static uint32_t prv_get_default_ambient_light_dark_threshold(void) {
-  PBL_ASSERTN(BOARD_CONFIG.ambient_light_dark_threshold != 0);
-  return BOARD_CONFIG.ambient_light_dark_threshold;
-}
-
 void ambient_light_init(void) {
-  s_sensor_light_dark_threshold = prv_get_default_ambient_light_dark_threshold();
-
   uint16_t mf, id;
   bool ok = prv_read_register(OPT3001_MFGID, &mf) && prv_read_register(OPT3001_DEVID, &id);
   if (!ok) {
@@ -106,40 +98,6 @@ uint32_t ambient_light_get_light_level(void) {
   uint32_t level = mant << exp;
 
   return level;
-}
-
-uint32_t ambient_light_get_dark_threshold(void) {
-  return s_sensor_light_dark_threshold;
-}
-
-void ambient_light_set_dark_threshold(uint32_t new_threshold) {
-  PBL_ASSERTN(new_threshold <= AMBIENT_LIGHT_LEVEL_MAX);
-  s_sensor_light_dark_threshold = new_threshold;
-}
-
-bool ambient_light_is_light(void) {
-  // if the sensor is not enabled, always return that it is dark
-  // The threshold lives in the lux domain (see ambient_light_level_to_lux).
-  return s_initialized && ambient_light_level_to_lux(ambient_light_get_light_level()) >
-                              s_sensor_light_dark_threshold;
-}
-
-AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level) {
-  if (!s_initialized) {
-    // if the sensor is not enabled, always return that it is very dark
-    return AmbientLightLevelUnknown;
-  }
-
-  const uint32_t k_delta_threshold = BOARD_CONFIG.ambient_k_delta_threshold;
-  if (light_level < (s_sensor_light_dark_threshold - k_delta_threshold)) {
-    return AmbientLightLevelVeryDark;
-  } else if (light_level < s_sensor_light_dark_threshold) {
-    return AmbientLightLevelDark;
-  } else if (light_level < (s_sensor_light_dark_threshold + k_delta_threshold)) {
-    return AmbientLightLevelLight;
-  } else {
-    return AmbientLightLevelVeryLight;
-  }
 }
 
 #ifdef CONFIG_SHELL

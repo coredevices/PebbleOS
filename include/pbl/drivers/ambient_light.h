@@ -26,23 +26,6 @@
  * @{
  */
 
-/** @brief Light level enum */
-typedef enum AmbientLightLevel {
-  /** No reading available. */
-  AmbientLightLevelUnknown = 0,
-  /** Well below the dark threshold. */
-  AmbientLightLevelVeryDark,
-  /** Below the dark threshold. */
-  AmbientLightLevelDark,
-  /** At or slightly above the dark threshold. */
-  AmbientLightLevelLight,
-  /** Well above the dark threshold. */
-  AmbientLightLevelVeryLight,
-} AmbientLightLevel;
-
-/** @brief Number of AmbientLightLevel values. */
-#define AMBIENT_LIGHT_LEVEL_ENUM_COUNT (AmbientLightLevelVeryLight + 1)
-
 /** @cond INTERNAL_HIDDEN */
 #ifndef CONFIG_AMBIENT_LIGHT_BITS
 // Fallback for header parsers (e.g. SDK generator) that don't preload autoconf.h.
@@ -103,37 +86,6 @@ void ambient_light_common_init(void);
  * @param sampling True while primed and not suspended.
  */
 void ambient_light_driver_set_state(bool active, bool sampling);
-
-/**
- * @brief Get the threshold between light and dark.
- *
- * @return Threshold, in the units returned by ambient_light_level_to_lux().
- */
-uint32_t ambient_light_get_dark_threshold(void);
-
-/**
- * @brief Set the threshold between light and dark.
- *
- * @param new_threshold Threshold, in the units returned by ambient_light_level_to_lux(), at most
- *                      #AMBIENT_LIGHT_LEVEL_MAX.
- */
-void ambient_light_set_dark_threshold(uint32_t new_threshold);
-
-/**
- * @brief Check whether it is light.
- *
- * @return True if the current level, converted with ambient_light_level_to_lux(), is above the
- *         dark threshold; false if dark or the sensor is unavailable.
- */
-bool ambient_light_is_light();
-
-/**
- * @brief Classify a light level against the dark threshold.
- *
- * @param light_level Light level, in the units of the dark threshold.
- * @return Light level class, AmbientLightLevelUnknown if the sensor is unavailable.
- */
-AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level);
 
 /**
  * @brief Check whether the board has raw-count to lux coefficients.

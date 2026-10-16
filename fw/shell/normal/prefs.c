@@ -8,6 +8,7 @@
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/light.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_nav_service.h>
 #include <pbl/util/units.h>
@@ -569,8 +570,7 @@ static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
     return false;
   }
   s_backlight_ambient_threshold = *threshold;
-  // Update the ambient light driver
-  ambient_light_set_dark_threshold(*threshold);
+  light_set_dark_threshold(*threshold);
   return true;
 }
 
@@ -1167,8 +1167,7 @@ void shell_prefs_init(void) {
   }
 #endif
 
-  // Update the ambient light driver with the loaded threshold value
-  ambient_light_set_dark_threshold(s_backlight_ambient_threshold);
+  light_set_dark_threshold(s_backlight_ambient_threshold);
 
   // Initialize prefs sync (must be after prefs are loaded)
   prefs_sync_init();
@@ -1595,8 +1594,7 @@ void backlight_set_ambient_threshold(uint32_t threshold) {
     threshold = 1;
   }
   prv_pref_set(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD, &threshold, sizeof(threshold));
-  // Update the ambient light driver with the new threshold
-  ambient_light_set_dark_threshold(threshold);
+  light_set_dark_threshold(threshold);
 }
 
 #ifdef CONFIG_ORIENTATION_MANAGER

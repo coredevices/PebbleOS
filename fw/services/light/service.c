@@ -4,6 +4,7 @@
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/services/light.h>
+#include <pbl/services/light_level.h>
 
 #include <board/board.h>
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -126,6 +127,9 @@ static uint32_t s_als_cached_level;
 static RtcTicks s_als_cached_ticks;        // 0 = invalid
 #define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ) // 1 second
 
+//! Ambient light level below which the backlight turns on, in lux
+static uint32_t s_dark_threshold;
+
 //! Event-gated continuous ALS:
 //!
 //! Wake-related entry points call prv_als_prime_for_interaction(), which (if
@@ -232,8 +236,30 @@ uint32_t light_get_ambient_lux(void) {
   return prv_get_als_level();
 }
 
+uint32_t light_get_dark_threshold(void) {
+  return s_dark_threshold;
+}
+
+void light_set_dark_threshold(uint32_t threshold) {
+  s_dark_threshold = threshold;
+}
+
+AmbientLightLevel light_level_to_enum(uint32_t lux) {
+  const uint32_t delta = BOARD_CONFIG.ambient_k_delta_threshold;
+
+  if (lux < (s_dark_threshold - delta)) {
+    return AmbientLightLevelVeryDark;
+  } else if (lux < s_dark_threshold) {
+    return AmbientLightLevelDark;
+  } else if (lux < (s_dark_threshold + delta)) {
+    return AmbientLightLevelLight;
+  } else {
+    return AmbientLightLevelVeryLight;
+  }
+}
+
 static bool prv_als_is_light(void) {
-  return prv_get_als_level() > ambient_light_get_dark_threshold();
+  return prv_get_als_level() > s_dark_threshold;
 }
 
 static void light_timer_callback(void *data) {
@@ -477,6 +503,7 @@ static bool prv_light_allowed(void) {
 }
 
 void light_init(void) {
+  s_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
   s_light_state = LIGHT_STATE_OFF;
   s_current_brightness = 0;
   s_num_buttons_down = 0;

@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>

@@ -10,6 +10,7 @@
 typedef struct {
   const uint8_t backlight_on_percent;
   const uint32_t ambient_light_dark_threshold;
+  const uint32_t ambient_k_delta_threshold;
 } BoardConfig;
 
 typedef struct {

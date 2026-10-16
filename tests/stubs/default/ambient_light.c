@@ -23,17 +23,6 @@ PBL_WEAK uint32_t ambient_light_get_light_level(void) {
   return 0;
 }
 
-PBL_WEAK uint32_t ambient_light_get_dark_threshold(void) {
-  return 0;
-}
-
-PBL_WEAK void ambient_light_set_dark_threshold(uint32_t new_threshold) {
-}
-
-PBL_WEAK bool ambient_light_is_light(void) {
-  return false;
-}
-
 PBL_WEAK uint32_t ambient_light_level_to_lux(uint32_t light_level) {
   return light_level;
 }

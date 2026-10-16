@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/ambient_light.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
@@ -11,6 +10,7 @@
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/light.h>
+#include <pbl/services/light_level.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
@@ -892,7 +892,7 @@ static uint32_t PBL_NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLS
   // Scale the reading into the 8-bit light field; saturate rather than wrap so a
   // sensor whose range exceeds the field doesn't alias bright light down to
   // "dark". The light service value is screen-compensated and in lux, matching
-  // the domain ambient_light_level_to_enum() expects when reading back.
+  // the domain light_level_to_enum() expects when reading back.
   const uint32_t light_level = light_get_ambient_lux();
   m_rec->base.light = MIN(ROUND(light_level, ALG_RAW_LIGHT_SENSOR_DIVIDE_BY), UINT8_MAX);
 
@@ -1111,7 +1111,7 @@ static bool prv_insert_health_minute_record(AlgReadMinutesContext *context, time
 
   // Put it in
   uint32_t raw_light = base_fields->light * ALG_RAW_LIGHT_SENSOR_DIVIDE_BY;
-  AmbientLightLevel health_light_level = ambient_light_level_to_enum(raw_light);
+  AmbientLightLevel health_light_level = light_level_to_enum(raw_light);
   HealthMinuteData record = {
     .steps = base_fields->steps,
     .orientation = base_fields->orientation,

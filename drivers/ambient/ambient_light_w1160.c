@@ -75,7 +75,6 @@ PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 #define W1160_ALS_POLL_TIMEOUT_MS (200) /* max wait for ALS data-ready */
 
 static bool s_initialized;
-static uint32_t s_sensor_light_dark_threshold;
 
 // DATA_ALS reads zero while SAMPLING_EN=0, so we cache the last known-good
 // value. Cache is served during suspend windows and invalidated when the
@@ -118,8 +117,6 @@ static bool prv_read_data_register(uint16_t *als_out) {
 void ambient_light_init(void) {
   uint8_t chip_id;
   bool rv;
-
-  s_sensor_light_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 
   pbl_sleep_ms(W1160_POR_WAIT_TIME);
 
@@ -274,34 +271,6 @@ void ambient_light_driver_set_state(bool active, bool sampling) {
   }
   s_active = active;
   pbl_mutex_unlock(&s_state_mutex);
-}
-
-uint32_t ambient_light_get_dark_threshold(void) {
-  return s_sensor_light_dark_threshold;
-}
-
-void ambient_light_set_dark_threshold(uint32_t new_threshold) {
-  PBL_ASSERTN(new_threshold <= AMBIENT_LIGHT_LEVEL_MAX);
-  s_sensor_light_dark_threshold = new_threshold;
-}
-
-bool ambient_light_is_light(void) {
-  // The threshold lives in the lux domain (see ambient_light_level_to_lux).
-  return ambient_light_level_to_lux(ambient_light_get_light_level()) >
-         s_sensor_light_dark_threshold;
-}
-
-AmbientLightLevel ambient_light_level_to_enum(uint32_t light_level) {
-  const uint32_t k_delta_threshold = BOARD_CONFIG.ambient_k_delta_threshold;
-  if (light_level < (s_sensor_light_dark_threshold - k_delta_threshold)) {
-    return AmbientLightLevelVeryDark;
-  } else if (light_level < s_sensor_light_dark_threshold) {
-    return AmbientLightLevelDark;
-  } else if (light_level < (s_sensor_light_dark_threshold + k_delta_threshold)) {
-    return AmbientLightLevelLight;
-  } else {
-    return AmbientLightLevelVeryLight;
-  }
 }
 
 #ifdef CONFIG_SHELL
