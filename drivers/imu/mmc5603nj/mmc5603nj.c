@@ -2,386 +2,279 @@
 /* SPDX-FileCopyrightText: 2025 Bob Wei */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/imu/mmc5603nj/registers.h>
 #include <pbl/drivers/mag.h>
-#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/imu/units.h>
 #include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 
-#include <board/board.h>
-#include <kernel/events.h>
 #include <kernel/util/sleep.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mag_mmc5603nj, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
-// Forward declarations of private methods
-static bool prv_mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data);
-static bool prv_mmc5603nj_write(uint8_t reg_addr, uint8_t data);
-static bool prv_mmc5603nj_init(void);
-static bool prv_mmc5603nj_check_whoami(void);
-static bool prv_mmc5603nj_reset(void);
-static bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz);
-#ifndef CONFIG_RECOVERY_FW
-static bool prv_configure_polling(void);
-static void prv_mmc5603nj_polling_callback(void *data);
-#endif
-static bool prv_mmc5603nj_is_data_ready(void);
-static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample);
-typedef enum {
-  X_AXIS = 0,
-  Y_AXIS = 1,
-  Z_AXIS = 2,
-} axis_t;
-static int16_t prv_get_axis_projection(axis_t axis, int16_t *raw_vector);
+#define MMC5603NJ_RATE_HZ_MAX 255U
 
-// Runtime state
-static bool s_initialized = false;
-static int s_use_refcount = 0;
-static PBL_MUTEX_DEFINE(s_mag_mutex);
-static uint8_t s_sample_rate_hz = 0;
-#ifndef CONFIG_RECOVERY_FW
-static TimerID s_polling_timer = TIMER_INVALID_ID;
-static uint16_t s_polling_interval_ms = 0;
-#endif
-static bool s_measurement_ready = false;
+static const struct pbl_mmc5603nj *s_dev;
 
-// watch rotation
-static bool s_rotated_180 = false;
+static int prv_read(uint8_t reg, uint8_t *data, uint32_t len) {
+  int ret;
 
-// MMC5603NJ entrypoints
-
-void mag_init(void) {
-  if (prv_mmc5603nj_init()) {
-    PBL_LOG_DBG("MMC5603NJ: Initialization complete");
-  } else {
-    PBL_LOG_ERR("MMC5603NJ: Initialization failed");
+  pbl_i2c_use(&s_dev->i2c);
+  ret = pbl_i2c_read_register_block(&s_dev->i2c, reg, len, data);
+  pbl_i2c_release(&s_dev->i2c);
+  if (ret != 0) {
+    PBL_LOG_ERR("Could not read register 0x%02x (%d)", reg, ret);
   }
+
+  return ret;
 }
 
-// mag.h implementation
+static int prv_write(uint8_t reg, uint8_t val) {
+  int ret;
 
-void mag_use(void) {
-  if (!s_initialized) {
-    return;
+  pbl_i2c_use(&s_dev->i2c);
+  ret = pbl_i2c_write_register(&s_dev->i2c, reg, val);
+  pbl_i2c_release(&s_dev->i2c);
+  if (ret != 0) {
+    PBL_LOG_ERR("Could not write register 0x%02x (%d)", reg, ret);
   }
 
-  pbl_mutex_lock(&s_mag_mutex, PBL_FOREVER);
-  ++s_use_refcount;
-  pbl_mutex_unlock(&s_mag_mutex);
+  return ret;
 }
 
-void mag_start_sampling(void) {
-  mag_use();
-  mag_change_sample_rate(MagSampleRate5Hz);
+static int prv_is_data_ready(bool *ready) {
+  uint8_t status;
+  int ret;
+
+  ret = prv_read(MMC5603NJ_REG_STATUS1, &status, 1);
+  if (ret != 0) {
+    return ret;
+  }
+
+  *ready = (status & MMC5603NJ_STATUS1_MEAS_M_DONE_MASK) != 0U;
+
+  return 0;
 }
 
-void mag_release(void) {
-  if (!s_initialized) {
-    return;
+static int16_t prv_get_axis(const int16_t raw[3], IMUCoordinateAxis axis) {
+  int16_t val = s_dev->axis_dir[axis] * raw[s_dev->axis_map[axis]];
+
+  if (s_dev->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
+    val = -val;
   }
 
-  pbl_mutex_lock(&s_mag_mutex, PBL_FOREVER);
-  PBL_ASSERTN(s_use_refcount != 0);
-  --s_use_refcount;
-  if (s_use_refcount == 0) {
-    if (!prv_mmc5603nj_set_sample_rate_hz(0)) {
-      PBL_LOG_ERR("MMC5603NJ: Failed to disable sensor on release");
-    }
-  }
-  pbl_mutex_unlock(&s_mag_mutex);
+  // 1024 counts per gauss in 16-bit mode
+  return (int16_t)(((int32_t)val * 1000) / 1024);
 }
 
-// callers responsibility to know if there is valid data to be read
-MagReadStatus mag_read_data(MagData *data) {
-  if (!s_initialized) {
-    return MagReadNoMag;
+static int prv_read_sample(MagData *sample) {
+  uint8_t data[6];
+  int16_t raw[3];
+  int ret;
+
+  ret = prv_read(MMC5603NJ_REG_XOUT0, data, sizeof(data));
+  if (ret != 0) {
+    return ret;
   }
 
-  pbl_mutex_lock(&s_mag_mutex, PBL_FOREVER);
-  MagReadStatus rv = prv_mmc5603nj_get_sample(data);
-  pbl_mutex_unlock(&s_mag_mutex);
-  return rv;
+  // Unsigned, offset by 2^15
+  for (uint8_t i = 0U; i < 3U; i++) {
+    raw[i] = (int16_t)((((uint16_t)data[2U * i] << 8) | data[2U * i + 1U]) - (1U << 15));
+  }
+
+  sample->x = prv_get_axis(raw, AXIS_X);
+  sample->y = prv_get_axis(raw, AXIS_Y);
+  sample->z = prv_get_axis(raw, AXIS_Z);
+
+  return 0;
 }
 
-bool mag_change_sample_rate(MagSampleRate rate) {
-  if (!s_initialized) {
-    return false;
+static int prv_reset(void) {
+  int ret;
+
+  ret = prv_write(MMC5603NJ_REG_CTRL1,
+                  PBL_FIELD_PREP(MMC5603NJ_CTRL1_BANDWIDTH_MASK, MMC5603NJ_CTRL1_BANDWIDTH_6ms6) |
+                      MMC5603NJ_CTRL1_SW_RESET);
+  if (ret != 0) {
+    return ret;
   }
 
-  pbl_mutex_lock(&s_mag_mutex, PBL_FOREVER);
-
-  if (s_use_refcount == 0) {
-    pbl_mutex_unlock(&s_mag_mutex);
-    return true;
-  }
-
-  uint8_t rate_hz = 0;
-  switch (rate) {
-    case MagSampleRate20Hz:
-      rate_hz = 20;
-      break;
-    case MagSampleRate5Hz:
-      rate_hz = 5;
-      break;
-    default:
-      pbl_mutex_unlock(&s_mag_mutex);
-      return false;
-  }
-
-  bool rv = prv_mmc5603nj_set_sample_rate_hz(rate_hz);
-  pbl_mutex_unlock(&s_mag_mutex);
-  return rv;
-}
-
-// I2C read/write helpers
-
-static bool prv_mmc5603nj_read(uint8_t reg_addr, uint8_t data_len, uint8_t *data) {
-  pbl_i2c_use(I2C_MMC5603NJ);
-  bool rv = pbl_i2c_write_block(I2C_MMC5603NJ, 1, &reg_addr) == 0;
-  if (!rv) {
-    PBL_LOG_ERR("MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
-  }
-  rv = pbl_i2c_read_block(I2C_MMC5603NJ, data_len, data) == 0;
-  if (!rv) {
-    PBL_LOG_ERR("MMC5603NJ: I2C data read failed for register 0x%02x", reg_addr);
-  }
-  pbl_i2c_release(I2C_MMC5603NJ);
-  return rv;
-}
-
-static bool prv_mmc5603nj_write(uint8_t reg_addr, uint8_t data) {
-  pbl_i2c_use(I2C_MMC5603NJ);
-  uint8_t d[2] = {reg_addr, data};
-  bool rv = pbl_i2c_write_block(I2C_MMC5603NJ, 2, d) == 0;
-  if (!rv) {
-    PBL_LOG_ERR("MMC5603NJ: I2C write failed for register 0x%02x", reg_addr);
-  }
-  pbl_i2c_release(I2C_MMC5603NJ);
-  return rv;
-}
-
-// Initialization
-
-static bool prv_mmc5603nj_init(void) {
-  if (s_initialized) {
-    return true;
-  }
-
-  if (!prv_mmc5603nj_check_whoami()) {
-    PBL_LOG_ERR("MMC5603NJ: WHO_AM_I check failed. Wrong device?");
-    return false;
-  }
-
-  // Reset the device
-  if (!prv_mmc5603nj_reset()) {
-    PBL_LOG_ERR("MMC5603NJ: Failed to reset");
-    return false;
-  }
-
-  s_initialized = true;
-  return true;
-}
-
-// Ask the compass for a 8-bit value that's programmed into the IC at the
-// factory. Useful as a sanity check to make sure everything came up properly.
-bool prv_mmc5603nj_check_whoami(void) {
-  uint8_t whoami = 0;
-  if (!prv_mmc5603nj_read(MMC5603NJ_REG_WHO_AM_I, 1, &whoami)) {
-    return false;
-  }
-  return (whoami == MMC5603NJ_WHO_AM_I_VALUE);
-}
-
-static bool prv_mmc5603nj_reset(void) {
-  // Software reset
-  if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL1, PBL_FIELD_PREP(MMC5603NJ_CTRL1_BANDWIDTH_MASK,
-                                                               MMC5603NJ_CTRL1_BANDWIDTH_6ms6) |
-                                                    MMC5603NJ_CTRL1_SW_RESET)) {
-    PBL_LOG_ERR("MMC5603NJ: Failed to reset device.");
-    return false;
-  }
   psleep(MMC5603NJ_SW_RESET_DELAY_MS);
 
-  // Set operation
-  if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_SET)) {
-    PBL_LOG_ERR("MMC5603NJ: Failed to set coils.");
-    return false;
+  ret = prv_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_SET);
+  if (ret != 0) {
+    return ret;
   }
+
   psleep(MMC5603NJ_SET_DELAY_MS);
 
-  // Reset operation
-  if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_RESET)) {
-    PBL_LOG_ERR("MMC5603NJ: Failed to reset coils.");
-    return false;
+  ret = prv_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_RESET);
+  if (ret != 0) {
+    return ret;
   }
+
   psleep(MMC5603NJ_SET_DELAY_MS);
-  return true;
+
+  return 0;
 }
 
-// Configure ODR
+static int prv_set_rate_hw(uint8_t rate_hz) {
+  MagData discard;
+  bool ready;
+  int ret;
 
-bool prv_mmc5603nj_set_sample_rate_hz(uint8_t rate_hz) {
-  if (rate_hz == s_sample_rate_hz) {
-    return true;
+  // Leave continuous mode
+  ret = prv_write(MMC5603NJ_REG_CTRL2, 0x00);
+  if (ret != 0) {
+    return ret;
   }
 
-  PBL_LOG_DBG("MMC5603NJ: Setting sample rate to %d Hz", rate_hz);
-
-  // Reset device runtime status (disabling continuous mode/etc)
-  if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL2, 0x00)) {
-    return false;
+  // Clear any pending data-ready flag
+  if (prv_is_data_ready(&ready) == 0 && ready) {
+    (void)prv_read_sample(&discard);
   }
 
-  // Do one final read to reset any data ready flags
-  MagData discard_sample;
-  prv_mmc5603nj_get_sample(&discard_sample);
+  if (rate_hz == 0U) {
+    return 0;
+  }
 
-  if (rate_hz > 0) {
-    // Set new sampling rate
-    if (!prv_mmc5603nj_write(MMC5603NJ_REG_ODR, rate_hz)) {
-      PBL_LOG_ERR("MMC5603NJ: Failed to update ODR.");
-      return false;
+  ret = prv_write(MMC5603NJ_REG_ODR, rate_hz);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // Recompute the measurement period
+  ret = prv_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_AUTO_SR_EN | MMC5603NJ_CTRL0_CMM_FREQ_EN);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return prv_write(MMC5603NJ_REG_CTRL2, PBL_FIELD_PREP(MMC5603NJ_CTRL2_AUTOSET_PRD_MASK,
+                                                       MMC5603NJ_CTRL2_AUTOSET_PRD_100) |
+                                            MMC5603NJ_CTRL2_PRD_SET_EN | MMC5603NJ_CTRL2_CMM_EN);
+}
+
+static void prv_poll_cb(void *data) {
+  MagData sample;
+  bool ready;
+  int ret;
+
+  pbl_mag_lock(&s_dev->mag);
+
+  if (s_dev->state->rate_hz == 0U) {
+    goto out;
+  }
+
+  ret = prv_is_data_ready(&ready);
+  if (ret == 0 && !ready) {
+    goto out;
+  }
+
+  if (ret == 0) {
+    ret = prv_read_sample(&sample);
+  }
+
+  if (ret != 0) {
+    PBL_LOG_WRN("Read failed (%d), restarting sampling", ret);
+    if (prv_set_rate_hw(0U) == 0) {
+      (void)prv_set_rate_hw(s_dev->state->rate_hz);
+    }
+    goto out;
+  }
+
+  pbl_mag_report_sample(&s_dev->mag, &sample);
+
+out:
+  pbl_mag_unlock(&s_dev->mag);
+}
+
+static int prv_init(const struct pbl_mag *mag) {
+  uint8_t whoami;
+  int ret;
+
+  s_dev = container_of(mag, const struct pbl_mmc5603nj, mag);
+
+  ret = prv_read(MMC5603NJ_REG_WHO_AM_I, &whoami, 1);
+  if (ret != 0) {
+    return -ENODEV;
+  }
+
+  if (whoami != MMC5603NJ_WHO_AM_I_VALUE) {
+    PBL_LOG_ERR("Unexpected id: 0x%02x!=0x%02x", whoami, MMC5603NJ_WHO_AM_I_VALUE);
+    return -ENODEV;
+  }
+
+  ret = prv_reset();
+  if (ret != 0) {
+    PBL_LOG_ERR("Could not reset (%d)", ret);
+    return ret;
+  }
+
+  return 0;
+}
+
+static int prv_set_rotated(const struct pbl_mag *mag, bool rotated) {
+  s_dev->state->rotated = rotated;
+
+  return 0;
+}
+
+static int prv_set_sampling_interval(const struct pbl_mag *mag, uint32_t interval_us,
+                                     uint32_t *actual_us) {
+  struct pbl_mmc5603nj_state *state = s_dev->state;
+  uint8_t rate_hz = 0U;
+  int ret;
+
+  if (interval_us > 0U) {
+    rate_hz = (uint8_t)CLIP(DIVIDE_CEIL(1000000U, interval_us), 1U, MMC5603NJ_RATE_HZ_MAX);
+  }
+
+  if (rate_hz != state->rate_hz) {
+    PBL_LOG_DBG("Setting sample rate to %u Hz", rate_hz);
+
+    ret = prv_set_rate_hw(rate_hz);
+    if (ret != 0) {
+      return ret;
     }
 
-    // Retrigger calculation of measurements rates
-    if (!prv_mmc5603nj_write(MMC5603NJ_REG_CTRL0,
-                             MMC5603NJ_CTRL0_AUTO_SR_EN | MMC5603NJ_CTRL0_CMM_FREQ_EN)) {
-      PBL_LOG_ERR("MMC5603NJ: Failed to trigger measurement calculation update.");
-      return false;
-    }
+    state->rate_hz = rate_hz;
 
-    // Start continuous mode
-    if (!prv_mmc5603nj_write(
-            MMC5603NJ_REG_CTRL2,
-            PBL_FIELD_PREP(MMC5603NJ_CTRL2_AUTOSET_PRD_MASK, MMC5603NJ_CTRL2_AUTOSET_PRD_100) |
-                MMC5603NJ_CTRL2_PRD_SET_EN | MMC5603NJ_CTRL2_CMM_EN)) {
-      PBL_LOG_ERR("MMC5603NJ: Failed to start continuous mode.");
-      return false;
-    }
-  }
+    if (rate_hz == 0U) {
+      new_timer_stop(state->poll_timer);
+    } else {
+      if (state->poll_timer == TIMER_INVALID_ID) {
+        state->poll_timer = new_timer_create();
+        if (state->poll_timer == TIMER_INVALID_ID) {
+          return -ENOMEM;
+        }
+      }
 
-  s_sample_rate_hz = rate_hz;
-
-#ifndef CONFIG_RECOVERY_FW
-  if (!prv_configure_polling()) {
-    PBL_LOG_ERR("MMC5603NJ: Failed to configure polling");
-    return false;
-  }
-#endif
-
-  return true;
-}
-
-#ifndef CONFIG_RECOVERY_FW
-// Configure polling (to simulate data-ready interrupts)
-
-static bool prv_configure_polling(void) {
-  uint16_t polling_interval_ms = s_sample_rate_hz == 0 ? 0 : DIVIDE_CEIL(1000.0, s_sample_rate_hz);
-
-  if (s_polling_interval_ms == polling_interval_ms) {
-    return true;
-  }
-
-  if (s_polling_timer != TIMER_INVALID_ID) {
-    new_timer_stop(s_polling_timer);
-    new_timer_delete(s_polling_timer);
-    s_polling_timer = TIMER_INVALID_ID;
-  }
-
-  if (polling_interval_ms > 0) {
-    s_polling_timer = new_timer_create();
-    if (s_polling_timer == TIMER_INVALID_ID) {
-      PBL_LOG_ERR("MMC5603NJ: Failed to create polling timer");
-      return false;
-    }
-    new_timer_start(s_polling_timer, polling_interval_ms, prv_mmc5603nj_polling_callback, nullptr,
-                    TIMER_START_FLAG_REPEATING);
-  }
-  s_polling_interval_ms = polling_interval_ms;
-  return true;
-}
-
-static void prv_mmc5603nj_polling_callback(void *data) {
-  if (s_use_refcount == 0 || s_sample_rate_hz == 0) {
-    return;
-  }
-
-  // Check if data is ready by reading status register
-  if (prv_mmc5603nj_is_data_ready()) {
-    // Post event to trigger data processing
-    s_measurement_ready = true;
-    PebbleEvent e = {
-      .type = PEBBLE_ECOMPASS_SERVICE_EVENT,
-    };
-    event_put(&e);
-  }
-}
-#endif
-
-// Samples
-bool prv_mmc5603nj_is_data_ready(void) {
-  uint8_t status = 0;
-  prv_mmc5603nj_read(MMC5603NJ_REG_STATUS1, 1, &status);
-  return (status & MMC5603NJ_STATUS1_MEAS_M_DONE_MASK) > 0;
-}
-
-static MagReadStatus prv_mmc5603nj_get_sample(MagData *sample) {
-  // Check if sensor enabled.
-  if (s_sample_rate_hz == 0) {
-    return MagReadMagOff;
-  }
-
-  // Check if data is ready
-  if (!s_measurement_ready) { // Avoid multiple status checks if we already know data is ready
-    if (prv_mmc5603nj_is_data_ready()) {
-      s_measurement_ready = true;
+      new_timer_start(state->poll_timer, DIVIDE_CEIL(1000U, rate_hz), prv_poll_cb, nullptr,
+                      TIMER_START_FLAG_REPEATING);
     }
   }
-  if (!s_measurement_ready) {
-    return MagReadCommunicationFail;
-  }
-  s_measurement_ready = false; // Clear state since we will be reading the measurement below
 
-  // Ready data
-  uint8_t raw_data[6]; // Only need 16 bit precision per axis
-  if (!prv_mmc5603nj_read(MMC5603NJ_REG_XOUT0, sizeof(raw_data), raw_data)) {
-    return MagReadCommunicationFail;
-  }
+  *actual_us = (rate_hz == 0U) ? 0U : 1000000U / rate_hz;
 
-  int16_t raw_vector[3];
-  for (uint8_t axis = 0; axis < 3; axis++) {
-    uint16_t raw_axis_value = ((uint16_t)raw_data[2 * axis] << 8) | raw_data[2 * axis + 1];
-    raw_vector[axis] =
-        (int16_t)(raw_axis_value - (1 << 15)); // offset by 2^15 for uint -> int alignment
-  }
-
-  // Convert raw counts to milliGauss (mG)
-  // Sensitivity: 1024 counts/G (16-bit operation)
-  // Formula: mG = (raw_counts * 1000) / 1024
-  int16_t raw_x = s_rotated_180 ? prv_get_axis_projection(X_AXIS, raw_vector) * -1
-                                : prv_get_axis_projection(X_AXIS, raw_vector);
-  int16_t raw_y = s_rotated_180 ? prv_get_axis_projection(Y_AXIS, raw_vector) * -1
-                                : prv_get_axis_projection(Y_AXIS, raw_vector);
-  int16_t raw_z = prv_get_axis_projection(Z_AXIS, raw_vector);
-
-  sample->x = ((int32_t)raw_x * 1000) / 1024;
-  sample->y = ((int32_t)raw_y * 1000) / 1024;
-  sample->z = ((int32_t)raw_z * 1000) / 1024;
-
-  return MagReadSuccess;
+  return 0;
 }
 
-void mag_set_rotated(bool rotated) {
-  s_rotated_180 = rotated;
+static int prv_peek(const struct pbl_mag *mag, MagData *sample) {
+  if (s_dev->state->rate_hz == 0U) {
+    return -ENODATA;
+  }
+
+  return prv_read_sample(sample);
 }
 
-static int16_t prv_get_axis_projection(axis_t axis, int16_t *raw_vector) {
-  uint8_t axis_offset = BOARD_CONFIG_MAG.mag_config.axes_offsets[axis];
-  bool invert = BOARD_CONFIG_MAG.mag_config.axes_inverts[axis];
-
-  return (invert ? -1 : 1) * raw_vector[axis_offset];
-}
+const struct pbl_mag_ops pbl_mmc5603nj_ops = {
+  .init = prv_init,
+  .set_rotated = prv_set_rotated,
+  .set_sampling_interval = prv_set_sampling_interval,
+  .peek = prv_peek,
+};

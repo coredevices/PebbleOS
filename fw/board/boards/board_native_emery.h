@@ -20,7 +20,3 @@ extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 85U,
 };
-
-static const BoardConfigMag BOARD_CONFIG_MAG = {
-  .mag_config = {},
-};

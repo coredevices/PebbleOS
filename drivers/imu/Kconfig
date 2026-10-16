@@ -127,19 +127,16 @@ endif # ACCEL_LSM6DSO
 menuconfig MAG
     bool "Magnetometer"
     help
-      Magnetometer Drivers
+      Magnetometer drivers (pbl/drivers/mag.h). The board instantiates
+      the magnetometer it has and exports it as MAG.
 
 if MAG
 
-choice MAG_DRIVER
-    prompt "Magnetometer Driver"
-
 config MAG_MMC5603NJ
     bool "MEMSIC MMC5603NJ"
+    depends on I2C
     help
       Support for the MEMSIC MMC5603NJ magnetometer.
-
-endchoice
 
 endif # MAG
 

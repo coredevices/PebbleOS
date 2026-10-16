@@ -5,7 +5,7 @@
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/display/display.h>
-#include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
+#include <pbl/drivers/mag.h>
 #include <pbl/services/orientation_manager.h>
 
 #include <kernel/events.h>
@@ -20,7 +20,9 @@ void prv_change_orientation(bool rotated) {
   display_set_rotated(rotated);
   button_set_rotated(rotated);
   (void)pbl_accel_set_rotated(ACCEL, rotated);
-  mag_set_rotated(rotated);
+#ifdef CONFIG_MAG
+  (void)pbl_mag_set_rotated(MAG, rotated);
+#endif
 #ifdef CONFIG_SERVICE_TOUCH
   touch_set_rotated(rotated);
 #endif

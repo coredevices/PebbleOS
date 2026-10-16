@@ -63,9 +63,9 @@ static void prv_update_display(void *context) {
   AppData *data = context;
 
   MagData sample;
-  MagReadStatus ret = mag_read_data(&sample);
+  int ret = pbl_mag_peek(MAG, &sample);
 
-  if (ret != MagReadSuccess) {
+  if (ret != 0) {
     sniprintf(data->status_string, sizeof(data->status_string), "MAG ERROR:\n%d", ret);
     text_layer_set_text(&data->status, data->status_string);
     return;
@@ -178,8 +178,7 @@ static void prv_handle_init(void) {
   app_state_set_user_data(data);
 
   // Initialize magnetometer
-  mag_start_sampling();
-  mag_change_sample_rate(MagSampleRate20Hz);
+  (void)pbl_mag_set_sampling_interval(MAG, 50000U, nullptr);
 
   Window *window = &data->window;
   window_init(window, "");
@@ -212,7 +211,7 @@ static void prv_handle_init(void) {
 
 static void prv_handle_deinit(void) {
   evented_timer_cancel(s_timer);
-  mag_release();
+  (void)pbl_mag_set_sampling_interval(MAG, 0U, nullptr);
 }
 
 static void s_main(void) {

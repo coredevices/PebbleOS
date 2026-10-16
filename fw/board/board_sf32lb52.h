@@ -93,15 +93,6 @@ typedef struct {
   uint8_t default_motion_sensitivity;
 } BoardConfigAccel;
 
-typedef struct {
-  int axes_offsets[3];
-  bool axes_inverts[3];
-} MagConfig;
-
-typedef struct {
-  const MagConfig mag_config;
-} BoardConfigMag;
-
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>

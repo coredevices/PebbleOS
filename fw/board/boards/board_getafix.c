@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
+#include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
@@ -262,9 +263,11 @@ PBL_LIS2DW12_DEFINE(s_lis2dw12, &s_i2c1.bus, 0x19,
 
 const struct pbl_accel *const ACCEL = &s_lis2dw12.accel;
 
-static const struct pbl_i2c_dev s_i2c_mmc5603nj = PBL_I2C_DEV(&s_i2c1.bus, 0x30);
+PBL_MMC5603NJ_DEFINE(s_mmc5603nj, &s_i2c1.bus, 0x30,
+                     .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
+                     .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = -1, [AXIS_Z] = 1});
 
-const struct pbl_i2c_dev *const I2C_MMC5603NJ = &s_i2c_mmc5603nj;
+const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
 
 PBL_I2C_SF32LB_DEFINE(s_i2c2, "i2c2", I2C2, 400000, PAD_PA11, I2C2_SCL, PAD_PA10, I2C2_SDA,
                       nullptr);

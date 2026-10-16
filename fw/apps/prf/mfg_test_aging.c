@@ -139,7 +139,7 @@ static void prv_format_time(char *buffer, size_t size, uint32_t seconds) {
 static void prv_cleanup_component(AppData *data) {
 #ifdef CONFIG_MAG
   if (data->component == ComponentMag) {
-    mag_release();
+    (void)pbl_mag_set_sampling_interval(MAG, 0U, nullptr);
   }
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -170,7 +170,7 @@ static void prv_drain_light_enable(AppData *data, bool enable) {
 static void prv_start_component(AppData *data) {
 #ifdef CONFIG_MAG
   if (data->component == ComponentMag) {
-    mag_start_sampling();
+    (void)pbl_mag_set_sampling_interval(MAG, 200000U, nullptr);
   }
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -259,8 +259,8 @@ static void prv_run_component_display(AppData *data) {
     }
 #ifdef CONFIG_MAG
     case ComponentMag: {
-      MagData mag_sample;
-      mag_read_data(&mag_sample);
+      MagData mag_sample = {};
+      (void)pbl_mag_peek(MAG, &mag_sample);
       comp_name = "Mag";
       sniprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
                 mag_sample.x, mag_sample.y, mag_sample.z);

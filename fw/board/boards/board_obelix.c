@@ -5,6 +5,7 @@
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
+#include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
@@ -282,9 +283,13 @@ PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
 PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c2, 0);
 
 #ifdef CONFIG_IS_BIGBOARD
-#define LSM6DSO_AXIS_DIR_Y (-1)
+#define LSM6DSO_AXIS_DIR_Y   (-1)
+#define MMC5603NJ_AXIS_DIR_X (-1)
+#define MMC5603NJ_AXIS_DIR_Y 1
 #else
-#define LSM6DSO_AXIS_DIR_Y 1
+#define LSM6DSO_AXIS_DIR_Y   1
+#define MMC5603NJ_AXIS_DIR_X 1
+#define MMC5603NJ_AXIS_DIR_Y (-1)
 #endif
 
 PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6a, .int1 = {.peripheral = hwp_gpio1, .gpio_pin = 38},
@@ -294,9 +299,11 @@ PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6a, .int1 = {.peripheral = hwp_gpio
 
 const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
 
-static const struct pbl_i2c_dev s_i2c_mmc5603nj = PBL_I2C_DEV(&s_i2c2.bus, 0x30);
+PBL_MMC5603NJ_DEFINE(
+    s_mmc5603nj, &s_i2c2.bus, 0x30, .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
+    .axis_dir = {[AXIS_X] = MMC5603NJ_AXIS_DIR_X, [AXIS_Y] = MMC5603NJ_AXIS_DIR_Y, [AXIS_Z] = 1});
 
-const struct pbl_i2c_dev *const I2C_MMC5603NJ = &s_i2c_mmc5603nj;
+const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
 
 PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", I2C3, 400000, PAD_PA11, I2C3_SCL, PAD_PA10, I2C3_SDA,
                       nullptr);

@@ -13,7 +13,6 @@
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
-#include <pbl/drivers/mag.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
 #include <pbl/drivers/pressure.h>
@@ -155,9 +154,6 @@ static void init_drivers(void) {
   touch_sensor_init();
 #endif
 
-#ifdef CONFIG_MAG
-  mag_init();
-#endif
 #ifdef CONFIG_PRESSURE
   pressure_init();
 #endif

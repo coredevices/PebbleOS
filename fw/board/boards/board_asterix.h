@@ -64,17 +64,6 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 55U, // Medium
 };
 
-static const BoardConfigMag BOARD_CONFIG_MAG = {
-  .mag_config = {
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = false,
-    .axes_inverts[AXIS_Y] = true,
-    .axes_inverts[AXIS_Z] = false,
-  },
-};
-
 extern UARTDevice *const DBG_UART;
 
 extern PwmState BACKLIGHT_PWM_STATE;
@@ -116,5 +105,4 @@ extern AudioDevice *const AUDIO;
 extern const struct pbl_i2c_dev *const I2C_DRV2604;
 extern const struct pbl_i2c_dev *const I2C_OPT3001;
 extern const struct pbl_i2c_dev *const I2C_DA7212;
-extern const struct pbl_i2c_dev *const I2C_MMC5603NJ;
 extern const struct pbl_i2c_dev *const I2C_BMP390;

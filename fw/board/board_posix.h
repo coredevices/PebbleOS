@@ -51,15 +51,6 @@ typedef struct {
   uint8_t default_motion_sensitivity;
 } BoardConfigAccel;
 
-typedef struct {
-  int axes_offsets[3];
-  bool axes_inverts[3];
-} MagConfig;
-
-typedef struct {
-  const MagConfig mag_config;
-} BoardConfigMag;
-
 typedef const struct UARTDevice UARTDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;

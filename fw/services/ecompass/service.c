@@ -5,6 +5,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/services/event_service.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/trig.h>
 
@@ -24,6 +25,9 @@ PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 #define ECOMPASS_CALIBRATION_FAST_MINUTES 2
 #endif
 
+#define ECOMPASS_SAMPLING_INTERVAL_US       200000U
+#define ECOMPASS_CALIB_SAMPLING_INTERVAL_US 50000U
+
 #define VALID_CORR_MARKER       0x5644
 #define BITS_PER_CORRECTION_VAL 16
 #define CORRECTION_VAL_MASK     ((1 << BITS_PER_CORRECTION_VAL) - 1)
@@ -36,6 +40,8 @@ static bool s_saved_corr_present = false;
 static int16_t s_saved_corr[3] = {};
 
 static int32_t s_last_heading = -1; // the last heading we found
+
+static MagData s_mag_sample;
 
 //////////////////////////////////////////////////////////////////////////////////
 // Calibration state variables
@@ -130,10 +136,8 @@ static void prv_calibration_time_expired_cb(void *data) {
       "Calibration time expired, complete, or app exit, "
       "dropping back to low frequency");
 
-  if (!mag_change_sample_rate(MagSampleRate5Hz)) {
-    PBL_LOG_WRN("Forcing reset to enter low freq mode");
-    mag_release();
-    mag_start_sampling();
+  if (pbl_mag_set_sampling_interval(MAG, ECOMPASS_SAMPLING_INTERVAL_US, nullptr) != 0) {
+    PBL_LOG_WRN("Could not drop back to low frequency");
   }
 
   s_high_freq_calib_active = false;
@@ -185,7 +189,7 @@ static void prv_compass_data_service_stop(PebbleTask task) {
       accel_session_data_unsubscribe(s_accel_session);
       accel_session_delete(s_accel_session);
       s_accel_session = nullptr;
-      mag_release();
+      (void)pbl_mag_set_sampling_interval(MAG, 0U, nullptr);
     }
   }
   PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
@@ -202,10 +206,28 @@ static void prv_compass_data_service_start(PebbleTask task) {
     accel_session_raw_data_subscribe(s_accel_session, ACCEL_SAMPLING_25HZ, 5,
                                      prv_accel_for_compass_handler);
 
-    mag_start_sampling();
+    (void)pbl_mag_set_sampling_interval(MAG, ECOMPASS_SAMPLING_INTERVAL_US, nullptr);
   }
   PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
 }
+
+static void prv_post_event_work(void *data) {
+  PebbleEvent e = {
+    .type = PEBBLE_ECOMPASS_SERVICE_EVENT,
+  };
+  event_put(&e);
+}
+
+static void prv_mag_sample_cb(const struct pbl_mag *mag, const MagData *sample, void *user_data) {
+  s_mag_sample = *sample;
+
+  // event_put() may block on KernelMain, which takes the device lock: post outside of it
+  new_timer_add_work_callback(prv_post_event_work, nullptr);
+}
+
+static const struct pbl_mag_listener s_mag_listener = {
+  .sample = prv_mag_sample_cb,
+};
 
 //////////////////////////////////////////////////////////////////////////////////
 // Public API
@@ -227,6 +249,8 @@ void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_st
 void ecompass_service_init(void) {
   s_service_init = true;
 
+  (void)pbl_mag_set_listener(MAG, &s_mag_listener);
+
   event_service_init(PEBBLE_COMPASS_DATA_EVENT, &prv_compass_data_service_start,
                      &prv_compass_data_service_stop);
 }
@@ -234,28 +258,15 @@ void ecompass_service_init(void) {
 void ecompass_service_handle(void) {
   static int samples_collected = 0;
 
-  // Data-ready events are posted for any magnetometer user, but only a
-  // subscribed service holds a reference it may release and restart.
+  // Samples are reported for any magnetometer user
   if (s_compass_subscribers_count == 0) {
     return;
   }
 
-  // read magnetometer sample
   MagData mag_data;
-  MagReadStatus rv = mag_read_data(&mag_data);
-  if (rv != MagReadSuccess) {
-    if (rv == MagReadCommunicationFail) {
-      // heavy hammer fix for now
-      // FIXME: move the restart logic to driver
-      PBL_LOG_WRN(
-          "Read after %d samples failed, "
-          "restarting compass",
-          samples_collected);
-      mag_release();
-      mag_start_sampling();
-    }
-    return;
-  }
+  pbl_mag_lock(MAG);
+  mag_data = s_mag_sample;
+  pbl_mag_unlock(MAG);
 
   // industry standard for heading coordinates uses NED convention (check out
   // Freescale's AN4248 or ST's AN3192 as examples). Therefore, we map pebbles
@@ -273,7 +284,7 @@ void ecompass_service_handle(void) {
     // for a short duration in order to finish calibration more quickly
     if (!s_calib_run) {
       ecomp_corr_reset();
-      mag_change_sample_rate(MagSampleRate20Hz);
+      (void)pbl_mag_set_sampling_interval(MAG, ECOMPASS_CALIB_SAMPLING_INTERVAL_US, nullptr);
       regular_timer_add_multiminute_callback(&s_cb_info, ECOMPASS_CALIBRATION_FAST_MINUTES);
       s_calib_run = true;
       s_high_freq_calib_active = true;

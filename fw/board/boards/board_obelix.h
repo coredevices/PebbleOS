@@ -15,7 +15,6 @@ extern UARTDevice *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
-extern const struct pbl_i2c_dev *const I2C_MMC5603NJ;
 extern const struct pbl_i2c_dev *const I2C_AW86225;
 extern const struct pbl_i2c_dev *const I2C_W1160;
 extern const struct pbl_i2c_dev *const I2C_AW2016;
@@ -32,24 +31,4 @@ extern const AudioDevice *AUDIO;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 55U, // Medium
-};
-
-static const BoardConfigMag BOARD_CONFIG_MAG = {
-  .mag_config = {
-#ifdef CONFIG_IS_BIGBOARD
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = true,
-    .axes_inverts[AXIS_Y] = false,
-    .axes_inverts[AXIS_Z] = false,
-#else
-    .axes_offsets[AXIS_X] = 1,
-    .axes_offsets[AXIS_Y] = 0,
-    .axes_offsets[AXIS_Z] = 2,
-    .axes_inverts[AXIS_X] = false,
-    .axes_inverts[AXIS_Y] = true,
-    .axes_inverts[AXIS_Z] = false,
-#endif
-  },
 };

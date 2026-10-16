@@ -6,6 +6,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
+#include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -119,10 +120,6 @@ static const struct pbl_i2c_dev I2C_SLAVE_DA7212 = PBL_I2C_DEV(&s_i2c_iic2.bus, 
 
 const struct pbl_i2c_dev *const I2C_DA7212 = &I2C_SLAVE_DA7212;
 
-static const struct pbl_i2c_dev I2C_SLAVE_MMC5603NJ = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x30);
-
-const struct pbl_i2c_dev *const I2C_MMC5603NJ = &I2C_SLAVE_MMC5603NJ;
-
 static const struct pbl_i2c_dev I2C_SLAVE_BMP390 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x76);
 
 const struct pbl_i2c_dev *const I2C_BMP390 = &I2C_SLAVE_BMP390;
@@ -137,6 +134,12 @@ PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c_iic2.bus, 0x6A,
                    .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = 1, [AXIS_Z] = 1});
 
 const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
+
+PBL_MMC5603NJ_DEFINE(s_mmc5603nj, &s_i2c_iic2.bus, 0x30,
+                     .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
+                     .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = -1, [AXIS_Z] = 1});
+
+const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
 
 PBL_IRQ_CONNECT(I2S, 5, nrfx_i2s_0_irq_handler, , 0);
 

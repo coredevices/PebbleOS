@@ -56,11 +56,6 @@ typedef struct {
 } PwmConfig;
 
 typedef struct {
-  int axes_offsets[3];
-  bool axes_inverts[3];
-} MagConfig;
-
-typedef struct {
   struct pbl_gpio i2s_ck;
   struct pbl_gpio i2s_sd;
   NRF_SPIM_Type *spi;
@@ -110,12 +105,6 @@ typedef struct {
 typedef struct {
   uint8_t default_motion_sensitivity;
 } BoardConfigAccel;
-
-typedef struct {
-  const MagConfig mag_config;
-  const struct pbl_gpio mag_int_gpio;
-  const GpioteConfig mag_int;
-} BoardConfigMag;
 
 typedef struct {
   const struct pbl_gpio ctl;
