@@ -281,6 +281,15 @@ uint32_t light_get_dark_threshold(void);
  */
 void light_set_dark_threshold(uint32_t threshold);
 
+/**
+ * @ingroup services_light
+ * @brief Check whether it is light.
+ *
+ * @return True if the ambient lux is above the dark threshold; false if dark or the
+ *         sensor is unavailable.
+ */
+bool ambient_light_is_light(void);
+
 /** @} */
 
 /** @} */
