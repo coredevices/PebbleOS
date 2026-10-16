@@ -187,9 +187,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x6f -- Add the dark mode service (rev 113)
 // sdk.major:0x5 .minor:0x70 -- Add per-bar action bar Left-Handed Mode placement (rev 114)
 // sdk.major:0x5 .minor:0x71 -- Apps using health must declare Health (rev 114, no API change)
+// sdk.major:0x5 .minor:0x72 -- Add notification count service (rev 115)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x71
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x72
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4

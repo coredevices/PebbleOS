@@ -140,6 +140,12 @@ pbl_clar_test(test_dark_mode_service
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_notification_service
+  SOURCES
+    pebble/applib/notification_service.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_accel_service
   SOURCES
     pebble/applib/accel_service.c
