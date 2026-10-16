@@ -14,8 +14,11 @@
 static void selected_pwm_percentage(NumberWindow *nw, void *ctx) {
   static bool on = true;
   int8_t val = number_window_get_value(nw);
-  vibe_set_strength(val);
-  vibe_ctl(on);
+  if (on) {
+    (void)pbl_vibe_start(VIBE, val);
+  } else {
+    (void)pbl_vibe_stop(VIBE);
+  }
   on = !on;
 }
 

@@ -10,6 +10,7 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
@@ -268,9 +269,9 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_N
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 3300,
                              true, false);
 
-static const struct pbl_i2c_dev s_i2c_aw86225 = PBL_I2C_DEV(&s_i2c1.bus, 0x58);
+PBL_AW86225_DEFINE(s_aw86225, &s_i2c1.bus, 0x58, PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW));
 
-const struct pbl_i2c_dev *const I2C_AW86225 = &s_i2c_aw86225;
+const struct pbl_vibe *const VIBE = &s_aw86225.vibe;
 
 static const struct pbl_i2c_dev s_i2c_aw2016 = PBL_I2C_DEV(&s_i2c1.bus, 0x64);
 
@@ -349,10 +350,6 @@ static HRMDevice s_hrm = {
 };
 
 HRMDevice *const HRM = &s_hrm;
-
-const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW),
-};
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {

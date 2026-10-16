@@ -130,7 +130,6 @@ static void init_drivers(void) {
   serial_console_init();
 
   battery_init();
-  vibe_init();
 
   flash_init();
   flash_sleep_when_idle(true);
@@ -139,7 +138,7 @@ static void init_drivers(void) {
 
   uint8_t vibe_cali = mfg_info_get_vibe_cali();
   if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {
-    vibe_apply_calibration(vibe_cali);
+    (void)pbl_vibe_set_calibration(VIBE, vibe_cali);
   }
 
 #ifdef CONFIG_MIC

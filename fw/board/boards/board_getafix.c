@@ -7,6 +7,8 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/vibe/aw86225.h>
+#include <pbl/drivers/vibe/aw8623x.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
@@ -318,18 +320,14 @@ PBL_W1160_DEFINE(s_w1160, &s_i2c3.bus, 0x48, &s_w1160_scale);
 const struct pbl_als *const ALS = &s_w1160.als;
 
 #ifdef CONFIG_BOARD_GETAFIX_DVT2
-static const struct pbl_i2c_dev s_i2c_aw86225 = PBL_I2C_DEV(&s_i2c3.bus, 0x58);
+PBL_AW86225_DEFINE(s_aw86225, &s_i2c3.bus, 0x58, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
 
-const struct pbl_i2c_dev *const I2C_AW86225 = &s_i2c_aw86225;
+const struct pbl_vibe *const VIBE = &s_aw86225.vibe;
 #else
-static const struct pbl_i2c_dev s_i2c_aw8623x = PBL_I2C_DEV(&s_i2c3.bus, 0x5a);
+PBL_AW8623X_DEFINE(s_aw8623x, &s_i2c3.bus, 0x5a, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
 
-const struct pbl_i2c_dev *const I2C_AW8623X = &s_i2c_aw8623x;
+const struct pbl_vibe *const VIBE = &s_aw8623x.vibe;
 #endif
-
-const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW),
-};
 
 const Npm1300Config NPM1300_CONFIG = {
   // 70mA = 1C (max limit from datasheet)

@@ -16,6 +16,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
 #include <pbl/drivers/uart/nrf5.h>
+#include <pbl/drivers/vibe/drv2604.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
 
@@ -109,9 +110,9 @@ PBL_I2C_NRF5_DEFINE(s_i2c_iic2, "i2c_iic2", 0, NRF_TWIM_FREQ_400K, PBL_GPIO(NRF5
 PBL_IRQ_CONNECT(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
                 nrfx_twim_0_irq_handler, , 0);
 
-static const struct pbl_i2c_dev I2C_SLAVE_DRV2604 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x5A);
+PBL_DRV2604_DEFINE(s_drv2604, &s_i2c_iic2.bus, 0x5A, PBL_GPIO(NRF5_GPIO_P0, 2, 0));
 
-const struct pbl_i2c_dev *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
+const struct pbl_vibe *const VIBE = &s_drv2604.vibe;
 
 PBL_OPT3001_DEFINE(s_opt3001, &s_i2c_iic2.bus, 0x44, nullptr, .always_on = true);
 

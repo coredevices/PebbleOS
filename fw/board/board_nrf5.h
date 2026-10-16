@@ -101,10 +101,6 @@ typedef struct {
 } BoardConfigAccel;
 
 typedef struct {
-  const struct pbl_gpio ctl;
-} BoardConfigActuator;
-
-typedef struct {
   NRF_RTC_Type *rtc;
   NRF_GPIOTE_Type *gpiote;
   uint8_t gpiote_ch;

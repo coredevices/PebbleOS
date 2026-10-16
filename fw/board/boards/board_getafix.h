@@ -16,11 +16,6 @@ extern UARTDevice *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
-#ifdef CONFIG_BOARD_GETAFIX_DVT2
-extern const struct pbl_i2c_dev *const I2C_AW86225;
-#else
-extern const struct pbl_i2c_dev *const I2C_AW8623X;
-#endif
 extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
@@ -28,8 +23,6 @@ extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 extern const MicDevice *MIC;
 extern const TouchSensor *CST816;
 extern const LedControllerAW9364E AW9364E;
-
-extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 55U, // Medium

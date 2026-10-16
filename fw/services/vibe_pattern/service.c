@@ -213,7 +213,7 @@ static void prv_update_strength_analytics(uint8_t new_strength_pct) {
 
 //! Turn the vibe motor on or off.
 //!
-//! This function should be used instead of vibe_ctl so that the vibe
+//! This function should be used instead of pbl_vibe_start() so that the vibe
 //! history is kept in sync with the vibe state.
 //! The caller must be holding s_vibe_pattern_mutex
 static void prv_vibes_set_vibe_strength(int32_t new_strength) {
@@ -229,8 +229,7 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
   prv_update_strength_analytics(new_strength_pct);
 
   if (new_strength != VIBE_STRENGTH_OFF) {
-    vibe_set_strength(new_strength);
-    vibe_ctl(true /* on */);
+    (void)pbl_vibe_start(VIBE, new_strength);
     s_last_vibe_active_tick = rtc_get_ticks();
     if (s_vibe_strength == VIBE_STRENGTH_OFF) {
       // Transitioning from off to on
@@ -238,7 +237,7 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
       prv_vibe_history_start_event();
     }
   } else {
-    vibe_ctl(false /* on */);
+    (void)pbl_vibe_stop(VIBE);
     if (s_vibe_strength != VIBE_STRENGTH_OFF) {
       // Transitioning from on to off; stamp the end so the shake holdoff runs
       // from when the motor actually stopped.

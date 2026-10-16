@@ -55,10 +55,6 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .battery_capacity_hours = 450,
 };
 
-static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = PBL_GPIO(NRF5_GPIO_P0, 2, 0), // LRA_EN
-};
-
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 55U, // Medium
 };
@@ -101,5 +97,4 @@ extern QSPIFlash *const QSPI_FLASH;
 extern MicDevice *const MIC;
 extern AudioDevice *const AUDIO;
 
-extern const struct pbl_i2c_dev *const I2C_DRV2604;
 extern const struct pbl_i2c_dev *const I2C_DA7212;

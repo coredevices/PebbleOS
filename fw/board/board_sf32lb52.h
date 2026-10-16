@@ -50,10 +50,6 @@ typedef struct {
 } PwmConfig;
 
 typedef struct {
-  const struct pbl_gpio ctl;
-} BoardConfigActuator;
-
-typedef struct {
   uint8_t backlight_on_percent;
   // ambient light config
   uint32_t ambient_light_dark_threshold;
