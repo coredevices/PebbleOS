@@ -98,7 +98,10 @@ static PBL_USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, 
     *state = (McuUnprivilegedCallContext){};
   }
 
-  PBL_ASSERTN(!state->active);
+  if (state->active) {
+    // Nested call, e.g. app code made a syscall that ran another app callback.
+    syscall_failed();
+  }
 
   *state = (McuUnprivilegedCallContext){
     .active = true,
@@ -173,6 +176,21 @@ bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr) {
   *lr_ptr = 0;
 
   return true;
+}
+
+void mcu_call_unprivileged_unwind(void) {
+  PBL_ASSERTN(mcu_state_is_thread_privileged());
+
+  McuUnprivilegedCallContext *state = prv_active_unprivileged_call_ctx_for_current_task();
+  if (state == nullptr) {
+    return;
+  }
+
+  state->active = false;
+  state->thread_id = 0;
+
+  prv_set_syscall_lr(state->outer_syscall_lr);
+  prv_set_syscall_sp(state->outer_syscall_sp);
 }
 
 //! Run @p fn unprivileged for the duration of one call, then return to the

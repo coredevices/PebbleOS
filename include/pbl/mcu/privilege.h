@@ -63,6 +63,15 @@ bool mcu_state_is_privileged(void);
  */
 void mcu_call_unprivileged(void (*fn)(void *), void *ctx);
 
+/**
+ * @brief Discard an mcu_call_unprivileged() call that will never return.
+ *
+ * For a privileged caller that regained control through a longjmp out of a syscall made by
+ * @p fn: the call's privileged return path was skipped, so its state has to be dropped before the
+ * next call. Must be called from privileged thread mode; does nothing if no call is active.
+ */
+void mcu_call_unprivileged_unwind(void);
+
 /** @} */
 
 #ifdef __arm__

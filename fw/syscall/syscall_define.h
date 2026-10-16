@@ -46,7 +46,7 @@
 
 #define PRV_SC_DEFINE(attrs, ret_kw, ret, name, ...)                                               \
   attrs static ret name##__impl(PRV_SC_IMPL_PARAMS(__VA_ARGS__));                                  \
-  PRV_DEFINE_SYSCALL(".syscall_checked.", ret, name, PRV_SC_PARAMS(__VA_ARGS__)) {                 \
+  PRV_DEFINE_SYSCALL(ret, name, PRV_SC_PARAMS(__VA_ARGS__)) {                                      \
     if (!PRIVILEGE_WAS_ELEVATED) {                                                                 \
       ret_kw name##__impl(false __VA_OPT__(, PRV_SC_MAP(PRV_SC_NAME, PRV_SC_COMMA, __VA_ARGS__))); \
     }                                                                                              \

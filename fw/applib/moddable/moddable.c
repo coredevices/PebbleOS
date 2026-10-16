@@ -9,6 +9,7 @@
 #include <applib/app.h>
 #include <applib/app_logging.h>
 #include <applib/moddable/moddable.h>
+#include <applib/moddable/moddable_private.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <logging/logging_private.h>
 #include <syscall/syscall.h>
@@ -17,6 +18,7 @@
 #if defined(CONFIG_MODDABLE_XS) && !defined(CONFIG_RECOVERY_FW)
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <moddableAppState.h>
 #include <process_management/app_manager.h>
@@ -68,6 +70,12 @@ void moddable_cleanup(void) {
   task_free(state);
 }
 
+void moddable_call_unprivileged(void (*fn)(void *), void *ctx) {
+  pebble_task_set_app_ram_executable(true);
+  mcu_call_unprivileged(fn, ctx);
+  pebble_task_set_app_ram_executable(false);
+}
+
 typedef struct {
   txBuildFFI build_ffi;
   txMachine *the;
@@ -81,13 +89,17 @@ static void prv_build_ffi_unprivileged_cb(void *data) {
   call->build_ffi(call->the, call->api);
 }
 
-static void prv_build_ffi(txMachine *the, txAPI *api) {
+void moddable_build_ffi(txMachine *the, txAPI *api) {
+  if (s_app_build_ffi == nullptr) {
+    return;
+  }
+
   BuildFFICall call = {
     .build_ffi = s_app_build_ffi,
     .the = the,
     .api = api,
   };
-  mcu_call_unprivileged(prv_build_ffi_unprivileged_cb, &call);
+  moddable_call_unprivileged(prv_build_ffi_unprivileged_cb, &call);
 }
 
 // Minimum recordSize for the original struct (without flags field)
@@ -104,17 +116,9 @@ static void prv_assert_userspace_creation_record(bool from_user, ModdableCreatio
   }
 }
 
-PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
+static void prv_run_machine(ModdableCreationRecord *cr, bool from_user) {
   uint32_t flags = 0;
   uint32_t record_size = 0;
-
-  if (from_user) {
-    const PebbleProcessMd *md = app_manager_get_current_app_md();
-    if (pebble_task_get_current() != PebbleTask_App || md == nullptr || !md->is_moddable_app ||
-        app_state_get_js_memory_api_context() != nullptr) {
-      syscall_failed();
-    }
-  }
 
   ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
   app_state_set_js_memory_api_context((void *)state);
@@ -186,7 +190,7 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
 
   state->the = the;
   s_app_build_ffi = (txBuildFFI)fxBuildFFI;
-  state->fxBuildFFI = fxBuildFFI ? (void *)prv_build_ffi : nullptr;
+  state->fxBuildFFI = fxBuildFFI ? (void *)moddable_build_ffi : nullptr;
   state->eventedTimer = EVENTED_TIMER_INVALID_ID;
 
   evented_timer_register(1, false, (EventedTimerCallback)modRunMachineSetup, the);
@@ -194,6 +198,10 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
   xsBeginHostExit(the);
   app_event_loop();
   xsEndHostExit(the);
+
+  // The machine may have exited from a syscall made by app code.
+  mcu_call_unprivileged_unwind();
+  pebble_task_set_app_ram_executable(false);
 
   int exitStatus = the->exitStatus;
   char *abortReason = state->abortReason;
@@ -219,6 +227,22 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
 
     app_event_loop();
   }
+}
+
+PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
+  if (from_user) {
+    const PebbleProcessMd *md = app_manager_get_current_app_md();
+    if (pebble_task_get_current() != PebbleTask_App || md == nullptr || !md->is_moddable_app ||
+        app_state_get_js_memory_api_context() != nullptr) {
+      syscall_failed();
+    }
+  }
+
+  // The machine runs privileged: keep it from running app code except through
+  // moddable_call_unprivileged().
+  pebble_task_set_app_ram_executable(false);
+  prv_run_machine(cr, from_user);
+  pebble_task_set_app_ram_executable(true);
 }
 
 #else

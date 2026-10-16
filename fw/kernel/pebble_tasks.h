@@ -63,3 +63,7 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task);
 struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr);
 
 void pebble_task_configure_idle_task(void);
+
+//! Allow or forbid instruction fetches from App RAM on the running App task.
+//! Forbidding them makes privileged code fault if it jumps into app code.
+void pebble_task_set_app_ram_executable(bool executable);
