@@ -646,6 +646,7 @@ PBL_T_STATIC void prv_charger_event_cb(PebbleEvent *e, void *context) {
 
 // Accept new data from the HR device driver.
 void hrm_manager_new_data_cb(const HRMData *data) {
+  bool update = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   if (!prv_can_turn_sensor_on() || s_manager_state.subscribers == nullptr) {
     // If the hrm manager should be disabled or we have no subscribers, this data is unwanted.
@@ -760,10 +761,13 @@ void hrm_manager_new_data_cb(const HRMData *data) {
   // we only check it once every HRM_CHECK_SENSOR_DISABLE_COUNT times
   if (++s_manager_state.check_disable_counter >= HRM_CHECK_SENSOR_DISABLE_COUNT) {
     s_manager_state.check_disable_counter = 0;
-    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+    update = true;
   }
 unlock:
   pbl_mutex_unlock(&s_manager_state.lock);
+  if (update) {
+    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+  }
 }
 
 void hrm_manager_handle_prefs_changed(void) {
@@ -865,11 +869,12 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
   };
   s_manager_state.subscribers = list_insert_before(s_manager_state.subscribers, &state->list_node);
 
+  session_ref = state->session_ref;
+  pbl_mutex_unlock(&s_manager_state.lock);
+
   // Update the HR enablement state
   system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
-
-  pbl_mutex_unlock(&s_manager_state.lock);
-  return state->session_ref;
+  return session_ref;
 }
 
 // Only a foreground app showing live readings (a short update interval) is worth the extra
@@ -907,11 +912,13 @@ PBL_SYSCALL(bool, sys_hrm_manager_unsubscribe, (VAL, HRMSessionRef, session)) {
   HRMSubscriberState *state = prv_get_owned_subscriber_state(session, from_user);
   if (state) {
     prv_remove_and_free_subscription(state);
-    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
     success = true;
   }
 
   pbl_mutex_unlock(&s_manager_state.lock);
+  if (success) {
+    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+  }
   return success;
 }
 
@@ -965,11 +972,13 @@ PBL_SYSCALL(bool, sys_hrm_manager_set_features, (VAL, HRMSessionRef, session),
   if (state) {
     state->features = features;
     success = true;
-    // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
-    // optical path, and must not wait for the next sample to trigger a pass.
-    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
   }
   pbl_mutex_unlock(&s_manager_state.lock);
+  // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
+  // optical path, and must not wait for the next sample to trigger a pass.
+  if (success) {
+    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+  }
   return success;
 }
 
@@ -989,17 +998,19 @@ PBL_SYSCALL(bool, sys_hrm_manager_set_update_interval, (VAL, HRMSessionRef, sess
       state->low_latency = prv_wants_low_latency(state->task, update_interval_s);
     }
     success = true;
-    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
   }
   pbl_mutex_unlock(&s_manager_state.lock);
+  if (success) {
+    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+  }
   return success;
 }
 
 void hrm_manager_enable(bool on) {
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   s_manager_state.enabled_run_level = on;
-  system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
   pbl_mutex_unlock(&s_manager_state.lock);
+  system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
 }
 
 HRMAccelData *hrm_manager_get_accel_data(void) {
