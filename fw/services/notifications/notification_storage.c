@@ -307,7 +307,7 @@ reset_storage:
 static bool prv_find_next_notification(SerializedTimelineItemHeader *header,
                                        bool (*compare_func)(SerializedTimelineItemHeader *header,
                                                             void *data),
-                                       void *data, bool match_deleted, int fd) {
+                                       void *data, int fd) {
   for (;;) {
     int result = pfs_read(fd, (uint8_t *)header, sizeof(*header));
 
@@ -329,8 +329,12 @@ static bool prv_find_next_notification(SerializedTimelineItemHeader *header,
       break;
     }
 
-    if ((match_deleted || !(status & TimelineItemStatusDeleted)) && compare_func(header, data)) {
-      return true;
+    if (!(status & TimelineItemStatusDeleted)) {
+      // Only check compare notifications if it is not deleted, otherwise skip it and look for
+      // the next match
+      if (compare_func(header, data)) {
+        return true;
+      }
     }
 
     if (pfs_seek(fd, header->payload_length, FSeekCur) < 0) {
@@ -358,7 +362,7 @@ bool notification_storage_notification_exists(const Uuid *id) {
   }
 
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
-  bool found = prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, true, fd);
+  bool found = prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd);
 
   prv_file_close(fd);
 
@@ -396,7 +400,7 @@ size_t notification_storage_get_len(const Uuid *uuid) {
 
   size_t size = 0;
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
-  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)uuid, false, fd)) {
+  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)uuid, fd)) {
     size = header.payload_length + sizeof(SerializedTimelineItemHeader);
   } else {
     PBL_LOG_DBG("notification not found");
@@ -419,7 +423,7 @@ bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(id, uuid_string);
-  if (!prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, false, fd)) {
+  if (!prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd)) {
     PBL_LOG_DBG("notification not found, %s", uuid_string);
     rv = false;
   } else {
@@ -506,7 +510,7 @@ bool notification_storage_get_status(const Uuid *id, uint8_t *status) {
   }
 
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
-  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, false, fd)) {
+  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd)) {
     *status = header.common.status;
     rv = true;
   }
@@ -523,8 +527,7 @@ void notification_storage_set_status(const Uuid *id, uint8_t status) {
     return;
   }
 
-  // Status is overwritten, not OR-ed: matching a deleted record would resurrect it
-  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, false, fd)) {
+  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd)) {
     prv_set_header_status(&header, status, fd);
   }
 
@@ -547,7 +550,7 @@ bool notification_storage_find_ancs_notification_id(uint32_t ancs_uid, Uuid *uui
   // the db. iOS can reset ANCS UIDs on reconnect, so we want to avoid finding an old notification
   bool found = false;
   while (prv_find_next_notification(&header, prv_ancs_id_compare_func, (void *)(uintptr_t)ancs_uid,
-                                    false, fd)) {
+                                    fd)) {
     found = true;
     *uuid_out = header.common.id;
 

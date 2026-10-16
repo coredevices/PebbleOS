@@ -42,7 +42,9 @@ void notification_storage_unlock(void);
 void notification_storage_store(TimelineItem *notification);
 
 /**
- * @brief Check whether a notification is stored, including one marked deleted.
+ * @brief Check whether a notification is stored.
+ *
+ * Lookups by id or ANCS UID ignore notifications marked deleted.
  *
  * @param id Notification id.
  * @return true if found.
@@ -80,7 +82,7 @@ void notification_storage_set_status(const Uuid *id, uint8_t status);
  *
  * @param id Notification id.
  * @param[out] status Status, a combination of TimelineItemStatus flags.
- * @return true if found and not marked deleted.
+ * @return true if found.
  */
 bool notification_storage_get_status(const Uuid *id, uint8_t *status);
 
