@@ -6,11 +6,11 @@
 
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/rng.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/logging/logging.h>
 
 #include <hardware/sf32lb52_trng.h>
-#include <kernel/util/delay.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rng_sf32lb, CONFIG_DRIVER_RNG_LOG_LEVEL);
@@ -36,7 +36,7 @@ static int prv_generate(uint32_t cmd, uint32_t valid, uint32_t offset, uint32_t 
       return -ETIMEDOUT;
     }
 
-    delay_us(1U);
+    pbl_busy_wait_us(1U);
   }
 
   *out = prv_getreg(offset);

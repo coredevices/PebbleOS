@@ -6,5 +6,5 @@ from .. import PebbleCommander
 
 @PebbleCommander.command()
 def audit_delay(cmdr):
-    """Audit delay_us."""
+    """Audit the cycle counter and busy waits."""
     return cmdr.send_prompt_command("audit delay")

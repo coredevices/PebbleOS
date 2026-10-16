@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/temperature.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 
 #include <hardware/nrf52_temp.h>
-#include <kernel/util/delay.h>
 
 #define CONVERSION_TIMEOUT_US 100U
 
@@ -38,7 +38,7 @@ int32_t temperature_read(void) {
       temp = (int32_t)prv_getreg(NRF52_TEMP_TEMP_OFFSET) * MILLIDEGREES_PER_LSB;
       break;
     }
-    delay_us(1);
+    pbl_busy_wait_us(1);
   }
 
   prv_clear_datardy();

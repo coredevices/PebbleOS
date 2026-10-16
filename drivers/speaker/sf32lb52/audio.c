@@ -5,15 +5,14 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 #include <pbl/drivers/speaker/sf32lb52/sf32lb_audio.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
-
-#include <kernel/util/delay.h>
 
 #define PA_POWER_DELAY_TIME (200) /* us */
 
 void audio_init(AudioDevice *audio_device) {
   pbl_gpio_configure(&audio_device->pa_ctrl, PBL_GPIO_OUTPUT_INACTIVE);
-  delay_us(PA_POWER_DELAY_TIME * 10);
+  pbl_busy_wait_us(PA_POWER_DELAY_TIME * 10);
   audec_init(audio_device);
 }
 
@@ -23,9 +22,9 @@ void audio_start(AudioDevice *audio_device, AudioTransCB cb) {
   }
 
   pbl_gpio_set(&audio_device->pa_ctrl, true);
-  delay_us(PA_POWER_DELAY_TIME);
+  pbl_busy_wait_us(PA_POWER_DELAY_TIME);
   pbl_gpio_set(&audio_device->pa_ctrl, false);
-  delay_us(PA_POWER_DELAY_TIME);
+  pbl_busy_wait_us(PA_POWER_DELAY_TIME);
   pbl_gpio_set(&audio_device->pa_ctrl, true);
   audec_start(audio_device, cb);
 }

@@ -51,7 +51,6 @@
 #include <kernel/kernel_heap.h>
 #include <kernel/memory_layout.h>
 #include <kernel/ui/kernel_ui.h>
-#include <kernel/util/delay.h>
 #include <kernel/util/task_init.h>
 #include <logging/pulse_logging.h>
 #include <mfg/mfg_info.h>
@@ -95,7 +94,6 @@ int main(void) {
 
   kernel_heap_init();
 
-  delay_init();
   dbgserial_init();
   pulse_early_init();
   print_splash_screen();

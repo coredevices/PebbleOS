@@ -13,6 +13,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/bits.h>
@@ -21,7 +22,6 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <kernel/util/delay.h>
 #include <kernel/util/sleep.h>
 
 PBL_LOG_MODULE_DEFINE(driver_pmic_npm1300, CONFIG_DRIVER_PMIC_LOG_LEVEL);
@@ -435,7 +435,7 @@ bool pmic_power_off(void) {
   // Give enough time for the PMIC to fully power down (tPWRDN = 100ms).
   // We will die here, if we do not, return false and let upper layers handle
   // the shutdown failure.
-  delay_us(100000);
+  pbl_busy_wait_us(100000);
 
   return false;
 }

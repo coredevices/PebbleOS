@@ -9,6 +9,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/imu/units.h>
@@ -19,7 +20,6 @@
 #include <pbl/util/misc.h>
 
 #include <board/board.h>
-#include <kernel/util/delay.h>
 #include <kernel/util/sleep.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
@@ -723,7 +723,7 @@ static int prv_init(const struct pbl_accel *accel) {
     return -EIO;
   }
 
-  delay_us(LIS2DW12_RESET_TIME_US);
+  pbl_busy_wait_us(LIS2DW12_RESET_TIME_US);
 
   do {
     ret = prv_lis2dw12_read(LIS2DW12_CTRL2, &val, 1);

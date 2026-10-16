@@ -9,6 +9,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/imu/units.h>
@@ -19,7 +20,6 @@
 #include <pbl/util/misc.h>
 
 #include <board/board.h>
-#include <kernel/util/delay.h>
 #include <kernel/util/sleep.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
@@ -823,7 +823,7 @@ static int prv_init(const struct pbl_accel *accel) {
     return -EIO;
   }
 
-  delay_us(LSM6DSO_RESET_TIME_US);
+  pbl_busy_wait_us(LSM6DSO_RESET_TIME_US);
 
   do {
     ret = prv_lsm6dso_read(LSM6DSO_CTRL3_C, &val, 1);

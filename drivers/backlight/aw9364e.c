@@ -3,11 +3,11 @@
 
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/gpio.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/util/math.h>
 
 #include <board/board.h>
-#include <kernel/util/delay.h>
 
 // AW9364E 1-wire dimming protocol implementation
 // The AW9364E uses pulse counting for brightness control:
@@ -39,9 +39,9 @@ static void prv_send_pulses(uint8_t count, bool from_shutdown) {
   pbl_irq_lock();
   for (uint8_t i = 0U; i < count; i++) {
     pbl_gpio_set(&AW9364E.gpio, false);
-    delay_us(AW9364E_TLO_US);
+    pbl_busy_wait_us(AW9364E_TLO_US);
     pbl_gpio_set(&AW9364E.gpio, true);
-    delay_us((from_shutdown && i == 0U) ? AW9364E_TON_US : AW9364E_THI_US);
+    pbl_busy_wait_us((from_shutdown && i == 0U) ? AW9364E_TON_US : AW9364E_THI_US);
   }
   pbl_irq_unlock();
 }
@@ -68,7 +68,7 @@ void backlight_set_brightness(uint8_t brightness) {
     // after this and would otherwise integrate the LED tail.
     pbl_gpio_set(&AW9364E.gpio, false);
     if (s_pulse_count != 0U) {
-      delay_us(AW9364E_OFF_TIME_US);
+      pbl_busy_wait_us(AW9364E_OFF_TIME_US);
     }
     s_pulse_count = 0U;
     return;
@@ -84,7 +84,7 @@ void backlight_set_brightness(uint8_t brightness) {
   } else {
     // Turning on or brightening: full shutdown, then re-train from scratch.
     pbl_gpio_set(&AW9364E.gpio, false);
-    delay_us(AW9364E_OFF_TIME_US);
+    pbl_busy_wait_us(AW9364E_OFF_TIME_US);
     prv_send_pulses(pulse_count, true);
   }
   s_pulse_count = pulse_count;

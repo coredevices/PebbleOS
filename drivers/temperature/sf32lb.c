@@ -3,11 +3,11 @@
 
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/temperature.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_tsen.h>
-#include <kernel/util/delay.h>
 
 #define CONVERSION_TIMEOUT_US 20000U
 
@@ -40,7 +40,7 @@ static void prv_tsen_enable(void) {
   prv_putreg(SF32LB52_TSEN_CTRL_OFFSET, ctrl);
   ctrl |= TSEN_CTRL_RSTB;
   prv_putreg(SF32LB52_TSEN_CTRL_OFFSET, ctrl);
-  delay_us(20);
+  pbl_busy_wait_us(20);
   ctrl |= TSEN_CTRL_RUN;
   prv_putreg(SF32LB52_TSEN_CTRL_OFFSET, ctrl);
 }
@@ -71,7 +71,7 @@ int32_t temperature_read(void) {
       temp = (int32_t)(num / SLOPE_DEN) - OFFSET;
       break;
     }
-    delay_us(1);
+    pbl_busy_wait_us(1);
   }
 
   prv_putreg(SF32LB52_TSEN_IRQ_OFFSET, prv_getreg(SF32LB52_TSEN_IRQ_OFFSET) | TSEN_IRQ_ICR);

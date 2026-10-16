@@ -4,10 +4,10 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/drivers/watchdog.h>
+#include <pbl/kernel/delay.h>
 
 #include <flash_region/flash_region.h>
 #include <kernel/core_dump_private.h>
-#include <kernel/util/delay.h>
 
 static bool s_active;
 
@@ -53,7 +53,7 @@ void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
 
     status_t status;
     while ((status = flash_impl_get_erase_status()) == E_BUSY)
-      delay_us(100);
+      pbl_busy_wait_us(100);
     CD_ASSERTN(status == S_SUCCESS);
 
     total_bytes -= erase_size;
@@ -76,7 +76,7 @@ uint32_t cd_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr,
     CD_ASSERTN(PASSED(written));
     status_t status;
     while ((status = flash_impl_get_write_status()) == E_BUSY) {
-      delay_us(10);
+      pbl_busy_wait_us(10);
     }
     CD_ASSERTN(PASSED(status));
     buffer += written;

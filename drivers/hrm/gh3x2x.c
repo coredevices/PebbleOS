@@ -19,7 +19,6 @@
 #include <gh_demo_inner.h>
 #include <goodix_hba.h>
 #include <kernel/events.h>
-#include <kernel/util/delay.h>
 #endif // CONFIG_GH3X2X_ALGO
 
 PBL_LOG_MODULE_DEFINE(driver_hrm_gh3x2x, CONFIG_DRIVER_HRM_LOG_LEVEL);

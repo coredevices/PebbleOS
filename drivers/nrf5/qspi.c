@@ -6,6 +6,7 @@
 #include <pbl/drivers/flash/qspi_flash.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
@@ -15,7 +16,6 @@
 #include <board/board.h>
 #include <flash_region/flash_region.h>
 #include <hal/nrf_qspi.h>
-#include <kernel/util/delay.h>
 #include <kernel/util/sleep.h>
 #include <nrfx.h>
 #include <system/passert.h>
@@ -441,7 +441,7 @@ status_t qspi_flash_erase_suspend(QSPIFlash *dev, uint32_t addr) {
   prv_cinstr(dev, part->instructions.erase_suspend);
 
   if (part->suspend_to_read_latency_us) {
-    delay_us(part->suspend_to_read_latency_us);
+    pbl_busy_wait_us(part->suspend_to_read_latency_us);
   }
 
   return S_SUCCESS;
@@ -582,7 +582,7 @@ void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
   if (active) {
     prv_cinstr(dev, part->instructions.enter_low_power);
     if (part->standby_to_low_power_latency_us) {
-      delay_us(part->standby_to_low_power_latency_us);
+      pbl_busy_wait_us(part->standby_to_low_power_latency_us);
     }
 
     nrf_qspi_int_disable(NRF_QSPI, NRF_QSPI_INT_READY_MASK);
@@ -602,7 +602,7 @@ void qspi_flash_set_lower_power_mode(QSPIFlash *dev, bool active) {
 
     prv_cinstr(dev, part->instructions.exit_low_power);
     if (part->low_power_to_standby_latency_us) {
-      delay_us(part->low_power_to_standby_latency_us);
+      pbl_busy_wait_us(part->low_power_to_standby_latency_us);
     }
   }
 }

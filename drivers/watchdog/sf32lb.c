@@ -4,12 +4,12 @@
 #include <stdint.h>
 
 #include <pbl/drivers/watchdog.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_pmuc.h>
 #include <hardware/sf32lb52_wdt.h>
-#include <kernel/util/delay.h>
 
 #define WDT_CMD_TIMEOUT_US 48000U
 
@@ -39,7 +39,7 @@ static void prv_wdt_command(uint32_t cmd, bool active) {
       return;
     }
 
-    delay_us(1U);
+    pbl_busy_wait_us(1U);
   }
 }
 
@@ -65,9 +65,9 @@ void watchdog_start(void) {
 }
 
 void watchdog_stop(void) {
-  delay_us(1000U);
+  pbl_busy_wait_us(1000U);
   prv_wdt_command(WDT_CCR_STOP, false);
-  delay_us(1000U);
+  pbl_busy_wait_us(1000U);
 }
 
 void watchdog_feed(void) {

@@ -6,6 +6,7 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
@@ -18,7 +19,6 @@
 #include <bf0_hal_rtc.h>
 #include <board/board.h>
 #include <kernel/events.h>
-#include <kernel/util/delay.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_display_jdi, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
@@ -116,14 +116,14 @@ static void prv_power_cycle(void) {
   pbl_gpio_set(&DISPLAY->vddp, false);
   pbl_gpio_set(&DISPLAY->vlcd, false);
 
-  delay_us(POWER_RESET_CYCLE_DELAY_TIME_US);
+  pbl_busy_wait_us(POWER_RESET_CYCLE_DELAY_TIME_US);
 }
 
 static void prv_display_on() {
   pbl_gpio_set(&DISPLAY->vlcd, true);
-  delay_us(POWER_SEQ_DELAY_TIME_US);
+  pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
   pbl_gpio_set(&DISPLAY->vddp, true);
-  delay_us(POWER_SEQ_DELAY_TIME_US);
+  pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
 
   LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
 
@@ -143,9 +143,9 @@ static void prv_display_off() {
   lptim->CR &= ~LPTIM_CR_ENABLE;
   lptim->CR &= ~LPTIM_CR_CNTSTRT;
 
-  delay_us(POWER_SEQ_DELAY_TIME_US);
+  pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
   pbl_gpio_set(&DISPLAY->vddp, false);
-  delay_us(POWER_SEQ_DELAY_TIME_US);
+  pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
   pbl_gpio_set(&DISPLAY->vlcd, false);
 }
 
