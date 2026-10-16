@@ -60,18 +60,15 @@ int32_t temperature_read(void) {
 
   prv_tsen_enable();
 
-  for (uint32_t us = 0U; us < CONVERSION_TIMEOUT_US; us++) {
-    if ((prv_getreg(SF32LB52_TSEN_IRQ_OFFSET) & TSEN_IRQ_IRSR) != 0U) {
-      // The Celsius conversion formula is: (DATA + 3000)/10100 * 749.2916 − 277.5391
-      // In order to calculate milli-Celsius degrees, we can perform the following conversions:
-      // COEF_NUM/COEF_DEN ≃ 749.2916/10100 × 1000
-      // (DATA+3000)*COEF_NUM/COEF_DEN - OFFSET
-      uint32_t raw = prv_getreg(SF32LB52_TSEN_RDATA_OFFSET) & TSEN_RDATA_MASK;
-      uint32_t num = (raw + 3000U) * SLOPE_NUM + ROUND_ADD;
-      temp = (int32_t)(num / SLOPE_DEN) - OFFSET;
-      break;
-    }
-    pbl_busy_wait_us(1);
+  if (PBL_POLL_BUSY_US((prv_getreg(SF32LB52_TSEN_IRQ_OFFSET) & TSEN_IRQ_IRSR) != 0U, 1,
+                       CONVERSION_TIMEOUT_US) == 0) {
+    // The Celsius conversion formula is: (DATA + 3000)/10100 * 749.2916 − 277.5391
+    // In order to calculate milli-Celsius degrees, we can perform the following conversions:
+    // COEF_NUM/COEF_DEN ≃ 749.2916/10100 × 1000
+    // (DATA+3000)*COEF_NUM/COEF_DEN - OFFSET
+    uint32_t raw = prv_getreg(SF32LB52_TSEN_RDATA_OFFSET) & TSEN_RDATA_MASK;
+    uint32_t num = (raw + 3000U) * SLOPE_NUM + ROUND_ADD;
+    temp = (int32_t)(num / SLOPE_DEN) - OFFSET;
   }
 
   prv_putreg(SF32LB52_TSEN_IRQ_OFFSET, prv_getreg(SF32LB52_TSEN_IRQ_OFFSET) | TSEN_IRQ_ICR);

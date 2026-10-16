@@ -34,13 +34,9 @@ static inline void prv_pmuc_putreg(uint32_t offset, uint32_t value) {
 static void prv_wdt_command(uint32_t cmd, bool active) {
   prv_wdt_putreg(SF32LB52_WDT_CCR_OFFSET, cmd);
 
-  for (uint32_t i = 0U; i < WDT_CMD_TIMEOUT_US; i++) {
-    if (((prv_wdt_getreg(SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) != 0U) == active) {
-      return;
-    }
-
-    pbl_busy_wait_us(1U);
-  }
+  (void)PBL_POLL_BUSY_US(
+      ((prv_wdt_getreg(SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) != 0U) == active, 1U,
+      WDT_CMD_TIMEOUT_US);
 }
 
 void watchdog_init(void) {

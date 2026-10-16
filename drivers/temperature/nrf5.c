@@ -33,12 +33,9 @@ int32_t temperature_read(void) {
   prv_clear_datardy();
   prv_putreg(NRF52_TEMP_TASKS_START_OFFSET, 1U);
 
-  for (uint32_t us = 0U; us < CONVERSION_TIMEOUT_US; us++) {
-    if (prv_getreg(NRF52_TEMP_EVENTS_DATARDY_OFFSET) != 0U) {
-      temp = (int32_t)prv_getreg(NRF52_TEMP_TEMP_OFFSET) * MILLIDEGREES_PER_LSB;
-      break;
-    }
-    pbl_busy_wait_us(1);
+  if (PBL_POLL_BUSY_US(prv_getreg(NRF52_TEMP_EVENTS_DATARDY_OFFSET) != 0U, 1,
+                       CONVERSION_TIMEOUT_US) == 0) {
+    temp = (int32_t)prv_getreg(NRF52_TEMP_TEMP_OFFSET) * MILLIDEGREES_PER_LSB;
   }
 
   prv_clear_datardy();

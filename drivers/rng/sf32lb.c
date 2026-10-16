@@ -31,12 +31,10 @@ static inline void prv_putreg(uint32_t offset, uint32_t value) {
 static int prv_generate(uint32_t cmd, uint32_t valid, uint32_t offset, uint32_t *out) {
   prv_putreg(SF32LB52_TRNG_CTRL_OFFSET, cmd);
 
-  for (uint32_t i = 0U; (prv_getreg(SF32LB52_TRNG_STAT_OFFSET) & valid) == 0U; i++) {
-    if (i == TRNG_TIMEOUT_US) {
-      return -ETIMEDOUT;
-    }
-
-    pbl_busy_wait_us(1U);
+  int ret =
+      PBL_POLL_BUSY_US((prv_getreg(SF32LB52_TRNG_STAT_OFFSET) & valid) != 0U, 1U, TRNG_TIMEOUT_US);
+  if (ret < 0) {
+    return ret;
   }
 
   *out = prv_getreg(offset);

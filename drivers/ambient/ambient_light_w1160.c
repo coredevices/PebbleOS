@@ -154,24 +154,25 @@ void ambient_light_init(void) {
   s_initialized = true;
 }
 
+//! True once DATA_ALS is ready, or when the flag read fails.
+static bool prv_data_ready(bool *read_ok) {
+  uint8_t flag;
+  *read_ok = prv_read_register(W1160_FLAG1_REG, &flag);
+  return !*read_ok || (flag & W1160_FLG_ALS_DR) != 0;
+}
+
 // Block-poll FLG_ALS_DR, then read DATA_ALS. Caller must have SAMPLING_EN=1.
 static bool prv_read_data_polled(uint16_t *als_out) {
-  uint8_t flag;
-  uint32_t elapsed = 0;
-  while (true) {
-    if (!prv_read_register(W1160_FLAG1_REG, &flag)) {
-      PBL_LOG_ERR("Could not read W1160 FLAG1");
-      return false;
-    }
-    if (flag & W1160_FLG_ALS_DR) {
-      break;
-    }
-    if (elapsed >= W1160_ALS_POLL_TIMEOUT_MS) {
-      PBL_LOG_ERR("W1160 ALS data-ready timeout");
-      return false;
-    }
-    pbl_sleep_ms(W1160_ALS_POLL_DELAY_MS);
-    elapsed += W1160_ALS_POLL_DELAY_MS;
+  bool read_ok;
+  int rc = PBL_POLL_SLEEP_MS(prv_data_ready(&read_ok), W1160_ALS_POLL_DELAY_MS,
+                             W1160_ALS_POLL_TIMEOUT_MS);
+  if (!read_ok) {
+    PBL_LOG_ERR("Could not read W1160 FLAG1");
+    return false;
+  }
+  if (rc < 0) {
+    PBL_LOG_ERR("W1160 ALS data-ready timeout");
+    return false;
   }
   return prv_read_data_register(als_out);
 }

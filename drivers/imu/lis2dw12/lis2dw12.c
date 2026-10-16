@@ -893,13 +893,19 @@ static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_sampl
   return 0;
 }
 
+//! True once a sample is ready, or when the status read fails.
+static bool prv_data_ready(bool *read_ok) {
+  uint8_t status;
+  *read_ok = prv_lis2dw12_read(LIS2DW12_STATUS, &status, 1);
+  return !*read_ok || (status & LIS2DW12_STATUS_DRDY) != 0U;
+}
+
 static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *data) {
   int err = 0;
   bool ret;
   uint8_t ctrl1;
   uint8_t ctrl1_bck;
   uint8_t ctrl3;
-  uint8_t status;
   uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES];
 
   // If sampling is active, the FIFO batches samples for subscribers, so the
@@ -955,24 +961,19 @@ static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *data) {
   }
 
   // Poll for data ready (timeout after 100ms, ~5x the expected 20ms at 50Hz ODR)
-  uint32_t elapsed_ms = 0;
-  do {
-    ret = prv_lis2dw12_read(LIS2DW12_STATUS, &status, 1);
-    if (!ret) {
-      PBL_LOG_ERR("Could not read STATUS register");
-      err = -EIO;
-      goto end;
-    }
-    if ((status & LIS2DW12_STATUS_DRDY) == 0U) {
-      if (elapsed_ms >= LIS2DW12_DRDY_POLL_TIMEOUT_MS) {
-        PBL_LOG_ERR("DRDY timeout after %" PRIu32 " ms", elapsed_ms);
-        err = -EIO;
-        goto end;
-      }
-      pbl_sleep_ms(LIS2DW12_DRDY_POLL_DELAY_MS);
-      elapsed_ms += LIS2DW12_DRDY_POLL_DELAY_MS;
-    }
-  } while ((status & LIS2DW12_STATUS_DRDY) == 0U);
+  bool read_ok;
+  int rc = PBL_POLL_SLEEP_MS(prv_data_ready(&read_ok), LIS2DW12_DRDY_POLL_DELAY_MS,
+                             LIS2DW12_DRDY_POLL_TIMEOUT_MS);
+  if (!read_ok) {
+    PBL_LOG_ERR("Could not read STATUS register");
+    err = -EIO;
+    goto end;
+  }
+  if (rc < 0) {
+    PBL_LOG_ERR("DRDY timeout after %d ms", LIS2DW12_DRDY_POLL_TIMEOUT_MS);
+    err = -EIO;
+    goto end;
+  }
 
   // Read sample
   ret = prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw));
