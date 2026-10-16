@@ -726,6 +726,19 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
   prv_file_close(fd);
 }
 
+static bool prv_count_notification(void *data, SerializedTimelineItemHeader *header) {
+  (void)header;
+  uint16_t *count = data;
+  (*count)++;
+  return true;
+}
+
+uint16_t notification_storage_get_count(void) {
+  uint16_t count = 0;
+  notification_storage_iterate(prv_count_notification, &count);
+  return count;
+}
+
 //! Reads the string attributes requested in attr_list from the payload following the header,
 //! leaving the file positioned after the payload
 static bool prv_read_string_attributes(const SerializedTimelineItemHeader *header,
