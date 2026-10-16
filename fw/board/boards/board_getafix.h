@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/touch/cst816/touch_sensor_definitions.h>
 #include <pbl/services/imu/units.h>
 
@@ -22,7 +21,6 @@ extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 extern const MicDevice *MIC;
 extern const TouchSensor *CST816;
-extern const LedControllerAW9364E AW9364E;
 
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 55U, // Medium

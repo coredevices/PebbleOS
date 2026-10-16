@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/w1160.h>
+#include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -247,9 +248,9 @@ static DisplayJDIDevice s_display = {
 DisplayJDIDevice *const DISPLAY = &s_display;
 PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
 
-const LedControllerAW9364E AW9364E = {
-  .gpio = PBL_GPIO(SF32LB_GPIO1, 1, 0),
-};
+PBL_AW9364E_DEFINE(s_aw9364e, PBL_GPIO(SF32LB_GPIO1, 1, 0));
+
+const struct pbl_backlight *const BACKLIGHT = &s_aw9364e.backlight;
 
 PBL_I2C_SF32LB_DMA_DEFINE(s_i2c1, "i2c1", I2C1, 400000, PAD_PA32, I2C1_SCL, PAD_PA33, I2C1_SDA,
                           DMA1_Channel6, DMA_REQUEST_22, DMAC1_CH6, 5, nullptr);

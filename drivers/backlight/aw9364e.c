@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/backlight.h>
+#include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/util/math.h>
-
-#include <board/board.h>
+#include <pbl/util/misc.h>
 
 // AW9364E 1-wire dimming protocol implementation
 // The AW9364E uses pulse counting for brightness control:
@@ -25,73 +25,77 @@
 #define AW9364E_MAX_PULSES  16U
 #define AW9364E_OFF_TIME_US 2600U
 
-//! Pulse count currently latched by the chip; 0 = shut down.
-static uint8_t s_pulse_count;
-
-void backlight_init(void) {
-  pbl_gpio_configure(&AW9364E.gpio, PBL_GPIO_OUTPUT);
+static const struct pbl_aw9364e *prv_get(const struct pbl_backlight *bl) {
+  return container_of(bl, const struct pbl_aw9364e, backlight);
 }
 
 //! Emit dimming pulses. A low period stretched past 500us puts the chip in
 //! undefined territory (past 2.5ms it shuts down), so the train runs with
 //! the scheduler and most interrupts masked; worst case is ~55us.
-static void prv_send_pulses(uint8_t count, bool from_shutdown) {
+static void prv_send_pulses(const struct pbl_aw9364e *dev, uint8_t count, bool from_shutdown) {
   pbl_irq_lock();
   for (uint8_t i = 0U; i < count; i++) {
-    pbl_gpio_set(&AW9364E.gpio, false);
+    (void)pbl_gpio_set(&dev->enable, false);
     pbl_busy_wait_us(AW9364E_TLO_US);
-    pbl_gpio_set(&AW9364E.gpio, true);
+    (void)pbl_gpio_set(&dev->enable, true);
     pbl_busy_wait_us((from_shutdown && i == 0U) ? AW9364E_TON_US : AW9364E_THI_US);
   }
   pbl_irq_unlock();
 }
 
-uint8_t backlight_get_level(uint8_t brightness) {
-  if (brightness > 100U) {
-    brightness = 100U;
-  }
+static int prv_init(const struct pbl_backlight *bl) {
+  return pbl_gpio_configure(&prv_get(bl)->enable, PBL_GPIO_OUTPUT);
+}
 
+// 0 = off, otherwise the pulse count to train (1 brightest, 16 dimmest)
+static uint8_t prv_get_level(const struct pbl_backlight *bl, uint8_t brightness) {
   if (brightness == 0U) {
     return 0U;
   }
 
-  return AW9364E_MAX_PULSES - DIVIDE_CEIL(brightness * AW9364E_MAX_PULSES, 100U) + 1U;
+  return AW9364E_MAX_PULSES -
+         DIVIDE_CEIL(brightness * AW9364E_MAX_PULSES, PBL_BACKLIGHT_BRIGHTNESS_MAX) + 1U;
 }
 
-void backlight_set_brightness(uint8_t brightness) {
-  // 0 = off, otherwise the pulse count to train (1 brightest, 16 dimmest)
-  const uint8_t pulse_count = backlight_get_level(brightness);
+static int prv_set_brightness(const struct pbl_backlight *bl, uint8_t brightness) {
+  const struct pbl_aw9364e *dev = prv_get(bl);
+  const uint8_t pulse_count = prv_get_level(bl, brightness);
+  struct pbl_aw9364e_state *state = dev->state;
 
   if (pulse_count == 0U) {
     // The LED keeps driving until EN has been low for 2.5ms. Wait that out so
     // the backlight is dark on return; the light service resumes the ALS right
     // after this and would otherwise integrate the LED tail.
-    pbl_gpio_set(&AW9364E.gpio, false);
-    if (s_pulse_count != 0U) {
+    (void)pbl_gpio_set(&dev->enable, false);
+    if (state->pulse_count != 0U) {
       pbl_busy_wait_us(AW9364E_OFF_TIME_US);
     }
-    s_pulse_count = 0U;
-    return;
+    state->pulse_count = 0U;
+    return 0;
   }
 
-  if (pulse_count == s_pulse_count) {
-    return;
+  if (pulse_count == state->pulse_count) {
+    return 0;
   }
 
-  if (s_pulse_count != 0U && pulse_count > s_pulse_count) {
+  if (state->pulse_count != 0U && pulse_count > state->pulse_count) {
     // Dimming: step down from the latched level, no blackout.
-    prv_send_pulses(pulse_count - s_pulse_count, false);
+    prv_send_pulses(dev, pulse_count - state->pulse_count, false);
   } else {
     // Turning on or brightening: full shutdown, then re-train from scratch.
-    pbl_gpio_set(&AW9364E.gpio, false);
+    (void)pbl_gpio_set(&dev->enable, false);
     pbl_busy_wait_us(AW9364E_OFF_TIME_US);
-    prv_send_pulses(pulse_count, true);
+    prv_send_pulses(dev, pulse_count, true);
   }
-  s_pulse_count = pulse_count;
+  state->pulse_count = pulse_count;
+
+  return 0;
 }
 
-void backlight_refresh(void) {
-  // Intentionally a no-op: re-applying state on this chip requires a 2.5ms
-  // shutdown, which would visibly blink the backlight on every wake with
-  // unchanged brightness.
-}
+// No refresh: re-applying the state needs a 2.5ms shutdown, which would
+// visibly blink the backlight on every wake with unchanged brightness.
+const struct pbl_backlight_ops pbl_aw9364e_ops = {
+  .init = prv_init,
+  .set_brightness = prv_set_brightness,
+  .get_level = prv_get_level,
+};

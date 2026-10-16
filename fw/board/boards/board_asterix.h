@@ -1,6 +1,5 @@
 #pragma once
 
-#include <pbl/drivers/backlight/pwm.h>
 #include <pbl/services/imu/units.h>
 
 #define BT_VENDOR_ID   0x0EEA
@@ -60,16 +59,6 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 };
 
 extern UARTDevice *const DBG_UART;
-
-extern PwmState BACKLIGHT_PWM_STATE;
-static const BacklightPwmConfig BACKLIGHT_PWM = {
-  .ctl = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
-  .pwm =
-      {.state = &BACKLIGHT_PWM_STATE,
-       .output = PBL_GPIO(NRF5_GPIO_P0, 26, 0),
-       .peripheral = NRFX_PWM_INSTANCE(0)},
-  .max_duty_cycle_percent = 67,
-};
 
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),

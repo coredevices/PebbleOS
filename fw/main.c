@@ -6,7 +6,6 @@
 #include <pbl/bluetooth/init.h>
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
-#include <pbl/drivers/backlight.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/debounced_button.h>
 #include <pbl/drivers/display/display.h>
@@ -148,8 +147,6 @@ static void init_drivers(void) {
 #ifdef CONFIG_TOUCH
   touch_sensor_init();
 #endif
-
-  backlight_init();
 
   temperature_init();
 

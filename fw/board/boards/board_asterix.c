@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/ambient/opt3001.h>
 #include <pbl/drivers/audio.h>
+#include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/nrf5.h>
@@ -187,7 +188,16 @@ AudioDevice *const AUDIO = (AudioDevice *)&s_audio_device;
 
 /* asterix shares SPI with flash, which we don't support */
 
-PwmState BACKLIGHT_PWM_STATE;
+static PwmState s_backlight_pwm_state;
+
+PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
+                         .pwm =
+                             {.state = &s_backlight_pwm_state,
+                              .output = PBL_GPIO(NRF5_GPIO_P0, 26, 0),
+                              .peripheral = NRFX_PWM_INSTANCE(0)},
+                         .max_duty_cycle_percent = 67);
+
+const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
 PBL_IRQ_CONNECT(PWM0, NRFX_PWM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_pwm_0_irq_handler, , 0);
 
 PBL_IRQ_CONNECT(RTC1, 7, rtc_irq_handler, , 0);

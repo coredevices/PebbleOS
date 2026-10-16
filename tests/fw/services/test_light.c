@@ -48,15 +48,19 @@ void backlight_set_enabled(bool enabled) {
 void backlight_set_ambient_sensor_enabled(bool enabled) {
 }
 
-void backlight_set_brightness(uint8_t brightness) {
+const struct pbl_backlight *const BACKLIGHT = nullptr;
+
+int pbl_backlight_set_brightness(const struct pbl_backlight *bl, uint8_t brightness) {
   s_backlight_brightness = brightness;
+  return 0;
 }
 
-uint8_t backlight_get_level(uint8_t brightness) {
+uint8_t pbl_backlight_get_level(const struct pbl_backlight *bl, uint8_t brightness) {
   return brightness;
 }
 
-void backlight_refresh(void) {
+int pbl_backlight_refresh(const struct pbl_backlight *bl) {
+  return 0;
 }
 
 bool backlight_is_motion_enabled(void) {

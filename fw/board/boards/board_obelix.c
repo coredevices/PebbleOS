@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/w1160.h>
-#include <pbl/drivers/backlight.h>
+#include <pbl/drivers/backlight/aw2016.h>
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
@@ -273,9 +273,9 @@ PBL_AW86225_DEFINE(s_aw86225, &s_i2c1.bus, 0x58, PBL_GPIO(SF32LB_GPIO1, 1, PBL_G
 
 const struct pbl_vibe *const VIBE = &s_aw86225.vibe;
 
-static const struct pbl_i2c_dev s_i2c_aw2016 = PBL_I2C_DEV(&s_i2c1.bus, 0x64);
+PBL_AW2016_DEFINE(s_aw2016, &s_i2c1.bus, 0x64);
 
-const struct pbl_i2c_dev *const I2C_AW2016 = &s_i2c_aw2016;
+const struct pbl_backlight *const BACKLIGHT = &s_aw2016.backlight;
 
 PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", I2C2, 400000, PAD_PA32, I2C2_SCL, PAD_PA33, I2C2_SDA,
                           DMA1_Channel6, DMA_REQUEST_23, DMAC1_CH6, 5, nullptr);
