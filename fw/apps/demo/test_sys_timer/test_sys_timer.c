@@ -11,9 +11,9 @@
 #include <applib/app.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 #include <system/passert.h>
 
 #define NUM_MAX_TIMERS 10
@@ -48,7 +48,7 @@ static void timer_callback(void *data) {
 static void stuck_timer_callback(void *data) {
   PBL_LOG_DBG("STT entering infinite loop in callback");
   while (true) {
-    psleep(100);
+    sys_psleep(100);
   }
 }
 
@@ -59,7 +59,7 @@ static void long_timer_callback(void *data) {
   PBL_LOG_DBG("STT long running callback %d executed", idx);
   s_app_data->fired_time[idx] = rtc_get_ticks();
 
-  psleep(250);
+  sys_psleep(250);
   return;
 }
 
@@ -150,7 +150,7 @@ void single_shot_timer_menu_cb(int index, void *ctx) {
   PBL_LOG_DBG("STT firing in %d ms", (int)expire_ms);
 
   // Wait for it to fire
-  psleep(300);
+  sys_psleep(300);
   PBL_ASSERTN(s_app_data->fired_time[timer_idx_0] != 0);
   scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_0], &expire_ms);
   PBL_ASSERTN(!scheduled);
@@ -196,7 +196,7 @@ void two_timers_menu_cb(int index, void *ctx) {
   PBL_ASSERTN(success);
 
   // Wait for them to fire
-  psleep(500);
+  sys_psleep(500);
   PBL_ASSERTN(s_app_data->fired_time[timer_idx_0] != 0);
   PBL_ASSERTN(s_app_data->fired_time[timer_idx_1] != 0);
   PBL_ASSERTN(s_app_data->fired_time[timer_idx_1] < s_app_data->fired_time[timer_idx_0]);
@@ -217,7 +217,7 @@ void deferred_delete_menu_cb(int index, void *ctx) {
   s_app_data->timer[0] = new_timer_create();
   bool success = new_timer_start(s_app_data->timer[0], 1, long_timer_callback, cb_data, zero_flags);
   PBL_ASSERTN(success);
-  psleep(50);
+  sys_psleep(50);
 
   // Stop and then delete it
   success = new_timer_stop(s_app_data->timer[0]);
@@ -237,7 +237,7 @@ void fail_if_executing_menu_cb(int index, void *ctx) {
   s_app_data->timer[0] = new_timer_create();
   bool success = new_timer_start(s_app_data->timer[0], 1, long_timer_callback, cb_data, zero_flags);
   PBL_ASSERTN(success);
-  psleep(50);
+  sys_psleep(50);
 
   // try and reschedule while it's executing
   success = new_timer_start(s_app_data->timer[0], 1, long_timer_callback, cb_data,
@@ -335,7 +335,7 @@ void reg_timer_delete_then_add_from_cb_menu_cb(int index, void *ctx) {
 
   // Wait for timer to run at least twice
   PBL_LOG_DBG("waiting for callback to run 2 times");
-  psleep(2200);
+  sys_psleep(2200);
 
   PBL_ASSERT(s_reg_timer_3_callback_count >= 2, "Callback didn't run at least twice");
 }

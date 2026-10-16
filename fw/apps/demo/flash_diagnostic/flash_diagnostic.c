@@ -16,10 +16,10 @@
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <kernel/util/sleep.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/resource_storage_flash.h>
+#include <syscall/syscall.h>
 #include <system/passert.h>
 
 #define NUM_REGIONS ARRAY_LENGTH(s_flash_regions)
@@ -138,7 +138,7 @@ static bool check_subsector_bitflip(struct Region region) {
       success = false;
       break;
     }
-    psleep(5);
+    sys_psleep(5);
   }
 
   return (success);

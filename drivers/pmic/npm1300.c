@@ -22,7 +22,6 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <kernel/util/sleep.h>
 
 PBL_LOG_MODULE_DEFINE(driver_pmic_npm1300, CONFIG_DRIVER_PMIC_LOG_LEVEL);
 
@@ -461,7 +460,7 @@ uint16_t pmic_get_vsys(void) {
       return 0;
     }
     if ((reg & NPM1300_EVENTSADC_VSYSRDY) == 0) {
-      psleep(ADC_POLL_DELAY_MS);
+      pbl_sleep_ms(ADC_POLL_DELAY_MS);
       elapsed += ADC_POLL_DELAY_MS;
     }
   }
@@ -497,7 +496,7 @@ int battery_get_millivolts(void) {
       return 0;
     }
     if ((reg & NPM1300_EVENTSADC_VBATRDY) == 0) {
-      psleep(ADC_POLL_DELAY_MS);
+      pbl_sleep_ms(ADC_POLL_DELAY_MS);
       elapsed += ADC_POLL_DELAY_MS;
     }
   }
@@ -574,7 +573,7 @@ int battery_get_constants(BatteryConstants *constants) {
       return ret;
     }
     if ((reg & NPM1300_EVENTSADC_VBATRDY) == 0U) {
-      psleep(ADC_POLL_DELAY_MS);
+      pbl_sleep_ms(ADC_POLL_DELAY_MS);
       elapsed += ADC_POLL_DELAY_MS;
     }
   }
@@ -604,7 +603,7 @@ int battery_get_constants(BatteryConstants *constants) {
       return ret;
     }
     if ((reg & NPM1300_EVENTSADC_IBATRDY) == 0U) {
-      psleep(ADC_POLL_DELAY_MS);
+      pbl_sleep_ms(ADC_POLL_DELAY_MS);
       elapsed += ADC_POLL_DELAY_MS;
     }
   }
@@ -634,7 +633,7 @@ int battery_get_constants(BatteryConstants *constants) {
       return ret;
     }
     if ((reg & NPM1300_EVENTSADC_NTCRDY) == 0U) {
-      psleep(ADC_POLL_DELAY_MS);
+      pbl_sleep_ms(ADC_POLL_DELAY_MS);
       elapsed += ADC_POLL_DELAY_MS;
     }
   }

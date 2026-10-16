@@ -7,6 +7,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/input/input.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -18,7 +19,6 @@
 #include <board/board.h>
 #include <cst816_fw.h>
 #include <kernel/events.h>
-#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
@@ -130,17 +130,17 @@ static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint
 
 static bool cst816_enter_bootmode(void) {
   pbl_gpio_set(&CST816->reset, true);
-  psleep(CST816_RESET_CYCLE_TIME);
+  pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
   pbl_gpio_set(&CST816->reset, false);
-  psleep(CST816_RESET_CYCLE_TIME);
+  pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
 
   uint8_t retry_cnt = 10;
   while (retry_cnt--) {
     uint8_t cmd = CST816_BOOT_MODE_CMD;
     bool rv = prv_write_data(CST816_BOOT_MODE_REG, &cmd, 1, 0);
-    psleep(CST816_REG_WR_DELAY_TIME);
+    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
     rv &= prv_read_data(CST816_BOOT_FLAG_REG, &cmd, 1, 0);
-    psleep(CST816_REG_WR_DELAY_TIME);
+    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
 
     if (cmd == CST816_BOOT_FLAG_VAL) {
       return true;
@@ -153,7 +153,7 @@ static bool cst816_enter_bootmode(void) {
 static uint16_t cst816_read_checksum(void) {
   uint8_t cmd = 0;
   bool rv = prv_write_data(CST816_BOOT_FLAG_REG, &cmd, 1, 0);
-  psleep(CST816_FW_CHECKSUM_CAL_TIME);
+  pbl_sleep_ms(CST816_FW_CHECKSUM_CAL_TIME);
 
   uint8_t data[2];
   rv &= prv_read_data(CST816_FW_CHECKSUM_REG, data, 2, 0);
@@ -174,22 +174,22 @@ static bool cst816_fw_update(void) {
       PBL_LOG_DBG("fw start_addr:%d length:%d", start_addr, length);
       uint8_t addr[2] = {start_addr & 0xff, start_addr >> 8};
       bool rv = prv_write_data(CST816_FW_START_ADDR_REG, addr, 2, 0);
-      psleep(CST816_REG_WR_DELAY_TIME);
+      pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
       if (!prv_write_data(CST816_FW_PAGE_REG, app_bin + fw_offset,
                           length >= CST816_FW_PAGE_SIZE ? CST816_FW_PAGE_SIZE : length, 0)) {
         PBL_LOG_ERR("cst816 update fw error by iic");
         return false;
       }
-      psleep(CST816_REG_WR_DELAY_TIME);
+      pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
       uint8_t cmd = 0xEE;
       rv = prv_write_data(CST816_FW_PAGE_DONE, &cmd, 1, 0);
-      psleep(CST816_FW_WR_TIME);
+      pbl_sleep_ms(CST816_FW_WR_TIME);
       for (int t = 0;; t++) {
         if (t > 50) {
           PBL_LOG_ERR("cst816 update fw error by writing timeout");
           return false;
         }
-        psleep(CST816_RESET_CYCLE_TIME);
+        pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
         uint8_t ready;
         rv = prv_read_data(CST816_FW_PAGE_STATE, &ready, 1, 0);
         if (rv && ready == CST816_FW_PAGE_READY) {
@@ -225,9 +225,9 @@ static bool cst816_fw_update(void) {
 static void cst816_hw_reset(void) {
   pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
   pbl_gpio_set(&CST816->reset, true);
-  psleep(CST816_RESET_CYCLE_TIME);
+  pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
   pbl_gpio_set(&CST816->reset, false);
-  psleep(CST816_POR_DELAY_TIME);
+  pbl_sleep_ms(CST816_POR_DELAY_TIME);
   pbl_mutex_unlock(&s_i2c_lock);
 }
 

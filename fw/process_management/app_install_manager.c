@@ -30,7 +30,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <kernel/util/sleep.h>
 #include <resource/resource.h>
 #include <system/passert.h>
 

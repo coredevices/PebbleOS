@@ -6,10 +6,10 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 //! Do some upkeep in between erases to keep the rest of the system stable since erases block
@@ -25,7 +25,7 @@ static void prv_erase_upkeep(int *erase_count, bool feed_watchdog) {
 
     // FIXME: We could check and see if we are starving tasks and only force a
     // context switch for that case
-    psleep((SECTOR_SIZE_BYTES > (64 * 1024)) ? 20 : 4);
+    pbl_sleep_ms((SECTOR_SIZE_BYTES > (64 * 1024)) ? 20 : 4);
   }
 
   if (feed_watchdog) {

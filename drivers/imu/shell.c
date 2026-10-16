@@ -5,9 +5,8 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/mag.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/shell/shell.h>
-
-#include <kernel/util/sleep.h>
 
 static int prv_accel_read(const struct pbl_shell *sh, size_t argc, char **argv) {
   AccelDriverSample sample;
@@ -52,7 +51,7 @@ static int prv_mag_read(const struct pbl_shell *sh, size_t argc, char **argv) {
       return ret;
     }
 
-    psleep(250);
+    pbl_sleep_ms(250);
   }
 
   ret = pbl_mag_peek(MAG, &sample);

@@ -4,6 +4,7 @@
 #include <errno.h>
 
 #include <pbl/drivers/i2c.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
@@ -12,7 +13,6 @@
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/util/misc.h>
 
-#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_i2c, CONFIG_DRIVER_I2C_LOG_LEVEL);
@@ -83,7 +83,7 @@ static int prv_wait_for_not_busy(const struct pbl_i2c_bus *bus) {
   static const int WAIT_DELAY = 10; // milliseconds
 
   if (bus->ops->is_busy(bus)) {
-    psleep(WAIT_DELAY);
+    pbl_sleep_ms(WAIT_DELAY);
     if (bus->ops->is_busy(bus)) {
       PBL_LOG_ERR("Timed out waiting for bus %s to become non-busy", prv_name(bus));
       return -EBUSY;

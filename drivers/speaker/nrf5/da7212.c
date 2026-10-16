@@ -5,6 +5,7 @@
 #include <pbl/drivers/clocksource.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -14,7 +15,6 @@
 
 #include <board/board.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <nrfx_i2s.h>
 #include <system/passert.h>
 
@@ -135,11 +135,11 @@ static void prv_apply_volume(AudioDevice *dev) {
 // fw/apps/prf/mfg_speaker_asterix.c (codec-master DAI mode).
 static void prv_codec_prepare(AudioDevice *dev) {
   prv_codec_write(dev, DA7212_CIF_CTRL, 0x80);
-  psleep(10);
+  pbl_sleep_ms(10);
 
   prv_codec_write(dev, DA7212_SYSTEM_ACTIVE, 0x01);
   prv_codec_write(dev, DA7212_REFERENCES, 0x08);
-  psleep(30);
+  pbl_sleep_ms(30);
 
   prv_codec_write(dev, DA7212_LDO_CTRL, 0x80);
 
@@ -154,7 +154,7 @@ static void prv_codec_prepare(AudioDevice *dev) {
   prv_codec_write(dev, 0xF0, 0x8B);
   prv_codec_write(dev, 0xF2, 0x03);
   prv_codec_write(dev, 0xF0, 0x00);
-  psleep(40);
+  pbl_sleep_ms(40);
 
   PBL_ASSERT(prv_codec_read(dev, DA7212_PLL_STATUS) == 0x07, "DA7212 PLL not locked");
 

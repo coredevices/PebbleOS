@@ -6,6 +6,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
@@ -22,7 +23,6 @@
 #include <applib/data_logging.h>
 #include <comm/bt_lock.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
@@ -459,7 +459,7 @@ void dls_finish(DataLoggingSession *logging_session) {
     // unlock and wait a little bit, since the system task should be busy writing these to flash.
     dls_unlock_session(logging_session, false /*inactivate*/);
     timeout -= 10;
-    psleep(10);
+    pbl_sleep_ms(10);
     if (!dls_lock_session(logging_session)) {
       // Someone snuck in and marked it inactive on us
       goto exit;

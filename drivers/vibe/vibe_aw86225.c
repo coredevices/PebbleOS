@@ -6,11 +6,11 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 
 #include <board/board.h>
-#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
@@ -193,7 +193,7 @@ static bool prv_aw862xx_play_go(bool flag) {
       standby = true;
       break;
     }
-    psleep(AW862XX_STOP_STANDBY_POLL_MS);
+    pbl_sleep_ms(AW862XX_STOP_STANDBY_POLL_MS);
   }
   if (!standby) {
     ret &=
@@ -230,7 +230,7 @@ static void prv_update_vbat(void) {
   bool ret =
       prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, AW862XX_SYSCTRL1_RAMINIT);
   ret &= prv_update_bits(AW862XX_REG_DETCFG2, AW862XX_DETCFG2_VBAT_GO, AW862XX_DETCFG2_VBAT_GO);
-  psleep(AW862XX_VBAT_DET_TIME);
+  pbl_sleep_ms(AW862XX_VBAT_DET_TIME);
   ret &= prv_read_register(AW862XX_REG_DET_VBAT, &hi);
   ret &= prv_read_register(AW862XX_REG_DET_LO, &lo);
   ret &= prv_update_bits(AW862XX_REG_SYSCTRL1, AW862XX_SYSCTRL1_RAMINIT, 0);
@@ -343,7 +343,7 @@ static int prv_f0_detection(void) {
   prv_write_register(AW862XX_REG_CONTCFG3, AW862XX_CONTCFG3_F0_DET_DRV_WIDTH);
 
   prv_write_register(AW862XX_REG_PLAYCFG4, AW862XX_PLAYCFG4_GO);
-  psleep(AW862XX_F0_DET_STANDBY_POLL_MS * 2);
+  pbl_sleep_ms(AW862XX_F0_DET_STANDBY_POLL_MS * 2);
 
   for (int i = 0; i < AW862XX_F0_DET_STANDBY_RETRIES; ++i) {
     if (!prv_read_register(AW862XX_REG_GLBRD5, &reg_val)) {
@@ -355,7 +355,7 @@ static int prv_f0_detection(void) {
       break;
     }
 
-    psleep(AW862XX_F0_DET_STANDBY_POLL_MS);
+    pbl_sleep_ms(AW862XX_F0_DET_STANDBY_POLL_MS);
   }
 
   if (!standby) {
@@ -392,9 +392,9 @@ static int prv_f0_detection(void) {
 void vibe_init(void) {
   pbl_gpio_configure(&BOARD_CONFIG_VIBE.ctl, PBL_GPIO_OUTPUT);
   pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, true);
-  psleep(AW862XX_PWR_OFF_TIME);
+  pbl_sleep_ms(AW862XX_PWR_OFF_TIME);
   pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, false);
-  psleep(AW862XX_PWR_ON_TIME);
+  pbl_sleep_ms(AW862XX_PWR_ON_TIME);
 
   uint8_t chip_id;
   bool ret = prv_read_register(AW862XX_REG_CHIPID, &chip_id);

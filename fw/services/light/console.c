@@ -5,10 +5,9 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/ambient_light.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/services/light.h>
 #include <pbl/shell/shell.h>
-
-#include <kernel/util/sleep.h>
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 #include <string.h>
@@ -55,7 +54,7 @@ PBL_SHELL_SUBCMD_ADD(sub_backlight, test, nullptr, "Turn the light on and print 
 // so a reading taken then would be a stale cached value.
 static int prv_cmd_als_lux(const struct pbl_shell *sh, size_t argc, char **argv) {
   light_allow(false);
-  psleep(ALS_LUX_SETTLE_MS);
+  pbl_sleep_ms(ALS_LUX_SETTLE_MS);
   const uint32_t raw = ambient_light_get_light_level();
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
   const uint32_t corr =
@@ -109,10 +108,10 @@ static void prv_als_fill_solid(uint8_t px) {
   s_als_flush_done = false;
   launcher_task_add_callback(prv_als_flush_cb, nullptr);
   while (!s_als_flush_done) {
-    psleep(2);
+    pbl_sleep_ms(2);
   }
   while (compositor_display_update_in_progress()) {
-    psleep(2);
+    pbl_sleep_ms(2);
   }
 }
 
@@ -123,7 +122,7 @@ static uint32_t prv_als_read_raw_avg(uint8_t n) {
     sum += ambient_light_get_light_level();
     watchdog_feed();
     pbl_task_wdt_feed_all();
-    psleep(30);
+    pbl_sleep_ms(30);
   }
   return (n > 0) ? (sum / n) : 0;
 }
@@ -148,13 +147,13 @@ static int prv_cmd_als_curve(const struct pbl_shell *sh, size_t argc, char **arg
   s_als_frozen = false;
   compositor_freeze(prv_als_frozen_cb, nullptr);
   while (!s_als_frozen) {
-    psleep(2);
+    pbl_sleep_ms(2);
   }
 
   uint32_t raw_white = 1;
   for (uint8_t i = 0; i < (uint8_t)(sizeof(levels) / sizeof(levels[0])); i++) {
     prv_als_fill_solid(levels[i].px);
-    psleep(ALS_MEASURE_SETTLE_MS);
+    pbl_sleep_ms(ALS_MEASURE_SETTLE_MS);
     const uint32_t raw = prv_als_read_raw_avg(4);
     if (i == 0) {
       raw_white = (raw > 0) ? raw : 1;

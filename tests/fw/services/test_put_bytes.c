@@ -53,7 +53,7 @@ bool firmware_update_is_in_progress(void) {
   return s_firmware_update_is_in_progress;
 }
 
-void psleep(int millis) {
+void pbl_sleep_ms(uint32_t ms) {
 }
 
 void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_id,

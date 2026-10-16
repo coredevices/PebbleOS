@@ -11,6 +11,7 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -22,7 +23,6 @@
 #include <flash_region/filesystem_regions.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <kernel/util/sleep.h>
 #include <system/hexdump.h>
 #include <system/passert.h>
 
@@ -510,7 +510,7 @@ static int get_updated_erase_hdr(PageHeader *hdr, uint16_t page) {
   // a little time in case we are calling this from a high priority task and
   // stalling them
   pbl_task_wdt_feed_self();
-  psleep(1);
+  pbl_sleep_ms(1);
 
   // mark the page as erased. This way we know that the erase completed
   // next time we scan the sector
@@ -761,7 +761,7 @@ static void pfs_prepare_for_file_creation(uint32_t file_size, uint32_t max_elaps
     // TODO: might be nice to only sleep here if we had to perform GC as part
     // of finding a free page
     if ((pages_to_find % 4) == 0) {
-      psleep(2);
+      pbl_sleep_ms(2);
     }
     pages_to_find--;
 

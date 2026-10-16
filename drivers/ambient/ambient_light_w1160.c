@@ -6,12 +6,12 @@
 #include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 
 #include <board/board.h>
-#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
@@ -121,7 +121,7 @@ void ambient_light_init(void) {
 
   s_sensor_light_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
 
-  psleep(W1160_POR_WAIT_TIME);
+  pbl_sleep_ms(W1160_POR_WAIT_TIME);
 
   rv = prv_read_register(W1160_PDT_ID_REG, &chip_id);
   if (!rv) {
@@ -170,7 +170,7 @@ static bool prv_read_data_polled(uint16_t *als_out) {
       PBL_LOG_ERR("W1160 ALS data-ready timeout");
       return false;
     }
-    psleep(W1160_ALS_POLL_DELAY_MS);
+    pbl_sleep_ms(W1160_ALS_POLL_DELAY_MS);
     elapsed += W1160_ALS_POLL_DELAY_MS;
   }
   return prv_read_data_register(als_out);

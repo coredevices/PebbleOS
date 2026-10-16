@@ -20,7 +20,6 @@
 #include <pbl/util/misc.h>
 
 #include <board/board.h>
-#include <kernel/util/sleep.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
@@ -970,7 +969,7 @@ static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *data) {
         err = -EIO;
         goto end;
       }
-      psleep(LIS2DW12_DRDY_POLL_DELAY_MS);
+      pbl_sleep_ms(LIS2DW12_DRDY_POLL_DELAY_MS);
       elapsed_ms += LIS2DW12_DRDY_POLL_DELAY_MS;
     }
   } while ((status & LIS2DW12_STATUS_DRDY) == 0U);

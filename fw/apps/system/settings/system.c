@@ -36,7 +36,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <kernel/util/sleep.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <process_management/app_manager.h>
@@ -44,6 +43,7 @@
 #include <shell/normal/battery_ui.h>
 #include <shell/prefs.h>
 #include <shell/system_app_ids.auto.h>
+#include <syscall/syscall.h>
 #include <system/bootbits.h>
 #include <system/passert.h>
 #include <system/version.h>
@@ -397,7 +397,7 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
   // Give time for backlight to turn off
   // If we don't do this, the text may say the false result
   // until the user changes the value
-  psleep(200);
+  sys_psleep(200);
 
   // Get current ambient light reading to show backlight status
   uint32_t current_reading = light_get_ambient_lux();

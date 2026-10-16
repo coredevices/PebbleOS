@@ -20,7 +20,6 @@
 #include <pbl/util/misc.h>
 
 #include <board/board.h>
-#include <kernel/util/sleep.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lsm6dso, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
@@ -624,7 +623,7 @@ static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detectio
 
   // Allow the accelerometer to stabilize after an ODR/power-mode change
   if (odr != LSM6DSO_CTRL1_XL_ODR_OFF) {
-    psleep(10);
+    pbl_sleep_ms(10);
   }
 
   s_dev->state->sampling_interval_us = sampling_interval_us;
@@ -1044,7 +1043,7 @@ static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *data) {
         err = -EIO;
         goto end;
       }
-      psleep(LSM6DSO_DRDY_POLL_DELAY_MS);
+      pbl_sleep_ms(LSM6DSO_DRDY_POLL_DELAY_MS);
       elapsed_ms += LSM6DSO_DRDY_POLL_DELAY_MS;
     }
   } while ((status & LSM6DSO_STATUS_REG_XLDA) == 0U);

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/runlevel.h>
@@ -12,7 +13,6 @@
 #include <flash_region/filesystem_regions.h>
 #include <kernel/event_loop.h>
 #include <kernel/util/factory_reset.h>
-#include <kernel/util/sleep.h>
 #include <kernel/util/standby.h>
 #include <process_management/worker_manager.h>
 #include <shell/normal/app_idle_timeout.h>
@@ -48,7 +48,7 @@ static void prv_factory_reset_non_pfs_data() {
 
   while (worker_manager_get_current_worker_md()) {
     // busy loop until the worker is killed
-    psleep(3);
+    pbl_sleep_ms(3);
   }
 
   rtc_timezone_clear();

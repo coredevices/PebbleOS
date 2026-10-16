@@ -9,9 +9,9 @@
 #include <applib/app.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 #include <system/passert.h>
 
 #define NUM_MENU_ITEMS 2
@@ -68,7 +68,7 @@ static void menu_select_callback(int index, void *ctx) {
     // Flood bluetooth
     while (s_connected) {
       while (s_pending_count > 6 && s_connected) {
-        psleep(100);
+        sys_psleep(100);
       }
       s_pending_count++;
       system_task_add_callback(send_bluetooth, nullptr);

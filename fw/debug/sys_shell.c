@@ -17,7 +17,6 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/util/factory_reset.h>
-#include <kernel/util/sleep.h>
 #include <process_management/worker_manager.h>
 #include <system/bootbits.h>
 #include <system/passert.h>
@@ -60,7 +59,7 @@ static int prv_cmd_factory_reset(const struct pbl_shell *sh, size_t argc, char *
     worker_manager_disable();
 
     while (worker_manager_get_current_worker_md()) {
-      psleep(3);
+      pbl_sleep_ms(3);
     }
 
     launcher_task_add_callback(factory_reset_fast, nullptr);

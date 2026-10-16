@@ -6,6 +6,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_list.h>
@@ -16,7 +17,6 @@
 
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
@@ -911,7 +911,7 @@ void dls_storage_rebuild(void) {
       // because we haven't started monitoring it yet, but if we starve KernelBG we'll hit false
       // watchdog reboots. Sleep a bit here so the background task has a chance to run. See
       // PBL-24560 for a long term fix.
-      psleep(10);
+      pbl_sleep_ms(10);
     }
 
     num_sessions_restored++;

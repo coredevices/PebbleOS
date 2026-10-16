@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/services/boot_splash.h>
 
@@ -13,7 +14,6 @@
 #include <board/display.h>
 #include <board/splash.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 
 // Platform-specific colors: PebbleOS uses ARGB2222 (GColor8), not raw RGB332
 #if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
@@ -174,7 +174,7 @@ void boot_splash_stop(void) {
     s_boot_splash_running = false;
     // Wait for the splash task to finish (max ~10ms delay due to short sleep intervals)
     while (s_boot_splash_task != nullptr) {
-      psleep(10);
+      pbl_sleep_ms(10);
     }
 
     // Draw final frame with logo only (no progress bar)

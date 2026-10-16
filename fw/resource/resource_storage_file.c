@@ -7,11 +7,10 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
-
-#include <kernel/util/sleep.h>
 
 extern const FileResourceData g_file_resource_stores[];
 extern const uint32_t g_num_file_resource_stores;
@@ -165,7 +164,7 @@ static void resource_storage_file_init(void) {
         // If this file is over 200KB, it's going to take a while to CRC. Let's sleep a bit
         // between entries so we don't starve out our background task. See PBL-24560 for a real
         // long term fix.
-        psleep(5);
+        pbl_sleep_ms(5);
       }
     }
   }

@@ -26,11 +26,11 @@
 #include <apps/prf/mfg_test_result.h>
 #include <gh_demo.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <mfg/mfg_info.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 #define STATUS_STRING_LEN  32
 #define CTR_STRING_LEN     128
@@ -207,7 +207,7 @@ static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   event_service_client_unsubscribe(&app_data->hrm_event_info);
   sys_hrm_manager_unsubscribe(app_data->hrm_session);
   // let sensor sleep by waiting 50ms
-  psleep(50);
+  sys_psleep(50);
   event_service_client_subscribe(&app_data->hrm_event_info);
   // Use app data as session ref
   AppInstallId app_id = 1;

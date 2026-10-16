@@ -8,8 +8,8 @@
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window.h>
-#include <kernel/util/sleep.h>
 #include <profile_mutexes.h>
+#include <syscall/syscall.h>
 #include <system/profiler.h>
 
 static Window *window;
@@ -29,7 +29,7 @@ static void deadlock(void) {
 
   PBL_LOG_DBG("Locking mutex 1");
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  psleep(20);
+  sys_psleep(20);
   PBL_LOG_DBG("Locking mutex 2");
   pbl_mutex_lock(&s_mutex2, PBL_FOREVER);
 }

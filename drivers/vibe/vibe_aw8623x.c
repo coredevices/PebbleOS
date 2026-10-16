@@ -4,11 +4,11 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 
 #include <board/board.h>
-#include <kernel/util/sleep.h>
 #include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
@@ -108,7 +108,7 @@ static bool prv_wait_for_standby(void) {
     if (PBL_FIELD_GET(AW8623X_GLBRD5_STATE_MASK, val) == AW8623X_GLBRD5_STATE_STANDBY) {
       return true;
     }
-    psleep(AW8623X_STOP_POLL_MS);
+    pbl_sleep_ms(AW8623X_STOP_POLL_MS);
   }
   return false;
 }
@@ -132,9 +132,9 @@ void vibe_init(void) {
   s_initialized = false;
   pbl_gpio_configure(&BOARD_CONFIG_VIBE.ctl, PBL_GPIO_OUTPUT);
   pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, true);
-  psleep(AW8623X_PWR_OFF_TIME_MS);
+  pbl_sleep_ms(AW8623X_PWR_OFF_TIME_MS);
   pbl_gpio_set(&BOARD_CONFIG_VIBE.ctl, false);
-  psleep(AW8623X_PWR_ON_TIME_MS);
+  pbl_sleep_ms(AW8623X_PWR_ON_TIME_MS);
 
   // Verify chip ID
   ret = prv_read_register(AW8623X_IDH, &val);

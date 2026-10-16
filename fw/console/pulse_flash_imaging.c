@@ -6,12 +6,12 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
 
 #include <console/pulse_protocol_impl.h>
 #include <flash_region/flash_region.h>
-#include <kernel/util/sleep.h>
 #include <resource/resource_storage_flash.h>
 #include <system/bootbits.h>
 
@@ -183,7 +183,7 @@ static void prv_handle_write(Command *cmd, size_t command_length) {
   // all of the available CPU time and completely block lower-priority tasks.
   // To prevent DoSing KernelBG and tripping the watchdog, suspend the current
   // task for a couple ticks after each write to let other tasks catch up.
-  psleep(2);
+  pbl_sleep_ms(2);
 }
 
 static void prv_handle_crc(Command *cmd, size_t length) {

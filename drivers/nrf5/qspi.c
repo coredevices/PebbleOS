@@ -16,7 +16,6 @@
 #include <board/board.h>
 #include <flash_region/flash_region.h>
 #include <hal/nrf_qspi.h>
-#include <kernel/util/sleep.h>
 #include <nrfx.h>
 #include <system/passert.h>
 
@@ -374,7 +373,7 @@ void qspi_flash_init(QSPIFlash *dev, QSPIFlashPart *part, bool coredump_mode) {
   prv_cinstr(dev, part->instructions.reset_enable);
   prv_cinstr(dev, part->instructions.reset);
 
-  psleep(part->reset_latency_ms);
+  pbl_sleep_ms(part->reset_latency_ms);
 
   // Enable 4-byte addressing if needed
   if (conf_prot.addrmode == NRF_QSPI_ADDRMODE_32BIT) {

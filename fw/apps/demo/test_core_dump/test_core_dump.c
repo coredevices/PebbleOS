@@ -10,9 +10,9 @@
 #include <applib/ui/ui.h>
 #include <kernel/core_dump.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 #include <system/passert.h>
 
 #define NUM_MENU_ITEMS 13
@@ -34,14 +34,14 @@ static TestTimersAppData *s_app_data = 0;
 static void stuck_timer_callback(void *data) {
   PBL_LOG_DBG("STT: Entering infinite loop in timer callback");
   while (true) {
-    psleep(100);
+    sys_psleep(100);
   }
 }
 
 static void stuck_system_task_callback(void *data) {
   PBL_LOG_DBG("Entering infinite loop in system task callback");
   while (true) {
-    psleep(100);
+    sys_psleep(100);
   }
 }
 

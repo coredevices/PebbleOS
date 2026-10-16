@@ -8,12 +8,11 @@
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/imu/mmc5603nj/registers.h>
 #include <pbl/drivers/mag.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
-
-#include <kernel/util/sleep.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mag_mmc5603nj, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
@@ -104,21 +103,21 @@ static int prv_reset(void) {
     return ret;
   }
 
-  psleep(MMC5603NJ_SW_RESET_DELAY_MS);
+  pbl_sleep_ms(MMC5603NJ_SW_RESET_DELAY_MS);
 
   ret = prv_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_SET);
   if (ret != 0) {
     return ret;
   }
 
-  psleep(MMC5603NJ_SET_DELAY_MS);
+  pbl_sleep_ms(MMC5603NJ_SET_DELAY_MS);
 
   ret = prv_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_RESET);
   if (ret != 0) {
     return ret;
   }
 
-  psleep(MMC5603NJ_SET_DELAY_MS);
+  pbl_sleep_ms(MMC5603NJ_SET_DELAY_MS);
 
   return 0;
 }

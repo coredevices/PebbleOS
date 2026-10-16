@@ -12,9 +12,9 @@
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 #define DA7212_CIF_CTRL            0x1D
 #define DA7212_DAI_CLK_MODE        0x28
@@ -56,7 +56,7 @@ static void prv_da7212_play_tone(void) {
   // CIF_CTRL: soft reset
   da7212_register_write(DA7212_CIF_CTRL, 0x80);
 
-  psleep(10);
+  sys_psleep(10);
 
   // SYSTEM_ACTIVE: wake-up
   da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x01);

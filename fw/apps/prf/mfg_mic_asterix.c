@@ -16,11 +16,11 @@
 #include <console/dbgserial.h>
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
-#include <kernel/util/sleep.h>
 #include <nrfx_i2s.h>
 #include <nrfx_pdm.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 #define DUMP_RECORDING_DBGSERIAL 0
 #define PLAY_SINEWAVE            0
@@ -122,7 +122,7 @@ static void prv_codec_setup(void) {
   // CIF_CTRL: soft reset
   da7212_register_write(DA7212_CIF_CTRL, 0x80);
 
-  psleep(10);
+  sys_psleep(10);
 
   // SYSTEM_ACTIVE: wake-up
   da7212_register_write(DA7212_SYSTEM_ACTIVE, 0x01);
@@ -130,7 +130,7 @@ static void prv_codec_setup(void) {
   // REFERENCES: enable master bias
   da7212_register_write(DA7212_REFERENCES, 0x08);
 
-  psleep(30);
+  sys_psleep(30);
 
   // LDO_CTRL: enable LDO, 1.05V
   da7212_register_write(DA7212_LDO_CTRL, 0x80);
@@ -155,7 +155,7 @@ static void prv_codec_setup(void) {
   da7212_register_write(0xF2, 0x03);
   da7212_register_write(0xF0, 0x00);
 
-  psleep(40);
+  sys_psleep(40);
 
   PBL_ASSERT(da7212_register_read(DA7212_PLL_STATUS) == 0x07, "DA7212 PLL not locked");
 
@@ -342,7 +342,7 @@ static void prv_playback(void) {
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   prv_codec_setup();
-  psleep(3000);
+  sys_psleep(3000);
   prv_codec_standby();
 
   nrfx_i2s_stop(&s_i2s);
