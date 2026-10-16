@@ -4,7 +4,7 @@
               "You should also make sure you are obeying our API design guidelines:",
               "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
             ],
-  "revision" : "109",
+  "revision" : "110",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/ambient_light.h",
@@ -44,6 +44,7 @@
     "fw/applib/cpu_cache.h",
     "fw/applib/health_service.h",
     "fw/applib/moddable/moddable.h",
+    "fw/applib/notification_service.h",
     "fw/applib/platform.h",
     "fw/applib/tick_timer_service.h",
     "fw/applib/touch_service.h",
@@ -447,6 +448,29 @@
                   "type": "function",
                   "name": "backlight_service_unsubscribe",
                   "addedRevision": "101"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "NotificationService",
+              "appOnly": true,
+              "exports": [
+                {
+                  "type": "type",
+                  "name": "NotificationCountHandler",
+                  "addedRevision": "110"
+                }, {
+                  "type": "function",
+                  "name": "notification_service_subscribe",
+                  "addedRevision": "110"
+                }, {
+                  "type": "function",
+                  "name": "notification_service_unsubscribe",
+                  "addedRevision": "110"
+                }, {
+                  "type": "function",
+                  "name": "notification_service_peek_count",
+                  "addedRevision": "110"
                 }
               ]
             }, {

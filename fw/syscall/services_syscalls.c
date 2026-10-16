@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/alarms/alarm.h>
+#include <pbl/services/notifications/notification_storage.h>
 
 #include <syscall/syscall_internal.h>
 
@@ -17,5 +18,13 @@ DEFINE_SYSCALL(bool, sys_hrm_manager_is_hrm_present) {
   return true;
 #else
   return false;
+#endif
+}
+
+DEFINE_SYSCALL(uint16_t, sys_notification_service_get_count, void) {
+#ifdef CONFIG_SERVICE_NOTIFICATIONS
+  return notification_storage_get_count();
+#else
+  return 0;
 #endif
 }
