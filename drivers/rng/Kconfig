@@ -35,6 +35,14 @@ config RNG_POSIX
     help
       Host random number generator.
 
+config RNG_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The rng shell command, to print random words and check their bit
+      statistics.
+
 module = DRIVER_RNG
 module-str = Random Number Generator
 source "subsys/logging/Kconfig.template.log_level"
