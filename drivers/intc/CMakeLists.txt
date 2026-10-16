@@ -3,3 +3,4 @@
 
 pbl_library()
 pbl_library_sources(intc.c)
+pbl_library_sources_ifdef(CONFIG_INTC_SHELL shell.c)
