@@ -18,6 +18,8 @@
 #include <pbl/util/math.h>
 #include <pbl/util/uuid.h>
 
+#include <apps/system/notifications_history.h>
+
 PBL_LOG_MODULE_DEFINE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
 typedef struct NotificationIterState {
@@ -740,6 +742,20 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
   }
 
   prv_file_close(&file);
+}
+
+static bool prv_count_notification(void *data, SerializedTimelineItemHeader *header) {
+  uint16_t *count = data;
+  if (!notifications_history_is_hidden(&header->common)) {
+    (*count)++;
+  }
+  return true;
+}
+
+uint16_t notification_storage_get_count(void) {
+  uint16_t count = 0;
+  notification_storage_iterate(prv_count_notification, &count);
+  return count;
 }
 
 //! Reads the string attributes requested in attr_list from the payload following the header,
