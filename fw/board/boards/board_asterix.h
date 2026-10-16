@@ -103,4 +103,3 @@ extern AudioDevice *const AUDIO;
 
 extern const struct pbl_i2c_dev *const I2C_DRV2604;
 extern const struct pbl_i2c_dev *const I2C_DA7212;
-extern const struct pbl_i2c_dev *const I2C_BMP390;

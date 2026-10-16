@@ -14,7 +14,6 @@
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
-#include <pbl/drivers/pressure.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
 #include <pbl/drivers/temperature.h>
@@ -149,10 +148,6 @@ static void init_drivers(void) {
 
 #ifdef CONFIG_TOUCH
   touch_sensor_init();
-#endif
-
-#ifdef CONFIG_PRESSURE
-  pressure_init();
 #endif
 
   backlight_init();
