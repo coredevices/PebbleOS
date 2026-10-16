@@ -16,6 +16,12 @@
 
 extern void notification_storage_reset(void);
 
+static bool s_dismissal_sync;
+
+bool alerts_preferences_get_notification_dismissal_sync(void) {
+  return s_dismissal_sync;
+}
+
 typedef void (*pbl_work_call_fn_t)(void *data);
 
 static Attribute action1_attributes[] = {
@@ -77,6 +83,7 @@ void test_notification_storage__initialize(void) {
   fake_pfs_mount();
   pbl_fs_format("/");
   notification_storage_reset();
+  s_dismissal_sync = false;
 }
 
 void test_notification_storage__cleanup(void) {
@@ -220,6 +227,53 @@ void test_notification_storage__basic(void) {
   Uuid invalid_uuid;
   uuid_generate(&invalid_uuid);
   cl_assert_equal_b(notification_storage_get(&invalid_uuid, &r), false);
+}
+
+void test_notification_storage__count_excludes_removed_notifications(void) {
+  TimelineItem first = {
+    .header = {
+      .id = UuidMake(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      .type = TimelineItemTypeNotification,
+      .layout = LayoutIdGeneric,
+    },
+  };
+  TimelineItem second = first;
+  second.header.id = UuidMake(2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+  cl_assert_equal_i(notification_storage_get_count(), 0);
+  notification_storage_store(&first);
+  notification_storage_store(&second);
+  cl_assert_equal_i(notification_storage_get_count(), 2);
+
+  notification_storage_remove(&first.header.id);
+  cl_assert_equal_i(notification_storage_get_count(), 1);
+}
+
+void test_notification_storage__count_skips_hidden_notifications(void) {
+  TimelineItem unread = {
+    .header = {
+      .id = UuidMake(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      .type = TimelineItemTypeNotification,
+      .layout = LayoutIdGeneric,
+    },
+  };
+  TimelineItem dismissed = unread;
+  dismissed.header.id = UuidMake(2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  TimelineItem actioned = unread;
+  actioned.header.id = UuidMake(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+  notification_storage_store(&unread);
+  notification_storage_store(&dismissed);
+  notification_storage_store(&actioned);
+  notification_storage_set_status(&dismissed.header.id, TimelineItemStatusDismissed);
+  notification_storage_set_status(&actioned.header.id, TimelineItemStatusActioned);
+
+  // Without dismissal sync the Notifications app shows acted-on notifications too
+  s_dismissal_sync = false;
+  cl_assert_equal_i(notification_storage_get_count(), 3);
+
+  s_dismissal_sync = true;
+  cl_assert_equal_i(notification_storage_get_count(), 1);
 }
 
 void test_notification_storage__iterate_strings_after_skips_old_and_deleted_payloads(void) {
