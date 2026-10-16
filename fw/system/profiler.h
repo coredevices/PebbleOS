@@ -18,11 +18,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/list.h>
-
-#ifdef CONFIG_PROFILER
-#include <cmsis_core.h>
-#endif
 
 typedef struct {
   ListNode list_node;
@@ -69,9 +66,9 @@ extern Profiler g_profiler;
 
 #define PROFILER_STOP profiler_stop()
 
-#define PROFILER_NODE_START(node) g_profiler_node_##node.start = DWT->CYCCNT
+#define PROFILER_NODE_START(node) g_profiler_node_##node.start = pbl_cycle_get_32()
 
-#define PROFILER_NODE_STOP(node) profiler_node_stop(&g_profiler_node_##node, DWT->CYCCNT)
+#define PROFILER_NODE_STOP(node) profiler_node_stop(&g_profiler_node_##node, pbl_cycle_get_32())
 
 #define SYS_PROFILER_NODE_START(node) sys_profiler_node_start(&g_profiler_node_##node)
 

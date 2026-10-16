@@ -1,7 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <cmsis_core.h>
+#include <pbl/kernel/time.h>
+
 #include <syscall/syscall_define.h>
 #include <system/profiler.h>
 
@@ -51,12 +52,12 @@ PBL_SYSCALL(void, sys_profiler_node_start, (VAL, ProfilerNode *, node)) {
     }
   }
 
-  node->start = DWT->CYCCNT;
+  node->start = pbl_cycle_get_32();
 }
 
 PBL_SYSCALL(void, sys_profiler_node_stop, (VAL, ProfilerNode *, node)) {
   // Capture the cycle count as soon as possible, before we validate the node argument
-  uint32_t dwt_cyc_cnt = DWT->CYCCNT;
+  uint32_t dwt_cyc_cnt = pbl_cycle_get_32();
 
   if (from_user) {
     if (!list_contains(g_profiler.nodes, (ListNode *)node)) {

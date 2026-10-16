@@ -6,22 +6,13 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/size.h>
 
-#include <cmsis_core.h>
 #include <system/passert.h>
 
 #if defined(CONFIG_SHELL) && defined(CONFIG_PROFILER)
 #include <pbl/shell/shell.h>
-#endif
-
-#ifdef CONFIG_SOC_NRF52
-#include <drivers/nrfx_common.h>
-#include <soc/nrfx_coredep.h>
-#endif
-
-#ifdef CONFIG_SOC_SF32LB52
-#include <bf0_hal.h>
 #endif
 
 #ifdef CONFIG_PULSE_EVERYWHERE
@@ -74,14 +65,11 @@ void profiler_init(void) {
 }
 
 void profiler_start(void) {
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->CYCCNT = 0;
-  DWT->CTRL |= 0x01;
-  g_profiler.start = DWT->CYCCNT;
+  g_profiler.start = pbl_cycle_get_32();
 }
 
 void profiler_stop(void) {
-  g_profiler.end = DWT->CYCCNT;
+  g_profiler.end = pbl_cycle_get_32();
 }
 
 uint32_t profiler_node_get_last_cycles(ProfilerNode *node) {
@@ -102,18 +90,7 @@ void profiler_node_stop(ProfilerNode *node, uint32_t dwt_cyc_cnt) {
 }
 
 uint32_t profiler_cycles_to_us(uint32_t cycles) {
-#if defined(CONFIG_SOC_NRF52)
-  uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
-#elifdef CONFIG_SOC_SF32LB52
-  uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
-#elifdef CONFIG_QEMU
-  uint32_t mhz = SystemCoreClock / 1000000;
-#else
-  RCC_ClocksTypeDef clocks;
-  RCC_GetClocksFreq(&clocks);
-  uint32_t mhz = clocks.HCLK_Frequency / 1000000;
-#endif
-  return cycles / mhz;
+  return (uint32_t)(((uint64_t)cycles * 1000000U) / pbl_cycles_per_sec());
 }
 
 uint32_t profiler_node_get_total_us(ProfilerNode *node) {
@@ -133,18 +110,7 @@ uint32_t profiler_get_total_duration(bool in_us) {
   }
 
   if (in_us) {
-#if defined(CONFIG_SOC_NRF52)
-    uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
-#elifdef CONFIG_SOC_SF32LB52
-    uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
-#elifdef CONFIG_QEMU
-    uint32_t mhz = SystemCoreClock / 1000000;
-#else
-    RCC_ClocksTypeDef clocks;
-    RCC_GetClocksFreq(&clocks);
-    uint32_t mhz = clocks.HCLK_Frequency / 1000000;
-#endif
-    total /= mhz;
+    total = profiler_cycles_to_us(total);
   }
 
   return total;
@@ -154,30 +120,12 @@ void profiler_print_stats(void) {
   PROFILER_STOP; // Make sure the profiler has been stopped.
   uint32_t total = profiler_get_total_duration(false);
 
-#if defined(CONFIG_SOC_NRF52)
-  uint32_t mhz = NRFX_DELAY_CPU_FREQ_MHZ;
   char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
-#elifdef CONFIG_SOC_SF32LB52
-  uint32_t mhz = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
-  char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
-#elifdef CONFIG_QEMU
-  uint32_t mhz = SystemCoreClock / 1000000;
-  char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "MHz", mhz);
-#else
-  RCC_ClocksTypeDef clocks;
-  RCC_GetClocksFreq(&clocks);
-  uint32_t mhz = clocks.HCLK_Frequency / 1000000;
-
-  char buf[80];
-  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "Hz", clocks.HCLK_Frequency);
-#endif
+  PROF_LOG(buf, sizeof(buf), "CPU Frequency: %" PRIu32 "Hz", pbl_cycles_per_sec());
   PROF_LOG(buf, sizeof(buf),
            "Profiler ran for %" PRIu32 " ticks (%" PRIu32 " us) (start: %" PRIu32 "; stop:%" PRIu32
            ")",
-           total, total / mhz, g_profiler.start, g_profiler.end);
+           total, profiler_cycles_to_us(total), g_profiler.start, g_profiler.end);
 
   ListNode *sorted = nullptr;
   ListNode *tail = list_get_tail(g_profiler.nodes);
@@ -196,8 +144,8 @@ void profiler_print_stats(void) {
 
       PROF_LOG(buf, sizeof(buf),
                "%-24s %-8" PRIu32 " %-11" PRIu32 " %-15" PRIu32 " %-8" PRIu32 " %-7" PRIu32,
-               node->module_name, node->count, node->total, node->total / mhz,
-               (node->total / node->count) / mhz, percent);
+               node->module_name, node->count, node->total, profiler_cycles_to_us(node->total),
+               profiler_cycles_to_us(node->total / node->count), percent);
 
       sorted = sorted->next;
     }
