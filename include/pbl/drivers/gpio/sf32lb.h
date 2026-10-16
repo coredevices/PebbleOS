@@ -7,14 +7,15 @@
 
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/gpio.h>
+#include <pbl/drivers/intc.h>
 #include <pbl/util/misc.h>
-
-#include <bf0_hal.h>
 
 /**
  * @defgroup drivers_gpio_sf32lb SF32LB GPIO
  * @ingroup drivers_gpio
  * @brief @ref drivers_gpio ports of the SF32LB SoCs.
+ *
+ * Each port carries an @ref drivers_intc controller whose lines are the pins.
  * @{
  */
 
@@ -28,6 +29,8 @@ struct pbl_gpio_sf32lb_state {
 struct pbl_gpio_sf32lb {
   /** GPIO port. */
   struct pbl_gpio_port port;
+  /** Interrupt controller of the pins, child of the port. */
+  struct pbl_intc intc;
   /** Register base address. */
   uintptr_t base;
   /** Clock. */
@@ -42,14 +45,17 @@ extern const struct pbl_gpio_sf32lb pbl_gpio_sf32lb_gpio1;
 
 /** Port GPIO1 (PA). */
 #define SF32LB_GPIO1 (&pbl_gpio_sf32lb_gpio1.port)
+/** Interrupt controller of port GPIO1. */
+#define SF32LB_GPIO1_INTC (&pbl_gpio_sf32lb_gpio1.intc)
+
 /**
  * @brief Registers of the port a pin is on, for HAL calls.
  *
  * @param gpio Pin on an SF32LB port.
  * @return Port registers.
  */
-static inline GPIO_TypeDef *pbl_gpio_sf32lb_regs(const struct pbl_gpio *gpio) {
-  return (GPIO_TypeDef *)container_of(gpio->port, const struct pbl_gpio_sf32lb, port)->base;
+static inline void *pbl_gpio_sf32lb_regs(const struct pbl_gpio *gpio) {
+  return (void *)container_of(gpio->port, const struct pbl_gpio_sf32lb, port)->base;
 }
 
 /** @} */
