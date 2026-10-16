@@ -17,7 +17,6 @@
 #include <pbl/kernel/idle.h>
 
 #include <cmsis_core.h>
-#include <hal/nrf_nvmc.h>
 
 static RtcTicks s_analytics_sleep_ticks = 0;
 static RtcTicks s_analytics_full_sleep_ticks = 0;
@@ -36,13 +35,9 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
     if (max_ticks < MIN_FULL_SLEEP_TICKS || !soc_nrf_sleep_full_is_allowed()) {
       RtcTicks sleep_start_ticks = rtc_get_ticks();
 
-      NRF_NVMC->ICACHECNF &= ~NVMC_ICACHECNF_CACHEEN_Msk;
-
       __DSB();
       __WFI();
       __ISB();
-
-      NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 
       s_analytics_sleep_ticks += rtc_get_ticks() - sleep_start_ticks;
     } else {
@@ -54,13 +49,9 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
       rtc_alarm_set(sleep_ticks);
       rtc_systick_pause();
 
-      NRF_NVMC->ICACHECNF &= ~NVMC_ICACHECNF_CACHEEN_Msk;
-
       __DSB();
       __WFI();
       __ISB();
-
-      NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
 
       rtc_systick_resume();
       elapsed_ticks = rtc_alarm_get_elapsed_ticks();

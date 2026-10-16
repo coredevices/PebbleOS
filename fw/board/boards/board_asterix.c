@@ -203,8 +203,6 @@ const Npm1300Config NPM1300_CONFIG = {
 void board_early_init(void) {
   PBL_LOG_ERR("asterix early init");
 
-  NRF_NVMC->ICACHECNF |= NVMC_ICACHECNF_CACHEEN_Msk;
-
   nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
   nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
   nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
