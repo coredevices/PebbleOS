@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
@@ -364,9 +365,13 @@ const Npm1300Config NPM1300_CONFIG = {
   .vbus_current_lim0 = 500, .vbus_current_startup = 500,
 };
 
-static const struct pbl_i2c_dev s_i2c_w1160 = PBL_I2C_DEV(&s_i2c1.bus, 0x48);
+// Bench-calibrated on 3 production units (unit spread 1.3%); dark floor
+// is <20 counts so no offset is needed.
+static const struct pbl_als_scale s_w1160_scale = {.offset = 0, .num = 100, .den = 483};
 
-const struct pbl_i2c_dev *const I2C_W1160 = &s_i2c_w1160;
+PBL_W1160_DEFINE(s_w1160, &s_i2c1.bus, 0x48, &s_w1160_scale);
+
+const struct pbl_als *const ALS = &s_w1160.als;
 
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .low_power_threshold = 4U,
@@ -377,11 +382,6 @@ const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 45,
   .ambient_light_dark_threshold = 800,
   .ambient_k_delta_threshold = 100,
-  // Bench-calibrated on 3 production units (unit spread 1.3%); dark floor
-  // is <20 counts so no offset is needed.
-  .ambient_light_lux_dark_offset = 0,
-  .ambient_light_lux_num = 100,
-  .ambient_light_lux_den = 483,
   .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
 };
 

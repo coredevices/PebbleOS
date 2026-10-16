@@ -4,17 +4,20 @@
 menuconfig AMBIENT_LIGHT
     bool "Ambient Light Sensor"
     help
-      Ambient Light Sensor Drivers
+      Ambient light sensor drivers (pbl/drivers/als.h). The board
+      instantiates the sensor it has and exports it as ALS.
 
 if AMBIENT_LIGHT
 
 config AMBIENT_LIGHT_OPT3001
     bool "TI OPT3001"
+    depends on I2C
     help
       Support for the TI OPT3001 ambient light sensor.
 
 config AMBIENT_LIGHT_W1160
     bool "W1160"
+    depends on I2C
     help
       Support for the W1160 ambient light sensor.
 

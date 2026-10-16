@@ -14,7 +14,6 @@
 static const BoardConfig BOARD_CONFIG = {
   .ambient_light_dark_threshold = 100,
   .ambient_k_delta_threshold = 30,
-  .als_always_on = true,
 
   .backlight_on_percent = 25,
 
@@ -103,6 +102,5 @@ extern MicDevice *const MIC;
 extern AudioDevice *const AUDIO;
 
 extern const struct pbl_i2c_dev *const I2C_DRV2604;
-extern const struct pbl_i2c_dev *const I2C_OPT3001;
 extern const struct pbl_i2c_dev *const I2C_DA7212;
 extern const struct pbl_i2c_dev *const I2C_BMP390;

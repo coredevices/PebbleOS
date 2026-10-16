@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/ambient/opt3001.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
@@ -112,9 +113,9 @@ static const struct pbl_i2c_dev I2C_SLAVE_DRV2604 = PBL_I2C_DEV(&s_i2c_iic2.bus,
 
 const struct pbl_i2c_dev *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
 
-static const struct pbl_i2c_dev I2C_SLAVE_OPT3001 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x44);
+PBL_OPT3001_DEFINE(s_opt3001, &s_i2c_iic2.bus, 0x44, nullptr, .always_on = true);
 
-const struct pbl_i2c_dev *const I2C_OPT3001 = &I2C_SLAVE_OPT3001;
+const struct pbl_als *const ALS = &s_opt3001.als;
 
 static const struct pbl_i2c_dev I2C_SLAVE_DA7212 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x1A);
 

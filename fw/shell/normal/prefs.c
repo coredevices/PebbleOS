@@ -3,7 +3,7 @@
 
 #include "quick_launch.h"
 
-#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/als.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/hrm/hrm_manager.h>

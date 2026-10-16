@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/als.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
@@ -91,7 +91,8 @@ static void prv_update_display(void *context) {
 
     case ALSStateSampling: {
       // Take a sample
-      uint32_t level = ambient_light_get_light_level();
+      uint32_t level = 0U;
+      (void)pbl_als_read(ALS, &level);
       data->als_sum += level;
       data->als_sample_count++;
 

@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/als.h>
 
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
@@ -21,8 +22,10 @@ typedef struct {
 } AmbientLightAppData;
 
 static void prv_populate_amb_read_str(char *str) {
-  int level = ambient_light_get_light_level();
-  snprintf(str, AMBIENT_READING_STR_LEN, "Amb Level:\n %d", level);
+  uint32_t level = 0U;
+
+  (void)pbl_als_read(ALS, &level);
+  snprintf(str, AMBIENT_READING_STR_LEN, "Amb Level:\n %" PRIu32, level);
 }
 
 static void timer_callback(void *cb_data) {

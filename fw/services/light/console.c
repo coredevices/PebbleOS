@@ -4,7 +4,7 @@
 #ifdef CONFIG_SHELL
 #include <inttypes.h>
 
-#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/als.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/services/light.h>
 #include <pbl/shell/shell.h>
@@ -26,6 +26,22 @@
 PBL_SHELL_SUBCMD_SET_CREATE(sub_als);
 PBL_SHELL_CMD_REGISTER(als, sub_als, "Ambient light sensor", nullptr);
 
+static int prv_cmd_als_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  uint32_t level;
+  int ret;
+
+  ret = pbl_als_read(ALS, &level);
+  if (ret != 0) {
+    pbl_shell_error(sh, "read failed (%d)", ret);
+    return ret;
+  }
+
+  pbl_shell_print(sh, "%" PRIu32, level);
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_als, read, nullptr, "Read the raw light level", prv_cmd_als_read, 0, 0);
+
 #ifndef CONFIG_RECOVERY_FW
 // Let the sensor settle after a backlight-off transition before reading.
 #define ALS_LUX_SETTLE_MS (250)
@@ -34,12 +50,17 @@ static int prv_cmd_backlight_test(const struct pbl_shell *sh, size_t argc, char 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
   // Print raw, region luminance, and the corrected value to sanity-check the
   // under-display compensation.
-  const uint32_t raw = ambient_light_get_light_level();
+  uint32_t raw = 0U;
+
+  (void)pbl_als_read(ALS, &raw);
   const uint16_t lum_q8 = als_compensation_sample_luminance();
   const uint32_t corr = als_compensation_apply(raw, lum_q8, CONFIG_ALS_BLACK_SCALE_Q8);
   pbl_shell_print(sh, "als raw: %" PRIu32 " lum_q8: %" PRIu16 " corr: %" PRIu32, raw, lum_q8, corr);
 #else
-  pbl_shell_print(sh, "als: %" PRIu32, ambient_light_get_light_level());
+  uint32_t level = 0U;
+
+  (void)pbl_als_read(ALS, &level);
+  pbl_shell_print(sh, "als: %" PRIu32, level);
 #endif
   light_enable_interaction();
   pbl_shell_print(sh, "brightness: %" PRIu8 "%%", light_get_current_brightness_percent());
@@ -55,7 +76,9 @@ PBL_SHELL_SUBCMD_ADD(sub_backlight, test, nullptr, "Turn the light on and print 
 static int prv_cmd_als_lux(const struct pbl_shell *sh, size_t argc, char **argv) {
   light_allow(false);
   pbl_sleep_ms(ALS_LUX_SETTLE_MS);
-  const uint32_t raw = ambient_light_get_light_level();
+  uint32_t raw = 0U;
+
+  (void)pbl_als_read(ALS, &raw);
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
   const uint32_t corr =
       als_compensation_apply(raw, als_compensation_sample_luminance(), CONFIG_ALS_BLACK_SCALE_Q8);
@@ -63,9 +86,9 @@ static int prv_cmd_als_lux(const struct pbl_shell *sh, size_t argc, char **argv)
   const uint32_t corr = raw;
 #endif
   light_allow(true);
-  if (ambient_light_lux_available()) {
+  if (pbl_als_has_lux(ALS)) {
     pbl_shell_print(sh, "als raw: %" PRIu32 " corr: %" PRIu32 " lux: %" PRIu32, raw, corr,
-                    ambient_light_level_to_lux(corr));
+                    pbl_als_to_lux(ALS, corr));
   } else {
     pbl_shell_print(sh, "als raw: %" PRIu32 " corr: %" PRIu32 " lux: n/a", raw, corr);
   }
@@ -119,7 +142,10 @@ static void prv_als_fill_solid(uint8_t px) {
 static uint32_t prv_als_read_raw_avg(uint8_t n) {
   uint32_t sum = 0;
   for (uint8_t i = 0; i < n; i++) {
-    sum += ambient_light_get_light_level();
+    uint32_t level = 0U;
+
+    (void)pbl_als_read(ALS, &level);
+    sum += level;
     watchdog_feed();
     pbl_task_wdt_feed_all();
     pbl_sleep_ms(30);

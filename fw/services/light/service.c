@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/services/light.h>
 #include <pbl/services/light_level.h>
@@ -133,7 +133,7 @@ static uint32_t s_dark_threshold;
 //! Event-gated continuous ALS:
 //!
 //! Wake-related entry points call prv_als_prime_for_interaction(), which (if
-//! not already primed) takes a single ambient_light_prime() refcount and
+//! not already primed) takes a single pbl_als_prime() refcount and
 //! starts a release timer for ALS_PRIME_HOLDOFF_MS. Each subsequent wake-y
 //! call rearms the timer. When it eventually fires, we drop the prime so the
 //! sensor goes back to idle.
@@ -188,7 +188,7 @@ static void prv_als_prime_release_callback(void *data) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (s_als_primed) {
     s_als_primed = false;
-    ambient_light_release();
+    pbl_als_release(ALS);
   }
   pbl_mutex_unlock(&s_mutex);
 }
@@ -202,7 +202,7 @@ static void prv_als_prime_for_interaction(void) {
       s_als_cached_ticks = 0;
     }
     s_als_primed = true;
-    ambient_light_prime();
+    pbl_als_prime(ALS);
   }
   new_timer_start(s_als_prime_release_timer_id, ALS_PRIME_HOLDOFF_MS,
                   prv_als_prime_release_callback, nullptr, 0 /* flags */);
@@ -216,7 +216,9 @@ static uint32_t prv_get_als_level(void) {
   if (cache_valid) {
     return s_als_cached_level;
   }
-  uint32_t level = ambient_light_get_light_level();
+  uint32_t level = 0U;
+
+  (void)pbl_als_read(ALS, &level);
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION) && !defined(CONFIG_RECOVERY_FW)
   // The ALS sits under the display; correct the reading for the transmittance
   // of the pixels in front of the sensor. Done once at ingest so every consumer
@@ -226,7 +228,7 @@ static uint32_t prv_get_als_level(void) {
 #endif
   // Convert to lux (identity on boards without coefficients) so thresholds
   // and the backlight ramp operate in device-independent units.
-  level = ambient_light_level_to_lux(level);
+  level = pbl_als_to_lux(ALS, level);
   s_als_cached_level = level;
   s_als_cached_ticks = now;
   return s_als_cached_level;
@@ -246,6 +248,10 @@ void light_set_dark_threshold(uint32_t threshold) {
 
 AmbientLightLevel light_level_to_enum(uint32_t lux) {
   const uint32_t delta = BOARD_CONFIG.ambient_k_delta_threshold;
+
+  if (!pbl_device_is_ready(&ALS->dev)) {
+    return AmbientLightLevelUnknown;
+  }
 
   if (lux < (s_dark_threshold - delta)) {
     return AmbientLightLevelVeryDark;
@@ -362,11 +368,11 @@ static void prv_change_brightness(uint8_t new_brightness) {
   prv_update_intensity_analytics(scaled_brightness);
 
   if (turning_on) {
-    ambient_light_suspend();
+    pbl_als_suspend(ALS);
   }
   backlight_set_brightness(scaled_brightness);
   if (turning_off) {
-    ambient_light_resume();
+    pbl_als_resume(ALS);
   }
   s_current_brightness = new_brightness;
 

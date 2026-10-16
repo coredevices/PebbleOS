@@ -7,7 +7,7 @@
 #include <time.h>
 
 #include <pbl/drivers/accel.h>
-#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/als.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/battery.h>
@@ -300,7 +300,8 @@ static void prv_run_component_display(AppData *data) {
       break;
 #endif
     case ComponentALS: {
-      uint32_t level = ambient_light_get_light_level();
+      uint32_t level = 0U;
+      (void)pbl_als_read(ALS, &level);
       comp_name = "ALS";
       sniprintf(comp_detail, sizeof(comp_detail), "Level: %" PRIu32, level);
       break;

@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include <pbl/drivers/ambient_light.h> // AMBIENT_LIGHT_LEVEL_MAX
+#include <pbl/drivers/als.h> // AMBIENT_LIGHT_LEVEL_MAX
 
 #include <applib/graphics/gtypes.h>
 #include <clar.h>

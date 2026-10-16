@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/ambient_light.h>
+#include <pbl/drivers/als.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
@@ -34,7 +34,7 @@ typedef struct SettingsBacklightData {
   char als_value_buffer[16];         // Buffer for ALS value display
   char backlight_percent_buffer[16]; // Buffer for backlight percentage display
   AppTimer *update_timer;            // Timer for live updating debug values
-  bool als_primed;                   // Whether we currently hold an ambient_light_prime() ref
+  bool als_primed;                   // Whether we currently hold a pbl_als_prime() ref
 } SettingsBacklightData;
 
 static const char *s_language_labels[] = {
@@ -496,7 +496,7 @@ static void prv_backlight_appear_cb(SettingsCallbacks *context) {
   // Hold the ALS in continuous mode while this submenu is visible so the
   // 500 ms refresh tick doesn't pay a full integration time per read.
   if (!data->als_primed) {
-    ambient_light_prime();
+    pbl_als_prime(ALS);
     data->als_primed = true;
   }
 }
@@ -508,7 +508,7 @@ static void prv_backlight_hide_cb(SettingsCallbacks *context) {
     data->update_timer = nullptr;
   }
   if (data->als_primed) {
-    ambient_light_release();
+    pbl_als_release(ALS);
     data->als_primed = false;
   }
 }
@@ -520,7 +520,7 @@ static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
     data->update_timer = nullptr;
   }
   if (data->als_primed) {
-    ambient_light_release();
+    pbl_als_release(ALS);
     data->als_primed = false;
   }
   i18n_free_all(data);

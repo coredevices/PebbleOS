@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -309,9 +310,13 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_N
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 0,
                              false, false);
 
-static const struct pbl_i2c_dev s_i2c_w1160 = PBL_I2C_DEV(&s_i2c3.bus, 0x48);
+// Bench-calibrated on 1 DVT2 unit, fit above 4500 lux; readings below
+// ~4000 lux deviated from the fit on that unit and need a re-measure.
+static const struct pbl_als_scale s_w1160_scale = {.offset = 0, .num = 50, .den = 517};
 
-const struct pbl_i2c_dev *const I2C_W1160 = &s_i2c_w1160;
+PBL_W1160_DEFINE(s_w1160, &s_i2c3.bus, 0x48, &s_w1160_scale);
+
+const struct pbl_als *const ALS = &s_w1160.als;
 
 #ifdef CONFIG_BOARD_GETAFIX_DVT2
 static const struct pbl_i2c_dev s_i2c_aw86225 = PBL_I2C_DEV(&s_i2c3.bus, 0x58);
@@ -345,11 +350,6 @@ const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
   .ambient_light_dark_threshold = 800,
   .ambient_k_delta_threshold = 100,
-  // Bench-calibrated on 1 DVT2 unit, fit above 4500 lux; readings below
-  // ~4000 lux deviated from the fit on that unit and need a re-measure.
-  .ambient_light_lux_dark_offset = 0,
-  .ambient_light_lux_num = 50,
-  .ambient_light_lux_den = 517,
 };
 
 const BoardConfigButton BOARD_CONFIG_BUTTON = {

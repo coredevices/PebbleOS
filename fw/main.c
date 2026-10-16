@@ -6,7 +6,6 @@
 #include <pbl/bluetooth/init.h>
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
-#include <pbl/drivers/ambient_light.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/debounced_button.h>
@@ -157,7 +156,6 @@ static void init_drivers(void) {
 #endif
 
   backlight_init();
-  ambient_light_init();
 
   temperature_init();
 

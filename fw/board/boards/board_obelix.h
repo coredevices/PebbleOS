@@ -16,7 +16,6 @@ extern UARTDevice *const HCI_TRACE_UART;
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
 extern const struct pbl_i2c_dev *const I2C_AW86225;
-extern const struct pbl_i2c_dev *const I2C_W1160;
 extern const struct pbl_i2c_dev *const I2C_AW2016;
 extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 extern PwmConfig *const PWM1_CH1;
