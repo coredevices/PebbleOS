@@ -130,6 +130,13 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
                                   void *data);
 
 /**
+ * @brief Count all notifications not marked deleted.
+ *
+ * @return Number of notifications available in the Notifications app.
+ */
+uint16_t notification_storage_get_count(void);
+
+/**
  * @brief Iterate over all notifications, reading selected string attributes of recent ones.
  *
  * For notifications with a timestamp at or after @p item_cutoff, the string attributes listed in

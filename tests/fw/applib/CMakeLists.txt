@@ -142,6 +142,12 @@ pbl_clar_test(test_dark_mode_service
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_notification_service
+  SOURCES
+    fw/applib/notification_service.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_accel_service
   SOURCES
     fw/applib/accel_service.c
