@@ -265,10 +265,13 @@ static void prv_arrow_layer_update_proc(Layer *layer, GContext *ctx) {
   // arrow is drawn correctly in both environments
 #if UNITTEST
   const GCompOp compositing_mode = GCompOpSet;
+#elif PBL_COLOR
+  // The arrow bitmap is black: tint it to stay visible in dark mode
+  const GCompOp compositing_mode = system_theme_is_dark_mode() ? GCompOpTint : GCompOpSet;
+  graphics_context_set_tint_color(ctx, system_theme_get_fg_color());
 #else
-  // Arrow color is inverted in dark mode
   const GCompOp compositing_mode =
-      PBL_IF_COLOR_ELSE(system_theme_is_dark_mode() ? GCompOpTint : GCompOpSet, GCompOpAssign);
+      system_theme_is_dark_mode() ? GCompOpAssignInverted : GCompOpAssign;
 #endif
   graphics_context_set_compositing_mode(ctx, compositing_mode);
 
