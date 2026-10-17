@@ -109,4 +109,18 @@ config PERFORMANCE_TESTS
     bool "Performance test instrumentation"
     select PROFILER
 
+config SYSCALL_HAS_ABORT
+    bool
+    help
+      The architecture implements syscall_abort_to().
+
+config SYSCALL_FUZZ
+    bool "Syscall fuzzer"
+    depends on SYSCALL_HAS_ABORT
+    help
+      Describe every PBL_SYSCALL in the firmware image and add the Syscall
+      Fuzz app, which calls each of them unprivileged with arguments that
+      must be rejected. A syscall that fails returns to the app instead of
+      killing it. For tests only.
+
 endmenu

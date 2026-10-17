@@ -23,6 +23,7 @@
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
+#include <syscall/syscall_fuzz.h>
 #include <system/passert.h>
 
 // Run App/Worker syscalls on a dedicated privileged stack instead of the
@@ -247,6 +248,13 @@ PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged_resume(void
 
   PBL_ASSERT(mcu_state_is_privileged(), "Insufficient Privileges!");
 
+#ifdef CONFIG_SYSCALL_FUZZ
+  const syscall_fuzz_reject_fn on_reject = syscall_fuzz_take_failure();
+  if (on_reject != nullptr) {
+    syscall_abort_to(on_reject);
+  }
+#endif
+
   PBL_LOG_WRN("Bad syscall!");
 
   sys_app_fault(saved_lr);
@@ -445,6 +453,12 @@ static uint16_t prv_syscall_stack_free_bytes(const uint32_t *stack) {
   return (uint16_t)(i * sizeof(uint32_t));
 }
 
+#ifdef CONFIG_SYSCALL_FUZZ
+const void *syscall_app_stack(void) {
+  return s_app_syscall_stack.words;
+}
+#endif
+
 uint16_t syscall_app_stack_free_bytes(void) {
   return prv_syscall_stack_free_bytes(s_app_syscall_stack.words);
 }
@@ -516,6 +530,37 @@ PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege(void) {
 // Just jump straight into the drop privilege code
 PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege_wrapper(void) {
   __asm volatile("b prv_drop_privilege\n");
+}
+
+// Task SP the syscall was made from, 8-byte aligned, and the task's stack limit,
+// packed as (psplim << 32 | sp).
+PBL_USED uint64_t syscall_abort_stack(void) {
+  const uint32_t sp = (uint32_t)prv_get_syscall_sp() & ~7u;
+  const uint32_t psplim = (uint32_t)pbl_thread_current()->stack;
+  return ((uint64_t)psplim << 32) | sp;
+}
+
+PBL_NAKED PBL_USED void syscall_abort_to(void (*fn)(void)) {
+  __asm volatile(
+      " mov r4, r0 \n"
+      " bl process_manager_handle_syscall_exit \n"
+      " bl syscall_abort_stack \n"
+#ifdef CONFIG_ARMV8_M_MAINLINE
+      " movs r2, #0 \n"
+      " msr psplim, r2 \n"
+      " mov sp, r0 \n"
+      " msr psplim, r1 \n"
+#else
+      " mov sp, r0 \n"
+#endif
+      " isb \n"
+      " mrs r2, control \n"
+      " orr r2, r2, #1 \n"
+      " msr control, r2 \n"
+      " isb \n"
+      " movs r0, #0 \n"
+      " mov lr, r0 \n"
+      " bx r4 \n");
 }
 
 // This function needs to preserve the argument registers and stack exactly as they were on

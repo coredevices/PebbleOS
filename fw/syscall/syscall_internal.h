@@ -40,6 +40,10 @@ bool syscall_internal_check_return_address(void *ret_addr);
 //! misbehaving app.
 [[noreturn]] void syscall_failed(void);
 
+//! Abandon the current syscall and resume the calling thread unprivileged at
+//! @p fn, on the stack it made the syscall from.
+[[noreturn]] void syscall_abort_to(void (*fn)(void));
+
 //! Call this from privileged mode when entering a syscall to ensure that provided
 //! pointers are in the app's memory space, rather than in the kernel. If the buffer is not,
 //! syscall_failed is called.
