@@ -8,6 +8,13 @@ menuconfig TEMPERATURE
 
 if TEMPERATURE
 
+config TEMPERATURE_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL && !RECOVERY_FW
+    help
+      The temp shell command, to read the die temperature.
+
 config TEMPERATURE_NRF5
     bool "Nordic nRF5"
     default y if SOC_NRF52

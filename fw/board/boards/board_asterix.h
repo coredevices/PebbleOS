@@ -1,6 +1,5 @@
 #pragma once
 
-#include <pbl/drivers/backlight/pwm.h>
 #include <pbl/services/imu/units.h>
 
 #define BT_VENDOR_ID   0x0EEA
@@ -55,25 +54,11 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .battery_capacity_hours = 450,
 };
 
-static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = PBL_GPIO(NRF5_GPIO_P0, 2, 0), // LRA_EN
-};
-
 static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 55U, // Medium
 };
 
 extern UARTDevice *const DBG_UART;
-
-extern PwmState BACKLIGHT_PWM_STATE;
-static const BacklightPwmConfig BACKLIGHT_PWM = {
-  .ctl = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
-  .pwm =
-      {.state = &BACKLIGHT_PWM_STATE,
-       .output = PBL_GPIO(NRF5_GPIO_P0, 26, 0),
-       .peripheral = NRFX_PWM_INSTANCE(0)},
-  .max_duty_cycle_percent = 67,
-};
 
 static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .spi = NRFX_SPIM_INSTANCE(3),
@@ -101,6 +86,4 @@ extern QSPIFlash *const QSPI_FLASH;
 extern MicDevice *const MIC;
 extern AudioDevice *const AUDIO;
 
-extern const struct pbl_i2c_dev *const I2C_DRV2604;
 extern const struct pbl_i2c_dev *const I2C_DA7212;
-extern const struct pbl_i2c_dev *const I2C_BMP390;

@@ -341,7 +341,7 @@ static void prv_apply_rgb_color(void) {
   const bool preempted = (s_color_preempt_refcount > 0);
   const uint32_t color =
       (preempted || !s_app_rgb_override_valid) ? backlight_get_default_color() : s_app_rgb_override;
-  backlight_set_color(color);
+  (void)pbl_backlight_set_color(BACKLIGHT, color);
 }
 #endif
 
@@ -370,14 +370,14 @@ static void prv_change_brightness(uint8_t new_brightness) {
   if (turning_on) {
     pbl_als_suspend(ALS);
   }
-  backlight_set_brightness(scaled_brightness);
+  (void)pbl_backlight_set_brightness(BACKLIGHT, scaled_brightness);
   if (turning_off) {
     pbl_als_resume(ALS);
   }
   s_current_brightness = new_brightness;
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  // backlight_set_brightness re-applies the last RGB color at the new
+  // pbl_backlight_set_brightness() re-applies the last RGB color at the new
   // intensity; follow up with the app override (or default white) so the
   // LED reflects the current color request for this state change.
   prv_apply_rgb_color();
@@ -386,8 +386,8 @@ static void prv_change_brightness(uint8_t new_brightness) {
 
 //! Hardware backlight level a given intensity would produce.
 static uint8_t prv_hw_level(uint8_t intensity) {
-  return backlight_get_level(
-      DIVIDE_CEIL(intensity * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U));
+  return pbl_backlight_get_level(
+      BACKLIGHT, DIVIDE_CEIL(intensity * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U));
 }
 
 //! Build the descending ladder of intensities below `from` that each produce
@@ -470,7 +470,7 @@ static void prv_change_state(BacklightState new_state) {
     // A user-initiated wake with unchanged brightness would otherwise
     // short-circuit. Re-apply the driver state so the hardware is brought back
     // in sync if it has drifted from what the firmware believes.
-    backlight_refresh();
+    (void)pbl_backlight_refresh(BACKLIGHT);
   }
 
   // Notify subscribers when the backlight transitions between on and off.

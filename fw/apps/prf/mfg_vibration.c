@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/drivers/vibe.h>
 
 #include <applib/app.h>
@@ -74,12 +76,13 @@ static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_cha
   const int WAIT_AFTER_CALIBRATION_S = 3;
 
   if (data->state == STATE_CALIBRATE) {
-    status_t status = vibe_calibrate();
-    if (status == S_SUCCESS) {
-      mfg_info_set_vibe_cali(vibe_get_calibration());
+    uint8_t cali;
+    int ret = pbl_vibe_calibrate(VIBE, &cali);
+    if (ret == 0) {
+      mfg_info_set_vibe_cali(cali);
       text_layer_set_text(&data->status, "CALIBRATED");
       data->state = STATE_WAITING;
-    } else if (status == E_INVALID_OPERATION) {
+    } else if (ret == -ENOTSUP) {
       text_layer_set_text(&data->status, "CALIBRATION SKIPPED");
       data->state = STATE_WAITING;
     } else if (++data->cali_attempts < MAX_CALIBRATION_ATTEMPTS) {

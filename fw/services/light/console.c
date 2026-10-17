@@ -46,6 +46,7 @@ PBL_SHELL_SUBCMD_ADD(sub_als, read, nullptr, "Read the raw light level", prv_cmd
 // Let the sensor settle after a backlight-off transition before reading.
 #define ALS_LUX_SETTLE_MS (250)
 
+#ifdef CONFIG_BACKLIGHT_SHELL
 static int prv_cmd_backlight_test(const struct pbl_shell *sh, size_t argc, char **argv) {
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
   // Print raw, region luminance, and the corrected value to sanity-check the
@@ -69,6 +70,7 @@ static int prv_cmd_backlight_test(const struct pbl_shell *sh, size_t argc, char 
 
 PBL_SHELL_SUBCMD_ADD(sub_backlight, test, nullptr, "Turn the light on and print its state",
                      prv_cmd_backlight_test, 0, 0);
+#endif
 
 // Print raw, compensated, and lux values in one shot. Forces the backlight off
 // for the read: the light service suspends ALS sampling while the LED is on,

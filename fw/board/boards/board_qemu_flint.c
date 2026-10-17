@@ -2,7 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/qemu.h>
+#include <pbl/drivers/backlight/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
+#include <pbl/drivers/temperature/qemu.h>
+#include <pbl/drivers/vibe/qemu.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
@@ -113,3 +116,9 @@ void board_init(void) {
 const struct pbl_accel *const ACCEL = QEMU_ACCEL;
 
 const struct pbl_als *const ALS = QEMU_ALS;
+
+const struct pbl_backlight *const BACKLIGHT = QEMU_BACKLIGHT;
+
+const struct pbl_vibe *const VIBE = QEMU_VIBE;
+
+const struct pbl_temp *const DIE_TEMP = QEMU_TEMP;

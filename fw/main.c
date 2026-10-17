@@ -6,7 +6,6 @@
 #include <pbl/bluetooth/init.h>
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
-#include <pbl/drivers/backlight.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/debounced_button.h>
 #include <pbl/drivers/display/display.h>
@@ -14,10 +13,8 @@
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
-#include <pbl/drivers/pressure.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
-#include <pbl/drivers/temperature.h>
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
@@ -131,7 +128,6 @@ static void init_drivers(void) {
   serial_console_init();
 
   battery_init();
-  vibe_init();
 
   flash_init();
   flash_sleep_when_idle(true);
@@ -140,7 +136,7 @@ static void init_drivers(void) {
 
   uint8_t vibe_cali = mfg_info_get_vibe_cali();
   if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {
-    vibe_apply_calibration(vibe_cali);
+    (void)pbl_vibe_set_calibration(VIBE, vibe_cali);
   }
 
 #ifdef CONFIG_MIC
@@ -150,14 +146,6 @@ static void init_drivers(void) {
 #ifdef CONFIG_TOUCH
   touch_sensor_init();
 #endif
-
-#ifdef CONFIG_PRESSURE
-  pressure_init();
-#endif
-
-  backlight_init();
-
-  temperature_init();
 
   rtc_init_timers();
   rtc_alarm_init();

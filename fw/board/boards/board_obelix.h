@@ -15,9 +15,6 @@ extern UARTDevice *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
-extern const struct pbl_i2c_dev *const I2C_AW86225;
-extern const struct pbl_i2c_dev *const I2C_AW2016;
-extern const BoardConfigActuator BOARD_CONFIG_VIBE;
 extern PwmConfig *const PWM1_CH1;
 extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/w1160.h>
-#include <pbl/drivers/backlight.h>
+#include <pbl/drivers/backlight/aw2016.h>
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
@@ -10,6 +10,8 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/temperature/sf32lb.h>
+#include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
@@ -269,13 +271,13 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_N
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 3300,
                              true, false);
 
-static const struct pbl_i2c_dev s_i2c_aw86225 = PBL_I2C_DEV(&s_i2c1.bus, 0x58);
+PBL_AW86225_DEFINE(s_aw86225, &s_i2c1.bus, 0x58, PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW));
 
-const struct pbl_i2c_dev *const I2C_AW86225 = &s_i2c_aw86225;
+const struct pbl_vibe *const VIBE = &s_aw86225.vibe;
 
-static const struct pbl_i2c_dev s_i2c_aw2016 = PBL_I2C_DEV(&s_i2c1.bus, 0x64);
+PBL_AW2016_DEFINE(s_aw2016, &s_i2c1.bus, 0x64);
 
-const struct pbl_i2c_dev *const I2C_AW2016 = &s_i2c_aw2016;
+const struct pbl_backlight *const BACKLIGHT = &s_aw2016.backlight;
 
 PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", I2C2, 400000, PAD_PA32, I2C2_SCL, PAD_PA33, I2C2_SDA,
                           DMA1_Channel6, DMA_REQUEST_23, DMAC1_CH6, 5, nullptr);
@@ -350,10 +352,6 @@ static HRMDevice s_hrm = {
 };
 
 HRMDevice *const HRM = &s_hrm;
-
-const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW),
-};
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
@@ -485,3 +483,5 @@ void board_init(void) {
   mic_init(MIC);
   audio_init(AUDIO);
 }
+
+const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;

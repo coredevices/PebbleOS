@@ -40,19 +40,19 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   PBL_LOG_INFO("backlight id:%d", app_data->test_pattern);
   switch (app_data->test_pattern) {
     case TestPattern_White:
-      backlight_set_color(BACKLIGHT_COLOR_WHITE);
+      (void)pbl_backlight_set_color(BACKLIGHT, BACKLIGHT_COLOR_WHITE);
       break;
     case TestPattern_Red:
-      backlight_set_color(BACKLIGHT_COLOR_RED);
+      (void)pbl_backlight_set_color(BACKLIGHT, BACKLIGHT_COLOR_RED);
       break;
     case TestPattern_Green:
-      backlight_set_color(BACKLIGHT_COLOR_GREEN);
+      (void)pbl_backlight_set_color(BACKLIGHT, BACKLIGHT_COLOR_GREEN);
       break;
     case TestPattern_Blue:
-      backlight_set_color(BACKLIGHT_COLOR_BLUE);
+      (void)pbl_backlight_set_color(BACKLIGHT, BACKLIGHT_COLOR_BLUE);
       break;
     case TestPattern_Black:
-      backlight_set_color(BACKLIGHT_COLOR_BLACK);
+      (void)pbl_backlight_set_color(BACKLIGHT, BACKLIGHT_COLOR_BLACK);
       break;
     default:
       break;
@@ -131,7 +131,7 @@ static void s_main(void) {
   app_event_loop();
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  backlight_set_color(BACKLIGHT_COLOR_WARM_WHITE);
+  (void)pbl_backlight_set_color(BACKLIGHT, BACKLIGHT_COLOR_WARM_WHITE);
 #endif
 
   light_enable(false);

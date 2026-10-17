@@ -201,7 +201,8 @@ void vibe_score_do_vibe(VibeScore *score) {
       sys_vibe_pattern_enqueue_step_raw(note->vibe_duration_ms, note->strength);
     }
     if (note->brake_duration_ms > 0) {
-      sys_vibe_pattern_enqueue_step_raw(note->brake_duration_ms, vibe_get_braking_strength());
+      sys_vibe_pattern_enqueue_step_raw(note->brake_duration_ms,
+                                        pbl_vibe_get_braking_strength(VIBE));
     }
   }
   sys_vibe_pattern_trigger_start();

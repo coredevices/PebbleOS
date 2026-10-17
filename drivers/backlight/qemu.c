@@ -2,13 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/backlight.h>
+#include <pbl/drivers/backlight/qemu.h>
+#include <pbl/kernel/mmio.h>
 
 #include <board/board.h>
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-#include <pbl/drivers/backlight.h>
-#endif
-
-#define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // Display register offsets (must match QEMU pebble-display)
 #define DISP_CTRL       0x000
@@ -22,79 +19,63 @@
 #define BACKLIGHT_OFF_LEVEL 180
 #define BACKLIGHT_ON_LEVEL  255
 
-static bool s_initialized;
-
 #ifdef CONFIG_BACKLIGHT_QEMU_COLOR
-static uint8_t s_brightness = 100U;
-static uint32_t s_rgb_current_color = BACKLIGHT_COLOR_WHITE;
-#endif
-
-#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
-static void prv_write_channels(uint8_t r, uint8_t g, uint8_t b) {
-  REG32(QEMU_DISPLAY_BASE + DISP_BL_RED) = r;
-  REG32(QEMU_DISPLAY_BASE + DISP_BL_GREEN) = g;
-  REG32(QEMU_DISPLAY_BASE + DISP_BL_BLUE) = b;
+static void prv_write_color(uint32_t rgb_color, uint8_t brightness) {
+  pbl_writel(((rgb_color >> 16) & 0xFFU) * brightness / PBL_BACKLIGHT_BRIGHTNESS_MAX,
+             QEMU_DISPLAY_BASE + DISP_BL_RED);
+  pbl_writel(((rgb_color >> 8) & 0xFFU) * brightness / PBL_BACKLIGHT_BRIGHTNESS_MAX,
+             QEMU_DISPLAY_BASE + DISP_BL_GREEN);
+  pbl_writel((rgb_color & 0xFFU) * brightness / PBL_BACKLIGHT_BRIGHTNESS_MAX,
+             QEMU_DISPLAY_BASE + DISP_BL_BLUE);
 }
-#endif
 
-void backlight_init(void) {
-#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
-  prv_write_channels(0xFFU, 0xFFU, 0xFFU);
+static int prv_init(const struct pbl_backlight *bl) {
+  prv_write_color(BACKLIGHT_COLOR_WHITE, PBL_BACKLIGHT_BRIGHTNESS_MAX);
+
+  return 0;
+}
+
+static int prv_set_brightness(const struct pbl_backlight *bl, uint8_t brightness) {
+  prv_write_color(bl->state->color, brightness);
+
+  return 0;
+}
+
+static int prv_set_color(const struct pbl_backlight *bl, uint32_t rgb_color) {
+  prv_write_color(rgb_color, bl->state->brightness);
+
+  return 0;
+}
 #else
-  REG32(QEMU_DISPLAY_BASE + DISP_BRIGHTNESS) = BACKLIGHT_OFF_LEVEL;
-  REG32(QEMU_DISPLAY_BASE + DISP_CTRL) |= CTRL_UPDATE;
-#endif
-  s_initialized = true;
+static void prv_write_level(uint32_t level) {
+  pbl_writel(level, QEMU_DISPLAY_BASE + DISP_BRIGHTNESS);
+  pbl_writel(pbl_readl(QEMU_DISPLAY_BASE + DISP_CTRL) | CTRL_UPDATE, QEMU_DISPLAY_BASE + DISP_CTRL);
 }
 
-void backlight_set_brightness(uint8_t brightness) {
-  if (!s_initialized) {
-    return;
-  }
+static int prv_init(const struct pbl_backlight *bl) {
+  prv_write_level(BACKLIGHT_OFF_LEVEL);
 
-  if (brightness > 100U) {
-    brightness = 100U;
-  }
+  return 0;
+}
 
+static int prv_set_brightness(const struct pbl_backlight *bl, uint8_t brightness) {
+  prv_write_level(BACKLIGHT_OFF_LEVEL +
+                  ((uint32_t)brightness * (BACKLIGHT_ON_LEVEL - BACKLIGHT_OFF_LEVEL)) /
+                      PBL_BACKLIGHT_BRIGHTNESS_MAX);
+
+  return 0;
+}
+#endif
+
+static const struct pbl_backlight_ops s_ops = {
+  .init = prv_init,
+  .set_brightness = prv_set_brightness,
 #ifdef CONFIG_BACKLIGHT_QEMU_COLOR
-  s_brightness = brightness;
-  backlight_set_color(s_rgb_current_color);
-#else
-  uint32_t level;
-  if (brightness == 0) {
-    level = BACKLIGHT_OFF_LEVEL;
-  } else {
-    uint32_t range = BACKLIGHT_ON_LEVEL - BACKLIGHT_OFF_LEVEL;
-    level = BACKLIGHT_OFF_LEVEL + ((uint32_t)brightness * range) / 100;
-    if (level > BACKLIGHT_ON_LEVEL) {
-      level = BACKLIGHT_ON_LEVEL;
-    }
-  }
-
-  REG32(QEMU_DISPLAY_BASE + DISP_BRIGHTNESS) = level;
-  REG32(QEMU_DISPLAY_BASE + DISP_CTRL) |= CTRL_UPDATE;
+  .set_color = prv_set_color,
 #endif
-}
+};
 
-uint8_t backlight_get_level(uint8_t brightness) {
-  // Emulated backlight: every brightness value is distinct.
-  return brightness;
-}
-
-void backlight_refresh(void) {
-}
-
-#ifdef CONFIG_BACKLIGHT_QEMU_COLOR
-void backlight_set_color(uint32_t rgb_color) {
-  uint8_t r = ((rgb_color >> 16) & 0xFFU) * s_brightness / 100U;
-  uint8_t g = ((rgb_color >> 8) & 0xFFU) * s_brightness / 100U;
-  uint8_t b = (rgb_color & 0xFFU) * s_brightness / 100U;
-
-  prv_write_channels(r, g, b);
-  s_rgb_current_color = rgb_color;
-}
-
-uint32_t backlight_get_color(void) {
-  return s_rgb_current_color;
-}
-#endif
+PBL_BACKLIGHT_STATE_DEFINE(pbl_backlight_qemu);
+const struct pbl_backlight pbl_backlight_qemu =
+    PBL_BACKLIGHT_INIT(pbl_backlight_qemu, "backlight", nullptr, &s_ops);
+PBL_DEVICE_REGISTER(pbl_backlight_qemu, &pbl_backlight_qemu.dev);

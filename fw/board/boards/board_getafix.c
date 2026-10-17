@@ -2,11 +2,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/w1160.h>
+#include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/temperature/sf32lb.h>
+#include <pbl/drivers/vibe/aw86225.h>
+#include <pbl/drivers/vibe/aw8623x.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
@@ -246,9 +250,9 @@ static DisplayJDIDevice s_display = {
 DisplayJDIDevice *const DISPLAY = &s_display;
 PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
 
-const LedControllerAW9364E AW9364E = {
-  .gpio = PBL_GPIO(SF32LB_GPIO1, 1, 0),
-};
+PBL_AW9364E_DEFINE(s_aw9364e, PBL_GPIO(SF32LB_GPIO1, 1, 0));
+
+const struct pbl_backlight *const BACKLIGHT = &s_aw9364e.backlight;
 
 PBL_I2C_SF32LB_DMA_DEFINE(s_i2c1, "i2c1", I2C1, 400000, PAD_PA32, I2C1_SCL, PAD_PA33, I2C1_SDA,
                           DMA1_Channel6, DMA_REQUEST_22, DMAC1_CH6, 5, nullptr);
@@ -319,18 +323,14 @@ PBL_W1160_DEFINE(s_w1160, &s_i2c3.bus, 0x48, &s_w1160_scale);
 const struct pbl_als *const ALS = &s_w1160.als;
 
 #ifdef CONFIG_BOARD_GETAFIX_DVT2
-static const struct pbl_i2c_dev s_i2c_aw86225 = PBL_I2C_DEV(&s_i2c3.bus, 0x58);
+PBL_AW86225_DEFINE(s_aw86225, &s_i2c3.bus, 0x58, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
 
-const struct pbl_i2c_dev *const I2C_AW86225 = &s_i2c_aw86225;
+const struct pbl_vibe *const VIBE = &s_aw86225.vibe;
 #else
-static const struct pbl_i2c_dev s_i2c_aw8623x = PBL_I2C_DEV(&s_i2c3.bus, 0x5a);
+PBL_AW8623X_DEFINE(s_aw8623x, &s_i2c3.bus, 0x5a, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
 
-const struct pbl_i2c_dev *const I2C_AW8623X = &s_i2c_aw8623x;
+const struct pbl_vibe *const VIBE = &s_aw8623x.vibe;
 #endif
-
-const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW),
-};
 
 const Npm1300Config NPM1300_CONFIG = {
   // 70mA = 1C (max limit from datasheet)
@@ -421,3 +421,5 @@ void board_early_init(void) {
 void board_init(void) {
   mic_init(MIC);
 }
+
+const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;

@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/ambient/opt3001.h>
 #include <pbl/drivers/audio.h>
+#include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/nrf5.h>
@@ -15,7 +16,9 @@
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
+#include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
+#include <pbl/drivers/vibe/drv2604.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
 
@@ -109,9 +112,9 @@ PBL_I2C_NRF5_DEFINE(s_i2c_iic2, "i2c_iic2", 0, NRF_TWIM_FREQ_400K, PBL_GPIO(NRF5
 PBL_IRQ_CONNECT(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
                 nrfx_twim_0_irq_handler, , 0);
 
-static const struct pbl_i2c_dev I2C_SLAVE_DRV2604 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x5A);
+PBL_DRV2604_DEFINE(s_drv2604, &s_i2c_iic2.bus, 0x5A, PBL_GPIO(NRF5_GPIO_P0, 2, 0));
 
-const struct pbl_i2c_dev *const I2C_DRV2604 = &I2C_SLAVE_DRV2604;
+const struct pbl_vibe *const VIBE = &s_drv2604.vibe;
 
 PBL_OPT3001_DEFINE(s_opt3001, &s_i2c_iic2.bus, 0x44, nullptr, .always_on = true);
 
@@ -120,10 +123,6 @@ const struct pbl_als *const ALS = &s_opt3001.als;
 static const struct pbl_i2c_dev I2C_SLAVE_DA7212 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x1A);
 
 const struct pbl_i2c_dev *const I2C_DA7212 = &I2C_SLAVE_DA7212;
-
-static const struct pbl_i2c_dev I2C_SLAVE_BMP390 = PBL_I2C_DEV(&s_i2c_iic2.bus, 0x76);
-
-const struct pbl_i2c_dev *const I2C_BMP390 = &I2C_SLAVE_BMP390;
 
 PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c_iic2.bus, 0x6A,
                    .int1 =
@@ -190,7 +189,16 @@ AudioDevice *const AUDIO = (AudioDevice *)&s_audio_device;
 
 /* asterix shares SPI with flash, which we don't support */
 
-PwmState BACKLIGHT_PWM_STATE;
+static PwmState s_backlight_pwm_state;
+
+PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
+                         .pwm =
+                             {.state = &s_backlight_pwm_state,
+                              .output = PBL_GPIO(NRF5_GPIO_P0, 26, 0),
+                              .peripheral = NRFX_PWM_INSTANCE(0)},
+                         .max_duty_cycle_percent = 67);
+
+const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
 PBL_IRQ_CONNECT(PWM0, NRFX_PWM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_pwm_0_irq_handler, , 0);
 
 PBL_IRQ_CONNECT(RTC1, 7, rtc_irq_handler, , 0);
@@ -222,3 +230,5 @@ void board_init(void) {
   pbl_i2c_write_block(I2C_DA7212, 2, da7212_powerdown);
   pbl_i2c_release(I2C_DA7212);
 }
+
+const struct pbl_temp *const DIE_TEMP = NRF5_TEMP;
