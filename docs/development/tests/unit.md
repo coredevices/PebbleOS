@@ -199,9 +199,3 @@ These mechanisms replace dependencies of the code under test:
 `pbl_test_broken()` in `tests/CMakeLists.txt` lists tests that are not
 built. Their `pbl_clar_test()` declarations stay where they are, so what
 the test needs is still on record when someone picks it back up.
-
-## JavaScript tests
-
-The JavaScript sources in `sdk/include/` have their own mocha-based tests in
-`sdk/tests/include/`; they are not run by `pbl test`. See
-`sdk/tests/include/README.md` for how to run them with `npm test`.
