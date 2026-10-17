@@ -100,10 +100,6 @@ void system_theme_refresh_ambient(void) {
 }
 
 PBL_SYSCALL(bool, system_theme_is_dark_mode) {
-  // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
-  if (PBL_IF_COLOR_ELSE(false, true)) {
-    return false;
-  }
   if (!prv_is_system_app()) {
     return false;
   }
