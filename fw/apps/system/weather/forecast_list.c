@@ -309,10 +309,12 @@ static void prv_load_icons(void) {
   for (int i = 0; i < (int)s_list->num_days; i++) {
     if (s_list->icons[i]) {
       gbitmap_destroy(s_list->icons[i]);
+      weather_recolor_gbitmap_for_dark_mode(s_list->icons[i]);
       s_list->icons[i] = nullptr;
     }
     s_list->icons[i] =
         gbitmap_create_with_resource(prv_icon_res(s_list->days[i].current_weather_type));
+    weather_recolor_gbitmap_for_dark_mode(s_list->icons[i]);
   }
 #endif
 }

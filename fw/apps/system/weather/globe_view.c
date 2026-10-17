@@ -3175,14 +3175,14 @@ static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bou
     y += intro_selection_offset(view);
 
   // BW: the dithered blue read as noise under white text — the selected bar
-  // goes solid black instead.
+  // goes solid black/white instead.
     const GColor sel_fill = PBL_IF_COLOR_ELSE(GColorVividCerulean, system_theme_get_fg_color());
     graphics_context_set_fill_color(ctx, selected ? sel_fill : system_theme_get_bg_color());
   graphics_fill_rect(ctx, GRect(0, y, bounds.size.w, bar_h), 0, GCornerNone);
   graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
   graphics_fill_rect(ctx, GRect(0, y, bounds.size.w, 2), 0, GCornerNone);
 
-  GColor label_color = selected ? GColorWhite : system_theme_get_fg_color();
+  GColor label_color = selected ? system_theme_get_bg_color() : system_theme_get_fg_color();
   GColor bg_color = selected ? sel_fill : system_theme_get_bg_color();
   draw_saved_locations_pin(ctx, GPoint(side_inset, y + (bar_h - GLOBE_SAVED_COG_SIZE) / 2),
                            label_color, bg_color);

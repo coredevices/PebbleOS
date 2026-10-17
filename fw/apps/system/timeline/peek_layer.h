@@ -69,6 +69,10 @@ void peek_layer_set_icon_with_invert(PeekLayer *peek_layer,
                                      const TimelineResourceInfo *timeline_res, bool invert);
 void peek_layer_set_icon_with_size(PeekLayer *peek_layer, const TimelineResourceInfo *timeline_res,
                                    TimelineResourceSize res_size, GRect icon_from);
+void peek_layer_set_icon_with_size_invert(PeekLayer *peek_layer,
+                                          const TimelineResourceInfo *timeline_res,
+                                          TimelineResourceSize res_size, GRect icon_from,
+                                          bool invert);
 
 //! Set the peek layer to have a stretching animation to a frame.
 void peek_layer_set_scale_to(PeekLayer *peek_layer, GRect icon_to);

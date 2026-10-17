@@ -1763,6 +1763,13 @@ static void prv_reload_icon(GBitmap **slot, BitmapLayer *bl, const WeatherLocati
     *slot = gbitmap_create_with_resource(
         tiny ? weather_type_get_icon_res_tiny(f->current_weather_type)
              : weather_type_get_icon_res_today(f->current_weather_type));
+#if PBL_BW
+    weather_recolor_gbitmap_for_dark_mode(*slot);
+#else
+    if (tiny) {
+      weather_recolor_gbitmap_for_dark_mode(*slot);
+    }
+#endif
   }
   bitmap_layer_set_bitmap(bl, *slot);
 }
@@ -2283,6 +2290,9 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
   if (today_forecast) {
     layout->current_weather_icon = gbitmap_create_with_resource(
         weather_type_get_icon_res_today(today_forecast->current_weather_type));
+#if PBL_BW
+    weather_recolor_gbitmap_for_dark_mode(layout->current_weather_icon);
+#endif
     bitmap_layer_set_bitmap(layout->current_weather_icon_layer, layout->current_weather_icon);
     layer_set_frame(bitmap_layer_get_layer(layout->current_weather_icon_layer),
                     layout->today_icon_rest_frame);
@@ -2294,6 +2304,7 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
   if (next_forecast) {
     layout->tomorrow_weather_icon = gbitmap_create_with_resource(
         weather_type_get_icon_res_tiny(next_forecast->current_weather_type));
+    weather_recolor_gbitmap_for_dark_mode(layout->tomorrow_weather_icon);
     bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, layout->tomorrow_weather_icon);
   } else {
     bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, nullptr);
@@ -2445,6 +2456,9 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
         new_today ? gbitmap_create_with_resource(
                         weather_type_get_icon_res_today(new_today->current_weather_type))
                   : nullptr;
+#if PBL_BW
+    weather_recolor_gbitmap_for_dark_mode(layout->outgoing_weather_icon);
+#endif
     // Frame set to arc start position below, after circle_center is computed.
     layer_set_hidden(layout->outgoing_weather_icon_layer, false);
     // current_weather_icon_layer already holds the old today bitmap — keep it as-is.

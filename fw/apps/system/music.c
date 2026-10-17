@@ -1053,7 +1053,7 @@ static void prv_set_pos_update_timer(MusicAppData *data, MusicPlayState playstat
 static void prv_configure_music_text_layer(TextLayer *text_layer, char *text_buffer,
                                            const GRect *rect, int16_t y_offset,
                                            GTextAlignment align, GFont font) {
-  text_layer_init_with_parameters(text_layer, rect, text_buffer, font, system_theme_get_fg_color(), GColorClear,
+  text_layer_init_with_parameters(text_layer, rect, text_buffer, font, PBL_IF_COLOR_ELSE(system_theme_get_fg_color(), GColorBlack), GColorClear,
                                   align, GTextOverflowModeFill);
   layer_set_bounds(&text_layer->layer, &GRect(0, -y_offset, rect->size.w, rect->size.h + y_offset));
   layer_set_clips(&text_layer->layer, false);

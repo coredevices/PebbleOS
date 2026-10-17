@@ -400,6 +400,40 @@ static bool prv_recolor_pdc_command_cb(GDrawCommand *command, uint32_t index, vo
   return true;
 }
 
+void weather_recolor_gbitmap_for_dark_mode(GBitmap *bmp) {
+  if (!bmp) {
+    return;
+  }
+
+  if (!system_theme_is_dark_mode()) {
+    return;
+  }
+
+  GColor *pal = gbitmap_get_palette(bmp);
+  uint32_t entries;
+  switch (gbitmap_get_format(bmp)) {
+    case GBitmapFormat1BitPalette: entries = 2; break;
+    case GBitmapFormat2BitPalette: entries = 4; break;
+    case GBitmapFormat4BitPalette: entries = 16; break;
+    default: return;
+  }
+  if (!pal) {
+    return;
+  }
+
+  // Hoisted: both are syscalls.
+  const GColor fg = system_theme_get_fg_color();
+  const GColor bg = system_theme_get_bg_color();
+
+  for (uint32_t i = 0; i < entries; i++) {
+    if (!pal[i].a) {
+      continue; // keep transparency
+    }
+    const GColor8 gray = gcolor_get_grayscale(pal[i]);
+    pal[i] = (gcolor_equal(gray, GColorBlack) || gcolor_equal(gray, GColorDarkGray)) ? fg : bg;
+  }
+}
+
 void weather_recolor_pdc_image_for_dark_mode(GDrawCommandImage *image) {
   if (!image || !system_theme_is_dark_mode()) return;
   GDrawCommandList *list = gdraw_command_image_get_command_list(image);
