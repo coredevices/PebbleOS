@@ -2390,7 +2390,7 @@ GColor shell_prefs_get_theme_highlight_color(void) {
 #ifdef CONFIG_THEMING
   return s_theme_highlight_color;
 #else
-  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+  return PBL_IF_COLOR_ELSE(GColorVividCerulean, system_theme_get_fg_color());
 #endif
 }
 
