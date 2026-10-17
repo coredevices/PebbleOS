@@ -26,7 +26,6 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
-#include <shell/system_theme.h>
 
 // Alarms app versions
 // 0: Initial version or never opened
@@ -279,7 +278,7 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
   // Otherwise if the alarm is smart draw according to the menu highlight.
   graphics_context_set_tint_color(
       ctx, !node->info.is_smart ? GColorClear
-                                : (cell_layer->is_highlighted ? GColorWhite : GColorBlack));
+                                : (cell_layer->is_highlighted ? system_theme_get_bg_color() : system_theme_get_fg_color()));
 
   char alarm_day_text[32] = {};
   MenuCellLayerConfig config = {
@@ -352,7 +351,7 @@ static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
       header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, system_theme_get_fg_color(), system_theme_get_bg_color(), nullptr,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_alarms_app_opened_click_handler);
 
-  expandable_dialog_set_action_bar_background_color(expandable_dialog, ALARMS_APP_HIGHLIGHT_COLOR);
+  expandable_dialog_set_action_bar_background_color(expandable_dialog, PBL_IF_COLOR_ELSE(ALARMS_APP_HIGHLIGHT_COLOR, GColorBlack));
   expandable_dialog_set_header(expandable_dialog, header);
 #if defined(PBL_ROUND)
   expandable_dialog_set_header_font(expandable_dialog,
@@ -392,7 +391,7 @@ static void prv_handle_init(void) {
                              .selection_changed = prv_alarm_list_selection_changed_callback
                            });
 
-  menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR, GColorWhite);
+  menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR, system_theme_get_bg_color());
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());

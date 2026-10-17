@@ -271,10 +271,9 @@ static WeatherType prv_header_type(void);
 #endif
 static void prv_load_icons(void) {
   if (!s_list) return;
-#if defined(CONFIG_TOUCH) && !PBL_ROUND
+#ifdef CONFIG_TOUCH
   s_list->today_header_dirty = true; // today's date/condition changed → recompute layout
-#endif
-#if defined(CONFIG_TOUCH)
+
   // Round 5-day uses the official PebbleOS weather PDC icons, cloned into RAM
   // (a system-app resource is mmap'd READ-ONLY, so draw of the raw would fault).
   for (int i = 0; i < (int)s_list->num_days; i++) {
@@ -286,7 +285,6 @@ static void prv_load_icons(void) {
         prv_official_weather_pdc_res(s_list->days[i].current_weather_type));
     s_list->pdc_icons[i] = raw ? gdraw_command_image_clone(raw) : nullptr;
     if (raw) gdraw_command_image_destroy(raw);
-    weather_recolor_pdc_image_for_dark_mode(s_list->pdc_icons[i]);
   }
   // Larger today icon for the summary header: official SMALL (50px) PDC scaled down.
   if (s_list->today_pdc) {
@@ -311,8 +309,8 @@ static void prv_load_icons(void) {
       gbitmap_destroy(s_list->icons[i]);
       s_list->icons[i] = nullptr;
     }
-    s_list->icons[i] =
-        gbitmap_create_with_resource(prv_icon_res(s_list->days[i].current_weather_type));
+    s_list->icons[i] = gbitmap_create_with_resource(prv_icon_res(s_list->days[i].current_weather_type));
+    weather_recolor_gbitmap_for_dark_mode(s_list->icons[i]);
   }
 #endif
 }
@@ -2081,10 +2079,10 @@ static void prv_draw_series_links(GContext *ctx, const int *colx, const int *y, 
 
 #if !PBL_ROUND
 // Hollow ring dot: coloured ring, white centre (emery graph).
-static void prv_draw_ring_dot(GContext *ctx, GPoint p, GColor ring) {
+static void prv_draw_ring_dot(GContext *ctx, GPoint p, GColor ring, GColor center) {
   graphics_context_set_fill_color(ctx, ring);
   graphics_fill_circle(ctx, p, 4);
-  graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+  graphics_context_set_fill_color(ctx, center);
   graphics_fill_circle(ctx, p, 2);
 }
 
@@ -2342,7 +2340,8 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     snprintf(tnow, sizeof(tnow), "--\xC2\xB0");
   }
   // Large temp, sized + vertically aligned to balance the 40px today icon.
-  graphics_context_set_text_color(ctx, system_theme_get_fg_color());
+  const GColor page_fg = system_theme_get_fg_color(); // syscall: once per frame
+  graphics_context_set_text_color(ctx, page_fg);
 #if PBL_ROUND
   graphics_draw_text(ctx, tnow, fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS),
                      GRect(112, 22 - hs, 120, 44), // -hs: ride the header scroll off the top
@@ -2364,7 +2363,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   // Title-case (e.g. "Partly Cloudy") — Pebble reserves ALL CAPS for terse labels/units.
   // Condition matches the date: same font/size/weight, same baseline (date is on
   // the left under the icon, condition on the right under the temp).
-  graphics_context_set_text_color(ctx, system_theme_get_fg_color());   // foreground on the page
+  graphics_context_set_text_color(ctx, page_fg);   // foreground on the page
   // Condition: right-anchored at x=230 (mirrors the left date, aligned to the fan's
   // 30/230 columns), growing LEFT as it lengthens down to x=110 (just clear of the
   // date). Length-dependent: measure the phrase + step the font down one size if even
@@ -2373,7 +2372,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   GFont cond_font = (GFont)s_list->today_cond_font; // measured once on data change, not per frame
   graphics_draw_text(ctx, cond, cond_font, GRect(cond_l, R5_DAYDATE_Y - hs, cond_r - cond_l, 16),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
-  graphics_context_set_text_color(ctx, system_theme_get_fg_color());   // foreground on the page
+  graphics_context_set_text_color(ctx, page_fg);   // foreground on the page
   // Date: left box, left-aligned (the today icon above is centred over this string).
   graphics_draw_text(ctx, daydate, day_font, // day_font IS GOTHIC_14_BOLD — no re-lookup
                      GRect(PBL_IF_ROUND_ELSE(30, R5_TODAY_X), R5_DAYDATE_Y - hs,
@@ -2392,7 +2391,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     const int cx = col_icon[i];
 
     const char *weekday = s_list->weekday_cache[i]; // built in the date-cache block above
-    graphics_context_set_text_color(ctx, system_theme_get_fg_color());
+    graphics_context_set_text_color(ctx, page_fg);
     const int bow = R5_BOW_DY(i, n, ss); // slight follow-the-glass curve (round only)
     if (!R5_DAYNAME_SCROLL_HIDE || ss * 4 < R5_SECTION_TRAVEL) {
       graphics_draw_text(ctx, weekday, day_font,
@@ -2532,17 +2531,18 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_width(ctx, 2);
     prv_draw_series_links(ctx, col_low, yl, okl, n, GColorBlue);
     prv_draw_series_links(ctx, col_high, yh, okh, n, GColorWindsorTan);
-    // Low dots match the high dots: hollow ring with a white centre — blue ring for the lows.
+    // Low dots match the high dots: hollow ring with a black/white centre — blue ring for the lows.
+    const GColor dot_center = system_theme_get_bg_color(); // syscall: once
     for (int i = 0; i < n; i++) {
       if (okl[i])
-        prv_draw_ring_dot(ctx, GPoint(col_low[i], yl[i]), GColorBlue);
+        prv_draw_ring_dot(ctx, GPoint(col_low[i], yl[i]), GColorBlue, dot_center);
     }
     for (int i = 0; i < n; i++) {
       if (okh[i])
-        prv_draw_ring_dot(ctx, GPoint(col_high[i], yh[i]), GColorOrange);
+        prv_draw_ring_dot(ctx, GPoint(col_high[i], yh[i]), GColorOrange, dot_center);
     }
-    // Numerals: both bold black — high ABOVE its dot, low BELOW its dot.
-    graphics_context_set_text_color(ctx, system_theme_get_fg_color());
+    // Numerals: both bold black/white — high ABOVE its dot, low BELOW its dot.
+    graphics_context_set_text_color(ctx, page_fg);
     for (int i = 0; i < n; i++) {
       if (okh[i])
         prv_draw_temp_centered(ctx, th[i], day_font, col_high[i], yh[i] - 4 - 16);
@@ -2606,6 +2606,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     y_lo[i] = okl[i] ? gbot - (fan[i].today_low - lmin) * band / lrange - ss : 0;
   }
 
+  const GColor page_bg = system_theme_get_bg_color(); // syscall: once
   graphics_context_set_antialiased(ctx, true);
   graphics_context_set_stroke_width(ctx, 2);
   // Muted connector lines — quiet links so the saturated dots + labels read as the data.
@@ -2616,20 +2617,20 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     if (okh[i]) {
       graphics_context_set_fill_color(ctx, GColorOrange);
       graphics_fill_circle(ctx, GPoint(col_high[i], y_hi[i]), R5_DOT_R);
-      graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+      graphics_context_set_fill_color(ctx, page_bg);
       graphics_fill_circle(ctx, GPoint(col_high[i], y_hi[i]), R5_DOT_INNER);
     }
     if (okl[i]) {
       graphics_context_set_fill_color(ctx, GColorVividCerulean);
       graphics_fill_circle(ctx, GPoint(col_low[i], y_lo[i]), R5_DOT_R);
-      graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+      graphics_context_set_fill_color(ctx, page_bg);
       graphics_fill_circle(ctx, GPoint(col_low[i], y_lo[i]), R5_DOT_INNER);
     }
   }
   // Temperature labels: high ABOVE its warm dot, low BELOW its cool dot.
   for (int i = 0; i < n; i++) {
     char hs[16], ls[16];
-    graphics_context_set_text_color(ctx, system_theme_get_fg_color());  // numerals; dots/lines stay coloured
+    graphics_context_set_text_color(ctx, page_fg);  // numerals; dots/lines stay coloured
     if (okh[i]) {
       snprintf(hs, sizeof(hs), "%d\xC2\xB0", fan[i].today_high);
       graphics_draw_text(ctx, hs, small_font,
@@ -2778,8 +2779,9 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
-  // Hoist context state changes outside the row loop.
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, system_theme_get_fg_color()));
+  // Hoist context state changesand syscalls outside the row loop.
+  const GColor page_fg = system_theme_get_fg_color();
+  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, page_fg));
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
 
   int rh = s_list->row_height;
@@ -2822,7 +2824,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     // Day label
     char weekday_label[16];
     prv_fill_weekday_label(i, f->label, weekday_label, sizeof(weekday_label));
-    graphics_context_set_text_color(ctx, system_theme_get_fg_color());
+    graphics_context_set_text_color(ctx, page_fg);
     graphics_draw_text(ctx, weekday_label, s_list->day_font,
                        GRect(day_label_x, ty, DAY_LABEL_W, 20), GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentLeft, nullptr);
