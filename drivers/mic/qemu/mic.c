@@ -5,11 +5,11 @@
 
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
 
 #include <board/board.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_qemu, CONFIG_DRIVER_MIC_LOG_LEVEL);
 

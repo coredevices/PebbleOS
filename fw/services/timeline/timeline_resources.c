@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/testing.h>
@@ -12,7 +13,6 @@
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 #define RESOURCE_MAX_SIZE (700)
 

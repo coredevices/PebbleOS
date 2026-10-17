@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/vibes/vibe_score_info.h>
 #include <pbl/util/size.h>
 
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 typedef enum AlertType {
   AlertType_Notifications = 1 << 0,
@@ -88,7 +88,7 @@ VibeScoreId vibe_score_info_cycle_next(VibeClient client, VibeScoreId curr_id) {
       break;
     }
     default: {
-      WTF;
+      pbl_panic();
     }
   }
 

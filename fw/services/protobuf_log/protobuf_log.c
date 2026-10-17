@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -19,7 +21,6 @@
 #include <mfg/mfg_serials.h>
 #include <pb.h>
 #include <pb_encode.h>
-#include <system/passert.h>
 #include <system/version.h>
 
 // These headers auto-generated from the measurements.proto
@@ -190,7 +191,7 @@ static size_t prv_session_extra_space_needed(const ProtobufLogConfig *config) {
     case ProtobufLogType_Events:
       return 0;
   }
-  WTF;
+  pbl_panic();
   return 0;
 }
 
@@ -249,7 +250,7 @@ static bool prv_session_encode_start(PLogSession *session) {
     case ProtobufLogType_Events:
       return true;
   }
-  WTF;
+  pbl_panic();
 }
 
 // ---------------------------------------------------------------------------------------

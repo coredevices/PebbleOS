@@ -5,6 +5,7 @@
 
 #include "bluetooth.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -20,7 +21,6 @@
 #include <kernel/ui/system_icons.h>
 #include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 enum {
   RemoteMenuForget = 0,

@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
 #include <pbl/util/size.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 //! Skeleton implementation struct
 typedef struct GetBytesStorageImplementation {
@@ -60,7 +60,7 @@ GetBytesStorageType prv_get_storage_type_for_object(GetBytesObjectType object_ty
     case GetBytesObjectFlash:
       return GetBytesStorageTypeFlash;
     default:
-      WTF;
+      pbl_panic();
       return GetBytesStorageTypeUnknown;
   }
 }

@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 
@@ -14,7 +15,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 // Menu Detail
 //////////////////
@@ -115,7 +115,7 @@ static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
         .highlight_background_color = GColorIslamicGreen,
       };
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -173,7 +173,7 @@ static void prv_menu_detail_draw_row(GContext *ctx, const Layer *cell_layer,
       break;
     }
     default:
-      WTF;
+      pbl_panic();
   }
 }
 

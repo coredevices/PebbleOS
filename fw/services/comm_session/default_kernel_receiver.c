@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_receive_router.h>
@@ -9,7 +10,6 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 

@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/log_hashing.h>
 #include <pbl/logging/logging.h>
@@ -19,7 +20,6 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #define NEW_LOG_HEADER "NL" NEW_LOG_VERSION
 static_assert((CORE_ID_MAIN_MCU & PACKED_CORE_MASK) == CORE_ID_MAIN_MCU, "Core number invalid");

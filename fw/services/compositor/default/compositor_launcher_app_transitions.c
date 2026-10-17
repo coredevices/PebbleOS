@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 #include <pbl/services/compositor/default/compositor_launcher_app_transitions.h>
@@ -11,7 +12,6 @@
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/graphics_private.h>
 #include <apps/system/launcher/default/launcher.h>
-#include <system/passert.h>
 
 typedef struct CompositorLauncherAppTransitionData {
   bool app_is_destination;

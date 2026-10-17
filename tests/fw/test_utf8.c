@@ -152,7 +152,7 @@ void test_utf8__get_size_truncate(void) {
   cl_assert_equal_i(13, utf8_get_size_truncate("Hello World! \xF0\x9F\x98\x84", 17));
   cl_assert_equal_i(16, utf8_get_size_truncate("Hello World! \xF0\x9F\x98", 17));
   cl_assert_equal_i(13, utf8_get_size_truncate("Hello World! \xF0\x9F\x98\x84", 16));
-  cl_assert_passert(utf8_get_size_truncate("Hi", 0));
+  cl_assert_panic(utf8_get_size_truncate("Hi", 0));
 }
 
 void test_utf8__truncate_with_ellipsis(void) {
@@ -194,6 +194,6 @@ void test_utf8__truncate_with_ellipsis(void) {
 
   // test that we access unallocated memory if the output buffer is too small
   output_buffer = realloc(output_buffer, 5);
-  cl_assert_passert(utf8_truncate_with_ellipsis("Hello", output_buffer, 6));
+  cl_assert_panic(utf8_truncate_with_ellipsis("Hello", output_buffer, 6));
   free(output_buffer);
 }

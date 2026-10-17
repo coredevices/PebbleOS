@@ -6,11 +6,10 @@
 #include "graphics.h"
 #include "graphics_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/testing.h>
-
-#include <system/passert.h>
 
 #define MINIMUM_PRECISE_STROKE_WIDTH 2
 

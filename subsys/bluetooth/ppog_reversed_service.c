@@ -7,6 +7,7 @@
 
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <host/ble_gap.h>
@@ -15,7 +16,6 @@
 #include <host/ble_uuid.h>
 #include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

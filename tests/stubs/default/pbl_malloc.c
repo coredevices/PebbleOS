@@ -147,3 +147,7 @@ PBL_WEAK char *task_strdup(const char *s) {
 PBL_WEAK void smart_free(void *ptr) {
   free(ptr);
 }
+
+PBL_WEAK [[noreturn]] void pbl_malloc_oom(size_t bytes, uintptr_t lr, Heap *heap_ptr) {
+  abort();
+}

@@ -4,11 +4,11 @@
 #include <stdint.h>
 
 #include <pbl/drivers/pwm.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/soc/sf32lb/sleep.h>
 
 #include <bf0_hal_tim.h>
 #include <board/board.h>
-#include <system/passert.h>
 
 #define MAX_PERIOD_GPT 0xFFFFU
 #define MAX_PERIOD_ATM 0xFFFFFFFFU

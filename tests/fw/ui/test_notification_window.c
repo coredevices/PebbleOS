@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/util/trig.h>
 

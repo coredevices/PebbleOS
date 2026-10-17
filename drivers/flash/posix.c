@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_impl.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <fcntl.h>
@@ -14,7 +15,6 @@
 #include <posix_host.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <system/passert.h>
 #include <system/status_codes.h>
 #include <unistd.h>
 

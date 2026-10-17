@@ -6,6 +6,7 @@
 #include "app_glance_private.h"
 #include "menu_layer.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/util/string.h>
@@ -17,7 +18,6 @@
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 // Use display height to determine icon margins: larger displays use more margin
 #if PBL_DISPLAY_HEIGHT >= 200

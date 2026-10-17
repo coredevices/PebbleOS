@@ -3,7 +3,10 @@
 
 #include "pebble_tasks.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/debug.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/util/size.h>
@@ -13,7 +16,6 @@
 #include <process_management/worker_manager.h>
 #include <syscall/syscall_internal.h>
 #include <system/die.h>
-#include <system/passert.h>
 #include <system/reboot_reason.h>
 
 static struct pbl_thread s_threads[NumPebbleTask];
@@ -57,7 +59,7 @@ const char *pebble_task_get_name(PebbleTask task) {
     if (task == PebbleTask_Unknown) {
       return "Unknown";
     }
-    WTF;
+    pbl_panic();
   }
 
   struct pbl_thread *thread = g_task_threads[task];
@@ -222,7 +224,7 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
       queue = nullptr;
       break;
     default:
-      WTF;
+      pbl_panic();
   }
   return queue;
 }
@@ -257,7 +259,7 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
                                   false /* allow_user_access */);
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 
   const MpuRegion *stack_guard_region = nullptr;
@@ -289,7 +291,7 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
     case PebbleTask_PULSE:
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 #endif
 
@@ -336,5 +338,26 @@ void pbl_thread_stack_overflow(struct pbl_thread *thread, const char *name) {
     reboot_reason_set(&reason);
 
     reset_due_to_software_failure();
+  }
+}
+
+void pebble_task_assert_current(PebbleTask expected_task) {
+  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
+
+  if (pebble_task_get_current() != expected_task) {
+    PBL_LOG_ALWAYS("LR: %p. Incorrect task! Expected <%s> got <%s>", (void *)saved_lr,
+                   pebble_task_get_name(expected_task),
+                   pebble_task_get_name(pebble_task_get_current()));
+    pbl_fatal_error_handler(saved_lr);
+  }
+}
+
+void pebble_task_assert_not_current(PebbleTask unexpected_task) {
+  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
+
+  if (pebble_task_get_current() == unexpected_task) {
+    PBL_LOG_ALWAYS("LR: %p. Incorrect task! Can't be <%s>", (void *)saved_lr,
+                   pebble_task_get_name(unexpected_task));
+    pbl_fatal_error_handler(saved_lr);
   }
 }

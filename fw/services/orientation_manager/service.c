@@ -11,7 +11,6 @@
 #include <kernel/events.h>
 #include <process_management/process_manager.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 #ifdef CONFIG_SERVICE_TOUCH
 #include <pbl/services/touch/touch.h>
 #endif

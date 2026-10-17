@@ -5,7 +5,9 @@
 
 #include "app_glance_structured.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/i18n/i18n.h>
@@ -17,7 +19,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 #define MAX_SUBTITLE_BUFFER_SIZE (16)
 
@@ -104,7 +105,7 @@ static uint32_t prv_get_workout_icon_resource_id_for_type(ActivitySessionType ty
       break;
   }
 
-  WTF;
+  pbl_panic();
 }
 
 static void prv_timer_callback(void *data) {

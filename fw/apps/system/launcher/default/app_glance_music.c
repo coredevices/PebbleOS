@@ -7,7 +7,9 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/music.h>
 #include <pbl/util/string.h>
 #include <pbl/util/struct.h>
@@ -17,7 +19,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 // We need enough space for the track artist and title (so 2 * MUSIC_BUFFER_LENGTH from music.h),
 // the delimiter string " - " (3), and 1 for the null terminator
@@ -101,7 +102,7 @@ static bool prv_should_display_music_state(MusicPlayState play_state,
     case MusicPlayStateInvalid:
       return false;
   }
-  WTF;
+  pbl_panic();
 }
 
 static void prv_update_glance_for_music_state(LauncherAppGlanceStructured *structured_glance) {
@@ -163,7 +164,7 @@ static void prv_music_event_handler(PebbleEvent *event, void *context) {
     case PebbleMediaEventTypeAlbumArtUpdated:
       return;
   }
-  WTF;
+  pbl_panic();
 }
 
 static const LauncherAppGlanceStructuredImpl s_music_structured_glance_impl = {

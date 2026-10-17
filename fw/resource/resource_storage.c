@@ -7,13 +7,13 @@
 
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/app_file.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 
 #include <system/hexdump.h>
-#include <system/passert.h>
 #include <system/version.h>
 
 static const ResourceStoreImplementation *s_resource_store_impls[] = {

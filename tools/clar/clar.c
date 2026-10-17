@@ -56,9 +56,9 @@
 
 #define CL_WITHIN(n, min, max) ((n) >= (min) && (n) <= (max))
 
-bool clar_expecting_passert = false;
-bool clar_passert_occurred = false;
-jmp_buf clar_passert_jmp_buf;
+bool clar_expecting_panic = false;
+bool clar_panic_occurred = false;
+jmp_buf clar_panic_jmp_buf;
 
 static void fs_rm(const char *_source);
 static void fs_copy(const char *_source, const char *dest);
@@ -182,8 +182,8 @@ clar_run_test(
   clar_on_test();
   _clar.trampoline_enabled = 1;
 
-  clar_passert_occurred = false;
-  clar_expecting_passert = false;
+  clar_panic_occurred = false;
+  clar_expecting_panic = false;
   if (setjmp(_clar.trampoline) == 0) {
     if (initialize->ptr != NULL)
       initialize->ptr();

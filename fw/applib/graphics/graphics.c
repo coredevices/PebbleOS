@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/bitops.h>
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
@@ -18,7 +19,6 @@
 #include <applib/graphics/raw_image.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 #if !defined(__clang__)
 #pragma GCC optimize("O3")

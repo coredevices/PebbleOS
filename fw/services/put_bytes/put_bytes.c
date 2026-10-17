@@ -4,7 +4,9 @@
 #include <string.h>
 
 #include <pbl/bluetooth/conn_event_stats.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
@@ -24,11 +26,11 @@
 #include <comm/bluetooth_analytics.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/system_message.h>
 #include <resource/resource_storage_file.h>
 #include <system/bootbits.h>
 #include <system/firmware_storage.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
 
@@ -552,7 +554,7 @@ static size_t prv_expected_minimum_length_by_command(const PutBytesCommand comma
     case PutBytesInstall:
       return sizeof(InstallRequest);
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -983,7 +985,7 @@ static void prv_process_msg_system_task_callback(void *unused) {
       prv_do_init();
       break;
     case PutBytesPut:
-      WTF; // Put Requests have their own handler
+      pbl_panic(); // Put Requests have their own handler
       break;
     case PutBytesCommit:
       prv_do_commit();

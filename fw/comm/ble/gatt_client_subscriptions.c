@@ -9,6 +9,7 @@
 
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
@@ -20,7 +21,6 @@
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 // -------------------------------------------------------------------------------------------------
 // Static variables

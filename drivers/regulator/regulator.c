@@ -2,9 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/regulator.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/util/misc.h>
-
-#include <system/passert.h>
 
 int pbl_regulator_dev_init(const struct pbl_device *dev) {
   const struct pbl_regulator *reg = container_of(dev, const struct pbl_regulator, dev);

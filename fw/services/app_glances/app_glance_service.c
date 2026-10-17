@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/util/math.h>
@@ -15,7 +16,6 @@
 #include <process_management/app_install_manager.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 #include <system/status_codes.h>
 
 //! Return true to continue iteration and false to stop it.

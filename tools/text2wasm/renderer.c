@@ -37,13 +37,10 @@ ResourceCallbackHandle resource_watch(ResAppNum app, uint32_t id, ResourceChange
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int size) {
   return NULL;
 }
-void passert_failed(const char *file, int line, const char *message, ...) {
+void pbl_panic_at(const char *file, int line, const char *message, ...) {
   abort();
 }
-void passert_failed_no_message(const char *file, int line) {
-  abort();
-}
-void passert_failed_no_message_with_lr(const char *file, int line, uint32_t lr) {
+void pbl_panic_bare_at(const char *file, int line) {
   abort();
 }
 uint8_t *render(const char *text, const uint8_t *font, size_t length, const uint8_t *extension,

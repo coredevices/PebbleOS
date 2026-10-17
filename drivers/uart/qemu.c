@@ -6,7 +6,6 @@
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
-#include <system/passert.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

@@ -114,7 +114,7 @@ bool activity_sessions_prv_is_sleep_activity(ActivitySessionType activity_type) 
     case ActivitySessionTypeCount:
       break;
   }
-  WTF;
+  pbl_panic();
 }
 
 // ------------------------------------------------------------------------------------

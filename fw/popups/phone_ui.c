@@ -10,6 +10,7 @@
 #include <string.h>
 #include <time.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
@@ -47,7 +48,6 @@
 #include <popups/notifications/notifications_presented_list.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 #define DECLINE_DELAY_MS       2000
 #define SMS_REPLY_DELAY_MS     1200

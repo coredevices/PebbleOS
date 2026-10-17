@@ -5,6 +5,7 @@
 #include <pbl/drivers/clocksource.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -16,7 +17,6 @@
 #include <board/board.h>
 #include <kernel/pbl_malloc.h>
 #include <nrfx_i2s.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_speaker_da7212, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
 

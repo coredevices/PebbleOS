@@ -10,7 +10,6 @@
 #include <kernel/pebble_tasks.h>
 #include <process_management/process_manager.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_inbox_service, CONFIG_SERVICE_APP_INBOX_SERVICE_LOG_LEVEL);
 

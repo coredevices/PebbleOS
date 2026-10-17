@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
-
-#include <system/passert.h>
 
 PBL_WEAK void system_reset_prepare(void) {
 }

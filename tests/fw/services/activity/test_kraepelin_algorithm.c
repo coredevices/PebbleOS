@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
@@ -18,7 +20,6 @@
 #include <applib/accel_service.h>
 #include <clar.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 // Stubs
 
@@ -1730,7 +1731,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
           desc = "run";
           break;
         case KAlgActivityTypeCount:
-          WTF;
+          pbl_panic();
           break;
       }
 

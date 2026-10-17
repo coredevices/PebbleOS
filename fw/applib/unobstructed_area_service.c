@@ -5,13 +5,13 @@
 
 #include "unobstructed_area_service_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
 #include <applib/graphics/framebuffer.h>
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 static void prv_handle_unobstructed_area_event(PebbleEvent *event, void *context);
 static void prv_origin_y_to_area(int16_t origin_y, GRect *area_out);

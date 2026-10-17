@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
@@ -9,7 +11,6 @@
 #include <applib/applib_malloc.auto.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 static void prv_outbox_prepare(AppMessageCtxOutbox *outbox);
 
@@ -37,7 +38,7 @@ static void prv_handle_nack_or_ack_timeout(AppMessageCtxOutbox *outbox, AppMessa
   } else if (outbox->phase == OUT_AWAITING_REPLY_AND_OUTBOX_CALLBACK) {
     outbox->phase = OUT_AWAITING_OUTBOX_CALLBACK;
   } else {
-    WTF;
+    pbl_panic();
   }
 }
 

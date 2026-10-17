@@ -4,12 +4,12 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 
 #include <board/board.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 

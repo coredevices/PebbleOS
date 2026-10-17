@@ -13,6 +13,7 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/msgq.h>
@@ -33,7 +34,6 @@
 #include <console/dbgserial.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 
 #define LCP_PROTOCOL_NUMBER (0xC021)
 

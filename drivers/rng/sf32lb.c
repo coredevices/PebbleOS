@@ -6,12 +6,12 @@
 
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/rng.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/logging/logging.h>
 
 #include <hardware/sf32lb52_trng.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rng_sf32lb, CONFIG_DRIVER_RNG_LOG_LEVEL);
 

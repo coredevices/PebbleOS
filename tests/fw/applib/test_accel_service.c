@@ -713,7 +713,7 @@ void test_accel_service__unsubscribing_from_another_task_asserts(void) {
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 
-  cl_assert_passert(accel_session_data_unsubscribe(session));
+  cl_assert_panic(accel_session_data_unsubscribe(session));
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   accel_session_data_unsubscribe(session);
@@ -759,7 +759,7 @@ void test_accel_service__subscribing_again_from_another_task_asserts(void) {
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 
-  cl_assert_passert(
+  cl_assert_panic(
       accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler));
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
@@ -774,7 +774,7 @@ void test_accel_service__changing_the_batch_size_from_another_task_asserts(void)
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 
-  cl_assert_passert(accel_session_set_samples_per_update(session, 2));
+  cl_assert_panic(accel_session_set_samples_per_update(session, 2));
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   accel_session_data_unsubscribe(session);
@@ -788,7 +788,7 @@ void test_accel_service__changing_the_sampling_rate_from_another_task_asserts(vo
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 
-  cl_assert_passert(accel_session_set_sampling_rate(session, ACCEL_SAMPLING_50HZ));
+  cl_assert_panic(accel_session_set_sampling_rate(session, ACCEL_SAMPLING_50HZ));
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   accel_session_data_unsubscribe(session);

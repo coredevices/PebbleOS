@@ -8,6 +8,7 @@
 #include "app_manager.h"
 #include "worker_manager.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -31,7 +32,6 @@
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <resource/resource.h>
-#include <system/passert.h>
 
 typedef struct PBL_PACKED RecentApp {
   AppInstallId id;

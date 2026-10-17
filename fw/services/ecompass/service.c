@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/mag.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/services/event_service.h>
@@ -13,7 +14,6 @@
 #include <applib/compass_service.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 

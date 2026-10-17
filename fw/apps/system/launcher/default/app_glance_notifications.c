@@ -5,7 +5,9 @@
 
 #include "app_glance_structured.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/util/string.h>
@@ -14,7 +16,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
-#include <system/passert.h>
 
 typedef struct LauncherAppGlanceNotifications {
   char title[APP_NAME_SIZE_BYTES];
@@ -124,7 +125,7 @@ static void prv_notification_event_handler(PebbleEvent *event, void *context) {
     case NotificationActionResult:
       return;
   }
-  WTF;
+  pbl_panic();
 }
 
 static const LauncherAppGlanceStructuredImpl s_notifications_structured_glance_impl = {

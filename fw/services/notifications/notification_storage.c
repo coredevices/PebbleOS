@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
@@ -16,7 +17,6 @@
 #include <pbl/util/uuid.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

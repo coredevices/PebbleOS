@@ -9,9 +9,9 @@
 
 #include <unistd.h>
 
-extern bool clar_expecting_passert;
-extern bool clar_passert_occurred;
-extern jmp_buf clar_passert_jmp_buf;
+extern bool clar_expecting_panic;
+extern bool clar_panic_occurred;
+extern jmp_buf clar_panic_jmp_buf;
 
 typedef enum ClarCmpOp {
   ClarCmpOp_EQ,
@@ -133,19 +133,18 @@ void cl_fixture_cleanup(const char *fixture_name);
 /**
  * Pebble assert macros:
  */
-#define cl_assert_passert(expr)                                                                  \
-  {                                                                                              \
-    clar_expecting_passert = true;                                                               \
-    int jumped = setjmp(clar_passert_jmp_buf);                                                   \
-    if (jumped == 0) {                                                                           \
-      do {                                                                                       \
-        expr;                                                                                    \
-      } while (0);                                                                               \
-    }                                                                                            \
-    clar__assert(clar_passert_occurred, __FILE__, __LINE__, "Expected passert_failed(): " #expr, \
-                 nullptr, 0);                                                                    \
-    clar_passert_occurred = false;                                                               \
-    clar_expecting_passert = false;                                                              \
+#define cl_assert_panic(expr)                                                                      \
+  {                                                                                                \
+    clar_expecting_panic = true;                                                                   \
+    int jumped = setjmp(clar_panic_jmp_buf);                                                       \
+    if (jumped == 0) {                                                                             \
+      do {                                                                                         \
+        expr;                                                                                      \
+      } while (0);                                                                                 \
+    }                                                                                              \
+    clar__assert(clar_panic_occurred, __FILE__, __LINE__, "Expected a panic: " #expr, nullptr, 0); \
+    clar_panic_occurred = false;                                                                   \
+    clar_expecting_panic = false;                                                                  \
   }
 
 /**

@@ -7,6 +7,7 @@
 #include "process_manager.h"
 
 // Pebble stuff
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/privilege.h>
 #include <pbl/services/light.h>
@@ -15,6 +16,7 @@
 
 #include <kernel/memory_layout.h>
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/util/segment.h>
 #include <kernel/util/task_init.h>
 #include <popups/crashed_ui.h>
@@ -25,7 +27,6 @@
 #include <shell/prefs.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 // FreeRTOS stuff
 

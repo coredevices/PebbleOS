@@ -7,7 +7,6 @@
 #include <pbl/util/trig.h>
 
 #include <applib/graphics/framebuffer.h>
-#include <system/passert.h>
 
 //! Packed so we can squeeze this into a void* as the animation context
 typedef struct PBL_PACKED {

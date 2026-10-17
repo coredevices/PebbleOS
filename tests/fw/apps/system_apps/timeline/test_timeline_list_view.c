@@ -3,6 +3,7 @@
 
 #include "test_timeline_app_includes.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>

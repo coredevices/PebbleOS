@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/process_management/app_order_storage.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -14,7 +15,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 static void add_app_with_install_id(const AppInstallEntry *entry, AppMenuDataSource *source);
 static bool remove_app_with_install_id(const AppInstallId install_id, AppMenuDataSource *source);

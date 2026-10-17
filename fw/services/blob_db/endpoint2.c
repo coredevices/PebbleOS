@@ -15,7 +15,6 @@
 #include <pbl/util/testing.h>
 
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 #include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);

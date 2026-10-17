@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/privilege.h>
@@ -23,7 +24,6 @@
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 // Run App/Worker syscalls on a dedicated privileged stack instead of the
 // caller's small unprivileged one, so a task that exhausts its stack faults

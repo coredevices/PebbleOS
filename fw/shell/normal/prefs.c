@@ -30,6 +30,7 @@
 #include <pbl/services/orientation_manager.h>
 #endif
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
@@ -42,7 +43,6 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <system/passert.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 

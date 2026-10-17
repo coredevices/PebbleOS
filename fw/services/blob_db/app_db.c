@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_fetch_endpoint.h>
@@ -13,7 +15,6 @@
 
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager_private.h>
-#include <system/passert.h>
 #include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
@@ -237,7 +238,7 @@ void app_db_init(void) {
   // is then one greater than the largest found.
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv != S_SUCCESS) {
-    WTF;
+    pbl_panic();
   }
 
   struct AppDBInitData data = {};

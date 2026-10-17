@@ -7,6 +7,7 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/drivers/flash/flash_internal.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
@@ -19,7 +20,6 @@
 
 #include <flash_region/flash_region.h>
 #include <process_management/worker_manager.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 

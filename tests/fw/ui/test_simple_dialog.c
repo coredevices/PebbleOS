@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/hash.h>
 #include <pbl/util/math.h>
@@ -21,7 +22,6 @@
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 static GContext s_ctx;
 

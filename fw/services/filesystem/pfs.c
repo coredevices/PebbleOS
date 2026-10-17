@@ -10,8 +10,10 @@
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -24,7 +26,6 @@
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
 
@@ -1381,7 +1382,7 @@ status_t pfs_close(int fd) {
   File *f = &PFS_FD(fd).file;
   if (f->is_tmp) {
     // If the original file is still open, force-evict it before removing.
-    // This prevents pfs_remove() from CROAKing on the in-use original fd.
+    // This prevents pfs_remove() from panicking on the in-use original fd.
     // Callers should close the original before the temp, but if they don't,
     // we handle it gracefully here rather than crashing.
     int orig_fd;
@@ -1454,7 +1455,7 @@ status_t pfs_remove(const char *name) {
   status_t rv = get_avail_fd(name, &fd, false);
   if (rv >= FDAlreadyLoaded) { // the file is in the cache
     if (rv == FDBusy) {
-      PBL_CROAK("Cannot delete %s, it is currently in use", PFS_FD(fd).file.name);
+      pbl_panic("Cannot delete %s, it is currently in use", PFS_FD(fd).file.name);
     }
     page = PFS_FD(fd).file.start_page;
     mark_fd_free(fd);
@@ -1568,7 +1569,7 @@ void pfs_remove_files(PFSFilenameTestCallback callback) {
     status_t rv = get_avail_fd(file_name, &fd, false);
     if (rv >= FDAlreadyLoaded) { // the file is in the cache
       if (rv == FDBusy) {
-        PBL_CROAK("Cannot delete %s, it is currently in use", PFS_FD(fd).file.name);
+        pbl_panic("Cannot delete %s, it is currently in use", PFS_FD(fd).file.name);
       }
       mark_fd_free(fd);
     }

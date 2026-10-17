@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
@@ -40,7 +41,6 @@
 #include <resource/resource.h>
 #include <shell/normal/language_ui.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
 

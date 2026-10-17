@@ -6,6 +6,8 @@
 #include "event_service_client.h"
 #include "tick_timer_service_private.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
@@ -16,7 +18,6 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 // ----------------------------------------------------------------------------------------------------
 static TickTimerServiceState *prv_get_state(PebbleTask task) {
@@ -31,7 +32,7 @@ static TickTimerServiceState *prv_get_state(PebbleTask task) {
   } else if (task == PebbleTask_KernelMain) {
     return kernel_applib_get_tick_timer_service_state();
   } else {
-    WTF;
+    pbl_panic();
   }
 }
 

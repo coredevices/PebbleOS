@@ -8,7 +8,9 @@
 #include "pebble_process_md.h"
 #include "worker_manager.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/debug.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -39,7 +41,6 @@
 #include <shell/normal/watchface.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 static TimerID s_deinit_timer_id = TIMER_INVALID_ID;
 
@@ -90,7 +91,7 @@ static void prv_force_close_timer_callback(void *data) {
   ProcessContext *context = prv_get_context_for_task(task);
 
   if (!prv_force_stop_task_if_unprivileged(context)) {
-    PBL_CROAK("task stuck inside privileged code!");
+    pbl_panic("task stuck inside privileged code!");
   }
   process_manager_put_kill_process_event(task, false /*graceful*/);
 }
@@ -383,7 +384,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 //! If however, the task is in privilege mode, we tell the syscall machinery to set the safe to kill
 //! boolean as soon as the current syscall returns and set another timer. Once that timer expires,
 //! if the task is no longer in privilege mode we post another KILL event (graceful = false). If the
-//! task is still in privilege mode then, we croak.
+//! task is still in privilege mode then, we panic.
 bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
   ProcessContext *context = prv_get_context_for_task(task);
@@ -486,7 +487,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
     } else if (task == PebbleTask_Worker) {
       heap = worker_state_get_heap();
     } else {
-      WTF;
+      pbl_panic();
     }
 
     // FIXME: We cast heap_size's size_t result to int because for some reason our printf doesn't
@@ -509,7 +510,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
   pbl_thread_suspend(nullptr /* self */);
 
   // We don't expect someone to resume us.
-  PBL_CROAK("");
+  pbl_panic("");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -599,7 +600,7 @@ void process_manager_close_process(PebbleTask task, bool gracefully) {
     worker_manager_close_current_worker(gracefully);
 
   } else {
-    WTF;
+    pbl_panic();
   }
 }
 
@@ -676,7 +677,7 @@ static uintptr_t prv_get_region_end(PebbleTask task, const void *lower_bound) {
     ram_start = __WORKER_RAM__;
     ram_end = __WORKER_RAM_end__;
   } else {
-    WTF;
+    pbl_panic();
   }
 
   if (lower_bound < ram_start) {

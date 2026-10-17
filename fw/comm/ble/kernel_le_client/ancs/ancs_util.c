@@ -7,11 +7,11 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 bool ancs_util_is_complete_notif_attr_response(const uint8_t *data, const size_t length,
                                                bool *out_error) {

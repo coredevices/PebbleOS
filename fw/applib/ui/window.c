@@ -4,6 +4,7 @@
 #include "status_bar_layer.h"
 #include "window_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app_logging.h>
@@ -23,7 +24,6 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 typedef enum {
   WindowHandlerOffsetLoad = offsetof(WindowHandlers, load),

@@ -4,9 +4,8 @@
 #include <errno.h>
 
 #include <pbl/drivers/reset.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
-
-#include <system/passert.h>
 
 static int prv_call(const struct pbl_reset *rst,
                     int (*op)(const struct pbl_reset_controller *ctrl, uint32_t id)) {

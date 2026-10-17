@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
@@ -17,7 +18,6 @@
 
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 

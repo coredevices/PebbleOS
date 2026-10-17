@@ -6,6 +6,8 @@
 #include "event_service_client.h"
 #include "health_service_private.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/hrm/hrm_manager.h>
@@ -25,7 +27,6 @@
 #include <process_state/worker_state/worker_state.h>
 #include <shell/prefs_syscalls.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 // Fetching minute history can take a while, so we limit the amount of data we will ever access
 // in one call to this
@@ -62,7 +63,7 @@ static HealthAggregation prv_default_aggregation(HealthMetric metric) {
     case HealthMetricHeartRateRawBPM:
       return HealthAggregationAvg;
   }
-  WTF;
+  pbl_panic();
   return 0;
 }
 
@@ -76,7 +77,7 @@ static HealthServiceState *prv_get_state(bool ensure_cache_initialized) {
   } else if (task == PebbleTask_Worker) {
     result = worker_state_get_health_service_state();
   } else {
-    WTF;
+    pbl_panic();
   }
 
   // clients can free the cache by calling health_service_events_unsubscribe()
@@ -136,7 +137,7 @@ static ActivityMetric prv_get_activity_metric(HealthMetric metric) {
     case HealthMetricHeartRateRawBPM:
       return ActivityMetricHeartRateRawBPM;
   }
-  WTF;
+  pbl_panic();
   return 0;
 }
 
@@ -187,7 +188,7 @@ static bool prv_metric_aggregation_implemented(HealthMetric metric, time_t time_
       }
       break;
   }
-  WTF;
+  pbl_panic();
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -640,7 +641,7 @@ static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState
   uint32_t num_samples = 0;
   switch (aggregation) {
     case HealthAggregationSum:
-      WTF; // Not supported
+      pbl_panic(); // Not supported
       break;
     case HealthAggregationAvg:
       value = 0;
@@ -701,7 +702,7 @@ static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState
           value = MIN(value, minute_data[i].heart_rate_bpm);
           break;
         case HealthAggregationSum:
-          WTF;
+          pbl_panic();
           break;
       }
     }
@@ -837,7 +838,7 @@ PBL_T_STATIC int64_t prv_session_compare(const ActivitySession *a, const Activit
       // sessions that start earlier come first
       return a->start_utc - b->start_utc;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -1426,7 +1427,7 @@ void health_service_activities_iterate(HealthActivityMask activity_mask, time_t 
           break;
         case ActivitySessionType_None:
         case ActivitySessionTypeCount:
-          WTF;
+          pbl_panic();
           break;
       }
       if (!callback(session_activity, session->start_utc,

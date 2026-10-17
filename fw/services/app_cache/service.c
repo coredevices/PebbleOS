@@ -21,7 +21,6 @@
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 

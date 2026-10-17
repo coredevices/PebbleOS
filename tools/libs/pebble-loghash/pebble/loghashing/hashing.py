@@ -97,9 +97,7 @@ def hash_line(line, file_name, line_num, force_hash=False):
     hash_dict = {}
 
     # Only match lines that contain one of the following substrings
-    if (force_hash or any(x in line for x in LINES_TO_HASH)) and (
-        force_hash or not any(x in line for x in ["PBL_CROAK_OOM"])
-    ):
+    if force_hash or any(x in line for x in LINES_TO_HASH):
         match = STR_LITERAL_PATTERN.search(line)
 
         if match:

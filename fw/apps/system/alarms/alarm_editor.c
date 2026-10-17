@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/i18n/i18n.h>
@@ -20,7 +21,6 @@
 #include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 typedef struct {
   OptionMenu *alarm_type_menu;

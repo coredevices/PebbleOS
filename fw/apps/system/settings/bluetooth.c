@@ -13,6 +13,7 @@
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/btutil/bt_device.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -37,7 +38,6 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 #define HEADER_BUFFER_SIZE 22
 

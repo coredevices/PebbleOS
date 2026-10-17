@@ -5,13 +5,14 @@
 
 #include "event_service_client.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/event_service.h>
 
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 // ----------------------------------------------------------------------------------------------------
 static BatteryStateServiceState *prv_get_state(PebbleTask task) {
@@ -24,7 +25,7 @@ static BatteryStateServiceState *prv_get_state(PebbleTask task) {
   } else if (task == PebbleTask_Worker) {
     return worker_state_get_battery_state_service_state();
   } else {
-    WTF;
+    pbl_panic();
   }
 }
 

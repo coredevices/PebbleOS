@@ -46,12 +46,12 @@
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
 #include <comm/qemu/serial.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(imu, CONFIG_DRIVER_IMU_LOG_LEVEL);
 

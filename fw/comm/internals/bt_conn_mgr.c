@@ -3,6 +3,7 @@
 
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
@@ -15,7 +16,6 @@
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 //! The Bluetooth Connection Manager is responsible for managing the power
 //! state of the active bluetooth connections. Sub-modules using bluetooth are

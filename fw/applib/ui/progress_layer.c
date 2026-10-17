@@ -8,7 +8,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/layer.h>
-#include <system/passert.h>
 
 static int16_t scale_progress_bar_width_px(unsigned int progress_percent, int16_t rect_width_px) {
   return ((progress_percent * (rect_width_px)) / 100);

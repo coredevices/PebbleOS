@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_message/app_message_sender.h>
@@ -12,7 +13,6 @@
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_outbox_service, CONFIG_SERVICE_APP_OUTBOX_SERVICE_LOG_LEVEL);
 

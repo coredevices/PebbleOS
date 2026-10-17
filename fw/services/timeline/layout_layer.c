@@ -4,6 +4,7 @@
 #include <pbl/services/timeline/layout_layer.h>
 
 // layout implementations
+#include <pbl/kernel/assert.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/timeline/alarm_layout.h>
 #include <pbl/services/timeline/calendar_layout.h>
@@ -12,8 +13,6 @@
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/services/timeline/sports_layout.h>
 #include <pbl/services/timeline/weather_layout.h>
-
-#include <system/passert.h>
 
 static const LayoutLayerConstructor s_layout_constructors[NumLayoutIds] = {
   [LayoutIdGeneric] = generic_layout_create,

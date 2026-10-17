@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 #include <pbl/drivers/battery.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/analytics/analytics.h>
@@ -14,10 +16,10 @@
 
 #include <applib/accel_service_private.h>
 #include <kernel/event_loop.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_stationary, CONFIG_SERVICE_STATIONARY_LOG_LEVEL);
 
@@ -258,7 +260,7 @@ static void prv_handle_awake_action(StationaryAction action) {
       prv_enter_disabled_state();
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -276,7 +278,7 @@ static void prv_handle_stationary_action(StationaryAction action) {
       prv_enter_disabled_state();
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -294,7 +296,7 @@ static void prv_handle_peeking_action(StationaryAction action) {
       prv_enter_disabled_state();
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -313,7 +315,7 @@ static void prv_handle_disabled_action(StationaryAction action) {
     case StationaryActionDisableStationary:
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 

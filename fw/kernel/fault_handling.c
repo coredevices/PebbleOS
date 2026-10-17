@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
@@ -148,6 +149,10 @@ extern void sys_app_fault(uint32_t lr);
   }
 }
 
+[[noreturn]] void pbl_fatal_error_handler(uintptr_t lr) {
+  trigger_fault(RebootReasonCode_Assert, lr);
+}
+
 [[noreturn]] void trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
   // OOM on a process's own heap is the app's fault, not the kernel's: kill just
   // that process even when privileged (Moddable apps run privileged inside the
@@ -207,7 +212,7 @@ static void prv_kill_user_process(uint32_t stashed_lr) {
 }
 
 PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
-  // This is the privileged side of handling a failed assert/croak from unprivileged code.
+  // This is the privileged side of handling a failed assert/panic from unprivileged code.
   // Always run on the current task.
 
   CrashInfo crash_info = make_crash_info_pc(stashed_lr);

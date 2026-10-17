@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/audio_endpoint_private.h>
@@ -10,7 +11,6 @@
 #include <pbl/util/circular_buffer.h>
 
 #include <comm/bt_lock.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_LEVEL);
 

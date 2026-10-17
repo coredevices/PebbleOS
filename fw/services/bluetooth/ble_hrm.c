@@ -4,6 +4,7 @@
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/hrm_service.h>
 #include <pbl/btutil/bt_device.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
@@ -21,7 +22,6 @@
 #include <kernel/pbl_malloc.h>
 #include <popups/ble_hrm/ble_hrm_reminder_popup.h>
 #include <popups/ble_hrm/ble_hrm_sharing_popup.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

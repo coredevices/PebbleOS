@@ -6,6 +6,7 @@
 #include "app_glance_service.h"
 #include "menu_layer_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/testing.h>
 
@@ -15,7 +16,6 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 #define LAUNCHER_MENU_LAYER_CONTENT_INDICATOR_LAYER_HEIGHT (32)
 #define LAUNCHER_MENU_LAYER_GENERIC_APP_ICON (RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON)

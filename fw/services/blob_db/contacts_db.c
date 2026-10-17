@@ -10,7 +10,6 @@
 #include <pbl/util/uuid.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 #include <system/status_codes.h>
 
 #define SETTINGS_FILE_NAME "contactsdb"

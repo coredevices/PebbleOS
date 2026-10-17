@@ -1,10 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/soc/nrf/sleep.h>
-
-#include <system/passert.h>
 
 static int s_block_count;
 

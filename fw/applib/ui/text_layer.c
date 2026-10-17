@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app_logging.h>
@@ -18,7 +19,6 @@
 #include <applib/preferred_content_size.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 static GTextLayoutCacheRef prv_text_layer_get_cache_handle(TextLayer *text_layer) {
   PBL_ASSERTN(text_layer);

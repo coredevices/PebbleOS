@@ -6,6 +6,7 @@
 
 #include <pbl/drivers/display/sharp_ls013b7dh01/sharp_ls013b7dh01.h>
 #include <pbl/drivers/gpio.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/util/bitops.h>
 
@@ -15,7 +16,6 @@
 #include <kernel/events.h>
 #include <nrfx_gppi.h>
 #include <nrfx_spim.h>
-#include <system/passert.h>
 
 #define DISP_MODE_WRITE 0x01U
 #define DISP_MODE_CLEAR 0x04U

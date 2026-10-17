@@ -13,6 +13,8 @@
 #include <string.h>
 
 #include <pbl/drivers/als.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/i18n/i18n.h>
@@ -45,7 +47,6 @@
 #include <shell/system_app_ids.auto.h>
 #include <syscall/syscall.h>
 #include <system/bootbits.h>
-#include <system/passert.h>
 #include <system/version.h>
 
 enum {
@@ -593,7 +594,7 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer, MenuIndex *cell
       break;
 #endif
     default:
-      WTF;
+      pbl_panic();
   }
   menu_layer_reload_data(menu_layer);
 }
@@ -1301,7 +1302,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     case SystemMenuItem_Count:
       break;
     default:
-      WTF;
+      pbl_panic();
   }
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(s_item_titles[row], data), subtitle, nullptr);
 }
@@ -1333,7 +1334,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       settings_factory_reset_window_push();
       break;
     default:
-      WTF;
+      pbl_panic();
   }
   settings_menu_reload_data(SettingsMenuItemSystem);
 }

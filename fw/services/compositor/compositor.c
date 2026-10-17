@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/compositor_display.h>
@@ -15,6 +16,7 @@
 #include <applib/ui/animation_private.h>
 #include <kernel/event_loop.h>
 #include <kernel/kernel_applib_state.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <popups/timeline/peek.h>
@@ -22,7 +24,6 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 #include <system/profiler.h>
 
 PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);

@@ -122,7 +122,7 @@ void test_gtypes__grect_inset_returns_zero_rect_for_large_insets(void) {
 void test_gtypes__grect_crop_asserts_for_large_insets(void) {
   GRect rect = GRect(10, 20, 30, 40);
   cl_assert_equal_grect(GRect(25, 35, 0, 10), grect_crop(rect, 15));
-  cl_assert_passert(grect_crop(rect, 16));
+  cl_assert_panic(grect_crop(rect, 16));
 }
 
 void test_gtypes__pbl_if_rect_else(void) {

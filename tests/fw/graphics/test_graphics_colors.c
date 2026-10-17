@@ -152,7 +152,7 @@ void test_graphics_colors__tint_luminance_lookup_table_init(void) {
   GColor8 lookup_table_out[GCOLOR8_COMPONENT_NUM_VALUES];
 
   // Passing in NULL for lookup_table_out should assert
-  cl_assert_passert(gcolor_tint_luminance_lookup_table_init(tint_color, nullptr));
+  cl_assert_panic(gcolor_tint_luminance_lookup_table_init(tint_color, nullptr));
 
   // Setting the tint color to black should result in a gradient from black to white
   tint_color = GColorBlack;
@@ -192,7 +192,7 @@ static void prv_test_tint_using_luminance_and_perform_lookup_using_color_luminan
 
 void test_graphics_colors__tint_using_luminance_and_perform_lookup_using_color_luminance(void) {
   // Passing in NULL for lookup_table should assert
-  cl_assert_passert(
+  cl_assert_panic(
       gcolor_perform_lookup_using_color_luminance_and_multiply_alpha(GColorRed, nullptr));
 
   // A src_color of yellow should have a luminance that picks white from lookup_table

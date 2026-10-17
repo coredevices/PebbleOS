@@ -6,6 +6,8 @@
 #include "process_loader.h"
 
 // Pebble stuff
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/mcu/privilege.h>
 #include <pbl/services/analytics/analytics.h>
@@ -43,13 +45,13 @@
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
+#include <kernel/pebble_tasks.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
 #include <shell/system_app_state_machine.h>
 #include <shell/system_shell.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 // FreeRTOS stuff
 
@@ -210,7 +212,7 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
       return MAX(CONFIG_APP_RAM_2X_SEGMENT_SIZE,
                  MAX(CONFIG_APP_RAM_3X_SEGMENT_SIZE, CONFIG_APP_RAM_4X_SEGMENT_SIZE));
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -602,7 +604,7 @@ static bool prv_app_switch(bool gracefully) {
   // Launch the new app
   if (!prv_app_start(s_next_app.md, s_next_app.common.args, s_next_app.common.reason)) {
     if (s_next_app.md->process_storage != ProcessStorageFlash) {
-      PBL_CROAK("Failed to start system app <%s>!", process_metadata_get_name(s_next_app.md));
+      pbl_panic("Failed to start system app <%s>!", process_metadata_get_name(s_next_app.md));
     }
     PBL_LOG_WRN("Failed to start app <%s>! Restarting launcher",
                 process_metadata_get_name(s_next_app.md));
@@ -752,7 +754,7 @@ static AppInstallId prv_get_app_exit_reason_destination_install_id_override(void
     case NUM_EXIT_REASONS:
       break;
   }
-  WTF;
+  pbl_panic();
 }
 #endif
 
@@ -877,7 +879,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
       *size = GSize(DISP_COLS, DISP_ROWS);
       return;
   }
-  WTF;
+  pbl_panic();
 }
 
 bool app_manager_is_app_supported(const PebbleProcessMd *md) {

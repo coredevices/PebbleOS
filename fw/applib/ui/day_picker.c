@@ -13,7 +13,6 @@
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 #define DAY_PICKER_CELL_HEIGHT \
   PBL_IF_RECT_ELSE(menu_cell_small_cell_height(), menu_cell_basic_cell_height())

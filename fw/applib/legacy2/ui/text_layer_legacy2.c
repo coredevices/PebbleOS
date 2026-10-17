@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/fonts/fonts.h>
@@ -13,7 +14,6 @@
 #include <applib/graphics/gtypes.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 static GTextLayoutCacheRef prv_text_layer_legacy2_get_cache_handle(TextLayerLegacy2 *text_layer) {
   if (text_layer == nullptr) {

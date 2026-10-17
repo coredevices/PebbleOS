@@ -14,7 +14,6 @@
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
-#include <system/passert.h>
 
 #define GPATH_ERROR "Unable to allocate memory for GPath call"
 

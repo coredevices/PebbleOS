@@ -157,7 +157,7 @@ void test_device__absent(void) {
 
 void test_device__cycle_asserts(void) {
   s_cycle_a.dev.deps = PBL_DEVICE_DEPS(&s_cycle_b.dev);
-  cl_assert_passert(pbl_device_init(&s_cycle_a.dev));
+  cl_assert_panic(pbl_device_init(&s_cycle_a.dev));
   s_cycle_a.dev.deps = nullptr;
 }
 

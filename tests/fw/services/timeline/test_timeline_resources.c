@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/struct.h>
 
 #include <clar.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 // Stubs
 /////////////////////////
@@ -260,11 +260,10 @@ void test_timeline_resources__get_id(void) {
 
   // Calling the function with an invalid size, no TimelineResourceInfo, or no AppResourceInfo
   // should assert
-  cl_assert_passert(
+  cl_assert_panic(
       timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeCount, &res_info));
-  cl_assert_passert(timeline_resources_get_id(nullptr, TimelineResourceSizeTiny, &res_info));
-  cl_assert_passert(
-      timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeTiny, nullptr));
+  cl_assert_panic(timeline_resources_get_id(nullptr, TimelineResourceSizeTiny, &res_info));
+  cl_assert_panic(timeline_resources_get_id(&timeline_res_info, TimelineResourceSizeTiny, nullptr));
 
   // Set the TimelineResourceInfo to have the UUID of an app with an invalid LUT
   const TimelineResourceTestAppData *app_with_invalid_lut_data =

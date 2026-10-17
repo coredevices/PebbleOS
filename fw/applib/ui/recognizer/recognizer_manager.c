@@ -9,12 +9,12 @@
 
 #include <stddef.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/touch/touch_event.h>
 #include <pbl/util/testing.h>
 
 #include <applib/ui/layer.h>
 #include <applib/ui/window.h>
-#include <system/passert.h>
 
 PBL_T_STATIC bool prv_process_all_recognizers(RecognizerManager *manager,
                                               RecognizerListIteratorCb iter_cb, void *context) {

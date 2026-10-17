@@ -172,14 +172,4 @@ size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
  */
 size_t pbl_thread_count(void);
 
-/**
- * @brief Handle a failed kernel assertion.
- *
- * Implemented by the platform.
- *
- * @param filename Source file name of the assertion.
- * @param line Line of the assertion.
- */
-[[noreturn]] void pbl_kernel_assert_failed(const char *filename, int line);
-
 /** @} */

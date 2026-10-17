@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
@@ -15,7 +16,6 @@
 #include <board/board.h>
 #include <flash_region/flash_region.h>
 #include <kernel/events.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
 

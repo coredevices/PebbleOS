@@ -22,6 +22,7 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/watchdog.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/mpu.h>
@@ -40,7 +41,6 @@ extern char *itoa(int value, char *str, int base);
 #include <mfg/mfg_serials.h>
 #include <pebbleos/chip_id.h>
 #include <system/bootbits.h>
-#include <system/passert.h>
 #include <system/reset.h>
 #include <system/version.h>
 

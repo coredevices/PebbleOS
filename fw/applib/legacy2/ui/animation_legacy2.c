@@ -5,6 +5,7 @@
 
 #include "animation_private_legacy2.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/math.h>
 #include <pbl/util/order.h>
 
@@ -12,7 +13,6 @@
 #include <kernel/kernel_applib_state.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 ///////////////////
 // Base AnimationLegacy2

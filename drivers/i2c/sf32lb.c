@@ -4,12 +4,11 @@
 #include <errno.h>
 
 #include <pbl/drivers/i2c/sf32lb.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/misc.h>
-
-#include <system/passert.h>
 
 static const struct pbl_i2c_sf32lb *prv_i2c(const struct pbl_i2c_bus *bus) {
   return container_of(bus, const struct pbl_i2c_sf32lb, bus);

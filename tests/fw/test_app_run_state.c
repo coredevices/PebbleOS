@@ -11,7 +11,6 @@
 #include <pbl/util/list.h>
 
 #include <process_management/app_run_state.h>
-#include <system/passert.h>
 
 // Stubs
 ///////////////////////////////////////

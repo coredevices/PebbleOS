@@ -6,6 +6,8 @@
 #include "animation.h"
 #include "animation_timing.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/trig.h>
 
 #include <applib/app_timer.h>
@@ -14,7 +16,6 @@
 #include <applib/pbl_std/pbl_std.h>
 #include <applib/ui/window_private.h>
 #include <process_management/process_manager.h>
-#include <system/passert.h>
 
 #ifdef CONFIG_TOUCH
 #include <syscall/syscall.h>
@@ -191,7 +192,7 @@ void action_bar_update_proc(ActionBarLayer *action_bar, GContext *ctx) {
           rect.origin.y = action_bar->layer.bounds.size.h - vertical_icon_margin - rect.size.h;
           break;
         default:
-          WTF;
+          pbl_panic();
       }
 
       // In order to avoid creating relatively heavy animations, we instead just base our drawing

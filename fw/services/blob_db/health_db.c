@@ -18,7 +18,6 @@
 #include <pbl/util/units.h>
 
 #include <system/hexdump.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 

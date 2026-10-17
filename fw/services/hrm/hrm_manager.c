@@ -4,7 +4,9 @@
 #include <stddef.h>
 
 #include <pbl/drivers/hrm.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
@@ -23,7 +25,6 @@
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
 #include <system/hexdump.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
 
@@ -614,7 +615,7 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
     }
 #endif
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -1050,6 +1051,8 @@ void hrm_manager_process_cleanup(PebbleTask task, AppInstallId app_id) {
 #include <errno.h>
 
 #include <pbl/shell/shell.h>
+
+#include <kernel/pebble_tasks.h>
 
 static const struct pbl_shell *s_console_sh;
 static HRMSessionRef s_console_session = HRM_INVALID_SESSION_REF;

@@ -13,7 +13,6 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
-#include <system/passert.h>
 
 #define SCROLL_OUT_MS         250
 #define BAR_HEIGHT            PROGRESS_SUGGESTED_HEIGHT

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/util/math.h>
@@ -13,7 +14,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 typedef struct {
   CommSession *session;

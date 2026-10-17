@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/crc/crc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session.h>
@@ -23,7 +24,6 @@
 #include <applib/data_logging.h>
 #include <clar.h>
 #include <process_management/pebble_process_md.h>
-#include <system/passert.h>
 
 // Stubs
 #include <stdio.h>

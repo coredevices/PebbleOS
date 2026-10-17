@@ -3,6 +3,7 @@
 
 #include "watchface.h"
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor_transitions.h>
@@ -18,7 +19,6 @@
 #include <process_management/pebble_process_md.h>
 #include <shell/sdk/shell_sdk.h>
 #include <shell/system_app_state_machine.h>
-#include <system/passert.h>
 
 typedef struct WatchfaceData {
   ClickManager click_manager;
@@ -62,7 +62,7 @@ static void prv_launch_timeline(ClickRecognizerRef recognizer, void *data) {
       s_timeline_args.direction = TimelineIterDirectionPast;
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 
   prv_launch_app_via_button(
@@ -105,7 +105,7 @@ void watchface_handle_button_event(PebbleEvent *e) {
         click_recognizer_handle_button_up(&data->click_manager.recognizers[e->button.button_id]);
         break;
       default:
-        PBL_CROAK("Invalid event type: %u", e->type);
+        pbl_panic("Invalid event type: %u", e->type);
         break;
     }
   }

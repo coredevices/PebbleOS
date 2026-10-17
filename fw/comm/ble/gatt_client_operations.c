@@ -4,12 +4,13 @@
 #include "gatt_client_operations.h"
 
 #include <pbl/bluetooth/gatt.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/list.h>
 
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 // -------------------------------------------------------------------------------------------------
 //! @see gatt_client_accessors.c / gatt_client_subscriptions.c
@@ -145,7 +146,7 @@ void pbl_bt_cb_gatt_client_operations_handle_response(
           break;
         }
         default:
-          WTF;
+          pbl_panic();
       }
     }
 

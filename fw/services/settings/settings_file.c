@@ -6,6 +6,8 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
@@ -13,7 +15,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
 
@@ -45,7 +46,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
       // This is very bad. Someone didn't use a mutex. There could already be
       // silent corruption, so it's better to crash now rather than let things
       // get even more scrambled.
-      PBL_CROAK("Settings file is already open!");
+      pbl_panic("Settings file is already open!");
     }
     return fd;
   }

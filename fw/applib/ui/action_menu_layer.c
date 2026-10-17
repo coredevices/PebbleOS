@@ -5,6 +5,7 @@
 
 #include "action_menu_window_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
 
@@ -21,7 +22,6 @@
 #include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 #define INDICATOR                "»"
 #define GLYPH_SCRATCH_SIZE       32

@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
@@ -8,12 +10,11 @@
 #include <applib/ui/ui.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 static AppTimer *s_timer = nullptr;
 
 static void shouldnt_happen(void *context) {
-  WTF;
+  pbl_panic();
 }
 
 static void stupid_cancel(void *context) {

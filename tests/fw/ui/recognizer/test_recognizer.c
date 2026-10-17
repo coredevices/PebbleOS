@@ -47,26 +47,25 @@ void test_recognizer__create_with_data(void) {
   cl_assert_equal_p(r->simultaneous_with_cb, nullptr);
   cl_assert_equal_p(r->fail_after, nullptr);
 
-  cl_assert_passert(recognizer_create_with_data(nullptr, &s_test_impl_data,
-                                                sizeof(s_test_impl_data), dummy, nullptr));
-  cl_assert_passert(
+  cl_assert_panic(recognizer_create_with_data(nullptr, &s_test_impl_data, sizeof(s_test_impl_data),
+                                              dummy, nullptr));
+  cl_assert_panic(
       recognizer_create_with_data(&s_test_impl, nullptr, sizeof(s_test_impl_data), dummy, nullptr));
-  cl_assert_passert(
-      recognizer_create_with_data(&s_test_impl, &s_test_impl_data, 0, dummy, nullptr));
+  cl_assert_panic(recognizer_create_with_data(&s_test_impl, &s_test_impl_data, 0, dummy, nullptr));
   cl_assert_equal_p(nullptr,
                     recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
                                                 sizeof(s_test_impl_data), nullptr, nullptr));
   s_test_impl.handle_touch_event = nullptr;
-  cl_assert_passert(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
-                                                sizeof(s_test_impl_data), dummy, nullptr));
+  cl_assert_panic(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
+                                              sizeof(s_test_impl_data), dummy, nullptr));
   s_test_impl.handle_touch_event = dummy;
   s_test_impl.reset = nullptr;
-  cl_assert_passert(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
-                                                sizeof(s_test_impl_data), dummy, nullptr));
+  cl_assert_panic(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
+                                              sizeof(s_test_impl_data), dummy, nullptr));
   s_test_impl.reset = dummy;
   s_test_impl.cancel = nullptr;
-  cl_assert_passert(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
-                                                sizeof(s_test_impl_data), dummy, nullptr));
+  cl_assert_panic(recognizer_create_with_data(&s_test_impl, &s_test_impl_data,
+                                              sizeof(s_test_impl_data), dummy, nullptr));
 
   recognizer_destroy(r);
 }
@@ -97,29 +96,29 @@ void test_recognizer__transition_state(void) {
   cl_assert_equal_i(event_type, -1);
 
   // Test that invalid state transitions get caught by asserts
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Completed));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Started));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Completed));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Started));
 
   r->state = RecognizerState_Possible;
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Possible));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Updated));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Cancelled));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Possible));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Updated));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Cancelled));
 
   recognizer_transition_state(r, RecognizerState_Started);
   cl_assert_equal_i(r->state, RecognizerState_Started);
   cl_assert_equal_i(event_type, RecognizerEvent_Started);
   cl_assert(!s_manager_state_change);
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Failed));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Possible));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Started));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Failed));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Possible));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Started));
 
   recognizer_transition_state(r, RecognizerState_Updated);
   cl_assert_equal_i(r->state, RecognizerState_Updated);
   cl_assert_equal_i(event_type, RecognizerEvent_Updated);
   cl_assert(!s_manager_state_change);
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Failed));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Possible));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Started));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Failed));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Possible));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Started));
 
   event_type = -1;
   recognizer_transition_state(r, RecognizerState_Updated);
@@ -130,24 +129,24 @@ void test_recognizer__transition_state(void) {
   recognizer_transition_state(r, RecognizerState_Completed);
   cl_assert_equal_i(event_type, RecognizerEvent_Completed);
   cl_assert_equal_i(r->state, RecognizerState_Completed);
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Failed));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Possible));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Started));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Updated));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Cancelled));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Completed));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Failed));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Possible));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Started));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Updated));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Cancelled));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Completed));
 
   r->state = RecognizerState_Updated;
   recognizer_transition_state(r, RecognizerState_Cancelled);
   cl_assert_equal_i(event_type, RecognizerEvent_Cancelled);
   cl_assert_equal_i(r->state, RecognizerState_Cancelled);
   cl_assert(!s_manager_state_change);
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Failed));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Possible));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Started));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Updated));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Cancelled));
-  cl_assert_passert(recognizer_transition_state(r, RecognizerState_Completed));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Failed));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Possible));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Started));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Updated));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Cancelled));
+  cl_assert_panic(recognizer_transition_state(r, RecognizerState_Completed));
 
   r->state = RecognizerState_Started;
   event_type = -1;
@@ -178,14 +177,14 @@ void test_recognizer__set_failed(void) {
   cl_assert(failed);
 
   // Failed -> Failed invalid transition
-  cl_assert_passert(recognizer_set_failed(r));
+  cl_assert_panic(recognizer_set_failed(r));
 
   // (!Possible) -> Failed invalid transition
   r->state = RecognizerState_Started;
-  cl_assert_passert(recognizer_set_failed(r));
+  cl_assert_panic(recognizer_set_failed(r));
 
   r->state = RecognizerState_Completed;
-  cl_assert_passert(recognizer_set_failed(r));
+  cl_assert_panic(recognizer_set_failed(r));
 }
 
 static void prv_sub_destroy(const Recognizer *r) {
@@ -363,8 +362,8 @@ void test_recognizer__init_static(void) {
   cl_assert_equal_p(r->impl, &impl);
 
   // Invalid args are still rejected
-  cl_assert_passert(recognizer_init_static_with_data(nullptr, &impl, &impl_data, sizeof(impl_data),
-                                                     prv_static_event, nullptr));
+  cl_assert_panic(recognizer_init_static_with_data(nullptr, &impl, &impl_data, sizeof(impl_data),
+                                                   prv_static_event, nullptr));
   cl_assert_equal_p(nullptr, recognizer_init_static_with_data(storage, &impl, &impl_data,
                                                               sizeof(impl_data), nullptr, nullptr));
 }
@@ -457,11 +456,11 @@ void test_recognizer__handle_touch_events(void) {
   cl_assert_equal_i(rec_event, RecognizerEvent_Cancelled);
 
   // Should not pass touch events to recognizers that are not active
-  cl_assert_passert(recognizer_handle_touch_event(r, &(TouchEvent){}));
+  cl_assert_panic(recognizer_handle_touch_event(r, &(TouchEvent){}));
 
   // Should not pass null touch events
   r->state = RecognizerState_Possible;
-  cl_assert_passert(recognizer_handle_touch_event(r, nullptr));
+  cl_assert_panic(recognizer_handle_touch_event(r, nullptr));
 }
 
 void test_recognizer__handle_touch_events_fail_after(void) {

@@ -15,7 +15,7 @@ void Reset_Handler(void);
 void arch_irq_spurious(void);
 void arch_irq_spurious(void) {
   // An exception or IRQ with no handler; IPSR holds its number.
-  KERNEL_ASSERT(false);
+  PBL_ASSERTN(false);
 }
 
 PBL_WEAK PBL_ALIAS("arch_irq_spurious") void NMI_Handler(void);

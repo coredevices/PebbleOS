@@ -7,7 +7,6 @@
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
-#include <system/passert.h>
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS != 1
 inline static void prv_inverter_layer_update_proc_color(GContext *ctx) {

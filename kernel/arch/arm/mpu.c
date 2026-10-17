@@ -35,7 +35,7 @@ bool mpu_memory_is_cachable(const void *addr) {
 void mpu_init_region_from_region(MpuRegion *copy, const MpuRegion *from, bool allow_user_access) {
   // Caller-side invariant: `from` is a PrivRW region (App/Worker RAM).
   // Toggle user RW based on which task is about to run.
-  KERNEL_ASSERT(from->permissions == MpuPermissions_PrivRW);
+  PBL_ASSERTN(from->permissions == MpuPermissions_PrivRW);
   *copy = *from;
   copy->permissions = allow_user_access ? MpuPermissions_PrivRW_UserRW : MpuPermissions_PrivRW;
 }

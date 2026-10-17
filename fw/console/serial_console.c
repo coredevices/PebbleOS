@@ -6,6 +6,8 @@
 #include "console_internal.h"
 #include "shell_dbgserial.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -13,7 +15,6 @@
 #include <console/dbgserial_input.h>
 #include <console/pulse_internal.h>
 #include <console/pulse_protocol_impl.h>
-#include <system/passert.h>
 
 SerialConsoleState s_serial_console_state = SERIAL_CONSOLE_STATE_LOGGING;
 static bool s_serial_console_initialized;
@@ -104,7 +105,7 @@ void serial_console_set_state(SerialConsoleState new_state) {
       dbgserial_set_rx_dma_enabled(true);
       break;
     default:
-      WTF; // Don't know this state
+      pbl_panic(); // Don't know this state
   }
 
   pbl_irq_unlock();

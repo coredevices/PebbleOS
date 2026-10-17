@@ -84,7 +84,7 @@ void test_content_indicator__init_should_add_to_buffer(void) {
   }
 
   // Initializing more content indicators than the buffer can hold should assert
-  cl_assert_passert(content_indicator_init(&content_indicator));
+  cl_assert_panic(content_indicator_init(&content_indicator));
 }
 
 void test_content_indicator__deinit_should_remove_from_buffer(void) {

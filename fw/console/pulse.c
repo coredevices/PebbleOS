@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <pbl/crc/crc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -24,7 +25,6 @@
 #include <console/pulse_llc.h>
 #include <console/pulse_protocol_impl.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 #define FRAME_POOL_SIZE (3)
 

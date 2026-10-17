@@ -6,6 +6,7 @@
 #include "task_timer_manager.h"
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
@@ -13,7 +14,6 @@
 #include <pbl/util/list.h>
 
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 
 // Structure of a timer
 typedef struct TaskTimer {

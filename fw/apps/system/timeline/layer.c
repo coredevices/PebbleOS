@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/timeline/layout_layer.h>
@@ -33,7 +34,6 @@
 #include <popups/timeline/peek_animations.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 #define PAST_TOP_MARGIN_EXTRA   PBL_IF_RECT_ELSE(10, 38)
 #define FUTURE_TOP_MARGIN_EXTRA PBL_IF_RECT_ELSE(10, 18)

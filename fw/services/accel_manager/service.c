@@ -5,6 +5,8 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
@@ -21,7 +23,6 @@
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_accel_manager, CONFIG_SERVICE_ACCEL_MANAGER_LOG_LEVEL);
 
@@ -268,7 +269,7 @@ static bool prv_call_data_callback(AccelManagerState *state) {
     case PebbleTask_NewTimers:
       return new_timer_add_work_callback(state->data_cb_handler, state->data_cb_context);
     default:
-      WTF; // Unsupported task for the accel manager
+      pbl_panic(); // Unsupported task for the accel manager
   }
 }
 

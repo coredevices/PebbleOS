@@ -9,6 +9,7 @@
 #endif
 
 #include <pbl/drivers/uart.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
@@ -21,11 +22,11 @@
 #include <comm/qemu/serial_private.h>
 #include <comm/qemu/transport.h>
 #include <kernel/events.h>
+#include <kernel/pebble_tasks.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_manager.h>
 #include <shell/system_theme.h>
 #include <system/hexdump.h>
-#include <system/passert.h>
 
 static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags);
 

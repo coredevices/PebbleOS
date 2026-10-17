@@ -4,8 +4,7 @@
 #include <errno.h>
 
 #include <pbl/drivers/gpio.h>
-
-#include <system/passert.h>
+#include <pbl/kernel/assert.h>
 
 PBL_DEVICE_CLASS_DEFINE(pbl_gpio_port_class, "gpio");
 

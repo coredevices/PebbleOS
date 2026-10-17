@@ -7,6 +7,8 @@
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 #include <pbl/bluetooth/id_addr.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
@@ -15,7 +17,6 @@
 #include <bf0_hal.h>
 #include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
-#include <system/passert.h>
 
 // NOTE: transport.h needs os_mbuf.h to be included first
 // clang-format off
@@ -258,7 +259,7 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
 
       return ble_transport_to_hs_acl(data);
     default:
-      WTF;
+      pbl_panic();
       break;
   }
 

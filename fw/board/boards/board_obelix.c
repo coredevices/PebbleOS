@@ -14,7 +14,6 @@
 
 #include <board/board.h>
 #include <board/splash.h>
-#include <system/passert.h>
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart =

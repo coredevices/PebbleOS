@@ -6,6 +6,8 @@
 #include "option_menu.h"
 #include "window.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/alerts_private.h>
@@ -18,7 +20,6 @@
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 // Offset between vibe intensity menu item index and vibe intensity enum values
 #define INTENSITY_ROW_OFFSET 1
@@ -393,7 +394,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
     }
     default:
-      WTF;
+      pbl_panic();
   }
 
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
@@ -438,7 +439,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       prv_status_bar_style_menu_push(data);
       break;
     default:
-      WTF;
+      pbl_panic();
   }
   settings_menu_reload_data(SettingsMenuItemNotifications);
 }

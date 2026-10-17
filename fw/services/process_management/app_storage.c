@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/app_file.h>
 #include <pbl/services/filesystem/pfs.h>
@@ -16,7 +17,6 @@
 
 #include <process_management/pebble_process_md.h>
 #include <resource/resource_storage.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
 

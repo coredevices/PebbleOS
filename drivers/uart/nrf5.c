@@ -3,10 +3,11 @@
 
 #include <pbl/drivers/uart.h>
 #include <pbl/drivers/uart/nrf5.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 
 #include <nrfx_uarte.h>
-#include <system/passert.h>
 #ifdef NRF_PPI_BASE
 #include <nrfx_ppi.h>
 #else
@@ -100,7 +101,7 @@ void uart_init(UARTDevice *dev) {
 }
 
 void uart_init_open_drain(UARTDevice *dev) {
-  WTF; /* unimplemented, for now */
+  pbl_panic(); /* unimplemented, for now */
 }
 
 void uart_init_tx_only(UARTDevice *dev) {
@@ -128,7 +129,7 @@ void uart_init_tx_only(UARTDevice *dev) {
 }
 
 void uart_init_rx_only(UARTDevice *dev) {
-  WTF; /* unimplemented, for now */
+  pbl_panic(); /* unimplemented, for now */
 }
 
 void uart_deinit(UARTDevice *dev) {
@@ -143,7 +144,7 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
               MKBAUD(230400) MKBAUD(250000) MKBAUD(460800) MKBAUD(921600) MKBAUD(1000000) -
       1;
   if (baud_cfg == (nrf_uarte_baudrate_t)-1)
-    WTF;
+    pbl_panic();
   nrfx_uarte_config_t config = {
     .txd_pin = dev->tx_gpio,
     .rxd_pin = dev->rx_gpio,
@@ -165,7 +166,7 @@ void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
 
   nrfx_err_t err = nrfx_uarte_reconfigure(&dev->periph, &config);
   if (err != NRFX_SUCCESS)
-    WTF;
+    pbl_panic();
 }
 
 // Read / Write APIs
@@ -181,7 +182,7 @@ void uart_write_byte(UARTDevice *dev, uint8_t data) {
 
 uint8_t uart_read_byte(UARTDevice *dev) {
   /* NYI for now, only accessory uses it */
-  WTF;
+  pbl_panic();
   return 0;
 }
 
@@ -202,26 +203,26 @@ UARTRXErrorFlags uart_has_errored_out(UARTDevice *dev) {
 bool uart_is_rx_ready(UARTDevice *dev) {
   // return dev->periph->SR & USART_SR_RXNE;
   /* NYI: used only in dialog_bootrom.c */
-  WTF;
+  pbl_panic();
   return false;
 }
 
 bool uart_has_rx_overrun(UARTDevice *dev) {
   // return dev->periph->SR & USART_SR_ORE;
-  WTF; /* NYI: used only in has_errored_out */
+  pbl_panic(); /* NYI: used only in has_errored_out */
   return false;
 }
 
 bool uart_has_rx_framing_error(UARTDevice *dev) {
   // return dev->periph->SR & USART_SR_FE;
-  WTF; /* NYU: used only in has_errored_out */
+  pbl_panic(); /* NYU: used only in has_errored_out */
   return false;
 }
 
 bool uart_is_tx_ready(UARTDevice *dev) {
   // return dev->periph->SR & USART_SR_TXE;
   /* NYI for now, only accessory uses it */
-  WTF;
+  pbl_panic();
   return false;
 }
 
@@ -242,7 +243,7 @@ void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_h
 
 void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_handler) {
   PBL_ASSERTN(dev->state->initialized);
-  WTF; /* accessory only, for now */
+  pbl_panic(); /* accessory only, for now */
   dev->state->tx_irq_handler = irq_handler;
 }
 
@@ -265,11 +266,11 @@ void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
 
 void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
   PBL_ASSERTN(dev->state->initialized);
-  WTF;
+  pbl_panic();
 }
 
 void uart_clear_all_interrupt_flags(UARTDevice *dev) {
-  WTF; /* only used internally? */
+  pbl_panic(); /* only used internally? */
 }
 
 // DMA

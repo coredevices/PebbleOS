@@ -3,6 +3,8 @@
 
 #include "event_service_client.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 #include <pbl/util/list.h>
@@ -11,7 +13,6 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 static EventServiceInfo *prv_get_state(void) {
   PebbleTask task = pebble_task_get_current();
@@ -22,7 +23,7 @@ static EventServiceInfo *prv_get_state(void) {
   } else if (task == PebbleTask_KernelMain) {
     return kernel_applib_get_event_service_state();
   } else {
-    WTF;
+    pbl_panic();
   }
 }
 

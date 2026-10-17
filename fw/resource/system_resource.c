@@ -19,7 +19,7 @@
 #include <resource/resource_version.auto.h>
 #include <font_resource_table.auto.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
+#include <pbl/kernel/assert.h>
 // clang-format on
 
 void system_resource_init(void) {

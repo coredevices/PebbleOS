@@ -11,7 +11,8 @@
 
 #include <bf0_hal_dma.h>
 #include <bf0_hal_uart.h>
-#include <system/passert.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 // clang-format on
 
 static void prv_init(UARTDevice *dev, uint32_t mode) {
@@ -34,7 +35,7 @@ static void prv_init(UARTDevice *dev, uint32_t mode) {
       HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
       break;
     default:
-      WTF;
+      pbl_panic();
       break;
   }
 
@@ -54,7 +55,7 @@ void uart_init(UARTDevice *dev) {
 }
 
 void uart_init_open_drain(UARTDevice *dev) {
-  WTF;
+  pbl_panic();
 }
 
 void uart_init_tx_only(UARTDevice *dev) {

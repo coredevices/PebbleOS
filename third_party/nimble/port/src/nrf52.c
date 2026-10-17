@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
-
-#include <system/passert.h>
 
 #undef UNUSED
 #include <nrfx.h>
@@ -48,6 +47,6 @@ void ble_npl_hw_set_isr(int irqn, void (*addr)(void)) {
       break;
 #endif
     default:
-      WTF;
+      pbl_panic();
   }
 }

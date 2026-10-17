@@ -6,10 +6,10 @@
 
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c/nrf5.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/util/misc.h>
 
 #include <nrfx.h>
-#include <system/passert.h>
 
 static const struct pbl_i2c_nrf5 *prv_i2c(const struct pbl_i2c_bus *bus) {
   return container_of(bus, const struct pbl_i2c_nrf5, bus);

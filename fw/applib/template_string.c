@@ -14,6 +14,7 @@
 #include <time.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -21,7 +22,6 @@
 #include <pbl/util/units.h>
 
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #define MAX_FILTER_NAME_LENGTH 16
 
@@ -163,7 +163,7 @@ PBL_T_STATIC bool prv_template_predicate_match(TemplateStringState *state, Predi
   } else if (*state->position == '>') {
     *cond = PredicateCondition_G;
   } else {
-    WTF;
+    pbl_panic();
   }
   state->position++;
 
@@ -190,7 +190,7 @@ PBL_T_STATIC bool prv_template_predicate_match(TemplateStringState *state, Predi
     case PredicateCondition_LE:
       return (state->filter_state <= *value);
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -571,7 +571,7 @@ static bool prv_format_predicate(TemplateStringState *state, bool previously_mat
   }
   // Predicate matcher will only leave on :,) or error, so this should never trip.
   if (!prv_predicate_valid_splitter(*state->position)) {
-    WTF;
+    pbl_panic();
   }
 
   int wait_time;

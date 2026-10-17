@@ -27,9 +27,9 @@ void test_system_theme__convert_content_size_between_platforms(void) {
                     PreferredContentSizeMedium);
 
   // Passing in an invalid from_platform or to_platform should assert
-  cl_assert_passert(prv_convert_content_size_between_platforms(
+  cl_assert_panic(prv_convert_content_size_between_platforms(
       PreferredContentSizeSmall, PlatformTypeGabbro + 1, PlatformTypeBasalt));
-  cl_assert_passert(prv_convert_content_size_between_platforms(
+  cl_assert_panic(prv_convert_content_size_between_platforms(
       PreferredContentSizeSmall, PlatformTypeBasalt, PlatformTypeGabbro + 1));
 
   // Converting from Emery to Basalt should return one size smaller

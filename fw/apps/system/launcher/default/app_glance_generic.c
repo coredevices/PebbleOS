@@ -5,6 +5,8 @@
 
 #include "app_glance_structured.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/struct.h>
 #include <pbl/util/units.h>
@@ -17,7 +19,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_info.h>
-#include <system/passert.h>
 
 #define APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MAJOR (PROCESS_INFO_FIRST_4X_SDK_VERSION_MAJOR)
 #define APP_GLANCE_MIN_SUPPORTED_SDK_VERSION_MINOR (PROCESS_INFO_FIRST_4X_SDK_VERSION_MINOR)

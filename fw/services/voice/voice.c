@@ -5,6 +5,7 @@
 
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/drivers/mic.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -22,7 +23,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 

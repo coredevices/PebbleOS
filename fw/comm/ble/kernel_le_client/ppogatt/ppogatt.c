@@ -10,6 +10,7 @@
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -25,8 +26,8 @@
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
-#include <system/passert.h>
 
 //! See https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=22511665
 //! for detailed information regarding the PPoGATT protocol state machine.

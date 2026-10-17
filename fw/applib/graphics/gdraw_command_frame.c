@@ -5,8 +5,6 @@
 
 #include "gdraw_command_private.h"
 
-#include <system/passert.h>
-
 bool gdraw_command_frame_validate(GDrawCommandFrame *frame, size_t size) {
   if (!frame || (size < sizeof(GDrawCommandFrame))) {
     return false;

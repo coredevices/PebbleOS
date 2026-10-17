@@ -3,6 +3,8 @@
 
 #include "bt_conn_dialog.h"
 
+#include <pbl/kernel/assert.h>
+
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/dialog_private.h>
@@ -13,7 +15,6 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 static void prv_handle_comm_session_event(PebbleEvent *e, void *context) {
   BtConnDialog *bt_dialog = context;

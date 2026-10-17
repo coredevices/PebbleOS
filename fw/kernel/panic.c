@@ -5,9 +5,9 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/panic.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <shell/system_app_state_machine.h>
-#include <system/passert.h>
 
 static uint32_t s_current_error = 0;
 

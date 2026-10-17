@@ -3,6 +3,7 @@
 
 #include "gdraw_command_transforms.h"
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/math_fixed.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/trig.h>
@@ -12,7 +13,6 @@
 #include <applib/ui/animation.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/animation_timing.h>
-#include <system/passert.h>
 
 ////////////////////
 // scale
@@ -399,7 +399,7 @@ Fixed_S16_3 prv_stroke_width_transform(Fixed_S16_3 native, Fixed_S16_3 op_value,
     case GStrokeWidthOpAdd:
       return Fixed_S16_3_add(native, op_value);
     default:
-      WTF;
+      pbl_panic();
   }
 }
 

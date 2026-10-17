@@ -21,6 +21,7 @@
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
@@ -58,7 +59,6 @@
 #include <resource/system_resource.h>
 #include <system/bootbits.h>
 #include <system/firmware_storage.h>
-#include <system/passert.h>
 #include <system/version.h>
 #ifdef CONFIG_QEMU_SERIAL
 #include <comm/qemu/serial.h>

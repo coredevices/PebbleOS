@@ -51,6 +51,7 @@
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_session.h>
 #endif
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
@@ -68,7 +69,6 @@
 #include <shell/prefs.h>
 #include <shell/shell_event_loop.h>
 #include <system/bootbits.h>
-#include <system/passert.h>
 #include <system/testinfra.h>
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;

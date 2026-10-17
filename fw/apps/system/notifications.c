@@ -9,6 +9,7 @@
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
@@ -38,7 +39,6 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 typedef struct LoadedNotificationNode {
   ListNode node;
@@ -798,7 +798,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
     // no subtitle, but yes title
     subtitle = body;
   } else {
-    WTF;
+    pbl_panic();
   }
 
   if (notifications_history_row_is_collapsed_group(row)) {

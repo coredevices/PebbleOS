@@ -829,8 +829,8 @@ void test_recognizer_manager__null_manager_register(void) {
   // The assert on the recognizer argument is preserved
   RecognizerManager manager;
   recognizer_manager_init(&manager);
-  cl_assert_passert(recognizer_manager_register_recognizer(&manager, nullptr));
-  cl_assert_passert(recognizer_manager_deregister_recognizer(&manager, nullptr));
+  cl_assert_panic(recognizer_manager_register_recognizer(&manager, nullptr));
+  cl_assert_panic(recognizer_manager_deregister_recognizer(&manager, nullptr));
 }
 
 void test_recognizer_manager__null_manager_state_change(void) {

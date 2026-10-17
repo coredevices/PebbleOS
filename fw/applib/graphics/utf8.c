@@ -2,14 +2,13 @@
 
 #include <inttypes.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/iterator.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 #include <pbl/util/utf8.h>
-
-#include <system/passert.h>
 
 //! Print all code points in a c-string (debugging)
 //! @param s A null-terminated c-string

@@ -3,9 +3,10 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/fatal.h>
+
 #include <board/board.h>
 #include <comm/qemu/settings.h>
-#include <system/passert.h>
 
 // QEMU RTC backup registers at RTC_BASE + 0x40
 #define QEMU_RTC_BACKUP_BASE (QEMU_RTC_BASE + 0x40)
@@ -54,6 +55,6 @@ uint32_t qemu_setting_get(QemuSetting setting) {
       break;
 
     default:
-      WTF;
+      pbl_panic();
   }
 }

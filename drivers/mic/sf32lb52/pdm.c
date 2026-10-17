@@ -6,6 +6,7 @@
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
 #include <pbl/drivers/regulator.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
@@ -19,7 +20,6 @@
 #include <board/board.h>
 #include <kernel/kernel_heap.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
 

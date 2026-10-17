@@ -6,6 +6,8 @@
 #include "menu.h"
 #include "option_menu.h"
 
+#include <pbl/kernel/fatal.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
@@ -13,7 +15,6 @@
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/menu_layer.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 #ifdef CONFIG_THEMING
 
@@ -134,7 +135,7 @@ static Window *prv_create_color_menu(void) {
   OptionMenu *option_menu = prv_push_color_menu();
   return option_menu ? &option_menu->window : nullptr;
 #else
-  WTF;
+  pbl_panic();
   return nullptr;
 #endif
 }

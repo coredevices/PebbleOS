@@ -7,12 +7,12 @@
 #include "layer.h"
 #include "property_animation_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
 #include <applib/legacy2/ui/property_animation_legacy2.h>
-#include <system/passert.h>
 
 /////////////////////
 // Property Animation

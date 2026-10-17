@@ -4,9 +4,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
+
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gtypes.h>
-#include <system/passert.h>
 
 volatile const int FrameBuffer_MaxX = DISP_COLS;
 volatile const int FrameBuffer_MaxY = DISP_ROWS;

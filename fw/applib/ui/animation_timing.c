@@ -3,10 +3,9 @@
 
 #include "animation_timing.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/math_fixed.h>
 #include <pbl/util/size.h>
-
-#include <system/passert.h>
 
 //! @file animation_timing.c
 

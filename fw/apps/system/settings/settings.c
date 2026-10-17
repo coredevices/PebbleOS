@@ -5,6 +5,7 @@
 
 #include "menu.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
@@ -17,7 +18,6 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
 

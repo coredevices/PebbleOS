@@ -476,7 +476,7 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
                                             required_space_for_strings, &buffer);
 
   if (!item) {
-    // Out of memory - we do not croak on out of memory for notifications (PBL-10521)
+    // Out of memory - we do not panic on out of memory for notifications (PBL-10521)
     PBL_LOG_WRN("Ignoring ANCS notification (out of memory)");
     return nullptr;
   }

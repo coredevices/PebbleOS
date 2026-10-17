@@ -8,6 +8,7 @@
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -17,7 +18,6 @@
 #include <host/ble_store.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

@@ -10,7 +10,7 @@ void pbl_poll_group_init(struct pbl_poll_group *g) {
 }
 
 void pbl_poll_group_add(struct pbl_poll_group *g, struct pbl_msgq *q) {
-  KERNEL_ASSERT(q->group == nullptr);
+  PBL_ASSERTN(q->group == nullptr);
   pbl_irq_lock();
   q->group = g;
   // Keep members in the order they were added.
@@ -47,7 +47,7 @@ static struct pbl_msgq *prv_ready_member(struct pbl_poll_group *g) {
 }
 
 struct pbl_msgq *pbl_poll_group_wait(struct pbl_poll_group *g, pbl_timeout_t timeout) {
-  KERNEL_ASSERT(!arch_in_isr() && g->members != nullptr);
+  PBL_ASSERTN(!arch_in_isr() && g->members != nullptr);
   struct pbl_msgq *ready;
   pbl_irq_lock();
   while ((ready = prv_ready_member(g)) == nullptr) {

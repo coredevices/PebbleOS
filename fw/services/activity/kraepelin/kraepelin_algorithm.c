@@ -29,6 +29,7 @@ Pebble App project.
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
@@ -40,7 +41,6 @@ Pebble App project.
 #include <pbl/util/units.h>
 
 #include <applib/accel_service.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

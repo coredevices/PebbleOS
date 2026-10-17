@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/compositor/compositor_private.h>
 #include <pbl/services/compositor/compositor_transitions.h>
@@ -16,7 +17,6 @@
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/animation_timing.h>
 #include <apps/system/timeline/common.h>
-#include <system/passert.h>
 
 static CompositorTransitionDirection prv_flip_transition_direction(
     CompositorTransitionDirection direction) {

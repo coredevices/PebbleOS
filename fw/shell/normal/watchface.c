@@ -3,6 +3,7 @@
 
 #include "watchface.h"
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 #include <pbl/services/notifications/do_not_disturb.h>
@@ -19,7 +20,6 @@
 #include <popups/timeline/peek.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
-#include <system/passert.h>
 
 #define QUICK_LAUNCH_HOLD_MS (400)
 #define BIT_SET              (1)
@@ -283,7 +283,7 @@ void watchface_handle_button_event(PebbleEvent *e) {
       click_recognizer_handle_button_up(&s_click_manager.recognizers[e->button.button_id]);
       break;
     default:
-      PBL_CROAK("Invalid event type: %u", e->type);
+      pbl_panic("Invalid event type: %u", e->type);
       break;
   }
 }

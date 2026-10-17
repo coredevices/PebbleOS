@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/timeline/layout_layer.h>
 #include <pbl/services/timeline/timeline_actions.h>
 #include <pbl/util/math.h>
@@ -20,7 +21,6 @@
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 ///////////////////////////////////////////////////////////
 // Drawing functions

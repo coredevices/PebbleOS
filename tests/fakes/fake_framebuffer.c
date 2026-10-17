@@ -5,11 +5,11 @@
 #include <string.h>
 
 #include <pbl/drivers/display.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bitops.h>
 
 #include <framebuffer.h>
-#include <system/passert.h>
 
 const int FrameBuffer_MaxX = DISP_COLS;
 const int FrameBuffer_MaxY = DISP_ROWS;

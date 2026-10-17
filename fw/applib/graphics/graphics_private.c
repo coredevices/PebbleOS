@@ -7,11 +7,12 @@
 #include "graphics.h"
 #include "gtypes.h"
 
+#include <string.h>
+
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/bitops.h>
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
-
-#include <system/passert.h>
 
 // ## Point setting/blending functions
 
@@ -597,7 +598,7 @@ void graphics_private_move_pixels_horizontally(GBitmap *bitmap, int16_t delta_x,
         // Note: this doesn't care about the bounding, because we don't have any round 1bpp
         // devices to support, and it simplifies the code.
 #if PBL_ROUND
-        WTF;
+        pbl_panic();
 #endif
         uint8_t *const buf = row_info.data;
         const int delta_bytes = abs_delta / 8;
@@ -687,7 +688,7 @@ void graphics_private_move_pixels_horizontally(GBitmap *bitmap, int16_t delta_x,
         break;
       }
       default:
-        WTF;
+        pbl_panic();
     }
   }
 }
@@ -720,7 +721,7 @@ void graphics_private_move_pixels_vertically(GBitmap *bitmap, int16_t delta_y) {
         // Note: this doesn't care about the bounding, because we don't have any round 1bpp
         // devices to support, and it simplifies the code.
 #if PBL_ROUND
-        WTF;
+        pbl_panic();
 #endif
         memmove(dst_row_info.data, src_row_info.data, bitmap->row_size_bytes);
         break;
@@ -741,7 +742,7 @@ void graphics_private_move_pixels_vertically(GBitmap *bitmap, int16_t delta_y) {
         break;
       }
       default:
-        WTF;
+        pbl_panic();
     }
   }
 }
@@ -781,7 +782,7 @@ GColor graphics_private_sample_line_color(const GBitmap *bitmap, GColorSampleEdg
         this_color.argb = data_row_info.data[x];
         break;
       default:
-        WTF;
+        pbl_panic();
     }
 
     if (i == 0) {

@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
@@ -13,7 +14,6 @@
 #include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 #define TEXT_BUFFER_SIZE 64
 
@@ -161,7 +161,7 @@ static void push_window(ClickAppData *data) {
 static void handle_init(void) {
   ClickAppData *data = (ClickAppData *)app_malloc_check(sizeof(ClickAppData));
   if (data == nullptr) {
-    PBL_CROAK("Out of memory");
+    pbl_panic("Out of memory");
   }
   app_state_set_user_data(data);
   push_window(data);

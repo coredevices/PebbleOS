@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
 #include <pbl/services/protobuf_log/protobuf_log_private.h>
 
 #include <event.pb.h>
-#include <system/passert.h>
 
 // -----------------------------------------------------------------------------------------
 // Convert ActivitySessionType to the internal protobuf representation.
@@ -30,7 +30,7 @@ static ActivitySessionType prv_proto_type_to_activity_type(ProtobufLogActivityTy
     case ProtobufLogActivityType_Open:
       return ActivitySessionType_Open;
   }
-  WTF;
+  pbl_panic();
 }
 
 // -----------------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ static ProtobufLogActivityType prv_activity_type_to_proto_type(ActivitySessionTy
     case ActivitySessionTypeCount:
       break;
   }
-  WTF;
+  pbl_panic();
 }
 */
 

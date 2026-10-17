@@ -67,7 +67,7 @@ static void prv_ready_remove(struct pbl_thread *t) {
 }
 
 static struct pbl_thread *prv_pick(void) {
-  KERNEL_ASSERT(s_ready_mask != 0);
+  PBL_ASSERTN(s_ready_mask != 0);
   return s_ready_head[31 - PBL_CLZ(s_ready_mask)];
 }
 
@@ -173,8 +173,8 @@ struct pbl_thread *waitq_pop(struct pbl_waitq *wq) {
 
 int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout) {
   struct pbl_thread *t = pbl_cur;
-  KERNEL_ASSERT(!arch_in_isr());
-  KERNEL_ASSERT(s_sched_lock == 0);
+  PBL_ASSERTN(!arch_in_isr());
+  PBL_ASSERTN(s_sched_lock == 0);
 
   prv_ready_remove(t);
   t->backend.state = PBL_THREAD_BLOCKED;
@@ -196,7 +196,7 @@ int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout) {
 }
 
 void sched_wake(struct pbl_thread *t, int rc) {
-  KERNEL_ASSERT(t->backend.state == PBL_THREAD_BLOCKED);
+  PBL_ASSERTN(t->backend.state == PBL_THREAD_BLOCKED);
   prv_timeout_remove(t);
   t->backend.waitq = nullptr;
   t->backend.wake_rc = rc;
@@ -379,7 +379,7 @@ void sched_start_prepare(void) {
     .stack_size = sizeof(s_idle_stack),
   };
   int rc = pbl_thread_create(&s_idle_thread, &attr);
-  KERNEL_ASSERT(rc == 0);
+  PBL_ASSERTN(rc == 0);
 
   pbl_irq_lock();
   s_started = true;
@@ -409,7 +409,7 @@ void pbl_sched_lock(void) {
 
 void pbl_sched_unlock(void) {
   pbl_irq_lock();
-  KERNEL_ASSERT(s_sched_lock > 0);
+  PBL_ASSERTN(s_sched_lock > 0);
   if (--s_sched_lock == 0 && s_switch_deferred) {
     s_switch_deferred = false;
     sched_request_switch();

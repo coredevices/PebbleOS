@@ -12,7 +12,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 #define NUM_MENU_SECTIONS 1
 #define NUM_MENU_ITEMS    4

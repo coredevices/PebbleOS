@@ -11,7 +11,6 @@
 #include <applib/preferred_content_size.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/window_private.h>
-#include <system/passert.h>
 
 typedef void (*ActionMenuLayerCallback)(const ActionMenuItem *item, void *context);
 

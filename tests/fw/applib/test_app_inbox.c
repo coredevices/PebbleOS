@@ -192,15 +192,15 @@ void test_app_inbox__app_inbox_create_and_register_oom(void) {
 }
 
 void test_app_inbox__app_inbox_create_and_register_msg_handler_not_permitted(void) {
-  // The syscall_failed() fake will trigger passert:
-  cl_assert_passert(app_inbox_create_and_register(BUFFER_SIZE, 1, NOT_PERMITTED_MSG_HANDLER,
-                                                  test_dropped_handler));
+  // The syscall_failed() fake will trigger a panic:
+  cl_assert_panic(app_inbox_create_and_register(BUFFER_SIZE, 1, NOT_PERMITTED_MSG_HANDLER,
+                                                test_dropped_handler));
 }
 
 void test_app_inbox__app_inbox_create_and_register_drop_handler_not_permitted(void) {
-  // The syscall_failed() fake will trigger passert:
-  cl_assert_passert(app_inbox_create_and_register(BUFFER_SIZE, 1, test_message_handler,
-                                                  NOT_PERMITTED_DROP_HANDLER));
+  // The syscall_failed() fake will trigger a panic:
+  cl_assert_panic(app_inbox_create_and_register(BUFFER_SIZE, 1, test_message_handler,
+                                                NOT_PERMITTED_DROP_HANDLER));
 }
 
 void test_app_inbox__app_inbox_create_and_register_happy_case(void) {

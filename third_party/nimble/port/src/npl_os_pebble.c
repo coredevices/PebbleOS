@@ -12,12 +12,13 @@
 #include "pbl/kernel/types.h"
 #include "pbl/mcu/interrupts.h"
 #include "pbl/services/new_timer/new_timer.h"
-#include "system/passert.h"
 
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 
 struct ble_npl_event *npl_pebble_eventq_get(struct ble_npl_eventq *evq, ble_npl_time_t tmo) {
@@ -97,7 +98,7 @@ ble_npl_error_t npl_pebble_mutex_pend(struct ble_npl_mutex *mu, ble_npl_time_t t
   }
 
   if (mcu_state_is_isr()) {
-    WTF;
+    pbl_panic();
   }
 
   return (pbl_mutex_lock(&mu->handle, PBL_TICKS(timeout)) == 0) ? BLE_NPL_OK : BLE_NPL_TIMEOUT;

@@ -9,12 +9,12 @@
 #include <pbl/kernel/poll.h>
 
 void pbl_msgq_init(struct pbl_msgq *q, void *buf, size_t msg_size, uint32_t max_msgs) {
-  KERNEL_ASSERT(buf != nullptr && msg_size > 0 && max_msgs > 0);
+  PBL_ASSERTN(buf != nullptr && msg_size > 0 && max_msgs > 0);
   *q = (struct pbl_msgq)PBL_MSGQ_INITIALIZER(buf, msg_size, max_msgs);
 }
 
 void pbl_msgq_deinit(struct pbl_msgq *q) {
-  KERNEL_ASSERT(q->group == nullptr);
+  PBL_ASSERTN(q->group == nullptr);
 }
 
 static uint8_t *prv_slot(struct pbl_msgq *q, uint32_t index) {

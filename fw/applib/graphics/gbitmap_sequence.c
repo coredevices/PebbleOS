@@ -5,6 +5,7 @@
 
 #include "gbitmap_png.h"
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/bitops.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
@@ -13,7 +14,6 @@
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/raw_image.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #define APNG_DECODE_ERROR    "APNG decoding failed"
 #define APNG_MEMORY_ERROR    "APNG memory allocation failed"
@@ -181,7 +181,7 @@ static void prv_set_pixel_in_row(uint8_t *row_data, GBitmapFormat bitmap_format,
     GColor8 *const destination_pixel = (GColor8 *)(row_data + x);
     *destination_pixel = color;
   } else {
-    WTF; // Unsupported destination type
+    pbl_panic(); // Unsupported destination type
   }
 }
 

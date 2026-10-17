@@ -4,9 +4,8 @@
 #include <errno.h>
 
 #include <pbl/drivers/intc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
-
-#include <system/passert.h>
 
 PBL_DEVICE_CLASS_DEFINE(pbl_intc_class, "intc");
 

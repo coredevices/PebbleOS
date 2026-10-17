@@ -27,7 +27,6 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/watchface.h>
-#include <system/passert.h>
 
 #define MINUTES(m) ((m) * PBL_SEC_PER_MIN)
 #define HOURS(m)   ((m) * PBL_SEC_PER_MIN * PBL_MIN_PER_HOUR)

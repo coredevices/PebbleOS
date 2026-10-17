@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_raw_iter.h>
 #include <pbl/util/math.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
 
@@ -64,7 +65,7 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
   // that way we should be able to avoid getting into a reboot loop.
   pfs_close_and_remove(iter->fd);
   PBL_LOG_ERR("Data at address %p. Rebooting...", contents);
-  PBL_CROAK("Internal logic error.");
+  pbl_panic("Internal logic error.");
 }
 
 static int sfs_seek(SettingsRawIter *iter, int amount, int whence) {

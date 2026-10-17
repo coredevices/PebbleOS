@@ -28,7 +28,7 @@ void pbl_posix_boot(int (*entry)(void)) {
   pthread_mutex_lock(&posix_cpu);
   pbl_soc_early_init();
   entry();
-  KERNEL_ASSERT(false);
+  PBL_ASSERTN(false);
   for (;;) {
   }
 }

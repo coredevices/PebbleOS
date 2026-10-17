@@ -11,6 +11,7 @@
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -20,7 +21,6 @@
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -892,7 +892,7 @@ void gap_le_connect_handle_bonding_change(pbl_bt_bonding_id_t bonding_id, BtPers
   if (op == BtPersistBondingOpDidChange) {
     if (!bt_persistent_storage_get_ble_pairing_by_id(bonding_id, &updated_bonding.irk,
                                                      &updated_bonding.device, nullptr)) {
-      WTF;
+      pbl_panic();
     }
     updated_bonding.id = bonding_id;
   }
@@ -914,7 +914,7 @@ void gap_le_connect_handle_bonding_change(pbl_bt_bonding_id_t bonding_id, BtPers
                             GAPLEConnectHCIReasonExtensionUserRemovedBonding);
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 unlock:
   bt_unlock();

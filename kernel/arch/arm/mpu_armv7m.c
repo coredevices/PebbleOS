@@ -25,7 +25,7 @@ static const uint32_t s_cache_settings[] = {
 };
 
 static uint8_t get_permission_value(const MpuRegion *region) {
-  KERNEL_ASSERT(region->permissions < MpuPermissionsCount);
+  PBL_ASSERTN(region->permissions < MpuPermissionsCount);
   return s_permission_to_ap[region->permissions];
 }
 
@@ -70,7 +70,7 @@ typedef struct {
 } BlockLayout;
 
 static BlockLayout compute_block_layout(uintptr_t base, uint32_t size) {
-  KERNEL_ASSERT(size >= MPU_ARMV7M_MIN_REGION_SIZE);
+  PBL_ASSERTN(size >= MPU_ARMV7M_MIN_REGION_SIZE);
 
   uint32_t block = MPU_ARMV7M_MIN_REGION_SIZE;
   while (block < size) {
@@ -96,7 +96,7 @@ static BlockLayout compute_block_layout(uintptr_t base, uint32_t size) {
     }
     block <<= 1;
   }
-  KERNEL_ASSERT(false);
+  PBL_ASSERTN(false);
 }
 
 static uint32_t get_size_field(uint32_t block_size) {
@@ -118,10 +118,10 @@ void mpu_enable(void) {
 // region.
 void mpu_get_register_settings(const MpuRegion *region, uint32_t *base_address_reg,
                                uint32_t *attributes_reg) {
-  KERNEL_ASSERT(region);
-  KERNEL_ASSERT((region->base_address & 0x1f) == 0);
-  KERNEL_ASSERT((region->region_num & ~0xf) == 0);
-  KERNEL_ASSERT((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
+  PBL_ASSERTN(region);
+  PBL_ASSERTN((region->base_address & 0x1f) == 0);
+  PBL_ASSERTN((region->region_num & ~0xf) == 0);
+  PBL_ASSERTN((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
 
   const BlockLayout layout = compute_block_layout(region->base_address, region->size);
 

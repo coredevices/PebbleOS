@@ -9,6 +9,7 @@
 
 #include "compass_service_private.h"
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/trig.h>
 
 #include <applib/app_timer.h>
@@ -18,7 +19,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-#include <system/passert.h>
 
 #define PEEK_TIMEOUT_MS 11 * 1000
 
@@ -36,7 +36,7 @@ static CompassServiceConfig **prv_get_config(PebbleTask task) {
   } else if (task == PebbleTask_KernelMain) {
     config = kernel_applib_get_compass_config();
   } else {
-    WTF;
+    pbl_panic();
   }
 
   if (*config == nullptr) {

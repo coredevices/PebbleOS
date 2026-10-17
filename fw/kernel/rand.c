@@ -20,10 +20,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/rand32.h>
 
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 #include <tinymt32.h>
 
 extern uint32_t *app_state_get_rand_ptr(void);

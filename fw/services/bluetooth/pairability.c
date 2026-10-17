@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/pairability.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -12,7 +13,6 @@
 
 #include <comm/ble/gap_le_slave_discovery.h>
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

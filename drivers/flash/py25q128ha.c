@@ -4,11 +4,11 @@
 #include <pbl/drivers/flash/flash_impl.h>
 #include <pbl/drivers/flash/qspi_flash.h>
 #include <pbl/drivers/flash/qspi_flash_part_definitions.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/util/size.h>
 
 #include <board/board.h>
 #include <flash_region/flash_region.h>
-#include <system/passert.h>
 #include <system/status_codes.h>
 
 static const uint32_t prv_sec_regs[] = {

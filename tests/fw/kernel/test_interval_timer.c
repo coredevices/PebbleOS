@@ -5,7 +5,7 @@
 #include <fakes/fake_rtc.h>
 #include <kernel/util/interval_timer.h>
 
-void passert_failed_no_message(const char *filename, int line_number) {
+void pbl_panic_bare_at(const char *filename, int line_number) {
 }
 
 void pbl_irq_lock(void) {

@@ -6,12 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 
 #include <applib/ui/app_window_stack.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 #include <system/profiler.h>
 
 typedef struct {

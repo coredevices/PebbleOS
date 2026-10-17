@@ -5,10 +5,9 @@
 #include <stdint.h>
 
 #include <pbl/drivers/als.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
-
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_als, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 

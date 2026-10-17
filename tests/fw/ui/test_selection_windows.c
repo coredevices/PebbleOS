@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/hash.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -18,7 +19,6 @@
 #include <clar.h>
 #include <resource/resource.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 // Helper Functions
 /////////////////////

@@ -2,11 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/exti.h>
+#include <pbl/kernel/assert.h>
 
 #include <board/board.h>
 #include <kernel/events.h>
 #include <nrfx.h>
-#include <system/passert.h>
 
 // NRF5 emulates EXTI using GPIOTE
 

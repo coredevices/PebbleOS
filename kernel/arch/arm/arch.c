@@ -151,7 +151,7 @@ void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regio
     rbar = MPU_RBAR_VALID_Msk | (FIRST_MPU_REGION + i);
 #endif
     if (r != nullptr) {
-      KERNEL_ASSERT(r->region_num == FIRST_MPU_REGION + i);
+      PBL_ASSERTN(r->region_num == FIRST_MPU_REGION + i);
       uint32_t base_reg;
       mpu_get_register_settings(r, &base_reg, &attr);
 #ifdef CONFIG_ARMV8_M_MAINLINE

@@ -5,6 +5,8 @@
 #include <stdint.h>
 
 #include <pbl/drivers/uart.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
@@ -12,7 +14,6 @@
 
 #include <board/board.h>
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 
 // clang-format off
 #include <os/os_mbuf.h>
@@ -82,7 +83,7 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
     case HCI_H4_ACL:
       return ble_transport_to_hs_acl(data);
     default:
-      WTF;
+      pbl_panic();
   }
 
   return -1;

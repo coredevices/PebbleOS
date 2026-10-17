@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
 #include <applib/graphics/bitblt_private.h>
 #include <applib/graphics/raw_image.h>
-#include <system/passert.h>
 
 #if !defined(__clang__)
 #pragma GCC optimize("O2")

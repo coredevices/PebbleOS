@@ -3,10 +3,10 @@
 
 #include "app_glance.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/struct.h>
 
 #include <applib/ui/kino/kino_reel_custom.h>
-#include <system/passert.h>
 
 GSize launcher_app_glance_get_size_for_reel(KinoReel *reel) {
   PBL_ASSERTN(reel->impl && (reel->impl->reel_type == KinoReelTypeCustom));

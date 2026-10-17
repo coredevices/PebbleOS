@@ -11,7 +11,6 @@
 #include <applib/ui/layer.h>
 #include <applib/ui/property_animation.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 ////////////////////////////////////////////////////////////
 // Data structures

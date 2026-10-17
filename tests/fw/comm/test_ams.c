@@ -672,7 +672,7 @@ void test_ams__supported_capabilities(void) {
 ///////////////////////////////////////////////////////////
 
 void test_ams__create_again_trips_assert(void) {
-  cl_assert_passert(ams_create());
+  cl_assert_panic(ams_create());
 }
 
 void test_ams__create_works_again_after_destroy(void) {

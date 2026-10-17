@@ -24,7 +24,6 @@
 #include <board/board.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_activity_sessions.h>
 #include <pbl/services/protobuf_log/protobuf_log_private.h>
@@ -10,7 +11,6 @@
 #include <measurements.pb.h>
 #include <payload.pb.h>
 #include <pb_decode.h>
-#include <system/passert.h>
 
 // -----------------------------------------------------------------------------------------
 // Callback used to decode uuid

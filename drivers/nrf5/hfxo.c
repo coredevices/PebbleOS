@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 
 #include <hal/nrf_clock.h>
-#include <system/passert.h>
 
 static uint8_t prv_refcnt;
 

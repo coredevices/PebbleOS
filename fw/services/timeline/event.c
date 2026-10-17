@@ -16,7 +16,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 #include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);

@@ -8,6 +8,7 @@
 #endif
 
 #include <pbl/drivers/battery.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_curve.h>
@@ -19,7 +20,6 @@
 #include <board/board.h>
 #include <kernel/events.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 

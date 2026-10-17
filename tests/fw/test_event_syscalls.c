@@ -129,20 +129,20 @@ void test_event_syscalls__subscribe_rejected(void) {
   };
   for (size_t i = 0; i < ARRAY_LENGTH(types); i++) {
     stubs_syscall_init();
-    cl_assert_passert(prv_subscribe(types[i]));
+    cl_assert_panic(prv_subscribe(types[i]));
     assert_syscall_failed();
   }
   cl_assert_equal_i(s_num_posted_events, 0);
 }
 
 void test_event_syscalls__unsubscribe_rejected(void) {
-  cl_assert_passert(prv_unsubscribe(PEBBLE_SYS_NOTIFICATION_EVENT));
+  cl_assert_panic(prv_unsubscribe(PEBBLE_SYS_NOTIFICATION_EVENT));
   assert_syscall_failed();
   cl_assert_equal_i(s_num_posted_events, 0);
 }
 
 void test_event_syscalls__post_rejected_type(void) {
-  cl_assert_passert(prv_post((PebbleEvent){.type = PEBBLE_CALLBACK_EVENT}));
+  cl_assert_panic(prv_post((PebbleEvent){.type = PEBBLE_CALLBACK_EVENT}));
   assert_syscall_failed();
   cl_assert_equal_i(s_num_posted_events, 0);
 }
@@ -166,7 +166,7 @@ void test_event_syscalls__post_render_ready(void) {
   cl_assert_equal_i(s_posted_event.task_mask, prv_all_but(1 << PebbleTask_KernelMain));
 
   stub_pebble_tasks_set_current(PebbleTask_Worker);
-  cl_assert_passert(prv_post((PebbleEvent){.type = PEBBLE_RENDER_READY_EVENT}));
+  cl_assert_panic(prv_post((PebbleEvent){.type = PEBBLE_RENDER_READY_EVENT}));
   assert_syscall_failed();
   cl_assert_equal_i(s_num_posted_events, 1);
 }
@@ -183,7 +183,7 @@ void test_event_syscalls__post_dictation(void) {
   cl_assert_equal_i(s_num_posted_events, 2);
 
   s_text_in_region = false;
-  cl_assert_passert(prv_post((PebbleEvent){
+  cl_assert_panic(prv_post((PebbleEvent){
     .type = PEBBLE_DICTATION_EVENT,
     .dictation = {.text = "hello"},
   }));
@@ -205,7 +205,7 @@ void test_event_syscalls__post_health(void) {
   cl_assert_equal_i(s_posted_event.health_event.data.significant_update.day_id, 0);
   cl_assert_equal_i(s_posted_event.task_mask, prv_all_but(1 << PebbleTask_Worker));
 
-  cl_assert_passert(prv_post((PebbleEvent){
+  cl_assert_panic(prv_post((PebbleEvent){
     .type = PEBBLE_HEALTH_SERVICE_EVENT,
     .health_event = {.type = HealthEventHeartRateUpdate},
   }));

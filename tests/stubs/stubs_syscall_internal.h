@@ -7,7 +7,6 @@
 #include <stdio.h>
 
 #include <kernel/pebble_tasks.h>
-#include <system/passert.h>
 
 extern bool s_syscall_did_fail;
 

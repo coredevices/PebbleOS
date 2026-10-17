@@ -12,7 +12,6 @@
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
-#include <system/passert.h>
 
 static NumberWindow number_window;
 

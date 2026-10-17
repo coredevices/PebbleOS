@@ -7,6 +7,7 @@
 
 #include <time.h>
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/clock.h>
@@ -229,7 +230,7 @@ static void prv_appear(struct Window *window) {
       app_window_stack_pop_all(false);
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 

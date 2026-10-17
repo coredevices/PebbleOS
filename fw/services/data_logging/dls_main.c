@@ -6,6 +6,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -23,10 +24,10 @@
 #include <applib/data_logging.h>
 #include <comm/bt_lock.h>
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 

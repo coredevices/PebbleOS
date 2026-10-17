@@ -20,7 +20,6 @@
 #include <mfg/mfg_serials.h>
 #include <process_management/app_manager.h>
 #include <system/hexdump.h>
-#include <system/passert.h>
 #include <system/reboot_reason.h>
 #include <system/version.h>
 

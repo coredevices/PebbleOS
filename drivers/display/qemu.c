@@ -4,9 +4,9 @@
 #include <string.h>
 
 #include <pbl/drivers/display/display.h>
+#include <pbl/kernel/assert.h>
 
 #include <board/board.h>
-#include <system/passert.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

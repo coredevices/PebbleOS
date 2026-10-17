@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 #include <pbl/services/time.h>
@@ -11,7 +12,6 @@
 #include <pbl/util/time.h>
 
 #include <resource/timeline_resource_ids.auto.h>
-#include <system/passert.h>
 
 const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id) {
   static const ANCSAppMetadata s_generic_app = {

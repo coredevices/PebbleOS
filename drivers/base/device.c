@@ -6,9 +6,8 @@
 #include <string.h>
 
 #include <pbl/device.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(device, CONFIG_DEVICE_LOG_LEVEL);
 

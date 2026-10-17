@@ -3,18 +3,18 @@
 
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/pmic.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 
 #include <kernel/util/standby.h>
 #include <system/bootbits.h>
-#include <system/passert.h>
 #include <system/reset.h>
 
 #ifdef CONFIG_PMIC
 [[noreturn]] static void prv_enter_standby(void) {
   pmic_power_off();
 
-  PBL_CROAK("We were not shut down!");
+  pbl_panic("We were not shut down!");
 }
 #else
 [[noreturn]] static void prv_enter_standby(void) {

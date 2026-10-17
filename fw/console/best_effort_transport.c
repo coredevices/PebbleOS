@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/byteorder.h>
 
@@ -16,7 +17,6 @@
 #include <console/pulse.h>
 #include <console/pulse2_transport_impl.h>
 #include <console/pulse_control_message_protocol.h>
-#include <system/passert.h>
 
 static bool s_layer_up = false;
 

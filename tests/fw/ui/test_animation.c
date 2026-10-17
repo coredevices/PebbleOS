@@ -3029,7 +3029,7 @@ void test_animation__accessors(void) {
   animation_schedule(h);
   cl_must_pass(animation_get_elapsed(h, &elapsed_ms));
   cl_assert_equal_i(elapsed_ms, -delay);
-  cl_assert_passert(animation_get_progress(h, &progress));
+  cl_assert_panic(animation_get_progress(h, &progress));
   animation_set_elapsed(h, 0);
   cl_must_pass(animation_get_elapsed(h, &elapsed_ms));
   cl_assert_equal_i(elapsed_ms, 0);

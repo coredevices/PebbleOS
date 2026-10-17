@@ -3,6 +3,8 @@
 
 #include "dialog_private.h"
 
+#include <pbl/kernel/assert.h>
+
 #include <applib/app_timer.h>
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/dialogs/dialog.h>
@@ -12,7 +14,6 @@
 #include <applib/ui/window_stack.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 static void prv_app_timer_callback(void *context) {
   Dialog *dialog = context;

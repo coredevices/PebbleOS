@@ -8,6 +8,7 @@
 #include "settings.h"
 #include "system.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/event_service_client.h>
@@ -18,7 +19,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
-#include <system/passert.h>
 
 typedef struct SettingsData {
   Window window;

@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
@@ -43,7 +45,6 @@
 #include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
 #include <popups/notifications/notification_window.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -595,7 +596,7 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
     }
     case TimelineItemActionTypeOpenPin:
     case TimelineItemActionTypeOpenWatchApp:
-      WTF;
+      pbl_panic();
     case TimelineItemActionTypeAncsNegative:
     case TimelineItemActionTypeAncsDelete:
     case TimelineItemActionTypeAncsPositive:

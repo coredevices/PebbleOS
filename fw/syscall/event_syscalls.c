@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 
@@ -12,7 +14,6 @@
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   if (!event_try_put_from_process(task, event)) {
@@ -181,7 +182,7 @@ PBL_SYSCALL(void, sys_event_service_client_subscribe,
     // The event service always runs from KernelMain
     event_queue = event_kernel_to_kernel_event_queue();
   } else {
-    WTF;
+    pbl_panic();
   }
 
   // Subscribe to the service!
@@ -246,7 +247,7 @@ PBL_SYSCALL(void, sys_event_service_client_unsubscribe, (VAL, EventServiceInfo *
     } else if (task == PebbleTask_Worker) {
       state = worker_state_get_event_service_state();
     } else {
-      WTF;
+      pbl_panic();
     }
   }
 

@@ -4,6 +4,7 @@
 #include <pbl/cron/cron.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
@@ -32,9 +33,9 @@
 #include <applib/health_service.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
@@ -13,7 +14,6 @@
 #include <pbl/util/math.h>
 
 #include <shell/prefs_private.h>
-#include <system/passert.h>
 
 #define FILE_NAME "notifpref"
 #define FILE_LEN  (1024)
@@ -561,7 +561,7 @@ VibeScoreId alerts_preferences_get_vibe_score_for_client(VibeClient client) {
     case VibeClient_OnDisconnect:
       return s_vibe_score_on_disconnect;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -594,7 +594,7 @@ void alerts_preferences_set_vibe_score_for_client(VibeClient client, VibeScoreId
       break;
     }
     default: {
-      WTF;
+      pbl_panic();
     }
   }
   SET_PREF(key, id);

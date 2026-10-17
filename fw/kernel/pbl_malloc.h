@@ -16,6 +16,9 @@ typedef struct Heap Heap;
 
 Heap *task_heap_get_for_current_task(void);
 
+//! Log a failed allocation of @p bytes from @p heap_ptr at @p lr and fault.
+[[noreturn]] void pbl_malloc_oom(size_t bytes, uintptr_t lr, Heap *heap_ptr);
+
 // task_* functions map to app_* or kernel_* based on which task we're calling it on.
 void *task_malloc(size_t bytes);
 #if defined(CONFIG_MALLOC_INSTRUMENTATION)

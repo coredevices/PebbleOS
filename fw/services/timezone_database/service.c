@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
@@ -13,7 +14,6 @@
 
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_timezone_database, CONFIG_SERVICE_TIMEZONE_DATABASE_LOG_LEVEL);
 

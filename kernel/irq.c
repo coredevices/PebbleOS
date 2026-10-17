@@ -11,7 +11,7 @@ void pbl_irq_lock(void) {
 }
 
 void pbl_irq_unlock(void) {
-  KERNEL_ASSERT(s_nesting > 0);
+  PBL_ASSERTN(s_nesting > 0);
   if (--s_nesting == 0) {
     arch_irq_enable();
   }

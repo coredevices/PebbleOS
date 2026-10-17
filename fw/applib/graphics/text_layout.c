@@ -25,6 +25,7 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/hash.h>
 #include <pbl/util/iterator.h>
@@ -37,7 +38,6 @@
 #include <kernel/ui/kernel_ui.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 static bool prv_char_iter_next_start_of_word(Iterator *char_iter);
 

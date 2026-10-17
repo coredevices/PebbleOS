@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/timeline/sports_layout.h>
 #include <pbl/services/timeline/weather_layout.h>
@@ -13,7 +14,6 @@
 #include <applib/ui/window_private.h>
 #include <apps/system/timeline/pin_window.h>
 #include <clar.h>
-#include <system/passert.h>
 
 // Fakes
 /////////////////////

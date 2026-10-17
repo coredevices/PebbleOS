@@ -62,7 +62,7 @@ void arch_init(void) {
 
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   struct posix_thread *pt = calloc(1, sizeof(*pt));
-  KERNEL_ASSERT(pt != nullptr);
+  PBL_ASSERTN(pt != nullptr);
   pthread_cond_init(&pt->wake, nullptr);
   pt->entry = entry;
   pt->arg = arg;

@@ -41,11 +41,11 @@ void test_buffer__should_add_data_until_full(void) {
 void test_buffer__cannot_remove_beyond_written(void) {
   struct pbl_buffer *b = prv_create(5);
   cl_assert_equal_i(0, pbl_buffer_remove(b, 0, 0));
-  cl_assert_passert(pbl_buffer_remove(b, 0, 1));
+  cl_assert_panic(pbl_buffer_remove(b, 0, 1));
 
   uint8_t b1 = 1;
   pbl_buffer_add(b, &b1, sizeof(uint8_t));
-  cl_assert_passert(pbl_buffer_remove(b, 0, 2));
+  cl_assert_panic(pbl_buffer_remove(b, 0, 2));
   cl_assert_equal_i(1, b->bytes_written);
 
   cl_assert_equal_i(1, pbl_buffer_remove(b, 0, 1));
@@ -70,8 +70,8 @@ void test_buffer__can_remove(void) {
   pbl_buffer_add(b, &b4, sizeof(uint8_t));
 
   // handles out of bounds cases
-  cl_assert_passert(pbl_buffer_remove(b, 0, 5));
-  cl_assert_passert(pbl_buffer_remove(b, 1, 4));
+  cl_assert_panic(pbl_buffer_remove(b, 0, 5));
+  cl_assert_panic(pbl_buffer_remove(b, 1, 4));
 
   cl_assert_equal_i(4, b->bytes_written);
   cl_assert_equal_i(b->data[0], b1);

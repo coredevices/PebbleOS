@@ -4,6 +4,7 @@
 #include "nimble_type_conversions.h"
 
 #include <pbl/bluetooth/pebble_pairing_service.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/ble/gap_le_connection.h>
@@ -12,7 +13,6 @@
 #include <host/ble_store.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 

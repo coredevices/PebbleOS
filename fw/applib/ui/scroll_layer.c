@@ -5,6 +5,7 @@
 
 #include "scroll_layer_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/math.h>
 
 #include <applib/applib_malloc.auto.h>
@@ -14,7 +15,6 @@
 #include <applib/ui/shadows.h>
 #include <applib/ui/window.h>
 #include <process_management/app_manager.h>
-#include <system/passert.h>
 
 #ifdef CONFIG_TOUCH
 #include <pbl/drivers/rtc.h>

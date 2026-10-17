@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
@@ -22,7 +23,6 @@
 
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

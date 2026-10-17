@@ -9,7 +9,9 @@
 #include <string.h>
 
 #include <pbl/btutil/bt_device.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/util/units.h>
@@ -22,8 +24,8 @@
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -351,7 +353,7 @@ static bool prv_handle_player_playback_info_value(const char *value, uint32_t va
       break;
 
     default:
-      WTF;
+      pbl_panic();
   }
   return true /* should_continue */;
 }
@@ -605,7 +607,7 @@ void ams_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
   AMSCharacteristic characteristic_id = prv_get_id_for_characteristic(subscribed_characteristic);
   if (characteristic_id != AMSCharacteristicEntityUpdate) {
     // Only Entity Update characteristic is expected to be subscribed to
-    WTF;
+    pbl_panic();
   }
 
   if (error != PBL_BT_GATT_ERROR_SUCCESS) {

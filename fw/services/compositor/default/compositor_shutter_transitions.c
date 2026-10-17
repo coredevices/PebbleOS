@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 #include <pbl/services/compositor/default/compositor_shutter_transitions.h>
 
@@ -8,7 +9,6 @@
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/graphics_private.h>
-#include <system/passert.h>
 
 typedef struct {
   CompositorTransitionDirection direction;

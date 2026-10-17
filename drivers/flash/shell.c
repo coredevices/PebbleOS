@@ -10,6 +10,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 #include <pbl/shell/shell.h>
@@ -19,7 +20,6 @@
 
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 #ifdef TEST_FLASH_LOCK_PROTECTION
 #include <pbl/drivers/watchdog.h>

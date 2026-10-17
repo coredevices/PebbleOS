@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
@@ -18,7 +19,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 typedef struct LauncherAppGlanceAlarms {
   char title[APP_NAME_SIZE_BYTES];

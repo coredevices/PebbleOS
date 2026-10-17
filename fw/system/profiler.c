@@ -7,9 +7,8 @@
 #include <stdio.h>
 
 #include <pbl/kernel/time.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
-
-#include <system/passert.h>
 
 #if defined(CONFIG_SHELL) && defined(CONFIG_PROFILER)
 #include <pbl/shell/shell.h>

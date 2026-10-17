@@ -3,6 +3,7 @@
 
 #include "action_toggle.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_launch_button.h>
@@ -16,7 +17,6 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 typedef struct ActionToggleDialogConfig {
   const char *window_name;

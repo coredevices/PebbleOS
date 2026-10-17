@@ -145,7 +145,7 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
     case PebbleTask_KernelBackground:
       return nullptr;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 

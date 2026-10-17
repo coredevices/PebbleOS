@@ -4,6 +4,7 @@
 #include <inttypes.h>
 
 #include <pbl/crc/crc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
@@ -18,7 +19,6 @@
 #include <pbl/util/math.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 

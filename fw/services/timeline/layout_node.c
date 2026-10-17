@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/layout_node.h>
 #include <pbl/services/timeline/timeline_layout.h>
@@ -8,7 +9,6 @@
 #include <pbl/util/string.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 static GTextNodeText *prv_create_text_node_buffer(const char *str) {
   const size_t str_length = str ? (strlen(str) + 1) : 0;

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <pbl/drivers/mic.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/voice/voice_speex.h>
 
@@ -14,7 +15,6 @@
 #include <speex/speex_bits.h>
 #include <speex/speex_header.h>
 #include <speex/speex_stereo.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 

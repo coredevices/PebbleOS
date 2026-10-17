@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
@@ -23,7 +25,6 @@
 #include <applib/accel_service.h>
 #include <applib/data_logging.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -88,7 +89,7 @@ static bool prv_lock(void) {
     PBL_LOG_ERR("Trying to use the activity algorithm but it hasn't been initialized");
     return false;
 #else
-    WTF;
+    pbl_panic();
 #endif
   }
   pbl_mutex_lock(&s_alg_state->mutex, PBL_FOREVER);
@@ -149,7 +150,7 @@ static void prv_create_activity_session_cb(void *context, KAlgActivityType kalg_
       activity = ActivitySessionType_Sleep;
       break;
     case KAlgActivityTypeCount:
-      WTF;
+      pbl_panic();
       break;
   }
   PBL_ASSERTN(activity != ActivitySessionTypeCount);

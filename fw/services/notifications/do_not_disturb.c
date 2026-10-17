@@ -26,7 +26,6 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

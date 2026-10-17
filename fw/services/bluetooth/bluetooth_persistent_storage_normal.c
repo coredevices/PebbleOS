@@ -4,6 +4,7 @@
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -21,7 +22,6 @@
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 

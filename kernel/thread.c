@@ -10,11 +10,11 @@
 static uint32_t s_next_id;
 
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) {
-  KERNEL_ASSERT(attr->stack != nullptr && attr->stack_size >= 128);
-  KERNEL_ASSERT(attr->prio <= PBL_PRIO_MAX);
+  PBL_ASSERTN(attr->stack != nullptr && attr->stack_size >= 128);
+  PBL_ASSERTN(attr->prio <= PBL_PRIO_MAX);
 
   // A struct is only reusable once its previous thread is gone.
-  KERNEL_ASSERT(t->id == 0 || t->backend.state == PBL_THREAD_DEAD);
+  PBL_ASSERTN(t->id == 0 || t->backend.state == PBL_THREAD_DEAD);
 
   memset(t, 0, sizeof(*t));
   t->id = ++s_next_id;
@@ -73,7 +73,7 @@ struct pbl_thread *pbl_thread_idle(void) {
 }
 
 void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio) {
-  KERNEL_ASSERT(prio <= PBL_PRIO_MAX);
+  PBL_ASSERTN(prio <= PBL_PRIO_MAX);
   pbl_irq_lock();
   // Keep an inherited boost; only the base moves.
   pbl_prio_t effective = t->prio > t->backend.base_prio ? (prio > t->prio ? prio : t->prio) : prio;

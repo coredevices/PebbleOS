@@ -8,7 +8,6 @@
 #include <applib/ui/dialogs/actionable_dialog.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 struct ConfirmationDialog {
   ActionableDialog action_dialog;

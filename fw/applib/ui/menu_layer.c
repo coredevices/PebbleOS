@@ -6,6 +6,7 @@
 #include "menu_layer_private.h"
 #include "vibes.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
@@ -22,7 +23,6 @@
 #include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
-#include <system/passert.h>
 
 #ifdef CONFIG_TOUCH
 #include <pbl/drivers/rtc.h>

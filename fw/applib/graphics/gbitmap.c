@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/testing.h>
 
@@ -16,7 +17,6 @@
 #include <applib/graphics/graphics.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 uint8_t gbitmap_get_bits_per_pixel(GBitmapFormat format) {
   switch (format) {

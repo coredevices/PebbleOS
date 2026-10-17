@@ -10,8 +10,6 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/util/list.h>
 
-#include <system/passert.h>
-
 typedef struct FakePebbleMutex {
   ListNode node;
   struct pbl_mutex *mutex;

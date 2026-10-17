@@ -9,12 +9,29 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/heap.h>
 
+#include <kernel/fault_handling.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-#include <system/passert.h>
+
+[[noreturn]] void pbl_malloc_oom(size_t bytes, uintptr_t lr, Heap *heap_ptr) {
+  unsigned int used = 0, free_bytes = 0, max_free = 0;
+  if (heap_ptr) {
+    heap_calc_totals(heap_ptr, &used, &free_bytes, &max_free);
+  }
+  PBL_LOG_ALWAYS("OOM: Failed to alloc %zu bytes at LR: 0x%" PRIxPTR
+                 " (used %u, free %u, max_free %u)",
+                 bytes, lr, used, free_bytes, max_free);
+
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
+  kernel_heap_dump_instrumentation();
+#endif
+
+  trigger_oom_fault(bytes, lr, heap_ptr);
+}
 
 Heap *task_heap_get_for_current_task(void) {
   if (pebble_task_get_current() == PebbleTask_App) {
@@ -54,7 +71,7 @@ void *task_malloc_check(size_t bytes) {
   void *mem = heap_malloc(heap, bytes, saved_lr);
 
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -90,7 +107,7 @@ void *task_zalloc_check(size_t bytes) {
   void *mem = heap_zalloc(heap, bytes, saved_lr);
 
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -109,7 +126,7 @@ void *task_calloc_check(size_t count, size_t size) {
 
   const size_t bytes = count * size;
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -134,7 +151,7 @@ void *app_malloc_check(size_t bytes) {
   Heap *heap = app_state_get_heap();
   void *mem = heap_malloc(heap, bytes, saved_lr);
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -164,7 +181,7 @@ void *app_zalloc_check(size_t bytes) {
   void *mem = heap_zalloc(heap, bytes, saved_lr);
 
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -183,7 +200,7 @@ void *app_calloc_check(size_t count, size_t size) {
 
   const size_t bytes = count * size;
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -208,7 +225,7 @@ void *kernel_malloc_check(size_t bytes) {
   Heap *heap = kernel_heap_get();
   void *mem = heap_malloc(heap, bytes, saved_lr);
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -227,7 +244,7 @@ void *kernel_calloc_check(size_t count, size_t size) {
 
   const size_t bytes = count * size;
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -251,7 +268,7 @@ void *kernel_zalloc_check(size_t bytes) {
   void *mem = heap_zalloc(heap, bytes, saved_lr);
 
   if (!mem && bytes != 0) {
-    PBL_CROAK_OOM(bytes, saved_lr, heap);
+    pbl_malloc_oom(bytes, saved_lr, heap);
   }
   return mem;
 }
@@ -274,7 +291,7 @@ char *kernel_strdup_check(const char *s) {
   Heap *heap = kernel_heap_get();
   void *mem = prv_strdup(heap, s, saved_lr);
   if (!mem) {
-    PBL_CROAK_OOM(strlen(s) + 1, saved_lr, heap);
+    pbl_malloc_oom(strlen(s) + 1, saved_lr, heap);
   }
 
   return mem;

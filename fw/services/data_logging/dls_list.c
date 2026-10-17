@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/util/uuid.h>
@@ -12,7 +13,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 

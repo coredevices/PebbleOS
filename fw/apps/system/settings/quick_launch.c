@@ -15,6 +15,7 @@
 #include "quick_launch_setup_menu.h"
 #include "window.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_launch_button.h>
@@ -25,7 +26,6 @@
 #include <process_management/app_menu_data_source.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/quick_launch.h>
-#include <system/passert.h>
 
 #define NUM_ROWS (NUM_BUTTONS + 2) // 4 hold buttons + 2 tap buttons (up and down)
 

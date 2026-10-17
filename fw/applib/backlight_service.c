@@ -6,10 +6,11 @@
 #include "backlight_service_private.h"
 #include "event_service_client.h"
 
+#include <pbl/kernel/fatal.h>
+
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-#include <system/passert.h>
 
 static BacklightServiceState *prv_get_state(void) {
   PebbleTask task = pebble_task_get_current();
@@ -20,7 +21,7 @@ static BacklightServiceState *prv_get_state(void) {
     return worker_state_get_backlight_service_state();
   }
 
-  WTF;
+  pbl_panic();
 }
 
 static void prv_do_handle(PebbleEvent *e, void *context) {

@@ -1,8 +1,8 @@
 #include <pbl/drivers/button.h>
+#include <pbl/kernel/fatal.h>
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <system/passert.h>
 
 // watch rotation
 static bool s_rotated_180 = false;
@@ -34,7 +34,7 @@ uint8_t button_get_state_bits(void) {
 
 void button_init(void) {
   if (BOARD_CONFIG_BUTTON.button_com.gpio_pin)
-    WTF; // NYI
+    pbl_panic(); // NYI
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     nrf_gpio_cfg_input(BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin,

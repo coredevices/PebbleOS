@@ -3,12 +3,12 @@
 
 #include "app_heap_util.h"
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/heap.h>
 
 #include <kernel/pebble_tasks.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
-#include <system/passert.h>
 
 static Heap *get_task_heap(void) {
   PebbleTask task = pebble_task_get_current();
@@ -19,7 +19,7 @@ static Heap *get_task_heap(void) {
   } else if (task == PebbleTask_Worker) {
     heap = worker_state_get_heap();
   } else {
-    WTF;
+    pbl_panic();
   }
 
   return heap;

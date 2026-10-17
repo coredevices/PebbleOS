@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -18,7 +19,6 @@
 
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 

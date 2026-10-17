@@ -35,6 +35,8 @@
 #endif
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/voice/voice.h>
@@ -46,7 +48,6 @@
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 // TODO:
 // mic hot before showing screen - needs robust beginning-of-speech detection -
@@ -327,7 +328,7 @@ static void prv_handle_ready_event(VoiceUiData *data, PebbleVoiceServiceEvent *e
       prv_handle_ready_error(data);
       break;
     default:
-      WTF;
+      pbl_panic();
   }
   if (event->status != VoiceStatusSuccess) {
     data->last_session_successful = false;
@@ -458,7 +459,7 @@ static void prv_handle_dictation_result(VoiceUiData *data, PebbleVoiceServiceEve
       break;
 
     default:
-      WTF;
+      pbl_panic();
   }
   data->last_session_successful = success;
 }
@@ -531,7 +532,7 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
       PBL_LOG_DBG("Ignoring event");
       break;
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -992,7 +993,7 @@ static void prv_handle_stop_transition(VoiceUiData *data) {
       break;
     }
     default:
-      WTF;
+      pbl_panic();
   }
 }
 
@@ -1093,12 +1094,12 @@ static VoiceUiState prv_get_next_state(VoiceUiState current_state, VoiceUiState 
       break;
 
     default:
-      WTF;
+      pbl_panic();
   }
 
   // No valid transition found!
 
-  PBL_CROAK("Cannot transition from state %" PRIu16 " to state %" PRIu16, current_state,
+  pbl_panic("Cannot transition from state %" PRIu16 " to state %" PRIu16, current_state,
             next_state);
 }
 
@@ -1175,7 +1176,7 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
       break;
 
     default:
-      WTF;
+      pbl_panic();
   }
 }
 

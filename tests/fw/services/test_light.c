@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/backlight.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/services/light.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -9,7 +10,6 @@
 #include <board/board.h>
 #include <clar.h>
 #include <fake_new_timer.h>
-#include <system/passert.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

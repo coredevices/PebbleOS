@@ -6,7 +6,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/poll.h>
 #include <pbl/logging/logging.h>
@@ -14,7 +16,6 @@
 
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #define MAX_KERNEL_EVENTS           32
 #define MAX_FROM_APP_EVENTS         10
@@ -122,7 +123,7 @@ struct pbl_msgq *event_get_to_kernel_queue(PebbleTask task) {
   } else if ((task == PebbleTask_NewTimers) || (task == PebbleTask_KernelBackground)) {
     return &s_kernel_event_queue;
   } else {
-    WTF;
+    pbl_panic();
     return nullptr;
   }
 }
@@ -390,7 +391,7 @@ void event_reset_from_process_queue(PebbleTask task) {
   } else if (task == PebbleTask_Worker) {
     reset_queue = &s_from_worker_event_queue;
   } else {
-    WTF;
+    pbl_panic();
   }
   event_queue_cleanup_and_reset(reset_queue);
 }

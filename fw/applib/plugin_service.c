@@ -6,13 +6,13 @@
 #include "event_service_client.h"
 #include "plugin_service_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // Get our state variables

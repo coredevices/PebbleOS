@@ -4,6 +4,7 @@
 #include <errno.h>
 
 #include <pbl/drivers/i2c.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
@@ -12,8 +13,6 @@
 #include <pbl/mcu/cache.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/util/misc.h>
-
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_i2c, CONFIG_DRIVER_I2C_LOG_LEVEL);
 

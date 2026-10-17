@@ -6,11 +6,10 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/task_wdt/task_wdt.h>
-
-#include <system/passert.h>
 
 //! Do some upkeep in between erases to keep the rest of the system stable since erases block
 //! the current task for so long.

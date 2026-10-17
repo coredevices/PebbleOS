@@ -3,11 +3,13 @@
 
 #include "fake_put_bytes_storage_mem.h"
 
+#include <string.h>
+
+#include <pbl/kernel/assert.h>
 #include <pbl/services/put_bytes/put_bytes_storage_internal.h>
 
 #include <clar_asserts.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 #define FAKE_STORAGE_MAX_SIZE (512 * 1024)
 

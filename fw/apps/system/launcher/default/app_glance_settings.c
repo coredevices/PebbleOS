@@ -8,7 +8,9 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/comm_session/session.h>
@@ -25,7 +27,6 @@
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 //! Horizontal span of one row of the charging bolt, top to bottom
 typedef struct ChargingIconRow {
@@ -338,7 +339,7 @@ static uint32_t prv_get_resource_id_for_connectivity_status(
   } else if (settings_glance->glance_state.is_pebble_app_connected) {
     return RESOURCE_ID_CONNECTIVITY_BLUETOOTH_CONNECTED;
   } else {
-    WTF;
+    pbl_panic();
   }
 }
 
@@ -394,7 +395,7 @@ static void prv_event_handler(PebbleEvent *event, void *context) {
     }
 #endif
     default:
-      WTF;
+      pbl_panic();
   }
 
   // Refresh the content in the glance

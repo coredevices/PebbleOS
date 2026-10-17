@@ -10,7 +10,6 @@
 #include <pbl/mcu/privilege.h>
 #include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
-#include <system/passert.h>
 
 
 ${includes}
@@ -72,7 +71,7 @@ static void* prv_malloc(size_t size, uintptr_t client_pc) {
 
   if (!result && mcu_state_is_thread_privileged() && !prv_is_moddable_app()) {
     // We want to trip an assert if our malloc failed and we're not running a 3rd party app.
-    PBL_CROAK_OOM(size, client_pc, task_heap_get_for_current_task());
+    pbl_malloc_oom(size, client_pc, task_heap_get_for_current_task());
   }
 
   return result;

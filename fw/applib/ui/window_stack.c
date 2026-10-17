@@ -9,6 +9,7 @@
 #include "window_stack_animation.h"
 #include "window_stack_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/util/struct.h>
@@ -18,7 +19,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 // Private API
 ////////////////////////////////////

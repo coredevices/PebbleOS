@@ -10,13 +10,13 @@
 
 #include "quick_launch_setup_menu.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <resource/resource_ids.auto.h>
-#include <system/passert.h>
 
 typedef enum QuickLaunchSetupVersion {
   //! Initial version or never opened

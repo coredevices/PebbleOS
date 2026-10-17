@@ -3,23 +3,23 @@
 
 #include "process_heap.h"
 
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/heap.h>
 
 #include <applib/app_logging.h>
 #include <process_management/pebble_process_info.h>
 #include <process_management/pebble_process_md.h>
-#include <system/passert.h>
 
 static void prv_warn_on_double_free(void *ptr) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Double free detected on pointer <%p>", ptr);
 }
 
-static void prv_croak_on_double_free(void *ptr) {
-  // Always log regardless of CROAKing on unprivileged apps. We don't send the
-  // croak message out over APP_LOG correctly so if we didn't do this developers
-  // wouldn't see the croak reason.
+static void prv_panic_on_double_free(void *ptr) {
+  // Always log regardless of panicking on unprivileged apps. We don't send the
+  // panic message out over APP_LOG correctly so if we didn't do this developers
+  // wouldn't see the panic reason.
   APP_LOG(APP_LOG_LEVEL_ERROR, "Double free detected on pointer <%p>", ptr);
-  PBL_CROAK("Double free detected on pointer <%p>", ptr);
+  pbl_panic("Double free detected on pointer <%p>", ptr);
 }
 
 static void prv_warn_on_heap_corruption(void *ptr) {
@@ -27,9 +27,9 @@ static void prv_warn_on_heap_corruption(void *ptr) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Error: Heap corrupt around <%p>", ptr);
 }
 
-static void prv_croak_on_heap_corruption(void *ptr) {
+static void prv_panic_on_heap_corruption(void *ptr) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Error: Heap corrupt around <%p>", ptr);
-  PBL_CROAK("Error: Heap corrupt around <%p>", ptr);
+  pbl_panic("Error: Heap corrupt around <%p>", ptr);
 }
 
 void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_md) {
@@ -45,7 +45,7 @@ void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_
   if (version_compare(app_sdk_version, old_style_double_free_handling_version) <= 0) {
     heap_set_double_free_handler(heap, prv_warn_on_double_free);
   } else {
-    heap_set_double_free_handler(heap, prv_croak_on_double_free);
+    heap_set_double_free_handler(heap, prv_panic_on_double_free);
   }
   // We try to detect heap corruption by looking at segment headers and
   // comparing the sizes of and prevSizes of consecutive blocks.
@@ -72,6 +72,6 @@ void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_
     // They're using 3.2 SDK or older, just let them off with a log message.
     heap_set_corruption_handler(heap, prv_warn_on_heap_corruption);
   } else {
-    heap_set_corruption_handler(heap, prv_croak_on_heap_corruption);
+    heap_set_corruption_handler(heap, prv_panic_on_heap_corruption);
   }
 }

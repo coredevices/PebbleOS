@@ -47,7 +47,7 @@ static const uint32_t s_cache_settings[] = {
 };
 
 static uint8_t get_permission_value(const MpuRegion *region) {
-  KERNEL_ASSERT(region->permissions < MpuPermissionsCount);
+  PBL_ASSERTN(region->permissions < MpuPermissionsCount);
   return s_permission_to_ap[region->permissions];
 }
 
@@ -91,11 +91,11 @@ void mpu_enable(void) {
 
 void mpu_get_register_settings(const MpuRegion *region, uint32_t *base_address_reg,
                                uint32_t *attributes_reg) {
-  KERNEL_ASSERT(region);
-  KERNEL_ASSERT((region->base_address & 0x1f) == 0);
-  KERNEL_ASSERT((region->region_num & ~0xf) == 0);
-  KERNEL_ASSERT((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
-  KERNEL_ASSERT((region->size & 0x1f) == 0);
+  PBL_ASSERTN(region);
+  PBL_ASSERTN((region->base_address & 0x1f) == 0);
+  PBL_ASSERTN((region->region_num & ~0xf) == 0);
+  PBL_ASSERTN((region->cache_policy < ARRAY_LENGTH(s_cache_settings)));
+  PBL_ASSERTN((region->size & 0x1f) == 0);
 
   *base_address_reg = ((region->base_address & MPU_RBAR_BASE_Msk) |
                        ((ARM_MPU_SH_INNER << MPU_RBAR_SH_Pos) & MPU_RBAR_SH_Msk) |

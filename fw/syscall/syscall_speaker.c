@@ -10,7 +10,6 @@
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 #define SPEAKER_MAX_STREAM_WRITE 8192
 

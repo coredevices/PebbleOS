@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 static DictionaryResult dict_init(DictionaryIterator *iter, const uint8_t *const buffer,
                                   const uint16_t length) {

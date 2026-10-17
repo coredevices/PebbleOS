@@ -7,13 +7,14 @@
 #include "graphics_circle_private.h"
 #include "graphics_private.h"
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/trig.h>
 
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 #if PBL_COLOR
 static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {
@@ -1445,7 +1446,7 @@ void grect_polar_calc_values(const GRect *r, GOvalScaleMode scale_mode, GPointPr
         side = grect_longest_side(rect);
         break;
       default:
-        WTF;
+        pbl_panic();
     }
     const int16_t radius_value = ((side + 1) * FIXED_ONE) / 2 - FIXED_ONE;
     *radius = Fixed_S16_3(MAX(0, radius_value));

@@ -3,12 +3,13 @@
 
 #include "option_menu_window.h"
 
+#include <pbl/kernel/assert.h>
+
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/menu_text_scroll.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
 #include <shell/system_theme_style.h>
-#include <system/passert.h>
 
 static const SystemThemeOptionMenuStyle *prv_get_style(void) {
   return &system_theme_get_style()->option_menu;

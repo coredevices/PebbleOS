@@ -62,12 +62,12 @@ void test_app_file__name_make_buf_just_big_enough(void) {
 
 void test_app_file__name_make_buf_too_small_for_suffix(void) {
   char buf[12];
-  cl_assert_passert(app_file_name_make(buf, sizeof(buf), 123, "ab", 2));
+  cl_assert_panic(app_file_name_make(buf, sizeof(buf), 123, "ab", 2));
 }
 
 void test_app_file__name_make_buf_too_small_for_prefix(void) {
   char buf[10];
-  cl_assert_passert(app_file_name_make(buf, sizeof(buf), 123, "", 0));
+  cl_assert_panic(app_file_name_make(buf, sizeof(buf), 123, "", 0));
 }
 
 // Tests for is_app_file_name()

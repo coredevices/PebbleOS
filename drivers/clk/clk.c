@@ -4,9 +4,8 @@
 #include <errno.h>
 
 #include <pbl/drivers/clk.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
-
-#include <system/passert.h>
 
 int pbl_clk_enable(const struct pbl_clk *clk) {
   const struct pbl_clk_controller *ctrl = clk->ctrl;

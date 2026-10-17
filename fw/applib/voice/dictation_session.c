@@ -6,12 +6,12 @@
 #include "dictation_session_private.h"
 #include "voice_window_private.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/voice/voice_window.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #ifdef CONFIG_MIC
 

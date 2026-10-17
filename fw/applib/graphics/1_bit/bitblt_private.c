@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bitops.h>
 #include <pbl/util/size.h>
@@ -12,7 +13,6 @@
 #include <applib/graphics/graphics_private.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/graphics/raw_image.h>
-#include <system/passert.h>
 
 #define MAX_SUPPORTED_PALETTE_ENTRIES 4
 

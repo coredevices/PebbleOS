@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include <pbl/drivers/als.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
@@ -20,7 +21,6 @@
 #include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 // Forward decl so the parent menu can push the Backlight submenu.
 static void prv_backlight_submenu_push(void);
@@ -359,7 +359,7 @@ static uint16_t prv_backlight_item_from_row(uint16_t row) {
     }
     visible_row++;
   }
-  WTF;
+  pbl_panic();
 }
 
 static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t row) {
@@ -391,7 +391,7 @@ static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t r
       prv_timeout_menu_push(data);
       break;
     default:
-      WTF;
+      pbl_panic();
   }
   settings_menu_reload_data(SettingsMenuItemDisplay);
   settings_menu_mark_dirty(SettingsMenuItemDisplay);
@@ -463,7 +463,7 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_timeout_labels[prv_timeout_get_selection_index()];
       break;
     default:
-      WTF;
+      pbl_panic();
   }
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
 }
@@ -594,7 +594,7 @@ static uint16_t prv_display_item_from_row(uint16_t row) {
     }
     visible_row++;
   }
-  WTF;
+  pbl_panic();
 }
 
 static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row) {
@@ -632,7 +632,7 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
       break;
 #endif
     default:
-      WTF;
+      pbl_panic();
   }
   settings_menu_reload_data(SettingsMenuItemDisplay);
   settings_menu_mark_dirty(SettingsMenuItemDisplay);
@@ -687,7 +687,7 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       break;
 #endif
     default:
-      WTF;
+      pbl_panic();
   }
   menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
 }

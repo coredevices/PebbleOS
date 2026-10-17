@@ -5,11 +5,11 @@
 
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/util/list.h>
 
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
-#include <system/passert.h>
 
 #define TEST_UUID                                                                              \
   UuidMake(0xF9, 0xC6, 0xEB, 0xE4, 0x06, 0xCD, 0x46, 0xF1, 0xB1, 0x51, 0x24, 0x08, 0x74, 0xD2, \

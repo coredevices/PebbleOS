@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/comm_session/session_analytics.h>
 #include <pbl/services/comm_session/session_internal.h>
 #include <pbl/services/comm_session/session_send_queue.h>
 #include <pbl/util/math.h>
 
 #include <comm/bt_lock.h>
-#include <system/passert.h>
 
 // -------------------------------------------------------------------------------------------------
 

@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -13,7 +15,6 @@
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #define NUM_MENU_ITEMS 13
 
@@ -72,8 +73,7 @@ static void menu_select_callback(int index, void *ctx) {
   // ---------------------------------------------------------------------------
   // Run the appropriate test
   if (index == 0) {
-    // CROAK
-    PBL_CROAK("CROAK");
+    pbl_panic("test");
 
   } else if (index == 1) {
     // stuck timer callback
@@ -181,7 +181,7 @@ static void prv_window_load(Window *window) {
 
   int i = 0;
   data->menu_items[i++] = (SimpleMenuItem){
-    .title = "croak",
+    .title = "panic",
     .callback = menu_select_callback,
   };
   data->menu_items[i++] = (SimpleMenuItem){

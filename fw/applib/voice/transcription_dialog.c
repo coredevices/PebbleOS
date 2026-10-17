@@ -3,6 +3,8 @@
 
 #include "transcription_dialog.h"
 
+#include <pbl/kernel/assert.h>
+
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/graphics/utf8.h>
@@ -12,7 +14,6 @@
 #include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
-#include <system/passert.h>
 
 #define SCROLL_ANIMATION_DURATION (300)
 #define POP_WINDOW_DELAY          (400)

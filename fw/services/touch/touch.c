@@ -4,6 +4,7 @@
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/input/input.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -17,7 +18,6 @@
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);
 

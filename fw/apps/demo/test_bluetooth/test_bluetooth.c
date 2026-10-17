@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -12,7 +13,6 @@
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #define NUM_MENU_ITEMS 2
 

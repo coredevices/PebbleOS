@@ -7,6 +7,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/input/input.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -19,7 +20,6 @@
 #include <board/board.h>
 #include <cst816_fw.h>
 #include <kernel/events.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 

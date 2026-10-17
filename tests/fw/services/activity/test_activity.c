@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -30,7 +31,6 @@
 #include <kernel/events.h>
 #include <shell/prefs.h>
 #include <sys/stat.h>
-#include <system/passert.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096

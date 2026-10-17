@@ -18,11 +18,6 @@
 // The subsystem on the POSIX kernel: time only moves when every thread is
 // blocked, so the watchdog thread's periodic sleep drives the clock.
 
-[[noreturn]] void pbl_kernel_assert_failed(const char *filename, int line) {
-  fprintf(stderr, "kernel assert at %s:%d\n", filename, line);
-  abort();
-}
-
 void pbl_task_wdt_reset_for_test(void);
 
 #define STACK 4096

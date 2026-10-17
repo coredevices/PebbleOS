@@ -57,6 +57,8 @@ extern "C" {
 // at linking time.
 // #include <soc/nrfx_irqs.h>
 
+#include <pbl/kernel/assert.h>
+
 //------------------------------------------------------------------------------
 
 /**
@@ -64,8 +66,7 @@ extern "C" {
  *
  * @param expression Expression to be evaluated.
  */
-#define NRFX_ASSERT(expr) ((expr) ? (void)0 : assert_failed((uint8_t *)__FILE__, __LINE__))
-void assert_failed(uint8_t *file, uint32_t line);
+#define NRFX_ASSERT(expr) PBL_ASSERTN(expr)
 
 /**
  * @brief Macro for placing a compile time assertion.

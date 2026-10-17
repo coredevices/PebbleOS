@@ -3,6 +3,7 @@
 
 #include "status_bar_layer.h"
 
+#include <pbl/kernel/assert.h>
 #include <pbl/services/clock.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
@@ -18,7 +19,6 @@
 #include <kernel/ui/kernel_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 typedef struct StatusBarTextFormat {
   GTextOverflowMode overflow_mode;

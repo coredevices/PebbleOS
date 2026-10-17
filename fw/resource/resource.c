@@ -8,13 +8,13 @@
 #include "resource_storage_flash.h"
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/process_management/app_storage.h>
 
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
-#include <system/passert.h>
 
 // TODO: this may be replaced once apps become more dynamic
 

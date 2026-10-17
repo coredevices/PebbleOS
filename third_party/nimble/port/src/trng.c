@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include <pbl/drivers/rng.h>
+#include <pbl/kernel/assert.h>
 
-#include <system/passert.h>
 #include <trng/trng.h>
 
 struct trng_dev {

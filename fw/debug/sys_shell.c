@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -19,7 +20,6 @@
 #include <kernel/util/factory_reset.h>
 #include <process_management/worker_manager.h>
 #include <system/bootbits.h>
-#include <system/passert.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 
@@ -44,8 +44,8 @@ static int prv_cmd_crash_hard(const struct pbl_shell *sh, size_t argc, char **ar
   system_hard_reset();
 }
 
-static int prv_cmd_croak(const struct pbl_shell *sh, size_t argc, char **argv) {
-  PBL_CROAK("You asked for this!");
+static int prv_cmd_panic(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pbl_panic("You asked for this!");
 }
 
 static int prv_cmd_factory_reset(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -205,7 +205,7 @@ PBL_SHELL_SUBCMD_ADD(sub_sys, crash, nullptr, "Reset as if the launcher panicked
                      0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, crash_hard, nullptr, "Hard reset as if the firmware failed to start",
                      prv_cmd_crash_hard, 0, 0);
-PBL_SHELL_SUBCMD_ADD(sub_sys, croak, nullptr, "Trigger a croak", prv_cmd_croak, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys, panic, nullptr, "Trigger a panic", prv_cmd_panic, 0, 0);
 #ifdef CONFIG_RECOVERY_FW
 PBL_SHELL_SUBCMD_ADD(sub_sys, factory_reset, nullptr, "Factory reset", prv_cmd_factory_reset, 1, 0);
 #else

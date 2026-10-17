@@ -8,7 +8,6 @@
 
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
-#include <system/passert.h>
 
 #define APP_SESSION_CAPABILITIES_CACHE_FILENAME "app_comm"
 

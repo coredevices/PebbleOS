@@ -5,6 +5,7 @@ pbl_library_named(kernel)
 pbl_library_kind(stlib)
 pbl_library_sources(
   debug.c
+  fatal.c
   irq.c
   msgq.c
   mutex.c

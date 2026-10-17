@@ -954,7 +954,7 @@ static void set_color_orientation(GlobeView *view, int32_t latitude_e2, int32_t 
 // here via uzlib (the same raw-deflate decoder uPNG uses).
 // Buffers come from malloc_try — the app-task heap free() and the allocator
 // gdraw_command_sequence_destroy's munmap-or-free path pair with, so the
-// inflated BW sequence can be handed to the normal destroy path. The croaking
+// inflated BW sequence can be handed to the normal destroy path. The panicking
 // allocators are off-limits here: the globe is an optional visual, so heap
 // pressure must degrade to "no globe", never reboot the watch.
 // Returns NULL on any failure; *out_size gets the inflated size.

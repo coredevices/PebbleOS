@@ -9,6 +9,7 @@
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/btutil/bt_uuid.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/local_id.h>
@@ -20,7 +21,6 @@
 #include <comm/bt_lock.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
-#include <system/passert.h>
 #include <system/version.h>
 
 static GAPLEAdvertisingJobRef s_discovery_advert_job;

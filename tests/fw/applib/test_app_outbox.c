@@ -108,14 +108,14 @@ static void prv_register(void) {
 
 void test_app_outbox__register_twice_asserts(void) {
   prv_register();
-  cl_assert_passert(prv_register());
+  cl_assert_panic(prv_register());
 }
 
 void test_app_outbox__send_not_user_space_buffer(void) {
   // TODO: really implement privilege escalation in unit tests. See PBL-9688
   return;
-  cl_assert_passert(app_outbox_send(nullptr, s_test_data_length, test_app_outbox_sent_handler,
-                                    s_expected_cb_ctx));
+  cl_assert_panic(app_outbox_send(nullptr, s_test_data_length, test_app_outbox_sent_handler,
+                                  s_expected_cb_ctx));
   assert_syscall_failed();
 }
 
@@ -125,15 +125,15 @@ static void prv_disallowed_sent_handler(AppOutboxStatus status, void *cb_ctx) {
 
 void test_app_outbox__send_disallowed_sent_handler(void) {
   prv_register();
-  cl_assert_passert(app_outbox_send(s_test_data, s_test_data_length, prv_disallowed_sent_handler,
-                                    s_expected_cb_ctx));
+  cl_assert_panic(app_outbox_send(s_test_data, s_test_data_length, prv_disallowed_sent_handler,
+                                  s_expected_cb_ctx));
   assert_syscall_failed();
 }
 
 void test_app_outbox__send_max_length_exceeded(void) {
   prv_register();
-  cl_assert_passert(app_outbox_send(s_test_data, s_test_data_length + 1,
-                                    test_app_outbox_sent_handler, s_expected_cb_ctx));
+  cl_assert_panic(app_outbox_send(s_test_data, s_test_data_length + 1, test_app_outbox_sent_handler,
+                                  s_expected_cb_ctx));
   assert_syscall_failed();
 }
 
@@ -172,7 +172,7 @@ void test_app_outbox__send_but_null_sent_handler(void) {
   prv_register();
   // Invalid data, so normally an event would get put to invoke the sent_handler,
   // but sent handler is NULL. Expect no events to be put.
-  cl_assert_passert(app_outbox_send(nullptr, 0, nullptr, s_expected_cb_ctx));
+  cl_assert_panic(app_outbox_send(nullptr, 0, nullptr, s_expected_cb_ctx));
   cl_assert_equal_i(s_num_app_outbox_events_sent, 0);
 }
 

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/button_id.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/touch/touch.h>
 
@@ -25,7 +26,6 @@
 #include <process_management/process_loader.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 #include <tinymt32.h>
 
 #if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)

@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 #include <pbl/bluetooth/comm.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/comm_session/session.h>
@@ -22,7 +24,6 @@
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall_define.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -141,7 +142,7 @@ static const char *prv_string_for_destination(TransportDestination destination) 
     case TransportDestinationHybrid:
       return "H";
     default:
-      WTF;
+      pbl_panic();
       return nullptr;
   }
 }

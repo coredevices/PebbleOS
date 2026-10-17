@@ -15,6 +15,7 @@ time.md
 boot.md
 idle.md
 memory.md
+fatal.md
 compiler.md
 internals.md
 ```

@@ -6,6 +6,8 @@
 #include <stdio.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 
@@ -20,7 +22,6 @@
 #include <resource/resource_ids.auto.h>
 #include <resource/resource_storage_flash.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 #define NUM_REGIONS ARRAY_LENGTH(s_flash_regions)
 
@@ -268,7 +269,7 @@ static void push_window(FlashDiagAppData *data) {
 static void handle_init(void) {
   FlashDiagAppData *data = (FlashDiagAppData *)app_malloc_check(sizeof(FlashDiagAppData));
   if (data == nullptr) {
-    PBL_CROAK("Out of memory");
+    pbl_panic("Out of memory");
   }
   app_state_set_user_data(data);
   push_window(data);

@@ -676,10 +676,10 @@ void
     _duma_exit(void);
 #endif
 
-// Avoid pulling in stubs_passert.h here, causes too many issues
+// Avoid pulling in the fatal stubs here, causes too many issues
 // define a weak fallback for code that doesn't pull in clar
-__attribute__((__weak__)) void passert_failed(const char *filename, int line_number,
-                                              const char *message, ...) {
+__attribute__((__weak__)) void pbl_panic_at(const char *filename, int line_number,
+                                            const char *message, ...) {
   va_list ap;
   va_start(ap, message);
   printf("*** ASSERTION FAILED: %s:%u\n", filename, line_number);
@@ -696,7 +696,7 @@ __attribute__((__weak__)) void passert_failed(const char *filename, int line_num
  * Print message and halt program execution in crazy way.
  */
 void _duma_assert(const char *exprstr, const char *filename, int lineno) {
-  passert_failed(filename, lineno, "\nDUMA: DUMA_ASSERT(%s) failed)\n", exprstr);
+  pbl_panic_at(filename, lineno, "\nDUMA: DUMA_ASSERT(%s) failed)\n", exprstr);
 }
 
 #ifndef DUMA_PREFER_GETENV
@@ -927,7 +927,7 @@ static void duma_getenvvars(DUMA_TLSVARS_T *duma_tls) {
 
 #include <signal.h>
 static void sigsegv_handler(int signum) {
-  passert_failed(__FILE__, __LINE__, "\nDUMA: DUMA_ASSERT(%d) failed)\n", signum);
+  pbl_panic_at(__FILE__, __LINE__, "\nDUMA: DUMA_ASSERT(%d) failed)\n", signum);
 }
 
 /* Function: duma_init

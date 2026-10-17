@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/msgq.h>
@@ -19,7 +20,6 @@
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/task_init.h>
 #include <process_management/app_manager.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL);
 

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/comm_session/session.h>
@@ -12,7 +13,6 @@
 
 #include <kernel/pbl_malloc.h>
 #include <sys/types.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_voice_endpoint, CONFIG_SERVICE_VOICE_ENDPOINT_LOG_LEVEL);
 

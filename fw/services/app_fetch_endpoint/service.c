@@ -15,8 +15,8 @@
 #include <pbl/util/uuid.h>
 
 #include <kernel/pbl_malloc.h>
+#include <kernel/pebble_tasks.h>
 #include <process_management/pebble_process_info.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_fetch_endpoint, CONFIG_SERVICE_APP_FETCH_ENDPOINT_LOG_LEVEL);
 

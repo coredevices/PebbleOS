@@ -5,6 +5,7 @@
 
 #include <errno.h>
 
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
@@ -15,13 +16,6 @@
 
 //! Internal interface between the objects, the scheduler and the arch code.
 //! Everything here is called with interrupts locked unless noted.
-
-#define KERNEL_ASSERT(x)                                 \
-  do {                                                   \
-    if (PBL_UNLIKELY(!(x))) {                            \
-      pbl_kernel_assert_failed(__FILE_NAME__, __LINE__); \
-    }                                                    \
-  } while (0)
 
 //! Woken by resume after being suspended while blocked.
 #define KWAKE_INTERRUPTED (-EINTR)

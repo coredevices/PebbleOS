@@ -24,7 +24,6 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/watchface.h>
-#include <system/passert.h>
 
 typedef struct DialogsData {
   Window window;

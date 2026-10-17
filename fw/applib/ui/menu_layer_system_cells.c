@@ -14,7 +14,6 @@
 #include <shell/system_theme.h>
 #include <shell/system_theme_style.h>
 #include <syscall/syscall.h>
-#include <system/passert.h>
 
 /////////////////////////////////
 // System Provided Cell Types

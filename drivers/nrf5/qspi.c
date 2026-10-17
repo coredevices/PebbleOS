@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/flash/qspi_flash.h>
 #include <pbl/drivers/qspi_definitions.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
@@ -17,7 +18,6 @@
 #include <flash_region/flash_region.h>
 #include <hal/nrf_qspi.h>
 #include <nrfx.h>
-#include <system/passert.h>
 
 // NOTE: This driver does not cover anomaly 244, which may cause data corruption
 // if HF clock source is switching between HFXO and HFINT (e.g. by BLE). This

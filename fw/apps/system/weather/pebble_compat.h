@@ -102,7 +102,7 @@
 #define resource_load(handle, buf, max) applib_resource_load((handle), (buf), (max))
 
 // App-task heap (the ported code uses the libc names). NOTE: the *_check variants
-// CROAK (kill the app) on OOM and never return NULL — any `if (!p)` after these is
+// Panic (kill the app) on OOM and never return NULL — any `if (!p)` after these is
 // unreachable. Sites with a real fallback path (skip-the-effect scratch buffers,
 // optional resource loads) must use malloc_try instead.
 #undef calloc

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/comm.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_transport.h>
@@ -14,7 +15,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
-#include <system/passert.h>
 
 #define PULSE_PP_OPCODE_DATA  (1)
 #define PULSE_PP_OPCODE_OPEN  (2)

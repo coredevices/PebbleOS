@@ -10,7 +10,6 @@
 #include <kernel/kernel_applib_state.h>
 #include <kernel/pebble_tasks.h>
 #include <process_state/app_state/app_state.h>
-#include <system/passert.h>
 
 static GContext s_kernel_graphics_context;
 

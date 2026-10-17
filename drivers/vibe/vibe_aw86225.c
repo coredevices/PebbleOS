@@ -11,7 +11,6 @@
 #include <pbl/util/bits.h>
 
 #include <board/board.h>
-#include <system/passert.h>
 
 PBL_LOG_MODULE_DEFINE(driver_vibe_aw86225, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 
