@@ -96,10 +96,6 @@ void system_theme_set_dark_mode(bool dark_mode) {
 }
 
 PBL_SYSCALL(bool, system_theme_is_dark_mode) {
-  // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
-  if (PBL_IF_COLOR_ELSE(false, true)) {
-    return false;
-  }
   return s_dark_mode && prv_is_system_app();
 }
 
