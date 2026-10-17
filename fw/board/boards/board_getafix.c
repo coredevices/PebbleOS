@@ -257,7 +257,7 @@ PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
 PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c1, 0);
 
 PBL_LIS2DW12_DEFINE(s_lis2dw12, &s_i2c1.bus, 0x19,
-                    .int1 = {.peripheral = hwp_gpio1, .gpio_pin = 26},
+                    .int1 = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 26, PBL_IRQ_TYPE_EDGE_RISING),
                     .int1_in = PBL_GPIO(SF32LB_GPIO1, 26, 0),
                     .axis_map = {[AXIS_X] = 0, [AXIS_Y] = 1, [AXIS_Z] = 2},
                     .axis_dir = {[AXIS_X] = -1, [AXIS_Y] = 1, [AXIS_Z] = 1});

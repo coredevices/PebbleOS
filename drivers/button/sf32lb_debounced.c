@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/debounced_button.h>
-#include <pbl/drivers/exti.h>
+#include <pbl/drivers/gpio.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/soc/sf32lb/sleep.h>
@@ -12,6 +12,7 @@
 #include <bf0_hal_tim.h>
 #include <board/board.h>
 #include <system/bootbits.h>
+#include <system/passert.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 
@@ -70,7 +71,7 @@ static void prv_enable_button_timer(void) {
   __enable_irq();
 }
 
-static void prv_button_interrupt_handler(void) {
+static void prv_button_interrupt_handler(void *arg) {
   prv_enable_button_timer();
 }
 
@@ -78,16 +79,13 @@ void debounced_button_init(void) {
   button_init();
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    const struct pbl_gpio *gpio = &BOARD_CONFIG_BUTTON.buttons[i].gpio;
-    const ExtiConfig config = {
-      .peripheral = pbl_gpio_sf32lb_regs(gpio),
-      .gpio_pin = gpio->pin,
-      .pull = (gpio->flags & PBL_GPIO_PULL_UP)     ? GPIO_PuPd_UP
-              : (gpio->flags & PBL_GPIO_PULL_DOWN) ? GPIO_PuPd_DOWN
-                                                   : GPIO_PuPd_NOPULL,
-    };
-    exti_configure_pin(config, ExtiTrigger_RisingFalling, prv_button_interrupt_handler);
-    exti_enable(config);
+    struct pbl_irq_spec irq;
+
+    PBL_ASSERTN(
+        pbl_gpio_to_irq(&BOARD_CONFIG_BUTTON.buttons[i].gpio, PBL_IRQ_TYPE_EDGE_BOTH, &irq) == 0);
+    PBL_ASSERTN(pbl_device_init(&irq.intc->dev) == 0);
+    PBL_ASSERTN(pbl_intc_request(&irq, prv_button_interrupt_handler, nullptr) == 0);
+    PBL_ASSERTN(pbl_intc_enable(&irq) == 0);
   }
 
   initialize_button_timer();

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <pbl/drivers/exti.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/intc.h>
 
 #include <applib/app_timer.h>
 
@@ -53,7 +53,7 @@ typedef const struct HRMDevice {
   /** Sensor I2C port. */
   const struct pbl_i2c_dev *i2c;
   /** Sensor interrupt line. */
-  ExtiConfig int_exti;
+  struct pbl_irq_spec int_irq;
   /** Sensor interrupt line, as an input. */
   struct pbl_gpio int_input;
   /** Sensor reset line, optional. */

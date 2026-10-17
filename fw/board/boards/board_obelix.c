@@ -340,11 +340,7 @@ static HRMDeviceState s_hrm_state;
 static HRMDevice s_hrm = {
   .state = &s_hrm_state,
   .i2c = &s_i2c_gh3x2x,
-  .int_exti =
-      {
-        .peripheral = hwp_gpio1,
-        .gpio_pin = 44,
-      },
+  .int_irq = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_FALLING),
   .int_input = PBL_GPIO(SF32LB_GPIO1, 44, 0),
   .reset = PBL_GPIO(&s_npm1300_gpio.port, 3, PBL_GPIO_PULL_UP),
 };
