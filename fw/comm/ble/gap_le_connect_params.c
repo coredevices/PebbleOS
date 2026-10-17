@@ -75,6 +75,10 @@
 //! Try 3 times before giving up.
 #define MAX_UPDATE_REQUEST_ATTEMPTS (3)
 
+//! Collisions with a peer procedure don't count as attempts, up to this many.
+#define MAX_COLLISION_RETRIES (10)
+#define COLLISION_RETRY_MS    (2 * 1000)
+
 static const GAPLEConnectRequestParams s_default_connection_params_table[PBL_BT_RESPONSE_TIME_NUM] =
     {
       [PBL_BT_RESPONSE_TIME_MAX] =
@@ -86,7 +90,7 @@ static const GAPLEConnectRequestParams s_default_connection_params_table[PBL_BT_
           },
       [PBL_BT_RESPONSE_TIME_MIDDLE] =
           {
-            .slave_latency_events = 30,
+            .slave_latency_events = 3,
             .connection_interval_min_1_25ms = 24, // 30ms
             .connection_interval_max_1_25ms = 36, // 45ms
             .supervision_timeout_10ms = 600,      // 6s
@@ -273,6 +277,7 @@ void gap_le_connect_params_request(GAPLEConnection *connection,
                                    enum pbl_bt_response_time_state desired_state) {
   // A new desired state is requested by the FW, start afresh:
   connection->param_update_info.attempts = 0;
+  connection->param_update_info.collisions = 0;
 
   prv_request_params_update(connection, desired_state);
 }
@@ -326,6 +331,25 @@ void gap_le_connect_params_re_evaluate(GAPLEConnection *connection) {
   prv_evaluate(connection, desired_state);
 }
 
+static void prv_handle_update_failed(GAPLEConnection *connection, enum pbl_bt_hci_status status) {
+  connection->param_update_info.is_request_pending = false;
+
+  if (((status != PBL_BT_HCI_STATUS_LL_PROCEDURE_COLLISION) &&
+       (status != PBL_BT_HCI_STATUS_DIFFERENT_TRANSACTION_COLLISION)) ||
+      (connection->param_update_info.collisions >= MAX_COLLISION_RETRIES)) {
+    return;
+  }
+
+  connection->param_update_info.collisions++;
+  if (connection->param_update_info.attempts > 0) {
+    connection->param_update_info.attempts--;
+  }
+
+  PBL_LOG_DBG("Conn param request collided (0x%02x), retrying", status);
+  new_timer_start(connection->param_update_info.watchdog_timer, COLLISION_RETRY_MS,
+                  prv_watchdog_timer_callback, connection, 0);
+}
+
 // -------------------------------------------------------------------------------------------------
 //! Extern'd for and used by gap_le_connect.c
 //! Handles Bluetopia's Connection Parameter Updated event.
@@ -336,13 +360,14 @@ void pbl_bt_handle_le_conn_params_update_event(
     const struct pbl_bt_conn_update_complete_event *event) {
   bt_lock();
   const struct pbl_bt_conn_params *params = &event->conn_params;
-  if (event->status != PBL_BT_HCI_STATUS_SUCCESS) {
-    goto unlock;
-  }
-
   GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
   if (!connection) {
     PBL_LOG_DBG("Receiving conn param update but connection is no longer open");
+    goto unlock;
+  }
+
+  if (event->status != PBL_BT_HCI_STATUS_SUCCESS) {
+    prv_handle_update_failed(connection, event->status);
     goto unlock;
   }
 

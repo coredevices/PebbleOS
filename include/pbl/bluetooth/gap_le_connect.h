@@ -99,7 +99,7 @@ struct PBL_PACKED pbl_bt_conn_update_complete_event {
   struct pbl_bt_conn_params conn_params;
   /** Address of the peer. The address type is not available. */
   struct pbl_bt_addr dev_address;
-  /** Status. The NimBLE backend only reports successful updates. */
+  /** Status. On failure, conn_params holds the parameters still in use. */
   enum pbl_bt_hci_status status;
 };
 
