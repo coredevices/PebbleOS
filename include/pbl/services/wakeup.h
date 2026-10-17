@@ -20,14 +20,16 @@
  */
 
 /**
- * @brief Time reserved around each event, in seconds, in which no other event can be scheduled.
+ * @brief Time reserved around each event, in seconds, in which the same app can't schedule
+ * another event.
  */
 #define WAKEUP_EVENT_WINDOW 60
 /** @brief Maximum number of events per app. */
 #define MAX_WAKEUP_EVENTS_PER_APP 8
 /**
- * @brief Reduced gap, in seconds, between events caught up after a time change or after the
- * service was disabled (e.g. low power mode).
+ * @brief Minimum gap, in seconds, between events of different apps scheduled close together,
+ * and between events caught up after a time change or after the service was disabled (e.g. low
+ * power mode).
  */
 #define WAKEUP_CATCHUP_WINDOW (WAKEUP_EVENT_WINDOW / 2)
 
@@ -36,7 +38,7 @@ typedef int32_t WakeupId;
 
 /** @brief Wakeup event passed to the app it launches. */
 typedef struct {
-  /** Event identifier, its scheduling timestamp. */
+  /** Event identifier. */
   WakeupId wakeup_id;
   /** Reason given by the app when scheduling the event. */
   int32_t wakeup_reason;

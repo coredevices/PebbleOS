@@ -28,14 +28,16 @@ void app_wakeup_service_subscribe(WakeupHandler handler);
 
 //! Registers a wakeup event that triggers a callback at the specified time.
 //! Applications may only schedule up to 8 wakeup events.
-//! Wakeup events are given a 1 minute duration window, in that no application may schedule a
-//! wakeup event with 1 minute of a currently scheduled wakeup event.
+//! Wakeup events are given a 1 minute duration window, in that an application may not schedule a
+//! wakeup event within 1 minute of another of its own scheduled wakeup events. Wakeup events of
+//! different applications that are close together are delivered in turn, so a wakeup event may
+//! occur slightly later than requested.
 //! @param timestamp The requested time (UTC) for the wakeup event to occur
 //! @param cookie The application specific reason for the wakeup event
 //! @param notify_if_missed On powering on Pebble, will alert user when
 //! notifications were missed due to Pebble being off.
 //! @return negative values indicate errors (StatusCode)
-//! E_RANGE if the event cannot be scheduled due to another event in that period.
+//! E_RANGE if the event cannot be scheduled due to another event of the app in that period.
 //! E_INVALID_ARGUMENT if the time requested is in the past.
 //! E_OUT_OF_RESOURCES if the application has already scheduled all 8 wakeup events.
 //! E_INTERNAL if a system error occurred during scheduling.
