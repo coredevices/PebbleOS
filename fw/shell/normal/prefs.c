@@ -1002,7 +1002,7 @@ static bool prv_set_s_music_show_album_art(bool *enabled) {
 
 static bool prv_set_s_dark_mode(uint8_t *mode) {
   if (*mode >= DarkModeCount) {
-    s_dark_mode = DarkModeOn;
+    s_dark_mode = DarkModeOff;
     return false;
   }
   s_dark_mode = *mode;

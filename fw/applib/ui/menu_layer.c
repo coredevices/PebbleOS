@@ -23,7 +23,6 @@
 #include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
-#include <shell/prefs_syscalls.h>
 #include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH

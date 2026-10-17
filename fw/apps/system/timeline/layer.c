@@ -463,8 +463,8 @@ static void prv_show_day_sep(TimelineLayer *timeline_layer, bool slide) {
   TimelineResourceInfo timeline_res = {
     .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
   };
-  peek_layer_set_icon_with_size(&timeline_layer->day_separator, &timeline_res,
-                                TimelineResourceSizeLarge, icon_from);
+  peek_layer_set_icon_with_size_invert(&timeline_layer->day_separator, &timeline_res,
+                                TimelineResourceSizeLarge, icon_from, system_theme_is_dark_mode());
 
   if (slide) {
     const bool align_in_frame = true;

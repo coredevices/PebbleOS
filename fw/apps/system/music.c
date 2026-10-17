@@ -905,7 +905,7 @@ static MusicNoMusicWindow *prv_create_no_music_window(void) {
 
   text_layer_init_with_parameters(
       &window->text_layer, &NO_MUSIC_TEXT_RECT, i18n_get("START PLAYBACK\nON YOUR PHONE", window),
-      fonts_get_system_font(config->no_music_font_key), system_theme_get_fg_color(), GColorClear,
+      fonts_get_system_font(config->no_music_font_key), PBL_IF_COLOR_ELSE(system_theme_get_fg_color(), GColorBlack), GColorClear,
       GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->window.layer, &window->bitmap_layer.layer);
   layer_add_child(&window->window.layer, &window->text_layer.layer);
@@ -1061,7 +1061,7 @@ static void prv_set_pos_update_timer(MusicAppData *data, MusicPlayState playstat
 static void prv_configure_music_text_layer(TextLayer *text_layer, char *text_buffer,
                                            const GRect *rect, int16_t y_offset,
                                            GTextAlignment align, GFont font) {
-  text_layer_init_with_parameters(text_layer, rect, text_buffer, font, system_theme_get_fg_color(), GColorClear,
+  text_layer_init_with_parameters(text_layer, rect, text_buffer, font, PBL_IF_COLOR_ELSE(system_theme_get_fg_color(), GColorBlack), GColorClear,
                                   align, GTextOverflowModeFill);
   layer_set_bounds(&text_layer->layer, &GRect(0, -y_offset, rect->size.w, rect->size.h + y_offset));
   layer_set_clips(&text_layer->layer, false);
@@ -1541,7 +1541,7 @@ static void prv_apply_art_appearance(MusicAppData *data) {
 #endif
   // Over album art the clock is drawn with a dark outline, so it stays white in every theme
   status_bar_layer_set_colors(&data->status_layer, GColorClear,
-                              data->has_album_art ? GColorWhite : system_theme_get_fg_color());
+                              data->has_album_art ? GColorWhite : PBL_IF_COLOR_ELSE(system_theme_get_fg_color(), GColorBlack));
   status_bar_layer_set_mode(&data->status_layer, clock_mode);
 #if MUSIC_ROUND_MEDIA_LAYOUT
   const GRect clock_frame = GRect(0, ART_ROUND_CLOCK_Y, DISP_COLS, 30);

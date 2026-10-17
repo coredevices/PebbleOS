@@ -133,16 +133,10 @@ PBL_SYSCALL(bool, system_theme_is_dark_mode) {
 }
 
 GColor system_theme_get_bg_color(void) {
-  if (!prv_is_system_app()) {
-    return GColorWhite;
-  }
   return system_theme_is_dark_mode() ? GColorBlack : GColorWhite;
 }
 
 GColor system_theme_get_fg_color(void) {
-  if (!prv_is_system_app()) {
-    return GColorBlack;
-  }
   return system_theme_is_dark_mode() ? GColorWhite : GColorBlack;
 }
 

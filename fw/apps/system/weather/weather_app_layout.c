@@ -1584,10 +1584,11 @@ static void prv_render_layout(Layer *layer, GContext *context) {
   // Drawn LAST so it sits over the footer row and the icon rail. The condition
   // mirrors the fin's exactly (prv_fin_* draws only when !next_forecast), so
   // stepping onto the final day swaps the chevron out for the fin.
+  const bool isDark = system_theme_is_dark_mode();
   if (layout->next_forecast) {
     const int chin_x = -layout->content_layer_origin.x; // content coords -> screen 0
     graphics_context_set_fill_color(context, PBL_IF_COLOR_ELSE(
-        system_theme_is_dark_mode() ? GColorDarkGray : GColorLightGray,
+        isDark ? GColorDarkGray : GColorLightGray,
         system_theme_get_bg_color()));
     graphics_fill_rect(context,
                        GRect(chin_x, WEATHER_APP_LAYOUT_ROUND_CHIN_Y, PBL_DISPLAY_WIDTH,
@@ -1763,6 +1764,13 @@ static void prv_reload_icon(GBitmap **slot, BitmapLayer *bl, const WeatherLocati
     *slot = gbitmap_create_with_resource(
         tiny ? weather_type_get_icon_res_tiny(f->current_weather_type)
              : weather_type_get_icon_res_today(f->current_weather_type));
+#if PBL_BW
+    weather_recolor_gbitmap_for_dark_mode(*slot);
+#elif PBL_RECT
+    if (tiny) {
+      weather_recolor_gbitmap_for_dark_mode(*slot);
+    }
+#endif
   }
   bitmap_layer_set_bitmap(bl, *slot);
 }
@@ -2095,7 +2103,9 @@ void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
   if (fin_raw) {
     gdraw_command_image_destroy(fin_raw); // munmaps the read-only flash mapping
   }
+#if PBL_RECT
   weather_recolor_pdc_image_for_dark_mode(layout->fin_pdc);
+#endif
 #if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
   layout->weather_icon_pdc_sequence = nullptr;
   layout->current_weather_escape_layer = nullptr;
@@ -2237,7 +2247,9 @@ void weather_app_layout_init(WeatherAppLayout *layout, const GRect *frame) {
           GSize(WEATHER_APP_LAYOUT_ROUND_PDC_ART, WEATHER_APP_LAYOUT_ROUND_PDC_ART));
     }
   }
+#if PBL_RECT
   weather_recolor_pdc_sequence_for_dark_mode(layout->weather_icon_pdc_sequence);
+#endif
   layout->current_weather_escape_layer =
       layer_create_with_data(GRect(0, 0, 1, 1), sizeof(WeatherAppLayout *));
   if (layout->current_weather_escape_layer) {
@@ -2283,6 +2295,9 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
   if (today_forecast) {
     layout->current_weather_icon = gbitmap_create_with_resource(
         weather_type_get_icon_res_today(today_forecast->current_weather_type));
+#if PBL_BW
+    weather_recolor_gbitmap_for_dark_mode(layout->current_weather_icon);
+#endif
     bitmap_layer_set_bitmap(layout->current_weather_icon_layer, layout->current_weather_icon);
     layer_set_frame(bitmap_layer_get_layer(layout->current_weather_icon_layer),
                     layout->today_icon_rest_frame);
@@ -2294,6 +2309,9 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
   if (next_forecast) {
     layout->tomorrow_weather_icon = gbitmap_create_with_resource(
         weather_type_get_icon_res_tiny(next_forecast->current_weather_type));
+#if PBL_RECT
+    weather_recolor_gbitmap_for_dark_mode(layout->tomorrow_weather_icon);
+#endif
     bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, layout->tomorrow_weather_icon);
   } else {
     bitmap_layer_set_bitmap(layout->tomorrow_weather_icon_layer, nullptr);
@@ -2445,6 +2463,9 @@ static bool prv_prepare_day_transition(WeatherAppLayout *layout,
         new_today ? gbitmap_create_with_resource(
                         weather_type_get_icon_res_today(new_today->current_weather_type))
                   : nullptr;
+#if PBL_BW
+    weather_recolor_gbitmap_for_dark_mode(layout->outgoing_weather_icon);
+#endif
     // Frame set to arc start position below, after circle_center is computed.
     layer_set_hidden(layout->outgoing_weather_icon_layer, false);
     // current_weather_icon_layer already holds the old today bitmap — keep it as-is.

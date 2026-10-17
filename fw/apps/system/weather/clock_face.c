@@ -200,9 +200,9 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
     return src;
   for (uint32_t i = 0; i < entries; i++) {
     if (rank[i] == 2)
-      pal[i] = GColorBlack;
+      pal[i] = system_theme_get_fg_color();
     else if (rank[i] == 1)
-      pal[i] = GColorWhite;
+      pal[i] = system_theme_get_bg_color();
     else
       pal[i] = src_pal[i]; // keep transparency
   }
@@ -725,8 +725,13 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   int W = bounds.size.w;
   int H = bounds.size.h;
 
+  // Only do this once a draw
+  const bool isDark = system_theme_is_dark_mode();
+  const GColor fg_color = system_theme_get_fg_color();
+  const GColor bg_color = system_theme_get_bg_color();
+
   // Background — matches other screens
-  graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+  graphics_context_set_fill_color(ctx, bg_color);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
   // Clock face centre — full screen, no bar offset
@@ -807,13 +812,13 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
 
       graphics_context_set_compositing_mode(ctx, GCompOpAssign);
       if (show_temp_side) {
-        const GColor circle_bg = system_theme_is_dark_mode() ? GColorDarkGray : GColorWhite;
+        const GColor circle_bg = isDark ? GColorDarkGray : GColorWhite;
         graphics_context_set_fill_color(ctx, circle_bg);
         graphics_fill_circle(ctx, GPoint(ix, iy), rr);
         // Colour: soft grey outline in light mode; match dark gray fill in dark mode.
         // BW: strokes cannot dither (LightGray maps to White and vanishes) — solid black is the only visible ring.
-        const GColor stroke_color = system_theme_is_dark_mode()
-            ? GColorDarkGray
+        const GColor stroke_color = isDark
+            ? PBL_IF_BW_ELSE(GColorWhite, GColorDarkGray)
             : PBL_IF_BW_ELSE(GColorBlack, GColorLightGray);
         graphics_context_set_stroke_color(ctx, stroke_color);
         graphics_context_set_stroke_width(ctx, 1);
@@ -848,7 +853,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
             tfont = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
           GSize nsz = graphics_text_layout_get_content_size(
               nbuf, tfont, GRect(0, 0, 40, 18), GTextOverflowModeFill, GTextAlignmentCenter);
-          graphics_context_set_text_color(ctx, system_theme_get_fg_color());
+          graphics_context_set_text_color(ctx, fg_color);
           graphics_draw_text(ctx, nbuf, tfont, GRect(ix - nsz.w / 2, iy - 11, nsz.w, 18),
                              GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
           graphics_draw_text(ctx, "\xC2\xB0", tfont, GRect(ix + nsz.w / 2, iy - 13, 10, 18),
@@ -924,9 +929,9 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       const int font_top_pad = -4;
       int ty_s = stg_cy - nsz.h / 2 + font_top_pad;
       // Clear staging area so no icon pixels bleed into the capture.
-      graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+      graphics_context_set_fill_color(ctx, bg_color);
       graphics_fill_rect(ctx, GRect(stg_x, stg_y, stg_w, stg_h), 0, GCornerNone);
-      graphics_context_set_text_color(ctx, system_theme_get_fg_color());
+      graphics_context_set_text_color(ctx, fg_color);
       // Number: centred horizontally at stg_cx
       graphics_draw_text(ctx, stg_buf, centre_font,
                          GRect(stg_x + left_pad, stg_y + ty_s, nsz.w + 2, nsz.h),
@@ -1016,10 +1021,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
         int32_t sx_step = ((int32_t)src_w << 16) / dst_w;
         int32_t sy_step = ((int32_t)src_h << 16) / dst_h;
         int32_t sy_fp = sy_step >> 1;
-#if !PBL_BW
-        // Hoisted: system_theme_get_bg_color() is a syscall, far too costly per pixel.
-        const uint8_t bg_argb = system_theme_get_bg_color().argb;
-#endif
+        const uint8_t bg_argb = bg_color.argb;
         for (int dy = 0; dy < dst_h; dy++, sy_fp += sy_step) {
           int sy = sy_fp >> 16;
           if (sy >= src_h)
@@ -1040,9 +1042,11 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
             // Skip white pixels (background). The staging bitmap is 8-bit on
             // colour and 1-bit on BW — read accordingly.
 #if PBL_BW
-            if (pbl_bitset8_get(srow, (unsigned)sx))
+            const uint8_t fg_argb = system_theme_get_fg_color().argb;
+            const bool bg_bit = (bg_argb & 0x3F) != 0;       // same test weather_fb_row_set uses
+            if ((pbl_bitset8_get(srow, (unsigned)sx) != 0) == bg_bit)
               continue;
-            weather_fb_row_set(ri.data, ax, GColorBlackARGB8);
+            weather_fb_row_set(ri.data, ax, fg_argb);
 #else
             uint8_t pixel = srow[sx];
             if (pixel == bg_argb)
@@ -1077,7 +1081,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     label_color = GColorLightGray; // first step — light gray on white
   }
   if (CLOCK_SMALL_RECT) {
-    label_color = GColorBlack; // gray dithers to broken specks on 1-bit
+    label_color = fg_color; // gray dithers to broken specks on 1-bit
   }
   GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 #if PBL_DISPLAY_HEIGHT >= 200
@@ -1217,7 +1221,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       int c2x = bcx - (int)((int32_t)sin_lookup(angle) * D_in / TRIG_MAX_RATIO);
       int c2y = bcy + (int)((int32_t)cos_lookup(angle) * D_in / TRIG_MAX_RATIO);
 
-      const GColor pill_color = PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+      const GColor pill_color = PBL_IF_COLOR_ELSE(GColorVividCerulean, fg_color);
       graphics_context_set_fill_color(ctx, pill_color);
       graphics_context_set_stroke_color(ctx, pill_color);
       graphics_context_set_stroke_width(ctx, r * 2 + 1);
@@ -1227,7 +1231,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       graphics_draw_line(ctx, GPoint(c1x, c1y), GPoint(c2x, c2y));
 
       graphics_context_set_stroke_width(ctx, 1);
-      graphics_context_set_text_color(ctx, GColorWhite);
+      graphics_context_set_text_color(ctx, bg_color);
     } else {
       graphics_context_set_text_color(ctx, label_color);
     }

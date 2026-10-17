@@ -17,5 +17,6 @@ void PBL_WEAK light_system_color_release(void) {
 void PBL_WEAK light_set_dark_threshold(uint32_t threshold) {
 }
 
-void PBL_WEAK ambient_light_is_light(void) {
+bool PBL_WEAK ambient_light_is_light(void) {
+    return false;
 }
