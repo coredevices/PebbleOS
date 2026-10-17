@@ -9,6 +9,7 @@
 #include <pbl/util/units.h>
 
 #include <board/board.h>
+#include <shell/system_theme.h>
 
 /**
  * @defgroup services_alarms Alarms
@@ -43,7 +44,7 @@
 #define SMART_ALARM_MAX_SMART_SNOOZE (SMART_ALARM_RANGE_S / SMART_ALARM_SNOOZE_DELAY_S)
 
 /** @brief Highlight color of the alarms app. */
-#define ALARMS_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack)
+#define ALARMS_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorJaegerGreen, system_theme_get_fg_color())
 
 /** @brief Unique ID of a configured alarm. */
 typedef int AlarmId;

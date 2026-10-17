@@ -22,7 +22,6 @@
 #include <applib/ui/menu_text_scroll.h>
 #include <applib/ui/window.h>
 #include <process_management/process_manager.h>
-#include <shell/prefs_syscalls.h>
 #include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH
