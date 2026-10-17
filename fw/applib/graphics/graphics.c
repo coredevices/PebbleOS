@@ -464,12 +464,7 @@ void graphics_context_init(GContext *context, FrameBuffer *framebuffer,
     .lock = false
   };
 
-  // init the font cache
-  FontCache *font_cache = &context->font_cache;
-  memset(font_cache->cache_keys, 0, sizeof(font_cache->cache_keys));
-  memset(font_cache->cache_data, 0, sizeof(font_cache->cache_data));
-  keyed_circular_cache_init(&font_cache->line_cache, font_cache->cache_keys, font_cache->cache_data,
-                            sizeof(LineCacheData), LINE_CACHE_SIZE);
+  text_resources_reset_cache(&context->font_cache);
 
   graphics_context_set_default_drawing_state(context, init_mode);
 }

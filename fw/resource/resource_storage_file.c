@@ -3,6 +3,7 @@
 
 #include "resource_storage_file.h"
 
+#include "language_pack.h"
 #include "resource_storage_impl.h"
 
 #include <stdint.h>
@@ -12,8 +13,38 @@
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 
+#include <resource/resource_ids.auto.h>
+
 extern const FileResourceData g_file_resource_stores[];
 extern const uint32_t g_num_file_resource_stores;
+
+static_assert(RESOURCE_ID_LECO_60_BOLD_NUMBERS_AM_PM_EXTENDED - RESOURCE_ID_STRINGS <
+                  LANGUAGE_PACK_RESOURCE_STRIDE,
+              "language pack resources must fit in a slot");
+
+// Each extra slot owns its whole ID window; the file says which entries it carries.
+static const FileResourceData s_language_resource_stores[LANGUAGE_PACK_COUNT - 1] = {
+#define LANGUAGE_STORE(slot)                                                   \
+  {LANGUAGE_PACK_RESOURCE_BASE + (slot) * LANGUAGE_PACK_RESOURCE_STRIDE + 1,   \
+   LANGUAGE_PACK_RESOURCE_BASE + ((slot) + 1) * LANGUAGE_PACK_RESOURCE_STRIDE, \
+   LANGUAGE_PACK_RESOURCE_BASE + (slot) * LANGUAGE_PACK_RESOURCE_STRIDE, "lang" #slot}
+  LANGUAGE_STORE(1),
+  LANGUAGE_STORE(2),
+  LANGUAGE_STORE(3),
+#undef LANGUAGE_STORE
+};
+
+bool language_pack_is_installed(uint8_t slot) {
+  const char *filename = language_pack_filename(slot);
+  if (!filename) {
+    return false;
+  }
+  const int fd = pfs_open(filename, OP_FLAG_READ | OP_FLAG_SKIP_HDR_CRC_CHECK, FILE_TYPE_STATIC, 0);
+  if (fd >= 0) {
+    pfs_close(fd);
+  }
+  return fd != E_DOES_NOT_EXIST;
+}
 
 // Common helpers functions
 //
@@ -102,6 +133,14 @@ static bool resource_storage_file_find_resource(ResourceStoreEntry *entry, ResAp
                                                 uint32_t resource_id) {
   if (app_num != SYSTEM_APP) {
     return false;
+  }
+  for (unsigned int i = 0; i < LANGUAGE_PACK_COUNT - 1; ++i) {
+    const FileResourceData *file = &s_language_resource_stores[i];
+    if (resource_id >= file->first_resource_id && resource_id <= file->last_resource_id) {
+      entry->store_data = file;
+      entry->id -= file->resource_id_offset;
+      return true;
+    }
   }
   for (unsigned int i = 0; i < g_num_file_resource_stores; ++i) {
     if (g_file_resource_stores[i].first_resource_id > resource_id) {

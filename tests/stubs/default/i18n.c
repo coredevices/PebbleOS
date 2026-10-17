@@ -8,6 +8,25 @@
 
 #include <applib/i18n.h>
 
+bool PBL_WEAK i18n_get_pack_info(uint8_t slot, I18nPackInfo *info) {
+  return false;
+}
+
+bool PBL_WEAK i18n_pack_has_fonts(uint8_t slot) {
+  return false;
+}
+
+const char *PBL_WEAK i18n_pack_install_begin(const char *filename) {
+  return filename;
+}
+
+void PBL_WEAK i18n_pack_install_end(bool success) {
+}
+
+bool PBL_WEAK i18n_remove_pack(uint8_t slot) {
+  return false;
+}
+
 const char *PBL_WEAK i18n_get(const char *msgid, const void *owner) {
   // If a string wasn't found, we want to return the original string.
   // However, if we have a context, this string needs to not show the context.

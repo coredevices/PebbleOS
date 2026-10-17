@@ -196,8 +196,21 @@ void shell_prefs_toggle_language_english(void);
 typedef enum ShellLanguage {
   ShellLanguageInstalledPack = 0,
   ShellLanguageEnglish,
+  ShellLanguagePack1,
+  ShellLanguagePack2,
+  ShellLanguagePack3,
   ShellLanguageCount,
 } ShellLanguage;
+
+// Pack slot zero keeps the legacy ShellLanguageInstalledPack value.
+static inline ShellLanguage shell_language_for_pack_slot(uint8_t slot) {
+  return slot == 0 ? ShellLanguageInstalledPack : (ShellLanguage)(ShellLanguagePack1 + slot - 1);
+}
+
+// English, which has no pack, maps to slot zero.
+static inline uint8_t shell_language_pack_slot(ShellLanguage language) {
+  return language >= ShellLanguagePack1 ? language - ShellLanguagePack1 + 1 : 0;
+}
 
 ShellLanguage shell_prefs_get_language(void);
 uint32_t shell_prefs_get_language_resource_id(void);

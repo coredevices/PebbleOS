@@ -19,7 +19,9 @@
 #include <board/board.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
+#include <resource/language_pack.h>
 #include <resource/resource_ids.auto.h>
+#include <resource/system_resource.h>
 #include <shell/normal/prefs_sync.h>
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
@@ -605,8 +607,11 @@ static bool prv_set_s_system_text_size(uint8_t *size) {
 static bool prv_set_s_language_english(bool *english) {
   s_language_english = *english;
   i18n_enable(!s_language_english);
+  system_resource_language_changed();
   return true;
 }
+
+static void prv_pref_store(const char *key, const void *value, size_t val_len);
 
 static bool prv_set_s_language(uint8_t *language) {
   if (*language >= ShellLanguageCount) {
@@ -615,8 +620,13 @@ static bool prv_set_s_language(uint8_t *language) {
   }
 
   s_language = *language;
-  shell_prefs_set_language_english(s_language == ShellLanguageEnglish);
+  // Skip the English pref's handler: it would remap the previous pack and invalidate the fonts
+  // a second time.
+  bool english = s_language == ShellLanguageEnglish;
+  s_language_english = english;
+  prv_pref_store(PREF_KEY_LANG_ENGLISH, &english, sizeof(english));
   i18n_set_resource(shell_prefs_get_language_resource_id());
+  system_resource_language_changed();
   return true;
 }
 
@@ -1250,6 +1260,13 @@ static void prv_pref_set(const char *key, const void *value, size_t val_len) {
   if (success) {
     prv_set_pref_backing(entry, value, val_len);
   }
+}
+
+// Updates only the backing store of a pref whose state the caller already set
+static void prv_pref_store(const char *key, const void *value, size_t val_len) {
+  const PrefsTableEntry *entry = prv_prefs_entry((const uint8_t *)key, strlen(key));
+  PBL_ASSERT(entry != nullptr, "Key %s not found", key);
+  prv_set_pref_backing(entry, value, val_len);
 }
 
 // ------------------------------------------------------------------------------------
@@ -1929,7 +1946,8 @@ ShellLanguage shell_prefs_get_language(void) {
 }
 
 uint32_t shell_prefs_get_language_resource_id(void) {
-  return RESOURCE_ID_STRINGS;
+  const uint8_t slot = shell_language_pack_slot(shell_prefs_get_language());
+  return language_pack_resource_id(slot, RESOURCE_ID_STRINGS, RESOURCE_ID_STRINGS);
 }
 
 void shell_prefs_set_language(ShellLanguage language) {
@@ -1938,10 +1956,8 @@ void shell_prefs_set_language(ShellLanguage language) {
     language_value = ShellLanguageInstalledPack;
   }
 
-  const bool english = (language_value == ShellLanguageEnglish);
+  // The handler applies the English flag and the resource
   prv_pref_set(PREF_KEY_LANGUAGE, &language_value, sizeof(language_value));
-  shell_prefs_set_language_english(english);
-  i18n_set_resource(shell_prefs_get_language_resource_id());
 }
 
 static void prv_activity_pref_set(void) {

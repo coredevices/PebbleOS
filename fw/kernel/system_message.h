@@ -6,6 +6,8 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/firmware_update.h>
 
+#define SYS_MSG_ENDPOINT_ID 0x12
+
 typedef enum SystemMessageType {
   SysMsgFirmwareAvailable_Deprecated = 0x00,
   SysMsgFirmwareStart = 0x01,
@@ -20,6 +22,13 @@ typedef enum SystemMessageType {
   SysMsgFirmwareStartResponse = 0x0a,
   SysMsgFirmwareStatus = 0x0b,         // Phone -> Watch request for partial fw install info
   SysMsgFirmwareStatusResponse = 0x0c, // Watch -> Phone response of what fw is partially installed
+  SysMsgLanguagePacks = 0x0d,
+  SysMsgLanguagePacksResponse = 0x0e,
+  SysMsgLanguagePackRemove = 0x0f,
+  SysMsgLanguagePackRemoveResponse = 0x10,
+  SysMsgLanguageSelect = 0x11,
+  // 0x12 is skipped to avoid confusion with the endpoint ID
+  SysMsgLanguageSelectResponse = 0x13,
 } SystemMessageType;
 
 typedef struct PBL_PACKED SysMsgSmoothFirmwareStartPayload {

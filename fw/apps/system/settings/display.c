@@ -9,6 +9,7 @@
 #include "window.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include <pbl/drivers/als.h>
 #include <pbl/services/i18n/i18n.h>
@@ -18,6 +19,7 @@
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
+#include <resource/language_pack.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
 #include <system/passert.h>
@@ -27,6 +29,10 @@ static void prv_backlight_submenu_push(void);
 
 typedef struct SettingsDisplayData {
   SettingsCallbacks callbacks;
+  I18nPackInfo packs[LANGUAGE_PACK_COUNT];
+  uint8_t pack_slots[LANGUAGE_PACK_COUNT];
+  uint8_t pack_count;
+  const char *language_labels[LANGUAGE_PACK_COUNT + 1];
 } SettingsDisplayData;
 
 typedef struct SettingsBacklightData {
@@ -37,23 +43,49 @@ typedef struct SettingsBacklightData {
   bool als_primed;                   // Whether we currently hold a pbl_als_prime() ref
 } SettingsBacklightData;
 
-static const char *s_language_labels[] = {
-  [ShellLanguageInstalledPack] = i18n_noop("Custom"),
-  [ShellLanguageEnglish] = "English",
-};
-
 static void prv_language_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  shell_prefs_set_language((ShellLanguage)selection);
+  SettingsDisplayData *data = settings_option_menu_get_context((SettingsOptionMenuData *)context);
+  if (selection > 0) {
+    const uint8_t slot = data->pack_slots[selection - 1];
+    I18nPackInfo current;
+    const I18nPackInfo *previous = &data->packs[slot];
+    if (!i18n_get_pack_info(slot, &current) || current.version != previous->version ||
+        strcmp(current.locale, previous->locale) != 0) {
+      app_window_stack_remove(&option_menu->window, true /* animated */);
+      return;
+    }
+  }
+  const ShellLanguage language =
+      selection == 0 ? ShellLanguageEnglish
+                     : shell_language_for_pack_slot(data->pack_slots[selection - 1]);
   app_window_stack_remove(&option_menu->window, true /* animated */);
+  shell_prefs_set_language(language);
 }
 
 static void prv_language_menu_push(SettingsDisplayData *data) {
+  data->pack_count = 0;
+  data->language_labels[0] = "English";
+  int selected = 0;
+  for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
+    I18nPackInfo *pack = &data->packs[slot];
+    const bool valid = i18n_get_pack_info(slot, pack);
+    if (!valid) {
+      continue;
+    }
+    data->pack_slots[data->pack_count] = slot;
+    data->language_labels[++data->pack_count] = pack->name;
+    if (!shell_prefs_get_language_english() &&
+        shell_prefs_get_language() == shell_language_for_pack_slot(slot)) {
+      selected = data->pack_count;
+    }
+  }
+  const uint8_t count = data->pack_count + 1;
   const OptionMenuCallbacks callbacks = {
     .select = prv_language_menu_select,
   };
-  settings_option_menu_push(i18n_noop("Language"), OptionMenuContentType_SingleLine,
-                            shell_prefs_get_language(), &callbacks, ARRAY_LENGTH(s_language_labels),
-                            false /* icons_enabled */, s_language_labels, data);
+  settings_option_menu_push(i18n_noop("Language"), OptionMenuContentType_SingleLine, selected,
+                            &callbacks, count, false /* icons_enabled */, data->language_labels,
+                            data);
 }
 
 // Text Size

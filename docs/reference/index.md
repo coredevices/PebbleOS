@@ -27,6 +27,7 @@ the phone apps.
 :maxdepth: 1
 
 blob-db.md
+language-packs.md
 ```
 
 ## Binary formats

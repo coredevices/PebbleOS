@@ -130,6 +130,21 @@ uint32_t resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
   return resource_id;
 }
 
+void resource_uncache(uint32_t first_id, uint32_t last_id) {
+  pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
+  ListNode *node = (ListNode *)s_resource_list;
+  while (node) {
+    ListNode *next = list_get_next(node);
+    const uint32_t id = ((CachedResource *)node)->id;
+    if (id >= first_id && id <= last_id) {
+      list_remove(node, (ListNode **)&s_resource_list, nullptr);
+      kernel_free(node);
+    }
+    node = next;
+  }
+  pbl_mutex_unlock(&s_resource_mutex);
+}
+
 size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id, uint32_t offset,
                                        uint8_t *buffer, size_t num_bytes) {
   PBL_ASSERTN(buffer);

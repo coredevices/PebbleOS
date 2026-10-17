@@ -13,12 +13,13 @@
 
 #include <flash_region/filesystem_regions.h>
 #include <kernel/events.h>
+#include <kernel/language_pack_protocol.h>
 #include <kernel/system_message.h>
 #include <system/passert.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 
-static const uint16_t ENDPOINT_ID = 0x12;
+static const uint16_t ENDPOINT_ID = SYS_MSG_ENDPOINT_ID;
 
 void system_message_send(SystemMessageType type) {
   uint8_t buffer[2] = {0x00, type};
@@ -162,6 +163,20 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t *data, si
       event_put(&e);
       break;
     }
+
+#ifndef CONFIG_RECOVERY_FW
+    case SysMsgLanguagePacks:
+      language_pack_protocol_handle_list(session, data, length);
+      break;
+
+    case SysMsgLanguagePackRemove:
+      language_pack_protocol_handle_remove(session, data, length);
+      break;
+
+    case SysMsgLanguageSelect:
+      language_pack_protocol_handle_select(session, data, length);
+      break;
+#endif
 
     default:
       PBL_LOG_ERR("Invalid message received, type is %u", data[1]);

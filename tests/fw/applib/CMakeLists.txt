@@ -87,6 +87,31 @@ pbl_clar_test(test_text_resources
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_system_resource_language_fonts
+  SOURCES
+    fw/flash_region/flash_region.c
+    fw/flash_region/filesystem_regions.c
+    fw/system/hexdump.c
+    fw/applib/fonts/codepoint.c
+    fw/applib/fonts/fonts.c
+    fw/applib/graphics/text_resources.c
+    fw/resource/resource.c
+    fw/resource/resource_storage.c
+    fw/resource/resource_storage_builtin.c
+    fw/resource/resource_storage_file.c
+    fw/resource/resource_storage_flash.c
+    fw/resource/system_resource.c
+    fw/services/filesystem/flash_translation.c
+    fw/services/filesystem/pfs.c
+    fw/services/filesystem/app_file.c
+    drivers/flash/flash_crc.c
+    tests/fakes/fake_rtc.c
+    tests/fakes/fake_spi_flash.c
+    tests/fixtures/resources/builtin_resources.auto.c
+    tests/fixtures/resources/pfs_resource_table.c
+  OVERRIDES dummy_board language_fonts
+)
+
 pbl_clar_test(test_bitmap_layer
   MODULES gtypes
   SOURCES

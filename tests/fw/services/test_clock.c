@@ -11,6 +11,7 @@
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/resource_version.auto.h>
+#include <shell/prefs.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -111,6 +112,11 @@ bool shell_prefs_get_language_english(void) {
   return false;
 }
 void shell_prefs_set_language_english(bool english) {
+}
+ShellLanguage shell_prefs_get_language(void) {
+  return ShellLanguageInstalledPack;
+}
+void shell_prefs_set_language(ShellLanguage language) {
 }
 void sys_localtime_r(time_t const *t, struct pbl_tm *lcltime) {
   pbl_localtime_r(t, lcltime);

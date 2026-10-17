@@ -36,6 +36,9 @@ bool process_manager_compiled_with_legacy2_sdk(void) {
   return false;
 }
 
+void text_resources_reset_cache(FontCache *font_cache) {
+}
+
 const uint8_t *resource_get_builtin_bytes(ResAppNum app_num, uint32_t resource_id,
                                           uint32_t *num_bytes_out) {
   return NULL;

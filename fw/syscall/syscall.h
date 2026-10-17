@@ -70,6 +70,9 @@ uint32_t sys_resource_get_and_cache(ResAppNum app_num, uint32_t resource_id);
 
 GFont sys_font_get_system_font(const char *font_key);
 void sys_font_reload_font(FontInfo *fontinfo);
+// Copies the font with which the pack in slot extends base_resource_id.
+// Returns false if the slot is the primary one, empty, or doesn't extend that font.
+bool sys_font_get_language_font(uint32_t base_resource_id, uint8_t slot, FontInfo *font_out);
 
 bool sys_vibe_pattern_enqueue_step_raw(uint32_t step_duration_ms, int32_t strength);
 bool sys_vibe_pattern_enqueue_step(uint32_t step_duration_ms, bool on);

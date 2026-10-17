@@ -48,6 +48,13 @@ GFont PBL_WEAK sys_font_get_system_font(const char *key) {
   return nullptr;
 }
 
+bool PBL_WEAK sys_font_get_language_font(uint32_t base_resource_id, uint8_t slot,
+                                         FontInfo *font_out) {
+  return false;
+}
+
+uint32_t PBL_WEAK g_font_language_generation;
+
 bool PBL_WEAK sys_accel_manager_data_unsubscribe(AccelManagerState *state) {
   return false;
 }

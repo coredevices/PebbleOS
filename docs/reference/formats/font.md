@@ -15,6 +15,18 @@ little-endian:
 3. offset tables
 4. glyph table
 
+(installed-language-packs)=
+
+## Installed language packs
+
+System fonts consult their selected pack's extension, then the other installed
+packs in slot order when a glyph is missing, before using the system fallback
+font or missing-glyph box. Font resources are read on demand; changing a pack
+or the selected language invalidates cached font metadata and glyphs. Custom
+app fonts keep their own glyphs and the existing system fallback behavior.
+Installing and selecting packs is described in
+[Language pack management](../language-packs.md).
+
 ## FontInfo header
 
 "FontInfo" is the generator's name for the on-disk header; the firmware

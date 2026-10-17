@@ -1,13 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/put_bytes/put_bytes_storage_file.h>
 
 #include <system/passert.h>
 
 bool pb_storage_file_init(PutBytesStorage *storage, PutBytesObjectType object_type,
                           uint32_t total_size, PutBytesStorageInfo *info, uint32_t append_offset) {
+  // Nothing to close in deinit if init bails out before opening the file
+  storage->impl_data = (void *)(intptr_t)-1;
+  const char *filename = i18n_pack_install_begin(info->filename);
+  if (!filename) {
+    return false;
+  }
+  if (filename != info->filename) {
+    // Pack file names are never longer than the add request's
+    strcpy(info->filename, filename);
+  }
   // if a file exists with that name, remove it
   pfs_remove(info->filename);
   if (total_size == 0) {
@@ -49,4 +62,5 @@ void pb_storage_file_deinit(PutBytesStorage *storage, bool is_success) {
   } else {
     pfs_close(fd);
   }
+  i18n_pack_install_end(is_success);
 }

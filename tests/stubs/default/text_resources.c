@@ -43,3 +43,6 @@ PBL_WEAK const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepo
 PBL_WEAK bool text_resources_glyph_is_color(const GlyphLocation *location) {
   return false;
 }
+
+PBL_WEAK void text_resources_reset_cache(FontCache *font_cache) {
+}

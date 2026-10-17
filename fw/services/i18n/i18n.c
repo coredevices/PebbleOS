@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include <pbl/logging/logging.h>
+#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
 #include <pbl/util/list.h>
@@ -37,7 +38,9 @@
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
+#include <resource/language_pack.h>
 #include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
 #include <shell/normal/language_ui.h>
 #include <shell/prefs.h>
 #include <system/passert.h>
@@ -117,7 +120,7 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen
   uint32_t step = prv_collision_step(hashval, mohandle->mo.hdr.mo_hsize);
   uint32_t idx = hashval % mohandle->mo.hdr.mo_hsize;
   size_t len = strlen(msgid);
-  while (1) {
+  for (uint32_t probe = 0; probe < mohandle->mo.hdr.mo_hsize; ++probe) {
     uint32_t strno = mohandle->mo.mo_htable[idx];
     if (strno-- == 0) {
       /* unexpected miss */
@@ -180,18 +183,49 @@ static bool prv_get_property(const char *header, const char *name, char *buffer,
   str += strlen(name);
 
   char *end = strchr(str, '\n');
-  unsigned int length = end - str;
-  if (end == nullptr || length > size) { // strchr failed
+  if (end == nullptr || (size_t)(end - str) >= size) {
     return false;
   }
+  const size_t length = end - str;
 
   memcpy(buffer, str, length);
   buffer[length] = '\0';
   return true;
 }
 
+#define HEADER_BUFFER_SIZE 400
+
+static bool prv_parse_metadata(const char *header, char *iso_locale, char *lang_name,
+                               uint16_t *lang_version) {
+  // Isolate the language substring
+  if (!prv_get_property(header, "Language: ", iso_locale, ISO_LOCALE_LENGTH)) {
+    PBL_LOG_WRN("Could not parse a language from language pack");
+    return false;
+  }
+
+  // Isolate the language name
+  if (!prv_get_property(header, "Name: ", lang_name, LOCALE_NAME_LENGTH)) {
+    strcpy(lang_name, iso_locale);
+  }
+
+  // Isolate the version value
+  char version_str[10] = {};
+  if (!prv_get_property(header, "Project-Id-Version: ", version_str, 10)) {
+    PBL_LOG_WRN("Could not parse a version from language pack");
+    return false;
+  }
+  char *version_end;
+  *lang_version = strtol(version_str, &version_end, 0);
+  if (version_end == version_str) {
+    PBL_LOG_WRN("Could not parse a version from language pack");
+    return false;
+  }
+
+  PBL_LOG_DBG("language: %s, version %d", iso_locale, *lang_version);
+  return true;
+}
+
 static bool prv_get_metadata(struct DomainBinding *db) {
-  const size_t HEADER_BUFFER_SIZE = 400;
   // malloc a comfortable amount of RAM to save the header in
   char *header = kernel_malloc_check(HEADER_BUFFER_SIZE);
   size_t header_len = 0;
@@ -204,32 +238,7 @@ static bool prv_get_metadata(struct DomainBinding *db) {
     goto cleanup;
   }
 
-  // Isolate the language substring
-  if (!prv_get_property(header, "Language: ", db->iso_locale, ISO_LOCALE_LENGTH)) {
-    PBL_LOG_WRN("Could not parse a language from language pack");
-    goto cleanup;
-  }
-
-  // Isolate the language name
-  if (!prv_get_property(header, "Name: ", db->lang_name, LOCALE_NAME_LENGTH)) {
-    strcpy(db->lang_name, "Unknown");
-  }
-
-  // Isolate the version value
-  char version_str[10] = {};
-  if (!prv_get_property(header, "Project-Id-Version: ", version_str, 10)) {
-    PBL_LOG_WRN("Could not parse a version from language pack");
-    goto cleanup;
-  }
-  char *version_end;
-  db->lang_version = strtol(version_str, &version_end, 0);
-  if (version_end == version_str) {
-    PBL_LOG_WRN("Could not parse a version from language pack");
-    goto cleanup;
-  }
-
-  success = true;
-  PBL_LOG_DBG("language: %s, version %d", db->iso_locale, db->lang_version);
+  success = prv_parse_metadata(header, db->iso_locale, db->lang_name, &db->lang_version);
 
 cleanup:
   kernel_free(header);
@@ -283,12 +292,19 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
 
   mohandle->len = size;
   /* validate htable */
-  if (mohandle->mo.hdr.mo_hsize < 2) {
+  if (mohandle->mo.hdr.mo_hsize <= 2 || mohandle->mo.hdr.mo_hsize > size / sizeof(uint32_t)) {
     goto fail;
   }
 
   size_t htable_size = sizeof(uint32_t) * mohandle->mo.hdr.mo_hsize;
-  uint32_t *htable = kernel_malloc_check(htable_size);
+  if (mohandle->mo.hdr.mo_hoffset > size || htable_size > size - mohandle->mo.hdr.mo_hoffset) {
+    goto fail;
+  }
+  // A corrupt pack can claim an htable close to its own size
+  uint32_t *htable = kernel_malloc(htable_size);
+  if (!htable) {
+    goto fail;
+  }
   mohandle->mo.mo_htable = htable;
   if (resource_load_byte_range_system(SYSTEM_APP, resource_id, mohandle->mo.hdr.mo_hoffset,
                                       (uint8_t *)htable, htable_size) == 0) {
@@ -548,15 +564,12 @@ static void prv_resource_changed_handler(void *data) {
   struct DomainBinding *db = (struct DomainBinding *)data;
   // Mark as invalid
   PBL_LOG_DBG("lang resource file reloading");
-  shell_prefs_set_language_english(false);
   const uint32_t prev_language_id = prv_language_id();
-  db->need_reload = true;
-  prv_mapit(db->resource_id, db);
-  prv_put_event_if_changed(prev_language_id);
-
-  if (resource_is_valid(SYSTEM_APP, db->resource_id)) {
-    language_ui_display_changed(db->lang_name);
+  if (!shell_prefs_get_language_english()) {
+    db->need_reload = true;
+    prv_mapit(db->resource_id, db);
   }
+  prv_put_event_if_changed(prev_language_id);
 }
 
 static void prv_resource_changed_callback(void *data) {
@@ -565,6 +578,31 @@ static void prv_resource_changed_callback(void *data) {
   PBL_LOG_DBG("lang resource file was modified");
   launcher_task_add_callback(prv_resource_changed_handler, data);
 }
+
+#ifndef CONFIG_RECOVERY_FW
+// Pack slot a PutBytes transfer holds open, or LANGUAGE_PACK_COUNT
+static uint8_t s_install_slot = LANGUAGE_PACK_COUNT;
+
+// Language changes remap s_system_domain, so they run on the launcher task like its readers.
+static void prv_deselect_pack_cb(void *data) {
+  const uint8_t slot = (uintptr_t)data;
+  // Even with English toggled on: toggling it off would select whatever the slot holds by then.
+  if (shell_prefs_get_language() == shell_language_for_pack_slot(slot)) {
+    shell_prefs_set_language(ShellLanguageEnglish);
+  }
+}
+
+static void prv_deselect_pack(uint8_t slot) {
+  launcher_task_add_callback(prv_deselect_pack_cb, (void *)(uintptr_t)slot);
+}
+
+static void prv_select_installed_pack_cb(void *data) {
+  shell_prefs_set_language(ShellLanguageInstalledPack);
+  if (s_system_domain.mohandle.mo.mo_htable) {
+    language_ui_display_changed(s_system_domain.lang_name);
+  }
+}
+#endif
 
 static void prv_unset(void) {
   s_system_domain.need_reload = false;
@@ -616,6 +654,112 @@ void i18n_enable(bool enable) {
   }
   prv_put_event_if_changed(prev_language_id);
 }
+
+bool i18n_get_pack_info(uint8_t slot, I18nPackInfo *info) {
+#ifndef CONFIG_RECOVERY_FW
+  if (slot >= LANGUAGE_PACK_COUNT || !info) {
+    return false;
+  }
+  const uint32_t resource_id =
+      language_pack_resource_id(slot, RESOURCE_ID_STRINGS, RESOURCE_ID_STRINGS);
+  // Only the header entry is needed, which msgfmt sorts first; skip the htable and CRC.
+  MoHeader hdr;
+  MoEntry original;
+  MoEntry translation;
+  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, 0, (uint8_t *)&hdr, sizeof(hdr)) !=
+          sizeof(hdr) ||
+      hdr.mo_magic != MO_MAGIC || hdr.mo_nstring == 0 ||
+      resource_load_byte_range_system(SYSTEM_APP, resource_id, hdr.mo_otable, (uint8_t *)&original,
+                                      sizeof(original)) != sizeof(original) ||
+      original.len != 0 ||
+      resource_load_byte_range_system(SYSTEM_APP, resource_id, hdr.mo_ttable,
+                                      (uint8_t *)&translation,
+                                      sizeof(translation)) != sizeof(translation)) {
+    return false;
+  }
+  char *header = kernel_malloc_check(HEADER_BUFFER_SIZE);
+  const size_t length = MIN(translation.len, HEADER_BUFFER_SIZE - 1);
+  bool valid = resource_load_byte_range_system(SYSTEM_APP, resource_id, translation.off,
+                                               (uint8_t *)header, length) == length;
+  if (valid) {
+    header[length] = '\0';
+    // Zero-pad: the phone echoes these back and they are compared with memcmp.
+    *info = (I18nPackInfo){};
+    valid = prv_parse_metadata(header, info->locale, info->name, &info->version);
+  }
+  kernel_free(header);
+  return valid;
+#else
+  return false;
+#endif
+}
+
+bool i18n_pack_has_fonts(uint8_t slot) {
+#ifndef CONFIG_RECOVERY_FW
+  for (uint32_t font = RESOURCE_ID_GOTHIC_14_EXTENDED;
+       font <= RESOURCE_ID_LECO_60_BOLD_NUMBERS_AM_PM_EXTENDED; ++font) {
+    if (resource_is_valid(SYSTEM_APP, language_pack_resource_id(slot, font, RESOURCE_ID_STRINGS))) {
+      return true;
+    }
+  }
+#endif
+  return false;
+}
+
+bool i18n_remove_pack(uint8_t slot) {
+#ifndef CONFIG_RECOVERY_FW
+  const char *filename = language_pack_filename(slot);
+  if (!filename) {
+    return false;
+  }
+  // PFS croaks when deleting a file that a transfer still holds open
+  if (slot == s_install_slot || pfs_remove(filename) != S_SUCCESS) {
+    return false;
+  }
+  prv_deselect_pack(slot);
+  return true;
+#else
+  return false;
+#endif
+}
+
+#ifndef CONFIG_RECOVERY_FW
+static bool s_select_on_install;
+
+const char *i18n_pack_install_begin(const char *filename) {
+  s_select_on_install = false;
+  s_install_slot = LANGUAGE_PACK_COUNT;
+  for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
+    if (strcmp(filename, language_pack_filename(slot)) == 0) {
+      // Legacy transfers replace slot zero and select it once complete.
+      s_select_on_install = slot == 0;
+      s_install_slot = slot;
+      return filename;
+    }
+  }
+  if (strcmp(filename, LANGUAGE_PACK_ADD_FILENAME) != 0) {
+    return filename;
+  }
+  for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
+    if (language_pack_is_installed(slot)) {
+      continue;
+    }
+    // The empty slot may still be selected, e.g. slot zero on a fresh watch.
+    prv_deselect_pack(slot);
+    s_install_slot = slot;
+    return language_pack_filename(slot);
+  }
+  return NULL;
+}
+
+void i18n_pack_install_end(bool success) {
+  if (success && s_select_on_install) {
+    launcher_task_add_callback(prv_select_installed_pack_cb, NULL);
+  }
+  s_select_on_install = false;
+  s_install_slot = LANGUAGE_PACK_COUNT;
+}
+#endif
 
 void command_i18n_resource(const char *arg) {
   uint32_t resource_id = atoi(arg);

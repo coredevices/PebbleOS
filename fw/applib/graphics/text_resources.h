@@ -10,6 +10,7 @@
 
 #include <applib/fonts/codepoint.h>
 #include <applib/fonts/fonts_private.h>
+#include <resource/language_pack.h>
 
 typedef struct PBL_PACKED {
   uint8_t width_px;
@@ -121,6 +122,13 @@ typedef struct FontCache {
   uint8_t glyph_buffer[sizeof(LineCacheData) + CACHE_GLYPH_SIZE];
   KeyedCircularCache line_cache;
   const FontResource *cached_font;
+  //! g_font_language_generation the cache was filled under
+  uint32_t language_generation;
+  //! System font that language_fonts extend, and the slots already fetched for it
+  uint32_t language_base_id;
+  uint8_t language_fetched;
+  //! Other packs' fonts, one per slot so pointers into them stay valid while the base is unchanged
+  FontInfo language_fonts[LANGUAGE_PACK_COUNT];
 } FontCache;
 
 typedef struct {
@@ -142,6 +150,9 @@ const GlyphData *text_resources_get_glyph(FontCache *font_cache, Codepoint codep
                                           FontInfo *font_info, GlyphLocation *location_out);
 
 bool text_resources_glyph_is_color(const GlyphLocation *location);
+
+//! Empties the font cache, e.g. on context init or after the language packs changed
+void text_resources_reset_cache(FontCache *font_cache);
 
 int8_t text_resources_get_glyph_horiz_advance(FontCache *font_cache, Codepoint codepoint,
                                               FontInfo *font_info);
