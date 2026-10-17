@@ -17,6 +17,11 @@ bool PBL_WEAK activity_get_sessions(uint32_t *session_entries, ActivitySession *
   return false;
 }
 
+bool PBL_WEAK activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
+                                             time_t utc_start) {
+  return false;
+}
+
 bool PBL_WEAK activity_get_step_averages(enum pbl_weekday day_of_week,
                                          ActivityMetricAverages *averages) {
   return false;

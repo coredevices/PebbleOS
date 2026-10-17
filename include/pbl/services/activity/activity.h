@@ -913,6 +913,26 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
 bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                  time_t *utc_start);
 
+/** @brief Most minutes activity_get_minute_heart_rate() fills in: a day, plus the hour repeated
+ * when DST ends. */
+#define ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES (PBL_MIN_PER_DAY + PBL_MIN_PER_HOUR)
+
+/**
+ * @brief Get the heart rate of each minute in a time range.
+ *
+ * Unlike activity_get_minute_history(), this reads the minute data once for the whole range.
+ * Blocks on KernelBG, so only callable from the app or worker task.
+ *
+ * @param[out] heart_rate_bpm Array of @p num_minutes heart rates, one per minute from
+ * @p utc_start, 0 for minutes without a reading.
+ * @param num_minutes Number of minutes to fill in, at most
+ * @ref ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES.
+ * @param utc_start UTC time of the first minute, rounded down to the minute.
+ * @return true on success, false on failure.
+ */
+bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
+                                    time_t utc_start);
+
 /** @brief Number of step averages per day, one per 15 minute interval. */
 #define ACTIVITY_NUM_METRIC_AVERAGES (4 * 24)
 /** @brief Step average value meaning unknown. */

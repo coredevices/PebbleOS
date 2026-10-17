@@ -601,6 +601,35 @@ void test_activity_algorithm_kraepelin__get_flash_minute_history(void) {
 }
 
 // ---------------------------------------------------------------------------------------
+// Heart rates are indexed from the requested start, from both flash and RAM, with minutes
+// before the first record left at 0
+void test_activity_algorithm_kraepelin__get_minute_heart_rate(void) {
+  const int num_minutes = 4 * PBL_MIN_PER_HOUR;
+  const int num_empty = 30;
+  time_t start_utc = rtc_get_time();
+
+  // Not on a 15 minute boundary, so the latest minutes are still in RAM
+  start_utc += 7 * PBL_SEC_PER_MIN;
+  rtc_set_time(start_utc);
+
+  AlgMinuteDLSSample minute_data[num_minutes];
+  prv_create_test_data(num_minutes, minute_data);
+  prv_feed_minute_data(num_minutes, minute_data, false /*simulate_bg_delays*/);
+
+  uint8_t bpm[num_empty + num_minutes];
+  memset(bpm, 0xA5, sizeof(bpm));
+  // Starting just past the minute to test that it is rounded down
+  const time_t start = start_utc - (num_empty * PBL_SEC_PER_MIN) + 5;
+  cl_assert(activity_algorithm_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), start));
+  for (int i = 0; i < num_empty; i++) {
+    cl_assert_equal_i(bpm[i], 0);
+  }
+  for (int i = 0; i < num_minutes; i++) {
+    cl_assert_equal_i(bpm[num_empty + i], minute_data[i].heart_rate_bpm);
+  }
+}
+
+// ---------------------------------------------------------------------------------------
 // Test that retrieving the most recent minute history works correctly. This test insures that
 // we correctly include the minute history that has not yet been saved to flash
 void test_activity_algorithm_kraepelin__get_ram_minute_history(void) {

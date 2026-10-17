@@ -664,6 +664,25 @@ bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32
   return true;
 }
 
+// Like activity_algorithm_get_minute_history() above, minutes still being written aren't
+// available. The heart rate of each one we return is (% 200) of its timestamp, plus 1.
+static int s_minute_heart_rate_calls;
+bool activity_algorithm_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
+                                              time_t utc_start) {
+  s_minute_heart_rate_calls++;
+  const uint32_t minute_idx = rtc_get_time() / PBL_SEC_PER_MIN;
+  const time_t last_second_available =
+      (minute_idx - (minute_idx % ALG_MINUTES_PER_FILE_RECORD)) * PBL_SEC_PER_MIN;
+
+  utc_start -= utc_start % PBL_SEC_PER_MIN;
+  for (uint32_t i = 0; i < num_minutes; i++) {
+    const time_t minute_utc = utc_start + i * PBL_SEC_PER_MIN;
+    heart_rate_bpm[i] =
+        (minute_utc + PBL_SEC_PER_MIN > last_second_available) ? 0 : (minute_utc % 200) + 1;
+  }
+  return true;
+}
+
 time_t activity_algorithm_get_last_sleep_utc(void) {
   return s_test_alg_state.last_sleep_utc;
 }
@@ -1795,6 +1814,61 @@ void test_activity__get_minute_history_timeout(void) {
   s_system_task_stalled = false;
   fake_system_task_callbacks_invoke_pending();
   cl_assert_equal_m(minutes, exp_minutes, sizeof(minutes));
+}
+
+// ---------------------------------------------------------------------------------------
+// A whole day of heart rates comes back from a single request, unavailable minutes as 0
+void test_activity__get_minute_heart_rate(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  const uint32_t num_minutes = PBL_MIN_PER_DAY;
+  uint8_t bpm[num_minutes];
+  memset(bpm, 0xA5, sizeof(bpm));
+  const time_t now = rtc_get_time();
+  const time_t utc_start = now - (now % PBL_SEC_PER_MIN) - (num_minutes - 1) * PBL_SEC_PER_MIN;
+
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  s_minute_heart_rate_calls = 0;
+  cl_assert(activity_get_minute_heart_rate(bpm, num_minutes, utc_start));
+  cl_assert_equal_i(s_minute_heart_rate_calls, 1);
+  for (uint32_t i = 0; i < num_minutes - (ALG_MINUTES_PER_FILE_RECORD * 2); i++) {
+    cl_assert_equal_i(bpm[i], ((utc_start + i * PBL_SEC_PER_MIN) % 200) + 1);
+  }
+  cl_assert_equal_i(bpm[num_minutes - 1], 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// Requests too large to fill in a bounded kernel buffer are refused
+void test_activity__get_minute_heart_rate_too_long(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  static uint8_t bpm[ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES + 1];
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), rtc_get_time()));
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// KernelBG must not write into the caller's buffer after the caller timed out
+void test_activity__get_minute_heart_rate_timeout(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  uint8_t bpm[10];
+  memset(bpm, 0xA5, sizeof(bpm));
+  uint8_t exp_bpm[10];
+  memset(exp_bpm, 0xA5, sizeof(exp_bpm));
+
+  stub_pebble_tasks_set_current(PebbleTask_App);
+  s_system_task_stalled = true;
+  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), rtc_get_time()));
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+
+  s_system_task_stalled = false;
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_m(bpm, exp_bpm, sizeof(bpm));
 }
 
 // Used by the test_activity__step_averages() method to figure out what steps/min we should

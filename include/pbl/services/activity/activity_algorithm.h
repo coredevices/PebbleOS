@@ -341,6 +341,18 @@ bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32
                                            time_t *utc_start);
 
 /**
+ * @brief Get the heart rate of each minute in a time range, reading the minute data once.
+ *
+ * @param[out] heart_rate_bpm Array of @p num_minutes heart rates, one per minute from
+ * @p utc_start, 0 for minutes without a reading.
+ * @param num_minutes Number of minutes to fill in.
+ * @param utc_start UTC time of the first minute, rounded down to the minute.
+ * @return true on success.
+ */
+bool activity_algorithm_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
+                                              time_t utc_start);
+
+/**
  * @brief Dump the minute file base64-encoded with PBL_LOG.
  *
  * Used to extract it through a support request.

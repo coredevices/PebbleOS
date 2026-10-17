@@ -1061,6 +1061,8 @@ void activity_algorithm_activity_hrm_set_paused(bool paused) {
 // This structure contains the context used by the activity_algorithm_get_minute_history() call
 typedef struct {
   HealthMinuteData *minute_data;
+  //! When set, only heart rates are written here instead of minute_data, indexed from utc_start
+  uint8_t *heart_rate_bpm;
   uint32_t array_size;
 
   uint32_t oldest_key;
@@ -1108,6 +1110,11 @@ static bool prv_insert_health_minute_record(AlgReadMinutesContext *context, time
     context->utc_start = record_utc;
   }
   context->last_record_idx_written = dst_index;
+
+  if (context->heart_rate_bpm) {
+    context->heart_rate_bpm[dst_index] = heart_rate_bpm;
+    return false;
+  }
 
   // Put it in
   uint32_t raw_light = base_fields->light * ALG_RAW_LIGHT_SENSOR_DIVIDE_BY;
@@ -1211,60 +1218,59 @@ exit:
 }
 
 // -------------------------------------------------------------------------------
-bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
-                                           time_t *utc_start) {
+// Read the minute data file, then the minutes still in RAM, into the context's output in a
+// single pass. The context only needs its output fields and utc_start set.
+static bool prv_read_minutes(AlgReadMinutesContext *context, time_t oldest_requested_utc) {
   if (!prv_lock()) {
     return false;
   }
 
-  bool success = true;
-  SettingsFile *file = nullptr;
-  uint32_t array_size = *num_records;
-
-  // Open the minute data file
-  file = prv_minute_data_file_open();
+  bool success = false;
+  SettingsFile *file = prv_minute_data_file_open();
   if (!file) {
-    success = false;
     goto exit;
   }
 
-  // Init for missing records
-  memset(minute_data, 0xFF, array_size * sizeof(HealthMinuteData));
-
   // Figure out the lowest key value for for chunks that go into this buffer
-  time_t utc_now = rtc_get_time();
+  const time_t utc_now = rtc_get_time();
   const time_t oldest_possible =
       utc_now - ALG_MINUTE_FILE_MAX_ENTRIES * ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
-  time_t oldest_requested_utc = *utc_start;
   oldest_requested_utc = MAX(oldest_possible, oldest_requested_utc);
 
-  // Create the context
-  AlgReadMinutesContext context = (AlgReadMinutesContext){
-    .minute_data = minute_data,
-    .array_size = array_size,
-    .oldest_key = prv_minute_file_get_settings_key(oldest_requested_utc) - 1,
-    .newest_key = prv_minute_file_get_settings_key(utc_now) + 1,
-    .utc_start = 0,
-    .oldest_requested_utc = oldest_requested_utc,
-    .last_record_idx_written = -1,
-  };
+  context->oldest_key = prv_minute_file_get_settings_key(oldest_requested_utc) - 1;
+  context->newest_key = prv_minute_file_get_settings_key(utc_now) + 1;
+  context->oldest_requested_utc = oldest_requested_utc;
+  context->last_record_idx_written = -1;
 
   // Read the minute data from flash
-  status_t status = settings_file_each(file, prv_read_minute_history_file_cb, &context);
-  if (status != S_SUCCESS) {
-    success = false;
+  if (settings_file_each(file, prv_read_minute_history_file_cb, context) != S_SUCCESS) {
     goto exit;
   }
 
   // Fill in any data we have in RAM as well
-  prv_read_minute_history_buffer(&context);
+  prv_read_minute_history_buffer(context);
+  success = true;
 
 exit:
   if (file) {
     prv_minute_data_file_close(file);
   }
   prv_unlock();
+  return success;
+}
 
+// -------------------------------------------------------------------------------
+bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
+                                           time_t *utc_start) {
+  AlgReadMinutesContext context = {
+    .minute_data = minute_data,
+    .array_size = *num_records,
+  };
+
+  // Init for missing records
+  memset(minute_data, 0xFF, *num_records * sizeof(HealthMinuteData));
+
+  const bool success = prv_read_minutes(&context, *utc_start);
   if (success) {
     // Return number of records that were written, including missing records in the middle
     *num_records = context.last_record_idx_written + 1;
@@ -1274,6 +1280,21 @@ exit:
     *utc_start = 0;
   }
   return success;
+}
+
+// -------------------------------------------------------------------------------
+bool activity_algorithm_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
+                                              time_t utc_start) {
+  utc_start -= utc_start % PBL_SEC_PER_MIN;
+  AlgReadMinutesContext context = {
+    .heart_rate_bpm = heart_rate_bpm,
+    .array_size = num_minutes,
+    // Fixed, so minutes are indexed from the requested start rather than the first record
+    .utc_start = utc_start,
+  };
+
+  memset(heart_rate_bpm, 0, num_minutes);
+  return prv_read_minutes(&context, utc_start);
 }
 
 // -------------------------------------------------------------------------------

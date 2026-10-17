@@ -1682,6 +1682,45 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
 }
 
 // ------------------------------------------------------------------------------------------------
+typedef struct {
+  ActivityBgRequest base;
+  uint32_t num_minutes;
+  time_t utc_start;
+  uint8_t heart_rate_bpm[];
+} ActivityMinuteHeartRateRequest;
+
+static bool prv_get_minute_heart_rate_handler(ActivityBgRequest *base) {
+  ActivityMinuteHeartRateRequest *req = (ActivityMinuteHeartRateRequest *)base;
+  return activity_algorithm_get_minute_heart_rate(req->heart_rate_bpm, req->num_minutes,
+                                                  req->utc_start);
+}
+
+bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
+                                    time_t utc_start) {
+  if (!s_activity_initialized || num_minutes > ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES) {
+    return false;
+  }
+
+  ActivityMinuteHeartRateRequest *req = kernel_zalloc(sizeof(*req) + num_minutes);
+  if (!req) {
+    return false;
+  }
+  req->num_minutes = num_minutes;
+  req->utc_start = utc_start;
+
+  if (!prv_bg_request_run(&req->base, prv_get_minute_heart_rate_handler, 30 /*timeout_sec*/)) {
+    return false;
+  }
+
+  const bool success = req->base.success;
+  if (success) {
+    memcpy(heart_rate_bpm, req->heart_rate_bpm, num_minutes);
+  }
+  kernel_free(req);
+  return success;
+}
+
+// ------------------------------------------------------------------------------------------------
 PBL_SYSCALL(bool, sys_activity_get_minute_history, (VAL, HealthMinuteData *, minute_data),
             (INOUT, uint32_t *, num_records), (INOUT, time_t *, utc_start)) {
   if (from_user) {
