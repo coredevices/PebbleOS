@@ -13,6 +13,9 @@
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
 #include <applib/ui/scroll_layer_private.h>
+#include <applib/ui/window_private.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
 #include <clar.h>
 #include <fake_app_timer.h>
 #include <fake_rtc.h>

@@ -27,6 +27,7 @@
 #include <process_management/app_manager.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/battery_ui.h>
+#include <shell/normal/dark_mode_updater.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
@@ -51,6 +52,7 @@ static void prv_maybe_run_settings_dbs_compaction_migration(void) {
 
 void shell_event_loop_init(void) {
   shell_prefs_init();
+  dark_mode_updater_init();
   prv_maybe_run_settings_dbs_compaction_migration();
   notification_window_service_init();
   app_inbox_service_init();

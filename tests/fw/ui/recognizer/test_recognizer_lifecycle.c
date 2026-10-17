@@ -10,6 +10,7 @@
 #include <applib/ui/window.h>
 #include <applib/ui/window_manager.h>
 #include <applib/ui/window_private.h>
+#include <shell/system_theme.h>
 #include <clar.h>
 
 // Stubs

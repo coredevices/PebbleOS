@@ -16,6 +16,7 @@
 #include <kernel/ui/kernel_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH
 #include <pbl/util/testing.h>
@@ -248,7 +249,7 @@ static void prv_arrow_layer_update_proc(Layer *layer, GContext *ctx) {
   const GRect *layer_bounds = &layer->bounds;
 
 #if PBL_RECT
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
   graphics_fill_rect(ctx, layer_bounds);
 #endif
 
@@ -266,7 +267,11 @@ static void prv_arrow_layer_update_proc(Layer *layer, GContext *ctx) {
 #if UNITTEST
   const GCompOp compositing_mode = GCompOpSet;
 #else
-  const GCompOp compositing_mode = PBL_IF_COLOR_ELSE(GCompOpSet, GCompOpAssign);
+  // Arrow color is inverted in dark mode
+  const GCompOp compositing_mode = PBL_IF_COLOR_ELSE(
+    system_theme_is_dark_mode() ? GCompOpTint : GCompOpSet,
+    GCompOpAssign
+  );
 #endif
   graphics_context_set_compositing_mode(ctx, compositing_mode);
 

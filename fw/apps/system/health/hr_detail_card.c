@@ -12,6 +12,7 @@
 #include <pbl/util/units.h>
 
 #include <kernel/pbl_malloc.h>
+#include <shell/system_theme.h>
 
 typedef struct HealthHrDetailCard {
   int16_t num_headings;
@@ -90,7 +91,7 @@ Window *health_hr_detail_card_create(HealthData *health_data) {
     .num_headings = card_data->num_headings,
     .headings = card_data->headings,
     .weekly_max = max_progress,
-    .bg_color = GColorWhite,
+    .bg_color = system_theme_get_bg_color(),
     .num_zones = card_data->num_zones,
     .zones = card_data->zones,
     .data = card_data,
