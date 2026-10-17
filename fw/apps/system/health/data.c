@@ -5,10 +5,13 @@
 
 #include "data_private.h"
 
+#include <string.h>
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
+#include <pbl/util/math.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
@@ -172,6 +175,38 @@ void health_data_update_current_bpm(HealthData *health_data) {
     health_data->current_hr_bpm = health_service_peek_current_value(HealthMetricHeartRateRawBPM);
     health_data->hr_last_updated = current_hr_timestamp;
   }
+}
+
+#define MINUTE_HISTORY_CHUNK_RECORDS 60
+
+uint16_t health_data_hr_get_today_bpm(uint8_t *minute_bpm) {
+  memset(minute_bpm, 0, PBL_MIN_PER_DAY);
+
+  // Index by local clock minute, so readings line up with the hour labels on DST change days
+  const time_t midnight = time_start_of_today();
+  const time_t now = rtc_get_time();
+  const uint16_t num_minutes = time_util_get_minute_of_day(now) + 1;
+
+  HealthMinuteData *chunk = app_malloc_check(MINUTE_HISTORY_CHUNK_RECORDS * sizeof(*chunk));
+  time_t utc_start = midnight;
+  while (utc_start < now) {
+    uint32_t num_records = MINUTE_HISTORY_CHUNK_RECORDS;
+    if (!activity_get_minute_history(chunk, &num_records, &utc_start) || num_records == 0) {
+      break;
+    }
+    // utc_start now holds the time of the first returned record
+    for (uint32_t i = 0; i < num_records; i++, utc_start += PBL_SEC_PER_MIN) {
+      if (utc_start < midnight || chunk[i].is_invalid) {
+        continue;
+      }
+      const int minute = time_util_get_minute_of_day(utc_start);
+      if (minute < num_minutes) {
+        minute_bpm[minute] = chunk[i].heart_rate_bpm;
+      }
+    }
+  }
+  app_free(chunk);
+  return num_minutes;
 }
 
 void health_data_update_hr_zone_minutes(HealthData *health_data) {

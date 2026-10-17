@@ -17,6 +17,7 @@
 #include <applib/ui/kino/kino_reel.h>
 #include <apps/system/timeline/text_node.h>
 #include <board/display.h>
+#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 
 // Compile-time display offset calculations
@@ -225,8 +226,16 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
 
 void health_hr_summary_card_select_click_handler(Layer *layer) {
   HealthHrSummaryCardData *data = layer_get_data(layer);
-  HealthData *health_data = data->health_data;
-  Window *window = health_hr_detail_card_create(health_data);
+  // Only needed while the detail card builds its chart; with monitoring off there's none to show
+  uint8_t *minute_bpm = nullptr;
+  uint16_t num_minutes = 0;
+  if (activity_prefs_heart_rate_is_enabled()) {
+    minute_bpm = app_malloc_check(PBL_MIN_PER_DAY);
+    num_minutes = health_data_hr_get_today_bpm(minute_bpm);
+  }
+  const HealthHrChartData today = {.minute_bpm = minute_bpm, .num_minutes = num_minutes};
+  Window *window = health_hr_detail_card_create(data->health_data, &today);
+  app_free(minute_bpm);
   window_set_window_handlers(window, &(WindowHandlers){
                                        .unload = prv_hr_detail_card_unload_callback,
                                      });
