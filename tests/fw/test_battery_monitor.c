@@ -193,7 +193,7 @@ void test_battery_monitor__charge_fluctuate_voltage(void) {
 }
 
 void test_battery_monitor__connection_reset(void) {
-  // Test for PBL-19951: Reset charge percent on reconnection events
+  // Reset charge percent on reconnection events
   int percent = 10;
   int charge_mv = battery_curve_lookup_voltage_by_percent(percent, true);
   int discharge_mv = battery_curve_lookup_voltage_by_percent(percent, false);

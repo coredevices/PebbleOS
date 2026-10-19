@@ -120,7 +120,7 @@ void battery_state_reset_filter(void) {
 }
 
 static uint32_t prv_filter_voltage(uint32_t avg_mv, uint32_t battery_mv) {
-  // Basic low-pass filter - See PBL-23637
+  // Basic low-pass filter
   const uint8_t VOLTAGE_FILTER_BETA = 2;
   uint32_t avg = (avg_mv << VOLTAGE_FILTER_BETA);
   avg -= avg_mv;

@@ -14,8 +14,6 @@ typedef struct VoltagePoint {
   uint16_t voltage;
 } VoltagePoint;
 
-// TODO: Move these curves somewhere else. Related: PBL-21049
-
 // TODO(ASTERIX,OBELIX): Needs customization for Asterix/Obelix
 #if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||        \
     defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_QEMU_FLINT) || \
