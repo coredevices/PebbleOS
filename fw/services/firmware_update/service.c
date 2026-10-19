@@ -22,7 +22,7 @@ PBL_LOG_MODULE_DEFINE(service_firmware_update, CONFIG_SERVICE_FIRMWARE_UPDATE_LO
 //
 // The new UI allows the phone to give us more info up front about how much data will be
 // transmitted and also cleanly drive a re-start of the UI to a non-0 percentage if the FW update
-// is being resumed. Newer implementations should this! (See PBL-42130)
+// is being resumed. Newer implementations should use it.
 
 static PBL_SEM_DEFINE(s_firmware_update_semaphore, 1, 1);
 static bool s_is_recovery_fw = false;
