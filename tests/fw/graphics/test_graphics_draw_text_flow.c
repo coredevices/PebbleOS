@@ -364,8 +364,7 @@ void test_graphics_draw_text_flow__max_used_size_draw_text_doom(void) {
   const GSize size_with_orphan_avoidance = graphics_text_layout_get_max_used_size(
       &ctx, text, font, box, overflow_mode, text_alignment, layout_ref);
 
-  // TODO: PBL-34191 move .avoid_text_orphans from GContext to TextLayout so layout is invalidated
-  // Invalidate the layout so it will be recalculated for the next step
+  // avoid_text_orphans lives in GContext, so the layout has to be invalidated by hand
   layout.hash = 0;
 
   prv_prepare_fb_steps_xy(fb_size, steps_x, steps_y);
@@ -421,7 +420,7 @@ void test_graphics_draw_text_flow__no_infinite_loop(void) {
 }
 
 void test_graphics_draw_text_flow__no_infinite_loop2(void) {
-  // replicates the bug described in PBL-29267 noticed in the notification app
+  // replicates an infinite loop noticed in the notification app
   // the following values are those we measured in GDB when it entered the infinite loop
   cl_assert(text_resources_init_font(0, RESOURCE_ID_GOTHIC_24_BOLD, 0, &s_font_info));
   TextLayoutExtended layout = {

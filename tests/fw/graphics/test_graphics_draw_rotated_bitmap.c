@@ -305,7 +305,7 @@ void test_graphics_draw_rotated_bitmap__data_row_handling(void) {
   GBitmap *test_image = get_gbitmap_from_pbi("stamp.Xbit.pbi");
   cl_assert(test_image != nullptr);
 
-  // PBL-24705 grect_center_point is off by 1
+  // One pixel up/left of grect_center_point()
   GPoint center = GPoint(DISP_COLS / 2 - 1, DISP_ROWS / 2 - 1);
 
   // No Clip, Angle 0

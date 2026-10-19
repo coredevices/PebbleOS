@@ -905,9 +905,8 @@ void DISABLED_test_bitblt__1bit_to_8bit_bounds_and_origin_offset(void) {
   gbitmap_destroy(src_bitmap);
 }
 
-// This test is the same as test_bitblt__1bit_to_1bit_bounds_and_origin_offset, except it is for
-// 1-bit to 1-bit.
-// FIXME: This is a known legacy-broken case in 1-bit bitblt. See PBL-14671 for more information
+// Same as test_bitblt__1bit_to_8bit_bounds_and_origin_offset, but for 1-bit to 1-bit.
+// TODO: 1-bit source tiling with bounds/offset past a word boundary doesn't match the reference
 void DISABLED__test_bitblt__1bit_to_1bit_bounds_and_origin_offset(void) {
   GBitmap *src_bitmap =
       get_gbitmap_from_pbi("test_bitblt__1bit_to_1bit_bounds_and_origin_offset.1bit.pbi");

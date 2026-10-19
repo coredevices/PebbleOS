@@ -34,7 +34,6 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
   // Just in case this output bitmap was created by hand.
   bmp->info.version = GBITMAP_VERSION_CURRENT;
 
-  // PBL-24228 Support Circular PBIs
   uint16_t info_flags = bmp->info_flags;
 #if PBL_ROUND
   if (bmp->info.format == GBitmapFormat8BitCircular) {
@@ -59,8 +58,7 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
       uint8_t *bmp_row = dest_row_info.data;
       int x = 0;
       const uint8_t blank = 0;
-      // PBL-24229 missing mask: data outside of circle is garbage from previous and next rows
-      // Pad with blanks before min_x
+      // Data outside of the circle belongs to adjacent rows, pad with blanks before min_x
       while (x < dest_row_info.min_x) {
         fwrite(&blank, 1, 1, file);
         x++;

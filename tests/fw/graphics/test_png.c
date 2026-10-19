@@ -163,7 +163,7 @@ void test_png__greyscale_4_bit_transparent(void) {
 
 // Tests 8-bit transparent color PNG with 4-bit number of colors (<= 16 colors)
 // loading into gbitmap
-// Checks for bug fixed for PBL-15809, where GBitmap depth was based off
+// Checks for a bug where GBitmap depth was based off
 // number of colors and not index value bits-per-pixel (bpp).
 // Result:
 //   - gbitmap matches platform loaded PNG
@@ -176,7 +176,7 @@ void test_png__color_8_bit_transparent_bpp_check(void) {
 
 // Tests 8-bit transparent color PNG with 256 Colors
 // loading into gbitmap
-// Checks for bug fixed for PBL-16549, where uint8_t limit was 255
+// Checks for a bug where uint8_t limit was 255
 // causing failure to load palette
 // Result:
 //   - gbitmap matches platform loaded PNG

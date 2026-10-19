@@ -111,8 +111,8 @@ void prv_prepare_canvas_and_render_emoji(ResourceId font_handle) {
   const int max_height = 2000;    // Large size protected from overflow and automatically truncated
   const GSize max_size = {max_width, max_height};
 
-  // FIXME: PBL-34261 graphics_text_layout_get_max_used_size reports a max of 192px in a unit test
-  // with the default aplite framebuffer size. Work around this issue by creating a larger canvas.
+  // graphics_text_layout_get_max_used_size is capped by the framebuffer size, so measure on a
+  // larger canvas.
   prv_prepare_canvas(max_size, GColorWhite);
 
   const GRect max_draw_frame = grect_inset_internal((GRect){.size = max_size}, margin.x, margin.y);
