@@ -97,7 +97,9 @@ static void prv_force_close_timer_callback(void *data) {
 }
 
 // ---------------------------------------------------------------------------------------------
-PBL_EXTERNALLY_VISIBLE void process_manager_handle_syscall_exit(void) {
+// Right before a syscall drops privilege: a safe point to suspend a process the
+// kernel is trying to kill.
+void pbl_kernel_syscall_exit(void) {
   PebbleTask task = pebble_task_get_current();
   ProcessContext *context = prv_get_context_for_task(task);
 
@@ -456,7 +458,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 
       // Send a DEINIT event to wake up the app if it's blocked waiting for events
       // (e.g., in sys_get_pebble_event). This allows the syscall to return and
-      // trigger process_manager_handle_syscall_exit() which will mark the process
+      // trigger pbl_kernel_syscall_exit() which will mark the process
       // as safe to kill.
       PBL_LOG_DBG("Sending DEINIT event to wake %s from syscall", pebble_task_get_name(task));
       PebbleEvent deinit_event = {

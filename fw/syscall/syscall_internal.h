@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/mcu/mpu.h>
+#include <pbl/kernel/syscall.h>
 
 #include <kernel/pebble_tasks.h>
 
@@ -16,25 +16,6 @@
 //! once the syscall is exited (unless the caller was originally privileged).
 #define DEFINE_SYSCALL(retType, funcName, ...) \
   PRV_DEFINE_SYSCALL(".syscall_text.", retType, funcName, __VA_ARGS__)
-
-#define PRV_DEFINE_SYSCALL(section, retType, funcName, ...)                \
-  retType PBL_NAKED PBL_SECTION(section #funcName) funcName(__VA_ARGS__) { \
-    __asm volatile(                                                        \
-        "push { lr } \n"                                                   \
-        "bl syscall_internal_maybe_skip_privilege \n"                      \
-        "svc 2 \n"                                                         \
-        "b __" #funcName "\n");                                            \
-  }                                                                        \
-  retType PBL_EXTERNALLY_VISIBLE PBL_USED __##funcName(__VA_ARGS__)
-
-//! Useful function for checking syscall privileges.
-//! @return True if the most recent syscall originated from userspace, resulting in a privilege
-//! escalation. It can only be called from a function created with DEFINE_SYSCALL, or from a
-//! PBL_ALWAYS_INLINE helper of one; the firmware build checks this.
-#define PRIVILEGE_WAS_ELEVATED (syscall_internal_check_return_address(PBL_RETURN_ADDRESS(0)))
-
-//! Check if ret_addr points at the drop_privilege code
-bool syscall_internal_check_return_address(void *ret_addr);
 
 //! Call this from privileged mode whenever a syscall did something wrong. This will kick out the
 //! misbehaving app.
@@ -63,39 +44,31 @@ void syscall_assert_userspace_log_message(const struct LogBinaryMessage *log_mes
 //! is longer than @p max or does not end within the app's memory space.
 int syscall_user_strnlen(const char *str, size_t max);
 
-// Used to implement DEFINE_SYSCALL
-void syscall_internal_maybe_skip_privilege(void);
-
-//! Return true when @p caller_pc is the return PC from the private
-//! mcu_call_unprivileged() re-entry SVC and the current task is inside
-//! mcu_call_unprivileged(). This is only a predicate; it does not consume or
-//! change the saved call state.
-bool mcu_call_unprivileged_reentry_is_allowed(uint32_t caller_pc);
-
-//! Handle an authorized mcu_call_unprivileged() re-entry SVC. This rechecks the
-//! stacked return PC, consumes the saved call state, and redirects the exception
-//! frame to mcu_call_unprivileged_resume().
-bool mcu_call_unprivileged_reentry_setup(uintptr_t orig_sp, uintptr_t *lr_ptr);
-
-// Test overrides.
-// TODO: really implement privilege escalation in unit tests. See PBL-9688
+//! PRIVILEGE_WAS_ELEVATED:
+//! @return True if the most recent syscall originated from userspace, resulting in a privilege
+//! escalation. It can only be called from a function created with DEFINE_SYSCALL, or from a
+//! PBL_ALWAYS_INLINE helper of one; the firmware build checks this.
 #if defined(UNITTEST)
 
-#undef PRV_DEFINE_SYSCALL
+// TODO: really implement privilege escalation in unit tests. See PBL-9688
 #define PRV_DEFINE_SYSCALL(section, retType, funcName, ...) retType funcName(__VA_ARGS__)
 
-#if !UNITTEST_WITH_SYSCALL_PRIVILEGES
-#undef PRIVILEGE_WAS_ELEVATED
+#if UNITTEST_WITH_SYSCALL_PRIVILEGES
+bool arch_syscall_returns_to_user(void *ret_addr);
+#define PRIVILEGE_WAS_ELEVATED (arch_syscall_returns_to_user(PBL_RETURN_ADDRESS(0)))
+#else
 #define PRIVILEGE_WAS_ELEVATED (0)
 #endif
 
-#elifdef CONFIG_ARCH_POSIX
+#elifdef CONFIG_USERSPACE
 
-// A native build has a single privilege level: syscalls are plain calls.
-#undef PRV_DEFINE_SYSCALL
+#define PRV_DEFINE_SYSCALL     ARCH_SYSCALL_DEFINE
+#define PRIVILEGE_WAS_ELEVATED ARCH_SYSCALL_FROM_USER()
+
+#else
+
+// A single privilege level: syscalls are plain calls.
 #define PRV_DEFINE_SYSCALL(section, retType, funcName, ...) retType funcName(__VA_ARGS__)
-
-#undef PRIVILEGE_WAS_ELEVATED
-#define PRIVILEGE_WAS_ELEVATED (0)
+#define PRIVILEGE_WAS_ELEVATED                              (0)
 
 #endif

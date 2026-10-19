@@ -149,12 +149,6 @@ void process_manager_send_callback_event_to_process(PebbleTask task, void (*call
 //! Send a kill event for the given process to KernelMain
 void process_manager_put_kill_process_event(PebbleTask task, bool gracefully);
 
-//! Right before a syscall function drops privilege, it calls this
-//! function to check whether the kernel is trying to kill the process.
-//! It offers us a place that we know is unprivileged for us to safely
-//! suspend the task and shut it down if it is misbehaving.
-void process_manager_handle_syscall_exit(void);
-
 //! Return true if the current process was compiled with any 2.x SDK
 bool process_manager_compiled_with_legacy2_sdk(void);
 

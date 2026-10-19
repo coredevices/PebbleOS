@@ -46,7 +46,7 @@ void dcache_flush(const void *addr, size_t size) {
   s_flush_addr = (uintptr_t)addr;
 }
 
-bool syscall_internal_check_return_address(void *ret_addr) {
+bool arch_syscall_returns_to_user(void *ret_addr) {
   s_addr_result = UserSpaceBuffer_Unchecked;
   return cl_mock_type(bool);
 }
@@ -72,7 +72,7 @@ void test_cpu_cache__alignment(void) {
   cl_will_return(icache_line_size, 8);
   cl_will_return(dcache_line_size, 16);
 
-  cl_will_return(syscall_internal_check_return_address, true);
+  cl_will_return(arch_syscall_returns_to_user, true);
   s_user_start = 0x00;
   s_user_size = 0x20;
 
@@ -93,7 +93,7 @@ void test_cpu_cache__userspace_fail_from_size(void) {
   cl_will_return(icache_line_size, 1);
   cl_will_return(dcache_line_size, 1);
 
-  cl_will_return(syscall_internal_check_return_address, true);
+  cl_will_return(arch_syscall_returns_to_user, true);
   s_user_start = 0x00;
   s_user_size = 0x20;
 
@@ -114,7 +114,7 @@ void test_cpu_cache__userspace_fail_from_addr(void) {
   cl_will_return(icache_line_size, 1);
   cl_will_return(dcache_line_size, 1);
 
-  cl_will_return(syscall_internal_check_return_address, true);
+  cl_will_return(arch_syscall_returns_to_user, true);
   s_user_start = 0x00;
   s_user_size = 0x20;
 
@@ -135,7 +135,7 @@ void test_cpu_cache__userspace_aligned_fail(void) {
   cl_will_return(icache_line_size, 8);
   cl_will_return(dcache_line_size, 8);
 
-  cl_will_return(syscall_internal_check_return_address, true);
+  cl_will_return(arch_syscall_returns_to_user, true);
   s_user_start = 0x24;
   s_user_size = 0x20;
 
@@ -156,7 +156,7 @@ void test_cpu_cache__userspace_ignore(void) {
   cl_will_return(icache_line_size, 1);
   cl_will_return(dcache_line_size, 1);
 
-  cl_will_return(syscall_internal_check_return_address, false);
+  cl_will_return(arch_syscall_returns_to_user, false);
   s_user_start = 0x00;
   s_user_size = 0x04;
 
@@ -180,7 +180,7 @@ void test_cpu_cache__without_icache(void) {
   s_invalidate_addr = s_flush_addr = 0xAA55;
   s_invalidate_size = s_flush_size = 0x55AA;
 
-  cl_will_return(syscall_internal_check_return_address, true);
+  cl_will_return(arch_syscall_returns_to_user, true);
   s_user_start = 0x00;
   s_user_size = 0x20;
 
@@ -204,7 +204,7 @@ void test_cpu_cache__without_dcache(void) {
   s_invalidate_addr = s_flush_addr = 0xAA55;
   s_invalidate_size = s_flush_size = 0x55AA;
 
-  cl_will_return(syscall_internal_check_return_address, true);
+  cl_will_return(arch_syscall_returns_to_user, true);
   s_user_start = 0x00;
   s_user_size = 0x20;
 
@@ -228,7 +228,7 @@ void test_cpu_cache__without_cache(void) {
   s_invalidate_addr = s_flush_addr = 0xAA55;
   s_invalidate_size = s_flush_size = 0x55AA;
 
-  cl_will_return(syscall_internal_check_return_address, true);
+  cl_will_return(arch_syscall_returns_to_user, true);
   s_user_start = 0x00;
   s_user_size = 0x20;
 

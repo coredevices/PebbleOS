@@ -119,7 +119,7 @@ def cmd_check_syscalls(args):
         m = func_re.match(line)
         if m:
             func = m.group(1)
-        elif "<syscall_internal_check_return_address>" in line:
+        elif "<arch_syscall_returns_to_user>" in line:
             callers.add(func)
 
     bad = sorted(

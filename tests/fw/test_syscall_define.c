@@ -25,7 +25,7 @@ static bool prv_in_user(const void *buf, size_t num_bytes) {
   return p >= start && p <= end && num_bytes <= end - p;
 }
 
-bool syscall_internal_check_return_address(void *ret_addr) {
+bool arch_syscall_returns_to_user(void *ret_addr) {
   return s_elevated;
 }
 

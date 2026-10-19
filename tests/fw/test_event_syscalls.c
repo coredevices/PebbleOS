@@ -17,7 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fakes
 
-bool syscall_internal_check_return_address(void *ret_addr) {
+bool arch_syscall_returns_to_user(void *ret_addr) {
   return true;
 }
 

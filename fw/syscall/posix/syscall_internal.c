@@ -45,7 +45,3 @@ void syscall_copy_out(struct syscall_copy_out *out) {
     memcpy(out->dst, out->src, out->num_bytes);
   }
 }
-
-bool syscall_internal_check_return_address(void *ret_addr) {
-  return false;
-}

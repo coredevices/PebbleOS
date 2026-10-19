@@ -2,8 +2,9 @@
 
 `pbl_thread_create()` takes a `struct pbl_thread_attr`: entry, priority,
 privileged flag, a caller-owned stack and up to four `MpuRegion`s that are
-switched in with the thread. `pbl_thread.tls[]` holds the per-thread pointers
-the syscall layer needs.
+switched in with the thread. With `CONFIG_USERSPACE` it also takes the
+memory the thread's syscalls may use and the stack they run on
+({doc}`syscalls`).
 
 ## Introspection
 

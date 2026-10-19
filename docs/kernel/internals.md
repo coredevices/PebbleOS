@@ -79,11 +79,13 @@ between when the FP context is active. Core dumps and the fault handler
 read that layout unchanged. PendSV saves the context, picks the next thread
 under BASEPRI, rewrites the four per-thread MPU regions through the RBAR
 alias registers and restores. Supervisor calls keep the port's numbers: 0
-starts the scheduler, 1 yields, 2 raises privilege. The privilege-raise path
-copies the exception frame onto the thread's syscall stack when it was
-created with one and hands the caller's stack pointer and stacked return
-slot to `pbl_kernel_syscall_entered()`, which is what the firmware's
-syscall island expects.
+starts the scheduler, 1 yields, 2 raises privilege. SVC 2 is honoured only
+from a syscall stub in `.syscall_text` or from the return of an
+`mcu_call_unprivileged()` callback. For a syscall it copies the exception
+frame onto the thread's syscall stack when it was created with one, records
+the caller's stack pointer and return address in the thread, and points the
+return at the code that drops privilege again
+(`kernel/arch/arm/syscall.c`).
 
 The vector table (`kernel/arch/arm/vector_table.c`) is a constant array in
 `.isr_vector`. `PBL_LISTIFY()` expands its `CONFIG_NUM_IRQS` slots to

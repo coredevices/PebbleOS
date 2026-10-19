@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "arm_syscall.h"
+
 #include <stddef.h>
 #include <string.h>
 
@@ -342,13 +344,14 @@ static uint32_t *prv_relocate_to_syscall_stack(uint32_t *frame, uint32_t exc_ret
 }
 
 static void prv_raise_privilege(uint32_t *frame, uint32_t exc_return) {
-  uint32_t caller_pc = frame[6];
-  if (!pbl_kernel_privilege_raise_allowed(caller_pc)) {
-    return;
+  if (!arch_user_call_return(frame)) {
+    if (!arch_syscall_raise_allowed(frame[6])) {
+      return;
+    }
+    uintptr_t orig_sp = prv_original_sp(frame, exc_return);
+    uint32_t *lr_slot = prv_relocate_to_syscall_stack(frame, exc_return, orig_sp);
+    arch_syscall_entered(orig_sp, lr_slot);
   }
-  uintptr_t orig_sp = prv_original_sp(frame, exc_return);
-  uint32_t *lr_slot = prv_relocate_to_syscall_stack(frame, exc_return, orig_sp);
-  pbl_kernel_syscall_entered(orig_sp, (uintptr_t *)lr_slot);
   __set_CONTROL(__get_CONTROL() & ~CONTROL_nPRIV_Msk);
   __ISB();
 }
