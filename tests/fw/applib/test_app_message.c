@@ -74,7 +74,6 @@ static bool s_in_received_is_called = false;
 static bool s_in_dropped_is_called = false;
 static bool s_ack_received_for_id_1 = false;
 static bool s_nack_received_for_id_2 = false;
-static AppMessageResult s_dropped_reason = APP_MSG_OK;
 
 static AppMessageCtx s_app_message_ctx;
 
@@ -158,7 +157,6 @@ static void prv_in_dropped_callback(AppMessageResult reason, void *context) {
   cl_assert_equal_p(context, &s_context);
   cl_assert_equal_b(s_in_dropped_is_called, false);
   s_in_dropped_is_called = true;
-  s_dropped_reason = reason;
 }
 
 static void prv_send_ack_nack(uint16_t endpoint_id, const uint8_t *data, unsigned int length,
@@ -190,10 +188,9 @@ static void prv_ack_sent_callback(uint16_t endpoint_id, const uint8_t *data, uns
   prv_send_ack_nack(endpoint_id, data, length, false);
 }
 
-static void prv_receive_test_data(uint8_t transaction_id, const bool oversized) {
+static void prv_receive_test_data(uint8_t transaction_id) {
   const uint16_t dict_length = dict_calc_buffer_size(1, (size_t)MAX_DATA_SIZE);
-  const uint16_t message_length =
-      offsetof(AppMessage, payload[0].push.dictionary) + +dict_length + (oversized ? 20 : 0);
+  const uint16_t message_length = offsetof(AppMessage, payload[0].push.dictionary) + dict_length;
   uint8_t buffer[message_length];
   AppMessage *message = (AppMessage *)buffer;
 
@@ -389,7 +386,6 @@ void test_app_message__initialize(void) {
   s_ack_received_for_id_1 = false;
   s_nack_received_for_id_2 = false;
   s_remote_receive_handler = nullptr;
-  s_dropped_reason = APP_MSG_OK;
   s_failure_result = APP_MSG_OK;
 
   s_process_manager_callback = nullptr;
@@ -652,7 +648,7 @@ static void check_in_accepting_again(void) {
 
 void test_app_message__receive_happy_case(void) {
   prv_set_remote_receive_handler(prv_receive_ack_nack_callback);
-  prv_receive_test_data(TEST_TRANSACTION_ID_1, false);
+  prv_receive_test_data(TEST_TRANSACTION_ID_1);
   cl_assert_equal_i(s_app_inbox_consume_call_count, 1);
   prv_process_sent_data();
 
@@ -665,49 +661,13 @@ void test_app_message__receive_happy_case(void) {
   check_in_accepting_again();
 }
 
-void test_app_message__receive_dropped_because_buffer_too_small(void) {
-  // FIXME:
-  // https://pebbletechnology.atlassian.net/browse/PBL-22925
-  return;
-
-  prv_set_remote_receive_handler(prv_receive_ack_nack_callback);
-  prv_receive_test_data(TEST_TRANSACTION_ID_2, true);
-
-  // Message should be dropped due to buffer overflow
-  cl_assert_equal_b(s_in_dropped_is_called, true);
-  cl_assert_equal_b(s_in_received_is_called, false);
-  cl_assert_equal_i(s_dropped_reason, APP_MSG_BUFFER_OVERFLOW);
-
-  cl_assert_equal_b(s_nack_received_for_id_2, true);
-
-  // Check that the state was reset
-  check_in_accepting_again();
-}
-
-void test_app_message__receive_app_not_running(void) {
-  // FIXME:
-  // https://pebbletechnology.atlassian.net/browse/PBL-22925
-  return;
-
-  prv_set_remote_receive_handler(prv_receive_ack_nack_callback);
-  prv_receive_test_data(TEST_TRANSACTION_ID_2, false);
-
-  cl_assert_equal_b(s_in_received_is_called, false);
-  cl_assert_equal_b(s_in_dropped_is_called, false);
-
-  cl_assert_equal_b(s_nack_received_for_id_2, true);
-
-  // Check that the state is reset
-  check_in_accepting_again();
-}
-
 void test_app_message__receive_app_uuid_mismatch(void) {
   // Change the current app uuid
   prv_set_app_uuid(UuidMake(0xF6, 0x2C, 0xB7, 0xBA, 0x1B, 0x8D, 0x46, 0x10, 0xBE, 0xC5, 0xDE, 0xC6,
                             0x5A, 0xD3, 0x18, 0x29));
 
   prv_set_remote_receive_handler(prv_receive_ack_nack_callback);
-  prv_receive_test_data(TEST_TRANSACTION_ID_2, false);
+  prv_receive_test_data(TEST_TRANSACTION_ID_2);
   prv_process_sent_data();
 
   cl_assert_equal_b(s_in_received_is_called, false);
