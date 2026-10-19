@@ -91,7 +91,6 @@ PBL_T_MOCKABLE void graphics_line_draw_1px_aa(GContext *ctx, GPoint p0, GPoint p
   }
 
   // Draw the initial pixel
-  // TODO: PBL-14743: Make a unit test that will test case of .frame.origin != {0,0}
   graphics_private_plot_pixel(framebuffer, &ctx->draw_state.clip_box, x1, y1, MAX_PLOT_OPACITY,
                               stroke_color);
 
@@ -487,8 +486,6 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
 
       // Find edges of the line's straight part
       if (y >= far_top.y.integer && y <= far_bottom.y.integer) {
-        // TODO: possible performance optimization: PBL-14744
-        // TODO: ^^ also possible avoid of following logic to avoid division by zero
         // Main part of the stroked line
         if (lm_p1.y.raw_value != lm_p0.y.raw_value) {
           left_margin.raw_value =
@@ -544,7 +541,6 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
       }
     }
   } else {
-    // PBL-14798: refactor this.
     // Top and bottom most point helpers for main loop
     GPointPrecise tm_p0 = far_left;
     GPointPrecise tm_p1 = far_top;

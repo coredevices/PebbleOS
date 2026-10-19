@@ -141,9 +141,7 @@ void graphics_private_move_pixels_vertically(GBitmap *bitmap, int16_t delta_y);
 //! @param row_number Absolute number of framebuffer row
 uint32_t graphics_private_get_1bit_grayscale_pattern(GColor color, uint8_t row_number);
 
-//! Which edge of the bitmap to sample. This is identical in order to
-//! CompositorTransitionDirection, and both should be wrapped into one enum as described in
-//! PBL-40961
+//! Which edge of the bitmap to sample. Must match the order of CompositorTransitionDirection.
 typedef enum {
   GColorSampleEdgeUp,
   GColorSampleEdgeDown,

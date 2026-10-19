@@ -735,7 +735,6 @@ static const GColor8Component s_color_component_multiplication_lookup[16] = {
 };
 
 GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component b) {
-  // TODO PBL-37522: Benchmark using arithmetic for this expression
   return s_color_component_multiplication_lookup[(a << 2) | b];
 }
 

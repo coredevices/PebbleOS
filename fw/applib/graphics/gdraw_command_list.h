@@ -38,7 +38,6 @@ typedef void (*GDrawCommandProcessCommand)(GDrawCommandProcessor *processor,
 //! @internal
 //! Data used by the processor
 typedef struct GDrawCommandProcessor {
-  // TODO: PBL-23778 processors for image, sequence, frame
   GDrawCommandProcessCommand command;
 } GDrawCommandProcessor;
 

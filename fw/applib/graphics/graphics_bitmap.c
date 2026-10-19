@@ -39,9 +39,8 @@ void graphics_draw_bitmap_in_rect_processed(GContext *ctx, const GBitmap *src_bi
     goto call_processor_post_function_and_return;
   }
 
-  // TODO PBL-35694: what if src_bitmap == dest_bitmap....
-  // This currently works only if the regions are equal, or the dest region is
-  // to the bottom/right of it, since we scan from left to right, top to bottom
+  // If src_bitmap == dest_bitmap, this only works if the regions are equal or the dest
+  // region is to the bottom/right of src, since we scan left to right, top to bottom
   GBitmap *dest_bitmap = graphics_context_get_bitmap(ctx);
   PBL_ASSERTN(dest_bitmap);
 
@@ -184,7 +183,6 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
   const GColor ctx_color = ctx->draw_state.stroke_color;
 
   if (grect_contains_point(&src->bounds, &src_ic)) {
-    // TODO: Optimize further (PBL-15657)
     // If src_ic is within the bounds of the source image, do the following performance
     // optimization:
     // Create a clipping rectangle based on the max distance away from the pivot point

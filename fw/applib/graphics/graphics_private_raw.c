@@ -114,8 +114,6 @@ PBL_T_STATIC void prv_assign_horizontal_line_raw(GContext *ctx, int16_t y, Fixed
                                             (uint8_t)x2.fraction);
   }
 #else
-  // TODO: as part of PBL-30849 make this a first-class function
-  // also see prv_blend_horizontal_line_raw
   const int16_t x1_rounded = (x1.raw_value + FIXED_S16_3_HALF.raw_value) / FIXED_S16_3_FACTOR;
   const int16_t x2_rounded = (x2.raw_value + FIXED_S16_3_HALF.raw_value) / FIXED_S16_3_FACTOR;
   prv_assign_row_with_pattern_1bit(framebuffer, y, x1_rounded, x2_rounded - x1_rounded + 1, color);
@@ -186,8 +184,6 @@ PBL_T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_
     prv_set_color(ctx, output, data_row_offset, i, 1, gcolor_alpha_blend(color, *output));
   }
 #else
-  // TODO: as part of PBL-30849 make this a first-class function
-  // also see, prv_assign_horizontal_line_raw
   prv_assign_row_with_pattern_1bit(framebuffer, y, x1, x2 - x1 + 1, color);
 #endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
 }

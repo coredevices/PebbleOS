@@ -46,7 +46,6 @@ static bool prv_codepoint_is_invisible(Codepoint cp) {
   return codepoint_is_formatting_indicator(cp) || codepoint_should_skip(cp);
 }
 
-// PBL-23045 Eventually remove perimeter debugging
 //! Start of the paragraph @p line_start falls in. P2 is defined over the
 //! paragraph, so a wrapped line must not resolve its own base direction or the
 //! alignment flips part way down. '\n' cannot appear as a UTF-8 continuation
@@ -1188,7 +1187,6 @@ bool is_clip_box_overflow_stop_condition_cb(GContext *ctx, Line *line,
 PBL_T_STATIC PBL_NOINLINE PBL_T_MOCKABLE void prv_debug_perimeter(GContext *ctx,
                                                                   const GRangeHorizontal *h_range,
                                                                   const Line *line) {
-  // PBL-23045 Eventually remove perimeter debugging
   // Draw a red horizontal line to show the range of the current lines perimeter
   if (app_state_get_text_perimeter_debugging_enabled()) {
 #if !defined(UNITTEST)
@@ -1477,7 +1475,7 @@ bool line_add_words(Line *line, Iterator *word_iter, LastLineCallback last_line_
 
   bool is_text_remaining = (line->start != nullptr);
 
-  // PBL-22083 : max_width_px == 0 eats a character that should appear on next line
+  // max_width_px == 0 would eat a character that belongs on the next line
   while (is_text_remaining && line->max_width_px > 0) {
     Word next_word = word_iter_state->current;
 

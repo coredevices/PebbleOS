@@ -144,7 +144,6 @@ GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component 
 // Define to describe the proper display format
 // as we don't share platform defines between SDK (e.g. snowy vs. basalt)
 // and display_snowy.h is not included in SDK generator this looks a bit ugly here
-// TODO: PBL-21978 remove redundant comments as a workaround around for SDK generator
 #if PBL_RECT && PBL_BW
 #define GBITMAP_NATIVE_FORMAT GBitmapFormat1Bit
 #elif PBL_RECT && PBL_COLOR
@@ -156,7 +155,6 @@ GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component 
 #endif
 
 // convenient macros to distinguish between rect and round
-// TODO: PBL-21978 remove redundant comments as a workaround around for SDK generator
 #if PBL_RECT
 
 //! Convenience macro to switch between two expression depending on the screen of the platform.
@@ -187,7 +185,6 @@ GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component 
 #define PBL_IF_MASK_ELSE(if_true, if_false) (if_false)
 
 // convenient macros to distinguish between bw and color
-// TODO: PBL-21978 remove redundant comments as a workaround around for SDK generator
 #if PBL_BW
 
 //! Convenience macro to switch between two expression depending on the screen of the platform.
@@ -1195,7 +1192,6 @@ typedef enum {
   //!   mode is that for the parts where the source image is black, the destination image will be
   //!   painted white. Other parts will be left untouched.
   GCompOpSet,
-  // TODO PBL-37523: Rename GCompOpTint to GCompOpTintAlpha
   //! Sets the bits in the destination image to the tint color using the source image for
   //! transparency. For GBitmapFormat1Bit, the visual result of this compositing mode is that for
   //! the parts where the source image is black, the destination image will be painted the tint
