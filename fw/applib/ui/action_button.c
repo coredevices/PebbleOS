@@ -5,6 +5,7 @@
 
 #include <applib/graphics/graphics.h>
 #include <applib/preferred_content_size.h>
+#include <shell/system_theme.h>
 
 void action_button_draw(GContext *ctx, Layer *layer, GColor fill_color) {
   // This should match the window bounds
@@ -35,5 +36,5 @@ void action_button_draw(GContext *ctx, Layer *layer, GColor fill_color) {
 }
 
 void action_button_update_proc(Layer *action_button_layer, GContext *ctx) {
-  action_button_draw(ctx, action_button_layer, GColorBlack);
+  action_button_draw(ctx, action_button_layer, system_theme_get_fg_color());
 }
