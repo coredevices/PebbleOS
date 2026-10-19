@@ -69,7 +69,6 @@ add_custom_command(TARGET pdc2png POST_BUILD
 target_compile_definitions(pdc2png PRIVATE
   UNITTEST
   CONFIG_SCREEN_COLOR_DEPTH_BITS=8
-  # TODO: PBL-21014 Support arbitrary display sizes
   DISP_COLS=144
   DISP_ROWS=168
   DISPLAY_FRAMEBUFFER_BYTES=24192
