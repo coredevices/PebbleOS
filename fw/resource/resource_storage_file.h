@@ -14,5 +14,4 @@ typedef struct {
   const char *name;
 } FileResourceData;
 
-// TODO PBL-21009: Move this somewhere else.
 #define APP_RESOURCE_FILENAME_MAX_LENGTH 24

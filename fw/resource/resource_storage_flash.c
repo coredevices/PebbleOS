@@ -60,7 +60,6 @@ static void resource_storage_system_bank_init(void) {
   // is called as part of system_resource_init we'll complain and handle missing resources.
 }
 
-// TODO PBL-21009: Move this somewhere else.
 const SystemResourceBank *resource_storage_flash_get_unused_bank(void) {
   size_t unused_bank_index;
   if (s_valid_resources_found) {

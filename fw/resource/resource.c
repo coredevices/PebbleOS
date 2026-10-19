@@ -201,9 +201,6 @@ const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_
 
   pbl_mutex_lock(&s_resource_mutex, PBL_FOREVER);
 
-  // FIXME PBL-28781: This operation touches flash. Even though this is the cleanest approach
-  // to detect if the resource is a builtin, it is a slow one. We should instead only search
-  // in the builtin table for the resource_ids and if there are no matches, bail early.
   ResourceStoreEntry resource;
   prv_get_resource(app_num, resource_id, &resource);
   pbl_mutex_unlock(&s_resource_mutex);

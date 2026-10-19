@@ -12,8 +12,6 @@
 //!
 //! Shared functionality that all the different ResourceStoreImplementation's need.
 
-// TODO PBL-21382: Abstract these details out of the resource storage implementation.
-
 //  Apart from builtins which do not have a header at all, the resource stores
 //  are structured as follow:
 //

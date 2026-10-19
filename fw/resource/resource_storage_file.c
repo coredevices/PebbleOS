@@ -193,7 +193,6 @@ static void resource_storage_file_init(void) {
 
     // Now check each entry in the file
     for (uint32_t resource_id = first_resource_id; resource_id <= last_resource_id; resource_id++) {
-      // TODO PBL-21402
       if (!resource_storage_check(SYSTEM_APP, resource_id, nullptr)) {
         PBL_LOG_ERR("System resource file %" PRIu32 " corrupt!!!", resource_id);
       }
@@ -201,8 +200,7 @@ static void resource_storage_file_init(void) {
       const uint32_t large_file_size_threshold = 200 * 1024;
       if (file_length > large_file_size_threshold) {
         // If this file is over 200KB, it's going to take a while to CRC. Let's sleep a bit
-        // between entries so we don't starve out our background task. See PBL-24560 for a real
-        // long term fix.
+        // between entries so we don't starve out our background task.
         pbl_sleep_ms(5);
       }
     }

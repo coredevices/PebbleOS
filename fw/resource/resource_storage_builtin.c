@@ -57,7 +57,6 @@ static bool resource_storage_builtin_find_resource(ResourceStoreEntry *entry, Re
   if (app_num != SYSTEM_APP) {
     return false;
   }
-  // Story time! This is closely related to PBL-14367
   // resource_id == 0 means get the store.
   // HOWEVER, both builtin and flash stores respond to (app_num,rsrc_id) == (SYSTEM_APP,*)
   // When we ask for (SYSTEM_APP,0), we always want to actually be getting the flash store.

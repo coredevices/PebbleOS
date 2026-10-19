@@ -120,8 +120,6 @@ static bool prv_validate_store(ResourceManifest *manifest, ResourceStoreEntry *e
     PBL_LOG_WRN("Resource crc mismatch for app %" PRIu32 ".", app_num);
     PBL_LOG_WRN("0x%" PRIx32 " != 0x%" PRIx32, calculated_crc, manifest->version.crc);
 
-    PBL_LOG_WRN("PBL-28517: If you see this please let Brad know");
-
     const uint32_t calculated_crc_again = prv_get_crc(entry, num_bytes, 0);
     PBL_LOG_WRN("Num bytes is %" PRIu32, num_bytes);
     PBL_LOG_WRN("Calculated the CRC again, got 0x%" PRIx32, calculated_crc_again);

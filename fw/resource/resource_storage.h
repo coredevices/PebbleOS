@@ -81,5 +81,4 @@ uint32_t resource_storage_read(ResourceStoreEntry *entry, uint32_t offset, void 
 
 uint32_t resource_store_get_metadata_size(ResourceStoreEntry *entry);
 
-// TODO PBL-21009: Move this somewhere else.
 void resource_storage_get_file_name(char *name, size_t buf_length, ResAppNum app_num);
