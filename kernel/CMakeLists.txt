@@ -12,6 +12,7 @@ pbl_library_sources(
   poll.c
   sched.c
   sem.c
+  syscall.c
   thread.c
   tick.c
   time.c

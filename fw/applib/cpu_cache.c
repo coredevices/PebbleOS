@@ -3,13 +3,12 @@
 
 #include "cpu_cache.h"
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/mcu/cache.h>
-
-#include <syscall/syscall_define.h>
 
 PBL_SYSCALL(void, memory_cache_flush, (VAL, void *, start), (VAL, size_t, size)) {
   // We need to align the address and size properly for the cache functions. It needs to be done
-  // before we do syscall_assert_userspace_buffer though, because otherwise the user could
+  // before we do pbl_syscall_verify_user though, because otherwise the user could
   // potentially abuse this behavior to flush+invalidate kernel memory. Theoretically that
   // shouldn't actually have any really effect, but it's better to be safe than sorry.
   // That should only be possible if the user region is not cache aligned, so in any realistic
@@ -20,7 +19,7 @@ PBL_SYSCALL(void, memory_cache_flush, (VAL, void *, start), (VAL, size_t, size))
   start = (void *)start_addr;
 
   if (from_user) {
-    syscall_assert_userspace_buffer(start, size);
+    pbl_syscall_verify_user(start, size);
   }
 
   if (dcache_is_enabled()) {

@@ -42,6 +42,7 @@
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/speaker/speaker_service.h>
 #endif
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
@@ -51,7 +52,6 @@
 #include <shell/system_app_state_machine.h>
 #include <shell/system_shell.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 // FreeRTOS stuff
 

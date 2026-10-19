@@ -57,7 +57,7 @@ sequenceDiagram
    privileges itself: drawing into the app's framebuffer, walking the
    app's layers, handling its timers.
 3. **Syscall.** What needs the kernel goes through a `sys_*` function
-   defined with `PBL_SYSCALL` (`fw/syscall/syscall_define.h`). It raises
+   defined with `PBL_SYSCALL` (`include/pbl/kernel/syscall.h`). It raises
    the privilege level on entry and drops it on return, so the kernel and
    services run privileged for the duration of the call. Syscalls check
    whatever the app hands them: `PBL_SYSCALL` copies small arguments into

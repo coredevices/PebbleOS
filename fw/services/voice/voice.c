@@ -8,6 +8,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/comm_session/session.h>
@@ -22,7 +23,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_voice, CONFIG_SERVICE_VOICE_LOG_LEVEL);
 

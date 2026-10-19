@@ -1,13 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/syscall.h>
+
 #include <applib/app_worker.h>
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <popups/switch_worker_ui.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
-#include <syscall/syscall_define.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // Determine if the worker for the current app is running
@@ -74,7 +75,7 @@ PBL_SYSCALL(AppWorkerResult, sys_app_worker_kill) {
 // Launch the app for the current worker
 PBL_SYSCALL(void, sys_launch_app_for_worker) {
   if (from_user && pebble_task_get_current() != PebbleTask_Worker) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   app_manager_put_launch_app_event(&(AppLaunchEventConfig){

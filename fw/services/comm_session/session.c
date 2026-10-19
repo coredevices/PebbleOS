@@ -6,6 +6,7 @@
 #include <pbl/bluetooth/comm.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/comm_session/session.h>
@@ -23,7 +24,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -560,7 +560,7 @@ PBL_SYSCALL(void, sys_app_comm_set_responsiveness, (VAL, SniffInterval, interval
       return;
   }
   PBL_LOG_WRN("Invalid sniff interval");
-  syscall_failed();
+  pbl_syscall_fail();
 }
 
 PBL_SYSCALL(bool, sys_system_pp_has_capability, (VAL, CommSessionCapability, capability)) {

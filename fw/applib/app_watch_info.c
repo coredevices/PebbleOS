@@ -3,10 +3,10 @@
 
 #include "app_watch_info.h"
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/version.h>
 
 #include <mfg/mfg_info.h>
-#include <syscall/syscall_define.h>
 #include <system/version.h>
 
 PBL_SYSCALL(WatchInfoColor, sys_watch_info_get_color) {

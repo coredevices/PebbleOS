@@ -6,6 +6,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 
@@ -15,7 +16,6 @@
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_event_service, CONFIG_SERVICE_EVENT_SERVICE_LOG_LEVEL);
 

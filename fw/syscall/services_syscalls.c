@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/alarms/alarm.h>
-
-#include <syscall/syscall_define.h>
 
 PBL_SYSCALL(bool, sys_alarm_get_next_enabled, (OUT, time_t *, timestamp_out)) {
   return alarm_get_next_enabled_alarm(timestamp_out);

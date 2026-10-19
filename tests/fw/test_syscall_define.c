@@ -6,10 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/syscall.h>
+
 #include <clar.h>
 #include <fake_pebble_tasks.h>
 #include <stubs_syscall_internal.h>
-#include <syscall/syscall_define.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -29,13 +30,13 @@ bool arch_syscall_returns_to_user(void *ret_addr) {
   return s_elevated;
 }
 
-void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
+void pbl_syscall_verify_user(const void *buf, size_t num_bytes) {
   if (!prv_in_user(buf, num_bytes)) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 }
 
-int syscall_copy_from_user(void *dst, const void *src, size_t num_bytes) {
+int pbl_user_copy_from(void *dst, const void *src, size_t num_bytes) {
   if (!prv_in_user(src, num_bytes)) {
     return -EFAULT;
   }
@@ -43,7 +44,7 @@ int syscall_copy_from_user(void *dst, const void *src, size_t num_bytes) {
   return 0;
 }
 
-int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes) {
+int pbl_user_copy_to(void *dst, const void *src, size_t num_bytes) {
   if (!prv_in_user(dst, num_bytes)) {
     return -EFAULT;
   }
@@ -51,7 +52,7 @@ int syscall_copy_to_user(void *dst, const void *src, size_t num_bytes) {
   return 0;
 }
 
-int syscall_user_strnlen(const char *str, size_t max) {
+int pbl_user_strnlen(const char *str, size_t max) {
   if (!prv_in_user(str, 0)) {
     return -EFAULT;
   }

@@ -4,6 +4,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -13,7 +14,6 @@
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_evented_timer, CONFIG_SERVICE_EVENTED_TIMER_LOG_LEVEL);
 

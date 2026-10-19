@@ -4,13 +4,13 @@
 #include "persist.h"
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/persist.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/math.h>
 
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 static_assert(PERSIST_DATA_MAX_LENGTH <= SETTINGS_VAL_MAX_LEN,
               "PERSIST_DATA_MAX_LENGTH is larger than the max length that "

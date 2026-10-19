@@ -18,7 +18,7 @@
 #include <resource/resource_storage.h>
 #include <resource/resource_version.auto.h>
 #include <font_resource_table.auto.h>
-#include <syscall/syscall_define.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/kernel/assert.h>
 // clang-format on
 
@@ -90,7 +90,7 @@ PBL_SYSCALL(GFont, sys_font_get_system_font, (VAL, const char *, font_key)) {
     if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), font_key, 100) &&
         !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), font_key, 100)) {
       PBL_LOG_ERR("Pointer %p not in app or microflash region", font_key);
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
 
@@ -108,7 +108,7 @@ static bool prv_is_system_font_info(const FontInfo *fontinfo) {
 
 PBL_SYSCALL(void, sys_font_reload_font, (VAL, FontInfo *, fontinfo)) {
   if (from_user && !prv_is_system_font_info(fontinfo)) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   text_resources_init_font(fontinfo->base.app_num, fontinfo->base.resource_id,

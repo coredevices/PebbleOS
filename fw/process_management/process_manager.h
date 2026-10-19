@@ -161,7 +161,7 @@ bool process_manager_compiled_with_legacy3_sdk(void);
 PlatformType process_manager_current_platform(void);
 
 //! Check if [buf, buf + num_bytes) lies between lower_bound and the end of task's memory region.
-//! lower_bound is used by syscall_assert_userspace_buffer to ensure that
+//! lower_bound is used by pbl_syscall_verify_user to ensure that
 //! the range doesn't cover the stack frame of the executing syscall
 bool process_manager_is_range_in_region(PebbleTask task, const void *buf, size_t num_bytes,
                                         const void *lower_bound);

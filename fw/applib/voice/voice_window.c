@@ -37,6 +37,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/voice/voice.h>
@@ -47,7 +48,6 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 // TODO:
 // mic hot before showing screen - needs robust beginning-of-speech detection -
@@ -1459,7 +1459,7 @@ PBL_SYSCALL(size_t, sys_voice_get_transcription_from_event, (IN, PebbleVoiceServ
             (VAL, char *, buffer), (VAL, size_t, buffer_size)) {
   if (from_user) {
     if (buffer && (buffer_size > 0)) {
-      syscall_assert_userspace_buffer(buffer, buffer_size);
+      pbl_syscall_verify_user(buffer, buffer_size);
     }
     // `e->data` is a kernel pointer the event service handed to the app along
     // with the event. The app can rewrite the field in its copy before calling
@@ -1468,7 +1468,7 @@ PBL_SYSCALL(size_t, sys_voice_get_transcription_from_event, (IN, PebbleVoiceServ
     // below into an arbitrary kernel read primitive.
     if (!event_service_is_known_buffer(e->data, PEBBLE_VOICE_SERVICE_EVENT)) {
       PBL_LOG_ERR("Rejecting voice event with unknown data pointer %p", e->data);
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
 

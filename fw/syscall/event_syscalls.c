@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 
@@ -13,13 +14,12 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   if (!event_try_put_from_process(task, event)) {
     PBL_LOG_WRN("%s: From app queue is full! Dropped %p! Killing App",
                 (task == PebbleTask_App ? "App" : "Worker"), event);
-    syscall_failed();
+    pbl_syscall_fail();
   }
 }
 
@@ -76,7 +76,7 @@ PBL_SYSCALL(void, sys_send_pebble_event_to_kernel, (IN, PebbleEvent *, event)) {
   if (from_user) {
     if (!prv_validate_event_from_user(task, event)) {
       PBL_LOG_ERR("Rejecting event type %u from unprivileged caller", event->type);
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
 
@@ -120,7 +120,7 @@ PBL_SYSCALL(uint32_t, sys_process_events_waiting, (VAL, PebbleTask, task)) {
 // memory and use list_remove as a 4-byte arbitrary-write primitive (`*a = b; *b = a`).
 static void prv_assert_list_node_in_userspace(const ListNode *node) {
   if (node != nullptr) {
-    syscall_assert_userspace_buffer(node, sizeof(*node));
+    pbl_syscall_verify_user(node, sizeof(*node));
   }
 }
 
@@ -166,7 +166,7 @@ PBL_SYSCALL(void, sys_event_service_client_subscribe,
     prv_assert_handler_list_node_in_userspace(handler);
     if (!prv_event_type_subscribable_from_user(handler->type)) {
       PBL_LOG_ERR("Rejecting subscription to event type %u", handler->type);
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
 
@@ -209,7 +209,7 @@ static bool prv_has_handler_for_type(EventServiceInfo *state, PebbleEventType ty
   bool advance_slow = false;
   for (ListNode *node = &state->list_node; node != nullptr; node = node->next) {
     if (from_userspace) {
-      syscall_assert_userspace_buffer(node, sizeof(EventServiceInfo));
+      pbl_syscall_verify_user(node, sizeof(EventServiceInfo));
     }
     if (event_service_filter(node, (void *)(uintptr_t)type)) {
       return true;
@@ -221,7 +221,7 @@ static bool prv_has_handler_for_type(EventServiceInfo *state, PebbleEventType ty
     if (node->next == slow) {
       // Cyclic list
       if (from_userspace) {
-        syscall_failed();
+        pbl_syscall_fail();
       }
       return false;
     }
@@ -237,7 +237,7 @@ PBL_SYSCALL(void, sys_event_service_client_unsubscribe, (VAL, EventServiceInfo *
     prv_assert_handler_list_node_in_userspace(handler);
     if (!prv_event_type_subscribable_from_user(handler->type)) {
       PBL_LOG_ERR("Rejecting subscription to event type %u", handler->type);
-      syscall_failed();
+      pbl_syscall_fail();
     }
     // The user-supplied `state` pointer flows into list_find as the list head; an app
     // could craft it (and the chain it heads) to walk into kernel memory. Re-derive

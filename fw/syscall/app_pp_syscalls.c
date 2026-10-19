@@ -3,13 +3,13 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/comm_session/app_session_capabilities.h>
 #include <pbl/services/comm_session/session.h>
 
 #include <applib/app_message/app_message_internal.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
-#include <syscall/syscall_define.h>
 
 static bool prv_is_endpoint_allowed(uint16_t endpoint_id) {
   return (endpoint_id == APP_MESSAGE_ENDPOINT_ID);
@@ -24,10 +24,10 @@ PBL_SYSCALL(CommSession *, sys_app_pp_get_comm_session) {
 PBL_SYSCALL(bool, sys_app_pp_send_data, (VAL, CommSession *, session), (VAL, uint16_t, endpoint_id),
             (IN_BUF, const uint8_t *, data, length), (VAL, uint16_t, length)) {
   if (from_user && pebble_task_get_current() != PebbleTask_App) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
   if (!prv_is_endpoint_allowed(endpoint_id)) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   comm_session_sanitize_app_session(&session);

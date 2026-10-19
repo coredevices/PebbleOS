@@ -7,6 +7,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
@@ -23,7 +24,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 #include <system/hexdump.h>
 
 PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);

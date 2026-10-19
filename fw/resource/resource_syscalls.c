@@ -3,11 +3,11 @@
 
 #include "resource.h"
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
-#include <syscall/syscall_define.h>
 
 //! @file resource_syscalls.c
 //! The landing place for untrusted code to use resources.
@@ -21,14 +21,14 @@ static void prv_assert_app_num_accessible(ResAppNum app_num) {
                                   ? worker_manager_get_current_worker_md()
                                   : app_manager_get_current_app_md();
   if (md == nullptr || app_num != (ResAppNum)process_metadata_get_res_bank_num(md)) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 }
 
 PBL_SYSCALL(size_t, sys_resource_size, (VAL, ResAppNum, app_num), (VAL, uint32_t, resource_id)) {
   if (from_user && pebble_task_get_current() == PebbleTask_Worker) {
     // Not allowed from workers
-    syscall_failed();
+    pbl_syscall_fail();
   }
   if (from_user) {
     prv_assert_app_num_accessible(app_num);
@@ -42,7 +42,7 @@ PBL_SYSCALL(size_t, sys_resource_load_range, (VAL, ResAppNum, app_num), (VAL, ui
             (VAL, size_t, num_bytes)) {
   if (from_user && pebble_task_get_current() == PebbleTask_Worker) {
     // Not allowed from workers
-    syscall_failed();
+    pbl_syscall_fail();
   }
   if (from_user) {
     prv_assert_app_num_accessible(app_num);
@@ -59,7 +59,7 @@ PBL_SYSCALL(const uint8_t *, sys_resource_read_only_bytes, (VAL, ResAppNum, app_
             (VAL, uint32_t, resource_id), (OUT_OPT, size_t *, num_bytes_out)) {
   if (from_user && pebble_task_get_current() == PebbleTask_Worker) {
     // Not allowed from workers
-    syscall_failed();
+    pbl_syscall_fail();
   }
   if (from_user) {
     prv_assert_app_num_accessible(app_num);
@@ -79,7 +79,7 @@ PBL_SYSCALL(bool, sys_resource_is_valid, (VAL, ResAppNum, app_num), (VAL, uint32
 PBL_SYSCALL(uint32_t, sys_resource_get_and_cache, (VAL, ResAppNum, app_num),
             (VAL, uint32_t, resource_id)) {
   if (from_user && app_num != SYSTEM_APP) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   return resource_get_and_cache(app_num, resource_id);

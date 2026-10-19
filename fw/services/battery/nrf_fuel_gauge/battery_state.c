@@ -8,6 +8,7 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_state.h>
@@ -17,7 +18,6 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <syscall/syscall_define.h>
 
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/settings/settings_file.h>

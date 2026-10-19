@@ -6,6 +6,7 @@
 #include <pbl/input/input.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/event_service.h>
@@ -17,7 +18,6 @@
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);
 

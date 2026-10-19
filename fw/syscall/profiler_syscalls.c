@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
 
-#include <syscall/syscall_define.h>
 #include <system/profiler.h>
 
 // ------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ PBL_SYSCALL(void, sys_profiler_print_stats) {
 PBL_SYSCALL(void, sys_profiler_node_start, (VAL, ProfilerNode *, node)) {
   if (from_user) {
     if (!list_contains(g_profiler.nodes, (ListNode *)node)) {
-      // Instead of calling syscall_failed(), simply return. If PROFILE_INIT has not been
+      // Instead of calling pbl_syscall_fail(), simply return. If PROFILE_INIT has not been
       // executed yet, there won't be any nodes in the list.
       return;
     }
@@ -61,7 +61,7 @@ PBL_SYSCALL(void, sys_profiler_node_stop, (VAL, ProfilerNode *, node)) {
 
   if (from_user) {
     if (!list_contains(g_profiler.nodes, (ListNode *)node)) {
-      // Instead of calling syscall_failed(), simply return. If PROFILE_INIT has not been
+      // Instead of calling pbl_syscall_fail(), simply return. If PROFILE_INIT has not been
       // executed yet, there won't be any nodes in the list.
       return;
     }

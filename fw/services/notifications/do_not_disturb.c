@@ -3,6 +3,7 @@
 
 #include <pbl/cron/cron.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences.h>
@@ -25,7 +26,6 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

@@ -36,7 +36,7 @@ new firmware plus a new SDK build.
 
 ## Defining the syscall
 
-`PBL_SYSCALL` (`fw/syscall/syscall_define.h`) takes the kind of each
+`PBL_SYSCALL` (`include/pbl/kernel/syscall.h`) takes the kind of each
 argument, and checks the arguments before the body runs. An argument that
 fails its check terminates the app:
 

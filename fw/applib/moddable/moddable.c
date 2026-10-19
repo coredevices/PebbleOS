@@ -3,6 +3,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include <stddef.h>
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/mcu/privilege.h>
 #include <pbl/services/evented_timer.h>
 
@@ -12,7 +13,6 @@
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <logging/logging_private.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 #if defined(CONFIG_MODDABLE_XS) && !defined(CONFIG_RECOVERY_FW)
 #include <kernel/event_loop.h>
@@ -100,7 +100,7 @@ static void prv_build_ffi(txMachine *the, txAPI *api) {
 static void prv_assert_userspace_creation_record(bool from_user, ModdableCreationRecord *cr,
                                                  size_t len) {
   if (from_user) {
-    syscall_assert_userspace_buffer(cr, len);
+    pbl_syscall_verify_user(cr, len);
   }
 }
 
@@ -112,7 +112,7 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
     const PebbleProcessMd *md = app_manager_get_current_app_md();
     if (pebble_task_get_current() != PebbleTask_App || md == nullptr || !md->is_moddable_app ||
         app_state_get_js_memory_api_context() != nullptr) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
 

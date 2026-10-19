@@ -3,20 +3,20 @@
 
 #include <stdckdint.h>
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_private.h>
 #include <pbl/util/uuid.h>
 
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 
 static void prv_assert_session_owned_by_caller(DataLoggingSession *session) {
   const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
   if (md == nullptr || !uuid_equal(&session->app_uuid, &md->uuid)) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 }
 
@@ -28,9 +28,9 @@ PBL_SYSCALL(DataLoggingSessionRef, sys_data_logging_create, (VAL, uint32_t, tag)
   // could point at kernel memory and turn dls_log into an arbitrary kernel write.
   if (from_user) {
     if (buffer != nullptr) {
-      syscall_assert_userspace_buffer(buffer, DLS_SESSION_MIN_BUFFER_SIZE);
+      pbl_syscall_verify_user(buffer, DLS_SESSION_MIN_BUFFER_SIZE);
     } else if (pebble_task_get_current() != PebbleTask_Worker) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
   return dls_create_current_process(tag, item_type, item_size, buffer, resume);
@@ -72,9 +72,9 @@ PBL_SYSCALL(DataLoggingResult, sys_data_logging_log, (VAL, DataLoggingSessionRef
 
     uint32_t num_bytes;
     if (ckd_mul(&num_bytes, num_items, (uint32_t)session->item_size)) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
-    syscall_assert_userspace_buffer(data, num_bytes);
+    pbl_syscall_verify_user(data, num_bytes);
   }
 
   return dls_log(session, data, num_items);

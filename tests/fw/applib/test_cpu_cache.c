@@ -51,7 +51,7 @@ bool arch_syscall_returns_to_user(void *ret_addr) {
   return cl_mock_type(bool);
 }
 
-void syscall_assert_userspace_buffer(const void *buf, size_t num_bytes) {
+void pbl_syscall_verify_user(const void *buf, size_t num_bytes) {
   uintptr_t addr = (uintptr_t)buf;
   uintptr_t end = addr + num_bytes - 1;
   if ((addr >= s_user_start) && (addr < (s_user_start + s_user_size)) && (end >= s_user_start) &&

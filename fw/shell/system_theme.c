@@ -7,13 +7,13 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 
 #include <applib/fonts/fonts.h>
 #include <process_management/process_manager.h>
-#include <syscall/syscall_define.h>
 
 ////////////////////
 // Helpers
@@ -29,7 +29,7 @@ static const char *prv_get_font_for_size(bool from_user, PreferredContentSize co
   }
   return system_theme_get_style_for_size(content_size)->fonts[font];
 fail:
-  from_user ? syscall_failed() : pbl_panic();
+  from_user ? pbl_syscall_fail() : pbl_panic();
 }
 
 ////////////////////

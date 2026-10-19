@@ -8,6 +8,7 @@
 
 // Pebble stuff
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/privilege.h>
 #include <pbl/services/light.h>
@@ -26,7 +27,6 @@
 #include <process_state/worker_state/worker_state.h>
 #include <shell/prefs.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 // FreeRTOS stuff
 

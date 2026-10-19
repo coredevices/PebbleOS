@@ -12,6 +12,7 @@
 #endif
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -21,7 +22,6 @@
 #include <kernel/low_power.h>
 #include <kernel/pebble_tasks.h>
 #include <services/light/als_screen_compensation.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_light, CONFIG_SERVICE_LIGHT_LOG_LEVEL);
 

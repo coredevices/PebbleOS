@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/util/list.h>
@@ -9,7 +10,6 @@
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/process_manager.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_inbox_service, CONFIG_SERVICE_APP_INBOX_SERVICE_LOG_LEVEL);
 
@@ -120,7 +120,7 @@ PBL_SYSCALL(bool, sys_app_inbox_service_register, (OUT_BUF, uint8_t *, storage, 
             (VAL, size_t, storage_size), (VAL, AppInboxMessageHandler, message_handler),
             (VAL, AppInboxDroppedHandler, dropped_handler)) {
   if (from_user && pebble_task_get_current() != PebbleTask_App) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
   const AppInboxServiceTag service_tag =
       prv_tag_for_event_handlers(message_handler, dropped_handler);
@@ -128,7 +128,7 @@ PBL_SYSCALL(bool, sys_app_inbox_service_register, (OUT_BUF, uint8_t *, storage, 
     PBL_LOG_ERR("AppInbox event handlers not allowed <0x%" PRIx32 ", 0x%" PRIx32 ">",
                 // Ugh.. no more format signature slots free for %p %p...
                 (uint32_t)(uintptr_t)message_handler, (uint32_t)(uintptr_t)dropped_handler);
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   return app_inbox_service_register(storage, storage_size, message_handler, dropped_handler,
@@ -149,7 +149,7 @@ PBL_SYSCALL(bool, sys_app_inbox_service_get_consumer_info, (VAL, AppInboxService
             (VAL, AppInboxConsumerInfo *, info_out)) {
   if (from_user) {
     if (info_out) {
-      syscall_assert_userspace_buffer(info_out, sizeof(*info_out));
+      pbl_syscall_verify_user(info_out, sizeof(*info_out));
     }
     if (!prv_is_inbox_owned_by_current_task(nullptr, tag)) {
       return false;
@@ -164,7 +164,7 @@ PBL_SYSCALL(void, sys_app_inbox_service_consume,
             (OUT_BUF, AppInboxConsumerInfo *, consumer_info, sizeof(*consumer_info))) {
   if (from_user) {
     if (!prv_is_inbox_owned_by_current_task(nullptr, consumer_info->tag)) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
   prv_consume(consumer_info);

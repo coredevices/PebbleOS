@@ -4,13 +4,13 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 
 #include <applib/app_logging.h>
 #include <kernel/util/stack_info.h>
 #include <logging/logging_private.h>
-#include <syscall/syscall_define.h>
 
 static const uint16_t APP_LOGGING_ENDPOINT = 2006;
 
@@ -27,9 +27,9 @@ PBL_SYSCALL(void, sys_app_log, (VAL, size_t, length), (IN_BUF, void *, log_buffe
 
   if (from_user) {
     if (length < sizeof(*message)) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
-    syscall_assert_userspace_log_message(&message->log_msg);
+    kernel_pbl_log_verify_user(&message->log_msg);
   }
 
   // First log to serial, we always do this.

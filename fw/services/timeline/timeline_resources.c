@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/testing.h>
@@ -12,7 +13,6 @@
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 #define RESOURCE_MAX_SIZE (700)
 
@@ -182,7 +182,7 @@ PBL_SYSCALL(void, sys_timeline_resources_get_id, (IN, const TimelineResourceInfo
   Uuid user_app_id;
 
   if (from_user && timeline_res->app_id) {
-    syscall_assert_userspace_buffer(timeline_res->app_id, sizeof(Uuid));
+    pbl_syscall_verify_user(timeline_res->app_id, sizeof(Uuid));
     user_app_id = *timeline_res->app_id;
     user_timeline_res = *timeline_res;
     user_timeline_res.app_id = &user_app_id;

@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/evented_timer.h>
 
 #include <applib/app_logging.h>
 #include <applib/app_timer.h>
-#include <syscall/syscall_define.h>
 
 //! @file fw/applib/app_timer.c
 //!
@@ -34,7 +34,7 @@ PBL_SYSCALL(bool, app_timer_reschedule, (VAL, AppTimer *, timer), (VAL, uint32_t
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
               (unsigned)(uintptr_t)timer);
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
   return evented_timer_reschedule((EventedTimerID)timer, new_timeout_ms);
@@ -49,7 +49,7 @@ PBL_SYSCALL(void, app_timer_cancel, (VAL, AppTimer *, timer)) {
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
               (unsigned)(uintptr_t)timer);
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
   evented_timer_cancel((EventedTimerID)timer);
@@ -64,7 +64,7 @@ PBL_SYSCALL(void *, app_timer_get_data, (VAL, AppTimer *, timer)) {
     if (!evented_timer_is_current_task((EventedTimerID)timer)) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid timer %u used in app_timer_reschedule",
               (unsigned)(uintptr_t)timer);
-      syscall_failed();
+      pbl_syscall_fail();
     }
   }
 

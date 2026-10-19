@@ -3,7 +3,7 @@
 
 #include "prefs_syscalls.h"
 
-#include <syscall/syscall_define.h>
+#include <pbl/kernel/syscall.h>
 
 PBL_SYSCALL(UnitsDistance, sys_shell_prefs_get_units_distance) {
   return shell_prefs_get_units_distance();

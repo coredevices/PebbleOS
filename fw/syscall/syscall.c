@@ -3,11 +3,10 @@
 
 #include "syscall.h"
 
-#include "syscall_define.h"
-
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -50,7 +49,7 @@ PBL_SYSCALL(void, sys_pbl_log, (VAL, LogBinaryMessage *, log_message), (VAL, uin
   // message_length` bytes straight from that address to the flash log channel
   // — a generic kernel-memory exfiltration primitive.
   if (from_user) {
-    syscall_assert_userspace_log_message(log_message);
+    kernel_pbl_log_verify_user(log_message);
   }
   kernel_pbl_log(log_message, flags);
 }

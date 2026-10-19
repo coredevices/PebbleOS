@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/speaker/limits.h>
 #include <pbl/services/speaker/note_sequence.h>
 #include <pbl/services/speaker/speaker_pcm_format.h>
@@ -9,14 +10,13 @@
 
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 #define SPEAKER_MAX_STREAM_WRITE 8192
 
 PBL_SYSCALL(bool, sys_speaker_play_note_seq, (IN_ARRAY, const SpeakerNote *, notes, num_notes),
             (VAL, uint32_t, num_notes), (VAL, uint8_t, priority), (VAL, uint8_t, volume)) {
   if (from_user && num_notes > SPEAKER_MAX_NOTES) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   if (from_user || priority > SpeakerPriorityCritical) {
@@ -36,11 +36,11 @@ PBL_SYSCALL(bool, sys_speaker_play_tone, (VAL, uint16_t, freq_hz), (VAL, uint16_
   }
 
   if (waveform >= SpeakerWaveformCount) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   if (velocity > 127) {
-    syscall_failed();
+    pbl_syscall_fail();
   }
 
   return speaker_service_play_tone_owned(freq_hz, duration_ms, waveform, velocity,
@@ -65,28 +65,28 @@ PBL_SYSCALL(bool, sys_speaker_play_tracks, (IN_ARRAY, const SpeakerTrack *, trac
 
   if (from_user) {
     if (num_tracks == 0 || num_tracks > SPEAKER_MAX_TRACKS) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
 
     uint32_t total_sample_bytes = 0;
     for (uint32_t i = 0; i < num_tracks; i++) {
       kernel_tracks[i] = tracks[i];
       if (kernel_tracks[i].num_notes == 0 || kernel_tracks[i].num_notes > SPEAKER_MAX_NOTES) {
-        syscall_failed();
+        pbl_syscall_fail();
       }
-      syscall_assert_userspace_buffer(kernel_tracks[i].notes,
-                                      kernel_tracks[i].num_notes * sizeof(SpeakerNote));
+      pbl_syscall_verify_user(kernel_tracks[i].notes,
+                              kernel_tracks[i].num_notes * sizeof(SpeakerNote));
       if (kernel_tracks[i].sample) {
-        syscall_assert_userspace_buffer(kernel_tracks[i].sample, sizeof(SpeakerSample));
+        pbl_syscall_verify_user(kernel_tracks[i].sample, sizeof(SpeakerSample));
         kernel_samples[i] = *kernel_tracks[i].sample;
         if (kernel_samples[i].num_bytes == 0) {
-          syscall_failed();
+          pbl_syscall_fail();
         }
         if (kernel_samples[i].num_bytes > SPEAKER_MAX_SAMPLE_BYTES_TOTAL - total_sample_bytes) {
-          syscall_failed();
+          pbl_syscall_fail();
         }
         total_sample_bytes += kernel_samples[i].num_bytes;
-        syscall_assert_userspace_buffer(kernel_samples[i].data, kernel_samples[i].num_bytes);
+        pbl_syscall_verify_user(kernel_samples[i].data, kernel_samples[i].num_bytes);
         kernel_tracks[i].sample = &kernel_samples[i];
       }
     }
@@ -119,7 +119,7 @@ PBL_SYSCALL(uint32_t, sys_speaker_stream_write, (IN_BUF, const void *, data, num
             (VAL, uint32_t, num_bytes)) {
   if (from_user) {
     if (num_bytes > 8192) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
     return speaker_service_stream_write_owned(pebble_task_get_current(), data, num_bytes);
   }

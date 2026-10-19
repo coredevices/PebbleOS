@@ -4,12 +4,11 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/kernel/types.h>
 #include <pbl/services/time.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
-
-#include <syscall/syscall_define.h>
 
 // timezone abbreviation
 static char s_timezone_abbr[PBL_TZ_LEN] = {}; // longest timezone abbreviation is 5 char + null

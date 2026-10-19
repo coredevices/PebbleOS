@@ -5,6 +5,7 @@
 
 #ifdef CONFIG_TOUCH
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/touch/touch.h>
 
 #include <applib/graphics/gtypes.h>
@@ -15,7 +16,6 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 // --- Action-bar snapshot publish (applib -> current task's nav state) --------------------------
 

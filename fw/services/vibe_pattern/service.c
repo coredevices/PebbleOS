@@ -9,6 +9,7 @@
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/analytics/analytics.h>
@@ -21,7 +22,6 @@
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_vibe_pattern, CONFIG_SERVICE_VIBE_PATTERN_LOG_LEVEL);
 

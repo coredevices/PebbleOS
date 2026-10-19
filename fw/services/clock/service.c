@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/analytics/analytics.h>
@@ -23,7 +24,6 @@
 #include <kernel/events.h>
 #include <shell/prefs.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/notifications/alerts.h>

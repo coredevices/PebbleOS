@@ -36,7 +36,7 @@ time_t rtc_get_time(void) {
   return 0;
 }
 
-void syscall_failed(void) {
+void pbl_syscall_fail(void) {
   abort();
 }
 

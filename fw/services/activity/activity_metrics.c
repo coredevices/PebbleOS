@@ -4,6 +4,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -22,7 +23,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -799,10 +799,10 @@ PBL_SYSCALL(bool, sys_activity_get_metric, (VAL, ActivityMetric, metric),
     }
     if ((unsigned int)metric >= ActivityMetricNumMetrics ||
         (history == nullptr && history_len > 0)) {
-      syscall_failed();
+      pbl_syscall_fail();
     }
     if (history) {
-      syscall_assert_userspace_buffer(history, history_len * sizeof(*history));
+      pbl_syscall_verify_user(history, history_len * sizeof(*history));
     }
   }
 

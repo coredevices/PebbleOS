@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/analytics/backend.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -10,7 +11,6 @@
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
 
-#include <syscall/syscall_define.h>
 #include <system/reboot_reason.h>
 #include <system/version.h>
 

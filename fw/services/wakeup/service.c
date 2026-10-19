@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
@@ -19,7 +20,6 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 
 PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 

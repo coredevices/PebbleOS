@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/syscall.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/debounced_connection_service.h>
 #include <pbl/services/regular_timer.h>
-
-#include <syscall/syscall_define.h>
 
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/notifications/alerts.h>

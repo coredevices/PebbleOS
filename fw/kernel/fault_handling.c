@@ -4,6 +4,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
@@ -23,7 +24,6 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
-#include <syscall/syscall_define.h>
 #include <system/reboot_reason.h>
 
 #ifndef CONFIG_ARCH_POSIX
@@ -222,6 +222,10 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
   prv_kill_user_process(stashed_lr);
   for (;;) {
   } // Not Reached
+}
+
+[[noreturn]] void pbl_kernel_syscall_fault(uintptr_t lr) {
+  sys_app_fault(lr);
 }
 
 // The hardware fault handlers; a native build gets signals instead.
