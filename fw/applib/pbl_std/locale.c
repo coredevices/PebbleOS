@@ -3,6 +3,8 @@
 
 #include "locale.h"
 
+#include <limits.h>
+
 #include <applib/i18n.h>
 #include <process_state/app_state/app_state.h>
 
@@ -48,8 +50,10 @@ char *pbl_setlocale(int category, const char *locale) {
   return nullptr;
 }
 
-static const struct lconv pbl_lconv = {".", "",  "",  "",  "",  "",  "",  "",  "",  "",  255, 255,
-                                       255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+static const struct lconv pbl_lconv = {".",      "",       "",       "",       "",       "",
+                                       "",       "",       "",       "",       CHAR_MAX, CHAR_MAX,
+                                       CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX,
+                                       CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX, CHAR_MAX};
 
 struct lconv *pbl_localeconv_r(struct _reent *data) {
   return (struct lconv *)&pbl_lconv;
