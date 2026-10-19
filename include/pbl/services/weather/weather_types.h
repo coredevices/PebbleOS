@@ -15,7 +15,6 @@
  * @{
  */
 
-// TODO (PBL-36438): use proper enum naming
 /**
  * @brief Weather condition, as sent by the phone.
  *
