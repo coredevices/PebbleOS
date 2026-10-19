@@ -301,7 +301,7 @@ PBL_IRQ_CONNECT(I2C3, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c3, 0);
 
 PBL_NPM1300_DEFINE(s_npm1300, &s_i2c3.bus, 0x6B);
 PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
-                           {.peripheral = hwp_gpio1, .gpio_pin = 44});
+                           PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_RISING));
 
 const struct pbl_npm1300_charger *const NPM1300_CHARGER = &s_npm1300_charger;
 

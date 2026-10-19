@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/intc.h>
 #include <pbl/drivers/mfd/npm1300.h>
 #include <pbl/services/new_timer/new_timer.h>
 
@@ -61,7 +62,7 @@ struct pbl_npm1300_charger {
   /** Charger configuration. */
   const Npm1300Config *cfg;
   /** Interrupt line, from the PMIC's GPIO1. */
-  ExtiConfig irq;
+  struct pbl_irq_spec irq;
   /** Runtime state. */
   struct pbl_npm1300_charger_state *state;
 };
@@ -84,16 +85,16 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
  * @param sym Symbol of the charger.
  * @param _pmic Core, a struct pbl_npm1300.
  * @param _cfg Charger configuration.
- * @param ... Interrupt line, an @c ExtiConfig initializer.
+ * @param _irq Interrupt line, a struct pbl_irq_spec initializer.
  */
-#define PBL_NPM1300_CHARGER_DEFINE(sym, _pmic, _cfg, ...)                                          \
+#define PBL_NPM1300_CHARGER_DEFINE(sym, _pmic, _cfg, _irq)                                         \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
   static struct pbl_npm1300_charger_state sym##_npm1300_charger_state;                             \
   const struct pbl_npm1300_charger sym = {                                                         \
     .dev =                                                                                         \
         PBL_DEVICE_INIT(sym, "npm1300_charger", pbl_npm1300_charger_init, &(_pmic)->dev, nullptr), \
     .cfg = (_cfg),                                                                                 \
-    .irq = __VA_ARGS__,                                                                            \
+    .irq = _irq,                                                                                   \
     .state = &sym##_npm1300_charger_state,                                                         \
   };                                                                                               \
   PBL_DEVICE_REGISTER(sym, &sym.dev)

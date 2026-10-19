@@ -9,7 +9,6 @@
 #include <math.h>
 
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/exti.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -297,7 +296,7 @@ static void prv_pmic_state_change_cb(void *null) {
                   prv_handle_charge_state_change, nullptr, 0 /*flags*/);
 }
 
-static void prv_npm1300_interrupt_handler(void) {
+static void prv_npm1300_interrupt_handler(void *arg) {
   system_task_add_callback_from_isr(prv_pmic_state_change_cb, nullptr);
 }
 
@@ -413,8 +412,23 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  exti_configure_pin(charger->irq, ExtiTrigger_Rising, prv_npm1300_interrupt_handler);
-  exti_enable(charger->irq);
+  ret = pbl_device_init(&charger->irq.intc->dev);
+  if (ret != 0) {
+    PBL_LOG_ERR("Interrupt controller unavailable");
+    return ret;
+  }
+
+  ret = pbl_intc_request(&charger->irq, prv_npm1300_interrupt_handler, nullptr);
+  if (ret != 0) {
+    PBL_LOG_ERR("Could not request the interrupt (%d)", ret);
+    return ret;
+  }
+
+  ret = pbl_intc_enable(&charger->irq);
+  if (ret != 0) {
+    PBL_LOG_ERR("Could not enable the interrupt (%d)", ret);
+    return ret;
+  }
 
   return 0;
 }

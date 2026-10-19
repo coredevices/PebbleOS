@@ -92,7 +92,7 @@ PBL_IRQ_CONNECT(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, NRFX_TWIM_DEFAULT_CONFIG_IRQ_
 
 PBL_NPM1300_DEFINE(s_npm1300, &s_i2c_npmc_iic1.bus, 0x6B);
 PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
-                           {NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(1, 12)});
+                           PBL_IRQ_SPEC(NRF5_GPIO_P1_INTC, 12, PBL_IRQ_TYPE_EDGE_RISING));
 
 const struct pbl_npm1300_charger *const NPM1300_CHARGER = &s_npm1300_charger;
 
