@@ -33,7 +33,7 @@ void test_bitmap_layer__cleanup(void) {
 // Tests
 //////////////////////
 
-// Test inspired by PBL-19136. Check that bitmaps get drawn in the right rect
+// Check that bitmaps get drawn in the right rect
 // on recent SDKs but that a previous bug is kept for 2.x SDK
 void test_bitmap_layer__nonzero_bounds(void) {
   GContext ctx = {

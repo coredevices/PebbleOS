@@ -23,7 +23,7 @@ void bitmap_layer_update_proc(BitmapLayer *image, GContext *ctx) {
       // Dirty workaround for calculation of offset in graphics_draw_bitmap_in_rect
       // and preserving state of bitmap alignment in bitmap_layer
       // The previous behavior is relied on by some 2.x apps, and therefore we exclude
-      // the fix for apps compiled with older SDKs. See PBL-19136 for details.
+      // the fix for apps compiled with older SDKs.
       rect.origin.x -= image->layer.bounds.origin.x;
       rect.origin.y -= image->layer.bounds.origin.y;
     }
