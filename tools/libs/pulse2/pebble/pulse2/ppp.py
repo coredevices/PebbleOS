@@ -285,7 +285,7 @@ class ControlProtocol:
     # Restart timer expiry duration, in seconds.
     restart_timeout = 0.4
 
-    # FIXME PBL-34320 proper MTU/MRU support
+    # TODO: negotiate MTU/MRU
     mtu = 1500
 
     states: ClassVar = [

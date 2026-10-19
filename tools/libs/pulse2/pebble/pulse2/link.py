@@ -174,7 +174,7 @@ class Interface:
             self.iostream.close()
 
     def on_link_up(self):
-        # FIXME PBL-34320 proper MTU/MRU support
+        # TODO: negotiate MTU/MRU
         self._link = Link(self, mtu=1500)
         # Test whether the link is ready to carry traffic
         self.lcp.ping(self._ping_done)
