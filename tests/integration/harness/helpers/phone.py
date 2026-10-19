@@ -280,8 +280,11 @@ class BumblePhone(Phone):
 
     def connect(self, timeout=90.0):
         from harness.ble.transport import BleTransport
-        from harness.connections import start_protocol
+        from harness.connections import PHONE_OS_UNKNOWN, start_protocol
 
+        # The harness's session, an Android app's to the watch, would take
+        # what is the phone's (e.g. the music) instead of its app.
+        self.dut.set_phone_platform(PHONE_OS_UNKNOWN)
         self.link.open(timeout)
         self.inbox = Inbox()
         self.pebble = start_protocol(BleTransport(self.link, on_frame=self.inbox))
@@ -298,12 +301,15 @@ class BumblePhone(Phone):
         return self._pairing.start()
 
     def disconnect(self):
+        from harness.connections import PHONE_OS_ANDROID
+
         if self._pairing is not None:
             # Unblock a comparison the test left unanswered.
             self._pairing.answer(False)
             self._pairing = None
         self.pebble = None
         self.link.close()
+        self.dut.set_phone_platform(PHONE_OS_ANDROID)
 
 
 class CoreAppPhone(Phone):

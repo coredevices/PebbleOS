@@ -44,6 +44,8 @@ class Connection(ABC):
     def __init__(self, address, dehasher=None):
         self.address = address
         self.dehasher = dehasher
+        #: The phone OS its Pebble protocol sessions say the app runs on.
+        self.platform = PHONE_OS_ANDROID
         #: The device this connection belongs to, set before it is opened.
         self.device = None
         self._listeners = []
@@ -79,6 +81,17 @@ class Connection(ABC):
         """A connected libpebble2 ``PebbleConnection``."""
         raise Unsupported(f"{self!r} does not carry the Pebble protocol")
 
+    def end_protocol_session(self):
+        """End the Pebble protocol session, if the firmware sees it end;
+        :attr:`protocol` starts another."""
+
+    def set_platform(self, platform):
+        """Make the phone OS of the next sessions ``platform``, ending the
+        current one if it says otherwise."""
+        if platform != self.platform:
+            self.platform = platform
+            self.end_protocol_session()
+
     def add_log_listener(self, listener):
         with self._listeners_lock:
             self._listeners.append(listener)
@@ -99,22 +112,24 @@ class Connection(ABC):
             listener(record)
 
 
-# The version response the harness answers with: an Android phone app, with
-# every protocol capability but settings sync, whose write-backs it would
-# leave unanswered and the watch retry for minutes.
+# The version response the harness answers with: a phone app (on Android
+# unless a test's phone is connected), with every protocol capability but
+# settings sync, whose write-backs it would leave unanswered and the watch
+# retry for minutes.
+PHONE_OS_UNKNOWN = 0
 PHONE_OS_ANDROID = 2
 SETTINGS_SYNC_SUPPORT = 1 << 23
 PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~SETTINGS_SYNC_SUPPORT
 
 
-def _phone_app_version():
+def _phone_app_version(platform):
     from libpebble2.protocol.system import AppVersionResponse, PhoneAppVersion
 
     return PhoneAppVersion(
         message=AppVersionResponse(
             protocol_version=0xFFFFFFFF,
             session_caps=0x80000000,
-            platform_flags=PHONE_OS_ANDROID,
+            platform_flags=platform,
             response_version=2,
             major_version=3,
             minor_version=0,
@@ -126,21 +141,22 @@ def _phone_app_version():
     )
 
 
-def start_protocol(transport):
+def start_protocol(transport, platform=PHONE_OS_ANDROID):
     """A running libpebble2 connection over ``transport``, identified to the
-    firmware as the phone app so private endpoints answer."""
+    firmware as the phone app (on ``platform``) so private endpoints
+    answer."""
     from libpebble2.communication import PebbleConnection
 
     class PhoneConnection(PebbleConnection):
         # libpebble2 answers the firmware's request with its own capabilities.
         def _app_version_response(self, packet):
-            self.send_packet(_phone_app_version())
+            self.send_packet(_phone_app_version(platform))
 
     pebble = PhoneConnection(transport)
     pebble.connect()
     pebble.run_async()
     # The firmware asks only once per session, which outlives host connections.
-    pebble.send_packet(_phone_app_version())
+    pebble.send_packet(_phone_app_version(platform))
     return pebble
 
 

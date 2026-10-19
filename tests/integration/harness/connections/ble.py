@@ -37,7 +37,7 @@ class BleConnection(Connection):
         self._link = BleLink(watch, controller, confirm_pairing=confirm)
         try:
             self._link.open(timeout)
-            self._pebble = start_protocol(BleTransport(self._link))
+            self._pebble = start_protocol(BleTransport(self._link), self.platform)
         except BaseException:
             self.close()
             raise

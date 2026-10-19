@@ -54,11 +54,14 @@ class PulseConnection(Connection):
         )
         self._log_thread.start()
 
-    def close(self):
+    def end_protocol_session(self):
         if self._pebble is not None:
             with contextlib.suppress(OSError, PebbleError, SocketClosed):
                 self._pebble.transport.disconnect()
             self._pebble = None
+
+    def close(self):
+        self.end_protocol_session()
         if self._interface is not None:
             self._interface.close()
             self._interface = None
@@ -139,5 +142,5 @@ class PulseConnection(Connection):
                 self._relink(10)
             from libpebble2.communication.transports.pulse import PULSETransport
 
-            self._pebble = start_protocol(PULSETransport(self._link))
+            self._pebble = start_protocol(PULSETransport(self._link), self.platform)
         return self._pebble

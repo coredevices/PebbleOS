@@ -284,6 +284,14 @@ class DeviceAdapter(ABC):
         """The libpebble2 connection to the firmware."""
         return self._connection(Capability.PROTOCOL).protocol
 
+    def set_phone_platform(self, platform):
+        """Make the harness's own Pebble protocol sessions, which the watch
+        takes for a phone app's, say they run on ``platform`` (a phone OS of
+        :mod:`harness.connections`)."""
+        for connection in self.connections:
+            if Capability.PROTOCOL in connection.capabilities:
+                connection.set_platform(platform)
+
     def wait_for_log(self, pattern, timeout=None, since=0):
         """The first log record matching ``pattern`` after mark ``since``."""
         self._connection(Capability.LOGS)
