@@ -75,6 +75,12 @@ static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Laye
                               selected, context);
 }
 
+static uint16_t prv_menu_get_cell_height(OptionMenu *option_menu, uint16_t row, bool selected,
+                                         void *context) {
+  MenuConfig *data = context;
+  return option_menu_system_cell_height(option_menu, data->items[row].title, selected);
+}
+
 static void prv_create_menu_and_render(MenuConfig *config) {
   option_menu_init(&s_data.option_menu);
 
@@ -90,7 +96,7 @@ static void prv_create_menu_and_render(MenuConfig *config) {
   const OptionMenuCallbacks callbacks = {
     .draw_row = config->callbacks.draw_row ?: prv_menu_draw_row,
     .get_num_rows = config->callbacks.get_num_rows ?: prv_menu_get_num_rows,
-    .get_cell_height = config->callbacks.get_cell_height ?: nullptr,
+    .get_cell_height = config->callbacks.get_cell_height ?: prv_menu_get_cell_height,
   };
   option_menu_set_callbacks(&s_data.option_menu, &callbacks, config);
 
