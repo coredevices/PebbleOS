@@ -38,7 +38,7 @@ void test_alarm_layout__get_subtitle_from_attributes(void) {
   AttributeList attribute_list = {};
   AttributeList *attribute_list_ref = &attribute_list;
 
-  // For legacy reasons (see PBL-33899), an alarm pin that only has a subtitle attribute should use
+  // For legacy reasons, an alarm pin that only has a subtitle attribute should use
   // that subtitle, manually making it all-caps using toupper_str() on rectangular displays
   attribute_list_add_cstring(attribute_list_ref, AttributeIdSubtitle, "Weekdays");
   prv_get_subtitle_from_attributes(attribute_list_ref, buffer, buffer_size, dummy_i18n_owner);

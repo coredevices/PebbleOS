@@ -12,7 +12,6 @@ static_assert(offsetof(CalendarIconPath, fill_color) == offsetof(GDrawCommand, f
 static_assert(offsetof(CalendarIconPath, radius) == offsetof(GDrawCommand, radius), "");
 static_assert(sizeof(CalendarIconPath) == offsetof(GDrawCommand, points), "");
 
-// FIXME: PBL-28898 GPath algorithm requires strange coordinates for pixel perfection
 // The paths here result in pixel perfect icons with the current gpath filled algorithm,
 // but when gpath filled is fixed to correctly match its coordinates, these MUST be updated.
 

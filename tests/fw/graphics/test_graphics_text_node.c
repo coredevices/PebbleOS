@@ -10,8 +10,6 @@
 // Stubs
 /////////////////////
 
-// TODO: PBL-22271 Complete timeline text node unit tests
-
 // Fakes
 /////////////////////
 

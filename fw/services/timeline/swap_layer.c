@@ -190,7 +190,7 @@ static void prv_update_status_bar_color(SwapLayer *swap_layer) {
   if (swap_layer->current) {
     const GRect *cur_frame = &swap_layer->current->layer.frame;
 #if PBL_RECT
-    // PBL-23115 status_bar can be off, so detect within range, updated a frame later.
+    // status_bar can be off, so detect within range, updated a frame later.
     color_status_bar = WITHIN(cur_frame->origin.y, -(3 * LAYOUT_BANNER_HEIGHT_RECT / 2) - 1,
                               LAYOUT_BANNER_HEIGHT_RECT / 2 - 1);
 #else
@@ -258,7 +258,6 @@ static void prv_arrow_layer_update_proc(Layer *layer, GContext *ctx) {
   const int16_t arrow_nudge_y = PBL_IF_RECT_ELSE(7, -8);
   arrow_bounds.origin.y += arrow_nudge_y;
 
-  // FIXME PBL-43428:
   // For some reason the down arrow bitmap is drawn as all-black in the test_notification_window
   // unit test on Silk unless we draw it with GCompOpSet, yet this results in the arrow being drawn
   // as all-white on a real Silk watch/QEMU; choosing the compositing mode this way ensures the

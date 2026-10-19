@@ -5,8 +5,6 @@
 #include "layout_layer.h"
 #include "layout_node.h"
 
-// TODO: PBL-28902 Timeline card layouts integration tests
-
 #include <pbl/services/clock.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>

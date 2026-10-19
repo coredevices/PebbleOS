@@ -1202,8 +1202,8 @@ static void prv_dismiss_all_step(void *context) {
       timeline_enable_ancs_bulk_action_mode(false);
       ctx->performed_actions = true;
 
-      // FIXME: PBL-34338 There are other actions that should also use bulk mode to avoid crashes
-      // such as dismissing notifications on Android while disconnected
+      // TODO: other actions should also use bulk mode to avoid crashes, such as dismissing
+      // notifications on Android while disconnected
       if (action->type == TimelineItemActionTypeAncsNegative) {
         ctx->ancs_bulk_mode = true;
       }

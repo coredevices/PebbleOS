@@ -651,9 +651,7 @@ bool timeline_add_missed_call_pin(TimelineItem *pin, uint32_t uid) {
   // patch the dismiss action to be a remove action
   TimelineItemAction *remove_action = timeline_item_find_dismiss_action(pin);
 
-  // TODO: PBL-23915
-  // We leak this i18n'd string because not leaking it is really hard.
-  // We make sure we only ever allocate it once though, so it's not the end of the world.
+  // This i18n'd string is leaked, but only ever allocated once
   remove_action->attr_list.attributes[1].cstring = (char *)i18n_get("Remove", &i18n_key);
   remove_action->type = TimelineItemActionTypeRemove;
 
@@ -705,9 +703,7 @@ static void prv_remove_pin_action(const TimelineItem *item, const TimelineItemAc
     // remove it via BlobDB
     blob_db_delete(BlobDBIdPins, (uint8_t *)&item->header.id, UUID_SIZE);
 
-    // TODO: PBL-23915
-    // We leak this i18n'd string because not leaking it is really hard.
-    // We make sure we only ever allocate it once though, so it's not the end of the world.
+    // This i18n'd string is leaked, but only ever allocated once
     prv_put_notification_action_result(&item->header.id, i18n_get("Removed", &i18n_key),
                                        TIMELINE_RESOURCE_RESULT_DELETED, ActionResultTypeSuccess);
   } else {
@@ -717,9 +713,7 @@ static void prv_remove_pin_action(const TimelineItem *item, const TimelineItemAc
 }
 
 static void prv_dismiss_local_notification_action(const TimelineItem *item) {
-  // TODO: PBL-23915
-  // We leak this i18n'd string because not leaking it is really hard.
-  // We make sure we only ever allocate it once though, so it's not the end of the world.
+  // This i18n'd string is leaked, but only ever allocated once
   prv_put_notification_action_result(&item->header.id, i18n_get("Dismissed", &i18n_key),
                                      TIMELINE_RESOURCE_RESULT_DISMISSED, ActionResultTypeSuccess);
 }
@@ -738,9 +732,7 @@ static void prv_perform_ancs_negative_action(const TimelineItem *item,
   ancs_perform_action(ancs_uid, action_id);
 
   if (!timeline_is_bulk_ancs_action_mode_enabled()) {
-    // TODO: PBL-23915
-    // We leak this i18n'd string because not leaking it is really hard.
-    // We make sure we only ever allocate it once though, so it's not the end of the world.
+    // This i18n'd string is leaked, but only ever allocated once
     char *msg_i18n = i18n_noop("Dismissed");
     int res_id = TIMELINE_RESOURCE_RESULT_DISMISSED;
 
@@ -770,9 +762,7 @@ static void prv_get_pin_and_push_pin_window(void *data) {
 
 static void prv_perform_health_response_action(const TimelineItem *item,
                                                const TimelineItemAction *action) {
-  // TODO: PBL-23915
-  // We leak this i18n'd string because not leaking it is really hard.
-  // We make sure we only ever allocate it once though, so it's not the end of the world.
+  // This i18n'd string is leaked, but only ever allocated once
   const char *message = attribute_get_string(&action->attr_list, AttributeIdBody,
                                              (char *)i18n_get("Thanks!", &i18n_key));
 
@@ -863,7 +853,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       ancs_perform_action(item->header.ancs_uid, ActionIDPositive);
       break;
     }
-    // FIXME PBL-18673 this is not necessarily dismiss
+    // TODO: a positive action is not necessarily a dismiss
     case TimelineItemActionTypeAncsPositive:
     case TimelineItemActionTypeAncsNegative:
     case TimelineItemActionTypeAncsDelete: {

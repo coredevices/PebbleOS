@@ -31,7 +31,7 @@ static void prv_pin_to_card_second_half_stopped(KinoLayer *layer, bool finished,
                                                              layout->icon_res_info.res_id);
   prv_change_reel(layout, new_reel);
   if (!layout->is_being_destroyed) {
-    // PBL-20112: Continue where we left off until this is changed to use the Window Transitioner
+    // Continue where we left off until this is changed to use the Window Transitioner
     prv_continue_reel(layout, new_reel, TIMELINE_CARD_TRANSITION_MS);
   }
   // Clip for the static icon
@@ -55,8 +55,6 @@ static void prv_pin_to_card_second_half(TimelineLayout *pin_timeline_layout,
   layer_set_clips(&pin_timeline_layout->icon_layer.layer, false);
   layer_set_clips(&card_timeline_layout->icon_layer.layer, false);
 
-  // TODO: PBL-28738 Refactor kino reel transform APIs or usage of APIs
-  // There is a lot of shared code throughout, and the API is code space intensive
   const bool take_ownership = true;
   KinoReel *new_reel = kino_reel_scale_segmented_create(from_reel, take_ownership, icon_to);
   kino_reel_transform_set_from_frame(new_reel, icon_from);
@@ -192,7 +190,7 @@ static void prv_up_down_stopped(Animation *animation, bool finished, void *conte
                                                              layout->icon_res_info.res_id);
   prv_change_reel(layout, new_reel);
   if (!layout->is_being_destroyed) {
-    // PBL-20111: Continue where we left off until kino reel transform frames is refactored
+    // Continue where we left off until kino reel transform frames is refactored
     // This is because continuing to render with the transform will have resulted in a jump
     // since it has been animating in global coordinates, not accounting for the property layer
     // animation of the pin containing this icon has gone through.

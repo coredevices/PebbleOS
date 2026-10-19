@@ -25,7 +25,7 @@
 extern const uint16_t g_timeline_resources[][TimelineResourceSizeCount];
 
 PBL_T_STATIC bool prv_is_app_published_resource_valid(const AppResourceInfo *res_info) {
-  // TODO: PBL-39864 Improve this code so it doesn't requiring loading/unloading a resource
+  // TODO: validate without loading/unloading the resource
   bool is_valid = true;
 
   KinoReel *reel = kino_reel_create_with_resource_system(res_info->res_app_num, res_info->res_id);
@@ -131,8 +131,8 @@ void timeline_resources_get_id(const TimelineResourceInfo *timeline_res, Timelin
   PBL_ASSERTN(timeline_res && res_info_out && (size < TimelineResourceSizeCount));
 
   // Test the high bit to determine if system resource
-  // TODO PBL-24499: Remove check for system uuid - this is only in place to ease the migration
-  // from 3.4, where not all system pins use the correct id convention
+  // The system uuid check covers pins from 3.4, where not all system pins use the correct id
+  // convention
   if (timeline_resources_is_system(timeline_res->res_id) || uuid_is_system(timeline_res->app_id)) {
     if (!prv_get_sys_resource(timeline_res->res_id, size, res_info_out)) {
       goto fail;

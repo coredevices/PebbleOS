@@ -66,8 +66,7 @@ static const TimelineLayoutStyle s_style_large = {
   .fat_time_margin_h = -3,
   .thin_time_margin_h = -6,
   .primary_list_margin_h = 2,
-  // PBL-42540: This property is dependent on the screen size. Whether there can be a secondary
-  // depends on whether the remaining screen space after fat permits.
+  // Whether there can be a secondary depends on the screen space remaining after fat
   .primary_secondary_peek_margin_h = -5,
   .thin_can_have_secondary = true,
   .thin_future_title_offset_y = 45,
@@ -441,8 +440,7 @@ static GTextNode *prv_create_all_day_text_node(const TimelineLayout *layout) {
   };
   GTextNodeText *text_node = (GTextNodeText *)layout_create_text_node_from_config(
       &layout->layout_layer, &s_all_day_config.text.extent.node);
-  // TODO: PBL-30522 Enable timeline list view text flow
-  // Remove when text flow is enabled
+  // TODO: remove once timeline list view text flow is enabled
   if (PBL_IF_ROUND_ELSE(layout->layout_layer.mode == LayoutLayerModePinnedThin, false)) {
     const bool is_future = (layout->info->scroll_direction == TimelineScrollDirectionDown);
     const int padding_left = is_future ? 25 : 29;
@@ -636,8 +634,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
     secondary_node->overflow = overflow;
     graphics_text_node_container_add_child(&vertical_node->container, &secondary_node->node);
 
-    // TODO: PBL-30522 Enable timeline list view text flow
-    // Remove when text flow is enabled
+    // TODO: remove once timeline list view text flow is enabled
     if (PBL_IF_ROUND_ELSE(!is_future && !is_peek, false)) {
       const int padding_left = 8;
       secondary_node->node.offset.x += padding_left;
