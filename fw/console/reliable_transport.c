@@ -178,10 +178,8 @@ void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length
 
         switch (pbl_be16_get(packet->i.protocol)) {
           case PULSE_CONTROL_MESSAGE_PROTOCOL:
-            // TODO PBL-37695: PCMP sends packets synchronously, which will
-            //      trip the not-KernelMain check on pulse_reliable_send_begin.
-            // pulse_control_message_protocol_on_packet(
-            //    &s_reliable_pcmp, packet->i.information, info_length);
+            // TODO: PCMP sends packets synchronously, which trips the
+            // not-KernelMain check in pulse_reliable_send_begin.
             break;
 #define ON_PACKET(N, HANDLER)                    \
   case N:                                        \
@@ -192,8 +190,7 @@ void pulse2_reliable_transport_on_command_packet(void *raw_packet, size_t length
 #undef ON_PACKET
 #undef ON_TRANSPORT_STATE_CHANGE
           default: {
-            // Work around PBL-37695 by sending the Port-Closed message
-            // from KernelBG.
+            // PCMP sends synchronously, so send Port-Closed from KernelBG.
             uintptr_t bad_port;
             memcpy(&bad_port, &packet->i.protocol, sizeof(packet->i.protocol));
             system_task_add_callback(prv_send_port_closed_message, (void *)bad_port);
