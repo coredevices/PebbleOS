@@ -5,11 +5,11 @@
         and end points</desc>
   <rect x="1" y="1" width="1198" height="598" fill="none" stroke="blue" stroke-width="1"/>
   <path d="M200,300 Q400,50 600,300 T1000,300" fill="none" stroke="red" stroke-width="5">
-    <pdc:annotation description="Element contains unsupported curved command(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-bezier">
+    <pdc:annotation description="Element contains unsupported curved command(s).">
       <pdc:highlight y="175.00" x="200.00" height="125.00" width="400.00"/>
       <pdc:highlight y="300.00" x="600.00" height="125.00" width="400.00"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-pixelgrid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
       <pdc:highlight y="292.31" x="206.25" details="Invalid point: (206.25, 292.31). Used closest supported coordinate: (206.25, 292.25)"/>
       <pdc:highlight y="284.86" x="212.50" details="Invalid point: (212.50, 284.86). Used closest supported coordinate: (212.5, 284.875)"/>
       <pdc:highlight y="277.66" x="218.75" details="Invalid point: (218.75, 277.66). Used closest supported coordinate: (218.75, 277.625)"/>

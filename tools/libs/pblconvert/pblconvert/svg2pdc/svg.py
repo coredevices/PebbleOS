@@ -397,9 +397,8 @@ class PathSurfaceContext(cairo.Context):
         else:
             self.add_current_point()
 
-        link = "https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-bezier"
         self.get_grouped_description(
-            "Element contains unsupported curved command(s).", link=link
+            "Element contains unsupported curved command(s)."
         ).add_highlight(*box)
 
     def rel_curve_to(self, dx1, dy1, dx2, dy2, dx3, dy3):

@@ -2,13 +2,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:pdc="http://www.pebble.com/2015/pdc" version="1.1" id="Design" x="0px" y="0px" viewBox="0 0 64 74" enable-background="new 0 0 64 74" xml:space="preserve">
   <rect x="9" y="2" fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="14" height="70"/>
   <path fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="  M16.3,51h-0.6C8.1,51,2,44.9,2,37.3v-0.6C2,29.1,8.1,23,15.7,23h0.6C23.9,23,30,29.1,30,36.7v0.6C30,44.9,23.9,51,16.3,51z">
-    <pdc:annotation description="Element contains unsupported curved command(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-bezier">
+    <pdc:annotation description="Element contains unsupported curved command(s).">
       <pdc:highlight y="37.30" x="2.00" height="13.70" width="13.70"/>
       <pdc:highlight y="23.00" x="2.00" height="13.70" width="13.70"/>
       <pdc:highlight y="23.00" x="16.30" height="13.70" width="13.70"/>
       <pdc:highlight y="37.30" x="16.30" height="13.70" width="13.70"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-pixelgrid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
       <pdc:highlight y="51.00" x="16.30" details="Invalid point: (16.30, 51.00). Used closest supported coordinate: (16.25, 51.0)"/>
       <pdc:highlight y="51.00" x="15.70" details="Invalid point: (15.70, 51.00). Used closest supported coordinate: (15.75, 51.0)"/>
       <pdc:highlight y="49.93" x="10.35" details="Invalid point: (10.35, 49.93). Used closest supported coordinate: (10.375, 49.875)"/>
@@ -35,13 +35,13 @@
   <line fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="9.5" y1="14.5" x2="23.5" y2="14.5"/>
   <line fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="16" y1="14.5" x2="16" y2="9"/>
   <path fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="  M16.3,44.5h-0.6c-4,0-7.2-3.2-7.2-7.2v-0.6c0-4,3.2-7.2,7.2-7.2h0.6c4,0,7.2,3.2,7.2,7.2v0.6C23.5,41.3,20.3,44.5,16.3,44.5z">
-    <pdc:annotation description="Element contains unsupported curved command(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-bezier">
+    <pdc:annotation description="Element contains unsupported curved command(s).">
       <pdc:highlight y="37.30" x="8.50" height="7.20" width="7.20"/>
       <pdc:highlight y="29.50" x="8.50" height="7.20" width="7.20"/>
       <pdc:highlight y="29.50" x="16.30" height="7.20" width="7.20"/>
       <pdc:highlight y="37.30" x="16.30" height="7.20" width="7.20"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-pixelgrid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
       <pdc:highlight y="44.50" x="16.30" details="Invalid point: (16.30, 44.50). Used closest supported coordinate: (16.25, 44.5)"/>
       <pdc:highlight y="44.50" x="15.70" details="Invalid point: (15.70, 44.50). Used closest supported coordinate: (15.75, 44.5)"/>
       <pdc:highlight y="42.40" x="10.60" details="Invalid point: (10.60, 42.40). Used closest supported coordinate: (10.625, 42.375)"/>
@@ -58,7 +58,7 @@
     </pdc:annotation>
   </path>
   <polygon fill="#FFFFFF" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="  39,70 62,38 54,32 62,4 39.9,33 48,39 ">
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-pixelgrid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
       <pdc:highlight y="33.00" x="39.90" details="Invalid point: (39.90, 33.00). Used closest supported coordinate: (39.875, 33.0)"/>
     </pdc:annotation>
   </polygon>

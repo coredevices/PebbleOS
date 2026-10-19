@@ -12,7 +12,7 @@
     <use xlink:href="#Triangle" transform="translate(221.16,268.8) rotate(144)"/>
     <use xlink:href="#Triangle" transform="translate(233.21,126.98) rotate(288)"/>
     <path d="     M 600, 81 c 59.196, 0, 107.18, 48.148, 107.18, 107.542 c 0, 59.387 -47.983, 107.535 -107.18, 107.535 c -59.192, 0 -107.178 -48.148 -107.178 -107.535 C 493.322, 129.048, 541.308, 81, 601, 81 z    M600,139 c 27.109, 0, 49.081, 22.048, 49.081, 49.249 c 0,27.193 -21.972, 49.242 -49.081, 49.242 c -27.106, 0 -49.082 -22.049 -49.082 -49.242 C 551.418, 161.242, 573.394, 139, 600, 139 z">
-      <pdc:annotation description="Element contains unsupported curved command(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-bezier">
+      <pdc:annotation description="Element contains unsupported curved command(s).">
         <pdc:highlight y="81.00" x="600.00" height="107.54" width="107.18"/>
         <pdc:highlight y="188.54" x="600.00" height="107.54" width="107.18"/>
         <pdc:highlight y="188.54" x="492.82" height="107.54" width="107.18"/>
@@ -22,7 +22,7 @@
         <pdc:highlight y="188.25" x="550.92" height="49.24" width="49.08"/>
         <pdc:highlight y="139.00" x="550.92" height="49.25" width="49.08"/>
       </pdc:annotation>
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-pixelgrid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
         <pdc:highlight y="81.14" x="605.52" details="Invalid point: (605.52, 81.14). Used closest supported coordinate: (605.5, 81.125)"/>
         <pdc:highlight y="81.56" x="610.96" details="Invalid point: (610.96, 81.56). Used closest supported coordinate: (611.0, 81.5)"/>
         <pdc:highlight y="82.24" x="616.32" details="Invalid point: (616.32, 82.24). Used closest supported coordinate: (616.375, 82.25)"/>
@@ -190,7 +190,7 @@
     <use xlink:href="#Triangle" transform="translate(600,188) rotate(180) translate(49,0) rotate(90)"/>
     <use xlink:href="#Triangle" transform="translate(600,188) rotate(300) translate(49,0) rotate(90)"/>
     <path d="     M 950,81 c 59.192, 0, 107.177, 48.148, 107.177, 107.542 c 0, 59.387 -47.984, 107.535 -107.177, 107.535 c -59.196, 0 -107.18 -48.148 -107.18 -107.535 C 843.906, 129.048, 891.89, 81, 950, 81 z    M 950, 139 c -27.109, 0 -49.085, 22.048 -49.085, 49.249 c 0, 27.193, 21.976, 49.242, 49.085, 49.242 c 27.106, 0, 49.082 -22.049, 49.082 -49.242 C 1000.168, 161.242, 978.192, 139, 950, 139 z">
-      <pdc:annotation description="Element contains unsupported curved command(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-bezier">
+      <pdc:annotation description="Element contains unsupported curved command(s).">
         <pdc:highlight y="81.00" x="950.00" height="107.54" width="107.18"/>
         <pdc:highlight y="188.54" x="950.00" height="107.54" width="107.18"/>
         <pdc:highlight y="188.54" x="842.82" height="107.54" width="107.18"/>
@@ -200,7 +200,7 @@
         <pdc:highlight y="188.25" x="950.00" height="49.24" width="49.08"/>
         <pdc:highlight y="139.00" x="950.00" height="49.25" width="49.08"/>
       </pdc:annotation>
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Draw+Commands#PebbleDrawCommands-issue-pixelgrid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
         <pdc:highlight y="81.14" x="955.52" details="Invalid point: (955.52, 81.14). Used closest supported coordinate: (955.5, 81.125)"/>
         <pdc:highlight y="81.56" x="960.96" details="Invalid point: (960.96, 81.56). Used closest supported coordinate: (961.0, 81.5)"/>
         <pdc:highlight y="82.24" x="966.32" details="Invalid point: (966.32, 82.24). Used closest supported coordinate: (966.375, 82.25)"/>
