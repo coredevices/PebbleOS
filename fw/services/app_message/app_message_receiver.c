@@ -73,8 +73,6 @@ static void prv_write(const uint8_t *data, size_t length) {
 static Receiver *prv_app_message_receiver_prepare(CommSession *session,
                                                   const PebbleProtocolEndpoint *endpoint,
                                                   size_t total_payload_size) {
-  // FIXME: Find a better solution for this.
-  // https://pebbletechnology.atlassian.net/browse/PBL-21538
   if (total_payload_size > 500) {
     comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
                                     PBL_BT_RESPONSE_TIME_MIN,
@@ -123,8 +121,6 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
 static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *data, size_t length) {
   AppMessageReceiver *rcv = (AppMessageReceiver *)receiver;
 
-  // FIXME: Find a better solution for this.
-  // https://pebbletechnology.atlassian.net/browse/PBL-21538
   comm_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
                                   PBL_BT_RESPONSE_TIME_MIN,
                                   PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);

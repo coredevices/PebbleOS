@@ -39,8 +39,7 @@ PBL_SYSCALL(bool, sys_app_pp_send_data, (VAL, CommSession *, session), (VAL, uin
   const AppInstallId app_id = app_manager_get_current_app_id();
   app_install_mark_prioritized(app_id, true /* can_expire */);
 
-  // TODO: apply some heuristic to decide whether to put connection in fast mode or not:
-  // https://pebbletechnology.atlassian.net/browse/PBL-21538
+  // TODO: use a heuristic to decide whether to put the connection in fast mode
   comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE, PBL_BT_RESPONSE_TIME_MIN,
                                   PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 

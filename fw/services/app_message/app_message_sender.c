@@ -19,8 +19,7 @@ PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL)
 // Misc helpers:
 
 static void prv_request_fast_connection(CommSession *session) {
-  // TODO: apply some heuristic to decide whether to put connection in fast mode or not:
-  // https://pebbletechnology.atlassian.net/browse/PBL-21538
+  // TODO: use a heuristic to decide whether to put the connection in fast mode
   comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE, PBL_BT_RESPONSE_TIME_MIN,
                                   PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 }

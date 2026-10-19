@@ -296,7 +296,7 @@ void test_app_message_receiver__receive_push_buffer_overflow(void) {
   prv_destroy_inbox();
 }
 
-// Covers race as described here: PBL-41464
+// Covers this race:
 // 1. A part of a big app message is being received, causing it to get received in chunks.
 //    It's not received completely yet.
 // 2. app_message_outbox_closed is called.

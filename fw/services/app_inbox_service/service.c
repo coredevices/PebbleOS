@@ -449,7 +449,6 @@ static void prv_send_event_if_needed(AppInboxNode *inbox) {
 
 static void prv_mark_failed_if_no_writer(AppInboxNode *inbox) {
   if (!inbox->writer) {
-    // See PBL-41464
     // App message has been reset (closed and opened again) while a message was being received.
     // Fail it because our state got lost.
     inbox->write_failed = true;
