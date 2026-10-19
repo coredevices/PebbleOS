@@ -35,6 +35,10 @@ bool sys_touch_app_nav_active(void) {
   return false;
 }
 
+bool menu_text_scroll_is_allowed(void) {
+  return true;
+}
+
 static TouchNavState s_touch_nav_state;
 struct TouchNavState *app_state_get_touch_nav_state(void) {
   return &s_touch_nav_state;

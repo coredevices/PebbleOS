@@ -27,7 +27,7 @@ typedef struct {
   uint32_t last_draw_ms;
 } MenuTextScroll;
 
-// Only the app and kernel tasks draw menus
+// Only the app and kernel tasks draw menus. Third-party apps fault on access to kernel memory.
 static MenuTextScroll s_scrolls[2];
 
 static MenuTextScroll *prv_get_scroll(void) {
@@ -51,6 +51,9 @@ static void prv_timer_cb(void *data) {
 
 //! Wait, scroll to the end, wait, then start over
 int16_t menu_text_scroll_get_offset(const Layer *cell_layer, int16_t overflow) {
+  if (!menu_text_scroll_is_allowed()) {
+    return 0;
+  }
   MenuTextScroll *scroll = prv_get_scroll();
   const uint32_t now = prv_now_ms();
 
@@ -76,6 +79,9 @@ int16_t menu_text_scroll_get_offset(const Layer *cell_layer, int16_t overflow) {
 }
 
 void menu_text_scroll_layer_deinit(const Layer *content_layer) {
+  if (!menu_text_scroll_is_allowed()) {
+    return;
+  }
   MenuTextScroll *scroll = prv_get_scroll();
   if (scroll->layer != content_layer) {
     return;
