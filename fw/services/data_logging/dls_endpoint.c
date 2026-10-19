@@ -412,8 +412,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
                dls_private_send_session(entry->session, false));
   } else {
     // Session has disappeared between the time that the reopen list was
-    // created and now. This ideally shouldn't happen, but there's a lot
-    // that's broken about datalogging. See PBL-37078.
+    // created and now. This ideally shouldn't happen.
     success = true;
   }
   kernel_free(entry);

@@ -570,8 +570,7 @@ void test_data_logging__send_session_medium(void) {
 }
 
 // ----------------------------------------------------------------------------------------
-// Test using the endpoint to empty a session using small item sizes. The item size of 19
-//  exposes issue PBL-21331
+// Test using the endpoint to empty a session using small, odd item sizes.
 void test_data_logging__send_session_small(void) {
   prv_endpoint_test(true /*buffered*/, 19, 45);
 }

@@ -488,8 +488,6 @@ static void prv_write_all_sessions_to_flash(void *data) {
 // ----------------------------------------------------------------------------------------
 DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_t num_items) {
 #ifndef CONFIG_RELEASE
-  // TODO: We should be able to remove this requirement once PBL-23925 is fixed
-  //
   // Some datalogging code holds the dls_list.c:s_list_mutex while taking the
   // bt_lock. Since we are locking the list and then trying to get the bt_lock,
   // any other thread which holds the bt_lock and then trys to call a log could
