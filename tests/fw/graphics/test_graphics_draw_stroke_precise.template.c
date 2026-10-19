@@ -53,7 +53,6 @@ void test_graphics_draw_stroke_precise_${BIT_DEPTH_NAME}__origin_layer_aa(void) 
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if PBL_COLOR
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 10);
   graphics_line_draw_precise_stroked_aa(&ctx, START_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT, 10);
@@ -67,7 +66,6 @@ void test_graphics_draw_stroke_precise_${BIT_DEPTH_NAME}__origin_layer_aa(void) 
   graphics_line_draw_precise_stroked_aa(&ctx, START_ON_ORIGIN_RECT_NXNY, END_ON_ORIGIN_RECT_NXNY, 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_precise_across_nxny_origin_layer_aa.${BIT_DEPTH_NAME}.pbi"));
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 10);
   graphics_line_draw_precise_stroked_aa(&ctx, END_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT, 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_precise_same_point_origin_layer_aa.${BIT_DEPTH_NAME}.pbi"));
@@ -103,7 +101,6 @@ void test_graphics_draw_stroke_precise_${BIT_DEPTH_NAME}__offset_layer_aa(void) 
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if PBL_COLOR
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 10);
   graphics_line_draw_precise_stroked_aa(&ctx, START_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT, 10);
@@ -117,7 +114,6 @@ void test_graphics_draw_stroke_precise_${BIT_DEPTH_NAME}__offset_layer_aa(void) 
   graphics_line_draw_precise_stroked_aa(&ctx, START_ON_ORIGIN_RECT_NXNY, END_ON_ORIGIN_RECT_NXNY, 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_precise_across_nxny_offset_layer_aa.${BIT_DEPTH_NAME}.pbi"));
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 10);
   graphics_line_draw_precise_stroked_aa(&ctx, END_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT, 10);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_precise_same_point_offset_layer_aa.${BIT_DEPTH_NAME}.pbi"));
@@ -188,8 +184,8 @@ void test_graphics_draw_stroke_precise_${BIT_DEPTH_NAME}__close_points_non_aa(vo
 }
 
 /*
- * Following functions will test issue of same starting/ending point for stroke width, where point lies
- *   between pixels due to precise points. This should be fixed by PBL-20783.
+ * Following functions test same starting/ending point for stroke width, where point lies
+ *   between pixels due to precise points.
  */
 void test_graphics_draw_stroke_precise_${BIT_DEPTH_NAME}__same_point_aa(void) {
 #if PBL_COLOR

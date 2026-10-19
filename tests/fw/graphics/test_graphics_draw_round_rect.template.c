@@ -25,6 +25,9 @@
 
 static FrameBuffer *fb = nullptr;
 
+// Checks under CONFIG_SCREEN_COLOR_DEPTH_BITS == 8 render a few pixels off the reference
+// images on 1-bit.
+
 // Setup
 void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
@@ -180,7 +183,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_aa_sw(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // AA = true, SW = 1
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
@@ -211,14 +213,12 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_aa_sw(void) {
   // AA = true, SW = 3
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 3);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r4_aa_sw3_no_clip.${BIT_DEPTH_NAME}.pbi"));
 #endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_XY, ORIGIN_RECT_CLIP_XY, true, 3);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_XY, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r4_aa_sw3_clip_xy.${BIT_DEPTH_NAME}.pbi"));
 #endif
@@ -227,7 +227,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_aa_sw(void) {
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r4_aa_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // AA = true, SW = 4
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 4);
@@ -259,17 +258,11 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_aa_sw(void) {
   // AA = true, SW = 11
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r4_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_XY, ORIGIN_RECT_CLIP_XY, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_XY, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r4_aa_sw11_clip_xy.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_NXNY, ORIGIN_RECT_CLIP_NXNY, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
@@ -320,8 +313,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_sw(void) {
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r4_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // SW = 4
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 4);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, RADIUS_DEFAULT);
@@ -334,7 +325,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_sw(void) {
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_CLIP_NXNY, ORIGIN_RECT_CLIP_NXNY, false, 4);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r4_sw4_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   // SW = 5
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 5);
@@ -401,40 +391,30 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_radius_aa_sw(void) 
   // AA = true, SW = 11
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 0);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r0_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 #endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 1);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r1_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 #endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 2);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r2_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 3);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r3_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 #endif
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
@@ -450,8 +430,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_radius_sw(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // AA = false, SW = 1
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 0);
@@ -468,7 +446,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_radius_sw(void) {
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, 3);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r3_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
   graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
@@ -527,7 +504,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_aa_sw(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // AA = true, SW = 1
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 1);
@@ -559,14 +535,12 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_aa_sw(void) {
   // AA = true, SW = 3
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 3);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_NO_CLIP, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_aa_sw3_no_clip.${BIT_DEPTH_NAME}.pbi"));
 #endif
 
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_XY, OFFSET_RECT_CLIP_XY, true, 3);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_CLIP_XY, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_aa_sw3_clip_xy.${BIT_DEPTH_NAME}.pbi"));
 #endif
@@ -575,7 +549,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_aa_sw(void) {
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_aa_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // AA = true, SW = 4
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 4);
@@ -607,17 +580,11 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_aa_sw(void) {
   // AA = true, SW = 11
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 11);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_NO_CLIP, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_XY, OFFSET_RECT_CLIP_XY, true, 11);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_CLIP_XY, RADIUS_DEFAULT);
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_aa_sw11_clip_xy.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_NXNY, OFFSET_RECT_CLIP_NXNY, true, 11);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
@@ -628,8 +595,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_sw(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // SW = 1
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, false, 1);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_NO_CLIP, RADIUS_DEFAULT);
@@ -655,7 +620,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_sw(void) {
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_NXNY, OFFSET_RECT_CLIP_NXNY, false, 2);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_sw2_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   // SW = 3
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, false, 3);
@@ -670,8 +634,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_sw(void) {
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_sw3_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // SW = 4
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, false, 4);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_NO_CLIP, RADIUS_DEFAULT);
@@ -684,7 +646,6 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__offset_sw(void) {
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_CLIP_NXNY, OFFSET_RECT_CLIP_NXNY, false, 4);
   graphics_draw_round_rect(&ctx, &OFFSET_DRAW_RECT_CLIP_NXNY, RADIUS_DEFAULT);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_offset_r4_sw4_clip_nxny.${BIT_DEPTH_NAME}.pbi"));
-#endif
 
   // SW = 5
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, false, 5);

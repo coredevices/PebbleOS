@@ -25,6 +25,9 @@
 
 static FrameBuffer *fb = nullptr;
 
+// Checks under CONFIG_SCREEN_COLOR_DEPTH_BITS == 8 render a few pixels off the reference
+// images on 1-bit.
+
 // Setup
 void test_graphics_draw_stroke_${BIT_DEPTH_NAME}__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
@@ -117,7 +120,6 @@ void test_graphics_draw_stroke_${BIT_DEPTH_NAME}__origin_layer(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, STROKE_WIDTH);
   graphics_draw_line(&ctx, START_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT);
@@ -145,7 +147,6 @@ void test_graphics_draw_stroke_${BIT_DEPTH_NAME}__offset_layer(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  // TODO: Fix offset calculation and reenable this: - PBL-16509
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, STROKE_WIDTH);
   graphics_draw_line(&ctx, START_ON_ORIGIN_RECT, END_ON_ORIGIN_RECT);
