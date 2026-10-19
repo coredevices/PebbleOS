@@ -239,7 +239,7 @@ def generate_resources(bld, resource_source_path):
     )
 
     # Create a resource ID header for use during the linking step of the build
-    # FIXME PBL-36458: Since pebble.h requires this file through a #include, this file must be
+    # Since pebble.h requires this file through a #include, this file must be
     # present for every project, regardless of whether or not resources exist for the project. At
     # this time, this means the `generate_resource_id_header` task generator must run for every
     # project. Since the input of the `generate_resource_id_header` task generator is the

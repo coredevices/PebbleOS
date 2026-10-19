@@ -5,7 +5,6 @@ import objcopy
 import pebble_sdk_gcc
 
 
-# TODO: PBL-33841 Make this a feature
 def generate_bin_file(task_gen, bin_type, elf_file, has_pkjs, has_worker):
     """
     Generate bin file by injecting metadata from elf file and resources file

@@ -154,7 +154,7 @@ def make_lib_bundle(task_gen):
     task.dep_nodes = js + includes + resources + binaries
 
 
-# PBL-40925 Use pebble_package.py instead of mkbundle.py
+# TODO: use pebble_package.py instead of mkbundle.py
 @feature("bundle")
 def make_pbl_bundle(task_gen):
     """
