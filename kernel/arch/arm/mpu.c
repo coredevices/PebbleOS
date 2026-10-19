@@ -26,9 +26,8 @@ bool mpu_memory_is_cachable(const void *addr) {
   if (!dcache_is_enabled()) {
     return false;
   }
-  // TODO PBL-37601: We're assuming only SRAM is cachable for now for simplicity sake. We should
-  // account for MPU configuration and also the fact that memory-mapped QSPI access goes through the
-  // cache.
+  // TODO: only SRAM is assumed to be cachable. Account for the MPU configuration and for
+  // memory-mapped QSPI access going through the cache.
   return ((uint32_t)addr >= SRAM_BASE) && ((uint32_t)addr < SRAM_END);
 }
 
