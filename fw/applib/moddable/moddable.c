@@ -4,7 +4,6 @@
 #include <stddef.h>
 
 #include <pbl/kernel/syscall.h>
-#include <pbl/mcu/privilege.h>
 #include <pbl/services/evented_timer.h>
 
 #include <applib/app.h>
@@ -87,7 +86,7 @@ static void prv_build_ffi(txMachine *the, txAPI *api) {
     .the = the,
     .api = api,
   };
-  mcu_call_unprivileged(prv_build_ffi_unprivileged_cb, &call);
+  pbl_user_call(prv_build_ffi_unprivileged_cb, &call);
 }
 
 // Minimum recordSize for the original struct (without flags field)

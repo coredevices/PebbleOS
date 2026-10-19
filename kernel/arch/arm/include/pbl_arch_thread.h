@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 #ifdef CONFIG_USERSPACE
-//! State of an mcu_call_unprivileged() call in progress.
+//! State of a pbl_user_call() call in progress.
 struct arch_user_call {
   uint32_t saved_r4_r11[8];
   uintptr_t caller_lr;

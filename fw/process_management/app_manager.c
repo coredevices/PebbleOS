@@ -9,7 +9,6 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/mcu/privilege.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/app_outbox_service.h>
@@ -132,12 +131,12 @@ static void prv_app_task_main(void *entry_point) {
   // about to start the app in earnest. No longer safe to kill.
   s_app_task_context.safe_to_kill = false;
 
+#ifdef CONFIG_USERSPACE
   // Enter unprivileged mode!
-  const bool is_unprivileged = s_app_task_context.app_md->is_unprivileged;
-
-  if (is_unprivileged) {
-    mcu_state_set_thread_privilege(false);
+  if (s_app_task_context.app_md->is_unprivileged) {
+    pbl_user_mode_enter();
   }
+#endif
 
   const PebbleMain main_func = entry_point;
   main_func();

@@ -10,16 +10,14 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
-#include <pbl/mcu/privilege.h>
 
 #include <cmsis_core.h>
 #include <kernel.h>
 #include <pbl_arch_syscall.h>
 
 static_assert(sizeof(((struct arch_user_call *)0)->saved_r4_r11) == 32,
-              "mcu_call_unprivileged asm assumes push {r4-r11} saves 32 bytes");
-static_assert(sizeof(uintptr_t) == sizeof(uint32_t),
-              "mcu_call_unprivileged asm assumes 32-bit pointers");
+              "pbl_user_call asm assumes push {r4-r11} saves 32 bytes");
+static_assert(sizeof(uintptr_t) == sizeof(uint32_t), "pbl_user_call asm assumes 32-bit pointers");
 
 uintptr_t arch_syscall_caller_sp(void) {
   return pbl_cur->backend.arch.syscall_sp;
@@ -29,13 +27,22 @@ PBL_USED uintptr_t arch_syscall_return_address(void) {
   return pbl_cur->backend.arch.syscall_lr;
 }
 
+PBL_USED bool arch_syscall_from_kernel(void) {
+  return !arch_is_user_context();
+}
+
+void pbl_user_mode_enter(void) {
+  __set_CONTROL(__get_CONTROL() | CONTROL_nPRIV_Msk);
+  __ISB();
+}
+
 // ---- kernel-to-user calls ---------------------------------------------------
 
-static PBL_USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, uintptr_t caller_lr,
-                                                 uintptr_t entry_sp, const uint32_t *saved_regs) {
+static PBL_USED void arch_user_call_enter(void (*fn)(void *), void *ctx, uintptr_t caller_lr,
+                                          uintptr_t entry_sp, const uint32_t *saved_regs) {
   (void)ctx;
 
-  PBL_ASSERTN(mcu_state_is_thread_privileged());
+  PBL_ASSERTN(!arch_is_user_context());
   PBL_ASSERTN(fn != nullptr);
 
   struct pbl_arch_thread *arch = &pbl_cur->backend.arch;
@@ -55,13 +62,13 @@ static PBL_USED void mcu_call_unprivileged_enter(void (*fn)(void *), void *ctx, 
   }
 }
 
-PBL_EXTERNALLY_VISIBLE void mcu_call_unprivileged_resume(void);
+PBL_EXTERNALLY_VISIBLE void arch_user_call_resume(void);
 
 static uintptr_t prv_user_call_return_pc(void) {
-  extern const uint16_t __mcu_call_unprivileged_svc[];
+  extern const uint16_t __arch_user_call_svc[];
 
   // A 16-bit SVC returns to the next halfword.
-  return (uintptr_t)__mcu_call_unprivileged_svc + sizeof(uint16_t);
+  return (uintptr_t)__arch_user_call_svc + sizeof(uint16_t);
 }
 
 bool arch_user_call_return(uint32_t *frame) {
@@ -82,20 +89,16 @@ bool arch_user_call_return(uint32_t *frame) {
   // Return from the exception into a fixed continuation, not back into the
   // callback. The continuation restores SP before using the stack.
   frame[0] = (uint32_t)call;
-  frame[6] = (uint32_t)&mcu_call_unprivileged_resume;
+  frame[6] = (uint32_t)&arch_user_call_resume;
   frame[5] = 0;
 
   return true;
 }
 
-//! Run @p fn unprivileged for the duration of one call, then return to the
-//! caller still in privileged thread mode.
-//!
-//! The re-entry SVC is deliberately outside .syscall_text. It is only accepted
-//! while this call is active for the current thread, and the SVC handler
-//! resumes through saved kernel state instead of the callback's stack.
-PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged(void (*fn)(void *),
-                                                                     void *ctx) {
+// The re-entry SVC is deliberately outside .syscall_text. It is only accepted
+// while this call is active for the current thread, and the SVC handler
+// resumes through saved kernel state instead of the callback's stack.
+PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void pbl_user_call(void (*fn)(void *), void *ctx) {
   __asm volatile(
       // Keep fn/ctx across the setup call. Copy r4-r11 too; the unprivileged
       // callee is not trusted to preserve the privileged caller's callee-saved registers.
@@ -108,7 +111,7 @@ PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged(void (*fn)(
       "  add r12, sp, #8                  \n" // r12 = saved r4-r11 pointer
       "  sub sp, sp, #8                   \n" // keep stack 8-byte aligned for C call
       "  str r12, [sp]                    \n" // 5th arg: saved_regs pointer
-      "  bl mcu_call_unprivileged_enter   \n"
+      "  bl arch_user_call_enter   \n"
       "  add sp, sp, #8                   \n" // discard 5th arg + alignment pad
       "  pop {r2, r3}                     \n" // r2 = fn, r3 = ctx
       "  add sp, sp, #32                  \n" // saved r4-r11 copied to kernel state
@@ -125,16 +128,16 @@ PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged(void (*fn)(
       "  blx r2                           \n"
 
       // Re-enter privileged mode. The handler accepts this exact callsite only
-      // while this mcu_call_unprivileged() call is active for the thread.
-      "  .global __mcu_call_unprivileged_svc \n"
-      "__mcu_call_unprivileged_svc:       \n"
+      // while this pbl_user_call() call is active for the thread.
+      "  .global __arch_user_call_svc \n"
+      "__arch_user_call_svc:       \n"
       "  svc 2                            \n"
       // Deliberate fail-closed trap. If the SVC was denied or not rewritten, do
       // not keep executing in the callback's control flow.
       "  udf #0                           \n");
 }
 
-PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void mcu_call_unprivileged_resume(void) {
+PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void arch_user_call_resume(void) {
   __asm volatile(
       // r0 is the state pointer stamped into the frame by Handler mode. Restore
       // SP before any stack use.
@@ -211,7 +214,7 @@ PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED arch_syscall_enter(void) {
   __asm volatile(
       // Save argument registers
       " push {r0-r3, lr} \n"
-      " bl mcu_state_is_privileged \n"
+      " bl arch_syscall_from_kernel \n"
       " cmp r0, #1 \n" // Were we privileged?
 
       " pop {r0-r3, lr} \n" // Restore state

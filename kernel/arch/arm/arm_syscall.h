@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-//! Handles the re-entry SVC that ends an mcu_call_unprivileged() callback,
+//! Handles the re-entry SVC that ends a pbl_user_call() callback,
 //! redirecting the exception @p frame. @return false if it is not one.
 bool arch_user_call_return(uint32_t *frame);
 

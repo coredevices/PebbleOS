@@ -119,6 +119,34 @@ int pbl_user_copy_to(void *dst, const void *src, size_t num_bytes);
 int pbl_user_strnlen(const char *str, size_t max);
 
 /**
+ * @brief Check whether the CPU runs unprivileged code.
+ *
+ * @return true in an unprivileged thread, false in a privileged one or an exception handler, and
+ * always false without @c CONFIG_USERSPACE.
+ */
+static inline bool pbl_is_user_context(void);
+
+#if defined(CONFIG_USERSPACE) || defined(__DOXYGEN__)
+/**
+ * @brief Drop the calling thread to unprivileged mode for good.
+ *
+ * From then on it reaches privileged code only through syscalls.
+ */
+void pbl_user_mode_enter(void);
+
+/**
+ * @brief Call a function unprivileged from privileged thread mode.
+ *
+ * For untrusted callbacks: memory or peripheral access the thread is not allowed inside @p fn
+ * faults the MPU instead of silently succeeding. The caller is privileged again when this returns.
+ *
+ * @param fn Function to call.
+ * @param ctx Argument passed to @p fn.
+ */
+void pbl_user_call(void (*fn)(void *), void *ctx);
+#endif
+
+/**
  * @brief Called on the way out of every syscall made from unprivileged code.
  *
  * Implemented by the application. Runs privileged, on the syscall's stack, just before privilege
@@ -141,6 +169,10 @@ void pbl_kernel_syscall_exit(void);
 
 #if defined(UNITTEST)
 
+static inline bool pbl_is_user_context(void) {
+  return false;
+}
+
 #define PRV_SC_STUB(section, ret, name, ...) ret name(__VA_ARGS__)
 #if UNITTEST_WITH_SYSCALL_PRIVILEGES
 bool arch_syscall_returns_to_user(void *ret_addr);
@@ -153,10 +185,18 @@ bool arch_syscall_returns_to_user(void *ret_addr);
 
 #include <pbl_arch_syscall.h>
 
+static inline bool pbl_is_user_context(void) {
+  return arch_is_user_context();
+}
+
 #define PRV_SC_STUB      ARCH_SYSCALL_DEFINE
 #define PRV_SC_FROM_USER ARCH_SYSCALL_FROM_USER
 
 #else
+
+static inline bool pbl_is_user_context(void) {
+  return false;
+}
 
 #define PRV_SC_STUB(section, ret, name, ...) ret name(__VA_ARGS__)
 #define PRV_SC_FROM_USER()                   false

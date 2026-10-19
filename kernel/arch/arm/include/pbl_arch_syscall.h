@@ -7,6 +7,8 @@
 
 #include <pbl/kernel/compiler.h>
 
+#include <cmsis_core.h>
+
 //! Defines the syscall stub @p name, placed in @p section, and opens the body
 //! of __@p name, which the stub runs privileged.
 #define ARCH_SYSCALL_DEFINE(section, ret, name, ...)           \
@@ -22,6 +24,10 @@
 //! True in the body of a syscall stub called from unprivileged code. Only valid
 //! in the body itself or a PBL_ALWAYS_INLINE helper of it.
 #define ARCH_SYSCALL_FROM_USER() arch_syscall_returns_to_user(PBL_RETURN_ADDRESS(0))
+
+static inline bool arch_is_user_context(void) {
+  return __get_IPSR() == 0 && (__get_CONTROL() & CONTROL_nPRIV_Msk) != 0;
+}
 
 void arch_syscall_enter(void);
 bool arch_syscall_returns_to_user(void *ret_addr);

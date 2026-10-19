@@ -7,7 +7,7 @@
 
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <pbl/mcu/privilege.h>
+#include <pbl/kernel/syscall.h>
 #include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
 
@@ -34,7 +34,7 @@ static const ApplibTypeInfo s_applib_malloc_types[] = {
 static size_t prv_find_size(int index) {
   const ApplibTypeInfo *type = &s_applib_malloc_types[index];
 
-  if (mcu_state_is_thread_privileged()) {
+  if (!pbl_is_user_context()) {
     return type->actual_size;
   }
 
@@ -69,7 +69,7 @@ static void* prv_malloc(size_t size, uintptr_t client_pc) {
   void *result = task_malloc(size);
 #endif
 
-  if (!result && mcu_state_is_thread_privileged() && !prv_is_moddable_app()) {
+  if (!result && !pbl_is_user_context() && !prv_is_moddable_app()) {
     // We want to trip an assert if our malloc failed and we're not running a 3rd party app.
     pbl_malloc_oom(size, client_pc, task_heap_get_for_current_task());
   }

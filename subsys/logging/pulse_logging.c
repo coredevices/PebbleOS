@@ -10,8 +10,8 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
+#include <pbl/kernel/syscall.h>
 #include <pbl/mcu/interrupts.h>
-#include <pbl/mcu/privilege.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
@@ -60,7 +60,7 @@ static size_t prv_serialize_log_header(MessageContents *contents, uint8_t log_le
   contents->log_level_char = pbl_log_get_level_char(log_level);
 #ifdef CONFIG_LOG_TASK_PREFIX
   contents->task_char = pebble_task_get_char(task);
-  if (mcu_state_is_privileged()) {
+  if (!pbl_is_user_context()) {
     contents->task_char = toupper(contents->task_char);
   }
 #else

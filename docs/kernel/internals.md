@@ -81,7 +81,7 @@ under BASEPRI, rewrites the four per-thread MPU regions through the RBAR
 alias registers and restores. Supervisor calls keep the port's numbers: 0
 starts the scheduler, 1 yields, 2 raises privilege. SVC 2 is honoured only
 from a syscall stub in `.syscall_text` or from the return of an
-`mcu_call_unprivileged()` callback. For a syscall it copies the exception
+`pbl_user_call()` callback. For a syscall it copies the exception
 frame onto the thread's syscall stack when it was created with one, records
 the caller's stack pointer and return address in the thread, and points the
 return at the code that drops privilege again

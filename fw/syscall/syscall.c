@@ -10,7 +10,6 @@
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/privilege.h>
 #include <pbl/services/time.h>
 #include <pbl/util/string.h>
 
@@ -24,7 +23,7 @@ PBL_SYSCALL(int, sys_test, (VAL, int, arg)) {
 #endif
 
   PBL_LOG_DBG("Inside test kernel function! Privileged? %s Arg %u IPSR: %" PRIu32,
-              bool_to_str(mcu_state_is_privileged()), arg, ipsr);
+              bool_to_str(!pbl_is_user_context()), arg, ipsr);
 
   return arg * 2;
 }

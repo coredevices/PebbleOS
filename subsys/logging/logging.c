@@ -15,7 +15,6 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
-#include <pbl/mcu/privilege.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/string.h>
 
@@ -71,7 +70,7 @@ static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_
   {
 #ifdef CONFIG_LOG_TASK_PREFIX
     unsigned char task_char = pebble_task_get_char(pebble_task_get_current());
-    if (mcu_state_is_privileged()) {
+    if (!pbl_is_user_context()) {
       task_char = toupper(task_char);
     }
 #else

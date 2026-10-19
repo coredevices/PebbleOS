@@ -8,7 +8,6 @@ pbl_library_sources(
   interrupts.c
   irq.c
   mpu.c
-  privilege.c
   reset.c
   vector_table.c
 )

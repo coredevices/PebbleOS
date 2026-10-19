@@ -10,12 +10,11 @@
 
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/privilege.h>
 
 [[noreturn]] void pbl_syscall_fail(void) {
   const uintptr_t lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
 
-  PBL_ASSERT(mcu_state_is_privileged(), "Insufficient Privileges!");
+  PBL_ASSERT(!pbl_is_user_context(), "Insufficient Privileges!");
   PBL_LOG_WRN("Bad syscall!");
   pbl_kernel_syscall_fault(lr);
 }

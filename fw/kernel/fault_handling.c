@@ -8,7 +8,6 @@
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
-#include <pbl/mcu/privilege.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/heap.h>
 #include <pbl/util/size.h>
@@ -142,7 +141,7 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
 extern void sys_app_fault(uint32_t lr);
 
 [[noreturn]] void trigger_fault(RebootReasonCode reason_code, uint32_t lr) {
-  if (mcu_state_is_privileged()) {
+  if (!pbl_is_user_context()) {
     kernel_fault(reason_code, lr);
   } else {
     sys_app_fault(lr);
@@ -165,7 +164,7 @@ extern void sys_app_fault(uint32_t lr);
   // scheduler running and outside an ISR, else reboot.
   bool can_kill_safely = !mcu_state_is_isr() && (pbl_kernel_is_running());
 
-  if (!mcu_state_is_privileged() || (process_heap_oom && can_kill_safely)) {
+  if (pbl_is_user_context() || (process_heap_oom && can_kill_safely)) {
     sys_app_fault(lr);
   }
 
@@ -289,14 +288,15 @@ static void prv_return_to_landing_zone(uintptr_t stacked_pc, uintptr_t stacked_l
   //      http://stackoverflow.com/a/9538628/1546
   stacked_args[7] = 1 << 24;
 
-  mcu_state_set_thread_privilege(true);
+  // Return to it privileged.
+  __set_CONTROL(__get_CONTROL() & ~CONTROL_nPRIV_Msk);
 
   // Now return to hardware_fault_landing_zone...
 }
 
 // Only an unprivileged thread, faulting on its own stack, can be redirected to the landing zone.
 static bool prv_fault_is_recoverable(unsigned int exc_return) {
-  return (exc_return & 0x04) && !mcu_state_is_thread_privileged();
+  return (exc_return & 0x04) && (__get_CONTROL() & CONTROL_nPRIV_Msk);
 }
 
 static void attempt_handle_stack_overflow(unsigned int *stacked_args, uintptr_t fault_pc,

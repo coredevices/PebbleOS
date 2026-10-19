@@ -3,7 +3,7 @@
 @brief Threads, synchronization, interrupts and scheduling (@c pbl/kernel).
 
 @defgroup mcu MCU
-@brief CPU core helpers: interrupts, privilege, cache and FPU (@c pbl/mcu).
+@brief CPU core helpers: interrupts, cache and FPU (@c pbl/mcu).
 
 @defgroup soc SoC
 @brief SoC-specific interfaces (@c pbl/soc).

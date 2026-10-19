@@ -10,7 +10,6 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/privilege.h>
 #include <pbl/services/light.h>
 #include <pbl/services/speaker/speaker_service.h>
 #include <pbl/services/vibe_pattern.h>
@@ -77,11 +76,12 @@ static void prv_worker_task_main(void *entry_point) {
   // about to start the worker in earnest. No longer safe to kill.
   s_worker_task_context.safe_to_kill = false;
 
+#ifdef CONFIG_USERSPACE
   // Enter unprivileged mode!
-  const bool is_unprivileged = s_worker_task_context.app_md->is_unprivileged;
-  if (is_unprivileged) {
-    mcu_state_set_thread_privilege(false);
+  if (s_worker_task_context.app_md->is_unprivileged) {
+    pbl_user_mode_enter();
   }
+#endif
 
   const PebbleMain main_func = entry_point;
   main_func();
