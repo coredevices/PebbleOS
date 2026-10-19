@@ -23,6 +23,12 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
   t->privileged = attr->privileged;
   t->stack = attr->stack;
   t->stack_size = attr->stack_size;
+#ifdef CONFIG_USERSPACE
+  t->user_start = attr->user_start;
+  t->user_end = attr->user_end;
+  t->syscall_stack = attr->syscall_stack;
+  t->syscall_stack_size = attr->syscall_stack_size;
+#endif
 
   uint32_t *words = attr->stack;
   for (size_t i = 0; i < attr->stack_size / sizeof(uint32_t); i++) {

@@ -391,6 +391,13 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
                                            ? process_metadata_get_code_bank_num(app_md)
                                            : SYSTEM_APP_BANK_ID);
 
+#ifdef CONFIG_USERSPACE
+  // A Moddable app runs its VM inside a syscall: keep that on the app stack.
+  if (!app_md->is_moddable_app) {
+    pebble_task_attr_set_syscall_stack(PebbleTask_App, &attr);
+  }
+#endif
+
   s_app_task_context.task_handle = pebble_task_create(PebbleTask_App, &attr);
 
   // Always notify the phone that the application is running

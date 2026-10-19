@@ -2504,6 +2504,7 @@ PREDEFINED             = __attribute__(x)= \
                          CONFIG_HRM=1 \
                          CONFIG_ORIENTATION_MANAGER=1 \
                          CONFIG_TOUCH=1 \
+                         CONFIG_USERSPACE=1 \
                          CONFIG_WATCHDOG=1 \
                          CONFIG_DYNAMIC_BACKLIGHT=1 \
                          CONFIG_BACKLIGHT_HAS_COLOR=1

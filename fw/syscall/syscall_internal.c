@@ -25,15 +25,6 @@
 #include <syscall/syscall.h>
 #include <syscall/syscall_define.h>
 
-// Run App/Worker syscalls on a dedicated privileged stack instead of the
-// caller's small unprivileged one, so a task that exhausts its stack faults
-// unprivileged (only that process dies) instead of rebooting the system.
-// ARMv8-M bounds the syscall stack with PSPLIM; ARMv7-M plants a no-access
-// MPU guard below it (MemoryRegion_Task4, see pebble_tasks.c).
-#if !defined(SYSCALL_PRIVILEGED_STACK)
-#define SYSCALL_PRIVILEGED_STACK 1
-#endif
-
 // Per-thread slots for the syscall return address and pre-syscall stack pointer
 #define TLS_SYSCALL_LR_IDX 0
 #define TLS_SYSCALL_SP_IDX 1
@@ -328,129 +319,18 @@ void syscall_copy_out(struct syscall_copy_out *out) {
   }
 }
 
-#if SYSCALL_PRIVILEGED_STACK
-// Dedicated privileged stacks for App/Worker syscalls. Plain .bss statics land
-// in the privileged-only .kernel_bss output (RAM): unreadable by app
-// code, zeroed at boot. (Not section(".kernel_bss") -- that would orphan them.)
-#define SYSCALL_STACK_WORDS 512u // 2 KiB each; size against measured high-water.
-#ifdef CONFIG_ARMV8_M_MAINLINE
-#define SYSCALL_STACK_GUARD_WORDS 0u
-#else
-#define SYSCALL_STACK_GUARD_WORDS 8u // smallest ARMv7-M MPU region, naturally aligned
-#endif
-
-typedef struct SyscallStack {
-#if SYSCALL_STACK_GUARD_WORDS
-  uint32_t guard[SYSCALL_STACK_GUARD_WORDS];
-#endif
-  uint32_t words[SYSCALL_STACK_WORDS];
-} SyscallStack;
-
-static SyscallStack s_app_syscall_stack PBL_ALIGNED(32);
-static SyscallStack s_worker_syscall_stack PBL_ALIGNED(32);
-
-#if SYSCALL_STACK_GUARD_WORDS
-static const MpuRegion s_app_syscall_stack_guard_region = {
-  .region_num = MemoryRegion_Task4,
-  .enabled = true,
-  .base_address = (uintptr_t)s_app_syscall_stack.guard,
-  .size = sizeof(s_app_syscall_stack.guard),
-  .cache_policy = MpuCachePolicy_NotCacheable,
-  .permissions = MpuPermissions_NoAccess,
-};
-
-static const MpuRegion s_worker_syscall_stack_guard_region = {
-  .region_num = MemoryRegion_Task4,
-  .enabled = true,
-  .base_address = (uintptr_t)s_worker_syscall_stack.guard,
-  .size = sizeof(s_worker_syscall_stack.guard),
-  .cache_policy = MpuCachePolicy_NotCacheable,
-  .permissions = MpuPermissions_NoAccess,
-};
-#endif
-
-const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
-#if SYSCALL_STACK_GUARD_WORDS
-  switch (task) {
-    case PebbleTask_App:
-      return &s_app_syscall_stack_guard_region;
-    case PebbleTask_Worker:
-      return &s_worker_syscall_stack_guard_region;
-    default:
-      break;
-  }
-#else
-  (void)task;
-#endif
-  return nullptr;
-}
-
-// Kernel hook: top of the current task's dedicated syscall stack (base in
-// *base_out), or NULL to keep it on the caller's stack. App + Worker only;
-// moddable apps use mcu_call_unprivileged() and stay on their own stack.
-uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out, uintptr_t *caller_start_out,
-                                   uintptr_t *caller_end_out) {
-  uint32_t *stack;
-  const MpuRegion *caller_region;
-  switch (pebble_task_get_current()) {
-    case PebbleTask_App:
-#ifdef CONFIG_MODDABLE_XS
-    {
-      const PebbleProcessMd *md = app_manager_get_current_app_md();
-      if (md != nullptr && md->is_moddable_app) {
-        return nullptr;
-      }
-    }
-#endif
-      stack = s_app_syscall_stack.words;
-      caller_region = memory_layout_get_app_region();
-      break;
-    case PebbleTask_Worker:
-      stack = s_worker_syscall_stack.words;
-      caller_region = memory_layout_get_worker_region();
-      break;
-    default:
-      return nullptr;
-  }
-  *base_out = (uintptr_t)&stack[0];
-  *caller_start_out = caller_region->base_address;
-  *caller_end_out = caller_region->base_address + caller_region->size;
-  return (uint32_t *)&stack[SYSCALL_STACK_WORDS];
-}
-
-static bool prv_psp_in_syscall_stack(uintptr_t psp, const uint32_t *stack) {
-  return (psp > (uintptr_t)&stack[0]) && (psp <= (uintptr_t)&stack[SYSCALL_STACK_WORDS]);
-}
-
-// Task SP/PSPLIM to restore if the finishing syscall ran on a dedicated stack,
-// packed as (psplim << 32 | sp) to return in r0:r1; 0 = no switch needed.
+// Task SP/PSPLIM to restore if the finishing syscall ran on the thread's syscall
+// stack, packed as (psplim << 32 | sp) to return in r0:r1; 0 = no switch needed.
 PBL_USED uint64_t syscall_stack_restore_target(void) {
+  const struct pbl_thread *t = pbl_thread_current();
   const uintptr_t psp = __get_PSP();
-  if (prv_psp_in_syscall_stack(psp, s_app_syscall_stack.words) ||
-      prv_psp_in_syscall_stack(psp, s_worker_syscall_stack.words)) {
+  const uintptr_t base = (uintptr_t)t->syscall_stack;
+  if (t->syscall_stack != nullptr && psp > base && psp <= base + t->syscall_stack_size) {
     const uint32_t sp = (uint32_t)prv_get_syscall_sp(); // slot1 = pre-syscall task SP
-    const uint32_t psplim = (uint32_t)pbl_thread_current()->stack;
+    const uint32_t psplim = (uint32_t)t->stack;
     return ((uint64_t)psplim << 32) | sp;
   }
   return 0;
-}
-
-// Peak unused bytes on a syscall stack: scan the zeroed .bss from the base to
-// the first written word (the high-water). For sizing during validation.
-static uint16_t prv_syscall_stack_free_bytes(const uint32_t *stack) {
-  uint32_t i = 0;
-  while (i < SYSCALL_STACK_WORDS && stack[i] == 0) {
-    i++;
-  }
-  return (uint16_t)(i * sizeof(uint32_t));
-}
-
-uint16_t syscall_app_stack_free_bytes(void) {
-  return prv_syscall_stack_free_bytes(s_app_syscall_stack.words);
-}
-
-uint16_t syscall_worker_stack_free_bytes(void) {
-  return prv_syscall_stack_free_bytes(s_worker_syscall_stack.words);
 }
 
 // Drop privilege and return to the task. If the syscall ran on a dedicated
@@ -481,37 +361,6 @@ PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege(void) {
       " bx r12 \n" // return into the app
   );
 }
-#else
-const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
-  (void)task;
-  return nullptr;
-}
-uint16_t syscall_app_stack_free_bytes(void) {
-  return 0xFFFF;
-}
-uint16_t syscall_worker_stack_free_bytes(void) {
-  return 0xFFFF;
-}
-
-// Drop privileges and return to the address stored in thread local storage
-// Has to preserve r0 and r1 so the syscall's return value is passed through
-PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege(void) {
-  __asm volatile(
-      " push {r0, r1} \n"
-      " bl process_manager_handle_syscall_exit \n"
-      " bl get_syscall_lr \n"
-      " push { r0 } \n" // push the correct lr onto the stack
-
-      " mov r0, #0 \n" // mcu_state_set_thread_privilege(false)
-      " bl mcu_state_set_thread_privilege \n"
-
-      " pop {lr} \n"     // Pop correct return address
-      " pop {r0, r1} \n" // Restore the return values of the syscall
-
-      " bx lr \n" // Leave the syscall
-  );
-}
-#endif // SYSCALL_PRIVILEGED_STACK
 
 // Just jump straight into the drop privilege code
 PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED prv_drop_privilege_wrapper(void) {

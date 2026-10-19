@@ -62,6 +62,12 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task);
 //! @p attr->regions is filled in here.
 struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr);
 
+#ifdef CONFIG_USERSPACE
+//! Runs the syscalls of @p task (App or Worker) on its dedicated privileged
+//! stack instead of the caller's.
+void pebble_task_attr_set_syscall_stack(PebbleTask task, struct pbl_thread_attr *attr);
+#endif
+
 void pebble_task_configure_idle_task(void);
 
 #if UNITTEST

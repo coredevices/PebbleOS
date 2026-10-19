@@ -228,6 +228,10 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
 
   PBL_LOG_DBG("Starting %s", task_name);
 
+#ifdef CONFIG_USERSPACE
+  pebble_task_attr_set_syscall_stack(PebbleTask_Worker, &attr);
+#endif
+
   s_worker_task_context.task_handle = pebble_task_create(PebbleTask_Worker, &attr);
 
   // If no default yet, set as the default so that it can be relaunched upon system reset

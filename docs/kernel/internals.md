@@ -80,10 +80,10 @@ read that layout unchanged. PendSV saves the context, picks the next thread
 under BASEPRI, rewrites the four per-thread MPU regions through the RBAR
 alias registers and restores. Supervisor calls keep the port's numbers: 0
 starts the scheduler, 1 yields, 2 raises privilege. The privilege-raise path
-copies the exception frame onto the thread's dedicated syscall stack when
-`pbl_kernel_syscall_stack()` provides one and hands the caller's stack
-pointer and stacked return slot to `pbl_kernel_syscall_entered()`, which is
-what the firmware's syscall island expects.
+copies the exception frame onto the thread's syscall stack when it was
+created with one and hands the caller's stack pointer and stacked return
+slot to `pbl_kernel_syscall_entered()`, which is what the firmware's
+syscall island expects.
 
 The vector table (`kernel/arch/arm/vector_table.c`) is a constant array in
 `.isr_vector`. `PBL_LISTIFY()` expands its `CONFIG_NUM_IRQS` slots to

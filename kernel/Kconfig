@@ -59,6 +59,17 @@ config KERNEL_MUTEX_LOCK_LR
 	bool "Record the caller of the outermost mutex lock"
 	default y
 
+config ARCH_HAS_USERSPACE
+	bool
+	help
+	  The architecture can run threads unprivileged and take syscalls
+	  from them.
+
+config USERSPACE
+	bool
+	default y
+	depends on ARCH_HAS_USERSPACE
+
 config RAMFUNC
 	bool
 	help

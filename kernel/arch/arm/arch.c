@@ -302,26 +302,18 @@ static uintptr_t prv_original_sp(const uint32_t *frame, uint32_t exc_return) {
 //! than four arguments read the extras from the caller's stack.
 #define SYSCALL_STACK_ARG_WORDS 16u
 
-// Boards without a dedicated syscall stack run syscalls on the caller's.
-PBL_WEAK uint32_t *pbl_kernel_syscall_stack(uintptr_t *base_out, uintptr_t *caller_start_out,
-                                            uintptr_t *caller_end_out) {
-  (void)base_out;
-  (void)caller_start_out;
-  (void)caller_end_out;
-  return nullptr;
-}
-
 // Moves the exception frame onto the thread's syscall stack, if it has one,
 // so the syscall body runs there. Returns the stacked-LR slot.
 static uint32_t *prv_relocate_to_syscall_stack(uint32_t *frame, uint32_t exc_return,
                                                uintptr_t orig_sp) {
-  uintptr_t base = 0;
-  uintptr_t caller_start = 0;
-  uintptr_t caller_end = 0;
-  uint32_t *top = pbl_kernel_syscall_stack(&base, &caller_start, &caller_end);
-  if (top == nullptr) {
+  const struct pbl_thread *t = pbl_cur;
+  if (t->syscall_stack == nullptr) {
     return &frame[5];
   }
+  const uintptr_t base = (uintptr_t)t->syscall_stack;
+  const uintptr_t caller_start = t->user_start;
+  const uintptr_t caller_end = t->user_end;
+  uint32_t *top = (uint32_t *)((base + t->syscall_stack_size) & ~7u);
 
   uint32_t *args = top - SYSCALL_STACK_ARG_WORDS;
   size_t args_size = 0;

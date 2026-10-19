@@ -49,15 +49,3 @@ void syscall_copy_out(struct syscall_copy_out *out) {
 bool syscall_internal_check_return_address(void *ret_addr) {
   return false;
 }
-
-const MpuRegion *syscall_get_stack_guard_region(PebbleTask task) {
-  return nullptr;
-}
-
-uint16_t syscall_app_stack_free_bytes(void) {
-  return 0xFFFF;
-}
-
-uint16_t syscall_worker_stack_free_bytes(void) {
-  return 0xFFFF;
-}
