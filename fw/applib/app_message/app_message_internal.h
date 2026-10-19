@@ -42,9 +42,6 @@ typedef struct PBL_PACKED {
   AppMessageHeader header;
 } AppMessageAck;
 
-// For a diagram of the state machine:
-// https://pebbletechnology.atlassian.net/wiki/pages/editpage.action?pageId=91914242
-
 typedef enum AppMessagePhaseOut {
   //! The App Message Outbox is not enabled.  To enable it, call app_message_open().
   OUT_CLOSED = 0,

@@ -161,10 +161,7 @@ void prv_syncing_content_offset_changed(struct ScrollLayer *scroll_layer, void *
 }
 
 static void prv_window_load(Window *window) {
-  // creates a structure as outlined at
-  // https://pebbletechnology.atlassian.net/wiki/display/DEV/3.0+Notifications+UI+MVP
-
-  // it's one full screen background image .background_layer,
+  // one full screen background image .background_layer,
   // one image at the top left .topleft_layer,
   // and two menu layers .action_list1 and .action_list2 that overlay each other
 

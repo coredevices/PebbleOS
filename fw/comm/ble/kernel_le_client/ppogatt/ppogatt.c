@@ -29,9 +29,6 @@
 #include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
 
-//! See https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=22511665
-//! for detailed information regarding the PPoGATT protocol state machine.
-
 typedef enum {
   StateDisconnectedReadingMeta,
   StateDisconnectedAwaitingMetaRetry,

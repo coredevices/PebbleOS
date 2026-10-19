@@ -65,8 +65,7 @@ static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
 }
 
 typedef struct PBL_PACKED {
-  // This struct is packed because it mirrors the endpoint definition:
-  // https://pebbletechnology.atlassian.net/wiki/pages/viewpage.action?pageId=491698#PebbleProtocol(BluetoothSerial)-0xb(11)-Time/Clock(bigendian)
+  // Mirrors the Pebble Protocol time endpoint payload (big endian).
   int32_t utc_time;                       // UTC timestamp
   int16_t utc_offset_min;                 // local timestamp - UTC timestamp in mins
   int8_t region_name_len;                 // timezone name length

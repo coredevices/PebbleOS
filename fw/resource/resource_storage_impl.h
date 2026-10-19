@@ -21,9 +21,6 @@
 //
 //  Each ResTableEntry contains metadata about resources, and an offset in the
 //  raw resource data blob.
-//
-//  More info at:
-//  https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+Resource+Pack+Format
 
 //! Actually baked into the flash storage format.
 //! Do not change this without changing the associated tooling!

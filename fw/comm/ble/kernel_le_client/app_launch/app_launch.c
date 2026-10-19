@@ -9,8 +9,6 @@
 
 #include <comm/ble/gatt_client_operations.h>
 
-//! See https://pebbletechnology.atlassian.net/wiki/display/DEV/Pebble+GATT+Services
-
 // -------------------------------------------------------------------------------------------------
 // Static variables
 

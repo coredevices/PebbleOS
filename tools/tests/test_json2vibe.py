@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-# See pebbletechnology.atlassian.net/wiki/display/DEV/Project%3A+Vibe+Pattern+Format
 import json
 import os
 import struct

@@ -1,8 +1,6 @@
 {
   "_notes": [ "You need to increase the revision for each change of this file AND",
-              "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h",
-              "You should also make sure you are obeying our API design guidelines:",
-              "https://pebbletechnology.atlassian.net/wiki/display/DEV/SDK+API+Design+Guidelines"
+              "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
   "revision" : "109",
   "version" : "2.0",
