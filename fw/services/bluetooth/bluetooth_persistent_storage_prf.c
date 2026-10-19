@@ -82,7 +82,7 @@ pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
     if (sm_is_pairing_info_equal_identity(new_pairing_info, &existing_pairing_info)) {
       // Treat re-pairing an existing device as an "update" instead of deletion+addition,
       // because there is only one bonding ID that gets re-used, a deletion would otherwise cause a
-      // disconnection to happen. See PBL-24737.
+      // disconnection to happen.
       PBL_LOG_INFO("Re-pairing previously paired LE device");
       is_updating_existing = true;
     } else {

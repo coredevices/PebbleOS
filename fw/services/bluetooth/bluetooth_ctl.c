@@ -100,7 +100,6 @@ static void prv_comm_start(void) {
 #endif
   } else {
     PBL_LOG_ERR("BT driver failed to start!");
-    // FIXME: PBL-36163 -- handle this better
   }
 }
 

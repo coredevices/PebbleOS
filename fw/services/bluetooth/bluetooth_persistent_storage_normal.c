@@ -257,7 +257,7 @@ cleanup:
 
 //! Get the next available BondingID
 //! This function re-uses bonding ids as they are freed. This could be a problem with 3rd party
-//! apps. https://pebbletechnology.atlassian.net/browse/PBL-8391
+//! apps.
 static pbl_bt_bonding_id_t prv_get_free_key() {
   pbl_bt_bonding_id_t free_key = PBL_BT_BONDING_ID_INVALID;
 
@@ -730,7 +730,6 @@ pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
     // for the pairing that we want to reconnect/connect to. If this isn't set then
     // we don't register an intent for the device and thus don't connect.
     // Currently only 1 ble pairing is really supported so this works for now
-    // FIXME: https://pebbletechnology.atlassian.net/browse/PBL-15277
     .ble_data.supports_ancs = is_gateway,
     .ble_data.requires_address_pinning = requires_address_pinning,
   };

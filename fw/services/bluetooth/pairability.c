@@ -49,10 +49,8 @@ static void evaluate_pairing_refcount(void *data) {
 }
 
 static void prv_schedule_evaluation(void) {
-  // We used to sparingly schedule the evaluation and had a bug because of this:
-  // https://pebbletechnology.atlassian.net/browse/PBL-22884
-  // Because this pretty much only happens in response to user input, don't bother limiting this,
-  // and always evaluate, even though the state might not have changed:
+  // Always evaluate, even if the state might not have changed: this pretty much only happens in
+  // response to user input, and skipping evaluations has caused bugs before.
   system_task_add_callback(evaluate_pairing_refcount, nullptr);
 }
 

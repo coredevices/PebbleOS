@@ -161,7 +161,6 @@ void test_bluetooth_persistent_storage_prf__ble_store_and_get(void) {
   // Re-pair device 1 again:
   // In case the device is the same as the existing pairing, make sure the operation is "change"
   // and not "delete"  to avoid disconnecting just because the existing pairing is deleted.
-  // For bug details see https://pebbletechnology.atlassian.net/browse/PBL-24690
   prv_reset_change_op_tracking();
   id_1 = bt_persistent_storage_store_ble_pairing(&pairing_1, true /* is_gateway */, nullptr,
                                                  false /* requires_address_pinning */,
