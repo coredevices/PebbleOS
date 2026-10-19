@@ -45,16 +45,22 @@ set(graphics_templated_tests
   test_graphics_draw_stroke_precise
 )
 
-foreach(test ${graphics_templated_tests})
-  configure_file(${test}.template.c ${CMAKE_CURRENT_BINARY_DIR}/${test}_${BIT_DEPTH_NAME}.c)
-  pbl_clar_test(${test}_${BIT_DEPTH_NAME}
-    SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${test}_${BIT_DEPTH_NAME}.c
-    SOURCES ${graphics_sources}
-    PLATFORMS obelix
-    INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
-    TEST_IMAGES
-  )
+foreach(depth_platform 8bit:obelix 1bit:asterix)
+  string(REPLACE ":" ";" depth_platform ${depth_platform})
+  list(GET depth_platform 0 BIT_DEPTH_NAME)
+  list(GET depth_platform 1 platform)
+  foreach(test ${graphics_templated_tests})
+    configure_file(${test}.template.c ${CMAKE_CURRENT_BINARY_DIR}/${test}_${BIT_DEPTH_NAME}.c)
+    pbl_clar_test(${test}_${BIT_DEPTH_NAME}
+      SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${test}_${BIT_DEPTH_NAME}.c
+      SOURCES ${graphics_sources}
+      PLATFORMS ${platform}
+      INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}
+      TEST_IMAGES
+    )
+  endforeach()
 endforeach()
+set(BIT_DEPTH_NAME 8bit)
 
 set(graphics_draw_text_sources
   fw/applib/graphics/8_bit/framebuffer.c

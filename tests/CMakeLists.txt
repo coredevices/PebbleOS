@@ -170,6 +170,8 @@ set_tests_properties(pbl_test_failed_dir PROPERTIES FIXTURES_SETUP pbl_test_fail
 pbl_test_broken(
   test_graphics_draw_circle_8bit
   test_graphics_fill_circle_8bit
+  test_graphics_draw_circle_1bit
+  test_graphics_fill_circle_1bit
   test_graphics_draw_line
   test_graphics_draw_rotated_bitmap
   # Crash (round-display segfault) and build (rect/round, platform)
