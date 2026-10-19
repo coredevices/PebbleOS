@@ -4,7 +4,6 @@
 #include <errno.h>
 
 #include <pbl/drivers/accel.h>
-#include <pbl/drivers/exti.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
@@ -573,7 +572,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   }
 }
 
-static void prv_lsm6dso_int1_irq_handler(void) {
+static void prv_lsm6dso_int1_irq_handler(void *arg) {
   // A rising edge proves the pad was low, i.e. the wake-up source deasserted
   s_dev->state->wu_active = false;
   // ... which also breaks any stuck-high streak the watchdog counted
@@ -798,6 +797,7 @@ static void prv_int1_wdt_cb(void *data) {
 
 static int prv_init(const struct pbl_accel *accel) {
   bool ret;
+  int err;
   uint8_t val;
 
   s_dev = container_of(accel, const struct pbl_lsm6dso, accel);
@@ -890,9 +890,29 @@ static int prv_init(const struct pbl_accel *accel) {
 
   s_dev->state->wk_ths_curr = CONFIG_ACCEL_LSM6DSO_WK_THS_DEFAULT;
 
-  // Enable INT1 external interrupt
-  exti_configure_pin(s_dev->int1, ExtiTrigger_Rising, prv_lsm6dso_int1_irq_handler);
-  exti_enable(s_dev->int1);
+  err = pbl_device_init(&s_dev->int1.intc->dev);
+  if (err != 0) {
+    PBL_LOG_ERR("INT1 interrupt controller unavailable");
+    return err;
+  }
+
+  err = pbl_gpio_configure(&s_dev->int1_in, PBL_GPIO_INPUT);
+  if (err != 0) {
+    PBL_LOG_ERR("Could not configure the INT1 input (%d)", err);
+    return err;
+  }
+
+  err = pbl_intc_request(&s_dev->int1, prv_lsm6dso_int1_irq_handler, nullptr);
+  if (err != 0) {
+    PBL_LOG_ERR("Could not request INT1 (%d)", err);
+    return err;
+  }
+
+  err = pbl_intc_enable(&s_dev->int1);
+  if (err != 0) {
+    PBL_LOG_ERR("Could not enable INT1 (%d)", err);
+    return err;
+  }
 
   s_dev->state->int1_wdt_timer.cb = prv_int1_wdt_cb;
 

@@ -294,7 +294,8 @@ PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c2, 0);
 #define MMC5603NJ_AXIS_DIR_Y (-1)
 #endif
 
-PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6a, .int1 = {.peripheral = hwp_gpio1, .gpio_pin = 38},
+PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6a,
+                   .int1 = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 38, PBL_IRQ_TYPE_EDGE_RISING),
                    .int1_in = PBL_GPIO(SF32LB_GPIO1, 38, 0),
                    .axis_map = {[AXIS_X] = 0, [AXIS_Y] = 1, [AXIS_Z] = 2},
                    .axis_dir = {[AXIS_X] = -1, [AXIS_Y] = LSM6DSO_AXIS_DIR_Y, [AXIS_Z] = 1});

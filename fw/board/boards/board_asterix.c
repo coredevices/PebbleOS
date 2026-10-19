@@ -122,10 +122,7 @@ static const struct pbl_i2c_dev I2C_SLAVE_DA7212 = PBL_I2C_DEV(&s_i2c_iic2.bus, 
 const struct pbl_i2c_dev *const I2C_DA7212 = &I2C_SLAVE_DA7212;
 
 PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c_iic2.bus, 0x6A,
-                   .int1 =
-                       {.peripheral = NRFX_GPIOTE_INSTANCE(0),
-                        .channel = 7,
-                        .gpio_pin = NRF_GPIO_PIN_MAP(1, 13)},
+                   .int1 = PBL_IRQ_SPEC(NRF5_GPIO_P1_INTC, 13, PBL_IRQ_TYPE_EDGE_RISING),
                    .int1_in = PBL_GPIO(NRF5_GPIO_P1, 13, 0),
                    .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
                    .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = 1, [AXIS_Z] = 1});
