@@ -20,8 +20,8 @@ typedef struct {
   const struct pbl_i2c_dev *i2c;
   /** I2C device in boot (firmware update) mode. */
   const struct pbl_i2c_dev *i2c_boot;
-  /** Interrupt line. */
-  ExtiConfig int_exti;
+  /** Interrupt input, pulsed low by the chip. */
+  struct pbl_gpio int_gpio;
   /** Reset line. */
   struct pbl_gpio reset;
   /** Maximum X coordinate. */

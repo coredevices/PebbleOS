@@ -320,12 +320,7 @@ static const struct pbl_i2c_dev s_i2c_cst816_boot = PBL_I2C_DEV(&s_i2c3.bus, 0x6
 static const TouchSensor touch_cst816 = {
   .i2c = &s_i2c_cst816,
   .i2c_boot = &s_i2c_cst816_boot,
-  .int_exti =
-      {
-        .peripheral = hwp_gpio1,
-        .gpio_pin = 27,
-        .pull = GPIO_PuPd_UP,
-      },
+  .int_gpio = PBL_GPIO(SF32LB_GPIO1, 27, PBL_GPIO_PULL_UP),
   .reset = PBL_GPIO(&s_npm1300_gpio.port, 2, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
 };
 
