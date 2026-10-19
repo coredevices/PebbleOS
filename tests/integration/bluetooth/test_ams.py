@@ -32,7 +32,10 @@ def _wait_music(prompt, timeout=10.0, **expected):
     deadline = time.monotonic() + timeout
     while True:
         state = _music_state(prompt)
-        if all(state.get(k) == v for k, v in expected.items()):
+        if all(
+            v(state.get(k)) if callable(v) else state.get(k) == v
+            for k, v in expected.items()
+        ):
             return state
         if time.monotonic() > deadline:
             raise AssertionError(f"music state {state}, expected {expected}")
@@ -43,10 +46,16 @@ def test_now_playing(prompt, iphone):
     """The watch shows what the phone's player plays."""
     iphone.ams.set_volume(0.65)
     iphone.ams.play("Itest Song", "Itest Artist", "Itest Album", 215.0, elapsed=42.0)
-    state = _wait_music(prompt, Server="AMS", Title="Itest Song", Volume="65")
+    state = _wait_music(
+        prompt,
+        Server="AMS",
+        Title="Itest Song",
+        Volume="65",
+        State=str(STATE_PLAYING),
+        Position=lambda p: p is not None and p.endswith("/215000"),
+    )
     assert state["Artist"] == "Itest Artist"
     assert state["Album"] == "Itest Album"
-    assert state["State"] == str(STATE_PLAYING)
     position, length = (int(v) for v in state["Position"].split("/"))
     assert length == 215000
     assert 42000 <= position < 215000
