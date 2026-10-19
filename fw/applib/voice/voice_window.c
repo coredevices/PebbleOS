@@ -7,6 +7,16 @@
 #include "transcription_dialog.h"
 #include "voice_window_private.h"
 
+#include <string.h>
+
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/fatal.h>
+#include <pbl/kernel/syscall.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/event_service.h>
+#include <pbl/services/voice/voice.h>
+#include <pbl/util/size.h>
+
 #include <applib/app_timer.h>
 #include <applib/applib_malloc.auto.h>
 #include <applib/event_service_client.h>
@@ -30,31 +40,11 @@
 #include <applib/ui/status_bar_layer.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window_stack.h>
-#if (0) // https://pebbletechnology.atlassian.net/browse/PBL-20406
-#include <applib/ui/vibes.h>
-#endif
-#include <string.h>
-
-#include <pbl/kernel/assert.h>
-#include <pbl/kernel/fatal.h>
-#include <pbl/kernel/syscall.h>
-#include <pbl/logging/logging.h>
-#include <pbl/services/event_service.h>
-#include <pbl/services/voice/voice.h>
-#include <pbl/util/size.h>
-
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
-
-// TODO:
-// mic hot before showing screen - needs robust beginning-of-speech detection -
-// https://pebbletechnology.atlassian.net/browse/PBL-16474 animated microphone icon -
-// https://pebbletechnology.atlassian.net/browse/PBL-16481 handle line wrapping -
-// https://pebbletechnology.atlassian.net/browse/PBL-16475 Brief vibration just before microphone is
-// turned on https://pebbletechnology.atlassian.net/browse/PBL-20406
 
 #define DICTATION_TIMEOUT        (15 * 1000) // 15s timeout for each dictation
 #define SPEECH_DETECTION_TIMEOUT (3 * 1000)
@@ -573,17 +563,6 @@ static void prv_cancel_dictation(VoiceUiData *data) {
 
 // Microphone Window
 ///////////////////////////////////////////////////////////////////////////
-
-#if (0) // https://pebbletechnology.atlassian.net/browse/PBL-20406
-static void prv_short_vibe(void) {
-  static const uint32_t VIBE_DURATIONS[] = {50};
-  VibePattern pattern = {
-    .durations = VIBE_DURATIONS,
-    .num_segments = ARRAY_LENGTH(VIBE_DURATIONS),
-  };
-  vibes_enqueue_custom_pattern(pattern);
-}
-#endif
 
 ///////////// CREATE DOT ANIMATIONS
 static void prv_dot_layer_update_proc(Layer *layer, GContext *ctx) {
@@ -1122,11 +1101,7 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
     // turning the mic on - dependent on separating the setup session and recording stages of
     // voice state machine
     case StateRecording:
-      // vibe briefly, enable clicking to end the transcription, unfold the mic from a dot
-      // and show text
-#if (0) // https://pebbletechnology.atlassian.net/browse/PBL-20406
-      prv_short_vibe();
-#endif
+      // enable clicking to end the transcription, unfold the mic from a dot and show text
       prv_enable_select_click(data);
       prv_stop_fly_dot(data);
       prv_hide_mic_dot(data);
