@@ -243,20 +243,18 @@ void test_text_resources__extended_font(void) {
 }
 
 void test_text_resources__test_emoji_font(void) {
-  const uint8_t phone_bytes[] = {0xfe, 0x81, 0x81, 0x3c, 0x66, 0x42,
-                                 0xc3, 0xe7, 0xff, 0x00, 0x00, 0x00};
-
   uint32_t gothic_18_emoji_handle = RESOURCE_ID_GOTHIC_18_EMOJI;
   cl_assert(text_resources_init_font(0, gothic_18_emoji_handle, 0, &s_font_info));
-
-  size_t glyph_size_bytes;
-  const GlyphData *glyph;
+  // Color glyph bodies aren't cached, so only the header can be checked
+  cl_assert(HAS_FEATURE(s_font_info.base.md.version, VERSION_FIELD_FEATURE_COLOR));
 
   const Codepoint PHONE_CODEPOINT = 0x260E;
-  glyph = text_resources_get_glyph(&s_font_cache, PHONE_CODEPOINT, &s_font_info, nullptr);
+  const GlyphData *glyph =
+      text_resources_get_glyph(&s_font_cache, PHONE_CODEPOINT, &s_font_info, nullptr);
   cl_assert(glyph != nullptr);
-  glyph_size_bytes = glyph_get_size_bytes(glyph);
-  cl_assert_equal_m(phone_bytes, glyph->data, glyph_size_bytes);
+  cl_assert_equal_i(glyph->header.width_px, 8);
+  cl_assert_equal_i(glyph->header.height_px, 9);
+  cl_assert_equal_i(glyph->header.horiz_advance, 10);
 }
 
 void DISABLED_test_text_resources__test_emoji_fallback(void) {
