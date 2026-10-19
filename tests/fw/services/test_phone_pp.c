@@ -179,8 +179,8 @@ void test_phone_pp__get_phone_call_state_response_disabled(void) {
   cl_assert_equal_i(e.type, PEBBLE_NULL_EVENT);
 }
 
-// PBL-34640 Make sure we don't put an incoming call event to a state response - the incoming call
-// state is only used for iOS 8 devices now and just causes trouble
+// Make sure we don't put an incoming call event to a state response - the incoming call state is
+// only used for iOS 8 devices now and just causes trouble
 void test_phone_pp__get_phone_call_state_response_incoming(void) {
   pp_get_phone_state_set_enabled(true);
   uint8_t pp_msg[] = {0x83, 0x07, 0x04, 0x1a, 0xd4, 0x77, 0x08, 0x00, 0x00};

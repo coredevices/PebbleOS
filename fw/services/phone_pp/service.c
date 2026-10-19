@@ -145,9 +145,7 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length, PebbleEve
 
   switch (msg_type) {
     case PhoneCmdIncoming: {
-      // PBL-34640 Generating incoming call events for phone state responses just gives us a bad
-      // time. We can look at changing this later if iOS ever starts sending us cookies properly,
-      // but it's not really worth the effort since it only applies to iOS 8
+      // Incoming call events from phone state responses only apply to iOS 8 and cause trouble
       if (is_state_response) {
         return false;
       }
