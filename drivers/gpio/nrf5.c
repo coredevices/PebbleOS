@@ -4,70 +4,88 @@
 #include <errno.h>
 
 #include <pbl/drivers/gpio/nrf5.h>
+#include <pbl/kernel/mmio.h>
 
-static uint32_t prv_pin(const struct pbl_gpio_port *port, uint8_t pin) {
-  return NRF_GPIO_PIN_MAP(container_of(port, const struct pbl_gpio_nrf5, port)->index, pin);
+#include <hardware/nrf52_gpio.h>
+
+#define P0_NUM_PINS 32U
+#define P1_NUM_PINS 16U
+
+static const struct pbl_gpio_nrf5 *prv_port(const struct pbl_gpio_port *port) {
+  return container_of(port, const struct pbl_gpio_nrf5, port);
 }
 
-static nrf_gpio_pin_pull_t prv_pull(uint32_t flags) {
-  if (flags & PBL_GPIO_PULL_UP) {
-    return NRF_GPIO_PIN_PULLUP;
-  }
+static inline void prv_putreg(const struct pbl_gpio_nrf5 *gpio, uint32_t offset, uint32_t value) {
+  pbl_writel(value, gpio->base + offset);
+}
 
-  if (flags & PBL_GPIO_PULL_DOWN) {
-    return NRF_GPIO_PIN_PULLDOWN;
-  }
-
-  return NRF_GPIO_PIN_NOPULL;
+static inline uint32_t prv_getreg(const struct pbl_gpio_nrf5 *gpio, uint32_t offset) {
+  return pbl_readl(gpio->base + offset);
 }
 
 static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
-  uint32_t abs_pin = prv_pin(port, pin);
+  const struct pbl_gpio_nrf5 *gpio = prv_port(port);
+  uint32_t cnf;
 
-  if (flags & PBL_GPIO_OUTPUT) {
-    if (flags & PBL_GPIO_OUTPUT_INIT_HIGH) {
-      nrf_gpio_pin_set(abs_pin);
-    } else if (flags & PBL_GPIO_OUTPUT_INIT_LOW) {
-      nrf_gpio_pin_clear(abs_pin);
-    }
-
-    nrf_gpio_cfg(abs_pin, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, prv_pull(flags),
-                 (flags & PBL_GPIO_OPEN_DRAIN) ? NRF_GPIO_PIN_S0D1 : NRF_GPIO_PIN_S0S1,
-                 NRF_GPIO_PIN_NOSENSE);
-  } else if (flags & PBL_GPIO_INPUT) {
-    nrf_gpio_cfg_input(abs_pin, prv_pull(flags));
-  } else {
+  if ((flags & (PBL_GPIO_INPUT | PBL_GPIO_OUTPUT)) == 0U) {
     return -EINVAL;
   }
+
+  if ((flags & PBL_GPIO_PULL_UP) != 0U) {
+    cnf = PBL_FIELD_PREP(GPIO_PIN_CNF_PULL_MASK, GPIO_PIN_CNF_PULL_UP);
+  } else if ((flags & PBL_GPIO_PULL_DOWN) != 0U) {
+    cnf = PBL_FIELD_PREP(GPIO_PIN_CNF_PULL_MASK, GPIO_PIN_CNF_PULL_DOWN);
+  } else {
+    cnf = PBL_FIELD_PREP(GPIO_PIN_CNF_PULL_MASK, GPIO_PIN_CNF_PULL_DISABLED);
+  }
+
+  if ((flags & PBL_GPIO_OUTPUT) != 0U) {
+    if ((flags & PBL_GPIO_OUTPUT_INIT_HIGH) != 0U) {
+      prv_putreg(gpio, NRF52_GPIO_OUTSET_OFFSET, PBL_BIT(pin));
+    } else if ((flags & PBL_GPIO_OUTPUT_INIT_LOW) != 0U) {
+      prv_putreg(gpio, NRF52_GPIO_OUTCLR_OFFSET, PBL_BIT(pin));
+    }
+
+    cnf |= GPIO_PIN_CNF_DIR_OUTPUT;
+    cnf |= PBL_FIELD_PREP(GPIO_PIN_CNF_DRIVE_MASK, ((flags & PBL_GPIO_OPEN_DRAIN) != 0U)
+                                                       ? GPIO_PIN_CNF_DRIVE_S0D1
+                                                       : GPIO_PIN_CNF_DRIVE_S0S1);
+  }
+
+  if ((flags & PBL_GPIO_INPUT) == 0U) {
+    cnf |= GPIO_PIN_CNF_INPUT_DISCONNECT;
+  }
+
+  prv_putreg(gpio, NRF52_GPIO_PIN_CNF_OFFSET(pin), cnf);
 
   return 0;
 }
 
 static int prv_get(const struct pbl_gpio_port *port, uint8_t pin) {
-  return nrf_gpio_pin_read(prv_pin(port, pin)) != 0U;
+  return (prv_getreg(prv_port(port), NRF52_GPIO_IN_OFFSET) & PBL_BIT(pin)) != 0U;
 }
 
 static int prv_set(const struct pbl_gpio_port *port, uint8_t pin, bool level) {
-  nrf_gpio_pin_write(prv_pin(port, pin), level);
+  prv_putreg(prv_port(port), level ? NRF52_GPIO_OUTSET_OFFSET : NRF52_GPIO_OUTCLR_OFFSET,
+             PBL_BIT(pin));
 
   return 0;
 }
 
-static const struct pbl_gpio_port_ops s_ops = {
+static const struct pbl_gpio_port_ops s_port_ops = {
   .configure = prv_configure,
   .get = prv_get,
   .set = prv_set,
 };
 
-#define GPIO_NRF5_DEFINE(sym, _name, _index, _num_pins)                                   \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                           \
-  const struct pbl_gpio_nrf5 sym = {                                                      \
-    .port = PBL_GPIO_PORT_INIT(sym, _name, nullptr, nullptr, &s_ops, _num_pins, nullptr), \
-    .index = (_index),                                                                    \
-  };                                                                                      \
+#define GPIO_NRF5_DEFINE(sym, _name, _index, _base, _num_pins)                                 \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                \
+  const struct pbl_gpio_nrf5 sym = {                                                           \
+    .port = PBL_GPIO_PORT_INIT(sym, _name, nullptr, nullptr, &s_port_ops, _num_pins, nullptr), \
+    .base = (_base),                                                                           \
+    .index = (_index),                                                                         \
+  };                                                                                           \
   PBL_DEVICE_REGISTER(sym, &sym.port.dev)
 
-GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p0, "gpio_p0", 0, P0_PIN_NUM);
-#ifdef NRF_P1
-GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p1, "gpio_p1", 1, P1_PIN_NUM);
-#endif
+GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p0, "gpio_p0", 0, NRF52_P0_BASE, P0_NUM_PINS);
+GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p1, "gpio_p1", 1, NRF52_P1_BASE, P1_NUM_PINS);
