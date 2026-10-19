@@ -29,20 +29,6 @@ typedef struct SystemThemeOptionMenuStyle {
   int16_t right_text_inset_with_icon;
 } SystemThemeOptionMenuStyle;
 
-// Fonts fixed at the platform's default content size, whatever size the user prefers
-
-//! Subtitle of a timeline pin's details
-#define SYSTEM_THEME_FONT_KEY_CARD_SUBTITLE FONT_KEY_GOTHIC_24_BOLD
-//! Label that marks a calendar pin as a recurring event
-#define SYSTEM_THEME_FONT_KEY_CALENDAR_RECURRING                                  \
-  PREFERRED_CONTENT_SIZE_SWITCH(                                                  \
-      PreferredContentSizeDefault,                                                \
-      /* small */ PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD),  \
-      /* medium */ PBL_IF_RECT_ELSE(FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD), \
-      /* large */ FONT_KEY_GOTHIC_18_BOLD, /* extralarge */ FONT_KEY_GOTHIC_18_BOLD)
-//! Subtitle of the timeline peek shown over the watchface
-#define SYSTEM_THEME_FONT_KEY_PEEK_SUBTITLE FONT_KEY_GOTHIC_18
-
 //! Smallest launcher cell heights of any content size, bounding how many rows can be visible
 #if PBL_RECT
 #define SYSTEM_THEME_LAUNCHER_MIN_CELL_HEIGHT (42)

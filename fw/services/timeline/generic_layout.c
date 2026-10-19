@@ -11,7 +11,6 @@
 #include <applib/ui/ui.h>
 #include <font_resource_keys.auto.h>
 #include <kernel/pbl_malloc.h>
-#include <shell/system_theme_style.h>
 
 //////////////////////////////////////////
 //  Card Mode
@@ -92,7 +91,8 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextAttributeConfig s_subtitle_config = {
     .attr_id = AttributeIdSubtitle,
-    .text.font_key = SYSTEM_THEME_FONT_KEY_CARD_SUBTITLE,
+    .text.style = LayoutContentSize_Auto,
+    .text.style_font = TextStyleFont_CardSubtitle,
     .text.line_spacing_delta = CARD_LINE_DELTA,
     .text.extent.margin.h = 10, // subtitle margin height
   };

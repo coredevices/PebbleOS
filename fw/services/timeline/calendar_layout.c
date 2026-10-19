@@ -18,7 +18,6 @@
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <shell/system_theme_style.h>
 
 //////////////////////////////////////////
 //  Card Mode
@@ -383,7 +382,8 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
     .str = i18n_noop("Recurring"),
     .use_i18n = true,
-    .text.font_key = SYSTEM_THEME_FONT_KEY_CALENDAR_RECURRING,
+    .text.style = LayoutContentSize_Auto,
+    .text.style_font = TextStyleFont_RecurringLabel,
     .text.extent.offset.y = PBL_IF_RECT_ELSE(4, 1), // recurring offset y
     .text.extent.margin.h = PBL_IF_RECT_ELSE(4, 1), // recurring margin height
   };

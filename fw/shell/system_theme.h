@@ -53,6 +53,12 @@ typedef enum TextStyleFont {
   //! Paragraph Header is for text that describes the content of a body paragraph. The size is
   //! smaller than both Body and Header.
   TextStyleFont_ParagraphHeader,
+  //! Card Subtitle is for the subtitle of a timeline pin's details. It is smaller than the title.
+  TextStyleFont_CardSubtitle,
+  //! Recurring Label marks a calendar pin as a recurring event. It is comparable to the caption.
+  TextStyleFont_RecurringLabel,
+  //! Peek Subtitle is for the subtitle of the timeline peek, below its fixed size title.
+  TextStyleFont_PeekSubtitle,
 
   TextStyleFontCount
 } TextStyleFont;
