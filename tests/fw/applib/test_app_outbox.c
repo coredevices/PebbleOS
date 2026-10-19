@@ -112,7 +112,7 @@ void test_app_outbox__register_twice_asserts(void) {
 }
 
 void test_app_outbox__send_not_user_space_buffer(void) {
-  // TODO: really implement privilege escalation in unit tests. See PBL-9688
+  // TODO: implement privilege escalation in unit tests
   return;
   cl_assert_panic(app_outbox_send(nullptr, s_test_data_length, test_app_outbox_sent_handler,
                                   s_expected_cb_ctx));
