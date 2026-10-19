@@ -140,10 +140,6 @@ def check_dict_log_strings(log_dict):
         output.insert(
             0, "NewLogging String Error{}:".format("s" if len(output) > 1 else "")
         )
-        output.append(
-            "See https://pebbletechnology.atlassian.net/wiki/display/DEV/New+Logging "
-            "for help"
-        )
 
     return "\n".join(output)
 

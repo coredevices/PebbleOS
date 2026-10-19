@@ -12,67 +12,11 @@ import zipfile
 
 import logdehash
 import newlogging
-import requests
 
 logger = logging.getLogger(__name__)
 
 DICT_FIRMWARE = "build/fw/loghash_dict.json"
 DICT_PRF = "build/prf/fw/loghash_dict.json"
-
-BUILD_ID_STR = "BUILD ID: "
-HASH_STR_LEN = 40
-
-
-SETTINGS = {
-    # Hagen Daas stuff:
-    "files": "https://files.pebblecorp.com/dict/",
-    # Go to https://auth.pebblecorp.com/show to get this value:
-    "hd_session": None,
-}
-
-
-class AuthException(Exception):
-    pass
-
-
-def load_user_settings():
-    settings_path = "~/.triage"
-    try:
-        with open(os.path.expanduser(settings_path), "rb") as settings_file:
-            user_settings = json.load(settings_file)
-    except OSError as e:
-        if e.errno == 2:
-            logger.error(
-                """Please create %s with credentials: """
-                """'{ "user": "$USER", "password": "$PASSWORD" }'""",
-                settings_path,
-            )
-        return
-    SETTINGS.update(user_settings)
-
-    if not SETTINGS["hd_session"]:
-        msg = (
-            "Missing 'hd_session' token in user settings.\n"
-            "1. Get the cookie from https://auth.pebblecorp.com/show\n"
-            f"2. Add as value with key 'hd_session' to {settings_path}"
-        )
-        logger.error(msg)
-        sys.exit(-1)
-
-
-def get_loghash_dict_from_hagen_daas_files(hash):
-    load_user_settings()
-
-    url = SETTINGS["files"] + hash
-    r = requests.get(url, headers={"Cookie": "hd_session={}".format(SETTINGS["hd_session"])})
-    if r.status_code > 400:
-        r.raise_for_status()
-    if "accounts.google.com" in r.url:
-        raise AuthException(
-            "Not authenticated, see instructions at the top of {}".format("https://pebbletechnology.atlassian.net/wiki/"
-            "display/DEV/Quickly+triaging+JIRA+FW+issues+with+pbldebug")
-        )
-    return r.text
 
 
 class Log:
@@ -102,8 +46,7 @@ def main():
         epilog="""
 Description:
     dehash.py is a script that tries to dehash whatever log is provided, however
-    it is provided. 'Files' on Hagen-Daas will be consulted if a loghash
-    dictionary isn't specified.
+    it is provided.
 
 Input File(s):
     Can be the log to dehash and/or log hash dictionaries to decode the log.
@@ -192,38 +135,6 @@ Examples:
         sys.stdout.write(dhl.strip())
         sys.stdout.write("\r\n")
         sys.stdout.flush()
-
-        # If we have a dictionary, continue
-        if loghash_dict:
-            continue
-
-        # No dictionary -- see if we can load one
-        index = dhl.upper().rfind(BUILD_ID_STR)
-        if index == -1:
-            continue
-
-        build_id = dhl[
-            index + len(BUILD_ID_STR) : (index + len(BUILD_ID_STR) + HASH_STR_LEN)
-        ]
-
-        try:
-            logger.debug("Loading dictionary from Hagen-Daas for ID %s", build_id)
-            d = get_loghash_dict_from_hagen_daas_files(build_id)
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-            AuthException,
-        ) as error:
-            sys.stderr.write(
-                f"Could not get build id {build_id} from files. {error}\r\n"
-            )
-            continue
-
-        if d:
-            loghash_dict = json.loads(d)
-            dehash.load_log_strings_from_dict(loghash_dict)
-        else:
-            sys.stderr.write(f"Could not get build id {build_id} from files.\r\n")
 
     if infile is not sys.stdin:
         infile.close()
