@@ -29,7 +29,6 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/util/segment.h>
 #include <kernel/util/task_init.h>
-#include <popups/health_tracking_ui.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_run_state.h>
@@ -413,10 +412,6 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
     uuid_to_string(&app_md->uuid, s_watchface_uuid);
     pbl_mutex_unlock(&s_watchface_metrics_mutex);
   }
-#endif
-
-#if !defined(CONFIG_RECOVERY_FW)
-  health_tracking_ui_register_app_launch(s_app_task_context.install_id);
 #endif
 
   return true;

@@ -3,7 +3,7 @@
 
 //! Weather system app — the rich ported UI, fed by the weather BlobDB.
 //!
-//! The animated forecast (PAGE_LIST) is the home/base window of the carousel
+//! The animated forecast is the home/base window of the carousel
 //! ring: forecast -> clock -> globe -> forecast. The forecast renders the active
 //! location's days from the BlobDB; the clock face and globe are pushed on top of
 //! it and dismissed back to it. City switching is wired from the forecast list
@@ -416,19 +416,8 @@ static void prv_refresh(WeatherAppData *data) {
 
 // ---- Navigation ----
 
-// Page identities. The animated forecast (PAGE_LIST) is the persistent base window; at most one of
-// {clock, globe, expanded card} sits on top of it, reached via buttons. s_page is a simple tag the
-// button handlers keep updated (the swipe carousel that once read it has been removed). PAGE_MAIN,
-// the old scrub screen, is gone; its enum value is retained only to keep the numbering stable.
-typedef enum {
-  PAGE_MAIN = 0,
-  PAGE_LIST,
-  PAGE_CLOCK,
-  PAGE_GLOBE,
-  PAGE_EXPANDED,
-  PAGE_COUNT
-} WeatherCarouselPage;
-static WeatherCarouselPage s_page = PAGE_LIST;
+// The animated forecast is the persistent base window; at most one of {clock, globe, expanded
+// card} sits on top of it, reached via buttons.
 
 // ---- Sub-view transitions ----
 
@@ -495,7 +484,6 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
 // today's hourly weather. The list resets itself to the resting forecast beneath.
 static void prv_on_clock_burst_requested(void *ctx) {
   WeatherAppData *data = (WeatherAppData *)ctx;
-  s_page = PAGE_CLOCK;
   prv_push_clock(data, false); // static_push=false -> clock_face_push (spiral intro), no slide
 }
 
@@ -514,7 +502,6 @@ static void prv_on_list_up_to_expanded(void *ctx) {
   // landing). Reveal the static card; don't replay the text slide.
   if (expanded_view_is_showing())
     return;
-  s_page = PAGE_EXPANDED;
   prv_push_expanded(data, ExpandedViewEntranceStatic);
 }
 
@@ -525,7 +512,6 @@ static void prv_expanded_select_to_globe(void *ctx) {
   // now-hidden card underneath (its white slide-out already covered the base — no flash).
   if (!data->globe_view) {
     expanded_view_dismiss(false);
-    s_page = PAGE_LIST;
     return;
   }
   if (data->current_lat_e2 != INT16_MIN && data->current_lon_e2 != INT16_MIN) {
@@ -534,7 +520,6 @@ static void prv_expanded_select_to_globe(void *ctx) {
   }
   // Open hovering the ACTIVE location's pin — the city last selected to look at.
   globe_view_focus_coords(data->globe_view, data->latitude_e2, data->longitude_e2);
-  s_page = PAGE_GLOBE;
   globe_view_push_slide_in_right(data->globe_view);
   expanded_view_dismiss(false); // remove the card, now hidden beneath the globe
 }
@@ -546,7 +531,6 @@ static void prv_expanded_down_to_main(void *ctx) {
   // un-animated so the fly IS the transition (no competing compositor slide).
   forecast_list_arm_return_fly();
   expanded_view_dismiss(false);
-  s_page = PAGE_LIST;
 }
 
 static void prv_report_after_exit(void *ctx) {
@@ -624,7 +608,6 @@ static void prv_globe_back_to_expanded(void *ctx) {
   if (clock_face_is_showing()) {
     clock_face_dismiss(false);
   }
-  s_page = PAGE_EXPANDED;
   prv_push_expanded(data, ExpandedViewEntranceCardFromLeft);
 }
 
@@ -649,7 +632,6 @@ static void prv_globe_location_selected(int ds_index, bool force, void *ctx) {
   // this callback returns (commit_hovered_location() → globe_view_pop() pops the
   // top window); its self-pop lands on the forecast base — the mainscreen.
   prv_select_ds_location((WeatherAppData *)ctx, ds_index);
-  s_page = PAGE_LIST;
 }
 
 // ---- Saved-locations list ----
@@ -666,7 +648,6 @@ static void prv_on_saved_location_selected(int ds_index, void *ctx) {
   }
   expanded_view_dismiss(false);
   clock_face_dismiss(false);
-  s_page = PAGE_LIST;
 }
 
 static void prv_open_saved_locations(void *ctx) {
@@ -694,12 +675,7 @@ static void prv_on_clock_wrap_to_main(void *ctx) {
   if (clock_face_is_showing()) {
     clock_face_dismiss(false);
   }
-  s_page = PAGE_LIST;
 }
-
-// The swipe-driven carousel ring (weather_carousel_navigate + prv_carousel_show + s_ring) was
-// removed: screens are now reached only via buttons. s_page remains as a simple page-identity tag
-// the button handlers keep updated (ready for gesture nav to be re-added against the new layout).
 
 static void prv_handle_weather(PebbleEvent *event, void *context) {
   prv_refresh(s_data);
@@ -707,7 +683,7 @@ static void prv_handle_weather(PebbleEvent *event, void *context) {
 
 static PBL_NOINLINE void prv_init(void) {
   // System-app statics survive across launches and a crashed run never reaches
-  // unload — clear every module's launch-persistent state first (like s_page).
+  // unload — clear every module's launch-persistent state first.
   clock_face_reset();
   expanded_view_reset();
   weather_report_reset();
@@ -725,8 +701,6 @@ static PBL_NOINLINE void prv_init(void) {
   // as they did on the v4.18 base.
   app_touch_navigation_enable(false);
 #endif
-  // The animated forecast is the carousel base window; start the ring there.
-  s_page = PAGE_LIST;
   // zalloc leaves coords at 0 — a VALID lat/lon (0°,0°). Unknown must be INT16_MIN so the
   // "have GPS coords?" gates don't pass before prv_refresh reads the current-location record.
   data->current_lat_e2 = INT16_MIN;

@@ -102,8 +102,6 @@ static const char SYSTEM_CAPABILITIES_KEY[] = "SYSTEM_CAPABILITIES";
 //! This key is used to access the BLE address that can be used for address pinning.
 static const char BLE_PINNED_ADDRESS_KEY[] = "BLE_PINNED_ADDRESS";
 
-static uint8_t s_bt_persistent_storage_updates = 0;
-
 static PBL_MUTEX_DEFINE(s_db_mutex);
 
 //! Cache of the last connected system session capabilities. Updated in flash when we get new flags
@@ -217,7 +215,6 @@ static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, con
       }
 
       if (do_perform_update) {
-        s_bt_persistent_storage_updates++;
         PBL_LOG_DBG("Updating GAP bonding record");
         rv = settings_file_set(&fd, key, key_len, (uint8_t *)data_in, data_len);
       }

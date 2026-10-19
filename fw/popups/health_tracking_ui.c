@@ -18,8 +18,6 @@ typedef struct HealthTrackingUIData {
   bool show_action_bar;
 } HealthTrackingUIData;
 
-static AppInstallId s_last_app_id;
-
 // ---------------------------------------------------------------------------
 static WindowStack *prv_get_window_stack(void) {
   return modal_manager_get_window_stack(ModalPriorityAlert);
@@ -77,9 +75,4 @@ void health_tracking_ui_feature_show_disabled(void) {
       " mobile app to continue.");
 
   health_tracking_ui_show_message(RESOURCE_ID_GENERIC_WARNING_TINY, msg, false);
-}
-
-// ---------------------------------------------------------------------------
-void health_tracking_ui_register_app_launch(AppInstallId app_id) {
-  s_last_app_id = 0;
 }
