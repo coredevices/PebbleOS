@@ -43,10 +43,7 @@ typedef struct NotificationWindowData {
   ActionMenu *action_menu;
 
   // Icon in status bar if in DND.
-  // This should really be part of the status bar but support hasn't been
-  // implemented yet. This also won't work well with round displays.
-  // Remove this once the status bar layer supports icons
-  // PBL-22859
+  // TODO: move into StatusBarLayer once it supports icons
   Layer dnd_icon_layer;
   GBitmap dnd_icon;
   bool dnd_icon_visible;
