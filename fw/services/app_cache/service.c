@@ -31,7 +31,7 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 //! application.
 //!
 //! A priority can also be calculated for each entry. It is calculated by a simple last used
-//! algorithm (TODO Improve: PBL-13209) which will help determine which application
+//! algorithm which will help determine which application
 //! needs to be evicted in order to free up more space for other application binaries.
 //!
 //! When an entry is added into the app cache, it means the binaries now reside on the watch. On
@@ -362,10 +362,8 @@ static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_li
   }
 }
 
-// The bug addressed in PBL-34010 caused resource files to remain in the filesystem even
-// after the associated application had been deleted.  This function attempts to find such
-// orphaned files and remove them.  Note: further to the bug in PBL-34010, this function will
-// remove any resource files that are not related to apps currently in the cache.
+// Remove any resource files that are not related to apps currently in the cache, e.g. left
+// behind after the associated application had been deleted.
 static void prv_purge_orphaned_resource_files(void) {
   // create a list of all app resource files in the filesystem
   PFSFileListEntry *resource_files = pfs_create_file_list(is_app_resource_file_name);
