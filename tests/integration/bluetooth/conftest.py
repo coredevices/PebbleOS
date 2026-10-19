@@ -4,6 +4,7 @@
 import pytest
 from harness.connections import Capability
 from harness.helpers.pairing import WatchPairing
+from harness.helpers.phone import IOS
 
 
 @pytest.fixture
@@ -32,4 +33,16 @@ def only_phone(dut, phone):
     and the harness's own (e.g. PULSE on the emulator) can be that one."""
     if dut.has(Capability.PROTOCOL):
         pytest.skip("the harness's own protocol session competes with the phone")
+    return phone
+
+
+@pytest.fixture
+def iphone(watch, phones):
+    """An iPhone paired and connected to the watch, which subscribed to its
+    notifications (ANCS) and registered for its media player's updates
+    (AMS)."""
+    phone = phones(os=IOS).connect()
+    watch.close_success()
+    phone.ancs.wait_subscribed()
+    phone.ams.wait_registered()
     return phone

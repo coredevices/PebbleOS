@@ -213,7 +213,8 @@ def power(ppk2, dut, test_results_dir):
 def phones(dut, lab_setup, test_results_dir):
     """Make phones: ``phones()`` is the setup's phone. A Bumble phone can
     also be another phone to the watch (``address``, ``name``) and host the
-    PPoGATT service itself (``ppogatt="forward"``). They start each test with
+    PPoGATT service itself (``ppogatt="forward"``). They run Android, or iOS
+    with ANCS and AMS (``os="ios"``). They start each test with
     no bonds, which they keep for the rest of it."""
     from harness.helpers.phone import forget_bonds, make_phone
 

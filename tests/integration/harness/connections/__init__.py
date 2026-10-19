@@ -117,6 +117,7 @@ class Connection(ABC):
 # settings sync, whose write-backs it would leave unanswered and the watch
 # retry for minutes.
 PHONE_OS_UNKNOWN = 0
+PHONE_OS_IOS = 1
 PHONE_OS_ANDROID = 2
 SETTINGS_SYNC_SUPPORT = 1 << 23
 PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~SETTINGS_SYNC_SUPPORT

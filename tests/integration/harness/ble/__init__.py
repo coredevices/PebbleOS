@@ -106,7 +106,9 @@ class BleLink:
     is :data:`REVERSED` or :data:`FORWARD`. ``mtu`` is the ATT MTU asked for,
     ``accept_parameters`` whether the watch's connection parameter updates
     are granted (they are declined by default), and ``forward_meta`` the
-    value of the phone's PPoGATT meta characteristic."""
+    value of the phone's PPoGATT meta characteristic. ``services`` are more
+    services of the phone's GATT server (e.g. :mod:`harness.ble.apple`'s),
+    each bound to the link."""
 
     def __init__(
         self,
@@ -121,6 +123,7 @@ class BleLink:
         accept_parameters=False,
         forward_meta=PPOG_FORWARD_META,
         snoop=None,
+        services=(),
     ):
         if ppogatt not in (REVERSED, FORWARD):
             raise HarnessError(f"no PPoGATT mode {ppogatt!r}")
@@ -142,6 +145,9 @@ class BleLink:
         self.mtu = mtu
         self.accept_parameters = accept_parameters
         self.forward_meta = forward_meta
+        self.services = list(services)
+        for service in self.services:
+            service.bind(self)
         #: Where to write the HCI traffic as btsnoop logs, one per power-on;
         #: ``{instance}`` numbers them.
         self.snoop = snoop
@@ -251,6 +257,8 @@ class BleLink:
         self._record_parameter_requests(device)
         if self.ppogatt == FORWARD:
             device.add_service(self._forward_service())
+        for service in self.services:
+            device.add_service(service.service())
         await device.power_on()
         self._device = device
 
@@ -579,6 +587,8 @@ class BleLink:
         logger.info("BLE: disconnected (reason %#x)", reason)
         self._disconnected.set()
         self._connection = None
+        for service in self.services:
+            service.disconnected()
         if self._ticker is not None:
             self._ticker.cancel()
             self._ticker = None
@@ -612,6 +622,30 @@ class BleLink:
             and self._ppog is not None
             and self._ppog.is_open
         )
+
+    # --- the phone's GATT server -------------------------------------------
+
+    @property
+    def is_linked(self):
+        """Whether there is a link to the watch, session or not."""
+        return self._loop is not None and self._connection is not None
+
+    @property
+    def att_payload(self):
+        """The most a notification carries on the link."""
+        return self._connection.att_mtu - 3
+
+    def call_soon(self, coro_fn, *args):
+        """Run ``coro_fn(*args)`` on the link's loop, without waiting."""
+        self._loop.call_soon_threadsafe(lambda: asyncio.ensure_future(coro_fn(*args)))
+
+    async def notify(self, characteristic, value):
+        """Notify the watch of a characteristic of the phone's GATT server,
+        if it subscribed."""
+        if self._connection is not None:
+            await self._device.notify_subscriber(
+                self._connection, characteristic, value
+            )
 
     # --- inspection ---------------------------------------------------------
 

@@ -211,6 +211,22 @@ payloads. `harness.helpers.blobdb` writes blob DB records and timeline
 items as the phone app does. The `bluetooth/test_*_endpoints.py` tests
 cover the Pebble protocol endpoints the watch serves the phone this way.
 
+A Bumble phone runs Android by default. `phones(os="ios")` makes it an
+iPhone instead: its app tells the watch it runs on iOS, and its GATT
+server hosts the Apple Notification Center Service (`phone.ancs`), the
+Apple Media Service (`phone.ams`) and Device Information, all from
+`harness.ble.apple`. `ancs.post()` posts a notification, which
+`modify()` and `remove()` change or withdraw, and `ancs.requests` keeps
+the Control Point commands the watch wrote, notification actions among
+them (`wait_action()`). `ams.play()`, `set_playback()`, `set_volume()`
+and `set_queue()` drive the media player, and `ams.commands` keeps the
+remote commands the watch sends. While a phone is connected, the
+harness's own Pebble protocol sessions say they run on no known OS, or the
+watch would treat them as an Android app's and give them what is the
+phone's (e.g. the music).
+The `iphone` fixture of `bluetooth/` is an iPhone the watch subscribed to;
+`bluetooth/test_ancs.py` and `bluetooth/test_ams.py` use it.
+
 ### Results
 
 Everything a run produces goes to `BUILD/itest` (or `--results-dir`):
