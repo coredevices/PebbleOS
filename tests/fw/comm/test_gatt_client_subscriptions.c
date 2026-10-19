@@ -416,8 +416,7 @@ void test_gatt_client_subscriptions__cccd_write_confirmation_but_no_subscription
   s_last_cccd_ref = 1;
   prv_confirm_cccd_write(PBL_BT_GATT_ERROR_SUCCESS);
 
-  // This used to cause a crash:
-  // https://pebbletechnology.atlassian.net/browse/PBL-23455
+  // This used to cause a crash
 }
 
 void test_gatt_client_subscriptions__notification(void) {

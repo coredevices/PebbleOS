@@ -686,7 +686,6 @@ void test_ppogatt__server_reset_request_while_pending_ack(void) {
   fake_gatt_client_op_assert_no_write();
 
   // In the past we had a bug here where the pending ACK would get sent out.
-  // See https://pebbletechnology.atlassian.net/browse/PBL-24651
 }
 
 void test_ppogatt__ignore_invalid_packet_type(void) {
@@ -1078,7 +1077,7 @@ void test_ppogatt__mtu_zero_due_to_disconnection(void) {
   // No crash
 }
 
-//! When client ID info got added to the Reset Packet (PBL-14099), a potential buffer overrun
+//! When client ID info got added to the Reset Packet, a potential buffer overrun
 //! situation got introduced accidentally. This test is a white-box test to catch this issue.
 //! For the Reset Packet, a buffer needs to be allocated. The size of this buffer is based upon
 //! the MTU of the connection. It's possible the lookup fails and returns 0. In this case, the
@@ -1097,7 +1096,6 @@ void test_ppogatt__mtu_zero_due_to_service_rediscovery_while_resetting(void) {
   // During service re-discovery the cached characteristic handles will be stale for a brief period.
   // This will cause the gatt_client_characteristic_get_device to return
   // PBL_BT_DEVICE_INTERNAL_INVALID and eventually gap_le_connection_get_gatt_mtu call to return 0.
-  // See PBL-22038.
   s_mtu_size = 0;
 
   // Simulate getting the subscription confirmation, this will normally trigger PPoGATT to try to

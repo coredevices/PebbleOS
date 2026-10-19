@@ -515,7 +515,7 @@ static void prv_handle_update(const AMSEntityUpdateNotification *update,
           return;
         case AMSTrackAttributeIDTitle:
           prv_handle_track_title_update(update, value_length);
-          // FIXME: This is a workaround. See PBL-21818
+          // New track: reset the position until the next playback info update.
           music_update_track_position(0);
           return;
         case AMSTrackAttributeIDDuration:

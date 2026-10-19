@@ -339,8 +339,6 @@ void test_kernel_le_client__service_added(void) {
   kernel_free(info);
 }
 
-// FIXME: PBL-27751: Improve test coverage of kernel_le_client.c
-
 void test_kernel_le_client__deleting_last_bonding_stops_reconnecting(void) {
   s_has_gateway_bonding = false;
   kernel_le_client_handle_bonding_change(1, BtPersistBondingOpWillDelete);

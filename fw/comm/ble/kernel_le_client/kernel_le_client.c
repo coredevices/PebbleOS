@@ -291,8 +291,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
   uint8_t *buffer = nullptr;
 
   if (value_length) {
-    // This is ugly and causes double-copying the data...
-    // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
+    // TODO: avoid double-copying the data
     buffer = (uint8_t *)kernel_malloc(value_length);
     if (PBL_UNLIKELY(!buffer)) {
       PBL_LOG_ERR("OOM for GATT read response - %d bytes", (int)value_length);
@@ -325,8 +324,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
       return; // yield
     }
 
-    // This is ugly and causes double-copying the data...
-    // TODO: https://pebbletechnology.atlassian.net/browse/PBL-14164
+    // TODO: avoid double-copying the data
     uint8_t *buffer = (uint8_t *)kernel_malloc(header.value_length);
     if (PBL_UNLIKELY(header.value_length && !buffer)) {
       PBL_LOG_ERR("OOM for GATT notification");
@@ -410,13 +408,8 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
               event->connected, event->bonding_id);
 
   const bool connected = event->connected;
-  // FIXME: When PPoGATT is supported add a check for active gateway
-  // https://pebbletechnology.atlassian.net/browse/PBL-15277
-  //
-  // For now, we just assume that the Kernel LE client is _always_ bonded for
-  // ANCS. Note that we cannot use bt_persistent_storage calls in this routine because
-  // we could be getting this call as a result of a disconnect due to
-  // forgetting a pairing key
+  // Assume the Kernel LE client is always bonded for ANCS. bt_persistent_storage can't be used
+  // here: this may run as a result of a disconnect due to forgetting a pairing key.
 
   const struct pbl_bt_device_internal device = PebbleEventToBTDeviceInternal(event);
   if (connected) {

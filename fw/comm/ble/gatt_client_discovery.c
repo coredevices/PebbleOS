@@ -308,8 +308,7 @@ static void prv_remove_current_discovery_job(GAPLEConnection *connection) {
 
   // Handle the case where we are have received service change indication
   // messages for the same range in quick succession and have multiple jobs
-  // scheduled as a result. This shouldn't be a frequent occurrence but see
-  // PBL-24741 as an example
+  // scheduled as a result.
 
   DiscoveryJobQueue *new_job = connection->discovery_jobs;
   if (!new_job) {
