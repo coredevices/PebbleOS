@@ -696,6 +696,12 @@ static void prv_get_pin_view_bounds(TimelineLayout *layout, GRect *box_out) {
   } else if (layout->layout_layer.mode == LayoutLayerModePinnedFat) {
     box_out->size.h -= PBL_IF_ROUND_ELSE(30, 20);
 #if PBL_ROUND
+    // Round pins keep the display's height, so make room for a time header larger than default
+    const int time_growth_h =
+        fonts_get_font_height(system_theme_get_font(TextStyleFont_TimeHeaderNumbers)) -
+        fonts_get_font_height(
+            system_theme_get_font_for_default_size(TextStyleFont_TimeHeaderNumbers));
+    box_out->size.h += MAX(time_growth_h, 0);
     // The title's glyph center is anchored to the icon, including during scrolling.
     GRect icon_frame, layout_frame;
     layer_get_global_frame(&layout->icon_layer.layer, &icon_frame);

@@ -28,8 +28,8 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_Title] = FONT_KEY_GOTHIC_18_BOLD,
               [TextStyleFont_Body] = FONT_KEY_GOTHIC_18,
-#endif
               [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_18_BOLD,
+#endif
               [TextStyleFont_Caption] = FONT_KEY_GOTHIC_14,
               [TextStyleFont_Footer] = FONT_KEY_GOTHIC_14,
               //! @note this is the same as the Title key (as that's what it's cloned from) until
@@ -88,8 +88,8 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_Title] = FONT_KEY_GOTHIC_24_BOLD,
               [TextStyleFont_Body] = FONT_KEY_GOTHIC_24_BOLD,
-#endif
               [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_24_BOLD,
+#endif
               [TextStyleFont_Caption] = FONT_KEY_GOTHIC_14,
               [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
@@ -139,8 +139,8 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_Title] = FONT_KEY_GOTHIC_28_BOLD,
               [TextStyleFont_Body] = FONT_KEY_GOTHIC_28,
-#endif
               [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
+#endif
               [TextStyleFont_Caption] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
@@ -198,22 +198,18 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #if !defined(CONFIG_RECOVERY_FW)
           [TextStyleFont_Title] = FONT_KEY_GOTHIC_36_BOLD,
           [TextStyleFont_Body] = FONT_KEY_GOTHIC_36,
+          [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_36,
 #endif
-          //! @note this is the same as Large until ExtraLarge is designed
-          [TextStyleFont_Subtitle] = FONT_KEY_GOTHIC_28,
           [TextStyleFont_Caption] = FONT_KEY_GOTHIC_24,
           [TextStyleFont_Footer] = FONT_KEY_GOTHIC_24,
           [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_28_BOLD,
           [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_28,
 #if !defined(CONFIG_RECOVERY_FW)
-          //! @note this is the same as Large until ExtraLarge is designed
-          [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
+          [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_32_BOLD_NUMBERS,
 #endif
-          //! @note this is the same as Large until ExtraLarge is designed
-          [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_18_BOLD,
-          //! @note this is the same as Large until ExtraLarge is designed
-          [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_24,
-          [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_18_BOLD,
+          [TextStyleFont_TimeHeaderWords] = FONT_KEY_GOTHIC_24_BOLD,
+          [TextStyleFont_PinSubtitle] = FONT_KEY_GOTHIC_28,
+          [TextStyleFont_ParagraphHeader] = FONT_KEY_GOTHIC_24_BOLD,
         },
     .menu_cell =
         {
