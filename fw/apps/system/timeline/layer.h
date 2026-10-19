@@ -64,8 +64,6 @@ typedef struct {
   KinoLayer end_of_timeline;
   PeekLayer day_separator;
   time_t current_day;
-  // TODO: PBL-22076 Remove Timeline Layer move_delta
-  // It is not good to keep too much questionably long lived state in views
   int move_delta;
   Animation *animation;
   RelationshipBarLayer relbar_layer;

@@ -14,7 +14,6 @@
 
 // This demo app tests that MPU reconfiguration whilst context switching preserves the coherency of
 // the data cache across between privileged and unprivileged tasks.
-// See PBL-38343 for details
 
 typedef struct {
   Window window;

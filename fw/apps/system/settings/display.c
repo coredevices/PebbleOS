@@ -135,9 +135,6 @@ static uint8_t prv_get_scaled_brightness(void) {
 
 static int prv_intensity_get_selection_index() {
   const uint8_t intensity = prv_get_scaled_brightness();
-
-  // FIXME: PBL-22272 ... We will return idx 0 if someone has an old value for
-  // one of the intensity options
   for (int i = 0; i < (int)ARRAY_LENGTH(s_intensity_values); i++) {
     if (s_intensity_values[i] == intensity) {
       return i;

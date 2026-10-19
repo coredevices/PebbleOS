@@ -99,7 +99,6 @@ static void prv_update_glance_for_next_alarm(LauncherAppGlanceAlarms *alarms_gla
   } else {
     // If the next alarm is smart, use the smart alarm icon
     if (alarm_is_next_enabled_alarm_smart()) {
-      // TODO PBL-39113: Replace this placeholder with a better smart alarm icon for the glance
       new_icon_resource_id = RESOURCE_ID_SMART_ALARM_TINY;
     }
 

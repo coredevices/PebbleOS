@@ -54,7 +54,6 @@ static void prv_draw_background_circle(Layer *layer, GContext *ctx) {
 
 static void prv_draw_spinner_circles(Layer *layer, GContext *ctx) {
   // Drawing the circles with aa is just too slow and we end up backing up the rest of the system.
-  // See PBL-16184
   graphics_context_set_antialiased(ctx, false);
 
   SpinnerUIData *data = window_get_user_data(layer_get_window(layer));
@@ -91,7 +90,7 @@ static void prv_anim_impl(struct Animation *animation,
   // We need to artificially limit how frequent we attempt to update the screen. If we update
   // it too fast the thing we wanted to do in the background never gets done. This isn't quite
   // ideal, as around 60 steps is when things are actually smooth, but 60 is too fast and does
-  // restrict the speed of our core dump. See PBL-16184
+  // restrict the speed of our core dump.
   const uint32_t steps_per_loop = 25;
   const int32_t min_delta = (ANIMATION_NORMALIZED_MAX / LOOPS_PER_ANIMATION) / steps_per_loop;
   if (data->cur_distance_normalized + min_delta < distance_normalized) {

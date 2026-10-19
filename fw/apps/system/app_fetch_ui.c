@@ -118,14 +118,13 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
     case AppFetchResultNoData:
       icon = TIMELINE_RESOURCE_CHECK_INTERNET_CONNECTION;
 #if PBL_ROUND
-      // TODO PBL-28730: Fix peek layer so it does its own line wrapping
+      // TODO: peek layer should do its own line wrapping
       message = i18n_get("No internet\nconnection", data);
 #else
       message = i18n_get("No internet connection", data);
 #endif
       break;
     case AppFetchResultIncompatibleJSFailure:
-      // TODO: PBL-39752 make this a more expressive error message with a call to action
       icon = TIMELINE_RESOURCE_GENERIC_WARNING;
       message = i18n_get("Incompatible JS", data);
       break;

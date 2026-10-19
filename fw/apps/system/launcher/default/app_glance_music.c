@@ -80,7 +80,6 @@ static void prv_set_glance_icon(LauncherAppGlanceMusic *music_glance,
   kino_reel_destroy(music_glance->icon);
 
   // Set the new icon and record its resource ID
-  // TODO PBL-38539: Switch from using a regular resource ID to using a TimelineResourceId
   music_glance->icon = kino_reel_create_with_resource(new_icon_resource_id);
   PBL_ASSERTN(music_glance->icon);
   music_glance->icon_resource_id = new_icon_resource_id;

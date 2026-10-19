@@ -210,7 +210,6 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
       // If BT Settings is open, update BLE device name upon connecting device:
       if (event->bluetooth.connection.is_ble &&
           event->bluetooth.connection.state == PebbleBluetoothConnectionEventStateConnected) {
-        // https://pebbletechnology.atlassian.net/browse/PBL-22176
         // iOS seems to respond with 0x0E (Unlikely Error) when performing this request while
         // the encryption set up is going on. For non-bonded devices it will work fine though.
         gap_le_device_name_request(&event->bluetooth.connection.device);

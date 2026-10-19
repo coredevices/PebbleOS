@@ -33,7 +33,6 @@ static void prv_set_sleep_session(char *buffer, size_t buffer_size, int32_t slee
   // We don't have a sleep session if either start or end time is not greater than 0.
   // Sometimes if there's no sleep, sleep session rendered as "16:00 - 16:00" so for a quick
   // fix, we assume there's no sleep if the start and end times are the same.
-  // https://pebbletechnology.atlassian.net/browse/PBL-40031
   if (sleep_start <= 0 || sleep_end <= 0 || sleep_start == sleep_end) {
     strncpy(buffer, EN_DASH, buffer_size);
     return;

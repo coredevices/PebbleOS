@@ -74,8 +74,7 @@ static const TimelineLayerStyle s_style_medium = {
   .right_margin = MARGIN_MEDIUM,
   .icon_right_margin = MARGIN_MEDIUM,
   .fat_pin_height = 110,
-  // PBL-42540: This property is dependent on the screen size. The thin pin height is the
-  // remainder of the screen space after the fat pin.
+  // Remainder of the screen space after the fat pin
   .thin_pin_height = PBL_IF_RECT_ELSE(66, 43),
   .day_sep_dot_diameter = 9,
   .day_sep_offset.x = PBL_IF_ROUND_ELSE(12, 0),
@@ -99,7 +98,6 @@ static const TimelineLayerStyle s_style_large = {
   .icon_offset_y = 3,
   .icon_right_margin = PBL_IF_RECT_ELSE(6, 12),
   .fat_pin_height = 131,
-  // PBL-42540: This property is dependent on the screen size.
   .thin_pin_height = 88,
   .day_sep_dot_diameter = 12,
   .day_sep_offset.y = -21,
@@ -459,7 +457,6 @@ static void prv_day_sep_anim_stopped(Animation *anim, bool finished, void *conte
   }
 }
 
-// TODO: PBL-21717 Day separator on Spalding
 Animation *timeline_layer_create_day_sep_show(TimelineLayer *timeline_layer) {
   GRect *from = &((Layer *)&timeline_layer->day_separator)->frame;
   GRect to;
@@ -500,7 +497,6 @@ static Animation *prv_create_up_down_animation(TimelineLayer *layer, uint32_t du
     }
   }
 
-// TODO: PBL-21982: Only support rectangular screen for now
 #if PBL_RECT
   Animation *relbar_animation =
       timeline_relbar_layer_create_animation(layer, duration, interpolate);
@@ -778,7 +774,7 @@ void timeline_layer_reset(TimelineLayer *layer) {
   prv_destroy_nonvisible_items(layer);
   timeline_layer_set_layouts_hidden(layer, false);
 
-  // PBL-18815: Reset the current day in case the pin was deleted. This should later be animated.
+  // Reset the current day in case the pin was deleted
   const int index = TIMELINE_LAYER_FIRST_VISIBLE_LAYOUT;
   if (layer->layouts[index]) {
     layer->current_day = layer->layouts[index]->info->current_day;
@@ -788,7 +784,6 @@ void timeline_layer_reset(TimelineLayer *layer) {
   prv_place_day_separator(layer);
   prv_place_end_of_timeline(layer);
 
-// TODO: PBL-21982: Only support rectangular screen for now
 #if PBL_RECT
   timeline_relbar_layer_reset(layer);
 #endif
@@ -951,7 +946,6 @@ void timeline_layer_init(TimelineLayer *layer, const GRect *frame_ref,
   layer_add_child((Layer *)layer, (Layer *)&layer->day_separator);
 
   // end-of-timeline indicator
-  // TODO: PBL-21716 Fin icon layout on Spalding
   prv_get_end_of_timeline_frame(layer, 3, &frame);
   kino_layer_init(&layer->end_of_timeline, &frame);
   kino_layer_set_reel_with_resource(&layer->end_of_timeline, RESOURCE_ID_END_OF_TIMELINE);
@@ -961,7 +955,6 @@ void timeline_layer_init(TimelineLayer *layer, const GRect *frame_ref,
   // populate the timeline with items
   timeline_layer_reset(layer);
 
-// TODO: PBL-21982: Only support rectangular screen for now
 #if PBL_RECT
   // Initialize Relationship bar
   timeline_relbar_layer_init(layer);
@@ -978,7 +971,6 @@ void timeline_layer_deinit(TimelineLayer *layer) {
   peek_layer_deinit(&layer->day_separator);
   kino_layer_deinit(&layer->end_of_timeline);
 
-// TODO: PBL-21982: Only support rectangular screen for now
 #if PBL_RECT
   timeline_relbar_layer_deinit(layer);
 #endif

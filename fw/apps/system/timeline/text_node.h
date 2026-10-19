@@ -5,8 +5,6 @@
 
 #include <applib/graphics/text.h>
 
-// TODO: PBL-22261 Rename GTextNode et. al. with a proper Prefix, e.g. TimelineTextNode
-
 //! GTextNode implements a stacking layout primarily for displaying complex compositions of text.
 //!
 //! TextNode supports sequential stacking with its horizontal and vertical containers. The

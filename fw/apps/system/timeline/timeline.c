@@ -917,7 +917,6 @@ PBL_T_STATIC void prv_setup_no_events_peek(TimelineAppData *data) {
 
 static void prv_setup_first_pin_peek(TimelineAppData *data) {
   TimelineIterState *state = timeline_model_get_current_state();
-  // TODO: PBL-22075 Refactor Timeline Model
   // timeline_model_get_current_state explicitly tries to return NULL when supposedly empty,
   // but this does not seem to actually happen
   if (!state) {

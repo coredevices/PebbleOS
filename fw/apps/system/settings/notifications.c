@@ -81,7 +81,6 @@ static void prv_filter_menu_push(SettingsNotificationsData *data) {
   AlertMask mask = alerts_get_mask();
   size_t cycle_len = ARRAY_LENGTH(s_alert_mode_values);
   size_t index = 0;
-  // TODO PBL-24306: update once AlertMask logic is made safer
   for (size_t i = 0; i < cycle_len; i++) {
     if (s_alert_mode_values[i] == mask) {
       index = i;

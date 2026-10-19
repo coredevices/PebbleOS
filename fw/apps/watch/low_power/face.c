@@ -94,7 +94,7 @@ static void init(void) {
   kino_layer_set_reel_with_resource(&s_low_power_data->low_power_kino_layer,
                                     RESOURCE_ID_BATTERY_NEEDS_CHARGING);
   kino_layer_set_alignment(&s_low_power_data->low_power_kino_layer, GAlignBottom);
-  // TODO PBL-30180: Design needs to revise icon so it doesn't have a rounded cap at the bottom
+  // Hide the icon's rounded bottom cap
   s_low_power_data->low_power_kino_layer.layer.frame.origin.y += 2;
   layer_add_child(&s_low_power_data->low_power_window.layer,
                   &s_low_power_data->low_power_kino_layer.layer);

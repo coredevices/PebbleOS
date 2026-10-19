@@ -503,7 +503,7 @@ static void prv_update_hrm_bpm(KickstartData *data) {
 static void prv_normalize_data(KickstartData *data) {
   // If the user's daily avg steps are very low (QA or a brand new pebble user), bump the value
   // to a slightly more reasonable number.
-  // This fixes an integer rounding problem when the value is very small (PBL-43717)
+  // This fixes an integer rounding problem when the value is very small
   const int min_daily_steps_avg = 100;
   data->daily_steps_avg = MAX(data->daily_steps_avg, min_daily_steps_avg);
 
