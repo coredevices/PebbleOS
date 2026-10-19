@@ -53,6 +53,7 @@ config ORIENTATION_MANAGER
 
 config MODDABLE_XS
     bool "Moddable XS JavaScript engine"
+    depends on USERSPACE
     help
       Build Moddable XS support for running JavaScript apps. PRF
       variant builds force this off regardless of the board default.
