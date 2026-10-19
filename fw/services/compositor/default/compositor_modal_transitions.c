@@ -167,9 +167,6 @@ const CompositorTransition *prv_modal_transition_get_rect(bool modal_is_destinat
   // NOTE: This initialization will set .expanding to false so we default to contracting to a dot
   s_data = (CompositorModalTransitionData){
     .modal_is_destination = modal_is_destination,
-    // TODO: PBL-19849
-    // Decide on the logistics of the background color of the modal pop animation, including
-    // providing a setter for it that apps can use
     .outer_color = GColorLightGray,
   };
 

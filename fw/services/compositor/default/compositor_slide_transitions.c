@@ -13,10 +13,6 @@
 #include <apps/system/timeline/common.h>
 #include <popups/timeline/peek.h>
 
-// TODO: PBL-31388 Factor out vertical compositor slide animations
-// This does a similar transition to the legacy modal slide transition
-// With a few tweaks, this compositor animation can drive both
-
 typedef struct {
   int16_t offset_y;
   bool slide_up;
