@@ -525,8 +525,6 @@ void *layer_get_data(const Layer *layer) {
   return ((DataLayer *)layer)->data;
 }
 
-// TODO: PBL-25368 cover the following "convert coordinates to screen space" functions with tests
-
 GPoint layer_convert_point_to_screen(const Layer *layer, GPoint point) {
   while (layer) {
     // don't consider window's root layer's frame/bounds

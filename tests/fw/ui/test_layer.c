@@ -5,7 +5,9 @@
 
 #include <applib/ui/layer.h>
 #include <applib/ui/layer_private.h>
+#include <applib/ui/window.h>
 #include <clar.h>
+#include <pebble_asserts.h>
 
 // Stubs
 ////////////////////////////////////
@@ -421,4 +423,51 @@ void test_layer__find_layer_contains_point_override_layer_contains_point(void) {
 
   // outside the bounds of child a, so child b is not found
   cl_assert_equal_p(layer_find_layer_containing_point(&parent, &GPoint(15, 15)), &parent);
+}
+
+void test_layer__convert_point_to_screen(void) {
+  Layer parent, child, grandchild;
+  layer_init(&parent, &GRect(10, 20, 100, 100));
+  layer_init(&child, &GRect(5, 6, 50, 50));
+  layer_init(&grandchild, &GRect(1, 2, 10, 10));
+  layer_add_child(&parent, &child);
+  layer_add_child(&child, &grandchild);
+
+  cl_assert_equal_gpoint(layer_convert_point_to_screen(&parent, GPointZero), GPoint(10, 20));
+  cl_assert_equal_gpoint(layer_convert_point_to_screen(&grandchild, GPoint(3, 4)),
+                         GPoint(10 + 5 + 1 + 3, 20 + 6 + 2 + 4));
+
+  // Bounds origins (e.g. scrolling) shift the children
+  layer_set_bounds(&child, &GRect(-7, -8, 50, 50));
+  cl_assert_equal_gpoint(layer_convert_point_to_screen(&grandchild, GPointZero),
+                         GPoint(10 + 5 - 7 + 1, 20 + 6 - 8 + 2));
+
+  cl_assert_equal_gpoint(layer_convert_point_to_screen(nullptr, GPoint(3, 4)), GPoint(3, 4));
+}
+
+void test_layer__convert_point_to_screen_stops_at_window_root(void) {
+  Window window = {};
+  layer_init(&window.layer, &GRect(30, 40, 100, 100));
+  window.layer.window = &window;
+  Layer child;
+  layer_init(&child, &GRect(5, 6, 50, 50));
+  layer_add_child(&window.layer, &child);
+
+  // The window's root layer frame and bounds are not taken into account
+  cl_assert_equal_gpoint(layer_convert_point_to_screen(&window.layer, GPoint(1, 2)), GPoint(1, 2));
+  cl_assert_equal_gpoint(layer_convert_point_to_screen(&child, GPoint(1, 2)), GPoint(6, 8));
+}
+
+void test_layer__convert_rect_to_screen(void) {
+  Layer parent, child;
+  layer_init(&parent, &GRect(10, 20, 100, 100));
+  layer_init(&child, &GRect(5, 6, 50, 50));
+  layer_add_child(&parent, &child);
+
+  cl_assert_equal_grect(layer_convert_rect_to_screen(&child, GRect(1, 2, 3, 4)),
+                        GRect(16, 28, 3, 4));
+
+  GRect global_frame;
+  layer_get_global_frame(&child, &global_frame);
+  cl_assert_equal_grect(global_frame, GRect(15, 26, 50, 50));
 }
