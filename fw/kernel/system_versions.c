@@ -124,7 +124,6 @@ static void prv_send_watch_versions(CommSession *session) {
   versions_msg.capabilities.activity_insights_support = 1;
   versions_msg.capabilities.voice_api_support = 1;
   versions_msg.capabilities.unread_coredump_support = 1;
-  // FIXME: PBL-31627 In PRF, APP_ID_SEND_TEXT isn't defined - requiring the #ifdef and ternary op.
 #ifdef APP_ID_SEND_TEXT
   versions_msg.capabilities.send_text_support = (APP_ID_SEND_TEXT != INSTALL_ID_INVALID) ? 1 : 0;
 #endif

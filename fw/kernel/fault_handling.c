@@ -230,9 +230,7 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
 // The hardware fault handlers; a native build gets signals instead.
 #ifndef CONFIG_ARCH_POSIX
 // These variables are assigned values when the watch faults
-// TODO PBL-PBL-36253: We should probably save these in CrashInfo in the future. Saved here because
-// they are easier to pull out through GDB and because we can keep the Bluetooth FW and Normal FW
-// fault handling the way they are now.
+// Saved here rather than in CrashInfo because they are easy to pull out through GDB.
 static uint32_t s_fault_saved_sp;
 static uint32_t s_fault_saved_lr;
 static uint32_t s_fault_saved_pc;
