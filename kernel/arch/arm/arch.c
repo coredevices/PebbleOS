@@ -1,7 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#ifdef CONFIG_USERSPACE
 #include "arm_syscall.h"
+#endif
 
 #include <stddef.h>
 #include <string.h>
@@ -127,7 +129,11 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   uintptr_t top = ((uintptr_t)t->stack + t->stack_size) & ~7u;
   struct saved_context *ctx = (struct saved_context *)(top - sizeof(struct saved_context));
   memset(ctx, 0, sizeof(*ctx));
+#ifdef CONFIG_USERSPACE
   ctx->control = t->privileged ? CONTROL_PRIVILEGED : CONTROL_UNPRIVILEGED;
+#else
+  ctx->control = CONTROL_PRIVILEGED;
+#endif
 #if HAS_PSPLIM
   ctx->psplim = (uint32_t)t->stack;
 #endif
@@ -289,6 +295,7 @@ PBL_NAKED static void prv_restore_first_thread(void) {
 
 // ---- supervisor calls -------------------------------------------------------
 
+#ifdef CONFIG_USERSPACE
 static uintptr_t prv_original_sp(const uint32_t *frame, uint32_t exc_return) {
   uintptr_t sp = (uintptr_t)frame + 8 * sizeof(uint32_t);
   if (prv_fp_active(exc_return)) {
@@ -355,6 +362,7 @@ static void prv_raise_privilege(uint32_t *frame, uint32_t exc_return) {
   __set_CONTROL(__get_CONTROL() & ~CONTROL_nPRIV_Msk);
   __ISB();
 }
+#endif
 
 PBL_NOINLINE PBL_USED static void prv_svc(uint32_t *frame, uint32_t exc_return) {
   uint8_t number = ((uint8_t *)frame[6])[-2];
@@ -367,9 +375,11 @@ PBL_NOINLINE PBL_USED static void prv_svc(uint32_t *frame, uint32_t exc_return) 
     case SVC_YIELD:
       arch_switch_request();
       break;
+#ifdef CONFIG_USERSPACE
     case SVC_RAISE_PRIVILEGE:
       prv_raise_privilege(frame, exc_return);
       break;
+#endif
     default:
       break;
   }

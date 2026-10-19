@@ -79,7 +79,10 @@ struct pbl_thread_attr {
   void *arg;
   /** Priority, @ref PBL_PRIO_IDLE to @ref PBL_PRIO_MAX. */
   pbl_prio_t prio;
-  /** Run in privileged mode; unprivileged threads are confined by the MPU. */
+  /**
+   * Run in privileged mode; unprivileged threads are confined by the MPU. Without
+   * @c CONFIG_USERSPACE every thread runs privileged.
+   */
   bool privileged;
   /** Lowest address of the stack; the caller owns the memory. */
   void *stack;

@@ -66,9 +66,14 @@ config ARCH_HAS_USERSPACE
 	  from them.
 
 config USERSPACE
-	bool
+	bool "Unprivileged threads and syscalls"
 	default y
 	depends on ARCH_HAS_USERSPACE
+	help
+	  Let threads run unprivileged, confined by the MPU, and enter
+	  privileged code only through syscalls, which check every argument
+	  they are handed. Without it every thread runs privileged and
+	  syscalls are plain calls.
 
 config RAMFUNC
 	bool

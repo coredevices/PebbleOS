@@ -10,6 +10,7 @@ may use. The implementation is PebbleOS's own.
 :maxdepth: 1
 
 threads.md
+syscalls.md
 interrupts.md
 time.md
 boot.md
