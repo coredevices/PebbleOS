@@ -145,7 +145,6 @@ static uint8_t *prv_fill_native_ancs_action(uint8_t **buffer, TimelineItemAction
 
   // We want to rename the "Clear" action to "Dismiss"
   if (strcmp(action->attr_list.attributes[1].cstring, "Clear") == 0) {
-    // TODO: PBL-23915
     // We leak this i18n'd string because not leaking it is really hard.
     // We make sure we only ever allocate it once though, so it's not the end of the world.
     action->attr_list.attributes[1].cstring = (char *)i18n_get("Dismiss", __FILE__);
@@ -153,7 +152,6 @@ static uint8_t *prv_fill_native_ancs_action(uint8_t **buffer, TimelineItemAction
 
   // We want to rename the "Dial" action to "Call Back"
   if (strcmp(action->attr_list.attributes[1].cstring, "Dial") == 0) {
-    // TODO: PBL-23915
     // We leak this i18n'd string because not leaking it is really hard.
     // We make sure we only ever allocate it once though, so it's not the end of the world.
     action->attr_list.attributes[1].cstring = (char *)i18n_get("Call Back", __FILE__);
@@ -476,7 +474,7 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
                                             required_space_for_strings, &buffer);
 
   if (!item) {
-    // Out of memory - we do not panic on out of memory for notifications (PBL-10521)
+    // Don't panic on out of memory for notifications
     PBL_LOG_WRN("Ignoring ANCS notification (out of memory)");
     return nullptr;
   }

@@ -161,14 +161,14 @@ static bool prv_should_ignore_because_time_reminder(const ANCSAttribute *app_id,
 
 static bool prv_find_existing_notification(TimelineItem *notification,
                                            CommonTimelineItemHeader *existing_header_out) {
-  // PBL-9509: iOS' Calendar app uses the timestamp of the ANCS notification for the time of the
-  // event, not the time the notification was sent. If a calendar event has multiple notifications,
-  // for example, 15 mins before and 5 minutes before, ANCS will send 2x ANCS notifications.
-  // Because our dupe detection is based on the ANCS timestamp field, it filters out any calendar
-  // event reminder following the initial one. Therefore, skip dupe filtering for ANCS
-  // notifications from the calendar app.
-  // Also note that the 1st will be "removed" by ANCS as the 2nd gets sent out. Therefore, we do not
-  // need to do anything special to "clean up" any previous reminders for the same event.
+  // iOS' Calendar app uses the timestamp of the ANCS notification for the time of the event, not
+  // the time the notification was sent. If a calendar event has multiple notifications, for
+  // example, 15 mins before and 5 minutes before, ANCS will send 2x ANCS notifications. Because our
+  // dupe detection is based on the ANCS timestamp field, it filters out any calendar event reminder
+  // following the initial one. Therefore, skip dupe filtering for ANCS notifications from the
+  // calendar app. Also note that the 1st will be "removed" by ANCS as the 2nd gets sent out.
+  // Therefore, we do not need to do anything special to "clean up" any previous reminders for the
+  // same event.
   if (notification->header.layout == LayoutIdCalendar) {
     return false;
   }
@@ -187,7 +187,6 @@ static bool prv_should_ignore_because_apple_mail_dot_app_bug(const ANCSAttribute
                                                              const ANCSAttribute *message) {
   // Apple's Mail.app sometimes sends a notification with "Loading..." or
   // "This message has no content." when Mail.app is still fetching the body of the email.
-  // PBL-8407 / PBL-1090 / Apple bug report number: rdr://17851582
   // Obviously this only works around the issue when the language is set to English.
   if (!pbl_pstring16_equal_cstring(&app_id->pstr, IOS_MAIL_APP_ID)) {
     return false;
@@ -208,11 +207,8 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   static const time_t INVALID_TIME = ~0;
 
   const time_t now = rtc_get_time();
-  // workaround for PBL-8400 (ignore notifications older than 2 hours)
-  // PBL-9066: Increased to 20 minutes due to Mail.app only fetching emails every 15 minutes
-  // PBL-9251: Increased to 2 hours. People have Fetch set to hourly.
-  // PBL-12726: Added a check to see if the timstamp is coming from a location based reminder
-  // This work-around is causing more trouble than the problem it was solving...
+  // Ignore notifications older than 2 hours (Mail.app Fetch can be set to hourly). Location based
+  // reminders come with an invalid timestamp.
   if (timestamp < (now - MAXIMUM_NOTIFY_TIME) && timestamp != INVALID_TIME) {
     PBL_LOG_DBG("Not presenting stale notif (ts=%ld)", timestamp);
     return true;
@@ -314,8 +310,8 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
   }
 
   // If this is an incoming call, let the phone service handle it
-  // It would be nice to handle facetime calls with the phone service but it doesn't look like we
-  // can: https://pebbletechnology.atlassian.net/browse/PBL-16955
+  // It would be nice to handle FaceTime calls with the phone service but it doesn't look like we
+  // can.
   const bool is_notification_from_phone_app = ancs_notifications_util_is_phone(app_id);
   const bool has_incoming_call_property = (properties & ANCSProperty_IncomingCall);
   const bool has_missed_call_property = (properties & ANCSProperty_MissedCall);
