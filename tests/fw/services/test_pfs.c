@@ -930,8 +930,6 @@ static bool prv_file_exists(char *name) {
 
 extern void test_override_last_written_page(uint16_t start_page);
 extern void test_force_recalc_of_gc_region(void);
-// PBL-20973
-//
 // On boot, we scan pfs for the last page which was written. We then scan for a garbage collection
 // sector (requirement is that no files exist in the entire sector) & use the last page as a
 // starting point for where we will create initialize new files.

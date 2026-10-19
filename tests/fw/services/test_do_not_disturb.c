@@ -254,9 +254,10 @@ void test_do_not_disturb__is_active(void) {
 
   do_not_disturb_set_manually_enabled(false);
   cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
+  // Disabling manual DND overrides the active schedule; toggling it off and on clears that
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);
   cl_assert(do_not_disturb_is_active() == false);
-  do_not_disturb_toggle_scheduled(WeekdaySchedule); // see PBL-22011
+  do_not_disturb_toggle_scheduled(WeekdaySchedule);
   cl_assert(do_not_disturb_is_active() == true);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   cl_assert(do_not_disturb_is_schedule_enabled(WeekdaySchedule) == true);
