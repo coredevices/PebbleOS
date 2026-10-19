@@ -63,7 +63,6 @@ static bool prv_app_install_entry_from_app_db_entry(AppInstallId id, AppDBEntry 
 static AppInstallId s_pending_app_deletion;
 static AppInstallId s_pending_worker_deletion;
 
-// PBL-31769: This should be moved to send_text.c
 #if defined(APP_ID_SEND_TEXT)
 static EventServiceInfo s_capabilities_event_info;
 #endif
@@ -544,7 +543,6 @@ static int prv_cmp_recent_apps(void *a, void *b) {
   return !(app_a->id == app_b->id);
 }
 
-// PBL-31769: This should be moved to send_text.c
 #if defined(APP_ID_SEND_TEXT)
 static void prv_capabilities_changed_event_handler(PebbleEvent *event, void *context) {
   // We only care if send text support changed right now
@@ -564,7 +562,6 @@ void app_install_manager_init(void) {
                       NUM_RECENT_APPS, prv_cmp_recent_apps);
   pbl_mutex_init(&s_recent_apps.mutex);
 
-  // PBL-31769: This should be moved to send_text.c
 #if defined(APP_ID_SEND_TEXT)
   s_capabilities_event_info = (EventServiceInfo){
     .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
@@ -586,8 +583,6 @@ static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
   // Remove this from Recovery FW for code size savings.
 #if !defined(CONFIG_RECOVERY_FW)
 
-  // this is a temporary solution to enable custom colors for 3rd-party apps
-  // please replace this, once PBL-19673 landed
   typedef struct {
     Uuid uuid;
     uint8_t color_argb;
