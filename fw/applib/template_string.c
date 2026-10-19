@@ -116,13 +116,12 @@ PBL_T_STATIC intmax_t prv_template_predicate_time(TemplateStringState *state) {
     state->position = endpos;
     int multiplier = 1;
     switch (*state->position) {
-      // NOTE: This number of seconds is a hack! See PBL-39903
+      // Years and months are approximated as 365 and 30 days.
 #if SUPPORT_YEAR
       case 'y':
         multiplier = 365 * PBL_SEC_PER_DAY;
         break;
 #endif
-        // NOTE: This number of seconds is a hack! See PBL-39903
 #if SUPPORT_MONTH
       case 'm':
         multiplier = 30 * PBL_SEC_PER_DAY;
@@ -485,21 +484,19 @@ PBL_T_STATIC const char *prv_template_format_specifier(TemplateStringState *stat
   // conversion specifiers
   switch (*input) {
 #if SUPPORT_YEAR
+    // Years and months are approximated as 365 and 30 days.
     case 'y': // year
-      // NOTE: This number of seconds to divide by is a hack! See PBL-39903
       prv_do_conversion(state, value, 365 * PBL_SEC_PER_DAY, 100, s_year_strings, add_units,
                         zero_pad, modulus);
       break;
 #endif
 #if SUPPORT_MONTH
     case 'm': // month
-      // NOTE: This number of seconds to divide by is a hack! See PBL-39903
       prv_do_conversion(state, value, 30 * PBL_SEC_PER_DAY, 12, s_month_strings, add_units,
                         zero_pad, modulus);
       break;
 #endif
     case 'd': // day
-              // NOTE: This number of modulus is a hack! See PBL-39903
 #if SUPPORT_MONTH
       prv_do_conversion(state, value, PBL_SEC_PER_DAY, 30, s_day_strings, add_units, zero_pad,
                         modulus);

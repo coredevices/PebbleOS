@@ -4,11 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <applib/app_logging.h>
-
-// FIXME PBL-1629: move needed declarations into applib
 #include <pbl/logging/logging.h>
 
+#include <applib/app_logging.h>
 #include <syscall/syscall.h>
 
 void app_log_vargs(uint8_t log_level, const char *src_filename, int src_line_number,

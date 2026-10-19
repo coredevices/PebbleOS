@@ -144,7 +144,6 @@ void test_pbl_std__get_id(void) {
 }
 
 void test_pbl_std__verify_memcpy_handles_bogus_parameters(void) {
-  // See PBL-7873
   uint8_t from = 1;
   uint8_t to;
 

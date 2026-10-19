@@ -21,8 +21,7 @@
 //!
 //! @{
 
-// convenient macros to distinguish between health and no health.
-// TODO: PBL-21978 remove redundant comments as a workaround around for SDK generator
+// Docs are duplicated in both branches so that the SDK generator picks them up.
 #if defined(PBL_HEALTH)
 
 //! Convenience macro to switch between two expressions depending on health support.

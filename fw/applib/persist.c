@@ -104,7 +104,6 @@ PBL_SYSCALL(status_t, persist_write_int, (VAL, const uint32_t, key), (VAL, const
   return PASSED(result) ? (status_t)sizeof(value) : result;
 }
 
-// FIXME: PBL-23877 Disallow and document persist write data of length 0 edge case
 PBL_SYSCALL(int, persist_write_data, (VAL, const uint32_t, key),
             (IN_BUF, const void *, buffer, buffer_size), (VAL, const size_t, buffer_size)) {
   const size_t restricted_size = MIN(buffer_size, PERSIST_DATA_MAX_LENGTH);

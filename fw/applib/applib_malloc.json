@@ -127,7 +127,6 @@
         "size_2x": 52,
         "size_3x": 52,
         "_comment": [ "Only meant for 2.x apps, but there are 3.x apps out there that abuse this.",
-                      "See PBL-31276.",
                       "Layer is not marked as a dependency (event though it is!) because Layer ",
                       "has padding on it we don't want. We don't want this padding because we ",
                       "didn't have any originally with 3.x, and now we can't retroactively go ",

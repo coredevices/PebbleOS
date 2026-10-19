@@ -224,7 +224,7 @@ void *pbl_memcpy(void *destination, const void *source, size_t num) {
   // negative numbers as their num parameter, which newlib handled by copying nothing, but
   // newlib-nano didn't handle at all and would interpret size_t as a extremely large unsigned
   // number. Guard against this happening so apps that used to work with the old libc will work
-  // with the new libc. See PBL-7873.
+  // with the new libc.
   if (((ptrdiff_t)num) <= 0) {
     return destination;
   }

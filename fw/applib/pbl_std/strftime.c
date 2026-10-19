@@ -3,7 +3,7 @@
 
 // This was bad and huge and ugly. Now it's good and small and ugly.
 
-// NOTE: PBL-22056
+// NOTE:
 // Our old strftime had a bug where a negative gmtoff that wasn't at least an hour would still show
 // up as positive for %z. Obviously this is wrong, but in the interest of compatibility and code
 // size, we're keeping it.

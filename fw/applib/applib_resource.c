@@ -49,9 +49,7 @@ void *applib_resource_mmap_or_load(ResAppNum app_num, uint32_t resource_id, size
     applib_resource_track_mmapped(mapped_data);
     result = (uint8_t *)(mapped_data + offset);
   } else {
-    // TODO: PBL-40010 clean this up
-    // we are wasting 7 bytes here so that clients of this API have the chance to
-    // align the data
+    // Over-allocate by 7 bytes so that clients of this API can align the data
     result = applib_malloc(num_bytes + (used_aligned ? 7 : 0));
     if (!result ||
         sys_resource_load_range(app_num, resource_id, offset, result, num_bytes) != num_bytes) {

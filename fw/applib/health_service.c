@@ -467,7 +467,7 @@ static HealthServiceAccessibilityMask prv_get_range_and_daily_history(
     HealthServiceTimeRange *time_range, HealthServiceDailyHistory *daily_history) {
   PBL_ASSERTN((time_range != nullptr) && (daily_history != nullptr));
 
-  // TODO: PBL-31628 permission system to reply with HealthServiceAccessibilityMaskNoPermission
+  // TODO: reply with HealthServiceAccessibilityMaskNoPermission once permissions exist
 
   if (!prv_get_metric_daily_history(state, metric, daily_history)) {
     return HealthServiceAccessibilityMaskNotAvailable;
@@ -1450,14 +1450,14 @@ bool health_service_private_get_yesterdays_sleep_activity(HealthValue *enter_sec
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_any_activity_accessible(
     HealthActivityMask activity_mask, time_t start_time, time_t end_time) {
-  // TODO: PBL-31628 permission system to reply with HealthServiceAccessibilityMaskNoPermission
+  // TODO: reply with HealthServiceAccessibilityMaskNoPermission once permissions exist
 
   if (activity_mask == HealthActivityNone) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
 
-  // TODO: PBL-31630 provide more accurate value for available time frame
-  // for now, we say that there's only 1 day worth of data for sleep sessions
+  // TODO: provide a more accurate available time frame; for now only 1 day worth of sleep
+  // sessions is reported
   HealthServiceTimeRange range;
   if (!prv_calculate_time_range(start_time, end_time, &range)) {
     return HealthServiceAccessibilityMaskNotAvailable;

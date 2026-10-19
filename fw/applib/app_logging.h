@@ -8,12 +8,10 @@
 
 #pragma once
 
-#include <pbl/util/uuid.h>
-
-// FIXME PBL-1629: move needed declarations into applib
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/util/uuid.h>
 
 #include <logging/logging_private.h>
 
