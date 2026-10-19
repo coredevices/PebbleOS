@@ -5,6 +5,7 @@
 #include <pbl/drivers/debounced_button.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/input/input.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bitops.h>
@@ -12,7 +13,6 @@
 #include <bf0_hal_tim.h>
 #include <board/board.h>
 #include <system/bootbits.h>
-#include <pbl/kernel/assert.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 

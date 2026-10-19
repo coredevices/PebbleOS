@@ -3,8 +3,9 @@
 
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/debounced_button.h>
-#include <pbl/drivers/exti.h>
+#include <pbl/drivers/gpio.h>
 #include <pbl/input/input.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/util/bitops.h>
 
 #include <board/board.h>
@@ -64,7 +65,7 @@ static void prv_enable_button_timer(void) {
   __enable_irq();
 }
 
-static void prv_button_interrupt_handler(void) {
+static void prv_button_interrupt_handler(void *arg) {
   prv_enable_button_timer();
 }
 
@@ -87,9 +88,13 @@ void debounced_button_init(void) {
   button_init();
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    const ExtiConfig config = BOARD_CONFIG_BUTTON.buttons[i].gpiote;
-    exti_configure_pin(config, ExtiTrigger_RisingFalling, prv_button_interrupt_handler);
-    exti_enable(config);
+    struct pbl_irq_spec irq;
+
+    PBL_ASSERTN(
+        pbl_gpio_to_irq(&BOARD_CONFIG_BUTTON.buttons[i].gpio, PBL_IRQ_TYPE_EDGE_BOTH, &irq) == 0);
+    PBL_ASSERTN(pbl_device_init(&irq.intc->dev) == 0);
+    PBL_ASSERTN(pbl_intc_request(&irq, prv_button_interrupt_handler, nullptr) == 0);
+    PBL_ASSERTN(pbl_intc_enable(&irq) == 0);
   }
 
   initialize_button_timer();

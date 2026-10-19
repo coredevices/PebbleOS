@@ -25,27 +25,18 @@ static const BoardConfigButton BOARD_CONFIG_BUTTON = {
   .buttons =
       {
         [BUTTON_ID_BACK] =
-            {"Back",
-             {NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 28)},
-             NRF_GPIO_PIN_PULLUP,
+            {"Back", PBL_GPIO(NRF5_GPIO_P0, 28, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
              PBL_INPUT_KEY_BACK},
         [BUTTON_ID_UP] =
-            {"Up",
-             {NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 29)},
-             NRF_GPIO_PIN_PULLUP,
+            {"Up", PBL_GPIO(NRF5_GPIO_P0, 29, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
              PBL_INPUT_KEY_UP},
         [BUTTON_ID_SELECT] =
-            {"Select",
-             {NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 30)},
-             NRF_GPIO_PIN_PULLUP,
+            {"Select", PBL_GPIO(NRF5_GPIO_P0, 30, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
              PBL_INPUT_KEY_SELECT},
         [BUTTON_ID_DOWN] =
-            {"Down",
-             {NRFX_GPIOTE_INSTANCE(0), 5, NRF_GPIO_PIN_MAP(0, 31)},
-             NRF_GPIO_PIN_PULLUP,
+            {"Down", PBL_GPIO(NRF5_GPIO_P0, 31, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
              PBL_INPUT_KEY_DOWN},
       },
-  .active_high = false,
   .timer = NRFX_TIMER_INSTANCE(1),
 };
 

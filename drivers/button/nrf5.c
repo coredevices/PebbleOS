@@ -1,5 +1,5 @@
 #include <pbl/drivers/button.h>
-#include <pbl/kernel/fatal.h>
+#include <pbl/drivers/gpio.h>
 
 #include <board/board.h>
 #include <kernel/events.h>
@@ -18,10 +18,7 @@ bool button_is_pressed(ButtonId id) {
     id = BUTTON_ID_UP;
   }
 
-  const ButtonConfig *button_config = &BOARD_CONFIG_BUTTON.buttons[id];
-
-  uint32_t bit = nrf_gpio_pin_read(button_config->gpiote.gpio_pin);
-  return (BOARD_CONFIG_BUTTON.active_high) ? bit : !bit;
+  return pbl_gpio_get(&BOARD_CONFIG_BUTTON.buttons[id].gpio) > 0;
 }
 
 uint8_t button_get_state_bits(void) {
@@ -33,12 +30,8 @@ uint8_t button_get_state_bits(void) {
 }
 
 void button_init(void) {
-  if (BOARD_CONFIG_BUTTON.button_com.gpio_pin)
-    pbl_panic(); // NYI
-
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    nrf_gpio_cfg_input(BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin,
-                       BOARD_CONFIG_BUTTON.buttons[i].pull);
+    pbl_gpio_configure(&BOARD_CONFIG_BUTTON.buttons[i].gpio, PBL_GPIO_INPUT);
   }
 }
 

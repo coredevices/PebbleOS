@@ -32,15 +32,10 @@ typedef struct {
 typedef GpioteConfig ExtiConfig; /* compatibility */
 
 typedef struct {
-  const char *const name; ///< Name for debugging purposes.
-  GpioteConfig gpiote;
-  nrf_gpio_pin_pull_t pull;
+  const char *name;
+  struct pbl_gpio gpio;
   uint16_t code;
 } ButtonConfig;
-
-typedef struct {
-  const uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
-} ButtonComConfig;
 
 typedef struct {
   uint16_t value;
@@ -81,8 +76,6 @@ typedef struct {
 /////////////////////////////////////////////////////////////////////////////
 typedef struct {
   const ButtonConfig buttons[NUM_BUTTONS];
-  const ButtonComConfig button_com;
-  const bool active_high;
   nrfx_timer_t timer;
 } BoardConfigButton;
 
