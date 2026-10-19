@@ -8,8 +8,7 @@
 #include <kernel/events.h>
 
 #define SHELL_PREFS_FILE_NAME "shellpref"
-// TODO: PBL-42170 Improve settings file to better utilize large sector sizes
-// We want to use a full page, but requesting such a size can end up using two pages
+// A full page would be ideal, but requesting such a size can end up using two pages
 #define SHELL_PREFS_FILE_LEN (2048)
 
 //! Update the backing store for the given preference.
