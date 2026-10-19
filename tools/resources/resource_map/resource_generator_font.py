@@ -84,7 +84,7 @@ class FontResourceGenerator(ResourceGenerator):
 
     @classmethod
     def build_font_data(cls, ttf_path, definition):
-        # PBL-23964: it turns out that font generation is not thread-safe with freetype
+        # It turns out that font generation is not thread-safe with freetype
         # 2.4 (and possibly later versions). To avoid running into this, we use a lock.
         with cls.lock:
             pixel_height = cls._get_pixel_height(definition)

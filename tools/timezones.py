@@ -85,7 +85,6 @@ dstzone_dict = {name: index for index, name in enumerate(dstzone_list)}
 # Make sure some of these values don't move around, because the firmware code in
 # include/pbl/services/time.h depends on certain special case timezones having certain values (see the
 # DSTID_* defines). This is gross and brittle and it would be better to generate a header.
-# PBL-30559
 assert dstzone_dict["Brazil"] == 6
 assert dstzone_dict["LH"] == 20
 

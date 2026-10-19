@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # encoding=utf8
-# PBL-31508: This is pretty bad and we want to re-do a lot of this.
-
 import os
 import sys
 import threading
