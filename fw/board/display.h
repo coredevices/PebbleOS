@@ -13,10 +13,9 @@ typedef struct {
   uint16_t max_x;
 } GBitmapDataRowInfoInternal;
 
-// FIXME: PBL-21055 Fix SDK exporter failing to crawl framebuffer headers
+// The SDK exporter can't crawl the framebuffer headers.
 #if !defined(SDK)
 
-// FIXME: PBL-21049 Fix platform abstraction and board definition scheme
 #ifdef UNITTEST
 // Do nothing, a unit-test's wscript specifies platforms=[]
 // used by tools/waf/pebble_test.py to define these includes per test

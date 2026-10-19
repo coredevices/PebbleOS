@@ -3,7 +3,6 @@
 
 #pragma once
 
-// FIXME: PBL-21049 Fix platform abstraction and board definition scheme
 #ifdef CONFIG_BOARD_ASTERIX
 #include <board/boards/board_asterix.h>
 #elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || \
