@@ -153,13 +153,8 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buff
     buffer += written;
     start_addr += written;
     buffer_size -= written;
-    // Give higher-priority tasks a chance to access the flash in between
-    // each page write.
-    // TODO: uncomment the lines below to resolve PBL-17503
-    // if (buffer_size) {
-    //   pbl_mutex_unlock(&s_flash_lock);
-    //   pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
-    // }
+    // TODO: release the lock between page writes so higher-priority tasks can
+    // access the flash.
   }
   pbl_mutex_unlock(&s_flash_lock);
 }
@@ -304,8 +299,8 @@ static void prv_flash_erase_blocking(uint32_t sector_addr, bool is_subsector) {
 
     remaining_ms = prv_flash_erase_poll();
 
-    // check to see if the cb responsible for resuming erases should have run
-    // but is blocked. See PBL-25741 for details
+    // Resume the erase here if the timer callback responsible for it is
+    // overdue, as its task may be blocked.
     uint32_t erase_suspend_time_remaining;
     if (new_timer_scheduled(s_erase_suspend_timer, &erase_suspend_time_remaining) &&
         (erase_suspend_time_remaining == 0)) {
