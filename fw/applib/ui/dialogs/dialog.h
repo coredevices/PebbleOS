@@ -37,7 +37,7 @@ typedef struct {
 //! * Fullscreen: True,
 //! * Show Status Layer: False,
 //! * Text Color: GColorBlack,
-//! * Background Color: GColorLightGray (GColorWhite for tintin)
+//! * Background Color: GColorLightGray or GColorDarkGray depending on light/dark mode (GColorWhite for tintin)
 //! * Vibe: False
 
 // Dialog object used as the core of other dialog types. The Dialog object shouldn't be used
