@@ -295,8 +295,8 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
     return E_INVALID_OPERATION;
   }
 
-  // FIXME: PBL-39523 timeline_item_storage_insert modifies a const buffer
-  // Invert flags & status to store on flash
+  // Invert flags & status to store on flash.
+  // TODO: avoid temporarily modifying the const val buffer.
   hdr->common.flags = ~hdr->common.flags;
   hdr->common.status = ~hdr->common.status;
 

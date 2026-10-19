@@ -598,8 +598,6 @@ status_t app_glance_db_delete_glance(const Uuid *uuid) {
 // Settings helpers
 //////////////////////
 
-// TODO PBL-38080: Extract out settings file opening/closing and mutex locking/unlocking for BlobDB
-
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
   const status_t rv = settings_file_open_growable(
