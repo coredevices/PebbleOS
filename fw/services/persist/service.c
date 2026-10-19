@@ -9,7 +9,6 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/app_file.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/persist.h>
 #include <pbl/services/settings/settings_file.h>
@@ -80,11 +79,6 @@ status_t persist_service_delete_file(const Uuid *uuid) {
     return status;
   }
   return pfs_remove(name);
-}
-
-static bool prv_bad_persist_file_filter(const char *filename) {
-  return is_app_file_name(filename) &&
-         strcmp(filename + APP_FILE_NAME_PREFIX_LENGTH, "persist") == 0;
 }
 
 size_t persist_service_get_max_size(void) {
@@ -185,20 +179,6 @@ static void prv_migrate_legacy_persist_files(void) {
 // Designed to be called once during reset
 void persist_service_init(void) {
   prv_migrate_legacy_persist_files();
-
-  // Find and delete any AppInstallId-indexed persist files. Due to PBL-16663
-  // (affecting FW 3.0-dp5 thru -dp7), the AppInstallId in the file name may not
-  // correspond to the app that the persist file originally belonged to. Since
-  // we can't be sure that the persist files correspond to the current
-  // AppInstallId, the safest thing to do is to simply blow them away.
-  // TODO: remove this code before FW 3.0-golden.
-  PFSFileListEntry *bad_file_list = pfs_create_file_list(prv_bad_persist_file_filter);
-  PFSFileListEntry *iter = bad_file_list;
-  while (iter) {
-    pfs_remove(iter->name);
-    iter = (PFSFileListEntry *)iter->list_node.next;
-  }
-  pfs_delete_file_list(bad_file_list);
 }
 
 // Return a pointer to the store for the given UUID. Each task that uses persist
