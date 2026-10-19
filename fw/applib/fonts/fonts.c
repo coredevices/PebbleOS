@@ -134,6 +134,6 @@ int16_t fonts_get_font_cap_offset(GFont font) {
     return 0;
   }
 
-  // FIXME PBL-25709: Actually use font-specific caps and also provide function for baseline offsets
+  // TODO: approximation, use the font-specific cap height
   return (int16_t)(((int16_t)font->max_height) * 22 / 100);
 }
