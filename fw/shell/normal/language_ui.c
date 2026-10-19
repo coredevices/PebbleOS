@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/preferred_durations.h>
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <resource/resource_ids.auto.h>
@@ -18,7 +19,7 @@ static void prv_push_language_changed_dialog(void *data) {
   dialog_set_text(dialog, lang_name);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_CONFIRMATION_LARGE);
   dialog_set_background_color(dialog, GColorJaegerGreen);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_DEFAULT);
+  dialog_set_timeout(dialog, preferred_result_display_duration());
   simple_dialog_push(simple_dialog, modal_manager_get_window_stack(ModalPriorityAlert));
   // after dialog closes, launch the watchface
   watchface_launch_default(nullptr);

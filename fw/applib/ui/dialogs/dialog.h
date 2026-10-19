@@ -12,7 +12,6 @@
 #define DIALOG_MAX_MESSAGE_LEN 140
 #define DIALOG_IS_ANIMATED     true
 
-// TODO PBL-38106: Replace uses of DIALOG_TIMEOUT_DEFAULT with preferred_result_display_duration()
 // The number of milliseconds it takes for the dialog to automatically go away if has_timeout is
 // set to true.
 #define DIALOG_TIMEOUT_DEFAULT  (1000)

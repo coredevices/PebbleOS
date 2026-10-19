@@ -4,6 +4,7 @@
 pbl_clar_test(test_ancs_pebble_actions
   MODULES settings timeline_item time rand
   SOURCES
+    fw/applib/ui/preferred_durations.c
     fw/comm/ble/kernel_le_client/ancs/ancs_util.c
     fw/services/blob_db/ios_notif_pref_db.c
     fw/services/notifications/ancs/ancs_filtering.c
@@ -20,6 +21,7 @@ pbl_clar_test(test_ancs_pebble_actions
 pbl_clar_test(test_timeline_actions
   MODULES timeline_item time
   SOURCES
+    fw/applib/ui/preferred_durations.c
     fw/services/timeline/actions_endpoint.c
     fw/services/timeline/timeline.c
     fw/services/timeline/timeline_actions.c

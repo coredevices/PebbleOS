@@ -17,6 +17,7 @@
 
 #include <applib/app.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
+#include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
@@ -153,7 +154,7 @@ static void prv_show_workout_ended_dialog(WorkoutAppData *data) {
   dialog_set_icon(dialog, RESOURCE_ID_WORKOUT_APP_END);
   dialog_set_icon_animate_direction(dialog, DialogIconAnimateNone);
   dialog_set_destroy_on_pop(dialog, false);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_DEFAULT);
+  dialog_set_timeout(dialog, preferred_result_display_duration());
 
   workout_dialog_set_text(workout_dialog, i18n_get("Workout\nEnded", workout_dialog));
   workout_dialog_set_action_bar_hidden(workout_dialog, true);

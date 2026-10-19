@@ -31,6 +31,7 @@
 #include <applib/ui/dialogs/dialog_private.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/preferred_durations.h>
 #include <applib/ui/progress_window.h>
 #include <applib/ui/window.h>
 #include <applib/ui/window_manager.h>
@@ -216,7 +217,7 @@ static void prv_show_result_window(ActionResultData *data, const TimelineResourc
   dialog_set_icon(dialog, icon_res_info.res_id);
   dialog_set_icon_animate_direction(dialog, DialogIconAnimationFromLeft);
   const uint32_t dialog_timeout_ms =
-      use_simple_dialog ? DIALOG_TIMEOUT_DEFAULT : DIALOG_TIMEOUT_INFINITE;
+      use_simple_dialog ? preferred_result_display_duration() : DIALOG_TIMEOUT_INFINITE;
   dialog_set_timeout(dialog, dialog_timeout_ms);
 
   if (data->action_menu) {

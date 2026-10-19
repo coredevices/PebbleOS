@@ -51,6 +51,7 @@
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window.h>
 #include <applib/ui/window_manager.h>
@@ -762,7 +763,7 @@ static void prv_push_muted_dialog(void) {
   const char *msg = i18n_get("Muted", dialog);
   dialog_set_text(dialog, msg);
   dialog_set_icon(dialog, RESOURCE_ID_RESULT_MUTE_LARGE);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_DEFAULT);
+  dialog_set_timeout(dialog, preferred_result_display_duration());
   i18n_free(msg, dialog);
   simple_dialog_push(simple_dialog, prv_get_window_stack());
 }

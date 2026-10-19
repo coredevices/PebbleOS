@@ -17,6 +17,7 @@
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/preferred_durations.h>
 #include <applib/ui/window.h>
 #include <applib/voice/transcription_dialog.h>
 #include <kernel/pbl_malloc.h>
@@ -43,7 +44,7 @@ static void prv_show_simple_dialog(DialogsData *data) {
   dialog_set_text(dialog, "Mama");
   dialog_set_background_color(dialog, GColorRajah);
   dialog_set_icon(dialog, data->resource_id_80);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_DEFAULT);
+  dialog_set_timeout(dialog, preferred_result_display_duration());
 
   app_simple_dialog_push(simple_dialog);
 }
@@ -262,7 +263,7 @@ static void prv_transcription_dialog_cb(void *context) {
   dialog_set_text(dialog, "Pop!");
   dialog_set_background_color(dialog, GColorRed);
   dialog_set_icon(dialog, data->resource_id_80);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_DEFAULT);
+  dialog_set_timeout(dialog, preferred_result_display_duration());
 
   app_simple_dialog_push(simple_dialog);
 }

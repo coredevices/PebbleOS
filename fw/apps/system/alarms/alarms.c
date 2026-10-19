@@ -20,6 +20,7 @@
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
@@ -117,7 +118,7 @@ static void prv_show_deleted_dialog(void) {
   i18n_free(delete_text, dialog);
   dialog_set_icon(dialog, RESOURCE_ID_RESULT_SHREDDED_LARGE);
   dialog_set_background_color(dialog, ALARMS_APP_HIGHLIGHT_COLOR);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_DEFAULT);
+  dialog_set_timeout(dialog, preferred_result_display_duration());
   app_simple_dialog_push(simple_dialog);
 }
 

@@ -12,6 +12,7 @@
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/preferred_durations.h>
 #include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <resource/resource_ids.auto.h>
@@ -66,7 +67,7 @@ static SimpleDialog *prv_snooze_set_confirm_dialog(void) {
   dialog_set_text(dialog, snooze_buf);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_CONFIRMATION_LARGE);
   dialog_set_background_color(dialog, GColorJaegerGreen);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_DEFAULT);
+  dialog_set_timeout(dialog, preferred_result_display_duration());
   return simple_dialog;
 }
 

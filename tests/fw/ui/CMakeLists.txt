@@ -294,6 +294,7 @@ pbl_clar_test(test_notification_window
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
+    fw/applib/ui/preferred_durations.c
     fw/system/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
