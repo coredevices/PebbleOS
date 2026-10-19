@@ -186,8 +186,10 @@ unlock:
 static void prv_pulse_pp_send_cb(void *data) {
   PulsePPCallbackPacket *cb_data = data;
   uint8_t *resp = pulse_reliable_send_begin(PULSE2_PEBBLE_PROTOCOL);
-  memcpy(resp, &cb_data->packet, cb_data->packet_length);
-  pulse_reliable_send(resp, cb_data->packet_length);
+  if (resp) {
+    memcpy(resp, &cb_data->packet, cb_data->packet_length);
+    pulse_reliable_send(resp, cb_data->packet_length);
+  }
   kernel_free(data);
 }
 
