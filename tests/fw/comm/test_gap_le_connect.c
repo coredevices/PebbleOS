@@ -26,10 +26,8 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-// Note:
-// The unit tests for "Pebble as Master" are disabled because role switching is not implemented yet,
-// and the FW is currently "hard-wired" to be slave as a precautionary measure to prevent it from
-// trying to connect as master. See PBL-20368.
+// The "Pebble as Master" tests are disabled: role switching is not implemented and the FW always
+// acts as slave.
 
 void pbl_bt_cb_handle_create_bonding(const struct pbl_bt_bonding *bonding,
                                      const struct pbl_bt_addr *addr) {

@@ -24,10 +24,6 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-#if BLE_MASTER_CONNECT_SUPPORT // FIXME: Shouldn't be needed after PBL-32761
-extern unsigned int bt_stack_id(void);
-#endif
-
 //! About this module
 //! -----------------
 //! - Manages initiating connections to other BLE devices as a Master.
@@ -115,9 +111,7 @@ static bool s_has_pending_create_connection;
 //! True if the device is currently connected as LE Slave (4.0)
 static bool s_is_connected_as_slave;
 
-//! TODO: Implement role-switching (PBL-20368)
-//! This is just a placeholder / stop-gap for now that is always set to GAPLERoleSlave, so that we
-//! don't accidentally act as a master (perform LE Create Connection).
+//! Role switching is not implemented: always act as slave (never perform LE Create Connection).
 static const GAPLERole s_current_role = GAPLERoleSlave;
 
 // -------------------------------------------------------------------------------------------------
@@ -140,8 +134,7 @@ static void prv_mutate_whitelist_safely(const struct pbl_bt_device_internal *dev
 
 // -------------------------------------------------------------------------------------------------
 
-// TODO: This is basically only used by the Settings/Bluetooth UI to refresh the list.
-// Need to fix this up when addressing https://pebbletechnology.atlassian.net/browse/PBL-5254
+// Only used by the Settings/Bluetooth UI to refresh the list.
 static void prv_put_legacy_connection_event(const struct pbl_bt_device_internal *device,
                                             bool is_connected) {
   PebbleEvent event = {
@@ -361,9 +354,7 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
             // Update connection address:
             intent->device = event->peer_address;
 
-            // FIXME:
-            // Find and assign bonding_id even if there is no intent.
-            // https://pebbletechnology.atlassian.net/browse/PBL-20972
+            // TODO: assign bonding_id even if there is no intent.
             connection->bonding_id = intent->bonding->id;
           }
 
@@ -387,9 +378,7 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
       }
 
       if (!found_match) {
-        // There is no connection intent from our end. This could be the phone that is connecting
-        // for the first time. Let the connection watchdog (TODO: PBL-11236) take care of
-        // disconnecting at some point, if the connection ends up being unused.
+        // No intent from our end, e.g. a phone connecting for the first time.
         PBL_LOG_WRN("No intent for connection");
         bluetooth_analytics_handle_no_intent_for_connection();
       }
@@ -551,81 +540,19 @@ unlock:
 }
 
 // -------------------------------------------------------------------------------------------------
-//! Wrappers around Bluetopia HCI / GAP calls - Not compiled at the moment, fix in PBL-32761
+//! Watch-driven connections are not implemented.
 //! bt_lock is assumed to be taken before calling these functions.
 
 static void prv_start_connecting(void) {
-#if !BLE_MASTER_CONNECT_SUPPORT // PBL-32761
   PBL_LOG_WRN("Watch driven BLE connection unimplemented");
-#else
-  if (s_has_pending_create_connection) {
-    PBL_LOG_ERR("Already connecting...");
-    return;
-  }
-
-  PBL_LOG_DBG("Starting connecting..");
-  unsigned int stack_id = bt_stack_id();
-  // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.12:
-  const GAP_LE_Address_Type_t local_addr_type = PBL_BT_ADDR_TYPE_RANDOM;
-  GAP_LE_Connection_Parameters_t connection_params = {
-    .Connection_Interval_Min = 40,
-    .Connection_Interval_Max = 60,
-    .Slave_Latency = 0,
-    .Supervision_Timeout = 6000,
-    .Minimum_Connection_Length = 0,
-    .Maximum_Connection_Length = 40950,
-  };
-  const int r = GAP_LE_Create_Connection(
-      stack_id, 10240, 10240, fpWhiteList, 0 /* fpWhiteList ignores remote addr type */,
-      nullptr /* fpWhiteList ignores remote addr */, local_addr_type, &connection_params,
-      gap_le_connect_bluetopia_connection_callback, 0 /* callback context: unused */);
-  if (r) {
-    PBL_LOG_ERR("GAP_LE_Create_Connection (r=%d)", r);
-  } else {
-    s_has_pending_create_connection = true;
-  }
-#endif
 }
 
 static void prv_stop_connecting(void) {
-#if !BLE_MASTER_CONNECT_SUPPORT // PBL-32761
   PBL_LOG_WRN("Watch driven BLE connection cancel unimplemented");
-#else
-  if (!s_has_pending_create_connection) {
-    return;
-  }
-  unsigned int stack_id = bt_stack_id();
-  PBL_LOG_DBG("Stopping connecting...");
-  // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.13:
-  const int r = GAP_LE_Cancel_Create_Connection(stack_id);
-  if (r) {
-    PBL_LOG_ERR("GAP_LE_Cancel_Create_Connection (r=%d)", r);
-  } else {
-    // Update the state right away (don't wait for the Connection Complete event
-    // with HCI_ERROR_CODE_UNKNOWN_CONNECTION_IDENTIFIER status):
-    s_has_pending_create_connection = false;
-  }
-#endif
 }
 
 static void prv_mutate_whitelist(const struct pbl_bt_device_internal *device, bool is_adding) {
-#if !BLE_MASTER_CONNECT_SUPPORT // PBL-32761
   PBL_LOG_WRN("BLE whitelist mutation unimplemented");
-#else
-  unsigned int stack_id = bt_stack_id();
-  PBL_LOG_DBG("Mutating white-list (adding=%u): " PBL_BT_BD_ADDR_FMT, is_adding,
-              PBL_BT_ADDR_XPLODE(device->address));
-  // See Bluetooth Spec 4.0, Volume 2, Part E, Chapter 7.8.15:
-  uint8_t status = 0;
-  const uint8_t addr_type = device->is_random_address ? 0x01 : 0x00;
-  typeof(&HCI_LE_Add_Device_To_White_List) mutator =
-      (is_adding ? HCI_LE_Add_Device_To_White_List : HCI_LE_Remove_Device_From_White_List);
-  const int r = mutator(stack_id, addr_type, BTDeviceAddressToBDADDR(device->address), &status);
-  if (r) {
-    PBL_LOG_ERR("HCI_LE_..._Device_To_White_List (is_adding=%u, r=%d, status=0x%x)", is_adding, r,
-                status);
-  }
-#endif
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -770,7 +697,6 @@ static enum pbl_bt_errno prv_register_intent(struct RegisterIntentRequest *reque
 
   bool is_already_connected = false;
   bool is_already_encrypted = false;
-  bool local_is_master = false;
 
   const struct pbl_bt_device_internal *connected_device = nullptr;
   GAPLEConnectionIntent *intent;
@@ -788,7 +714,6 @@ static enum pbl_bt_errno prv_register_intent(struct RegisterIntentRequest *reque
     if (connection) {
       is_already_connected = true;
       is_already_encrypted = connection->is_encrypted;
-      local_is_master = connection->local_is_master;
 
       connected_device = &connection->device;
     }
@@ -834,17 +759,7 @@ static enum pbl_bt_errno prv_register_intent(struct RegisterIntentRequest *reque
   }
 
   if (is_pairing_required && !is_already_encrypted) {
-    if (local_is_master) {
-      // TODO:
-      // - Check if pairing process is on-going, if so, do nothing
-      // - If not on-going, kick it off (we're the master)
-      // See https://pebbletechnology.atlassian.net/browse/PBL-6850
-    } else {
-      // Pebble is slave, the other side should start pairing.
-      // Connection watchdog should take care of disconnecting after timeout in case pairing
-      // does not happen in a timely manner
-      // TODO: https://pebbletechnology.atlassian.net/browse/PBL-11236
-    }
+    // As slave, the other side is expected to start pairing.
     return PBL_BT_ERRNO_OK;
   }
 
