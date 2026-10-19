@@ -75,12 +75,6 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-// FIXME: PBL-23945
-void fake_kernel_malloc_mark(void) {
-}
-void fake_kernel_malloc_mark_assert_equal(void) {
-}
-
 // Helpers
 ///////////////////////////////////////////////////////////
 
@@ -157,8 +151,6 @@ void test_gatt_service_changed_client__handle_indication_service_changed(void) {
                                          TEST_GATT_CONNECTION_ID);
   const uint16_t att_handle = fake_gatt_gatt_profile_service_service_changed_att_handle();
 
-  fake_kernel_malloc_mark();
-
   const int start_count_before_indication = fake_gatt_is_service_discovery_start_count();
 
   const uint16_t handle_range[2] = {
@@ -170,8 +162,6 @@ void test_gatt_service_changed_client__handle_indication_service_changed(void) {
   // Re-discovery is trigger on KernelBG:
   fake_system_task_callbacks_invoke_pending();
 
-  // The KernelBG trip uses kernel_malloc, make sure it's cleaning up properly:
-  fake_kernel_malloc_mark_assert_equal();
   cl_assert_equal_b(handled, true);
 
   // Expect service discovery to be started once more:

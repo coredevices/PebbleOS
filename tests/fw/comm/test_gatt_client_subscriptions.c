@@ -33,10 +33,14 @@ enum pbl_bt_errno gatt_client_op_write_descriptor_cccd(pbl_bt_descriptor_t cccd,
   return s_write_descriptor_cccd_result;
 }
 
-// FIXME: PBL-23945
+static int s_malloc_mark;
+
 void fake_kernel_malloc_mark(void) {
+  s_malloc_mark = fake_pbl_malloc_num_net_allocs();
 }
+
 void fake_kernel_malloc_mark_assert_equal(void) {
+  cl_assert_equal_i(s_malloc_mark, fake_pbl_malloc_num_net_allocs());
 }
 
 // Stubs
