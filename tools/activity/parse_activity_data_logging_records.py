@@ -29,27 +29,12 @@ This .c file can in turn be incorporated into the algorithm unit tests.
 import argparse
 import base64
 import datetime
-import gzip
-import json
 import logging
 import os
-import re
 import struct
 from pathlib import Path
 
-from jira.client import JIRA
-
 logger = logging.getLogger(__name__)
-
-# Create a ~/.triage JSON file and override/configure these keys:
-SETTINGS = {
-    # JIRA server url / username / password
-    "server_url": "https://pebbletechnology.atlassian.net",
-    "user": None,
-    "password": None,
-    # Local path to download issue attachments to
-    "download_path": "/tmp/",
-}
 
 SLEEP_DEFAULT_EXPECTED_TEXT = """  //> TEST_VERSION 3
   //> TEST_TOTAL -1
@@ -75,133 +60,6 @@ SLEEP_DEFAULT_EXPECTED_TEXT = """  //> TEST_VERSION 3
   //> TEST_IN_DEEP_SLEEP_MAX 0
   //> TEST_WEIGHT 1.0
 """
-
-#############################################################################################
-
-
-#############################################################################################
-class JIRASupport:
-    DESYM_EXT = ".desym"
-
-    def __init__(self, issue_id):
-        self.issue_id = issue_id
-
-    def issue_url(self, issue_id):
-        return "{}/browse/{}".format(SETTINGS["server_url"], issue_id)
-
-    def issue_download_path(self, issue_id):
-        return os.path.join(SETTINGS["download_path"], issue_id)
-
-    def download_path(self):
-        return os.path.join(SETTINGS["download_path"])
-
-    def load_user_settings(self):
-        settings_path = "~/.triage"
-        try:
-            with open(os.path.expanduser(settings_path), "rb") as settings_file:
-                user_settings = json.load(settings_file)
-        except OSError as e:
-            if e.errno == 2:
-                logger.error(
-                    """Please create %s with credentials: """
-                    """'{ "user": "$USER", "password": "$PASSWORD" }'""",
-                    settings_path,
-                )
-            return
-        SETTINGS.update(user_settings)
-
-    def create_jira(self):
-        self.load_user_settings()
-        creds = (SETTINGS["user"], SETTINGS["password"])
-        return JIRA(options={"server": SETTINGS["server_url"]}, basic_auth=creds)
-
-    def download_attachments(self, issue_path, issue):
-        attachments = issue.fields.attachment
-        if not attachments:
-            raise RuntimeError("No attachments found.")
-        local_paths = []
-        for attachment in attachments:
-            filename = attachment.raw["filename"]
-            local_path = os.path.join(issue_path, filename)
-            local_paths.append(local_path)
-            if os.path.exists(local_path):
-                logger.debug("Skipping %s: file already exists.", filename)
-                continue
-            logger.info(f"Downloading {filename}...")
-            with open(local_path, "wb") as attachment_file:
-                attachment_file.write(attachment.get())
-        return set(local_paths)
-
-    def unzip_android_logs(self, paths):
-        ungz_paths = []
-        gz_paths = filter(lambda path: re.search(r"\.gz$", path), paths)
-        for gz_path in gz_paths:
-            with gzip.open(gz_path, "rb") as f_in:
-                ungz_path = os.path.splitext(gz_path)[0]
-                with open(ungz_path, "wb") as f_out:
-                    try:
-                        f_out.writelines(f_in)
-                    except OSError:
-                        logger.error("Error writing unzipped android log")
-                    finally:
-                        f_out.close()
-                ungz_paths.append(ungz_path)
-        return set(ungz_paths)
-
-    def get_watch_logs(self, local_attachment_paths):
-        """Goes through the list of attachment paths returns a list containing only the
-        watch logs.
-        """
-        watch_logs = []
-        got_device_logs = False
-        for path in sorted(local_attachment_paths):
-            # iOS uses "watch_logs...", Android <2.1 uses "pebble.log", and Android >=2.1 (Holo)
-            #  uses "device-logs.log"
-            if (
-                "watch_logs" not in path
-                and "pebble.log" not in path
-                and "device-logs" not in path
-            ):
-                # Not a watch_logs... file
-                continue
-            if "device-logs" in path:
-                got_device_logs = True
-            elif "pebble.log" in path and got_device_logs:
-                # Newer Android requests (Holo) have watch logs in "device-logs", not pebble.log
-                continue
-            if ".gz" in path:
-                # Don't try to process pebble.log.gz
-                continue
-            if JIRASupport.DESYM_EXT in path:
-                # This watch_logs file is a desymmed log file
-                continue
-            watch_logs.append(path)
-        return watch_logs
-
-    def all_logs(self):
-        """Download all watch log files and return a list of their filenames"""
-        jira = self.create_jira()
-        issue = jira.issue(self.issue_id)
-
-        # Create /tmp/ISSUE_ID to download attachments to:
-        issue_path = self.issue_download_path(self.issue_id)
-        if not os.path.exists(issue_path):
-            logger.info(f"Creating {issue_path}")
-            os.makedirs(issue_path)
-        else:
-            logger.info(f"Using {issue_path}")
-
-        # Download attachments:
-        try:
-            local_attachment_paths = self.download_attachments(issue_path, issue)
-        except Exception:  # noqa: BLE001
-            logger.info("No attachments to process")
-            return []
-
-        # Android attaches a .gz with all the logs:
-        android_log_paths = self.unzip_android_logs(local_attachment_paths)
-        local_attachment_paths = local_attachment_paths | android_log_paths
-        return self.get_watch_logs(local_attachment_paths)
 
 
 #############################################################################################
@@ -767,8 +625,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "infile",
         help="The input file. This can be a .bin file obtained using the "
-        "'pebble data-logging download' command. a .txt log file from a"
-        "support request, or a JIRA ticket number like 'PBL-25667' (no extension)",
+        "'pebble data-logging download' command, or a .txt log file from a "
+        "support request",
     )
     parser.add_argument(
         "--input",
@@ -825,7 +683,6 @@ if __name__ == "__main__":
     if args.debug:
         level = logging.DEBUG
     logging.basicConfig(level=level)
-    from_jira = False
 
     if args.infile.endswith(".bin"):
         input_is_bin = True
@@ -833,19 +690,11 @@ if __name__ == "__main__":
     elif args.infile.endswith(".txt") or args.infile.endswith(".log"):
         input_is_bin = False
         infiles = [args.infile]
-    elif "." in args.infile:
-        raise RuntimeError("Invalid input file type. Must end with .txt or .bin")
     else:
-        input_is_bin = False
-        jira = JIRASupport(args.infile)
-        infiles = jira.all_logs()
-        from_jira = True
+        raise RuntimeError("Invalid input file type. Must end with .txt, .log or .bin")
 
     # Figure out a good prefix to use for each sample name
-    if from_jira:
-        sample_prefix = args.infile.lower()
-    else:
-        sample_prefix = os.path.splitext(os.path.basename(args.infile))[0].lower()
+    sample_prefix = os.path.splitext(os.path.basename(args.infile))[0].lower()
 
     for file in infiles:
         if args.input == "accel_samples":
