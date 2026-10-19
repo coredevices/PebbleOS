@@ -1,53 +1,57 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
+
 #include <pbl/drivers/exti.h>
+#include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
 
 #include <board/board.h>
-#include <kernel/events.h>
-#include <nrfx.h>
 
-// NRF5 emulates EXTI using GPIOTE
+PBL_LOG_MODULE_DEFINE(driver_exti_nrf5, CONFIG_DRIVER_EXTI_LOG_LEVEL);
 
-static void prv_exti_handler(nrfx_gpiote_pin_t pin, nrfx_gpiote_trigger_t trigger,
-                             void *p_context) {
-  ExtiHandlerCallback cb = (ExtiHandlerCallback)p_context;
+static ExtiHandlerCallback s_callbacks[48];
 
-  cb();
+static void prv_handler(void *arg) {
+  s_callbacks[(uintptr_t)arg]();
+}
+
+static struct pbl_irq_spec prv_spec(ExtiConfig cfg, ExtiTrigger trigger) {
+  uint8_t type = (trigger == ExtiTrigger_Rising)    ? PBL_IRQ_TYPE_EDGE_RISING
+                 : (trigger == ExtiTrigger_Falling) ? PBL_IRQ_TYPE_EDGE_FALLING
+                                                    : PBL_IRQ_TYPE_EDGE_BOTH;
+
+  return (struct pbl_irq_spec)PBL_IRQ_SPEC(
+      (cfg.gpio_pin < 32U) ? NRF5_GPIO_P0_INTC : NRF5_GPIO_P1_INTC, cfg.gpio_pin % 32U, type);
 }
 
 void exti_configure_pin(ExtiConfig cfg, ExtiTrigger trigger, ExtiHandlerCallback cb) {
-  nrfx_err_t err;
-  if (!nrfx_gpiote_init_check(&cfg.peripheral)) {
-    err = nrfx_gpiote_init(&cfg.peripheral, NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY);
-    PBL_ASSERTN(err == NRFX_SUCCESS);
+  const struct pbl_irq_spec spec = prv_spec(cfg, trigger);
+  int ret;
+
+  PBL_ASSERTN(cfg.gpio_pin < ARRAY_LENGTH(s_callbacks));
+  PBL_ASSERTN(pbl_device_init(&spec.intc->dev) == 0);
+
+  (void)pbl_intc_free(&spec);
+
+  s_callbacks[cfg.gpio_pin] = cb;
+  ret = pbl_intc_request(&spec, prv_handler, (void *)(uintptr_t)cfg.gpio_pin);
+  if (ret != 0) {
+    PBL_LOG_ERR("Could not configure pin %" PRIu32 " (%d)", cfg.gpio_pin, ret);
   }
-  uint8_t channel = cfg.channel;
-  nrfx_gpiote_trigger_config_t tcfg = {
-    .trigger = trigger == ExtiTrigger_Rising          ? NRFX_GPIOTE_TRIGGER_LOTOHI
-               : trigger == ExtiTrigger_Falling       ? NRFX_GPIOTE_TRIGGER_HITOLO
-               : trigger == ExtiTrigger_RisingFalling ? NRFX_GPIOTE_TRIGGER_TOGGLE
-                                                      : NRFX_GPIOTE_TRIGGER_NONE,
-    .p_in_channel = &channel
-  };
-  nrfx_gpiote_handler_config_t hcfg = {.handler = prv_exti_handler, .p_context = cb};
-  nrfx_gpiote_input_pin_config_t pcfg = {
-    .p_pull_config = nullptr,
-    .p_trigger_config = &tcfg,
-    .p_handler_config = &hcfg
-  };
-
-  err = nrfx_gpiote_input_configure(&cfg.peripheral, cfg.gpio_pin, &pcfg);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  nrfx_gpiote_trigger_disable(&cfg.peripheral, cfg.gpio_pin);
 }
 
 void exti_enable(ExtiConfig cfg) {
-  nrfx_gpiote_trigger_enable(&cfg.peripheral, cfg.gpio_pin, true /* int_enable */);
+  const struct pbl_irq_spec spec = prv_spec(cfg, ExtiTrigger_Rising);
+
+  (void)pbl_intc_enable(&spec);
 }
 
 void exti_disable(ExtiConfig cfg) {
-  nrfx_gpiote_trigger_disable(&cfg.peripheral, cfg.gpio_pin);
+  const struct pbl_irq_spec spec = prv_spec(cfg, ExtiTrigger_Rising);
+
+  (void)pbl_intc_disable(&spec);
 }

@@ -83,9 +83,6 @@ PBL_IRQ_CONNECT(SPIM3, NRFX_SPIM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_spim_3_irq_ha
 
 /* PERIPHERAL ID 10 */
 
-/* EXTI */
-PBL_IRQ_CONNECT(GPIOTE, NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_gpiote_0_irq_handler, , 0);
-
 /* nPM1300 */
 PBL_I2C_NRF5_DEFINE(s_i2c_npmc_iic1, "i2c_npmc_iic1", 1, NRF_TWIM_FREQ_400K,
                     PBL_GPIO(NRF5_GPIO_P0, 14, 0), PBL_GPIO(NRF5_GPIO_P0, 15, 0), nullptr);

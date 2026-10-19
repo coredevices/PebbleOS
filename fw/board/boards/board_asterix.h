@@ -72,7 +72,6 @@ static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
   .extcomin = {
     .rtc = NRF_RTC2,
     .gpiote = NRF_GPIOTE,
-    .gpiote_ch = 6,
     .psel = NRF_GPIO_PIN_MAP(1, 15),
     // 120Hz/5% (feeds flip-flop, generating 60Hz/50% signal to EXTCOMIN)
     .period_us = 1000000 / 120,

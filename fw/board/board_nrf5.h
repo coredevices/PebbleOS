@@ -103,7 +103,6 @@ typedef struct {
 typedef struct {
   NRF_RTC_Type *rtc;
   NRF_GPIOTE_Type *gpiote;
-  uint8_t gpiote_ch;
   uint32_t psel;
   uint32_t period_us;
   uint32_t pulse_us;
