@@ -171,7 +171,7 @@ static void prv_expandable_dialog_load(Window *window) {
     // We account for a header that may be larger than the available space
     // by adjusting our height variable that is passed to the body layer
     GSize header_size = text_layer_get_content_size(ctx, header_layer);
-    header_size.h += 4; // See PBL-1741
+    header_size.h += 4;
     header_size.w = w;
     header_content_height = header_size.h;
     text_layer_set_size(header_layer, header_size);
@@ -199,7 +199,7 @@ static void prv_expandable_dialog_load(Window *window) {
 #endif
 
   int32_t text_content_height = text_layer_get_content_size(ctx, text_layer).h;
-  text_content_height += 4; // See PBL-1741
+  text_content_height += 4;
   text_layer_set_size(text_layer, GSize(w, text_content_height));
 
   uint16_t scroll_height = icon_offset + icon_size.h + header_content_height + text_content_height +

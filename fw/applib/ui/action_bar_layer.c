@@ -59,7 +59,6 @@ static int prv_press_animation_offset(void) {
                              /*gabbro*/ 4);
 }
 
-// TODO: Once PBL-16032 is implemented, use that instead.
 static int64_t prv_get_precise_time(void) {
   time_t seconds;
   uint16_t milliseconds;

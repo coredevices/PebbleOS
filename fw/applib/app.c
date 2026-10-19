@@ -21,7 +21,6 @@ static void prv_render_app(void) {
     window_render(app_window_stack_get_top_window(), ctx);
     SYS_PROFILER_NODE_STOP(render_app);
   } else {
-    // TODO: PBL-17645 render container layer instead of the two windows
     WindowTransitioningContext *transition_context = &stack->transition_context;
 
     if (transition_context->implementation->render) {

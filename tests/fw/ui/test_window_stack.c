@@ -1369,7 +1369,7 @@ void test_window_stack__pop_during_window_unload(void) {
   cl_assert_equal_i(window_stack_count(stack), 0);
   cl_assert_equal_i(prv_get_load_unload_count(), 0);
   cl_assert_equal_i(prv_get_appear_disappear_count(), 0);
-  // FIXME: PBL-25460
+  // TODO: the transition stays scheduled after the window is unloaded
   //  cl_assert_equal_b(animation_is_scheduled(fake_animation_get_first_animation()), false);
 }
 

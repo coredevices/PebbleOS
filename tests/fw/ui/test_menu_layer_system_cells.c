@@ -29,7 +29,6 @@
 
 static bool s_cell_is_highlighted = false;
 
-// TODO PBL-23041: When round MenuLayer animations are enabled, we need a "is_selected" function
 bool menu_cell_layer_is_highlighted(const Layer *cell_layer) {
   return s_cell_is_highlighted;
 }

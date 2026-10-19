@@ -683,7 +683,6 @@ static uint32_t prv_get_time_normalized_raw(const AnimationPrivate *animation, u
 }
 
 AnimationProgress animation_private_get_animation_progress(const AnimationPrivate *animation) {
-  // FIXME PBL-25497: Make this function less fragile
   // Calling prv_get_ms_since_system_start() here means this function will have different return
   // values if it's called multiple times, all of which will be different from the value actually
   // passed to the animations .update() function
@@ -1615,8 +1614,7 @@ bool animation_set_reverse(Animation *animation_h, bool reverse) {
     return false;
   }
 
-  // NOTE: We still need to implement reverse for sequence and spawn animations.
-  // tracked in this JIRA: https://pebbletechnology.atlassian.net/browse/PBL-14838
+  // TODO: reverse is not implemented for sequence and spawn animations
   animation->reverse = reverse;
   return true;
 }

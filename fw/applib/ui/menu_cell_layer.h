@@ -20,7 +20,6 @@
 //!   @{
 
 //! @internal
-//! TODO: PBL-21467 Implement MenuCellLayer
 //! MenuCellLayer is a virtual layer until it is actually implemented
 
 typedef enum MenuCellLayerIconAlign {

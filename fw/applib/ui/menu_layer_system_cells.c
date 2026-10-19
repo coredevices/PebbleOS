@@ -533,7 +533,6 @@ static PBL_ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_two_columns_round(
 
 static PBL_ALWAYS_INLINE void prv_menu_cell_basic_draw_custom_round(
     GContext *ctx, const Layer *cell_layer, const MenuCellLayerConfig *config) {
-  // TODO PBL-23041: When round MenuLayer animations are enabled, we need a "is_selected" function
   const bool cell_is_selected = menu_cell_layer_is_highlighted(cell_layer);
   const bool draw_two_columns =
       (config->value || (config->icon && ((GAlign)config->icon_align == GAlignRight)));
@@ -561,7 +560,6 @@ static PBL_ALWAYS_INLINE void prv_draw_cell(GContext *ctx, const Layer *cell_lay
       ctx, cell_layer, config);
 }
 
-//! TODO: PBL-21467 Replace with MenuCellLayer
 void menu_cell_layer_draw(GContext *ctx, const Layer *cell_layer,
                           const MenuCellLayerConfig *config) {
   prv_draw_cell(ctx, cell_layer, config);

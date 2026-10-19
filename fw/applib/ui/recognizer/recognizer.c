@@ -91,9 +91,8 @@ static void prv_send_subscriber_event(Recognizer *recognizer) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Implementation interface
 
-// TODO: we may need to make wrap these calls for the SDK access so that the asserts on invalid
-// data/transitions are not triggered. I'd like to preserve them for internal use to quickly catch
-// errors (https://pebbletechnology.atlassian.net/browse/PBL-31359)
+// TODO: wrap these for SDK access so invalid data/transitions don't trigger the asserts, which
+// are kept to catch internal errors
 
 static void prv_init_recognizer(Recognizer *recognizer, const RecognizerImpl *impl,
                                 const void *data, size_t data_size, RecognizerEventCb event_cb,

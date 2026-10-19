@@ -79,7 +79,7 @@ static void prv_unload_removed_windows(WindowStack *window_stack) {
     //
     // For now, rely on our animation transition routines having checks for
     // NULL windows since our animation subsystem can't cope with these
-    // unschedules in some cases (See PBL-25460 for more details)
+    // unschedules in some cases.
     if (context->window_to == items_to_unload[i]->window) {
       context->window_to = nullptr;
     }
@@ -124,7 +124,6 @@ static void prv_transition_to(Window *window_from, Window *window_to,
     .implementation = transition,
   };
 
-  // TODO: PBL-17806 in future, store frames and config values as well
   if (transition->create_animation) {
     context->animation = transition->create_animation(context);
   }
@@ -135,9 +134,7 @@ static void prv_transition_to(Window *window_from, Window *window_to,
   }
   PBL_ASSERTN(context->animation);
 
-  // TODO: PBL-17645 setup container view
   animation_schedule(context->animation);
-  // TODO: PBL-17645 cleanup container view in animation.stopped
 }
 
 static void prv_next_inserter(WindowStackItem *stack_item) {
@@ -480,8 +477,7 @@ void window_transition_context_appear(WindowTransitioningContext *context) {
 
   ClickManager *click_manager = window_manager_get_window_click_manager(window_to);
   if (window_manager_is_window_focused(window_to)) {
-    // TODO: PBL-37477 Window Stack directly calls click config
-    // Either this or app_click_config_setup_with_window should be calling
+    // TODO: this or app_click_config_setup_with_window should call
     // window_setup_click_config_provider instead
     app_click_config_setup_with_window(click_manager, window_to);
 

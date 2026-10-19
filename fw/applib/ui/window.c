@@ -419,8 +419,6 @@ void window_unload(Window *window) {
   // unload.
 }
 
-// TODO PBL-1769: deal with window unload. In app deinit? When low memory?
-
 void window_set_on_screen(Window *window, bool new_on_screen, bool call_window_appear_handlers) {
   PBL_ASSERTN(window != nullptr); // This tripped me up for about a day
   if (new_on_screen == window->on_screen) {
