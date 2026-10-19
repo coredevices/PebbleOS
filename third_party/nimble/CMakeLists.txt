@@ -90,5 +90,6 @@ pbl_library_compile_options(
   -Wno-unused-function
   -Wno-sign-compare
   -Wno-old-style-declaration
+  -Wno-unused-but-set-global
   -Wimplicit-fallthrough=1
 )
