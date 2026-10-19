@@ -19,9 +19,9 @@ FAST_DISCOVERY_S = 5 * 60
 NOMINAL_VOLTAGE_MV = 3800
 IDLE_NOMINAL_UA = {
     "obelix": {
-        "advertising_fast": 300,
-        "advertising_slow": 152,
-        "airplane_mode": 146,
+        "advertising_fast": 954,
+        "advertising_slow": 130,
+        "airplane_mode": 97,
     },
     "getafix": {
         "advertising_fast": 953,
