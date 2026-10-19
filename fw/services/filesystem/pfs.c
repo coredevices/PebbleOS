@@ -2138,13 +2138,6 @@ void pbl_analytics_external_collect_pfs_stats(void) {
  * Debug Utilities
  */
 
-// TODO: Remove once we figure out PBL-20973
-void pfs_collect_diagnostic_data(int fd, void *diagnostic_buf, size_t diagnostic_buf_len) {
-  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-  memcpy(diagnostic_buf, &PFS_FD(fd), MIN(diagnostic_buf_len, sizeof(FileDesc)));
-  pbl_mutex_unlock(&s_pfs_mutex);
-}
-
 // Dump the first n bytes of a file (from current seek position)
 void pfs_debug_dump(int fd, int num_bytes) {
   uint8_t *bytes = kernel_malloc(num_bytes);
