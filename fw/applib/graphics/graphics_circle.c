@@ -54,7 +54,7 @@ static GPointPrecise prv_get_rotated_precise_point(GPointPrecise center, uint16_
 static GPointPrecise prv_get_rotated_precise_point_for_ellipsis(GPointPrecise center,
                                                                 uint16_t radius_x,
                                                                 uint16_t radius_y, uint32_t angle) {
-  // PBL-25637: goes bonkers for ellipsis and angles around 90° and 270°
+  // TODO: inaccurate for ellipses at angles near 90° and 270°
   if (radius_x == radius_y) {
     // We're dealing with circle here - theres an easier way...
     return prv_get_rotated_precise_point(center, radius_x, angle);
@@ -346,23 +346,6 @@ PBL_T_STATIC void graphics_circle_quadrant_draw_1px_aa(GContext *ctx, GPoint p, 
   graphics_release_frame_buffer(ctx, framebuffer);
 }
 #endif // PBL_COLOR
-
-/*
-static void prv_circle_arc_draw_1px(GContext* ctx, GPoint center, uint16_t radius,
-                                    int32_t angle_start, int32_t angle_end) {
-  // TODO: PBL-23119 Write non-aa function
-  // TODO: PBL-24777 Write new 1px functions (with support for ellipsis)
-//  prv_circle_quadrant_part_1px_aa(ctx, center, radius, config.start_quadrant.angle_start,
-//                                  config.start_quadrant.angle_end);
-//
-//  prv_circle_quadrant_part_1px_aa(ctx, center, radius, config.end_quadrant.angle_start,
-//                                  config.end_quadrant.angle_end);
-//
-//  if (config.full_quadrants != GCornerNone) {
-//    graphics_circle_quadrant_draw_1px_aa(ctx, center, radius, config.full_quadrants);
-//  }
-}
-*/
 
 inline void prv_vline_quadrant(GCornerMask quadrant, GCornerMask desired, GContext *ctx, int16_t x,
                                Fixed_S16_3 start, Fixed_S16_3 end) {
@@ -1203,14 +1186,6 @@ PBL_T_MOCKABLE void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrec
     // Dont draw anything
     return;
   }
-  // TODO: Adapt this to support new precision, for now this is faked by regular fill
-  // This will be done with PBL-24777
-  /*
-    else if (stroke_width == 1) {
-      prv_circle_arc_draw_1px(ctx, center, radius, angle_start, angle_end);
-      return;
-    }
-  */
   // Color hack to draw using stroke_color instead of fill_color
   GColor tmp_color = ctx->draw_state.fill_color;
   ctx->draw_state.fill_color = ctx->draw_state.stroke_color;
@@ -1270,9 +1245,6 @@ PBL_T_MOCKABLE void graphics_fill_radial_precise_internal(GContext *ctx, GPointP
                                                           Fixed_S16_3 radius_inner,
                                                           Fixed_S16_3 radius_outer,
                                                           int32_t angle_start, int32_t angle_end) {
-  // This function is going to be replaced with function that will support drawing of ellipsis
-  //   as documented in PBL-23640
-
   // For now we only accept .0 and .5 radius precision
   radius_inner.raw_value -= radius_inner.raw_value % (FIXED_S16_3_ONE.raw_value / 2);
   radius_outer.raw_value -= radius_outer.raw_value % (FIXED_S16_3_ONE.raw_value / 2);
@@ -1292,23 +1264,6 @@ PBL_T_MOCKABLE void graphics_fill_radial_precise_internal(GContext *ctx, GPointP
     return;
   }
 
-  // TODO: Adapt this to support new precision, for now this is faked by regular fill
-  // This will be done with PBL-24777
-  /*
-    if (radius_outer.raw_value - radius_inner.raw_value == FIXED_S16_3_ONE.raw_value) {
-      // Color hack
-      GColor tmp_color = ctx->draw_state.stroke_color;
-      ctx->draw_state.stroke_color = ctx->draw_state.fill_color;
-
-      // prv_circle_arc_draw_1px(ctx, center, radius_outer, angle_start, angle_end);
-
-      // Restore color
-      ctx->draw_state.stroke_color = tmp_color;
-
-      // We're done here
-      return;
-    } else
-  */
   if (radius_outer.raw_value - radius_inner.raw_value < FIXED_S16_3_ONE.raw_value) {
     // Abort, abort!
     return;
