@@ -239,7 +239,6 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
     // Only relevant for iOS + BLE, otherwise this is a no-op:
     app_launch_trigger();
 
-    // TODO: PBL-1771: find a more graceful way to handle this
 #ifndef CONFIG_RECOVERY_FW
     system_task_add_callback(dls_private_handle_disconnect, nullptr);
 #endif
