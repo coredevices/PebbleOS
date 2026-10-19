@@ -58,6 +58,9 @@ function(pbl_link_native)
     )
     set_property(TARGET pebbleos APPEND PROPERTY LINK_DEPENDS
       ${PBL_PBPACK} ${PBL_BASE}/soc/posix/emscripten/shell.html)
+    foreach(frame pt2-br pt2-sb)
+      configure_file(${PBL_BASE}/soc/posix/emscripten/${frame}.png ${frame}.png COPYONLY)
+    endforeach()
   elseif(APPLE)
     # Packed structs hold pointers at unaligned offsets, which chained fixups
     # cannot rebase.

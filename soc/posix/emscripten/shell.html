@@ -5,40 +5,292 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PebbleOS</title>
 <style>
-  :root { color-scheme: dark; }
-  body { margin: 0; padding: 32px 0; display: flex; flex-direction: column; align-items: center;
-         gap: 16px; background: #111; color: #ccc;
-         font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
-  #canvas { width: 400px; height: 456px; image-rendering: pixelated; outline: none;
-            border-radius: 12px; box-shadow: 0 0 0 10px #222, 0 12px 40px #000; background: #000; }
-  #status { min-height: 1.4em; }
-  #log { width: min(720px, calc(100vw - 32px)); height: 30vh; margin: 0; padding: 8px; overflow: auto;
-         background: #000; border-radius: 6px; white-space: pre-wrap; }
-  .hint { color: #777; }
+  :root {
+    color-scheme: dark;
+    --bg: #15171a;
+    --fg: #d6d8db;
+    --dim: #868b92;
+    --panel: #1f2226;
+    --line: #2d3136;
+    --accent: #ff4f1f;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 20px 16px 16px; background: var(--bg); color: var(--fg);
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* The watch is laid out on the frame artwork's 293x432 grid, --px per cell. */
+  #watch {
+    --px: 1.5px;
+    position: relative; flex: none;
+    width: calc(293 * var(--px)); height: calc(432 * var(--px));
+    user-select: none; -webkit-user-select: none; touch-action: none;
+  }
+  .frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  /* A copy under the screen casts the shadow, which would show through the screen hole. */
+  #shadow { filter: drop-shadow(0 18px 36px rgba(0, 0, 0, .55)); }
+  #canvas, #screen, #boot {
+    position: absolute;
+    left: calc(46 * var(--px)); top: calc(102 * var(--px));
+    width: calc(200 * var(--px)); height: calc(228 * var(--px));
+  }
+  /* SDL draws here; the screen below shows it, so the browser never scales it. */
+  #canvas { opacity: 0; outline: none; display: block; }
+  #screen { background: #000; display: block; }
+  #boot {
+    display: flex; align-items: center; justify-content: center; background: #000;
+    color: #fff; font-weight: 600; letter-spacing: .02em; pointer-events: none;
+    transition: opacity .3s;
+  }
+  #boot.done { opacity: 0; }
+  #boot.crash {
+    flex-direction: column; gap: 8px; padding: 12px; opacity: 1; pointer-events: auto;
+    text-align: center; font-weight: 400; letter-spacing: 0;
+  }
+  #boot.crash strong { color: var(--accent); font-size: 15px; }
+  #boot.crash small { color: var(--dim); font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+                      overflow-wrap: anywhere; }
+
+  .btn {
+    position: absolute; padding: 0; border: 0; background: transparent; cursor: pointer;
+    width: calc(26 / 293 * 100%); height: calc(64 / 432 * 100%);
+  }
+  .btn::after {
+    content: ""; position: absolute; top: 4%; bottom: 4%; width: calc(14 / 26 * 100%);
+    border-radius: 3px; background: rgba(255, 255, 255, 0); transition: background .08s;
+  }
+  .btn.left { left: calc(-6 / 293 * 100%); }
+  .btn.left::after { right: 0; }
+  .btn.right { left: calc(273 / 293 * 100%); }
+  .btn.right::after { left: calc(4 / 26 * 100%); }
+  .btn:hover::after { background: rgba(255, 255, 255, .14); }
+  .btn.down::after { background: rgba(0, 0, 0, .35); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  #b-back   { top: calc(110 / 432 * 100%); }
+  #b-up     { top: calc(110 / 432 * 100%); }
+  #b-select { top: calc(182 / 432 * 100%); }
+  #b-down   { top: calc(258 / 432 * 100%); }
+
+  #bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px;
+         max-width: 720px; color: var(--dim); }
+  #bar .group { display: flex; align-items: center; gap: 8px; }
+  kbd { display: inline-block; min-width: 1.7em; padding: 1px 6px; border: 1px solid var(--line);
+        border-bottom-width: 2px; border-radius: 5px; background: var(--panel); color: var(--fg);
+        font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: center; }
+  .swatch { width: 18px; height: 18px; padding: 0; border-radius: 50%; cursor: pointer;
+            border: 2px solid var(--line); }
+  .swatch[aria-pressed="true"] { border-color: var(--fg); }
+  .swatch[data-skin="pt2-sb"] { background: linear-gradient(135deg, #cfd2d4 50%, #2a9be0 50%); }
+  .swatch[data-skin="pt2-br"] { background: linear-gradient(135deg, #2c2d2f 50%, #ff4f1f 50%); }
+  button.text { padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px;
+                background: var(--panel); color: var(--fg); font: inherit; cursor: pointer; }
+  button.text:hover { border-color: var(--dim); }
+
+  #log { width: min(720px, 100%); height: 28vh; margin: 0; padding: 8px 10px; overflow: auto;
+         border: 1px solid var(--line); border-radius: 8px; background: #0c0d0f; color: #b9bdc2;
+         font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+  #log[hidden] { display: none; }
 </style>
 </head>
 <body>
-<canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
-<div id="status">Loading…</div>
-<div class="hint">Click the screen, then: arrows = up / down / select / back, Enter = select,
-  Esc = back. The mouse is a finger; scroll to drag.</div>
-<pre id="log"></pre>
+<div id="watch">
+  <img class="frame" id="shadow" alt="" src="pt2-br.png">
+  <canvas id="screen"></canvas>
+  <canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="boot">Loading…</div>
+  <img class="frame" id="frame" alt="" src="pt2-br.png">
+  <button class="btn left"  id="b-back"   data-key="Escape"     aria-label="Back"></button>
+  <button class="btn right" id="b-up"     data-key="ArrowUp"    aria-label="Up"></button>
+  <button class="btn right" id="b-select" data-key="ArrowRight" aria-label="Select"></button>
+  <button class="btn right" id="b-down"   data-key="ArrowDown"  aria-label="Down"></button>
+</div>
+
+<div id="bar">
+  <span class="group"><kbd>←</kbd>back <kbd>↑</kbd>up <kbd>→</kbd>select <kbd>↓</kbd>down</span>
+  <span class="group">Mouse is a finger, wheel drags</span>
+  <span class="group">
+    <button class="swatch" data-skin="pt2-br" aria-label="Black and red" aria-pressed="true"></button>
+    <button class="swatch" data-skin="pt2-sb" aria-label="Silver and blue" aria-pressed="false"></button>
+  </span>
+  <span class="group">
+    <button class="text" id="reset">Reset</button>
+    <button class="text" id="toggle-log" aria-expanded="false">Show log</button>
+  </span>
+</div>
+<pre id="log" hidden></pre>
+
 <script>
-  const log = document.getElementById('log');
-  const canvas = document.getElementById('canvas');
-  canvas.addEventListener('click', () => canvas.focus());
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('canvas');
+  const log = $('log');
+  const screen = $('screen');
+  const ctx = screen.getContext('2d');
+
+  // Keep the frame around after it is shown, for the screen to copy.
+  const getContext = canvas.getContext.bind(canvas);
+  canvas.getContext = (type, attrs) =>
+    getContext(type, type.startsWith('webgl') ? { ...attrs, preserveDrawingBuffer: true } : attrs);
+
+  // Emscripten's SDL reads key events from the window.
+  const KEYS = {
+    Escape: { keyCode: 27, button: 'b-back' },
+    ArrowLeft: { keyCode: 37, button: 'b-back' },
+    Backspace: { keyCode: 8, button: 'b-back' },
+    ArrowUp: { keyCode: 38, button: 'b-up' },
+    ArrowRight: { keyCode: 39, button: 'b-select' },
+    Enter: { keyCode: 13, button: 'b-select' },
+    ' ': { keyCode: 32, button: 'b-select' },
+    ArrowDown: { keyCode: 40, button: 'b-down' },
+  };
+  const CODES = { ' ': 'Space' };
+
+  function sendKey(type, key) {
+    const k = KEYS[key];
+    window.dispatchEvent(new KeyboardEvent(type, {
+      key, code: CODES[key] || key, keyCode: k.keyCode, which: k.keyCode, bubbles: true,
+    }));
+  }
+
+  // Frame buttons: held while the pointer is down, so long presses work.
+  for (const el of document.querySelectorAll('.btn')) {
+    const key = el.dataset.key;
+    let held = false;
+    const release = () => {
+      if (!held) return;
+      held = false;
+      el.classList.remove('down');
+      sendKey('keyup', key);
+    };
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      held = true;
+      el.classList.add('down');
+      sendKey('keydown', key);
+    });
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+    el.addEventListener('lostpointercapture', release);
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  // Keyboard presses light up the matching frame button.
+  for (const type of ['keydown', 'keyup']) {
+    window.addEventListener(type, (e) => {
+      const k = KEYS[e.key];
+      if (!k) return;
+      if (e.isTrusted) e.preventDefault();
+      $(k.button).classList.toggle('down', type === 'keydown');
+    });
+  }
+
+  function setSkin(skin) {
+    $('frame').src = $('shadow').src = skin + '.png';
+    for (const s of document.querySelectorAll('.swatch')) {
+      s.setAttribute('aria-pressed', String(s.dataset.skin === skin));
+    }
+    try { localStorage.setItem('pebbleos-skin', skin); } catch (e) {}
+  }
+  for (const s of document.querySelectorAll('.swatch')) {
+    s.addEventListener('click', () => setSkin(s.dataset.skin));
+  }
+  try {
+    const skin = localStorage.getItem('pebbleos-skin');
+    if (skin && document.querySelector(`.swatch[data-skin="${skin}"]`)) setSkin(skin);
+  } catch (e) {}
+
+  // A fixed size, with a whole number of device pixels per watch pixel,
+  // smaller only when it does not fit.
+  function fit() {
+    const dpr = window.devicePixelRatio || 1;
+    const room = Math.min(1.5, (innerWidth - 32) / 293, (innerHeight - 100) / 432);
+    const k = Math.floor(room * dpr);
+    $('watch').style.setProperty('--px', (k >= 1 ? k / dpr : room) + 'px');
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  // The screen's backing store matches its device pixels, and is drawn with
+  // square pixels, whatever the zoom.
+  new ResizeObserver(([e]) => {
+    const dpr = window.devicePixelRatio || 1;
+    const w = e.contentRect.width * dpr, h = e.contentRect.height * dpr;
+    // Emulated device scales report CSS pixels here.
+    const box = e.devicePixelContentBoxSize?.[0];
+    const exact = box && Math.abs(box.inlineSize - w) < 1 && Math.abs(box.blockSize - h) < 1;
+    screen.width = exact ? box.inlineSize : Math.round(w);
+    screen.height = exact ? box.blockSize : Math.round(h);
+  }).observe(screen);
+
+  function draw() {
+    if (canvas.width && canvas.height) {
+      const r = Math.min(screen.width / canvas.width, screen.height / canvas.height);
+      const k = r >= 1 ? Math.round(r) : r;
+      const w = canvas.width * k, h = canvas.height * k;
+      ctx.imageSmoothingEnabled = r < 1;
+      ctx.drawImage(canvas, (screen.width - w) >> 1, (screen.height - h) >> 1, w, h);
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  $('reset').addEventListener('click', () => location.reload());
+  function showLog(show) {
+    const button = $('toggle-log');
+    log.hidden = !show;
+    button.textContent = show ? 'Hide log' : 'Show log';
+    button.setAttribute('aria-expanded', String(show));
+    if (show) log.scrollTop = log.scrollHeight;
+  }
+  $('toggle-log').addEventListener('click', () => showLog(log.hidden));
+
+  // A trap ends the firmware without a word, so say so on the screen.
+  let crashed = false;
+  function crash(error) {
+    if (crashed) return;
+    crashed = true;
+    print(`\n*** firmware crashed: ${error?.stack || error} ***`);
+    const restart = document.createElement('button');
+    restart.className = 'text';
+    restart.textContent = 'Restart';
+    restart.addEventListener('click', () => location.reload());
+    const title = document.createElement('strong');
+    title.textContent = 'Firmware crashed';
+    const detail = document.createElement('small');
+    detail.textContent = error?.message || String(error);
+    const boot = $('boot');
+    boot.classList.remove('done');
+    boot.classList.add('crash');
+    boot.replaceChildren(title, detail, restart);
+    showLog(true);
+  }
+  window.addEventListener('error', (e) => crash(e.error || e.message));
+  window.addEventListener('unhandledrejection', (e) => crash(e.reason));
+
   function print(text) {
     const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
     log.textContent += text + '\n';
     if (log.textContent.length > 200000) log.textContent = log.textContent.slice(-150000);
     if (atBottom) log.scrollTop = log.scrollHeight;
   }
+
   var Module = {
     canvas,
     print,
     printErr: print,
-    setStatus: (text) => { document.getElementById('status').textContent = text; },
-    onRuntimeInitialized: () => canvas.focus(),
+    setStatus: (text) => {
+      const m = text.match(/\((\d+(?:\.\d+)?)\/(\d+)\)/);
+      $('boot').textContent = m ? `Loading… ${Math.round(100 * m[1] / m[2])}%` : (text || 'Booting…');
+    },
+    onAbort: (what) => crash(what),
+    onRuntimeInitialized: () => {
+      $('boot').classList.add('done');
+      canvas.focus();
+    },
   };
 </script>
 {{{ SCRIPT }}}

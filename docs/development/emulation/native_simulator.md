@@ -131,9 +131,11 @@ pbl build
 python3 -m http.server --directory build
 ```
 
-Then open <http://localhost:8000/pebbleos.html>. Click the screen to give it
-the keyboard; the firmware log shows under it. The flash lives in memory, so
-the watch starts afresh on every load, and there is no shell.
+Then open <http://localhost:8000/pebbleos.html>. The watch has the emulator's
+frame: click its buttons, or use the arrow keys (left is back, right is
+select); the mouse is a finger on the screen. The firmware log is a click
+away. The flash lives in memory, so the watch starts afresh on every load,
+and there is no shell.
 
 ## How it works
 
