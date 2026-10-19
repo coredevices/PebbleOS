@@ -145,27 +145,6 @@ void test_graphics_draw_stroke_precise_${BIT_DEPTH_NAME}__offset_layer_non_aa(vo
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_precise_same_point_offset_layer_non_aa.${BIT_DEPTH_NAME}.pbi"));
 }
 
-#define COLOR_START_POINT   GPointPrecise(5, 35)
-#define COLOR_END_POINT     GPointPrecise(45, 40)
-
-void test_graphics_draw_stroke_${BIT_DEPTH_NAME}__color(void) {
-  // TODO: Fix blending and reenable this - PBL-16509
-/*
-  GContext ctx;
-  test_graphics_context_init(&ctx, fb);
-
-  setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 10);
-  graphics_context_set_stroke_color(&ctx, GColorBlack);
-  graphics_line_draw_precise_stroked_aa(&ctx, COLOR_START_POINT, COLOR_END_POINT, 10);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_precise_inside_origin_layer.${BIT_DEPTH_NAME}.pbi"));
-
-  setup_test_aa_sw(&ctx, fb, OFFSET_RECT_NO_CLIP, OFFSET_RECT_NO_CLIP, true, 10);
-  graphics_context_set_stroke_color(&ctx, GColorClear);
-  graphics_line_draw_precise_stroked_non_aa(&ctx, COLOR_START_POINT, COLOR_END_POINT, 10);
-  cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_stroke_precise_inside_origin_layer.${BIT_DEPTH_NAME}.pbi"));
-*/
-}
-
 /*
  * Following points come from bug reports, causing "plasma effect" where multiple
  *   lines in close vicinity of one spot (~1 pixel) caused artifact instead of
