@@ -112,7 +112,7 @@ static int32_t prv_get_avg_hr(void) {
 
 static void prv_update_duration(void) {
   // We can't just increment the time on a second callback because of the inaccuracy of our timer
-  // system. PBL-32523
+  // system.
   // Instead, we keep track of a start_utc, paused_time, and last_paused_utc. With these
   // we can accurately keep track of the total duration of the workout.
   if (!workout_service_is_workout_ongoing()) {

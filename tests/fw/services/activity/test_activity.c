@@ -2210,7 +2210,7 @@ void test_activity__sleep_after_timezone_change(void) {
   // ----------------------------------------------------------------------------
   // Let's start out in EST time when tracking starts. All of our tests start at 5pm UTC, which is
   // 12pm EST. Let's start out in this time zone then switch back to PST right before we fall
-  // asleep. This replicates the conditions that resulted in PBL-24823
+  // asleep. This replicates the conditions of an old sleep tracking bug.
   TimezoneInfo tz_info = {
     .tm_zone = "EST",
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,

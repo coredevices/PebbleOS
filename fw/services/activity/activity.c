@@ -190,7 +190,7 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
 
     // Perform a basic validity check so we only proceed with reasonable data
     // TODO: Use quality to filter out some readings,
-    // TODO PBL-40784: Use HRMQuality_OffWrist as a special case to slow down the HRM subscription
+    // TODO: Use HRMQuality_OffWrist as a special case to slow down the HRM subscription
     bool valid_hr_reading = true;
     if (hrm_event->bpm.bpm < ACTIVITY_DEFAULT_MIN_HR ||
         hrm_event->bpm.bpm > ACTIVITY_DEFAULT_MAX_HR) {
@@ -855,7 +855,7 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
 // Tail end of prv_process_minute_data, separated out to decrease stack requirements. This
 // portion of the logic handles activity process, saving prefs to our backing store, and
 // resetting metrics at midnight.
-// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler
 static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
   bool need_history_update_event;
   uint16_t cur_day_index;
@@ -922,7 +922,7 @@ static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
 // ------------------------------------------------------------------------------------------------
 // Takes care of updating the history when we reach midnight as well as checking for changes in
 // sleep state. Returns true if the sleep metrics were updated
-// We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
+// We use PBL_NOINLINE to reduce the stack requirements during the minute handler
 static void PBL_NOINLINE prv_process_minute_data(time_t utc_sec) {
   // Update the metrics
   activity_metrics_prv_minute_handler(utc_sec);

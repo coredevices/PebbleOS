@@ -864,7 +864,6 @@ void test_activity_insights__activation_delay_insights_fifteen_interval_trigger(
 
 // Make sure that when the watch resets, we retain state properly
 void test_activity_insights__nap_session_power_cycle(void) {
-  // PBL-36355 Disable nap notifications
   // Enable this unit test when re-enabling nap session notifications
 #if 0
   prv_set_sleep_history_avg();

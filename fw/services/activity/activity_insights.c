@@ -1896,7 +1896,6 @@ void prv_process_activity_sessions(time_t now_utc) {
       }
       switch (sessions[i].type) {
         case ActivitySessionType_Nap:
-          // PBL-36355 Disable nap notifications
           // Nap notifications are disabled until we get better at detecting naps
           // Re-enable nap session unit tests when re-enabling nap session notifications
           break;
