@@ -764,9 +764,9 @@ void light_toggle_ambient_sensor_enabled(void) {
     prv_change_state(LIGHT_STATE_ON_TIMED);
   } else {
     prv_change_state(LIGHT_STATE_OFF);
-    // FIXME: PBL-24793 There is an edge case of when the backlight has timed off
-    // or you're toggling it from no ambient (always light on buttons) to ambient,
-    // you will see it turn on and immediately off if its bright out
+    // TODO: when the backlight has timed off or you're toggling from no ambient
+    // (always light on buttons) to ambient, it turns on and immediately off if it's
+    // bright out.
   }
   pbl_mutex_unlock(&s_mutex);
 }
