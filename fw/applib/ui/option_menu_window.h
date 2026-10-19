@@ -84,6 +84,12 @@ typedef struct {
 
 uint16_t option_menu_default_cell_height(OptionMenuContentType content_type, bool selected);
 
+//! Height of a system row for its title
+uint16_t option_menu_system_cell_height(OptionMenu *option_menu, const char *title, bool selected);
+
+//! Whether a system row's title needs a second line at the width the row draws it in
+bool option_menu_title_wraps(const OptionMenu *option_menu, const char *title);
+
 void option_menu_set_status_colors(OptionMenu *option_menu, GColor background, GColor foreground);
 void option_menu_set_normal_colors(OptionMenu *option_menu, GColor background, GColor foreground);
 void option_menu_set_highlight_colors(OptionMenu *option_menu, GColor background,

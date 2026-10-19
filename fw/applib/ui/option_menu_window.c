@@ -7,9 +7,17 @@
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/menu_text_scroll.h>
+#include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
 #include <shell/system_theme_style.h>
+
+#if PBL_ROUND
+//! Space between the text and the icon, and on the left of the text
+#define ROUND_ICON_TEXT_INSET 14
+//! Extra left inset of unselected text beside an icon, so it isn't clipped
+#define ROUND_UNSELECTED_TEXT_INSET 8
+#endif
 
 static const SystemThemeOptionMenuStyle *prv_get_style(void) {
   return &system_theme_get_style()->option_menu;
@@ -46,6 +54,43 @@ uint16_t option_menu_default_cell_height(OptionMenuContentType content_type, boo
   return cell_height ?: menu_cell_basic_cell_height();
 }
 
+//! Width the system row draws its title in
+static int16_t prv_get_title_width(const OptionMenu *option_menu) {
+  const SystemThemeOptionMenuStyle *const style = prv_get_style();
+#if PBL_ROUND
+  // Unselected rows beside an icon
+  const int16_t icon_inset = gbitmap_get_bounds(&option_menu->chosen_image).size.w +
+                             ROUND_ICON_TEXT_INSET + style->right_icon_spacing;
+  return layer_get_bounds_by_value((const Layer *)&option_menu->menu_layer).size.w - icon_inset -
+         ROUND_ICON_TEXT_INSET - ROUND_UNSELECTED_TEXT_INSET;
+#else
+  const int16_t left_inset = menu_cell_basic_horizontal_inset();
+  int16_t right_inset = left_inset;
+  if (option_menu->icons_enabled) {
+    right_inset = style->right_text_inset_with_icon +
+                  gbitmap_get_bounds(&option_menu->chosen_image).size.w + style->right_icon_spacing;
+  }
+  return layer_get_bounds_by_value((const Layer *)&option_menu->menu_layer).size.w - left_inset -
+         right_inset - 2 * style->text_inset_single;
+#endif
+}
+
+bool option_menu_title_wraps(const OptionMenu *option_menu, const char *title) {
+  const GFont font = option_menu->title_font;
+  const int16_t line_height = fonts_get_font_height(font);
+  const GSize size = graphics_text_layout_get_max_used_size(
+      graphics_context_get_current_context(), title, font,
+      GRect(0, 0, prv_get_title_width(option_menu), 2 * line_height), GTextOverflowModeWordWrap,
+      GTextAlignmentLeft, nullptr);
+  return size.h > line_height;
+}
+
+uint16_t option_menu_system_cell_height(OptionMenu *option_menu, const char *title, bool selected) {
+  const uint16_t default_height =
+      option_menu_default_cell_height(option_menu->content_type, selected);
+  return default_height;
+}
+
 static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
                                             void *context) {
   const bool is_selected = menu_layer_is_index_selected(menu_layer, cell_index);
@@ -60,7 +105,7 @@ static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *ce
 
 static int32_t prv_draw_selection_icon(const OptionMenu *option_menu, GContext *ctx,
                                        const GRect *cell_layer_bounds, bool is_chosen) {
-  const int32_t left_icon_spacing = PBL_IF_RECT_ELSE(0, 14);
+  const int32_t left_icon_spacing = PBL_IF_RECT_ELSE(0, ROUND_ICON_TEXT_INSET);
   const GSize not_chosen_icon_bounds = gbitmap_get_bounds(&option_menu->not_chosen_image).size;
   const GSize chosen_icon_bounds = gbitmap_get_bounds(&option_menu->chosen_image).size;
   PBL_ASSERTN(gsize_equal(&not_chosen_icon_bounds, &chosen_icon_bounds));
@@ -89,7 +134,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
 
   if (option_menu->icons_enabled) {
     const bool is_chosen = (cell_index->row == option_menu->choice);
-    const int32_t left_inset_x = PBL_IF_RECT_ELSE(0, 14);
+    const int32_t left_inset_x = PBL_IF_RECT_ELSE(0, ROUND_ICON_TEXT_INSET);
     const int32_t right_inset_x =
         prv_draw_selection_icon(option_menu, ctx, &remaining_rect, is_chosen);
     remaining_rect = grect_inset(remaining_rect, GEdgeInsets(0, right_inset_x, 0, left_inset_x));
@@ -97,9 +142,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
 
 #if PBL_ROUND
   if (!is_selected && option_menu->icons_enabled) {
-    const int32_t left_text_inset_to_prevent_clipping = 8;
-    remaining_rect =
-        grect_inset(remaining_rect, GEdgeInsets(0, 0, 0, left_text_inset_to_prevent_clipping));
+    remaining_rect = grect_inset(remaining_rect, GEdgeInsets(0, 0, 0, ROUND_UNSELECTED_TEXT_INSET));
   }
 #else
   const SystemThemeOptionMenuStyle *const style = prv_get_style();
