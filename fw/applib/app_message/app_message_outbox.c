@@ -153,7 +153,6 @@ AppMessageResult app_message_outbox_begin(DictionaryIterator **iterator) {
   if (prv_is_message_pending(phase)) {
     PBL_LOG_ERR("Can't call app_message_outbox_begin() now, wait for sent_callback!");
 
-    // See https://pebbletechnology.atlassian.net/browse/PBL-10146
     // Workaround for apps that sit in a while() loop waiting on app_message_outbox_begin().
     // Sleep a little longer each time we get a consecutive poll that returns failure.
     prv_throttle(outbox);

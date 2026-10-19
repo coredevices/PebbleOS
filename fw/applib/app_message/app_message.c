@@ -43,8 +43,7 @@ void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *
       return;
 
     case CMD_REQUEST:
-      // Incoming request for an update push:
-      // TODO PBL-1636: decide to implement CMD_REQUEST, or remove it
+      // Not supported
       return;
 
     case CMD_ACK:
@@ -188,8 +187,6 @@ AppMessageResult app_message_open(const uint32_t size_inbound, const uint32_t si
 void app_message_close(void) {
   AppMessageCtx *app_message_ctx = app_state_get_app_message_ctx();
 
-  // TODO PBL-1634: handle the the return status when this function returns status.
-  // For now, continue to ignore failure.
   app_message_outbox_close(&app_message_ctx->outbox);
   app_message_inbox_close(&app_message_ctx->inbox);
 
