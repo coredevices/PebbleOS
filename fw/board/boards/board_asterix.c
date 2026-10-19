@@ -29,7 +29,6 @@
 // QSPI
 #include <hal/nrf_clock.h>
 #include <hal/nrf_gpio.h>
-#include <nrfx_gpiote.h>
 #include <nrfx_pdm.h>
 #include <nrfx_twim.h>
 

@@ -41,7 +41,7 @@ static const struct pbl_lsm6dso *s_dev;
 //   adjusted automatically when ODR changes, so it is possible to notice
 //   sensitivity changes when changing sampling interval.
 // - INT1 mixes level (FIFO threshold) and latched (wake-up) sources on a
-//   rising-edge EXTI, so a pad latched HIGH yields no further edges: shake
+//   rising-edge interrupt, so a pad latched HIGH yields no further edges: shake
 //   events die and the pending interrupt blocks deep sleep. The work handler
 //   re-checks the pad after servicing; a watchdog recovers the stream (FIFO
 //   cadence while sampling, fixed-rate pad poll in shake-only mode).

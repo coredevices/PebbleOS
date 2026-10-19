@@ -13,7 +13,6 @@
 #include <pbl/drivers/gpio/nrf5.h>
 
 #include <hal/nrf_gpio.h>
-#include <nrfx_gpiote.h>
 #include <nrfx_pdm.h>
 #include <nrfx_pwm.h>
 #include <nrfx_spim.h>
@@ -22,14 +21,6 @@
 
 #define GPIO_Port_NULL (nullptr)
 #define GPIO_Pin_NULL  ((uint16_t)-1)
-
-typedef struct {
-  nrfx_gpiote_t peripheral;
-  uint8_t channel;
-  uint32_t gpio_pin; ///< The result of NRF_GPIO_PIN_MAP(port, pin).
-} GpioteConfig;
-
-typedef GpioteConfig ExtiConfig; /* compatibility */
 
 typedef struct {
   const char *name;

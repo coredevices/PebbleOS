@@ -3,7 +3,6 @@
 
 #include <inttypes.h>
 
-#include <pbl/drivers/exti.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
@@ -13,6 +12,7 @@
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 
+#include <board/board.h>
 #include <hal/nrf_rtc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rtc_nrf5, CONFIG_DRIVER_RTC_LOG_LEVEL);
