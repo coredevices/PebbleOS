@@ -43,11 +43,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* The watch is laid out on the frame artwork's 293x432 grid, --px per cell. */
+  /* The watch is laid out on the frame artwork's grid, --px per cell. */
   #watch {
     --px: 1.5px;
     position: relative; flex: none;
-    width: calc(293 * var(--px)); height: calc(432 * var(--px));
+    width: calc(var(--fw) * var(--px)); height: calc(var(--fh) * var(--px));
     user-select: none; -webkit-user-select: none; touch-action: none;
   }
   .frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -56,9 +56,10 @@
   :root[data-theme="light"] #shadow { filter: drop-shadow(0 14px 28px rgba(0, 0, 0, .28)); }
   #canvas, #screen, #boot {
     position: absolute;
-    left: calc(46 * var(--px)); top: calc(102 * var(--px));
-    width: calc(200 * var(--px)); height: calc(228 * var(--px));
+    left: calc(var(--sx) * var(--px)); top: calc(var(--sy) * var(--px));
+    width: calc(var(--sw) * var(--px)); height: calc(var(--sh) * var(--px));
   }
+  #watch.round #screen, #watch.round #boot { border-radius: 50%; }
   /* SDL draws here; the screen below shows it, so the browser never scales it. */
   #canvas { opacity: 0; outline: none; display: block; }
   #screen { background: #000; display: block; }
@@ -77,36 +78,23 @@
                       overflow-wrap: anywhere; }
 
   .btn {
-    position: absolute; padding: 0; border: 0; background: transparent; cursor: pointer;
-    width: calc(26 / 293 * 100%); height: calc(64 / 432 * 100%);
+    position: absolute; padding: 0; border: 0; border-radius: 3px; cursor: pointer;
+    background: rgba(255, 255, 255, 0); transition: background .08s;
   }
-  .btn::after {
-    content: ""; position: absolute; top: 4%; bottom: 4%; width: calc(14 / 26 * 100%);
-    border-radius: 3px; background: rgba(255, 255, 255, 0); transition: background .08s;
-  }
-  .btn.left { left: calc(-6 / 293 * 100%); }
-  .btn.left::after { right: 0; }
-  .btn.right { left: calc(273 / 293 * 100%); }
-  .btn.right::after { left: calc(4 / 26 * 100%); }
-  .btn:hover::after { background: rgba(255, 255, 255, .14); }
-  .btn.down::after { background: rgba(0, 0, 0, .35); }
-  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-  #b-back   { top: calc(110 / 432 * 100%); }
-  #b-up     { top: calc(110 / 432 * 100%); }
-  #b-select { top: calc(182 / 432 * 100%); }
-  #b-down   { top: calc(258 / 432 * 100%); }
+  .btn:hover { background: rgba(255, 255, 255, .14); }
+  .btn.down { background: rgba(0, 0, 0, .35); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   #bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px;
          max-width: 720px; color: var(--dim); }
   #bar .group { display: flex; align-items: center; gap: 8px; }
+  #bar .group[hidden] { display: none; }
   kbd { display: inline-block; min-width: 1.7em; padding: 1px 6px; border: 1px solid var(--line);
         border-bottom-width: 2px; border-radius: 5px; background: var(--panel); color: var(--fg);
         font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: center; }
   .swatch { width: 18px; height: 18px; padding: 0; border-radius: 50%; cursor: pointer;
             border: 2px solid var(--line); }
   .swatch[aria-pressed="true"] { border-color: var(--fg); }
-  .swatch[data-skin="pt2-sb"] { background: linear-gradient(135deg, #cfd2d4 50%, #2a9be0 50%); }
-  .swatch[data-skin="pt2-br"] { background: linear-gradient(135deg, #2c2d2f 50%, #ff4f1f 50%); }
   button.text { padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px;
                 background: var(--panel); color: var(--fg); font: inherit; cursor: pointer; }
   button.text:hover { border-color: var(--dim); }
@@ -119,24 +107,21 @@
 </head>
 <body>
 <div id="watch">
-  <img class="frame" id="shadow" alt="" src="pt2-br.png">
+  <img class="frame" id="shadow" alt="">
   <canvas id="screen"></canvas>
   <canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
   <div id="boot">Loading…</div>
-  <img class="frame" id="frame" alt="" src="pt2-br.png">
-  <button class="btn left"  id="b-back"   data-key="Escape"     aria-label="Back"></button>
-  <button class="btn right" id="b-up"     data-key="ArrowUp"    aria-label="Up"></button>
-  <button class="btn right" id="b-select" data-key="ArrowRight" aria-label="Select"></button>
-  <button class="btn right" id="b-down"   data-key="ArrowDown"  aria-label="Down"></button>
+  <img class="frame" id="frame" alt="">
+  <button class="btn" id="b-back"   data-key="Escape"     aria-label="Back"></button>
+  <button class="btn" id="b-up"     data-key="ArrowUp"    aria-label="Up"></button>
+  <button class="btn" id="b-select" data-key="ArrowRight" aria-label="Select"></button>
+  <button class="btn" id="b-down"   data-key="ArrowDown"  aria-label="Down"></button>
 </div>
 
 <div id="bar">
   <span class="group"><kbd>←</kbd>back <kbd>↑</kbd>up <kbd>→</kbd>select <kbd>↓</kbd>down</span>
-  <span class="group">Mouse is a finger, wheel drags</span>
-  <span class="group">
-    <button class="swatch" data-skin="pt2-br" aria-label="Black and red" aria-pressed="true"></button>
-    <button class="swatch" data-skin="pt2-sb" aria-label="Silver and blue" aria-pressed="false"></button>
-  </span>
+  <span class="group" id="touch-hint">Mouse is a finger, wheel drags</span>
+  <span class="group" id="swatches"></span>
   <span class="group">
     <button class="text" id="reset">Reset</button>
     <button class="text" id="toggle-log" aria-expanded="false">Show log</button>
@@ -146,6 +131,71 @@
 
 <script>
   const $ = (id) => document.getElementById(id);
+
+  // Frame artwork and where the screen and buttons sit on it, as the QEMU
+  // decorations; the first skin is the default.
+  const PLATFORMS = {
+    emery: {
+      size: [293, 432], screen: [46, 102, 200, 228], touch: true,
+      skins: {
+        'pt2-br': ['Black and red', '#2c2d2f', '#ff4f1f'],
+        'pt2-sb': ['Silver and blue', '#cfd2d4', '#2a9be0'],
+      },
+      buttons: {
+        'b-back': [0, 112, 16, 60], 'b-up': [277, 112, 16, 60],
+        'b-select': [277, 184, 16, 60], 'b-down': [277, 260, 16, 60],
+      },
+    },
+    gabbro: {
+      size: [330, 460], screen: [36, 100, 260, 260], round: true, touch: true,
+      skins: {
+        'pr2-bk20': ['Black', '#2a2a2a', '#2a2a2a'],
+        'pr2-gd14': ['Gold', '#e08e43', '#0067af'],
+      },
+      buttons: {
+        'b-back': [0, 212, 18, 36], 'b-up': [298, 148, 22, 32],
+        'b-select': [308, 212, 22, 32], 'b-down': [290, 276, 26, 34],
+      },
+    },
+    flint: {
+      size: [220, 403], screen: [38, 117, 144, 168],
+      skins: {
+        'p2d-bk': ['Black', '#0d0d0d', '#313131'],
+        'p2d-wh': ['White', '#eaeaea', '#eeeeee'],
+      },
+      buttons: {
+        'b-back': [0, 116, 10, 48], 'b-up': [210, 116, 10, 48],
+        'b-select': [210, 176, 10, 52], 'b-down': [210, 240, 10, 44],
+      },
+    },
+  };
+  const PLATFORM = PLATFORMS['@PBL_PLATFORM_NAME@'];
+  const [FW, FH] = PLATFORM.size;
+
+  {
+    const watch = $('watch');
+    const [sx, sy, sw, sh] = PLATFORM.screen;
+    for (const [k, v] of Object.entries({ fw: FW, fh: FH, sx, sy, sw, sh })) {
+      watch.style.setProperty('--' + k, v);
+    }
+    watch.classList.toggle('round', !!PLATFORM.round);
+    for (const [id, [x, y, w, h]] of Object.entries(PLATFORM.buttons)) {
+      Object.assign($(id).style, {
+        left: `${100 * x / FW}%`, top: `${100 * y / FH}%`,
+        width: `${100 * w / FW}%`, height: `${100 * h / FH}%`,
+      });
+    }
+    $('touch-hint').hidden = !PLATFORM.touch;
+    for (const [skin, [label, a, b]] of Object.entries(PLATFORM.skins)) {
+      const s = document.createElement('button');
+      s.className = 'swatch';
+      s.dataset.skin = skin;
+      s.setAttribute('aria-label', label);
+      s.style.background = `linear-gradient(135deg, ${a} 50%, ${b} 50%)`;
+      $('swatches').append(s);
+    }
+  }
+
   const canvas = $('canvas');
   const log = $('log');
   const screen = $('screen');
@@ -209,29 +259,31 @@
     });
   }
 
-  function setSkin(skin) {
+  const SKIN_KEY = 'pebbleos-skin-@PBL_PLATFORM_NAME@';
+  function setSkin(skin, save = true) {
     $('frame').src = $('shadow').src = skin + '.png';
     for (const s of document.querySelectorAll('.swatch')) {
       s.setAttribute('aria-pressed', String(s.dataset.skin === skin));
     }
-    try { localStorage.setItem('pebbleos-skin', skin); } catch (e) {}
+    if (save) try { localStorage.setItem(SKIN_KEY, skin); } catch (e) {}
   }
   for (const s of document.querySelectorAll('.swatch')) {
     s.addEventListener('click', () => setSkin(s.dataset.skin));
   }
-  try {
-    const skin = localStorage.getItem('pebbleos-skin');
-    if (skin && document.querySelector(`.swatch[data-skin="${skin}"]`)) setSkin(skin);
-  } catch (e) {}
+  {
+    let skin = null;
+    try { skin = localStorage.getItem(SKIN_KEY); } catch (e) {}
+    setSkin(skin in PLATFORM.skins ? skin : Object.keys(PLATFORM.skins)[0], false);
+  }
 
   // A fixed size, with a whole number of device pixels per watch pixel,
   // smaller only when it does not fit.
   function fit() {
     const dpr = window.devicePixelRatio || 1;
     // Embedded, the frame takes the page's height, so only the width counts.
-    const height = embedded ? Infinity : (innerHeight - 100) / 432;
+    const height = embedded ? Infinity : (innerHeight - 100) / FH;
     const side = parseFloat(getComputedStyle(document.body).paddingLeft) * 2;
-    const room = Math.min(1.5, (innerWidth - side) / 293, height);
+    const room = Math.min(1.5, (innerWidth - side) / FW, height);
     const k = Math.floor(room * dpr);
     $('watch').style.setProperty('--px', (k >= 1 ? k / dpr : room) + 'px');
   }
