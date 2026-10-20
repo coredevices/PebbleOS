@@ -189,3 +189,15 @@ class BuildDir:
     @property
     def pbpack(self):
         return self.join("system_resources.pbpack")
+
+    def flash_region(self, name):
+        """``(address, size)`` of flash region ``name``, e.g. ``FILESYSTEM``."""
+        from pbl import flash_layout
+
+        layout = flash_layout.regions(self)
+        if name not in layout:
+            raise CommandContextError(
+                f"no {name} flash region on board {self.board}; "
+                f"regions: {', '.join(layout)}"
+            )
+        return layout[name]

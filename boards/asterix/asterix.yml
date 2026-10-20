@@ -4,6 +4,3 @@
 runners:
   - openocd
   - nrfutil
-
-# SYSTEM_RESOURCES_BANK_0, the bank the firmware checks first
-resources_offset: 0x200000

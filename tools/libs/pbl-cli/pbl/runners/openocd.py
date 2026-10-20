@@ -50,13 +50,11 @@ class OpenOcdRunner(Runner):
             raise UnsupportedOperation(
                 "the board has no support/resources.cfg to flash resources with"
             )
-        if self.cfg.resources_offset is None:
-            raise UnsupportedOperation("the board has no resources_offset")
         self._run_command(
             f"init; reset halt; program {self.cfg.hex_file}; "
             f"source {{{self._resources_cfg}}}; "
             f"pbl_flash_resources {{{self.cfg.resources_file}}} "
-            f"{self.cfg.resources_offset:#x}; "
+            f"{self.cfg.resources_address:#x}; "
             "echo {Resources Finished}; reset;",
             expect=[
                 "Programming Started",

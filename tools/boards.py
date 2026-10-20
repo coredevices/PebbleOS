@@ -10,14 +10,7 @@ NO_REVISION = "_"
 
 class BoardSpec:
     def __init__(
-        self,
-        target,
-        name,
-        revision=None,
-        variant=None,
-        runners=None,
-        qemu=None,
-        resources_offset=None,
+        self, target, name, revision=None, variant=None, runners=None, qemu=None
     ):
         self.target = target
         self.name = name
@@ -25,7 +18,6 @@ class BoardSpec:
         self.variant = variant
         self.runners = runners or []
         self.qemu = qemu or {}
-        self.resources_offset = resources_offset
 
     @property
     def normalized(self):
@@ -135,21 +127,6 @@ def load_qemu(board_dir, board):
     return {"decorations": decorations}
 
 
-def load_resources_offset(board_dir, board):
-    """Offset of the system resources in the board's flash, if runners write them."""
-    manifest, data = _load_manifest(board_dir, board)
-    if manifest is None:
-        return None
-
-    offset = data.get("resources_offset")
-    if offset is not None and (not isinstance(offset, int) or offset < 0):
-        raise TypeError(
-            f"Invalid revision manifest {manifest}: expected resources_offset integer"
-        )
-
-    return offset
-
-
 def available_boards(srcdir):
     choices = []
     for board in sorted(os.listdir(_boards_dir(srcdir))):
@@ -223,5 +200,4 @@ def parse_board(srcdir, target):
         variant,
         load_runners(board_dir, board),
         load_qemu(board_dir, board),
-        load_resources_offset(board_dir, board),
     )

@@ -50,7 +50,7 @@ class RunnerConfig(NamedTuple):
     hex_file: str | None = None
     elf_file: str | None = None
     resources_file: str | None = None
-    resources_offset: int | None = None  # in the board's flash
+    resources_address: int | None = None  # in the board's flash layout
     sftool: str = "sftool"
     gdb: str | None = None
     dry_run: bool = False

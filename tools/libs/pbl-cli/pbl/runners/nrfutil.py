@@ -41,8 +41,6 @@ class NrfUtilRunner(Runner):
             raise UnsupportedOperation(
                 "the board has no support/nrfutil_ext_mem.json to flash resources with"
             )
-        if self.cfg.resources_offset is None:
-            raise UnsupportedOperation("the board has no resources_offset")
 
     def _program_resources(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -53,7 +51,7 @@ class NrfUtilRunner(Runner):
                 image = IntelHex()
                 image.loadbin(
                     self.cfg.resources_file,
-                    offset=QSPI_XIP_BASE + self.cfg.resources_offset,
+                    offset=QSPI_XIP_BASE + self.cfg.resources_address,
                 )
                 image.write_hex_file(hex_file)
             self._nrfutil(

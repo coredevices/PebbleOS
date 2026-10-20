@@ -40,8 +40,11 @@ def make_runner(build, args, resources=False):
         )
 
     resources_file = None
+    resources_address = None
     if resources and build.variant != "prf":
         resources_file = build.pbpack
+        # The bank the firmware checks first
+        resources_address, _ = build.flash_region("SYSTEM_RESOURCES_BANK_0")
 
     cfg = runners.RunnerConfig(
         board_dir=os.path.join(build.topdir, "boards", build.board_spec.name),
@@ -49,7 +52,7 @@ def make_runner(build, args, resources=False):
         hex_file=build.hex,
         elf_file=build.elf,
         resources_file=resources_file,
-        resources_offset=build.board_spec.resources_offset,
+        resources_address=resources_address,
         sftool=build.tool("sftool") or "sftool",
         gdb=build.tool("gdb"),
         dry_run=getattr(args, "dry_run", False),

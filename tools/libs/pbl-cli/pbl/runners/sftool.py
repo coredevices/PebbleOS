@@ -3,9 +3,6 @@
 
 from .core import Runner, RunnerCaps, RunnerError
 
-# Flash offset where system resources are written.
-RESOURCES_OFFSET = 0x12620000
-
 
 class SfToolRunner(Runner):
     name = "sftool"
@@ -37,7 +34,9 @@ class SfToolRunner(Runner):
         if command == "flash":
             files = [self.cfg.hex_file]
             if self.cfg.resources_file:
-                files.append(f"{self.cfg.resources_file}@{RESOURCES_OFFSET:#x}")
+                files.append(
+                    f"{self.cfg.resources_file}@{self.cfg.resources_address:#x}"
+                )
             self._sftool("write_flash " + self.quote(*files))
         elif command == "erase":
             self._sftool("erase_flash")
