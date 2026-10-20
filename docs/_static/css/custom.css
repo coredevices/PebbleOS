@@ -294,3 +294,18 @@ html.dark {
   height: 760px;
   border: 0;
 }
+
+.pbl-playground select {
+  display: block;
+  margin: 0 auto;
+  padding: 4px 8px;
+  border: 1px solid var(--sy-c-border);
+  border-radius: 6px;
+  background: var(--sy-c-background);
+  color: var(--sy-c-text);
+  font: inherit;
+}
+
+.pbl-playground select[hidden] {
+  display: none;
+}
