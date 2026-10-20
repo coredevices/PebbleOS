@@ -50,6 +50,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        host: [linux, macos]
+        board: [native_flint, native_emery, native_gabbro]
         include:
           - host: linux
             os: ubuntu-24.04
@@ -89,7 +91,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Configure
-        run: pbl configure --board native_emery
+        run: pbl configure --board ${{ matrix.board }}
 
       - name: Build
         run: pbl build
@@ -109,7 +111,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: native-smoke-${{ matrix.host }}
+          name: native-smoke-${{ matrix.host }}-${{ matrix.board }}
           path: |
             build/smoke.log
             build/smoke.bmp
