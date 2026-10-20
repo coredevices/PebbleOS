@@ -27,8 +27,8 @@ symbol that enables it. Some are forks under
 
 `third_party/nonfree` holds the vendor binaries and libraries the hardware
 needs but that are not open source: the nRF Fuel Gauge library, the
-CST816 touch controller and AS7000 heart rate sensor firmware, the GH3x2x
-heart rate algorithms and the SF32LB52 Bluetooth controller patches. Each
+CST816 touch controller firmware, the GH3x2x heart rate algorithms and the
+SF32LB52 Bluetooth controller patches. Each
 keeps its vendor's license.
 
 ## Adding or updating a component
