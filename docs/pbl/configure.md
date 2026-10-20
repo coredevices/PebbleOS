@@ -11,7 +11,10 @@ pbl configure --board qemu_emery
 
 The board names, and the revisions of each, are listed in
 {doc}`../boards/index`. A board with revisions takes one after `@`, e.g.
-`obelix@pvt`.
+`obelix@pvt`. A board variant, another way to build the same board, comes
+after `/`: `native_emery/wasm` builds the native watch as WebAssembly. It
+applies `boards/<board>/defconfig.<variant>` and can bring its own
+toolchain (`toolchain.<variant>.cmake`).
 
 ## Variants
 

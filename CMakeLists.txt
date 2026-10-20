@@ -33,10 +33,15 @@ set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 # The toolchain and the device tools come from the installed SDK.
 include(pebbleos_sdk)
 
-# Boards that do not run on ARM bring their own toolchain.
-string(REGEX REPLACE "@.*$" "" board_name "${BOARD}")
+# Boards that do not run on ARM bring their own toolchain, and so can
+# their variants (BOARD[@REVISION][/VARIANT]).
+string(REGEX REPLACE "[@/].*$" "" board_name "${BOARD}")
+string(REGEX MATCH "/.+$" board_variant "${BOARD}")
+string(REPLACE "/" "" board_variant "${board_variant}")
 if(NOT CMAKE_TOOLCHAIN_FILE)
-  if(EXISTS ${PBL_BASE}/boards/${board_name}/toolchain.cmake)
+  if(board_variant AND EXISTS ${PBL_BASE}/boards/${board_name}/toolchain.${board_variant}.cmake)
+    set(CMAKE_TOOLCHAIN_FILE ${PBL_BASE}/boards/${board_name}/toolchain.${board_variant}.cmake)
+  elseif(EXISTS ${PBL_BASE}/boards/${board_name}/toolchain.cmake)
     set(CMAKE_TOOLCHAIN_FILE ${PBL_BASE}/boards/${board_name}/toolchain.cmake)
   else()
     set(CMAKE_TOOLCHAIN_FILE ${PBL_BASE}/cmake/toolchain/arm-none-eabi.cmake)

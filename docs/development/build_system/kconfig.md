@@ -32,6 +32,7 @@ A build's configuration is resolved from these fragments, in this order:
 | --- | --- |
 | `boards/<board>/defconfig` | What the board has: SoC, platform, drivers and their parameters |
 | `boards/<board>/defconfig.<revision>` | What a revision changes |
+| `boards/<board>/defconfig.<board variant>` | What a board variant (`native_emery/wasm`) changes |
 | `fw/prj.conf` | Services and features every firmware enables |
 | `fw/prj_<variant>.conf` | What the `normal` or `prf` variant adds or removes |
 | `<build>/menuconfig.conf` | Changes made with {doc}`../../pbl/menuconfig` |
