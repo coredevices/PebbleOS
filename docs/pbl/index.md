@@ -34,6 +34,7 @@ command's own options.
 | {doc}`clean` | {doc}`image_recovery` | {doc}`feed` |
 | {doc}`test` | {doc}`reset` | |
 | {doc}`itest` | {doc}`run` | |
+| | {doc}`erase` | |
 | | {doc}`bork` | |
 | | {doc}`openocd` | |
 
@@ -79,13 +80,13 @@ first one is the default; `-r/--runner` picks another.
 
 | Runner | Boards | Operations |
 | --- | --- | --- |
-| `openocd` | asterix | flash (with resources), run, reset, erase, debug, debug server |
-| `nrfutil` | asterix | flash (with resources), run, reset, erase |
-| `sftool` | obelix, getafix | flash (with resources), erase |
+| `openocd` | asterix | flash (with resources), run, reset, erase (with ranges), debug, debug server |
+| `nrfutil` | asterix | flash (with resources), run, reset, erase (with ranges) |
+| `sftool` | obelix, getafix | flash (with resources), erase (with ranges) |
 
 For the OpenOCD runner, the probe and target configuration lives in the
-board's `support/openocd.cfg`, and how to write the resources, if it can, in
-`support/resources.cfg`.
+board's `support/openocd.cfg`, and how to write the resources and erase
+ranges, if it can, in `support/flash.cfg`.
 
 The `nrfutil` runner needs a J-Link probe. To write the resources it takes
 the external flash configuration from the board's
@@ -115,6 +116,7 @@ image_resources.md
 image_recovery.md
 reset.md
 run.md
+erase.md
 bork.md
 openocd.md
 ```

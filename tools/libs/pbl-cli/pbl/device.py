@@ -27,7 +27,7 @@ def runner_options(parser):
     runners.register_args(group)
 
 
-def make_runner(build, args, resources=False):
+def make_runner(build, args, resources=False, erase_ranges=()):
     """Create the runner for ``build``, honoring ``--runner``."""
     supported = build.board_spec.runners
     selected = getattr(args, "runner", None) or (supported[0] if supported else None)
@@ -53,6 +53,7 @@ def make_runner(build, args, resources=False):
         elf_file=build.elf,
         resources_file=resources_file,
         resources_address=resources_address,
+        erase_ranges=tuple(erase_ranges),
         sftool=build.tool("sftool") or "sftool",
         gdb=build.tool("gdb"),
         dry_run=getattr(args, "dry_run", False),
@@ -60,9 +61,11 @@ def make_runner(build, args, resources=False):
     return runners.create(selected, cfg, args)
 
 
-def run_on_device(build, args, command, resources=False):
+def run_on_device(build, args, command, resources=False, erase_ranges=()):
     """Dispatch one runner command, reporting failures as command errors."""
     try:
-        make_runner(build, args, resources=resources).run(command)
+        make_runner(build, args, resources=resources, erase_ranges=erase_ranges).run(
+            command
+        )
     except runners.RunnerError as e:
         raise CommandContextError(str(e)) from e

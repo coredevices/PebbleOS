@@ -15,6 +15,7 @@ set _QSPI 0x40029000
 set _QSPI_RAM 0x20000000
 set _QSPI_CHUNK 0x10000
 set _QSPI_BLOCK 0x10000
+set _QSPI_SECTOR 0x1000
 
 proc _qspi_min {a b} {
 	if {$a < $b} {
@@ -101,26 +102,37 @@ proc nrf52_qspi_init {sck csn io0 io1 io2 io3 {sckfreq 3} {addr32 1}} {
 	}
 }
 
+# 64 KiB blocks where aligned, 4 KiB sectors elsewhere.
 proc nrf52_qspi_erase {offset size} {
-	global _QSPI_BLOCK
-	if {($offset % $_QSPI_BLOCK) != 0} {
-		error "qspi: offset not 64 KiB aligned"
+	global _QSPI_BLOCK _QSPI_SECTOR
+	if {($offset % $_QSPI_SECTOR) != 0 || ($size % $_QSPI_SECTOR) != 0} {
+		error "qspi: erase range not 4 KiB aligned"
 	}
-	for {set a $offset} {$a < $offset + $size} {incr a $_QSPI_BLOCK} {
+	set end [expr {$offset + $size}]
+	set a $offset
+	while {$a < $end} {
+		if {($a % $_QSPI_BLOCK) == 0 && $end - $a >= $_QSPI_BLOCK} {
+			set len 1
+			set step $_QSPI_BLOCK
+		} else {
+			set len 0
+			set step $_QSPI_SECTOR
+		}
 		mww [_qspi_reg 0x51c] $a
-		mww [_qspi_reg 0x520] 1
+		mww [_qspi_reg 0x520] $len
 		mww [_qspi_reg 0x100] 0
 		mww [_qspi_reg 0x00c] 1
 		_qspi_wait_ready
 		_qspi_wait_wip
+		incr a $step
 	}
 }
 
 proc nrf52_qspi_write {file offset} {
-	global _QSPI_RAM _QSPI_CHUNK
+	global _QSPI_RAM _QSPI_CHUNK _QSPI_SECTOR
 	set size [file size $file]
 	set start [clock milliseconds]
-	nrf52_qspi_erase $offset $size
+	nrf52_qspi_erase $offset [expr {($size + $_QSPI_SECTOR - 1) & ~($_QSPI_SECTOR - 1)}]
 	echo [format "qspi: erased in %d ms" [expr {[clock milliseconds] - $start}]]
 
 	for {set pos 0} {$pos < $size} {incr pos $_QSPI_CHUNK} {

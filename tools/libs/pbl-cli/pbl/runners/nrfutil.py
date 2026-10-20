@@ -16,7 +16,9 @@ class NrfUtilRunner(Runner):
     @classmethod
     def capabilities(cls):
         return RunnerCaps(
-            commands={"flash", "run", "reset", "erase"}, flash_resources=True
+            commands={"flash", "run", "reset", "erase"},
+            flash_resources=True,
+            erase_ranges=True,
         )
 
     @property
@@ -36,11 +38,19 @@ class NrfUtilRunner(Runner):
             "--options chip_erase_mode=ERASE_RANGES_TOUCHED_BY_FIRMWARE"
         )
 
-    def _check_resources(self):
+    def _check_ext_mem(self, what):
         if not os.path.exists(self._ext_mem_config):
             raise UnsupportedOperation(
-                "the board has no support/nrfutil_ext_mem.json to flash resources with"
+                f"the board has no support/nrfutil_ext_mem.json to {what}"
             )
+
+    def _erase_ranges(self):
+        self._check_ext_mem("erase ranges")
+        for address, size in self.cfg.erase_ranges:
+            # The end address is inclusive
+            start = QSPI_XIP_BASE + address
+            end = start + size - 1
+            self._nrfutil(f"erase --pages {start:#x}-{end:#x}", ext_mem=True)
 
     def _program_resources(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -64,12 +74,14 @@ class NrfUtilRunner(Runner):
     def do_run(self, command):
         if command == "flash":
             if self.cfg.resources_file:
-                self._check_resources()
+                self._check_ext_mem("flash resources")
             self._program(self.cfg.hex_file)
             if self.cfg.resources_file:
                 self._program_resources()
             self._nrfutil("reset")
         elif command in ("run", "reset"):
             self._nrfutil("reset")
+        elif command == "erase" and self.cfg.erase_ranges:
+            self._erase_ranges()
         elif command == "erase":
             self._nrfutil("erase")

@@ -35,6 +35,7 @@ class OpenOcdRunner(Runner):
         return RunnerCaps(
             commands={"flash", "run", "reset", "erase", "debug", "debugserver"},
             flash_resources=True,
+            erase_ranges=True,
         )
 
     @property
@@ -42,17 +43,28 @@ class OpenOcdRunner(Runner):
         return os.path.join(self.cfg.board_dir, "support", "openocd.cfg")
 
     @property
-    def _resources_cfg(self):
-        return os.path.join(self.cfg.board_dir, "support", "resources.cfg")
+    def _flash_cfg(self):
+        return os.path.join(self.cfg.board_dir, "support", "flash.cfg")
+
+    def _check_flash_cfg(self, what):
+        if not os.path.exists(self._flash_cfg):
+            raise UnsupportedOperation(f"the board has no support/flash.cfg to {what}")
+
+    def _erase_ranges(self):
+        self._check_flash_cfg("erase ranges")
+        erase = "".join(f"pbl_erase {a:#x} {s:#x}; " for a, s in self.cfg.erase_ranges)
+        self._run_command(
+            f"init; reset halt; source {{{self._flash_cfg}}}; {erase}"
+            "echo {Erase Finished}; reset;",
+            expect=["Erase Finished", "shutdown"],
+            enforce_expect=True,
+        )
 
     def _flash_resources(self):
-        if not os.path.exists(self._resources_cfg):
-            raise UnsupportedOperation(
-                "the board has no support/resources.cfg to flash resources with"
-            )
+        self._check_flash_cfg("flash resources")
         self._run_command(
             f"init; reset halt; program {self.cfg.hex_file}; "
-            f"source {{{self._resources_cfg}}}; "
+            f"source {{{self._flash_cfg}}}; "
             f"pbl_flash_resources {{{self.cfg.resources_file}}} "
             f"{self.cfg.resources_address:#x}; "
             "echo {Resources Finished}; reset;",
@@ -78,6 +90,8 @@ class OpenOcdRunner(Runner):
             self._run_command("init; reset run;", expect=["found"])
         elif command == "reset":
             self._run_command("init; reset;", expect=["found"])
+        elif command == "erase" and self.cfg.erase_ranges:
+            self._erase_ranges()
         elif command == "erase":
             self._run_command("init; reset halt;", ignore_fail=True)
             self._run_command("init; flash erase_sector 0 0 1;", ignore_fail=True)
