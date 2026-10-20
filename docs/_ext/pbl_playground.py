@@ -8,16 +8,19 @@
 with a list to pick one when there are several. The extension builds them
 when the HTML builder starts, in build directories that are kept between
 runs so only what changed is rebuilt, and publishes them under
-``_playground/<board>/``.
+``_playground/<board>/``. The page asks for each build's files with
+``?v=<hash of the build>``, so no cache ever mixes files from two builds.
 
 ``pbl_playground = False`` (or ``-D pbl_playground=0``) leaves the build out,
 for faster builds; the page then says the playground is not part of this
 build.
 """
 
+import hashlib
 import html
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -31,6 +34,7 @@ from sphinx.util.docutils import SphinxDirective
 ROOT = Path(__file__).resolve().parents[2]
 OUTDIR = "_playground"
 FILES = ["pebbleos.html", "pebbleos.js", "pebbleos.wasm", "pebbleos.data", "*.png"]
+VERSIONED = ["pebbleos.js", "pebbleos.wasm", "pebbleos.data"]
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +49,12 @@ IFRAME = """\
   const frame = root.querySelector("iframe");
   const select = root.querySelector("select");
   const base = {base};
+  const versions = {versions};
   const theme = () =>
     document.documentElement.classList.contains("dark") ? "dark" : "light";
   const load = () => {{
-    frame.src = base + select.value + "/pebbleos.html?embed&theme=" + theme();
+    frame.src = base + select.value + "/pebbleos.html?v=" + versions[select.value] +
+      "&embed&theme=" + theme();
   }};
   try {{
     const saved = localStorage.getItem("pbl-playground-board");
@@ -92,12 +98,15 @@ class PlaygroundDirective(SphinxDirective):
             return [note]
         depth = self.env.docname.count("/")
         boards = self.config.pbl_playground_boards
+        for path in self.env.pbl_playground_deps:
+            self.env.note_dependency(path)
         options = "".join(
             f'<option value="{_dirname(b)}">{html.escape(label)}</option>'
             for b, label in boards.items()
         )
         content = IFRAME.format(
             base=json.dumps("../" * depth + f"{OUTDIR}/"),
+            versions=json.dumps(self.env.pbl_playground_versions),
             options=options,
             hidden=" hidden" if len(boards) < 2 else "",
         )
@@ -146,6 +155,15 @@ def build_firmware(app):
         run("cmake", "--build", str(builddir))
         app.pbl_playground_dirs[_dirname(board)] = builddir
 
+    app.env.pbl_playground_versions = {}
+    app.env.pbl_playground_deps = []
+    for name, builddir in app.pbl_playground_dirs.items():
+        digest = hashlib.sha256()
+        for f in VERSIONED:
+            digest.update((builddir / f).read_bytes())
+            app.env.pbl_playground_deps.append(str(builddir / f))
+        app.env.pbl_playground_versions[name] = digest.hexdigest()[:16]
+
 
 def publish_firmware(app, exception):
     if exception is not None or not _enabled(app):
@@ -156,6 +174,16 @@ def publish_firmware(app, exception):
         for pattern in FILES:
             for path in builddir.glob(pattern):
                 shutil.copy2(path, outdir / path.name)
+        page = outdir / "pebbleos.html"
+        version = app.env.pbl_playground_versions[name]
+        text, n = re.subn(
+            r"""src=(["']?)pebbleos\.js\1""",
+            f'src="pebbleos.js?v={version}"',
+            page.read_text(),
+        )
+        if n != 1:
+            raise ExtensionError(f"playground: no pebbleos.js script in {page}")
+        page.write_text(text)
 
 
 def setup(app):

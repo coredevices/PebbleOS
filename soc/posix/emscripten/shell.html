@@ -370,6 +370,9 @@
 
   var Module = {
     canvas,
+    // The same build's files, whatever the browser has cached.
+    locateFile: (path, prefix) =>
+      prefix + path + (params.has('v') ? '?v=' + encodeURIComponent(params.get('v')) : ''),
     print,
     printErr: print,
     setStatus: (text) => {
