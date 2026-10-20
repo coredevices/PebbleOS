@@ -57,3 +57,6 @@ PBL_WEAK bool workout_service_get_current_workout_info(int32_t *steps_out, int32
                                                        HRZone *current_hr_zone_out) {
   return false;
 }
+
+PBL_WEAK void workout_service_handle_spo2(uint8_t percent) {
+}

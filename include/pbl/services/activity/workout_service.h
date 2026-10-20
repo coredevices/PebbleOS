@@ -188,4 +188,26 @@ void workout_service_get_active_kcalories(int32_t *active);
  */
 bool workout_service_get_avg_hr(int32_t *avg_hr_out);
 
+/**
+ * @brief Record a blood oxygen reading taken during the current workout.
+ *
+ * No-op without a workout or while it is paused. Called from KernelBG.
+ *
+ * @param percent SpO2, in percent.
+ */
+void workout_service_handle_spo2(uint8_t percent);
+
+/**
+ * @brief Get the blood oxygen readings of the current workout.
+ *
+ * Readings are only taken when blood oxygen during activities is enabled. Each output is
+ * optional.
+ *
+ * @param[out] last_pct_out Latest SpO2 in percent, or zero if none yet.
+ * @param[out] min_pct_out Lowest SpO2 in percent, or zero if none yet.
+ * @param[out] measuring_out Whether a reading is in progress, pausing heart rate.
+ * @return true if a workout is ongoing.
+ */
+bool workout_service_get_spo2(int32_t *last_pct_out, int32_t *min_pct_out, bool *measuring_out);
+
 /** @} */

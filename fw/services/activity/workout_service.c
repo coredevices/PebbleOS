@@ -55,6 +55,10 @@ typedef struct CurrentWorkoutData {
   int32_t hr_samples_sum;
   int32_t hr_samples_count;
 
+  uint8_t spo2_last_pct;
+  uint8_t spo2_min_pct;
+  bool spo2_measuring;
+
   // Ring of recent raw BPMs used to median-filter the live HR for display during movement.
   uint8_t bpm_ring[WORKOUT_HR_SMOOTH_N];
   uint8_t bpm_ring_count;
@@ -361,6 +365,7 @@ void workout_service_set_hrm_paused(bool paused) {
   {
     sys_hrm_manager_set_features(s_workout_data.hrm_session, paused ? 0 : HRMFeature_BPM);
     if (s_workout_data.current_workout) {
+      s_workout_data.current_workout->spo2_measuring = paused;
       // No HR updates arrive while paused (a whole SpO2 attempt, shorter than the staleness
       // expiry), so drop the live value rather than show it as current, and restart the zone-time
       // clock so the gap isn't attributed to the zone of the first sample after resuming.
@@ -726,6 +731,36 @@ bool workout_service_get_avg_hr(int32_t *avg_hr_out) {
   *avg_hr_out = ongoing ? prv_get_avg_hr() : 0;
   prv_unlock();
   return ongoing;
+}
+
+void workout_service_handle_spo2(uint8_t percent) {
+  prv_lock();
+  {
+    CurrentWorkoutData *wrkt = s_workout_data.current_workout;
+    if (wrkt && !wrkt->paused && percent > 0) {
+      wrkt->spo2_last_pct = percent;
+      if (!wrkt->spo2_min_pct || percent < wrkt->spo2_min_pct) {
+        wrkt->spo2_min_pct = percent;
+      }
+    }
+  }
+  prv_unlock();
+}
+
+bool workout_service_get_spo2(int32_t *last_pct_out, int32_t *min_pct_out, bool *measuring_out) {
+  prv_lock();
+  const CurrentWorkoutData *wrkt = s_workout_data.current_workout;
+  if (last_pct_out) {
+    *last_pct_out = wrkt ? wrkt->spo2_last_pct : 0;
+  }
+  if (min_pct_out) {
+    *min_pct_out = wrkt ? wrkt->spo2_min_pct : 0;
+  }
+  if (measuring_out) {
+    *measuring_out = wrkt && wrkt->spo2_measuring;
+  }
+  prv_unlock();
+  return wrkt != nullptr;
 }
 
 #if UNITTEST

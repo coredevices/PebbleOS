@@ -991,3 +991,36 @@ void test_workout_service__calories_without_a_workout(void) {
   cl_assert_equal_i(0, avg_bpm);
   cl_assert(!workout_service_get_avg_hr(nullptr));
 }
+
+void test_workout_service__spo2(void) {
+  int32_t last;
+  int32_t min;
+  bool measuring;
+  workout_service_handle_spo2(95);
+  cl_assert(!workout_service_get_spo2(&last, &min, &measuring));
+  cl_assert_equal_i(0, last);
+  cl_assert_equal_i(0, min);
+
+  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
+  cl_assert(workout_service_get_spo2(&last, &min, &measuring));
+  cl_assert_equal_i(0, last);
+  cl_assert(!measuring);
+
+  workout_service_set_hrm_paused(true);
+  cl_assert(workout_service_get_spo2(nullptr, nullptr, &measuring));
+  cl_assert(measuring);
+  workout_service_set_hrm_paused(false);
+  workout_service_handle_spo2(97);
+  workout_service_handle_spo2(94);
+  workout_service_handle_spo2(96);
+  cl_assert(workout_service_get_spo2(&last, &min, &measuring));
+  cl_assert_equal_i(96, last);
+  cl_assert_equal_i(94, min);
+  cl_assert(!measuring);
+
+  cl_assert(workout_service_pause_workout(true));
+  workout_service_handle_spo2(90);
+  cl_assert(workout_service_get_spo2(&last, &min, nullptr));
+  cl_assert_equal_i(96, last);
+  cl_assert_equal_i(94, min);
+}
