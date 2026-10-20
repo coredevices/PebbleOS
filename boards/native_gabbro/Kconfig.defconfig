@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RESOURCES_BOARD
+    default "qemu_gabbro"
+
+# A browser has no socket for the emulator's serial port.
+config QEMU_SERIAL
+    default y if !POSIX_EMSCRIPTEN

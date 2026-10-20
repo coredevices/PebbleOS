@@ -30,9 +30,9 @@ typedef struct {
 #include <board/displays/display_getafix.h>
 #elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
 #include <board/displays/display_qemu_emery.h>
-#elifdef CONFIG_BOARD_QEMU_FLINT
+#elif defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_NATIVE_FLINT)
 #include <board/displays/display_qemu_flint.h>
-#elifdef CONFIG_BOARD_QEMU_GABBRO
+#elif defined(CONFIG_BOARD_QEMU_GABBRO) || defined(CONFIG_BOARD_NATIVE_GABBRO)
 #include <board/displays/display_qemu_gabbro.h>
 #else
 #error "Unknown display definition for board"

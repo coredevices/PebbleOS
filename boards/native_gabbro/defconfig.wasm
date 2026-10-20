@@ -1,0 +1,3 @@
+# native_gabbro wasm board variant configuration
+
+CONFIG_POSIX_EMSCRIPTEN=y

@@ -181,9 +181,9 @@ static_assert(sizeof(struct FirmwareMetadata) ==
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGetafixDVT2)
 #elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleEmeryEmu)
-#elifdef CONFIG_BOARD_QEMU_FLINT
+#elif defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_NATIVE_FLINT)
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleFlintEmu)
-#elifdef CONFIG_BOARD_QEMU_GABBRO
+#elif defined(CONFIG_BOARD_QEMU_GABBRO) || defined(CONFIG_BOARD_NATIVE_GABBRO)
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformPebbleGabbroEmu)
 #else
 #define FIRMWARE_METADATA_HW_PLATFORM (FirmwareMetadataPlatformUnknown)

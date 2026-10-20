@@ -530,7 +530,8 @@
       ],
       "target_platforms": [
         "getafix",
-        "qemu_gabbro"
+        "qemu_gabbro",
+        "native_gabbro"
       ]
     },
     {

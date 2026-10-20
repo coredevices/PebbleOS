@@ -10,9 +10,9 @@
 #include <board/splash/splash_getafix.xbm>
 #elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
 #include <board/splash/splash_obelix.xbm>
-#elifdef CONFIG_BOARD_QEMU_FLINT
+#elif defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_NATIVE_FLINT)
 #include <board/splash/splash_obelix.xbm>
-#elifdef CONFIG_BOARD_QEMU_GABBRO
+#elif defined(CONFIG_BOARD_QEMU_GABBRO) || defined(CONFIG_BOARD_NATIVE_GABBRO)
 #include <board/splash/splash_obelix.xbm>
 #else
 #error "Unknown splash definition for board"
