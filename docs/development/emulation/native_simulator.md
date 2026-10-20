@@ -12,9 +12,15 @@ both hosts and boots it to the launcher on every change, and the
 The simulator reproduces a platform, but not an architecture:
 
 The platform
-: The `native_emery` board is the Emery platform of Pebble Time 2: its
-  200 × 228 color display, its buttons and its touchscreen, and the same
-  firmware services, UI and apps built into the firmware.
+: Each native board is a platform: its display, its buttons and touchscreen
+  if it has one, and the same firmware services, UI and apps built into the
+  firmware.
+
+  | Board | Platform | Display |
+  | --- | --- | --- |
+  | `native_flint` | Flint, Pebble 2 Duo | 144 × 168, black and white |
+  | `native_emery` | Emery, Pebble Time 2 | 200 × 228, color, touch |
+  | `native_gabbro` | Gabbro, Pebble Round 2 | 260 × 260 round, color, touch |
 
 Not the architecture
 : The firmware is compiled for the host CPU, with the host compiler and C
@@ -45,7 +51,7 @@ without a dictionary.
 
 Install a host C compiler and [SDL2](https://www.libsdl.org), both part of
 the dependencies in the {doc}`../../getting_started/index`. Then configure,
-build and start the program:
+build and start the program, here for Emery:
 
 ```shell
 pbl configure --board native_emery
@@ -122,7 +128,7 @@ pbl configure --board=native_emery -DCONFIG_ASAN=y -DCONFIG_UBSAN=y
 
 ## In a browser
 
-The `wasm` variant of the board builds the same virtual watch as
+The `wasm` variant of each native board builds the same virtual watch as
 WebAssembly, with [Emscripten](https://emscripten.org):
 
 ```shell
@@ -133,10 +139,11 @@ python3 -m http.server --directory build
 
 Then open <http://localhost:8000/pebbleos.html>. The watch has the emulator's
 frame: click its buttons, or use the arrow keys (left is back, right is
-select); the mouse is a finger on the screen. The firmware log is a click
-away. The flash lives in memory, so the watch starts afresh on every load,
-and there is no shell. The {doc}`/playground` embeds this build in the
-documentation.
+select); on touch platforms the mouse is a finger on the screen. The
+firmware log is a click away. The flash lives in memory, so the watch starts
+afresh on every load, and there is no shell. The {doc}`/playground` embeds
+these builds in the documentation, one per board in `pbl_playground_boards`
+in `docs/conf.py`.
 
 ## How it works
 
