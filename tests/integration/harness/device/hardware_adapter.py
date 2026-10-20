@@ -19,7 +19,7 @@ POWER_OFF_S = 1.0
 # How often a command run on a repowered watch is tried.
 REPOWERED_ATTEMPTS = 3
 # The smallest erasable unit, all a slot header needs.
-FLASH_SUBSECTOR_SIZE = 0x1000
+SLOT_HEADER_SIZE = 0x1000
 
 
 class HardwareAdapter(DeviceAdapter):
@@ -108,29 +108,28 @@ class HardwareAdapter(DeviceAdapter):
             self.invalidate_firmware_slots()
         self._run_repowered(self._flash_command(), "flash")
 
-    def _erase_regions(self, regions, what, purpose):
-        sftool = self.build.tool("sftool")
-        soc = self.build.config.get("CONFIG_SOC")
-        if not (sftool and soc and self.config.serial):
-            raise HarnessError(
-                f"{purpose} needs sftool and --device-serial (board {self.build.board})"
-            )
-        command = [sftool, "-c", soc, "-p", self.config.serial[0], "erase_region"]
-        command += [f"{address:#x}:{size:#x}" for address, size in regions]
+    def _erase_regions(self, regions, what):
+        """Erase flash regions (``NAME`` or ``NAME:SIZE``) with the board's
+        runner."""
+        command = ["pbl", "-b", self.build.path, "erase"]
+        for region in regions:
+            command += ["--region", region]
+        if self.config.serial:
+            command += ["--tty", self.config.serial[0]]
         self._run_repowered(command, what)
 
     def invalidate_firmware_slots(self):
         """Erase the normal firmware slots' headers, as PRF does when it
         boots: the bootloader only falls back to PRF without a valid slot."""
-        regions = []
-        for name in ("FIRMWARE_SLOT_0", "FIRMWARE_SLOT_1"):
-            address, _ = self.build.flash_region(name)
-            regions.append((address, FLASH_SUBSECTOR_SIZE))
-        self._erase_regions(regions, "invalidate", "booting PRF")
+        regions = [
+            f"{name}:{SLOT_HEADER_SIZE:#x}"
+            for name in ("FIRMWARE_SLOT_0", "FIRMWARE_SLOT_1")
+        ]
+        self._erase_regions(regions, "invalidate")
 
     def boot_recovery(self):
         """Boot PRF again, e.g. after a test installed the normal firmware."""
-        # sftool needs the serial port the connections hold.
+        # The runner may need the serial port the connections hold.
         self.disconnect()
         self.invalidate_firmware_slots()
         if not self._hard_reset():
@@ -141,15 +140,10 @@ class HardwareAdapter(DeviceAdapter):
     def erase_filesystem(self):
         """Erase the filesystem (bondings, settings, apps and data), and the
         bonding kept for PRF, which the firmware restores from otherwise."""
-        regions = [self.build.flash_region("FILESYSTEM")]
-        try:
-            regions.append(self.build.flash_region("SHARED_PRF_STORAGE"))
-        except HarnessError:
-            pass
-        self._erase_regions(regions, "erase", "erasing the filesystem")
+        self._erase_regions(["FILESYSTEM", "SHARED_PRF_STORAGE"], "erase")
 
     def wipe(self):
-        # sftool needs the serial port the connections hold.
+        # The runner may need the serial port the connections hold.
         self.disconnect()
         self.erase_filesystem()
         if not self._hard_reset():
