@@ -18,12 +18,6 @@
 #define GPIO_Pin_NULL  0U
 
 typedef struct {
-  int pad;
-  pin_function func;
-  int flags;
-} Pinmux;
-
-typedef struct {
   GPT_HandleTypeDef handle;
   GPT_ClockConfigTypeDef clock_config;
   uint16_t value;
