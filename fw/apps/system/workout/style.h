@@ -10,10 +10,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 
-static inline int workout_header_height(void) {
-  return PBL_IF_ROUND_ELSE(48, 40);
-}
-
 static inline GColor workout_activity_color(ActivitySessionType type) {
   return PBL_IF_COLOR_ELSE(type == ActivitySessionType_Run    ? GColorChromeYellow
                            : type == ActivitySessionType_Walk ? GColorPictonBlue
@@ -44,7 +40,16 @@ static inline void workout_fill_heart(GContext *ctx, GRect box, GColor color) {
   gpath_draw_filled(ctx, &path);
 }
 
+static inline int workout_heading_top(void) {
+  return PBL_IF_ROUND_ELSE(16, 6);
+}
+
+// Accent rule under the activity heading of the workout screens.
+static inline GRect workout_heading_rule(GSize size) {
+  return GRect(size.w / 2 - 14, workout_heading_top() + 25, 28, 3);
+}
+
 static inline void workout_draw_select_indicator(GContext *ctx, GSize size) {
-  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_oval(ctx, GRect(size.w - 5, (size.h - 26) / 2, 26, 26), GOvalScaleModeFitCircle);
 }

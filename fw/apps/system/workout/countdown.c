@@ -86,29 +86,30 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
       PBL_IF_ROUND_ELSE(18, -2) - (morphing ? prv_interpolate(0, 60, window->progress) : 0);
   const int footer_y =
       h - PBL_IF_ROUND_ELSE(72, 57) + (morphing ? prv_interpolate(0, 90, window->progress) : 0);
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(ctx, i18n_get("WORKOUT", window),
                      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), GRect(0, header_y, w, 26),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_stroke_width(ctx, 2);
   const int side = PBL_IF_ROUND_ELSE(24, 0);
   graphics_draw_line(ctx, GPoint(side, header_y + 26), GPoint(w - side, header_y + 26));
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(ctx,
                      i18n_get(workout_utils_get_name_for_activity(window->activity_type), window),
                      fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD), GRect(0, footer_y + 1, w, 34),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 
-  graphics_context_set_fill_color(
-      ctx, PBL_IF_COLOR_ELSE(workout_activity_color(window->activity_type), GColorBlack));
+  graphics_context_set_fill_color(ctx, workout_activity_color(window->activity_type));
   if (morphing) {
+    // Collapse into the accent rule under the workout heading.
     const int diameter = 2 * radius + 1;
-    GRect shape = GRect(prv_interpolate(center.x - radius, 0, window->progress),
-                        prv_interpolate(center.y - radius, 0, window->progress),
-                        prv_interpolate(diameter, w, window->progress),
-                        prv_interpolate(diameter, workout_header_height(), window->progress));
-    graphics_fill_round_rect(ctx, &shape, prv_interpolate(radius, 0, window->progress),
+    const GRect rule = workout_heading_rule(GSize(w, h));
+    GRect shape = GRect(prv_interpolate(center.x - radius, rule.origin.x, window->progress),
+                        prv_interpolate(center.y - radius, rule.origin.y, window->progress),
+                        prv_interpolate(diameter, rule.size.w, window->progress),
+                        prv_interpolate(diameter, rule.size.h, window->progress));
+    graphics_fill_round_rect(ctx, &shape, prv_interpolate(radius, 1, window->progress),
                              GCornersAll);
   } else {
     const int beat =
@@ -117,14 +118,14 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   }
 
   if (window->phase == CountdownPhase_Number && window->number == 0) {
-    graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+    graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(ctx, i18n_get("GO!", window),
                        fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
                        GRect(center.x - radius, center.y - 21, 2 * radius, 40),
                        GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
   } else if (window->phase == CountdownPhase_Number) {
     const char number[] = {'0' + window->number, '\0'};
-    graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+    graphics_context_set_text_color(ctx, GColorBlack);
     graphics_draw_text(
         ctx, number,
         fonts_get_system_font(h >= 200 ? FONT_KEY_LECO_60_NUMBERS_AM_PM : FONT_KEY_LECO_42_NUMBERS),
@@ -282,7 +283,7 @@ void workout_countdown_start(ActivitySessionType type, StartWorkoutCallback star
   Window *window = &countdown->window;
   window_init(window, WINDOW_NAME("Workout Countdown"));
   window_set_user_data(window, countdown);
-  window_set_background_color(window, GColorWhite);
+  window_set_background_color(window, GColorBlack);
   window_set_window_handlers(window, &(WindowHandlers){
                                        .unload = prv_window_unload_handler,
 #ifdef CONFIG_TOUCH

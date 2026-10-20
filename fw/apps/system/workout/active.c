@@ -939,16 +939,16 @@ static GRect prv_dashboard_value(GContext *ctx, WorkoutActiveWindow *active_wind
   return box;
 }
 
-static GColor prv_zone_color(HRZone zone, bool text) {
+static GColor prv_zone_color(HRZone zone) {
   switch (zone) {
     case HRZone_Zone1:
-      return PBL_IF_COLOR_ELSE(text ? GColorArmyGreen : GColorChromeYellow, GColorBlack);
+      return PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite);
     case HRZone_Zone2:
-      return PBL_IF_COLOR_ELSE(text ? GColorWindsorTan : GColorOrange, GColorBlack);
+      return PBL_IF_COLOR_ELSE(GColorOrange, GColorWhite);
     case HRZone_Zone3:
-      return PBL_IF_COLOR_ELSE(text ? GColorDarkCandyAppleRed : GColorRed, GColorBlack);
+      return PBL_IF_COLOR_ELSE(GColorRed, GColorWhite);
     default:
-      return PBL_IF_COLOR_ELSE(text ? GColorDukeBlue : GColorPictonBlue, GColorBlack);
+      return PBL_IF_COLOR_ELSE(GColorPictonBlue, GColorWhite);
   }
 }
 
@@ -959,47 +959,98 @@ static GColor prv_metric_color(WorkoutActiveWindow *window, WorkoutMetricType me
       return GColorOrange;
     case WorkoutMetricType_Hr:
     case WorkoutMetricType_AvgHr:
-      return GColorRed;
+      return GColorFolly;
     case WorkoutMetricType_SpO2:
     case WorkoutMetricType_SpO2Min:
       return GColorVividCerulean;
-    case WorkoutMetricType_Distance:
-    case WorkoutMetricType_AvgPace:
-    case WorkoutMetricType_AvgSpeed:
-    case WorkoutMetricType_Steps:
-      return workout_activity_text_color(window->activity_type);
     default:
-      break;
+      return workout_activity_color(window->activity_type);
   }
+#else
+  return GColorWhite;
 #endif
-  return GColorBlack;
 }
 
+// A label in the metric's color above a white value.
 static void prv_dashboard_pair(GContext *ctx, WorkoutActiveWindow *window, GRect box,
                                WorkoutMetricType left, const char *left_label,
-                               WorkoutMetricType right, const char *right_label) {
+                               WorkoutMetricType right, const char *right_label, GColor ink) {
+  const bool flooded = !gcolor_equal(ink, GColorWhite);
   const int half = box.size.w / 2;
   const WorkoutMetricType metrics[] = {left, right};
   const char *labels[] = {left_label, right_label};
   for (int i = 0; i < 2; i++) {
     const int x = box.origin.x + i * half;
-    prv_dashboard_text(ctx, i18n_get(labels[i], window), FONT_KEY_GOTHIC_14,
+    prv_dashboard_text(ctx, i18n_get(labels[i], window), FONT_KEY_GOTHIC_14_BOLD,
                        GRect(x, box.origin.y, half, 18),
-                       PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
-    const GColor color = prv_metric_color(window, metrics[i]);
+                       flooded ? ink : prv_metric_color(window, metrics[i]));
     prv_dashboard_value(
         ctx, window, metrics[i], GRect(x, box.origin.y + 16, half, 36),
-        half >= 74 ? FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM : FONT_KEY_LECO_20_BOLD_NUMBERS, color);
+        half >= 74 ? FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM : FONT_KEY_LECO_20_BOLD_NUMBERS, ink);
   }
 }
 
-static void prv_dashboard_heart_icon(GContext *ctx, WorkoutActiveWindow *window, GRect box) {
+static void prv_dashboard_heart_icon(GContext *ctx, WorkoutActiveWindow *window, GRect box,
+                                     GColor color) {
   if (window->beat) {
     box = grect_inset(box, GEdgeInsets(-MAX(2, box.size.w / 8)));
   }
-  workout_fill_heart(ctx, box, PBL_IF_COLOR_ELSE(GColorRed, GColorBlack));
+  workout_fill_heart(ctx, box, color);
 }
 
+// Position of a heart rate along the zone gauge, in 1/1000ths of its width. Each zone gets an
+// equal share, spanning resting HR to max HR.
+static int prv_gauge_position(int bpm) {
+  const int bounds[] = {
+    activity_prefs_heart_get_resting_hr(),      activity_prefs_heart_get_zone1_threshold(),
+    activity_prefs_heart_get_zone2_threshold(), activity_prefs_heart_get_zone3_threshold(),
+    activity_prefs_heart_get_max_hr(),
+  };
+  const int zone = hr_util_get_hr_zone(bpm);
+  const int low = bounds[zone];
+  const int high = MAX(bounds[zone + 1], low + 1);
+  return zone * 250 + CLIP((bpm - low) * 250 / (high - low), 0, 249);
+}
+
+// Four zone segments with the current one lit and a marker at the exact heart rate.
+static void prv_draw_zone_gauge(GContext *ctx, WorkoutActiveWindow *window, GRect box, int bpm,
+                                bool flooded) {
+  const int gap = 3;
+  const int segment_w = (box.size.w - 3 * gap) / 4;
+  const HRZone zone = hr_util_get_hr_zone(bpm);
+  for (int i = 0; i < 4; i++) {
+    const bool active = bpm > 0 && i == (int)zone;
+    const int grow = prv_bar_progress(window, i);
+    GRect segment = GRect(box.origin.x + i * (segment_w + gap), box.origin.y,
+                          segment_w * grow / ANIMATION_NORMALIZED_MAX, box.size.h);
+    GColor color;
+    if (flooded) {
+      color = active == PBL_IF_COLOR_ELSE(true, false) ? GColorWhite : GColorBlack;
+    } else {
+      color = active ? prv_zone_color(i) : PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack);
+    }
+    graphics_context_set_fill_color(ctx, color);
+    graphics_fill_round_rect(ctx, &segment, box.size.h / 2, GCornersAll);
+#if PBL_BW
+    if (!active) {
+      graphics_context_set_stroke_color(ctx, flooded ? GColorBlack : GColorWhite);
+      graphics_draw_round_rect(ctx, &segment, box.size.h / 2);
+    }
+#endif
+  }
+  if (bpm <= 0 || window->bars_progress < ANIMATION_NORMALIZED_MAX) {
+    return;
+  }
+  const int x = box.origin.x + prv_gauge_position(bpm) * box.size.w / 1000;
+  const int y = box.origin.y - 2;
+  const int beat = window->beat ? 1 : 0;
+  GPoint points[] = {{x - 5 - beat, y - 6 - beat}, {x + 5 + beat, y - 6 - beat}, {x, y}};
+  GPath path = {.num_points = ARRAY_LENGTH(points), .points = points};
+  graphics_context_set_fill_color(ctx, flooded ? GColorBlack : GColorWhite);
+  gpath_draw_filled(ctx, &path);
+}
+
+// Heart, live BPM in the zone's color and the zone gauge.
 static void prv_dashboard_heart(GContext *ctx, WorkoutActiveWindow *window, GRect box) {
   const int bpm =
       window->workout_controller->get_metric_value(WorkoutMetricType_Hr, window->workout_data);
@@ -1007,13 +1058,13 @@ static void prv_dashboard_heart(GContext *ctx, WorkoutActiveWindow *window, GRec
   if (!window->has_hrm) {
     GRect label = GRect(box.origin.x, box.origin.y + (box.size.h - 24) / 2, box.size.w, 24);
     prv_dashboard_text(ctx, i18n_get("No heart rate", window), FONT_KEY_GOTHIC_18, label,
-                       PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
+                       PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
     return;
   }
   const HRZone zone = hr_util_get_hr_zone(bpm);
-  const int heart_h = large ? 19 : 13;
-  const int icon_gap = large ? 5 : 4;
+  const int heart_h = large ? 22 : 15;
   const char *font = large ? FONT_KEY_LECO_38_BOLD_NUMBERS : FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM;
+  const int number_h = large ? 32 : 24;
   char text[12];
   if (bpm > 0) {
     snprintf(text, sizeof(text), "%d", bpm);
@@ -1023,35 +1074,35 @@ static void prv_dashboard_heart(GContext *ctx, WorkoutActiveWindow *window, GRec
   const GSize text_size = graphics_text_layout_get_max_used_size(
       ctx, text, fonts_get_system_font(font), GRect(0, 0, box.size.w, 44), GTextOverflowModeFill,
       GTextAlignmentLeft, nullptr);
-  const int bar_w = large ? 12 : 7;
-  const int bar_left = box.origin.x + box.size.w - (4 * bar_w + 9);
-  const int value_x = box.origin.x + heart_h + icon_gap;
-  const int value_w = MIN(text_size.w, bar_left - 6 - value_x);
-  const int bar_h = large ? 27 : 19;
-  const int number_y = box.origin.y + (box.size.h - bar_h) / 2 - (large ? 11 : 7);
-  const int value_center_y = box.origin.y + box.size.h / 2;
+  const char *zone_label = bpm > 0 ? prv_get_label_for_hr_metric(bpm) : i18n_noop("MEASURING");
+  const GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
+  const GSize label_size = graphics_text_layout_get_max_used_size(
+      ctx, i18n_get(zone_label, window), label_font, GRect(0, 0, box.size.w, 18),
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
+  const int gap = 6;
+  const int group_w = heart_h + gap + text_size.w + (large ? gap + label_size.w : 0);
+  const int x = box.origin.x + MAX(0, (box.size.w - group_w) / 2);
+  const int y = box.origin.y;
   prv_dashboard_heart_icon(ctx, window,
-                           GRect(box.origin.x, value_center_y - heart_h / 2, heart_h, heart_h));
-  prv_dashboard_value(ctx, window, WorkoutMetricType_Hr, GRect(value_x, number_y, value_w, 44),
-                      font, prv_zone_color(zone, true));
-  const int bar_bottom = number_y + (large ? 38 : 26);
-  for (int i = 0; i < 4; i++) {
-    const bool active = bpm > 0 && i == (int)zone;
-    const int target = active ? bar_h + (window->beat ? 2 : 0) : bar_h / 2;
-    const int height = MAX(1, target * prv_bar_progress(window, i) / ANIMATION_NORMALIZED_MAX);
-    GRect bar = GRect(bar_left + i * (bar_w + 3), bar_bottom - height, bar_w, height);
-    graphics_context_set_fill_color(ctx, prv_zone_color(i, false));
-    graphics_fill_rect(ctx, &bar);
+                           GRect(x, y + (number_h - heart_h) / 2 + 2, heart_h, heart_h),
+                           PBL_IF_COLOR_ELSE(GColorFolly, GColorWhite));
+  const int value_x = x + heart_h + gap;
+  prv_dashboard_text(
+      ctx, text, font, GRect(value_x, y - (large ? 6 : 4), text_size.w + 2, 44),
+      bpm > 0 ? prv_zone_color(zone) : PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+  if (large) {
+    graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+    graphics_draw_text(ctx, i18n_get(zone_label, window), label_font,
+                       GRect(value_x + text_size.w + gap, y + number_h / 2 - 9, label_size.w, 18),
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   }
-  if (bpm <= 0 && large) {
-    prv_dashboard_text(ctx, i18n_get("MEASURING", window), FONT_KEY_GOTHIC_14,
-                       GRect(box.origin.x, box.origin.y + box.size.h - 16, box.size.w, 18),
-                       PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
-  }
+  prv_draw_zone_gauge(
+      ctx, window, GRect(box.origin.x, y + number_h + (large ? 4 : 3), box.size.w, large ? 8 : 6),
+      bpm, false);
 }
 
 static void prv_draw_hr_chart(GContext *ctx, WorkoutActiveWindow *window, GRect box,
-                              AnimationProgress progress) {
+                              AnimationProgress progress, GColor ink) {
   const int left = box.origin.x + 24;
   const int right = box.origin.x + box.size.w - 25;
   const int bottom = box.origin.y + box.size.h - 16;
@@ -1064,15 +1115,14 @@ static void prv_draw_hr_chart(GContext *ctx, WorkoutActiveWindow *window, GRect 
   const bool has_reading =
       workout_hr_history_range(window->hr_history, elapsed, &minimum, &maximum);
   graphics_context_set_stroke_width(ctx, 1);
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, GColorBlack));
-  graphics_draw_line(ctx, GPoint(left, top), GPoint(right, top));
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_draw_line(ctx, GPoint(left, top), GPoint(left, bottom));
+  graphics_context_set_stroke_color(ctx, ink);
+  graphics_draw_horizontal_line_dotted(ctx, GPoint(left, top), right - left);
   graphics_draw_line(ctx, GPoint(left, bottom), GPoint(right, bottom));
 
   bool previous_valid = false;
   GPoint previous = GPointZero;
   int previous_time = 0;
+  graphics_context_set_stroke_width(ctx, 3);
   for (unsigned i = 0; window->hr_history && i < window->hr_history->count; i++) {
     const WorkoutHrSample *sample = workout_hr_history_get(window->hr_history, i);
     const int age = elapsed - sample->elapsed_s;
@@ -1083,8 +1133,6 @@ static void prv_draw_hr_chart(GContext *ctx, WorkoutActiveWindow *window, GRect 
     const GPoint point =
         GPoint(right - age * (right - left) / WORKOUT_HR_HISTORY_SECONDS,
                bottom - (sample->bpm - minimum) * (bottom - top) / (maximum - minimum));
-    graphics_context_set_stroke_color(ctx, prv_zone_color(hr_util_get_hr_zone(sample->bpm), true));
-    graphics_context_set_stroke_width(ctx, 2);
     if (previous_valid && sample->elapsed_s == previous_time + 1) {
       graphics_draw_line(ctx, previous, point);
     } else {
@@ -1102,21 +1150,18 @@ static void prv_draw_hr_chart(GContext *ctx, WorkoutActiveWindow *window, GRect 
     } else {
       strcpy(label, "--");
     }
-    prv_dashboard_text(ctx, label, FONT_KEY_GOTHIC_14, GRect(box.origin.x, top - 8, 22, 18),
-                       GColorBlack);
+    prv_dashboard_text(ctx, label, FONT_KEY_GOTHIC_14_BOLD, GRect(box.origin.x, top - 9, 22, 18),
+                       ink);
     if (has_reading) {
       snprintf(label, sizeof(label), "%d", minimum);
     }
-    prv_dashboard_text(ctx, label, FONT_KEY_GOTHIC_14, GRect(box.origin.x, bottom - 8, 22, 18),
-                       GColorBlack);
-    prv_dashboard_text(ctx, i18n_get("Last minute", window), FONT_KEY_GOTHIC_14,
-                       GRect(left, bottom, right - left, 18), GColorBlack);
+    prv_dashboard_text(ctx, label, FONT_KEY_GOTHIC_14_BOLD, GRect(box.origin.x, bottom - 9, 22, 18),
+                       ink);
+    prv_dashboard_text(ctx, i18n_get("LAST MINUTE", window), FONT_KEY_GOTHIC_14_BOLD,
+                       GRect(left, bottom, right - left, 18), ink);
     if (!has_reading) {
-      GRect label_box = GRect(left + 2, (top + bottom - 18) / 2, right - left - 4, 18);
-      graphics_context_set_fill_color(ctx, GColorWhite);
-      graphics_fill_rect(ctx, &label_box);
-      prv_dashboard_text(ctx, i18n_get("WAITING FOR HR", window), FONT_KEY_GOTHIC_14, label_box,
-                         GColorBlack);
+      prv_dashboard_text(ctx, i18n_get("WAITING FOR HR", window), FONT_KEY_GOTHIC_14_BOLD,
+                         GRect(left + 2, (top + bottom - 18) / 2, right - left - 4, 18), ink);
     }
   }
 }
@@ -1126,10 +1171,10 @@ static void prv_draw_confetti(GContext *ctx, WorkoutActiveWindow *window, GSize 
   if (!window->confetti_animation) {
     return;
   }
-  static const GColor colors[] = {GColorRed,           GColorChromeYellow, GColorPictonBlue,
+  static const GColor colors[] = {GColorFolly,         GColorChromeYellow, GColorPictonBlue,
                                   GColorScreaminGreen, GColorMagenta,      GColorOrange};
   const int t = window->confetti_progress;
-  const int top = workout_header_height();
+  const int top = workout_heading_top() + 28;
   for (int i = 0; i < 28; i++) {
     // Deterministic scatter: each piece gets a launch direction and speed from its index.
     const int seed = (i * 37 + 11) % 64;
@@ -1153,11 +1198,39 @@ static void prv_draw_complete(GContext *ctx, WorkoutActiveWindow *window, GRect 
       ctx, text, font, box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
   GRect badge = GRect(box.origin.x + (box.size.w - text_size.w) / 2 - 8, box.origin.y + 1,
                       text_size.w + 16, 16);
-  graphics_context_set_fill_color(ctx, workout_activity_text_color(window->activity_type));
+  graphics_context_set_fill_color(
+      ctx, PBL_IF_COLOR_ELSE(workout_activity_color(window->activity_type), GColorWhite));
   graphics_fill_round_rect(ctx, &badge, 8, GCornersAll);
   prv_dashboard_text(ctx, text, FONT_KEY_GOTHIC_14_BOLD,
-                     GRect(box.origin.x, box.origin.y - 2, box.size.w, box.size.h), GColorWhite);
+                     GRect(box.origin.x, box.origin.y - 2, box.size.w, box.size.h), GColorBlack);
   prv_draw_confetti(ctx, window, window->window.layer.bounds.size);
+}
+
+// Activity icon and name, in the accent color over a short accent rule.
+static void prv_draw_heading(GContext *ctx, WorkoutActiveWindow *window, GRect box, GColor ink) {
+  GBitmap *icon = window->activity_icon;
+  const GSize icon_size = gbitmap_get_bounds(icon).size;
+  const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  const char *title = window->activity_type == ActivitySessionType_Run    ? i18n_noop("RUN")
+                      : window->activity_type == ActivitySessionType_Walk ? i18n_noop("WALK")
+                                                                          : i18n_noop("WORKOUT");
+  const char *text = i18n_get(title, window);
+  const GSize text_size = graphics_text_layout_get_max_used_size(
+      ctx, text, font, GRect(0, 0, box.size.w - icon_size.w - 4, 24),
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
+  const int group_w = icon_size.w + 4 + text_size.w;
+  const int x = box.origin.x + (box.size.w - group_w) / 2;
+  graphics_context_set_compositing_mode(ctx, GCompOpSet);
+  graphics_draw_bitmap_in_rect(
+      ctx, icon, &GRect(x, box.origin.y + (24 - icon_size.h) / 2, icon_size.w, icon_size.h));
+  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+  graphics_context_set_text_color(ctx, ink);
+  graphics_draw_text(ctx, text, font, GRect(x + icon_size.w + 4, box.origin.y - 3, text_size.w, 24),
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
+  graphics_context_set_fill_color(ctx, ink);
+  const GRect rule = workout_heading_rule(window->window.layer.bounds.size);
+  graphics_fill_rect(ctx, &GRect(box.origin.x + box.size.w / 2 - rule.size.w / 2, rule.origin.y,
+                                 rule.size.w, rule.size.h));
 }
 
 static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
@@ -1170,72 +1243,65 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
   const bool large = h >= 200;
   const int margin = PBL_IF_ROUND_ELSE(w >= 240 ? 44 : 26, 8);
   const int content_w = w - 2 * margin;
-  const int top = PBL_IF_ROUND_ELSE(22, 14);
-  const int pair_y = h - (large ? PBL_IF_ROUND_ELSE(77, 65) : PBL_IF_ROUND_ELSE(65, 52));
+  const int top = workout_heading_top();
+  const int pair_y = h - (large ? PBL_IF_ROUND_ELSE(77, 63) : PBL_IF_ROUND_ELSE(65, 50));
   const bool open = window->activity_type == ActivitySessionType_Open;
   const int page = window->current_scrollable_metric;
   const bool heart_page = window->has_hrm && page == (open ? 1 : 3);
-  const int header_h = workout_header_height();
-  GRect accent = GRect(0, 0, w, header_h);
-  graphics_context_set_fill_color(
-      ctx, PBL_IF_COLOR_ELSE(workout_activity_color(window->activity_type), GColorBlack));
-  graphics_fill_rect(ctx, &accent);
+  const int bpm =
+      window->workout_controller->get_metric_value(WorkoutMetricType_Hr, window->workout_data);
+  const GColor accent =
+      PBL_IF_COLOR_ELSE(workout_activity_color(window->activity_type), GColorWhite);
 
-  GBitmap *heading_icon = window->activity_icon;
-  const GSize icon_size = gbitmap_get_bounds(heading_icon).size;
-  const GFont heading_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-  const char *activity_title = window->activity_type == ActivitySessionType_Run ? i18n_noop("RUN")
-                               : window->activity_type == ActivitySessionType_Walk
-                                   ? i18n_noop("WALK")
-                                   : i18n_noop("WORKOUT");
-  const char *heading_text = i18n_get(activity_title, window);
-  GSize heading_size = graphics_text_layout_get_max_used_size(
-      ctx, heading_text, heading_font, GRect(0, 0, content_w - icon_size.w - 4, 24),
-      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
-  const int group_w = icon_size.w + 4 + heading_size.w;
-  const int group_x = margin + (content_w - group_w) / 2;
-  graphics_context_set_compositing_mode(ctx, GCompOpSet);
-  graphics_draw_bitmap_in_rect(
-      ctx, heading_icon, &GRect(group_x, (header_h - icon_size.h) / 2, icon_size.w, icon_size.h));
-  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-  graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
-  graphics_draw_text(ctx, heading_text, heading_font,
-                     GRect(group_x + icon_size.w + 4, (header_h - 24) / 2, heading_size.w, 24),
-                     GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
+  // The heart rate page floods with the zone's color and pausing with the activity's color.
+  GColor background = GColorBlack;
+  GColor ink = GColorWhite;
+  if (paused && !finished) {
+    background = PBL_IF_COLOR_ELSE(accent, GColorWhite);
+    ink = GColorBlack;
+  } else if (heart_page && !finished) {
+    background = PBL_IF_COLOR_ELSE(
+        bpm > 0 ? prv_zone_color(hr_util_get_hr_zone(bpm)) : GColorLightGray, GColorWhite);
+    ink = GColorBlack;
+  }
+  const bool flooded = !gcolor_equal(ink, GColorWhite);
+  graphics_context_set_fill_color(ctx, background);
+  graphics_fill_rect(ctx, &GRect(0, 0, w, h));
+  prv_draw_heading(ctx, window, GRect(margin, top, content_w, 28), flooded ? ink : accent);
 
   if (paused && !finished) {
     prv_dashboard_text(ctx, i18n_get(window->confirming_finish ? "END WORKOUT?" : "PAUSED", window),
-                       FONT_KEY_GOTHIC_18_BOLD, GRect(margin, top + 26, content_w, 24),
-                       PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
+                       large ? FONT_KEY_GOTHIC_28_BOLD : FONT_KEY_GOTHIC_24_BOLD,
+                       GRect(margin, top + (large ? 36 : 32), content_w, 34), ink);
     prv_dashboard_value(ctx, window, WorkoutMetricType_Duration,
-                        GRect(margin, top + 50, content_w, 58),
+                        GRect(margin, top + (large ? 70 : 60), content_w, 58),
                         large ? FONT_KEY_LECO_42_NUMBERS : FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
-                        PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
+                        ink);
     if (large) {
-      prv_dashboard_pair(ctx, window, GRect(margin, top + 110, content_w, 48),
+      prv_dashboard_pair(ctx, window, GRect(margin, pair_y, content_w, 48),
                          open ? WorkoutMetricType_Steps : WorkoutMetricType_Distance,
                          open ? i18n_noop("STEPS")
                               : window->workout_controller->get_distance_string(
                                     i18n_noop("DIST MI"), i18n_noop("DIST KM")),
-                         WorkoutMetricType_ActiveCalories, i18n_noop("EST KCAL"));
+                         WorkoutMetricType_ActiveCalories, i18n_noop("EST KCAL"), ink);
     }
-    prv_dashboard_text(ctx, i18n_get("ELAPSED", window), FONT_KEY_GOTHIC_14,
-                       GRect(margin, top + (large ? 94 : 78), content_w, 18),
-                       PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
     i18n_free_all(window);
     return;
   }
 
-  workout_draw_select_indicator(ctx, layer->bounds.size);
+  if (flooded) {
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_oval(ctx, GRect(layer->bounds.size.w - 5, (h - 26) / 2, 26, 26),
+                       GOvalScaleModeFitCircle);
+  } else {
+    workout_draw_select_indicator(ctx, layer->bounds.size);
+  }
+
   WorkoutMetricType hero = WorkoutMetricType_Duration;
   const char *heading = i18n_noop("ELAPSED");
-  GColor hero_color = paused ? PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack) : GColorBlack;
   if (heart_page) {
     hero = WorkoutMetricType_Hr;
     heading = i18n_noop("HEART RATE BPM");
-    hero_color = prv_zone_color(hr_util_get_hr_zone(window->workout_controller->get_metric_value(
-                                    hero, window->workout_data)),
-                                true);
   } else if (!open && page == 1) {
     hero = WorkoutMetricType_AvgCadence;
     heading = i18n_noop("AVG CADENCE /MIN");
@@ -1247,39 +1313,39 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
   if (finished && page == 0) {
     heading = i18n_noop("TOTAL TIME");
   }
+  const int label_y = top + (large ? 32 : 30);
+  prv_dashboard_text(ctx, i18n_get(heading, window), FONT_KEY_GOTHIC_14_BOLD,
+                     GRect(margin, label_y, content_w, 18),
+                     flooded ? ink : PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
   const char *hero_font = large && !finished ? FONT_KEY_LECO_60_NUMBERS_AM_PM
                           : large            ? FONT_KEY_LECO_42_NUMBERS
-                                             : FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM;
-  GRect hero_box = GRect(margin, top + (large && !finished ? 16 : 22), content_w, large ? 70 : 40);
+                                             : FONT_KEY_LECO_32_BOLD_NUMBERS;
+  GRect hero_box = GRect(margin, label_y + (large ? 4 : 10), content_w, large ? 70 : 40);
   if (heart_page) {
-    const int bpm = window->workout_controller->get_metric_value(hero, window->workout_data);
     char text[12];
     if (bpm > 0) {
       snprintf(text, sizeof(text), "%d", bpm);
     } else {
       strcpy(text, "--");
     }
-    const int heart_height = large ? (finished ? 30 : 42) : 19;
-    const GSize heart_size = GSize(heart_height, heart_height);
+    const int heart_height = large ? (finished ? 30 : 44) : 22;
     const GSize value_size = graphics_text_layout_get_max_used_size(
         ctx, text, fonts_get_system_font(hero_font), hero_box, GTextOverflowModeFill,
         GTextAlignmentCenter, nullptr);
     const int gap = 8;
-    const int value_w = MIN(value_size.w, content_w - heart_size.w - gap);
-    const int group_x = margin + (content_w - heart_size.w - gap - value_w) / 2;
-    const int value_center_y = hero_box.origin.y + (large ? (finished ? 27 : 39) : 17);
+    const int value_w = MIN(value_size.w, content_w - heart_height - gap);
+    const int group_x = margin + (content_w - heart_height - gap - value_w) / 2;
+    const int value_center_y = hero_box.origin.y + (large ? (finished ? 27 : 39) : 19);
     prv_dashboard_heart_icon(
-        ctx, window, GRect(group_x, value_center_y - heart_size.h / 2, heart_size.w, heart_size.h));
-    hero_box.origin.x = group_x + heart_size.w + gap;
+        ctx, window, GRect(group_x, value_center_y - heart_height / 2, heart_height, heart_height),
+        flooded ? ink : PBL_IF_COLOR_ELSE(GColorFolly, GColorWhite));
+    hero_box.origin.x = group_x + heart_height + gap;
     hero_box.size.w = value_w;
   }
-  const GRect hero_value = prv_dashboard_value(ctx, window, hero, hero_box, hero_font, hero_color);
-  prv_dashboard_text(ctx, i18n_get(heading, window), FONT_KEY_GOTHIC_14,
-                     GRect(margin, top + (large ? (finished ? 64 : 76) : 50), content_w, 18),
-                     PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack));
+  prv_dashboard_value(ctx, window, hero, hero_box, hero_font, ink);
 
   if (finished && (!heart_page || (!window->hr_plot_visible && !window->hr_plot_progress))) {
-    const int row_y = top + (large ? 84 : 66);
+    const int row_y = label_y + (large ? 62 : 44);
     const bool form = page == 1 || open;
     prv_dashboard_pair(ctx, window, GRect(margin, row_y, content_w, 48),
                        form ? WorkoutMetricType_Steps : WorkoutMetricType_Distance,
@@ -1288,8 +1354,9 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
                                                                               i18n_noop("DIST KM")),
                        form ? WorkoutMetricType_ActiveCalories : WorkoutMetricType_AvgPace,
                        form ? i18n_noop("EST KCAL")
-                            : window->workout_controller->get_distance_string(
-                                  i18n_noop("AVG /MI"), i18n_noop("AVG /KM")));
+                            : window->workout_controller->get_distance_string(i18n_noop("AVG /MI"),
+                                                                              i18n_noop("AVG /KM")),
+                       ink);
     if (large) {
       WorkoutMetricType right = WorkoutMetricType_ActiveCalories;
       const char *right_label = i18n_noop("EST KCAL");
@@ -1298,7 +1365,7 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
         right_label = window->has_spo2 ? i18n_noop("LOW SPO2 %") : i18n_noop("AVG CADENCE");
       }
       prv_dashboard_pair(ctx, window, GRect(margin, row_y + 48, content_w, 48),
-                         WorkoutMetricType_AvgHr, i18n_noop("AVG BPM"), right, right_label);
+                         WorkoutMetricType_AvgHr, i18n_noop("AVG BPM"), right, right_label, ink);
     }
     prv_draw_complete(ctx, window, GRect(margin, h - PBL_IF_ROUND_ELSE(34, 23), content_w, 18));
     i18n_free_all(window);
@@ -1307,35 +1374,17 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
 
   if (heart_page) {
     const int half = ANIMATION_NORMALIZED_MAX / 2;
-    const int chart_y = top + (large ? 96 : 66);
+    const int chart_y = label_y + (large ? 80 : 50);
     const int chart_bottom = h - (finished ? 40 : PBL_IF_ROUND_ELSE(25, 17));
     if (window->hr_plot_progress > half) {
       prv_draw_hr_chart(ctx, window, GRect(margin, chart_y, content_w, chart_bottom - chart_y),
-                        MIN(ANIMATION_NORMALIZED_MAX, 2 * (window->hr_plot_progress - half)));
+                        MIN(ANIMATION_NORMALIZED_MAX, 2 * (window->hr_plot_progress - half)), ink);
     } else {
-      const int bpm =
-          window->workout_controller->get_metric_value(WorkoutMetricType_Hr, window->workout_data);
-      const int bar_w = (content_w - 9) / 4;
-      const int bar_top = top + (large ? 100 : 68);
-      const int full_h = large ? 28 : 10;
-      for (int i = 0; i < 4; i++) {
-        const bool active = bpm > 0 && i == (int)hr_util_get_hr_zone(bpm);
-        const int bar_h = (active ? full_h + (window->beat ? 3 : 0) : full_h / 2) *
-                          prv_bar_progress(window, i) / ANIMATION_NORMALIZED_MAX;
-        const int progress = window->hr_plot_progress;
-        const int height = MAX(1, bar_h * (half - progress) / half);
-        const int axis_left = margin + 24;
-        const int axis_w = content_w - 49;
-        const int from_x = margin + i * (bar_w + 3);
-        const int target_x = axis_left + i * axis_w / 4;
-        const int target_w = (i + 1) * axis_w / 4 - i * axis_w / 4;
-        const int bottom =
-            bar_top + full_h + (chart_bottom - 16 - bar_top - full_h) * progress / half;
-        GRect bar = GRect(from_x + (target_x - from_x) * progress / half, bottom - height,
-                          bar_w + (target_w - bar_w) * progress / half, height);
-        graphics_context_set_fill_color(ctx, prv_zone_color(i, false));
-        graphics_fill_rect(ctx, &bar);
-      }
+      const int gauge_y = label_y + (large ? 92 : 56);
+      const int shrink = content_w * window->hr_plot_progress / half / 2;
+      prv_draw_zone_gauge(ctx, window,
+                          GRect(margin + shrink, gauge_y, content_w - 2 * shrink, large ? 12 : 8),
+                          bpm, true);
       if (!window->hr_plot_progress) {
         const bool spo2_measuring =
             window->has_spo2 && window->workout_controller->get_metric_value(
@@ -1345,15 +1394,13 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
                                     : bpm > 0      ? prv_get_label_for_hr_metric(bpm)
                                                    : i18n_noop("MEASURING"),
                                     window),
-                           FONT_KEY_GOTHIC_14_BOLD,
-                           GRect(margin, bar_top + full_h + 2, content_w, 18), hero_color);
+                           large ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_14_BOLD,
+                           GRect(margin, gauge_y + (large ? 14 : 9), content_w, 24), ink);
       }
     }
   } else {
-    const int row_w = MAX(hero_value.size.w, MIN(content_w, large ? 160 : 108));
-    const int row_y = top + (large ? 76 : 50) + 18;
-    prv_dashboard_heart(ctx, window,
-                        GRect(margin + (content_w - row_w) / 2, row_y, row_w, pair_y - row_y));
+    const int row_y = label_y + (large ? 80 : 48);
+    prv_dashboard_heart(ctx, window, GRect(margin, row_y, content_w, pair_y - row_y));
   }
 
   WorkoutMetricType left = WorkoutMetricType_Distance;
@@ -1375,27 +1422,29 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
   }
   if (!heart_page || !window->hr_plot_progress) {
     prv_dashboard_pair(ctx, window, GRect(margin, pair_y, content_w, 54), left, left_label, right,
-                       right_label);
+                       right_label, ink);
   }
   if (finished) {
     prv_draw_complete(ctx, window, GRect(margin, h - PBL_IF_ROUND_ELSE(34, 23), content_w, 18));
   } else if (window->num_scrollable_metrics > 1) {
     const int count = window->num_scrollable_metrics;
     for (int i = 0; i < count; i++) {
-      GRect marker = GRect(w / 2 - count * 8 + i * 16, h - PBL_IF_ROUND_ELSE(18, 9), 11, 3);
+      GRect marker = GRect(w / 2 - count * 8 + i * 16, h - PBL_IF_ROUND_ELSE(18, 8), 11, 3);
       if (i == page) {
         marker = grect_inset(marker, GEdgeInsets(0, -2));
-        graphics_context_set_fill_color(ctx, workout_activity_text_color(window->activity_type));
-        graphics_fill_round_rect(ctx, &marker, 1, GCornersAll);
-      } else {
-#if PBL_COLOR
-        graphics_context_set_fill_color(ctx, GColorLightGray);
-        graphics_fill_round_rect(ctx, &marker, 1, GCornersAll);
-#else
-        graphics_context_set_stroke_color(ctx, GColorBlack);
-        graphics_draw_rect(ctx, &marker);
-#endif
       }
+      graphics_context_set_fill_color(
+          ctx, i == page ? (flooded ? ink : accent)
+                         : (flooded ? PBL_IF_COLOR_ELSE(GColorDarkGray, GColorBlack)
+                                    : PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite)));
+      graphics_fill_round_rect(ctx, &marker, 1, GCornersAll);
+#if PBL_BW
+      if (i != page) {
+        graphics_context_set_fill_color(ctx, background);
+        const GRect inner = grect_inset(marker, GEdgeInsets(1));
+        graphics_fill_rect(ctx, &inner);
+      }
+#endif
     }
   }
   i18n_free_all(window);
@@ -1729,7 +1778,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window, void *w
   window_init(window, WINDOW_NAME("Workout Active Info"));
   window_set_user_data(window, active_window);
   window_set_background_color(
-      window, active_window->layout == WorkoutLayout_Dashboard ? GColorWhite : BACKGROUND_COLOR);
+      window, active_window->layout == WorkoutLayout_Dashboard ? GColorBlack : BACKGROUND_COLOR);
   window_set_window_handlers(window, &(WindowHandlers){
                                        .unload = prv_window_unload_handler,
 #ifdef CONFIG_TOUCH

@@ -18,7 +18,7 @@
 
 #include <resource/resource_ids.auto.h>
 
-#define BACKGROUND_COLOR GColorWhite
+#define BACKGROUND_COLOR GColorBlack
 
 typedef struct WorkoutSummaryWindow {
   Window window;
@@ -69,17 +69,17 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, const char *na
   const int header_y = PBL_IF_ROUND_ELSE(18, -2);
   const int header_h = 26;
   const int footer_y = h - PBL_IF_ROUND_ELSE(72, 57);
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(ctx, i18n_get("WORKOUT", layer),
                      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
                      GRect(0, header_y, w, header_h), GTextOverflowModeTrailingEllipsis,
                      GTextAlignmentCenter, nullptr);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_context_set_stroke_width(ctx, 2);
   const int side = PBL_IF_ROUND_ELSE(24, 0);
   graphics_draw_line(ctx, GPoint(side, header_y + header_h), GPoint(w - side, header_y + header_h));
 
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(ctx, i18n_get(name, layer), fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
                      GRect(0, footer_y + 1, w, 34), GTextOverflowModeTrailingEllipsis,
                      GTextAlignmentCenter, nullptr);
@@ -88,9 +88,9 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, const char *na
   };
   graphics_context_set_stroke_width(ctx, 1);
   for (int i = 0; i < 3; i++) {
-    const GColor color = PBL_IF_COLOR_ELSE(workout_activity_color(types[i]), GColorBlack);
+    const GColor color = workout_activity_color(types[i]);
     GRect marker = GRect(w / 2 - 20 + i * 16, footer_y + 42, 9, 9);
-    graphics_context_set_fill_color(ctx, activity_type == types[i] ? color : GColorWhite);
+    graphics_context_set_fill_color(ctx, activity_type == types[i] ? color : GColorBlack);
     graphics_fill_rect(ctx, &marker);
     graphics_context_set_stroke_color(ctx, color);
     graphics_draw_rect(ctx, &marker);
