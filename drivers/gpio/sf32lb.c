@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/gpio/sf32lb.h>
+#include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/misc.h>
@@ -12,17 +13,15 @@
 #include <hardware/sf32lb52_gpio.h>
 #include <hardware/sf32lb52_hpsys_aon.h>
 #include <hardware/sf32lb52_pinmux.h>
-#include <hardware/sf32lb52_rtc.h>
 
 #define GPIO1_NUM_PINS  45U
 #define GPIO1_NUM_BANKS 2U
 
-#define AON_PULL_FIRST_PIN 34U
-#define AON_PULL_LAST_PIN  44U
-#define AON_PULL_PAWK_BASE 28U
-#define PBR_PULL_FIRST_PIN 24U
-#define PBR_PULL_LAST_PIN  27U
-#define WAKEUP_FIRST_PIN   24U
+#define WAKEUP_FIRST_PIN 24U
+
+#define PAD_GPIO(pin) \
+  PBL_PINCTRL_SF32LB52_PIN(PBL_PINCTRL_SF32LB52_PORT_PA, pin, PINMUX_PAD_FSEL_GPIO, 0U, 0U)
+#define PAD_GPIO_MSK (PINMUX_PAD_FSEL_MASK | PINMUX_PAD_PE | PINMUX_PAD_PS | PINMUX_PAD_IE)
 
 static const struct pbl_gpio_sf32lb *prv_port(const struct pbl_gpio_port *port) {
   return container_of(port, const struct pbl_gpio_sf32lb, port);
@@ -46,31 +45,16 @@ static inline void prv_putpin(const struct pbl_gpio_sf32lb *gpio, uint32_t pin, 
   prv_putreg(gpio, pin / 32U, offset, GPIO_PIN_BIT(pin));
 }
 
-// Pulls of always-on and backup pads are also set in the RTC block
 static void prv_pad_configure(uint32_t pin, uint32_t flags) {
-  bool pe = (flags & (PBL_GPIO_PULL_UP | PBL_GPIO_PULL_DOWN)) != 0U;
-  bool ps = (flags & PBL_GPIO_PULL_UP) != 0U;
-  uint32_t val = PBL_FIELD_PREP(PINMUX_PAD_FSEL_MASK, PINMUX_PAD_FSEL_GPIO) | PINMUX_PAD_IE;
+  uint32_t val = PAD_GPIO(pin) | PBL_PINCTRL_SF32LB52_INPUT;
 
-  if (pe) {
-    val |= PINMUX_PAD_PE;
-  }
-  if (ps) {
-    val |= PINMUX_PAD_PS;
+  if ((flags & PBL_GPIO_PULL_UP) != 0U) {
+    val |= PBL_PINCTRL_SF32LB52_PULL_UP;
+  } else if ((flags & PBL_GPIO_PULL_DOWN) != 0U) {
+    val |= PBL_PINCTRL_SF32LB52_PULL_DOWN;
   }
 
-  pbl_modifyl(PINMUX_PAD_FSEL_MASK | PINMUX_PAD_PE | PINMUX_PAD_PS | PINMUX_PAD_IE, val,
-              SF32LB52_PINMUX1_BASE + SF32LB52_PINMUX_PAD_PA_OFFSET(pin));
-
-  if (pin >= AON_PULL_FIRST_PIN && pin <= AON_PULL_LAST_PIN) {
-    uint32_t bit = RTC_PAWK_PIN(pin - AON_PULL_PAWK_BASE);
-
-    pbl_modifyl(bit, pe ? bit : 0U, SF32LB52_RTC_BASE + SF32LB52_RTC_PAWK1R_OFFSET);
-    pbl_modifyl(bit, ps ? bit : 0U, SF32LB52_RTC_BASE + SF32LB52_RTC_PAWK2R_OFFSET);
-  } else if (pin >= PBR_PULL_FIRST_PIN && pin <= PBR_PULL_LAST_PIN) {
-    pbl_modifyl(RTC_PBR_PE | RTC_PBR_PS, (pe ? RTC_PBR_PE : 0U) | (ps ? RTC_PBR_PS : 0U),
-                SF32LB52_RTC_BASE + SF32LB52_RTC_PBR_OFFSET(pin - PBR_PULL_FIRST_PIN));
-  }
+  (void)pbl_pinctrl_sf32lb52_modify(val, PAD_GPIO_MSK);
 }
 
 static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
@@ -146,9 +130,8 @@ static int prv_intc_configure(const struct pbl_intc *intc, uint32_t hwirq, uint3
 
   gpio->state->od[hwirq / 32U] &= ~GPIO_PIN_BIT(hwirq);
   prv_putpin(gpio, hwirq, SF32LB52_GPIO_DOECR_OFFSET);
-  pbl_modifyl(PINMUX_PAD_FSEL_MASK,
-              PBL_FIELD_PREP(PINMUX_PAD_FSEL_MASK, PINMUX_PAD_FSEL_GPIO) | PINMUX_PAD_IE,
-              SF32LB52_PINMUX1_BASE + SF32LB52_PINMUX_PAD_PA_OFFSET(hwirq));
+  (void)pbl_pinctrl_sf32lb52_modify(PAD_GPIO(hwirq) | PBL_PINCTRL_SF32LB52_INPUT,
+                                    PINMUX_PAD_FSEL_MASK | PINMUX_PAD_IE);
 
   prv_putpin(gpio, hwirq, edge ? SF32LB52_GPIO_ITSR_OFFSET : SF32LB52_GPIO_ITCR_OFFSET);
   prv_putpin(gpio, hwirq, high ? SF32LB52_GPIO_IPHSR_OFFSET : SF32LB52_GPIO_IPHCR_OFFSET);
