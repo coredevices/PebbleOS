@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/uart.h>
 
 #include <board/board.h>
@@ -46,10 +47,8 @@ typedef struct UARTState {
 typedef const struct UARTDevice {
   /** Driver state. */
   UARTDeviceState *state;
-  /** RX pin. */
-  Pinmux rx;
-  /** TX pin. */
-  Pinmux tx;
+  /** Pins. */
+  struct pbl_pinctrl pinctrl;
   /** UART interrupt. */
   IRQn_Type irqn;
   /** Receive DMA interrupt. */

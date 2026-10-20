@@ -7,6 +7,7 @@
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
+#include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
@@ -40,20 +41,15 @@ static UARTDeviceState s_dbg_uart_state = {
   },
 };
 
+PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA19_USART1_TXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA18_USART1_RXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_UP);
+
 static UARTDevice DBG_UART_DEVICE = {
   .state = &s_dbg_uart_state,
-  .tx =
-      {
-        .pad = PAD_PA19,
-        .func = USART1_TXD,
-        .flags = PIN_NOPULL,
-      },
-  .rx =
-      {
-        .pad = PAD_PA18,
-        .func = USART1_RXD,
-        .flags = PIN_PULLUP,
-      },
+  .pinctrl = PBL_PINCTRL(&s_dbg_uart_default, nullptr, 0),
   .irqn = USART1_IRQn,
   .dma_irqn = DMAC1_CH1_IRQn,
 };
@@ -207,13 +203,13 @@ static UARTDeviceState s_hci_trace_uart_state = {
   },
 };
 
+PBL_PINCTRL_STATE_DEFINE(s_hci_trace_uart_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA20_USART3_TXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+
 static UARTDevice HCI_TRACE_UART_DEVICE = {
   .state = &s_hci_trace_uart_state,
-  .tx = {
-    .pad = PAD_PA20,
-    .func = USART3_TXD,
-    .flags = PIN_NOPULL,
-  },
+  .pinctrl = PBL_PINCTRL(&s_hci_trace_uart_default, nullptr, 0),
 };
 UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 // clang-format off
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/irq.h>
@@ -16,28 +17,15 @@
 // clang-format on
 
 static void prv_init(UARTDevice *dev, uint32_t mode) {
-  HAL_StatusTypeDef ret;
+  int ret;
 
   dev->state->huart.Init.Mode = mode;
   dev->state->dev = dev;
   ret = HAL_UART_Init(&dev->state->huart);
   PBL_ASSERTN(ret == HAL_OK);
 
-  switch (mode) {
-    case UART_MODE_TX_RX:
-      HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
-      HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
-      break;
-    case UART_MODE_TX:
-      HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
-      break;
-    case UART_MODE_RX:
-      HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
-      break;
-    default:
-      pbl_panic();
-      break;
-  }
+  ret = pbl_pinctrl_select_state(&dev->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+  PBL_ASSERTN(ret == 0);
 
   dev->state->initialized = true;
 
