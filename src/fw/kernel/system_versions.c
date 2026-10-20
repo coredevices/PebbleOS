@@ -65,19 +65,6 @@ static void prv_fixup_firmware_metadata(FirmwareMetadata *fw_metadata) {
   fixup_string(fw_metadata->version_short, sizeof(fw_metadata->version_short));
 }
 
-static void prv_fixup_running_firmware_metadata(FirmwareMetadata *fw_metadata) {
-  prv_fixup_firmware_metadata(fw_metadata);
-
-#ifdef MANUFACTURING_FW
-  // Lie to the phone and force this to say we're not a MFG firmware. If we tell the phone app
-  // that we're a MFG firmware it will get mad at us and try to update us out of this mode. We
-  // want to stay in this mode to collect logs and core dumps at the factory.
-  // FIXME: Long term the phone should probably just be able to collect logs and core dumps
-  // regardless of the state of the watch, but for now just lie.
-  fw_metadata->is_recovery_firmware = false;
-#endif
-}
-
 static void resource_version_to_network_endian(ResourceVersion *resources_version) {
   resources_version->crc = htonl(resources_version->crc);
   resources_version->timestamp = htonl(resources_version->timestamp);
@@ -95,7 +82,7 @@ static void prv_send_watch_versions(CommSession *session) {
             "");
 
   version_copy_running_fw_metadata(&versions_msg.running_fw_metadata);
-  prv_fixup_running_firmware_metadata(&versions_msg.running_fw_metadata);
+  prv_fixup_firmware_metadata(&versions_msg.running_fw_metadata);
 
   version_copy_recovery_fw_metadata(&versions_msg.recovery_fw_metadata);
   prv_fixup_firmware_metadata(&versions_msg.recovery_fw_metadata);
