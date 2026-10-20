@@ -459,8 +459,8 @@ void test_menu_layer__center_focused_handles_skipped_rows(void) {
 }
 
 // Not declared in menu_layer.h; normally reached via the window click config
-extern void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer);
-extern void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer);
+extern void menu_up_click_handler(ClickRecognizerRef recognizer, void *context);
+extern void menu_down_click_handler(ClickRecognizerRef recognizer, void *context);
 
 static void prv_redirect_off_last_row(struct MenuLayer *menu_layer, MenuIndex *new_index,
                                       MenuIndex old_index, void *callback_context) {

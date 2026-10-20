@@ -92,7 +92,8 @@ inline static bool prv_is_long_click_enabled(ClickRecognizer *recognizer) {
           recognizer->config.long_click.release_handler != nullptr);
 }
 
-static void prv_auto_repeat_single_click(ClickRecognizer *recognizer) {
+static void prv_auto_repeat_single_click(void *data) {
+  ClickRecognizer *recognizer = data;
   if (!recognizer->is_button_down) {
     // If this button isn't being held down anymore, don't re-register the timer.
     return;
@@ -101,9 +102,8 @@ static void prv_auto_repeat_single_click(ClickRecognizer *recognizer) {
   // Start the repetition timer:
   // Note: We're not using the timer_register_repeating() here, so we have the possibility
   //       of changing the interval in the handler.
-  recognizer->hold_timer =
-      app_timer_register(recognizer->config.click.repeat_interval_ms,
-                         (AppTimerCallback)prv_auto_repeat_single_click, recognizer);
+  recognizer->hold_timer = app_timer_register(recognizer->config.click.repeat_interval_ms,
+                                              prv_auto_repeat_single_click, recognizer);
   recognizer->is_repeating = true;
 
   // Fire right once:

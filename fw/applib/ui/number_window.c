@@ -25,7 +25,8 @@ static void update_output_value(NumberWindow *nf) {
   layer_mark_dirty(&nf->window.layer);
 }
 
-static void up_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  NumberWindow *nf = context;
   bool is_increased = false;
   int32_t new_val = nf->value + nf->step_size;
   if (new_val <= nf->max_val && new_val > nf->value) {
@@ -40,7 +41,8 @@ static void up_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
   }
 }
 
-static void down_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
+static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  NumberWindow *nf = context;
   bool is_decreased = false;
   int32_t new_val = nf->value - nf->step_size;
   if (new_val >= nf->min_val && new_val < nf->value) {
@@ -55,22 +57,22 @@ static void down_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) 
   }
 }
 
-static void select_click_handler(ClickRecognizerRef recognizer, NumberWindow *nf) {
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  NumberWindow *nf = context;
   if (nf->callbacks.selected != nullptr) {
     nf->callbacks.selected(nf, nf->callback_context);
   }
 }
 
-static void click_config_provider(NumberWindow *nf) {
-  window_single_repeating_click_subscribe(BUTTON_ID_UP, 50, (ClickHandler)up_click_handler);
-  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 50, (ClickHandler)down_click_handler);
+static void click_config_provider(void *context) {
+  window_single_repeating_click_subscribe(BUTTON_ID_UP, 50, up_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 50, down_click_handler);
 
   // Work-around: by using a multi-click setup for the select button,
   // the handler will get fired with a very short delay, so the inverted segment of
   // the action bar is visible for a short period of time as to give visual
   // feedback of the button press.
-  window_multi_click_subscribe(BUTTON_ID_SELECT, 1, 2, 25, true,
-                               (ClickHandler)select_click_handler);
+  window_multi_click_subscribe(BUTTON_ID_SELECT, 1, 2, 25, true, select_click_handler);
 }
 
 static GRect prv_get_text_frame(Layer *window_layer) {
@@ -166,15 +168,15 @@ int32_t number_window_get_value(const NumberWindow *nf) {
   return nf->value;
 }
 
-static void number_window_load(NumberWindow *nw) {
+static void number_window_load(Window *window) {
+  NumberWindow *nw = (NumberWindow *)window;
   ActionBarLayer *action_bar = &nw->action_bar;
   action_bar_layer_set_context(action_bar, nw);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, &s_bar_icon_up_bitmap);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, &s_bar_icon_down_bitmap);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, &s_bar_icon_check_bitmap);
   action_bar_layer_add_to_window(action_bar, &nw->window);
-  action_bar_layer_set_click_config_provider(action_bar,
-                                             (ClickConfigProvider)click_config_provider);
+  action_bar_layer_set_click_config_provider(action_bar, click_config_provider);
 }
 
 void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbacks callbacks,
@@ -191,7 +193,7 @@ void number_window_init(NumberWindow *nw, const char *label, NumberWindowCallbac
 
   window_init(&nw->window, WINDOW_NAME(label));
   window_set_window_handlers(&nw->window, &(WindowHandlers){
-                                            .load = (WindowHandler)number_window_load,
+                                            .load = number_window_load,
                                           });
   layer_set_update_proc(&nw->window.layer, prv_update_proc);
 

@@ -131,7 +131,8 @@ static bool prv_content_indicator_find_buffer_offset_bytes_cb(ContentIndicator *
   return true;
 }
 
-static void prv_content_indicator_reset_direction(ContentIndicatorDirectionData *direction_data) {
+static void prv_content_indicator_reset_direction(void *data) {
+  ContentIndicatorDirectionData *direction_data = data;
   // Cancel the timeout timer, if necessary
   if (direction_data->timeout_timer) {
     app_timer_cancel(direction_data->timeout_timer);
@@ -344,8 +345,7 @@ void content_indicator_set_content_available(ContentIndicator *content_indicator
     // If the arrow should time out and a timer isn't already scheduled, register a timeout timer
     if (config->times_out && !direction_data->timeout_timer) {
       direction_data->timeout_timer = app_timer_register(
-          CONTENT_INDICATOR_TIMEOUT_MS, (AppTimerCallback)prv_content_indicator_reset_direction,
-          direction_data);
+          CONTENT_INDICATOR_TIMEOUT_MS, prv_content_indicator_reset_direction, direction_data);
     }
   }
 }

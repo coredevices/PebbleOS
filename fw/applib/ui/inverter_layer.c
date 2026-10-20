@@ -50,7 +50,8 @@ inline static void prv_inverter_layer_update_proc_bw(GContext *ctx) {
 }
 #endif
 
-void inverter_layer_update_proc(InverterLayer *inverter, GContext *ctx) {
+void inverter_layer_update_proc(Layer *layer, GContext *ctx) {
+  InverterLayer *inverter = (InverterLayer *)layer;
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   prv_inverter_layer_update_proc_bw(ctx);
 #else
@@ -66,7 +67,7 @@ void inverter_layer_init(InverterLayer *inverter, const GRect *frame) {
   *inverter = (InverterLayer){};
   inverter->layer.frame = *frame;
   inverter->layer.bounds = (GRect){{0, 0}, frame->size};
-  inverter->layer.update_proc = (LayerUpdateProc)inverter_layer_update_proc;
+  inverter->layer.update_proc = inverter_layer_update_proc;
   layer_set_clips(&inverter->layer, true);
   layer_mark_dirty(&(inverter->layer));
 }

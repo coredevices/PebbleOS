@@ -26,7 +26,8 @@ static inline enum qrcodegen_Ecc prv_ecc_to_qrcodegen(QRCodeECC ecc) {
   }
 }
 
-static void prv_qr_code_update_proc(QRCode *qr_code, GContext *ctx) {
+static void prv_qr_code_update_proc(Layer *layer, GContext *ctx) {
+  QRCode *qr_code = (QRCode *)layer;
   uint8_t *qr_code_buf;
   uint8_t *tmp_buf;
   enum qrcodegen_Ecc ecc;
@@ -127,7 +128,7 @@ void qr_code_init_with_parameters(QRCode *qr_code, const GRect *frame, const voi
   *qr_code = (QRCode){};
   qr_code->layer.frame = *frame;
   qr_code->layer.bounds = (GRect){{0, 0}, frame->size};
-  qr_code->layer.update_proc = (LayerUpdateProc)prv_qr_code_update_proc;
+  qr_code->layer.update_proc = prv_qr_code_update_proc;
   qr_code->data = data;
   qr_code->data_len = data_len;
   qr_code->ecc = ecc;

@@ -103,7 +103,9 @@ bool is_remote_connected(StoredRemote *remote) {
   return (remote->ble.connection != nullptr);
 }
 
-static int remote_comparator(StoredRemote *remote, StoredRemote *other) {
+static int remote_comparator(void *remote_data, void *other_data) {
+  StoredRemote *remote = remote_data;
+  StoredRemote *other = other_data;
   if (is_remote_connected(remote) != is_remote_connected(other)) {
     return is_remote_connected(remote) ? -1 : 1;
   } else {
@@ -113,8 +115,8 @@ static int remote_comparator(StoredRemote *remote, StoredRemote *other) {
 
 static void add_remote(SettingsBluetoothData *data, StoredRemote *remote) {
   const bool ascending = false;
-  data->remote_list_head = list_sorted_add(data->remote_list_head, &remote->list_node,
-                                           (Comparator)remote_comparator, ascending);
+  data->remote_list_head =
+      list_sorted_add(data->remote_list_head, &remote->list_node, remote_comparator, ascending);
 }
 
 static StoredRemote *stored_remote_create(void) {

@@ -54,8 +54,8 @@ static uint16_t prv_transform_index(AppMenuDataSource *data_source, uint16_t ori
 #endif
 }
 
-static void select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
-                            SettingsWatchfacesData *data) {
+static void select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
+  SettingsWatchfacesData *data = context;
   const AppMenuNode *app_node =
       app_menu_data_source_get_node_at_index(&data->data_source, cell_index->row);
 
@@ -70,7 +70,7 @@ static void select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
 
 #if PBL_ROUND
 static int16_t get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index,
-                                        SettingsWatchfacesData *data) {
+                                        void *context) {
   const int16_t focused_cell_height =
       (system_theme_get_content_size() == PreferredContentSizeExtraLarge)
           ? 100
@@ -87,12 +87,14 @@ static int16_t get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex 
 #endif
 
 static uint16_t get_num_rows_callback(struct MenuLayer *menu_layer, uint16_t section_index,
-                                      SettingsWatchfacesData *data) {
+                                      void *context) {
+  SettingsWatchfacesData *data = context;
   return app_menu_data_source_get_count(&data->data_source);
 }
 
 static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
-                              SettingsWatchfacesData *data) {
+                              void *context) {
+  SettingsWatchfacesData *data = context;
   AppMenuNode *node = app_menu_data_source_get_node_at_index(&data->data_source, cell_index->row);
   GBitmap *bitmap = app_menu_data_source_get_node_icon(&data->data_source, node);
   const char *subtitle =
@@ -150,16 +152,15 @@ static void prv_window_load(Window *window) {
   app_menu_data_source_enable_icons(&data->data_source,
                                     RESOURCE_ID_MENU_LAYER_GENERIC_WATCHFACE_ICON);
 
-  menu_layer_set_callbacks(
-      menu_layer, data,
-      &(MenuLayerCallbacks){
+  menu_layer_set_callbacks(menu_layer, data,
+                           &(MenuLayerCallbacks){
 #if PBL_ROUND
-        .get_cell_height = (MenuLayerGetCellHeightCallback)get_cell_height_callback,
+                             .get_cell_height = get_cell_height_callback,
 #endif
-        .get_num_rows = (MenuLayerGetNumberOfRowsInSectionsCallback)get_num_rows_callback,
-        .draw_row = (MenuLayerDrawRowCallback)draw_row_callback,
-        .select_click = (MenuLayerSelectCallback)select_callback,
-      });
+                             .get_num_rows = get_num_rows_callback,
+                             .draw_row = draw_row_callback,
+                             .select_click = select_callback,
+                           });
   menu_layer_set_highlight_colors(&data->menu_layer,
                                   PBL_IF_COLOR_ELSE(GColorJazzberryJam, GColorBlack), GColorWhite);
   menu_layer_set_click_config_onto_window(menu_layer, window);

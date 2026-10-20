@@ -25,7 +25,8 @@ static GTextLayoutCacheRef prv_text_layer_get_cache_handle(TextLayer *text_layer
   return text_layer->should_cache_layout ? text_layer->layout_cache : nullptr;
 }
 
-void text_layer_update_proc(TextLayer *text_layer, GContext *ctx) {
+void text_layer_update_proc(Layer *layer, GContext *ctx) {
+  TextLayer *text_layer = (TextLayer *)layer;
   PBL_ASSERTN(text_layer);
   const GColor bg_color = text_layer->background_color;
   if (!(gcolor_equal(bg_color, GColorClear))) {
@@ -56,7 +57,7 @@ void text_layer_init_with_parameters(TextLayer *text_layer, const GRect *frame, 
   *text_layer = (TextLayer){};
   text_layer->layer.frame = *frame;
   text_layer->layer.bounds = (GRect){{0, 0}, frame->size};
-  text_layer->layer.update_proc = (LayerUpdateProc)text_layer_update_proc;
+  text_layer->layer.update_proc = text_layer_update_proc;
   text_layer->text_color = text_color;
   text_layer->background_color = back_color;
   text_layer->overflow_mode = overflow_mode;

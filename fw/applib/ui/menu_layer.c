@@ -212,9 +212,9 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
 }
 #endif // PBL_ROUND
 
-static void prv_menu_scroll_offset_changed_handler(ScrollLayer *scroll_layer,
-                                                   MenuLayer *menu_layer) {
+static void prv_menu_scroll_offset_changed_handler(ScrollLayer *scroll_layer, void *context) {
 #ifdef CONFIG_TOUCH
+  MenuLayer *menu_layer = context;
   prv_menu_update_overscroll_stretch(menu_layer);
   if (menu_layer->touch_fling_active) {
     // Keep the scrollbar alive while an inertial coast drives the offset.
@@ -233,7 +233,8 @@ static void prv_menu_scroll_offset_changed_handler(ScrollLayer *scroll_layer,
 #endif
 }
 
-static void prv_menu_select_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer) {
+static void prv_menu_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  MenuLayer *menu_layer = context;
   // If the selection animation is running, complete it. Note that 2.x apps don't have a selection
   // animation.
   if (menu_layer->animation.animation) {
@@ -259,8 +260,8 @@ static void prv_menu_select_click_handler(ClickRecognizerRef recognizer, MenuLay
   }
 }
 
-static void prv_menu_select_long_click_handler(ClickRecognizerRef recognizer,
-                                               MenuLayer *menu_layer) {
+static void prv_menu_select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  MenuLayer *menu_layer = context;
   if (menu_layer->callbacks.select_long_click) {
     menu_layer->callbacks.select_long_click(menu_layer, &menu_layer->selection.index,
                                             menu_layer->callback_context);
@@ -388,7 +389,8 @@ static void prv_menu_reconcile_selection_before_step(MenuLayer *menu_layer) {
 }
 #endif // CONFIG_TOUCH
 
-void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer) {
+void menu_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  MenuLayer *menu_layer = context;
   const bool up = true;
   if (menu_layer->scroll_wrap_around &&
       prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
@@ -409,7 +411,8 @@ void menu_up_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer)
   }
 }
 
-void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_layer) {
+void menu_down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  MenuLayer *menu_layer = context;
   const bool up = false;
   if (menu_layer->scroll_wrap_around &&
       prv_menu_scroll_handle_wrap_around(menu_layer, recognizer, up)) {
@@ -430,20 +433,18 @@ void menu_down_click_handler(ClickRecognizerRef recognizer, MenuLayer *menu_laye
   }
 }
 
-static void prv_menu_click_config_provider(MenuLayer *menu_layer) {
+static void prv_menu_click_config_provider(void *context) {
+  MenuLayer *menu_layer = context;
   // The config that gets passed in, has already the UP and DOWN buttons configured
   // we're overriding the default behavior here:
-  window_single_repeating_click_subscribe(BUTTON_ID_UP, 100 /*ms*/,
-                                          (ClickHandler)menu_up_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_UP, 100 /*ms*/, menu_up_click_handler);
   if (menu_layer->callbacks.select_click) {
-    window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)prv_menu_select_click_handler);
+    window_single_click_subscribe(BUTTON_ID_SELECT, prv_menu_select_click_handler);
   }
   if (menu_layer->callbacks.select_long_click) {
-    window_long_click_subscribe(BUTTON_ID_SELECT, 0,
-                                (ClickHandler)prv_menu_select_long_click_handler, nullptr);
+    window_long_click_subscribe(BUTTON_ID_SELECT, 0, prv_menu_select_long_click_handler, nullptr);
   }
-  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100 /*ms*/,
-                                          (ClickHandler)menu_down_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100 /*ms*/, menu_down_click_handler);
 }
 
 static inline uint16_t prv_menu_layer_get_num_sections(MenuLayer *menu_layer) {
@@ -949,9 +950,8 @@ void menu_layer_init_scroll_layer_callbacks(MenuLayer *menu_layer) {
   ScrollLayer *scroll_layer = &menu_layer->scroll_layer;
   scroll_layer_set_callbacks(
       scroll_layer, (ScrollLayerCallbacks){
-                      .click_config_provider = (ClickConfigProvider)prv_menu_click_config_provider,
-                      .content_offset_changed_handler =
-                          (ScrollLayerCallback)prv_menu_scroll_offset_changed_handler,
+                      .click_config_provider = prv_menu_click_config_provider,
+                      .content_offset_changed_handler = prv_menu_scroll_offset_changed_handler,
                     });
   scroll_layer->content_sublayer.update_proc = (LayerUpdateProc)menu_layer_update_proc;
 }

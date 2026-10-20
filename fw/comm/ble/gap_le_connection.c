@@ -268,7 +268,12 @@ GAPLEConnection *gap_le_connection_by_gatt_id(unsigned int connection_id) {
 
 //! @note !!! To access the returned context bt_lock MUST be held!!!
 GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter, void *data) {
-  return (GAPLEConnection *)list_find(&s_connections->node, (ListFilterCallback)filter, data);
+  for (ListNode *node = &s_connections->node; node != nullptr; node = node->next) {
+    if (filter((GAPLEConnection *)node, data)) {
+      return (GAPLEConnection *)node;
+    }
+  }
+  return nullptr;
 }
 
 // -------------------------------------------------------------------------------------------------

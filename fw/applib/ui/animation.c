@@ -865,10 +865,10 @@ static Animation *prv_call_using_vargs(CreateFromArrayFunc func, Animation *anim
 
 // -------------------------------------------------------------------------------------------
 // Complex animations don't perform any logic in their update callback
-static void prv_complex_animation_update(Animation *animation, uint32_t distance) {
+static void prv_complex_animation_update(Animation *animation, const AnimationProgress progress) {
 }
 static const AnimationImplementation s_complex_implementation = {
-  .update = (AnimationUpdateImplementation)prv_complex_animation_update,
+  .update = prv_complex_animation_update,
 };
 
 // -------------------------------------------------------------------------------------------

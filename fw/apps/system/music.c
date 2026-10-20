@@ -432,6 +432,14 @@ static Animation *prv_create_upwards_animation(MusicAppData *data) {
       nullptr);
 }
 
+static void prv_set_frame(void *subject, GRect frame) {
+  layer_set_frame_by_value(subject, frame);
+}
+
+static GRect prv_get_frame(void *subject) {
+  return layer_get_frame_by_value(subject);
+}
+
 static const PropertyAnimationImplementation s_frame_layer_implementation = {
   .base =
       {
@@ -440,10 +448,10 @@ static const PropertyAnimationImplementation s_frame_layer_implementation = {
   .accessors = {
     .setter =
         {
-          .grect = (const GRectSetter)layer_set_frame_by_value,
+          .grect = prv_set_frame,
         },
     .getter = {
-      .grect = (const GRectGetter)layer_get_frame_by_value,
+      .grect = prv_get_frame,
     },
   },
 };

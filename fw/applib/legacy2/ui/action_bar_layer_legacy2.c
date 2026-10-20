@@ -27,7 +27,8 @@ inline static void action_bar_legacy2_set_highlighted(ActionBarLayerLegacy2 *act
   }
 }
 
-static void action_bar_legacy2_changed_proc(ActionBarLayerLegacy2 *action_bar, GContext *ctx) {
+static void action_bar_legacy2_changed_proc(Layer *layer) {
+  ActionBarLayerLegacy2 *action_bar = (ActionBarLayerLegacy2 *)layer;
   if (action_bar->layer.window && action_bar->layer.window->on_screen == false) {
     // clear first, fixes issue of returning from other page while highlighted
     for (int i = 0; i < NUM_ACTION_BAR_LEGACY2_ITEMS; i++) {
@@ -36,7 +37,8 @@ static void action_bar_legacy2_changed_proc(ActionBarLayerLegacy2 *action_bar, G
   }
 }
 
-static void action_bar_legacy2_update_proc(ActionBarLayerLegacy2 *action_bar, GContext *ctx) {
+static void action_bar_legacy2_update_proc(Layer *layer, GContext *ctx) {
+  ActionBarLayerLegacy2 *action_bar = (ActionBarLayerLegacy2 *)layer;
   const GColor bg_color = get_native_color(action_bar->background_color);
   graphics_context_set_fill_color(ctx, bg_color);
   const uint8_t radius = 3;
@@ -85,9 +87,8 @@ static void action_bar_legacy2_update_proc(ActionBarLayerLegacy2 *action_bar, GC
 void action_bar_layer_legacy2_init(ActionBarLayerLegacy2 *action_bar) {
   *action_bar = (ActionBarLayerLegacy2){};
   layer_init(&action_bar->layer, &GRectZero);
-  action_bar->layer.update_proc = (LayerUpdateProc)action_bar_legacy2_update_proc;
-  action_bar->layer.property_changed_proc =
-      (PropertyChangedProc)(void *)action_bar_legacy2_changed_proc;
+  action_bar->layer.update_proc = action_bar_legacy2_update_proc;
+  action_bar->layer.property_changed_proc = action_bar_legacy2_changed_proc;
   action_bar->background_color = GColor2Black;
 }
 
@@ -149,7 +150,8 @@ static void action_bar_legacy2_raw_down_handler(ClickRecognizerRef recognizer, v
   action_bar_legacy2_raw_up_down_handler(recognizer, action_bar, true);
 }
 
-static void action_bar_legacy2_click_config_provider(ActionBarLayerLegacy2 *action_bar) {
+static void action_bar_legacy2_click_config_provider(void *config_context) {
+  ActionBarLayerLegacy2 *action_bar = config_context;
   void *context = action_bar_legacy2_get_context(action_bar);
   // For UP, SELECT and DOWN, setup the raw handler and assign the user specified context:
   for (ButtonId button_id = BUTTON_ID_UP; button_id < NUM_BUTTONS; ++button_id) {
@@ -170,8 +172,7 @@ inline static void action_bar_legacy2_update_click_config_provider(
     ActionBarLayerLegacy2 *action_bar) {
   if (action_bar->window) {
     window_set_click_config_provider_with_context(
-        action_bar->window, (ClickConfigProvider)action_bar_legacy2_click_config_provider,
-        action_bar);
+        action_bar->window, action_bar_legacy2_click_config_provider, action_bar);
   }
 }
 

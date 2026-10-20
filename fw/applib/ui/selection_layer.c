@@ -309,7 +309,8 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
   }
 }
 
-static void prv_draw_selection_layer(SelectionLayer *selection_layer, GContext *ctx) {
+static void prv_draw_selection_layer(Layer *layer, GContext *ctx) {
+  SelectionLayer *selection_layer = (SelectionLayer *)layer;
   // The first thing that is drawn is the background for each cell
   prv_draw_cell_backgrounds(selection_layer, ctx);
 
@@ -549,7 +550,8 @@ void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   }
 }
 
-static void prv_click_config_provider(SelectionLayer *selection_layer) {
+static void prv_click_config_provider(void *context) {
+  SelectionLayer *selection_layer = context;
   // Config UP / DOWN button behavior:
   window_set_click_context(BUTTON_ID_UP, selection_layer);
   window_set_click_context(BUTTON_ID_DOWN, selection_layer);
@@ -586,7 +588,7 @@ void selection_layer_init(SelectionLayer *selection_layer, const GRect *frame, u
   layer_create_with_data(*frame, sizeof(selection_layer));
   layer_set_frame(&selection_layer->layer, frame);
   layer_set_clips(&selection_layer->layer, false);
-  layer_set_update_proc(&selection_layer->layer, (LayerUpdateProc)prv_draw_selection_layer);
+  layer_set_update_proc(&selection_layer->layer, prv_draw_selection_layer);
 }
 
 SelectionLayer *selection_layer_create(GRect frame, unsigned num_cells) {
@@ -656,8 +658,8 @@ void selection_layer_set_active(SelectionLayer *selection_layer, bool is_active)
 void selection_layer_set_click_config_onto_window(SelectionLayer *selection_layer,
                                                   struct Window *window) {
   if (selection_layer && window) {
-    window_set_click_config_provider_with_context(
-        window, (ClickConfigProvider)prv_click_config_provider, selection_layer);
+    window_set_click_config_provider_with_context(window, prv_click_config_provider,
+                                                  selection_layer);
   }
 }
 

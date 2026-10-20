@@ -27,7 +27,9 @@ static EventServiceInfo *prv_get_state(void) {
   }
 }
 
-static int event_service_comparator(EventServiceInfo *a, EventServiceInfo *b) {
+static int event_service_comparator(void *a_data, void *b_data) {
+  EventServiceInfo *a = a_data;
+  EventServiceInfo *b = b_data;
   return (b->type - a->type);
 }
 
@@ -49,7 +51,7 @@ void event_service_client_subscribe(EventServiceInfo *handler) {
     return;
   }
   // Add to handlers list
-  list_sorted_add(list, &handler->list_node, (Comparator)event_service_comparator, true);
+  list_sorted_add(list, &handler->list_node, event_service_comparator, true);
 
   sys_event_service_client_subscribe(handler);
 }

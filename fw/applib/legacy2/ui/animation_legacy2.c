@@ -104,8 +104,9 @@ void animation_legacy2_init(struct AnimationLegacy2 *animation) {
   animation->is_completed = false;
 }
 
-static int animation_legacy2_scheduler_comparator(AnimationLegacy2 *animation_legacy2_a,
-                                                  AnimationLegacy2 *animation_legacy2_b) {
+static int animation_legacy2_scheduler_comparator(void *a, void *b) {
+  AnimationLegacy2 *animation_legacy2_a = a;
+  AnimationLegacy2 *animation_legacy2_b = b;
   return serial_distance32(animation_legacy2_a->abs_start_time_ms,
                            animation_legacy2_b->abs_start_time_ms);
 }
@@ -129,8 +130,8 @@ inline static uint32_t animation_legacy2_get_ms_since_system_start(void) {
   return (sys_get_ticks() * 1000 / RTC_TICKS_HZ);
 }
 
-static void animation_legacy2_timer_callback(
-    AnimationLegacy2Scheduler *animation_legacy2_scheduler) {
+static void animation_legacy2_timer_callback(void *data) {
+  AnimationLegacy2Scheduler *animation_legacy2_scheduler = data;
   animation_legacy2_scheduler->timer_handle = nullptr;
   animation_legacy2_private_run(animation_legacy2_scheduler);
 }
@@ -151,9 +152,8 @@ static void animation_legacy2_reschedule_timer(
     // fired and we're waiting for the handler to be called. This will end up rescheduling us for
     // the right time once that gets handled.
   } else {
-    animation_legacy2_scheduler->timer_handle =
-        app_timer_register(interval_ms, (AppTimerCallback)animation_legacy2_timer_callback,
-                           animation_legacy2_scheduler);
+    animation_legacy2_scheduler->timer_handle = app_timer_register(
+        interval_ms, animation_legacy2_timer_callback, animation_legacy2_scheduler);
     PBL_ASSERTN(animation_legacy2_scheduler->timer_handle != nullptr);
   }
 }
@@ -180,7 +180,7 @@ static void animation_legacy2_private_schedule(
   const bool ascending = true;
   animation_legacy2_scheduler->head =
       list_sorted_add(animation_legacy2_scheduler->head, &animation->list_node,
-                      (Comparator)animation_legacy2_scheduler_comparator, ascending);
+                      animation_legacy2_scheduler_comparator, ascending);
   const bool has_new_head = (&animation->list_node == animation_legacy2_scheduler->head);
   if (has_new_head) {
     // Only reschedule the timer if the previous head animation wasn't running yet:

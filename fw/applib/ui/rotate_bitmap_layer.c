@@ -10,7 +10,8 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 
-void rot_bitmap_layer_update_proc(RotBitmapLayer *image, GContext *ctx) {
+void rot_bitmap_layer_update_proc(Layer *layer, GContext *ctx) {
+  RotBitmapLayer *image = (RotBitmapLayer *)layer;
   const GColor corner_clip_color = image->corner_clip_color;
   if (!(gcolor_is_transparent(corner_clip_color))) {
     graphics_context_set_fill_color(ctx, corner_clip_color);
@@ -29,7 +30,7 @@ void rot_bitmap_layer_init(RotBitmapLayer *image, GBitmap *bitmap) {
   const int32_t layer_size = integer_sqrt(bmp_width * bmp_width + bmp_height * bmp_height);
 
   layer_init(&image->layer, &GRect(0, 0, layer_size, layer_size));
-  image->layer.update_proc = (LayerUpdateProc)rot_bitmap_layer_update_proc;
+  image->layer.update_proc = rot_bitmap_layer_update_proc;
 
   image->src_ic = GPoint(bmp_width / 2, bmp_height / 2);
   image->dest_ic = GPoint(layer_size / 2, layer_size / 2);

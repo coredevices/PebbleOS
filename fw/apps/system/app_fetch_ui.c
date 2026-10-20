@@ -229,7 +229,7 @@ static void prv_app_fetch_event_handler(PebbleEvent *event, void *context) {
 }
 
 // TODO: Use appropriate transitions to and from watchfaces or apps
-static void prv_click_handler(ClickRecognizerRef recognizer, Window *window) {
+static void prv_click_handler(ClickRecognizerRef recognizer, void *context) {
   AppFetchUIData *data = app_state_get_user_data();
   if (data->done) {
     app_window_stack_pop(true);
@@ -239,10 +239,10 @@ static void prv_click_handler(ClickRecognizerRef recognizer, Window *window) {
 }
 
 static void config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_BACK, (ClickHandler)prv_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler)prv_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler)prv_click_handler);
-  window_single_click_subscribe(BUTTON_ID_BACK, (ClickHandler)prv_click_handler);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, prv_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_click_handler);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_click_handler);
 }
 
 static void handle_init(void) {

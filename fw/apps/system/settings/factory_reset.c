@@ -42,7 +42,8 @@ static void prv_lockout_back_button(Window *window) {
   window_set_click_config_provider(window, nullptr);
 }
 
-static void confirm_click_handler(ClickRecognizerRef recognizer, Window *window) {
+static void confirm_click_handler(ClickRecognizerRef recognizer, void *context) {
+  Window *window = context;
   ConfirmUIData *data = window_get_user_data(window);
 
   // Need to lock-out inputs after starting the factory reset.
@@ -67,26 +68,26 @@ static void confirm_click_handler(ClickRecognizerRef recognizer, Window *window)
 }
 
 //! Wipe registry + Enter Standby (for factory)
-static void confirm_long_click_handler(ClickRecognizerRef recognizer, Window *window) {
+static void confirm_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  Window *window = context;
   // Need to lock-out inputs after starting the factory reset.
   prv_lockout_back_button(window);
 
   factory_reset(true /* should_shutdown */);
 }
 
-static void decline_click_handler(ClickRecognizerRef recognizer, Window *window) {
+static void decline_click_handler(ClickRecognizerRef recognizer, void *context) {
   const bool animated = true;
   app_window_stack_pop(animated);
   (void)recognizer;
-  (void)window;
+  (void)context;
 }
 
-static void config_provider(Window *window) {
-  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler)confirm_click_handler);
-  window_long_click_subscribe(BUTTON_ID_UP, 1200, (ClickHandler)confirm_long_click_handler,
-                              nullptr);
-  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler)decline_click_handler);
-  (void)window;
+static void config_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, confirm_click_handler);
+  window_long_click_subscribe(BUTTON_ID_UP, 1200, confirm_long_click_handler, nullptr);
+  window_single_click_subscribe(BUTTON_ID_DOWN, decline_click_handler);
+  (void)context;
 }
 
 static void prv_window_load(Window *window) {
@@ -141,7 +142,7 @@ static void prv_window_load(Window *window) {
   action_bar_layer_init(action_bar);
   action_bar_layer_set_context(action_bar, window);
   action_bar_layer_add_to_window(action_bar, window);
-  action_bar_layer_set_click_config_provider(action_bar, (ClickConfigProvider)config_provider);
+  action_bar_layer_set_click_config_provider(action_bar, config_provider);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, data->action_bar_icon_check);
   action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, data->action_bar_icon_x);
 }

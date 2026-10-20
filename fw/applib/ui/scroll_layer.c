@@ -742,7 +742,8 @@ void scroll_layer_scroll_down_click_handler(ClickRecognizerRef recognizer, void 
   (void)recognizer;
 }
 
-static void scroll_layer_click_config_provider(ScrollLayer *scroll_layer) {
+static void scroll_layer_click_config_provider(void *context) {
+  ScrollLayer *scroll_layer = context;
   // Config UP / DOWN button behavior:
   window_single_repeating_click_subscribe(BUTTON_ID_UP, 100, scroll_layer_scroll_up_click_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 100,
@@ -757,8 +758,8 @@ static void scroll_layer_click_config_provider(ScrollLayer *scroll_layer) {
 }
 
 void scroll_layer_set_click_config_onto_window(ScrollLayer *scroll_layer, struct Window *window) {
-  window_set_click_config_provider_with_context(
-      window, (ClickConfigProvider)scroll_layer_click_config_provider, scroll_layer);
+  window_set_click_config_provider_with_context(window, scroll_layer_click_config_provider,
+                                                scroll_layer);
 }
 
 void scroll_layer_set_callbacks(ScrollLayer *scroll_layer, ScrollLayerCallbacks callbacks) {
