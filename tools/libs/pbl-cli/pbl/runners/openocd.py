@@ -9,7 +9,7 @@ import socket
 import subprocess
 import sys
 
-from .core import Runner, RunnerCaps, RunnerError
+from .core import Runner, RunnerCaps, RunnerError, UnsupportedOperation
 
 OPENOCD_TELNET_PORT = 4444
 OPENOCD_GDB_PORT = 3333
@@ -33,15 +33,44 @@ class OpenOcdRunner(Runner):
     @classmethod
     def capabilities(cls):
         return RunnerCaps(
-            commands={"flash", "run", "reset", "erase", "debug", "debugserver"}
+            commands={"flash", "run", "reset", "erase", "debug", "debugserver"},
+            flash_resources=True,
         )
 
     @property
     def _cfg_file(self):
         return os.path.join(self.cfg.board_dir, "support", "openocd.cfg")
 
+    @property
+    def _resources_cfg(self):
+        return os.path.join(self.cfg.board_dir, "support", "resources.cfg")
+
+    def _flash_resources(self):
+        if not os.path.exists(self._resources_cfg):
+            raise UnsupportedOperation(
+                "the board has no support/resources.cfg to flash resources with"
+            )
+        if self.cfg.resources_offset is None:
+            raise UnsupportedOperation("the board has no resources_offset")
+        self._run_command(
+            f"init; reset halt; program {self.cfg.hex_file}; "
+            f"source {{{self._resources_cfg}}}; "
+            f"pbl_flash_resources {{{self.cfg.resources_file}}} "
+            f"{self.cfg.resources_offset:#x}; "
+            "echo {Resources Finished}; reset;",
+            expect=[
+                "Programming Started",
+                "Programming Finished",
+                "Resources Finished",
+                "shutdown",
+            ],
+            enforce_expect=True,
+        )
+
     def do_run(self, command):
-        if command == "flash":
+        if command == "flash" and self.cfg.resources_file:
+            self._flash_resources()
+        elif command == "flash":
             self._run_command(
                 f"init; reset halt; program {self.cfg.hex_file} reset;",
                 expect=["Programming Started", "Programming Finished", "shutdown"],

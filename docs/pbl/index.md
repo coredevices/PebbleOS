@@ -79,12 +79,13 @@ first one is the default; `-r/--runner` picks another.
 
 | Runner | Boards | Operations |
 | --- | --- | --- |
-| `openocd` | asterix | flash, run, reset, erase, debug, debug server |
+| `openocd` | asterix | flash (with resources), run, reset, erase, debug, debug server |
 | `nrfutil` | asterix | flash, run, reset, erase |
 | `sftool` | obelix, getafix | flash (with resources), erase |
 
 For the OpenOCD runner, the probe and target configuration lives in the
-board's `support/openocd.cfg`.
+board's `support/openocd.cfg`, and how to write the resources, if it can, in
+`support/resources.cfg`.
 
 ```{toctree}
 :hidden:

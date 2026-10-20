@@ -17,9 +17,10 @@ a serial port, given with `--tty`, e.g. `/dev/ttyACM0` or
 pbl flash --tty /dev/ttyACM0
 ```
 
-The first time, the system resources have to be written too. Boards using
-`sftool` take `--resources`; on the others, image them over the serial
-console once the firmware is running, with {doc}`image_resources`.
+The first time, the system resources have to be written too. The `sftool`
+runner, and the `openocd` one on asterix, take `--resources`; otherwise, image
+them over the serial console once the firmware is running, with
+{doc}`image_resources`.
 
 When both firmware and resources are written, the watch boots into the
 main application; {doc}`console` shows its logs.
