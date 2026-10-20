@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config PINCTRL
+    bool
+    help
+      Pin controller class (pbl/drivers/pinctrl.h), selected by the drivers
+      that route peripheral signals to pins.
+
+config PINCTRL_SHELL
+    bool "Pin controller shell commands"
+    default y
+    depends on PINCTRL && SHELL
+    help
+      The pinctrl shell command, to dump the pad registers of every pin
+      controller.
