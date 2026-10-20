@@ -9,6 +9,7 @@
 
 #include <pbl/drivers/button_id.h>
 #include <pbl/drivers/gpio/sf32lb.h>
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/input/input.h>
 
 #include <bf0_hal_pinmux.h>
@@ -33,7 +34,7 @@ typedef struct {
 } PwmState;
 
 typedef struct {
-  Pinmux pwm_pin;
+  struct pbl_pinctrl pinctrl;
   PwmState *state;
 } PwmConfig;
 
