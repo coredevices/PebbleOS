@@ -191,6 +191,12 @@ typedef struct WorkoutServiceMetrics {
   int32_t avg_bpm;
   /** Estimated active kilocalories. */
   int32_t active_kcal;
+  /** Latest SpO2 in percent, or zero if none yet. */
+  int32_t spo2_pct;
+  /** Lowest SpO2 in percent, or zero if none yet. */
+  int32_t spo2_min_pct;
+  /** An SpO2 reading is in progress, pausing heart rate. */
+  bool spo2_measuring;
 } WorkoutServiceMetrics;
 
 /**
@@ -200,5 +206,14 @@ typedef struct WorkoutServiceMetrics {
  * @return true if a workout is ongoing.
  */
 bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_out);
+
+/**
+ * @brief Record an SpO2 reading taken during the current workout.
+ *
+ * No-op without a workout or while it is paused. Called from KernelBG.
+ *
+ * @param percent SpO2, in percent.
+ */
+void workout_service_handle_spo2(uint8_t percent);
 
 /** @} */

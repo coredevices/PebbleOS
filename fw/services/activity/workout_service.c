@@ -55,6 +55,10 @@ typedef struct CurrentWorkoutData {
   int32_t hr_samples_sum;
   int32_t hr_samples_count;
 
+  uint8_t spo2_last_pct;
+  uint8_t spo2_min_pct;
+  bool spo2_measuring;
+
   // Ring of recent raw BPMs used to median-filter the live HR for display during movement.
   uint8_t bpm_ring[WORKOUT_HR_SMOOTH_N];
   uint8_t bpm_ring_count;
@@ -77,6 +81,9 @@ typedef struct WorkoutServiceData {
   time_t last_workout_end_ts;
   time_t frontend_last_opened_ts;
   HRMSessionRef hrm_session;
+  //! An SpO2 attempt owns the optical path. Kept without a workout too, so one that starts
+  //! mid-attempt joins it.
+  bool hrm_paused;
 
   CurrentWorkoutData *current_workout;
 } WorkoutServiceData;
@@ -359,8 +366,10 @@ void workout_service_set_hrm_paused(bool paused) {
 #ifdef CONFIG_HRM
   prv_lock();
   {
+    s_workout_data.hrm_paused = paused;
     sys_hrm_manager_set_features(s_workout_data.hrm_session, paused ? 0 : HRMFeature_BPM);
     if (s_workout_data.current_workout) {
+      s_workout_data.current_workout->spo2_measuring = paused;
       // No HR updates arrive while paused (a whole SpO2 attempt, shorter than the staleness
       // expiry), so drop the live value rather than show it as current, and restart the zone-time
       // clock so the gap isn't attributed to the zone of the first sample after resuming.
@@ -372,6 +381,12 @@ void workout_service_set_hrm_paused(bool paused) {
 }
 
 // ---------------------------------------------------------------------------------------
+#ifdef CONFIG_HRM
+static HRMFeature prv_hrm_features(void) {
+  return s_workout_data.hrm_paused ? (HRMFeature)0 : HRMFeature_BPM;
+}
+#endif // CONFIG_HRM
+
 // FIXME: We should probably handle this on KernelBG and not use the official app subscription
 void workout_service_frontend_opened(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
@@ -379,7 +394,7 @@ void workout_service_frontend_opened(void) {
   {
 #ifdef CONFIG_HRM
     s_workout_data.hrm_session =
-        sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, HRMFeature_BPM);
+        sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, prv_hrm_features());
 #endif // CONFIG_HRM
     s_workout_data.frontend_last_opened_ts = time_get_uptime_seconds();
     prv_put_event(PebbleWorkoutEvent_FrontendOpened);
@@ -422,7 +437,7 @@ void workout_service_frontend_closed(void) {
     if (hr_time_left > 0) {
       // Still some time left. Set a subscription with an expiration
       s_workout_data.hrm_session =
-          sys_hrm_manager_app_subscribe(app_get_app_id(), 1, hr_time_left, HRMFeature_BPM);
+          sys_hrm_manager_app_subscribe(app_get_app_id(), 1, hr_time_left, prv_hrm_features());
     } else {
       // No time left. Kill the subscription
       sys_hrm_manager_unsubscribe(s_workout_data.hrm_session);
@@ -468,6 +483,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
     s_workout_data.current_workout->type = type;
     s_workout_data.current_workout->start_utc = rtc_get_time();
     s_workout_data.current_workout->current_bpm_timestamp_ts = time_get_uptime_seconds();
+    s_workout_data.current_workout->spo2_measuring = s_workout_data.hrm_paused;
     // FIXME: This probably doesn't need to be on a timer. We can just flush out a new time on each
     // API function call
     s_workout_data.second_timer = (RegularTimerInfo){
@@ -723,10 +739,27 @@ bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_
       .hr_samples = wrkt->hr_samples_count,
       .avg_bpm = prv_get_avg_hr(),
       .active_kcal = ROUND(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
+      .spo2_pct = wrkt->spo2_last_pct,
+      .spo2_min_pct = wrkt->spo2_min_pct,
+      .spo2_measuring = wrkt->spo2_measuring,
     };
   }
   prv_unlock();
   return wrkt != nullptr;
+}
+
+void workout_service_handle_spo2(uint8_t percent) {
+  prv_lock();
+  {
+    CurrentWorkoutData *wrkt = s_workout_data.current_workout;
+    if (wrkt && !wrkt->paused && percent > 0) {
+      wrkt->spo2_last_pct = percent;
+      if (!wrkt->spo2_min_pct || percent < wrkt->spo2_min_pct) {
+        wrkt->spo2_min_pct = percent;
+      }
+    }
+  }
+  prv_unlock();
 }
 
 #if UNITTEST

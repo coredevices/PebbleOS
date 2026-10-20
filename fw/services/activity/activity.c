@@ -547,6 +547,7 @@ static void prv_activity_spo2_update(uint32_t now_ts) {
       if (as->got_reading) {
         // Success: resume HR and wait the full interval before the next point.
         prv_activity_spo2_set_sampling(false);
+        workout_service_handle_spo2(as->percent);
         as->phase = ActivitySpO2ActPhase_Wait;
         as->phase_started_ts = now_ts;
       } else if (now_ts - as->phase_started_ts >= ACTIVITY_SPO2_ACTIVITY_ATTEMPT_SEC) {
@@ -601,6 +602,7 @@ PBL_T_STATIC void prv_activity_spo2_subscription_cb(PebbleHRMEvent *hrm_event, v
     s_activity_state.spo2.pending_percent = pct;
     s_activity_state.spo2.pending_quality = prv_spo2_health_quality(quality);
     s_activity_state.activity_spo2.got_reading = true;
+    s_activity_state.activity_spo2.percent = pct;
   }
 
   prv_activity_spo2_schedule_update();
