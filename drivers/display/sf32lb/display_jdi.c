@@ -4,6 +4,7 @@
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
 #include <pbl/drivers/gpio.h>
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
@@ -100,20 +101,12 @@ static bool s_rotated_180 = true;
 static bool s_rotated_180 = false;
 #endif
 
-static void prv_drive_low(const Pinmux *pinmux) {
-  const struct pbl_gpio gpio = PBL_GPIO(SF32LB_GPIO1, pinmux->pad - PAD_PA00, 0);
-
-  pbl_gpio_configure(&gpio, PBL_GPIO_OUTPUT_LOW);
-}
-
 static void prv_power_cycle(void) {
   // This will disable all JDI pull-ups/downs so that VLCD can fully turn off,
   // allowing for a clean power cycle.
-  prv_drive_low(&DISPLAY->pinmux.b1);
-  prv_drive_low(&DISPLAY->pinmux.vck);
-  prv_drive_low(&DISPLAY->pinmux.xrst);
-  prv_drive_low(&DISPLAY->pinmux.hck);
-  prv_drive_low(&DISPLAY->pinmux.r2);
+  for (uint8_t i = 0U; i < DISPLAY->num_discharge; i++) {
+    pbl_gpio_configure(&DISPLAY->discharge[i], PBL_GPIO_OUTPUT_LOW);
+  }
 
   pbl_gpio_set(&DISPLAY->vddp, false);
   pbl_gpio_set(&DISPLAY->vlcd, false);
@@ -352,21 +345,7 @@ void display_init(void) {
 
   prv_power_cycle();
 
-  HAL_PIN_Set(DISPLAY->pinmux.xrst.pad, DISPLAY->pinmux.xrst.func, DISPLAY->pinmux.xrst.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.vst.pad, DISPLAY->pinmux.vst.func, DISPLAY->pinmux.vst.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.vck.pad, DISPLAY->pinmux.vck.func, DISPLAY->pinmux.vck.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.enb.pad, DISPLAY->pinmux.enb.func, DISPLAY->pinmux.enb.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.hst.pad, DISPLAY->pinmux.hst.func, DISPLAY->pinmux.hst.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.hck.pad, DISPLAY->pinmux.hck.func, DISPLAY->pinmux.hck.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.r1.pad, DISPLAY->pinmux.r1.func, DISPLAY->pinmux.r1.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.r2.pad, DISPLAY->pinmux.r2.func, DISPLAY->pinmux.r2.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.g1.pad, DISPLAY->pinmux.g1.func, DISPLAY->pinmux.g1.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.g2.pad, DISPLAY->pinmux.g2.func, DISPLAY->pinmux.g2.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.b1.pad, DISPLAY->pinmux.b1.func, DISPLAY->pinmux.b1.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.b2.pad, DISPLAY->pinmux.b2.func, DISPLAY->pinmux.b2.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.vcom_frp.pad, DISPLAY->pinmux.vcom_frp.func,
-              DISPLAY->pinmux.vcom_frp.flags, 1);
-  HAL_PIN_Set(DISPLAY->pinmux.xfrp.pad, DISPLAY->pinmux.xfrp.func, DISPLAY->pinmux.xfrp.flags, 1);
+  PBL_ASSERTN(pbl_pinctrl_select_state(&DISPLAY->pinctrl, PBL_PINCTRL_STATE_DEFAULT) == 0);
 
   HAL_LCDC_Init(&state->hlcdc);
   HAL_LCDC_LayerReset(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT);

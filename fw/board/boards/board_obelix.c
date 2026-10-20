@@ -82,6 +82,28 @@ static DisplayJDIState s_display_state = {
   },
 };
 
+PBL_PINCTRL_STATE_DEFINE(
+    s_display_default, SF32LB52_PINCTRL,
+    SF32LB52_PA40_LCDC1_JDI_XRST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA08_LCDC1_JDI_VST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA39_LCDC1_JDI_VCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA07_LCDC1_JDI_ENB | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA06_LCDC1_JDI_HST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA41_LCDC1_JDI_HCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA05_LCDC1_JDI_R1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA42_LCDC1_JDI_R2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA04_LCDC1_JDI_G1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA43_LCDC1_JDI_G2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA03_LCDC1_JDI_B1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA02_LCDC1_JDI_B2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+
+static const struct pbl_gpio s_display_discharge[] = {
+  PBL_GPIO(SF32LB_GPIO1, 3, 0),  PBL_GPIO(SF32LB_GPIO1, 39, 0), PBL_GPIO(SF32LB_GPIO1, 40, 0),
+  PBL_GPIO(SF32LB_GPIO1, 41, 0), PBL_GPIO(SF32LB_GPIO1, 42, 0),
+};
+
 static DisplayJDIDevice s_display = {
   .state = &s_display_state,
   .irqn = LCDC1_IRQn,
@@ -90,93 +112,9 @@ static DisplayJDIDevice s_display = {
         .lptim = hwp_lptim2,
         .freq_hz = 60U,
       },
-  .pinmux =
-      {
-        .xrst =
-            {
-              .pad = PAD_PA40,
-              .func = LCDC1_JDI_XRST,
-              .flags = PIN_NOPULL,
-            },
-        .vst =
-            {
-              .pad = PAD_PA08,
-              .func = LCDC1_JDI_VST,
-              .flags = PIN_NOPULL,
-            },
-        .vck =
-            {
-              .pad = PAD_PA39,
-              .func = LCDC1_JDI_VCK,
-              .flags = PIN_NOPULL,
-            },
-        .enb =
-            {
-              .pad = PAD_PA07,
-              .func = LCDC1_JDI_ENB,
-              .flags = PIN_NOPULL,
-            },
-        .hst =
-            {
-              .pad = PAD_PA06,
-              .func = LCDC1_JDI_HST,
-              .flags = PIN_NOPULL,
-            },
-        .hck =
-            {
-              .pad = PAD_PA41,
-              .func = LCDC1_JDI_HCK,
-              .flags = PIN_NOPULL,
-            },
-        .r1 =
-            {
-              .pad = PAD_PA05,
-              .func = LCDC1_JDI_R1,
-              .flags = PIN_NOPULL,
-            },
-        .r2 =
-            {
-              .pad = PAD_PA42,
-              .func = LCDC1_JDI_R2,
-              .flags = PIN_NOPULL,
-            },
-        .g1 =
-            {
-              .pad = PAD_PA04,
-              .func = LCDC1_JDI_G1,
-              .flags = PIN_NOPULL,
-            },
-        .g2 =
-            {
-              .pad = PAD_PA43,
-              .func = LCDC1_JDI_G2,
-              .flags = PIN_NOPULL,
-            },
-        .b1 =
-            {
-              .pad = PAD_PA03,
-              .func = LCDC1_JDI_B1,
-              .flags = PIN_NOPULL,
-            },
-        .b2 =
-            {
-              .pad = PAD_PA02,
-              .func = LCDC1_JDI_B2,
-              .flags = PIN_NOPULL,
-            },
-        .vcom_frp =
-            {
-              .pad = PAD_PA24,
-              .func = PBR_LPTIM2_OUT,
-              .flags = PIN_NOPULL,
-            },
-        .xfrp =
-            {
-              .pad = PAD_PA25,
-              .func = PBR_LPTIM2_INV_OUT,
-              .flags = PIN_NOPULL,
-            },
-      },
+  .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
+  .discharge = s_display_discharge,
+  .num_discharge = ARRAY_LENGTH(s_display_discharge),
   .vddp = PBL_GPIO(SF32LB_GPIO1, 28, 0),
   .vlcd = PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
   .splash = {
