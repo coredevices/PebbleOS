@@ -40,14 +40,6 @@ Get started
 Try it in the browser
 ```
 
-```{button-link} https://github.com/coredevices/pebbleos
-:color: dark
-:outline:
-:class: sd-rounded-pill
-
-Browse the sources
-```
-
 ````
 
 :::::
