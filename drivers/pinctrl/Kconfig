@@ -7,6 +7,14 @@ config PINCTRL
       Pin controller class (pbl/drivers/pinctrl.h), selected by the drivers
       that route peripheral signals to pins.
 
+config PINCTRL_SF32LB52
+    bool "SiFli SF32LB52 pin controller"
+    default y if SOC_SF32LB52
+    select PINCTRL
+    help
+      Pin multiplexer and pad configuration of the SiFli SF32LB52 HPSYS
+      pads.
+
 config PINCTRL_SHELL
     bool "Pin controller shell commands"
     default y
