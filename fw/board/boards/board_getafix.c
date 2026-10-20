@@ -321,21 +321,16 @@ static MicDeviceState mic_state = {
     },
   },
 };
+PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA22_PDM1_CLK | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
+
 static const MicDevice mic_device = {
   .state = &mic_state,
   .pdm_instance = hwp_pdm1,
-  .clk_gpio =
-      {
-        .pad = PAD_PA22,
-        .func = PDM1_CLK,
-        .flags = PIN_NOPULL,
-      },
-  .data_gpio =
-      {
-        .pad = PAD_PA23,
-        .func = PDM1_DATA,
-        .flags = PIN_PULLDOWN,
-      },
+  .pinctrl = PBL_PINCTRL(&s_mic_default, nullptr, 0),
   .pdm_dma_irq = DMAC1_CH5_IRQn,
   .pdm_irq = PDM1_IRQn,
 #ifdef CONFIG_RECOVERY_FW
