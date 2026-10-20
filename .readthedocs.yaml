@@ -18,10 +18,15 @@ build:
     - librsvg2-bin
   jobs:
     post_checkout:
-      # Skip build if there are no doc changes in a PR
+      # The playground (docs/_ext/pbl_playground.py) builds the firmware as
+      # WebAssembly; pull requests get it with the ci:docs-playground label.
+      - sh docs/_scripts/pbl_playground_check_rtd.sh
+      # Skip build if there are no doc changes in a PR, unless it builds the
+      # playground
       # Ref. https://docs.readthedocs.com/platform/stable/build-customization.html#cancel-build-based-on-a-condition
       - |
-        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ include/ Doxyfile Doxyfile.rtd .readthedocs.yaml;
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && [ ! -e .pbl_playground ] &&
+           git diff --quiet origin/main -- docs/ include/ Doxyfile Doxyfile.rtd .readthedocs.yaml;
         then
           exit 183;
         fi
@@ -32,9 +37,7 @@ build:
       - git clone https://github.com/jothepro/doxygen-awesome-css.git &&
         git -C doxygen-awesome-css checkout d52eafe3e9303399fda15661f3d7bb8fe3d7eabc
       - doxygen Doxyfile.rtd
-      # The playground (docs/_ext/pbl_playground.py) builds the firmware as
-      # WebAssembly; pull request builds leave it out.
-      - if [ "$READTHEDOCS_VERSION_TYPE" != "external" ]; then sh docs/_scripts/pbl_playground_setup_rtd.sh; fi
+      - if [ -e .pbl_playground ]; then sh docs/_scripts/pbl_playground_setup_rtd.sh; fi
 
 sphinx:
     configuration: docs/conf.py
