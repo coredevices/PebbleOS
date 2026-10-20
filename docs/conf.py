@@ -29,6 +29,7 @@ extensions = [
     "sphinxcontrib.mermaid",
     "matplotlib.sphinxext.plot_directive",
     "pbl_docs",
+    "pbl_playground",
     "kconfig",
 ]
 
@@ -72,6 +73,10 @@ html_context = {
     "source_version": "main",
     "source_docs_path": "/docs/",
 }
+
+# The firmware build behind the playground, left out of Read the Docs pull
+# request previews
+pbl_playground = os.environ.get("READTHEDOCS_VERSION_TYPE") != "external"
 
 # Pages that moved, served as redirects from their old URL
 pbl_redirects = {

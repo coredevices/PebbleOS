@@ -286,3 +286,11 @@ html.dark {
   margin: 0 auto;
 }
 
+
+/* pbl-playground: sized by the page inside, see docs/_ext/pbl_playground.py */
+.pbl-playground iframe {
+  display: block;
+  width: 100%;
+  height: 760px;
+  border: 0;
+}

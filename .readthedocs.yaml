@@ -11,7 +11,11 @@ build:
   tools:
     python: "3.13"
   apt_packages:
+    - cmake
     - doxygen
+    # The playground's firmware build
+    - gettext
+    - librsvg2-bin
   jobs:
     post_checkout:
       # Skip build if there are no doc changes in a PR
@@ -28,6 +32,9 @@ build:
       - git clone https://github.com/jothepro/doxygen-awesome-css.git &&
         git -C doxygen-awesome-css checkout d52eafe3e9303399fda15661f3d7bb8fe3d7eabc
       - doxygen Doxyfile.rtd
+      # The playground (docs/_ext/pbl_playground.py) builds the firmware as
+      # WebAssembly; pull request builds leave it out.
+      - if [ "$READTHEDOCS_VERSION_TYPE" != "external" ]; then sh docs/_scripts/pbl_playground_setup_rtd.sh; fi
 
 sphinx:
     configuration: docs/conf.py
