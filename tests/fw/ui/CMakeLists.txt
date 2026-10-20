@@ -385,6 +385,22 @@ pbl_clar_test(test_emoji_fonts
   TEST_IMAGES
 )
 
+pbl_clar_test(test_emoji_glyphs
+  MODULES resources graphics_bitdepth gdraw png text
+  SOURCES
+    fw/applib/graphics/gtransform.c
+    fw/applib/graphics/perimeter.c
+    fw/applib/graphics/text_render.c
+    fw/applib/graphics/text_resources.c
+    fw/board/displays/display_getafix.c
+    fw/system/hexdump.c
+    tests/fakes/fake_gbitmap_get_data_row.c
+    tests/fakes/fake_rtc.c
+  DEFINES "FIRMWARE_EMOJI_DIR=\"${PBL_BASE}/resources/normal/base/pbf\""
+  OVERRIDES dummy_board
+  TEST_IMAGES
+)
+
 pbl_clar_test(test_expandable_dialog
   MODULES resources graphics_bitdepth gdraw text_render png menu_layer text_layer
   SOURCES
