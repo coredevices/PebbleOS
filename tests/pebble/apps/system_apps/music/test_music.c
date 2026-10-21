@@ -112,6 +112,28 @@ bool music_album_art_is_current(void) {
   return s_album_art_current;
 }
 
+// Album art cache fake: a hit makes the art current, as the service does
+static bool s_album_art_cached;
+static int s_album_art_cache_lookups;
+
+uint8_t music_get_album_art_request(uint16_t side, ImagingFormat format, char *title, char *artist,
+                                    ImageCacheKey *key) {
+  music_get_now_playing(title, artist, nullptr);
+  *key = (ImageCacheKey){.bytes = {(uint8_t)side, format}};
+  return s_music_now_playing_generation;
+}
+
+void music_album_art_release_retained(void) {
+}
+
+bool music_album_art_load_cached(uint16_t side, ImagingFormat format) {
+  s_album_art_cache_lookups++;
+  if (s_album_art_cached) {
+    s_album_art_current = true;
+  }
+  return s_album_art_cached;
+}
+
 // Imaging service fake: records the album art requests the app makes.
 static bool s_imaging_supported;
 static int s_imaging_request_count;
@@ -255,6 +277,8 @@ void test_music__initialize(void) {
   s_album_art = nullptr;
   s_album_art_current = false;
   s_album_art_lock_depth = 0;
+  s_album_art_cached = false;
+  s_album_art_cache_lookups = 0;
 
   s_imaging_supported = false;
   s_imaging_request_count = 0;
@@ -408,6 +432,23 @@ void test_music__album_art_requested_on_launch(void) {
 #else
   cl_assert_equal_i(s_imaging_request_count, 0);
 #endif
+}
+
+void test_music__cached_album_art_is_not_requested(void) {
+  prv_set_now_playing("Crumbling Castle", "King Gizzard & The Lizard Wizard");
+  s_music_play_state = MusicPlayStatePlaying;
+  s_music_now_playing_generation = 1;
+  s_imaging_supported = false;
+  s_prefs_music_show_album_art = true;
+  s_album_art_cached = true;
+
+  prv_launch_app_and_render();
+
+#if MUSIC_ALBUM_ART_SUPPORTED
+  // Found in the cache, even with no phone to ask
+  cl_assert_equal_i(s_album_art_cache_lookups, 1);
+#endif
+  cl_assert_equal_i(s_imaging_request_count, 0);
 }
 
 void test_music__album_art_not_requested_when_pref_off(void) {
