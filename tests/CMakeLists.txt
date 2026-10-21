@@ -114,6 +114,7 @@ add_subdirectory(${PBL_BASE}/third_party/nanopb ${CMAKE_BINARY_DIR}/third_party/
 add_subdirectory(${PBL_BASE}/pebble/services/protobuf_log/proto
                  ${CMAKE_BINARY_DIR}/pebble/services/protobuf_log/proto)
 add_subdirectory(${PBL_BASE}/lib/util ${CMAKE_BINARY_DIR}/lib/util)
+add_subdirectory(${PBL_BASE}/third_party/speex ${CMAKE_BINARY_DIR}/third_party/speex)
 add_subdirectory(${PBL_BASE}/lib/btutil ${CMAKE_BINARY_DIR}/lib/btutil)
 add_subdirectory(${PBL_BASE}/lib/kraepelin ${CMAKE_BINARY_DIR}/lib/kraepelin)
 add_subdirectory(${PBL_BASE}/subsys/crc ${CMAKE_BINARY_DIR}/libcrc)
