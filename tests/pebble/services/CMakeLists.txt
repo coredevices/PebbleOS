@@ -488,3 +488,7 @@ pbl_clar_test(test_voice_speex
   INCLUDES third_party/speex third_party/speex/speex/include
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_resident_image
+  SOURCES pebble/services/imaging/resident_image.c
+)
