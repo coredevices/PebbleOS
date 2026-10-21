@@ -8,7 +8,6 @@
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_service_changed.h>
 #include <comm/bt_lock.h>
-#include <kernel/events.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -17,8 +16,6 @@ extern void gatt_client_subscriptions_handle_server_notification(GAPLEConnection
                                                                  uint16_t att_handle,
                                                                  const uint8_t *att_value,
                                                                  uint16_t att_length);
-
-extern bool gap_le_connect_has_intent_for_connection(const GAPLEConnection *connection);
 
 void pbl_bt_cb_gatt_handle_connect(const struct pbl_bt_gatt_device_connection_event *event) {
   bt_lock();
@@ -107,29 +104,4 @@ void pbl_bt_cb_gatt_handle_indication(const struct pbl_bt_gatt_server_notif_indi
 
   gatt_client_subscriptions_handle_server_notification(connection, event->attr_handle,
                                                        event->attr_val, event->attr_val_len);
-}
-
-void pbl_bt_cb_gatt_handle_buffer_empty(const struct pbl_bt_gatt_device_buffer_empty_event *event) {
-  bt_lock();
-  {
-    const GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
-    if (!connection || !gap_le_connect_has_intent_for_connection(connection)) {
-      goto unlock;
-    }
-
-    PebbleEvent e = {
-      .type = PEBBLE_BLE_GATT_CLIENT_EVENT,
-      .task_mask = (PebbleTaskBitset) ~(1u << PebbleTask_KernelMain),
-      .bluetooth = {
-        .le = {
-          .gatt_client = {
-            .subtype = PebbleBLEGATTClientEventTypeBufferEmpty,
-          },
-        },
-      },
-    };
-    event_put(&e);
-  }
-unlock:
-  bt_unlock();
 }

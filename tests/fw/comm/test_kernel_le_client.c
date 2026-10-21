@@ -116,9 +116,6 @@ void ppogatt_create(void) {
 void ppogatt_destroy(void) {
 }
 
-void ppogatt_handle_buffer_empty(void) {
-}
-
 void gatt_client_op_cleanup(void) {
 }
 

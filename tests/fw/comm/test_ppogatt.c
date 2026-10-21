@@ -678,9 +678,9 @@ void test_ppogatt__server_reset_request_while_pending_ack(void) {
   prv_receive_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
   fake_gatt_client_op_assert_no_write();
 
-  // Simulate outbound queue having space again:
+  // Simulate outbound queue having space again, the retry timer resends:
   fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_OK);
-  ppogatt_handle_buffer_empty();
+  stub_new_timer_invoke(1);
 
   // Expect Reset Complete to be sent out, but nothing more than that:
   prv_assert_sent_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
@@ -891,23 +891,6 @@ void test_ppogatt__handle_client_disappearing_for_send_callback(void) {
   ppogatt_send_next((struct Transport *)&fake_client);
   // No crashes, no writes, etc.
   fake_gatt_client_op_assert_no_write();
-}
-
-void test_ppogatt__handle_bluetooth_stack_queue_full_and_empty_events(void) {
-  test_ppogatt__open_session_when_found_pebble_app();
-  fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
-
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
-  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                        transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
-                    true);
-  ppogatt_send_next(transport);
-  fake_gatt_client_op_assert_no_write();
-
-  fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_OK);
-  ppogatt_handle_buffer_empty();
-  prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], 0 /* sn */,
-                       s_short_data_fragment, sizeof(s_short_data_fragment));
 }
 
 void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(void) {

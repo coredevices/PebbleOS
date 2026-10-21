@@ -271,7 +271,6 @@ typedef enum {
   PebbleBLEGATTClientEventTypeDescriptorRead,
   PebbleBLEGATTClientEventTypeDescriptorWrite,
   PebbleBLEGATTClientEventTypeNotification,
-  PebbleBLEGATTClientEventTypeBufferEmpty,
   PebbleBLEGATTClientEventTypeNum,
 } PebbleBLEGATTClientEventType;
 

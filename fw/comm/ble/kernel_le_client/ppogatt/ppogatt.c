@@ -1687,21 +1687,6 @@ static void prv_send_next_packets(PPoGATTClient *client) {
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_buffer_empty(void) {
-  bt_lock();
-  {
-    // FIXME: How to avoid one client using up all the buffer space all the time?
-    PPoGATTClient *client = s_ppogatt_head;
-    while (client) {
-      prv_send_next_packets(client);
-      client = (PPoGATTClient *)client->node.next;
-    }
-  }
-  bt_unlock();
-}
-
-// -------------------------------------------------------------------------------------------------
-
 // To be called by comm_session after enqueuing new data into the SendBuffer
 // bt_lock() must be held before calling
 void ppogatt_send_next(Transport *transport) {

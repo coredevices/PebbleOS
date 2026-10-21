@@ -65,12 +65,6 @@ struct pbl_bt_gatt_device_disconnection_event {
   struct pbl_bt_addr dev_address;
 };
 
-/** @brief The transmit buffers to a peer became available again. Not reported by NimBLE. */
-struct pbl_bt_gatt_device_buffer_empty_event {
-  /** Address of the peer. */
-  struct pbl_bt_addr dev_address;
-};
-
 /** @brief A notification or indication was received from a peer's GATT server. */
 struct pbl_bt_gatt_server_notif_indic_event {
   /** Address of the peer. */
@@ -248,14 +242,6 @@ extern void pbl_bt_cb_gatt_handle_connect(const struct pbl_bt_gatt_device_connec
  */
 extern void pbl_bt_cb_gatt_handle_disconnect(
     const struct pbl_bt_gatt_device_disconnection_event *event);
-
-/**
- * @brief Called when the transmit buffers became available again. Not invoked by NimBLE.
- *
- * @param event The peer.
- */
-extern void pbl_bt_cb_gatt_handle_buffer_empty(
-    const struct pbl_bt_gatt_device_buffer_empty_event *event);
 
 /**
  * @brief Called when the ATT MTU of a connection changed.

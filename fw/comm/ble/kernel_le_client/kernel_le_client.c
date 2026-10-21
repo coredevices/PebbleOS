@@ -352,11 +352,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
 }
 
 static void prv_handle_gatt_event(const PebbleBLEGATTClientEvent *event) {
-  if (event->subtype == PebbleBLEGATTClientEventTypeBufferEmpty) {
-    // Taking a shortcut here:
-    ppogatt_handle_buffer_empty();
-    return;
-  } else if (event->subtype == PebbleBLEGATTClientEventTypeNotification) {
+  if (event->subtype == PebbleBLEGATTClientEventTypeNotification) {
     prv_consume_notifications(event);
     return;
   }
