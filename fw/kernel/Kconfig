@@ -21,3 +21,19 @@ config KERNEL_VOLATILE_HEAP_SIZE
     depends on KERNEL_VOLATILE_HEAP
     default 65536
     range 4096 131072
+
+config PSRAM_IMAGE_POOL
+    bool "Image slot pool in external RAM"
+    depends on PSRAM_RETENTION
+    default y
+    help
+      Fixed-size slots in disposable external RAM for decoded images,
+      for the image cache. Slots are only usable with a retention hold.
+
+config PSRAM_IMAGE_SLOTS
+    int "Number of image slots"
+    depends on PSRAM_IMAGE_POOL
+    default 32
+    range 1 64
+    help
+      Each slot takes 44 KiB of external RAM.
