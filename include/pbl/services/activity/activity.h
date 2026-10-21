@@ -151,15 +151,14 @@ typedef struct PBL_PACKED ActivityHRMSettings {
   bool activity_tracking_enabled;
 } ActivityHRMSettings;
 
-/**
- * @brief Blood oxygen (SpO2) preferences, as stored in prefs.
- *
- * The on/off setting is synced from the phone under its own key
- * (@c PREF_KEY_ACTIVITY_SPO2_ENABLED); only the watch-local interval lives here.
- */
+/** @brief SpO2 (blood oxygen) preferences, as stored in prefs. */
 typedef struct PBL_PACKED ActivitySpO2Settings {
+  /** Background SpO2 monitoring enabled. */
+  bool enabled;
   /** @ref HRMonitoringInterval value. */
   uint8_t measurement_interval;
+  /** SpO2 sampling during detected activities and workouts. */
+  bool activity_tracking_enabled;
 } ActivitySpO2Settings;
 
 /** @brief Default user height, in millimeters (5'3.8", CDC average). */
@@ -209,7 +208,9 @@ typedef struct PBL_PACKED ActivitySpO2Settings {
 /** @brief Initializer for the default @ref ActivitySpO2Settings. */
 #define ACTIVITY_SPO2_DEFAULT_PREFERENCES               \
   {                                                     \
+    .enabled = false,                                   \
     .measurement_interval = HRMonitoringInterval_10Min, \
+    .activity_tracking_enabled = false,                 \
   }
 
 /** @brief Lowest heart rate reading accepted as valid, in beats per minute. */

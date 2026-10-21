@@ -288,21 +288,10 @@ static_assert(sizeof(ActivityHRMSettings) == 3,
 #define PREF_KEY_ACTIVITY_SPO2_PREFERENCES "spo2Preferences"
 static ActivitySpO2Settings s_activity_spo2_preferences = ACTIVITY_SPO2_DEFAULT_PREFERENCES;
 #if !UNITTEST
-static_assert(sizeof(ActivitySpO2Settings) == 1,
-              "sizeof(ActivitySpO2Settings) grew, stored records need migrating!");
+static_assert(sizeof(ActivitySpO2Settings) == 3,
+              "ActivitySpO2Settings changed size; prv_migrate_activity_spo2_prefs() only knows "
+              "the 1 byte interval-only record!");
 #endif
-
-// Blood oxygen on/off. Synced from the phone (and the on-watch toggle) as a
-// single bool byte under its own key, mirroring the mobile app's
-// `bloodOxygenPreferences` blob. Opt-in: default off until enabled.
-#define PREF_KEY_ACTIVITY_SPO2_ENABLED "bloodOxygenPreferences"
-static bool s_activity_spo2_enabled = false;
-
-// Blood oxygen during activities opt-in. Synced from the phone like the other health toggles, and
-// only meaningful when HR-during-activities is on (enforced in the settings UI). Opt-in: default
-// off.
-#define PREF_KEY_ACTIVITY_SPO2_ACTIVITY_TRACKING "bloodOxygenActivityPreferences"
-static bool s_activity_spo2_activity_tracking_enabled = false;
 
 #define PREF_KEY_ACTIVITY_HEART_RATE_PREFERENCES "heartRatePreferences"
 static HeartRatePreferences s_activity_hr_preferences = ACTIVITY_HEART_RATE_DEFAULT_PREFERENCES;
@@ -808,24 +797,6 @@ static bool prv_set_s_activity_spo2_preferences(ActivitySpO2Settings *new_settin
   return true;
 }
 
-static bool prv_set_s_activity_spo2_enabled(bool *enabled) {
-  s_activity_spo2_enabled = *enabled;
-
-#ifdef CONFIG_HRM
-  hrm_manager_handle_prefs_changed();
-#endif // CONFIG_HRM
-  return true;
-}
-
-static bool prv_set_s_activity_spo2_activity_tracking_enabled(bool *enabled) {
-  s_activity_spo2_activity_tracking_enabled = *enabled;
-
-#ifdef CONFIG_HRM
-  hrm_manager_handle_prefs_changed();
-#endif // CONFIG_HRM
-  return true;
-}
-
 static uint8_t prv_set_s_timeline_settings_opened(uint8_t *version) {
   s_timeline_settings_opened = *version;
   return true;
@@ -1070,6 +1041,48 @@ static void prv_migrate_activity_hrm_prefs(SettingsFile *file) {
   settings_file_set(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, sizeof(settings));
 }
 
+// Locally written keys include the null terminator, phone-originated BlobDB writes may not.
+static bool prv_take_legacy_bool(SettingsFile *file, const char *key, bool *value) {
+  bool found = false;
+  for (size_t key_len = strlen(key); key_len <= strlen(key) + 1; key_len++) {
+    if (settings_file_get_len(file, key, key_len) != (int)sizeof(*value)) {
+      continue;
+    }
+    if (settings_file_get(file, key, key_len, value, sizeof(*value)) == S_SUCCESS) {
+      found = true;
+    }
+    settings_file_delete(file, key, key_len);
+  }
+  return found;
+}
+
+// spo2Preferences started as a 1 byte interval-only record, with the on/off and
+// during-activities toggles stored under keys of their own.
+static void prv_migrate_activity_spo2_prefs(SettingsFile *file) {
+  const size_t key_len = sizeof(PREF_KEY_ACTIVITY_SPO2_PREFERENCES);
+  const int stored_len = settings_file_get_len(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len);
+  if (stored_len >= (int)sizeof(ActivitySpO2Settings)) {
+    return;
+  }
+
+  ActivitySpO2Settings settings = ACTIVITY_SPO2_DEFAULT_PREFERENCES;
+  bool migrate = false;
+  if (stored_len == (int)sizeof(settings.measurement_interval)) {
+    migrate = settings_file_get(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len,
+                                &settings.measurement_interval,
+                                sizeof(settings.measurement_interval)) == S_SUCCESS;
+  }
+  migrate |= prv_take_legacy_bool(file, "bloodOxygenPreferences", &settings.enabled);
+  migrate |= prv_take_legacy_bool(file, "bloodOxygenActivityPreferences",
+                                  &settings.activity_tracking_enabled);
+  if (!migrate) {
+    return;
+  }
+
+  PBL_LOG_INFO("Migrating %d byte spo2Preferences record", stored_len);
+  settings_file_set(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len, &settings, sizeof(settings));
+}
+
 // ------------------------------------------------------------------------------------
 static void prv_pref_set(const char *key, const void *value, size_t val_len);
 
@@ -1099,6 +1112,7 @@ void shell_prefs_init(void) {
   prv_convert_deprecated_dynamic_intensity_key(&file);
 #endif
   prv_migrate_activity_hrm_prefs(&file);
+  prv_migrate_activity_spo2_prefs(&file);
 
 #if !TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
   {
@@ -2134,24 +2148,31 @@ void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled) {
 }
 
 bool activity_prefs_spo2_is_enabled(void) {
-  return s_activity_spo2_enabled;
+  return s_activity_spo2_preferences.enabled;
+}
+
+// prv_pref_set runs prv_set_s_activity_spo2_preferences, which re-evaluates the sensor; writing
+// the key also syncs it to the phone.
+static void prv_activity_spo2_prefs_store(void) {
+  prv_pref_set(PREF_KEY_ACTIVITY_SPO2_PREFERENCES, &s_activity_spo2_preferences,
+               sizeof(s_activity_spo2_preferences));
 }
 
 void activity_prefs_set_spo2_enabled(bool enabled) {
-  if (s_activity_spo2_enabled != enabled) {
-    // prv_pref_set runs prv_set_s_activity_spo2_enabled, which updates the global
-    // and re-evaluates the sensor; writing the key also syncs it to the phone.
-    prv_pref_set(PREF_KEY_ACTIVITY_SPO2_ENABLED, &enabled, sizeof(enabled));
+  if (s_activity_spo2_preferences.enabled != enabled) {
+    s_activity_spo2_preferences.enabled = enabled;
+    prv_activity_spo2_prefs_store();
   }
 }
 
 bool activity_prefs_spo2_activity_tracking_is_enabled(void) {
-  return s_activity_spo2_activity_tracking_enabled;
+  return s_activity_spo2_preferences.activity_tracking_enabled;
 }
 
 void activity_prefs_set_spo2_activity_tracking_enabled(bool enabled) {
-  if (s_activity_spo2_activity_tracking_enabled != enabled) {
-    prv_pref_set(PREF_KEY_ACTIVITY_SPO2_ACTIVITY_TRACKING, &enabled, sizeof(enabled));
+  if (s_activity_spo2_preferences.activity_tracking_enabled != enabled) {
+    s_activity_spo2_preferences.activity_tracking_enabled = enabled;
+    prv_activity_spo2_prefs_store();
   }
 }
 
@@ -2166,9 +2187,7 @@ HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void) {
 void activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval interval) {
   if (s_activity_spo2_preferences.measurement_interval != (uint8_t)interval) {
     s_activity_spo2_preferences.measurement_interval = (uint8_t)interval;
-    prv_pref_set(PREF_KEY_ACTIVITY_SPO2_PREFERENCES, &s_activity_spo2_preferences,
-                 sizeof(s_activity_spo2_preferences));
-    hrm_manager_handle_prefs_changed();
+    prv_activity_spo2_prefs_store();
   }
 }
 #endif

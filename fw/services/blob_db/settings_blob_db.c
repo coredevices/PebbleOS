@@ -109,8 +109,6 @@ static const char *s_syncable_settings[] = {
   "hrmPreferences",
   "heartRatePreferences",
   "spo2Preferences",
-  "bloodOxygenPreferences",
-  "bloodOxygenActivityPreferences",
 
   // Menu wrap around preferences
   "menuScrollWrapAround",
