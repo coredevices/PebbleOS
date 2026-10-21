@@ -6,10 +6,12 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/services/resident_image.h>
 #include <pbl/util/math.h>
+#include <pbl/util/sha256.h>
 
 #include <applib/graphics/gtypes.h>
 #include <apps/system/music.h>
@@ -278,6 +280,11 @@ void music_update_now_playing(const char *title, size_t title_length, const char
   copy_and_truncate(s_music_ctx.album, album, album_length);
 
   pbl_mutex_unlock(&s_music_ctx.mutex);
+
+  // Skipping back and forth should find the art in the cache
+  if (track_changed) {
+    image_cache_activity();
+  }
 
   prv_put_now_playing_changed_event();
 }
@@ -603,6 +610,61 @@ void music_album_art_transfer_failed(uint8_t token) {
     PBL_LOG_DBG("Ignore stale album art failure token=%u current=%u", token,
                 music_get_now_playing_generation());
   }
+}
+
+static void prv_album_art_key_locked(uint16_t side, ImagingFormat format, ImageCacheKey *key) {
+  const uint8_t params[3] = {side & 0xff, side >> 8, format};
+  uint8_t digest[SHA256_DIGEST_SIZE];
+  Sha256 sha;
+
+  // The terminators keep the fields apart
+  sha256_init(&sha);
+  sha256_update(&sha, s_music_ctx.title, strlen(s_music_ctx.title) + 1);
+  sha256_update(&sha, s_music_ctx.artist, strlen(s_music_ctx.artist) + 1);
+  sha256_update(&sha, s_music_ctx.album, strlen(s_music_ctx.album) + 1);
+  sha256_update(&sha, params, sizeof(params));
+  sha256_final(&sha, digest);
+  memcpy(key->bytes, digest, sizeof(key->bytes));
+}
+
+uint8_t music_get_album_art_request(uint16_t side, ImagingFormat format, char *title, char *artist,
+                                    ImageCacheKey *key) {
+  // One snapshot, so that a track change can't pair one track's art with another's key
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  strcpy(title, s_music_ctx.title);
+  strcpy(artist, s_music_ctx.artist);
+  prv_album_art_key_locked(side, format, key);
+  const uint8_t generation = s_music_ctx.now_playing_generation;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+  return generation;
+}
+
+void music_album_art_release_retained(void) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  if (s_music_ctx.album_art && resident_image_is_pinned(s_music_ctx.album_art)) {
+    prv_free_album_art_locked();
+    // Fetched again the next time it is shown
+    s_music_ctx.album_art_generation = s_music_ctx.now_playing_generation - 1;
+  }
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+}
+
+bool music_album_art_load_cached(uint16_t side, ImagingFormat format) {
+  const GSize size = GSize(side, side);
+  ImageCacheKey key;
+
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  prv_album_art_key_locked(side, format, &key);
+  const uint8_t generation = s_music_ctx.now_playing_generation;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+
+  ResidentImage *image = resident_image_load_cached(ImageCacheClientAlbumArt, &key, size);
+  if (!image) {
+    return false;
+  }
+
+  music_set_album_art(image, generation);
+  return true;
 }
 
 bool music_album_art_is_current(void) {

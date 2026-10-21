@@ -563,3 +563,23 @@ void test_music_endpoint__player_name_not_available(void) {
 
   cl_assert_equal_b(music_get_player_name(nullptr), false);
 }
+
+void test_music_endpoint__album_art_cache_key_follows_the_track(void) {
+  ImageCacheKey first, again, other_album, other_side;
+  char title[MUSIC_BUFFER_LENGTH];
+  char artist[MUSIC_BUFFER_LENGTH];
+  music_update_now_playing("title", 5, "artist", 6, "album", 5);
+  const uint8_t generation =
+      music_get_album_art_request(166, ImagingFormat4BitPalette, title, artist, &first);
+  cl_assert_equal_i(generation, music_get_now_playing_generation());
+  cl_assert_equal_s(title, "title");
+  cl_assert_equal_s(artist, "artist");
+  music_get_album_art_request(166, ImagingFormat4BitPalette, title, artist, &again);
+  music_get_album_art_request(260, ImagingFormat4BitPalette, title, artist, &other_side);
+  music_update_now_playing("title", 5, "artist", 6, "album2", 6);
+  music_get_album_art_request(166, ImagingFormat4BitPalette, title, artist, &other_album);
+
+  cl_assert_equal_m(&first, &again, sizeof(first));
+  cl_assert(memcmp(&first, &other_side, sizeof(first)) != 0);
+  cl_assert(memcmp(&first, &other_album, sizeof(first)) != 0);
+}
