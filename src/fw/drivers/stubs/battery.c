@@ -1,3 +1,6 @@
+/* SPDX-FileCopyrightText: 2025 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
 #include "drivers/battery.h"
 
 void battery_init(void) {
@@ -20,6 +23,11 @@ int battery_get_constants(BatteryConstants *constants) {
 
 int battery_charge_status_get(BatteryChargeStatus *status) {
   *status = BatteryChargeStatusUnknown;
+  return 0;
+}
+
+int battery_charge_error_get(uint32_t *reason) {
+  *reason = 0;
   return 0;
 }
 

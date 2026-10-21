@@ -23,6 +23,8 @@ typedef enum {
   BatteryChargeStatusCC,
   //! Battery is in constant voltage charge mode.
   BatteryChargeStatusCV,
+  //! Charging stopped due to an error.
+  BatteryChargeStatusError,
 } BatteryChargeStatus;
 
 //! Battery constants.
@@ -102,3 +104,11 @@ uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,
 //! @retval 0 On success.
 //! @retval error Error code on failure.
 int battery_charge_status_get(BatteryChargeStatus *status);
+
+//! Get the charger error reason.
+//!
+//! @param[out] reason Device-specific error reason bits, 0 if there is no error.
+//!
+//! @retval 0 On success.
+//! @retval error Error code on failure.
+int battery_charge_error_get(uint32_t *reason);
