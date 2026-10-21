@@ -21,11 +21,7 @@ void test_flash_logging__initialize(void) {
 }
 
 void test_flash_logging__cleanup(void) {
-  uint32_t size = FLASH_REGION_DEBUG_DB_BEGIN - 0;
-  fake_flash_assert_region_untouched(0, size);
-
-  size = BOARD_NOR_FLASH_SIZE - FLASH_REGION_DEBUG_DB_END;
-  fake_flash_assert_region_untouched(FLASH_REGION_DEBUG_DB_END, size);
+  fake_flash_assert_untouched_outside(FLASH_REGION_DEBUG_DB_BEGIN, FLASH_REGION_DEBUG_DB_END);
   fake_spi_flash_cleanup();
 }
 

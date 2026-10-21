@@ -77,13 +77,12 @@ void fake_spi_flash_init(uint32_t offset, uint32_t length) {
   memset(s_state.storage, 0xff, length);
 }
 
-void fake_flash_assert_region_untouched(uint32_t start_addr, uint32_t length) {
-  if (length == 0) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < length; i++) {
-    cl_assert(s_state.storage[start_addr + i] == 0xff);
+void fake_flash_assert_untouched_outside(uint32_t begin, uint32_t end) {
+  for (uint32_t addr = s_state.offset; addr < s_state.offset + s_state.length; addr++) {
+    if (addr >= begin && addr < end) {
+      continue;
+    }
+    cl_assert(s_state.storage[addr - s_state.offset] == 0xff);
   }
 }
 

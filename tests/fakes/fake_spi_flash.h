@@ -28,7 +28,7 @@ void fake_spi_flash_cleanup(void);
 //! the atomicity of algorithms which are purported to be so.
 void fake_spi_flash_force_future_failure(int after_n_bytes, jmp_buf *retire_to);
 
-void fake_flash_assert_region_untouched(uint32_t start_addr, uint32_t length);
+void fake_flash_assert_untouched_outside(uint32_t begin, uint32_t end);
 
 uint32_t fake_flash_read_count(void);
 uint32_t fake_flash_write_count(void);
