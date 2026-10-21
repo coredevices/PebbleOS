@@ -85,8 +85,12 @@
 #ifdef CONFIG_EXTRAM
 //! Place the zero-initialized variable in external RAM.
 #define PBL_SECTION_EXTRAM PBL_SECTION(".extram.bss")
+//! Place the zero-initialized variable in external RAM that may lose its contents, see
+//! pbl/kernel/psram.h.
+#define PBL_SECTION_DISPOSABLE PBL_SECTION(".disposable.bss")
 #else
 #define PBL_SECTION_EXTRAM
+#define PBL_SECTION_DISPOSABLE
 #endif
 
 /** @} */

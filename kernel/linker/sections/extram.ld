@@ -12,3 +12,13 @@
         . = ALIGN(32);
         __extram_bss_end = .;
     } >EXTRAM
+
+    .disposable_bss (NOLOAD) : ALIGN(32) {
+        __disposable_bss_start = .;
+
+        *(.disposable.bss)
+        *(.disposable.bss.*)
+
+        . = ALIGN(32);
+        __disposable_bss_end = .;
+    } >EXTRAM
