@@ -8,6 +8,8 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/psram.h>
+#include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
@@ -15,11 +17,11 @@
 #include <pbl/services/image_cache.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/resident_image.h>
-#include <pbl/kernel/heap.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
+#include <kernel/event_loop.h>
 
 PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
 
@@ -49,6 +51,7 @@ typedef struct {
   uint8_t token;
   uint32_t total_bytes;
   uint32_t received_bytes;
+  uint64_t last_chunk_ms;
   //! Where the image is received: a cache entry, with a PSRAM hold taken, or a resident image
   ImageCacheEntry *entry;
   ResidentImage *image;
@@ -75,6 +78,12 @@ static const ImageCacheClient CACHE_CLIENTS[ImagingImageTypeCount] = {
 // One per type, so that consumers can fetch at the same time
 static Reassembly s_rx[ImagingImageTypeCount];
 
+// A transfer the phone stops sending is dropped after this long, not to hold its memory, or keep
+// the PSRAM retained, until the next one
+#define IMAGING_STALL_TIMEOUT_MS (5000)
+static void prv_stall_timer_expired(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_stall_timer, prv_stall_timer_expired);
+
 static void prv_rx_reset(uint8_t type) {
   if (type < ARRAY_LENGTH(s_rx)) {
     resident_image_destroy(s_rx[type].image);
@@ -99,6 +108,40 @@ void imaging_register_transfer_handlers(ImagingImageType image_type,
     s_will_receive_handlers[image_type] = will_receive;
     s_transfer_failed_handlers[image_type] = transfer_failed;
   }
+}
+
+static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *reason);
+static void prv_arm_stall_timer(void);
+
+static void prv_check_stalled(void *data) {
+  const uint64_t now = pbl_uptime_ms();
+  bool active = false;
+
+  for (uint8_t type = 0; type < ARRAY_LENGTH(s_rx); type++) {
+    Reassembly *rx = &s_rx[type];
+    if (!rx->active) {
+      continue;
+    }
+    if (now - rx->last_chunk_ms >= IMAGING_STALL_TIMEOUT_MS) {
+      prv_drop(type, rx->token, rx->total_bytes, "stalled");
+    } else {
+      active = true;
+    }
+  }
+
+  if (active) {
+    prv_arm_stall_timer();
+  }
+}
+
+static void prv_stall_timer_expired(struct pbl_work *work) {
+  // The reassembly state is only touched on KernelMain
+  launcher_task_add_callback(prv_check_stalled, nullptr);
+}
+
+static void prv_arm_stall_timer(void) {
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_stall_timer,
+                              PBL_MSEC(IMAGING_STALL_TIMEOUT_MS));
 }
 
 static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *reason) {
@@ -375,6 +418,10 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
     resident_image_write(rx->image, hdr->offset, cursor, hdr->chunk_len);
   }
   rx->received_bytes += hdr->chunk_len;
+  rx->last_chunk_ms = pbl_uptime_ms();
+  if (!(hdr->flags & ImagingResponseFlagLast)) {
+    prv_arm_stall_timer();
+  }
 
   if (hdr->flags & ImagingResponseFlagLast) {
     if (rx->received_bytes != rx->total_bytes) {
