@@ -126,6 +126,22 @@ pbl_clar_test(test_imaging
     pebble/services/imaging/resident_image.c
 )
 
+pbl_clar_test(test_imaging_cache
+  SOURCE test_imaging.c
+  SOURCES
+    tests/fakes/fake_session.c
+    pebble/services/imaging/imaging.c
+    pebble/services/imaging/resident_image.c
+    pebble/services/imaging/image_cache.c
+    pebble/kernel/psram_image_pool.c
+  DEFINES
+    CONFIG_PSRAM_RETENTION
+    CONFIG_PSRAM_IMAGE_POOL
+    CONFIG_PSRAM_IMAGE_SLOTS=4
+    CONFIG_IMAGE_CACHE
+    CONFIG_PSRAM_IDLE_RELEASE_MS=5000
+)
+
 pbl_clar_test(test_compass_cal
   SOURCES
     pebble/services/ecompass/correction.c

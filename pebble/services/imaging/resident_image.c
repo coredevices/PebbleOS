@@ -3,14 +3,22 @@
 
 #include <string.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/psram.h>
+#include <pbl/logging/logging.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/resident_image.h>
 #include <pbl/util/math.h>
 
 #include <applib/graphics/graphics_bitmap.h>
 
+PBL_LOG_MODULE_DECLARE(service_imaging, DEFAULT_LOG_LEVEL);
+
 struct ResidentImage {
+  //! Image cache entry drawn in place, with the PSRAM held, when there was no RAM for a copy
+  const GBitmap *pinned;
   GSize size;
   GBitmapFormat format;
   uint16_t row_size_bytes;
@@ -110,9 +118,56 @@ ResidentImage *resident_image_create_from_bitmap(const GBitmap *bitmap) {
   return image;
 }
 
+ResidentImage *resident_image_create_from_cache(const GBitmap *cached) {
+  ResidentImage *image = resident_image_create_from_bitmap(cached);
+  if (image) {
+    return image;
+  }
+
+  // Keep showing it from the PSRAM instead, at the cost of keeping it retained
+  image = pbl_zalloc(sizeof(*image));
+  if (!image) {
+    return NULL;
+  }
+  PBL_LOG_WRN("No RAM for a %dx%d image, keeping it in PSRAM", cached->bounds.size.w,
+              cached->bounds.size.h);
+  PBL_ANALYTICS_ADD(psram_demote_fail, 1);
+  psram_retain_acquire();
+  image_cache_retain(cached);
+  image->pinned = cached;
+  image->size = cached->bounds.size;
+  image->format = cached->info.format;
+  return image;
+}
+
+ResidentImage *resident_image_load_cached(ImageCacheClient client, const ImageCacheKey *key,
+                                          GSize size) {
+  ResidentImage *image = NULL;
+
+  // Spare the PSRAM a wake-up on a miss
+  if (!image_cache_contains(client, key, size)) {
+    return NULL;
+  }
+
+  psram_retain_acquire();
+  const GBitmap *cached = image_cache_acquire(client, key, size);
+  if (cached) {
+    image = resident_image_create_from_cache(cached);
+    image_cache_release(cached);
+  }
+  psram_retain_release();
+
+  return image;
+}
+
 void resident_image_destroy(ResidentImage *image) {
   if (!image) {
     return;
+  }
+
+  if (image->pinned) {
+    image_cache_release(image->pinned);
+    psram_retain_release();
   }
 
   for (uint16_t i = 0; i < image->num_segments; i++) {
@@ -123,8 +178,11 @@ void resident_image_destroy(ResidentImage *image) {
 
 bool resident_image_write(ResidentImage *image, uint32_t offset, const uint8_t *data,
                           size_t length) {
-  const uint32_t segment_size = prv_segment_size(image);
+  if (image->pinned) {
+    return false;
+  }
 
+  const uint32_t segment_size = prv_segment_size(image);
   if ((offset > resident_image_get_data_size(image)) ||
       (length > resident_image_get_data_size(image) - offset)) {
     return false;
@@ -143,8 +201,12 @@ bool resident_image_write(ResidentImage *image, uint32_t offset, const uint8_t *
   return true;
 }
 
+bool resident_image_is_pinned(const ResidentImage *image) {
+  return image->pinned != NULL;
+}
+
 GColor *resident_image_get_palette(ResidentImage *image) {
-  return image->palette;
+  return image->pinned ? image->pinned->palette : image->palette;
 }
 
 GSize resident_image_get_size(const ResidentImage *image) {
@@ -156,6 +218,13 @@ uint32_t resident_image_get_data_size(const ResidentImage *image) {
 }
 
 void resident_image_draw(GContext *ctx, const ResidentImage *image, const GRect *rect) {
+  if (image->pinned) {
+    GBitmap bitmap = *image->pinned;
+    bitmap.bounds.size = GSize(MIN(rect->size.w, image->size.w), MIN(rect->size.h, image->size.h));
+    graphics_draw_bitmap_in_rect(ctx, &bitmap, &(GRect){rect->origin, bitmap.bounds.size});
+    return;
+  }
+
   GBitmap bitmap = {
     .row_size_bytes = image->row_size_bytes,
     .info.format = image->format,
