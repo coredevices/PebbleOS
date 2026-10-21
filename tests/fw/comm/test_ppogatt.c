@@ -6,6 +6,7 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
+#include <comm/ble/gatt_client_operations.h>
 #include <comm/ble/kernel_le_client/ppogatt/ppogatt.h>
 #include <comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h>
 
@@ -48,20 +49,20 @@ GAPLEConnection *gatt_client_characteristic_get_connection(
   return nullptr;
 }
 
-// The bt_lock-held write path (see prv_send_next_packets) is only taken when
-// bt_lock_is_held() is true; the test's bt_lock stub never reports it held, so
-// these entry points must not be reached. Fail loudly if they are.
+// prv_write_packet resolves the data characteristic, then writes to it.
+static pbl_bt_characteristic_t s_write_characteristic;
+
 uint16_t gatt_client_characteristic_get_handle_and_connection(
     pbl_bt_characteristic_t characteristic_ref, GAPLEConnection **connection_out) {
-  cl_fail("unexpected call: bt_lock is never held in this test");
-  return 0;
+  s_write_characteristic = characteristic_ref;
+  *connection_out = nullptr;
+  return 1;
 }
 
 enum pbl_bt_errno pbl_bt_gatt_write_without_response(GAPLEConnection *connection,
                                                      const uint8_t *value, size_t value_length,
                                                      uint16_t att_handle) {
-  cl_fail("unexpected call: bt_lock is never held in this test");
-  return PBL_BT_ERRNO_OK;
+  return gatt_client_op_write_without_response(s_write_characteristic, value, value_length);
 }
 
 // Reversed PPoG only fires from a reversed-role client, which this test never creates.

@@ -1592,6 +1592,33 @@ static void prv_finalize_queued_packet(PPoGATTClient *client, uint16_t payload_s
 
 // -------------------------------------------------------------------------------------------------
 
+//! Hands a packet to NimBLE, releasing bt_lock for the call to avoid a
+//! deadlock with ble_hs_mutex.
+static enum pbl_bt_errno prv_write_packet(PPoGATTClient *client, const PPoGATTPacket *packet,
+                                          uint16_t length) {
+  bt_lock_assert_held(true);
+
+  enum pbl_bt_errno e;
+  if (client->role == PPoGATTRoleReversed) {
+    bt_unlock();
+    e = pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, length);
+  } else {
+    GAPLEConnection *connection;
+    const uint16_t att_handle = gatt_client_characteristic_get_handle_and_connection(
+        client->characteristics.data, &connection);
+    if (!att_handle) {
+      return PBL_BT_ERRNO_INVALID_PARAMETER;
+    }
+    // If the connection goes away meanwhile, NimBLE fails the conn_handle lookup.
+    bt_unlock();
+    e = pbl_bt_gatt_write_without_response(connection, (const uint8_t *)packet, length, att_handle);
+  }
+  bt_lock();
+  return e;
+}
+
+// -------------------------------------------------------------------------------------------------
+
 static void prv_send_next_packets(PPoGATTClient *client) {
   if (client->send_in_progress) {
     // Re-entered while the outer call dropped bt_lock; reschedule so queued
@@ -1612,19 +1639,10 @@ static void prv_send_next_packets(PPoGATTClient *client) {
   while ((packet = prv_prepare_next_packet(client, &heap_packet, &payload_size))) {
     ++loop_count;
 
-    if (client->role == PPoGATTRoleReversed) {
-      const uint16_t total_len = sizeof(PPoGATTPacket) + payload_size;
-      // Release bt_lock before calling into NimBLE to avoid deadlock with ble_hs_mutex.
-      const bool lock_was_held = bt_lock_is_held();
-      if (lock_was_held) {
-        bt_unlock();
-      }
-      const enum pbl_bt_errno e =
-          pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, total_len);
-      if (lock_was_held) {
-        bt_lock();
-      }
-      if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
+    const enum pbl_bt_errno e =
+        prv_write_packet(client, packet, sizeof(PPoGATTPacket) + payload_size);
+    if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
+      if (client->role == PPoGATTRoleReversed) {
         // Out of mbufs (e.g. inbound flood during a firmware update). NimBLE
         // has no "buffers freed" event, so retry after a short delay.
         if (client->send_retry_count++ == 0) {
@@ -1634,88 +1652,19 @@ static void prv_send_next_packets(PPoGATTClient *client) {
           new_timer_start(client->send_retry_timer, PPOGATT_SEND_RETRY_DELAY_MS,
                           prv_send_retry_timer_cb, client, 0);
         }
-        break;
-      } else if (e != PBL_BT_ERRNO_OK) {
-        PBL_LOG_ERR("Reversed PPoG notify failed %i", e);
-        break;
       }
-      if (client->send_retry_count) {
-        PBL_LOG_INFO("Reversed PPoG send recovered after %u retries", client->send_retry_count);
-        client->send_retry_count = 0;
-      }
-      prv_finalize_queued_packet(client, payload_size);
-
-      const uint8_t max_loop_count = 10;
-      if (loop_count > max_loop_count) {
-        prv_send_next_packets_async(client);
-        break;
-      }
-      continue;
-    }
-
-    // Get the connection and handle while holding bt_lock
-    GAPLEConnection *connection;
-    uint16_t att_handle;
-    bool lock_was_held = bt_lock_is_held();
-
-    if (lock_was_held) {
-      att_handle = gatt_client_characteristic_get_handle_and_connection(
-          client->characteristics.data, &connection);
-      if (!att_handle) {
-        // Invalid characteristic, bail out
-        break;
-      }
-      // Release bt_lock BEFORE calling into NimBLE to avoid deadlock.
-      // See comment in gatt_client_op_write_without_response.
-      bt_unlock();
-    } else {
-      // If bt_lock wasn't held, we can call gatt_client_op_write_without_response directly
-      // (it will manage the lock itself)
-      const enum pbl_bt_errno e = gatt_client_op_write_without_response(
-          client->characteristics.data, (const uint8_t *)packet,
-          sizeof(PPoGATTPacket) + payload_size);
-      if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
-        // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
-        break;
-      } else if (e != PBL_BT_ERRNO_OK) {
-        // Most likely the LE connection got busted, don't think retrying will help.
-        PBL_LOG_ERR("Write failed %i", e);
-        break;
-      } else {
-        // Packet successfully queued
-        prv_finalize_queued_packet(client, payload_size);
-      }
-
-      const uint8_t max_loop_count = 10;
-      if (loop_count > max_loop_count) {
-        prv_send_next_packets_async(client);
-        break;
-      }
-      continue;
-    }
-
-    // Call into NimBLE without holding bt_lock
-    const enum pbl_bt_errno e = pbl_bt_gatt_write_without_response(
-        connection, (const uint8_t *)packet, sizeof(PPoGATTPacket) + payload_size, att_handle);
-
-    // Re-acquire bt_lock before accessing client state
-    bt_lock();
-
-    if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
-      // Need to wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
+      // Forward: wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
       break;
     } else if (e != PBL_BT_ERRNO_OK) {
       // Most likely the LE connection got busted, don't think retrying will help.
       PBL_LOG_ERR("Write failed %i", e);
       break;
-    } else {
-      //     PBL_LOG_DBG("OUT:");
-      //     PBL_HEXDUMP(LOG_LEVEL_DEBUG, (const uint8_t *) packet, sizeof(PPoGATTPacket) +
-      //     payload_size);
-
-      // Packet successfully queued
-      prv_finalize_queued_packet(client, payload_size);
     }
+    if (client->send_retry_count) {
+      PBL_LOG_INFO("Reversed PPoG send recovered after %u retries", client->send_retry_count);
+      client->send_retry_count = 0;
+    }
+    prv_finalize_queued_packet(client, payload_size);
 
     const uint8_t max_loop_count = 10;
     if (loop_count > max_loop_count) {
