@@ -28,6 +28,7 @@
 #include <pbl/services/event_service.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/firmware_update.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/language_pack.h>
 #include <pbl/services/light.h>
 #include <pbl/services/music_internal.h>
@@ -180,6 +181,7 @@ static void launcher_handle_button_event(PebbleEvent *e) {
   // trigger the backlight on any button down event
   if (e->type == PEBBLE_BUTTON_DOWN_EVENT) {
     PBL_ANALYTICS_ADD(button_pressed_count, 1);
+    image_cache_activity();
 
     if (button_id == BUTTON_ID_BACK && !watchface_running &&
         process_metadata_get_run_level(app_manager_get_current_app_md()) ==
@@ -274,6 +276,12 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
 
     case PEBBLE_RENDER_READY_EVENT:
       compositor_app_render_ready();
+      return;
+
+    case PEBBLE_BACKLIGHT_EVENT:
+      if (e->backlight.is_on) {
+        image_cache_activity();
+      }
       return;
 
 #ifdef CONFIG_SERVICE_MUSIC
