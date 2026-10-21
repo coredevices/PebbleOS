@@ -154,8 +154,8 @@ static void prv_init(void) {
 
   if (!sys_hrm_manager_is_hrm_present()) {
     text_layer_set_text(detail_tl, "No HRM present");
-  } else if (!activity_prefs_heart_rate_is_enabled() && !activity_prefs_blood_oxygen_is_enabled() &&
-             !activity_prefs_blood_oxygen_activity_tracking_is_enabled()) {
+  } else if (!activity_prefs_heart_rate_is_enabled() && !activity_prefs_spo2_is_enabled() &&
+             !activity_prefs_spo2_activity_tracking_is_enabled()) {
     // A foreground app's subscription bypasses the per-feature pref mask, but the HRM manager
     // still won't power the sensor on at all with every monitoring pref off.
     text_layer_set_text(detail_tl, "Enable heart rate or\nblood oxygen monitoring");

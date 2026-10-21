@@ -158,14 +158,14 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return s_activity_prefs_heart_rate_is_enabled;
 }
 
-static bool s_activity_prefs_blood_oxygen_is_enabled = false;
-bool activity_prefs_blood_oxygen_is_enabled(void) {
-  return s_activity_prefs_blood_oxygen_is_enabled;
+static bool s_activity_prefs_spo2_is_enabled = false;
+bool activity_prefs_spo2_is_enabled(void) {
+  return s_activity_prefs_spo2_is_enabled;
 }
 
-static bool s_activity_prefs_blood_oxygen_activity_tracking_is_enabled = false;
-bool activity_prefs_blood_oxygen_activity_tracking_is_enabled(void) {
-  return s_activity_prefs_blood_oxygen_activity_tracking_is_enabled;
+static bool s_activity_prefs_spo2_activity_tracking_is_enabled = false;
+bool activity_prefs_spo2_activity_tracking_is_enabled(void) {
+  return s_activity_prefs_spo2_activity_tracking_is_enabled;
 }
 
 bool battery_is_usb_connected(void) {
@@ -235,7 +235,7 @@ void test_hrm_manager__initialize(void) {
   s_accel_data_cb_context = nullptr;
   s_accel_consume_calls = 0;
   s_accel_waiting_batches = 0;
-  s_activity_prefs_blood_oxygen_is_enabled = false;
+  s_activity_prefs_spo2_is_enabled = false;
   hrm_manager_init();
   hrm_manager_enable(true);
 
@@ -422,7 +422,7 @@ void test_hrm_manager__low_latency_only_for_live_foreground_app(void) {
 // The pref mask keeps background subscribers off a disabled path, but a foreground app that asked
 // for the feature bypasses it.
 void test_hrm_manager__pref_mask_exempts_foreground_app(void) {
-  s_activity_prefs_blood_oxygen_is_enabled = false;
+  s_activity_prefs_spo2_is_enabled = false;
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   HRMSessionRef bg_ref = hrm_manager_subscribe_with_callback(
@@ -462,7 +462,7 @@ void test_hrm_manager__select_active_path(void) {
 // A due SpO2 subscriber pre-empts a running green consumer, and the green path resumes as soon as
 // the SpO2 subscriber is served and backs off.
 void test_hrm_manager__spo2_preempts_green(void) {
-  s_activity_prefs_blood_oxygen_is_enabled = true;
+  s_activity_prefs_spo2_is_enabled = true;
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   HRMSessionRef green_ref = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);

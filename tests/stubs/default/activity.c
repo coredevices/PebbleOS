@@ -43,11 +43,11 @@ bool PBL_WEAK activity_prefs_heart_rate_is_enabled(void) {
   return true;
 }
 
-bool PBL_WEAK activity_prefs_blood_oxygen_is_enabled(void) {
+bool PBL_WEAK activity_prefs_spo2_is_enabled(void) {
   return false;
 }
 
-bool PBL_WEAK activity_prefs_blood_oxygen_activity_tracking_is_enabled(void) {
+bool PBL_WEAK activity_prefs_spo2_activity_tracking_is_enabled(void) {
   return false;
 }
 

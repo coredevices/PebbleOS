@@ -321,7 +321,7 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
 #ifdef CONFIG_HRM
   // If blood oxygen monitoring is disabled (master toggle off or "Disabled" interval), make sure
   // we're not sampling and skip.
-  if (!activity_prefs_blood_oxygen_is_enabled() ||
+  if (!activity_prefs_spo2_is_enabled() ||
       activity_prefs_get_spo2_measurement_interval() == HRMonitoringInterval_Disabled) {
     if (s_activity_state.spo2.currently_sampling) {
       prv_spo2_set_sampling(false, now_ts);
@@ -517,7 +517,7 @@ static void prv_activity_spo2_update(uint32_t now_ts) {
                            activity_algorithm_activity_hrm_is_active();
   const bool workout_active = workout_service_is_workout_ongoing();
   const bool eligible =
-      activity_prefs_blood_oxygen_activity_tracking_is_enabled() && (auto_active || workout_active);
+      activity_prefs_spo2_activity_tracking_is_enabled() && (auto_active || workout_active);
 
   if (!eligible) {
     if (as->phase != ActivitySpO2ActPhase_Idle) {

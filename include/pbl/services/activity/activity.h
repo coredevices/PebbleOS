@@ -155,7 +155,7 @@ typedef struct PBL_PACKED ActivityHRMSettings {
  * @brief Blood oxygen (SpO2) preferences, as stored in prefs.
  *
  * The on/off setting is synced from the phone under its own key
- * (@c PREF_KEY_BLOOD_OXYGEN_PREFERENCES); only the watch-local interval lives here.
+ * (@c PREF_KEY_ACTIVITY_SPO2_ENABLED); only the watch-local interval lives here.
  */
 typedef struct PBL_PACKED ActivitySpO2Settings {
   /** @ref HRMonitoringInterval value. */
@@ -775,7 +775,7 @@ bool activity_prefs_heart_rate_is_enabled(void);
  *
  * @return true if enabled.
  */
-bool activity_prefs_blood_oxygen_is_enabled(void);
+bool activity_prefs_spo2_is_enabled(void);
 
 /**
  * @brief Check whether SpO2 sampling during detected activities is enabled.
@@ -785,7 +785,7 @@ bool activity_prefs_blood_oxygen_is_enabled(void);
  *
  * @return true if enabled.
  */
-bool activity_prefs_blood_oxygen_activity_tracking_is_enabled(void);
+bool activity_prefs_spo2_activity_tracking_is_enabled(void);
 
 #ifdef CONFIG_HRM
 /**
@@ -823,14 +823,14 @@ void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled);
  *
  * @param enabled If true, enable it.
  */
-void activity_prefs_set_blood_oxygen_enabled(bool enabled);
+void activity_prefs_set_spo2_enabled(bool enabled);
 
 /**
  * @brief Enable or disable SpO2 sampling during detected activities.
  *
  * @param enabled If true, enable it.
  */
-void activity_prefs_set_blood_oxygen_activity_tracking_enabled(bool enabled);
+void activity_prefs_set_spo2_activity_tracking_enabled(bool enabled);
 
 /**
  * @brief Get the background SpO2 measurement interval.
