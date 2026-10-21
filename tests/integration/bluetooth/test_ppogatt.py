@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-"""The Pebble Protocol over GATT, as the watch runs it: windows sized to the
-link, transfers larger than a window, resets from either side, lost
+"""The Pebble Protocol over GATT, as the watch runs it: the windows it agrees
+on, transfers larger than a window, resets from either side, lost
 packets, and the versions it agrees on with a phone hosting the service."""
 
 import re
@@ -80,15 +80,15 @@ def _ping_all(pebble, count, timeout=60.0):
 
 @BOTH
 @pytest.mark.parametrize("mtu", [MIN_MTU, LARGE_MTU], ids=["mtu23", "mtu_large"])
-def test_window_follows_mtu(dut, watch, phones, mtu):
-    """With the minimum MTU the watch sends a full window, with a large one
-    the version 0 window; either way it takes the phone's."""
+def test_window_is_phones(dut, watch, phones, mtu):
+    """Whatever the MTU, the watch offers its largest window and takes the
+    phone's."""
     since = dut.logs.mark()
     phone = phones(mtu=mtu).connect()
     role, version, tx, rx = _opened(dut, since)
     assert (role, version) == ("reversed", 1)
     assert phone.link.att_mtu == min(mtu, 256)
-    assert tx == (PHONE_WINDOW if mtu == MIN_MTU else V0_WINDOW)
+    assert tx == PHONE_WINDOW
     assert 0 < rx <= PHONE_WINDOW
 
 
@@ -174,22 +174,24 @@ def test_watch_resends_lost_data(dut, watch, phones):
 
 @BOTH
 @pytest.mark.parametrize(
-    "meta,version,window",
+    "meta,version,tx_window",
     [
         (_meta(0, 0, session_type=False), 0, V0_WINDOW),
-        (PPOG_FORWARD_META, 1, None),
-        (_meta(0, 5), 1, None),
+        (PPOG_FORWARD_META, 1, PHONE_WINDOW),
+        (_meta(0, 5), 1, PHONE_WINDOW),
     ],
     ids=["v0", "v1", "newer"],
 )
-def test_forward_version(dut, watch, phones, meta, version, window):
-    """A phone hosting the service gets the highest version both support."""
+def test_forward_version(dut, watch, phones, meta, version, tx_window):
+    """A phone hosting the service gets the highest version both support,
+    and from version 1 on the watch takes the phone's TX window."""
     since = dut.logs.mark()
     phone = phones(ppogatt=FORWARD, forward_meta=meta).connect()
     role, agreed, tx, rx = _opened(dut, since)
     assert (role, agreed) == ("forward", version)
-    if window is not None:
-        assert (tx, rx) == (window, window)
+    assert tx == tx_window
+    if version == 0:
+        assert rx == V0_WINDOW
     assert phone.watch_version() is not None
 
 

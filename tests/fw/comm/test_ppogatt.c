@@ -25,6 +25,8 @@
 
 #define MTU_SIZE         (158)
 #define MAX_PAYLOAD_SIZE (MTU_SIZE - 3 /* ATT Header size */ - 1 /* PPoGATT Packet Header */)
+//! The windows the phone offers, as libpebble3 does.
+#define PHONE_WINDOW_SIZE (25)
 
 uint16_t s_mtu_size;
 
@@ -212,8 +214,10 @@ static void prv_receive_reset_complete(pbl_bt_characteristic_t characteristic) {
                                       s_client_reset_complete_size, PBL_BT_GATT_ERROR_SUCCESS);
 }
 
-static const uint8_t s_short_data_fragment[] = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+//! Tests send it shortened by one byte per SN, across a whole window.
+static const uint8_t s_short_data_fragment[PHONE_WINDOW_SIZE] = {
+  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc,
+  0xdd, 0xee, 0xff, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
 };
 
 static void prv_receive_short_data_fragment(pbl_bt_characteristic_t characteristic, uint8_t sn) {
@@ -250,7 +254,7 @@ static void prv_assert_sent_reset_complete(pbl_bt_characteristic_t characteristi
   if (s_ppogatt_version > 0) {
     expected_response.payload = (const PPoGATTResetCompleteClientIDPayloadV1){
       .ppogatt_max_rx_window = PPOGATT_V1_DESIRED_RX_WINDOW_SIZE,
-      .ppogatt_max_tx_window = PPOGATT_V0_WINDOW_SIZE,
+      .ppogatt_max_tx_window = PPOGATT_SN_MOD_DIV - 1,
     };
   }
 
@@ -292,8 +296,8 @@ static void prv_assert_sent_data(pbl_bt_characteristic_t characteristic, uint8_t
 
 void test_ppogatt__initialize(void) {
   s_ppogatt_version = USE_PPOGATT_VERSION;
-  s_tx_window_size = 25;
-  s_rx_window_size = 25;
+  s_tx_window_size = PHONE_WINDOW_SIZE;
+  s_rx_window_size = PHONE_WINDOW_SIZE;
   prv_create_expected_reset_request();
   prv_create_expected_reset_complete();
   s_mtu_size = MTU_SIZE;
@@ -806,8 +810,10 @@ void test_ppogatt__send_data_max_payload_size(void) {
   uint8_t *data = malloc(MAX_PAYLOAD_SIZE);
   memset(data, 0x55, MAX_PAYLOAD_SIZE);
 
+  // The fake send buffer holds a V0 window of these:
+  const uint8_t num_packets = MIN(s_tx_window_size, PPOGATT_V0_WINDOW_SIZE);
   Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
-  for (uint8_t sn = 0; sn < s_tx_window_size; ++sn) {
+  for (uint8_t sn = 0; sn < num_packets; ++sn) {
     cl_assert_equal_b(
         fake_comm_session_send_buffer_write_raw_by_transport(transport, data, MAX_PAYLOAD_SIZE),
         true);
@@ -824,6 +830,9 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
 
   uint8_t sn = 0;
   Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  // V1 takes the phone's window whatever the MTU:
+  cl_assert_equal_i(s_tx_window_size,
+                    (s_ppogatt_version > 0) ? PHONE_WINDOW_SIZE : PPOGATT_V0_WINDOW_SIZE);
 
   // Get s_rx_window_size packets in flight:
   for (sn = 0; sn < s_tx_window_size; ++sn) {
@@ -1019,7 +1028,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
 
   // Some new data has been queued up in the mean time:
   cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                        transport, s_short_data_fragment, sizeof(s_short_data_fragment) - sn),
+                        transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
                     true);
   // Only now the system task callback is fired (prv_send_next_packets_async):
   fake_comm_session_process_send_next();
@@ -1027,7 +1036,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
   // Expect the new data to come through, no retransmissions at all.
   // (They all got considered Ack'd by the one Ack)
   prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn /* sn */,
-                       s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
+                       s_short_data_fragment, sizeof(s_short_data_fragment));
 }
 
 void test_ppogatt__retransmit_max_number_of_times(void) {

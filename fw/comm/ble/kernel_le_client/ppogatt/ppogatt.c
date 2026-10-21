@@ -569,27 +569,8 @@ static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_i
   client->out = (typeof(client->out)){};
 
   if (prv_client_supports_enhanced_throughput_features(client)) {
-    // Set our desired window sizes
-    //
-    // Note: since version 4.0, the Android app negotiates the MTU size before starting up a PPoG
-    // session so we can use this info to dynamically change the window size. The iOS app has no
-    // control over when the MTU size is negotiated (though it seems to be negotiated in time) but
-    // if we were to use PPoG V1 on iOS it's something we should check
-
-    if (prv_get_max_payload_size(client) < GATT_MTU_MINIMUM) {
-      // If a device does not support large a large MTU/payload size, its throughput is severely
-      // limited by the window size leading. This prevents us from handling throughput sensitive
-      // operations (such as dictation) in time and results in dropped packets. To improve this,
-      // negotiate a larger TX Window size so we can get a better data rate.
-      client->out.tx_window_size = (PPOGATT_SN_MOD_DIV - 1);
-    } else {
-      // TODO: For larger MTU sizes, we wind up getting throttled by default_kernel_sender.c
-      // because it limits kernel heap space allocated to ~1kB. We may be able to improve App
-      // Message throughput by fiddling with this value but at the same time we run a higher risk
-      // of blowing up the Dialog Heap if a lot of payloads get queued up on the BT chip. When time
-      // allows, we should fiddle with this setting to see if we can optimize outbound throughput
-      client->out.tx_window_size = PPOGATT_V0_WINDOW_SIZE;
-    }
+    // Set our desired window sizes: the largest TX window, the phone caps it
+    client->out.tx_window_size = (PPOGATT_SN_MOD_DIV - 1);
 
     const uint8_t desired_rx_window =
         MIN(PPOGATT_V1_DESIRED_RX_WINDOW_SIZE, PPOGATT_SN_MOD_DIV - 1);
