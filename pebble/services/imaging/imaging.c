@@ -42,18 +42,22 @@ static PBL_MUTEX_DEFINE(s_lock);
 static uint32_t s_unsupported_types;
 static struct pbl_pp_session *s_latched_session;
 
-static struct {
+typedef struct {
   bool active;
   uint8_t token;
-  uint8_t type;
   uint32_t total_bytes;
   uint32_t received_bytes;
   ResidentImage *image;
-} s_rx;
+} Reassembly;
 
-static void prv_rx_reset(void) {
-  resident_image_destroy(s_rx.image);
-  s_rx = (typeof(s_rx)){};
+// One per type, so that consumers can fetch at the same time
+static Reassembly s_rx[ImagingImageTypeCount];
+
+static void prv_rx_reset(uint8_t type) {
+  if (type < ARRAY_LENGTH(s_rx)) {
+    resident_image_destroy(s_rx[type].image);
+    s_rx[type] = (Reassembly){};
+  }
 }
 
 void imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {
@@ -76,9 +80,10 @@ static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *rea
   unsigned int free_bytes;
   unsigned int largest_free;
   pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &largest_free);
-  PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size, largest_free);
+  PBL_LOG_WRN("Drop %s type=%u token=%u size=%" PRIu32 " largest=%u", reason, type, token, size,
+              largest_free);
 
-  prv_rx_reset();
+  prv_rx_reset(type);
   ImagingTransferFailedHandler handler = (type < ARRAY_LENGTH(s_transfer_failed_handlers))
                                              ? s_transfer_failed_handlers[type]
                                              : nullptr;
@@ -213,20 +218,26 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       s_unsupported_types |= (1u << type);
       pbl_mutex_unlock(&s_lock);
     }
-    prv_rx_reset();
+    prv_rx_reset(type);
     prv_deliver(hdr->token, type, nullptr);
     return;
   }
 
   if (hdr->flags & ImagingResponseFlagNoImage) {
-    prv_rx_reset();
+    prv_rx_reset(type);
     prv_deliver(hdr->token, type, nullptr);
     return;
   }
 
+  if (type >= ARRAY_LENGTH(s_rx)) {
+    PBL_LOG_WRN("Drop chunk of unknown type=%u", type);
+    return;
+  }
+  Reassembly *rx = &s_rx[type];
+
   if (hdr->flags & ImagingResponseFlagFirst) {
-    if (s_rx.active) {
-      prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "superseded");
+    if (rx->active) {
+      prv_drop(type, rx->token, rx->total_bytes, "superseded");
     }
     if ((size_t)(msg_end - cursor) < 6) {
       prv_drop(type, hdr->token, length, "short image header");
@@ -266,23 +277,20 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       palette[i] = (GColor){.argb = cursor[i]};
     }
     cursor += palette_count;
-    s_rx.image = resident_image_create(GSize(width, height), gformat, palette, max_palette);
-    if (!s_rx.image) {
+    rx->image = resident_image_create(GSize(width, height), gformat, palette, max_palette);
+    if (!rx->image) {
       prv_drop(type, hdr->token, total, "image allocation failed");
       return;
     }
-    s_rx.active = true;
-    s_rx.token = hdr->token;
-    s_rx.type = type;
-    s_rx.total_bytes = total;
-    s_rx.received_bytes = 0;
+    rx->active = true;
+    rx->token = hdr->token;
+    rx->total_bytes = total;
+    rx->received_bytes = 0;
   }
 
-  if (!s_rx.active || s_rx.token != hdr->token || s_rx.type != type) {
-    // ponytail: one reassembly slot, so two consumers fetching at once costs one of them a retry.
-    // Add a per-token slot array if that ever matters.
-    if (s_rx.active) {
-      prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "transfer mismatch");
+  if (!rx->active || rx->token != hdr->token) {
+    if (rx->active) {
+      prv_drop(type, rx->token, rx->total_bytes, "transfer mismatch");
     } else {
       prv_drop(type, hdr->token, length, "no matching transfer");
     }
@@ -291,24 +299,24 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
 
   // Reliable, ordered transport: require contiguous in-order chunks with an exact declared length.
   const size_t avail = (cursor <= msg_end) ? (size_t)(msg_end - cursor) : 0;
-  if (hdr->offset != s_rx.received_bytes || hdr->chunk_len != avail ||
-      (uint32_t)hdr->offset + hdr->chunk_len > s_rx.total_bytes) {
-    prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "invalid chunk");
+  if (hdr->offset != rx->received_bytes || hdr->chunk_len != avail ||
+      (uint32_t)hdr->offset + hdr->chunk_len > rx->total_bytes) {
+    prv_drop(type, rx->token, rx->total_bytes, "invalid chunk");
     return;
   }
-  resident_image_write(s_rx.image, hdr->offset, cursor, hdr->chunk_len);
-  s_rx.received_bytes += hdr->chunk_len;
+  resident_image_write(rx->image, hdr->offset, cursor, hdr->chunk_len);
+  rx->received_bytes += hdr->chunk_len;
 
   if (hdr->flags & ImagingResponseFlagLast) {
-    if (s_rx.received_bytes != s_rx.total_bytes) {
-      prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "incomplete image");
+    if (rx->received_bytes != rx->total_bytes) {
+      prv_drop(type, rx->token, rx->total_bytes, "incomplete image");
       return;
     }
     // Ownership of the image moves to the handler
-    ResidentImage *image = s_rx.image;
-    const uint8_t token = s_rx.token;
-    s_rx.image = nullptr;
-    prv_rx_reset();
+    ResidentImage *image = rx->image;
+    const uint8_t token = rx->token;
+    rx->image = nullptr;
+    prv_rx_reset(type);
     prv_deliver(token, type, image);
   }
 }
@@ -327,10 +335,12 @@ void imaging_handle_comm_session_event(const PebbleCommSessionEvent *event) {
   // the endpoint receiver, so touching s_rx is safe. Also clear the unsupported-type latch here
   // rather than relying solely on the pointer comparison in prv_type_latched_unsupported: a
   // future session could be allocated at the address of the freed one.
-  if (s_rx.active) {
-    prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "session closed");
-  } else {
-    prv_rx_reset();
+  for (uint8_t type = 0; type < ARRAY_LENGTH(s_rx); type++) {
+    if (s_rx[type].active) {
+      prv_drop(type, s_rx[type].token, s_rx[type].total_bytes, "session closed");
+    } else {
+      prv_rx_reset(type);
+    }
   }
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   s_latched_session = nullptr;
