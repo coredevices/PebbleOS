@@ -38,9 +38,9 @@ COPY_AS_IS = ("test_bitblt_circular__*.png", "test_gbitmap_sequence__*.apng",
 
 def _convert_pbi(src, dst):
     bitdepth = None
-    if any(word in dst for word in (".8bit.", "~obelix", "~gabbro")):
+    if any(word in dst for word in (".8bit.", "~emery", "~gabbro")):
         img_fmt = "color_raw"
-    elif any(word in dst for word in (".1bit.", "~asterix")):
+    elif any(word in dst for word in (".1bit.", "~flint")):
         img_fmt = "bw"
     else:
         img_fmt = "color"  # raw and palettized color images
@@ -63,9 +63,9 @@ def _convert_pblpng(src, dst):
     bit_suffix = re.search(r"(\d)bit(palette)?\.png", dst)
     if bit_suffix:
         bitdepth = int(bit_suffix.group(1))
-    elif any(word in dst for word in ("~obelix", "~gabbro")):
+    elif any(word in dst for word in ("~emery", "~gabbro")):
         bitdepth = 8
-    elif any(word in dst for word in ("~asterix",)):
+    elif any(word in dst for word in ("~flint",)):
         bitdepth = 1
         palette_name = "pebble2"
 

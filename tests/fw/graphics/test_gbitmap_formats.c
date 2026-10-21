@@ -77,10 +77,10 @@ void test_gbitmap_formats__create_blank_with_palette(void) {
 }
 
 void test_gbitmap_formats__display_framebuffer_bytes(void) {
-#ifdef CONFIG_BOARD_ASTERIX
+#ifdef CONFIG_PLATFORM_FLINT
   const size_t expected = 20 * 168; // 20 * 8 == 144px + 2 bytes padding per scanline
 #endif
-#ifdef CONFIG_BOARD_OBELIX
+#ifdef CONFIG_PLATFORM_EMERY
   const size_t expected = 200 * 228;
 #endif
 #ifdef CONFIG_PLATFORM_GABBRO

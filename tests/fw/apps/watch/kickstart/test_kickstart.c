@@ -126,7 +126,7 @@ void test_kickstart__render_steps_above_daily_avg(void) {
 }
 
 void test_kickstart__render_hr_bpm(void) {
-#ifdef CONFIG_BOARD_ASTERIX
+#ifdef CONFIG_PLATFORM_FLINT
   prv_set_data(&s_data, 10323, 7500, 13000, 82);
 
   window_set_on_screen(&s_data.window, true, true);
@@ -136,7 +136,7 @@ void test_kickstart__render_hr_bpm(void) {
 }
 
 void test_kickstart__render_hr_bpm_obstructed(void) {
-#ifdef CONFIG_BOARD_ASTERIX
+#ifdef CONFIG_PLATFORM_FLINT
   prv_set_data(&s_data, 10323, 7500, 13000, 82);
   prv_set_unobstructed_area_height(TIMELINE_PEEK_HEIGHT);
 
@@ -156,7 +156,7 @@ void test_kickstart__render_steps_above_daily_avg_24h(void) {
 }
 
 void test_kickstart__render_hr_bpm_24h(void) {
-#ifdef CONFIG_BOARD_ASTERIX
+#ifdef CONFIG_PLATFORM_FLINT
   s_clock_is_24h_style = true;
   prv_set_data(&s_data, 10323, 7500, 13000, 82);
 
@@ -167,7 +167,7 @@ void test_kickstart__render_hr_bpm_24h(void) {
 }
 
 void test_kickstart__render_hr_bpm_obstructed_24h(void) {
-#ifdef CONFIG_BOARD_ASTERIX
+#ifdef CONFIG_PLATFORM_FLINT
   s_clock_is_24h_style = true;
   prv_set_data(&s_data, 10323, 7500, 13000, 82);
   prv_set_unobstructed_area_height(TIMELINE_PEEK_HEIGHT);

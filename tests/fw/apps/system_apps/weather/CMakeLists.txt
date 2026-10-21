@@ -32,7 +32,7 @@ pbl_clar_test(test_weather_app_layout
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
     fw/services/clock/time.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES

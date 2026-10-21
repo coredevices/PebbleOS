@@ -24,7 +24,7 @@ pbl_clar_test(test_pfs
   SOURCES
     fw/system/hexdump.c
     tests/fakes/fake_rtc.c
-  PLATFORMS obelix
+  PLATFORMS emery
   DEFINES DUMA_DISABLED
   OVERRIDES dummy_board
 )
@@ -39,7 +39,7 @@ pbl_clar_test(test_put_bytes
     tests/fakes/fake_resource_storage.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   OVERRIDES dummy_board
 )
 
@@ -350,7 +350,7 @@ pbl_clar_test(test_shared_prf_storage_v3
     fw/services/shared_prf_storage/shared_prf_storage.c
     tests/fakes/fake_flash_region.c
     tests/fakes/fake_spi_flash.c
-  PLATFORMS obelix
+  PLATFORMS emery
   OVERRIDES shared_prf_storage_v3
 )
 

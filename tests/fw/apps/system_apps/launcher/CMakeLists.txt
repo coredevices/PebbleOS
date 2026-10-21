@@ -47,7 +47,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
     fw/services/clock/time.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   OVERRIDES dummy_board
   TEST_IMAGES
 )

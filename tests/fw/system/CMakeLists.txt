@@ -4,6 +4,6 @@
 pbl_clar_test(test_flash_region
   SOURCES
     fw/flash_region/flash_region.c
-  PLATFORMS obelix
+  PLATFORMS emery
   OVERRIDES dummy_board
 )

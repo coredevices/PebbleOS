@@ -70,7 +70,7 @@ pbl_clar_test(test_alarm_layout
     fw/services/timeline/alarm_layout.c
     fw/services/timeline/attribute.c
     fw/services/clock/time.c
-  PLATFORMS obelix gabbro
+  PLATFORMS emery gabbro
   DEFINES CAPABILITY_HAS_HEALTH_TRACKING=0
   OVERRIDES dummy_board
 )
@@ -121,7 +121,7 @@ pbl_clar_test(test_timeline_layouts
     tests/stubs/stubs_timeline_layout.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES

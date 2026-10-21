@@ -42,7 +42,7 @@ pbl_clar_test(test_workout_summary
     fw/apps/system/workout/summary.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -87,7 +87,7 @@ pbl_clar_test(test_workout_active
     fw/apps/system/workout/active.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -131,7 +131,7 @@ pbl_clar_test(test_workout_dialog
     fw/apps/system/workout/dialog.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -175,7 +175,7 @@ pbl_clar_test(test_workout_selection
     fw/apps/system/workout/selection.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES

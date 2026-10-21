@@ -26,7 +26,7 @@ pbl_clar_test(test_music
     fw/applib/ui/bitmap_layer.c
     fw/applib/ui/progress_layer.c
     fw/applib/ui/window.c
-  PLATFORMS asterix obelix gabbro
+  PLATFORMS flint emery gabbro
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES

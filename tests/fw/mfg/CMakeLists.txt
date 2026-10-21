@@ -5,6 +5,6 @@ pbl_clar_test(test_mfg_serials
   SOURCES
     fw/mfg/mfg_serials.c
     tests/fakes/fake_otp.c
-  PLATFORMS obelix
+  PLATFORMS emery
   OVERRIDES dummy_board
 )

@@ -56,7 +56,7 @@ pbl_clar_test(test_timeline_list_view
     tests/stubs/stubs_evented_timer.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -116,7 +116,7 @@ pbl_clar_test(test_timeline_no_events
     tests/stubs/stubs_evented_timer.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro
+  PLATFORMS emery gabbro
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES

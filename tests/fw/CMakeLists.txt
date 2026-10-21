@@ -137,8 +137,7 @@ pbl_clar_test(test_flash_logging
     fw/debug/flash_logging.c
     fw/flash_region/flash_region.c
     tests/fakes/fake_spi_flash.c
-  PLATFORMS asterix
-  DEFINES DUMA_DISABLED PLATFORM_ASTERIX
+  DEFINES DUMA_DISABLED
   OVERRIDES dummy_board
 )
 
@@ -198,7 +197,7 @@ pbl_clar_test(test_pebble_process_md
   SOURCES
     fw/process_management/pebble_process_info.c
     fw/process_management/pebble_process_md.c
-  PLATFORMS obelix gabbro
+  PLATFORMS emery gabbro
 )
 
 pbl_clar_test(test_phone_formatting
@@ -232,7 +231,7 @@ pbl_clar_test(test_text_layout_8_bit
     fw/applib/graphics/gtransform.c
     fw/applib/graphics/8_bit/bitblt_private.c
     tests/fakes/fake_gbitmap_png.c
-  PLATFORMS obelix
+  PLATFORMS emery
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
 )
 

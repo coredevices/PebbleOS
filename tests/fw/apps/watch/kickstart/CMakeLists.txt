@@ -32,7 +32,7 @@ pbl_clar_test(test_kickstart
     fw/apps/watch/kickstart/kickstart.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  PLATFORMS obelix gabbro asterix
+  PLATFORMS emery gabbro flint
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board
   TEST_IMAGES

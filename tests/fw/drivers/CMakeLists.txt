@@ -10,7 +10,7 @@ pbl_clar_test(test_flash_api
 pbl_clar_test(test_flash_erase
   SOURCES
     drivers/flash/flash_erase.c
-  PLATFORMS obelix
+  PLATFORMS emery
   OVERRIDES dummy_board
 )
 

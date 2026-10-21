@@ -180,6 +180,6 @@ pbl_clar_test(test_qr_code
     third_party/qr_code_generator/include
     third_party/qr_code_generator/QR-Code-generator/c
   DEFINES QRCODEGEN_TEST
-  PLATFORMS obelix
+  PLATFORMS emery
   TEST_IMAGES
 )
