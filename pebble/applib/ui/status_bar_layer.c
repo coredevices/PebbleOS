@@ -28,42 +28,95 @@ typedef struct StatusBarTextFormat {
   GFont font;
 } StatusBarTextFormat;
 
-// The two "Big & Bold" clock variants share the same larger font and taller bar; the Outlined one
-// additionally draws a black outline around the glyphs.
-static PBL_ALWAYS_INLINE bool prv_mode_is_large_bold(StatusBarLayerMode mode) {
-  return mode == StatusBarLayerModeClockLargeBold ||
-         mode == StatusBarLayerModeClockLargeBoldOutlined;
+//! Font and bar size of a mode. The large sizes center the time vertically in a taller bar.
+typedef enum StatusBarClockSize {
+  StatusBarClockSizeDefault,
+  StatusBarClockSizeLargeBold,
+  StatusBarClockSizeExtraLargeBold,
+  StatusBarClockSizeHuge,
+} StatusBarClockSize;
+
+// Outlined modes share the size of their plain mode; they only add an outline around the glyphs.
+static PBL_ALWAYS_INLINE StatusBarClockSize prv_clock_size(StatusBarLayerMode mode) {
+  switch (mode) {
+    case StatusBarLayerModeClockLargeBold:
+    case StatusBarLayerModeClockLargeBoldOutlined:
+      return StatusBarClockSizeLargeBold;
+    case StatusBarLayerModeClockExtraLargeBold:
+      return StatusBarClockSizeExtraLargeBold;
+    case StatusBarLayerModeClockHuge:
+      return StatusBarClockSizeHuge;
+    default:
+      return StatusBarClockSizeDefault;
+  }
+}
+
+// Big & Bold or larger: centered vertically in a taller bar, and kept clear of the info text.
+static PBL_ALWAYS_INLINE bool prv_mode_has_large_clock(StatusBarLayerMode mode) {
+  return prv_clock_size(mode) != StatusBarClockSizeDefault;
 }
 
 static PBL_ALWAYS_INLINE bool prv_mode_is_clock(StatusBarLayerMode mode) {
   return mode == StatusBarLayerModeClock || mode == StatusBarLayerModeClockBold ||
-         prv_mode_is_large_bold(mode);
+         prv_mode_has_large_clock(mode);
 }
 
-static PBL_ALWAYS_INLINE StatusBarTextFormat
-prv_get_text_format(const StatusBarLayerConfig *config) {
+static PBL_ALWAYS_INLINE StatusBarTextFormat prv_get_text_format(const StatusBarLayerConfig *config,
+                                                                 bool is_title) {
   const PlatformType platform = process_manager_current_platform();
   const StatusBarLayerMode mode = config ? config->mode : StatusBarLayerModeClock;
+  StatusBarClockSize size = prv_clock_size(mode);
+  // The "Huge" clock leaves no room for info text in its own font, so the info text uses the
+  // "Big & Bold" font instead.
+  if (!is_title && size == StatusBarClockSizeHuge) {
+    size = StatusBarClockSizeLargeBold;
+  }
   const char *font_key;
-  if (prv_mode_is_large_bold(mode)) {
-    font_key = PBL_PLATFORM_SWITCH(platform,
-                                   /*aplite*/ FONT_KEY_GOTHIC_18_BOLD,
-                                   /*basalt*/ FONT_KEY_GOTHIC_18_BOLD,
-                                   /*chalk*/ FONT_KEY_GOTHIC_18_BOLD,
-                                   /*diorite*/ FONT_KEY_GOTHIC_18_BOLD,
-                                   /*emery*/ FONT_KEY_GOTHIC_24_BOLD,
-                                   /*flint*/ FONT_KEY_GOTHIC_18_BOLD,
-                                   /*gabbro*/ FONT_KEY_GOTHIC_24_BOLD);
-  } else {
-    const bool bold = (mode == StatusBarLayerModeClockBold);
-    font_key = PBL_PLATFORM_SWITCH(platform,
-                                   /*aplite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-                                   /*basalt*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-                                   /*chalk*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-                                   /*diorite*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-                                   /*emery*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18,
-                                   /*flint*/ bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14,
-                                   /*gabbro*/ bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18);
+  switch (size) {
+    case StatusBarClockSizeHuge:
+      font_key = PBL_PLATFORM_SWITCH(platform,
+                                     /*aplite*/ FONT_KEY_GOTHIC_28_BOLD,
+                                     /*basalt*/ FONT_KEY_GOTHIC_28_BOLD,
+                                     /*chalk*/ FONT_KEY_GOTHIC_28_BOLD,
+                                     /*diorite*/ FONT_KEY_GOTHIC_28_BOLD,
+                                     /*emery*/ FONT_KEY_GOTHIC_36_BOLD,
+                                     /*flint*/ FONT_KEY_GOTHIC_28_BOLD,
+                                     /*gabbro*/ FONT_KEY_GOTHIC_36_BOLD);
+      break;
+    case StatusBarClockSizeExtraLargeBold:
+      font_key = PBL_PLATFORM_SWITCH(platform,
+                                     /*aplite*/ FONT_KEY_GOTHIC_24_BOLD,
+                                     /*basalt*/ FONT_KEY_GOTHIC_24_BOLD,
+                                     /*chalk*/ FONT_KEY_GOTHIC_24_BOLD,
+                                     /*diorite*/ FONT_KEY_GOTHIC_24_BOLD,
+                                     /*emery*/ FONT_KEY_GOTHIC_28_BOLD,
+                                     /*flint*/ FONT_KEY_GOTHIC_24_BOLD,
+                                     /*gabbro*/ FONT_KEY_GOTHIC_28_BOLD);
+      break;
+    case StatusBarClockSizeLargeBold:
+      font_key = PBL_PLATFORM_SWITCH(platform,
+                                     /*aplite*/ FONT_KEY_GOTHIC_18_BOLD,
+                                     /*basalt*/ FONT_KEY_GOTHIC_18_BOLD,
+                                     /*chalk*/ FONT_KEY_GOTHIC_18_BOLD,
+                                     /*diorite*/ FONT_KEY_GOTHIC_18_BOLD,
+                                     /*emery*/ FONT_KEY_GOTHIC_24_BOLD,
+                                     /*flint*/ FONT_KEY_GOTHIC_18_BOLD,
+                                     /*gabbro*/ FONT_KEY_GOTHIC_24_BOLD);
+      break;
+    case StatusBarClockSizeDefault: {
+      const bool bold = (mode == StatusBarLayerModeClockBold);
+      const char *gothic_14 = bold ? FONT_KEY_GOTHIC_14_BOLD : FONT_KEY_GOTHIC_14;
+      const char *gothic_18 = bold ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_18;
+      font_key = PBL_PLATFORM_SWITCH(platform,
+                                     /*aplite*/ gothic_14,
+                                     /*basalt*/ gothic_14,
+                                     /*chalk*/ gothic_14,
+                                     /*diorite*/ gothic_14,
+                                     /*emery*/ gothic_18,
+                                     /*flint*/ gothic_14,
+                                     /*gabbro*/ gothic_18);
+      break;
+    }
   }
   return (StatusBarTextFormat){
     .overflow_mode = GTextOverflowModeTrailingEllipsis,
@@ -72,12 +125,27 @@ prv_get_text_format(const StatusBarLayerConfig *config) {
   };
 }
 
-static int prv_height(const StatusBarLayerConfig *config) {
+static int prv_height_for_mode(StatusBarLayerMode mode) {
   const PlatformType platform = process_manager_current_platform();
-  if (config && prv_mode_is_large_bold(config->mode)) {
-    return _STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT(platform);
+  switch (prv_clock_size(mode)) {
+    case StatusBarClockSizeHuge:
+      return _STATUS_BAR_LAYER_HUGE_HEIGHT(platform);
+    case StatusBarClockSizeExtraLargeBold:
+      return _STATUS_BAR_LAYER_EXTRA_LARGE_BOLD_HEIGHT(platform);
+    case StatusBarClockSizeLargeBold:
+      return _STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT(platform);
+    case StatusBarClockSizeDefault:
+      break;
   }
   return _STATUS_BAR_LAYER_HEIGHT(platform);
+}
+
+static int prv_height(const StatusBarLayerConfig *config) {
+  return prv_height_for_mode(config ? config->mode : StatusBarLayerModeClock);
+}
+
+int16_t status_bar_layer_get_height_for_mode(StatusBarLayerMode mode) {
+  return prv_height_for_mode(mode);
 }
 
 // Function prototypes
@@ -522,7 +590,7 @@ static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayer
                                              StatusBarLayer *status_bar_layer, bool is_title,
                                              int16_t min_x, int16_t max_x, int16_t min_y,
                                              int16_t max_y, char *data) {
-  const StatusBarTextFormat text_format = prv_get_text_format(config);
+  const StatusBarTextFormat text_format = prv_get_text_format(config, is_title);
   const GFont font = text_format.font;
   const uint8_t font_height = fonts_get_font_height(font);
   const int16_t center = (max_x + min_x) / 2;
@@ -533,7 +601,7 @@ static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayer
   // starting point of text needs to be half width left of the center.
   const int16_t x_start = center - width / 2;
   int16_t y;
-  if (config && prv_mode_is_large_bold(config->mode)) {
+  if (config && prv_mode_has_large_clock(config->mode)) {
     // Center vertically in the taller bar. (font_height - 4) / 4 compensates
     // Gothic's top leading so the glyph looks optically centered; this can
     // produce a slightly negative y, which the draw context clips (intentional
@@ -607,26 +675,41 @@ static void prv_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig 
     clock_copy_time_string(config->title_text_buffer, sizeof(config->title_text_buffer));
   }
 
+  // find width of info text
+  GFont info_font = prv_get_text_format(config, false /* is_title */).font;
+  GSize max_used_size = graphics_text_layout_get_max_used_size(
+      ctx, config->info_text_buffer, info_font, GRect(0, 0, 100, prv_height(config)),
+      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
+  int16_t info_text_left_offset =
+      (int16_t)(x_offset_r - max_used_size.w - STATUS_BAR_LAYER_INFO_PADDING);
+  int16_t info_text_right_offset = (int16_t)(x_offset_r - STATUS_BAR_LAYER_INFO_PADDING);
+
   if (config->mode != StatusBarLayerModeCustomText) { // draw center text
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
     StatusBarLayer *marquee_owner =
         (status_bar_layer && !prv_mode_is_clock(config->mode)) ? status_bar_layer : nullptr;
+    int16_t title_max_x = x_offset_r;
+    // A large clock can reach the info text; move it left just far enough to clear it.
+    if (prv_mode_has_large_clock(config->mode) && max_used_size.w > 0) {
+      const GFont title_font = prv_get_text_format(config, true /* is_title */).font;
+      const int16_t title_width =
+          graphics_text_layout_get_max_used_size(ctx, config->title_text_buffer, title_font,
+                                                 GRect(0, 0, INT16_MAX, prv_height(config)),
+                                                 GTextOverflowModeFill, GTextAlignmentLeft, nullptr)
+              .w;
+      const int16_t clear_center =
+          info_text_left_offset - STATUS_BAR_LAYER_INFO_PADDING - title_width / 2;
+      if (clear_center < (x_offset_l + x_offset_r) / 2) {
+        title_max_x = 2 * clear_center - x_offset_l;
+      }
+    }
     prv_status_bar_layer_render_text(ctx, config, marquee_owner, true /* is_title */, x_offset_l,
-                                     x_offset_r, y_offset_top, y_offset_bottom,
+                                     title_max_x, y_offset_top, y_offset_bottom,
                                      config->title_text_buffer);
   } else { // TODO: here goes center text animations
   }
 
   // render info text
-  GFont info_font = prv_get_text_format(config).font;
-  // find width of info text
-  GSize max_used_size = graphics_text_layout_get_max_used_size(
-      ctx, config->info_text_buffer, info_font, GRect(0, 0, 100, prv_height(config)),
-      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
-  // use the width found to render the info text
-  int16_t info_text_left_offset =
-      (int16_t)(x_offset_r - max_used_size.w - STATUS_BAR_LAYER_INFO_PADDING);
-  int16_t info_text_right_offset = (int16_t)(x_offset_r - STATUS_BAR_LAYER_INFO_PADDING);
   prv_status_bar_layer_render_text(ctx, config, status_bar_layer, false /* is_title */,
                                    info_text_left_offset, info_text_right_offset, y_offset_top,
                                    y_offset_bottom, config->info_text_buffer);
@@ -651,7 +734,8 @@ int16_t status_layer_get_title_text_width(StatusBarLayer *status_bar_layer) {
   // other modes not supported
   PBL_ASSERTN(prv_mode_is_clock(status_bar_layer->config.mode));
 
-  const StatusBarTextFormat text_format = prv_get_text_format(&status_bar_layer->config);
+  const StatusBarTextFormat text_format =
+      prv_get_text_format(&status_bar_layer->config, true /* is_title */);
   char time_text_buffer[TITLE_TEXT_BUFFER_SIZE];
   clock_copy_time_string(time_text_buffer, sizeof(time_text_buffer));
   GContext *ctx = graphics_context_get_current_context();
