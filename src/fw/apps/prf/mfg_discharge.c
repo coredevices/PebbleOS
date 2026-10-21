@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "applib/app.h"
+#include "applib/app_timer.h"
 #include "applib/battery_state_service.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
@@ -23,6 +24,7 @@
 #include "util/time/time.h"
 
 #define CHARGE_TARGET_PERCENT 99
+#define CHARGE_TIMEOUT_MS (90 * MS_PER_MINUTE)
 #define DRAIN_TARGET_PERCENT 70
 #define SETTLE_DURATION_S (2 * SECONDS_PER_HOUR)
 #define MAX_DURATION_S (10 * SECONDS_PER_HOUR)
@@ -36,6 +38,12 @@ typedef enum {
   DischargeStatePass,
   DischargeStateFail,
 } DischargeTestState;
+
+typedef enum {
+  DischargeFailReasonNone = 0,
+  DischargeFailReasonChargeError,
+  DischargeFailReasonChargeTimeout,
+} DischargeFailReason;
 
 static const char *status_text[] = {
     [DischargeStateChargeTo100] = "Charge to 100%",
@@ -56,6 +64,10 @@ typedef struct {
   char details_string[256];
 
   DischargeTestState test_state;
+  DischargeFailReason fail_reason;
+
+  AppTimer *charge_timer;
+  uint32_t charge_error;
 
   // Battery state at end of settling phase
   int32_t initial_voltage_mv;
@@ -72,6 +84,41 @@ static void prv_render(AppData *data);
 
 static void prv_handle_battery_state(BatteryChargeState charge) {
   prv_render(app_state_get_user_data());
+}
+
+static void prv_end_charge_phase(AppData *data) {
+  if (data->charge_timer != NULL) {
+    app_timer_cancel(data->charge_timer);
+    data->charge_timer = NULL;
+  }
+}
+
+static void prv_fail_charge_phase(AppData *data, DischargeFailReason reason) {
+  prv_end_charge_phase(data);
+  battery_state_service_unsubscribe();
+
+  data->test_state = DischargeStateFail;
+  data->fail_reason = reason;
+
+  if (reason == DischargeFailReasonChargeError) {
+    if (battery_charge_error_get(&data->charge_error) < 0) {
+      data->charge_error = 0;
+    }
+    PBL_LOG_ERR("Discharge test FAIL - charge error 0x%" PRIx32, data->charge_error);
+  } else {
+    PBL_LOG_ERR("Discharge test FAIL - charge timeout");
+  }
+
+  prv_render(data);
+}
+
+static void prv_handle_charge_timeout(void *context) {
+  AppData *data = context;
+
+  data->charge_timer = NULL;
+  if (data->test_state == DischargeStateChargeTo100) {
+    prv_fail_charge_phase(data, DischargeFailReasonChargeTimeout);
+  }
 }
 
 static void prv_finish_test(AppData *data) {
@@ -146,7 +193,15 @@ static void prv_render(AppData *data) {
   charge_state = battery_get_charge_state();
 
   switch (data->test_state) {
-    case DischargeStateChargeTo100:
+    case DischargeStateChargeTo100: {
+      BatteryChargeStatus chg_status;
+
+      if ((battery_charge_status_get(&chg_status) == 0) &&
+          (chg_status == BatteryChargeStatusError)) {
+        prv_fail_charge_phase(data, DischargeFailReasonChargeError);
+        return;
+      }
+
       if (!charge_state.is_plugged) {
         sniprintf(data->details_string, sizeof(data->details_string),
                   "Plug charger\n%" PRIu8 "%%", charge_state.charge_percent);
@@ -162,11 +217,12 @@ static void prv_render(AppData *data) {
         sniprintf(data->details_string, sizeof(data->details_string),
                   "Charging\n%" PRIu8 "%%", charge_state.charge_percent);
       } else {
+        prv_end_charge_phase(data);
         data->test_state = DischargeStateDrainTo70;
         prv_render(data);
         return;
       }
-      break;
+    } break;
 
     case DischargeStateDrainTo70:
       if (charge_state.is_plugged) {
@@ -214,6 +270,18 @@ static void prv_render(AppData *data) {
 
     case DischargeStatePass:
     case DischargeStateFail: {
+      if (data->fail_reason == DischargeFailReasonChargeError) {
+        sniprintf(data->details_string, sizeof(data->details_string), "Charge error\n0x%02" PRIx32,
+                  data->charge_error);
+        break;
+      }
+
+      if (data->fail_reason == DischargeFailReasonChargeTimeout) {
+        sniprintf(data->details_string, sizeof(data->details_string),
+                  "Charge timeout\n%" PRIu8 "%%", charge_state.charge_percent);
+        break;
+      }
+
       int32_t voltage_drop = data->initial_voltage_mv - battery_const.v_mv;
       int8_t percent_drop = (int8_t)data->initial_percent - (int8_t)charge_state.charge_percent;
 
@@ -253,6 +321,7 @@ static void prv_raw_button_down_handler(ClickRecognizerRef recognizer, void *con
   const uint8_t up_down = (1 << BUTTON_ID_UP) | (1 << BUTTON_ID_DOWN);
   if ((data->buttons_held_bitset & up_down) == up_down &&
       data->test_state == DischargeStateChargeTo100) {
+    prv_end_charge_phase(data);
     data->test_state = DischargeStateDrainTo70;
     prv_render(data);
   }
@@ -314,6 +383,7 @@ static void app_init(void) {
   // monitor samples ~once a minute and forces an update on plug/unplug) to
   // avoid per-second wake-ups while waiting for the charger
   battery_state_service_subscribe(prv_handle_battery_state);
+  data->charge_timer = app_timer_register(CHARGE_TIMEOUT_MS, prv_handle_charge_timeout, data);
   prv_render(data);
 
   app_window_stack_push(window, true /* Animated */);
