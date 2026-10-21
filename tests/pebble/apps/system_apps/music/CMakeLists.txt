@@ -26,6 +26,7 @@ pbl_clar_test(test_music
     pebble/applib/ui/bitmap_layer.c
     pebble/applib/ui/progress_layer.c
     pebble/applib/ui/window.c
+    pebble/services/imaging/resident_image.c
   PLATFORMS flint emery gabbro
   DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
   OVERRIDES dummy_board

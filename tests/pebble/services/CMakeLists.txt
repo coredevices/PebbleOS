@@ -111,6 +111,7 @@ pbl_clar_test(test_music_endpoint
     tests/fakes/fake_rtc.c
     pebble/services/music/endpoint.c
     pebble/services/music/service.c
+    pebble/services/imaging/resident_image.c
 )
 
 pbl_clar_test(test_ping
@@ -122,6 +123,7 @@ pbl_clar_test(test_imaging
   SOURCES
     tests/fakes/fake_session.c
     pebble/services/imaging/imaging.c
+    pebble/services/imaging/resident_image.c
 )
 
 pbl_clar_test(test_compass_cal

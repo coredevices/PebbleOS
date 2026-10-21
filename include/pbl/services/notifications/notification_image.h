@@ -7,7 +7,7 @@
 
 #include <pbl/util/uuid.h>
 
-struct GBitmap;
+struct ResidentImage;
 
 /**
  * @defgroup services_notifications_notification_image Notification images
@@ -56,9 +56,9 @@ bool notification_image_claim(const Uuid *item_id, uint8_t *token_out);
  * returns NULL. The lock is recursive.
  *
  * @param item_id Item whose image to get.
- * @return Stored bitmap, owned by the slot, or NULL if there is none for @p item_id.
+ * @return Stored image, owned by the slot, or NULL if there is none for @p item_id.
  */
-const struct GBitmap *notification_image_lock(const Uuid *item_id);
+const struct ResidentImage *notification_image_lock(const Uuid *item_id);
 
 /** @brief Unlock the slot locked by notification_image_lock(). */
 void notification_image_unlock(void);
@@ -76,15 +76,14 @@ bool notification_image_is_pending(const Uuid *item_id);
 /**
  * @brief Store a delivered image.
  *
- * Takes ownership of @p bitmap; it, its pixel data and its palette must be allocated on the kernel
- * heap. A stale token frees the bitmap.
+ * Takes ownership of @p image. A stale token frees it.
  *
  * @param token Token returned by notification_image_claim().
- * @param bitmap Delivered image, or NULL when the phone had no image.
+ * @param image Delivered image, or NULL when the phone had no image.
  * @return true if the slot resolved, so anything showing the notification must redraw, also when
- *         @p bitmap is NULL as that removes the pending placeholder.
+ *         @p image is NULL as that removes the pending placeholder.
  */
-bool notification_image_store(uint8_t token, struct GBitmap *bitmap);
+bool notification_image_store(uint8_t token, struct ResidentImage *image);
 
 /** @brief Release the slot and free the stored image. */
 void notification_image_clear(void);

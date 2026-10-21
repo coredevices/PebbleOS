@@ -11,7 +11,7 @@
 
 #include <kernel/events.h>
 
-struct GBitmap;
+typedef struct ResidentImage ResidentImage;
 struct pbl_pp_session;
 
 /**
@@ -25,8 +25,8 @@ struct pbl_pp_session;
  * phone advertises image-fetch support.
  *
  * @code{.c}
- * static void prv_received(uint8_t token, struct GBitmap *bitmap) {
- *   // bitmap is NULL if the phone has none; otherwise the handler owns it
+ * static void prv_received(uint8_t token, ResidentImage *image) {
+ *   // image is NULL if the phone has none; otherwise the handler owns it
  * }
  *
  * imaging_register_handler(ImagingImageTypeAlbumArt, prv_received);
@@ -39,11 +39,11 @@ struct pbl_pp_session;
  * @brief Called on KernelMain when a requested image has been received.
  *
  * @param token Token of the request.
- * @param bitmap Received image, or NULL if the phone has none (@ref ImagingResponseFlagNoImage).
- *               Ownership of a non-NULL bitmap and its pixel and palette buffers passes to the
- *               handler.
+ * @param image Received image, or NULL if the phone has none (@ref ImagingResponseFlagNoImage).
+ *              Ownership of a non-NULL image passes to the handler, which frees it with
+ *              resident_image_destroy().
  */
-typedef void (*ImagingReceivedHandler)(uint8_t token, struct GBitmap *bitmap);
+typedef void (*ImagingReceivedHandler)(uint8_t token, ResidentImage *image);
 
 /**
  * @brief Called before the buffers for an incoming image are allocated.

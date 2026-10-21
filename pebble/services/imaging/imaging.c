@@ -12,6 +12,8 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/imaging.h>
+#include <pbl/services/resident_image.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -20,7 +22,7 @@
 PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
 
 // Full-screen 4-bpp on the largest supported display (260x260) is ~34 KB. Cap generously and reject
-// anything larger to bound kernel-heap use against a malformed or hostile phone.
+// anything larger to bound memory use against a malformed or hostile phone.
 #define IMAGING_MAX_BYTES       (40 * 1024)
 #define IMAGING_MAX_DIM         (300)
 #define IMAGING_PALETTE_ENTRIES (16)
@@ -44,19 +46,13 @@ static struct {
   bool active;
   uint8_t token;
   uint8_t type;
-  GBitmapFormat format;
-  uint16_t width;
-  uint16_t height;
-  uint16_t row_size_bytes;
   uint32_t total_bytes;
   uint32_t received_bytes;
-  uint8_t *pixels;
-  GColor *palette; // NULL for non-palette formats
+  ResidentImage *image;
 } s_rx;
 
 static void prv_rx_reset(void) {
-  pbl_free(s_rx.pixels);
-  pbl_free(s_rx.palette);
+  resident_image_destroy(s_rx.image);
   s_rx = (typeof(s_rx)){};
 }
 
@@ -98,14 +94,12 @@ static uint8_t prv_response_type(const ImagingResponseHeader *hdr) {
   return (hdr->flags & IMAGING_RESPONSE_FLAG_TYPE_MASK) >> IMAGING_RESPONSE_FLAG_TYPE_SHIFT;
 }
 
-static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
+static void prv_deliver(uint8_t token, uint8_t type, ResidentImage *image) {
   ImagingReceivedHandler handler = (type < ARRAY_LENGTH(s_handlers)) ? s_handlers[type] : nullptr;
   if (handler) {
-    handler(token, bitmap);
-  } else if (bitmap) {
-    pbl_free(bitmap->addr);
-    pbl_free(bitmap->palette);
-    pbl_free(bitmap);
+    handler(token, image);
+  } else {
+    resident_image_destroy(image);
   }
 }
 
@@ -267,29 +261,19 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       will_receive(hdr->token);
     }
 
-    s_rx.pixels = pbl_zalloc(total);
-    if (!s_rx.pixels) {
-      prv_drop(type, hdr->token, total, "pixel allocation failed");
-      return;
+    GColor palette[IMAGING_PALETTE_ENTRIES] = {};
+    for (uint8_t i = 0; i < palette_count; ++i) {
+      palette[i] = (GColor){.argb = cursor[i]};
     }
-    if (max_palette > 0) {
-      s_rx.palette = pbl_zalloc(IMAGING_PALETTE_ENTRIES * sizeof(GColor));
-      if (!s_rx.palette) {
-        prv_drop(type, hdr->token, total, "palette allocation failed");
-        return;
-      }
-      for (uint8_t i = 0; i < palette_count; ++i) {
-        s_rx.palette[i] = (GColor){.argb = cursor[i]};
-      }
-      cursor += palette_count;
+    cursor += palette_count;
+    s_rx.image = resident_image_create(GSize(width, height), gformat, palette, max_palette);
+    if (!s_rx.image) {
+      prv_drop(type, hdr->token, total, "image allocation failed");
+      return;
     }
     s_rx.active = true;
     s_rx.token = hdr->token;
     s_rx.type = type;
-    s_rx.format = gformat;
-    s_rx.width = width;
-    s_rx.height = height;
-    s_rx.row_size_bytes = row_size;
     s_rx.total_bytes = total;
     s_rx.received_bytes = 0;
   }
@@ -312,7 +296,7 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
     prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "invalid chunk");
     return;
   }
-  memcpy(s_rx.pixels + hdr->offset, cursor, hdr->chunk_len);
+  resident_image_write(s_rx.image, hdr->offset, cursor, hdr->chunk_len);
   s_rx.received_bytes += hdr->chunk_len;
 
   if (hdr->flags & ImagingResponseFlagLast) {
@@ -320,23 +304,12 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "incomplete image");
       return;
     }
-    GBitmap *bmp = pbl_zalloc(sizeof(GBitmap));
-    if (!bmp) {
-      prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "bitmap allocation failed");
-      return;
-    }
-    bmp->addr = s_rx.pixels;
-    bmp->row_size_bytes = s_rx.row_size_bytes;
-    bmp->info.format = s_rx.format;
-    bmp->info.version = GBITMAP_VERSION_CURRENT;
-    bmp->bounds = (GRect){{0, 0}, {s_rx.width, s_rx.height}};
-    bmp->palette = s_rx.palette;
-    // Ownership of the pixel and palette buffers moves into the bitmap.
+    // Ownership of the image moves to the handler
+    ResidentImage *image = s_rx.image;
     const uint8_t token = s_rx.token;
-    s_rx.pixels = nullptr;
-    s_rx.palette = nullptr;
+    s_rx.image = nullptr;
     prv_rx_reset();
-    prv_deliver(token, type, bmp);
+    prv_deliver(token, type, image);
   }
 }
 
@@ -350,7 +323,7 @@ void imaging_handle_comm_session_event(const PebbleCommSessionEvent *event) {
     return;
   }
   // The system session closed: free any partially received image so an aborted transfer doesn't
-  // hold its pixel buffer until the next one starts. This runs on KernelMain, the same task as
+  // hold its pixels until the next one starts. This runs on KernelMain, the same task as
   // the endpoint receiver, so touching s_rx is safe. Also clear the unsupported-type latch here
   // rather than relying solely on the pointer comparison in prv_type_latched_unsupported: a
   // future session could be allocated at the address of the freed one.

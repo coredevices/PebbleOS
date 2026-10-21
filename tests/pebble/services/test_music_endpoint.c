@@ -8,6 +8,7 @@
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/music_endpoint_types.h>
 #include <pbl/services/music_internal.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
@@ -149,11 +150,16 @@ static void prv_set_dummy_server_connected(bool connected) {
   music_set_connected_server(&s_dummy_server_implementation, connected /* connected */);
 }
 
-static GBitmap *prv_make_album_art(void) {
-  GBitmap *bitmap = pbl_zalloc(sizeof(*bitmap));
-  bitmap->addr = pbl_zalloc(4);
-  bitmap->palette = pbl_zalloc(sizeof(GColor));
-  return bitmap;
+// Album art is never drawn here, and only uses 8-bit color
+uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) {
+  return width;
+}
+
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+}
+
+static ResidentImage *prv_make_album_art(void) {
+  return resident_image_create(GSize(4, 2), GBitmapFormat8Bit, nullptr, 0);
 }
 
 static void prv_assert_no_data_sent_cb(uint16_t endpoint_id, const uint8_t *data,
