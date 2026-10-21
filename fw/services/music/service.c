@@ -8,6 +8,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/music_internal.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/util/math.h>
 
 #include <applib/graphics/gtypes.h>
@@ -66,11 +67,11 @@ struct MusicServiceContext {
   //! @see music_skip_seeks_within_track
   bool skip_seeks_within_track;
 
-  //! Album art for the current track, or NULL if none. Owned by the service; freed with
-  //! pbl_free. Deliberately kept (up to ~34 KB of kernel heap on the largest displays) even
-  //! while the Music app is closed, so reopening it shows the cover instantly; a track change,
-  //! NoArt reply or server disconnect replaces or frees it.
-  GBitmap *album_art;
+  //! Album art for the current track, or NULL if none. Owned by the service. Deliberately kept (up
+  //! to ~34 KB of kernel heap on the largest displays) even while the Music app is closed, so
+  //! reopening it shows the cover instantly; a track change, NoArt reply or server disconnect
+  //! replaces or frees it.
+  ResidentImage *album_art;
 
   //! The now_playing_generation the current album art response was for. A track change bumps
   //! now_playing_generation without clearing the art (so the previous art stays on screen until the
@@ -90,8 +91,8 @@ struct MusicServiceContext {
 static void prv_free_album_art_locked(void);
 
 // Album art arrives via the generic image-fetch service; store it against the requesting token.
-static void prv_imaging_album_art_received(uint8_t token, GBitmap *bitmap) {
-  music_set_album_art(bitmap, token);
+static void prv_imaging_album_art_received(uint8_t token, ResidentImage *image) {
+  music_set_album_art(image, token);
 }
 
 static void prv_imaging_album_art_will_receive(uint8_t token) {
@@ -146,9 +147,7 @@ static bool prv_str_differs(const char *dest, const char *src, size_t src_length
 //! Free the currently-stored album art. Caller must hold the mutex.
 static void prv_free_album_art_locked(void) {
   if (s_music_ctx.album_art) {
-    pbl_free(s_music_ctx.album_art->addr);
-    pbl_free(s_music_ctx.album_art->palette);
-    pbl_free(s_music_ctx.album_art);
+    resident_image_destroy(s_music_ctx.album_art);
     s_music_ctx.album_art = nullptr;
   }
 }
@@ -570,24 +569,20 @@ static void prv_put_album_art_updated_event(void) {
   event_put(&e);
 }
 
-void music_set_album_art(GBitmap *bitmap, uint8_t token) {
+void music_set_album_art(ResidentImage *image, uint8_t token) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
 
   if (token != s_music_ctx.now_playing_generation) {
     // The track changed while the art was in flight; it's for the wrong song. Drop it.
     PBL_LOG_DBG("Drop stale album art token=%u current=%u", token,
                 s_music_ctx.now_playing_generation);
-    if (bitmap) {
-      pbl_free(bitmap->addr);
-      pbl_free(bitmap->palette);
-      pbl_free(bitmap);
-    }
+    resident_image_destroy(image);
     pbl_mutex_unlock(&s_music_ctx.mutex);
     return;
   }
 
   prv_free_album_art_locked();
-  s_music_ctx.album_art = bitmap;
+  s_music_ctx.album_art = image;
   // Record that we've now got a response (art, or NULL for NoArt) for this track, so the Music app
   // stops re-requesting until the track changes again.
   s_music_ctx.album_art_generation = token;
@@ -617,9 +612,9 @@ bool music_album_art_is_current(void) {
   return is_current;
 }
 
-const GBitmap *music_album_art_lock(void) {
+const ResidentImage *music_album_art_lock(void) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
-  // Held until music_album_art_unlock so the bitmap can't be freed mid-draw. The recursive mutex is
+  // Held until music_album_art_unlock so the image can't be freed mid-draw. The recursive mutex is
   // released by the matching unlock call.
   return s_music_ctx.album_art;
 }

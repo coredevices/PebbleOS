@@ -93,12 +93,12 @@ uint8_t music_get_now_playing_generation(void) {
   return s_music_now_playing_generation;
 }
 
-// Album art fake: the tests hand the "service-owned" cover bitmap straight to the app.
-static GBitmap *s_album_art;
+// Album art fake: the tests hand the "service-owned" cover straight to the app.
+static ResidentImage *s_album_art;
 static bool s_album_art_current;
 static int s_album_art_lock_depth;
 
-const struct GBitmap *music_album_art_lock(void) {
+const struct ResidentImage *music_album_art_lock(void) {
   s_album_art_lock_depth++;
   return s_album_art;
 }
@@ -280,12 +280,8 @@ void test_music__initialize(void) {
 void test_music__cleanup(void) {
   // The app must never leave the service's art bitmap locked.
   cl_assert_equal_i(s_album_art_lock_depth, 0);
-  if (s_album_art) {
-    free(s_album_art->addr);
-    free(s_album_art->palette);
-    free(s_album_art);
-    s_album_art = nullptr;
-  }
+  resident_image_destroy(s_album_art);
+  s_album_art = nullptr;
 }
 
 // Helpers
@@ -315,8 +311,11 @@ static void prv_render(void) {
 // Hand the app the cover the imaging service would have delivered: art-square-sized (the size the
 // app requests for this platform), 4-bit palette.
 static void prv_receive_album_art(void) {
-  s_album_art = get_gbitmap_from_pbi("test_music__art_cover_" PLATFORM_NAME ".pbi");
+  GBitmap *cover = get_gbitmap_from_pbi("test_music__art_cover_" PLATFORM_NAME ".pbi");
+  cl_assert(cover != nullptr);
+  s_album_art = resident_image_create_from_bitmap(cover);
   cl_assert(s_album_art != nullptr);
+  gbitmap_destroy(cover);
   s_album_art_current = true;
 }
 #endif

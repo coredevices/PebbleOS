@@ -1174,8 +1174,8 @@ static void prv_redraw_current_layout(void *unused) {
   }
 }
 
-static void prv_imaging_notification_received(uint8_t token, GBitmap *bitmap) {
-  if (!notification_image_store(token, bitmap) || !s_in_use) {
+static void prv_imaging_notification_received(uint8_t token, ResidentImage *image) {
+  if (!notification_image_store(token, image) || !s_in_use) {
     return;
   }
   // Delivery lands on KernelMain, which is where the modal renders; the notification history app

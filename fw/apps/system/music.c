@@ -11,6 +11,7 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/music.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/math.h>
 #include <pbl/util/trig.h>
@@ -1283,15 +1284,15 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
 
 static void prv_album_art_update_proc(Layer *layer, GContext *ctx) {
   // Hold the art locked for the whole draw so the service can't free it mid-blit.
-  const GBitmap *art = music_album_art_lock();
+  const ResidentImage *art = music_album_art_lock();
   if (art && shell_prefs_get_music_show_album_art()) {
     // The phone renders the whole cover to the content width, so it fills the square; centre it in
     // case the box is a touch shorter than the cover.
-    const GSize sz = art->bounds.size;
+    const GSize sz = resident_image_get_size(art);
     const GRect b = layer->bounds;
     const GRect dst = GRect((b.size.w - sz.w) / 2, (b.size.h - sz.h) / 2, sz.w, sz.h);
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-    graphics_draw_bitmap_in_rect(ctx, art, &dst);
+    resident_image_draw(ctx, art, &dst);
   }
   music_album_art_unlock();
 #if MUSIC_ROUND_MEDIA_LAYOUT
@@ -1495,7 +1496,7 @@ static void prv_artist_restore(MusicAppData *data) {
 //! and the scrolling title, and outline the clock so it stays legible over
 //! the cover. A full-window repaint clears the moved layers' old pixels.
 static void prv_apply_art_appearance(MusicAppData *data) {
-  const GBitmap *art = music_album_art_lock();
+  const ResidentImage *art = music_album_art_lock();
   data->has_album_art = (art != nullptr) && shell_prefs_get_music_show_album_art();
   music_album_art_unlock();
 

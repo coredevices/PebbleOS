@@ -5,6 +5,7 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/notification_image.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/services/timeline/notification_jumboji_table.h>
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -279,15 +280,15 @@ static void prv_image_node_callback(GContext *ctx, const GRect *box,
 
   if (render) {
     const Uuid *item_id = &layout->info.item->header.id;
-    const GBitmap *bitmap = notification_image_lock(item_id);
-    if (bitmap) {
-      const GSize bitmap_size = bitmap->bounds.size;
+    const ResidentImage *art = notification_image_lock(item_id);
+    if (art) {
+      const GSize art_size = resident_image_get_size(art);
       const GRect dest = {
-        {origin.x + (image.w - bitmap_size.w) / 2, origin.y + (image.h - bitmap_size.h) / 2},
-        bitmap_size,
+        {origin.x + (image.w - art_size.w) / 2, origin.y + (image.h - art_size.h) / 2},
+        art_size,
       };
       graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-      graphics_draw_bitmap_in_rect(ctx, bitmap, &dest);
+      resident_image_draw(ctx, art, &dest);
     } else if (notification_image_is_pending(item_id)) {
       // Still transferring: fill the reserved area so the card doesn't look broken. Once the phone
       // answers NoImage this stops and the space is simply blank.

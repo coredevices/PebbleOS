@@ -226,7 +226,7 @@ void music_request_low_latency_for_period(uint32_t period_seconds);
  */
 const char *music_get_connected_server_debug_name(void);
 
-struct GBitmap;
+struct ResidentImage;
 
 /**
  * @brief Get the now-playing generation token.
@@ -259,7 +259,7 @@ bool music_album_art_is_current(void);
  *
  * @return Album art owned by the service, or NULL if there is none.
  */
-const struct GBitmap *music_album_art_lock(void);
+const struct ResidentImage *music_album_art_lock(void);
 
 /** @brief Release the album art borrowed with music_album_art_lock(). */
 void music_album_art_unlock(void);
