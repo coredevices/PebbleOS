@@ -190,6 +190,11 @@ static const TimelineResourceId REMINDER_FALLBACK_ICON = TIMELINE_RESOURCE_NOTIF
 LayoutLayer *notification_layout_create(const LayoutLayerConfig *config);
 
 /**
+ * @brief Status bar mode of the notification window, from the selected status bar style.
+ */
+StatusBarLayerMode notification_layout_get_status_bar_mode(void);
+
+/**
  * @brief Check the attributes of a notification or reminder.
  *
  * @param existing_attributes Array of NumAttributeIds flags, indexed by AttributeId.

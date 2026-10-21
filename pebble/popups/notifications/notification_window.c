@@ -1282,18 +1282,6 @@ static void prv_dnd_status_changed(bool dnd_is_active) {
 // Notification Window API
 ///////////////////////////
 
-static StatusBarLayerMode prv_status_bar_mode_for_style(NotificationStatusBarStyle style) {
-  switch (style) {
-    case NotificationStatusBarStyle_Bold:
-      return StatusBarLayerModeClockBold;
-    case NotificationStatusBarStyle_LargeBold:
-      return StatusBarLayerModeClockLargeBold;
-    case NotificationStatusBarStyle_Default:
-    default:
-      return StatusBarLayerModeClock;
-  }
-}
-
 #ifdef CONFIG_TOUCH
 // The action button layer spans the full window for drawing purposes only; it is decorative and
 // owns no touch region. Report that it contains no point so touch hit-testing falls through to the
@@ -1362,9 +1350,7 @@ static void prv_init_notification_window(bool is_modal, bool allow_dismiss_all) 
   status_bar_layer_set_colors(status_layer, PBL_IF_RECT_ELSE(GColorBlack, GColorClear),
                               PBL_IF_RECT_ELSE(GColorWhite, GColorBlack));
   status_bar_layer_set_separator_mode(status_layer, StatusBarLayerSeparatorModeNone);
-  status_bar_layer_set_mode(
-      status_layer,
-      prv_status_bar_mode_for_style(alerts_preferences_get_notification_status_bar_style()));
+  status_bar_layer_set_mode(status_layer, notification_layout_get_status_bar_mode());
   const int16_t status_bar_height = status_layer->layer.frame.size.h;
 
   // prepare the swap layer frame using notification_layout values including the status bar

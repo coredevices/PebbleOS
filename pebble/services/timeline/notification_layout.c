@@ -200,6 +200,22 @@ static bool prv_should_enlarge_emoji(NotificationLayout *layout) {
           prv_get_emoji_icon(layout) != INVALID_RESOURCE);
 }
 
+StatusBarLayerMode notification_layout_get_status_bar_mode(void) {
+  switch (alerts_preferences_get_notification_status_bar_style()) {
+    case NotificationStatusBarStyle_Bold:
+      return StatusBarLayerModeClockBold;
+    case NotificationStatusBarStyle_LargeBold:
+      return StatusBarLayerModeClockLargeBold;
+    case NotificationStatusBarStyle_ExtraLargeBold:
+      return StatusBarLayerModeClockExtraLargeBold;
+    case NotificationStatusBarStyle_Huge:
+      return StatusBarLayerModeClockHuge;
+    case NotificationStatusBarStyle_Default:
+    default:
+      return StatusBarLayerModeClock;
+  }
+}
+
 #if NOTIFICATION_IMAGE_SUPPORTED
 //! Space above and below the image band. Its own constant because body_padding is 0 for rect at
 //! the default content size, which leaves the image touching the body text.
@@ -536,14 +552,10 @@ static PBL_CONST_FUNC int32_t prv_interpolate_linear(int32_t out_min, int32_t ou
   return out_min + (out_max - out_min) * (progress - in_min) / (in_max - in_min);
 }
 
-// Effective notification status bar height: taller when the "Big & Bold" clock
-// style is selected, otherwise the default. The content top is pushed down by
-// this amount, so the banner clip math must match it.
+// Effective notification status bar height: taller for the larger clock styles. The content top
+// is pushed down by this amount, so the banner clip math must match it.
 static int16_t prv_notif_status_bar_height(void) {
-  return (alerts_preferences_get_notification_status_bar_style() ==
-          NotificationStatusBarStyle_LargeBold)
-             ? STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT
-             : STATUS_BAR_LAYER_HEIGHT;
+  return status_bar_layer_get_height_for_mode(notification_layout_get_status_bar_mode());
 }
 
 static void prv_draw_banner_round(NotificationLayout *notification_layout, GContext *ctx,

@@ -185,6 +185,10 @@ typedef enum {
   NotificationStatusBarStyle_Bold = 1,
   /** Large bold clock. */
   NotificationStatusBarStyle_LargeBold = 2,
+  /** Extra large bold clock. */
+  NotificationStatusBarStyle_ExtraLargeBold = 3,
+  /** Largest bold clock. */
+  NotificationStatusBarStyle_Huge = 4,
   /** Number of styles. */
   NotificationStatusBarStyleCount,
 } NotificationStatusBarStyle;

@@ -439,8 +439,10 @@ void test_notification_window__body_icon(void) {
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
-void test_notification_window__big_bold(void) {
-  s_notification_status_bar_style = NotificationStatusBarStyle_LargeBold;
+//! Renders the same short notification with the given status bar style. The caller checks the
+//! image, as its name comes from the test function.
+static void prv_render_notification_with_status_bar_style(NotificationStatusBarStyle style) {
+  s_notification_status_bar_style = style;
   s_test_data = (NotificationWindowTestData){
     .icon_id = TIMELINE_RESOURCE_NOTIFICATION_FACEBOOK_MESSENGER,
     .title = "Henry Levak",
@@ -452,6 +454,10 @@ void test_notification_window__big_bold(void) {
   const unsigned int num_down_scrolls =
       PBL_IF_RECT_ELSE((PreferredContentSizeDefault < PreferredContentSizeLarge) ? 1 : 0, 0);
   prv_prepare_canvas_and_render_notification_windows(num_down_scrolls);
+}
+
+void test_notification_window__big_bold(void) {
+  prv_render_notification_with_status_bar_style(NotificationStatusBarStyle_LargeBold);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
 
@@ -465,5 +471,15 @@ void test_notification_window__emoji(void) {
     .background_color = GColorPictonBlue,
   };
   prv_prepare_canvas_and_render_notification_windows(0 /* num_down_scrolls */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_notification_window__bigger_bolder(void) {
+  prv_render_notification_with_status_bar_style(NotificationStatusBarStyle_ExtraLargeBold);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_notification_window__huge(void) {
+  prv_render_notification_with_status_bar_style(NotificationStatusBarStyle_Huge);
   FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
 }
