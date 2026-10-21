@@ -765,6 +765,15 @@ static void prv_handle_data(PPoGATTClient *client, const PPoGATTPacket *packet,
       .sn = client->in.next_expected_data_sn,
       .type = PPoGATTPacketTypeAck,
     };
+    if (!prv_client_supports_enhanced_throughput_features(client)) {
+      client->out.send_rx_ack_now = true;
+    } else {
+      client->out.outstanding_rx_ack_count++;
+      if (client->out.outstanding_rx_ack_count >= (client->out.rx_window_size / 2)) {
+        // we want to ACK data before the other side is blocking waiting for an ACK
+        client->out.send_rx_ack_now = true;
+      }
+    }
     prv_send_next_packets(client);
 
     client->in.next_expected_data_sn = prv_next_sn(client->in.next_expected_data_sn);
@@ -1495,16 +1504,6 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
   if (client->out.reset_packet_byte != 0) {
     return prv_prepare_next_reset_packet(client, heap_packet_in_out, payload_size_out);
   } else if (client->out.ack_packet_byte != 0) {
-    if (!prv_client_supports_enhanced_throughput_features(client)) {
-      client->out.send_rx_ack_now = true;
-    } else {
-      client->out.outstanding_rx_ack_count++;
-      if (client->out.outstanding_rx_ack_count >= (client->out.rx_window_size / 2)) {
-        // we want to ACK data before the other side is blocking waiting for an ACK
-        client->out.send_rx_ack_now = true;
-      }
-    }
-
     if (client->out.send_rx_ack_now) {
       if (new_timer_scheduled(client->rx_ack_timer, nullptr)) {
         new_timer_stop(client->rx_ack_timer);

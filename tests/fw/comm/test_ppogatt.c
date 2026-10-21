@@ -760,6 +760,25 @@ void test_ppogatt__ack_received_data(void) {
   }
 }
 
+void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
+  test_ppogatt__open_session_when_found_pebble_app();
+  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  const pbl_bt_characteristic_t data = s_characteristics[0][PPoGATTCharacteristicData];
+
+  // V0 Acks every packet, V1 every half window:
+  const uint8_t num_packets = (s_ppogatt_version > 0) ? (s_rx_window_size / 2) : 1;
+  for (uint8_t sn = 0; sn < num_packets - 1; ++sn) {
+    prv_receive_short_data_fragment(data, sn);
+    // Send attempts don't count as received packets:
+    for (uint8_t i = 0; i < s_rx_window_size; ++i) {
+      ppogatt_send_next(transport);
+    }
+    fake_gatt_client_op_assert_no_write();
+  }
+  prv_receive_short_data_fragment(data, num_packets - 1);
+  prv_assert_sent_ack(data, num_packets - 1);
+}
+
 void test_ppogatt__close(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
