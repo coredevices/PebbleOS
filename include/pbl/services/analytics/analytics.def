@@ -160,3 +160,7 @@ PBL_ANALYTICS_METRIC_DEFINE_TIMER(psram_hold_ms)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(psram_epoch_resets)
 // Peak usage of the volatile kernel heap in external RAM, in bytes.
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(volatile_heap_high_water)
+// Image cache lookups and evictions.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_hits)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_misses)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_evictions)

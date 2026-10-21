@@ -520,3 +520,13 @@ pbl_clar_test(test_voice_speex
 pbl_clar_test(test_resident_image
   SOURCES fw/services/imaging/resident_image.c
 )
+
+pbl_clar_test(test_image_cache
+  SOURCES fw/services/imaging/image_cache.c fw/kernel/psram_image_pool.c
+  DEFINES
+    CONFIG_PSRAM_RETENTION
+    CONFIG_PSRAM_IMAGE_POOL
+    CONFIG_PSRAM_IMAGE_SLOTS=18
+    CONFIG_IMAGE_CACHE
+    CONFIG_PSRAM_IDLE_RELEASE_MS=5000
+)
