@@ -36,9 +36,11 @@
 //! Delay in milliseconds before retrying a failed meta characteristic read
 #define PPOGATT_META_READ_RETRY_DELAY_MS (500)
 
-//! Delay in milliseconds before retrying a send that failed for lack of BT
-//! stack buffers (reversed role: NimBLE has no "buffers freed" event)
+//! Delay in milliseconds before the first retry of a send that failed for lack
+//! of BT stack buffers (NimBLE has no "buffers freed" event)
 #define PPOGATT_SEND_RETRY_DELAY_MS (20)
+//! Each further retry doubles the delay, up to this
+#define PPOGATT_SEND_RETRY_MAX_DELAY_MS (200)
 
 typedef enum {
   //! Watch is the GATT client; phone hosts the PPoG service.

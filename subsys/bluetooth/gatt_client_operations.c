@@ -74,7 +74,12 @@ enum pbl_bt_errno pbl_bt_gatt_write_without_response(GAPLEConnection *connection
   }
 
   int rc = ble_gattc_write_no_rsp_flat(conn_handle, att_handle, value, value_length);
-  if (rc != 0) {
+  if (rc == BLE_HS_ENOMEM) {
+    // Usually nothing was sent. Rarely, the first ACL fragments of a PDU that
+    // spans several went out; the peer discards that PDU at the next start
+    // fragment.
+    return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
+  } else if (rc != 0) {
     PBL_LOG_ERR("Failed to write without response: %d", rc);
     return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + rc;
   }

@@ -129,14 +129,14 @@ typedef struct PPoGATTClient {
   //! Guards prv_send_next_packets against re-entry while bt_lock is dropped.
   bool send_in_progress;
 
-  //! Number of consecutive send attempts that failed for lack of BT stack
-  //! buffers (reversed role only); 0 when not stalled.
+  //! Number of consecutive send retries for lack of BT stack buffers; 0 when
+  //! not stalled.
   uint16_t send_retry_count;
 
   TimerID rx_ack_timer; //! Timer to ensure Acks for data are dispatched regularly
 
   //! Timer to retry sending after the BT stack ran out of buffers
-  //! (reversed role only; NimBLE has no "buffers freed" event to wait for)
+  //! (NimBLE has no "buffers freed" event to wait for)
   TimerID send_retry_timer;
 
   //! Whether the PPoGATT server transports "System", "App" or "Hybrid" PP sessions.
@@ -1498,6 +1498,22 @@ static void prv_send_retry_timer_cb(void *data) {
   launcher_task_add_callback(prv_send_retry_kernelmain_cb, data);
 }
 
+//! Out of mbufs (e.g. inbound flood during a firmware update). NimBLE has no
+//! "buffers freed" event, so retry later, backing off while the stall lasts.
+static void prv_retry_send_later(PPoGATTClient *client) {
+  if (new_timer_scheduled(client->send_retry_timer, nullptr)) {
+    return;
+  }
+  if (client->send_retry_count == 0) {
+    PBL_LOG_DBG("PPoGATT out of buffers, retrying");
+  }
+  // Double the delay per retry; the inner MIN only bounds the shift.
+  const uint32_t delay_ms = MIN(PPOGATT_SEND_RETRY_DELAY_MS << MIN(client->send_retry_count, 16),
+                                PPOGATT_SEND_RETRY_MAX_DELAY_MS);
+  client->send_retry_count++;
+  new_timer_start(client->send_retry_timer, delay_ms, prv_send_retry_timer_cb, client, 0);
+}
+
 static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
                                                     PPoGATTPacket **heap_packet_in_out,
                                                     uint16_t *payload_size_out) {
@@ -1642,18 +1658,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
     const enum pbl_bt_errno e =
         prv_write_packet(client, packet, sizeof(PPoGATTPacket) + payload_size);
     if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
-      if (client->role == PPoGATTRoleReversed) {
-        // Out of mbufs (e.g. inbound flood during a firmware update). NimBLE
-        // has no "buffers freed" event, so retry after a short delay.
-        if (client->send_retry_count++ == 0) {
-          PBL_LOG_WRN("Reversed PPoG out of buffers, retrying");
-        }
-        if (!new_timer_scheduled(client->send_retry_timer, nullptr)) {
-          new_timer_start(client->send_retry_timer, PPOGATT_SEND_RETRY_DELAY_MS,
-                          prv_send_retry_timer_cb, client, 0);
-        }
-      }
-      // Forward: wait for "Buffer Empty" event (see ppogatt_handle_buffer_empty)
+      prv_retry_send_later(client);
       break;
     } else if (e != PBL_BT_ERRNO_OK) {
       // Most likely the LE connection got busted, don't think retrying will help.
@@ -1661,7 +1666,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
       break;
     }
     if (client->send_retry_count) {
-      PBL_LOG_INFO("Reversed PPoG send recovered after %u retries", client->send_retry_count);
+      PBL_LOG_DBG("PPoGATT send recovered after %u retries", client->send_retry_count);
       client->send_retry_count = 0;
     }
     prv_finalize_queued_packet(client, payload_size);

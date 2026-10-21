@@ -910,6 +910,35 @@ void test_ppogatt__handle_bluetooth_stack_queue_full_and_empty_events(void) {
                        s_short_data_fragment, sizeof(s_short_data_fragment));
 }
 
+void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(void) {
+  test_ppogatt__open_session_when_found_pebble_app();
+  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  const pbl_bt_characteristic_t data = s_characteristics[0][PPoGATTCharacteristicData];
+
+  for (uint8_t sn = 0; sn < 2; ++sn) {
+    fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
+                          transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+                      true);
+    ppogatt_send_next(transport);
+
+    // NimBLE has no "Buffer Empty" event; the retry timer backs off:
+    uint32_t delay_ms = PPOGATT_SEND_RETRY_DELAY_MS;
+    for (int i = 0; i < 6; ++i) {
+      fake_gatt_client_op_assert_no_write();
+      cl_assert_equal_i(stub_new_timer_timeout(stub_new_timer_get_next()),
+                        MIN(delay_ms, PPOGATT_SEND_RETRY_MAX_DELAY_MS));
+      stub_new_timer_invoke(1);
+      delay_ms *= 2;
+    }
+
+    fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_OK);
+    stub_new_timer_invoke(1);
+    prv_assert_sent_data(data, sn, s_short_data_fragment, sizeof(s_short_data_fragment));
+    // The next stall starts over at the shortest delay.
+  }
+}
+
 void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t sn = 0;

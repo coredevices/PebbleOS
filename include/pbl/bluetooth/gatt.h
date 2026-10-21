@@ -192,6 +192,7 @@ void pbl_bt_gatt_send_changed_indication(const struct pbl_bt_device_internal *de
  * @param att_handle Handle of the attribute.
  * @retval PBL_BT_ERRNO_OK The write was queued.
  * @retval PBL_BT_ERRNO_INVALID_STATE @p connection is not connected.
+ * @retval PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES Out of buffers. Transient: retry after a short delay.
  * @return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN plus the backend error code on other failures.
  */
 enum pbl_bt_errno pbl_bt_gatt_write_without_response(GAPLEConnection *connection,
