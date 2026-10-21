@@ -49,17 +49,18 @@ config SF32LB52_PSRAM
     depends on SOC_SF32LB52_HAS_PSRAM
     select EXTRAM
     select HAL_SIFLI_MPI_PSRAM
+    select PSRAM_RETENTION
     help
       Bring up the PSRAM in the SiP (MPI1) and use it as external RAM.
       Its size is set by the variant. Its type is detected at boot from
       the package ID, as a variant may ship with more than one.
 
 config SF32LB52_PSRAM_HALF_SLEEP
-    bool "Put the PSRAM in half-sleep during deep sleep"
+    bool "Always retain the PSRAM in deep sleep (debug)"
     depends on SF32LB52_PSRAM
-    default y
     help
-      Half-sleep retains data at a lower current than standby, at the
-      cost of a 150 us wake-up on every deep sleep exit.
+      Put the PSRAM in half-sleep on every deep sleep, even without a
+      retention hold, instead of deep power-down. Costs about 30 uA
+      while idle; only meant for measurements and debugging.
 
 endif # SOC_SF32LB52

@@ -4,7 +4,10 @@
 #include "psram.h"
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/psram.h>
 #include <pbl/mcu/cache.h>
+#include <pbl/services/analytics/analytics.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
@@ -28,8 +31,28 @@ static const PsramType s_types[8] = {
   [6] = {"Winbond HyperBus", SPI_MODE_HBPSRAM},
 };
 
+typedef enum {
+  PsramStateActive,
+  PsramStateHalfSleep,
+  PsramStateDeepPowerDown,
+} PsramState;
+
 static FLASH_HandleTypeDef s_handle;
+static qspi_configure_t s_cfg;
 static const PsramType *s_type;
+
+// Holds are counted under s_lock. The idle thread reads them, and moves the PSRAM between states,
+// with interrupts masked and every other thread blocked, so it never sees a transition halfway.
+static PBL_MUTEX_DEFINE(s_lock);
+static uint32_t s_holds;
+static volatile PsramState s_state;
+static volatile uint32_t s_epoch;
+static uint32_t s_dpd_wakes;
+
+extern uint8_t __extram_bss_start[];
+extern uint8_t __extram_bss_end[];
+extern uint8_t __disposable_bss_start[];
+extern uint8_t __disposable_bss_end[];
 
 static uint8_t prv_get_pid(void) {
   return ((hwp_hpsys_cfg->IDR & HPSYS_CFG_IDR_PID_Msk) >> HPSYS_CFG_IDR_PID_Pos) & 0x7;
@@ -88,44 +111,128 @@ void soc_sf32lb_psram_init(void) {
   // MPI1 runs from SYSCLK (DLL1, 240 MHz): 120 MHz DDR on the bus
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_PSRAM1, RCC_CLK_FLASH_SYSCLK);
 
-  qspi_configure_t cfg = {
+  s_cfg = (qspi_configure_t){
     .Instance = FLASH1,
     .base = MPI1_MEM_BASE,
     .msize = CONFIG_EXTRAM_SIZE / 0x100000,
     .SpiMode = s_type->mode,
   };
 
-  ret = HAL_MPI_PSRAM_Init(&s_handle, &cfg, 1);
+  ret = HAL_MPI_PSRAM_Init(&s_handle, &s_cfg, 1);
   PBL_ASSERTN(ret == HAL_OK);
 }
 
-void soc_sf32lb_psram_enter_low_power(void) {
+static bool prv_dpd_supported(void) {
 #ifdef CONFIG_SF32LB52_PSRAM_HALF_SLEEP
-  // No write-back may reach the PSRAM while it sleeps
-  dcache_flush_all();
-  HAL_MPI_PSRAM_ENT_LOWP(&s_handle, s_type->mode);
+  return false;
+#else
+  // Only disposable data may be lost
+  if (__extram_bss_end - __extram_bss_start != 0) {
+    return false;
+  }
+  // Legacy OPI parts have no deep power-down path
+  return s_type->mode != SPI_MODE_LEGPSRAM;
 #endif
+}
+
+static void prv_wake_from_dpd(void) {
+  HAL_StatusTypeDef ret;
+
+  ret = HAL_MPI_EXIT_LOWP(&s_handle, s_type->mode);
+  PBL_ASSERTN(ret == HAL_OK);
+
+  // Deep power-down resets the PSRAM configuration registers
+  ret = HAL_MPI_PSRAM_Init(&s_handle, &s_cfg, 1);
+  PBL_ASSERTN(ret == HAL_OK);
+
+  s_state = PsramStateActive;
+  s_dpd_wakes++;
+  PBL_ANALYTICS_ADD(psram_epoch_resets, 1);
+}
+
+void psram_retain_acquire(void) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  if (s_holds++ == 0U) {
+    PBL_ANALYTICS_TIMER_START(psram_hold_ms);
+  }
+  if (s_state == PsramStateDeepPowerDown) {
+    prv_wake_from_dpd();
+  }
+  pbl_mutex_unlock(&s_lock);
+}
+
+void psram_retain_release(void) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  PBL_ASSERTN(s_holds > 0U);
+  if (--s_holds == 0U) {
+    PBL_ANALYTICS_TIMER_STOP(psram_hold_ms);
+  }
+  pbl_mutex_unlock(&s_lock);
+}
+
+bool psram_is_retained(void) {
+  return s_holds > 0U;
+}
+
+uint32_t psram_epoch(void) {
+  return s_epoch;
+}
+
+void soc_sf32lb_psram_enter_low_power(void) {
+  HAL_StatusTypeDef ret;
+
+  if (s_state != PsramStateActive) {
+    return;
+  }
+
+  if ((s_holds > 0U) || !prv_dpd_supported()) {
+    // No write-back may reach the PSRAM while it sleeps
+    dcache_flush_all();
+    ret = HAL_MPI_PSRAM_ENT_LOWP(&s_handle, s_type->mode);
+    PBL_ASSERTN(ret == HAL_OK);
+    s_state = PsramStateHalfSleep;
+    return;
+  }
+
+  // Nor may a dirty line be evicted into it, or a stale one be hit after it is powered back up
+  dcache_flush_invalidate_all();
+  if (s_type->mode == SPI_MODE_HBPSRAM) {
+    ret = HAL_HYPER_PSRAM_DPD(&s_handle);
+  } else {
+    ret = HAL_MPI_PSRAM_DPD(&s_handle);
+  }
+  PBL_ASSERTN(ret == HAL_OK);
+  // Without a pause before the clocks are switched off, the HCPU sometimes hangs until the
+  // watchdog resets it
+  HAL_Delay_us(100);
+  s_state = PsramStateDeepPowerDown;
+  s_epoch++;
 }
 
 void soc_sf32lb_psram_exit_low_power(void) {
-#ifdef CONFIG_SF32LB52_PSRAM_HALF_SLEEP
-  HAL_MPI_EXIT_LOWP(&s_handle, s_type->mode);
-#endif
+  HAL_StatusTypeDef ret;
+
+  // Left in deep power-down until the next hold
+  if (s_state == PsramStateHalfSleep) {
+    ret = HAL_MPI_EXIT_LOWP(&s_handle, s_type->mode);
+    PBL_ASSERTN(ret == HAL_OK);
+    s_state = PsramStateActive;
+  }
 }
 
 #ifdef CONFIG_SHELL
-extern uint8_t __extram_bss_start[];
-extern uint8_t __extram_bss_end[];
-
 static int prv_cmd_psram(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_shell_print(sh, "Type: %s (PID %u)", s_type->name, prv_get_pid());
-  pbl_shell_print(sh, "Used: %" PRIu32 " of %" PRIu32 " bytes",
-                  (uint32_t)(__extram_bss_end - __extram_bss_start), (uint32_t)CONFIG_EXTRAM_SIZE);
-#ifdef CONFIG_SF32LB52_PSRAM_HALF_SLEEP
-  pbl_shell_print(sh, "Deep sleep: half-sleep");
-#else
-  pbl_shell_print(sh, "Deep sleep: standby");
-#endif
+  pbl_shell_print(sh, "Used: %" PRIu32 " retained + %" PRIu32 " disposable of %" PRIu32 " bytes",
+                  (uint32_t)(__extram_bss_end - __extram_bss_start),
+                  (uint32_t)(__disposable_bss_end - __disposable_bss_start),
+                  (uint32_t)CONFIG_EXTRAM_SIZE);
+  pbl_shell_print(sh, "Holds: %" PRIu32 ", epoch: %" PRIu32 ", deep power-down wakes: %" PRIu32,
+                  s_holds, s_epoch, s_dpd_wakes);
+  pbl_shell_print(sh, "State: %s",
+                  (s_state == PsramStateDeepPowerDown) ? "deep power-down" : "active");
+  pbl_shell_print(sh, "Deep sleep without holds: %s",
+                  prv_dpd_supported() ? "deep power-down" : "half-sleep");
   return 0;
 }
 
