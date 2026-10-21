@@ -3,3 +3,4 @@
 
 pbl_library()
 pbl_library_sources(imaging.c resident_image.c)
+pbl_library_sources_ifdef(CONFIG_IMAGE_CACHE image_cache.c)
