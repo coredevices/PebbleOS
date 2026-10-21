@@ -540,7 +540,7 @@ static void prv_wind_in_user_units(int mph, const void *owner, int *speed, const
       break;
     case UnitsWind_Knots:
       *speed = ((mph * 869) + 500) / 1000;
-      *unit = i18n_get(i18n_noop("kn"), owner);
+      *unit = i18n_get(i18n_noop("kt"), owner);
       break;
     default:
       *speed = ((mph * 1609) + 500) / 1000;
