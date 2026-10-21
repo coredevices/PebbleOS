@@ -63,7 +63,7 @@ typedef const struct HRMDevice {
 /**
  * @brief Queue tuning protocol data received over BLE for processing on the system task.
  *
- * Only with @c CONFIG_BT_GH3X2X_TUNING_SERVICE.
+ * Only with @c CONFIG_BT_SERVICE_GH3X2X_TUNING.
  *
  * @param context Heap buffer holding a 32-bit length followed by the data; freed once processed.
  * @return True if queued.

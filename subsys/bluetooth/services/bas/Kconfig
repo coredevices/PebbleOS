@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_SERVICE_BAS
+    bool "Battery Service"
+    default y
+    select NIMBLE_BLE_SVC_BAS
+    help
+      Standard GATT Battery Service, reporting the battery level
+      (pbl/bluetooth/bas.h).

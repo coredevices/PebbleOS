@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_SERVICE_DIS
+    bool "Device Information Service"
+    default y
+    select NIMBLE_BLE_SVC_DIS
+    help
+      Standard GATT Device Information Service, with the model, serial
+      number, firmware and software revisions and manufacturer
+      (pbl/bluetooth/dis.h).

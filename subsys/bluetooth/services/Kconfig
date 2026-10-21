@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Services"
+
+rsource "bas/Kconfig"
+rsource "dis/Kconfig"
+rsource "gh3x2x_tuning/Kconfig"
+rsource "ppog_reversed/Kconfig"
+rsource "pps/Kconfig"
+
+endmenu

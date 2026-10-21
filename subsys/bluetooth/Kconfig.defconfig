@@ -17,12 +17,6 @@ endchoice
 config NIMBLE_BLE_HS_AUTO_START
     default n
 
-config NIMBLE_BLE_SVC_BAS
-    default y
-
-config NIMBLE_BLE_SVC_DIS
-    default y
-
 # LE Secure Connections only, with MITM protection: mode 1 level 4.
 config NIMBLE_BLE_SM_BONDING
     default y

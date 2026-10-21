@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "nimble_type_conversions.h"
-
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
+#include <bluetooth/nimble_type_conversions.h>
+#include <bluetooth/services/services.h>
 #include <comm/ble/gap_le_connection.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
@@ -149,7 +149,7 @@ static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
   },
 };
 
-void pebble_pairing_service_init(void) {
+void pbl_bt__pps_init(void) {
   int rc;
 
   rc = ble_gatts_count_cfg(pebble_pairing_svc);

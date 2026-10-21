@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_SERVICE_PPS
+    bool "Pebble Pairing Service"
+    default y
+    help
+      GATT service through which the phone app checks the connection
+      status and triggers pairing (pbl/bluetooth/pebble_pairing_service.h).

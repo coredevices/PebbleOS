@@ -3,7 +3,12 @@
 
 #include <pbl/bluetooth/bas.h>
 
+#include <bluetooth/services/services.h>
 #include <services/bas/ble_svc_bas.h>
+
+void pbl_bt__bas_init(void) {
+  ble_svc_bas_init();
+}
 
 void pbl_bt_bas_handle_update(uint8_t percent) {
   ble_svc_bas_battery_level_set(percent);

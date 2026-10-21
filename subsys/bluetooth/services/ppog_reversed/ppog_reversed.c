@@ -1,15 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ppog_reversed_service.h"
-
-#include "nimble_type_conversions.h"
-
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
+#include <bluetooth/nimble_type_conversions.h>
+#include <bluetooth/services/services.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>
@@ -121,7 +119,7 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
 
 static struct ble_gap_event_listener s_gap_event_listener;
 
-void ppog_reversed_service_init(void) {
+void pbl_bt__ppog_reversed_init(void) {
   int rc = ble_gatts_count_cfg(s_ppog_reversed_svc);
   PBL_ASSERTN(rc == 0);
   rc = ble_gatts_add_svcs(s_ppog_reversed_svc);

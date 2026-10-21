@@ -277,7 +277,7 @@ void gh3x2x_wear_evt_notify(bool is_wear) {
   HRM->state->is_wear = is_wear;
 }
 
-#ifdef CONFIG_BT_GH3X2X_TUNING_SERVICE
+#ifdef CONFIG_BT_SERVICE_GH3X2X_TUNING
 void gh3x2x_timer_init(uint32_t period_ms) {
   if (HRM) {
     HRM->state->timer_period_ms = period_ms;

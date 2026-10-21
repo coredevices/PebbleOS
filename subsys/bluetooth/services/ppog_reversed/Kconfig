@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_SERVICE_PPOG_REVERSED
+    bool "Reversed PPoGATT service"
+    default y
+    help
+      PPoGATT service hosted by the watch, for phones whose GATT server
+      API is broken (pbl/bluetooth/ppog_reversed.h).

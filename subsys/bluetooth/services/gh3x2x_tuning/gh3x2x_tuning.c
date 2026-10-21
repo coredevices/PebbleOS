@@ -8,6 +8,7 @@
 
 #include <pbl/drivers/hrm/gh3x2x.h>
 
+#include <bluetooth/services/services.h>
 #include <console/console.h>
 #include <host/ble_hs.h>
 #include <host/ble_uuid.h>
@@ -117,7 +118,7 @@ void gh3x2x_ble_notify(const uint8_t *p_data, uint32_t data_len) {
   ble_gatts_notify_custom(g_gh3x2x_ble_conn_handle, g_gh3x2x_ble_attr_tx_handle, om);
 }
 
-int gh3x2x_tuning_service_init(void) {
+int pbl_bt__gh3x2x_tuning_init(void) {
   int rc = ble_gatts_count_cfg(gatt_svr_svcs);
   if (rc != 0) {
     return rc;

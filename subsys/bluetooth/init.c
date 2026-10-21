@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "gh3x2x_tuning_service.h"
 #include "nimble_store.h"
+#include "services/services.h"
 
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/bluetooth/init.h>
@@ -20,8 +20,6 @@
 #include <host/util/util.h>
 #include <kernel/pebble_tasks.h>
 #include <nimble/nimble_port.h>
-#include <services/bas/ble_svc_bas.h>
-#include <services/dis/ble_svc_dis.h>
 #include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
 
@@ -29,8 +27,6 @@ PBL_LOG_MODULE_DEFINE(bt, CONFIG_BT_LOG_LEVEL);
 
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 
-extern void pebble_pairing_service_init(void);
-extern void ppog_reversed_service_init(void);
 extern void nimble_discover_init(void);
 extern void nimble_gattc_op_queue_init(void);
 
@@ -42,7 +38,6 @@ static struct pbl_thread *s_host_task_handle;
 PBL_THREAD_STACK_DEFINE(s_host_task_stack, 5000);
 static PBL_SEM_DEFINE(s_host_started, 0, 1);
 static PBL_SEM_DEFINE(s_host_stopped, 0, 1);
-static struct pbl_bt_dis_info s_dis_info;
 static struct ble_hs_stop_listener s_listener;
 
 typedef enum {
@@ -172,23 +167,9 @@ bool pbl_bt_start(struct pbl_bt_config *config) {
   // so we wait for *this* start to sync.
   (void)(pbl_sem_take(&s_host_started, PBL_NO_WAIT) == 0);
 
-  s_dis_info = config->dis_info;
-  ble_svc_dis_model_number_set(s_dis_info.model_number);
-  ble_svc_dis_serial_number_set(s_dis_info.serial_number);
-  ble_svc_dis_firmware_revision_set(s_dis_info.fw_revision);
-  ble_svc_dis_software_revision_set(s_dis_info.sw_revision);
-  ble_svc_dis_manufacturer_name_set(s_dis_info.manufacturer);
-
   ble_svc_gap_init();
   ble_svc_gatt_init();
-  ble_svc_dis_init();
-  pebble_pairing_service_init();
-  ble_svc_bas_init();
-  ppog_reversed_service_init();
-
-#ifdef CONFIG_BT_GH3X2X_TUNING_SERVICE
-  gh3x2x_tuning_service_init();
-#endif
+  pbl_bt__services_init(&config->dis_info);
 
   ble_hs_sched_start();
   f_rc = (pbl_sem_take(&s_host_started, PBL_MSEC(s_bt_stack_start_stop_timeout_ms)) == 0);
