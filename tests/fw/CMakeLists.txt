@@ -134,6 +134,13 @@ pbl_clar_test(test_heap
     kernel/heap.c
 )
 
+pbl_clar_test(test_volatile_heap
+  SOURCES
+    fw/kernel/volatile_heap.c
+    kernel/heap.c
+  DEFINES CONFIG_PSRAM_RETENTION CONFIG_KERNEL_VOLATILE_HEAP CONFIG_KERNEL_VOLATILE_HEAP_SIZE=4096
+)
+
 pbl_clar_test(test_data_logging
   MODULES pfs rand
   SOURCES

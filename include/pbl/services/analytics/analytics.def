@@ -158,3 +158,5 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(touch_driver_awake_time_ms)
 // were lost to deep power-down and it was powered back up.
 PBL_ANALYTICS_METRIC_DEFINE_TIMER(psram_hold_ms)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(psram_epoch_resets)
+// Peak usage of the volatile kernel heap in external RAM, in bytes.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(volatile_heap_high_water)

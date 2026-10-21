@@ -6,3 +6,18 @@ config TASK_TIMER_POOL_SIZE
     default 192
     help
       Number of TaskTimer slots reserved in .kernel_bss
+
+config KERNEL_VOLATILE_HEAP
+    bool "Volatile kernel heap in external RAM"
+    depends on PSRAM_RETENTION
+    default y
+    help
+      A kernel heap in disposable external RAM, for large transient
+      buffers (e.g. voice). Live allocations hold the external RAM
+      retained. Without it, kernel_volatile_*() use the kernel heap.
+
+config KERNEL_VOLATILE_HEAP_SIZE
+    int "Volatile kernel heap size"
+    depends on KERNEL_VOLATILE_HEAP
+    default 65536
+    range 4096 131072
