@@ -68,6 +68,7 @@ typedef struct {
 
   AppTimer *charge_timer;
   uint32_t charge_error;
+  bool charge_retried;
 
   // Battery state at end of settling phase
   int32_t initial_voltage_mv;
@@ -81,6 +82,7 @@ typedef struct {
 } AppData;
 
 static void prv_render(AppData *data);
+static void prv_handle_charge_timeout(void *context);
 
 static void prv_handle_battery_state(BatteryChargeState charge) {
   prv_render(app_state_get_user_data());
@@ -91,6 +93,37 @@ static void prv_end_charge_phase(AppData *data) {
     app_timer_cancel(data->charge_timer);
     data->charge_timer = NULL;
   }
+}
+
+static void prv_start_charge_timer(AppData *data) {
+  prv_end_charge_phase(data);
+  data->charge_timer = app_timer_register(CHARGE_TIMEOUT_MS, prv_handle_charge_timeout, data);
+}
+
+static const char *prv_charge_error_name(uint32_t reason) {
+  if (reason & BATTERY_CHARGE_ERROR_NTC_SENSOR) {
+    return "NTC sensor error";
+  } else if (reason & BATTERY_CHARGE_ERROR_VBAT_SENSOR) {
+    return "VBAT sensor error";
+  } else if (reason & BATTERY_CHARGE_ERROR_VBAT_LOW) {
+    return "VBAT too low";
+  } else if (reason & BATTERY_CHARGE_ERROR_VTRICKLE) {
+    return "VTRICKLE error";
+  } else if (reason & BATTERY_CHARGE_ERROR_MEAS_TIMEOUT) {
+    return "Measurement timeout";
+  } else if (reason & BATTERY_CHARGE_ERROR_CHARGE_TIMEOUT) {
+    return "Charger safety timeout";
+  } else if (reason & BATTERY_CHARGE_ERROR_TRICKLE_TIMEOUT) {
+    return "Trickle timeout";
+  }
+
+  return "Unknown";
+}
+
+static bool prv_can_retry_charge(AppData *data) {
+  return (data->test_state == DischargeStateFail) &&
+         (data->fail_reason == DischargeFailReasonChargeError) &&
+         (data->charge_error == BATTERY_CHARGE_ERROR_TRICKLE_TIMEOUT) && !data->charge_retried;
 }
 
 static void prv_fail_charge_phase(AppData *data, DischargeFailReason reason) {
@@ -271,8 +304,10 @@ static void prv_render(AppData *data) {
     case DischargeStatePass:
     case DischargeStateFail: {
       if (data->fail_reason == DischargeFailReasonChargeError) {
-        sniprintf(data->details_string, sizeof(data->details_string), "Charge error\n0x%02" PRIx32,
-                  data->charge_error);
+        sniprintf(data->details_string, sizeof(data->details_string),
+                  "Charge error\n0x%02" PRIx32 "\n%s%s", data->charge_error,
+                  prv_charge_error_name(data->charge_error),
+                  prv_can_retry_charge(data) ? "\n\nSelect: retry" : "");
         break;
       }
 
@@ -312,6 +347,31 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *data) {
   app_window_stack_pop(true);
 }
 
+// A deeply discharged battery can need more than one trickle period to
+// recover, so the operator may retry charging once after a trickle timeout
+static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  AppData *data = app_state_get_user_data();
+
+  if (!prv_can_retry_charge(data)) {
+    return;
+  }
+
+  if (battery_charge_error_clear() < 0) {
+    PBL_LOG_ERR("Failed to clear charge error");
+    return;
+  }
+
+  PBL_LOG_WRN("Charge error 0x%" PRIx32 " cleared, retrying charge", data->charge_error);
+
+  data->charge_retried = true;
+  data->fail_reason = DischargeFailReasonNone;
+  data->test_state = DischargeStateChargeTo100;
+
+  battery_state_service_subscribe(prv_handle_battery_state);
+  prv_start_charge_timer(data);
+  prv_render(data);
+}
+
 static void prv_raw_button_down_handler(ClickRecognizerRef recognizer, void *context) {
   AppData *data = app_state_get_user_data();
   bitset8_set(&data->buttons_held_bitset, click_recognizer_get_button_id(recognizer));
@@ -334,6 +394,7 @@ static void prv_raw_button_up_handler(ClickRecognizerRef recognizer, void *conte
 
 static void prv_config_provider(void *data) {
   window_single_click_subscribe(BUTTON_ID_BACK, prv_back_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
   window_raw_click_subscribe(BUTTON_ID_UP, prv_raw_button_down_handler,
                              prv_raw_button_up_handler, NULL);
   window_raw_click_subscribe(BUTTON_ID_DOWN, prv_raw_button_down_handler,
@@ -383,7 +444,7 @@ static void app_init(void) {
   // monitor samples ~once a minute and forces an update on plug/unplug) to
   // avoid per-second wake-ups while waiting for the charger
   battery_state_service_subscribe(prv_handle_battery_state);
-  data->charge_timer = app_timer_register(CHARGE_TIMEOUT_MS, prv_handle_charge_timeout, data);
+  prv_start_charge_timer(data);
   prv_render(data);
 
   app_window_stack_push(window, true /* Animated */);
