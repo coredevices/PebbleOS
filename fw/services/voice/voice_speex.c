@@ -43,8 +43,10 @@ typedef struct {
 } VoiceSpeexEncoder;
 
 static VoiceSpeexEncoder s_encoder = {};
-//! Dictation and app streams both initialize the encoder, from different tasks
+//! Dictation and app streams both use the encoder, from different tasks. Guards the reference
+//! count, and the encoder setup and teardown.
 static PBL_MUTEX_DEFINE(s_lock);
+static unsigned int s_users;
 
 // Speex configuration
 #define SPEEX_SAMPLE_RATE         16000 // 16 kHz wideband
@@ -138,17 +140,8 @@ static bool prv_init_locked(void) {
   return true;
 }
 
-bool voice_speex_init(void) {
-  pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  const bool rv = prv_init_locked();
-  pbl_mutex_unlock(&s_lock);
-  return rv;
-}
-
-void voice_speex_deinit(void) {
-  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+static void prv_deinit_locked(void) {
   if (!s_encoder.initialized) {
-    pbl_mutex_unlock(&s_lock);
     return;
   }
 
@@ -170,6 +163,27 @@ void voice_speex_deinit(void) {
   }
 
   memset(&s_encoder, 0, sizeof(s_encoder));
+}
+
+bool voice_speex_init(void) {
+  bool ok;
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  ok = prv_init_locked();
+  if (ok) {
+    s_users++;
+  }
+  pbl_mutex_unlock(&s_lock);
+
+  return ok;
+}
+
+void voice_speex_deinit(void) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  PBL_ASSERTN(s_users > 0U);
+  if (--s_users == 0U) {
+    prv_deinit_locked();
+  }
   pbl_mutex_unlock(&s_lock);
 }
 

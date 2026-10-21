@@ -68,17 +68,25 @@ ModalProperty modal_manager_get_properties(void) {
 
 #define FAKE_FRAME_SAMPLES (320)
 
-static bool s_speex_initialized;
+static int s_speex_users;
 static bool s_speex_init_fails;
 static int s_encode_count;
 
 bool voice_speex_is_initialized(void) {
-  return s_speex_initialized;
+  return s_speex_users > 0;
 }
 
 bool voice_speex_init(void) {
-  s_speex_initialized = !s_speex_init_fails;
-  return s_speex_initialized;
+  if (s_speex_init_fails) {
+    return false;
+  }
+  s_speex_users++;
+  return true;
+}
+
+void voice_speex_deinit(void) {
+  cl_assert(s_speex_users > 0);
+  s_speex_users--;
 }
 
 int voice_speex_get_frame_size(void) {
@@ -90,7 +98,7 @@ void voice_speex_get_transfer_info(AudioTransferInfoSpeex *info) {
 }
 
 int voice_speex_encode_frame(int16_t *samples, uint8_t *encoded_data, size_t max_encoded_size) {
-  cl_assert(s_speex_initialized);
+  cl_assert(s_speex_users > 0);
   s_encode_count++;
   encoded_data[0] = (uint8_t)samples[0];
   return 25;
@@ -241,7 +249,7 @@ void test_mic_stream__initialize(void) {
   s_watchface_running = false;
   s_no_phone = false;
   s_modal_focused = false;
-  s_speex_initialized = false;
+  s_speex_users = 0;
   s_speex_init_fails = false;
   s_encode_count = 0;
   s_mic_running = false;
@@ -265,6 +273,8 @@ void test_mic_stream__cleanup(void) {
   fake_mutex_assert_all_unlocked();
   stub_new_timer_cleanup();
   fake_pbl_malloc_check_net_allocs();
+  // Every stream releases the encoder it took
+  cl_assert_equal_i(0, s_speex_users);
 }
 
 // Tests

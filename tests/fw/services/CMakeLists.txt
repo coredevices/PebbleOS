@@ -506,3 +506,10 @@ pbl_clar_test(test_mic_capture
   DEFINES CONFIG_SERVICE_MIC_CAPTURE
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_voice_speex
+  SOURCES fw/services/voice/voice_speex.c
+  LIBS speex
+  INCLUDES third_party/speex third_party/speex/speex/include
+  OVERRIDES dummy_board
+)
