@@ -93,7 +93,9 @@ static void prv_comm_start(void) {
 #ifdef CONFIG_SERVICE_BLE_HRM
     ble_hrm_init();
 #endif
+#ifdef CONFIG_BT_SERVICE_BAS
     ble_bas_init();
+#endif
     bt_pairability_init();
 #ifdef CONFIG_QEMU_SERIAL
     qemu_transport_start();
@@ -107,7 +109,9 @@ static void prv_comm_stop(void) {
   if (!s_comm_is_running) {
     return;
   }
+#ifdef CONFIG_BT_SERVICE_BAS
   ble_bas_deinit();
+#endif
 #ifdef CONFIG_SERVICE_BLE_HRM
   ble_hrm_deinit();
 #endif

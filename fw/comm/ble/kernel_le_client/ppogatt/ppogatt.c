@@ -1596,10 +1596,13 @@ static enum pbl_bt_errno prv_write_packet(PPoGATTClient *client, const PPoGATTPa
   bt_lock_assert_held(true);
 
   enum pbl_bt_errno e;
+#ifdef CONFIG_BT_SERVICE_PPOG_REVERSED
   if (client->role == PPoGATTRoleReversed) {
     bt_unlock();
     e = pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, length);
-  } else {
+  } else
+#endif
+  {
     GAPLEConnection *connection;
     const uint16_t att_handle = gatt_client_characteristic_get_handle_and_connection(
         client->characteristics.data, &connection);

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(sources
-  ble_bas.c
   bluetooth_ctl.c
   bluetooth_persistent_storage_debug.c
   bonding.c
@@ -20,5 +19,6 @@ else()
 endif()
 pbl_library()
 pbl_library_sources(${sources})
+pbl_library_sources_ifdef(CONFIG_BT_SERVICE_BAS ble_bas.c)
 pbl_library_sources_ifdef(CONFIG_SERVICE_BLE_HRM ble_hrm.c)
 pbl_library_sources_ifdef(CONFIG_SHELL shell.c)
