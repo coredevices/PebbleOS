@@ -137,7 +137,7 @@ typedef struct PBL_PACKED {
   uint8_t heart_rate_zone;
 
   // New fields added in version 14
-  /** Blood oxygen saturation (%) measured this minute, 0 if none. */
+  /** SpO2 (%) measured this minute, 0 if none. */
   uint8_t spo2_percent;
   /** SpO2 signal quality (@c HeartRateQuality value), 0 if none. */
   uint8_t spo2_quality;

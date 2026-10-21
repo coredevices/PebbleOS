@@ -158,7 +158,7 @@ static void prv_init(void) {
              !activity_prefs_spo2_activity_tracking_is_enabled()) {
     // A foreground app's subscription bypasses the per-feature pref mask, but the HRM manager
     // still won't power the sensor on at all with every monitoring pref off.
-    text_layer_set_text(detail_tl, "Enable heart rate or\nblood oxygen monitoring");
+    text_layer_set_text(detail_tl, "Enable heart rate or\nSpO2 monitoring");
   } else {
     text_layer_set_text(detail_tl, "Measuring...\nKeep watch on wrist");
     prv_enable_spo2(app_data);

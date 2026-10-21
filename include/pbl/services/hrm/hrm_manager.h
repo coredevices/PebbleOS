@@ -24,7 +24,7 @@
  * continuously.
  *
  * The green (BPM, HRV) and red/IR (SpO2) optical paths are mutually exclusive; SpO2 wins when
- * due. Background subscribers only get the features allowed by the heart rate and blood oxygen
+ * due. Background subscribers only get the features allowed by the heart rate and SpO2
  * preferences, foreground apps get what they ask for. The sensor stays off while charging or
  * when the run level disables it.
  *
@@ -72,7 +72,7 @@ typedef enum {
   HRMFeatureShift_BPM = 0,
   /** Heart rate variability. */
   HRMFeatureShift_HRV = 1,
-  /** Blood oxygen saturation. */
+  /** Oxygen saturation (SpO2). */
   HRMFeatureShift_SpO2 = 2,
 #ifdef CONFIG_MFG
   /** PPG CTR test data (manufacturing). */
@@ -90,7 +90,7 @@ typedef enum {
   HRMFeature_BPM = (1 << HRMFeatureShift_BPM),
   /** Heart rate variability (peak-to-peak interval). */
   HRMFeature_HRV = (1 << HRMFeatureShift_HRV),
-  /** Blood oxygen saturation. */
+  /** Oxygen saturation (SpO2). */
   HRMFeature_SpO2 = (1 << HRMFeatureShift_SpO2),
 #ifdef CONFIG_MFG
   /** PPG CTR test data (manufacturing). */
@@ -268,7 +268,7 @@ typedef struct {
   /** HRV quality. */
   HRMQuality hrv_quality;
 
-  /** Blood oxygen saturation, in percent. */
+  /** Oxygen saturation (SpO2), in percent. */
   uint8_t spo2_percent;
   /** SpO2 quality. */
   HRMQuality spo2_quality;

@@ -1106,7 +1106,7 @@ static int prv_cmd_hrm_read(const struct pbl_shell *sh, size_t argc, char **argv
 static int prv_cmd_spo2_read(const struct pbl_shell *sh, size_t argc, char **argv) {
   // Console subscribers are subject to the pref mask; a reading would never come.
   if (!(prv_prefs_allowed_features() & HRMFeature_SpO2)) {
-    pbl_shell_error(sh, "blood oxygen monitoring is disabled");
+    pbl_shell_error(sh, "SpO2 monitoring is disabled");
     return -EPERM;
   }
   return prv_console_subscribe(sh, HRMFeature_SpO2, HRMEvent_SpO2);
@@ -1114,7 +1114,7 @@ static int prv_cmd_spo2_read(const struct pbl_shell *sh, size_t argc, char **arg
 
 static const struct pbl_shell_cmd sub_hrm[] = {
   PBL_SHELL_CMD(read, nullptr, "Read the heart rate", prv_cmd_hrm_read),
-  PBL_SHELL_CMD(spo2, nullptr, "Read the blood oxygen level", prv_cmd_spo2_read),
+  PBL_SHELL_CMD(spo2, nullptr, "Read the SpO2 level", prv_cmd_spo2_read),
   PBL_SHELL_SUBCMD_SET_END,
 };
 

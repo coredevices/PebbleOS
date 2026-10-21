@@ -151,7 +151,7 @@ typedef struct PBL_PACKED ActivityHRMSettings {
   bool activity_tracking_enabled;
 } ActivityHRMSettings;
 
-/** @brief SpO2 (blood oxygen) preferences, as stored in prefs. */
+/** @brief SpO2 preferences, as stored in prefs. */
 typedef struct PBL_PACKED ActivitySpO2Settings {
   /** Background SpO2 monitoring enabled. */
   bool enabled;
@@ -770,7 +770,7 @@ uint8_t activity_prefs_heart_get_zone3_threshold(void);
 bool activity_prefs_heart_rate_is_enabled(void);
 
 /**
- * @brief Check whether background blood oxygen (SpO2) monitoring is enabled.
+ * @brief Check whether background SpO2 monitoring is enabled.
  *
  * Declared regardless of @c CONFIG_HRM since the HRM manager gates sensor power on it.
  *
@@ -818,7 +818,7 @@ bool activity_prefs_hrm_activity_tracking_is_enabled(void);
 void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled);
 
 /**
- * @brief Enable or disable background blood oxygen (SpO2) monitoring.
+ * @brief Enable or disable background SpO2 monitoring.
  *
  * The setting is synced to the phone.
  *

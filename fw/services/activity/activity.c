@@ -319,7 +319,7 @@ static void prv_spo2_set_sampling(bool sampling, uint32_t now_ts) {
 // scheduler but runs on its own independent interval.
 static void prv_spo2_subscription_update(uint32_t now_ts) {
 #ifdef CONFIG_HRM
-  // If blood oxygen monitoring is disabled (master toggle off or "Disabled" interval), make sure
+  // If SpO2 monitoring is disabled (master toggle off or "Disabled" interval), make sure
   // we're not sampling and skip.
   if (!activity_prefs_spo2_is_enabled() ||
       activity_prefs_get_spo2_measurement_interval() == HRMonitoringInterval_Disabled) {
@@ -438,7 +438,7 @@ PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *cont
 #endif // CONFIG_HRM
 
 // ---------------------------------------------------------------------------------------
-// Init blood oxygen (SpO2) support
+// Init SpO2 support
 static void prv_spo2_init(void) {
 #ifdef CONFIG_HRM
   s_activity_state.spo2.currently_sampling = false;
@@ -452,7 +452,7 @@ static void prv_spo2_init(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-// De-init blood oxygen (SpO2) support
+// De-init SpO2 support
 static void prv_spo2_deinit(void) {
 #ifdef CONFIG_HRM
   sys_hrm_manager_unsubscribe(s_activity_state.spo2.hrm_session);
@@ -510,7 +510,7 @@ static bool prv_activity_spo2_can_start_attempt(void) {
 static void prv_activity_spo2_update(uint32_t now_ts) {
   ActivitySpO2ActivitySupport *as = &s_activity_state.activity_spo2;
 
-  // Run while the blood-oxygen-during-activities opt-in is on AND we're in an activity: either an
+  // Run while the SpO2-during-activities opt-in is on AND we're in an activity: either an
   // auto-detected one with a running HR session (which needs HR-during-activities), or a manually
   // started workout. The manual workout path only needs the SpO2 opt-in.
   const bool auto_active = activity_prefs_hrm_activity_tracking_is_enabled() &&

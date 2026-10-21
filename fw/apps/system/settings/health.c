@@ -119,7 +119,7 @@ static void prv_spo2_interval_menu_push(SettingsHealthData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_spo2_interval_menu_select,
   };
-  const char *title = i18n_noop("Blood Oxygen");
+  const char *title = i18n_noop("SpO2 Monitoring");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_spo2_interval_labels), true /* icons_enabled */,
                             s_spo2_interval_labels, data);
@@ -174,7 +174,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
     }
     case SettingsHealthSpO2Enabled: {
-      title = i18n_noop("Blood Oxygen");
+      title = i18n_noop("SpO2");
       subtitle = activity_prefs_spo2_is_enabled() ? i18n_noop("On") : i18n_noop("Off");
       break;
     }
@@ -186,7 +186,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
     }
     case SettingsHealthSpO2ActivityTracking: {
-      title = i18n_noop("Blood O2 During Activity");
+      title = i18n_noop("SpO2 During Activity");
       if (!activity_prefs_hrm_activity_tracking_is_enabled()) {
         // Requires HR During Activity to be on first.
         subtitle = i18n_noop("Needs HR During Activity");
@@ -229,7 +229,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       bool new_value = !activity_prefs_hrm_activity_tracking_is_enabled();
       activity_prefs_set_hrm_activity_tracking_enabled(new_value);
       if (!new_value) {
-        // Blood O2 in activity depends on HR in activity; clear it when the parent goes off.
+        // SpO2 in activity depends on HR in activity; clear it when the parent goes off.
         activity_prefs_set_spo2_activity_tracking_enabled(false);
       }
       break;
