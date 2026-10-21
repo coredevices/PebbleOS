@@ -199,6 +199,24 @@ static void prv_charge_status_inform(BatteryChargeStatus chg_status) {
   PBL_ASSERTN(ret == 0);
 }
 
+static bool prv_is_charging(BatteryChargeStatus chg_status) {
+  return (chg_status == BatteryChargeStatusTrickle) || (chg_status == BatteryChargeStatusCC) ||
+         (chg_status == BatteryChargeStatusCV);
+}
+
+static void prv_log_charge_error(void) {
+  uint32_t reason;
+  int ret;
+
+  ret = battery_charge_error_get(&reason);
+  if (ret < 0) {
+    PBL_LOG_ERR("Charger error, could not obtain reason (%d)", ret);
+    return;
+  }
+
+  PBL_LOG_ERR("Charger error, reason: 0x%" PRIx32, reason);
+}
+
 static void prv_battery_state_put_change_event(PreciseBatteryChargeState state) {
   PebbleEvent e = {
       .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,
@@ -243,10 +261,13 @@ static void prv_update_state(void *force_update) {
   if (chg_status != s_last_chg_status) {
     s_last_chg_status = chg_status;
     prv_charge_status_inform(chg_status);
+    if (chg_status == BatteryChargeStatusError) {
+      prv_log_charge_error();
+      update = true;
+    }
   }
 
-  is_charging = is_plugged && !(chg_status == BatteryChargeStatusComplete ||
-                                chg_status == BatteryChargeStatusUnknown);
+  is_charging = is_plugged && prv_is_charging(chg_status);
   if (is_charging != s_last_battery_charge_state.is_charging) {
     s_last_battery_charge_state.is_charging = is_charging;
     update = true;
@@ -410,11 +431,13 @@ init_done:
   PBL_ASSERTN(ret == 0);
 
   prv_charge_status_inform(s_last_chg_status);
+  if (s_last_chg_status == BatteryChargeStatusError) {
+    prv_log_charge_error();
+  }
 
   s_last_battery_charge_state.is_plugged = battery_is_usb_connected_impl();
-  s_last_battery_charge_state.is_charging = s_last_battery_charge_state.is_plugged &&
-                                            !(s_last_chg_status == BatteryChargeStatusComplete ||
-                                              s_last_chg_status == BatteryChargeStatusUnknown);
+  s_last_battery_charge_state.is_charging =
+      s_last_battery_charge_state.is_plugged && prv_is_charging(s_last_chg_status);
 
   s_periodic_timer_id = new_timer_create();
 
