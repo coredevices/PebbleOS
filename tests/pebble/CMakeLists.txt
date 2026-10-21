@@ -125,6 +125,11 @@ pbl_clar_test(test_heap
     kernel/heap.c
 )
 
+pbl_clar_test(test_psram_image_pool
+  SOURCES pebble/kernel/psram_image_pool.c
+  DEFINES CONFIG_PSRAM_RETENTION CONFIG_PSRAM_IMAGE_POOL CONFIG_PSRAM_IMAGE_SLOTS=3
+)
+
 pbl_clar_test(test_volatile_heap
   SOURCES
     pebble/kernel/volatile_heap.c
