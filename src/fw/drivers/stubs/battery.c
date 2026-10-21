@@ -31,6 +31,10 @@ int battery_charge_error_get(uint32_t *reason) {
   return 0;
 }
 
+int battery_charge_error_clear(void) {
+  return 0;
+}
+
 bool battery_charge_controller_thinks_we_are_charging_impl(void) {
   return 1;
 }

@@ -105,6 +105,15 @@ uint32_t battery_convert_reading_to_millivolts(ADCVoltageMonitorReading reading,
 //! @retval error Error code on failure.
 int battery_charge_status_get(BatteryChargeStatus *status);
 
+//! Charger error reason bits.
+#define BATTERY_CHARGE_ERROR_NTC_SENSOR 0x01U
+#define BATTERY_CHARGE_ERROR_VBAT_SENSOR 0x02U
+#define BATTERY_CHARGE_ERROR_VBAT_LOW 0x04U
+#define BATTERY_CHARGE_ERROR_VTRICKLE 0x08U
+#define BATTERY_CHARGE_ERROR_MEAS_TIMEOUT 0x10U
+#define BATTERY_CHARGE_ERROR_CHARGE_TIMEOUT 0x20U
+#define BATTERY_CHARGE_ERROR_TRICKLE_TIMEOUT 0x40U
+
 //! Get the charger error reason.
 //!
 //! @param[out] reason Device-specific error reason bits, 0 if there is no error.
@@ -112,3 +121,9 @@ int battery_charge_status_get(BatteryChargeStatus *status);
 //! @retval 0 On success.
 //! @retval error Error code on failure.
 int battery_charge_error_get(uint32_t *reason);
+
+//! Clear the charger error and resume charging.
+//!
+//! @retval 0 On success.
+//! @retval error Error code on failure.
+int battery_charge_error_clear(void);
