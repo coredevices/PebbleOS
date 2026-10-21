@@ -784,7 +784,7 @@ void test_ppogatt__missing_inbound_packet(void) {
 void test_ppogatt__send_data_max_payload_size(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t *data = malloc(MAX_PAYLOAD_SIZE);
-  memset(data, MAX_PAYLOAD_SIZE, 0x55);
+  memset(data, 0x55, MAX_PAYLOAD_SIZE);
 
   Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
   for (uint8_t sn = 0; sn < s_tx_window_size; ++sn) {
