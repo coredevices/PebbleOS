@@ -755,6 +755,15 @@ int battery_charge_error_get(uint32_t *reason) {
   return 0;
 }
 
+int battery_charge_error_clear(void) {
+  if (!prv_write_register(PmicRegisters_BCHARGER_TASKCLEARCHGERR, 1) ||
+      !prv_write_register(PmicRegisters_BCHARGER_TASKRELEASEERROR, 1)) {
+    return -1;
+  }
+
+  return 0;
+}
+
 void command_pmic_read_registers(void) {
   char buffer[64];
 #define SAY(x) do { uint8_t reg; int rv = prv_read_register(PmicRegisters_##x, &reg); prompt_send_response_fmt(buffer, sizeof(buffer), "PMIC: " #x " = %02x (rv %d)", reg, rv); } while(0)
