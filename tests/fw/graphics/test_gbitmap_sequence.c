@@ -78,7 +78,6 @@ static const char *prv_get_image_name(const char *func_name, int index, const ch
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_2bit_bouncing_ball(void) {
-#if PLATFROM_SPALDING
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
 
@@ -110,7 +109,6 @@ void test_gbitmap_sequence__color_2bit_bouncing_ball(void) {
   // Test loop around
   gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(1)));
-#endif
 }
 
 // Tests APNG file with 8-bit color, 88 frames of delay 100ms each and loop = 2
@@ -118,7 +116,6 @@ void test_gbitmap_sequence__color_2bit_bouncing_ball(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_fight(void) {
-#ifdef CONFIG_BOARD_QEMU_GABBRO
   bool status = false;
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
@@ -154,7 +151,6 @@ void test_gbitmap_sequence__color_8bit_fight(void) {
   status = gbitmap_sequence_update_bitmap_by_elapsed(bitmap_sequence, bitmap, 12345 * 100);
   cl_assert_equal_b(status, true);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(88)));
-#endif
 }
 
 // Tests APNG file with 8-bit color, 5 frames and loop = 1
@@ -163,7 +159,6 @@ void test_gbitmap_sequence__color_8bit_fight(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_coin(void) {
-#ifdef CONFIG_BOARD_QEMU_GABBRO
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
 
@@ -189,7 +184,6 @@ void test_gbitmap_sequence__color_8bit_coin(void) {
   // Since loop only equals 1, make sure that huge elapsed time leaves us at final frame
   gbitmap_sequence_update_bitmap_by_elapsed(bitmap_sequence, bitmap, 12345 * 1000);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(5)));
-#endif
 }
 
 // Tests APNG file with 8-bit color, 5 frames and loop = 1
@@ -198,7 +192,6 @@ void test_gbitmap_sequence__color_8bit_coin(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_coin_round(void) {
-#ifdef CONFIG_BOARD_QEMU_GABBRO
   uint32_t resource_id = sys_resource_load_file_as_resource(
       TEST_IMAGES_PATH, "test_gbitmap_sequence__color_8bit_coin.apng");
   cl_assert(resource_id != UINT32_MAX);
@@ -206,7 +199,7 @@ void test_gbitmap_sequence__color_8bit_coin_round(void) {
   GBitmapSequence *bitmap_sequence = gbitmap_sequence_create_with_resource(resource_id);
   cl_assert(bitmap_sequence);
 
-  GBitmap *bitmap = gbitmap_create_blank(GSize(180, 180), GBitmapFormat8BitCircular);
+  GBitmap *bitmap = gbitmap_create_blank(GSize(DISP_COLS, DISP_ROWS), GBitmapFormat8BitCircular);
   cl_assert(bitmap);
 
   // Since frame 1 has 0 delay, it renders then immediately we render frame 2
@@ -224,7 +217,6 @@ void test_gbitmap_sequence__color_8bit_coin_round(void) {
   // Since loop only equals 1, make sure that huge elapsed time leaves us at final frame
   gbitmap_sequence_update_bitmap_by_elapsed(bitmap_sequence, bitmap, 12345 * 1000);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(5)));
-#endif
 }
 
 // Tests APNG file with 8-bit color, 5 frames and loop infinite, size 64x64
@@ -232,11 +224,10 @@ void test_gbitmap_sequence__color_8bit_coin_round(void) {
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_bounds(void) {
-#ifdef CONFIG_BOARD_QEMU_GABBRO
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
 
-  GRect orig_bounds = GRect(0, 0, 180, 180);
+  GRect orig_bounds = GRect(0, 0, DISP_COLS, DISP_ROWS);
   int xshift = 71;
   int yshift = 39;
   GRect shift_bounds =
@@ -274,14 +265,12 @@ void test_gbitmap_sequence__color_8bit_bounds(void) {
   gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   gbitmap_set_bounds(bitmap, orig_bounds);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(5)));
-#endif
 }
 
 // Tests APNG file with 8-bit color, originally broke the updated upng+tinflate code
 // Result:
 //   - gbitmaps matches platform decoded APNG
 void test_gbitmap_sequence__color_8bit_yoshi(void) {
-#ifdef CONFIG_BOARD_QEMU_GABBRO
   bool status = false;
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
@@ -300,7 +289,6 @@ void test_gbitmap_sequence__color_8bit_yoshi(void) {
   status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
   cl_assert_equal_b(status, true);
   cl_check(gbitmap_pbi_eq(bitmap, GET_PBI_NAME(3)));
-#endif
 }
 
 void test_gbitmap_sequence__1bit_to_1bit_notification(void) {
