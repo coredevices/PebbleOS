@@ -9,10 +9,11 @@ nimble: mynewt-nimble
 header: port/include/syscfg/syscfg.h
 booleans: booleans.yml
 
-# One Kconfig.<id> file per area. `depends` is a raw Kconfig expression naming
-# the builds that compile the area's packages; where it is false, the options
-# stay undefined, exactly as they would be for a newt target that leaves the
-# package out.
+# One Kconfig.<id> file per area. `enable` names a bool the area defines to
+# switch its packages on, for those a build can leave out; where it is off,
+# the options stay undefined, exactly as they would be for a newt target that
+# leaves the package out. `includes` lists areas whose files are sourced from
+# inside this one's menu, rather than from the top-level Kconfig.
 areas:
   - id: ble
     title: "Core"
@@ -24,13 +25,26 @@ areas:
     packages:
       - nimble/host
 
-  - id: services
+  - id: svcs
     title: "GATT services"
     packages:
-      - nimble/host/services/bas
-      - nimble/host/services/dis
       - nimble/host/services/gap
       - nimble/host/services/gatt
+    includes:
+      - svc_bas
+      - svc_dis
+
+  - id: svc_bas
+    title: "Battery Service"
+    enable: NIMBLE_BLE_SVC_BAS
+    packages:
+      - nimble/host/services/bas
+
+  - id: svc_dis
+    title: "Device Information Service"
+    enable: NIMBLE_BLE_SVC_DIS
+    packages:
+      - nimble/host/services/dis
 
   - id: transport
     title: "HCI transport"
@@ -39,13 +53,13 @@ areas:
 
   - id: controller
     title: "Controller"
-    depends: BT_HCI_NRF52
+    enable: NIMBLE_CONTROLLER
     packages:
       - nimble/controller
 
   - id: drivers
-    title: "Radio driver"
-    depends: BT_HCI_NRF52
+    title: "nRF5x radio driver"
+    enable: NIMBLE_DRIVER_NRF5X
     packages:
       - nimble/drivers/nrf5x
     files:

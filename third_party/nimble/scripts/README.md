@@ -95,13 +95,23 @@ expressions, as `BLE_SM_IO_CAP` does.
 
 ## Areas
 
-Each area in `config.yml` groups packages into one `Kconfig.<id>`, and may
-carry a `depends` naming the builds that compile them (for instance, only
-`BT_HCI_NRF52` builds the link layer). Where that dependency is false, the
-area's options take 0, the same value NimBLE sees for a package a newt target
-leaves out. The area menu uses `visible if` rather than `if`, because `if`
-would also gate the `default` lines and leave the options valueless — which
-Kconfig compares as a string, making `SYM != 0` true.
+Each area in `config.yml` groups packages into one `Kconfig.<id>`. An area
+whose packages a build can leave out carries an `enable`: the generator
+defines it as a bool, off unless something selects it, and the build compiles
+the packages' sources only when it is set. It is the Kconfig counterpart of a
+newt target depending on the package; PebbleOS selects it from the option
+that needs the package, e.g. `BT_HCI_NRF52` selects `NIMBLE_CONTROLLER`.
+
+Where it is off, the area's options take 0, the same value NimBLE sees for a
+package a newt target leaves out, and its fixed values are left undefined.
+The area menu uses `visible if` rather than `if`, because `if` would also gate
+the `default` lines and leave the options valueless — which Kconfig compares
+as a string, making `SYM != 0` true.
+
+An area may also list, under `includes`, areas whose `Kconfig.<id>` it
+sources at the end of its menu, so that optional packages nest under the
+group they belong to: `Kconfig.svcs` sources `Kconfig.svc_bas` and
+`Kconfig.svc_dis`. Only the top-level areas are sourced from `Kconfig`.
 
 Within a file, NimBLE's own `# … settings.` banner comments become menus.
 

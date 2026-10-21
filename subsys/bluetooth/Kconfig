@@ -24,6 +24,8 @@ choice BT_HCI
 config BT_HCI_NRF52
     bool "NimBLE controller on the nRF52 radio"
     depends on SOC_NRF52
+    select NIMBLE_CONTROLLER
+    select NIMBLE_DRIVER_NRF5X
     help
       Run the NimBLE link layer in the same image, on the nRF52 radio.
 

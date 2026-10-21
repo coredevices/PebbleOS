@@ -491,7 +491,7 @@ class Def:
         like a newt package that is not part of the target: the option is
         simply not defined.
         """
-        return bool(self.condition) or bool(self.area.depends)
+        return bool(self.condition) or bool(self.area.enable)
 
 
 def scan_sections(text):
@@ -570,9 +570,12 @@ class Area:
         self.title = spec["title"]
         self.packages = spec.get("packages") or []
         self.files = spec.get("files") or []
-        # A raw Kconfig expression: when it is false the packages are not part
-        # of the build, so none of their options is defined.
-        self.depends = spec.get("depends")
+        # A bool symbol switching the packages on, for those a build can do
+        # without: when it is off they are not part of the build, so none of
+        # their options is defined.
+        self.enable = spec.get("enable")
+        # Areas whose Kconfig files are sourced from inside this one's menu.
+        self.includes = spec.get("includes") or []
         self.defs = []
 
     @property
@@ -583,6 +586,11 @@ class Area:
 class Model:
     def __init__(self, config):
         self.areas = [Area(spec) for spec in config["areas"]]
+        ids = {area.id for area in self.areas}
+        for area in self.areas:
+            for child in area.includes:
+                if child not in ids:
+                    die(f"{area.id}: includes unknown area {child}")
         self.overrides = config.get("overrides") or {}
         self.booleans = set(
             load_yaml(os.path.join(SCRIPTS_DIR, config["booleans"]))["booleans"]
@@ -620,7 +628,7 @@ class Model:
                 if entry is None:
                     self.notes.append(f"{area.id}: value for unknown option {name}")
                     continue
-                entry.overrides.append((area.depends, condition, value))
+                entry.overrides.append((area.enable, condition, value))
 
         self.scan_assignments(nimble_root)
         self.check_booleans()
@@ -736,7 +744,7 @@ class Model:
         that, a hidden option would still hand its NimBLE default to the
         expressions that read it.
         """
-        own = entry.area.depends
+        own = entry.area.enable
         lines = []
         for depends, condition, value in entry.overrides:
             conditions = [c for c in (own, depends) if c]
@@ -837,7 +845,7 @@ def render_range(entry, renderer):
         return []
     # Guarded like the defaults, so the zero an unbuilt package takes is not
     # clamped into the range.
-    return [f"    range {low} {high}" + guard([entry.area.depends])]
+    return [f"    range {low} {high}" + guard([entry.area.enable])]
 
 
 def render_choice(entry, renderer):
@@ -870,12 +878,14 @@ def render_option(entry, renderer, model):
 
 def render_area(area, model, renderer):
     out = [SPDX, BANNER, "\n"]
+    if area.enable:
+        out.append(f'config {area.enable}\n    bool "{area.title}"\n\n')
     out.append(f'menu "{area.title}"\n')
-    if area.depends:
+    if area.enable:
         # `visible if` rather than `if`: a plain `if` would also gate every
         # `default` below, leaving the options valueless rather than zero for
         # the builds that leave their package out.
-        out.append(f"visible if {area.depends}\n")
+        out.append(f"visible if {area.enable}\n")
 
     section = None
     for entry in area.defs:
@@ -888,6 +898,8 @@ def render_area(area, model, renderer):
         out.append("\n" + "\n".join(render_option(entry, renderer, model)) + "\n")
     if section:
         out.append("\nendmenu\n")
+    for child in area.includes:
+        out.append(f'\nrsource "Kconfig.{child}"\n')
 
     out.append("\nendmenu\n")
     return "".join(out)
@@ -951,6 +963,13 @@ def render_header_option(entry):
 
     default = fallback(entry)
     if entry.kconfig is None:
+        if entry.area.enable and not entry.condition and entry.kind != "undef":
+            # Fixed, but only defined while the package is switched on.
+            value = entry.default if entry.kind == "string" else f"({entry.default})"
+            out.append(f"#ifdef CONFIG_{entry.area.enable}")
+            out.append(f"#define {name} {value}")
+            out.append("#endif")
+            return out
         if default is None:
             return out + [f"#undef {name}"]
         return out + [f"#define {name} {default}"]
@@ -958,8 +977,9 @@ def render_header_option(entry):
     body = f"CONFIG_{entry.sym}" if entry.kind == "string" else f"(CONFIG_{entry.sym})"
     out.append(f"#ifdef CONFIG_{entry.sym}")
     out.append(f"#define {name} {body}")
-    out.append("#else")
-    out.append(f"#undef {name}" if default is None else f"#define {name} {default}")
+    if default is not None:
+        out.append("#else")
+        out.append(f"#define {name} {default}")
     out.append("#endif")
     return out
 

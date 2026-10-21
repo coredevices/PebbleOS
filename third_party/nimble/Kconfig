@@ -39,7 +39,7 @@ source "subsys/logging/Kconfig.template.log_level"
 # subsys/bluetooth/Kconfig.defconfig, per-SoC ones in soc/*/Kconfig.defconfig.
 rsource "Kconfig.ble"
 rsource "Kconfig.host"
-rsource "Kconfig.services"
+rsource "Kconfig.svcs"
 rsource "Kconfig.transport"
 rsource "Kconfig.controller"
 rsource "Kconfig.drivers"
