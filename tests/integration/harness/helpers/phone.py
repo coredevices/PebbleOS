@@ -12,8 +12,9 @@ import struct
 import threading
 import time
 
-from harness.ble import AUTO, HOST_ADDRESS, HOST_NAME, REVERSED, BleLink
+from harness.ble import HOST_ADDRESS, HOST_NAME, REVERSED, BleLink
 from harness.errors import HarnessError, Unsupported, WatchTimeout
+from harness.helpers.pairing import WatchPairing
 from harness.lab import PHONE_BUMBLE, PHONE_COREAPP
 
 logger = logging.getLogger(__name__)
@@ -246,7 +247,9 @@ def _is_pairing_failure(error):
 class BumblePhone(Phone):
     """The harness as the phone, through a Bluetooth controller, running
     ``os``: :data:`ANDROID`, or :data:`IOS`, which hosts ANCS (``ancs``), AMS
-    (``ams``) and Device Information as an iPhone does."""
+    (``ams``) and Device Information as an iPhone does. It connects to
+    ``watch``, by default the DUT's own address: on a real radio, other
+    watches in range advertise too."""
 
     ancs = None
     ams = None
@@ -257,7 +260,7 @@ class BumblePhone(Phone):
         keystore,
         address=HOST_ADDRESS,
         name=HOST_NAME,
-        watch=AUTO,
+        watch=None,
         ppogatt=REVERSED,
         os=ANDROID,
         **link_options,
@@ -268,6 +271,8 @@ class BumblePhone(Phone):
         if os not in (ANDROID, IOS):
             raise HarnessError(f"no phone OS {os!r}")
         self.os = os
+        if watch is None:
+            watch = WatchPairing(dut).address()
         if os == IOS:
             from harness.ble.apple import AMS, ANCS, DeviceInformation
 
