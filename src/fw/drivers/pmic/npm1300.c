@@ -704,6 +704,16 @@ void set_6V6_power_state(bool enabled) {
 
 int battery_charge_status_get(BatteryChargeStatus *status) {
   uint8_t chg_status;
+  uint8_t err_reason;
+
+  if (!prv_read_register(PmicRegisters_BCHARGER_BCHGERRREASON, &err_reason)) {
+    return -1;
+  }
+
+  if (err_reason != 0U) {
+    *status = BatteryChargeStatusError;
+    return 0;
+  }
 
   if (!prv_read_register(PmicRegisters_BCHARGER_BCHGCHARGESTATUS, &chg_status)) {
     return -1;
@@ -729,6 +739,18 @@ int battery_charge_status_get(BatteryChargeStatus *status) {
       *status = BatteryChargeStatusUnknown;
       break;
   }
+
+  return 0;
+}
+
+int battery_charge_error_get(uint32_t *reason) {
+  uint8_t err_reason;
+
+  if (!prv_read_register(PmicRegisters_BCHARGER_BCHGERRREASON, &err_reason)) {
+    return -1;
+  }
+
+  *reason = err_reason;
 
   return 0;
 }
