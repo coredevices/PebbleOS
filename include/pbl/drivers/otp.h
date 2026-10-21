@@ -19,10 +19,6 @@
  * @{
  */
 
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||         \
-    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) ||     \
-    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO) || \
-    defined(CONFIG_SOC_POSIX)
 /** @brief OTP slot indexes. */
 enum {
   /** Hardware version. */
@@ -34,9 +30,6 @@ enum {
   /** Number of slots. */
   NUM_OTP_SLOTS = 3,
 };
-#else
-#error "OTP Slots not set for platform"
-#endif
 
 /** @brief Result of otp_write_slot(). */
 typedef enum {

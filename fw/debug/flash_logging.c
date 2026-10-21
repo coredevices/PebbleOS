@@ -147,25 +147,11 @@ static uint8_t prv_get_next_log_file_id(uint8_t file_id) {
 }
 
 static uint32_t prv_get_unit_base_address(uint32_t addr) {
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||         \
-    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) ||     \
-    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO) || \
-    defined(CONFIG_SOC_POSIX)
   return flash_get_subsector_base_address(addr);
-#else
-#error "Invalid platform!"
-#endif
 }
 
 static void prv_erase_unit(uint32_t addr) {
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) ||         \
-    defined(CONFIG_BOARD_GETAFIX) || defined(CONFIG_BOARD_QEMU_EMERY) ||     \
-    defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_QEMU_GABBRO) || \
-    defined(CONFIG_SOC_POSIX)
   flash_erase_subsector_blocking(addr);
-#else
-#error "Invalid platform!"
-#endif
 }
 
 static void prv_format_flash_logging_region(void) {
