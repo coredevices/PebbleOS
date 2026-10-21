@@ -1318,7 +1318,7 @@ static void prv_maybe_request_album_art(void) {
   char artist[MUSIC_BUFFER_LENGTH];
   music_get_now_playing(title, artist, nullptr);
   imaging_request_album_art(music_get_now_playing_generation(), ImagingFormat4BitPalette, side,
-                            side, title, artist);
+                            side, title, artist, nullptr);
 #endif
 }
 

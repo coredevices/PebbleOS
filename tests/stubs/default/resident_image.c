@@ -13,11 +13,24 @@ ResidentImage *PBL_WEAK resident_image_create_from_bitmap(const GBitmap *bitmap)
   return nullptr;
 }
 
+ResidentImage *PBL_WEAK resident_image_create_from_cache(const GBitmap *cached) {
+  return nullptr;
+}
+
+ResidentImage *PBL_WEAK resident_image_load_cached(ImageCacheClient client,
+                                                   const ImageCacheKey *key, GSize size) {
+  return nullptr;
+}
+
 void PBL_WEAK resident_image_destroy(ResidentImage *image) {
 }
 
 bool PBL_WEAK resident_image_write(ResidentImage *image, uint32_t offset, const uint8_t *data,
                                    size_t length) {
+  return false;
+}
+
+bool PBL_WEAK resident_image_is_pinned(const ResidentImage *image) {
   return false;
 }
 

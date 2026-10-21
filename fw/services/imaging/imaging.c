@@ -7,8 +7,10 @@
 #include <pbl/kernel/heap.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/psram.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/resident_image.h>
 #include <pbl/kernel/heap.h>
@@ -47,8 +49,28 @@ typedef struct {
   uint8_t token;
   uint32_t total_bytes;
   uint32_t received_bytes;
+  //! Where the image is received: a cache entry, with a PSRAM hold taken, or a resident image
+  ImageCacheEntry *entry;
   ResidentImage *image;
 } Reassembly;
+
+//! Cache key of the last request of each type, guarded by s_lock
+static struct {
+  bool valid;
+  uint8_t token;
+  ImageCacheKey key;
+} s_req[ImagingImageTypeCount];
+
+#ifdef CONFIG_IMAGE_CACHE
+#define IS_IMAGE_CACHE_ENABLED true
+#else
+#define IS_IMAGE_CACHE_ENABLED false
+#endif
+
+static const ImageCacheClient CACHE_CLIENTS[ImagingImageTypeCount] = {
+  [ImagingImageTypeAlbumArt] = ImageCacheClientAlbumArt,
+  [ImagingImageTypeNotification] = ImageCacheClientNotification,
+};
 
 // One per type, so that consumers can fetch at the same time
 static Reassembly s_rx[ImagingImageTypeCount];
@@ -56,6 +78,10 @@ static Reassembly s_rx[ImagingImageTypeCount];
 static void prv_rx_reset(uint8_t type) {
   if (type < ARRAY_LENGTH(s_rx)) {
     resident_image_destroy(s_rx[type].image);
+    if (s_rx[type].entry) {
+      image_cache_abort(s_rx[type].entry);
+      psram_retain_release();
+    }
     s_rx[type] = (Reassembly){};
   }
 }
@@ -130,11 +156,32 @@ bool imaging_is_type_supported(ImagingImageType image_type) {
   return !latched;
 }
 
+static void prv_set_request_key(ImagingImageType type, uint8_t token, const ImageCacheKey *key) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  s_req[type].valid = (key != nullptr);
+  s_req[type].token = token;
+  if (key) {
+    s_req[type].key = *key;
+  }
+  pbl_mutex_unlock(&s_lock);
+}
+
+static bool prv_get_request_key(uint8_t type, uint8_t token, ImageCacheKey *key) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  const bool valid = s_req[type].valid && (s_req[type].token == token);
+  if (valid) {
+    *key = s_req[type].key;
+  }
+  pbl_mutex_unlock(&s_lock);
+  return valid;
+}
+
 bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t width, uint16_t height,
-                               const char *title, const char *artist) {
+                               const char *title, const char *artist, const ImageCacheKey *key) {
   if (!imaging_is_type_supported(ImagingImageTypeAlbumArt)) {
     return false;
   }
+  prv_set_request_key(ImagingImageTypeAlbumArt, token, key);
   CommSession *session = comm_session_get_system_session();
   const size_t title_len = title ? MIN(strlen(title), 255) : 0;
   const size_t artist_len = artist ? MIN(strlen(artist), 255) : 0;
@@ -164,6 +211,9 @@ bool imaging_request_notification_image(uint8_t token, ImagingFormat format, uin
   if (!item_id || !imaging_is_type_supported(ImagingImageTypeNotification)) {
     return false;
   }
+  ImageCacheKey key;
+  image_cache_key_from_uuid(&key, item_id);
+  prv_set_request_key(ImagingImageTypeNotification, token, &key);
   CommSession *session = comm_session_get_system_session();
   uint8_t payload[sizeof(ImagingRequestHeader) + UUID_SIZE];
   ImagingRequestHeader *hdr = (ImagingRequestHeader *)payload;
@@ -275,10 +325,25 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       palette[i] = (GColor){.argb = cursor[i]};
     }
     cursor += palette_count;
-    rx->image = resident_image_create(GSize(width, height), gformat, palette, max_palette);
-    if (!rx->image) {
-      prv_drop(type, hdr->token, total, "image allocation failed");
-      return;
+
+    // Receive into the PSRAM cache if possible, else straight into internal RAM
+    ImageCacheKey key;
+    if (IS_IMAGE_CACHE_ENABLED && prv_get_request_key(type, hdr->token, &key)) {
+      psram_retain_acquire();
+      rx->entry =
+          image_cache_begin(CACHE_CLIENTS[type], &key, GSize(width, height), gformat, max_palette);
+      if (rx->entry) {
+        memcpy(image_cache_palette(rx->entry), palette, max_palette * sizeof(GColor));
+      } else {
+        psram_retain_release();
+      }
+    }
+    if (!rx->entry) {
+      rx->image = resident_image_create(GSize(width, height), gformat, palette, max_palette);
+      if (!rx->image) {
+        prv_drop(type, hdr->token, total, "image allocation failed");
+        return;
+      }
     }
     rx->active = true;
     rx->token = hdr->token;
@@ -302,7 +367,11 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
     prv_drop(type, rx->token, rx->total_bytes, "invalid chunk");
     return;
   }
-  resident_image_write(rx->image, hdr->offset, cursor, hdr->chunk_len);
+  if (rx->entry) {
+    memcpy(image_cache_pixels(rx->entry) + hdr->offset, cursor, hdr->chunk_len);
+  } else {
+    resident_image_write(rx->image, hdr->offset, cursor, hdr->chunk_len);
+  }
   rx->received_bytes += hdr->chunk_len;
 
   if (hdr->flags & ImagingResponseFlagLast) {
@@ -310,10 +379,22 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       prv_drop(type, rx->token, rx->total_bytes, "incomplete image");
       return;
     }
-    // Ownership of the image moves to the handler
     ResidentImage *image = rx->image;
     const uint8_t token = rx->token;
     rx->image = nullptr;
+    if (rx->entry) {
+      // Hand over a copy in internal RAM, so that the PSRAM need not be retained while it's shown
+      const GBitmap *cached = image_cache_commit(rx->entry);
+      rx->entry = nullptr;
+      image = resident_image_create_from_cache(cached);
+      image_cache_release(cached);
+      psram_retain_release();
+      if (!image) {
+        prv_drop(type, token, rx->total_bytes, "image copy failed");
+        return;
+      }
+    }
+    // Ownership of the image moves to the handler
     prv_rx_reset(type);
     prv_deliver(token, type, image);
   }
@@ -338,5 +419,6 @@ void imaging_handle_comm_session_event(const PebbleCommSessionEvent *event) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   s_latched_session = nullptr;
   s_unsupported_types = 0;
+  memset(s_req, 0, sizeof(s_req));
   pbl_mutex_unlock(&s_lock);
 }

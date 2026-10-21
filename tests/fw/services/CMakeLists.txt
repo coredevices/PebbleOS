@@ -116,6 +116,22 @@ pbl_clar_test(test_imaging
     fw/services/imaging/resident_image.c
 )
 
+pbl_clar_test(test_imaging_cache
+  SOURCE test_imaging.c
+  SOURCES
+    tests/fakes/fake_session.c
+    fw/services/imaging/imaging.c
+    fw/services/imaging/resident_image.c
+    fw/services/imaging/image_cache.c
+    fw/kernel/psram_image_pool.c
+  DEFINES
+    CONFIG_PSRAM_RETENTION
+    CONFIG_PSRAM_IMAGE_POOL
+    CONFIG_PSRAM_IMAGE_SLOTS=4
+    CONFIG_IMAGE_CACHE
+    CONFIG_PSRAM_IDLE_RELEASE_MS=5000
+)
+
 pbl_clar_test(test_analytics_native
   SOURCES
     fw/services/analytics/native.c

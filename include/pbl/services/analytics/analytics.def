@@ -164,3 +164,5 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(volatile_heap_high_water)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_hits)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_misses)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_evictions)
+// Images shown from the PSRAM, holding it retained, for lack of RAM for a copy.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(psram_demote_fail)

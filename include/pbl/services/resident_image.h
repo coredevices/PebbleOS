@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/services/image_cache.h>
+
 #include <applib/graphics/gtypes.h>
 
 /**
@@ -57,6 +59,28 @@ ResidentImage *resident_image_create(GSize size, GBitmapFormat format, const GCo
 ResidentImage *resident_image_create_from_bitmap(const GBitmap *bitmap);
 
 /**
+ * @brief Create a resident copy of an image cache entry.
+ *
+ * If there is no RAM for a copy, the entry is pinned and drawn from the PSRAM instead, which is
+ * kept retained for as long as the image lives.
+ *
+ * @param cached Bitmap of an image cache entry, pinned by the caller with a retention hold taken.
+ * @return Image, or NULL if out of memory.
+ */
+ResidentImage *resident_image_create_from_cache(const GBitmap *cached);
+
+/**
+ * @brief Create a resident copy of an image cache entry, if there is one.
+ *
+ * @param client Cache client.
+ * @param key Cache key.
+ * @param size Size the image must have.
+ * @return Image, or NULL on a miss or if out of memory.
+ */
+ResidentImage *resident_image_load_cached(ImageCacheClient client, const ImageCacheKey *key,
+                                          GSize size);
+
+/**
  * @brief Destroy a resident image.
  *
  * @param image Image, or NULL.
@@ -70,7 +94,7 @@ void resident_image_destroy(ResidentImage *image);
  * @param offset Offset in the pixel stream: the rows, each of the format's row size, in order.
  * @param data Data.
  * @param length Length of @p data.
- * @return false if the write goes past the end of the pixels.
+ * @return false if the write goes past the end of the pixels, or the image is a cache entry.
  */
 bool resident_image_write(ResidentImage *image, uint32_t offset, const uint8_t *data,
                           size_t length);
@@ -82,6 +106,14 @@ bool resident_image_write(ResidentImage *image, uint32_t offset, const uint8_t *
  * @return Palette of @ref RESIDENT_IMAGE_MAX_PALETTE entries.
  */
 GColor *resident_image_get_palette(ResidentImage *image);
+
+/**
+ * @brief Check whether an image is drawn from the image cache, keeping the PSRAM retained.
+ *
+ * @param image Image.
+ * @return true if the image is drawn from the cache, for lack of RAM for a copy.
+ */
+bool resident_image_is_pinned(const ResidentImage *image);
 
 /**
  * @brief Get the size.
