@@ -11,6 +11,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notification_storage_private.h>
 #include <pbl/services/timeline/attribute_private.h>
@@ -555,6 +556,10 @@ void notification_storage_set_status(const Uuid *id, uint8_t status) {
 
 void notification_storage_remove(const Uuid *id) {
   notification_storage_set_status(id, TimelineItemStatusDeleted);
+  // Removed, or replaced by an edit
+  ImageCacheKey key;
+  image_cache_key_from_uuid(&key, id);
+  image_cache_invalidate(ImageCacheClientNotification, &key);
 }
 
 bool notification_storage_find_ancs_notification_id(uint32_t ancs_uid, Uuid *uuid_out) {
@@ -848,6 +853,7 @@ void notification_storage_reset_and_init(void) {
   pbl_fs_unlink(FILENAME);
   s_write_offset = 0;
   notification_storage_unlock();
+  image_cache_flush(ImageCacheClientNotification);
 }
 
 // Added for use by unit tests. Do not call from firmware
