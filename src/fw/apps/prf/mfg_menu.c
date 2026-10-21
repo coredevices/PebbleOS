@@ -39,6 +39,7 @@
 #include "process_management/app_manager.h"
 #include "process_state/app_state/app_state.h"
 #include "resource/resource_ids.auto.h"
+#include "services/common/bluetooth/bluetooth_persistent_storage.h"
 #include "services/common/bluetooth/local_id.h"
 #include "services/common/bluetooth/pairability.h"
 #include "system/bootbits.h"
@@ -181,6 +182,39 @@ static void prv_select_discharge(int index, void *context) {
   launcher_task_add_callback(prv_launch_app_cb, (void*) mfg_discharge_app_get_info());
 }
 
+static void prv_clear_bondings_confirmed(ClickRecognizerRef recognizer, void *context) {
+  ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
+  confirmation_dialog_pop(confirmation_dialog);
+
+  bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
+  if (confirmed) {
+    bt_persistent_storage_delete_all_pairings();
+  }
+}
+
+static void prv_clear_bondings_click_config(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, prv_clear_bondings_confirmed);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_clear_bondings_confirmed);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_clear_bondings_confirmed);
+}
+
+static void prv_extras_select_clear_bondings(int index, void *context) {
+  ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Clear Bondings");
+  Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
+
+  dialog_set_text(dialog, "Clear all bondings?\n\nThis action cannot be undone!");
+  dialog_set_background_color(dialog, GColorOrange);
+  dialog_set_text_color(dialog, GColorWhite);
+
+  confirmation_dialog_set_click_config_provider(confirmation_dialog,
+                                                prv_clear_bondings_click_config);
+
+  ActionBarLayer *action_bar = confirmation_dialog_get_action_bar(confirmation_dialog);
+  action_bar_layer_set_context(action_bar, confirmation_dialog);
+
+  app_confirmation_dialog_push(confirmation_dialog);
+}
+
 #ifdef MANUFACTURING_FW
 static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context) {
   ConfirmationDialog *confirmation_dialog = (ConfirmationDialog *)context;
@@ -226,6 +260,7 @@ static void prv_extras_window_load(Window *window) {
 #if CAPABILITY_HAS_BUILTIN_HRM
     { .title = "Test HRM",          .callback = prv_select_hrm },
 #endif
+    { .title = "Clear Bondings",    .callback = prv_extras_select_clear_bondings },
 #ifdef MANUFACTURING_FW
     { .title = "Load PRF",          .callback = prv_extras_select_load_prf },
 #endif
