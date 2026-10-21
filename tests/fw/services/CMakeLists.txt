@@ -508,7 +508,8 @@ pbl_clar_test(test_mic_capture
 )
 
 pbl_clar_test(test_voice_speex
-  SOURCES fw/services/voice/voice_speex.c
+  SOURCES fw/services/voice/voice_speex.c fw/kernel/volatile_heap.c kernel/heap.c
+  DEFINES CONFIG_PSRAM_RETENTION CONFIG_KERNEL_VOLATILE_HEAP CONFIG_KERNEL_VOLATILE_HEAP_SIZE=32768
   LIBS speex
   INCLUDES third_party/speex third_party/speex/speex/include
   OVERRIDES dummy_board
