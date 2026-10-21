@@ -17,6 +17,7 @@ pbl_library_sources(
   poll.c
   reboot.c
   sched.c
+  scratch.c
   sem.c
   syscall.c
   thread.c
