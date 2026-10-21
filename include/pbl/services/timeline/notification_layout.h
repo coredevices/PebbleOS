@@ -59,9 +59,10 @@
  * @brief Smallest layout origin y at which its text is considered visible.
  *
  * @param h Height of the layout.
+ * @param swap_h Height of the swap layer the layout is shown in.
  */
-#define TEXT_VISIBLE_LOWER_THRESHOLD(h) \
-  (-(h) + PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
+#define TEXT_VISIBLE_LOWER_THRESHOLD(h, swap_h) \
+  (-(h) + (swap_h) - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
 
 /**
  * @brief Fonts and spacing of a notification card, per content size.
