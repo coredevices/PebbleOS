@@ -43,6 +43,8 @@ if(CONFIG_GH3X2X_ALGO)
     ${gh3x2x}/demo_code/demo_kernel_code/module/gh_soft_adt
     ${gh3x2x}/demo_code/demo_mp_code/inc
   )
+  # Read by the demo code's config, which the driver includes too.
+  pbl_compile_definitions_ifdef(CONFIG_BT_SERVICE_GH3X2X_TUNING GH3X2X_TUNING_SERVICE_ENABLED)
   pbl_library_import(star-mc1_arm-gcc14.2.1_softfp+Os_common_dl ${gh3x2x}/algo_lib/COMMON_DL)
   pbl_library_import(star-mc1_arm-gcc14.2.1_softfp+Os_common_dsp ${gh3x2x}/algo_lib/COMMON_DSP)
   pbl_library_import("GitInfo_star-mc1-arm-none-eabi-gcc1421(softfp+Os)" ${gh3x2x}/algo_lib/HR)
@@ -57,5 +59,5 @@ if(CONFIG_GH3X2X_ALGO)
   )
   pbl_library_named(gh3x2x)
   pbl_library_sources(${sources})
-  pbl_library_compile_options(-Wno-sign-compare)
+  pbl_library_compile_options(-Wno-sign-compare -Wno-type-limits)
 endif()
