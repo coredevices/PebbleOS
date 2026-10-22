@@ -48,12 +48,8 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 //! each cache entry is ~16 bytes, 4000 / 16 = 250 apps
 #define APP_CACHE_MAX_SIZE 4000
 
-//! Keep enough room for the maximum sized application based on platform, plus a little more room.
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(UNITTEST)
+//! Keep enough room for the maximum sized application, plus a little more room.
 #define APP_SPACE_BUFFER PBL_KIB(300)
-#else
-#define APP_SPACE_BUFFER PBL_MIB(4)
-#endif
 
 #define MAX_PRIORITY ((uint32_t)~0)
 
