@@ -11,7 +11,8 @@ from harness.helpers.ui import Button, Ui
 pytestmark = pytest.mark.variants("prf")
 
 # The watch's name under the QR code: its address is random on the emulator.
-NAME_BAND_H = 28
+# The field is 30 px high and sits 10 px higher on round displays.
+NAME_BAND_H = 40
 # The backlight stays on 3 s after a press, then fades out over 0.5 s.
 BACKLIGHT_OFF_S = (3.0, 4.0)
 BACKLIGHT_WATCH_S = 6

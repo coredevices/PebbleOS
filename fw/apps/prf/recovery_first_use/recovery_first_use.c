@@ -185,7 +185,7 @@ static void prv_window_load(Window *window) {
       data->qr_url_buffer, strlen(data->qr_url_buffer), QRCodeECCMedium, GColorBlack, GColorWhite);
   layer_add_child(&window->layer, &qr_code->layer);
 
-#if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
+#if defined(CONFIG_PLATFORM_EMERY) || defined(CONFIG_PLATFORM_GABBRO)
   const uint16_t name_height = 30;
 #else
   const uint16_t name_height = 20;
@@ -197,7 +197,7 @@ static void prv_window_load(Window *window) {
       &GRect(0, window->layer.bounds.size.h - PBL_IF_RECT_ELSE(name_height, name_height + 10),
              window->layer.bounds.size.w, name_height),
       nullptr,
-#if defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
+#if defined(CONFIG_PLATFORM_EMERY) || defined(CONFIG_PLATFORM_GABBRO)
       fonts_get_system_font(FONT_KEY_GOTHIC_24),
 #else
       fonts_get_system_font(FONT_KEY_GOTHIC_14),
