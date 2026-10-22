@@ -1013,6 +1013,9 @@ void test_workout_service__metrics(void) {
   cl_assert_equal_i(distance_m, metrics.distance_m);
   cl_assert_equal_i(zone, metrics.current_hr_zone);
   cl_assert_equal_i(kcal, metrics.active_kcal);
+  int32_t hr_zone_time_s[HRZoneCount];
+  cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
+  cl_assert_equal_m(hr_zone_time_s, metrics.hr_zone_time_s, sizeof(hr_zone_time_s));
 
   cl_assert(workout_service_pause_workout(true));
   prv_put_bpm_event(150, HRMQuality_Good);

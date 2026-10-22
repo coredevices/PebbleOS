@@ -191,6 +191,8 @@ typedef struct WorkoutServiceMetrics {
   int32_t avg_bpm;
   /** Estimated active kilocalories. */
   int32_t active_kcal;
+  /** Seconds spent in each heart rate zone, indexed by HRZone. */
+  int32_t hr_zone_time_s[HRZoneCount];
   /** Latest SpO2 in percent, or zero if none yet. */
   int32_t spo2_pct;
   /** Lowest SpO2 in percent, or zero if none yet. */

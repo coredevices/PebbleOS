@@ -743,6 +743,7 @@ bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_
       .spo2_min_pct = wrkt->spo2_min_pct,
       .spo2_measuring = wrkt->spo2_measuring,
     };
+    memcpy(metrics_out->hr_zone_time_s, wrkt->hr_zone_time_s, sizeof(wrkt->hr_zone_time_s));
   }
   prv_unlock();
   return wrkt != nullptr;
