@@ -4,7 +4,7 @@
 #pragma once
 
 /**
- * @defgroup services_bluetooth_ble_bas Battery service
+ * @defgroup services_bluetooth_battery_level Battery level
  * @ingroup services_bluetooth
  * @brief Feeds the battery level to the BLE Battery Service.
  * @{
@@ -13,11 +13,11 @@
 /**
  * @brief Start reporting the battery level, on KernelMain.
  */
-void ble_bas_init(void);
+void bt_battery_level_start(void);
 
 /**
  * @brief Stop reporting the battery level, on KernelMain.
  */
-void ble_bas_deinit(void);
+void bt_battery_level_stop(void);
 
 /** @} */
