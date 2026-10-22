@@ -53,7 +53,7 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 // Values comply with Apple Accessory Design Guidelines.
 static const uint32_t s_interval_ms[] = {
   [GAPLEAdvertisingInterval_Short] = 20,  // 20ms
-  [GAPLEAdvertisingInterval_Long] = 1022, // 1022.5ms (truncated to ms)
+  [GAPLEAdvertisingInterval_Long] = 1285, // 1285ms
 };
 
 typedef struct GAPLEAdvertisingJob {

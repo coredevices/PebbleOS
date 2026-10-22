@@ -61,7 +61,7 @@ void pbl_bt_advert_advertising_disable(void) {
 // Expected ms values for each interval preset
 static const uint32_t s_expected_interval_ms[] = {
   [GAPLEAdvertisingInterval_Short] = 20,
-  [GAPLEAdvertisingInterval_Long] = 1022,
+  [GAPLEAdvertisingInterval_Long] = 1285,
 };
 
 void gap_le_assert_advertising_interval(GAPLEAdvertisingInterval expected) {
