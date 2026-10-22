@@ -1,0 +1,9 @@
+# The gabbro firmware's resources, in id order.
+include:
+  - fonts
+  - images
+  - animations
+  - vibes
+  - data
+  - timeline
+  - lang

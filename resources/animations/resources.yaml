@@ -1,0 +1,77 @@
+# PDC animations: directories of SVG frames and pre-rendered sequences.
+media:
+
+  - name: HEALTH_APP_PULSING_HEART
+    type: raw
+    file: health_app_pulsing_heart.pdc
+
+  - name: MODAL_CONTRACT_TO_MODAL_SEQUENCE
+    type: pdc
+    file:
+      rect: rect/modal_contract_to_modal
+      round: round/modal_contract_to_modal
+    targetPlatforms: [emery, gabbro]
+
+  - name: MODAL_CONTRACT_FROM_MODAL_SEQUENCE
+    type: pdc
+    file:
+      rect: rect/modal_contract_from_modal
+      round: round/modal_contract_from_modal
+    targetPlatforms: [emery, gabbro]
+
+  - name: MODAL_EXPAND_TO_APP_SEQUENCE
+    type: pdc
+    file:
+      rect: rect/modal_expand_to_app
+      round: round/modal_expand_to_app
+    targetPlatforms: [emery, gabbro]
+
+  - name: ALARM_CLOCK_LARGE
+    type: raw
+    file: Pebble_80x80_Alarm_clock.pdc
+    builtin: [emery, gabbro]
+
+  - name: BATTERY_ICON_CHARGING_LARGE
+    type: raw
+    file: Pebble_80x80_Battery_currently_charging.pdc
+    builtin: true
+
+  - name: RESULT_DELETED_LARGE
+    type: raw
+    file: Pebble_80x80_Deleted.pdc
+    builtin: [emery, gabbro]
+
+  - name: RESULT_SHREDDED_LARGE
+    type: raw
+    file: Pebble_80x80_Result_shredded.pdc
+    builtin: [emery, gabbro]
+
+  - name: RESULT_DISMISSED_LARGE
+    type: raw
+    file: Pebble_80x80_Dismiss.pdc
+    builtin: [emery, gabbro]
+
+  - name: GENERIC_CONFIRMATION_LARGE
+    type: raw
+    file: Pebble_80x80_Generic_confirmation.pdc
+    builtin: true
+
+  - name: INCOMING_PHONE_CALL_LARGE
+    type: raw
+    file: Pebble_80x80_Incoming_call.pdc
+    builtin: [emery, gabbro]
+
+  - name: RESULT_MUTE_LARGE
+    type: raw
+    file: Pebble_80x80_Mute.pdc
+    builtin: true
+
+  - name: RESULT_SENT_LARGE
+    type: raw
+    file: Pebble_80x80_Sent.pdc
+    builtin: [emery, gabbro]
+
+  - name: RESULT_UNMUTE_LARGE
+    type: raw
+    file: Pebble_80x80_Unmute.pdc
+    builtin: [emery, gabbro]

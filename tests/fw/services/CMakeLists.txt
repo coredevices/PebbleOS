@@ -4,7 +4,7 @@
 # The timezone database the tests check against, as a C array. The
 # firmware bakes the same bytes into a resource.
 set(timezone_fixture ${CMAKE_CURRENT_BINARY_DIR}/timezone_fixture.auto.h)
-set(timezones_olson ${PBL_BASE}/resources/normal/base/tzdata/timezones_olson.txt)
+set(timezones_olson ${PBL_BASE}/resources/tzdata/timezones_olson.txt)
 add_custom_command(
   OUTPUT ${timezone_fixture}
   COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/resources.py tzdata-header

@@ -7,8 +7,8 @@
 # is wrapped as a resource.
 #
 # Adding an app here also needs a raw resource entry named
-# STORED_APP_<APPNAME> in resources/normal/base/resource_map.json (file:
-# normal/raw/app_<appname>.bin) and an entry in the system app registry.
+# STORED_APP_<APPNAME> in resources/data/resources.yaml and an entry in
+# the system app registry.
 
 # Apps are built the way a third-party app is: the SDK's own flags and
 # headers, not the firmware's. Only the configuration is shared.
@@ -148,7 +148,7 @@ function(pbl_stored_app name)
     VERBATIM
   )
 
-  set(reso ${PROJECT_BINARY_DIR}/resources/normal/base/raw/app_${name}.bin.reso)
+  set(reso ${PROJECT_BINARY_DIR}/resources/data/app_${name}.bin.reso)
   add_custom_command(
     OUTPUT ${reso}
     COMMAND ${generate} app-reso --input ${app_bin}/pebble-app.bin

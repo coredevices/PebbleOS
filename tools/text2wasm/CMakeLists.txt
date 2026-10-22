@@ -111,17 +111,15 @@ target_link_options(pebble_renderer PRIVATE
 )
 
 set(font_outputs)
-foreach(directory normal common)
-  file(GLOB fonts CONFIGURE_DEPENDS "${PEBBLEOS_ROOT}/resources/${directory}/base/pbf/GOTHIC*.pbf")
-  foreach(font IN LISTS fonts)
-    get_filename_component(name "${font}" NAME)
-    set(output "${DIST}/${name}")
-    add_custom_command(OUTPUT "${output}"
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${font}" "${output}"
-      DEPENDS "${font}"
-      VERBATIM)
-    list(APPEND font_outputs "${output}")
-  endforeach()
+file(GLOB fonts CONFIGURE_DEPENDS "${PEBBLEOS_ROOT}/resources/fonts/GOTHIC*.pbf")
+foreach(font IN LISTS fonts)
+  get_filename_component(name "${font}" NAME)
+  set(output "${DIST}/${name}")
+  add_custom_command(OUTPUT "${output}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${font}" "${output}"
+    DEPENDS "${font}"
+    VERBATIM)
+  list(APPEND font_outputs "${output}")
 endforeach()
 
 add_custom_target(text2wasm ALL

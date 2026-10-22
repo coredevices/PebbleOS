@@ -200,11 +200,14 @@ static bool prv_check_atlas(FontInfo *font, const Codepoint *codepoints, size_t 
   return gbitmap_pbi_eq(s_dest_bitmap, filename);
 }
 
-// EMOJI_28~color.pbf -> emoji_28_color
+// color/EMOJI_28.pbf -> emoji_28_color, bw/EMOJI_28.pbf -> emoji_28
 static void prv_font_image_name(const char *file_name, char *out, size_t out_size) {
-  snprintf(out, out_size, "%.*s", (int)(strlen(file_name) - strlen(".pbf")), file_name);
+  const char *base = strchr(file_name, '/') + 1;
+  const bool color = strncmp(file_name, "color/", strlen("color/")) == 0;
+  snprintf(out, out_size, "%.*s%s", (int)(strlen(base) - strlen(".pbf")), base,
+           color ? "_color" : "");
   for (char *c = out; *c; c++) {
-    *c = (*c == '~') ? '_' : tolower((unsigned char)*c);
+    *c = tolower((unsigned char)*c);
   }
 }
 
@@ -264,20 +267,27 @@ static int prv_compare_names(const void *a, const void *b) {
 //////////////////////
 
 void test_emoji_glyphs__atlases(void) {
-  DIR *dir = opendir(FIRMWARE_EMOJI_DIR);
-  cl_assert_(dir, FIRMWARE_EMOJI_DIR);
+  static const char *const variants[] = {"bw", "color"};
   char *names[64];
   size_t num_names = 0;
-  struct dirent *entry;
-  while ((entry = readdir(dir))) {
-    const size_t len = strlen(entry->d_name);
-    if (strncmp(entry->d_name, "EMOJI_", strlen("EMOJI_")) == 0 && len > strlen(".pbf") &&
-        strcmp(entry->d_name + len - strlen(".pbf"), ".pbf") == 0) {
-      cl_assert(num_names < ARRAY_LENGTH(names));
-      names[num_names++] = strdup(entry->d_name);
+  for (size_t v = 0; v < ARRAY_LENGTH(variants); v++) {
+    char dir_path[PATH_STRING_LENGTH];
+    snprintf(dir_path, sizeof(dir_path), "%s/%s", FIRMWARE_EMOJI_DIR, variants[v]);
+    DIR *dir = opendir(dir_path);
+    cl_assert_(dir, dir_path);
+    struct dirent *entry;
+    while ((entry = readdir(dir))) {
+      const size_t len = strlen(entry->d_name);
+      if (strncmp(entry->d_name, "EMOJI_", strlen("EMOJI_")) == 0 && len > strlen(".pbf") &&
+          strcmp(entry->d_name + len - strlen(".pbf"), ".pbf") == 0) {
+        cl_assert(num_names < ARRAY_LENGTH(names));
+        char *name = malloc(PATH_STRING_LENGTH);
+        snprintf(name, PATH_STRING_LENGTH, "%s/%s", variants[v], entry->d_name);
+        names[num_names++] = name;
+      }
     }
+    closedir(dir);
   }
-  closedir(dir);
   cl_assert(num_names > 0);
   qsort(names, num_names, sizeof(names[0]), prv_compare_names);
 

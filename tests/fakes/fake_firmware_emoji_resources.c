@@ -8,9 +8,9 @@
 #include <resource/resource_ids.auto.h>
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-#define EMOJI_SUFFIX "~color.pbf"
+#define EMOJI_DIR FIRMWARE_EMOJI_DIR "/color"
 #else
-#define EMOJI_SUFFIX ".pbf"
+#define EMOJI_DIR FIRMWARE_EMOJI_DIR "/bw"
 #endif
 
 static FILE *prv_open_emoji(ResAppNum app_num, uint32_t id) {
@@ -20,16 +20,16 @@ static FILE *prv_open_emoji(ResAppNum app_num, uint32_t id) {
   const char *path;
   switch (id) {
     case RESOURCE_ID_GOTHIC_14_EMOJI:
-      path = FIRMWARE_EMOJI_DIR "/EMOJI_14" EMOJI_SUFFIX;
+      path = EMOJI_DIR "/EMOJI_14.pbf";
       break;
     case RESOURCE_ID_GOTHIC_18_EMOJI:
-      path = FIRMWARE_EMOJI_DIR "/EMOJI_18" EMOJI_SUFFIX;
+      path = EMOJI_DIR "/EMOJI_18.pbf";
       break;
     case RESOURCE_ID_GOTHIC_24_EMOJI:
-      path = FIRMWARE_EMOJI_DIR "/EMOJI_24" EMOJI_SUFFIX;
+      path = EMOJI_DIR "/EMOJI_24.pbf";
       break;
     case RESOURCE_ID_GOTHIC_28_EMOJI:
-      path = FIRMWARE_EMOJI_DIR "/EMOJI_28" EMOJI_SUFFIX;
+      path = EMOJI_DIR "/EMOJI_28.pbf";
       break;
     default:
       return nullptr;

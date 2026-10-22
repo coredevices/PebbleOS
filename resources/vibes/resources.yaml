@@ -1,0 +1,74 @@
+# Vibration patterns.
+media:
+
+  - name: VIBE_SCORE_REVEILLE
+    type: vibe
+    file: reveille.json
+
+  - name: VIBE_SCORE_HAPTIC_FEEDBACK
+    type: vibe
+    file: haptic_feedback.json
+
+  - name: VIBE_SCORE_NUDGE_NUDGE
+    type: vibe
+    file: nudge_nudge.json
+
+  - name: VIBE_SCORE_PULSE
+    type: vibe
+    file: pulse.json
+
+  - name: VIBE_SCORE_JACKHAMMER
+    type: vibe
+    file: jackhammer.json
+
+  - name: VIBE_SCORE_MARIO
+    type: vibe
+    file: mario.json
+
+  - name: VIBE_SCORE_STANDARD_SHORT_LOW
+    type: vibe
+    file: standard_short_low.json
+
+  - name: VIBE_SCORE_STANDARD_SHORT_HIGH
+    type: vibe
+    file: standard_short_high.json
+
+  - name: VIBE_SCORE_STANDARD_LONG_LOW
+    type: vibe
+    file: standard_long_low.json
+
+  - name: VIBE_SCORE_STANDARD_LONG_HIGH
+    type: vibe
+    file: standard_long_high.json
+
+  - name: VIBE_SCORE_ALARM_LPM
+    type: vibe
+    file: alarm_lpm.json
+
+  - name: VIBE_SCORE_GENTLE
+    type: vibe
+    file: gentle.json
+
+  - name: VIBE_SCORE_DOUBLE_PULSE_MEDIUM
+    type: vibe
+    file: double_pulse_medium.json
+
+  - name: VIBE_SCORE_PEBBLE_MORSE
+    type: vibe
+    file: pebble_morse.json
+
+  - name: VIBE_SCORE_HEARTBEAT
+    type: vibe
+    file: heartbeat.json
+
+  - name: VIBE_SCORE_DOUBLE_TAP
+    type: vibe
+    file: double_tap.json
+
+  - name: VIBE_SCORE_WAVE
+    type: vibe
+    file: wave.json
+
+  - name: VIBE_SCORE_IMPERIAL
+    type: vibe
+    file: imperial.json

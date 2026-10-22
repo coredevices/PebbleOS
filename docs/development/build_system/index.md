@@ -117,4 +117,5 @@ developers to build their own projects with; see {doc}`../../sdk/building`.
 
 cmake.md
 kconfig.md
+resources.md
 ```

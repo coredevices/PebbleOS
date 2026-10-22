@@ -1,0 +1,22 @@
+# The gabbro recovery firmware's resources. It has no resource pack,
+# so everything is linked into the image.
+overrides:
+  builtin: true
+  extended: false
+include:
+  - path: fonts
+    only:
+      - GOTHIC_18_BOLD
+      - GOTHIC_24_BOLD
+      - GOTHIC_14
+      - GOTHIC_24
+  - path: images
+    only:
+      - ACTION_BAR_ICON_CHECK
+      - ACTION_BAR_ICON_X
+      - BT_PAIR_SUCCESS
+      - BT_PAIR_FAILURE
+      - BT_PAIR_APPROVE_ON_PHONE
+      - BT_PAIR_CONFIRMATION
+      - GENERIC_WARNING_LARGE
+  - recovery

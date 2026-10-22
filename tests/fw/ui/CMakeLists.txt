@@ -282,7 +282,7 @@ pbl_clar_test(test_action_menu_window
     fw/shell/system_theme.c
     fw/shell/system_theme_style.c
     fw/applib/ui/shadows.c
-  DEFINES "FIRMWARE_EMOJI_DIR=\"${PBL_BASE}/resources/normal/base/pbf\""
+  DEFINES "FIRMWARE_EMOJI_DIR=\"${PBL_BASE}/resources/fonts\""
   PLATFORMS emery gabbro flint
   OVERRIDES dummy_board
   TEST_IMAGES
@@ -396,7 +396,7 @@ pbl_clar_test(test_emoji_glyphs
     fw/system/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
-  DEFINES "FIRMWARE_EMOJI_DIR=\"${PBL_BASE}/resources/normal/base/pbf\""
+  DEFINES "FIRMWARE_EMOJI_DIR=\"${PBL_BASE}/resources/fonts\""
   OVERRIDES dummy_board
   TEST_IMAGES
 )

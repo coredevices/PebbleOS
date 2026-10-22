@@ -17,7 +17,7 @@ from resources.types.resource_definition import ResourceDefinition
 height_from_name = FontResourceGenerator._get_font_height_from_name
 
 TTF_PATH = os.path.join(
-    root_dir, os.pardir, "resources/normal/base/ttf/Roboto-Condensed.ttf"
+    root_dir, os.pardir, "resources/fonts/Roboto-Condensed.ttf"
 )
 
 

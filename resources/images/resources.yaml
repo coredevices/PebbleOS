@@ -1,0 +1,2233 @@
+# System images, by size and display variant.
+media:
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: ACTION_BAR_ICON_CHECK
+    type: pbi8
+    file: action_bar_icon_check.png
+    builtin: [emery, gabbro]
+
+  - name: ACTION_BAR_ICON_X
+    type: pbi8
+    file: action_bar_icon_x.png
+
+  - name: BT_PAIR_SUCCESS
+    type: pdc
+    file:
+      bw: bw/bt_pair_success.svg
+      color: color/bt_pair_success.svg
+
+  - name: BT_PAIR_FAILURE
+    type: pdc
+    file:
+      bw: bw/bt_pair_failure.svg
+      color: color/bt_pair_failure.svg
+
+  - name: BT_PAIR_APPROVE_ON_PHONE
+    type: pdc
+    file:
+      bw: bw/bt_pair_approve_on_phone.svg
+      color: color/bt_pair_approve_on_phone.svg
+
+  - name: BT_PAIR_CONFIRMATION
+    type: pdc
+    file: bt_pair_confirmation.svg
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: GENERIC_WARNING_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_warning.svg
+    builtin: [emery, gabbro]
+
+  - name: BATTERY_ICON_LOW_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Low_battery.svg
+
+  - name: BATTERY_ICON_VERY_LOW_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Very_low_battery.svg
+
+  - name: BATTERY_ICON_FULL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Battery_full.svg
+
+  - name: BATTERY_ICON_FULL_LARGE_INVERTED
+    type: pdc
+    file: 80x80/Pebble_80x80_Battery_full_inverted.svg
+
+  - name: BATTERY_ICON_CHARGING_LARGE_INVERTED
+    type: pdc
+    file: 80x80/Pebble_80x80_Battery_currently_charging_inverted.svg
+
+  - name: BATTERY_ICON_CHARGE
+    type: png
+    file: charge_battery_icon.png
+
+  - name: BATTERY_NEEDS_CHARGING
+    type: pdc
+    file: 50x50/Pebble_50x50_Needs_Charging.svg
+
+  - name: CONNECTIVITY_BLUETOOTH_AIRPLANE_MODE
+    type: png
+    file: connectivity_bluetooth_airplane_mode.png
+
+  - name: CONNECTIVITY_BLUETOOTH_CONNECTED
+    type: png
+    file: connectivity_bluetooth_connected.png
+
+  - name: CONNECTIVITY_BLUETOOTH_DISCONNECTED
+    type: png
+    file: connectivity_bluetooth_disconnected.png
+
+  - name: CONNECTIVITY_BLUETOOTH_DND
+    type: png
+    file: connectivity_bluetooth_dnd.png
+
+  - name: CONNECTIVITY_BLUETOOTH_CALLS_ONLY
+    type: png
+    file: connectivity_bluetooth_calls_only.png
+
+  - name: QUIET_TIME
+    type: png
+    file:
+      bw: bw/quiet_time.png
+      color: color/quiet_time.png
+
+  - name: MUSIC_APP_GLANCE_PLAY
+    type: png
+    file: music_app_glance_play.png
+
+  - name: MUSIC_APP_GLANCE_PAUSE
+    type: png
+    file: music_app_glance_pause.png
+
+  - name: NOTIFICATIONS_APP_GLANCE
+    type: png
+    file: notifications_app_glance.png
+
+  - name: SEND_TEXT_APP_GLANCE
+    type: png
+    file: send_text_app_glance.png
+
+  - name: WATCHFACES_APP_GLANCE
+    type: png
+    file: watchfaces_app_glance.png
+
+  - name: MENU_ICON_TICTOC_WATCH
+    type: pbi8
+    file:
+      bw: bw/menu_icon_simplicity_watch.png
+      color: color/menu_icon_tictoc_watch.png
+
+  - name: MENU_ICON_KICKSTART_WATCH
+    type: pbi8
+    file: menu_icon_kickstart_watch.png
+
+  - name: SETTINGS_MENU_ICON_BLUETOOTH
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Connect_to_watch.svg
+
+  - name: SETTINGS_MENU_ICON_NOTIFICATIONS
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_SMS.svg
+
+  - name: SETTINGS_MENU_ICON_VIBRATIONS
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Vibrating_watch.svg
+
+  - name: SETTINGS_MENU_ICON_QUIET_TIME
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Sleep.svg
+
+  - name: SETTINGS_MENU_ICON_TIMELINE
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Timeline_weather.svg
+
+  - name: SETTINGS_MENU_ICON_QUICK_LAUNCH
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Rocket.svg
+
+  - name: SETTINGS_MENU_ICON_DATE_TIME
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Calendar.svg
+
+  - name: SETTINGS_MENU_ICON_DISPLAY
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Send_to_watch_unchecked.svg
+
+  - name: SETTINGS_MENU_ICON_HEALTH
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Heart_empty.svg
+
+  - name: SETTINGS_MENU_ICON_THEMES
+    type: pbi
+    file: 25x25/Pebble_25x25_Paint_brush.svg
+
+  - name: SETTINGS_MENU_ICON_BACKGROUND_APP
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_Locker.svg
+
+  - name: SETTINGS_MENU_ICON_SYSTEM
+    type: pbi
+    file: ../../third_party/resources/iconography/icons/25px_About.svg
+
+  - name: SETTINGS_ICON_BLUETOOTH_ALT
+    type: pbi
+    file: settings_icon_bluetooth_alt.png
+
+  - name: SETTINGS_ICON_BLUETOOTH
+    type: pbi
+    file: settings_icon_bluetooth.png
+
+  - name: SETTINGS_ICON_AIRPLANE
+    type: pbi
+    file: settings_icon_airplane.png
+
+  - name: ACTION_BAR_ICON_SMS
+    type: pbi
+    file: action_bar_icon_sms.png
+
+  - name: MUSIC_ICON_SKIP_FORWARD
+    type: pbi8
+    file: music_icon_skip_forward.png
+
+  - name: MUSIC_ICON_SKIP_BACKWARD
+    type: pbi8
+    file: music_icon_skip_backward.png
+
+  - name: MUSIC_ICON_FAST_FORWARD
+    type: pbi8
+    file: music_icon_fast_forward.png
+
+  - name: MUSIC_ICON_REWIND
+    type: pbi8
+    file: music_icon_rewind.png
+
+  - name: MUSIC_ICON_ELLIPSIS
+    type: pbi8
+    file: music_icon_ellipsis.png
+
+  - name: MUSIC_ICON_PAUSE
+    type: pbi8
+    file: music_icon_pause.png
+
+  - name: MUSIC_ICON_PLAY
+    type: pbi8
+    file: music_icon_play.png
+
+  - name: MUSIC_ICON_PLAY_PAUSE
+    type: pbi
+    file: music_icon_play_pause.png
+
+  - name: MUSIC_ICON_VOLUME_UP
+    type: pbi8
+    file: music_icon_volume_up.png
+
+  - name: MUSIC_ICON_VOLUME_DOWN
+    type: pbi8
+    file: music_icon_volume_down.png
+
+  - name: MUSIC_LARGE_CASSETTE
+    type: png
+    file:
+      bw: bw/music_small_cassette.png
+      color: color/music_small_cassette.png
+
+  - name: MUSIC_LARGE_VOLUME_UP
+    type: png
+    file:
+      bw: bw/volume_up_big.png
+      color: color/volume_up_big.png
+
+  - name: MUSIC_LARGE_VOLUME_DOWN
+    type: png
+    file:
+      bw: bw/volume_down_big.png
+      color: color/volume_down_big.png
+
+  - name: MUSIC_LARGE_PAUSED
+    type: png
+    file:
+      bw: bw/music_paused.png
+      color: color/music_paused.png
+
+  - name: MUSIC_IMAGE_NO_MUSIC
+    type: png
+    file:
+      bw: bw/music_no_music.png
+      color: color/music_no_music.png
+
+  - name: MENU_LAYER_GENERIC_WATCHFACE_ICON
+    type: pbi
+    file: generic_watchface_icon.png
+
+  - name: MENU_LAYER_GENERIC_WATCHAPP_ICON
+    type: png
+    file: generic_watchapp_icon.png
+
+  - name: UNCHECKED_RADIO_BUTTON
+    type: pbi8
+    file:
+      bw: bw/radiobutton_unchecked.png
+      color: color/radiobutton_unchecked.png
+
+  - name: CHECKED_RADIO_BUTTON
+    type: pbi8
+    file:
+      bw: bw/radiobutton_checked.png
+      color: color/radiobutton_checked.png
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: ACTION_BAR_ICON_UP
+    type: pbi8
+    file: action_bar_icon_up.png
+    builtin: [emery, gabbro]
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: ACTION_BAR_ICON_DOWN
+    type: pbi8
+    file: action_bar_icon_down.png
+    builtin: [emery, gabbro]
+
+  - name: ACTION_BAR_ICON_MORE
+    type: pbi8
+    file: action_bar_icon_more.png
+
+  - name: ACTION_BAR_ICON_SNOOZE
+    type: pbi8
+    file: action_bar_icon_snooze.png
+
+  - name: ACTION_BAR_ICON_PAUSE
+    type: pbi8
+    file: action_bar_icon_pause.png
+
+  - name: ACTION_BAR_ICON_START
+    type: pbi8
+    file: action_bar_icon_start.png
+
+  - name: ACTION_BAR_ICON_STOP
+    type: pbi8
+    file: action_bar_icon_stop.png
+
+  - name: ACTION_BAR_ICON_TOGGLE
+    type: pbi8
+    file: action_bar_icon_toggle.png
+
+  - name: ACTION_MENU_FADE_TOP
+    type: png
+    file: action_menu_fade_top.png
+
+  - name: ACTION_MENU_FADE_BOTTOM
+    type: png
+    file: action_menu_fade_bottom.png
+
+  - name: CHECKBOX_ICON_CHECKED
+    type: pbi8
+    file:
+      bw: bw/checkbox-checked.png
+      color: color/checkbox-checked.png
+      gabbro: gabbro/checkbox-checked.png
+
+  - name: CHECKBOX_ICON_UNCHECKED
+    type: pbi8
+    file:
+      bw: bw/checkbox-unchecked.png
+      color: color/checkbox-unchecked.png
+      gabbro: gabbro/checkbox-unchecked.png
+
+  - name: CHECKMARK_ICON_BLACK
+    type: pbi8
+    file:
+      bw: bw/checkmark-black.png
+      color: color/checkmark-black.png
+
+  - name: CHECKMARK_ICON_DOTTED
+    type: pbi8
+    file:
+      bw: bw/checkmark-gray.png
+      color: color/checkmark-gray.png
+
+  - name: BLE_HRM_SHARING_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_BLE_HRM_Sharing.svg
+
+  - name: BLE_HRM_SHARING_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_BLE_HRM_Sharing.svg
+
+  - name: BLE_HRM_SHARING_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_BLE_HRM_Sharing.svg
+
+  - name: NOTIFICATION_GENERIC_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_notification.svg
+
+  - name: NOTIFICATION_GENERIC_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_notification.svg
+
+  - name: NOTIFICATION_GENERIC_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_notification.svg
+
+  - name: MISSED_CALL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Missed_call.svg
+
+  - name: MISSED_CALL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Missed_call.svg
+
+  - name: GENERIC_REMINDER_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_reminder.svg
+
+  - name: WHATSAPP_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_WhatsApp_notification.svg
+
+  - name: WHATSAPP_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_WhatsApp_notification.svg
+
+  - name: TWITTER_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Twitter_notification.svg
+
+  - name: TWITTER_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Twitter_notification.svg
+
+  - name: TELEGRAM_APP_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Telegram_app.svg
+
+  - name: GOOGLE_HANGOUTS_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Google_Hangouts_notification.svg
+
+  - name: GMAIL_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Gmail_notification.svg
+
+  - name: FACEBOOK_MESSENGER_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Facebook_messenger_notification.svg
+
+  - name: FACEBOOK_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Facebook_notification.svg
+
+  - name: GENERIC_WEATHER_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_weather.svg
+
+  - name: AUDIO_CASSETTE_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Audio_cassette.svg
+
+  - name: SUNNY_DAY_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Sunny_day.svg
+
+  - name: GENERIC_SPORTS_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_sports.svg
+
+  - name: GENERIC_EMAIL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_e-mail.svg
+
+  - name: AMERICAN_FOOTBALL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_American_football.svg
+
+  - name: TIMELINE_CALENDAR_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Calendar.svg
+
+  - name: BASEBALL_GAME_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Baseball_game.svg
+
+  - name: BASEBALL_GAME_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Baseball_game.svg
+
+  - name: ALARM_CLOCK_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Alarm_clock.svg
+
+  - name: BIRTHDAY_EVENT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Birthday_event.svg
+
+  - name: BLACKBERRY_MESSENGER_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Blackberry_messenger.svg
+
+  - name: CAR_RENTAL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Car_rental.svg
+
+  - name: SCHEDULED_FLIGHT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Scheduled_flight.svg
+
+  - name: CLOUDY_DAY_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Cloudy_day.svg
+
+  - name: CRICKET_GAME_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Cricket_game.svg
+
+  - name: CRICKET_GAME_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Cricket_game.svg
+
+  - name: CRICKET_GAME_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Cricket_game.svg
+
+  - name: DINNER_RESERVATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Dinner_reservation.svg
+
+  - name: DISMISSED_PHONE_CALL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Dismissed_call.svg
+
+  - name: GENERIC_CONFIRMATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_confirmation.svg
+
+  - name: GENERIC_PIN_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_pin.svg
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: GENERIC_WARNING_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_warning.svg
+    builtin: [emery, gabbro]
+
+  - name: GOOGLE_INBOX_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Google_inbox_notification.svg
+
+  - name: GLUCOSE_MONITOR_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Glucose_monitor.svg
+
+  - name: HEAVY_RAIN_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Heavy_rain.svg
+
+  - name: HEAVY_SNOW_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Heavy_snow.svg
+
+  - name: HOCKEY_GAME_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Hockey_game.svg
+
+  - name: HOCKEY_GAME_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Hockey_game.svg
+
+  - name: HOCKEY_GAME_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Hockey_game.svg
+
+  - name: HOTEL_RESERVATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Hotel_reservation.svg
+
+  - name: INSTAGRAM_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Instagram.svg
+
+  - name: INSTAGRAM_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Instagram.svg
+
+  - name: LIGHT_RAIN_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Light_rain.svg
+
+  - name: LIGHT_SNOW_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Light_snow.svg
+
+  - name: MAILBOX_NOTIFICATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Mailbox.svg
+
+  - name: MAILBOX_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Mailbox.svg
+
+  - name: MOVIE_EVENT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Movie_event.svg
+
+  - name: MUSIC_EVENT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Music_event.svg
+
+  - name: NEWS_EVENT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_News_event.svg
+
+  - name: PARTLY_CLOUDY_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Partly_cloudy.svg
+
+  - name: PAY_BILL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Pay_bill.svg
+
+  - name: REACHED_FITNESS_GOAL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Reached_fitness_goal.svg
+
+  - name: RADIO_SHOW_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Radio_show.svg
+
+  - name: SCHEDULED_EVENT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Scheduled_event.svg
+
+  - name: SOCCER_GAME_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Soccer_game.svg
+
+  - name: SOCCER_GAME_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Soccer_game.svg
+
+  - name: STOCKS_EVENT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Stocks_event.svg
+
+  - name: BIRTHDAY_EVENT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Birthday_event.svg
+
+  - name: BLACKBERRY_MESSENGER_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Blackberry_messenger.svg
+
+  - name: TIMELINE_CALENDAR_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Calendar.svg
+
+  - name: TIMELINE_EMPTY_CALENDAR_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Empty_calendar.svg
+
+  - name: ALARM_CLOCK_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Alarm_clock.svg
+
+  - name: CAR_RENTAL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Car_rental.svg
+
+  - name: CHECK_INTERNET_CONNECTION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Check_internet_connection.svg
+
+  - name: DINNER_RESERVATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Dinner_reservation.svg
+
+  - name: DISMISSED_PHONE_CALL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Dismissed_call.svg
+
+  - name: GENERIC_SMS_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_SMS.svg
+
+  - name: GENERIC_SMS_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_SMS.svg
+
+  - name: GENERIC_SMS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_SMS.svg
+
+  - name: FACEBOOK_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Facebook_notification.svg
+
+  - name: FACEBOOK_MESSENGER_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Facebook_messenger_notification.svg
+
+  - name: GENERIC_CONFIRMATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_confirmation.svg
+
+  - name: GENERIC_EMAIL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_e-mail.svg
+
+  - name: GENERIC_PIN_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_pin.svg
+
+  - name: GENERIC_REMINDER_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_reminder.svg
+
+  - name: GENERIC_WARNING_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_warning.svg
+
+  - name: GENERIC_WEATHER_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_weather.svg
+
+  - name: GLUCOSE_MONITOR_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Glucose_monitor.svg
+
+  - name: GMAIL_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Gmail_notification.svg
+
+  - name: GOOGLE_HANGOUTS_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Google_Hangouts_notification.svg
+
+  - name: GOOGLE_INBOX_NOTIFICATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Google_inbox_notification.svg
+
+  - name: HEAVY_RAIN_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Heavy_rain.svg
+
+  - name: HEAVY_SNOW_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Heavy_snow.svg
+
+  - name: HOTEL_RESERVATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Hotel_reservation.svg
+
+  - name: LIGHT_RAIN_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Light_rain.svg
+
+  - name: LIGHT_SNOW_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Light_snow.svg
+
+  - name: MOVIE_EVENT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Movie_event.svg
+
+  - name: MUSIC_EVENT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Music_event.svg
+
+  - name: NEWS_EVENT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_News_event.svg
+
+  - name: PARTLY_CLOUDY_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Partly_cloudy.svg
+
+  - name: PAY_BILL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Pay_bill.svg
+
+  - name: RADIO_SHOW_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Radio_show.svg
+
+  - name: REACHED_FITNESS_GOAL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Reached_fitness_goal.svg
+
+  - name: SCHEDULED_EVENT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Scheduled_event.svg
+
+  - name: SUNNY_DAY_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Sunny_day.svg
+
+  - name: GENERIC_SPORTS_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_sports.svg
+
+  - name: TIDE_IS_HIGH_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Tide_is_high.svg
+
+  - name: WATCH_DISCONNECTED_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Watch_disconnected.svg
+
+  - name: ALARM_CLOCK_LARGE_STATIC
+    type: pdc
+    file: 80x80/Pebble_80x80_Alarm_clock_static.svg
+
+  - name: AMERICAN_FOOTBALL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_American_football.svg
+
+  - name: AMERICAN_FOOTBALL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_American_football.svg
+
+  - name: GOOGLE_HANGOUTS_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Google_Hangouts_notification.svg
+
+  - name: WHATSAPP_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_WhatsApp_notification.svg
+
+  - name: AUDIO_CASSETTE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Audio_cassette.svg
+
+  - name: AUDIO_CASSETTE_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Audio_cassette.svg
+
+  - name: BASEBALL_GAME_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Baseball_game.svg
+
+  - name: BIRTHDAY_EVENT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Birthday_event.svg
+
+  - name: BLACKBERRY_MESSENGER_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Blackberry_messenger.svg
+
+  - name: TIMELINE_CALENDAR_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Calendar.svg
+
+  - name: TIMELINE_EMPTY_CALENDAR_LARGE
+    type: pdc
+    file: 66x66/Pebble_66x66_Empty_calendar.svg
+
+  - name: CAR_RENTAL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Car_rental.svg
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: CHECK_INTERNET_CONNECTION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Check_internet_connection.svg
+    builtin: [emery, gabbro]
+
+  - name: CLOUDY_DAY_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Cloudy_day.svg
+
+  - name: CLOUDY_DAY_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Cloudy_day.svg
+
+  - name: DAY_SEPARATOR_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Day_separator.svg
+
+  - name: DAY_SEPARATOR_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Day_separator.svg
+
+  - name: DAY_SEPARATOR_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Day_separator.svg
+
+  - name: RESULT_DELETED_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Deleted.svg
+
+  - name: RESULT_DELETED_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Deleted.svg
+
+  - name: DINNER_RESERVATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Dinner_reservation.svg
+
+  - name: DISMISSED_PHONE_CALL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Dismissed_call.svg
+
+  - name: DURING_PHONE_CALL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_During_phone_call.svg
+
+  - name: DURING_PHONE_CALL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_During_phone_call.svg
+
+  - name: DURING_PHONE_CALL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_During_phone_call.svg
+
+  - name: DURING_PHONE_CALL_CENTERED_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_During_phone_call.svg
+
+  - name: FACEBOOK_MESSENGER_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Facebook_messenger_notification.svg
+
+  - name: FACEBOOK_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Facebook_notification.svg
+
+  - name: GENERIC_EMAIL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_e-mail.svg
+
+  - name: GENERIC_PIN_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_pin.svg
+
+  - name: GENERIC_REMINDER_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_reminder.svg
+
+  - name: GENERIC_SPORTS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_sports.svg
+
+  - name: GENERIC_WEATHER_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_weather.svg
+
+  - name: GLUCOSE_MONITOR_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Glucose_monitor.svg
+
+  - name: GMAIL_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Gmail_notification.svg
+
+  - name: GOOGLE_INBOX_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Google_inbox_notification.svg
+
+  - name: HEAVY_RAIN_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Heavy_rain.svg
+
+  - name: HEAVY_SNOW_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Heavy_snow.svg
+
+  - name: HOTEL_RESERVATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Hotel_reservation.svg
+
+  - name: INSTAGRAM_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Instagram.svg
+
+  - name: LIGHT_RAIN_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Light_rain.svg
+
+  - name: LIGHT_SNOW_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Light_snow.svg
+
+  - name: MAILBOX_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Mailbox.svg
+
+  - name: MISSED_CALL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Missed_call.svg
+
+  - name: MOVIE_EVENT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Movie_event.svg
+
+  - name: MUSIC_EVENT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Music_event.svg
+
+  - name: NEWS_EVENT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_News_event.svg
+
+  - name: PARTLY_CLOUDY_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Partly_cloudy.svg
+
+  - name: PAY_BILL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Pay_bill.svg
+
+  - name: RADIO_SHOW_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Radio_show.svg
+
+  - name: REACHED_FITNESS_GOAL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Reached_fitness_goal.svg
+
+  - name: SCHEDULED_EVENT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Scheduled_event.svg
+
+  - name: SCHEDULED_FLIGHT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Scheduled_flight.svg
+
+  - name: SCHEDULED_FLIGHT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Scheduled_flight.svg
+
+  - name: RESULT_SENT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Sent.svg
+
+  - name: RESULT_SENT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Sent.svg
+
+  - name: SOCCER_GAME_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Soccer_game.svg
+
+  - name: STOCKS_EVENT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Stocks_event.svg
+
+  - name: STOCKS_EVENT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Stocks_event.svg
+
+  - name: SUNNY_DAY_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Sunny_day.svg
+
+  - name: TELEGRAM_APP_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Telegram_app.svg
+
+  - name: TELEGRAM_APP_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Telegram_app.svg
+
+  - name: TIDE_IS_HIGH_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Tide_is_high.svg
+
+  - name: TWITTER_NOTIFICATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Twitter_notification.svg
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: WATCH_DISCONNECTED_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Watch_disconnected.svg
+    builtin: [emery, gabbro]
+
+  - name: RESULT_FAILED_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_failed.svg
+
+  - name: RESULT_FAILED_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_failed.svg
+
+  - name: RESULT_FAILED_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_failed.svg
+
+  - name: GENERIC_QUESTION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Generic_question.svg
+
+  - name: GENERIC_QUESTION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Generic_question.svg
+
+  - name: GENERIC_QUESTION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Generic_question.svg
+
+  - name: RAINING_AND_SNOWING_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Raining_and_snowing.svg
+
+  - name: RAINING_AND_SNOWING_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Raining_and_snowing.svg
+
+  - name: RAINING_AND_SNOWING_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Raining_and_snowing.svg
+
+  - name: NOTIFICATION_FACETIME_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Facetime_incoming.svg
+
+  - name: NOTIFICATION_FACETIME_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Facetime_incoming.svg
+
+  - name: NOTIFICATION_FACETIME_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Facetime_incoming.svg
+
+  - name: NOTIFICATION_LINE_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Line.svg
+
+  - name: NOTIFICATION_LINE_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Line.svg
+
+  - name: NOTIFICATION_LINE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Line.svg
+
+  - name: NOTIFICATION_SKYPE_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Skype.svg
+
+  - name: NOTIFICATION_SKYPE_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Skype.svg
+
+  - name: NOTIFICATION_SKYPE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Skype.svg
+
+  - name: NOTIFICATION_SNAPCHAT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Snapchat.svg
+
+  - name: NOTIFICATION_SNAPCHAT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Snapchat.svg
+
+  - name: NOTIFICATION_SNAPCHAT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Snapchat.svg
+
+  - name: NOTIFICATION_VIBER_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Viber.svg
+
+  - name: NOTIFICATION_VIBER_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Viber.svg
+
+  - name: NOTIFICATION_VIBER_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Viber.svg
+
+  - name: NOTIFICATION_WECHAT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_WeChat.svg
+
+  - name: NOTIFICATION_WECHAT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_WeChat.svg
+
+  - name: NOTIFICATION_WECHAT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_WeChat.svg
+
+  - name: NOTIFICATION_YAHOO_MAIL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Yahoo_mail.svg
+
+  - name: NOTIFICATION_YAHOO_MAIL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Yahoo_mail.svg
+
+  - name: NOTIFICATION_YAHOO_MAIL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Yahoo_mail.svg
+
+  - name: TV_SHOW_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_TV_show.svg
+
+  - name: TV_SHOW_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_TV_show.svg
+
+  - name: TV_SHOW_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_TV_show.svg
+
+  - name: END_OF_TIMELINE
+    type: pdc
+    file: 50x50/Pebble_50x50_Fin.svg
+
+  - name: BASKETBALL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Basketball.svg
+
+  - name: BASKETBALL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Basketball.svg
+
+  - name: BASKETBALL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Basketball.svg
+
+  - name: RESULT_DISMISSED_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Dismiss.svg
+
+  - name: RESULT_DISMISSED_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Dismiss.svg
+
+  - name: TIDE_IS_HIGH_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Tide_is_high.svg
+
+  - name: OUTGOING_CALL_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Outgoing_call.svg
+
+  - name: NOTIFICATION_HIPCHAT_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Hipchat.svg
+
+  - name: NOTIFICATION_HIPCHAT_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Hipchat.svg
+
+  - name: NOTIFICATION_HIPCHAT_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Hipchat.svg
+
+  - name: NOTIFICATION_GOOGLE_MESSENGER_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Google_messenger.svg
+
+  - name: NOTIFICATION_GOOGLE_MESSENGER_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Google_messenger.svg
+
+  - name: NOTIFICATION_GOOGLE_MESSENGER_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Google_messenger.svg
+
+  - name: INCOMING_PHONE_CALL_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Incoming_call.svg
+
+  - name: INCOMING_PHONE_CALL_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Incoming_call.svg
+
+  - name: NOTIFICATION_KAKAOTALK_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_KakaoTalk.svg
+
+  - name: NOTIFICATION_KAKAOTALK_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_KakaoTalk.svg
+
+  - name: NOTIFICATION_KAKAOTALK_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_KakaoTalk.svg
+
+  - name: NOTIFICATION_KIK_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Kik.svg
+
+  - name: NOTIFICATION_KIK_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Kik.svg
+
+  - name: NOTIFICATION_KIK_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Kik.svg
+
+  - name: NOTIFICATION_LIGHTHOUSE_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Lighthouse.svg
+
+  - name: NOTIFICATION_LIGHTHOUSE_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Lighthouse.svg
+
+  - name: NOTIFICATION_LIGHTHOUSE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Lighthouse.svg
+
+  - name: LOCATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Location.svg
+
+  - name: LOCATION_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Location.svg
+
+  - name: LOCATION_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Location.svg
+
+  - name: SUNSET_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Sunset.svg
+
+  - name: SUNSET_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Sunset.svg
+
+  - name: SUNSET_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Sunset.svg
+
+  - name: SUNRISE_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Sunrise.svg
+
+  - name: SUNRISE_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Sunrise.svg
+
+  - name: SUNRISE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Sunrise.svg
+
+  - name: SETTINGS_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Settings.svg
+
+  - name: SETTINGS_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Settings.svg
+
+  - name: SETTINGS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Settings.svg
+
+  - name: PLUS_ICON_BLACK
+    type: png
+    file: plus_black.png
+
+  - name: PLUS_ICON_DOTTED
+    type: pbi
+    file: plus_dotted.png
+
+  - name: RESULT_SHREDDED_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Result_shredded.svg
+
+  - name: RESULT_SHREDDED_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Result_shredded.svg
+
+  - name: QUIET_TIME_MOUSE
+    type: pdc
+    file: 80x80/Pebble_80x80_Quiet_time_mouse.svg
+
+  - name: REMINDER_SNOOZE
+    type: pdc
+    file: 80x80/Pebble_80x80_Reminder_snooze.svg
+
+  - name: QUIET_TIME_STATUS_BAR
+    type: png
+    file: quiet_time_status_icon.png
+
+  - name: QUICK_DISMISS
+    type: pdc
+    file: 25x25/Pebble_25x25_Quick_dismiss.svg
+
+  - name: ARROW_DOWN
+    type: pbi8
+    file:
+      bw: bw/arrow_down.png
+      color: color/arrow_down.png
+    builtin: true
+
+  - name: THUMBS_UP_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Thumbs_up.svg
+
+  - name: THUMBS_UP_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Thumbs_up.svg
+
+  - name: ARROW_UP_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Arrow_up.svg
+
+  - name: ARROW_DOWN_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Arrow_down.svg
+
+  - name: ACTIVITY_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Activity.svg
+
+  - name: ACTIVITY_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Activity.svg
+
+  - name: ACTIVITY_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Activity.svg
+
+  - name: SLEEP_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Sleep.svg
+
+  - name: SLEEP_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Sleep.svg
+
+  - name: SLEEP_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Sleep.svg
+
+  - name: REWARD_AVERAGE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Reward_average.svg
+
+  - name: REWARD_GOOD_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Reward_good.svg
+
+  - name: REWARD_BAD_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Reward_bad.svg
+
+  - name: CALORIES_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Calories.svg
+
+  - name: DISTANCE_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Distance.svg
+
+  - name: DURATION_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Duration.svg
+
+  - name: PACE_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Pace.svg
+
+  - name: RUN_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Run.svg
+
+  - name: RUN_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Run.svg
+
+  - name: MOON_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Moon.svg
+
+  - name: NOTIFICATION_AMAZON_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Amazon.svg
+
+  - name: NOTIFICATION_AMAZON_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Amazon.svg
+
+  - name: NOTIFICATION_AMAZON_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Amazon.svg
+
+  - name: NOTIFICATION_GOOGLE_MAPS_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Google_Maps.svg
+
+  - name: NOTIFICATION_GOOGLE_MAPS_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Google_Maps.svg
+
+  - name: NOTIFICATION_GOOGLE_MAPS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Google_Maps.svg
+
+  - name: NOTIFICATION_GOOGLE_PHOTOS_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Google_Photos.svg
+
+  - name: NOTIFICATION_GOOGLE_PHOTOS_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Google_Photos.svg
+
+  - name: NOTIFICATION_GOOGLE_PHOTOS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Google_Photos.svg
+
+  - name: NOTIFICATION_IOS_PHOTOS_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_iOS_Photos.svg
+
+  - name: NOTIFICATION_IOS_PHOTOS_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_iOS_Photos.svg
+
+  - name: NOTIFICATION_IOS_PHOTOS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_iOS_Photos.svg
+
+  - name: NOTIFICATION_LINKEDIN_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_LinkedIn.svg
+
+  - name: NOTIFICATION_LINKEDIN_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_LinkedIn.svg
+
+  - name: NOTIFICATION_LINKEDIN_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_LinkedIn.svg
+
+  - name: NOTIFICATION_SLACK_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Slack.svg
+
+  - name: NOTIFICATION_SLACK_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Slack.svg
+
+  - name: NOTIFICATION_SLACK_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Slack.svg
+
+  - name: NOTIFICATION_AIRMAIL_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Airmail_25px.svg
+
+  - name: NOTIFICATION_AIRMAIL_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Airmail_50px.svg
+
+  - name: NOTIFICATION_AIRMAIL_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Airmail_80px.svg
+
+  - name: NOTIFICATION_BEEPER_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Beeper_25px.svg
+
+  - name: NOTIFICATION_BEEPER_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Beeper_50px.svg
+
+  - name: NOTIFICATION_BEEPER_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Beeper_80px.svg
+
+  - name: NOTIFICATION_BLUESKY_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Bluesky_25px.svg
+
+  - name: NOTIFICATION_BLUESKY_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Bluesky_50px.svg
+
+  - name: NOTIFICATION_BLUESKY_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Bluesky_80px.svg
+
+  - name: NOTIFICATION_DISCORD_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Discord_25px.svg
+
+  - name: NOTIFICATION_DISCORD_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Discord_50px.svg
+
+  - name: NOTIFICATION_DISCORD_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Discord_80px.svg
+
+  - name: NOTIFICATION_DUOLINGO_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Duolingo_25px.svg
+
+  - name: NOTIFICATION_DUOLINGO_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Duolingo_50px.svg
+
+  - name: NOTIFICATION_DUOLINGO_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Duolingo_80px.svg
+
+  - name: NOTIFICATION_EBAY_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/eBay_25px.svg
+
+  - name: NOTIFICATION_EBAY_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/eBay_50px.svg
+
+  - name: NOTIFICATION_EBAY_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/eBay_80px.svg
+
+  - name: NOTIFICATION_ELEMENT_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Element_25px.svg
+
+  - name: NOTIFICATION_ELEMENT_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Element_50px.svg
+
+  - name: NOTIFICATION_ELEMENT_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Element_80px.svg
+
+  - name: NOTIFICATION_GOOGLE_CHAT_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Google_Chat_25px.svg
+
+  - name: NOTIFICATION_GOOGLE_CHAT_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Google_Chat_50px.svg
+
+  - name: NOTIFICATION_GOOGLE_CHAT_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Google_Chat_80px.svg
+
+  - name: NOTIFICATION_GOOGLE_TASKS_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Google_Tasks_25px.svg
+
+  - name: NOTIFICATION_GOOGLE_TASKS_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Google_Tasks_50px.svg
+
+  - name: NOTIFICATION_GOOGLE_TASKS_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Google_Tasks_80px.svg
+
+  - name: NOTIFICATION_HOME_ASSISTANT_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Home_Assistant_25px.svg
+
+  - name: NOTIFICATION_HOME_ASSISTANT_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Home_Assistant_50px.svg
+
+  - name: NOTIFICATION_HOME_ASSISTANT_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Home_Assistant_80px.svg
+
+  - name: NOTIFICATION_OUTLOOK_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Outlook_25px.svg
+
+  - name: NOTIFICATION_OUTLOOK_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Outlook_50px.svg
+
+  - name: NOTIFICATION_OUTLOOK_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Outlook_80px.svg
+
+  - name: NOTIFICATION_SIGNAL_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Signal_25px.svg
+
+  - name: NOTIFICATION_SIGNAL_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Signal_50px.svg
+
+  - name: NOTIFICATION_SIGNAL_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Signal_80px.svg
+
+  - name: NOTIFICATION_STEAM_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Steam_25px.svg
+
+  - name: NOTIFICATION_STEAM_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Steam_50px.svg
+
+  - name: NOTIFICATION_STEAM_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Steam_80px.svg
+
+  - name: NOTIFICATION_TEAMS_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Teams_25px.svg
+
+  - name: NOTIFICATION_TEAMS_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Teams_50px.svg
+
+  - name: NOTIFICATION_TEAMS_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Teams_80px.svg
+
+  - name: NOTIFICATION_THREADS_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Threads_25px.svg
+
+  - name: NOTIFICATION_THREADS_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Threads_50px.svg
+
+  - name: NOTIFICATION_THREADS_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Threads_80px.svg
+
+  - name: NOTIFICATION_TWITCH_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Twitch_25px.svg
+
+  - name: NOTIFICATION_TWITCH_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Twitch_50px.svg
+
+  - name: NOTIFICATION_TWITCH_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Twitch_80px.svg
+
+  - name: NOTIFICATION_UNIFI_PROTECT_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Unifi_Protect_25px.svg
+
+  - name: NOTIFICATION_UNIFI_PROTECT_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Unifi_Protect_50px.svg
+
+  - name: NOTIFICATION_UNIFI_PROTECT_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Unifi_Protect_80px.svg
+
+  - name: NOTIFICATION_YOUTUBE_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Youtube_25px.svg
+
+  - name: NOTIFICATION_YOUTUBE_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Youtube_50px.svg
+
+  - name: NOTIFICATION_YOUTUBE_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Youtube_80px.svg
+
+  - name: NOTIFICATION_ZOOM_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Zoom_25px.svg
+
+  - name: NOTIFICATION_ZOOM_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Zoom_50px.svg
+
+  - name: NOTIFICATION_ZOOM_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Zoom_80px.svg
+
+  - name: NOTIFICATION_REDDIT_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Reddit_25px.svg
+
+  - name: NOTIFICATION_REDDIT_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Reddit_50px.svg
+
+  - name: NOTIFICATION_REDDIT_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Reddit_80px.svg
+
+  - name: NOTIFICATION_SWARM_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Swarm_25px.svg
+
+  - name: NOTIFICATION_SWARM_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Swarm_50px.svg
+
+  - name: NOTIFICATION_SWARM_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Swarm_80px.svg
+
+  - name: NOTIFICATION_TAPO_TINY
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Tapo_25px.svg
+
+  - name: NOTIFICATION_TAPO_SMALL
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Tapo_50px.svg
+
+  - name: NOTIFICATION_TAPO_LARGE
+    type: pdc
+    file: ../../third_party/resources/iconography/brand-logos/Tapo_80px.svg
+
+  - name: SMART_ALARM_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Smart_alarm.svg
+
+  - name: HEALTH_APP_ACTIVITY
+    type: png
+    file: health_app_activity.png
+
+  - name: HEALTH_APP_SLEEP
+    type: png
+    file:
+      bw: bw/health_app_sleep.png
+      color: color/health_app_sleep.png
+
+  - name: HEALTH_APP_CROWN
+    type: pdc
+    file:
+      bw: bw/health_app_crown.svg
+      color: color/health_app_crown.svg
+
+  - name: HEALTH_APP_HR
+    type: png
+    file:
+      bw: bw/health_app_hr.png
+      color: color/health_app_hr.png
+
+  - name: WORKOUT_APP_WALK
+    type: png
+    file: workout_app_walk.png
+
+  - name: WORKOUT_APP_WALK_SMALL
+    type: png
+    file: workout_app_walk_small.png
+
+  - name: WORKOUT_APP_WALK_TINY
+    type: png
+    file: workout_app_walk_tiny.png
+
+  - name: WORKOUT_APP_RUN
+    type: png
+    file: workout_app_run.png
+
+  - name: WORKOUT_APP_RUN_SMALL
+    type: png
+    file: workout_app_run_small.png
+
+  - name: WORKOUT_APP_RUN_TINY
+    type: png
+    file: workout_app_run_tiny.png
+
+  - name: WORKOUT_APP_WORKOUT
+    type: png
+    file: workout_app_workout.png
+
+  - name: WORKOUT_APP_WORKOUT_SMALL
+    type: png
+    file: workout_app_workout_small.png
+
+  - name: WORKOUT_APP_DETECTED
+    type: png
+    file: workout_app_detected.png
+
+  - name: WORKOUT_APP_HEART
+    type: png
+    file: workout_app_heart.png
+
+  - name: WORKOUT_APP_MEASURING_HR
+    type: png
+    file: workout_app_measuring_hr.png
+
+  - name: WORKOUT_APP_HR_PULSE_TINY
+    type: png
+    file: workout_app_hr_pulse_tiny.png
+
+  - name: WORKOUT_APP_END
+    type: png
+    file: workout_app_end.png
+
+  - name: WORKOUT_APP_ONE
+    type: pdc
+    file: workout_app_one.svg
+
+  - name: WORKOUT_APP_TWO
+    type: pdc
+    file: workout_app_two.svg
+
+  - name: WORKOUT_APP_THREE
+    type: pdc
+    file: workout_app_three.svg
+
+  - name: HEART_TINY
+    type: pdc
+    file: 25x25/Pebble_25x25_Heart.svg
+
+  - name: HEART_SMALL
+    type: pdc
+    file: 50x50/Pebble_50x50_Heart.svg
+
+  - name: HEART_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Heart.svg
+
+  - name: BACKLIGHT
+    type: pdc
+    file: 80x80/Pebble_80x80_Backlight.svg
+
+  - name: AIRPLANE
+    type: pdc
+    file: 80x80/Pebble_80x80_Airplane.svg
+
+  - name: TOUCH
+    type: pdc
+    file: 80x80/Pebble_80x80_Touch.svg
+
+  - name: WX_SUNNY_TINY
+    type: png
+    file: 25x25/wx_sunny_day_25x25.png
+
+  - name: WX_SUNNY_SMALL
+    type: png
+    file: 50x50/wx_sunny_day_50x50.png
+
+  - name: WX_PARTLY_TINY
+    type: png
+    file: 25x25/wx_partly_cloudy_25x25.png
+
+  - name: WX_PARTLY_SMALL
+    type: png
+    file: 50x50/wx_partly_cloudy_50x50.png
+
+  - name: WX_CLOUDY_TINY
+    type: png
+    file: 25x25/wx_cloudy_day_25x25.png
+
+  - name: WX_CLOUDY_SMALL
+    type: png
+    file: 50x50/wx_cloudy_day_50x50.png
+
+  - name: WX_LIGHTRAIN_TINY
+    type: png
+    file: 25x25/wx_light_rain_25x25.png
+
+  - name: WX_LIGHTRAIN_SMALL
+    type: png
+    file: 50x50/wx_light_rain_50x50.png
+
+  - name: WX_HEAVYRAIN_TINY
+    type: png
+    file: 25x25/wx_heavy_rain_25x25.png
+
+  - name: WX_HEAVYRAIN_SMALL
+    type: png
+    file: 50x50/wx_heavy_rain_50x50.png
+
+  - name: WX_LIGHTSNOW_TINY
+    type: png
+    file: 25x25/wx_light_snow_25x25.png
+
+  - name: WX_LIGHTSNOW_SMALL
+    type: png
+    file: 50x50/wx_light_snow_50x50.png
+
+  - name: WX_HEAVYSNOW_TINY
+    type: png
+    file: 25x25/wx_heavy_snow_25x25.png
+
+  - name: WX_HEAVYSNOW_SMALL
+    type: png
+    file: 50x50/wx_heavy_snow_50x50.png
+
+  - name: WX_RAINSNOW_TINY
+    type: png
+    file: 25x25/wx_raining_and_snowing_25x25.png
+
+  - name: WX_RAINSNOW_SMALL
+    type: png
+    file: 50x50/wx_raining_and_snowing_50x50.png
+
+  - name: WX_GENERIC_TINY
+    type: png
+    file: 25x25/wx_generic_weather_25x25.png
+
+  - name: WX_GENERIC_SMALL
+    type: png
+    file: 50x50/wx_generic_weather_50x50.png
+
+  - name: WX_SUNNY_LARGE
+    type: pdc
+    file: 80x80/wx_sunny_day_80x80.svg
+
+  - name: WX_PARTLY_LARGE
+    type: pdc
+    file: 80x80/wx_partly_cloudy_80x80.svg
+
+  - name: WX_CLOUDY_LARGE
+    type: pdc
+    file: 80x80/wx_cloudy_day_80x80.svg
+
+  - name: WX_GENERIC_LARGE
+    type: pdc
+    file: 80x80/wx_generic_weather_80x80.svg
+
+  - name: WEATHER_REPORT_PAPER
+    type: pdc
+    file: 80x80/Pebble_80x80_Weather_report.svg
+
+  # Built into firmware to ensure that voice API memory contract is not violated
+  # Ensure that if this is moved to resources, images are allocated up front when
+  # a dictation session is started
+  - name: VOICE_MICROPHONE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Microphone.svg
+    builtin: true
+
+  - name: NO_EVENTS_LARGE
+    type: raw
+    file: 80x80/Pebble_80x80_No_events.pdc
+    builtin: [flint]
+
+  - name: TIMER_APP_FACE_ICON
+    type: pdc
+    file: launcher_app_face_timer_icon.svg
+    targetPlatforms: [emery, gabbro]
+
+  - name: STOPWATCH_APP_FACE_ICON
+    type: pdc
+    file: launcher_app_face_stopwatch_icon.svg
+    targetPlatforms: [emery, gabbro]
+
+  - name: ESPN_APP_FACE_ICON
+    type: png
+    file: launcher_app_face_espn_icon.png
+    targetPlatforms: [emery, gabbro]
+
+  - name: HEALTH_APP_FACE_ICON
+    type: pdc
+    file: launcher_app_face_health_icon.svg
+    targetPlatforms: [emery, gabbro]
+
+  - name: SEND_TEXT_APP_FACE_ICON
+    type: pdc
+    file: launcher_app_face_send_text_icon.svg
+    targetPlatforms: [emery, gabbro]
+
+  - name: QUIET_TIME_ACTIVE
+    type: png
+    file: quiet_time_active.png
+    targetPlatforms: [emery, gabbro]
+
+  - name: BATTERY_CHARGING_ICON
+    type: png
+    file: battery_charging_icon.png
+
+  - name: HEALTH_ICON_MOON
+    type: png
+    file: health_icon_moon.png
+
+  - name: HEALTH_ICON_ROTATED_MOON
+    type: png
+    file: health_icon_rotated_moon.png
+
+  - name: STRIDE_HEART
+    type: png
+    file: stride_heart.png
+    targetPlatforms: [emery, gabbro]
+
+  - name: STRIDE_SHOE_GREEN
+    type: png
+    file: stride_shoe_green.png
+    targetPlatforms: [emery, gabbro]
+
+  - name: STRIDE_SHOE_BLUE
+    type: png
+    file: stride_shoe_blue.png
+    targetPlatforms: [emery, gabbro]
+
+  - name: SYSTEM_FCC_MARK
+    type: pbi
+    file: system_fcc_mark.png
+
+  - name: SYSTEM_KCC_MARK
+    type: pbi
+    file: system_kcc_mark.png
+
+  - name: SYSTEM_CE_MARK
+    type: pbi
+    file: system_ce_mark.png
+
+  - name: SYSTEM_WEEE_MARK
+    type: pbi
+    file: system_weee_mark.png
+
+  - name: SYSTEM_UKCA_MARK
+    type: pbi
+    file: system_ukca_mark.png
+
+  - name: SYSTEM_R_MARK
+    type: pbi
+    file: system_r_mark.png
+
+  - name: SYSTEM_T_MARK
+    type: pbi
+    file: system_t_mark.png
+
+  - name: SYSTEM_AUS_RCM_MARK
+    type: pbi
+    file: system_aus_rcm_mark.png
+
+  - name: SYSTEM_NOM_NYCE_MARK
+    type: pbi
+    file: system_nom_nyce_mark.png
+
+  - name: EMOJI_BIG_OPEN_SMILE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_big_open_smile.svg
+
+  - name: EMOJI_BIG_SMILE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_big_smile.svg
+
+  - name: EMOJI_HEART_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_heart.svg
+
+  - name: EMOJI_KISSING_WITH_HEART_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_kissing_with_heart.svg
+
+  - name: EMOJI_LAUGHING_WITH_TEARS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_laughing_with_tears.svg
+
+  - name: EMOJI_SAD_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_sad.svg
+
+  - name: EMOJI_SMILING_BLUSH_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_smiling_blush.svg
+
+  - name: EMOJI_SMILING_HEARTS_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_smiling_hearts.svg
+
+  - name: EMOJI_SMILING_WITH_TEETH_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_smiling_with_teeth.svg
+
+  - name: EMOJI_THUMBS_UP_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_thumbs_up.svg
+
+  - name: EMOJI_WINK_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_wink.svg
+
+  - name: EMOJI_WINK_TONGUE_LARGE
+    type: pdc
+    file: 80x80/Pebble_80x80_Emoji_wink_tongue.svg
+
+  - name: SMART_ALARM_ICON_BLACK
+    type: png
+    file: sa_list_icon_black.png
+
+  - name: BLE_HRM_SHARE_REQUEST_LARGE
+    type: png
+    file: ble_hrm_share_request.png
+    config: SERVICE_BLE_HRM
+
+  - name: BLE_HRM_SHARED
+    type: pdc
+    file: ble_hrm_shared.svg
+    config: SERVICE_BLE_HRM
+
+  - name: BLE_HRM_NOT_SHARED
+    type: png
+    file: ble_hrm_not_shared.png
+    config: SERVICE_BLE_HRM
+
+  - name: CONNECTIVITY_SHARING_HRM
+    type: png
+    file: ble_hrm_sharing_app_glance.png
+    config: SERVICE_BLE_HRM
+
+  - name: MENU_ICON_HEALTH
+    type: pdc
+    file: menu_icon_health.svg
+
+  - name: MULTIWATCH_BACKGROUND_20MM_BLACK
+    type: png
+    file: multiwatch_bg_20mm_black.png
+    targetPlatforms: [gabbro]
+
+  - name: MULTIWATCH_TIMEZONE_20MM_BLACK
+    type: png
+    file: multiwatch_tz_20mm_black.png
+    targetPlatforms: [gabbro]
+
+  - name: MULTIWATCH_BACKGROUND_20MM_SILVER
+    type: png
+    file: multiwatch_bg_20mm_silver.png
+    targetPlatforms: [gabbro]
+
+  - name: MULTIWATCH_TIMEZONE_20MM_SILVER
+    type: png
+    file: multiwatch_tz_20mm_silver.png
+    targetPlatforms: [gabbro]
+
+  - name: MULTIWATCH_BACKGROUND_14MM_SILVER
+    type: png
+    file: multiwatch_bg_14mm_silver.png
+    targetPlatforms: [gabbro]
+
+  - name: MULTIWATCH_TIMEZONE_14MM_SILVER
+    type: png
+    file: multiwatch_tz_14mm_silver.png
+    targetPlatforms: [gabbro]
+
+  - name: MULTIWATCH_BACKGROUND_14MM_ROSE_GOLD
+    type: png
+    file: multiwatch_bg_14mm_rosegold.png
+    targetPlatforms: [gabbro]
+
+  - name: MULTIWATCH_TIMEZONE_14MM_ROSE_GOLD
+    type: png
+    file: multiwatch_tz_14mm_rosegold.png
+    targetPlatforms: [gabbro]
+
+  - name: QUIET_TIME_MOUSE_RIGHT_ALIGNED
+    type: pdc
+    file: 80x80/Pebble_80x80_Quiet_time_mouse_right_aligned.svg
+    targetPlatforms: [gabbro]
+
+  - name: STRIDE_SHOE
+    type: png
+    file: stride_shoe.png
+    targetPlatforms: [flint]

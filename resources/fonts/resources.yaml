@@ -1,0 +1,190 @@
+# System fonts. A .pbf face is used as it is; the font options only
+# shape the faces rendered from a .ttf.
+media:
+
+  - name: FONT_FALLBACK_INTERNAL
+    type: font
+    file: GOTHIC_14.pbf
+    builtin: true
+
+  - name: GOTHIC_18_BOLD
+    type: font
+    file: GOTHIC_18_BOLD.pbf
+    extended: true
+
+  - name: GOTHIC_09
+    type: font
+    file: GOTHIC_09.pbf
+    extended: true
+
+  - name: GOTHIC_14
+    type: font
+    file: GOTHIC_14.pbf
+    extended: true
+
+  - name: GOTHIC_14_EMOJI
+    type: font
+    file:
+      bw: bw/EMOJI_14.pbf
+      color: color/EMOJI_14.pbf
+
+  - name: GOTHIC_14_BOLD
+    type: font
+    file: GOTHIC_14_BOLD.pbf
+    extended: true
+
+  - name: GOTHIC_18
+    type: font
+    file: GOTHIC_18.pbf
+    extended: true
+
+  - name: GOTHIC_18_EMOJI
+    type: font
+    file:
+      bw: bw/EMOJI_18.pbf
+      color: color/EMOJI_18.pbf
+
+  - name: GOTHIC_24
+    type: font
+    file: GOTHIC_24.pbf
+    extended: true
+
+  - name: GOTHIC_24_BOLD
+    type: font
+    file: GOTHIC_24_BOLD.pbf
+    extended: true
+
+  - name: GOTHIC_24_EMOJI
+    type: font
+    file:
+      bw: bw/EMOJI_24.pbf
+      color: color/EMOJI_24.pbf
+
+  - name: GOTHIC_28
+    type: font
+    file: GOTHIC_28.pbf
+    extended: true
+
+  - name: GOTHIC_28_BOLD
+    type: font
+    file: GOTHIC_28_BOLD.pbf
+    extended: true
+
+  - name: GOTHIC_28_EMOJI
+    type: font
+    file:
+      bw: bw/EMOJI_28.pbf
+      color: color/EMOJI_28.pbf
+
+  - name: GOTHIC_36
+    type: font
+    file: GOTHIC_36.pbf
+    extended: true
+
+  - name: GOTHIC_36_BOLD
+    type: font
+    file: GOTHIC_36_BOLD.pbf
+    extended: true
+
+  - name: BITHAM_30_BLACK
+    type: font
+    file: BITHAM_30_BLACK.pbf
+
+  - name: BITHAM_42_BOLD
+    type: font
+    file: BITHAM_42_BOLD.pbf
+    trackingAdjust: -2
+
+  - name: BITHAM_42_LIGHT
+    type: font
+    file: BITHAM_42_LIGHT.pbf
+    trackingAdjust: -3
+
+  - name: BITHAM_42_MEDIUM_NUMBERS
+    type: font
+    file: BITHAM_42_MEDIUM_NUMBERS.pbf
+    trackingAdjust: -3
+
+  - name: BITHAM_34_MEDIUM_NUMBERS
+    type: font
+    file: BITHAM_34_MEDIUM_NUMBERS.pbf
+    trackingAdjust: -2
+
+  - name: BITHAM_34_LIGHT_SUBSET
+    type: font
+    file: BITHAM_34_LIGHT_SUBSET.pbf
+    trackingAdjust: -2
+
+  - name: BITHAM_18_LIGHT_SUBSET
+    type: font
+    file: BITHAM_18_LIGHT_SUBSET.pbf
+    trackingAdjust: -1
+
+  - name: ROBOTO_CONDENSED_21
+    type: font
+    file: Roboto-Condensed.ttf
+    characterList: basic_latin_codepoints.json
+    compatibility: '2.7'
+
+  - name: ROBOTO_BOLD_SUBSET_49
+    type: font
+    file: Roboto-Bold.ttf
+    characterRegex: '[:0-9]'
+    compatibility: '2.7'
+
+  - name: DROID_SERIF_28_BOLD
+    type: font
+    file: DroidSerif-Bold.ttf
+    characterList: basic_latin_codepoints.json
+    compatibility: '2.7'
+
+  - name: LECO_20_BOLD_NUMBERS
+    type: font
+    file: LECO_20_BOLD_NUMBERS.pbf
+
+  - name: LECO_26_BOLD_NUMBERS_AM_PM
+    type: font
+    file: LECO_26_BOLD_NUMBERS_AM_PM.pbf
+
+  - name: LECO_32_BOLD_NUMBERS
+    type: font
+    file: LECO_32_BOLD_NUMBERS.pbf
+
+  - name: LECO_36_BOLD_NUMBERS
+    type: font
+    file: LECO_36_BOLD_NUMBERS.pbf
+
+  - name: LECO_38_BOLD_NUMBERS
+    type: font
+    file: LECO_38_BOLD_NUMBERS.pbf
+
+  - name: LECO_42_NUMBERS
+    type: font
+    file: LECO_42_NUMBERS.pbf
+
+  - name: LECO_28_LIGHT_NUMBERS
+    type: font
+    file: LECO_28_LIGHT_NUMBERS.pbf
+
+  - name: LECO_60_NUMBERS_AM_PM
+    type: font
+    file: LECO_60_NUMBERS_AM_PM.pbf
+
+  - name: LECO_60_BOLD_NUMBERS_AM_PM
+    type: font
+    file: LECO_60_BOLD_NUMBERS_AM_PM.pbf
+
+  - name: AGENCY_FB_46_NUMBERS_AM_PM
+    type: font
+    file: AGENCY_FB_46_NUMBERS_AM_PM.pbf
+    targetPlatforms: [emery, gabbro]
+
+  - name: AGENCY_FB_88_NUMBERS_AM_PM
+    type: font
+    file: AGENCY_FB_88_NUMBERS_AM_PM.pbf
+    targetPlatforms: [emery, gabbro]
+
+  - name: AGENCY_FB_88_THIN_NUMBERS_AM_PM
+    type: font
+    file: AGENCY_FB_88_THIN_NUMBERS_AM_PM.pbf
+    targetPlatforms: [emery, gabbro]

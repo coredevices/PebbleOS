@@ -1,0 +1,27 @@
+# Raw data blobs.
+media:
+
+  # raw-deflate + u32 size prefix (tools/deflate_resource.py);
+  # inflated at load by globe_view.c prv_load_inflated
+  - name: GLOBE_CUBEMAP
+    type: raw
+    file: globe_cubemap_packed.deflate
+
+  - name: GLOBE_STARFIELD
+    type: raw
+    file: globe_starfield.deflate
+
+  # PDC PAYLOAD (8-byte file header stripped) deflated; the loader
+  # inflates + gdraw_command_sequence_validate()s it
+  - name: GLOBE_BW_SEQUENCE
+    type: raw
+    file: globe_bw_sequence.deflate
+
+  - name: GLOBE_CRADLE_PDC
+    type: raw
+    file: globe_cradle.pdc
+
+  - name: WX_WEATHER_ICONS_PDC
+    type: raw
+    file: weather_icons.pdc
+    targetPlatforms: [gabbro]

@@ -1,0 +1,33 @@
+# Resources only the recovery firmware builds.
+media:
+
+  - name: FONT_FALLBACK_INTERNAL
+    type: font
+    file:
+      bw: ../fonts/GOTHIC_14.pbf
+      color: ../fonts/GOTHIC_24.pbf
+    builtin: true
+    aliases: [BITHAM_34_MEDIUM_NUMBERS, GOTHIC_14_BOLD, GOTHIC_18, GOTHIC_28, GOTHIC_28_BOLD]
+
+  - name: GENERIC_CONFIRMATION_LARGE
+    type: pdc
+    file: Pebble_80x80_Generic_confirmation.svg
+
+  - name: RECOVERY_LOW_POWER_DISCHARGING
+    type: pdc
+    file: Pebble-PRF_low_power_discharging.svg
+
+  - name: RECOVERY_LOW_POWER_CHARGING
+    type: pdc
+    file: Pebble-PRF_low_power_charging.svg
+
+  - name: MINCHO_20_PAIR
+    type: font
+    file: sazanami-mincho.ttf
+    characterRegex: '[ペアリング]'
+
+  - name: MINCHO_24_PAIR
+    type: font
+    file: sazanami-mincho.ttf
+    targetPlatforms: [emery, gabbro]
+    characterRegex: '[ペアリング]'

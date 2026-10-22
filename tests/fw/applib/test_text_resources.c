@@ -764,8 +764,8 @@ void test_text_resources__test_glyph_decompression(void) {
   cl_assert(!HAS_FEATURE(s_font_info.base.md.version, VERSION_FIELD_FEATURE_RLE4));
 
   // Load GOTHIC_18_COMPRESSED. This is the same font, added by hand to the system resource pack.
-  // To do this, simply copy the GOTHIC_18 stanza in resource/normal/base/resource_map.json, change
-  // the name to include _COMPRESSED, and add the field: "compress": "RLE4". Rebuild, and run
+  // To do this, simply copy the GOTHIC_18 entry in resources/fonts/resources.yaml, change the
+  // name to include _COMPRESSED, and add the key: compress: RLE4. Rebuild, and run
   // ./tools/update_system_pbpack.sh
   // GOTHIC_18_COMPRESSED isn't in the regular pbpack; it has to be added by hand (see comment
   // above) and the resource_ids.auto.h override updated to give it a real ID. When it's absent

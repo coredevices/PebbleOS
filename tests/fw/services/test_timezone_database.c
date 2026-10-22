@@ -27,7 +27,7 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
 void test_timezone_database__get_region_count(void) {
   // Note this test will break every time we update the timezone database and that's ok. Just
   // make sure the new number is sane and update the expected number. The count is derived from
-  // the number of Zone entries in resources/normal/base/tzdata/timezones_olson.txt after the
+  // the number of Zone entries in resources/tzdata/timezones_olson.txt after the
   // generator's filtering (build_zoneinfo_list).
   cl_assert_equal_i(timezone_database_get_region_count(), 309);
 }

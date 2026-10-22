@@ -1,14 +1,32 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 #
-# The resource pipeline: every entry of the board's resource maps becomes
-# a .reso, the .reso files are collected into a resource ball, and the
-# firmware's resource tables, headers and pbpack are derived from it.
+# The resource pipeline: every resource the platform file and the
+# registered fragments declare becomes a .reso, the .reso files are
+# collected into a resource ball, and the firmware's resource tables,
+# headers and pbpack are derived from it.
 
 define_property(GLOBAL PROPERTY PBL_DYNAMIC_RESOURCES
   BRIEF_DOCS "Resources produced by the build itself (stored apps, timezones)")
+define_property(GLOBAL PROPERTY PBL_RESOURCE_FRAGMENTS
+  BRIEF_DOCS "Directories with a resources.yaml, registered from the build")
 
 set(PBL_RESOURCES_PY ${PBL_BASE}/tools/cmake/resources.py)
+
+# A directory holding a resources.yaml whose resources the firmware
+# includes after the ones its platform file lists.
+function(pbl_resource_fragment dir)
+  if(NOT IS_ABSOLUTE ${dir})
+    set(dir ${CMAKE_CURRENT_SOURCE_DIR}/${dir})
+  endif()
+  set_property(GLOBAL APPEND PROPERTY PBL_RESOURCE_FRAGMENTS ${dir})
+endfunction()
+
+function(pbl_resource_fragment_ifdef feature dir)
+  if(${feature})
+    pbl_resource_fragment(${dir})
+  endif()
+endfunction()
 
 # A .reso another build step produces, added to the resource ball after
 # the ones the resource maps declare.
@@ -40,8 +58,8 @@ function(pbl_resources)
 
   # The timezone database is built straight into a resource.
   if(NOT CONFIG_RECOVERY_FW)
-    set(tzdata ${PROJECT_BINARY_DIR}/resources/normal/base/tzdata/tzdata.bin.reso)
-    set(olson ${PBL_BASE}/resources/normal/base/tzdata/timezones_olson.txt)
+    set(tzdata ${PROJECT_BINARY_DIR}/resources/tzdata/tzdata.bin.reso)
+    set(olson ${PBL_BASE}/resources/tzdata/timezones_olson.txt)
     pbl_resource_command(
       OUTPUT ${tzdata}
       ARGS tzdata --input ${olson} --output ${tzdata}
@@ -51,18 +69,19 @@ function(pbl_resources)
     list(APPEND dynamic ${tzdata})
   endif()
 
-  # A board may share the resource maps of another one.
-  set(resources_board ${PBL_BOARD_NAME})
-  if(CONFIG_RESOURCES_BOARD)
-    set(resources_board ${CONFIG_RESOURCES_BOARD})
+  set(platform_file ${PBL_BASE}/resources/platforms/${PBL_PLATFORM_NAME}.yaml)
+  if(VARIANT STREQUAL "prf")
+    set(platform_file ${PBL_BASE}/resources/platforms/${PBL_PLATFORM_NAME}.prf.yaml)
   endif()
+  get_property(fragments GLOBAL PROPERTY PBL_RESOURCE_FRAGMENTS)
 
-  # Resolve the resource maps into per-resource build rules.
+  # Resolve the declarations into per-resource build rules.
   execute_process(
     COMMAND ${PYTHON_EXECUTABLE} ${PBL_RESOURCES_PY} manifest
       --builddir ${PROJECT_BINARY_DIR}
       --platform ${PBL_PLATFORM_NAME}
-      --board-name ${resources_board}
+      --platform-file ${platform_file}
+      --fragment ${fragments}
       --variant ${VARIANT}
       --config ${PBL_DOTCONFIG}
       --output ${manifest}
@@ -77,7 +96,7 @@ function(pbl_resources)
 
   include(${PROJECT_BINARY_DIR}/resources/resources.cmake)
   set_property(DIRECTORY ${PBL_BASE} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-    ${PBL_RESOURCE_MAP_FILES} ${PBL_RESOURCES_PY} ${PBL_DOTCONFIG})
+    ${PBL_RESOURCE_FILES} ${PBL_RESOURCES_PY} ${PBL_DOTCONFIG})
 
   pbl_resource_command(
     OUTPUT ${ball}
@@ -167,9 +186,9 @@ function(pbl_resources)
     pbl_resource_command(
       OUTPUT ${PROJECT_BINARY_DIR}/resources/layouts.json.auto
       ARGS layouts --manifest ${manifest}
-           --template ${PBL_BASE}/resources/normal/base/layouts/layouts.json.in
+           --template ${PBL_BASE}/resources/timeline/layouts.json.in
            --output ${PROJECT_BINARY_DIR}/resources/layouts.json.auto
-      DEPENDS ${manifest} ${PBL_BASE}/resources/normal/base/layouts/layouts.json.in
+      DEPENDS ${manifest} ${PBL_BASE}/resources/timeline/layouts.json.in
       COMMENT "Generating layouts.json"
     )
     list(APPEND generated
