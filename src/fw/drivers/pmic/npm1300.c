@@ -27,6 +27,7 @@
 #define CHARGER_DEBOUNCE_MS 400
 #define ADC_POLL_DELAY_MS   5     // Delay between ADC poll iterations to reduce I2C traffic
 #define ADC_POLL_TIMEOUT_MS 100   // Max time to wait for ADC measurement
+#define ANOMALY27_BUCK1_ON_TIME_US 1000U
 static TimerID s_debounce_charger_timer = TIMER_INVALID_ID;
 static uint32_t s_dischg_limit_ma;
 
@@ -117,6 +118,7 @@ typedef enum {
   PmicRegisters_GPIOS_GPIOOPENDRAIN1 = 0x0615,
   PmicRegisters_ERRLOG_SCRATCH0 = 0x0E01,
   PmicRegisters_ERRLOG_SCRATCH1 = 0x0E02,
+  PmicRegisters_BUCK_BUCK1ENASET = 0x0400,
   PmicRegisters_BUCK_BUCK1ENACLR = 0x0401,
   PmicRegisters_BUCK_BUCK1NORMVOUT = 0x0408,
   PmicRegisters_BUCK_BUCK2NORMVOUT = 0x040A,
@@ -126,6 +128,8 @@ typedef enum {
   PmicRegisters_BUCK_BUCK1VOUTSTATUS = 0x0410,
   PmicRegisters_BUCK_BUCK2VOUTSTATUS = 0x0411,
   PmicRegisters_BUCK_BUCKSTATUS = 0x0434,
+  PmicRegisters_BUCK_BUCKSTATUS__BUCK1MODE_MSK = 0x03,
+  PmicRegisters_BUCK_BUCKSTATUS__BUCK1MODE_PWM = 0x02,
   PmicRegisters_LDSW_TASKLDSW1SET = 0x0800,
   PmicRegisters_LDSW_TASKLDSW1CLR = 0x0801,
   PmicRegisters_LDSW_TASKLDSW2SET = 0x0802,
@@ -217,6 +221,45 @@ static bool prv_buck_set_sw_ctrl(uint16_t normvout_reg, uint16_t voutstatus_reg,
   return ok;
 }
 
+#if PLATFORM_OBELIX || PLATFORM_GETAFIX
+// Anomaly 27 state is kept across resets as long as the PMIC stays powered, so
+// it may have been entered by an earlier boot. BUCK1 reports forced PWM mode
+// while in it, and cycling BUCK1 clears it, but only if it is left on for a
+// while.
+static bool prv_buck1_clear_anomaly27(void) {
+  uint8_t status;
+
+  if (!prv_read_register(PmicRegisters_BUCK_BUCKSTATUS, &status)) {
+    return false;
+  }
+
+  if ((status & PmicRegisters_BUCK_BUCKSTATUS__BUCK1MODE_MSK) !=
+      PmicRegisters_BUCK_BUCKSTATUS__BUCK1MODE_PWM) {
+    return true;
+  }
+
+  if (!prv_write_register(PmicRegisters_BUCK_BUCK1ENASET, 1)) {
+    return false;
+  }
+
+  delay_us(ANOMALY27_BUCK1_ON_TIME_US);
+
+  if (!prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1) ||
+      !prv_read_register(PmicRegisters_BUCK_BUCKSTATUS, &status)) {
+    return false;
+  }
+
+  if ((status & PmicRegisters_BUCK_BUCKSTATUS__BUCK1MODE_MSK) ==
+      PmicRegisters_BUCK_BUCKSTATUS__BUCK1MODE_PWM) {
+    PBL_LOG_ERR("Anomaly 27 active, could not be cleared");
+  } else {
+    PBL_LOG_WRN("Anomaly 27 active, cleared");
+  }
+
+  return true;
+}
+#endif
+
 static void prv_handle_charge_state_change(void *null) {
   const bool is_charging = pmic_is_charging();
   const bool is_connected = pmic_is_usb_connected();
@@ -305,6 +348,7 @@ bool pmic_init(void) {
                               PmicRegisters_BUCK_BUCKSWCTRLSEL__BUCK1SWCTRLSEL_SWCTRL,
                               8 /* 1.8V */);
   ok &= prv_write_register(PmicRegisters_BUCK_BUCK1ENACLR, 1);
+  ok &= prv_buck1_clear_anomaly27();
   //enable 1.8V@LDO1
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW1LDOSEL, 1);  //LDO
   ok &= prv_write_register(PmicRegisters_LDSW_LDSW1VOUTSEL, 8);  //1.8V
