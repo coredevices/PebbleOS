@@ -3,7 +3,6 @@
 
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
-#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <bluetooth/nimble_type_conversions.h>
@@ -119,15 +118,28 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
 
 static struct ble_gap_event_listener s_gap_event_listener;
 
-void pbl_bt__ppog_reversed_init(void) {
+int pbl_bt__ppog_reversed_init(void) {
   int rc = ble_gatts_count_cfg(s_ppog_reversed_svc);
-  PBL_ASSERTN(rc == 0);
+  if (rc != 0) {
+    PBL_LOG_ERR("Failed to count reversed PPoG service: 0x%04x", (uint16_t)rc);
+    return rc;
+  }
+
   rc = ble_gatts_add_svcs(s_ppog_reversed_svc);
-  PBL_ASSERTN(rc == 0);
+  if (rc != 0) {
+    PBL_LOG_ERR("Failed to add reversed PPoG service: 0x%04x", (uint16_t)rc);
+    return rc;
+  }
+
   // Called on every pbl_bt_start, but the listener list is only cleared on
   // nimble_port_init, so tolerate EALREADY.
   rc = ble_gap_event_listener_register(&s_gap_event_listener, prv_handle_gap_event, nullptr);
-  PBL_ASSERTN(rc == 0 || rc == BLE_HS_EALREADY);
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
+    PBL_LOG_ERR("Failed to register reversed PPoG GAP listener: 0x%04x", (uint16_t)rc);
+    return rc;
+  }
+
+  return 0;
 }
 
 enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,

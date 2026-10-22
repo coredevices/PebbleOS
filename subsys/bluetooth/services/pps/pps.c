@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/pebble_pairing_service.h>
-#include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
 #include <bluetooth/nimble_type_conversions.h>
@@ -149,13 +148,20 @@ static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
   },
 };
 
-void pbl_bt__pps_init(void) {
-  int rc;
+int pbl_bt__pps_init(void) {
+  int rc = ble_gatts_count_cfg(pebble_pairing_svc);
+  if (rc != 0) {
+    PBL_LOG_ERR("Failed to count Pebble Pairing Service: 0x%04x", (uint16_t)rc);
+    return rc;
+  }
 
-  rc = ble_gatts_count_cfg(pebble_pairing_svc);
-  PBL_ASSERTN(rc == 0);
   rc = ble_gatts_add_svcs(pebble_pairing_svc);
-  PBL_ASSERTN(rc == 0);
+  if (rc != 0) {
+    PBL_LOG_ERR("Failed to add Pebble Pairing Service: 0x%04x", (uint16_t)rc);
+    return rc;
+  }
+
+  return 0;
 }
 
 void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t *chr_uuid) {

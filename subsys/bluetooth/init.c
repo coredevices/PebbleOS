@@ -169,7 +169,12 @@ bool pbl_bt_start(struct pbl_bt_config *config) {
 
   ble_svc_gap_init();
   ble_svc_gatt_init();
-  pbl_bt__services_init(&config->dis_info);
+  rc = pbl_bt__services_init(&config->dis_info);
+  if (rc != 0) {
+    (void)ble_gatts_reset();
+    s_driver_state = DriverStateStopped;
+    return false;
+  }
 
   ble_hs_sched_start();
   f_rc = (pbl_sem_take(&s_host_started, PBL_MSEC(s_bt_stack_start_stop_timeout_ms)) == 0);

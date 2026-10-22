@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include <pbl/drivers/hrm/gh3x2x.h>
+#include <pbl/logging/logging.h>
 
 #include <bluetooth/services/services.h>
 #include <console/console.h>
@@ -121,11 +122,15 @@ void gh3x2x_ble_notify(const uint8_t *p_data, uint32_t data_len) {
 int pbl_bt__gh3x2x_tuning_init(void) {
   int rc = ble_gatts_count_cfg(gatt_svr_svcs);
   if (rc != 0) {
+    PBL_LOG_ERR("Failed to count GH3X2X tuning service: 0x%04x", (uint16_t)rc);
     return rc;
   }
+
   rc = ble_gatts_add_svcs(gatt_svr_svcs);
   if (rc != 0) {
+    PBL_LOG_ERR("Failed to add GH3X2X tuning service: 0x%04x", (uint16_t)rc);
     return rc;
   }
-  return rc;
+
+  return 0;
 }
