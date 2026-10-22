@@ -374,7 +374,7 @@ pbl_clar_test(test_emoji_fonts
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
     fw/shell/system_theme_style.c
-    fw/board/displays/display_getafix.c
+    fw/board/displays/display_gabbro.c
     fw/system/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
@@ -392,7 +392,7 @@ pbl_clar_test(test_emoji_glyphs
     fw/applib/graphics/perimeter.c
     fw/applib/graphics/text_render.c
     fw/applib/graphics/text_resources.c
-    fw/board/displays/display_getafix.c
+    fw/board/displays/display_gabbro.c
     fw/system/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c

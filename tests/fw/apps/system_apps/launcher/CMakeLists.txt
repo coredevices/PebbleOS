@@ -34,7 +34,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/apps/system/launcher/default/app_glance_workout.c
     fw/apps/system/launcher/default/menu_layer.c
     fw/apps/system/timeline/text_node.c
-    fw/board/displays/display_getafix.c
+    fw/board/displays/display_gabbro.c
     fw/services/app_glances/app_glance_service.c
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c

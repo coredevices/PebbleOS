@@ -98,7 +98,7 @@
 // layer's origin is (12,0)). Emery flows each row from its measured height,
 // which cannot be chord-checked at compile time; on a circle every ink band has
 // to be proven against BOTH edges of its own row, so round pins them instead.
-// Every band below was checked against display_getafix.c's real 260-row mask.
+// Every band below was checked against display_gabbro.c's real 260-row mask.
 #define WEATHER_APP_LAYOUT_ROUND_TEXT_RAIL 16 // + off->x (2) -> content 18 -> screen 30
 // 28_BOLD ink 46..63. This is as high as the day name can go: 'WEDNESDAY' is
 // 113px, and between the glass on its left and the today disc's white halo on

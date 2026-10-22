@@ -2,9 +2,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-// Getafix display pixel masks
+// Gabbro display pixel masks
 //
-// The Getafix round display is logically a square 260x260 display with
+// The gabbro round display is logically a square 260x260 display with
 // some of the pixels hidden under a mask or missing entirely. The mask
 // is symmetrical both horizontally and vertically: the masks on the
 // left and right side of a line are equal, and the mask on the top half

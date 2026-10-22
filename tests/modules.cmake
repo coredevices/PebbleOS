@@ -96,7 +96,7 @@ pbl_test_module(text_render
     fw/applib/graphics/text_render.c
     fw/applib/graphics/perimeter.c
     tests/fakes/fake_fonts.c
-    fw/board/displays/display_getafix.c
+    fw/board/displays/display_gabbro.c
 )
 
 pbl_test_module(gdraw
