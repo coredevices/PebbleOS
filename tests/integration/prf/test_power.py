@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import re
 import time
 
 import numpy as np
@@ -28,6 +29,10 @@ SMOOTHING_S = 0.01
 
 # Booting at this VBAT, the fuel gauge estimates under 5%: PRF's low battery.
 LOW_BATTERY_MV = 3500
+# The fuel gauge's first reading after boot, within this of the PPK2's.
+BATTERY_LOG = r"Percent: \d+, V: (-?\d+) mV"
+VBAT_TOLERANCE_MV = 100
+VBAT_ATTEMPTS = 3
 
 
 @pytest.fixture(autouse=True)
@@ -82,11 +87,23 @@ def test_backlight_timeout(dut, power, record_property):
     assert low <= on_s <= high, f"backlight on for {on_s:.2f} s"
 
 
-def test_low_battery(dut, power):
-    power.ppk2.set_voltage(LOW_BATTERY_MV)
-    try:
+def _boot_at(dut, power, voltage_mv):
+    """Reset the watch until it reads ``voltage_mv``, re-applying it if the
+    PPK2 did not; the log mark of that boot."""
+    for _ in range(VBAT_ATTEMPTS):
+        power.ppk2.set_voltage(voltage_mv)
         since = dut.logs.mark()
         dut.reset()
+        record = dut.wait_for_log(BATTERY_LOG, 30, since)
+        vbat_mv = int(re.search(BATTERY_LOG, str(record)).group(1))
+        if abs(vbat_mv - voltage_mv) <= VBAT_TOLERANCE_MV:
+            return since
+    pytest.fail(f"VBAT reads {vbat_mv} mV with the PPK2 at {voltage_mv} mV")
+
+
+def test_low_battery(dut, power):
+    try:
+        since = _boot_at(dut, power, LOW_BATTERY_MV)
         dut.wait_for_log(r"Battery low: enter low power mode", 60, since)
         assert "Low Power App" in Ui(dut).window_stack()
     finally:
