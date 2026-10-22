@@ -78,15 +78,18 @@ static void prv_worker_task_main(void *entry_point) {
   // about to start the worker in earnest. No longer safe to kill.
   s_worker_task_context.safe_to_kill = false;
 
+  // Read what the runtime needs while still privileged: these are kernel variables
+  const PebbleProcessMd *app_md = s_worker_task_context.app_md;
+  void *stack_top = s_worker_stack_top;
+
 #ifdef CONFIG_USERSPACE
   // Enter unprivileged mode!
-  if (s_worker_task_context.app_md->is_unprivileged) {
+  if (app_md->is_unprivileged) {
     pbl_user_mode_enter();
   }
 #endif
 
-  process_runtime_run(s_worker_task_context.app_md, PebbleTask_Worker, entry_point,
-                      s_worker_stack_top);
+  process_runtime_run(app_md, PebbleTask_Worker, entry_point, stack_top);
 
   // Clean up after the worker.  Remember to put only non-critical cleanup here,
   // as the worker may crash or otherwise misbehave. If something really needs to
