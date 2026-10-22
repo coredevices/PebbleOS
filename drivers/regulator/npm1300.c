@@ -4,14 +4,22 @@
 #include <errno.h>
 
 #include <pbl/drivers/regulator/npm1300.h>
+#include <pbl/kernel/delay.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
+PBL_LOG_MODULE_DEFINE(driver_regulator_npm1300, CONFIG_DRIVER_REGULATOR_LOG_LEVEL);
+
 // BUCK block: per-rail registers at base + rail * stride
-#define NPM1300_BUCK_ENASET(n)     (0x0400U + 2U * (n))
-#define NPM1300_BUCK_ENACLR(n)     (0x0401U + 2U * (n))
-#define NPM1300_BUCK_NORMVOUT(n)   (0x0408U + 2U * (n))
-#define NPM1300_BUCK_SWCTRLSEL     0x040FU
-#define NPM1300_BUCK_VOUTSTATUS(n) (0x0410U + (n))
+#define NPM1300_BUCK_ENASET(n)          (0x0400U + 2U * (n))
+#define NPM1300_BUCK_ENACLR(n)          (0x0401U + 2U * (n))
+#define NPM1300_BUCK_NORMVOUT(n)        (0x0408U + 2U * (n))
+#define NPM1300_BUCK_SWCTRLSEL          0x040FU
+#define NPM1300_BUCK_VOUTSTATUS(n)      (0x0410U + (n))
+#define NPM1300_BUCK_STATUS             0x0434U
+#define NPM1300_BUCK_STATUS_MODE(n)     PBL_GENMASK(4U * (n) + 1U, 4U * (n))
+#define NPM1300_BUCK_STATUS_MODE_PWM(n) (0x2U << (4U * (n)))
 
 // LDSW block
 #define NPM1300_LDSW_TASKSET(n)          (0x0800U + 2U * (n))
@@ -21,6 +29,9 @@
 #define NPM1300_LDSW_STATUS_PWRUPLDO(n)  (1U << (2U * (n) + 1U))
 #define NPM1300_LDSW_LDOSEL(n)           (0x0808U + (n))
 #define NPM1300_LDSW_VOUTSEL(n)          (0x080CU + (n))
+
+// BUCK on time that clears the anomaly 27 state
+#define NPM1300_ANOMALY27_BUCK_ON_TIME_US 1000U
 
 // Both blocks encode 1.0 V + 100 mV * code
 #define NPM1300_VOUT_MIN_MV  1000U
@@ -83,6 +94,55 @@ static int prv_buck_init_locked(const struct pbl_npm1300 *pmic, unsigned int n, 
   return pbl_npm1300_write(pmic, NPM1300_BUCK_NORMVOUT(n), vout);
 }
 
+// Anomaly 27 state is kept as long as the PMIC stays powered, so it may have been entered on an
+// earlier boot, e.g. by firmware without the workaround. The BUCK reports forced PWM mode while in
+// it, and cycling the BUCK clears it, but only if it is left on for a while. A rail that has to
+// stay on cannot be cycled, so the state is only reported.
+static int prv_buck_clear_anomaly27(const struct pbl_npm1300 *pmic, unsigned int n,
+                                    bool always_on) {
+  uint8_t status;
+  int ret;
+
+  ret = pbl_npm1300_read(pmic, NPM1300_BUCK_STATUS, &status);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if ((status & NPM1300_BUCK_STATUS_MODE(n)) != NPM1300_BUCK_STATUS_MODE_PWM(n)) {
+    return 0;
+  }
+
+  if (always_on) {
+    PBL_LOG_ERR("BUCK%u anomaly 27 active, cannot be cleared on an always-on rail", n + 1U);
+    return 0;
+  }
+
+  ret = pbl_npm1300_write(pmic, NPM1300_BUCK_ENASET(n), 1);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_busy_wait_us(NPM1300_ANOMALY27_BUCK_ON_TIME_US);
+
+  ret = pbl_npm1300_write(pmic, NPM1300_BUCK_ENACLR(n), 1);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_npm1300_read(pmic, NPM1300_BUCK_STATUS, &status);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if ((status & NPM1300_BUCK_STATUS_MODE(n)) == NPM1300_BUCK_STATUS_MODE_PWM(n)) {
+    PBL_LOG_ERR("BUCK%u anomaly 27 active, could not be cleared", n + 1U);
+  } else {
+    PBL_LOG_WRN("BUCK%u anomaly 27 active, cleared", n + 1U);
+  }
+
+  return 0;
+}
+
 static int prv_ldsw_init_locked(const struct pbl_npm1300 *pmic, unsigned int n, bool ldo,
                                 uint8_t vout) {
   uint8_t status;
@@ -123,6 +183,9 @@ static int prv_init(const struct pbl_regulator *reg) {
   pbl_npm1300_lock(pmic);
   if (prv_is_buck(rail)) {
     ret = prv_buck_init_locked(pmic, prv_index(rail), prv_vout_code(rail->voltage_mv));
+    if (ret == 0) {
+      ret = prv_buck_clear_anomaly27(pmic, prv_index(rail), reg->always_on);
+    }
   } else {
     ret = prv_ldsw_init_locked(pmic, prv_index(rail), rail->ldo,
                                rail->ldo ? prv_vout_code(rail->voltage_mv) : 0U);

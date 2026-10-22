@@ -14,3 +14,11 @@ config REGULATOR_NPM1300
     select REGULATOR
     help
       Support for the BUCK and LDSW rails of the Nordic nPM1300 PMIC.
+
+if REGULATOR
+
+module = DRIVER_REGULATOR
+module-str = Regulator
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # REGULATOR
