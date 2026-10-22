@@ -210,7 +210,9 @@ PBL_SECTION_RAM void pbl_soc_idle(pbl_tick_t max_ticks) {
 
         // configure LPTIM to wake us up after expected idle time
         sleep_ticks = max_ticks - EARLY_WAKEUP_TICKS;
-        lptim_ticks = MIN(sleep_ticks * rc10k_get_freq_hz() / RTC_TICKS_HZ, MAX_LPTIM_CNT);
+        // 64-bit: sleep_ticks * ~10 kHz overflows 32 bits past ~7 minutes and for PBL_TICK_FOREVER.
+        lptim_ticks = (uint32_t)MIN((uint64_t)sleep_ticks * rc10k_get_freq_hz() / RTC_TICKS_HZ,
+                                    MAX_LPTIM_CNT);
         HAL_LPTIM_Counter_Start_IT(&s_lptim, lptim_ticks);
 
         gtimer_start = HAL_GTIMER_READ();
