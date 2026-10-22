@@ -48,7 +48,7 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
       reason_string = "%s%sResetButtonsHeld";
       break;
     case RebootReasonCode_ShutdownMenuItem:
-      reason_string = "%s%sLowBattery";
+      reason_string = "%s%sShutdownMenuItem";
       break;
     case RebootReasonCode_FactoryResetReset:
       reason_string = "%s%sFactoryResetReset";
@@ -71,6 +71,12 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
     case RebootReasonCode_PrfIdle:
       reason_string = "%s%sIdle PRF";
       break;
+    case RebootReasonCode_PrfReset:
+      reason_string = "%s%sPrfReset";
+      break;
+    case RebootReasonCode_PrfResetButtonsHeld:
+      reason_string = "%s%sPrfResetButtonsHeld";
+      break;
     // Error occurred
     case RebootReasonCode_Assert:
       reason_string = "%s%sAssert: LR %#" PRIxPTR;
@@ -92,6 +98,12 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
       break;
     case RebootReasonCode_BtCoredump:
       reason_string = "%s%sBT Coredump";
+      break;
+    case RebootReasonCode_CoreDump:
+      reason_string = "%s%sCoredump";
+      break;
+    case RebootReasonCode_CoreDumpEntryFailed:
+      reason_string = "%s%sCoredump Entry Failed";
       break;
     default:
       reason_string = "%s%sUnrecognized Reason";
