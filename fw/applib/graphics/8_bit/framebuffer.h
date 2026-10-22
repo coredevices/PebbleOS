@@ -15,7 +15,8 @@
 
 #ifndef UNITTEST
 typedef struct FrameBuffer {
-  uint8_t buffer[FRAMEBUFFER_SIZE_BYTES];
+  //! Word aligned so that rows can be compared and copied a word at a time
+  uint8_t buffer[FRAMEBUFFER_SIZE_BYTES] PBL_ALIGNED(4);
   GSize size;       //<! Active size of the framebuffer
   GRect dirty_rect; //<! Smallest rect covering all dirty pixels.
   bool is_dirty;
