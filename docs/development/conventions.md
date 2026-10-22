@@ -37,6 +37,18 @@ Firmware and unit tests are C23:
 
 Declarations exported to the SDK must still build as C99, which apps use.
 
+## Naming
+
+Functions and types are prefixed by who may use them:
+
+- Public API, declared in `include/pbl/`, takes `pbl_` and the name of its
+  module: `pbl_bt_start()`, `struct pbl_bt_addr`.
+- Functions shared between the files of a module but private to it,
+  declared in a header inside the module, take a double underscore after
+  the module name: `pbl_bt__services_init()`.
+- Functions local to a file are `static` and take `prv_`, and file-scope
+  variables `s_`: `prv_comm_start()`, `s_comm_is_running`.
+
 ## Comments
 
 Keep code comments short and concise; extended rationale belongs in the Git
