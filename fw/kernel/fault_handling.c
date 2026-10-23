@@ -318,6 +318,15 @@ static void attempt_handle_stack_overflow(unsigned int *stacked_args, uintptr_t 
   prv_return_to_landing_zone(0, 0, stacked_args); // We can't get LR or PC, so just set to 0's.
 }
 
+// The App task, running privileged, tried to execute app code while App RAM was not executable.
+// It jumped there instead of running the app code unprivileged, so blame the app.
+static bool prv_fault_is_privileged_app_code_fetch(uintptr_t stacked_pc, unsigned int exc_return) {
+  const uint8_t mmfsr = SCB->CFSR & 0xff;
+  return (exc_return & 0x04) && (mmfsr & (1 << 0) /* IACCVIOL */) &&
+         pebble_task_get_current() == PebbleTask_App &&
+         memory_layout_is_pointer_in_region(memory_layout_get_app_region(), (void *)stacked_pc);
+}
+
 static void attempt_handle_generic_fault(unsigned int *stacked_args, unsigned int exc_return) {
   uintptr_t stacked_lr = (uintptr_t)stacked_args[5];
   ;
@@ -325,7 +334,8 @@ static void attempt_handle_generic_fault(unsigned int *stacked_args, unsigned in
   ;
   ;
 
-  if (!prv_fault_is_recoverable(exc_return)) {
+  if (!prv_fault_is_recoverable(exc_return) &&
+      !prv_fault_is_privileged_app_code_fetch(stacked_pc, exc_return)) {
     // We're hosed! We can't recover so just reboot everything.
     kernel_fault(RebootReasonCode_HardFault, stacked_lr ? stacked_lr : stacked_pc);
     return;

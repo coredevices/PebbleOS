@@ -414,6 +414,16 @@ void pebble_task_configure_idle_task(void) {
   pbl_thread_regions_set(pbl_thread_idle(), regions);
 }
 
+void pebble_task_set_app_ram_executable(bool executable) {
+  PBL_ASSERTN(pebble_task_get_current() == PebbleTask_App);
+
+  MpuRegion app_region;
+  mpu_init_region_from_region(&app_region, memory_layout_get_app_region(),
+                              true /* allow_user_access */);
+  app_region.executable = executable;
+  pbl_thread_region_set(pbl_thread_current(), &app_region);
+}
+
 void pbl_thread_stack_overflow(struct pbl_thread *thread, const char *name) {
   PebbleTask task = pebble_task_get_task_for_thread(thread);
 

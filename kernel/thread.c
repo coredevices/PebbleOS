@@ -100,3 +100,9 @@ void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *region
   arch_thread_regions_set(t, regions);
   pbl_irq_unlock();
 }
+
+void pbl_thread_region_set(struct pbl_thread *t, const MpuRegion *region) {
+  pbl_irq_lock();
+  arch_thread_region_set(t, region);
+  pbl_irq_unlock();
+}

@@ -16,7 +16,7 @@ extern uint32_t app_outbox_service_max_message_length(AppOutboxServiceTag tag);
 
 #include <fake_kernel_malloc.h>
 #include <fake_pebble_tasks.h>
-#include <stubs_syscall_internal.h>
+#include <stubs_kernel_syscall.h>
 
 static EventServiceInfo s_app_state_app_outbox_subscription_info;
 EventServiceInfo *app_state_get_app_outbox_subscription_info(void) {

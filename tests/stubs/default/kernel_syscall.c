@@ -11,8 +11,6 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
 
-#include <kernel/pebble_tasks.h>
-
 PBL_WEAK bool s_syscall_did_fail;
 
 PBL_WEAK void stubs_syscall_init(void) {
@@ -25,10 +23,6 @@ PBL_WEAK [[noreturn]] void pbl_syscall_fail(void) {
 
   // Use cl_assert_panic() if you want to catch this getting hit.
   PBL_ASSERTN(false);
-}
-
-PBL_WEAK bool syscall_made_from_userspace(void) {
-  return true;
 }
 
 PBL_WEAK void pbl_syscall_verify_user(const void *buf, size_t num_bytes) {
@@ -67,13 +61,4 @@ PBL_WEAK void pbl_syscall_copy_out(struct pbl_syscall_copy_out *out) {
   if (out->dst != nullptr && pbl_user_copy_to(out->dst, out->src, out->num_bytes) < 0) {
     pbl_syscall_fail();
   }
-}
-
-PBL_WEAK void syscall_init_context() {
-}
-
-PBL_WEAK void syscall_redirect_syscall_exit(PebbleTask task, void (*func)(void)) {
-}
-
-PBL_WEAK void syscall_reset(PebbleTask task) {
 }

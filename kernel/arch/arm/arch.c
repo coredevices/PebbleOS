@@ -150,30 +150,47 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
 // so no RNR write is needed per region. An empty slot must still carry them:
 // an RBAR write with VALID clear lands on whatever region RNR last selected,
 // i.e. it would wipe the slot programmed just before it.
+static void prv_region_words(unsigned int i, const MpuRegion *r, uint32_t *rbar_out,
+                             uint32_t *attr_out) {
+  uint32_t rbar = 0;
+  uint32_t attr = 0;
+#ifndef CONFIG_ARMV8_M_MAINLINE
+  rbar = MPU_RBAR_VALID_Msk | (FIRST_MPU_REGION + i);
+#endif
+  if (r != nullptr) {
+    PBL_ASSERTN(r->region_num == FIRST_MPU_REGION + i);
+    uint32_t base_reg;
+    mpu_get_register_settings(r, &base_reg, &attr);
+#ifdef CONFIG_ARMV8_M_MAINLINE
+    rbar = base_reg;
+#else
+    rbar |= base_reg & ~(MPU_RBAR_VALID_Msk | MPU_RBAR_REGION_Msk);
+#endif
+  }
+  *rbar_out = rbar;
+  *attr_out = attr;
+}
+
 void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
   for (unsigned int i = 0; i < NUM_MPU_REGIONS; i++) {
     const MpuRegion *r = regions ? regions[i] : nullptr;
-    uint32_t rbar = 0;
-    uint32_t attr = 0;
-#ifndef CONFIG_ARMV8_M_MAINLINE
-    rbar = MPU_RBAR_VALID_Msk | (FIRST_MPU_REGION + i);
-#endif
-    if (r != nullptr) {
-      PBL_ASSERTN(r->region_num == FIRST_MPU_REGION + i);
-      uint32_t base_reg;
-      mpu_get_register_settings(r, &base_reg, &attr);
-#ifdef CONFIG_ARMV8_M_MAINLINE
-      rbar = base_reg;
-#else
-      rbar |= base_reg & ~(MPU_RBAR_VALID_Msk | MPU_RBAR_REGION_Msk);
-#endif
-    }
-    t->backend.arch.mpu[2 * i] = rbar;
-    t->backend.arch.mpu[2 * i + 1] = attr;
+    prv_region_words(i, r, &t->backend.arch.mpu[2 * i], &t->backend.arch.mpu[2 * i + 1]);
   }
 #if __DCACHE_PRESENT
   SCB_CleanDCache();
 #endif
+}
+
+void arch_thread_region_set(struct pbl_thread *t, const MpuRegion *region) {
+  PBL_ASSERTN(region->region_num >= FIRST_MPU_REGION &&
+              region->region_num < FIRST_MPU_REGION + NUM_MPU_REGIONS);
+  const unsigned int i = region->region_num - FIRST_MPU_REGION;
+  prv_region_words(i, region, &t->backend.arch.mpu[2 * i], &t->backend.arch.mpu[2 * i + 1]);
+  if (t == pbl_cur) {
+    mpu_set_region(region);
+    __DSB();
+    __ISB();
+  }
 }
 
 void arch_thread_aborted(struct pbl_thread *t) {

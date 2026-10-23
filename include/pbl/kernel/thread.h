@@ -268,6 +268,18 @@ static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
 void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions);
 
 /**
+ * @brief Replace one MPU region of a thread.
+ *
+ * The slot is selected by @ref MpuRegion::region_num. When @p t is the running thread the change
+ * takes effect immediately. Meant for permission changes: unlike pbl_thread_regions_set(), it does
+ * not clean the data cache, so the base, size and cache policy must stay the same.
+ *
+ * @param t Thread.
+ * @param region Region to program.
+ */
+void pbl_thread_region_set(struct pbl_thread *t, const MpuRegion *region);
+
+/**
  * @brief Read a thread-local pointer slot.
  *
  * @param t Thread.

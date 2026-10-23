@@ -139,11 +139,22 @@ void pbl_user_mode_enter(void);
  *
  * For untrusted callbacks: memory or peripheral access the thread is not allowed inside @p fn
  * faults the MPU instead of silently succeeding. The caller is privileged again when this returns.
+ * Calling it again before it returns, from a syscall made by @p fn, fails that syscall with
+ * pbl_syscall_fail().
  *
  * @param fn Function to call.
  * @param ctx Argument passed to @p fn.
  */
 void pbl_user_call(void (*fn)(void *), void *ctx);
+
+/**
+ * @brief Discard a pbl_user_call() that will never return.
+ *
+ * For a privileged caller that regained control through a longjmp out of a syscall made by the
+ * callee: the call's return path was skipped, so its state has to be dropped before the next call.
+ * Must be called from privileged thread mode; does nothing if no call is active.
+ */
+void pbl_user_call_unwind(void);
 #endif
 
 /**
@@ -173,7 +184,7 @@ static inline bool pbl_is_user_context(void) {
   return false;
 }
 
-#define PRV_SC_STUB(section, ret, name, ...) ret name(__VA_ARGS__)
+#define PRV_SC_STUB(ret, name, ...) ret name(__VA_ARGS__)
 #if UNITTEST_WITH_SYSCALL_PRIVILEGES
 bool arch_syscall_returns_to_user(void *ret_addr);
 #define PRV_SC_FROM_USER() arch_syscall_returns_to_user(PBL_RETURN_ADDRESS(0))
@@ -198,14 +209,14 @@ static inline bool pbl_is_user_context(void) {
   return false;
 }
 
-#define PRV_SC_STUB(section, ret, name, ...) ret name(__VA_ARGS__)
-#define PRV_SC_FROM_USER()                   false
+#define PRV_SC_STUB(ret, name, ...) ret name(__VA_ARGS__)
+#define PRV_SC_FROM_USER()          false
 
 #endif
 
 #define PRV_SC_DEFINE(attrs, ret_kw, ret, name, ...)                                               \
   attrs static ret name##__impl(PRV_SC_IMPL_PARAMS(__VA_ARGS__));                                  \
-  PRV_SC_STUB(".syscall_checked.", ret, name, PRV_SC_PARAMS(__VA_ARGS__)) {                        \
+  PRV_SC_STUB(ret, name, PRV_SC_PARAMS(__VA_ARGS__)) {                                             \
     if (!PRV_SC_FROM_USER()) {                                                                     \
       ret_kw name##__impl(false __VA_OPT__(, PRV_SC_MAP(PRV_SC_NAME, PRV_SC_COMMA, __VA_ARGS__))); \
     }                                                                                              \

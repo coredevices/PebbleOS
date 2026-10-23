@@ -22,6 +22,7 @@ void arch_init(void);
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg);
 
 void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions);
+void arch_thread_region_set(struct pbl_thread *t, const MpuRegion *region);
 
 //! Starts running pbl_cur; never returns.
 [[noreturn]] void arch_start(void);
