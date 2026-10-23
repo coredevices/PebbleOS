@@ -7,6 +7,7 @@
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
+#include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
@@ -40,20 +41,15 @@ static UARTDeviceState s_dbg_uart_state = {
   },
 };
 
+PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA19_USART1_TXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA18_USART1_RXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_UP);
+
 static UARTDevice DBG_UART_DEVICE = {
   .state = &s_dbg_uart_state,
-  .tx =
-      {
-        .pad = PAD_PA19,
-        .func = USART1_TXD,
-        .flags = PIN_NOPULL,
-      },
-  .rx =
-      {
-        .pad = PAD_PA18,
-        .func = USART1_RXD,
-        .flags = PIN_PULLUP,
-      },
+  .pinctrl = PBL_PINCTRL(&s_dbg_uart_default, nullptr, 0),
   .irqn = USART1_IRQn,
   .dma_irqn = DMAC1_CH1_IRQn,
 };
@@ -86,6 +82,28 @@ static DisplayJDIState s_display_state = {
   },
 };
 
+PBL_PINCTRL_STATE_DEFINE(
+    s_display_default, SF32LB52_PINCTRL,
+    SF32LB52_PA40_LCDC1_JDI_XRST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA08_LCDC1_JDI_VST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA39_LCDC1_JDI_VCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA07_LCDC1_JDI_ENB | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA06_LCDC1_JDI_HST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA41_LCDC1_JDI_HCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA05_LCDC1_JDI_R1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA42_LCDC1_JDI_R2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA04_LCDC1_JDI_G1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA43_LCDC1_JDI_G2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA03_LCDC1_JDI_B1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA02_LCDC1_JDI_B2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+
+static const struct pbl_gpio s_display_discharge[] = {
+  PBL_GPIO(SF32LB_GPIO1, 3, 0),  PBL_GPIO(SF32LB_GPIO1, 39, 0), PBL_GPIO(SF32LB_GPIO1, 40, 0),
+  PBL_GPIO(SF32LB_GPIO1, 41, 0), PBL_GPIO(SF32LB_GPIO1, 42, 0),
+};
+
 static DisplayJDIDevice s_display = {
   .state = &s_display_state,
   .irqn = LCDC1_IRQn,
@@ -94,93 +112,9 @@ static DisplayJDIDevice s_display = {
         .lptim = hwp_lptim2,
         .freq_hz = 60U,
       },
-  .pinmux =
-      {
-        .xrst =
-            {
-              .pad = PAD_PA40,
-              .func = LCDC1_JDI_XRST,
-              .flags = PIN_NOPULL,
-            },
-        .vst =
-            {
-              .pad = PAD_PA08,
-              .func = LCDC1_JDI_VST,
-              .flags = PIN_NOPULL,
-            },
-        .vck =
-            {
-              .pad = PAD_PA39,
-              .func = LCDC1_JDI_VCK,
-              .flags = PIN_NOPULL,
-            },
-        .enb =
-            {
-              .pad = PAD_PA07,
-              .func = LCDC1_JDI_ENB,
-              .flags = PIN_NOPULL,
-            },
-        .hst =
-            {
-              .pad = PAD_PA06,
-              .func = LCDC1_JDI_HST,
-              .flags = PIN_NOPULL,
-            },
-        .hck =
-            {
-              .pad = PAD_PA41,
-              .func = LCDC1_JDI_HCK,
-              .flags = PIN_NOPULL,
-            },
-        .r1 =
-            {
-              .pad = PAD_PA05,
-              .func = LCDC1_JDI_R1,
-              .flags = PIN_NOPULL,
-            },
-        .r2 =
-            {
-              .pad = PAD_PA42,
-              .func = LCDC1_JDI_R2,
-              .flags = PIN_NOPULL,
-            },
-        .g1 =
-            {
-              .pad = PAD_PA04,
-              .func = LCDC1_JDI_G1,
-              .flags = PIN_NOPULL,
-            },
-        .g2 =
-            {
-              .pad = PAD_PA43,
-              .func = LCDC1_JDI_G2,
-              .flags = PIN_NOPULL,
-            },
-        .b1 =
-            {
-              .pad = PAD_PA03,
-              .func = LCDC1_JDI_B1,
-              .flags = PIN_NOPULL,
-            },
-        .b2 =
-            {
-              .pad = PAD_PA02,
-              .func = LCDC1_JDI_B2,
-              .flags = PIN_NOPULL,
-            },
-        .vcom_frp =
-            {
-              .pad = PAD_PA24,
-              .func = PBR_LPTIM2_OUT,
-              .flags = PIN_NOPULL,
-            },
-        .xfrp =
-            {
-              .pad = PAD_PA25,
-              .func = PBR_LPTIM2_INV_OUT,
-              .flags = PIN_NOPULL,
-            },
-      },
+  .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
+  .discharge = s_display_discharge,
+  .num_discharge = ARRAY_LENGTH(s_display_discharge),
   .vddp = PBL_GPIO(SF32LB_GPIO1, 28, 0),
   .vlcd = PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
   .splash = {
@@ -207,13 +141,13 @@ static UARTDeviceState s_hci_trace_uart_state = {
   },
 };
 
+PBL_PINCTRL_STATE_DEFINE(s_hci_trace_uart_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA20_USART3_TXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+
 static UARTDevice HCI_TRACE_UART_DEVICE = {
   .state = &s_hci_trace_uart_state,
-  .tx = {
-    .pad = PAD_PA20,
-    .func = USART3_TXD,
-    .flags = PIN_NOPULL,
-  },
+  .pinctrl = PBL_PINCTRL(&s_hci_trace_uart_default, nullptr, 0),
 };
 UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
@@ -250,8 +184,12 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 };
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
-PBL_I2C_SF32LB_DEFINE(s_i2c1, "i2c1", I2C1, 400000, PAD_PA31, I2C1_SCL, PAD_PA30, I2C1_SDA,
-                      nullptr);
+PBL_PINCTRL_STATE_DEFINE(s_i2c1_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA31_I2C1_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA30_I2C1_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_I2C_SF32LB_DEFINE(s_i2c1, "i2c1", I2C1, 400000, &s_i2c1_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
 
@@ -278,8 +216,13 @@ PBL_AW2016_DEFINE(s_aw2016, &s_i2c1.bus, 0x64);
 
 const struct pbl_backlight *const BACKLIGHT = &s_aw2016.backlight;
 
-PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", I2C2, 400000, PAD_PA32, I2C2_SCL, PAD_PA33, I2C2_SDA,
-                          DMA1_Channel6, DMA_REQUEST_23, DMAC1_CH6, 5, nullptr);
+PBL_PINCTRL_STATE_DEFINE(s_i2c2_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA32_I2C2_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA33_I2C2_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", I2C2, 400000, &s_i2c2_default, DMA1_Channel6,
+                          DMA_REQUEST_23, DMAC1_CH6, 5, nullptr);
 
 PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
 PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c2, 0);
@@ -308,8 +251,12 @@ PBL_MMC5603NJ_DEFINE(
 
 const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
 
-PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", I2C3, 400000, PAD_PA11, I2C3_SCL, PAD_PA10, I2C3_SDA,
-                      nullptr);
+PBL_PINCTRL_STATE_DEFINE(s_i2c3_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA11_I2C3_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA10_I2C3_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", I2C3, 400000, &s_i2c3_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C3, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c3, 0);
 
@@ -326,8 +273,12 @@ static const TouchSensor touch_cst816 = {
 
 const TouchSensor *CST816 = &touch_cst816;
 
-PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", I2C4, 400000, PAD_PA09, I2C4_SCL, PAD_PA20, I2C4_SDA,
-                      nullptr);
+PBL_PINCTRL_STATE_DEFINE(s_i2c4_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA09_I2C4_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA20_I2C4_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", I2C4, 400000, &s_i2c4_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C4, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c4, 0);
 
@@ -402,21 +353,16 @@ static MicDeviceState mic_state = {
     },
   },
 };
+PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA22_PDM1_CLK | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
+
 static const MicDevice mic_device = {
   .state = &mic_state,
   .pdm_instance = hwp_pdm1,
-  .clk_gpio =
-      {
-        .pad = PAD_PA22,
-        .func = PDM1_CLK,
-        .flags = PIN_NOPULL,
-      },
-  .data_gpio =
-      {
-        .pad = PAD_PA23,
-        .func = PDM1_DATA,
-        .flags = PIN_PULLDOWN,
-      },
+  .pinctrl = PBL_PINCTRL(&s_mic_default, nullptr, 0),
   .pdm_dma_irq = DMAC1_CH5_IRQn,
   .pdm_irq = PDM1_IRQn,
 #ifdef CONFIG_RECOVERY_FW

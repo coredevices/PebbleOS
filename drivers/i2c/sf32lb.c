@@ -156,9 +156,12 @@ static bool prv_is_busy(const struct pbl_i2c_bus *bus) {
 static int prv_init(const struct pbl_i2c_bus *bus) {
   const struct pbl_i2c_sf32lb *i2c = prv_i2c(bus);
   I2C_HandleTypeDef *hdl = &i2c->state->hdl;
+  int ret;
 
-  HAL_PIN_Set(i2c->scl_pad, i2c->scl_func, PIN_NOPULL, 1);
-  HAL_PIN_Set(i2c->sda_pad, i2c->sda_func, PIN_NOPULL, 1);
+  ret = pbl_pinctrl_select_state(&i2c->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+  if (ret != 0) {
+    return ret;
+  }
 
   HAL_RCC_EnableModule(i2c->module);
   if (HAL_I2C_Init(hdl) != HAL_OK) {

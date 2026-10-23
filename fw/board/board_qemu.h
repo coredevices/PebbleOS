@@ -25,12 +25,6 @@ typedef enum {
 } GPIOPuPd_TypeDef;
 
 typedef struct {
-  int pad;
-  int func;
-  int flags;
-} Pinmux;
-
-typedef struct {
   uint16_t value;
   uint16_t resolution;
   int enabled;
@@ -38,7 +32,6 @@ typedef struct {
 } PwmState;
 
 typedef struct {
-  Pinmux pwm_pin;
   PwmState *state;
 } PwmConfig;
 

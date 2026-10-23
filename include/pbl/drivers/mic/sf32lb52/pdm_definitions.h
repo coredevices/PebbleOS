@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/mic.h>
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/util/circular_buffer.h>
@@ -72,10 +73,8 @@ typedef const struct MicDevice {
   IRQn_Type pdm_irq;
   /** PDM DMA interrupt. */
   IRQn_Type pdm_dma_irq;
-  /** PDM clock pin. */
-  Pinmux clk_gpio;
-  /** PDM data pin. */
-  Pinmux data_gpio;
+  /** PDM clock and data pins. */
+  struct pbl_pinctrl pinctrl;
   /** Number of channels, 1 or 2. */
   uint32_t channels;
   /** PDM sample rate in Hz. */

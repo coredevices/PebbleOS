@@ -115,7 +115,7 @@ void pwm_init(const PwmConfig *pwm, uint32_t resolution, uint32_t frequency) {
   pwm->state->resolution = resolution;
   pwm->state->value = 1000000000UL / (frequency);
 
-  HAL_PIN_Set(pwm->pwm_pin.pad, pwm->pwm_pin.func, pwm->pwm_pin.flags, 1);
+  PBL_ASSERTN(pbl_pinctrl_select_state(&pwm->pinctrl, PBL_PINCTRL_STATE_DEFAULT) == 0);
 
   ret = HAL_GPT_Base_Init(htim);
   PBL_ASSERTN(ret == HAL_OK);

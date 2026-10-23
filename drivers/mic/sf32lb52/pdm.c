@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
@@ -66,9 +67,7 @@ void mic_init(const MicDevice *this) {
   pbl_mutex_init(&state->mutex);
   state->volume = PDM_AUDIO_RECORD_GAIN_DEFAULT;
 
-  // Pinmux configuration
-  HAL_PIN_Set(this->clk_gpio.pad, this->clk_gpio.func, this->clk_gpio.flags, 1);
-  HAL_PIN_Set(this->data_gpio.pad, this->data_gpio.func, this->data_gpio.flags, 1);
+  PBL_ASSERTN(pbl_pinctrl_select_state(&this->pinctrl, PBL_PINCTRL_STATE_DEFAULT) == 0);
 
   this->state->hpdm = &s_hpdm;
   PDM_HandleTypeDef *hpdm = this->state->hpdm;

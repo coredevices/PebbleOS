@@ -9,18 +9,13 @@
 
 #include <pbl/drivers/button_id.h>
 #include <pbl/drivers/gpio/sf32lb.h>
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/input/input.h>
 
 #include <bf0_hal_pinmux.h>
 
 #define GPIO_Port_NULL nullptr
 #define GPIO_Pin_NULL  0U
-
-typedef struct {
-  int pad;
-  pin_function func;
-  int flags;
-} Pinmux;
 
 typedef struct {
   GPT_HandleTypeDef handle;
@@ -33,7 +28,7 @@ typedef struct {
 } PwmState;
 
 typedef struct {
-  Pinmux pwm_pin;
+  struct pbl_pinctrl pinctrl;
   PwmState *state;
 } PwmConfig;
 

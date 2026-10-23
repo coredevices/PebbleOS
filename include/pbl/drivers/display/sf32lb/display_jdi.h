@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/gpio.h>
+#include <pbl/drivers/pinctrl.h>
 
 #include <bf0_hal.h>
 #include <bf0_hal_lcdc.h>
@@ -49,36 +50,11 @@ typedef const struct DisplayJDIDevice {
     uint8_t freq_hz;
   } vcom;
   /** Panel interface pins. */
-  struct {
-    /** Reset (XRST). */
-    Pinmux xrst;
-    /** Vertical start (VST). */
-    Pinmux vst;
-    /** Vertical clock (VCK). */
-    Pinmux vck;
-    /** Write enable (ENB). */
-    Pinmux enb;
-    /** Horizontal start (HST). */
-    Pinmux hst;
-    /** Horizontal clock (HCK). */
-    Pinmux hck;
-    /** Red data, odd pixels. */
-    Pinmux r1;
-    /** Red data, even pixels. */
-    Pinmux r2;
-    /** Green data, odd pixels. */
-    Pinmux g1;
-    /** Green data, even pixels. */
-    Pinmux g2;
-    /** Blue data, odd pixels. */
-    Pinmux b1;
-    /** Blue data, even pixels. */
-    Pinmux b2;
-    /** VCOM / FRP signal. */
-    Pinmux vcom_frp;
-    /** Inverted FRP signal (XFRP). */
-    Pinmux xfrp;
-  } pinmux;
+  struct pbl_pinctrl pinctrl;
+  /** Panel inputs driven low while the panel is power cycled, as GPIOs. */
+  const struct pbl_gpio *discharge;
+  /** Number of @ref discharge pins. */
+  uint8_t num_discharge;
   /** Panel VDDP supply enable. */
   struct pbl_gpio vddp;
   /** Panel VLCD supply enable. */
