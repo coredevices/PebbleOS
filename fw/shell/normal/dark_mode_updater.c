@@ -6,12 +6,13 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/services/regular_timer.h>
 
+#include <kernel/events.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
 
 #define MINUTES_PER_DAY (24 * 60)
 
-//! Last evaluated state
+//! Last state announced with PEBBLE_DARK_MODE_CHANGE_EVENT
 static bool s_is_dark;
 
 static void prv_minute_callback(void *data);
@@ -52,6 +53,10 @@ static void prv_update(void) {
   }
   s_is_dark = is_dark;
   system_theme_set_dark_mode(is_dark);
+  PebbleEvent event = {
+    .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+  };
+  event_put(&event);
 }
 
 static void prv_minute_callback(void *data) {

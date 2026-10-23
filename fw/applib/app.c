@@ -8,9 +8,12 @@
 #include <pbl/profiler/profiler.h>
 
 #include <applib/ui/app_window_stack.h>
+#include <applib/ui/layer.h>
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
+#include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
+#include <shell/system_theme.h>
 #include <syscall/syscall.h>
 
 PBL_PROFILER_NODE_DEFINE(render_app);
@@ -129,6 +132,15 @@ static void prv_app_button_up_handler(PebbleEvent *e, void *context) {
       &app_state_get_click_manager()->recognizers[e->button.button_id]);
 }
 
+// Redraws the visible window so anything resolving theme colors while drawing picks up the new
+// mode. Colors a window captured earlier need to be re-applied by its owner.
+static void prv_app_dark_mode_change_handler(PebbleEvent *e, void *context) {
+  Window *window = app_window_stack_get_top_window();
+  if (window) {
+    layer_mark_dirty(&window->layer);
+  }
+}
+
 // this handler is called via the legacy2_status_bar_change_event and
 // will update the status bar once a minute for non-fullscreen legacy2 apps
 static void prv_legacy2_status_bar_handler(PebbleEvent *e, void *context) {
@@ -182,6 +194,7 @@ static PBL_NOINLINE void prv_handle_deinit_event(void) {
   event_service_client_unsubscribe(&events_info->will_focus_event);
   event_service_client_unsubscribe(&events_info->button_down_event);
   event_service_client_unsubscribe(&events_info->button_up_event);
+  event_service_client_unsubscribe(&events_info->dark_mode_change_event);
   prv_legacy2_status_bar_timer_unsubscribe(); // a no-op on sdk3+ applications
   WindowStack *app_window_stack = app_state_get_window_stack();
   window_stack_lock_push(app_window_stack);
@@ -227,6 +240,14 @@ void app_event_loop_common(void) {
   event_service_client_subscribe(&events_info->will_focus_event);
   event_service_client_subscribe(&events_info->button_down_event);
   event_service_client_subscribe(&events_info->button_up_event);
+  if (system_theme_is_system_ui()) {
+    // Third party apps keep the SDK default colors, so they have nothing to redraw
+    events_info->dark_mode_change_event = (EventServiceInfo){
+      .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+      .handler = prv_app_dark_mode_change_handler,
+    };
+    event_service_client_subscribe(&events_info->dark_mode_change_event);
+  }
   prv_legacy2_status_bar_timer_subscribe(); // a no-op on sdk3+ applications
 
   event_loop_upkeep();

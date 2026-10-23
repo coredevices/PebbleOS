@@ -40,6 +40,7 @@ typedef struct ApplibInternalEventsInfo {
   EventServiceInfo will_focus_event;
   EventServiceInfo button_down_event;
   EventServiceInfo button_up_event;
+  EventServiceInfo dark_mode_change_event;
   EventServiceInfo legacy2_status_bar_change_event;
   int minute_of_last_legacy2_statusbar_change;
 } ApplibInternalEventsInfo;
