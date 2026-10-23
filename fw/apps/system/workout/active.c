@@ -27,6 +27,8 @@
 #include <apps/system/timeline/text_node.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 #define TEXT_COLOR       (GColorBlack)
 #define TEXT_ALIGNMENT   (PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentRight))
@@ -177,6 +179,12 @@ static GColor prv_get_bg_color_for_metric(WorkoutMetricType metric_type,
 #if PBL_BW
   return GColorWhite;
 #else
+  SystemThemeColors colors;
+  system_theme_get_app_colors(BACKGROUND_COLOR, GColorPastelYellow, &colors);
+  const GColor main_bg =
+      !shell_prefs_is_theme_background_default() ? colors.background_color : colors.primary_color;
+  const GColor scroll_bg =
+      !shell_prefs_is_theme_background_default() ? colors.background_color : colors.secondary_color;
   if (metric_type == WorkoutMetricType_Hr) {
     switch (hr_util_get_hr_zone(active_window->workout_controller->get_metric_value(
         metric_type, active_window->workout_data))) {
@@ -189,10 +197,10 @@ static GColor prv_get_bg_color_for_metric(WorkoutMetricType metric_type,
       case HRZone_Zone3:
         return GColorOrange;
       default:
-        return BACKGROUND_COLOR;
+        return main_bg;
     }
   } else {
-    return is_scrollable ? GColorPastelYellow : BACKGROUND_COLOR;
+    return is_scrollable ? scroll_bg : main_bg;
   }
 #endif
 }

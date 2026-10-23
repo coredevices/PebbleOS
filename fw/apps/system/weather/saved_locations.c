@@ -9,6 +9,9 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h> // integer_sqrt — the launcher's chord-inset math
 
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
+
 #define SAVED_LOCATIONS_ROW_HEIGHT              44
 #define SAVED_LOCATIONS_TOUCH_AXIS_THRESHOLD_PX 5
 #define SAVED_LOCATIONS_TOUCH_TAP_THRESHOLD_PX  10
@@ -18,6 +21,8 @@
 typedef struct {
   Window *window;
   MenuLayer *menu_layer;
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
   SavedLocationsSelectCallback select_callback;
   void *select_context;
   int active_ds_index; // pre-highlighted record, -1 = none
@@ -198,7 +203,8 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
 #endif
   const bool highlighted = menu_cell_layer_is_highlighted(cell_layer);
   GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-  graphics_context_set_text_color(ctx, highlighted ? GColorWhite : GColorBlack);
+  graphics_context_set_text_color(
+      ctx, highlighted ? s_view->theme_colors.primary_text_color : s_view->theme_colors.text_color);
 
   char temp_text[12];
   snprintf(temp_text, sizeof(temp_text), "%d°", (int)glance->temp);
@@ -233,6 +239,13 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
     return;
   graphics_draw_text(ctx, title, font, GRect(bounds.origin.x + title_x, text_y, title_w, 30),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
+}
+
+static void prv_draw_background(GContext *ctx, const Layer *bg_layer, bool highlight,
+                                void *context) {
+  SavedLocationsView *view = context;
+  system_theme_draw_background(ctx, &bg_layer->bounds, view->theme_colors.background_color,
+                               view->bg_bitmap);
 }
 
 static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
@@ -450,6 +463,7 @@ static void prv_window_unload(Window *window) {
     menu_layer_destroy(view->menu_layer);
     view->menu_layer = nullptr;
   }
+  gbitmap_destroy(view->bg_bitmap);
   prv_glance_destroy_icons();
 #ifdef CONFIG_TOUCH
   touch_service_unsubscribe();
@@ -512,8 +526,12 @@ void saved_locations_push(const SavedLocationsConfig *config) {
     s_view = nullptr;
     return;
   }
+  const GColor default_primary = PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+  system_theme_get_app_colors(default_primary, default_primary, &view->theme_colors);
+  view->bg_bitmap = system_theme_create_background_bitmap();
+
   window_set_user_data(view->window, view);
-  window_set_background_color(view->window, GColorWhite);
+  window_set_background_color(view->window, view->theme_colors.background_color);
   window_set_window_handlers(view->window, (WindowHandlers){
 #ifdef CONFIG_TOUCH
                                              .appear = prv_window_appear,
@@ -534,6 +552,7 @@ void saved_locations_push(const SavedLocationsConfig *config) {
 #endif
   view->menu_layer = menu_layer_create(bounds);
   if (!view->menu_layer) {
+    gbitmap_destroy(view->bg_bitmap);
     window_destroy(view->window);
     free(view);
     s_view = nullptr;
@@ -546,11 +565,10 @@ void saved_locations_push(const SavedLocationsConfig *config) {
                              .get_num_rows = prv_get_num_rows,
                              .get_cell_height = prv_get_cell_height,
                              .draw_row = prv_draw_row,
+                             .draw_background = prv_draw_background,
                              .select_click = prv_select_click,
                            });
-  menu_layer_set_normal_colors(view->menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(view->menu_layer,
-                                  PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack), GColorWhite);
+  menu_layer_set_theme_colors(view->menu_layer, &view->theme_colors);
   menu_layer_set_click_config_onto_window(view->menu_layer, view->window);
   layer_add_child(root, menu_layer_get_layer(view->menu_layer));
 

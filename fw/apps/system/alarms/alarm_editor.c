@@ -21,6 +21,13 @@
 #include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
+
+static SystemThemeColors prv_get_editor_colors(void) {
+  SystemThemeColors colors;
+  system_theme_get_app_colors(ALARMS_APP_HIGHLIGHT_COLOR, ALARMS_APP_HIGHLIGHT_COLOR, &colors);
+  return colors;
+}
 
 typedef struct {
   OptionMenu *alarm_type_menu;
@@ -191,7 +198,7 @@ static void prv_time_picker_complete(TimeSelectionWindowData *time_picker_window
     memset(initial.custom_days, 0, sizeof(initial.custom_days));
     DayPickerConfig config = {
       .initial = initial,
-      .highlight_color = ALARMS_APP_HIGHLIGHT_COLOR,
+      .highlight_color = prv_get_editor_colors().primary_color,
       .allow_once = true,
     };
     day_picker_push(config, prv_day_picker_callback, data);
@@ -203,7 +210,7 @@ static void prv_time_picker_complete(TimeSelectionWindowData *time_picker_window
 
 static void prv_setup_time_picker_window(AlarmEditorData *data) {
   const TimeSelectionWindowConfig config = {
-    .color = ALARMS_APP_HIGHLIGHT_COLOR,
+    .color = prv_get_editor_colors().primary_color,
     .callback = {
       .update = true,
       .complete = prv_time_picker_complete,
@@ -266,7 +273,8 @@ static void prv_setup_type_menu_window(AlarmEditorData *data) {
       false /* icons_enabled */, s_type_labels, data);
   PBL_ASSERTN(option_menu);
   data->alarm_type_menu = option_menu;
-  option_menu_set_highlight_colors(option_menu, ALARMS_APP_HIGHLIGHT_COLOR, GColorWhite);
+  const SystemThemeColors colors = prv_get_editor_colors();
+  option_menu_set_highlight_colors(option_menu, colors.primary_color, colors.primary_text_color);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,7 +331,7 @@ void alarm_editor_update_alarm_days(AlarmId alarm_id, AlarmEditorCompleteCallbac
 
   DayPickerConfig config = {
     .initial = initial,
-    .highlight_color = ALARMS_APP_HIGHLIGHT_COLOR,
+    .highlight_color = prv_get_editor_colors().primary_color,
     .allow_once = true,
   };
   day_picker_push(config, prv_day_picker_callback, data);

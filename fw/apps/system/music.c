@@ -884,7 +884,11 @@ static void prv_no_music_window_click_config(void *context) {
 static MusicNoMusicWindow *prv_create_no_music_window(void) {
   MusicNoMusicWindow *window = app_malloc_check(sizeof(MusicNoMusicWindow));
   window_init(&window->window, WINDOW_NAME("NoMusicWindow"));
-  window_set_background_color(&window->window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+  const GColor bg_color = !shell_prefs_is_theme_background_default()
+                              ? system_theme_get_background_color()
+                              : PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
+  const GColor text_color = gcolor_legible_over(bg_color);
+  window_set_background_color(&window->window, bg_color);
   window_set_window_handlers(&window->window,
                              &(WindowHandlers){.unload = prv_unload_no_music_window});
 
@@ -903,7 +907,7 @@ static MusicNoMusicWindow *prv_create_no_music_window(void) {
 
   text_layer_init_with_parameters(
       &window->text_layer, &NO_MUSIC_TEXT_RECT, i18n_get("START PLAYBACK\nON YOUR PHONE", window),
-      fonts_get_system_font(config->no_music_font_key), GColorBlack, GColorClear,
+      fonts_get_system_font(config->no_music_font_key), text_color, GColorClear,
       GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->window.layer, &window->bitmap_layer.layer);
   layer_add_child(&window->window.layer, &window->text_layer.layer);
@@ -1550,7 +1554,13 @@ static void prv_apply_art_appearance(MusicAppData *data) {
 static void prv_init_ui(Window *window) {
   MusicAppData *data = window_get_user_data(window);
 
-  window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+  SystemThemeColors theme_colors;
+  system_theme_get_app_colors(PBL_IF_COLOR_ELSE(GColorRed, GColorBlack),
+                              PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite), &theme_colors);
+  const GColor bg_color = !shell_prefs_is_theme_background_default()
+                              ? theme_colors.background_color
+                              : PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
+  window_set_background_color(window, bg_color);
 
   const GSize WINDOW_SIZE = window->layer.bounds.size;
 
@@ -1631,10 +1641,8 @@ static void prv_init_ui(Window *window) {
 #endif
 
   progress_layer_init(&data->track_pos_bar, &track_rect);
-  progress_layer_set_background_color(&data->track_pos_bar,
-                                      PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
-  progress_layer_set_foreground_color(&data->track_pos_bar,
-                                      PBL_IF_COLOR_ELSE(GColorRed, GColorBlack));
+  progress_layer_set_background_color(&data->track_pos_bar, theme_colors.secondary_color);
+  progress_layer_set_foreground_color(&data->track_pos_bar, theme_colors.primary_color);
   progress_layer_set_corner_radius(&data->track_pos_bar, config->track_corner_radius);
   layer_add_child(&window->layer, (Layer *)&data->track_pos_bar);
 

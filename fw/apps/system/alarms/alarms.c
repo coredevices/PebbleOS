@@ -47,6 +47,8 @@ typedef struct AlarmsAppData {
 
   GBitmap plus_icon;
   GBitmap smart_alarm_icon;
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
 
   AlarmNode *alarm_list_head;
   MenuIndex selected_index;
@@ -56,6 +58,12 @@ typedef struct AlarmsAppData {
 
   EventServiceInfo alarm_event_info;
 } AlarmsAppData;
+
+static SystemThemeColors prv_get_alarms_colors(void) {
+  SystemThemeColors colors;
+  system_theme_get_app_colors(ALARMS_APP_HIGHLIGHT_COLOR, ALARMS_APP_HIGHLIGHT_COLOR, &colors);
+  return colors;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Alarm list functions
@@ -111,13 +119,15 @@ static bool prv_are_alarms_scheduled(AlarmsAppData *data) {
 //! General helper functions
 
 static void prv_show_deleted_dialog(void) {
+  const SystemThemeColors colors = prv_get_alarms_colors();
   SimpleDialog *simple_dialog = simple_dialog_create("AlarmDelete");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
   const char *delete_text = i18n_noop("Alarm Deleted");
   dialog_set_text(dialog, i18n_get(delete_text, dialog));
   i18n_free(delete_text, dialog);
   dialog_set_icon(dialog, RESOURCE_ID_RESULT_SHREDDED_LARGE);
-  dialog_set_background_color(dialog, ALARMS_APP_HIGHLIGHT_COLOR);
+  dialog_set_background_color(dialog, colors.primary_color);
+  dialog_set_text_color(dialog, colors.primary_text_color);
   dialog_set_timeout(dialog, preferred_result_display_duration());
   app_simple_dialog_push(simple_dialog);
 }
@@ -278,8 +288,10 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
   // If the alarm is not smart, use the icon as spacing but don't render it.
   // Otherwise if the alarm is smart draw according to the menu highlight.
   graphics_context_set_tint_color(
-      ctx, !node->info.is_smart ? GColorClear
-                                : (cell_layer->is_highlighted ? GColorWhite : GColorBlack));
+      ctx, !node->info.is_smart
+               ? GColorClear
+               : (cell_layer->is_highlighted ? data->theme_colors.primary_text_color
+                                             : data->theme_colors.text_color));
 
   char alarm_day_text[32] = {};
   MenuCellLayerConfig config = {
@@ -300,6 +312,13 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
     config.subtitle = alarm_day_text;
   }
   menu_cell_layer_draw(ctx, cell_layer, &config);
+}
+
+static void prv_alarm_list_draw_background_callback(GContext *ctx, const Layer *bg_layer,
+                                                    bool highlight, void *callback_context) {
+  AlarmsAppData *data = (AlarmsAppData *)callback_context;
+  system_theme_draw_background(ctx, &bg_layer->bounds, data->theme_colors.background_color,
+                               data->bg_bitmap);
 }
 
 static void prv_alarm_list_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
@@ -343,16 +362,18 @@ static void prv_alarms_app_opened_click_handler(ClickRecognizerRef recognizer, v
 }
 
 static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
+  const SystemThemeColors colors = prv_get_alarms_colors();
   const char *first_use_text = i18n_get(
       "Let us wake you in your lightest sleep so you're fully refreshed! "
       "Smart Alarm wakes you up to 30min before your alarm.",
       data);
   const char *header = i18n_get("Smart Alarm", data);
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
-      header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, GColorBlack, GColorWhite, nullptr,
-      RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_alarms_app_opened_click_handler);
+      header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, colors.text_color,
+      colors.background_color, nullptr, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
+      prv_alarms_app_opened_click_handler);
 
-  expandable_dialog_set_action_bar_background_color(expandable_dialog, ALARMS_APP_HIGHLIGHT_COLOR);
+  expandable_dialog_set_action_bar_background_color(expandable_dialog, colors.primary_color);
   expandable_dialog_set_header(expandable_dialog, header);
 #if defined(PBL_ROUND)
   expandable_dialog_set_header_font(expandable_dialog,
@@ -369,10 +390,13 @@ static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
 static void prv_handle_init(void) {
   AlarmsAppData *data = app_malloc_check(sizeof(*data));
   *data = (AlarmsAppData){{.user_data = nullptr}};
+  data->theme_colors = prv_get_alarms_colors();
+  data->bg_bitmap = system_theme_create_background_bitmap();
 
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Alarms"));
   window_set_user_data(window, data);
+  window_set_background_color(window, data->theme_colors.background_color);
 
   data->alarm_list_head = nullptr;
   // Alarm list must be updated before menu layer is initialized
@@ -388,11 +412,12 @@ static void prv_handle_init(void) {
                              .get_num_rows = prv_alarm_list_get_num_rows_callback,
                              .get_cell_height = prv_alarm_list_get_cell_height_callback,
                              .draw_row = prv_alarm_list_draw_row_callback,
+                             .draw_background = prv_alarm_list_draw_background_callback,
                              .select_click = prv_alarm_list_select_callback,
                              .selection_changed = prv_alarm_list_selection_changed_callback
                            });
 
-  menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR, GColorWhite);
+  menu_layer_set_theme_colors(&data->menu_layer, &data->theme_colors);
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -403,8 +428,9 @@ static void prv_handle_init(void) {
   layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
   status_bar_layer_init(&data->status_layer);
-  status_bar_layer_set_colors(&data->status_layer, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack),
-                              PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+  status_bar_layer_set_colors(&data->status_layer,
+                              PBL_IF_COLOR_ELSE(data->theme_colors.background_color, GColorBlack),
+                              PBL_IF_COLOR_ELSE(data->theme_colors.text_color, GColorWhite));
   status_bar_layer_set_separator_mode(&data->status_layer, StatusBarLayerSeparatorModeNone);
   layer_add_child(&data->window.layer, status_bar_layer_get_layer(&data->status_layer));
 
@@ -451,6 +477,7 @@ static void prv_handle_deinit(void) {
   AlarmsAppData *data = app_state_get_user_data();
   status_bar_layer_deinit(&data->status_layer);
   menu_layer_deinit(&data->menu_layer);
+  gbitmap_destroy(data->bg_bitmap);
   i18n_free_all(data);
   prv_clear_alarm_list(data);
   event_service_client_unsubscribe(&data->alarm_event_info);

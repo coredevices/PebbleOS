@@ -26,6 +26,7 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 #define SEND_TEXT_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(SMS_REPLY_COLOR, GColorBlack)
 
@@ -44,6 +45,9 @@ typedef struct SendTextAppData {
   MenuLayer menu_layer;
   PeekLayer no_contacts_layer;
   StatusBarLayer status_layer;
+
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
 
   ContactNode *contact_list_head;
 
@@ -120,7 +124,7 @@ static void prv_open_action_menu(SendTextAppData *data, const char *number) {
     return;
   }
 
-  timeline_actions_push_response_menu(item, reply_action, SEND_TEXT_APP_HIGHLIGHT_COLOR,
+  timeline_actions_push_response_menu(item, reply_action, data->theme_colors.primary_color,
                                       prv_action_menu_did_close, data->window.parent_window_stack,
                                       TimelineItemActionSourceSendTextApp,
                                       false /* standalone_reply */);
@@ -249,11 +253,18 @@ static void prv_contact_list_draw_header_callback(GContext *ctx, const Layer *ce
   const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
   GRect box = cell_layer->bounds;
   box.origin.y -= 2;
-  graphics_context_set_text_color(ctx, GColorDarkGray);
+  graphics_context_set_text_color(ctx, data->theme_colors.subtitle_color);
   graphics_draw_text(ctx, i18n_get("Select Contact", data), font, box, GTextOverflowModeFill,
                      GTextAlignmentCenter, nullptr);
 }
 #endif
+
+static void prv_contact_list_draw_background_callback(GContext *ctx, const Layer *bg_layer,
+                                                      bool highlight, void *callback_context) {
+  SendTextAppData *data = (SendTextAppData *)callback_context;
+  system_theme_draw_background(ctx, &bg_layer->bounds, data->theme_colors.background_color,
+                               data->bg_bitmap);
+}
 
 static void prv_contact_list_draw_row_callback(GContext *ctx, const Layer *cell_layer,
                                                MenuIndex *cell_index, void *callback_context) {
@@ -287,10 +298,14 @@ static void prv_contact_list_select_callback(MenuLayer *menu_layer, MenuIndex *c
 static void prv_init(void) {
   SendTextAppData *data = app_zalloc_check(sizeof(SendTextAppData));
   app_state_set_user_data(data);
+  system_theme_get_app_colors(SEND_TEXT_APP_HIGHLIGHT_COLOR, SEND_TEXT_APP_HIGHLIGHT_COLOR,
+                              &data->theme_colors);
+  data->bg_bitmap = system_theme_create_background_bitmap();
 
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Send Text"));
   window_set_user_data(window, data);
+  window_set_background_color(window, data->theme_colors.background_color);
 
   Layer *window_root_layer = &window->layer;
 
@@ -312,10 +327,11 @@ static void prv_init(void) {
                                .get_header_height = prv_contact_list_get_header_height_callback,
 #endif
                                .draw_row = prv_contact_list_draw_row_callback,
+                               .draw_background = prv_contact_list_draw_background_callback,
                                .select_click = prv_contact_list_select_callback,
                              });
 
-    menu_layer_set_highlight_colors(&data->menu_layer, SEND_TEXT_APP_HIGHLIGHT_COLOR, GColorWhite);
+    menu_layer_set_theme_colors(&data->menu_layer, &data->theme_colors);
     menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
     menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                       shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -328,7 +344,7 @@ static void prv_init(void) {
 
     StatusBarLayer *status_layer = &data->status_layer;
     status_bar_layer_init(status_layer);
-    status_bar_layer_set_colors(status_layer, GColorClear, GColorBlack);
+    status_bar_layer_set_colors(status_layer, GColorClear, data->theme_colors.text_color);
     // On rect we show the "Select Contact" text in the status bar, but on round the status bar
     // shows the clock time and we use a menu cell header to display "Select Contact" (see above)
 #if PBL_RECT
@@ -347,7 +363,7 @@ static void prv_init(void) {
     };
     peek_layer_set_icon(peek_layer, &timeline_res);
     peek_layer_set_title(peek_layer, i18n_get("Add contacts in\nmobile app", data));
-    peek_layer_set_background_color(peek_layer, GColorLightGray);
+    peek_layer_set_background_color(peek_layer, data->theme_colors.background_color);
     peek_layer_play(peek_layer);
     layer_add_child(window_root_layer, &peek_layer->layer);
   }
@@ -362,6 +378,7 @@ static void prv_deinit(void) {
   status_bar_layer_deinit(&data->status_layer);
   peek_layer_deinit(&data->no_contacts_layer);
   menu_layer_deinit(&data->menu_layer);
+  gbitmap_destroy(data->bg_bitmap);
   i18n_free_all(data);
   prv_clear_contact_list(data);
   app_free(data);
