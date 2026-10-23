@@ -11,6 +11,7 @@
 #include <applib/graphics/gdraw_command_transforms.h>
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/text.h>
+#include <applib/ui/kino/kino_reel_pdci.h>
 #include <resource/resource_ids.auto.h>
 
 static bool prv_tint_icon_command(GDrawCommand *command, uint32_t index, void *context) {
@@ -20,15 +21,24 @@ static bool prv_tint_icon_command(GDrawCommand *command, uint32_t index, void *c
 }
 
 KinoReel *workout_create_activity_icon(ActivitySessionType type) {
-  KinoReel *icon = kino_reel_create_with_resource(
+  GDrawCommandImage *resource = gdraw_command_image_create_with_resource(
       type == ActivitySessionType_Open   ? RESOURCE_ID_WORKOUT_APP_WORKOUT
       : type == ActivitySessionType_Walk ? RESOURCE_ID_WORKOUT_APP_WALK
                                          : RESOURCE_ID_WORKOUT_APP_RUN);
-  GDrawCommandImage *image = kino_reel_get_gdraw_command_image(icon);
-  if (image) {
-    GColor color = workout_activity_color(type);
-    gdraw_command_list_iterate(gdraw_command_image_get_command_list(image), prv_tint_icon_command,
-                               &color);
+  // system resources may be memory-mapped read-only, tint a copy
+  GDrawCommandImage *image = gdraw_command_image_clone(resource);
+  gdraw_command_image_destroy(resource);
+  if (!image) {
+    return nullptr;
+  }
+
+  GColor color = workout_activity_color(type);
+  gdraw_command_list_iterate(gdraw_command_image_get_command_list(image), prv_tint_icon_command,
+                             &color);
+
+  KinoReel *icon = kino_reel_pdci_create(image, true);
+  if (!icon) {
+    gdraw_command_image_destroy(image);
   }
   return icon;
 }
