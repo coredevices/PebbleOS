@@ -66,10 +66,33 @@ jobs:
           find artifacts -type f -exec cp {} release/ \;
           ls -l release
 
+      - name: Check tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          current=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+
+          if printf '%s\n' "$current" "$TAG" | sort -VC; then
+            echo "is_newest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_newest=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [[ "$TAG" == *-rc* || "$TAG" == *-beta* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create release
         uses: softprops/action-gh-release@v3.0.3
         with:
           files: release/*
+          prerelease: ${{ steps.tag.outputs.is_prerelease }}
+          make_latest: ${{ steps.tag.outputs.is_newest == 'true' && steps.tag.outputs.is_prerelease == 'false' }}
 
       - name: Publish release to eng-dash
         if: ${{ github.repository == 'coredevices/PebbleOS' }}
