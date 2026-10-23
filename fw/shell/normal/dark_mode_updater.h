@@ -7,8 +7,9 @@
 
 #include <shell/prefs.h>
 
-//! Keeps the effective dark mode up to date, following the clock in Scheduled mode. Must be
-//! called after the shell prefs are initialized.
+//! Keeps the effective dark mode up to date, following the clock in Scheduled mode. Puts a
+//! PEBBLE_DARK_MODE_CHANGE_EVENT whenever it flips. Must be called after the shell prefs are
+//! initialized.
 void dark_mode_updater_init(void);
 
 //! Re-evaluates dark mode and starts or stops following the clock to match the prefs. Call when
