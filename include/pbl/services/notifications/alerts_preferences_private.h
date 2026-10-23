@@ -302,6 +302,44 @@ bool alerts_preferences_dnd_is_smart_enabled(void);
 void alerts_preferences_dnd_set_smart_enabled(bool enable);
 
 /**
+ * @brief Get whether sleep-aware DND is enabled.
+ *
+ * @return true if enabled.
+ */
+bool alerts_preferences_dnd_is_sleep_enabled(void);
+
+/**
+ * @brief Store whether sleep-aware DND is enabled.
+ *
+ * @param enable true to enable.
+ */
+void alerts_preferences_dnd_set_sleep_enabled(bool enable);
+
+/** @brief Until Wake DND progress. */
+typedef enum {
+  /** Until Wake DND is off. */
+  DndUntilWakeStateDisabled = 0,
+  /** Active, no confirmed sleep seen yet. */
+  DndUntilWakeStateWaitingForSleep,
+  /** Active, sleep seen; ends on wake. */
+  DndUntilWakeStateWaitingForWake,
+} DndUntilWakeState;
+
+/**
+ * @brief Get the Until Wake DND state.
+ *
+ * @return Current state.
+ */
+DndUntilWakeState alerts_preferences_dnd_get_until_wake_state(void);
+
+/**
+ * @brief Store the Until Wake DND state.
+ *
+ * @param state New state.
+ */
+void alerts_preferences_dnd_set_until_wake_state(DndUntilWakeState state);
+
+/**
  * @brief Lock the alerts preferences mutex.
  *
  * Must be paired with alerts_preferences_unlock().
