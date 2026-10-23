@@ -8,6 +8,15 @@ config SERVICE_COMPOSITOR
 
 if SERVICE_COMPOSITOR
 
+config SERVICE_COMPOSITOR_PARTIAL_FRAMES
+    bool "Composite app frames from their dirty rectangle"
+    default y
+    help
+      Copy only what an app frame changed into the system framebuffer and
+      push only those rows to the display, while the framebuffer still
+      holds the previous frame. Disable to composite every app frame in
+      full.
+
 module = SERVICE_COMPOSITOR
 module-str = Compositor
 source "subsys/logging/Kconfig.template.log_level"

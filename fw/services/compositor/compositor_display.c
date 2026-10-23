@@ -7,6 +7,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor.h>
+#include <pbl/services/compositor/compositor_private.h>
 #include <pbl/util/bitops.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -157,6 +158,8 @@ void compositor_display_update(void (*handle_update_complete_cb)(void)) {
   if (!framebuffer_is_dirty(fb)) {
     return;
   }
+  // Every flush drops the mirror; the compositor restores it after an app frame's flush
+  compositor_app_framebuffer_mirror_invalidate();
 #ifdef CONFIG_BOARD_OBELIX
   // Capture dirty region bounds for corner restoration later
   s_dirty_y0 = fb->dirty_rect.origin.y;

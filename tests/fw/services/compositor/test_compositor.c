@@ -2,7 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/compositor/compositor.h>
+#include <pbl/services/compositor/compositor_private.h>
 
+#include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gcontext.h>
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
@@ -53,21 +55,52 @@ bool animation_destroy(Animation *animation) {
 }
 
 static int s_app_window_render_count;
+static bool s_app_framebuffer_fetched;
+static FrameBuffer s_app_framebuffer;
 FrameBuffer *app_state_get_framebuffer(void) {
   // Not a great proxy for app rendering but good enough. The compositor fetches the app
-  // framebuffer once per app render (via compositor_get_app_framebuffer_as_bitmap() on the
-  // fast path where the app framebuffer matches the display), so this increments once per render.
-  ++s_app_window_render_count;
+  // framebuffer while rendering the app and nowhere else, so the first fetch of each render
+  // (reset below when the render finishes) counts as one render.
+  if (!s_app_framebuffer_fetched) {
+    s_app_framebuffer_fetched = true;
+    ++s_app_window_render_count;
+  }
 
-  return compositor_get_framebuffer();
+  return &s_app_framebuffer;
 }
 
 void app_manager_get_framebuffer_size(GSize *size) {
   *size = (GSize){DISP_COLS, DISP_ROWS};
 }
 
+static int s_count_bitblt;
+static GRect s_last_bitblt_rect;
 void bitblt_bitmap_into_bitmap(GBitmap *dest_bitmap, const GBitmap *src_bitmap, GPoint dest_offset,
                                GCompOp compositing_mode, GColor tint_color) {
+  ++s_count_bitblt;
+  s_last_bitblt_rect = (GRect){dest_offset, src_bitmap->bounds.size};
+  // The compositor must never copy outside the display
+  cl_assert(dest_offset.x >= 0 && dest_offset.y >= 0);
+  cl_assert(dest_offset.x + src_bitmap->bounds.size.w <= DISP_COLS);
+  cl_assert(dest_offset.y + src_bitmap->bounds.size.h <= DISP_ROWS);
+}
+
+static GRect s_last_marked_rect;
+void framebuffer_mark_dirty_rect(FrameBuffer *fb, GRect rect) {
+  s_last_marked_rect = rect;
+  fb->dirty_rect = fb->is_dirty ? grect_union(&fb->dirty_rect, &rect) : rect;
+  fb->is_dirty = true;
+}
+
+void framebuffer_reset_dirty(FrameBuffer *fb) {
+  fb->dirty_rect = GRectZero;
+  fb->is_dirty = false;
+}
+
+// A transparent modal that paints a strip at the bottom of the screen, like the timeline peek
+static const GRect s_modal_strip = {{0, 200}, {DISP_COLS, 28}};
+static void prv_modal_render_strip(GContext *ctx) {
+  framebuffer_mark_dirty_rect(compositor_get_framebuffer(), s_modal_strip);
 }
 
 void compositor_dot_transition_app_to_app_init(Animation *animation) {
@@ -79,6 +112,7 @@ bool compositor_dot_transition_app_to_app_update_func(GContext *ctx, Animation *
 }
 
 static bool s_modal_window_present = false;
+static bool s_modal_window_transparent = false;
 Window *modal_manager_get_top_window(void) {
   return (Window *)(uintptr_t)s_modal_window_present;
 }
@@ -86,7 +120,11 @@ Window *modal_manager_get_top_window(void) {
 FAKE_VOID_FUNC(modal_manager_render, GContext *);
 
 ModalProperty modal_manager_get_properties(void) {
-  return s_modal_window_present ? ModalProperty_Exists : ModalPropertyDefault;
+  if (!s_modal_window_present) {
+    return ModalPropertyDefault;
+  }
+  return s_modal_window_transparent ? (ModalProperty_Exists | ModalProperty_Transparent)
+                                    : ModalProperty_Exists;
 }
 
 GContext *kernel_ui_get_graphics_context(void) {
@@ -129,6 +167,8 @@ AnimationPrivate *animation_private_animation_find(Animation *handle) {
 static int s_count_display_update = 0;
 void compositor_display_update(void (*handle_update_complete_cb)(void)) {
   ++s_count_display_update;
+  // Like the real one, a flush drops the mirror of the app framebuffer
+  compositor_app_framebuffer_mirror_invalidate();
 }
 
 static bool s_display_update_in_progress = false;
@@ -145,6 +185,7 @@ static bool s_render_pending;
 bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *event) {
   if (event->type == PEBBLE_RENDER_FINISHED_EVENT) {
     s_render_pending = false;
+    s_app_framebuffer_fetched = false;
   }
   s_last_event = *event;
   return true;
@@ -208,6 +249,7 @@ void test_compositor__initialize(void) {
   s_last_event = (PebbleEvent){.type = 0};
 
   s_modal_window_present = false;
+  s_modal_window_transparent = false;
 
   s_count_animation_create = 0;
   s_count_animation_schedule = 0;
@@ -219,6 +261,11 @@ void test_compositor__initialize(void) {
   s_count_compositor_init_func_b = 0;
 
   s_app_window_render_count = 0;
+  s_app_framebuffer_fetched = false;
+  s_app_framebuffer = (FrameBuffer){.size = {DISP_COLS, DISP_ROWS}};
+  s_count_bitblt = 0;
+  s_last_bitblt_rect = GRectZero;
+  s_last_marked_rect = GRectZero;
   RESET_FAKE(modal_manager_render);
 
   s_display_update_in_progress = false;
@@ -346,6 +393,156 @@ void test_compositor__app_no_animation(void) {
   // Now the app has rendered something and we should actually update the display.
   compositor_app_render_ready();
   cl_assert_equal_i(s_count_display_update, 1);
+}
+
+static void prv_mark_app_framebuffer_dirty(GRect rect) {
+  s_app_framebuffer.dirty_rect = rect;
+  s_app_framebuffer.is_dirty = true;
+}
+
+void test_compositor__app_frame_copies_dirty_rect(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect dirty_rect = GRect(10, 20, 30, 40);
+
+  // Nothing mirrors the app framebuffer yet, so the first frame is copied in full and the
+  // app's dirty rect is consumed
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_display_update, 1);
+  cl_assert_equal_i(s_count_bitblt, 1);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+  cl_assert(!s_app_framebuffer.is_dirty);
+
+  // The next frame copies and marks only what the app touched
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_display_update, 2);
+  cl_assert_equal_i(s_count_bitblt, 2);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
+  cl_assert(grect_equal(&s_last_marked_rect, &dirty_rect));
+  cl_assert(!s_app_framebuffer.is_dirty);
+
+  // A rect from app memory is clipped to the display before it is used
+  prv_mark_app_framebuffer_dirty(GRect(-10, DISP_ROWS - 5, 50, 100));
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 3);
+  const GRect clipped_rect = GRect(0, DISP_ROWS - 5, 40, 5);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &clipped_rect));
+  cl_assert(grect_equal(&s_last_marked_rect, &clipped_rect));
+
+  // A frame with nothing dirty copies nothing
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 3);
+}
+
+void test_compositor__app_frame_full_after_modal(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect dirty_rect = GRect(10, 20, 30, 40);
+
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+
+  // A modal is pushed and popped without animation; its frames flush over the app's
+  s_modal_window_present = true;
+  compositor_transition(nullptr);
+  cl_assert_equal_i(modal_manager_render_fake.call_count, 1);
+  s_modal_window_present = false;
+  compositor_transition(nullptr);
+
+  // The app's first frame after the modal is composited in full again, the one after it is not
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
+}
+
+void test_compositor__app_frame_under_transparent_modal(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect dirty_rect = GRect(10, 20, 30, 40);
+
+  // A transparent modal sits over the app, drawing a strip at the bottom
+  s_modal_window_present = true;
+  s_modal_window_transparent = true;
+  modal_manager_render_fake.custom_fake = prv_modal_render_strip;
+  compositor_transition(nullptr);
+  compositor_app_render_ready();
+  cl_assert_equal_i(modal_manager_render_fake.call_count, 1);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+
+  // The next frame copies the app's dirty rect and the strip the modal drew, then draws the
+  // modal again; the system framebuffer's dirty rect covers both
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert_equal_i(modal_manager_render_fake.call_count, 2);
+  const GRect expected_copy = grect_union(&dirty_rect, &s_modal_strip);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &expected_copy));
+  cl_assert(grect_equal(&compositor_get_framebuffer()->dirty_rect, &expected_copy));
+
+  // Once the modal draws nothing (hidden offscreen), only the app's rect is copied, after one
+  // more frame that restores the app's pixels where the modal was
+  modal_manager_render_fake.custom_fake = nullptr;
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &expected_copy));
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
+}
+
+void test_compositor__app_frame_full_after_transition(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect dirty_rect = GRect(10, 20, 30, 40);
+
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+
+  // A new app without a transition animation: its first frame is composited in full even
+  // though it only marked a corner dirty
+  compositor_transition(nullptr);
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
+}
+
+void test_compositor__app_frame_rejects_wrapped_rect(void) {
+  // A transparent modal strip sits over the app, like the timeline peek
+  s_modal_window_present = true;
+  s_modal_window_transparent = true;
+  modal_manager_render_fake.custom_fake = prv_modal_render_strip;
+  compositor_transition(nullptr);
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 1);
+
+  // A rect from app memory whose clipping wraps around in 16 bits is dropped rather than copied
+  // from outside the display, so only the modal's strip is copied back
+  s_app_framebuffer.dirty_rect = GRect(0, INT16_MIN, 10, INT16_MAX);
+  s_app_framebuffer.is_dirty = true;
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 2);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &s_modal_strip));
+}
+
+void test_compositor__app_frame_full_after_mirror_invalidate(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect dirty_rect = GRect(10, 20, 30, 40);
+
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+
+  // The system framebuffer or the panel changed behind the compositor's back, as on a display
+  // rotation, so the next frame is composited in full again
+  compositor_app_framebuffer_mirror_invalidate();
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
 }
 
 void test_compositor__app_not_ready_modal_push_pop(void) {

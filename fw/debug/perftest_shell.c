@@ -11,6 +11,7 @@
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/services/compositor/compositor.h>
+#include <pbl/services/compositor/compositor_private.h>
 #include <pbl/shell/shell.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
@@ -32,6 +33,7 @@ static GContext *prv_perftest_get_context(void) {
   GContext *ctx = &s_perftest_ctx;
   FrameBuffer *fb = compositor_get_framebuffer();
   memset(fb->buffer, 0xff, FRAMEBUFFER_SIZE_BYTES);
+  compositor_app_framebuffer_mirror_invalidate();
   graphics_context_init(ctx, fb, GContextInitializationMode_App);
   return ctx;
 }

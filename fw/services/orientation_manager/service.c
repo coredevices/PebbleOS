@@ -6,6 +6,7 @@
 #include <pbl/drivers/button.h>
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/mag.h>
+#include <pbl/services/compositor/compositor_private.h>
 #include <pbl/services/orientation_manager.h>
 
 #include <kernel/events.h>
@@ -17,6 +18,8 @@
 
 void prv_change_orientation(bool rotated) {
   display_set_rotated(rotated);
+  // The panel now shows the frame the other way up, so the next app frame must be sent whole
+  compositor_app_framebuffer_mirror_invalidate();
   button_set_rotated(rotated);
   (void)pbl_accel_set_rotated(ACCEL, rotated);
 #ifdef CONFIG_MAG

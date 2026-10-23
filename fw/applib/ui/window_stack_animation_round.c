@@ -33,6 +33,8 @@ static void prv_window_transition_render(WindowTransitioningContext *context, GC
     const int16_t delta_x = new_x - context->window_to_last_x;
     graphics_private_move_pixels_horizontally(&ctx->dest_bitmap, delta_x,
                                               false /* patch_garbage */);
+    // The move bypasses the drawing primitives, so mark the dirty rect by hand
+    graphics_context_mark_dirty_rect(ctx, ctx->dest_bitmap.bounds);
     context->window_to_last_x = new_x;
 
     // render window_from
