@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# developer.repebble.com imports these docs (and the Doxygen reference built
+# from include/) when coredevices/sdk-docs builds. Run that build when they
+# change on main, so the site follows the repository instead of waiting for
+# the next sdk-docs push.
+name: Docs Publish
+
+on:
+  push:
+    branches: [main]
+    # What the import reads: the Sphinx sources, the headers and Doxyfiles
+    # of the API reference, and what Sphinx pulls in from elsewhere (pbl
+    # command help, the Kconfig tree, CONTRIBUTING.md). The playground's
+    # firmware build reads the whole tree; it refreshes with the next of
+    # these changes rather than on every push.
+    paths:
+      - docs/**
+      - include/**
+      - Doxyfile
+      - Doxyfile.rtd
+      - tools/libs/pbl-cli/**
+      - "**/Kconfig*"
+      - CONTRIBUTING.md
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  rebuild-site:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Run the developer.repebble.com build
+        env:
+          GH_TOKEN: ${{ secrets.SDK_DOCS_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::warning::SDK_DOCS_DISPATCH_TOKEN not set, skipping"
+            exit 0
+          fi
+          # --ref: without it gh asks GraphQL for sdk-docs' default branch,
+          # which needs Contents read; the token only has Actions read/write.
+          gh workflow run build.yml -R coredevices/sdk-docs --ref main
