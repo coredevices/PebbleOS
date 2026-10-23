@@ -124,8 +124,8 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
   SendBuffer *sb;
   if (packet_len == 0 ||
-      !(sb = comm_session_send_buffer_begin_write(state->session, GET_BYTES_ENDPOINT_ID, packet_len,
-                                                  COMM_SESSION_DEFAULT_TIMEOUT))) {
+      !(sb = comm_session_send_buffer_begin_write_bulk(state->session, GET_BYTES_ENDPOINT_ID,
+                                                       packet_len, COMM_SESSION_DEFAULT_TIMEOUT))) {
     // If timeout, try again
     // MT: What if the session got disconnected?
     system_task_add_callback(prv_protocol_send_next_chunk, state);

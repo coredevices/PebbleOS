@@ -58,8 +58,8 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
                                   PBL_BT_CONSUMER_PP_LOG_DUMP, PBL_BT_RESPONSE_TIME_MIN, 5);
 
   const uint16_t required_length = total_length + 1 + 4;
-  SendBuffer *sb = comm_session_send_buffer_begin_write(session, ENDPOINT_ID, required_length,
-                                                        COMM_SESSION_DEFAULT_TIMEOUT);
+  SendBuffer *sb = comm_session_send_buffer_begin_write_bulk(session, ENDPOINT_ID, required_length,
+                                                             COMM_SESSION_DEFAULT_TIMEOUT);
   if (!sb) {
     PBL_LOG_DBG("Failed to get send buffer");
     return false;

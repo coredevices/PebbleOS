@@ -158,8 +158,8 @@ void screenshot_send_next_chunk(void *raw_state) {
 
   SendBuffer *sb;
   if (max_buf_len == 0 /* disconnected */ ||
-      !(sb = comm_session_send_buffer_begin_write(session, SCREENSHOT_ENDPOINT_ID, session_len,
-                                                  COMM_SESSION_DEFAULT_TIMEOUT))) {
+      !(sb = comm_session_send_buffer_begin_write_bulk(session, SCREENSHOT_ENDPOINT_ID, session_len,
+                                                       COMM_SESSION_DEFAULT_TIMEOUT))) {
     PBL_LOG_WRN("Terminating screenshot send early: %" PRIu32, max_buf_len);
     prv_finish(state);
     return;

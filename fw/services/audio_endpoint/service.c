@@ -114,9 +114,9 @@ void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
   }
 
   CommSession *comm_session = comm_session_get_system_session();
-  SendBuffer *sb = comm_session_send_buffer_begin_write(comm_session, AUDIO_ENDPOINT,
-                                                        sizeof(DataTransferMsg) + frame_size + 1,
-                                                        0 /* timeout_ms, never block */);
+  SendBuffer *sb = comm_session_send_buffer_begin_write_bulk(
+      comm_session, AUDIO_ENDPOINT, sizeof(DataTransferMsg) + frame_size + 1,
+      0 /* timeout_ms, never block */);
   if (!sb) {
     s_dropped_frames++;
     PBL_LOG_DBG("Dropping a frame...");

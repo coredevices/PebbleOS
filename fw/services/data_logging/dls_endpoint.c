@@ -280,8 +280,8 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 
   const uint32_t total_length = sizeof(DataLoggingSendDataMessage) + num_bytes;
   const uint32_t timeout_ms = 500;
-  SendBuffer *sb = comm_session_send_buffer_begin_write(session, ENDPOINT_ID_DATA_LOGGING,
-                                                        total_length, timeout_ms);
+  SendBuffer *sb = comm_session_send_buffer_begin_write_bulk(session, ENDPOINT_ID_DATA_LOGGING,
+                                                             total_length, timeout_ms);
   if (!sb) {
     pbl_mutex_unlock(&s_endpoint_data.mutex);
     return false;
