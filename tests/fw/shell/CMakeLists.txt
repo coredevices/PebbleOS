@@ -3,6 +3,7 @@
 
 pbl_clar_test(test_system_theme
   SOURCES
+    fw/applib/graphics/gtypes.c
     fw/shell/system_theme.c
     fw/shell/system_theme_style.c
 )

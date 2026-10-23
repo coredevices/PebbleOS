@@ -13,7 +13,11 @@
 #include <pbl/util/testing.h>
 
 #include <applib/fonts/fonts.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/gtypes.h>
 #include <process_management/process_manager.h>
+#include <resource/resource.h>
+#include <shell/prefs.h>
 
 ////////////////////
 // Helpers
@@ -104,4 +108,113 @@ PreferredContentSize system_theme_convert_host_content_size_to_runtime_platform(
   const PlatformType runtime_platform = process_manager_current_platform();
   return prv_convert_content_size_between_platforms(size, PBL_PLATFORM_TYPE_CURRENT,
                                                     runtime_platform);
+}
+
+static void prv_resolve_colors(GColor primary, GColor secondary, GColor bg, GColor text_pref,
+                               SystemThemeColors *colors_out) {
+  GColor text = gcolor_is_transparent(text_pref) ? gcolor_legible_over(bg) : text_pref;
+  GColor subtitle =
+      PBL_IF_COLOR_ELSE(gcolor_equal(text, GColorWhite) ? GColorLightGray : GColorDarkGray, text);
+  *colors_out = (SystemThemeColors){
+    .primary_color = primary,
+    .primary_text_color = gcolor_legible_over(primary),
+    .secondary_color = secondary,
+    .secondary_text_color = gcolor_legible_over(secondary),
+    .background_color = bg,
+    .text_color = text,
+    .subtitle_color = subtitle,
+  };
+}
+
+PBL_SYSCALL(void, system_theme_get_colors, (OUT, SystemThemeColors *, colors_out)) {
+  prv_resolve_colors(
+      shell_prefs_get_theme_highlight_color(), shell_prefs_get_theme_secondary_color(),
+      shell_prefs_get_theme_background_color(), shell_prefs_get_theme_text_color(), colors_out);
+}
+
+static bool prv_use_default_app_colors(void) {
+#if !PBL_COLOR
+  return true;
+#else
+  return (shell_prefs_get_theme_app_color_mode() == ThemeAppColorMode_BackgroundOnly) ||
+         (shell_prefs_is_theme_background_default() &&
+          gcolor_equal(shell_prefs_get_theme_highlight_color(), GColorVividCerulean) &&
+          gcolor_equal(shell_prefs_get_theme_secondary_color(), GColorCobaltBlue));
+#endif
+}
+
+void system_theme_get_app_colors(GColor default_primary, GColor default_secondary,
+                                 SystemThemeColors *colors_out) {
+  if (!colors_out) {
+    return;
+  }
+  const bool use_defaults = prv_use_default_app_colors();
+  const GColor primary = use_defaults ? default_primary : shell_prefs_get_theme_highlight_color();
+  const GColor secondary =
+      use_defaults ? default_secondary : shell_prefs_get_theme_secondary_color();
+  prv_resolve_colors(primary, secondary, shell_prefs_get_theme_background_color(),
+                     shell_prefs_get_theme_text_color(), colors_out);
+}
+
+PBL_SYSCALL(GColor, system_theme_get_primary_color) {
+  return shell_prefs_get_theme_highlight_color();
+}
+
+PBL_SYSCALL(GColor, system_theme_get_secondary_color) {
+  return shell_prefs_get_theme_secondary_color();
+}
+
+PBL_SYSCALL(GColor, system_theme_get_background_color) {
+  return shell_prefs_get_theme_background_color();
+}
+
+PBL_SYSCALL(GColor, system_theme_get_text_color) {
+  GColor text = shell_prefs_get_theme_text_color();
+  if (gcolor_is_transparent(text)) {
+    return gcolor_legible_over(shell_prefs_get_theme_background_color());
+  }
+  return text;
+}
+
+GBitmap *system_theme_create_background_bitmap(void) {
+  const uint32_t bg_res_id = shell_prefs_get_theme_bg_resource_id();
+  if (bg_res_id == 0) {
+    return nullptr;
+  }
+  return gbitmap_create_with_resource_system(SYSTEM_APP, bg_res_id);
+}
+
+void system_theme_draw_background(GContext *ctx, const GRect *bounds, GColor fallback_bg_color,
+                                  const GBitmap *cached_bg_bitmap) {
+  if (!ctx || !bounds) {
+    return;
+  }
+  if (!gcolor_is_transparent(fallback_bg_color)) {
+    graphics_context_set_fill_color(ctx, fallback_bg_color);
+    graphics_fill_rect(ctx, bounds);
+  }
+#if PBL_COLOR
+  if (cached_bg_bitmap) {
+    graphics_draw_bitmap_in_rect(ctx, cached_bg_bitmap, bounds);
+  } else if (shell_prefs_get_theme_bg_resource_id() != 0) {
+    GBitmap *bg = system_theme_create_background_bitmap();
+    if (bg) {
+      graphics_draw_bitmap_in_rect(ctx, bg, bounds);
+      gbitmap_destroy(bg);
+    }
+  }
+#endif
+}
+
+void system_theme_reset_to_default(bool dark_mode) {
+  const Uuid invalid_uuid = UUID_INVALID;
+  shell_prefs_set_theme_active_uuid(&invalid_uuid);
+  shell_prefs_set_theme_highlight_color(
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorCobaltBlue : GColorVividCerulean, GColorBlack));
+  shell_prefs_set_theme_secondary_color(
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorOxfordBlue : GColorCobaltBlue, GColorBlack));
+  shell_prefs_set_theme_background_color(
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorBlack : GColorClear, GColorClear));
+  shell_prefs_set_theme_text_color(GColorClear);
+  shell_prefs_set_theme_bg_resource_id(0);
 }

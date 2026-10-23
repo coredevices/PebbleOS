@@ -94,6 +94,7 @@ void option_menu_set_status_colors(OptionMenu *option_menu, GColor background, G
 void option_menu_set_normal_colors(OptionMenu *option_menu, GColor background, GColor foreground);
 void option_menu_set_highlight_colors(OptionMenu *option_menu, GColor background,
                                       GColor foreground);
+void option_menu_set_theme_colors(OptionMenu *option_menu, const SystemThemeColors *colors);
 
 //! @internal
 //! This is currently the only way to set callbacks, which follows (calling it now) 4.x conventions.

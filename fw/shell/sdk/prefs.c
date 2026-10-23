@@ -313,6 +313,58 @@ void shell_prefs_set_theme_highlight_color(GColor color) {
   // Not used in SDK shell
 }
 
+GColor shell_prefs_get_theme_secondary_color(void) {
+  return PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack);
+}
+
+void shell_prefs_set_theme_secondary_color(GColor color) {
+  // Not used in SDK shell
+}
+
+GColor shell_prefs_get_theme_background_color(void) {
+  return GColorWhite;
+}
+
+void shell_prefs_set_theme_background_color(GColor color) {
+  // Not used in SDK shell
+}
+
+bool shell_prefs_is_theme_background_default(void) {
+  return true;
+}
+
+GColor shell_prefs_get_theme_text_color(void) {
+  return GColorClear;
+}
+
+void shell_prefs_set_theme_text_color(GColor color) {
+  // Not used in SDK shell
+}
+
+Uuid shell_prefs_get_theme_active_uuid(void) {
+  return UUID_INVALID;
+}
+
+void shell_prefs_set_theme_active_uuid(const Uuid *uuid) {
+  // Not used in SDK shell
+}
+
+uint32_t shell_prefs_get_theme_bg_resource_id(void) {
+  return 0;
+}
+
+void shell_prefs_set_theme_bg_resource_id(uint32_t resource_id) {
+  // Not used in SDK shell
+}
+
+ThemeAppColorMode shell_prefs_get_theme_app_color_mode(void) {
+  return ThemeAppColorMode_ColorsAndBackground;
+}
+
+void shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode) {
+  // Not used in SDK shell
+}
+
 #ifdef CONFIG_APP_SCALING
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;

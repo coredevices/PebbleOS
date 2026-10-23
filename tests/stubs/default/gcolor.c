@@ -12,3 +12,7 @@ bool PBL_WEAK gcolor_equal(GColor8 x, GColor8 y) {
 GColor8 PBL_WEAK gcolor_legible_over(GColor8 background_color) {
   return GColorBlack;
 }
+
+bool PBL_WEAK gcolor_is_transparent(GColor8 color) {
+  return (color.a <= 1);
+}
