@@ -15,6 +15,7 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/option_menu_window.h>
 #include <apps/system/timeline/timeline.h>
+#include <apps/system/toggle/button_lock_toggle.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_menu_data_source.h>
@@ -75,6 +76,11 @@ static bool prv_app_filter_callback(struct AppMenuDataSource *source, AppInstall
 
   // For tap buttons, filter Timeline apps based on button
   if (data->is_tap) {
+    // A single tap is too easy to trigger by accident to release the lock.
+    const Uuid button_lock_uuid = BUTTON_LOCK_TOGGLE_UUID;
+    if (uuid_equal(&entry->uuid, &button_lock_uuid)) {
+      return false;
+    }
     if (data->button == BUTTON_ID_UP) {
       // Tap Up: Only show Timeline Past, hide Timeline Future and Timeline Full
       if (uuid_equal(&entry->uuid, &timeline_future_uuid)) {
