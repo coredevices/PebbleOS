@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdint.h>
+#include <syscall/syscall.h>
 
-uint32_t sys_app_comm_get_sniff_interval(void) {
-  return 0;
+SniffInterval sys_app_comm_get_sniff_interval(void) {
+  return SNIFF_INTERVAL_NORMAL;
 }
