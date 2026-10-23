@@ -26,6 +26,9 @@ PBL_WEAK void pbl_task_wdt_feed_thread(struct pbl_thread *thread) {
 PBL_WEAK void pbl_task_wdt_feed_all(void) {
 }
 
+PBL_WEAK void pbl_task_wdt_set_waiting(bool waiting) {
+}
+
 PBL_WEAK void pbl_task_wdt_suspend(uint32_t timeout_ms) {
 }
 

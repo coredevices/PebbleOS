@@ -439,3 +439,28 @@ pbl_clar_test(test_clock_time
   SOURCES
     tests/fakes/fake_rtc.c
 )
+
+pbl_clar_test(test_system_task
+  SOURCES
+    fw/services/system_task/service.c
+    kernel/tick.c
+    kernel/sched.c
+    kernel/thread.c
+    kernel/mutex.c
+    kernel/sem.c
+    kernel/msgq.c
+    kernel/poll.c
+    kernel/irq.c
+    kernel/debug.c
+    kernel/arch/posix/arch.c
+    kernel/arch/posix/test.c
+  INCLUDES
+    kernel
+    kernel/arch
+    kernel/arch/posix/include
+  DEFINES
+    CONFIG_KERNEL_IDLE_STACK_SIZE=1024
+    CONFIG_TASK_WDT_TIMEOUT_MS=5000
+    CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL=0
+    PBL_NO_LINKER_SCRIPT
+)
