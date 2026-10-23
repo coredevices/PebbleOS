@@ -13,6 +13,7 @@
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 #define DAY_PICKER_CELL_HEIGHT \
   PBL_IF_RECT_ELSE(menu_cell_small_cell_height(), menu_cell_basic_cell_height())
@@ -24,6 +25,8 @@ typedef struct {
   DayPickerCallback callback;
   void *callback_context;
   GColor highlight_color;
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
   bool allow_once;
 } DayPickerData;
 
@@ -34,6 +37,8 @@ typedef struct {
   GBitmap deselected_icon;
   GBitmap selected_icon;
   GBitmap checkmark_icon;
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
   uint32_t current_checkmark_icon_resource_id;
   bool show_check_something_first_text;
   bool was_completed;
@@ -112,6 +117,13 @@ static void prv_day_picker_draw_row(GContext *ctx, const Layer *cell_layer, Menu
   menu_cell_basic_draw(ctx, cell_layer, cell_text, nullptr, nullptr);
 }
 
+static void prv_day_picker_draw_background(GContext *ctx, const Layer *bg_layer, bool highlight,
+                                           void *callback_context) {
+  DayPickerData *data = (DayPickerData *)callback_context;
+  system_theme_draw_background(ctx, &bg_layer->bounds, data->theme_colors.background_color,
+                               data->bg_bitmap);
+}
+
 static void prv_day_picker_handle_selection(MenuLayer *menu_layer, MenuIndex *cell_index,
                                             void *callback_context) {
   DayPickerData *data = (DayPickerData *)callback_context;
@@ -141,6 +153,7 @@ static void prv_day_picker_handle_selection(MenuLayer *menu_layer, MenuIndex *ce
 static void prv_day_picker_window_unload(Window *window) {
   DayPickerData *data = (DayPickerData *)window_get_user_data(window);
   menu_layer_deinit(&data->menu_layer);
+  gbitmap_destroy(data->bg_bitmap);
   i18n_free_all(&data->window);
   task_free(data);
 }
@@ -154,9 +167,14 @@ void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *c
     .highlight_color = config.highlight_color,
     .allow_once = config.allow_once,
   };
+  system_theme_get_app_colors(config.highlight_color, config.highlight_color, &data->theme_colors);
+  data->theme_colors.primary_color = config.highlight_color;
+  data->theme_colors.primary_text_color = gcolor_legible_over(config.highlight_color);
+  data->bg_bitmap = system_theme_create_background_bitmap();
 
   window_init(&data->window, WINDOW_NAME("Day Picker"));
   window_set_user_data(&data->window, data);
+  window_set_background_color(&data->window, data->theme_colors.background_color);
   data->window.window_handlers.unload = prv_day_picker_window_unload;
 
   GRect bounds = data->window.layer.bounds;
@@ -170,9 +188,10 @@ void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *c
                              .get_num_rows = prv_day_picker_get_num_rows,
                              .get_cell_height = prv_day_picker_get_cell_height,
                              .draw_row = prv_day_picker_draw_row,
+                             .draw_background = prv_day_picker_draw_background,
                              .select_click = prv_day_picker_handle_selection,
                            });
-  menu_layer_set_highlight_colors(&data->menu_layer, config.highlight_color, GColorWhite);
+  menu_layer_set_theme_colors(&data->menu_layer, &data->theme_colors);
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -303,12 +322,20 @@ static void prv_custom_day_picker_selection_changed(MenuLayer *menu_layer, MenuI
   }
 }
 
+static void prv_custom_day_picker_draw_background(GContext *ctx, const Layer *bg_layer,
+                                                  bool highlight, void *callback_context) {
+  CustomDayPickerData *data = (CustomDayPickerData *)callback_context;
+  system_theme_draw_background(ctx, &bg_layer->bounds, data->theme_colors.background_color,
+                               data->bg_bitmap);
+}
+
 static void prv_custom_day_picker_window_unload(Window *window) {
   CustomDayPickerData *data = (CustomDayPickerData *)window_get_user_data(window);
   menu_layer_deinit(&data->menu_layer);
   gbitmap_deinit(&data->selected_icon);
   gbitmap_deinit(&data->deselected_icon);
   gbitmap_deinit(&data->checkmark_icon);
+  gbitmap_destroy(data->bg_bitmap);
   i18n_free_all(&data->window);
   task_free(data);
 }
@@ -323,10 +350,15 @@ void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallba
     .was_completed = false,
     .show_check_something_first_text = false,
   };
+  system_theme_get_app_colors(highlight_color, highlight_color, &data->theme_colors);
+  data->theme_colors.primary_color = highlight_color;
+  data->theme_colors.primary_text_color = gcolor_legible_over(highlight_color);
+  data->bg_bitmap = system_theme_create_background_bitmap();
   memcpy(data->scheduled_days, initial_days, sizeof(data->scheduled_days));
 
   window_init(&data->window, WINDOW_NAME("Custom Day Picker"));
   window_set_user_data(&data->window, data);
+  window_set_background_color(&data->window, data->theme_colors.background_color);
   data->window.window_handlers.unload = prv_custom_day_picker_window_unload;
 
   GRect bounds = data->window.layer.bounds;
@@ -340,10 +372,11 @@ void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallba
                              .get_num_rows = prv_custom_day_picker_get_num_rows,
                              .get_cell_height = prv_custom_day_picker_get_cell_height,
                              .draw_row = prv_custom_day_picker_draw_row,
+                             .draw_background = prv_custom_day_picker_draw_background,
                              .select_click = prv_custom_day_picker_handle_selection,
                              .selection_changed = prv_custom_day_picker_selection_changed,
                            });
-  menu_layer_set_highlight_colors(&data->menu_layer, highlight_color, GColorWhite);
+  menu_layer_set_theme_colors(&data->menu_layer, &data->theme_colors);
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());

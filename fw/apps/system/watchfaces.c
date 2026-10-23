@@ -25,6 +25,8 @@ typedef struct SettingsWatchfacesData {
   MenuLayer menu_layer;
   AppMenuDataSource data_source;
   AppInstallId active_watchface_id;
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
 } SettingsWatchfacesData;
 
 ////////////////////
@@ -92,6 +94,13 @@ static uint16_t get_num_rows_callback(struct MenuLayer *menu_layer, uint16_t sec
   return app_menu_data_source_get_count(&data->data_source);
 }
 
+static void draw_background_callback(GContext *ctx, const Layer *bg_layer, bool highlight,
+                                     void *context) {
+  SettingsWatchfacesData *data = context;
+  system_theme_draw_background(ctx, &bg_layer->bounds, data->theme_colors.background_color,
+                               data->bg_bitmap);
+}
+
 static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
                               void *context) {
   SettingsWatchfacesData *data = context;
@@ -136,6 +145,10 @@ static void prv_reload_menu_data(void *data) {
 
 static void prv_window_load(Window *window) {
   SettingsWatchfacesData *data = window_get_user_data(window);
+  const GColor default_primary = PBL_IF_COLOR_ELSE(GColorJazzberryJam, GColorBlack);
+  system_theme_get_app_colors(default_primary, default_primary, &data->theme_colors);
+  data->bg_bitmap = system_theme_create_background_bitmap();
+  window_set_background_color(window, data->theme_colors.background_color);
 
   MenuLayer *menu_layer = &data->menu_layer;
   const GRect menu_layer_frame = PBL_IF_RECT_ELSE(
@@ -159,10 +172,10 @@ static void prv_window_load(Window *window) {
 #endif
                              .get_num_rows = get_num_rows_callback,
                              .draw_row = draw_row_callback,
+                             .draw_background = draw_background_callback,
                              .select_click = select_callback,
                            });
-  menu_layer_set_highlight_colors(&data->menu_layer,
-                                  PBL_IF_COLOR_ELSE(GColorJazzberryJam, GColorBlack), GColorWhite);
+  menu_layer_set_theme_colors(&data->menu_layer, &data->theme_colors);
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -176,6 +189,7 @@ static void prv_window_unload(Window *window) {
   SettingsWatchfacesData *data = window_get_user_data(window);
   menu_layer_deinit(&data->menu_layer);
   app_menu_data_source_deinit(&data->data_source);
+  gbitmap_destroy(data->bg_bitmap);
 
   i18n_free_all(data);
 }

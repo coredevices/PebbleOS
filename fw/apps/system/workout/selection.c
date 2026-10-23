@@ -11,6 +11,7 @@
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 typedef enum {
   WorkoutType_Run,
@@ -23,6 +24,8 @@ typedef struct WorkoutSelectionWindow {
   Window window;
   MenuLayer menu_layer;
   GBitmap workout_icons[WorkoutTypeCount];
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
   SelectWorkoutCallback select_workout_cb;
 } WorkoutSelectionWindow;
 
@@ -123,6 +126,14 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
                      GTextOverflowModeFill, title_alignment, nullptr);
 }
 
+static void prv_draw_background_callback(GContext *ctx, const Layer *bg_layer, bool highlight,
+                                         void *context) {
+  WorkoutSelectionWindow *selection_window = (WorkoutSelectionWindow *)context;
+  system_theme_draw_background(ctx, &bg_layer->bounds,
+                               selection_window->theme_colors.background_color,
+                               selection_window->bg_bitmap);
+}
+
 static void prv_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
   WorkoutSelectionWindow *selection_window = (WorkoutSelectionWindow *)context;
 
@@ -140,6 +151,7 @@ static void prv_window_unload_handler(Window *window) {
     for (int i = 0; i < WorkoutTypeCount; i++) {
       gbitmap_deinit(&selection_window->workout_icons[i]);
     }
+    gbitmap_destroy(selection_window->bg_bitmap);
     menu_layer_deinit(&selection_window->menu_layer);
     window_deinit(&selection_window->window);
     i18n_free_all(selection_window);
@@ -154,10 +166,14 @@ WorkoutSelectionWindow *workout_selection_push(SelectWorkoutCallback select_work
   WorkoutSelectionWindow *selection_window = app_zalloc_check(sizeof(WorkoutSelectionWindow));
 
   selection_window->select_workout_cb = select_workout_cb;
+  const GColor default_primary = PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack);
+  system_theme_get_app_colors(default_primary, default_primary, &selection_window->theme_colors);
+  selection_window->bg_bitmap = system_theme_create_background_bitmap();
 
   Window *window = &selection_window->window;
   window_init(window, WINDOW_NAME("Workout Selection"));
   window_set_user_data(window, selection_window);
+  window_set_background_color(window, selection_window->theme_colors.background_color);
   window_set_window_handlers(window, &(WindowHandlers){
                                        .unload = prv_window_unload_handler,
                                      });
@@ -174,11 +190,10 @@ WorkoutSelectionWindow *workout_selection_push(SelectWorkoutCallback select_work
                              .get_num_rows = prv_get_num_rows_callback,
                              .get_cell_height = prv_get_cell_height_callback,
                              .draw_row = prv_draw_row_callback,
+                             .draw_background = prv_draw_background_callback,
                              .select_click = prv_select_callback,
                            });
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(menu_layer, PBL_IF_COLOR_ELSE(GColorYellow, GColorBlack),
-                                  PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+  menu_layer_set_theme_colors(menu_layer, &selection_window->theme_colors);
   menu_layer_set_click_config_onto_window(menu_layer, &selection_window->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(

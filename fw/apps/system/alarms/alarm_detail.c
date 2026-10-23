@@ -16,6 +16,7 @@
 #include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 #ifdef CONFIG_SPEAKER
 #include <pbl/services/speaker/speaker_service.h>
@@ -58,6 +59,8 @@ typedef struct AlarmDetailData {
 } AlarmDetailData;
 
 static SimpleDialog *prv_snooze_set_confirm_dialog(void) {
+  SystemThemeColors colors;
+  system_theme_get_app_colors(GColorJaegerGreen, GColorJaegerGreen, &colors);
   SimpleDialog *simple_dialog = simple_dialog_create("AlarmSnoozeSet");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
   const char *snooze_text = i18n_noop("Snooze delay set to %d minutes");
@@ -66,7 +69,8 @@ static SimpleDialog *prv_snooze_set_confirm_dialog(void) {
   i18n_free(snooze_text, dialog);
   dialog_set_text(dialog, snooze_buf);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_CONFIRMATION_LARGE);
-  dialog_set_background_color(dialog, GColorJaegerGreen);
+  dialog_set_background_color(dialog, colors.primary_color);
+  dialog_set_text_color(dialog, colors.primary_text_color);
   dialog_set_timeout(dialog, preferred_result_display_duration());
   return simple_dialog;
 }
@@ -253,6 +257,8 @@ void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu, const ActionMenuItem
 void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
                               AlarmEditorCompleteCallback alarm_editor_callback,
                               void *callback_context) {
+  SystemThemeColors colors;
+  system_theme_get_app_colors(ALARMS_APP_HIGHLIGHT_COLOR, ALARMS_APP_HIGHLIGHT_COLOR, &colors);
   AlarmDetailData *data = task_malloc_check(sizeof(AlarmDetailData));
   *data = (AlarmDetailData){
     .alarm_id = alarm_id,
@@ -261,7 +267,8 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     .callback_context = callback_context,
     .menu_config = {
       .context = data,
-      .colors.background = ALARMS_APP_HIGHLIGHT_COLOR,
+      .colors.background = colors.primary_color,
+      .colors.foreground = colors.primary_text_color,
       .will_close = prv_alarm_detail_menu_will_close,
       .did_close = prv_cleanup_alarm_detail_menu,
     },

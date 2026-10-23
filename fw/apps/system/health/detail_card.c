@@ -13,6 +13,7 @@
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 // Compile-time display offset calculations
 #define HEALTH_Y_OFFSET       ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
@@ -585,7 +586,10 @@ void health_detail_card_configure(HealthDetailCard *detail_card,
   if (!detail_card || !config) {
     return;
   }
-  detail_card->bg_color = config->bg_color;
+  SystemThemeColors theme_colors;
+  system_theme_get_app_colors(config->bg_color, config->bg_color, &theme_colors);
+  detail_card->bg_color = !shell_prefs_is_theme_background_default() ? theme_colors.background_color
+                                                                     : theme_colors.primary_color;
   window_set_background_color(&detail_card->window, detail_card->bg_color);
   if (config->num_headings) {
     detail_card->num_headings = config->num_headings;

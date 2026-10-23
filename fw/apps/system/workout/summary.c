@@ -14,6 +14,8 @@
 #include <applib/ui/ui.h>
 #include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 #define BACKGROUND_COLOR PBL_IF_COLOR_ELSE(GColorYellow, GColorWhite)
 #define TEXT_COLOR       (gcolor_legible_over(BACKGROUND_COLOR))
@@ -26,6 +28,9 @@ typedef struct WorkoutSummaryWindow {
 
   GBitmap *action_bar_start;
   GBitmap *action_bar_more;
+  GBitmap *bg_bitmap;
+  GColor bg_color;
+  GColor text_color;
 
   ActivitySessionType activity_type;
 
@@ -73,13 +78,17 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, KinoReel *icon
   const int name_y = PBL_IF_RECT_ELSE(107, 109);
   GRect name_rect = GRect(name_x, name_y, drawing_rect.size.w, 32);
 
-  graphics_context_set_text_color(ctx, TEXT_COLOR);
+  WorkoutSummaryWindow *summary_window = window_get_user_data(layer_get_window(layer));
+  graphics_context_set_text_color(ctx, summary_window ? summary_window->text_color : TEXT_COLOR);
   graphics_draw_text(ctx, name, font, name_rect, overflow_mode, alignment, nullptr);
 }
 
 static void prv_base_layer_update_proc(struct Layer *layer, GContext *ctx) {
   WorkoutSummaryWindow *summary_window = window_get_user_data(layer_get_window(layer));
-
+  if (summary_window->bg_bitmap) {
+    system_theme_draw_background(ctx, &layer->bounds, summary_window->bg_color,
+                                 summary_window->bg_bitmap);
+  }
   prv_render_activity_type(ctx, layer, summary_window->icon, summary_window->name);
 }
 
@@ -113,6 +122,7 @@ static void prv_window_unload_handler(Window *window) {
     kino_reel_destroy(summary_window->icon);
     gbitmap_destroy(summary_window->action_bar_more);
     gbitmap_destroy(summary_window->action_bar_start);
+    gbitmap_destroy(summary_window->bg_bitmap);
     action_bar_layer_deinit(&summary_window->action_bar);
     status_bar_layer_deinit(&summary_window->status_layer);
     layer_deinit(&summary_window->base_layer);
@@ -132,11 +142,18 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
 
   summary_window->start_workout_cb = start_workout_cb;
   summary_window->select_workout_cb = select_workout_cb;
+  SystemThemeColors theme_colors;
+  system_theme_get_app_colors(BACKGROUND_COLOR, BACKGROUND_COLOR, &theme_colors);
+  summary_window->bg_color = !shell_prefs_is_theme_background_default()
+                                 ? theme_colors.background_color
+                                 : PBL_IF_COLOR_ELSE(theme_colors.primary_color, GColorWhite);
+  summary_window->text_color = gcolor_legible_over(summary_window->bg_color);
+  summary_window->bg_bitmap = system_theme_create_background_bitmap();
 
   Window *window = &summary_window->window;
   window_init(window, WINDOW_NAME("Workout Summary"));
   window_set_user_data(window, summary_window);
-  window_set_background_color(window, BACKGROUND_COLOR);
+  window_set_background_color(window, summary_window->bg_color);
   window_set_window_handlers(window, &(WindowHandlers){
                                        .unload = prv_window_unload_handler,
                                      });
@@ -150,7 +167,7 @@ WorkoutSummaryWindow *workout_summary_window_create(ActivitySessionType activity
 
   StatusBarLayer *status_layer = &summary_window->status_layer;
   status_bar_layer_init(status_layer);
-  status_bar_layer_set_colors(status_layer, GColorClear, TEXT_COLOR);
+  status_bar_layer_set_colors(status_layer, GColorClear, summary_window->text_color);
   layer_add_child(&window->layer, status_bar_layer_get_layer(status_layer));
 
 #if PBL_RECT

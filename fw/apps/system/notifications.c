@@ -60,6 +60,8 @@ typedef struct NotificationsData {
   char *group_title;
   size_t group_title_size;
   NotificationGroupWindow *group_window;
+  GBitmap *bg_bitmap;
+  SystemThemeColors theme_colors;
 #if PBL_ROUND
   StatusBarLayer status_bar_layer;
 #endif
@@ -298,6 +300,14 @@ static void prv_group_window_draw_row(GContext *ctx, const Layer *cell_layer, Me
                               group_window->time_buffer, nullptr, false, GTextOverflowModeFill);
 }
 
+static void prv_group_window_draw_background(GContext *ctx, const Layer *bg_layer, bool highlight,
+                                             void *context) {
+  NotificationGroupWindow *group_window = context;
+  NotificationsData *data = group_window->notifications_data;
+  system_theme_draw_background(ctx, &bg_layer->bounds, data->theme_colors.background_color,
+                               data->bg_bitmap);
+}
+
 static void prv_group_window_select(MenuLayer *menu_layer, MenuIndex *cell_index, void *context) {
   NotificationGroupWindow *group_window = context;
   if (cell_index->row < group_window->count) {
@@ -307,11 +317,14 @@ static void prv_group_window_select(MenuLayer *menu_layer, MenuIndex *cell_index
 
 static void prv_group_window_load(Window *window) {
   NotificationGroupWindow *group_window = window_get_user_data(window);
+  NotificationsData *data = group_window->notifications_data;
+  window_set_background_color(window, data->theme_colors.background_color);
   GRect sender_frame = window->layer.bounds;
   sender_frame.size.h = MENU_CELL_BASIC_HEADER_HEIGHT;
   text_layer_init_with_parameters(&group_window->sender_layer, &sender_frame, group_window->sender,
-                                  fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), GColorBlack,
-                                  GColorWhite,
+                                  fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
+                                  data->theme_colors.text_color,
+                                  data->theme_colors.background_color,
                                   PBL_IF_RECT_ELSE(GTextAlignmentLeft, GTextAlignmentCenter),
                                   GTextOverflowModeTrailingEllipsis);
 
@@ -325,11 +338,10 @@ static void prv_group_window_load(Window *window) {
                              .get_num_rows = prv_group_window_get_num_rows,
                              .get_cell_height = prv_group_window_get_cell_height,
                              .draw_row = prv_group_window_draw_row,
+                             .draw_background = prv_group_window_draw_background,
                              .select_click = prv_group_window_select,
                            });
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(
-      menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, GColorBlack), GColorWhite);
+  menu_layer_set_theme_colors(menu_layer, &data->theme_colors);
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, false);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
@@ -963,8 +975,21 @@ static void prv_window_disappear(Window *window) {
   data->loaded_notification_list = nullptr;
 }
 
+static void prv_draw_background_callback(GContext *ctx, const Layer *bg_layer, bool highlight,
+                                         void *data) {
+  NotificationsData *notifications_data = data;
+  system_theme_draw_background(ctx, &bg_layer->bounds,
+                               notifications_data->theme_colors.background_color,
+                               notifications_data->bg_bitmap);
+}
+
 static void prv_window_load(Window *window) {
   NotificationsData *data = window_get_user_data(window);
+  const GColor default_primary = PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, GColorBlack);
+  system_theme_get_app_colors(default_primary, default_primary, &data->theme_colors);
+  data->bg_bitmap = system_theme_create_background_bitmap();
+  window_set_background_color(window, data->theme_colors.background_color);
+
   MenuLayer *menu_layer = &data->menu_layer;
   const GRect menu_layer_frame = PBL_IF_RECT_ELSE(
       window->layer.bounds, grect_inset_internal(window->layer.bounds, 0, STATUS_BAR_LAYER_HEIGHT));
@@ -973,13 +998,12 @@ static void prv_window_load(Window *window) {
                            &(MenuLayerCallbacks){
                              .get_num_rows = prv_get_num_rows_callback,
                              .draw_row = prv_draw_row_callback,
+                             .draw_background = prv_draw_background_callback,
                              .get_cell_height = prv_get_cell_height,
                              .select_click = prv_select_callback,
                            });
 
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(
-      menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, GColorBlack), GColorWhite);
+  menu_layer_set_theme_colors(menu_layer, &data->theme_colors);
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -997,13 +1021,13 @@ static void prv_window_load(Window *window) {
       text_layer,
       &GRect(horizontal_margin, window->layer.bounds.size.h / 2 - 15,
              window->layer.bounds.size.w - horizontal_margin, window->layer.bounds.size.h / 2),
-      i18n_get("No notifications", data), font, GColorBlack, GColorWhite, GTextAlignmentCenter,
-      GTextOverflowModeTrailingEllipsis);
+      i18n_get("No notifications", data), font, data->theme_colors.text_color,
+      data->theme_colors.background_color, GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
   layer_add_child(&window->layer, text_layer_get_layer(text_layer));
 
 #if PBL_ROUND
   GColor bg_color = GColorClear;
-  GColor fg_color = GColorBlack;
+  GColor fg_color = data->theme_colors.text_color;
 
   StatusBarLayer *status_bar = &data->status_bar_layer;
   status_bar_layer_init(status_bar);
@@ -1054,6 +1078,7 @@ static void prv_handle_deinit(void) {
   status_bar_layer_deinit(&data->status_bar_layer);
 #endif
   menu_layer_deinit(&data->menu_layer);
+  gbitmap_destroy(data->bg_bitmap);
   event_service_client_unsubscribe(&data->notification_event_info);
   prv_loaded_notification_list_deinit(data->loaded_notification_list);
   notifications_history_deinit(&data->history);
