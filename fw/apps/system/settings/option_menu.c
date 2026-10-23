@@ -7,10 +7,24 @@
 
 #include <pbl/services/i18n/i18n.h>
 
+#include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
+#include <shell/system_theme.h>
+
+static void prv_dark_mode_change_handler(PebbleEvent *event, void *context) {
+  SettingsOptionMenuData *data = context;
+  OptionMenu *option_menu = data->option_menu;
+  const GColor bg = system_theme_get_bg_color();
+  const GColor fg = system_theme_get_fg_color();
+  window_set_background_color(&option_menu->window, bg);
+  option_menu_set_status_colors(option_menu, bg, fg);
+  option_menu_set_normal_colors(option_menu, bg, fg);
+  layer_mark_dirty(&option_menu->window.layer);
+}
 
 static void prv_menu_unload(OptionMenu *option_menu, void *context) {
   SettingsOptionMenuData *data = context;
+  event_service_client_unsubscribe(&data->dark_mode_event_info);
   if (data->callbacks.unload) {
     data->callbacks.unload(option_menu, data);
   }
@@ -58,6 +72,12 @@ OptionMenu *settings_option_menu_create(const char *i18n_title_key,
   SettingsOptionMenuData *data = task_malloc_check(sizeof(SettingsOptionMenuData));
   OptionMenuCallbacks callbacks = *callbacks_ref;
   *data = (SettingsOptionMenuData){
+    .option_menu = option_menu,
+    .dark_mode_event_info = {
+      .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+      .handler = prv_dark_mode_change_handler,
+      .context = data,
+    },
     .callbacks = callbacks,
     .context = context,
     .num_rows = num_rows,
@@ -70,6 +90,7 @@ OptionMenu *settings_option_menu_create(const char *i18n_title_key,
   callbacks.get_num_rows = prv_menu_get_num_rows;
   callbacks.unload = prv_menu_unload;
   option_menu_set_callbacks(option_menu, &callbacks, data);
+  event_service_client_subscribe(&data->dark_mode_event_info);
   return option_menu;
 }
 

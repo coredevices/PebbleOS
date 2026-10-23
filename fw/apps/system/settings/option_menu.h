@@ -1,9 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <applib/event_service_client.h>
 #include <applib/ui/option_menu_window.h>
 
 typedef struct {
+  OptionMenu *option_menu;
+  EventServiceInfo dark_mode_event_info; //!< Re-applies the theme colors when dark mode flips
   OptionMenuCallbacks callbacks;
   void *context;
   const char **rows;
