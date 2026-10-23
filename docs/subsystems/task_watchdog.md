@@ -36,6 +36,10 @@ callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
   instead of a full check period later. Without `CONFIG_WATCHDOG` it logs instead and keeps running. A
   channel fed again within the grace period clears the reboot reason and
   logs the recovery.
+- A thread waiting for work (`pbl_task_wdt_set_waiting()`) does not expire
+  while it is blocked. Once woken it must run within its timeout, counted
+  from the check that first finds it runnable, so a waiting thread starved
+  by a busier, higher-priority one still expires.
 - `pbl_task_wdt_suspend()` keeps every channel fed for a bounded time (or until
   `pbl_task_wdt_resume()`), for phases such as boot or a long settings-file
   compaction where stalls are expected.

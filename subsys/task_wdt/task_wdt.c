@@ -39,6 +39,7 @@ struct channel {
   void *user_data;
   bool active;
   bool waiting;
+  bool woken;
   bool expired;
 };
 
@@ -67,6 +68,23 @@ static inline bool prv_reached(pbl_tick_t now, pbl_tick_t when) {
 static void prv_feed_locked(struct channel *ch, pbl_tick_t now) {
   ch->deadline = now + ch->timeout;
   ch->expired = false;
+}
+
+//! A waiting thread is idle only while blocked: once woken it must run within
+//! its timeout like a busy one, or a starved thread would never expire.
+static bool prv_idle_locked(struct channel *ch, pbl_tick_t now) {
+  if (!ch->waiting) {
+    return false;
+  }
+  if (pbl_thread_state(ch->thread) != PBL_THREAD_READY) {
+    ch->woken = false;
+    return true;
+  }
+  if (!ch->woken) {
+    ch->woken = true;
+    prv_feed_locked(ch, now);
+  }
+  return false;
 }
 
 static void prv_feed_all_locked(pbl_tick_t now) {
@@ -102,7 +120,7 @@ static size_t prv_collect_expired(struct expired *expired, uint8_t *fed_mask,
       continue;
     }
     *active_mask |= 1u << i;
-    if (ch->waiting || !prv_reached(now, ch->deadline)) {
+    if (prv_idle_locked(ch, now) || !prv_reached(now, ch->deadline)) {
       *fed_mask |= 1u << i;
       continue;
     }
@@ -325,6 +343,7 @@ void pbl_task_wdt_set_waiting(bool waiting) {
     struct channel *ch = &s_channels[i];
     if (ch->active && ch->thread == thread) {
       ch->waiting = waiting;
+      ch->woken = false;
       prv_feed_locked(ch, now);
     }
   }

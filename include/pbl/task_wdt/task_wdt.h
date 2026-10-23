@@ -113,7 +113,8 @@ void pbl_task_wdt_feed_all(void);
  *
  * A thread blocked waiting for work cannot be stuck, so its channels do not expire while it
  * waits; going back to busy restarts their timeouts. A thread that only blocks to wait for work
- * then needs no periodic feeding.
+ * then needs no periodic feeding. Once woken, a waiting thread that does not get to run is
+ * starved: its timeouts restart from the check that first finds it runnable.
  *
  * @code{.c}
  * while (running) {

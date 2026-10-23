@@ -374,3 +374,37 @@ void test_task_wdt__waiting_is_per_thread(void) {
   cl_assert_equal_i(s_callback_channel, 1);
   cl_assert_equal_i(s_reason.data8[0], 0x1);
 }
+
+static struct pbl_sem s_wake;
+static uint32_t s_woken_ms;
+
+static void prv_starved_waiter_entry(void *arg) {
+  cl_assert(pbl_task_wdt_add(nullptr, TIMEOUT_MS, prv_callback, nullptr) >= 0);
+  pbl_task_wdt_set_waiting(true);
+  pbl_sem_take(&s_wake, PBL_FOREVER);
+  pbl_task_wdt_set_waiting(false);
+  pbl_test_kernel_stop();
+}
+
+static void prv_hog_entry(void *arg) {
+  prv_sleep_ms(10 * TIMEOUT_MS);
+  cl_assert_equal_i(s_callbacks, 0);
+  pbl_sem_give(&s_wake);
+  s_woken_ms = prv_now_ms();
+  while (s_callbacks == 0 && prv_now_ms() < s_woken_ms + 10 * TIMEOUT_MS) {
+    pbl_test_tick(1);
+  }
+  pbl_test_kernel_stop();
+}
+
+void test_task_wdt__woken_waiting_channel_expires_when_starved(void) {
+  pbl_sem_init(&s_wake, 0, 1);
+  prv_spawn(0, "waiter", prv_starved_waiter_entry, nullptr);
+  struct pbl_thread *hog = prv_spawn(1, "hog", prv_hog_entry, nullptr);
+  pbl_thread_prio_set(hog, 3);
+  pbl_test_kernel_run();
+  cl_assert_equal_i(s_callbacks, 1);
+  cl_assert_equal_i(s_callback_channel, 0);
+  cl_assert(s_first_callback_ms >= s_woken_ms + TIMEOUT_MS);
+  cl_assert(s_first_callback_ms < s_woken_ms + TIMEOUT_MS + 2 * PERIOD_MS);
+}
