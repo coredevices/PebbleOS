@@ -198,7 +198,7 @@ can do with it.
 :::::{tab-item} Watch
 :sync: watch
 
-There are two ways to get the firmware onto a watch:
+There are three ways to get the firmware onto a watch:
 
 - **Flash it with a programmer.** With a
   {doc}`programmer <../programmers/index>` connected as the
@@ -223,16 +223,40 @@ There are two ways to get the firmware onto a watch:
   mobile app, enable `Settings -> Show debug options`, then go back to the
   Devices tab, tap your watch, choose `Firmware Update Debug -> Sideload
   FW`, and select the file. The app starts the update and shows its
-  progress on the watch card.
+  progress on the watch card. {doc}`../pbl/bundle` also covers scripting
+  repeated installs over `adb` on Android.
 
-```{note}
-Holding Back + Up + Select reboots the watch into the recovery firmware
-(PRF), from which the Pebble mobile app can install a firmware again.
-```
+- **Install a bundle with the `pebble` tool.** With the
+  [Developer Connection](https://developer.repebble.com/guides/tools-and-resources/developer-connection/)
+  enabled in the Pebble app, the `pebble` tool installs the
+  `.pbz` from `pbl bundle` through the phone:
+
+  ```shell
+  pebble fw install build/<bundle>.pbz --phone <phone-ip>
+  ```
 
 :::::
 
 ::::::
+
+## Recovery firmware
+
+The watch keeps a second, minimal firmware called PRF (Pebble Recovery
+Firmware) in its own slot. The bootloader falls back to it when the main
+firmware cannot boot, and from it the Pebble mobile app installs the main
+firmware again. PRF is built from the same source as a separate variant,
+`pbl configure --board <board> --variant prf` (see {doc}`../pbl/configure`);
+{doc}`../architecture/index` describes how the firmwares relate.
+
+To reboot a running watch into PRF, hold Back, Up and Select together, or
+run:
+
+```shell
+pebble fw enter-prf
+```
+
+`pebble fw install` takes `--slot 0|1` for bundles that contain more than
+one firmware image.
 
 ## Next steps
 
