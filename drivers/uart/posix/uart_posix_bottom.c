@@ -18,6 +18,10 @@
 #include <termios.h>
 #include <unistd.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -221,12 +225,60 @@ void uart_posix_bottom_start(enum uart_posix_channel id) {
   }
 }
 
+#ifdef __EMSCRIPTEN__
+// A browser has no socket for the QEMU serial protocol, so the page is its
+// other end: the firmware's bytes go to Module.onQemuSerial, and the page's
+// come in through uart_posix_qemu_rx_from_page, fed to the UART on the main
+// loop, as an installed .pbw is. They wait there while the UART cannot take
+// them, as a TCP peer's wait in the socket.
+#define PAGE_RX_MAX (64 * 1024)
+
+EM_JS(void, prv_qemu_tx_to_page, (int c), {
+  if (Module.onQemuSerial)
+    Module.onQemuSerial(c);
+});
+
+EM_JS(void, prv_qemu_rx_copy_from_page, (void *dst), { HEAPU8.set(Module.qemuSerialRx, dst); });
+
+static uint8_t s_page_rx[PAGE_RX_MAX];
+static size_t s_page_rx_head;
+static size_t s_page_rx_len;
+
+//! The page puts its bytes in Module.qemuSerialRx and hands them over; past
+//! what can wait, they are dropped.
+EMSCRIPTEN_KEEPALIVE void uart_posix_qemu_rx_from_page(size_t len) {
+  if (len > PAGE_RX_MAX - s_page_rx_len) {
+    fprintf(stderr, "uart: %zu bytes from the page dropped, %zu waiting\n", len, s_page_rx_len);
+    return;
+  }
+  memmove(s_page_rx, s_page_rx + s_page_rx_head, s_page_rx_len);
+  s_page_rx_head = 0;
+  prv_qemu_rx_copy_from_page(s_page_rx + s_page_rx_len);
+  s_page_rx_len += len;
+}
+
+static void prv_page_rx_poll(void) {
+  while (s_page_rx_len && uart_posix_rx_enabled(UART_POSIX_QEMU)) {
+    uart_posix_rx(UART_POSIX_QEMU, s_page_rx[s_page_rx_head++]);
+    s_page_rx_len--;
+  }
+}
+
+POSIX_HOST_HOOK(.poll = prv_page_rx_poll)
+#endif
+
 void uart_posix_bottom_write(enum uart_posix_channel id, uint8_t c) {
   struct channel *channel = &s_channels[id];
   // The console always reaches stdout, so that a log of the process has it.
   if (id == UART_POSIX_CONSOLE) {
     (void)write(STDOUT_FILENO, &c, 1);
   }
+#ifdef __EMSCRIPTEN__
+  if (id == UART_POSIX_QEMU) {
+    prv_qemu_tx_to_page(c);
+    return;
+  }
+#endif
   const int fd = atomic_load(&channel->client_fd);
   if (fd < 0) {
     return;

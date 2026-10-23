@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 //! Host end of a UART: the console is the terminal unless given a TCP port;
-//! the QEMU one is a TCP port; Bluetooth HCI connects to a TCP port or opens a
-//! serial device. Each is otherwise not connected.
+//! the QEMU one is a TCP port, or the page in a browser; Bluetooth HCI connects
+//! to a TCP port or opens a serial device. Each is otherwise not connected.
 enum uart_posix_channel {
   UART_POSIX_CONSOLE,
   UART_POSIX_QEMU,
