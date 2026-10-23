@@ -233,7 +233,7 @@ static Window *prv_init(void) {
   option_menu_init(&data->option_menu);
   // Not using option_menu_configure because prv_reload_menu_data already sets
   // icons_enabled and chosen row index
-  option_menu_set_status_colors(&data->option_menu, GColorWhite, GColorBlack);
+  option_menu_set_status_colors(&data->option_menu, system_theme_get_bg_color(), system_theme_get_fg_color());
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   option_menu_set_highlight_colors(&data->option_menu, highlight_bg,
                                    gcolor_legible_over(highlight_bg));

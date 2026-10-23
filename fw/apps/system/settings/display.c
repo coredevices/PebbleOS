@@ -3,6 +3,7 @@
 
 #include "display.h"
 
+#include "dark_mode_menu.h"
 #include "menu.h"
 #include "notifications_private.h"
 #include "option_menu.h"
@@ -13,11 +14,13 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
 
 #include <applib/ui/ui.h>
+#include <applib/ui/time_range_selection_window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/language_pack.h>
@@ -33,6 +36,9 @@ typedef struct SettingsDisplayData {
   uint8_t pack_slots[LANGUAGE_PACK_COUNT];
   uint8_t pack_count;
   const char *language_labels[LANGUAGE_PACK_COUNT + 1];
+#ifndef CONFIG_THEMING
+  DarkModeMenu dark_mode_menu;
+#endif
 } SettingsDisplayData;
 
 typedef struct SettingsBacklightData {
@@ -593,6 +599,10 @@ enum SettingsDisplayItem {
 #ifdef CONFIG_APP_SCALING
   SettingsDisplayLegacyAppMode,
 #endif
+#ifndef CONFIG_THEMING
+  SettingsDisplayDarkMode,
+  SettingsDisplayDarkModeSchedule,
+#endif
   NumSettingsDisplayItems
 };
 
@@ -609,8 +619,19 @@ static bool prv_display_item_is_visible(uint16_t item) {
     return touch_is_globally_enabled();
   }
 #endif
+#ifndef CONFIG_THEMING
+  if (item == SettingsDisplayDarkModeSchedule) {
+    return shell_prefs_get_dark_mode() == DarkModeScheduled;
+  }
+#endif
   return true;
 }
+
+#ifndef CONFIG_THEMING
+static GColor prv_dark_mode_highlight_color(void) {
+  return PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack);
+}
+#endif
 
 static uint16_t prv_display_item_from_row(uint16_t row) {
   uint16_t visible_row = 0;
@@ -660,6 +681,14 @@ static void prv_display_select_click_cb(SettingsCallbacks *context, uint16_t row
       prv_legacy_app_mode_menu_push((SettingsDisplayData *)context);
       break;
 #endif
+#ifndef CONFIG_THEMING
+    case SettingsDisplayDarkMode:
+      dark_mode_menu_push(&((SettingsDisplayData *)context)->dark_mode_menu);
+      break;
+    case SettingsDisplayDarkModeSchedule:
+      dark_mode_menu_schedule_push(&((SettingsDisplayData *)context)->dark_mode_menu);
+      break;
+#endif
     default:
       pbl_panic();
   }
@@ -672,6 +701,7 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   SettingsDisplayData *data = (SettingsDisplayData *)context;
   const char *title = nullptr;
   const char *subtitle = nullptr;
+  char time_buf[32];
   switch (prv_display_item_from_row(row)) {
     case SettingsDisplayBacklight:
       title = i18n_noop("Backlight");
@@ -715,6 +745,18 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       subtitle = s_legacy_app_mode_labels[shell_prefs_get_legacy_app_render_mode()];
       break;
 #endif
+#ifndef CONFIG_THEMING
+    case SettingsDisplayDarkMode:
+      title = i18n_noop("Dark Mode");
+      subtitle = dark_mode_menu_get_mode_label();
+      break;
+    case SettingsDisplayDarkModeSchedule: {
+      title = i18n_noop("Schedule Time");
+      dark_mode_menu_format_schedule(time_buf, sizeof(time_buf));
+      subtitle = time_buf;
+      break;
+    }
+#endif
     default:
       pbl_panic();
   }
@@ -733,6 +775,9 @@ static uint16_t prv_display_num_rows_cb(SettingsCallbacks *context) {
 
 static void prv_display_deinit_cb(SettingsCallbacks *context) {
   SettingsDisplayData *data = (SettingsDisplayData *)context;
+#ifndef CONFIG_THEMING
+  dark_mode_menu_deinit(&data->dark_mode_menu);
+#endif
   i18n_free_all(data);
   app_free(data);
 }
@@ -740,6 +785,10 @@ static void prv_display_deinit_cb(SettingsCallbacks *context) {
 static Window *prv_init(void) {
   SettingsDisplayData *data = app_malloc_check(sizeof(*data));
   *data = (SettingsDisplayData){};
+#ifndef CONFIG_THEMING
+  dark_mode_menu_init(&data->dark_mode_menu, SettingsMenuItemDisplay,
+                      prv_dark_mode_highlight_color);
+#endif
 
   data->callbacks = (SettingsCallbacks){
     .deinit = prv_display_deinit_cb,

@@ -126,9 +126,14 @@ static void prv_schedule_progress_failure_animation(ProgressWindow *data, uint32
     TimelineResourceInfo timeline_res = {
       .res_id = timeline_res_id,
     };
+#if PBL_BW
+    peek_layer_set_icon_with_invert(peek_layer, &timeline_res, system_theme_is_dark_mode());
+    peek_layer_set_text_color(peek_layer, system_theme_get_fg_color());
+#else
     peek_layer_set_icon(peek_layer, &timeline_res);
+#endif
     peek_layer_set_title(peek_layer, message);
-    peek_layer_set_background_color(peek_layer, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+    peek_layer_set_background_color(peek_layer, PBL_IF_COLOR_ELSE(system_theme_is_dark_mode() ? GColorDarkGray : GColorLightGray, system_theme_get_bg_color()));
     data->is_peek_layer_used = true;
   }
 
@@ -259,7 +264,7 @@ void progress_window_init(ProgressWindow *data) {
   // Create and set up the window
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Progress Window"));
-  window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+  window_set_background_color(window, PBL_IF_COLOR_ELSE(system_theme_is_dark_mode() ? GColorDarkGray : GColorLightGray, system_theme_get_bg_color()));
 
   const GRect *bounds = &window->layer.bounds;
   GPoint center = grect_center_point(bounds);

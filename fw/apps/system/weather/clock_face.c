@@ -200,9 +200,9 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
     return src;
   for (uint32_t i = 0; i < entries; i++) {
     if (rank[i] == 2)
-      pal[i] = GColorBlack;
+      pal[i] = system_theme_get_fg_color();
     else if (rank[i] == 1)
-      pal[i] = GColorWhite;
+      pal[i] = system_theme_get_bg_color();
     else
       pal[i] = src_pal[i]; // keep transparency
   }
@@ -702,7 +702,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   // Transparent window bg on round (step 3) — the degenerate no-state frame must paint
   // the white itself, since this proc is what guarantees full coverage.
   if (!s_cf) {
-    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
     graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
     return;
   }
@@ -725,8 +725,13 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   int W = bounds.size.w;
   int H = bounds.size.h;
 
-  // White background — matches other screens
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  // Only do this once a draw
+  const bool isDark = system_theme_is_dark_mode();
+  const GColor fg_color = system_theme_get_fg_color();
+  const GColor bg_color = system_theme_get_bg_color();
+
+  // Background — matches other screens
+  graphics_context_set_fill_color(ctx, bg_color);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
   // Clock face centre — full screen, no bar offset
@@ -807,11 +812,15 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
 
       graphics_context_set_compositing_mode(ctx, GCompOpAssign);
       if (show_temp_side) {
-        graphics_context_set_fill_color(ctx, GColorWhite);
+        const GColor circle_bg = isDark ? GColorDarkGray : GColorWhite;
+        graphics_context_set_fill_color(ctx, circle_bg);
         graphics_fill_circle(ctx, GPoint(ix, iy), rr);
-        // Colour: soft grey outline. BW: strokes cannot dither (LightGray
-        // maps to White and vanishes) — solid black is the only visible ring.
-        graphics_context_set_stroke_color(ctx, PBL_IF_BW_ELSE(GColorBlack, GColorLightGray));
+        // Colour: soft grey outline in light mode; match dark gray fill in dark mode.
+        // BW: strokes cannot dither (LightGray maps to White and vanishes) — solid black is the only visible ring.
+        const GColor stroke_color = isDark
+            ? PBL_IF_BW_ELSE(GColorWhite, GColorDarkGray)
+            : PBL_IF_BW_ELSE(GColorBlack, GColorLightGray);
+        graphics_context_set_stroke_color(ctx, stroke_color);
         graphics_context_set_stroke_width(ctx, 1);
         graphics_draw_circle(ctx, GPoint(ix, iy), rr);
       } else {
@@ -844,7 +853,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
             tfont = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
           GSize nsz = graphics_text_layout_get_content_size(
               nbuf, tfont, GRect(0, 0, 40, 18), GTextOverflowModeFill, GTextAlignmentCenter);
-          graphics_context_set_text_color(ctx, GColorBlack);
+          graphics_context_set_text_color(ctx, fg_color);
           graphics_draw_text(ctx, nbuf, tfont, GRect(ix - nsz.w / 2, iy - 11, nsz.w, 18),
                              GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
           graphics_draw_text(ctx, "\xC2\xB0", tfont, GRect(ix + nsz.w / 2, iy - 13, 10, 18),
@@ -920,9 +929,9 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       const int font_top_pad = -4;
       int ty_s = stg_cy - nsz.h / 2 + font_top_pad;
       // Clear staging area so no icon pixels bleed into the capture.
-      graphics_context_set_fill_color(ctx, GColorWhite);
+      graphics_context_set_fill_color(ctx, bg_color);
       graphics_fill_rect(ctx, GRect(stg_x, stg_y, stg_w, stg_h), 0, GCornerNone);
-      graphics_context_set_text_color(ctx, GColorBlack);
+      graphics_context_set_text_color(ctx, fg_color);
       // Number: centred horizontally at stg_cx
       graphics_draw_text(ctx, stg_buf, centre_font,
                          GRect(stg_x + left_pad, stg_y + ty_s, nsz.w + 2, nsz.h),
@@ -1012,6 +1021,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
         int32_t sx_step = ((int32_t)src_w << 16) / dst_w;
         int32_t sy_step = ((int32_t)src_h << 16) / dst_h;
         int32_t sy_fp = sy_step >> 1;
+        const uint8_t bg_argb = bg_color.argb;
         for (int dy = 0; dy < dst_h; dy++, sy_fp += sy_step) {
           int sy = sy_fp >> 16;
           if (sy >= src_h)
@@ -1032,12 +1042,14 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
             // Skip white pixels (background). The staging bitmap is 8-bit on
             // colour and 1-bit on BW — read accordingly.
 #if PBL_BW
-            if (pbl_bitset8_get(srow, (unsigned)sx))
+            const uint8_t fg_argb = system_theme_get_fg_color().argb;
+            const bool bg_bit = (bg_argb & 0x3F) != 0;       // same test weather_fb_row_set uses
+            if ((pbl_bitset8_get(srow, (unsigned)sx) != 0) == bg_bit)
               continue;
-            weather_fb_row_set(ri.data, ax, GColorBlackARGB8);
+            weather_fb_row_set(ri.data, ax, fg_argb);
 #else
             uint8_t pixel = srow[sx];
-            if (pixel == 0xFF)
+            if (pixel == bg_argb)
               continue; // GColor8 white
             weather_fb_row_set(ri.data, ax, pixel);
 #endif
@@ -1069,7 +1081,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     label_color = GColorLightGray; // first step — light gray on white
   }
   if (CLOCK_SMALL_RECT) {
-    label_color = GColorBlack; // gray dithers to broken specks on 1-bit
+    label_color = fg_color; // gray dithers to broken specks on 1-bit
   }
   GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 #if PBL_DISPLAY_HEIGHT >= 200
@@ -1209,7 +1221,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       int c2x = bcx - (int)((int32_t)sin_lookup(angle) * D_in / TRIG_MAX_RATIO);
       int c2y = bcy + (int)((int32_t)cos_lookup(angle) * D_in / TRIG_MAX_RATIO);
 
-      const GColor pill_color = PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+      const GColor pill_color = PBL_IF_COLOR_ELSE(GColorVividCerulean, fg_color);
       graphics_context_set_fill_color(ctx, pill_color);
       graphics_context_set_stroke_color(ctx, pill_color);
       graphics_context_set_stroke_width(ctx, r * 2 + 1);
@@ -1219,7 +1231,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       graphics_draw_line(ctx, GPoint(c1x, c1y), GPoint(c2x, c2y));
 
       graphics_context_set_stroke_width(ctx, 1);
-      graphics_context_set_text_color(ctx, GColorWhite);
+      graphics_context_set_text_color(ctx, bg_color);
     } else {
       graphics_context_set_text_color(ctx, label_color);
     }
@@ -1325,7 +1337,7 @@ static void prv_window_load(Window *window) {
   // window with the bg colour every frame unless transparent, and prv_canvas_draw always
   // paints every pixel (its own white fill / the squash resample). See forecast_list's
   // matching change. The !s_cf early-return keeps a white guard.
-  window_set_background_color(window, PBL_IF_ROUND_ELSE(GColorClear, GColorWhite));
+  window_set_background_color(window, PBL_IF_ROUND_ELSE(GColorClear, system_theme_get_bg_color()));
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   s_cf->canvas = layer_create(bounds);
   layer_set_update_proc(s_cf->canvas, prv_canvas_draw);
