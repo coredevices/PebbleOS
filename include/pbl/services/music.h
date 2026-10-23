@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/services/image_cache.h>
+#include <pbl/services/imaging_endpoint_types.h>
+
 /**
  * @defgroup services_music Music
  * @ingroup services
@@ -226,7 +229,7 @@ void music_request_low_latency_for_period(uint32_t period_seconds);
  */
 const char *music_get_connected_server_debug_name(void);
 
-struct GBitmap;
+struct ResidentImage;
 
 /**
  * @brief Get the now-playing generation token.
@@ -252,6 +255,38 @@ uint8_t music_get_now_playing_generation(void);
 bool music_album_art_is_current(void);
 
 /**
+ * @brief Get what to request the current track's album art with.
+ *
+ * @param side Width and height of the art.
+ * @param format Pixel format of the art.
+ * @param[out] title Title, of @ref MUSIC_BUFFER_LENGTH bytes.
+ * @param[out] artist Artist, of @ref MUSIC_BUFFER_LENGTH bytes.
+ * @param[out] key Image cache key.
+ * @return Now-playing generation, to request the art with.
+ */
+uint8_t music_get_album_art_request(uint16_t side, ImagingFormat format, char *title, char *artist,
+                                    ImageCacheKey *key);
+
+/**
+ * @brief Drop album art that keeps the PSRAM retained.
+ *
+ * Art is drawn from the PSRAM when there was no RAM for a copy, which costs idle current. Called
+ * once it is no longer shown; it is fetched again the next time.
+ */
+void music_album_art_release_retained(void);
+
+/**
+ * @brief Take the current track's album art from the image cache.
+ *
+ * On a hit, the art becomes current as if it had just been received, without a transfer.
+ *
+ * @param side Width and height of the art.
+ * @param format Pixel format of the art.
+ * @return true on a hit.
+ */
+bool music_album_art_load_cached(uint16_t side, ImagingFormat format);
+
+/**
  * @brief Borrow the current album art for drawing.
  *
  * Holds the service lock until music_album_art_unlock(), which must always be called, even when
@@ -259,7 +294,7 @@ bool music_album_art_is_current(void);
  *
  * @return Album art owned by the service, or NULL if there is none.
  */
-const struct GBitmap *music_album_art_lock(void);
+const struct ResidentImage *music_album_art_lock(void);
 
 /** @brief Release the album art borrowed with music_album_art_lock(). */
 void music_album_art_unlock(void);

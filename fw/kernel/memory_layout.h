@@ -47,6 +47,11 @@ enum MemoryRegionAssignments {
   MemoryRegion_Task4
 };
 
+#ifdef CONFIG_EXTRAM
+// External RAM takes the slot of the read-only data region, which is never programmed
+#define MemoryRegion_ExtRam MemoryRegion_ReadOnlyData
+#endif
+
 void memory_layout_dump_mpu_regions_to_dbgserial(void);
 
 void memory_layout_setup_mpu(void);

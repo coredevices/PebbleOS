@@ -6,11 +6,12 @@
 
 #include <pbl/drivers/mic.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/voice/voice_speex.h>
 
 #include <board/board.h>
-#include <kernel/pbl_malloc.h>
+#include <kernel/volatile_heap.h>
 #include <speex/speex.h>
 #include <speex/speex_bits.h>
 #include <speex/speex_header.h>
@@ -38,10 +39,14 @@ typedef struct {
   uint8_t *frame_buffer;
   size_t frame_buffer_size;
   uint8_t *encoded_buffer;
+  char *bits_buffer;
   size_t encoded_buffer_size;
 } VoiceSpeexEncoder;
 
 static VoiceSpeexEncoder s_encoder = {};
+// Guards the reference count, and the encoder setup and teardown
+static PBL_MUTEX_DEFINE(s_lock);
+static unsigned int s_users;
 
 // Speex configuration
 #define SPEEX_SAMPLE_RATE         16000 // 16 kHz wideband
@@ -49,9 +54,10 @@ static VoiceSpeexEncoder s_encoder = {};
 #define SPEEX_QUALITY             6     // Quality level (0-10)
 #define SPEEX_COMPLEXITY          1     // Complexity (1-10, lower for embedded)
 #define SPEEX_ENCODED_BUFFER_SIZE 320   // Max encoded frame size
+#define SPEEX_BITS_BUFFER_SIZE    2000  // As allocated by speex_bits_init()
 #define SPEEX_AUDIO_GAIN          3     // Audio gain multiplier (3x)
 
-bool voice_speex_init(void) {
+static bool prv_init(void) {
   if (s_encoder.initialized) {
     return true;
   }
@@ -75,8 +81,10 @@ bool voice_speex_init(void) {
     return false;
   }
 
-  // Initialize bits structure
-  speex_bits_init(&s_encoder.bits);
+  // Initialize bits structure. Its buffer is only touched once per frame, so unlike the encoder
+  // state, it costs nothing measurable in the volatile heap.
+  s_encoder.bits_buffer = kernel_volatile_zalloc_check(SPEEX_BITS_BUFFER_SIZE);
+  speex_bits_init_buffer(&s_encoder.bits, s_encoder.bits_buffer, SPEEX_BITS_BUFFER_SIZE);
 
   // Initialize stereo state if stereo
   if (s_encoder.channels == 2) {
@@ -114,11 +122,11 @@ bool voice_speex_init(void) {
 
   // Allocate frame buffer (16-bit samples, multiplied by channel count for stereo)
   s_encoder.frame_buffer_size = s_encoder.frame_size * sizeof(int16_t) * s_encoder.channels;
-  s_encoder.frame_buffer = (uint8_t *)kernel_malloc_check(s_encoder.frame_buffer_size);
+  s_encoder.frame_buffer = (uint8_t *)kernel_volatile_zalloc_check(s_encoder.frame_buffer_size);
 
   // Allocate encoded buffer
   s_encoder.encoded_buffer_size = SPEEX_ENCODED_BUFFER_SIZE;
-  s_encoder.encoded_buffer = kernel_malloc_check(s_encoder.encoded_buffer_size);
+  s_encoder.encoded_buffer = kernel_volatile_zalloc_check(s_encoder.encoded_buffer_size);
 
   s_encoder.initialized = true;
 
@@ -135,7 +143,7 @@ bool voice_speex_init(void) {
   return true;
 }
 
-void voice_speex_deinit(void) {
+static void prv_deinit(void) {
   if (!s_encoder.initialized) {
     return;
   }
@@ -146,18 +154,41 @@ void voice_speex_deinit(void) {
   }
 
   speex_bits_destroy(&s_encoder.bits);
+  kernel_volatile_free(s_encoder.bits_buffer);
 
   if (s_encoder.frame_buffer) {
-    kernel_free(s_encoder.frame_buffer);
+    kernel_volatile_free(s_encoder.frame_buffer);
     s_encoder.frame_buffer = nullptr;
   }
 
   if (s_encoder.encoded_buffer) {
-    kernel_free(s_encoder.encoded_buffer);
+    kernel_volatile_free(s_encoder.encoded_buffer);
     s_encoder.encoded_buffer = nullptr;
   }
 
   memset(&s_encoder, 0, sizeof(s_encoder));
+}
+
+bool voice_speex_init(void) {
+  bool ok;
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  ok = prv_init();
+  if (ok) {
+    s_users++;
+  }
+  pbl_mutex_unlock(&s_lock);
+
+  return ok;
+}
+
+void voice_speex_deinit(void) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  PBL_ASSERTN(s_users > 0U);
+  if (--s_users == 0U) {
+    prv_deinit();
+  }
+  pbl_mutex_unlock(&s_lock);
 }
 
 void voice_speex_get_transfer_info(AudioTransferInfoSpeex *info) {

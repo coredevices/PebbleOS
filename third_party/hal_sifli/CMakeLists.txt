@@ -151,6 +151,11 @@ if(CONFIG_HAL_SIFLI_MPI)
     SiFli-SDK/drivers/hal/flash_table.c
   )
 endif()
+if(CONFIG_HAL_SIFLI_MPI_PSRAM)
+  list(APPEND micro_sources
+    SiFli-SDK/drivers/hal/bf0_hal_mpi_psram.c
+  )
+endif()
 if(CONFIG_HAL_SIFLI_PCD)
   list(APPEND micro_sources
     SiFli-SDK/drivers/hal/bf0_hal_pcd.c

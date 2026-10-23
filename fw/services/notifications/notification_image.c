@@ -3,29 +3,19 @@
 
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/notifications/notification_image.h>
-
-#include <applib/graphics/gtypes.h>
-#include <kernel/pbl_malloc.h>
+#include <pbl/services/resident_image.h>
 
 //! Responses are delivered on KernelMain while the card that requested and renders the image runs
 //! on KernelMain (modal) or the App task (notification history), so the slot needs a lock. It is
-//! recursive because the renderer holds it across the blit to stop the bitmap being freed
+//! recursive because the renderer holds it across the blit to stop the image being freed
 //! underneath it.
 static PBL_MUTEX_DEFINE(s_lock);
 
 static Uuid s_item_id;
-static GBitmap *s_bitmap;
+static ResidentImage *s_image;
 static uint8_t s_token;
 static bool s_claimed; //!< The slot belongs to s_item_id (in flight, delivered or empty).
 static bool s_pending; //!< Waiting on a response for s_token.
-
-static void prv_free(GBitmap *bitmap) {
-  if (bitmap) {
-    kernel_free(bitmap->addr);
-    kernel_free(bitmap->palette);
-    kernel_free(bitmap);
-  }
-}
 
 void notification_image_service_init(void) {
 }
@@ -39,8 +29,8 @@ bool notification_image_claim(const Uuid *item_id, uint8_t *token_out) {
     pbl_mutex_unlock(&s_lock);
     return false;
   }
-  prv_free(s_bitmap);
-  s_bitmap = nullptr;
+  resident_image_destroy(s_image);
+  s_image = nullptr;
   s_item_id = *item_id;
   s_claimed = true;
   s_pending = true;
@@ -49,13 +39,13 @@ bool notification_image_claim(const Uuid *item_id, uint8_t *token_out) {
   return true;
 }
 
-const GBitmap *notification_image_lock(const Uuid *item_id) {
+const ResidentImage *notification_image_lock(const Uuid *item_id) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  // Held until notification_image_unlock so the bitmap can't be freed mid-draw.
-  if (!s_bitmap || !item_id || !s_claimed || !uuid_equal(&s_item_id, item_id)) {
+  // Held until notification_image_unlock so the image can't be freed mid-draw.
+  if (!s_image || !item_id || !s_claimed || !uuid_equal(&s_item_id, item_id)) {
     return nullptr;
   }
-  return s_bitmap;
+  return s_image;
 }
 
 void notification_image_unlock(void) {
@@ -69,23 +59,23 @@ bool notification_image_is_pending(const Uuid *item_id) {
   return pending;
 }
 
-bool notification_image_store(uint8_t token, GBitmap *bitmap) {
+bool notification_image_store(uint8_t token, ResidentImage *image) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (!s_pending || token != s_token) {
     pbl_mutex_unlock(&s_lock);
-    prv_free(bitmap);
+    resident_image_destroy(image);
     return false;
   }
   s_pending = false;
-  s_bitmap = bitmap;
+  s_image = image;
   pbl_mutex_unlock(&s_lock);
   return true;
 }
 
 void notification_image_clear(void) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  prv_free(s_bitmap);
-  s_bitmap = nullptr;
+  resident_image_destroy(s_image);
+  s_image = nullptr;
   s_claimed = false;
   s_pending = false;
   pbl_mutex_unlock(&s_lock);

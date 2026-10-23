@@ -11,6 +11,7 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/music.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/math.h>
 #include <pbl/util/trig.h>
@@ -1273,15 +1274,15 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
 
 static void prv_album_art_update_proc(Layer *layer, GContext *ctx) {
   // Hold the art locked for the whole draw so the service can't free it mid-blit.
-  const GBitmap *art = music_album_art_lock();
+  const ResidentImage *art = music_album_art_lock();
   if (art && shell_prefs_get_music_show_album_art()) {
     // The phone renders the whole cover to the content width, so it fills the square; centre it in
     // case the box is a touch shorter than the cover.
-    const GSize sz = art->bounds.size;
+    const GSize sz = resident_image_get_size(art);
     const GRect b = layer->bounds;
     const GRect dst = GRect((b.size.w - sz.w) / 2, (b.size.h - sz.h) / 2, sz.w, sz.h);
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-    graphics_draw_bitmap_in_rect(ctx, art, &dst);
+    resident_image_draw(ctx, art, &dst);
   }
   music_album_art_unlock();
 #if MUSIC_ROUND_MEDIA_LAYOUT
@@ -1295,19 +1296,24 @@ static void prv_album_art_update_proc(Layer *layer, GContext *ctx) {
 //! so a track change re-fetches).
 static void prv_maybe_request_album_art(void) {
 #if MUSIC_ALBUM_ART_SUPPORTED
-  if (!shell_prefs_get_music_show_album_art() ||
-      !imaging_is_type_supported(ImagingImageTypeAlbumArt) || !music_has_now_playing() ||
+  if (!shell_prefs_get_music_show_album_art() || !music_has_now_playing() ||
       music_album_art_is_current()) {
     return;
   }
   // The watch picks the size (its art-square width) and asks for the current track by name, so the
   // phone returns art that matches what we're showing.
   const int16_t side = prv_art_width();
+  // Recently shown art is still in the cache while the watch is in use
+  if (music_album_art_load_cached(side, ImagingFormat4BitPalette) ||
+      !imaging_is_type_supported(ImagingImageTypeAlbumArt)) {
+    return;
+  }
   char title[MUSIC_BUFFER_LENGTH];
   char artist[MUSIC_BUFFER_LENGTH];
-  music_get_now_playing(title, artist, nullptr);
-  imaging_request_album_art(music_get_now_playing_generation(), ImagingFormat4BitPalette, side,
-                            side, title, artist);
+  ImageCacheKey key;
+  const uint8_t generation =
+      music_get_album_art_request(side, ImagingFormat4BitPalette, title, artist, &key);
+  imaging_request_album_art(generation, ImagingFormat4BitPalette, side, side, title, artist, &key);
 #endif
 }
 
@@ -1485,7 +1491,7 @@ static void prv_artist_restore(MusicAppData *data) {
 //! and the scrolling title, and outline the clock so it stays legible over
 //! the cover. A full-window repaint clears the moved layers' old pixels.
 static void prv_apply_art_appearance(MusicAppData *data) {
-  const GBitmap *art = music_album_art_lock();
+  const ResidentImage *art = music_album_art_lock();
   data->has_album_art = (art != nullptr) && shell_prefs_get_music_show_album_art();
   music_album_art_unlock();
 
@@ -1804,6 +1810,9 @@ static void prv_handle_deinit(void) {
   if (data->temporarily_show_progress_timer) {
     app_timer_cancel(data->temporarily_show_progress_timer);
   }
+#if MUSIC_ALBUM_ART_SUPPORTED
+  music_album_art_release_retained();
+#endif
   // Detach the action bar so its touch-nav snapshot does not keep routing taps after the app exits.
   action_bar_layer_remove_from_window(&data->action_bar);
   i18n_free_all(data);

@@ -92,12 +92,12 @@ uint8_t music_get_now_playing_generation(void) {
   return s_music_now_playing_generation;
 }
 
-// Album art fake: the tests hand the "service-owned" cover bitmap straight to the app.
-static GBitmap *s_album_art;
+// Album art fake: the tests hand the "service-owned" cover straight to the app.
+static ResidentImage *s_album_art;
 static bool s_album_art_current;
 static int s_album_art_lock_depth;
 
-const struct GBitmap *music_album_art_lock(void) {
+const struct ResidentImage *music_album_art_lock(void) {
   s_album_art_lock_depth++;
   return s_album_art;
 }
@@ -109,6 +109,28 @@ void music_album_art_unlock(void) {
 
 bool music_album_art_is_current(void) {
   return s_album_art_current;
+}
+
+// Album art cache fake: a hit makes the art current, as the service does
+static bool s_album_art_cached;
+static int s_album_art_cache_lookups;
+
+uint8_t music_get_album_art_request(uint16_t side, ImagingFormat format, char *title, char *artist,
+                                    ImageCacheKey *key) {
+  music_get_now_playing(title, artist, nullptr);
+  *key = (ImageCacheKey){.bytes = {(uint8_t)side, format}};
+  return s_music_now_playing_generation;
+}
+
+void music_album_art_release_retained(void) {
+}
+
+bool music_album_art_load_cached(uint16_t side, ImagingFormat format) {
+  s_album_art_cache_lookups++;
+  if (s_album_art_cached) {
+    s_album_art_current = true;
+  }
+  return s_album_art_cached;
 }
 
 // Imaging service fake: records the album art requests the app makes.
@@ -126,7 +148,7 @@ bool imaging_is_type_supported(ImagingImageType image_type) {
 }
 
 bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t width, uint16_t height,
-                               const char *title, const char *artist) {
+                               const char *title, const char *artist, const ImageCacheKey *key) {
   if (!s_imaging_supported) {
     return false;
   }
@@ -254,6 +276,8 @@ void test_music__initialize(void) {
   s_album_art = nullptr;
   s_album_art_current = false;
   s_album_art_lock_depth = 0;
+  s_album_art_cached = false;
+  s_album_art_cache_lookups = 0;
 
   s_imaging_supported = false;
   s_imaging_request_count = 0;
@@ -279,12 +303,8 @@ void test_music__initialize(void) {
 void test_music__cleanup(void) {
   // The app must never leave the service's art bitmap locked.
   cl_assert_equal_i(s_album_art_lock_depth, 0);
-  if (s_album_art) {
-    free(s_album_art->addr);
-    free(s_album_art->palette);
-    free(s_album_art);
-    s_album_art = nullptr;
-  }
+  resident_image_destroy(s_album_art);
+  s_album_art = nullptr;
 }
 
 // Helpers
@@ -314,8 +334,11 @@ static void prv_render(void) {
 // Hand the app the cover the imaging service would have delivered: art-square-sized (the size the
 // app requests for this platform), 4-bit palette.
 static void prv_receive_album_art(void) {
-  s_album_art = get_gbitmap_from_pbi("test_music__art_cover_" PLATFORM_NAME ".pbi");
+  GBitmap *cover = get_gbitmap_from_pbi("test_music__art_cover_" PLATFORM_NAME ".pbi");
+  cl_assert(cover != nullptr);
+  s_album_art = resident_image_create_from_bitmap(cover);
   cl_assert(s_album_art != nullptr);
+  gbitmap_destroy(cover);
   s_album_art_current = true;
 }
 #endif
@@ -408,6 +431,23 @@ void test_music__album_art_requested_on_launch(void) {
 #else
   cl_assert_equal_i(s_imaging_request_count, 0);
 #endif
+}
+
+void test_music__cached_album_art_is_not_requested(void) {
+  prv_set_now_playing("Crumbling Castle", "King Gizzard & The Lizard Wizard");
+  s_music_play_state = MusicPlayStatePlaying;
+  s_music_now_playing_generation = 1;
+  s_imaging_supported = false;
+  s_prefs_music_show_album_art = true;
+  s_album_art_cached = true;
+
+  prv_launch_app_and_render();
+
+#if MUSIC_ALBUM_ART_SUPPORTED
+  // Found in the cache, even with no phone to ask
+  cl_assert_equal_i(s_album_art_cache_lookups, 1);
+#endif
+  cl_assert_equal_i(s_imaging_request_count, 0);
 }
 
 void test_music__album_art_not_requested_when_pref_off(void) {

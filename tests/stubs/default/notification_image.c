@@ -11,7 +11,7 @@ bool PBL_WEAK notification_image_claim(const Uuid *item_id, uint8_t *token_out) 
   return false;
 }
 
-const struct GBitmap *PBL_WEAK notification_image_lock(const Uuid *item_id) {
+const struct ResidentImage *PBL_WEAK notification_image_lock(const Uuid *item_id) {
   return nullptr;
 }
 
@@ -22,7 +22,7 @@ bool PBL_WEAK notification_image_is_pending(const Uuid *item_id) {
   return false;
 }
 
-bool PBL_WEAK notification_image_store(uint8_t token, struct GBitmap *bitmap) {
+bool PBL_WEAK notification_image_store(uint8_t token, struct ResidentImage *image) {
   return false;
 }
 

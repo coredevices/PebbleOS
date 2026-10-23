@@ -170,14 +170,13 @@ void music_update_track_duration(uint32_t track_duration_ms);
 /**
  * @brief Hand the album art of the current track to the service.
  *
- * Ownership of the bitmap, its pixel data and its palette, all allocated on the kernel heap,
- * passes to the service, which frees the previous art. Art whose @p token does not match the
- * current now-playing generation is stale and is freed immediately.
+ * Ownership of the image passes to the service, which frees the previous art. Art whose @p token
+ * does not match the current now-playing generation is stale and is freed immediately.
  *
- * @param bitmap Album art, or NULL to report that the track has none.
+ * @param image Album art, or NULL to report that the track has none.
  * @param token Now-playing generation the art was requested for.
  */
-void music_set_album_art(struct GBitmap *bitmap, uint8_t token);
+void music_set_album_art(struct ResidentImage *image, uint8_t token);
 
 /**
  * @brief Report that an album art transfer ended without an image.

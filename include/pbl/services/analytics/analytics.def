@@ -155,3 +155,15 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(display_flush_time_ms)
 // Time the touch controller spent in active scan, estimated from the wake
 // window following each interrupt.
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(touch_driver_awake_time_ms)
+// External RAM: time with a retention hold taken, and times its contents
+// were lost to deep power-down and it was powered back up.
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(psram_hold_ms)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(psram_epoch_resets)
+// Peak usage of the volatile kernel heap in external RAM, in bytes.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(volatile_heap_high_water)
+// Image cache lookups and evictions.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_hits)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_misses)
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(image_cache_evictions)
+// Images shown from the PSRAM, holding it retained, for lack of RAM for a copy.
+PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(psram_demote_fail)

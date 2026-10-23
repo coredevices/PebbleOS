@@ -100,6 +100,16 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
   }
 }
 
+// The encoder is only kept for a session, not to hold its buffers forever after the first one
+static bool s_has_encoder;
+
+static void prv_release_encoder(void) {
+  if (s_has_encoder) {
+    voice_speex_deinit();
+    s_has_encoder = false;
+  }
+}
+
 static void prv_teardown_session(void) {
   // Reset communication session responsiveness to default after voice session ends
   CommSession *comm_session = comm_session_get_system_session();
@@ -123,12 +133,14 @@ static void prv_stop_recording(void) {
 
   prv_teardown_session();
 
-  // Speex cleanup will be handled by delayed cleanup to avoid race conditions
+  // The microphone is stopped, so it no longer touches the encoder
+  prv_release_encoder();
 }
 
 static void prv_cancel_recording(void) {
   PBL_LOG_DBG("prv_cancel_recording called - cancelling mic and audio endpoint transfer");
   mic_stop(MIC);
+  prv_release_encoder();
 
   audio_endpoint_cancel_transfer(s_session_id);
   prv_teardown_session();
@@ -142,6 +154,7 @@ static void prv_cancel_early_session(void) {
 }
 
 static void prv_reset(void) {
+  prv_release_encoder();
   s_state = SessionState_Idle;
   s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
 }
@@ -340,20 +353,19 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   PBL_LOG_DBG("voice_start_dictation called with session_type: %d", session_type);
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
-  // Lazily initialize Speex encoder to avoid baseline memory usage when voice not used
-  if (!voice_speex_is_initialized()) {
-    if (!voice_speex_init()) {
-      PBL_LOG_ERR("Failed to initialize Speex encoder");
-      pbl_mutex_unlock(&s_lock);
-      return VOICE_SESSION_ID_INVALID;
-    }
-  }
-
   if (s_state != SessionState_Idle) {
     PBL_LOG_DBG("Voice service not idle (state: %d), returning invalid session", s_state);
     pbl_mutex_unlock(&s_lock);
     return VOICE_SESSION_ID_INVALID;
   }
+
+  // Released when the session ends
+  if (!voice_speex_init()) {
+    PBL_LOG_ERR("Failed to initialize Speex encoder");
+    pbl_mutex_unlock(&s_lock);
+    return VOICE_SESSION_ID_INVALID;
+  }
+  s_has_encoder = true;
 
   // Start new session generation and clear teardown guard
   s_session_generation++;
@@ -539,6 +551,10 @@ done:
   if (has_error) {
     PBL_LOG_DBG("Session setup had errors, stopping timeout timer");
     new_timer_stop(s_timeout);
+    // Don't leave the session, and its encoder, waiting for a timeout that won't come
+    if (s_state != SessionState_Idle) {
+      prv_cancel_session();
+    }
   } else {
     PBL_LOG_DBG("Session setup complete, notifying voice endpoint subsystem started");
     prv_handle_subsystem_started(SessionState_VoiceEndpointSetupReceived);
