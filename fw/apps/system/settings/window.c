@@ -42,6 +42,7 @@ typedef struct SettingsData {
   ClickConfigProvider menu_layer_click_config; //! HACK: Used to register a back click.
 
   EventServiceInfo pref_change_event_info; //!< Subscription for pref change notifications
+  EventServiceInfo dark_mode_event_info;   //!< Subscription for dark mode flips
 } SettingsData;
 
 // Pref change handler
@@ -54,6 +55,10 @@ static void prv_refresh_theme_colors(SettingsData *data) {
   status_bar_layer_set_colors(&data->status_layer, bg, fg);
   menu_layer_set_normal_colors(&data->menu_layer, bg, fg);
   layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
+}
+
+static void prv_dark_mode_change_handler(PebbleEvent *event, void *context) {
+  prv_refresh_theme_colors(context);
 }
 
 static void prv_pref_change_handler(PebbleEvent *event, void *context) {
@@ -229,6 +234,13 @@ static void prv_settings_window_load(Window *window) {
     .context = data,
   };
   event_service_client_subscribe(&data->pref_change_event_info);
+
+  data->dark_mode_event_info = (EventServiceInfo){
+    .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+    .handler = prv_dark_mode_change_handler,
+    .context = data,
+  };
+  event_service_client_subscribe(&data->dark_mode_event_info);
 }
 
 static void prv_settings_window_appear(Window *window) {
@@ -246,6 +258,7 @@ static void prv_settings_window_unload(Window *window) {
 
   // Unsubscribe from pref change events
   event_service_client_unsubscribe(&data->pref_change_event_info);
+  event_service_client_unsubscribe(&data->dark_mode_event_info);
 
   // Call the hide callback for the currently open category.
   SettingsCallbacks *callbacks = prv_get_current_callbacks(data);

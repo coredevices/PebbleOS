@@ -56,6 +56,7 @@ typedef struct {
   GBitmap *icons[SettingsMenuItem_Count];
 #endif
   EventServiceInfo pref_change_event_info; //!< Subscription for pref change notifications
+  EventServiceInfo dark_mode_event_info;   //!< Subscription for dark mode flips
 } SettingsAppData;
 
 static void prv_pref_change_handler(PebbleEvent *event, void *context) {
@@ -66,6 +67,17 @@ static void prv_pref_change_handler(PebbleEvent *event, void *context) {
   menu_layer_reload_data(&data->menu_layer);
   menu_layer_set_selected_index(&data->menu_layer, menu_layer_get_selected_index(&data->menu_layer),
                                 MenuRowAlignCenter, false /* animated */);
+}
+
+static void prv_apply_theme_colors(SettingsAppData *data) {
+  window_set_background_color(&data->window, system_theme_get_bg_color());
+  menu_layer_set_normal_colors(&data->menu_layer, system_theme_get_bg_color(),
+                               system_theme_get_fg_color());
+  layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
+}
+
+static void prv_dark_mode_change_handler(PebbleEvent *event, void *context) {
+  prv_apply_theme_colors(context);
 }
 
 static uint16_t prv_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index,
@@ -171,21 +183,25 @@ static void prv_window_load(Window *window) {
     .context = data,
   };
   event_service_client_subscribe(&data->pref_change_event_info);
+
+  data->dark_mode_event_info = (EventServiceInfo){
+    .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+    .handler = prv_dark_mode_change_handler,
+    .context = data,
+  };
+  event_service_client_subscribe(&data->dark_mode_event_info);
 }
 
 static void prv_window_appear(Window *window) {
-  SettingsAppData *data = window_get_user_data(window);
   // Refresh background and menu colors in case dark mode changed while away
-  window_set_background_color(window, system_theme_get_bg_color());
-  menu_layer_set_normal_colors(&data->menu_layer, system_theme_get_bg_color(),
-                               system_theme_get_fg_color());
-  layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
+  prv_apply_theme_colors(window_get_user_data(window));
 }
 
 static void prv_window_unload(Window *window) {
   SettingsAppData *data = window_get_user_data(window);
 
   event_service_client_unsubscribe(&data->pref_change_event_info);
+  event_service_client_unsubscribe(&data->dark_mode_event_info);
 
 #ifdef CONFIG_SETTINGS_ICONS
   // Free icons

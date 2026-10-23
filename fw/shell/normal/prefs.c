@@ -1016,6 +1016,7 @@ static bool prv_set_s_dark_mode_schedule(DarkModeSchedule *schedule) {
     return false;
   }
   s_dark_mode_schedule = *schedule;
+  dark_mode_updater_prefs_changed();
   return true;
 }
 
