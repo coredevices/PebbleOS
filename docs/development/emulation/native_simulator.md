@@ -185,6 +185,17 @@ afresh on every load, and there is no shell. The {doc}`/playground` embeds
 these builds in the documentation, one per board in `pbl_playground_boards`
 in `docs/conf.py`.
 
+Another page can embed a build in a frame and be its phone:
+
+- `?screen` shows the screen alone, filling the frame, with no frame artwork,
+  buttons or controls, and takes no input.
+- `?serial` gives the parent page the QEMU serial protocol, as `-p` does on
+  the command line. The frame posts `{pblReady: true}`, then the watch's bytes
+  as `{pblSerial: Uint8Array}`; the parent posts its bytes back the same way,
+  and a `.pbw` to install as `{pblInstall: Uint8Array}`. The watch starts
+  with no phone: the parent connects as one with a
+  `QemuProtocol_BluetoothConnection` message.
+
 ## How it works
 
 The kernel's `posix` architecture (`kernel/arch/posix`) runs each kernel
