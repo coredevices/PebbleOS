@@ -15,6 +15,13 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
   return s_stub_send_buffer;
 }
 
+SendBuffer *comm_session_send_buffer_begin_write_bulk(CommSession *session, uint16_t endpoint_id,
+                                                      size_t required_free_length,
+                                                      uint32_t timeout_ms) {
+  return comm_session_send_buffer_begin_write(session, endpoint_id, required_free_length,
+                                              timeout_ms);
+}
+
 bool comm_session_send_buffer_write(SendBuffer *send_buffer, const uint8_t *data, size_t length) {
   return true;
 }

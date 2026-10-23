@@ -17,6 +17,12 @@
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
+typedef enum {
+  SendBufferClassNormal,
+  SendBufferClassBulk,
+  SendBufferClassCount,
+} SendBufferClass;
+
 typedef struct SendBuffer {
   //! Save some memory by making this a union.
   //! @note This is the first field, so that we can just cast between
@@ -37,6 +43,8 @@ typedef struct SendBuffer {
 
   //! Number of bytes that have been consumed so far
   size_t consumed_length;
+
+  SendBufferClass cls;
 
   struct PBL_PACKED {
     //! The remainder of this struct is the Pebble Protocol message (header + payload):
@@ -61,17 +69,23 @@ typedef struct SendBuffer {
 #define DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED \
   ((sizeof(PebbleProtocolHeader) + DEFAULT_KERNEL_SENDER_MAX_PAYLOAD_SIZE))
 
-// -------------------------------------------------------------------------------------------------
-//! Semaphore that is signaled when data has been consumed by the transport,
-//! when it calls to comm_default_kernel_sender_consume(). This semaphore is used to block calls to
-//! comm_session_send_buffer_begin_write() in case there is not enough space left.
-//! @note This semaphore *must never* be taken when bt_lock() is held or deadlock will happen!
-//! Giving the semaphore when bt_lock() is held is fine though.
-static PBL_SEM_DEFINE(s_default_kernel_sender_write_semaphore, 0, 1);
+//! Extra space on top of either class's limit, so that interactive messages still fit while bulk
+//! transfers fill theirs.
+#define DEFAULT_KERNEL_SENDER_RESERVE_BYTES ((size_t)256)
 
-//! Total number of bytes worth of Pebble Protocol messages (incl. header) allocated by this module.
-//! This excludes sizeof(SendBuffer), see comment with DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED.
-static size_t s_default_kernel_sender_bytes_allocated;
+// -------------------------------------------------------------------------------------------------
+//! Semaphores, one per class, signaled when a send buffer has been freed. They are used to block
+//! calls to comm_session_send_buffer_begin_write() in case there is not enough space left. Having
+//! one per class keeps a retrying bulk sender from taking the wakeup an interactive one waits for.
+//! @note These semaphores *must never* be taken when bt_lock() is held or deadlock will happen!
+//! Giving them when bt_lock() is held is fine though.
+static PBL_SEM_DEFINE(s_default_kernel_sender_write_semaphore, 0, 1);
+static PBL_SEM_DEFINE(s_default_kernel_sender_bulk_write_semaphore, 0, 1);
+
+//! Number of bytes worth of Pebble Protocol messages (incl. header) allocated by this module, per
+//! class. This excludes sizeof(SendBuffer), see comment with
+//! DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED.
+static size_t s_default_kernel_sender_bytes_allocated[SendBufferClassCount];
 
 // -------------------------------------------------------------------------------------------------
 
@@ -96,22 +110,33 @@ static uint32_t prv_remaining_ms(uint32_t timeout_ms_in, RtcTicks start_ticks) {
   return 0;
 }
 
+static struct pbl_sem *prv_write_semaphore(SendBufferClass cls) {
+  return (cls == SendBufferClassBulk) ? &s_default_kernel_sender_bulk_write_semaphore
+                                      : &s_default_kernel_sender_write_semaphore;
+}
+
 static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoint_id,
-                                          size_t payload_buffer_length) {
+                                          size_t payload_buffer_length, SendBufferClass cls) {
   bt_lock_assert_held(true /* assert_is_held */);
-  const size_t num_bytes_allocated_after = (s_default_kernel_sender_bytes_allocated +
-                                            sizeof(PebbleProtocolHeader) + payload_buffer_length);
-  if (num_bytes_allocated_after > DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED) {
+  const size_t message_size = sizeof(PebbleProtocolHeader) + payload_buffer_length;
+  const size_t class_bytes_after = s_default_kernel_sender_bytes_allocated[cls] + message_size;
+  const size_t total_bytes_after = s_default_kernel_sender_bytes_allocated[SendBufferClassBulk] +
+                                   s_default_kernel_sender_bytes_allocated[SendBufferClassNormal] +
+                                   message_size;
+  if (class_bytes_after > DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED ||
+      total_bytes_after >
+          DEFAULT_KERNEL_SENDER_MAX_BYTES_ALLOCATED + DEFAULT_KERNEL_SENDER_RESERVE_BYTES) {
     return nullptr;
   }
   const size_t allocation_size = (sizeof(SendBuffer) + payload_buffer_length);
-  s_default_kernel_sender_bytes_allocated = num_bytes_allocated_after;
+  s_default_kernel_sender_bytes_allocated[cls] = class_bytes_after;
   // Use ...alloc_check() here. If this appears to be an issue, we could consider giving this
   // module its own Heap:
   SendBuffer *sb = (SendBuffer *)kernel_zalloc_check(allocation_size);
   *sb = (const SendBuffer){
     .payload_buffer_length = payload_buffer_length,
     .consumed_length = 0,
+    .cls = cls,
     .session = session,
     .header = {
       .endpoint_id = pbl_cpu_to_be16(endpoint_id),
@@ -123,10 +148,11 @@ static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoin
 
 static void prv_destroy_send_buffer(SendBuffer *sb) {
   bt_lock_assert_held(true /* assert_is_held */);
-  s_default_kernel_sender_bytes_allocated -=
+  s_default_kernel_sender_bytes_allocated[sb->cls] -=
       (sizeof(PebbleProtocolHeader) + sb->payload_buffer_length);
   kernel_free(sb);
   pbl_sem_give(&s_default_kernel_sender_write_semaphore);
+  pbl_sem_give(&s_default_kernel_sender_bulk_write_semaphore);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -193,9 +219,9 @@ size_t comm_session_send_buffer_get_max_payload_length(const CommSession *sessio
   return max_length;
 }
 
-SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
-                                                 size_t required_payload_length,
-                                                 uint32_t timeout_ms) {
+static SendBuffer *prv_begin_write(CommSession *session, uint16_t endpoint_id,
+                                   size_t required_payload_length, uint32_t timeout_ms,
+                                   SendBufferClass cls) {
   if (!session) {
     return nullptr;
   }
@@ -218,7 +244,7 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
         bt_unlock();
         return nullptr;
       }
-      sb = prv_create_send_buffer(session, endpoint_id, required_payload_length);
+      sb = prv_create_send_buffer(session, endpoint_id, required_payload_length, cls);
       is_current_task_send_next_task = comm_session_is_current_task_send_next_task(session);
     }
     bt_unlock();
@@ -239,8 +265,7 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
         comm_session_send_next_immediately(session);
       } else {
         // Wait for the sending process to free up some space in the send buffer:
-        is_timeout = ((
-            pbl_sem_take(&s_default_kernel_sender_write_semaphore, PBL_TICKS(remaining_ms)) != 0));
+        is_timeout = (pbl_sem_take(prv_write_semaphore(cls), PBL_TICKS(remaining_ms)) != 0);
       }
     }
 
@@ -251,6 +276,20 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
       return nullptr;
     }
   } // while(true)
+}
+
+SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
+                                                 size_t required_payload_length,
+                                                 uint32_t timeout_ms) {
+  return prv_begin_write(session, endpoint_id, required_payload_length, timeout_ms,
+                         SendBufferClassNormal);
+}
+
+SendBuffer *comm_session_send_buffer_begin_write_bulk(CommSession *session, uint16_t endpoint_id,
+                                                      size_t required_payload_length,
+                                                      uint32_t timeout_ms) {
+  return prv_begin_write(session, endpoint_id, required_payload_length, timeout_ms,
+                         SendBufferClassBulk);
 }
 
 bool comm_session_send_buffer_write(SendBuffer *sb, const uint8_t *data, size_t length) {
@@ -279,6 +318,11 @@ struct pbl_sem *comm_session_send_buffer_write_semaphore(void) {
   return &s_default_kernel_sender_write_semaphore;
 }
 
+struct pbl_sem *comm_session_send_buffer_bulk_write_semaphore(void) {
+  return &s_default_kernel_sender_bulk_write_semaphore;
+}
+
 void comm_default_kernel_sender_deinit(void) {
   pbl_sem_reset(&s_default_kernel_sender_write_semaphore);
+  pbl_sem_reset(&s_default_kernel_sender_bulk_write_semaphore);
 }

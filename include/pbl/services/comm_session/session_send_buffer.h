@@ -52,6 +52,25 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
                                                  size_t required_free_length, uint32_t timeout_ms);
 
 /**
+ * @brief Allocate a kernel-heap buffer for a bulk transfer message.
+ *
+ * Like comm_session_send_buffer_begin_write(), for messages that are part of a large transfer
+ * (logs, screenshots, data logging, audio). Bulk and other messages each have their own limit on
+ * top of some shared space, so other messages still get a buffer while a transfer is in
+ * progress.
+ *
+ * @param session Destination session.
+ * @param endpoint_id Pebble Protocol endpoint ID.
+ * @param required_free_length Payload space in bytes guaranteed to be available on success.
+ * @param timeout_ms Maximum time to wait for the space.
+ * @return Send buffer, or NULL on timeout, if the length exceeds the maximum payload, or if
+ *         @p session is not valid.
+ */
+SendBuffer *comm_session_send_buffer_begin_write_bulk(CommSession *session, uint16_t endpoint_id,
+                                                      size_t required_free_length,
+                                                      uint32_t timeout_ms);
+
+/**
  * @brief Append payload data to a send buffer.
  *
  * bt_lock() may be held.
