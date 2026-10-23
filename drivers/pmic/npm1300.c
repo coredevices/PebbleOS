@@ -433,28 +433,24 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
   return 0;
 }
 
-bool pmic_power_off(void) {
-  // TODO: review implementation, see GH-238
+int pmic_power_off(void) {
+  int ret;
+
+  // Ship mode exits as soon as VBUS is present
   if (pmic_is_usb_connected()) {
-    PBL_LOG_ERR("USB is connected, cannot power off");
-    return false;
+    return -EBUSY;
   }
 
-  if (prv_write_register(NPM1300_TASKENTERSHIPMODE, 1) != 0) {
-    PBL_LOG_ERR("Failed to enter ship mode");
-    return false;
+  ret = prv_write_register(NPM1300_TASKENTERSHIPMODE, 1);
+  if (ret != 0) {
+    PBL_LOG_ERR("Failed to enter ship mode (%d)", ret);
+    return ret;
   }
 
-  // Give enough time for the PMIC to fully power down (tPWRDN = 100ms).
-  // We will die here, if we do not, return false and let upper layers handle
-  // the shutdown failure.
+  // tPWRDN is 100 ms
   pbl_busy_wait_us(100000);
 
-  return false;
-}
-
-bool pmic_full_power_off(void) {
-  return pmic_power_off();
+  return -ETIMEDOUT;
 }
 
 uint16_t pmic_get_vsys(void) {

@@ -20,9 +20,11 @@
  * All components lose power except the RTC, and the PMIC wakes the board on a button press.
  * Fails while USB power is connected.
  *
- * @return false if the board did not power off.
+ * @retval -EBUSY USB power is connected.
+ * @retval -ETIMEDOUT The board is still powered.
+ * @retval -errno Other errors.
  */
-bool pmic_power_off(void);
+int pmic_power_off(void);
 
 /**
  * @brief Enable the PMIC battery monitor.
