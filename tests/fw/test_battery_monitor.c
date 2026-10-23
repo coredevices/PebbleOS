@@ -83,7 +83,7 @@ static uint32_t standby_timer_get_timeout() {
   return stub_new_timer_timeout(timer_id);
 }
 
-FAKE_VOID_FUNC(enter_standby, RebootReasonCode);
+FAKE_VALUE_FUNC(int, enter_standby, RebootReasonCode);
 
 void event_put(PebbleEvent *event) {
   s_last_event_put = *event;

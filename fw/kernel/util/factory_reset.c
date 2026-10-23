@@ -61,11 +61,11 @@ void factory_reset_set_reason_and_reset(void) {
 }
 
 static void prv_factory_reset_post(bool should_shutdown) {
+  // Reset instead if the watch can't power off, e.g. while charging
   if (should_shutdown) {
     enter_standby(RebootReasonCode_FactoryResetShutdown);
-  } else {
-    factory_reset_set_reason_and_reset();
   }
+  factory_reset_set_reason_and_reset();
 }
 
 void factory_reset(bool should_shutdown) {

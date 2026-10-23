@@ -22,8 +22,7 @@
 #endif
 
 static int prv_cmd_standby(const struct pbl_shell *sh, size_t argc, char **argv) {
-  enter_standby(RebootReasonCode_MfgShutdown);
-  return 0;
+  return enter_standby(RebootReasonCode_MfgShutdown);
 }
 
 static int prv_cmd_consumer(const struct pbl_shell *sh, size_t argc, char **argv) {

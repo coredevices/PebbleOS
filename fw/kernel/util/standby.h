@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/kernel/compiler.h>
-
 #include <system/reboot_reason.h>
 
-#if !UNITTEST
-[[noreturn]]
-#endif
-void enter_standby(RebootReasonCode reason);
+//! Power the watch off.
+//!
+//! Only returns if standby can't be entered and nothing has been torn down yet.
+//!
+//! @retval -EBUSY USB power is connected.
+int enter_standby(RebootReasonCode reason);

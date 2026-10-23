@@ -18,10 +18,8 @@ void battery_ui_handle_state_change_event(PreciseBatteryChargeState new_state);
 
 //! Handle shutting down the watch.
 //!
-//! If the watch is plugged in at the time, a "shut down while charging" UI is
-//! displayed to give the user feedback on the charge state. Standby will be
-//! entered once the watch is unplugged.
-void battery_ui_handle_shut_down(void);
+//! @retval -EBUSY The watch can't shut down while it is plugged in.
+int battery_ui_handle_shut_down(void);
 
 //! Show the 'battery charging' modal dialog
 void battery_ui_display_plugged(uint8_t percent);
