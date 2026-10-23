@@ -107,7 +107,7 @@ static void prv_terminate_transfer(void *data) {
   prv_disable_chip_select();
   prv_disable_spim();
 
-  s_uccb();
+  s_uccb(true);
 }
 
 static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {

@@ -118,7 +118,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   s_updating = false;
 
   // In QEMU the update is immediate, so call the completion callback directly
-  uccb();
+  uccb(true);
 }
 
 void display_update_boot_frame(uint8_t *framebuffer) {

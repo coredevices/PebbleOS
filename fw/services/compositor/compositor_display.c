@@ -20,7 +20,7 @@
 //! It's set to the current row index that we are DMA'ing out to the display.
 static uint16_t s_current_flush_line;
 
-static void (*s_update_complete_handler)(void);
+static void (*s_update_complete_handler)(bool success);
 
 static RtcTicks s_flush_start_ticks;
 static uint32_t s_flush_count;
@@ -112,7 +112,7 @@ static bool prv_flush_get_next_line_cb(DisplayRow *row) {
 }
 
 //! display_update complete callback
-static void prv_flush_complete_cb(void) {
+static void prv_flush_complete_cb(bool success) {
 #ifdef CONFIG_BOARD_OBELIX
   // Restore original corner pixels that we modified before the display update
   FrameBuffer *fb = compositor_get_framebuffer();
@@ -149,11 +149,11 @@ static void prv_flush_complete_cb(void) {
   framebuffer_reset_dirty(compositor_get_framebuffer());
 
   if (s_update_complete_handler) {
-    s_update_complete_handler();
+    s_update_complete_handler(success);
   }
 }
 
-void compositor_display_update(void (*handle_update_complete_cb)(void)) {
+void compositor_display_update(void (*handle_update_complete_cb)(bool success)) {
   FrameBuffer *fb = compositor_get_framebuffer();
   if (!framebuffer_is_dirty(fb)) {
     return;

@@ -15,7 +15,7 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-extern void prv_handle_display_update_complete(void);
+extern void prv_handle_display_update_complete(bool success);
 
 static int s_count_animation_create = 0;
 Animation *animation_create(void) {
@@ -188,10 +188,15 @@ AnimationPrivate *animation_private_animation_find(Animation *handle) {
 }
 
 static int s_count_display_update = 0;
-void compositor_display_update(void (*handle_update_complete_cb)(void)) {
+static bool s_display_update_success = true;
+void compositor_display_update(void (*handle_update_complete_cb)(bool success)) {
   ++s_count_display_update;
   // Like the real one, a flush drops the mirror of the app framebuffer
   compositor_app_framebuffer_mirror_invalidate();
+  // The update completes at once, as it does in QEMU
+  if (handle_update_complete_cb) {
+    handle_update_complete_cb(s_display_update_success);
+  }
 }
 
 static bool s_display_update_in_progress = false;
@@ -280,6 +285,7 @@ void test_compositor__initialize(void) {
   s_scheduled_animation = nullptr;
 
   s_count_display_update = 0;
+  s_display_update_success = true;
   s_count_compositor_init_func_a = 0;
   s_count_compositor_init_func_b = 0;
 
@@ -350,7 +356,7 @@ void test_compositor__app_render_busy(void) {
 
   // Now fake the display update completeing. The app should know draw.
   s_display_update_in_progress = false;
-  prv_handle_display_update_complete();
+  prv_handle_display_update_complete(true /* success */);
   cl_assert_equal_i(s_count_display_update, 1);
 
   // Subsequent app updates should now draw straight through.
@@ -375,7 +381,7 @@ void test_compositor__app_render_busy(void) {
   // deferred app render that follows is consumed by scheduling the animation, so no extra display
   // update happens here.
   s_display_update_in_progress = false;
-  prv_handle_display_update_complete();
+  prv_handle_display_update_complete(true /* success */);
   cl_assert_equal_i(s_count_display_update, 2);
   cl_assert_equal_i(s_count_animation_schedule, 1);
 
@@ -403,7 +409,7 @@ void test_compositor__modal_transition_cancels_deferred_app(void) {
 
   // Start the animation
   s_display_update_in_progress = false;
-  prv_handle_display_update_complete();
+  prv_handle_display_update_complete(true /* success */);
   cl_assert_equal_i(s_count_animation_create, 1);
   cl_assert_equal_i(s_count_animation_schedule, 1);
 }
@@ -634,6 +640,27 @@ void test_compositor__app_frame_full_after_mirror_invalidate(void) {
   cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
 }
 
+void test_compositor__app_frame_full_after_failed_flush(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect dirty_rect = GRect(10, 20, 30, 40);
+
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+
+  // A partial frame's rows never reach the panel, so the frame after it is sent in full
+  s_display_update_success = false;
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
+  s_display_update_success = true;
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+  prv_mark_app_framebuffer_dirty(dirty_rect);
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &dirty_rect));
+}
+
 void test_compositor__app_not_ready_modal_push_pop(void) {
   // If a modal window is popped revealing an app that has not yet rendered itself for the first
   // time we shouldn't render the app immediately. We need to still wait for the app to render
@@ -689,7 +716,7 @@ void test_compositor__app_not_ready_cancelled_animation_deferred(void) {
   // Now complete the animation teardown by finishing the copy to the display. We shouldn't render
   // the app because it hasn't rendered anything yet.
   s_display_update_in_progress = false;
-  prv_handle_display_update_complete();
+  prv_handle_display_update_complete(true /* success */);
   cl_assert_equal_i(s_app_window_render_count, 0);
   cl_assert_equal_i(s_count_animation_destroy, 1);
 
@@ -772,7 +799,7 @@ void test_compositor__freeze_waits_for_display_update(void) {
 
   // The update completes: the deferred frame stays held back and the callback fires
   s_display_update_in_progress = false;
-  prv_handle_display_update_complete();
+  prv_handle_display_update_complete(true /* success */);
   cl_assert_equal_i(s_count_display_update, 0);
   cl_assert_equal_i(s_count_frozen, 1);
 

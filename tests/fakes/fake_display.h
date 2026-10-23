@@ -16,7 +16,7 @@ typedef struct {
 } DisplayRow;
 
 typedef bool (*NextRowCallback)(DisplayRow *row);
-typedef void (*UpdateCompleteCallback)(void);
+typedef void (*UpdateCompleteCallback)(bool success);
 
 typedef enum {
   DISPLAY_STATE_IDLE,

@@ -15,9 +15,10 @@
  *
  * Does nothing when the framebuffer is not dirty. On completion the dirty region is reset.
  *
- * @param handle_update_complete_cb Called once the update completes, or NULL.
+ * @param handle_update_complete_cb Called once the update completes, with whether it reached
+ * the panel, or NULL.
  */
-void compositor_display_update(void (*handle_update_complete_cb)(void));
+void compositor_display_update(void (*handle_update_complete_cb)(bool success));
 
 /**
  * @brief Check whether a display update is in progress.

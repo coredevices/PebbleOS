@@ -49,8 +49,12 @@ typedef struct {
  */
 typedef bool (*NextRowCallback)(DisplayRow *row);
 
-/** @brief Notification that an update has completed. */
-typedef void (*UpdateCompleteCallback)(void);
+/**
+ * @brief Notification that an update has completed.
+ *
+ * @param success False when the rows did not reach the panel.
+ */
+typedef void (*UpdateCompleteCallback)(bool success);
 
 /**
  * @brief Show a boot animation frame.
@@ -88,7 +92,7 @@ void display_set_rotated(bool rotated);
  * not be called while an update is in progress.
  *
  * @param nrcb Provides the rows to update.
- * @param uccb Called when the update has completed.
+ * @param uccb Called when the update has completed, with whether it reached the panel.
  */
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb);
 

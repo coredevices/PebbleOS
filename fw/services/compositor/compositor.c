@@ -51,6 +51,9 @@ typedef struct {
 //! Whether the current app frame's fit copies pixels one to one.
 static bool s_app_frame_verbatim;
 
+//! Set by the completion of a flush whose rows did not reach the panel.
+static bool s_flush_failed;
+
 typedef enum {
   //! Render the app with no transparent modals straight through
   CompositorState_App,
@@ -351,7 +354,12 @@ static void prv_notify_frozen(void) {
   callback(s_frozen_callback_data);
 }
 
-PBL_T_STATIC void prv_handle_display_update_complete(void) {
+PBL_T_STATIC void prv_handle_display_update_complete(bool success) {
+  if (!success) {
+    // The rows never reached the panel, so the next app frame must be sent whole
+    s_flush_failed = true;
+    s_app_framebuffer_mirrored = false;
+  }
   if (s_deferred_render.transition_complete.pending) {
     s_deferred_render.transition_complete.pending = false;
     prv_finish_transition();
@@ -435,9 +443,10 @@ void compositor_app_render_ready(void) {
     // compositor_render_app also renders modals if the CompositorState_AppAndModal as that state
     // indicates that there are transparent modals that allow the app framebuffer to show through
     compositor_render_app();
+    s_flush_failed = false;
     prv_compositor_flush();
-    // The flush dropped the mirror; an app frame copied one to one restores it
-    s_app_framebuffer_mirrored = s_app_frame_verbatim;
+    // The flush dropped the mirror; an app frame copied one to one and sent restores it
+    s_app_framebuffer_mirrored = s_app_frame_verbatim && !s_flush_failed;
   }
 
   // Draw the modal if in the Modal state
@@ -683,7 +692,7 @@ void compositor_freeze(CompositorFrozenCallback callback, void *data) {
 
 static void prv_compositor_unfreeze_cb(void *ignored) {
   // Run deferred draws
-  prv_handle_display_update_complete();
+  prv_handle_display_update_complete(true /* success */);
 }
 
 void compositor_unfreeze(void) {

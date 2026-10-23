@@ -47,6 +47,7 @@ static uint16_t s_update_y0;
 static uint16_t s_update_y1;
 static bool s_initialized;
 static bool s_updating;
+static bool s_update_failed;
 static UpdateCompleteCallback s_uccb;
 static PBL_SEM_DEFINE(s_sem, 0, 1);
 static TimerID s_silent_loss_timer = TIMER_INVALID_ID;
@@ -273,7 +274,7 @@ static void prv_display_update_terminate(void *data) {
   }
 
   s_updating = false;
-  s_uccb();
+  s_uccb(!s_update_failed);
   soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
 }
 
@@ -429,7 +430,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
   if (first_row) {
     // No rows to update
-    uccb();
+    uccb(true);
     return;
   }
 
@@ -446,6 +447,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
   s_uccb = uccb;
   s_updating = true;
+  s_update_failed = false;
   s_eof_observed = false;
 
   soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
@@ -459,6 +461,7 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   HAL_StatusTypeDef status = prv_display_update_start();
   if (status != HAL_OK) {
     prv_handle_send_failure("update", status);
+    s_update_failed = true;
     prv_display_update_terminate(nullptr);
   }
 }
