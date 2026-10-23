@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+name: Docs Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/**
+      - include/**
+      - Doxyfile
+      - Doxyfile.rtd
+      - tools/libs/pbl-cli/**
+      - "**/Kconfig*"
+      - CONTRIBUTING.md
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  rebuild-site:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Run the developer.repebble.com build
+        env:
+          GH_TOKEN: ${{ secrets.SDK_DOCS_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::warning::SDK_DOCS_DISPATCH_TOKEN not set, skipping"
+            exit 0
+          fi
+          gh workflow run build.yml -R coredevices/sdk-docs --ref main
