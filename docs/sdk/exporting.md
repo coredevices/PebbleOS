@@ -69,6 +69,23 @@ The syscalls listed in `fw/syscall/legacy_syscalls.txt` predate
 `DEFINE_SYSCALL`. The firmware build rejects any other syscall defined that
 way; a converted syscall must also be removed from the list.
 
+### Fuzzing
+
+Every syscall is fuzzed. `CONFIG_SYSCALL_FUZZ` selects the kernel's syscall
+descriptors ({doc}`../kernel/syscalls`), so `PBL_SYSCALL` also records the
+syscall and the kinds of its arguments, and the Syscall Fuzz app
+(`fw/apps/demo/syscall_fuzz`) calls each one unprivileged: once with valid
+arguments, then once per argument and bad value. Pointer arguments are given
+addresses outside the app (kernel RAM, the syscall stack, flash, peripherals,
+`nullptr`, ranges that straddle or wrap the app's memory) and must be
+rejected; other values must leave the kernel running and its memory intact.
+
+`system/test_syscall_fuzz.py` runs it on QEMU (`qemu_flint` for the ARMv7-M
+MPU, `qemu_emery` for ARMv8-M) and fails if any syscall in the image was not
+fuzzed. A new syscall needs nothing more, unless it takes an app callback
+that the system calls later: give it a `RULE_CALLBACK` in the app, so that
+the fuzzer passes a valid one.
+
 ## `exported_symbols.json`
 
 ```json

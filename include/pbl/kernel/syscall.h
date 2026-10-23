@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/syscall_desc.h>
 
 /**
  * @defgroup kernel_syscall Syscalls
@@ -59,10 +60,11 @@
  * @param ret Return type.
  * @param name Syscall name.
  */
-#define PBL_SYSCALL(ret, name, ...) PRV_SC_DEFINE(, return, ret, name, __VA_ARGS__)
+#define PBL_SYSCALL(ret, name, ...) PRV_SC_DEFINE(, return, 0, ret, name, __VA_ARGS__)
 
 /** @brief As PBL_SYSCALL(), for a syscall that never returns. */
-#define PBL_SYSCALL_NORETURN(name, ...) PRV_SC_DEFINE([[noreturn]], , void, name, __VA_ARGS__)
+#define PBL_SYSCALL_NORETURN(name, ...) \
+  PRV_SC_DEFINE([[noreturn]], , PBL_SYSCALL_DESC_NORETURN, void, name, __VA_ARGS__)
 
 /**
  * @brief Kill the thread whose syscall is in progress.
@@ -144,6 +146,17 @@ void pbl_user_mode_enter(void);
  * @param ctx Argument passed to @p fn.
  */
 void pbl_user_call(void (*fn)(void *), void *ctx);
+
+/**
+ * @brief Abandon the syscall in progress and resume its caller at @p fn.
+ *
+ * @p fn runs unprivileged, on the stack the syscall was made from, and must not return. For test
+ * tools that pass syscalls bad arguments on purpose and recover from the rejections. Must be
+ * called from a syscall made from unprivileged code.
+ *
+ * @param fn Function to resume the caller at.
+ */
+[[noreturn]] void pbl_syscall_abort_to(void (*fn)(void));
 #endif
 
 /**
@@ -203,7 +216,7 @@ static inline bool pbl_is_user_context(void) {
 
 #endif
 
-#define PRV_SC_DEFINE(attrs, ret_kw, ret, name, ...)                                               \
+#define PRV_SC_DEFINE(attrs, ret_kw, flags, ret, name, ...)                                        \
   attrs static ret name##__impl(PRV_SC_IMPL_PARAMS(__VA_ARGS__));                                  \
   PRV_SC_STUB(".syscall_checked.", ret, name, PRV_SC_PARAMS(__VA_ARGS__)) {                        \
     if (!PRV_SC_FROM_USER()) {                                                                     \
@@ -212,7 +225,63 @@ static inline bool pbl_is_user_context(void) {
     PRV_SC_MAP(PRV_SC_CHECK, PRV_SC_EMPTY, __VA_ARGS__)                                            \
     ret_kw name##__impl(true __VA_OPT__(, PRV_SC_MAP(PRV_SC_KARG, PRV_SC_COMMA, __VA_ARGS__)));    \
   }                                                                                                \
+  PRV_SC_DESC(flags, ret, name, __VA_ARGS__)                                                       \
   attrs static ret name##__impl(PRV_SC_IMPL_PARAMS(__VA_ARGS__))
+
+#ifdef CONFIG_SYSCALL_DESC
+#define PRV_SC_DESC(desc_flags, ret, sc, ...)                                                      \
+  static void sc##__call(const void *const *prv_sc_args) {                                         \
+    (void)prv_sc_args;                                                                             \
+    PRV_SC_MAP(PRV_SC_LOAD_ARG, PRV_SC_EMPTY, __VA_ARGS__)                                         \
+    (void)sc(__VA_OPT__(PRV_SC_MAP(PRV_SC_NAME, PRV_SC_COMMA, __VA_ARGS__)));                      \
+  }                                                                                                \
+  [[gnu::used, gnu::section(".syscall_desc")]] static const struct pbl_syscall_desc sc##__desc = { \
+    .name = #sc,                                                                                   \
+    .call = sc##__call,                                                                            \
+    .args = PRV_SC_CAT(PRV_SC_ARG_DESCS_, PRV_SC_HAS_ARGS(__VA_ARGS__))(__VA_ARGS__),              \
+    .num_args = PRV_SC_NARGS(__VA_ARGS__),                                                         \
+    .flags = (desc_flags),                                                                         \
+  };
+
+#define PRV_SC_LOAD_ARG(kind, type, arg, ...)                                           \
+  typeof_unqual(type) arg;                                                              \
+  static_assert(sizeof(arg) <= PBL_SYSCALL_DESC_ARG_MAX, "syscall argument too large"); \
+  __builtin_memcpy(&arg, *prv_sc_args++, sizeof(arg));
+
+#define PRV_SC_ARG_DESCS_0(...) nullptr
+#define PRV_SC_ARG_DESCS_1(...)                            \
+  (const struct pbl_syscall_arg_desc[]) {                  \
+    PRV_SC_MAP(PRV_SC_ARG_DESC, PRV_SC_COMMA, __VA_ARGS__) \
+  }
+
+#define PRV_SC_ARG_DESC(arg_kind, type, arg, ...) \
+  {                                               \
+    .name = #arg,                                 \
+    .extra = "" #__VA_ARGS__,                     \
+    .kind = PBL_SYSCALL_ARG_##arg_kind,           \
+    .type_class = __builtin_classify_type(type),  \
+    .size = sizeof(type),                         \
+    .elem_size = PRV_SC_ELEM_##arg_kind(type),    \
+  }
+
+#define PRV_SC_ELEM_PTR(type)  sizeof(*(type) nullptr)
+#define PRV_SC_ELEM_BYTE(type) 1
+#define PRV_SC_ELEM_VAL        PRV_SC_ELEM_BYTE
+#define PRV_SC_ELEM_IN         PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_IN_OPT     PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_OUT        PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_OUT_OPT    PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_INOUT      PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_INOUT_OPT  PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_IN_BUF     PRV_SC_ELEM_BYTE
+#define PRV_SC_ELEM_OUT_BUF    PRV_SC_ELEM_BYTE
+#define PRV_SC_ELEM_IN_ARRAY   PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_OUT_ARRAY  PRV_SC_ELEM_PTR
+#define PRV_SC_ELEM_STR        PRV_SC_ELEM_BYTE
+#define PRV_SC_ELEM_STRN       PRV_SC_ELEM_BYTE
+#else
+#define PRV_SC_DESC(flags, ret, name, ...)
+#endif
 
 //! Copy-out record run as a cleanup once the body has returned.
 struct pbl_syscall_copy_out {

@@ -23,6 +23,7 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
+#include <syscall/syscall_fuzz.h>
 #include <system/reboot_reason.h>
 
 #ifndef CONFIG_ARCH_POSIX
@@ -224,6 +225,13 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
 }
 
 [[noreturn]] void pbl_kernel_syscall_fault(uintptr_t lr) {
+#ifdef CONFIG_SYSCALL_FUZZ
+  const syscall_fuzz_reject_fn on_reject = syscall_fuzz_take_failure();
+  if (on_reject != nullptr) {
+    pbl_syscall_abort_to(on_reject);
+  }
+#endif
+
   sys_app_fault(lr);
 }
 

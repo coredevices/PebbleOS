@@ -12,6 +12,10 @@
         __syscall_text_end__ = .;
         *(.text)                   /* remaining code */
         *(.text.*)                 /* remaining code */
+        . = ALIGN(4);
+        __syscall_desc_start__ = .;
+        KEEP(*(.syscall_desc))       /* PBL_SYSCALL descriptors (CONFIG_SYSCALL_DESC) */
+        __syscall_desc_end__ = .;
         *(.rodata)                 /* read-only data (constants) */
         *(.rodata*)
         *(.constdata)              /* read-only data (constants) */

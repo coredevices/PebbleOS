@@ -204,6 +204,37 @@ PBL_EXTERNALLY_VISIBLE void PBL_NAKED PBL_USED arch_syscall_exit_nested(void) {
   __asm volatile("b arch_syscall_exit\n");
 }
 
+// Switch to @p sp, limited by @p psplim, drop privilege and branch to @p fn.
+static PBL_NAKED PBL_USED void prv_syscall_abort(void (*fn)(void), uint32_t sp, uint32_t psplim) {
+  __asm volatile(
+#ifdef CONFIG_ARMV8_M_MAINLINE
+      " movs r3, #0 \n"
+      " msr psplim, r3 \n" // lift the limit, sp may be above or below the current one
+      " mov sp, r1 \n"
+      " msr psplim, r2 \n"
+#else
+      " mov sp, r1 \n"
+#endif
+      " isb \n"
+      " mrs r3, control \n" // drop privilege: CONTROL.nPRIV = 1
+      " orr r3, r3, #1 \n"
+      " msr control, r3 \n"
+      " isb \n"
+      " movs r1, #0 \n"
+      " mov lr, r1 \n" // fn must not return
+      " bx r0 \n");
+}
+
+void pbl_syscall_abort_to(void (*fn)(void)) {
+  PBL_ASSERTN(!arch_is_user_context());
+
+  pbl_kernel_syscall_exit();
+
+  const struct pbl_thread *t = pbl_cur;
+  prv_syscall_abort(fn, (uint32_t)t->backend.arch.syscall_sp & ~7u, (uint32_t)t->stack);
+  __builtin_unreachable();
+}
+
 // This function needs to preserve the argument registers and stack exactly as they were on
 // entry, so the arguments are passed correctly into the syscall. The key purpose of this
 // function is to determine whether or not the caller is privileged. If the caller is
