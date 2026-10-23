@@ -205,6 +205,9 @@ unlock:
 static bool prv_default_connected(void) {
 #ifdef CONFIG_QEMU
   return qemu_setting_get(QemuSetting_DefaultConnected);
+#elif defined(CONFIG_POSIX_EMSCRIPTEN)
+  // In a browser the page may never be a phone: it connects when it is one.
+  return false;
 #else
   return true;
 #endif

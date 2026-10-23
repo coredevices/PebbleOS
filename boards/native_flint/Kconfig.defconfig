@@ -4,6 +4,6 @@
 config RESOURCES_BOARD
     default "qemu_flint"
 
-# A browser has no socket for the emulator's serial port.
+# In a browser, the page is the other end of the emulator's serial port.
 config QEMU_SERIAL
-    default y if !POSIX_EMSCRIPTEN
+    default y

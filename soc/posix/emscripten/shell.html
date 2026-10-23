@@ -5,10 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PebbleOS</title>
 <script>
-  // Embedded in the documentation: ?embed, and the page's ?theme.
+  // Embedded in the documentation: ?embed, and the page's ?theme. Embedded
+  // in another page as just the display: ?screen, which shows the screen alone
+  // and takes no input; ?serial, which gives the parent page the QEMU serial
+  // protocol and app installs over postMessage.
   const params = new URLSearchParams(location.search);
-  const embedded = params.has('embed');
+  const screenOnly = params.has('screen');
+  const embedded = params.has('embed') || screenOnly;
   if (embedded) document.documentElement.dataset.embed = '';
+  if (screenOnly) document.documentElement.dataset.screen = '';
   if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
 </script>
 <style>
@@ -34,6 +39,10 @@
   :root[data-embed] body { padding: 40px; }
   /* The frame grows with the page, so not in viewport units. */
   :root[data-embed] #log { height: 220px; }
+  /* The screen alone fills the frame, with nothing around it to press. */
+  :root[data-screen] body { padding: 0; }
+  :root[data-screen] :is(.frame, .btn, #bar, #log) { display: none; }
+  :root[data-screen] #watch, :root[data-screen] #canvas { pointer-events: none; }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
@@ -184,6 +193,11 @@
     },
   };
   const PLATFORM = PLATFORMS['@PBL_PLATFORM_NAME@'];
+  if (screenOnly) {
+    const [, , sw, sh] = PLATFORM.screen;
+    PLATFORM.size = [sw, sh];
+    PLATFORM.screen = [0, 0, sw, sh];
+  }
   const [FW, FH] = PLATFORM.size;
 
   {
@@ -212,6 +226,13 @@
 
   const canvas = $('canvas');
   const log = $('log');
+  // The screen alone takes no input: no focus, and the user's keys stop here.
+  if (screenOnly) {
+    canvas.removeAttribute('tabindex');
+    for (const type of ['keydown', 'keyup', 'keypress']) {
+      window.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
+    }
+  }
   const screen = $('screen');
   const ctx = screen.getContext('2d');
 
@@ -294,10 +315,11 @@
   // smaller only when it does not fit.
   function fit() {
     const dpr = window.devicePixelRatio || 1;
-    // Embedded, the frame takes the page's height, so only the width counts.
-    const height = embedded ? Infinity : (innerHeight - 100) / FH;
+    // Embedded, the frame takes the page's height, so only the width counts;
+    // the screen alone fills the frame it is given.
+    const height = screenOnly ? innerHeight / FH : embedded ? Infinity : (innerHeight - 100) / FH;
     const side = parseFloat(getComputedStyle(document.body).paddingLeft) * 2;
-    const room = Math.min(1.5, (innerWidth - side) / FW, height);
+    const room = Math.min(screenOnly ? Infinity : 1.5, (innerWidth - side) / FW, height);
     const k = Math.floor(room * dpr);
     $('watch').style.setProperty('--px', (k >= 1 ? k / dpr : room) + 'px');
   }
@@ -385,6 +407,7 @@
       // Embedded, focus would scroll the documentation page to the frame.
       if (!embedded) canvas.focus();
       enableApps();
+      enableSerial();
     },
   };
 
@@ -415,6 +438,8 @@
 
   function enableApps() {
     if (!Module._samsa_pbw_install_from_page) return;
+    if (params.get('pbw')) installUrl(params.get('pbw'));
+    if (screenOnly) return;
     $('apps').hidden = false;
     const url = $('app-url');
     // Typing a link must not press the watch's buttons.
@@ -440,7 +465,37 @@
       document.body.classList.remove('drop');
       for (const file of e.dataTransfer.files) installFile(file);
     });
-    if (params.get('pbw')) installUrl(params.get('pbw'));
+  }
+
+  // ?serial: the parent page is the phone. The firmware's QEMU serial bytes
+  // go to it as { pblSerial: Uint8Array }, gathered per turn of the event
+  // loop; it sends bytes back the same way, and a .pbw as { pblInstall }.
+  // { pblReady: true } tells it the frame takes messages; the firmware may
+  // still be booting, and holds the bytes until it is up. The watch starts
+  // with no phone, so the parent's first message connects one.
+  function enableSerial() {
+    if (!params.has('serial') || parent === window || !Module._uart_posix_qemu_rx_from_page) return;
+    let tx = [];
+    Module.onQemuSerial = (c) => {
+      if (!tx.length) {
+        setTimeout(() => {
+          parent.postMessage({ pblSerial: new Uint8Array(tx) }, '*');
+          tx = [];
+        });
+      }
+      tx.push(c);
+    };
+    window.addEventListener('message', (e) => {
+      if (e.source !== parent) return;
+      if (e.data?.pblSerial instanceof Uint8Array) {
+        Module.qemuSerialRx = e.data.pblSerial;
+        Module._uart_posix_qemu_rx_from_page(e.data.pblSerial.length);
+        Module.qemuSerialRx = null;
+      } else if (e.data?.pblInstall instanceof Uint8Array) {
+        installBytes(e.data.pblInstall, 'app from the page');
+      }
+    });
+    parent.postMessage({ pblReady: true }, '*');
   }
 
   if (embedded) {
