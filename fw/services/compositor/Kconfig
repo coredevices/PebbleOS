@@ -17,6 +17,17 @@ config SERVICE_COMPOSITOR_PARTIAL_FRAMES
       holds the previous frame. Disable to composite every app frame in
       full.
 
+config SERVICE_COMPOSITOR_PARTIAL_FRAMES_WHOLE_SCREEN
+    bool "Compare the whole screen rather than the dirty rectangle"
+    depends on SERVICE_COMPOSITOR_PARTIAL_FRAMES
+    help
+      Compare every row of an app frame against the previous one instead
+      of only the rows within the rectangle the app's drawing marked. For
+      compatibility with apps that write pixels into their framebuffer
+      without marking them, which the SDK does not support but used to
+      show on the next frame, at the cost of comparing the whole screen
+      on every frame.
+
 module = SERVICE_COMPOSITOR
 module-str = Compositor
 source "subsys/logging/Kconfig.template.log_level"

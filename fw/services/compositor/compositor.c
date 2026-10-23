@@ -173,8 +173,83 @@ static void prv_render_modal_over_app(void) {
 }
 
 #ifdef CONFIG_SERVICE_COMPOSITOR_PARTIAL_FRAMES
-//! Copies only what the app marked dirty plus what a transparent modal drew over the last frame,
-//! while the system framebuffer still holds that frame. False when a full composite is needed.
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+//! The two alpha bits never reach the panel, and a driver converting rows in place for the panel
+//! may clear them, so they are left out of the comparison.
+#define PIXEL_COMPARE_MASK 0x3F3F3F3Fu
+#else
+#define PIXEL_COMPARE_MASK 0xFFFFFFFFu
+#endif
+
+//! Whether two rows differ over the bytes [byte0, byte1], a word at a time once aligned.
+//! Nothing outside that range is read.
+static bool prv_rows_differ(const uint8_t *a, const uint8_t *b, size_t byte0, size_t byte1) {
+  const uint8_t byte_mask = PIXEL_COMPARE_MASK & 0xFFu;
+  const uint8_t *pa = a + byte0;
+  const uint8_t *pb = b + byte0;
+  size_t n = byte1 - byte0 + 1;
+  if ((((uintptr_t)pa ^ (uintptr_t)pb) & 3) == 0) {
+    for (; n > 0 && ((uintptr_t)pa & 3) != 0; n--) {
+      if (((*pa++ ^ *pb++) & byte_mask) != 0) {
+        return true;
+      }
+    }
+    const uint32_t *wa = (const uint32_t *)pa;
+    const uint32_t *wb = (const uint32_t *)pb;
+    for (; n >= 4; n -= 4) {
+      if (((*wa++ ^ *wb++) & PIXEL_COMPARE_MASK) != 0) {
+        return true;
+      }
+    }
+    pa = (const uint8_t *)wa;
+    pb = (const uint8_t *)wb;
+  }
+  for (; n > 0; n--) {
+    if (((*pa++ ^ *pb++) & byte_mask) != 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//! Narrows rect to the rows where the app framebuffer differs from the system framebuffer, which
+//! still holds the previous frame. False when no row differs.
+static bool prv_narrow_to_changed_rows(GRect *rect) {
+  const GBitmap app_bitmap = compositor_get_app_framebuffer_as_bitmap();
+  const GBitmap sys_bitmap = compositor_get_framebuffer_as_bitmap();
+  const int16_t x_max = grect_get_max_x(rect) - 1;
+  int16_t first = -1;
+  int16_t last = -1;
+  for (int16_t y = rect->origin.y; y < grect_get_max_y(rect); y++) {
+    const GBitmapDataRowInfo app_row = gbitmap_get_data_row_info(&app_bitmap, y);
+    const GBitmapDataRowInfo sys_row = gbitmap_get_data_row_info(&sys_bitmap, y);
+    const int16_t x0 = MAX(rect->origin.x, app_row.min_x);
+    const int16_t x1 = MIN(x_max, app_row.max_x);
+    if (x0 > x1) {
+      continue;
+    }
+    // Only the bytes holding those columns are read; round displays pack each row to its extent
+    const size_t byte0 = ((size_t)x0 * CONFIG_SCREEN_COLOR_DEPTH_BITS) / 8;
+    const size_t byte1 =
+        ((size_t)x1 * CONFIG_SCREEN_COLOR_DEPTH_BITS + CONFIG_SCREEN_COLOR_DEPTH_BITS - 1) / 8;
+    if (prv_rows_differ(app_row.data, sys_row.data, byte0, byte1)) {
+      if (first < 0) {
+        first = y;
+      }
+      last = y;
+    }
+  }
+  if (first < 0) {
+    return false;
+  }
+  rect->origin.y = first;
+  rect->size.h = last - first + 1;
+  return true;
+}
+
+//! Copies only what changed within what the app marked dirty plus what a transparent modal drew
+//! over the last frame, while the system framebuffer still holds that frame. False when a full
+//! composite is needed.
 static bool prv_render_app_dirty_rect(const AppFrameFit *fit) {
   if ((s_state != CompositorState_App && s_state != CompositorState_AppAndModal) ||
       !s_app_framebuffer_mirrored || !prv_app_frame_fit_is_verbatim(fit)) {
@@ -196,7 +271,11 @@ static bool prv_render_app_dirty_rect(const AppFrameFit *fit) {
     rect = grect_is_empty(&rect) ? s_modal_rect : grect_union(&rect, &s_modal_rect);
     grect_clip(&rect, &display_rect);
   }
-  if (!grect_is_empty(&rect)) {
+#ifdef CONFIG_SERVICE_COMPOSITOR_PARTIAL_FRAMES_WHOLE_SCREEN
+  // The comparison alone decides what changed, whatever the app marked
+  rect = display_rect;
+#endif
+  if (!grect_is_empty(&rect) && prv_narrow_to_changed_rows(&rect)) {
     prv_scaled_app_fb_copy(rect, false /* copy_relative_to_origin */, 0 /* offset_y */, fit);
     framebuffer_mark_dirty_rect(&s_framebuffer, rect);
   }

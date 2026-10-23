@@ -83,6 +83,25 @@ void bitblt_bitmap_into_bitmap(GBitmap *dest_bitmap, const GBitmap *src_bitmap, 
   cl_assert(dest_offset.x >= 0 && dest_offset.y >= 0);
   cl_assert(dest_offset.x + src_bitmap->bounds.size.w <= DISP_COLS);
   cl_assert(dest_offset.y + src_bitmap->bounds.size.h <= DISP_ROWS);
+  // Copy the pixels too, so the system framebuffer really holds the frame afterwards
+  for (int16_t y = 0; y < src_bitmap->bounds.size.h; y++) {
+    memcpy((uint8_t *)dest_bitmap->addr + (dest_offset.y + y) * dest_bitmap->row_size_bytes +
+               dest_offset.x,
+           (const uint8_t *)src_bitmap->addr +
+               (src_bitmap->bounds.origin.y + y) * src_bitmap->row_size_bytes +
+               src_bitmap->bounds.origin.x,
+           src_bitmap->bounds.size.w);
+  }
+}
+
+GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
+  // The compositor must never compare rows outside the display
+  cl_assert(y < DISP_ROWS);
+  return (GBitmapDataRowInfo){
+    .data = (uint8_t *)bitmap->addr + y * bitmap->row_size_bytes,
+    .min_x = 0,
+    .max_x = grect_get_max_x(&bitmap->bounds) - 1,
+  };
 }
 
 static GRect s_last_marked_rect;
@@ -97,9 +116,17 @@ void framebuffer_reset_dirty(FrameBuffer *fb) {
   fb->is_dirty = false;
 }
 
+// Back the framebuffer bitmaps with real buffers sized for the display, one for the app and
+// one for the system framebuffer. compositor_render_app() memsets framebuffer_get_size_bytes()
+// bytes through the system one's addr, and compares and copies rows between the two.
+static uint8_t s_framebuffer_data[DISP_COLS * DISP_ROWS];
+static uint8_t s_app_framebuffer_data[DISP_COLS * DISP_ROWS];
+
 // A transparent modal that paints a strip at the bottom of the screen, like the timeline peek
 static const GRect s_modal_strip = {{0, 200}, {DISP_COLS, 28}};
 static void prv_modal_render_strip(GContext *ctx) {
+  memset(s_framebuffer_data + s_modal_strip.origin.y * DISP_COLS, 0x5a,
+         s_modal_strip.size.h * DISP_COLS);
   framebuffer_mark_dirty_rect(compositor_get_framebuffer(), s_modal_strip);
 }
 
@@ -138,13 +165,9 @@ void framebuffer_clear(FrameBuffer *f) {
 void framebuffer_dirty_all(FrameBuffer *fb) {
 }
 
-// Back the framebuffer bitmap with a real buffer sized for the display. compositor_render_app()
-// memsets framebuffer_get_size_bytes() bytes through this bitmap's addr, so it must point at at
-// least DISP_COLS * DISP_ROWS bytes of valid storage.
-static uint8_t s_framebuffer_data[DISP_COLS * DISP_ROWS];
 GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   return (GBitmap){
-    .addr = s_framebuffer_data,
+    .addr = (fb == &s_app_framebuffer) ? s_app_framebuffer_data : s_framebuffer_data,
     .row_size_bytes = DISP_COLS,
     .bounds = GRect(0, 0, size->w, size->h),
   };
@@ -263,6 +286,8 @@ void test_compositor__initialize(void) {
   s_app_window_render_count = 0;
   s_app_framebuffer_fetched = false;
   s_app_framebuffer = (FrameBuffer){.size = {DISP_COLS, DISP_ROWS}};
+  memset(s_framebuffer_data, 0, sizeof(s_framebuffer_data));
+  memset(s_app_framebuffer_data, 0, sizeof(s_app_framebuffer_data));
   s_count_bitblt = 0;
   s_last_bitblt_rect = GRectZero;
   s_last_marked_rect = GRectZero;
@@ -395,9 +420,22 @@ void test_compositor__app_no_animation(void) {
   cl_assert_equal_i(s_count_display_update, 1);
 }
 
+// Paints the app framebuffer within rect with a value it has not had before
+static void prv_paint_app_framebuffer(GRect rect) {
+  static uint8_t s_paint;
+  ++s_paint;
+  const GRect display_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  grect_clip(&rect, &display_rect);
+  for (int16_t y = rect.origin.y; y < grect_get_max_y(&rect); y++) {
+    memset(s_app_framebuffer_data + y * DISP_COLS + rect.origin.x, s_paint, rect.size.w);
+  }
+}
+
+// Marks rect dirty in the app framebuffer and paints it, as an app's drawing would
 static void prv_mark_app_framebuffer_dirty(GRect rect) {
   s_app_framebuffer.dirty_rect = rect;
   s_app_framebuffer.is_dirty = true;
+  prv_paint_app_framebuffer(rect);
 }
 
 void test_compositor__app_frame_copies_dirty_rect(void) {
@@ -433,6 +471,57 @@ void test_compositor__app_frame_copies_dirty_rect(void) {
   // A frame with nothing dirty copies nothing
   compositor_app_render_ready();
   cl_assert_equal_i(s_count_bitblt, 3);
+}
+
+void test_compositor__app_frame_copies_changed_rows_only(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+
+  // An app that marks the whole screen but only changed a few rows gets those rows copied
+  s_app_framebuffer.dirty_rect = full_rect;
+  s_app_framebuffer.is_dirty = true;
+  prv_paint_app_framebuffer(GRect(50, 100, 20, 11));
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 2);
+  const GRect changed_rows = GRect(0, 100, DISP_COLS, 11);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &changed_rows));
+  cl_assert(grect_equal(&s_last_marked_rect, &changed_rows));
+
+  // Marking the whole screen without changing a pixel copies nothing
+  s_app_framebuffer.dirty_rect = full_rect;
+  s_app_framebuffer.is_dirty = true;
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 2);
+}
+
+void test_compositor__app_frame_ignores_alpha_bits(void) {
+  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+
+  // An opaque frame, every pixel with its alpha bits set
+  memset(s_app_framebuffer_data, 0xff, sizeof(s_app_framebuffer_data));
+  compositor_app_render_ready();
+  cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
+
+  // The display driver converted the flushed rows in place and cleared their alpha bits, as the
+  // SF32LB one does, which must not count as a change
+  for (size_t i = 0; i < sizeof(s_framebuffer_data); i++) {
+    s_framebuffer_data[i] &= 0x3f;
+  }
+  s_app_framebuffer.dirty_rect = full_rect;
+  s_app_framebuffer.is_dirty = true;
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 1);
+
+  // A real change in the colour bits still is one
+  s_app_framebuffer.dirty_rect = full_rect;
+  s_app_framebuffer.is_dirty = true;
+  prv_paint_app_framebuffer(GRect(0, 30, DISP_COLS, 2));
+  compositor_app_render_ready();
+  cl_assert_equal_i(s_count_bitblt, 2);
+  const GRect changed_rows = GRect(0, 30, DISP_COLS, 2);
+  cl_assert(grect_equal(&s_last_bitblt_rect, &changed_rows));
 }
 
 void test_compositor__app_frame_full_after_modal(void) {
