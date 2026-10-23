@@ -14,8 +14,9 @@ config SETTINGS_ICONS
 
 config THEMING
     bool "Color theming"
+    default y if SCREEN_COLOR_DEPTH_BITS_8 && !RECOVERY_FW
     help
-      Expose the highlight-color theming UI under Settings.
+      Expose the highlight-color and system theming UI under Settings.
 
 config BACKLIGHT_STANDARD_INTENSITY
     int "Standard backlight preset intensity (%)"

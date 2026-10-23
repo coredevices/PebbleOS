@@ -18,6 +18,10 @@ void PBL_WEAK graphics_fill_round_rect(GContext *ctx, const GRect *rect, uint16_
 void PBL_WEAK graphics_draw_circle(GContext *ctx, GPoint p, uint16_t radius) {
 }
 
+void PBL_WEAK graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *src_bitmap,
+                                           const GRect *rect) {
+}
+
 void PBL_WEAK graphics_draw_bitmap_in_rect_processed(GContext *ctx, const GBitmap *src_bitmap,
                                                      const GRect *rect,
                                                      GBitmapProcessor *processor) {

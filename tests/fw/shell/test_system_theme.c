@@ -4,6 +4,8 @@
 #include <applib/platform.h>
 #include <applib/preferred_content_size.h>
 #include <clar.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 // Stubs
 ///////////////
@@ -51,4 +53,42 @@ void test_system_theme__convert_content_size_between_platforms(void) {
   cl_assert_equal_i(prv_convert_content_size_between_platforms(
                         PreferredContentSizeSmall, PlatformTypeEmery, PlatformTypeChalk),
                     PreferredContentSizeSmall);
+}
+
+void test_system_theme__get_colors_and_app_color_mode(void) {
+  shell_prefs_set_theme_highlight_color(GColorSunsetOrange);
+  shell_prefs_set_theme_secondary_color(GColorLavenderIndigo);
+  shell_prefs_set_theme_background_color(GColorBlack);
+  shell_prefs_set_theme_text_color(GColorYellow);
+
+  SystemThemeColors colors = {};
+  system_theme_get_colors(&colors);
+  cl_assert_equal_i(colors.primary_color.argb,
+                    PBL_IF_COLOR_ELSE(GColorSunsetOrange, GColorBlack).argb);
+  cl_assert_equal_i(colors.secondary_color.argb,
+                    PBL_IF_COLOR_ELSE(GColorLavenderIndigo, GColorBlack).argb);
+  cl_assert_equal_i(colors.background_color.argb, GColorBlack.argb);
+  cl_assert_equal_i(colors.text_color.argb, GColorYellow.argb);
+
+  // In ColorsAndBackground mode, default app colors are overridden by theme colors
+  shell_prefs_set_theme_app_color_mode(ThemeAppColorMode_ColorsAndBackground);
+  SystemThemeColors app_colors = {};
+  system_theme_get_app_colors(GColorJaegerGreen, GColorDarkGreen, &app_colors);
+  cl_assert_equal_i(app_colors.primary_color.argb,
+                    PBL_IF_COLOR_ELSE(GColorSunsetOrange, GColorBlack).argb);
+  cl_assert_equal_i(app_colors.secondary_color.argb,
+                    PBL_IF_COLOR_ELSE(GColorLavenderIndigo, GColorBlack).argb);
+  cl_assert_equal_i(app_colors.background_color.argb, GColorBlack.argb);
+
+  // In BackgroundOnly mode, default app primary/secondary colors are preserved while background is
+  // themed
+  shell_prefs_set_theme_app_color_mode(ThemeAppColorMode_BackgroundOnly);
+  system_theme_get_app_colors(GColorJaegerGreen, GColorDarkGreen, &app_colors);
+  cl_assert_equal_i(app_colors.primary_color.argb, GColorJaegerGreen.argb);
+  cl_assert_equal_i(app_colors.secondary_color.argb, GColorDarkGreen.argb);
+  cl_assert_equal_i(app_colors.background_color.argb, GColorBlack.argb);
+  cl_assert_equal_i(app_colors.text_color.argb, GColorYellow.argb);
+
+  system_theme_reset_to_default(false);
+  cl_assert_equal_i(shell_prefs_get_theme_background_color().argb, GColorWhite.argb);
 }
