@@ -175,6 +175,44 @@ static void prv_menu_layer_selection_will_change([[maybe_unused]] MenuLayer *men
   prv_play_glance_for_row(launcher_menu_layer, new_index->row);
 }
 
+static void prv_menu_layer_draw_background(GContext *ctx, const Layer *bg_layer, bool highlight,
+                                           void *context) {
+  LauncherMenuLayer *launcher_menu_layer = context;
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
+  if (highlight) {
+    graphics_context_set_fill_color(ctx, colors.primary_color);
+    graphics_fill_rect(ctx, &bg_layer->bounds);
+    return;
+  }
+  system_theme_draw_background(ctx, &bg_layer->bounds, colors.background_color,
+                               launcher_menu_layer ? launcher_menu_layer->bg_bitmap : nullptr);
+}
+
+static void prv_apply_theme_colors(LauncherMenuLayer *launcher_menu_layer) {
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
+  MenuLayer *menu_layer = &launcher_menu_layer->menu_layer;
+  menu_layer_set_normal_colors(
+      menu_layer, launcher_menu_layer->bg_bitmap ? GColorClear : colors.background_color,
+      colors.text_color);
+  menu_layer_set_highlight_colors(menu_layer, colors.primary_color, colors.primary_text_color);
+#if PBL_ROUND
+  ContentIndicator *content_indicator =
+      scroll_layer_get_content_indicator(&menu_layer->scroll_layer);
+  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
+    .layer = &launcher_menu_layer->up_arrow_layer,
+    .colors.background = colors.background_color,
+    .colors.foreground = colors.subtitle_color,
+  };
+  content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionUp,
+                                        &content_indicator_config);
+  content_indicator_config.layer = &launcher_menu_layer->down_arrow_layer;
+  content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionDown,
+                                        &content_indicator_config);
+#endif
+}
+
 PBL_T_STATIC void prv_launcher_menu_layer_set_selection_index(
     LauncherMenuLayer *launcher_menu_layer, uint16_t index, MenuRowAlign row_align, bool animated) {
   if (!launcher_menu_layer || !launcher_menu_layer->data_source) {
@@ -221,8 +259,7 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
 
   MenuLayer *menu_layer = &launcher_menu_layer->menu_layer;
   menu_layer_init(menu_layer, &menu_layer_frame);
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+  launcher_menu_layer->bg_bitmap = system_theme_create_background_bitmap();
   menu_layer_pad_bottom_enable(menu_layer, false);
   menu_layer_set_callbacks(menu_layer, launcher_menu_layer,
                            &(MenuLayerCallbacks){
@@ -231,6 +268,7 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
                              .select_click = prv_menu_layer_select,
                              .get_cell_height = prv_menu_layer_get_cell_height,
                              .selection_will_change = prv_menu_layer_selection_will_change,
+                             .draw_background = prv_menu_layer_draw_background,
                            });
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -257,20 +295,9 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
   Layer *down_arrow_layer = &launcher_menu_layer->down_arrow_layer;
   layer_init(down_arrow_layer, &down_arrow_layer_frame);
   layer_add_child(container_layer, down_arrow_layer);
-
-  ContentIndicator *content_indicator =
-      scroll_layer_get_content_indicator(&menu_layer->scroll_layer);
-  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
-    .layer = up_arrow_layer,
-    .colors.background = GColorWhite,
-    .colors.foreground = GColorDarkGray,
-  };
-  content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionUp,
-                                        &content_indicator_config);
-  content_indicator_config.layer = down_arrow_layer;
-  content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionDown,
-                                        &content_indicator_config);
 #endif
+
+  prv_apply_theme_colors(launcher_menu_layer);
 
   // Wait to add the menu layer until after we might have added the content indicators because
   // the indicator arrows only get positioned properly if their layers overlap with the menu layer's
@@ -343,6 +370,16 @@ void launcher_menu_layer_update_content_size(LauncherMenuLayer *launcher_menu_la
   launcher_menu_layer_set_selection_state(launcher_menu_layer, &selection_state);
   launcher_menu_layer_set_selection_animations_enabled(launcher_menu_layer,
                                                        selection_animations_enabled);
+}
+
+void launcher_menu_layer_update_theme(LauncherMenuLayer *launcher_menu_layer) {
+  if (!launcher_menu_layer) {
+    return;
+  }
+  gbitmap_destroy(launcher_menu_layer->bg_bitmap);
+  launcher_menu_layer->bg_bitmap = system_theme_create_background_bitmap();
+  prv_apply_theme_colors(launcher_menu_layer);
+  prv_launcher_menu_layer_mark_dirty(launcher_menu_layer);
 }
 
 void launcher_menu_layer_set_selection_state(LauncherMenuLayer *launcher_menu_layer,
@@ -420,6 +457,8 @@ void launcher_menu_layer_deinit(LauncherMenuLayer *launcher_menu_layer) {
     return;
   }
 
+  gbitmap_destroy(launcher_menu_layer->bg_bitmap);
+  launcher_menu_layer->bg_bitmap = nullptr;
   launcher_app_glance_service_deinit(&launcher_menu_layer->glance_service);
   menu_layer_deinit(&launcher_menu_layer->menu_layer);
 

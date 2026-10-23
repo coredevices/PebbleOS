@@ -19,6 +19,7 @@
 #include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 typedef struct SettingsData {
   Window window;
@@ -43,11 +44,21 @@ typedef struct SettingsData {
   EventServiceInfo pref_change_event_info; //!< Subscription for pref change notifications
 } SettingsData;
 
+static void prv_apply_theme_colors(SettingsData *data) {
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
+  status_bar_layer_set_colors(&data->status_layer, colors.secondary_color,
+                              colors.secondary_text_color);
+  menu_layer_set_theme_colors(&data->menu_layer, &colors);
+  window_set_background_color(&data->window, colors.background_color);
+}
+
 // Pref change handler
 ///////////////////////
 
 static void prv_pref_change_handler(PebbleEvent *event, void *context) {
   SettingsData *data = context;
+  prv_apply_theme_colors(data);
   // Reload the menu when any pref changes: cell heights are cached by the menu
   // layer and can change with the preferred content size. Re-anchor the
   // selection afterwards so the scroll offset stays within the new geometry.
@@ -62,21 +73,6 @@ static void prv_pref_change_handler(PebbleEvent *event, void *context) {
 static SettingsCallbacks *prv_get_current_callbacks(SettingsData *data) {
   PBL_ASSERTN(data && data->callbacks);
   return data->callbacks;
-}
-
-// Menu appearance helpers
-//////////////////////////
-
-static void prv_set_sub_menu_colors(GContext *ctx, const Layer *cell_layer, bool highlight) {
-  if (highlight) {
-    GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-    graphics_context_set_fill_color(ctx, highlight_bg);
-    graphics_context_set_text_color(ctx, gcolor_legible_over(highlight_bg));
-  } else {
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_context_set_text_color(ctx, GColorBlack);
-  }
-  graphics_fill_rect(ctx, &cell_layer->bounds);
 }
 
 // Menu Layer Handling
@@ -125,10 +121,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
   const uint16_t section = cell_index->section;
   PBL_ASSERTN(section < SettingsMenuItem_Count);
 
-  bool highlight = menu_cell_layer_is_highlighted(cell_layer);
-
   SettingsCallbacks *callbacks = prv_get_current_callbacks(data);
-  prv_set_sub_menu_colors(ctx, cell_layer, highlight);
   if (callbacks->draw_row) {
     const bool is_selected = menu_cell_layer_is_highlighted(cell_layer);
     callbacks->draw_row(callbacks, ctx, cell_layer, row, is_selected);
@@ -192,9 +185,7 @@ static void prv_settings_window_load(Window *window) {
                              .selection_changed = prv_selection_changed_callback,
                              .selection_will_change = prv_selection_will_change_callback,
                            });
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+  prv_apply_theme_colors(data);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -225,6 +216,7 @@ static void prv_settings_window_load(Window *window) {
 
 static void prv_settings_window_appear(Window *window) {
   SettingsData *data = window_get_user_data(window);
+  prv_apply_theme_colors(data);
   SettingsCallbacks *callbacks = prv_get_current_callbacks(data);
   if (callbacks->appear) {
     callbacks->appear(data->callbacks);

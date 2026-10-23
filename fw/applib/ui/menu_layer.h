@@ -691,6 +691,13 @@ void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GCol
 //! @see \ref menu_layer_set_normal_colors
 void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground);
 
+typedef struct SystemThemeColors SystemThemeColors;
+
+//! @internal
+//! Apply resolved system theme colors (and transparent cell background when a theme background
+//! bitmap is active) to a \ref MenuLayer.
+void menu_layer_set_theme_colors(MenuLayer *menu_layer, const SystemThemeColors *colors);
+
 //! True, if the \ref MenuLayer generally scrolls such that the selected row is in the center.
 //! @see \ref menu_layer_set_center_focused
 bool menu_layer_get_center_focused(MenuLayer *menu_layer);

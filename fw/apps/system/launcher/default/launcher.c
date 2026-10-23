@@ -53,6 +53,7 @@ static void prv_will_focus(bool in_focus) {
 static void prv_pref_change_handler([[maybe_unused]] PebbleEvent *event, void *context) {
   LauncherAppWindowData *data = context;
   launcher_menu_layer_update_content_size(&data->launcher_menu_layer);
+  launcher_menu_layer_update_theme(&data->launcher_menu_layer);
 }
 
 ////////////////////////////////
