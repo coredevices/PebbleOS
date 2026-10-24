@@ -1069,6 +1069,12 @@ static void prv_click_config_provider(void *data) {
   }
 }
 
+static void prv_set_session_responsiveness(enum pbl_bt_response_time_state state,
+                                           uint16_t max_period_secs) {
+  comm_session_set_responsiveness(comm_session_get_system_session(),
+                                  PBL_BT_CONSUMER_NOTIFICATION_WINDOW, state, max_period_secs);
+}
+
 ///////////////////////
 // Window Callbacks
 ///////////////////////
@@ -1156,6 +1162,7 @@ static void prv_window_unload(Window *window) {
   i18n_free_all(data);
   s_in_use = false;
   timeline_action_endpoint_send_displayed_item(nullptr);
+  prv_set_session_responsiveness(PBL_BT_RESPONSE_TIME_MAX, 0);
 }
 
 //////////////////////
@@ -1211,8 +1218,15 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
 #if NOTIFICATION_IMAGE_SUPPORTED
   prv_maybe_request_notification_image(layout, n);
 #endif
+  const bool has_actions = prv_should_provide_action_menu_for_item(data, n);
   if (data->first_notif_loaded || !data->is_modal) {
-    layer_set_hidden(&data->action_button_layer, !prv_should_provide_action_menu_for_item(data, n));
+    layer_set_hidden(&data->action_button_layer, !has_actions);
+  }
+  // Switching to fast parameters takes over a second at high peripheral latency, so start
+  // before the action menu opens.
+  if (has_actions) {
+    prv_set_session_responsiveness(PBL_BT_RESPONSE_TIME_MIN,
+                                   PBL_BT_MIN_LATENCY_MODE_TIMEOUT_NOTIFICATION_WINDOW_SECS);
   }
   // update status bar to the current info
   prv_update_status_layer(data);

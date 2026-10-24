@@ -63,6 +63,8 @@ enum pbl_bt_consumer {
   PBL_BT_CONSUMER_PRF,
   /** Remote device, through the Pebble Pairing Service. */
   PBL_BT_CONSUMER_PPS_REMOTE_DEVICE,
+  /** Notification window, while a notification with actions is shown. */
+  PBL_BT_CONSUMER_NOTIFICATION_WINDOW,
   /** Unit tests. */
   PBL_BT_CONSUMER_UNIT_TESTS,
   /** Number of consumers. */
@@ -107,6 +109,8 @@ typedef void (*pbl_bt_responsiveness_granted_cb_t)(void);
 #define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_SCREENSHOT_SECS (5)
 /** @brief Timeline action menu. */
 #define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS (10)
+/** @brief Notification window. */
+#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_NOTIFICATION_WINDOW_SECS (10)
 /** @brief Voice. */
 #define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS (10)
 /** @} */

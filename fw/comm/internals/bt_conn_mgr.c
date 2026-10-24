@@ -80,6 +80,7 @@ static const char *prv_consumer_name(enum pbl_bt_consumer consumer) {
     [PBL_BT_CONSUMER_TIMELINE_ACTION_MENU] = "TimelineActionMenu",
     [PBL_BT_CONSUMER_PRF] = "PRF",
     [PBL_BT_CONSUMER_PPS_REMOTE_DEVICE] = "PebblePairingServiceRemoteDevice",
+    [PBL_BT_CONSUMER_NOTIFICATION_WINDOW] = "NotificationWindow",
     [PBL_BT_CONSUMER_UNIT_TESTS] = "UnitTests",
   };
 
