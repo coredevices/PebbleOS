@@ -151,7 +151,7 @@ void test_emoji_fonts__gothic_28_emoji(void) {
 }
 
 void test_emoji_fonts__gothic_36_text(void) {
-  // Gothic 36 has no emoji font of its own, so it draws them from an emoji font
+  // Gothic 36 has no emoji of its own, so it draws them from the emoji font
   prv_prepare_canvas_and_render_emoji(RESOURCE_ID_GOTHIC_36);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }

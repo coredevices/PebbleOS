@@ -12,8 +12,16 @@ EMOJI_28~color.pbf files are the color-display variants of these fonts. They
 carry the same glyphs, some of them colored, and every notice in this file
 applies to them as well.
 
-The original community glyphs described below are retained unchanged and remain
-under the Apache License, Version 2.0.
+The EMOJI_36.pbf and EMOJI_36~color.pbf files are made from the 28 point fonts.
+Glyphs that came from Noto Emoji are rendered again from Noto Emoji at the
+larger size. In EMOJI_36~color.pbf, colored glyphs that have Noto Color Emoji
+art are drawn from Noto Emoji instead and colored from that art, Copyright
+Google LLC, licensed under the Apache License, Version 2.0. All other glyphs,
+including the community glyphs described below, are scaled up from their 28
+point images. Every notice in this file applies to them as well.
+
+The original community glyphs described below are retained unchanged in the 14
+to 28 point fonts and remain under the Apache License, Version 2.0.
 =============================================================================
 
 The files:
@@ -21,6 +29,7 @@ The files:
   - EMOJI_18.pbf
   - EMOJI_24.pbf
   - EMOJI_28.pbf
+  - EMOJI_36.pbf
 contain images created by the community for the Rebble Foundation under the Apache License, Version 2.0.
 Original project repository: https://github.com/pebble-dev/rebble-emojis/tree/legacy
 The images used have been modified to render correctly on PebbleOS, the included files are:
