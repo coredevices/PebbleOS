@@ -6,4 +6,4 @@
 // DO NOT MODIFY
 //
 
-static const ResourceVersion SYSTEM_RESOURCE_VERSION = {.crc = 3571934105, .timestamp = 0};
+static const ResourceVersion SYSTEM_RESOURCE_VERSION = {.crc = 1658015797, .timestamp = 0};
