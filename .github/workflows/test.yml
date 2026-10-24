@@ -69,6 +69,10 @@ jobs:
         # not hide the rest. The job still fails if anything failed.
         run: pbl test
 
+      - name: Check resource snapshots
+        if: (!cancelled())
+        run: python tools/test_resource_snapshots.py --check
+
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v6
         if: (!cancelled())

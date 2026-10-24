@@ -194,6 +194,22 @@ These mechanisms replace dependencies of the code under test:
   `tests/overrides/README.md` and `tests/overrides/default/README.md`
   before adding one — in particular, avoid adding to `default/`.
 
+## Resource snapshots
+
+Tests that load system resources, e.g. to draw text, read each platform's
+pack from `tests/fixtures/resources/system_resources_<platform>.pbpack`,
+with matching `resource_ids.auto.h` and `resource_version.auto.h` under
+`tests/overrides/default/resources/`. These are copies of firmware build
+outputs, so after changing anything in `resources/`, regenerate them and
+then the reference images that change:
+
+```shell
+tools/test_resource_snapshots.py
+```
+
+It configures each board in a temporary directory, so it needs the firmware
+toolchain. CI runs it with `--check` and fails if the copies are out of date.
+
 ## Broken tests
 
 `pbl_test_broken()` in `tests/CMakeLists.txt` lists tests that are not
