@@ -154,6 +154,49 @@ def test_notification_action(dut, phone, blobdb):
     _wait_modal(ui, NOTIFICATION_WINDOW, present=False)
 
 
+def test_notification_action_with_result(dut, phone, blobdb):
+    """An action that carries its result shows it as soon as it is sent,
+    without waiting for the phone's answer, which changes nothing when it
+    comes."""
+    ui = Ui(dut)
+    item_id = uuid.uuid4()
+    actions = [
+        (
+            7,
+            ActionType.GENERIC,
+            [(Attribute.TITLE, "Mark as read"), (Attribute.BODY, "Marked as read")],
+        )
+    ]
+    value = _notification(item_id, phone.watch_time(), "Dinner at 8?", actions)
+    assert blobdb.insert(Database.NOTIFICATIONS, item_id, value) == Status.SUCCESS
+    _wait_modal(ui, NOTIFICATION_WINDOW)
+    time.sleep(PEEK_S)
+
+    since = phone.inbox.mark()
+    ui.press(Button.SELECT)
+    _wait_modal(ui, ACTION_MENU)
+    ui.press(Button.SELECT)
+    invoke = phone.inbox.wait(
+        TIMELINE_ACTION_ENDPOINT, lambda p: p[0] == INVOKE_ACTION, 10, since
+    )
+    assert invoke == bytes([INVOKE_ACTION]) + item_id.bytes + bytes([7, 0])
+    _wait_modal(ui, ACTION_RESULT)
+    assert ACTION_PROGRESS not in ui.modal_stack()
+    _wait_modal(ui, NOTIFICATION_WINDOW, present=False)
+    _wait_modal(ui, ACTION_RESULT, present=False)
+
+    phone.send(
+        TIMELINE_ACTION_ENDPOINT,
+        bytes([PHONE_RESPONSE])
+        + item_id.bytes
+        + bytes([RESPONSE_ACK, 1])
+        + attribute(Attribute.SUBTITLE, "Marked as read"),
+    )
+    time.sleep(1.0)
+    assert ACTION_RESULT not in ui.modal_stack()
+    assert phone.watch_version() is not None
+
+
 def test_clear_notifications(dut, phone, blobdb):
     """Clearing the notifications while one pops up leaves the watch
     running."""

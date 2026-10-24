@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
@@ -664,16 +666,19 @@ bool timeline_add_missed_call_pin(TimelineItem *pin, uint32_t uid) {
 
 static void prv_put_notification_action_result(const Uuid *id, const char *msg,
                                                uint32_t timeline_res_id, ActionResultType type) {
-  // send action result event
-  PebbleSysNotificationActionResult *action_result =
-      kernel_malloc_check(sizeof(PebbleSysNotificationActionResult) + 2 * sizeof(Attribute));
+  // send action result event, with a copy of the message as it may live in the item
+  const size_t msg_size = strlen(msg) + 1;
+  PebbleSysNotificationActionResult *action_result = kernel_malloc_check(
+      sizeof(PebbleSysNotificationActionResult) + 2 * sizeof(Attribute) + msg_size);
 
   AttributeList result_attributes = {
     .num_attributes = 2,
     .attributes = (Attribute *)(((uint8_t *)action_result) + sizeof(*action_result)),
   };
+  char *msg_copy = (char *)&result_attributes.attributes[2];
+  memcpy(msg_copy, msg, msg_size);
   result_attributes.attributes[0].id = AttributeIdSubtitle;
-  result_attributes.attributes[0].cstring = (char *)msg;
+  result_attributes.attributes[0].cstring = msg_copy;
   result_attributes.attributes[1].id = AttributeIdIconLarge;
   result_attributes.attributes[1].uint32 = timeline_res_id;
 
@@ -695,6 +700,25 @@ static void prv_do_remote_action(const Uuid *id, TimelineItemActionType type, ui
         id, i18n_get("Can't connect. Relaunch Pebble Time app on phone.", &i18n_key),
         TIMELINE_RESOURCE_GENERIC_WARNING, ActionResultTypeFailure);
   }
+}
+
+// The phone can send the result of an action with the action itself, in its body and large icon
+// attributes. Show it as soon as the action is sent instead of waiting for the phone's response.
+static void prv_do_remote_action_with_known_result(const TimelineItem *item,
+                                                   const TimelineItemAction *action,
+                                                   const AttributeList *attributes) {
+  const bool do_async = false;
+  prv_do_remote_action(&item->header.id, action->type, action->id, attributes, do_async);
+
+  const char *result = attribute_get_string(&action->attr_list, AttributeIdBody, nullptr);
+  if (!result || !comm_session_get_system_session()) {
+    return;
+  }
+
+  const uint32_t timeline_res_id = attribute_get_uint32(&action->attr_list, AttributeIdIconLarge,
+                                                        TIMELINE_RESOURCE_GENERIC_CONFIRMATION);
+  prv_put_notification_action_result(&item->header.id, result, timeline_res_id,
+                                     ActionResultTypeSuccess);
 }
 
 static void prv_remove_pin_action(const TimelineItem *item, const TimelineItemAction *action,
@@ -875,6 +899,8 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       [[fallthrough]];
     case TimelineItemActionTypeGeneric:
     case TimelineItemActionTypeResponse:
+      prv_do_remote_action_with_known_result(item, action, attributes);
+      break;
     case TimelineItemActionTypeAncsResponse:
     case TimelineItemActionTypeAncsGeneric:
     case TimelineItemActionTypeHttp:

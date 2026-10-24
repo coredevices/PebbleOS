@@ -430,6 +430,12 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
 
   PebbleSysNotificationActionResult *action_result = e->sys_notification.action_result;
 
+  // A late result of an earlier action
+  if (action_result && data->chaining_data.notif &&
+      !uuid_equal(&action_result->id, &data->chaining_data.notif->header.id)) {
+    return;
+  }
+
   if (action_result == nullptr ||
       (data->response.ignore_failures && action_result->type != ActionResultTypeSuccess)) {
     const bool success = false;
