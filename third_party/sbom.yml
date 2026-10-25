@@ -90,6 +90,15 @@ components:
     purl: pkg:github/coredevices/mynewt-nimble@56441c054f9365b337db7a76ade8a134737da4e1
     url: https://github.com/coredevices/mynewt-nimble
 
+  - name: zephyr-bluetooth-host
+    path: zephyr_bt/zephyr
+    supplier: Zephyr Project
+    description: Zephyr RTOS, of which only the Bluetooth host is built
+    commit: e35b686be50a224e381fd35174be9fcb1a4ddd37
+    license: Apache-2.0
+    purl: pkg:github/zephyrproject-rtos/zephyr@e35b686be50a224e381fd35174be9fcb1a4ddd37
+    url: https://github.com/zephyrproject-rtos/zephyr
+
   - name: nrf_fuel_gauge
     path: nonfree/pebbleos-nonfree/npm1300
     type: library

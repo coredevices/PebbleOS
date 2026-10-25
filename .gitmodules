@@ -49,3 +49,6 @@
 [submodule "third_party/samsa/samsa"]
 	path = third_party/samsa/samsa
 	url = https://github.com/coredevices/samsa.git
+[submodule "third_party/zephyr_bt/zephyr"]
+	path = third_party/zephyr_bt/zephyr
+	url = https://github.com/zephyrproject-rtos/zephyr.git
