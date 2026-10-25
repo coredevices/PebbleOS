@@ -359,6 +359,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
       TouchEvent touch = e->touch.event;
       touch_wake_gate_stamp(&touch, gate);
       e->touch.event = touch;
+      watchface_handle_touch_event(&touch);
       return;
     }
 #endif

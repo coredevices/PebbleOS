@@ -32,7 +32,8 @@ static bool prv_health_launch_is_reversed(AppLaunchReason reason, ButtonId butto
                                           const void *args) {
   const AppQuickLaunchAction action = (AppQuickLaunchAction)(uintptr_t)args;
   return (reason == APP_LAUNCH_QUICK_LAUNCH) && (button == BUTTON_ID_DOWN) &&
-         ((action == APP_QUICK_LAUNCH_ACTION_TAP) || (action == APP_QUICK_LAUNCH_ACTION_HOLD));
+         ((action == APP_QUICK_LAUNCH_ACTION_TAP) || (action == APP_QUICK_LAUNCH_ACTION_HOLD) ||
+          (action == APP_QUICK_LAUNCH_ACTION_SWIPE));
 }
 
 static const CompositorTransition *prv_health_open_transition(const LaunchConfigCommon *config) {

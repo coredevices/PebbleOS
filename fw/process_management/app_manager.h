@@ -96,6 +96,8 @@ ResAppNum app_manager_get_current_resource_num(void);
 
 AppLaunchReason app_manager_get_launch_reason(void);
 
+AppQuickLaunchAction app_manager_get_quick_launch_action(void);
+
 ButtonId app_manager_get_launch_button(void);
 
 void app_manager_get_framebuffer_size(GSize *size);

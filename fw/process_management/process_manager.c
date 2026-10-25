@@ -167,6 +167,7 @@ void process_manager_init_context(ProcessContext *context, const PebbleProcessMd
   // get app launch reason and wakeup_info
   context->launch_reason = app_manager_get_launch_reason();
   context->launch_button = app_manager_get_launch_button();
+  context->quick_launch_action = app_manager_get_quick_launch_action();
   context->wakeup_info = app_manager_get_app_wakeup_state();
 
   // set the default exit reason
@@ -738,6 +739,10 @@ PBL_SYSCALL(AppQuickLaunchAction, sys_process_get_quick_launch_action) {
   if (sys_process_get_launch_reason() != APP_LAUNCH_QUICK_LAUNCH) {
     return APP_QUICK_LAUNCH_ACTION_NONE;
   }
+  if (prv_get_context()->quick_launch_action != APP_QUICK_LAUNCH_ACTION_NONE) {
+    return prv_get_context()->quick_launch_action;
+  }
+  // Older callers encode the action in args.
   return (AppQuickLaunchAction)(uintptr_t)process_manager_get_current_process_args();
 }
 

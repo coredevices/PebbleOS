@@ -11,6 +11,8 @@
 typedef struct LaunchConfigCommon {
   AppLaunchReason reason;
   ButtonId button;
+  // Separate from app-specific args (e.g. TimelineArgs).
+  AppQuickLaunchAction quick_launch_action;
   const void *args;
   const CompositorTransition *transition;
 } LaunchConfigCommon;

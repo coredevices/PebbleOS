@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdlib.h>
+
 #include <pbl/mcu/mpu.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/vibe_pattern.h>
@@ -10,6 +12,7 @@
 #include <applib/graphics/framebuffer.h>
 #include <applib/ui/window_stack.h>
 #include <applib/ui/window_stack_private.h>
+#include <apps/system/timeline/timeline.h>
 #include <clar.h>
 #include <fff.h>
 #include <kernel/util/segment.h>
@@ -20,6 +23,7 @@
 #include <process_management/process_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <stubs_thread.h>
+#include <syscall/syscall.h>
 
 // Fakes
 #include <fake_new_timer.h>
@@ -264,7 +268,9 @@ void quick_launch_handle_analytics(void) {
 void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
 }
 
-void sys_exit(int status) {
+[[noreturn]] void sys_exit(void) {
+  cl_fail("unexpected process exit");
+  abort();
 }
 
 status_t app_cache_app_launched(AppInstallId id) {
@@ -568,4 +574,67 @@ void test_app_manager__override_next_app_with_watchface_using_action_performed_e
                     }),
                     true);
   cl_assert_equal_i(app_exit_reason_get(), default_exit_reason);
+}
+
+static void prv_launch_with_metadata(LaunchConfigCommon common) {
+  test_app_manager__start_first();
+  app_manager_launch_new_app(&(AppLaunchConfig){
+    .md = &s_third_party_app.common,
+    .common = common,
+  });
+  app_manager_get_task_context()->safe_to_kill = true;
+  app_manager_close_current_app(true);
+}
+
+void test_app_manager__timeline_swipe_metadata_and_args(void) {
+  const TimelineArgs args = {
+    .direction = TimelineIterDirectionPast,
+    .launch_into_pin = true,
+    .stay_in_list_view = true,
+    .pin_id = {1, 2, 3, 4},
+  };
+  prv_launch_with_metadata((LaunchConfigCommon){
+    .reason = APP_LAUNCH_QUICK_LAUNCH,
+    .button = BUTTON_ID_UP,
+    .quick_launch_action = APP_QUICK_LAUNCH_ACTION_SWIPE,
+    .args = &args,
+  });
+  cl_assert_equal_i(sys_process_get_launch_reason(), APP_LAUNCH_QUICK_LAUNCH);
+  cl_assert_equal_i(sys_process_get_launch_button(), BUTTON_ID_UP);
+  cl_assert_equal_i(sys_process_get_quick_launch_action(), APP_QUICK_LAUNCH_ACTION_SWIPE);
+  cl_assert(process_manager_get_current_process_args() == &args);
+  cl_assert_equal_i(sys_process_get_launch_args(), 0);
+
+  // A subsequent ordinary launch must not inherit the swipe metadata.
+  app_manager_launch_new_app(&(AppLaunchConfig){.md = &s_launch_app.common});
+  app_manager_get_task_context()->safe_to_kill = true;
+  app_manager_close_current_app(true);
+  cl_assert_equal_i(sys_process_get_quick_launch_action(), APP_QUICK_LAUNCH_ACTION_NONE);
+  cl_assert(process_manager_get_current_process_args() == nullptr);
+}
+
+void test_app_manager__legacy_quick_launch_actions(void) {
+  for (AppQuickLaunchAction action = APP_QUICK_LAUNCH_ACTION_HOLD;
+       action <= APP_QUICK_LAUNCH_ACTION_SWIPE; action++) {
+    test_app_manager__initialize();
+    prv_launch_with_metadata((LaunchConfigCommon){
+      .reason = APP_LAUNCH_QUICK_LAUNCH,
+      .button = BUTTON_ID_DOWN,
+      .args = (void *)(uintptr_t)action,
+    });
+    cl_assert_equal_i(sys_process_get_launch_reason(), APP_LAUNCH_QUICK_LAUNCH);
+    cl_assert_equal_i(sys_process_get_launch_button(), BUTTON_ID_DOWN);
+    cl_assert_equal_i(sys_process_get_quick_launch_action(), action);
+  }
+}
+
+void test_app_manager__system_launch_does_not_expose_quick_launch_action(void) {
+  const TimelineArgs args = {.direction = TimelineIterDirectionFuture};
+  prv_launch_with_metadata((LaunchConfigCommon){
+    .reason = APP_LAUNCH_SYSTEM,
+    .quick_launch_action = APP_QUICK_LAUNCH_ACTION_TAP,
+    .args = &args,
+  });
+  cl_assert_equal_i(sys_process_get_quick_launch_action(), APP_QUICK_LAUNCH_ACTION_NONE);
+  cl_assert(process_manager_get_current_process_args() == &args);
 }

@@ -51,6 +51,10 @@ AppLaunchReason PBL_WEAK app_manager_get_launch_reason(void) {
   return 0;
 }
 
+AppQuickLaunchAction PBL_WEAK app_manager_get_quick_launch_action(void) {
+  return APP_QUICK_LAUNCH_ACTION_NONE;
+}
+
 ButtonId PBL_WEAK app_manager_get_launch_button(void) {
   return 0;
 }

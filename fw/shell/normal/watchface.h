@@ -12,6 +12,10 @@ void watchface_init(void);
 
 void watchface_handle_button_event(PebbleEvent *e);
 
+#ifdef CONFIG_TOUCH
+void watchface_handle_touch_event(const TouchEvent *event);
+#endif
+
 void watchface_set_default_install_id(AppInstallId id);
 
 AppInstallId watchface_get_default_install_id(void);

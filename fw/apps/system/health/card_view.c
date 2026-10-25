@@ -331,7 +331,8 @@ HealthCardView *health_card_view_create(HealthData *health_data) {
     const AppQuickLaunchAction action = app_launch_get_quick_launch_action();
     directional_quick_launch =
         (button == BUTTON_ID_UP || button == BUTTON_ID_DOWN) &&
-        (action == APP_QUICK_LAUNCH_ACTION_TAP || action == APP_QUICK_LAUNCH_ACTION_HOLD);
+        (action == APP_QUICK_LAUNCH_ACTION_TAP || action == APP_QUICK_LAUNCH_ACTION_HOLD ||
+         action == APP_QUICK_LAUNCH_ACTION_SWIPE);
     reverse_order = directional_quick_launch && (button == BUTTON_ID_DOWN);
   }
 

@@ -46,6 +46,11 @@ void wakeup_popup_window(uint8_t missed_apps_count, uint8_t *missed_apps_banks) 
 void watchface_set_default_install_id(AppInstallId id) {
 }
 
+#ifdef CONFIG_TOUCH
+void watchface_handle_touch_event(const TouchEvent *event) {
+}
+#endif
+
 void watchface_handle_button_event(PebbleEvent *e) {
 }
 

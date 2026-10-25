@@ -864,6 +864,10 @@ AppLaunchReason app_manager_get_launch_reason(void) {
   return s_next_app.common.reason;
 }
 
+AppQuickLaunchAction app_manager_get_quick_launch_action(void) {
+  return s_next_app.common.quick_launch_action;
+}
+
 ButtonId app_manager_get_launch_button(void) {
   return s_next_app.common.button;
 }

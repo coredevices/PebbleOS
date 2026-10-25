@@ -43,6 +43,8 @@ typedef enum {
   APP_QUICK_LAUNCH_ACTION_HOLD,     //!< User held a single button
   APP_QUICK_LAUNCH_ACTION_TAP,      //!< User tapped a button (single click)
   APP_QUICK_LAUNCH_ACTION_COMBO,    //!< User held a button combination
+  //! User swiped on the watchface: up maps to DOWN, down to UP, left to SELECT, right to BACK.
+  APP_QUICK_LAUNCH_ACTION_SWIPE,
 } AppQuickLaunchAction;
 
 //! Get the argument passed to the app when it was launched.

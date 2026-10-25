@@ -217,6 +217,10 @@ void touch_nav_state_deinit(TouchNavState *state);
 //! (\ref TouchServiceHandler). \a context is the \ref TouchNavState.
 void touch_nav_dispatch(const TouchEvent *touch_event, void *context);
 
+//! Map finger travel to a navigation button: up = DOWN, down = UP, left = SELECT, right = BACK.
+//! Returns NUM_BUTTONS for an invalid direction.
+ButtonId touch_nav_swipe_button(SwipeDirection direction);
+
 //! Store the foreground ActionBarLayer snapshot into \a state. A NULL \a frame clears the snapshot
 //! (bar removed / no window); otherwise \a frame is the bar's global-coordinate rectangle and
 //! \a icon_mask its per-zone icon presence bits. Called from the \ref sys_touch_set_action_bar

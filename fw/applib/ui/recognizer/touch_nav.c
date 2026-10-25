@@ -368,7 +368,7 @@ static void prv_apply_tier_exclusion(TouchNavState *state, TouchNavRoute route) 
 // ---------------------------------------------------------------------------------------------
 // Bridge
 
-static ButtonId prv_swipe_button(SwipeDirection direction) {
+ButtonId touch_nav_swipe_button(SwipeDirection direction) {
   // Content-scroll convention: the emulated button opposes finger travel, matching native
   // MenuLayer/ScrollLayer touch. Finger up scrolls content up (= DOWN button); finger down = UP.
   // The horizontal axis is not a scroll: swiping left-to-right (right) = BACK, right-to-left
@@ -444,7 +444,7 @@ static void prv_recognizer_event(const Recognizer *recognizer, RecognizerEvent e
         if (recognizer == state->swipe) {
           // A swipe over the bar stays full-screen: only taps are zoned.
           const SwipeDirection dir = swipe_recognizer_get_direction((Recognizer *)recognizer);
-          prv_emit_click(state, prv_swipe_button(dir));
+          prv_emit_click(state, touch_nav_swipe_button(dir));
         } else if (recognizer == state->tap) {
           // Route the tap into the action-bar UP/SELECT/DOWN zone if the tap point is inside a
           // present bar; otherwise (no bar, or a tap outside it) this is a plain SELECT -- unless

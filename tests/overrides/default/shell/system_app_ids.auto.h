@@ -19,3 +19,7 @@
 #define APP_ID_GOLF               ((AppInstallId) - 52)
 #define APP_ID_SPORTS             ((AppInstallId) - 53)
 #define APP_ID_HEALTH_APP         ((AppInstallId) - 82)
+
+#define APP_ID_TIMELINE_PAST        ((AppInstallId) - 96)
+#define APP_ID_TIMELINE_FULL        ((AppInstallId) - 32)
+#define APP_ID_QUICK_LAUNCH_NOTHING ((AppInstallId) - 101)

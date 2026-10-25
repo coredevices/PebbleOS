@@ -91,6 +91,11 @@ void watchface_init(void) {
   prv_watchface_configure_click_handlers();
 }
 
+#ifdef CONFIG_TOUCH
+void watchface_handle_touch_event(const TouchEvent *event) {
+}
+#endif
+
 void watchface_handle_button_event(PebbleEvent *e) {
   // Only handle button press if app state indicates that the app is still running
   // which is not in the process of closing

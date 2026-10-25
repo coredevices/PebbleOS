@@ -59,6 +59,9 @@ typedef struct ProcessContext {
   //! The button information that launched the app used to provide the app this information
   ButtonId launch_button;
 
+  //! Quick-launch metadata independent of the app's arguments.
+  AppQuickLaunchAction quick_launch_action;
+
   //! Used to allow the application to specify the reason it exited
   AppExitReason exit_reason;
 

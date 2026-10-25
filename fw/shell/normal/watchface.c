@@ -3,6 +3,15 @@
 
 #include "watchface.h"
 
+#ifdef CONFIG_TOUCH
+#include "watchface_swipe.h"
+
+#include <pbl/services/touch/touch.h>
+
+#include <applib/ui/recognizer/touch_nav.h>
+#include <kernel/ui/modals/modal_manager.h>
+#endif
+
 #include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/compositor/compositor_transitions.h>
@@ -29,6 +38,10 @@
 #define COMBO_BACK_UP_BUTTONS ((BIT_SET << BUTTON_ID_BACK) | (BIT_SET << BUTTON_ID_UP))
 #define COMBO_UP_DOWN_BUTTONS ((BIT_SET << BUTTON_ID_UP) | (BIT_SET << BUTTON_ID_DOWN))
 
+#ifdef CONFIG_TOUCH
+static WatchfaceSwipe s_swipe;
+#endif
+
 static ClickManager s_click_manager;
 static uint8_t s_buttons_pressed = BIT_CLEAR;
 static AppTimer *s_combo_back_hold_timer = nullptr;
@@ -38,7 +51,7 @@ static void prv_launch_quick_launch_app(AppInstallId app_id, ButtonId button,
                                         AppLaunchReason timeline_reason,
                                         AppQuickLaunchAction action);
 
-static bool prv_should_ignore_button_click(void) {
+static bool prv_should_ignore_input(void) {
   if (app_manager_get_task_context()->closing_state != ProcessRunState_Running) {
     // Ignore if the app is not running (such as if it is in the process of closing)
     return true;
@@ -173,6 +186,7 @@ static void prv_launch_timeline_app(AppInstallId app_id, ButtonId button, AppLau
     .id = app_id,
     .common.reason = reason,
     .common.button = button,
+    .common.quick_launch_action = action,
     .common.args = &s_timeline_args,
     .common.transition = animation,
   });
@@ -265,14 +279,38 @@ static void prv_watchface_configure_click_handlers(void) {
 void watchface_init(void) {
   click_manager_init(&s_click_manager);
   prv_watchface_configure_click_handlers();
+#ifdef CONFIG_TOUCH
+  watchface_swipe_init(&s_swipe);
+#endif
 }
 
+#ifdef CONFIG_TOUCH
+void watchface_handle_touch_event(const TouchEvent *event) {
+  const bool modal_focused =
+      modal_manager_get_enabled() && !(modal_manager_get_properties() & ModalProperty_Unfocused);
+  const bool eligible = app_manager_is_watchface_running() && !modal_focused &&
+                        !compositor_is_animating() && !prv_should_ignore_input() &&
+                        s_buttons_pressed == BIT_CLEAR && !prv_is_any_combo_active() &&
+                        touch_nav_enabled();
+  const SwipeDirection direction = watchface_swipe_handle_touch(&s_swipe, event, eligible);
+  if (direction == SwipeDirection_None || !quick_launch_swipe_is_enabled(direction)) {
+    return;
+  }
+  prv_launch_quick_launch_app(quick_launch_swipe_get_app(direction),
+                              touch_nav_swipe_button(direction), APP_LAUNCH_QUICK_LAUNCH,
+                              APP_QUICK_LAUNCH_ACTION_SWIPE);
+}
+#endif
+
 void watchface_handle_button_event(PebbleEvent *e) {
-  if (prv_should_ignore_button_click()) {
+  if (prv_should_ignore_input()) {
     return;
   }
   switch (e->type) {
     case PEBBLE_BUTTON_DOWN_EVENT:
+#ifdef CONFIG_TOUCH
+      watchface_swipe_cancel(&s_swipe);
+#endif
       s_buttons_pressed |= (BIT_SET << e->button.button_id);
       click_recognizer_handle_button_down(&s_click_manager.recognizers[e->button.button_id]);
       prv_check_combo_back_hold();
@@ -317,4 +355,8 @@ void watchface_start_low_power(void) {
 
 void watchface_reset_click_manager(void) {
   click_manager_reset(&s_click_manager);
+#ifdef CONFIG_TOUCH
+  // Focus and app transitions also cancel any in-flight watchface swipe.
+  watchface_swipe_cancel(&s_swipe);
+#endif
 }
