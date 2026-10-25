@@ -558,6 +558,13 @@ int zbt_pbap_sync(unsigned books) {
   return zbt_host_pbap_sync(books & ZBT_BOOK_ALL);
 }
 
+int zbt_pbap_refresh(unsigned books, uint32_t max_age_ms) {
+  if (s_status.state != ZBT_STATE_READY) {
+    return -EAGAIN;
+  }
+  return zbt_host_pbap_refresh(books & ZBT_BOOK_ALL, max_age_ms);
+}
+
 int zbt_hfp_audio_on_watch(bool on_watch) {
   if (s_status.state != ZBT_STATE_READY) {
     return -EAGAIN;
