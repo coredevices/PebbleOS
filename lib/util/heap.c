@@ -181,6 +181,32 @@ static void prv_calc_totals(Heap *const heap, unsigned int *used, unsigned int *
   util_dbgserial_str(format_str);
 }
 
+size_t heap_get_largest_free_blocks(Heap *const heap, unsigned int *sizes, size_t max) {
+  UTIL_ASSERT(heap);
+  size_t n = 0;
+
+  heap_lock(heap);
+  for (HeapInfo_t *block = heap->begin; block < heap->end; block = get_next_block(heap, block)) {
+    if (block->is_allocated) {
+      continue;
+    }
+    const unsigned int size = block->Size * ALIGNMENT_SIZE;
+    // Insert in descending order, dropping the smallest when full.
+    size_t i = (n < max) ? n++ : max;
+    while (i > 0 && sizes[i - 1] < size) {
+      if (i < max) {
+        sizes[i] = sizes[i - 1];
+      }
+      i--;
+    }
+    if (i < max) {
+      sizes[i] = size;
+    }
+  }
+  heap_unlock(heap);
+  return n;
+}
+
 void heap_calc_totals(Heap *const heap, unsigned int *used, unsigned int *free,
                       unsigned int *max_free) {
   UTIL_ASSERT(heap);

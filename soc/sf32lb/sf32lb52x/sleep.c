@@ -24,6 +24,12 @@ void soc_sf32lb_sleep_release(SocSf32lbSleepLevel level) {
   pbl_irq_unlock();
 }
 
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+int soc_sf32lb_sleep_blocks(SocSf32lbSleepLevel level) {
+  return level > SOC_SF32LB_ACTIVE && level <= SOC_SF32LB_DEEPSLEEP ? s_block_count[level] : 0;
+}
+#endif
+
 SocSf32lbSleepLevel soc_sf32lb_sleep_max_level(void) {
   // The shallowest blocked level forbids itself and everything deeper, so the
   // deepest permitted level is one step shallower than it.

@@ -628,6 +628,14 @@
       ]
     },
     {
+      "id": -198,
+      "enum": "BT_CLASSIC_PROBE",
+      "md_fn": "bt_classic_probe_get_app_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_BT_CLASSIC_PROBE"
+      ]
+    },
+    {
       "id": -200,
       "enum": "DIALER",
       "md_fn": "dialer_get_app_info",

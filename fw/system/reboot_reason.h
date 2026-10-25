@@ -87,3 +87,8 @@ uint32_t reboot_get_slot_of_last_launched_app(void);
 void reboot_set_slot_of_last_launched_app(uint32_t app_slot);
 
 RebootReasonCode reboot_reason_get_last_reboot_reason(void);
+
+#ifdef CONFIG_REBOOT_REASON_KEEP_LAST
+//! The last reboot reason in full, as it was before boot cleared it.
+void reboot_reason_get_last(RebootReason *reason);
+#endif

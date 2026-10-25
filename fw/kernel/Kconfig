@@ -6,3 +6,18 @@ config TASK_TIMER_POOL_SIZE
     default 192
     help
       Number of TaskTimer slots reserved in .kernel_bss
+
+config REBOOT_REASON_KEEP_LAST
+    bool "Keep the last reboot reason in full"
+    help
+      The reboot reason is cleared once it has been logged at boot, and only
+      its code is kept. With this option the whole reason (for an assert or a
+      hard fault, the caller's address) stays available from
+      reboot_reason_get_last().
+
+config KERNEL_HEAP_BOOT_MIN_HEADROOM
+    bool "Track the kernel heap's smallest headroom since boot"
+    help
+      The analytics heartbeat resets the kernel heap's high water mark every
+      hour. With this option the smallest headroom seen at each reset is kept,
+      so kernel_heap_get_boot_minimum_headroom() covers the whole boot.

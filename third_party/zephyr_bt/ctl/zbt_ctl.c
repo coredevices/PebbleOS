@@ -43,6 +43,10 @@
 #include <kernel/memory_layout.h>
 #include <kernel/pebble_tasks.h>
 #include <system/status_codes.h>
+#ifdef CONFIG_REBOOT_REASON_KEEP_LAST
+#include <system/die.h>
+#include <system/reboot_reason.h>
+#endif
 
 // Disconnecting takes at most 3 s (port), then the host threads exit; a command
 // in flight can hold the Zephyr thread for its 10 s timeout.
@@ -662,9 +666,11 @@ static void prv_keep_connected(bool now);
 static void prv_bat_sample_bg(void *data) {
   BatteryConstants bat;
   if (s_status.state == ZBT_STATE_OFF) {
+#ifndef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
     // Only the probe shows it: no waking the watch for it.
     new_timer_stop(s_bat_timer);
     return;
+#endif
     // The host stopped: what the watch draws without it.
     if (battery_get_constants(&bat) == 0) {
       s_bat_off_sum += bat.i_ua;
@@ -887,7 +893,15 @@ void zbt_ctl_sco(bool up) {
 }
 
 void zbt_ctl_diag(uint16_t kind, uint32_t a, uint32_t b, uint32_t c) {
-#if defined(UNITTEST)
+#ifdef CONFIG_REBOOT_REASON_KEEP_LAST
+  RebootReason reason = {
+    .code = RebootReasonCode_Assert,
+    .data16 = kind,
+    .watchdog = {.stuck_task_pc = a, .stuck_task_lr = b, .stuck_task_callback = c},
+  };
+  reboot_reason_set(&reason);
+  reset_due_to_software_failure();
+#elif defined(UNITTEST)
   fprintf(stderr, "zbt diag %x: %08lx %08lx %08lx\n", kind, (unsigned long)a, (unsigned long)b,
           (unsigned long)c);
   abort();

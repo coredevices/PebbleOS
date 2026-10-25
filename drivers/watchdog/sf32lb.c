@@ -14,6 +14,9 @@
 #define WDT_CMD_TIMEOUT_US 48000U
 
 static McuRebootReason s_cached_reset_flag;
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+static uint32_t s_reset_wsr;
+#endif
 
 static inline uint32_t prv_wdt_getreg(uint32_t offset) {
   return pbl_readl(SF32LB52_WDT1_BASE + offset);
@@ -77,6 +80,9 @@ bool watchdog_check_reset_flag(void) {
 McuRebootReason watchdog_clear_reset_flag(void) {
   uint32_t wsr = prv_pmuc_getreg(SF32LB52_PMUC_WSR_OFFSET);
   prv_pmuc_putreg(SF32LB52_PMUC_WCR_OFFSET, 0xffffffffU);
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+  s_reset_wsr = wsr;
+#endif
 
   s_cached_reset_flag = (McuRebootReason){
     .brown_out_reset = 0,
@@ -94,3 +100,9 @@ McuRebootReason watchdog_clear_reset_flag(void) {
 McuRebootReason watchdog_get_reset_flag(void) {
   return s_cached_reset_flag;
 }
+
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+uint32_t watchdog_get_reset_wsr(void) {
+  return s_reset_wsr;
+}
+#endif

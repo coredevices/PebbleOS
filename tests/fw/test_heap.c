@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/util/heap.h>
+#include <pbl/util/size.h>
 
 #include <applib/app_heap_util.h>
 #include <clar.h>
@@ -248,6 +249,61 @@ void test_heap__heap_bytes_used(void) {
   cl_assert(abs((before_used + malloc_size_bytes) - (after_used)) < 16);
 
   heap_free(heap, ptr, 0);
+  free(heap_space);
+}
+
+static int prv_compare_ptr(const void *a, const void *b) {
+  const uintptr_t x = (uintptr_t)*(void *const *)a;
+  const uintptr_t y = (uintptr_t)*(void *const *)b;
+  return (x > y) - (x < y);
+}
+
+void test_heap__largest_free_blocks(void) {
+  const size_t heap_size_bytes = 4096;
+  void *heap_space = malloc(heap_size_bytes);
+  cl_assert(heap_space != NULL);
+  Heap heap;
+  heap_init(&heap, heap_space, (char *)heap_space + heap_size_bytes, false);
+
+  void *blocks[16];
+  size_t n = 0;
+  while (n < ARRAY_LENGTH(blocks) && (blocks[n] = heap_malloc(&heap, 512, 0)) != NULL) {
+    n++;
+  }
+  cl_assert(n >= 7);
+  qsort(blocks, n, sizeof(blocks[0]), prv_compare_ptr);
+
+  // Free runs of one and three blocks and the last block, kept apart by blocks 1 and 5.
+  heap_free(&heap, blocks[0], 0);
+  heap_free(&heap, blocks[2], 0);
+  heap_free(&heap, blocks[3], 0);
+  heap_free(&heap, blocks[4], 0);
+  heap_free(&heap, blocks[n - 1], 0);
+
+  unsigned int used;
+  unsigned int free_bytes;
+  unsigned int max_free;
+  heap_calc_totals(&heap, &used, &free_bytes, &max_free);
+
+  unsigned int sizes[2];
+  cl_assert_equal_i(heap_get_largest_free_blocks(&heap, sizes, ARRAY_LENGTH(sizes)), 2);
+  cl_assert_equal_i(sizes[0], max_free);
+  cl_assert(sizes[0] >= 3 * 512);
+  cl_assert(sizes[1] >= 512 && sizes[1] < sizes[0]);
+
+  unsigned int all[8];
+  const size_t count = heap_get_largest_free_blocks(&heap, all, ARRAY_LENGTH(all));
+  unsigned int sum = 0;
+  for (size_t i = 0; i < count; i++) {
+    sum += all[i];
+    cl_assert(i == 0 || all[i] <= all[i - 1]);
+  }
+  cl_assert_equal_i(sum, free_bytes);
+
+  for (size_t i = 5; i < n - 1; i++) {
+    heap_free(&heap, blocks[i], 0);
+  }
+  heap_free(&heap, blocks[1], 0);
   free(heap_space);
 }
 

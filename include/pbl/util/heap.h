@@ -218,6 +218,16 @@ void heap_calc_totals(Heap *const heap, unsigned int *used, unsigned int *free,
                       unsigned int *max_free);
 
 /**
+ * @brief Get the sizes of the largest free blocks, largest first.
+ *
+ * @param heap Heap.
+ * @param[out] sizes Block sizes in bytes, including the block header.
+ * @param max Capacity of @p sizes.
+ * @return Number of sizes written.
+ */
+size_t heap_get_largest_free_blocks(Heap *const heap, unsigned int *sizes, size_t max);
+
+/**
  * @brief Dump every block and the heap totals to the debug serial port.
  *
  * Only available with @c CONFIG_MALLOC_INSTRUMENTATION.

@@ -53,6 +53,14 @@ McuRebootReason watchdog_clear_reset_flag(void);
  */
 McuRebootReason watchdog_get_reset_flag(void);
 
+#if defined(CONFIG_DEMO_APP_BT_CLASSIC_PROBE) && defined(CONFIG_SOC_SF32LB52)
+/**
+ * @brief The PMU's wake and reset status (PMUC WSR) as watchdog_clear_reset_flag() read it at
+ *        boot, in full: which watchdog, a low battery, the power key; for the BT Classic Probe.
+ */
+uint32_t watchdog_get_reset_wsr(void);
+#endif
+
 #else
 
 /** @cond INTERNAL_HIDDEN */

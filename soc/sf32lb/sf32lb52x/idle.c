@@ -44,6 +44,22 @@ static RtcTicks s_analytics_deepwfi_ticks;
 static RtcTicks s_analytics_deepsleep_ticks;
 static RtcTicks s_last_ticks;
 static uint32_t s_analytics_ipc_not_idle_count;
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+// Since boot, unlike the hourly analytics: where the time went.
+static uint64_t s_total_wfi_ticks;
+static uint64_t s_total_deepwfi_ticks;
+static uint64_t s_total_deepsleep_ticks;
+// Why an idle did not deep sleep: a driver blocks it, or the next wake is too near.
+static uint32_t s_no_ds_blocked;
+static uint32_t s_no_ds_short;
+// What woke the deep sleeps: the wake timer, the LCPU, a GPIO pin, anything else.
+static uint32_t s_wake_timer;
+static uint32_t s_wake_lcpu;
+static uint32_t s_wake_other;
+static uint32_t s_wake_pin[SOC_SF32LB_WAKE_PINS];
+// Deep sleeps by length: under 0.2 s, 1 s, 5 s, longer.
+static uint32_t s_ds_len[4];
+#endif
 static bool s_force_wfi;
 
 //! Early wake-up ticks (to avoid over-sleeping due to wake-up latency)
@@ -188,6 +204,13 @@ PBL_SECTION_RAM void pbl_soc_idle(pbl_tick_t max_ticks) {
   if (pbl_idle_confirm()) {
     SocSf32lbSleepLevel max_level = soc_sf32lb_sleep_max_level();
 
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+    if (max_level < SOC_SF32LB_DEEPSLEEP) {
+      s_no_ds_blocked++;
+    } else if (max_ticks < MIN_DEEPSLEEP_TICKS) {
+      s_no_ds_short++;
+    }
+#endif
     // Deep sleep needs a minimum idle window.
     if (max_ticks < MIN_DEEPSLEEP_TICKS) {
       max_level = MIN(max_level, SOC_SF32LB_DEEPWFI);
@@ -250,6 +273,13 @@ PBL_SECTION_RAM void pbl_soc_idle(pbl_tick_t max_ticks) {
 
         // Track deep sleep time for analytics
         s_analytics_deepsleep_ticks += elapsed_ticks;
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+        s_total_deepsleep_ticks += elapsed_ticks;
+        s_ds_len[elapsed_ticks < RTC_TICKS_HZ / 5   ? 0
+                 : elapsed_ticks < RTC_TICKS_HZ     ? 1
+                 : elapsed_ticks < 5 * RTC_TICKS_HZ ? 2
+                                                    : 3]++;
+#endif
 
         // stop LPTIM
         HAL_LPTIM_Counter_Stop_IT(&s_lptim);
@@ -316,6 +346,28 @@ PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
   HAL_HPAON_CLEAR_POWER_MODE();
 
   status = HAL_HPAON_GET_WSR();
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+  const uint32_t lcpu = HPSYS_AON_WSR_LP2HP_REQ_Msk | HPSYS_AON_WSR_LP2HP_IRQ_Msk;
+  if (status & HPSYS_AON_WSR_LPTIM1_Msk) {
+    s_wake_timer++;
+  }
+  if (status & lcpu) {
+    s_wake_lcpu++;
+  }
+  if (status & HPSYS_AON_WSR_GPIO1_Msk) {
+    // The GPIO handler has not run yet: its pending pins are what woke us.
+    const GPIO1_TypeDef *gpio = (const GPIO1_TypeDef *)GPIO1_BASE;
+    const uint32_t isr[2] = {gpio->ISR0, gpio->ISR1};
+    for (int i = 0; i < SOC_SF32LB_WAKE_PINS; i++) {
+      if (isr[i / 32] & (1UL << (i % 32))) {
+        s_wake_pin[i]++;
+      }
+    }
+  }
+  if (!(status & (HPSYS_AON_WSR_LPTIM1_Msk | lcpu | HPSYS_AON_WSR_GPIO1_Msk))) {
+    s_wake_other++;
+  }
+#endif
   status &= ~HPSYS_AON_WSR_PIN_ALL;
   HAL_HPAON_CLEAR_WSR(status);
 }
@@ -327,8 +379,14 @@ void SysTick_Handler(void) {
 
   if (s_last_sleep_type == SleepTypeWfi) {
     s_analytics_wfi_ticks++;
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+    s_total_wfi_ticks++;
+#endif
   } else if (s_last_sleep_type == SleepTypeDeepWfi) {
     s_analytics_deepwfi_ticks++;
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+    s_total_deepwfi_ticks++;
+#endif
   }
 
   s_last_sleep_type = SleepTypeNone;
@@ -337,6 +395,37 @@ void SysTick_Handler(void) {
   // SysTick due to flash erase times (runs with IRQs disabled to not interfere
   // with XIP, and can easily span multiple ticks)
 }
+
+#ifdef CONFIG_DEMO_APP_BT_CLASSIC_PROBE
+void soc_sf32lb_sleep_why(uint32_t *blocked, uint32_t *short_window) {
+  *blocked = s_no_ds_blocked;
+  *short_window = s_no_ds_short;
+}
+
+void soc_sf32lb_sleep_lengths(uint32_t lengths[4]) {
+  for (int i = 0; i < 4; i++) {
+    lengths[i] = s_ds_len[i];
+  }
+}
+
+void soc_sf32lb_sleep_wakes(uint32_t *timer, uint32_t *lcpu, uint32_t *other,
+                            uint32_t pins[SOC_SF32LB_WAKE_PINS]) {
+  *timer = s_wake_timer;
+  *lcpu = s_wake_lcpu;
+  *other = s_wake_other;
+  for (int i = 0; i < SOC_SF32LB_WAKE_PINS; i++) {
+    pins[i] = s_wake_pin[i];
+  }
+}
+
+void soc_sf32lb_sleep_totals(uint64_t *wfi, uint64_t *deepwfi, uint64_t *deepsleep,
+                             uint32_t *ipc_not_idle) {
+  *wfi = s_total_wfi_ticks;
+  *deepwfi = s_total_deepwfi_ticks;
+  *deepsleep = s_total_deepsleep_ticks;
+  *ipc_not_idle = s_analytics_ipc_not_idle_count;
+}
+#endif
 
 void pbl_analytics_external_collect_cpu_stats(void) {
   uint32_t wfi_ticks = s_analytics_wfi_ticks;

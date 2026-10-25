@@ -6,6 +6,11 @@
 #include <pbl/mcu/interrupts.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/util/heap.h>
+#ifdef CONFIG_KERNEL_HEAP_BOOT_MIN_HEADROOM
+#include <stdint.h>
+
+#include <pbl/util/math.h>
+#endif
 
 #ifndef CONFIG_ARCH_POSIX
 #include <cmsis_core.h>
@@ -16,6 +21,10 @@
 #endif
 
 static Heap s_kernel_heap;
+
+#ifdef CONFIG_KERNEL_HEAP_BOOT_MIN_HEADROOM
+static uint32_t s_boot_min_headroom = UINT32_MAX;
+#endif
 
 #ifdef CONFIG_ARCH_POSIX
 // Kernel threads run one at a time, and only yield the CPU when they block,
@@ -75,8 +84,17 @@ void pbl_analytics_external_collect_kernel_heap_stats(void) {
 
   // Reset the high water mark so we can see if there are certain periods of time
   // where we really tax the heap
+#ifdef CONFIG_KERNEL_HEAP_BOOT_MIN_HEADROOM
+  s_boot_min_headroom = MIN(s_boot_min_headroom, headroom);
+#endif
   s_kernel_heap.high_water_mark = s_kernel_heap.current_size;
 }
+
+#ifdef CONFIG_KERNEL_HEAP_BOOT_MIN_HEADROOM
+uint32_t kernel_heap_get_boot_minimum_headroom(void) {
+  return MIN(s_boot_min_headroom, heap_get_minimum_headroom(&s_kernel_heap));
+}
+#endif
 
 Heap *kernel_heap_get(void) {
   return &s_kernel_heap;

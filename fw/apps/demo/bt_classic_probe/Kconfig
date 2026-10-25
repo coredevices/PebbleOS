@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DEMO_APP_BT_CLASSIC_PROBE
+    bool "BT Classic probe"
+    depends on BT_HCI_SF32LB52 && !RECOVERY_FW && !MFG
+    # The call view reads the LCPU's voice path.
+    depends on BT_CALL_AUDIO || !BT_ZEPHYR_CLASSIC
+    select KERNEL_HEAP_BOOT_MIN_HEADROOM
+    select REBOOT_REASON_KEEP_LAST
+    help
+      Reads the SF32LB52 controller's BR/EDR and LE feature bits over HCI
+      and, on Select, makes the controller discoverable over BR/EDR. Nothing
+      is persisted and boot is unchanged; discoverability is cleared on exit.
