@@ -90,6 +90,7 @@ int zbt_host_hfp_dial(const char *number, uint32_t delay_ms);
 bool zbt_host_hfp_dial_cancel(void);
 int zbt_host_hfp_redial(void);
 int zbt_host_pbap_sync(unsigned books);
+int zbt_host_pbap_refresh(unsigned books, uint32_t max_age_ms);
 //! The entries handed over are saved: ask the phone for more.
 void zbt_host_pbap_next(void);
 int zbt_host_pairing_reply(bool accept);

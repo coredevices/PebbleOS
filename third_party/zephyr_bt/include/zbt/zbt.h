@@ -415,6 +415,13 @@ struct zbt_book_entry {
 int zbt_pbap_sync(unsigned books);
 
 /**
+ * @brief Read again, in the background, those of @p books (as for zbt_pbap_sync()) not read in
+ *        full within the last @p max_age_ms (or not since the host started).
+ * @return 0, also when none needed it; -EAGAIN when the host is not ready.
+ */
+int zbt_pbap_refresh(unsigned books, uint32_t max_age_ms);
+
+/**
  * @brief The name of @p number in the phone's contacts on the watch (the trailing digits
  *        compared, so +81 90... finds 090...).
  * @return Whether one was found, copied to @p name.

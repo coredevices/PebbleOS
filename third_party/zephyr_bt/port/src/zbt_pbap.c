@@ -79,6 +79,8 @@ static struct {
   unsigned auto_books;
   //! Books asked for (zbt_host_pbap_sync(), any task).
   unsigned requested;
+  //! When each book was last read in full (k_uptime_get()), 0 for not since the host started.
+  int64_t read_ms[ZBT_BOOK_COUNT];
   uint8_t channel;
   bool ready;
 } s_p;
@@ -483,6 +485,9 @@ static int prv_pull(bool first) {
 // How the book being read ended, before it is handed over.
 static void prv_book_result(int result) {
   zbt_ctl_status()->pbap_result[s->book] = (int16_t)result;
+  if (result == 0) {
+    s_p.read_ms[s->book] = k_uptime_get();
+  }
 }
 
 // The next book asked for, or the end.
@@ -749,6 +754,24 @@ void zbt_pbap_auto(unsigned books, uint32_t delay_ms) {
   }
   s_p.auto_books |= books;
   (void)k_work_reschedule(&s_p.auto_work, K_MSEC(delay_ms));
+}
+
+int zbt_host_pbap_refresh(unsigned books, uint32_t max_age_ms) {
+  if (!s_p.ready) {
+    return -EAGAIN;
+  }
+  const int64_t now = k_uptime_get();
+  unsigned stale = 0;
+  for (int book = 0; book < ZBT_BOOK_COUNT; book++) {
+    if ((books & (1U << book)) &&
+        (s_p.read_ms[book] == 0 || now - s_p.read_ms[book] > (int64_t)max_age_ms)) {
+      stale |= 1U << book;
+    }
+  }
+  if (stale != 0) {
+    zbt_pbap_auto(stale, 0);
+  }
+  return 0;
 }
 
 // The watch's PCE record (PBAP 1.2), as Zephyr's shell has it: Android offers contact
