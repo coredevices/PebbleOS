@@ -32,6 +32,8 @@
 #define FAV_FILE      "dialer_favorites"
 #define FAV_FILE_SIZE 1024
 #define FAV_MAX       10
+// Opening the Dialer reads the phone's contacts and favorites again when older than this.
+#define REFRESH_AGE_MS (10 * 60 * 1000)
 // Phone book rows read at a time.
 #define CACHE_ENTRIES 8
 
@@ -1095,6 +1097,9 @@ static void prv_init(void) {
                                                  });
 
   app_window_stack_push(&data->main_window, true);
+  // Contacts and favorites changed on the phone since: read again in the background (the
+  // history follows each call already).
+  (void)zbt_pbap_refresh((1U << ZBT_BOOK_CONTACTS) | (1U << ZBT_BOOK_FAVORITES), REFRESH_AGE_MS);
 }
 
 static void prv_main(void) {
