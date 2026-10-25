@@ -9,6 +9,14 @@
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#ifdef CONFIG_BT_HCI_ROUTER
+#include <errno.h>
+#include <string.h>
+
+#include <pbl/bluetooth/hci_router.h>
+#include <pbl/kernel/debug.h>
+#include <pbl/kernel/mutex.h>
+#endif
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
@@ -266,6 +274,171 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   return -1;
 }
 
+#ifdef CONFIG_BT_HCI_ROUTER
+// Longer than NimBLE's own 2 s command timeout, which fires first.
+#define ROUTER_GATE_TIMEOUT_MS 2500
+
+static bool s_router_active;
+static struct hci_router s_router;
+static PBL_MUTEX_DEFINE(s_router_tx_mutex);
+static PBL_SEM_DEFINE(s_router_cmd_gate, 1, 1);
+
+static int prv_router_nimble_evt(void *ctx, const uint8_t *evt, size_t len, bool discardable) {
+  uint8_t *buf = prv_alloc_evt(discardable);
+  if (buf == NULL) {
+    return -1;
+  }
+
+  memcpy(buf, evt, len);
+  prv_hci_trace(HCI_H4_EVT, buf, len, H4TL_PACKET_CTRL);
+  (void)ble_transport_to_hs_evt(buf);
+  return 0;
+}
+
+static int prv_router_nimble_acl(void *ctx, const uint8_t *acl, size_t len) {
+  struct os_mbuf *om = prv_alloc_acl_from_ll();
+  if (os_mbuf_append(om, acl, len) != 0) {
+    os_mbuf_free_chain(om);
+    return -1;
+  }
+
+  prv_hci_trace(HCI_H4_ACL, acl, len, H4TL_PACKET_CTRL);
+  (void)ble_transport_to_hs_acl(om);
+  return 0;
+}
+
+static bool prv_router_tx_lock(void *ctx, bool wait) {
+  return pbl_mutex_lock(&s_router_tx_mutex, wait ? PBL_FOREVER : PBL_NO_WAIT) == 0;
+}
+
+static void prv_router_tx_unlock(void *ctx) {
+  pbl_mutex_unlock(&s_router_tx_mutex);
+}
+
+static int prv_router_tx_write(void *ctx, const uint8_t *data, size_t len) {
+  return ipc_queue_write(s_ipc_port, data, len, IPC_TIMEOUT_TICKS) == len ? 0 : -1;
+}
+
+static bool prv_router_gate_take(void *ctx, bool wait) {
+  return pbl_sem_take(&s_router_cmd_gate, wait ? PBL_MSEC(ROUTER_GATE_TIMEOUT_MS) : PBL_NO_WAIT) ==
+         0;
+}
+
+static void prv_router_gate_give(void *ctx) {
+  pbl_sem_give(&s_router_cmd_gate);
+}
+
+static const struct hci_router_ops s_router_ops = {
+  .nimble_evt = prv_router_nimble_evt,
+  .nimble_acl = prv_router_nimble_acl,
+  .tx_lock = prv_router_tx_lock,
+  .tx_unlock = prv_router_tx_unlock,
+  .tx_write = prv_router_tx_write,
+  .gate_take = prv_router_gate_take,
+  .gate_give = prv_router_gate_give,
+};
+
+static bool prv_router_mbuf_next(void *it, const uint8_t **data, size_t *len) {
+  struct os_mbuf **x = it;
+  if (*x == NULL) {
+    return false;
+  }
+  *data = (*x)->om_data;
+  *len = (*x)->om_len;
+  *x = SLIST_NEXT(*x, om_next);
+  return true;
+}
+
+static int prv_router_tx_mbuf(uint8_t h4_type, struct os_mbuf *om) {
+  struct os_mbuf *x = om;
+  int rc = hci_router_tx_data(&s_router, h4_type, prv_router_mbuf_next, &x);
+  os_mbuf_free_chain(om);
+  return rc == 0 ? 0 : BLE_ERR_MEM_CAPACITY;
+}
+
+bool hci_router_is_active(void) {
+  return s_router_active;
+}
+
+void hci_router_get_stats(struct hci_router_stats *out) {
+  if (s_router_active) {
+    *out = s_router.stats;
+  } else {
+    memset(out, 0, sizeof(*out));
+  }
+}
+
+size_t hci_router_get_log(struct hci_router_log_entry *out) {
+  return s_router_active ? hci_router_log_copy(&s_router, out) : 0;
+}
+
+bool hci_router_get_sync_conn(uint8_t out[HCI_ROUTER_SYNC_CONN_LEN]) {
+  if (!s_router_active || !s_router.sync_conn_valid) {
+    return false;
+  }
+  memcpy(out, s_router.sync_conn, HCI_ROUTER_SYNC_CONN_LEN);
+  return true;
+}
+
+void hci_router_get_smp(struct hci_router_smp_pdu *req, struct hci_router_smp_pdu *rsp) {
+  if (s_router_active) {
+    *req = s_router.smp_req;
+    *rsp = s_router.smp_rsp;
+  } else {
+    memset(req, 0, sizeof(*req));
+    memset(rsp, 0, sizeof(*rsp));
+  }
+}
+
+void hci_router_rx_stack(uint32_t *size, uint32_t *unused) {
+  struct pbl_thread_stack_info info = {0};
+  if (s_hci_task_handle != NULL) {
+    pbl_thread_stack_info(s_hci_task_handle, &info);
+  }
+  *size = info.size;
+  *unused = info.high_water;
+}
+
+int hci_router_classic_attach(hci_router_classic_cb_t evt, hci_router_classic_cb_t acl, void *ctx) {
+  if (!s_router_active) {
+    return -ENODEV;
+  }
+  hci_router_set_classic(&s_router, evt, acl, ctx);
+  return 0;
+}
+
+int hci_router_classic_send_cmd(const uint8_t *cmd, size_t len) {
+  if (!s_router_active) {
+    return -ENODEV;
+  }
+  return hci_router_classic_cmd(&s_router, cmd, len);
+}
+
+struct prv_single_frag {
+  const uint8_t *data;
+  size_t len;
+};
+
+static bool prv_single_frag_next(void *it, const uint8_t **data, size_t *len) {
+  struct prv_single_frag *f = it;
+  if (f->data == NULL) {
+    return false;
+  }
+  *data = f->data;
+  *len = f->len;
+  f->data = NULL;
+  return true;
+}
+
+int hci_router_classic_send_acl(const uint8_t *pkt, size_t len) {
+  if (!s_router_active) {
+    return -ENODEV;
+  }
+  struct prv_single_frag f = {.data = pkt, .len = len};
+  return hci_router_tx_data(&s_router, HCI_ROUTER_H4_ACL, prv_single_frag_next, &f);
+}
+#endif // CONFIG_BT_HCI_ROUTER
+
 static void prv_hci_task_main(void *unused) {
   uint8_t buf[64];
 
@@ -276,6 +449,12 @@ static void prv_hci_task_main(void *unused) {
       size_t len;
 
       len = ipc_queue_read(s_ipc_port, buf, sizeof(buf));
+#ifdef CONFIG_BT_HCI_ROUTER
+      if (s_router_active && len > 0U) {
+        hci_router_rx(&s_router, buf, len);
+        continue;
+      }
+#endif
       if (len > 0U) {
         uint8_t *pbuf = buf;
         while (len > 0U) {
@@ -319,6 +498,11 @@ void ble_transport_ll_reinit(void) {
   int ret;
 
   hci_h4_sm_init(&s_hci_h4sm, &s_hci_h4_allocs_from_ll, prv_hci_frame_cb);
+#ifdef CONFIG_BT_HCI_ROUTER
+  if (s_router_active) {
+    hci_router_reset(&s_router);
+  }
+#endif
 
   ret = prv_config_ipc();
   PBL_ASSERTN(ret == 0);
@@ -331,6 +515,14 @@ void ble_transport_ll_init(void) {
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
   uart_init_tx_only(HCI_TRACE_UART);
   uart_set_baud_rate(HCI_TRACE_UART, 1000000);
+#endif
+
+#ifdef CONFIG_BT_HCI_ROUTER
+  // Decided once per boot, before the controller is powered.
+  s_router_active = hci_router_boot_consume();
+  if (s_router_active) {
+    hci_router_init(&s_router, &s_router_ops, MYNEWT_VAL(BLE_TRANSPORT_EVT_SIZE));
+  }
 #endif
 
   ble_transport_ll_reinit();
@@ -372,6 +564,17 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
 
   prv_hci_trace(HCI_H4_CMD, (uint8_t *)cmd, sizeof(*cmd) + cmd->length, H4TL_PACKET_HOST);
 
+#ifdef CONFIG_BT_HCI_ROUTER
+  if (s_router_active) {
+    if (hci_router_tx_cmd(&s_router, HCI_ROUTER_OWNER_NIMBLE, (const uint8_t *)cmd,
+                          sizeof(*cmd) + cmd->length) != 0) {
+      PBL_LOG_ERR("Failed to write HCI CMD");
+      err = BLE_ERR_MEM_CAPACITY;
+    }
+    goto exit;
+  }
+#endif
+
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
     PBL_LOG_ERR("Failed to write HCI CMD header");
@@ -399,6 +602,12 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   int err = 0;
 
   prv_hci_trace_mbuf(HCI_H4_ACL, om, H4TL_PACKET_HOST);
+
+#ifdef CONFIG_BT_HCI_ROUTER
+  if (s_router_active) {
+    return prv_router_tx_mbuf(HCI_H4_ACL, om);
+  }
+#endif
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1U, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
@@ -432,6 +641,12 @@ int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   struct os_mbuf *x;
 
   prv_hci_trace_mbuf(HCI_H4_ISO, om, H4TL_PACKET_HOST);
+
+#ifdef CONFIG_BT_HCI_ROUTER
+  if (s_router_active) {
+    return prv_router_tx_mbuf(HCI_H4_ISO, om);
+  }
+#endif
 
   written = ipc_queue_write(s_ipc_port, &h4_cmd, 1, IPC_TIMEOUT_TICKS);
   if (written != 1U) {
