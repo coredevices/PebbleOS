@@ -17,6 +17,11 @@
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/mutex.h>
 #endif
+#ifdef CONFIG_BT_CALL_AUDIO
+#include <pbl/bluetooth/lcpu_audio_probe.h>
+
+#include <bluetooth/lcpu_ring.h>
+#endif
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
@@ -479,6 +484,212 @@ static void prv_hci_task_main(void *unused) {
   }
 }
 
+#ifdef CONFIG_BT_CALL_AUDIO
+/* LCPU voice path (lcpu_audio_probe.h) */
+
+// IPC queue the LCPU rings for each voice packet (SiFli SDK SYS_HL_BT_AUDIO_QUEUE).
+#define AUDIO_QID 6
+// Shared memory of the voice path, and where the rev A LCPU image keeps its pointers to it.
+#define AUDIO_MEM          0x2040E000U
+#define AUDIO_MEM_SIZE     0x400U
+#define AUDIO_TO_HCPU_RING (AUDIO_MEM + 0x00U)
+#define AUDIO_TO_LCPU_RING (AUDIO_MEM + 0x20U)
+#define AUDIO_SCO_STA      (AUDIO_MEM + 0x40U)
+#define AUDIO_SCO_PARA     (AUDIO_MEM + AUDIO_MEM_SIZE - 20U)
+#define AUDIO_VARS         0x2040E6E8U
+
+static ipc_queue_handle_t s_audio_port = IPC_QUEUE_INVALID_HANDLE;
+static uint32_t s_audio_notifications;
+// Whether the LCPU runs, so its RAM can be read; taken around power changes.
+static bool s_lcpu_on;
+static PBL_MUTEX_DEFINE(s_lcpu_mutex);
+
+static lcpu_audio_notify_t s_audio_notify;
+static void *s_audio_notify_ctx;
+// The LCPU is kept awake for a call.
+static bool s_lcpu_held;
+
+static int32_t prv_audio_rx_ind(ipc_queue_handle_t handle, size_t size) {
+  s_audio_notifications++;
+  const lcpu_audio_notify_t notify = s_audio_notify;
+  if (notify != NULL) {
+    notify(s_audio_notify_ctx);
+  }
+  return 0;
+}
+
+// A doorbell only, as the SDK opens it: no buffers, nothing is ever written.
+static void prv_audio_queue_open(void) {
+  if (!s_router_active || s_audio_port != IPC_QUEUE_INVALID_HANDLE) {
+    return;
+  }
+  ipc_queue_cfg_t q_cfg = {
+    .qid = AUDIO_QID,
+    .rx_ind = prv_audio_rx_ind,
+  };
+  s_audio_port = ipc_queue_init(&q_cfg);
+  if (s_audio_port != IPC_QUEUE_INVALID_HANDLE && ipc_queue_open(s_audio_port) != 0) {
+    ipc_queue_deinit(s_audio_port);
+    s_audio_port = IPC_QUEUE_INVALID_HANDLE;
+  }
+}
+
+static void prv_audio_queue_close(void) {
+  if (s_audio_port != IPC_QUEUE_INVALID_HANDLE) {
+    ipc_queue_close(s_audio_port);
+    ipc_queue_deinit(s_audio_port);
+    s_audio_port = IPC_QUEUE_INVALID_HANDLE;
+  }
+}
+
+static void prv_set_lcpu_on(bool on) {
+  pbl_mutex_lock(&s_lcpu_mutex, PBL_FOREVER);
+  s_lcpu_on = on;
+  pbl_mutex_unlock(&s_lcpu_mutex);
+}
+
+void lcpu_audio_probe_read(struct lcpu_audio_probe *out) {
+  const uint32_t issr = hwp_hpsys_aon->ISSR;
+  *out = (struct lcpu_audio_probe){
+    .rev_id = __HAL_SYSCFG_GET_REVID(),
+    .notifications = s_audio_notifications,
+    .lcpu_wake_refs = g_hal_hpaon_lcpu_wakeup_ref_cnt,
+    .lcpu_wake_req = (issr & HPSYS_AON_ISSR_HP2LP_REQ) != 0,
+    .lcpu_active = (issr & HPSYS_AON_ISSR_LP_ACTIVE) != 0,
+  };
+  pbl_mutex_lock(&s_lcpu_mutex, PBL_FOREVER);
+  if (s_router_active && s_lcpu_on) {
+    // The LP system's RAM is only reachable while it is awake.
+    HAL_HPAON_WakeCore(CORE_ID_LCPU);
+    memcpy(out->vars, (const void *)AUDIO_VARS, sizeof(out->vars));
+    memcpy(&out->to_hcpu, (const void *)AUDIO_TO_HCPU_RING, sizeof(out->to_hcpu));
+    memcpy(&out->to_lcpu, (const void *)AUDIO_TO_LCPU_RING, sizeof(out->to_lcpu));
+    memcpy(out->sco_sta, (const void *)AUDIO_SCO_STA, sizeof(out->sco_sta));
+    // Where p_hl_sco_para points, if into the shared voice memory (other addresses may have
+    // no memory behind them).
+    const uint32_t para = out->vars[3];
+    out->sco_para_addr =
+        (para >= AUDIO_MEM && para <= AUDIO_MEM + AUDIO_MEM_SIZE - sizeof(out->sco_para))
+            ? para
+            : AUDIO_SCO_PARA;
+    memcpy(out->sco_para, (const void *)out->sco_para_addr, sizeof(out->sco_para));
+    uint16_t len = sizeof(out->soft_cvsd);
+    (void)HAL_LCPU_CONFIG_get(HAL_LCPU_CONFIG_SOFT_CVSD, (uint8_t *)&out->soft_cvsd, &len);
+    HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+    out->valid = true;
+  }
+  pbl_mutex_unlock(&s_lcpu_mutex);
+}
+void lcpu_audio_set_notify(lcpu_audio_notify_t cb, void *context) {
+  pbl_irq_lock();
+  s_audio_notify = cb;
+  s_audio_notify_ctx = context;
+  pbl_irq_unlock();
+}
+
+bool lcpu_audio_hold(bool hold) {
+  pbl_mutex_lock(&s_lcpu_mutex, PBL_FOREVER);
+  if (hold && !s_lcpu_held && s_router_active && s_lcpu_on) {
+    HAL_HPAON_WakeCore(CORE_ID_LCPU);
+    s_lcpu_held = true;
+  } else if (!hold && s_lcpu_held) {
+    HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+    s_lcpu_held = false;
+  }
+  const bool held = s_lcpu_held;
+  pbl_mutex_unlock(&s_lcpu_mutex);
+  return held;
+}
+
+// The ring's data, if the ring is sane: in the shared voice memory, past the ring headers.
+static volatile uint8_t *prv_ring_mem(const volatile struct lcpu_audio_ring *r, bool read) {
+  const uint32_t mem = read ? r->rd_buffer_ptr : r->wr_buffer_ptr;
+  const int32_t size = r->buffer_size;
+  if (size <= 0 || mem < AUDIO_SCO_STA + 0x10U || mem + (uint32_t)size > AUDIO_SCO_PARA) {
+    return NULL;
+  }
+  return (volatile uint8_t *)mem;
+}
+
+// Runs @p op on a ring with the LCPU awake; 0 when it is not readable.
+static size_t prv_ring_op(uint32_t ring_addr, bool read, uint8_t *out, const uint8_t *in,
+                          size_t len) {
+  size_t done = 0;
+  pbl_mutex_lock(&s_lcpu_mutex, PBL_FOREVER);
+  if (s_router_active && s_lcpu_on) {
+    if (!s_lcpu_held) {
+      HAL_HPAON_WakeCore(CORE_ID_LCPU);
+    }
+    volatile struct lcpu_audio_ring *r = (volatile struct lcpu_audio_ring *)ring_addr;
+    volatile uint8_t *mem = prv_ring_mem(r, read);
+    if (mem != NULL) {
+      done = read ? lcpu_ring_get(r, mem, out, len) : lcpu_ring_put(r, mem, in, len);
+    }
+    if (!s_lcpu_held) {
+      HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+    }
+  }
+  pbl_mutex_unlock(&s_lcpu_mutex);
+  return done;
+}
+
+size_t lcpu_audio_rx_read(uint8_t *out, size_t len) {
+  return prv_ring_op(AUDIO_TO_HCPU_RING, true, out, NULL, len);
+}
+
+size_t lcpu_audio_rx_packet(uint8_t *out, size_t max) {
+  size_t done = 0;
+  pbl_mutex_lock(&s_lcpu_mutex, PBL_FOREVER);
+  if (s_router_active && s_lcpu_on && max >= LCPU_AUDIO_HDR_BYTES) {
+    if (!s_lcpu_held) {
+      HAL_HPAON_WakeCore(CORE_ID_LCPU);
+    }
+    volatile struct lcpu_audio_ring *r = (volatile struct lcpu_audio_ring *)AUDIO_TO_HCPU_RING;
+    volatile uint8_t *mem = prv_ring_mem(r, true);
+    if (mem != NULL && lcpu_ring_peek(r, mem, out, LCPU_AUDIO_HDR_BYTES) != 0) {
+      const size_t len = LCPU_AUDIO_HDR_BYTES + out[0];
+      if (len > max) {
+        // Out of step with the packets: drop what is there, hand the header back.
+        uint8_t sink;
+        while (lcpu_ring_get(r, mem, &sink, 1) != 0) {
+        }
+        done = LCPU_AUDIO_HDR_BYTES;
+      } else {
+        done = lcpu_ring_get(r, mem, out, len);
+      }
+    }
+    if (!s_lcpu_held) {
+      HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+    }
+  }
+  pbl_mutex_unlock(&s_lcpu_mutex);
+  return done;
+}
+
+size_t lcpu_audio_tx_write(const uint8_t *in, size_t len) {
+  return prv_ring_op(AUDIO_TO_LCPU_RING, false, NULL, in, len);
+}
+
+// The value SiFli's SDK writes to have the LCPU hand a voice link's CVSD air bits over as they
+// are, to be decoded on the HCPU (SOFT_CVSD_ENCODE, which the SDK sets for SF32LB52X), instead of
+// converting them itself.
+#define LCPU_SOFT_CVSD 0x5A5AA5A5U
+
+// Before any voice link, as the SDK does when its audio path starts.
+static void prv_audio_soft_cvsd(void) {
+  if (!s_router_active) {
+    return;
+  }
+  uint32_t value = LCPU_SOFT_CVSD;
+  (void)HAL_LCPU_CONFIG_set(HAL_LCPU_CONFIG_SOFT_CVSD, &value, sizeof(value));
+}
+#else
+#define prv_audio_queue_open()
+#define prv_audio_queue_close()
+#define prv_set_lcpu_on(on)
+#define prv_audio_soft_cvsd()
+#endif
+
 static void prv_nvds_config(void) {
 #ifdef CONFIG_BT_ID_ADDR
   struct pbl_bt_addr addr;
@@ -507,8 +718,12 @@ void ble_transport_ll_reinit(void) {
   ret = prv_config_ipc();
   PBL_ASSERTN(ret == 0);
 
+  prv_audio_queue_open();
+
   prv_nvds_config();
   lcpu_power_on();
+  prv_set_lcpu_on(true);
+  prv_audio_soft_cvsd();
 }
 
 void ble_transport_ll_init(void) {
@@ -543,7 +758,9 @@ void ble_transport_ll_init(void) {
 }
 
 void ble_transport_ll_deinit(void) {
+  prv_set_lcpu_on(false);
   pbl_irq_disable(PBL_IRQN(LCPU2HCPU));
+  prv_audio_queue_close();
   ipc_queue_close(s_ipc_port);
   ipc_queue_deinit(s_ipc_port);
   s_ipc_port = IPC_QUEUE_INVALID_HANDLE;

@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #endif
 
+#ifdef CONFIG_BT_CALL_AUDIO
+#include <pbl/bluetooth/call_audio.h>
+#endif
 #include <pbl/bluetooth/hci_router.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/rtc.h>
@@ -81,6 +84,10 @@ static int64_t s_bat_off_sum;
 static int32_t s_bat_off_ua;
 static uint32_t s_bat_off_samples;
 static enum phase s_phase;
+#ifdef CONFIG_BT_CALL_AUDIO
+// Whether the call's voice link is up, as the host last said.
+static volatile bool s_sco_up;
+#endif
 static TimerID s_timer = TIMER_INVALID_ID;
 static uint32_t s_elapsed_ms;
 static bool s_poll_queued;
@@ -323,6 +330,10 @@ static void prv_take_ram(void) {
 }
 
 static void prv_release_ram(void) {
+#ifdef CONFIG_BT_CALL_AUDIO
+  s_sco_up = false;
+  call_audio_stop();
+#endif
   (void)hci_router_classic_attach(NULL, NULL, NULL);
   zbt_host_stacks(&s_status.exec_stack, &s_status.rx_stack);
   s_status.ram_held = false;
@@ -803,6 +814,25 @@ void zbt_ctl_save_key(const struct zbt_link_key *key) {
   }
 }
 
+#ifdef CONFIG_BT_CALL_AUDIO
+// On KernelBG: bring the call audio in line with the voice link.
+static void prv_sco_bg(void *data) {
+  if (s_sco_up && s_phase == PHASE_RUN) {
+    call_audio_start();
+  } else if (!s_sco_up) {
+    call_audio_stop();
+  }
+}
+#endif
+
+#ifdef CONFIG_BT_CALL_AUDIO
+// On KernelBG: an answered call's audio plays through the speaker mute; a ringing one not.
+static void prv_call_bg(void *data) {
+  const enum zbt_call call = s_status.call;
+  speaker_service_set_call_unmuted(call == ZBT_CALL_ACTIVE || call == ZBT_CALL_HELD);
+}
+#endif
+
 void zbt_ctl_call_changed(void) {
   const enum zbt_call call = s_status.call;
   if (call == ZBT_CALL_ACTIVE || call == ZBT_CALL_HELD) {
@@ -812,6 +842,10 @@ void zbt_ctl_call_changed(void) {
   } else if (call != ZBT_CALL_OUTGOING && call != ZBT_CALL_ALERTING) {
     s_status.call_since = 0;
   }
+#ifdef CONFIG_BT_CALL_AUDIO
+  // Only the last state counts.
+  (void)system_task_add_callback_droppable(prv_call_bg, NULL);
+#endif
 }
 
 // On KernelBG: the call that ended, onto the log.
@@ -829,7 +863,15 @@ void zbt_ctl_call_ended(const struct zbt_call_record *rec) {
 }
 
 void zbt_ctl_sco(bool up) {
+#ifdef CONFIG_BT_CALL_AUDIO
+  // The host's callbacks can run with the scheduler locked (its HCI input); starting and
+  // stopping the call audio takes mutexes and waits, so it happens on KernelBG. Only the
+  // last state counts, so a callback that cannot be queued is caught up by the next.
+  s_sco_up = up;
+  (void)system_task_add_callback_droppable(prv_sco_bg, NULL);
+#else
   (void)up;
+#endif
 }
 
 void zbt_ctl_diag(uint16_t kind, uint32_t a, uint32_t b, uint32_t c) {

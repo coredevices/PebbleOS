@@ -35,7 +35,12 @@ components:
 
   - name: SiFli-SDK
     path: hal_sifli/SiFli-SDK
-    nested: [external]
+    nested:
+      - external
+      - middleware/audio/audio_bt_voice/audio_cvsd.c
+      - middleware/audio/audio_bt_voice/audio_cvsd.h
+      - middleware/audio/audio_bt_voice/audio_filter.c
+      - middleware/audio/audio_bt_voice/audio_filter.h
     supplier: SiFli Technology
     description: SiFli-SDK v2.4.0 with PebbleOS changes
     commit: 1f7536a53379207a048a846a804c2eefe165ebe1
@@ -49,6 +54,17 @@ components:
     description: CMSIS headers as bundled in SiFli-SDK
     commit: 1f7536a53379207a048a846a804c2eefe165ebe1
     license: Apache-2.0
+
+  - name: SiFli-SDK-CVSD
+    paths:
+      - hal_sifli/SiFli-SDK/middleware/audio/audio_bt_voice/audio_cvsd.c
+      - hal_sifli/SiFli-SDK/middleware/audio/audio_bt_voice/audio_cvsd.h
+      - hal_sifli/SiFli-SDK/middleware/audio/audio_bt_voice/audio_filter.c
+      - hal_sifli/SiFli-SDK/middleware/audio/audio_bt_voice/audio_filter.h
+    supplier: Synopsys, Inc.
+    description: CVSD codec and its filters as bundled in SiFli-SDK, for call audio
+    commit: 1f7536a53379207a048a846a804c2eefe165ebe1
+    license: BSD-3-Clause
 
   - name: mbedtls
     path: mbedtls/mbedtls

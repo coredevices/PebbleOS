@@ -254,6 +254,14 @@ bool speaker_service_stream_open_realtime_owned(SpeakerPriority pri, uint8_t vol
 uint32_t speaker_service_stream_write_owned(PebbleTask owner, const void *data, uint32_t num_bytes);
 
 /**
+ * @brief Bytes written to the stream owned by a task and not yet handed to the driver.
+ *
+ * @param owner Owning task, or @c PebbleTask_Unknown for any stream.
+ * @return Buffered bytes, in the stream's PCM format; 0 if no such stream is open.
+ */
+uint32_t speaker_service_stream_buffered_owned(PebbleTask owner);
+
+/**
  * @brief Close the stream owned by a task, draining its buffered data.
  *
  * @param owner Owning task, or @c PebbleTask_Unknown to close any stream.
@@ -325,5 +333,11 @@ bool speaker_service_is_muted(void);
  * The output volume of a playing source is re-applied immediately.
  */
 void speaker_service_handle_audio_prefs_changed(void);
+
+#ifdef CONFIG_BT_CALL_AUDIO
+//! A call is answered (or no longer): the call audio's realtime stream plays through the
+//! speaker mute while it is, and follows it while the call only rings.
+void speaker_service_set_call_unmuted(bool unmuted);
+#endif
 
 /** @} */

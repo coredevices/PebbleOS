@@ -4,6 +4,7 @@
 config BT_ZEPHYR_CLASSIC
     bool "Zephyr BR/EDR host (experimental)"
     depends on BT_HCI_ROUTER
+    imply BT_CALL_AUDIO
     help
       Build Zephyr's Bluetooth host as a second host for BR/EDR next to
       NimBLE, sharing the controller through the HCI router. It only runs

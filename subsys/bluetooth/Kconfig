@@ -65,6 +65,14 @@ config BT_HCI_ROUTER
       hci_router_boot_reserve() use it, once; every other boot keeps the
       plain transport.
 
+config BT_CALL_AUDIO
+    bool "Call audio over the LCPU's voice path (experimental)"
+    depends on BT_HCI_ROUTER && SPEAKER && MIC_POLLING
+    help
+      While a SCO link is up, play the phone's audio, which the LCPU puts in
+      its shared voice memory, and send the microphone's to the phone the
+      same way.
+
 choice BT_ID_ADDR_SOURCE
     prompt "Identity address"
     default BT_ID_ADDR_CONTROLLER

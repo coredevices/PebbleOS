@@ -118,6 +118,11 @@ static void prv_audio_trans_cb(uint32_t *free_size);
 static void prv_refill_locked(void);
 static void prv_refill_realtime_locked(void);
 
+#ifdef CONFIG_BT_CALL_AUDIO
+//! A call is answered: its realtime stream plays through the mute.
+static bool s_call_unmuted;
+#endif
+
 static bool prv_is_speaker_muted(void) {
   if (alerts_preferences_get_speaker_muted()) {
     return true;
@@ -129,9 +134,19 @@ static bool prv_is_speaker_muted(void) {
 }
 
 static uint8_t prv_effective_volume(uint8_t vol) {
+#ifdef CONFIG_BT_CALL_AUDIO
+  // The realtime stream is a call taken on the watch: once answered, play it even when muted
+  // (ringing, the watch's settings hold).
+  const bool call =
+      s_call_unmuted && s_state.source_type == SpeakerSourceStream && s_state.stream_realtime;
+  if (prv_is_speaker_muted() && !call) {
+    return 0;
+  }
+#else
   if (prv_is_speaker_muted()) {
     return 0;
   }
+#endif
   if (s_state.volume_absolute) {
     return vol;
   }
@@ -822,6 +837,17 @@ uint32_t speaker_service_stream_write_owned(PebbleTask owner, const void *data,
   return written;
 }
 
+uint32_t speaker_service_stream_buffered_owned(PebbleTask owner) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  uint32_t buffered = 0;
+  if (s_state.state != SpeakerStateIdle && s_state.source_type == SpeakerSourceStream &&
+      (owner == PebbleTask_Unknown || owner == s_state.owner_task)) {
+    buffered = pcm_stream_available(&s_state.pcm_stream);
+  }
+  pbl_mutex_unlock(&s_lock);
+  return buffered;
+}
+
 void speaker_service_stream_close(void) {
   speaker_service_stream_close_owned(PebbleTask_Unknown);
 }
@@ -887,6 +913,15 @@ void speaker_service_set_volume_owned(PebbleTask owner, uint8_t vol) {
 bool speaker_service_is_muted(void) {
   return prv_is_speaker_muted();
 }
+
+#ifdef CONFIG_BT_CALL_AUDIO
+void speaker_service_set_call_unmuted(bool unmuted) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  s_call_unmuted = unmuted;
+  pbl_mutex_unlock(&s_lock);
+  speaker_service_handle_audio_prefs_changed();
+}
+#endif
 
 void speaker_service_handle_audio_prefs_changed(void) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -1002,6 +1037,10 @@ uint32_t speaker_service_stream_write_owned(PebbleTask owner, const void *data,
 }
 
 uint32_t speaker_service_stream_write(const void *data, uint32_t num_bytes) {
+  return 0;
+}
+
+uint32_t speaker_service_stream_buffered_owned(PebbleTask owner) {
   return 0;
 }
 
