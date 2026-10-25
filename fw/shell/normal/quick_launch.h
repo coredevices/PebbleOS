@@ -6,6 +6,7 @@
 #include <pbl/drivers/button_id.h>
 #include <pbl/util/uuid.h>
 
+#include <applib/ui/recognizer/swipe.h>
 #include <process_management/app_install_types.h>
 
 bool quick_launch_is_enabled(ButtonId button);
@@ -29,3 +30,9 @@ bool quick_launch_combo_up_down_is_enabled(void);
 AppInstallId quick_launch_combo_up_down_get_app(void);
 void quick_launch_combo_up_down_set_app(AppInstallId app_id);
 void quick_launch_combo_up_down_set_enabled(bool enabled);
+
+// Accepts one cardinal direction, not a direction mask.
+bool quick_launch_swipe_is_enabled(SwipeDirection direction);
+AppInstallId quick_launch_swipe_get_app(SwipeDirection direction);
+void quick_launch_swipe_set_app(SwipeDirection direction, AppInstallId app_id);
+void quick_launch_swipe_set_enabled(SwipeDirection direction, bool enabled);

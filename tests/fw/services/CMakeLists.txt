@@ -265,6 +265,18 @@ pbl_clar_test(test_app_cache
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_app_cache_touch
+  SOURCE test_app_cache.c
+  MODULES settings
+  SOURCES
+    fw/services/filesystem/app_file.c
+    fw/services/app_cache/service.c
+    tests/fakes/fake_rtc.c
+    tests/fakes/fake_events.c
+  DEFINES CONFIG_TOUCH
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_mic_manager
   SOURCES
     fw/services/mic_manager/mic_manager.c

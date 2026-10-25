@@ -42,6 +42,10 @@ AppInstallId s_test_id_ql_up;
 AppInstallId s_test_id_ql_down;
 AppInstallId s_test_id_watchface;
 AppInstallId s_test_id_worker;
+static AppInstallId s_test_id_swipe_up;
+static AppInstallId s_test_id_swipe_down;
+static AppInstallId s_test_id_swipe_left;
+static AppInstallId s_test_id_swipe_right;
 
 AppInstallId quick_launch_get_app(ButtonId button) {
   if (button == BUTTON_ID_UP) {
@@ -65,6 +69,22 @@ AppInstallId quick_launch_combo_back_up_get_app(void) {
 
 AppInstallId quick_launch_combo_up_down_get_app(void) {
   return s_test_id_ql_down;
+}
+
+AppInstallId quick_launch_swipe_get_app(SwipeDirection direction) {
+  switch (direction) {
+    case SwipeDirection_Up:
+      return s_test_id_swipe_up;
+    case SwipeDirection_Down:
+      return s_test_id_swipe_down;
+    case SwipeDirection_Left:
+      return s_test_id_swipe_left;
+    case SwipeDirection_Right:
+      return s_test_id_swipe_right;
+    default:
+      cl_assert(false);
+      return INSTALL_ID_INVALID;
+  }
 }
 
 AppInstallId watchface_get_default_install_id(void) {
@@ -101,6 +121,14 @@ static const AppData app3 = {
 };
 
 void test_app_cache__initialize(void) {
+  s_test_id_ql_up = INSTALL_ID_INVALID;
+  s_test_id_ql_down = INSTALL_ID_INVALID;
+  s_test_id_watchface = INSTALL_ID_INVALID;
+  s_test_id_worker = INSTALL_ID_INVALID;
+  s_test_id_swipe_up = INSTALL_ID_INVALID;
+  s_test_id_swipe_down = INSTALL_ID_INVALID;
+  s_test_id_swipe_left = INSTALL_ID_INVALID;
+  s_test_id_swipe_right = INSTALL_ID_INVALID;
   rtc_set_time(1478397600);
   fake_spi_flash_init(0, 0x1000000);
   fake_event_init();
@@ -497,6 +525,46 @@ void test_app_cache__free_up_space_save_defaults(void) {
   fake_system_task_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert(after_size == (before_size - to_free));
+}
+
+void test_app_cache__free_up_space_swipe_bindings(void) {
+  s_test_id_swipe_up = 1;
+  s_test_id_swipe_down = 2;
+  s_test_id_swipe_left = 3;
+  s_test_id_swipe_right = 4;
+  for (AppInstallId id = 1; id <= 5; ++id) {
+    prv_create_file_for_id(id);
+    cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(id, 1000));
+  }
+
+#ifdef CONFIG_TOUCH
+  // Protected apps have the highest priority, but may still be evicted if space is exhausted.
+  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(1000));
+#else
+  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(5000));
+#endif
+  fake_system_task_callbacks_invoke_pending();
+  for (AppInstallId id = 1; id <= 4; ++id) {
+#ifdef CONFIG_TOUCH
+    cl_assert(prv_file_for_id_exists(id));
+#else
+    cl_assert(!prv_file_for_id_exists(id));
+#endif
+  }
+  cl_assert(!prv_file_for_id_exists(5));
+#ifdef CONFIG_TOUCH
+  cl_assert_equal_i(app_cache_get_size(), 4000);
+#else
+  cl_assert_equal_i(app_cache_get_size(), 0);
+#endif
+
+  s_test_id_swipe_up = INSTALL_ID_INVALID;
+  s_test_id_swipe_down = INSTALL_ID_INVALID;
+  s_test_id_swipe_left = INSTALL_ID_INVALID;
+  s_test_id_swipe_right = INSTALL_ID_INVALID;
+  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(4000));
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_i(app_cache_get_size(), 0);
 }
 
 struct file_description {

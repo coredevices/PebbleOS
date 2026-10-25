@@ -261,6 +261,31 @@ static QuickLaunchPreference s_quick_launch_combo_up_down = {
   .uuid = UUID_INVALID_INIT,
 };
 
+#define PREF_KEY_QUICK_LAUNCH_SWIPE_UP    "qlSwipeUp"
+#define PREF_KEY_QUICK_LAUNCH_SWIPE_DOWN  "qlSwipeDown"
+#define PREF_KEY_QUICK_LAUNCH_SWIPE_LEFT  "qlSwipeLeft"
+#define PREF_KEY_QUICK_LAUNCH_SWIPE_RIGHT "qlSwipeRight"
+
+static QuickLaunchPreference s_quick_launch_swipe_up = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_swipe_down = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_swipe_left = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
+static QuickLaunchPreference s_quick_launch_swipe_right = {
+  .enabled = false,
+  .uuid = UUID_INVALID_INIT,
+};
+
 #define PREF_KEY_QUICK_LAUNCH_SETUP_OPENED "qlSetupOpened"
 static uint8_t s_quick_launch_setup_opened = 0;
 
@@ -712,6 +737,30 @@ static bool prv_set_s_quick_launch_combo_up_down(QuickLaunchPreference *pref) {
   return true;
 }
 
+static bool prv_set_s_quick_launch_swipe_up(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_swipe_up = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_swipe_down(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_swipe_down = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_swipe_left(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_swipe_left = *pref;
+  return true;
+}
+
+static bool prv_set_s_quick_launch_swipe_right(QuickLaunchPreference *pref) {
+  prv_normalize_quick_launch_pref(pref);
+  s_quick_launch_swipe_right = *pref;
+  return true;
+}
+
 static bool prv_set_s_quick_launch_setup_opened(uint8_t *version) {
   s_quick_launch_setup_opened = *version;
   return true;
@@ -1016,6 +1065,13 @@ static const PrefsTableEntry s_prefs_table[] = {
 #include "prefs_values.h.inc"
 };
 #undef PREFS_MACRO
+
+// Aligned storage for any pref, without overwriting its live value before the handler runs.
+typedef union {
+#define PREFS_MACRO(key, var) typeof(var) var;
+#include "prefs_values.h.inc"
+#undef PREFS_MACRO
+} PrefsValue;
 
 // ------------------------------------------------------------------------------------
 static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
@@ -1400,13 +1456,13 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
     return;
   }
 
-  // Read in the updated value from the backing store
-  bool success =
-      prefs_private_read_backing(event->key, event->key_len, entry->value, entry->value_len);
+  // Preserve the old state so handlers can detect transitions and apply their side effects.
+  PrefsValue value;
+  bool success = prefs_private_read_backing(event->key, event->key_len, &value, entry->value_len);
   if (success) {
     // Call the state update handler in case this pref needs to take other action besides
     // just updating the global
-    if (!entry->handler(entry->value, entry->value_len)) {
+    if (!entry->handler(&value, entry->value_len)) {
       // If the handler returns false, that means it reset the global back to the default,
       // so we should write the new value to the backing
       prefs_private_write_backing(event->key, event->key_len, entry->value, entry->value_len);
@@ -1952,6 +2008,62 @@ void quick_launch_combo_up_down_set_enabled(bool enabled) {
   QuickLaunchPreference pref = s_quick_launch_combo_up_down;
   pref.enabled = enabled;
   prv_pref_set(PREF_KEY_QUICK_LAUNCH_COMBO_UP_DOWN, &pref, sizeof(pref));
+}
+
+static QuickLaunchPreference *prv_swipe_pref(SwipeDirection direction, const char **key_out) {
+  QuickLaunchPreference *pref = nullptr;
+  const char *key = nullptr;
+  switch (direction) {
+    case SwipeDirection_Up:
+      pref = &s_quick_launch_swipe_up;
+      key = PREF_KEY_QUICK_LAUNCH_SWIPE_UP;
+      break;
+    case SwipeDirection_Down:
+      pref = &s_quick_launch_swipe_down;
+      key = PREF_KEY_QUICK_LAUNCH_SWIPE_DOWN;
+      break;
+    case SwipeDirection_Left:
+      pref = &s_quick_launch_swipe_left;
+      key = PREF_KEY_QUICK_LAUNCH_SWIPE_LEFT;
+      break;
+    case SwipeDirection_Right:
+      pref = &s_quick_launch_swipe_right;
+      key = PREF_KEY_QUICK_LAUNCH_SWIPE_RIGHT;
+      break;
+    default:
+      PBL_ASSERTN(0);
+      break;
+  }
+  if (key_out) {
+    *key_out = key;
+  }
+  return pref;
+}
+
+bool quick_launch_swipe_is_enabled(SwipeDirection direction) {
+  return prv_swipe_pref(direction, nullptr)->enabled;
+}
+
+AppInstallId quick_launch_swipe_get_app(SwipeDirection direction) {
+  return app_install_get_id_for_uuid(&prv_swipe_pref(direction, nullptr)->uuid);
+}
+
+void quick_launch_swipe_set_app(SwipeDirection direction, AppInstallId app_id) {
+  const char *key;
+  prv_swipe_pref(direction, &key);
+  QuickLaunchPreference pref = {
+    .enabled = true,
+    .uuid = UUID_INVALID_INIT,
+  };
+  app_install_get_uuid_for_install_id(app_id, &pref.uuid);
+  prv_pref_set(key, &pref, sizeof(pref));
+}
+
+void quick_launch_swipe_set_enabled(SwipeDirection direction, bool enabled) {
+  const char *key;
+  QuickLaunchPreference pref = *prv_swipe_pref(direction, &key);
+  pref.enabled = enabled;
+  prv_pref_set(key, &pref, sizeof(pref));
 }
 
 void watchface_set_default_install_id(AppInstallId app_id) {

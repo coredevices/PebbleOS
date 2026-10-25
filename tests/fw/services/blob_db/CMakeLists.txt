@@ -129,6 +129,19 @@ pbl_clar_test(test_prefs_db
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_prefs_db_touch
+  SOURCE test_prefs_db.c
+  DEFINES CONFIG_TOUCH
+  MODULES settings time rand
+  SOURCES
+    fw/services/blob_db/prefs_db.c
+    fw/shell/normal/prefs.c
+    tests/stubs/stubs_system_resource.c
+    tests/fakes/fake_accel_service.c
+    tests/fakes/fake_rtc.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_ios_notif_pref_db
   MODULES timeline_item time rand
   SOURCES

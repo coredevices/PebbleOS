@@ -23,3 +23,7 @@ AppInstallId PBL_WEAK quick_launch_combo_back_up_get_app(void) {
 AppInstallId PBL_WEAK quick_launch_combo_up_down_get_app(void) {
   return 0;
 }
+
+AppInstallId PBL_WEAK quick_launch_swipe_get_app(SwipeDirection direction) {
+  return INSTALL_ID_INVALID;
+}
