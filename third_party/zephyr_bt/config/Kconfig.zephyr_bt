@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Top-level Kconfig for evaluating Zephyr's Bluetooth Kconfig on its own, for
+# gen_config.py. It stands in for the Zephyr options outside Bluetooth that
+# the Bluetooth Kconfig refers to, and for Zephyr's Kconfig functions.
+
+mainmenu "Zephyr Bluetooth host for PebbleOS"
+
+UINT8_MAX := 255
+UINT16_MAX := 65535
+UINT32_MAX := 4294967295
+INT8_MAX := 127
+INT16_MAX := 32767
+INT32_MAX := 2147483647
+INT8_MIN := -128
+INT16_MIN := -32768
+INT32_MIN := -2147483648
+APP_VERSION_TWEAK_STRING := 0
+VERSION_MAJOR := 4
+ZEPHYR_BT_HCI := zephyr,bt-hci
+dt_nodelabel_enabled = n
+dt_chosen_bool_prop = n
+config MULTITHREADING
+	def_bool y
+config PRINTK
+	def_bool y
+config NETWORKING
+	bool
+config ASSERT
+	bool
+config LOG
+	bool
+config SETTINGS
+	bool
+config ZTEST
+	bool
+config EXPERIMENTAL
+	bool
+config CRC
+	bool
+config NET_BUF
+	bool
+config ENTROPY_GENERATOR
+	bool
+config SYSTEM_WORKQUEUE_PRIORITY
+	int
+	default -1
+config SYSTEM_WORKQUEUE_STACK_SIZE
+	int
+	default 1024
+config NUM_PREEMPT_PRIORITIES
+	int
+	default 15
+config NUM_COOP_PRIORITIES
+	int
+	default 16
+config LOG_DEFAULT_LEVEL
+	int
+	default 0
+config MAIN_STACK_SIZE
+	int
+	default 1024
+config HEAP_MEM_POOL_SIZE
+	int
+	default 0
+config PEBBLE_ZBT
+	bool "PebbleOS port: connections without the LE roles"
+	select BT_CONN
+source "subsys/bluetooth/Kconfig"

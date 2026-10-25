@@ -6,6 +6,7 @@ menu "Third-party"
 rsource "hal_nordic/Kconfig"
 rsource "hal_sifli/Kconfig"
 rsource "nimble/Kconfig"
+rsource "zephyr_bt/Kconfig"
 
 config MBEDTLS
     bool "mbedTLS"

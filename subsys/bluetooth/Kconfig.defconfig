@@ -36,10 +36,15 @@ config NIMBLE_BLE_SM_MITM
 config NIMBLE_BLE_SM_LVL
     default 4
 
+# With the BR/EDR host, also ask for the link key bit (0x08), so a bonded
+# phone derives a BR/EDR link key from the LE one (CTKD) and the watch, which
+# derives the same key, can authenticate over BR/EDR without pairing again.
 config NIMBLE_BLE_SM_OUR_KEY_DIST
+    default 9 if BT_ZEPHYR_CLASSIC
     default 1
 
 config NIMBLE_BLE_SM_THEIR_KEY_DIST
+    default 11 if BT_ZEPHYR_CLASSIC
     default 3
 
 choice NIMBLE_BLE_SM_IO_CAP_CHOICE

@@ -330,3 +330,13 @@ int hci_router_boot_reserve(void);
  * @return Whether a reservation was present.
  */
 bool hci_router_boot_consume(void);
+
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC_AUTO
+/**
+ * @brief The routed boot came up (the classic host started): the next one routes too.
+ *
+ * With CONFIG_BT_ZEPHYR_CLASSIC_AUTO every boot routes, without a reservation, unless the last
+ * routed one never confirmed: then routing stays off until hci_router_boot_reserve().
+ */
+void hci_router_boot_confirm(void);
+#endif

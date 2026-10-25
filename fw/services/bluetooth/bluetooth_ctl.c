@@ -26,6 +26,10 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC_AUTO
+#include <zbt/zbt.h>
+#endif
+
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 static bool s_comm_initialized = false;
@@ -97,6 +101,10 @@ static void prv_comm_start(void) {
     bt_battery_level_start();
 #endif
     bt_pairability_init();
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC_AUTO
+    // The classic host for calls, on boots that route the controller.
+    (void)zbt_start();
+#endif
 #ifdef CONFIG_QEMU_SERIAL
     qemu_transport_start();
 #endif
@@ -109,6 +117,10 @@ static void prv_comm_stop(void) {
   if (!s_comm_is_running) {
     return;
   }
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC_AUTO
+  // The classic host goes before the controller does.
+  (void)zbt_stop_wait(20000);
+#endif
 #ifdef CONFIG_BT_SERVICE_BAS
   bt_battery_level_stop();
 #endif

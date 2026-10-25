@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_ZEPHYR_CLASSIC
+    bool "Zephyr BR/EDR host (experimental)"
+    depends on BT_HCI_ROUTER
+    help
+      Build Zephyr's Bluetooth host as a second host for BR/EDR next to
+      NimBLE, sharing the controller through the HCI router. It only runs
+      on boots that use the router and runs on demand (zbt_start() and
+      zbt_stop()), in its own sections of the kernel's RAM.
+
+config BT_ZEPHYR_CLASSIC_AUTO
+    bool "Run the Zephyr host on every boot"
+    depends on BT_ZEPHYR_CLASSIC
+    default y
+    help
+      Route the controller on every boot (falling back to the plain
+      transport, until a reservation, after a routed boot that did not come
+      up), start the host with Bluetooth and stop it before Bluetooth goes,
+      and keep the bonded phone connected for calls.
+
