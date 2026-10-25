@@ -16,6 +16,10 @@
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <popups/phone_ui.h>
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+#include <zbt/zbt.h>
+#endif
+
 PBL_LOG_MODULE_DEFINE(service_phone_call, CONFIG_SERVICE_PHONE_CALL_LOG_LEVEL);
 
 //! This service is a little confusing, but generally here is how the phone calls work:
@@ -104,7 +108,36 @@ static void prv_call_end_common(void) {
   PBL_ANALYTICS_TIMER_STOP(phone_call_time_ms);
 }
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+// The call in progress is a stale one: its end never came (an app's call, as Discord's, which
+// the phone's app reports a ring for but not always its end), no call's screen is up, and the
+// watch's hands-free link has no call either.
+static bool prv_call_is_stale(void) {
+  if (phone_ui_is_visible()) {
+    return false;
+  }
+  struct zbt_status zst;
+  zbt_get_status(&zst);
+  return zst.state != ZBT_STATE_READY || zst.call_virtual || zst.call == ZBT_CALL_NONE ||
+         zst.call == ZBT_CALL_ENDED;
+}
+#endif
+
 static void prv_handle_incoming_call(const PebblePhoneEvent *event) {
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  if (s_call_in_progress && event->source == PhoneCallSource_PP && prv_call_is_stale()) {
+    PBL_LOG_DBG("Ending a stale call for a new ring");
+    zbt_trace('z');
+    prv_call_end_common();
+  }
+  // For the BT Classic Probe's call view: a ring ignored, the call in progress (x) or the
+  // phone's app not connected (n).
+  if (s_call_in_progress) {
+    zbt_trace('x');
+  } else if (event->source != PhoneCallSource_ANCS && !s_mobile_app_is_connected) {
+    zbt_trace('n');
+  }
+#endif
   // Only 1 call at a time is supported
   if (s_call_in_progress) {
     // An ANCS re-subscription mid-call makes iOS re-deliver the ongoing call under a new UID.
@@ -208,6 +241,10 @@ PBL_T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
   PebblePhoneEvent event = (PebblePhoneEvent)e->phone;
 
   if (!alerts_should_notify_for_type(AlertPhoneCall)) {
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+    // For the BT Classic Probe's call view: call alerts off (quiet time, the settings).
+    zbt_trace('b');
+#endif
     prv_handle_call_end(true /* disconnected */);
     phone_call_util_destroy_caller(event.caller);
     return;

@@ -13,6 +13,10 @@
 #include <kernel/events.h>
 #include <system/hexdump.h>
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+#include <zbt/zbt.h>
+#endif
+
 PBL_LOG_MODULE_DEFINE(service_phone_pp, CONFIG_SERVICE_PHONE_PP_LOG_LEVEL);
 
 #define CALLER_BUFFER_LENGTH 32
@@ -135,6 +139,16 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length, PebbleEve
                                    bool is_state_response) {
   uint8_t msg_type = *iter++;
   --length;
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  // For the BT Classic Probe's call view: what the phone's app sends.
+  zbt_trace(msg_type == PhoneCmdIncoming   ? 'i'
+            : msg_type == PhoneCmdStart    ? 'c'
+            : msg_type == PhoneCmdEnd      ? 'e'
+            : msg_type == PhoneCmdRing     ? 'r'
+            : msg_type == PhoneCmdOutgoing ? 'o'
+            : msg_type == PhoneCmdMissed   ? 'm'
+                                           : '?');
+#endif
 
   bool did_parse = false;
   PebbleCallInfo call_info;

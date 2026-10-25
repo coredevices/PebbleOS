@@ -55,6 +55,12 @@
 #include <zbt/zbt.h>
 #endif
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+#include "phone_volume_icons.h"
+
+#include <pbl/bluetooth/call_audio.h>
+#endif
+
 #define DECLINE_DELAY_MS       2000
 #define SMS_REPLY_DELAY_MS     1200
 #define SMS_REPLY_IOS_DELAY_MS 600
@@ -178,6 +184,16 @@ typedef struct {
   //! "Calling" and its moving dots, until the call is answered.
   EventedTimerID calling_timer;
   uint8_t calling_dots;
+#ifdef CONFIG_BT_CALL_AUDIO
+  //! The speaker's volume, for a while after Up or Select set it.
+  ProgressLayer volume_bar;
+  EventedTimerID volume_bar_timer;
+  //! An unanswered end the phone's app reported, looked at again once the watch's link has
+  //! caught up (phone_ui_handle_call_end()): set while waiting, and once looked at.
+  EventedTimerID end_check_timer;
+  bool end_checked;
+  bool end_disconnected;
+#endif
 #endif
 
   const PhoneStyle *style;
@@ -254,6 +270,9 @@ static PhoneUIData *s_phone_ui_data;
 static void prv_window_pop(void);
 static void prv_window_pop_with_delay(uint32_t delay_ms);
 static void prv_action_bar_setup(PhoneCallActions actions);
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+static void prv_stop_calling(void);
+#endif
 
 static void prv_set_answer_window(void) {
   modal_window_push(&s_phone_ui_data->window, ModalPriorityPhone, false /* don't animate */);
@@ -738,6 +757,77 @@ static void prv_answer_on_speaker_click_handler(ClickRecognizerRef recognizer, v
 }
 #endif
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+// During a call talked on the phone, Select brings it to the watch's speaker; on the speaker,
+// a long Select takes it back to the phone.
+static void prv_to_watch_click_handler(ClickRecognizerRef recognizer, void *unused) {
+  (void)zbt_hfp_audio_on_watch(true);
+  s_phone_ui_data->audio_chosen = true;
+  s_phone_ui_data->on_phone = false;
+  s_phone_ui_data->on_speaker = true;
+  prv_action_bar_setup(PhoneCallActions_Decline);
+}
+
+static void prv_to_phone_click_handler(ClickRecognizerRef recognizer, void *unused) {
+  (void)zbt_hfp_audio_on_watch(false);
+  s_phone_ui_data->audio_chosen = true;
+  s_phone_ui_data->on_speaker = false;
+  s_phone_ui_data->on_phone = true;
+  layer_set_hidden(&s_phone_ui_data->volume_bar.layer, true);
+  prv_action_bar_setup(PhoneCallActions_Decline);
+}
+#endif
+
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+// During a call on the watch's speaker, Up and Select set its volume.
+static bool prv_call_on_speaker(void) {
+  if (s_phone_ui_data->on_speaker || s_phone_ui_data->on_phone) {
+    return s_phone_ui_data->on_speaker;
+  }
+  // Answered or dialed elsewhere: a call over the watch's link has its audio on the watch,
+  // unless it was answered with the audio on the phone (above).
+  struct call_audio_stats st;
+  call_audio_get_stats(&st);
+  struct zbt_status zst;
+  zbt_get_status(&zst);
+  const bool watch_call = zst.state == ZBT_STATE_READY && zst.call != ZBT_CALL_NONE &&
+                          zst.call != ZBT_CALL_ENDED && zst.call != ZBT_CALL_INCOMING;
+  if (watch_call && zst.audio_on_phone) {
+    // Dialed on the phone: talked there, the watch's speaker an option.
+    s_phone_ui_data->on_phone = true;
+    return false;
+  }
+  return st.running || watch_call;
+}
+
+#define VOLUME_BAR_SHOW_MS 2000
+
+static void prv_hide_volume_bar(void *unused) {
+  if (s_phone_ui_data) {
+    s_phone_ui_data->volume_bar_timer = EVENTED_TIMER_INVALID_ID;
+    layer_set_hidden(&s_phone_ui_data->volume_bar.layer, true);
+  }
+}
+
+static void prv_show_volume_bar(void) {
+  progress_layer_set_progress(&s_phone_ui_data->volume_bar, call_audio_volume_percent());
+  layer_set_hidden(&s_phone_ui_data->volume_bar.layer, false);
+  evented_timer_cancel(s_phone_ui_data->volume_bar_timer);
+  s_phone_ui_data->volume_bar_timer = evented_timer_register(
+      VOLUME_BAR_SHOW_MS, false /* repeating */, prv_hide_volume_bar, nullptr);
+}
+
+static void prv_volume_up_click_handler(ClickRecognizerRef recognizer, void *unused) {
+  (void)call_audio_volume_change(1);
+  prv_show_volume_bar();
+}
+
+static void prv_volume_down_click_handler(ClickRecognizerRef recognizer, void *unused) {
+  (void)call_audio_volume_change(-1);
+  prv_show_volume_bar();
+}
+#endif
+
 static void prv_decline_click_handler(ClickRecognizerRef recognizer, void *unused) {
   prv_decline_call();
   prv_window_pop_with_delay(DECLINE_DELAY_MS);
@@ -768,6 +858,12 @@ static void prv_sms_reply_click_handler(ClickRecognizerRef recognizer, void *unu
 
 static void prv_pop_click_handler(ClickRecognizerRef recognizer, void *unused) {
   prv_stop_ringing();
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  // Back on a call the watch has not dialed yet takes it back.
+  if (s_phone_ui_data->watch_call) {
+    (void)zbt_hfp_dial_cancel();
+  }
+#endif
   prv_window_pop();
 }
 
@@ -970,7 +1066,27 @@ static void prv_action_bar_setup(PhoneCallActions actions) {
                                 &s_action_bar_icon_speaker_bitmap);
     }
 #endif
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+    if ((actions & PhoneCallActions_Decline) && !(actions & PhoneCallActions_Answer)) {
+      if (prv_call_on_speaker()) {
+        s_phone_ui_data->up_action = prv_volume_up_click_handler;
+        s_phone_ui_data->select_action = prv_volume_down_click_handler;
+        s_phone_ui_data->select_long_action = prv_to_phone_click_handler;
+        action_bar_layer_set_icon(&s_phone_ui_data->action_bar, BUTTON_ID_UP,
+                                  &s_action_bar_icon_volume_up_bitmap);
+        action_bar_layer_set_icon(&s_phone_ui_data->action_bar, BUTTON_ID_SELECT,
+                                  &s_action_bar_icon_volume_down_bitmap);
+      } else if (s_phone_ui_data->on_phone && prv_can_answer_on_speaker()) {
+        s_phone_ui_data->select_action = prv_to_watch_click_handler;
+        action_bar_layer_set_icon(&s_phone_ui_data->action_bar, BUTTON_ID_SELECT,
+                                  &s_action_bar_icon_speaker_bitmap);
+      }
+    }
+#endif
   } else {
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+    layer_set_hidden(&s_phone_ui_data->volume_bar.layer, true);
+#endif
     prv_hide_action_bar();
   }
 
@@ -1006,6 +1122,13 @@ static void prv_phone_ui_deinit(void) {
   gbitmap_deinit(&s_phone_ui_data->down_bitmap);
 
   text_layer_deinit(&s_phone_ui_data->call_status_text_layer);
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  evented_timer_cancel(s_phone_ui_data->calling_timer);
+  evented_timer_cancel(s_phone_ui_data->volume_bar_timer);
+  evented_timer_cancel(s_phone_ui_data->end_check_timer);
+  evented_timer_cancel(s_phone_ui_data->clip_timer);
+  progress_layer_deinit(&s_phone_ui_data->volume_bar);
+#endif
   text_layer_deinit(&s_phone_ui_data->caller_id_text_layer);
 
   evented_timer_cancel(s_phone_ui_data->call_duration_timer);
@@ -1142,6 +1265,19 @@ static void prv_phone_ui_init(void) {
   // Shrink the bounds but not the frame size to allow for centering when action bar removed
   s_phone_ui_data->call_status_text_layer.layer.bounds.size.w = width - TEXT_RIGHTSIDE_PADDING;
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  // The speaker's volume, under the status text
+  const GRect volume_bar_rect =
+      GRect(TEXT_MARGIN_WIDTH + 4, style->status_pos_y + style->status_height + 8,
+            width - TEXT_RIGHTSIDE_PADDING - 8, 8);
+  progress_layer_init(&s_phone_ui_data->volume_bar, &volume_bar_rect);
+  progress_layer_set_corner_radius(&s_phone_ui_data->volume_bar, 4);
+  progress_layer_set_foreground_color(&s_phone_ui_data->volume_bar, GColorBlack);
+  progress_layer_set_background_color(&s_phone_ui_data->volume_bar, GColorLightGray);
+  layer_set_hidden(&s_phone_ui_data->volume_bar.layer, true);
+  layer_add_child(&s_phone_ui_data->core_ui_container, &s_phone_ui_data->volume_bar.layer);
+#endif
+
   // Action bar
   action_bar_layer_init(&s_phone_ui_data->action_bar);
   action_bar_layer_add_to_window(&s_phone_ui_data->action_bar, window);
@@ -1160,6 +1296,46 @@ static bool prv_check_popups_are_blocked(void) {
 //!
 //! API for updating / creating the phone UI
 //!
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+#define CLIP_CHECK_MS    500
+#define CLIP_CHECK_TRIES 60
+
+// A caller the phone's app could not give (an app's call, as LINE's or Discord's): "Unknown".
+static bool prv_caller_unknown(const PebblePhoneCaller *caller) {
+  if (caller == nullptr) {
+    return true;
+  }
+  if (caller->number != nullptr && caller->number[0] != '\0') {
+    return false;
+  }
+  if (caller->name == nullptr) {
+    return true;
+  }
+  const char *unknown = i18n_get("Unknown", __FILE__);
+  const bool same = strcmp(caller->name, unknown) == 0;
+  i18n_free(unknown, __FILE__);
+  return same;
+}
+
+static void prv_clip_tick(void *unused) {
+  if (!s_phone_ui_data) {
+    return;
+  }
+  struct zbt_status zst;
+  zbt_get_status(&zst);
+  const bool found = zst.call == ZBT_CALL_INCOMING && zst.clip[0] != '\0';
+  if (found) {
+    char name[ZBT_NAME_MAX] = "";
+    const bool named = zbt_book_find_name(zst.clip, name, sizeof(name));
+    PebblePhoneCaller caller = {.number = zst.clip, .name = named ? name : nullptr};
+    prv_display_caller_info(&caller);
+  }
+  if (found || ++s_phone_ui_data->clip_tries >= CLIP_CHECK_TRIES) {
+    evented_timer_cancel(s_phone_ui_data->clip_timer);
+    s_phone_ui_data->clip_timer = EVENTED_TIMER_INVALID_ID;
+  }
+}
+#endif
 
 void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_call_ui,
                                    PhoneCallSource source) {
@@ -1175,6 +1351,10 @@ void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_
 
   prv_phone_ui_init();
   s_phone_ui_data->show_ongoing_call_ui = show_ongoing_call_ui;
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  // For the BT Classic Probe's call view: the ring's screen.
+  zbt_trace('R');
+#endif
 
   prv_unfold_icon_resource(TIMELINE_RESOURCE_INCOMING_PHONE_CALL);
 
@@ -1185,6 +1365,14 @@ void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_
     // Check if we support sms reply
     can_reply = prv_load_sms_reply_action(caller->number, source);
   }
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  if (prv_caller_unknown(caller) && prv_can_answer_on_speaker()) {
+    // The watch's link may have the caller ID: shown once it does.
+    s_phone_ui_data->clip_timer =
+        evented_timer_register(CLIP_CHECK_MS, true /* repeating */, prv_clip_tick, nullptr);
+    prv_clip_tick(nullptr);
+  }
+#endif
 
   uint8_t actions = PhoneCallActions_Decline | PhoneCallActions_Answer;
   if (can_reply) {
@@ -1201,6 +1389,35 @@ void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_
 }
 
 void phone_ui_handle_outgoing_call(PebblePhoneCaller *caller) {
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  if (s_phone_ui_data && s_phone_ui_data->watch_call) {
+    // The watch dialed it and shows it already: the phone's name for it only.
+    if (caller) {
+      prv_display_caller_info(caller);
+    }
+    return;
+  }
+  struct zbt_status zst;
+  zbt_get_status(&zst);
+  if (zst.state == ZBT_STATE_READY &&
+      (zst.call == ZBT_CALL_OUTGOING || zst.call == ZBT_CALL_ALERTING ||
+       (zst.call == ZBT_CALL_NONE && zst.hfp == ZBT_HFP_CONNECTED))) {
+    // Over the watch's link (dialed on the phone, the hands-free link maybe not told yet): that
+    // call's screen, talked on the phone with the watch's speaker an option.
+    phone_ui_show_watch_call(caller ? caller->number : zst.clip, caller ? caller->name : nullptr,
+                             0);
+    if (!zst.dialed_here && !s_phone_ui_data->audio_chosen) {
+      // A call the phone's app reports, dialed on the phone: its audio stays there. (The
+      // phone's audio for other things, a recorded call played back, comes without this
+      // report and plays on the watch.)
+      (void)zbt_hfp_audio_on_watch(false);
+      s_phone_ui_data->on_phone = true;
+      s_phone_ui_data->on_speaker = false;
+      prv_action_bar_setup(PhoneCallActions_Decline);
+    }
+    return;
+  }
+#endif
   if (s_phone_ui_data) {
     // In this case we are waiting to pop the window and a new event has come in.
     // Pop it immediately and then set up for the new event
@@ -1216,7 +1433,12 @@ void phone_ui_handle_outgoing_call(PebblePhoneCaller *caller) {
     prv_display_caller_info(caller);
   }
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  // A call over the watch's link: its volume from here too, and ending it.
+  prv_action_bar_setup(prv_call_on_speaker() ? PhoneCallActions_Decline : PhoneCallActions_None);
+#else
   prv_action_bar_setup(PhoneCallActions_None);
+#endif
 
   prv_window_pop_with_delay(OUTGOING_CALL_DELAY_MS);
 }
@@ -1240,6 +1462,9 @@ void phone_ui_handle_call_start(bool can_decline) {
     PBL_LOG_ERR("Can't handle call start, UI isn't setup");
     return;
   }
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  prv_stop_calling();
+#endif
 
   prv_stop_ringing();
 
@@ -1259,15 +1484,168 @@ void phone_ui_handle_call_start(bool can_decline) {
   prv_set_answer_window();
 }
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+static void prv_calling_tick(void *unused) {
+  if (s_phone_ui_data == nullptr) {
+    return;
+  }
+  static const char *const DOTS[] = {"", ".", "..", "..."};
+  s_phone_ui_data->calling_dots =
+      (s_phone_ui_data->calling_dots + 1) % (sizeof(DOTS) / sizeof(DOTS[0]));
+  sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "Calling%s",
+            DOTS[s_phone_ui_data->calling_dots]);
+  text_layer_set_text(&s_phone_ui_data->call_status_text_layer,
+                      s_phone_ui_data->call_status_text_buf);
+}
+
+static void prv_stop_calling(void) {
+  evented_timer_cancel(s_phone_ui_data->calling_timer);
+  s_phone_ui_data->calling_timer = EVENTED_TIMER_INVALID_ID;
+}
+
+// Until the call is answered, its status moves, so the screen shows the call is under way.
+static void prv_start_calling(void) {
+  s_phone_ui_data->calling_dots = 0;
+  prv_calling_tick(nullptr);
+  prv_show_call_status();
+  s_phone_ui_data->calling_timer =
+      evented_timer_register(500, true /* repeating */, prv_calling_tick, nullptr);
+}
+
+void phone_ui_show_watch_call(const char *number, const char *name, time_t active_since) {
+  if (s_phone_ui_data) {
+    if (s_phone_ui_data->watch_call && modal_manager_is_window_visible(&s_phone_ui_data->window)) {
+      return;
+    }
+    prv_window_pop();
+  }
+  prv_phone_ui_init();
+  s_phone_ui_data->show_ongoing_call_ui = true;
+  s_phone_ui_data->watch_call = true;
+  zbt_trace('W');
+  // On the watch's speaker (the volume buttons from the start, dialing included), unless it
+  // is talked on the phone: dialed there, or answered there (and no call audio running).
+  struct call_audio_stats audio;
+  call_audio_get_stats(&audio);
+  struct zbt_status zst;
+  zbt_get_status(&zst);
+  s_phone_ui_data->on_speaker = !zst.audio_on_phone && (active_since == 0 || audio.running);
+  s_phone_ui_data->on_phone = !s_phone_ui_data->on_speaker;
+
+  PebblePhoneCaller caller = {
+    .number = (number && number[0] != '\0') ? (char *)number : nullptr,
+    .name = (name && name[0] != '\0') ? (char *)name : nullptr,
+  };
+  prv_display_caller_info(&caller);
+  // As it is, not morphed from the nothing a new screen has.
+  TimelineResourceInfo timeline_res = {.res_id = TIMELINE_RESOURCE_DURING_PHONE_CALL};
+  AppResourceInfo icon_res_info;
+  timeline_resources_get_id(&timeline_res, s_phone_ui_data->style->icon_size, &icon_res_info);
+  s_phone_ui_data->current_icon = kino_reel_create_with_resource(icon_res_info.res_id);
+  s_phone_ui_data->current_icon_id = icon_res_info.res_id;
+  kino_layer_set_reel(&s_phone_ui_data->icon_layer, s_phone_ui_data->current_icon, false);
+  prv_set_window_color(ACCEPT_COLOR, false);
+  // This must be called before prv_set_status_text, otherwise the text will not be centered
+  prv_action_bar_setup(PhoneCallActions_Decline);
+  if (active_since != 0) {
+    s_phone_ui_data->call_start_time = active_since;
+    prv_start_call_duration_timer();
+  } else {
+    prv_start_calling();
+  }
+  prv_set_answer_window();
+}
+
+void phone_ui_watch_call_changed(time_t active_since, bool ended) {
+  if (!s_phone_ui_data || !s_phone_ui_data->watch_call) {
+    return;
+  }
+  if (!ended && !s_phone_ui_data->audio_chosen) {
+    // Where the host has the audio: dialed on the phone, it says so once it knows of the call.
+    struct zbt_status zst;
+    zbt_get_status(&zst);
+    if (zst.call != ZBT_CALL_NONE && zst.audio_on_phone != s_phone_ui_data->on_phone) {
+      s_phone_ui_data->on_phone = zst.audio_on_phone;
+      s_phone_ui_data->on_speaker = !zst.audio_on_phone;
+      if (zst.audio_on_phone) {
+        layer_set_hidden(&s_phone_ui_data->volume_bar.layer, true);
+      }
+      prv_action_bar_setup(PhoneCallActions_Decline);
+    }
+  }
+  if (ended) {
+    prv_stop_calling();
+    s_phone_ui_data->watch_call = false;
+    phone_ui_handle_call_end(true /* call_accepted */, false /* disconnected */);
+  } else if (active_since != 0 &&
+             s_phone_ui_data->call_duration_timer == EVENTED_TIMER_INVALID_ID) {
+    prv_stop_calling();
+    s_phone_ui_data->call_start_time = active_since;
+    prv_start_call_duration_timer();
+  }
+}
+
+bool phone_ui_is_visible(void) {
+  return s_phone_ui_data && modal_manager_is_window_visible(&s_phone_ui_data->window);
+}
+#endif
+
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+#define END_CHECK_MS 1500
+
+static void prv_end_check(void *unused) {
+  if (s_phone_ui_data) {
+    s_phone_ui_data->end_check_timer = EVENTED_TIMER_INVALID_ID;
+    phone_ui_handle_call_end(false /* call_accepted */, s_phone_ui_data->end_disconnected);
+  }
+}
+#endif
+
 void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
   if (!s_phone_ui_data) {
     PBL_LOG_ERR("Can't handle call end, UI isn't setup");
     return;
   }
 
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  if (!call_accepted && !s_phone_ui_data->watch_call) {
+    // The phone's app says the call ended unanswered, but the watch's link may have a call
+    // under way (an app's call, as Discord's, answered, here or at the other side): that
+    // call's screen instead. The link may tell of it a moment later: looked at again after
+    // END_CHECK_MS.
+    struct zbt_status zst;
+    zbt_get_status(&zst);
+    if (zst.state == ZBT_STATE_READY &&
+        (zst.call == ZBT_CALL_OUTGOING || zst.call == ZBT_CALL_ALERTING ||
+         zst.call == ZBT_CALL_ACTIVE || zst.call == ZBT_CALL_HELD)) {
+      if (zst.call_virtual) {
+        // Android's virtual call for the app's call: no call to show, nor "Declined".
+        phone_ui_handle_call_hide();
+        return;
+      }
+      char name[ZBT_NAME_MAX] = "";
+      (void)zbt_book_find_name(zst.clip, name, sizeof(name));
+      phone_ui_show_watch_call(zst.clip, name, zst.call_since);
+      return;
+    }
+    if (zst.state == ZBT_STATE_READY && zst.hfp == ZBT_HFP_CONNECTED &&
+        !s_phone_ui_data->end_checked) {
+      prv_stop_ringing();
+      s_phone_ui_data->end_checked = true;
+      s_phone_ui_data->end_disconnected = disconnected;
+      s_phone_ui_data->end_check_timer =
+          evented_timer_register(END_CHECK_MS, false /* repeating */, prv_end_check, nullptr);
+      return;
+    }
+  }
+#endif
+
   prv_stop_ringing();
 
   prv_stop_call_duration_timer();
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+  prv_stop_calling();
+#endif
 
   // This must be called before prv_set_status_text, otherwise the text will not be centered
   prv_action_bar_setup(PhoneCallActions_None);
@@ -1284,6 +1662,9 @@ void phone_ui_handle_call_end(bool call_accepted, bool disconnected) {
     } else {
       prv_set_status_text(DECLINED);
     }
+#if defined(CONFIG_BT_ZEPHYR_CLASSIC) && defined(CONFIG_BT_CALL_AUDIO)
+    zbt_trace('D');
+#endif
   }
 
   prv_window_pop_with_delay(CALL_END_DELAY_MS);
