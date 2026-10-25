@@ -1825,6 +1825,48 @@
     },
     {
       "type": "pdc",
+      "name": "DIALER_MENU_ICON",
+      "file": "../third_party/resources/iconography/icons/25px_Phone.svg",
+      "config": "CONFIG_DEMO_APP_DIALER"
+    },
+    {
+      "type": "pbi",
+      "name": "DIALER_ICON_KEYPAD",
+      "file": "normal/base/images/dialer_keypad.svg",
+      "config": "CONFIG_DEMO_APP_DIALER"
+    },
+    {
+      "type": "pbi",
+      "name": "DIALER_ICON_CONTACTS",
+      "file": "../third_party/resources/iconography/icons/25px_Contacts_book.svg",
+      "config": "CONFIG_DEMO_APP_DIALER"
+    },
+    {
+      "type": "pbi",
+      "name": "DIALER_ICON_HISTORY",
+      "file": "../third_party/resources/iconography/icons/25px_Clock_and_details.svg",
+      "config": "CONFIG_DEMO_APP_DIALER"
+    },
+    {
+      "type": "pbi",
+      "name": "DIALER_ICON_FAVORITES",
+      "file": "../third_party/resources/iconography/icons/25px_Heart_filled.svg",
+      "config": "CONFIG_DEMO_APP_DIALER"
+    },
+    {
+      "type": "pbi",
+      "name": "DIALER_ICON_REDIAL",
+      "file": "../third_party/resources/iconography/icons/25px_Phone.svg",
+      "config": "CONFIG_DEMO_APP_DIALER"
+    },
+    {
+      "type": "pbi",
+      "name": "DIALER_ICON_SYNC",
+      "file": "../third_party/resources/iconography/icons/25px_Check_for_updates.svg",
+      "config": "CONFIG_DEMO_APP_DIALER"
+    },
+    {
+      "type": "pdc",
       "name": "SETTINGS_SMALL",
       "file": "normal/base/images/Pebble_50x50_Settings.svg"
     },

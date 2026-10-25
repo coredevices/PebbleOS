@@ -74,6 +74,10 @@
 #include <system/bootbits.h>
 #include <system/testinfra.h>
 
+#ifdef CONFIG_DEMO_APP_DIALER
+#include <apps/demo/dialer/call_indicator.h>
+#endif
+
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;
 
@@ -217,6 +221,14 @@ static void launcher_handle_button_event(PebbleEvent *e) {
     light_button_released();
   }
 
+#ifdef CONFIG_DEMO_APP_DIALER
+  // Select and Down together during a call: back to its screen.
+  if (call_indicator_handle_button(e)) {
+    e->task_mask |= 1 << PebbleTask_App;
+    return;
+  }
+#endif
+
   app_idle_timeout_refresh();
 
   if (compositor_is_animating()) {
@@ -295,6 +307,15 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
 
 #ifdef CONFIG_TOUCH
     case PEBBLE_TOUCH_EVENT: {
+#ifdef CONFIG_DEMO_APP_DIALER
+      // The in-call pill over any app takes its own touches.
+      const TouchEvent pill_touch = e->touch.event;
+      if (call_indicator_handle_touch(&pill_touch)) {
+        // Nor the app under it.
+        e->task_mask |= 1 << PebbleTask_App;
+        return;
+      }
+#endif
       // Raw touches only navigate (and hold the backlight) while the
       // interaction session is active; unarmed contact on the idle watchface
       // stays fully inert. Release on liftoff ungated so the refcount can't
@@ -364,6 +385,13 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
 #endif
 
     case PEBBLE_GESTURE_EVENT: {
+#ifdef CONFIG_DEMO_APP_DIALER
+      // A tap on the in-call bar is the bar's, not the app's under it.
+      if (call_indicator_covers(e->gesture.event.x, e->gesture.event.y)) {
+        e->task_mask |= 1 << PebbleTask_App;
+        return;
+      }
+#endif
 #ifdef CONFIG_TOUCH
       if (e->gesture.event.type == GestureEvent_Palm) {
         // palm gesture turns off the backlight

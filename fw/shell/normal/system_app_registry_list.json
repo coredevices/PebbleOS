@@ -628,6 +628,14 @@
       ]
     },
     {
+      "id": -200,
+      "enum": "DIALER",
+      "md_fn": "dialer_get_app_info",
+      "ifdefs": [
+        "CONFIG_DEMO_APP_DIALER"
+      ]
+    },
+    {
       "id": -90,
       "enum": "REMINDERS",
       "md_fn": "reminder_app_get_info",

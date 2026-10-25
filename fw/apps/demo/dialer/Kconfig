@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DEMO_APP_DIALER
+    bool "Dialer"
+    depends on BT_ZEPHYR_CLASSIC && BT_CALL_AUDIO
+    default y
+    help
+      Calls from the watch over the Zephyr hands-free link: a number pad,
+      the calls the watch saw, favorites kept on the watch, and redial.
+      The host must already be running and connected to the phone.

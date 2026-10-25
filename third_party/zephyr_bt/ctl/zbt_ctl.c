@@ -36,6 +36,9 @@
 #include <pbl/services/system_task.h>
 
 #include <host/ble_store.h>
+#ifdef CONFIG_DEMO_APP_DIALER
+#include <apps/demo/dialer/call_indicator.h>
+#endif
 #include <kernel/event_loop.h>
 #include <kernel/memory_layout.h>
 #include <kernel/pebble_tasks.h>
@@ -833,6 +836,12 @@ static void prv_call_bg(void *data) {
 }
 #endif
 
+#ifdef CONFIG_DEMO_APP_DIALER
+static void prv_call_main(void *data) {
+  call_indicator_update();
+}
+#endif
+
 void zbt_ctl_call_changed(void) {
   const enum zbt_call call = s_status.call;
   if (call == ZBT_CALL_ACTIVE || call == ZBT_CALL_HELD) {
@@ -845,6 +854,9 @@ void zbt_ctl_call_changed(void) {
 #ifdef CONFIG_BT_CALL_AUDIO
   // Only the last state counts.
   (void)system_task_add_callback_droppable(prv_call_bg, NULL);
+#endif
+#ifdef CONFIG_DEMO_APP_DIALER
+  launcher_task_add_callback(prv_call_main, NULL);
 #endif
 }
 
