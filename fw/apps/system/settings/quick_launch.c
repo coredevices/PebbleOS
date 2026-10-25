@@ -12,11 +12,13 @@
 #include "menu.h"
 #include "option_menu.h"
 #include "quick_launch_app_menu.h"
+#include "quick_launch_slot.h"
 #include "quick_launch_setup_menu.h"
 #include "window.h"
 
 #include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/util/size.h>
 
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
@@ -27,16 +29,37 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/quick_launch.h>
 
-#define NUM_ROWS (NUM_BUTTONS + 2) // 4 hold buttons + 2 tap buttons (up and down)
+typedef struct {
+  const char *title;
+  QuickLaunchSlot slot;
+} QuickLaunchMenuRow;
 
-typedef enum {
-  ROW_TAP_UP = 0,
-  ROW_TAP_DOWN,
-  ROW_HOLD_UP,
-  ROW_HOLD_SELECT,
-  ROW_HOLD_DOWN,
-  ROW_HOLD_BACK,
-} QuickLaunchRow;
+static const QuickLaunchMenuRow s_rows[] = {
+  /// Shown in Quick Launch Settings as the title of the tap up button option.
+  {i18n_noop("Tap Up"), {.type = QuickLaunchSlotTap, .button = BUTTON_ID_UP}},
+  /// Shown in Quick Launch Settings as the title of the tap down button option.
+  {i18n_noop("Tap Down"), {.type = QuickLaunchSlotTap, .button = BUTTON_ID_DOWN}},
+  /// Shown in Quick Launch Settings as the title of the hold up button option.
+  {i18n_noop("Hold Up"), {.type = QuickLaunchSlotHold, .button = BUTTON_ID_UP}},
+  /// Shown in Quick Launch Settings as the title of the hold center button option.
+  {i18n_noop("Hold Center"), {.type = QuickLaunchSlotHold, .button = BUTTON_ID_SELECT}},
+  /// Shown in Quick Launch Settings as the title of the hold down button option.
+  {i18n_noop("Hold Down"), {.type = QuickLaunchSlotHold, .button = BUTTON_ID_DOWN}},
+  /// Shown in Quick Launch Settings as the title of the hold back button option.
+  {i18n_noop("Hold Back"), {.type = QuickLaunchSlotHold, .button = BUTTON_ID_BACK}},
+#ifdef CONFIG_TOUCH
+  /// Shown in Quick Launch Settings as the title of the swipe up option.
+  {i18n_noop("Swipe Up"), {.type = QuickLaunchSlotSwipe, .direction = SwipeDirection_Up}},
+  /// Shown in Quick Launch Settings as the title of the swipe down option.
+  {i18n_noop("Swipe Down"), {.type = QuickLaunchSlotSwipe, .direction = SwipeDirection_Down}},
+  /// Shown in Quick Launch Settings as the title of the swipe left option.
+  {i18n_noop("Swipe Left"), {.type = QuickLaunchSlotSwipe, .direction = SwipeDirection_Left}},
+  /// Shown in Quick Launch Settings as the title of the swipe right option.
+  {i18n_noop("Swipe Right"), {.type = QuickLaunchSlotSwipe, .direction = SwipeDirection_Right}},
+#endif
+};
+
+#define NUM_ROWS ARRAY_LENGTH(s_rows)
 
 typedef enum {
   CATEGORY_ROW_ACTIONS = 0,
@@ -48,25 +71,8 @@ typedef enum {
 typedef struct QuickLaunchData {
   SettingsCallbacks callbacks;
   char app_names[NUM_ROWS][APP_NAME_SIZE_BYTES];
-  //! The button whose binding the pushed sub-menus are editing.
-  ButtonId button;
-  bool is_tap;
+  QuickLaunchSlot slot;
 } QuickLaunchData;
-
-static const char *s_row_titles[NUM_ROWS] = {
-  /// Shown in Quick Launch Settings as the title of the tap up button option.
-  [ROW_TAP_UP] = i18n_noop("Tap Up"),
-  /// Shown in Quick Launch Settings as the title of the tap down button option.
-  [ROW_TAP_DOWN] = i18n_noop("Tap Down"),
-  /// Shown in Quick Launch Settings as the title of the hold up button quick launch option.
-  [ROW_HOLD_UP] = i18n_noop("Hold Up"),
-  /// Shown in Quick Launch Settings as the title of the hold center button quick launch option.
-  [ROW_HOLD_SELECT] = i18n_noop("Hold Center"),
-  /// Shown in Quick Launch Settings as the title of the hold down button quick launch option.
-  [ROW_HOLD_DOWN] = i18n_noop("Hold Down"),
-  /// Shown in Quick Launch Settings as the title of the hold back button quick launch option.
-  [ROW_HOLD_BACK] = i18n_noop("Hold Back"),
-};
 
 static const char *s_category_row_titles[CategoryRowCount] = {
   /// Shown in Quick Launch Settings as the title of the list of actions.
@@ -102,57 +108,48 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
 }
 
 static void prv_update_app_names(QuickLaunchData *data) {
-  // Tap buttons
-  prv_get_subtitle_string(quick_launch_single_click_get_app(BUTTON_ID_UP), data,
-                          data->app_names[ROW_TAP_UP], APP_NAME_SIZE_BYTES);
-  prv_get_subtitle_string(quick_launch_single_click_get_app(BUTTON_ID_DOWN), data,
-                          data->app_names[ROW_TAP_DOWN], APP_NAME_SIZE_BYTES);
-
-  // Hold buttons
-  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_UP), data, data->app_names[ROW_HOLD_UP],
-                          APP_NAME_SIZE_BYTES);
-  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_SELECT), data,
-                          data->app_names[ROW_HOLD_SELECT], APP_NAME_SIZE_BYTES);
-  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_DOWN), data,
-                          data->app_names[ROW_HOLD_DOWN], APP_NAME_SIZE_BYTES);
-  prv_get_subtitle_string(quick_launch_get_app(BUTTON_ID_BACK), data,
-                          data->app_names[ROW_HOLD_BACK], APP_NAME_SIZE_BYTES);
+  for (size_t row = 0; row < NUM_ROWS; ++row) {
+    prv_get_subtitle_string(quick_launch_slot_get_app(s_rows[row].slot), data,
+                            data->app_names[row], APP_NAME_SIZE_BYTES);
+  }
 }
 
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
                             uint16_t row, bool selected) {
   QuickLaunchData *data = (QuickLaunchData *)context;
   PBL_ASSERTN(row < NUM_ROWS);
-  const char *title = i18n_get(s_row_titles[row], data);
+  const char *title = i18n_get(s_rows[row].title, data);
   char *subtitle_buf = data->app_names[row];
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_buf, nullptr);
 }
 
 static uint16_t prv_get_initial_selection_cb(SettingsCallbacks *context) {
-  // If launched by quick launch, select the row of the button pressed, otherwise default to 0
   if (app_launch_reason() == APP_LAUNCH_QUICK_LAUNCH) {
-    ButtonId button = app_launch_button();
-    // Map button to hold row (quick launch is always hold/long press)
-    switch (button) {
-      case BUTTON_ID_UP:
-        return ROW_HOLD_UP;
-      case BUTTON_ID_SELECT:
-        return ROW_HOLD_SELECT;
-      case BUTTON_ID_DOWN:
-        return ROW_HOLD_DOWN;
-      case BUTTON_ID_BACK:
-        return ROW_HOLD_BACK;
-      default:
-        break;
+    const AppQuickLaunchAction action = app_launch_get_quick_launch_action();
+    const ButtonId button = app_launch_button();
+    for (size_t row = 0; row < NUM_ROWS; ++row) {
+      const QuickLaunchSlot slot = s_rows[row].slot;
+      if (action == APP_QUICK_LAUNCH_ACTION_HOLD && slot.type == QuickLaunchSlotHold &&
+          slot.button == button) {
+        return row;
+      }
+#ifdef CONFIG_TOUCH
+      if (action == APP_QUICK_LAUNCH_ACTION_SWIPE && slot.type == QuickLaunchSlotSwipe &&
+          ((slot.direction == SwipeDirection_Up && button == BUTTON_ID_DOWN) ||
+           (slot.direction == SwipeDirection_Down && button == BUTTON_ID_UP) ||
+           (slot.direction == SwipeDirection_Left && button == BUTTON_ID_SELECT) ||
+           (slot.direction == SwipeDirection_Right && button == BUTTON_ID_BACK))) {
+        return row;
+      }
+#endif
     }
   }
   return 0;
 }
 
-//! The row to start on, which is the category the button is currently bound to.
+//! The row to start on, which is the category the slot is currently bound to.
 static QuickLaunchCategoryRow prv_get_category_row(QuickLaunchData *data) {
-  const AppInstallId app_id = data->is_tap ? quick_launch_single_click_get_app(data->button)
-                                           : quick_launch_get_app(data->button);
+  const AppInstallId app_id = quick_launch_slot_get_app(data->slot);
   AppInstallEntry entry;
   if ((app_id == INSTALL_ID_INVALID) || !app_install_get_entry_for_install_id(app_id, &entry)) {
     return CATEGORY_ROW_ACTIONS;
@@ -166,7 +163,7 @@ static void prv_category_menu_select(OptionMenu *option_menu, int selection, voi
   const QuickLaunchMenuCategory category = (selection == CATEGORY_ROW_ACTIONS)
                                                ? QuickLaunchMenuCategoryActions
                                                : QuickLaunchMenuCategoryApps;
-  quick_launch_app_menu_window_push(data->button, data->is_tap, category, &option_menu->window);
+  quick_launch_app_menu_window_push(data->slot, category, &option_menu->window);
 }
 
 static void prv_category_menu_push(QuickLaunchData *data) {
@@ -181,41 +178,8 @@ static void prv_category_menu_push(QuickLaunchData *data) {
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   PBL_ASSERTN(row < NUM_ROWS);
 
-  ButtonId button;
-  bool is_tap;
-
-  switch (row) {
-    case ROW_TAP_UP:
-      button = BUTTON_ID_UP;
-      is_tap = true;
-      break;
-    case ROW_TAP_DOWN:
-      button = BUTTON_ID_DOWN;
-      is_tap = true;
-      break;
-    case ROW_HOLD_UP:
-      button = BUTTON_ID_UP;
-      is_tap = false;
-      break;
-    case ROW_HOLD_SELECT:
-      button = BUTTON_ID_SELECT;
-      is_tap = false;
-      break;
-    case ROW_HOLD_DOWN:
-      button = BUTTON_ID_DOWN;
-      is_tap = false;
-      break;
-    case ROW_HOLD_BACK:
-      button = BUTTON_ID_BACK;
-      is_tap = false;
-      break;
-    default:
-      return;
-  }
-
   QuickLaunchData *data = (QuickLaunchData *)context;
-  data->button = button;
-  data->is_tap = is_tap;
+  data->slot = s_rows[row].slot;
   prv_category_menu_push(data);
 }
 

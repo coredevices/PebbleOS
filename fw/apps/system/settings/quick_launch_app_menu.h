@@ -4,7 +4,7 @@
 #pragma once
 
 #include <applib/ui/window.h>
-#include <shell/normal/quick_launch.h>
+#include "quick_launch_slot.h"
 
 typedef enum QuickLaunchMenuCategory {
   //! Entries that are only visible in Quick Launch, e.g. the system toggles.
@@ -13,9 +13,8 @@ typedef enum QuickLaunchMenuCategory {
   QuickLaunchMenuCategoryApps,
 } QuickLaunchMenuCategory;
 
-//! @param button The button whose binding is being edited.
-//! @param is_tap Whether the binding is for a tap rather than a hold.
+//! @param slot The binding being edited.
 //! @param category Which kind of target the menu lists.
 //! @param parent The category menu to unwind along with this one on selection.
-void quick_launch_app_menu_window_push(ButtonId button, bool is_tap,
-                                       QuickLaunchMenuCategory category, Window *parent);
+void quick_launch_app_menu_window_push(QuickLaunchSlot slot, QuickLaunchMenuCategory category,
+                                       Window *parent);
