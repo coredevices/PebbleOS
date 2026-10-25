@@ -39,6 +39,7 @@
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/settings/settings_file.h>
+#include <pbl/services/stationary.h>
 #include <pbl/services/timeline/peek.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
@@ -613,6 +614,7 @@ static bool prv_set_s_display_orientation_left(bool *left) {
 
 static bool prv_set_s_stationary_mode_enabled(bool *enabled) {
   s_stationary_mode_enabled = *enabled;
+  stationary_handle_prefs_changed();
   return true;
 }
 

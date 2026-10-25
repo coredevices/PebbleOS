@@ -49,6 +49,9 @@ void stationary_run_level_enable(bool allow);
  */
 void stationary_wake_up(void);
 
+/** @brief Apply a change of the user setting, whether made locally or synced from the phone. */
+void stationary_handle_prefs_changed(void);
+
 /** @brief Handle a charger connection change. Called on KernelMain. */
 void stationary_handle_battery_connection_change_event(void);
 

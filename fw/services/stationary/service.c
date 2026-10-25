@@ -151,15 +151,10 @@ bool stationary_get_enabled(void) {
 }
 
 void stationary_set_enabled(bool enabled) {
-  if (enabled == stationary_get_enabled()) {
-    return;
-  }
   shell_prefs_set_stationary_enabled(enabled);
+}
 
-  if (enabled) {
-  } else {
-  }
-
+void stationary_handle_prefs_changed(void) {
   launcher_task_add_callback(prv_update_stationary_enabled, nullptr);
 }
 
