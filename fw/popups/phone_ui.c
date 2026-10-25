@@ -558,6 +558,7 @@ static void prv_start_call_duration_timer(void) {
     s_phone_ui_data->call_start_time = rtc_get_time();
   }
 
+  evented_timer_cancel(s_phone_ui_data->call_duration_timer);
   s_phone_ui_data->call_duration_timer =
       evented_timer_register(1000, true /* repeating */, prv_update_call_time, nullptr);
 
