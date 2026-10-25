@@ -49,6 +49,12 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
 
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+#include "phone_speaker_icon.h"
+
+#include <zbt/zbt.h>
+#endif
+
 #define DECLINE_DELAY_MS       2000
 #define SMS_REPLY_DELAY_MS     1200
 #define SMS_REPLY_IOS_DELAY_MS 600
@@ -106,6 +112,7 @@ typedef enum {
   PhoneCallActions_Decline = 1 << 0,
   PhoneCallActions_Answer = 1 << 1,
   PhoneCallActions_Reply = 1 << 2,
+  PhoneCallActions_Speaker = 1 << 3,
 } PhoneCallActions;
 
 typedef struct {
@@ -153,6 +160,25 @@ typedef struct {
   ClickHandler up_action;
   ClickHandler select_action;
   ClickHandler down_action;
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+  ClickHandler select_long_action;
+  //! The call was answered here on the watch's speaker, or with its audio on the phone.
+  bool on_speaker;
+  bool on_phone;
+  //! Moved here between the phone and the watch's speaker: no longer follows the host's
+  //! audio_on_phone.
+  bool audio_chosen;
+  //! The screen of a call over the watch's link (phone_ui_show_watch_call()), which this
+  //! screen follows to its end.
+  bool watch_call;
+  //! A ring the phone's app gave no caller for: the watch's link's caller ID, looked for
+  //! every CLIP_CHECK_MS while it rings, CLIP_CHECK_TRIES times.
+  EventedTimerID clip_timer;
+  uint8_t clip_tries;
+  //! "Calling" and its moving dots, until the call is answered.
+  EventedTimerID calling_timer;
+  uint8_t calling_dots;
+#endif
 
   const PhoneStyle *style;
 
@@ -647,6 +673,15 @@ static void prv_open_reply_action_menu(void *unused) {
 static void prv_answer_click_handler(ClickRecognizerRef recognizer, void *unused) {
   prv_stop_ringing();
   phone_call_answer();
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+  // Over the watch's link too, for a ring it has: an app's call (Discord's) the phone's app
+  // cannot answer.
+  struct zbt_status zst;
+  zbt_get_status(&zst);
+  if (zst.state == ZBT_STATE_READY && zst.call == ZBT_CALL_INCOMING) {
+    (void)zbt_hfp_answer();
+  }
+#endif
 
   // This must be called before prv_set_status_text, otherwise the text will not be centered
   prv_action_bar_setup(s_phone_ui_data->show_ongoing_call_ui ? PhoneCallActions_Decline
@@ -667,6 +702,10 @@ static void prv_answer_click_handler(ClickRecognizerRef recognizer, void *unused
 static void prv_decline_call(void) {
   prv_stop_ringing();
   phone_call_decline();
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+  // Over the watch's link too, which the phone's app may not know of.
+  (void)zbt_hfp_hangup();
+#endif
 
   prv_stop_call_duration_timer();
   prv_set_icon_resource(TIMELINE_RESOURCE_DISMISSED_PHONE_CALL);
@@ -676,6 +715,28 @@ static void prv_decline_call(void) {
   prv_action_bar_setup(PhoneCallActions_None);
   prv_set_status_text(DECLINED);
 }
+
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+// Over the watch's hands-free link, Up answers with the audio on the phone and Select on
+// the watch's speaker.
+static bool prv_can_answer_on_speaker(void) {
+  struct zbt_status st;
+  zbt_get_status(&st);
+  return st.state == ZBT_STATE_READY && st.hfp == ZBT_HFP_CONNECTED;
+}
+
+static void prv_answer_on_phone_click_handler(ClickRecognizerRef recognizer, void *unused) {
+  (void)zbt_hfp_audio_on_watch(false);
+  s_phone_ui_data->on_phone = true;
+  prv_answer_click_handler(recognizer, unused);
+}
+
+static void prv_answer_on_speaker_click_handler(ClickRecognizerRef recognizer, void *unused) {
+  (void)zbt_hfp_audio_on_watch(true);
+  s_phone_ui_data->on_speaker = true;
+  prv_answer_click_handler(recognizer, unused);
+}
+#endif
 
 static void prv_decline_click_handler(ClickRecognizerRef recognizer, void *unused) {
   prv_decline_call();
@@ -845,6 +906,12 @@ static void prv_click_config_provider(void *context) {
     window_single_click_subscribe(BUTTON_ID_DOWN, s_phone_ui_data->down_action);
   }
 
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+  if (s_phone_ui_data->select_long_action) {
+    window_long_click_subscribe(BUTTON_ID_SELECT, 0, s_phone_ui_data->select_long_action, nullptr);
+  }
+#endif
+
   window_single_click_subscribe(BUTTON_ID_BACK, prv_pop_click_handler);
 }
 
@@ -852,6 +919,9 @@ static void prv_action_bar_setup(PhoneCallActions actions) {
   s_phone_ui_data->up_action = nullptr;
   s_phone_ui_data->select_action = nullptr;
   s_phone_ui_data->down_action = nullptr;
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+  s_phone_ui_data->select_long_action = nullptr;
+#endif
 
   ResourceId up_icon = RESOURCE_ID_INVALID;
   ResourceId select_icon = RESOURCE_ID_INVALID;
@@ -862,6 +932,18 @@ static void prv_action_bar_setup(PhoneCallActions actions) {
       s_phone_ui_data->up_action = prv_answer_click_handler;
       up_icon = RESOURCE_ID_ACTION_BAR_ICON_CHECK;
     }
+
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+    if (actions & PhoneCallActions_Speaker) {
+      s_phone_ui_data->up_action = prv_answer_on_phone_click_handler;
+      s_phone_ui_data->select_action = prv_answer_on_speaker_click_handler;
+      if (actions & PhoneCallActions_Reply) {
+        // Select is taken: reply on a long press, without an icon
+        s_phone_ui_data->select_long_action = prv_sms_reply_click_handler;
+        actions &= ~PhoneCallActions_Reply;
+      }
+    }
+#endif
 
     if (actions & PhoneCallActions_Reply) {
       // Move to top if that place isn't taken
@@ -882,6 +964,12 @@ static void prv_action_bar_setup(PhoneCallActions actions) {
     prv_set_action_bar_icon(BUTTON_ID_UP, up_icon, &s_phone_ui_data->up_bitmap);
     prv_set_action_bar_icon(BUTTON_ID_SELECT, select_icon, &s_phone_ui_data->select_bitmap);
     prv_set_action_bar_icon(BUTTON_ID_DOWN, down_icon, &s_phone_ui_data->down_bitmap);
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+    if (actions & PhoneCallActions_Speaker) {
+      action_bar_layer_set_icon(&s_phone_ui_data->action_bar, BUTTON_ID_SELECT,
+                                &s_action_bar_icon_speaker_bitmap);
+    }
+#endif
   } else {
     prv_hide_action_bar();
   }
@@ -1072,6 +1160,7 @@ static bool prv_check_popups_are_blocked(void) {
 //!
 //! API for updating / creating the phone UI
 //!
+
 void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_call_ui,
                                    PhoneCallSource source) {
   if (prv_check_popups_are_blocked()) {
@@ -1101,6 +1190,11 @@ void phone_ui_handle_incoming_call(PebblePhoneCaller *caller, bool show_ongoing_
   if (can_reply) {
     actions |= PhoneCallActions_Reply;
   }
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+  if (prv_can_answer_on_speaker()) {
+    actions |= PhoneCallActions_Speaker;
+  }
+#endif
   prv_action_bar_setup(actions);
 
   prv_start_ringing();

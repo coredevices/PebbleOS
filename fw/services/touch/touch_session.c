@@ -6,6 +6,7 @@
 #include <pbl/services/light.h>
 #include <pbl/services/touch/touch_session.h>
 
+#include <applib/ui/window_stack.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_manager.h>
 #include <shell/prefs.h>
@@ -49,7 +50,17 @@ bool touch_session_is_active(void) {
   // A focused modal just demanded attention (notification, alarm): the
   // immediate touch response is intentional.
   if (modal_manager_get_enabled() && !(modal_manager_get_properties() & ModalProperty_Unfocused)) {
+#ifdef CONFIG_BT_ZEPHYR_CLASSIC
+    // Except an incoming call's screen in the dark: a stray touch there would answer the call.
+    const Window *top = modal_manager_get_top_window();
+    const bool call = top != NULL && top == window_stack_get_top_window(
+                                                modal_manager_get_window_stack(ModalPriorityPhone));
+    if (!call || light_is_on()) {
+      return true;
+    }
+#else
     return true;
+#endif
   }
   // A lit backlight means something (button, shake, wake gesture) already
   // signalled engagement. One kept on by touch alone doesn't, or a stream of
