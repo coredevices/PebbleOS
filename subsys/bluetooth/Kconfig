@@ -56,6 +56,15 @@ config BT_HCI_FAKE
 
 endchoice
 
+config BT_HCI_ROUTER
+    bool "HCI router for a second host (experimental)"
+    depends on BT_HCI_SF32LB52 && !RECOVERY_FW && !MFG
+    help
+      Route the controller's H4 stream through a router that can share it
+      between NimBLE and a BR/EDR host. Only boots reserved with
+      hci_router_boot_reserve() use it, once; every other boot keeps the
+      plain transport.
+
 choice BT_ID_ADDR_SOURCE
     prompt "Identity address"
     default BT_ID_ADDR_CONTROLLER
