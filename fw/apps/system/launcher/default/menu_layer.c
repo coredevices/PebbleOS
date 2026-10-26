@@ -295,6 +295,19 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
   Layer *down_arrow_layer = &launcher_menu_layer->down_arrow_layer;
   layer_init(down_arrow_layer, &down_arrow_layer_frame);
   layer_add_child(container_layer, down_arrow_layer);
+
+  ContentIndicator *content_indicator =
+      scroll_layer_get_content_indicator(&menu_layer->scroll_layer);
+  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
+    .layer = up_arrow_layer,
+    .colors.background = GColorWhite,
+    .colors.foreground = GColorDarkGray,
+  };
+  content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionUp,
+                                        &content_indicator_config);
+  content_indicator_config.layer = down_arrow_layer;
+  content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionDown,
+                                        &content_indicator_config);
 #endif
 
   prv_apply_theme_colors(launcher_menu_layer);

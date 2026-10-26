@@ -151,3 +151,14 @@ ThemeAppColorMode PBL_WEAK shell_prefs_get_theme_app_color_mode(void) {
 void PBL_WEAK shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode) {
   s_theme_app_color_mode = mode;
 }
+
+void PBL_WEAK shell_prefs_reset_theme_to_default(bool dark_mode) {
+  s_theme_active_uuid = UUID_INVALID;
+  s_theme_highlight_color =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorCobaltBlue : GColorVividCerulean, GColorBlack);
+  s_theme_secondary_color =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorOxfordBlue : GColorCobaltBlue, GColorBlack);
+  s_theme_background_color = PBL_IF_COLOR_ELSE(dark_mode ? GColorBlack : GColorClear, GColorClear);
+  s_theme_text_color = GColorClear;
+  s_theme_bg_resource_id = 0;
+}

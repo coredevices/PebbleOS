@@ -2432,6 +2432,29 @@ void shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode) {
 #endif
 }
 
+void shell_prefs_reset_theme_to_default(bool dark_mode) {
+#ifdef CONFIG_THEMING
+  const Uuid invalid_uuid = UUID_INVALID;
+  const GColor highlight =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorCobaltBlue : GColorVividCerulean, GColorBlack);
+  const GColor secondary =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorOxfordBlue : GColorCobaltBlue, GColorBlack);
+  const GColor bg = PBL_IF_COLOR_ELSE(dark_mode ? GColorBlack : GColorClear, GColorClear);
+  const GColor text = GColorClear;
+  const uint32_t bg_res_id = 0;
+
+  prv_pref_set(PREF_KEY_THEME_ACTIVE_UUID, &invalid_uuid, sizeof(Uuid));
+  prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &highlight, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_SECONDARY_COLOR, &secondary, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_BACKGROUND_COLOR, &bg, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_TEXT_COLOR, &text, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_BG_RESOURCE_ID, &bg_res_id, sizeof(uint32_t));
+
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_HIGHLIGHT_COLOR,
+                                sizeof(PREF_KEY_THEME_HIGHLIGHT_COLOR));
+#endif
+}
+
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
   return s_menu_scroll_wrap_around;
 }

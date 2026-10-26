@@ -6,7 +6,6 @@
 #include <pbl/kernel/compiler.h>
 
 #include <applib/graphics/graphics.h>
-#include <shell/prefs.h>
 #include <shell/system_theme.h>
 
 const char *PBL_WEAK system_theme_get_font_key(TextStyleFont font) {
@@ -40,81 +39,48 @@ system_theme_convert_host_content_size_to_runtime_platform(PreferredContentSize 
 }
 
 void PBL_WEAK system_theme_get_colors(SystemThemeColors *colors_out) {
-  if (!colors_out) {
-    return;
+  if (colors_out) {
+    *colors_out = (SystemThemeColors){
+      .primary_color = GColorVividCerulean,
+      .primary_text_color = GColorWhite,
+      .secondary_color = GColorCobaltBlue,
+      .secondary_text_color = GColorWhite,
+      .background_color = GColorWhite,
+      .text_color = GColorBlack,
+      .subtitle_color = GColorDarkGray,
+    };
   }
-  const GColor primary = shell_prefs_get_theme_highlight_color();
-  const GColor secondary = shell_prefs_get_theme_secondary_color();
-  const GColor bg = shell_prefs_get_theme_background_color();
-  GColor text = shell_prefs_get_theme_text_color();
-  if (gcolor_is_transparent(text)) {
-    text = gcolor_legible_over(bg);
-  }
-  *colors_out = (SystemThemeColors){
-    .primary_color = primary,
-    .primary_text_color = gcolor_legible_over(primary),
-    .secondary_color = secondary,
-    .secondary_text_color = gcolor_legible_over(secondary),
-    .background_color = bg,
-    .text_color = text,
-    .subtitle_color =
-        PBL_IF_COLOR_ELSE(gcolor_equal(text, GColorWhite) ? GColorLightGray : GColorDarkGray, text),
-  };
-}
-
-static bool prv_use_default_app_colors(void) {
-#if !PBL_COLOR
-  return true;
-#else
-  return (shell_prefs_get_theme_app_color_mode() == ThemeAppColorMode_BackgroundOnly) ||
-         (shell_prefs_is_theme_background_default() &&
-          gcolor_equal(shell_prefs_get_theme_highlight_color(), GColorVividCerulean) &&
-          gcolor_equal(shell_prefs_get_theme_secondary_color(), GColorCobaltBlue));
-#endif
 }
 
 void PBL_WEAK system_theme_get_app_colors(GColor default_primary, GColor default_secondary,
                                           SystemThemeColors *colors_out) {
-  if (!colors_out) {
-    return;
+  if (colors_out) {
+    *colors_out = (SystemThemeColors){
+      .primary_color = default_primary,
+      .primary_text_color = GColorWhite,
+      .secondary_color = default_secondary,
+      .secondary_text_color = GColorWhite,
+      .background_color = GColorWhite,
+      .text_color = GColorBlack,
+      .subtitle_color = GColorDarkGray,
+    };
   }
-  const bool use_defaults = prv_use_default_app_colors();
-  const GColor primary = use_defaults ? default_primary : shell_prefs_get_theme_highlight_color();
-  const GColor secondary =
-      use_defaults ? default_secondary : shell_prefs_get_theme_secondary_color();
-  const GColor bg = shell_prefs_get_theme_background_color();
-  GColor text = shell_prefs_get_theme_text_color();
-  if (gcolor_is_transparent(text)) {
-    text = gcolor_legible_over(bg);
-  }
-  *colors_out = (SystemThemeColors){
-    .primary_color = primary,
-    .primary_text_color = gcolor_legible_over(primary),
-    .secondary_color = secondary,
-    .secondary_text_color = gcolor_legible_over(secondary),
-    .background_color = bg,
-    .text_color = text,
-    .subtitle_color =
-        PBL_IF_COLOR_ELSE(gcolor_equal(text, GColorWhite) ? GColorLightGray : GColorDarkGray, text),
-  };
 }
 
 GColor PBL_WEAK system_theme_get_primary_color(void) {
-  return shell_prefs_get_theme_highlight_color();
+  return GColorVividCerulean;
 }
 
 GColor PBL_WEAK system_theme_get_secondary_color(void) {
-  return shell_prefs_get_theme_secondary_color();
+  return GColorCobaltBlue;
 }
 
 GColor PBL_WEAK system_theme_get_background_color(void) {
-  return shell_prefs_get_theme_background_color();
+  return GColorWhite;
 }
 
 GColor PBL_WEAK system_theme_get_text_color(void) {
-  GColor text = shell_prefs_get_theme_text_color();
-  return gcolor_is_transparent(text) ? gcolor_legible_over(shell_prefs_get_theme_background_color())
-                                     : text;
+  return GColorBlack;
 }
 
 GBitmap *PBL_WEAK system_theme_create_background_bitmap(void) {

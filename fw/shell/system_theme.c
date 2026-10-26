@@ -112,6 +112,9 @@ PreferredContentSize system_theme_convert_host_content_size_to_runtime_platform(
 
 static void prv_resolve_colors(GColor primary, GColor secondary, GColor bg, GColor text_pref,
                                SystemThemeColors *colors_out) {
+  if (!colors_out) {
+    return;
+  }
   GColor text = gcolor_is_transparent(text_pref) ? gcolor_legible_over(bg) : text_pref;
   GColor subtitle =
       PBL_IF_COLOR_ELSE(gcolor_equal(text, GColorWhite) ? GColorLightGray : GColorDarkGray, text);
@@ -196,25 +199,10 @@ void system_theme_draw_background(GContext *ctx, const GRect *bounds, GColor fal
 #if PBL_COLOR
   if (cached_bg_bitmap) {
     graphics_draw_bitmap_in_rect(ctx, cached_bg_bitmap, bounds);
-  } else if (shell_prefs_get_theme_bg_resource_id() != 0) {
-    GBitmap *bg = system_theme_create_background_bitmap();
-    if (bg) {
-      graphics_draw_bitmap_in_rect(ctx, bg, bounds);
-      gbitmap_destroy(bg);
-    }
   }
 #endif
 }
 
 void system_theme_reset_to_default(bool dark_mode) {
-  const Uuid invalid_uuid = UUID_INVALID;
-  shell_prefs_set_theme_active_uuid(&invalid_uuid);
-  shell_prefs_set_theme_highlight_color(
-      PBL_IF_COLOR_ELSE(dark_mode ? GColorCobaltBlue : GColorVividCerulean, GColorBlack));
-  shell_prefs_set_theme_secondary_color(
-      PBL_IF_COLOR_ELSE(dark_mode ? GColorOxfordBlue : GColorCobaltBlue, GColorBlack));
-  shell_prefs_set_theme_background_color(
-      PBL_IF_COLOR_ELSE(dark_mode ? GColorBlack : GColorClear, GColorClear));
-  shell_prefs_set_theme_text_color(GColorClear);
-  shell_prefs_set_theme_bg_resource_id(0);
+  shell_prefs_reset_theme_to_default(dark_mode);
 }

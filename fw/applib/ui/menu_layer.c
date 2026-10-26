@@ -23,7 +23,6 @@
 #include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
-#include <shell/prefs.h>
 #include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH
@@ -1701,9 +1700,7 @@ void menu_layer_set_theme_colors(MenuLayer *menu_layer, const SystemThemeColors 
     return;
   }
 #if PBL_COLOR
-  const GColor normal_bg =
-      (shell_prefs_get_theme_bg_resource_id() != 0) ? GColorClear : colors->background_color;
-  menu_layer_set_normal_colors(menu_layer, normal_bg, colors->text_color);
+  menu_layer_set_normal_colors(menu_layer, colors->background_color, colors->text_color);
   menu_layer_set_highlight_colors(menu_layer, colors->primary_color, colors->primary_text_color);
 #else
   menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);

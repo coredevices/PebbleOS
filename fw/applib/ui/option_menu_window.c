@@ -8,7 +8,6 @@
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/menu_text_scroll.h>
 #include <resource/resource_ids.auto.h>
-#include <shell/prefs.h>
 #include <shell/system_theme.h>
 #include <shell/system_theme_style.h>
 
@@ -189,10 +188,8 @@ void option_menu_set_theme_colors(OptionMenu *option_menu, const SystemThemeColo
     return;
   }
 #if PBL_COLOR
-  const GColor normal_bg =
-      (shell_prefs_get_theme_bg_resource_id() != 0) ? GColorClear : colors->background_color;
   option_menu_set_status_colors(option_menu, colors->secondary_color, colors->secondary_text_color);
-  option_menu_set_normal_colors(option_menu, normal_bg, colors->text_color);
+  option_menu_set_normal_colors(option_menu, colors->background_color, colors->text_color);
   option_menu_set_highlight_colors(option_menu, colors->primary_color, colors->primary_text_color);
 #else
   option_menu_set_status_colors(option_menu, GColorWhite, GColorBlack);

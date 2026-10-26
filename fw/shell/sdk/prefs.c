@@ -365,6 +365,10 @@ void shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode) {
   // Not used in SDK shell
 }
 
+void shell_prefs_reset_theme_to_default(bool dark_mode) {
+  // Not used in SDK shell
+}
+
 #ifdef CONFIG_APP_SCALING
 LegacyAppRenderMode shell_prefs_get_legacy_app_render_mode(void) {
   return (LegacyAppRenderMode)s_legacy_app_render_mode;

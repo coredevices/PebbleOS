@@ -90,18 +90,13 @@ typedef struct SettingsThemesData {
 
 static int prv_find_color_index(const ColorDefinition *defs, size_t count, GColor color,
                                 GColor default_color) {
-  if (gcolor_is_transparent(color) || gcolor_equal(color, default_color)) {
-    for (size_t i = 0; i < count; i++) {
-      if (gcolor_is_transparent(defs[i].color) || gcolor_equal(defs[i].color, default_color)) {
-        return (int)i;
-      }
-    }
-    return 0;
-  }
   for (size_t i = 0; i < count; i++) {
-    if (gcolor_equal(color, defs[i].color)) {
+    if (!gcolor_is_transparent(defs[i].color) && gcolor_equal(color, defs[i].color)) {
       return (int)i;
     }
+  }
+  if (gcolor_is_transparent(color) || gcolor_equal(color, default_color)) {
+    return 0;
   }
   return -1;
 }
@@ -113,7 +108,7 @@ static const char *prv_get_color_name(const ColorDefinition *defs, size_t count,
       return defs[i].name;
     }
   }
-  if (gcolor_equal(color, default_color)) {
+  if (gcolor_is_transparent(color) || gcolor_equal(color, default_color)) {
     return i18n_noop("Default");
   }
   return i18n_noop("Custom");
