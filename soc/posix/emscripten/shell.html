@@ -8,9 +8,11 @@
   // Embedded in the documentation: ?embed, and the page's ?theme. Embedded
   // in another page as just the display: ?screen, which shows the screen alone
   // and takes no input; ?serial, which gives the parent page the QEMU serial
-  // protocol and app installs over postMessage.
+  // protocol and app installs over postMessage. ?sunlight shows the colors
+  // as they look on a watch in sunlight.
   const params = new URLSearchParams(location.search);
   const screenOnly = params.has('screen');
+  const sunlight = params.has('sunlight');
   const embedded = params.has('embed') || screenOnly;
   if (embedded) document.documentElement.dataset.embed = '';
   if (screenOnly) document.documentElement.dataset.screen = '';
@@ -341,13 +343,51 @@
     screen.height = exact ? box.blockSize : Math.round(h);
   }).observe(screen);
 
+  // ?sunlight: the display's 64 colors as measured on a watch in sunlight,
+  // the color picker's "Sunlight" palette (developer.repebble.com/guides/
+  // tools-and-resources/color-picker), in place of the firmware's exact
+  // 0x00/0x55/0xAA/0xFF channels. Indexed by the two high bits of each
+  // channel, red first; as little-endian RGBA pixels.
+  const SUNLIGHT = sunlight && new Uint32Array([
+    '000000', '001e41', '004387', '0068ca', '2b4a2c', '27514f', '16638d', '007dce',
+    '5e9860', '5c9b72', '57a5a2', '4cb4db', '8ee391', '8ee69e', '8aebc0', '84f5f1',
+    '4a161b', '482748', '40488a', '2f6bcc', '564e36', '545454', '4f6790', '4180d0',
+    '759a64', '759d76', '71a6a4', '69b5dd', '9ee594', '9de7a0', '9becc2', '95f6f2',
+    '99353f', '983e5a', '955694', '8f74d2', '9d5b4d', '9d6064', '9a7099', '9587d5',
+    'afa072', 'aea382', 'ababab', 'a7bae2', 'c9e89d', 'c9eaa7', 'c7f0c8', 'c3f9f7',
+    'e35462', 'e25874', 'e16aa3', 'de83dc', 'e66e6b', 'e6727c', 'e37fa7', 'e194df',
+    'f1aa86', 'f1ad93', 'efb5b8', 'ecc3eb', 'ffeeab', 'fff1b5', 'fff6d3', 'ffffff',
+  ].map((hex) => {
+    const n = parseInt(hex, 16);
+    return 0xff000000 | ((n & 0xff) << 16) | (n & 0xff00) | (n >> 16);
+  }));
+  const corrected = sunlight && document.createElement('canvas');
+  // The frame to show: the firmware's, or a copy in the sunlight colors.
+  function frame() {
+    if (!sunlight) return canvas;
+    if (corrected.width !== canvas.width || corrected.height !== canvas.height) {
+      corrected.width = canvas.width;
+      corrected.height = canvas.height;
+    }
+    const c = corrected.getContext('2d', { willReadFrequently: true });
+    c.drawImage(canvas, 0, 0);
+    const image = c.getImageData(0, 0, corrected.width, corrected.height);
+    const px = new Uint32Array(image.data.buffer);
+    for (let i = 0; i < px.length; i++) {
+      const v = px[i];
+      px[i] = SUNLIGHT[((v >> 2) & 0x30) | ((v >> 12) & 0xc) | ((v >> 22) & 0x3)];
+    }
+    c.putImageData(image, 0, 0);
+    return corrected;
+  }
+
   function draw() {
     if (canvas.width && canvas.height) {
       const r = Math.min(screen.width / canvas.width, screen.height / canvas.height);
       const k = r >= 1 && !screenOnly ? Math.round(r) : r;
       const w = canvas.width * k, h = canvas.height * k;
       ctx.imageSmoothingEnabled = r < 1 || k % 1 !== 0;
-      ctx.drawImage(canvas, (screen.width - w) >> 1, (screen.height - h) >> 1, w, h);
+      ctx.drawImage(frame(), (screen.width - w) >> 1, (screen.height - h) >> 1, w, h);
     }
     requestAnimationFrame(draw);
   }
