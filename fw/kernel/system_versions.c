@@ -138,6 +138,9 @@ static void prv_send_watch_versions(CommSession *session) {
 #endif
 #ifndef CONFIG_RECOVERY_FW
   versions_msg.capabilities.multiple_language_packs_support = 1;
+#ifdef CONFIG_TOUCH
+  versions_msg.capabilities.swipe_shortcuts_support = 1;
+#endif
 #endif
   bt_local_id_copy_address(&versions_msg.device_address);
 

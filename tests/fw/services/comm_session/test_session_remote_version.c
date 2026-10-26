@@ -10,6 +10,12 @@
 
 static CommSession s_session;
 
+void test_session_remote_version__swipe_shortcut_capability_wire_format(void) {
+  PebbleProtocolCapabilities capabilities = {.swipe_shortcuts_support = true};
+  cl_assert_equal_i(sizeof(capabilities), 8);
+  cl_assert(capabilities.flags == (UINT64_C(1) << 29));
+}
+
 extern void session_remote_version_protocol_msg_callback(CommSession *session, const uint8_t *data,
                                                          size_t length);
 

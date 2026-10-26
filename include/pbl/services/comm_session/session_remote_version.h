@@ -83,6 +83,8 @@ typedef struct PBL_PACKED {
       bool app_permissions_support : 1;
       /** Multiple packs, phone management, and active-language selection. */
       bool multiple_language_packs_support : 1;
+      /** Watch supports configurable watchface swipe shortcuts. */
+      bool swipe_shortcuts_support : 1;
     };
     /** All flags as a bitset. */
     uint64_t flags;
