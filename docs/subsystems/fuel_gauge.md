@@ -133,8 +133,8 @@ In both cases it starts over from the voltage.
 ## Characterizing a cell
 
 `tools/fuel_gauge.py` fits a model to measurements and replays logs through
-the estimator. It needs numpy and scipy (both in the development venv), plus
-matplotlib for plots and a host C compiler for `replay` and `synth`.
+the estimator. It needs numpy, scipy and matplotlib (all in the development
+venv), and a host C compiler for `replay` and `synth`.
 
 Logs are CSV files with the columns `time_s`, `voltage_v`, `current_a`
 (positive when discharging), `temperature_c` and `charge_state` (the
@@ -142,17 +142,11 @@ Logs are CSV files with the columns `time_s`, `voltage_v`, `current_a`
 
 ### Bench procedure
 
-A source-measure unit or a programmable load logging voltage and current at
-about 1 Hz gives the best model. The fit needs a known SOC path, so:
-
-1. Charge the cell fully (CC/CV to the charger's termination voltage and
-   current, as on the watch) and let it rest for 30 minutes.
-2. Discharge in pulses: 0.5C for 144 s (2% of capacity), then 15 minutes of
-   rest, repeated until the cell reaches its cutoff voltage. The pulse edges
-   identify R0, the relaxation after each pulse identifies R1 and tau1, and
-   the end of every rest gives an OCV point.
-3. Optionally repeat at other temperatures, e.g. 5 C and 40 C, to fit
-   `r_temp_coeff`.
+The fit needs a log with a known SOC path: a full, rested cell discharged in
+pulses down to its cutoff voltage, logging voltage and current at about
+1 Hz. `tools/fuel_gauge_bench.py` runs this on an nPM1300-EK with an nPM-FG
+load. [Cell characterization](fuel_gauge_characterization.md) describes the
+setup, the procedure, and the maths of the model and the fit in detail.
 
 Then fit:
 

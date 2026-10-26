@@ -12,6 +12,7 @@ bluetooth.md
 crc.md
 fs.md
 fuel_gauge.md
+fuel_gauge_characterization.md
 input.md
 logging.md
 profiler.md
