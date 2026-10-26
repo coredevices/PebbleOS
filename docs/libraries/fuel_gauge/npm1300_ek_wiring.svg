@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 330" width="640" height="330">
+  <style>
+    .f { fill: none; stroke: #8a8a8a; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .w { fill: none; stroke: #8a8a8a; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .d { fill: none; stroke: #8a8a8a; stroke-width: 1.6; stroke-dasharray: 6 4; }
+    .n { fill: #8a8a8a; }
+    text { fill: #8a8a8a; font-family: "Latin Modern Roman", "STIX Two Text", "Cambria", "Times New Roman", serif; font-size: 16px; }
+    .i { font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif; font-style: italic; }
+    .s { font-size: 13px; }
+  </style>
+
+  <!-- host -->
+  <rect class="w" x="20" y="125" width="120" height="60" rx="4"/>
+  <text x="80" y="151" text-anchor="middle">host</text>
+  <text x="80" y="171" text-anchor="middle" class="s">bench.py</text>
+
+  <!-- USB power, for charging only -->
+  <rect class="w" x="250" y="20" width="140" height="40" rx="4"/>
+  <text x="320" y="45" text-anchor="middle">USB power</text>
+
+  <!-- nPM1300-EK -->
+  <rect class="w" x="210" y="100" width="220" height="130" rx="4"/>
+  <text x="330" y="188" text-anchor="middle">nPM1300-EK</text>
+
+  <!-- shell over the interface MCU's USB port -->
+  <path class="w" d="M140 155 H210"/>
+  <text x="175" y="146" text-anchor="middle" class="s">shell</text>
+  <text x="218" y="160" class="s">USB, MCU</text>
+  <text x="320" y="120" text-anchor="middle" class="s">USB, PMIC</text>
+
+  <!-- VBUS over the PMIC's USB port, connected while charging -->
+  <path class="d" d="M320 60 V100"/>
+  <text x="330" y="85" class="s">VBUS, charging only</text>
+
+  <!-- nPM-FG load board on the EK -->
+  <rect class="w" x="250" y="265" width="140" height="44" rx="4"/>
+  <text x="320" y="292" text-anchor="middle">nPM-FG load</text>
+  <path class="f" d="M290 230 V265 M350 230 V265"/>
+
+  <!-- cell on the battery connector, thermistor on NTC -->
+  <path class="f" d="M430 140 H540 V158 M430 205 H540 V182"/>
+  <path class="f" d="M520 158 H560"/>
+  <path class="f" d="M531 170 H549" style="stroke-width: 4"/>
+  <path class="f" d="M540 170 V182"/>
+  <text x="575" y="175">cell</text>
+  <text x="440" y="132" class="s">BAT</text>
+  <rect class="w" x="470" y="160" width="22" height="22" rx="3"/>
+  <text x="481" y="176" text-anchor="middle" class="i">T</text>
+  <path class="w" d="M470 171 H430"/>
+  <text x="440" y="190" class="s">NTC</text>
+</svg>
