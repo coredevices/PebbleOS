@@ -8,4 +8,5 @@ Li-po cell from periodic voltage, current and temperature measurements.
 
 introduction.md
 models/index.md
+tools.md
 ```
