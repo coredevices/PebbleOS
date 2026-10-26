@@ -85,6 +85,7 @@ handle the build is the default; `-r/--runner` picks another.
 | `openocd` | asterix | flash (with resources), reset, erase (with ranges), debug, debug server |
 | `nrfutil` | asterix | flash (with resources), reset, erase (with ranges) |
 | `sftool` | obelix, getafix | flash (with resources), erase (with ranges) |
+| `phone` | asterix, obelix, getafix | flash (always with resources), reset |
 | `qemu` | qemu_* | run |
 | `native` | native_* | run |
 | `wasm` | native_*/wasm | run |
@@ -96,6 +97,10 @@ ranges, if it can, in `support/flash.cfg`.
 The `nrfutil` runner needs a J-Link probe. To write the resources it takes
 the external flash configuration from the board's
 `support/nrfutil_ext_mem.json`.
+
+The `phone` runner needs no programmer: it goes through the Pebble app's
+Developer Connection, at the phone address given with `--address`. It needs
+libpebble2.
 
 ```{toctree}
 :hidden:

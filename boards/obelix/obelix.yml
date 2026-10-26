@@ -8,3 +8,4 @@ revisions:
 
 runners:
   - sftool
+  - phone
