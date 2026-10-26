@@ -168,8 +168,6 @@ void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *c
     .allow_once = config.allow_once,
   };
   system_theme_get_app_colors(config.highlight_color, config.highlight_color, &data->theme_colors);
-  data->theme_colors.primary_color = config.highlight_color;
-  data->theme_colors.primary_text_color = gcolor_legible_over(config.highlight_color);
   data->bg_bitmap = system_theme_create_background_bitmap();
 
   window_init(&data->window, WINDOW_NAME("Day Picker"));
@@ -351,8 +349,6 @@ void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallba
     .show_check_something_first_text = false,
   };
   system_theme_get_app_colors(highlight_color, highlight_color, &data->theme_colors);
-  data->theme_colors.primary_color = highlight_color;
-  data->theme_colors.primary_text_color = gcolor_legible_over(highlight_color);
   data->bg_bitmap = system_theme_create_background_bitmap();
   memcpy(data->scheduled_days, initial_days, sizeof(data->scheduled_days));
 

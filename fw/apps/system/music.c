@@ -1062,8 +1062,8 @@ static void prv_set_pos_update_timer(MusicAppData *data, MusicPlayState playstat
 
 static void prv_configure_music_text_layer(TextLayer *text_layer, char *text_buffer,
                                            const GRect *rect, int16_t y_offset,
-                                           GTextAlignment align, GFont font) {
-  text_layer_init_with_parameters(text_layer, rect, text_buffer, font, GColorBlack, GColorClear,
+                                           GTextAlignment align, GFont font, GColor text_color) {
+  text_layer_init_with_parameters(text_layer, rect, text_buffer, font, text_color, GColorClear,
                                   align, GTextOverflowModeFill);
   layer_set_bounds(&text_layer->layer, &GRect(0, -y_offset, rect->size.w, rect->size.h + y_offset));
   layer_set_clips(&text_layer->layer, false);
@@ -1582,24 +1582,28 @@ static void prv_init_ui(Window *window) {
   layer_set_hidden(&data->album_art_layer, true);
   layer_add_child(&data->window.layer, &data->album_art_layer);
 
+  const GColor text_color = gcolor_legible_over(bg_color);
+
   prv_configure_music_text_layer(&data->artist_text_layer, data->artist_buffer, &artist_rect,
                                  ARTIST_BOUNDS_OFFSET, ARTIST_TITLE_TEXT_ALIGNMENT,
-                                 system_theme_get_font_for_default_size(TextStyleFont_Header));
+                                 system_theme_get_font_for_default_size(TextStyleFont_Header),
+                                 text_color);
   layer_add_child(&data->window.layer, &data->artist_text_layer.layer);
 
   prv_configure_music_text_layer(&data->position_text_layer, data->position_buffer, &time_rect,
                                  TIME_BOUNDS_OFFSET, GTextAlignmentLeft,
-                                 fonts_get_system_font(config->music_time_font_key));
+                                 fonts_get_system_font(config->music_time_font_key), text_color);
   layer_add_child(&data->window.layer, &data->position_text_layer.layer);
 
   prv_configure_music_text_layer(&data->length_text_layer, data->length_buffer, &time_rect,
                                  TIME_BOUNDS_OFFSET, GTextAlignmentRight,
-                                 fonts_get_system_font(config->music_time_font_key));
+                                 fonts_get_system_font(config->music_time_font_key), text_color);
   layer_add_child(&data->window.layer, &data->length_text_layer.layer);
 
   prv_configure_music_text_layer(&data->title_text_layer, data->title_buffer, &title_rect,
                                  TITLE_BOUNDS_OFFSET, ARTIST_TITLE_TEXT_ALIGNMENT,
-                                 system_theme_get_font_for_default_size(TextStyleFont_Subtitle));
+                                 system_theme_get_font_for_default_size(TextStyleFont_Subtitle),
+                                 text_color);
   text_layer_set_line_spacing_delta(&data->title_text_layer, -2);
 
   layer_add_child(&data->window.layer, &data->title_text_layer.layer);
