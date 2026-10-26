@@ -312,7 +312,10 @@
   }
 
   // A fixed size, with a whole number of device pixels per watch pixel,
-  // smaller only when it does not fit.
+  // smaller only when it does not fit. The screen alone fits the box its
+  // embedder gives it exactly, whole device pixels or not: snapped, the
+  // store's 93px box on a 3x phone gets one device pixel per watch pixel,
+  // the face in about three quarters of the box and the rest black.
   function fit() {
     const dpr = window.devicePixelRatio || 1;
     // Embedded, the frame takes the page's height, so only the width counts;
@@ -321,7 +324,7 @@
     const side = parseFloat(getComputedStyle(document.body).paddingLeft) * 2;
     const room = Math.min(screenOnly ? Infinity : 1.5, (innerWidth - side) / FW, height);
     const k = Math.floor(room * dpr);
-    $('watch').style.setProperty('--px', (k >= 1 ? k / dpr : room) + 'px');
+    $('watch').style.setProperty('--px', (!screenOnly && k >= 1 ? k / dpr : room) + 'px');
   }
   fit();
   window.addEventListener('resize', fit);
@@ -341,9 +344,9 @@
   function draw() {
     if (canvas.width && canvas.height) {
       const r = Math.min(screen.width / canvas.width, screen.height / canvas.height);
-      const k = r >= 1 ? Math.round(r) : r;
+      const k = r >= 1 && !screenOnly ? Math.round(r) : r;
       const w = canvas.width * k, h = canvas.height * k;
-      ctx.imageSmoothingEnabled = r < 1;
+      ctx.imageSmoothingEnabled = r < 1 || k % 1 !== 0;
       ctx.drawImage(canvas, (screen.width - w) >> 1, (screen.height - h) >> 1, w, h);
     }
     requestAnimationFrame(draw);
