@@ -10,6 +10,7 @@ from .core import (
 from .native import NativeRunner
 from .nrfutil import NrfUtilRunner
 from .openocd import OpenOcdRunner
+from .phone import PhoneRunner
 from .qemu import QemuRunner
 from .sftool import SfToolRunner
 from .wasm import WasmRunner
@@ -35,6 +36,7 @@ RUNNERS = {
         QemuRunner,
         NativeRunner,
         WasmRunner,
+        PhoneRunner,
     )
 }
 

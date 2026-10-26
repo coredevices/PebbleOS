@@ -52,6 +52,9 @@ class RunnerConfig(NamedTuple):
     soc: str | None = None  # CONFIG_SOC, e.g. "NRF52", "SF32LB52"
     hex_file: str | None = None
     elf_file: str | None = None
+    bin_file: str | None = None
+    pbpack_file: str | None = None  # None on PRF builds
+    firmware_slot: int | None = None  # None without multiple slots
     resources_file: str | None = None
     resources_address: int | None = None  # in the board's flash layout
     erase_ranges: tuple = ()  # (address, size) in the board's flash layout

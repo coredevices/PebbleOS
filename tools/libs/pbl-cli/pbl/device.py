@@ -41,6 +41,11 @@ def make_runner(build, args, resources=False, erase_ranges=(), extra_args=()):
         soc=build.config.CONFIG_SOC or None,
         hex_file=build.hex,
         elf_file=build.elf,
+        bin_file=build.bin,
+        pbpack_file=build.pbpack if build.variant != "prf" else None,
+        firmware_slot=build.config.CONFIG_FIRMWARE_SLOT
+        if build.config.CONFIG_PBLBOOT
+        else None,
         resources_file=resources_file,
         resources_address=resources_address,
         erase_ranges=tuple(erase_ranges),
