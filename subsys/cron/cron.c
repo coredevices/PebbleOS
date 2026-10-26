@@ -320,6 +320,17 @@ static bool prv_adjust_for_wday_spec(const struct pbl_cron_job *cron, struct pbl
   return adjusted;
 }
 
+// Does the local clock reading at `t` satisfy the job's spec?
+static bool prv_matches_spec(const struct pbl_cron_job *job, time_t t) {
+  struct pbl_tm tm;
+  pbl_localtime_r(&t, &tm);
+  return (job->minute == PBL_CRON_MINUTE_ANY || job->minute == tm.tm_min) &&
+         (job->hour == PBL_CRON_HOUR_ANY || job->hour == tm.tm_hour) &&
+         (job->mday == PBL_CRON_MDAY_ANY || job->mday == tm.tm_mday - 1) &&
+         (job->month == PBL_CRON_MONTH_ANY || job->month == tm.tm_mon) &&
+         (job->wday == PBL_CRON_WDAY_ANY || job->wday == 0 || (job->wday & (1 << tm.tm_wday)));
+}
+
 static time_t prv_get_execute_time_from_epoch(const struct pbl_cron_job *job, time_t local_epoch) {
   struct pbl_tm current_tm;
   // We work off of each element, so we need a struct pbl_tm.
@@ -453,11 +464,19 @@ static time_t prv_get_execute_time_from_epoch(const struct pbl_cron_job *job, ti
       // We want holed alarms to fire instantly, so set time to DST start time.
       t = time_get_dst_start();
     }
+  } else if (job->hour == PBL_CRON_HOUR_ANY) {
+    // t is the standard-time reading of the local time. In the overlap where DST ends, the same
+    // local time comes around once more an hour earlier, while DST is still on. A job that runs
+    // every hour (or minute) is due then too, so take that first occurrence if it is still ahead
+    // of us and reads the same on the clock (the one at the transition itself does not: it shows
+    // as the hour before). Jobs at a fixed hour, like alarms, keep firing at the second
+    // occurrence: the clock-change recompute at the transition would otherwise fire them twice.
+    const time_t first = t - time_get_dstoffset();
+    const bool ahead = job->may_be_instant ? (first >= local_epoch) : (first > local_epoch);
+    if (ahead && time_get_isdst(first - 1) && prv_matches_spec(job, first - job->offset_seconds)) {
+      t = first;
+    }
   }
-  // We could be in the overlap where DST ends, but we don't actually care about it.
-  // Why, you ask? This gives us the 'first' matching time if we ignore it.
-  // So 1:30 will give us the first 1:30, not the second one.
-  // Yes it's arbitrary. Yes it's confusing. But that's timekeeping and DST for you.
 
   return t;
 }
