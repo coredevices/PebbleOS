@@ -9,6 +9,7 @@ from .core import Runner, RunnerCaps, RunnerError
 
 DEV_CONNECTION_PORT = 9000
 RECOVERY_TIMEOUT = 120
+REENABLE_TIMEOUT = 300
 RECONNECT_INTERVAL = 3
 
 # The firmware's reset command values, which libpebble2's Reset enum does not match
@@ -89,21 +90,33 @@ class PhoneRunner(Runner):
             pebble.unregister_endpoint(handle)
 
     def _wait_for_recovery(self, pebble):
+        from libpebble2.exceptions import ConnectionError as PebbleConnectionError
         from libpebble2.exceptions import PebbleError
 
         # The phone may keep the connection open while the watch reboots, or
-        # drop it
-        deadline = time.monotonic() + RECOVERY_TIMEOUT
-        while time.monotonic() < deadline:
+        # drop it. Older apps also turn the Developer Connection off when the
+        # watch disconnects, so it has to be enabled again by hand.
+        timeout = RECOVERY_TIMEOUT
+        start = time.monotonic()
+        prompted = False
+        while time.monotonic() - start < timeout:
             time.sleep(RECONNECT_INTERVAL)
             try:
                 if not pebble.transport.connected:
                     pebble = self._connect()
                 if self._in_recovery(pebble):
                     return pebble
+            except PebbleConnectionError:
+                if not prompted:
+                    print(
+                        "The phone closed the Developer Connection: enable it "
+                        "again in the Pebble app to continue"
+                    )
+                    prompted = True
+                    timeout = time.monotonic() - start + REENABLE_TIMEOUT
             except PebbleError:
                 continue
-        raise RunnerError(f"the watch did not come back in PRF in {RECOVERY_TIMEOUT}s")
+        raise RunnerError(f"the watch did not come back in PRF in {timeout:.0f}s")
 
     @staticmethod
     def _put(pebble, object_type, path):

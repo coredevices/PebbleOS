@@ -38,6 +38,8 @@ The runner reboots the watch into PRF, which invalidates the firmware slots,
 then installs the firmware and the system resources; PRF takes both or
 neither, so `--resources` is implied. PRF installs into slot 0, so on boards
 with two firmware slots the build has to be the slot 0 one, the default.
+Older app versions turn the Developer Connection off when the watch
+reboots; the runner then asks for it to be enabled again and waits.
 A watch can also be updated by sideloading a {doc}`bundle`.
 
 ## Options
