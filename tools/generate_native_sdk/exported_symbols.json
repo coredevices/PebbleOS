@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "111",
+  "revision" : "112",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/button_id.h",
@@ -37,6 +37,7 @@
     "fw/applib/app_wakeup.h",
     "fw/applib/app_exit_reason.h",
     "fw/applib/app_launch_reason.h",
+    "fw/applib/app_install.h",
     "fw/applib/app_launch_button.h",
     "fw/applib/cpu_cache.h",
     "fw/applib/health_service.h",
@@ -1509,6 +1510,37 @@
               "name": "wakeup_query",
               "implName": "app_wakeup_query",
               "addedRevision": "24"
+            }
+          ]
+        }, {
+          "type": "group",
+          "name": "AppInstall",
+          "addedRevision": "112",
+          "exports": [
+            {
+              "type": "define",
+              "name": "APP_INSTALL_NAME_SIZE",
+              "addedRevision": "112"
+            }, {
+              "type": "type",
+              "name": "AppInstallInfo",
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "app_install_count",
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "app_install_get_at_index",
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "app_launch",
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "watchface_select",
+              "addedRevision": "112"
             }
           ]
         }, {

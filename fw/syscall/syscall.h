@@ -17,6 +17,7 @@
 #include <applib/app_comm.h>
 #include <applib/app_exit_reason.h>
 #include <applib/app_inbox.h>
+#include <applib/app_install.h>
 #include <applib/app_logging.h>
 #include <applib/app_outbox.h>
 #include <applib/app_timer.h>
@@ -300,3 +301,8 @@ bool sys_do_not_disturb_is_active(void);
 //! @param timestamp_out Set to the UTC time of the next enabled alarm.
 //! @return True if at least one enabled alarm is scheduled.
 bool sys_alarm_get_next_enabled(time_t *timestamp_out);
+
+uint32_t sys_app_install_count(void);
+bool sys_app_install_get_at_index(uint32_t index, AppInstallInfo *info);
+bool sys_app_launch(const Uuid *uuid);
+bool sys_watchface_select(const Uuid *uuid);
