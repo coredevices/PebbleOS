@@ -43,6 +43,15 @@ pbl_clar_test(test_put_bytes
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_get_bytes
+  SOURCES
+    fw/services/get_bytes/get_bytes.c
+    tests/fakes/fake_session.c
+    tests/fakes/fake_events.c
+    tests/fakes/fake_rtc.c
+  DEFINES CONFIG_SOC_POSIX
+)
+
 pbl_clar_test(test_language_pack_storage
   SOURCES
     fw/services/put_bytes/put_bytes_storage_file.c

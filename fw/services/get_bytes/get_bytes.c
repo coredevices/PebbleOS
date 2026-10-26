@@ -126,8 +126,14 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
   if (packet_len == 0 ||
       !(sb = comm_session_send_buffer_begin_write_bulk(state->session, GET_BYTES_ENDPOINT_ID,
                                                        packet_len, COMM_SESSION_DEFAULT_TIMEOUT))) {
-    // If timeout, try again
-    // MT: What if the session got disconnected?
+    if (comm_session_send_buffer_get_max_payload_length(state->session) == 0) {
+      gb_storage_cleanup(&state->storage, false /* unsuccessful */);
+      kernel_free(state);
+      s_get_bytes_in_progress = false;
+      prv_put_status_event(DebugInfoStateFinished);
+      return;
+    }
+    // Timed out, try again
     system_task_add_callback(prv_protocol_send_next_chunk, state);
     return;
   }
