@@ -123,14 +123,20 @@ Connection in the Pebble app and pass the address it shows, which implies
 pbl run -r phone --address $IP
 ```
 
-The runner reboots the watch into PRF, which invalidates the firmware slots,
-then installs the firmware and the system resources; PRF takes both or
-neither, so `--resources` is implied. PRF installs into slot 0, so on boards
-with two firmware slots the build has to be the slot 0 one, the default.
-Older app versions turn the Developer Connection off when the watch
-reboots; over adb or the cloud the runner reconnects, otherwise it asks for
-it to be enabled again and waits.
-A watch can also be updated by sideloading a {doc}`bundle`.
+The runner packages the build into a {doc}`bundle`, firmware and system
+resources together, so `--resources` is implied, and sends it to the app in
+one message. The app installs it over Bluetooth as it does any firmware
+update, rebooting the watch into PRF first when needed, e.g. when the
+bundle is for the slot the watch runs from, and reports its progress. The
+runner reconnects when the watch reboots and the connection drops.
+
+On boards with two firmware slots, the watch writes the slot it does not
+run from, while PRF always writes slot 0: a slot 0 build, the default,
+always installs, while a slot 1 build only installs on a watch running from
+slot 0.
+
+Older app versions cannot install bundles, and the runner stops with an
+error asking to update the app.
 
 ## Options
 
