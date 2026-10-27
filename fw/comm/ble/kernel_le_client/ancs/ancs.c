@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -612,28 +613,20 @@ static void prv_is_ancs_alive_cb(void *data) {
 //! iOS re-sends the whole notification center as pre-existing right after (re)subscribing. Those
 //! are only handed over as recovered (missed while disconnected) for a bit after reconnection.
 //! Without a previous session to compare against, they are dropped.
-static RegularTimerInfo s_notification_connection_delay_timer;
-static bool s_just_connected = false;
+#define POST_CONNECTION_IGNORE_TICKS (10 * RTC_TICKS_HZ)
+static RtcTicks s_connected_ticks;
+static bool s_connected_ticks_valid;
 static bool s_session_active = false;
 static bool s_had_session = false;
 
-static void prv_set_no_longer_just_connected(void *data) {
-  s_just_connected = false;
-  regular_timer_remove_callback(&s_notification_connection_delay_timer);
+static void prv_start_post_connection_ignore_window(void) {
+  s_connected_ticks = rtc_get_ticks();
+  s_connected_ticks_valid = true;
 }
 
-static void prv_start_temp_notification_connection_delay_timer(void) {
-  if (regular_timer_is_scheduled(&s_notification_connection_delay_timer)) {
-    regular_timer_remove_callback(&s_notification_connection_delay_timer);
-  }
-  s_just_connected = true;
-
-  const int post_connection_notification_ignore_seconds = 10;
-  s_notification_connection_delay_timer = (const RegularTimerInfo){
-    .cb = prv_set_no_longer_just_connected,
-  };
-  regular_timer_add_multisecond_callback(&s_notification_connection_delay_timer,
-                                         post_connection_notification_ignore_seconds);
+static bool prv_just_connected(void) {
+  return s_connected_ticks_valid &&
+         (rtc_get_ticks() - s_connected_ticks) < POST_CONNECTION_IGNORE_TICKS;
 }
 
 // -----------------------------------------------------------------------------
@@ -977,7 +970,7 @@ void ancs_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
 
     if (characteristic_id == ANCSCharacteristicData) {
       prv_ancs_is_alive_start_tracking();
-      prv_start_temp_notification_connection_delay_timer();
+      prv_start_post_connection_ignore_window();
       s_session_active = true;
     }
   } else {
@@ -1093,7 +1086,7 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
       // By skipping the pre-existing check we will re-receive all the notifications
       // we got in the past 2 hours. To get past this ignore notifications for the first couple
       // seconds after connecting
-      if (s_just_connected && (nsnotification->event_flags & EventFlagPreExisting)) {
+      if (prv_just_connected() && (nsnotification->event_flags & EventFlagPreExisting)) {
         if (s_had_session) {
           PBL_LOG_DBG("PreExisting ANCS notification after reconnecting");
           prv_notif_queue_push_attr_request(nsnotification->uid,

@@ -754,8 +754,6 @@ static void prv_reconnect(time_t lost_time, time_t now) {
 
 static void prv_send_pre_existing_complete_dict(void) {
   prv_send_notification_with_event_flags((uint8_t *)&s_complete_dict, EventFlagPreExisting);
-  // Let the post-reconnection window expire
-  regular_timer_fire_seconds(10);
 }
 
 // Posted while disconnected and still fresh: alert as if it just arrived.
@@ -783,6 +781,17 @@ void test_ancs__pre_existing_from_before_disconnection_ignored(void) {
 
   cl_assert_equal_i(fake_notification_storage_get_store_count(), 0);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+}
+
+// The window is 10 s from the subscribe; after it, pre-existing ones are new.
+void test_ancs__pre_existing_window_ends_after_10_s(void) {
+  prv_reconnect(COMPLETE_DICT_TIME + 10 * 60, COMPLETE_DICT_TIME + 20 * 60);
+  prv_send_pre_existing_complete_dict();
+  cl_assert_equal_i(fake_notification_storage_get_store_count(), 0);
+
+  fake_rtc_increment_ticks(10 * RTC_TICKS_HZ);
+  prv_send_pre_existing_complete_dict();
+  cl_assert_equal_i(fake_notification_storage_get_store_count(), 1);
 }
 
 // No Longer Supported
