@@ -32,6 +32,32 @@ RESULT_FAIL_SERVICE_UNAVAILABLE = 0x01
 
 TRANSCRIPTION_SENTENCE_LIST = 0x01
 
+# Below the 15 s the watch waits for a result before giving up on it.
+SESSION_END_S = 5.0
+
+
+def start(prompt, kind="dictation", timeout=0.0):
+    """Start a session, retrying for ``timeout`` while one is in progress."""
+    deadline = time.monotonic() + timeout
+    while True:
+        lines = prompt(f"voice start {kind}")
+        if any("started" in line for line in lines):
+            return
+        if time.monotonic() > deadline:
+            raise WatchTimeout(f"no voice session started: {lines}")
+        time.sleep(0.2)
+
+
+def assert_session_ends(prompt, voice):
+    """The previous session is over: another starts within SESSION_END_S
+    and records. It is cancelled once recording, so that the phone's answer
+    to it cannot reach a later session (the answer has no session id)."""
+    voice.result = RESULT_SUCCESS
+    since = len(voice.sessions)
+    start(prompt, timeout=SESSION_END_S)
+    voice.wait_frames(voice.wait_session(since=since), 1)
+    prompt("voice cancel")
+
 
 @dataclass
 class SpeexInfo:

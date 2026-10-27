@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import time
-
 import pytest
-from harness.errors import WatchTimeout
 from harness.fixtures import dut_scope_within
 from harness.helpers.phone import forget_bonds, make_phone
 from harness.helpers.voice import (
@@ -13,6 +10,8 @@ from harness.helpers.voice import (
     SESSION_DICTATION,
     SESSION_NLP,
     VoicePhone,
+    assert_session_ends,
+    start,
 )
 
 pytestmark = [
@@ -24,8 +23,6 @@ pytestmark = [
 SAMPLE_RATE_HZ = 16000
 FRAME_SAMPLES = 320
 RECORD_FRAMES = 50
-# Below the 15 s the watch waits for a result before giving up on it.
-SESSION_END_S = 5.0
 
 
 @pytest.fixture(scope=dut_scope_within("module"))
@@ -48,35 +45,12 @@ def answering(voice):
     voice.result = RESULT_SUCCESS
 
 
-def _start(prompt, kind="dictation", timeout=0.0):
-    """Start a session, retrying for ``timeout`` while one is in progress."""
-    deadline = time.monotonic() + timeout
-    while True:
-        lines = prompt(f"voice start {kind}")
-        if any("started" in line for line in lines):
-            return
-        if time.monotonic() > deadline:
-            raise WatchTimeout(f"no voice session started: {lines}")
-        time.sleep(0.2)
-
-
-def _assert_session_ends(prompt, voice):
-    """The previous session is over: another starts within SESSION_END_S
-    and records. It is cancelled once recording, so that the phone's answer
-    to it cannot reach a later session (the answer has no session id)."""
-    voice.result = RESULT_SUCCESS
-    since = len(voice.sessions)
-    _start(prompt, timeout=SESSION_END_S)
-    voice.wait_frames(voice.wait_session(since=since), 1)
-    prompt("voice cancel")
-
-
 @pytest.mark.parametrize(
     "kind,session_type", [("dictation", SESSION_DICTATION), ("nlp", SESSION_NLP)]
 )
 def test_session(prompt, voice, kind, session_type):
     since = len(voice.sessions)
-    _start(prompt, kind)
+    start(prompt, kind)
     session = voice.wait_session(since=since)
     assert session.session_type == session_type
     assert not session.app_initiated
@@ -92,24 +66,24 @@ def test_session(prompt, voice, kind, session_type):
         voice.send_result(session, ["hello", "world"])
     else:
         voice.send_nlp_result(session, "call mom")
-    _assert_session_ends(prompt, voice)
+    assert_session_ends(prompt, voice)
 
 
 def test_rejected(dut, prompt, voice):
     voice.result = RESULT_FAIL_SERVICE_UNAVAILABLE
     since = len(voice.sessions)
     mark = dut.logs.mark()
-    _start(prompt)
+    start(prompt)
     session = voice.wait_session(since=since)
     dut.wait_for_log(r"Error occurred setting up session: 1", since=mark)
     assert not session.frames
-    _assert_session_ends(prompt, voice)
+    assert_session_ends(prompt, voice)
 
 
 def test_cancelled(prompt, voice):
     since = len(voice.sessions)
-    _start(prompt)
+    start(prompt)
     session = voice.wait_session(since=since)
     voice.wait_frames(session, 1)
     prompt("voice cancel")
-    _assert_session_ends(prompt, voice)
+    assert_session_ends(prompt, voice)
