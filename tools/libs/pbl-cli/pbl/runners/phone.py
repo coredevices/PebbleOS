@@ -15,7 +15,7 @@ RECOVERY_TIMEOUT = 120
 REENABLE_TIMEOUT = 300
 RECONNECT_INTERVAL = 3
 
-VIA_CHOICES = ("adb", "ip")
+VIA_CHOICES = ("adb", "cloud", "ip")
 
 # The Android app's receiver that starts the Developer Connection for adb
 ADB_DEV_CONNECTION_ACTION = "coredevices.coreapp.DEV_CONNECTION"
@@ -59,8 +59,8 @@ class PhoneRunner(Runner):
             "--via",
             choices=VIA_CHOICES,
             help="How the phone runner reaches the phone's Developer "
-            "Connection: adb (Android, the default) or ip (implied by "
-            "--address)",
+            "Connection: adb (Android, the default), cloud (signed in with "
+            "'pebble login') or ip (implied by --address)",
         )
         parser.add_argument(
             "--address",
@@ -122,6 +122,17 @@ class PhoneRunner(Runner):
         self._adb_start_dev_connection()
         return f"ws://127.0.0.1:{self.adb_port}/"
 
+    @staticmethod
+    def _cloud_transport():
+        from . import cloudpebble
+
+        try:
+            return cloudpebble.ProxyTransport(cloudpebble.token())
+        except cloudpebble.NotLoggedIn:
+            raise RunnerError(
+                "sign in with 'pebble login' (pebble-tool) to use --via cloud"
+            ) from None
+
     def _connect(self):
         try:
             from libpebble2.communication import PebbleConnection
@@ -131,8 +142,12 @@ class PhoneRunner(Runner):
         except ImportError as e:
             raise RunnerError(f"libpebble2 is not installed ({e})") from e
 
-        pebble = PebbleConnection(WebsocketTransport(self._url()))
-        pebble.connect()
+        if self.via == "cloud":
+            pebble = PebbleConnection(self._cloud_transport())
+            pebble.connect()
+        else:
+            pebble = PebbleConnection(WebsocketTransport(self._url()))
+            pebble.connect()
         pebble.run_async()
         return pebble
 
@@ -169,8 +184,8 @@ class PhoneRunner(Runner):
 
         # The phone may keep the connection open while the watch reboots, or
         # drop it. Older apps also turn the Developer Connection off when the
-        # watch disconnects, so it has to be enabled again: over adb until the
-        # watch is back, otherwise by hand.
+        # watch disconnects, so it has to be enabled again: over adb or the
+        # cloud until the watch is back, otherwise by hand.
         timeout = RECOVERY_TIMEOUT
         start = time.monotonic()
         prompted = False
@@ -248,6 +263,7 @@ class PhoneRunner(Runner):
             raise RunnerError("--adb-serial goes with --via adb only")
         phone = {
             "adb": "over adb",
+            "cloud": "over the cloud",
             "ip": f"at {self.address}",
         }[self.via]
         if self.cfg.dry_run:
