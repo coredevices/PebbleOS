@@ -15,6 +15,8 @@ RECOVERY_TIMEOUT = 120
 REENABLE_TIMEOUT = 300
 RECONNECT_INTERVAL = 3
 
+VIA_CHOICES = ("adb", "ip")
+
 # The Android app's receiver that starts the Developer Connection for adb
 ADB_DEV_CONNECTION_ACTION = "coredevices.coreapp.DEV_CONNECTION"
 ADB_DEV_CONNECTION_RECEIVER = (
@@ -40,8 +42,9 @@ class AdbDevConnectionError(RunnerError):
 class PhoneRunner(Runner):
     name = "phone"
 
-    def __init__(self, cfg, address=None, adb_serial=None):
+    def __init__(self, cfg, via=None, address=None, adb_serial=None):
         super().__init__(cfg)
+        self.via = via or ("ip" if address else "adb")
         self.address = address
         self.adb_serial = adb_serial
         self.adb_port = None
@@ -53,9 +56,15 @@ class PhoneRunner(Runner):
     @classmethod
     def do_add_parser(cls, parser):
         parser.add_argument(
+            "--via",
+            choices=VIA_CHOICES,
+            help="How the phone runner reaches the phone's Developer "
+            "Connection: adb (Android, the default) or ip (implied by "
+            "--address)",
+        )
+        parser.add_argument(
             "--address",
-            help="Phone address (Developer Connection) for the phone runner; "
-            "without it, an Android phone is reached over adb",
+            help="Phone address (Developer Connection) for the phone runner",
         )
         parser.add_argument(
             "--adb-serial",
@@ -67,6 +76,7 @@ class PhoneRunner(Runner):
     def do_create(cls, cfg, args):
         return cls(
             cfg,
+            via=getattr(args, "via", None),
             address=getattr(args, "address", None),
             adb_serial=getattr(args, "adb_serial", None),
         )
@@ -107,7 +117,7 @@ class PhoneRunner(Runner):
             self.adb_port = int(self._adb("forward", "tcp:0", f"tcp:{m.group(2)}"))
 
     def _url(self):
-        if self.address:
+        if self.via == "ip":
             return f"ws://{self.address}:{DEV_CONNECTION_PORT}/"
         self._adb_start_dev_connection()
         return f"ws://127.0.0.1:{self.adb_port}/"
@@ -174,7 +184,7 @@ class PhoneRunner(Runner):
             except AdbDevConnectionError:
                 continue
             except PebbleConnectionError:
-                if not self.address:
+                if self.via != "ip":
                     continue
                 if not prompted:
                     print(
@@ -232,13 +242,20 @@ class PhoneRunner(Runner):
         )
 
     def do_run(self, command):
-        phone = f"at {self.address}" if self.address else "over adb"
+        if (self.via == "ip") != bool(self.address):
+            raise RunnerError("--address goes with --via ip, and only with it")
+        if self.adb_serial and self.via != "adb":
+            raise RunnerError("--adb-serial goes with --via adb only")
+        phone = {
+            "adb": "over adb",
+            "ip": f"at {self.address}",
+        }[self.via]
         if self.cfg.dry_run:
             print(f"[dry-run] {command} through the phone {phone}")
             return
-        if not self.address and not shutil.which("adb"):
+        if self.via == "adb" and not shutil.which("adb"):
             raise RunnerError(
-                "adb not found: install it, or give the phone's address with --address"
+                "adb not found: install it, or reach the phone with another --via"
             )
         from libpebble2.exceptions import PebbleError
 

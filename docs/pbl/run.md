@@ -93,19 +93,23 @@ When both firmware and resources are written, the watch boots into the
 main application; {doc}`console` shows its logs.
 
 A watch without a programmer is flashed through its phone with the `phone`
-runner. An Android phone connected over
-[adb](https://developer.android.com/tools/adb) needs nothing else: the
-runner starts the Pebble app's
+runner, which reaches the Pebble app's
 [Developer Connection](https://developer.repebble.com/guides/tools-and-resources/developer-connection/)
-itself and reaches it through an adb port forward. Pass `--adb-serial` when
-adb sees more than one phone:
+in one of two ways, picked with `--via`.
+
+An Android phone connected over
+[adb](https://developer.android.com/tools/adb), the default, needs nothing
+else: the runner starts the Developer Connection itself and reaches it
+through an adb port forward. Pass `--adb-serial` when adb sees more than one
+phone:
 
 ```shell
 pbl run -r phone
 ```
 
-Any other phone is reached over the network: enable the Developer
-Connection in the Pebble app and pass the address it shows:
+A phone on the same network is reached directly: enable the Developer
+Connection in the Pebble app and pass the address it shows, which implies
+`--via ip`:
 
 ```shell
 pbl run -r phone --address $IP
