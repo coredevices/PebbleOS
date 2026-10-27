@@ -71,9 +71,40 @@ pbl run
 
 ## On a watch
 
-On a watch connected through a {doc}`programmer <../programmers/index>`,
-running the firmware is flashing it: `pbl run` does what {doc}`flash` does,
-and takes the same options.
+On a watch, running the firmware is flashing it. With a
+{doc}`programmer <../programmers/index>` connected as the
+{doc}`board's page <../boards/index>` shows, the board's runner writes it
+directly. The `sftool` runner talks to the watch over a serial port, given
+with `--tty`, e.g. `/dev/ttyACM0` or `/dev/tty.usbmodem1102`:
+
+```shell
+pbl run --tty /dev/ttyACM0
+```
+
+The first time, the system resources have to be written too. The `sftool`
+runner, and the `openocd` and `nrfutil` ones on asterix, take `--resources`;
+otherwise, image them over the serial console once the firmware is running,
+with {doc}`image_resources`.
+
+When both firmware and resources are written, the watch boots into the
+main application; {doc}`console` shows its logs.
+
+A watch without a programmer is flashed through its phone with the `phone`
+runner. Enable the
+[Developer Connection](https://developer.repebble.com/guides/tools-and-resources/developer-connection/)
+in the Pebble app and pass the address it shows:
+
+```shell
+pbl run -r phone --address $IP
+```
+
+The runner reboots the watch into PRF, which invalidates the firmware slots,
+then installs the firmware and the system resources; PRF takes both or
+neither, so `--resources` is implied. PRF installs into slot 0, so on boards
+with two firmware slots the build has to be the slot 0 one, the default.
+Older app versions turn the Developer Connection off when the watch
+reboots; the runner then asks for it to be enabled again and waits.
+A watch can also be updated by sideloading a {doc}`bundle`.
 
 ## Options
 

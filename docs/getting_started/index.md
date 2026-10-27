@@ -202,15 +202,15 @@ There are two ways to get the firmware onto a watch:
 
 - **Flash it with a programmer.** With a
   {doc}`programmer <../programmers/index>` connected as the
-  {doc}`board's page <../boards/index>` shows, {doc}`../pbl/flash`
+  {doc}`board's page <../boards/index>` shows, {doc}`../pbl/run`
   writes the firmware directly:
 
   ```shell
-  pbl flash
+  pbl run
   ```
 
   The first time, the system resources have to be written as well;
-  {doc}`../pbl/flash` explains how for each board.
+  {doc}`../pbl/run` explains how for each board.
 
 - **Sideload a bundle.** Without a programmer, package the firmware with
   {doc}`../pbl/bundle`, which writes a `.pbz` into the build directory:

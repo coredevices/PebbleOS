@@ -100,7 +100,7 @@ runners:
   - nrfutil
 ```
 
-`pbl run`, `flash`, `reset`, `bork`, `openocd` and `debug` all dispatch to
+`pbl run`, `reset`, `bork`, `openocd` and `debug` all dispatch to
 it. Each runner contributes its own options (e.g. `--tty` for sftool), so
 they show up on all of those commands. New runners are modules in
 `pbl/runners/`, registered in that package's `RUNNERS` table, and declare

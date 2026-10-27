@@ -116,7 +116,7 @@ def pytest_addoption(parser):
     )
     group.addoption(
         "--flash-command",
-        help="Command to flash the watch with (default: pbl flash)",
+        help="Command to flash the watch with (default: pbl run)",
     )
     group.addoption(
         "--dut-scope",

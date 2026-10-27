@@ -59,7 +59,7 @@ and has no such limitation.
 ### On a real watch
 
 Give the debug console's serial port, and optionally have the harness flash
-the build first (with `pbl flash --resources`, or `--flash-command`):
+the build first (with `pbl run --resources`, or `--flash-command`):
 
 ```shell
 pbl -b build-obelix itest --device-serial /dev/tty.usbserial-1 \

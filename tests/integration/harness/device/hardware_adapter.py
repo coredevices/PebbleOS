@@ -41,7 +41,7 @@ class HardwareAdapter(DeviceAdapter):
     def _flash_command(self):
         if self.config.flash_command:
             return shlex.split(self.config.flash_command)
-        command = ["pbl", "-b", self.build.path, "flash"]
+        command = ["pbl", "-b", self.build.path, "run"]
         if self.build.variant != "prf":
             command.append("--resources")
         if self.config.serial:

@@ -17,7 +17,7 @@ active. Run it from anywhere inside the checkout:
 ```shell
 pbl configure --board asterix
 pbl build
-pbl flash
+pbl run
 ```
 
 `pbl --help` lists every command, grouped; `pbl <command> --help` shows one
@@ -28,13 +28,12 @@ command's own options.
 | Build | Device | Emulator |
 | --- | --- | --- |
 | {doc}`configure` | {doc}`run` | {doc}`screenshot` |
-| {doc}`build` | {doc}`flash` | {doc}`touch` |
-| {doc}`bundle` | {doc}`console` | {doc}`swipe` |
-| {doc}`menuconfig` | {doc}`debug` | {doc}`feed` |
-| {doc}`clean` | {doc}`image_resources` | |
-| {doc}`test` | {doc}`image_recovery` | |
-| {doc}`itest` | {doc}`reset` | |
-| | {doc}`erase` | |
+| {doc}`build` | {doc}`console` | {doc}`touch` |
+| {doc}`bundle` | {doc}`debug` | {doc}`swipe` |
+| {doc}`menuconfig` | {doc}`image_resources` | {doc}`feed` |
+| {doc}`clean` | {doc}`image_recovery` | |
+| {doc}`test` | {doc}`reset` | |
+| {doc}`itest` | {doc}`erase` | |
 | | {doc}`bork` | |
 | | {doc}`openocd` | |
 
@@ -53,7 +52,7 @@ Separate build directories let several boards be built side by side:
 ```shell
 pbl -b build-qemu configure --board qemu_emery
 pbl -b build-asterix configure --board asterix
-pbl -b build-asterix flash
+pbl -b build-asterix run
 ```
 
 ## Where its knowledge comes from
@@ -120,7 +119,6 @@ itest.md
 :caption: Device
 
 run.md
-flash.md
 console.md
 debug.md
 image_resources.md
