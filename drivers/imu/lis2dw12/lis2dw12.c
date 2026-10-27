@@ -470,7 +470,18 @@ static void prv_lis2dw12_int1_work_handler(void) {
 
   if (fifo_progress) {
     prv_queue_work(prv_lis2dw12_int1_work_handler);
-  } else if (!action_taken) {
+    return;
+  }
+
+  if (action_taken) {
+    return;
+  }
+
+  // Retry once, a source may have asserted after the status reads
+  action_taken = prv_lis2dw12_service_int1(&fifo_progress);
+  if (fifo_progress) {
+    prv_queue_work(prv_lis2dw12_int1_work_handler);
+  } else if (!action_taken && pbl_gpio_get(&s_dev->int1_in)) {
     prv_lis2dw12_recover();
   }
 }
