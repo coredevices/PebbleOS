@@ -6,3 +6,11 @@ config DMA
     help
       DMA controller class (pbl/drivers/dma.h), selected by the controller
       drivers.
+
+config DMA_SF32LB52
+    bool "SiFli SF32LB52 DMA controller"
+    default y if SOC_SF32LB52
+    depends on CLK_SF32LB
+    select DMA
+    help
+      The SF32LB52 HPSYS DMA controller (DMAC1).
