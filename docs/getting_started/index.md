@@ -189,14 +189,14 @@ On a real board, `pbl run` flashes the firmware to the watch. With a
 {doc}`programmer <../programmers/index>` connected as the
 {doc}`board's page <../boards/index>` shows, add `--resources` the first
 time to write the system resources too. Without one, go through the phone
-paired with the watch: enable the Developer Connection in the Pebble app
-and pass the address it shows:
+paired with the watch, connected over adb if it runs Android:
 
 ```shell
-pbl run -r phone --address $IP
+pbl run -r phone
 ```
 
-{doc}`../pbl/run` covers the options of each case.
+{doc}`../pbl/run` covers the options of each case, including phones
+reached over the network.
 
 ## Next steps
 

@@ -91,9 +91,19 @@ When both firmware and resources are written, the watch boots into the
 main application; {doc}`console` shows its logs.
 
 A watch without a programmer is flashed through its phone with the `phone`
-runner. Enable the
+runner. An Android phone connected over
+[adb](https://developer.android.com/tools/adb) needs nothing else: the
+runner starts the Pebble app's
 [Developer Connection](https://developer.repebble.com/guides/tools-and-resources/developer-connection/)
-in the Pebble app and pass the address it shows:
+itself and reaches it through an adb port forward. Pass `--adb-serial` when
+adb sees more than one phone:
+
+```shell
+pbl run -r phone
+```
+
+Any other phone is reached over the network: enable the Developer
+Connection in the Pebble app and pass the address it shows:
 
 ```shell
 pbl run -r phone --address $IP
@@ -104,7 +114,8 @@ then installs the firmware and the system resources; PRF takes both or
 neither, so `--resources` is implied. PRF installs into slot 0, so on boards
 with two firmware slots the build has to be the slot 0 one, the default.
 Older app versions turn the Developer Connection off when the watch
-reboots; the runner then asks for it to be enabled again and waits.
+reboots; over adb the runner starts it again, otherwise it asks for it to
+be enabled again and waits.
 A watch can also be updated by sideloading a {doc}`bundle`.
 
 ## Options
