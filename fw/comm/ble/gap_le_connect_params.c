@@ -79,16 +79,16 @@ static const GAPLEConnectRequestParams s_default_connection_params_table[PBL_BT_
     {
       [PBL_BT_RESPONSE_TIME_MAX] =
           {
-            .slave_latency_events = 30,
-            .connection_interval_min_1_25ms = 24, // 30ms
-            .connection_interval_max_1_25ms = 36, // 45ms
+            .slave_latency_events = 4,
+            .connection_interval_min_1_25ms = 36, // 45ms
+            .connection_interval_max_1_25ms = 48, // 60ms
             .supervision_timeout_10ms = 600,      // 6s
           },
       [PBL_BT_RESPONSE_TIME_MIDDLE] =
           {
-            .slave_latency_events = 30,
-            .connection_interval_min_1_25ms = 24, // 30ms
-            .connection_interval_max_1_25ms = 36, // 45ms
+            .slave_latency_events = 4,
+            .connection_interval_min_1_25ms = 36, // 45ms
+            .connection_interval_max_1_25ms = 48, // 60ms
             .supervision_timeout_10ms = 600,      // 6s
           },
       [PBL_BT_RESPONSE_TIME_MIN] = {

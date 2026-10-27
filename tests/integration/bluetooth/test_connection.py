@@ -207,10 +207,10 @@ def _wait_idle_parameters(phone, timeout=60.0):
 
 def _assert_idle(parameters):
     if isinstance(parameters, ParameterRequest):
-        assert parameters == ParameterRequest(30, 45, 30, 6000)
+        assert parameters == ParameterRequest(45, 60, 4, 6000)
     else:
-        assert 30 <= parameters.connection_interval <= 45
-        assert parameters.peripheral_latency == 30
+        assert 45 <= parameters.connection_interval <= 60
+        assert parameters.peripheral_latency == 4
         assert parameters.supervision_timeout == 6000
 
 
