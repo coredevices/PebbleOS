@@ -176,63 +176,27 @@ pbl build
 
 ## Run the firmware
 
-::::::{tab-set}
-:sync-group: target
-
-:::::{tab-item} Emulator
-:sync: emulator
-
-Launch the emulator:
-
 ```shell
 pbl run
 ```
 
-A window opens with the emulated watch and the firmware boots to the
-watchface; the arrow keys are the watch buttons. The
+On an emulated board, a window opens with the emulated watch and the
+firmware boots to the watchface; the arrow keys are the watch buttons. The
 {doc}`../development/emulation/emulator` page covers everything else you
 can do with it.
 
-:::::
+On a real board, `pbl run` flashes the firmware to the watch. With a
+{doc}`programmer <../programmers/index>` connected as the
+{doc}`board's page <../boards/index>` shows, add `--resources` the first
+time to write the system resources too. Without one, go through the phone
+paired with the watch: enable the Developer Connection in the Pebble app
+and pass the address it shows:
 
-:::::{tab-item} Watch
-:sync: watch
-
-There are two ways to get the firmware onto a watch:
-
-- **Flash it with a programmer.** With a
-  {doc}`programmer <../programmers/index>` connected as the
-  {doc}`board's page <../boards/index>` shows, {doc}`../pbl/run`
-  writes the firmware directly:
-
-  ```shell
-  pbl run
-  ```
-
-  The first time, the system resources have to be written as well;
-  {doc}`../pbl/run` explains how for each board.
-
-- **Sideload a bundle.** Without a programmer, package the firmware with
-  {doc}`../pbl/bundle`, which writes a `.pbz` into the build directory:
-
-  ```shell
-  pbl bundle
-  ```
-
-  Copy the `.pbz` to the phone paired with the watch. In the Pebble
-  mobile app, enable `Settings -> Show debug options`, then go back to the
-  Devices tab, tap your watch, choose `Firmware Update Debug -> Sideload
-  FW`, and select the file. The app starts the update and shows its
-  progress on the watch card.
-
-```{note}
-Holding Back + Up + Select reboots the watch into the recovery firmware
-(PRF), from which the Pebble mobile app can install a firmware again.
+```shell
+pbl run -r phone --address $IP
 ```
 
-:::::
-
-::::::
+{doc}`../pbl/run` covers the options of each case.
 
 ## Next steps
 
