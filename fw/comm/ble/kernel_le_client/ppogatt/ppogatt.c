@@ -163,8 +163,8 @@ static uint8_t s_disconnect_counter;
 //! Caps rediscovery on stale meta handles to once per BLE connection.
 static bool s_rediscovery_requested_this_connection;
 
-//! The connection currently using reversed PPoG, or NULL if none. Forward
-//! PPoG yields to reversed on this connection.
+//! The connection on which the phone started a reversed PPoG handshake, or
+//! NULL if none. Forward PPoG yields to reversed on this connection.
 static GAPLEConnection *s_reversed_active_conn;
 
 // -------------------------------------------------------------------------------------------------
@@ -173,6 +173,7 @@ static GAPLEConnection *s_reversed_active_conn;
 static void prv_send_next_packets(PPoGATTClient *client);
 static void prv_start_reset(PPoGATTClient *client);
 static void prv_request_meta_rediscovery(PPoGATTClient *client);
+static void prv_reversed_take_over(PPoGATTClient *client);
 
 extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
     const struct pbl_bt_device_internal *device);
@@ -505,20 +506,16 @@ static PPoGATTClient *prv_find_reversed_client_for_conn(uint16_t conn_handle) {
                                     (void *)(uintptr_t)conn_handle);
 }
 
-static bool prv_connection_filter_callback(ListNode *found_node, void *data) {
+static bool prv_forward_connection_filter_callback(ListNode *found_node, void *data) {
   const PPoGATTClient *client = (const PPoGATTClient *)found_node;
-  const GAPLEConnection *connection = (const GAPLEConnection *)data;
-  if (client->role == PPoGATTRoleReversed) {
-    return (client->rev.connection == connection);
-  }
-  GAPLEConnection *forward_conn =
-      gatt_client_characteristic_get_connection(client->characteristics.meta);
-  return (forward_conn == connection);
+  return (client->role == PPoGATTRoleForward &&
+          gatt_client_characteristic_get_connection(client->characteristics.meta) ==
+              (const GAPLEConnection *)data);
 }
 
-static PPoGATTClient *prv_find_client_for_connection(GAPLEConnection *connection) {
-  return (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head, prv_connection_filter_callback,
-                                    (void *)connection);
+static PPoGATTClient *prv_find_forward_client_for_connection(GAPLEConnection *connection) {
+  return (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head,
+                                    prv_forward_connection_filter_callback, (void *)connection);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -785,6 +782,9 @@ static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *v
   }
   if (PBL_UNLIKELY(packet->type == PPoGATTPacketTypeResetRequest)) {
     PBL_LOG_INFO("Got reset request!");
+    if (client->role == PPoGATTRoleReversed && s_reversed_active_conn != client->rev.connection) {
+      prv_reversed_take_over(client);
+    }
     prv_handle_reset_request(client);
     return;
   }
@@ -1078,16 +1078,24 @@ void ppogatt_invalidate_all_references(void) {
 // -------------------------------------------------------------------------------------------------
 // Reversed PPoG (watch hosts the GATT service)
 
+// A subscription alone doesn't mean the phone uses reversed PPoG: NimBLE also
+// restores a bonded phone's subscription when it reconnects, while the phone
+// may host forward PPoG. Reversed takes over once the phone starts its
+// handshake.
+static void prv_reversed_take_over(PPoGATTClient *client) {
+  bt_lock_assert_held(true);
+
+  PPoGATTClient *forward = prv_find_forward_client_for_connection(client->rev.connection);
+  if (forward) {
+    PBL_LOG_INFO("Reversed PPoG taking over from forward client");
+    prv_delete_client(forward, false /* is_disconnected */, DeleteReason_DuplicateServer);
+  }
+  s_reversed_active_conn = client->rev.connection;
+}
+
 static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle,
                                TimerID rx_ack_timer, TimerID send_retry_timer) {
   bt_lock_assert_held(true);
-
-  // Reversed wins over any client already bound to this connection.
-  PPoGATTClient *existing = prv_find_client_for_connection(connection);
-  if (existing) {
-    PBL_LOG_INFO("Reversed PPoG taking over from existing client (role=%u)", existing->role);
-    prv_delete_client(existing, false /* is_disconnected */, DeleteReason_DuplicateServer);
-  }
 
   PPoGATTClient *client = prv_create_client(rx_ack_timer, send_retry_timer);
   if (!client) {
@@ -1099,8 +1107,6 @@ static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle
   client->app_uuid = UUID_INVALID;
   client->version = PPOGATT_MAX_VERSION;
   client->destination = TransportDestinationHybrid;
-
-  s_reversed_active_conn = connection;
 
   // The handshake is phone-initiated: wait for the phone's ResetRequest.
   client->state = StateConnectedClosedAwaitingResetRequest;
