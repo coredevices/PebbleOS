@@ -14,6 +14,8 @@ pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 
 NOTIFICATION_WINDOW = "Notification Window"
 ACTION_MENU = "Action Menu"
+# Well before any earlier session ended: the watch has seen it.
+PRE_EXISTING_AGE_S = 10 * 60
 
 
 def _wait_modal(ui, name=NOTIFICATION_WINDOW, present=True, timeout=10.0):
@@ -45,12 +47,15 @@ def test_notification_shown(ui, ancs):
 
 
 def test_pre_existing_ignored(ui, ancs):
-    """Notifications the phone had before the watch connected are not
-    shown again right after it connects."""
-    since = ancs.requests.mark()
-    notification = ancs.post("Old news", title="Anna", flags=EventFlag.PRE_EXISTING)
+    """Notifications the phone had before the watch's last session ended
+    are not shown again right after it connects."""
+    ancs.post(
+        "Old news",
+        title="Anna",
+        flags=EventFlag.PRE_EXISTING,
+        date=ancs.clock() - PRE_EXISTING_AGE_S,
+    )
     time.sleep(2)
-    assert not [r for r in ancs.requests.since(since) if r.uid == notification.uid]
     assert NOTIFICATION_WINDOW not in ui.modal_stack()
 
 
