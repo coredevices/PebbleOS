@@ -10,7 +10,7 @@
           <g transform="translate(104.000000, 104.500000) rotate(-23.000000) translate(-104.000000, -104.500000) translate(24.960000, 25.080000)">
             <g transform="translate(79.040000, 79.420000) rotate(24.000000) translate(-79.040000, -79.420000) translate(19.760000, 19.855000)">
               <path d="M41.0130357,0 L118.147337,41.2102138 L77.1343017,118.715353 L-7.10542736e-15,77.5051397 L41.0130357,0 L41.0130357,0 Z">
-                <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+                <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
                   <pdc:highlight y="-36.52" x="-34.09" details="Invalid point: (-34.09, -36.52). Used closest supported coordinate: (-34.125, -36.5)"/>
                   <pdc:highlight y="-36.34" x="53.36" details="Invalid point: (53.36, -36.34). Used closest supported coordinate: (53.375, -36.375)"/>
                   <pdc:highlight y="51.34" x="53.53" details="Invalid point: (53.53, 51.34). Used closest supported coordinate: (53.5, 51.375)"/>

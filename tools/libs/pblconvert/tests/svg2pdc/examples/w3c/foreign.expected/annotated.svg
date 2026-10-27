@@ -54,7 +54,7 @@
         <pdc:annotation description="Element contains unsupported curved command(s).">
           <pdc:highlight y="0.00" x="100.00" height="450.00" width="300.00"/>
         </pdc:annotation>
-        <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+        <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
           <pdc:highlight y="7.00" x="101.17" details="Invalid point: (101.17, 7.00). Used closest supported coordinate: (101.125, 7.0)"/>
           <pdc:highlight y="13.95" x="102.34" details="Invalid point: (102.34, 13.95). Used closest supported coordinate: (102.375, 14.0)"/>
           <pdc:highlight y="20.85" x="103.52" details="Invalid point: (103.52, 20.85). Used closest supported coordinate: (103.5, 20.875)"/>

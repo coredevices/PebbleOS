@@ -189,13 +189,8 @@ class Command:
 
             if problem is not None:
                 if grid_annotation is None:
-                    link = (
-                        "https://pebbleos.readthedocs.io/en/latest/"
-                        "reference/formats/pdc.html#coordinate-grid"
-                    )
                     grid_annotation = annotator.add_annotation(
-                        "Element is expressed with unsupported coordinate(s).",
-                        link=link,
+                        "Element is expressed with unsupported coordinate(s)."
                     )
                 grid_annotation.add_highlight(p[0], p[1], details=problem)
 
