@@ -42,11 +42,9 @@ static bool prv_callback_registered_filter(ListNode *found_node, void *data) {
 }
 
 // -------------------------------------------------------------------------------------------
-static void do_callbacks(ListNode *list, uint16_t elapsed) {
-  pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
-
-  // Settle the counts first, so callbacks registered by the ones that run below start counting
-  // from now instead of being charged for the elapsed seconds.
+// Settle the counts before running any callback, so callbacks registered from now on start
+// counting from now instead of being charged for the elapsed seconds.
+static void prv_settle_locked(ListNode *list, uint16_t elapsed) {
   for (ListNode *iter = list_get_next(list); iter != 0; iter = list_get_next(iter)) {
     RegularTimerInfo *reg_timer = (RegularTimerInfo *)iter;
     reg_timer->private_due = reg_timer->private_count <= elapsed;
@@ -56,6 +54,10 @@ static void do_callbacks(ListNode *list, uint16_t elapsed) {
       reg_timer->private_count -= elapsed;
     }
   }
+}
+
+static void do_callbacks(ListNode *list) {
+  pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
 
   for (ListNode *iter = list_get_next(list); iter != 0;) {
     RegularTimerInfo *reg_timer = (RegularTimerInfo *)iter;
@@ -140,9 +142,10 @@ static void timer_callback(void *data) {
   }
   s_last_second_fired = t;
   s_last_second_fired_valid = true;
+  prv_settle_locked(&s_seconds_callbacks, elapsed);
   pbl_mutex_unlock(&s_callback_list_semaphore);
 
-  do_callbacks(&s_seconds_callbacks, elapsed);
+  do_callbacks(&s_seconds_callbacks);
 
   struct pbl_tm time;
   pbl_localtime_r(&t, &time);
@@ -168,7 +171,10 @@ static void timer_callback(void *data) {
     }
     s_last_minute_fire_ts = now_ts;
 
-    do_callbacks(&s_minutes_callbacks, 1);
+    pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
+    prv_settle_locked(&s_minutes_callbacks, 1);
+    pbl_mutex_unlock(&s_callback_list_semaphore);
+    do_callbacks(&s_minutes_callbacks);
   }
 
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
@@ -321,9 +327,10 @@ static void prv_fire_callbacks(ListNode *list, uint16_t mod) {
     }
     iter = list_get_next(iter);
   }
+  prv_settle_locked(list, 1);
   pbl_mutex_unlock(&s_callback_list_semaphore);
 
-  do_callbacks(list, 1);
+  do_callbacks(list);
 }
 
 void regular_timer_fire_seconds(uint8_t secs) {
