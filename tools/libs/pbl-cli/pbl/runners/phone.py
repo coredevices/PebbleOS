@@ -14,6 +14,7 @@ DEV_CONNECTION_PORT = 9000
 RECOVERY_TIMEOUT = 120
 REENABLE_TIMEOUT = 300
 RECONNECT_INTERVAL = 3
+ADB_CONNECT_ATTEMPTS = 5
 
 VIA_CHOICES = ("adb", "cloud", "ip")
 
@@ -139,6 +140,7 @@ class PhoneRunner(Runner):
             from libpebble2.communication.transports.websocket import (
                 WebsocketTransport,
             )
+            from libpebble2.exceptions import ConnectionError as PebbleConnectionError
         except ImportError as e:
             raise RunnerError(f"libpebble2 is not installed ({e})") from e
 
@@ -146,8 +148,18 @@ class PhoneRunner(Runner):
             pebble = PebbleConnection(self._cloud_transport())
             pebble.connect()
         else:
-            pebble = PebbleConnection(WebsocketTransport(self._url()))
-            pebble.connect()
+            url = self._url()
+            # The app restarts its server for the adb broadcast, which the
+            # port forward may reach before it listens again
+            for attempt in range(ADB_CONNECT_ATTEMPTS if self.via == "adb" else 1):
+                pebble = PebbleConnection(WebsocketTransport(url))
+                try:
+                    pebble.connect()
+                    break
+                except PebbleConnectionError:
+                    if attempt == ADB_CONNECT_ATTEMPTS - 1 or self.via != "adb":
+                        raise
+                    time.sleep(1)
         pebble.run_async()
         return pebble
 
