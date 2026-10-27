@@ -7,8 +7,9 @@
   ``@defgroup`` comments in ``include/``.
 - ``pbl-command`` renders the usage and options of a ``pbl`` command
   from its own argument parser.
-- The API reference entry of the sidebar, which a toctree only takes as a
-  full URL, links to the Doxygen reference of the same build.
+- ``pbl_docs_toctree_links`` maps placeholders of toctree entries, which
+  only take URLs (``scheme://``), to paths of the same build, such as the
+  Doxygen reference.
 """
 
 import argparse
@@ -23,7 +24,6 @@ from sphinx.util.docutils import SphinxDirective, SphinxRole
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = [ROOT / "include", ROOT / "docs" / "_doxygen"]
 PBL_CLI = ROOT / "tools" / "libs" / "pbl-cli"
-APIDOC_TOCTREE_URL = "https://pebbleos.readthedocs.io/en/latest/apidoc/index.html"
 
 COMMENT_RE = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
 DEFGROUP_RE = re.compile(r"[@\\]defgroup\s+(\w+)\s+(.+)")
@@ -155,17 +155,24 @@ def builder_inited(app):
 
 def html_page_context(app, pagename, templatename, context, doctree):
     toctree = context.get("toctree")
-    if toctree is None:
+    links = app.config.pbl_docs_toctree_links
+    if toctree is None or not links:
         return
-    uri = context["pathto"]("apidoc/index.html", 1)
-    context["toctree"] = lambda **kwargs: toctree(**kwargs).replace(
-        APIDOC_TOCTREE_URL, uri
-    )
+    pathto = context["pathto"]
+
+    def toctree_links(**kwargs):
+        html = toctree(**kwargs)
+        for placeholder, path in links.items():
+            html = html.replace(placeholder, pathto(path, 1))
+        return html
+
+    context["toctree"] = toctree_links
 
 
 def setup(app):
     app.add_role("apidoc", ApidocRole())
     app.add_directive("pbl-command", PblCommandDirective)
+    app.add_config_value("pbl_docs_toctree_links", {}, "html", types=[dict])
     app.connect("builder-inited", builder_inited)
     app.connect("html-page-context", html_page_context)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

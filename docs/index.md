@@ -167,5 +167,5 @@ community/contributing.md
 
 reference/index.md
 reference/kconfig.md
-API reference <https://pebbleos.readthedocs.io/en/latest/apidoc/index.html>
+API reference <apidoc://>
 ```

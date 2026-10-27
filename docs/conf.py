@@ -85,6 +85,9 @@ pbl_playground_boards = {
     "native_flint/wasm": "Pebble 2 Duo",
 }
 
+# Toctree entries only take URLs: placeholders for paths of the build
+pbl_docs_toctree_links = {"apidoc://": "apidoc/index.html"}
+
 # -- Options for the matplotlib plot directive ---------------------------------
 
 # Plots are drawn at build time from code; show only the figure, as SVG on a
