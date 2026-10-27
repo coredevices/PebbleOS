@@ -59,6 +59,20 @@ def test_pre_existing_ignored(ui, ancs):
     assert NOTIFICATION_WINDOW not in ui.modal_stack()
 
 
+def test_missed_notification_recovered(ui, iphone, ancs):
+    """A notification posted while the watch was away, which the phone
+    sends as pre-existing once the watch is back, is shown."""
+    iphone.disconnect()
+    iphone.connect()
+    ancs.wait_subscribed()
+    since = ancs.requests.mark()
+    notification = ancs.post(
+        "Running 10 min late", title="Anna", flags=EventFlag.PRE_EXISTING
+    )
+    ancs.wait_fetched(notification.uid, since=since)
+    _wait_modal(ui)
+
+
 def test_notification_removed(ui, ancs):
     """A notification cleared on the phone goes from the watch's screen."""
     notification = ancs.post("Running 10 min late", title="Anna")
