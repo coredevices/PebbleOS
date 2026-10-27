@@ -1608,7 +1608,8 @@ static void prv_handle_notification_added_common(Uuid *id, NotificationType type
     return;
   }
 
-  if (type == NotificationMobile && prv_notification_is_phone_silent(id)) {
+  if (type == NotificationMobile && alerts_preferences_get_notification_respect_phone_silence() &&
+      prv_notification_is_phone_silent(id)) {
     prv_log_notification_vibe("skipped: silenced on the phone", id);
     return;
   }
