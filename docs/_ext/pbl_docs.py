@@ -7,13 +7,10 @@
   ``@defgroup`` comments in ``include/``.
 - ``pbl-command`` renders the usage and options of a ``pbl`` command
   from its own argument parser.
-- ``pbl_redirects`` keeps moved pages reachable at their old URL.
 """
 
 import argparse
 import hashlib
-import os
-import posixpath
 import re
 import sys
 from pathlib import Path
@@ -137,46 +134,13 @@ class PblCommandDirective(SphinxDirective):
         return item
 
 
-REDIRECT_TEMPLATE = """<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Redirecting</title>
-<link rel="canonical" href="{uri}">
-<meta http-equiv="refresh" content="0; url={uri}">
-</head>
-<body><a href="{uri}">This page has moved.</a></body>
-</html>
-"""
-
-
-def write_redirects(app, exception):
-    if exception or app.builder.format != "html":
-        return
-    for old, new in app.config.pbl_redirects.items():
-        if old in app.env.found_docs:
-            raise ValueError(f"redirect source {old!r} is still a page")
-        if new not in app.env.found_docs:
-            raise ValueError(f"redirect target {new!r} is not a page")
-        uri = (
-            posixpath.relpath(new, posixpath.dirname(old) or ".")
-            + app.builder.out_suffix
-        )
-        path = os.path.join(app.outdir, old + app.builder.out_suffix)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
-            f.write(REDIRECT_TEMPLATE.format(uri=uri))
-
-
 def builder_inited(app):
     app.pbl_groups = scan_groups()
     app.pbl_commands = pbl_subparsers()
 
 
 def setup(app):
-    app.add_config_value("pbl_redirects", {}, "html")
     app.add_role("apidoc", ApidocRole())
     app.add_directive("pbl-command", PblCommandDirective)
     app.connect("builder-inited", builder_inited)
-    app.connect("build-finished", write_redirects)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

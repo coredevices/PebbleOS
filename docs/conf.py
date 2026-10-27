@@ -87,34 +87,6 @@ pbl_playground_boards = {
     "native_flint/wasm": "Pebble 2 Duo",
 }
 
-# Pages that moved, served as redirects from their old URL
-pbl_redirects = {
-    "development/quickstart": "getting_started/index",
-    "development/getting_started": "getting_started/index",
-    "development/options": "pbl/configure",
-    "development/building_fw": "pbl/run",
-    "pbl/flash": "pbl/run",
-    "development/pbl": "pbl/index",
-    "development/build_system": "development/build_system/index",
-    "development/qemu": "development/emulation/emulator",
-    "development/native": "development/emulation/native_simulator",
-    "development/testing": "development/tests/unit",
-    "development/integration_tests": "development/tests/integration",
-    "development/sdk_export": "sdk/exporting",
-    "reference/recognizers": "sdk/recognizers",
-    "development/sbom": "third_party/sbom",
-    "development/moddable": "third_party/moddable",
-    "development/contributing": "community/contributing",
-    "architecture/kernel": "kernel/index",
-    "architecture/kernel_internals": "kernel/internals",
-    "architecture/crc": "subsystems/crc",
-    "architecture/input": "subsystems/input",
-    "architecture/shell": "subsystems/shell",
-    "architecture/task_watchdog": "subsystems/task_watchdog",
-    "architecture/device": "drivers/device_model",
-    "architecture/activity/index": "services/activity/index",
-}
-
 # -- Options for the matplotlib plot directive ---------------------------------
 
 # Plots are drawn at build time from code; show only the figure, as SVG on a
