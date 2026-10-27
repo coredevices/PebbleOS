@@ -107,11 +107,6 @@ config HAL_SIFLI_HCD
       Enable the HCD (USB host controller) SiFli HAL module
       driver.
 
-config HAL_SIFLI_I2C
-    bool "I2C HAL module"
-    help
-      Enable the I2C SiFli HAL module driver.
-
 config HAL_SIFLI_I2S
     bool "I2S HAL module"
     help

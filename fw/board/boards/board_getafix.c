@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/backlight/aw9364e.h>
+#include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
@@ -192,11 +193,11 @@ PBL_PINCTRL_STATE_DEFINE(s_i2c1_default, SF32LB52_PINCTRL,
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA33_I2C1_SDA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DMA_DEFINE(s_i2c1, "i2c1", I2C1, 400000, &s_i2c1_default, DMA1_Channel6,
-                          DMA_REQUEST_22, DMAC1_CH6, 5, nullptr);
+static const struct pbl_dma_chan s_i2c1_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 5, SF32LB52_DMA_REQ_I2C1, SF32LB52_DMA_PL_HIGH);
+PBL_I2C_SF32LB_DMA_DEFINE(s_i2c1, "i2c1", 1, 400000, &s_i2c1_default, &s_i2c1_dma, nullptr);
 
 PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
-PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c1, 0);
 
 PBL_LIS2DW12_DEFINE(s_lis2dw12, &s_i2c1.bus, 0x19,
                     .int1 = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 26, PBL_IRQ_TYPE_EDGE_RISING),
@@ -217,7 +218,7 @@ PBL_PINCTRL_STATE_DEFINE(s_i2c2_default, SF32LB52_PINCTRL,
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA10_I2C2_SDA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DEFINE(s_i2c2, "i2c2", I2C2, 400000, &s_i2c2_default, nullptr);
+PBL_I2C_SF32LB_DEFINE(s_i2c2, "i2c2", 2, 400000, &s_i2c2_default, nullptr);
 PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
 
 static const struct pbl_i2c_dev s_i2c_cst816 = PBL_I2C_DEV(&s_i2c2.bus, 0x15);
@@ -238,7 +239,7 @@ PBL_PINCTRL_STATE_DEFINE(s_i2c3_default, SF32LB52_PINCTRL,
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA30_I2C3_SDA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", I2C3, 400000, &s_i2c3_default, nullptr);
+PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", 3, 400000, &s_i2c3_default, nullptr);
 PBL_IRQ_CONNECT(I2C3, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c3, 0);
 
 PBL_NPM1300_DEFINE(s_npm1300, &s_i2c3.bus, 0x6B);
