@@ -353,10 +353,6 @@ void flash_erase_subsector_blocking(uint32_t subsector_addr) {
   prv_flash_erase_blocking(subsector_addr, true /* is_subsector */);
 }
 
-void flash_enable_write_protection(void) {
-  flash_impl_enable_write_protection();
-}
-
 void flash_prf_set_protection(bool do_protect) {
   status_t status;
   pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
@@ -370,31 +366,12 @@ void flash_prf_set_protection(bool do_protect) {
   pbl_mutex_unlock(&s_flash_lock);
 }
 
-#if 0
-void flash_erase_bulk(void) {
-  pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
-  flash_impl_erase_bulk_begin();
-  while (flash_impl_erase_is_in_progress()) {
-    pbl_sleep_ms(10);
-  }
-  pbl_mutex_unlock(&s_flash_lock);
-}
-#endif
-
-void flash_sleep_when_idle(bool enable) {
-  // the S29VS flash automatically enters and exits standby
-}
-
-bool flash_get_sleep_when_idle(void) {
-  return false;
-}
-
-bool flash_is_initialized(void) {
+static bool prv_is_initialized(void) {
   return s_flash_initialized;
 }
 
 void flash_stop(void) {
-  if (!flash_is_initialized()) {
+  if (!prv_is_initialized()) {
     // Not yet initialized, nothing to do.
     return;
   }
@@ -408,12 +385,6 @@ void flash_stop(void) {
       pbl_sleep_ms(10);
     }
   }
-}
-
-void flash_switch_mode(FlashModeType mode) {
-  pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
-  flash_impl_set_burst_mode(mode == FLASH_MODE_SYNC_BURST);
-  pbl_mutex_unlock(&s_flash_lock);
 }
 
 uint32_t flash_get_sector_base_address(uint32_t flash_addr) {
@@ -438,18 +409,6 @@ bool flash_sector_is_erased(uint32_t sector_addr) {
 
 bool flash_subsector_is_erased(uint32_t sector_addr) {
   return flash_impl_blank_check_subsector(flash_impl_get_subsector_base_address(sector_addr));
-}
-
-void flash_use(void) {
-  pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
-  flash_impl_use();
-  pbl_mutex_unlock(&s_flash_lock);
-}
-
-void flash_release_many(uint32_t num_locks) {
-  pbl_mutex_lock(&s_flash_lock, PBL_FOREVER);
-  flash_impl_release_many(num_locks);
-  pbl_mutex_unlock(&s_flash_lock);
 }
 
 status_t flash_read_security_register(uint32_t addr, uint8_t *val) {

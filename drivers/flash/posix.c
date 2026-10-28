@@ -94,20 +94,12 @@ status_t flash_impl_init(bool coredump_mode) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_set_burst_mode(bool enable) {
-  return S_SUCCESS;
-}
-
 FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
   return addr & ~(PRV_SECTOR_SIZE - 1);
 }
 
 FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   return addr & ~(PRV_SUBSECTOR_SIZE - 1);
-}
-
-size_t flash_impl_get_capacity(void) {
-  return PRV_CAPACITY;
 }
 
 status_t flash_impl_enter_low_power_mode(void) {
@@ -121,9 +113,6 @@ status_t flash_impl_exit_low_power_mode(void) {
 status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
   memcpy(buffer, prv_ptr(addr), len);
   return S_SUCCESS;
-}
-
-void flash_impl_enable_write_protection(void) {
 }
 
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
@@ -150,14 +139,6 @@ status_t flash_impl_get_write_status(void) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_write_suspend(FlashAddress addr) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_write_resume(FlashAddress addr) {
-  return S_SUCCESS;
-}
-
 status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
   memset(prv_ptr(flash_impl_get_subsector_base_address(subsector_addr)), 0xff, PRV_SUBSECTOR_SIZE);
   return S_SUCCESS;
@@ -165,11 +146,6 @@ status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
 
 status_t flash_impl_erase_sector_begin(FlashAddress sector_addr) {
   memset(prv_ptr(flash_impl_get_sector_base_address(sector_addr)), 0xff, PRV_SECTOR_SIZE);
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_bulk_begin(void) {
-  memset(s_flash, 0xff, PRV_CAPACITY);
   return S_SUCCESS;
 }
 
@@ -209,15 +185,6 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr) {
 
 status_t flash_impl_blank_check_sector(FlashAddress addr) {
   return prv_blank_check(flash_impl_get_sector_base_address(addr), PRV_SECTOR_SIZE);
-}
-
-void flash_impl_use(void) {
-}
-
-void flash_impl_release(void) {
-}
-
-void flash_impl_release_many(uint32_t num_locks) {
 }
 
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {

@@ -22,11 +22,6 @@ status_t flash_impl_init(bool coredump_mode) {
   return S_SUCCESS;
 }
 
-void flash_impl_use(void) {
-}
-void flash_impl_release_many(uint32_t num_locks) {
-}
-
 int get_subsector_base_calls = 0;
 FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   get_subsector_base_calls++;
@@ -107,19 +102,12 @@ status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
   return E_UNKNOWN;
 }
 
-status_t flash_impl_set_burst_mode(bool enable) {
-  return E_UNKNOWN;
-}
-
 status_t flash_impl_unprotect(void) {
   return S_SUCCESS;
 }
 
 int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t len) {
   return E_UNKNOWN;
-}
-
-void flash_impl_enable_write_protection(void) {
 }
 
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {

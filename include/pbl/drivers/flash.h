@@ -32,11 +32,6 @@
  * @{
  */
 
-/** @brief Expected ID of a 32 Mbit part. */
-static const uint32_t EXPECTED_SPI_FLASH_ID_32MBIT = 0x20bb16;
-/** @brief Expected ID of a 64 Mbit part. */
-static const uint32_t EXPECTED_SPI_FLASH_ID_64MBIT = 0x20bb17;
-
 /** @brief Security (OTP) registers of the flash part. */
 typedef struct FlashSecurityRegisters {
   /** Base address of each security register. */
@@ -147,13 +142,6 @@ bool flash_sector_is_erased(uint32_t sector_addr);
 bool flash_subsector_is_erased(uint32_t sector_addr);
 
 /**
- * @brief Erase the entire flash.
- *
- * Blocks for up to a minute: make sure the watchdog does not fire.
- */
-void flash_erase_bulk(void);
-
-/**
  * @brief Erase a range of flash asynchronously, using as few erase operations as possible.
  *
  * Erases at least [@p max_start, @p min_end) and at most [@p min_start, @p max_end), using
@@ -171,27 +159,6 @@ void flash_erase_optimal_range(uint32_t min_start, uint32_t max_start, uint32_t 
                                void *context);
 
 /**
- * @brief Let the flash enter deep sleep between commands.
- *
- * @param enable true to enable.
- */
-void flash_sleep_when_idle(bool enable);
-
-/**
- * @brief Check whether flash_sleep_when_idle() is in effect.
- *
- * @return true if enabled.
- */
-bool flash_get_sleep_when_idle(void);
-
-/**
- * @brief Check whether flash_init() has run.
- *
- * @return true if initialized.
- */
-bool flash_is_initialized(void);
-
-/**
  * @brief Put the flash in deep power-down before entering stop mode.
  *
  * Takes no locks; call only with interrupts disabled. The part draws about 100 uA in standby
@@ -205,24 +172,6 @@ void flash_power_down_for_stop_mode(void);
  * Counterpart of flash_power_down_for_stop_mode(), with the same constraints.
  */
 void flash_power_up_after_stop_mode(void);
-
-/** @brief Flash read mode. */
-typedef enum {
-  /** Asynchronous reads. */
-  FLASH_MODE_ASYNC = 0,
-  /** Synchronous burst reads. */
-  FLASH_MODE_SYNC_BURST,
-
-  /** Number of modes. */
-  FLASH_MODE_NUM_MODES
-} FlashModeType;
-
-/**
- * @brief Switch the read mode.
- *
- * @param mode New mode; burst mode is used only if the part supports it.
- */
-void flash_switch_mode(FlashModeType mode);
 
 /**
  * @brief Get the base address of the sector containing an address.
@@ -239,9 +188,6 @@ uint32_t flash_get_sector_base_address(uint32_t flash_addr);
  * @return Subsector base address.
  */
 uint32_t flash_get_subsector_base_address(uint32_t flash_addr);
-
-/** @brief Enable write protection, if the part requires it to be enabled explicitly. */
-void flash_enable_write_protection(void);
 
 /**
  * @brief Write-protect the recovery firmware region, or remove all protection.
@@ -267,22 +213,6 @@ uint32_t flash_crc32(uint32_t flash_addr, uint32_t length);
  * @return pbl_crc32_legacy() of the region.
  */
 uint32_t flash_crc32_legacy(uint32_t flash_addr, uint32_t length);
-
-/**
- * @brief Take a reference keeping the flash peripheral powered.
- *
- * Call before any flash access, including memory-mapped reads. Release with flash_release_many().
- */
-void flash_use(void);
-
-/**
- * @brief Drop several references taken with flash_use().
- *
- * The peripheral is powered down when the count reaches zero.
- *
- * @param num_locks Number of references to drop, usually 1.
- */
-void flash_release_many(uint32_t num_locks);
 
 /**
  * @brief Read a byte from a security register.

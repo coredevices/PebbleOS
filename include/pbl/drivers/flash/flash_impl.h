@@ -36,17 +36,6 @@ typedef uint32_t FlashAddress;
 status_t flash_impl_init(bool coredump_mode);
 
 /**
- * @brief Enable or disable synchronous burst mode, if supported.
- *
- * Burst mode is disabled by flash_impl_init(). The result is undefined if another operation is
- * in progress.
- *
- * @param enable true to enable burst mode.
- * @return S_SUCCESS or an error.
- */
-status_t flash_impl_set_burst_mode(bool enable);
-
-/**
  * @brief Get the base address of the sector containing an address.
  *
  * Reentrant.
@@ -65,13 +54,6 @@ FlashAddress flash_impl_get_sector_base_address(FlashAddress addr);
  * @return Subsector base address.
  */
 FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr);
-
-/**
- * @brief Get the flash capacity.
- *
- * @return Capacity in bytes.
- */
-size_t flash_impl_get_capacity(void);
 
 /**
  * @brief Enter a low-power state.
@@ -102,9 +84,6 @@ status_t flash_impl_exit_low_power_mode(void);
  * @return S_SUCCESS or an error.
  */
 status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len);
-
-/** @brief Enable write protection, if the part requires it to be enabled explicitly. */
-void flash_impl_enable_write_protection(void);
 
 /**
  * @brief Write-protect a range of sectors.
@@ -174,24 +153,6 @@ int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t le
 status_t flash_impl_get_write_status(void);
 
 /**
- * @brief Suspend an in-progress write so reads and erases are permitted.
- *
- * @param addr Address passed to the flash_impl_write_page_begin() call that started the write.
- * @return S_SUCCESS or an error.
- */
-status_t flash_impl_write_suspend(FlashAddress addr);
-
-/**
- * @brief Resume a suspended write.
- *
- * The result is undefined if a read or write is in progress.
- *
- * @param addr Address passed to flash_impl_write_suspend().
- * @return S_SUCCESS or an error.
- */
-status_t flash_impl_write_resume(FlashAddress addr);
-
-/**
  * @brief Start erasing the subsector containing an address.
  *
  * The result is undefined if a read or write is in progress. It is an error to call this while
@@ -212,16 +173,6 @@ status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr);
  * @return S_SUCCESS or an error.
  */
 status_t flash_impl_erase_sector_begin(FlashAddress sector_addr);
-
-/**
- * @brief Start erasing the entire flash.
- *
- * The result is undefined if a read or write is in progress. It is an error to call this while
- * an erase is suspended.
- *
- * @return S_SUCCESS or an error.
- */
-status_t flash_impl_erase_bulk_begin(void);
 
 /**
  * @brief Poll the status of an erase.
@@ -305,17 +256,6 @@ status_t flash_impl_blank_check_subsector(FlashAddress addr);
  * @retval E_BUSY Another operation is in progress.
  */
 status_t flash_impl_blank_check_sector(FlashAddress addr);
-
-/** @brief Take a reference keeping the flash peripheral powered. */
-void flash_impl_use(void);
-/** @brief Drop one reference taken with flash_impl_use(). */
-void flash_impl_release(void);
-/**
- * @brief Drop several references taken with flash_impl_use().
- *
- * @param num_locks Number of references to drop.
- */
-void flash_impl_release_many(uint32_t num_locks);
 
 /**
  * @brief Read a byte from a security register.

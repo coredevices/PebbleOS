@@ -17,9 +17,6 @@ static void prv_do_update(void) {
   PBL_LOG_INFO("Updating PRF!");
   flash_prf_set_protection(false);
 
-  bool saved_sleep_when_idle = flash_get_sleep_when_idle();
-  flash_sleep_when_idle(false);
-
 #ifndef CONFIG_PBLBOOT
   FirmwareDescription description =
       firmware_storage_read_firmware_description(FLASH_REGION_FIRMWARE_DEST_BEGIN);
@@ -60,7 +57,6 @@ static void prv_do_update(void) {
 
 done:
   flash_prf_set_protection(true);
-  flash_sleep_when_idle(saved_sleep_when_idle);
   PBL_LOG_DBG("Done!");
 }
 #endif

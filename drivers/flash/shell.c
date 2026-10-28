@@ -169,18 +169,6 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
-static int prv_cmd_mode(const struct pbl_shell *sh, size_t argc, char **argv) {
-  long mode;
-
-  if (pbl_shell_strtol(argv[1], &mode) != 0) {
-    pbl_shell_error(sh, "invalid mode '%s'", argv[1]);
-    return -EINVAL;
-  }
-
-  flash_switch_mode(mode);
-  return 0;
-}
-
 static int prv_cmd_fill(const struct pbl_shell *sh, size_t argc, char **argv) {
   uint32_t address;
   uint32_t length;
@@ -435,7 +423,6 @@ PBL_SHELL_SUBCMD_ADD(sub_flash, sec, sub_flash_sec, "Security registers", nullpt
 
 PBL_SHELL_SUBCMD_ADD(sub_flash, read, nullptr, "Write raw flash bytes to the console <addr> <len>",
                      prv_cmd_read, 3, 0);
-PBL_SHELL_SUBCMD_ADD(sub_flash, mode, nullptr, "Switch the flash mode <mode>", prv_cmd_mode, 2, 0);
 PBL_SHELL_SUBCMD_ADD(sub_flash, fill, nullptr,
                      "Fill with an incrementing pattern <addr> <len> <start>", prv_cmd_fill, 4, 0);
 PBL_SHELL_SUBCMD_ADD(sub_flash, validate, nullptr, "Erase, write and read back a test sector",

@@ -53,21 +53,12 @@ status_t flash_impl_init(bool coredump_mode) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_set_burst_mode(bool enable) {
-  (void)enable;
-  return S_SUCCESS;
-}
-
 FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
   return addr & ~(QEMU_SECTOR_SIZE - 1);
 }
 
 FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   return addr & ~(QEMU_SUBSECTOR_SIZE - 1);
-}
-
-size_t flash_impl_get_capacity(void) {
-  return REG32(QEMU_EXTFLASH_BASE + FLASH_SIZE);
 }
 
 status_t flash_impl_enter_low_power_mode(void) {
@@ -83,10 +74,6 @@ status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
   const uint8_t *src = (const uint8_t *)(uintptr_t)addr;
   memcpy(buffer, src, len);
   return S_SUCCESS;
-}
-
-void flash_impl_enable_write_protection(void) {
-  // No-op for QEMU
 }
 
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
@@ -125,16 +112,6 @@ status_t flash_impl_get_write_status(void) {
   return S_SUCCESS;
 }
 
-status_t flash_impl_write_suspend(FlashAddress addr) {
-  (void)addr;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_write_resume(FlashAddress addr) {
-  (void)addr;
-  return S_SUCCESS;
-}
-
 status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
   REG32(QEMU_EXTFLASH_BASE + FLASH_ADDR) = subsector_addr;
   REG32(QEMU_EXTFLASH_BASE + FLASH_CMD) = CMD_ERASE_SUBSECTOR;
@@ -144,19 +121,6 @@ status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
 status_t flash_impl_erase_sector_begin(FlashAddress sector_addr) {
   REG32(QEMU_EXTFLASH_BASE + FLASH_ADDR) = sector_addr;
   REG32(QEMU_EXTFLASH_BASE + FLASH_CMD) = CMD_ERASE_SECTOR;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_bulk_begin(void) {
-  // Erase the entire flash by erasing sector by sector
-  size_t capacity = flash_impl_get_capacity();
-  for (size_t addr = 0; addr < capacity; addr += QEMU_SECTOR_SIZE) {
-    flash_impl_erase_sector_begin(addr);
-    // Wait for completion
-    while (flash_impl_get_erase_status() == E_BUSY) {
-      // spin
-    }
-  }
   return S_SUCCESS;
 }
 
@@ -210,17 +174,6 @@ status_t flash_impl_blank_check_sector(FlashAddress addr) {
     }
   }
   return S_TRUE;
-}
-
-void flash_impl_use(void) {
-  // No power management needed for QEMU flash
-}
-
-void flash_impl_release(void) {
-}
-
-void flash_impl_release_many(uint32_t num_locks) {
-  (void)num_locks;
 }
 
 status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {

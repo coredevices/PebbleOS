@@ -102,9 +102,6 @@ FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
   return (addr & SUBSECTOR_ADDR_MASK);
 }
 
-void flash_impl_enable_write_protection(void) {
-}
-
 status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
   if (s_protected) {
     return E_ERROR;
@@ -193,11 +190,6 @@ status_t flash_impl_enter_low_power_mode(void) {
 }
 status_t flash_impl_exit_low_power_mode(void) {
   qspi_flash_set_lower_power_mode(QSPI_FLASH, false);
-  return S_SUCCESS;
-}
-
-status_t flash_impl_set_burst_mode(bool burst_mode) {
-  // NYI
   return S_SUCCESS;
 }
 
