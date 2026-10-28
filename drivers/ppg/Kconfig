@@ -18,6 +18,13 @@ config PPG_SHELL
       The ppg shell command, to inspect the front end and read raw
       samples.
 
+config PPG_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      Synthetic front end for QEMU, which emulates no optical sensor: it
+      models a wrist with a pulse set by the host.
+
 module = DRIVER_PPG
 module-str = PPG front end
 source "subsys/logging/Kconfig.template.log_level"

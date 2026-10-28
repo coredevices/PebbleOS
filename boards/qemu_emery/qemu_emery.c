@@ -9,6 +9,7 @@
 #include <pbl/drivers/gpio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/input/gpio_keys.h>
+#include <pbl/drivers/ppg/qemu.h>
 #include <pbl/drivers/rtc/qemu.h>
 #include <pbl/drivers/temperature/qemu.h>
 #include <pbl/drivers/touch/qemu.h>
@@ -63,6 +64,8 @@ static HRMDevice s_hrm = {
   .state = &s_hrm_state,
 };
 HRMDevice *const HRM = &s_hrm;
+
+const struct pbl_ppg *const PPG = QEMU_PPG;
 
 PBL_IRQ_CONNECT(UART2, 5, pbl_uart_qemu_irq_handler, &s_uart2, 0);
 PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);
