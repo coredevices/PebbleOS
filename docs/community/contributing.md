@@ -80,6 +80,15 @@ Additional requirements:
 - If your commit addresses a specific issue, please include a reference to the issue number in the commit message (e.g., "Fixes #123").
 - If your commit includes changes to documentation, please ensure that the documentation is updated accordingly and that the commit message reflects this.
 
+## Pull Request Requirements
+- Changes impacting low-level components (e.g. hardware drivers, connectivity) are accompanied by
+  proof of testing on real hardware, such as logs, measurements or captures. Testing on QEMU or the
+  change compiling is not sufficient.
+- Where applicable, changes show their impact on power and battery usage, measured with e.g. a power
+  meter or detailed battery usage logs.
+- User experience changes are accompanied by pictures or videos clearly showing the feature. When
+  an existing feature changes, show it before and after the change.
+
 ## Generative AI usage
 The use of large language models (LLMs) is acceptable **if and only if** a thorough manual review is performed. **By submitting a pull request, you are guaranteeing the following:**
 - You have *personally* reviewed all generated code to make sure that it will not cause undue technical issues, including testing for edge cases, ensuring data integrity, and verifying that performance standards are maintained.
