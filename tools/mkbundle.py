@@ -107,7 +107,9 @@ class PebbleBundle:
         self.has_firmware = True
         return True
 
-    def add_resources(self, resources_path, resources_timestamp, sdk_version=None):
+    def add_resources(
+        self, resources_path, resources_timestamp, sdk_version=None, layouts_path=None
+    ):
         if self.has_resources:
             raise RuntimeError("Added multiple resource packs to a single bundle")
 
@@ -127,7 +129,7 @@ class PebbleBundle:
             and sdk_version["major"] >= 5
             and sdk_version["minor"] > 19
         ):
-            timeline_resource_path = os.path.join(
+            timeline_resource_path = layouts_path or os.path.join(
                 "build", self.subfolder, "layouts.json"
             )
 
@@ -356,6 +358,8 @@ def make_watchapp_bundle(
         'worker_bin' -- (optional) path to the worker binary file
         'sdk_version' -- version of SDK used to build binary
         'subfolder' -- path to subfolder in PBW for platform binary
+        'layouts' -- (optional) path to the platform's layouts.json, by default
+                     build/<subfolder>/layouts.json if it exists
     js -- (optional) a list of paths to javascript files to be included
     outfile -- path to write the pbw to
     named_files -- (optional) {path in the pbw: path on disk} of loose files, such as a plugin
@@ -394,7 +398,7 @@ def make_watchapp_bundle(
         if binary["resources"]:
             resources_path = os.path.expanduser(binary["resources"])
             platform_bundle.add_resources(
-                resources_path, timestamp, binary["sdk_version"]
+                resources_path, timestamp, binary["sdk_version"], binary.get("layouts")
             )
 
         bundle.bundle_files.append(platform_bundle)
