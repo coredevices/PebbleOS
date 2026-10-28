@@ -37,6 +37,14 @@ config DISPLAY_SDL
     help
       Display shown in an SDL window on the host of a native build.
 
+config DISPLAY_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The display shell command, to show the display and turn its panel on
+      or off.
+
 module = DRIVER_DISPLAY
 module-str = Display
 source "subsys/logging/Kconfig.template.log_level"
