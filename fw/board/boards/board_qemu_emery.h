@@ -10,5 +10,4 @@ extern const struct pbl_uart *const QEMU_UART;
 #ifdef CONFIG_BT_HCI_UART
 extern const struct pbl_uart *const BT_HCI_UART;
 #endif
-extern MicDevice *const MIC;
 extern HRMDevice *const HRM;

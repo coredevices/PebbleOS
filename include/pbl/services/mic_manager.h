@@ -7,8 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/drivers/mic.h>
-
 #include <kernel/pebble_tasks.h>
 
 //! Arbitrates the single microphone between kernel clients.
@@ -17,6 +15,18 @@
 //! app owns the mic preempts the app, which is told through its preempted callback before the mic
 //! is restarted. An app cannot acquire the mic while dictation owns it. The OS mic banner is shown
 //! while an app client owns the running mic.
+
+//! Sample rate of the frames clients receive, in Hz.
+#define MIC_MANAGER_SAMPLE_RATE 16000
+
+//! Channels of the frames clients receive.
+#define MIC_MANAGER_CHANNELS 1
+
+//! Handler for a full frame of captured audio, called on KernelBG.
+//! @param samples Captured samples, the buffer passed when acquiring.
+//! @param sample_count Number of 16-bit samples in @p samples.
+//! @param context User context passed when acquiring.
+typedef void (*MicDataHandlerCB)(int16_t *samples, size_t sample_count, void *context);
 
 typedef enum MicClient {
   MicClientNone = 0,
@@ -40,7 +50,9 @@ typedef void (*MicManagerPreemptedCb)(void *context);
 
 void mic_manager_init(void);
 
-//! Starts the microphone for a client. See \ref mic_start for the buffer semantics.
+//! Starts the microphone for a client, which receives frames of @p buffer_len samples in
+//! @p buffer. The buffer is owned by the manager until the client releases the mic or is
+//! preempted.
 //! @return true if the client now owns the running microphone
 bool mic_manager_acquire(MicClient client, MicDataHandlerCB handler, void *context, int16_t *buffer,
                          size_t buffer_len, MicManagerPreemptedCb on_preempted,

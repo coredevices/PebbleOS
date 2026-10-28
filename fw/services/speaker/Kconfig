@@ -8,6 +8,15 @@ config SERVICE_SPEAKER
 
 if SERVICE_SPEAKER
 
+config SERVICE_SPEAKER_STANDBY_MS
+    int "Speaker standby (ms)"
+    default 1000 if AUDIO_DA7212
+    default 0
+    help
+      How long the speaker keeps streaming silence after playback before
+      it stops, so sounds in quick succession do not restart the audio
+      path. The DA7212 path distorts when restarted too often.
+
 module = SERVICE_SPEAKER
 module-str = Speaker
 source "subsys/logging/Kconfig.template.log_level"

@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include <pbl/bluetooth/responsiveness.h>
-#include <pbl/drivers/mic.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
@@ -141,7 +140,7 @@ static void prv_cancel_recording(void) {
 
 static void prv_cancel_early_session(void) {
   // For early cancellation, only cancel the audio endpoint transfer
-  // Don't call mic_stop() since the microphone was never started
+  // The microphone was never started
   audio_endpoint_cancel_transfer(s_session_id);
   prv_teardown_session();
 }

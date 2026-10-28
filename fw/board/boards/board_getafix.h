@@ -14,4 +14,3 @@ extern const struct pbl_rproc_sf32lb52 *const LCPU;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern const struct pbl_uart *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern const MicDevice *MIC;
