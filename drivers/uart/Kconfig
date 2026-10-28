@@ -32,6 +32,14 @@ config UART_POSIX
     help
       UART backed by a host file descriptor.
 
+config UART_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The uart shell command, to list the ports, change their line
+      settings and send text.
+
 module = DRIVER_UART
 module-str = UART
 source "subsys/logging/Kconfig.template.log_level"
