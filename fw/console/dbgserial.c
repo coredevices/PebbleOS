@@ -19,16 +19,14 @@
 #endif
 
 void dbgserial_init(void) {
-#if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
-  uart_init(DBG_UART);
-#else
-  uart_init_tx_only(DBG_UART);
-#endif
+  (void)pbl_device_init(&DBG_UART->dev);
   dbgserial_restore_baud_rate();
 }
 
 void dbgserial_change_baud_rate(uint32_t new_baud) {
-  uart_set_baud_rate(DBG_UART, new_baud);
+  const struct pbl_uart_config cfg = {.baudrate = new_baud};
+
+  (void)pbl_uart_configure(DBG_UART, &cfg);
 }
 
 void dbgserial_restore_baud_rate(void) {
@@ -50,11 +48,11 @@ void dbgserial_putchar(uint8_t c) {
 }
 
 void dbgserial_putchar_lazy(uint8_t c) {
-  uart_write_byte(DBG_UART, c);
+  pbl_uart_poll_out(DBG_UART, c);
 }
 
 void dbgserial_flush(void) {
-  uart_wait_for_tx_complete(DBG_UART);
+  pbl_uart_flush(DBG_UART);
 }
 
 void dbgserial_putstr_fmt(char *buffer, unsigned int buffer_size, const char *fmt, ...) {

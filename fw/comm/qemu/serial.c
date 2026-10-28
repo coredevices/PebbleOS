@@ -21,6 +21,7 @@
 #include <pbl/util/byteorder.h>
 #include <pbl/util/size.h>
 
+#include <board/board.h>
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 #include <comm/qemu/transport.h>
@@ -31,7 +32,7 @@
 #include <shell/system_theme.h>
 #include <system/hexdump.h>
 
-static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags);
+static void prv_uart_rx(const struct pbl_uart *uart, uint8_t byte, void *arg);
 
 // Our globals
 static QemuSerialGlobals s_qemu_state;
@@ -257,13 +258,10 @@ void qemu_serial_init(void) {
   // Init our state variables
   qemu_serial_private_init_state(&s_qemu_state);
 
-  // Init the UART
-  uart_init(QEMU_UART);
-  uart_set_baud_rate(QEMU_UART, UART_SERIAL_BAUD_RATE);
-  uart_set_rx_interrupt_handler(QEMU_UART, prv_uart_irq_handler);
+  const struct pbl_uart_config cfg = {.baudrate = UART_SERIAL_BAUD_RATE};
 
-  // enable the UART RX interrupt
-  uart_set_rx_interrupt_enabled(QEMU_UART, true);
+  (void)pbl_uart_configure(QEMU_UART, &cfg);
+  (void)pbl_uart_rx_enable(QEMU_UART, prv_uart_rx, nullptr);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -285,9 +283,9 @@ static void prv_process_receive_buffer(void *context) {
   // Prevent our ISR from putting more characters in while we muck with the receive buffer by
   //  disabling UART interrupts while we process it.
   while (true) {
-    uart_set_rx_interrupt_enabled(QEMU_UART, false);
+    (void)pbl_uart_rx_disable(QEMU_UART);
     uint8_t *msg_ptr = qemu_serial_private_assemble_message(&s_qemu_state, &msg_bytes, &protocol);
-    uart_set_rx_interrupt_enabled(QEMU_UART, true);
+    (void)pbl_uart_rx_enable(QEMU_UART, prv_uart_rx, nullptr);
     if (!msg_ptr) {
       break;
     }
@@ -304,12 +302,9 @@ static void prv_process_receive_buffer(void *context) {
 }
 
 // -----------------------------------------------------------------------------------------
-static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErrorFlags *err_flags) {
-  // The interrupt triggers when a byte has been read from the UART. QEMU's
-  // emulated UARTs don't emulate receive overruns by default so we don't have
-  // to worry about that case. QEMU will buffer the data stream until we're
-  // ready to consume more data by reading from the UART again.
-  PBL_ASSERTN(!err_flags->overrun_error);
+static void prv_uart_rx(const struct pbl_uart *uart, uint8_t byte, void *arg) {
+  // QEMU buffers the data stream until we're ready to consume more data by
+  // reading from the UART again.
 
   // Add to circular buffer. It's safe to assume that the buffer has space
   // remaining as the RX interrupt will be disabled from the time the buffer
@@ -327,7 +322,7 @@ static void prv_uart_irq_handler(UARTDevice *dev, uint8_t byte, const UARTRXErro
     // data will be read from the UART until prv_process_receive_buffer() is
     // run, draining the buffer and re-enabling the RX interrupt. QEMU will
     // buffer the remaining data until the interrupt is re-enabled.
-    uart_set_rx_interrupt_enabled(dev, false);
+    (void)pbl_uart_rx_disable(uart);
     buffer_full = true;
   }
 
@@ -353,9 +348,9 @@ static void prv_send(const uint8_t *data, uint32_t len) {
   PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, len);
 
   while (len--) {
-    uart_write_byte(QEMU_UART, *data++);
+    pbl_uart_poll_out(QEMU_UART, *data++);
   }
-  uart_wait_for_tx_complete(QEMU_UART);
+  pbl_uart_flush(QEMU_UART);
 }
 
 // -----------------------------------------------------------------------------------------

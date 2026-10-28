@@ -93,16 +93,13 @@ void serial_console_set_state(SerialConsoleState new_state) {
 #ifdef CONFIG_SHELL
     case SERIAL_CONSOLE_STATE_PROMPT:
       dbgserial_register_character_callback(shell_dbgserial_handle_char);
-      dbgserial_set_rx_dma_enabled(false);
       break;
 #endif
     case SERIAL_CONSOLE_STATE_LOGGING:
       dbgserial_register_character_callback(logging_handle_character);
-      dbgserial_set_rx_dma_enabled(false);
       break;
     case SERIAL_CONSOLE_STATE_PULSE:
       dbgserial_register_character_callback(pulse_handle_character);
-      dbgserial_set_rx_dma_enabled(true);
       break;
     default:
       pbl_panic(); // Don't know this state

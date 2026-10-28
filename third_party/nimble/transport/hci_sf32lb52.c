@@ -2,8 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
+#include <pbl/drivers/uart.h>
+
 #include <board/board.h>
-#include <drivers/uart.h>
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 #include <pbl/bluetooth/id_addr.h>
@@ -164,11 +165,11 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   s_hci_trace_seq++;
 
   for (uint8_t i = 0U; i < HCI_TRACE_HEADER_LEN; i++) {
-    uart_write_byte(HCI_TRACE_UART, trace_hdr[i]);
+    pbl_uart_poll_out(HCI_TRACE_UART, trace_hdr[i]);
   }
 
   for (uint16_t i = 0U; i < len; i++) {
-    uart_write_byte(HCI_TRACE_UART, data[i]);
+    pbl_uart_poll_out(HCI_TRACE_UART, data[i]);
   }
 }
 #else
@@ -328,11 +329,6 @@ void ble_transport_ll_reinit(void) {
 }
 
 void ble_transport_ll_init(void) {
-#ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-  uart_init_tx_only(HCI_TRACE_UART);
-  uart_set_baud_rate(HCI_TRACE_UART, 1000000);
-#endif
-
   ble_transport_ll_reinit();
 
   ble_transport_register_put_acl_from_ll_cb(prv_acl_put_signal);

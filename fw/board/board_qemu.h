@@ -52,7 +52,7 @@ typedef struct {
 #define QEMU_EXTFLASH_XIP_BASE 0x10000000
 
 // Forward-declare device types
-typedef const struct UARTDevice UARTDevice;
+struct pbl_uart;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;
 typedef const struct HRMDevice HRMDevice;

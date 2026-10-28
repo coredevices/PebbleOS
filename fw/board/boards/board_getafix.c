@@ -17,6 +17,7 @@
 #include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/touch/cst816.h>
+#include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/drivers/vibe/aw8623x.h>
 #include <pbl/kernel/irq.h>
@@ -33,18 +34,11 @@ PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
 static const struct pbl_dma_chan s_dbg_uart_rx_dma =
     PBL_DMA_CHAN(SF32LB52_DMAC1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
 
-static UARTDeviceState s_dbg_uart_state;
+PBL_UART_SF32LB_DMA_DEFINE(s_uart1, "uart1", 1, 1000000, &s_dbg_uart_default, &s_dbg_uart_rx_dma,
+                           nullptr);
+const struct pbl_uart *const DBG_UART = &s_uart1.uart;
 
-static UARTDevice DBG_UART_DEVICE = {
-  .state = &s_dbg_uart_state,
-  .pinctrl = PBL_PINCTRL(&s_dbg_uart_default, nullptr, 0),
-  .rx_dma = &s_dbg_uart_rx_dma,
-  .index = 1,
-};
-
-UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
-
-PBL_IRQ_CONNECT(USART1, 5, uart_irq_handler, DBG_UART, 0);
+PBL_IRQ_CONNECT(USART1, 5, pbl_uart_sf32lb_irq_handler, &s_uart1, 0);
 PBL_IRQ_CONNECT(DMAC1_CH1, 5, pbl_dma_sf32lb52_irq_handler, &s_dbg_uart_rx_dma, 0);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
@@ -52,14 +46,8 @@ PBL_PINCTRL_STATE_DEFINE(s_hci_trace_uart_default, SF32LB52_PINCTRL,
                          SF32LB52_PA27_USART3_TXD | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
 
-static UARTDeviceState s_hci_trace_uart_state;
-
-static UARTDevice HCI_TRACE_UART_DEVICE = {
-  .state = &s_hci_trace_uart_state,
-  .pinctrl = PBL_PINCTRL(&s_hci_trace_uart_default, nullptr, 0),
-  .index = 3,
-};
-UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
+PBL_UART_SF32LB_DEFINE(s_uart3, "uart3", 3, 1000000, &s_hci_trace_uart_default, nullptr);
+const struct pbl_uart *const HCI_TRACE_UART = &s_uart3.uart;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 static QSPIPortState s_qspi_port_state = {

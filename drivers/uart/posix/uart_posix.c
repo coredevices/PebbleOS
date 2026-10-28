@@ -3,119 +3,86 @@
 
 #include "uart_posix_bottom.h"
 
+#include <errno.h>
 #include <stddef.h>
 
 #include <pbl/drivers/uart/posix.h>
+#include <pbl/util/misc.h>
 
 #include <pbl_arch_posix.h>
 
-static UARTDevice *s_devices[UART_POSIX_NUM_CHANNELS];
+static_assert(PBL_UART_POSIX_CONSOLE == UART_POSIX_CONSOLE);
+static_assert(PBL_UART_POSIX_QEMU == UART_POSIX_QEMU);
+static_assert(PBL_UART_POSIX_BT_HCI == UART_POSIX_BT_HCI);
+
+static const struct pbl_uart *s_devices[UART_POSIX_NUM_CHANNELS];
 
 struct rx {
-  UARTDevice *dev;
+  const struct pbl_uart *uart;
   uint8_t c;
 };
 
+static const struct pbl_uart_posix *prv_posix(const struct pbl_uart *uart) {
+  return container_of(uart, const struct pbl_uart_posix, uart);
+}
+
 static void prv_rx_isr(void *arg) {
   const struct rx *rx = arg;
-  UARTDeviceState *state = rx->dev->state;
-  if (state->rx_int_enabled && state->rx_irq_handler != nullptr) {
-    const UARTRXErrorFlags flags = {};
-    state->rx_irq_handler(rx->dev, rx->c, &flags);
-  }
+
+  (void)pbl_uart_receive(rx->uart, rx->c);
 }
 
 bool uart_posix_rx_enabled(enum uart_posix_channel channel) {
-  UARTDevice *dev = s_devices[channel];
-  return dev != nullptr && __atomic_load_n(&dev->state->rx_int_enabled, __ATOMIC_RELAXED);
+  const struct pbl_uart *uart = s_devices[channel];
+
+  return uart != nullptr && __atomic_load_n(&uart->state->rx_enabled, __ATOMIC_RELAXED);
 }
 
 void uart_posix_rx(enum uart_posix_channel channel, uint8_t c) {
-  struct rx rx = {.dev = s_devices[channel], .c = c};
-  if (rx.dev != nullptr) {
+  struct rx rx = {.uart = s_devices[channel], .c = c};
+
+  if (rx.uart != nullptr) {
     pbl_posix_irq_run(prv_rx_isr, &rx);
   }
 }
 
-void uart_init(UARTDevice *dev) {
-  if (s_devices[dev->channel] == nullptr) {
-    s_devices[dev->channel] = dev;
-    uart_posix_bottom_start((enum uart_posix_channel)dev->channel);
+static int prv_init(const struct pbl_uart *uart) {
+  uint8_t channel = prv_posix(uart)->channel;
+
+  if (channel >= UART_POSIX_NUM_CHANNELS || s_devices[channel] != nullptr) {
+    return -EINVAL;
   }
-}
 
-void uart_init_open_drain(UARTDevice *dev) {
-}
+  s_devices[channel] = uart;
+  uart_posix_bottom_start((enum uart_posix_channel)channel);
 
-void uart_init_tx_only(UARTDevice *dev) {
-}
-
-void uart_init_rx_only(UARTDevice *dev) {
-}
-
-void uart_deinit(UARTDevice *dev) {
-}
-
-void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
-}
-
-void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_handler) {
-  dev->state->rx_irq_handler = irq_handler;
-}
-
-void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_handler) {
-}
-
-void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  dev->state->rx_int_enabled = enabled;
-}
-
-void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-}
-
-void uart_write_byte(UARTDevice *dev, uint8_t data) {
-  uart_posix_bottom_write((enum uart_posix_channel)dev->channel, data);
-}
-
-uint8_t uart_read_byte(UARTDevice *dev) {
   return 0;
 }
 
-void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
+static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
+  if (cfg->parity != PBL_UART_PARITY_NONE || cfg->flow_ctrl != PBL_UART_FLOW_CTRL_NONE) {
+    return -ENOTSUP;
+  }
+
+  return 0;
 }
 
-void uart_stop_rx_dma(UARTDevice *dev) {
+static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
+  uart_posix_bottom_write((enum uart_posix_channel)prv_posix(uart)->channel, c);
 }
 
-void uart_clear_rx_dma_buffer(UARTDevice *dev) {
+// The bottom half polls the class state to hold bytes back
+static int prv_rx_enable(const struct pbl_uart *uart) {
+  return 0;
 }
 
-bool uart_is_rx_ready(UARTDevice *dev) {
-  return false;
+static void prv_rx_disable(const struct pbl_uart *uart) {
 }
 
-bool uart_has_rx_overrun(UARTDevice *dev) {
-  return false;
-}
-
-bool uart_has_rx_framing_error(UARTDevice *dev) {
-  return false;
-}
-
-bool uart_is_tx_ready(UARTDevice *dev) {
-  return true;
-}
-
-bool uart_is_tx_complete(UARTDevice *dev) {
-  return true;
-}
-
-void uart_wait_for_tx_complete(UARTDevice *dev) {
-}
-
-UARTRXErrorFlags uart_has_errored_out(UARTDevice *dev) {
-  return (UARTRXErrorFlags){};
-}
-
-void uart_clear_all_interrupt_flags(UARTDevice *dev) {
-}
+const struct pbl_uart_ops pbl_uart_posix_ops = {
+  .init = prv_init,
+  .configure = prv_configure,
+  .poll_out = prv_poll_out,
+  .rx_enable = prv_rx_enable,
+  .rx_disable = prv_rx_disable,
+};

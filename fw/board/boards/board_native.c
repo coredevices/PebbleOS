@@ -13,33 +13,15 @@
 
 #include <board/board.h>
 
-static UARTDeviceState s_dbg_uart_state;
+PBL_UART_POSIX_DEFINE(s_dbg_uart, "console", PBL_UART_POSIX_CONSOLE, 115200);
+const struct pbl_uart *const DBG_UART = &s_dbg_uart.uart;
 
-static const struct UARTDevice s_dbg_uart = {
-  .state = &s_dbg_uart_state,
-  .channel = 0,
-};
-
-UARTDevice *const DBG_UART = &s_dbg_uart;
-
-static UARTDeviceState s_qemu_uart_state;
-
-static const struct UARTDevice s_qemu_uart = {
-  .state = &s_qemu_uart_state,
-  .channel = 1,
-};
-
-UARTDevice *const QEMU_UART = &s_qemu_uart;
+PBL_UART_POSIX_DEFINE(s_qemu_uart, "qemu", PBL_UART_POSIX_QEMU, 115200);
+const struct pbl_uart *const QEMU_UART = &s_qemu_uart.uart;
 
 #ifdef CONFIG_BT_HCI_UART
-static UARTDeviceState s_bt_hci_uart_state;
-
-static const struct UARTDevice s_bt_hci_uart = {
-  .state = &s_bt_hci_uart_state,
-  .channel = 2,
-};
-
-UARTDevice *const BT_HCI_UART = &s_bt_hci_uart;
+PBL_UART_POSIX_DEFINE(s_bt_hci_uart, "bt_hci", PBL_UART_POSIX_BT_HCI, 115200);
+const struct pbl_uart *const BT_HCI_UART = &s_bt_hci_uart.uart;
 #endif
 
 #if PBL_BW

@@ -4,8 +4,6 @@
 // clang-format off
 #include "dbgserial_input.h"
 
-#include <pbl/kernel/compiler.h>
-
 #include <board/board.h>
 #include <pbl/drivers/uart.h>
 // clang-format on
@@ -14,41 +12,26 @@
 
 static DbgSerialCharacterCallback s_character_callback;
 
-//! We DMA into this buffer as a circular buffer
-#define DMA_BUFFER_LENGTH (256)
-static uint8_t s_dma_buffer[DMA_BUFFER_LENGTH] PBL_ALIGNED(32);
-static bool s_dma_enabled = false;
-
-static void prv_uart_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
+static void prv_rx(const struct pbl_uart *uart, uint8_t c, void *arg) {
   if (s_character_callback) {
-    s_character_callback(data);
+    s_character_callback(c);
   }
 }
 
 void dbgserial_input_init(void) {
-  // set up the USART interrupt on RX
-  uart_set_rx_interrupt_handler(DBG_UART, prv_uart_irq_handler);
-  uart_set_rx_interrupt_enabled(DBG_UART, true);
+  (void)pbl_uart_rx_enable(DBG_UART, prv_rx, nullptr);
 }
 
 void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {
   s_character_callback = callback;
 }
 
-void dbgserial_set_rx_dma_enabled(bool enabled) {
-  if (enabled == s_dma_enabled) {
-    return;
-  }
-  s_dma_enabled = enabled;
-  if (enabled) {
-    uart_start_rx_dma(DBG_UART, s_dma_buffer, DMA_BUFFER_LENGTH);
-  } else {
-    uart_stop_rx_dma(DBG_UART);
-  }
-}
-
 void dbgserial_set_input_enabled(bool enabled) {
-  uart_set_rx_interrupt_enabled(DBG_UART, enabled);
+  if (enabled) {
+    (void)pbl_uart_rx_enable(DBG_UART, prv_rx, nullptr);
+  } else {
+    (void)pbl_uart_rx_disable(DBG_UART);
+  }
 }
 
 #else
@@ -56,9 +39,6 @@ void dbgserial_input_init(void) {
 }
 
 void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {
-}
-
-void dbgserial_set_rx_dma_enabled(bool enabled) {
 }
 
 void dbgserial_set_input_enabled(bool enabled) {

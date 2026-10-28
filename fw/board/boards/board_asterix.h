@@ -30,7 +30,7 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
   .default_motion_sensitivity = 55U, // Medium
 };
 
-extern UARTDevice *const DBG_UART;
+extern const struct pbl_uart *const DBG_UART;
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
 

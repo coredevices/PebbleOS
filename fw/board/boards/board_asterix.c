@@ -61,16 +61,10 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 /* PERIPHERAL ID 43 */
 
-static UARTDeviceState s_dbg_uart_state;
-static UARTDevice DBG_UART_DEVICE = {
-  .state = &s_dbg_uart_state,
-  .index = 0,
-  .timer = 2,
-  .tx = PBL_GPIO(NRF5_GPIO_P0, 27, 0),
-  .rx = PBL_GPIO(NRF5_GPIO_P0, 5, 0),
-};
-UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
-PBL_IRQ_CONNECT(UART0_UARTE0, 7, uart_irq_handler, DBG_UART, 0);
+PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0, 1000000, PBL_GPIO(NRF5_GPIO_P0, 27, 0),
+                     PBL_GPIO(NRF5_GPIO_P0, 5, 0), 2, nullptr);
+const struct pbl_uart *const DBG_UART = &s_uart0.uart;
+PBL_IRQ_CONNECT(UART0_UARTE0, 7, pbl_uart_nrf5_irq_handler, &s_uart0, 0);
 /* PERIPHERAL ID 8 */
 
 /* buttons */

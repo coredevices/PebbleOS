@@ -41,9 +41,8 @@ typedef struct {
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
-#include <pbl/drivers/uart/sf32lb.h>
 
-typedef const struct UARTDevice UARTDevice;
+struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;

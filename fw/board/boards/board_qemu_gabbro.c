@@ -18,37 +18,16 @@
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/drivers/uart/qemu.h>
 
-static UARTDeviceState s_dbg_uart_state = {};
-
-static struct UARTDevice DBG_UART_DEVICE = {
-  .state = &s_dbg_uart_state,
-  .base_addr = QEMU_UART2_BASE,
-  .irqn = UART2_IRQn,
-};
-
-UARTDevice *const DBG_UART = (UARTDevice *)&DBG_UART_DEVICE;
+PBL_UART_QEMU_DEFINE(s_uart2, "uart2", QEMU_UART2_BASE, PBL_IRQN(UART2), 115200);
+const struct pbl_uart *const DBG_UART = &s_uart2.uart;
 
 // QEMU control protocol UART (UART1)
-static UARTDeviceState s_qemu_uart_state = {};
-
-static struct UARTDevice QEMU_UART_DEVICE = {
-  .state = &s_qemu_uart_state,
-  .base_addr = QEMU_UART1_BASE,
-  .irqn = UART1_IRQn,
-};
-
-UARTDevice *const QEMU_UART = (UARTDevice *)&QEMU_UART_DEVICE;
+PBL_UART_QEMU_DEFINE(s_uart1, "uart1", QEMU_UART1_BASE, PBL_IRQN(UART1), 115200);
+const struct pbl_uart *const QEMU_UART = &s_uart1.uart;
 
 #ifdef CONFIG_BT_HCI_UART
-static UARTDeviceState s_bt_hci_uart_state = {};
-
-static struct UARTDevice BT_HCI_UART_DEVICE = {
-  .state = &s_bt_hci_uart_state,
-  .base_addr = QEMU_UART3_BASE,
-  .irqn = UART3_IRQn,
-};
-
-UARTDevice *const BT_HCI_UART = (UARTDevice *)&BT_HCI_UART_DEVICE;
+PBL_UART_QEMU_DEFINE(s_uart3, "uart3", QEMU_UART3_BASE, PBL_IRQN(UART3), 115200);
+const struct pbl_uart *const BT_HCI_UART = &s_uart3.uart;
 #endif
 
 // Display device - QEMU framebuffer
@@ -83,10 +62,10 @@ static MicDevice MIC_DEVICE = {
 };
 MicDevice *const MIC = &MIC_DEVICE;
 
-PBL_IRQ_CONNECT(UART2, 5, uart_irq_handler, DBG_UART, 0);
-PBL_IRQ_CONNECT(UART1, 6, uart_irq_handler, QEMU_UART, 0);
+PBL_IRQ_CONNECT(UART2, 5, pbl_uart_qemu_irq_handler, &s_uart2, 0);
+PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);
 #ifdef CONFIG_BT_HCI_UART
-PBL_IRQ_CONNECT(UART3, 6, uart_irq_handler, BT_HCI_UART, 0);
+PBL_IRQ_CONNECT(UART3, 6, pbl_uart_qemu_irq_handler, &s_uart3, 0);
 #endif
 
 void board_early_init(void) {
