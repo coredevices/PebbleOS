@@ -14,7 +14,6 @@
 
 #include <hal/nrf_gpio.h>
 #include <nrfx_pdm.h>
-#include <nrfx_pwm.h>
 #include <nrfx_spim.h>
 #include <nrfx_timer.h>
 // clang-format on
@@ -27,19 +26,6 @@ typedef struct {
   struct pbl_gpio gpio;
   uint16_t code;
 } ButtonConfig;
-
-typedef struct {
-  uint16_t value;
-  uint16_t resolution;
-  int enabled;
-  nrf_pwm_sequence_t seq;
-} PwmState;
-
-typedef struct {
-  struct pbl_gpio output;
-  nrfx_pwm_t peripheral;
-  PwmState *state;
-} PwmConfig;
 
 typedef struct {
   struct pbl_gpio i2s_ck;

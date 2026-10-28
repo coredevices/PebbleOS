@@ -34,6 +34,7 @@ config BACKLIGHT_AW9364E
 
 config BACKLIGHT_PWM
     bool "PWM"
+    depends on PWM
     help
       Support for a backlight driven by a PWM peripheral.
 

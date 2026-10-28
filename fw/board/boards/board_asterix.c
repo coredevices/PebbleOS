@@ -12,6 +12,7 @@
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
 #include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/pwm/nrf5.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/rtc.h>
@@ -76,7 +77,6 @@ PBL_IRQ_CONNECT(TIMER1, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_1_irq
 PBL_IRQ_CONNECT(TIMER2, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_2_irq_handler, , 0);
 
 /* display */
-PwmState DISPLAY_EXTCOMIN_STATE;
 PBL_IRQ_CONNECT(SPIM3, NRFX_SPIM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_spim_3_irq_handler, , 0);
 
 /* PERIPHERAL ID 10 */
@@ -181,17 +181,13 @@ AudioDevice *const AUDIO = (AudioDevice *)&s_audio_device;
 
 /* asterix shares SPI with flash, which we don't support */
 
-static PwmState s_backlight_pwm_state;
+PBL_PWM_NRF5_DEFINE(s_pwm0, "pwm0", 0, nullptr, PBL_GPIO(NRF5_GPIO_P0, 26, 0));
 
 PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
-                         .pwm =
-                             {.state = &s_backlight_pwm_state,
-                              .output = PBL_GPIO(NRF5_GPIO_P0, 26, 0),
-                              .peripheral = NRFX_PWM_INSTANCE(0)},
+                         .pwm = PBL_PWM(&s_pwm0.ctrl, 0, PBL_PWM_HZ(256), 0),
                          .max_duty_cycle_percent = 67);
 
 const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
-PBL_IRQ_CONNECT(PWM0, NRFX_PWM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_pwm_0_irq_handler, , 0);
 
 PBL_IRQ_CONNECT(RTC1, 7, rtc_irq_handler, , 0);
 
