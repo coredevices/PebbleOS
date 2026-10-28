@@ -14,6 +14,13 @@ config SPI_NRF5
     help
       Support for the Nordic nRF5 SPIM controller.
 
+config SPI_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The spi shell command, to list the buses and run transfers.
+
 module = DRIVER_SPI
 module-str = SPI
 source "subsys/logging/Kconfig.template.log_level"
