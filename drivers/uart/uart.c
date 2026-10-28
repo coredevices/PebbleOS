@@ -23,7 +23,9 @@ int pbl_uart_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  state->cfg = (struct pbl_uart_config){.baudrate = uart->baudrate};
+  if (!state->early) {
+    state->cfg = (struct pbl_uart_config){.baudrate = uart->baudrate};
+  }
 
   pbl_irq_lock();
   ret = uart->ops->configure(uart, &state->cfg);
@@ -42,6 +44,33 @@ bool pbl_uart_receive(const struct pbl_uart *uart, uint8_t c) {
   state->rx_cb(uart, c, state->rx_arg);
 
   return state->rx_enabled;
+}
+
+static bool prv_can_send(const struct pbl_uart *uart) {
+  return uart->state->early || pbl_device_is_ready(&uart->dev);
+}
+
+int pbl_uart_early_init(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
+  int ret;
+
+  if (cfg->baudrate == 0U) {
+    return -EINVAL;
+  }
+
+  ret = uart->ops->early_init(uart);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_irq_lock();
+  ret = uart->ops->configure(uart, cfg);
+  if (ret == 0) {
+    uart->state->cfg = *cfg;
+    uart->state->early = true;
+  }
+  pbl_irq_unlock();
+
+  return ret;
 }
 
 int pbl_uart_configure(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
@@ -76,7 +105,7 @@ int pbl_uart_config_get(const struct pbl_uart *uart, struct pbl_uart_config *cfg
 }
 
 void pbl_uart_poll_out(const struct pbl_uart *uart, uint8_t c) {
-  if (!pbl_device_is_ready(&uart->dev)) {
+  if (!prv_can_send(uart)) {
     return;
   }
 
@@ -86,7 +115,7 @@ void pbl_uart_poll_out(const struct pbl_uart *uart, uint8_t c) {
 }
 
 void pbl_uart_flush(const struct pbl_uart *uart) {
-  if (!pbl_device_is_ready(&uart->dev) || uart->ops->flush == nullptr) {
+  if (!prv_can_send(uart) || uart->ops->flush == nullptr) {
     return;
   }
 

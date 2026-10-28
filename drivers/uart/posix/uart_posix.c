@@ -59,6 +59,11 @@ static int prv_init(const struct pbl_uart *uart) {
   return 0;
 }
 
+// The console reaches stdout before its channel starts, the other channels drop bytes
+static int prv_early_init(const struct pbl_uart *uart) {
+  return 0;
+}
+
 static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
   if (cfg->parity != PBL_UART_PARITY_NONE || cfg->flow_ctrl != PBL_UART_FLOW_CTRL_NONE) {
     return -ENOTSUP;
@@ -81,6 +86,7 @@ static void prv_rx_disable(const struct pbl_uart *uart) {
 
 const struct pbl_uart_ops pbl_uart_posix_ops = {
   .init = prv_init,
+  .early_init = prv_early_init,
   .configure = prv_configure,
   .poll_out = prv_poll_out,
   .rx_enable = prv_rx_enable,

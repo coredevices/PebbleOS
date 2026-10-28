@@ -31,6 +31,10 @@
  * pbl_uart_flush(DBG_UART);
  * @endcode
  *
+ * A port can also serve as an early console, before the device model is initialized:
+ * pbl_uart_early_init() sets it up for polled transmission only, and the device init takes over
+ * with the same line settings.
+ *
  * The port may keep the SoC out of its deepest sleep states while reception is enabled. Calls
  * may be made from interrupt context. They return 0 or a negative errno: @c -ENODEV if the port
  * is not ready and @c -ENOTSUP for line settings it does not support.
@@ -85,6 +89,7 @@ struct pbl_uart_state {
   pbl_uart_rx_callback_t rx_cb;
   void *rx_arg;
   bool rx_enabled;
+  bool early;
 };
 /** @endcond */
 
@@ -94,8 +99,13 @@ struct pbl_uart_state {
  * Called with interrupts locked, except init().
  */
 struct pbl_uart_ops {
-  /** Set the port up for transmission. Returns 0 or a negative errno. */
+  /** Set the port up. Returns 0 or a negative errno. */
   int (*init)(const struct pbl_uart *uart);
+  /**
+   * Set the port up for polled transmission, before the device model is initialized. Returns 0 or
+   * a negative errno.
+   */
+  int (*early_init)(const struct pbl_uart *uart);
   /** Apply line settings. Returns 0 or a negative errno. */
   int (*configure)(const struct pbl_uart *uart, const struct pbl_uart_config *cfg);
   /** Send a byte, waiting for room. */
@@ -150,7 +160,8 @@ struct pbl_uart {
   }
 
 /**
- * @brief Device init of every port: calls the driver's init, then applies the line settings.
+ * @brief Device init of every port: calls the driver's init, then applies the line settings, the
+ * early console's if the port was one.
  *
  * @param dev Port device.
  * @return 0 or a negative errno.
@@ -167,6 +178,15 @@ int pbl_uart_init(const struct pbl_device *dev);
  * @return true if reception is still enabled, false if the driver must hold further bytes back.
  */
 bool pbl_uart_receive(const struct pbl_uart *uart, uint8_t c);
+
+/**
+ * @brief Set a port up as an early console, for polled transmission before its device init.
+ *
+ * @param uart Port.
+ * @param cfg Line settings, kept once the device init takes over.
+ * @return 0 or a negative errno.
+ */
+int pbl_uart_early_init(const struct pbl_uart *uart, const struct pbl_uart_config *cfg);
 
 /**
  * @brief Apply line settings.
@@ -187,7 +207,8 @@ int pbl_uart_configure(const struct pbl_uart *uart, const struct pbl_uart_config
 int pbl_uart_config_get(const struct pbl_uart *uart, struct pbl_uart_config *cfg);
 
 /**
- * @brief Send a byte, waiting for room. Does nothing if the port is not ready.
+ * @brief Send a byte, waiting for room. Does nothing if the port is neither ready nor an early
+ * console.
  *
  * @param uart Port.
  * @param c Byte.

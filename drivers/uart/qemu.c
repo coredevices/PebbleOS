@@ -37,12 +37,23 @@ static inline void prv_putreg(const struct pbl_uart_qemu *qemu, uint32_t offset,
   pbl_writel(value, qemu->base + offset);
 }
 
-static int prv_init(const struct pbl_uart *uart) {
+static int prv_early_init(const struct pbl_uart *uart) {
   const struct pbl_uart_qemu *qemu = prv_qemu(uart);
 
   prv_putreg(qemu, UART_CTRL_OFFSET, 0U);
   prv_putreg(qemu, UART_INT_OFFSET, INT_RX_PENDING | INT_TX_PENDING);
-  pbl_irq_enable(qemu->irqn);
+
+  return 0;
+}
+
+static int prv_init(const struct pbl_uart *uart) {
+  int ret = prv_early_init(uart);
+
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_irq_enable(prv_qemu(uart)->irqn);
 
   return 0;
 }
@@ -93,6 +104,7 @@ void pbl_uart_qemu_irq_handler(const struct pbl_uart_qemu *qemu) {
 
 const struct pbl_uart_ops pbl_uart_qemu_ops = {
   .init = prv_init,
+  .early_init = prv_early_init,
   .configure = prv_configure,
   .poll_out = prv_poll_out,
   .flush = prv_flush,

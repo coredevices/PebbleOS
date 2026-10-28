@@ -18,9 +18,11 @@
 #define DEFAULT_SERIAL_BAUD_RATE 115200
 #endif
 
+// The port is an early console until its device init takes over
 void dbgserial_init(void) {
-  (void)pbl_device_init(&DBG_UART->dev);
-  dbgserial_restore_baud_rate();
+  const struct pbl_uart_config cfg = {.baudrate = DEFAULT_SERIAL_BAUD_RATE};
+
+  (void)pbl_uart_early_init(DBG_UART, &cfg);
 }
 
 void dbgserial_change_baud_rate(uint32_t new_baud) {

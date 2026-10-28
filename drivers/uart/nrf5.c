@@ -87,7 +87,7 @@ static int prv_pin_init(const struct pbl_gpio *gpio, uint32_t flags) {
   return pbl_gpio_configure(gpio, flags);
 }
 
-static int prv_init(const struct pbl_uart *uart) {
+static int prv_early_init(const struct pbl_uart *uart) {
   const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
   int ret;
 
@@ -100,17 +100,29 @@ static int prv_init(const struct pbl_uart *uart) {
     return ret;
   }
 
-  ret = soc_nrf_ppi_alloc(&nrf5->state->ppi_ch);
-  if (ret != 0) {
-    return ret;
-  }
-
   prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_DISABLED);
   prv_putreg(nrf5, NRF52_UARTE_PSEL_TXD_OFFSET, pbl_gpio_nrf5_pin(&nrf5->tx));
   prv_putreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET, UARTE_PSEL_DISCONNECTED);
   prv_putreg(nrf5, NRF52_UARTE_PSEL_RTS_OFFSET, UARTE_PSEL_DISCONNECTED);
   prv_putreg(nrf5, NRF52_UARTE_PSEL_CTS_OFFSET, UARTE_PSEL_DISCONNECTED);
   prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_ENABLED);
+
+  return 0;
+}
+
+static int prv_init(const struct pbl_uart *uart) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+  int ret;
+
+  ret = prv_early_init(uart);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = soc_nrf_ppi_alloc(&nrf5->state->ppi_ch);
+  if (ret != 0) {
+    return ret;
+  }
 
   pbl_writel(TIMER_MODE_LOW_POWER_COUNTER, prv_timer_reg(nrf5, NRF52_TIMER_MODE_OFFSET));
   pbl_writel(TIMER_BITMODE_32BIT, prv_timer_reg(nrf5, NRF52_TIMER_BITMODE_OFFSET));
@@ -247,6 +259,7 @@ void pbl_uart_nrf5_irq_handler(const struct pbl_uart_nrf5 *nrf5) {
 
 const struct pbl_uart_ops pbl_uart_nrf5_ops = {
   .init = prv_init,
+  .early_init = prv_early_init,
   .configure = prv_configure,
   .poll_out = prv_poll_out,
   .rx_enable = prv_rx_enable,

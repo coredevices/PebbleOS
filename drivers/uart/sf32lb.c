@@ -60,7 +60,7 @@ static void prv_flush(const struct pbl_uart *uart) {
   usart->state->tx_pending = false;
 }
 
-static int prv_init(const struct pbl_uart *uart) {
+static int prv_early_init(const struct pbl_uart *uart) {
   const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
   const struct pbl_clk *clk;
   int ret;
@@ -83,6 +83,30 @@ static int prv_init(const struct pbl_uart *uart) {
     }
   }
 
+  ret = pbl_pinctrl_select_state(&usart->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+  if (ret != 0) {
+    return ret;
+  }
+
+  prv_flush(uart);
+
+  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, 0U);
+  prv_putreg(usart, SF32LB52_USART_CR2_OFFSET, 0U);
+  prv_putreg(usart, SF32LB52_USART_CR3_OFFSET, 0U);
+  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, UART_CR1_TE | UART_CR1_UE);
+
+  return 0;
+}
+
+static int prv_init(const struct pbl_uart *uart) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
+  int ret;
+
+  ret = prv_early_init(uart);
+  if (ret != 0) {
+    return ret;
+  }
+
   if (usart->rx_dma != nullptr) {
     const struct pbl_dma_slave_config cfg = {
       .src_addr = prv_reg(usart, SF32LB52_USART_RDR_OFFSET),
@@ -99,18 +123,6 @@ static int prv_init(const struct pbl_uart *uart) {
       return ret;
     }
   }
-
-  ret = pbl_pinctrl_select_state(&usart->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
-  if (ret != 0) {
-    return ret;
-  }
-
-  prv_flush(uart);
-
-  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, 0U);
-  prv_putreg(usart, SF32LB52_USART_CR2_OFFSET, 0U);
-  prv_putreg(usart, SF32LB52_USART_CR3_OFFSET, 0U);
-  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, UART_CR1_TE | UART_CR1_UE);
 
   pbl_irq_enable(s_instances[usart->index - 1U].irqn);
 
@@ -280,6 +292,7 @@ void pbl_uart_sf32lb_irq_handler(const struct pbl_uart_sf32lb *usart) {
 
 const struct pbl_uart_ops pbl_uart_sf32lb_ops = {
   .init = prv_init,
+  .early_init = prv_early_init,
   .configure = prv_configure,
   .poll_out = prv_poll_out,
   .flush = prv_flush,
