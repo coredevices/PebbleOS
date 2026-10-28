@@ -6,23 +6,21 @@
 
 #include <pbl/drivers/display/sharp_ls013b7dh01/sharp_ls013b7dh01.h>
 #include <pbl/drivers/gpio.h>
-#include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/pwm.h>
+#include <pbl/drivers/spi.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/kernel/sem.h>
 #include <pbl/util/bitops.h>
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <nrfx_spim.h>
 
 #define DISP_MODE_WRITE 0x01U
 #define DISP_MODE_CLEAR 0x04U
 
 static uint8_t s_buf[2 + ((DISP_LINE_BYTES + 2) * PBL_DISPLAY_HEIGHT)];
 static bool s_updating;
+static struct pbl_spi_xfer s_xfer = {.tx_buf = s_buf};
 static UpdateCompleteCallback s_uccb;
-static PBL_SEM_DEFINE(s_sem, 0, 1);
 
 // watch rotation
 static bool s_rotated_180 = false;
@@ -40,63 +38,27 @@ static void prv_extcomin_init(void) {
   PBL_ASSERTN(pbl_pwm_apply(extcomin, &state) == 0);
 }
 
-static inline void prv_enable_spim(void) {
-  nrf_spim_enable(BOARD_CONFIG_DISPLAY.spi.p_reg);
-}
-
-static inline void prv_disable_spim(void) {
-  nrf_spim_disable(BOARD_CONFIG_DISPLAY.spi.p_reg);
-
-  // Workaround for nRF52840 anomaly 195
-  if (BOARD_CONFIG_DISPLAY.spi.p_reg == NRF_SPIM3) {
-    *(volatile uint32_t *)0x4002F004 = 1;
-  }
-}
-
-static inline void prv_enable_chip_select(void) {
-  pbl_gpio_set(&BOARD_CONFIG_DISPLAY.cs, true);
-}
-
-static inline void prv_disable_chip_select(void) {
-  pbl_gpio_set(&BOARD_CONFIG_DISPLAY.cs, false);
-}
-
-static void prv_terminate_transfer(void *data) {
+static void prv_update_done(void *data) {
   s_updating = false;
-
-  prv_disable_chip_select();
-  prv_disable_spim();
-
   s_uccb(true);
 }
 
-static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
-  if (s_updating) {
-    PebbleEvent e = {
-      .type = PEBBLE_CALLBACK_EVENT,
-      .callback = {
-        .callback = prv_terminate_transfer,
-      },
-    };
+static void prv_spi_done(int status, void *arg) {
+  PebbleEvent e = {
+    .type = PEBBLE_CALLBACK_EVENT,
+    .callback = {
+      .callback = prv_update_done,
+    },
+  };
 
-    event_put_isr(&e);
-  } else {
-    pbl_sem_give(&s_sem);
-  }
+  PBL_ASSERTN(status == 0);
+  event_put_isr(&e);
 }
 
 void display_init(void) {
-  nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
-      pbl_gpio_nrf5_pin(&BOARD_CONFIG_DISPLAY.clk), pbl_gpio_nrf5_pin(&BOARD_CONFIG_DISPLAY.mosi),
-      NRF_SPIM_PIN_NOT_CONNECTED, NRF_SPIM_PIN_NOT_CONNECTED);
-  config.frequency = NRFX_MHZ_TO_HZ(1);
-  config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
+  PBL_ASSERTN(pbl_device_init(&BOARD_CONFIG_DISPLAY.spi.bus->dev) == 0);
+  PBL_ASSERTN(pbl_spi_setup(&BOARD_CONFIG_DISPLAY.spi) == 0);
 
-  nrfx_err_t err =
-      nrfx_spim_init(&BOARD_CONFIG_DISPLAY.spi, &config, prv_spim_evt_handler, nullptr);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  pbl_gpio_configure(&BOARD_CONFIG_DISPLAY.cs, PBL_GPIO_OUTPUT);
   pbl_gpio_configure(&BOARD_CONFIG_DISPLAY.on_ctrl, PBL_GPIO_OUTPUT_ACTIVE);
 
   prv_extcomin_init();
@@ -104,19 +66,10 @@ void display_init(void) {
 
 void display_clear(void) {
   uint8_t buf[] = {DISP_MODE_CLEAR, 0x00};
-  nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = buf, .tx_length = sizeof(buf)};
 
   PBL_ASSERTN(!s_updating);
 
-  prv_enable_spim();
-  prv_enable_chip_select();
-
-  nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  pbl_sem_take(&s_sem, PBL_FOREVER);
-
-  prv_disable_chip_select();
-  prv_disable_spim();
+  PBL_ASSERTN(pbl_spi_write(&BOARD_CONFIG_DISPLAY.spi, buf, sizeof(buf)) == 0);
 }
 
 void display_set_enabled(bool enabled) {
@@ -130,13 +83,11 @@ void display_set_rotated(bool rotated) {
 void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   DisplayRow row;
   uint8_t *pbuf = s_buf;
-  nrfx_spim_xfer_desc_t desc = {.p_tx_buffer = pbuf};
 
   PBL_ASSERTN(!s_updating);
 
   // write command (write)
   *pbuf++ = DISP_MODE_WRITE;
-  desc.tx_length++;
 
   while (nrcb(&row)) {
     // write row address, data and trailing dummy
@@ -150,21 +101,17 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
       pbuf += DISP_LINE_BYTES;
     }
     *pbuf++ = 0x00;
-    desc.tx_length += DISP_LINE_BYTES + 2;
   }
 
   // write last trailing dummy
   *pbuf++ = 0x00;
-  desc.tx_length++;
 
-  prv_enable_spim();
-  prv_enable_chip_select();
-
+  s_xfer.len = pbuf - s_buf;
   s_uccb = uccb;
   s_updating = true;
 
-  nrfx_err_t err = nrfx_spim_xfer(&BOARD_CONFIG_DISPLAY.spi, &desc, 0);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
+  PBL_ASSERTN(
+      pbl_spi_transfer_async(&BOARD_CONFIG_DISPLAY.spi, &s_xfer, 1U, prv_spi_done, nullptr) == 0);
 }
 
 bool display_update_in_progress(void) {

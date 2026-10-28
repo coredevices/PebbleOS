@@ -78,7 +78,10 @@ PBL_IRQ_CONNECT(TIMER2, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_2_irq
 
 /* display */
 PBL_PWM_NRF5_RTC_DEFINE(EXTCOMIN_PWM, "extcomin", 2, PBL_GPIO(NRF5_GPIO_P1, 15, 0), nullptr);
-PBL_IRQ_CONNECT(SPIM3, NRFX_SPIM_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_spim_3_irq_handler, , 0);
+PBL_SPI_NRF5_DEFINE(DISPLAY_SPI, "spi3", 3, PBL_GPIO(NRF5_GPIO_P0, 6, 0),
+                    PBL_GPIO(NRF5_GPIO_P0, 8, 0), PBL_GPIO(nullptr, 0, 0), nullptr,
+                    PBL_GPIO(NRF5_GPIO_P1, 3, 0));
+PBL_IRQ_CONNECT(SPIM3, 7, pbl_spi_nrf5_irq_handler, &DISPLAY_SPI, 0);
 
 /* PERIPHERAL ID 10 */
 

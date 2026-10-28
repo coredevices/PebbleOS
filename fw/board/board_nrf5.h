@@ -12,10 +12,10 @@
 #include <pbl/input/input.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/pwm.h>
+#include <pbl/drivers/spi.h>
 
 #include <hal/nrf_gpio.h>
 #include <nrfx_pdm.h>
-#include <nrfx_spim.h>
 #include <nrfx_timer.h>
 // clang-format on
 
@@ -72,11 +72,7 @@ typedef struct {
 } BoardConfigAccel;
 
 typedef struct {
-  nrfx_spim_t spi;
-
-  const struct pbl_gpio mosi;
-  const struct pbl_gpio clk;
-  const struct pbl_gpio cs;
+  const struct pbl_spi_dev spi;
 
   const struct pbl_gpio on_ctrl;
 

@@ -17,13 +17,12 @@ config DISPLAY_JDI_SF32LB
     help
       Support for JDI display via SiFli SF32LB.
 
-config DISPLAY_SHARP_LS013B7DH01_NRF5
-    bool "Sharp LS013B7DH01 (nRF5)"
+config DISPLAY_SHARP_LS013B7DH01
+    bool "Sharp LS013B7DH01"
     default y if SOC_NRF52
-    depends on PWM
-    select HAL_NORDIC
+    depends on PWM && SPI
     help
-      Support for the Sharp LS013B7DH01 display via nRF5.
+      Support for the Sharp LS013B7DH01 memory LCD.
 
 config DISPLAY_QEMU
     bool "QEMU Framebuffer Display"
