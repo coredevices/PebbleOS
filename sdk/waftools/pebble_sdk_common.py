@@ -47,6 +47,7 @@ def options(opt):
     :return: N/A
     """
     opt.load("gcc")
+    opt.load("pebble_sdk_clangdb")
     opt.add_option(
         "-d",
         "--debug",
