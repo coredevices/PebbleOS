@@ -7,14 +7,12 @@
 #include <pbl/drivers/display/sharp_ls013b7dh01/sharp_ls013b7dh01.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/gpio/nrf5.h>
+#include <pbl/drivers/pwm.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/sem.h>
-#include <pbl/soc/nrf/ppi.h>
 #include <pbl/util/bitops.h>
 
 #include <board/board.h>
-#include <hal/nrf_gpiote.h>
-#include <hal/nrf_rtc.h>
 #include <kernel/events.h>
 #include <nrfx_spim.h>
 
@@ -29,49 +27,17 @@ static PBL_SEM_DEFINE(s_sem, 0, 1);
 // watch rotation
 static bool s_rotated_180 = false;
 
+// EXTCOMIN toggles the panel's VCOM on rising edges, so it takes short pulses
 static void prv_extcomin_init(void) {
-  const NrfLowPowerPWM *extcomin = &BOARD_CONFIG_DISPLAY.extcomin;
-  uint32_t evt_addr, task_addr;
-  uint8_t ppi_ch[2];
-  uint8_t te_ch;
+  const struct pbl_pwm *extcomin = &BOARD_CONFIG_DISPLAY.extcomin;
+  struct pbl_pwm_state state;
 
-  PBL_ASSERTN(pbl_gpio_nrf5_gpiote_alloc(&te_ch) == 0);
-  nrf_gpiote_te_default(extcomin->gpiote, te_ch);
+  PBL_ASSERTN(pbl_device_init(&extcomin->ctrl->dev) == 0);
 
-  nrf_gpio_pin_write(extcomin->psel, 0);
-  nrf_gpio_cfg_output(extcomin->psel);
-
-  // RTC: CC0 is the period end, CC1 is the pulse end
-  nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_STOP);
-  nrf_rtc_event_clear(extcomin->rtc, nrf_rtc_compare_event_get(0));
-  nrf_rtc_event_clear(extcomin->rtc, nrf_rtc_compare_event_get(1));
-  nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_CLEAR);
-  nrf_rtc_prescaler_set(extcomin->rtc, NRF_RTC_FREQ_TO_PRESCALER(32768));
-  nrf_rtc_event_enable(extcomin->rtc, (NRF_RTC_INT_COMPARE0_MASK | NRF_RTC_INT_COMPARE1_MASK));
-  nrf_rtc_cc_set(extcomin->rtc, 0, (32768 * extcomin->period_us) / 1000000 - 1);
-  nrf_rtc_cc_set(extcomin->rtc, 1, (32768 * extcomin->pulse_us) / 1000000 - 1);
-
-  nrf_gpiote_task_configure(extcomin->gpiote, te_ch, extcomin->psel, NRF_GPIOTE_POLARITY_NONE,
-                            NRF_GPIOTE_INITIAL_VALUE_LOW);
-  nrf_gpiote_task_enable(extcomin->gpiote, te_ch);
-
-  PBL_ASSERTN(soc_nrf_ppi_alloc(&ppi_ch[0]) == 0);
-  PBL_ASSERTN(soc_nrf_ppi_alloc(&ppi_ch[1]) == 0);
-
-  // Period end (CC0) sets GPIO, clears RTC
-  evt_addr = nrf_rtc_event_address_get(extcomin->rtc, nrf_rtc_compare_event_get(0));
-  task_addr = nrf_gpiote_task_address_get(extcomin->gpiote, nrf_gpiote_set_task_get(te_ch));
-  soc_nrf_ppi_setup(ppi_ch[0], evt_addr, task_addr,
-                    nrf_rtc_task_address_get(extcomin->rtc, NRF_RTC_TASK_CLEAR));
-
-  // Pulse end (CC1) clears GPIO
-  evt_addr = nrf_rtc_event_address_get(extcomin->rtc, nrf_rtc_compare_event_get(1));
-  task_addr = nrf_gpiote_task_address_get(extcomin->gpiote, nrf_gpiote_clr_task_get(te_ch));
-  soc_nrf_ppi_setup(ppi_ch[1], evt_addr, task_addr, 0U);
-
-  soc_nrf_ppi_enable((1UL << ppi_ch[0]) | (1UL << ppi_ch[1]));
-
-  nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_START);
+  pbl_pwm_init_state(extcomin, &state);
+  PBL_ASSERTN(pbl_pwm_set_relative_duty_cycle(&state, 1U, 20U) == 0);
+  state.enabled = true;
+  PBL_ASSERTN(pbl_pwm_apply(extcomin, &state) == 0);
 }
 
 static inline void prv_enable_spim(void) {

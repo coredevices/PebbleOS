@@ -11,6 +11,7 @@
 #include <pbl/drivers/button_id.h>
 #include <pbl/input/input.h>
 #include <pbl/drivers/gpio/nrf5.h>
+#include <pbl/drivers/pwm.h>
 
 #include <hal/nrf_gpio.h>
 #include <nrfx_pdm.h>
@@ -71,14 +72,6 @@ typedef struct {
 } BoardConfigAccel;
 
 typedef struct {
-  NRF_RTC_Type *rtc;
-  NRF_GPIOTE_Type *gpiote;
-  uint32_t psel;
-  uint32_t period_us;
-  uint32_t pulse_us;
-} NrfLowPowerPWM;
-
-typedef struct {
   nrfx_spim_t spi;
 
   const struct pbl_gpio mosi;
@@ -87,7 +80,7 @@ typedef struct {
 
   const struct pbl_gpio on_ctrl;
 
-  const NrfLowPowerPWM extcomin;
+  const struct pbl_pwm extcomin;
 } BoardConfigSharpDisplay;
 
 typedef const struct UARTDevice UARTDevice;
