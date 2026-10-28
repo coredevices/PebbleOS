@@ -10,9 +10,6 @@
 
 #include <board/board.h>
 #include <nrfx.h>
-#include <system/bootbits.h>
-#include <system/reboot_reason.h>
-#include <system/reset.h>
 
 // We want TIM4 to run at 32KHz
 static const uint32_t TIMER_FREQUENCY_HZ = 31250;
@@ -20,16 +17,6 @@ static const uint32_t TIMER_FREQUENCY_HZ = 31250;
 static const uint32_t TIMER_PERIOD_TICKS = 64;
 // A button must be stable for 20 samples (40ms) to be accepted.
 static const uint32_t NUM_DEBOUNCE_SAMPLES = 20;
-
-#define RESET_BUTTONS ((1 << BUTTON_ID_SELECT) | (1 << BUTTON_ID_BACK))
-
-#define DEBOUNCE_SAMPLES_PER_SECOND (TIMER_FREQUENCY_HZ / TIMER_PERIOD_TICKS)
-
-// This reset-buttons-held timeout must be lower than the PMIC's back-button-reset timeout,
-// which is ~8-11s. The spacing between these timeouts should be large enough to avoid accidentally
-// shutting down the device when a customer is attempting to reset. Therefore the FW's
-// reset-buttons-held timeout is set to 5 seconds:
-#define RESET_THRESHOLD_SAMPLES (5 * DEBOUNCE_SAMPLES_PER_SECOND)
 
 static void prv_timer_handler(nrf_timer_event_t evt, void *ctx);
 
@@ -151,36 +138,6 @@ static void prv_timer_handler(nrf_timer_event_t evt, void *ctx) {
       pbl_input_report_key(BOARD_CONFIG_BUTTON.buttons[i].code, is_pressed, true);
     }
   }
-
-#if !defined(CONFIG_MFG)
-  // Now that s_debounced_button_state is updated, check to see if the user is holding down the
-  // reset combination.
-  static uint32_t s_hard_reset_timer = 0;
-  if ((s_debounced_button_state & RESET_BUTTONS) == RESET_BUTTONS) {
-    s_hard_reset_timer += 1;
-    can_power_down_tim4 = false;
-
-    if (s_hard_reset_timer > RESET_THRESHOLD_SAMPLES) {
-      __disable_irq();
-
-      // If the UP button is held at the moment the timeout is hit, set the force-PRF bootbit:
-      const bool force_prf = (s_debounced_button_state & (1 << BUTTON_ID_UP));
-      if (force_prf) {
-        boot_bit_set(BOOT_BIT_FORCE_PRF);
-      }
-
-      RebootReason reason = {
-        .code = force_prf ? RebootReasonCode_PrfResetButtonsHeld : RebootReasonCode_ResetButtonsHeld
-      };
-      reboot_reason_set(&reason);
-
-      // Don't use system_reset here. This back door absolutely must work. Just hard reset.
-      system_hard_reset();
-    }
-  } else {
-    s_hard_reset_timer = 0;
-  }
-#endif
 
   if (can_power_down_tim4) {
     __disable_irq();
