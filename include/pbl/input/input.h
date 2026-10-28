@@ -49,20 +49,20 @@ enum pbl_input_type : uint8_t {
   PBL_INPUT_EV_GES,
 };
 
-/** @brief @ref PBL_INPUT_EV_KEY codes. */
+/** @brief @ref PBL_INPUT_EV_KEY codes, with the Linux input event code values. */
 enum : uint16_t {
-  PBL_INPUT_KEY_BACK,
-  PBL_INPUT_KEY_UP,
-  PBL_INPUT_KEY_SELECT,
-  PBL_INPUT_KEY_DOWN,
+  PBL_INPUT_KEY_UP = 103,
+  PBL_INPUT_KEY_DOWN = 108,
+  PBL_INPUT_KEY_BACK = 158,
   /** Touch contact. */
-  PBL_INPUT_BTN_TOUCH,
+  PBL_INPUT_BTN_TOUCH = 330,
+  PBL_INPUT_KEY_SELECT = 353,
 };
 
-/** @brief @ref PBL_INPUT_EV_ABS codes. */
+/** @brief @ref PBL_INPUT_EV_ABS codes, with the Linux input event code values. */
 enum : uint16_t {
-  PBL_INPUT_ABS_X,
-  PBL_INPUT_ABS_Y,
+  PBL_INPUT_ABS_X = 0,
+  PBL_INPUT_ABS_Y = 1,
 };
 
 /** @brief @ref PBL_INPUT_EV_GES codes, located at the report's @ref PBL_INPUT_ABS_X and Y. */

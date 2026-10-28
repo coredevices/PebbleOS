@@ -18,6 +18,10 @@ An event is a type, a code and a value:
 - `PBL_INPUT_EV_GES`: a gesture recognized by the device (tap, double tap,
   palm), located at the report's `ABS_X` and `ABS_Y`.
 
+Key and axis codes have the values of the Linux input event codes
+(`KEY_BACK` is 158, `ABS_X` is 0, ...), so a devicetree `linux,code`
+property is a code as is.
+
 Events are grouped in reports, the last one carrying `sync`. A touch sample
 is `BTN_TOUCH`, `ABS_X`, `ABS_Y` (sync); a gesture is `ABS_X`, `ABS_Y`,
 `GES` (sync); a button is a single `KEY` event with `sync`.
