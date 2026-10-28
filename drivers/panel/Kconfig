@@ -5,3 +5,9 @@ config PANEL
     bool
     help
       Panel class, selected by the display controllers driving a panel.
+
+config PANEL_JDI_MIP
+    bool "JDI memory-in-pixel panel"
+    depends on PANEL && GPIO && PWM
+    help
+      Support for JDI memory-in-pixel panels on the parallel interface.
