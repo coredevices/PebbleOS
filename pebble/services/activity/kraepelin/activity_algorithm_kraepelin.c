@@ -45,7 +45,7 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
   (MAX(ALG_MINUTES_PER_DLS_RECORD, ALG_MINUTES_PER_FILE_RECORD) + \
    PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M + 1)
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // A walk or run must be this long before it turns the HRM on, to save battery
 #define ALG_ACTIVITY_HRM_MIN_LEN_S (3 * PBL_SEC_PER_MIN)
 
@@ -62,7 +62,7 @@ typedef struct {
 
   struct pbl_kraepelin *k_state; // Pointer to Kraepelin state variables
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // HR subscriptions held by the walk and run in progress
   HRMSessionRef walk_hrm_session;
   HRMSessionRef run_hrm_session;
@@ -151,7 +151,7 @@ static uint32_t prv_minute_file_get_settings_key(time_t utc) {
   return utc / seconds_per_key;
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // ----------------------------------------------------------------------------------------------
 static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   // The algorithm doesn't care about these events. It only subscribed so the activity service
@@ -197,7 +197,7 @@ static bool prv_update_step_activity_hrm(enum pbl_kraepelin_activity activity,
 // Make the HR subscriptions follow the walk and run in progress. Must be called whenever the
 // algorithm may have started or ended one.
 static void prv_update_activity_hrm(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   const bool walk_changed =
       prv_update_step_activity_hrm(PBL_KRAEPELIN_ACTIVITY_WALK, &s_alg_state->walk_hrm_session);
   const bool run_changed =
@@ -943,7 +943,7 @@ bool activity_algorithm_deinit(void) {
   PBL_ASSERTN(s_alg_state->k_state);
 
   pbl_mutex_deinit(&s_alg_state->mutex);
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // Anything left subscribed would pin the sensor on
   if (s_alg_state->walk_hrm_session != HRM_INVALID_SESSION_REF) {
     sys_hrm_manager_unsubscribe(s_alg_state->walk_hrm_session);

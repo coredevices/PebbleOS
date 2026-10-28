@@ -142,7 +142,7 @@ static void prv_reset_hr_data(void) {
   s_workout_data.current_workout->bpm_ring_head = 0;
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Map a workout type onto the HR algorithm's activity scene, so it uses a motion-tuned model.
 static HRMActivityScene prv_scene_for_workout_type(ActivitySessionType type) {
   switch (type) {
@@ -156,7 +156,7 @@ static HRMActivityScene prv_scene_for_workout_type(ActivitySessionType type) {
       return HRMActivityScene_Default;
   }
 }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
 // Median of the last `count` raw BPMs in the ring (insertion order), used to discard motion spikes.
 static uint8_t prv_median_bpm(uint8_t *ring, uint8_t count, uint8_t head) {
@@ -359,10 +359,10 @@ void workout_service_frontend_opened(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
   {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     s_workout_data.hrm_session =
         sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, HRMFeature_BPM);
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
     s_workout_data.frontend_last_opened_ts = time_get_uptime_seconds();
     prv_put_event(PebbleWorkoutEvent_FrontendOpened);
   }
@@ -375,7 +375,7 @@ void workout_service_frontend_closed(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
   {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     int32_t hr_time_left;
 
     if (workout_service_is_workout_ongoing()) {
@@ -409,7 +409,7 @@ void workout_service_frontend_closed(void) {
       // No time left. Kill the subscription
       sys_hrm_manager_unsubscribe(s_workout_data.hrm_session);
     }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
     prv_put_event(PebbleWorkoutEvent_FrontendClosed);
   }
@@ -462,7 +462,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
     // Finally tell our algorithm it should stop automatically tracking activities
     activity_algorithm_enable_activity_tracking(false /* disable */);
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     // Switch the HR algorithm to a motion-tuned model for this workout type. Auto activity tracking
     // is disabled above, so there's no competing scene source while the workout runs.
     hrm_manager_set_activity_scene(prv_scene_for_workout_type(type));
@@ -561,7 +561,7 @@ bool workout_service_stop_workout(void) {
     // Re-enable automatic activity tracking
     activity_algorithm_enable_activity_tracking(true /* enable */);
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     // The workout app holds an unbounded 1-second HR subscription while open. Now that the workout
     // has ended, start the post-workout recovery countdown immediately so HR sampling drops back to
     // the user's preferred rate within a bounded window, regardless of when the app actually exits.
@@ -569,7 +569,7 @@ bool workout_service_stop_workout(void) {
                                         WORKOUT_ENDED_HR_SUBSCRIPTION_TS_EXPIRE);
     // Back to the general-purpose HR model now that the workout is over.
     hrm_manager_set_activity_scene(HRMActivityScene_Default);
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
     PBL_LOG_INFO("Stopping a workout with type: %d", wrkt->type);
     prv_put_event(PebbleWorkoutEvent_Stopped);

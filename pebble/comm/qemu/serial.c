@@ -203,7 +203,7 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   PBL_LOG_DBG("Got heart rate msg: bpm: %d, quality: %d", hdr->bpm, hdr->quality);
-#if defined(CONFIG_HRM)
+#if defined(CONFIG_SERVICE_HRM)
   // The protocol carries a grade, -1 (off wrist) or 0 (worst) to 4 (excellent); map it to a
   // representative algorithm confidence.
   static const uint8_t s_confidence_for_grade[] = {20, 50, 70, 85, 95};

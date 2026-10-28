@@ -1074,7 +1074,7 @@ void hrm_manager_process_cleanup(PebbleTask task, AppInstallId app_id) {
                                       HRM_MANAGER_APP_EXIT_EXPIRATION_SEC);
 }
 
-#if defined(CONFIG_SHELL) && defined(CONFIG_HRM)
+#if defined(CONFIG_SHELL) && defined(CONFIG_SERVICE_HRM)
 #include <errno.h>
 
 #include <pbl/shell/shell.h>
