@@ -4,8 +4,8 @@
 
 """Decode the LCDC interrupt ring buffer from a coredump.
 
-display_jdi.c records every LCDC interrupt into the BSS ring buffer
-`s_lcdc_irq_log` (see pbl_display_jdi_sf32lb_irq_handler), which is captured in
+sf32lb/lcdc.c records every LCDC interrupt into the BSS ring buffer
+`s_lcdc_irq_log` (see pbl_display_sf32lb_lcdc_irq_handler), which is captured in
 coredumps. This tool pulls it out and decodes it, so the interrupt
 interleaving behind the JDI-parallel silent-loss crash (a lost EOF
 completion) can be read post-mortem.

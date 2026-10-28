@@ -8,6 +8,7 @@ config PANEL
 
 config PANEL_JDI_MIP
     bool "JDI memory-in-pixel panel"
+    default y if DISPLAY_SF32LB_LCDC
     depends on PANEL && GPIO && PWM
     help
       Support for JDI memory-in-pixel panels on the parallel interface.

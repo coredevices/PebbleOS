@@ -37,7 +37,6 @@ typedef struct {
   uint8_t default_motion_sensitivity;
 } BoardConfigAccel;
 
-#include <pbl/drivers/display/sf32lb/display_jdi.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
 #include <pbl/drivers/qspi_definitions.h>

@@ -3,10 +3,12 @@
 
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/backlight/aw9364e.h>
+#include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/input/gpio_keys.h>
+#include <pbl/drivers/panel/jdi_mip.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
@@ -116,29 +118,6 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 };
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
-static struct pbl_display_jdi_sf32lb_state s_display_state = {
-  .hlcdc = {
-    .Instance = LCDC1,
-    .Init = {
-      .lcd_itf = LCDC_INTF_JDI_PARALLEL,
-      .color_mode = LCDC_PIXEL_FORMAT_RGB332,
-      .freq = 746268, // HCK frequency
-      .cfg = {
-        .jdi = {
-          .bank_col_head = 0,
-          .valid_columns = PBL_DISPLAY_WIDTH,
-          .bank_col_tail = 8,
-          .bank_row_head = 0,
-          .valid_rows = PBL_DISPLAY_HEIGHT,
-          .bank_row_tail = 4,
-          .enb_start_col = 6,
-          .enb_end_col = 128,
-        },
-      },
-    },
-  },
-};
-
 PBL_PINCTRL_STATE_DEFINE(
     s_display_default, SF32LB52_PINCTRL,
     SF32LB52_PA40_LCDC1_JDI_XRST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
@@ -166,17 +145,29 @@ static const struct pbl_gpio s_display_discharge[] = {
   PBL_GPIO(SF32LB_GPIO1, 41, 0), PBL_GPIO(SF32LB_GPIO1, 42, 0),
 };
 
-PBL_DISPLAY_JDI_SF32LB_DEFINE(s_display, "display", &s_display_state, PBL_DISPLAY_WIDTH,
-                              PBL_DISPLAY_HEIGHT, true, .irqn = LCDC1_IRQn,
-                              .vcom = PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0),
-                              .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
-                              .discharge = s_display_discharge,
-                              .num_discharge = ARRAY_LENGTH(s_display_discharge),
-                              .vddp = PBL_GPIO(SF32LB_GPIO1, 0, 0),
-                              .vlcd = PBL_GPIO(SF32LB_GPIO1, 9, 0));
+static const struct pbl_panel_timing s_panel_timing = {
+  .clock_hz = 746268,
+  .hactive = PBL_DISPLAY_WIDTH,
+  .hback_porch = 0,
+  .hfront_porch = 8,
+  .vactive = PBL_DISPLAY_HEIGHT,
+  .vback_porch = 0,
+  .vfront_porch = 4,
+  .enable_start = 6,
+  .enable_end = 128,
+};
+
+PBL_PANEL_JDI_MIP_DEFINE(s_panel, "panel", &s_panel_timing, PBL_GPIO(SF32LB_GPIO1, 0, 0),
+                         PBL_GPIO(SF32LB_GPIO1, 9, 0),
+                         PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0));
+
+PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", LCDC1, LCDC1_IRQn, &s_panel.panel,
+                               PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, true,
+                               PBL_PINCTRL(&s_display_default, nullptr, 0), s_display_discharge,
+                               ARRAY_LENGTH(s_display_discharge));
 
 const struct pbl_display *const DISPLAY = &s_display.disp;
-PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_jdi_sf32lb_irq_handler, &s_display, 0);
+PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_sf32lb_lcdc_irq_handler, &s_display, 0);
 
 PBL_AW9364E_DEFINE(s_aw9364e, PBL_GPIO(SF32LB_GPIO1, 1, 0));
 

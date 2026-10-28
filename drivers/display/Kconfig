@@ -8,14 +8,16 @@ menuconfig DISPLAY
 
 if DISPLAY
 
-config DISPLAY_JDI_SF32LB
-    bool "JDI (SiFli SF32LB)"
+config DISPLAY_SF32LB_LCDC
+    bool "SiFli SF32LB LCD controller"
     default y if SOC_SF32LB52
-    depends on PWM
+    depends on PINCTRL
+    select PANEL
     select HAL_SIFLI
     select HAL_SIFLI_LCD
     help
-      Support for JDI display via SiFli SF32LB.
+      Support for the SiFli SF32LB LCD controller, driving a JDI
+      memory-in-pixel panel.
 
 config DISPLAY_SHARP_LS013B7DH01
     bool "Sharp LS013B7DH01"
