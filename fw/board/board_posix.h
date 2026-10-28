@@ -35,12 +35,6 @@ typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct AudioDevice AudioDevice;
 
-typedef struct PosixDisplayDevice {
-  uint16_t width;
-  uint16_t height;
-} PosixDisplayDevice;
-typedef const PosixDisplayDevice DisplayDevice;
-
 void board_early_init(void);
 void board_init(void);
 

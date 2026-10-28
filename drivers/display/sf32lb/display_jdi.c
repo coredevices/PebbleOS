@@ -1,26 +1,19 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/display/display.h>
+#include <errno.h>
+
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
-#include <pbl/drivers/gpio.h>
-#include <pbl/drivers/pinctrl.h>
-#include <pbl/drivers/pwm.h>
 #include <pbl/drivers/rtc.h>
-#include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/soc/sf32lb/sleep.h>
-
-#include <bf0_hal_lcdc.h>
-#include <board/board.h>
-#include <kernel/events.h>
+#include <pbl/util/misc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_display_jdi, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 
@@ -41,21 +34,15 @@ PBL_LOG_MODULE_DEFINE(driver_display_jdi, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 // (lcd_if.h struct ends around offset 0x100).
 #define DISPLAY_LCDC_REG_DUMP_BYTES 2048
 
-// Pointer to the compositor's framebuffer - we convert in-place to save 44KB RAM
-static uint8_t *s_framebuffer;
-static uint16_t s_update_y0;
-static uint16_t s_update_y1;
-static bool s_initialized;
-static bool s_updating;
-static bool s_update_failed;
-static UpdateCompleteCallback s_uccb;
-static PBL_SEM_DEFINE(s_sem, 0, 1);
+// The HAL completion callback has no context argument
+static const struct pbl_display_jdi_sf32lb *s_jdi;
+
 static TimerID s_silent_loss_timer = TIMER_INVALID_ID;
-// Set from HAL_LCDC_SendLayerDataCpltCbk (ISR). The silent-loss handler checks
-// this to distinguish "EOF truly never fired" (real bug → crash) from "EOF
-// fired but terminate hasn't drained off the KernelMain queue yet" (race
-// against scheduler latency → don't crash).
-static volatile bool s_eof_observed;
+// Generation of the update in flight, and of the last one the EOF callback
+// completed. The silent-loss handler only crashes if its generation never
+// completed, so a timer left running after a completion is harmless.
+static uint32_t s_update_gen;
+static volatile uint32_t s_completed_gen;
 // Captured at silent-loss time so the coredump shipped to Sifli carries the
 // LCDC register state at the moment of the wedge. uint32_t storage (not
 // uint8_t) so the linker word-aligns it — prv_snapshot_lcdc_regs reads MMIO
@@ -64,7 +51,7 @@ static volatile bool s_eof_observed;
 // any C code in this image — without it, the compiler eliminates the stores.
 static volatile uint32_t s_lcdc_pre_crash_regs[DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t)];
 
-// Ring buffer of recent LCDC interrupts, recorded by display_jdi_irq_handler
+// Ring buffer of recent LCDC interrupts, recorded by the interrupt handler
 #define DISPLAY_IRQ_LOG_ENTRIES 32
 
 typedef struct {
@@ -73,7 +60,7 @@ typedef struct {
   uint32_t irq_after;    // LCD_IF.IRQ after the HAL handler cleared bits
   uint32_t jdi_par_ctrl; // LCD_IF.JDI_PAR_CTRL before the handler (INT_LINE_NUM)
   uint32_t status;       // LCD_IF.STATUS before the handler
-  uint32_t flags;        // bit0: EOF callback fired; bit1: s_updating at entry
+  uint32_t flags;        // bit0: EOF callback fired; bit1: update in progress at entry
 } DisplayIrqLogEntry;
 
 typedef struct {
@@ -94,52 +81,58 @@ static volatile bool s_lcdc_eof_cb_fired;
 static volatile bool s_test_drop_next_complete;
 #endif
 
-#if DISPLAY_ORIENTATION_ROTATED_180
-static bool s_rotated_180 = true;
-#else
-static bool s_rotated_180 = false;
-#endif
+static const struct pbl_display_jdi_sf32lb *prv_jdi(const struct pbl_display *disp) {
+  return container_of(disp, const struct pbl_display_jdi_sf32lb, disp);
+}
 
-static void prv_power_cycle(void) {
-  // This will disable all JDI pull-ups/downs so that VLCD can fully turn off,
-  // allowing for a clean power cycle.
-  for (uint8_t i = 0U; i < DISPLAY->num_discharge; i++) {
-    pbl_gpio_configure(&DISPLAY->discharge[i], PBL_GPIO_OUTPUT_LOW);
+static void prv_power_cycle(const struct pbl_display_jdi_sf32lb *jdi) {
+  for (uint8_t i = 0U; i < jdi->num_discharge; i++) {
+    pbl_gpio_configure(&jdi->discharge[i], PBL_GPIO_OUTPUT_LOW);
   }
 
-  pbl_gpio_set(&DISPLAY->vddp, false);
-  pbl_gpio_set(&DISPLAY->vlcd, false);
+  pbl_gpio_set(&jdi->vddp, false);
+  pbl_gpio_set(&jdi->vlcd, false);
 
   pbl_busy_wait_us(POWER_RESET_CYCLE_DELAY_TIME_US);
 }
 
-static void prv_display_on() {
+static int prv_panel_on(const struct pbl_display_jdi_sf32lb *jdi) {
   struct pbl_pwm_state vcom;
+  int ret;
 
-  pbl_gpio_set(&DISPLAY->vlcd, true);
+  pbl_gpio_set(&jdi->vlcd, true);
   pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
-  pbl_gpio_set(&DISPLAY->vddp, true);
+  pbl_gpio_set(&jdi->vddp, true);
   pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
 
-  pbl_pwm_init_state(&DISPLAY->vcom, &vcom);
-  PBL_ASSERTN(pbl_pwm_set_relative_duty_cycle(&vcom, 1U, 2U) == 0);
+  pbl_pwm_init_state(&jdi->vcom, &vcom);
+  ret = pbl_pwm_set_relative_duty_cycle(&vcom, 1U, 2U);
+  if (ret != 0) {
+    return ret;
+  }
+
   vcom.enabled = true;
-  PBL_ASSERTN(pbl_pwm_apply(&DISPLAY->vcom, &vcom) == 0);
+
+  return pbl_pwm_apply(&jdi->vcom, &vcom);
 }
 
-static void prv_display_off() {
-  DisplayJDIState *state = DISPLAY->state;
-  HAL_LCDC_DeInit(&state->hlcdc);
+static int prv_panel_off(const struct pbl_display_jdi_sf32lb *jdi) {
+  int ret;
 
-  PBL_ASSERTN(pbl_pwm_disable(&DISPLAY->vcom) == 0);
+  HAL_LCDC_DeInit(&jdi->state->hlcdc);
+
+  ret = pbl_pwm_disable(&jdi->vcom);
+  if (ret != 0) {
+    return ret;
+  }
 
   pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
-  pbl_gpio_set(&DISPLAY->vddp, false);
+  pbl_gpio_set(&jdi->vddp, false);
   pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
-  pbl_gpio_set(&DISPLAY->vlcd, false);
+  pbl_gpio_set(&jdi->vlcd, false);
+
+  return 0;
 }
-
-#define ROW_WORDS (PBL_DISPLAY_WIDTH / 4)
 
 // 222: XX RR GG BB, 332: RR 0G GG BB
 static PBL_ALWAYS_INLINE uint32_t prv_to_332(uint32_t p) {
@@ -150,16 +143,18 @@ static PBL_ALWAYS_INLINE uint32_t prv_to_222(uint32_t p) {
   return ((p >> 2) & 0x30303030) | ((p >> 1) & 0x0C0C0C0C) | (p & 0x03030303);
 }
 
-static PBL_ALWAYS_INLINE void prv_row_convert(uint32_t *row, uint32_t (*conv)(uint32_t)) {
-  for (uint32_t i = 0; i < ROW_WORDS; i++) {
+static PBL_ALWAYS_INLINE void prv_row_convert(uint32_t *row, uint32_t words,
+                                              uint32_t (*conv)(uint32_t)) {
+  for (uint32_t i = 0; i < words; i++) {
     row[i] = conv(row[i]);
   }
 }
 
 // HMirror is done in software, VMirror by the LCDC
-static PBL_ALWAYS_INLINE void prv_row_convert_mirror(uint32_t *row, uint32_t (*conv)(uint32_t)) {
+static PBL_ALWAYS_INLINE void prv_row_convert_mirror(uint32_t *row, uint32_t words,
+                                                     uint32_t (*conv)(uint32_t)) {
   uint32_t i = 0;
-  uint32_t j = ROW_WORDS - 1;
+  uint32_t j = words - 1;
   for (; i < j; i++, j--) {
     uint32_t a = row[i];
     uint32_t b = row[j];
@@ -171,117 +166,97 @@ static PBL_ALWAYS_INLINE void prv_row_convert_mirror(uint32_t *row, uint32_t (*c
   }
 }
 
-static HAL_StatusTypeDef prv_display_update_start(void) {
-  DisplayJDIState *state = DISPLAY->state;
+static void prv_rows_convert(const struct pbl_display_jdi_sf32lb *jdi, uint32_t (*conv)(uint32_t)) {
+  struct pbl_display_jdi_sf32lb_state *state = jdi->state;
+  uint32_t words = jdi->disp.width / 4U;
 
-  // The LCDC reads the framebuffer over DMA, which bypasses the D-cache.
-  // Flush dirty lines for the rows we're about to send so the LCDC sees
-  // the 332-converted pixels instead of stale SRAM.
-  uintptr_t fb_addr = (uintptr_t)&s_framebuffer[s_update_y0 * PBL_DISPLAY_WIDTH];
-  size_t fb_size = (size_t)(s_update_y1 - s_update_y0 + 1) * PBL_DISPLAY_WIDTH;
+  for (uint16_t y = state->y0; y <= state->y1; y++) {
+    uint32_t *row = (uint32_t *)&state->fb[y * state->pitch];
+
+    if (state->rotated) {
+      prv_row_convert_mirror(row, words, conv);
+    } else {
+      prv_row_convert(row, words, conv);
+    }
+  }
+}
+
+static HAL_StatusTypeDef prv_update_start(const struct pbl_display_jdi_sf32lb *jdi) {
+  struct pbl_display_jdi_sf32lb_state *state = jdi->state;
+  uint16_t width = jdi->disp.width;
+  uint16_t height = jdi->disp.height;
+  uint8_t *first = &state->fb[state->y0 * state->pitch];
+
+  uintptr_t fb_addr = (uintptr_t)first;
+  size_t fb_size = (size_t)(state->y1 - state->y0 + 1) * state->pitch;
   dcache_align(&fb_addr, &fb_size);
   dcache_flush((const void *)fb_addr, fb_size);
 
-  // The ROI is in panel lines, which are mirrored when VMirror is on
-  uint16_t roi_y0 = s_update_y0;
-  uint16_t roi_y1 = s_update_y1;
-  if (s_rotated_180) {
-    roi_y0 = PBL_DISPLAY_HEIGHT - 1 - s_update_y1;
-    roi_y1 = PBL_DISPLAY_HEIGHT - 1 - s_update_y0;
+  uint16_t roi_y0 = state->y0;
+  uint16_t roi_y1 = state->y1;
+  if (state->rotated) {
+    roi_y0 = height - 1 - state->y1;
+    roi_y1 = height - 1 - state->y0;
   }
 
-  // The LCDC pairs canvas and layer lines by position, so the layer must
-  // cover exactly the ROI
-  HAL_LCDC_SetROIArea(&state->hlcdc, 0, roi_y0, PBL_DISPLAY_WIDTH - 1, roi_y1);
-  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT,
-                        &s_framebuffer[s_update_y0 * PBL_DISPLAY_WIDTH], 0, roi_y0,
-                        PBL_DISPLAY_WIDTH - 1, roi_y1);
+  HAL_LCDC_SetROIArea(&state->hlcdc, 0, roi_y0, width - 1, roi_y1);
+  HAL_LCDC_LayerSetData(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, first, 0, roi_y0, width - 1, roi_y1);
   return HAL_LCDC_SendLayerData_IT(&state->hlcdc);
 }
 
-static void prv_handle_send_failure(const char *ctx, HAL_StatusTypeDef status) {
-  DisplayJDIState *state = DISPLAY->state;
-  PBL_LOG_ERR("display: %s SendLayerData_IT=%d State=%d ErrorCode=0x%08lx", ctx, (int)status,
-              (int)state->hlcdc.State, (unsigned long)state->hlcdc.ErrorCode);
-  state->hlcdc.State = HAL_LCDC_STATE_READY;
-  state->hlcdc.ErrorCode = HAL_LCDC_ERROR_NONE;
+static void prv_handle_send_failure(const struct pbl_display_jdi_sf32lb *jdi,
+                                    HAL_StatusTypeDef status) {
+  LCDC_HandleTypeDef *hlcdc = &jdi->state->hlcdc;
+
+  PBL_LOG_ERR("display: SendLayerData_IT=%d State=%d ErrorCode=0x%08lx", (int)status,
+              (int)hlcdc->State, (unsigned long)hlcdc->ErrorCode);
+  hlcdc->State = HAL_LCDC_STATE_READY;
+  hlcdc->ErrorCode = HAL_LCDC_ERROR_NONE;
 }
 
 static void prv_snapshot_lcdc_regs(const LCDC_HandleTypeDef *hlcdc) {
-  // Peripheral MMIO must be read as aligned 32-bit volatile loads; plain
-  // memcpy may emit byte-wise loads on some toolchains and fault.
   const volatile uint32_t *src = (const volatile uint32_t *)hlcdc->Instance;
   for (size_t i = 0; i < DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t); i++) {
     s_lcdc_pre_crash_regs[i] = src[i];
   }
 }
 
-// Runs on PebbleTask_NewTimers if no LCDC EOF callback arrives within
-// DISPLAY_SILENT_LOSS_TIMEOUT_MS of kickoff. Known trigger: SiFli HAL's
-// ICB-overflow path (bf0_hal_lcdc.c HAL_LCDC_IRQHandler) sets
-// HAL_LCDC_ERROR_OVERFLOW without invoking XferCpltCallback / XferErrorCallback,
-// so the firmware silently loses the completion and the compositor wedges.
-// Capture LCDC registers into BSS so they ride in the coredump, then crash —
-// the user sees a reboot instead of a frozen screen, and the coredump
-// captures the state Sifli needs to diagnose the underlying HAL bug.
 static void prv_silent_loss_handler(void *data) {
-  if (s_eof_observed) {
-    // EOF fired between us arming the timer and the timeout — terminate is
-    // queued on KernelMain but hasn't run yet. Don't crash on a scheduler
-    // latency artifact.
+  struct pbl_display_jdi_sf32lb_state *state = s_jdi->state;
+
+  if (s_completed_gen == (uint32_t)(uintptr_t)data) {
     return;
   }
-  DisplayJDIState *state = DISPLAY->state;
+
   prv_snapshot_lcdc_regs(&state->hlcdc);
-  // HPSYS SRAM is Normal cacheable (since the MPU region shrink in
-  // hal_sifli/sf32lb52 system_bf0_ap.c), so the snapshot stores above land
-  // in D-cache. PebbleOS captures coredump RAM after the crash path may
-  // have already invalidated the cache, so flush the dirty lines back to
-  // physical SRAM before we trip a panic.
   uintptr_t snap_addr = (uintptr_t)s_lcdc_pre_crash_regs;
   size_t snap_size = sizeof(s_lcdc_pre_crash_regs);
   dcache_align(&snap_addr, &snap_size);
   dcache_flush((const void *)snap_addr, snap_size);
   pbl_panic("LCDC silent loss: no EOF in %ums (State=%d Err=0x%lx y=%u..%u)",
             (unsigned)DISPLAY_SILENT_LOSS_TIMEOUT_MS, (int)state->hlcdc.State,
-            (unsigned long)state->hlcdc.ErrorCode, (unsigned)s_update_y0, (unsigned)s_update_y1);
+            (unsigned long)state->hlcdc.ErrorCode, (unsigned)state->y0, (unsigned)state->y1);
 }
 
-static void prv_display_update_terminate(void *data) {
-  new_timer_stop(s_silent_loss_timer);
-
-  // Convert the updated region back from 332 to 222 format
-  for (uint16_t y = s_update_y0; y <= s_update_y1; y++) {
-    uint32_t *row = (uint32_t *)&s_framebuffer[y * PBL_DISPLAY_WIDTH];
-
-    if (s_rotated_180) {
-      prv_row_convert_mirror(row, prv_to_222);
-    } else {
-      prv_row_convert(row, prv_to_222);
-    }
-  }
-
-  s_updating = false;
-  s_uccb(!s_update_failed);
+static void prv_update_end(const struct pbl_display_jdi_sf32lb *jdi, int status) {
+  prv_rows_convert(jdi, prv_to_222);
   soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+  pbl_display_complete(&jdi->disp, status);
 }
 
-void display_jdi_irq_handler(DisplayJDIDevice *disp) {
-  DisplayJDIState *state = DISPLAY->state;
-  LCD_IF_TypeDef *regs = state->hlcdc.Instance;
+void pbl_display_jdi_sf32lb_irq_handler(const struct pbl_display_jdi_sf32lb *jdi) {
+  LCD_IF_TypeDef *regs = jdi->state->hlcdc.Instance;
 
-  // Snapshot LCDC state before/after the HAL handler into the ring buffer so a
-  // coredump shows the interrupt interleaving behind the lost-EOF wedge.
   volatile DisplayIrqLogEntry *entry =
       &s_lcdc_irq_log.entries[s_lcdc_irq_log.write_count % DISPLAY_IRQ_LOG_ENTRIES];
   entry->timestamp = (uint32_t)rtc_get_ticks();
   entry->irq_before = regs->IRQ;
   entry->jdi_par_ctrl = regs->JDI_PAR_CTRL;
   entry->status = regs->STATUS;
-  entry->flags = s_updating ? 0x2u : 0x0u;
+  entry->flags = pbl_display_update_in_progress(&jdi->disp) ? 0x2u : 0x0u;
 
   s_lcdc_eof_cb_fired = false;
-  HAL_LCDC_IRQHandler(&state->hlcdc);
+  HAL_LCDC_IRQHandler(&jdi->state->hlcdc);
 
   entry->irq_after = regs->IRQ;
   if (s_lcdc_eof_cb_fired) {
@@ -295,183 +270,117 @@ void HAL_LCDC_SendLayerDataCpltCbk(LCDC_HandleTypeDef *lcdc) {
   s_lcdc_eof_cb_fired = true;
 
 #ifndef CONFIG_RELEASE
-  if (s_test_drop_next_complete && s_updating) {
+  if (s_test_drop_next_complete && pbl_display_update_in_progress(&s_jdi->disp)) {
     s_test_drop_next_complete = false;
-    // Simulate the lost-completion failure mode: leave s_eof_observed false
-    // and don't post the terminate event. The silent-loss timer should fire
+    // Simulate the lost-completion failure mode: leave the generation
+    // incomplete and don't end the update. The silent-loss timer should fire
     // ~DISPLAY_SILENT_LOSS_TIMEOUT_MS later and a panic.
     return;
   }
 #endif
 
-  // Mark EOF before doing anything else so the silent-loss handler's race
-  // check sees it even if the terminate event sits on the KernelMain queue
-  // longer than the timeout.
-  s_eof_observed = true;
-
-  if (s_updating) {
-    PebbleEvent e = {
-      .type = PEBBLE_CALLBACK_EVENT,
-      .callback = {
-        .callback = prv_display_update_terminate,
-      },
-    };
-
-    event_put_isr(&e);
-  } else {
-    pbl_sem_give(&s_sem);
-  }
+  s_completed_gen = s_update_gen;
+  prv_update_end(s_jdi, 0);
 }
 
-void display_init(void) {
-  if (s_initialized) {
-    return;
+static int prv_init(const struct pbl_display *disp) {
+  const struct pbl_display_jdi_sf32lb *jdi = prv_jdi(disp);
+  LCDC_HandleTypeDef *hlcdc = &jdi->state->hlcdc;
+  int ret;
+
+  if (pbl_device_init(&jdi->vddp.port->dev) != 0 || pbl_device_init(&jdi->vlcd.port->dev) != 0 ||
+      pbl_device_init(&jdi->vcom.ctrl->dev) != 0) {
+    return -ENODEV;
   }
 
-  DisplayJDIState *state = DISPLAY->state;
-
-  // Runs from the boot splash, before pbl_device_init_all()
-  PBL_ASSERTN(pbl_device_init(&SF32LB_GPIO1->dev) == 0 &&
-              pbl_device_init(&DISPLAY->vddp.port->dev) == 0 &&
-              pbl_device_init(&DISPLAY->vlcd.port->dev) == 0 &&
-              pbl_device_init(&DISPLAY->vcom.ctrl->dev) == 0);
-
-  pbl_gpio_configure(&DISPLAY->vddp, PBL_GPIO_OUTPUT);
-  pbl_gpio_configure(&DISPLAY->vlcd, PBL_GPIO_OUTPUT);
-
-  prv_power_cycle();
-
-  PBL_ASSERTN(pbl_pinctrl_select_state(&DISPLAY->pinctrl, PBL_PINCTRL_STATE_DEFAULT) == 0);
-
-  HAL_LCDC_Init(&state->hlcdc);
-  HAL_LCDC_LayerReset(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT);
-  HAL_LCDC_LayerSetCmpr(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, 0);
-  HAL_LCDC_LayerSetFormat(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, LCDC_PIXEL_FORMAT_RGB332);
-  HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_rotated_180);
-
-  pbl_irq_enable(DISPLAY->irqn);
-
-  prv_display_on();
-
-  s_initialized = true;
-}
-
-void display_set_enabled(bool enabled) {
-  if (enabled) {
-    prv_display_on();
-  } else {
-    prv_display_off();
-  }
-}
-
-bool display_update_in_progress(void) {
-  return s_updating;
-}
-
-void display_set_rotated(bool rotated) {
-  DisplayJDIState *state = DISPLAY->state;
-
-#if DISPLAY_ORIENTATION_ROTATED_180
-  s_rotated_180 = !rotated;
-#else
-  s_rotated_180 = rotated;
-#endif
-  HAL_LCDC_LayerVMirror(&state->hlcdc, HAL_LCDC_LAYER_DEFAULT, s_rotated_180);
-}
-
-void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  DisplayRow row;
-  bool first_row = true;
-
-  PBL_ASSERTN(!s_updating);
-
-  // Convert rows in-place from 222 to 332 format
-  // We use the compositor's framebuffer directly to save RAM
-  while (nrcb(&row)) {
-    if (first_row) {
-      // Capture pointer to compositor's framebuffer from first row
-      s_framebuffer = row.data;
-      s_update_y0 = row.address;
-      first_row = false;
-    }
-    s_update_y1 = row.address;
-
-    if (s_rotated_180) {
-      prv_row_convert_mirror((uint32_t *)row.data, prv_to_332);
-    } else {
-      prv_row_convert((uint32_t *)row.data, prv_to_332);
+  for (uint8_t i = 0U; i < jdi->num_discharge; i++) {
+    if (pbl_device_init(&jdi->discharge[i].port->dev) != 0) {
+      return -ENODEV;
     }
   }
 
-  if (first_row) {
-    // No rows to update
-    uccb(true);
-    return;
+  s_jdi = jdi;
+  s_silent_loss_timer = new_timer_create();
+
+  pbl_gpio_configure(&jdi->vddp, PBL_GPIO_OUTPUT);
+  pbl_gpio_configure(&jdi->vlcd, PBL_GPIO_OUTPUT);
+
+  prv_power_cycle(jdi);
+
+  ret = pbl_pinctrl_select_state(&jdi->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+  if (ret != 0) {
+    return ret;
   }
 
-  // Adjust framebuffer pointer to start of buffer (row 0)
-  s_framebuffer = s_framebuffer - (s_update_y0 * PBL_DISPLAY_WIDTH);
+  HAL_LCDC_Init(hlcdc);
+  HAL_LCDC_LayerReset(hlcdc, HAL_LCDC_LAYER_DEFAULT);
+  HAL_LCDC_LayerSetCmpr(hlcdc, HAL_LCDC_LAYER_DEFAULT, 0);
+  HAL_LCDC_LayerSetFormat(hlcdc, HAL_LCDC_LAYER_DEFAULT, LCDC_PIXEL_FORMAT_RGB332);
 
-  // Lazy-create the silent-loss timer. display_init runs via boot_splash_start
-  // before new_timer_service_init, so creating it in display_init would
-  // silently fail. The compositor doesn't reach this path until well after
-  // the timer service is up.
-  if (s_silent_loss_timer == TIMER_INVALID_ID) {
-    s_silent_loss_timer = new_timer_create();
-  }
+  pbl_irq_enable(jdi->irqn);
 
-  s_uccb = uccb;
-  s_updating = true;
-  s_update_failed = false;
-  s_eof_observed = false;
+  return prv_panel_on(jdi);
+}
+
+static int prv_enable(const struct pbl_display *disp) {
+  return prv_panel_on(prv_jdi(disp));
+}
+
+static int prv_disable(const struct pbl_display *disp) {
+  return prv_panel_off(prv_jdi(disp));
+}
+
+static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
+  const struct pbl_display_jdi_sf32lb *jdi = prv_jdi(disp);
+
+  jdi->state->rotated = rotated;
+  HAL_LCDC_LayerVMirror(&jdi->state->hlcdc, HAL_LCDC_LAYER_DEFAULT, rotated);
+
+  return 0;
+}
+
+static int prv_update(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
+                      uint16_t y0, uint16_t y1) {
+  const struct pbl_display_jdi_sf32lb *jdi = prv_jdi(disp);
+  struct pbl_display_jdi_sf32lb_state *state = jdi->state;
+  HAL_StatusTypeDef status;
+
+  state->fb = buf->data;
+  state->pitch = buf->pitch;
+  state->y0 = y0;
+  state->y1 = y1;
+
+  // Converted in place, to save a framebuffer of RAM
+  prv_rows_convert(jdi, prv_to_332);
 
   soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
+
   // Arm the timer before kickoff so the EOF IRQ, which can fire as soon as
   // SendLayerData_IT returns, never races us into a state where the timer
-  // isn't yet armed. prv_display_update_terminate stops it on the normal
-  // completion path; the kickoff-failure path below stops it via the same
-  // terminate call.
+  // isn't yet armed.
+  s_update_gen++;
   new_timer_start(s_silent_loss_timer, DISPLAY_SILENT_LOSS_TIMEOUT_MS, prv_silent_loss_handler,
-                  nullptr, 0);
-  HAL_StatusTypeDef status = prv_display_update_start();
+                  (void *)(uintptr_t)s_update_gen, 0);
+
+  status = prv_update_start(jdi);
   if (status != HAL_OK) {
-    prv_handle_send_failure("update", status);
-    s_update_failed = true;
-    prv_display_update_terminate(nullptr);
-  }
-}
-
-void display_update_boot_frame(uint8_t *framebuffer) {
-  if (s_rotated_180) {
-    // HMirror in software (VMirror is done by hardware)
-    for (uint16_t y = 0; y < PBL_DISPLAY_HEIGHT; y++) {
-      uint8_t *row = &framebuffer[y * PBL_DISPLAY_WIDTH];
-      for (uint16_t x = 0; x < PBL_DISPLAY_WIDTH / 2; x++) {
-        uint8_t tmp = row[x];
-        row[x] = row[PBL_DISPLAY_WIDTH - 1 - x];
-        row[PBL_DISPLAY_WIDTH - 1 - x] = tmp;
-      }
-    }
+    prv_handle_send_failure(jdi, status);
+    s_completed_gen = s_update_gen;
+    prv_rows_convert(jdi, prv_to_222);
+    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+    return -EIO;
   }
 
-  s_framebuffer = framebuffer;
-  s_update_y0 = 0;
-  s_update_y1 = PBL_DISPLAY_HEIGHT - 1;
-
-  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
-  HAL_StatusTypeDef status = prv_display_update_start();
-  if (status == HAL_OK) {
-    pbl_sem_take(&s_sem, PBL_FOREVER);
-  } else {
-    // Without this guard a failed kickoff would block boot forever on s_sem,
-    // since the EOF IRQ that gives the semaphore never fires.
-    prv_handle_send_failure("boot", status);
-  }
-  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+  return 0;
 }
 
-void display_clear(void) {
-}
+const struct pbl_display_ops pbl_display_jdi_sf32lb_ops = {
+  .init = prv_init,
+  .enable = prv_enable,
+  .disable = prv_disable,
+  .set_rotated = prv_set_rotated,
+  .update = prv_update,
+};
 
 #ifndef CONFIG_RELEASE
 void display_jdi_test_drop_next_complete(void) {

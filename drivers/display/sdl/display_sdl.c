@@ -3,63 +3,81 @@
 
 #include "display_sdl_bottom.h"
 
+#include <errno.h>
 #include <string.h>
 
-#include <pbl/drivers/display/display.h>
-#include <pbl/kernel/assert.h>
+#include <pbl/drivers/display/sdl.h>
 
-#include <board/board.h>
+#include <board/display.h>
 
 static uint8_t s_fb[PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT];
 static bool s_enabled;
 
-static void prv_flush(void) {
+static void prv_flush(const struct pbl_display *disp) {
   if (s_enabled) {
-    display_sdl_bottom_update(s_fb, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
+    display_sdl_bottom_update(s_fb, disp->width, disp->height);
   }
 }
 
-void display_init(void) {
+static int prv_init(const struct pbl_display *disp) {
+  if ((uint32_t)disp->width * disp->height > sizeof(s_fb)) {
+    return -EINVAL;
+  }
+
   s_enabled = true;
+
+  return 0;
 }
 
-void display_clear(void) {
-  memset(s_fb, 0, sizeof(s_fb));
-  prv_flush();
+static int prv_enable(const struct pbl_display *disp) {
+  s_enabled = true;
+
+  return 0;
 }
 
-void display_set_enabled(bool enabled) {
-  s_enabled = enabled;
+static int prv_disable(const struct pbl_display *disp) {
+  s_enabled = false;
+
+  return 0;
 }
 
-void display_set_rotated(bool rotated) {
+static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
+  return 0;
 }
 
-bool display_update_in_progress(void) {
-  return false;
-}
+static int prv_update(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
+                      uint16_t y0, uint16_t y1) {
+  for (uint16_t y = y0; y <= y1; y++) {
+    const uint8_t *src = &buf->data[y * buf->pitch];
+    uint8_t *dst = &s_fb[y * disp->width];
 
-void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  PBL_ASSERTN(nrcb != nullptr);
-  PBL_ASSERTN(uccb != nullptr);
-
-  DisplayRow row;
-  while (nrcb(&row)) {
-    uint8_t *dst = &s_fb[row.address * PBL_DISPLAY_WIDTH];
-#if PBL_BW
-    // 1 bit per pixel, white set, to ARGB2222
-    for (int x = 0; x < PBL_DISPLAY_WIDTH; x++) {
-      dst[x] = (row.data[x / 8] & (1 << (x % 8))) ? 0xff : 0xc0;
+    if (disp->format == PBL_DISPLAY_FORMAT_MONO) {
+      for (uint16_t x = 0U; x < disp->width; x++) {
+        dst[x] = (src[x / 8U] & (1U << (x % 8U))) != 0U ? 0xffU : 0xc0U;
+      }
+    } else {
+      memcpy(dst, src, disp->width);
     }
-#else
-    memcpy(dst, row.data, PBL_DISPLAY_WIDTH);
-#endif
   }
-  prv_flush();
-  uccb(true);
+
+  prv_flush(disp);
+  pbl_display_complete(disp, 0);
+
+  return 0;
 }
 
-void display_update_boot_frame(uint8_t *framebuffer) {
-  memcpy(s_fb, framebuffer, sizeof(s_fb));
-  prv_flush();
+static int prv_clear(const struct pbl_display *disp) {
+  memset(s_fb, 0, sizeof(s_fb));
+  prv_flush(disp);
+
+  return 0;
 }
+
+const struct pbl_display_ops pbl_display_sdl_ops = {
+  .init = prv_init,
+  .enable = prv_enable,
+  .disable = prv_disable,
+  .set_rotated = prv_set_rotated,
+  .update = prv_update,
+  .clear = prv_clear,
+};

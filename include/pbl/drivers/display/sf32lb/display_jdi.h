@@ -3,44 +3,48 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
+#include <pbl/drivers/display.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/pwm.h>
 
 #include <bf0_hal.h>
 #include <bf0_hal_lcdc.h>
-#include <board/board.h>
 
 /**
  * @defgroup drivers_display_sf32lb SF32LB JDI display
  * @ingroup drivers_display
- * @brief @ref drivers_display implementation for JDI memory-in-pixel panels driven by the
- * SF32LB LCD controller.
+ * @brief @ref drivers_display driver for JDI memory-in-pixel panels driven by the SF32LB LCD
+ * controller.
+ *
+ * Takes @ref PBL_DISPLAY_FORMAT_ARGB2222 rows, converted in place to the controller's RGB332
+ * while an update runs. Updates complete from the LCD controller's interrupt, connected by the
+ * board.
  * @{
  */
 
-/** @cond INTERNAL_HIDDEN */
-typedef struct DisplayJDIState {
+/** @brief Driver runtime state, with the LCD controller configuration set by the board. */
+struct pbl_display_jdi_sf32lb_state {
+  /** LCD controller handle; the board sets its instance and configuration. */
   LCDC_HandleTypeDef hlcdc;
-} DisplayJDIState;
-/** @endcond */
+  /** @cond INTERNAL_HIDDEN */
+  uint8_t *fb;
+  uint32_t pitch;
+  uint16_t y0;
+  uint16_t y1;
+  bool rotated;
+  /** @endcond */
+};
 
-/** @brief Splash image. */
-typedef struct DisplayJDISplash {
-  /** Image data. */
-  const uint8_t *data;
-  /** Width in pixels. */
-  uint16_t width;
-  /** Height in pixels. */
-  uint16_t height;
-} DisplayJDISplash;
-
-/** @brief JDI display device. */
-typedef const struct DisplayJDIDevice {
+/** @brief SF32LB JDI display. */
+struct pbl_display_jdi_sf32lb {
+  /** Display. */
+  struct pbl_display disp;
   /** Driver runtime state. */
-  DisplayJDIState *state;
+  struct pbl_display_jdi_sf32lb_state *state;
   /** LCD controller interrupt. */
   IRQn_Type irqn;
   /** VCOM inversion signal, run at its period with a 50% duty cycle while the panel is on. */
@@ -55,16 +59,39 @@ typedef const struct DisplayJDIDevice {
   struct pbl_gpio vddp;
   /** Panel VLCD supply enable. */
   struct pbl_gpio vlcd;
-  /** Splash image; not used by the driver. */
-  DisplayJDISplash splash;
-} DisplayJDIDevice;
+};
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_display_ops pbl_display_jdi_sf32lb_ops;
+/** @endcond */
 
 /**
- * @brief LCD controller interrupt handler.
+ * @brief Define an SF32LB JDI display.
  *
- * @param disp Display device.
+ * @param sym Symbol of the display.
+ * @param _name Name.
+ * @param _state Driver runtime state, with the LCD controller configuration.
+ * @param _width Width, in pixels.
+ * @param _height Height, in pixels.
+ * @param _rotated Panel mounted upside down.
+ * @param ... Remaining struct pbl_display_jdi_sf32lb fields, as designated initializers.
  */
-void display_jdi_irq_handler(DisplayJDIDevice *disp);
+#define PBL_DISPLAY_JDI_SF32LB_DEFINE(sym, _name, _state, _width, _height, _rotated, ...)       \
+  PBL_DISPLAY_STATE_DEFINE(sym);                                                                \
+  const struct pbl_display_jdi_sf32lb sym = {                                                   \
+    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_jdi_sf32lb_ops, nullptr, _width, _height, \
+                             PBL_DISPLAY_FORMAT_ARGB2222, _rotated),                            \
+    .state = (_state),                                                                          \
+    __VA_ARGS__,                                                                                \
+  };                                                                                            \
+  PBL_DEVICE_REGISTER(sym, &sym.disp.dev)
+
+/**
+ * @brief LCD controller interrupt handler, to connect with PBL_IRQ_CONNECT().
+ *
+ * @param jdi Display.
+ */
+void pbl_display_jdi_sf32lb_irq_handler(const struct pbl_display_jdi_sf32lb *jdi);
 
 #ifndef CONFIG_RELEASE
 /**

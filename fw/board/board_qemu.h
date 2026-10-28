@@ -59,17 +59,6 @@ typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct AudioDevice AudioDevice;
 
-// QEMU display device
-typedef struct QemuDisplayDevice {
-  uint32_t base_addr;
-  uint32_t fb_addr;
-  uint16_t width;
-  uint16_t height;
-  uint8_t bpp;
-  int irqn;
-} QemuDisplayDevice;
-typedef const QemuDisplayDevice DisplayDevice;
-
 extern AudioDevice *const AUDIO;
 
 void board_early_init(void);

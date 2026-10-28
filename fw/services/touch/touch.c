@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/display/display.h>
 #include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/assert.h>
@@ -14,6 +13,7 @@
 #include <pbl/services/touch/touch_event.h>
 #include <pbl/services/touch/touch_session.h>
 
+#include <board/display.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>

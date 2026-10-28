@@ -4,6 +4,7 @@
 #include <pbl/drivers/ambient/opt3001.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/backlight/pwm.h>
+#include <pbl/drivers/display/sharp_ls013b7dh01.h>
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/nrf5.h>
@@ -14,10 +15,12 @@
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/nrf5.h>
+#include <pbl/drivers/pwm/nrf5_rtc.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
+#include <pbl/drivers/spi/nrf5.h>
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/vibe/drv2604.h>
@@ -88,11 +91,18 @@ PBL_GPIO_KEYS_DEFINE(
                       PBL_INPUT_KEY_DOWN, 40));
 
 /* display */
-PBL_PWM_NRF5_RTC_DEFINE(EXTCOMIN_PWM, "extcomin", 2, PBL_GPIO(NRF5_GPIO_P1, 15, 0), nullptr);
-PBL_SPI_NRF5_DEFINE(DISPLAY_SPI, "spi3", 3, PBL_GPIO(NRF5_GPIO_P0, 6, 0),
-                    PBL_GPIO(NRF5_GPIO_P0, 8, 0), PBL_GPIO(nullptr, 0, 0), nullptr,
-                    PBL_GPIO(NRF5_GPIO_P1, 3, 0));
-PBL_IRQ_CONNECT(SPIM3, 7, pbl_spi_nrf5_irq_handler, &DISPLAY_SPI, 0);
+PBL_PWM_NRF5_RTC_DEFINE(s_extcomin, "extcomin", 2, PBL_GPIO(NRF5_GPIO_P1, 15, 0), nullptr);
+PBL_SPI_NRF5_DEFINE(s_spi3, "spi3", 3, PBL_GPIO(NRF5_GPIO_P0, 6, 0), PBL_GPIO(NRF5_GPIO_P0, 8, 0),
+                    PBL_GPIO(nullptr, 0, 0), nullptr, PBL_GPIO(NRF5_GPIO_P1, 3, 0));
+PBL_IRQ_CONNECT(SPIM3, 7, pbl_spi_nrf5_irq_handler, &s_spi3, 0);
+
+// EXTCOMIN feeds a flip-flop, generating a 60 Hz 50% VCOM
+PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(
+    s_display, "display",
+    PBL_SPI_DEV(&s_spi3.bus, 0, 1000000, PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST),
+    PBL_GPIO(NRF5_GPIO_P0, 4, 0), PBL_PWM(&s_extcomin.ctrl, 0, PBL_PWM_HZ(120), 0), false);
+
+const struct pbl_display *const DISPLAY = &s_display.disp;
 
 /* PERIPHERAL ID 10 */
 

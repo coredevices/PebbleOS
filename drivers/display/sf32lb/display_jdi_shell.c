@@ -13,12 +13,12 @@ static int prv_cmd_drop_complete(const struct pbl_shell *sh, size_t argc, char *
   return 0;
 }
 
-static const struct pbl_shell_cmd sub_display[] = {
+static const struct pbl_shell_cmd sub_lcdc[] = {
   PBL_SHELL_CMD(drop_complete, nullptr, "Drop the next LCDC transfer-complete callback",
                 prv_cmd_drop_complete),
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-PBL_SHELL_CMD_REGISTER(display, sub_display, "Display", nullptr);
+PBL_SHELL_CMD_REGISTER(lcdc, sub_lcdc, "SF32LB LCD controller", nullptr);
 
 #endif

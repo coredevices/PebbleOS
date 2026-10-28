@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/ambient/qemu.h>
 #include <pbl/drivers/backlight/qemu.h>
+#include <pbl/drivers/display/qemu.h>
 #include <pbl/drivers/gpio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/input/gpio_keys.h>
@@ -50,16 +51,10 @@ UARTDevice *const BT_HCI_UART = (UARTDevice *)&BT_HCI_UART_DEVICE;
 #endif
 
 // Display device - QEMU framebuffer
-static QemuDisplayDevice s_display = {
-  .base_addr = QEMU_DISPLAY_BASE,
-  .fb_addr = QEMU_DISPLAY_FB_BASE,
-  .width = 260,
-  .height = 260,
-  .bpp = 8,
-  .irqn = DISPLAY_IRQn,
-};
+PBL_DISPLAY_QEMU_DEFINE(s_display, "display", QEMU_DISPLAY_BASE, QEMU_DISPLAY_FB_BASE, 260, 260,
+                        PBL_DISPLAY_FORMAT_ARGB2222);
 
-DisplayDevice *const DISPLAY = &s_display;
+const struct pbl_display *const DISPLAY = &s_display.disp;
 
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .low_power_threshold = 2U,

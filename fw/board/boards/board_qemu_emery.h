@@ -11,7 +11,6 @@ extern UARTDevice *const QEMU_UART;
 #ifdef CONFIG_BT_HCI_UART
 extern UARTDevice *const BT_HCI_UART;
 #endif
-extern DisplayDevice *const DISPLAY;
 extern MicDevice *const MIC;
 extern HRMDevice *const HRM;
 extern const BoardConfigPower BOARD_CONFIG_POWER;

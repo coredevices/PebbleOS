@@ -18,7 +18,6 @@
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
-#include <board/splash.h>
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart =
@@ -61,7 +60,7 @@ UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 PBL_IRQ_CONNECT(USART1, 5, uart_irq_handler, DBG_UART, 0);
 PBL_IRQ_CONNECT(DMAC1_CH1, 5, uart_dma_irq_handler, DBG_UART, 0);
 
-static DisplayJDIState s_display_state = {
+static struct pbl_display_jdi_sf32lb_state s_display_state = {
   .hlcdc = {
     .Instance = LCDC1,
     .Init = {
@@ -111,24 +110,17 @@ static const struct pbl_gpio s_display_discharge[] = {
   PBL_GPIO(SF32LB_GPIO1, 41, 0), PBL_GPIO(SF32LB_GPIO1, 42, 0),
 };
 
-static DisplayJDIDevice s_display = {
-  .state = &s_display_state,
-  .irqn = LCDC1_IRQn,
-  .vcom = PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0),
-  .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
-  .discharge = s_display_discharge,
-  .num_discharge = ARRAY_LENGTH(s_display_discharge),
-  .vddp = PBL_GPIO(SF32LB_GPIO1, 28, 0),
-  .vlcd = PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
-  .splash = {
-    .data = splash_bits,
-    .width = splash_width,
-    .height = splash_height,
-  },
-};
+PBL_DISPLAY_JDI_SF32LB_DEFINE(s_display, "display", &s_display_state, PBL_DISPLAY_WIDTH,
+                              PBL_DISPLAY_HEIGHT, false, .irqn = LCDC1_IRQn,
+                              .vcom = PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0),
+                              .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
+                              .discharge = s_display_discharge,
+                              .num_discharge = ARRAY_LENGTH(s_display_discharge),
+                              .vddp = PBL_GPIO(SF32LB_GPIO1, 28, 0),
+                              .vlcd = PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW));
 
-DisplayJDIDevice *const DISPLAY = &s_display;
-PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
+const struct pbl_display *const DISPLAY = &s_display.disp;
+PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_jdi_sf32lb_irq_handler, &s_display, 0);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 static UARTDeviceState s_hci_trace_uart_state = {

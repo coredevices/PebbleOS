@@ -12,7 +12,6 @@
 #include <pbl/input/input.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/pwm.h>
-#include <pbl/drivers/spi.h>
 
 #include <hal/nrf_gpio.h>
 #include <nrfx_pdm.h>
@@ -54,14 +53,6 @@ typedef struct {
 typedef struct {
   uint8_t default_motion_sensitivity;
 } BoardConfigAccel;
-
-typedef struct {
-  const struct pbl_spi_dev spi;
-
-  const struct pbl_gpio on_ctrl;
-
-  const struct pbl_pwm extcomin;
-} BoardConfigSharpDisplay;
 
 typedef const struct UARTDevice UARTDevice;
 typedef const struct HRMDevice HRMDevice;

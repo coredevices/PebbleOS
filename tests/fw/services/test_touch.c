@@ -4,12 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/drivers/display/display.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_event.h>
 #include <pbl/services/touch/touch_session.h>
 
+#include <board/display.h>
 #include <clar.h>
 #include <fake_events.h>
 #include <kernel/event_loop.h>

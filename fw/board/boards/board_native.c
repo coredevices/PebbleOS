@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/ambient/posix.h>
 #include <pbl/drivers/backlight/posix.h>
+#include <pbl/drivers/display/sdl.h>
 #include <pbl/drivers/imu/posix.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/drivers/temperature/posix.h>
@@ -40,12 +41,15 @@ static const struct UARTDevice s_bt_hci_uart = {
 UARTDevice *const BT_HCI_UART = &s_bt_hci_uart;
 #endif
 
-static const PosixDisplayDevice s_display = {
-  .width = PBL_DISPLAY_WIDTH,
-  .height = PBL_DISPLAY_HEIGHT,
-};
+#if PBL_BW
+#define DISPLAY_FORMAT PBL_DISPLAY_FORMAT_MONO
+#else
+#define DISPLAY_FORMAT PBL_DISPLAY_FORMAT_ARGB2222
+#endif
 
-DisplayDevice *const DISPLAY = &s_display;
+PBL_DISPLAY_SDL_DEFINE(s_display, "display", PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, DISPLAY_FORMAT);
+
+const struct pbl_display *const DISPLAY = &s_display;
 
 static MicDeviceState s_mic_state;
 static MicDevice s_mic = {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <pbl/drivers/pwm/nrf5_rtc.h>
-#include <pbl/drivers/spi/nrf5.h>
 #include <pbl/services/imu/units.h>
 
 #define BT_VENDOR_ID   0x0EEA
@@ -33,19 +31,6 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 };
 
 extern UARTDevice *const DBG_UART;
-extern const struct pbl_pwm_nrf5_rtc EXTCOMIN_PWM;
-extern const struct pbl_spi_nrf5 DISPLAY_SPI;
-
-static const BoardConfigSharpDisplay BOARD_CONFIG_DISPLAY = {
-  .spi = PBL_SPI_DEV(&DISPLAY_SPI.bus, 0, 1000000,
-                     PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST),
-
-  .on_ctrl = PBL_GPIO(NRF5_GPIO_P0, 4, 0),
-
-  // Feeds a flip-flop, generating a 60 Hz 50% signal to EXTCOMIN
-  .extcomin = PBL_PWM(&EXTCOMIN_PWM.ctrl, 0, PBL_PWM_HZ(120), 0),
-};
-
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
 

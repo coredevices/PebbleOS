@@ -3,7 +3,6 @@
 
 #include <string.h>
 
-#include <pbl/drivers/display/display.h>
 #include <pbl/input/input.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/util/math.h>
@@ -11,6 +10,7 @@
 
 #include <applib/event_service_client.h>
 #include <applib/ui/recognizer/swipe.h>
+#include <board/display.h>
 #include <clar.h>
 #include <kernel/events.h>
 #include <kernel/input_buttons.h>

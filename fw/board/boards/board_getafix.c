@@ -17,7 +17,6 @@
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
-#include <board/splash.h>
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart =
@@ -117,7 +116,7 @@ static QSPIFlash QSPI_FLASH_DEVICE = {
 };
 QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 
-static DisplayJDIState s_display_state = {
+static struct pbl_display_jdi_sf32lb_state s_display_state = {
   .hlcdc = {
     .Instance = LCDC1,
     .Init = {
@@ -167,24 +166,17 @@ static const struct pbl_gpio s_display_discharge[] = {
   PBL_GPIO(SF32LB_GPIO1, 41, 0), PBL_GPIO(SF32LB_GPIO1, 42, 0),
 };
 
-static DisplayJDIDevice s_display = {
-  .state = &s_display_state,
-  .irqn = LCDC1_IRQn,
-  .vcom = PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0),
-  .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
-  .discharge = s_display_discharge,
-  .num_discharge = ARRAY_LENGTH(s_display_discharge),
-  .vddp = PBL_GPIO(SF32LB_GPIO1, 0, 0),
-  .vlcd = PBL_GPIO(SF32LB_GPIO1, 9, 0),
-  .splash = {
-    .data = splash_bits,
-    .width = splash_width,
-    .height = splash_height,
-  },
-};
+PBL_DISPLAY_JDI_SF32LB_DEFINE(s_display, "display", &s_display_state, PBL_DISPLAY_WIDTH,
+                              PBL_DISPLAY_HEIGHT, true, .irqn = LCDC1_IRQn,
+                              .vcom = PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0),
+                              .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
+                              .discharge = s_display_discharge,
+                              .num_discharge = ARRAY_LENGTH(s_display_discharge),
+                              .vddp = PBL_GPIO(SF32LB_GPIO1, 0, 0),
+                              .vlcd = PBL_GPIO(SF32LB_GPIO1, 9, 0));
 
-DisplayJDIDevice *const DISPLAY = &s_display;
-PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
+const struct pbl_display *const DISPLAY = &s_display.disp;
+PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_jdi_sf32lb_irq_handler, &s_display, 0);
 
 PBL_AW9364E_DEFINE(s_aw9364e, PBL_GPIO(SF32LB_GPIO1, 1, 0));
 

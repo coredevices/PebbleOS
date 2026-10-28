@@ -7,7 +7,6 @@
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/display/display.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mic.h>
@@ -189,8 +188,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   board_early_init();
 
-  boot_splash_start();
-
   kernel_applib_init();
 
   system_task_init();
@@ -199,6 +196,9 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   new_timer_service_init();
   regular_timer_init();
+
+  // After the timer service, which the display may use
+  boot_splash_start();
 
   // Suspend the task watchdog while the rest of the system comes up.
   pbl_task_wdt_init();
@@ -244,12 +244,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 #ifdef CONFIG_HRM
   hrm_init(HRM);
 #endif
-
-  // The display has to be initialized before bluetooth because on Snowy the
-  // display FPGA shares the 32 kHz clock signal with bluetooth. If the FPGA is
-  // not programmed when we attempt to initialize bluetooth, it prevents the
-  // clock from reaching the bluetooth module and initialization fails.
-  display_init();
 
   // Stop boot splash before initializing compositor
   boot_splash_stop();

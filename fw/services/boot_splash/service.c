@@ -9,36 +9,32 @@
 
 #include <string.h>
 
-#include <pbl/drivers/display/display.h>
+#include <pbl/drivers/display.h>
+#include <pbl/util/math.h>
 
-#include <board/display.h>
 #include <board/splash.h>
 #include <kernel/pbl_malloc.h>
 
-// Platform-specific colors: PebbleOS uses ARGB2222 (GColor8), not raw RGB332
-#if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-// QEMU and native displays render ARGB2222
-#define SPLASH_COLOR_WHITE 0xFF // A=3, R=3, G=3, B=3
-#define SPLASH_COLOR_BLACK 0xC0 // A=3, R=0, G=0, B=0
-#define SPLASH_COLOR_LGRAY 0xEA // A=3, R=2, G=2, B=2
-// Their boot splash always uses an 8bpp framebuffer regardless of platform bit depth
-#define BOOT_SPLASH_FB_BYTES (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT)
-#else
-// Hardware displays: the compositor handles GColor8 → native conversion,
-// but boot_splash writes raw pixels before the compositor is initialized.
-// On obelix/getafix the LCDC accepts RGB332 directly.
-#define SPLASH_COLOR_WHITE   0xFF
-#define SPLASH_COLOR_BLACK   0x00
-#define SPLASH_COLOR_LGRAY   0xB6
-#define BOOT_SPLASH_FB_BYTES DISPLAY_FRAMEBUFFER_BYTES
-#endif
+enum splash_color {
+  SPLASH_COLOR_WHITE,
+  SPLASH_COLOR_BLACK,
+  SPLASH_COLOR_LGRAY,
+};
+
+// ARGB2222 values of the splash colors
+static const uint8_t s_argb2222[] = {
+  [SPLASH_COLOR_WHITE] = 0xFF,
+  [SPLASH_COLOR_BLACK] = 0xC0,
+  [SPLASH_COLOR_LGRAY] = 0xEA,
+};
 
 // Progress bar configuration
-#define PROGRESS_BAR_WIDTH          80
-#define PROGRESS_BAR_HEIGHT         4
-#define PROGRESS_INDICATOR_WIDTH    20
-#define PROGRESS_FRAME_DELAY_MS     100
-#define PROGRESS_TOTAL_FRAMES       20
+#define PROGRESS_BAR_WIDTH       80
+#define PROGRESS_BAR_HEIGHT      4
+#define PROGRESS_INDICATOR_WIDTH 20
+#define PROGRESS_FRAME_DELAY_MS  100
+#define PROGRESS_TOTAL_FRAMES    20
+
 #define BOOT_SPLASH_TASK_STACK_SIZE 2048
 #define BOOT_SPLASH_TASK_PRIORITY   (PBL_PRIO_MAX - 1)
 
@@ -47,30 +43,79 @@ static struct pbl_thread s_boot_splash_thread;
 PBL_THREAD_STACK_DEFINE(s_boot_splash_stack, BOOT_SPLASH_TASK_STACK_SIZE);
 static struct pbl_thread *s_boot_splash_task;
 static volatile bool s_boot_splash_running;
-static uint8_t *s_boot_splash_fb;
+static struct pbl_display_buffer s_boot_splash_fb;
+
+static uint32_t prv_pitch(void) {
+  if (DISPLAY->format == PBL_DISPLAY_FORMAT_MONO) {
+    return ROUND_TO_MOD_CEIL(DISPLAY->width, 32U) / 8U;
+  }
+
+  return DISPLAY->width;
+}
+
+static size_t prv_fb_bytes(void) {
+  return prv_pitch() * DISPLAY->height;
+}
+
+static void prv_set_pixel(const struct pbl_display_buffer *fb, int16_t x, int16_t y,
+                          enum splash_color color) {
+  if (x < 0 || x >= DISPLAY->width || y < 0 || y >= DISPLAY->height) {
+    return;
+  }
+
+  uint8_t *row = &fb->data[(uint32_t)y * fb->pitch];
+
+  if (DISPLAY->format == PBL_DISPLAY_FORMAT_MONO) {
+    // Light gray shows as white, the indicator as black
+    if (color == SPLASH_COLOR_BLACK) {
+      row[x / 8] &= ~(1U << (x % 8));
+    } else {
+      row[x / 8] |= 1U << (x % 8);
+    }
+  } else {
+    row[x] = s_argb2222[color];
+  }
+}
+
+static void prv_clear(const struct pbl_display_buffer *fb) {
+  memset(fb->data,
+         (DISPLAY->format == PBL_DISPLAY_FORMAT_MONO) ? 0xFF : s_argb2222[SPLASH_COLOR_WHITE],
+         prv_fb_bytes());
+}
 
 // Draw a filled rectangle
-static void prv_draw_filled_rect(uint8_t *fb, int16_t x0, int16_t y0, int16_t width, int16_t height,
-                                 uint8_t color) {
+static void prv_draw_filled_rect(const struct pbl_display_buffer *fb, int16_t x0, int16_t y0,
+                                 int16_t width, int16_t height, enum splash_color color) {
   for (int16_t y = y0; y < y0 + height; y++) {
     for (int16_t x = x0; x < x0 + width; x++) {
-      if (x >= 0 && x < PBL_DISPLAY_WIDTH && y >= 0 && y < PBL_DISPLAY_HEIGHT) {
-        fb[(uint32_t)y * PBL_DISPLAY_WIDTH + x] = color;
+      prv_set_pixel(fb, x, y, color);
+    }
+  }
+}
+
+// Draw the logo, centered
+static void prv_draw_logo(const struct pbl_display_buffer *fb) {
+  int16_t logo_x0 = (DISPLAY->width - splash_width) / 2;
+  int16_t logo_y0 = (DISPLAY->height - splash_height) / 2;
+
+  for (uint16_t y = 0U; y < splash_height; y++) {
+    for (uint16_t x = 0U; x < splash_width; x++) {
+      if (splash_bits[y * (splash_width / 8) + x / 8] & (0x1U << (x & 7))) {
+        prv_set_pixel(fb, x + logo_x0, y + logo_y0, SPLASH_COLOR_BLACK);
       }
     }
   }
 }
 
 // Draw progress bar with animated indicator
-static void prv_draw_progress_bar(uint8_t *fb, int16_t center_x, int16_t center_y, uint16_t frame) {
-  const uint8_t COLOR_TRACK = SPLASH_COLOR_LGRAY;
-  const uint8_t COLOR_INDICATOR = SPLASH_COLOR_BLACK;
-
+static void prv_draw_progress_bar(const struct pbl_display_buffer *fb, int16_t center_x,
+                                  int16_t center_y, uint16_t frame) {
   int16_t bar_x0 = center_x - PROGRESS_BAR_WIDTH / 2;
   int16_t bar_y0 = center_y - PROGRESS_BAR_HEIGHT / 2;
 
   // Draw track (background)
-  prv_draw_filled_rect(fb, bar_x0, bar_y0, PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT, COLOR_TRACK);
+  prv_draw_filled_rect(fb, bar_x0, bar_y0, PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT,
+                       SPLASH_COLOR_LGRAY);
 
   // Calculate indicator position (ping-pong animation)
   int32_t max_travel = PROGRESS_BAR_WIDTH - PROGRESS_INDICATOR_WIDTH;
@@ -88,46 +133,28 @@ static void prv_draw_progress_bar(uint8_t *fb, int16_t center_x, int16_t center_
 
   // Draw indicator
   prv_draw_filled_rect(fb, bar_x0 + indicator_offset, bar_y0, PROGRESS_INDICATOR_WIDTH,
-                       PROGRESS_BAR_HEIGHT, COLOR_INDICATOR);
+                       PROGRESS_BAR_HEIGHT, SPLASH_COLOR_BLACK);
+}
+
+static void prv_show(const struct pbl_display_buffer *fb) {
+  (void)pbl_display_update_sync(DISPLAY, fb, 0U, DISPLAY->height - 1U);
 }
 
 // Boot splash task - runs until stopped
 static void prv_boot_splash_task(void *param) {
-  uint8_t *fb = s_boot_splash_fb;
+  const struct pbl_display_buffer *fb = &s_boot_splash_fb;
   uint16_t frame = 0;
 
-  // Get splash logo dimensions
-  const uint16_t logo_width = splash_width;
-  const uint16_t logo_height = splash_height;
-  const uint8_t *logo_data = splash_bits;
-
-  // Calculate logo position (centered)
-  uint16_t logo_x0 = (PBL_DISPLAY_WIDTH - logo_width) / 2;
-  uint16_t logo_y0 = (PBL_DISPLAY_HEIGHT - logo_height) / 2;
-
-  // Calculate progress bar center position (below centered logo)
-  int16_t progress_cx = PBL_DISPLAY_WIDTH / 2;
-  int16_t progress_cy = logo_y0 + logo_height + 20;
+  // Progress bar below the centered logo
+  int16_t progress_cx = DISPLAY->width / 2;
+  int16_t progress_cy = (DISPLAY->height - splash_height) / 2 + splash_height + 20;
 
   // Animation loop - runs until s_boot_splash_running is cleared
   while (s_boot_splash_running) {
-    // Clear framebuffer to white
-    memset(fb, SPLASH_COLOR_WHITE, BOOT_SPLASH_FB_BYTES);
-
-    // Draw logo
-    for (uint16_t y = 0U; y < logo_height; y++) {
-      for (uint16_t x = 0U; x < logo_width; x++) {
-        if (logo_data[y * (logo_width / 8) + x / 8] & (0x1U << (x & 7))) {
-          fb[(y + logo_y0) * PBL_DISPLAY_WIDTH + (x + logo_x0)] = SPLASH_COLOR_BLACK;
-        }
-      }
-    }
-
-    // Draw progress bar
+    prv_clear(fb);
+    prv_draw_logo(fb);
     prv_draw_progress_bar(fb, progress_cx, progress_cy, frame);
-
-    // Send frame to display
-    display_update_boot_frame(fb);
+    prv_show(fb);
 
     frame++;
 
@@ -138,19 +165,23 @@ static void prv_boot_splash_task(void *param) {
   }
 
   // Cleanup
-  kernel_free(fb);
-  s_boot_splash_fb = nullptr;
+  kernel_free(s_boot_splash_fb.data);
+  s_boot_splash_fb.data = nullptr;
   s_boot_splash_task = nullptr;
   pbl_thread_abort(nullptr);
 }
 
 void boot_splash_start(void) {
-  // Initialize the display
-  display_init();
+  if (pbl_device_init(&DISPLAY->dev) != 0) {
+    return;
+  }
 
   // Allocate framebuffer for boot splash
-  s_boot_splash_fb = kernel_malloc(BOOT_SPLASH_FB_BYTES);
-  if (!s_boot_splash_fb) {
+  s_boot_splash_fb = (struct pbl_display_buffer){
+    .data = kernel_malloc(prv_fb_bytes()),
+    .pitch = prv_pitch(),
+  };
+  if (s_boot_splash_fb.data == nullptr) {
     return;
   }
 
@@ -178,30 +209,15 @@ void boot_splash_stop(void) {
     }
 
     // Draw final frame with logo only (no progress bar)
-    uint8_t *fb = kernel_malloc(BOOT_SPLASH_FB_BYTES);
-    if (fb) {
-      memset(fb, SPLASH_COLOR_WHITE, BOOT_SPLASH_FB_BYTES);
-
-      // Get splash logo dimensions
-      const uint16_t logo_width = splash_width;
-      const uint16_t logo_height = splash_height;
-      const uint8_t *logo_data = splash_bits;
-
-      // Calculate logo position (centered, same as animation)
-      uint16_t logo_x0 = (PBL_DISPLAY_WIDTH - logo_width) / 2;
-      uint16_t logo_y0 = (PBL_DISPLAY_HEIGHT - logo_height) / 2;
-
-      // Draw logo
-      for (uint16_t y = 0U; y < logo_height; y++) {
-        for (uint16_t x = 0U; x < logo_width; x++) {
-          if (logo_data[y * (logo_width / 8) + x / 8] & (0x1U << (x & 7))) {
-            fb[(y + logo_y0) * PBL_DISPLAY_WIDTH + (x + logo_x0)] = SPLASH_COLOR_BLACK;
-          }
-        }
-      }
-
-      display_update_boot_frame(fb);
-      kernel_free(fb);
+    struct pbl_display_buffer fb = {
+      .data = kernel_malloc(prv_fb_bytes()),
+      .pitch = prv_pitch(),
+    };
+    if (fb.data != nullptr) {
+      prv_clear(&fb);
+      prv_draw_logo(&fb);
+      prv_show(&fb);
+      kernel_free(fb.data);
     }
   }
 }

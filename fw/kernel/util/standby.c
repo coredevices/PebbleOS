@@ -3,7 +3,7 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/display/display.h>
+#include <pbl/drivers/display.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/logging/logging.h>
 
@@ -25,8 +25,8 @@ int enter_standby(RebootReasonCode reason) {
   RebootReason reboot_reason = {reason, 0};
   reboot_reason_set(&reboot_reason);
 
-  display_clear();
-  display_set_enabled(false);
+  (void)pbl_display_clear(DISPLAY);
+  (void)pbl_display_disable(DISPLAY);
 
   system_reset_prepare();
   reboot_reason_set_restarted_safely();

@@ -3,22 +3,19 @@
 
 #include <string.h>
 
+#include <pbl/drivers/display.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/compositor_private.h>
-#include <pbl/util/bitops.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gcolor_definitions.h>
 #include <applib/graphics/gtypes.h>
-
-//! This variable is used when we are flushing s_framebuffer out to the display driver.
-//! It's set to the current row index that we are DMA'ing out to the display.
-static uint16_t s_current_flush_line;
+#include <kernel/events.h>
 
 static void (*s_update_complete_handler)(bool success);
 
@@ -26,118 +23,87 @@ static RtcTicks s_flush_start_ticks;
 static uint32_t s_flush_count;
 static RtcTicks s_flush_ticks;
 
+static uint16_t s_flush_y0;
+static uint16_t s_flush_y1;
+
+// Rounded corners, drawn into the framebuffer for the flush and undone after it. Each entry is
+// the number of pixels masked from the left and right edges of a row from the top or bottom.
 #ifdef CONFIG_BOARD_ASTERIX
 static const uint8_t s_corner_shape[] = {3, 1, 1};
-static uint8_t s_line_buffer[FRAMEBUFFER_BYTES_PER_ROW];
-#endif
-
-#ifdef CONFIG_BOARD_OBELIX
-// Rounded corner mask for Obelix — radius 3 quarter-circle.
-// Each entry is the number of pixels to mask from the left/right edge.
-// Shape follows a quarter-circle: at row y, mask pixels where x < sqrt(r² - y²)
-static const uint8_t s_corner_shape[] = {3, 3, 2, 1};
-
-// For Obelix, we modify the framebuffer directly because the display driver
-// does in-place pixel format conversion and expects row.data to point into
-// the compositor's framebuffer. We save original corner pixels here to restore later.
-#define CORNER_SAVE_ROWS ARRAY_LENGTH(s_corner_shape)
-#define CORNER_MAX_WIDTH 3
-static uint8_t s_saved_corners[CORNER_SAVE_ROWS * 2]
-                              [CORNER_MAX_WIDTH * 2]; // [row][left+right pixels]
-static uint16_t s_dirty_y0;
-static uint16_t s_dirty_y1;
-#endif
-
-//! display_update get next line callback
-static bool prv_flush_get_next_line_cb(DisplayRow *row) {
-  FrameBuffer *fb = compositor_get_framebuffer();
-
-  s_current_flush_line = MAX(s_current_flush_line, fb->dirty_rect.origin.y);
-  const uint16_t y_end = fb->dirty_rect.origin.y + fb->dirty_rect.size.h;
-  if (s_current_flush_line < y_end) {
-    row->address = s_current_flush_line;
-    void *fb_line = framebuffer_get_line(fb, s_current_flush_line);
-#ifdef CONFIG_BOARD_ASTERIX
-    // Draw rounded corners onto the screen without modifying the
-    // system framebuffer.
-    if (s_current_flush_line < ARRAY_LENGTH(s_corner_shape) ||
-        s_current_flush_line >= DISP_ROWS - ARRAY_LENGTH(s_corner_shape)) {
-      memcpy(s_line_buffer, fb_line, FRAMEBUFFER_BYTES_PER_ROW);
-      uint8_t corner_idx = (s_current_flush_line < ARRAY_LENGTH(s_corner_shape))
-                               ? s_current_flush_line
-                               : DISP_ROWS - s_current_flush_line - 1;
-      uint8_t corner_width = s_corner_shape[corner_idx];
-      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
-        pbl_bitset8_clear(s_line_buffer, pixel);
-        pbl_bitset8_clear(s_line_buffer, DISP_COLS - pixel - 1);
-      }
-      row->data = s_line_buffer;
-    } else {
-      row->data = fb_line;
-    }
 #elifdef CONFIG_BOARD_OBELIX
-    // Draw rounded corners by modifying the framebuffer directly.
-    // The display driver does in-place format conversion and expects row.data
-    // to point into the compositor's framebuffer. We save and restore corners.
-    if (s_current_flush_line < ARRAY_LENGTH(s_corner_shape) ||
-        s_current_flush_line >= DISP_ROWS - ARRAY_LENGTH(s_corner_shape)) {
-      uint8_t corner_idx = (s_current_flush_line < ARRAY_LENGTH(s_corner_shape))
-                               ? s_current_flush_line
-                               : DISP_ROWS - s_current_flush_line - 1;
-      uint8_t save_idx = (s_current_flush_line < ARRAY_LENGTH(s_corner_shape))
-                             ? s_current_flush_line
-                             : CORNER_SAVE_ROWS + corner_idx;
-      uint8_t corner_width = s_corner_shape[corner_idx];
-      uint8_t *line = fb_line;
-      // Save original corner pixels
-      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
-        s_saved_corners[save_idx][pixel] = line[pixel];
-        s_saved_corners[save_idx][CORNER_MAX_WIDTH + pixel] = line[DISP_COLS - pixel - 1];
-      }
-      // Mask corner pixels to black (rounded corner effect)
-      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
-        line[pixel] = GColorBlackARGB8;
-        line[DISP_COLS - pixel - 1] = GColorBlackARGB8;
-      }
-    }
-    row->data = fb_line;
-#else
-    row->data = fb_line;
+static const uint8_t s_corner_shape[] = {3, 3, 2, 1};
 #endif
-    s_current_flush_line++;
-    return true;
-  }
 
-  return false;
+#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX)
+#define CORNER_ROWS      ARRAY_LENGTH(s_corner_shape)
+#define CORNER_MAX_WIDTH 3
+
+#if PBL_BW
+#define PIXEL_BYTE(x) ((x) / 8)
+#else
+#define PIXEL_BYTE(x) (x)
+#endif
+
+// Bytes holding the corner pixels of each masked row: [row][left, right][byte]
+static uint8_t s_saved_corners[CORNER_ROWS * 2][2][CORNER_MAX_WIDTH];
+
+static void prv_mask_pixel(uint8_t *line, uint16_t x) {
+#if PBL_BW
+  line[x / 8] &= ~(1U << (x % 8));
+#else
+  line[x] = GColorBlackARGB8;
+#endif
 }
 
-//! display_update complete callback
-static void prv_flush_complete_cb(bool success) {
-#ifdef CONFIG_BOARD_OBELIX
-  // Restore original corner pixels that we modified before the display update
-  FrameBuffer *fb = compositor_get_framebuffer();
-  for (uint8_t i = 0; i < CORNER_SAVE_ROWS; ++i) {
-    uint8_t corner_width = s_corner_shape[i];
-    // Top corners (only if row was in dirty region)
-    if (i >= s_dirty_y0 && i <= s_dirty_y1) {
-      uint8_t *top_line = framebuffer_get_line(fb, i);
-      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
-        top_line[pixel] = s_saved_corners[i][pixel];
-        top_line[DISP_COLS - pixel - 1] = s_saved_corners[i][CORNER_MAX_WIDTH + pixel];
-      }
+static void prv_corner_row(uint16_t y, uint8_t *width, uint8_t *save_idx) {
+  if (y < CORNER_ROWS) {
+    *width = s_corner_shape[y];
+    *save_idx = y;
+  } else if (y >= DISP_ROWS - CORNER_ROWS) {
+    *width = s_corner_shape[DISP_ROWS - y - 1];
+    *save_idx = CORNER_ROWS + (DISP_ROWS - y - 1);
+  } else {
+    *width = 0;
+  }
+}
+
+static void prv_corners_apply(FrameBuffer *fb, bool mask) {
+  for (uint16_t y = s_flush_y0; y <= s_flush_y1; y++) {
+    uint8_t width;
+    uint8_t idx;
+
+    prv_corner_row(y, &width, &idx);
+    if (width == 0) {
+      continue;
     }
-    // Bottom corners (only if row was in dirty region)
-    uint8_t bottom_row = DISP_ROWS - i - 1;
-    if (bottom_row >= s_dirty_y0 && bottom_row <= s_dirty_y1) {
-      uint8_t *bottom_line = framebuffer_get_line(fb, bottom_row);
-      for (uint8_t pixel = 0; pixel < corner_width; ++pixel) {
-        bottom_line[pixel] = s_saved_corners[CORNER_SAVE_ROWS + i][pixel];
-        bottom_line[DISP_COLS - pixel - 1] =
-            s_saved_corners[CORNER_SAVE_ROWS + i][CORNER_MAX_WIDTH + pixel];
+
+    uint8_t *line = (uint8_t *)framebuffer_get_line(fb, y);
+    uint16_t left = PIXEL_BYTE(0);
+    uint16_t right = PIXEL_BYTE(DISP_COLS - width);
+    uint16_t len = PIXEL_BYTE(width - 1) - left + 1;
+
+    if (mask) {
+      memcpy(s_saved_corners[idx][0], &line[left], len);
+      memcpy(s_saved_corners[idx][1], &line[right], len);
+      for (uint8_t x = 0; x < width; x++) {
+        prv_mask_pixel(line, x);
+        prv_mask_pixel(line, DISP_COLS - x - 1);
       }
+    } else {
+      memcpy(&line[left], s_saved_corners[idx][0], len);
+      memcpy(&line[right], s_saved_corners[idx][1], len);
     }
   }
+}
+#else
+static void prv_corners_apply(FrameBuffer *fb, bool mask) {
+}
 #endif
+
+static void prv_flush_finish(void *data) {
+  bool success = (data == nullptr);
+
+  prv_corners_apply(compositor_get_framebuffer(), false);
 
   RtcTicks elapsed = rtc_get_ticks() - s_flush_start_ticks;
   pbl_irq_lock();
@@ -145,12 +111,31 @@ static void prv_flush_complete_cb(bool success) {
   s_flush_ticks += elapsed;
   pbl_irq_unlock();
 
-  s_current_flush_line = 0;
   framebuffer_reset_dirty(compositor_get_framebuffer());
 
   if (s_update_complete_handler) {
     s_update_complete_handler(success);
   }
+}
+
+// The display reports from its interrupt, or synchronously from compositor_display_update()
+static void prv_flush_done(int status, void *arg) {
+  void *data = (status == 0) ? nullptr : (void *)1;
+
+  if (!pbl_in_isr()) {
+    prv_flush_finish(data);
+    return;
+  }
+
+  PebbleEvent e = {
+    .type = PEBBLE_CALLBACK_EVENT,
+    .callback = {
+      .callback = prv_flush_finish,
+      .data = data,
+    },
+  };
+
+  event_put_isr(&e);
 }
 
 void compositor_display_update(void (*handle_update_complete_cb)(bool success)) {
@@ -160,20 +145,26 @@ void compositor_display_update(void (*handle_update_complete_cb)(bool success)) 
   }
   // Every flush drops the mirror; the compositor restores it after an app frame's flush
   compositor_app_framebuffer_mirror_invalidate();
-#ifdef CONFIG_BOARD_OBELIX
-  // Capture dirty region bounds for corner restoration later
-  s_dirty_y0 = fb->dirty_rect.origin.y;
-  s_dirty_y1 = fb->dirty_rect.origin.y + fb->dirty_rect.size.h - 1;
-#endif
-  s_update_complete_handler = handle_update_complete_cb;
-  s_current_flush_line = 0;
 
+  s_flush_y0 = fb->dirty_rect.origin.y;
+  s_flush_y1 = fb->dirty_rect.origin.y + fb->dirty_rect.size.h - 1;
+  s_update_complete_handler = handle_update_complete_cb;
   s_flush_start_ticks = rtc_get_ticks();
-  display_update(&prv_flush_get_next_line_cb, &prv_flush_complete_cb);
+
+  prv_corners_apply(fb, true);
+
+  struct pbl_display_buffer buf = {
+    .data = (uint8_t *)framebuffer_get_line(fb, 0),
+    .pitch = FRAMEBUFFER_BYTES_PER_ROW,
+  };
+
+  if (pbl_display_update(DISPLAY, &buf, s_flush_y0, s_flush_y1, prv_flush_done, nullptr) != 0) {
+    prv_flush_finish((void *)1);
+  }
 }
 
 bool compositor_display_update_in_progress(void) {
-  return display_update_in_progress();
+  return pbl_display_update_in_progress(DISPLAY);
 }
 
 void pbl_analytics_external_collect_display_stats(void) {
