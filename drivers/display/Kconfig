@@ -11,10 +11,8 @@ if DISPLAY
 config DISPLAY_SF32LB_LCDC
     bool "SiFli SF32LB LCD controller"
     default y if SOC_SF32LB52
-    depends on PINCTRL
+    depends on CLK_SF32LB && PINCTRL && RESET_SF32LB
     select PANEL
-    select HAL_SIFLI
-    select HAL_SIFLI_LCD
     help
       Support for the SiFli SF32LB LCD controller, driving a JDI
       memory-in-pixel panel.

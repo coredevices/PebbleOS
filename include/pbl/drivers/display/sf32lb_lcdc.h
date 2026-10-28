@@ -6,13 +6,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <pbl/drivers/clk.h>
 #include <pbl/drivers/display.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/panel.h>
 #include <pbl/drivers/pinctrl.h>
-
-#include <bf0_hal.h>
-#include <bf0_hal_lcdc.h>
+#include <pbl/drivers/reset.h>
+#include <pbl/kernel/irq.h>
 
 /**
  * @defgroup drivers_display_sf32lb_lcdc SF32LB LCD controller
@@ -25,8 +25,11 @@
  * board.
  *
  * @code{.c}
- * PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", LCDC1, LCDC1_IRQn, &s_panel.panel, 200, 228,
- *                                false, PBL_PINCTRL(&s_lcdc_default, NULL, 0), s_discharge,
+ * PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_IRQN(LCDC1),
+ *                                PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_LCDC1),
+ *                                PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
+ *                                &s_panel.panel, 200, 228, false,
+ *                                PBL_PINCTRL(&s_lcdc_default, NULL, 0), s_discharge,
  *                                ARRAY_LENGTH(s_discharge));
  * PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_sf32lb_lcdc_irq_handler, &s_display, 0);
  * @endcode
@@ -35,11 +38,11 @@
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_display_sf32lb_lcdc_state {
-  LCDC_HandleTypeDef hlcdc;
   uint8_t *fb;
   uint32_t pitch;
   uint16_t y0;
   uint16_t y1;
+  uint16_t max_line;
   bool rotated;
 };
 /** @endcond */
@@ -51,9 +54,13 @@ struct pbl_display_sf32lb_lcdc {
   /** Driver runtime state. */
   struct pbl_display_sf32lb_lcdc_state *state;
   /** Controller registers. */
-  LCD_IF_TypeDef *regs;
+  uintptr_t base;
   /** Controller interrupt. */
-  IRQn_Type irqn;
+  pbl_irq_t irqn;
+  /** Controller clock. */
+  struct pbl_clk clk;
+  /** Controller reset. */
+  struct pbl_reset rst;
   /** Panel. */
   const struct pbl_panel *panel;
   /** Panel interface pins. */
@@ -73,8 +80,10 @@ extern const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops;
  *
  * @param sym Symbol of the display.
  * @param _name Name.
- * @param _regs Controller registers.
- * @param _irqn Controller interrupt.
+ * @param _base Controller registers.
+ * @param _irqn Controller interrupt, from PBL_IRQN().
+ * @param _clk Controller clock, from PBL_CLK().
+ * @param _rst Controller reset, from PBL_RESET().
  * @param _panel Panel.
  * @param _width Width, in pixels, the panel's visible columns.
  * @param _height Height, in pixels, the panel's visible lines.
@@ -83,16 +92,18 @@ extern const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops;
  * @param _discharge Pins driven low while the panel is power cycled, or NULL.
  * @param _num_discharge Number of @p _discharge pins.
  */
-#define PBL_DISPLAY_SF32LB_LCDC_DEFINE(sym, _name, _regs, _irqn, _panel, _width, _height,        \
-                                       _rotated, _pinctrl, _discharge, _num_discharge)           \
+#define PBL_DISPLAY_SF32LB_LCDC_DEFINE(sym, _name, _base, _irqn, _clk, _rst, _panel, _width,     \
+                                       _height, _rotated, _pinctrl, _discharge, _num_discharge)  \
   PBL_DISPLAY_STATE_DEFINE(sym);                                                                 \
   static struct pbl_display_sf32lb_lcdc_state sym##_lcdc_state;                                  \
   const struct pbl_display_sf32lb_lcdc sym = {                                                   \
     .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sf32lb_lcdc_ops, nullptr, _width, _height, \
                              PBL_DISPLAY_FORMAT_ARGB2222, _rotated),                             \
     .state = &sym##_lcdc_state,                                                                  \
-    .regs = (_regs),                                                                             \
+    .base = (_base),                                                                             \
     .irqn = (_irqn),                                                                             \
+    .clk = _clk,                                                                                 \
+    .rst = _rst,                                                                                 \
     .panel = (_panel),                                                                           \
     .pinctrl = _pinctrl,                                                                         \
     .discharge = (_discharge),                                                                   \

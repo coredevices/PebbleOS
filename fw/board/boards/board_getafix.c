@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/backlight/aw9364e.h>
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
@@ -13,12 +14,14 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
+#include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/drivers/vibe/aw8623x.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
+#include <hardware/sf32lb52_memorymap.h>
 
 static UARTDeviceState s_dbg_uart_state = {
   .huart =
@@ -161,8 +164,10 @@ PBL_PANEL_JDI_MIP_DEFINE(s_panel, "panel", &s_panel_timing, PBL_GPIO(SF32LB_GPIO
                          PBL_GPIO(SF32LB_GPIO1, 9, 0),
                          PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0));
 
-PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", LCDC1, LCDC1_IRQn, &s_panel.panel,
-                               PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, true,
+PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_IRQN(LCDC1),
+                               PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_LCDC1),
+                               PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
+                               &s_panel.panel, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, true,
                                PBL_PINCTRL(&s_display_default, nullptr, 0), s_display_discharge,
                                ARRAY_LENGTH(s_display_discharge));
 
