@@ -12,6 +12,7 @@ if extras_dir not in sys.path:
 
 import sdk_paths  # noqa: F401
 from generate_appinfo import generate_appinfo_c
+from pebble_project import ProjectError, app_info_from_package_json
 from process_sdk_resources import generate_resources
 from sdk_helpers import (
     configure_libraries,
@@ -34,28 +35,10 @@ def _extract_project_info(conf, info_json, json_filename):
     :return: JSON blob containing project information for build
     """
     if "pebble" in info_json:
-        project_info = info_json["pebble"]
-        validate_message_keys_object(conf, project_info, "package.json")
-
-        project_info["name"] = info_json["name"]
-        project_info["shortName"] = project_info["longName"] = project_info[
-            "displayName"
-        ]
-
-        # Validate version specified in package.json to avoid issues later
-        if not info_json["version"]:
-            conf.fatal("Project is missing a version")
-        version = _validate_version(conf, info_json["version"])
-        project_info["versionLabel"] = version
-
-        if isinstance(info_json["author"], str):
-            project_info["companyName"] = (
-                info_json["author"].split("(", 1)[0].split("<", 1)[0].strip()
-            )
-        elif isinstance(info_json["author"], dict) and "name" in info_json["author"]:
-            project_info["companyName"] = info_json["author"]["name"]
-        else:
-            conf.fatal("Missing author name in project info")
+        try:
+            project_info = app_info_from_package_json(info_json)
+        except ProjectError as e:
+            conf.fatal(str(e))
     elif "package.json" == json_filename:
         try:
             with open(
@@ -114,38 +97,6 @@ def _write_appinfo_json_file(task):
         task.generator.bld.fatal(
             "Unable to find project info to populate appinfo.json file with"
         )
-
-
-def _validate_version(ctx, original_version):
-    """
-    Validates the format of the version field in an app's project info
-    to be compatible with the Pebble FW.
-    :param ctx: the ConfigureContext object
-    :param version: the version provided in project info (package.json/appinfo.json)
-    :return: a MAJOR.MINOR version that is acceptable for Pebble FW
-    """
-    version = original_version.split(".")
-    if len(version) > 3:
-        ctx.fatal(
-            "App versions must be of the format MAJOR or MAJOR.MINOR or MAJOR.MINOR.PATCH. "
-            f"An invalid version of {original_version} was specified for the app. Try {version[0]}.{version[1]}.{version[2]} instead"
-        )
-    elif not (0 <= int(version[0]) <= 255):
-        ctx.fatal(
-            f"An invalid or out of range value of {version[0]} was specified for the major version of "
-            "the app. The valid range is 0-255."
-        )
-    elif not (0 <= int(version[1]) <= 255):
-        ctx.fatal(
-            f"An invalid or out of range value of {version[1]} was specified for the minor version of "
-            "the app. The valid range is 0-255."
-        )
-    # note: version[2] does not reach the Pebble FW (it is stripped off by generate_appinfo)
-    # so has no upper limit. Just make sure it's an int.
-    if len(version) == 3:
-        int(version[2])
-
-    return ".".join(version[:3])
 
 
 def options(opt):
