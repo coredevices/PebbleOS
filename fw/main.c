@@ -7,7 +7,6 @@
 #include <pbl/device.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/hrm.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
@@ -170,10 +169,6 @@ int main(void) {
   resource_init();
 
   system_resource_init();
-
-#ifdef CONFIG_HRM
-  hrm_init(HRM);
-#endif
 
   // Stop boot splash before initializing compositor
   boot_splash_stop();

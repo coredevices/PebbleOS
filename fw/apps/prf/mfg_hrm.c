@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/hrm.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/util/units.h>
 

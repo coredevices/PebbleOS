@@ -337,15 +337,6 @@ static void *prv_buffer_slot(PebbleEvent *event) {
         return &event->bluetooth.le.gatt_client_service.info;
       }
       break;
-#ifdef CONFIG_MFG
-    case PEBBLE_HRM_EVENT:
-      if (event->hrm.event_type == HRMEvent_CTR) {
-        return &event->hrm.ctr;
-      } else if (event->hrm.event_type == HRMEvent_Leakage) {
-        return &event->hrm.leakage;
-      }
-      break;
-#endif
     case PEBBLE_APP_GLANCE_EVENT:
       return &event->app_glance.app_uuid;
 

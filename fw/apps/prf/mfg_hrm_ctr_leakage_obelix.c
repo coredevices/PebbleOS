@@ -3,32 +3,30 @@
 
 #include "mfg_hrm_ctr_leakage_obelix.h"
 
+#include <errno.h>
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
-#include <pbl/drivers/accel.h>
-#include <pbl/drivers/hrm.h>
-#include <pbl/drivers/hrm/gh3x2x.h>
+#include <pbl/drivers/ppg.h>
+#include <pbl/drivers/ppg/gh3x2x.h>
+#include <pbl/drivers/ppg/gh3x2x_regs.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/evented_timer.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/hrm/hrm_manager.h>
-#include <pbl/util/bitops.h>
+#include <pbl/services/hrm/hrm_ppg.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
-#include <pbl/util/trig.h>
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
-#include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <applib/ui/window_private.h>
 #include <apps/prf/mfg_test_result.h>
-#include <gh_demo.h>
-#include <mfg/mfg_info.h>
 #include <process_management/pebble_process_md.h>
-#include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
 
@@ -36,27 +34,141 @@
 #define CTR_STRING_LEN     128
 #define LEAKAGE_STRING_LEN 128
 #define RESULT_DISPLAY_MS  1000
+#define POLL_MS            100
 
-#define PPG_GR_CTR_THS0   (423.0f)
-#define PPG_GR_CTR_THS1   (441.0f)
-#define PPG_IR_CTR_THS0   (339.0f)
-#define PPG_IR_CTR_THS1   (336.0f)
-#define PPG_RED_CTR_THS0  (564.0f)
-#define PPG_RED_CTR_THS1  (597.0f)
-#define PPG_GR_LEAK_THS0  (1.87f)
-#define PPG_GR_LEAK_THS1  (2.4f)
-#define PPG_IR_LEAK_THS0  (10.2f)
-#define PPG_IR_LEAK_THS1  (9.8f)
-#define PPG_RED_LEAK_THS0 (7.0f)
-#define PPG_RED_LEAK_THS1 (9.6f)
+#define TEST_RATE_HZ       25U
+#define TEST_DROP_PERIODS  30U
+#define TEST_PERIODS       80U
+#define TEST_LED_UA        20000U
+#define CTR_FIRST_SLOT     0U
+#define LEAKAGE_FIRST_SLOT 3U
+#define CTR_GAIN_OHM       10000U
+#define LEAKAGE_GAIN_OHM   100000U
+#define TEST_RX_MASK       0x3U
+#define TEST_NUM_RX        2U
+
+/* Results are photocurrent per LED current, in nA/mA, scaled by 100. */
+#define RESULT_SCALE 100
+#define PA_PER_NA    1000
+#define UA_PER_MA    1000
+
+enum {
+  CH_GREEN,
+  CH_IR,
+  CH_RED,
+  CH_NUM_LEDS,
+};
+
+#define NUM_CHANNELS (CH_NUM_LEDS * TEST_NUM_RX)
+
+/* Indexed green rx0/rx1, IR rx0/rx1, red rx0/rx1. */
+static const int32_t s_ctr_min[NUM_CHANNELS] = {42300, 44100, 33900, 33600, 56400, 59700};
+static const int32_t s_leakage_max[NUM_CHANNELS] = {187, 240, 1020, 980, 700, 960};
+
+/* Slots 0-2 measure CTR at 10 kOhm; slots 3-5 leakage, at the 100 kOhm reset gain. */
+static const struct pbl_gh3x2x_reg s_test_regs[] = {
+  {GH3X2X_CTRL, 0x0610},
+  {GH3X2X_SAMPLE_RATE, 0x001F},
+  {GH3X2X_FIFO_WATERMARK, 0x00A0},
+  {GH3X2X_WAKEUP_TIMER, 0x000D},
+  {GH3X2X_SLOT_SEQ(0), 0x0100},
+  {GH3X2X_SLOT_SEQ(2), 0x0302},
+  {GH3X2X_SLOT_SEQ(4), 0x0504},
+  {GH3X2X_SLOT_SEQ(6), 0x0806},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL3), 0x0C15},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL4), 0x4400},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL10), 0x0019},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL3), 0x0C15},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL4), 0x4400},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL10), 0x0219},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL3), 0x0C15},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL4), 0x4400},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL10), 0x0400},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL11), 0x0219},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL3), 0x0C15},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL10), 0x0019},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL3), 0x0C15},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL10), 0x0219},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL3), 0x0C15},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL10), 0x0400},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL11), 0x0219},
+  {GH3X2X_SLOT_REG(6, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(6, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(6, GH3X2X_SLOT_CTRL3), 0x0006},
+  {GH3X2X_SLOT_REG(6, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(6, GH3X2X_SLOT_CTRL10), 0x0400},
+  {GH3X2X_SLOT_REG(6, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_TIMER(0), 0x0223},
+  {GH3X2X_SLOT_TIMER(1), 0x0223},
+  {GH3X2X_SLOT_TIMER(2), 0x0223},
+  {GH3X2X_SLOT_TIMER(3), 0x0223},
+  {GH3X2X_SLOT_TIMER(4), 0x0223},
+  {GH3X2X_SLOT_TIMER(5), 0x0223},
+  {GH3X2X_SLOT_TIMER(6), 0x01AF},
+  {GH3X2X_AFE_CTRL0, 0x0120},
+  {GH3X2X_AFE_CTRL4, 0x0551},
+  {GH3X2X_INT_CR2, 0x4F60},
+  {GH3X2X_INT_PWR, 0x000A},
+  {GH3X2X_OSC32K_TEMP, 0x0008},
+  {GH3X2X_LED_FS, 0x0233},
+  {GH3X2X_ECG_IA_AD0, 0x0400},
+  {GH3X2X_ECG_IA_AD2, 0x2310},
+  {GH3X2X_EFUSE_CTRL, 0x0000},
+};
+
+static const struct pbl_ppg_slot s_test_slots[] = {
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_GREEN}, .rx_mask = TEST_RX_MASK},
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_IR}, .rx_mask = TEST_RX_MASK},
+  {.led_mask = 0x2, .leds = {[1] = PBL_PPG_LED_RED}, .rx_mask = TEST_RX_MASK},
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_GREEN}, .rx_mask = TEST_RX_MASK},
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_IR}, .rx_mask = TEST_RX_MASK},
+  {.led_mask = 0x2, .leds = {[1] = PBL_PPG_LED_RED}, .rx_mask = TEST_RX_MASK},
+  {.rx_mask = TEST_RX_MASK},
+};
+
+static const struct pbl_gh3x2x_setup s_test_setup = {
+  .regs = s_test_regs,
+  .num_regs = ARRAY_LENGTH(s_test_regs),
+  .slots = s_test_slots,
+  .num_slots = ARRAY_LENGTH(s_test_slots),
+};
 
 typedef enum {
-  TestMode_NULL,
+  TestMode_None,
   TestMode_CTR,
   TestMode_Leakage,
   TestMode_Algo_HR,
-  TestMode_Algo_SPO2,
+  TestMode_Algo_SpO2,
 } HRMTestMode;
+
+static struct {
+  uint8_t first_slot;
+  uint32_t periods;
+  int64_t sum[NUM_CHANNELS];
+  bool done;
+} s_capture;
 
 typedef struct {
   Window window;
@@ -71,6 +183,9 @@ typedef struct {
   char leak_string[LEAKAGE_STRING_LEN];
   HRMSessionRef hrm_session;
   HRMTestMode test_mode;
+  uint32_t gain_ohm;
+  bool capture_pending;
+  const char *capture_status;
 
   bool ctr_received;
   bool leak_received;
@@ -79,81 +194,205 @@ typedef struct {
   uint64_t result_start_time;
 } AppData;
 
-static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
-  AppData *app_data = app_state_get_user_data();
+static void prv_samples(const struct pbl_ppg *ppg, const struct pbl_ppg_batch *batch,
+                        void *user_data) {
+  for (uint16_t i = 0U; i < batch->num_samples; i++) {
+    const struct pbl_ppg_sample *sample = &batch->samples[i];
+    uint8_t ch;
 
-  if (e->type == PEBBLE_HRM_EVENT) {
-    if (app_data->test_mode >= TestMode_Algo_HR) {
-      if (e->hrm.event_type == HRMEvent_BPM) {
-        snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling... %d",
-                 HRM->state->is_wear);
-        memset(app_data->ctr_string, 0, CTR_STRING_LEN);
-        snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d C:%d", e->hrm.bpm.bpm,
-                 e->hrm.bpm.confidence);
-        PBL_LOG_DBG("%s", app_data->ctr_string);
-      } else if (e->hrm.event_type == HRMEvent_SpO2) {
-        snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling... %d",
-                 HRM->state->is_wear);
-        memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
-        snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d C:%d", e->hrm.spo2.percent,
-                 e->hrm.spo2.confidence);
-        PBL_LOG_DBG("%s", app_data->leak_string);
-      }
-    } else {
-      if (e->hrm.event_type == HRMEvent_CTR) {
-        bool rst =
-            (e->hrm.ctr->ctr[0] >= PPG_GR_CTR_THS0) && (e->hrm.ctr->ctr[1] >= PPG_GR_CTR_THS1) &&
-            (e->hrm.ctr->ctr[2] >= PPG_IR_CTR_THS0) && (e->hrm.ctr->ctr[3] >= PPG_IR_CTR_THS1) &&
-            (e->hrm.ctr->ctr[4] >= PPG_RED_CTR_THS0) && (e->hrm.ctr->ctr[5] >= PPG_RED_CTR_THS1);
-        app_data->ctr_received = true;
-        app_data->ctr_passed = rst;
-        memset(app_data->ctr_string, 0, CTR_STRING_LEN);
-        snprintf(app_data->ctr_string, CTR_STRING_LEN,
-                 "CTR:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d",
-                 rst ? "PASS" : "FAILED", (int)e->hrm.ctr->ctr[0],
-                 (int)(e->hrm.ctr->ctr[0] * 100) % 100, (int)e->hrm.ctr->ctr[2],
-                 (int)(e->hrm.ctr->ctr[2] * 100) % 100, (int)e->hrm.ctr->ctr[4],
-                 (int)(e->hrm.ctr->ctr[4] * 100) % 100, (int)e->hrm.ctr->ctr[1],
-                 (int)(e->hrm.ctr->ctr[1] * 100) % 100, (int)e->hrm.ctr->ctr[3],
-                 (int)(e->hrm.ctr->ctr[3] * 100) % 100, (int)e->hrm.ctr->ctr[5],
-                 (int)(e->hrm.ctr->ctr[5] * 100) % 100);
-        PBL_LOG_DBG("%s", app_data->ctr_string);
-      } else if (e->hrm.event_type == HRMEvent_Leakage) {
-        bool rst = (e->hrm.leakage->leakage[0] <= PPG_GR_LEAK_THS0) &&
-                   (e->hrm.leakage->leakage[1] <= PPG_GR_LEAK_THS1) &&
-                   (e->hrm.leakage->leakage[2] <= PPG_IR_LEAK_THS0) &&
-                   (e->hrm.leakage->leakage[3] <= PPG_IR_LEAK_THS1) &&
-                   (e->hrm.leakage->leakage[4] <= PPG_RED_LEAK_THS0) &&
-                   (e->hrm.leakage->leakage[5] <= PPG_RED_LEAK_THS1);
-        app_data->leak_received = true;
-        app_data->leak_passed = rst;
-        memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
-        snprintf(app_data->leak_string, LEAKAGE_STRING_LEN,
-                 "Leak:(%s)\n%4d.%02d %4d.%02d %4d.%02d\n%4d.%02d %4d.%02d %4d.%02d",
-                 rst ? "PASS" : "FAILED", (int)e->hrm.leakage->leakage[0],
-                 (int)(e->hrm.leakage->leakage[0] * 100) % 100, (int)e->hrm.leakage->leakage[2],
-                 (int)(e->hrm.leakage->leakage[2] * 100) % 100, (int)e->hrm.leakage->leakage[4],
-                 (int)(e->hrm.leakage->leakage[4] * 100) % 100, (int)e->hrm.leakage->leakage[1],
-                 (int)(e->hrm.leakage->leakage[1] * 100) % 100, (int)e->hrm.leakage->leakage[3],
-                 (int)(e->hrm.leakage->leakage[3] * 100) % 100, (int)e->hrm.leakage->leakage[5],
-                 (int)(e->hrm.leakage->leakage[5] * 100) % 100);
-        PBL_LOG_DBG("%s", app_data->leak_string);
-      }
-
-      // When both CTR and leakage results are in, report and start close timer
-      if (app_data->ctr_received && app_data->leak_received && app_data->result_start_time == 0) {
-        bool passed = app_data->ctr_passed && app_data->leak_passed;
-        mfg_test_result_report(MfgTestId_HrmCtrLeakage, passed, 0);
-        snprintf(app_data->status_string, STATUS_STRING_LEN, passed ? "PASS" : "FAIL");
-        app_data->result_start_time = pbl_uptime_ticks();
-      }
+    if (s_capture.done || (sample->rx >= TEST_NUM_RX)) {
+      continue;
     }
-    layer_mark_dirty(&app_data->window.layer);
+
+    if ((sample->slot < s_capture.first_slot) ||
+        (sample->slot >= (s_capture.first_slot + CH_NUM_LEDS))) {
+      continue;
+    }
+
+    ch = sample->slot - s_capture.first_slot;
+
+    if ((ch == CH_GREEN) && (sample->rx == 0U)) {
+      s_capture.periods++;
+    }
+
+    if ((s_capture.periods > TEST_DROP_PERIODS) &&
+        (s_capture.periods <= (TEST_DROP_PERIODS + TEST_PERIODS))) {
+      s_capture.sum[ch * TEST_NUM_RX + sample->rx] += sample->value;
+    }
+
+    if (s_capture.periods > (TEST_DROP_PERIODS + TEST_PERIODS)) {
+      s_capture.done = true;
+    }
   }
 }
 
-static void prv_result_timer_callback(void *cb_data) {
+static const struct pbl_ppg_listener s_listener = {.samples = prv_samples};
+
+static bool s_test_setup_loaded;
+
+static int prv_start_capture(uint8_t first_slot) {
+  struct pbl_ppg_config config = {.sample_rate_hz = TEST_RATE_HZ, .batch = TEST_RATE_HZ};
+  int ret;
+
+  ret = pbl_ppg_stop(PPG);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_gh3x2x_load_setup(PPG, &s_test_setup);
+  if (ret != 0) {
+    return ret;
+  }
+
+  s_test_setup_loaded = true;
+
+  pbl_ppg_lock(PPG);
+  memset(&s_capture, 0, sizeof(s_capture));
+  s_capture.first_slot = first_slot;
+  pbl_ppg_unlock(PPG);
+
+  for (uint8_t ch = 0U; ch < CH_NUM_LEDS; ch++) {
+    config.rx_mask[first_slot + ch] = TEST_RX_MASK;
+  }
+
+  ret = pbl_ppg_configure(PPG, &config);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_ppg_set_listener(PPG, &s_listener);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return pbl_ppg_start(PPG);
+}
+
+static void prv_stop_capture(void) {
+  (void)pbl_ppg_stop(PPG);
+  (void)pbl_ppg_set_listener(PPG, nullptr);
+
+  if (s_test_setup_loaded) {
+    s_test_setup_loaded = false;
+    (void)pbl_gh3x2x_load_setup(PPG, nullptr);
+  }
+}
+
+static bool prv_take_results(uint32_t gain_ohm, int32_t *results) {
+  const struct pbl_ppg_info *info = pbl_ppg_get_info(PPG);
+  const struct pbl_ppg_channel channel = {.calibrated_gain_ohm = gain_ohm};
+  bool done;
+
+  pbl_ppg_lock(PPG);
+  done = s_capture.done;
+  if (done) {
+    for (uint8_t i = 0U; i < NUM_CHANNELS; i++) {
+      int32_t mean = (int32_t)(s_capture.sum[i] / (int64_t)TEST_PERIODS);
+      int64_t pa = pbl_ppg_value_to_pa(info, &channel, mean);
+
+      results[i] = (int32_t)((pa * RESULT_SCALE * UA_PER_MA) / (PA_PER_NA * TEST_LED_UA));
+    }
+  }
+  pbl_ppg_unlock(PPG);
+
+  return done;
+}
+
+static void prv_format(char *buf, size_t len, const char *name, bool passed,
+                       const int32_t *results) {
+  int32_t whole[NUM_CHANNELS];
+  int32_t frac[NUM_CHANNELS];
+
+  for (uint8_t i = 0U; i < NUM_CHANNELS; i++) {
+    whole[i] = results[i] / RESULT_SCALE;
+    frac[i] = ABS(results[i] % RESULT_SCALE);
+  }
+
+  snprintf(buf, len,
+           "%s:(%s)\n%4" PRId32 ".%02" PRId32 " %4" PRId32 ".%02" PRId32 " %4" PRId32 ".%02" PRId32
+           "\n%4" PRId32 ".%02" PRId32 " %4" PRId32 ".%02" PRId32 " %4" PRId32 ".%02" PRId32,
+           name, passed ? "PASS" : "FAILED", whole[0], frac[0], whole[2], frac[2], whole[4],
+           frac[4], whole[1], frac[1], whole[3], frac[3], whole[5], frac[5]);
+}
+
+static bool prv_ctr_passed(const int32_t *results) {
+  for (uint8_t i = 0U; i < NUM_CHANNELS; i++) {
+    if (results[i] < s_ctr_min[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool prv_leakage_passed(const int32_t *results) {
+  for (uint8_t i = 0U; i < NUM_CHANNELS; i++) {
+    if (results[i] > s_leakage_max[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static void prv_check_capture(AppData *app_data) {
+  int32_t results[NUM_CHANNELS];
+
+  if (!prv_take_results(app_data->gain_ohm, results)) {
+    return;
+  }
+
+  prv_stop_capture();
+
+  if (app_data->test_mode == TestMode_CTR) {
+    app_data->ctr_received = true;
+    app_data->ctr_passed = prv_ctr_passed(results);
+    prv_format(app_data->ctr_string, CTR_STRING_LEN, "CTR", app_data->ctr_passed, results);
+    PBL_LOG_DBG("%s", app_data->ctr_string);
+  } else {
+    app_data->leak_received = true;
+    app_data->leak_passed = prv_leakage_passed(results);
+    prv_format(app_data->leak_string, LEAKAGE_STRING_LEN, "Leak", app_data->leak_passed, results);
+    PBL_LOG_DBG("%s", app_data->leak_string);
+  }
+
+  app_data->test_mode = TestMode_None;
+
+  if (app_data->ctr_received && app_data->leak_received && (app_data->result_start_time == 0)) {
+    bool passed = app_data->ctr_passed && app_data->leak_passed;
+
+    mfg_test_result_report(MfgTestId_HrmCtrLeakage, passed, 0);
+    snprintf(app_data->status_string, STATUS_STRING_LEN, passed ? "PASS" : "FAIL");
+    app_data->result_start_time = pbl_uptime_ticks();
+  }
+}
+
+static void prv_begin_capture(AppData *app_data) {
+  int ret;
+
+  app_data->capture_pending = false;
+
+  ret = prv_start_capture((app_data->test_mode == TestMode_CTR) ? CTR_FIRST_SLOT
+                                                                : LEAKAGE_FIRST_SLOT);
+  if (ret != 0) {
+    prv_stop_capture();
+    app_data->test_mode = TestMode_None;
+    snprintf(app_data->status_string, STATUS_STRING_LEN, "Sensor error %d", ret);
+    return;
+  }
+
+  snprintf(app_data->status_string, STATUS_STRING_LEN, "%s", app_data->capture_status);
+}
+
+static void prv_poll_timer_callback(void *cb_data) {
   AppData *data = app_state_get_user_data();
+
+  if (data->capture_pending && !hrm_ppg_is_running()) {
+    prv_begin_capture(data);
+  } else if (!data->capture_pending &&
+             ((data->test_mode == TestMode_CTR) || (data->test_mode == TestMode_Leakage))) {
+    prv_check_capture(data);
+  }
 
   if (data->result_start_time != 0) {
     uint32_t elapsed = (uint32_t)(pbl_uptime_ticks() - data->result_start_time);
@@ -164,57 +403,87 @@ static void prv_result_timer_callback(void *cb_data) {
   }
 
   layer_mark_dirty(&data->window.layer);
-  app_timer_register(100, prv_result_timer_callback, nullptr);
+  app_timer_register(POLL_MS, prv_poll_timer_callback, nullptr);
 }
 
-static void prv_update_status(void *param) {
-  layer_mark_dirty((Layer *)param);
+static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
+  AppData *app_data = app_state_get_user_data();
+
+  if (e->type != PEBBLE_HRM_EVENT) {
+    return;
+  }
+
+  if (e->hrm.event_type == HRMEvent_BPM) {
+    snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d C:%d", e->hrm.bpm.bpm,
+             e->hrm.bpm.confidence);
+    PBL_LOG_DBG("%s", app_data->ctr_string);
+  } else if (e->hrm.event_type == HRMEvent_SpO2) {
+    snprintf(app_data->leak_string, LEAKAGE_STRING_LEN, "SPO2:%d C:%d", e->hrm.spo2.percent,
+             e->hrm.spo2.confidence);
+    PBL_LOG_DBG("%s", app_data->leak_string);
+  }
+
+  layer_mark_dirty(&app_data->window.layer);
+}
+
+static void prv_stop_algo(AppData *app_data) {
+  if (app_data->hrm_session == HRM_INVALID_SESSION_REF) {
+    return;
+  }
+
+  event_service_client_unsubscribe(&app_data->hrm_event_info);
+  sys_hrm_manager_unsubscribe(app_data->hrm_session);
+  app_data->hrm_session = HRM_INVALID_SESSION_REF;
+}
+
+static void prv_start_test(AppData *app_data, HRMTestMode mode, uint32_t gain_ohm,
+                           const char *status) {
+  prv_stop_algo(app_data);
+
+  app_data->test_mode = mode;
+  app_data->gain_ohm = gain_ohm;
+  app_data->capture_status = status;
+  app_data->capture_pending = true;
+  snprintf(app_data->status_string, STATUS_STRING_LEN, "Starting...");
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
-  sys_hrm_manager_set_features(app_data->hrm_session, HRMFeature_CTR | HRMFeature_Leakage);
-  if (app_data->test_mode != TestMode_CTR) {
-    gh3x2x_start_ft_ctr();
-    app_data->test_mode = TestMode_CTR;
-    snprintf(app_data->status_string, STATUS_STRING_LEN, "CTR Sampling...");
-    // Start polling timer for result display timeout
-    app_timer_register(100, prv_result_timer_callback, nullptr);
-  } else if (app_data->test_mode != TestMode_Leakage) {
-    gh3x2x_start_ft_leakage();
-    app_data->test_mode = TestMode_Leakage;
-    snprintf(app_data->status_string, STATUS_STRING_LEN, "Leak Sampling...");
+
+  if (!app_data->ctr_received) {
+    prv_start_test(app_data, TestMode_CTR, CTR_GAIN_OHM, "CTR Sampling...");
+  } else {
+    prv_start_test(app_data, TestMode_Leakage, LEAKAGE_GAIN_OHM, "Leak Sampling...");
   }
 
-  app_timer_register(10, prv_update_status, &app_data->window.layer);
+  layer_mark_dirty(&app_data->window.layer);
 }
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
+  HRMFeature features;
+
+  app_data->capture_pending = false;
+  prv_stop_capture();
+  prv_stop_algo(app_data);
 
   if (app_data->test_mode != TestMode_Algo_HR) {
     snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling...");
-    gh3x2x_set_work_mode(GH3X2X_FUNCTION_HR);
     app_data->test_mode = TestMode_Algo_HR;
+    features = HRMFeature_BPM;
   } else {
     snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling...");
-    gh3x2x_set_work_mode(GH3X2X_FUNCTION_SPO2);
-    app_data->test_mode = TestMode_Algo_SPO2;
+    app_data->test_mode = TestMode_Algo_SpO2;
+    features = HRMFeature_SpO2;
   }
 
   snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR: Q:");
   snprintf(app_data->leak_string, LEAKAGE_STRING_LEN, "SPO2: Q:");
-  event_service_client_unsubscribe(&app_data->hrm_event_info);
-  sys_hrm_manager_unsubscribe(app_data->hrm_session);
-  // let sensor sleep by waiting 50ms
-  sys_psleep(50);
-  event_service_client_subscribe(&app_data->hrm_event_info);
-  // Use app data as session ref
-  AppInstallId app_id = 1;
-  app_data->hrm_session =
-      sys_hrm_manager_app_subscribe(app_id, 1, PBL_SEC_PER_HOUR, HRMFeature_BPM | HRMFeature_SpO2);
 
-  app_timer_register(10, prv_update_status, &app_data->window.layer);
+  event_service_client_subscribe(&app_data->hrm_event_info);
+  app_data->hrm_session = sys_hrm_manager_app_subscribe(1, 1, PBL_SEC_PER_HOUR, features);
+
+  layer_mark_dirty(&app_data->window.layer);
 }
 
 static void prv_config_provider(void *data) {
@@ -271,20 +540,17 @@ static void prv_handle_init(void) {
     .type = PEBBLE_HRM_EVENT,
     .handler = prv_handle_hrm_data,
   };
-  event_service_client_subscribe(&data->hrm_event_info);
+  data->hrm_session = HRM_INVALID_SESSION_REF;
 
-  // Use app data as session ref
-  AppInstallId app_id = 1;
-  data->hrm_session = sys_hrm_manager_app_subscribe(app_id, 1, PBL_SEC_PER_HOUR,
-                                                    HRMFeature_CTR | HRMFeature_Leakage);
-
+  app_timer_register(POLL_MS, prv_poll_timer_callback, nullptr);
   app_window_stack_push(window, true);
 }
 
 static void prv_handle_deinit(void) {
   AppData *data = app_state_get_user_data();
-  event_service_client_unsubscribe(&data->hrm_event_info);
-  sys_hrm_manager_unsubscribe(data->hrm_session);
+
+  prv_stop_capture();
+  prv_stop_algo(data);
 
   text_layer_deinit(&data->title_text_layer);
   text_layer_deinit(&data->status_text_layer);
