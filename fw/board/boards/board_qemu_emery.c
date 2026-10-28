@@ -4,6 +4,7 @@
 #include <pbl/drivers/ambient/qemu.h>
 #include <pbl/drivers/backlight/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
+#include <pbl/drivers/ppg/qemu.h>
 #include <pbl/drivers/temperature/qemu.h>
 #include <pbl/drivers/vibe/qemu.h>
 #include <pbl/kernel/irq.h>
@@ -104,6 +105,8 @@ static HRMDevice s_hrm = {
   .state = &s_hrm_state,
 };
 HRMDevice *const HRM = &s_hrm;
+
+const struct pbl_ppg *const PPG = QEMU_PPG;
 
 PBL_IRQ_CONNECT(UART2, 5, uart_irq_handler, DBG_UART, 0);
 PBL_IRQ_CONNECT(UART1, 6, uart_irq_handler, QEMU_UART, 0);
