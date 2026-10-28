@@ -21,15 +21,6 @@
 void button_init(void);
 
 /**
- * @brief Set whether the device is rotated by 180 degrees.
- *
- * While rotated, the up and down buttons are swapped.
- *
- * @param rotated True if rotated by 180 degrees.
- */
-void button_set_rotated(bool rotated);
-
-/**
  * @brief Check whether a button is pressed.
  *
  * @param id Button to check.

@@ -82,34 +82,7 @@ uint8_t button_get_state_bits(void) {
   return (uint8_t)(REG32(QEMU_GPIO_BASE + GPIO_BTN_STATE) & 0xF);
 }
 
-void button_set_rotated(bool rotated) {
-  (void)rotated;
-}
-
 void debounced_button_init(void) {
   // QEMU handles debounce in the GPIO device itself
   button_init();
 }
-
-#ifdef CONFIG_SHELL
-#include <errno.h>
-
-#include <pbl/shell/shell.h>
-
-#ifdef CONFIG_RECOVERY_FW
-static int prv_cmd_button_read(const struct pbl_shell *sh, size_t argc, char **argv) {
-  long button;
-
-  if (pbl_shell_strtol(argv[1], &button) != 0 || button < 0 || button >= NUM_BUTTONS) {
-    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
-    return -EINVAL;
-  }
-
-  pbl_shell_print(sh, "%s", button_is_pressed((ButtonId)button) ? "down" : "up");
-  return 0;
-}
-
-PBL_SHELL_SUBCMD_ADD(sub_button, read, nullptr, "Read the state of button <id>",
-                     prv_cmd_button_read, 2, 0);
-#endif
-#endif

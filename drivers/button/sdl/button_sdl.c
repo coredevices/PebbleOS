@@ -55,9 +55,6 @@ uint8_t button_get_state_bits(void) {
   return s_state;
 }
 
-void button_set_rotated(bool rotated) {
-}
-
 void debounced_button_init(void) {
   button_init();
 }

@@ -12,7 +12,6 @@
 #include <stdlib.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/button.h>
 #include <pbl/mcu/fpu.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_monitor.h>
@@ -37,6 +36,7 @@
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <console/serial_console.h>
 #include <kernel/core_dump.h>
+#include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/low_power.h>
 #include <kernel/panic.h>
@@ -634,7 +634,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   // skip this. This insures that we don't enter PRF for a bad worker.
   if (launcher_panic_get_current_error()) {
     PBL_LOG_WRN("Not launching worker because launcher panic");
-  } else if (button_get_state_bits() != 0) {
+  } else if (input_buttons_get_state() != 0) {
     PBL_LOG_WRN("Not launching worker because button held");
   } else if (boot_bit_test(BOOT_BIT_FW_START_FAIL_STRIKE_TWO)) {
     PBL_LOG_WRN("Not launching worker because of 2 strikes");

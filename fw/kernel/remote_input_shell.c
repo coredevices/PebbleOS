@@ -81,6 +81,18 @@ static int prv_cmd_raw(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
+static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
+  unsigned long button;
+
+  if (pbl_shell_strtoul(argv[1], &button) != 0 || button >= NUM_BUTTONS) {
+    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  pbl_shell_print(sh, "%s", (input_buttons_get_state() & (1U << button)) ? "down" : "up");
+  return 0;
+}
+
 PBL_SHELL_SUBCMD_SET_CREATE(sub_button);
 PBL_SHELL_CMD_REGISTER(button, sub_button, "Buttons", nullptr);
 
@@ -90,6 +102,8 @@ PBL_SHELL_SUBCMD_ADD(sub_button, hold, nullptr, "Press a button for a while <btn
 PBL_SHELL_SUBCMD_ADD(sub_button, multi, nullptr,
                      "Press a button repeatedly <btn> <count> <hold_ms> <delay_ms>", prv_cmd_multi,
                      5, 0);
+PBL_SHELL_SUBCMD_ADD(sub_button, read, nullptr, "Read the state of a button <btn>", prv_cmd_read, 2,
+                     0);
 PBL_SHELL_SUBCMD_ADD(sub_button, raw, nullptr, "Report a raw event <btn> <0=up|1=down>",
                      prv_cmd_raw, 3, 0);
 

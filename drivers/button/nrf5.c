@@ -4,20 +4,7 @@
 #include <board/board.h>
 #include <kernel/events.h>
 
-// watch rotation
-static bool s_rotated_180 = false;
-
-void button_set_rotated(bool rotated) {
-  s_rotated_180 = rotated;
-}
-
 bool button_is_pressed(ButtonId id) {
-  if (s_rotated_180 && id == BUTTON_ID_UP) {
-    id = BUTTON_ID_DOWN;
-  } else if (s_rotated_180 && id == BUTTON_ID_DOWN) {
-    id = BUTTON_ID_UP;
-  }
-
   return pbl_gpio_get(&BOARD_CONFIG_BUTTON.buttons[id].gpio) > 0;
 }
 
@@ -34,24 +21,3 @@ void button_init(void) {
     pbl_gpio_configure(&BOARD_CONFIG_BUTTON.buttons[i].gpio, PBL_GPIO_INPUT);
   }
 }
-
-#if defined(CONFIG_SHELL) && defined(CONFIG_RECOVERY_FW)
-#include <errno.h>
-
-#include <pbl/shell/shell.h>
-
-static int prv_cmd_button_read(const struct pbl_shell *sh, size_t argc, char **argv) {
-  long button;
-
-  if (pbl_shell_strtol(argv[1], &button) != 0 || button < 0 || button >= NUM_BUTTONS) {
-    pbl_shell_error(sh, "invalid button '%s'", argv[1]);
-    return -EINVAL;
-  }
-
-  pbl_shell_print(sh, "%s", button_is_pressed((ButtonId)button) ? "down" : "up");
-  return 0;
-}
-
-PBL_SHELL_SUBCMD_ADD(sub_button, read, nullptr, "Read the state of button <id>",
-                     prv_cmd_button_read, 2, 0);
-#endif
