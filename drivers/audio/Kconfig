@@ -54,6 +54,12 @@ config AUDIO_NRF5_I2S
     help
       Playback through the nRF5 I2S interface.
 
+config AUDIO_DA7212
+    bool "Dialog DA7212 codec"
+    depends on I2C
+    help
+      The Dialog DA7212 codec, playing to its line output.
+
 config AUDIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
