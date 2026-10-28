@@ -24,15 +24,6 @@ typedef struct {
 } BoardConfig;
 
 typedef struct {
-  const char *name;
-  uint16_t code;
-} ButtonConfig;
-
-typedef struct {
-  ButtonConfig buttons[NUM_BUTTONS];
-} BoardConfigButton;
-
-typedef struct {
   const uint8_t low_power_threshold;
   const uint16_t battery_capacity_hours;
 } BoardConfigPower;

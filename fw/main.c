@@ -7,7 +7,6 @@
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/debounced_button.h>
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
@@ -44,6 +43,7 @@
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/fault_handling.h>
+#include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/kernel_heap.h>
 #include <kernel/memory_layout.h>
@@ -289,9 +289,7 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   boot_bit_set(BOOT_BIT_FW_STABLE);
 #endif
 
-  // Initialize button driver at the last moment to prevent "system on" button press from
-  // entering the kernel event queue.
-  debounced_button_init();
+  input_buttons_enable();
 
   pbl_task_wdt_resume();
 }

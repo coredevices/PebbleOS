@@ -26,6 +26,7 @@ config GPIO_SF32LB
 config GPIO_QEMU
     bool "QEMU GPIO"
     default y if SOC_QEMU
+    select INTC
     help
       Support for the QEMU GPIO peripheral.
 

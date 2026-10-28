@@ -27,18 +27,6 @@ typedef struct {
 } BoardConfig;
 
 typedef struct {
-  const char *name;
-  struct pbl_gpio gpio;
-  uint16_t code;
-} ButtonConfig;
-
-typedef struct {
-  ButtonConfig buttons[NUM_BUTTONS];
-  GPT_TypeDef *timer;
-  IRQn_Type timer_irqn;
-} BoardConfigButton;
-
-typedef struct {
   //! Percentage for watch only mode
   const uint8_t low_power_threshold;
   //! Approximate hours of battery life

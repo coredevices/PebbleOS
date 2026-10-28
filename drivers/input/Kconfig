@@ -10,4 +10,12 @@ config INPUT_GPIO_KEYS
     help
       Keys on GPIOs with interrupts, debounced in software.
 
+config INPUT_SDL
+    bool "SDL keyboard"
+    default y if SOC_POSIX
+    select SDL
+    select INPUT
+    help
+      Watch buttons driven by the keyboard, through SDL, in a native build.
+
 endmenu

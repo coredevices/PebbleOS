@@ -15,6 +15,7 @@ static const uint16_t s_codes[NUM_BUTTONS] = {
   [BUTTON_ID_DOWN] = PBL_INPUT_KEY_DOWN,
 };
 
+static bool s_enabled;
 static bool s_rotated;
 // Indexed by the key's position in s_codes, whatever the rotation.
 static uint8_t s_pressed;
@@ -31,6 +32,10 @@ static ButtonId prv_rotate(ButtonId id) {
 
 uint16_t input_buttons_code(ButtonId id) {
   return s_codes[prv_rotate(id)];
+}
+
+void input_buttons_enable(void) {
+  s_enabled = true;
 }
 
 void input_buttons_set_rotated(bool rotated) {
@@ -63,6 +68,10 @@ static void prv_input_cb(const struct pbl_input_event *evt, void *user_data) {
       s_pressed |= 1U << key;
     } else {
       s_pressed &= ~(1U << key);
+    }
+
+    if (!s_enabled) {
+      return;
     }
 
     PebbleEvent e = {

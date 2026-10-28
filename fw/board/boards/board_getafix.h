@@ -18,7 +18,6 @@ extern QSPIFlash *const QSPI_FLASH;
 extern DisplayJDIDevice *const DISPLAY;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
-extern const BoardConfigButton BOARD_CONFIG_BUTTON;
 extern const MicDevice *MIC;
 extern const TouchSensor *CST816;
 

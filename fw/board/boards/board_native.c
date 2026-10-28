@@ -65,15 +65,6 @@ const BoardConfig BOARD_CONFIG = {
   .ambient_k_delta_threshold = 25,
 };
 
-const BoardConfigButton BOARD_CONFIG_BUTTON = {
-  .buttons = {
-    [BUTTON_ID_BACK] = {"Back", PBL_INPUT_KEY_BACK},
-    [BUTTON_ID_UP] = {"Up", PBL_INPUT_KEY_UP},
-    [BUTTON_ID_SELECT] = {"Select", PBL_INPUT_KEY_SELECT},
-    [BUTTON_ID_DOWN] = {"Down", PBL_INPUT_KEY_DOWN},
-  },
-};
-
 void board_early_init(void) {
 }
 

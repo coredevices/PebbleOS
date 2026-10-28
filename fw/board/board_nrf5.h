@@ -20,12 +20,6 @@
 // clang-format on
 
 typedef struct {
-  const char *name;
-  struct pbl_gpio gpio;
-  uint16_t code;
-} ButtonConfig;
-
-typedef struct {
   struct pbl_gpio i2s_ck;
   struct pbl_gpio i2s_sd;
   NRF_SPIM_Type *spi;
@@ -46,13 +40,6 @@ typedef struct {
 
   const uint8_t backlight_on_percent; // percent of max possible brightness
 } BoardConfig;
-
-// Button Configuration
-/////////////////////////////////////////////////////////////////////////////
-typedef struct {
-  const ButtonConfig buttons[NUM_BUTTONS];
-  nrfx_timer_t timer;
-} BoardConfigButton;
 
 // Power Configuration
 /////////////////////////////////////////////////////////////////////////////

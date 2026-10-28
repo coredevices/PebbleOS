@@ -131,6 +131,7 @@ static int16_t prv_observed_x(int i) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void test_remote_input__initialize(void) {
+  input_buttons_enable();
   remote_input_init();
   s_event_count = 0;
   s_touch_count = 0;

@@ -9,6 +9,7 @@
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
+#include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -72,9 +73,19 @@ PBL_IRQ_CONNECT(UART0_UARTE0, NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_uarte
                 0);
 /* PERIPHERAL ID 8 */
 
-/* buttons */
-PBL_IRQ_CONNECT(TIMER1, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_1_irq_handler, , 0);
 PBL_IRQ_CONNECT(TIMER2, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_2_irq_handler, , 0);
+
+/* buttons */
+PBL_GPIO_KEYS_DEFINE(
+    BUTTONS, "buttons",
+    PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(NRF5_GPIO_P0, 28, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_BACK, 40),
+    PBL_GPIO_KEYS_KEY("Up", PBL_GPIO(NRF5_GPIO_P0, 29, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_UP, 40),
+    PBL_GPIO_KEYS_KEY("Select", PBL_GPIO(NRF5_GPIO_P0, 30, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_SELECT, 40),
+    PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(NRF5_GPIO_P0, 31, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_DOWN, 40));
 
 /* display */
 PBL_PWM_NRF5_RTC_DEFINE(EXTCOMIN_PWM, "extcomin", 2, PBL_GPIO(NRF5_GPIO_P1, 15, 0), nullptr);

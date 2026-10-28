@@ -8,11 +8,11 @@
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
+#include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
-#include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
 #include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/kernel/irq.h>
@@ -328,24 +328,15 @@ const BoardConfig BOARD_CONFIG = {
   .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
 };
 
-const BoardConfigButton BOARD_CONFIG_BUTTON = {
-  .buttons =
-      {
-        [BUTTON_ID_BACK] = {"Back", PBL_GPIO(SF32LB_GPIO1, 34, 0), PBL_INPUT_KEY_BACK},
-        [BUTTON_ID_UP] =
-            {"Up", PBL_GPIO(SF32LB_GPIO1, 35, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-             PBL_INPUT_KEY_UP},
-        [BUTTON_ID_SELECT] =
-            {"Select", PBL_GPIO(SF32LB_GPIO1, 36, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-             PBL_INPUT_KEY_SELECT},
-        [BUTTON_ID_DOWN] =
-            {"Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-             PBL_INPUT_KEY_DOWN},
-      },
-  .timer = GPTIM2,
-  .timer_irqn = GPTIM2_IRQn,
-};
-PBL_IRQ_CONNECT(GPTIM2, 7, debounced_button_irq_handler, GPTIM2, 0);
+PBL_GPIO_KEYS_DEFINE(
+    BUTTONS, "buttons",
+    PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(SF32LB_GPIO1, 34, 0), PBL_INPUT_KEY_BACK, 40),
+    PBL_GPIO_KEYS_KEY("Up", PBL_GPIO(SF32LB_GPIO1, 35, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_UP, 40),
+    PBL_GPIO_KEYS_KEY("Select", PBL_GPIO(SF32LB_GPIO1, 36, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_SELECT, 40),
+    PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_DOWN, 40));
 
 static MicDeviceState mic_state = {
   .hdma = {

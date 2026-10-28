@@ -3,7 +3,9 @@
 
 #include <pbl/drivers/ambient/qemu.h>
 #include <pbl/drivers/backlight/qemu.h>
+#include <pbl/drivers/gpio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
+#include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/temperature/qemu.h>
 #include <pbl/drivers/vibe/qemu.h>
 #include <pbl/kernel/irq.h>
@@ -73,14 +75,12 @@ const BoardConfig BOARD_CONFIG = {
   .backlight_default_color = BACKLIGHT_COLOR_WHITE,
 };
 
-const BoardConfigButton BOARD_CONFIG_BUTTON = {
-  .buttons = {
-    [BUTTON_ID_BACK] = {"Back", PBL_INPUT_KEY_BACK},
-    [BUTTON_ID_UP] = {"Up", PBL_INPUT_KEY_UP},
-    [BUTTON_ID_SELECT] = {"Select", PBL_INPUT_KEY_SELECT},
-    [BUTTON_ID_DOWN] = {"Down", PBL_INPUT_KEY_DOWN},
-  },
-};
+PBL_GPIO_KEYS_DEFINE(BUTTONS, "buttons",
+                     PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(QEMU_GPIO, 0, 0), PBL_INPUT_KEY_BACK, 0),
+                     PBL_GPIO_KEYS_KEY("Up", PBL_GPIO(QEMU_GPIO, 1, 0), PBL_INPUT_KEY_UP, 0),
+                     PBL_GPIO_KEYS_KEY("Select", PBL_GPIO(QEMU_GPIO, 2, 0), PBL_INPUT_KEY_SELECT,
+                                       0),
+                     PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(QEMU_GPIO, 3, 0), PBL_INPUT_KEY_DOWN, 0));
 
 // Audio device
 static struct AudioState s_audio_state;
