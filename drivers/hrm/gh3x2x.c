@@ -23,7 +23,7 @@
 
 PBL_LOG_MODULE_DEFINE(driver_hrm_gh3x2x, CONFIG_DRIVER_HRM_LOG_LEVEL);
 
-void gh3026_reset_pin_ctrl(uint8_t pin_level) {
+void gh3x2x_reset_pin_ctrl(uint8_t pin_level) {
   if (pbl_gpio_is_connected(&HRM->reset)) {
     pbl_gpio_set_raw(&HRM->reset, pin_level != 0U);
   }
@@ -59,17 +59,17 @@ static volatile uint32_t s_hrm_timer_flag = false;
 
 // GH3X2X library glue code
 
-void gh3026_reset_pin_init(void) {
+void gh3x2x_reset_pin_init(void) {
 }
 
-void gh3026_i2c_init(void) {
+void gh3x2x_i2c_init(void) {
 }
 
-void gh3026_i2c_write(uint8_t device_id, const uint8_t write_buffer[], uint16_t length) {
+void gh3x2x_i2c_write(uint8_t device_id, const uint8_t write_buffer[], uint16_t length) {
   pbl_i2c_write(HRM->i2c, write_buffer, length);
 }
 
-void gh3026_i2c_read(uint8_t device_id, const uint8_t write_buffer[], uint16_t write_length,
+void gh3x2x_i2c_read(uint8_t device_id, const uint8_t write_buffer[], uint16_t write_length,
                      uint8_t read_buffer[], uint16_t read_length) {
   pbl_i2c_write(HRM->i2c, write_buffer, write_length);
   pbl_i2c_read(HRM->i2c, read_buffer, read_length);
@@ -82,7 +82,7 @@ static void prv_conv_fs4g_mg_to_lsb512(AccelRawData *data) {
   data->z = (int16_t)data->z / 1.953f;
 }
 
-void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
+void gh3x2x_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_buffer_index) {
   HRMAccelData *acc = hrm_manager_get_accel_data();
   GU16 count = *gsensor_buffer_index = acc->num_samples;
   if (count > __GSENSOR_DATA_BUFFER_SIZE__)
@@ -94,22 +94,22 @@ void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_bu
   hrm_manager_release_accel_data();
 }
 
-static void gh3026_int_callback_function(void *context) {
+static void gh3x2x_int_callback_function(void *context) {
   s_hrm_int_flag = false;
   Gh3x2xDemoInterruptProcess();
 }
 
-static void gh3026_int_irq_callback(void *arg) {
+static void gh3x2x_int_irq_callback(void *arg) {
   hal_gh3x2x_int_handler_call_back();
 
   if (s_hrm_int_flag == false) {
-    if (system_task_add_callback_from_isr(gh3026_int_callback_function, nullptr)) {
+    if (system_task_add_callback_from_isr(gh3x2x_int_callback_function, nullptr)) {
       s_hrm_int_flag = true;
     }
   }
 }
 
-void gh3026_int_pin_init(void) {
+void gh3x2x_int_pin_init(void) {
   int ret;
 
   ret = pbl_device_init(&HRM->int_irq.intc->dev);
@@ -127,7 +127,7 @@ void gh3026_int_pin_init(void) {
     return;
   }
 
-  ret = pbl_intc_request(&HRM->int_irq, gh3026_int_irq_callback, nullptr);
+  ret = pbl_intc_request(&HRM->int_irq, gh3x2x_int_irq_callback, nullptr);
   if (ret != 0) {
     PBL_LOG_ERR("Could not request the interrupt (%d)", ret);
     return;
@@ -496,7 +496,7 @@ void hrm_init(HRMDevice *dev) {
     return;
   }
 #else
-  gh3026_reset_pin_ctrl(0);
+  gh3x2x_reset_pin_ctrl(0);
   pbl_gpio_configure(&dev->int_input, PBL_GPIO_INPUT | PBL_GPIO_PULL_DOWN);
 #endif
 
