@@ -27,6 +27,19 @@ config AUDIO_SF32LB52_PDM
     help
       Capture from digital microphones on the SF32LB52 PDM interface.
 
+config AUDIO_QEMU
+    bool "QEMU audio device"
+    depends on SOC_QEMU
+    help
+      Playback through the QEMU audio device.
+
+config AUDIO_HOST_MIC
+    bool "Host microphone"
+    depends on SOC_QEMU || SOC_POSIX
+    help
+      Records mono audio the host sends over the QEMU channel
+      (`pebble emu-mic`), and silence when it sends none.
+
 config AUDIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
