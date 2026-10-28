@@ -8,6 +8,13 @@ menuconfig AUDIO
 
 if AUDIO
 
+config AUDIO_AMP_GPIO
+    bool "GPIO amplifier"
+    depends on GPIO
+    help
+      Amplifier switched by an enable GPIO, with an optional supply and
+      enable mode pulses.
+
 config AUDIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
