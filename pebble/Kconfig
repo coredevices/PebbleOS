@@ -45,13 +45,9 @@ config FS_PFS_SHELL_LITTER
     default !RECOVERY_FW && !RELEASE
     depends on FS_PFS && SHELL
 
-config GH3X2X_ALGO
+config HRM_BACKEND_GOODIX
     default !RECOVERY_FW || MFG
-    depends on HRM_GH3X2X && BOARD_OBELIX
-
-config HRM_GH3X2X_FACTORY_TEST
-    default y if MFG
-    depends on HRM && GH3X2X_ALGO
+    depends on PPG_GH3X2X && BOARD_OBELIX
 
 config KERNEL_STACK_GUARD
     default y

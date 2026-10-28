@@ -123,7 +123,7 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
     case MfgTestId_Vibration:
       snprintf(entry, sizeof(entry), "VIB:%c", rc);
       break;
-#if defined(CONFIG_BOARD_OBELIX) && defined(CONFIG_MFG)
+#ifdef CONFIG_MFG_HRM_CTR_LEAKAGE
     case MfgTestId_HrmCtrLeakage:
       snprintf(entry, sizeof(entry), "HRM:%c", rc);
       break;

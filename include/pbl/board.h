@@ -13,9 +13,6 @@ extern const uint8_t BOARD_DISPLAY_CORNERS[];
 extern const uint8_t BOARD_DISPLAY_NUM_CORNERS;
 #endif
 
-// FIXME: remove once the HRM moves to the device model
-typedef const struct HRMDevice HRMDevice;
-
 #ifdef CONFIG_BOARD_HEADER
 #include CONFIG_BOARD_HEADER
 #endif

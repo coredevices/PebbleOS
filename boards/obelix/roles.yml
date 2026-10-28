@@ -9,6 +9,7 @@ accel: lsm6dso
 mag: mmc5603nj
 als: w1160
 touch: touchscreen
+ppg: ppg
 vibe: haptics
 mic: mic
 speaker: speaker

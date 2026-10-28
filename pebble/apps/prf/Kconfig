@@ -8,3 +8,11 @@ config MFG_SPEAKER_GAIN_MDB
     help
       Gain the factory speaker test plays its tone at, the level the test
       is qualified at on the board.
+
+config MFG_HRM_CTR_LEAKAGE
+    bool "Factory heart rate CTR and light leakage test"
+    default y
+    depends on MFG && PPG_GH3X2X && BOARD_OBELIX
+    help
+      The factory test of the optical stack: crosstalk (CTR) and light
+      leakage, measured with raw samples of the GH3X2X front end.

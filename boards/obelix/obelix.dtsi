@@ -266,6 +266,14 @@
 	pinctrl-names = "default";
 	clock-frequency = <400000>;
 	status = "okay";
+
+	ppg: heart-rate@14 {
+		compatible = "goodix,gh3026";
+		reg = <0x14>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <44 IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&pmic 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+	};
 };
 
 &mpi2 {

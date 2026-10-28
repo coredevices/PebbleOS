@@ -104,7 +104,7 @@ components:
     type: library
     supplier: Nordic Semiconductor ASA
     description: nRF Fuel Gauge library and battery models, from sdk-nrfxlib 8f9ab9b01dd3
-    commit: 5ab558e55e43b93a51ec9509b6e7d7418d500598
+    commit: c889620532990042837c9c23546ec9123280558a
     license: LicenseRef-Nordic-5-Clause
     url: https://github.com/nrfconnect/sdk-nrfxlib
 
@@ -113,14 +113,14 @@ components:
     type: firmware
     supplier: Shanghai Hynitron Microelectronics Co., Ltd
     description: CST816 touch controller firmware
-    commit: 5ab558e55e43b93a51ec9509b6e7d7418d500598
+    commit: c889620532990042837c9c23546ec9123280558a
     license: LicenseRef-Hynitron-5-Clause
 
   - name: gh3x2x
     path: nonfree/pebbleos-nonfree/gh3x2x
     supplier: Shenzhen Goodix Technology Co., Ltd.
-    description: GH3x2x heart rate sensor driver and algorithms
-    commit: 5ab558e55e43b93a51ec9509b6e7d7418d500598
+    description: GH3x2x heart rate algorithms
+    commit: c889620532990042837c9c23546ec9123280558a
     license: LicenseRef-Goodix-5-Clause
 
   - name: sf32lb52-lcpu-patch
@@ -128,7 +128,7 @@ components:
     type: firmware
     supplier: SiFli Technology
     description: SF32LB52 LCPU (Bluetooth controller) firmware patches
-    commit: 5ab558e55e43b93a51ec9509b6e7d7418d500598
+    commit: c889620532990042837c9c23546ec9123280558a
     license: LicenseRef-SiFli-5-Clause
 
   - name: picolibc
