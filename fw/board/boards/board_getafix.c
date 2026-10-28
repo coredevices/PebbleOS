@@ -24,68 +24,40 @@
 #include <board/board.h>
 #include <hardware/sf32lb52_memorymap.h>
 
-static UARTDeviceState s_dbg_uart_state = {
-  .huart =
-      {
-        .Instance = USART1,
-        .Init =
-            {
-              .BaudRate = 1000000,
-              .WordLength = UART_WORDLENGTH_8B,
-              .StopBits = UART_STOPBITS_1,
-              .Parity = UART_PARITY_NONE,
-              .HwFlowCtl = UART_HWCONTROL_NONE,
-              .OverSampling = UART_OVERSAMPLING_16,
-            },
-      },
-  .hdma = {
-    .Instance = DMA1_Channel1,
-    .Init = {
-      .Request = DMA_REQUEST_5,
-      .IrqPrio = 5,
-    },
-  },
-};
-
 PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
                          SF32LB52_PA19_USART1_TXD | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA18_USART1_RXD | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_UP);
 
+static const struct pbl_dma_chan s_dbg_uart_rx_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
+
+static UARTDeviceState s_dbg_uart_state;
+
 static UARTDevice DBG_UART_DEVICE = {
   .state = &s_dbg_uart_state,
   .pinctrl = PBL_PINCTRL(&s_dbg_uart_default, nullptr, 0),
-  .irqn = USART1_IRQn,
-  .dma_irqn = DMAC1_CH1_IRQn,
+  .rx_dma = &s_dbg_uart_rx_dma,
+  .index = 1,
 };
 
 UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
 
 PBL_IRQ_CONNECT(USART1, 5, uart_irq_handler, DBG_UART, 0);
-PBL_IRQ_CONNECT(DMAC1_CH1, 5, uart_dma_irq_handler, DBG_UART, 0);
+PBL_IRQ_CONNECT(DMAC1_CH1, 5, pbl_dma_sf32lb52_irq_handler, &s_dbg_uart_rx_dma, 0);
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-static UARTDeviceState s_hci_trace_uart_state = {
-  .huart = {
-    .Instance = USART3,
-    .Init = {
-      .WordLength = UART_WORDLENGTH_8B,
-      .StopBits = UART_STOPBITS_1,
-      .Parity = UART_PARITY_NONE,
-      .HwFlowCtl = UART_HWCONTROL_NONE,
-      .OverSampling = UART_OVERSAMPLING_16,
-    },
-  },
-};
-
 PBL_PINCTRL_STATE_DEFINE(s_hci_trace_uart_default, SF32LB52_PINCTRL,
                          SF32LB52_PA27_USART3_TXD | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
 
+static UARTDeviceState s_hci_trace_uart_state;
+
 static UARTDevice HCI_TRACE_UART_DEVICE = {
   .state = &s_hci_trace_uart_state,
   .pinctrl = PBL_PINCTRL(&s_hci_trace_uart_default, nullptr, 0),
+  .index = 3,
 };
 UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
