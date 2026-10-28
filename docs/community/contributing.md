@@ -93,6 +93,9 @@ The following rules additionally apply to contributions made in whole or part us
 - The use of generative AI is disclosed with an `Assisted-by: LLM` trailer on every relevant commit,
   whatever the tool, model or vendor. Do not name them, and remove any trailer the tool adds by
   itself (e.g. `Co-Authored-By: <model> <vendor email>`).
+- AI tools must not sign off in their own name. Only a human can certify the DCO: the
+  `Signed-off-by` line is the author's own (e.g. via `git commit -s`), taking full responsibility
+  for the change.
 - All submitted text is in English. We do not have the capacity to review text or translations for other languages at this time and we do not trust LLMs to handle this correctly.
 - No AI-generated images, icons, SVG files, or other critically artistic works are included in the content of the pull request.
 
