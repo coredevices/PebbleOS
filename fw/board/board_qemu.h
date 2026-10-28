@@ -25,17 +25,6 @@ typedef enum {
 } GPIOPuPd_TypeDef;
 
 typedef struct {
-  uint16_t value;
-  uint16_t resolution;
-  int enabled;
-  uint16_t channel;
-} PwmState;
-
-typedef struct {
-  PwmState *state;
-} PwmConfig;
-
-typedef struct {
   uint8_t backlight_on_percent;
   uint32_t ambient_light_dark_threshold;
   uint32_t ambient_k_delta_threshold;

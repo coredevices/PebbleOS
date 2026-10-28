@@ -18,21 +18,6 @@
 #define GPIO_Pin_NULL  0U
 
 typedef struct {
-  GPT_HandleTypeDef handle;
-  GPT_ClockConfigTypeDef clock_config;
-  uint16_t value;
-  uint16_t resolution;
-  int enabled;
-  uint16_t channel;
-  uint8_t is_comp;
-} PwmState;
-
-typedef struct {
-  struct pbl_pinctrl pinctrl;
-  PwmState *state;
-} PwmConfig;
-
-typedef struct {
   uint8_t backlight_on_percent;
   // ambient light config
   uint32_t ambient_light_dark_threshold;
