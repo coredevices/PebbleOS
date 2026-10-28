@@ -5,6 +5,7 @@
 #include <pbl/drivers/display/sf32lb/display_jdi.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/pinctrl.h>
+#include <pbl/drivers/pwm.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
@@ -18,8 +19,6 @@
 #include <pbl/soc/sf32lb/sleep.h>
 
 #include <bf0_hal_lcdc.h>
-#include <bf0_hal_lptim.h>
-#include <bf0_hal_rtc.h>
 #include <board/board.h>
 #include <kernel/events.h>
 
@@ -115,28 +114,24 @@ static void prv_power_cycle(void) {
 }
 
 static void prv_display_on() {
+  struct pbl_pwm_state vcom;
+
   pbl_gpio_set(&DISPLAY->vlcd, true);
   pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
   pbl_gpio_set(&DISPLAY->vddp, true);
   pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
 
-  LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
-
-  lptim->CFGR |= LPTIM_INTCLOCKSOURCE_LPCLOCK;
-  lptim->ARR = RC10K_FREQ / DISPLAY->vcom.freq_hz;
-  lptim->CMP = lptim->ARR / 2;
-  lptim->CR |= LPTIM_CR_ENABLE;
-  lptim->CR |= LPTIM_CR_CNTSTRT;
+  pbl_pwm_init_state(&DISPLAY->vcom, &vcom);
+  PBL_ASSERTN(pbl_pwm_set_relative_duty_cycle(&vcom, 1U, 2U) == 0);
+  vcom.enabled = true;
+  PBL_ASSERTN(pbl_pwm_apply(&DISPLAY->vcom, &vcom) == 0);
 }
 
 static void prv_display_off() {
   DisplayJDIState *state = DISPLAY->state;
   HAL_LCDC_DeInit(&state->hlcdc);
 
-  LPTIM_TypeDef *lptim = DISPLAY->vcom.lptim;
-
-  lptim->CR &= ~LPTIM_CR_ENABLE;
-  lptim->CR &= ~LPTIM_CR_CNTSTRT;
+  PBL_ASSERTN(pbl_pwm_disable(&DISPLAY->vcom) == 0);
 
   pbl_busy_wait_us(POWER_SEQ_DELAY_TIME_US);
   pbl_gpio_set(&DISPLAY->vddp, false);
@@ -338,7 +333,8 @@ void display_init(void) {
   // Runs from the boot splash, before pbl_device_init_all()
   PBL_ASSERTN(pbl_device_init(&SF32LB_GPIO1->dev) == 0 &&
               pbl_device_init(&DISPLAY->vddp.port->dev) == 0 &&
-              pbl_device_init(&DISPLAY->vlcd.port->dev) == 0);
+              pbl_device_init(&DISPLAY->vlcd.port->dev) == 0 &&
+              pbl_device_init(&DISPLAY->vcom.ctrl->dev) == 0);
 
   pbl_gpio_configure(&DISPLAY->vddp, PBL_GPIO_OUTPUT);
   pbl_gpio_configure(&DISPLAY->vlcd, PBL_GPIO_OUTPUT);

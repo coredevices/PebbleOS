@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/pinctrl.h>
+#include <pbl/drivers/pwm.h>
 
 #include <bf0_hal.h>
 #include <bf0_hal_lcdc.h>
@@ -42,13 +43,8 @@ typedef const struct DisplayJDIDevice {
   DisplayJDIState *state;
   /** LCD controller interrupt. */
   IRQn_Type irqn;
-  /** VCOM inversion signal generation. */
-  struct {
-    /** Low-power timer generating the signal. */
-    LPTIM_TypeDef *lptim;
-    /** Signal frequency in Hz. */
-    uint8_t freq_hz;
-  } vcom;
+  /** VCOM inversion signal, run at its period with a 50% duty cycle while the panel is on. */
+  struct pbl_pwm vcom;
   /** Panel interface pins. */
   struct pbl_pinctrl pinctrl;
   /** Panel inputs driven low while the panel is power cycled, as GPIOs. */

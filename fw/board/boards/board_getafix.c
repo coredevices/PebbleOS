@@ -8,6 +8,7 @@
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
 #include <pbl/drivers/temperature/sf32lb.h>
@@ -152,9 +153,14 @@ PBL_PINCTRL_STATE_DEFINE(
     SF32LB52_PA04_LCDC1_JDI_G1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
     SF32LB52_PA43_LCDC1_JDI_G2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
     SF32LB52_PA03_LCDC1_JDI_B1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA02_LCDC1_JDI_B2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+    SF32LB52_PA02_LCDC1_JDI_B2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+
+PBL_PINCTRL_STATE_DEFINE(s_lptim2_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_PWM_SF32LB_LPTIM_DEFINE(s_lptim2, "lptim2", 2, &s_lptim2_default, nullptr);
 
 static const struct pbl_gpio s_display_discharge[] = {
   PBL_GPIO(SF32LB_GPIO1, 3, 0),  PBL_GPIO(SF32LB_GPIO1, 39, 0), PBL_GPIO(SF32LB_GPIO1, 40, 0),
@@ -164,11 +170,7 @@ static const struct pbl_gpio s_display_discharge[] = {
 static DisplayJDIDevice s_display = {
   .state = &s_display_state,
   .irqn = LCDC1_IRQn,
-  .vcom =
-      {
-        .lptim = hwp_lptim2,
-        .freq_hz = 60U,
-      },
+  .vcom = PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0),
   .pinctrl = PBL_PINCTRL(&s_display_default, nullptr, 0),
   .discharge = s_display_discharge,
   .num_discharge = ARRAY_LENGTH(s_display_discharge),

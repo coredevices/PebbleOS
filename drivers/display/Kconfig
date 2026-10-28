@@ -11,6 +11,7 @@ if DISPLAY
 config DISPLAY_JDI_SF32LB
     bool "JDI (SiFli SF32LB)"
     default y if SOC_SF32LB52
+    depends on PWM
     select HAL_SIFLI
     select HAL_SIFLI_LCD
     help
