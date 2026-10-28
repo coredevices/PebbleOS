@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PPG
+    bool "PPG front end"
+    help
+      Optical front end drivers (pbl/drivers/ppg.h): LEDs and
+      photodiode receivers sampled in time slots. The board gives its
+      front end the ppg role.
+
+if PPG
+
+config PPG_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The ppg shell command, to inspect the front end and read raw
+      samples.
+
+module = DRIVER_PPG
+module-str = PPG front end
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # PPG
