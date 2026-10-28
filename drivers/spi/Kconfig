@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SPI
+    bool "SPI"
+    help
+      SPI Drivers
+
+if SPI
+
+module = DRIVER_SPI
+module-str = SPI
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SPI
