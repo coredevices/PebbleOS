@@ -36,9 +36,11 @@
  * @endcode
  *
  * Unlike dmaengine there is no descriptor queue: preparing a transfer starts it, and a channel
- * runs one transfer at a time. The memory side uses the peripheral's bus width, so lengths are a
- * multiple of it. Buffers must be reachable by the controller; cache maintenance is up to the
- * consumer. Calls may be made from interrupt context; a channel belongs to one consumer.
+ * runs one transfer at a time. A cyclic transfer runs over a ring of periods until terminated,
+ * calling its callback at the end of each period. The memory side uses the peripheral's bus width,
+ * so lengths are a multiple of it. Buffers must be reachable by the controller; cache maintenance
+ * is up to the consumer. Calls may be made from interrupt context; a channel belongs to one
+ * consumer.
  * @{
  */
 
@@ -116,6 +118,13 @@ struct pbl_dma_controller_ops {
   /** Start a transfer on a configured channel. Returns 0 or a negative errno. */
   int (*prep_slave_single)(const struct pbl_dma_controller *ctrl, uint8_t channel, void *buf,
                            size_t len, enum pbl_dma_dir dir);
+  /**
+   * Optional. Start a cyclic transfer on a configured channel, reporting each period with
+   * pbl_dma_complete(). Returns 0, @c -EINVAL for a ring the controller cannot run, or a negative
+   * errno.
+   */
+  int (*prep_dma_cyclic)(const struct pbl_dma_controller *ctrl, uint8_t channel, void *buf,
+                         size_t buf_len, size_t period_len, enum pbl_dma_dir dir);
   /** Stop a channel. Returns 0 or a negative errno. */
   int (*terminate)(const struct pbl_dma_controller *ctrl, uint8_t channel);
   /** Read the bytes left of a channel's transfer. Returns 0 or a negative errno. */
@@ -196,6 +205,27 @@ int pbl_dma_prep_slave_single(const struct pbl_dma_chan *chan, void *buf, size_t
                               enum pbl_dma_dir dir, pbl_dma_callback_t callback, void *arg);
 
 /**
+ * @brief Start a cyclic transfer between a ring of periods and the peripheral.
+ *
+ * The transfer wraps around at the end of the ring and runs until pbl_dma_terminate().
+ * @p callback is called with status 0 at the end of each period, and with a negative errno once
+ * if the transfer fails, which stops the channel.
+ *
+ * @param chan Channel, set up with pbl_dma_slave_config().
+ * @param buf Ring.
+ * @param buf_len Length of the ring in bytes, a multiple of @p period_len.
+ * @param period_len Length of a period in bytes, a multiple of the peripheral's bus width.
+ * @param dir Direction.
+ * @param callback Called at the end of each period.
+ * @param arg Callback argument.
+ * @return 0, @c -EBUSY if a transfer is running, @c -ENOTSUP if the controller has no cyclic
+ * transfers, @c -EINVAL for a ring the controller cannot run, or another negative errno.
+ */
+int pbl_dma_prep_dma_cyclic(const struct pbl_dma_chan *chan, void *buf, size_t buf_len,
+                            size_t period_len, enum pbl_dma_dir dir, pbl_dma_callback_t callback,
+                            void *arg);
+
+/**
  * @brief Stop a channel. No callback is called for the transfer it stops.
  *
  * @param chan Channel.
@@ -213,7 +243,8 @@ int pbl_dma_terminate(const struct pbl_dma_chan *chan);
 int pbl_dma_tx_status(const struct pbl_dma_chan *chan, size_t *residue);
 
 /**
- * @brief Report the end of a channel's transfer, calling its callback.
+ * @brief Report the end of a channel's transfer, or of a period of a cyclic one, calling its
+ * callback.
  *
  * Called by controller drivers from their interrupt handlers.
  *

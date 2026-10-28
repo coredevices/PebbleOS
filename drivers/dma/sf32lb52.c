@@ -56,8 +56,8 @@ static int prv_slave_config(const struct pbl_dma_controller *ctrl, const struct 
   return 0;
 }
 
-static int prv_prep_slave_single(const struct pbl_dma_controller *ctrl, uint8_t channel, void *buf,
-                                 size_t len, enum pbl_dma_dir dir) {
+static int prv_start(const struct pbl_dma_controller *ctrl, uint8_t channel, void *buf, size_t len,
+                     enum pbl_dma_dir dir, uint32_t irqs) {
   const struct pbl_dma_chan_state *state = &ctrl->chans[channel];
   uint32_t ccr = prv_getreg(SF32LB52_DMAC_CCR_OFFSET(channel));
   uint32_t width;
@@ -81,12 +81,9 @@ static int prv_prep_slave_single(const struct pbl_dma_controller *ctrl, uint8_t 
 
   ccr &= DMAC_CCR_PL_MASK;
   ccr |= PBL_FIELD_PREP(DMAC_CCR_PSIZE_MASK, width >> 1) |
-         PBL_FIELD_PREP(DMAC_CCR_MSIZE_MASK, width >> 1) | DMAC_CCR_MINC;
+         PBL_FIELD_PREP(DMAC_CCR_MSIZE_MASK, width >> 1) | DMAC_CCR_MINC | irqs;
   if (dir == PBL_DMA_MEM_TO_DEV) {
     ccr |= DMAC_CCR_DIR;
-  }
-  if (state->callback != nullptr) {
-    ccr |= DMAC_CCR_TCIE | DMAC_CCR_TEIE;
   }
 
   prv_putreg(SF32LB52_DMAC_CCR_OFFSET(channel), ccr);
@@ -97,6 +94,28 @@ static int prv_prep_slave_single(const struct pbl_dma_controller *ctrl, uint8_t 
   prv_putreg(SF32LB52_DMAC_CCR_OFFSET(channel), ccr | DMAC_CCR_EN);
 
   return 0;
+}
+
+static int prv_prep_slave_single(const struct pbl_dma_controller *ctrl, uint8_t channel, void *buf,
+                                 size_t len, enum pbl_dma_dir dir) {
+  uint32_t irqs = 0U;
+
+  if (ctrl->chans[channel].callback != nullptr) {
+    irqs = DMAC_CCR_TCIE | DMAC_CCR_TEIE;
+  }
+
+  return prv_start(ctrl, channel, buf, len, dir, irqs);
+}
+
+// The half and full transfer interrupts end the two periods of the ring
+static int prv_prep_dma_cyclic(const struct pbl_dma_controller *ctrl, uint8_t channel, void *buf,
+                               size_t buf_len, size_t period_len, enum pbl_dma_dir dir) {
+  if (buf_len != 2U * period_len) {
+    return -EINVAL;
+  }
+
+  return prv_start(ctrl, channel, buf, buf_len, dir,
+                   DMAC_CCR_CIRC | DMAC_CCR_HTIE | DMAC_CCR_TCIE | DMAC_CCR_TEIE);
 }
 
 static int prv_terminate(const struct pbl_dma_controller *ctrl, uint8_t channel) {
@@ -121,20 +140,32 @@ static int prv_tx_status(const struct pbl_dma_controller *ctrl, uint8_t channel,
 void pbl_dma_sf32lb52_irq_handler(const struct pbl_dma_chan *chan) {
   uint8_t channel = chan->channel;
   uint32_t isr = prv_getreg(SF32LB52_DMAC_ISR_OFFSET);
-  int status;
 
   if ((isr & DMAC_ISR_TEIF(channel)) != 0U) {
-    status = -EIO;
-  } else if ((isr & DMAC_ISR_TCIF(channel)) != 0U) {
-    status = 0;
-  } else {
+    (void)prv_terminate(chan->ctrl, channel);
+    pbl_dma_complete(chan->ctrl, channel, -EIO);
+    return;
+  }
+
+  if ((prv_getreg(SF32LB52_DMAC_CCR_OFFSET(channel)) & DMAC_CCR_CIRC) != 0U) {
+    prv_putreg(SF32LB52_DMAC_IFCR_OFFSET, isr & DMAC_ISR_ALL(channel));
+    if ((isr & DMAC_ISR_HTIF(channel)) != 0U) {
+      pbl_dma_complete(chan->ctrl, channel, 0);
+    }
+    if ((isr & DMAC_ISR_TCIF(channel)) != 0U) {
+      pbl_dma_complete(chan->ctrl, channel, 0);
+    }
+    return;
+  }
+
+  if ((isr & DMAC_ISR_TCIF(channel)) == 0U) {
     return;
   }
 
   prv_putreg(SF32LB52_DMAC_IFCR_OFFSET, DMAC_ISR_ALL(channel));
   (void)prv_terminate(chan->ctrl, channel);
 
-  pbl_dma_complete(chan->ctrl, channel, status);
+  pbl_dma_complete(chan->ctrl, channel, 0);
 }
 
 static int prv_init(const struct pbl_device *dev) {
@@ -150,6 +181,7 @@ static int prv_init(const struct pbl_device *dev) {
 static const struct pbl_dma_controller_ops s_ops = {
   .slave_config = prv_slave_config,
   .prep_slave_single = prv_prep_slave_single,
+  .prep_dma_cyclic = prv_prep_dma_cyclic,
   .terminate = prv_terminate,
   .tx_status = prv_tx_status,
 };

@@ -21,6 +21,7 @@
  * PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_dma_sf32lb52_irq_handler, &s_rx, 0);
  * @endcode
  *
+ * Cyclic transfers run a ring of two periods, ended by the half and full transfer interrupts.
  * The controller clock stays on once the controller is initialized.
  * @{
  */
