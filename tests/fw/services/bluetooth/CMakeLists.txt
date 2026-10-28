@@ -5,7 +5,7 @@ pbl_clar_test(test_ble_hrm
   SOURCES
     fw/services/bluetooth/ble_hrm.c
     tests/fakes/fake_events.c
-  DEFINES CONFIG_HRM
+  DEFINES CONFIG_SERVICE_HRM
 )
 
 pbl_clar_test(test_local_addr

@@ -56,7 +56,7 @@ void services_common_init(void) {
   touch_init();
 #endif
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   hrm_manager_init();
 #endif
 }
@@ -76,7 +76,7 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
   },
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   {
     .set_enable_fn = hrm_manager_enable,
     .enable_mask = R_Normal,
