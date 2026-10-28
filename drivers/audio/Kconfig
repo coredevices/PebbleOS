@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig AUDIO
+    bool "Audio"
+    help
+      Audio stream class (pbl/drivers/audio.h) and its drivers.
+
+if AUDIO
+
+module = DRIVER_AUDIO
+module-str = Audio
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # AUDIO
