@@ -96,6 +96,7 @@ Main rules:
 - Commit format is `area: short description`, with longer description in the
   body if necessary
 - Run `gitlint` on every commit to verify rules are followed
+- Follow the pull request and AI rules in `docs/community/contributing.md`
 
 Others:
 
