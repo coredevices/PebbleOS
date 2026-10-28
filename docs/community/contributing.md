@@ -81,6 +81,7 @@ Additional requirements:
 - If your commit includes changes to documentation, please ensure that the documentation is updated accordingly and that the commit message reflects this.
 
 ## Pull Request Requirements
+- Discuss large changes or new features with the maintainers before sending a big pull request.
 - Changes impacting low-level components (e.g. hardware drivers, connectivity) are accompanied by
   proof of testing on real hardware, such as logs, measurements or captures. Testing on QEMU or the
   change compiling is not sufficient.
