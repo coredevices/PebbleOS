@@ -165,8 +165,8 @@ def main():
                 TINTIN_ROOT=REPO_ROOT, PLATFORM_PATH=platform_dir)
 
     _copy_tree(os.path.join(SDK_ROOT, "include"), os.path.join(common, "include"))
-    _copy(os.path.join(SDK_ROOT, "pebble_app.ld.template"),
-          os.path.join(common, "pebble_app.ld.template"))
+    for name in ("pebble_app.ld.template", "pebble_app_init_arrays.ld"):
+        _copy(os.path.join(SDK_ROOT, name), os.path.join(common, name))
 
     _check_templates(os.path.join(SDK_ROOT, "defaults"))
     _copy_tree(os.path.join(SDK_ROOT, "defaults"), os.path.join(common, "templates"))
