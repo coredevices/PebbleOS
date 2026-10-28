@@ -5,6 +5,7 @@ menu "Drivers"
 
 rsource "base/Kconfig"
 rsource "ambient/Kconfig"
+rsource "audio/Kconfig"
 rsource "backlight/Kconfig"
 rsource "battery/Kconfig"
 rsource "clk/Kconfig"

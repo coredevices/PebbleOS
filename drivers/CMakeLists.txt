@@ -4,6 +4,7 @@
 add_subdirectory(base)
 pbl_add_subdirectory_ifdef(CONFIG_SPEAKER speaker)
 pbl_add_subdirectory_ifdef(CONFIG_AMBIENT_LIGHT ambient)
+pbl_add_subdirectory_ifdef(CONFIG_AUDIO audio)
 pbl_add_subdirectory_ifdef(CONFIG_TEMPERATURE temperature)
 pbl_add_subdirectory_ifdef(CONFIG_BATTERY battery)
 pbl_add_subdirectory_ifdef(CONFIG_CLK clk)
