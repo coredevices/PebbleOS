@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/util/circular_buffer.h>
 
@@ -13,8 +13,8 @@
 
 /**
  * @defgroup drivers_speaker_sf32lb52 SF32LB52 audio
- * @ingroup drivers_audio
- * @brief @ref drivers_audio implementation for the SF32LB52 audio codec (AUDCODEC) DAC.
+ * @ingroup drivers_speaker
+ * @brief @ref drivers_speaker implementation for the SF32LB52 audio codec (AUDCODEC) DAC.
  * @{
  */
 

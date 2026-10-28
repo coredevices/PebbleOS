@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/pmic/npm1300.h>
 
 #include <applib/app.h>

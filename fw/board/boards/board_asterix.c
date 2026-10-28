@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/opt3001.h>
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/display/sharp_ls013b7dh01.h>
 #include <pbl/drivers/flash/spi_nor.h>

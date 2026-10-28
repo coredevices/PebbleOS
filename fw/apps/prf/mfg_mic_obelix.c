@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/logging/logging.h>

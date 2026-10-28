@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 #include <pbl/drivers/speaker/sf32lb52/sf32lb_audio.h>

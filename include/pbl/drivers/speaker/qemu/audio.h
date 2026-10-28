@@ -5,12 +5,12 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 
 /**
  * @defgroup drivers_speaker_qemu QEMU audio
- * @ingroup drivers_audio
- * @brief @ref drivers_audio implementation for the QEMU audio device.
+ * @ingroup drivers_speaker
+ * @brief @ref drivers_speaker implementation for the QEMU audio device.
  * @{
  */
 
