@@ -5,17 +5,19 @@
 #include <pbl/drivers/backlight/aw2016.h>
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/gpio/npm1300.h>
-#include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/ppg/gh3026.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
 #include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/services/hrm/hrm_ppg.h>
+#include <pbl/util/size.h>
 
 #include <board/board.h>
 #include <board/splash.h>
@@ -285,18 +287,90 @@ PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", 4, 400000, &s_i2c4_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C4, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c4, 0);
 
-static const struct pbl_i2c_dev s_i2c_gh3x2x = PBL_I2C_DEV(&s_i2c4.bus, 0x14);
-
-static HRMDeviceState s_hrm_state;
-static HRMDevice s_hrm = {
-  .state = &s_hrm_state,
-  .i2c = &s_i2c_gh3x2x,
-  .int_irq = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_FALLING),
-  .int_input = PBL_GPIO(SF32LB_GPIO1, 44, 0),
-  .reset = PBL_GPIO(&s_npm1300_gpio.port, 3, PBL_GPIO_PULL_UP),
+static const struct pbl_gh3026_reg s_gh3026_regs[] = {
+  {0x0004, 0x001F}, {0x0006, 0x0005}, {0x000A, 0x00A0}, {0x000E, 0x000D}, {0x0020, 0x5477},
+  {0x0022, 0x5555}, {0x0100, 0x0100}, {0x0102, 0x0302}, {0x0104, 0x0504}, {0x010A, 0x274C},
+  {0x010E, 0x0000}, {0x0110, 0x0D13}, {0x0112, 0x4455}, {0x0114, 0x000A}, {0x011E, 0x0019},
+  {0x0120, 0x0400}, {0x0122, 0x0CBF}, {0x0126, 0x2744}, {0x0128, 0x0001}, {0x012A, 0x0000},
+  {0x012C, 0x0E14}, {0x012E, 0x4441}, {0x0130, 0x0002}, {0x013A, 0x0400}, {0x013C, 0x0219},
+  {0x013E, 0x197F}, {0x0142, 0x2744}, {0x0144, 0x0001}, {0x0146, 0x0000}, {0x0148, 0x0D14},
+  {0x014A, 0x4441}, {0x014C, 0x0002}, {0x0156, 0x0219}, {0x0158, 0x0400}, {0x015A, 0x197F},
+  {0x015E, 0x2744}, {0x0160, 0x0001}, {0x0162, 0x0000}, {0x0164, 0x0C10}, {0x0166, 0x4442},
+  {0x0168, 0x0002}, {0x0172, 0x020C}, {0x0174, 0x0400}, {0x017A, 0x2744}, {0x017C, 0x0001},
+  {0x017E, 0x0000}, {0x0180, 0x0000}, {0x0182, 0x4442}, {0x0184, 0x0002}, {0x018E, 0x0400},
+  {0x0190, 0x0400}, {0x0196, 0xC704}, {0x0198, 0x0001}, {0x019A, 0x0000}, {0x019C, 0x0C10},
+  {0x019E, 0x4442}, {0x01A0, 0x0002}, {0x01A6, 0x0003}, {0x01AA, 0x020C}, {0x01AC, 0x0400},
+  {0x01EC, 0x0123}, {0x01EE, 0x0172}, {0x01F0, 0x0172}, {0x01F2, 0x00E8}, {0x01F4, 0x006A},
+  {0x01F6, 0x00E8}, {0x0200, 0x1020}, {0x0280, 0x0A00}, {0x0282, 0xF530}, {0x0284, 0x9388},
+  {0x0286, 0xC45C}, {0x0288, 0xA328}, {0x0408, 0x0001}, {0x0410, 0x49F0}, {0x0412, 0x0082},
+  {0x0414, 0x49F0}, {0x0416, 0x0082}, {0x0422, 0x0011}, {0x0424, 0x0901}, {0x0426, 0x0102},
+  {0x0428, 0x0102}, {0x0502, 0x4F60}, {0x0504, 0x000A}, {0x0506, 0x00A1}, {0x0588, 0x0008},
+  {0x0692, 0x0233}, {0x0694, 0x0400}, {0x0698, 0x3310}, {0x069A, 0x1101}, {0x0700, 0x0000},
 };
 
-HRMDevice *const HRM = &s_hrm;
+static const struct pbl_ppg_slot s_gh3026_slots[] = {
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_GREEN}, .rx_mask = 0x3},
+  {.led_mask = 0x2, .leds = {[1] = PBL_PPG_LED_RED}, .rx_mask = 0x3},
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_IR}, .rx_mask = 0x3},
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_IR}, .rx_mask = 0x3},
+  {.rx_mask = 0x3},
+};
+
+PBL_GH3026_DEFINE(s_gh3026, &s_i2c4.bus, 0x14,
+                  .irq = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_FALLING),
+                  .irq_input = PBL_GPIO(SF32LB_GPIO1, 44, 0),
+                  .reset = PBL_GPIO(&s_npm1300_gpio.port, 3,
+                                    PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                  .regs = s_gh3026_regs, .num_regs = ARRAY_LENGTH(s_gh3026_regs),
+                  .slots = s_gh3026_slots, .num_slots = ARRAY_LENGTH(s_gh3026_slots));
+
+const struct pbl_ppg *const PPG = &s_gh3026.ppg;
+
+const struct hrm_ppg_config HRM_PPG_CONFIG = {
+  .roles = {
+    [HRM_PPG_ROLE_GREEN] =
+        {
+          .slot = 0,
+          .rx_mask = 0x3,
+          .agc = true,
+          .agc_led = 0,
+          .agc_target = HRM_PPG_AGC_GENERAL,
+          .initial_ua = 19608,
+          .initial_gain_ohm = 250000,
+          .min_ua = 9412,
+          .max_ua = 149804,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_RED] =
+        {
+          .slot = 1,
+          .rx_mask = 0x1,
+          .agc = true,
+          .agc_led = 1,
+          .agc_target = HRM_PPG_AGC_SPO2,
+          .initial_ua = 19608,
+          .initial_gain_ohm = 25000,
+          .min_ua = 19608,
+          .max_ua = 99608,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_IR] =
+        {
+          .slot = 2,
+          .rx_mask = 0x1,
+          .agc = true,
+          .agc_led = 0,
+          .agc_target = HRM_PPG_AGC_SPO2,
+          .initial_ua = 19608,
+          .initial_gain_ohm = 25000,
+          .min_ua = 19608,
+          .max_ua = 99608,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_WEAR] = {.slot = 3, .rx_mask = 0x1},
+    [HRM_PPG_ROLE_AMBIENT] = {.slot = 4, .rx_mask = 0x1},
+  },
+};
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {

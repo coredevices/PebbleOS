@@ -47,8 +47,8 @@ class QemuProtocolConnection(Connection):
     def protocol(self):
         return self._pebble
 
-    def send_to_qemu(self, packet):
+    def send_to_qemu(self, packet, target=None):
         """Send a packet of libpebble2's QEMU protocol to the emulator."""
         from libpebble2.communication.transports.qemu import MessageTargetQemu
 
-        self._pebble.transport.send_packet(packet, target=MessageTargetQemu())
+        self._pebble.transport.send_packet(packet, target=target or MessageTargetQemu())

@@ -1,13 +1,43 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+config HRM_BACKEND
+    bool
+    help
+      An HRM algorithm backend is built (provides HRM_PPG_BACKEND).
+
+config HRM_BACKEND_HRV
+    bool
+    help
+      The HRM algorithm backend reports beat-to-beat intervals.
+
+config HRM_BACKEND_QEMU
+    bool "QEMU backend"
+    default y if PPG_QEMU
+    depends on PPG_QEMU
+    select HRM_BACKEND
+    help
+      Measures the synthetic pulse of the QEMU front end, which follows
+      the heart rate set by the QEMU host.
+
 config SERVICE_HRM
     bool "Heart rate monitor"
-    default y if HRM
+    default y if HRM_BACKEND
+    depends on PPG && HRM_BACKEND
     help
-      Heart rate monitor manager service. Requires an HRM driver (CONFIG_HRM).
+      Heart rate monitor manager service: runs the PPG front end, its
+      gain control and an algorithm backend for subscribers.
 
 if SERVICE_HRM
+
+config HRM_HRV
+    bool "HRV (RR interval) support"
+    default y
+    depends on HRM_BACKEND_HRV
+    help
+      Report heart-rate-variability (RR/inter-beat interval) data. HRV
+      is only sampled while an app holds an HRV subscription, with the
+      green path at a higher sample rate.
 
 module = SERVICE_HRM
 module-str = Heart rate monitor

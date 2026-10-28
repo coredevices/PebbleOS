@@ -319,6 +319,10 @@ class DeviceAdapter(ABC):
         """Have the battery report ``percent``, with a charger or not."""
         raise Unsupported(f"the {self.type} device has no battery to set")
 
+    def set_heart_rate(self, bpm, quality):
+        """Have the heart rate sensor see ``bpm`` with signal ``quality`` (-1 is off wrist)."""
+        raise Unsupported(f"the {self.type} device has no heart rate to set")
+
     def screenshot(self):
         """The display as a PIL image, when the device can capture it."""
 

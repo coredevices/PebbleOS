@@ -33,7 +33,7 @@ config BT_ANCS_CLIENT
 config SERVICE_BLE_HRM
     bool "Heart rate sharing over BLE"
     default y
-    depends on HRM && BT_HRM_SERVICE && !RECOVERY_FW
+    depends on SERVICE_HRM && BT_HRM_SERVICE && !RECOVERY_FW
     help
       Share heart rate measurements with paired devices through the GATT
       Heart Rate Service, with the sharing permission popups and settings.

@@ -237,7 +237,7 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return true;
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
   return HRMonitoringInterval_10Min;
 }

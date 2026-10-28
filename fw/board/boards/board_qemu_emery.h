@@ -13,7 +13,6 @@ extern UARTDevice *const BT_HCI_UART;
 #endif
 extern DisplayDevice *const DISPLAY;
 extern MicDevice *const MIC;
-extern HRMDevice *const HRM;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const BoardConfigButton BOARD_CONFIG_BUTTON;

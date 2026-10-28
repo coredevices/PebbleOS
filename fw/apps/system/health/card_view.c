@@ -22,7 +22,7 @@
 // Enum for different card types
 typedef enum {
   Card_ActivitySummary,
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   Card_HrSummary,
 #endif
   Card_SleepSummary,
@@ -48,7 +48,7 @@ typedef struct HealthCardView {
 
 static Layer *(*s_card_view_create[CardCount])(HealthData *health_data) = {
   [Card_ActivitySummary] = health_activity_summary_card_create,
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   [Card_HrSummary] = health_hr_summary_card_create,
 #endif
   [Card_SleepSummary] = health_sleep_summary_card_create,
@@ -56,7 +56,7 @@ static Layer *(*s_card_view_create[CardCount])(HealthData *health_data) = {
 
 static void (*s_card_view_select_click_handler[CardCount])(Layer *layer) = {
   [Card_ActivitySummary] = health_activity_summary_card_select_click_handler,
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   [Card_HrSummary] = health_hr_summary_card_select_click_handler,
 #endif
   [Card_SleepSummary] = health_sleep_summary_card_select_click_handler,
@@ -64,7 +64,7 @@ static void (*s_card_view_select_click_handler[CardCount])(Layer *layer) = {
 
 static GColor (*s_card_view_get_bg_color[CardCount])(Layer *layer) = {
   [Card_ActivitySummary] = health_activity_summary_card_get_bg_color,
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   [Card_HrSummary] = health_hr_summary_card_get_bg_color,
 #endif
   [Card_SleepSummary] = health_sleep_summary_card_get_bg_color,
@@ -72,7 +72,7 @@ static GColor (*s_card_view_get_bg_color[CardCount])(Layer *layer) = {
 
 static bool (*s_card_view_show_select_indicator[CardCount])(Layer *layer) = {
   [Card_ActivitySummary] = health_activity_summary_show_select_indicator,
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   [Card_HrSummary] = health_hr_summary_show_select_indicator,
 #endif
   [Card_SleepSummary] = health_sleep_summary_show_select_indicator,
@@ -87,7 +87,7 @@ static int prv_get_next_card_idx(Card current, bool up) {
   int next = current + direction;
 
 // Skip over the HR card if we don't support it
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   if (next == Card_HrSummary && !activity_is_hrm_present()) {
     next = next + direction;
   }

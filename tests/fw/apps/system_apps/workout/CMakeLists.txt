@@ -99,7 +99,7 @@ set(workout_active_args
 # Only emery has a heart rate sensor.
 pbl_clar_test(test_workout_active ${workout_active_args}
   PLATFORMS emery
-  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1 CONFIG_HRM
+  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1 CONFIG_SERVICE_HRM
 )
 
 pbl_clar_test(test_workout_active ${workout_active_args}

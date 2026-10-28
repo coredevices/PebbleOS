@@ -646,16 +646,6 @@ typedef struct HRMSpO2Data { // 4 bytes
   uint8_t invalid : 1;     //!< raw algorithm invalid flag (debug)
 } HRMSpO2Data;
 
-#ifdef CONFIG_MFG
-typedef struct HRMCTRData { // 6 bytes
-  double ctr[6];
-} HRMCTRData;
-
-typedef struct HRMLeakageData { // 6 bytes
-  double leakage[6];
-} HRMLeakageData;
-#endif
-
 typedef struct HRMSubscriptionExpiringData { // 4 bytes
   HRMSessionRef session_ref;
 } HRMSubscriptionExpiringData;
@@ -664,10 +654,6 @@ typedef enum HRMEventType {
   HRMEvent_BPM = 0,
   HRMEvent_HRV,
   HRMEvent_SpO2,
-#ifdef CONFIG_MFG
-  HRMEvent_CTR,
-  HRMEvent_Leakage,
-#endif
   HRMEvent_SubscriptionExpiring
 } HRMEventType;
 
@@ -677,10 +663,6 @@ typedef struct PBL_PACKED PebbleHRMEvent { // 5 bytes
     HRMBPMData bpm;
     HRMHRVData hrv;
     HRMSpO2Data spo2;
-#ifdef CONFIG_MFG
-    HRMCTRData *ctr;
-    HRMLeakageData *leakage;
-#endif
     HRMSubscriptionExpiringData expiring;
   };
 } PebbleHRMEvent;

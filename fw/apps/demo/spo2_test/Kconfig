@@ -3,4 +3,4 @@
 
 config DEMO_APP_SPO2_TEST
     bool "SpO2 Test"
-    depends on HRM
+    depends on SERVICE_HRM

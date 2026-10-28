@@ -25,7 +25,7 @@ static const char *s_units_distance_labels[] = {
   i18n_noop("Miles"),
 };
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 static const HRMonitoringInterval s_hrm_intervals[] = {
   HRMonitoringInterval_5Min,  HRMonitoringInterval_10Min,    HRMonitoringInterval_30Min,
   HRMonitoringInterval_1Hour, HRMonitoringInterval_Disabled,
@@ -72,7 +72,7 @@ static int prv_spo2_interval_to_index(HRMonitoringInterval interval) {
 enum SettingsHealthItem {
   SettingsHealthTrackingEnabled,
   SettingsHealthUnitDistance,
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   SettingsHealthHRMonitoringInterval,
   SettingsHealthHRActivityTracking,
   SettingsHealthSpO2Enabled,
@@ -82,7 +82,7 @@ enum SettingsHealthItem {
   NumSettingsHealthItems
 };
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // HRM Interval option menu
 /////////////////////////////
 
@@ -159,7 +159,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       }
       break;
     }
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     case SettingsHealthHRMonitoringInterval: {
       title = i18n_noop("HR Monitoring");
       HRMonitoringInterval interval = activity_prefs_get_hrm_measurement_interval();
@@ -221,7 +221,7 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       shell_prefs_set_units_distance(unit);
       break;
     }
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     case SettingsHealthHRMonitoringInterval:
       prv_hrm_interval_menu_push((SettingsHealthData *)context);
       break;

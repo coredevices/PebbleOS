@@ -1980,7 +1980,7 @@ WorkoutActiveWindow *workout_active_create_for_activity_type(
   active_window->has_hrm = activity_is_hrm_present() && activity_prefs_heart_rate_is_enabled();
   active_window->num_scrollable_metrics =
       (type == ActivitySessionType_Open ? 1 : 2) + (active_window->has_hrm ? 2 : 0);
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   active_window->has_spo2 =
       active_window->has_hrm && activity_prefs_spo2_activity_tracking_is_enabled();
 #endif

@@ -1199,7 +1199,7 @@ bool health_service_cancel_metric_alert(HealthMetricAlert *alert) {
 }
 
 // ----------------------------------------------------------------------------------------------
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 //! The HR and HRV sample periods share the app's single HRM subscription: subscribe with the
 //! union of the needed features at the shorter of the two periods, or unsubscribe when both
 //! requests are cleared.
@@ -1242,7 +1242,7 @@ static bool prv_update_hrm_subscription(HealthServiceState *state) {
 
 // ----------------------------------------------------------------------------------------------
 bool health_service_set_hrv_sample_period(uint16_t interval_sec) {
-#if !defined(CONFIG_HRM) || !defined(CONFIG_HRM_HRV)
+#if !defined(CONFIG_SERVICE_HRM) || !defined(CONFIG_HRM_HRV)
   return false;
 #else
   HealthServiceState *state = prv_get_state(false);
@@ -1261,7 +1261,7 @@ bool health_service_set_hrv_sample_period(uint16_t interval_sec) {
 }
 
 bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) {
-#ifndef CONFIG_HRM
+#ifndef CONFIG_SERVICE_HRM
   return false;
 #else
   HealthServiceState *state = prv_get_state(false);
@@ -1281,7 +1281,7 @@ bool health_service_set_heart_rate_sample_period(uint16_t interval_sec) {
 
 // ----------------------------------------------------------------------------------------------
 uint16_t health_service_get_heart_rate_sample_period_expiration_sec(void) {
-#ifndef CONFIG_HRM
+#ifndef CONFIG_SERVICE_HRM
   return 0;
 #else
   if (!sys_activity_prefs_heart_rate_is_enabled()) {

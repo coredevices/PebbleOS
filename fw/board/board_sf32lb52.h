@@ -57,7 +57,6 @@ typedef struct {
 #include <pbl/drivers/uart/sf32lb.h>
 
 typedef const struct UARTDevice UARTDevice;
-typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;

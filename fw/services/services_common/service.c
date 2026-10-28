@@ -57,7 +57,7 @@ void services_common_init(void) {
   touch_init();
 #endif
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   hrm_manager_init();
 #endif
 }
@@ -85,7 +85,7 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .enable_mask = R_Normal,
   },
 #endif
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   {
     .set_enable_fn = hrm_manager_enable,
     .enable_mask = R_Normal,

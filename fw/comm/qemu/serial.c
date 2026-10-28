@@ -17,7 +17,7 @@
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/hrm/hrm_qemu.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/size.h>
 
@@ -198,13 +198,8 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   PBL_LOG_DBG("Got heart rate msg: bpm: %d, quality: %d", hdr->bpm, hdr->quality);
-#if defined(CONFIG_HRM)
-  HRMData hrm_data = {
-    .features = HRMFeature_BPM,
-    .hrm_bpm = hdr->bpm,
-    .hrm_quality = (HRMQuality)hdr->quality,
-  };
-  hrm_manager_new_data_cb(&hrm_data);
+#ifdef CONFIG_HRM_BACKEND_QEMU
+  hrm_qemu_set_heart_rate(hdr->bpm, (HRMQuality)hdr->quality);
 #else
   PBL_LOG_WRN("Heart rate injection unsupported on this board (no HRM)");
 #endif

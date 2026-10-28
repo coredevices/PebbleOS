@@ -10,7 +10,6 @@
 #include <pbl/drivers/debounced_button.h>
 #include <pbl/drivers/display/display.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
 #include <pbl/drivers/rtc.h>
@@ -240,10 +239,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   resource_init();
 
   system_resource_init();
-
-#ifdef CONFIG_HRM
-  hrm_init(HRM);
-#endif
 
   // The display has to be initialized before bluetooth because on Snowy the
   // display FPGA shares the 32 kHz clock signal with bluetooth. If the FPGA is

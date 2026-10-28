@@ -13,8 +13,8 @@
 #include <apps/system/workout/workout.h>
 #include <shell/prefs.h>
 
-// Only boards with a heart rate sensor build with CONFIG_HRM.
-#ifdef CONFIG_HRM
+// Only boards with a heart rate sensor build with CONFIG_SERVICE_HRM.
+#ifdef CONFIG_SERVICE_HRM
 static const bool s_has_hrm = true;
 #else
 static const bool s_has_hrm = false;

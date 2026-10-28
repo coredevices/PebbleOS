@@ -2501,7 +2501,7 @@ PREDEFINED             = __attribute__(x)= \
                          PBL_EXTERNALLY_VISIBLE= \
                          PBL_NOCOMMON= \
                          PBL_SECTION(name)= \
-                         CONFIG_HRM=1 \
+                         CONFIG_SERVICE_HRM=1 \
                          CONFIG_ORIENTATION_MANAGER=1 \
                          CONFIG_TOUCH=1 \
                          CONFIG_USERSPACE=1 \

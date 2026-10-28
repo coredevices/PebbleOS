@@ -74,12 +74,6 @@ typedef enum {
   HRMFeatureShift_HRV = 1,
   /** Oxygen saturation (SpO2). */
   HRMFeatureShift_SpO2 = 2,
-#ifdef CONFIG_MFG
-  /** PPG CTR test data (manufacturing). */
-  HRMFeatureShift_CTR = 3,
-  /** PPG leakage test data (manufacturing). */
-  HRMFeatureShift_Leakage = 4,
-#endif
   /** Number of features. */
   HRMFeatureShiftMax
 } HRMFeatureShift;
@@ -92,25 +86,19 @@ typedef enum {
   HRMFeature_HRV = (1 << HRMFeatureShift_HRV),
   /** Oxygen saturation (SpO2). */
   HRMFeature_SpO2 = (1 << HRMFeatureShift_SpO2),
-#ifdef CONFIG_MFG
-  /** PPG CTR test data (manufacturing). */
-  HRMFeature_CTR = (1 << HRMFeatureShift_CTR),
-  /** PPG leakage test data (manufacturing). */
-  HRMFeature_Leakage = (1 << HRMFeatureShift_Leakage),
-#endif
   /** Upper bound of the feature values. */
   HRMFeatureMax
 } HRMFeature;
 
-/** @brief Accelerometer sampling rate provided to the HRM driver, in mHz (25 Hz). */
+/** @brief Accelerometer sampling rate provided to the HRM algorithms, in mHz (25 Hz). */
 #define HRM_MANAGER_ACCEL_RATE_MILLIHZ (25000)
-/** @brief Accelerometer samples buffered for the driver: 2 s, in case a handshake is missed. */
-#define HRM_MANAGER_MAX_ACCEL_SAMPLES ((2 * HRM_MANAGER_ACCEL_RATE_MILLIHZ) / 1000)
+/** @brief Accelerometer samples buffered between front end reads: 4 s. */
+#define HRM_MANAGER_MAX_ACCEL_SAMPLES ((4 * HRM_MANAGER_ACCEL_RATE_MILLIHZ) / 1000)
 
 /** @brief Expiration given to the subscription of an app that exits, in seconds. */
 #define HRM_MANAGER_APP_EXIT_EXPIRATION_SEC PBL_SEC_PER_HOUR
 
-/** @brief Accelerometer samples for the HRM driver's motion compensation. */
+/** @brief Accelerometer samples for the HRM algorithms' motion compensation. */
 typedef struct {
   /** Samples, in mG. */
   AccelRawData data[HRM_MANAGER_MAX_ACCEL_SAMPLES];
@@ -249,9 +237,9 @@ bool sys_hrm_manager_is_hrm_present(void);
 void hrm_manager_enable(bool on);
 
 //------------------------------------------------------------------------------
-// HRM Driver Interface
+// HRM processing interface
 //------------------------------------------------------------------------------
-// The driver needs to provide new data to the service and needs to pull accel data.
+// The processing layer provides new data to the manager and pulls accel data from it.
 
 /** @brief Data reported by the HRM driver. */
 typedef struct {
@@ -279,12 +267,6 @@ typedef struct {
   /** Raw algorithm invalid flag (debug); a reading with it clear is usable. */
   bool spo2_invalid;
 
-#ifdef CONFIG_MFG
-  /** PPG CTR test data, per channel (manufacturing). */
-  double ctr[6];
-  /** PPG leakage test data, per channel (manufacturing). */
-  double leakage[6];
-#endif
 } HRMData;
 
 /**

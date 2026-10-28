@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import socket
+import struct
 import subprocess
 import tempfile
 import time
@@ -16,6 +17,7 @@ MICRO_FLASH_IMAGE = "qemu_micro_flash.bin"
 SPI_FLASH_IMAGE = "qemu_spi_flash.bin"
 ABS_MAX = 32767
 HCI_DRAIN_S = 0.2
+QEMU_PROTOCOL_HEART_RATE = 13
 
 
 def _free_port():
@@ -239,27 +241,39 @@ class QemuAdapter(DeviceAdapter):
             return [f"pulse:{console}"]
         return [f"serial:{console}", f"qemu:127.0.0.1:{self.pebble_port}"]
 
-    def set_battery(self, percent, charging=False):
+    def _send_to_qemu(self, packet, target=None):
         from libpebble2.communication.transports.qemu import (
             MessageTargetQemu,
             QemuTransport,
         )
-        from libpebble2.communication.transports.qemu.protocol import QemuBattery
 
         from harness.connections.qemu import QemuProtocolConnection
 
-        packet = QemuBattery(percent=percent, charging=charging)
+        target = target or MessageTargetQemu()
         for connection in self.connections:
             if isinstance(connection, QemuProtocolConnection):
-                connection.send_to_qemu(packet)
+                connection.send_to_qemu(packet, target)
                 return
         # The port serves one client at a time; nothing holds it.
         transport = QemuTransport("127.0.0.1", self.pebble_port)
         transport.connect()
         try:
-            transport.send_packet(packet, target=MessageTargetQemu())
+            transport.send_packet(packet, target=target)
         finally:
             transport.socket.close()
+
+    def set_battery(self, percent, charging=False):
+        from libpebble2.communication.transports.qemu.protocol import QemuBattery
+
+        self._send_to_qemu(QemuBattery(percent=percent, charging=charging))
+
+    def set_heart_rate(self, bpm, quality):
+        from libpebble2.communication.transports.qemu import MessageTargetQemu
+
+        self._send_to_qemu(
+            struct.pack("<Bb", bpm, quality),
+            MessageTargetQemu(protocol=QEMU_PROTOCOL_HEART_RATE, raw=True),
+        )
 
     def screenshot(self):
         from PIL import Image

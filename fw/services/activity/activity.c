@@ -53,7 +53,7 @@ ActivityState *activity_private_state(void) {
 
 // ------------------------------------------------------------------------------------------------
 bool activity_is_hrm_present(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   if (!s_activity_initialized) {
     return false;
   }
@@ -68,7 +68,7 @@ static bool prv_activity_allowed_to_be_enabled(void) {
 }
 
 // ------------------------------------------------------------------------------------------------
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Get the HRM measurement period in seconds based on the user's setting
 static uint32_t prv_get_hrm_period_sec(void) {
   switch (activity_prefs_get_hrm_measurement_interval()) {
@@ -85,7 +85,7 @@ static uint32_t prv_get_hrm_period_sec(void) {
 }
 #endif
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 static void prv_activity_spo2_schedule_update(void); // defined below; used by the HR callback
 #endif
 
@@ -93,7 +93,7 @@ static void prv_activity_spo2_schedule_update(void); // defined below; used by t
 // If necessary, change the sampling period of our heart rate subscription
 // @param[in] now_ts number of seconds the system has been running (from time_get_uptime_seconds())
 static void prv_heart_rate_subscription_update(uint32_t now_ts) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // If measurement interval is disabled, ensure we're not sampling and skip
   if (activity_prefs_get_hrm_measurement_interval() == HRMonitoringInterval_Disabled) {
     if (s_activity_state.hr.currently_sampling) {
@@ -176,12 +176,12 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     s_activity_state.hr.toggled_sampling_at_ts = now_ts;
     PBL_LOG_DBG("Changed HR sampling period to %" PRIu32 " sec", desired_interval_sec);
   }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new data arrives
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   PBL_LOG_DBG("Got HR event: %d", (int)hrm_event->event_type);
   if (hrm_event->event_type == HRMEvent_BPM) {
@@ -246,12 +246,12 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
     prv_activity_spo2_schedule_update();
   }
 }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
 // ---------------------------------------------------------------------------------------
 // Init heart rate support
 static void prv_heart_rate_init(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // Subscribe to HRM data
   s_activity_state.hr.currently_sampling = false;
   s_activity_state.hr.toggled_sampling_at_ts = time_get_uptime_seconds();
@@ -262,21 +262,21 @@ static void prv_heart_rate_init(void) {
 
   s_activity_state.hr.log_session = protobuf_log_hr_create(nullptr);
   PBL_ASSERTN(s_activity_state.hr.log_session != nullptr);
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 // ---------------------------------------------------------------------------------------
 // De-init heart rate support
 static void prv_heart_rate_deinit(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   sys_hrm_manager_unsubscribe(s_activity_state.hr.hrm_session);
   protobuf_log_session_delete(s_activity_state.hr.log_session);
   activity_metrics_prv_reset_hr_stats();
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 // ------------------------------------------------------------------------------------------------
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Get the SpO2 measurement period in seconds based on the user's setting
 static uint32_t prv_get_spo2_period_sec(void) {
   switch (activity_prefs_get_spo2_measurement_interval()) {
@@ -295,7 +295,7 @@ static uint32_t prv_get_spo2_period_sec(void) {
 // Switch our SpO2 session between sampling and dormant. A dormant session asks for no features at
 // all, so the manager ignores it: it otherwise treats a never-served subscriber as due, which would
 // light the red/IR LED at boot (and again every OFF period) with no measurement window open.
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 static void prv_spo2_set_sampling(bool sampling, uint32_t now_ts) {
   bool success = sys_hrm_manager_set_features(s_activity_state.spo2.hrm_session,
                                               sampling ? HRMFeature_SpO2 : (HRMFeature)0);
@@ -312,13 +312,13 @@ static void prv_spo2_set_sampling(bool sampling, uint32_t now_ts) {
   }
   PBL_LOG_DBG("Changed SpO2 sampling period to %" PRIu32 " sec", interval_sec);
 }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
 // ------------------------------------------------------------------------------------------------
 // If necessary, change the sampling period of our SpO2 subscription. Mirrors the heart rate
 // scheduler but runs on its own independent interval.
 static void prv_spo2_subscription_update(uint32_t now_ts) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // If SpO2 monitoring is disabled (master toggle off or "Disabled" interval), make sure
   // we're not sampling and skip.
   if (!activity_prefs_spo2_is_enabled() ||
@@ -382,13 +382,13 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
         !s_activity_state.spo2.currently_sampling && !watch_is_flat && !hrm_offwrist;
     prv_spo2_set_sampling(should_be_sampling, now_ts);
   }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 // ------------------------------------------------------------------------------------------------
 // Map the sensor's HRMQuality onto the 0-7 HeartRateQuality scale stored in the minute record
 // (0=none, 1=OffWrist, 3=Worst .. 7=Excellent), matching how heart rate quality is reported.
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 static uint8_t prv_spo2_health_quality(HRMQuality quality) {
   switch (quality) {
     case HRMQuality_Excellent:
@@ -407,11 +407,11 @@ static uint8_t prv_spo2_health_quality(HRMQuality quality) {
       return 0;
   }
 }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new SpO2 data arrives
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   if (hrm_event->event_type != HRMEvent_SpO2) {
     return;
@@ -435,12 +435,12 @@ PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *cont
   // Modify our sampling period now if necessary
   prv_spo2_subscription_update(time_get_uptime_seconds());
 }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
 // ---------------------------------------------------------------------------------------
 // Init SpO2 support
 static void prv_spo2_init(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   s_activity_state.spo2.currently_sampling = false;
   s_activity_state.spo2.toggled_sampling_at_ts = time_get_uptime_seconds();
   // Dormant until a measurement window opens (see prv_spo2_set_sampling).
@@ -448,21 +448,21 @@ static void prv_spo2_init(void) {
       INSTALL_ID_INVALID, ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC, 0 /*expire_s*/, (HRMFeature)0,
       false /*low_latency*/, prv_spo2_subscription_cb, nullptr);
   PBL_ASSERTN(s_activity_state.spo2.hrm_session != HRM_INVALID_SESSION_REF);
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 // ---------------------------------------------------------------------------------------
 // De-init SpO2 support
 static void prv_spo2_deinit(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   sys_hrm_manager_unsubscribe(s_activity_state.spo2.hrm_session);
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 // ------------------------------------------------------------------------------------------------
 // Activity-triggered SpO2: while HR-during-activities is sampling continuously, periodically pause
 // HR and grab one SpO2 point. Independent of the daily SpO2 schedule and the daily SpO2 toggle.
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Pause the continuous activity HR and turn our dedicated SpO2 session on (sampling), or the
 // reverse (resume HR, idle SpO2). Pauses both the auto-activity HR and a manual workout's HR (each
 // a no-op if that one isn't running) so SpO2 owns the optical path for the attempt.
@@ -607,12 +607,12 @@ PBL_T_STATIC void prv_activity_spo2_subscription_cb(PebbleHRMEvent *hrm_event, v
 
   prv_activity_spo2_schedule_update();
 }
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 
 // ---------------------------------------------------------------------------------------
 // Init / de-init activity-triggered SpO2 support
 static void prv_activity_spo2_init(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   s_activity_state.activity_spo2.phase = ActivitySpO2ActPhase_Idle;
   s_activity_state.activity_spo2.update_pending = false;
   // Dormant until an attempt starts (see prv_activity_spo2_set_sampling).
@@ -620,11 +620,11 @@ static void prv_activity_spo2_init(void) {
       INSTALL_ID_INVALID, ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC, 0 /*expire_s*/, (HRMFeature)0,
       false /*low_latency*/, prv_activity_spo2_subscription_cb, nullptr);
   PBL_ASSERTN(s_activity_state.activity_spo2.hrm_session != HRM_INVALID_SESSION_REF);
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 static void prv_activity_spo2_deinit(void) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // Make sure HR isn't left paused if we tear down mid-attempt. Mirror set_sampling(): an attempt
   // pauses both the auto-activity HR and a manual workout's HR, so resume both here too.
   if (s_activity_state.activity_spo2.phase == ActivitySpO2ActPhase_Sampling) {
@@ -633,7 +633,7 @@ static void prv_activity_spo2_deinit(void) {
   }
   sys_hrm_manager_unsubscribe(s_activity_state.activity_spo2.hrm_session);
   s_activity_state.activity_spo2.phase = ActivitySpO2ActPhase_Idle;
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -897,7 +897,7 @@ static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
     // Update the SpO2 sampling period if necessary
     prv_spo2_subscription_update(time_get_uptime_seconds());
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     // Drive the activity-triggered SpO2 reader (backstop; the data callbacks drive it
     // finer-grained)
     prv_activity_spo2_schedule_update();

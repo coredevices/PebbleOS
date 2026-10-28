@@ -4,10 +4,10 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include <pbl/drivers/hrm.h>
 #include <pbl/kernel/types.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/services/hrm/hrm_ppg.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
@@ -36,7 +36,7 @@ extern uint32_t prv_get_dropped_events_count(void);
 extern HRMFeature prv_select_active_path(HRMFeature wanted);
 
 // -----------------------------------------------------------------------------
-// HRM Driver fakes
+// HRM processing fakes
 // -----------------------------------------------------------------------------
 
 static struct {
@@ -46,21 +46,20 @@ static struct {
   int enable_count;
 } s_hrm_state;
 
-bool hrm_enable(HRMDevice *dev, HRMFeature features, bool low_latency) {
+int hrm_ppg_start(HRMFeature features, bool low_latency) {
   s_hrm_state.low_latency = low_latency;
   s_hrm_state.enabled = true;
   s_hrm_state.features = features;
   s_hrm_state.enable_count++;
-  return true;
+  return 0;
 }
-void hrm_disable(HRMDevice *dev) {
+void hrm_ppg_stop(void) {
   s_hrm_state.enabled = false;
 }
-bool hrm_is_enabled(HRMDevice *dev) {
+bool hrm_ppg_is_running(void) {
   return s_hrm_state.enabled;
 }
-void hrm_set_activity_scene(HRMDevice *dev, HRMActivityScene scene) {
-  (void)dev;
+void hrm_ppg_set_scene(HRMActivityScene scene) {
   (void)scene;
 }
 
@@ -257,7 +256,7 @@ void test_hrm_manager__subscription(void) {
   cl_assert(subscriber->expire_utc == rtc_get_time() + expire_s);
   cl_assert(subscriber->update_interval_s == update_interval_s);
   cl_assert(subscriber->features == HRMFeature_BPM);
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   // We should be able to find it by app ad as well
   cl_assert(sys_hrm_manager_get_app_subscription(app_id) == session_ref);
@@ -277,7 +276,7 @@ void test_hrm_manager__subscription(void) {
   sys_hrm_manager_unsubscribe(session_ref);
   fake_system_task_callbacks_invoke_pending();
   cl_assert(prv_get_subscriber_state_from_ref(session_ref) == nullptr);
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 }
 
 // An accel data event queued before the sensor turned off, or before it turned on again with a new
@@ -327,7 +326,7 @@ void test_hrm_manager__feature_change_restarts_sensor(void) {
   HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(app_id, 1, 0 /*expire_s*/, HRMFeature_BPM);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
   cl_assert_equal_i(s_hrm_state.enable_count, 1);
 
@@ -337,20 +336,20 @@ void test_hrm_manager__feature_change_restarts_sensor(void) {
       sys_hrm_manager_app_subscribe(app_id, 1, 0 /*expire_s*/, HRMFeature_BPM | HRMFeature_HRV);
   cl_assert(new_ref == session_ref);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM | HRMFeature_HRV);
   cl_assert_equal_i(s_hrm_state.enable_count, 2);
 
   // Dropping HRV again restarts back to BPM only
   sys_hrm_manager_app_subscribe(app_id, 1, 0 /*expire_s*/, HRMFeature_BPM);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
   cl_assert_equal_i(s_hrm_state.enable_count, 3);
 
   sys_hrm_manager_unsubscribe(session_ref);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 }
 
 // A same-path superset keeps running: a served longer-interval BPM|HRV subscriber must not make the
@@ -375,7 +374,7 @@ void test_hrm_manager__same_path_superset_keeps_running(void) {
   prv_fake_send_new_data();
   hrm_manager_handle_prefs_changed();
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM | HRMFeature_HRV);
   cl_assert_equal_i(s_hrm_state.enable_count, 2);
 
@@ -387,7 +386,7 @@ void test_hrm_manager__same_path_superset_keeps_running(void) {
 
   sys_hrm_manager_unsubscribe(live_ref);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 }
 
 // Only a foreground app polling at a live-display interval gets the low-latency FIFO cadence;
@@ -413,7 +412,7 @@ void test_hrm_manager__low_latency_only_for_live_foreground_app(void) {
   // A slow-polling app starts the sensor on the default cadence.
   app_ref = sys_hrm_manager_app_subscribe(1 /*app_id*/, PBL_SEC_PER_MIN, 0, HRMFeature_BPM);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   cl_assert_equal_b(s_hrm_state.low_latency, false);
   sys_hrm_manager_unsubscribe(app_ref);
   fake_system_task_callbacks_invoke_pending();
@@ -428,17 +427,17 @@ void test_hrm_manager__pref_mask_exempts_foreground_app(void) {
   HRMSessionRef bg_ref = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 
   stub_pebble_tasks_set_current(PebbleTask_App);
   HRMSessionRef app_ref = sys_hrm_manager_app_subscribe(1 /*app_id*/, 1, 0, HRMFeature_SpO2);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_SpO2);
 
   sys_hrm_manager_unsubscribe(app_ref);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
   sys_hrm_manager_unsubscribe(bg_ref);
 }
 
@@ -674,7 +673,7 @@ void test_hrm_manager__subscribe_multiple(void) {
     cl_assert(prv_get_subscriber_state_from_ref(session_refs[i]) == nullptr);
     cl_assert(prv_get_subscriber_state_from_app_id(PebbleTask_App, app_ids[i]) == nullptr);
   }
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 }
 
 void test_hrm_manager__feature_callbacks(void) {
@@ -709,7 +708,7 @@ void test_hrm_manager__no_feature_callbacks(void) {
 
   // A subscriber with no requested features is ignored entirely: it must not power the sensor on,
   // but the subscription still exists and receives no callbacks.
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
   cl_assert(prv_get_subscriber_state_from_ref(session_ref));
 
   cl_assert_equal_i(s_event_count, 0);
@@ -899,27 +898,27 @@ void test_hrm_manager__enable_disable(void) {
   // 1. Disabling and then enabling with no subscriber should leave the HRM off
   hrm_manager_enable(false);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
   hrm_manager_enable(true);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 
   // 2. Subscribing while disabled should not enable the hrm
   hrm_manager_enable(false);
   fake_system_task_callbacks_invoke_pending();
   HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(1, 1, PBL_SEC_PER_MIN, HRMFeature_BPM);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 
   // 3. Enabling with a subscriber should turn HRM on
   hrm_manager_enable(true);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   // 4. Disabling with a Subscriber should disable the HRM
   hrm_manager_enable(false);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 
   sys_hrm_manager_unsubscribe(session_ref);
 }
@@ -942,11 +941,11 @@ void test_hrm_manager__update_interval(void) {
   fake_system_task_callbacks_invoke_pending();
 
   // Should start out enabled before we get the first good reading
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   // Send some data while enabled
   int num_updates;
-  for (num_updates = 0; num_updates < 1000 && hrm_is_enabled(HRM); num_updates++) {
+  for (num_updates = 0; num_updates < 1000 && hrm_ppg_is_running(); num_updates++) {
     prv_fake_send_new_data();
     fake_system_task_callbacks_invoke_pending();
   }
@@ -963,10 +962,10 @@ void test_hrm_manager__update_interval(void) {
   prv_advance_time_ms(timeout_ms);
   stub_new_timer_fire(prv_get_timer_id());
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   // Send the next data, should be disabled again after that
-  for (num_updates = 0; num_updates < 1000 && hrm_is_enabled(HRM); num_updates++) {
+  for (num_updates = 0; num_updates < 1000 && hrm_ppg_is_running(); num_updates++) {
     prv_fake_send_new_data();
     fake_system_task_callbacks_invoke_pending();
   }
@@ -977,14 +976,14 @@ void test_hrm_manager__update_interval(void) {
   update_interval_s = 10;
   cl_assert(sys_hrm_manager_set_update_interval(session_ref, update_interval_s, expire_s));
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   prv_advance_time_ms(1000);
 
   // Send the next data, should still be enabled since the interval is less that the spin-up
   // time
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   prv_advance_time_ms(1000);
 
   // Now add a 10 minute subscription back in.
@@ -996,19 +995,19 @@ void test_hrm_manager__update_interval(void) {
   // too
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   prv_advance_time_ms(1000);
 
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
   prv_advance_time_ms(1000);
 
   // Remove the 10 second subscription - We should get disabled after the next update now
   sys_hrm_manager_unsubscribe(session_ref);
   prv_fake_send_new_data();
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 }
 
 void test_hrm_manager__can_turn_sensor_on(void) {
@@ -1024,36 +1023,36 @@ void test_hrm_manager__can_turn_sensor_on(void) {
   hrm_manager_enable(false);
   cl_assert(!prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(!hrm_is_enabled(HRM));
+  cl_assert(!hrm_ppg_is_running());
 
   hrm_manager_enable(true);
   cl_assert(prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(hrm_is_enabled(HRM));
+  cl_assert(hrm_ppg_is_running());
 
   // Test the pref changes
   s_activity_prefs_heart_rate_is_enabled = false;
   hrm_manager_handle_prefs_changed();
   cl_assert(!prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(!hrm_is_enabled(HRM));
+  cl_assert(!hrm_ppg_is_running());
 
   s_activity_prefs_heart_rate_is_enabled = true;
   hrm_manager_handle_prefs_changed();
   cl_assert(prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(hrm_is_enabled(HRM));
+  cl_assert(hrm_ppg_is_running());
 
   // Test charging state changes
   prv_put_battery_state_change_event(true /* is plugged in */);
   cl_assert(!prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(!hrm_is_enabled(HRM));
+  cl_assert(!hrm_ppg_is_running());
 
   prv_put_battery_state_change_event(false /* is plugged in */);
   cl_assert(prv_can_turn_sensor_on());
   fake_system_task_callbacks_invoke_pending();
-  cl_assert(hrm_is_enabled(HRM));
+  cl_assert(hrm_ppg_is_running());
 }
 
 // A full app event queue (app not draining events fast enough) must not panic the firmware.
@@ -1092,7 +1091,7 @@ void test_hrm_manager__unserved_subscriber_timeout(void) {
   fake_system_task_callbacks_invoke_pending();
 
   // Never served, so the sensor turns on right away
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   // Sub-Good readings don't serve the subscriber; the sensor stays on before the timeout
   const HRMData poor_data = {
@@ -1104,7 +1103,7 @@ void test_hrm_manager__unserved_subscriber_timeout(void) {
     hrm_manager_new_data_cb(&poor_data);
     fake_system_task_callbacks_invoke_pending();
   }
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   // Once the serve window expires, the subscriber is deferred and the sensor powers off
   prv_advance_time_ms((HRM_MAX_UNSERVED_TIME_SEC + 1) * PBL_MSEC_PER_SEC);
@@ -1112,7 +1111,7 @@ void test_hrm_manager__unserved_subscriber_timeout(void) {
     hrm_manager_new_data_cb(&poor_data);
     fake_system_task_callbacks_invoke_pending();
   }
-  cl_assert_equal_b(hrm_is_enabled(HRM), false);
+  cl_assert_equal_b(hrm_ppg_is_running(), false);
 
   // The re-enable timer waits out the subscriber's interval, not another immediate attempt
   uint32_t timeout_ms = stub_new_timer_timeout(prv_get_timer_id());
@@ -1127,7 +1126,7 @@ void test_hrm_manager__unserved_timeout_keeps_live_hr_on(void) {
   HRMSessionRef session_ref =
       sys_hrm_manager_app_subscribe(1 /*app_id*/, 1 /*interval_s*/, 0 /*expire_s*/, HRMFeature_BPM);
   fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   const HRMData poor_data = {
     .features = HRMFeature_BPM,
@@ -1139,7 +1138,7 @@ void test_hrm_manager__unserved_timeout_keeps_live_hr_on(void) {
     hrm_manager_new_data_cb(&poor_data);
     fake_system_task_callbacks_invoke_pending();
   }
-  cl_assert_equal_b(hrm_is_enabled(HRM), true);
+  cl_assert_equal_b(hrm_ppg_is_running(), true);
 
   sys_hrm_manager_unsubscribe(session_ref);
 }

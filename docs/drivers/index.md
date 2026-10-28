@@ -11,6 +11,9 @@ Two classes carry design notes worth reading before changing them:
   between the dumb low-level driver and the accel service that owns
   buffering, clients and subsampling, so the same service code runs on any
   accel part.
+- **PPG front end** — `include/pbl/drivers/ppg.h` describes the slot and
+  receiver model: drivers deliver raw samples, and gain control and the
+  heart rate algorithms live in the HRM service (`services/hrm`).
 - **Flash** — `drivers/flash/README.md` documents the two flash APIs:
   the main one, and a coredump-only path that must work without OS services.
 

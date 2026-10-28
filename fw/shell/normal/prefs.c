@@ -819,9 +819,9 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
   // for the setting
   s_activity_hrm_preferences = *new_settings;
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   hrm_manager_handle_prefs_changed();
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
 #ifdef CONFIG_SERVICE_BLE_HRM
   ble_hrm_handle_activity_prefs_heart_rate_is_enabled(new_settings->enabled);
 #endif // CONFIG_SERVICE_BLE_HRM
@@ -831,9 +831,9 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
 static bool prv_set_s_activity_spo2_preferences(ActivitySpO2Settings *new_settings) {
   s_activity_spo2_preferences = *new_settings;
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   hrm_manager_handle_prefs_changed();
-#endif // CONFIG_HRM
+#endif // CONFIG_SERVICE_HRM
   return true;
 }
 
@@ -2194,7 +2194,7 @@ bool activity_prefs_heart_rate_is_enabled(void) {
   return s_activity_hrm_preferences.enabled;
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 HRMonitoringInterval activity_prefs_get_hrm_measurement_interval(void) {
   uint8_t interval = s_activity_hrm_preferences.measurement_interval;
   if (interval >= HRMonitoringIntervalCount) {
@@ -2392,7 +2392,7 @@ void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) 
 void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_tracking_enabled,
                              activity_prefs_tracking_is_enabled());
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_enabled, activity_prefs_heart_rate_is_enabled());
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_hrm_measurement_interval,
                              activity_prefs_get_hrm_measurement_interval());

@@ -363,7 +363,7 @@ typedef struct KAlgState {
 
   bool disable_activity_session_tracking; // If true don't automatically track activities
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   bool activity_hrm_paused; // True while the activity HR session is parked for a SpO2 attempt
 #endif
 } KAlgState;
@@ -379,7 +379,7 @@ static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
   return alg_state->log_time_fmt;
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Bound the auto-activity HR subscription and re-arm it each active minute, so it lapses on its own
 // if this state machine ever stops running. An activity survives k_max_inactive_minutes without
 // reaching here, so the window has to comfortably exceed that.
@@ -391,7 +391,7 @@ static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
 // ----------------------------------------------------------------------------------------
 // Drop the HRM subscription held by a step activity, if it has one.
 static void prv_release_step_activity_hrm(KAlgStepActivityState *state) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   if (state->hrm_session != HRM_INVALID_SESSION_REF) {
     sys_hrm_manager_unsubscribe(state->hrm_session);
     state->hrm_session = HRM_INVALID_SESSION_REF;
@@ -1948,7 +1948,7 @@ static const KAlgActivityAttributes *prv_get_step_activity_attributes(KAlgActivi
   return &k_attributes[activity];
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // ------------------------------------------------------------------------------------------
 static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   // The algorithm doesn't care about these events. It only subscribed so the activity service
@@ -1956,7 +1956,7 @@ static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
 }
 #endif
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Recompute the HR algorithm's activity scene from whichever auto-detected walk/run session is
 // sampling HR. Run dominates walk (higher intensity); neither active -> default model. Manual
 // workouts disable auto-tracking, so this never races the workout's own scene. Runs on KernelBG.
@@ -1997,7 +1997,7 @@ static void prv_end_step_activity(KAlgState *alg_state, KAlgStepActivityState *s
                 state->distance_mm);
   }
   prv_reset_step_activity_state(state);
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // This activity's HR session is gone; recompute the scene so it follows whichever activity
   // (if any) is still running, or drops back to the default model.
   prv_update_activity_hrm_scene(alg_state);
@@ -2015,7 +2015,7 @@ static void prv_reset_state(KAlgState *state, KAlgActivitySessionCallback sessio
   state->sleep_state = (KAlgSleepActivityState){};
   state->deep_sleep_state = (KAlgDeepSleepActivityState){};
   state->not_worn_state = (KAlgNotWornState){};
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   state->activity_hrm_paused = false;
 #endif
 }
@@ -2055,7 +2055,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
     PBL_ASSERTN(state->start_time < utc_now);
     uint32_t duration_secs = utc_now - state->start_time;
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     // Honour an in-progress pause: re-arming at 1 Hz here would silently undo
     // kalg_activity_hrm_set_paused() partway through a SpO2 attempt, putting the green path back
     // on the shared optical path and making the attempt fail.
@@ -2182,7 +2182,7 @@ void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable,
 }
 
 bool kalg_activity_hrm_is_active(KAlgState *kalg_state) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   return (kalg_state->walk_state.hrm_session != HRM_INVALID_SESSION_REF) ||
          (kalg_state->run_state.hrm_session != HRM_INVALID_SESSION_REF);
 #else
@@ -2191,7 +2191,7 @@ bool kalg_activity_hrm_is_active(KAlgState *kalg_state) {
 }
 
 void kalg_activity_hrm_set_paused(KAlgState *kalg_state, bool paused) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // Idle the activity HR session(s) (interval = 1 day) to free the optical path, or restore the
   // 1 s continuous rate. The subscriber stays alive either way, so resuming is immediate. Keep the
   // expiry bound: passing 0 would clear it and leave an unbounded 1 s subscription behind.

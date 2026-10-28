@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 
-#include <pbl/drivers/hrm.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -14,6 +13,7 @@
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
+#include <pbl/services/hrm/hrm_ppg.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -247,7 +247,7 @@ static HRMFeature prv_subscriber_allowed_features(const HRMSubscriberState *stat
 }
 
 #ifndef CONFIG_MFG
-// The GH3X2X lights one optical path at a time: SpO2 uses the red/IR LEDs, BPM/HRV use the green
+// The front end lights one optical path at a time: SpO2 uses the red/IR LEDs, BPM/HRV use the green
 // LED. Returns true if this feature set maps to the red/IR (SpO2) path.
 static bool prv_features_use_ir_path(HRMFeature features) {
   return (features & HRMFeature_SpO2) != 0;
@@ -292,7 +292,7 @@ static bool prv_should_reconfigure(HRMFeature wanted, HRMFeature active, HRMFeat
 // the prompt FIFO cadence for a live-display consumer; background logging passes false to save
 // MCU/I2C wakeups. Returns true on success. Must be called with s_manager_state.lock held.
 static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
-  // Only subscribe if not already subscribed (prevents leak if hrm_is_enabled is out of sync)
+  // Only subscribe if not already subscribed (prevents leak if the sensor state is out of sync)
   if (s_manager_state.accel_state) {
     PBL_LOG_WRN("HRM: accel already subscribed, unsubscribing first");
     prv_accel_unsubscribe();
@@ -305,7 +305,7 @@ static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
     features = HRMFeature_BPM;
   }
 
-  if (!hrm_enable(HRM, features, low_latency)) {
+  if (hrm_ppg_start(features, low_latency) != 0) {
     // HRM failed to enable, clean up the accel subscription
     s_manager_state.enable_failure_count++;
     if (s_manager_state.enable_failure_count >= HRM_MAX_ENABLE_FAILURES) {
@@ -326,7 +326,7 @@ static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
   s_manager_state.unserved_timeout_logged = false;
   // Re-apply the current activity scene so a sensor power-cycle never drops back to the default
   // (least motion-tolerant) HR model while an activity is in progress.
-  hrm_set_activity_scene(HRM, s_manager_state.activity_scene);
+  hrm_ppg_set_scene(s_manager_state.activity_scene);
   // Track HRM on-time
   PBL_ANALYTICS_TIMER_START(hrm_on_time_ms);
   return true;
@@ -334,7 +334,7 @@ static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
 
 // Take the sensor offline and release the accel subscription. Must hold s_manager_state.lock.
 static void prv_sensor_disable(void) {
-  hrm_disable(HRM);
+  hrm_ppg_stop();
   // Stop tracking HRM on-time
   PBL_ANALYTICS_TIMER_STOP(hrm_on_time_ms);
   s_manager_state.active_features = 0;
@@ -380,7 +380,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       // subscriber. Only counts continuous on-time, so subscribers that went overdue while the
       // sensor was forced off (charging, run level) still get served first.
       const bool serve_window_expired =
-          hrm_is_enabled(HRM) && s_manager_state.sensor_on_since_ticks &&
+          hrm_ppg_is_running() && s_manager_state.sensor_on_since_ticks &&
           ((int64_t)(cur_ticks - s_manager_state.sensor_on_since_ticks) > unserved_timeout_ticks);
 
       const HRMFeature prefs_allowed = prv_prefs_allowed_features();
@@ -446,7 +446,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     const HRMFeature active_features = prv_select_active_path(wanted_features);
 
     if (turn_sensor_on && active_features != 0 && !hrm_permanently_failed) {
-      if (!hrm_is_enabled(HRM)) {
+      if (!hrm_ppg_is_running()) {
         // Sensor is off and a subscriber is due: bring it online.
         PBL_LOG_DBG("Turning on HR sensor (features 0x%x)", active_features);
         if (prv_sensor_enable(active_features, low_latency_wanted)) {
@@ -456,13 +456,13 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       } else if (prv_should_reconfigure(active_features, s_manager_state.active_features,
                                         live_features)) {
         // Restart when the optical path changes (HR <-> SpO2) or the running feature set no longer
-        // fits the subscribers. Both need a fresh hrm_enable with the new set.
+        // fits the subscribers. Both need a fresh start with the new set.
         PBL_LOG_DBG("Restarting HR sensor (0x%x -> 0x%x)", s_manager_state.active_features,
                     active_features);
         prv_sensor_disable();
         prv_sensor_enable(active_features, low_latency_wanted);
       }
-    } else if (!turn_sensor_on && hrm_is_enabled(HRM)) {
+    } else if (!turn_sensor_on && hrm_ppg_is_running()) {
       // Turn off the sensor now
       PBL_LOG_DBG("Turning off HR sensor");
       prv_sensor_disable();
@@ -543,18 +543,6 @@ static void prv_system_task_hrm_handler(void *context) {
           continue;
         }
         break;
-#ifdef CONFIG_MFG
-      case HRMEvent_CTR:
-        if (!(state->features & HRMFeature_CTR)) {
-          continue;
-        }
-        break;
-      case HRMEvent_Leakage:
-        if (!(state->features & HRMFeature_Leakage)) {
-          continue;
-        }
-        break;
-#endif
       case HRMEvent_SubscriptionExpiring:
         continue;
     }
@@ -599,22 +587,6 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
       event->spo2.valid_level = data->spo2_valid_level;
       event->spo2.invalid = data->spo2_invalid;
       break;
-#ifdef CONFIG_MFG
-    case HRMFeature_CTR: {
-      HRMCTRData *ctr_data = kernel_zalloc_check(sizeof(HRMCTRData));
-      memcpy(ctr_data->ctr, data->ctr, sizeof(HRMCTRData));
-      event->event_type = HRMEvent_CTR;
-      event->ctr = ctr_data;
-      break;
-    }
-    case HRMFeature_Leakage: {
-      HRMLeakageData *leakage_data = kernel_zalloc_check(sizeof(HRMLeakageData));
-      memcpy(leakage_data->leakage, data->leakage, sizeof(HRMLeakageData));
-      event->event_type = HRMEvent_Leakage;
-      event->leakage = leakage_data;
-      break;
-    }
-#endif
     default:
       pbl_panic();
   }
@@ -801,7 +773,7 @@ void hrm_manager_set_activity_scene(HRMActivityScene scene) {
   s_manager_state.activity_scene = scene;
   // Apply immediately too: if the sensor is already on (e.g. a continuous workout HR session) the
   // algorithm should switch scenes without waiting for the next power cycle.
-  hrm_set_activity_scene(HRM, scene);
+  hrm_ppg_set_scene(scene);
   pbl_mutex_unlock(&s_manager_state.lock);
 }
 
@@ -1048,7 +1020,7 @@ void hrm_manager_process_cleanup(PebbleTask task, AppInstallId app_id) {
                                       HRM_MANAGER_APP_EXIT_EXPIRATION_SEC);
 }
 
-#if defined(CONFIG_SHELL) && defined(CONFIG_HRM)
+#ifdef CONFIG_SHELL
 #include <errno.h>
 
 #include <pbl/shell/shell.h>
