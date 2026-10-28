@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-set(sources)
+set(sources display.c)
 if(CONFIG_DISPLAY_QEMU)
   list(APPEND sources qemu.c)
 elseif(CONFIG_DISPLAY_SDL)
