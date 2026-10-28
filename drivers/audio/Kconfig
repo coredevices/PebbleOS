@@ -21,6 +21,12 @@ config AUDIO_SF32LB52_AUDCODEC
     help
       Playback through the DAC of the SF32LB52 audio codec.
 
+config AUDIO_SF32LB52_PDM
+    bool "SiFli SF32LB52 PDM"
+    depends on SOC_SF32LB52 && DMA_SF32LB52 && CLK_SF32LB && RESET_SF32LB && PINCTRL && REGULATOR
+    help
+      Capture from digital microphones on the SF32LB52 PDM interface.
+
 config AUDIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
