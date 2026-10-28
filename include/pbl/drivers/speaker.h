@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 /**
- * @defgroup drivers_audio Audio playback
+ * @defgroup drivers_speaker Audio playback
  * @ingroup drivers
  * @brief Speaker (audio output) driver interface.
  *

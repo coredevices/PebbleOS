@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/util/circular_buffer.h>
 
@@ -14,8 +14,8 @@
 
 /**
  * @defgroup drivers_speaker_nrf5 DA7212 on nRF5
- * @ingroup drivers_audio
- * @brief @ref drivers_audio implementation for a DA7212 codec fed by the nRF5 I2S peripheral.
+ * @ingroup drivers_speaker
+ * @brief @ref drivers_speaker implementation for a DA7212 codec fed by the nRF5 I2S peripheral.
  * @{
  */
 

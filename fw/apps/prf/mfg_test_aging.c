@@ -8,7 +8,7 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/als.h>
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/mag.h>

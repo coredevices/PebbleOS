@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/audio.h>
+#include <pbl/drivers/speaker.h>
 #include <pbl/drivers/clocksource.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
