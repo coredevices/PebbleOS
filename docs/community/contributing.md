@@ -112,8 +112,12 @@ The following rules additionally apply to contributions made in whole or part us
 - Big pull requests are not allowed and will be ignored or closed, unless previously agreed with
   the maintainers. Reviewing big AI-assisted pull requests is time-consuming and not necessarily
   productive.
-- You may review pull requests with AI assistance, but never publish the AI review comments. Keep
-  them to yourself and push changes fixing the bugs you confirm.
+- You may review pull requests with AI assistance. Review comments are posted only when a human
+  asked for the review, checked the findings and stands behind them as their own. Do not let AI
+  tools comment on pull requests by themselves, nor reply to AI review comments with more AI
+  output: comments are for the author and reviewers, not for tools talking to each other. When
+  reviewing your own pull request, keep the AI findings to yourself and push changes fixing the
+  bugs you confirm.
 - All submitted text is in English. We do not have the capacity to review text or translations for other languages at this time and we do not trust LLMs to handle this correctly.
 - No AI-generated images, icons, SVG files, or other critically artistic works are included in the content of the pull request.
 
