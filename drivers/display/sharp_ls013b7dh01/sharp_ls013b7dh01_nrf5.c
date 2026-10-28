@@ -9,13 +9,13 @@
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/soc/nrf/ppi.h>
 #include <pbl/util/bitops.h>
 
 #include <board/board.h>
 #include <hal/nrf_gpiote.h>
 #include <hal/nrf_rtc.h>
 #include <kernel/events.h>
-#include <nrfx_gppi.h>
 #include <nrfx_spim.h>
 
 #define DISP_MODE_WRITE 0x01U
@@ -30,7 +30,6 @@ static PBL_SEM_DEFINE(s_sem, 0, 1);
 static bool s_rotated_180 = false;
 
 static void prv_extcomin_init(void) {
-  nrfx_err_t err;
   const NrfLowPowerPWM *extcomin = &BOARD_CONFIG_DISPLAY.extcomin;
   uint32_t evt_addr, task_addr;
   uint8_t ppi_ch[2];
@@ -56,26 +55,21 @@ static void prv_extcomin_init(void) {
                             NRF_GPIOTE_INITIAL_VALUE_LOW);
   nrf_gpiote_task_enable(extcomin->gpiote, te_ch);
 
-  err = nrfx_gppi_channel_alloc(&ppi_ch[0]);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  err = nrfx_gppi_channel_alloc(&ppi_ch[1]);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
+  PBL_ASSERTN(soc_nrf_ppi_alloc(&ppi_ch[0]) == 0);
+  PBL_ASSERTN(soc_nrf_ppi_alloc(&ppi_ch[1]) == 0);
 
   // Period end (CC0) sets GPIO, clears RTC
   evt_addr = nrf_rtc_event_address_get(extcomin->rtc, nrf_rtc_compare_event_get(0));
   task_addr = nrf_gpiote_task_address_get(extcomin->gpiote, nrf_gpiote_set_task_get(te_ch));
-  nrfx_gppi_channel_endpoints_setup(ppi_ch[0], evt_addr, task_addr);
-
-  task_addr = nrf_rtc_task_address_get(extcomin->rtc, NRF_RTC_TASK_CLEAR);
-  nrfx_gppi_fork_endpoint_setup(ppi_ch[0], task_addr);
+  soc_nrf_ppi_setup(ppi_ch[0], evt_addr, task_addr,
+                    nrf_rtc_task_address_get(extcomin->rtc, NRF_RTC_TASK_CLEAR));
 
   // Pulse end (CC1) clears GPIO
   evt_addr = nrf_rtc_event_address_get(extcomin->rtc, nrf_rtc_compare_event_get(1));
   task_addr = nrf_gpiote_task_address_get(extcomin->gpiote, nrf_gpiote_clr_task_get(te_ch));
-  nrfx_gppi_channel_endpoints_setup(ppi_ch[1], evt_addr, task_addr);
+  soc_nrf_ppi_setup(ppi_ch[1], evt_addr, task_addr, 0U);
 
-  nrfx_gppi_channels_enable((1UL << ppi_ch[0]) | (1UL << ppi_ch[1]));
+  soc_nrf_ppi_enable((1UL << ppi_ch[0]) | (1UL << ppi_ch[1]));
 
   nrf_rtc_task_trigger(extcomin->rtc, NRF_RTC_TASK_START);
 }

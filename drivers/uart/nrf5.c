@@ -6,13 +6,10 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
+#include <pbl/soc/nrf/ppi.h>
+#include <pbl/util/bits.h>
 
 #include <nrfx_uarte.h>
-#ifdef NRF_PPI_BASE
-#include <nrfx_ppi.h>
-#else
-#include <nrfx_dppi.h>
-#endif
 
 PBL_LOG_MODULE_DEFINE(driver_uart_nrf5, CONFIG_DRIVER_UART_LOG_LEVEL);
 
@@ -59,43 +56,20 @@ void uart_init(UARTDevice *dev) {
   err = nrfx_timer_init(&dev->counter, &tconfig, _timer_event_handler);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-#ifdef NRF_PPI_BASE
-  nrf_ppi_channel_t rxdrdy_count_channel;
-  nrf_ppi_channel_t endrx_clear_channel;
-
-  err = nrfx_ppi_channel_alloc(&rxdrdy_count_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  nrfx_ppi_channel_assign(rxdrdy_count_channel,
-                          nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_RXDRDY),
-                          nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_COUNT));
-  nrfx_ppi_channel_enable(rxdrdy_count_channel);
-
-  err = nrfx_ppi_channel_alloc(&endrx_clear_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  nrfx_ppi_channel_assign(endrx_clear_channel,
-                          nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_ENDRX),
-                          nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_CLEAR));
-  nrfx_ppi_channel_enable(endrx_clear_channel);
-#else
   uint8_t rxdrdy_count_channel;
   uint8_t endrx_clear_channel;
 
-  err = nrfx_dppi_channel_alloc(&rxdrdy_count_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_RXDRDY),
-                          rxdrdy_count_channel);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_COUNT),
-                          rxdrdy_count_channel);
-  nrfx_dppi_channel_enable(rxdrdy_count_channel);
+  PBL_ASSERTN(soc_nrf_ppi_alloc(&rxdrdy_count_channel) == 0);
+  soc_nrf_ppi_setup(rxdrdy_count_channel,
+                    nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_RXDRDY),
+                    nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_COUNT), 0U);
 
-  err = nrfx_dppi_channel_alloc(&endrx_clear_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_ENDRX),
-                          endrx_clear_channel);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_CLEAR),
-                          endrx_clear_channel);
-  nrfx_dppi_channel_enable(endrx_clear_channel);
-#endif
+  PBL_ASSERTN(soc_nrf_ppi_alloc(&endrx_clear_channel) == 0);
+  soc_nrf_ppi_setup(endrx_clear_channel,
+                    nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_ENDRX),
+                    nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_CLEAR), 0U);
+
+  soc_nrf_ppi_enable(PBL_BIT(rxdrdy_count_channel) | PBL_BIT(endrx_clear_channel));
 
   dev->state->initialized = true;
 }
