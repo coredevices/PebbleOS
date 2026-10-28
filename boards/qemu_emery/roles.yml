@@ -14,6 +14,9 @@ als:
   symbol: QEMU_ALS
   include: pbl/drivers/als/qemu.h
 touch: touchscreen
+ppg:
+  symbol: QEMU_PPG
+  include: pbl/drivers/ppg/qemu.h
 vibe:
   symbol: QEMU_VIBE
   include: pbl/drivers/vibe/qemu.h
