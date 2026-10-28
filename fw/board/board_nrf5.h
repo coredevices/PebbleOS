@@ -15,7 +15,6 @@
 
 #include <hal/nrf_gpio.h>
 #include <nrfx_pdm.h>
-#include <nrfx_timer.h>
 // clang-format on
 
 typedef struct {

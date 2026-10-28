@@ -64,19 +64,14 @@ QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
 static UARTDeviceState s_dbg_uart_state;
 static UARTDevice DBG_UART_DEVICE = {
   .state = &s_dbg_uart_state,
-  .tx_gpio = NRF_GPIO_PIN_MAP(0, 27),
-  .rx_gpio = NRF_GPIO_PIN_MAP(0, 5),
-  .rts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
-  .cts_gpio = NRF_UARTE_PSEL_DISCONNECTED,
-  .periph = NRFX_UARTE_INSTANCE(0),
-  .counter = NRFX_TIMER_INSTANCE(2),
+  .index = 0,
+  .timer = 2,
+  .tx = PBL_GPIO(NRF5_GPIO_P0, 27, 0),
+  .rx = PBL_GPIO(NRF5_GPIO_P0, 5, 0),
 };
 UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
-PBL_IRQ_CONNECT(UART0_UARTE0, NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_uarte_0_irq_handler, ,
-                0);
+PBL_IRQ_CONNECT(UART0_UARTE0, 7, uart_irq_handler, DBG_UART, 0);
 /* PERIPHERAL ID 8 */
-
-PBL_IRQ_CONNECT(TIMER2, NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY, nrfx_timer_2_irq_handler, , 0);
 
 /* buttons */
 PBL_GPIO_KEYS_DEFINE(

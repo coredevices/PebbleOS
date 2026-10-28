@@ -5,79 +5,60 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/gpio.h>
 #include <pbl/drivers/uart.h>
 
 #include <board/board.h>
-#include <nrfx_uarte.h>
 
 /**
  * @defgroup drivers_uart_nrf5 nRF5
  * @ingroup drivers_uart
  * @brief nRF5 UARTE device definition.
  *
- * Receive DMA uses a timer counting received bytes to find the DMA write position.
+ * Bytes are sent one at a time through EasyDMA. Reception runs through EasyDMA into the two halves
+ * of the receive DMA buffer, which must be a power of two in size, while a TIMER in counter mode
+ * counts the received bytes. The RX pin is connected when reception first starts.
  * @{
  */
 
 /** @brief nRF5 UART state, owned by the driver. */
-typedef struct UARTState {
-  /** Device initialized. */
-  bool initialized;
+typedef struct UARTDeviceState {
   /** Receive handler. */
   UARTRXInterruptHandler rx_irq_handler;
-  /** Transmit handler. */
-  UARTTXInterruptHandler tx_irq_handler;
+  /** Receive DMA buffer, NULL when not receiving through DMA. */
+  uint8_t *rx_buf;
+  /** Size of the receive DMA buffer in bytes. */
+  uint32_t rx_len;
+  /** Bytes delivered since reception started. */
+  uint32_t rx_consumed;
+  /** Half of the receive DMA buffer to queue next. */
+  uint8_t rx_next;
   /** Receive interrupt enabled. */
   bool rx_int_enabled;
-  /** Transmit interrupt enabled. */
-  bool tx_int_enabled;
-  /** Unused. */
-  bool rx_done_pending;
-  /** Receive DMA buffer, NULL when not receiving through DMA. */
-  uint8_t *rx_dma_buffer;
-  /** Receive DMA running; paused while the receive interrupt is disabled. */
-  bool rx_dma_running;
-  /** Size of the receive DMA buffer in bytes. */
-  uint32_t rx_dma_length;
-  /** Index of the receive sub-buffer queued next to the UARTE. */
-  uint32_t rx_dma_index;
-  /** Index of the receive sub-buffer being filled by DMA. */
-  uint32_t rx_prod_index;
-  /** Index of the receive sub-buffer being consumed. */
-  uint32_t rx_cons_index;
-  /** Consumed bytes in the current receive sub-buffer. */
-  uint32_t rx_cons_pos;
-  /** UARTE transmit cache buffer. */
-  uint32_t tx_cache_buffer[8];
-  /** UARTE receive cache buffer. */
-  uint32_t rx_cache_buffer[8];
+  /** Reception running. */
+  bool rx_running;
+  /** PPI channel counting received bytes. */
+  uint8_t ppi_ch;
 } UARTDeviceState;
 
 /** @brief nRF5 UART device. */
 typedef const struct UARTDevice {
   /** Driver state. */
   UARTDeviceState *state;
-  /** Half-duplex operation. */
-  bool half_duplex;
+  /** UARTE instance index. */
+  uint8_t index;
+  /** Index of the TIMER instance counting received bytes. */
+  uint8_t timer;
   /** TX pin. */
-  uint32_t tx_gpio;
+  struct pbl_gpio tx;
   /** RX pin. */
-  uint32_t rx_gpio;
-  /** RTS pin. */
-  uint32_t rts_gpio;
-  /** CTS pin. */
-  uint32_t cts_gpio;
-  /** UARTE instance. */
-  nrfx_uarte_t periph;
-  /** Timer counting received bytes. */
-  nrfx_timer_t counter;
+  struct pbl_gpio rx;
 } UARTDevice;
 
 /**
  * @brief UART interrupt handler.
  *
- * Called from the IRQ handler in the board file on nRF5, and connected with PBL_IRQ_CONNECT()
- * in the board file on SF32LB and QEMU.
+ * Connected with PBL_IRQ_CONNECT() in the board file.
  *
  * @param dev Device.
  */
