@@ -40,6 +40,20 @@ config AUDIO_HOST_MIC
       Records mono audio the host sends over the QEMU channel
       (`pebble emu-mic`), and silence when it sends none.
 
+config AUDIO_NRF5_PDM
+    bool "Nordic nRF5 PDM"
+    depends on SOC_NRF52
+    select HAL_NORDIC
+    help
+      Capture from digital microphones on the nRF5 PDM interface.
+
+config AUDIO_NRF5_I2S
+    bool "Nordic nRF5 I2S"
+    depends on SOC_NRF52
+    select HAL_NORDIC
+    help
+      Playback through the nRF5 I2S interface.
+
 config AUDIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
