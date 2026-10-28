@@ -13,6 +13,7 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
+#include <services/mic_manager/mic_source.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////
@@ -144,10 +145,8 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
   cl_assert_equal_i(session_id, s_transfer_session);
 }
 
-// Fake mic driver, driven by the tests
+// Fake mic source, driven by the tests
 ////////////////////////////////////////////////////////////////
-
-MicDevice *const MIC = nullptr;
 
 static bool s_mic_running;
 static MicDataHandlerCB s_mic_handler;
@@ -155,8 +154,8 @@ static void *s_mic_context;
 static int16_t *s_mic_buffer;
 static size_t s_mic_buffer_len;
 
-bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, int16_t *audio_buffer,
-               size_t audio_buffer_len) {
+bool mic_source_start(MicDataHandlerCB data_handler, void *context, int16_t *audio_buffer,
+                      size_t audio_buffer_len) {
   if (s_mic_running) {
     return false;
   }
@@ -170,8 +169,8 @@ bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, in
 
 static int16_t s_dictation_buffer[FAKE_FRAME_SAMPLES];
 
-void mic_stop(MicDevice *this) {
-  // The driver owns the buffer until mic_stop() returns
+void mic_source_stop(void) {
+  // The source owns the buffer until mic_source_stop() returns
   if (s_mic_running && (s_mic_buffer != s_dictation_buffer)) {
     cl_assert(fake_pbl_malloc_contains(s_mic_buffer));
   }

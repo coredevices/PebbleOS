@@ -87,7 +87,7 @@ Kconfig symbols are ordinary CMake variables, so directories and sources
 follow the configuration:
 
 ```cmake
-pbl_add_subdirectory_ifdef(CONFIG_MIC mic)
+pbl_add_subdirectory_ifdef(CONFIG_AUDIO audio)
 pbl_library_sources_ifdef(CONFIG_ACCEL_LSM6DSO lsm6dso/lsm6dso.c)
 ```
 

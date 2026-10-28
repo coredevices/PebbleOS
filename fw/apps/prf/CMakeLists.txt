@@ -24,6 +24,11 @@ if(NOT CONFIG_BOARD_GETAFIX)
     mfg_mic_getafix.c
   )
 endif()
+if(NOT CONFIG_AUDIO)
+  list(APPEND excl
+    mfg_audio.c
+  )
+endif()
 if(NOT CONFIG_MAG)
   list(APPEND excl
     mfg_mag.c

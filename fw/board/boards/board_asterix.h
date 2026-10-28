@@ -10,7 +10,4 @@
 #define BOARD_RTC_INST NRF_RTC1
 #define BOARD_RTC_IRQN RTC1_IRQn
 
-extern MicDevice *const MIC;
-extern AudioDevice *const AUDIO;
-
 extern const struct pbl_i2c_dev *const I2C_DA7212;

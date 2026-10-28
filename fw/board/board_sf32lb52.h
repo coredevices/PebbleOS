@@ -13,15 +13,8 @@
 
 #include <bf0_hal_pinmux.h>
 
-// clang-format off
-#include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
-#include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
-// clang-format on
-
 struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;
-typedef const struct MicDevice MicDevice;
-typedef const struct AudioDevice AudioDevice;
 
 #include <pbl/drivers/i2c/sf32lb.h>
 

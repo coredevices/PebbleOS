@@ -9,7 +9,6 @@
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
-#include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
@@ -118,10 +117,6 @@ static void init_drivers(void) {
   if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {
     (void)pbl_vibe_set_calibration(VIBE, vibe_cali);
   }
-
-#ifdef CONFIG_MIC
-  mic_init(MIC);
-#endif
 }
 
 static void clear_reset_loop_detection_bits(void) {
