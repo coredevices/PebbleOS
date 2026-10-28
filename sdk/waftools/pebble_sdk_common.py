@@ -20,6 +20,8 @@ from waflib.Task import Task
 from waflib.TaskGen import after_method, before_method, feature
 from waflib.Tools import c, c_preproc
 
+CMAKE_DOCS = "https://pebbleos.readthedocs.io/latest/sdk/app_build.html"
+
 # Override the default waf task __str__ method to include display of the HW platform being targeted
 Task.__str__ = wrap_task_name_with_platform
 
@@ -53,6 +55,10 @@ def configure(conf):
     :param conf: the ConfigureContext
     :return: N/A
     """
+    Logs.warn(
+        "Building apps with waf is deprecated and will be removed: build with CMake "
+        "instead, see " + CMAKE_DOCS
+    )
     if not conf.options.debug:
         conf.env.append_value("DEFINES", "RELEASE")
     else:
