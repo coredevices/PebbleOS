@@ -3,5 +3,6 @@
 
 pbl_library()
 pbl_library_sources(ppg.c)
+pbl_library_sources_ifdef(CONFIG_PPG_GH3X2X gh3x2x.c)
 pbl_library_sources_ifdef(CONFIG_PPG_QEMU qemu.c)
 pbl_library_sources_ifdef(CONFIG_PPG_SHELL shell.c)

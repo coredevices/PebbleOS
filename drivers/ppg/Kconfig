@@ -18,6 +18,12 @@ config PPG_SHELL
       The ppg shell command, to inspect the front end and read raw
       samples.
 
+config PPG_GH3X2X
+    bool "Goodix GH3x2x"
+    depends on I2C && INTC
+    help
+      Support for the Goodix GH3x2x optical front ends.
+
 config PPG_QEMU
     bool "QEMU"
     default y if SOC_QEMU
