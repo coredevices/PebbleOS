@@ -90,7 +90,8 @@ become callable from user apps.
 Main rules:
 
 - Commit using `-s` git option, so commits have `Signed-Off-By`
-- Always indicate commit is co-authored by the current AI model
+- Always add an `Assisted-by: LLM` trailer; never name the model, tool or vendor
+  (no `Co-Authored-By` lines)
 - Commit in small chunks, trying to preserve bisectability
 - Commit format is `area: short description`, with longer description in the
   body if necessary

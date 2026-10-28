@@ -81,7 +81,7 @@ Every commit carries a `Signed-off-by` line, certifying the Developer
 Certificate of Origin, that matches the commit's author; `git commit -s`
 adds it. The author name must be a real name, and GitHub `noreply`
 addresses are not accepted. Work produced with generative AI is disclosed
-with a `Co-Authored-By` line, following the {doc}`../community/contributing`.
+with an `Assisted-by: LLM` line, following the {doc}`../community/contributing`.
 
 ```text
 services/battery: hide the percentage while charging starts
