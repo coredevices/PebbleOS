@@ -104,11 +104,6 @@ if(CONFIG_HAL_SIFLI_I2S)
     SiFli-SDK/drivers/hal/bf0_hal_i2s.c
   )
 endif()
-if(CONFIG_HAL_SIFLI_LCD)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_lcdc.c
-  )
-endif()
 if(CONFIG_HAL_SIFLI_LCPU_CONFIG)
   list(APPEND micro_sources
     SiFli-SDK/drivers/hal/bf0_hal_lcpu_config.c

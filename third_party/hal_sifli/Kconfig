@@ -119,11 +119,6 @@ config HAL_SIFLI_IPC_QUEUE
       Enable the IPC queue middleware for inter-core
       communication.
 
-config HAL_SIFLI_LCD
-    bool "LCDC HAL module"
-    help
-      Enable the LCDC (LCD controller) SiFli HAL module driver.
-
 config HAL_SIFLI_LCPU
     bool "LCPU boot support"
     depends on HAL_SIFLI_SF32LB52
