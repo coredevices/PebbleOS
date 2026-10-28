@@ -89,6 +89,10 @@ Additional requirements:
   meter or detailed battery usage logs.
 - User experience changes are accompanied by pictures or videos clearly showing the feature. When
   an existing feature changes, show it before and after the change.
+- New behaviour comes with tests where feasible: unit tests, or integration tests for system-level
+  behaviour. See {doc}`../development/tests/index`.
+- Run the checks CI runs before submitting: `pbl test`, clang-format, ruff and gitlint. See
+  {doc}`../development/conventions`.
 
 ## Generative AI usage
 The use of large language models (LLMs) is acceptable **if and only if** a thorough manual review is performed. **By submitting a pull request, you are guaranteeing the following:**
