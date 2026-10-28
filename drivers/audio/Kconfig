@@ -8,6 +8,13 @@ menuconfig AUDIO
 
 if AUDIO
 
+config AUDIO_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The audio shell command, to list the devices, record and play tones.
+
 module = DRIVER_AUDIO
 module-str = Audio
 source "subsys/logging/Kconfig.template.log_level"
