@@ -14,4 +14,12 @@ config PWM_NRF5
     help
       Support for the Nordic nRF5 PWM controller.
 
+config PWM_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The pwm shell command, to list the controllers and run or disable
+      their channels.
+
 endif # PWM
