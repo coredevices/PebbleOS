@@ -5,7 +5,7 @@
     "app": {
         "default": {
             "src/c/${project_name}.c": "app/main.c",
-            "wscript": "app/wscript",
+            "CMakeLists.txt": "app/CMakeLists.txt",
             "package.json": "app/package.json",
             "resources": null
         },
@@ -23,7 +23,7 @@
         "default": {
             "src/c/${project_name}.c": "lib/lib.c",
             "include/${project_name}.h": "lib/lib.h",
-            "wscript": "lib/wscript",
+            "CMakeLists.txt": "lib/CMakeLists.txt",
             "package.json": "lib/package.json",
             "src/resources": null
         },
