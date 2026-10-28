@@ -100,9 +100,8 @@ static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
     }
 
 #if PBL_ROUND
-    const GBitmapDataRowInfoInternal *row_infos = g_gbitmap_data_row_infos;
-    const size_t framebuffer_row_min_pixel = row_infos[state->row].min_x;
-    const size_t framebuffer_row_max_pixel = row_infos[state->row].max_x;
+    const size_t framebuffer_row_min_pixel = display_round_mask_inset(state->row);
+    const size_t framebuffer_row_max_pixel = DISP_COLS - 1 - framebuffer_row_min_pixel;
     for (uint32_t i = 0; i < remaining_framebuffer_row_bytes; i++) {
       const uint32_t i_with_offset = i + framebuffer_current_column;
       if (WITHIN(i_with_offset, framebuffer_row_min_pixel, framebuffer_row_max_pixel)) {

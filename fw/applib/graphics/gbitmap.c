@@ -100,6 +100,16 @@ PBL_ALWAYS_INLINE
 #endif
 GBitmapDataRowInfo prv_gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
   if (bitmap->info.format == GBitmapFormat8BitCircular) {
+#if PBL_ROUND
+    if (!bitmap->data_row_infos) {
+      const uint16_t inset = display_round_mask_inset(y);
+      return (GBitmapDataRowInfo){
+        .data = (uint8_t *)bitmap->addr + y * DISP_COLS,
+        .min_x = inset,
+        .max_x = DISP_COLS - 1 - inset,
+      };
+    }
+#endif
     const GBitmapDataRowInfoInternal *info = &bitmap->data_row_infos[y];
     return (GBitmapDataRowInfo){
       .data = (uint8_t *)bitmap->addr + info->offset,
@@ -244,12 +254,6 @@ static GBitmap *prv_gbitmap_create_blank(GSize size, GBitmapFormat format) {
       applib_free(bitmap);
       return nullptr;
     }
-
-#if PBL_ROUND
-    if (BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)) {
-      bitmap->data_row_infos = g_gbitmap_data_row_infos;
-    }
-#endif
   }
 
   return bitmap;

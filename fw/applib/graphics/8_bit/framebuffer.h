@@ -34,4 +34,9 @@ static_assert(sizeof(FrameBuffer) == offsetof(FrameBuffer, buffer) + FRAMEBUFFER
               "FrameBuffer must not have tail padding");
 #endif
 
+#if PBL_ROUND
+//! Rows of the packed framebuffer of legacy round apps.
+extern const GBitmapDataRowInfoInternal g_gbitmap_legacy_3x_data_row_infos[];
+#endif
+
 uint8_t *framebuffer_get_line(FrameBuffer *f, uint16_t y);

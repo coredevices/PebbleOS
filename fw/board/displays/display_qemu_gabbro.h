@@ -22,6 +22,3 @@
 #define LEGACY_3X_DISP_ROWS 180
 
 #define DISPLAY_FRAMEBUFFER_BYTES (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT)
-
-extern const void *const g_gbitmap_data_row_infos;
-extern const void *const g_gbitmap_legacy_3x_data_row_infos;
