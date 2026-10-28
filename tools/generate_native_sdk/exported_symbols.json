@@ -1526,6 +1526,10 @@
               "name": "AppInstallInfo",
               "addedRevision": "112"
             }, {
+              "type": "type",
+              "name": "AppInstallResult",
+              "addedRevision": "112"
+            }, {
               "type": "function",
               "name": "app_install_count",
               "addedRevision": "112"

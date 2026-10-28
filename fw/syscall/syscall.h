@@ -302,7 +302,7 @@ bool sys_do_not_disturb_is_active(void);
 //! @return True if at least one enabled alarm is scheduled.
 bool sys_alarm_get_next_enabled(time_t *timestamp_out);
 
-uint32_t sys_app_install_count(void);
-bool sys_app_install_get_at_index(uint32_t index, AppInstallInfo *info);
-bool sys_app_launch(const Uuid *uuid);
-bool sys_watchface_select(const Uuid *uuid);
+AppInstallResult sys_app_install_count(uint32_t *count);
+AppInstallResult sys_app_install_get_at_index(uint32_t index, AppInstallInfo *info);
+AppInstallResult sys_app_launch(const Uuid *uuid);
+AppInstallResult sys_watchface_select(const Uuid *uuid);

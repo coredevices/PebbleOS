@@ -5,18 +5,18 @@
 
 #include <syscall/syscall.h>
 
-uint32_t app_install_count(void) {
-  return sys_app_install_count();
+AppInstallResult app_install_count(uint32_t *count) {
+  return sys_app_install_count(count);
 }
 
-bool app_install_get_at_index(uint32_t index, AppInstallInfo *info) {
+AppInstallResult app_install_get_at_index(uint32_t index, AppInstallInfo *info) {
   return sys_app_install_get_at_index(index, info);
 }
 
-bool app_launch(const Uuid *uuid) {
+AppInstallResult app_launch(const Uuid *uuid) {
   return sys_app_launch(uuid);
 }
 
-bool watchface_select(const Uuid *uuid) {
+AppInstallResult watchface_select(const Uuid *uuid) {
   return sys_watchface_select(uuid);
 }

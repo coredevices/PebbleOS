@@ -7,6 +7,7 @@
 
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/blob_db/app_db.h>
 #include <pbl/util/string.h>
 
 #include <applib/app_install.h>
@@ -14,6 +15,7 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <shell/normal/watchface.h>
+#include <syscall/syscall.h>
 
 static_assert(APP_INSTALL_NAME_SIZE == APP_NAME_SIZE_BYTES,
               "installed-app names must fit the registry name");
@@ -78,16 +80,36 @@ static void prv_launch(AppInstallId id) {
   });
 }
 
-PBL_SYSCALL(uint32_t, sys_app_install_count) {
-  uint32_t count = 0;
-  app_install_enumerate_entries(prv_count_visible, &count);
-  return count;
+static AppInstallResult prv_check_permission(void) {
+  Uuid uuid;
+  if (!sys_process_manager_get_current_process_uuid(&uuid) || !app_db_app_install_granted(&uuid)) {
+    return AppInstallErrPermissionDenied;
+  }
+  return AppInstallOk;
 }
 
-PBL_SYSCALL(bool, sys_app_install_get_at_index, (VAL, uint32_t, index),
+PBL_SYSCALL(AppInstallResult, sys_app_install_count, (OUT_OPT, uint32_t *, count)) {
+  const AppInstallResult permission = prv_check_permission();
+  if (permission != AppInstallOk) {
+    return permission;
+  }
+  if (count == nullptr) {
+    return AppInstallErrFailed;
+  }
+
+  *count = 0;
+  app_install_enumerate_entries(prv_count_visible, count);
+  return AppInstallOk;
+}
+
+PBL_SYSCALL(AppInstallResult, sys_app_install_get_at_index, (VAL, uint32_t, index),
             (OUT, AppInstallInfo *, info)) {
+  const AppInstallResult permission = prv_check_permission();
+  if (permission != AppInstallOk) {
+    return permission;
+  }
   if (info == nullptr) {
-    return false;
+    return AppInstallErrFailed;
   }
 
   IndexQuery query = {
@@ -95,43 +117,51 @@ PBL_SYSCALL(bool, sys_app_install_get_at_index, (VAL, uint32_t, index),
     .info = info,
   };
   app_install_enumerate_entries(prv_copy_at_index, &query);
-  return query.found;
+  return query.found ? AppInstallOk : AppInstallErrFailed;
 }
 
-PBL_SYSCALL(bool, sys_app_launch, (IN, const Uuid *, uuid)) {
+PBL_SYSCALL(AppInstallResult, sys_app_launch, (IN, const Uuid *, uuid)) {
+  const AppInstallResult permission = prv_check_permission();
+  if (permission != AppInstallOk) {
+    return permission;
+  }
   if (uuid == nullptr) {
-    return false;
+    return AppInstallErrFailed;
   }
 
   const AppInstallId id = app_install_get_id_for_uuid(uuid);
   if (id == INSTALL_ID_INVALID) {
-    return false;
+    return AppInstallErrFailed;
   }
 
   PBL_LOG_DBG("Launching app id %" PRId32, id);
   prv_launch(id);
-  return true;
+  return AppInstallOk;
 }
 
-PBL_SYSCALL(bool, sys_watchface_select, (IN, const Uuid *, uuid)) {
+PBL_SYSCALL(AppInstallResult, sys_watchface_select, (IN, const Uuid *, uuid)) {
+  const AppInstallResult permission = prv_check_permission();
+  if (permission != AppInstallOk) {
+    return permission;
+  }
   if (uuid == nullptr) {
-    return false;
+    return AppInstallErrFailed;
   }
 
   const AppInstallId id = app_install_get_id_for_uuid(uuid);
   if (id == INSTALL_ID_INVALID) {
-    return false;
+    return AppInstallErrFailed;
   }
 
   AppInstallEntry entry;
   if (!app_install_get_entry_for_install_id(id, &entry) ||
       !app_install_entry_is_watchface(&entry) || app_install_entry_is_hidden(&entry)) {
     PBL_LOG_DBG("Refusing watchface select for id %" PRId32, id);
-    return false;
+    return AppInstallErrFailed;
   }
 
   watchface_set_default_install_id(id);
   PBL_LOG_DBG("Selected watchface id %" PRId32, id);
   prv_launch(id);
-  return true;
+  return AppInstallOk;
 }

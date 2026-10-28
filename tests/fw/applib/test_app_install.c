@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/services/blob_db/app_db.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
 
@@ -12,6 +13,7 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <shell/normal/watchface.h>
+#include <syscall/syscall.h>
 
 enum {
   IdHiddenFace = -2,
@@ -49,6 +51,7 @@ static int s_num_steps;
 static AppInstallId s_default_id;
 static AppLaunchEventConfig s_launch;
 static const AppInstallId s_unchanged_default = 42;
+static bool s_granted;
 
 static void prv_entry(AppInstallEntry *entry, AppInstallId id, ProcessType type,
                       ProcessVisibility visibility, const Uuid *uuid, const char *name) {
@@ -66,6 +69,7 @@ void test_app_install__initialize(void) {
   memset(s_steps, 0, sizeof(s_steps));
   s_default_id = s_unchanged_default;
   s_launch = (AppLaunchEventConfig){};
+  s_granted = true;
 
   prv_entry(&s_entries[0], IdHiddenFace, ProcessTypeWatchface, ProcessVisibilityHidden,
             &s_hidden_face_uuid, "Secret");
@@ -137,37 +141,52 @@ void app_manager_put_launch_app_event(const AppLaunchEventConfig *config) {
   s_steps[s_num_steps++] = StepLaunch;
 }
 
+bool sys_process_manager_get_current_process_uuid(Uuid *uuid_out) {
+  if (uuid_out == nullptr) {
+    return false;
+  }
+  *uuid_out = s_alarms_uuid;
+  return true;
+}
+
+bool app_db_app_install_granted(const Uuid *uuid) {
+  return s_granted && (uuid != nullptr);
+}
+
 void test_app_install__enumerate(void) {
-  cl_assert_equal_i(app_install_count(), 3);
+  uint32_t count = 0;
+  cl_assert_equal_i(app_install_count(&count), AppInstallOk);
+  cl_assert_equal_i(count, 3);
+  cl_assert_equal_i(app_install_count(nullptr), AppInstallErrFailed);
 
   AppInstallInfo info = {};
-  cl_assert(app_install_get_at_index(0, &info));
+  cl_assert_equal_i(app_install_get_at_index(0, &info), AppInstallOk);
   cl_assert_equal_s(info.name, "Alarms");
   cl_assert(!info.is_watchface);
   cl_assert(uuid_equal(&info.uuid, &s_alarms_uuid));
 
-  cl_assert(app_install_get_at_index(1, &info));
+  cl_assert_equal_i(app_install_get_at_index(1, &info), AppInstallOk);
   cl_assert_equal_s(info.name, "TicToc");
   cl_assert(info.is_watchface);
   cl_assert(uuid_equal(&info.uuid, &s_tictoc_uuid));
 
-  cl_assert(app_install_get_at_index(2, &info));
+  cl_assert_equal_i(app_install_get_at_index(2, &info), AppInstallOk);
   cl_assert_equal_s(info.name, "Kickstart");
   cl_assert(info.is_watchface);
 
-  cl_assert(!app_install_get_at_index(3, &info));
+  cl_assert_equal_i(app_install_get_at_index(3, &info), AppInstallErrFailed);
   cl_assert_equal_s(info.name, "Kickstart");
 }
 
 void test_app_install__launch_missing(void) {
-  cl_assert(!app_launch(&s_missing_uuid));
-  cl_assert(!app_launch(nullptr));
+  cl_assert_equal_i(app_launch(&s_missing_uuid), AppInstallErrFailed);
+  cl_assert_equal_i(app_launch(nullptr), AppInstallErrFailed);
   cl_assert_equal_i(s_num_steps, 0);
   cl_assert_equal_i(s_default_id, s_unchanged_default);
 }
 
 void test_app_install__launch_does_not_change_default(void) {
-  cl_assert(app_launch(&s_kickstart_uuid));
+  cl_assert_equal_i(app_launch(&s_kickstart_uuid), AppInstallOk);
   cl_assert_equal_i(s_num_steps, 1);
   cl_assert_equal_i(s_steps[0], StepLaunch);
   cl_assert_equal_i(s_launch.id, IdKickstart);
@@ -175,27 +194,42 @@ void test_app_install__launch_does_not_change_default(void) {
   cl_assert_equal_i(s_default_id, s_unchanged_default);
 
   s_num_steps = 0;
-  cl_assert(app_launch(&s_hidden_face_uuid));
+  cl_assert_equal_i(app_launch(&s_hidden_face_uuid), AppInstallOk);
   cl_assert_equal_i(s_launch.id, IdHiddenFace);
   cl_assert_equal_i(s_default_id, s_unchanged_default);
 }
 
 void test_app_install__select_rejects_non_watchface(void) {
-  cl_assert(!watchface_select(&s_alarms_uuid));
-  cl_assert(!watchface_select(&s_missing_uuid));
-  cl_assert(!watchface_select(nullptr));
+  cl_assert_equal_i(watchface_select(&s_alarms_uuid), AppInstallErrFailed);
+  cl_assert_equal_i(watchface_select(&s_missing_uuid), AppInstallErrFailed);
+  cl_assert_equal_i(watchface_select(nullptr), AppInstallErrFailed);
   cl_assert_equal_i(s_num_steps, 0);
   cl_assert_equal_i(s_default_id, s_unchanged_default);
 }
 
 void test_app_install__select_rejects_hidden_watchface(void) {
-  cl_assert(!watchface_select(&s_hidden_face_uuid));
+  cl_assert_equal_i(watchface_select(&s_hidden_face_uuid), AppInstallErrFailed);
+  cl_assert_equal_i(s_num_steps, 0);
+  cl_assert_equal_i(s_default_id, s_unchanged_default);
+}
+
+void test_app_install__permission_denied(void) {
+  s_granted = false;
+  uint32_t count = 7;
+  AppInstallInfo info = {.name = "kept"};
+
+  cl_assert_equal_i(app_install_count(&count), AppInstallErrPermissionDenied);
+  cl_assert_equal_i(count, 7);
+  cl_assert_equal_i(app_install_get_at_index(0, &info), AppInstallErrPermissionDenied);
+  cl_assert_equal_s(info.name, "kept");
+  cl_assert_equal_i(app_launch(&s_kickstart_uuid), AppInstallErrPermissionDenied);
+  cl_assert_equal_i(watchface_select(&s_kickstart_uuid), AppInstallErrPermissionDenied);
   cl_assert_equal_i(s_num_steps, 0);
   cl_assert_equal_i(s_default_id, s_unchanged_default);
 }
 
 void test_app_install__select_persists_default(void) {
-  cl_assert(watchface_select(&s_kickstart_uuid));
+  cl_assert_equal_i(watchface_select(&s_kickstart_uuid), AppInstallOk);
   cl_assert_equal_i(s_num_steps, 2);
   cl_assert_equal_i(s_steps[0], StepSetDefault);
   cl_assert_equal_i(s_steps[1], StepLaunch);

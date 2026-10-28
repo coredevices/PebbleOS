@@ -485,14 +485,22 @@ status_t app_db_flush(void) {
   return S_SUCCESS;
 }
 
-bool app_db_microphone_granted(const Uuid *uuid) {
+static bool prv_permission_granted(const Uuid *uuid, uint32_t bit) {
   if (!uuid || (prv_lock_mutex_and_open_file() != S_SUCCESS)) {
     return false;
   }
   // The grant record goes with the app, so it alone answers
   const uint32_t permissions = prv_read_permissions(&s_app_db.settings_file, uuid);
   prv_close_file_and_unlock_mutex();
-  return (permissions & APP_DB_PERMISSION_MICROPHONE) != 0;
+  return (permissions & bit) != 0;
+}
+
+bool app_db_microphone_granted(const Uuid *uuid) {
+  return prv_permission_granted(uuid, APP_DB_PERMISSION_MICROPHONE);
+}
+
+bool app_db_app_install_granted(const Uuid *uuid) {
+  return prv_permission_granted(uuid, APP_DB_PERMISSION_APP_INSTALL);
 }
 
 status_t app_db_compact(void) {
