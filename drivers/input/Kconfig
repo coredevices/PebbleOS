@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Input"
+
+config INPUT_GPIO_KEYS
+    bool "GPIO keys"
+    depends on GPIO
+    select INPUT
+    help
+      Keys on GPIOs with interrupts, debounced in software.
+
+endmenu
