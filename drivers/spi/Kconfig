@@ -8,6 +8,12 @@ menuconfig SPI
 
 if SPI
 
+config SPI_NRF5
+    bool "Nordic nRF5 SPI Controller"
+    default y if SOC_NRF52
+    help
+      Support for the Nordic nRF5 SPIM controller.
+
 module = DRIVER_SPI
 module-str = SPI
 source "subsys/logging/Kconfig.template.log_level"
