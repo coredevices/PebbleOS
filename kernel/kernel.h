@@ -60,4 +60,12 @@ void sched_tick(void);
 bool sched_idle_confirm(void);
 void sched_idle_slept(pbl_tick_t elapsed);
 struct pbl_thread *sched_idle_thread(void);
+//! Current tick count; call with the interrupt lock held.
+pbl_tick_t sched_ticks(void);
+
+//! Runs the callbacks of the expired timers, from the tick ISR.
+void timer_expire(void);
+//! Ticks from @p now until the next timer expires, PBL_TICK_FOREVER if none.
+pbl_tick_t timer_ticks_until_next(pbl_tick_t now);
+void timer_reset_for_test(void);
 extern struct pbl_thread *pbl_all_threads;

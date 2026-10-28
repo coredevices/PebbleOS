@@ -6,6 +6,7 @@ pbl_clar_test(test_task_wdt
     subsys/task_wdt/task_wdt.c
     kernel/tick.c
     kernel/sched.c
+    kernel/timer.c
     kernel/thread.c
     kernel/mutex.c
     kernel/sem.c

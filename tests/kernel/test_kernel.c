@@ -284,6 +284,92 @@ void test_kernel__semaphore_counts_to_limit(void) {
   cl_assert_equal_i(pbl_sem_count(&s), 0);
 }
 
+// ---- timers -----------------------------------------------------------------
+
+static struct pbl_timer s_timer;
+static uint64_t s_timer_fired_at;
+static bool s_timer_in_isr;
+
+static void prv_timer_fn(struct pbl_timer *timer) {
+  cl_assert(timer == &s_timer);
+  s_timer_fired_at = pbl_uptime_ticks();
+  s_timer_in_isr = pbl_in_isr();
+  pbl_sem_give(&s_sem);
+}
+
+static void prv_timer_waiter(void *arg) {
+  pbl_timer_start(&s_timer, PBL_TICKS(7));
+  cl_assert(pbl_timer_is_active(&s_timer));
+  cl_assert_equal_i(pbl_sem_take(&s_sem, PBL_FOREVER), 0);
+  cl_assert_equal_i(s_timer_fired_at, 7);
+  cl_assert(s_timer_in_isr);
+  cl_assert(!pbl_timer_is_active(&s_timer));
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__timer_expires_in_isr_while_idle(void) {
+  pbl_sem_init(&s_sem, 0, 1);
+  pbl_timer_init(&s_timer, prv_timer_fn);
+  prv_spawn(0, "waiter", 2, prv_timer_waiter, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_timer_restart_stop(void *arg) {
+  pbl_timer_start(&s_timer, PBL_TICKS(5));
+  pbl_thread_sleep(PBL_TICKS(3));
+  pbl_timer_start(&s_timer, PBL_TICKS(5));
+  cl_assert_equal_i(pbl_sem_take(&s_sem, PBL_FOREVER), 0);
+  cl_assert_equal_i(s_timer_fired_at, 8);
+
+  pbl_timer_start(&s_timer, PBL_TICKS(2));
+  pbl_timer_stop(&s_timer);
+  cl_assert(!pbl_timer_is_active(&s_timer));
+  cl_assert_equal_i(pbl_sem_take(&s_sem, PBL_TICKS(10)), -EAGAIN);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__timer_restart_and_stop(void) {
+  pbl_sem_init(&s_sem, 0, 1);
+  pbl_timer_init(&s_timer, prv_timer_fn);
+  prv_spawn(0, "waiter", 2, prv_timer_restart_stop, nullptr);
+  pbl_test_kernel_run();
+}
+
+#define NUM_ORDER_TIMERS 3
+
+static struct pbl_timer s_order_timers[NUM_ORDER_TIMERS];
+static int s_timer_order[NUM_ORDER_TIMERS];
+static int s_timer_count;
+
+static void prv_timer_order_fn(struct pbl_timer *timer) {
+  s_timer_order[s_timer_count++] = (int)(timer - s_order_timers);
+  if (s_timer_count == NUM_ORDER_TIMERS) {
+    pbl_sem_give(&s_sem);
+  }
+}
+
+static void prv_timer_order(void *arg) {
+  pbl_timer_start(&s_order_timers[0], PBL_TICKS(9));
+  pbl_timer_start(&s_order_timers[1], PBL_TICKS(3));
+  pbl_timer_start(&s_order_timers[2], PBL_TICKS(6));
+  cl_assert_equal_i(pbl_sem_take(&s_sem, PBL_FOREVER), 0);
+  cl_assert_equal_i(pbl_uptime_ticks(), 9);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__timers_expire_in_order(void) {
+  pbl_sem_init(&s_sem, 0, 1);
+  s_timer_count = 0;
+  for (int i = 0; i < NUM_ORDER_TIMERS; i++) {
+    pbl_timer_init(&s_order_timers[i], prv_timer_order_fn);
+  }
+  prv_spawn(0, "waiter", 2, prv_timer_order, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_i(s_timer_order[0], 1);
+  cl_assert_equal_i(s_timer_order[1], 2);
+  cl_assert_equal_i(s_timer_order[2], 0);
+}
+
 // ---- mutexes ----------------------------------------------------------------
 
 static PBL_MUTEX_DEFINE(s_mutex);

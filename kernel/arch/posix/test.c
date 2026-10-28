@@ -43,9 +43,13 @@ void arch_idle(pbl_tick_t max_ticks) {
     fprintf(stderr, "kernel test: every thread is blocked forever\n");
     abort();
   }
-  pbl_irq_lock();
-  sched_idle_slept(max_ticks);
-  pbl_irq_unlock();
+  // The last tick is an interrupt, so that timers expire in ISR context.
+  if (max_ticks > 1) {
+    pbl_irq_lock();
+    sched_idle_slept(max_ticks - 1);
+    pbl_irq_unlock();
+  }
+  pbl_test_tick(1);
 }
 
 static void prv_run_until_stopped(void) {

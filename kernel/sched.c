@@ -347,6 +347,10 @@ void sched_idle_slept(pbl_tick_t elapsed) {
   sched_request_switch();
 }
 
+pbl_tick_t sched_ticks(void) {
+  return (pbl_tick_t)s_ticks;
+}
+
 struct pbl_thread *sched_idle_thread(void) {
   return &s_idle_thread;
 }
@@ -360,6 +364,10 @@ static void prv_idle_entry(void *arg) {
       sched_yield_current();
     }
     pbl_tick_t idle_ticks = prv_ticks_until_next_timeout();
+    pbl_tick_t timer_ticks = timer_ticks_until_next((pbl_tick_t)s_ticks);
+    if (timer_ticks < idle_ticks) {
+      idle_ticks = timer_ticks;
+    }
     pbl_irq_unlock();
     arch_idle(idle_ticks);
   }
@@ -460,6 +468,7 @@ void pbl_kernel_tick_isr(void) {
   pbl_irq_lock();
   sched_tick();
   pbl_irq_unlock();
+  timer_expire();
 }
 
 void sched_reset_for_test(void) {
@@ -476,4 +485,5 @@ void sched_reset_for_test(void) {
   s_switch_deferred = false;
   s_started = false;
   s_next_number = 0;
+  timer_reset_for_test();
 }
