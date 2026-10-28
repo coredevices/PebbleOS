@@ -30,6 +30,13 @@
 /** @brief Meters per mile, rounded. */
 #define PBL_M_PER_MILE 1609
 
+/** @brief Nanoseconds per microsecond. */
+#define PBL_NSEC_PER_USEC 1000
+/** @brief Nanoseconds per millisecond. */
+#define PBL_NSEC_PER_MSEC 1000000
+/** @brief Nanoseconds per second. */
+#define PBL_NSEC_PER_SEC 1000000000
+
 /** @brief Microseconds per millisecond. */
 #define PBL_USEC_PER_MSEC 1000
 /** @brief Microseconds per second. */
