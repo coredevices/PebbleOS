@@ -34,8 +34,8 @@ static void prv_call_ble_bonding_change_handlers(pbl_bt_bonding_id_t bonding,
 }
 
 static pbl_bt_bonding_id_t prv_bt_persistent_storage_store_ble_pairing(
-    const struct pbl_bt_sm_pairing_info *new_pairing_info, bool is_gateway,
-    bool requires_address_pinning, uint8_t flags, const char *device_name, BtPersistBondingOp op) {
+    const struct pbl_bt_sm_pairing_info *new_pairing_info, bool is_gateway, uint8_t flags,
+    const char *device_name, BtPersistBondingOp op) {
   if (new_pairing_info && is_gateway) {
     PBL_LOG_INFO("Storing BLE pairing: addr=" PBL_BT_ADDR_FMT " random=%u",
                  PBL_BT_ADDR_XPLODE(new_pairing_info->identity.address),
@@ -44,8 +44,7 @@ static pbl_bt_bonding_id_t prv_bt_persistent_storage_store_ble_pairing(
                  new_pairing_info->is_remote_identity_info_valid,
                  new_pairing_info->is_remote_encryption_info_valid,
                  new_pairing_info->is_local_encryption_info_valid);
-    shared_prf_storage_store_ble_pairing_data(new_pairing_info, device_name,
-                                              requires_address_pinning, flags);
+    shared_prf_storage_store_ble_pairing_data(new_pairing_info, device_name, flags);
     prv_call_ble_bonding_change_handlers(BLE_BONDING_ID, op);
     return BLE_BONDING_ID;
   }
@@ -54,31 +53,16 @@ static pbl_bt_bonding_id_t prv_bt_persistent_storage_store_ble_pairing(
   return PBL_BT_BONDING_ID_INVALID;
 }
 
-bool bt_persistent_storage_set_ble_pinned_address(const struct pbl_bt_addr *addr) {
-  shared_prf_storage_set_ble_pinned_address(addr);
-  return true;
-}
-
-bool bt_persistent_storage_has_pinned_ble_pairings(void) {
-  bool requires_address_pinning_out = false;
-  shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, &requires_address_pinning_out, nullptr);
-  return requires_address_pinning_out;
-}
-
-bool bt_persistent_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
-  return shared_prf_storage_get_ble_pinned_address(address_out);
-}
-
 pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
     const struct pbl_bt_sm_pairing_info *new_pairing_info, bool is_gateway, const char *device_name,
-    bool requires_address_pinning, uint8_t flags) {
+    uint8_t flags) {
   // We only have one slot in PRF and all pairing info (except the device
   // name) will arrive in one-shot so anytime this routine gets called it
   // means we have 'added' a new pairing
 
   bool is_updating_existing = false;
   struct pbl_bt_sm_pairing_info existing_pairing_info;
-  if (shared_prf_storage_get_ble_pairing_data(&existing_pairing_info, nullptr, nullptr, nullptr)) {
+  if (shared_prf_storage_get_ble_pairing_data(&existing_pairing_info, nullptr, nullptr)) {
     if (sm_is_pairing_info_equal_identity(new_pairing_info, &existing_pairing_info)) {
       // Treat re-pairing an existing device as an "update" instead of deletion+addition,
       // because there is only one bonding ID that gets re-used, a deletion would otherwise cause a
@@ -94,8 +78,8 @@ pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
 
   BtPersistBondingOp pairing_op =
       is_updating_existing ? BtPersistBondingOpDidChange : BtPersistBondingOpDidAdd;
-  return (prv_bt_persistent_storage_store_ble_pairing(
-      new_pairing_info, is_gateway, requires_address_pinning, flags, device_name, pairing_op));
+  return (prv_bt_persistent_storage_store_ble_pairing(new_pairing_info, is_gateway, flags,
+                                                      device_name, pairing_op));
 }
 
 bool bt_persistent_storage_update_ble_device_name(pbl_bt_bonding_id_t bonding,
@@ -103,10 +87,8 @@ bool bt_persistent_storage_update_ble_device_name(pbl_bt_bonding_id_t bonding,
   // A device name has come in, update the name of our currently paired device
   struct pbl_bt_sm_pairing_info data = {};
   char existing_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = {};
-  bool requires_address_pinning = false;
   uint8_t flags = 0;
-  if (!shared_prf_storage_get_ble_pairing_data(&data, existing_name, &requires_address_pinning,
-                                               &flags)) {
+  if (!shared_prf_storage_get_ble_pairing_data(&data, existing_name, &flags)) {
     PBL_LOG_ERR("Tried to store device name, but pairing no longer around.");
     return false;
   }
@@ -118,9 +100,9 @@ bool bt_persistent_storage_update_ble_device_name(pbl_bt_bonding_id_t bonding,
     return true;
   }
   // In PRF, only the gateway should get paired, so default to "true":
-  return (PBL_BT_BONDING_ID_INVALID != prv_bt_persistent_storage_store_ble_pairing(
-                                           &data, true /* is_gateway */, requires_address_pinning,
-                                           flags, device_name, BtPersistBondingOpDidChange));
+  return (PBL_BT_BONDING_ID_INVALID !=
+          prv_bt_persistent_storage_store_ble_pairing(&data, true /* is_gateway */, flags,
+                                                      device_name, BtPersistBondingOpDidChange));
 }
 
 static void prv_remove_ble_bonding_from_backend(void) {
@@ -130,7 +112,7 @@ static void prv_remove_ble_bonding_from_backend(void) {
   struct pbl_bt_bonding bonding = {
     .is_gateway = true,
   };
-  if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, nullptr, nullptr, nullptr)) {
+  if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, nullptr, nullptr)) {
     return;
   }
   pbl_bt_handle_host_removed_bonding(&bonding);
@@ -153,7 +135,7 @@ bool bt_persistent_storage_get_ble_pairing_by_id(pbl_bt_bonding_id_t bonding,
                                                  char *name_out) {
   struct pbl_bt_sm_pairing_info data;
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  if (!shared_prf_storage_get_ble_pairing_data(&data, name, nullptr, nullptr)) {
+  if (!shared_prf_storage_get_ble_pairing_data(&data, name, nullptr)) {
     return false;
   }
 
@@ -205,7 +187,7 @@ void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, vo
 void bt_persistent_storage_register_existing_ble_bondings(void) {
   struct pbl_bt_bonding bonding = {};
   uint8_t flags;
-  if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, nullptr, nullptr, &flags)) {
+  if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, nullptr, &flags)) {
     PBL_LOG_INFO("No existing BLE bonding to register");
     return;
   }

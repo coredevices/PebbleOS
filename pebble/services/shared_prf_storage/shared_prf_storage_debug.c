@@ -17,13 +17,10 @@ void shared_prf_storage_dump_contents(const struct pbl_shell *sh) {
 
   struct pbl_bt_sm_pairing_info pairing_info;
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  bool requires_address_pinning;
   uint8_t flags;
-  if (shared_prf_storage_get_ble_pairing_data(&pairing_info, name, &requires_address_pinning,
-                                              &flags)) {
+  if (shared_prf_storage_get_ble_pairing_data(&pairing_info, name, &flags)) {
     bluetooth_persistent_storage_debug_dump_ble_pairing_info(sh, &pairing_info);
-    pbl_shell_print(sh, "Req addr pin: %u, flags: %x, BLE Dev Name: %s", requires_address_pinning,
-                    flags, name);
+    pbl_shell_print(sh, "flags: %x, BLE Dev Name: %s", flags, name);
   } else {
     pbl_shell_print(sh, "No BLE Data");
   }
@@ -37,11 +34,6 @@ void shared_prf_storage_dump_contents(const struct pbl_shell *sh) {
                                                       &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]);
   } else {
     pbl_shell_print(sh, "Missing IRK and/or ERK root key(s)!");
-  }
-
-  struct pbl_bt_addr addr;
-  if (shared_prf_storage_get_ble_pinned_address(&addr)) {
-    pbl_shell_print(sh, "Pinned address: " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_PTR(&addr));
   }
 
   if (shared_prf_storage_get_local_device_name(name, PBL_BT_DEVICE_NAME_BUFFER_SIZE)) {

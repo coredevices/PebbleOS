@@ -76,7 +76,7 @@ pbl_bt_bonding_id_t fake_bt_persistent_storage_add(const struct pbl_bt_sm_key *i
 
 pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
     const struct pbl_bt_sm_pairing_info *pairing_info, bool is_gateway, const char *device_name,
-    bool requires_address_pinning, uint8_t flags) {
+    uint8_t flags) {
   const struct pbl_bt_sm_key *IRK =
       pairing_info->is_remote_identity_info_valid ? &pairing_info->irk : nullptr;
   const struct pbl_bt_device_internal *device =
