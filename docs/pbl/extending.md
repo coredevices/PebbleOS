@@ -10,7 +10,7 @@ pbl/app/main.py    finds the workspace, assembles the commands, dispatches
 pbl/command.py     PblCommand, the base class every command derives from
 pbl/workspace.py   the checkout: pbl.yml, the layout, the extensions
 pbl/build.py       a build directory and what can be read back from it
-pbl/runners/       the binary runners (openocd, sftool, qemu, ...)
+pbl/runners/       the binary runners (openocd, sftool, probe-rs, qemu, ...)
 pbl/commands/      the commands themselves
 ```
 

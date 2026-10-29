@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+chip: SF32LB52
+
+# The debugger is reached over a serial port, given with --tty
+serial: true
+
+# probe-rs reports a flash region overlapping RAM, which GDB rejects, then
+# treating flash as RAM and patching software breakpoints into it. Describe
+# flash to GDB, so that it uses hardware breakpoints there.
+gdb-flash: [0x12000000, 0x20000000]

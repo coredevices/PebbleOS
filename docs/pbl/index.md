@@ -76,7 +76,8 @@ pbl -b build-asterix run
 Device commands reach their target through a binary runner: a watch, or a
 program on the host running the firmware, such as the emulator. A board
 lists the runners it supports in its manifest, and for each command the
-first one that can handle the build and the command is the default;
+first one that can handle the build and the command is the default, so a
+board can be flashed with one runner and debugged with another;
 `-r/--runner` picks another.
 
 | Runner | Boards | Operations |
@@ -84,6 +85,7 @@ first one that can handle the build and the command is the default;
 | `openocd` | asterix | flash (with resources), erase, debug, debugserver |
 | `nrfutil` | asterix | flash (with resources), erase |
 | `sftool` | obelix, getafix | flash (with resources), erase |
+| `probe-rs` | asterix, obelix, getafix | debug, debugserver |
 | `phone` | asterix, obelix, getafix | flash (always with resources) |
 | `qemu` | qemu_* | run, debug, debugserver |
 | `native` | native_* | run, debug |
@@ -96,6 +98,13 @@ ranges, in `support/flash.cfg`.
 The `nrfutil` runner needs a J-Link probe. To write the resources it takes
 the external flash configuration from the board's
 `support/nrfutil_ext_mem.json`.
+
+The `probe-rs` runner needs [probe-rs](https://probe.rs). It takes the
+chip from the board's `support/probe-rs.yml`. Some platforms have a
+serial-based debugger, e.g. over the programmer's debug UART: give its
+port with `--tty`. `--probe` picks one of several debug probes. Where
+probe-rs misreports the flash region to GDB, the file's `gdb-flash` gives
+it, so that GDB sets hardware breakpoints there.
 
 The `phone` runner needs no programmer: it goes through the Pebble app's
 Developer Connection, at the phone address given with `--address`. It needs

@@ -16,7 +16,7 @@ The server listens on the runner's port, see {doc}`debug`, or on
 `--gdb-port`:
 
 ```shell
-pbl debugserver --gdb-port 2331
+pbl debugserver --tty /dev/cu.usbmodem5B7A1355001 --gdb-port 2331
 ```
 
 The `native` runner has no GDB server: the simulator runs under the

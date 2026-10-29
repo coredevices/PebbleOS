@@ -17,7 +17,9 @@ class SfToolRunner(Runner):
 
     @classmethod
     def do_add_parser(cls, parser):
-        parser.add_argument("--tty", help="Serial port for the sftool runner")
+        parser.add_argument(
+            "--tty", help="Serial port for the sftool and probe-rs runners"
+        )
 
     @classmethod
     def do_create(cls, cfg, args):

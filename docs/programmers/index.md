@@ -6,8 +6,8 @@ to connect one; the pages below describe each programmer.
 
 | Programmer | Boards | Interfaces | Runners |
 | --- | --- | --- | --- |
-| {doc}`core_b2b_v2` | asterix | SWD, debug UART | `openocd`, `nrfutil` |
-| {doc}`pblprog_sifli` | obelix, getafix | Debug UART | `sftool` |
+| {doc}`core_b2b_v2` | asterix | SWD, debug UART | `openocd`, `nrfutil`, `probe-rs` |
+| {doc}`pblprog_sifli` | obelix, getafix | Debug UART | `sftool`, `probe-rs` |
 
 ```{toctree}
 :hidden:

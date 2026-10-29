@@ -147,6 +147,10 @@ class Runner(ABC):
     def gdb_port(self, default):
         return self.cfg.gdb_port or default
 
+    def gdb_init_commands(self):
+        """GDB commands to run before connecting to the server."""
+        return []
+
     def gdb_argv(self, port):
         """gdb on the firmware ELF, with the repository's extensions, attached
         to the gdb server on ``port``."""
@@ -163,7 +167,10 @@ class Runner(ABC):
                 file=sys.stderr,
             )
             gdb = gdb.removesuffix("-py")
-        argv = [gdb, self.cfg.elf_file, "-ex", f"target remote :{port}"]
+        argv = [gdb, self.cfg.elf_file]
+        for command in self.gdb_init_commands():
+            argv += ["-ex", command]
+        argv += ["-ex", f"target remote :{port}"]
         if self.cfg.build is not None:
             argv[1:1] = ["-ix", os.path.join(self.cfg.build.topdir, ".gdbinit")]
         return argv

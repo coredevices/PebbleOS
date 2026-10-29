@@ -11,6 +11,7 @@ from .native import NativeRunner
 from .nrfutil import NrfUtilRunner
 from .openocd import OpenOcdRunner
 from .phone import PhoneRunner
+from .probe_rs import ProbeRsRunner
 from .qemu import QemuRunner
 from .sftool import SfToolRunner
 from .wasm import WasmRunner
@@ -33,6 +34,7 @@ RUNNERS = {
         OpenOcdRunner,
         SfToolRunner,
         NrfUtilRunner,
+        ProbeRsRunner,
         QemuRunner,
         NativeRunner,
         WasmRunner,
