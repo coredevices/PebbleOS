@@ -17,6 +17,9 @@ pbl_test_module(rand
 pbl_test_module(pfs
   SOURCES
     fw/services/filesystem/pfs.c
+    subsys/fs/fs.c
+    subsys/fs/pfs/pfs_fs.c
+    tests/fakes/fake_pfs.c
     fw/services/filesystem/flash_translation.c
     fw/flash_region/filesystem_regions.c
     tests/fakes/fake_spi_flash.c

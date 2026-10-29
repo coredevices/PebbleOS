@@ -47,6 +47,14 @@
 #define OP_FLAG_SKIP_HDR_CRC_CHECK (1 << 3)
 /** @brief Cache the translation from file pages to flash pages. */
 #define OP_FLAG_USE_PAGE_CACHE (1 << 4)
+/** @brief With @ref OP_FLAG_WRITE, fail with @c E_DOES_NOT_EXIST instead of creating the file. */
+#define OP_FLAG_NO_CREATE (1 << 5)
+/**
+ * @brief Create the file, or the overwrite version, only on pfs_create_deferred().
+ *
+ * Until then the descriptor holds the name, and the file reads as empty.
+ */
+#define OP_FLAG_DEFER_CREATE (1 << 6)
 
 /** @brief File type of regular files. */
 #define FILE_TYPE_STATIC (0xfe)
@@ -93,6 +101,8 @@ typedef bool (*PFSFilenameTestCallback)(const char *name);
 typedef struct {
   /** List node. */
   ListNode list_node;
+  /** File size in bytes. */
+  size_t size;
   /** NUL-terminated file name. */
   char name[];
 } PFSFileListEntry;
@@ -126,6 +136,18 @@ typedef struct {
  * @retval E_OUT_OF_STORAGE Not enough space to create the file.
  */
 extern int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type, size_t start_size);
+
+/**
+ * @brief Create a file opened with @ref OP_FLAG_DEFER_CREATE.
+ *
+ * @param fd File descriptor.
+ * @param size File size in bytes.
+ * @retval S_SUCCESS File created.
+ * @retval E_INVALID_ARGUMENT Invalid descriptor or zero size.
+ * @retval E_INVALID_OPERATION The file was already created.
+ * @retval E_OUT_OF_STORAGE Not enough space to create the file.
+ */
+extern status_t pfs_create_deferred(int fd, size_t size);
 
 /**
  * @brief Write at the current position, then advance it.
@@ -191,6 +213,25 @@ extern status_t pfs_close_and_remove(int fd);
  * @return Other negative @c status_t on failure.
  */
 extern status_t pfs_remove(const char *name);
+
+/**
+ * @brief Check whether a file exists and get its size, without opening it.
+ *
+ * @param name File name.
+ * @param[out] size Size in bytes.
+ * @retval S_SUCCESS The file exists.
+ * @retval E_DOES_NOT_EXIST The file does not exist.
+ * @return Other negative @c status_t on failure.
+ */
+extern status_t pfs_stat(const char *name, size_t *size);
+
+/**
+ * @brief Get the name of an open file.
+ *
+ * @param fd File descriptor.
+ * @return Name, valid until the file is closed, or NULL for an invalid descriptor.
+ */
+extern const char *pfs_get_file_name(int fd);
 
 /**
  * @brief Get the size of a file, that is the number of bytes that can be read.
