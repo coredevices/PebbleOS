@@ -59,6 +59,11 @@ config KERNEL_MUTEX_LOCK_LR
 	bool "Record the caller of the outermost mutex lock"
 	default y
 
+config ARCH_HAS_DEBUGGER_DETECT
+	bool
+	help
+	  The architecture can tell whether a debugger is attached.
+
 config ARCH_HAS_USERSPACE
 	bool
 	help

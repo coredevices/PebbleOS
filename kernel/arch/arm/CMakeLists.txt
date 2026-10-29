@@ -4,6 +4,7 @@
 pbl_library_sources(
   arch.c
   cache.c
+  debug.c
   fpu.c
   interrupts.c
   irq.c
