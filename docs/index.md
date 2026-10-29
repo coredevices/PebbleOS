@@ -128,7 +128,7 @@ pbl/index.md
 development/build_system/index.md
 development/emulation/index.md
 development/tests/index.md
-development/debugging.md
+development/debugging/index.md
 development/conventions.md
 ```
 

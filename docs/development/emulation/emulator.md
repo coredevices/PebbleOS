@@ -145,7 +145,7 @@ emulator (`pebble install --emulator`) does; see
 
 The emulator always runs a GDB server. {doc}`../../pbl/debug` attaches to it
 through a proxy that walks the kernel's thread list, so `info threads` and
-per-thread backtraces work; see {doc}`../debugging`.
+per-thread backtraces work; see {doc}`../debugging/index`.
 
 ## Ports and sockets
 

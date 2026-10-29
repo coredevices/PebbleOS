@@ -19,19 +19,19 @@ and costs around a fifth of the link.
 
 ## GDB
 
-Start a debug session with {doc}`../pbl/debug`:
+Start a debug session with {doc}`../../pbl/debug`:
 
 ```shell
 pbl debug
 ```
 
-On QEMU boards this attaches GDB to the {doc}`emulator <emulation/emulator>`
+On QEMU boards this attaches GDB to the {doc}`emulator <../emulation/emulator>`
 through a proxy (`tools/qemu/qemu_gdb_proxy.py`) that walks the kernel's
 thread list, so `info threads` and per-thread backtraces work. On real
 hardware, `pbl debug` is available on boards whose runner is OpenOCD (e.g.
 asterix, configured by `boards/asterix/support/openocd.cfg`); boards
 flashed via sftool do not support it. The
-{doc}`native simulator <emulation/native_simulator>` runs under the host's
+{doc}`native simulator <../emulation/native_simulator>` runs under the host's
 own debugger instead.
 
 ### PebbleOS GDB commands
@@ -61,8 +61,8 @@ Highlights (run `pbl` for the full list):
 
 ## Console and logs
 
-{doc}`../pbl/console` attaches to the firmware console and dehashes log
-messages on the fly (see {doc}`../subsystems/logging`). The dehashing code
+{doc}`../../pbl/console` attaches to the firmware console and dehashes log
+messages on the fly (see {doc}`../../subsystems/logging`). The dehashing code
 lives in `tools/log_hashing/` and `tools/libs/pebble-loghash/`.
 
 Logs are also persisted to a circular buffer in flash;

@@ -9,7 +9,7 @@
 # Or, this script can be setup to auto-load into gdb by placing a link to it into the
 #  <data-directory>/python/gdb/command directory
 #
-# See https://pebbleos.readthedocs.io/latest/development/debugging.html
+# See https://pebbleos.readthedocs.io/latest/development/debugging/index.html
 
 import collections
 import json
