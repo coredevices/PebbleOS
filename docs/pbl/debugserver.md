@@ -8,9 +8,9 @@ pbl debugserver
 
 Runs the GDB server of the board's {ref}`runner <pbl-runners>` in the
 foreground, the one {doc}`debug` starts, until `Ctrl-C`. Anything that
-speaks the GDB remote protocol attaches to it: GDB, an IDE, or
-`pbl debug` from another terminal, which then leaves the server running
-when GDB quits.
+speaks the GDB remote protocol attaches to it: GDB, an
+{doc}`IDE <../development/debugging/vscode>`, or `pbl debug` from another
+terminal, which then leaves the server running when GDB quits.
 
 The server listens on the runner's port, see {doc}`debug`, or on
 `--gdb-port`:

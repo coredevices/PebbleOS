@@ -31,8 +31,9 @@ pbl debug --tty /dev/cu.usbmodem5B7A1355001
 ```
 
 `--probe` selects one of several debug probes, as `VID:PID[:SERIAL]`.
-{doc}`../development/debugging/index` covers the setup and the GDB
-extensions the firmware ships with.
+{doc}`../development/debugging/index` covers the
+setup, and {doc}`../development/debugging/gdb_tutorial` walks through a
+session.
 
 ## Options
 
