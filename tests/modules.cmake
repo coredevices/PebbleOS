@@ -18,7 +18,6 @@ pbl_test_module(pfs
   SOURCES
     fw/services/filesystem/pfs.c
     fw/services/filesystem/flash_translation.c
-    fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     tests/fakes/fake_spi_flash.c
 )

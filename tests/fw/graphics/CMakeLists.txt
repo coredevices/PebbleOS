@@ -83,7 +83,6 @@ set(graphics_draw_text_sources
   fw/applib/graphics/arabic_shaping.c
   fw/applib/graphics/perimeter.c
   fw/applib/graphics/text_resources.c
-  fw/flash_region/flash_region.c
   fw/flash_region/filesystem_regions.c
   fw/system/hexdump.c
   fw/applib/fonts/codepoint.c

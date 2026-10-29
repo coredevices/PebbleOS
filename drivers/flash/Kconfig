@@ -8,6 +8,12 @@ menuconfig FLASH
 
 if FLASH
 
+config FLASH_OTP
+    bool
+    help
+      Selected by drivers with a user one-time programmable area, see
+      pbl_flash_otp_*().
+
 config FLASH_GD25LQ255E
     bool "GigaDevice GD25LQ255E"
     help
@@ -17,6 +23,14 @@ config FLASH_GD25Q256E
     bool "GigaDevice GD25Q256E"
     help
       Support for the GigaDevice GD25Q256E NOR flash.
+
+config FLASH_SPI_NOR
+    bool "SPI NOR"
+    depends on SPI_MEM
+    select FLASH_OTP
+    help
+      Support for a JEDEC NOR flash on a SPI memory controller, described
+      by its SFDP tables and the board's part description.
 
 config FLASH_QEMU
     bool "QEMU External Flash"
@@ -29,6 +43,13 @@ config FLASH_POSIX
     default y if SOC_POSIX
     help
       External flash backed by a file on the host.
+
+config FLASH_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The flash shell command, to inspect, erase and test the flash.
 
 module = DRIVER_FLASH
 module-str = Flash

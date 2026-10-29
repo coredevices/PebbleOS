@@ -15,7 +15,7 @@ PBL_LOG_MODULE_DEFINE(service_prf_update, CONFIG_SERVICE_PRF_UPDATE_LOG_LEVEL);
 #ifndef CONFIG_RECOVERY_FW
 static void prv_do_update(void) {
   PBL_LOG_INFO("Updating PRF!");
-  flash_prf_set_protection(false);
+  (void)pbl_flash_unprotect(FLASH);
 
 #ifndef CONFIG_PBLBOOT
   FirmwareDescription description =
@@ -39,9 +39,7 @@ static void prv_do_update(void) {
 #endif
 
   PBL_LOG_DBG("Erasing previous PRF...");
-  flash_region_erase_optimal_range(
-      FLASH_REGION_SAFE_FIRMWARE_BEGIN, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-      FLASH_REGION_SAFE_FIRMWARE_BEGIN + total_length, FLASH_REGION_SAFE_FIRMWARE_END);
+  pbl_flash_erase(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN, total_length);
 
   PBL_LOG_DBG("Copying PRF from scratch to the PRF slot");
   uint8_t buffer[512];
@@ -49,14 +47,15 @@ static void prv_do_update(void) {
   while (offset < total_length) {
     const uint32_t chunk_size = MIN(sizeof(buffer), (total_length - offset));
 
-    flash_read_bytes(buffer, FLASH_REGION_FIRMWARE_DEST_BEGIN + offset, chunk_size);
-    flash_write_bytes(buffer, FLASH_REGION_SAFE_FIRMWARE_BEGIN + offset, chunk_size);
+    pbl_flash_read(FLASH, FLASH_REGION_FIRMWARE_DEST_BEGIN + offset, buffer, chunk_size);
+    pbl_flash_write(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN + offset, buffer, chunk_size);
 
     offset += chunk_size;
   }
 
 done:
-  flash_prf_set_protection(true);
+  (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                          FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
   PBL_LOG_DBG("Done!");
 }
 #endif

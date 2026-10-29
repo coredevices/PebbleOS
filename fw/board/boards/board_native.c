@@ -4,6 +4,7 @@
 #include <pbl/drivers/ambient/posix.h>
 #include <pbl/drivers/backlight/posix.h>
 #include <pbl/drivers/display/sdl.h>
+#include <pbl/drivers/flash/posix.h>
 #include <pbl/drivers/imu/posix.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/drivers/temperature/posix.h>
@@ -60,3 +61,4 @@ const struct pbl_temp *const DIE_TEMP = POSIX_TEMP;
 #ifdef CONFIG_TOUCH_SDL
 const struct pbl_touch *const TOUCH = SDL_TOUCH;
 #endif
+const struct pbl_flash *const FLASH = POSIX_FLASH;

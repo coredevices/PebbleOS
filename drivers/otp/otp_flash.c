@@ -8,38 +8,35 @@
 
 #define FLASH_ERASE_VAL 0xFFU
 #define OTP_SLOT_SIZE   32U
-#define SEC_REG_IDX     0x0U
 
-bool cd_flash_active(void);
-status_t cd_flash_read_security_register(uint32_t addr, uint8_t *val);
-status_t cd_flash_security_register_is_locked(uint32_t addr, bool *locked);
+static const char *const s_cell_names[NUM_OTP_SLOTS] = {
+  [OTP_HWVER] = "hw-version",
+  [OTP_SERIAL] = "serial-number",
+  [OTP_PCBA_SERIAL] = "pcba-serial-number",
+};
 
 static char s_slot[NUM_OTP_SLOTS][OTP_SLOT_SIZE];
 
-char *otp_get_slot(const uint8_t index) {
-  const FlashSecurityRegisters *info;
-  status_t ret;
+static const struct pbl_flash_otp_cell *prv_cell(const uint8_t index) {
+  const struct pbl_flash_otp_cell *cell;
 
   if (index >= NUM_OTP_SLOTS) {
     return nullptr;
   }
 
-  info = flash_security_registers_info();
-  if (info->num_sec_regs == 0U) {
+  cell = pbl_flash_otp_cell_get(FLASH, s_cell_names[index]);
+  if (cell == nullptr || cell->len != OTP_SLOT_SIZE) {
     return nullptr;
   }
 
-  for (uint8_t i = 0U; i < OTP_SLOT_SIZE; i++) {
-    if (cd_flash_active()) {
-      ret = cd_flash_read_security_register(info->sec_regs[SEC_REG_IDX] + index * OTP_SLOT_SIZE + i,
-                                            (uint8_t *)&s_slot[index][i]);
-    } else {
-      ret = flash_read_security_register(info->sec_regs[SEC_REG_IDX] + index * OTP_SLOT_SIZE + i,
-                                         (uint8_t *)&s_slot[index][i]);
-    }
-    if (ret != S_SUCCESS) {
-      return nullptr;
-    }
+  return cell;
+}
+
+char *otp_get_slot(const uint8_t index) {
+  const struct pbl_flash_otp_cell *cell = prv_cell(index);
+
+  if (cell == nullptr || pbl_flash_otp_read(FLASH, cell->offset, s_slot[index], cell->len) != 0) {
+    return nullptr;
   }
 
   return s_slot[index];
@@ -50,21 +47,15 @@ uint8_t *otp_get_lock(const uint8_t index) {
 }
 
 bool otp_is_locked(const uint8_t index) {
-  const FlashSecurityRegisters *info;
-  status_t ret;
+  const struct pbl_flash_otp_cell *cell = prv_cell(index);
+  struct pbl_flash_otp_info info;
   bool locked;
 
-  info = flash_security_registers_info();
-  if (info->num_sec_regs == 0U) {
+  if (cell == nullptr || pbl_flash_otp_get_info(FLASH, &info) != 0) {
     return false;
   }
 
-  if (cd_flash_active()) {
-    ret = cd_flash_security_register_is_locked(info->sec_regs[SEC_REG_IDX], &locked);
-  } else {
-    ret = flash_security_register_is_locked(info->sec_regs[SEC_REG_IDX], &locked);
-  }
-  if (ret != S_SUCCESS) {
+  if (pbl_flash_otp_is_locked(FLASH, (uint8_t)(cell->offset / info.region_len), &locked) != 0) {
     return false;
   }
 
@@ -72,42 +63,36 @@ bool otp_is_locked(const uint8_t index) {
 }
 
 OtpWriteResult otp_write_slot(const uint8_t index, const char *value) {
-  const FlashSecurityRegisters *info;
+  const struct pbl_flash_otp_cell *cell = prv_cell(index);
   char *existing_val;
-  status_t ret;
   size_t len;
 
-  if (index >= NUM_OTP_SLOTS) {
+  if (cell == nullptr) {
     return OtpWriteFailCorrupt;
   }
 
   len = strlen(value);
-  if (len >= OTP_SLOT_SIZE) {
+  if (len >= cell->len) {
     return OtpWriteFailCorrupt;
   }
 
   existing_val = otp_get_slot(index);
-  for (size_t i = 0U; i < OTP_SLOT_SIZE; i++) {
+  if (existing_val == nullptr) {
+    return OtpWriteFailCorrupt;
+  }
+
+  for (size_t i = 0U; i < cell->len; i++) {
     if ((uint8_t)existing_val[i] != FLASH_ERASE_VAL) {
       return OtpWriteFailAlreadyWritten;
     }
   }
 
-  info = flash_security_registers_info();
-  if (info->num_sec_regs == 0U) {
+  if (pbl_flash_otp_write(FLASH, cell->offset, value, len + 1U) != 0) {
     return OtpWriteFailCorrupt;
   }
 
-  for (size_t i = 0U; i <= len; i++) {
-    ret = flash_write_security_register(info->sec_regs[SEC_REG_IDX] + index * OTP_SLOT_SIZE + i,
-                                        (uint8_t)value[i]);
-    if (ret != S_SUCCESS) {
-      return OtpWriteFailCorrupt;
-    }
-  }
-
   existing_val = otp_get_slot(index);
-  if ((existing_val == nullptr) || (memcmp(existing_val, value, len + 1) != 0)) {
+  if ((existing_val == nullptr) || (memcmp(existing_val, value, len + 1U) != 0)) {
     return OtpWriteFailCorrupt;
   }
 

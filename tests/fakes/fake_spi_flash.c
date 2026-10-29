@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/drivers/flash.h>
+
 #include <clar_asserts.h>
 #include <flash_region/flash_region.h>
 #include <sys/stat.h>
@@ -124,21 +126,28 @@ void fake_spi_flash_force_future_failure(int after_n_bytes, jmp_buf *retire_to) 
   s_state.jmp_on_failure = retire_to;
 }
 
-void flash_read_bytes(uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
-  cl_assert(start_addr >= s_state.offset);
-  cl_assert(start_addr + buffer_size <= s_state.offset + s_state.length);
-
-  ++s_state.read_count;
-  memcpy(buffer, s_state.storage + (start_addr - s_state.offset), buffer_size);
+static void prv_check_range(uint32_t addr, size_t len) {
+  cl_assert(addr >= s_state.offset);
+  cl_assert(addr + len <= s_state.offset + s_state.length);
 }
 
-void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buffer_size) {
-  cl_assert(start_addr >= s_state.offset);
-  cl_assert(start_addr + buffer_size <= s_state.offset + s_state.length);
+int pbl_flash_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len) {
+  prv_check_range(addr, len);
+
+  ++s_state.read_count;
+  memcpy(buf, s_state.storage + (addr - s_state.offset), len);
+
+  return 0;
+}
+
+int pbl_flash_write(const struct pbl_flash *flash, uint32_t addr, const void *buf, size_t len) {
+  const uint8_t *src = buf;
+
+  prv_check_range(addr, len);
 
   ++s_state.write_count;
 
-  for (int i = 0; i < buffer_size; ++i) {
+  for (size_t i = 0; i < len; ++i) {
     if (s_state.jmp_on_failure != nullptr) {
       if (s_state.bytes_left_till_write_failure == 0) {
         longjmp(*s_state.jmp_on_failure, 1);
@@ -146,45 +155,80 @@ void flash_write_bytes(const uint8_t *buffer, uint32_t start_addr, uint32_t buff
         s_state.bytes_left_till_write_failure--;
       }
     }
-    // 0 write 0 = 0
-    // 1 write 0 = 0
-    // 1 write 1 = 1
-    // 0 write 1 = 0
-    s_state.storage[start_addr - s_state.offset + i] &= buffer[i];
+    // NOR flash only clears bits
+    s_state.storage[addr - s_state.offset + i] &= src[i];
   }
+
+  return 0;
 }
 
-//! @param block_size must be a power of two
-static void erase_block(uint32_t block_addr, uint32_t block_size) {
+static void prv_erase_block(uint32_t addr, uint32_t size) {
   ++s_state.erase_count;
+  prv_check_range(addr, size);
+  memset(&s_state.storage[addr - s_state.offset], 0xff, size);
+}
 
-  const uint32_t block_mask = ~(block_size - 1);
-  uint32_t block_start = block_addr & block_mask;
+int pbl_flash_erase(const struct pbl_flash *flash, uint32_t addr, size_t len) {
+  cl_assert((addr % SUBSECTOR_SIZE_BYTES) == 0);
+  len = ((len + SUBSECTOR_SIZE_BYTES - 1) / SUBSECTOR_SIZE_BYTES) * SUBSECTOR_SIZE_BYTES;
 
-  cl_assert(block_start >= s_state.offset);
-  if (block_start + block_size > s_state.offset + s_state.length) {
-    printf("-0x%x 0x%x\n", block_start + block_size, s_state.offset + s_state.length);
+  while (len > 0) {
+    uint32_t unit = SUBSECTOR_SIZE_BYTES;
+
+    if ((addr % SECTOR_SIZE_BYTES) == 0 && len >= SECTOR_SIZE_BYTES) {
+      unit = SECTOR_SIZE_BYTES;
+    }
+    prv_erase_block(addr, unit);
+    addr += unit;
+    len -= unit;
   }
-  cl_assert(block_start + block_size <= s_state.offset + s_state.length);
 
-  memset(&s_state.storage[block_start - s_state.offset], 0xff, block_size);
+  return 0;
 }
 
-void flash_erase_sector_blocking(uint32_t sector_addr) {
-  erase_block(sector_addr, SECTOR_SIZE_BYTES);
+int pbl_flash_erase_async(const struct pbl_flash *flash, uint32_t addr, size_t len,
+                          pbl_flash_erase_cb_t cb, void *arg) {
+  cb(pbl_flash_erase(flash, addr, len), arg);
+
+  return 0;
 }
 
-uint32_t flash_get_subsector_base_address(uint32_t flash_addr) {
-  return flash_addr & ~(SUBSECTOR_SIZE_BYTES - 1);
+bool pbl_flash_is_erased(const struct pbl_flash *flash, uint32_t addr, size_t len) {
+  prv_check_range(addr, len);
+
+  for (size_t i = 0; i < len; i++) {
+    if (s_state.storage[addr - s_state.offset + i] != 0xff) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-void flash_erase_subsector_blocking(uint32_t subsector_addr) {
-  erase_block(subsector_addr, SUBSECTOR_SIZE_BYTES);
+int pbl_flash_protect(const struct pbl_flash *flash, uint32_t addr, size_t len) {
+  return 0;
 }
 
-uint32_t flash_get_sector_base_address(uint32_t flash_addr) {
-  return (flash_addr & ~(SECTOR_SIZE_BYTES - 1));
+int pbl_flash_unprotect(const struct pbl_flash *flash) {
+  return 0;
 }
+
+void pbl_flash_stop(const struct pbl_flash *flash) {
+}
+
+static const struct pbl_flash_geometry s_geometry = {
+  .size = UINT32_MAX,
+  .page_size = 256U,
+  .sector_size = SECTOR_SIZE_BYTES,
+  .subsector_size = SUBSECTOR_SIZE_BYTES,
+};
+
+static const struct pbl_flash s_flash = {
+  .base = 0U,
+  .geometry = &s_geometry,
+};
+
+const struct pbl_flash *const FLASH = &s_flash;
 
 uint32_t fake_flash_read_count(void) {
   return s_state.read_count;
