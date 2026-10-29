@@ -9,3 +9,13 @@ pbl_clar_test(test_fs
   DEFINES DUMA_DISABLED
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_pfs
+  MODULES pfs
+  SOURCES
+    subsys/logging/hexdump.c
+    tests/fakes/fake_rtc.c
+  PLATFORMS emery
+  DEFINES DUMA_DISABLED
+  OVERRIDES dummy_board
+)

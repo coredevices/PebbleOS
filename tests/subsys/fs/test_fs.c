@@ -7,12 +7,12 @@
 
 #include <pbl/fs/fs.h>
 #include <pbl/fs/pfs.h>
-#include <pbl/services/filesystem/pfs.h>
 
 #include <clar.h>
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
+#include <fs/pfs/pfs.h>
 
 // Recording backend
 ///////////////////////////////////////////////////////////////////////////////

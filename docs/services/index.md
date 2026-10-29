@@ -6,10 +6,8 @@ They live in `fw/services/`, with their interfaces in `include/pbl/services/`.
 
 ## Storage
 
-PFS, the Pebble File System, lives in `fw/services/filesystem/`. The API
-and on-flash layout are documented in `pfs.h`; the wear-leveling strategy
-(round-robin page allocation tracking the last written page) is described
-alongside the allocator in `pfs.c`.
+Services keep their files on the root (`/`) file system of the
+{doc}`file system subsystem <../subsystems/fs>`.
 
 ## Service modules
 

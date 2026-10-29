@@ -12,7 +12,6 @@ if FS
 config FS_PFS
     bool "Pebble File System (PFS)"
     default y
-    depends on SERVICE_FILESYSTEM
     help
       PFS, the wear-leveled file system on the external NOR flash.
 

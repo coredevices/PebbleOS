@@ -9,7 +9,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 

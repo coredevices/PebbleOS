@@ -7,8 +7,6 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/flash_translation.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -16,6 +14,8 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <flash_region/flash_region.h>
+#include <fs/pfs/flash_translation.h>
+#include <fs/pfs/pfs.h>
 
 #define PFS_SECTOR_SIZE 4096
 
@@ -739,46 +739,6 @@ void test_pfs__migration(void) {
 #endif // FLASH_REGION_FILESYSTEM_2_BEGIN
 }
 
-static uint32_t s_watch_file_callback_called_count = 0;
-static void prv_file_changed_callback(void *data) {
-  s_watch_file_callback_called_count++;
-}
-
-void test_pfs__watch_file_callbacks(void) {
-  const char *file_name = "newfile";
-
-  PFSCallbackHandle cb_handle =
-      pfs_watch_file(file_name, prv_file_changed_callback, FILE_CHANGED_EVENT_ALL, nullptr);
-
-  // Callback should get invoked if we close with write access
-  s_watch_file_callback_called_count = 0;
-  int fd = pfs_open(file_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  cl_assert(s_watch_file_callback_called_count == 1);
-
-  // Callback should not get invoked if we close with read access
-  s_watch_file_callback_called_count = 0;
-  fd = pfs_open(file_name, OP_FLAG_READ, 0, 0);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  cl_assert(s_watch_file_callback_called_count == 0);
-
-  // Callback should get invoked if we remove the file
-  s_watch_file_callback_called_count = 0;
-  pfs_remove(file_name);
-  cl_assert(s_watch_file_callback_called_count == 1);
-
-  pfs_unwatch_file(cb_handle);
-
-  // Callback should not get invoked anymore
-  s_watch_file_callback_called_count = 0;
-  fd = pfs_open(file_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  cl_assert(s_watch_file_callback_called_count == 0);
-}
-
 extern status_t test_scan_for_last_written(void);
 void test_pfs__last_written_page(void) {
   pfs_format(true);
@@ -1117,40 +1077,6 @@ void test_pfs__start_page_collides_with_gc_page(void) {
     cl_assert(fd >= 0);
     pfs_close(fd);
   }
-}
-
-void test_pfs__remove_files(void) {
-  pfs_format(true);
-  pfs_init(false);
-
-  // Create some files
-  int fd;
-  fd = pfs_open("a_test_0", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  fd = pfs_open("a_test_1", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  fd = pfs_open("b_test_0", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  fd = pfs_open("b_test_1", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-
-  // Should have 4 entries in pfs
-  cl_assert_equal_b(prv_file_exists("a_test_0"), true);
-  cl_assert_equal_b(prv_file_exists("a_test_1"), true);
-  cl_assert_equal_b(prv_file_exists("b_test_0"), true);
-  cl_assert_equal_b(prv_file_exists("b_test_1"), true);
-
-  pfs_remove_files(prv_filename_filter_a_prefix_cb);
-
-  // Should have only files starting with b_
-  cl_assert_equal_b(prv_file_exists("a_test_0"), false);
-  cl_assert_equal_b(prv_file_exists("a_test_1"), false);
-  cl_assert_equal_b(prv_file_exists("b_test_0"), true);
-  cl_assert_equal_b(prv_file_exists("b_test_1"), true);
 }
 
 void test_pfs__doesnt_give_out_fd_zero(void) {

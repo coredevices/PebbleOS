@@ -6,16 +6,13 @@
 #include <stdint.h>
 #include <string.h>
 
-/**
- * @defgroup services_filesystem_flash_translation Flash translation layer
- * @ingroup services_filesystem
- * @brief Contiguous virtual address space for PFS over several flash regions.
+/*
+ * Flash translation layer: a contiguous virtual address space for PFS over several flash regions.
  *
  * Lets PFS grow into multiple flash regions while keeping a contiguous virtual address space.
  * Regions are added in the order of the board's filesystem region list. On boot, the regions
  * where PFS is already active are added as they are; the remaining ones are erased and then
  * added, growing the filesystem.
- * @{
  */
 
 /**
@@ -85,5 +82,3 @@ void ftl_format(void);
  * the remaining regions. Called by pfs_init().
  */
 void ftl_populate_region_list(void);
-
-/** @} */

@@ -3,11 +3,12 @@
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_RELEASE)
 
+#include "pfs.h"
+
 #include <errno.h>
 #include <stdio.h>
 
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/shell/shell.h>
 #include <pbl/task_wdt/task_wdt.h>
 

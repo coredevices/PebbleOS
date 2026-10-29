@@ -1,6 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pfs.h"
+
+#include "flash_translation.h"
+
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -18,15 +22,13 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
-#include <pbl/services/filesystem/flash_translation.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
 
 #include <flash_region/filesystem_regions.h>
 #include <kernel/pebble_tasks.h>
 
-PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(fs, CONFIG_FS_LOG_LEVEL);
 
 static PBL_MUTEX_DEFINE(s_pfs_mutex);
 
@@ -208,22 +210,9 @@ void pfs_reset_all_state(void) {
 // Files opened with OP_FLAG_DEFER_CREATE that are not on flash yet
 #define IS_DEFERRED(f) ((f)->start_page == INVALID_PAGE)
 
-typedef struct {
-  ListNode list_node;
-  //! Name of the file to watch
-  const char *name;
-  //! Which events will invoke callbacks (see FILE_CHANGED_EVENT_ flags in pfs.h)
-  uint8_t event_flags;
-  //! Caller provided data pointer
-  void *data;
-  //! Callback pointer
-  PFSFileChangedCallback callback;
-} PFSFileChangedCallbackNode;
-
 static uint8_t *s_pfs_page_flags_cache = nullptr;
 static uint16_t s_pfs_page_count = 0;
 static uint32_t s_pfs_size = 0;
-static ListNode *s_head_callback_node_list = nullptr;
 
 // In the interest of being able to leverage sector erases / minimize seek time
 // for large files, deploying a variable length page size may be beneficial.
@@ -1351,68 +1340,6 @@ static bool prv_update_gc_reserved_region(void) {
   return (true); // gc block must be valid to get here
 }
 
-static bool watch_list_find_str(ListNode *node, void *data) {
-  PFSFileChangedCallbackNode *filechg_node = (PFSFileChangedCallbackNode *)node;
-  return (strcmp(filechg_node->name, (char *)data) == 0);
-}
-
-PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
-                                 uint8_t event_flags, void *data) {
-  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-
-  PFSFileChangedCallbackNode *node = pbl_malloc_check(sizeof(PFSFileChangedCallbackNode));
-  *node =
-      (PFSFileChangedCallbackNode){.callback = callback, .event_flags = event_flags, .data = data};
-
-  // find out if we already have a string for this particular filename
-  ListNode *find_str = list_find(s_head_callback_node_list, watch_list_find_str, (char *)filename);
-  if (find_str == nullptr) {
-    node->name = pbl_strdup_check(filename);
-  } else {
-    node->name = ((PFSFileChangedCallbackNode *)find_str)->name;
-  }
-
-  s_head_callback_node_list = list_prepend(s_head_callback_node_list, &node->list_node);
-  pbl_mutex_unlock(&s_pfs_mutex);
-
-  return node;
-}
-
-void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
-  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-
-  PFSFileChangedCallbackNode *callback_node = (PFSFileChangedCallbackNode *)cb_handle;
-
-  PBL_ASSERTN(callback_node->list_node.next != nullptr ||
-              callback_node->list_node.prev != nullptr ||
-              s_head_callback_node_list == &callback_node->list_node);
-  PBL_ASSERTN(list_contains(s_head_callback_node_list, &callback_node->list_node));
-  list_remove(&callback_node->list_node, &(s_head_callback_node_list), nullptr);
-
-  // if no one is watching the file anymore, free the string
-  ListNode *find_str =
-      list_find(s_head_callback_node_list, watch_list_find_str, (char *)callback_node->name);
-  if (find_str == nullptr) {
-    pbl_free((void *)(callback_node->name));
-  }
-
-  pbl_free(callback_node);
-
-  pbl_mutex_unlock(&s_pfs_mutex);
-}
-
-// IMPORTANT: This call assumes that the caller has already grabbed s_pfs_mutex
-static void prv_invoke_watch_file_callbacks(const char *file_name, uint8_t event) {
-  PFSFileChangedCallbackNode *callback_node =
-      (PFSFileChangedCallbackNode *)s_head_callback_node_list;
-  while (callback_node) {
-    if (!strcmp(callback_node->name, file_name) && (callback_node->event_flags & event)) {
-      callback_node->callback(callback_node->data);
-    }
-    callback_node = (PFSFileChangedCallbackNode *)list_get_next(&callback_node->list_node);
-  }
-}
-
 status_t pfs_close(int fd) {
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
 
@@ -1456,12 +1383,6 @@ status_t pfs_close(int fd) {
 
   PFS_FD(fd).fd_status = FD_STATUS_UNREFERENCED;
   PFS_FD(fd).time_closed = time_closed_counter++;
-
-  // If this file was modified, invoke the callbacks
-  if (f->op_flags & (OP_FLAG_WRITE | OP_FLAG_OVERWRITE)) {
-    // IMPORTANT: prv_invoke_watch_file_callbacks assumes that we already have s_pfs_mutex
-    prv_invoke_watch_file_callbacks(f->name, FILE_CHANGED_EVENT_CLOSED);
-  }
 
   res = S_SUCCESS;
 cleanup:
@@ -1514,8 +1435,6 @@ status_t pfs_remove(const char *name) {
   }
 
   rv = unlink_flash_file(page);
-  // IMPORTANT: prv_invoke_watch_file_callbacks assumes that we already have s_pfs_mutex
-  prv_invoke_watch_file_callbacks(name, FILE_CHANGED_EVENT_REMOVED);
 cleanup:
   pbl_mutex_unlock(&s_pfs_mutex);
   return (rv);
@@ -1587,27 +1506,6 @@ void pfs_delete_file_list(PFSFileListEntry *head) {
     pbl_free(node);
     node = next;
   }
-}
-
-static void prv_remove_file(uint16_t pg, const char *file_name, uint32_t file_size, void *ctx) {
-  int fd;
-  status_t rv = get_avail_fd(file_name, &fd, false);
-  if (rv >= FDAlreadyLoaded) { // the file is in the cache
-    if (rv == FDBusy) {
-      pbl_panic("Cannot delete %s, it is currently in use", PFS_FD(fd).file.name);
-    }
-    mark_fd_free(fd);
-  }
-
-  unlink_flash_file(pg);
-  // IMPORTANT: prv_invoke_watch_file_callbacks assumes that we already have s_pfs_mutex
-  prv_invoke_watch_file_callbacks(file_name, FILE_CHANGED_EVENT_REMOVED);
-}
-
-void pfs_remove_files(PFSFilenameTestCallback callback) {
-  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-  prv_for_each_file(callback, prv_remove_file, nullptr);
-  pbl_mutex_unlock(&s_pfs_mutex);
 }
 
 #define MAX_PAGE_CACHE_ENTRIES 10 // 6 bytes per entry
