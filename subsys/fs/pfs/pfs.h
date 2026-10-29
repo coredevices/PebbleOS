@@ -11,10 +11,9 @@
 #include <kernel/pebble_tasks.h>
 #include <system/status_codes.h>
 
-/**
- * @defgroup services_filesystem Filesystem
- * @ingroup services
- * @brief Pebble File System (PFS) on the external NOR flash.
+/*
+ * Pebble File System (PFS) on the external NOR flash, the backend behind the "/" mount (see
+ * pfs_fs.c). Private to the file system subsystem.
  *
  * - All functions are thread-safe.
  * - PFS implements basic wear leveling to extend the life of the flash part.
@@ -34,7 +33,6 @@
  *   pfs_close(fd);
  * }
  * @endcode
- * @{
  */
 
 /** @brief Open for reading; fails if the file does not exist. */
@@ -69,28 +67,8 @@ typedef enum {
   FSeekCur
 } FSeekType;
 
-/** @brief pfs_watch_file() event: the file was closed after being opened for writing. */
-#define FILE_CHANGED_EVENT_CLOSED (1 << 0)
-/** @brief pfs_watch_file() event: the file was removed. */
-#define FILE_CHANGED_EVENT_REMOVED (1 << 1)
-/** @brief pfs_watch_file() events: all of them. */
-#define FILE_CHANGED_EVENT_ALL (FILE_CHANGED_EVENT_CLOSED | FILE_CHANGED_EVENT_REMOVED)
-
 /**
- * @brief Callback of pfs_watch_file().
- *
- * Runs on the task that closed or removed the file, with the PFS lock held: it must not call
- * PFS.
- *
- * @param data Data passed to pfs_watch_file().
- */
-typedef void (*PFSFileChangedCallback)(void *data);
-
-/** @brief Handle of a file watch, for pfs_unwatch_file(). */
-typedef void *PFSCallbackHandle;
-
-/**
- * @brief File name filter of pfs_create_file_list() and pfs_remove_files().
+ * @brief File name filter of pfs_create_file_list().
  *
  * @param name File name.
  * @return true if the file matches.
@@ -188,7 +166,7 @@ extern int pfs_seek(int fd, int offset, FSeekType seek_type);
 /**
  * @brief Close a file.
  *
- * Commits an overwrite and notifies watchers if the file was opened for writing.
+ * Commits an overwrite.
  *
  * @param fd File descriptor.
  * @retval S_SUCCESS File closed.
@@ -320,25 +298,6 @@ extern int pfs_sector_optimal_size(int min_size, int namelen);
 extern uint32_t get_available_pfs_space(void);
 
 /**
- * @brief Watch a file for changes.
- *
- * @param filename Name of the file to watch.
- * @param callback Function called on the selected events.
- * @param event_flags @c FILE_CHANGED_EVENT_* flags selecting the events.
- * @param data Pointer passed to @p callback.
- * @return Handle for pfs_unwatch_file().
- */
-PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
-                                 uint8_t event_flags, void *data);
-
-/**
- * @brief Stop watching a file.
- *
- * @param cb_handle Handle returned by pfs_watch_file().
- */
-void pfs_unwatch_file(PFSCallbackHandle cb_handle);
-
-/**
  * @brief Compute the legacy CRC-32 of a part of a file.
  *
  * Moves the current position of @p fd.
@@ -365,12 +324,3 @@ extern PFSFileListEntry *pfs_create_file_list(PFSFilenameTestCallback callback);
  * @param list Head of the list.
  */
 extern void pfs_delete_file_list(PFSFileListEntry *list);
-
-/**
- * @brief Remove all files whose name matches a filter.
- *
- * @param callback Name filter.
- */
-extern void pfs_remove_files(PFSFilenameTestCallback callback);
-
-/** @} */

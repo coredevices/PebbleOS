@@ -8,8 +8,8 @@
 #include <process_management/app_install_types.h>
 
 /**
- * @defgroup services_filesystem_app_file App files
- * @ingroup services_filesystem
+ * @defgroup services_process_management_app_file App files
+ * @ingroup services_process_management
  * @brief Consistent naming of per-app files.
  *
  * Files belonging to an app are named with a fixed-length prefix derived from its

@@ -8,7 +8,7 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/fs/fs.h>
-#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/math.h>
 

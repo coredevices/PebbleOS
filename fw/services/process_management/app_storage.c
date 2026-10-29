@@ -10,7 +10,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
