@@ -15,6 +15,15 @@ config MIC_NRF5
     help
       Support for the Nordic nRF5 PDM microphone interface.
 
+config MIC_NRF5_GAIN
+    int "PDM gain"
+    depends on MIC_NRF5
+    range 0 80
+    default 40
+    help
+      PDM gain in 0.5 dB steps, where 0 is -20 dB, 40 is 0 dB and 80 is
+      +20 dB.
+
 config MIC_SF32LB
     bool "SiFli SF32LB PDM"
     default y if SOC_SF32LB52

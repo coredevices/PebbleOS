@@ -18,18 +18,6 @@
 // clang-format on
 
 typedef struct {
-  struct pbl_gpio i2s_ck;
-  struct pbl_gpio i2s_sd;
-  NRF_SPIM_Type *spi;
-  uint32_t spi_clock_ctrl;
-  nrf_pdm_gain_t gain;
-} MicConfig;
-
-typedef struct {
-  // Audio Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const MicConfig mic_config;
-
   // Ambient Light Configuration
   /////////////////////////////////////////////////////////////////////////////
   const uint32_t ambient_light_dark_threshold;

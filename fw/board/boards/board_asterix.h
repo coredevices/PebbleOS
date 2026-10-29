@@ -15,10 +15,6 @@ static const BoardConfig BOARD_CONFIG = {
   .ambient_k_delta_threshold = 30,
 
   .backlight_on_percent = 25,
-
-  .mic_config = {
-    .gain = 40,
-  }
 };
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
