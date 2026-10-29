@@ -3,14 +3,12 @@
 
 pbl_clar_test(test_flash_api
   SOURCES
-    drivers/flash/flash_api.c
-  OVERRIDES dummy_board
-)
-
-pbl_clar_test(test_flash_erase
-  SOURCES
-    drivers/flash/flash_erase.c
-  PLATFORMS emery
+    drivers/base/device.c
+    drivers/flash/flash.c
+  DEFINES
+    CONFIG_DEVICE_LOG_LEVEL=0
+    CONFIG_DRIVER_FLASH_LOG_LEVEL=0
+    PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
 

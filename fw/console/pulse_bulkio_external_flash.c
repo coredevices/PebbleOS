@@ -26,13 +26,13 @@ typedef struct ExternalFlashEraseState {
 
 static int external_flash_domain_read(uint8_t *buf, uint32_t address, uint32_t length,
                                       void *context) {
-  flash_read_bytes(buf, address, length);
+  pbl_flash_read(FLASH, address, buf, length);
   return length;
 }
 
 static int external_flash_domain_write(uint8_t *buf, uint32_t address, uint32_t length,
                                        void *context) {
-  flash_write_bytes(buf, address, length);
+  pbl_flash_write(FLASH, address, buf, length);
   return length;
 }
 
@@ -40,19 +40,23 @@ static int external_flash_domain_stat(uint8_t *resp, size_t resp_max_len, void *
   return E_INVALID_OPERATION;
 }
 
-static void prv_erase_sector(void *context, status_t result) {
-  ExternalFlashEraseState *state = context;
+static void prv_erase_sector(int status, void *arg) {
+  ExternalFlashEraseState *state = arg;
 
   const unsigned int sectors_to_erase = (state->length + SECTOR_SIZE_BYTES - 1) / SECTOR_SIZE_BYTES;
 
-  if (FAILED(result)) {
-    pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, result, state->cookie);
+  if (status != 0) {
+    pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, E_INTERNAL, state->cookie);
     kernel_free(state);
   } else if (state->next_sector < sectors_to_erase) {
-    unsigned int sector_addr = state->address + state->next_sector * SECTOR_SIZE_BYTES;
+    uint32_t sector_addr =
+        (state->address + state->next_sector * SECTOR_SIZE_BYTES) & SECTOR_ADDR_MASK;
     state->next_sector += 1;
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, S_TRUE, state->cookie);
-    flash_erase_sector(sector_addr, prv_erase_sector, state);
+    status = pbl_flash_erase_async(FLASH, sector_addr, SECTOR_SIZE_BYTES, prv_erase_sector, state);
+    if (status != 0) {
+      prv_erase_sector(status, state);
+    }
   } else {
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, S_SUCCESS, state->cookie);
     kernel_free(state);
@@ -74,7 +78,7 @@ static status_t external_flash_domain_erase(uint8_t *packet_data, size_t length,
     .cookie = cookie
   };
 
-  prv_erase_sector(state, 0);
+  prv_erase_sector(0, state);
 
   // Return a non-zero code to indicate the erase is still in process
   return S_TRUE;

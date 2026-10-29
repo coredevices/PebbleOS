@@ -25,7 +25,7 @@
 
 void system_reset_prepare(void) {
   fw_prepare_for_reset();
-  flash_stop();
+  pbl_flash_stop(FLASH);
 }
 
 [[noreturn]] void system_reset(void) {

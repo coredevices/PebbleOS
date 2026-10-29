@@ -1,16 +1,19 @@
-Flash Memory Drivers
---------------------
+Flash Drivers
+-------------
 
-Flash memory access is exposed through two separate APIs. The main API, defined
-in `flash.h` and implemented in `flash_api.c`, is used almost everywhere. There
-is also an alternate API used exclusively for performing core dumps, implemented
-in `cd_flash_driver.c`. The alternate API is carefully implemented to be usable
-regardless of how messed up the system state is in by not relying on any OS
-services.
+Flash is a device class, `struct pbl_flash` in `include/pbl/drivers/flash.h`.
+The class core in `flash.c` serializes access, enforces the protected range,
+runs erases (blocking or asynchronous, suspended around reads and writes) and
+has a coredump mode that relies on no OS service. Drivers only move data and
+start erases through `struct pbl_flash_ops`.
 
-The flash APIs are written to be agnostic to the specific type of flash used.
-They are written against the generic low-level driver interface defined in
-`flash_impl.h`. Each low-level driver is specific to a combination of
-flash memory part and microcontroller interface. The low-level drivers make no
-use of OS services so that they can be used for both the main and core dump
-driver APIs.
+The board defines its flash with the `PBL_FLASH_*_DEFINE()` macro of its driver
+and exports it as `FLASH`. NOR parts are described in `nor.h` and defined in
+their own file.
+
+Real hardware runs the SPI NOR driver, `spi_nor.c`, over a SPI memory
+controller (`drivers/spi_mem`): the controller only runs command, address,
+dummy and data operations, and maps reads, while the NOR protocol (SFDP, 4-byte
+addressing, quad enable, suspend, deep power-down, OTP) lives in the NOR driver.
+The OTP area is the part's security registers; `otp.c` exposes it as a linear
+range, and boards name the cells they keep factory data in.

@@ -4,5 +4,4 @@
 pbl_library()
 pbl_library_sources(
   rc10k.c
-  qspi.c
 )

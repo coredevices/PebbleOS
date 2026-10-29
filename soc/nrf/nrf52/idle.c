@@ -24,6 +24,24 @@ static RtcTicks s_analytics_full_sleep_ticks = 0;
 static const RtcTicks EARLY_WAKEUP_TICKS = 2;
 static const RtcTicks MIN_FULL_SLEEP_TICKS = 5;
 
+static void prv_full_sleep(void *arg) {
+  const RtcTicks sleep_ticks = *(const RtcTicks *)arg;
+  RtcTicks elapsed_ticks;
+
+  rtc_alarm_set(sleep_ticks);
+  rtc_systick_pause();
+
+  __DSB();
+  __WFI();
+  __ISB();
+
+  rtc_systick_resume();
+  elapsed_ticks = rtc_alarm_get_elapsed_ticks();
+  pbl_idle_slept(elapsed_ticks);
+
+  s_analytics_full_sleep_ticks += elapsed_ticks;
+}
+
 void pbl_soc_idle(pbl_tick_t max_ticks) {
   if (!rtc_alarm_is_initialized() || !idle_is_allowed()) {
     return;
@@ -41,25 +59,9 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
 
       s_analytics_sleep_ticks += rtc_get_ticks() - sleep_start_ticks;
     } else {
-      const RtcTicks sleep_ticks = max_ticks - EARLY_WAKEUP_TICKS;
-      RtcTicks elapsed_ticks;
+      RtcTicks sleep_ticks = max_ticks - EARLY_WAKEUP_TICKS;
 
-      flash_power_down_for_stop_mode();
-
-      rtc_alarm_set(sleep_ticks);
-      rtc_systick_pause();
-
-      __DSB();
-      __WFI();
-      __ISB();
-
-      rtc_systick_resume();
-      elapsed_ticks = rtc_alarm_get_elapsed_ticks();
-      pbl_idle_slept(elapsed_ticks);
-
-      flash_power_up_after_stop_mode();
-
-      s_analytics_full_sleep_ticks += elapsed_ticks;
+      pbl_flash_power_down(FLASH, prv_full_sleep, &sleep_ticks);
     }
   }
 
