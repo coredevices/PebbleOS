@@ -5,12 +5,15 @@
 
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/dma/sf32lb52.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
 
 #include <hardware/sf32lb52_dmac.h>
 
 #define MAX_REQUEST 0x3fU
+
+static_assert(PBL_IRQN(DMAC1_CH8) - PBL_IRQN(DMAC1_CH1) == SF32LB52_DMAC_NUM_CHANNELS - 1U);
 
 // The MPI (XIP flash) code bus window, which the DMAC reaches through the system bus instead
 #define MPI_CBUS_START  0x10000000U
@@ -92,6 +95,10 @@ static int prv_start(const struct pbl_dma_controller *ctrl, uint8_t channel, voi
   prv_putreg(SF32LB52_DMAC_CM0AR_OFFSET(channel), prv_bus_addr((uintptr_t)buf));
   prv_putreg(SF32LB52_DMAC_IFCR_OFFSET, DMAC_ISR_ALL(channel));
   prv_putreg(SF32LB52_DMAC_CCR_OFFSET(channel), ccr | DMAC_CCR_EN);
+
+  if (irqs != 0U) {
+    pbl_irq_enable(PBL_IRQN(DMAC1_CH1) + channel);
+  }
 
   return 0;
 }
