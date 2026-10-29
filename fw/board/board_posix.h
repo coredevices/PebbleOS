@@ -24,10 +24,6 @@ typedef struct {
   const uint16_t battery_capacity_hours;
 } BoardConfigPower;
 
-typedef struct {
-  uint8_t default_motion_sensitivity;
-} BoardConfigAccel;
-
 struct pbl_uart;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;

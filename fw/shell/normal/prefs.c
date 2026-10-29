@@ -112,7 +112,7 @@ static bool s_touch_enabled = true;
 static bool s_touch_navigation_menu_enabled = true;
 
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
-static uint8_t s_motion_sensitivity = 55; // Default to Medium
+static uint8_t s_motion_sensitivity = CONFIG_SERVICE_ACCEL_MANAGER_DEFAULT_SENSITIVITY;
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_MODE "lightDynamicMode"
@@ -1138,10 +1138,6 @@ void shell_prefs_init(void) {
   s_backlight_color = BOARD_CONFIG.backlight_default_color;
   s_backlight_color_night = BOARD_CONFIG.backlight_default_color;
 #endif
-  // Use board-specific default motion sensitivity if provided (non-zero)
-  if (BOARD_CONFIG_ACCEL.default_motion_sensitivity != 0) {
-    s_motion_sensitivity = BOARD_CONFIG_ACCEL.default_motion_sensitivity;
-  }
 
   SettingsFile file = {};
   if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {

@@ -126,6 +126,7 @@ pbl_clar_test(test_prefs_db
     tests/stubs/stubs_system_resource.c
     tests/fakes/fake_accel_service.c
     tests/fakes/fake_rtc.c
+  DEFINES CONFIG_SERVICE_ACCEL_MANAGER_DEFAULT_SENSITIVITY=55
   OVERRIDES dummy_board
 )
 

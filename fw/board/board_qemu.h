@@ -28,10 +28,6 @@ typedef struct {
   const uint16_t battery_capacity_hours;
 } BoardConfigPower;
 
-typedef struct {
-  uint8_t default_motion_sensitivity;
-} BoardConfigAccel;
-
 // QEMU MMIO peripheral base addresses
 #define QEMU_UART0_BASE      0x40000000
 #define QEMU_UART1_BASE      0x40001000

@@ -32,14 +32,6 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   .battery_capacity_hours = 144,
 };
 
-typedef struct {
-  uint8_t default_motion_sensitivity;
-} BoardConfigAccel;
-
-static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 0,
-};
-
 typedef const struct MicDevice MicDevice;
 static MicDevice *const MIC = (void *)0;
 

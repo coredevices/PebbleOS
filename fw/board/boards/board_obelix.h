@@ -19,7 +19,3 @@ extern const BoardConfig BOARD_CONFIG;
 extern const MicDevice *MIC;
 extern HRMDevice *const HRM;
 extern const AudioDevice *AUDIO;
-
-static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 55U, // Medium
-};

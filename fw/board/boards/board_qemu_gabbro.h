@@ -14,7 +14,3 @@ extern const struct pbl_uart *const BT_HCI_UART;
 extern MicDevice *const MIC;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
-
-static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 85U,
-};

@@ -17,7 +17,3 @@ extern QSPIFlash *const QSPI_FLASH;
 extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;
 extern const MicDevice *MIC;
-
-static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
-  .default_motion_sensitivity = 55U, // Medium
-};
