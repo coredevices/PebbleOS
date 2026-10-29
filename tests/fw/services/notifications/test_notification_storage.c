@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notification_storage_private.h>
 #include <pbl/util/size.h>
@@ -11,6 +11,7 @@
 
 // Stubs
 ////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
@@ -77,8 +78,8 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 
 void test_notification_storage__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   notification_storage_reset();
 }
 
