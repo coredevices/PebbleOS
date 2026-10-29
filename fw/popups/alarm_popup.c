@@ -376,6 +376,10 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
     .unload = prv_cleanup_alarm_popup,
   };
   dialog_set_callbacks(dialog, &callback, nullptr);
+#ifdef CONFIG_TOUCH
+  // A ringing alarm must not be dismissed or snoozed by a stray touch; buttons only.
+  window_set_touch_bridge_disabled(&dialog->window, true);
+#endif
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
 
   // The alarm id isn't carried in the event (PebbleEvent must stay <= 12 bytes
