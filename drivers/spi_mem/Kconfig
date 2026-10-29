@@ -9,6 +9,13 @@ menuconfig SPI_MEM
 
 if SPI_MEM
 
+config SPI_MEM_NRF5_QSPI
+    bool "Nordic nRF5 QSPI"
+    default y if SOC_NRF52
+    depends on SOC_NRF52
+    help
+      Support for the Nordic nRF5 QSPI peripheral.
+
 module = DRIVER_SPI_MEM
 module-str = SPI memory
 source "subsys/logging/Kconfig.template.log_level"
