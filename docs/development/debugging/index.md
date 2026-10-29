@@ -174,9 +174,43 @@ commands above:
 arm-none-eabi-gdb build/pebbleos.elf -ex "core-file <coredump>"
 ```
 
-## Memory usage analysis
+## Footprint
 
-`tools/` contains several ELF analyzers for RAM and flash footprint work,
-e.g. `analyze_fw_static_memory_usage.py` and
-`analyze_mcu_flash_usage_treemap.py` (renders an interactive treemap of
-flash usage).
+Three build targets report where the firmware's ROM and RAM go:
+
+```shell
+pbl build rom_report
+pbl build ram_report
+pbl build footprint
+```
+
+`rom_report` and `ram_report` print the image's contents as a tree that
+follows the source tree, down to each function and variable, with its size,
+its share of the total and the section it lives in. `footprint` writes the
+same two trees as `rom.json` and `ram.json` to `build/footprint/`, along
+with `footprint.html`, an interactive treemap of both: click a tile to zoom
+into it, and Escape to zoom back out.
+
+ROM counts everything the image carries, including the initial values of
+data and the code copied to RAM at startup. RAM counts what is writable,
+zero-initialized or copied there, stacks included. App and worker RAM are
+not part of the firmware's image, so they are not in the report.
+
+Symbols are attributed to the file that declares them, as recorded in the
+debug info. Some land in buckets of their own:
+
+- `(generated)`: files generated in the build directory, e.g. resource and
+  timezone tables.
+- `(toolchain)`: the C library and compiler runtime.
+- `(no source)`: symbols without debug info, such as those of prebuilt
+  libraries, grouped under their object's file name where it is known.
+- `(no symbol)`: section bytes that no symbol covers, mostly merged string
+  literals, alignment padding and stack sections.
+
+The script behind the targets can also be run by hand, e.g. to limit the
+tree's depth or to compare two builds through the JSON:
+
+```shell
+tools/footprint/footprint.py --elf build/pebbleos.elf rom --depth 2
+tools/footprint/footprint.py --elf build/pebbleos.elf ram --json ram.json
+```

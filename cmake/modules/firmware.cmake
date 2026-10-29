@@ -285,6 +285,29 @@ function(pbl_link_firmware)
     )
   endif()
 
+  # --- Footprint reports --------------------------------------------------
+
+  set(footprint_cmd ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/footprint/footprint.py
+                    --elf ${elf} --base ${PBL_BASE})
+  foreach(kind rom ram)
+    string(TOUPPER ${kind} kind_upper)
+    add_custom_target(${kind}_report
+      COMMAND ${footprint_cmd} ${kind}
+      DEPENDS pebbleos
+      COMMENT "Reporting ${kind_upper} usage"
+      USES_TERMINAL
+      VERBATIM
+    )
+  endforeach()
+  add_custom_target(footprint
+    COMMAND ${footprint_cmd} all --output-dir ${PROJECT_BINARY_DIR}/footprint
+            --title "${PBL_BOARD_NORMALIZED} ${VARIANT}"
+    DEPENDS pebbleos
+    COMMENT "Writing the footprint reports"
+    USES_TERMINAL
+    VERBATIM
+  )
+
   # --- QEMU flash images --------------------------------------------------
 
   if(CONFIG_QEMU)
