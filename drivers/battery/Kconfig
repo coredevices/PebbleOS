@@ -1,6 +1,12 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+config BATTERY_HIGH_LOAD
+    bool
+    help
+      The battery driver implements battery_high_load_request() and
+      battery_high_load_release().
+
 menuconfig BATTERY
     bool "Battery"
     help

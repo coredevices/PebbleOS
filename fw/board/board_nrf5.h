@@ -14,22 +14,9 @@
 #include <pbl/drivers/pwm.h>
 
 #include <hal/nrf_gpio.h>
-#include <nrfx_pdm.h>
 // clang-format on
 
 typedef struct {
-  struct pbl_gpio i2s_ck;
-  struct pbl_gpio i2s_sd;
-  NRF_SPIM_Type *spi;
-  uint32_t spi_clock_ctrl;
-  nrf_pdm_gain_t gain;
-} MicConfig;
-
-typedef struct {
-  // Audio Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const MicConfig mic_config;
-
   // Ambient Light Configuration
   /////////////////////////////////////////////////////////////////////////////
   const uint32_t ambient_light_dark_threshold;
@@ -55,10 +42,8 @@ typedef struct {
 
 struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;
-typedef const struct MicDevice MicDevice;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;
-typedef const struct AudioDevice AudioDevice;
 
 void board_early_init(void);
 void board_init(void);

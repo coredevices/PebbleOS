@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/w1160.h>
+#include <pbl/drivers/audio/sf32lb52.h>
 #include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/display/sf32lb_lcdc.h>
@@ -248,40 +249,19 @@ PBL_GPIO_KEYS_DEFINE(
     PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
                       PBL_INPUT_KEY_DOWN, 40));
 
-static MicDeviceState mic_state = {
-  .hdma = {
-    .Instance = DMA1_Channel5,
-    .Init = {
-      .Request = DMA_REQUEST_36,
-      .IrqPrio = 5,
-    },
-  },
-};
+static const struct pbl_dma_chan s_mic_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 4, SF32LB52_DMA_REQ_PDM1_L, SF32LB52_DMA_PL_LOW);
 PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
                          SF32LB52_PA22_PDM1_CLK | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
+PBL_AUDIO_SF32LB52_PDM_DEFINE(s_mic, "mic", PBL_PINCTRL(&s_mic_default, nullptr, 0), PBL_IRQN(PDM1),
+                              &s_mic_dma, PBL_IRQN(DMAC1_CH5), &s_npm1300_ldsw2.reg);
+PBL_IRQ_CONNECT(PDM1, 5, pbl_audio_sf32lb52_pdm_irq_handler, &s_mic, 0);
+PBL_IRQ_CONNECT(DMAC1_CH5, 5, pbl_dma_sf32lb52_irq_handler, &s_mic_dma, 0);
 
-static const MicDevice mic_device = {
-  .state = &mic_state,
-  .pdm_instance = hwp_pdm1,
-  .pinctrl = PBL_PINCTRL(&s_mic_default, nullptr, 0),
-  .pdm_dma_irq = DMAC1_CH5_IRQn,
-  .pdm_irq = PDM1_IRQn,
-#ifdef CONFIG_RECOVERY_FW
-  // PRF mic test needs stereo capture to verify both microphones
-  .channels = 2,
-#else
-  .channels = 1,
-#endif
-  .sample_rate = 16000,
-  .channel_depth = 16,
-  .vdd = &s_npm1300_ldsw2.reg,
-};
-const MicDevice *MIC = &mic_device;
-PBL_IRQ_CONNECT(PDM1, 5, pdm1_data_handler, MIC, 0);
-PBL_IRQ_CONNECT(DMAC1_CH5, 5, pdm1_l_dma_handler, MIC, 0);
+const struct pbl_audio *const MIC = &s_mic.audio;
 
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;
@@ -291,7 +271,6 @@ void board_early_init(void) {
 }
 
 void board_init(void) {
-  mic_init(MIC);
 }
 
 const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;

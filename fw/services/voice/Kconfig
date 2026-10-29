@@ -8,7 +8,7 @@ config SERVICE_VOICE
     select SPEEX
     select SERVICE_MIC_MANAGER
     help
-      Voice (dictation) service. Requires a microphone driver (CONFIG_MIC).
+      Voice (dictation) service. Requires a microphone (CONFIG_MIC).
 
 if SERVICE_VOICE
 

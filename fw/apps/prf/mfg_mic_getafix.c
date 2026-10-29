@@ -3,12 +3,13 @@
 
 #include "mfg_mic_getafix.h"
 
+#include "mfg_audio.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/mic.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
@@ -39,7 +40,6 @@
 #define SAMPLE_BITS           16
 #define FFT_SIZE              1024
 #define MAX_CHANNELS          2
-#define PCM_BUFFER_SIZE       1024
 
 // Calculate total samples and flash requirements
 #define N_SAMPLES         (MAX_CHANNELS * ((SAMPLE_RATE_HZ * RECORDING_DURATION_MS) / 1000))
@@ -79,7 +79,6 @@ typedef struct {
   char mic1_text[STATUS_STR_LEN];
   char mic2_text[STATUS_STR_LEN];
 
-  int16_t pcm[PCM_BUFFER_SIZE];
   uint32_t flash_addr;
 
   TestState state;
@@ -164,7 +163,7 @@ static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame
 
 // Separate channels for dual microphone analysis from flash
 static void prv_analyze_dual_mic(AppData *data) {
-  uint32_t num_channels = mic_get_channels(MIC);
+  const uint32_t num_channels = MAX_CHANNELS;
 
   // Allocate temporary buffer for FFT analysis
   int16_t *fft_buffer = kernel_malloc_check(FFT_SIZE * 2 * sizeof(int16_t));
@@ -223,7 +222,7 @@ static void prv_analyze_dual_mic(AppData *data) {
 }
 
 // Microphone data callback - writes to flash
-static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *context) {
+static void prv_mic_data_handler(int16_t *samples, size_t sample_count) {
   AppData *data = app_state_get_user_data();
 
   if (data->state != TestState_Recording) {
@@ -233,7 +232,7 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
   // Write samples to flash
   if (data->flash_addr - FLASH_START + (sample_count * sizeof(int16_t)) > BLOCK_SIZE) {
     // Recording complete
-    mic_stop(MIC);
+    mfg_audio_capture_stop();
     data->flash_addr = FLASH_START;
     data->state = TestState_Analyzing;
     snprintf(data->status_text, STATUS_STR_LEN, "Analyzing...");
@@ -271,17 +270,14 @@ static void prv_start_test(void) {
   // Erase flash region for recording
   flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
 
-  uint32_t num_channels = mic_get_channels(MIC);
+  const uint32_t num_channels = MAX_CHANNELS;
 
   snprintf(data->status_text, STATUS_STR_LEN, "Recording...");
 
   PBL_LOG_INFO("Starting microphone test (channels=%lu, block_size=%lu)",
                (unsigned long)num_channels, (unsigned long)BLOCK_SIZE);
 
-  mic_init(MIC);
-  mic_set_volume(MIC, 100); // maximum volume
-
-  if (!mic_start(MIC, prv_mic_data_handler, nullptr, data->pcm, PCM_BUFFER_SIZE)) {
+  if (mfg_audio_capture_start(MAX_CHANNELS, INT32_MAX, prv_mic_data_handler) != 0) {
     PBL_LOG_ERR("Failed to start microphone");
     mfg_test_result_report(MfgTestId_Mic, false, 0);
     data->state = TestState_Failed;
@@ -396,7 +392,7 @@ static void s_main(void) {
   app_event_loop();
 
   // Cleanup
-  mic_stop(MIC);
+  mfg_audio_capture_stop();
 }
 
 const PebbleProcessMd *mfg_mic_getafix_app_get_info(void) {

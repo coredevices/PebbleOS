@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/audio.h>
-#include <pbl/drivers/pmic/npm1300.h>
+#include "mfg_audio.h"
+
+#include <pbl/util/size.h>
 
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
@@ -26,16 +27,18 @@ static const int16_t sine_wave_4k[] = {
   0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768,
 };
 
-static void prv_audio_trans_handler(uint32_t *free_size) {
-  uint32_t available_size = *free_size;
-  while (available_size > sizeof(sine_wave_4k)) {
-    available_size = audio_write(AUDIO, (void *)&sine_wave_4k[0], sizeof(sine_wave_4k));
+// The level the factory test is qualified at
+#define SPEAKER_GAIN_MDB (-25000)
+
+static size_t prv_audio_fill(int16_t *samples, size_t count) {
+  for (size_t i = 0; i < count; i++) {
+    samples[i] = sine_wave_4k[i % ARRAY_LENGTH(sine_wave_4k)];
   }
+  return count;
 }
 
 static void prv_play_audio(void) {
-  audio_start(AUDIO, prv_audio_trans_handler);
-  audio_set_volume(AUDIO, 30);
+  (void)mfg_audio_playback_start(SPEAKER_GAIN_MDB, prv_audio_fill);
 }
 
 static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
@@ -68,7 +71,7 @@ static void prv_show_result_dialog(void) {
 }
 
 static void prv_timer_callback(void *cb_data) {
-  audio_stop(AUDIO);
+  mfg_audio_playback_stop();
   prv_show_result_dialog();
 }
 
@@ -92,15 +95,11 @@ static void prv_handle_init(void) {
 }
 
 static void s_main(void) {
-  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
-  (void)pbl_npm1300_charger_set_dischg_limit_ma(NPM1300_CHARGER, NPM1300_DISCHG_LIMIT_MA_MAX);
   prv_handle_init();
   prv_play_audio();
   app_timer_register(5000, prv_timer_callback, nullptr);
   app_event_loop();
-  audio_stop(AUDIO);
-  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
-  (void)pbl_npm1300_charger_set_dischg_limit_ma(NPM1300_CHARGER, NPM1300_CONFIG.dischg_limit_ma);
+  mfg_audio_playback_stop();
 }
 
 const PebbleProcessMd *mfg_speaker_obelix_app_get_info(void) {

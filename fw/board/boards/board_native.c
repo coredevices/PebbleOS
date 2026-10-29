@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/posix.h>
+#include <pbl/drivers/audio/qemu.h>
 #include <pbl/drivers/backlight/posix.h>
 #include <pbl/drivers/display/sdl.h>
 #include <pbl/drivers/imu/posix.h>
-#include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/drivers/temperature/posix.h>
 #include <pbl/drivers/touch/sdl.h>
 #include <pbl/drivers/uart/posix.h>
@@ -34,12 +34,9 @@ PBL_DISPLAY_SDL_DEFINE(s_display, "display", PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIG
 
 const struct pbl_display *const DISPLAY = &s_display;
 
-static MicDeviceState s_mic_state;
-static MicDevice s_mic = {
-  .state = &s_mic_state,
-  .channels = 1,
-};
-MicDevice *const MIC = &s_mic;
+PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
+
+const struct pbl_audio *const MIC = &s_mic.audio;
 
 const BoardConfigPower BOARD_CONFIG_POWER = {
   .low_power_threshold = 2U,

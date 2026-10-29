@@ -785,6 +785,36 @@ static int prv_set_dischg_limit_locked(const struct pbl_npm1300_charger *charger
   return 0;
 }
 
+static int prv_dischg_limit_regs(uint32_t ma, uint8_t *msb, uint8_t *lsb) {
+  if (ma == 200U) {
+    *msb = NPM1300_BCHGISETDISCHARGEMSB_200MA;
+    *lsb = NPM1300_BCHGISETDISCHARGELSB_200MA;
+  } else if (ma == NPM1300_DISCHG_LIMIT_MA_MAX) {
+    *msb = NPM1300_BCHGISETDISCHARGEMSB_1000MA;
+    *lsb = NPM1300_BCHGISETDISCHARGELSB_1000MA;
+  } else {
+    PBL_LOG_ERR("Invalid discharge limit: %" PRIu32 " mA", ma);
+    return -EINVAL;
+  }
+
+  return 0;
+}
+
+static int prv_apply_dischg_limit_locked(const struct pbl_npm1300_charger *charger) {
+  uint32_t ma = charger->state->high_load_count > 0U ? NPM1300_DISCHG_LIMIT_MA_MAX
+                                                     : charger->cfg->dischg_limit_ma;
+  uint8_t msb;
+  uint8_t lsb;
+  int ret;
+
+  ret = prv_dischg_limit_regs(ma, &msb, &lsb);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return prv_set_dischg_limit_locked(charger, ma, msb, lsb);
+}
+
 int pbl_npm1300_charger_set_dischg_limit_ma(const struct pbl_npm1300_charger *charger,
                                             uint32_t ma) {
   const struct pbl_npm1300 *pmic = pbl_npm1300_from_cell(&charger->dev);
@@ -792,15 +822,9 @@ int pbl_npm1300_charger_set_dischg_limit_ma(const struct pbl_npm1300_charger *ch
   uint8_t lsb;
   int ret;
 
-  if (ma == 200U) {
-    msb = NPM1300_BCHGISETDISCHARGEMSB_200MA;
-    lsb = NPM1300_BCHGISETDISCHARGELSB_200MA;
-  } else if (ma == 1000U) {
-    msb = NPM1300_BCHGISETDISCHARGEMSB_1000MA;
-    lsb = NPM1300_BCHGISETDISCHARGELSB_1000MA;
-  } else {
-    PBL_LOG_ERR("Invalid discharge limit: %" PRIu32 " mA", ma);
-    return -EINVAL;
+  ret = prv_dischg_limit_regs(ma, &msb, &lsb);
+  if (ret != 0) {
+    return ret;
   }
 
   pbl_npm1300_lock(pmic);
@@ -808,6 +832,40 @@ int pbl_npm1300_charger_set_dischg_limit_ma(const struct pbl_npm1300_charger *ch
   pbl_npm1300_unlock(pmic);
 
   return ret;
+}
+
+static int prv_high_load_update(int delta) {
+  const struct pbl_npm1300_charger *charger = NPM1300_CHARGER;
+  const struct pbl_npm1300 *pmic = pbl_npm1300_from_cell(&charger->dev);
+  struct pbl_npm1300_charger_state *state = charger->state;
+  int ret;
+
+  if (!pbl_device_is_ready(&charger->dev)) {
+    return -ENODEV;
+  }
+
+  pbl_npm1300_lock(pmic);
+  if (delta < 0 && state->high_load_count == 0U) {
+    pbl_npm1300_unlock(pmic);
+    return -EALREADY;
+  }
+
+  state->high_load_count += delta;
+  ret = prv_apply_dischg_limit_locked(charger);
+  if (ret != 0) {
+    state->high_load_count -= delta;
+  }
+  pbl_npm1300_unlock(pmic);
+
+  return ret;
+}
+
+int battery_high_load_request(void) {
+  return prv_high_load_update(1);
+}
+
+int battery_high_load_release(void) {
+  return prv_high_load_update(-1);
 }
 
 #ifdef CONFIG_SHELL

@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "mfg_audio.h"
+
 #include <stdio.h>
 
-#include <pbl/drivers/audio.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
@@ -21,6 +21,7 @@
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
+// Samples read back from flash at once
 #define PCM_BUFFER_SIZE 1024
 
 #define RECORDING_MS      5000
@@ -52,69 +53,44 @@ typedef struct {
   bool show_result_pending;
 } AppData;
 
-static void prv_interleaved_to_non_interleaved(int16_t *audio_data, size_t frame_count) {
-  if (audio_data == nullptr || frame_count == 0) {
-    return;
-  }
-
-  for (size_t i = 1; i < frame_count; i++) {
-    int16_t temp = audio_data[2 * i];
-    for (size_t j = 2 * i; j > i; j--) {
-      audio_data[j] = audio_data[j - 1];
-    }
-    audio_data[i] = temp;
-  }
-}
-
-static void prv_audio_trans_handler(uint32_t *free_size) {
-  uint32_t available_size = *free_size;
+static size_t prv_audio_fill(int16_t *samples, size_t count) {
   AppData *app_data = app_state_get_user_data();
-  static enum {
-    MIC1,
-    MIC2,
-    MIC_MAX,
-  } mic_id = MIC1;
+  static uint8_t s_mic = 0;
+  const size_t bytes = count * N_CHANNELS * sizeof(int16_t);
 
-  while (available_size > PCM_BUFFER_SIZE * sizeof(int16_t)) {
-    flash_read_bytes((uint8_t *)app_data->pcm, app_data->flash_addr,
-                     PCM_BUFFER_SIZE * sizeof(int16_t));
-    app_data->flash_addr += PCM_BUFFER_SIZE * sizeof(int16_t);
-    prv_interleaved_to_non_interleaved(app_data->pcm, PCM_BUFFER_SIZE / 2);
-    if (mic_id == MIC1) {
-      available_size = audio_write(AUDIO, (void *)app_data->pcm, PCM_BUFFER_SIZE);
-    } else if (mic_id == MIC2) {
-      available_size =
-          audio_write(AUDIO, (void *)&app_data->pcm[PCM_BUFFER_SIZE / 2], PCM_BUFFER_SIZE);
-    }
-  }
-
-  if (app_data->flash_addr >= FLASH_START + BLOCK_SIZE) {
+  if (app_data->flash_addr - FLASH_START + bytes > BLOCK_SIZE) {
     app_data->flash_addr = FLASH_START;
-    if (++mic_id >= MIC_MAX) {
-      audio_stop(AUDIO);
+    if (++s_mic >= N_CHANNELS) {
+      mfg_audio_playback_stop();
       app_data->audio_playing = false;
-      mic_id = MIC1;
+      s_mic = 0;
       app_data->show_result_pending = true;
-      return;
+      return 0;
     }
 
     snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Playing MIC2");
   }
+
+  flash_read_bytes((uint8_t *)app_data->pcm, app_data->flash_addr, bytes);
+  app_data->flash_addr += bytes;
+  for (size_t i = 0; i < count; i++) {
+    samples[i] = app_data->pcm[N_CHANNELS * i + s_mic];
+  }
+
+  return count;
 }
 
-static void prv_start_playback() {
+static void prv_start_playback(void) {
   AppData *app_data = app_state_get_user_data();
 
-  audio_set_volume(AUDIO, 100);
-  audio_start(AUDIO, prv_audio_trans_handler);
-  app_data->audio_playing = true;
+  app_data->audio_playing = mfg_audio_playback_start(0, prv_audio_fill) == 0;
 }
 
-static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *context) {
+static void prv_mic_data_handler(int16_t *samples, size_t sample_count) {
   AppData *app_data = app_state_get_user_data();
 
   if (app_data->flash_addr - FLASH_START > BLOCK_SIZE) {
-    mic_stop(MIC);
+    mfg_audio_capture_stop();
     app_data->mic_recording = false;
     app_data->flash_addr = FLASH_START;
     snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Playing MIC1");
@@ -134,11 +110,9 @@ static void prv_recording_start(void) {
   window_set_overrides_back_button(&app_data->window, true);
 
   snprintf(app_data->status_text, PROCESS_STATUS_STR_LEN, "Pls Speak");
-  mic_init(MIC);
-  // set to maximum make it's more audible in testing
-  mic_set_volume(MIC, 100);
-  mic_start(MIC, prv_mic_data_handler, nullptr, app_data->pcm, PCM_BUFFER_SIZE);
-  app_data->mic_recording = true;
+  // Highest gain, to make it more audible in testing
+  app_data->mic_recording =
+      mfg_audio_capture_start(N_CHANNELS, INT32_MAX, prv_mic_data_handler) == 0;
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -227,22 +201,16 @@ static void prv_handle_init(void) {
 
   app_window_stack_push(window, true /* Animated */);
   app_timer_register(500, prv_timer_callback, nullptr);
-
-  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
-  (void)pbl_npm1300_charger_set_dischg_limit_ma(NPM1300_CHARGER, NPM1300_DISCHG_LIMIT_MA_MAX);
 }
 
 static void prv_handler_deinit(void) {
   AppData *data = app_state_get_user_data();
   if (data->mic_recording) {
-    mic_stop(MIC);
+    mfg_audio_capture_stop();
   }
   if (data->audio_playing) {
-    audio_stop(AUDIO);
+    mfg_audio_playback_stop();
   }
-
-  // HACK(OBELIX): we need proper regulator API (with consumer current, etc.)
-  (void)pbl_npm1300_charger_set_dischg_limit_ma(NPM1300_CHARGER, NPM1300_CONFIG.dischg_limit_ma);
 }
 
 static void s_main(void) {

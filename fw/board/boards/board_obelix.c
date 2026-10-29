@@ -2,6 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/ambient/w1160.h>
+#include <pbl/drivers/audio/amp_gpio.h>
+#include <pbl/drivers/audio/sf32lb52.h>
 #include <pbl/drivers/backlight/aw2016.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/display/sf32lb_lcdc.h>
@@ -280,70 +282,35 @@ PBL_GPIO_KEYS_DEFINE(
     PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
                       PBL_INPUT_KEY_DOWN, 40));
 
-static MicDeviceState mic_state = {
-  .hdma = {
-    .Instance = DMA1_Channel5,
-    .Init = {
-      .Request = DMA_REQUEST_36,
-      .IrqPrio = 5,
-    },
-  },
-};
+static const struct pbl_dma_chan s_mic_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 4, SF32LB52_DMA_REQ_PDM1_L, SF32LB52_DMA_PL_LOW);
 PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
                          SF32LB52_PA22_PDM1_CLK | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
+PBL_AUDIO_SF32LB52_PDM_DEFINE(s_mic, "mic", PBL_PINCTRL(&s_mic_default, nullptr, 0), PBL_IRQN(PDM1),
+                              &s_mic_dma, PBL_IRQN(DMAC1_CH5), &s_npm1300_ldsw2.reg);
+PBL_IRQ_CONNECT(PDM1, 5, pbl_audio_sf32lb52_pdm_irq_handler, &s_mic, 0);
+PBL_IRQ_CONNECT(DMAC1_CH5, 5, pbl_dma_sf32lb52_irq_handler, &s_mic_dma, 0);
 
-static const MicDevice mic_device = {
-  .state = &mic_state,
-  .pdm_instance = hwp_pdm1,
-  .pinctrl = PBL_PINCTRL(&s_mic_default, nullptr, 0),
-  .pdm_dma_irq = DMAC1_CH5_IRQn,
-  .pdm_irq = PDM1_IRQn,
-#ifdef CONFIG_RECOVERY_FW
-  // PRF mic test needs stereo capture to verify both microphones
-  .channels = 2,
-#else
-  .channels = 1,
-#endif
-  .sample_rate = 16000,
-  .channel_depth = 16,
-  .vdd = &s_npm1300_ldsw2.reg,
-};
-const MicDevice *MIC = &mic_device;
-PBL_IRQ_CONNECT(PDM1, 5, pdm1_data_handler, MIC, 0);
-PBL_IRQ_CONNECT(DMAC1_CH5, 5, pdm1_l_dma_handler, MIC, 0);
+const struct pbl_audio *const MIC = &s_mic.audio;
 
-static void prv_audio_power_up(void) {
-  pbl_npm1300_charger_set_dischg_limit_ma(NPM1300_CHARGER, NPM1300_DISCHG_LIMIT_MA_MAX);
-}
+// Class-D amplifier, one enable pulse selects its mode
+PBL_AUDIO_AMP_GPIO_DEFINE(s_speaker_amp, "speaker_amp", PBL_GPIO(SF32LB_GPIO1, 0, 0), nullptr,
+                          .mode_pulses = 1, .pulse_us = 200, .settle_us = 2000);
 
-static void prv_audio_power_down(void) {
-  pbl_npm1300_charger_set_dischg_limit_ma(NPM1300_CHARGER, NPM1300_CONFIG.dischg_limit_ma);
-}
-
-static const BoardPowerOps prv_audio_power_ops = {
-  .power_up = prv_audio_power_up,
-  .power_down = prv_audio_power_down,
+static const struct pbl_audio_link s_speaker_link = {
+  .amp = &s_speaker_amp.amp,
 };
 
-static AudioDeviceState audio_state;
-static const AudioDevice audio_device = {
-  .state = &audio_state,
-  .irq_priority = 5,
-  .channels = 1,
-  .samplerate = 16000,
-  .data_format = 16,
-  .audec_dma_irq = DMAC1_CH4_IRQn,
-  .audec_dma_channel = DMA1_Channel4,
-  .audec_dma_request = DMA_REQUEST_41,
+static const struct pbl_dma_chan s_speaker_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 3, SF32LB52_DMA_REQ_AUDAC_CH0, SF32LB52_DMA_PL_HIGH);
+PBL_AUDIO_SF32LB52_AUDCODEC_DEFINE(s_speaker, "speaker", &s_speaker_dma, PBL_IRQN(DMAC1_CH4),
+                                   &s_speaker_link);
+PBL_IRQ_CONNECT(DMAC1_CH4, 5, pbl_dma_sf32lb52_irq_handler, &s_speaker_dma, 0);
 
-  .pa_ctrl = PBL_GPIO(SF32LB_GPIO1, 0, 0),
-  .power_ops = &prv_audio_power_ops,
-};
-const AudioDevice *AUDIO = &audio_device;
-PBL_IRQ_CONNECT(DMAC1_CH4, 5, audec_dac0_dma_irq_handler, AUDIO, 0);
+const struct pbl_audio *const SPEAKER = &s_speaker.audio;
 
 uint32_t BSP_GetOtpBase(void) {
   return MPI2_MEM_BASE;
@@ -353,8 +320,6 @@ void board_early_init(void) {
 }
 
 void board_init(void) {
-  mic_init(MIC);
-  audio_init(AUDIO);
 }
 
 const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;

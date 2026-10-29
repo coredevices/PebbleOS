@@ -12,6 +12,7 @@ config PMIC_NPM1300
     bool "Nordic nPM1300 charger"
     default y
     depends on MFD_NPM1300
+    select BATTERY_HIGH_LOAD
     help
       Support for the charger of the Nordic nPM1300 PMIC.
 

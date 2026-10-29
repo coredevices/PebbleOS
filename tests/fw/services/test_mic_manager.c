@@ -6,6 +6,7 @@
 #include <pbl/services/mic_manager.h>
 
 #include <clar.h>
+#include <services/mic_manager/mic_source.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////
@@ -15,10 +16,8 @@
 ////////////////////////////////////////////////////////////////
 #include <stubs_logging.h>
 
-// Fake mic driver
+// Fake mic source
 ////////////////////////////////////////////////////////////////
-
-MicDevice *const MIC = nullptr;
 
 static bool s_mic_running;
 static int s_start_count;
@@ -26,8 +25,8 @@ static int s_stop_count;
 static MicDataHandlerCB s_handler;
 static int16_t *s_buffer;
 
-bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, int16_t *audio_buffer,
-               size_t audio_buffer_len) {
+bool mic_source_start(MicDataHandlerCB data_handler, void *context, int16_t *audio_buffer,
+                      size_t audio_buffer_len) {
   if (s_mic_running) {
     return false;
   }
@@ -38,7 +37,7 @@ bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, in
   return true;
 }
 
-void mic_stop(MicDevice *this) {
+void mic_source_stop(void) {
   s_mic_running = false;
   s_stop_count++;
   s_handler = nullptr;

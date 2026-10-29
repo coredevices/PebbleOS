@@ -15,9 +15,8 @@
 #include <board/board.h>
 
 // UART device for debug serial
+#include <pbl/drivers/audio/qemu.h>
 #include <pbl/drivers/hrm/qemu.h>
-#include <pbl/drivers/mic/qemu/mic_definitions.h>
-#include <pbl/drivers/speaker/qemu/audio.h>
 #include <pbl/drivers/uart/qemu.h>
 
 PBL_UART_QEMU_DEFINE(s_uart2, "uart2", QEMU_UART2_BASE, PBL_IRQN(UART2), 115200);
@@ -58,21 +57,14 @@ PBL_GPIO_KEYS_DEFINE(BUTTONS, "buttons",
                      PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(QEMU_GPIO, 3, 0), PBL_INPUT_KEY_DOWN, 0));
 
 // Audio device
-static struct AudioState s_audio_state;
-static struct AudioDevice AUDIO_DEVICE = {
-  .state = &s_audio_state,
-  .base_addr = QEMU_AUDIO_BASE,
-  .irqn = AUDIO_IRQn,
-};
-AudioDevice *const AUDIO = (AudioDevice *)&AUDIO_DEVICE;
+PBL_AUDIO_QEMU_DEFINE(s_speaker, "speaker", QEMU_AUDIO_BASE, PBL_IRQN(AUDIO));
 
-// Microphone (QEMU stub — feeds silence on a timer)
-static MicDeviceState s_mic_state;
-static MicDevice MIC_DEVICE = {
-  .state = &s_mic_state,
-  .channels = 1,
-};
-MicDevice *const MIC = &MIC_DEVICE;
+const struct pbl_audio *const SPEAKER = &s_speaker.audio;
+
+// Microphone fed by the host
+PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
+
+const struct pbl_audio *const MIC = &s_mic.audio;
 
 static HRMDeviceState s_hrm_state;
 static HRMDevice s_hrm = {
@@ -85,7 +77,7 @@ PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);
 #ifdef CONFIG_BT_HCI_UART
 PBL_IRQ_CONNECT(UART3, 6, pbl_uart_qemu_irq_handler, &s_uart3, 0);
 #endif
-PBL_IRQ_CONNECT(AUDIO, 5, qemu_audio_irq_handler, AUDIO, 0);
+PBL_IRQ_CONNECT(AUDIO, 5, pbl_audio_qemu_irq_handler, &s_speaker, 0);
 
 void board_early_init(void) {
 }

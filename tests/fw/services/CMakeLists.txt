@@ -245,7 +245,7 @@ pbl_clar_test(test_speaker_service
     fw/services/speaker/pcm_stream.c
     fw/services/speaker/track_player.c
     tests/fakes/fake_events.c
-  DEFINES CONFIG_SPEAKER=1
+  DEFINES CONFIG_SPEAKER=1 CONFIG_SERVICE_SPEAKER_STANDBY_MS=0 CONFIG_BATTERY_HIGH_LOAD=1
   OVERRIDES dummy_board
 )
 

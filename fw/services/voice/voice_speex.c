@@ -4,10 +4,10 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include <pbl/drivers/mic.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/mic_manager.h>
 #include <pbl/services/voice/voice_speex.h>
 
 #include <board/board.h>
@@ -62,7 +62,7 @@ static bool prv_init_locked(void) {
   memset(&s_encoder, 0, sizeof(s_encoder));
 
   // Get channel count from mic device (default to mono if not specified)
-  s_encoder.channels = (uint8_t)mic_get_channels(MIC);
+  s_encoder.channels = MIC_MANAGER_CHANNELS;
   PBL_LOG_DBG("Mic channels: %" PRIu8, s_encoder.channels);
 
   // Initialize Speex encoder - use wideband mode for 16kHz sample rate
@@ -130,9 +130,9 @@ static bool prv_init_locked(void) {
               s_encoder.sample_rate, s_encoder.bit_rate, s_encoder.frame_size, s_encoder.channels);
 
   // Verify sample rates match
-  if (s_encoder.sample_rate != MIC_SAMPLE_RATE) {
+  if (s_encoder.sample_rate != MIC_MANAGER_SAMPLE_RATE) {
     PBL_LOG_WRN("Speex sample rate (%" PRIu32 ") != Mic sample rate (%d)", s_encoder.sample_rate,
-                MIC_SAMPLE_RATE);
+                MIC_MANAGER_SAMPLE_RATE);
   }
 
   return true;

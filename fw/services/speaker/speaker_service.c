@@ -8,16 +8,21 @@
 #include "pcm_stream.h"
 #include "track_player.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/drivers/audio.h>
+#include <pbl/drivers/battery.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/speaker/note_sequence.h>
+#include <pbl/services/system_task.h>
+#include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -29,15 +34,28 @@ PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 
 #define SPEAKER_SAMPLE_RATE    16000
 #define SPEAKER_REFILL_SAMPLES 512
+#define MS_PER_S               1000
+
+// Device ring: two periods of one refill each
+#define SPEAKER_PERIOD_FRAMES SPEAKER_REFILL_SAMPLES
+#define SPEAKER_PERIODS       2
+
+// Samples queued between the synthesizer on KernelBG and the device ring
+#define SPEAKER_FIFO_MS    128
+#define SPEAKER_FIFO_BYTES ((SPEAKER_SAMPLE_RATE * SPEAKER_FIFO_MS / MS_PER_S) * sizeof(int16_t))
+
+// Silent periods the device keeps streaming after playback before it stops
+#define SPEAKER_STANDBY_PERIODS                                                  \
+  DIVIDE_CEIL(CONFIG_SERVICE_SPEAKER_STANDBY_MS *SPEAKER_SAMPLE_RATE / MS_PER_S, \
+              SPEAKER_PERIOD_FRAMES)
+
+// Volume 1 sits this far below volume 100, or at the lowest gain of the device if it is closer
+#define SPEAKER_VOLUME_FLOOR_MDB (-48000)
+#define SPEAKER_VOLUME_MAX       100
 
 // Volume-preview tone: square, to match the perceived loudness
 #define VOLUME_PREVIEW_FREQ_HZ     660
 #define VOLUME_PREVIEW_DURATION_MS 200
-
-// The audio drivers queue up to ~64 ms ahead of the DAC (double-buffered
-// DMA/I2S pipe + circular buffer). Once the source runs dry, pad with 80 ms
-// of silence before stopping so the queued audio actually plays.
-#define SPEAKER_PIPELINE_DRAIN_SAMPLES ((SPEAKER_SAMPLE_RATE * 80) / 1000)
 
 typedef struct {
   SpeakerState state;
@@ -82,11 +100,18 @@ typedef struct {
   int32_t mix_buf[SPEAKER_REFILL_SAMPLES];
   int16_t track_scratch[SPEAKER_REFILL_SAMPLES];
 
-  // Pipeline drain: set once the source has no more samples to generate;
-  // we then emit drain_samples_remaining of silence before stopping so the
-  // driver's queued audio finishes playing.
+  // Set once the source has no more samples; playback ends when the device has played the
+  // queued samples.
   bool pipeline_draining;
-  uint32_t drain_samples_remaining;
+
+  // Device stream: ring of periods and the queue the period callback drains
+  bool device_running;
+  int16_t *ring;
+  uint8_t *fifo_storage;
+  CircularBuffer fifo;
+  // Periods handed out with no queued samples, counted from the device interrupt
+  volatile uint32_t idle_periods;
+  volatile bool bottom_half_pending;
 
   // Finish-event delivery
   bool finish_enabled;
@@ -114,7 +139,6 @@ static uint8_t s_last_sampled_volume_pct;   // Last volume percentage sampled
 static uint32_t s_total_speaker_on_time_ms; // Total speaker on-time tracked
 
 static void prv_stop_internal(SpeakerFinishReason reason);
-static void prv_audio_trans_cb(uint32_t *free_size);
 static void prv_refill_locked(void);
 static void prv_refill_realtime_locked(void);
 
@@ -198,25 +222,179 @@ static void prv_log_silence(uint8_t vol, uint8_t effective_vol) {
   }
 }
 
-static void prv_start_audio(uint8_t vol) {
+static uint16_t prv_fifo_free(void) {
+  pbl_irq_lock();
+  uint16_t free = circular_buffer_get_write_space_remaining(&s_state.fifo);
+  pbl_irq_unlock();
+  return free;
+}
+
+static uint16_t prv_fifo_used(void) {
+  pbl_irq_lock();
+  uint16_t used = circular_buffer_get_read_space_remaining(&s_state.fifo);
+  pbl_irq_unlock();
+  return used;
+}
+
+static void prv_fifo_write(const int16_t *samples, uint32_t count) {
+  pbl_irq_lock();
+  (void)circular_buffer_write(&s_state.fifo, samples, count * sizeof(int16_t));
+  s_state.idle_periods = 0;
+  pbl_irq_unlock();
+}
+
+static void prv_fifo_flush(void) {
+  pbl_irq_lock();
+  circular_buffer_consume(&s_state.fifo, circular_buffer_get_read_space_remaining(&s_state.fifo));
+  pbl_irq_unlock();
+}
+
+static void prv_bottom_half(void *data);
+
+//! Runs from the device interrupt: drain the queue into the period and wake KernelBG once.
+static void prv_period_done(const struct pbl_audio *audio, void *period,
+                            const struct pbl_audio_pos *pos, void *arg) {
+  uint16_t avail = circular_buffer_get_read_space_remaining(&s_state.fifo);
+  uint16_t bytes = MIN(avail, SPEAKER_PERIOD_FRAMES * sizeof(int16_t));
+
+  if (bytes > 0) {
+    (void)circular_buffer_copy(&s_state.fifo, period, bytes);
+    circular_buffer_consume(&s_state.fifo, bytes);
+    s_state.idle_periods = 0;
+  } else {
+    s_state.idle_periods++;
+  }
+
+  (void)pbl_audio_period_ready(audio, period);
+
+  // A dropped wakeup is retried on the next period; underrunning beats flooding the queue
+  if (!s_state.bottom_half_pending) {
+    s_state.bottom_half_pending = true;
+    if (!system_task_add_callback_from_isr_droppable_raised(prv_bottom_half, nullptr)) {
+      s_state.bottom_half_pending = false;
+    }
+  }
+}
+
+//! The speaker draws more than the default battery discharge limit allows
+static void prv_high_load(bool on) {
+#ifdef CONFIG_BATTERY_HIGH_LOAD
+  if (on) {
+    (void)battery_high_load_request();
+  } else {
+    (void)battery_high_load_release();
+  }
+#endif
+}
+
+static void prv_device_down(void) {
+  if (!s_state.device_running) {
+    return;
+  }
+
+  (void)pbl_audio_stop(SPEAKER);
+  prv_high_load(false);
+  pbl_audio_buf_free(s_state.ring);
+  kernel_free(s_state.fifo_storage);
+  s_state.ring = nullptr;
+  s_state.fifo_storage = nullptr;
+  s_state.device_running = false;
+}
+
+static int prv_device_up(void) {
+  struct pbl_audio_stream stream = {
+    .rate = SPEAKER_SAMPLE_RATE,
+    .channels = 1,
+    .period_frames = SPEAKER_PERIOD_FRAMES,
+    .periods = SPEAKER_PERIODS,
+    .period_done = prv_period_done,
+  };
+  int ret;
+
+  if (s_state.device_running) {
+    prv_fifo_flush();
+    return 0;
+  }
+
+  s_state.fifo_storage = kernel_malloc(SPEAKER_FIFO_BYTES);
+  stream.buf = pbl_audio_buf_alloc(pbl_audio_ring_bytes(&stream));
+  if (s_state.fifo_storage == nullptr || stream.buf == nullptr) {
+    kernel_free(s_state.fifo_storage);
+    pbl_audio_buf_free(stream.buf);
+    s_state.fifo_storage = nullptr;
+    return -ENOMEM;
+  }
+
+  circular_buffer_init(&s_state.fifo, s_state.fifo_storage, SPEAKER_FIFO_BYTES);
+  s_state.ring = stream.buf;
+  s_state.idle_periods = 0;
+  s_state.bottom_half_pending = false;
+
+  prv_high_load(true);
+  ret = pbl_audio_start(SPEAKER, &stream);
+  if (ret != 0) {
+    prv_high_load(false);
+    pbl_audio_buf_free(s_state.ring);
+    kernel_free(s_state.fifo_storage);
+    s_state.ring = nullptr;
+    s_state.fifo_storage = nullptr;
+    return ret;
+  }
+
+  s_state.device_running = true;
+
+  return 0;
+}
+
+//! Maps volume 1-100 onto the gain steps between the floor and 0 dB, never above 0 dB.
+static void prv_apply_volume(uint8_t vol) {
+  struct pbl_audio_caps caps;
+
+  if (vol == 0) {
+    (void)pbl_audio_set_mute(SPEAKER, true);
+    return;
+  }
+
+  if (pbl_audio_get_caps(SPEAKER, &caps) == 0 && caps.gain_step_mdb > 0) {
+    const int32_t top = MIN(caps.gain_max_mdb, 0);
+    const int32_t floor = MAX(caps.gain_min_mdb, SPEAKER_VOLUME_FLOOR_MDB);
+    const int32_t span_steps = (top - floor) / caps.gain_step_mdb;
+    const int32_t steps = (SPEAKER_VOLUME_MAX - (int32_t)vol) * span_steps / SPEAKER_VOLUME_MAX;
+
+    (void)pbl_audio_set_gain(SPEAKER, top - steps * caps.gain_step_mdb);
+  }
+
+  (void)pbl_audio_set_mute(SPEAKER, false);
+}
+
+static bool prv_start_audio(uint8_t vol) {
   const uint8_t effective_vol = prv_effective_volume(vol);
+  int ret;
 
   prv_log_silence(vol, effective_vol);
+  prv_apply_volume(effective_vol);
+
+  ret = prv_device_up();
+  if (ret != 0) {
+    PBL_LOG_WRN("Speaker failed to start (%d)", ret);
+    return false;
+  }
 
   PBL_ANALYTICS_TIMER_START(speaker_on_time_ms);
   PBL_ANALYTICS_ADD(speaker_play_count, 1);
   prv_update_volume_analytics(effective_vol);
 
-  audio_init((AudioDevice *)AUDIO);
-  audio_set_volume((AudioDevice *)AUDIO, effective_vol);
-  audio_start((AudioDevice *)AUDIO, prv_audio_trans_cb);
+  return true;
 }
 
 static void prv_stop_audio(void) {
   PBL_ANALYTICS_TIMER_STOP(speaker_on_time_ms);
   prv_update_volume_analytics(0);
 
-  audio_stop((AudioDevice *)AUDIO);
+  prv_fifo_flush();
+  if (SPEAKER_STANDBY_PERIODS == 0) {
+    prv_device_down();
+  }
 }
 
 static void prv_free_tracks(void) {
@@ -293,6 +471,20 @@ static void prv_stop_internal(SpeakerFinishReason reason) {
   prv_post_finish_event(reason);
 }
 
+//! Caller must hold s_lock. Starts the device for the source just set up, or drops the source
+//! without a finish event.
+static bool prv_start_or_abort_locked(uint8_t vol) {
+  if (prv_start_audio(vol)) {
+    return true;
+  }
+
+  const bool finish_enabled = s_state.finish_enabled;
+  s_state.finish_enabled = false;
+  prv_stop_internal(SpeakerFinishReasonStopped);
+  s_state.finish_enabled = finish_enabled;
+  return false;
+}
+
 static bool prv_can_preempt(SpeakerPriority new_pri) {
   if (s_state.state == SpeakerStateIdle) {
     return true;
@@ -305,21 +497,20 @@ static bool prv_can_preempt(SpeakerPriority new_pri) {
   return new_pri > s_state.priority;
 }
 
-//! Called from system task context when the audio driver needs more data.
-//! This is the DMA refill callback path:
-//!   DMA ISR -> system_task_add_callback_from_isr -> audio driver trans_cb -> here
-static void prv_audio_trans_cb(uint32_t *free_size) {
-  if (*free_size < sizeof(s_state.refill_buf)) {
-    return;
-  }
+//! KernelBG side of the device interrupt: refill the queue, end drained playback and stop the
+//! device once it has idled through its standby.
+static void prv_bottom_half(void *data) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  s_state.bottom_half_pending = false;
+
   if (s_state.source_type == SpeakerSourceStream && s_state.stream_realtime) {
     prv_refill_realtime_locked();
   } else {
     // Catch up queued PCM without inserting silence between short packets.
-    uint32_t refill_count =
-        s_state.source_type == SpeakerSourceStream ? *free_size / sizeof(s_state.refill_buf) : 1;
-    while (refill_count-- && s_state.state != SpeakerStateIdle) {
+    uint32_t refill_count = s_state.source_type == SpeakerSourceStream
+                                ? prv_fifo_free() / sizeof(s_state.refill_buf)
+                                : (prv_fifo_free() >= sizeof(s_state.refill_buf) ? 1 : 0);
+    while (refill_count-- && s_state.state != SpeakerStateIdle && !s_state.pipeline_draining) {
       prv_refill_locked();
       if (s_state.source_type == SpeakerSourceStream &&
           pcm_stream_available(&s_state.pcm_stream) == 0) {
@@ -327,6 +518,16 @@ static void prv_audio_trans_cb(uint32_t *free_size) {
       }
     }
   }
+
+  if (s_state.pipeline_draining && prv_fifo_used() == 0 &&
+      s_state.idle_periods >= SPEAKER_PERIODS) {
+    prv_stop_internal(SpeakerFinishReasonDone);
+  }
+
+  if (s_state.state == SpeakerStateIdle && s_state.idle_periods + 1 > SPEAKER_STANDBY_PERIODS) {
+    prv_device_down();
+  }
+
   pbl_mutex_unlock(&s_lock);
 }
 
@@ -490,27 +691,14 @@ static void prv_refill_locked(void) {
   }
 
   if (source_exhausted) {
-    // Drain: pad with silence so the driver's queued audio finishes playing.
-    if (!s_state.pipeline_draining) {
-      s_state.pipeline_draining = true;
-      s_state.drain_samples_remaining = SPEAKER_PIPELINE_DRAIN_SAMPLES;
-      s_state.state = SpeakerStateDraining;
-    }
-    uint32_t to_gen = s_state.drain_samples_remaining;
-    if (to_gen == 0) {
-      prv_stop_internal(SpeakerFinishReasonDone);
-      return;
-    }
-    if (to_gen > SPEAKER_REFILL_SAMPLES) {
-      to_gen = SPEAKER_REFILL_SAMPLES;
-    }
-    memset(s_state.refill_buf, 0, to_gen * sizeof(int16_t));
-    s_state.drain_samples_remaining -= to_gen;
-    samples_generated = to_gen;
+    // The queued samples play out before the bottom half ends playback
+    s_state.pipeline_draining = true;
+    s_state.state = SpeakerStateDraining;
+    return;
   }
 
   if (samples_generated > 0) {
-    audio_write((AudioDevice *)AUDIO, s_state.refill_buf, samples_generated * sizeof(int16_t));
+    prv_fifo_write(s_state.refill_buf, samples_generated);
   }
 }
 
@@ -519,7 +707,7 @@ static void prv_refill_realtime_locked(void) {
       prv_pcm_input_samples(SPEAKER_REFILL_SAMPLES) * prv_pcm_bytes_per_sample();
   while (s_state.state == SpeakerStatePlaying &&
          pcm_stream_available(&s_state.pcm_stream) >= bytes_needed &&
-         audio_write((AudioDevice *)AUDIO, nullptr, 0) >= sizeof(s_state.refill_buf)) {
+         prv_fifo_free() >= sizeof(s_state.refill_buf)) {
     prv_refill_locked();
   }
 }
@@ -561,9 +749,12 @@ bool speaker_service_play_note_seq_owned(const SpeakerNote *notes, uint32_t num_
   s_state.volume = vol;
   prv_set_owner_locked(owner);
 
-  prv_start_audio(vol);
+  if (!prv_start_or_abort_locked(vol)) {
+    pbl_mutex_unlock(&s_lock);
+    return false;
+  }
 
-  // Prime the audio buffer with initial data
+  // Prime the queue with initial data
   prv_refill_locked();
 
   pbl_mutex_unlock(&s_lock);
@@ -608,7 +799,10 @@ static bool prv_play_tone_internal(uint16_t freq_hz, uint16_t duration_ms, uint8
   s_state.volume_absolute = volume_absolute;
   prv_set_owner_locked(owner);
 
-  prv_start_audio(vol);
+  if (!prv_start_or_abort_locked(vol)) {
+    pbl_mutex_unlock(&s_lock);
+    return false;
+  }
   prv_refill_locked();
 
   pbl_mutex_unlock(&s_lock);
@@ -718,7 +912,10 @@ bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_
   s_state.volume = vol;
   prv_set_owner_locked(owner);
 
-  prv_start_audio(vol);
+  if (!prv_start_or_abort_locked(vol)) {
+    pbl_mutex_unlock(&s_lock);
+    return false;
+  }
   prv_refill_locked();
 
   pbl_mutex_unlock(&s_lock);
@@ -783,7 +980,10 @@ static bool prv_stream_open(SpeakerPriority pri, uint8_t vol, SpeakerPcmFormat f
   memset(s_state.prev_samples, 0, sizeof(s_state.prev_samples));
   s_state.pcm_tail_samples = 0;
 
-  prv_start_audio(vol);
+  if (!prv_start_or_abort_locked(vol)) {
+    pbl_mutex_unlock(&s_lock);
+    return false;
+  }
 
   pbl_mutex_unlock(&s_lock);
   return true;
@@ -879,7 +1079,7 @@ void speaker_service_set_volume_owned(PebbleTask owner, uint8_t vol) {
   if (s_state.state != SpeakerStateIdle) {
     const uint8_t effective_vol = prv_effective_volume(vol);
     prv_update_volume_analytics(effective_vol);
-    audio_set_volume((AudioDevice *)AUDIO, effective_vol);
+    prv_apply_volume(effective_vol);
   }
   pbl_mutex_unlock(&s_lock);
 }
@@ -896,7 +1096,7 @@ void speaker_service_handle_audio_prefs_changed(void) {
   }
   const uint8_t effective_vol = prv_effective_volume(s_state.volume);
   prv_update_volume_analytics(effective_vol);
-  audio_set_volume((AudioDevice *)AUDIO, effective_vol);
+  prv_apply_volume(effective_vol);
   pbl_mutex_unlock(&s_lock);
 }
 

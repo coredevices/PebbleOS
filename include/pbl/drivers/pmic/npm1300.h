@@ -51,6 +51,7 @@ typedef struct {
 /** @cond INTERNAL_HIDDEN */
 struct pbl_npm1300_charger_state {
   uint32_t dischg_limit_ma;
+  uint32_t high_load_count;
   TimerID debounce_timer;
 };
 /** @endcond */
@@ -101,6 +102,8 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
 
 /**
  * @brief Set the battery discharge current limit.
+ *
+ * The limit is @ref NPM1300_DISCHG_LIMIT_MA_MAX while a battery_high_load_request() is held.
  *
  * @param charger Charger.
  * @param ma Limit in mA, 200 or 1000.

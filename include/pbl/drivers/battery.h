@@ -130,4 +130,21 @@ void battery_force_charge_enable(bool is_charging);
  */
 int battery_charge_status_get(BatteryChargeStatus *status);
 
+/**
+ * @brief Request a high discharge current, e.g. for the speaker.
+ *
+ * Requests nest: the battery may supply a high current until each request is released. Provided
+ * by drivers that select @c BATTERY_HIGH_LOAD.
+ *
+ * @return 0 or a negative errno.
+ */
+int battery_high_load_request(void);
+
+/**
+ * @brief Release a request made with battery_high_load_request().
+ *
+ * @return 0 or a negative errno.
+ */
+int battery_high_load_release(void);
+
 /** @} */

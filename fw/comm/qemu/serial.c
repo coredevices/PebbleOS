@@ -7,8 +7,8 @@
 #ifdef CONFIG_BATTERY_QEMU
 #include <pbl/drivers/battery/qemu.h>
 #endif
-#ifdef CONFIG_MIC_QEMU
-#include <pbl/drivers/mic/qemu/mic_definitions.h>
+#ifdef CONFIG_AUDIO_HOST_MIC
+#include <pbl/drivers/audio/qemu.h>
 #endif
 
 #include <pbl/drivers/uart.h>
@@ -230,7 +230,7 @@ static const QemuMessageHandler s_qemu_endpoints[] = {
   {QemuProtocol_ContentSize, prv_content_size_msg_callback},
   {QemuProtocol_HealthMetric, prv_health_metric_msg_callback},
   {QemuProtocol_HeartRate, prv_heart_rate_msg_callback},
-#ifdef CONFIG_MIC_QEMU
+#ifdef CONFIG_AUDIO_HOST_MIC
   {QemuProtocol_MicAudio, qemu_mic_msg_callback},
 #endif
   // Button messages are handled by QEMU directly

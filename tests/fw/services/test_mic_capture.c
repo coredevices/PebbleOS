@@ -18,6 +18,7 @@
 #include <process_management/app_install_manager_private.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
+#include <services/mic_manager/mic_source.h>
 #include <stubs_logging.h>
 
 static const Uuid s_app = {.byte0 = 1};
@@ -33,8 +34,6 @@ static MicDataHandlerCB s_handler;
 static void *s_context;
 static int16_t *s_buffer;
 static size_t s_buffer_len;
-MicDevice *const MIC = nullptr;
-
 const PebbleProcessMd *app_manager_get_current_app_md(void) {
   return s_have_md ? &s_md : nullptr;
 }
@@ -54,8 +53,7 @@ status_t pfs_remove(const char *name) {
   return S_SUCCESS;
 }
 
-bool mic_start(MicDevice *this, MicDataHandlerCB handler, void *context, int16_t *buffer,
-               size_t len) {
+bool mic_source_start(MicDataHandlerCB handler, void *context, int16_t *buffer, size_t len) {
   if (s_running || s_driver_fails)
     return false;
   s_running = true;
@@ -67,7 +65,7 @@ bool mic_start(MicDevice *this, MicDataHandlerCB handler, void *context, int16_t
   return true;
 }
 
-void mic_stop(MicDevice *this) {
+void mic_source_stop(void) {
   s_running = false;
   s_handler = nullptr;
 }

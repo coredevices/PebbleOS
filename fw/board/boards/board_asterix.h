@@ -15,10 +15,6 @@ static const BoardConfig BOARD_CONFIG = {
   .ambient_k_delta_threshold = 30,
 
   .backlight_on_percent = 25,
-
-  .mic_config = {
-    .gain = 40,
-  }
 };
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
@@ -33,8 +29,5 @@ static const BoardConfigAccel BOARD_CONFIG_ACCEL = {
 extern const struct pbl_uart *const DBG_UART;
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;
-
-extern MicDevice *const MIC;
-extern AudioDevice *const AUDIO;
 
 extern const struct pbl_i2c_dev *const I2C_DA7212;

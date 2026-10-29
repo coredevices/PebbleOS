@@ -56,10 +56,6 @@ struct pbl_uart;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;
 typedef const struct HRMDevice HRMDevice;
-typedef const struct MicDevice MicDevice;
-typedef const struct AudioDevice AudioDevice;
-
-extern AudioDevice *const AUDIO;
 
 void board_early_init(void);
 void board_init(void);

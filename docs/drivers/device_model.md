@@ -107,7 +107,7 @@ PMIC can rely on its cells being up. Cells reach the core with
 Board-level facts live in the board, which instantiates the core and the
 cells it uses: each rail is a `PBL_NPM1300_REGULATOR_DEFINE()` with its
 voltage, mode and whether it is always on; consumers point at the regulator
-(`MicDevice.vdd`) and switch it through its use count, and a PMIC pin is an
+(the `vdd` of a PDM microphone) and switch it through its use count, and a PMIC pin is an
 ordinary `PBL_GPIO(&s_npm1300_gpio.port, ...)`.
 
 ## Reporting to consumers
