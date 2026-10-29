@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SPI_MEM
+    bool "SPI memory controllers"
+    help
+      Controllers running command, address, dummy and data operations
+      against SPI memories.
+
+if SPI_MEM
+
+module = DRIVER_SPI_MEM
+module-str = SPI memory
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SPI_MEM
