@@ -41,11 +41,6 @@ static MicDevice s_mic = {
 };
 MicDevice *const MIC = &s_mic;
 
-const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 2U,
-  .battery_capacity_hours = 168U,
-};
-
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 100,
   .ambient_light_dark_threshold = 150,

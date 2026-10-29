@@ -258,11 +258,6 @@ PBL_W1160_DEFINE(s_w1160, &s_i2c1.bus, 0x48, &s_w1160_scale);
 
 const struct pbl_als *const ALS = &s_w1160.als;
 
-const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 4U,
-  .battery_capacity_hours = 400U,
-};
-
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 45,
   .ambient_light_dark_threshold = 800,

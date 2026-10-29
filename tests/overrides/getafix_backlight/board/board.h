@@ -16,21 +16,11 @@ typedef struct {
 typedef struct {
 } BoardConfigBTCommon;
 
-typedef struct {
-  const uint8_t low_power_threshold;
-  const uint8_t battery_capacity_hours;
-} BoardConfigPower;
-
 static const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
 };
 
 static const BoardConfigBTCommon BOARD_CONFIG_BT_COMMON = {};
-
-static const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 5,
-  .battery_capacity_hours = 144,
-};
 
 typedef const struct MicDevice MicDevice;
 static MicDevice *const MIC = (void *)0;

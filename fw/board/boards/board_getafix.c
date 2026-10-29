@@ -227,11 +227,6 @@ const Npm1300Config NPM1300_CONFIG = {
   .vbus_current_lim0 = 500, .vbus_current_startup = 500,
 };
 
-const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 5U,
-  .battery_capacity_hours = 150U,
-};
-
 const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
   .ambient_light_dark_threshold = 800,

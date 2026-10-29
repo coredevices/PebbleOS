@@ -7,8 +7,6 @@
 #include <pbl/util/ratio.h>
 #include <pbl/util/size.h>
 
-#include <board/board.h>
-
 typedef struct VoltagePoint {
   uint8_t percent;
   uint16_t voltage;
@@ -163,19 +161,19 @@ uint32_t battery_curve_lookup_voltage_by_percent(uint32_t percent, bool is_charg
 //! So must remove low_power_threshold to get correct remaining hours
 //! before low_power_mode is triggered
 uint32_t battery_curve_get_hours_remaining(uint32_t percent_remaining) {
-  if (percent_remaining <= BOARD_CONFIG_POWER.low_power_threshold) {
+  if (percent_remaining <= CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT) {
     return 0;
   }
-  percent_remaining -= BOARD_CONFIG_POWER.low_power_threshold;
-  return ((BOARD_CONFIG_POWER.battery_capacity_hours * percent_remaining) / 100);
+  percent_remaining -= CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT;
+  return ((CONFIG_SERVICE_BATTERY_CAPACITY_HOURS * percent_remaining) / 100);
 }
 
 //! This call is used internally with PreciseBatteryChargeState
 //! So must add low_power_threshold to get percentage in terms of
 //! PreciseBatteryChargeState (which includes low_power_mode)
 uint32_t battery_curve_get_percent_remaining(uint32_t hours) {
-  return ((hours * 100) / BOARD_CONFIG_POWER.battery_capacity_hours) +
-         BOARD_CONFIG_POWER.low_power_threshold;
+  return ((hours * 100) / CONFIG_SERVICE_BATTERY_CAPACITY_HOURS) +
+         CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT;
 }
 
 // for unit tests and analytics

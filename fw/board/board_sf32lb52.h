@@ -26,13 +26,6 @@ typedef struct {
 #endif
 } BoardConfig;
 
-typedef struct {
-  //! Percentage for watch only mode
-  const uint8_t low_power_threshold;
-  //! Approximate hours of battery life
-  const uint16_t battery_capacity_hours;
-} BoardConfigPower;
-
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
 #include <pbl/drivers/qspi_definitions.h>

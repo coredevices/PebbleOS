@@ -12,5 +12,4 @@ extern const struct pbl_uart *const QEMU_UART;
 extern const struct pbl_uart *const BT_HCI_UART;
 #endif
 extern MicDevice *const MIC;
-extern const BoardConfigPower BOARD_CONFIG_POWER;
 extern const BoardConfig BOARD_CONFIG;

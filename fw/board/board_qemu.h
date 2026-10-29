@@ -23,11 +23,6 @@ typedef struct {
 #endif
 } BoardConfig;
 
-typedef struct {
-  const uint8_t low_power_threshold;
-  const uint16_t battery_capacity_hours;
-} BoardConfigPower;
-
 // QEMU MMIO peripheral base addresses
 #define QEMU_UART0_BASE      0x40000000
 #define QEMU_UART1_BASE      0x40001000

@@ -17,11 +17,6 @@ static const BoardConfig BOARD_CONFIG = {
   .backlight_on_percent = 25,
 };
 
-static const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 2,
-  .battery_capacity_hours = 450,
-};
-
 extern const struct pbl_uart *const DBG_UART;
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;

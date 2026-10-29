@@ -19,11 +19,6 @@ typedef struct {
 #endif
 } BoardConfig;
 
-typedef struct {
-  const uint8_t low_power_threshold;
-  const uint16_t battery_capacity_hours;
-} BoardConfigPower;
-
 struct pbl_uart;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;

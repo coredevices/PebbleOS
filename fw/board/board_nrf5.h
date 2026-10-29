@@ -27,16 +27,6 @@ typedef struct {
   const uint8_t backlight_on_percent; // percent of max possible brightness
 } BoardConfig;
 
-// Power Configuration
-/////////////////////////////////////////////////////////////////////////////
-typedef struct {
-  //! Percentage for watch only mode
-  const uint8_t low_power_threshold;
-
-  //! Approximate hours of battery life
-  const uint16_t battery_capacity_hours;
-} BoardConfigPower;
-
 struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;

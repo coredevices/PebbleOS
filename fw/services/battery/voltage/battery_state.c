@@ -18,7 +18,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/ratio.h>
 
-#include <board/board.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
@@ -282,8 +281,8 @@ BatteryChargeState battery_get_charge_state(void) {
   int32_t percent = pbl_ratio32_to_percent(s_last_battery_state.percent);
 
   // subtract low power reserve, so developer will see 0% when we're approaching low power mode
-  int32_t percent_normalized = MAX((percent - BOARD_CONFIG_POWER.low_power_threshold +
-                                    percent / (100 / BOARD_CONFIG_POWER.low_power_threshold)),
+  int32_t percent_normalized = MAX((percent - CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT +
+                                    percent / (100 / CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT)),
                                    0);
 
   // massage rounding factor so that between 100% to 50% charge the SOC reported is biased to a
