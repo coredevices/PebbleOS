@@ -633,8 +633,10 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
   switch (request->type) {
 #ifndef CONFIG_RECOVERY_FW
     case ObjectFile: {
-      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo) + strlen(request->filename) + 1);
-      strcpy(storage_info->filename, request->filename);
+      storage_info =
+          pbl_malloc_check(sizeof(PutBytesStorageInfo) + sizeof("/") + strlen(request->filename));
+      strcpy(storage_info->filename, "/");
+      strcat(storage_info->filename, request->filename);
       break;
     }
     case ObjectWatchApp:

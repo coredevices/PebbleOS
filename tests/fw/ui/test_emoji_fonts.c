@@ -24,6 +24,7 @@
 /////////////////////
 #include "../graphics/test_graphics.h"
 #include "../graphics/util.h"
+#include "fake_pfs.h"
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -36,8 +37,8 @@ static GBitmap *s_dest_bitmap;
 
 void test_emoji_fonts__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
 

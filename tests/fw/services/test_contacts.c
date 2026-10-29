@@ -1,16 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/attributes_address.h>
 #include <pbl/services/contacts/contacts.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
@@ -81,7 +82,7 @@ static const uint8_t s_contact_1[] = {
 
 void test_contacts__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   contacts_db_init();
 }
 

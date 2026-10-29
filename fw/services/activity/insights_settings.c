@@ -4,18 +4,18 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/insights_settings.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
-#define ACTIVITY_INSIGHTS_SETTINGS_FILENAME          "insights"
+#define ACTIVITY_INSIGHTS_SETTINGS_FILENAME          "/insights"
 #define ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE 4096
 
 #define ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY     "version"
@@ -225,17 +225,17 @@ bool activity_insights_settings_write(const char *insight_name, ActivityInsightS
   return rv;
 }
 
-PFSCallbackHandle activity_insights_settings_watch(PFSFileChangedCallback callback) {
+struct pbl_fs_watch *activity_insights_settings_watch(pbl_fs_watch_cb_t callback) {
   if (!activity_is_initialized()) {
-    return 0; // Return invalid handle
+    return nullptr;
   }
-  return pfs_watch_file(ACTIVITY_INSIGHTS_SETTINGS_FILENAME, callback, FILE_CHANGED_EVENT_CLOSED,
-                        nullptr);
+  return pbl_fs_watch_add(ACTIVITY_INSIGHTS_SETTINGS_FILENAME, PBL_FS_WATCH_CLOSED, callback,
+                          nullptr);
 }
 
-void activity_insights_settings_unwatch(PFSCallbackHandle cb_handle) {
+void activity_insights_settings_unwatch(struct pbl_fs_watch *watch) {
   if (!activity_is_initialized()) {
     return;
   }
-  pfs_unwatch_file(cb_handle);
+  pbl_fs_watch_remove(watch);
 }

@@ -15,6 +15,7 @@
 
 // Fakes
 #include <fake_app_manager.h>
+#include <fake_pfs.h>
 
 // Stubs
 
@@ -45,11 +46,11 @@ static size_t glyph_get_size_bytes(const GlyphData *glyph) {
 
 void test_text_resources__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang");
   // cl_assert(resource_has_valid_system_resources());
 
   memset(&s_font_info, 0, sizeof(s_font_info));
@@ -75,7 +76,7 @@ void test_text_resources__init_font(void) {
 }
 
 void test_text_resources__glyph_from_second_extra_pack(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang2");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang2");
   FontInfo latin = {}, chinese = {};
   cl_assert(text_resources_init_font(SYSTEM_APP, RESOURCE_ID_GOTHIC_18, 0, &latin));
   const uint32_t extra_resource =
@@ -102,7 +103,7 @@ void test_text_resources__extra_pack_change_invalidates_missing_glyph_cache(void
   cl_assert(text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info, &location));
   cl_assert_equal_i(location.font_res->resource_id, RESOURCE_ID_GOTHIC_18);
 
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
   const uint32_t extra_resource =
       language_pack_resource_id(1, RESOURCE_ID_GOTHIC_18_EXTENDED, RESOURCE_ID_STRINGS);
   FontInfo chinese = {};
@@ -112,7 +113,7 @@ void test_text_resources__extra_pack_change_invalidates_missing_glyph_cache(void
   cl_assert(text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info, &location));
   cl_assert_equal_i(location.font_res->resource_id, extra_resource);
 
-  cl_assert_equal_i(pfs_remove("lang1"), S_SUCCESS);
+  cl_assert_equal_i(pbl_fs_unlink("/lang1"), 0);
   s_test_language_fonts[1] = NULL;
   ++g_font_language_generation;
   cl_assert(text_resources_get_glyph(&s_font_cache, 0x4E50, &s_font_info, &location));
@@ -120,7 +121,7 @@ void test_text_resources__extra_pack_change_invalidates_missing_glyph_cache(void
 }
 
 void test_text_resources__extra_pack_fonts_are_fetched_once(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
   FontInfo chinese = {};
   cl_assert(text_resources_init_font(
       SYSTEM_APP, language_pack_resource_id(1, RESOURCE_ID_GOTHIC_18_EXTENDED, RESOURCE_ID_STRINGS),
@@ -143,7 +144,7 @@ void test_text_resources__extra_pack_fonts_are_fetched_once(void) {
 }
 
 void test_text_resources__same_baseline_for_active_and_secondary_pack(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
   const uint32_t extension =
       language_pack_resource_id(1, RESOURCE_ID_GOTHIC_18_EXTENDED, RESOURCE_ID_STRINGS);
   cl_assert(text_resources_init_font(SYSTEM_APP, RESOURCE_ID_GOTHIC_36, extension, &s_font_info));

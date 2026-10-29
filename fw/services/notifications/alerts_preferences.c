@@ -21,7 +21,7 @@
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
-#define FILE_NAME "notifpref"
+#define FILE_NAME "/notifpref"
 #define FILE_LEN  (1024)
 
 static PBL_MUTEX_DEFINE(s_mutex);

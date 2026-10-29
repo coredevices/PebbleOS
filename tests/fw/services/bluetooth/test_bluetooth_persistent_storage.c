@@ -3,11 +3,11 @@
 
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 
 #include <clar.h>
@@ -22,6 +22,7 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_shared_prf_storage.h>
 #include <fake_spi_flash.h>
@@ -114,7 +115,7 @@ void sys_pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigne
 void test_bluetooth_persistent_storage__initialize(void) {
   bonding_sync_init();
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
 
   s_ble_bonding_change_add_count = 0;
   s_ble_bonding_change_update_count = 0;

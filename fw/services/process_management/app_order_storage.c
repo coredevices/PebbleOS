@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/process_management/app_order_storage.h>
 
 #include <applib/app_malloc.h>
@@ -12,7 +12,7 @@
 
 PBL_LOG_MODULE_DEFINE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
 
-#define ORDER_FILE "lnc_ord"
+#define ORDER_FILE "/lnc_ord"
 
 typedef struct {
   struct pbl_mutex order_mutex;
@@ -45,8 +45,8 @@ AppMenuOrderStorage *app_order_read_order(void) {
     return nullptr;
   }
 
-  int fd;
-  if ((fd = pfs_open(ORDER_FILE, OP_FLAG_READ, 0, 0)) < 0) {
+  struct pbl_fs_file file;
+  if (pbl_fs_open(&file, ORDER_FILE, PBL_FS_O_READ) < 0) {
     PBL_LOG_DBG("App menu order file does not exist");
     s_data.file_known_missing = true;
     pbl_mutex_unlock(&s_data.order_mutex);
@@ -54,7 +54,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   }
 
   // Check if it is an valid file
-  if ((pfs_get_file_size(fd) % sizeof(AppInstallId)) != sizeof(uint8_t)) {
+  if ((pbl_fs_size(&file) % sizeof(AppInstallId)) != sizeof(uint8_t)) {
     PBL_LOG_ERR("Invalid order storage file");
     delete_file = true;
     goto cleanup;
@@ -62,7 +62,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
 
   // Read the number of AppInstallId's listed in the file
   uint8_t list_length;
-  if (pfs_read(fd, &list_length, sizeof(uint8_t)) != sizeof(uint8_t)) {
+  if (pbl_fs_read(&file, &list_length, sizeof(uint8_t)) != sizeof(uint8_t)) {
     PBL_LOG_ERR("Could not read app menu order file");
     delete_file = true;
     goto cleanup;
@@ -78,7 +78,7 @@ AppMenuOrderStorage *app_order_read_order(void) {
   // read in entire list into array
   const int read_size = list_length * sizeof(AppInstallId);
   int rd_sz;
-  if ((rd_sz = pfs_read(fd, (uint8_t *)storage->id_list, read_size)) != read_size) {
+  if ((rd_sz = pbl_fs_read(&file, (uint8_t *)storage->id_list, read_size)) != read_size) {
     PBL_LOG_ERR("Corrupted ordered install_id list (Rd %d of %d bytes)", rd_sz, read_size);
     app_free(storage);
     storage = nullptr;
@@ -90,9 +90,9 @@ AppMenuOrderStorage *app_order_read_order(void) {
   storage->list_length = list_length;
 
 cleanup:
-  pfs_close(fd);
+  pbl_fs_close(&file);
   if (delete_file) {
-    pfs_remove(ORDER_FILE);
+    pbl_fs_unlink(ORDER_FILE);
   }
 
   pbl_mutex_unlock(&s_data.order_mutex);
@@ -105,25 +105,28 @@ static void prv_app_order_write_order(AppMenuOrderStorage *storage) {
 
   int storage_size = sizeof(AppMenuOrderStorage) + (storage->list_length * sizeof(AppInstallId));
 
-  int fd = pfs_open(ORDER_FILE, OP_FLAG_OVERWRITE, FILE_TYPE_STATIC, storage_size);
-  if (fd == E_DOES_NOT_EXIST) {
-    // File doesn't exist, need to create a new file.
-    fd = pfs_open(ORDER_FILE, OP_FLAG_WRITE, FILE_TYPE_STATIC, storage_size);
+  struct pbl_fs_file file;
+  int ret = pbl_fs_open(&file, ORDER_FILE, PBL_FS_O_REPLACE | PBL_FS_O_CREATE);
+  if (ret == 0) {
+    ret = pbl_fs_truncate(&file, storage_size);
+    if (ret < 0) {
+      pbl_fs_close(&file);
+    }
   }
 
-  if (fd < 0) {
+  if (ret < 0) {
     PBL_LOG_ERR("Could not create app menu order file");
     goto cleanup;
   }
 
   // write back the whole file
-  int wrote_storage_bytes = pfs_write(fd, (uint8_t *)storage, storage_size);
+  int wrote_storage_bytes = pbl_fs_write(&file, (uint8_t *)storage, storage_size);
 
   if (wrote_storage_bytes != storage_size) {
     PBL_LOG_ERR("Failed to write all bytes of order list");
   }
 
-  pfs_close(fd);
+  pbl_fs_close(&file);
 
   // File now exists, clear the missing flag
   s_data.file_known_missing = false;

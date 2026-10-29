@@ -25,7 +25,7 @@
 
 PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 
-#define SETTINGS_FILE_NAME "wakeup"
+#define SETTINGS_FILE_NAME "/wakeup"
 // settings file => 29 bytes * 30 apps * 8 wakeup events = ~7000 bytes
 // This should be more than enough space to store all the wakeup events we will ever want.
 #define SETTINGS_FILE_SIZE PBL_KIB(8)

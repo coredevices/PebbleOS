@@ -219,7 +219,8 @@ bool i18n_remove_pack(uint8_t slot);
  *
  * Additive pack installs go to the first free pack slot; other files are unchanged.
  *
- * @return File name to write, or NULL if every pack slot is occupied.
+ * @param filename Path of the file being transferred.
+ * @return Path to write, or NULL if every pack slot is occupied.
  */
 const char *i18n_pack_install_begin(const char *filename);
 

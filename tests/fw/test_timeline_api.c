@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/timeline.h>
@@ -23,6 +23,7 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
 status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
@@ -85,7 +86,7 @@ void notifications_handle_notification_removed(Uuid *notification_id) {
 
 void test_timeline_api__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   pin_db_init();
 }
 

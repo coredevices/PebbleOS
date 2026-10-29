@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/insights_settings.h>
-#include <pbl/services/filesystem/pfs.h>
 
 #include <clar.h>
 
@@ -272,14 +272,14 @@ ActivityScalarStore activity_metrics_prv_steps_per_minute(void) {
 
 // =========================================================================================
 // PFS stubs
-static PFSFileChangedCallback pfs_watch_cb = nullptr;
-PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
-                                 uint8_t event_flags, void *data) {
-  pfs_watch_cb = callback;
+static pbl_fs_watch_cb_t pfs_watch_cb = nullptr;
+struct pbl_fs_watch *pbl_fs_watch_add(const char *path, uint32_t events, pbl_fs_watch_cb_t cb,
+                                      void *user_data) {
+  pfs_watch_cb = cb;
   return nullptr;
 }
 
-void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
+void pbl_fs_watch_remove(struct pbl_fs_watch *watch) {
   pfs_watch_cb = nullptr;
 }
 

@@ -12,6 +12,7 @@
 // Fakes
 #include <fake_app_manager.h>
 #include <fake_bootbits.h>
+#include <fake_pfs.h>
 
 // Stubs
 
@@ -510,10 +511,10 @@ extern uint32_t prv_get_store_length(ResourceStoreEntry *entry, ResourceManifest
 
 void test_resource__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
-  pfs_format(false /* write erase headers */);
+  pbl_fs_format("/");
 }
 
 void test_resource__cleanup(void) {
@@ -530,7 +531,7 @@ void test_resource__resource_update(void) {
 }
 
 void test_resource__pug(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "pug");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "/pug");
   size_t pug_size = resource_size(SYSTEM_APP, RESOURCE_ID_PUG);
   cl_assert_equal_i(pug_size, sizeof(pug));
   uint8_t pug_buf[pug_size];
@@ -601,7 +602,7 @@ static void prv_res_changed_callback(void *data) {
 }
 
 void test_resource__watch(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "pug");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "/pug");
 
   ResourceCallbackHandle cb_handle =
       resource_watch(SYSTEM_APP, RESOURCE_ID_PUG, prv_res_changed_callback, nullptr);
@@ -609,7 +610,7 @@ void test_resource__watch(void) {
 
   // Callback should get invoked if resource was written to
   s_watch_res_callback_called_count = 0;
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "pug");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "/pug");
   cl_assert(s_watch_res_callback_called_count == 1);
 
   // Turn off watch
@@ -617,7 +618,7 @@ void test_resource__watch(void) {
 
   // Callback should get invoked if resource was written to
   s_watch_res_callback_called_count = 0;
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "pug");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, PUG_FIXTURE_NAME, "/pug");
   cl_assert(s_watch_res_callback_called_count == 0);
 }
 

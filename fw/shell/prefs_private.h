@@ -7,7 +7,7 @@
 
 #include <kernel/events.h>
 
-#define SHELL_PREFS_FILE_NAME "shellpref"
+#define SHELL_PREFS_FILE_NAME "/shellpref"
 // A full page would be ideal, but requesting such a size can end up using two pages
 #define SHELL_PREFS_FILE_LEN (2048)
 

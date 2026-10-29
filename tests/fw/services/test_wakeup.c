@@ -3,9 +3,9 @@
 
 #include <time.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/wakeup.h>
 
@@ -21,6 +21,7 @@
 #include <fake_app_manager.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -43,7 +44,7 @@ typedef struct PBL_PACKED {
 static void prv_store_entry(WakeupId wakeup_id, Uuid uuid, time_t timestamp) {
   TestWakeupEntry entry = {.uuid = uuid, .timestamp = timestamp};
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "wakeup", 8 * 1024));
+  cl_must_pass(settings_file_open(&file, "/wakeup", 8 * 1024));
   cl_must_pass(settings_file_set(&file, &wakeup_id, sizeof(wakeup_id), &entry, sizeof(entry)));
   settings_file_close(&file);
 }
@@ -84,7 +85,7 @@ void test_wakeup__initialize(void) {
 
   // Init fake filesystem used to load/store wakeup events
   fake_spi_flash_init(0, 0x1000000); // from test_settings_file.c
-  pfs_init(false);
+  fake_pfs_mount();
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   stub_app_init();
@@ -361,7 +362,7 @@ void test_wakeup__invalid_ids_dropped_at_boot(void) {
 
   SettingsFile file;
   WakeupId key = -5;
-  cl_must_pass(settings_file_open(&file, "wakeup", 8 * 1024));
+  cl_must_pass(settings_file_open(&file, "/wakeup", 8 * 1024));
   cl_assert(!settings_file_exists(&file, &key, sizeof(key)));
   key = 0;
   cl_assert(!settings_file_exists(&file, &key, sizeof(key)));

@@ -3,16 +3,17 @@
 
 #include <string.h>
 
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/units.h>
 
 #include <clar.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <shell/prefs_private.h>
 
-#define NOTIF_PREFS_FILE_NAME         "notifpref"
+#define NOTIF_PREFS_FILE_NAME         "/notifpref"
 #define NOTIF_PREFS_FILE_LEN          1024
 #define PREF_KEY_NOTIF_TEXT_SIZE      "notifTextSize"
 #define PREF_KEY_TEXT_STYLE           "textStyle"
@@ -49,8 +50,8 @@ static bool prv_notification_text_size_stored(void) {
 
 void test_alerts_preferences__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 }
 
 void test_alerts_preferences__cleanup(void) {
