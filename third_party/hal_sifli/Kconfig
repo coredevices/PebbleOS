@@ -21,7 +21,6 @@ config HAL_SIFLI_SF32LB52
     select HAL_SIFLI_IPC_QUEUE
     select HAL_SIFLI_LPTIM
     select HAL_SIFLI_LRC_CAL
-    select HAL_SIFLI_MPI
     select HAL_SIFLI_PINMUX
     select HAL_SIFLI_RTC
     help
@@ -29,7 +28,7 @@ config HAL_SIFLI_SF32LB52
       SF32LB52X target define and adds the SF32LB52-specific cmsis
       and local glue sources to the build. It also selects the HAL
       modules required by SoC-level PebbleOS code (clock/tick,
-      sleep, flash XIP, pinmux, RTC and RC calibration).
+      sleep, pinmux, RTC and RC calibration).
 
 config HAL_SIFLI_AES
     bool "AES HAL module"
@@ -157,12 +156,6 @@ config HAL_SIFLI_MAILBOX
     help
       Enable the MAILBOX (inter-core mailbox) SiFli HAL module
       driver.
-
-config HAL_SIFLI_MPI
-    bool "MPI HAL module"
-    help
-      Enable the MPI (memory peripheral interface, NOR flash)
-      SiFli HAL module driver.
 
 config HAL_SIFLI_PCD
     bool "PCD HAL module"
