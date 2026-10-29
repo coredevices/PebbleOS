@@ -25,9 +25,16 @@ config WATCHDOG_NRF5
     help
       Support for the Nordic nRF5 watchdog.
 
+config WATCHDOG_RUNS_WHILE_HALTED
+    bool
+    help
+      The watchdog keeps counting while a debugger has the CPU stopped,
+      so the task watchdog stops it while one is attached.
+
 config WATCHDOG_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
+    select WATCHDOG_RUNS_WHILE_HALTED
     help
       Support for the SiFli SF32LB watchdog.
 

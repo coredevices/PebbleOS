@@ -86,6 +86,15 @@ config DEBUG_INFO_MACROS
       firmware's macros. It costs around 7% of the compile time and
       makes the objects, and with them the link, noticeably larger.
 
+config DEBUGGER_AWARE
+    bool "Adapt to an attached debugger"
+    default y if !RELEASE
+    depends on ARCH_HAS_DEBUGGER_DETECT
+    help
+      While a debugger is attached, stop the hardware watchdog and only
+      log the stalls the task watchdog detects, so that the firmware can
+      stay stopped for as long as needed.
+
 config ASAN
     bool "AddressSanitizer"
     depends on ARCH_POSIX

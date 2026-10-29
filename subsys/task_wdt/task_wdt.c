@@ -57,6 +57,9 @@ static bool s_suspended;
 static bool s_suspend_timed;
 static pbl_tick_t s_suspend_until;
 static bool s_stalled;
+#ifdef CONFIG_DEBUGGER_AWARE
+static bool s_debugger;
+#endif
 
 static struct pbl_thread s_thread;
 PBL_THREAD_STACK_DEFINE(s_stack, CONFIG_TASK_WDT_THREAD_STACK_SIZE);
@@ -200,10 +203,48 @@ static pbl_tick_t prv_report(const struct expired *expired, size_t num_expired, 
   return max_expired_for;
 }
 
+//! Whether a debugger is attached, stopping the hardware watchdog meanwhile when it would keep
+//! counting while the CPU is stopped.
+static bool prv_debugger_attached(void) {
+#ifdef CONFIG_DEBUGGER_AWARE
+  bool attached = pbl_debugger_attached();
+  if (attached != s_debugger) {
+    s_debugger = attached;
+    if (attached) {
+      PBL_LOG_SYNC_INFO("Task watchdog: debugger attached, not resetting");
+#ifdef CONFIG_WATCHDOG_RUNS_WHILE_HALTED
+      watchdog_stop();
+#endif
+    } else {
+      PBL_LOG_SYNC_INFO("Task watchdog: debugger detached");
+#ifdef CONFIG_WATCHDOG_RUNS_WHILE_HALTED
+      watchdog_start();
+#endif
+    }
+  }
+  return attached;
+#else
+  return false;
+#endif
+}
+
+static void prv_feed_hw(bool debugger) {
+#ifdef CONFIG_WATCHDOG_RUNS_WHILE_HALTED
+  // Stopped for the debugger: feeding restarts it
+  if (debugger) {
+    return;
+  }
+#else
+  (void)debugger;
+#endif
+  watchdog_feed();
+}
+
 static uint32_t prv_check(void) {
   struct expired expired[NUM_CHANNELS];
   uint8_t fed_mask;
   uint8_t active_mask;
+  bool debugger = prv_debugger_attached();
 
   size_t num_expired = prv_collect_expired(expired, &fed_mask, &active_mask);
   if (num_expired == 0) {
@@ -214,7 +255,7 @@ static uint32_t prv_check(void) {
       }
       PBL_LOG_SYNC_WRN("Task watchdog: recovered from a stall");
     }
-    watchdog_feed();
+    prv_feed_hw(debugger);
     return CONFIG_TASK_WDT_CHECK_PERIOD_MS;
   }
 
@@ -222,16 +263,20 @@ static uint32_t prv_check(void) {
   pbl_tick_t expired_for = prv_report(expired, num_expired, fed_mask, active_mask);
   if (expired_for >= pbl_ms_to_ticks(CONFIG_TASK_WDT_GRACE_MS)) {
 #ifdef CONFIG_WATCHDOG
-    // The orderly teardown system_reset() performs from thread context could
-    // block on the stuck thread and lose the core dump; a locked-out
-    // scheduler makes it skip straight to the dump.
-    pbl_irq_lock();
-    reset_due_to_software_failure();
+    if (debugger) {
+      PBL_LOG_SYNC_ERR("Task watchdog: expired, not resetting (debugger attached)");
+    } else {
+      // The orderly teardown system_reset() performs from thread context could
+      // block on the stuck thread and lose the core dump; a locked-out
+      // scheduler makes it skip straight to the dump.
+      pbl_irq_lock();
+      reset_due_to_software_failure();
+    }
 #else
     PBL_LOG_SYNC_ERR("Task watchdog: expired, not resetting (CONFIG_WATCHDOG=n)");
 #endif
   }
-  watchdog_feed();
+  prv_feed_hw(debugger);
   return MIN(CONFIG_TASK_WDT_GRACE_MS, CONFIG_TASK_WDT_CHECK_PERIOD_MS);
 }
 
