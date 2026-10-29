@@ -12,6 +12,8 @@ struct posix_thread {
   pthread_cond_t wake;
   void (*entry)(void *);
   void *arg;
+  // Linux limits host thread names to 15 characters
+  char name[16];
   bool created;
   bool run;
   bool aborted;
