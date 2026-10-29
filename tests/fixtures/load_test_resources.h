@@ -6,12 +6,13 @@
 #include <flash_region/flash_region.h>
 #include <resource/resource.h>
 #include <resource/resource_version.auto.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
 #define RESOURCES_FIXTURE_PATH "resources"
@@ -45,17 +46,17 @@ void load_resource_fixture_on_pfs(const char *fixture_path, const char *name, co
   // copy file to fake flash storage
   cl_assert(fread(buf, 1, st.st_size, file) > 0);
 
-  int fd = pfs_open(pfs_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, st.st_size);
-  cl_assert(fd >= 0);
-  int bytes_written = pfs_write(fd, buf, st.st_size);
+  struct pbl_fs_file pfs_file;
+  cl_assert_equal_i(fake_pfs_create(&pfs_file, pfs_name, st.st_size), 0);
+  int bytes_written = pbl_fs_write(&pfs_file, buf, st.st_size);
   cl_assert(st.st_size == bytes_written);
-  pfs_close(fd);
+  pbl_fs_close(&pfs_file);
 }
 
 void load_system_resources_fixture(void) {
   fake_spi_flash_init(0 /* offset */, 0x1000000 /* length */);
-  pfs_init(false /* run filesystem check */);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
   resource_init();

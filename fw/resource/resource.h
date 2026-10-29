@@ -30,7 +30,7 @@ typedef struct PBL_PACKED {
   uint32_t timestamp;
 } ResourceVersion;
 
-//! Types used by pfs_watch_resource()
+//! Types used by resource_watch()
 typedef void (*ResourceChangedCallback)(void *data);
 typedef void *ResourceCallbackHandle;
 

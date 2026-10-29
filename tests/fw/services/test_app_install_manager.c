@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/time.h>
 #include <pbl/util/build_id.h>
@@ -30,6 +30,7 @@
 
 // Fake Includes
 ////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
@@ -113,10 +114,10 @@ void load_fixture_on_pfs(const char *name, const char *pfs_name) {
   // copy file to fake flash storage
   cl_assert(fread(buf, 1, st.st_size, file) > 0);
 
-  int fd = pfs_open(pfs_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, st.st_size);
-  cl_assert(fd >= 0);
-  cl_assert(st.st_size == pfs_write(fd, buf, st.st_size));
-  pfs_close(fd);
+  struct pbl_fs_file pfs_file;
+  cl_assert_equal_i(fake_pfs_create(&pfs_file, pfs_name, st.st_size), 0);
+  cl_assert(st.st_size == pbl_fs_write(&pfs_file, buf, st.st_size));
+  pbl_fs_close(&pfs_file);
 }
 
 /* Start of test */
@@ -230,7 +231,7 @@ AppInstallId menu_layer_id;
 
 void test_app_install_manager__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
 
   app_install_manager_init();
   app_db_init();

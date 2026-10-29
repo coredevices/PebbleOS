@@ -96,7 +96,7 @@ typedef struct SettingsFile {
  * worst case (all values booleans).
  *
  * @param[out] file Settings file to initialize.
- * @param name PFS file name.
+ * @param name Absolute path of the file, on PFS.
  * @param max_used_space Space valid records may use, in bytes.
  * @retval S_SUCCESS File opened.
  * @return Negative status code from PFS on failure.
@@ -110,7 +110,7 @@ status_t settings_file_open(SettingsFile *file, const char *name, int max_used_s
  * records and doubles its allocation as needed, up to @p max_used_space.
  *
  * @param[out] file Settings file to initialize.
- * @param name PFS file name.
+ * @param name Absolute path of the file, on PFS.
  * @param max_used_space Space valid records may use, in bytes.
  * @param initial_alloc_size Initial allocation in bytes, greater than 0.
  * @retval S_SUCCESS File opened.

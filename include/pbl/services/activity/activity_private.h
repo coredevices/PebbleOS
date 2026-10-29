@@ -141,7 +141,7 @@ typedef uint32_t ActivityScalarStore;
 #define ACTIVITY_DAG_PER_KG 100
 
 /** @brief Name of the activity settings file. */
-#define ACTIVITY_SETTINGS_FILE_NAME "activity"
+#define ACTIVITY_SETTINGS_FILE_NAME "/activity"
 /** @brief Size of the activity settings file, in bytes. */
 #define ACTIVITY_SETTINGS_FILE_LEN 0x4000
 

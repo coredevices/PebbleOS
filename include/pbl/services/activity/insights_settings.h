@@ -5,8 +5,8 @@
 
 #include "activity.h"
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/filesystem/pfs.h>
 
 /**
  * @defgroup services_activity_insights_settings Insights settings
@@ -193,16 +193,16 @@ void activity_insights_settings_init(void);
  * @brief Watch the insights settings file.
  *
  * @param callback Called when the file is closed after modifications, or deleted.
- * @return Handle for activity_insights_settings_unwatch(), 0 if the activity service is not
+ * @return Watch for activity_insights_settings_unwatch(), NULL if the activity service is not
  * initialized.
  */
-PFSCallbackHandle activity_insights_settings_watch(PFSFileChangedCallback callback);
+struct pbl_fs_watch *activity_insights_settings_watch(pbl_fs_watch_cb_t callback);
 
 /**
  * @brief Stop watching the insights settings file.
  *
- * @param cb_handle Handle returned by activity_insights_settings_watch().
+ * @param watch Watch returned by activity_insights_settings_watch().
  */
-void activity_insights_settings_unwatch(PFSCallbackHandle cb_handle);
+void activity_insights_settings_unwatch(struct pbl_fs_watch *watch);
 
 /** @} */

@@ -148,7 +148,7 @@ static void prv_save_state(void) {
 }
 #else
 // In normal firmware, use settings file
-#define FUEL_GAUGE_SETTINGS_FILE_NAME "fgs"
+#define FUEL_GAUGE_SETTINGS_FILE_NAME "/fgs"
 #define FUEL_GAUGE_SETTINGS_MAX_SIZE  2048
 
 static const uint32_t FUEL_GAUGE_STATE_KEY = 1;

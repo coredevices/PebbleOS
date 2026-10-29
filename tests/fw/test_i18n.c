@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
 
@@ -19,6 +19,7 @@
 
 // Fakes
 ////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
 // Stubs
@@ -59,9 +60,9 @@ void event_put(PebbleEvent *event) {
 /////////////////////////
 void test_i18n__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "lang");
+  fake_pfs_mount();
+  pbl_fs_format("/");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "/lang");
   s_language = ShellLanguageInstalledPack;
   shell_prefs_set_language_english(false);
   i18n_set_resource(RESOURCE_ID_STRINGS);
@@ -103,7 +104,7 @@ void test_i18n__english_with_installed_pack(void) {
 }
 
 void test_i18n__english_without_installed_pack(void) {
-  cl_assert_equal_i(pfs_remove("lang"), S_SUCCESS);
+  cl_assert_equal_i(pbl_fs_unlink("/lang"), 0);
   i18n_set_resource(RESOURCE_ID_STRINGS);
 
   cl_assert_equal_s(i18n_get_locale(), "en_US");
@@ -228,7 +229,7 @@ void test_i18n__language_change_event(void) {
 
 void test_i18n__extra_pack_metadata_preserves_translations(void) {
   const char *translated = i18n_get("Music", __FILE__);
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
   I18nPackInfo pack;
   cl_assert(i18n_get_pack_info(1, &pack));
   cl_assert_equal_s(pack.locale, "zh_CN");
@@ -242,7 +243,7 @@ void test_i18n__extra_pack_metadata_preserves_translations(void) {
 }
 
 void test_i18n__select_extra_pack_and_remove(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "lang2");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "/lang2");
   shell_prefs_set_language(ShellLanguagePack2);
   cl_assert_equal_s(i18n_get_locale(), "fr_FR");
   cl_assert_equal_s(i18n_get("Music", __FILE__), "Musique");
@@ -255,7 +256,7 @@ void test_i18n__select_extra_pack_and_remove(void) {
 }
 
 void test_i18n__remove_resets_selection_with_english_toggled(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "lang2");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "/lang2");
   shell_prefs_set_language(ShellLanguagePack2);
   shell_prefs_set_language_english(true);
   cl_assert(i18n_remove_pack(2));
@@ -264,7 +265,7 @@ void test_i18n__remove_resets_selection_with_english_toggled(void) {
 
 void test_i18n__installation_preserves_english(void) {
   shell_prefs_set_language(ShellLanguageEnglish);
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "lang");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, FRENCH_FIXTURE_NAME, "/lang");
   cl_assert(shell_prefs_get_language_english());
   cl_assert_equal_s(i18n_get_locale(), "en_US");
   cl_assert_equal_s(i18n_get("Music", __FILE__), "Music");
@@ -280,11 +281,11 @@ void test_i18n__missing_and_invalid_slots(void) {
 }
 
 void test_i18n__invalid_pack_remains_removable(void) {
-  int fd = pfs_open("lang3", OP_FLAG_WRITE, FILE_TYPE_STATIC, 1);
-  cl_assert(fd >= 0);
+  struct pbl_fs_file file;
+  cl_assert_equal_i(fake_pfs_create(&file, "/lang3", 1), 0);
   const uint8_t invalid = 0;
-  cl_assert_equal_i(pfs_write(fd, &invalid, 1), 1);
-  pfs_close(fd);
+  cl_assert_equal_i(pbl_fs_write(&file, &invalid, 1), 1);
+  pbl_fs_close(&file);
   I18nPackInfo pack;
   cl_assert(!i18n_get_pack_info(3, &pack));
   cl_assert(language_pack_is_installed(3));
