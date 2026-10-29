@@ -3,6 +3,7 @@
 
 import os
 import platform
+import sys
 
 from pbl import emulator
 
@@ -14,6 +15,10 @@ SPI_FLASH_TARGET = "qemu_image_spi"
 SPI_FLASH_IMAGE = "qemu_spi_flash.bin"
 
 NO_DECORATION = "none"
+
+# Where the gdb proxy, which makes the kernel's threads visible to gdb,
+# listens; it forwards to the emulator's own gdb server.
+GDB_PROXY_PORT = 1233
 
 
 class QemuRunner(Runner):
@@ -27,7 +32,7 @@ class QemuRunner(Runner):
 
     @classmethod
     def capabilities(cls):
-        return RunnerCaps(commands={"run"})
+        return RunnerCaps(commands={"run", "debug", "debugserver"})
 
     @classmethod
     def supports(cls, cfg):
@@ -64,6 +69,12 @@ class QemuRunner(Runner):
         )
 
     def do_run(self, command):
+        if command == "debug":
+            port = self.gdb_port(GDB_PROXY_PORT)
+            return self.run_server_and_gdb(self._gdb_proxy(port), port)
+        if command == "debugserver":
+            return self.run_program(self._gdb_proxy(self.gdb_port(GDB_PROXY_PORT)))
+
         build = self.cfg.build
         decoration = self._decoration(build)
 
@@ -89,6 +100,15 @@ class QemuRunner(Runner):
         return self.run_program(
             self._command_line(build, decoration, spi_flash), cwd=build.topdir
         )
+
+    def _gdb_proxy(self, port):
+        build = self.cfg.build
+        return [
+            sys.executable,
+            os.path.join(build.topdir, "tools", "qemu", "qemu_gdb_proxy.py"),
+            f"--port={port}",
+            f"--target=localhost:{emulator.GDB_PORT}",
+        ]
 
     def _decoration(self, build):
         available = build.board_spec.qemu.get("decorations", [])

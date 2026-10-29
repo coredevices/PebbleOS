@@ -1,54 +1,44 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-import sys
-
 from pbl.command import PblCommand
 from pbl.device import run_on_device, runner_options
-from pbl.emulator import GDB_PORT
-
-# The port qemu_gdb_proxy.py listens on for gdb; it forwards to the emulator.
-GDB_PROXY_PORT = 1233
 
 
-class Debug(PblCommand):
+class _DebugCommand(PblCommand):
     group = "device"
-
-    def __init__(self):
-        super().__init__("debug", "Attach gdb to the firmware")
 
     def do_add_parser(self, parser_adder):
         parser = self.add_subparser(parser_adder)
+        parser.add_argument(
+            "--gdb-port",
+            type=int,
+            metavar="PORT",
+            help="Port of the gdb server (default: the runner's)",
+        )
         runner_options(parser)
         return parser
 
     def do_run(self, args, unknown):
-        build = self.build_dir()
-        if not build.config.CONFIG_QEMU:
-            run_on_device(build, args, "debug")
-            return
+        run_on_device(self.build_dir(), args, self.name)
 
-        import pexpect
 
-        proxy = self.script("tools", "qemu", "qemu_gdb_proxy.py")
-        cmd = (
-            f"{sys.executable} {proxy} --port={GDB_PROXY_PORT} "
-            f"--target=localhost:{GDB_PORT}"
+class Debug(_DebugCommand):
+    def __init__(self):
+        super().__init__(
+            "debug",
+            "Attach gdb to the firmware",
+            "Start the runner's gdb server and attach gdb to the running "
+            "firmware. A server already listening on the gdb port, e.g. one "
+            "started with 'pbl debugserver', is used instead.",
         )
-        if self.dry_run:
-            self.inf("[dry-run]", cmd, color="yellow")
-            return
 
-        proc = pexpect.spawn(cmd, logfile=sys.stdout, encoding="utf-8")
-        proc.expect(["Connected to target", pexpect.TIMEOUT], timeout=10)
-        self._gdb(build, GDB_PROXY_PORT)
 
-    def _gdb(self, build, port):
-        from tools.gdb_driver import find_gdb_path
-
-        elf = build.elf
-        gdb = build.tool("gdb") or find_gdb_path()
-        if gdb is None:
-            self.die("pebble-gdb not found")
-        os.system(f'{gdb} {elf} --ex="target remote :{port}"')
+class DebugServer(_DebugCommand):
+    def __init__(self):
+        super().__init__(
+            "debugserver",
+            "Start a gdb server for the firmware",
+            "Start the runner's gdb server in the foreground, for gdb, an IDE "
+            "or 'pbl debug' to attach to.",
+        )

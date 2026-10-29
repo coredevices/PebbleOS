@@ -30,10 +30,11 @@ command's own options.
 | {doc}`configure` | {doc}`run` |
 | {doc}`build` | {doc}`console` |
 | {doc}`bundle` | {doc}`debug` |
-| {doc}`menuconfig` | {doc}`emulator` |
-| {doc}`clean` | {doc}`image_resources` |
-| {doc}`test` | {doc}`image_recovery` |
-| {doc}`itest` | {doc}`erase` |
+| {doc}`menuconfig` | {doc}`debugserver` |
+| {doc}`clean` | {doc}`emulator` |
+| {doc}`test` | {doc}`image_resources` |
+| {doc}`itest` | {doc}`image_recovery` |
+| | {doc}`erase` |
 
 ## Shared options
 
@@ -80,11 +81,11 @@ first one that can handle the build and the command is the default;
 
 | Runner | Boards | Operations |
 | --- | --- | --- |
-| `openocd` | asterix | flash (with resources), erase, debug |
+| `openocd` | asterix | flash (with resources), erase, debug, debugserver |
 | `nrfutil` | asterix | flash (with resources), erase |
 | `sftool` | obelix, getafix | flash (with resources), erase |
 | `phone` | asterix, obelix, getafix | flash (always with resources) |
-| `qemu` | qemu_* | run |
+| `qemu` | qemu_* | run, debug, debugserver |
 | `native` | native_* | run |
 | `wasm` | native_*/wasm | run |
 
@@ -120,6 +121,7 @@ itest.md
 run.md
 console.md
 debug.md
+debugserver.md
 emulator.md
 image_resources.md
 image_recovery.md

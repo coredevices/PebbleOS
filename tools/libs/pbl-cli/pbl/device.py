@@ -57,6 +57,7 @@ def make_runner(
         erase_ranges=tuple(erase_ranges),
         sftool=build.tool("sftool") or "sftool",
         gdb=build.tool("gdb"),
+        gdb_port=getattr(args, "gdb_port", None),
         build=build,
         extra_args=tuple(extra_args),
         dry_run=getattr(args, "dry_run", False),

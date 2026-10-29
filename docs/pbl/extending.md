@@ -10,7 +10,7 @@ pbl/app/main.py    finds the workspace, assembles the commands, dispatches
 pbl/command.py     PblCommand, the base class every command derives from
 pbl/workspace.py   the checkout: pbl.yml, the layout, the extensions
 pbl/build.py       a build directory and what can be read back from it
-pbl/runners.py     the binary runners (openocd, sftool, nrfutil)
+pbl/runners/       the binary runners (openocd, sftool, qemu, ...)
 pbl/commands/      the commands themselves
 ```
 
@@ -100,8 +100,12 @@ runners:
   - nrfutil
 ```
 
-`pbl run`, `erase` and `debug` dispatch to the first of them that
-supports the command. Each runner contributes its own options (e.g.
+`pbl run`, `erase`, `debug` and `debugserver` dispatch to the first of
+them that supports the command. Each runner contributes its own options (e.g.
 `--tty` for sftool), so they show up on all of those commands. New runners
 are modules in `pbl/runners/`, registered in that package's `RUNNERS`
 table, and declare the operations they support in `capabilities()`.
+
+A runner with a GDB server implements `debugserver` by running it in the
+foreground, and `debug` by handing it to `run_server_and_gdb()`, which
+starts it, attaches GDB once it listens and stops it when GDB quits.

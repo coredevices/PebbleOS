@@ -1,13 +1,11 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import contextlib
 import errno
 import os
 import re
 import socket
 import subprocess
-import sys
 
 from .core import Runner, RunnerCaps, RunnerError, UnsupportedOperation
 
@@ -33,7 +31,7 @@ class OpenOcdRunner(Runner):
     @classmethod
     def capabilities(cls):
         return RunnerCaps(
-            commands={"flash", "erase", "debug"},
+            commands={"flash", "erase", "debug", "debugserver"},
             flash_resources=True,
         )
 
@@ -88,40 +86,13 @@ class OpenOcdRunner(Runner):
         elif command == "erase":
             self._erase_ranges()
         elif command == "debug":
-            self._debug()
+            port = self.gdb_port(OPENOCD_GDB_PORT)
+            return self.run_server_and_gdb(self._server(port), port)
+        elif command == "debugserver":
+            return self.run_program(self._server(self.gdb_port(OPENOCD_GDB_PORT)))
 
-    def _debug(self):
-        from tools.gdb_driver import find_gdb_path
-
-        gdb = self.cfg.gdb or find_gdb_path()
-        if gdb is None:
-            raise RunnerError("pebble-gdb not found!")
-
-        with self._daemon():
-            cmd = f'{gdb} {self.cfg.elf_file} --init-command=".gdbinit" --ex="target remote :{OPENOCD_GDB_PORT}"'
-            if self.cfg.dry_run:
-                print("[dry-run] " + cmd)
-            else:
-                os.system(cmd)
-
-    @contextlib.contextmanager
-    def _daemon(self):
-        if _is_openocd_running():
-            yield
-            return
-
-        import pexpect
-
-        proc = pexpect.spawn(
-            "openocd", ["-f", self._cfg_file], encoding="utf-8", logfile=sys.stdout
-        )
-        result = proc.expect(["Listening on port", pexpect.TIMEOUT], timeout=10)
-        if result != 0:
-            raise RunnerError("Timed out connecting OpenOCD to development board...")
-        try:
-            yield
-        finally:
-            proc.close()
+    def _server(self, port):
+        return ["openocd", "-f", self._cfg_file, "-c", f"gdb_port {port}"]
 
     def _run_command(
         self, cmd, ignore_fail=False, expect=(), shutdown=True, enforce_expect=False
