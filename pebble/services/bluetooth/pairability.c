@@ -7,7 +7,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/pairability.h>
 
 #include <comm/ble/gap_le_slave_discovery.h>
@@ -33,11 +32,6 @@ static void evaluate_pairing_refcount(void *data) {
 
   pbl_bt_le_pairability_set_enabled(is_ble_pairable_and_discoverable);
   if (s_last_ble_discoverable_state != is_ble_pairable_and_discoverable) {
-    if (is_ble_pairable_and_discoverable) {
-      bt_local_addr_pause_cycling();
-    } else {
-      bt_local_addr_resume_cycling();
-    }
     gap_le_slave_set_discoverable(is_ble_pairable_and_discoverable);
     s_last_ble_discoverable_state = is_ble_pairable_and_discoverable;
   }

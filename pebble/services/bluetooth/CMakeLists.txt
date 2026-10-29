@@ -6,7 +6,6 @@ set(sources
   bluetooth_persistent_storage_debug.c
   bonding.c
   dis.c
-  local_addr.c
   local_id.c
   pairability.c
   pebble_pairing_service.c

@@ -24,9 +24,6 @@ struct PBL_PACKED pbl_bt_bonding {
   /** True if the remote device is capable of talking PPoGATT. */
   bool is_gateway : 1;
 
-  /** True if the local device address should be pinned. */
-  bool should_pin_address : 1;
-
   /**
    * Backend specific flags.
    *
@@ -36,10 +33,7 @@ struct PBL_PACKED pbl_bt_bonding {
   uint8_t flags : 5;
 
   /** Reserved. */
-  uint8_t rsvd : 1;
-
-  /** Address to pin. Valid iff @ref should_pin_address is true. */
-  struct pbl_bt_addr pinned_address;
+  uint8_t rsvd : 2;
 };
 
 /** @brief Stored Client Characteristic Configuration Descriptor state of a peer. */

@@ -16,7 +16,6 @@
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/dis.h>
-#include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
 
@@ -85,7 +84,6 @@ static void prv_comm_start(void) {
   pbl_free(config);
 
   if (s_comm_is_running) {
-    bt_local_addr_init();
     gap_le_init();
     bt_local_id_configure_driver();
 #ifdef CONFIG_SERVICE_BLE_HRM

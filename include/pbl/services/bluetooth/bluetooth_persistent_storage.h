@@ -14,7 +14,7 @@
  * @brief Persistent BLE bondings, CCCDs and local Bluetooth settings.
  *
  * Normal firmware keeps them in a settings file and mirrors the gateway pairing, root keys,
- * device name and pinned address to shared PRF storage. Recovery firmware uses shared PRF
+ * and device name to shared PRF storage. Recovery firmware uses shared PRF
  * storage directly, with a single bonding slot. Only one BLE bonding is kept: storing a new
  * one replaces the others.
  *
@@ -65,29 +65,6 @@ typedef void (*BtPersistBondingDBEachBLE)(struct pbl_bt_device_internal *device,
                                           pbl_bt_bonding_id_t *id, void *context);
 
 /**
- * @brief Check whether any BLE bonding requires address pinning.
- *
- * @return True if one does.
- */
-bool bt_persistent_storage_has_pinned_ble_pairings(void);
-
-/**
- * @brief Store the pinned local BLE address.
- *
- * @param address Address to pin.
- * @return True on success.
- */
-bool bt_persistent_storage_set_ble_pinned_address(const struct pbl_bt_addr *address);
-
-/**
- * @brief Get the pinned local BLE address.
- *
- * @param[out] address_out Pinned address, may be NULL.
- * @return True if a pinned address is stored.
- */
-bool bt_persistent_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out);
-
-/**
  * @brief Add or update a BLE bonding.
  *
  * An existing bonding with the same identity is updated; otherwise a new one is added, the
@@ -96,13 +73,12 @@ bool bt_persistent_storage_get_ble_pinned_address(struct pbl_bt_addr *address_ou
  * @param pairing_info Pairing info; empty pairing info is rejected.
  * @param is_gateway True if the device is the phone running the Pebble app.
  * @param device_name Remote device name, may be NULL.
- * @param requires_address_pinning True if the remote needs a stable local address.
  * @param flags Bonding flags, passed back to the Bluetooth driver.
  * @return Bonding ID, or @c PBL_BT_BONDING_ID_INVALID on failure.
  */
 pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
     const struct pbl_bt_sm_pairing_info *pairing_info, bool is_gateway, const char *device_name,
-    bool requires_address_pinning, uint8_t flags);
+    uint8_t flags);
 
 /**
  * @brief Update the name of a BLE bonding.
