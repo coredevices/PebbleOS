@@ -9,6 +9,7 @@ define_property(GLOBAL PROPERTY PBL_DYNAMIC_RESOURCES
   BRIEF_DOCS "Resources produced by the build itself (stored apps, timezones)")
 
 set(PBL_RESOURCES_PY ${PBL_BASE}/tools/cmake/resources.py)
+set(PBL_RESOURCES_GENERATORS_PY ${PBL_BASE}/tools/resources/generators.py)
 
 # A .reso another build step produces, added to the resource ball after
 # the ones the resource maps declare.
@@ -21,7 +22,7 @@ function(pbl_resource_command)
   add_custom_command(
     OUTPUT ${ARG_OUTPUT}
     COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_RESOURCES_PY} ${ARG_ARGS}
-    DEPENDS ${ARG_DEPENDS} ${PBL_RESOURCES_PY}
+    DEPENDS ${ARG_DEPENDS} ${PBL_RESOURCES_PY} ${PBL_RESOURCES_GENERATORS_PY}
     WORKING_DIRECTORY ${PBL_BASE}
     COMMENT "${ARG_COMMENT}"
     VERBATIM
