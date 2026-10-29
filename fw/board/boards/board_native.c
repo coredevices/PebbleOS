@@ -41,12 +41,6 @@ static MicDevice s_mic = {
 };
 MicDevice *const MIC = &s_mic;
 
-const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 100,
-  .ambient_light_dark_threshold = 150,
-  .ambient_k_delta_threshold = 25,
-};
-
 void board_early_init(void) {
 }
 

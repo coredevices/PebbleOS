@@ -10,13 +10,6 @@
 #define BOARD_RTC_INST NRF_RTC1
 #define BOARD_RTC_IRQN RTC1_IRQn
 
-static const BoardConfig BOARD_CONFIG = {
-  .ambient_light_dark_threshold = 100,
-  .ambient_k_delta_threshold = 30,
-
-  .backlight_on_percent = 25,
-};
-
 extern const struct pbl_uart *const DBG_UART;
 extern QSPIPort *const QSPI;
 extern QSPIFlash *const QSPI_FLASH;

@@ -13,4 +13,3 @@ extern const struct pbl_uart *const BT_HCI_UART;
 #endif
 extern MicDevice *const MIC;
 extern HRMDevice *const HRM;
-extern const BoardConfig BOARD_CONFIG;

@@ -38,13 +38,6 @@ PBL_DISPLAY_QEMU_DEFINE(s_display, "display", QEMU_DISPLAY_BASE, QEMU_DISPLAY_FB
 
 const struct pbl_display *const DISPLAY = &s_display.disp;
 
-const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 100,
-  .ambient_light_dark_threshold = 150,
-  .ambient_k_delta_threshold = 25,
-  .backlight_default_color = BACKLIGHT_COLOR_WHITE,
-};
-
 PBL_GPIO_KEYS_DEFINE(BUTTONS, "buttons",
                      PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(QEMU_GPIO, 0, 0), PBL_INPUT_KEY_BACK, 0),
                      PBL_GPIO_KEYS_KEY("Up", PBL_GPIO(QEMU_GPIO, 1, 0), PBL_INPUT_KEY_UP, 0),

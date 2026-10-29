@@ -16,7 +16,6 @@
 #include <applib/graphics/gtypes.h>
 #include <apps/system/timeline/timeline.h>
 #include <apps/system/toggle/quiet_time.h>
-#include <board/board.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
 #include <resource/language_pack.h>
@@ -88,11 +87,11 @@ static uint8_t s_backlight_intensity; // default set in shell_prefs_init()
 #define BACKLIGHT_COLOR_DEFAULT_SUNSET_MINUTE  (18 * PBL_MIN_PER_HOUR)
 
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
-static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_prefs_init()
+static uint32_t s_backlight_color = CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 #define PREF_KEY_BACKLIGHT_COLOR_DAY_NIGHT_ENABLED "lightColorDayNightEnabled"
 static bool s_backlight_color_day_night_enabled = false;
 #define PREF_KEY_BACKLIGHT_COLOR_NIGHT "lightColorNight"
-static uint32_t s_backlight_color_night; // default pulled from BOARD_CONFIG in shell_prefs_init()
+static uint32_t s_backlight_color_night = CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 #define PREF_KEY_BACKLIGHT_COLOR_SUNRISE_MINUTE "lightColorSunriseMinute"
 static uint16_t s_backlight_color_sunrise_minute = BACKLIGHT_COLOR_DEFAULT_SUNRISE_MINUTE;
 #define PREF_KEY_BACKLIGHT_COLOR_SUNSET_MINUTE "lightColorSunsetMinute"
@@ -181,8 +180,7 @@ static bool s_display_orientation_left = false;
 #endif
 
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
-static uint32_t s_backlight_ambient_threshold =
-    0; // default set from board config in shell_prefs_init()
+static uint32_t s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
 
 #define PREF_KEY_STATIONARY "stationaryMode"
 static bool s_stationary_mode_enabled = true;
@@ -1133,11 +1131,6 @@ void shell_prefs_init(void) {
   // Match the Standard preset so fresh devices report Mode: Standard.
   s_backlight_intensity = s_backlight_preset_settings[BacklightPreset_Standard].intensity;
 #endif
-  s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  s_backlight_color = BOARD_CONFIG.backlight_default_color;
-  s_backlight_color_night = BOARD_CONFIG.backlight_default_color;
-#endif
 
   SettingsFile file = {};
   if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
@@ -1196,7 +1189,7 @@ void shell_prefs_init(void) {
   // current readings (backlight stuck off). Drop any stored override so the
   // device follows the new board default.
   if (!s_als_threshold_migrated_v1) {
-    s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+    s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
     SettingsFile mfile = {};
     if (settings_file_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       settings_file_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
@@ -1211,7 +1204,7 @@ void shell_prefs_init(void) {
   // threshold overrides are in the wrong unit (~5x too high). Drop them so
   // the device follows the new lux board defaults.
   if (!s_als_threshold_migrated_v2) {
-    s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+    s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
     SettingsFile v2file = {};
     if (settings_file_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       settings_file_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,

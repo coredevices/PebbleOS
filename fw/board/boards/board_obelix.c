@@ -258,13 +258,6 @@ PBL_W1160_DEFINE(s_w1160, &s_i2c1.bus, 0x48, &s_w1160_scale);
 
 const struct pbl_als *const ALS = &s_w1160.als;
 
-const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 45,
-  .ambient_light_dark_threshold = 800,
-  .ambient_k_delta_threshold = 100,
-  .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
-};
-
 PBL_GPIO_KEYS_DEFINE(
     BUTTONS, "buttons",
     PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(SF32LB_GPIO1, 34, 0), PBL_INPUT_KEY_BACK, 40),

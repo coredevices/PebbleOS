@@ -12,17 +12,6 @@
 
 #include <cmsis_core.h>
 
-typedef struct {
-  uint8_t backlight_on_percent;
-  uint32_t ambient_light_dark_threshold;
-  uint32_t ambient_k_delta_threshold;
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  // Default RGB backlight color (packed 0x00RRGGBB), applied when no app
-  // override is set. User-preference overrides this via backlight_set_color().
-  uint32_t backlight_default_color;
-#endif
-} BoardConfig;
-
 // QEMU MMIO peripheral base addresses
 #define QEMU_UART0_BASE      0x40000000
 #define QEMU_UART1_BASE      0x40001000

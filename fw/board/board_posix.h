@@ -10,15 +10,6 @@
 #include <pbl/drivers/button_id.h>
 #include <pbl/input/input.h>
 
-typedef struct {
-  uint8_t backlight_on_percent;
-  uint32_t ambient_light_dark_threshold;
-  uint32_t ambient_k_delta_threshold;
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  uint32_t backlight_default_color;
-#endif
-} BoardConfig;
-
 struct pbl_uart;
 typedef const struct QSPIPort QSPIPort;
 typedef const struct QSPIFlash QSPIFlash;

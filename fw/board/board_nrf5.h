@@ -17,16 +17,6 @@
 #include <nrfx_pdm.h>
 // clang-format on
 
-typedef struct {
-  // Ambient Light Configuration
-  /////////////////////////////////////////////////////////////////////////////
-  const uint32_t ambient_light_dark_threshold;
-  const uint32_t ambient_k_delta_threshold;
-  const struct pbl_gpio photo_en;
-
-  const uint8_t backlight_on_percent; // percent of max possible brightness
-} BoardConfig;
-
 struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;

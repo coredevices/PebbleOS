@@ -272,7 +272,7 @@ void light_set_dark_threshold(uint32_t threshold) {
 }
 
 AmbientLightLevel light_level_to_enum(uint32_t lux) {
-  const uint32_t delta = BOARD_CONFIG.ambient_k_delta_threshold;
+  const uint32_t delta = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD_DELTA;
 
   if (!pbl_device_is_ready(&ALS->dev)) {
     return AmbientLightLevelUnknown;
@@ -440,7 +440,7 @@ void light_handle_clock_change(void) {
 static void prv_change_brightness(uint8_t new_brightness) {
   // Scale the 0-100% to the maximum value allowed in hardware
   uint8_t scaled_brightness =
-      DIVIDE_CEIL(new_brightness * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U);
+      DIVIDE_CEIL(new_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
 
   // Bleed-through gate around backlight 0↔on edges: while the LED is
   // illuminating the cover glass, the W1160 photodiode would latch
@@ -479,7 +479,8 @@ static void prv_change_brightness(uint8_t new_brightness) {
 //! Hardware backlight level a given intensity would produce.
 static uint8_t prv_hw_level(uint8_t intensity) {
   return pbl_backlight_get_level(
-      BACKLIGHT, DIVIDE_CEIL(intensity * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U));
+      BACKLIGHT,
+      DIVIDE_CEIL(intensity * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U));
 }
 
 //! Build the descending ladder of intensities below `from` that each produce
@@ -601,7 +602,7 @@ static bool prv_light_allowed(void) {
 }
 
 void light_init(void) {
-  s_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+  s_dark_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
   s_light_state = LIGHT_STATE_OFF;
   s_current_brightness = 0;
   s_num_buttons_down = 0;

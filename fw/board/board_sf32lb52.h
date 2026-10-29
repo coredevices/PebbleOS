@@ -14,22 +14,12 @@
 
 #include <bf0_hal_pinmux.h>
 
-typedef struct {
-  uint8_t backlight_on_percent;
-  // ambient light config
-  uint32_t ambient_light_dark_threshold;
-  uint32_t ambient_k_delta_threshold;
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  // Default RGB backlight color (packed 0x00RRGGBB), applied when no app
-  // override is set. User-preference overrides this via backlight_set_color().
-  uint32_t backlight_default_color;
-#endif
-} BoardConfig;
-
+// clang-format off
 #include <pbl/drivers/flash/qspi_flash_definitions.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
 #include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
+// clang-format on
 
 struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;

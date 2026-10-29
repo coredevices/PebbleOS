@@ -227,12 +227,6 @@ const Npm1300Config NPM1300_CONFIG = {
   .vbus_current_lim0 = 500, .vbus_current_startup = 500,
 };
 
-const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 25,
-  .ambient_light_dark_threshold = 800,
-  .ambient_k_delta_threshold = 100,
-};
-
 PBL_GPIO_KEYS_DEFINE(
     BUTTONS, "buttons",
     PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(SF32LB_GPIO1, 34, 0), PBL_INPUT_KEY_BACK, 40),
