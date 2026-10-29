@@ -48,7 +48,6 @@ dist
 compile_commands.json
 *.auto
 loghash_dict.pickle
-analyze_mcu_flash_usage_treemap.jsonp
 **/.idea
 
 .env

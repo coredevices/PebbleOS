@@ -136,9 +136,8 @@ config TSAN
 config LINKER_MAP
     bool "Linker map file"
     help
-      Write build/pebbleos.map, the cross-referenced link map that
-      tools/analyze_fw_static_memory_usage.py reads. It is tens of
-      megabytes and costs around a fifth of the link.
+      Write build/pebbleos.map, the cross-referenced link map. It is tens
+      of megabytes and costs around a fifth of the link.
 
 endmenu
 

@@ -45,9 +45,8 @@ firmware's macros. It costs around 7% of the compile time and makes the
 objects, and with them the link, noticeably larger.
 
 :`-DCONFIG_LINKER_MAP=y`:
-Write `build/pebbleos.map`, the cross-referenced link map that
-`tools/analyze_fw_static_memory_usage.py` reads. It is tens of megabytes
-and costs around a fifth of the link.
+Write `build/pebbleos.map`, the cross-referenced link map. It is tens of
+megabytes and costs around a fifth of the link.
 
 ## Live debugging
 
