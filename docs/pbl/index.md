@@ -74,8 +74,9 @@ pbl -b build-asterix run
 
 Device commands reach their target through a binary runner: a watch, or a
 program on the host running the firmware, such as the emulator. A board
-lists the runners it supports in its manifest, and the first one that can
-handle the build is the default; `-r/--runner` picks another.
+lists the runners it supports in its manifest, and for each command the
+first one that can handle the build and the command is the default;
+`-r/--runner` picks another.
 
 | Runner | Boards | Operations |
 | --- | --- | --- |

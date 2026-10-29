@@ -27,8 +27,14 @@ def runner_options(parser):
     runners.register_args(group)
 
 
-def make_runner(build, args, resources=False, erase_ranges=(), extra_args=()):
-    """Create the runner for ``build``, honoring ``--runner``."""
+def make_runner(
+    build, args, commands, resources=False, erase_ranges=(), extra_args=()
+):
+    """Create the runner for ``build``, honoring ``--runner``.
+
+    Without it, the board's first runner that can handle the build and one
+    of ``commands`` is picked.
+    """
     resources_file = None
     resources_address = None
     if resources and build.variant != "prf":
@@ -59,10 +65,17 @@ def make_runner(build, args, resources=False, erase_ranges=(), extra_args=()):
     supported = build.board_spec.runners
     selected = getattr(args, "runner", None)
     if not selected:
-        usable = [name for name in supported if runners.get(name).supports(cfg)]
+        usable = [
+            name
+            for name in supported
+            if runners.get(name).supports(cfg)
+            and runners.get(name).capabilities().commands & set(commands)
+        ]
         selected = usable[0] if usable else None
     if not selected:
-        raise CommandContextError(f"board {build.board} has no runner")
+        raise CommandContextError(
+            f"board {build.board} has no runner for {' or '.join(commands)}"
+        )
     if selected not in supported:
         raise CommandContextError(
             f"board {build.board} does not support the {selected} runner; "
@@ -78,8 +91,8 @@ def make_runner(build, args, resources=False, erase_ranges=(), extra_args=()):
 def run_on_device(build, args, command, resources=False, erase_ranges=()):
     """Dispatch one runner command, reporting failures as command errors."""
     try:
-        make_runner(build, args, resources=resources, erase_ranges=erase_ranges).run(
-            command
-        )
+        make_runner(
+            build, args, (command,), resources=resources, erase_ranges=erase_ranges
+        ).run(command)
     except runners.RunnerError as e:
         raise CommandContextError(str(e)) from e

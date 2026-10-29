@@ -38,7 +38,11 @@ class Run(PblCommand):
         build = self.build_dir()
         try:
             runner = make_runner(
-                build, args, resources=args.resources, extra_args=extra_args
+                build,
+                args,
+                ("run", "flash"),
+                resources=args.resources,
+                extra_args=extra_args,
             )
             if "run" not in runner.capabilities().commands:
                 if extra_args:

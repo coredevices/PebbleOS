@@ -100,8 +100,8 @@ runners:
   - nrfutil
 ```
 
-`pbl run`, `erase` and `debug` all dispatch to
-it. Each runner contributes its own options (e.g. `--tty` for sftool), so
-they show up on all of those commands. New runners are modules in
-`pbl/runners/`, registered in that package's `RUNNERS` table, and declare
-the operations they support in `capabilities()`.
+`pbl run`, `erase` and `debug` dispatch to the first of them that
+supports the command. Each runner contributes its own options (e.g.
+`--tty` for sftool), so they show up on all of those commands. New runners
+are modules in `pbl/runners/`, registered in that package's `RUNNERS`
+table, and declare the operations they support in `capabilities()`.
