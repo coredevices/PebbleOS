@@ -86,7 +86,7 @@ first one that can handle the build and the command is the default;
 | `sftool` | obelix, getafix | flash (with resources), erase |
 | `phone` | asterix, obelix, getafix | flash (always with resources) |
 | `qemu` | qemu_* | run, debug, debugserver |
-| `native` | native_* | run |
+| `native` | native_* | run, debug |
 | `wasm` | native_*/wasm | run |
 
 For the OpenOCD runner, the probe and target configuration lives in the

@@ -15,6 +15,7 @@ server.
 | --- | --- | --- | --- |
 | `qemu` | qemu_* | Proxy to the emulator, with the kernel's threads | 1233 |
 | `openocd` | asterix | OpenOCD | 3333 |
+| `native` | native_* | None: runs the simulator under gdb or lldb | |
 
 On QEMU boards the emulator has to be running already, e.g. with
 {doc}`run` in another terminal. A server already listening on the port,

@@ -30,7 +30,8 @@ class Console(PblCommand):
         parser.add_argument(
             "--qemu-host",
             default=f"localhost:{CONSOLE_PORT}",
-            help="host:port for the emulator's console (default: %(default)s)",
+            help="host:port for the emulator's or the simulator's console "
+            "(default: %(default)s)",
         )
         parser.add_argument(
             "--reconnect",
@@ -41,7 +42,8 @@ class Console(PblCommand):
 
     def do_run(self, args, unknown):
         build = self.build_dir()
-        emulated = bool(build.config.CONFIG_QEMU)
+        # The native simulator serves its console over TCP under pbl debug
+        emulated = bool(build.config.CONFIG_QEMU or build.config.CONFIG_SOC_POSIX)
 
         if emulated:
             tty = f"socket://{args.qemu_host}"

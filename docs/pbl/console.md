@@ -1,7 +1,8 @@
 # `pbl console`
 
 Attach to the firmware's console: over serial on a watch, over TCP to a
-running emulator.
+running emulator, or to the native simulator under {doc}`debug`, which
+moves its console off the terminal.
 
 ```shell
 pbl console                       # the emulator

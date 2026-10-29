@@ -19,6 +19,9 @@ The server listens on the runner's port, see {doc}`debug`, or on
 pbl debugserver --gdb-port 2331
 ```
 
+The `native` runner has no GDB server: the simulator runs under the
+debugger itself.
+
 ## Options
 
 ```{pbl-command} debugserver
