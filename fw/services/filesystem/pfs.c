@@ -205,6 +205,9 @@ void pfs_reset_all_state(void) {
 
 #define VALID_TYPE(type) ((type) == FILE_TYPE_STATIC)
 
+// Files opened with OP_FLAG_DEFER_CREATE that are not on flash yet
+#define IS_DEFERRED(f) ((f)->start_page == INVALID_PAGE)
+
 typedef struct {
   ListNode list_node;
   //! Name of the file to watch
@@ -1013,6 +1016,47 @@ static AvailFdStatus get_avail_fd(const char *name, int *fdp, bool is_tmp) {
  * Exported PFS APIs
  */
 
+status_t pfs_stat(const char *name, size_t *size) {
+  size_t namelen = (name == nullptr) ? 0 : strlen(name);
+  if ((namelen < 1) || (namelen > FILE_MAX_NAME_LEN)) {
+    return E_INVALID_ARGUMENT;
+  }
+
+  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
+
+  status_t rv = E_DOES_NOT_EXIST;
+  for (int fd = FD_INDEX_OFFSET; fd < FD_INDEX_OFFSET + PFS_FD_SET_SIZE; fd++) {
+    File *f = &PFS_FD(fd).file;
+    if (!f->is_tmp && (f->name != nullptr) && !IS_DEFERRED(f) && (strcmp(f->name, name) == 0)) {
+      *size = f->file_size;
+      rv = S_SUCCESS;
+      goto cleanup;
+    }
+  }
+
+  uint16_t page;
+  if ((rv = locate_flash_file(name, &page)) == S_SUCCESS) {
+    PageHeader pg_hdr;
+    FileHeader file_hdr;
+    if (read_header(page, &pg_hdr, &file_hdr) == PageAndFileHdrValid) {
+      *size = file_hdr.file_size;
+    } else {
+      rv = E_INTERNAL;
+    }
+  }
+
+cleanup:
+  pbl_mutex_unlock(&s_pfs_mutex);
+  return rv;
+}
+
+const char *pfs_get_file_name(int fd) {
+  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
+  const char *name = FD_VALID(fd) ? PFS_FD(fd).file.name : nullptr;
+  pbl_mutex_unlock(&s_pfs_mutex);
+  return name;
+}
+
 size_t pfs_get_file_size(int fd) {
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
 
@@ -1379,6 +1423,13 @@ status_t pfs_close(int fd) {
   }
 
   File *f = &PFS_FD(fd).file;
+  if (IS_DEFERRED(f)) {
+    // Never created: nothing to commit, keep the original of an overwrite
+    mark_fd_free(fd);
+    res = S_SUCCESS;
+    goto cleanup;
+  }
+
   if (f->is_tmp) {
     // If the original file is still open, force-evict it before removing.
     // This prevents pfs_remove() from panicking on the in-use original fd.
@@ -1470,7 +1521,7 @@ cleanup:
   return (rv);
 }
 
-typedef void (*PrvFileVisitor)(uint16_t pg, const char *file_name, void *ctx);
+typedef void (*PrvFileVisitor)(uint16_t pg, const char *file_name, uint32_t file_size, void *ctx);
 
 // Calls visitor for every file whose name passes the filter. Must hold s_pfs_mutex.
 static void prv_for_each_file(PFSFilenameTestCallback filter, PrvFileVisitor visitor, void *ctx) {
@@ -1505,15 +1556,16 @@ static void prv_for_each_file(PFSFilenameTestCallback filter, PrvFileVisitor vis
       continue;
     }
 
-    visitor(pg, file_name, ctx);
+    visitor(pg, file_name, file_hdr.file_size, ctx);
   }
 }
 
-static void prv_add_to_file_list(uint16_t pg, const char *file_name, void *ctx) {
+static void prv_add_to_file_list(uint16_t pg, const char *file_name, uint32_t file_size,
+                                 void *ctx) {
   ListNode **head = ctx;
   const size_t name_len = strlen(file_name);
   PFSFileListEntry *entry = pbl_malloc_check(sizeof(PFSFileListEntry) + name_len + 1);
-  *entry = (PFSFileListEntry){};
+  *entry = (PFSFileListEntry){.size = file_size};
   memcpy(entry->name, file_name, name_len + 1);
   *head = list_insert_before(*head, &entry->list_node);
 }
@@ -1537,7 +1589,7 @@ void pfs_delete_file_list(PFSFileListEntry *head) {
   }
 }
 
-static void prv_remove_file(uint16_t pg, const char *file_name, void *ctx) {
+static void prv_remove_file(uint16_t pg, const char *file_name, uint32_t file_size, void *ctx) {
   int fd;
   status_t rv = get_avail_fd(file_name, &fd, false);
   if (rv >= FDAlreadyLoaded) { // the file is in the cache
@@ -1757,7 +1809,8 @@ static int file_found_or_added_to_pfs(int fd, const char *name, uint8_t op_flags
   bool is_read_only =
       (op_flags & (OP_FLAG_READ | OP_FLAG_WRITE | OP_FLAG_OVERWRITE)) == OP_FLAG_READ;
   bool is_tmp = ((op_flags & OP_FLAG_OVERWRITE) != 0);
-  if ((is_read_only || is_tmp) && (res == E_DOES_NOT_EXIST)) {
+  bool no_create = ((op_flags & OP_FLAG_NO_CREATE) != 0);
+  if ((is_read_only || is_tmp || no_create) && (res == E_DOES_NOT_EXIST)) {
     goto cleanup;
   }
 
@@ -1774,7 +1827,15 @@ static int file_found_or_added_to_pfs(int fd, const char *name, uint8_t op_flags
   file->start_offset = FILEDATA_LEN + file->namelen;
 
   if (is_tmp || ((res == E_DOES_NOT_EXIST) && ((op_flags & OP_FLAG_WRITE) != 0))) {
-    res = pfs_open_handle_create_request(fd, file_type, start_size);
+    if ((op_flags & OP_FLAG_DEFER_CREATE) != 0) {
+      file->file_size = 0;
+      file->file_type = FILE_TYPE_STATIC;
+      file->start_page = file->curr_page = INVALID_PAGE;
+      file->curr_vpg = 0;
+      res = S_SUCCESS;
+    } else {
+      res = pfs_open_handle_create_request(fd, file_type, start_size);
+    }
   } else if ((op_flags & OP_FLAG_READ) != 0) {
     res = pfs_open_handle_read_request(fd, page);
   } else { // unexpected situation
@@ -1813,7 +1874,7 @@ cleanup:
   if (res >= S_SUCCESS) {
     // we are returning a valid file handle so if the user has asked for the
     // page translations to be cached let's do that now
-    if ((op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) {
+    if (((op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) && !IS_DEFERRED(&PFS_FD(res).file)) {
       allocate_page_cache(res);
     }
     // check to see if we should update the gc block
@@ -1822,6 +1883,40 @@ cleanup:
 
   pbl_mutex_unlock(&s_pfs_mutex);
   return (res);
+}
+
+status_t pfs_create_deferred(int fd, size_t size) {
+  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
+
+  status_t res;
+  if (!FD_VALID(fd) || (fd == GC_FD_HANDLE_ID)) {
+    res = E_INVALID_ARGUMENT;
+    goto cleanup;
+  }
+
+  File *file = &PFS_FD(fd).file;
+  if (!IS_DEFERRED(file)) {
+    res = E_INVALID_OPERATION;
+    goto cleanup;
+  }
+
+  res = pfs_open_handle_create_request(fd, FILE_TYPE_STATIC, size);
+  if (res < S_SUCCESS) {
+    file->file_size = 0;
+    file->start_page = file->curr_page = INVALID_PAGE;
+    goto cleanup;
+  }
+
+  file->offset = 0;
+  file->curr_vpg = 0;
+  if ((file->op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) {
+    allocate_page_cache(fd);
+  }
+  prv_update_gc_reserved_region();
+
+cleanup:
+  pbl_mutex_unlock(&s_pfs_mutex);
+  return res;
 }
 
 static int pfs_open_gc_file(uint32_t space_needed, bool create) {
