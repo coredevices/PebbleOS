@@ -22,10 +22,7 @@ void battery_ui_handle_state_change_event(PreciseBatteryChargeState new_state);
 int battery_ui_handle_shut_down(void);
 
 //! Show the 'battery charging' modal dialog
-void battery_ui_display_plugged(uint8_t percent);
-
-//! Update the charge level shown by the 'battery charging' modal dialog
-void battery_ui_update_charge_level(uint8_t percent);
+void battery_ui_display_plugged(void);
 
 //! Show the 'battery charged' modal dialog
 void battery_ui_display_fully_charged(void);
