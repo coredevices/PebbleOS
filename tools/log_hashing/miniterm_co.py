@@ -5,11 +5,9 @@
 # Stuff we need
 import os
 import sys
-import time
 
 from logdehash import LogDehash
 from serial import Serial
-from serial.serialutil import SerialException
 from serial.tools.miniterm import main
 from serial.urlhandler.protocol_socket import Serial as SocketSerial
 
@@ -38,57 +36,11 @@ def dehash_read(self, size, plain_read):
     return "".join(read_data).encode()
 
 
-def socket_serial_read(self, size=1):
-    """
-    Read size bytes from the serial port. If a timeout is set it may
-    return less characters as requested. With no timeout it will block
-    until the requested number of bytes is read.
-    This is a replacement for protocol_socket.SocketSerial.read() that is smarter about
-    handling a closed socket from the remote end. Instead of just immediately returning an
-    empty string, it attempts to reopen the socket when it detects it has closed.
-    """
-    data = bytearray()
-    if self._timeout is not None:
-        timeout = time.time() + self._timeout
-    else:
-        timeout = None
-
-    while len(data) < size and (timeout is None or time.time() < timeout):
-        if not self._isOpen:
-            # If not open, try and re-open
-            try:
-                self.open()
-            except SerialException:
-                # Ignore failure to open and just wait a bit
-                time.sleep(0.1)
-                continue
-
-        try:
-            # Read available data
-            block = self._socket.recv(size - len(data))
-            if block:
-                data.extend(block)
-            else:
-                # no data -> EOF (remote connection closed). If no data at all, loop until
-                # we can reopen the socket
-                self.close()
-                if data:
-                    break
-
-        except TimeoutError:
-            # just need to get out of recv from time to time to check if
-            # still alive
-            continue
-        except OSError as e:
-            # connection fails -> terminate loop
-            raise SerialException(f"connection failed ({e})")
-    return bytes(data)
-
-
 # Insert ourselves in the serial read routine
 #  (could also copy-paste the entire miniterm reader() method in here, which would be meh)
 #  (or patch sys.stdout, which would just suck, because who knows what else that'd break)
 plain_read = Serial.read
+plain_socket_read = SocketSerial.read
 
 
 def dehash_serial_read(self, size):
@@ -96,7 +48,7 @@ def dehash_serial_read(self, size):
 
 
 def dehash_socket_read(self, size):
-    return dehash_read(self, size, socket_serial_read)
+    return dehash_read(self, size, plain_socket_read)
 
 
 def yes_no_to_bool(arg):
