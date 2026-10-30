@@ -60,6 +60,8 @@ target_include_directories(pdc2png PRIVATE
   ${PBL_BASE}/fw
 )
 
+target_compile_options(pdc2png PRIVATE -include${PBL_BASE}/fw/board/display_platform.h)
+
 # pdc2png resolves pbi2png against its own directory, so it gets a copy.
 add_custom_command(TARGET pdc2png POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -69,11 +71,9 @@ add_custom_command(TARGET pdc2png POST_BUILD
 target_compile_definitions(pdc2png PRIVATE
   UNITTEST
   CONFIG_SCREEN_COLOR_DEPTH_BITS=8
-  DISP_COLS=144
-  DISP_ROWS=168
-  DISPLAY_FRAMEBUFFER_BYTES=24192
-  PBL_COLOR
-  PBL_RECT
+  CONFIG_PLATFORM_COLOR=1
+  CONFIG_PLATFORM_DISPLAY_WIDTH=144
+  CONFIG_PLATFORM_DISPLAY_HEIGHT=168
   CONFIG_BOARD_OBELIX=1
   CONFIG_PLATFORM_EMERY=1
   CONFIG_FLASH_GD25Q256E=1
