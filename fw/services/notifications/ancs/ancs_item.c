@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/ancs/ancs_item.h>
@@ -11,7 +12,6 @@
 #include <pbl/util/string.h>
 
 #include <applib/graphics/utf8.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_storage_impl.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
@@ -137,7 +137,7 @@ static uint8_t *prv_fill_native_ancs_action(uint8_t **buffer, TimelineItemAction
 
   // Allocate a new buffer if none provided
   if (!(*buffer)) {
-    *buffer = task_malloc_check(prv_max_ellipsified_cstring_size(title));
+    *buffer = pbl_malloc_check(prv_max_ellipsified_cstring_size(title));
   }
 
   uint8_t *rv = prv_add_pstring_to_attribute(*buffer, title, ACTION_MAX_LENGTH,
@@ -510,7 +510,7 @@ void ancs_item_update_dismiss_action(TimelineItem *item, uint32_t uid,
     // Copy the timeline item to move the new action back into the single buffer
     TimelineItem *new_item = timeline_item_copy(item);
 
-    task_free(string_buffer);
+    pbl_free(string_buffer);
     attribute_list_destroy_list(&dismiss->attr_list);
 
     timeline_item_free_allocated_buffer(item);

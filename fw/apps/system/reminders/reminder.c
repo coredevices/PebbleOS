@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/clock.h>
@@ -24,7 +25,6 @@
 #include <applib/voice/transcription_dialog.h>
 #include <applib/voice/voice_window.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/timeline_resource_ids.auto.h>
@@ -291,7 +291,7 @@ const PebbleProcessMd *reminder_app_get_info(void) {
       capabilities.reminders_app_support &&
       (prefs ? (prefs->appState == ReminderAppState_Enabled) : false);
 
-  task_free(prefs);
+  pbl_free(prefs);
 
   static const PebbleProcessMdSystem s_reminder_app_info = {
     .common =

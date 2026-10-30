@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/time.h>
@@ -14,7 +15,6 @@
 #include <pbl/util/units.h>
 
 #include <clar_asserts.h>
-#include <kernel/pbl_malloc.h>
 
 #define WEATHER_PREFS_DATA_SIZE        \
   (sizeof(SerializedWeatherAppPrefs) + \
@@ -134,7 +134,7 @@ static WeatherDBEntry *prv_create_entry(const WeatherDBEntry *base_entry, char *
   data_size = strlen(location) + strlen(phrase) + sizeof(uint16_t) * 2; // One for each string
 
   const size_t entry_size = sizeof(WeatherDBEntry) + data_size;
-  WeatherDBEntry *entry = task_zalloc_check(entry_size);
+  WeatherDBEntry *entry = pbl_zalloc_check(entry_size);
   *entry = *base_entry;
   // The strings are appended after the FULL current struct, so the record must
   // carry the current minor — a lower minor moves the strings offset forward.
@@ -172,7 +172,7 @@ void weather_shared_data_init(void) {
 void weather_shared_data_cleanup(void) {
   for (int i = 0; i < WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES; i++) {
     if (s_entries[i]) {
-      task_free(s_entries[i]);
+      pbl_free(s_entries[i]);
       s_entries[i] = nullptr;
     }
   }

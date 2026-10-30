@@ -13,7 +13,6 @@
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <logging/backends/flash.h>
 
 void test_log_flash__initialize(void) {
@@ -156,7 +155,7 @@ static char **generate_unique_logs(size_t space_avail, size_t log_len, int *num_
     }
 
     msg[log_len] = '\0';
-    msg_arr[i] = task_strdup(msg);
+    msg_arr[i] = strdup(msg);
   }
 
   return (msg_arr);
@@ -229,8 +228,8 @@ void test_log_flash__wrap(void) {
   // write two more additional logs which should cause the first erase
   // region to get erased
   logs = realloc(logs, sizeof(char *) * (num_logs + 2));
-  logs[num_logs] = task_strdup("Let's test if wrap around is working!");
-  logs[num_logs + 1] = task_strdup("This should be on an early page");
+  logs[num_logs] = strdup("Let's test if wrap around is working!");
+  logs[num_logs + 1] = strdup("This should be on an early page");
 
   int start_log = num_logs / (tot_size / erase_size);
   int num_wrapped = num_logs - start_log;

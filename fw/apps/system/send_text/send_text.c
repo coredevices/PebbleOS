@@ -7,6 +7,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
@@ -23,7 +24,6 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
 #include <apps/system/timeline/peek_layer.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
@@ -204,7 +204,7 @@ static void prv_read_contacts_from_prefs(SendTextAppData *data) {
     }
   }
 
-  task_free(prefs);
+  pbl_free(prefs);
 }
 
 static void prv_update_contact_list(SendTextAppData *data) {

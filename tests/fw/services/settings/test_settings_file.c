@@ -4,13 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/settings/settings_raw_iter.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 
 // Stubs
 ////////////////////////////////////
@@ -476,12 +476,12 @@ void test_settings_file__each(void) {
     set_and_verify(&file, key, key_len, val, val_len);
   }
 
-  uint8_t *counts = task_zalloc(255);
+  uint8_t *counts = pbl_zalloc(255);
   settings_file_each(&file, prv_each_cb, counts);
   for (int i = 0; i < 255; i++) {
     cl_assert_equal_i(counts[i], 1);
   }
-  task_free(counts);
+  pbl_free(counts);
 }
 
 static const uint8_t STOPPING_NUM = 117;

@@ -4,6 +4,7 @@
 #include "peek_private.h"
 
 #include <pbl/cron/cron.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
@@ -14,7 +15,6 @@
 #include <applib/unobstructed_area_service.h>
 #include <apps/system/timeline/common.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <popups/system_obstruction.h>
@@ -126,12 +126,12 @@ static void prv_destroy_layout(void) {
 
   layout_destroy(&peek->peek_layout->timeline_layout->layout_layer);
   timeline_item_destroy(peek->peek_layout->item);
-  task_free(peek->peek_layout);
+  pbl_free(peek->peek_layout);
   peek->peek_layout = nullptr;
 }
 
 static PeekLayout *prv_create_layout(TimelineItem *item, unsigned int num_concurrent) {
-  PeekLayout *layout = task_zalloc_check(sizeof(PeekLayout));
+  PeekLayout *layout = pbl_zalloc_check(sizeof(PeekLayout));
   item = timeline_item_copy(item);
   layout->item = item;
   timeline_layout_init_info(&layout->info, item, time_util_get_midnight_of(rtc_get_time()));

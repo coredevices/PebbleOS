@@ -17,8 +17,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/uuid.h>
 
-#include <kernel/pbl_malloc.h>
-
 PBL_LOG_MODULE_DEFINE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
 typedef struct NotificationIterState {
@@ -374,7 +372,7 @@ static bool prv_get_notification(TimelineItem *notification, SerializedTimelineI
                                  int fd) {
   notification->allocated_buffer = nullptr; // Must be initialized in case this goes to cleanup
   // Read notification to temporary buffer
-  uint8_t *read_buffer = task_zalloc_check(header->payload_length);
+  uint8_t *read_buffer = pbl_zalloc_check(header->payload_length);
 
   int result = pfs_read(fd, read_buffer, header->payload_length);
   if (result < 0) {
@@ -385,11 +383,11 @@ static bool prv_get_notification(TimelineItem *notification, SerializedTimelineI
     goto cleanup;
   }
 
-  task_free(read_buffer);
+  pbl_free(read_buffer);
   return true;
 
 cleanup:
-  task_free(read_buffer);
+  pbl_free(read_buffer);
   return false;
 }
 
