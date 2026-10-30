@@ -273,6 +273,11 @@
     },
     {
       "type": "font",
+      "name": "GOTHIC_36_EMOJI",
+      "file": "normal/base/pbf/EMOJI_36.pbf"
+    },
+    {
+      "type": "font",
       "name": "BITHAM_30_BLACK",
       "file": "normal/base/pbf/BITHAM_30_BLACK.pbf",
       "characterList": "normal/base/ttf/basic_latin_codepoints.json",
