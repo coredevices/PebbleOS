@@ -628,6 +628,17 @@ static const GlyphData *prv_get_glyph_in_font(FontCache *font_cache, Codepoint c
       font_res = other;
     }
   }
+  // An emoji font may lack some emoji: draw those from the next smaller emoji font
+  while (!data && owner != font_info) {
+    FontInfo *smaller = fonts_get_system_emoji_font_for_size(owner->base.md.max_height - 1);
+    if (!smaller || smaller == owner) {
+      break;
+    }
+    owner = smaller;
+    font_res = &smaller->base;
+    prv_check_font_cache(font_cache, font_res);
+    data = prv_get_glyph_metadata_from_spi(codepoint, font_cache, font_res, need_bitmap);
+  }
   if (owner_out) {
     *owner_out = owner;
   }
