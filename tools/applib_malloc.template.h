@@ -15,6 +15,18 @@ void* applib_malloc(size_t size);
 //! Allocate memory for applib for a given size and zero the buffer
 void* applib_zalloc(size_t size);
 
+//! Allocate a zeroed array for applib; NULL if count * size overflows
+void* applib_calloc(size_t count, size_t size);
+
+//! Allocate memory for applib, returning NULL on failure even in system code
+void* applib_malloc_try(size_t size);
+
+//! Allocate zeroed memory for applib, returning NULL on failure even in system code
+void* applib_zalloc_try(size_t size);
+
+//! Reallocate memory previously allocated using applib_malloc
+void* applib_realloc(void *ptr, size_t size);
+
 //! Deallocate memory previously allocated using applib_malloc
 void applib_free(void *ptr);
 

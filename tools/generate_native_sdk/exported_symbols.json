@@ -4747,25 +4747,25 @@
       "type": "function",
       "name": "malloc",
       "skipDefinition": true,
-      "implName": "task_malloc",
+      "implName": "applib_malloc",
       "addedRevision": "0"
     }, {
       "type": "function",
       "name": "calloc",
       "skipDefinition": true,
-      "implName": "task_calloc",
+      "implName": "applib_calloc",
       "addedRevision": "9"
     }, {
       "type": "function",
       "name": "free",
       "skipDefinition": true,
-      "implName": "task_free",
+      "implName": "applib_free",
       "addedRevision": "0"
     }, {
       "type": "function",
       "name": "realloc",
       "skipDefinition": true,
-      "implName": "task_realloc",
+      "implName": "applib_realloc",
       "addedRevision": "12"
     }, {
       "type": "function",

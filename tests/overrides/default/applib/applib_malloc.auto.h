@@ -18,4 +18,6 @@ static inline void *applib_zalloc(size_t size) {
 #define applib_type_malloc(Type) malloc(sizeof(Type))
 #define applib_type_size(Type)   sizeof(Type)
 #define applib_malloc(size)      malloc(size)
+#define applib_malloc_try(size)  malloc(size)
+#define applib_zalloc_try(size)  applib_zalloc(size)
 #define applib_free(ptr)         free(ptr)
