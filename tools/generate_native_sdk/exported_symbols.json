@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "111",
+  "revision" : "112",
   "version" : "2.0",
   "files": [
     "fw/system/status_codes.h",
@@ -644,6 +644,10 @@
               "type": "function",
               "name": "health_service_peek_current_value",
               "addedRevision": "83"
+            }, {
+              "type": "function",
+              "name": "health_service_peek_spo2_percent",
+              "addedRevision": "112"
             }, {
               "type": "type",
               "name": "HealthServiceTimeScope"
