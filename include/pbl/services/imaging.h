@@ -6,12 +6,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/services/image_cache.h>
 #include <pbl/services/imaging_endpoint_types.h>
 #include <pbl/util/uuid.h>
 
 #include <kernel/events.h>
 
-struct GBitmap;
+typedef struct ResidentImage ResidentImage;
 typedef struct CommSession CommSession;
 
 /**
@@ -25,12 +26,12 @@ typedef struct CommSession CommSession;
  * phone advertises image-fetch support.
  *
  * @code{.c}
- * static void prv_received(uint8_t token, struct GBitmap *bitmap) {
- *   // bitmap is NULL if the phone has none; otherwise the handler owns it
+ * static void prv_received(uint8_t token, ResidentImage *image) {
+ *   // image is NULL if the phone has none; otherwise the handler owns it
  * }
  *
  * imaging_register_handler(ImagingImageTypeAlbumArt, prv_received);
- * imaging_request_album_art(token, ImagingFormat8BitColor, 144, 144, title, artist);
+ * imaging_request_album_art(token, ImagingFormat8BitColor, 144, 144, title, artist, NULL);
  * @endcode
  * @{
  */
@@ -39,11 +40,11 @@ typedef struct CommSession CommSession;
  * @brief Called on KernelMain when a requested image has been received.
  *
  * @param token Token of the request.
- * @param bitmap Received image, or NULL if the phone has none (@ref ImagingResponseFlagNoImage).
- *               Ownership of a non-NULL bitmap and its pixel and palette buffers passes to the
- *               handler.
+ * @param image Received image, or NULL if the phone has none (@ref ImagingResponseFlagNoImage).
+ *              Ownership of a non-NULL image passes to the handler, which frees it with
+ *              resident_image_destroy().
  */
-typedef void (*ImagingReceivedHandler)(uint8_t token, struct GBitmap *bitmap);
+typedef void (*ImagingReceivedHandler)(uint8_t token, ResidentImage *image);
 
 /**
  * @brief Called before the buffers for an incoming image are allocated.
@@ -100,15 +101,17 @@ bool imaging_is_type_supported(ImagingImageType image_type);
  * @param height Height in pixels.
  * @param title Track title, truncated to 255 bytes, or NULL.
  * @param artist Track artist, truncated to 255 bytes, or NULL.
+ * @param key Key to keep the image in the image cache under, or NULL not to cache it.
  * @return true if the request was sent, false if the type is unsupported.
  */
 bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t width, uint16_t height,
-                               const char *title, const char *artist);
+                               const char *title, const char *artist, const ImageCacheKey *key);
 
 /**
  * @brief Request the image the phone holds for a timeline item.
  *
- * The handler of @ref ImagingImageTypeNotification is called when the transfer completes.
+ * The handler of @ref ImagingImageTypeNotification is called when the transfer completes. The
+ * image is kept in the image cache, keyed by @p item_id.
  *
  * @param token Opaque value passed back to the handlers.
  * @param format Pixel format.

@@ -5,6 +5,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/system_task.h>
@@ -42,6 +43,10 @@ static void prv_factory_reset_non_pfs_data() {
   event_service_clear_process_subscriptions(PebbleTask_App);
 
   shared_prf_storage_wipe_all();
+
+  for (int client = 0; client < ImageCacheClientCount; client++) {
+    image_cache_flush(client);
+  }
 
   services_set_runlevel(RunLevel_BareMinimum);
   app_idle_timeout_stop();

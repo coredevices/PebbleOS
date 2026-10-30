@@ -6,8 +6,10 @@
 
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/imaging.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/util/heap.h>
 
+#include <applib/graphics/graphics_bitmap.h>
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
 #include <kernel/pbl_malloc.h>
@@ -18,6 +20,12 @@
 
 #include <fake_session.h>
 #include <fake_system_task.h>
+
+#ifdef CONFIG_IMAGE_CACHE
+#include <fake_mutex.h>
+#include <fake_psram.h>
+#include <kernel/psram_image_pool.h>
+#endif
 
 // imaging.c only needs the row-size rules from the graphics code; provide them here so the test
 // controls the expected sizes without pulling in the renderer.
@@ -46,7 +54,24 @@ static int s_will_receives;
 static int s_failures;
 static uint8_t s_last_token;
 static uint8_t s_last_failure_token;
-static GBitmap *s_last_bitmap;
+static ResidentImage *s_last_image;
+
+// Reads an image back through what it draws
+static uint8_t s_drawn[64];
+
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+  for (int y = 0; y < rect->size.h; y++) {
+    memcpy(&s_drawn[(rect->origin.y + y) * bitmap->row_size_bytes],
+           (const uint8_t *)bitmap->addr + y * bitmap->row_size_bytes, bitmap->row_size_bytes);
+  }
+}
+
+static const uint8_t *prv_image_pixels(ResidentImage *image) {
+  memset(s_drawn, 0, sizeof(s_drawn));
+  const GSize size = resident_image_get_size(image);
+  resident_image_draw(nullptr, image, &GRect(0, 0, size.w, size.h));
+  return s_drawn;
+}
 
 Heap *kernel_heap_get(void) {
   static Heap heap;
@@ -60,20 +85,16 @@ void heap_calc_totals(Heap *heap, unsigned int *used, unsigned int *free_bytes,
   *max_free = 64 * 1024;
 }
 
-static void prv_free_last_bitmap(void) {
-  if (s_last_bitmap) {
-    kernel_free(s_last_bitmap->addr);
-    kernel_free(s_last_bitmap->palette);
-    kernel_free(s_last_bitmap);
-    s_last_bitmap = nullptr;
-  }
+static void prv_free_last_image(void) {
+  resident_image_destroy(s_last_image);
+  s_last_image = nullptr;
 }
 
-static void prv_art_handler(uint8_t token, GBitmap *bitmap) {
+static void prv_art_handler(uint8_t token, ResidentImage *image) {
   s_deliveries++;
   s_last_token = token;
-  prv_free_last_bitmap();
-  s_last_bitmap = bitmap;
+  prv_free_last_image();
+  s_last_image = image;
 }
 
 static void prv_will_receive_handler(uint8_t token) {
@@ -87,10 +108,10 @@ static void prv_failure_handler(uint8_t token) {
 
 static int s_notif_deliveries;
 
-static void prv_notif_handler(uint8_t token, GBitmap *bitmap) {
+static void prv_notif_handler(uint8_t token, ResidentImage *image) {
   s_notif_deliveries++;
-  prv_free_last_bitmap();
-  s_last_bitmap = bitmap;
+  prv_free_last_image();
+  s_last_image = image;
 }
 
 static uint8_t prv_typed(ImagingImageType type, uint8_t flags) {
@@ -174,12 +195,20 @@ void test_imaging__initialize(void) {
   s_notif_deliveries = 0;
   s_last_token = 0;
   s_last_failure_token = 0;
-  s_last_bitmap = nullptr;
+  s_last_image = nullptr;
   stub_pbl_malloc_set_kernel_malloc_should_fail(false);
 }
 
 void test_imaging__cleanup(void) {
-  prv_free_last_bitmap();
+  prv_free_last_image();
+#ifdef CONFIG_IMAGE_CACHE
+  psram_retain_acquire();
+  image_cache_flush(ImageCacheClientAlbumArt);
+  image_cache_flush(ImageCacheClientNotification);
+  psram_retain_release();
+  cl_assert_equal_i(psram_image_pool_used(), 0);
+  cl_assert_equal_i(fake_psram_holds(), 0);
+#endif
   fake_comm_session_cleanup();
 }
 
@@ -189,13 +218,12 @@ void test_imaging__single_chunk_image(void) {
   cl_assert_equal_i(s_failures, 0);
   cl_assert_equal_i(s_deliveries, 1);
   cl_assert_equal_i(s_last_token, TEST_TOKEN);
-  cl_assert(s_last_bitmap != nullptr);
-  cl_assert_equal_i(s_last_bitmap->bounds.size.w, 4);
-  cl_assert_equal_i(s_last_bitmap->bounds.size.h, 2);
-  cl_assert_equal_i(s_last_bitmap->row_size_bytes, 2);
-  cl_assert_equal_i(s_last_bitmap->info.format, GBitmapFormat4BitPalette);
-  cl_assert(memcmp(s_last_bitmap->addr, s_pixels, sizeof(s_pixels)) == 0);
-  cl_assert_equal_i(((GColor *)s_last_bitmap->palette)[1].argb, s_palette[1]);
+  cl_assert(s_last_image != nullptr);
+  cl_assert_equal_i(resident_image_get_size(s_last_image).w, 4);
+  cl_assert_equal_i(resident_image_get_size(s_last_image).h, 2);
+  cl_assert_equal_i(resident_image_get_data_size(s_last_image), sizeof(s_pixels));
+  cl_assert(memcmp(prv_image_pixels(s_last_image), s_pixels, sizeof(s_pixels)) == 0);
+  cl_assert_equal_i(resident_image_get_palette(s_last_image)[1].argb, s_palette[1]);
 }
 
 void test_imaging__multi_chunk_image(void) {
@@ -209,8 +237,8 @@ void test_imaging__multi_chunk_image(void) {
                            s_pixels + 2, 2);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 1);
-  cl_assert(s_last_bitmap != nullptr);
-  cl_assert(memcmp(s_last_bitmap->addr, s_pixels, sizeof(s_pixels)) == 0);
+  cl_assert(s_last_image != nullptr);
+  cl_assert(memcmp(prv_image_pixels(s_last_image), s_pixels, sizeof(s_pixels)) == 0);
 }
 
 void test_imaging__allocation_failure_notifies_and_resets(void) {
@@ -254,7 +282,7 @@ void test_imaging__no_image(void) {
                                         nullptr, 0, nullptr, 0);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 1);
-  cl_assert(s_last_bitmap == nullptr);
+  cl_assert(s_last_image == nullptr);
 }
 
 void test_imaging__truncated_header_rejected(void) {
@@ -373,7 +401,7 @@ void test_imaging__unsupported_latches_until_session_close(void) {
                                         0, nullptr, 0, nullptr, 0);
   prv_receive(buf, len);
   cl_assert_equal_i(s_deliveries, 1);
-  cl_assert(s_last_bitmap == nullptr);
+  cl_assert(s_last_image == nullptr);
   cl_assert(!imaging_is_type_supported(ImagingImageTypeAlbumArt));
   // Latching is per type
   cl_assert(imaging_is_type_supported(ImagingImageTypeNotification));
@@ -388,7 +416,8 @@ void test_imaging__unsupported_latches_until_session_close(void) {
 }
 
 void test_imaging__request_payload_format(void) {
-  cl_assert(imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Title", "Artist"));
+  cl_assert(
+      imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Title", "Artist", nullptr));
   fake_comm_session_process_send_next();
   const uint8_t expected[] = {
     0x01, 7,   0x00, 0x02, 166, 0,   166, 0,   5,   'T', 'i',
@@ -419,7 +448,7 @@ void test_imaging__response_routed_by_type(void) {
   prv_receive(buf, len);
   cl_assert_equal_i(s_notif_deliveries, 1);
   cl_assert_equal_i(s_deliveries, 0);
-  cl_assert(s_last_bitmap != nullptr);
+  cl_assert(s_last_image != nullptr);
 }
 
 void test_imaging__untyped_response_goes_to_album_art(void) {
@@ -431,7 +460,8 @@ void test_imaging__untyped_response_goes_to_album_art(void) {
 
 void test_imaging__interleaved_requests_route_correctly(void) {
   const Uuid id = UuidMake(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
-  cl_assert(imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Title", "Artist"));
+  cl_assert(
+      imaging_request_album_art(7, ImagingFormat4BitPalette, 166, 166, "Title", "Artist", nullptr));
   cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 180, 135, &id));
   // The album art response arrives after the notification request was sent; it must still reach
   // the album art handler.
@@ -453,3 +483,109 @@ void test_imaging__unsupported_latches_per_type(void) {
   cl_assert(!imaging_is_type_supported(ImagingImageTypeNotification));
   cl_assert(imaging_is_type_supported(ImagingImageTypeAlbumArt));
 }
+
+void test_imaging__concurrent_transfers_of_different_types(void) {
+  uint8_t buf[64];
+  size_t len =
+      prv_build_response(buf, 7, ImagingResponseFlagFirst, 0, 2, 4, 2, ImagingFormat4BitPalette,
+                         s_palette, sizeof(s_palette), s_pixels, 2);
+  prv_receive(buf, len);
+  // A notification image arrives in the middle of the album art
+  len = prv_build_response(
+      buf, 9,
+      prv_typed(ImagingImageTypeNotification, ImagingResponseFlagFirst | ImagingResponseFlagLast),
+      0, sizeof(s_pixels), 4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels,
+      sizeof(s_pixels));
+  prv_receive(buf, len);
+  cl_assert_equal_i(s_notif_deliveries, 1);
+
+  len = prv_build_response(buf, 7, ImagingResponseFlagLast, 2, 2, 0, 0, 0, nullptr, 0, s_pixels + 2,
+                           2);
+  prv_receive(buf, len);
+  cl_assert_equal_i(s_failures, 0);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert(memcmp(prv_image_pixels(s_last_image), s_pixels, sizeof(s_pixels)) == 0);
+}
+
+#ifdef CONFIG_IMAGE_CACHE
+static const ImageCacheKey s_key = {.bytes = {1, 2, 3}};
+
+void test_imaging__received_into_cache(void) {
+  cl_assert(imaging_request_album_art(TEST_TOKEN, ImagingFormat4BitPalette, 4, 2, "Title", "Artist",
+                                      &s_key));
+  uint8_t buf[64];
+  size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2, 4, 2,
+                         ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
+  prv_receive(buf, len);
+  // The transfer holds the PSRAM, and takes no internal RAM
+  cl_assert_equal_i(fake_psram_holds(), 1);
+  cl_assert_equal_i(psram_image_pool_used(), 1);
+
+  len = prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagLast, 2, 2, 0, 0, 0, nullptr, 0,
+                           s_pixels + 2, 2);
+  prv_receive(buf, len);
+  cl_assert_equal_i(fake_psram_holds(), 0);
+  cl_assert_equal_i(s_deliveries, 1);
+  // The consumer gets a copy in internal RAM
+  cl_assert(memcmp(prv_image_pixels(s_last_image), s_pixels, sizeof(s_pixels)) == 0);
+  cl_assert_equal_i(resident_image_get_palette(s_last_image)[2].argb, s_palette[2]);
+  cl_assert(image_cache_contains(ImageCacheClientAlbumArt, &s_key, GSize(4, 2)));
+}
+
+void test_imaging__dropped_transfer_aborts_cache_entry(void) {
+  cl_assert(imaging_request_album_art(TEST_TOKEN, ImagingFormat4BitPalette, 4, 2, "Title", "Artist",
+                                      &s_key));
+  uint8_t buf[64];
+  const size_t len =
+      prv_build_response(buf, TEST_TOKEN, ImagingResponseFlagFirst, 0, 2, 4, 2,
+                         ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels, 2);
+  prv_receive(buf, len);
+  const PebbleCommSessionEvent closed_event = {
+    .is_open = false,
+    .is_system = true,
+  };
+  imaging_handle_comm_session_event(&closed_event);
+  cl_assert_equal_i(s_failures, 1);
+  cl_assert_equal_i(fake_psram_holds(), 0);
+  cl_assert_equal_i(psram_image_pool_used(), 0);
+  cl_assert(!image_cache_contains(ImageCacheClientAlbumArt, &s_key, GSize(4, 2)));
+}
+
+void test_imaging__uncached_without_key(void) {
+  cl_assert(imaging_request_album_art(TEST_TOKEN, ImagingFormat4BitPalette, 4, 2, "Title", "Artist",
+                                      nullptr));
+  prv_receive_valid_image(TEST_TOKEN);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert_equal_i(psram_image_pool_used(), 0);
+}
+
+void test_imaging__notification_cached_by_item(void) {
+  const Uuid id = UuidMake(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+  cl_assert(imaging_request_notification_image(9, ImagingFormat4BitPalette, 4, 2, &id));
+  uint8_t buf[64];
+  const size_t len = prv_build_response(
+      buf, 9,
+      prv_typed(ImagingImageTypeNotification, ImagingResponseFlagFirst | ImagingResponseFlagLast),
+      0, sizeof(s_pixels), 4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels,
+      sizeof(s_pixels));
+  prv_receive(buf, len);
+  cl_assert_equal_i(s_notif_deliveries, 1);
+  ImageCacheKey key;
+  image_cache_key_from_uuid(&key, &id);
+  cl_assert(image_cache_contains(ImageCacheClientNotification, &key, GSize(4, 2)));
+}
+#else
+// The tests generator ignores the preprocessor: only test_imaging_cache runs these
+void test_imaging__received_into_cache(void) {
+}
+
+void test_imaging__dropped_transfer_aborts_cache_entry(void) {
+}
+
+void test_imaging__uncached_without_key(void) {
+}
+
+void test_imaging__notification_cached_by_item(void) {
+}
+#endif

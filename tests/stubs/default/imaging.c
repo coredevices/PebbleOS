@@ -27,7 +27,8 @@ bool PBL_WEAK imaging_is_type_supported(ImagingImageType image_type) {
 }
 
 bool PBL_WEAK imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t width,
-                                        uint16_t height, const char *title, const char *artist) {
+                                        uint16_t height, const char *title, const char *artist,
+                                        const ImageCacheKey *key) {
   return false;
 }
 

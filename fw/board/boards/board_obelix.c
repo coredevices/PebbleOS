@@ -152,8 +152,14 @@ PBL_NPM1300_GPIO_DEFINE(s_npm1300_gpio, &s_npm1300);
 
 const struct pbl_npm1300_charger *const NPM1300_CHARGER = &s_npm1300_charger;
 
+// VDD_SiP: powers the SiP PSRAM when used
+#ifdef CONFIG_SF32LB52_PSRAM
+#define BUCK1_ALWAYS_ON true
+#else
+#define BUCK1_ALWAYS_ON false
+#endif
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck1, "npm1300_buck1", &s_npm1300, PBL_NPM1300_BUCK1, 1800,
-                             false, false);
+                             false, BUCK1_ALWAYS_ON);
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_NPM1300_LDSW1, 1800,
                              true, true);
 // Microphone supply

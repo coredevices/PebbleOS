@@ -7,6 +7,7 @@
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/music_endpoint_types.h>
 #include <pbl/services/music_internal.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
@@ -148,11 +149,16 @@ static void prv_set_dummy_server_connected(bool connected) {
   music_set_connected_server(&s_dummy_server_implementation, connected /* connected */);
 }
 
-static GBitmap *prv_make_album_art(void) {
-  GBitmap *bitmap = kernel_zalloc(sizeof(*bitmap));
-  bitmap->addr = kernel_zalloc(4);
-  bitmap->palette = kernel_zalloc(sizeof(GColor));
-  return bitmap;
+// Album art is never drawn here, and only uses 8-bit color
+uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) {
+  return width;
+}
+
+void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
+}
+
+static ResidentImage *prv_make_album_art(void) {
+  return resident_image_create(GSize(4, 2), GBitmapFormat8Bit, nullptr, 0);
 }
 
 static void prv_assert_no_data_sent_cb(uint16_t endpoint_id, const uint8_t *data,
@@ -556,4 +562,24 @@ void test_music_endpoint__player_name_not_available(void) {
   prv_receive_app_info_event(true /* is_android */);
 
   cl_assert_equal_b(music_get_player_name(nullptr), false);
+}
+
+void test_music_endpoint__album_art_cache_key_follows_the_track(void) {
+  ImageCacheKey first, again, other_album, other_side;
+  char title[MUSIC_BUFFER_LENGTH];
+  char artist[MUSIC_BUFFER_LENGTH];
+  music_update_now_playing("title", 5, "artist", 6, "album", 5);
+  const uint8_t generation =
+      music_get_album_art_request(166, ImagingFormat4BitPalette, title, artist, &first);
+  cl_assert_equal_i(generation, music_get_now_playing_generation());
+  cl_assert_equal_s(title, "title");
+  cl_assert_equal_s(artist, "artist");
+  music_get_album_art_request(166, ImagingFormat4BitPalette, title, artist, &again);
+  music_get_album_art_request(260, ImagingFormat4BitPalette, title, artist, &other_side);
+  music_update_now_playing("title", 5, "artist", 6, "album2", 6);
+  music_get_album_art_request(166, ImagingFormat4BitPalette, title, artist, &other_album);
+
+  cl_assert_equal_m(&first, &again, sizeof(first));
+  cl_assert(memcmp(&first, &other_side, sizeof(first)) != 0);
+  cl_assert(memcmp(&first, &other_album, sizeof(first)) != 0);
 }

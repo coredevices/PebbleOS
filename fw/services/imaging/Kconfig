@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config IMAGE_CACHE
+    bool "Cache received images in external RAM"
+    depends on PSRAM_IMAGE_POOL
+    default y
+    help
+      Receive album art and notification images into the PSRAM image
+      pool instead of the kernel heap, and keep recent ones there
+      while the watch is in use, so showing one again needs no
+      transfer.
+
+config PSRAM_IDLE_RELEASE_MS
+    int "Time the image cache is kept after the last activity (ms)"
+    depends on IMAGE_CACHE
+    default 5000
+    help
+      User activity (a button press, the backlight turning on, a track
+      change, a notification) holds the PSRAM retained for this long.
+      Longer means more cache hits, and more time at about +30 uA.

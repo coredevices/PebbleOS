@@ -105,6 +105,16 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
   }
 }
 
+// The encoder is only kept for a session, not to hold its buffers forever after the first one
+static bool s_has_encoder;
+
+static void prv_release_encoder(void) {
+  if (s_has_encoder) {
+    voice_speex_deinit();
+    s_has_encoder = false;
+  }
+}
+
 static void prv_teardown_session(void) {
   // Reset communication session responsiveness to default after voice session ends
   CommSession *comm_session = comm_session_get_system_session();
@@ -128,12 +138,14 @@ static void prv_stop_recording(void) {
 
   prv_teardown_session();
 
-  // Speex cleanup will be handled by delayed cleanup to avoid race conditions
+  // The microphone is stopped, so it no longer touches the encoder
+  prv_release_encoder();
 }
 
 static void prv_cancel_recording(void) {
   PBL_LOG_DBG("prv_cancel_recording called - cancelling mic and audio endpoint transfer");
   mic_manager_release(MicClientVoiceDictation);
+  prv_release_encoder();
 
   audio_endpoint_cancel_transfer(s_session_id);
   prv_teardown_session();
@@ -147,6 +159,7 @@ static void prv_cancel_early_session(void) {
 }
 
 static void prv_reset(void) {
+  prv_release_encoder();
   s_state = SessionState_Idle;
   s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
   mic_manager_set_dictation_active(false);
@@ -373,15 +386,14 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   }
   mic_manager_set_dictation_active(true);
 
-  // Lazily initialize Speex encoder to avoid baseline memory usage when voice not used
-  if (!voice_speex_is_initialized()) {
-    if (!voice_speex_init()) {
-      PBL_LOG_ERR("Failed to initialize Speex encoder");
-      prv_reset();
-      pbl_mutex_unlock(&s_lock);
-      return VOICE_SESSION_ID_INVALID;
-    }
+  // Released when the session ends
+  if (!voice_speex_init()) {
+    PBL_LOG_ERR("Failed to initialize Speex encoder");
+    prv_reset();
+    pbl_mutex_unlock(&s_lock);
+    return VOICE_SESSION_ID_INVALID;
   }
+  s_has_encoder = true;
 
   // Start new session generation and clear teardown guard
   s_session_generation++;

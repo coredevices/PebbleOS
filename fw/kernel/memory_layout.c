@@ -24,8 +24,13 @@ static const char *const MEMORY_REGION_NAMES[] = {
 #ifdef CONFIG_SOC_SF32LB52
   "RESERVED0",       "RESERVED1",       "RESERVED2",       "RESERVED3",
 #endif
-  "UNPRIV_FLASH",    "UNPRIV_RO_BSS",   "UNPRIV_RO_DATA",  "ISR_STACK_GUARD",
-  "Task Specific 1", "Task Specific 2", "Task Specific 3", "Task Specific 4"
+  "UNPRIV_FLASH",    "UNPRIV_RO_BSS",
+#ifdef CONFIG_EXTRAM
+  "EXTRAM",
+#else
+  "UNPRIV_RO_DATA",
+#endif
+  "ISR_STACK_GUARD", "Task Specific 1", "Task Specific 2", "Task Specific 3", "Task Specific 4"
 };
 
 static const char *prv_permissions_str(MpuPermissions p) {
@@ -122,6 +127,18 @@ static const MpuRegion s_isr_stack_guard_region = {
 };
 #endif
 
+#ifdef CONFIG_EXTRAM
+// External RAM: kernel data only, never executable
+static const MpuRegion s_extram_region = {
+  .region_num = MemoryRegion_ExtRam,
+  .enabled = true,
+  .base_address = CONFIG_EXTRAM_BASE,
+  .size = CONFIG_EXTRAM_SIZE,
+  .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
+  .permissions = MpuPermissions_PrivRW,
+};
+#endif
+
 static const MpuRegion s_app_stack_guard_region = {
   .region_num = MemoryRegion_TaskStackGuard,
   .enabled = true,
@@ -215,6 +232,10 @@ void memory_layout_setup_mpu(void) {
   // on SF32LB52 to reclaim the slot.
 #ifndef CONFIG_SOC_SF32LB52
   mpu_set_region(&s_isr_stack_guard_region);
+#endif
+
+#ifdef CONFIG_EXTRAM
+  mpu_set_region(&s_extram_region);
 #endif
 
   mpu_enable();

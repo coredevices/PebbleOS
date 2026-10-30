@@ -19,6 +19,7 @@
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/light.h>
 #include <pbl/services/notifications/alerts.h>
@@ -32,6 +33,7 @@
 #include <pbl/services/notifications/notification_types.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/regular_timer.h>
+#include <pbl/services/resident_image.h>
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/notification_layout.h>
@@ -1170,8 +1172,8 @@ static void prv_redraw_current_layout(void *unused) {
   }
 }
 
-static void prv_imaging_notification_received(uint8_t token, GBitmap *bitmap) {
-  if (!notification_image_store(token, bitmap) || !s_in_use) {
+static void prv_imaging_notification_received(uint8_t token, ResidentImage *image) {
+  if (!notification_image_store(token, image) || !s_in_use) {
     return;
   }
   // Delivery lands on KernelMain, which is where the modal renders; the notification history app
@@ -1191,13 +1193,27 @@ static void prv_imaging_notification_transfer_failed(uint8_t token) {
 static void prv_maybe_request_notification_image(LayoutLayer *layout, TimelineItem *item) {
   GSize size;
   uint8_t token;
+  ImageCacheKey key;
+  image_cache_key_from_uuid(&key, &item->header.id);
   if (!notification_layout_get_image_size(layout, &size) ||
-      !imaging_is_type_supported(ImagingImageTypeNotification) ||
+      (!image_cache_contains(ImageCacheClientNotification, &key, size) &&
+       !imaging_is_type_supported(ImagingImageTypeNotification)) ||
       !notification_image_claim(&item->header.id, &token)) {
     return;
   }
-  imaging_request_notification_image(token, ImagingFormat4BitPalette, size.w, size.h,
-                                     &item->header.id);
+
+  // Recently viewed images are still in the cache while the watch is in use
+  ResidentImage *image = resident_image_load_cached(ImageCacheClientNotification, &key, size);
+  if (image) {
+    prv_imaging_notification_received(token, image);
+    return;
+  }
+
+  if (!imaging_request_notification_image(token, ImagingFormat4BitPalette, size.w, size.h,
+                                          &item->header.id)) {
+    // Not pending any more: drop the placeholder
+    prv_imaging_notification_received(token, nullptr);
+  }
 }
 #endif
 
@@ -1209,6 +1225,8 @@ static void prv_layout_did_appear_handler(SwapLayer *swap_layer, LayoutLayer *la
   notifications_presented_list_set_current(id);
   timeline_action_endpoint_send_displayed_item(id);
 #if NOTIFICATION_IMAGE_SUPPORTED
+  // Scrolling through notifications keeps their images cached
+  image_cache_activity();
   prv_maybe_request_notification_image(layout, n);
 #endif
   if (data->first_notif_loaded || !data->is_modal) {
@@ -1722,6 +1740,9 @@ void notification_window_handle_notification(PebbleSysNotificationEvent *e) {
       prv_handle_action_result(e->action_result);
       break;
     case NotificationAdded:
+#if NOTIFICATION_IMAGE_SUPPORTED
+      image_cache_activity();
+#endif
       prv_handle_notification_added_common(e->notification_id, NotificationMobile);
       break;
     case NotificationActedUpon:

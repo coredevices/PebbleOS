@@ -12,6 +12,7 @@
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
 #include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/pairability.h>
+#include <pbl/services/image_cache.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/util/math.h>
@@ -473,6 +474,10 @@ static void prv_update_active_gateway_if_needed(pbl_bt_bonding_id_t bonding,
 static void prv_call_common_bonding_change_handlers(pbl_bt_bonding_id_t bonding,
                                                     BtPersistBondingOp op) {
   bt_pairability_update_due_to_bonding_change();
+  // Images from the phone being unpaired must not outlive the pairing
+  if (op == BtPersistBondingOpWillDelete) {
+    image_cache_flush(ImageCacheClientNotification);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

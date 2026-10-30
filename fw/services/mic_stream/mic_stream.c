@@ -86,6 +86,7 @@ static void prv_finish_teardown(const MicStreamTeardown *teardown) {
   // The mic stops first, so no frame arrives while the stop is sent. Also drops the reservation;
   // no-op on the mic if it never started or dictation already took it.
   mic_manager_release(MicClientAppStream);
+  voice_speex_deinit();
   kernel_free(teardown->chunk);
   if (teardown->close_transfer) {
     if (teardown->phone_expects_stop) {
@@ -190,8 +191,8 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
   if (!mic_manager_reserve(MicClientAppStream)) {
     return MicStreamServiceStartErrBusy;
   }
-  // Shared with dictation, which can't start while the mic is reserved
-  if (!voice_speex_is_initialized() && !voice_speex_init()) {
+  // Shared with dictation, which can't start while the mic is reserved. Released on teardown.
+  if (!voice_speex_init()) {
     mic_manager_release(MicClientAppStream);
     return MicStreamServiceStartErrNoMemory;
   }
@@ -199,6 +200,7 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
   int16_t *chunk = kernel_malloc(chunk_samples * sizeof(int16_t));
   if (!chunk) {
     mic_manager_release(MicClientAppStream);
+    voice_speex_deinit();
     return MicStreamServiceStartErrNoMemory;
   }
   // Fails while a previous session still closes
@@ -206,6 +208,7 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
   if (session == AUDIO_ENDPOINT_SESSION_INVALID_ID) {
     kernel_free(chunk);
     mic_manager_release(MicClientAppStream);
+    voice_speex_deinit();
     return MicStreamServiceStartErrBusy;
   }
 
@@ -214,6 +217,7 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
     pbl_mutex_unlock(&s_lock);
     kernel_free(chunk);
     mic_manager_release(MicClientAppStream);
+    voice_speex_deinit();
     audio_endpoint_cancel_transfer(session);
     return MicStreamServiceStartErrNotForeground;
   }

@@ -19,15 +19,20 @@
  */
 
 /**
- * @brief Initialize the encoder and allocate its buffers.
+ * @brief Take a reference to the encoder, initializing it and allocating its buffers first.
  *
- * Does nothing if already initialized.
+ * Each successful call must be balanced by voice_speex_deinit().
  *
  * @return true on success.
  */
 bool voice_speex_init(void);
 
-/** @brief Release the encoder and its buffers. */
+/**
+ * @brief Release a reference to the encoder.
+ *
+ * The last one frees the encoder and its buffers. The microphone must be stopped first, as it
+ * writes into the frame buffer.
+ */
 void voice_speex_deinit(void);
 
 /**

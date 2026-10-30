@@ -133,6 +133,16 @@ pbl_clar_test(test_heap
     fw/applib/app_heap_util.c
 )
 
+pbl_clar_test(test_psram_image_pool
+  SOURCES fw/kernel/psram_image_pool.c
+  DEFINES CONFIG_PSRAM_RETENTION CONFIG_PSRAM_IMAGE_POOL CONFIG_PSRAM_IMAGE_SLOTS=3
+)
+
+pbl_clar_test(test_volatile_heap
+  SOURCES fw/kernel/volatile_heap.c
+  DEFINES CONFIG_PSRAM_RETENTION CONFIG_KERNEL_VOLATILE_HEAP CONFIG_KERNEL_VOLATILE_HEAP_SIZE=4096
+)
+
 pbl_clar_test(test_flash_logging
   SOURCES
     fw/debug/flash_logging.c
