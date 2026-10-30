@@ -19,6 +19,7 @@ const struct pbl_flash_nor_part pbl_flash_nor_gd25lq255e = {
   // Security registers 2 and 3 only, locked by LB2 and LB3 (status register 2 bits 4 and 5)
   .otp = PBL_FLASH_NOR_OTP(1024U, 2U, 0x2000U, 0x1000U, 4U),
   .qe = PBL_FLASH_NOR_QE_SR2_BIT1_WR_SR1,
+  .sr1_bp_mask = 0x7CU,
   .reset_ms = 12U,
   .suspend_us = 20U,
   .dpd_enter_us = 3U,
