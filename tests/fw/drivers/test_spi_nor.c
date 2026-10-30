@@ -65,6 +65,13 @@ static int s_ex4b;
 static size_t s_dirmap_bytes;
 static size_t s_op_read_bytes;
 static int s_invalidates;
+static bool s_suspended;
+static uint32_t s_suspended_busy;
+static uint32_t s_erase_busy;
+static uint32_t s_irq_every;
+static int s_irq_windows;
+static int s_susp_polls;
+static uint32_t s_min_resume_to_suspend;
 
 static uint32_t prv_chip_id(void) {
   return (s_model == CHIP_GD25LQ255E) ? 0x1960c8U : 0x1940c8U;
@@ -182,6 +189,11 @@ static void prv_take_wel(void) {
   s_busy = BUSY_READS;
 }
 
+static void prv_take_wel_erase(void) {
+  prv_take_wel();
+  s_busy = s_erase_busy;
+}
+
 static int prv_exec_op(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_op *op) {
   uint8_t *in = op->data.buf.in;
   const uint8_t *out = op->data.buf.out;
@@ -200,7 +212,20 @@ static int prv_exec_op(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_o
       s_4byte = false;
       return 0;
     case PBL_FLASH_NOR_CMD_SUSPEND:
+      if (s_busy > 0U && !s_suspended) {
+        s_suspended = true;
+        s_suspended_busy = s_busy;
+        s_busy = 0U;
+        s_sr2 |= PBL_FLASH_NOR_SR2_SUS;
+      }
+      return 0;
     case PBL_FLASH_NOR_CMD_RESUME:
+      if (s_suspended) {
+        s_suspended = false;
+        s_busy = s_suspended_busy;
+        s_sr2 &= (uint8_t)~PBL_FLASH_NOR_SR2_SUS;
+      }
+      return 0;
     case PBL_FLASH_NOR_CMD_DPD:
     case PBL_FLASH_NOR_CMD_RDPD:
       return 0;
@@ -277,12 +302,12 @@ static int prv_exec_op(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_o
       return 0;
     case PBL_FLASH_NOR_CMD_SE:
     case 0x21U:
-      prv_take_wel();
+      prv_take_wel_erase();
       memset(&s_mem[addr & ~0xFFFU], 0xFF, 0x1000U);
       return 0;
     case PBL_FLASH_NOR_CMD_BE:
     case 0xDCU:
-      prv_take_wel();
+      prv_take_wel_erase();
       memset(&s_mem[addr & ~0xFFFFU], 0xFF, 0x10000U);
       return 0;
     case PBL_FLASH_NOR_CMD_RDSCUR:
@@ -326,11 +351,58 @@ static int prv_poll_status(const struct pbl_spi_mem *mem, const struct pbl_spi_m
   cl_assert_equal_i(mask, PBL_FLASH_NOR_SR_WIP);
   cl_assert_equal_i(match, 0);
 
-  ret = prv_exec_op(mem, op);
-  s_busy = 0U;
   s_polls++;
+  ret = prv_exec_op(mem, op);
+  if (ret != 0 || susp == nullptr) {
+    s_busy = 0U;
+    return ret;
+  }
 
-  return ret;
+  // Polls the way a controller the CPU runs from does, one microsecond per status read, with an
+  // interrupt pending every s_irq_every microseconds
+  s_susp_polls++;
+  cl_assert_equal_i(susp->suspend.cmd.opcode, PBL_FLASH_NOR_CMD_SUSPEND);
+  cl_assert_equal_i(susp->resume.cmd.opcode, PBL_FLASH_NOR_CMD_RESUME);
+
+  uint8_t sr;
+  uint32_t t = 0U;
+  uint32_t resumed = 0U;
+  uint32_t last_irq = 0U;
+  const struct pbl_spi_mem_op rdsr = *status;
+
+  while (true) {
+    struct pbl_spi_mem_op st = rdsr;
+
+    st.data.buf.in = &sr;
+    cl_assert_equal_i(prv_exec_op(mem, &st), 0);
+    t++;
+    if ((sr & mask) == match) {
+      break;
+    }
+
+    if (s_irq_every == 0U || (t - last_irq) < s_irq_every || (t - resumed) < susp->resume_us) {
+      continue;
+    }
+
+    s_min_resume_to_suspend = MIN(s_min_resume_to_suspend, t - resumed);
+    cl_assert_equal_i(prv_exec_op(mem, &susp->suspend), 0);
+    t += susp->suspend_us;
+    do {
+      st.data.buf.in = &sr;
+      cl_assert_equal_i(prv_exec_op(mem, &st), 0);
+      t++;
+    } while ((sr & mask) != match);
+
+    // Interrupts run here, with the part readable
+    cl_assert(s_suspended || s_busy == 0U);
+    s_irq_windows++;
+    last_irq = t;
+
+    cl_assert_equal_i(prv_exec_op(mem, &susp->resume), 0);
+    resumed = t;
+  }
+
+  return 0;
 }
 
 static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_dirmap *desc) {
@@ -442,6 +514,9 @@ static void prv_build_sfdp(void) {
   }
 }
 
+static void prv_erase_cb(int status, void *arg) {
+}
+
 static void prv_reset_instance(struct pbl_device_state *dev, struct pbl_flash_state *st,
                                struct pbl_flash_spi_nor_data *data) {
   *dev = (struct pbl_device_state){};
@@ -481,6 +556,13 @@ static void prv_reset(enum chip_model model) {
   s_dirmap_bytes = 0U;
   s_op_read_bytes = 0U;
   s_invalidates = 0;
+  s_suspended = false;
+  s_suspended_busy = 0U;
+  s_erase_busy = BUSY_READS;
+  s_irq_every = 0U;
+  s_irq_windows = 0;
+  s_susp_polls = 0;
+  s_min_resume_to_suspend = UINT32_MAX;
 }
 
 static const struct pbl_flash *prv_init(const struct pbl_flash_spi_nor *nor) {
@@ -721,6 +803,64 @@ void test_spi_nor__xip_adopts_and_erases_synchronously(void) {
   cl_assert_equal_i(pbl_flash_erase(flash, 0x12000000U, 0x1000U), 0);
   cl_assert_equal_i(s_polls, 1);
   cl_assert(pbl_flash_is_erased(flash, 0x12000000U, 0x1000U));
+}
+
+void test_spi_nor__xip_erase_suspended_for_interrupts(void) {
+  const struct pbl_flash *flash;
+
+  prv_reset(CHIP_GD25Q256E);
+  s_sr2 = PBL_FLASH_NOR_SR2_QE;
+  s_poll_controller = true;
+  s_dirmap_controller = true;
+  flash = prv_init(&s_nor_xip);
+
+  memset(s_mem, 0x00, 0x10000U);
+  s_erase_busy = 2000U;
+  s_irq_every = 10U;
+  cl_assert_equal_i(pbl_flash_erase(flash, 0x12000000U, 0x10000U), 0);
+
+  cl_assert_equal_i(s_susp_polls, 1);
+  cl_assert(s_irq_windows >= 10);
+  cl_assert(s_min_resume_to_suspend >= pbl_flash_nor_gd25q256e.resume_us);
+  cl_assert(!s_suspended);
+  cl_assert_equal_i(s_sr2 & PBL_FLASH_NOR_SR2_SUS, 0);
+  cl_assert(pbl_flash_is_erased(flash, 0x12000000U, 0x10000U));
+}
+
+void test_spi_nor__xip_program_not_suspended(void) {
+  const struct pbl_flash *flash;
+  uint8_t data[16] = {};
+
+  prv_reset(CHIP_GD25Q256E);
+  s_sr2 = PBL_FLASH_NOR_SR2_QE;
+  s_poll_controller = true;
+  s_dirmap_controller = true;
+  flash = prv_init(&s_nor_xip);
+
+  s_irq_every = 1U;
+  cl_assert_equal_i(pbl_flash_write(flash, 0x12000000U, data, sizeof(data)), 0);
+  cl_assert_equal_i(s_susp_polls, 0);
+  cl_assert_equal_i(s_irq_windows, 0);
+}
+
+// The flash class suspends an erase in progress around reads on controllers the CPU does not run
+// from, with the part's own suspend and resume
+void test_spi_nor__erase_suspended_for_reads(void) {
+  const struct pbl_flash *flash = prv_init(&s_nor_lq);
+  uint8_t byte;
+
+  s_erase_busy = UINT32_MAX;
+  memset(s_mem, 0x00, 0x1000U);
+  cl_assert_equal_i(pbl_flash_erase_async(flash, 0x0U, 0x1000U, prv_erase_cb, nullptr), 0);
+  cl_assert(s_busy > 0U);
+
+  cl_assert_equal_i(pbl_flash_read(flash, 0x2000U, &byte, 1U), 0);
+  cl_assert(s_suspended);
+  cl_assert(s_sr2 & PBL_FLASH_NOR_SR2_SUS);
+
+  stub_new_timer_fire(stub_new_timer_get_next());
+  cl_assert(!s_suspended);
+  cl_assert(s_busy > 0U);
 }
 
 // OTP

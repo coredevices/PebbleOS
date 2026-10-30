@@ -170,10 +170,11 @@ static int prv_wait_idle(const struct pbl_flash_spi_nor *nor) {
 }
 
 // Runs an operation that leaves the part busy, returning once it is idle again
-static int prv_exec_wait(const struct pbl_flash_spi_nor *nor, const struct pbl_spi_mem_op *op) {
+static int prv_exec_wait_susp(const struct pbl_flash_spi_nor *nor, const struct pbl_spi_mem_op *op,
+                              const struct pbl_spi_mem_suspend *susp) {
   int ret;
 
-  ret = pbl_spi_mem_poll_status(nor->bus, op, &s_rdsr, PBL_FLASH_NOR_SR_WIP, 0U, nullptr);
+  ret = pbl_spi_mem_poll_status(nor->bus, op, &s_rdsr, PBL_FLASH_NOR_SR_WIP, 0U, susp);
   if (ret != -ENOTSUP) {
     return ret;
   }
@@ -184,6 +185,10 @@ static int prv_exec_wait(const struct pbl_flash_spi_nor *nor, const struct pbl_s
   }
 
   return prv_wait_idle(nor);
+}
+
+static int prv_exec_wait(const struct pbl_flash_spi_nor *nor, const struct pbl_spi_mem_op *op) {
+  return prv_exec_wait_susp(nor, op, nullptr);
 }
 
 static int prv_write_reg(const struct pbl_flash_spi_nor *nor, uint8_t opcode, const void *buf,
@@ -732,6 +737,17 @@ static int prv_probe(const struct pbl_flash_spi_nor *nor) {
     }
   }
 
+  data->susp = (struct pbl_spi_mem_suspend){
+    .suspend =
+        PBL_SPI_MEM_OP(PBL_SPI_MEM_OP_CMD(PBL_FLASH_NOR_CMD_SUSPEND, 1), PBL_SPI_MEM_OP_NO_ADDR,
+                       PBL_SPI_MEM_OP_NO_DUMMY, PBL_SPI_MEM_OP_NO_DATA),
+    .resume =
+        PBL_SPI_MEM_OP(PBL_SPI_MEM_OP_CMD(PBL_FLASH_NOR_CMD_RESUME, 1), PBL_SPI_MEM_OP_NO_ADDR,
+                       PBL_SPI_MEM_OP_NO_DUMMY, PBL_SPI_MEM_OP_NO_DATA),
+    .suspend_us = part->suspend_us,
+    .resume_us = part->resume_us,
+  };
+
   data->pm = (struct pbl_spi_mem_pm){
     .enter = PBL_SPI_MEM_OP(PBL_SPI_MEM_OP_CMD(PBL_FLASH_NOR_CMD_DPD, 1), PBL_SPI_MEM_OP_NO_ADDR,
                             PBL_SPI_MEM_OP_NO_DUMMY, PBL_SPI_MEM_OP_NO_DATA),
@@ -915,9 +931,10 @@ static int prv_erase(const struct pbl_flash *flash, uint32_t addr, uint32_t size
                       PBL_SPI_MEM_OP_ADDR(data->addr_nbytes, offset, 1), PBL_SPI_MEM_OP_NO_DUMMY,
                       PBL_SPI_MEM_OP_NO_DATA);
 
-  // The CPU cannot run from the part while it erases, so the erase completes here
+  // The CPU cannot run from the part while it erases, so the erase completes here, suspended
+  // whenever interrupts need to run
   if (pbl_spi_mem_is_xip(nor->bus)) {
-    ret = prv_exec_wait(nor, &op);
+    ret = prv_exec_wait_susp(nor, &op, &data->susp);
     pbl_spi_mem_dirmap_invalidate(nor->bus, &data->dirmap, offset, size);
     return (ret == 0) ? 1 : ret;
   }

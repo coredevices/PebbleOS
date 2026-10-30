@@ -156,6 +156,8 @@ struct pbl_flash_nor_part {
   uint16_t reset_ms;
   /** Time from an erase suspend until reads are allowed, in microseconds. */
   uint16_t suspend_us;
+  /** Shortest time from an erase resume to the next suspend, in microseconds. */
+  uint16_t resume_us;
   /** Time to enter deep power-down, in microseconds. */
   uint16_t dpd_enter_us;
   /** Time to leave deep power-down, in microseconds. */
