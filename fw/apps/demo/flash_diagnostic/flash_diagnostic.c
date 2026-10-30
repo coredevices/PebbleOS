@@ -12,11 +12,11 @@
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/simple_menu_layer.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>

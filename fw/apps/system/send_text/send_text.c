@@ -19,6 +19,7 @@
 
 #include <applib/app.h>
 #include <applib/app_exit_reason.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
 #include <apps/system/timeline/peek_layer.h>

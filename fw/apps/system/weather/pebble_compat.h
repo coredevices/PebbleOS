@@ -38,7 +38,7 @@
 #include <applib/persist.h>
 
 // --- Process / app state / heap ---
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 // --- Resources (real generated ids; replaces the stored-app pinned header) ---

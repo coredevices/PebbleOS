@@ -7,12 +7,12 @@
 
 #include <applib/app.h>
 #include <applib/app_logging.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <applib/voice/dictation_session.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 #define TRANSCRIPTION_BUFFER_SIZE 512

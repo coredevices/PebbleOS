@@ -10,6 +10,7 @@
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 
+#include <applib/app_malloc.h>
 #include <applib/ui/menu_layer.h>
 #include <apps/system_app_ids.h>
 #include <kernel/pbl_malloc.h>

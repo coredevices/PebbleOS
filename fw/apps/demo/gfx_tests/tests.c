@@ -11,8 +11,8 @@
 #include <pbl/profiler/profiler.h>
 #include <pbl/util/size.h>
 
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_PROFILER_NODE_DEFINE(gfx_test_update_proc);
 

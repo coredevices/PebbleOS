@@ -14,8 +14,8 @@
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/health_service_private.h>
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 
 PBL_T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {

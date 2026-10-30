@@ -10,7 +10,7 @@
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/i18n/i18n.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 
 typedef struct HealthActivityDetailCard {
   int32_t daily_avg;

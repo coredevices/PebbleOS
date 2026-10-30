@@ -24,6 +24,7 @@
 
 #include <applib/app.h>
 #include <applib/app_focus_service.h>
+#include <applib/app_malloc.h>
 #include <applib/event_service_client.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>

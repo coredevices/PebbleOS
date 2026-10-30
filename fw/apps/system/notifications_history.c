@@ -9,7 +9,7 @@
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/string.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 
 static int prv_compare_entries(const NotificationHistoryEntry *a,
                                const NotificationHistoryEntry *b) {

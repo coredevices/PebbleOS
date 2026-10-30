@@ -7,11 +7,11 @@
 #include "style.h"
 #include "utils.h"
 
+#include <applib/app_malloc.h>
 #include <applib/ui/kino/kino_reel.h>
 #include <applib/ui/kino/kino_reel/transform.h>
 #include <applib/ui/kino/kino_reel/unfold.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #ifdef CONFIG_TOUCH
 #include <applib/touch_service.h>
 #endif

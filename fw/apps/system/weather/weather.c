@@ -31,6 +31,8 @@
 #include <pbl/services/timeline/timeline.h> // UUID_WEATHER_DATA_SOURCE
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
+
 #define WX_MAX_DAYS 7
 
 typedef struct WeatherAppData {

@@ -14,9 +14,9 @@
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/speaker/speaker_service.h>
 
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/system_icons.h>
 

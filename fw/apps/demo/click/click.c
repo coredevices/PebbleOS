@@ -10,9 +10,9 @@
 #include <pbl/util/math.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 #define TEXT_BUFFER_SIZE 64

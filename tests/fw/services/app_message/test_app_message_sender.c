@@ -9,6 +9,7 @@
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
+#include <applib/app_malloc.h>
 #include <applib/app_message/app_message_internal.h>
 #include <clar.h>
 #include <fff.h>

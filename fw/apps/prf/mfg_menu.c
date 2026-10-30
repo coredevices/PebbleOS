@@ -8,6 +8,7 @@
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/battery_state_service.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/ui.h>
@@ -18,7 +19,6 @@
 #include <apps/prf/mfg_test_menu.h>
 #include <apps/prf/mfg_utilities.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/util/standby.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>

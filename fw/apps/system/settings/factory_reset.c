@@ -7,13 +7,13 @@
 
 #include <pbl/services/i18n/i18n.h>
 
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/action_bar_layer.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
 #include <apps/system/timeline/peek_layer.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/system_icons.h>
 #include <kernel/util/factory_reset.h>

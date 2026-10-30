@@ -6,8 +6,8 @@
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
-#include <kernel/pbl_malloc.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include <process_state/app_state/app_state.h>

@@ -7,6 +7,7 @@
 #include <pbl/services/clock.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/perimeter.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
@@ -14,7 +15,6 @@
 #include <apps/system/launcher/launcher.h>
 #include <apps/system/timeline/timeline.h>
 #include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>

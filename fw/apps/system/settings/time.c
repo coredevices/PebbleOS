@@ -16,13 +16,13 @@
 #include <pbl/util/string.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/date_selection_window.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/time_selection_window.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <shell/prefs.h>
 
 // 9 (TZ) continents: Africa, America, Antarctica, Asia, Atlantic, Australia,

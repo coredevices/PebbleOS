@@ -4,6 +4,7 @@
 #include <pbl/drivers/i2c.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
@@ -11,7 +12,6 @@
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>

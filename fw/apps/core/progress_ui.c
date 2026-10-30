@@ -10,6 +10,7 @@
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/app_window_stack.h>
@@ -20,7 +21,6 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window_private.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>

@@ -21,6 +21,7 @@
 #include <pbl/util/struct.h>
 #include <pbl/util/trig.h>
 
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/graphics.h>
@@ -28,7 +29,6 @@
 #include <applib/ui/kino/kino_layer.h>
 #include <applib/ui/property_animation.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/system_icons.h>
 #include <popups/timeline/peek_animations.h>

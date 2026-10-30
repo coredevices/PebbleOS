@@ -17,7 +17,7 @@
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 #include <resource/resource_ids.auto.h>
 
 #define ICON_EXIT_MS      200

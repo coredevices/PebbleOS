@@ -9,6 +9,7 @@
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/click.h>
@@ -17,7 +18,6 @@
 #include <flash_region/flash_region.h>
 #include <font_resource_keys.auto.h>
 #include <kernel/memory_layout.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 // Demo app that deliberately runs a series of memory accesses that the

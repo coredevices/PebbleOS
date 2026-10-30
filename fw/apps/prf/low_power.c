@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/kino/kino_layer.h>
@@ -9,7 +10,6 @@
 #include <applib/ui/ui.h>
 #include <applib/ui/window_private.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 
 #define LOW_POWER_APP_STATE_UPDATE_TIME_MS 2000

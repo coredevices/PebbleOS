@@ -18,6 +18,7 @@
 
 #include <applib/accel_service.h>
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/event_service_client.h>
 #include <applib/fonts/fonts.h>
@@ -26,7 +27,6 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/property_animation.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/system_icons.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>

@@ -21,9 +21,9 @@
 #include <pbl/util/uuid.h>
 
 #include <applib/app_glance.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/kino/kino_reel.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 //! Cache twice the number of glances we'll show simultaneously in the launcher
 #define LAUNCHER_APP_GLANCE_SERVICE_CACHE_NUM_ENTRIES (2 * LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS)

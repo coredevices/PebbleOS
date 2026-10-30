@@ -4,6 +4,7 @@
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
 #include <applib/tick_timer_service.h>
@@ -12,7 +13,6 @@
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <mfg/mfg_mode/mfg_factory_mode.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>

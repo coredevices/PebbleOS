@@ -17,6 +17,7 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>

@@ -8,10 +8,10 @@
 
 #include <applib/accel_service.h>
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/connection_service.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <text_layout.h>
