@@ -10,6 +10,7 @@
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/graphics/text.h>
@@ -17,7 +18,6 @@
 #include <applib/ui/bitmap_layer.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 typedef struct AppData {

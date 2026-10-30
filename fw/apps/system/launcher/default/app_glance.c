@@ -4,7 +4,7 @@
 #include "app_glance.h"
 
 #include <applib/app_glance.h>
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 #include <resource/resource_ids.auto.h>
 
 void launcher_app_glance_init(LauncherAppGlance *glance, const Uuid *uuid, KinoReel *impl,

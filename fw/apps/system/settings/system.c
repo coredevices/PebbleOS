@@ -27,6 +27,7 @@
 #include <pbl/util/size.h>
 #include <pbl/util/time.h>
 
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/actionable_dialog.h>
@@ -38,7 +39,6 @@
 #include <applib/ui/ui.h>
 #include <kernel/core_dump.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>

@@ -13,6 +13,7 @@
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/progress_window.h>

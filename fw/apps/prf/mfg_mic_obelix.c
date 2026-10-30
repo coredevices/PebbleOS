@@ -9,6 +9,7 @@
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/text_layer.h>
@@ -17,7 +18,6 @@
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 

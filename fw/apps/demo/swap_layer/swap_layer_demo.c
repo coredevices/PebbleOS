@@ -14,6 +14,7 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
 #include <applib/ui/app_window_stack.h>
@@ -22,7 +23,6 @@
 #include <applib/ui/window.h>
 #include <applib/ui/window_stack.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/phone_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>

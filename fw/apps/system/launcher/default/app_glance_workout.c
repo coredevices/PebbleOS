@@ -14,9 +14,9 @@
 #include <pbl/util/string.h>
 #include <pbl/util/struct.h>
 
+#include <applib/app_malloc.h>
 #include <applib/template_string.h>
 #include <apps/system/workout/utils.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 

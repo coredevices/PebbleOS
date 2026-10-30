@@ -11,6 +11,7 @@
 #endif
 #include <pbl/util/size.h>
 
+#include <applib/app_malloc.h>
 #include <apps/prf/mfg_als.h>
 #include <apps/prf/mfg_backlight.h>
 #include <apps/prf/mfg_button.h>
@@ -29,7 +30,6 @@
 #include <apps/prf/mfg_touch.h>
 #include <apps/prf/mfg_vibration.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
 

@@ -6,6 +6,7 @@
 #include <pbl/services/runlevel.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
@@ -14,7 +15,6 @@
 #include <board/board.h>
 #include <kernel/event_loop.h>
 #include <kernel/panic.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 #include <system/reset.h>

@@ -9,10 +9,10 @@
 
 #include <applib/app.h>
 #include <applib/app_light.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
 

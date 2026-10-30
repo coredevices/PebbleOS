@@ -7,10 +7,10 @@
 
 #include <applib/app.h>
 #include <applib/app_focus_service.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 #if PBL_ROUND

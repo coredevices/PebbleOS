@@ -17,10 +17,10 @@
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>

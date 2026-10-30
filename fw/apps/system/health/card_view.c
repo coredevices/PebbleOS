@@ -12,10 +12,10 @@
 
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/action_button.h>
 #include <applib/ui/content_indicator.h>
 #include <applib/ui/content_indicator_private.h>
-#include <kernel/pbl_malloc.h>
 
 #define BACK_TO_WATCHFACE (-1)
 

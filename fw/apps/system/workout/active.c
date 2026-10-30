@@ -9,12 +9,12 @@
 #include "workout.h"
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window_manager.h>
 #include <apps/system/timeline/text_node.h>
-#include <kernel/pbl_malloc.h>
 #ifdef CONFIG_TOUCH
 #include <applib/touch_service.h>
 #endif

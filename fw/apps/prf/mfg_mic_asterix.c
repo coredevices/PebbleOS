@@ -9,13 +9,13 @@
 #include <pbl/kernel/sem.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <board/board.h>
 #include <console/dbgserial.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <nrfx_i2s.h>
 #include <nrfx_pdm.h>
 #include <process_management/pebble_process_md.h>

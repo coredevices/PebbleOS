@@ -21,8 +21,8 @@
 #include <pbl/services/vibes/vibe_score_info.h>
 #include <pbl/util/string.h>
 
+#include <applib/app_malloc.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 
 typedef enum VibeSettingsRow {
 #ifdef CONFIG_SPEAKER

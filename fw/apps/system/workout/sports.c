@@ -15,8 +15,8 @@
 
 #include <applib/app.h>
 #include <applib/app_comm.h>
+#include <applib/app_malloc.h>
 #include <applib/app_sync/app_sync.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 enum {

@@ -9,6 +9,7 @@
 #include <pbl/util/trig.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/path_layer.h>
@@ -17,7 +18,6 @@
 #include <applib/ui/window_private.h>
 #include <apps/prf/mfg_test_result.h>
 #include <board/display.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 

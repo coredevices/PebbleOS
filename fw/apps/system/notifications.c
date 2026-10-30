@@ -23,6 +23,7 @@
 
 #include <applib/app.h>
 #include <applib/app_exit_reason.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_list.h>
@@ -32,7 +33,6 @@
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/menu_cell_layer.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/system_icons.h>
 #include <popups/notifications/notification_window.h>
 #include <process_state/app_state/app_state.h>

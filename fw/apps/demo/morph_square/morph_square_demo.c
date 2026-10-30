@@ -4,12 +4,12 @@
 #include "morph_square_demo.h"
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/kino/kino_layer.h>
 #include <applib/ui/kino/kino_reel/morph_square.h>
 #include <applib/ui/kino/kino_reel/transform.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 

@@ -20,12 +20,12 @@
 #include <pbl/util/uuid.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/kino/kino_reel/unfold.h>
 #include <applib/ui/ui.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/timeline_resource_ids.auto.h>

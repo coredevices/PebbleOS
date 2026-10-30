@@ -11,7 +11,7 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 #include <resource/timeline_resource_ids.auto.h>
 
 static TimelineItem *prv_create_abandoned_workout_notification(void) {

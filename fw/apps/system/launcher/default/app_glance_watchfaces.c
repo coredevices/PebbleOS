@@ -9,7 +9,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/struct.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <shell/normal/watchface.h>
 

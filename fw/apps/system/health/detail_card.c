@@ -8,9 +8,9 @@
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/pbl_std/pbl_std.h>
 #include <board/display.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 

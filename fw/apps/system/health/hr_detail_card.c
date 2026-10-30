@@ -12,9 +12,9 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/fonts/codepoint.h>
 #include <board/display.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct HealthHrDetailCard {
   int16_t num_headings;

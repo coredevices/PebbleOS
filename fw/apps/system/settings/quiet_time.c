@@ -18,6 +18,7 @@
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
+#include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/day_picker.h>
