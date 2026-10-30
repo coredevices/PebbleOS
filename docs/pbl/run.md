@@ -91,32 +91,50 @@ When both firmware and resources are written, the watch boots into the
 main application; {doc}`console` shows its logs.
 
 A watch without a programmer is flashed through its phone with the `phone`
-runner. An Android phone connected over
-[adb](https://developer.android.com/tools/adb) needs nothing else: the
-runner starts the Pebble app's
+runner, which reaches the Pebble app's
 [Developer Connection](https://developer.repebble.com/guides/tools-and-resources/developer-connection/)
-itself and reaches it through an adb port forward. Pass `--adb-serial` when
-adb sees more than one phone:
+in one of three ways, picked with `--via`.
+
+An Android phone connected over
+[adb](https://developer.android.com/tools/adb), the default, needs nothing
+else: the runner starts the Developer Connection itself and reaches it
+through an adb port forward. Pass `--adb-serial` when adb sees more than one
+phone:
 
 ```shell
 pbl run -r phone
 ```
 
-Any other phone is reached over the network: enable the Developer
-Connection in the Pebble app and pass the address it shows:
+Any phone is reached through the cloud when signed in to the same account
+as `pebble login`, from the [`pebble` tool](https://developer.repebble.com/sdk/)
+installed separately:
+
+```shell
+pbl run -r phone --via cloud
+```
+
+A phone on the same network is reached directly: enable the Developer
+Connection in the Pebble app and pass the address it shows, which implies
+`--via ip`:
 
 ```shell
 pbl run -r phone --address $IP
 ```
 
-The runner reboots the watch into PRF, which invalidates the firmware slots,
-then installs the firmware and the system resources; PRF takes both or
-neither, so `--resources` is implied. PRF installs into slot 0, so on boards
-with two firmware slots the build has to be the slot 0 one, the default.
-Older app versions turn the Developer Connection off when the watch
-reboots; over adb the runner starts it again, otherwise it asks for it to
-be enabled again and waits.
-A watch can also be updated by sideloading a {doc}`bundle`.
+The runner packages the build into a {doc}`bundle`, firmware and system
+resources together, so `--resources` is implied, and sends it to the app in
+one message. The app installs it over Bluetooth as it does any firmware
+update, rebooting the watch into PRF first when needed, e.g. when the
+bundle is for the slot the watch runs from, and reports its progress. The
+runner reconnects when the watch reboots and the connection drops.
+
+On boards with two firmware slots, the watch writes the slot it does not
+run from, while PRF always writes slot 0: a slot 0 build, the default,
+always installs, while a slot 1 build only installs on a watch running from
+slot 0.
+
+Older app versions cannot install bundles, and the runner stops with an
+error asking to update the app.
 
 ## Options
 

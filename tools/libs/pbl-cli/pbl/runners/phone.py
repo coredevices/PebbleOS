@@ -1,19 +1,23 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import glob
+import os
 import queue
 import re
 import shutil
-import struct
 import subprocess
+import threading
 import time
 
 from .core import Runner, RunnerCaps, RunnerError
 
 DEV_CONNECTION_PORT = 9000
-RECOVERY_TIMEOUT = 120
-REENABLE_TIMEOUT = 300
 RECONNECT_INTERVAL = 3
+ADB_CONNECT_ATTEMPTS = 5
+INSTALL_TIMEOUT = 600
+
+VIA_CHOICES = ("adb", "cloud", "ip")
 
 # The Android app's receiver that starts the Developer Connection for adb
 ADB_DEV_CONNECTION_ACTION = "coredevices.coreapp.DEV_CONNECTION"
@@ -22,26 +26,36 @@ ADB_DEV_CONNECTION_RECEIVER = (
 )
 ADB_BROADCAST_RESULT = re.compile(r'result=(-?\d+)(?:, data="(.*)")?')
 
-# The firmware's reset command value, which libpebble2's Reset enum does not match
-RESET_INTO_RECOVERY = 0xFF
-
-# Version reply: frame header, command, then the running firmware's metadata,
-# whose flags byte libpebble2 reads as a single is_recovery bool
-VERSION_ENDPOINT = 0x0010
-VERSION_RESPONSE = 0x01
-VERSION_RUNNING_FLAGS_OFFSET = 4 + 1 + 4 + 32 + 8
-FW_METADATA_IS_RECOVERY = 0x01
+# Developer Connection message that has the app install a firmware bundle,
+# and the log with which older apps turn it down
+INSTALL_FIRMWARE = 0x0D
+APP_UNKNOWN_OPERATION = "Unknown operation."
 
 
 class AdbDevConnectionError(RunnerError):
     pass
 
 
+def _ignore_closed_reader(args):
+    """libpebble2's reader thread dies with a traceback when the phone closes
+    the connection, which the runner handles by reconnecting."""
+    from websocket import WebSocketConnectionClosedException
+
+    if (
+        args.thread is not None
+        and args.thread.name == "PebbleConnection"
+        and isinstance(args.exc_value, WebSocketConnectionClosedException)
+    ):
+        return
+    threading.__excepthook__(args)
+
+
 class PhoneRunner(Runner):
     name = "phone"
 
-    def __init__(self, cfg, address=None, adb_serial=None):
+    def __init__(self, cfg, via=None, address=None, adb_serial=None):
         super().__init__(cfg)
+        self.via = via or ("ip" if address else "adb")
         self.address = address
         self.adb_serial = adb_serial
         self.adb_port = None
@@ -53,9 +67,15 @@ class PhoneRunner(Runner):
     @classmethod
     def do_add_parser(cls, parser):
         parser.add_argument(
+            "--via",
+            choices=VIA_CHOICES,
+            help="How the phone runner reaches the phone's Developer "
+            "Connection: adb (Android, the default), cloud (signed in with "
+            "'pebble login') or ip (implied by --address)",
+        )
+        parser.add_argument(
             "--address",
-            help="Phone address (Developer Connection) for the phone runner; "
-            "without it, an Android phone is reached over adb",
+            help="Phone address (Developer Connection) for the phone runner",
         )
         parser.add_argument(
             "--adb-serial",
@@ -67,6 +87,7 @@ class PhoneRunner(Runner):
     def do_create(cls, cfg, args):
         return cls(
             cfg,
+            via=getattr(args, "via", None),
             address=getattr(args, "address", None),
             adb_serial=getattr(args, "adb_serial", None),
         )
@@ -107,10 +128,21 @@ class PhoneRunner(Runner):
             self.adb_port = int(self._adb("forward", "tcp:0", f"tcp:{m.group(2)}"))
 
     def _url(self):
-        if self.address:
+        if self.via == "ip":
             return f"ws://{self.address}:{DEV_CONNECTION_PORT}/"
         self._adb_start_dev_connection()
         return f"ws://127.0.0.1:{self.adb_port}/"
+
+    @staticmethod
+    def _cloud_transport():
+        from . import cloudpebble
+
+        try:
+            return cloudpebble.ProxyTransport(cloudpebble.token())
+        except cloudpebble.NotLoggedIn:
+            raise RunnerError(
+                "sign in with 'pebble login' (pebble-tool) to use --via cloud"
+            ) from None
 
     def _connect(self):
         try:
@@ -118,134 +150,154 @@ class PhoneRunner(Runner):
             from libpebble2.communication.transports.websocket import (
                 WebsocketTransport,
             )
+            from libpebble2.exceptions import ConnectionError as PebbleConnectionError
         except ImportError as e:
             raise RunnerError(f"libpebble2 is not installed ({e})") from e
 
-        pebble = PebbleConnection(WebsocketTransport(self._url()))
-        pebble.connect()
-        pebble.run_async()
+        if self.via == "cloud":
+            pebble = PebbleConnection(self._cloud_transport())
+            pebble.connect()
+        else:
+            url = self._url()
+            # The app restarts its server for the adb broadcast, which the
+            # port forward may reach before it listens again
+            for attempt in range(ADB_CONNECT_ATTEMPTS if self.via == "adb" else 1):
+                pebble = PebbleConnection(WebsocketTransport(url))
+                try:
+                    pebble.connect()
+                    break
+                except PebbleConnectionError:
+                    if attempt == ADB_CONNECT_ATTEMPTS - 1 or self.via != "adb":
+                        raise
+                    time.sleep(1)
+        # Not run_async(): it waits for the watch to answer, while the bundle
+        # install only needs the phone
+        threading.Thread(
+            target=pebble.run_sync, name="PebbleConnection", daemon=True
+        ).start()
         return pebble
 
+    def _bundle(self):
+        build = self.cfg.build
+        cmd = ["cmake", "--build", build.path, "--target", "bundle"]
+        if subprocess.call(cmd, stdout=subprocess.DEVNULL) != 0:
+            raise RunnerError(f"{self.quote(*cmd)} failed")
+        bundles = glob.glob(build.join("*.pbz"))
+        if not bundles:
+            raise RunnerError(f"no firmware bundle in {build.path}")
+        return max(bundles, key=os.path.getmtime)
+
     @staticmethod
-    def _reset(pebble, command):
-        from libpebble2.protocol.system import Reset
+    def _watch_install(pebble, events):
+        from libpebble2.communication.transports.websocket import MessageTargetPhone
+        from libpebble2.communication.transports.websocket.protocol import (
+            WebSocketInstallStatus,
+            WebSocketPhoneAppLog,
+        )
 
-        pebble.send_packet(Reset(command=command))
+        return [
+            pebble.register_transport_endpoint(
+                MessageTargetPhone,
+                WebSocketPhoneAppLog,
+                lambda message: events.put(("log", message.payload)),
+            ),
+            pebble.register_transport_endpoint(
+                MessageTargetPhone,
+                WebSocketInstallStatus,
+                lambda message: events.put(("status", message.status)),
+            ),
+        ]
 
-    @staticmethod
-    def _in_recovery(pebble):
-        from libpebble2.exceptions import TimeoutError as PebbleTimeoutError
-        from libpebble2.protocol.system import WatchVersion, WatchVersionRequest
-
-        flags = queue.Queue()
-
-        def on_message(message):
-            endpoint, command = struct.unpack_from(">HB", message, 2)
-            if endpoint == VERSION_ENDPOINT and command == VERSION_RESPONSE:
-                flags.put(message[VERSION_RUNNING_FLAGS_OFFSET])
-
-        handle = pebble.register_raw_inbound_handler(on_message)
-        try:
-            pebble.send_packet(WatchVersion(data=WatchVersionRequest()))
-            return bool(flags.get(timeout=15) & FW_METADATA_IS_RECOVERY)
-        except queue.Empty:
-            raise PebbleTimeoutError("no version reply from the watch") from None
-        finally:
-            pebble.unregister_endpoint(handle)
-
-    def _wait_for_recovery(self, pebble):
-        from libpebble2.exceptions import ConnectionError as PebbleConnectionError
+    def _reconnect(self, deadline):
         from libpebble2.exceptions import PebbleError
 
-        # The phone may keep the connection open while the watch reboots, or
-        # drop it. Older apps also turn the Developer Connection off when the
-        # watch disconnects, so it has to be enabled again: over adb until the
-        # watch is back, otherwise by hand.
-        timeout = RECOVERY_TIMEOUT
-        start = time.monotonic()
-        prompted = False
-        while time.monotonic() - start < timeout:
+        while time.monotonic() < deadline:
             time.sleep(RECONNECT_INTERVAL)
             try:
-                if not pebble.transport.connected:
-                    pebble = self._connect()
-                if self._in_recovery(pebble):
-                    return pebble
-            except AdbDevConnectionError:
+                return self._connect()
+            except (AdbDevConnectionError, PebbleError):
                 continue
-            except PebbleConnectionError:
-                if not self.address:
-                    continue
-                if not prompted:
-                    print(
-                        "The phone closed the Developer Connection: enable it "
-                        "again in the Pebble app to continue"
-                    )
-                    prompted = True
-                    timeout = time.monotonic() - start + REENABLE_TIMEOUT
-            except PebbleError:
-                continue
-        raise RunnerError(f"the watch did not come back in PRF in {timeout:.0f}s")
+        raise RunnerError("could not reconnect to the phone")
 
-    @staticmethod
-    def _put(pebble, object_type, path):
-        from libpebble2.services.putbytes import PutBytes
+    def _install_bundle(self, pebble, path):
+        """Has the app install the bundle, deciding itself whether it goes
+        through PRF."""
+        from libpebble2.communication.transports.websocket.protocol import (
+            WebSocketInstallStatus,
+        )
 
         with open(path, "rb") as f:
             data = f.read()
+        print(f"Sending {path} to the phone")
+        events = queue.Queue()
+        handles = self._watch_install(pebble, events)
+        pebble.transport.ws.send_binary(bytes([INSTALL_FIRMWARE]) + data)
 
-        def progress(_interval, sent, total):
-            print(f"\r{path}: {sent * 100 // total}%", end="", flush=True)
-
-        pb = PutBytes(pebble, object_type, data, bank=0)
-        pb.register_handler("progress", progress)
-        pb.send()
-        print()
+        # The app goes on with the install, and reports it, when the watch
+        # reboots and the connection drops
+        deadline = time.monotonic() + INSTALL_TIMEOUT
+        try:
+            while time.monotonic() < deadline:
+                try:
+                    kind, value = events.get(timeout=1)
+                except queue.Empty:
+                    if not pebble.transport.connected:
+                        print("The phone closed the connection, reconnecting")
+                        pebble = self._reconnect(deadline)
+                        handles = self._watch_install(pebble, events)
+                    continue
+                if kind == "status":
+                    if value != WebSocketInstallStatus.StatusCode.Success:
+                        raise RunnerError(
+                            "the Pebble app failed to install the firmware"
+                        )
+                    return
+                if value == APP_UNKNOWN_OPERATION:
+                    raise RunnerError(
+                        "the Pebble app cannot install firmware: update it"
+                    )
+                print(value)
+            raise RunnerError(
+                f"the Pebble app did not install the firmware in {INSTALL_TIMEOUT}s"
+            )
+        finally:
+            for handle in handles:
+                pebble.unregister_endpoint(handle)
 
     def _flash(self):
-        from libpebble2.protocol.system import SystemMessage
-        from libpebble2.services.putbytes import PutBytesType
-
-        if self.cfg.firmware_slot not in (None, 0):
-            raise RunnerError(
-                "PRF installs into slot 0; configure with -DCONFIG_FIRMWARE_SLOT=0"
-            )
         if not self.cfg.pbpack_file:
             raise RunnerError("only the normal firmware can be installed")
 
-        # PRF invalidates the firmware slots and installs into slot 0, and only
-        # commits the firmware together with the resources
-        pebble = self._connect()
-        if not self._in_recovery(pebble):
-            print("Rebooting the watch into PRF")
-            self._reset(pebble, RESET_INTO_RECOVERY)
-            pebble = self._wait_for_recovery(pebble)
-
-        pebble.send_and_read(
-            SystemMessage(message_type=SystemMessage.Type.FirmwareUpdateStart),
-            SystemMessage,
-        )
-        self._put(pebble, PutBytesType.Firmware, self.cfg.bin_file)
-        self._put(pebble, PutBytesType.SystemResources, self.cfg.pbpack_file)
-        pebble.send_packet(
-            SystemMessage(message_type=SystemMessage.Type.FirmwareUpdateComplete)
-        )
+        # The app installs the bundle over Bluetooth, so the firmware crosses
+        # the Developer Connection in one message rather than chunk by chunk
+        self._install_bundle(self._connect(), self._bundle())
 
     def do_run(self, command):
-        phone = f"at {self.address}" if self.address else "over adb"
+        if (self.via == "ip") != bool(self.address):
+            raise RunnerError("--address goes with --via ip, and only with it")
+        if self.adb_serial and self.via != "adb":
+            raise RunnerError("--adb-serial goes with --via adb only")
+        phone = {
+            "adb": "over adb",
+            "cloud": "over the cloud",
+            "ip": f"at {self.address}",
+        }[self.via]
         if self.cfg.dry_run:
             print(f"[dry-run] {command} through the phone {phone}")
             return
-        if not self.address and not shutil.which("adb"):
+        if self.via == "adb" and not shutil.which("adb"):
             raise RunnerError(
-                "adb not found: install it, or give the phone's address with --address"
+                "adb not found: install it, or reach the phone with another --via"
             )
         from libpebble2.exceptions import PebbleError
 
+        threading.excepthook = _ignore_closed_reader
         try:
             self._flash()
         except PebbleError as e:
-            raise RunnerError(f"{command} through the phone failed: {e}") from e
+            raise RunnerError(
+                f"{command} through the phone failed: {e or type(e).__name__}"
+            ) from e
         finally:
             if self.adb_port is not None:
                 self._adb("forward", "--remove", f"tcp:{self.adb_port}")
