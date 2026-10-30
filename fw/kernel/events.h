@@ -253,9 +253,8 @@ typedef struct PBL_PACKED { // 9 bytes
   struct pbl_bt_device_internal device;
 } PebbleBluetoothConnectionEvent;
 
-typedef struct PBL_PACKED { // 9 bytes
+typedef struct PBL_PACKED { // 8 bytes
   uint8_t hci_reason;
-  pbl_bt_bonding_id_t bonding_id;
   uint64_t bt_device_bits : 50;
   bool connected : 1;
 } PebbleBLEConnectionEvent;

@@ -249,14 +249,11 @@ void test_shared_prf_storage_v3__wipe_all(void) {
   sm_pairing_info.is_local_encryption_info_valid = true;
   sm_pairing_info.is_remote_signing_info_valid = true;
   sm_pairing_info.is_remote_identity_info_valid = true;
-  shared_prf_storage_store_ble_pairing_data(&sm_pairing_info, PAIRING_NAME,
-                                            false /* requires_address_pinning */, 0 /* flags */);
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr, nullptr),
-                    true);
+  shared_prf_storage_store_ble_pairing_data(&sm_pairing_info, PAIRING_NAME, 0 /* flags */);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), true);
   shared_prf_storage_wipe_all();
 
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr, nullptr),
-                    false);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), false);
 }
 
 void test_shared_prf_storage_v3__getting_started_complete(void) {
@@ -270,21 +267,16 @@ void test_shared_prf_storage_v3__getting_started_complete(void) {
 
 void test_shared_prf_storage_v3__ble_pairing(void) {
   shared_prf_storage_wipe_all();
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr, nullptr),
-                    false);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), false);
 
-  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME,
-                                            false /* requires_address_pinning */, 0 /* flags */);
+  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME, 0 /* flags */);
 
   char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   memset(name_out, 0, sizeof(name_out));
   struct pbl_bt_sm_pairing_info pairing_info_out = {};
-  bool requires_address_pinning_out = true;
   uint8_t flags = 0;
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(&pairing_info_out, name_out,
-                                                            &requires_address_pinning_out, &flags),
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(&pairing_info_out, name_out, &flags),
                     true);
-  cl_assert_equal_b(requires_address_pinning_out, false);
   cl_assert_equal_i(flags, 0);
   cl_assert_equal_i(strcmp(DEVICE_NAME, name_out), 0);
   cl_assert_equal_b(PAIRING_INFO.is_mitm_protection_enabled,
@@ -316,8 +308,7 @@ void test_shared_prf_storage_v3__ble_pairing(void) {
       memcmp(&PAIRING_INFO.csrk, &pairing_info_out.csrk, sizeof(struct pbl_bt_sm_key)), 0);
 
   shared_prf_storage_erase_ble_pairing_data();
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr, nullptr),
-                    false);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), false);
 }
 
 void test_shared_prf_storage_v3__root_keys(void) {
@@ -374,23 +365,6 @@ void test_shared_prf_storage_v3__local_device_name_NULL_new_erased_field(void) {
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
 }
 
-// Test that setting and retrieving a pinned address works.
-void test_shared_prf_storage_v3__pinned_address(void) {
-  shared_prf_storage_set_ble_pinned_address(&DEVICE_ADDR);
-  struct pbl_bt_addr addr_buf;
-  bool rv = shared_prf_storage_get_ble_pinned_address(&addr_buf);
-  cl_assert_equal_b(rv, true);
-  cl_assert_equal_m(&DEVICE_ADDR, &addr_buf, sizeof(DEVICE_ADDR));
-
-  shared_prf_storage_set_ble_pinned_address(&DEVICE_ADDR);
-  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
-
-  shared_prf_storage_set_ble_pinned_address(nullptr);
-  rv = shared_prf_storage_get_ble_pinned_address(nullptr);
-  cl_assert_equal_b(rv, false);
-  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
-}
-
 void test_shared_prf_storage_v3__local_identity_address(void) {
   struct pbl_bt_addr addr_buf;
   cl_assert_equal_b(shared_prf_storage_get_local_identity_address(&addr_buf), false);
@@ -405,12 +379,10 @@ void test_shared_prf_storage_v3__local_identity_address(void) {
 
 // Pages written by firmware that predates the field leave it erased.
 void test_shared_prf_storage_v3__local_identity_address_absent_in_old_page(void) {
-  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, PAIRING_NAME,
-                                            false /* requires_address_pinning */, 0 /* flags */);
+  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, PAIRING_NAME, 0 /* flags */);
 
   cl_assert_equal_b(shared_prf_storage_get_local_identity_address(nullptr), false);
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr, nullptr),
-                    true);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), true);
 }
 
 // Rewriting other fields copies the whole struct, as older firmware does too.
@@ -428,8 +400,7 @@ void test_shared_prf_storage_v3__local_identity_address_survives_rewrites(void) 
 
 // Junk in the field reads as absent and never invalidates the page.
 void test_shared_prf_storage_v3__local_identity_address_junk(void) {
-  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, PAIRING_NAME,
-                                            false /* requires_address_pinning */, 0 /* flags */);
+  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, PAIRING_NAME, 0 /* flags */);
 
   uint8_t junk[sizeof(SprfLocalIdentityAddress)];
   memset(junk, 0x17, sizeof(junk));
@@ -440,8 +411,7 @@ void test_shared_prf_storage_v3__local_identity_address_junk(void) {
 
   cl_assert_equal_b(shared_prf_storage_get_local_identity_address(nullptr), false);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr, nullptr),
-                    true);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), true);
 
   shared_prf_storage_init();
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
@@ -450,8 +420,7 @@ void test_shared_prf_storage_v3__local_identity_address_junk(void) {
   shared_prf_storage_set_local_identity_address(&DEVICE_ADDR);
   cl_assert_equal_b(shared_prf_storage_get_local_identity_address(&addr_buf), true);
   cl_assert_equal_m(&DEVICE_ADDR, &addr_buf, sizeof(DEVICE_ADDR));
-  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr, nullptr),
-                    true);
+  cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), true);
 }
 
 void test_shared_prf_storage_v3__rewrite_pages_and_wrap_around(void) {
@@ -477,8 +446,7 @@ void test_shared_prf_storage_v3__rewrite_pages_and_wrap_around(void) {
 void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
   const bool GETTING_STARTED_COMPLETE = true;
 
-  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME,
-                                            true /* requires_address_pinning */, 0xff /* flags */);
+  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
   shared_prf_storage_set_local_device_name(DEVICE_NAME);
 
@@ -486,11 +454,8 @@ void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
 
   // Check pairing info
   struct pbl_bt_sm_pairing_info pairing_info_out;
-  bool requires_address_pinning = false;
   uint8_t flags = 0;
-  shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out,
-                                          &requires_address_pinning, &flags);
-  cl_assert_equal_b(requires_address_pinning, true);
+  shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out, &flags);
   cl_assert_equal_i(flags, 0xff);
   cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
   cl_assert_equal_s(device_name_out, DEVICE_NAME);
@@ -507,8 +472,7 @@ void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
 void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_still_intact(void) {
   bool GETTING_STARTED_COMPLETE = true;
 
-  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME,
-                                            true /* requires_address_pinning */, 0xff /* flags */);
+  shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
   shared_prf_storage_set_local_device_name(DEVICE_NAME);
 
@@ -526,12 +490,9 @@ void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_stil
 
   // Check pairing info
   struct pbl_bt_sm_pairing_info pairing_info_out;
-  bool requires_address_pinning = false;
   uint8_t flags = 0;
 
-  shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out,
-                                          &requires_address_pinning, &flags);
-  cl_assert_equal_b(requires_address_pinning, true);
+  shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out, &flags);
   cl_assert_equal_i(flags, 0xff);
   cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
   cl_assert_equal_s(device_name_out, DEVICE_NAME);
@@ -623,10 +584,8 @@ void test_shared_prf_storage_v3__handle_corrupt_field_during_setting(void) {
 // Test that when we write the ble_data and the ble_name separately, a page rewrite isn't triggered
 void test_shared_prf_storage_v3__write_ble_data_and_ble_name_separately(void) {
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, nullptr,
-                                            true /* requires_address_pinning */,
                                             true /* auto_accept_re_pairing */);
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME,
-                                            true /* requires_address_pinning */,
                                             true /* auto_accept_re_pairing */);
   // confirm we wrote to the same "Page"
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
@@ -637,7 +596,6 @@ void test_shared_prf_storage_v3__write_ble_data_and_ble_name_separately(void) {
 // marked with 0xFF's
 void test_shared_prf_storage_v3__write_ble_data_name_delete_rewrite(void) {
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME,
-                                            true /* requires_address_pinning */,
                                             true /* auto_accept_re_pairing */);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
   shared_prf_storage_erase_ble_pairing_data();
@@ -646,11 +604,10 @@ void test_shared_prf_storage_v3__write_ble_data_name_delete_rewrite(void) {
   char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   struct pbl_bt_sm_pairing_info pairing_info_out;
   const bool rv =
-      shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out, nullptr, nullptr);
+      shared_prf_storage_get_ble_pairing_data(&pairing_info_out, device_name_out, nullptr);
   cl_assert_equal_b(rv, false);
 
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME,
-                                            true /* requires_address_pinning */,
                                             true /* auto_accept_re_pairing */);
   // It should detect the fields were already blank in the current page so the index should not
   // increment

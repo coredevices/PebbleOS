@@ -102,7 +102,7 @@ typedef struct PBL_PACKED SprfBlePairingData {
   SprfValidFields fields : 8;
   /** Pairing has MITM protection. */
   bool is_mitm_protection_enabled;
-  /** Pairing requires address pinning. */
+  /** Unused, always false. Older firmware pinned the local address when set. */
   bool requires_address_pinning;
 
   /** Pairing flags. Added in version 2, always 0 in version 1. */
@@ -119,7 +119,7 @@ typedef struct PBL_PACKED SprfBlePairingName {
 } SprfBlePairingName;
 static_assert(offsetof(SprfBlePairingName, crc) == 0, "crc must be the first field");
 
-/** @brief Pinned address field. */
+/** @brief Pinned address field. Unused, older firmware stored its pinned address here. */
 typedef struct PBL_PACKED SprfPinnedAddress {
   /** Field CRC. */
   uint32_t crc;

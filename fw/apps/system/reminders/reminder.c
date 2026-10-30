@@ -9,7 +9,7 @@
 
 #include <pbl/kernel/fatal.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/i18n/i18n.h>
@@ -283,7 +283,7 @@ static void prv_main(void) {
 
 const PebbleProcessMd *reminder_app_get_info(void) {
   PebbleProtocolCapabilities capabilities;
-  bt_persistent_storage_get_cached_system_capabilities(&capabilities);
+  bt_settings_get_capabilities(&capabilities);
   SerializedReminderAppPrefs *prefs = watch_app_prefs_get_reminder();
 
   const bool is_visible_in_launcher =

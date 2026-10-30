@@ -16,9 +16,8 @@
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/battery_level.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/dis.h>
-#include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/services/system_task.h>
@@ -78,16 +77,10 @@ static void prv_comm_start(void) {
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
   PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u", config->is_hrm_supported_and_enabled);
 #endif
-  // Register existing bondings before bringing the connection up: NimBLE
-  // restores them before the link is established. The other backends use
-  // no-op bonding handlers, so doing it early is harmless for them too.
-  bt_persistent_storage_register_existing_ble_bondings();
-
   s_comm_is_running = pbl_bt_start(config);
   kernel_free(config);
 
   if (s_comm_is_running) {
-    bt_local_addr_init();
     gap_le_init();
     bt_local_id_configure_driver();
 #ifdef CONFIG_SERVICE_BLE_HRM
@@ -214,7 +207,7 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
   }
   pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
   prv_track_quick_airplane_mode_toggles(!enabled);
-  bt_persistent_storage_set_airplane_mode_enabled(enabled);
+  bt_settings_set_airplane_mode(enabled);
   s_comm_airplane_mode_on = enabled;
   bool should_schedule_eval = false;
   if (!s_comm_state_change_eval_is_scheduled) {
@@ -228,7 +221,7 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 }
 
 void bt_ctl_init(void) {
-  s_comm_airplane_mode_on = bt_persistent_storage_get_airplane_mode_enabled();
+  s_comm_airplane_mode_on = bt_settings_get_airplane_mode();
   s_comm_initialized = true;
 
   gatt_client_subscription_boot();

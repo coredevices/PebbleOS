@@ -15,7 +15,7 @@
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/i18n/i18n.h>
@@ -866,7 +866,7 @@ static void prv_mute_notification_today(ActionMenu *action_menu,
 
 static bool prv_has_mute_action(TimelineItem *item) {
   PebbleProtocolCapabilities capabilities;
-  bt_persistent_storage_get_cached_system_capabilities(&capabilities);
+  bt_settings_get_capabilities(&capabilities);
 
   return timeline_item_is_ancs_notif(item) && capabilities.notification_filtering_support;
 }

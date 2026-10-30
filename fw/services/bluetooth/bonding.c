@@ -1,81 +1,53 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/bluetooth/bonding_sync.h>
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/bond.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/bluetooth/local_addr.h>
+#include <pbl/services/bluetooth/bluetooth_ctl.h>
+#include <pbl/services/bluetooth/bt_settings.h>
+#include <pbl/services/bluetooth/pairability.h>
 
+#include <comm/ble/gap_le_connect.h>
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gap_le_device_name.h>
+#include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/bt_lock.h>
-#include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
-typedef struct {
-  pbl_bt_bonding_id_t bonding_id;
-  struct pbl_bt_addr addr;
-  bool is_gateway;
-} CreateBondingContext;
+void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info) {
+  // In practice only a single bond is kept, so a new one means a new phone.
+  bt_settings_set_unfaithful(true);
 
-static void prv_finalize_create_bonding(pbl_bt_bonding_id_t bonding_id,
-                                        const struct pbl_bt_addr *addr, bool is_gateway) {
+  if (!bt_ctl_is_bluetooth_running()) {
+    return;
+  }
+
   bt_lock();
-  GAPLEConnection *connection = gap_le_connection_by_addr(addr);
+  GAPLEConnection *connection = gap_le_connection_by_addr(&info->addr.address);
   if (connection) {
-    connection->bonding_id = bonding_id;
-    connection->is_gateway = is_gateway;
-
-    if (!connection->is_gateway) {
-      PBL_LOG_DBG("New bonding is not gateway?");
-    }
-
+    connection->is_bonded = true;
+    connection->identity = info->addr;
+    connection->is_gateway = true;
     gap_le_device_name_request(&connection->device);
   } else {
-    PBL_LOG_ERR("Couldn't find connection for bonding!");
+    PBL_LOG_ERR("Couldn't find connection for bond!");
   }
   bt_unlock();
+
+  kernel_le_client_handle_bond_added(info);
+  bt_pairability_update_due_to_bonding_change();
 }
 
-static void prv_finalize_create_bonding_cb(void *data) {
-  CreateBondingContext *context = data;
-  prv_finalize_create_bonding(context->bonding_id, &context->addr, context->is_gateway);
-  kernel_free(context);
-}
+void pbl_bt_cb_bond_deleted(const struct pbl_bt_device_internal *addr) {
+  bt_settings_delete_peer_name(addr);
 
-void pbl_bt_cb_handle_create_bonding(const struct pbl_bt_bonding *bonding,
-                                     const struct pbl_bt_addr *addr) {
-  PBL_LOG_INFO("Creating new bonding for " PBL_BT_ADDR_FMT,
-               PBL_BT_ADDR_XPLODE(bonding->pairing_info.identity.address));
-  const bool should_pin_address = bonding->should_pin_address;
-  if (should_pin_address) {
-    bt_local_addr_pin(&bonding->pinned_address);
-  }
-  const uint8_t flags = bonding->flags;
-  if (flags) {
-    PBL_LOG_INFO("flags: 0x02%x", flags);
-  }
-  pbl_bt_bonding_id_t bonding_id = bt_persistent_storage_store_ble_pairing(
-      &bonding->pairing_info, bonding->is_gateway, nullptr, should_pin_address, flags);
-  if (bonding_id == PBL_BT_BONDING_ID_INVALID) {
-    PBL_LOG_ERR("Failed to persist new bonding");
+  if (!bt_ctl_is_bluetooth_running()) {
     return;
   }
 
-  if (launcher_task_is_current_task()) {
-    prv_finalize_create_bonding(bonding_id, addr, bonding->is_gateway);
-    return;
-  }
-
-  CreateBondingContext *context = kernel_malloc_check(sizeof(*context));
-
-  *context = (CreateBondingContext){
-    .bonding_id = bonding_id,
-    .addr = *addr,
-    .is_gateway = bonding->is_gateway,
-  };
-  launcher_task_add_callback(prv_finalize_create_bonding_cb, context);
+  gap_le_connection_handle_bond_deleted(addr);
+  gap_le_connect_handle_bond_deleted(addr);
+  kernel_le_client_handle_bond_deleted(addr);
+  bt_pairability_update_due_to_bonding_change();
 }

@@ -31,22 +31,18 @@ void ancs_destroy(void) {
 void app_launch_handle_disconnection(void) {
 }
 
-pbl_bt_bonding_id_t bt_persistent_storage_get_ble_ancs_bonding(void) {
-  return 1;
-}
-
-bool bt_persistent_storage_is_ble_ancs_bonding(pbl_bt_bonding_id_t bonding) {
-  return true;
-}
-
 static bool s_has_gateway_bonding;
 
-bool bt_persistent_storage_has_active_ble_gateway_bonding(void) {
-  return s_has_gateway_bonding;
+void pbl_bt_foreach_bond(pbl_bt_bond_cb_t func, void *user_data) {
+  const struct pbl_bt_bond_info info = {};
+
+  if (s_has_gateway_bonding) {
+    func(&info, user_data);
+  }
 }
 
-bool bt_persistent_storage_has_ble_ancs_bonding(void) {
-  return s_has_gateway_bonding;
+size_t pbl_bt_bond_count(void) {
+  return s_has_gateway_bonding ? 1 : 0;
 }
 
 void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
@@ -55,12 +51,12 @@ void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_
 void gap_le_connect_cancel_all(void) {
 }
 
-enum pbl_bt_errno gap_le_connect_cancel_by_bonding(pbl_bt_bonding_id_t bonding_id) {
+enum pbl_bt_errno gap_le_connect_cancel_by_bond(const struct pbl_bt_device_internal *addr) {
   return PBL_BT_ERRNO_OK;
 }
 
-enum pbl_bt_errno gap_le_connect_connect_by_bonding(pbl_bt_bonding_id_t bonding_id,
-                                                    bool auto_reconnect, bool is_pairing_required) {
+enum pbl_bt_errno gap_le_connect_connect_by_bond(const struct pbl_bt_device_internal *addr,
+                                                 bool auto_reconnect, bool is_pairing_required) {
   return PBL_BT_ERRNO_OK;
 }
 
@@ -336,13 +332,17 @@ void test_kernel_le_client__service_added(void) {
   kernel_free(info);
 }
 
-void test_kernel_le_client__deleting_last_bonding_stops_reconnecting(void) {
+void test_kernel_le_client__deleting_last_bond_stops_reconnecting(void) {
+  const struct pbl_bt_device_internal addr = {};
+
   s_has_gateway_bonding = false;
-  kernel_le_client_handle_bonding_change(1, BtPersistBondingOpWillDelete);
+  kernel_le_client_handle_bond_deleted(&addr);
   cl_assert_equal_i(s_reconnect_stop_count, 1);
 }
 
-void test_kernel_le_client__deleting_other_bonding_keeps_reconnecting(void) {
-  kernel_le_client_handle_bonding_change(2, BtPersistBondingOpWillDelete);
+void test_kernel_le_client__deleting_other_bond_keeps_reconnecting(void) {
+  const struct pbl_bt_device_internal addr = {};
+
+  kernel_le_client_handle_bond_deleted(&addr);
   cl_assert_equal_i(s_reconnect_stop_count, 0);
 }

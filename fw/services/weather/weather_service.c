@@ -5,7 +5,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/blob_db/weather_db.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/time.h>
 #include <pbl/services/weather/weather_service.h>
@@ -299,7 +299,7 @@ bool weather_service_supported_by_phone(void) {
   return true;
 #endif
   PebbleProtocolCapabilities capabilities;
-  bt_persistent_storage_get_cached_system_capabilities(&capabilities);
+  bt_settings_get_capabilities(&capabilities);
   if (!capabilities.weather_app_support) {
     PBL_LOG_WRN("No weather support on phone");
   }

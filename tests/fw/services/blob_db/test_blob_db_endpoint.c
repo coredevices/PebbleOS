@@ -6,7 +6,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/endpoint.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/comm_session/session.h>
 
 #include <clar.h>
@@ -19,7 +19,7 @@
 // Stubs
 ////////////////////////////////////
 
-void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
+void bt_settings_set_unfaithful(bool is_unfaithful) {
   return;
 }
 

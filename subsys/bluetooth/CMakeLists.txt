@@ -14,3 +14,4 @@ pbl_library()
 pbl_library_sources(${sources})
 
 add_subdirectory(services)
+add_subdirectory(store)

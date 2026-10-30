@@ -6,7 +6,7 @@
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/app_outbox_service.h>
 #include <pbl/services/blob_db/api.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/music.h>
 #include <pbl/services/music_endpoint.h>
@@ -70,7 +70,7 @@ void shell_event_loop_init(void) {
   // We are almost done booting, welcome the user if applicable. This _must_ occur before setting
   // the getting started completed below.
   if (factory_reset_or_first_use) {
-    bt_persistent_storage_set_unfaithful(true);
+    bt_settings_set_unfaithful(true);
   }
 
   // As soon as we boot normally for the first time, we've therefore completed first use mode and

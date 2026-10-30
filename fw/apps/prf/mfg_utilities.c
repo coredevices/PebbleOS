@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/bluetooth/bond.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
@@ -24,7 +24,7 @@ static void prv_clear_bondings_confirmed(ClickRecognizerRef recognizer, void *co
 
   bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
   if (confirmed) {
-    bt_persistent_storage_delete_all_pairings();
+    (void)pbl_bt_unpair(nullptr);
   }
 }
 

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/send_text_service.h>
 
@@ -55,7 +55,7 @@ void send_text_service_init(void) {
 
 bool send_text_service_is_send_text_supported(void) {
   PebbleProtocolCapabilities capabilities;
-  bt_persistent_storage_get_cached_system_capabilities(&capabilities);
+  bt_settings_get_capabilities(&capabilities);
 
   return (capabilities.send_text_support && s_has_send_text_reply_action);
 }

@@ -44,8 +44,7 @@ void dls_private_handle_disconnect(void *data) {
 void session_remote_version_start_requests(CommSession *session) {
 }
 
-void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {
+void bt_settings_set_capabilities(const PebbleProtocolCapabilities *capabilities) {
 }
 
 // Fakes

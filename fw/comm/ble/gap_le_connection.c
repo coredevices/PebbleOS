@@ -7,7 +7,6 @@
 
 #include <pbl/btutil/bt_device.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/util/list.h>
 
 #include <comm/bt_conn_mgr.h>
@@ -120,7 +119,6 @@ GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *devi
     .device = *device,
     .local_is_master = local_is_master,
     .conn_mgr_info = bt_conn_mgr_info_init(),
-    .bonding_id = PBL_BT_BONDING_ID_INVALID,
     .ticks_since_connection = rtc_get_ticks(),
     .is_remote_device_managing_connection_parameters = false,
     .connection_parameter_sets = nullptr,
@@ -291,9 +289,6 @@ void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data) {
 
 void gap_le_connection_set_gateway(GAPLEConnection *connection, bool is_gateway) {
   connection->is_gateway = is_gateway;
-
-  // TODO: update bonding `is_gateway` flag
-  // bt_persistent_storage_...
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -308,21 +303,17 @@ GAPLEConnection *gap_le_connection_get_gateway(void) {
 
 // -------------------------------------------------------------------------------------------------
 
-static bool prv_find_connection_with_bonding_id(GAPLEConnection *connection, void *data) {
-  pbl_bt_bonding_id_t bonding_id = (pbl_bt_bonding_id_t)(uintptr_t)data;
-  return (connection->bonding_id == bonding_id);
+static bool prv_find_connection_with_identity(GAPLEConnection *connection, void *data) {
+  const struct pbl_bt_device_internal *addr = data;
+  return connection->is_bonded && bt_device_internal_equal(&connection->identity, addr);
 }
 
-void gap_le_connection_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op) {
-  if (op != BtPersistBondingOpWillDelete) {
-    return;
-  }
-  // Clean up the bonding_id field for the bonding that just got removed:
+void gap_le_connection_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
   bt_lock();
   GAPLEConnection *connection =
-      gap_le_connection_find(prv_find_connection_with_bonding_id, (void *)(uintptr_t)bonding);
+      gap_le_connection_find(prv_find_connection_with_identity, (void *)addr);
   if (connection) {
-    connection->bonding_id = PBL_BT_BONDING_ID_INVALID;
+    connection->is_bonded = false;
   }
   bt_unlock();
 }

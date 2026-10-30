@@ -61,13 +61,11 @@ void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in);
  * @param[out] pairing_info_out Pairing keys.
  * @param[out] name_out Buffer of @c PBL_BT_DEVICE_NAME_BUFFER_SIZE bytes for the remote device
  *                      name, empty if none is stored.
- * @param[out] requires_address_pinning_out Whether the pairing requires address pinning.
  * @param[out] flags Pairing flags.
  * @return true if a pairing is stored.
  */
 bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
-                                             char *name_out, bool *requires_address_pinning_out,
-                                             uint8_t *flags);
+                                             char *name_out, uint8_t *flags);
 
 /**
  * @brief Store the BLE pairing, replacing the previous one.
@@ -76,30 +74,20 @@ bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pair
  *
  * @param pairing_info Pairing keys.
  * @param name Remote device name, or NULL to keep the stored name.
- * @param requires_address_pinning Whether the pairing requires address pinning.
  * @param flags Pairing flags.
  */
 void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
-                                               const char *name, bool requires_address_pinning,
-                                               uint8_t flags);
+                                               const char *name, uint8_t flags);
+
+/**
+ * @brief Store the remote device name of the BLE pairing.
+ *
+ * @param name Remote device name.
+ */
+void shared_prf_storage_set_ble_pairing_name(const char *name);
 
 /** @brief Erase the BLE pairing and its device name. */
 void shared_prf_storage_erase_ble_pairing_data(void);
-
-/**
- * @brief Get the pinned BLE address.
- *
- * @param[out] address_out Address, may be NULL. Only valid when true is returned.
- * @return true if a pinned address is stored.
- */
-bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out);
-
-/**
- * @brief Store the pinned BLE address.
- *
- * @param address Address, or NULL to erase it.
- */
-void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address);
 
 /**
  * @brief Get the local identity address.

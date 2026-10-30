@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/pairability.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
@@ -38,11 +37,6 @@ static void evaluate_pairing_refcount(void *data) {
 
   pbl_bt_le_pairability_set_enabled(is_ble_pairable_and_discoverable);
   if (s_last_ble_discoverable_state != is_ble_pairable_and_discoverable) {
-    if (is_ble_pairable_and_discoverable) {
-      bt_local_addr_pause_cycling();
-    } else {
-      bt_local_addr_resume_cycling();
-    }
     gap_le_slave_set_discoverable(is_ble_pairable_and_discoverable);
     s_last_ble_discoverable_state = is_ble_pairable_and_discoverable;
   }
@@ -96,8 +90,7 @@ void bt_pairability_release_ble(void) {
 void bt_pairability_update_due_to_bonding_change(void) {
   static bool s_pairable_due_to_no_gateway_bondings = false;
 
-  if (!bt_persistent_storage_has_active_ble_gateway_bonding() &&
-      !bt_persistent_storage_has_ble_ancs_bonding()) {
+  if (pbl_bt_bond_count() == 0) {
     if (!s_pairable_due_to_no_gateway_bondings) {
       bt_pairability_use();
       s_pairable_due_to_no_gateway_bondings = true;

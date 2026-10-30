@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/bluetooth/bond.h>
 
 #include <kernel/events.h>
 
@@ -13,7 +13,9 @@
 //! - bootstrap the ANCS module
 //! - bootstrap the "Service Changed" module
 
-void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
+void kernel_le_client_handle_bond_added(const struct pbl_bt_bond_info *info);
+
+void kernel_le_client_handle_bond_deleted(const struct pbl_bt_device_internal *addr);
 
 void kernel_le_client_handle_event(const PebbleEvent *event);
 

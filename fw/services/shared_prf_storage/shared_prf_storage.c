@@ -411,8 +411,7 @@ void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
 //!
 
 bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
-                                             char *name_out, bool *requires_address_pinning_out,
-                                             uint8_t *flags) {
+                                             char *name_out, uint8_t *flags) {
   bool rv;
   prv_lock();
   {
@@ -455,9 +454,6 @@ bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pair
       };
     }
 
-    if (requires_address_pinning_out) {
-      *requires_address_pinning_out = data.requires_address_pinning;
-    }
     if (flags) {
       *flags = data.flags;
     }
@@ -481,8 +477,7 @@ unlock:
 }
 
 void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
-                                               const char *name, bool requires_address_pinning,
-                                               uint8_t flags) {
+                                               const char *name, uint8_t flags) {
   if (!pairing_info || sm_is_pairing_info_empty(pairing_info)) {
     PBL_LOG_WRN("PRF Storage: Attempting to store an NULL or empty pairing info");
     return;
@@ -505,8 +500,6 @@ void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_in
       .csrk = pairing_info->csrk,
 
       .is_mitm_protection_enabled = pairing_info->is_mitm_protection_enabled,
-
-      .requires_address_pinning = requires_address_pinning,
 
       .flags = flags,
 
@@ -532,6 +525,16 @@ void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_in
   prv_unlock();
 }
 
+void shared_prf_storage_set_ble_pairing_name(const char *name) {
+  prv_lock();
+  {
+    SprfBlePairingName name_data = {};
+    strncpy(name_data.name, name, sizeof(name_data.name));
+    SPRF_PERSIST_FIELD(name_data, ble_pairing_name);
+  }
+  prv_unlock();
+}
+
 void shared_prf_storage_erase_ble_pairing_data(void) {
   prv_lock();
   {
@@ -544,44 +547,6 @@ void shared_prf_storage_erase_ble_pairing_data(void) {
 //!
 //! Getting started bit
 //!
-
-bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
-  bool rv;
-  prv_lock();
-  {
-    SprfPinnedAddress data;
-    rv = SPRF_FETCH_FIELD(data, pinned_address);
-    if (!rv) {
-      goto unlock;
-    }
-
-    if (address_out) {
-      *address_out = data.pinned_address;
-    }
-
-    rv = true;
-  }
-
-unlock:
-  prv_unlock();
-  return rv;
-}
-
-//! Stores the new BLE Pinned Address in the shared storage.
-void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address) {
-  prv_lock();
-  {
-    if (address) {
-      SprfPinnedAddress data = {
-        .pinned_address = *address,
-      };
-      SPRF_PERSIST_FIELD(data, pinned_address);
-    } else {
-      SPRF_ERASE_FIELD(pinned_address);
-    }
-  }
-  prv_unlock();
-}
 
 //!
 //! Local identity address

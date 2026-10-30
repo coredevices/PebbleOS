@@ -10,13 +10,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/services/i18n/i18n.h>
@@ -133,41 +134,31 @@ static void prv_copy_device_name_with_fallback(StoredRemote *remote, const char 
   }
 }
 
-static void prv_add_ble_remote(struct pbl_bt_device_internal *device, struct pbl_bt_sm_key *irk,
-                               const char *name, pbl_bt_bonding_id_t *id, void *context) {
+static void prv_add_ble_remote(const struct pbl_bt_bond_info *info, void *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
-  if (!data) {
-    return;
-  }
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
   StoredRemote *remote = stored_remote_create();
-  remote->ble.bonding = *id;
-  prv_copy_device_name_with_fallback(remote, name);
+  remote->ble.identity = info->addr;
+  prv_copy_device_name_with_fallback(remote,
+                                     bt_settings_get_peer_name(&info->addr, name) ? name : nullptr);
+
+  bt_lock();
+  GAPLEConnection *connection = gap_le_connection_find_by_irk(&info->irk);
+  if (!connection) {
+    connection = gap_le_connection_by_device(&info->addr);
+  }
+  remote->ble.connection = connection;
+#ifdef CONFIG_SERVICE_BLE_HRM
+  remote->ble.is_sharing_heart_rate = ble_hrm_is_sharing_to_connection(connection);
+#endif
+  bt_unlock();
+
   add_remote(data, remote);
 }
 
 static void prv_add_ble_remotes(SettingsBluetoothData *data) {
-  bt_persistent_storage_for_each_ble_pairing(prv_add_ble_remote, data);
-
-  StoredRemote *remote = (StoredRemote *)data->remote_list_head;
-  while (remote) {
-    struct pbl_bt_sm_key irk;
-    struct pbl_bt_device_internal device;
-
-    if (bt_persistent_storage_get_ble_pairing_by_id(remote->ble.bonding, &irk, &device, nullptr)) {
-      bt_lock();
-      GAPLEConnection *connection = gap_le_connection_find_by_irk(&irk);
-      if (!connection) {
-        connection = gap_le_connection_by_device(&device);
-      }
-      remote->ble.connection = connection;
-#ifdef CONFIG_SERVICE_BLE_HRM
-      remote->ble.is_sharing_heart_rate = ble_hrm_is_sharing_to_connection(connection);
-#endif
-      bt_unlock();
-    }
-    remote = (StoredRemote *)remote->list_node.next;
-  }
+  pbl_bt_foreach_bond(prv_add_ble_remote, data);
 }
 
 static void prv_clear_remote_list(SettingsBluetoothData *data) {

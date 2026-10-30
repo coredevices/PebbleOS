@@ -15,11 +15,6 @@
 
 #include <comm/bt_conn_mgr_impl.h>
 
-// FIXME: Including this header results in a compile time failure because the
-// chain eventually includes a Bluetopia API. Figure out why this is problematic
-// #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-// void gap_le_connection_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op);
-
 // -----------------------------------------------------------------------------
 // The calls below are thread-safe, no need to own bt_lock, per se, before
 // calling them.
@@ -62,6 +57,9 @@ typedef struct GAPLEConnection {
   //! Whether the connected device is our gateway (aka "the phone running Pebble app")
   bool is_gateway : 1;
 
+  //! Whether the device is bonded, see @ref identity.
+  bool is_bonded : 1;
+
   //! @see pebble_pairing_service.c
   bool is_subscribed_to_connection_status_notifications : 1;
   bool is_subscribed_to_gatt_mtu_notifications : 1;
@@ -92,9 +90,8 @@ typedef struct GAPLEConnection {
   bool has_sent_gatt_service_changed_indication;
   TimerID gatt_service_changed_indication_timer;
 
-  //! The bonding ID (only for BLE at the moment).
-  //! If the device is not bonded, the field will be PBL_BT_BONDING_ID_INVALID
-  pbl_bt_bonding_id_t bonding_id;
+  //! The identity address of the device, valid iff @ref is_bonded.
+  struct pbl_bt_device_internal identity;
 
   //! The IRK of the remote device, NULL if the connection address was not resolved.
   struct pbl_bt_sm_key *irk;
@@ -186,6 +183,10 @@ void gap_le_connection_set_irk(GAPLEConnection *connection, const struct pbl_bt_
 //! Sets whether the connection is to the gateway device (aka "the phone").
 //! Updates the is_gateway flag on any associated bonding as well.
 void gap_le_connection_set_gateway(GAPLEConnection *connection, bool is_gateway);
+
+//! Marks the connection to a peer whose bond got deleted as no longer bonded.
+//! Takes bt_lock.
+void gap_le_connection_handle_bond_deleted(const struct pbl_bt_device_internal *addr);
 
 GAPLEConnection *gap_le_connection_get_gateway(void);
 

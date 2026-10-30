@@ -7,7 +7,7 @@
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
 #include <pbl/services/blob_db/sync.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/settings/settings_file.h>
@@ -165,7 +165,7 @@ static bool s_initialized = false;
 //! Returns true if the phone advertises settings_sync_support capability
 bool settings_blob_db_phone_supports_sync(void) {
   PebbleProtocolCapabilities capabilities;
-  bt_persistent_storage_get_cached_system_capabilities(&capabilities);
+  bt_settings_get_capabilities(&capabilities);
   return capabilities.settings_sync_support;
 }
 

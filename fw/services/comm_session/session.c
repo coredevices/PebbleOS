@@ -8,7 +8,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_analytics.h>
 #include <pbl/services/comm_session/session_internal.h>
@@ -102,7 +102,7 @@ void comm_session_set_capabilities(CommSession *session, CommSessionCapability c
 
   if (comm_session_is_system(session)) {
     const PebbleProtocolCapabilities capabilities = {.flags = capability_flags};
-    bt_persistent_storage_set_cached_system_capabilities(&capabilities);
+    bt_settings_set_capabilities(&capabilities);
   }
 }
 

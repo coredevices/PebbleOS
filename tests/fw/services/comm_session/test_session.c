@@ -32,8 +32,7 @@ void comm_session_receive_router_cleanup(CommSession *session) {
 void comm_session_send_queue_cleanup(CommSession *session) {
 }
 
-void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {
+void bt_settings_set_capabilities(const PebbleProtocolCapabilities *capabilities) {
 }
 
 static uint16_t s_send_queue_length;

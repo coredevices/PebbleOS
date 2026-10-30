@@ -239,13 +239,6 @@ bool touch_navigation_menu_is_enabled(void) {
 void touch_set_navigation_menu_enabled(bool enable) {
 }
 
-bool bt_persistent_storage_get_airplane_mode_enabled(void) {
-  return false;
-}
-
-void bt_persistent_storage_set_airplane_mode_enabled(bool *state) {
-}
-
 uint32_t backlight_get_timeout_ms(void) {
   return DEFAULT_BACKLIGHT_TIMEOUT_MS;
 }

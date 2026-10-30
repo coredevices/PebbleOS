@@ -11,7 +11,7 @@ OTHER_PHONE_NAME = "pbl-itest-2"
 
 
 def _stored(dut, address, since):
-    dut.wait_for_log(rf"Storing BLE pairing: addr={address}", timeout=30, since=since)
+    dut.wait_for_log(rf"Bonded with {address}", timeout=30, since=since)
 
 
 def test_getting_started_shows_phone_name(

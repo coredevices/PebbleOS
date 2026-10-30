@@ -4,9 +4,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/id.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_id.h>
+#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/util/hash.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
@@ -47,8 +48,8 @@ void bt_local_id_configure_driver(void) {
   pbl_bt_id_copy_local_identity_address(&s_local_address);
 
   if (!prv_has_device_name()) {
-    if (!bt_persistent_storage_get_local_device_name(s_local_device_name,
-                                                     sizeof(s_local_device_name))) {
+    if (!shared_prf_storage_get_local_device_name(s_local_device_name,
+                                                  sizeof(s_local_device_name))) {
       prv_set_default_device_name();
     }
   }

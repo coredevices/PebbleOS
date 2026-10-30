@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/bluetooth/dis.h>
-#include <pbl/bluetooth/sm_types.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
 
 /**
@@ -36,8 +36,6 @@
  *
  * struct pbl_bt_config *config = kernel_zalloc_check(sizeof(*config));
  * dis_get_info(&config->dis_info);
- * // Bondings registered before starting are restored by the host.
- * bt_persistent_storage_register_existing_ble_bondings();
  * bool running = pbl_bt_start(config);
  * kernel_free(config);
  *
@@ -50,13 +48,6 @@
 
 /** @brief Stack configuration passed to pbl_bt_start(). */
 struct PBL_PACKED pbl_bt_config {
-  /**
-   * @brief Root keys, indexed by enum pbl_bt_sm_root_key_type.
-   *
-   * Not used by the NimBLE backend, which reads and generates the root keys through the
-   * persistent storage service.
-   */
-  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
   /** Values served by the Device Information Service. */
   struct pbl_bt_dis_info dis_info;
   /** Identity address. Not used by the NimBLE backend, see pbl_bt_id_addr_get(). */
@@ -88,8 +79,7 @@ bool pbl_bt_start(struct pbl_bt_config *config);
 /**
  * @brief Stop the Bluetooth stack.
  *
- * Blocks until the host has stopped, then resets the GATT server and drops the in-memory bonding
- * store. No bonding removal callbacks are issued.
+ * Blocks until the host has stopped, then resets the GATT server. Bonds are kept.
  */
 void pbl_bt_stop(void);
 

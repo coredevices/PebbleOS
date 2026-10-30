@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/comm_session/session_internal.h>
 #include <pbl/services/comm_session/session_remote_os.h>
 #include <pbl/services/comm_session/session_remote_version.h>

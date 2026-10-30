@@ -7,7 +7,7 @@
 
 #include <pbl/bluetooth/types.h>
 
-//! Requests the device name, caches the result in bt_persistent_storage and into
+//! Requests the device name, caches the result in the Bluetooth settings and into
 //! connection->device_name.
 void gap_le_device_name_request(const struct pbl_bt_device_internal *address);
 

@@ -400,12 +400,12 @@ log_error:
 }
 
 static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
-  PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u, bond=%u", event->hci_reason,
-              event->connected, event->bonding_id);
+  PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u", event->hci_reason,
+              event->connected);
 
   const bool connected = event->connected;
-  // Assume the Kernel LE client is always bonded for ANCS. bt_persistent_storage can't be used
-  // here: this may run as a result of a disconnect due to forgetting a pairing key.
+  // Assume the Kernel LE client is always bonded for ANCS. The bonds can't be checked here: this
+  // may run as a result of a disconnect due to forgetting a bond.
 
   const struct pbl_bt_device_internal device = PebbleEventToBTDeviceInternal(event);
   if (connected) {
@@ -458,10 +458,9 @@ void kernel_le_client_handle_event(const PebbleEvent *e) {
 }
 
 // -------------------------------------------------------------------------------------------------
-static void prv_connect_gateway_bonding(pbl_bt_bonding_id_t gateway_bonding) {
+static void prv_connect_gateway(const struct pbl_bt_device_internal *addr) {
   gap_le_slave_reconnect_start();
-  gap_le_connect_connect_by_bonding(gateway_bonding, true /* auto_reconnect */,
-                                    true /* is_pairing_required */);
+  gap_le_connect_connect_by_bond(addr, true /* auto_reconnect */, true /* is_pairing_required */);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -475,16 +474,26 @@ static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 }
 
 // -------------------------------------------------------------------------------------------------
-void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersistBondingOp op) {
-  if (op == BtPersistBondingOpWillDelete) {
-    // The bonding is already gone from storage, so its type cannot be read back.
-    if (!bt_persistent_storage_has_active_ble_gateway_bonding() &&
-        !bt_persistent_storage_has_ble_ancs_bonding()) {
-      gap_le_slave_reconnect_stop();
-    }
-    gap_le_connect_cancel_by_bonding(bonding);
-  } else if (op == BtPersistBondingOpDidAdd && bt_persistent_storage_is_ble_ancs_bonding(bonding)) {
-    prv_connect_gateway_bonding(bonding);
+void kernel_le_client_handle_bond_added(const struct pbl_bt_bond_info *info) {
+  // Every bond is the gateway's: only one is kept.
+  prv_connect_gateway(&info->addr);
+}
+
+// -------------------------------------------------------------------------------------------------
+void kernel_le_client_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
+  if (pbl_bt_bond_count() == 0) {
+    gap_le_slave_reconnect_stop();
+  }
+  gap_le_connect_cancel_by_bond(addr);
+}
+
+// -------------------------------------------------------------------------------------------------
+static void prv_connect_gateway_cb(const struct pbl_bt_bond_info *info, void *user_data) {
+  bool *connected = user_data;
+
+  if (!*connected) {
+    prv_connect_gateway(&info->addr);
+    *connected = true;
   }
 }
 
@@ -493,10 +502,8 @@ void kernel_le_client_init(void) {
   // Reset analytics
   ppogatt_reset_disconnect_counter();
 
-  pbl_bt_bonding_id_t gateway_bonding = bt_persistent_storage_get_ble_ancs_bonding();
-  if (gateway_bonding != PBL_BT_BONDING_ID_INVALID) {
-    prv_connect_gateway_bonding(gateway_bonding);
-  }
+  bool connected = false;
+  pbl_bt_foreach_bond(prv_connect_gateway_cb, &connected);
 }
 
 // -------------------------------------------------------------------------------------------------

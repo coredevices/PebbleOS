@@ -52,16 +52,17 @@ void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
 //! BLE Pairing Data
 
 bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
-                                             char *name_out, bool *requires_address_pinning_out,
-                                             uint8_t *flags) {
+                                             char *name_out, uint8_t *flags) {
   return false;
 }
 
 void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
-                                               char *name, bool requires_address_pinning,
-                                               uint8_t flags) {
+                                               const char *name, uint8_t flags) {
   s_prf_storage_ble_delete_count++;
   s_prf_storage_ble_store_count++;
+}
+
+void shared_prf_storage_set_ble_pairing_name(const char *name) {
 }
 
 void shared_prf_storage_erase_ble_pairing_data(void) {
@@ -105,15 +106,4 @@ void shared_prf_storage_set_getting_started_complete(bool set) {
 
 void shared_prf_storage_wipe_all(void) {
   return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Pinned Address
-
-bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
-  return false;
-}
-
-//! Stores the new BLE Pinned Address in the shared storage.
-void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address) {
 }

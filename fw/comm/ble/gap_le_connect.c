@@ -7,14 +7,13 @@
 #include "gap_le_connect_params.h"
 #include "gap_le_connection.h"
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
-#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 
 #include <comm/bluetooth_analytics.h>
 #include <comm/bt_conn_mgr.h>
@@ -49,7 +48,6 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 //! Data structure to hold cached bonding info
 typedef struct {
-  pbl_bt_bonding_id_t id;
   struct pbl_bt_device_internal device; // containing identity address, not connection address
   struct pbl_bt_sm_key irk;
 } GAPLEConnectionIntentBonding;
@@ -127,7 +125,6 @@ static void prv_start_connecting_if_needed(void);
 static GAPLEConnectionIntent *prv_get_intent_by_device(const struct pbl_bt_device_internal *device);
 static void prv_intent_remove_and_free(GAPLEConnectionIntent *intent);
 static bool prv_is_intent_using_whitelist(const GAPLEConnectionIntent *intent);
-static pbl_bt_bonding_id_t prv_get_bonding_id_for_intent(const GAPLEConnectionIntent *intent);
 static void prv_mutate_whitelist(const struct pbl_bt_device_internal *device, bool is_adding);
 static void prv_mutate_whitelist_safely(const struct pbl_bt_device_internal *device,
                                         bool is_adding);
@@ -158,8 +155,7 @@ static void prv_put_legacy_connection_event(const struct pbl_bt_device_internal 
 // -------------------------------------------------------------------------------------------------
 
 static void prv_put_connection_event(const struct pbl_bt_device_internal *device,
-                                     uint8_t hci_reason, bool connected,
-                                     pbl_bt_bonding_id_t bonding_id) {
+                                     uint8_t hci_reason, bool connected) {
   PebbleEvent pebble_event = {
     .type = PEBBLE_BLE_CONNECTION_EVENT,
     .task_mask = (PebbleTaskBitset) ~(1u << PebbleTask_KernelMain),
@@ -169,7 +165,6 @@ static void prv_put_connection_event(const struct pbl_bt_device_internal *device
           .bt_device_bits = device->opaque.opaque_64,
           .hci_reason = hci_reason,
           .connected = connected,
-          .bonding_id = bonding_id,
         },
       },
     },
@@ -216,8 +211,7 @@ static bool prv_update_intent(GAPLEConnectionIntent *intent, uint8_t hci_reason,
 
   if (intent->connected != connected && !is_hidden) {
     intent->connected = connected;
-    prv_put_connection_event(&intent->device, hci_reason, connected,
-                             prv_get_bonding_id_for_intent(intent));
+    prv_put_connection_event(&intent->device, hci_reason, connected);
   }
 
   if (is_done) {
@@ -353,8 +347,8 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
             // Update connection address:
             intent->device = event->peer_address;
 
-            // TODO: assign bonding_id even if there is no intent.
-            connection->bonding_id = intent->bonding->id;
+            connection->is_bonded = true;
+            connection->identity = intent->bonding->device;
           }
 
           prv_update_intent(intent, PBL_BT_HCI_STATUS_SUCCESS,
@@ -604,18 +598,18 @@ static GAPLEConnectionIntent *prv_get_intent_by_device(
                                             (void *)device);
 }
 
-static bool prv_intent_filter_by_bonding_id(ListNode *node, void *data) {
-  const pbl_bt_bonding_id_t bonding_id = (pbl_bt_bonding_id_t)(uintptr_t)data;
+static bool prv_intent_filter_by_bond(ListNode *node, void *data) {
+  const struct pbl_bt_device_internal *addr = data;
   const GAPLEConnectionIntent *intent = (const GAPLEConnectionIntent *)node;
   if (!intent->is_bonding_based) {
     return false;
   }
-  return (intent->bonding->id == bonding_id);
+  return bt_device_internal_equal(&intent->bonding->device, addr);
 }
 
-static GAPLEConnectionIntent *prv_get_intent_by_bonding_id(pbl_bt_bonding_id_t bonding_id) {
-  return (GAPLEConnectionIntent *)list_find(&s_intents->node, prv_intent_filter_by_bonding_id,
-                                            (void *)(uintptr_t)bonding_id);
+static GAPLEConnectionIntent *prv_get_intent_by_bond(const struct pbl_bt_device_internal *addr) {
+  return (GAPLEConnectionIntent *)list_find(&s_intents->node, prv_intent_filter_by_bond,
+                                            (void *)addr);
 }
 
 static bool prv_intent_filter_disconnected(ListNode *node, void *data) {
@@ -638,14 +632,6 @@ static bool prv_is_intent_using_whitelist(const GAPLEConnectionIntent *intent) {
   // See note in BT spec "Note: An all zero Identity Resolving Key data field indicates that a
   // device does not have a valid resolvable private address." in Security Manager chapter.
   return (!intent->is_bonding_based);
-}
-
-// -------------------------------------------------------------------------------------------------
-static pbl_bt_bonding_id_t prv_get_bonding_id_for_intent(const GAPLEConnectionIntent *intent) {
-  if (intent->is_bonding_based) {
-    return intent->bonding->id;
-  }
-  return PBL_BT_BONDING_ID_INVALID;
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -718,7 +704,7 @@ static enum pbl_bt_errno prv_register_intent(struct RegisterIntentRequest *reque
 
       connected_device = &connection->device;
     }
-    intent = prv_get_intent_by_bonding_id(request->bonding.id);
+    intent = prv_get_intent_by_bond(&request->bonding.device);
   } else {
     is_already_connected = gap_le_connection_is_connected(request->device);
     intent = prv_get_intent_by_device(request->device);
@@ -793,8 +779,7 @@ static void prv_unregister_intent(GAPLEConnectionIntent *intent,
 
   // Only send disconnection event if a connection event has been sent in the past:
   if (should_send_disconnection_event && intent->connected) {
-    prv_put_connection_event(device, hci_reason, false /* connected */,
-                             prv_get_bonding_id_for_intent(intent));
+    prv_put_connection_event(device, hci_reason, false /* connected */);
   }
 
   prv_intent_remove_and_free(intent);
@@ -802,37 +787,13 @@ static void prv_unregister_intent(GAPLEConnectionIntent *intent,
 
 // -------------------------------------------------------------------------------------------------
 
-void gap_le_connect_handle_bonding_change(pbl_bt_bonding_id_t bonding_id, BtPersistBondingOp op) {
-  // Load from flash outside of the bt_lock() block:
-  GAPLEConnectionIntentBonding updated_bonding;
-  if (op == BtPersistBondingOpDidChange) {
-    if (!bt_persistent_storage_get_ble_pairing_by_id(bonding_id, &updated_bonding.irk,
-                                                     &updated_bonding.device, nullptr)) {
-      pbl_panic();
-    }
-    updated_bonding.id = bonding_id;
-  }
-
+void gap_le_connect_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
   bt_lock();
-  GAPLEConnectionIntent *intent = prv_get_intent_by_bonding_id(bonding_id);
-  if (!intent) {
-    goto unlock;
+  GAPLEConnectionIntent *intent = prv_get_intent_by_bond(addr);
+  if (intent) {
+    prv_unregister_intent(intent, true /* should_send_disconnection_event */,
+                          GAPLEConnectHCIReasonExtensionUserRemovedBonding);
   }
-  switch (op) {
-    case BtPersistBondingOpDidAdd:
-      // FIXME:
-      break;
-    case BtPersistBondingOpDidChange:
-      *intent->bonding = updated_bonding;
-      break;
-    case BtPersistBondingOpWillDelete:
-      prv_unregister_intent(intent, true /* should_send_disconnection_event */,
-                            GAPLEConnectHCIReasonExtensionUserRemovedBonding);
-      break;
-    default:
-      pbl_panic();
-  }
-unlock:
   bt_unlock();
 }
 
@@ -877,23 +838,19 @@ enum pbl_bt_errno gap_le_connect_cancel(const struct pbl_bt_device_internal *dev
 
 // -------------------------------------------------------------------------------------------------
 
-enum pbl_bt_errno gap_le_connect_connect_by_bonding(pbl_bt_bonding_id_t bonding_id,
-                                                    bool auto_reconnect, bool is_pairing_required) {
-  if (bonding_id == PBL_BT_BONDING_ID_INVALID) {
+enum pbl_bt_errno gap_le_connect_connect_by_bond(const struct pbl_bt_device_internal *addr,
+                                                 bool auto_reconnect, bool is_pairing_required) {
+  struct pbl_bt_bond_info info;
+  if (!addr || pbl_bt_bond_get(addr, &info) != 0) {
     return PBL_BT_ERRNO_INVALID_PARAMETER;
   }
   struct RegisterIntentRequest request = {
     .is_bonding_based = true,
     .bonding = {
-      .id = bonding_id,
+      .device = info.addr,
+      .irk = info.irk,
     },
   };
-  // Get the IRK and device from the bonding storage,
-  // outside of bt_lock(), because it uses flash.
-  if (!bt_persistent_storage_get_ble_pairing_by_id(bonding_id, &request.bonding.irk,
-                                                   &request.bonding.device, nullptr)) {
-    return PBL_BT_ERRNO_INVALID_PARAMETER;
-  }
   bt_lock();
   enum pbl_bt_errno ret_value = prv_register_intent(&request, auto_reconnect, is_pairing_required);
   bt_unlock();
@@ -902,13 +859,13 @@ enum pbl_bt_errno gap_le_connect_connect_by_bonding(pbl_bt_bonding_id_t bonding_
 
 // -------------------------------------------------------------------------------------------------
 
-enum pbl_bt_errno gap_le_connect_cancel_by_bonding(pbl_bt_bonding_id_t bonding_id) {
-  if (bonding_id == PBL_BT_BONDING_ID_INVALID) {
+enum pbl_bt_errno gap_le_connect_cancel_by_bond(const struct pbl_bt_device_internal *addr) {
+  if (!addr) {
     return PBL_BT_ERRNO_INVALID_PARAMETER;
   }
   bt_lock();
   // Find the intent for the device:
-  GAPLEConnectionIntent *intent = prv_get_intent_by_bonding_id(bonding_id);
+  GAPLEConnectionIntent *intent = prv_get_intent_by_bond(addr);
   enum pbl_bt_errno ret_value;
   if (!intent) {
     // No intent for given device
@@ -1013,9 +970,9 @@ bool gap_le_connect_has_connection_intent(const struct pbl_bt_device_internal *d
   return ret_value;
 }
 
-bool gap_le_connect_has_connection_intent_for_bonding(pbl_bt_bonding_id_t bonding_id) {
+bool gap_le_connect_has_connection_intent_for_bond(const struct pbl_bt_device_internal *addr) {
   bt_lock();
-  const bool ret_value = (prv_get_intent_by_bonding_id(bonding_id) != nullptr);
+  const bool ret_value = (prv_get_intent_by_bond(addr) != nullptr);
   bt_unlock();
   return ret_value;
 }

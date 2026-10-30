@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/bt_device.h>
@@ -17,7 +17,6 @@
 
 #include <fake_GAPAPI.h>
 #include <fake_HCIAPI.h>
-#include <fake_bluetooth_persistent_storage.h>
 #include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
@@ -29,8 +28,22 @@
 // The "Pebble as Master" tests are disabled: role switching is not implemented and the FW always
 // acts as slave.
 
-void pbl_bt_cb_handle_create_bonding(const struct pbl_bt_bonding *bonding,
-                                     const struct pbl_bt_addr *addr) {
+static bool s_has_bond;
+
+int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_info *info) {
+  if (!s_has_bond) {
+    return -1;
+  }
+
+  if (info) {
+    *info = (struct pbl_bt_bond_info){
+      .addr = *addr,
+      .irk = *(const struct pbl_bt_sm_key *)fake_GAPAPI_get_fake_irk(),
+      .irk_valid = true,
+    };
+  }
+
+  return 0;
 }
 
 void cc2564A_bad_le_connection_complete_handle(
@@ -91,20 +104,9 @@ static struct pbl_bt_device_internal prv_dummy_device(uint8_t octet) {
   return *(struct pbl_bt_device_internal *)(&device);
 }
 
-static pbl_bt_bonding_id_t prv_add_bonding_for_fake_resolvable_device(void) {
-  struct pbl_bt_device_internal identity_device = {};
-  const struct pbl_bt_sm_key *irk = (const struct pbl_bt_sm_key *)fake_GAPAPI_get_fake_irk();
-  struct pbl_bt_bonding bonding = {
-    .pairing_info =
-        {
-          .identity = identity_device,
-          .irk = *irk,
-          .is_remote_identity_info_valid = true,
-        },
-    .is_gateway = true,
-  };
-  pbl_bt_handle_host_added_bonding(&bonding);
-  return fake_bt_persistent_storage_add(irk, &identity_device, "Dummy", true /* is_gateway */);
+static struct pbl_bt_device_internal prv_add_bonding_for_fake_resolvable_device(void) {
+  s_has_bond = true;
+  return (struct pbl_bt_device_internal){};
 }
 
 static void prv_assert_no_event(void) {
@@ -153,7 +155,7 @@ void test_gap_le_connect__initialize(void) {
   GAP_LE_Advertising_Enable(1, TRUE, nullptr, nullptr, gap_le_connect_bluetopia_connection_callback,
                             0);
   fake_event_init();
-  fake_bt_persistent_storage_reset();
+  s_has_bond = false;
   gap_le_connection_init();
   gap_le_connect_init();
 }
@@ -205,24 +207,26 @@ void test_gap_le_connect__unregister_null_device(void) {
 }
 
 void test_gap_le_connect__register_invalid_bonding(void) {
-  enum pbl_bt_errno e = gap_le_connect_connect_by_bonding(
-      PBL_BT_BONDING_ID_INVALID, true /* auto_reconnect */, false /* is_pairing_required */);
+  enum pbl_bt_errno e = gap_le_connect_connect_by_bond(nullptr, true /* auto_reconnect */,
+                                                       false /* is_pairing_required */);
   cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
 }
 
 void test_gap_le_connect__register_non_existing_bonding(void) {
-  enum pbl_bt_errno e = gap_le_connect_connect_by_bonding(~0, true /* auto_reconnect */,
-                                                          false /* is_pairing_required */);
+  const struct pbl_bt_device_internal addr = prv_dummy_device(1);
+  enum pbl_bt_errno e = gap_le_connect_connect_by_bond(&addr, true /* auto_reconnect */,
+                                                       false /* is_pairing_required */);
   cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
 }
 
 void test_gap_le_connect__unregister_invalid_bonding(void) {
-  enum pbl_bt_errno e = gap_le_connect_cancel_by_bonding(PBL_BT_BONDING_ID_INVALID);
+  enum pbl_bt_errno e = gap_le_connect_cancel_by_bond(nullptr);
   cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
 }
 
 void test_gap_le_connect__unregister_non_existing_bonding(void) {
-  enum pbl_bt_errno e = gap_le_connect_cancel_by_bonding(~0);
+  const struct pbl_bt_device_internal addr = prv_dummy_device(1);
+  enum pbl_bt_errno e = gap_le_connect_cancel_by_bond(&addr);
   cl_assert_equal_i(e, PBL_BT_ERRNO_INVALID_PARAMETER);
 }
 
@@ -254,7 +258,7 @@ void test_gap_le_connect__register_same_device_and_bonding(void) {
   enum pbl_bt_errno e;
   bool registered;
   struct pbl_bt_device_internal device = *fake_GAPAPI_get_device_resolving_to_fake_irk();
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent:
   e = gap_le_connect_connect(&device, true /* auto_reconnect */, false /* is_pairing_required */);
@@ -263,10 +267,10 @@ void test_gap_le_connect__register_same_device_and_bonding(void) {
   cl_assert_equal_b(registered, true);
 
   // Register another connection intent using the bonding:
-  e = gap_le_connect_connect_by_bonding(bonding_id, true /* auto_reconnect */,
-                                        false /* is_pairing_required */);
+  e = gap_le_connect_connect_by_bond(&bond, true /* auto_reconnect */,
+                                     false /* is_pairing_required */);
   cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
-  registered = gap_le_connect_has_connection_intent_for_bonding(bonding_id);
+  registered = gap_le_connect_has_connection_intent_for_bond(&bond);
   cl_assert_equal_b(registered, true);
 }
 
@@ -303,11 +307,11 @@ void __disabled_test_gap_le_connect__connection_event_for_registered_client(void
 
 void test_gap_le_connect__connection_event_for_registered_client_by_bonding(void) {
   struct pbl_bt_device_internal device = *fake_GAPAPI_get_device_resolving_to_fake_irk();
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent:
-  enum pbl_bt_errno e = gap_le_connect_connect_by_bonding(bonding_id, true /* auto_reconnect */,
-                                                          false /* is_pairing_required */);
+  enum pbl_bt_errno e = gap_le_connect_connect_by_bond(&bond, true /* auto_reconnect */,
+                                                       false /* is_pairing_required */);
   cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Device isn't connected. Verify no event was caused as a result of the
@@ -342,15 +346,15 @@ void __disabled_test_gap_le_connect__register_for_already_connected_device(void)
 void test_gap_le_connect__register_for_already_connected_bonding(void) {
   enum pbl_bt_errno e;
   struct pbl_bt_device_internal device = *fake_GAPAPI_get_device_resolving_to_fake_irk();
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   // Simulate getting a Connection Complete event for the device from Bluetopia:
   prv_fake_connect(&device, false /* is_master*/);
   fake_event_clear_last();
 
   // Register connection intent:
-  e = gap_le_connect_connect_by_bonding(bonding_id, true /* auto_reconnect */,
-                                        false /* is_pairing_required */);
+  e = gap_le_connect_connect_by_bond(&bond, true /* auto_reconnect */,
+                                     false /* is_pairing_required */);
   cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Verify the (virtual) connection event:
@@ -448,13 +452,13 @@ void __disabled_test_gap_le_connect__disconnection_event_upon_cancel_connect(voi
 // Cancel Connect by Bonding (as Slave)
 
 void test_gap_le_connect__slave_cancel_connect_by_bonding(void) {
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent:
-  gap_le_connect_connect_by_bonding(bonding_id, false /* no auto_reconnect */,
-                                    false /* is_pairing_required */);
+  gap_le_connect_connect_by_bond(&bond, false /* no auto_reconnect */,
+                                 false /* is_pairing_required */);
 
-  enum pbl_bt_errno e = gap_le_connect_cancel_by_bonding(bonding_id);
+  enum pbl_bt_errno e = gap_le_connect_cancel_by_bond(&bond);
   cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   prv_assert_no_event();
@@ -466,15 +470,15 @@ void test_gap_le_connect__slave_cancel_connect_by_bonding(void) {
 
 void test_gap_le_connect__slave_disconnection_event_upon_cancel_connect_by_bonding(void) {
   struct pbl_bt_device_internal device = *fake_GAPAPI_get_device_resolving_to_fake_irk();
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   prv_fake_connect(&device, false /* is_master*/);
 
   // Register connection intent:
-  gap_le_connect_connect_by_bonding(bonding_id, false /* no auto_reconnect */,
-                                    false /* is_pairing_required */);
+  gap_le_connect_connect_by_bond(&bond, false /* no auto_reconnect */,
+                                 false /* is_pairing_required */);
 
-  enum pbl_bt_errno e = gap_le_connect_cancel_by_bonding(bonding_id);
+  enum pbl_bt_errno e = gap_le_connect_cancel_by_bond(&bond);
   cl_assert_equal_i(e, PBL_BT_ERRNO_OK);
 
   // Verify the (virtual) disconnection event:
@@ -506,11 +510,11 @@ void __disabled_test_gap_le_connect__one_shot_intent_removed_when_disconnected_b
 
 void test_gap_le_connect__connection_event_only_after_encrypted_if_encryption_required(void) {
   struct pbl_bt_device_internal device = *fake_GAPAPI_get_device_resolving_to_fake_irk();
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent:
-  gap_le_connect_connect_by_bonding(bonding_id, true /* no auto_reconnect */,
-                                    true /* is_pairing_required */);
+  gap_le_connect_connect_by_bond(&bond, true /* no auto_reconnect */,
+                                 true /* is_pairing_required */);
 
   prv_fake_connect(&device, false /* is_master*/);
 
@@ -531,7 +535,7 @@ void test_gap_le_connect__connection_event_only_after_encrypted_if_encryption_re
 
 void test_gap_le_connect__add_intent_requiring_pairing_after_connected_and_encrypted(void) {
   struct pbl_bt_device_internal device = *fake_GAPAPI_get_device_resolving_to_fake_irk();
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   prv_fake_connect(&device, false /* is_master*/);
   fake_GAPAPI_set_encrypted_for_device(&device);
@@ -551,8 +555,8 @@ void test_gap_le_connect__add_intent_requiring_pairing_after_connected_and_encry
   gap_le_connection_by_device(&device);
 
   // Register connection intent:
-  gap_le_connect_connect_by_bonding(bonding_id, true /* no auto_reconnect */,
-                                    true /* is_pairing_required */);
+  gap_le_connect_connect_by_bond(&bond, true /* no auto_reconnect */,
+                                 true /* is_pairing_required */);
 
   // Verify the (virtual) connection event:
   prv_assert_connection_event(&device, true /* connected */, HCI_ERROR_CODE_SUCCESS);
@@ -563,19 +567,19 @@ void test_gap_le_connect__add_intent_requiring_pairing_after_connected_and_encry
 
 void test_gap_le_connect__removed_bonding_while_connected(void) {
   struct pbl_bt_device_internal device = *fake_GAPAPI_get_device_resolving_to_fake_irk();
-  pbl_bt_bonding_id_t bonding_id = prv_add_bonding_for_fake_resolvable_device();
+  const struct pbl_bt_device_internal bond = prv_add_bonding_for_fake_resolvable_device();
 
   // Register connection intent:
-  gap_le_connect_connect_by_bonding(bonding_id, false /* no auto_reconnect */,
-                                    false /* is_pairing_required */);
+  gap_le_connect_connect_by_bond(&bond, false /* no auto_reconnect */,
+                                 false /* is_pairing_required */);
 
   prv_fake_connect(&device, false /* is_master*/);
 
   // Verify the (virtual) connection event:
   prv_assert_connection_event(&device, true /* connected */, HCI_ERROR_CODE_SUCCESS);
 
-  // Simulate "bonding will delete" callback:
-  gap_le_connect_handle_bonding_change(bonding_id, BtPersistBondingOpWillDelete);
+  // Simulate the bond deleted callback:
+  gap_le_connect_handle_bond_deleted(&bond);
 
   // Verify the (virtual) disconnection event:
   prv_assert_connection_event(&device, false /* connected */,

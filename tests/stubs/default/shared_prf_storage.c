@@ -27,21 +27,15 @@ PBL_WEAK void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
 }
 
 PBL_WEAK bool shared_prf_storage_get_ble_pairing_data(
-    struct pbl_bt_sm_pairing_info *pairing_info_out, char *name_out,
-    bool *requires_address_pinning_out, uint8_t *flags) {
+    struct pbl_bt_sm_pairing_info *pairing_info_out, char *name_out, uint8_t *flags) {
   return false;
+}
+
+PBL_WEAK void shared_prf_storage_set_ble_pairing_name(const char *name) {
 }
 
 PBL_WEAK void shared_prf_storage_store_ble_pairing_data(
-    const struct pbl_bt_sm_pairing_info *pairing_info, const char *name,
-    bool requires_address_pinning, uint8_t flags) {
-}
-
-PBL_WEAK bool shared_prf_storage_get_ble_pinned_address(struct pbl_bt_addr *address_out) {
-  return false;
-}
-
-PBL_WEAK void shared_prf_storage_set_ble_pinned_address(const struct pbl_bt_addr *address) {
+    const struct pbl_bt_sm_pairing_info *pairing_info, const char *name, uint8_t flags) {
 }
 
 PBL_WEAK bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,

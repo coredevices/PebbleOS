@@ -5,10 +5,10 @@
 
 #include "bluetooth.h"
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/ui/action_menu_window_private.h>
@@ -57,8 +57,8 @@ static void prv_show_dialog(void *i18n_owner) {
   app_expandable_dialog_push(e_dialog);
 }
 
-static void prv_forget_ble_remote(int id) {
-  bt_persistent_storage_delete_ble_pairing_by_id(id);
+static void prv_forget_ble_remote(const struct pbl_bt_device_internal *identity) {
+  (void)pbl_bt_unpair(identity);
 }
 
 static void prv_remote_menu_cleanup(ActionMenu *action_menu, const ActionMenuItem *item,
@@ -73,7 +73,7 @@ static void prv_remote_menu_cleanup(ActionMenu *action_menu, const ActionMenuIte
 static void prv_forget_item(ActionMenu *action_menu, const ActionMenuItem *item, void *context) {
   SettingsRemoteData *remote_data = (SettingsRemoteData *)context;
   StoredRemote *remote = &remote_data->remote;
-  prv_forget_ble_remote(remote->ble.bonding);
+  prv_forget_ble_remote(&remote->ble.identity);
   PBL_LOG_INFO("User Forgot BT Pairing");
   PBL_LOG_DBG("Name: %s", remote->name);
   settings_bluetooth_update_remotes(remote_data->bt_data);
