@@ -220,6 +220,23 @@ static int prv_write_sr2(const struct pbl_flash_spi_nor *nor, uint8_t sr2) {
   return prv_write_reg(nor, PBL_FLASH_NOR_CMD_WRSR, sr, sizeof(sr));
 }
 
+// Writes status register 1 the way the part takes it, keeping status register 2
+static int prv_write_sr1(const struct pbl_flash_spi_nor *nor, uint8_t sr1) {
+  uint8_t sr[2] = {sr1};
+  int ret;
+
+  if (nor->data->qer == QER_SR2_BIT1_V6 || nor->data->qer == QER_SR1_BIT6) {
+    return prv_write_reg(nor, PBL_FLASH_NOR_CMD_WRSR, sr, 1U);
+  }
+
+  ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDSR2, &sr[1], 1U);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return prv_write_reg(nor, PBL_FLASH_NOR_CMD_WRSR, sr, sizeof(sr));
+}
+
 // Runs an operation in as many pieces as the controller needs
 static int prv_exec_chunked(const struct pbl_flash_spi_nor *nor, struct pbl_spi_mem_op *op) {
   size_t remaining = op->data.nbytes;
@@ -407,6 +424,29 @@ static uint8_t prv_part_qer(const struct pbl_flash_nor_part *part) {
     default:
       return QER_NONE;
   }
+}
+
+static int prv_unprotect(const struct pbl_flash_spi_nor *nor) {
+  const uint8_t mask = nor->part->sr1_bp_mask;
+  uint8_t sr;
+  int ret;
+
+  ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDSR, &sr, 1U);
+  if (ret != 0 || (sr & mask) == 0U) {
+    return ret;
+  }
+
+  ret = prv_write_sr1(nor, sr & ~mask);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDSR, &sr, 1U);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return ((sr & mask) == 0U) ? 0 : -EIO;
 }
 
 static int prv_set_quad_enable(const struct pbl_flash_spi_nor *nor) {
@@ -657,6 +697,11 @@ static int prv_probe(const struct pbl_flash_spi_nor *nor) {
     if (ret != 0) {
       return ret;
     }
+  }
+
+  ret = prv_unprotect(nor);
+  if (ret != 0) {
+    return ret;
   }
 
   data->dirmap = (struct pbl_spi_mem_dirmap){

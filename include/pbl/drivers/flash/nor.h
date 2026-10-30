@@ -150,6 +150,8 @@ struct pbl_flash_nor_part {
   struct pbl_flash_nor_otp otp;
   /** Quad enable bit location, and how status register 2 is written. Overrides SFDP. */
   enum pbl_flash_nor_qe qe;
+  /** Block protection bits of status register 1, cleared at init. */
+  uint8_t sr1_bp_mask;
   /** Time from a reset until commands are accepted, in milliseconds. */
   uint16_t reset_ms;
   /** Time from an erase suspend until reads are allowed, in microseconds. */

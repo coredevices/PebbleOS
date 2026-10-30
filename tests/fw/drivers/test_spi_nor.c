@@ -569,11 +569,29 @@ void test_spi_nor__quad_enabled_once(void) {
 
 void test_spi_nor__quad_enable_with_wrsr2(void) {
   prv_reset(CHIP_GD25Q256E);
-  s_sr1 = 0x1CU;
+  s_sr1 = 0x80U;
   prv_init(&s_nor_q);
 
   cl_assert(s_sr2 & PBL_FLASH_NOR_SR2_QE);
-  cl_assert_equal_i(s_sr1, 0x1C);
+  cl_assert_equal_i(s_sr1, 0x80);
+}
+
+void test_spi_nor__block_protection_cleared(void) {
+  s_sr1 = 0x80U | 0x1CU;
+  s_sr2 = PBL_FLASH_NOR_SR2_QE;
+  prv_init(&s_nor_lq);
+
+  cl_assert_equal_i(s_sr1, 0x80);
+  cl_assert_equal_i(s_sr2, PBL_FLASH_NOR_SR2_QE);
+  cl_assert_equal_i(s_wrsr_count, 1);
+
+  prv_reset(CHIP_GD25Q256E);
+  s_sr1 = 0x80U | 0x1CU;
+  s_sr2 = PBL_FLASH_NOR_SR2_QE;
+  prv_init(&s_nor_q);
+
+  cl_assert_equal_i(s_sr1, 0x80);
+  cl_assert_equal_i(s_sr2, PBL_FLASH_NOR_SR2_QE);
 }
 
 void test_spi_nor__quad_already_enabled(void) {
@@ -808,25 +826,25 @@ void test_spi_nor__otp_lock_keeps_status(void) {
   const struct pbl_flash *flash;
   bool locked;
 
-  s_sr1 = 0x1CU;
+  s_sr1 = 0x80U;
   s_sr2 = PBL_FLASH_NOR_SR2_QE;
   flash = prv_init(&s_nor_lq);
 
   cl_assert_equal_i(pbl_flash_otp_lock(flash, 1U), 0);
   cl_assert_equal_i(s_sr2, PBL_FLASH_NOR_SR2_QE | PBL_BIT(5));
-  cl_assert_equal_i(s_sr1, 0x1C);
+  cl_assert_equal_i(s_sr1, 0x80);
   cl_assert_equal_i(pbl_flash_otp_is_locked(flash, 1U, &locked), 0);
   cl_assert(locked);
   cl_assert_equal_i(pbl_flash_otp_is_locked(flash, 0U, &locked), 0);
   cl_assert(!locked);
 
   prv_reset(CHIP_GD25Q256E);
-  s_sr1 = 0x1CU;
+  s_sr1 = 0x80U;
   s_sr2 = PBL_FLASH_NOR_SR2_QE;
   flash = prv_init(&s_nor_q);
   cl_assert_equal_i(pbl_flash_otp_lock(flash, 0U), 0);
   cl_assert_equal_i(s_sr2, PBL_FLASH_NOR_SR2_QE | PBL_BIT(3));
-  cl_assert_equal_i(s_sr1, 0x1C);
+  cl_assert_equal_i(s_sr1, 0x80);
 }
 
 // A status register write the part ignores is reported, not taken for a lock
