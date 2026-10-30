@@ -24,9 +24,9 @@ IDLE_NOMINAL_UA = {
         "airplane_mode": 97,
     },
     "getafix": {
-        "advertising_fast": 953,
-        "advertising_slow": 128,
-        "airplane_mode": 93,
+        "advertising_fast": 927,
+        "advertising_slow": 119,
+        "airplane_mode": 86,
     },
     "asterix": {
         "advertising_fast": 655,
