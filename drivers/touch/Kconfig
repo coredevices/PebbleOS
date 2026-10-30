@@ -30,12 +30,42 @@ config TOUCH_QEMU
     help
       Support for the QEMU touchscreen peripheral.
 
+if TOUCH_QEMU
+
+config TOUCH_QEMU_SIZE_X
+    int "QEMU touchscreen X coordinates"
+    help
+      Number of X coordinates the QEMU touchscreen reports.
+
+config TOUCH_QEMU_SIZE_Y
+    int "QEMU touchscreen Y coordinates"
+    help
+      Number of Y coordinates the QEMU touchscreen reports.
+
+endif # TOUCH_QEMU
+
 config TOUCH_SDL
     bool "SDL mouse"
     default y if SOC_POSIX
     select SDL
     help
       Touchscreen driven by the mouse, through SDL, in a native build.
+
+if TOUCH_SDL
+
+config TOUCH_SDL_SIZE_X
+    int "SDL touchscreen X coordinates"
+    default DISPLAY_SDL_WIDTH if DISPLAY_SDL
+    help
+      Number of X coordinates the SDL touchscreen reports.
+
+config TOUCH_SDL_SIZE_Y
+    int "SDL touchscreen Y coordinates"
+    default DISPLAY_SDL_HEIGHT if DISPLAY_SDL
+    help
+      Number of Y coordinates the SDL touchscreen reports.
+
+endif # TOUCH_SDL
 
 module = DRIVER_TOUCH
 module-str = Touchscreen

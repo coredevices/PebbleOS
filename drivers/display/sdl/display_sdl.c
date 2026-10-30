@@ -8,9 +8,7 @@
 
 #include <pbl/drivers/display/sdl.h>
 
-#include <board/display.h>
-
-static uint8_t s_fb[PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT];
+static uint8_t s_fb[CONFIG_DISPLAY_SDL_WIDTH * CONFIG_DISPLAY_SDL_HEIGHT];
 static bool s_enabled;
 
 static void prv_flush(const struct pbl_display *disp) {

@@ -24,13 +24,14 @@ PBL_UART_POSIX_DEFINE(s_bt_hci_uart, "bt_hci", PBL_UART_POSIX_BT_HCI, 115200);
 const struct pbl_uart *const BT_HCI_UART = &s_bt_hci_uart.uart;
 #endif
 
-#if PBL_BW
+#ifdef CONFIG_DISPLAY_SDL_MONO
 #define DISPLAY_FORMAT PBL_DISPLAY_FORMAT_MONO
 #else
 #define DISPLAY_FORMAT PBL_DISPLAY_FORMAT_ARGB2222
 #endif
 
-PBL_DISPLAY_SDL_DEFINE(s_display, "display", PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, DISPLAY_FORMAT);
+PBL_DISPLAY_SDL_DEFINE(s_display, "display", CONFIG_DISPLAY_SDL_WIDTH, CONFIG_DISPLAY_SDL_HEIGHT,
+                       DISPLAY_FORMAT);
 
 const struct pbl_display *const DISPLAY = &s_display;
 

@@ -78,6 +78,6 @@ static const struct pbl_touch_ops s_ops = {
 
 PBL_TOUCH_STATE_DEFINE(pbl_touch_qemu);
 const struct pbl_touch pbl_touch_qemu =
-    PBL_TOUCH_INIT(pbl_touch_qemu, "touch", nullptr, &s_ops, .size_x = PBL_DISPLAY_WIDTH,
-                   .size_y = PBL_DISPLAY_HEIGHT);
+    PBL_TOUCH_INIT(pbl_touch_qemu, "touch", nullptr, &s_ops, .size_x = CONFIG_TOUCH_QEMU_SIZE_X,
+                   .size_y = CONFIG_TOUCH_QEMU_SIZE_Y);
 PBL_DEVICE_REGISTER(pbl_touch_qemu, &pbl_touch_qemu.dev);

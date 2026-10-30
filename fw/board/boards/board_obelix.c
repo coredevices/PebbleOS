@@ -71,10 +71,10 @@ static const struct pbl_gpio s_display_discharge[] = {
 
 static const struct pbl_panel_timing s_panel_timing = {
   .clock_hz = 746268,
-  .hactive = PBL_DISPLAY_WIDTH,
+  .hactive = 200,
   .hback_porch = 2,
   .hfront_porch = 6,
-  .vactive = PBL_DISPLAY_HEIGHT,
+  .vactive = 228,
   .vback_porch = 0,
   .vfront_porch = 6,
   .enable_start = 3,
@@ -88,7 +88,7 @@ PBL_PANEL_JDI_MIP_DEFINE(s_panel, "panel", &s_panel_timing, PBL_GPIO(SF32LB_GPIO
 PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_IRQN(LCDC1),
                                PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_LCDC1),
                                PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
-                               &s_panel.panel, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, false,
+                               &s_panel.panel, 200, 228, false,
                                PBL_PINCTRL(&s_display_default, nullptr, 0), s_display_discharge,
                                ARRAY_LENGTH(s_display_discharge));
 
@@ -214,7 +214,7 @@ PBL_IRQ_CONNECT(I2C3, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c3, 0);
 
 PBL_CST816_DEFINE(s_cst816, &s_i2c3.bus, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 27, PBL_GPIO_PULL_UP),
                   PBL_GPIO(&s_npm1300_gpio.port, 2, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
-                  .size_x = PBL_DISPLAY_WIDTH, .size_y = PBL_DISPLAY_HEIGHT);
+                  .size_x = 200, .size_y = 228);
 
 const struct pbl_touch *const TOUCH = &s_cst816.touch;
 

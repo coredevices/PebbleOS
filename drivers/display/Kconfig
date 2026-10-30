@@ -37,6 +37,25 @@ config DISPLAY_SDL
     help
       Display shown in an SDL window on the host of a native build.
 
+if DISPLAY_SDL
+
+config DISPLAY_SDL_WIDTH
+    int "SDL display width"
+    help
+      Width of the SDL display, in pixels.
+
+config DISPLAY_SDL_HEIGHT
+    int "SDL display height"
+    help
+      Height of the SDL display, in pixels.
+
+config DISPLAY_SDL_MONO
+    bool "SDL display is monochrome"
+    help
+      The SDL display takes a 1-bit framebuffer, 8-bit color otherwise.
+
+endif # DISPLAY_SDL
+
 config DISPLAY_SHELL
     bool "Shell commands"
     default y

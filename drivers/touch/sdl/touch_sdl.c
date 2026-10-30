@@ -32,8 +32,8 @@ static void prv_touch_isr(void *arg) {
 
   s_last = (struct prv_touch_event){
     .pressed = e->pressed,
-    .x = CLIP(e->x, 0, PBL_DISPLAY_WIDTH - 1),
-    .y = CLIP(e->y, 0, PBL_DISPLAY_HEIGHT - 1),
+    .x = CLIP(e->x, 0, CONFIG_TOUCH_SDL_SIZE_X - 1),
+    .y = CLIP(e->y, 0, CONFIG_TOUCH_SDL_SIZE_Y - 1),
   };
 
   if (!s_enabled || s_work_pending) {
@@ -50,7 +50,7 @@ void touch_sdl_changed(bool pressed, int x, int y) {
 }
 
 static int prv_init(const struct pbl_touch *touch) {
-  touch_sdl_bottom_init(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
+  touch_sdl_bottom_init(CONFIG_TOUCH_SDL_SIZE_X, CONFIG_TOUCH_SDL_SIZE_Y);
 
   return 0;
 }
@@ -75,6 +75,6 @@ static const struct pbl_touch_ops s_ops = {
 
 PBL_TOUCH_STATE_DEFINE(pbl_touch_sdl);
 const struct pbl_touch pbl_touch_sdl =
-    PBL_TOUCH_INIT(pbl_touch_sdl, "touch", nullptr, &s_ops, .size_x = PBL_DISPLAY_WIDTH,
-                   .size_y = PBL_DISPLAY_HEIGHT);
+    PBL_TOUCH_INIT(pbl_touch_sdl, "touch", nullptr, &s_ops, .size_x = CONFIG_TOUCH_SDL_SIZE_X,
+                   .size_y = CONFIG_TOUCH_SDL_SIZE_Y);
 PBL_DEVICE_REGISTER(pbl_touch_sdl, &pbl_touch_sdl.dev);
