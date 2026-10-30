@@ -9,7 +9,6 @@
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/task_timer_manager.h>
 #include <kernel/util/task_init.h>

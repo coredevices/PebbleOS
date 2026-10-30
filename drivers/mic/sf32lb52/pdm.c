@@ -20,7 +20,6 @@
 #include <pbl/util/circular_buffer.h>
 
 #include <board/board.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
 

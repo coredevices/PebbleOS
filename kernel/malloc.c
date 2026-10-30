@@ -85,3 +85,21 @@ char *pbl_strdup_check(const char *s) {
 void pbl_free(void *ptr) {
   pbl_heap_free(&s_kernel_heap, ptr, (uintptr_t)PBL_RETURN_ADDRESS(0));
 }
+
+// The firmware links with --wrap for these, so code that calls libc directly, mostly third party,
+// allocates from the kernel heap.
+void *__wrap_malloc(size_t size) {
+  return pbl_heap_alloc(&s_kernel_heap, size, (uintptr_t)PBL_RETURN_ADDRESS(0));
+}
+
+void *__wrap_calloc(size_t count, size_t size) {
+  return pbl_heap_calloc(&s_kernel_heap, count, size, (uintptr_t)PBL_RETURN_ADDRESS(0));
+}
+
+void *__wrap_realloc(void *ptr, size_t size) {
+  return pbl_heap_realloc(&s_kernel_heap, ptr, size, (uintptr_t)PBL_RETURN_ADDRESS(0));
+}
+
+void __wrap_free(void *ptr) {
+  pbl_heap_free(&s_kernel_heap, ptr, (uintptr_t)PBL_RETURN_ADDRESS(0));
+}

@@ -5,8 +5,6 @@
 #include <pbl/services/get_bytes/get_bytes_storage.h>
 #include <pbl/util/size.h>
 
-#include <kernel/pbl_malloc.h>
-
 //! Skeleton implementation struct
 typedef struct GetBytesStorageImplementation {
   GetBytesStorageType type;

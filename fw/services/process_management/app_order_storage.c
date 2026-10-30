@@ -7,7 +7,6 @@
 #include <pbl/services/process_management/app_order_storage.h>
 
 #include <applib/app_malloc.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_install_manager.h>
 

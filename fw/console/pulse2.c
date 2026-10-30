@@ -32,7 +32,6 @@
 #include <console/control_protocol.h>
 #include <console/control_protocol_impl.h>
 #include <console/dbgserial.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 #define LCP_PROTOCOL_NUMBER (0xC021)
