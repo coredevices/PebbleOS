@@ -31,6 +31,9 @@ static FILE *prv_open_emoji(ResAppNum app_num, uint32_t id) {
     case RESOURCE_ID_GOTHIC_28_EMOJI:
       path = FIRMWARE_EMOJI_DIR "/EMOJI_28" EMOJI_SUFFIX;
       break;
+    case RESOURCE_ID_GOTHIC_36_EMOJI:
+      path = FIRMWARE_EMOJI_DIR "/EMOJI_36" EMOJI_SUFFIX;
+      break;
     default:
       return nullptr;
   }
