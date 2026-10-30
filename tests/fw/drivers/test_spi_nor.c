@@ -377,7 +377,9 @@ static const struct pbl_spi_mem s_xip_bus =
     PBL_SPI_MEM_INIT(s_xip_bus, "xip_bus", nullptr, &s_bus_ops, PBL_SPI_MEM_XIP);
 PBL_DEVICE_REGISTER(s_xip_bus, &s_xip_bus.dev);
 
-static const struct pbl_flash_otp_cell s_otp_cells[] = {BOARD_OTP_CELLS};
+static const struct pbl_flash_otp_cell s_otp_cells[] = {
+  BOARD_OTP_CELLS, BOARD_OTP_CELLS_SOC_CONFIG
+};
 static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
 
 PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, 0U, &s_otp_layout);
@@ -912,6 +914,43 @@ void test_spi_nor__slot_addresses_gd25lq255e(void) {
 void test_spi_nor__slot_addresses_gd25q256e(void) {
   prv_reset(CHIP_GD25Q256E);
   prv_check_slot_addresses(prv_init(&s_nor_q), 1U, 3U);
+}
+
+// The SoC factory configuration of SF32LB52 boards sits in security registers 2 and 3 of their
+// GD25Q256E, apart from the factory slots in register 1; its system page, the first 32 bytes of
+// register 1, is the hw-version cell
+void test_spi_nor__soc_config_addresses_gd25q256e(void) {
+  static const struct {
+    const char *name;
+    uint32_t phys;
+    uint32_t len;
+  } cells[] = {
+    {"hw-version", 0x1000U, 32U},         {"serial-number", 0x1020U, 32U},
+    {"pcba-serial-number", 0x1040U, 32U}, {"soc-config-user", 0x2000U, 256U},
+    {"soc-config-cust", 0x3000U, 256U},
+  };
+  const struct pbl_flash *flash;
+
+  prv_reset(CHIP_GD25Q256E);
+  flash = prv_init(&s_nor_q);
+
+  for (size_t i = 0U; i < ARRAY_LENGTH(cells); i++) {
+    const struct pbl_flash_otp_cell *cell = pbl_flash_otp_cell_get(flash, cells[i].name);
+    uint32_t last = cells[i].phys + cells[i].len - 1U;
+    uint8_t byte = (uint8_t)(0x20U + i);
+
+    cl_assert(cell != nullptr);
+    cl_assert_equal_i(cell->len, cells[i].len);
+    cl_assert_equal_i(pbl_flash_otp_write(flash, cell->offset, &byte, 1U), 0);
+    cl_assert_equal_i(pbl_flash_otp_write(flash, cell->offset + cell->len - 1U, &byte, 1U), 0);
+    cl_assert_equal_i(s_sec[cells[i].phys >> 12][cells[i].phys & 0xFFFU], byte);
+    cl_assert_equal_i(s_sec[last >> 12][last & 0xFFFU], byte);
+
+    for (size_t j = 0U; j < i; j++) {
+      cl_assert(cells[j].phys + cells[j].len <= cells[i].phys ||
+                cells[i].phys + cells[i].len <= cells[j].phys);
+    }
+  }
 }
 
 void test_spi_nor__otp_slots(void) {
