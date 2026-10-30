@@ -13,10 +13,10 @@
 #include <pbl/util/trig.h>
 
 #include <applib/app_timer.h>
+#include <applib/applib_malloc.auto.h>
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
 #include <kernel/kernel_applib_state.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 
@@ -43,7 +43,7 @@ static CompassServiceConfig **prv_get_config(PebbleTask task) {
     // Note that config will never be NULL after grabbing it from an app,
     // worker, or kernel state.  However, the value pointed to it may be
     // NULL.
-    *config = task_zalloc_check(sizeof(CompassServiceConfig));
+    *config = applib_zalloc(sizeof(CompassServiceConfig));
   }
 
   return config;
@@ -121,6 +121,6 @@ void compass_service_subscribe(CompassHeadingHandler handler) {
 void compass_service_unsubscribe(void) {
   CompassServiceConfig **config = prv_get_config(PebbleTask_Unknown);
   event_service_client_unsubscribe(&(*config)->info);
-  task_free(*config);
+  applib_free(*config);
   *config = nullptr;
 }

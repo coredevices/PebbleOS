@@ -6,11 +6,11 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/units.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/pbl_std/timelocal.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/day_picker.h>
 #include <applib/ui/menu_layer.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 
@@ -142,11 +142,11 @@ static void prv_day_picker_window_unload(Window *window) {
   DayPickerData *data = (DayPickerData *)window_get_user_data(window);
   menu_layer_deinit(&data->menu_layer);
   i18n_free_all(&data->window);
-  task_free(data);
+  applib_free(data);
 }
 
 void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *context) {
-  DayPickerData *data = task_malloc_check(sizeof(DayPickerData));
+  DayPickerData *data = applib_malloc(sizeof(DayPickerData));
   *data = (DayPickerData){
     .initial = config.initial,
     .callback = callback,
@@ -310,12 +310,12 @@ static void prv_custom_day_picker_window_unload(Window *window) {
   gbitmap_deinit(&data->deselected_icon);
   gbitmap_deinit(&data->checkmark_icon);
   i18n_free_all(&data->window);
-  task_free(data);
+  applib_free(data);
 }
 
 void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallback callback,
                             void *context, GColor highlight_color) {
-  CustomDayPickerData *data = task_malloc_check(sizeof(CustomDayPickerData));
+  CustomDayPickerData *data = applib_malloc(sizeof(CustomDayPickerData));
   *data = (CustomDayPickerData){
     .callback = callback,
     .callback_context = context,

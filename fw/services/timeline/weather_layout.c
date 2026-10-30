@@ -9,12 +9,12 @@
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/preferred_content_size.h>
 #include <applib/ui/ui.h>
 #include <apps/system/timeline/text_node.h>
 #include <font_resource_keys.auto.h>
-#include <kernel/pbl_malloc.h>
 
 #define WEATHER_CARD_TITLE_LENGTH 30 // We're limited to one line for this layout
 
@@ -203,7 +203,7 @@ bool weather_layout_verify(bool existing_attributes[]) {
 }
 
 LayoutLayer *weather_layout_create(const LayoutLayerConfig *config) {
-  WeatherLayout *layout = task_zalloc_check(sizeof(WeatherLayout));
+  WeatherLayout *layout = applib_zalloc(sizeof(WeatherLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
     .attributes = {AttributeIdTitle, AttributeIdSubtitle},

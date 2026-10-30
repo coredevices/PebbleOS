@@ -3,7 +3,7 @@
 
 #include "menu_layer_legacy2.h"
 
-#include <kernel/pbl_malloc.h>
+#include <applib/applib_malloc.auto.h>
 
 extern void menu_layer_init_scroll_layer_callbacks(MenuLayer *menu_layer);
 
@@ -24,7 +24,7 @@ void menu_layer_legacy2_init(MenuLayer *menu_layer, const GRect *frame) {
 }
 
 MenuLayer *menu_layer_legacy2_create(GRect frame) {
-  MenuLayer *layer = task_malloc(sizeof(MenuLayer));
+  MenuLayer *layer = applib_malloc(sizeof(MenuLayer));
   if (layer) {
     menu_layer_legacy2_init(layer, &frame);
   }

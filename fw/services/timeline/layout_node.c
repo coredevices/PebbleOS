@@ -8,7 +8,7 @@
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/applib_malloc.auto.h>
 
 static GTextNodeText *prv_create_text_node_buffer(const char *str) {
   const size_t str_length = str ? (strlen(str) + 1) : 0;
@@ -394,7 +394,7 @@ GTextNodeVertical *layout_create_metrics_node(const LayoutLayer *layout_ref) {
 
   if (num_metrics > 1) {
     layout->num_metric_icon_layers = num_metrics - 1;
-    layout->metric_icon_layers = task_zalloc_check((num_metrics - 1) * sizeof(KinoLayer *));
+    layout->metric_icon_layers = applib_zalloc((num_metrics - 1) * sizeof(KinoLayer *));
   }
 
   const int num_nodes = PBL_IF_ROUND_ELSE(num_metrics + 1, // optional page break

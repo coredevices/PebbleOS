@@ -11,8 +11,8 @@
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/util/uuid.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
@@ -61,7 +61,7 @@ bool dls_lock_session(DataLoggingSession *session) {
 // Callback used to free a storage buffer from unprivileged mode.
 static void prv_free_storage_buffer_cb(void *p) {
   PBL_LOG_DBG("Freeing buffer storage ptr: %p", p);
-  task_free(p);
+  applib_free(p);
 }
 
 // ---------------------------------------------------------------------------------------

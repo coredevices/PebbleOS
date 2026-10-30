@@ -21,7 +21,6 @@
 #include <applib/ui/click.h>
 #include <applib/ui/menu_text_scroll.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
 
 #ifdef CONFIG_TOUCH
@@ -939,7 +938,7 @@ void menu_layer_update_proc(Layer *scroll_content_layer, GContext *ctx) {
   // Assign the new cache:
   menu_layer->cache.cursor = render_iter->new_cache;
 
-  task_free(render_iter);
+  applib_free(render_iter);
 
   if (menu_layer->scrollbar_visible) {
     prv_scrollbar_draw(menu_layer, ctx, content_top_y);

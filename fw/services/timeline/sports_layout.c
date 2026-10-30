@@ -11,11 +11,11 @@
 #include <pbl/util/string.h>
 #include <pbl/util/units.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/preferred_content_size.h>
 #include <applib/ui/ui.h>
 #include <font_resource_keys.auto.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
@@ -285,7 +285,7 @@ bool sports_layout_verify(bool existing_attributes[]) {
 }
 
 LayoutLayer *sports_layout_create(const LayoutLayerConfig *config) {
-  SportsLayout *layout = task_zalloc_check(sizeof(SportsLayout));
+  SportsLayout *layout = applib_zalloc(sizeof(SportsLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
     .attributes = {AttributeIdTitle, AttributeIdSubtitle},
