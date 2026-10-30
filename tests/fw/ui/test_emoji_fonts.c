@@ -79,12 +79,13 @@ static void prv_render_text(GContext *ctx, const char *text, GFont const font, c
   }
 }
 
-static GSize prv_draw_emoji(GContext *ctx, const GRect *bounds, GFont font, bool render) {
+static GSize prv_draw_emoji(GContext *ctx, const char *text, const GRect *bounds, GFont font,
+                            bool render) {
   TextLayoutExtended layout = {
     .line_spacing_delta = 2, // Give some space for the larger emojis
   };
   graphics_context_set_text_color(ctx, GColorBlack);
-  prv_render_text(ctx, s_emoji_string, font, bounds, GTextOverflowModeWordWrap, GTextAlignmentLeft,
+  prv_render_text(ctx, text, font, bounds, GTextOverflowModeWordWrap, GTextAlignmentLeft,
                   (GTextLayoutCacheRef)&layout, true /* render */);
   return layout.max_used_size;
 }
@@ -102,7 +103,7 @@ void prv_prepare_canvas(GSize bitmap_size, GColor background_color) {
          s_dest_bitmap->row_size_bytes * s_dest_bitmap->bounds.size.h);
 }
 
-void prv_prepare_canvas_and_render_emoji(ResourceId font_handle) {
+static void prv_prepare_canvas_and_render_text(ResourceId font_handle, const char *text) {
   // Calculate canvas size necessary
   cl_assert(text_resources_init_font(0, font_handle, 0, &s_font_info));
 
@@ -116,7 +117,8 @@ void prv_prepare_canvas_and_render_emoji(ResourceId font_handle) {
   prv_prepare_canvas(max_size, GColorWhite);
 
   const GRect max_draw_frame = grect_inset_internal((GRect){.size = max_size}, margin.x, margin.y);
-  const GSize used_size = prv_draw_emoji(&s_ctx, &max_draw_frame, &s_font_info, false /* render */);
+  const GSize used_size =
+      prv_draw_emoji(&s_ctx, text, &max_draw_frame, &s_font_info, false /* render */);
 
   // Resize the canvas to the used size.
   const GSize canvas_size = {max_width, used_size.h + 2 * margin.y};
@@ -124,7 +126,11 @@ void prv_prepare_canvas_and_render_emoji(ResourceId font_handle) {
 
   // Create the new canvas
   const GRect draw_frame = grect_inset_internal((GRect){.size = canvas_size}, margin.x, margin.y);
-  prv_draw_emoji(&s_ctx, &draw_frame, &s_font_info, true /* render */);
+  prv_draw_emoji(&s_ctx, text, &draw_frame, &s_font_info, true /* render */);
+}
+
+void prv_prepare_canvas_and_render_emoji(ResourceId font_handle) {
+  prv_prepare_canvas_and_render_text(font_handle, s_emoji_string);
 }
 
 // Tests
@@ -153,5 +159,11 @@ void test_emoji_fonts__gothic_28_emoji(void) {
 void test_emoji_fonts__gothic_36_text(void) {
   // Gothic 36 has no emoji font of its own, so it draws them from an emoji font
   prv_prepare_canvas_and_render_emoji(RESOURCE_ID_GOTHIC_36);
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_emoji_fonts__gothic_36_text_fallback(void) {
+  // The 36 point emoji font lacks the Pebble-style emoji, so they come from the 28 point one
+  prv_prepare_canvas_and_render_text(RESOURCE_ID_GOTHIC_36, "Noto 🚁🎨🦈🦔 Pebble 😄💩❤★");
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
