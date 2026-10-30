@@ -61,6 +61,12 @@ jobs:
           - watch: getafix
             board: getafix@dvt2
             variant: prf
+          - watch: obelix
+            board: obelix@pvt
+            variant: normal
+          - watch: obelix
+            board: obelix@pvt
+            variant: prf
 
     steps:
       - name: Mark Github workspace as safe
@@ -125,6 +131,12 @@ jobs:
             variant: normal
           - watch: getafix
             board: getafix@dvt2
+            variant: prf
+          - watch: obelix
+            board: obelix@pvt
+            variant: normal
+          - watch: obelix
+            board: obelix@pvt
             variant: prf
 
     steps:
