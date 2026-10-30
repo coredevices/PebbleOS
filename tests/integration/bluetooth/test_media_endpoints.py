@@ -85,11 +85,17 @@ def _music_state(prompt):
     )
 
 
-def _wait_music(prompt, timeout=10.0, **expected):
+def _position(state):
+    return tuple(int(v) for v in state.get("Position", "0/0").split("/"))
+
+
+def _wait_music(prompt, timeout=10.0, until=None, **expected):
     deadline = time.monotonic() + timeout
     while True:
         state = _music_state(prompt)
-        if all(state.get(k) == v for k, v in expected.items()):
+        if all(state.get(k) == v for k, v in expected.items()) and (
+            until is None or until(state)
+        ):
             return state
         if time.monotonic() > deadline:
             raise AssertionError(f"music state {state}, expected {expected}")
@@ -111,13 +117,19 @@ def test_now_playing(prompt, phone):
         + struct.pack("<BiiBB", PLAYBACK_PLAYING, 42000, 100, 1, 1),
     )
     phone.send(MUSIC_ENDPOINT, bytes([MUSIC_VOLUME, 65]))
-    state = _wait_music(prompt, Title="Itest Song", Volume="65")
+    # The position can lag the other fields, so wait for it too.
+    state = _wait_music(
+        prompt,
+        Title="Itest Song",
+        Volume="65",
+        until=lambda s: _position(s)[0] >= 42000,
+    )
     assert state["Server"] == "PP"
     assert state["Player"] == "Itest Player"
     assert state["Artist"] == "Itest Artist"
     assert state["Album"] == "Itest Album"
     assert state["State"] == str(STATE_PLAYING)
-    position, length = (int(v) for v in state["Position"].split("/"))
+    position, length = _position(state)
     assert length == 215000
     assert 42000 <= position < 215000
 
