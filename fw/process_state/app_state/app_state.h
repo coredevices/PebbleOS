@@ -21,6 +21,7 @@
 #include <applib/health_service_private.h>
 #include <applib/mic_capture_private.h>
 #include <applib/mic_stream_private.h>
+#include <applib/notification_service_private.h>
 #include <applib/pbl_std/locale.h>
 #include <applib/plugin_service_private.h>
 #include <applib/tick_timer_service.h>
@@ -107,6 +108,8 @@ PluginServiceState *app_state_get_plugin_service(void);
 LogState *app_state_get_log_state(void);
 
 BatteryStateServiceState *app_state_get_battery_state_service_state(void);
+
+NotificationServiceState *app_state_get_notification_service_state(void);
 
 BacklightServiceState *app_state_get_backlight_service_state(void);
 
