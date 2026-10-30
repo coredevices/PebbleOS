@@ -15,7 +15,6 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <nrfx_pdm.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_nrf5, CONFIG_DRIVER_MIC_LOG_LEVEL);

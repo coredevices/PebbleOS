@@ -14,7 +14,6 @@
 #include <applib/app_malloc.h>
 #include <applib/ui/menu_layer.h>
 #include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
 

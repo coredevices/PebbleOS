@@ -14,7 +14,6 @@
 #include <applib/app_message/app_message_internal.h>
 #include <clar.h>
 #include <fff.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 
 extern const SessionSendJobImpl s_app_message_send_job_impl;

@@ -55,11 +55,6 @@ static void prv_pointer_list_remove(void *ptr) {
 
 static size_t s_max_size_allowed = ~0;
 
-static struct pbl_heap s_heap;
-struct pbl_heap *task_heap_get_for_current_task(void) {
-  return &s_heap;
-}
-
 static void *malloc_and_track(size_t bytes, void *lr) {
   if (bytes >= s_max_size_allowed) {
     return nullptr;
@@ -125,44 +120,6 @@ void fake_pbl_malloc_clear_tracking(void) {
   s_max_size_allowed = ~0;
 }
 
-void *task_malloc(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_malloc_check(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_realloc(void *ptr, size_t bytes) {
-  return realloc_and_track(ptr, bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_zalloc(size_t bytes) {
-  void *ptr = task_malloc(bytes);
-  if (ptr) {
-    memset(ptr, 0, bytes);
-  }
-  return ptr;
-}
-
-void *task_zalloc_check(size_t bytes) {
-  void *ptr = task_malloc_check(bytes);
-  memset(ptr, 0, bytes);
-  return ptr;
-}
-
-void *task_calloc(size_t count, size_t size) {
-  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_calloc_check(size_t count, size_t size) {
-  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
-}
-
-void task_free(void *ptr) {
-  free_and_track(ptr);
-}
-
 void *applib_zalloc(size_t bytes) {
   return calloc_and_track(1, bytes, PBL_RETURN_ADDRESS(0));
 }
@@ -183,10 +140,7 @@ void app_free(void *ptr) {
   free_and_track(ptr);
 }
 
-char *task_strdup(const char *s) {
-  return pbl_strdup(s);
-}
-
+static struct pbl_heap s_heap;
 struct pbl_heap *pbl_malloc_heap(void) {
   return &s_heap;
 }

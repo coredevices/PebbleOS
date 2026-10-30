@@ -16,7 +16,6 @@
 #include <pbl/services/vibe_pattern.h>
 
 #include <kernel/memory_layout.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/segment.h>
 #include <kernel/util/task_init.h>

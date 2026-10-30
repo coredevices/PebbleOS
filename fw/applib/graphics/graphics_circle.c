@@ -14,8 +14,6 @@
 #include <pbl/util/testing.h>
 #include <pbl/util/trig.h>
 
-#include <kernel/pbl_malloc.h>
-
 #if PBL_COLOR
 static Fixed_S16_3 prv_get_circle_border(int16_t y, uint16_t radius) {
   // Match to the precision we need here

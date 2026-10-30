@@ -14,7 +14,6 @@
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
 
