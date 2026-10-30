@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
@@ -14,7 +15,6 @@
 
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_weather, CONFIG_SERVICE_WEATHER_LOG_LEVEL);
 
@@ -82,10 +82,10 @@ static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
   };
 
   // add 1 for null terminator
-  forecast_out->location_name = task_zalloc_check(location_pstring->str_length + 1);
+  forecast_out->location_name = pbl_zalloc_check(location_pstring->str_length + 1);
   pbl_pstring16_to_cstring(location_pstring, forecast_out->location_name);
 
-  forecast_out->current_weather_phrase = task_zalloc_check(phrase_pstring->str_length + 1);
+  forecast_out->current_weather_phrase = pbl_zalloc_check(phrase_pstring->str_length + 1);
   pbl_pstring16_to_cstring(phrase_pstring, forecast_out->current_weather_phrase);
 
   return true;
@@ -118,14 +118,14 @@ static void prv_add_to_list_if_valid(WeatherDBKey *key, WeatherDBEntry *entry, v
     return; // location not found in ordering list, skip over
   }
 
-  WeatherDataListNode *node = task_zalloc_check(sizeof(WeatherDataListNode));
+  WeatherDataListNode *node = pbl_zalloc_check(sizeof(WeatherDataListNode));
   node->id = location_index;
   WeatherLocationForecast *forecast = &node->forecast;
 
   if (!prv_fill_forecast_from_entry(entry, forecast)) {
     uuid_to_string(key, key_string_buffer);
     PBL_LOG_WRN("Could not create forecast from %s's entry", key_string_buffer);
-    task_free(node);
+    pbl_free(node);
     return;
   }
 
@@ -173,21 +173,21 @@ static void prv_update_default_location_cache(void) {
   if (entry_len == 0) {
     goto cleanup;
   }
-  WeatherDBEntry *entry = task_zalloc_check(entry_len);
+  WeatherDBEntry *entry = pbl_zalloc_check(entry_len);
   status_t rv = weather_db_read((uint8_t *)&default_location_key, sizeof(default_location_key),
                                 (uint8_t *)entry, entry_len);
   if (rv != S_SUCCESS) {
     goto free_entry;
   }
-  WeatherLocationForecast *forecast_out = task_zalloc_check(sizeof(WeatherLocationForecast));
+  WeatherLocationForecast *forecast_out = pbl_zalloc_check(sizeof(WeatherLocationForecast));
   if (prv_fill_forecast_from_entry(entry, forecast_out)) {
     s_default_forecast = forecast_out;
   } else {
-    task_free(forecast_out);
+    pbl_free(forecast_out);
   }
 
 free_entry:
-  task_free(entry);
+  pbl_free(entry);
 cleanup:
   pbl_mutex_unlock(&s_mutex);
 }
@@ -196,14 +196,14 @@ WeatherLocationForecast *weather_service_create_default_forecast(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   WeatherLocationForecast *forecast = nullptr;
   if (s_default_forecast) {
-    forecast = task_zalloc_check(sizeof(WeatherLocationForecast));
+    forecast = pbl_zalloc_check(sizeof(WeatherLocationForecast));
     *forecast = *s_default_forecast;
     const size_t location_name_length = strlen(s_default_forecast->location_name);
-    forecast->location_name = task_zalloc_check(location_name_length + 1);
+    forecast->location_name = pbl_zalloc_check(location_name_length + 1);
     strncpy(forecast->location_name, s_default_forecast->location_name, location_name_length);
 
     const size_t phrase_length = strlen(s_default_forecast->current_weather_phrase);
-    forecast->current_weather_phrase = task_zalloc_check(phrase_length + 1);
+    forecast->current_weather_phrase = pbl_zalloc_check(phrase_length + 1);
     strncpy(forecast->current_weather_phrase, s_default_forecast->current_weather_phrase,
             phrase_length);
   }
@@ -213,9 +213,9 @@ WeatherLocationForecast *weather_service_create_default_forecast(void) {
 
 void weather_service_destroy_default_forecast(WeatherLocationForecast *forecast) {
   if (forecast) {
-    task_free(forecast->location_name);
-    task_free(forecast->current_weather_phrase);
-    task_free(forecast);
+    pbl_free(forecast->location_name);
+    pbl_free(forecast->current_weather_phrase);
+    pbl_free(forecast);
   }
 }
 
@@ -286,10 +286,10 @@ WeatherDataListNode *weather_service_locations_list_get_location_at_index(Weathe
 
 void weather_service_locations_list_destroy(WeatherDataListNode *head) {
   while (head) {
-    task_free(head->forecast.location_name);
-    task_free(head->forecast.current_weather_phrase);
+    pbl_free(head->forecast.location_name);
+    pbl_free(head->forecast.current_weather_phrase);
     WeatherDataListNode *next = (WeatherDataListNode *)head->node.next;
-    task_free(head);
+    pbl_free(head);
     head = next;
   }
 }

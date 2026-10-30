@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/weather_db.h>
@@ -9,8 +10,6 @@
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/util/units.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -86,7 +85,7 @@ static bool prv_weather_db_for_each_cb(SettingsFile *file, SettingsRecordInfo *i
   WeatherDBKey key;
   info->get_key(file, &key, info->key_len);
 
-  WeatherDBEntry *entry = task_zalloc_check(info->val_len);
+  WeatherDBEntry *entry = pbl_zalloc_check(info->val_len);
   info->get_val(file, entry, info->val_len);
   if (!weather_db_entry_is_supported(entry)) {
     PBL_LOG_WRN("Unsupported weather entry version: %" PRIu8, entry->version);
@@ -97,7 +96,7 @@ static bool prv_weather_db_for_each_cb(SettingsFile *file, SettingsRecordInfo *i
   cb_data->cb(&key, entry, cb_data->cb_ctx);
 
 cleanup:
-  task_free(entry);
+  pbl_free(entry);
   return true;
 }
 

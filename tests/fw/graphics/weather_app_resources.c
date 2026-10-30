@@ -7,9 +7,9 @@
 
 #include <pbl/util/size.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gdraw_command_private.h>
 #include <applib/ui/animation.h>
-#include <kernel/pbl_malloc.h>
 
 #if defined(UNITTEST)
 #include <stdio.h>
@@ -26,7 +26,7 @@ GDrawCommandImage *weather_app_resource_create_cloud() {
 
   const uint16_t num_commands = 5;
 
-  GDrawCommandImage *image = task_malloc(
+  GDrawCommandImage *image = applib_malloc(
       sizeof(GDrawCommandImage) + sizeof(GDrawCommand) * num_commands + sizeof(c0_points) +
       sizeof(c1_points) + sizeof(c2_points) + sizeof(c3_points) + sizeof(c4_points));
 
@@ -112,7 +112,7 @@ GDrawCommandImage *weather_app_resource_create_sun(void) {
                         {31, 36}, {21, 36}, {13, 28}, {13, 18}};
   const uint16_t num_commands = 5;
 
-  GDrawCommandImage *image = task_malloc(
+  GDrawCommandImage *image = applib_malloc(
       sizeof(GDrawCommandImage) + sizeof(GDrawCommand) * num_commands + sizeof(c0_points) +
       sizeof(c1_points) + sizeof(c2_points) + sizeof(c3_points) + sizeof(c4_points));
 

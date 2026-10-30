@@ -8,9 +8,9 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/i18n/i18n.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/ui/action_bar_layer.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/process_manager.h>
 #include <process_management/worker_manager.h>
@@ -48,7 +48,7 @@ static void prv_click_confirm_decline_callback(ClickRecognizerRef recognizer, vo
   }
 
   s_is_on_screen = false;
-  task_free(args);
+  applib_free(args);
 }
 
 static void prv_click_config_provider(void *context) {
@@ -92,7 +92,7 @@ void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
   ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Background App");
   Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
   const char *fmt = i18n_get("Run %s instead of %s as the background app?", confirmation_dialog);
-  char *msg_buffer = task_zalloc_check(DIALOG_MAX_MESSAGE_LEN);
+  char *msg_buffer = applib_zalloc(DIALOG_MAX_MESSAGE_LEN);
   sniprintf(msg_buffer, DIALOG_MAX_MESSAGE_LEN, fmt, new_entry.name, old_entry.name);
 
   confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_click_config_provider);
@@ -101,10 +101,10 @@ void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
   dialog_set_text_color(dialog, GColorWhite);
   dialog_set_text(dialog, msg_buffer);
 
-  task_free(msg_buffer);
+  applib_free(msg_buffer);
   i18n_free_all(confirmation_dialog);
 
-  SwitchWorkerUIArgs *args = task_malloc_check(sizeof(SwitchWorkerUIArgs));
+  SwitchWorkerUIArgs *args = applib_malloc(sizeof(SwitchWorkerUIArgs));
   *args = (SwitchWorkerUIArgs){
     .new_worker_id = new_worker_id,
     .set_as_default = set_as_default,

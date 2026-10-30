@@ -27,7 +27,6 @@
 #include <pbl/util/units.h>
 
 #include <applib/event_service_client.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/timeline_resource_ids.auto.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -1901,7 +1900,7 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
 // ------------------------------------------------------------------------------------------------
 void prv_process_activity_sessions(time_t now_utc) {
   uint32_t num_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
-  ActivitySession *sessions = task_zalloc_check(num_sessions * sizeof(ActivitySession));
+  ActivitySession *sessions = pbl_zalloc_check(num_sessions * sizeof(ActivitySession));
 
   if (activity_get_sessions(&num_sessions, sessions)) {
     for (unsigned int i = 0; i < num_sessions; i++) {
@@ -1924,7 +1923,7 @@ void prv_process_activity_sessions(time_t now_utc) {
     }
   }
 
-  task_free(sessions);
+  pbl_free(sessions);
 }
 
 // ------------------------------------------------------------------------------------------------

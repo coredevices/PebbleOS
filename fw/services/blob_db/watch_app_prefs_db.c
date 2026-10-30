@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
@@ -11,7 +12,6 @@
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <kernel/pbl_malloc.h>
 #include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
@@ -59,13 +59,13 @@ static void *prv_get_prefs(const char *pref_key) {
 
   const int len =
       settings_file_get_len(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key));
-  void *prefs = task_zalloc(len);
+  void *prefs = pbl_zalloc(len);
 
   if (prefs) {
     rv = settings_file_get(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key), prefs,
                            len);
     if (rv != S_SUCCESS) {
-      task_free(prefs);
+      pbl_free(prefs);
       prefs = nullptr;
     }
   }
@@ -86,7 +86,7 @@ SerializedReminderAppPrefs *watch_app_prefs_get_reminder(void) {
   SerializedReminderAppPrefs *result = nullptr;
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
   if (s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid) {
-    result = task_zalloc(sizeof(*result));
+    result = pbl_zalloc(sizeof(*result));
     if (result) {
       *result = s_watch_app_prefs_db.cached_reminder_app_prefs;
     }
@@ -102,7 +102,7 @@ SerializedReminderAppPrefs *watch_app_prefs_get_reminder(void) {
 
 void watch_app_prefs_destroy_weather(SerializedWeatherAppPrefs *prefs) {
   if (prefs) {
-    task_free(prefs);
+    pbl_free(prefs);
   }
 }
 // BlobDB APIs

@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
@@ -21,7 +22,6 @@
 #include <applib/data_logging.h>
 #include <applib/health_service.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -374,8 +374,8 @@ static void prv_update_median_hr_bpm(ActivityState *state) {
     int32_t median, total_weight;
 
     // Stats requires an int32_t array and we need one for both the samples and the weights
-    int32_t *sample_buf = task_zalloc_check(num_hr_samples * sizeof(int32_t));
-    int32_t *weight_buf = task_zalloc_check(num_hr_samples * sizeof(int32_t));
+    int32_t *sample_buf = pbl_zalloc_check(num_hr_samples * sizeof(int32_t));
+    int32_t *weight_buf = pbl_zalloc_check(num_hr_samples * sizeof(int32_t));
     for (size_t i = 0; i < num_hr_samples; i++) {
       sample_buf[i] = hr->samples[i];
       weight_buf[i] = hr->weights[i];
@@ -387,8 +387,8 @@ static void prv_update_median_hr_bpm(ActivityState *state) {
 
     // Calculate the weighted median
     median = pbl_stats_weighted_median(sample_buf, weight_buf, num_hr_samples);
-    task_free(sample_buf);
-    task_free(weight_buf);
+    pbl_free(sample_buf);
+    pbl_free(weight_buf);
 
     state->hr.metrics.last_stable_bpm = (uint8_t)median;
     state->hr.metrics.last_stable_bpm_update_time_utc = rtc_get_time();

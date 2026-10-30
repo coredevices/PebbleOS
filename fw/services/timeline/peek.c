@@ -10,7 +10,6 @@
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <shell/prefs.h>
 
 typedef struct TimelinePeekEventData {
@@ -57,13 +56,13 @@ static void prv_put_peek_event(PeekUpdateContext *update, TimelineItemId *item_i
 
 static void prv_peek_will_update(void **context) {
   PeekUpdateContext **update = (PeekUpdateContext **)context;
-  *update = task_zalloc_check(sizeof(PeekUpdateContext));
+  *update = pbl_zalloc_check(sizeof(PeekUpdateContext));
   (*update)->first_header.common.id = UUID_INVALID;
 }
 
 static void prv_peek_did_update(void **context) {
   PeekUpdateContext **update = (PeekUpdateContext **)context;
-  task_free(*update);
+  pbl_free(*update);
 }
 
 static bool prv_is_in_peeking_time_window(SerializedTimelineItemHeader *header, time_t now) {

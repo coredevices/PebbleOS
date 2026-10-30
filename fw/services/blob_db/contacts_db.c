@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/contacts.h>
@@ -9,7 +10,6 @@
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <kernel/pbl_malloc.h>
 #include <system/status_codes.h>
 
 #define SETTINGS_FILE_NAME "contactsdb"
@@ -58,7 +58,7 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
     return 0;
   }
 
-  *contact_out = task_zalloc(contact_len);
+  *contact_out = pbl_zalloc(contact_len);
   if (!*contact_out) {
     prv_close_file_and_unlock_mutex();
     return 0;
@@ -68,7 +68,7 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
                          (void *)*contact_out, contact_len);
   prv_close_file_and_unlock_mutex();
   if (rv != S_SUCCESS) {
-    task_free(*contact_out);
+    pbl_free(*contact_out);
     return 0;
   }
 
@@ -76,7 +76,7 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
 }
 
 void contacts_db_free_serialized_contact(SerializedContact *contact) {
-  task_free(contact);
+  pbl_free(contact);
 }
 
 /////////////////////////

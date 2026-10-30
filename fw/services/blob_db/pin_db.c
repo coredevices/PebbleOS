@@ -15,7 +15,6 @@
 #include <pbl/util/uuid.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
@@ -150,7 +149,7 @@ status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin) {
   if (size <= 0) {
     return E_DOES_NOT_EXIST;
   }
-  uint8_t *read_buf = task_malloc_check(size);
+  uint8_t *read_buf = pbl_malloc_check(size);
   status_t status = pin_db_read((uint8_t *)id, UUID_SIZE, read_buf, size);
   if (status != S_SUCCESS) {
     goto cleanup;
@@ -163,11 +162,11 @@ status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin) {
     goto cleanup;
   }
 
-  task_free(read_buf);
+  pbl_free(read_buf);
   return (S_SUCCESS);
 
 cleanup:
-  task_free(read_buf);
+  pbl_free(read_buf);
   return status;
 }
 

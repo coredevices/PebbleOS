@@ -21,7 +21,7 @@
 /**
  * @brief Read the Send Text app preferences.
  *
- * @return Task heap allocated preferences, NULL on failure. Free with task_free().
+ * @return Preferences on the kernel heap, NULL on failure. Free with pbl_free().
  */
 SerializedSendTextPrefs *watch_app_prefs_get_send_text(void);
 
@@ -38,7 +38,7 @@ SerializedWeatherAppPrefs *watch_app_prefs_get_weather(void);
  *
  * Served from a cache after the first read.
  *
- * @return Task heap allocated preferences, NULL on failure. Free with task_free().
+ * @return Preferences on the kernel heap, NULL on failure. Free with pbl_free().
  */
 SerializedReminderAppPrefs *watch_app_prefs_get_reminder(void);
 
