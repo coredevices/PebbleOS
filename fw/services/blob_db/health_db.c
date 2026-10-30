@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -11,20 +12,20 @@
 #include <pbl/services/activity/hr_util.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/health_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/time.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
 #include <system/hexdump.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define HEALTH_DB_DEBUG       0
 #define HEALTH_DB_MAX_KEY_LEN 30
 
-static const char *HEALTH_DB_FILE_NAME = "healthdb";
+static const char *HEALTH_DB_FILE_NAME = "/healthdb";
 static const int HEALTH_DB_MAX_SIZE = PBL_KIB(12);
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -402,7 +403,7 @@ status_t health_db_delete(const uint8_t *key, int key_len) {
 
 status_t health_db_flush(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  status_t rv = pfs_remove(HEALTH_DB_FILE_NAME);
+  status_t rv = status_from_errno(pbl_fs_unlink(HEALTH_DB_FILE_NAME));
   pbl_mutex_unlock(&s_mutex);
   return rv;
 }

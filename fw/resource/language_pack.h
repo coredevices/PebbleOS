@@ -11,7 +11,7 @@
 #define LANGUAGE_PACK_COUNT           4
 #define LANGUAGE_PACK_RESOURCE_BASE   0x2000
 #define LANGUAGE_PACK_RESOURCE_STRIDE 32
-#define LANGUAGE_PACK_ADD_FILENAME    "lang-add"
+#define LANGUAGE_PACK_ADD_FILENAME    "/lang-add"
 
 static inline uint32_t language_pack_resource_id(uint8_t slot, uint32_t resource_id,
                                                  uint32_t strings_resource_id) {
@@ -21,7 +21,7 @@ static inline uint32_t language_pack_resource_id(uint8_t slot, uint32_t resource
 }
 
 static inline const char *language_pack_filename(uint8_t slot) {
-  static const char *const names[LANGUAGE_PACK_COUNT] = {"lang", "lang1", "lang2", "lang3"};
+  static const char *const names[LANGUAGE_PACK_COUNT] = {"/lang", "/lang1", "/lang2", "/lang3"};
   return slot < LANGUAGE_PACK_COUNT ? names[slot] : NULL;
 }
 

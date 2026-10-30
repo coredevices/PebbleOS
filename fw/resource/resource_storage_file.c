@@ -6,11 +6,14 @@
 #include "language_pack.h"
 #include "resource_storage_impl.h"
 
+#include <errno.h>
 #include <stdint.h>
 
+#include <pbl/crc/crc.h>
+#include <pbl/fs/fs.h>
+#include <pbl/fs/pfs.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 
 #include <resource/resource_ids.auto.h>
@@ -27,7 +30,7 @@ static const FileResourceData s_language_resource_stores[LANGUAGE_PACK_COUNT - 1
 #define LANGUAGE_STORE(slot)                                                   \
   {LANGUAGE_PACK_RESOURCE_BASE + (slot) * LANGUAGE_PACK_RESOURCE_STRIDE + 1,   \
    LANGUAGE_PACK_RESOURCE_BASE + ((slot) + 1) * LANGUAGE_PACK_RESOURCE_STRIDE, \
-   LANGUAGE_PACK_RESOURCE_BASE + (slot) * LANGUAGE_PACK_RESOURCE_STRIDE, "lang" #slot}
+   LANGUAGE_PACK_RESOURCE_BASE + (slot) * LANGUAGE_PACK_RESOURCE_STRIDE, "/lang" #slot}
   LANGUAGE_STORE(1),
   LANGUAGE_STORE(2),
   LANGUAGE_STORE(3),
@@ -39,11 +42,12 @@ bool language_pack_is_installed(uint8_t slot) {
   if (!filename) {
     return false;
   }
-  const int fd = pfs_open(filename, OP_FLAG_READ | OP_FLAG_SKIP_HDR_CRC_CHECK, FILE_TYPE_STATIC, 0);
-  if (fd >= 0) {
-    pfs_close(fd);
+  struct pbl_fs_file file;
+  const int ret = pbl_fs_open(&file, filename, PBL_FS_O_READ | PBL_FS_O_PFS_SKIP_HDR_CRC_CHECK);
+  if (ret == 0) {
+    pbl_fs_close(&file);
   }
-  return fd != E_DOES_NOT_EXIST;
+  return ret != -ENOENT;
 }
 
 // Common helpers functions
@@ -51,41 +55,56 @@ bool language_pack_is_installed(uint8_t slot) {
 // These functions are highly coupled to the ones that call them but they're just for code
 // deduplication and not actually intended to be reusable or provide encapsulation.
 
-static uint32_t prv_file_common_get_length_and_close(int fd) {
-  if (fd < 0) {
+static uint32_t prv_file_common_get_length_and_close(struct pbl_fs_file *file, int ret) {
+  if (ret < 0) {
     return 0;
   }
-  uint32_t length = pfs_get_file_size(fd);
-  pfs_close(fd);
+  uint32_t length = pbl_fs_size(file);
+  pbl_fs_close(file);
   return length;
 }
 
-static uint32_t prv_file_common_get_crc(int fd, uint32_t num_bytes, uint32_t entry_offset) {
-  if (fd < 0) {
+static uint32_t prv_file_common_get_crc(struct pbl_fs_file *file, int ret, uint32_t num_bytes,
+                                        uint32_t entry_offset) {
+  if (ret < 0) {
     return 0xFFFFFFFF;
   }
-  uint32_t crc =
-      pfs_crc_calculate_file(fd, RESOURCE_STORE_METADATA_BYTES + entry_offset, num_bytes);
-  pfs_close(fd);
-  return crc;
+
+  struct pbl_crc32_legacy checksum;
+  pbl_crc32_legacy_init(&checksum);
+
+  uint8_t buffer[128];
+  pbl_fs_seek(file, RESOURCE_STORE_METADATA_BYTES + entry_offset, PBL_FS_SEEK_SET);
+  while (num_bytes > 0) {
+    const ssize_t bytes_read = pbl_fs_read(file, buffer, MIN(num_bytes, sizeof(buffer)));
+    if (bytes_read <= 0) {
+      break;
+    }
+    pbl_crc32_legacy_update(&checksum, buffer, bytes_read);
+    num_bytes -= bytes_read;
+  }
+
+  pbl_fs_close(file);
+  return pbl_crc32_legacy_finish(&checksum);
 }
 
-static uint32_t prv_file_common_read(int fd, uint32_t offset, void *data, size_t num_bytes) {
-  if (fd < 0) {
+static uint32_t prv_file_common_read(struct pbl_fs_file *file, int ret, uint32_t offset, void *data,
+                                     size_t num_bytes) {
+  if (ret < 0) {
     return 0;
   }
 
-  int bytes_read = 0;
+  ssize_t bytes_read = 0;
 
-  if (pfs_seek(fd, offset, FSeekSet) >= 0) {
-    bytes_read = pfs_read(fd, data, num_bytes);
+  if (pbl_fs_seek(file, offset, PBL_FS_SEEK_SET) >= 0) {
+    bytes_read = pbl_fs_read(file, data, num_bytes);
 
-    // prevent invalid resource API return values
-    if (bytes_read < 0) {
+    // prevent invalid resource API return values, and partial reads past the end
+    if (bytes_read != (ssize_t)num_bytes) {
       bytes_read = 0;
     }
   }
-  pfs_close(fd);
+  pbl_fs_close(file);
 
   return bytes_read;
 }
@@ -93,35 +112,41 @@ static uint32_t prv_file_common_read(int fd, uint32_t offset, void *data, size_t
 ///////////////////////////////////////////////////////////////////////////////
 // ResourceStoreTypeFile implementation
 
-static int prv_file_open_by_name(const char *name, uint8_t op_flags) {
-  int fd = pfs_open(name, op_flags, FILE_TYPE_STATIC, 0);
+#define FAST_READ_FLAGS \
+  (PBL_FS_O_READ | PBL_FS_O_PFS_SKIP_HDR_CRC_CHECK | PBL_FS_O_PFS_USE_PAGE_CACHE)
 
-  if ((fd < 0) && (fd != E_DOES_NOT_EXIST)) {
-    PBL_LOG_WRN("Could not open resource pfs file <%s>, fd: %d", name, fd);
+static int prv_file_open_by_name(struct pbl_fs_file *file, const char *name, uint32_t flags) {
+  int ret = pbl_fs_open(file, name, flags);
+
+  if ((ret < 0) && (ret != -ENOENT)) {
+    PBL_LOG_WRN("Could not open resource pfs file <%s>, ret: %d", name, ret);
   }
 
-  return fd;
+  return ret;
 }
 
-static int prv_file_open(ResourceStoreEntry *entry, uint8_t op_flags) {
-  return prv_file_open_by_name(((FileResourceData *)entry->store_data)->name, op_flags);
+static int prv_file_open(struct pbl_fs_file *file, ResourceStoreEntry *entry, uint32_t flags) {
+  return prv_file_open_by_name(file, ((FileResourceData *)entry->store_data)->name, flags);
 }
 
 static uint32_t resource_storage_file_get_length(ResourceStoreEntry *entry) {
-  const uint8_t op_flags = OP_FLAG_READ | OP_FLAG_SKIP_HDR_CRC_CHECK | OP_FLAG_USE_PAGE_CACHE;
-  return prv_file_common_get_length_and_close(prv_file_open(entry, op_flags));
+  struct pbl_fs_file file;
+  int ret = prv_file_open(&file, entry, FAST_READ_FLAGS);
+  return prv_file_common_get_length_and_close(&file, ret);
 }
 
 static uint32_t resource_storage_file_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                               uint32_t entry_offset) {
-  const uint8_t op_flags = OP_FLAG_READ;
-  return prv_file_common_get_crc(prv_file_open(entry, op_flags), num_bytes, entry_offset);
+  struct pbl_fs_file file;
+  int ret = prv_file_open(&file, entry, PBL_FS_O_READ);
+  return prv_file_common_get_crc(&file, ret, num_bytes, entry_offset);
 }
 
 static uint32_t resource_storage_file_read(ResourceStoreEntry *entry, uint32_t offset, void *data,
                                            size_t num_bytes) {
-  const uint8_t op_flags = OP_FLAG_READ | OP_FLAG_SKIP_HDR_CRC_CHECK | OP_FLAG_USE_PAGE_CACHE;
-  return prv_file_common_read(prv_file_open(entry, op_flags), offset, data, num_bytes);
+  struct pbl_fs_file file;
+  int ret = prv_file_open(&file, entry, FAST_READ_FLAGS);
+  return prv_file_common_read(&file, ret, offset, data, num_bytes);
 }
 
 static const uint8_t *resource_storage_file_readonly_bytes_unsupported(ResourceStoreEntry *entry,
@@ -163,12 +188,11 @@ static ResourceCallbackHandle resource_storage_file_watch(ResourceStoreEntry *en
   if (!file) {
     return nullptr;
   }
-  PFSCallbackHandle cb_handle = pfs_watch_file(file->name, callback, FILE_CHANGED_EVENT_ALL, data);
-  return cb_handle;
+  return pbl_fs_watch_add(file->name, PBL_FS_WATCH_ALL, callback, data);
 }
 
 static bool resource_storage_file_unwatch(ResourceCallbackHandle cb_handle) {
-  pfs_unwatch_file(cb_handle);
+  pbl_fs_watch_remove(cb_handle);
   return true;
 }
 
@@ -180,10 +204,10 @@ static void resource_storage_file_init(void) {
 
     // Get the length of the file to see if we're checking a large file
     const char *name = g_file_resource_stores[i].name;
-    const uint8_t op_flags = OP_FLAG_READ | OP_FLAG_SKIP_HDR_CRC_CHECK | OP_FLAG_USE_PAGE_CACHE;
-    const int fd = prv_file_open_by_name(name, op_flags);
+    struct pbl_fs_file file;
+    const int ret = prv_file_open_by_name(&file, name, FAST_READ_FLAGS);
 
-    const uint32_t file_length = prv_file_common_get_length_and_close(fd);
+    const uint32_t file_length = prv_file_common_get_length_and_close(&file, ret);
 
     // Files written for older firmware may carry fewer entries
     const uint32_t first_resource_id = g_file_resource_stores[i].first_resource_id;
@@ -231,20 +255,14 @@ const ResourceStoreImplementation g_file_impl = {
 ///////////////////////////////////////////////////////////////////////////////
 // ResourceStoreTypeAppFile implementation
 
-static int prv_app_file_open(ResourceStoreEntry *entry, uint8_t op_flags) {
+static int prv_app_file_open(struct pbl_fs_file *file, ResourceStoreEntry *entry, uint32_t flags) {
   ResAppNum app_num = (ResAppNum)(uintptr_t)entry->store_data;
   if (app_num == SYSTEM_APP) {
-    return -1;
+    return -EINVAL;
   }
   char filename[APP_RESOURCE_FILENAME_MAX_LENGTH + 1]; // extra for null terminator
   resource_storage_get_file_name(filename, sizeof(filename), app_num);
-  int fd = pfs_open(filename, op_flags, FILE_TYPE_STATIC, 0);
-
-  if ((fd < 0) && (fd != E_DOES_NOT_EXIST)) {
-    PBL_LOG_WRN("Could not open resource pfs file <%s>, fd: %d", filename, fd);
-  }
-
-  return fd;
+  return prv_file_open_by_name(file, filename, flags);
 }
 
 static bool resource_storage_app_file_find_resource(ResourceStoreEntry *entry, ResAppNum app_num,
@@ -264,24 +282,27 @@ static void resource_storage_app_file_clear(ResourceStoreEntry *entry) {
   }
   char filename[APP_RESOURCE_FILENAME_MAX_LENGTH + 1]; // extra for null terminator
   resource_storage_get_file_name(filename, sizeof(filename), app_num);
-  pfs_remove(filename);
+  pbl_fs_unlink(filename);
 }
 
 static uint32_t resource_storage_app_file_get_length(ResourceStoreEntry *entry) {
-  const uint8_t op_flags = OP_FLAG_READ | OP_FLAG_SKIP_HDR_CRC_CHECK | OP_FLAG_USE_PAGE_CACHE;
-  return prv_file_common_get_length_and_close(prv_app_file_open(entry, op_flags));
+  struct pbl_fs_file file;
+  int ret = prv_app_file_open(&file, entry, FAST_READ_FLAGS);
+  return prv_file_common_get_length_and_close(&file, ret);
 }
 
 static uint32_t resource_storage_app_file_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                                   uint32_t entry_offset) {
-  const uint8_t op_flags = OP_FLAG_READ;
-  return prv_file_common_get_crc(prv_app_file_open(entry, op_flags), num_bytes, entry_offset);
+  struct pbl_fs_file file;
+  int ret = prv_app_file_open(&file, entry, PBL_FS_O_READ);
+  return prv_file_common_get_crc(&file, ret, num_bytes, entry_offset);
 }
 
 static uint32_t resource_storage_app_file_read(ResourceStoreEntry *entry, uint32_t offset,
                                                void *data, size_t num_bytes) {
-  const uint8_t op_flags = OP_FLAG_READ | OP_FLAG_SKIP_HDR_CRC_CHECK | OP_FLAG_USE_PAGE_CACHE;
-  return prv_file_common_read(prv_app_file_open(entry, op_flags), offset, data, num_bytes);
+  struct pbl_fs_file file;
+  int ret = prv_app_file_open(&file, entry, FAST_READ_FLAGS);
+  return prv_file_common_read(&file, ret, offset, data, num_bytes);
 }
 
 const ResourceStoreImplementation g_app_file_impl = {

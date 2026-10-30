@@ -1,18 +1,19 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/contacts.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
 #include <kernel/pbl_malloc.h>
 #include <system/status_codes.h>
+#include <system/status_errno.h>
 
-#define SETTINGS_FILE_NAME "contactsdb"
+#define SETTINGS_FILE_NAME "/contactsdb"
 #define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
 static struct {
@@ -154,7 +155,7 @@ status_t contacts_db_delete(const uint8_t *key, int key_len) {
 
 status_t contacts_db_flush(void) {
   pbl_mutex_lock(&s_contacts_db.mutex, PBL_FOREVER);
-  status_t rv = pfs_remove(SETTINGS_FILE_NAME);
+  status_t rv = status_from_errno(pbl_fs_unlink(SETTINGS_FILE_NAME));
   pbl_mutex_unlock(&s_contacts_db.mutex);
   return rv;
 }

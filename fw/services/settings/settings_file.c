@@ -1,20 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 #include <time.h>
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
+#include <pbl/fs/pfs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/settings/settings_raw_iter.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <kernel/pbl_malloc.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
 
@@ -29,7 +32,12 @@ static bool file_hdr_is_uninitialized(SettingsFileHeader *file_hdr) {
          (file_hdr->flags == 0xffff);
 }
 
-static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, int max_used_space,
+static status_t prv_close_and_remove(SettingsFile *file, const char *name) {
+  pbl_fs_close(&file->iter.file);
+  return status_from_errno(pbl_fs_unlink(name));
+}
+
+static status_t prv_open(SettingsFile *file, const char *name, uint32_t flags, int max_used_space,
                          int alloc_used_space, int min_alloc_used_space) {
   // Making the max_space_total at least a little bit larger than the
   // alloc_used_space allows us to avoid thrashing. Without it, if
@@ -37,18 +45,29 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   // single value would force the whole file to be rewritten- every single
   // time! It's probably worth it to "waste" a bit of flash space to avoid
   // this pathological case.
-  int max_space_total = pfs_sector_optimal_size(alloc_used_space * 12 / 10, strlen(name));
+  int max_space_total = pbl_fs_pfs_optimal_size(name, alloc_used_space * 12 / 10);
+  if (max_space_total < 0) {
+    return status_from_errno(max_space_total);
+  }
 
-  int fd = pfs_open(name, flags, FILE_TYPE_STATIC, max_space_total);
-  if (fd < 0) {
-    PBL_LOG_ERR("Could not open settings file '%s', %d", name, fd);
-    if (fd == E_BUSY) {
+  struct pbl_fs_file fs_file;
+  int ret = pbl_fs_open(&fs_file, name, flags);
+  if ((ret == 0) && (pbl_fs_size(&fs_file) == 0)) {
+    ret = pbl_fs_truncate(&fs_file, max_space_total);
+    if (ret < 0) {
+      pbl_fs_close(&fs_file);
+    }
+  }
+
+  if (ret < 0) {
+    PBL_LOG_ERR("Could not open settings file '%s', %d", name, ret);
+    if (ret == -EBUSY) {
       // This is very bad. Someone didn't use a mutex. There could already be
       // silent corruption, so it's better to crash now rather than let things
       // get even more scrambled.
       pbl_panic("Settings file is already open!");
     }
-    return fd;
+    return status_from_errno(ret);
   }
 
   *file = (SettingsFile){
@@ -59,7 +78,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
     .max_space_total = max_space_total,
   };
 
-  settings_raw_iter_init(&file->iter, fd, file->name);
+  settings_raw_iter_init(&file->iter, &fs_file, file->name);
 
   SettingsFileHeader file_hdr = file->iter.file_hdr;
   if (file_hdr_is_uninitialized(&file_hdr)) {
@@ -71,7 +90,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
 
   if (memcmp(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic)) != 0) {
     PBL_LOG_ERR("Attempted to open %s, not a settings file. Removing and recreating.", name);
-    status_t rv = pfs_close_and_remove(fd);
+    status_t rv = prv_close_and_remove(file, name);
     if (rv < 0) {
       PBL_LOG_ERR("Could not remove corrupt settings file %s: %" PRId32, name, rv);
       return rv;
@@ -81,7 +100,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
 
   if (file_hdr.version > SETTINGS_FILE_VERSION) {
     PBL_LOG_WRN("Unrecognized version %d for file %s, removing...", file_hdr.version, name);
-    status_t rv = pfs_close_and_remove(fd);
+    status_t rv = prv_close_and_remove(file, name);
     if (rv < 0) {
       PBL_LOG_ERR("Could not remove old-version settings file %s: %" PRId32, name, rv);
       return rv;
@@ -91,7 +110,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
 
   // For growable files, adopt the actual file size before bootup_check so that
   // any compaction during recovery uses the correct (grown) allocation size.
-  int actual_size = pfs_get_file_size(file->iter.fd);
+  int actual_size = pbl_fs_size(&file->iter.file);
   if (alloc_used_space < max_used_space && actual_size > max_space_total) {
     file->alloc_used_space = actual_size * 10 / 12;
     file->max_space_total = actual_size;
@@ -103,7 +122,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
                 "), not good. "
                 "Attempting to recover by deleting %s...",
                 status, name);
-    pfs_close_and_remove(fd);
+    prv_close_and_remove(file, name);
     return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
   }
 
@@ -127,7 +146,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
 }
 
 status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
-  return prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, max_used_space, max_used_space,
+  return prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, max_used_space, max_used_space,
                   max_used_space);
 }
 
@@ -135,7 +154,7 @@ status_t settings_file_open_growable(SettingsFile *file, const char *name, int m
                                      int initial_alloc_size) {
   // prv_grow doubles alloc_used_space; a zero seed would loop forever.
   PBL_ASSERTN(initial_alloc_size > 0);
-  return prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, max_used_space, initial_alloc_size,
+  return prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, max_used_space, initial_alloc_size,
                   initial_alloc_size);
 }
 
@@ -234,7 +253,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
 
   SettingsFile new_file;
   status_t status =
-      prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ, file->max_used_space,
+      prv_open(&new_file, file->name, PBL_FS_O_REPLACE | PBL_FS_O_READ, file->max_used_space,
                file->alloc_used_space, file->min_alloc_used_space);
   if (status < 0) {
     PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %" PRIi32 ".",
@@ -291,7 +310,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
   settings_file_close(&new_file);
-  status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space,
+  status = prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, file->max_used_space,
                     alloc_used_space, min_alloc_used_space);
   kernel_free(name);
 
@@ -691,7 +710,7 @@ status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback c
   }
   SettingsFile new_file;
   status_t status =
-      prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ, file->max_used_space,
+      prv_open(&new_file, file->name, PBL_FS_O_REPLACE | PBL_FS_O_READ, file->max_used_space,
                file->alloc_used_space, file->min_alloc_used_space);
   if (status < 0) {
     kernel_free(name);
@@ -711,7 +730,7 @@ status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback c
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
   settings_file_close(&new_file);
-  status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space,
+  status = prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, file->max_used_space,
                     alloc_used_space, min_alloc_used_space);
   kernel_free(name);
 

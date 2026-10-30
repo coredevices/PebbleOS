@@ -13,6 +13,6 @@
 const uint32_t g_num_file_resource_stores = 2;
 
 const FileResourceData g_file_resource_stores[] = {
-  { RESOURCE_ID_PUG, RESOURCE_ID_PUG, (RESOURCE_ID_PUG - 1), "pug" },
-  { RESOURCE_ID_STRINGS, RESOURCE_ID_DROID_SERIF_28_BOLD_EXTENDED, (RESOURCE_ID_STRINGS - 1), "lang" },
+  { RESOURCE_ID_PUG, RESOURCE_ID_PUG, (RESOURCE_ID_PUG - 1), "/pug" },
+  { RESOURCE_ID_STRINGS, RESOURCE_ID_DROID_SERIF_28_BOLD_EXTENDED, (RESOURCE_ID_STRINGS - 1), "/lang" },
 };

@@ -92,9 +92,12 @@ set(graphics_draw_text_sources
   fw/resource/resource_storage_builtin.c
   fw/resource/resource_storage_file.c
   fw/resource/resource_storage_flash.c
-  fw/services/filesystem/flash_translation.c
-  fw/services/filesystem/pfs.c
-  fw/services/filesystem/app_file.c
+  subsys/fs/pfs/flash_translation.c
+  subsys/fs/pfs/pfs.c
+  subsys/fs/fs.c
+  subsys/fs/pfs/pfs_fs.c
+  tests/fakes/fake_pfs.c
+  fw/services/process_management/app_file.c
   drivers/flash/flash_crc.c
   tests/fakes/fake_fonts.c
   tests/fakes/fake_rtc.c

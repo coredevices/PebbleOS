@@ -7,8 +7,8 @@
 #include <string.h>
 
 #include <pbl/crc/crc.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/math.h>
 
@@ -47,30 +47,30 @@ alignas(max_align_t) static uint8_t s_ram[RAM_SIZE];
 // Fakes
 ////////////////////////////////////
 
-int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type, size_t start_size) {
+int pbl_fs_open(struct pbl_fs_file *file, const char *path, uint32_t flags) {
   s_read_offset = 0;
-  snprintf(s_opened_name, sizeof(s_opened_name), "%s", name);
-  return 1;
+  snprintf(s_opened_name, sizeof(s_opened_name), "%s", path);
+  return 0;
 }
 
-int pfs_read(int fd, void *buf, size_t size) {
-  const size_t len = MIN(size, s_image_len - s_read_offset);
+ssize_t pbl_fs_read(struct pbl_fs_file *file, void *buf, size_t len) {
+  len = MIN(len, s_image_len - s_read_offset);
   memcpy(buf, &s_image[s_read_offset], len);
   s_read_offset += len;
-  return (int)len;
+  return (ssize_t)len;
 }
 
-status_t pfs_close(int fd) {
-  return S_SUCCESS;
+int pbl_fs_close(struct pbl_fs_file *file) {
+  return 0;
 }
 
-status_t pfs_remove(const char *name) {
-  return S_SUCCESS;
+int pbl_fs_unlink(const char *path) {
+  return 0;
 }
 
-void app_file_name_make(char *restrict buffer, size_t buffer_len, AppInstallId app_id,
+void app_file_path_make(char *restrict buffer, size_t buffer_len, AppInstallId app_id,
                         const char *restrict suffix, size_t suffix_len) {
-  snprintf(buffer, buffer_len, "@%08" PRIx32 "/%s", (uint32_t)app_id, suffix);
+  snprintf(buffer, buffer_len, "/@%08" PRIx32 "/%s", (uint32_t)app_id, suffix);
 }
 
 void resource_storage_clear(ResAppNum app_num) {

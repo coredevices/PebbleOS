@@ -9,12 +9,12 @@
 
 #include <pbl/cron/cron.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
@@ -237,7 +237,7 @@ void event_service_client_subscribe(EventServiceInfo *service_info) {
 
 void prv_assert_settings_key_absent(const void *key, size_t key_len) {
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "alarms", 1024));
+  cl_must_pass(settings_file_open(&file, "/alarms", 1024));
   cl_assert(settings_file_get_len(&file, key, key_len) == 0);
   settings_file_close(&file);
 }
@@ -246,7 +246,7 @@ void prv_assert_settings_value(const void *key, size_t key_len, const void *expe
                                size_t value_len) {
   SettingsFile file;
   char buffer[value_len];
-  cl_must_pass(settings_file_open(&file, "alarms", 1024));
+  cl_must_pass(settings_file_open(&file, "/alarms", 1024));
   cl_must_pass(settings_file_get(&file, key, key_len, buffer, value_len));
   settings_file_close(&file);
   cl_assert_equal_m(expected_value, buffer, value_len);

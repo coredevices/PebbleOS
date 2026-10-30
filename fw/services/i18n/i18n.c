@@ -29,9 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
 #include <pbl/util/list.h>
@@ -713,7 +713,7 @@ bool i18n_remove_pack(uint8_t slot) {
     return false;
   }
   // PFS croaks when deleting a file that a transfer still holds open
-  if (slot == s_install_slot || pfs_remove(filename) != S_SUCCESS) {
+  if (slot == s_install_slot || pbl_fs_unlink(filename) != 0) {
     return false;
   }
   prv_deselect_pack(slot);

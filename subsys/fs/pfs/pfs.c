@@ -1,6 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pfs.h"
+
+#include "flash_translation.h"
+
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -17,8 +21,6 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
-#include <pbl/services/filesystem/flash_translation.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
 
@@ -27,7 +29,7 @@
 #include <kernel/pebble_tasks.h>
 #include <system/hexdump.h>
 
-PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(fs, CONFIG_FS_LOG_LEVEL);
 
 static PBL_MUTEX_DEFINE(s_pfs_mutex);
 
@@ -206,22 +208,12 @@ void pfs_reset_all_state(void) {
 
 #define VALID_TYPE(type) ((type) == FILE_TYPE_STATIC)
 
-typedef struct {
-  ListNode list_node;
-  //! Name of the file to watch
-  const char *name;
-  //! Which events will invoke callbacks (see FILE_CHANGED_EVENT_ flags in pfs.h)
-  uint8_t event_flags;
-  //! Caller provided data pointer
-  void *data;
-  //! Callback pointer
-  PFSFileChangedCallback callback;
-} PFSFileChangedCallbackNode;
+// Files opened with OP_FLAG_DEFER_CREATE that are not on flash yet
+#define IS_DEFERRED(f) ((f)->start_page == INVALID_PAGE)
 
 static uint8_t *s_pfs_page_flags_cache = nullptr;
 static uint16_t s_pfs_page_count = 0;
 static uint32_t s_pfs_size = 0;
-static ListNode *s_head_callback_node_list = nullptr;
 
 // In the interest of being able to leverage sector erases / minimize seek time
 // for large files, deploying a variable length page size may be beneficial.
@@ -1014,6 +1006,47 @@ static AvailFdStatus get_avail_fd(const char *name, int *fdp, bool is_tmp) {
  * Exported PFS APIs
  */
 
+status_t pfs_stat(const char *name, size_t *size) {
+  size_t namelen = (name == nullptr) ? 0 : strlen(name);
+  if ((namelen < 1) || (namelen > FILE_MAX_NAME_LEN)) {
+    return E_INVALID_ARGUMENT;
+  }
+
+  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
+
+  status_t rv = E_DOES_NOT_EXIST;
+  for (int fd = FD_INDEX_OFFSET; fd < FD_INDEX_OFFSET + PFS_FD_SET_SIZE; fd++) {
+    File *f = &PFS_FD(fd).file;
+    if (!f->is_tmp && (f->name != nullptr) && !IS_DEFERRED(f) && (strcmp(f->name, name) == 0)) {
+      *size = f->file_size;
+      rv = S_SUCCESS;
+      goto cleanup;
+    }
+  }
+
+  uint16_t page;
+  if ((rv = locate_flash_file(name, &page)) == S_SUCCESS) {
+    PageHeader pg_hdr;
+    FileHeader file_hdr;
+    if (read_header(page, &pg_hdr, &file_hdr) == PageAndFileHdrValid) {
+      *size = file_hdr.file_size;
+    } else {
+      rv = E_INTERNAL;
+    }
+  }
+
+cleanup:
+  pbl_mutex_unlock(&s_pfs_mutex);
+  return rv;
+}
+
+const char *pfs_get_file_name(int fd) {
+  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
+  const char *name = FD_VALID(fd) ? PFS_FD(fd).file.name : nullptr;
+  pbl_mutex_unlock(&s_pfs_mutex);
+  return name;
+}
+
 size_t pfs_get_file_size(int fd) {
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
 
@@ -1308,68 +1341,6 @@ static bool prv_update_gc_reserved_region(void) {
   return (true); // gc block must be valid to get here
 }
 
-static bool watch_list_find_str(ListNode *node, void *data) {
-  PFSFileChangedCallbackNode *filechg_node = (PFSFileChangedCallbackNode *)node;
-  return (strcmp(filechg_node->name, (char *)data) == 0);
-}
-
-PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
-                                 uint8_t event_flags, void *data) {
-  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-
-  PFSFileChangedCallbackNode *node = kernel_malloc_check(sizeof(PFSFileChangedCallbackNode));
-  *node =
-      (PFSFileChangedCallbackNode){.callback = callback, .event_flags = event_flags, .data = data};
-
-  // find out if we already have a string for this particular filename
-  ListNode *find_str = list_find(s_head_callback_node_list, watch_list_find_str, (char *)filename);
-  if (find_str == nullptr) {
-    node->name = kernel_strdup_check(filename);
-  } else {
-    node->name = ((PFSFileChangedCallbackNode *)find_str)->name;
-  }
-
-  s_head_callback_node_list = list_prepend(s_head_callback_node_list, &node->list_node);
-  pbl_mutex_unlock(&s_pfs_mutex);
-
-  return node;
-}
-
-void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
-  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-
-  PFSFileChangedCallbackNode *callback_node = (PFSFileChangedCallbackNode *)cb_handle;
-
-  PBL_ASSERTN(callback_node->list_node.next != nullptr ||
-              callback_node->list_node.prev != nullptr ||
-              s_head_callback_node_list == &callback_node->list_node);
-  PBL_ASSERTN(list_contains(s_head_callback_node_list, &callback_node->list_node));
-  list_remove(&callback_node->list_node, &(s_head_callback_node_list), nullptr);
-
-  // if no one is watching the file anymore, free the string
-  ListNode *find_str =
-      list_find(s_head_callback_node_list, watch_list_find_str, (char *)callback_node->name);
-  if (find_str == nullptr) {
-    kernel_free((void *)(callback_node->name));
-  }
-
-  kernel_free(callback_node);
-
-  pbl_mutex_unlock(&s_pfs_mutex);
-}
-
-// IMPORTANT: This call assumes that the caller has already grabbed s_pfs_mutex
-static void prv_invoke_watch_file_callbacks(const char *file_name, uint8_t event) {
-  PFSFileChangedCallbackNode *callback_node =
-      (PFSFileChangedCallbackNode *)s_head_callback_node_list;
-  while (callback_node) {
-    if (!strcmp(callback_node->name, file_name) && (callback_node->event_flags & event)) {
-      callback_node->callback(callback_node->data);
-    }
-    callback_node = (PFSFileChangedCallbackNode *)list_get_next(&callback_node->list_node);
-  }
-}
-
 status_t pfs_close(int fd) {
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
 
@@ -1380,6 +1351,13 @@ status_t pfs_close(int fd) {
   }
 
   File *f = &PFS_FD(fd).file;
+  if (IS_DEFERRED(f)) {
+    // Never created: nothing to commit, keep the original of an overwrite
+    mark_fd_free(fd);
+    res = S_SUCCESS;
+    goto cleanup;
+  }
+
   if (f->is_tmp) {
     // If the original file is still open, force-evict it before removing.
     // This prevents pfs_remove() from panicking on the in-use original fd.
@@ -1406,12 +1384,6 @@ status_t pfs_close(int fd) {
 
   PFS_FD(fd).fd_status = FD_STATUS_UNREFERENCED;
   PFS_FD(fd).time_closed = time_closed_counter++;
-
-  // If this file was modified, invoke the callbacks
-  if (f->op_flags & (OP_FLAG_WRITE | OP_FLAG_OVERWRITE)) {
-    // IMPORTANT: prv_invoke_watch_file_callbacks assumes that we already have s_pfs_mutex
-    prv_invoke_watch_file_callbacks(f->name, FILE_CHANGED_EVENT_CLOSED);
-  }
 
   res = S_SUCCESS;
 cleanup:
@@ -1464,14 +1436,12 @@ status_t pfs_remove(const char *name) {
   }
 
   rv = unlink_flash_file(page);
-  // IMPORTANT: prv_invoke_watch_file_callbacks assumes that we already have s_pfs_mutex
-  prv_invoke_watch_file_callbacks(name, FILE_CHANGED_EVENT_REMOVED);
 cleanup:
   pbl_mutex_unlock(&s_pfs_mutex);
   return (rv);
 }
 
-typedef void (*PrvFileVisitor)(uint16_t pg, const char *file_name, void *ctx);
+typedef void (*PrvFileVisitor)(uint16_t pg, const char *file_name, uint32_t file_size, void *ctx);
 
 // Calls visitor for every file whose name passes the filter. Must hold s_pfs_mutex.
 static void prv_for_each_file(PFSFilenameTestCallback filter, PrvFileVisitor visitor, void *ctx) {
@@ -1506,15 +1476,16 @@ static void prv_for_each_file(PFSFilenameTestCallback filter, PrvFileVisitor vis
       continue;
     }
 
-    visitor(pg, file_name, ctx);
+    visitor(pg, file_name, file_hdr.file_size, ctx);
   }
 }
 
-static void prv_add_to_file_list(uint16_t pg, const char *file_name, void *ctx) {
+static void prv_add_to_file_list(uint16_t pg, const char *file_name, uint32_t file_size,
+                                 void *ctx) {
   ListNode **head = ctx;
   const size_t name_len = strlen(file_name);
   PFSFileListEntry *entry = kernel_malloc_check(sizeof(PFSFileListEntry) + name_len + 1);
-  *entry = (PFSFileListEntry){};
+  *entry = (PFSFileListEntry){.size = file_size};
   memcpy(entry->name, file_name, name_len + 1);
   *head = list_insert_before(*head, &entry->list_node);
 }
@@ -1536,27 +1507,6 @@ void pfs_delete_file_list(PFSFileListEntry *head) {
     kernel_free(node);
     node = next;
   }
-}
-
-static void prv_remove_file(uint16_t pg, const char *file_name, void *ctx) {
-  int fd;
-  status_t rv = get_avail_fd(file_name, &fd, false);
-  if (rv >= FDAlreadyLoaded) { // the file is in the cache
-    if (rv == FDBusy) {
-      pbl_panic("Cannot delete %s, it is currently in use", PFS_FD(fd).file.name);
-    }
-    mark_fd_free(fd);
-  }
-
-  unlink_flash_file(pg);
-  // IMPORTANT: prv_invoke_watch_file_callbacks assumes that we already have s_pfs_mutex
-  prv_invoke_watch_file_callbacks(file_name, FILE_CHANGED_EVENT_REMOVED);
-}
-
-void pfs_remove_files(PFSFilenameTestCallback callback) {
-  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-  prv_for_each_file(callback, prv_remove_file, nullptr);
-  pbl_mutex_unlock(&s_pfs_mutex);
 }
 
 #define MAX_PAGE_CACHE_ENTRIES 10 // 6 bytes per entry
@@ -1758,7 +1708,8 @@ static int file_found_or_added_to_pfs(int fd, const char *name, uint8_t op_flags
   bool is_read_only =
       (op_flags & (OP_FLAG_READ | OP_FLAG_WRITE | OP_FLAG_OVERWRITE)) == OP_FLAG_READ;
   bool is_tmp = ((op_flags & OP_FLAG_OVERWRITE) != 0);
-  if ((is_read_only || is_tmp) && (res == E_DOES_NOT_EXIST)) {
+  bool no_create = ((op_flags & OP_FLAG_NO_CREATE) != 0);
+  if ((is_read_only || is_tmp || no_create) && (res == E_DOES_NOT_EXIST)) {
     goto cleanup;
   }
 
@@ -1775,7 +1726,15 @@ static int file_found_or_added_to_pfs(int fd, const char *name, uint8_t op_flags
   file->start_offset = FILEDATA_LEN + file->namelen;
 
   if (is_tmp || ((res == E_DOES_NOT_EXIST) && ((op_flags & OP_FLAG_WRITE) != 0))) {
-    res = pfs_open_handle_create_request(fd, file_type, start_size);
+    if ((op_flags & OP_FLAG_DEFER_CREATE) != 0) {
+      file->file_size = 0;
+      file->file_type = FILE_TYPE_STATIC;
+      file->start_page = file->curr_page = INVALID_PAGE;
+      file->curr_vpg = 0;
+      res = S_SUCCESS;
+    } else {
+      res = pfs_open_handle_create_request(fd, file_type, start_size);
+    }
   } else if ((op_flags & OP_FLAG_READ) != 0) {
     res = pfs_open_handle_read_request(fd, page);
   } else { // unexpected situation
@@ -1814,7 +1773,7 @@ cleanup:
   if (res >= S_SUCCESS) {
     // we are returning a valid file handle so if the user has asked for the
     // page translations to be cached let's do that now
-    if ((op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) {
+    if (((op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) && !IS_DEFERRED(&PFS_FD(res).file)) {
       allocate_page_cache(res);
     }
     // check to see if we should update the gc block
@@ -1823,6 +1782,40 @@ cleanup:
 
   pbl_mutex_unlock(&s_pfs_mutex);
   return (res);
+}
+
+status_t pfs_create_deferred(int fd, size_t size) {
+  pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
+
+  status_t res;
+  if (!FD_VALID(fd) || (fd == GC_FD_HANDLE_ID)) {
+    res = E_INVALID_ARGUMENT;
+    goto cleanup;
+  }
+
+  File *file = &PFS_FD(fd).file;
+  if (!IS_DEFERRED(file)) {
+    res = E_INVALID_OPERATION;
+    goto cleanup;
+  }
+
+  res = pfs_open_handle_create_request(fd, FILE_TYPE_STATIC, size);
+  if (res < S_SUCCESS) {
+    file->file_size = 0;
+    file->start_page = file->curr_page = INVALID_PAGE;
+    goto cleanup;
+  }
+
+  file->offset = 0;
+  file->curr_vpg = 0;
+  if ((file->op_flags & OP_FLAG_USE_PAGE_CACHE) != 0) {
+    allocate_page_cache(fd);
+  }
+  prv_update_gc_reserved_region();
+
+cleanup:
+  pbl_mutex_unlock(&s_pfs_mutex);
+  return res;
 }
 
 static int pfs_open_gc_file(uint32_t space_needed, bool create) {

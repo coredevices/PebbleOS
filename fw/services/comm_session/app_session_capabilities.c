@@ -9,7 +9,7 @@
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
 
-#define APP_SESSION_CAPABILITIES_CACHE_FILENAME "app_comm"
+#define APP_SESSION_CAPABILITIES_CACHE_FILENAME "/app_comm"
 
 #define APP_SESSION_CAPABILITIES_CACHE_FILE_MAX_USED_SPACE (PBL_KIB(2))
 

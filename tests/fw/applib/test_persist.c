@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/persist.h>
 
 #include <applib/persist.h>
@@ -17,6 +18,7 @@
 
 // Stubs
 ////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
@@ -77,7 +79,7 @@ static_assert(sizeof(lipsum) > PERSIST_STRING_MAX_LENGTH,
 void test_persist__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
 
-  pfs_init(false);
+  fake_pfs_mount();
   persist_service_init();
 
   persist_service_client_open(&test_uuid_a);
@@ -267,17 +269,16 @@ typedef struct PBL_PACKED {
 } LegacyPmapField;
 
 static void prv_write_raw_file(const char *name, const void *data, size_t len) {
-  int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, len);
-  cl_assert(fd >= 0);
-  cl_assert_equal_i(pfs_write(fd, data, len), (int)len);
-  cl_assert(PASSED(pfs_close(fd)));
+  struct pbl_fs_file file;
+  cl_assert_equal_i(fake_pfs_create(&file, name, len), 0);
+  cl_assert_equal_i(pbl_fs_write(&file, data, len), (int)len);
+  cl_assert_equal_i(pbl_fs_close(&file), 0);
 }
 
 static void prv_uuid_file_name(char *name, const Uuid *uuid) {
   const uint8_t *b = (const uint8_t *)uuid;
   char *p = name;
-  *p++ = 'p';
-  *p++ = 's';
+  p += sprintf(p, "/ps");
   for (int i = 0; i < 16; ++i) {
     p += snprintf(p, 3, "%02x", b[i]);
   }
@@ -290,8 +291,8 @@ void test_persist__legacy_migration(void) {
   const Uuid uuid = test_uuid_b;
   const uint8_t content[] = "legacy persist payload";
 
-  char legacy_name[sizeof("ps000001")];
-  snprintf(legacy_name, sizeof(legacy_name), "ps%06d", legacy_id);
+  char legacy_name[sizeof("/ps000001")];
+  snprintf(legacy_name, sizeof(legacy_name), "/ps%06d", legacy_id);
   prv_write_raw_file(legacy_name, content, sizeof(content));
 
   uint8_t pmap[sizeof(LegacyPmapHeader) + 2 * sizeof(LegacyPmapField)];
@@ -300,21 +301,22 @@ void test_persist__legacy_migration(void) {
   LegacyPmapField *fields = (LegacyPmapField *)(pmap + sizeof(LegacyPmapHeader));
   fields[0] = (LegacyPmapField){.id = legacy_id, .uuid = uuid};
   fields[1] = (LegacyPmapField){.id = ~0}; // EOF entry
-  prv_write_raw_file("pmap", pmap, sizeof(pmap));
+  prv_write_raw_file("/pmap", pmap, sizeof(pmap));
 
   persist_service_init();
 
   // The file now lives under the new scheme with identical content.
-  char new_name[2 + 32 + 1];
+  char new_name[sizeof("/ps") + 32];
   prv_uuid_file_name(new_name, &uuid);
-  int fd = pfs_open(new_name, OP_FLAG_READ, 0, 0);
-  cl_assert(fd >= 0);
+  struct pbl_fs_file file;
+  cl_assert_equal_i(pbl_fs_open(&file, new_name, PBL_FS_O_READ), 0);
   uint8_t readback[sizeof(content)];
-  cl_assert_equal_i(pfs_read(fd, readback, sizeof(readback)), (int)sizeof(readback));
+  cl_assert_equal_i(pbl_fs_read(&file, readback, sizeof(readback)), (int)sizeof(readback));
   cl_assert(memcmp(readback, content, sizeof(content)) == 0);
-  pfs_close(fd);
+  pbl_fs_close(&file);
 
   // The legacy file and the pmap are gone.
-  cl_assert(pfs_open(legacy_name, OP_FLAG_READ, 0, 0) < 0);
-  cl_assert(pfs_open("pmap", OP_FLAG_READ, 0, 0) < 0);
+  struct pbl_fs_dirent entry;
+  cl_assert_equal_i(pbl_fs_stat(legacy_name, &entry), -ENOENT);
+  cl_assert_equal_i(pbl_fs_stat("/pmap", &entry), -ENOENT);
 }

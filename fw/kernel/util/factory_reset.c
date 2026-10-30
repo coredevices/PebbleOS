@@ -22,10 +22,14 @@
 #include <system/reset.h>
 
 #if !defined(CONFIG_RECOVERY_FW)
+#include <string.h>
+
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/timeline/event.h>
+
+#include <kernel/pbl_malloc.h>
 #endif
 
 static bool s_in_factory_reset = false;
@@ -85,9 +89,9 @@ void factory_reset(bool should_shutdown) {
   firmware_storage_invalidate_firmware_slot(1);
 #endif
 
-  // pfs_format() holds the PFS mutex across the erase, blocking concurrent
+  // Formatting PFS holds its mutex across the erase, blocking concurrent
   // writes from the App task that would otherwise survive into a freshly-erased region.
-  pfs_format(false /* write_erase_headers */);
+  pbl_fs_format("/");
 #else
   filesystem_regions_erase_all();
 #endif
@@ -103,6 +107,25 @@ void close_db_files() {
   pin_db_deinit();
 }
 
+static void prv_remove_all_files(void) {
+  struct pbl_fs_dir dir;
+  if (pbl_fs_opendir(&dir, "/") < 0) {
+    return;
+  }
+
+  struct pbl_fs_dirent *entry = kernel_malloc_check(sizeof(*entry));
+  char *path = kernel_malloc_check(sizeof("/") + PBL_FS_NAME_MAX);
+  while ((pbl_fs_readdir(&dir, entry) == 0) && (entry->name[0] != '\0')) {
+    strcpy(path, "/");
+    strcat(path, entry->name);
+    pbl_fs_unlink(path);
+  }
+
+  kernel_free(path);
+  kernel_free(entry);
+  pbl_fs_closedir(&dir);
+}
+
 void factory_reset_fast(void *unused) {
   s_in_factory_reset = true;
 
@@ -113,7 +136,7 @@ void factory_reset_fast(void *unused) {
 
   prv_factory_reset_non_pfs_data();
 
-  pfs_remove_files(nullptr);
+  prv_remove_all_files();
 
   prv_factory_reset_post(false /* should_shutdown */);
 }

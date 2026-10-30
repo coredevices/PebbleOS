@@ -278,7 +278,6 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
     .item_type = type,
     .item_size = size,
     .session_created_timestamp = timestamp,
-    .storage.fd = DLS_INVALID_FILE
   };
 
   if (status == DataLoggingStatusActive) {

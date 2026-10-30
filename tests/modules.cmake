@@ -16,8 +16,11 @@ pbl_test_module(rand
 
 pbl_test_module(pfs
   SOURCES
-    fw/services/filesystem/pfs.c
-    fw/services/filesystem/flash_translation.c
+    subsys/fs/pfs/pfs.c
+    subsys/fs/fs.c
+    subsys/fs/pfs/pfs_fs.c
+    tests/fakes/fake_pfs.c
+    subsys/fs/pfs/flash_translation.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     tests/fakes/fake_spi_flash.c
@@ -38,7 +41,7 @@ pbl_test_module(resources
     fw/resource/resource_storage_builtin.c
     fw/resource/resource_storage_file.c
     fw/resource/resource_storage_flash.c
-    fw/services/filesystem/app_file.c
+    fw/services/process_management/app_file.c
     drivers/flash/flash_crc.c
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fixtures/resources/pfs_resource_table.c

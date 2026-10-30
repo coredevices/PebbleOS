@@ -1,18 +1,20 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "flash_translation.h"
+
+#include "pfs.h"
+
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/flash_translation.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <flash_region/filesystem_regions.h>
 #include <flash_region/flash_region.h>
 
-PBL_LOG_MODULE_DECLARE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(fs, CONFIG_FS_LOG_LEVEL);
 
 //! Flash translation operation
 typedef enum {

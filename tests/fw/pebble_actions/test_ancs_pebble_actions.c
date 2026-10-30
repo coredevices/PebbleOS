@@ -23,6 +23,7 @@ extern const int TIMELINE_ACTION_ENDPOINT;
 
 // Fakes / Helpers
 ///////////////////////////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
 static const uint8_t *s_expected_send_data = nullptr;
@@ -126,8 +127,8 @@ void test_ancs_pebble_actions__initialize(void) {
   s_sent_action = false;
 
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 }
 
 void test_ancs_pebble_actions__cleanup(void) {

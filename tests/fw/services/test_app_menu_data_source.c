@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/size.h>
@@ -33,6 +33,7 @@
 ////////////////////////////////////
 #include <pbl/services/time.h>
 
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
 // Test reset function for app_order_storage cached state
@@ -159,8 +160,8 @@ static bool everything_filter_callback(struct AppMenuDataSource *source, AppInst
 void test_app_menu_data_source__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
 
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   // Reset app_order_storage cached state - file_known_missing persists between tests
   // and would cause app_order_read_order to return NULL even when the file exists
@@ -304,13 +305,14 @@ void prv_write_order_to_file(const AppInstallId order[], uint8_t num_entries) {
   uint8_t entries_to_write = num_entries + 1;
   uint16_t file_len = sizeof(uint8_t) + (entries_to_write) * sizeof(AppInstallId);
 
-  pfs_remove("lnc_ord");
-  int fd = pfs_open("lnc_ord", OP_FLAG_WRITE, FILE_TYPE_STATIC, file_len);
-  pfs_write(fd, &entries_to_write, sizeof(entries_to_write));
-  pfs_write(fd, order, sizeof(AppInstallId) * num_entries);
+  pbl_fs_unlink("/lnc_ord");
+  struct pbl_fs_file file;
+  cl_assert_equal_i(fake_pfs_create(&file, "/lnc_ord", file_len), 0);
+  pbl_fs_write(&file, &entries_to_write, sizeof(entries_to_write));
+  pbl_fs_write(&file, order, sizeof(AppInstallId) * num_entries);
   AppInstallId zero_id = 0;
-  pfs_write(fd, &zero_id, sizeof(zero_id));
-  pfs_close(fd);
+  pbl_fs_write(&file, &zero_id, sizeof(zero_id));
+  pbl_fs_close(&file);
 }
 
 void prv_test_new_order_with_filter_callback(const AppInstallId order[], uint8_t num_entries,

@@ -3,9 +3,9 @@
 
 #include "./blob_db/weather_data_shared.h"
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/comm_session/session_remote_version.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h>
 #include <pbl/services/weather/weather_types.h>
@@ -21,6 +21,7 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
 // Stubs
@@ -41,7 +42,7 @@ void bt_persistent_storage_get_cached_system_capabilities(
 
 void test_weather_service__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   weather_db_init();
   weather_service_init();
   weather_shared_data_init();

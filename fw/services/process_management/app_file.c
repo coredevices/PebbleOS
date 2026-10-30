@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
-#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/process_management/app_file.h>
 
 #include <resource/resource_storage.h>
 
@@ -29,6 +29,15 @@ void app_file_name_make(char *restrict buffer, size_t buffer_len, AppInstallId a
 
   memcpy(&buffer[10], suffix, suffix_len);
   buffer[APP_FILE_NAME_PREFIX_LENGTH + suffix_len] = '\0';
+}
+
+void app_file_path_make(char *restrict buffer, size_t buffer_len, AppInstallId app_id,
+                        const char *restrict suffix, size_t suffix_len) {
+  const size_t dir_len = strlen(APP_FILE_DIR);
+  PBL_ASSERTN(buffer_len > dir_len);
+
+  memcpy(buffer, APP_FILE_DIR, dir_len);
+  app_file_name_make(buffer + dir_len, buffer_len - dir_len, app_id, suffix, suffix_len);
 }
 
 //! Checks whether the given filename is an app file.

@@ -1,13 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/put_bytes/put_bytes_storage_file.h>
 
 #include <clar.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <kernel/events.h>
 #include <resource/language_pack.h>
@@ -40,8 +42,8 @@ void shell_prefs_set_language(ShellLanguage language) {
 
 void test_language_pack_storage__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   s_language = ShellLanguageInstalledPack;
   i18n_set_resource(RESOURCE_ID_STRINGS);
 }
@@ -61,12 +63,12 @@ static bool prv_add_pack(uint8_t value, bool success) {
 }
 
 static void prv_assert_pack(uint8_t slot, uint8_t value) {
-  int fd = pfs_open(language_pack_filename(slot), OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-  cl_assert(fd >= 0);
+  struct pbl_fs_file file;
+  cl_assert_equal_i(pbl_fs_open(&file, language_pack_filename(slot), PBL_FS_O_READ), 0);
   uint8_t data;
-  cl_assert_equal_i(pfs_read(fd, &data, 1), 1);
+  cl_assert_equal_i(pbl_fs_read(&file, &data, 1), 1);
   cl_assert_equal_i(data, value);
-  pfs_close(fd);
+  pbl_fs_close(&file);
 }
 
 void test_language_pack_storage__fills_slots_without_replacing_existing_packs(void) {
@@ -83,7 +85,7 @@ void test_language_pack_storage__reuses_removed_slot(void) {
   cl_assert(prv_add_pack(0, true));
   cl_assert(prv_add_pack(1, true));
   cl_assert(prv_add_pack(2, true));
-  cl_assert_equal_i(pfs_remove("lang1"), S_SUCCESS);
+  cl_assert_equal_i(pbl_fs_unlink("/lang1"), 0);
   cl_assert(prv_add_pack(3, true));
   prv_assert_pack(0, 0);
   prv_assert_pack(1, 3);
@@ -94,7 +96,8 @@ void test_language_pack_storage__failed_transfer_preserves_existing_pack(void) {
   cl_assert(prv_add_pack(0, true));
   cl_assert(prv_add_pack(1, false));
   prv_assert_pack(0, 0);
-  cl_assert_equal_i(pfs_open("lang1", OP_FLAG_READ, FILE_TYPE_STATIC, 0), E_DOES_NOT_EXIST);
+  struct pbl_fs_file file;
+  cl_assert_equal_i(pbl_fs_open(&file, "/lang1", PBL_FS_O_READ), -ENOENT);
 }
 
 void test_language_pack_storage__first_add_keeps_builtin_english_active(void) {
@@ -110,9 +113,9 @@ void test_language_pack_storage__extra_add_preserves_selected_pack(void) {
 }
 
 static bool prv_legacy_transfer(uint8_t value, bool success) {
-  uint8_t buffer[sizeof(PutBytesStorageInfo) + sizeof("lang")];
+  uint8_t buffer[sizeof(PutBytesStorageInfo) + sizeof("/lang")];
   PutBytesStorageInfo *info = (PutBytesStorageInfo *)buffer;
-  strcpy(info->filename, "lang");
+  strcpy(info->filename, "/lang");
   PutBytesStorage storage = {};
   if (!pb_storage_file_init(&storage, ObjectFile, 1, info, 0)) {
     return false;
@@ -148,12 +151,12 @@ void test_language_pack_storage__failed_legacy_transfer_keeps_language(void) {
 }
 
 void test_language_pack_storage__other_files_are_untouched(void) {
-  uint8_t buffer[sizeof(PutBytesStorageInfo) + sizeof("other")];
+  uint8_t buffer[sizeof(PutBytesStorageInfo) + sizeof("/other")];
   PutBytesStorageInfo *info = (PutBytesStorageInfo *)buffer;
-  strcpy(info->filename, "other");
+  strcpy(info->filename, "/other");
   PutBytesStorage storage = {};
   cl_assert(pb_storage_file_init(&storage, ObjectFile, 1, info, 0));
-  cl_assert_equal_s(info->filename, "other");
+  cl_assert_equal_s(info->filename, "/other");
   pb_storage_file_deinit(&storage, true);
   cl_assert_equal_i(s_language, ShellLanguageInstalledPack);
 }
@@ -165,7 +168,7 @@ void test_language_pack_storage__transfer_blocks_removing_its_slot(void) {
   strcpy(info->filename, LANGUAGE_PACK_ADD_FILENAME);
   PutBytesStorage storage = {};
   cl_assert(pb_storage_file_init(&storage, ObjectFile, 1, info, 0));
-  cl_assert_equal_s(info->filename, "lang1");
+  cl_assert_equal_s(info->filename, "/lang1");
   cl_assert(!i18n_remove_pack(1));
   cl_assert(i18n_remove_pack(0));
   pb_storage_file_deinit(&storage, true);

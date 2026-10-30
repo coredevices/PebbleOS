@@ -3,8 +3,8 @@
 
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/mic_capture.h>
 #include <pbl/services/mic_manager.h>
 
@@ -49,7 +49,7 @@ ModalProperty modal_manager_get_properties(void) {
   return s_modal ? ModalProperty_Exists : ModalPropertyDefault;
 }
 
-status_t pfs_remove(const char *name) {
+int pbl_fs_unlink(const char *path) {
   fake_settings_file_reset();
   return S_SUCCESS;
 }

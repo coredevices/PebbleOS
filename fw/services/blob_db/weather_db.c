@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/weather_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/util/units.h>
@@ -14,7 +14,7 @@
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-#define SETTINGS_FILE_NAME "weatherdb"
+#define SETTINGS_FILE_NAME "/weatherdb"
 
 #define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
@@ -132,7 +132,7 @@ status_t weather_db_flush(void) {
     return E_RANGE;
   }
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
-  pfs_remove(SETTINGS_FILE_NAME);
+  pbl_fs_unlink(SETTINGS_FILE_NAME);
   pbl_mutex_unlock(&s_weather_db.mutex);
 
   return S_SUCCESS;

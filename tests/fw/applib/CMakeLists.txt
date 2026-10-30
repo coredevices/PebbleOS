@@ -38,7 +38,7 @@ pbl_clar_test(test_persist
   SOURCES
     fw/applib/dict.c
     fw/applib/persist.c
-    fw/services/filesystem/app_file.c
+    fw/services/process_management/app_file.c
     fw/services/persist/service.c
     tests/fakes/fake_rtc.c
     tests/fixtures/resources/builtin_resources.auto.c
@@ -101,9 +101,12 @@ pbl_clar_test(test_system_resource_language_fonts
     fw/resource/resource_storage_file.c
     fw/resource/resource_storage_flash.c
     fw/resource/system_resource.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
-    fw/services/filesystem/app_file.c
+    subsys/fs/pfs/flash_translation.c
+    subsys/fs/pfs/pfs.c
+    subsys/fs/fs.c
+    subsys/fs/pfs/pfs_fs.c
+    tests/fakes/fake_pfs.c
+    fw/services/process_management/app_file.c
     drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c

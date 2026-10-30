@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/weather/weather_service_private.h>
 #include <pbl/util/uuid.h>
 
@@ -15,6 +15,7 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_kernel_services_notifications.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 
@@ -45,7 +46,7 @@ static uint8_t s_weather_prefs[WEATHER_DATA_SIZE];
 
 void test_watch_app_prefs_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   watch_app_prefs_db_init();
 
   // Set up our test prefs with some random data

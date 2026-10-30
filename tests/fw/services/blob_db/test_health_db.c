@@ -4,8 +4,8 @@
 #include <limits.h>
 #include <stdio.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/health_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -16,7 +16,7 @@
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
-status_t pfs_remove(const char *name) {
+int pbl_fs_unlink(const char *path) {
   fake_settings_file_reset();
   return S_SUCCESS;
 }

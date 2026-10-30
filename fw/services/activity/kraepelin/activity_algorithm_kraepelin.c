@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
@@ -10,7 +11,6 @@
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/light.h>
 #include <pbl/services/light_level.h>
 #include <pbl/services/settings/settings_file.h>
@@ -31,7 +31,7 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 // NOTE: This file is called "activity_sleep" for legacy reasons. A better name now would be
 // something like "activity_minute_data", but we want to maintain compatibility with prior
 // releases that only used it for sleep data.
-#define ALG_MINUTE_DATA_FILE_NAME "activity_sleep"
+#define ALG_MINUTE_DATA_FILE_NAME "/activity_sleep"
 
 // How many records we need to store in our circular buffer
 // +1 for mgmt overhead
@@ -382,7 +382,7 @@ exit:
 
   if (nuke_file) {
     PBL_LOG_WRN("Detected invalid minute data file, deleting it");
-    pfs_remove(ALG_MINUTE_DATA_FILE_NAME);
+    pbl_fs_unlink(ALG_MINUTE_DATA_FILE_NAME);
   }
   return file;
 }
@@ -1363,7 +1363,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
   prv_init_minute_record(&record.hdr, utc_sec, true /*for_file*/);
 
   // Delete old file so this doesn't take forever, in case it's already got a lot of data in it
-  pfs_remove(ALG_MINUTE_DATA_FILE_NAME);
+  pbl_fs_unlink(ALG_MINUTE_DATA_FILE_NAME);
   s_alg_state->num_minute_records = 0;
 
   uint32_t secs_per_record = ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;

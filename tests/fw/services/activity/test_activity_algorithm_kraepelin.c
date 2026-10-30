@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
@@ -12,7 +13,6 @@
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/light_level.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/settings/settings_file.h>
@@ -34,6 +34,7 @@
 
 #include <fake_accel_service.h>
 #include <fake_new_timer.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -391,8 +392,8 @@ void test_activity_algorithm_kraepelin__initialize(void) {
   fake_rtc_init(100 /*initial_ticks*/, utc_sec);
 
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   // Init the algorithm
   s_activity_next_resting_calories = 0;

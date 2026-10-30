@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/size.h>
@@ -19,6 +19,7 @@
 #include <pbl/services/time.h>
 
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
@@ -248,7 +249,7 @@ static TimelineItem
 void test_timeline_model__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   fake_rtc_init(0, 0);
-  pfs_init(false);
+  fake_pfs_mount();
   // Note: creating a settings file is going to result in one malloc for the FD name
   pin_db_init();
   time_util_update_timezone(&tz);

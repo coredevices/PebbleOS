@@ -15,9 +15,9 @@
  * @ingroup services
  * @brief Storage of installed app and worker binaries.
  *
- * App and worker binaries are stored in PFS as app files (see @ref services_filesystem_app_file)
- * with the suffixes @ref APP_FILE_NAME_SUFFIX and @ref WORKER_FILE_NAME_SUFFIX; resources are
- * kept separately by the resource storage.
+ * App and worker binaries are stored in PFS as app files, see
+ * @ref services_process_management_app_file, with the suffixes @ref APP_FILE_NAME_SUFFIX and
+ * @ref WORKER_FILE_NAME_SUFFIX; resources are kept separately by the resource storage.
  * @{
  */
 

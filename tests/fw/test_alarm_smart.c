@@ -8,6 +8,7 @@
 #include <pbl/util/units.h>
 
 #include <fake_new_timer.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 
 static int s_rand = 0;
@@ -83,8 +84,8 @@ void test_alarm_smart__initialize(void) {
   memset(s_fake_pin_records, 0, sizeof(s_fake_pin_records));
 
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   pbl_cron_init();
 

@@ -1,13 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+#include <string.h>
 #include <time.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
@@ -45,7 +47,7 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 //! on the platform. The only time when this isn't true is the time between "add_entry" and the
 //! callback to clean up the cache.
 
-#define APP_CACHE_FILE_NAME "appcache"
+#define APP_CACHE_FILE_NAME "/appcache"
 
 //! each cache entry is ~16 bytes, 4000 / 16 = 250 apps
 #define APP_CACHE_MAX_SIZE 4000
@@ -88,7 +90,7 @@ typedef struct {
   uint32_t bytes_in_list;
   //! Evicted only if nothing else can make room.
   const AppInstallId do_not_evict[DO_NOT_EVICT_LIST_SIZE];
-  //! Never evicted: their binaries are open, and pfs_remove croaks on an open file.
+  //! Never evicted: their binaries are open, and PFS croaks on removing an open file.
   const AppInstallId never_evict[NEVER_EVICT_LIST_SIZE];
 } EachEvictData;
 
@@ -144,7 +146,12 @@ static void prv_trim_top_priorities(EvictListNode **list_node, uint32_t *bytes_i
 
 //! Check if we need to free up some space in the cache. If so, do it.
 static void prv_cleanup_app_cache_if_needed(void *data) {
-  uint32_t pfs_space = get_available_pfs_space();
+  struct pbl_fs_statvfs stat;
+  if (pbl_fs_statvfs("/", &stat) < 0) {
+    return;
+  }
+
+  uint32_t pfs_space = stat.f_bfree * stat.f_frsize;
 
   if (pfs_space < APP_SPACE_BUFFER) {
     const uint32_t to_free = (APP_SPACE_BUFFER - pfs_space);
@@ -158,8 +165,59 @@ static void prv_delete_cache_callback(void *data) {
   app_cache_flush();
 }
 
+typedef struct {
+  ListNode list_node;
+  char name[];
+} FileListEntry;
+
+static FileListEntry *prv_create_file_list(bool (*filter)(const char *name)) {
+  struct pbl_fs_dir dir;
+  if (pbl_fs_opendir(&dir, APP_FILE_DIR) < 0) {
+    return nullptr;
+  }
+
+  ListNode *head = nullptr;
+  struct pbl_fs_dirent *entry = kernel_malloc_check(sizeof(*entry));
+  while ((pbl_fs_readdir(&dir, entry) == 0) && (entry->name[0] != '\0')) {
+    if (!filter(entry->name)) {
+      continue;
+    }
+
+    size_t len = strlen(entry->name);
+    FileListEntry *node = kernel_malloc_check(sizeof(*node) + len + 1);
+    *node = (FileListEntry){};
+    memcpy(node->name, entry->name, len + 1);
+    head = list_insert_before(head, &node->list_node);
+  }
+
+  kernel_free(entry);
+  pbl_fs_closedir(&dir);
+
+  return (FileListEntry *)head;
+}
+
+static void prv_delete_file_list(FileListEntry *head) {
+  ListNode *node = (ListNode *)head;
+  while (node) {
+    ListNode *next = list_get_next(node);
+    kernel_free(node);
+    node = next;
+  }
+}
+
+static void prv_remove_file(const char *name) {
+  char path[sizeof(APP_FILE_DIR) + PBL_FS_NAME_MAX];
+  snprintf(path, sizeof(path), APP_FILE_DIR "%s", name);
+  pbl_fs_unlink(path);
+}
+
 static void prv_delete_cached_files(void) {
-  pfs_remove_files(is_app_file_name);
+  FileListEntry *files = prv_create_file_list(is_app_file_name);
+  for (FileListEntry *iter = files; iter != nullptr;
+       iter = (FileListEntry *)list_get_next(&iter->list_node)) {
+    prv_remove_file(iter->name);
+  }
+  prv_delete_file_list(files);
 }
 
 static bool prv_is_in_list(AppInstallId id, const AppInstallId list[], uint8_t len) {
@@ -326,7 +384,7 @@ unlock:
 // AppCache Helpers
 //////////////////////
 
-// Remove the filename entry in the PFSFileList (via context) that corresponds to the
+// Remove the filename entry in the file list (via context) that corresponds to the
 // app install id passed in via info
 static bool prv_remove_matching_resource_file_callback(SettingsFile *file, SettingsRecordInfo *info,
                                                        void *context) {
@@ -334,11 +392,11 @@ static bool prv_remove_matching_resource_file_callback(SettingsFile *file, Setti
   // examine the SettingsRecordInfo and extract the AppInstallId from it
   info->get_key(file, (uint8_t *)&id, info->key_len);
   // the context passed in is really a pointer to the resource_list
-  PFSFileListEntry **resource_list = context;
-  PFSFileListEntry *iter = *resource_list;
+  FileListEntry **resource_list = context;
+  FileListEntry *iter = *resource_list;
   while (iter) {
     // grab the next entry right now since we may delete the node we're looking at
-    PFSFileListEntry *next = (PFSFileListEntry *)iter->list_node.next;
+    FileListEntry *next = (FileListEntry *)iter->list_node.next;
     if (app_file_parse_app_id(iter->name) == id) {
       // the AppInstallId of the file matches the one in the cache so we can remove this
       // entry from the resource_list (since we don't want to delete it)
@@ -353,7 +411,7 @@ static bool prv_remove_matching_resource_file_callback(SettingsFile *file, Setti
 }
 
 // Delete files from resource_list that don't correspond to entries in the app cache
-static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_list) {
+static void prv_app_cache_find_and_delete_orphans(FileListEntry **resource_list) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
 
   SettingsFile file;
@@ -374,11 +432,11 @@ static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_li
 
   // resource_list now only contains filenames of resource files that don't have corresponding
   // entries in the app cache. We can safely delete these files.
-  PFSFileListEntry *iter = *resource_list;
+  FileListEntry *iter = *resource_list;
   while (iter) {
     PBL_LOG_INFO("Orphaned resource file removed: %s", iter->name);
-    pfs_remove(iter->name);
-    iter = (PFSFileListEntry *)iter->list_node.next;
+    prv_remove_file(iter->name);
+    iter = (FileListEntry *)iter->list_node.next;
   }
 }
 
@@ -386,10 +444,10 @@ static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_li
 // behind after the associated application had been deleted.
 static void prv_purge_orphaned_resource_files(void) {
   // create a list of all app resource files in the filesystem
-  PFSFileListEntry *resource_files = pfs_create_file_list(is_app_resource_file_name);
+  FileListEntry *resource_files = prv_create_file_list(is_app_resource_file_name);
   // delete app resource files that don't correspond to entries in the app cache
   prv_app_cache_find_and_delete_orphans(&resource_files);
-  pfs_delete_file_list(resource_files);
+  prv_delete_file_list(resource_files);
 }
 
 //////////////////////////
@@ -401,12 +459,13 @@ void app_cache_init(void) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     // if no cache file exists, then we should go ahead and clean up any files that are left over
-    int fd = pfs_open(APP_CACHE_FILE_NAME, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-    if (fd < 0) {
+    struct pbl_fs_dirent *entry = kernel_malloc_check(sizeof(*entry));
+    int ret = pbl_fs_stat(APP_CACHE_FILE_NAME, entry);
+    kernel_free(entry);
+    if (ret < 0) {
       prv_delete_cached_files();
       goto unlock;
     }
-    pfs_close(fd);
   }
 
 unlock:
@@ -511,7 +570,7 @@ void app_cache_flush(void) {
 
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    pfs_remove(APP_CACHE_FILE_NAME);
+    pbl_fs_unlink(APP_CACHE_FILE_NAME);
     prv_delete_cached_files();
   }
   pbl_mutex_unlock(&s_app_cache_mutex);

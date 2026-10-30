@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
@@ -9,7 +10,6 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
@@ -22,7 +22,7 @@
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-#define SETTINGS_FILE_NAME "appglancedb"
+#define SETTINGS_FILE_NAME "/appglancedb"
 //! The defines below calculate `APP_GLANCE_DB_MAX_USED_SIZE` which is the actual minimum space we
 //! need to guarantee all of the apps's glances on the watch can have the same number of slices,
 //! and that number currently evaluates to 69050 bytes. We provide some additional space beyond that
@@ -623,7 +623,7 @@ void app_glance_db_init(void) {
 
 status_t app_glance_db_flush(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
-  pfs_remove(SETTINGS_FILE_NAME);
+  pbl_fs_unlink(SETTINGS_FILE_NAME);
   pbl_mutex_unlock(&s_app_glance_db.mutex);
 
   return S_SUCCESS;

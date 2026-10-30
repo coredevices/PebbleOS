@@ -9,7 +9,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/app_file.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 
@@ -276,7 +276,7 @@ void resource_unwatch(ResourceCallbackHandle cb_handle) {
 }
 
 void resource_storage_get_file_name(char *name, size_t buf_length, ResAppNum resource_bank) {
-  app_file_name_make(name, buf_length, resource_bank, APP_RESOURCES_FILENAME_SUFFIX,
+  app_file_path_make(name, buf_length, resource_bank, APP_RESOURCES_FILENAME_SUFFIX,
                      strlen(APP_RESOURCES_FILENAME_SUFFIX));
 }
 

@@ -3,11 +3,11 @@
 
 #include <stdio.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/size.h>
@@ -22,6 +22,7 @@
 // Fakes
 ////////////////////////////////////
 #include <fake_events.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 
@@ -29,9 +30,9 @@
 ////////////////////////////////////
 
 void app_storage_delete_app(AppInstallId id) {
-  char buffer[30];
-  itoa_int(id, buffer, 10);
-  pfs_remove(buffer);
+  char buffer[30] = "/";
+  itoa_int(id, buffer + strlen(buffer), 10);
+  pbl_fs_unlink(buffer);
 }
 
 bool app_storage_app_exists(AppInstallId id) {
@@ -115,7 +116,7 @@ void test_app_cache__initialize(void) {
   rtc_set_time(1478397600);
   fake_spi_flash_init(0, 0x1000000);
   fake_event_init();
-  pfs_init(false);
+  fake_pfs_mount();
   app_cache_init();
   app_cache_flush();
 }
@@ -282,7 +283,7 @@ void test_app_cache__clear(void) {
   cl_assert_equal_b(false, app_cache_entry_exists(app3.id));
 }
 
-#define APP_CACHE_FILE_NAME "appcache"
+#define APP_CACHE_FILE_NAME "/appcache"
 #define APP_CACHE_MAX_SIZE  4000
 
 typedef struct PBL_PACKED {
@@ -499,24 +500,33 @@ void test_app_cache__free_up_space_lots_apps(void) {
   cl_assert_equal_i(after_size, 0);
 }
 
+static bool prv_file_exists(const char *name) {
+  char path[64];
+  snprintf(path, sizeof(path), "/%s", name);
+
+  struct pbl_fs_dirent entry;
+  return pbl_fs_stat(path, &entry) == 0;
+}
+
+static void prv_file_create(const char *name, size_t size) {
+  char path[64];
+  snprintf(path, sizeof(path), "/%s", name);
+
+  struct pbl_fs_file file;
+  cl_assert_equal_i(fake_pfs_create(&file, path, size), 0);
+  pbl_fs_close(&file);
+}
+
 static bool prv_file_for_id_exists(AppInstallId id) {
   char buffer[30];
   itoa_int(id, buffer, 10);
-
-  int fd = pfs_open(buffer, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-  if (fd < 0) {
-    return false;
-  }
-  pfs_close(fd);
-  return true;
+  return prv_file_exists(buffer);
 }
 
 static void prv_create_file_for_id(AppInstallId id) {
   char buffer[30];
   itoa_int(id, buffer, 10);
-
-  int fd = pfs_open(buffer, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  pfs_close(fd);
+  prv_file_create(buffer, 10);
 }
 
 void test_app_cache__delete_binaries_for_id_with_no_entry(void) {
@@ -598,12 +608,6 @@ static struct file_description descriptions[] = {
 
 };
 
-static void prv_file_create(const char *name, size_t size) {
-  int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, size);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-}
-
 static void prv_app_filename(char *filename, size_t size, int id) {
   app_file_name_make(filename, size, id, APP_FILE_NAME_SUFFIX, strlen(APP_FILE_NAME_SUFFIX));
 }
@@ -626,9 +630,7 @@ static void prv_app_files_create(int id) {
 }
 
 static void prv_check_file_exists(const char *filename) {
-  int fd = pfs_open(filename, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
+  cl_assert(prv_file_exists(filename));
 }
 
 void test_app_cache__purge_orphaned_files(void) {
@@ -647,9 +649,9 @@ void test_app_cache__purge_orphaned_files(void) {
   // re-initialize the app-cache (which should purge the above 3 files)
   app_cache_init();
   // let's see if the three files we should have deleted are indeed gone
-  cl_assert(pfs_open("@00000000/res", OP_FLAG_READ, FILE_TYPE_STATIC, 0) < 0);
-  cl_assert(pfs_open("@00000001/res", OP_FLAG_READ, FILE_TYPE_STATIC, 0) < 0);
-  cl_assert(pfs_open("@ffffffff/res", OP_FLAG_READ, FILE_TYPE_STATIC, 0) < 0);
+  cl_assert(!prv_file_exists("@00000000/res"));
+  cl_assert(!prv_file_exists("@00000001/res"));
+  cl_assert(!prv_file_exists("@ffffffff/res"));
   // let's make sure the app and res files in the cache weren't deleted
   for (uint32_t i = 0; i < 15; ++i) {
     char filename[15];

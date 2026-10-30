@@ -33,6 +33,7 @@ static GContext s_ctx;
 #include "../../fixtures/load_test_resources.h"
 
 #include <fake_content_indicator.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
 GContext *graphics_context_get_current_context(void) {
@@ -105,8 +106,8 @@ void test_action_menu_window__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
 

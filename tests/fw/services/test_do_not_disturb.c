@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
@@ -24,6 +24,7 @@
 
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
@@ -96,7 +97,7 @@ static void prv_assert_settings_value(const void *key, size_t key_len, const voi
                                       size_t value_len) {
   SettingsFile file;
   char buffer[value_len];
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
+  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
   cl_must_pass(settings_file_get(&file, key, key_len, buffer, value_len));
   settings_file_close(&file);
   cl_assert_equal_m(expected_value, buffer, value_len);
@@ -157,8 +158,8 @@ static bool prv_is_schedule_enabled(unsigned int index) {
 
 void test_do_not_disturb__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   rtc_set_time(s_thursday_00_00);
   alerts_preferences_init();
@@ -219,7 +220,7 @@ void test_do_not_disturb__manually_enable(void) {
 //! settings file first, then the BlobDB insert event is handed to alerts_preferences.
 static void prv_sync_bool_pref_from_phone(const char *key, bool value) {
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
+  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
   cl_must_pass(settings_file_set(&file, key, strlen(key), &value, sizeof(value)));
   settings_file_close(&file);
 
@@ -746,14 +747,14 @@ static const int s_thursday_02_00 = 1426125600;
 
 static void prv_write_pref(const char *key, const void *value, size_t value_len) {
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
+  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
   cl_must_pass(settings_file_set(&file, key, strlen(key), value, value_len));
   settings_file_close(&file);
 }
 
 static void prv_delete_pref(const char *key) {
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
+  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
   settings_file_delete(&file, key, strlen(key));
   settings_file_close(&file);
 }

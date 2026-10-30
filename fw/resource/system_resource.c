@@ -7,7 +7,7 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text_resources.h>
@@ -159,8 +159,8 @@ static void prv_watch_language_packs(void) {
 #ifndef CONFIG_RECOVERY_FW
   pbl_mutex_init(&s_language_fonts_mutex);
   for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
-    pfs_watch_file(language_pack_filename(slot), prv_language_pack_file_changed,
-                   FILE_CHANGED_EVENT_ALL, (void *)(uintptr_t)slot);
+    pbl_fs_watch_add(language_pack_filename(slot), PBL_FS_WATCH_ALL, prv_language_pack_file_changed,
+                     (void *)(uintptr_t)slot);
   }
 #endif
 }

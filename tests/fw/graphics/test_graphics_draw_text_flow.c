@@ -18,6 +18,7 @@
 // Helper Functions
 ////////////////////////////////////
 #include "8bit/test_framebuffer.h"
+#include "fake_pfs.h"
 #include "test_graphics.h"
 #include "util.h"
 
@@ -68,8 +69,8 @@ void test_graphics_draw_text_flow__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
 

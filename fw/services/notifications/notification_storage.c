@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <inttypes.h>
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notification_storage_private.h>
 #include <pbl/services/timeline/attribute_private.h>
@@ -22,11 +23,11 @@ PBL_LOG_MODULE_DEFINE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LE
 
 typedef struct NotificationIterState {
   SerializedTimelineItemHeader header;
-  int fd;
+  struct pbl_fs_file *file;
   TimelineItem notification;
 } NotificationIterState;
 
-static const char *FILENAME = "notifstr"; // The filename should not be changed
+static const char *FILENAME = "/notifstr"; // The filename should not be changed
 
 static PBL_MUTEX_DEFINE(s_notif_storage_mutex);
 
@@ -34,18 +35,33 @@ static uint32_t s_write_offset;
 
 static bool prv_iter_next(IteratorState state);
 static bool prv_get_notification(TimelineItem *notification, SerializedTimelineItemHeader *header,
-                                 int fd);
-static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status, int fd);
+                                 struct pbl_fs_file *file);
+static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status,
+                                  struct pbl_fs_file *file);
+
+static int prv_open(struct pbl_fs_file *file, uint32_t flags) {
+  int ret = pbl_fs_open(file, FILENAME, flags);
+  if ((ret == 0) && ((flags & (PBL_FS_O_WRITE | PBL_FS_O_REPLACE)) != 0) &&
+      (pbl_fs_size(file) == 0)) {
+    ret = pbl_fs_truncate(file, NOTIFICATION_STORAGE_FILE_SIZE);
+    if (ret < 0) {
+      pbl_fs_close(file);
+    }
+  }
+
+  return ret;
+}
 
 void notification_storage_init(void) {
   // Clear notifications storage on reset
-  pfs_remove(FILENAME);
+  pbl_fs_unlink(FILENAME);
   // Create a new file and close it (removes delay when receiving first notification after boot)
-  int fd = pfs_open(FILENAME, OP_FLAG_WRITE, FILE_TYPE_STATIC, NOTIFICATION_STORAGE_FILE_SIZE);
-  if (fd < 0) {
-    PBL_LOG_ERR("Error opening file %d", fd);
+  struct pbl_fs_file file;
+  int ret = prv_open(&file, PBL_FS_O_WRITE | PBL_FS_O_CREATE);
+  if (ret < 0) {
+    PBL_LOG_ERR("Error opening file %d", ret);
   } else {
-    pfs_close(fd);
+    pbl_fs_close(&file);
   }
   s_write_offset = 0;
 }
@@ -58,38 +74,37 @@ void notification_storage_unlock(void) {
   pbl_mutex_unlock(&s_notif_storage_mutex);
 }
 
-static int prv_file_open(uint8_t op_flags) {
+static int prv_file_open(struct pbl_fs_file *file, uint32_t flags) {
   notification_storage_lock();
-  int fd = pfs_open(FILENAME, op_flags, FILE_TYPE_STATIC, NOTIFICATION_STORAGE_FILE_SIZE);
-  if (fd < 0) {
+  int ret = prv_open(file, flags);
+  if (ret < 0) {
     // If a write operation or a read operation fails with anything other than "does not exist",
     // log error
-    bool read_only =
-        ((op_flags & (OP_FLAG_WRITE | OP_FLAG_OVERWRITE | OP_FLAG_READ)) == OP_FLAG_READ);
-    if ((!read_only) || (fd != E_DOES_NOT_EXIST)) {
-      PBL_LOG_ERR("Error opening file %d", fd);
+    bool read_only = ((flags & (PBL_FS_O_WRITE | PBL_FS_O_REPLACE)) == 0);
+    if ((!read_only) || (ret != -ENOENT)) {
+      PBL_LOG_ERR("Error opening file %d", ret);
       // Remove file so next open will create a new one (notification storage trashed)
-      pfs_remove(FILENAME);
+      pbl_fs_unlink(FILENAME);
     }
     notification_storage_unlock();
   }
-  return fd;
+  return ret;
 }
 
-static void prv_file_close(int fd) {
-  pfs_close(fd);
+static void prv_file_close(struct pbl_fs_file *file) {
+  pbl_fs_close(file);
   notification_storage_unlock();
 }
 
 static int prv_write_notification(TimelineItem *notification, SerializedTimelineItemHeader *header,
-                                  int fd) {
+                                  struct pbl_fs_file *file) {
   int bytes_written = 0;
 
   // Invert flags & status to store on flash
   header->common.flags = ~header->common.flags;
   header->common.status = ~header->common.status;
 
-  int result = pfs_write(fd, (uint8_t *)header, sizeof(*header));
+  int result = pbl_fs_write(file, (uint8_t *)header, sizeof(*header));
 
   // Restore flags & status
   header->common.flags = ~header->common.flags;
@@ -108,7 +123,7 @@ static int prv_write_notification(TimelineItem *notification, SerializedTimeline
   uint8_t *write_buffer = kernel_malloc_check(header->payload_length);
 
   timeline_item_serialize_payload(notification, write_buffer, header->payload_length);
-  result = pfs_write(fd, write_buffer, header->payload_length);
+  result = pbl_fs_write(file, write_buffer, header->payload_length);
   if (result < 0) {
     PBL_LOG_ERR("Error writing notification payload %d", result);
     kernel_free(write_buffer);
@@ -123,12 +138,12 @@ static int prv_write_notification(TimelineItem *notification, SerializedTimeline
 
 //! Iterate over notifications space and mark the oldest notifications as deleted until we have
 //! enough space available
-static void prv_reclaim_space(size_t size_needed, int fd) {
+static void prv_reclaim_space(size_t size_needed, struct pbl_fs_file *file) {
   size_needed = ((size_needed / NOTIFICATION_STORAGE_MINIMUM_INCREMENT_SIZE) + 1) *
                 NOTIFICATION_STORAGE_MINIMUM_INCREMENT_SIZE; // Free up space size in blocks
   size_t size_available = 0;
   NotificationIterState iter_state = {
-    .fd = fd,
+    .file = file,
   };
   Iterator iter;
   iter_init(&iter, prv_iter_next, nullptr, &iter_state);
@@ -140,23 +155,24 @@ static void prv_reclaim_space(size_t size_needed, int fd) {
       uuid_to_string(&iter_state.header.common.id, uuid_buffer);
       PBL_LOG_WRN("Storage full: marking notification %s as deleted (ANCS UID: %" PRIu32 ")",
                   uuid_buffer, iter_state.header.common.ancs_uid);
-      prv_set_header_status(&iter_state.header, TimelineItemStatusDeleted, fd);
+      prv_set_header_status(&iter_state.header, TimelineItemStatusDeleted, file);
       size_available += sizeof(SerializedTimelineItemHeader) + iter_state.header.payload_length;
       if (size_needed <= size_available) {
         return;
       }
     }
-    if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
+    if (pbl_fs_seek(file, iter_state.header.payload_length, PBL_FS_SEEK_CUR) < 0) {
       break;
     }
   }
 }
 
 //! Check whether there exists @c size_needed available space in storage after compression
-static bool prv_is_storage_full(size_t size_needed, size_t *size_available, int fd) {
+static bool prv_is_storage_full(size_t size_needed, size_t *size_available,
+                                struct pbl_fs_file *file) {
   *size_available = 0;
   NotificationIterState iter_state = {
-    .fd = fd,
+    .file = file,
   };
   Iterator iter;
   iter_init(&iter, prv_iter_next, nullptr, &iter_state);
@@ -169,7 +185,7 @@ static bool prv_is_storage_full(size_t size_needed, size_t *size_available, int 
         return false;
       }
     }
-    if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
+    if (pbl_fs_seek(file, iter_state.header.payload_length, PBL_FS_SEEK_CUR) < 0) {
       break;
     }
   }
@@ -178,30 +194,30 @@ static bool prv_is_storage_full(size_t size_needed, size_t *size_available, int 
 
 //! Compress storage by reading all valid notifications out of old file and storing to new file
 //! via overwrite
-static bool prv_compress(size_t size_needed, int *fd) {
-  pfs_seek(*fd, 0, FSeekSet);
+static bool prv_compress(size_t size_needed, struct pbl_fs_file *file) {
+  pbl_fs_seek(file, 0, PBL_FS_SEEK_SET);
 
   // Open file for overwrite
-  int new_fd =
-      pfs_open(FILENAME, OP_FLAG_OVERWRITE, FILE_TYPE_STATIC, NOTIFICATION_STORAGE_FILE_SIZE);
-  if (new_fd < 0) {
-    PBL_LOG_ERR("Error opening new file for compression %d", new_fd);
+  struct pbl_fs_file new_file;
+  int ret = prv_open(&new_file, PBL_FS_O_REPLACE);
+  if (ret < 0) {
+    PBL_LOG_ERR("Error opening new file for compression %d", ret);
     return false;
   }
 
   // Delete old notifications if there is no space left in storage
   size_t size_available;
-  if (prv_is_storage_full(size_needed, &size_available, *fd)) {
-    pfs_seek(*fd, 0, FSeekSet);
-    prv_reclaim_space(size_needed - size_available, *fd);
+  if (prv_is_storage_full(size_needed, &size_available, file)) {
+    pbl_fs_seek(file, 0, PBL_FS_SEEK_SET);
+    prv_reclaim_space(size_needed - size_available, file);
   }
-  pfs_seek(*fd, 0, FSeekSet);
+  pbl_fs_seek(file, 0, PBL_FS_SEEK_SET);
 
   int write_offset = 0;
 
   // Iterate over notifications stored and write to new file
   NotificationIterState iter_state = {
-    .fd = *fd,
+    .file = file,
   };
   Iterator iter;
   iter_init(&iter, prv_iter_next, nullptr, &iter_state);
@@ -210,12 +226,12 @@ static bool prv_compress(size_t size_needed, int *fd) {
     uint8_t status = iter_state.header.common.status;
     if (status & TimelineItemStatusDeleted) {
       // Skip over deleted notification
-      pfs_seek(*fd, iter_state.header.payload_length, FSeekCur);
+      pbl_fs_seek(file, iter_state.header.payload_length, PBL_FS_SEEK_CUR);
       continue;
     }
 
     TimelineItem notification;
-    if (!prv_get_notification(&notification, &iter_state.header, *fd)) {
+    if (!prv_get_notification(&notification, &iter_state.header, file)) {
       // Error occurred
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
       uuid_to_string(&iter_state.header.common.id, uuid_buffer);
@@ -223,7 +239,7 @@ static bool prv_compress(size_t size_needed, int *fd) {
                   uuid_buffer);
       goto cleanup;
     }
-    int result = prv_write_notification(&notification, &iter_state.header, new_fd);
+    int result = prv_write_notification(&notification, &iter_state.header, &new_file);
     if (result < 0) {
       // Error occurred
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
@@ -243,21 +259,20 @@ static bool prv_compress(size_t size_needed, int *fd) {
 
   s_write_offset = write_offset;
 
-  pfs_close(*fd);
-  pfs_close(new_fd);
+  pbl_fs_close(file);
+  pbl_fs_close(&new_file);
 
-  *fd = pfs_open(FILENAME, OP_FLAG_READ | OP_FLAG_WRITE, FILE_TYPE_STATIC,
-                 NOTIFICATION_STORAGE_FILE_SIZE);
-  if (*fd < 0) {
-    PBL_LOG_ERR("Error re-opening after compression %d", new_fd);
+  ret = prv_open(file, PBL_FS_O_RDWR | PBL_FS_O_CREATE);
+  if (ret < 0) {
+    PBL_LOG_ERR("Error re-opening after compression %d", ret);
     return false;
   }
 
   return true;
 
 cleanup:
-  pfs_close(*fd);
-  pfs_close(new_fd);
+  pbl_fs_close(file);
+  pbl_fs_close(&new_file);
   return false;
 }
 
@@ -267,22 +282,22 @@ void notification_storage_store(TimelineItem *notification) {
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
   timeline_item_serialize_header(notification, &header);
 
-  int fd = prv_file_open(OP_FLAG_WRITE | OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_RDWR | PBL_FS_O_CREATE) < 0) {
     return;
   }
   size_t size_needed = header.payload_length + sizeof(SerializedTimelineItemHeader);
   if (size_needed > (NOTIFICATION_STORAGE_FILE_SIZE - s_write_offset)) {
-    if (!prv_compress(size_needed, &fd)) {
+    if (!prv_compress(size_needed, &file)) {
       // Notification storage compression failed. Clear notifications storage
       PBL_LOG_ERR("Notification storage compression failed! Resetting all notifications.");
       goto reset_storage;
     }
   }
 
-  pfs_seek(fd, s_write_offset, FSeekSet);
+  pbl_fs_seek(&file, s_write_offset, PBL_FS_SEEK_SET);
 
-  int result = prv_write_notification(notification, &header, fd);
+  int result = prv_write_notification(notification, &header, &file);
   if (result < 0) {
     // [AS] TODO: Write failure: reset storage, compression or reset watch?
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
@@ -294,7 +309,7 @@ void notification_storage_store(TimelineItem *notification) {
 
   s_write_offset += result;
 
-  prv_file_close(fd);
+  prv_file_close(&file);
   return;
 
 reset_storage:
@@ -307,15 +322,15 @@ reset_storage:
 static bool prv_find_next_notification(SerializedTimelineItemHeader *header,
                                        bool (*compare_func)(SerializedTimelineItemHeader *header,
                                                             void *data),
-                                       void *data, int fd) {
+                                       void *data, struct pbl_fs_file *file) {
   for (;;) {
-    int result = pfs_read(fd, (uint8_t *)header, sizeof(*header));
+    int result = pbl_fs_read(file, (uint8_t *)header, sizeof(*header));
 
     // Restore flags & status
     header->common.flags = ~header->common.flags;
     header->common.status = ~header->common.status;
 
-    if ((result < 0) || (uuid_is_invalid(&header->common.id))) {
+    if ((result != (int)sizeof(*header)) || (uuid_is_invalid(&header->common.id))) {
       break;
     }
 
@@ -323,7 +338,7 @@ static bool prv_find_next_notification(SerializedTimelineItemHeader *header,
     if ((status & TimelineItemStatusUnused) ||
         (header->common.type >= TimelineItemTypeOutOfRange) ||
         (header->common.layout >= NumLayoutIds)) {
-      pfs_close(fd);
+      pbl_fs_close(file);
       notification_storage_reset_and_init();
       PBL_LOG_ERR("Notification storage corrupt. Resetting...");
       break;
@@ -337,7 +352,7 @@ static bool prv_find_next_notification(SerializedTimelineItemHeader *header,
       }
     }
 
-    if (pfs_seek(fd, header->payload_length, FSeekCur) < 0) {
+    if (pbl_fs_seek(file, header->payload_length, PBL_FS_SEEK_CUR) < 0) {
       break;
     }
   }
@@ -356,27 +371,27 @@ static bool prv_ancs_id_compare_func(SerializedTimelineItemHeader *header, void 
 }
 
 bool notification_storage_notification_exists(const Uuid *id) {
-  int fd = prv_file_open(OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return false;
   }
 
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
-  bool found = prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd);
+  bool found = prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, &file);
 
-  prv_file_close(fd);
+  prv_file_close(&file);
 
   return found;
 }
 
 static bool prv_get_notification(TimelineItem *notification, SerializedTimelineItemHeader *header,
-                                 int fd) {
+                                 struct pbl_fs_file *file) {
   notification->allocated_buffer = nullptr; // Must be initialized in case this goes to cleanup
   // Read notification to temporary buffer
   uint8_t *read_buffer = task_zalloc_check(header->payload_length);
 
-  int result = pfs_read(fd, read_buffer, header->payload_length);
-  if (result < 0) {
+  int result = pbl_fs_read(file, read_buffer, header->payload_length);
+  if (result != (int)header->payload_length) {
     goto cleanup;
   }
 
@@ -393,28 +408,28 @@ cleanup:
 }
 
 size_t notification_storage_get_len(const Uuid *uuid) {
-  int fd = prv_file_open(OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return 0;
   }
 
   size_t size = 0;
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
-  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)uuid, fd)) {
+  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)uuid, &file)) {
     size = header.payload_length + sizeof(SerializedTimelineItemHeader);
   } else {
     PBL_LOG_DBG("notification not found");
   }
 
-  prv_file_close(fd);
+  prv_file_close(&file);
   return (size);
 }
 
 bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
   PBL_ASSERTN(item_out);
 
-  int fd = prv_file_open(OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return false;
   }
 
@@ -423,18 +438,18 @@ bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
   uuid_to_string(id, uuid_string);
-  if (!prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd)) {
+  if (!prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, &file)) {
     PBL_LOG_DBG("notification not found, %s", uuid_string);
     rv = false;
   } else {
-    if (!prv_get_notification(item_out, &header, fd)) {
+    if (!prv_get_notification(item_out, &header, &file)) {
       PBL_LOG_ERR("Could not retrieve notification with id %s and size %u", uuid_string,
                   header.payload_length);
       rv = false;
     }
   }
 
-  prv_file_close(fd);
+  prv_file_close(&file);
 
   return rv;
 }
@@ -442,13 +457,15 @@ bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
 //! @return is_advanced
 static bool prv_iter_next(IteratorState state) {
   NotificationIterState *iter_state = state;
-  int result = pfs_read(iter_state->fd, (uint8_t *)&iter_state->header, sizeof(iter_state->header));
+  int result =
+      pbl_fs_read(iter_state->file, (uint8_t *)&iter_state->header, sizeof(iter_state->header));
 
   // Restore flags & status
   iter_state->header.common.flags = ~iter_state->header.common.flags;
   iter_state->header.common.status = ~iter_state->header.common.status;
 
-  if ((result == E_RANGE) || (uuid_is_invalid(&iter_state->header.common.id))) {
+  if (((result >= 0) && (result != (int)sizeof(iter_state->header))) ||
+      (uuid_is_invalid(&iter_state->header.common.id))) {
     // End iteration if we have reached the end of the file or the header ID is invalid (erased
     // flash)
     return false;
@@ -464,13 +481,15 @@ static bool prv_rewrite_iter_next(IteratorState state) {
   NotificationIterState *iter_state = state;
   int result = 0;
 
-  result = pfs_read(iter_state->fd, (uint8_t *)&iter_state->header, sizeof(iter_state->header));
+  result =
+      pbl_fs_read(iter_state->file, (uint8_t *)&iter_state->header, sizeof(iter_state->header));
 
   // Restore flags & status
   iter_state->header.common.flags = ~iter_state->header.common.flags;
   iter_state->header.common.status = ~iter_state->header.common.status;
 
-  if ((result == E_RANGE) || (uuid_is_invalid(&iter_state->header.common.id))) {
+  if (((result >= 0) && (result != (int)sizeof(iter_state->header))) ||
+      (uuid_is_invalid(&iter_state->header.common.id))) {
     return false;
   } else if (result < 0) {
     PBL_LOG_ERR("Error reading notification header while iterating %d", result);
@@ -480,60 +499,62 @@ static bool prv_rewrite_iter_next(IteratorState state) {
   if (iter_state->header.common.status & TimelineItemStatusDeleted) {
     // Deleted entries are not read into iter_state->notification; skip the payload so the next
     // iteration reads a record header, not payload bytes
-    return pfs_seek(iter_state->fd, iter_state->header.payload_length, FSeekCur) >= 0;
+    return pbl_fs_seek(iter_state->file, iter_state->header.payload_length, PBL_FS_SEEK_CUR) >= 0;
   }
-  return prv_get_notification(&iter_state->notification, &iter_state->header, iter_state->fd);
+  return prv_get_notification(&iter_state->notification, &iter_state->header, iter_state->file);
 }
 
-static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status, int fd) {
+static void prv_set_header_status(SerializedTimelineItemHeader *header, uint8_t status,
+                                  struct pbl_fs_file *file) {
   // Seek to the status field
-  pfs_seek(fd, (-(int)sizeof(*header) + (int)offsetof(CommonTimelineItemHeader, status)), FSeekCur);
+  pbl_fs_seek(file, (-(int)sizeof(*header) + (int)offsetof(CommonTimelineItemHeader, status)),
+              PBL_FS_SEEK_CUR);
 
   // Invert flags & status to store on flash
   status = ~status;
 
-  int result = pfs_write(fd, (uint8_t *)&status, sizeof(header->common.status));
+  int result = pbl_fs_write(file, (uint8_t *)&status, sizeof(header->common.status));
   if (result < 0) {
     PBL_LOG_ERR("Error writing status to notification header %d", result);
   }
 
   // Seek to the end of the header
-  pfs_seek(fd,
-           ((int)sizeof(*header) - (int)offsetof(CommonTimelineItemHeader, status) -
-            sizeof(header->common.status)),
-           FSeekCur);
+  pbl_fs_seek(file,
+              ((int)sizeof(*header) - (int)offsetof(CommonTimelineItemHeader, status) -
+               sizeof(header->common.status)),
+              PBL_FS_SEEK_CUR);
 }
 
 bool notification_storage_get_status(const Uuid *id, uint8_t *status) {
-  int fd = prv_file_open(OP_FLAG_READ);
+  struct pbl_fs_file file;
   bool rv = false;
-  if (fd < 0) {
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return rv;
   }
 
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
-  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd)) {
+  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, &file)) {
     *status = header.common.status;
     rv = true;
   }
 
-  prv_file_close(fd);
+  prv_file_close(&file);
   return rv;
 }
 
 void notification_storage_set_status(const Uuid *id, uint8_t status) {
   SerializedTimelineItemHeader header = {.common.id = UUID_INVALID};
 
-  int fd = prv_file_open(OP_FLAG_READ | OP_FLAG_WRITE);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_RDWR | PBL_FS_O_CREATE) < 0) {
     return;
   }
 
-  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, fd)) {
-    prv_set_header_status(&header, status, fd);
+  if (prv_find_next_notification(&header, prv_uuid_equal_func, (void *)id, &file)) {
+    prv_set_header_status(&header, status, &file);
   }
 
-  prv_file_close(fd);
+  prv_file_close(&file);
 }
 
 void notification_storage_remove(const Uuid *id) {
@@ -541,8 +562,8 @@ void notification_storage_remove(const Uuid *id) {
 }
 
 bool notification_storage_find_ancs_notification_id(uint32_t ancs_uid, Uuid *uuid_out) {
-  int fd = prv_file_open(OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return false;
   }
 
@@ -552,24 +573,25 @@ bool notification_storage_find_ancs_notification_id(uint32_t ancs_uid, Uuid *uui
   // the db. iOS can reset ANCS UIDs on reconnect, so we want to avoid finding an old notification
   bool found = false;
   while (prv_find_next_notification(&header, prv_ancs_id_compare_func, (void *)(uintptr_t)ancs_uid,
-                                    fd)) {
+                                    &file)) {
     found = true;
     *uuid_out = header.common.id;
 
     // Seek to the end of this item's payload (start of the next item)
-    if (pfs_seek(fd, header.payload_length, FSeekCur) < 0) {
+    if (pbl_fs_seek(&file, header.payload_length, PBL_FS_SEEK_CUR) < 0) {
       break;
     }
   }
 
-  prv_file_close(fd);
+  prv_file_close(&file);
 
   return found;
 }
 
 static bool prv_compare_ancs_notifications(TimelineItem *notification, const uint8_t *payload,
                                            size_t payload_size,
-                                           SerializedTimelineItemHeader *header, int fd) {
+                                           SerializedTimelineItemHeader *header,
+                                           struct pbl_fs_file *file) {
   if ((notification->header.timestamp != header->common.timestamp) ||
       (notification->header.layout != header->common.layout) ||
       (header->payload_length != payload_size)) {
@@ -580,14 +602,14 @@ static bool prv_compare_ancs_notifications(TimelineItem *notification, const uin
   if (header->payload_length == payload_size) {
     uint8_t *read_buffer = kernel_malloc_check(payload_size);
 
-    int result = pfs_read(fd, read_buffer, payload_size);
-    if (result < 0) {
+    int result = pbl_fs_read(file, read_buffer, payload_size);
+    if (result != (int)payload_size) {
       kernel_free(read_buffer);
       return false;
     }
 
     // Seek back to the end of the header so that the next iterator seek finds the next record
-    pfs_seek(fd, -payload_size, FSeekCur);
+    pbl_fs_seek(file, -(off_t)payload_size, PBL_FS_SEEK_CUR);
 
     found = (memcmp(payload, read_buffer, payload_size) == 0);
     kernel_free(read_buffer);
@@ -599,8 +621,8 @@ bool notification_storage_find_ancs_notification_by_timestamp(
     TimelineItem *notification, CommonTimelineItemHeader *header_out) {
   PBL_ASSERTN(notification && header_out);
 
-  int fd = prv_file_open(OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return false;
   }
 
@@ -612,7 +634,7 @@ bool notification_storage_find_ancs_notification_by_timestamp(
   // Iterate over all records until a match is found
   bool rv = false;
   NotificationIterState iter_state = {
-    .fd = fd,
+    .file = &file,
   };
   Iterator iter;
   iter_init(&iter, prv_iter_next, nullptr, &iter_state);
@@ -621,13 +643,13 @@ bool notification_storage_find_ancs_notification_by_timestamp(
     uint8_t status = iter_state.header.common.status;
     if (!(status & TimelineItemStatusDeleted)) {
       if (prv_compare_ancs_notifications(notification, payload, payload_size, &iter_state.header,
-                                         fd)) {
+                                         &file)) {
         *header_out = iter_state.header.common;
         rv = true;
         break;
       }
     }
-    int result = pfs_seek(iter_state.fd, iter_state.header.payload_length, FSeekCur);
+    int result = pbl_fs_seek(iter_state.file, iter_state.header.payload_length, PBL_FS_SEEK_CUR);
     if (result < 0) {
       break;
     }
@@ -635,7 +657,7 @@ bool notification_storage_find_ancs_notification_by_timestamp(
 
   kernel_free(payload);
 
-  prv_file_close(fd);
+  prv_file_close(&file);
 
   return rv;
 }
@@ -648,20 +670,19 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
     return;
   }
 
-  int fd = prv_file_open(OP_FLAG_READ | OP_FLAG_WRITE);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_RDWR | PBL_FS_O_CREATE) < 0) {
     return;
   }
 
-  int new_fd = pfs_open(FILENAME, OP_FLAG_OVERWRITE | OP_FLAG_READ, FILE_TYPE_STATIC,
-                        NOTIFICATION_STORAGE_FILE_SIZE);
-  if (new_fd < 0) {
-    prv_file_close(fd);
+  struct pbl_fs_file new_file;
+  if (prv_open(&new_file, PBL_FS_O_REPLACE | PBL_FS_O_READ) < 0) {
+    prv_file_close(&file);
     return;
   }
 
   Iterator iter;
-  NotificationIterState iter_state = {.fd = fd};
+  NotificationIterState iter_state = {.file = &file};
   iter_init(&iter, prv_rewrite_iter_next, nullptr, &iter_state);
 
   int write_offset = 0;
@@ -673,7 +694,7 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
       continue;
     }
     iter_callback(&iter_state.notification, &iter_state.header, data);
-    int result = prv_write_notification(&iter_state.notification, &iter_state.header, new_fd);
+    int result = prv_write_notification(&iter_state.notification, &iter_state.header, &new_file);
     timeline_item_free_allocated_buffer(&iter_state.notification);
     if (result < 0) {
       break;
@@ -683,14 +704,13 @@ void notification_storage_rewrite(void (*iter_callback)(TimelineItem *notificati
   s_write_offset = write_offset;
 
   // Close the old file
-  prv_file_close(fd);
+  prv_file_close(&file);
 
-  // We have to close and reopened the new file pointed to by the file descriptor, so
-  // that it's temp flag is cleared.
-  pfs_close(new_fd);
-  new_fd = prv_file_open(OP_FLAG_READ | OP_FLAG_WRITE);
-  // Finally, close that new file as this fd is only known here
-  prv_file_close(new_fd);
+  // We have to close and reopened the new file, so that it's temp flag is cleared.
+  pbl_fs_close(&new_file);
+  if (prv_file_open(&new_file, PBL_FS_O_RDWR | PBL_FS_O_CREATE) == 0) {
+    prv_file_close(&new_file);
+  }
 }
 
 void notification_storage_iterate(bool (*iter_callback)(void *data,
@@ -700,13 +720,13 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
     return;
   }
 
-  int fd = prv_file_open(OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return;
   }
 
   Iterator iter;
-  NotificationIterState iter_state = {.fd = fd};
+  NotificationIterState iter_state = {.file = &file};
 
   iter_init(&iter, prv_iter_next, nullptr, &iter_state);
 
@@ -717,19 +737,20 @@ void notification_storage_iterate(bool (*iter_callback)(void *data,
         break;
       }
     }
-    int result = pfs_seek(iter_state.fd, iter_state.header.payload_length, FSeekCur);
+    int result = pbl_fs_seek(iter_state.file, iter_state.header.payload_length, PBL_FS_SEEK_CUR);
     if (result < 0) {
       break;
     }
   }
 
-  prv_file_close(fd);
+  prv_file_close(&file);
 }
 
 //! Reads the string attributes requested in attr_list from the payload following the header,
 //! leaving the file positioned after the payload
 static bool prv_read_string_attributes(const SerializedTimelineItemHeader *header,
-                                       AttributeList *attr_list, size_t buffer_size, int fd) {
+                                       AttributeList *attr_list, size_t buffer_size,
+                                       struct pbl_fs_file *file) {
   for (uint8_t i = 0; i < attr_list->num_attributes; i++) {
     attr_list->attributes[i].cstring[0] = '\0';
   }
@@ -738,7 +759,7 @@ static bool prv_read_string_attributes(const SerializedTimelineItemHeader *heade
   for (uint8_t i = 0; i < header->num_attributes; i++) {
     SerializedAttributeHeader attribute;
     if ((remaining < sizeof(attribute)) ||
-        (pfs_read(fd, (uint8_t *)&attribute, sizeof(attribute)) < 0)) {
+        (pbl_fs_read(file, (uint8_t *)&attribute, sizeof(attribute)) != sizeof(attribute))) {
       return false;
     }
     remaining -= sizeof(attribute);
@@ -749,18 +770,18 @@ static bool prv_read_string_attributes(const SerializedTimelineItemHeader *heade
 
     Attribute *dest = attribute_find(attr_list, attribute.id);
     const size_t length = dest ? MIN(attribute.length, buffer_size - 1) : 0;
-    if ((length > 0) && (pfs_read(fd, (uint8_t *)dest->cstring, length) < 0)) {
+    if ((length > 0) && (pbl_fs_read(file, (uint8_t *)dest->cstring, length) != (ssize_t)length)) {
       return false;
     }
     if (dest) {
       dest->cstring[length] = '\0';
     }
-    if (pfs_seek(fd, attribute.length - length, FSeekCur) < 0) {
+    if (pbl_fs_seek(file, attribute.length - length, PBL_FS_SEEK_CUR) < 0) {
       return false;
     }
   }
 
-  return pfs_seek(fd, remaining, FSeekCur) >= 0;
+  return pbl_fs_seek(file, remaining, PBL_FS_SEEK_CUR) >= 0;
 }
 
 void notification_storage_iterate_strings_after(
@@ -772,13 +793,13 @@ void notification_storage_iterate_strings_after(
     return;
   }
 
-  int fd = prv_file_open(OP_FLAG_READ);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (prv_file_open(&file, PBL_FS_O_READ) < 0) {
     return;
   }
 
   Iterator iter;
-  NotificationIterState iter_state = {.fd = fd};
+  NotificationIterState iter_state = {.file = &file};
   iter_init(&iter, prv_iter_next, nullptr, &iter_state);
 
   while (iter_next(&iter)) {
@@ -790,7 +811,7 @@ void notification_storage_iterate_strings_after(
       PBL_LOG_WRN("Skipping corrupt notification");
     }
     if (corrupt || (status & TimelineItemStatusDeleted)) {
-      if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
+      if (pbl_fs_seek(&file, iter_state.header.payload_length, PBL_FS_SEEK_CUR) < 0) {
         break;
       }
       continue;
@@ -798,18 +819,19 @@ void notification_storage_iterate_strings_after(
 
     const bool read_strings = iter_state.header.common.timestamp >= item_cutoff;
     if (read_strings) {
-      const int payload_offset = pfs_seek(fd, 0, FSeekCur);
+      const int payload_offset = pbl_fs_seek(&file, 0, PBL_FS_SEEK_CUR);
       if (payload_offset < 0) {
         break;
       }
-      if (!prv_read_string_attributes(&iter_state.header, attr_list, buffer_size, fd)) {
+      if (!prv_read_string_attributes(&iter_state.header, attr_list, buffer_size, &file)) {
         PBL_LOG_WRN("Skipping corrupt notification payload");
-        if (pfs_seek(fd, payload_offset + iter_state.header.payload_length, FSeekSet) < 0) {
+        if (pbl_fs_seek(&file, payload_offset + iter_state.header.payload_length, PBL_FS_SEEK_SET) <
+            0) {
           break;
         }
         continue;
       }
-    } else if (pfs_seek(fd, iter_state.header.payload_length, FSeekCur) < 0) {
+    } else if (pbl_fs_seek(&file, iter_state.header.payload_length, PBL_FS_SEEK_CUR) < 0) {
       break;
     }
 
@@ -822,12 +844,12 @@ void notification_storage_iterate_strings_after(
     }
   }
 
-  prv_file_close(fd);
+  prv_file_close(&file);
 }
 
 void notification_storage_reset_and_init(void) {
   notification_storage_lock();
-  pfs_remove(FILENAME);
+  pbl_fs_unlink(FILENAME);
   s_write_offset = 0;
   notification_storage_unlock();
 }

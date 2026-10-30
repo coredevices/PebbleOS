@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/types.h>
@@ -14,7 +15,6 @@
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/time.h>
@@ -48,6 +48,7 @@ void prefs_sync_init(void) {
 #include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_std.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -958,8 +959,8 @@ void test_activity__initialize(void) {
   time_t utc_sec = pbl_mktime(&time_tm);
   fake_rtc_init(100 /*initial_ticks*/, utc_sec);
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   prv_activity_algorithm_erase_minute_data();
   prv_activity_init_and_set_enabled(true);
@@ -1963,14 +1964,13 @@ void prv_assert_known_settings(void) {
   sprintf(out_path, "%s/%s/%s", CLAR_FIXTURE_PATH, ACTIVITY_FIXTURE_PATH, filename);
 
   // Open and read the settings file from PFS
-  int fd = pfs_open(ACTIVITY_SETTINGS_FILE_NAME, OP_FLAG_READ, FILE_TYPE_STATIC,
-                    ACTIVITY_SETTINGS_FILE_LEN);
-  cl_assert(fd >= S_SUCCESS);
-  size_t size = pfs_get_file_size(fd);
+  struct pbl_fs_file pfs_file;
+  cl_assert_equal_i(pbl_fs_open(&pfs_file, ACTIVITY_SETTINGS_FILE_NAME, PBL_FS_O_READ), 0);
+  size_t size = pbl_fs_size(&pfs_file);
   uint8_t *buf = malloc(size);
   cl_assert(buf != nullptr);
-  cl_assert(pfs_read(fd, buf, size) == size);
-  pfs_close(fd);
+  cl_assert(pbl_fs_read(&pfs_file, buf, size) == size);
+  pbl_fs_close(&pfs_file);
 
   // Save it to the local file system
   FILE *file = fopen(out_path, "wb");
@@ -1999,12 +1999,12 @@ static void prv_load_settings_file_onto_pfs(const char *filename, const char *pf
   // copy file to fake flash storage
   cl_assert(fread(buf, 1, st.st_size, file) > 0);
 
-  pfs_remove(pfs_name);
-  int fd = pfs_open(pfs_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, st.st_size);
-  cl_assert(fd >= 0);
-  int bytes_written = pfs_write(fd, buf, st.st_size);
+  pbl_fs_unlink(pfs_name);
+  struct pbl_fs_file pfs_file;
+  cl_assert_equal_i(fake_pfs_create(&pfs_file, pfs_name, st.st_size), 0);
+  int bytes_written = pbl_fs_write(&pfs_file, buf, st.st_size);
   cl_assert(st.st_size == bytes_written);
-  pfs_close(fd);
+  pbl_fs_close(&pfs_file);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -2034,7 +2034,7 @@ void test_activity__migrate_settings_v2(void) {
   } ActivitySettingsValueHistoryV2;
 
   // Build a version 2 settings file by hand
-  pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);
+  pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
   SettingsFile file;
   cl_assert_equal_i(
       settings_file_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN),

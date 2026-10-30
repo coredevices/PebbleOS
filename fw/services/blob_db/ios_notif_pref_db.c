@@ -1,23 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/blob_db/sync_util.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
 #include <kernel/pbl_malloc.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-PBL_T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "iosnotifprefdb";
+PBL_T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "/iosnotifprefdb";
 PBL_T_STATIC const int iOS_NOTIF_PREF_MAX_SIZE = PBL_KIB(32);
 
 typedef struct PBL_PACKED {
@@ -282,7 +283,7 @@ status_t ios_notif_pref_db_delete(const uint8_t *key, int key_len) {
 
 status_t ios_notif_pref_db_flush(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  status_t rv = pfs_remove(iOS_NOTIF_PREF_DB_FILE_NAME);
+  status_t rv = status_from_errno(pbl_fs_unlink(iOS_NOTIF_PREF_DB_FILE_NAME));
   pbl_mutex_unlock(&s_mutex);
   return rv;
 }

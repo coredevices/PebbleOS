@@ -19,16 +19,6 @@ pbl_clar_test(test_language_pack_protocol
   SOURCES fw/kernel/language_pack_protocol.c
 )
 
-pbl_clar_test(test_pfs
-  MODULES pfs
-  SOURCES
-    fw/system/hexdump.c
-    tests/fakes/fake_rtc.c
-  PLATFORMS emery
-  DEFINES DUMA_DISABLED
-  OVERRIDES dummy_board
-)
-
 pbl_clar_test(test_put_bytes
   SOURCES
     fw/services/put_bytes/put_bytes.c
@@ -61,9 +51,12 @@ pbl_clar_test(test_language_pack_storage
     fw/resource/resource_storage_builtin.c
     fw/resource/resource_storage_file.c
     fw/resource/resource_storage_flash.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
-    fw/services/filesystem/app_file.c
+    subsys/fs/pfs/flash_translation.c
+    subsys/fs/pfs/pfs.c
+    subsys/fs/fs.c
+    subsys/fs/pfs/pfs_fs.c
+    tests/fakes/fake_pfs.c
+    fw/services/process_management/app_file.c
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     drivers/flash/flash_crc.c
@@ -272,7 +265,7 @@ pbl_clar_test(test_voice_endpoint
 pbl_clar_test(test_app_cache
   MODULES settings
   SOURCES
-    fw/services/filesystem/app_file.c
+    fw/services/process_management/app_file.c
     fw/services/app_cache/service.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_events.c
@@ -301,7 +294,7 @@ pbl_clar_test(test_app_install_manager
     fw/resource/resource_storage_builtin.c
     fw/resource/resource_storage_file.c
     fw/resource/resource_storage_flash.c
-    fw/services/filesystem/app_file.c
+    fw/services/process_management/app_file.c
     fw/services/app_cache/service.c
     fw/services/process_management/app_storage.c
     fw/process_management/app_install_manager.c
@@ -330,7 +323,7 @@ pbl_clar_test(test_app_menu_data_source
     fw/resource/resource_storage_flash.c
     fw/services/app_cache/service.c
     fw/services/blob_db/app_db.c
-    fw/services/filesystem/app_file.c
+    fw/services/process_management/app_file.c
     fw/services/process_management/app_order_storage.c
     fw/services/process_management/app_storage.c
     tests/fakes/fake_rtc.c
@@ -384,7 +377,7 @@ pbl_clar_test(test_shared_prf_storage_v3
 
 pbl_clar_test(test_app_file
   SOURCES
-    fw/services/filesystem/app_file.c
+    fw/services/process_management/app_file.c
 )
 
 pbl_clar_test(test_do_not_disturb

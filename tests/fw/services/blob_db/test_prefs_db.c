@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/prefs_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/uuid.h>
 
 #include <clar.h>
@@ -15,6 +15,7 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_kernel_services_notifications.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 
@@ -32,7 +33,7 @@ void i18n_enable(bool enable) {
 
 void test_prefs_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
 }
 
 void test_prefs_db__cleanup(void) {

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/wakeup.h>
 
@@ -17,6 +17,7 @@
 #include <fake_app_manager.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -25,7 +26,7 @@
 // Stubs
 //////////////////////////////////////////////////////////
 
-#define SETTINGS_FILE_NAME "wakeup"
+#define SETTINGS_FILE_NAME "/wakeup"
 #define SETTINGS_FILE_SIZE 2048
 
 #define WAKEUP_REASON 0x1337
@@ -99,8 +100,8 @@ void close_settings_file(SettingsFile *file) {
 
 void test_migrate_wakeup__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   // Load pre-migration wakeup entry onto pfs
   SettingsFile file;

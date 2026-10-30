@@ -3,11 +3,13 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/comm_session/protocol.h>
@@ -27,10 +29,12 @@
  * @{
  */
 
+/** @brief Directory of session files. */
+#define DLS_FILE_DIR "/"
 /** @brief Prefix of session file names, followed by the decimal session ID. */
 #define DLS_FILE_NAME_PREFIX "dls_storage_"
-/** @brief Size of a buffer holding a session file name. */
-static const uint32_t DLS_FILE_NAME_MAX_LEN = 20;
+/** @brief Size of a buffer holding a session file path. */
+static const uint32_t DLS_FILE_PATH_MAX_LEN = 32;
 /** @brief Initial size of a session file. */
 static const uint32_t DLS_FILE_INIT_SIZE_BYTES = PBL_KIB(4);
 
@@ -97,12 +101,13 @@ typedef enum {
  */
 static const uint8_t DLS_ENDPOINT_CMD_MASK = 0x7f;
 
-/** @brief Value of @ref DataLoggingSessionStorage::fd when the session has no open file. */
-#define DLS_INVALID_FILE (-1)
 /** @brief Location of a session's data in its file. */
 typedef struct DataLoggingSessionStorage {
-  /** PFS file descriptor, or @ref DLS_INVALID_FILE when not open. */
-  int fd;
+  /** Session file, valid while @ref open. */
+  struct pbl_fs_file file;
+
+  /** Whether @ref file is open. */
+  bool open;
 
   /** File offset of the next write. */
   uint32_t write_offset;

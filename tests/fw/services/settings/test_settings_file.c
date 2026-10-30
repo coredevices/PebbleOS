@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/settings/settings_raw_iter.h>
 
@@ -15,6 +15,7 @@
 
 // Stubs
 ////////////////////////////////////
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <stubs_pbl_malloc.h>
@@ -25,7 +26,7 @@ extern status_t settings_file_compact(SettingsFile *file);
 
 void test_settings_file__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
 }
 
 void test_settings_file__cleanup(void) {
@@ -39,11 +40,6 @@ void test_settings_file__cleanup(void) {
   (byte & 0x80 ? 1 : 0), (byte & 0x40 ? 1 : 0), (byte & 0x20 ? 1 : 0), (byte & 0x10 ? 1 : 0), \
       (byte & 0x08 ? 1 : 0), (byte & 0x04 ? 1 : 0), (byte & 0x02 ? 1 : 0), (byte & 0x01 ? 1 : 0)
 
-extern void pfs_debug_dump(int fd, int num_bytes);
-void settings_file_hexdump(SettingsFile *file) {
-  pfs_seek(file->iter.fd, 0, FSeekSet);
-  pfs_debug_dump(file->iter.fd, 4096);
-}
 void settings_file_dump(SettingsFile *file) {
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
        settings_raw_iter_next(&file->iter)) {
@@ -79,7 +75,7 @@ static void set_and_verify(SettingsFile *file, uint8_t *key, int key_len, uint8_
 void test_settings_file__set_get_one(void) {
   printf("\nTesting setting and retrieving a single key a single time...\n");
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_set_get_one", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_set_get_one", 4096));
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
   memcpy(key, "key", sizeof(key));
@@ -93,7 +89,7 @@ void test_settings_file__set_get_one(void) {
 void test_settings_file__set_get_one_many_times(void) {
   printf("\nTesting setting and retrieving a key several times...\n");
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_set_get_one_many_times", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_set_get_one_many_times", 4096));
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
   memcpy(key, "key", sizeof(key));
@@ -108,7 +104,7 @@ void test_settings_file__set_get_one_many_times(void) {
   }
 
   settings_file_close(&file);
-  cl_must_pass(settings_file_open(&file, "test_file_set_get_one_many_times", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_set_get_one_many_times", 4096));
 
   printf("Making sure we still get the right value after closing & reopening the file...\n");
   verify(&file, key, key_len, val, val_len);
@@ -130,7 +126,7 @@ static void prv_test_settings_file_compaction(const bool manual) {
   // If manual is disabled, then the test will only compact when it is required to do so.
 
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_compaction", 2048));
+  cl_must_pass(settings_file_open(&file, "/test_file_compaction", 2048));
 
   uint32_t value = 0;
   static const uint32_t LOOPS = 10;
@@ -183,7 +179,7 @@ void test_settings_file__compute_stats(void) {
   printf("\nTesting if compute stats is equal to live stats...\n");
   SettingsFile file;
   const uint32_t max_used_space = 4096;
-  cl_must_pass(settings_file_open(&file, "test_file_max_storage", max_used_space));
+  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", max_used_space));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -203,7 +199,7 @@ void test_settings_file__compute_stats(void) {
   settings_file_compact(&file);
   const SettingsFile file_copy = file;
   settings_file_close(&file);
-  cl_must_pass(settings_file_open(&file, "test_file_max_storage", max_used_space));
+  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", max_used_space));
   cl_assert_equal_i(file.max_used_space, file_copy.max_used_space);
   cl_assert_equal_i(file.max_space_total, file_copy.max_space_total);
   cl_assert_equal_i(file.used_space, file_copy.used_space);
@@ -213,7 +209,7 @@ void test_settings_file__compute_stats(void) {
 void test_settings_file__max_storage(void) {
   printf("\nTesting what happens when we hit the storage limits...\n");
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_max_storage", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", 4096));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -243,7 +239,7 @@ void test_settings_file__max_storage(void) {
 void test_settings_file__max_storage_with_delete(void) {
   printf("\nTesting what happens when we hit the storage limits with deletes...\n");
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_max_storage", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", 4096));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -275,7 +271,7 @@ void test_settings_file__max_storage_with_delete(void) {
 void test_settings_file__used_space_tracking(void) {
   printf("\nTesting used space tracking...\n");
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_used_space_tracking", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_used_space_tracking", 4096));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -317,10 +313,10 @@ static RecordResult write_and_change_record_aborting_after_bytes(int after_n_byt
   // Wednesday (the 1st) at 00:00
   // date -d "2014/01/01 00:00:00" "+%s" ==> 1388563200
   fake_rtc_init(0, 1388563200);
-  pfs_init(false);
+  fake_pfs_mount();
 
   SettingsFile file_original;
-  cl_must_pass(settings_file_open(&file_original, "test_file_atomic", 4096));
+  cl_must_pass(settings_file_open(&file_original, "/test_file_atomic", 4096));
 
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
@@ -349,11 +345,11 @@ static RecordResult write_and_change_record_aborting_after_bytes(int after_n_byt
     fake_spi_flash_force_future_failure(0, nullptr);
     extern void pfs_reset_all_state(void);
     pfs_reset_all_state();
-    pfs_init(false);
+    fake_pfs_mount();
 
     // Reopen the file we were in the middle of writing.
     SettingsFile file_new;
-    cl_must_pass(settings_file_open(&file_new, "test_file_atomic", 4096));
+    cl_must_pass(settings_file_open(&file_new, "/test_file_atomic", 4096));
 
     settings_file_dump(&file_new);
 
@@ -419,7 +415,7 @@ void test_settings_file__zero_length(void) {
   printf("\nTesting if we can set keys & values of zero length...\n");
 
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_zero_length", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_zero_length", 4096));
 
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
@@ -464,7 +460,7 @@ void test_settings_file__each(void) {
   printf("\nTesting if we can use each...\n");
 
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_each", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_each", 4096));
 
   uint8_t key[5];
   int key_len = 4;
@@ -514,7 +510,7 @@ void test_settings_file__each_quit_early(void) {
   printf("\nTesting if we can use each and stop early at %d iterations...\n", STOPPING_NUM);
 
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_each", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_each", 4096));
 
   uint8_t key[5];
   int key_len = 4;
@@ -537,7 +533,7 @@ void test_settings_file__in_place(void) {
   printf("Testing that we can update a setting file in place\n");
 
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_in_place", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_in_place", 4096));
 
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
@@ -571,8 +567,8 @@ void test_settings_file__reallocate_larger(void) {
   const int k_initial_size = 0x1000;
   const int k_larger_size = 0x4000;
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_reallocate_larger", k_initial_size));
-  int orig_fd_size = pfs_get_file_size(file.iter.fd);
+  cl_must_pass(settings_file_open(&file, "/test_file_reallocate_larger", k_initial_size));
+  int orig_fd_size = pbl_fs_size(&file.iter.file);
 
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
@@ -585,8 +581,8 @@ void test_settings_file__reallocate_larger(void) {
 
   // Now close the file and re-open it with a larger size
   settings_file_close(&file);
-  cl_must_pass(settings_file_open(&file, "test_file_reallocate_larger", k_larger_size));
-  int new_fd_size = pfs_get_file_size(file.iter.fd);
+  cl_must_pass(settings_file_open(&file, "/test_file_reallocate_larger", k_larger_size));
+  int new_fd_size = pbl_fs_size(&file.iter.file);
   cl_assert(new_fd_size > orig_fd_size);
 
   verify(&file, key, key_len, val, val_len);
@@ -603,9 +599,9 @@ void test_settings_file__growable_auto_growth(void) {
   const int initial_alloc = 2048;
   const int max_cap = 32768;
   SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "tg", max_cap, initial_alloc));
+  cl_must_pass(settings_file_open_growable(&file, "/tg", max_cap, initial_alloc));
 
-  int initial_file_size = pfs_get_file_size(file.iter.fd);
+  int initial_file_size = pbl_fs_size(&file.iter.file);
   printf("Initial file size: %d, max_space_total: %d\n", initial_file_size, file.max_space_total);
 
   // Write large records to fill and exceed the initial allocation.
@@ -624,7 +620,7 @@ void test_settings_file__growable_auto_growth(void) {
     cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
   }
 
-  int grown_file_size = pfs_get_file_size(file.iter.fd);
+  int grown_file_size = pbl_fs_size(&file.iter.file);
   printf("Grown file size: %d\n", grown_file_size);
   cl_assert(grown_file_size > initial_file_size);
 
@@ -647,7 +643,7 @@ void test_settings_file__growable_enforces_cap(void) {
   const int initial_alloc = 2048;
   const int max_cap = 4096;
   SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "tc", max_cap, initial_alloc));
+  cl_must_pass(settings_file_open_growable(&file, "/tc", max_cap, initial_alloc));
 
   uint8_t key[5];
   int key_len = 4;
@@ -687,7 +683,7 @@ void test_settings_file__growable_reopen(void) {
   const int initial_alloc = 2048;
   const int max_cap = 32768;
   SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "tr", max_cap, initial_alloc));
+  cl_must_pass(settings_file_open_growable(&file, "/tr", max_cap, initial_alloc));
 
   // Write enough large records to force growth past the initial page
   uint8_t key[5];
@@ -702,14 +698,14 @@ void test_settings_file__growable_reopen(void) {
     cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
   }
 
-  int grown_file_size = pfs_get_file_size(file.iter.fd);
+  int grown_file_size = pbl_fs_size(&file.iter.file);
   printf("Grown file size: %d\n", grown_file_size);
   settings_file_close(&file);
 
   // Reopen with the same growable parameters
-  cl_must_pass(settings_file_open_growable(&file, "tr", max_cap, initial_alloc));
+  cl_must_pass(settings_file_open_growable(&file, "/tr", max_cap, initial_alloc));
 
-  int reopened_file_size = pfs_get_file_size(file.iter.fd);
+  int reopened_file_size = pbl_fs_size(&file.iter.file);
   printf("Reopened file size: %d\n", reopened_file_size);
   // The file should not have shrunk
   cl_assert(reopened_file_size >= grown_file_size);
@@ -727,7 +723,7 @@ void test_settings_file__growable_reopen(void) {
 void test_settings_file__open_and_lookup_scale_linearly(void) {
   const int num_records = 400;
   SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "lin", 1024 * 1024, 4096));
+  cl_must_pass(settings_file_open_growable(&file, "/lin", 1024 * 1024, 4096));
 
   uint8_t key[5];
   uint8_t val[256];
@@ -736,11 +732,11 @@ void test_settings_file__open_and_lookup_scale_linearly(void) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
     cl_must_pass(settings_file_set(&file, key, 4, val, sizeof(val)));
   }
-  const int num_pages = pfs_get_file_size(file.iter.fd) / 4000 + 1;
+  const int num_pages = pbl_fs_size(&file.iter.file) / 4000 + 1;
   settings_file_close(&file);
 
   uint32_t reads = fake_flash_read_count();
-  cl_must_pass(settings_file_open_growable(&file, "lin", 1024 * 1024, 4096));
+  cl_must_pass(settings_file_open_growable(&file, "/lin", 1024 * 1024, 4096));
   reads = fake_flash_read_count() - reads;
   cl_assert(reads <= 3 * (num_records + num_pages));
 
@@ -760,7 +756,7 @@ void test_settings_file__growable_shrinks_on_compact(void) {
   const int initial_alloc = 2048;
   const int max_cap = 32768;
   SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "tk", max_cap, initial_alloc));
+  cl_must_pass(settings_file_open_growable(&file, "/tk", max_cap, initial_alloc));
 
   uint8_t key[5];
   int key_len = 4;
@@ -776,7 +772,7 @@ void test_settings_file__growable_shrinks_on_compact(void) {
     cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
   }
 
-  const int grown_file_size = pfs_get_file_size(file.iter.fd);
+  const int grown_file_size = pbl_fs_size(&file.iter.file);
   const int grown_alloc = file.alloc_used_space;
   printf("Grown: file_size=%d alloc=%d\n", grown_file_size, grown_alloc);
   cl_assert(grown_alloc > initial_alloc);
@@ -790,7 +786,7 @@ void test_settings_file__growable_shrinks_on_compact(void) {
   // Force compact. Should drop alloc to the smallest doubling that fits 2x used.
   cl_must_pass(settings_file_compact(&file));
 
-  const int shrunk_file_size = pfs_get_file_size(file.iter.fd);
+  const int shrunk_file_size = pbl_fs_size(&file.iter.file);
   const int shrunk_alloc = file.alloc_used_space;
   printf("Shrunk: file_size=%d alloc=%d\n", shrunk_file_size, shrunk_alloc);
   cl_assert(shrunk_alloc < grown_alloc);
@@ -811,10 +807,10 @@ void test_settings_file__non_growable_does_not_shrink_on_compact(void) {
 
   const int max_used = 8192;
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "tn", max_used));
+  cl_must_pass(settings_file_open(&file, "/tn", max_used));
 
   const int initial_alloc = file.alloc_used_space;
-  const int initial_file_size = pfs_get_file_size(file.iter.fd);
+  const int initial_file_size = pbl_fs_size(&file.iter.file);
   printf("Initial: file_size=%d alloc=%d\n", initial_file_size, initial_alloc);
 
   uint8_t key[5];
@@ -835,7 +831,7 @@ void test_settings_file__non_growable_does_not_shrink_on_compact(void) {
   cl_must_pass(settings_file_compact(&file));
 
   const int post_alloc = file.alloc_used_space;
-  const int post_file_size = pfs_get_file_size(file.iter.fd);
+  const int post_file_size = pbl_fs_size(&file.iter.file);
   printf("After compact: file_size=%d alloc=%d\n", post_file_size, post_alloc);
   cl_assert_equal_i(post_alloc, initial_alloc);
   cl_assert_equal_i(post_file_size, initial_file_size);
@@ -857,8 +853,8 @@ void test_settings_file__growable_migration_from_non_growable(void) {
   memset(val, 0x5A, val_len);
 
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "tm", legacy_max));
-  int legacy_file_size = pfs_get_file_size(file.iter.fd);
+  cl_must_pass(settings_file_open(&file, "/tm", legacy_max));
+  int legacy_file_size = pbl_fs_size(&file.iter.file);
   printf("Legacy file size: %d\n", legacy_file_size);
 
   const int num_records = 20;
@@ -871,9 +867,9 @@ void test_settings_file__growable_migration_from_non_growable(void) {
 
   const int new_initial_alloc = 4096;
   const int new_max = 1024 * 1024;
-  cl_must_pass(settings_file_open_growable(&file, "tm", new_max, new_initial_alloc));
+  cl_must_pass(settings_file_open_growable(&file, "/tm", new_max, new_initial_alloc));
 
-  int reopened_file_size = pfs_get_file_size(file.iter.fd);
+  int reopened_file_size = pbl_fs_size(&file.iter.file);
   printf("Reopened (as growable) file size: %d\n", reopened_file_size);
   // The pre-allocated legacy file must not be shrunk on reopen.
   cl_assert(reopened_file_size >= legacy_file_size);
@@ -895,7 +891,7 @@ void test_settings_file__iterator_wrapping(void) {
   printf("Testing that we can call get_len and get without iterator searching again\n");
 
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_no_move", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_no_move", 4096));
 
   uint8_t key[5];
   int key_len = 4;
@@ -948,7 +944,7 @@ void test_settings_file__iterator_wrapping(void) {
 void test_settings_file__rewrite_filtered_oom(void) {
   printf("\nTesting that compaction aborts cleanly when kernel_malloc fails...\n");
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "test_file_rewrite_oom", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_rewrite_oom", 4096));
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
   memcpy(key, "key", sizeof(key));
@@ -973,7 +969,7 @@ void test_settings_file__rewrite_filtered_oom(void) {
   settings_file_close(&file);
 
   // And the data must survive a reopen.
-  cl_must_pass(settings_file_open(&file, "test_file_rewrite_oom", 4096));
+  cl_must_pass(settings_file_open(&file, "/test_file_rewrite_oom", 4096));
   verify(&file, key, key_len, val, val_len);
   settings_file_close(&file);
 }

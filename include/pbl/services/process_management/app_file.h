@@ -8,8 +8,8 @@
 #include <process_management/app_install_types.h>
 
 /**
- * @defgroup services_filesystem_app_file App files
- * @ingroup services_filesystem
+ * @defgroup services_process_management_app_file App files
+ * @ingroup services_process_management
  * @brief Consistent naming of per-app files.
  *
  * Files belonging to an app are named with a fixed-length prefix derived from its
@@ -33,6 +33,22 @@
  * @param suffix_len Length of @p suffix, without the NUL terminator.
  */
 void app_file_name_make(char *restrict buffer, size_t buffer_len, AppInstallId app_id,
+                        const char *restrict suffix, size_t suffix_len);
+
+/** @brief Directory app files are stored in. */
+#define APP_FILE_DIR "/"
+
+/**
+ * @brief Make the path of an app file: the app file name in @ref APP_FILE_DIR.
+ *
+ * @param[out] buffer Buffer to write the NUL-terminated path into.
+ * @param buffer_len Size of @p buffer in bytes, greater than the length of @ref APP_FILE_DIR +
+ * @ref APP_FILE_NAME_PREFIX_LENGTH + @p suffix_len (asserted).
+ * @param app_id App install id.
+ * @param suffix Suffix string.
+ * @param suffix_len Length of @p suffix, without the NUL terminator.
+ */
+void app_file_path_make(char *restrict buffer, size_t buffer_len, AppInstallId app_id,
                         const char *restrict suffix, size_t suffix_len);
 
 /**

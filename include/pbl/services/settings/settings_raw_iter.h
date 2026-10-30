@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 
 #include <system/status_codes.h>
@@ -95,8 +96,8 @@ typedef struct PBL_PACKED {
 typedef struct {
   /** File name, for diagnostics. */
   const char *file_name;
-  /** PFS file descriptor. */
-  int fd;
+  /** Open file. */
+  struct pbl_fs_file file;
   /** File header. */
   SettingsFileHeader file_hdr;
 
@@ -116,10 +117,10 @@ typedef struct {
  * @brief Initialize an iterator and read the file header.
  *
  * @param[out] iter Iterator.
- * @param fd Open PFS file.
+ * @param file Open file, owned by the iterator afterwards.
  * @param file_name File name, for diagnostics. Must outlive the iterator.
  */
-void settings_raw_iter_init(SettingsRawIter *iter, int fd, const char *file_name);
+void settings_raw_iter_init(SettingsRawIter *iter, struct pbl_fs_file *file, const char *file_name);
 
 /**
  * @brief Write the file header, for newly created files.

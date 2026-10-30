@@ -4,6 +4,7 @@
 #include <pbl/cron/cron.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
@@ -17,7 +18,6 @@
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/blob_db/health_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_hr.h>
@@ -788,7 +788,7 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
   if (result != S_SUCCESS) {
     // Delete the old file and create a new one if migration failed
     activity_private_settings_close(file);
-    pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);
+    pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
     file = activity_private_settings_open();
     *written_version = ACTIVITY_SETTINGS_CURRENT_VERSION;
   }
@@ -1923,7 +1923,7 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
   pbl_cron_job_unschedule(&s_activity_job);
   pbl_mutex_deinit(&s_activity_state.mutex);
   if (reset_settings) {
-    pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);
+    pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
   }
 
   if (sleep_history) {

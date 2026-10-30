@@ -77,7 +77,7 @@ typedef struct PBL_PACKED {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Settings File
 
-#define BT_PERSISTENT_STORAGE_FILE_NAME "gap_bonding_db"
+#define BT_PERSISTENT_STORAGE_FILE_NAME "/gap_bonding_db"
 #define BT_PERSISTENT_STORAGE_FILE_SIZE (4096)
 
 //! All of the actual pairings use a pbl_bt_bonding_id_t as a key. This is because with BLE pairings

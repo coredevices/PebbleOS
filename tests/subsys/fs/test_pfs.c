@@ -7,8 +7,6 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/flash_translation.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -16,6 +14,8 @@
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <flash_region/flash_region.h>
+#include <fs/pfs/flash_translation.h>
+#include <fs/pfs/pfs.h>
 
 #define PFS_SECTOR_SIZE 4096
 
@@ -739,46 +739,6 @@ void test_pfs__migration(void) {
 #endif // FLASH_REGION_FILESYSTEM_2_BEGIN
 }
 
-static uint32_t s_watch_file_callback_called_count = 0;
-static void prv_file_changed_callback(void *data) {
-  s_watch_file_callback_called_count++;
-}
-
-void test_pfs__watch_file_callbacks(void) {
-  const char *file_name = "newfile";
-
-  PFSCallbackHandle cb_handle =
-      pfs_watch_file(file_name, prv_file_changed_callback, FILE_CHANGED_EVENT_ALL, nullptr);
-
-  // Callback should get invoked if we close with write access
-  s_watch_file_callback_called_count = 0;
-  int fd = pfs_open(file_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  cl_assert(s_watch_file_callback_called_count == 1);
-
-  // Callback should not get invoked if we close with read access
-  s_watch_file_callback_called_count = 0;
-  fd = pfs_open(file_name, OP_FLAG_READ, 0, 0);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  cl_assert(s_watch_file_callback_called_count == 0);
-
-  // Callback should get invoked if we remove the file
-  s_watch_file_callback_called_count = 0;
-  pfs_remove(file_name);
-  cl_assert(s_watch_file_callback_called_count == 1);
-
-  pfs_unwatch_file(cb_handle);
-
-  // Callback should not get invoked anymore
-  s_watch_file_callback_called_count = 0;
-  fd = pfs_open(file_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  cl_assert(s_watch_file_callback_called_count == 0);
-}
-
 extern status_t test_scan_for_last_written(void);
 void test_pfs__last_written_page(void) {
   pfs_format(true);
@@ -928,6 +888,147 @@ static bool prv_file_exists(char *name) {
   return true;
 }
 
+void test_pfs__stat(void) {
+  size_t size = 0;
+  cl_assert_equal_i(pfs_stat("st", &size), E_DOES_NOT_EXIST);
+
+  int fd = pfs_open("st", OP_FLAG_WRITE, FILE_TYPE_STATIC, 42);
+  cl_assert(fd >= 0);
+  // Open files are found in the descriptor cache
+  cl_assert_equal_i(pfs_stat("st", &size), S_SUCCESS);
+  cl_assert_equal_i(size, 42);
+  pfs_close(fd);
+
+  // and closed ones on the flash too, after a reboot
+  pfs_reset_all_state();
+  pfs_init(false);
+  size = 0;
+  cl_assert_equal_i(pfs_stat("st", &size), S_SUCCESS);
+  cl_assert_equal_i(size, 42);
+  cl_assert_equal_i(pfs_stat("", &size), E_INVALID_ARGUMENT);
+}
+
+void test_pfs__no_create(void) {
+  int fd = pfs_open("nc", OP_FLAG_READ | OP_FLAG_WRITE | OP_FLAG_NO_CREATE, FILE_TYPE_STATIC, 10);
+  cl_assert_equal_i(fd, E_DOES_NOT_EXIST);
+  cl_assert(!prv_file_exists("nc"));
+
+  fd = pfs_open("nc", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
+  cl_assert(fd >= 0);
+  pfs_close(fd);
+  fd = pfs_open("nc", OP_FLAG_READ | OP_FLAG_WRITE | OP_FLAG_NO_CREATE, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_get_file_size(fd), 10);
+  pfs_close(fd);
+}
+
+void test_pfs__deferred_create(void) {
+  const uint32_t space = get_available_pfs_space();
+
+  int fd = pfs_open("dc", OP_FLAG_READ | OP_FLAG_WRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_get_file_size(fd), 0);
+  cl_assert_equal_i(get_available_pfs_space(), space);
+
+  // The name is taken, but the file is not on the flash yet
+  size_t size;
+  cl_assert_equal_i(pfs_stat("dc", &size), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(pfs_open("dc", OP_FLAG_READ, FILE_TYPE_STATIC, 0), E_BUSY);
+  uint8_t buf[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  cl_assert_equal_i(pfs_write(fd, buf, 1), E_RANGE);
+  cl_assert_equal_i(pfs_read(fd, buf, 1), E_RANGE);
+
+  cl_assert_equal_i(pfs_create_deferred(fd, 0), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(pfs_create_deferred(fd, sizeof(buf)), S_SUCCESS);
+  cl_assert_equal_i(pfs_create_deferred(fd, sizeof(buf)), E_INVALID_OPERATION);
+  cl_assert_equal_i(pfs_get_file_size(fd), sizeof(buf));
+  cl_assert(get_available_pfs_space() < space);
+  cl_assert_equal_i(pfs_write(fd, buf, sizeof(buf)), sizeof(buf));
+  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+
+  pfs_reset_all_state();
+  pfs_init(false);
+  fd = pfs_open("dc", OP_FLAG_READ, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  uint8_t rbuf[sizeof(buf)];
+  cl_assert_equal_i(pfs_read(fd, rbuf, sizeof(rbuf)), sizeof(rbuf));
+  cl_assert(memcmp(rbuf, buf, sizeof(buf)) == 0);
+  pfs_close(fd);
+}
+
+void test_pfs__deferred_create_never_created(void) {
+  const uint32_t space = get_available_pfs_space();
+
+  int fd = pfs_open("dn", OP_FLAG_WRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+
+  cl_assert(!prv_file_exists("dn"));
+  cl_assert_equal_i(get_available_pfs_space(), space);
+}
+
+static void prv_create_file(const char *name, uint8_t fill, size_t len) {
+  uint8_t buf[len];
+  memset(buf, fill, len);
+  int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, len);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_write(fd, buf, len), len);
+  pfs_close(fd);
+}
+
+static void prv_assert_file(const char *name, uint8_t fill, size_t len) {
+  int fd = pfs_open(name, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_get_file_size(fd), len);
+  uint8_t buf[len];
+  cl_assert_equal_i(pfs_read(fd, buf, len), len);
+  for (size_t i = 0; i < len; i++) {
+    cl_assert_equal_i(buf[i], fill);
+  }
+  pfs_close(fd);
+}
+
+// Closing an overwrite that was never created must keep the original
+void test_pfs__deferred_overwrite_never_created(void) {
+  prv_create_file("do", 0x11, 20);
+
+  int fd = pfs_open("do", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  prv_assert_file("do", 0x11, 20);
+  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  prv_assert_file("do", 0x11, 20);
+
+  pfs_reset_all_state();
+  pfs_init(false);
+  prv_assert_file("do", 0x11, 20);
+}
+
+void test_pfs__deferred_overwrite(void) {
+  cl_assert_equal_i(pfs_open("dw", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0),
+                    E_DOES_NOT_EXIST);
+
+  prv_create_file("dw", 0x11, 20);
+  int fd = pfs_open("dw", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_create_deferred(fd, 30), S_SUCCESS);
+  uint8_t buf[30];
+  memset(buf, 0x22, sizeof(buf));
+  cl_assert_equal_i(pfs_write(fd, buf, sizeof(buf)), sizeof(buf));
+  prv_assert_file("dw", 0x11, 20);
+
+  // A reboot before the close keeps the original
+  pfs_reset_all_state();
+  pfs_init(false);
+  prv_assert_file("dw", 0x11, 20);
+
+  fd = pfs_open("dw", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
+  cl_assert(fd >= 0);
+  cl_assert_equal_i(pfs_create_deferred(fd, 30), S_SUCCESS);
+  cl_assert_equal_i(pfs_write(fd, buf, sizeof(buf)), sizeof(buf));
+  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  prv_assert_file("dw", 0x22, 30);
+}
+
 extern void test_override_last_written_page(uint16_t start_page);
 extern void test_force_recalc_of_gc_region(void);
 // On boot, we scan pfs for the last page which was written. We then scan for a garbage collection
@@ -976,40 +1077,6 @@ void test_pfs__start_page_collides_with_gc_page(void) {
     cl_assert(fd >= 0);
     pfs_close(fd);
   }
-}
-
-void test_pfs__remove_files(void) {
-  pfs_format(true);
-  pfs_init(false);
-
-  // Create some files
-  int fd;
-  fd = pfs_open("a_test_0", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  fd = pfs_open("a_test_1", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  fd = pfs_open("b_test_0", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-  fd = pfs_open("b_test_1", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-
-  // Should have 4 entries in pfs
-  cl_assert_equal_b(prv_file_exists("a_test_0"), true);
-  cl_assert_equal_b(prv_file_exists("a_test_1"), true);
-  cl_assert_equal_b(prv_file_exists("b_test_0"), true);
-  cl_assert_equal_b(prv_file_exists("b_test_1"), true);
-
-  pfs_remove_files(prv_filename_filter_a_prefix_cb);
-
-  // Should have only files starting with b_
-  cl_assert_equal_b(prv_file_exists("a_test_0"), false);
-  cl_assert_equal_b(prv_file_exists("a_test_1"), false);
-  cl_assert_equal_b(prv_file_exists("b_test_0"), true);
-  cl_assert_equal_b(prv_file_exists("b_test_1"), true);
 }
 
 void test_pfs__doesnt_give_out_fd_zero(void) {

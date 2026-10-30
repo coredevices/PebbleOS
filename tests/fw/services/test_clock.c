@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/timezone_database.h>
 #include <pbl/services/vibes/vibe_score.h>
@@ -20,6 +20,7 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_events.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -38,7 +39,7 @@ static bool s_prefs_24h_style;
 void test_clock__initialize(void) {
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false);
   resource_init();
 }

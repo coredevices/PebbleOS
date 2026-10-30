@@ -4,6 +4,8 @@
 #include "test_alarm_common.h"
 
 // Stubs
+#include "fake_pfs.h"
+
 #include <pbl/util/units.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,8 +76,8 @@ void test_alarm__initialize(void) {
   memset(s_fake_pin_records, 0, sizeof(s_fake_pin_records));
 
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   pbl_cron_init();
 
@@ -512,7 +514,7 @@ void test_alarm__reload_removes_untracked_future_pins(void) {
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
   Uuid tracked[3];
   SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "alarms", 1024));
+  cl_must_pass(settings_file_open(&file, "/alarms", 1024));
   cl_must_pass(settings_file_get(&file, &key, sizeof(key), tracked, sizeof(tracked)));
   settings_file_close(&file);
 

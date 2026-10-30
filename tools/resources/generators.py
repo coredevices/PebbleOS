@@ -312,7 +312,7 @@ def build_pfs_resource_table(file_definitions, output_path,
             last = "RESOURCE_ID_{}".format(d["resources"][-1])
             # FIXME: this offset is trivially computed at compile time; the
             # concept should just go away.
-            f.write(f'  {{ {first}, {last}, ({first} - 1), "{d["name"]}" }},\n')
+            f.write(f'  {{ {first}, {last}, ({first} - 1), "/{d["name"]}" }},\n')
         f.write("};\n")
 
 

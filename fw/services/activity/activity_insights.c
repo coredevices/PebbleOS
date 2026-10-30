@@ -101,8 +101,9 @@ static ActivityInsightSettings s_activity_reward_settings;
 static ActivityInsightSettings s_activity_summary_settings;
 static ActivityInsightSettings s_activity_session_settings;
 
-static PFSCallbackHandle s_pfs_cb_handle = nullptr; // Required for handling settings file changes
-static EventServiceInfo s_blobdb_event_info;        // Used to detect pin deletion events
+static struct pbl_fs_watch *s_settings_watch =
+    nullptr;                                 // Required for handling settings file changes
+static EventServiceInfo s_blobdb_event_info; // Used to detect pin deletion events
 
 // Timestamp and UUID of the last time we added a new summary pin - stored to flash to allow
 // us to continue to update the pin across reboots
@@ -1957,8 +1958,8 @@ static void prv_settings_file_changed_cb(void *data);
 static void prv_reload_settings(void *not_used) {
   PBL_LOG_DBG("Reloading insights settings");
 
-  if (s_pfs_cb_handle) {
-    activity_insights_settings_unwatch(s_pfs_cb_handle);
+  if (s_settings_watch) {
+    activity_insights_settings_unwatch(s_settings_watch);
   }
 
   if (!activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD,
@@ -1986,7 +1987,7 @@ static void prv_reload_settings(void *not_used) {
     s_activity_session_settings.enabled = false; // worst-case, we disable the insight
   }
 
-  s_pfs_cb_handle = activity_insights_settings_watch(prv_settings_file_changed_cb);
+  s_settings_watch = activity_insights_settings_watch(prv_settings_file_changed_cb);
 }
 
 static void prv_settings_file_changed_cb(void *data) {

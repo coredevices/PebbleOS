@@ -7,10 +7,10 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
@@ -42,12 +42,13 @@ AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_i
                                                         PebbleTask task_type) {
   char process_name[APP_FILENAME_MAX_LENGTH];
   app_storage_get_file_name(process_name, sizeof(process_name), app_id, task_type);
-  int fd;
-  if ((fd = pfs_open(process_name, OP_FLAG_READ, 0, 0)) < S_SUCCESS) {
+  struct pbl_fs_file file;
+  if (pbl_fs_open(&file, process_name, PBL_FS_O_READ) < 0) {
     return (GET_APP_INFO_COULD_NOT_READ_FORMAT);
   }
-  if (pfs_read(fd, (uint8_t *)app_info, sizeof(PebbleProcessInfo)) != sizeof(PebbleProcessInfo)) {
-    pfs_close(fd);
+  if (pbl_fs_read(&file, (uint8_t *)app_info, sizeof(PebbleProcessInfo)) !=
+      sizeof(PebbleProcessInfo)) {
+    pbl_fs_close(&file);
     return (GET_APP_INFO_COULD_NOT_READ_FORMAT);
   }
   if (build_id_out) {
@@ -55,14 +56,14 @@ AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_i
     // The note.gnu.build-id section seems to have a hard-coded word-alignment requirement...
     uint8_t note_buffer[BUILD_ID_TOTAL_EXPECTED_LEN + padding_size];
     const ElfExternalNote *note = (const ElfExternalNote *)(note_buffer + padding_size);
-    int result = pfs_read(fd, note_buffer, sizeof(note_buffer));
+    int result = pbl_fs_read(&file, note_buffer, sizeof(note_buffer));
     if ((result == (int)sizeof(note_buffer)) && build_id_contains_gnu_build_id(note)) {
       memcpy(build_id_out, note->data + note->name_length, BUILD_ID_EXPECTED_LEN);
     } else {
       memset(build_id_out, 0, BUILD_ID_EXPECTED_LEN);
     }
   }
-  pfs_close(fd);
+  pbl_fs_close(&file);
 
   if (strncmp("PBLAPP", app_info->header, sizeof(app_info->header)) != 0) {
     // there isn't a valid app in the bank
@@ -91,10 +92,10 @@ void app_storage_delete_app(AppInstallId id) {
 
   // remove worker
   app_storage_get_file_name(process_name, sizeof(process_name), id, PebbleTask_Worker);
-  pfs_remove(process_name);
+  pbl_fs_unlink(process_name);
   // remove app too
   app_storage_get_file_name(process_name, sizeof(process_name), id, PebbleTask_App);
-  pfs_remove(process_name);
+  pbl_fs_unlink(process_name);
   // remove resources
   resource_storage_clear(id);
 }
@@ -105,11 +106,11 @@ bool app_storage_app_exists(AppInstallId id) {
 
   // check app binary first
   app_storage_get_file_name(process_name, sizeof(process_name), id, PebbleTask_App);
-  int fd = pfs_open(process_name, OP_FLAG_READ, 0, 0);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (pbl_fs_open(&file, process_name, PBL_FS_O_READ) < 0) {
     return false;
   }
-  pfs_close(fd);
+  pbl_fs_close(&file);
 
   // now check resource bank
   return resource_storage_check((ResAppNum)id, 0, nullptr);
@@ -120,5 +121,5 @@ void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_i
   const char *task_str = (task == PebbleTask_App) ? APP_FILE_NAME_SUFFIX : WORKER_FILE_NAME_SUFFIX;
   size_t task_str_len =
       (task == PebbleTask_App) ? strlen(APP_FILE_NAME_SUFFIX) : strlen(WORKER_FILE_NAME_SUFFIX);
-  app_file_name_make(name, buf_length, app_id, task_str, task_str_len);
+  app_file_path_make(name, buf_length, app_id, task_str, task_str_len);
 }

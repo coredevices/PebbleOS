@@ -7,9 +7,9 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/process_management/app_storage.h>
 
 #include <kernel/util/segment.h>
@@ -236,20 +236,22 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
 
   // load the process from the pfs file appX or workerX
   char process_name[APP_FILENAME_MAX_LENGTH];
-  int fd;
+  struct pbl_fs_file file;
   app_storage_get_file_name(process_name, sizeof(process_name), app_id, task);
 
-  if ((fd = pfs_open(process_name, OP_FLAG_READ, 0, 0)) < S_SUCCESS) {
-    PBL_LOG_ERR("Process open failed for process %s, fd = %d", process_name, fd);
+  int ret = pbl_fs_open(&file, process_name, PBL_FS_O_READ);
+  if (ret < 0) {
+    PBL_LOG_ERR("Process open failed for process %s, ret = %d", process_name, ret);
     return (false);
   }
 
-  if (pfs_read(fd, destination->start, load_size) != (int)load_size) {
-    PBL_LOG_ERR("Process read failed for process %s, fd = %d", process_name, fd);
-    pfs_close(fd);
+  ret = pbl_fs_read(&file, destination->start, load_size);
+  if (ret != (int)load_size) {
+    PBL_LOG_ERR("Process read failed for process %s, ret = %d", process_name, ret);
+    pbl_fs_close(&file);
     return (false);
   }
-  pfs_close(fd);
+  pbl_fs_close(&file);
 
   return prv_initialize_sdk_process(task, &info, destination);
 }

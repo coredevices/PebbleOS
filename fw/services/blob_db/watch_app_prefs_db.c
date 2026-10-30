@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/weather/weather_service_private.h>
 #include <pbl/util/testing.h>
@@ -13,6 +13,7 @@
 
 #include <kernel/pbl_malloc.h>
 #include <system/status_codes.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -25,7 +26,7 @@ static struct {
   SerializedReminderAppPrefs cached_reminder_app_prefs;
 } s_watch_app_prefs_db;
 
-#define SETTINGS_FILE_NAME "watch_app_prefs"
+#define SETTINGS_FILE_NAME "/watch_app_prefs"
 #define SETTINGS_FILE_SIZE PBL_KIB(20)
 
 PBL_T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
@@ -212,7 +213,7 @@ status_t watch_app_prefs_db_delete(const uint8_t *key, int key_len) {
 
 status_t watch_app_prefs_db_flush(void) {
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
-  status_t rv = pfs_remove(SETTINGS_FILE_NAME);
+  status_t rv = status_from_errno(pbl_fs_unlink(SETTINGS_FILE_NAME));
   pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   return rv;
 }

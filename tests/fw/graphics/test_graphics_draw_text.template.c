@@ -28,6 +28,7 @@
 
 ///////////////////////////////////////////////////////////
 // Fakes
+#include <fake_pfs.h>
 #include <fake_gbitmap_get_data_row.h>
 
 static FrameBuffer *fb = nullptr;
@@ -53,8 +54,8 @@ static const char *s_text_buffer = "Text Clipping";
 static void prv_setup_resources(void) {
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false /* is_next */);
 
   resource_init();
@@ -503,8 +504,8 @@ void test_graphics_draw_text_8bit__data_row_offsets(void) {
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false /* is_next */);
 
   resource_init();

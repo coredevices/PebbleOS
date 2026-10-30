@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/uuid.h>
 
@@ -56,7 +56,7 @@ void sys_timeline_resources_get_id(const TimelineResourceInfo *timeline_res,
 // Stubs
 ////////////////////////////////////////////////////////////////
 
-status_t pfs_remove(const char *name) {
+int pbl_fs_unlink(const char *path) {
   fake_settings_file_reset();
   return S_SUCCESS;
 }

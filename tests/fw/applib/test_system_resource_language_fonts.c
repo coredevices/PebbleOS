@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text_resources.h>
 #include <clar.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
 #include <resource/language_pack.h>
@@ -49,8 +50,8 @@ static uint32_t prv_extension(uint8_t slot) {
 
 void test_system_resource_language_fonts__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
   resource_init();
@@ -60,9 +61,9 @@ void test_system_resource_language_fonts__initialize(void) {
 }
 
 void test_system_resource_language_fonts__cleanup(void) {
-  // Pack fonts outlive pfs_format(); removing the files drops them.
+  // Pack fonts outlive pbl_fs_format(); removing the files drops them.
   for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
-    pfs_remove(language_pack_filename(slot));
+    pbl_fs_unlink(language_pack_filename(slot));
   }
 }
 
@@ -74,8 +75,8 @@ void test_system_resource_language_fonts__no_packs(void) {
 }
 
 void test_system_resource_language_fonts__finds_fonts_per_slot(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang3");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang3");
   FontInfo font;
   cl_assert(!sys_font_get_language_font(RESOURCE_ID_GOTHIC_18, 0, &font));
   cl_assert(sys_font_get_language_font(RESOURCE_ID_GOTHIC_18, 1, &font));
@@ -90,7 +91,7 @@ void test_system_resource_language_fonts__finds_fonts_per_slot(void) {
 }
 
 void test_system_resource_language_fonts__skips_primary_pack(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang2");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang2");
   s_language = ShellLanguagePack2;
   system_resource_language_changed();
   FontInfo font;
@@ -101,7 +102,7 @@ void test_system_resource_language_fonts__skips_primary_pack(void) {
 }
 
 void test_system_resource_language_fonts__font_without_extension(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
   FontInfo font;
   cl_assert(!sys_font_get_language_font(RESOURCE_ID_GOTHIC_24, 1, &font));
   cl_assert(!sys_font_get_language_font(RESOURCE_ID_GOTHIC_14, 1, &font));
@@ -115,22 +116,22 @@ void test_system_resource_language_fonts__pack_changes_invalidate(void) {
   const uint32_t generation = g_font_language_generation;
 
   // The absent pack was cached; installing it must be noticed.
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
   cl_assert(g_font_language_generation != generation);
   cl_assert(!system_font->loaded);
   cl_assert(sys_font_get_language_font(RESOURCE_ID_GOTHIC_18, 1, &font));
 
-  cl_assert_equal_i(pfs_remove("lang1"), S_SUCCESS);
+  cl_assert_equal_i(pbl_fs_unlink("/lang1"), 0);
   cl_assert(!sys_font_get_language_font(RESOURCE_ID_GOTHIC_18, 1, &font));
 }
 
 void test_system_resource_language_fonts__pack_changes_drop_cached_resources(void) {
-  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "lang1");
+  load_resource_fixture_on_pfs(RESOURCES_FIXTURE_PATH, CHINESE_FIXTURE_NAME, "/lang1");
   s_language = ShellLanguagePack1;
   system_resource_language_changed();
   cl_assert(system_resource_get_font(FONT_KEY_GOTHIC_18));
   cl_assert(resource_size(SYSTEM_APP, prv_extension(1)) > 0);
-  cl_assert_equal_i(pfs_remove("lang1"), S_SUCCESS);
+  cl_assert_equal_i(pbl_fs_unlink("/lang1"), 0);
   cl_assert_equal_i(resource_size(SYSTEM_APP, prv_extension(1)), 0);
 }
 
