@@ -489,21 +489,23 @@ void test_workout_service__reject_low_quality_hr(void) {
 
   prv_put_bpm_event(168, HRMQuality_Good);
   prv_put_bpm_event(120, HRMQuality_Worst);
-  prv_put_bpm_event(110, HRMQuality_Poor);
   prv_assert_current_hr(168, HRZone_Zone2);
+
+  // Poor samples nudge the display by a bounded step but stay out of the statistics.
+  prv_put_bpm_event(110, HRMQuality_Poor);
+  prv_assert_current_hr(164, HRZone_Zone2);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
   cl_assert_equal_i(avg_hr, 168);
 }
 
 // ---------------------------------------------------------------------------------------
-void test_workout_service__low_quality_hr_does_not_extend_expiry(void) {
+void test_workout_service__worst_hr_does_not_extend_expiry(void) {
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   prv_put_bpm_event(168, HRMQuality_Good);
 
   for (int i = 0; i < 3; i++) {
     prv_inc_time(15);
     prv_put_bpm_event(120, HRMQuality_Worst);
-    prv_put_bpm_event(110, HRMQuality_Poor);
     prv_assert_current_hr(168, HRZone_Zone2);
   }
   prv_inc_time(14);
@@ -517,6 +519,50 @@ void test_workout_service__low_quality_hr_does_not_extend_expiry(void) {
 }
 
 // ---------------------------------------------------------------------------------------
+void test_workout_service__poor_hr_tracks_rise_from_trusted_value(void) {
+  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
+  prv_put_bpm_event(100, HRMQuality_Good);
+
+  // An interval surge read at Poor quality climbs towards the reading instead of freezing.
+  for (int i = 0; i < 10; i++) {
+    prv_inc_time(1);
+    prv_put_bpm_event(170, HRMQuality_Poor);
+  }
+  prv_assert_current_hr(140, HRZone_Zone1);
+
+  for (int i = 0; i < 10; i++) {
+    prv_inc_time(1);
+    prv_put_bpm_event(170, HRMQuality_Poor);
+  }
+  prv_assert_current_hr(170, HRZone_Zone2);
+
+  // A trusted sample still takes over immediately.
+  prv_put_bpm_event(160, HRMQuality_Good);
+  prv_assert_current_hr(160, HRZone_Zone2);
+}
+
+// ---------------------------------------------------------------------------------------
+void test_workout_service__poor_hr_holds_display_until_limit(void) {
+  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
+  prv_put_bpm_event(150, HRMQuality_Good);
+
+  // Poor samples keep the display alive past the normal staleness expiry...
+  for (int i = 0; i < 11; i++) {
+    prv_inc_time(15);
+    prv_put_bpm_event(150, HRMQuality_Poor);
+    prv_assert_current_hr(150, HRZone_Zone1);
+  }
+
+  // ...but only until no trusted sample has been seen for the hold limit.
+  prv_inc_time(15);
+  prv_put_bpm_event(150, HRMQuality_Poor);
+  prv_inc_time(45);
+  prv_assert_current_hr(0, HRZone_Zone0);
+  prv_put_bpm_event(150, HRMQuality_Poor);
+  prv_assert_current_hr(0, HRZone_Zone0);
+}
+
+// ---------------------------------------------------------------------------------------
 void test_workout_service__acceptable_hr_median_and_good_recovery(void) {
   int32_t avg_hr;
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
@@ -526,7 +572,7 @@ void test_workout_service__acceptable_hr_median_and_good_recovery(void) {
   prv_put_bpm_event(180, HRMQuality_Acceptable);
   prv_assert_current_hr(180, HRZone_Zone3);
   prv_put_bpm_event(100, HRMQuality_Poor);
-  prv_assert_current_hr(180, HRZone_Zone3);
+  prv_assert_current_hr(176, HRZone_Zone3);
   prv_put_bpm_event(170, HRMQuality_Acceptable);
   prv_assert_current_hr(170, HRZone_Zone2);
   prv_put_bpm_event(80, HRMQuality_Worst);
@@ -588,7 +634,7 @@ void test_workout_service__hr_quality_and_paused_statistics(void) {
   prv_assert_current_hr(160, HRZone_Zone2);
   prv_put_bpm_event(100, HRMQuality_Worst);
   prv_put_bpm_event(180, HRMQuality_Poor);
-  prv_assert_current_hr(160, HRZone_Zone2);
+  prv_assert_current_hr(164, HRZone_Zone2);
   prv_inc_time(10);
   prv_put_bpm_event(180, HRMQuality_Good);
   prv_assert_current_hr(180, HRZone_Zone3);
@@ -605,7 +651,7 @@ void test_workout_service__hr_quality_and_paused_statistics(void) {
   prv_put_bpm_event(160, HRMQuality_Acceptable);
   prv_put_bpm_event(100, HRMQuality_Worst);
   prv_put_bpm_event(200, HRMQuality_Poor);
-  prv_assert_current_hr(160, HRZone_Zone2);
+  prv_assert_current_hr(164, HRZone_Zone2);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
   cl_assert_equal_i(avg_hr, 147);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));

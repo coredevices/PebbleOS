@@ -35,6 +35,12 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 // Small so it tracks real rapid changes (intervals) while still discarding single-sample outliers.
 #define WORKOUT_HR_SMOOTH_N 3
 
+// Poor-quality samples (common under heavy motion) may nudge the displayed HR by at most this much
+// per sample, so it follows real changes without jumping to motion artifacts.
+#define WORKOUT_HR_POOR_MAX_STEP_BPM 4
+// Poor samples only keep the display alive this long after the last trusted (Acceptable+) sample.
+#define WORKOUT_HR_POOR_HOLD_S (3 * PBL_SEC_PER_MIN)
+
 //! Allocated when a Workout is started
 typedef struct CurrentWorkoutData {
   ActivitySessionType type;
@@ -49,7 +55,8 @@ typedef struct CurrentWorkoutData {
   // Pace
   int32_t active_calories;
   int32_t current_bpm;
-  time_t current_bpm_timestamp_ts; // Time since boot
+  time_t current_bpm_timestamp_ts; // Time since boot of the last trusted sample
+  time_t current_bpm_display_ts;   // Time since boot the displayed HR was last refreshed
   HRZone current_hr_zone;
   int32_t hr_zone_time_s[HRZoneCount];
   int32_t hr_samples_sum;
@@ -143,6 +150,7 @@ static void prv_reset_hr_data(void) {
   s_workout_data.current_workout->current_bpm = 0;
   s_workout_data.current_workout->current_hr_zone = HRZone_Zone0;
   s_workout_data.current_workout->current_bpm_timestamp_ts = now_ts;
+  s_workout_data.current_workout->current_bpm_display_ts = now_ts;
   // Drop any buffered samples so a stale pre-off-wrist value can't leak back into the live HR.
   s_workout_data.current_workout->bpm_ring_count = 0;
   s_workout_data.current_workout->bpm_ring_head = 0;
@@ -223,9 +231,24 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
     return;
   }
 
+  const time_t now_ts = time_get_uptime_seconds();
+
   if (event->quality == HRMQuality_OffWrist) {
     // Reset to zero for OffWrist readings
     prv_reset_hr_data();
+  } else if (event->quality == HRMQuality_Poor) {
+    // Under heavy motion the quality often stays Poor for long stretches. Rather than freeze the
+    // display and then blank it, step towards the reading in bounded increments, but only from a
+    // recent trusted value. Poor samples never enter the workout statistics.
+    if (wrkt_data->current_bpm == 0 ||
+        (now_ts - wrkt_data->current_bpm_timestamp_ts) >= WORKOUT_HR_POOR_HOLD_S) {
+      return;
+    }
+    const int32_t delta = CLIP((int32_t)event->current_bpm - wrkt_data->current_bpm,
+                               -WORKOUT_HR_POOR_MAX_STEP_BPM, WORKOUT_HR_POOR_MAX_STEP_BPM);
+    wrkt_data->current_bpm += delta;
+    wrkt_data->current_hr_zone = hr_util_get_hr_zone(wrkt_data->current_bpm);
+    wrkt_data->current_bpm_display_ts = now_ts;
   } else if (event->quality >= HRMQuality_Acceptable) {
     const int prev_bpm_timestamp_ts = wrkt_data->current_bpm_timestamp_ts;
     const uint8_t raw_bpm = event->current_bpm;
@@ -249,7 +272,8 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
     }
 
     wrkt_data->current_hr_zone = hr_util_get_hr_zone(wrkt_data->current_bpm);
-    wrkt_data->current_bpm_timestamp_ts = time_get_uptime_seconds();
+    wrkt_data->current_bpm_timestamp_ts = now_ts;
+    wrkt_data->current_bpm_display_ts = now_ts;
 
     if (!workout_service_is_paused()) {
       // TODO: Maybe apply smoothing
@@ -296,7 +320,7 @@ PBL_T_STATIC void prv_workout_timer_cb(void *unused) {
     prv_update_duration();
 
     const time_t now_ts = time_get_uptime_seconds();
-    const time_t age_hr_s = now_ts - s_workout_data.current_workout->current_bpm_timestamp_ts;
+    const time_t age_hr_s = now_ts - s_workout_data.current_workout->current_bpm_display_ts;
     if (s_workout_data.current_workout->current_bpm != 0 &&
         age_hr_s >= WORKOUT_HR_READING_TS_EXPIRE) {
       prv_reset_hr_data();
@@ -483,6 +507,8 @@ bool workout_service_start_workout(ActivitySessionType type) {
     s_workout_data.current_workout->type = type;
     s_workout_data.current_workout->start_utc = rtc_get_time();
     s_workout_data.current_workout->current_bpm_timestamp_ts = time_get_uptime_seconds();
+    s_workout_data.current_workout->current_bpm_display_ts =
+        s_workout_data.current_workout->current_bpm_timestamp_ts;
     s_workout_data.current_workout->spo2_measuring = s_workout_data.hrm_paused;
     // FIXME: This probably doesn't need to be on a timer. We can just flush out a new time on each
     // API function call
