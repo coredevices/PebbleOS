@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -20,7 +21,6 @@
 #include <applib/health_service.h>
 #include <apps/system/workout/utils.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -433,7 +433,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
     // Before starting this new session we need to deal with any in progress sessions
     uint32_t num_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
     ActivitySession *sessions =
-        kernel_zalloc_check(sizeof(ActivitySession) * ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
+        pbl_zalloc_check(sizeof(ActivitySession) * ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
     activity_get_sessions(&num_sessions, sessions);
     for (unsigned i = 0; i < num_sessions; i++) {
       // End and save any automatically detected ongoing sessions
@@ -442,9 +442,9 @@ bool workout_service_start_workout(ActivitySessionType type) {
         activity_sessions_prv_add_activity_session(&sessions[i]);
       }
     }
-    kernel_free(sessions);
+    pbl_free(sessions);
 
-    s_workout_data.current_workout = kernel_zalloc_check(sizeof(CurrentWorkoutData));
+    s_workout_data.current_workout = pbl_zalloc_check(sizeof(CurrentWorkoutData));
     s_workout_data.current_workout->type = type;
     s_workout_data.current_workout->start_utc = rtc_get_time();
     s_workout_data.current_workout->current_bpm_timestamp_ts = time_get_uptime_seconds();
@@ -576,7 +576,7 @@ bool workout_service_stop_workout(void) {
     PBL_LOG_INFO("Stopping a workout with type: %d", wrkt->type);
     prv_put_event(PebbleWorkoutEvent_Stopped);
 
-    kernel_free(s_workout_data.current_workout);
+    pbl_free(s_workout_data.current_workout);
     s_workout_data.current_workout = nullptr;
   }
   prv_unlock();
@@ -744,7 +744,7 @@ void workout_service_get_active_kcalories(int32_t *active) {
 
 void workout_service_reset(void) {
   if (s_workout_data.current_workout) {
-    kernel_free(s_workout_data.current_workout);
+    pbl_free(s_workout_data.current_workout);
   }
   s_workout_data = (WorkoutServiceData){};
 }

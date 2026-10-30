@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/malloc.h>
 
 static PebbleEvent s_last_pebble_event;
 static uint32_t s_fake_event_count = 0;
@@ -75,7 +75,7 @@ void fake_event_clear_last(void) {
     memcpy(&buf, slot, sizeof(buf));
   }
   if (buf) {
-    kernel_free(buf);
+    pbl_free(buf);
     memset(slot, 0, sizeof(buf));
   }
 

@@ -5,6 +5,7 @@
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/syscall.h>
@@ -32,7 +33,6 @@
 #include <applib/data_logging.h>
 #include <applib/health_service.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
 
@@ -437,10 +437,10 @@ static void prv_spo2_deinit(void) {
 // ----------------------------------------------------------------------------------------------
 // Open the settings file and malloc space for the file struct
 SettingsFile *activity_private_settings_open(void) {
-  SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
+  SettingsFile *file = pbl_malloc_check(sizeof(SettingsFile));
   if (settings_file_open(file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN) !=
       S_SUCCESS) {
-    kernel_free(file);
+    pbl_free(file);
     PBL_LOG_ERR("No settings file");
     return nullptr;
   }
@@ -451,7 +451,7 @@ SettingsFile *activity_private_settings_open(void) {
 // Close the settings file and free the file struct
 void activity_private_settings_close(SettingsFile *file) {
   settings_file_close(file);
-  kernel_free(file);
+  pbl_free(file);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -535,12 +535,12 @@ static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_fi
   }
 
   // rewrite this entry unmodified
-  void *data = kernel_malloc_check(info->val_len);
+  void *data = pbl_malloc_check(info->val_len);
   info->get_val(old_file, data, info->val_len);
 
   settings_file_set(new_file, &key, info->key_len, data, info->val_len);
 
-  kernel_free(data);
+  pbl_free(data);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -965,7 +965,7 @@ static void prv_feed_samples_system_cb(void *context_in) {
 
   // Feed samples into the algorithm
   prv_accel_cb(context->data, context->num_samples, timestamp);
-  kernel_free(context);
+  pbl_free(context);
 
   s_activity_state.pending_test_cb = false;
 }
@@ -1158,7 +1158,7 @@ static void prv_bg_request_system_cb(void *data) {
   pbl_mutex_unlock(&s_activity_state.mutex);
 
   if (abandoned) {
-    kernel_free(req);
+    pbl_free(req);
   } else {
     pbl_sem_give(&s_activity_state.bg_wait_semaphore);
   }
@@ -1174,7 +1174,7 @@ static bool prv_bg_request_run(ActivityBgRequest *req, ActivityBgRequestHandler 
 
   req->handler = handler;
   if (!system_task_add_callback(prv_bg_request_system_cb, req)) {
-    kernel_free(req);
+    pbl_free(req);
     return false;
   }
 
@@ -1422,8 +1422,7 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
   // Fetch in bounded chunks into kernel memory, padding gaps between chunks with invalid records
   while (written < requested) {
     const uint32_t chunk = MIN(requested - written, ACTIVITY_MINUTE_HISTORY_CHUNK_RECORDS);
-    ActivityMinuteHistoryRequest *req =
-        kernel_zalloc(sizeof(*req) + chunk * sizeof(HealthMinuteData));
+    ActivityMinuteHistoryRequest *req = pbl_zalloc(sizeof(*req) + chunk * sizeof(HealthMinuteData));
     if (!req) {
       success = (written > 0);
       break;
@@ -1458,7 +1457,7 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
         next_utc = first_utc + (time_t)written * PBL_SEC_PER_MIN;
       }
     }
-    kernel_free(req);
+    pbl_free(req);
 
     if (done) {
       break;
@@ -1495,7 +1494,7 @@ bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minute
     return false;
   }
 
-  ActivityMinuteHeartRateRequest *req = kernel_zalloc(sizeof(*req) + num_minutes);
+  ActivityMinuteHeartRateRequest *req = pbl_zalloc(sizeof(*req) + num_minutes);
   if (!req) {
     return false;
   }
@@ -1510,7 +1509,7 @@ bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minute
   if (success) {
     memcpy(heart_rate_bpm, req->heart_rate_bpm, num_minutes);
   }
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 
@@ -1581,8 +1580,7 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
     if (enable && !s_activity_state.sample_collection_enabled) {
-      ActivitySampleCollectionData *data =
-          kernel_zalloc_check(sizeof(ActivitySampleCollectionData));
+      ActivitySampleCollectionData *data = pbl_zalloc_check(sizeof(ActivitySampleCollectionData));
       s_activity_state.sample_collection_data = data;
       data->first_record = true;
       s_activity_state.sample_collection_session_id++;
@@ -1598,7 +1596,7 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
       if (data->dls_session) {
         dls_finish(data->dls_session);
       }
-      kernel_free(data);
+      pbl_free(data);
       s_activity_state.sample_collection_data = nullptr;
       s_activity_state.sample_collection_seconds =
           rtc_get_time() - s_activity_state.sample_collection_seconds;
@@ -1626,7 +1624,7 @@ bool activity_dump_sleep_log(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  ActivityBgRequest *req = kernel_zalloc(sizeof(*req));
+  ActivityBgRequest *req = pbl_zalloc(sizeof(*req));
   if (!req) {
     return false;
   }
@@ -1634,7 +1632,7 @@ bool activity_dump_sleep_log(void) {
     return false;
   }
   const bool success = req->success;
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 
@@ -1659,7 +1657,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
 
     // Allocate space for the samples
     uint16_t req_size = sizeof(ActivityFeedSamples) + chunk_size * sizeof(AccelRawData);
-    ActivityFeedSamples *context = kernel_malloc(req_size);
+    ActivityFeedSamples *context = pbl_malloc(req_size);
     if (!context) {
       PBL_LOG_ERR("Not enough memory");
       return false;
@@ -1760,7 +1758,7 @@ bool activity_test_minute_file_info(bool compact_first, uint32_t *num_records, u
   if (!s_activity_initialized) {
     return false;
   }
-  ActivitySleepFileInfoRequest *req = kernel_zalloc(sizeof(*req));
+  ActivitySleepFileInfoRequest *req = pbl_zalloc(sizeof(*req));
   if (!req) {
     return false;
   }
@@ -1774,7 +1772,7 @@ bool activity_test_minute_file_info(bool compact_first, uint32_t *num_records, u
     *data_bytes = req->data_bytes;
     *minutes = req->minutes;
   }
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 
@@ -1788,7 +1786,7 @@ bool activity_test_fill_minute_file(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  ActivityBgRequest *req = kernel_zalloc(sizeof(*req));
+  ActivityBgRequest *req = pbl_zalloc(sizeof(*req));
   if (!req) {
     return false;
   }
@@ -1796,7 +1794,7 @@ bool activity_test_fill_minute_file(void) {
     return false;
   }
   const bool success = req->success;
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 

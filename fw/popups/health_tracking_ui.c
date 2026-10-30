@@ -3,12 +3,12 @@
 
 #include "health_tracking_ui.h"
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <resource/resource_ids.auto.h>
 
@@ -52,12 +52,12 @@ static void prv_push_enable_in_mobile_dialog(void *context) {
 
   light_enable_interaction();
 
-  kernel_free(data);
+  pbl_free(data);
 }
 
 // ---------------------------------------------------------------------------
 void health_tracking_ui_show_message(uint32_t res_id, const char *text, bool show_action_bar) {
-  HealthTrackingUIData *data = kernel_malloc(sizeof(HealthTrackingUIData));
+  HealthTrackingUIData *data = pbl_malloc(sizeof(HealthTrackingUIData));
   *data = (HealthTrackingUIData){
     .res_id = res_id,
     .text = text,

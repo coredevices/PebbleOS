@@ -4,6 +4,7 @@
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
@@ -15,7 +16,6 @@
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 //! The Bluetooth Connection Manager is responsible for managing the power
 //! state of the active bluetooth connections. Sub-modules using bluetooth are
@@ -229,7 +229,7 @@ static void prv_bt_le_gateway_response_latency_watchdog_handler(void *data) {
     if (conn_mgr_info->curr_requested_state == curr_request->req_state) {
       if (curr_ticks >= curr_request->timeout) {
         list_remove(&curr_request->list_node, (ListNode **)&conn_mgr_info->requests, nullptr);
-        kernel_free(curr_request);
+        pbl_free(curr_request);
       }
     }
     curr_request = next;
@@ -297,7 +297,7 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_c
     }
 
     // create node
-    consumer_request = kernel_malloc_check(sizeof(ConnectionStateRequest));
+    consumer_request = pbl_malloc_check(sizeof(ConnectionStateRequest));
     list_init(&consumer_request->list_node);
     conn_mgr_info->requests = (ConnectionStateRequest *)list_prepend(
         &conn_mgr_info->requests->list_node, &consumer_request->list_node);
@@ -332,7 +332,7 @@ handle_current_state:
 
 //! expects that the bt lock is held
 ConnectionMgrInfo *bt_conn_mgr_info_init(void) {
-  ConnectionMgrInfo *newinfo = kernel_malloc_check(sizeof(ConnectionMgrInfo));
+  ConnectionMgrInfo *newinfo = pbl_malloc_check(sizeof(ConnectionMgrInfo));
   *newinfo = (ConnectionMgrInfo){
     .curr_requested_state = PBL_BT_RESPONSE_TIME_MAX,
   };
@@ -352,11 +352,11 @@ void bt_conn_mgr_info_deinit(ConnectionMgrInfo **info) {
   while (curr_request != nullptr) {
     ListNode *temp = list_get_next(curr_request);
     list_remove(curr_request, nullptr, nullptr);
-    kernel_free(curr_request);
+    pbl_free(curr_request);
     curr_request = temp;
   }
 
-  kernel_free(*info);
+  pbl_free(*info);
   *info = nullptr;
 }
 

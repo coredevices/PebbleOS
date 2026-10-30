@@ -3,12 +3,12 @@
 
 #include "pin_window.h"
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/time.h>
 
 #include <applib/ui/action_button.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 
 void timeline_pin_window_set_item(TimelinePinWindow *pin_window, TimelineItem *item,
@@ -125,7 +125,7 @@ static void prv_pin_window_unload_modal(Window *window) {
 
   timeline_item_destroy(pin_window->item_detail_layer.item);
   prv_pin_window_unload(window);
-  kernel_free(window);
+  pbl_free(window);
 }
 
 static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
@@ -146,7 +146,7 @@ static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
 }
 
 void timeline_pin_window_push_modal(TimelineItem *item) {
-  TimelinePinWindow *pin_window = kernel_zalloc_check(sizeof(TimelinePinWindow));
+  TimelinePinWindow *pin_window = pbl_zalloc_check(sizeof(TimelinePinWindow));
   timeline_pin_window_init(pin_window, item, time_util_get_midnight_of(rtc_get_time()));
   window_set_window_handlers((Window *)pin_window, &(WindowHandlers){
                                                      .load = prv_pin_window_load,

@@ -4,6 +4,7 @@
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
@@ -14,7 +15,6 @@
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <system/status_codes.h>
 
@@ -113,7 +113,7 @@ static void prv_update_status(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   new_timer_stop(s_timer);
   SerializedTimelineItemHeader *filter_headers =
-      kernel_zalloc_check(TimelineEventServiceCount * sizeof(SerializedTimelineItemHeader));
+      pbl_zalloc_check(TimelineEventServiceCount * sizeof(SerializedTimelineItemHeader));
 
   // Will update
   for (unsigned int i = 0; i < TimelineEventServiceCount; i++) {
@@ -165,7 +165,7 @@ static void prv_update_status(void) {
   }
 
   prv_set_timer(timeout_ms);
-  kernel_free(filter_headers);
+  pbl_free(filter_headers);
   pbl_mutex_unlock(&s_mutex);
 }
 

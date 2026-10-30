@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
+
 #include <fake_animation.h>
 #include <fake_events.h>
 #include <fake_pbl_malloc.h>
@@ -1193,7 +1195,7 @@ void test_window_stack__dump(void) {
   cl_assert_equal_s(dump[1].name, "Window2");
   cl_assert_equal_p(dump[2].addr, window1);
   cl_assert_equal_s(dump[2].name, "Window1");
-  kernel_free(dump);
+  pbl_free(dump);
 }
 
 void test_window_stack__pop_all_modals(void) {

@@ -39,7 +39,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
   // shrink to what is left.
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
     size_t buffer_size = PDM_BUFFER_SIZE_SAMPLES * sizeof(int16_t);
-    state->pdm_buffers[i] = kernel_malloc(buffer_size);
+    state->pdm_buffers[i] = pbl_malloc(buffer_size);
     if (!state->pdm_buffers[i]) {
       PBL_LOG_ERR("Failed to allocate PDM buffer %d", i);
       prv_free_buffers(state);
@@ -55,7 +55,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
   uint8_t *storage = nullptr;
 
   while (try_size >= CIRCULAR_BUF_MIN_SIZE_BYTES) {
-    storage = kernel_malloc(try_size);
+    storage = pbl_malloc(try_size);
     if (storage) {
       break;
     }
@@ -88,7 +88,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
 static void prv_free_buffers(MicDeviceState *state) {
   // Free circular buffer storage
   if (state->circ_buffer_storage) {
-    kernel_free(state->circ_buffer_storage);
+    pbl_free(state->circ_buffer_storage);
     state->circ_buffer_storage = nullptr;
   }
   state->circ_buffer_size = 0;
@@ -96,7 +96,7 @@ static void prv_free_buffers(MicDeviceState *state) {
   // Free PDM buffers
   for (int i = 0; i < PDM_BUFFER_COUNT; i++) {
     if (state->pdm_buffers[i]) {
-      kernel_free(state->pdm_buffers[i]);
+      pbl_free(state->pdm_buffers[i]);
       state->pdm_buffers[i] = nullptr;
     }
   }

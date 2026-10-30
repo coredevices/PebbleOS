@@ -56,8 +56,8 @@ static struct {
 } s_rx;
 
 static void prv_rx_reset(void) {
-  kernel_free(s_rx.pixels);
-  kernel_free(s_rx.palette);
+  pbl_free(s_rx.pixels);
+  pbl_free(s_rx.palette);
   s_rx = (typeof(s_rx)){};
 }
 
@@ -104,9 +104,9 @@ static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
   if (handler) {
     handler(token, bitmap);
   } else if (bitmap) {
-    kernel_free(bitmap->addr);
-    kernel_free(bitmap->palette);
-    kernel_free(bitmap);
+    pbl_free(bitmap->addr);
+    pbl_free(bitmap->palette);
+    pbl_free(bitmap);
   }
 }
 
@@ -266,13 +266,13 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       will_receive(hdr->token);
     }
 
-    s_rx.pixels = kernel_zalloc(total);
+    s_rx.pixels = pbl_zalloc(total);
     if (!s_rx.pixels) {
       prv_drop(type, hdr->token, total, "pixel allocation failed");
       return;
     }
     if (max_palette > 0) {
-      s_rx.palette = kernel_zalloc(IMAGING_PALETTE_ENTRIES * sizeof(GColor));
+      s_rx.palette = pbl_zalloc(IMAGING_PALETTE_ENTRIES * sizeof(GColor));
       if (!s_rx.palette) {
         prv_drop(type, hdr->token, total, "palette allocation failed");
         return;
@@ -319,7 +319,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "incomplete image");
       return;
     }
-    GBitmap *bmp = kernel_zalloc(sizeof(GBitmap));
+    GBitmap *bmp = pbl_zalloc(sizeof(GBitmap));
     if (!bmp) {
       prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "bitmap allocation failed");
       return;

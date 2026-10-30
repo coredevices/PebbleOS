@@ -3,10 +3,10 @@
 
 #include "nimble_gattc_op_queue.h"
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
 
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
 #include <nimble/nimble_port.h>
 
 typedef struct {
@@ -36,8 +36,8 @@ static void prv_kick_locked(void) {
 static void prv_pop_locked(void) {
   GattClientOp *op = (GattClientOp *)s_ops;
   list_remove(&op->node, &s_ops, nullptr);
-  kernel_free(op->ctx);
-  kernel_free(op);
+  pbl_free(op->ctx);
+  pbl_free(op);
 }
 
 static void prv_run_cb(struct ble_npl_event *ev) {
@@ -62,7 +62,7 @@ static void prv_run_cb(struct ble_npl_event *ev) {
 }
 
 void nimble_gattc_op_queue_push(NimbleGattClientOpStartFn start, void *ctx) {
-  GattClientOp *op = kernel_zalloc_check(sizeof(*op));
+  GattClientOp *op = pbl_zalloc_check(sizeof(*op));
   list_init(&op->node);
   op->start = start;
   op->ctx = ctx;

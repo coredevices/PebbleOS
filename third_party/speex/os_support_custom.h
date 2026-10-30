@@ -5,26 +5,23 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Forward declare PebbleOS functions */
-extern void *kernel_zalloc_check(size_t size);
-extern void *kernel_realloc(void *ptr, size_t size);
-extern void kernel_free(void *ptr);
+#include <pbl/kernel/malloc.h>
 
-/* Override memory allocation functions to use PebbleOS kernel functions */
+/* Override memory allocation functions to use the kernel heap */
 static inline void *speex_alloc(int size) {
-  return kernel_zalloc_check((size_t)size);
+  return pbl_zalloc_check((size_t)size);
 }
 static inline void *speex_alloc_scratch(int size) {
-  return kernel_zalloc_check((size_t)size);
+  return pbl_zalloc_check((size_t)size);
 }
 static inline void *speex_realloc(void *ptr, int size) {
-  return kernel_realloc(ptr, (size_t)size);
+  return pbl_realloc(ptr, (size_t)size);
 }
 static inline void speex_free(void *ptr) {
-  kernel_free(ptr);
+  pbl_free(ptr);
 }
 static inline void speex_free_scratch(void *ptr) {
-  kernel_free(ptr);
+  pbl_free(ptr);
 }
 
 /* Override debug/warning functions to be no-ops for embedded system */

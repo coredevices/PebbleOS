@@ -5,11 +5,11 @@
 
 #include <string.h>
 
-#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/malloc.h>
 
 bool pcm_stream_init(PcmStreamState *s, uint32_t size_bytes) {
   memset(s, 0, sizeof(*s));
-  s->buffer = kernel_malloc(size_bytes);
+  s->buffer = pbl_malloc(size_bytes);
   if (!s->buffer) {
     return false;
   }
@@ -67,7 +67,7 @@ bool pcm_stream_is_done(PcmStreamState *s) {
 
 void pcm_stream_deinit(PcmStreamState *s) {
   if (s->buffer) {
-    kernel_free(s->buffer);
+    pbl_free(s->buffer);
   }
   memset(s, 0, sizeof(*s));
 }

@@ -6,6 +6,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/util/uuid.h>
@@ -71,7 +72,7 @@ static void prv_free_storage_buffer(DataLoggingSession *session) {
   }
 
   if (session->data->buffer_in_kernel_heap) {
-    kernel_free(session->data->buffer_storage);
+    pbl_free(session->data->buffer_storage);
   } else {
     // The subscriber's buffer was allocated on its unprivileged process heap (app or worker). It
     // is unsafe to free it from here in privileged mode because a corrupted heap could crash the
@@ -105,7 +106,7 @@ void dls_unlock_session(DataLoggingSession *session, bool inactivate) {
     prv_free_storage_buffer(session);
     pbl_mutex_unlock(&session->data->mutex);
     pbl_mutex_deinit(&session->data->mutex);
-    kernel_free(session->data);
+    pbl_free(session->data);
     session->data = nullptr;
 
   } else {
@@ -171,9 +172,9 @@ void dls_list_remove_session(DataLoggingSession *logging_session) {
       pbl_mutex_unlock(&s_list_mutex);
       if (logging_session->data) {
         pbl_mutex_deinit(&logging_session->data->mutex);
-        kernel_free(logging_session->data);
+        pbl_free(logging_session->data);
       }
-      kernel_free(logging_session);
+      pbl_free(logging_session);
       return;
     }
     iter = &((*iter)->next);
@@ -190,9 +191,9 @@ void dls_list_remove_all(void) {
     next = cur->next;
     if (cur->data) {
       pbl_mutex_deinit(&cur->data->mutex);
-      kernel_free(cur->data);
+      pbl_free(cur->data);
     }
-    kernel_free(cur);
+    pbl_free(cur);
     cur = next;
   }
 
@@ -268,7 +269,7 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
     return nullptr;
   }
 
-  DataLoggingSession *logging_session = kernel_malloc_check(sizeof(DataLoggingSession));
+  DataLoggingSession *logging_session = pbl_malloc_check(sizeof(DataLoggingSession));
 
   *logging_session = (DataLoggingSession){
     .status = status,
@@ -282,7 +283,7 @@ DataLoggingSession *dls_list_create_session(uint32_t tag, DataLoggingItemType ty
   };
 
   if (status == DataLoggingStatusActive) {
-    DataLoggingActiveState *active_state = kernel_malloc_check(sizeof(DataLoggingActiveState));
+    DataLoggingActiveState *active_state = pbl_malloc_check(sizeof(DataLoggingActiveState));
     *active_state = (DataLoggingActiveState){};
     pbl_mutex_init(&active_state->mutex);
     logging_session->data = active_state;

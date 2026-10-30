@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/process_management/app_order_storage.h>
@@ -129,7 +130,7 @@ static void prv_app_order_write_order(AppMenuOrderStorage *storage) {
   s_data.file_known_missing = false;
 
 cleanup:
-  kernel_free(storage);
+  pbl_free(storage);
   pbl_mutex_unlock(&s_data.order_mutex);
 }
 
@@ -170,7 +171,7 @@ void write_uuid_list_to_file(const Uuid *uuid_list, uint8_t count) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
 
   int storage_size = sizeof(AppMenuOrderStorage) + (count * sizeof(AppInstallId));
-  AppMenuOrderStorage *storage = kernel_malloc(storage_size);
+  AppMenuOrderStorage *storage = pbl_malloc(storage_size);
   memset(storage, 0, storage_size);
 
   UuidTranslateData data = {

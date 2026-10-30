@@ -5,6 +5,7 @@
 #include "nimble_type_conversions.h"
 
 #include <pbl/bluetooth/gap_le_device_name.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 
@@ -12,7 +13,6 @@
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>
 #include <host/ble_uuid.h>
-#include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -38,9 +38,9 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 
   PBL_LOG_DBG("Device name read cb: conn=%u handle=%u len=%u", conn_handle, attr->handle, name_len);
 
-  char *device_name = kernel_zalloc_check(name_len + 1);
+  char *device_name = pbl_zalloc_check(name_len + 1);
   if (ble_hs_mbuf_to_flat(attr->om, device_name, name_len, nullptr) != 0) {
-    kernel_free(device_name);
+    pbl_free(device_name);
     return 0;
   }
 
@@ -52,7 +52,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
   GAPLEConnection *connection = gap_le_connection_by_device(device);
   if (connection == nullptr) {
     bt_unlock();
-    kernel_free(device_name);
+    pbl_free(device_name);
     return 0;
   }
 
@@ -60,7 +60,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
       (connection->device_name == nullptr) || strcmp(connection->device_name, device_name) != 0;
   if (changed) {
     if (connection->device_name) {
-      kernel_free(connection->device_name);
+      pbl_free(connection->device_name);
     }
     connection->device_name = device_name;
   }
@@ -71,11 +71,11 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
   if (!changed) {
     // Same name as before: don't re-persist it (each store rewrites the
     // pairing storage and fires bonding change handlers).
-    kernel_free(device_name);
+    pbl_free(device_name);
     return 0;
   }
 
-  struct pbl_bt_addr *addr = kernel_zalloc_check(sizeof(struct pbl_bt_addr));
+  struct pbl_bt_addr *addr = pbl_zalloc_check(sizeof(struct pbl_bt_addr));
   *addr = addr_copy;
   system_task_add_callback(pbl_bt_store_device_name_kernelbg_cb, addr);
 
@@ -103,7 +103,7 @@ static int prv_device_name_read_op_start(void *ctx) {
 }
 
 void pbl_bt_gap_le_device_name_request(const struct pbl_bt_device_internal *device) {
-  struct pbl_bt_device_internal *ctx = kernel_zalloc_check(sizeof(*ctx));
+  struct pbl_bt_device_internal *ctx = pbl_zalloc_check(sizeof(*ctx));
   *ctx = *device;
   nimble_gattc_op_queue_push(prv_device_name_read_op_start, ctx);
 }

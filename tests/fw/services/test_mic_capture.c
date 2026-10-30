@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/mic_capture.h>
@@ -90,7 +91,7 @@ void app_fetch_cancel_from_system_task(void) {
 bool app_install_do_callbacks(InstallEventType type, AppInstallId id, Uuid *uuid,
                               InstallCallbackDoneCallback cb, void *data) {
   s_install_callbacks++;
-  kernel_free(uuid);
+  pbl_free(uuid);
   return true;
 }
 

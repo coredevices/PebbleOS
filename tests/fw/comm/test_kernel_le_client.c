@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -9,7 +10,6 @@
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/ble/kernel_le_client/test/test_definition.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,8 +309,8 @@ void test_kernel_le_client__notifications_drained_with_room_in_kernel_queue(void
 void test_kernel_le_client__service_added(void) {
   uint8_t num_services_added = ARRAY_LENGTH(s_service_handles);
   PebbleBLEGATTClientServiceEventInfo *info =
-      kernel_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) +
-                    (num_services_added * sizeof(pbl_bt_service_t)));
+      pbl_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) +
+                 (num_services_added * sizeof(pbl_bt_service_t)));
 
   *info = (PebbleBLEGATTClientServiceEventInfo){
     .status = PBL_BT_ERRNO_OK,
@@ -333,7 +333,7 @@ void test_kernel_le_client__service_added(void) {
   // Found one complete service instance:
   cl_assert_equal_i(s_services_discovered_count, 1);
 
-  kernel_free(info);
+  pbl_free(info);
 }
 
 void test_kernel_le_client__deleting_last_bonding_stops_reconnecting(void) {

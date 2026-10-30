@@ -14,6 +14,8 @@ extern uint32_t app_outbox_service_max_message_length(AppOutboxServiceTag tag);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fakes & Stubs
 
+#include <pbl/kernel/malloc.h>
+
 #include <fake_kernel_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <stubs_syscall_internal.h>
@@ -76,7 +78,7 @@ void test_app_outbox__initialize(void) {
   fake_kernel_malloc_enable_stats(true);
 
   s_test_data_length = app_outbox_service_max_message_length(AppOutboxServiceTagUnitTest);
-  s_test_data = kernel_malloc(s_test_data_length);
+  s_test_data = pbl_malloc(s_test_data_length);
   memset(s_test_data, 0x88, s_test_data_length);
 
   s_num_sent_handler_called = 0;
@@ -96,7 +98,7 @@ void test_app_outbox__initialize(void) {
 void test_app_outbox__cleanup(void) {
   app_outbox_service_deinit();
 
-  kernel_free(s_test_data);
+  pbl_free(s_test_data);
 }
 
 static size_t s_consumer_data_length = 1;

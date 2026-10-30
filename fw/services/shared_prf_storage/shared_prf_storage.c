@@ -5,13 +5,13 @@
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/shared_prf_storage/v3_sprf/shared_prf_storage_private.h>
 
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_shared_prf_storage, CONFIG_SERVICE_SHARED_PRF_STORAGE_LOG_LEVEL);
 
@@ -191,13 +191,13 @@ static void prv_fetch_struct(SharedPRFData *data_out) {
 }
 
 static SharedPRFData *prv_alloc_and_fetch_struct(void) {
-  SharedPRFData *data = kernel_zalloc_check(sizeof(SharedPRFData));
+  SharedPRFData *data = pbl_zalloc_check(sizeof(SharedPRFData));
   prv_fetch_struct(data);
   return data;
 }
 
 static void prv_dealloc_struct(SharedPRFData *data) {
-  kernel_free(data);
+  pbl_free(data);
 }
 
 static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, bool calc_crc) {

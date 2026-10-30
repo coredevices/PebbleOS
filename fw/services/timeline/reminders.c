@@ -3,6 +3,7 @@
 
 #include <pbl/cron/cron.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
@@ -13,7 +14,6 @@
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -32,7 +32,7 @@ static ReminderId s_next_reminder_id;
 bool reminders_mark_has_reminded(ReminderId *reminder_id);
 
 static void prv_put_reminder_event(ReminderId *reminder_id, ReminderEventType type) {
-  Uuid *removed_id = kernel_malloc(sizeof(Uuid));
+  Uuid *removed_id = pbl_malloc(sizeof(Uuid));
   if (!removed_id) {
     return;
   }

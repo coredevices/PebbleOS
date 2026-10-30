@@ -6,12 +6,12 @@
 #include "gap_le_connection.h"
 
 #include <pbl/bluetooth/gatt.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
 
 extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
     const struct pbl_bt_device_internal *device);
@@ -27,7 +27,7 @@ static void prv_rediscover_kernelbg_cb(void *data) {
   // Rediscover the world:
   struct pbl_bt_device_internal *device = (struct pbl_bt_device_internal *)data;
   const enum pbl_bt_errno e = gatt_client_discovery_rediscover_all(device);
-  kernel_free(device);
+  pbl_free(device);
   if (e != PBL_BT_ERRNO_OK) {
     PBL_LOG_ERR("Service Changed couldn't restart discovery: %i", e);
   }
@@ -53,7 +53,7 @@ bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *conne
   // (See "2.5.2 Attribute Caching" in BT Core Specification)
   if ((range->start == 0x001 && range->end == 0xFFFF)) {
     struct pbl_bt_device_internal *device =
-        (struct pbl_bt_device_internal *)kernel_malloc_check(sizeof(struct pbl_bt_device_internal));
+        (struct pbl_bt_device_internal *)pbl_malloc_check(sizeof(struct pbl_bt_device_internal));
     *device = connection->device;
     system_task_add_callback(prv_rediscover_kernelbg_cb, device);
     return true;
@@ -235,7 +235,7 @@ PBL_SHELL_SUBCMD_ADD(sub_bt, svc_changed, nullptr, "Send a Service Changed indic
                      prv_cmd_svc_changed, 0, 0);
 
 static int prv_cmd_rediscover(const struct pbl_shell *sh, size_t argc, char **argv) {
-  struct pbl_bt_device_internal *device = kernel_malloc_check(sizeof(*device));
+  struct pbl_bt_device_internal *device = pbl_malloc_check(sizeof(*device));
 
   bt_lock();
   GAPLEConnection *conn_hdl = gap_le_connection_any();
@@ -245,7 +245,7 @@ static int prv_cmd_rediscover(const struct pbl_shell *sh, size_t argc, char **ar
   bt_unlock();
 
   if (!conn_hdl) {
-    kernel_free(device);
+    pbl_free(device);
     pbl_shell_error(sh, "not connected");
     return -ENOTCONN;
   }

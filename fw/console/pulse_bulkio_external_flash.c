@@ -7,9 +7,9 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <system/status_codes.h>
 
 typedef struct PBL_PACKED ExternalFlashEraseOptions {
@@ -47,7 +47,7 @@ static void prv_erase_sector(int status, void *arg) {
 
   if (status != 0) {
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, E_INTERNAL, state->cookie);
-    kernel_free(state);
+    pbl_free(state);
   } else if (state->next_sector < sectors_to_erase) {
     uint32_t sector_addr =
         (state->address + state->next_sector * SECTOR_SIZE_BYTES) & SECTOR_ADDR_MASK;
@@ -59,7 +59,7 @@ static void prv_erase_sector(int status, void *arg) {
     }
   } else {
     pulse_bulkio_erase_message_send(PulseBulkIODomainType_ExternalFlash, S_SUCCESS, state->cookie);
-    kernel_free(state);
+    pbl_free(state);
   }
 }
 
@@ -70,7 +70,7 @@ static status_t external_flash_domain_erase(uint8_t *packet_data, size_t length,
 
   ExternalFlashEraseOptions *options = (ExternalFlashEraseOptions *)packet_data;
 
-  ExternalFlashEraseState *state = kernel_malloc(sizeof(ExternalFlashEraseState));
+  ExternalFlashEraseState *state = pbl_malloc(sizeof(ExternalFlashEraseState));
   *state = (ExternalFlashEraseState){
     .address = options->address,
     .length = options->length,

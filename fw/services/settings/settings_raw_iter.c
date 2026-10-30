@@ -3,12 +3,11 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_raw_iter.h>
 #include <pbl/util/math.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
 
@@ -27,12 +26,12 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
     return nullptr;
   }
   int read_size = file_size;
-  uint8_t *contents = kernel_calloc(1, read_size);
+  uint8_t *contents = pbl_calloc(1, read_size);
   while (contents == nullptr && read_size > 0) {
     // If we can't allocate enough RAM to read the whole file, we should
     // at least try to read part of it.
     read_size /= 2;
-    contents = kernel_calloc(1, read_size);
+    contents = pbl_calloc(1, read_size);
   }
   if (contents == nullptr) {
     PBL_LOG_ERR("Could not allocate %d bytes for corrupt file of size %d.", read_size, file_size);
@@ -46,7 +45,7 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
   int status = pfs_seek(iter->fd, start_offset, FSeekSet);
   if (status < 0) {
     PBL_LOG_ERR("Debug seek failed: %d", status);
-    kernel_free(contents);
+    pbl_free(contents);
     return nullptr;
   }
   int actual_read_size = pfs_read(iter->fd, contents, read_size);

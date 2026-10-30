@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/profiler/profiler.h>
 #include <pbl/services/compositor/compositor_transitions.h>
@@ -23,7 +24,6 @@
 #include <applib/ui/window_stack_private.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
@@ -703,7 +703,7 @@ static int prv_cmd_modals(const struct pbl_shell *sh, size_t argc, char **argv) 
                         info.dumps[priority][i].name);
       }
     }
-    kernel_free(info.dumps[priority]);
+    pbl_free(info.dumps[priority]);
   }
   return 0;
 }

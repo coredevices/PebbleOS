@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
@@ -17,7 +18,6 @@
 #include <pbl/util/units.h>
 
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/wakeup_ui.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
@@ -117,8 +117,7 @@ void wakeup_dispatcher_system_task(void *data) {
   if (!(app_manager_get_current_app_id() == app_id)) {
     // Lookup app, and if installed, launch
     if (app_id != INSTALL_ID_INVALID) {
-      PebbleLaunchAppEventExtended *data =
-          kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
+      PebbleLaunchAppEventExtended *data = pbl_malloc_check(sizeof(PebbleLaunchAppEventExtended));
       *data = (PebbleLaunchAppEventExtended){
         .common.reason = APP_LAUNCH_WAKEUP,
         .wakeup.wakeup_id = wakeup_id,
@@ -322,8 +321,7 @@ static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new
     if (entry.notify_if_missed) {
       if (missed_events->missed_app_ids == nullptr) {
         // This is allocated here, but free'd in the wakeup_ui.h module
-        missed_events->missed_app_ids =
-            kernel_malloc(NUM_APPS_ALERT_ON_BOOT * sizeof(AppInstallId));
+        missed_events->missed_app_ids = pbl_malloc(NUM_APPS_ALERT_ON_BOOT * sizeof(AppInstallId));
         if (missed_events->missed_app_ids == nullptr) {
           return;
         }

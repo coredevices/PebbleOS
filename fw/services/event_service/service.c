@@ -5,13 +5,13 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 
 #include <applib/event_service_client.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
@@ -165,10 +165,10 @@ void event_service_init(PebbleEventType type,
                         EventServiceRemoveSubscriberCallback remove_subscriber_callback) {
   if (s_event_services[type] != nullptr) {
     // an event service was already inited, free it
-    kernel_free(s_event_services[type]);
+    pbl_free(s_event_services[type]);
   }
 
-  s_event_services[type] = kernel_malloc(sizeof(EventServiceEntry));
+  s_event_services[type] = pbl_malloc(sizeof(EventServiceEntry));
   memset(s_event_services[type], 0, sizeof(*s_event_services[type]));
   s_event_services[type]->add_subscriber_callback = add_subscriber_callback;
   s_event_services[type]->remove_subscriber_callback = remove_subscriber_callback;
@@ -201,7 +201,7 @@ static bool prv_steal_buffer(void *buf, EventServiceEntry *service, PebbleEvent 
   }
 
   if (intents_pending) {
-    EventServiceBuffer *esb = kernel_zalloc_check(sizeof(EventServiceBuffer));
+    EventServiceBuffer *esb = pbl_zalloc_check(sizeof(EventServiceBuffer));
     esb->ptr = buf;
     esb->type = e->type;
     esb->intents_pending = intents_pending;
@@ -361,10 +361,10 @@ void event_service_free_claimed_buffer(void *ref) {
     if (!intents_pending) {
       list_remove((ListNode *)esb, (ListNode **)&s_event_service_buffers, nullptr);
       if (esb->ptr) {
-        kernel_free(esb->ptr);
+        pbl_free(esb->ptr);
         esb->ptr = nullptr;
       }
-      kernel_free(esb);
+      pbl_free(esb);
     }
   }
 }
@@ -404,7 +404,7 @@ static int16_t prv_get_plugin_index(const Uuid *uuid, PebbleTask task) {
       goto unlock;
     }
   } else {
-    entry = kernel_zalloc_check(sizeof(EventPluginUUIDEntry));
+    entry = pbl_zalloc_check(sizeof(EventPluginUUIDEntry));
     entry->service_index = ++s_next_service_index;
     list_append(&s_plugin_list, &entry->list_node);
   }
@@ -447,7 +447,7 @@ PBL_SYSCALL(void, sys_event_service_cleanup, (OUT_BUF, PebbleEvent *, e, sizeof(
     } else {
       // free the EventServiceBuffer and free the data
       list_remove((ListNode *)esb, (ListNode **)&s_event_service_buffers, nullptr);
-      kernel_free(esb);
+      pbl_free(esb);
 
       event_deinit(e);
     }

@@ -28,7 +28,7 @@ void test_settings_file__initialize(void) {
 }
 
 void test_settings_file__cleanup(void) {
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
+  stub_pbl_malloc_set_should_fail(false);
 }
 
 #include <stdio.h>
@@ -945,7 +945,7 @@ void test_settings_file__iterator_wrapping(void) {
 }
 
 void test_settings_file__rewrite_filtered_oom(void) {
-  printf("\nTesting that compaction aborts cleanly when kernel_malloc fails...\n");
+  printf("\nTesting that compaction aborts cleanly when pbl_malloc fails...\n");
   SettingsFile file;
   cl_must_pass(settings_file_open(&file, "test_file_rewrite_oom", 4096));
   uint8_t key[4];
@@ -958,9 +958,9 @@ void test_settings_file__rewrite_filtered_oom(void) {
 
   // Compaction under OOM must fail without crashing and without touching
   // the on-disk file.
-  stub_pbl_malloc_set_kernel_malloc_should_fail(true);
+  stub_pbl_malloc_set_should_fail(true);
   cl_assert_equal_i(E_OUT_OF_MEMORY, settings_file_compact(&file));
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
+  stub_pbl_malloc_set_should_fail(false);
 
   // The file must still be open and intact.
   verify(&file, key, key_len, val, val_len);

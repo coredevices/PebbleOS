@@ -3,6 +3,7 @@
 
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
 #include <bluetooth/nimble_type_conversions.h>
@@ -11,7 +12,6 @@
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>
 #include <host/ble_uuid.h>
-#include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -35,7 +35,7 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
   if (pkt_len == 0) {
     return 0;
   }
-  uint8_t *buf = kernel_malloc(pkt_len);
+  uint8_t *buf = pbl_malloc(pkt_len);
   if (!buf) {
     return BLE_ATT_ERR_INSUFFICIENT_RES;
   }
@@ -43,7 +43,7 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
   int rc = ble_hs_mbuf_to_flat(ctxt->om, buf, pkt_len, &out_len);
   if (rc != 0) {
     PBL_LOG_ERR("Reversed PPoG write flatten failed: 0x%04x", (uint16_t)rc);
-    kernel_free(buf);
+    pbl_free(buf);
     return BLE_ATT_ERR_UNLIKELY;
   }
   pbl_bt_cb_ppog_reversed_data_written(conn_handle, buf, out_len);

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
@@ -21,7 +22,6 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <pbl_arch_posix.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
@@ -140,9 +140,9 @@ static bool prv_write_file(const char *name, const ZipEntry *entry) {
   } else {
     // Deflate refers back up to 32 KiB, which the dictionary ring keeps.
     const size_t dict_size = 32 * 1024, chunk_size = 1024;
-    uint8_t *dict = kernel_malloc(dict_size);
-    uint8_t *chunk = kernel_malloc(chunk_size);
-    TINF_DATA *d = kernel_malloc(sizeof(*d));
+    uint8_t *dict = pbl_malloc(dict_size);
+    uint8_t *chunk = pbl_malloc(chunk_size);
+    TINF_DATA *d = pbl_malloc(sizeof(*d));
     ok = dict && chunk && d;
     if (ok) {
       uzlib_init();
@@ -171,9 +171,9 @@ static bool prv_write_file(const char *name, const ZipEntry *entry) {
       }
       ok = ok && written == entry->size;
     }
-    kernel_free(d);
-    kernel_free(chunk);
-    kernel_free(dict);
+    pbl_free(d);
+    pbl_free(chunk);
+    pbl_free(dict);
   }
   if (ok) {
     pfs_close(fd);
@@ -254,8 +254,8 @@ static void prv_install(void *data) {
   if (ok && head.method == 0) {
     memcpy(header, head.data, sizeof(header));
   } else if (ok) {
-    uint8_t *dict = kernel_malloc(32 * 1024);
-    TINF_DATA *d = kernel_malloc(sizeof(*d));
+    uint8_t *dict = pbl_malloc(32 * 1024);
+    TINF_DATA *d = pbl_malloc(sizeof(*d));
     ok = dict && d;
     if (ok) {
       uzlib_init();
@@ -267,8 +267,8 @@ static void prv_install(void *data) {
       d->dest_limit = header + sizeof(header);
       ok = uzlib_uncompress(d) >= 0 && d->dest == d->dest_limit;
     }
-    kernel_free(d);
-    kernel_free(dict);
+    pbl_free(d);
+    pbl_free(dict);
   }
   memcpy(&install->info, header, sizeof(install->info));
   if (!ok || strncmp(install->info.header, "PBLAPP", sizeof(install->info.header)) != 0) {

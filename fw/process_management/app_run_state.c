@@ -6,11 +6,11 @@
 #include "launcher_app_message.h"
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
@@ -43,7 +43,7 @@ static void prv_send_response(void *data) {
     }
   }
 
-  kernel_free(app_run_state);
+  pbl_free(app_run_state);
 }
 
 void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const Uuid *uuid) {
@@ -81,7 +81,7 @@ void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const U
         // We check the session here as to be backwards compatible with the 0x31 endpoint and
         // to avoid repeating code, the endpoint makes use of this function, but since it does
         // not have an active session (it's session is NULL), it will fall to the else case.
-        AppRunState *app_run_state = kernel_malloc_check(sizeof(AppRunState));
+        AppRunState *app_run_state = pbl_malloc_check(sizeof(AppRunState));
         app_run_state->state = RUNNING;
         app_run_state->uuid = *uuid;
         prv_send_response(app_run_state);
@@ -131,7 +131,7 @@ void app_run_state_send_update(const Uuid *uuid, AppState app_state) {
 
   // Offload to KernelBG, because this function is called 2x when switching apps and we want to
   // be sure not to block KernelMain for 2x 4000ms when the send buffer is full.
-  AppRunState *app_run_state = kernel_malloc(sizeof(AppRunState));
+  AppRunState *app_run_state = pbl_malloc(sizeof(AppRunState));
   app_run_state->uuid = *uuid;
   app_run_state->state = app_state;
   system_task_add_callback(prv_send_response, app_run_state);

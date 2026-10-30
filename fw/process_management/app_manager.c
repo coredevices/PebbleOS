@@ -9,6 +9,7 @@
 // Pebble stuff
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/app_inbox_service.h>
@@ -25,7 +26,6 @@
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <kernel/event_loop.h>
 #include <kernel/memory_layout.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/util/segment.h>
@@ -691,7 +691,7 @@ static const CompositorTransition *prv_get_transition(const LaunchConfigCommon *
 void app_manager_put_launch_app_event(const AppLaunchEventConfig *config) {
   PBL_ASSERTN(config->id != INSTALL_ID_INVALID);
 
-  PebbleLaunchAppEventExtended *data = kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
+  PebbleLaunchAppEventExtended *data = pbl_malloc_check(sizeof(PebbleLaunchAppEventExtended));
   *data = (PebbleLaunchAppEventExtended){.common = config->common};
   data->common.transition = prv_get_transition(&config->common, config->id);
 

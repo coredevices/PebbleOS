@@ -3,6 +3,7 @@
 
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/types.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_addr.h>
@@ -11,7 +12,6 @@
 #include <comm/ble/gap_le_device_name.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -43,7 +43,7 @@ static void prv_finalize_create_bonding(pbl_bt_bonding_id_t bonding_id,
 static void prv_finalize_create_bonding_cb(void *data) {
   CreateBondingContext *context = data;
   prv_finalize_create_bonding(context->bonding_id, &context->addr, context->is_gateway);
-  kernel_free(context);
+  pbl_free(context);
 }
 
 void pbl_bt_cb_handle_create_bonding(const struct pbl_bt_bonding *bonding,
@@ -70,7 +70,7 @@ void pbl_bt_cb_handle_create_bonding(const struct pbl_bt_bonding *bonding,
     return;
   }
 
-  CreateBondingContext *context = kernel_malloc_check(sizeof(*context));
+  CreateBondingContext *context = pbl_malloc_check(sizeof(*context));
 
   *context = (CreateBondingContext){
     .bonding_id = bonding_id,

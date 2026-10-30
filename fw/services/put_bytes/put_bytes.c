@@ -8,6 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -25,7 +26,6 @@
 
 #include <comm/bluetooth_analytics.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/system_message.h>
 #include <resource/resource_storage_file.h>
@@ -272,7 +272,7 @@ static void prv_pre_ack_if_space_in_put_job_queue(void) {
 static void prv_deinit_put_job_queue(void) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
   for (int i = 0; i < MAX_BATCHED_PB_PUT_OPS; i++) {
-    kernel_free(put_jobs->job[i].buffer);
+    pbl_free(put_jobs->job[i].buffer);
     put_jobs->job[i].buffer = nullptr;
   }
 }
@@ -291,7 +291,7 @@ static bool prv_init_put_job_queue_if_necessary(void) {
   for (i = 0; i < MAX_BATCHED_PB_PUT_OPS; i++) {
     // Note: If heap pressure becomes an issue, we could also consider only
     // using pre-acking if there is a certain amount of space free in the heap
-    uint8_t *buffer = (uint8_t *)kernel_zalloc(PUT_BYTES_PP_BUFFER_SIZE);
+    uint8_t *buffer = (uint8_t *)pbl_zalloc(PUT_BYTES_PP_BUFFER_SIZE);
     if (!buffer) {
       if (i == 0) {
         PBL_LOG_ERR("Not enough memory to service PB request, abort!");
@@ -633,8 +633,7 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
   switch (request->type) {
 #ifndef CONFIG_RECOVERY_FW
     case ObjectFile: {
-      storage_info =
-          kernel_malloc_check(sizeof(PutBytesStorageInfo) + strlen(request->filename) + 1);
+      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo) + strlen(request->filename) + 1);
       strcpy(storage_info->filename, request->filename);
       break;
     }
@@ -643,7 +642,7 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
       PebbleTask task = (request->type == ObjectWatchApp) ? PebbleTask_App : PebbleTask_Worker;
       char filename[APP_FILENAME_MAX_LENGTH + 1];
       app_storage_get_file_name(filename, sizeof(filename), index, task);
-      storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
+      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
       strcpy(storage_info->filename, filename);
       break;
     }
@@ -652,7 +651,7 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
       // The +1 is to make up for the fact that app banks start at 0, res banks start at 1. Fixing
       // in D641
       resource_storage_get_file_name(filename, sizeof(filename), index);
-      storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
+      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
       strcpy(storage_info->filename, filename);
       break;
     }
@@ -669,14 +668,14 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
       s_ready_to_install[request->type - 1].type = 0;
       [[fallthrough]];
     default: {
-      storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo));
+      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo));
       storage_info->index = request->index;
     }
   }
 
   const bool success = pb_storage_init(&s_pb_state.storage, s_pb_state.type, s_pb_state.total_size,
                                        storage_info, s_pb_state.append_offset);
-  kernel_free(storage_info);
+  pbl_free(storage_info);
   return success;
 }
 

@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
@@ -13,7 +14,6 @@
 #include <applib/app_glance.h>
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <syscall/syscall.h>
 #include <system/status_codes.h>
@@ -87,7 +87,7 @@ static bool prv_find_current_glance(AppGlanceSliceInternal *slice, void *context
 }
 
 static void prv_glance_event_put(const Uuid *app_uuid) {
-  Uuid *app_uuid_copy = kernel_zalloc_check(sizeof(Uuid));
+  Uuid *app_uuid_copy = pbl_zalloc_check(sizeof(Uuid));
   *app_uuid_copy = *app_uuid;
 
   PebbleEvent e = (PebbleEvent){
@@ -158,7 +158,7 @@ bool app_glance_service_get_current_slice(const Uuid *app_uuid, AppGlanceSliceIn
 
   bool success;
   // Try to read the app's glance, first checking the cache
-  AppGlance *app_glance = kernel_zalloc_check(sizeof(*app_glance));
+  AppGlance *app_glance = pbl_zalloc_check(sizeof(*app_glance));
   const status_t rv = app_glance_db_read_glance(app_uuid, app_glance);
   if (rv != S_SUCCESS) {
     success = false;
@@ -181,13 +181,13 @@ bool app_glance_service_get_current_slice(const Uuid *app_uuid, AppGlanceSliceIn
   success = true;
 
 cleanup:
-  kernel_free(app_glance);
+  pbl_free(app_glance);
 
   return success;
 }
 
 static AppGlance *prv_copy_user_glance(const AppGlance *glance) {
-  AppGlance *copy = kernel_malloc(sizeof(*copy));
+  AppGlance *copy = pbl_malloc(sizeof(*copy));
   if (!copy) {
     return nullptr;
   }
@@ -218,7 +218,7 @@ PBL_SYSCALL(bool, sys_app_glance_update, (IN, const Uuid *, uuid),
   }
 
   const bool success = (app_glance_db_insert_glance(uuid, glance) == S_SUCCESS);
-  kernel_free(user_glance);
+  pbl_free(user_glance);
   if (success) {
     prv_glance_event_put(uuid);
   }

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <pbl/kernel/malloc.h>
+
 #include <comm/ble/gap_le_connection.h>
 
 /**
@@ -32,7 +34,7 @@ void pbl_bt_gap_le_device_name_request(const struct pbl_bt_device_internal *addr
  * Implemented by the firmware, run on KernelBG.
  *
  * @param ctx struct pbl_bt_addr of the peer, heap allocated. The callee frees it with
- *            kernel_free().
+ *            pbl_free().
  */
 void pbl_bt_store_device_name_kernelbg_cb(void *ctx);
 

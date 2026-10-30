@@ -4,17 +4,17 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
 
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 
 bool gb_storage_flash_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                             GetBytesStorageInfo *info) {
   if (!info->flash_len || (info->flash_start_addr + info->flash_len) > BOARD_NOR_FLASH_SIZE) {
     return false;
   }
-  storage->impl_data = kernel_zalloc_check(sizeof(*info));
+  storage->impl_data = pbl_zalloc_check(sizeof(*info));
   memcpy(storage->impl_data, info, sizeof(*info));
 
   return true;
@@ -33,5 +33,5 @@ bool gb_storage_flash_read_next_chunk(GetBytesStorage *storage, uint8_t *buffer,
 }
 
 void gb_storage_flash_cleanup(GetBytesStorage *storage, bool successful) {
-  kernel_free(storage->impl_data);
+  pbl_free(storage->impl_data);
 }

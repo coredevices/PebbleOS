@@ -12,11 +12,11 @@
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/pairing_confirm.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
 #include <host/ble_gap.h>
-#include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -140,7 +140,7 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
     // If the address is not resolved, pairing is gonna happen.
     // Trigger name read to have it ready for the pairing confirmation.
     memset(s_device_name, 0, sizeof(s_device_name));
-    uint16_t *conn_handle = kernel_malloc_check(sizeof(*conn_handle));
+    uint16_t *conn_handle = pbl_malloc_check(sizeof(*conn_handle));
     *conn_handle = event->connect.conn_handle;
     nimble_gattc_op_queue_push(prv_device_name_read_op_start, conn_handle);
   }

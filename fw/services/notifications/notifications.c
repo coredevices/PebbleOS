@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
@@ -8,7 +9,6 @@
 #include <pbl/util/bitops.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 static void prv_notification_migration_iterator_callback(TimelineItem *notification,
                                                          SerializedTimelineItemHeader *header,
@@ -31,7 +31,7 @@ void notifications_handle_notification_action_result(
 }
 
 void notifications_handle_notification_removed(Uuid *notification_id) {
-  Uuid *removed_id = kernel_malloc_check(sizeof(Uuid));
+  Uuid *removed_id = pbl_malloc_check(sizeof(Uuid));
   *removed_id = *notification_id;
   PebbleEvent launcher_event = {
     .type = PEBBLE_SYS_NOTIFICATION_EVENT,
@@ -74,7 +74,7 @@ void notifications_init(void) {
 void notifications_add_notification(TimelineItem *notification) {
   notification_storage_store(notification);
 
-  Uuid *uuid = kernel_malloc_check(sizeof(Uuid));
+  Uuid *uuid = pbl_malloc_check(sizeof(Uuid));
   *uuid = notification->header.id;
   notifications_handle_notification_added(uuid);
 }

@@ -4,13 +4,13 @@
 #include <limits.h>
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/mic_capture.h>
 #include <pbl/services/mic_manager.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_management/pebble_process_md.h>
 
@@ -66,7 +66,7 @@ static bool prv_stop_locked(MicCaptureBuffers **buffers) {
 //! Expects s_lock not held: the driver calls prv_data with its own lock held.
 static void prv_release(MicCaptureBuffers *buffers) {
   mic_manager_release(MicClientAppCapture);
-  kernel_free(buffers);
+  pbl_free(buffers);
 }
 
 static void prv_stop_with_reason(MicCaptureStopReason reason) {
@@ -148,7 +148,7 @@ int32_t mic_capture_service_start(PebbleTask task) {
     return -MicCaptureStartErrBusy;
   if (!app_db_microphone_granted(&md->uuid))
     return -MicCaptureStartErrPermissionDenied;
-  MicCaptureBuffers *buffers = kernel_malloc(sizeof(*buffers));
+  MicCaptureBuffers *buffers = pbl_malloc(sizeof(*buffers));
   if (!buffers)
     return -MicCaptureStartErrNoMemory;
 
@@ -156,7 +156,7 @@ int32_t mic_capture_service_start(PebbleTask task) {
   if ((s_revocations != revocations) || (s_focus_losses != focus_losses)) {
     const bool revoked = (s_revocations != revocations);
     pbl_mutex_unlock(&s_lock);
-    kernel_free(buffers);
+    pbl_free(buffers);
     return revoked ? -MicCaptureStartErrPermissionDenied : -MicCaptureStartErrNotForeground;
   }
   s_next_session = s_next_session >= INT32_MAX ? 1 : s_next_session + 1;

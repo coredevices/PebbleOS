@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
@@ -10,7 +11,6 @@
 #include <pbl/services/new_timer/new_timer.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall.h>
@@ -98,7 +98,7 @@ PBL_SYSCALL(void, sys_evented_timer_consume, (VAL, TimerID, timer_id),
     list_remove(&timer->list_node, &s_timer_list_head, nullptr);
     pbl_mutex_unlock(&s_mutex);
     new_timer_delete(timer->sys_timer_id);
-    kernel_free(timer);
+    pbl_free(timer);
   }
 }
 
@@ -190,7 +190,7 @@ void evented_timer_clear_process_timers(PebbleTask task) {
       list_remove(iter, &s_timer_list_head, nullptr);
       // The delete operation will stop it for us
       new_timer_delete(timer->sys_timer_id);
-      kernel_free(timer);
+      pbl_free(timer);
     }
 
     iter = next;
@@ -238,7 +238,7 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
     return EVENTED_TIMER_INVALID_ID;
   }
 
-  EventedTimer *new_timer = kernel_malloc_check(sizeof(EventedTimer));
+  EventedTimer *new_timer = pbl_malloc_check(sizeof(EventedTimer));
 
   *new_timer = (EventedTimer){
     .list_node = {},
@@ -323,7 +323,7 @@ void evented_timer_cancel(EventedTimerID timer_id) {
 
   new_timer_delete(timer->sys_timer_id); // This automatically stops the timer for us first
   list_remove(&timer->list_node, &s_timer_list_head, nullptr);
-  kernel_free(timer);
+  pbl_free(timer);
 
   pbl_mutex_unlock(&s_mutex);
 }

@@ -19,6 +19,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/ble/gap_le_connect.h>
@@ -29,7 +30,6 @@
 #include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 #define MAX_SERVICE_INSTANCES (8)
 
@@ -292,7 +292,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
 
   if (value_length) {
     // TODO: avoid double-copying the data
-    buffer = (uint8_t *)kernel_malloc(value_length);
+    buffer = (uint8_t *)pbl_malloc(value_length);
     if (PBL_UNLIKELY(!buffer)) {
       PBL_LOG_ERR("OOM for GATT read response - %d bytes", (int)value_length);
       return;
@@ -303,7 +303,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
   if (client->handle_read_or_notification) {
     client->handle_read_or_notification(event->object_ref, buffer, value_length, event->gatt_error);
   }
-  kernel_free(buffer);
+  pbl_free(buffer);
 }
 
 static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
@@ -325,7 +325,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
     }
 
     // TODO: avoid double-copying the data
-    uint8_t *buffer = (uint8_t *)kernel_malloc(header.value_length);
+    uint8_t *buffer = (uint8_t *)pbl_malloc(header.value_length);
     if (PBL_UNLIKELY(header.value_length && !buffer)) {
       PBL_LOG_ERR("OOM for GATT notification");
       return;
@@ -346,7 +346,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
       PBL_LOG_DBG("No client to handle GATT notification from characteristic %p",
                   (void *)header.characteristic);
     }
-    kernel_free(buffer);
+    pbl_free(buffer);
     header.value_length = next_value_length;
   }
 }

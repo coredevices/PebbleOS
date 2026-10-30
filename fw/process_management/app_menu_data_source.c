@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/process_management/app_order_storage.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -198,12 +199,12 @@ void prv_handle_app_event(void *data) {
       break;
   }
 
-  kernel_free(install_data);
+  pbl_free(install_data);
 }
 
 void prv_send_callback_to_app(AppMenuDataSource *data_source, AppInstallId install_id,
                               InstallEventType event_type) {
-  InstallData *install_data = kernel_malloc_check(sizeof(InstallData));
+  InstallData *install_data = pbl_malloc_check(sizeof(InstallData));
   *install_data = (InstallData){
     .id = install_id,
     .source = data_source,

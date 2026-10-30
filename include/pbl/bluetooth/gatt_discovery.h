@@ -5,6 +5,7 @@
 
 #include <pbl/bluetooth/gatt_service_types.h>
 #include <pbl/bluetooth/types.h>
+#include <pbl/kernel/malloc.h>
 
 /**
  * @defgroup bluetooth_gatt_discovery GATT service discovery
@@ -25,7 +26,7 @@
  * void pbl_bt_cb_gatt_client_discovery_handle_indication(GAPLEConnection *connection,
  *                                                        struct pbl_bt_gatt_service *service,
  *                                                        enum pbl_bt_errno error) {
- *   // Takes ownership of service, kernel_free() it when done.
+ *   // Takes ownership of service, pbl_free() it when done.
  * }
  *
  * bool pbl_bt_cb_gatt_client_discovery_complete(GAPLEConnection *connection,

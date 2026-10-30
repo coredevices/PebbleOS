@@ -62,7 +62,7 @@ typedef struct AudioState {
   volatile bool callback_pending;
   uint8_t volume;
   /**
-   * Raw (unaligned) pointer returned by kernel_malloc for the AUDCODEC DAC
+   * Raw (unaligned) pointer returned by pbl_malloc for the AUDCODEC DAC
    * DMA buffer. haudcodec->buf[] is bumped up to a cache-line boundary so
    * dcache_flush() of one half can't touch the other half's lines.
    */

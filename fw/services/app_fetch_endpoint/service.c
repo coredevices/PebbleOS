@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/app_fetch_endpoint.h>
@@ -14,7 +15,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/uuid.h>
 
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/pebble_process_info.h>
 
@@ -234,7 +234,7 @@ void prv_put_bytes_event_system_task_cb(void *data) {
   }
 
 finally:
-  kernel_free(pb_event);
+  pbl_free(pb_event);
 }
 
 //! Put Bytes handler. Used for keeping track of progress and cleanup events. This is called
@@ -246,7 +246,7 @@ void app_fetch_put_bytes_event_handler(PebblePutBytesEvent *pb_event) {
     return;
   }
 
-  PebblePutBytesEvent *pb_event_copy = kernel_malloc_check(sizeof(PebblePutBytesEvent));
+  PebblePutBytesEvent *pb_event_copy = pbl_malloc_check(sizeof(PebblePutBytesEvent));
   memcpy(pb_event_copy, pb_event, sizeof(PebblePutBytesEvent));
   system_task_add_callback(prv_put_bytes_event_system_task_cb, pb_event_copy);
 }
@@ -268,7 +268,7 @@ static void prv_app_fetch_binaries_system_task_cb(void *data) {
                successful ? "Sent" : "Failed to send", uuid_buffer, request->app_id);
 
   // free before error checking
-  kernel_free(request);
+  pbl_free(request);
 
   // If Bluetooth wasn't active, then post the error and cleanup.
   if (!successful) {
@@ -317,7 +317,7 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) 
     return;
   }
 
-  AppFetchInstallRequest *request = kernel_malloc_check(sizeof(AppFetchInstallRequest));
+  AppFetchInstallRequest *request = pbl_malloc_check(sizeof(AppFetchInstallRequest));
 
   // reset all state
   s_fetch_state = (AppFetchState){};

@@ -113,7 +113,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
   uint8_t *storage = nullptr;
 
   while (try_size >= floor) {
-    storage = kernel_malloc(try_size);
+    storage = pbl_malloc(try_size);
     if (storage) {
       break;
     }
@@ -143,7 +143,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
 static void prv_free_buffers(MicDeviceState *state) {
   // Free circular buffer storage
   if (state->circ_buffer_storage) {
-    kernel_free(state->circ_buffer_storage);
+    pbl_free(state->circ_buffer_storage);
     state->circ_buffer_storage = nullptr;
   }
 }
@@ -381,9 +381,9 @@ static bool prv_start(const MicDevice *this, MicDataHandlerCB data_handler, void
   // boundary. dcache_invalidate() in the IRQ path would otherwise risk
   // destroying dirty bytes in lines shared with neighboring allocations.
   const size_t cache_align = dcache_line_size();
-  state->raw_dma_buffer = kernel_malloc(hpdm->RxXferSize + cache_align - 1U);
+  state->raw_dma_buffer = pbl_malloc(hpdm->RxXferSize + cache_align - 1U);
   if (!state->raw_dma_buffer || !prv_allocate_buffers(this, ready != nullptr)) {
-    kernel_free(state->raw_dma_buffer);
+    pbl_free(state->raw_dma_buffer);
     state->raw_dma_buffer = nullptr;
     pbl_mutex_unlock(&state->mutex);
     return false;
@@ -423,7 +423,7 @@ static bool prv_start(const MicDevice *this, MicDataHandlerCB data_handler, void
     HAL_PDM_DeInit(hpdm);
     HAL_RCC_DisableModule(RCC_MOD_PDM1);
 
-    kernel_free(state->raw_dma_buffer);
+    pbl_free(state->raw_dma_buffer);
     state->raw_dma_buffer = nullptr;
     hpdm->pRxBuffPtr = nullptr;
 
@@ -487,7 +487,7 @@ void mic_stop(const MicDevice *this) {
   // Free dynamically allocated buffers
   prv_free_buffers(state);
 
-  kernel_free(state->raw_dma_buffer);
+  pbl_free(state->raw_dma_buffer);
   state->raw_dma_buffer = nullptr;
   hpdm->pRxBuffPtr = nullptr;
 

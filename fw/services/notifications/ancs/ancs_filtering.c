@@ -4,14 +4,13 @@
 #include <string.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/ancs/ancs_filtering.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/pstring.h>
 #include <pbl/util/units.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
@@ -80,7 +79,7 @@ static char *prv_attr_to_cstring(const ANCSAttribute *attr, size_t *len_out) {
     *len_out = 0;
     return nullptr;
   }
-  char *str = kernel_zalloc_check(attr->length + 1);
+  char *str = pbl_zalloc_check(attr->length + 1);
   pbl_pstring16_to_cstring(&attr->pstr, str);
   *len_out = strlen(str);
   return str;
@@ -167,9 +166,9 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
     }
   }
 
-  kernel_free(allocated_body);
-  kernel_free(allocated_subtitle);
-  kernel_free(allocated_title);
+  pbl_free(allocated_body);
+  pbl_free(allocated_subtitle);
+  pbl_free(allocated_title);
   return matched;
 }
 
@@ -216,7 +215,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
 
     if (!pbl_pstring16_equal_cstring(&app_name_attr->pstr, existing_name)) {
       // If the existing name doesn't match our new name, update the name
-      app_name_buff = kernel_zalloc_check(app_name_attr->length + 1);
+      app_name_buff = pbl_zalloc_check(app_name_attr->length + 1);
       pbl_pstring16_to_cstring(&app_name_attr->pstr, app_name_buff);
       attribute_list_add_cstring(&new_attr_list, AttributeIdAppName, app_name_buff);
       list_dirty = true;
@@ -252,7 +251,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
   }
   struct pbl_string_list *default_rules = nullptr;
   if (!rules_attr) {
-    default_rules = kernel_zalloc_check(sizeof(struct pbl_string_list) + sizeof(uint8_t));
+    default_rules = pbl_zalloc_check(sizeof(struct pbl_string_list) + sizeof(uint8_t));
     default_rules->serialized_byte_length = sizeof(uint8_t);
     default_rules->data[0] = 0; // zero filtering rules by default
     attribute_list_add_string_list(&new_attr_list, AttributeIdNotificationFilteringRules,
@@ -284,7 +283,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
 
     // Update our copy of the prefs with the new data
     const size_t buf_size = attributes_actions_get_buffer_size(&new_attr_list, new_action_group);
-    *notif_prefs = kernel_zalloc_check(sizeof(iOSNotifPrefs) + buf_size);
+    *notif_prefs = pbl_zalloc_check(sizeof(iOSNotifPrefs) + buf_size);
     uint8_t *buffer = (uint8_t *)*notif_prefs + sizeof(iOSNotifPrefs);
 
     attributes_actions_deep_copy(&new_attr_list, &(*notif_prefs)->attr_list, new_action_group,
@@ -292,8 +291,8 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
     ios_notif_pref_db_free_prefs(app_notif_prefs);
   }
 
-  kernel_free(app_name_buff);
-  kernel_free(default_rules);
+  pbl_free(app_name_buff);
+  pbl_free(default_rules);
   attribute_list_destroy_list(&new_attr_list);
 }
 

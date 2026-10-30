@@ -9,6 +9,7 @@
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -17,7 +18,6 @@
 #include <host/ble_hs.h>
 #include <host/ble_store.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -111,7 +111,7 @@ static BleStoreValueSec *prv_nimble_store_upsert_sec(const int obj_type,
 
   s = prv_nimble_store_find_sec(obj_type, &key_sec);
   if (s == nullptr) {
-    s = kernel_zalloc_check(sizeof(BleStoreValueSec));
+    s = pbl_zalloc_check(sizeof(BleStoreValueSec));
     if (*sec_list == nullptr) {
       *sec_list = (ListNode *)s;
     } else {
@@ -231,7 +231,7 @@ static void prv_handle_sec_written_cb(void *data) {
 
   prv_notify_host_bonding_changed(ctx->obj_type, &ctx->value_sec);
 
-  kernel_free(ctx);
+  pbl_free(ctx);
 }
 
 static int prv_nimble_store_write_sec(const int obj_type,
@@ -252,7 +252,7 @@ static int prv_nimble_store_write_sec(const int obj_type,
 
   prv_nimble_store_upsert_sec(obj_type, value_sec);
 
-  NimbleStoreSecWrittenContext *ctx = kernel_malloc_check(sizeof(*ctx));
+  NimbleStoreSecWrittenContext *ctx = pbl_malloc_check(sizeof(*ctx));
   *ctx = (NimbleStoreSecWrittenContext){
     .obj_type = obj_type,
     .value_sec = *value_sec,
@@ -282,7 +282,7 @@ static int prv_nimble_store_delete_sec(int obj_type, const struct ble_store_key_
   list_remove((ListNode *)s, sec_list, nullptr);
   pbl_mutex_unlock(&s_store_mutex);
 
-  kernel_free(s);
+  pbl_free(s);
 
   nimble_addr_to_pebble_device(&key_sec->peer_addr, &device);
   PBL_LOG_INFO("SEC delete: obj=%d addr=" PBL_BT_ADDR_FMT, obj_type,
@@ -353,7 +353,7 @@ static void prv_nimble_store_insert_cccd(const struct ble_store_value_cccd *valu
 
   s = prv_nimble_store_find_cccd(&key_cccd);
   if (s == nullptr) {
-    s = kernel_zalloc_check(sizeof(BleStoreValueCCCD));
+    s = pbl_zalloc_check(sizeof(BleStoreValueCCCD));
     if (s_cccds == nullptr) {
       s_cccds = s;
     } else {
@@ -406,7 +406,7 @@ static int prv_nimble_store_delete_cccd(const struct ble_store_key_cccd *key_ccc
   }
 
   list_remove((ListNode *)s, (ListNode **)&s_cccds, nullptr);
-  kernel_free(s);
+  pbl_free(s);
 
 unlock:
   pbl_mutex_unlock(&s_store_mutex);
@@ -487,7 +487,7 @@ void nimble_store_init(void) {
 }
 
 static bool prv_store_value_free(ListNode *node, void *context) {
-  kernel_free(node);
+  pbl_free(node);
   return false;
 }
 
@@ -582,13 +582,13 @@ void pbl_bt_handle_host_removed_bonding(const struct pbl_bt_bonding *bonding) {
   s_sec = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_OUR_SEC, &key_sec);
   if (s_sec != nullptr) {
     list_remove((ListNode *)s_sec, (ListNode **)&s_our_value_secs, nullptr);
-    kernel_free(s_sec);
+    pbl_free(s_sec);
   }
 
   s_sec = prv_nimble_store_find_sec(BLE_STORE_OBJ_TYPE_PEER_SEC, &key_sec);
   if (s_sec != nullptr) {
     list_remove((ListNode *)s_sec, (ListNode **)&s_peer_value_secs, nullptr);
-    kernel_free(s_sec);
+    pbl_free(s_sec);
   }
 
   pbl_mutex_unlock(&s_store_mutex);
@@ -620,7 +620,7 @@ void pbl_bt_handle_host_removed_cccd(const struct pbl_bt_cccd *cccd) {
   s = prv_nimble_store_find_cccd(&key_cccd);
   if (s != nullptr) {
     list_remove((ListNode *)s, (ListNode **)&s_cccds, nullptr);
-    kernel_free(s);
+    pbl_free(s);
   }
 
   pbl_mutex_unlock(&s_store_mutex);

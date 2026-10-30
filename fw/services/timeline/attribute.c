@@ -2,12 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/attribute_private.h>
 #include <pbl/util/math.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -221,7 +220,7 @@ Attribute *prv_add_attribute(AttributeList *list, AttributeId id) {
 
   uint8_t attribute_idx = list->num_attributes;
   list->num_attributes++;
-  list->attributes = kernel_realloc(list->attributes, list->num_attributes * sizeof(Attribute));
+  list->attributes = pbl_realloc(list->attributes, list->num_attributes * sizeof(Attribute));
   list->attributes[attribute_idx].id = id;
   return &list->attributes[attribute_idx];
 }
@@ -486,13 +485,13 @@ void attribute_list_add_attribute(AttributeList *list, const Attribute *new_attr
 void attribute_list_init_list(uint8_t num_attributes, AttributeList *list_out) {
   *list_out = (AttributeList){
     .num_attributes = num_attributes,
-    .attributes = kernel_zalloc_check(num_attributes * sizeof(Attribute))
+    .attributes = pbl_zalloc_check(num_attributes * sizeof(Attribute))
   };
 }
 
 void attribute_list_destroy_list(AttributeList *list) {
   PBL_ASSERTN(list != nullptr);
-  kernel_free(list->attributes);
+  pbl_free(list->attributes);
 }
 
 bool attribute_check_serialized_list(const uint8_t *cursor, const uint8_t *val_end,

@@ -12,6 +12,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/util/units.h>
@@ -23,7 +24,6 @@
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -538,7 +538,7 @@ static void prv_handle_update(const AMSEntityUpdateNotification *update,
 
 void ams_create(void) {
   PBL_ASSERTN(!s_ams_client);
-  s_ams_client = (AMSClient *)kernel_zalloc_check(sizeof(AMSClient));
+  s_ams_client = (AMSClient *)pbl_zalloc_check(sizeof(AMSClient));
 }
 
 void ams_invalidate_all_references(void) {
@@ -665,7 +665,7 @@ void ams_destroy(void) {
   }
   prv_set_connected(false);
 
-  kernel_free(s_ams_client);
+  pbl_free(s_ams_client);
   s_ams_client = nullptr;
 }
 

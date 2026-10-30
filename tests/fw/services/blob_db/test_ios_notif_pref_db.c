@@ -3,12 +3,12 @@
 
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -77,14 +77,14 @@ void test_ios_notif_pref_db__insert_inverts_flags(void) {
   settings_file_open(&file, iOS_NOTIF_PREF_DB_FILE_NAME, iOS_NOTIF_PREF_MAX_SIZE);
 
   const unsigned prefs_len = settings_file_get_len(&file, key, sizeof(key));
-  void *prefs_out = kernel_zalloc(prefs_len);
+  void *prefs_out = pbl_zalloc(prefs_len);
   settings_file_get(&file, key, sizeof(key), prefs_out, prefs_len);
   settings_file_close(&file);
 
   uint32_t flags = *((uint32_t *)prefs_out);
   cl_assert_equal_i(flags, ~0);
 
-  kernel_free(prefs_out);
+  pbl_free(prefs_out);
 }
 
 void test_ios_notif_pref_db__read_flags(void) {

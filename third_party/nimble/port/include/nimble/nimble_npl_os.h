@@ -8,7 +8,7 @@
 #ifndef _NIMBLE_NPL_OS_H_
 #define _NIMBLE_NPL_OS_H_
 
-#include "kernel/pbl_malloc.h"
+#include "pbl/kernel/malloc.h"
 #include "os/os_cputime.h"
 #include "pbl/drivers/rtc.h"
 #include "pbl/kernel/irq.h"
@@ -245,7 +245,7 @@ static inline bool ble_npl_hw_is_in_critical(void) {
   return pbl_irq_is_locked();
 }
 #undef realloc
-#define realloc kernel_realloc
+#define realloc pbl_realloc
 
 #if NRF52_SERIES
 

@@ -6,12 +6,12 @@
 
 #include <pbl/drivers/mic.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/voice/voice_speex.h>
 
 #include <board/board.h>
-#include <kernel/pbl_malloc.h>
 #include <speex/speex.h>
 #include <speex/speex_bits.h>
 #include <speex/speex_header.h>
@@ -117,11 +117,11 @@ static bool prv_init_locked(void) {
 
   // Allocate frame buffer (16-bit samples, multiplied by channel count for stereo)
   s_encoder.frame_buffer_size = s_encoder.frame_size * sizeof(int16_t) * s_encoder.channels;
-  s_encoder.frame_buffer = (uint8_t *)kernel_malloc_check(s_encoder.frame_buffer_size);
+  s_encoder.frame_buffer = (uint8_t *)pbl_malloc_check(s_encoder.frame_buffer_size);
 
   // Allocate encoded buffer
   s_encoder.encoded_buffer_size = SPEEX_ENCODED_BUFFER_SIZE;
-  s_encoder.encoded_buffer = kernel_malloc_check(s_encoder.encoded_buffer_size);
+  s_encoder.encoded_buffer = pbl_malloc_check(s_encoder.encoded_buffer_size);
 
   s_encoder.initialized = true;
 
@@ -160,12 +160,12 @@ void voice_speex_deinit(void) {
   speex_bits_destroy(&s_encoder.bits);
 
   if (s_encoder.frame_buffer) {
-    kernel_free(s_encoder.frame_buffer);
+    pbl_free(s_encoder.frame_buffer);
     s_encoder.frame_buffer = nullptr;
   }
 
   if (s_encoder.encoded_buffer) {
-    kernel_free(s_encoder.encoded_buffer);
+    pbl_free(s_encoder.encoded_buffer);
     s_encoder.encoded_buffer = nullptr;
   }
 

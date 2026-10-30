@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
@@ -24,7 +25,6 @@
 
 #include <applib/accel_service.h>
 #include <applib/data_logging.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -104,7 +104,7 @@ static void prv_unlock(void) {
 // Open the minute data settings file and malloc space for the file struct
 // We use PBL_NOINLINE to reduce the stack requirements during the minute handler
 static PBL_NOINLINE SettingsFile *prv_minute_data_file_open(void) {
-  SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
+  SettingsFile *file = pbl_malloc_check(sizeof(SettingsFile));
   if (settings_file_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != S_SUCCESS) {
     PBL_LOG_ERR("No minute data file");
     return nullptr;
@@ -116,7 +116,7 @@ static PBL_NOINLINE SettingsFile *prv_minute_data_file_open(void) {
 // Close the settings file and free the file struct
 static void prv_minute_data_file_close(SettingsFile *file) {
   settings_file_close(file);
-  kernel_free(file);
+  pbl_free(file);
 }
 
 // --------------------------------------------------------------------------------------------
@@ -776,13 +776,13 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
 bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   // Allocate kraepelin state and our globals
   PBL_ASSERTN(s_alg_state == 0);
-  KAlgState *k_state = kernel_zalloc(kalg_state_size());
+  KAlgState *k_state = pbl_zalloc(kalg_state_size());
   if (k_state) {
-    s_alg_state = kernel_zalloc(sizeof(AlgState));
+    s_alg_state = pbl_zalloc(sizeof(AlgState));
   }
   if (!s_alg_state) {
     PBL_LOG_ERR("Not enough memory");
-    kernel_free(k_state);
+    pbl_free(k_state);
     return false;
   }
 
@@ -842,9 +842,9 @@ bool activity_algorithm_deinit(void) {
 
   pbl_mutex_deinit(&s_alg_state->mutex);
   kalg_deinit(s_alg_state->k_state);
-  kernel_free(s_alg_state->k_state);
+  pbl_free(s_alg_state->k_state);
 
-  kernel_free(s_alg_state);
+  pbl_free(s_alg_state);
   s_alg_state = nullptr;
   return true;
 }

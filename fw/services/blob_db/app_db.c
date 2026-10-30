@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_fetch_endpoint.h>
@@ -13,7 +14,6 @@
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager_private.h>
 #include <system/status_codes.h>
 
@@ -278,7 +278,7 @@ void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {
     return;
   }
 
-  AppDBEntry *db_entry = kernel_malloc_check(sizeof(AppDBEntry));
+  AppDBEntry *db_entry = pbl_malloc_check(sizeof(AppDBEntry));
 
   EnumerateData cb_data = {
     .cb = cb,
@@ -288,7 +288,7 @@ void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {
   settings_file_each(&s_app_db.settings_file, prv_enumerate_entries, &cb_data);
 
   prv_close_file_and_unlock_mutex();
-  kernel_free(db_entry);
+  pbl_free(db_entry);
   return;
 }
 
@@ -451,7 +451,7 @@ status_t app_db_delete(const uint8_t *key, int key_len) {
   if (rv == S_SUCCESS) {
     prv_permissions_changed((const Uuid *)key, 0);
     // uuid will be free'd by app_install_manager
-    Uuid *uuid_copy = kernel_malloc_check(sizeof(Uuid));
+    Uuid *uuid_copy = pbl_malloc_check(sizeof(Uuid));
     memcpy(uuid_copy, key, sizeof(Uuid));
     app_install_do_callbacks(APP_REMOVED, app_id, uuid_copy, nullptr, nullptr);
   }

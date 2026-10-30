@@ -6,12 +6,12 @@
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/qemu/mic_definitions.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
 #include <board/board.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_qemu, CONFIG_DRIVER_MIC_LOG_LEVEL);
 
@@ -82,7 +82,7 @@ void qemu_mic_msg_callback(const uint8_t *data, uint32_t len) {
 
 static void prv_free_ring(MicDeviceState *state) {
   pbl_mutex_lock(&state->lock, PBL_FOREVER);
-  kernel_free(state->ring);
+  pbl_free(state->ring);
   state->ring = nullptr;
   state->ring_count = 0;
   pbl_mutex_unlock(&state->lock);
@@ -137,7 +137,7 @@ bool mic_start(MicDevice *this, MicDataHandlerCB data_handler, void *context, in
 
   // Without the ring the host's audio is dropped and the consumer still gets silence.
   pbl_mutex_lock(&state->lock, PBL_FOREVER);
-  state->ring = kernel_malloc(RING_SAMPLES * sizeof(int16_t));
+  state->ring = pbl_malloc(RING_SAMPLES * sizeof(int16_t));
   state->ring_read = 0;
   state->ring_count = 0;
   pbl_mutex_unlock(&state->lock);

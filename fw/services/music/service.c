@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -12,7 +13,6 @@
 #include <applib/graphics/gtypes.h>
 #include <apps/system/music.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
@@ -67,7 +67,7 @@ struct MusicServiceContext {
   bool skip_seeks_within_track;
 
   //! Album art for the current track, or NULL if none. Owned by the service; freed with
-  //! kernel_free. Deliberately kept (up to ~34 KB of kernel heap on the largest displays) even
+  //! pbl_free. Deliberately kept (up to ~34 KB of kernel heap on the largest displays) even
   //! while the Music app is closed, so reopening it shows the cover instantly; a track change,
   //! NoArt reply or server disconnect replaces or frees it.
   GBitmap *album_art;
@@ -146,9 +146,9 @@ static bool prv_str_differs(const char *dest, const char *src, size_t src_length
 //! Free the currently-stored album art. Caller must hold the mutex.
 static void prv_free_album_art_locked(void) {
   if (s_music_ctx.album_art) {
-    kernel_free(s_music_ctx.album_art->addr);
-    kernel_free(s_music_ctx.album_art->palette);
-    kernel_free(s_music_ctx.album_art);
+    pbl_free(s_music_ctx.album_art->addr);
+    pbl_free(s_music_ctx.album_art->palette);
+    pbl_free(s_music_ctx.album_art);
     s_music_ctx.album_art = nullptr;
   }
 }
@@ -578,9 +578,9 @@ void music_set_album_art(GBitmap *bitmap, uint8_t token) {
     PBL_LOG_DBG("Drop stale album art token=%u current=%u", token,
                 s_music_ctx.now_playing_generation);
     if (bitmap) {
-      kernel_free(bitmap->addr);
-      kernel_free(bitmap->palette);
-      kernel_free(bitmap);
+      pbl_free(bitmap->addr);
+      pbl_free(bitmap->palette);
+      pbl_free(bitmap);
     }
     pbl_mutex_unlock(&s_music_ctx.mutex);
     return;

@@ -7,6 +7,7 @@
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
@@ -21,7 +22,6 @@
 #include <pbl/util/shared_cbuf.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 
 PBL_LOG_MODULE_DEFINE(service_accel_manager, CONFIG_SERVICE_ACCEL_MANAGER_LOG_LEVEL);
@@ -463,7 +463,7 @@ PBL_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, (VAL, AccelSa
 
   pbl_accel_lock(ACCEL);
   {
-    state = kernel_malloc_check(sizeof(AccelManagerState));
+    state = pbl_malloc_check(sizeof(AccelManagerState));
     *state = (AccelManagerState){
       .task = handler_task,
       .data_cb_handler = data_cb,
@@ -525,7 +525,7 @@ static void prv_remove_subscriber_locked(AccelManagerState *state) {
   // Remove this subscriber and free up its state variables
   pbl_shared_cbuf_remove_subsampled_client(&s_buffer, &state->buffer_client);
   list_remove(&state->list_node, &s_data_subscribers /* &head */, nullptr /* &tail */);
-  kernel_free(state);
+  pbl_free(state);
 
   if (!s_data_subscribers) {
     // If no one left using the data subscription, disable it
@@ -923,7 +923,7 @@ void test_accel_manager_reset(void) {
   while (state) {
     AccelManagerState *free_state = state;
     state = (AccelManagerState *)state->list_node.next;
-    kernel_free(free_state);
+    pbl_free(free_state);
   }
   s_data_subscribers = nullptr;
   s_shake_subscribers_count = 0;

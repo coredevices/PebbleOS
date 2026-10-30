@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/app_inbox_service.h>
@@ -11,7 +12,6 @@
 #include <pbl/util/math.h>
 
 #include <applib/app_message/app_message_internal.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 
@@ -79,7 +79,7 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
                                     PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
   }
 
-  AppMessageReceiver *rcv = (AppMessageReceiver *)kernel_zalloc(sizeof(AppMessageReceiver));
+  AppMessageReceiver *rcv = (AppMessageReceiver *)pbl_zalloc(sizeof(AppMessageReceiver));
   if (!rcv) {
     return nullptr;
   }
@@ -91,7 +91,7 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
   // Always forward the header to default system receiver as well, we'll cancel it later on if the
   // message was written successfully to the app inbox.
   if (!prv_fwd_prepare(rcv, session, header_bytes_remaining)) {
-    kernel_free(rcv);
+    pbl_free(rcv);
     return nullptr;
   }
 
@@ -140,7 +140,7 @@ static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *da
 static void prv_finally(AppMessageReceiver *receiver,
                         void (*kernel_receiver_finally_cb)(Receiver *)) {
   kernel_receiver_finally_cb(receiver->kernel_receiver);
-  kernel_free(receiver);
+  pbl_free(receiver);
 }
 
 static void prv_app_message_receiver_finish(Receiver *receiver) {

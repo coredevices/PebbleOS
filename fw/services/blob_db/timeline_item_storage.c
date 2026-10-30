@@ -2,12 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/timeline_item_storage.h>
 #include <pbl/services/settings/settings_raw_iter.h>
 #include <pbl/util/units.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -346,7 +345,7 @@ status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t 
 status_t timeline_item_storage_get_from_settings_record(SettingsFile *file,
                                                         SettingsRecordInfo *info,
                                                         TimelineItem *item) {
-  uint8_t *read_buf = kernel_zalloc_check(info->val_len);
+  uint8_t *read_buf = pbl_zalloc_check(info->val_len);
   info->get_val(file, read_buf, info->val_len);
 
   SerializedTimelineItemHeader *header = (SerializedTimelineItemHeader *)read_buf;
@@ -356,7 +355,7 @@ status_t timeline_item_storage_get_from_settings_record(SettingsFile *file,
   uint8_t *payload = read_buf + sizeof(SerializedTimelineItemHeader);
   status_t rv = timeline_item_deserialize_item(item, header, payload) ? S_SUCCESS : E_INTERNAL;
 
-  kernel_free(read_buf);
+  pbl_free(read_buf);
   return rv;
 }
 

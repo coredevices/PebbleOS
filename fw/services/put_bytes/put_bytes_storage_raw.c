@@ -3,12 +3,12 @@
 
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/put_bytes/put_bytes_storage_raw.h>
 #include <pbl/util/math.h>
 
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_storage_flash.h>
 #include <system/firmware_storage.h>
 
@@ -54,7 +54,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *sta
   const MemoryLayout *layout = prv_get_layout_for_type(obj_type);
 
   const size_t read_buffer_size = 2048;
-  uint8_t *read_buffer = kernel_zalloc(read_buffer_size);
+  uint8_t *read_buffer = pbl_zalloc(read_buffer_size);
 
   bool success = false;
 
@@ -103,7 +103,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *sta
   }
 
 cleanup:
-  kernel_free(read_buffer);
+  pbl_free(read_buffer);
   return success;
 }
 

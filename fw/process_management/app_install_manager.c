@@ -10,6 +10,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
@@ -29,7 +30,6 @@
 #include <applib/event_service_client.h>
 #include <apps/system_app_registry.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <resource/resource.h>
 
@@ -265,14 +265,14 @@ static void prv_app_install_enumerate_app_db(AppInstallId install_id, AppDBEntry
 
 void app_install_enumerate_entries(AppInstallEnumerateCb cb, void *data) {
   // Keep this off of the stack. This function presses the limits of our stack.
-  AppInstallEntry *entry = kernel_malloc_check(sizeof(AppInstallEntry));
+  AppInstallEntry *entry = pbl_malloc_check(sizeof(AppInstallEntry));
 
   // Iterate over the registry
   for (uint32_t i = 0; i < ARRAY_LENGTH(APP_RECORDS); i++) {
     if (app_install_get_entry_for_install_id(APP_RECORDS[i].id, entry)) {
       // if a false is returned from the function, then stop iterating.
       if (cb(entry, data) == false) {
-        kernel_free(entry);
+        pbl_free(entry);
         return;
       }
     }
@@ -286,7 +286,7 @@ void app_install_enumerate_entries(AppInstallEnumerateCb cb, void *data) {
   };
   app_db_enumerate_entries(prv_app_install_enumerate_app_db, &cb_data);
 
-  kernel_free(entry);
+  pbl_free(entry);
 }
 
 AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
@@ -450,7 +450,7 @@ static void app_install_launcher_task_callback(void *context) {
   }
 
   if (s_install_callback_data.uuid) {
-    kernel_free(s_install_callback_data.uuid);
+    pbl_free(s_install_callback_data.uuid);
   }
 
   s_install_callback_data = (InstallCallbackData){.callback_in_progress = false};
@@ -652,7 +652,7 @@ static bool prv_app_install_entry_from_app_db_entry(AppInstallId id, AppDBEntry 
 
 static bool prv_app_install_entry_from_resource_registry_entry(const AppRegistryEntry *reg_entry,
                                                                AppInstallEntry *entry) {
-  PebbleProcessInfo *app_header = kernel_malloc_check(sizeof(PebbleProcessInfo));
+  PebbleProcessInfo *app_header = pbl_malloc_check(sizeof(PebbleProcessInfo));
   bool rv = false;
 
   if (resource_load_byte_range_system(SYSTEM_APP, reg_entry->bin_resource_id, 0,
@@ -679,7 +679,7 @@ static bool prv_app_install_entry_from_resource_registry_entry(const AppRegistry
   i18n_get_with_buffer(reg_entry->name, entry->name, APP_NAME_SIZE_BYTES);
   rv = true;
 done:
-  kernel_free(app_header);
+  pbl_free(app_header);
   return rv;
 }
 
@@ -734,12 +734,12 @@ bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEnt
     }
     return rv;
   } else if (app_db_exists_install_id(install_id)) {
-    AppDBEntry *db_entry = kernel_malloc_check(sizeof(AppDBEntry));
+    AppDBEntry *db_entry = pbl_malloc_check(sizeof(AppDBEntry));
     bool rv = (app_db_get_app_entry_for_install_id(install_id, db_entry) == S_SUCCESS);
     if (rv) {
       rv = prv_app_install_entry_from_app_db_entry(install_id, db_entry, entry);
     }
-    kernel_free(db_entry);
+    pbl_free(db_entry);
     return rv;
   }
 
@@ -786,7 +786,7 @@ static const PebbleProcessMd *prv_get_md_for_reg_entry(const AppRegistryEntry *r
       // Convert to PebbleProcessMd. Set the correct icon_id from the passed in argument
       app_header.icon_resource_id = reg_entry->icon_resource_id;
       // freed in process_manager.c
-      PebbleProcessMdResource *md = kernel_malloc_check(sizeof(PebbleProcessMdResource));
+      PebbleProcessMdResource *md = pbl_malloc_check(sizeof(PebbleProcessMdResource));
       process_metadata_init_with_resource_header(md, &app_header, reg_entry->bin_resource_id,
                                                  PebbleTask_App);
       const PebbleProcessMd *const_md = (PebbleProcessMd *)md;
@@ -812,7 +812,7 @@ static const PebbleProcessMd *prv_get_md_for_flash_id(AppInstallId id, bool work
   }
 
   // freed in process_manager.c
-  PebbleProcessMdFlash *md = kernel_malloc_check(sizeof(PebbleProcessMdFlash));
+  PebbleProcessMdFlash *md = pbl_malloc_check(sizeof(PebbleProcessMdFlash));
   process_metadata_init_with_flash_header(md, &app_header, id, task, build_id_buffer);
   const PebbleProcessMd *const_md = (PebbleProcessMd *)md;
   return const_md;
@@ -842,7 +842,7 @@ void app_install_release_md(const PebbleProcessMd *md) {
       break;
     case ProcessStorageFlash:
     case ProcessStorageResource:
-      kernel_free((PebbleProcessMd *)md);
+      pbl_free((PebbleProcessMd *)md);
   }
 }
 

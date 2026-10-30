@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/malloc.h>
 
 typedef struct {
   const uint8_t *key;
@@ -31,9 +31,9 @@ static RamStorageEntry *prv_get_entry(RamStorageEntry *entries, const uint8_t *k
 
 static void prv_delete(RamStorageEntry **entries, RamStorageEntry *entry) {
   list_remove((ListNode *)entry, (ListNode **)entries, nullptr);
-  kernel_free(entry->key);
-  kernel_free(entry->val);
-  kernel_free(entry);
+  pbl_free(entry->key);
+  pbl_free(entry->val);
+  pbl_free(entry);
 }
 
 status_t ram_storage_insert(RamStorage *storage, const uint8_t *key, int key_len,
@@ -45,12 +45,12 @@ status_t ram_storage_insert(RamStorage *storage, const uint8_t *key, int key_len
   }
 
   // Allocate the entry struct
-  entry = kernel_malloc_check(sizeof(RamStorageEntry));
+  entry = pbl_malloc_check(sizeof(RamStorageEntry));
   *entry = (RamStorageEntry){};
   // Allocate key & values and copy them over
-  entry->key = kernel_malloc_check(key_len);
+  entry->key = pbl_malloc_check(key_len);
   memcpy(entry->key, key, key_len);
-  entry->val = kernel_malloc_check(val_len);
+  entry->val = pbl_malloc_check(val_len);
   memcpy(entry->val, val, val_len);
   entry->key_len = key_len;
   entry->val_len = val_len;

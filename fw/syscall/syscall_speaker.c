@@ -52,7 +52,7 @@ PBL_SYSCALL(bool, sys_speaker_play_tracks, (IN_ARRAY, const SpeakerTrack *, trac
             (VAL, uint32_t, num_tracks), (VAL, uint8_t, priority), (VAL, uint8_t, volume)) {
   // We need to defend against TOCTOU: speaker_service_play_tracks() re-reads
   // each track's num_notes and sample->num_bytes from user memory (e.g. as the
-  // size argument to kernel_malloc/memcpy that copy the user buffers into
+  // size argument to pbl_malloc/memcpy that copy the user buffers into
   // kernel buffers). A racing app could resize them after our validation and
   // overflow either the kernel allocation or the validated source range.
   //

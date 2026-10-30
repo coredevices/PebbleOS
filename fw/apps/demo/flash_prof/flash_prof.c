@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
@@ -10,13 +11,12 @@
 #include <applib/ui/number_window.h>
 #include <applib/ui/window_stack.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 
 static NumberWindow number_window;
 
 static uint32_t timed_read_bytes(uint32_t num_bytes) {
-  uint8_t *buffer = kernel_malloc_check(num_bytes);
+  uint8_t *buffer = pbl_malloc_check(num_bytes);
   time_t start_time_s;
   uint16_t start_time_ms;
   rtc_get_time_ms(&start_time_s, &start_time_ms);
@@ -24,7 +24,7 @@ static uint32_t timed_read_bytes(uint32_t num_bytes) {
   time_t stop_time_s;
   uint16_t stop_time_ms;
   rtc_get_time_ms(&stop_time_s, &stop_time_ms);
-  kernel_free(buffer);
+  pbl_free(buffer);
   return ((stop_time_s * 1000 + stop_time_ms) - (start_time_s * 1000 + start_time_ms));
 }
 
