@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/blob_db/api.h>
@@ -667,7 +668,7 @@ static void prv_put_notification_action_result(const Uuid *id, const char *msg,
                                                uint32_t timeline_res_id, ActionResultType type) {
   // send action result event
   PebbleSysNotificationActionResult *action_result =
-      kernel_malloc_check(sizeof(PebbleSysNotificationActionResult) + 2 * sizeof(Attribute));
+      pbl_malloc_check(sizeof(PebbleSysNotificationActionResult) + 2 * sizeof(Attribute));
 
   AttributeList result_attributes = {
     .num_attributes = 2,
@@ -758,7 +759,7 @@ static void prv_get_pin_and_push_pin_window(void *data) {
   } else {
     PBL_LOG_ERR("Failed to fetch parent pin");
   }
-  kernel_free(parent_id);
+  pbl_free(parent_id);
 }
 
 static void prv_perform_health_response_action(const TimelineItem *item,
@@ -796,7 +797,7 @@ static void prv_app_render_ready(PebbleEvent *e, void *context) {
   }
 
   event_service_client_unsubscribe(&ctx->event_info);
-  kernel_free(ctx);
+  pbl_free(ctx);
 }
 
 void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,
@@ -825,7 +826,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
 
       // Wait for the app we just launched to have something to render before hiding all modals.
       // If we don't we'll end up with flashing in a blank framebuffer.
-      OpenAppContext *ctx = kernel_malloc_check(sizeof(OpenAppContext));
+      OpenAppContext *ctx = pbl_malloc_check(sizeof(OpenAppContext));
       *ctx = (OpenAppContext){
         .event_info =
             {
@@ -839,7 +840,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       break;
     }
     case TimelineItemActionTypeOpenPin: {
-      Uuid *parent_id = kernel_malloc(sizeof(Uuid));
+      Uuid *parent_id = pbl_malloc(sizeof(Uuid));
       if (parent_id) {
         *parent_id = item->header.parent_id;
         launcher_task_add_callback(prv_get_pin_and_push_pin_window, parent_id);

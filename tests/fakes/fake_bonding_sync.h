@@ -7,9 +7,8 @@
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/sm_util.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
-
-#include <kernel/pbl_malloc.h>
 
 typedef struct {
   ListNode node;
@@ -19,7 +18,7 @@ typedef struct {
 static BLEBondingNode *s_ble_bonding_head;
 
 void bonding_sync_add_bonding(const struct pbl_bt_bonding *bonding) {
-  BLEBondingNode *node = (BLEBondingNode *)kernel_malloc_check(sizeof(BLEBondingNode));
+  BLEBondingNode *node = (BLEBondingNode *)pbl_malloc_check(sizeof(BLEBondingNode));
   *node = (BLEBondingNode){
     .bonding = *bonding,
   };
@@ -40,7 +39,7 @@ static bool prv_list_find_cb(ListNode *found_list_node, void *data) {
 
 static void prv_remove_node(BLEBondingNode *node) {
   list_remove((ListNode *)node, (ListNode **)&s_ble_bonding_head, nullptr);
-  kernel_free(node);
+  pbl_free(node);
 }
 
 bool bonding_sync_contains_pairing_info(const struct pbl_bt_sm_pairing_info *pairing_info,

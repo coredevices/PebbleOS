@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
@@ -12,8 +13,6 @@
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -75,14 +74,14 @@ static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, i
     return 0;
   }
 
-  *prefs_out = kernel_zalloc(prefs_len);
+  *prefs_out = pbl_zalloc(prefs_len);
   if (!*prefs_out) {
     return 0;
   }
 
   status_t rv = prv_read_serialized_prefs(file, app_id, key_len, (void *)*prefs_out, prefs_len);
   if (rv != S_SUCCESS) {
-    kernel_free(*prefs_out);
+    pbl_free(*prefs_out);
     return 0;
   }
 
@@ -90,7 +89,7 @@ static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, i
 }
 
 static void prv_free_serialized_prefs(SerializedNotifPrefs *prefs) {
-  kernel_free(prefs);
+  pbl_free(prefs);
 }
 
 iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
@@ -137,7 +136,7 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
       serialized_prefs->num_attributes, serialized_prefs->num_actions, attributes_per_action,
       string_alloc_size);
 
-  iOSNotifPrefs *notif_prefs = kernel_zalloc_check(sizeof(iOSNotifPrefs) + alloc_size);
+  iOSNotifPrefs *notif_prefs = pbl_zalloc_check(sizeof(iOSNotifPrefs) + alloc_size);
 
   uint8_t *buffer = (uint8_t *)notif_prefs + sizeof(iOSNotifPrefs);
   uint8_t *const buf_end = buffer + alloc_size;
@@ -153,7 +152,7 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     buffer[key_len] = '\0';
     PBL_LOG_ERR("Could not deserialize data for <%s>", buffer);
     prv_free_serialized_prefs(serialized_prefs);
-    kernel_free(notif_prefs);
+    pbl_free(notif_prefs);
     return nullptr;
   }
 
@@ -162,7 +161,7 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
 }
 
 void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
-  kernel_free(prefs);
+  pbl_free(prefs);
 }
 
 status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
@@ -175,7 +174,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
 
   size_t payload_size = attributes_actions_get_serialized_payload_size(attr_list, action_group);
   size_t serialized_prefs_size = sizeof(SerializedNotifPrefs) + payload_size;
-  SerializedNotifPrefs *new_prefs = kernel_zalloc_check(serialized_prefs_size);
+  SerializedNotifPrefs *new_prefs = pbl_zalloc_check(serialized_prefs_size);
   *new_prefs = (SerializedNotifPrefs){
     .num_attributes = attr_list ? attr_list->num_attributes : 0,
     .num_actions = action_group ? action_group->num_actions : 0,

@@ -11,6 +11,7 @@
 #ifdef CONFIG_QEMU_SERIAL
 #include <comm/qemu/transport.h>
 #endif
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -24,7 +25,6 @@
 #include <pbl/services/system_task.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -72,7 +72,7 @@ static void prv_comm_start(void) {
     return;
   }
   // Heap allocated to reduce stack usage
-  struct pbl_bt_config *config = kernel_zalloc_check(sizeof(struct pbl_bt_config));
+  struct pbl_bt_config *config = pbl_zalloc_check(sizeof(struct pbl_bt_config));
   dis_get_info(&config->dis_info);
 #ifdef CONFIG_SERVICE_BLE_HRM
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
@@ -84,7 +84,7 @@ static void prv_comm_start(void) {
   bt_persistent_storage_register_existing_ble_bondings();
 
   s_comm_is_running = pbl_bt_start(config);
-  kernel_free(config);
+  pbl_free(config);
 
   if (s_comm_is_running) {
     bt_local_addr_init();

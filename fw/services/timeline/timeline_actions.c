@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
@@ -40,7 +41,6 @@
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
@@ -546,7 +546,7 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
 
       AttributeList response_attributes = (AttributeList){
         .num_attributes = num_attributes,
-        .attributes = kernel_zalloc_check(sizeof(Attribute) * num_attributes),
+        .attributes = pbl_zalloc_check(sizeof(Attribute) * num_attributes),
       };
       memcpy(response_attributes.attributes, pin->attr_list.attributes,
              sizeof(Attribute) * pin->attr_list.num_attributes);
@@ -558,7 +558,7 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
       };
 
       timeline_invoke_action(pin, action, &response_attributes);
-      kernel_free(response_attributes.attributes);
+      pbl_free(response_attributes.attributes);
       break;
     }
     case TimelineItemActionTypeResponse: {
@@ -1189,7 +1189,7 @@ static void prv_dismiss_all_step(void *context) {
       const bool success = false;
       prv_cleanup_action_result(ctx->data, success);
     }
-    kernel_free(ctx);
+    pbl_free(ctx);
     return;
   }
 
@@ -1246,7 +1246,7 @@ void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifica
   }
 
   DismissAllContext *ctx =
-      kernel_malloc_check(sizeof(DismissAllContext) + num_notifications * sizeof(NotificationInfo));
+      pbl_malloc_check(sizeof(DismissAllContext) + num_notifications * sizeof(NotificationInfo));
   *ctx = (DismissAllContext){
     .data = data,
     .num_notifications = num_notifications,

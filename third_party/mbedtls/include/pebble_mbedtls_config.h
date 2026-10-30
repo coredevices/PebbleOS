@@ -10,16 +10,12 @@
  * AES-128 (ECB/CMAC) and P-256 ECDH.
  */
 
-#include <stddef.h>
-
-/* Allocate from the kernel heap. */
-void *kernel_calloc(size_t count, size_t size);
-void kernel_free(void *ptr);
+#include <pbl/kernel/malloc.h>
 
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
-#define MBEDTLS_PLATFORM_CALLOC_MACRO kernel_calloc
-#define MBEDTLS_PLATFORM_FREE_MACRO   kernel_free
+#define MBEDTLS_PLATFORM_CALLOC_MACRO pbl_calloc
+#define MBEDTLS_PLATFORM_FREE_MACRO   pbl_free
 
 #define MBEDTLS_AES_C
 #define MBEDTLS_AES_ROM_TABLES

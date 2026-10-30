@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
@@ -22,7 +23,6 @@
 #include <pbl/util/pstring.h>
 
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
@@ -419,7 +419,7 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
     return;
   }
 
-  Uuid *notification_id = kernel_malloc_check(sizeof(Uuid));
+  Uuid *notification_id = pbl_malloc_check(sizeof(Uuid));
 
   if (notification_storage_find_ancs_notification_id(ancs_uid, notification_id)) {
     PBL_LOG_DBG("Notification removed from notification centre: (UID: %" PRIu32 ")", ancs_uid);
@@ -429,7 +429,7 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
   } else {
     // notification_id is passed into an event if a matching notification was found, so it will
     // be freed by the system later
-    kernel_free(notification_id);
+    pbl_free(notification_id);
   }
 
   if (properties & ANCSProperty_IncomingCall) {

@@ -8,6 +8,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 #include <pbl/shell/shell.h>
@@ -17,7 +18,6 @@
 #include <pbl/util/size.h>
 
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 
 #define ERASED_BYTE 0xFFU
 
@@ -166,7 +166,7 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
     return ret;
   }
 
-  buf = kernel_malloc(MIN(MAX_READ_SIZE, len));
+  buf = pbl_malloc(MIN(MAX_READ_SIZE, len));
   if (buf == nullptr) {
     pbl_shell_error(sh, "unable to allocate read buffer");
     return -ENOMEM;
@@ -189,7 +189,7 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
     len -= chunk;
   }
 
-  kernel_free(buf);
+  pbl_free(buf);
 
   return ret;
 }
@@ -375,7 +375,7 @@ static void prv_stress_cb(void *data) {
     return;
   }
 
-  buf = kernel_malloc(len);
+  buf = pbl_malloc(len);
   if (buf == nullptr) {
     PBL_LOG_ALWAYS("flash stress test: malloc of size %" PRIu32 " failed", len);
     system_task_add_callback(prv_stress_cb, (void *)(uintptr_t)(iters - 1U));
@@ -396,7 +396,7 @@ static void prv_stress_cb(void *data) {
     if (pbl_flash_erase(FLASH, s_stress_erased_end, sector_size) != 0 ||
         !pbl_flash_is_erased(FLASH, s_stress_erased_end, sector_size)) {
       PBL_LOG_ALWAYS("flash stress test: erase of 0x%" PRIx32 " failed", s_stress_erased_end);
-      kernel_free(buf);
+      pbl_free(buf);
       return;
     }
     s_stress_erased_end += sector_size;
@@ -418,14 +418,14 @@ static void prv_stress_cb(void *data) {
     for (uint32_t i = 0U; i < len; i++) {
       if (buf[i] != (uint8_t)x) {
         PBL_LOG_ALWAYS("flash stress test: miscompare at 0x%" PRIx32 ", giving up", addr + i);
-        kernel_free(buf);
+        pbl_free(buf);
         return;
       }
       x = prv_xorshift32(x);
     }
   }
 
-  kernel_free(buf);
+  pbl_free(buf);
 
   PBL_LOG_ALWAYS("flash stress test: %" PRIu32 " bytes at 0x%" PRIx32 " OK, %" PRIu32 " to go", len,
                  addr, iters - 1U);
@@ -454,7 +454,7 @@ static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
   uint32_t iters = BENCH_START_ITERS / 2U;
   void *buf;
 
-  buf = kernel_malloc(size);
+  buf = pbl_malloc(size);
   if (buf == nullptr) {
     pbl_shell_error(sh, "OOM allocating read buffer");
     return -ENOMEM;
@@ -477,7 +477,7 @@ static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
                   (unsigned int)size, iters, elapsed,
                   (uint32_t)((elapsed * 1000000U) / ((uint64_t)iters * RTC_TICKS_HZ)));
 
-  kernel_free(buf);
+  pbl_free(buf);
   pbl_task_wdt_feed_self();
 
   return 0;

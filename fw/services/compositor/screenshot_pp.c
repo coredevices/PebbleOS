@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
 #include <pbl/services/compositor/compositor.h>
@@ -11,7 +12,6 @@
 
 #include <applib/graphics/framebuffer.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
@@ -139,7 +139,7 @@ void screenshot_send_next_chunk(void *raw_state) {
     session_len += sizeof(ScreenshotHeader);
   }
 
-  void *buffer = kernel_zalloc(max_buf_len);
+  void *buffer = pbl_zalloc(max_buf_len);
   if (!buffer) {
     PBL_LOG_WRN("Screenshot aborted, OOM.");
     prv_send_error_response(session, SCREENSHOT_OOM_ERROR);
@@ -150,7 +150,7 @@ void screenshot_send_next_chunk(void *raw_state) {
   session_len += len;
 
   if (len == 0) {
-    kernel_free(buffer);
+    pbl_free(buffer);
     prv_finish(state);
     return;
   }
@@ -187,7 +187,7 @@ void screenshot_send_next_chunk(void *raw_state) {
   }
   comm_session_send_buffer_end_write(sb);
 
-  kernel_free(buffer);
+  pbl_free(buffer);
 
   prv_request_fast_connection(session);
 

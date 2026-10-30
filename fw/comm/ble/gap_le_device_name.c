@@ -4,11 +4,11 @@
 #include "gap_le_device_name.h"
 
 #include <pbl/bluetooth/gap_le_device_name.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 pbl_bt_bonding_id_t prv_get_bonding_id_and_name_from_address_safe(void *ctx, char *device_name) {
   pbl_bt_bonding_id_t bonding_id = PBL_BT_BONDING_ID_INVALID;
@@ -35,7 +35,7 @@ unlock:
 void pbl_bt_store_device_name_kernelbg_cb(void *ctx) {
   char device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   pbl_bt_bonding_id_t bonding_id = prv_get_bonding_id_and_name_from_address_safe(ctx, device_name);
-  kernel_free(ctx);
+  pbl_free(ctx);
 
   if (bonding_id == PBL_BT_BONDING_ID_INVALID) {
     return;

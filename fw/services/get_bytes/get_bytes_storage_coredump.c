@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/get_bytes/get_bytes_private.h>
 #include <pbl/services/get_bytes/get_bytes_storage_file.h>
 
 #include <flash_region/flash_region.h>
 #include <kernel/core_dump.h>
-#include <kernel/pbl_malloc.h>
 #include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
@@ -67,7 +67,7 @@ static uint32_t prv_coredump_flash_base(bool unread_only) {
 
 bool gb_storage_coredump_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                                GetBytesStorageInfo *info) {
-  storage->impl_data = kernel_zalloc_check(sizeof(GBCoredumpData));
+  storage->impl_data = pbl_zalloc_check(sizeof(GBCoredumpData));
   ((GBCoredumpData *)storage->impl_data)->only_get_new_coredump = info->only_get_new_coredump;
   return true;
 }
@@ -111,7 +111,7 @@ void gb_storage_coredump_cleanup(GetBytesStorage *storage, bool successful) {
     core_dump_mark_read(data->core_dump_base);
   }
 
-  kernel_free(storage->impl_data);
+  pbl_free(storage->impl_data);
 }
 
 bool is_unread_coredump_available(void) {

@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/app_db.h>
@@ -20,7 +21,6 @@
 #include <pbl/services/blob_db/weather_db.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -190,7 +190,7 @@ void blob_db_event_put(BlobDBEventType type, BlobDBId db_id, const uint8_t *key,
   // copy key for event
   uint8_t *key_bytes = nullptr;
   if (key_len > 0) {
-    key_bytes = kernel_malloc(key_len);
+    key_bytes = pbl_malloc(key_len);
     memcpy(key_bytes, key, key_len);
   }
 

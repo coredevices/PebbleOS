@@ -14,6 +14,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
@@ -26,7 +27,6 @@
 #include <comm/ble/gatt_client_operations.h>
 #include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -195,7 +195,7 @@ static void prv_notif_queue_reset(void) {
   while (head) {
     cur = head;
     list_remove(cur, &head, nullptr);
-    kernel_free(cur);
+    pbl_free(cur);
   }
   s_ancs_client->queue = nullptr;
 }
@@ -204,7 +204,7 @@ static void prv_notif_queue_push_common(NotificationQueueNode *node) {
   if (prv_notif_queue_find(node)) {
     // already in the queue
     PBL_LOG_WRN("ANCS item already in Queue");
-    kernel_free(node);
+    pbl_free(node);
     return;
   }
 
@@ -218,7 +218,7 @@ static void prv_notif_queue_push_common(NotificationQueueNode *node) {
 }
 
 static void prv_notif_queue_push_action(uint32_t uid, ActionId action_id) {
-  NotificationQueueNode *node = kernel_malloc(sizeof(NotificationQueueNode));
+  NotificationQueueNode *node = pbl_malloc(sizeof(NotificationQueueNode));
   if (!node) {
     PBL_LOG_WRN("ANCS action alloc failed, dropping (uid=%" PRIu32 ")", uid);
     return;
@@ -243,7 +243,7 @@ static bool prv_evict_oldest_attr_request(void) {
     if (node != in_flight && node->op == NotificationQueueOpGetAttributes) {
       PBL_LOG_WRN("ANCS queue full, evicting oldest notif (uid=%" PRIu32 ")", node->uid);
       list_remove((ListNode *)node, (ListNode **)&s_ancs_client->queue, nullptr);
-      kernel_free(node);
+      pbl_free(node);
       return true;
     }
     node = next;
@@ -260,7 +260,7 @@ static void prv_notif_queue_push_attr_request(uint32_t uid, ANCSProperty propert
     }
   }
 
-  NotificationQueueNode *node = kernel_malloc(sizeof(NotificationQueueNode));
+  NotificationQueueNode *node = pbl_malloc(sizeof(NotificationQueueNode));
   if (!node) {
     PBL_LOG_WRN("ANCS attr-request alloc failed, dropping (uid=%" PRIu32 ")", uid);
     return;
@@ -278,7 +278,7 @@ static void prv_notif_queue_pop(void) {
   NotificationQueueNode *temp = s_ancs_client->queue;
   if (temp) {
     list_remove((ListNode *)s_ancs_client->queue, (ListNode **)&s_ancs_client->queue, nullptr);
-    kernel_free(temp);
+    pbl_free(temp);
   }
 }
 
@@ -830,7 +830,7 @@ static void prv_get_app_attributes(const ANCSAttribute *app_id) {
   const size_t request_size = sizeof(GetAppAttributesMsg) + app_id->length + 1 + // NULL terminator
                               ARRAY_LENGTH(s_fetched_app_attributes);
 
-  GetAppAttributesMsg *request = kernel_zalloc_check(request_size);
+  GetAppAttributesMsg *request = pbl_zalloc_check(request_size);
   *request = (GetAppAttributesMsg){
     .command_id = CommandIDGetAppAttributes,
   };
@@ -853,7 +853,7 @@ static void prv_get_app_attributes(const ANCSAttribute *app_id) {
 
   bool success = prv_write_control_point_request((const CPDSMessage *)request, request_size);
 
-  kernel_free(request);
+  pbl_free(request);
 
   if (!success) {
     PBL_LOG_WRN("Failed to fetch app attributes for notification");
@@ -871,8 +871,7 @@ static void prv_get_notification_attributes(uint32_t uid) {
   };
 
   static const size_t request_max_size = 32;
-  struct pbl_buffer *request_buffer =
-      kernel_malloc_check(sizeof(*request_buffer) + request_max_size);
+  struct pbl_buffer *request_buffer = pbl_malloc_check(sizeof(*request_buffer) + request_max_size);
   pbl_buffer_init(request_buffer, request_max_size);
   const size_t written_size =
       pbl_buffer_add(request_buffer, (const uint8_t *)&cmd_header, sizeof(cmd_header));
@@ -888,7 +887,7 @@ static void prv_get_notification_attributes(uint32_t uid) {
   bool success = prv_write_control_point_request((const CPDSMessage *)request_buffer->data,
                                                  request_buffer->bytes_written);
 
-  kernel_free(request_buffer);
+  pbl_free(request_buffer);
 
   if (!success) {
     if (retrying) {
@@ -1237,7 +1236,7 @@ static void prv_serialize_action(const PerformNotificationActionMsg *action_msg)
 void prv_serialize_action_launcher_task_cb(void *data) {
   const PerformNotificationActionMsg *action_msg = (PerformNotificationActionMsg *)data;
   prv_serialize_action(action_msg);
-  kernel_free(data);
+  pbl_free(data);
 }
 
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
@@ -1245,7 +1244,7 @@ void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
   // Avoid heap allocation when directly calling prv_serialize_action:
   PerformNotificationActionMsg action_msg;
   PerformNotificationActionMsg *action_msg_ptr =
-      is_kernel_main ? &action_msg : kernel_malloc_check(sizeof(PerformNotificationActionMsg));
+      is_kernel_main ? &action_msg : pbl_malloc_check(sizeof(PerformNotificationActionMsg));
   *action_msg_ptr = (const PerformNotificationActionMsg){
     .command_id = CommandIDPerformNotificationAction,
     .notification_uid = notification_uid,
@@ -1269,7 +1268,7 @@ void ancs_handle_ios9_or_newer_detected(void) {
 
 void ancs_create(void) {
   PBL_ASSERTN(s_ancs_client == nullptr);
-  s_ancs_client = (ANCSClient *)kernel_zalloc_check(sizeof(ANCSClient));
+  s_ancs_client = (ANCSClient *)pbl_zalloc_check(sizeof(ANCSClient));
   pbl_buffer_init(&s_ancs_client->reassembly_ctx.buffer,
                   sizeof(s_ancs_client->reassembly_ctx.buffer_storage));
   ancs_app_name_storage_init();
@@ -1285,7 +1284,7 @@ void ancs_destroy(void) {
   ancs_app_name_storage_deinit();
 
   prv_reset_and_flush();
-  kernel_free(s_ancs_client);
+  pbl_free(s_ancs_client);
   s_ancs_client = nullptr;
   prv_put_ancs_disconnected_event();
 }

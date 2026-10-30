@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/api.h>
@@ -59,10 +60,10 @@ static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, cons
     // can't add a pin for a not installed app!
     if (install_id == INSTALL_ID_INVALID) {
       // String initialized on the heap to reduce stack usage
-      char *parent_id_string = kernel_malloc_check(UUID_STRING_BUFFER_LENGTH);
+      char *parent_id_string = pbl_malloc_check(UUID_STRING_BUFFER_LENGTH);
       uuid_to_string(&parent_id, parent_id_string);
       PBL_LOG_ERR("Pin insert for a pin with no app installed, parent id: %s", parent_id_string);
-      kernel_free(parent_id_string);
+      pbl_free(parent_id_string);
       goto done;
     }
     // Bump the app's priority by telling the cache we're using it
@@ -97,7 +98,7 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
 
   // allocate a buffer big enough for serialized item
   size_t payload_size = timeline_item_get_serialized_payload_size(item);
-  uint8_t *buffer = kernel_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
+  uint8_t *buffer = pbl_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
   uint8_t *write_ptr = buffer;
 
   // serialize the header
@@ -128,7 +129,7 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
   }
 
 cleanup:
-  kernel_free(buffer);
+  pbl_free(buffer);
   return rv;
 }
 

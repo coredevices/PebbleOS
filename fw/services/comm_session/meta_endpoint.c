@@ -1,12 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/meta_endpoint.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/byteorder.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -30,14 +29,14 @@ static void prv_send_meta_response_kernelbg_cb(void *data) {
                          (const uint8_t *)&meta_response_info_heap_copy->payload, payload_size,
                          COMM_SESSION_DEFAULT_TIMEOUT);
 
-  kernel_free(meta_response_info_heap_copy);
+  pbl_free(meta_response_info_heap_copy);
 }
 
 void meta_endpoint_send_response_async(const MetaResponseInfo *meta_response_info) {
   PBL_LOG_ERR("Meta protocol error: 0x%x (endpoint=%u)", meta_response_info->payload.error_code,
               meta_response_info->payload.endpoint_id);
 
-  MetaResponseInfo *meta_response_info_heap_copy = kernel_zalloc_check(sizeof(*meta_response_info));
+  MetaResponseInfo *meta_response_info_heap_copy = pbl_zalloc_check(sizeof(*meta_response_info));
   memcpy(meta_response_info_heap_copy, meta_response_info, sizeof(*meta_response_info));
   system_task_add_callback(prv_send_meta_response_kernelbg_cb, meta_response_info_heap_copy);
 }

@@ -3,6 +3,7 @@
 
 #include <pbl/input/input.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
@@ -13,7 +14,6 @@
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
 #include <kernel/input_buttons.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/remote_input.h>
 
 #if defined(CONFIG_SERVICE_TOUCH)
@@ -140,7 +140,7 @@ static void prv_button_timer_cb(void *cb_data) {
     new_timer_start(s_input_timer, was_held_down ? context->gap_ms : context->hold_ms,
                     prv_button_timer_cb, context, 0 /* flags */);
   } else {
-    kernel_free(context);
+    pbl_free(context);
     prv_sequence_finished();
   }
 }
@@ -155,7 +155,7 @@ RemoteInputResult remote_input_button_press(ButtonId button, uint32_t presses, u
     // and leaving the button stuck down.
     return RemoteInputResult_Ok;
   }
-  ButtonPressContext *context = kernel_malloc(sizeof(ButtonPressContext));
+  ButtonPressContext *context = pbl_malloc(sizeof(ButtonPressContext));
   if (!context) {
     return RemoteInputResult_Invalid;
   }
@@ -171,7 +171,7 @@ RemoteInputResult remote_input_button_press(ButtonId button, uint32_t presses, u
   // separate them.
   const RemoteInputResult result = prv_start_sequence(prv_button_timer_cb, context);
   if (result != RemoteInputResult_Ok) {
-    kernel_free(context);
+    pbl_free(context);
   }
   return result;
 }
@@ -263,7 +263,7 @@ static void prv_path_timer_cb(void *cb_data) {
     emitted = prv_path_emit(TouchInjectPhase_Move, context->x, context->y);
   } else {
     prv_path_emit(TouchInjectPhase_End, context->x, context->y);
-    kernel_free(context);
+    pbl_free(context);
     prv_sequence_finished();
     return;
   }
@@ -274,7 +274,7 @@ static void prv_path_timer_cb(void *cb_data) {
     // carrying on would strand a half-finished path. The caller was already told Ok, so leave a
     // trace of the abort.
     PBL_LOG_DBG("Remote input: touch path aborted, injection refused");
-    kernel_free(context);
+    pbl_free(context);
     prv_sequence_finished();
     return;
   }
@@ -284,7 +284,7 @@ static void prv_path_timer_cb(void *cb_data) {
 
 static RemoteInputResult prv_start_path(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
                                         uint8_t steps, uint16_t step_ms) {
-  PathContext *context = kernel_malloc(sizeof(PathContext));
+  PathContext *context = pbl_malloc(sizeof(PathContext));
   if (!context) {
     return RemoteInputResult_Invalid;
   }
@@ -301,7 +301,7 @@ static RemoteInputResult prv_start_path(int16_t x1, int16_t y1, int16_t x2, int1
 
   const RemoteInputResult result = prv_start_sequence(prv_path_timer_cb, context);
   if (result != RemoteInputResult_Ok) {
-    kernel_free(context);
+    pbl_free(context);
   }
   return result;
 }

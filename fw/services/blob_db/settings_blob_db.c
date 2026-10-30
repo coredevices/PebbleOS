@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
@@ -15,7 +16,6 @@
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
 
-#include <kernel/pbl_malloc.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
 
@@ -524,7 +524,7 @@ static bool prv_build_dirty_list_callback(SettingsFile *file, SettingsRecordInfo
   }
 
   // Allocate dirty item
-  BlobDBDirtyItem *item = kernel_malloc_check(sizeof(BlobDBDirtyItem) + info->key_len);
+  BlobDBDirtyItem *item = pbl_malloc_check(sizeof(BlobDBDirtyItem) + info->key_len);
   list_init((ListNode *)item);
   item->last_updated = (time_t)info->last_modified;
   item->key_len = info->key_len;

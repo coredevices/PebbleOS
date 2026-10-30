@@ -4,6 +4,7 @@
 #include <time.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/filesystem/app_file.h>
@@ -16,7 +17,6 @@
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
@@ -134,7 +134,7 @@ static void prv_trim_top_priorities(EvictListNode **list_node, uint32_t *bytes_i
     if (node->size <= (*bytes_in_list - bytes_needed)) {
       *bytes_in_list -= node->size;
       node = (EvictListNode *)list_pop_head((ListNode *)node);
-      kernel_free(temp);
+      pbl_free(temp);
     } else {
       break;
     }
@@ -198,7 +198,7 @@ static bool prv_each_free_up_space(SettingsFile *file, SettingsRecordInfo *info,
   }
 
   // create node
-  EvictListNode *node = kernel_malloc_check(sizeof(EvictListNode));
+  EvictListNode *node = pbl_malloc_check(sizeof(EvictListNode));
   list_init((ListNode *)node);
 
   // give them an extremely high priority so that we only remove them if we really NEED to
@@ -314,7 +314,7 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
                   node->size);
       app_cache_remove_entry(node->id);
       node = (EvictListNode *)list_pop_head((ListNode *)node);
-      kernel_free(temp);
+      pbl_free(temp);
     }
   }
 unlock:
@@ -344,8 +344,8 @@ static bool prv_remove_matching_resource_file_callback(SettingsFile *file, Setti
       // entry from the resource_list (since we don't want to delete it)
       // note: resource_list may be updated if we happen to remove the first entry in the list
       list_remove(&(iter->list_node), (ListNode **)resource_list, nullptr);
-      kernel_free(iter); // free up the memory for the node we just removed
-      break;             // we can quit now that we've found a match for this id
+      pbl_free(iter); // free up the memory for the node we just removed
+      break;          // we can quit now that we've found a match for this id
     }
     iter = next;
   }

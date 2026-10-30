@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/util/list.h>
 
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/process_manager.h>
 
@@ -340,7 +340,7 @@ static void prv_callback_event_handler(void *ctx) {
 bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
                                 AppInboxMessageHandler message_handler,
                                 AppInboxDroppedHandler dropped_handler, AppInboxServiceTag tag) {
-  AppInboxNode *new_node = (AppInboxNode *)kernel_zalloc(sizeof(AppInboxNode));
+  AppInboxNode *new_node = (AppInboxNode *)pbl_zalloc(sizeof(AppInboxNode));
   if (!new_node) {
     PBL_LOG_ERR("Not enough memory to allocate AppInboxNode");
     return false;
@@ -363,7 +363,7 @@ bool app_inbox_service_register(uint8_t *storage, size_t storage_size,
     }
 
     if (has_error) {
-      kernel_free(new_node);
+      pbl_free(new_node);
       new_node = nullptr;
     } else {
       new_node->tag = tag;
@@ -389,7 +389,7 @@ uint32_t app_inbox_service_unregister_by_storage(uint8_t *storage) {
     if (node) {
       list_remove((ListNode *)node, (ListNode **)&s_app_inbox_head, nullptr);
       num_messages_lost = node->num_failed + node->num_success + (node->writer ? 1 : 0);
-      kernel_free(node);
+      pbl_free(node);
     }
   }
   prv_unlock();
@@ -402,7 +402,7 @@ void app_inbox_service_unregister_all(void) {
     AppInboxNode *node = s_app_inbox_head;
     while (node) {
       AppInboxNode *next = (AppInboxNode *)node->node.next;
-      kernel_free(node);
+      pbl_free(node);
       node = next;
     }
     s_app_inbox_head = nullptr;

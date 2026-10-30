@@ -12,6 +12,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
@@ -23,7 +24,6 @@
 #include <console/pulse2_transport_impl.h>
 #include <console/pulse_control_message_protocol.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 //! Modulus for sequence numbers
 #define MODULUS               (128u)
@@ -374,7 +374,7 @@ void pulse2_reliable_on_link_down(void) {
 void pulse2_reliable_init(void) {
   ppp_control_protocol_init(PULSE2_TRAINCP);
   ppp_control_protocol_open(PULSE2_TRAINCP);
-  s_tx_buffer = kernel_zalloc_check(sizeof(ReliableInfoBuffer) + pulse_reliable_max_send_size());
+  s_tx_buffer = pbl_zalloc_check(sizeof(ReliableInfoBuffer) + pulse_reliable_max_send_size());
   pbl_sem_give(&s_tx_lock);
 }
 

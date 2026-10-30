@@ -14,7 +14,7 @@
 #include <kernel/event_loop.h>
 #include <kernel/memory_layout.h>
 #include <kernel/panic.h>
-#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/malloc.h>
 #include <kernel/util/fw_reset.h>
 #include <resource/resource.h>
 #include <resource/language_pack.h>
@@ -106,7 +106,7 @@ static void prv_language_pack_changed(void *data) {
                    language_pack_resource_id(slot, RESOURCE_ID_LECO_60_BOLD_NUMBERS_AM_PM_EXTENDED,
                                              RESOURCE_ID_STRINGS));
   pbl_mutex_lock(&s_language_fonts_mutex, PBL_FOREVER);
-  kernel_free(s_language_fonts[slot]);
+  pbl_free(s_language_fonts[slot]);
   s_language_fonts[slot] = NULL;
   s_language_pack_state[slot] = LanguagePackUnknown;
   ++s_language_pack_changes[slot];
@@ -128,7 +128,7 @@ static LanguageFonts *prv_get_language_fonts(uint8_t slot) {
     return NULL;
   }
   if (!s_language_fonts[slot]) {
-    s_language_fonts[slot] = kernel_zalloc(sizeof(LanguageFonts));
+    s_language_fonts[slot] = pbl_zalloc(sizeof(LanguageFonts));
   }
   return s_language_fonts[slot];
 }

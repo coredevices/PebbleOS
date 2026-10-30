@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/kernel/malloc.h>
+
 /**
  * @defgroup services_activity_kraepelin Kraepelin algorithm
  * @ingroup services_activity
@@ -17,7 +19,7 @@
  * The caller owns the state, of size kalg_state_size():
  *
  * @code{.c}
- * KAlgState *state = kernel_malloc_check(kalg_state_size());
+ * KAlgState *state = pbl_malloc_check(kalg_state_size());
  * kalg_init(state, NULL);
  *
  * // For every batch of 25 Hz samples
@@ -33,7 +35,7 @@
  *                        resting_cal, active_cal, distance_mm, false, session_cb, ctx);
  *
  * kalg_deinit(state);
- * kernel_free(state);
+ * pbl_free(state);
  * @endcode
  * @{
  */

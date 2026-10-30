@@ -5,6 +5,7 @@
 #include "nimble_type_conversions.h"
 
 #include <pbl/bluetooth/gatt.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
@@ -85,27 +86,27 @@ typedef struct {
 } GATTServiceDiscoveryContext;
 
 static bool prv_descriptor_free_cb(ListNode *node, void *context) {
-  kernel_free(node);
+  pbl_free(node);
   return true;
 }
 
 static bool prv_characteristic_free_cb(ListNode *node, void *context) {
   GATTServiceDiscoveryCharacteristicNode *chr_node = (GATTServiceDiscoveryCharacteristicNode *)node;
   list_foreach(chr_node->descriptors, prv_descriptor_free_cb, nullptr);
-  kernel_free(node);
+  pbl_free(node);
   return true;
 }
 
 static bool prv_service_free_cb(ListNode *node, void *context) {
   GATTServiceDiscoveryServiceNode *service_node = (GATTServiceDiscoveryServiceNode *)node;
   list_foreach(service_node->characteristics, prv_characteristic_free_cb, nullptr);
-  kernel_free(node);
+  pbl_free(node);
   return true;
 }
 
 static void prv_free_discovery_context(GATTServiceDiscoveryContext *context) {
   list_foreach(context->services, prv_service_free_cb, nullptr);
-  kernel_free(context);
+  pbl_free(context);
 }
 
 static void prv_discovery_failed(GATTServiceDiscoveryContext *context, int status) {
@@ -125,7 +126,7 @@ static bool prv_convert_service_and_notify_os_cb(ListNode *node, void *context) 
   uint16_t num_characteristics = list_count(service_node->characteristics);
   size_t size_bytes =
       PBL_BT_GATT_SERVICE_SIZE_BYTES(num_characteristics, service_node->num_descriptors, 0);
-  struct pbl_bt_gatt_service *gatt_service = kernel_zalloc_check(size_bytes);
+  struct pbl_bt_gatt_service *gatt_service = pbl_zalloc_check(size_bytes);
   gatt_service->size_bytes = size_bytes;
   gatt_service->att_handle = service_node->service.start_handle;
   gatt_service->num_characteristics = num_characteristics;
@@ -238,7 +239,7 @@ static int prv_on_svc_chgd_subscribe(uint16_t conn_handle, const struct ble_gatt
     PBL_LOG_DBG("Subscribed to service changed");
   }
 
-  kernel_free(arg);
+  pbl_free(arg);
 
   return 0;
 }
@@ -263,7 +264,7 @@ static void prv_convert_service_and_notify_os(uint16_t conn_handle,
     int ret;
 
     GATTServiceDiscoveryDescriptorContext *ctx =
-        kernel_zalloc_check(sizeof(GATTServiceDiscoveryDescriptorContext));
+        pbl_zalloc_check(sizeof(GATTServiceDiscoveryDescriptorContext));
     ctx->connection = context->connection;
     ctx->chr_handle = chr_handle;
 
@@ -324,7 +325,7 @@ static void prv_discover_next_chrs(uint16_t conn_handle, GATTServiceDiscoveryCon
 static GATTServiceDiscoveryDescriptorNode *prv_create_descriptor_node(
     const struct ble_gatt_dsc *dsc) {
   GATTServiceDiscoveryDescriptorNode *dsc_node =
-      kernel_zalloc_check(sizeof(GATTServiceDiscoveryDescriptorNode));
+      pbl_zalloc_check(sizeof(GATTServiceDiscoveryDescriptorNode));
   list_init(&dsc_node->node);
   dsc_node->descriptor = *dsc;
   return dsc_node;
@@ -332,7 +333,7 @@ static GATTServiceDiscoveryDescriptorNode *prv_create_descriptor_node(
 
 static GATTServiceDiscoveryCharacteristicNode *prv_create_chr_node(const struct ble_gatt_chr *chr) {
   GATTServiceDiscoveryCharacteristicNode *chr_node =
-      kernel_zalloc_check(sizeof(GATTServiceDiscoveryCharacteristicNode));
+      pbl_zalloc_check(sizeof(GATTServiceDiscoveryCharacteristicNode));
   list_init(&chr_node->node);
   chr_node->characteristic = *chr;
   return chr_node;
@@ -340,7 +341,7 @@ static GATTServiceDiscoveryCharacteristicNode *prv_create_chr_node(const struct 
 
 static GATTServiceDiscoveryServiceNode *prv_create_service_node(const struct ble_gatt_svc *svc) {
   GATTServiceDiscoveryServiceNode *service_node =
-      kernel_zalloc_check(sizeof(GATTServiceDiscoveryServiceNode));
+      pbl_zalloc_check(sizeof(GATTServiceDiscoveryServiceNode));
   list_init(&service_node->node);
   service_node->service = *svc;
   return service_node;
@@ -553,7 +554,7 @@ static enum pbl_bt_errno prv_start_discovery(const GAPLEConnection *connection,
     return PBL_BT_ERRNO_INVALID_STATE;
   }
 
-  GATTServiceDiscoveryContext *context = kernel_zalloc_check(sizeof(GATTServiceDiscoveryContext));
+  GATTServiceDiscoveryContext *context = pbl_zalloc_check(sizeof(GATTServiceDiscoveryContext));
   context->connection = (GAPLEConnection *)connection;
   context->range = *data;
 
@@ -599,7 +600,7 @@ static int prv_discovery_op_start(void *ctx) {
 
 enum pbl_bt_errno pbl_bt_gatt_start_discovery_range(const GAPLEConnection *connection,
                                                     const struct pbl_bt_att_handle_range *data) {
-  DiscoveryOp *op = kernel_zalloc_check(sizeof(*op));
+  DiscoveryOp *op = pbl_zalloc_check(sizeof(*op));
   op->connection = (GAPLEConnection *)connection;
   op->range = *data;
 

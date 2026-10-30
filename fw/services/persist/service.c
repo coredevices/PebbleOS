@@ -7,6 +7,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
@@ -16,7 +17,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
@@ -119,7 +119,7 @@ static status_t prv_copy_file(const char *from, const char *to) {
 
   status_t rv = S_SUCCESS;
   const size_t chunk_size = 128;
-  uint8_t *buf = kernel_malloc(chunk_size);
+  uint8_t *buf = pbl_malloc(chunk_size);
   if (buf == nullptr) {
     rv = E_OUT_OF_MEMORY;
   } else {
@@ -136,7 +136,7 @@ static status_t prv_copy_file(const char *from, const char *to) {
       }
       remaining -= n;
     }
-    kernel_free(buf);
+    pbl_free(buf);
   }
 
   pfs_close(from_fd);
@@ -221,7 +221,7 @@ void persist_service_client_open(const Uuid *uuid) {
     if (store) {
       store->usage_count++;
     } else {
-      store = kernel_malloc_check(sizeof(*store));
+      store = pbl_malloc_check(sizeof(*store));
       *store = (PersistStore){
         .uuid = *uuid,
         .usage_count = 1,
@@ -248,7 +248,7 @@ void persist_service_client_close(const Uuid *uuid) {
         settings_file_close(&store->file);
       }
       list_remove(&store->list_node, &s_client_stores /* &head */, nullptr /* &tail */);
-      kernel_free(store);
+      pbl_free(store);
     }
   }
   prv_unlock();

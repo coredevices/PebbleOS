@@ -8,6 +8,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_list.h>
@@ -17,7 +18,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
 
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
@@ -483,7 +483,7 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
   success = false;
   int32_t buf_size = DLS_ENDPOINT_MAX_PAYLOAD;
   while (true) {
-    tmp_buf = kernel_malloc(buf_size);
+    tmp_buf = pbl_malloc(buf_size);
     if (tmp_buf) {
       break;
     }
@@ -521,7 +521,7 @@ static bool prv_realloc_storage(DataLoggingSession *session, uint32_t new_size) 
   success = true;
 
 exit:
-  kernel_free(tmp_buf);
+  pbl_free(tmp_buf);
   if (new_storage.fd != DLS_INVALID_FILE) {
     pfs_close_and_remove(new_storage.fd);
   }
@@ -931,7 +931,7 @@ void dls_storage_rebuild(void) {
 
   bad_session:
     pfs_remove(head->name);
-    kernel_free(session);
+    pbl_free(session);
     head = (PFSFileListEntry *)head->list_node.next;
   }
 

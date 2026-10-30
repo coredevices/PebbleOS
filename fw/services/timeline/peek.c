@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/peek.h>
@@ -34,7 +35,7 @@ static void prv_put_peek_event(PeekUpdateContext *update, TimelineItemId *item_i
                                TimelinePeekTimeType time_type) {
   TimelineItemId *item_id_copy = nullptr;
   if (item_id) {
-    item_id_copy = kernel_malloc_check(sizeof(TimelineItemId));
+    item_id_copy = pbl_malloc_check(sizeof(TimelineItemId));
     *item_id_copy = *item_id;
   }
   const bool is_all_day_event_visible =

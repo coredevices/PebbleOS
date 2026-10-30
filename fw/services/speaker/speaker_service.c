@@ -12,6 +12,7 @@
 
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -23,7 +24,6 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 
@@ -49,7 +49,7 @@ typedef struct {
 
   // Note sequence source
   NoteSequenceState note_seq;
-  SpeakerNote *note_buf; // kernel_malloc'd copy of notes
+  SpeakerNote *note_buf; // pbl_malloc'd copy of notes
 
   // Single tone source (raw frequency, no MIDI quantization)
   uint32_t tone_samples_remaining;
@@ -223,11 +223,11 @@ static void prv_free_tracks(void) {
   for (uint32_t i = 0; i < s_state.num_tracks; i++) {
     track_deinit(&s_state.tracks[i]);
     if (s_state.track_notes_buf[i]) {
-      kernel_free(s_state.track_notes_buf[i]);
+      pbl_free(s_state.track_notes_buf[i]);
       s_state.track_notes_buf[i] = nullptr;
     }
     if (s_state.track_sample_data[i]) {
-      kernel_free(s_state.track_sample_data[i]);
+      pbl_free(s_state.track_sample_data[i]);
       s_state.track_sample_data[i] = nullptr;
     }
   }
@@ -276,7 +276,7 @@ static void prv_stop_internal(SpeakerFinishReason reason) {
   if (source_type == SpeakerSourceNoteSeq) {
     note_seq_deinit(&s_state.note_seq);
     if (s_state.note_buf) {
-      kernel_free(s_state.note_buf);
+      pbl_free(s_state.note_buf);
       s_state.note_buf = nullptr;
     }
   } else if (source_type == SpeakerSourceStream) {
@@ -545,7 +545,7 @@ bool speaker_service_play_note_seq_owned(const SpeakerNote *notes, uint32_t num_
 
   // Copy notes to kernel memory so they persist
   size_t notes_size = num_notes * sizeof(SpeakerNote);
-  s_state.note_buf = kernel_malloc(notes_size);
+  s_state.note_buf = pbl_malloc(notes_size);
   if (!s_state.note_buf) {
     PBL_LOG_ERR("Failed to allocate note buffer");
     pbl_mutex_unlock(&s_lock);
@@ -683,7 +683,7 @@ bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_
   for (uint32_t i = 0; i < num_tracks; i++) {
     const SpeakerTrack *t = &tracks[i];
     size_t notes_size = (size_t)t->num_notes * sizeof(SpeakerNote);
-    s_state.track_notes_buf[i] = kernel_malloc(notes_size);
+    s_state.track_notes_buf[i] = pbl_malloc(notes_size);
     if (!s_state.track_notes_buf[i]) {
       PBL_LOG_ERR("Failed to allocate track notes");
       goto alloc_fail;
@@ -694,7 +694,7 @@ bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_
     kernel_tracks[i].num_notes = t->num_notes;
 
     if (t->sample) {
-      s_state.track_sample_data[i] = kernel_malloc(t->sample->num_bytes);
+      s_state.track_sample_data[i] = pbl_malloc(t->sample->num_bytes);
       if (!s_state.track_sample_data[i]) {
         PBL_LOG_ERR("Failed to allocate sample data");
         goto alloc_fail;
@@ -727,11 +727,11 @@ bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_
 alloc_fail:
   for (uint32_t i = 0; i < num_tracks; i++) {
     if (s_state.track_notes_buf[i]) {
-      kernel_free(s_state.track_notes_buf[i]);
+      pbl_free(s_state.track_notes_buf[i]);
       s_state.track_notes_buf[i] = nullptr;
     }
     if (s_state.track_sample_data[i]) {
-      kernel_free(s_state.track_sample_data[i]);
+      pbl_free(s_state.track_sample_data[i]);
       s_state.track_sample_data[i] = nullptr;
     }
   }

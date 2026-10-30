@@ -11,6 +11,7 @@
 #include <time.h>
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
@@ -41,7 +42,6 @@
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/ui/system_icons.h>
@@ -937,7 +937,7 @@ static void prv_phone_ui_deinit(void) {
 
   timeline_item_destroy(s_phone_ui_data->call_response_item);
 
-  kernel_free(s_phone_ui_data);
+  pbl_free(s_phone_ui_data);
 
   s_phone_ui_data = nullptr;
 }
@@ -984,7 +984,7 @@ static void prv_window_pop_with_delay(uint32_t delay_ms) {
 static void prv_phone_ui_init(void) {
   PBL_ASSERTN(s_phone_ui_data == nullptr);
 
-  s_phone_ui_data = kernel_zalloc_check(sizeof(PhoneUIData));
+  s_phone_ui_data = pbl_zalloc_check(sizeof(PhoneUIData));
   s_phone_ui_data->hid_action_bar = false;
 
   s_phone_ui_data->style = s_phone_styles[system_theme_get_content_size()];

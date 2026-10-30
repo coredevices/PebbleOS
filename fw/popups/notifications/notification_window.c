@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
@@ -257,7 +258,7 @@ static void prv_dismiss_all(void *data, ActionMenu *action_menu) {
 
   Uuid *first_id = notifications_presented_list_first();
 
-  NotificationInfo *notif_list = kernel_malloc_check(sizeof(NotificationInfo) * num_notifications);
+  NotificationInfo *notif_list = pbl_malloc_check(sizeof(NotificationInfo) * num_notifications);
 
   for (int i = 0; i < num_notifications; i++) {
     Uuid *id = notifications_presented_list_relative(first_id, i);
@@ -270,7 +271,7 @@ static void prv_dismiss_all(void *data, ActionMenu *action_menu) {
   timeline_actions_dismiss_all(notif_list, num_notifications, action_menu,
                                prv_handle_dismiss_all_complete, data);
 
-  kernel_free(notif_list);
+  pbl_free(notif_list);
 }
 
 static void prv_dismiss_all_action_cb(ActionMenu *action_menu, const ActionMenuItem *item,

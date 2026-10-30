@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
@@ -10,7 +11,6 @@
 #include <pbl/util/list.h>
 
 #include <applib/app_message/app_message_internal.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
 
@@ -234,7 +234,7 @@ static void app_outbox_service_send(const uint8_t *data, size_t length,
 
     const size_t consumer_data_length = consumer->consumer_data_length;
     AppOutboxMessage *message =
-        (AppOutboxMessage *)kernel_zalloc(sizeof(AppOutboxMessage) + consumer_data_length);
+        (AppOutboxMessage *)pbl_zalloc(sizeof(AppOutboxMessage) + consumer_data_length);
     if (!message) {
       status = AppOutboxStatusOutOfMemory;
       goto finally;
@@ -279,7 +279,7 @@ void app_outbox_service_consume_message(AppOutboxMessage *message, AppOutboxStat
     prv_schedule_sent_handler(message->sent_handler, message->cb_ctx, status);
   }
 finally:
-  kernel_free(message);
+  pbl_free(message);
   prv_unlock();
 }
 

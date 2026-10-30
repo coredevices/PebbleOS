@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/notif_db.h>
 #include <pbl/services/notifications/notification_storage.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -30,7 +29,7 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
     return E_INTERNAL;
   }
 
-  Uuid *id = kernel_malloc_check(sizeof(Uuid));
+  Uuid *id = pbl_malloc_check(sizeof(Uuid));
   *id = notification.header.id;
 
   char uuid_string[UUID_STRING_BUFFER_LENGTH];
@@ -46,7 +45,7 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
     PBL_LOG_INFO("Notification added: %s", uuid_string);
     notifications_handle_notification_added(id);
   } else {
-    kernel_free(id);
+    pbl_free(id);
   }
 
   timeline_item_free_allocated_buffer(&notification);

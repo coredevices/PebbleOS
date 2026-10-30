@@ -6,6 +6,7 @@
 #include <pbl/crc/crc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -17,8 +18,6 @@
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 
@@ -415,7 +414,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
     // created and now. This ideally shouldn't happen.
     success = true;
   }
-  kernel_free(entry);
+  pbl_free(entry);
 
   if (success) {
     // Schedule next one
@@ -432,7 +431,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
     while (new_head) {
       DataLoggingReopenEntry *entry = new_head;
       new_head = (DataLoggingReopenEntry *)list_pop_head((ListNode *)new_head);
-      kernel_free(entry);
+      pbl_free(entry);
     }
   }
 }
@@ -441,7 +440,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
 //! open. On entry, 'data' points to the variable holding the head of the list.
 static bool dls_endpoint_add_reopen_sessions_cb(DataLoggingSession *session, void *data) {
   DataLoggingReopenEntry **head_ptr = (DataLoggingReopenEntry **)data;
-  DataLoggingReopenEntry *entry = kernel_malloc_check(sizeof(DataLoggingReopenEntry));
+  DataLoggingReopenEntry *entry = pbl_malloc_check(sizeof(DataLoggingReopenEntry));
   *entry = (DataLoggingReopenEntry){
     .session = session,
     .app_uuid = session->app_uuid,

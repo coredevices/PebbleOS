@@ -6,11 +6,12 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
 
 #include <clar_asserts.h>
 
-// Simple pass-through implementation of kernel_malloc/free that attempts to
+// Simple pass-through implementation of pbl_malloc/free that attempts to
 // protect against buffer overruns in tested code by adding a canary value to
 // the beginning and end of the allocated block, and verifying the value on
 // freeing of the block. It won't catch *all* memory errors of course, like
@@ -33,7 +34,7 @@ typedef struct {
 
 Allocation *s_head;
 
-void *kernel_malloc(size_t bytes) {
+void *pbl_malloc(size_t bytes) {
   if (bytes > s_largest_free_block_bytes) {
     return nullptr;
   }
@@ -58,24 +59,24 @@ void *kernel_malloc(size_t bytes) {
   return ptr;
 }
 
-void *kernel_zalloc(size_t bytes) {
-  void *ptr = kernel_malloc(bytes);
+void *pbl_zalloc(size_t bytes) {
+  void *ptr = pbl_malloc(bytes);
   if (ptr) {
     memset(ptr, 0, bytes);
   }
   return ptr;
 }
 
-void *kernel_zalloc_check(size_t bytes) {
-  return kernel_zalloc(bytes);
+void *pbl_zalloc_check(size_t bytes) {
+  return pbl_zalloc(bytes);
 }
 
-void *kernel_malloc_check(size_t bytes) {
-  return kernel_malloc(bytes);
+void *pbl_malloc_check(size_t bytes) {
+  return pbl_malloc(bytes);
 }
 
-char *kernel_strdup(const char *s) {
-  char *r = kernel_malloc_check(strlen(s) + 1);
+char *pbl_strdup(const char *s) {
+  char *r = pbl_malloc_check(strlen(s) + 1);
   if (!r) {
     return nullptr;
   }
@@ -83,8 +84,8 @@ char *kernel_strdup(const char *s) {
   return r;
 }
 
-char *kernel_strdup_check(const char *s) {
-  return kernel_strdup(s);
+char *pbl_strdup_check(const char *s) {
+  return pbl_strdup(s);
 }
 
 static bool prv_find_allocation_filter_cb(ListNode *found_node, void *data) {
@@ -98,7 +99,7 @@ static void prv_double_free_assert(Allocation *a) {
   cl_assert_(a != nullptr, "Couldn't find allocation! Double free?");
 }
 
-void kernel_free(void *ptr) {
+void pbl_free(void *ptr) {
   if (ptr == nullptr) {
     return;
   }
@@ -144,7 +145,7 @@ uint64_t fake_kernel_malloc_get_total_bytes_allocated(void) {
   return bytes_allocated;
 }
 
-//! Makes successive kernel_malloc() fail for sizes above the number of bytes specified.
+//! Makes successive pbl_malloc() fail for sizes above the number of bytes specified.
 void fake_kernel_malloc_set_largest_free_block(uint64_t bytes) {
   s_largest_free_block_bytes = bytes;
 }

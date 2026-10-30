@@ -6,6 +6,7 @@
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/sm_util.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/shared_prf_storage/v3_sprf/shared_prf_storage_private.h>
@@ -13,7 +14,6 @@
 
 #include <clar.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 
 // Fakes
 //////////////////////////////////////////////////////////
@@ -171,11 +171,11 @@ static const struct pbl_bt_sm_pairing_info PAIRING_INFO = (const struct pbl_bt_s
 // Helpers
 ///////////////////////////////////////////////////////////
 static void prv_fill_flash_random_data(void) {
-  uint8_t *buf = kernel_malloc_check(SPRF_REGION_SIZE);
+  uint8_t *buf = pbl_malloc_check(SPRF_REGION_SIZE);
   fake_spi_flash_erase();
   memset(buf, 0x17, SPRF_REGION_SIZE);
   pbl_flash_write(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, buf, SPRF_REGION_SIZE);
-  kernel_free(buf);
+  pbl_free(buf);
 }
 
 static void prv_assert_mutexes_unlocked(void) {
@@ -195,7 +195,7 @@ void test_shared_prf_storage_v3__cleanup(void) {
 }
 
 void test_shared_prf_storage_v3__init_all_zeros(void) {
-  uint8_t *flash_buf = kernel_zalloc(SPRF_REGION_SIZE);
+  uint8_t *flash_buf = pbl_zalloc(SPRF_REGION_SIZE);
   pbl_flash_write(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, flash_buf, SPRF_REGION_SIZE);
   shared_prf_storage_init();
   shared_prf_storage_set_getting_started_complete(true);

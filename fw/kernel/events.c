@@ -9,12 +9,12 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/poll.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_outbox_service.h>
 
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 
 #define MAX_KERNEL_EVENTS           32
@@ -212,7 +212,7 @@ static void prv_event_put(struct pbl_msgq *queue, const char *queue_type, uintpt
 void event_deinit(PebbleEvent *event) {
   void *buffer = event_get_buffer(event);
   if (buffer) {
-    kernel_free(buffer);
+    pbl_free(buffer);
     event_clear_buffer(event);
   }
 }

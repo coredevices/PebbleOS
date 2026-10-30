@@ -12,6 +12,7 @@
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -33,7 +34,6 @@
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <apps/system/app_fetch_ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
@@ -263,7 +263,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       PBL_LOG_DBG("Cache entry did not exist on launch attempt");
 
       // Freed in app_fetch_ui.c
-      AppFetchUIArgs *fetch_args = kernel_malloc_check(sizeof(AppFetchUIArgs));
+      AppFetchUIArgs *fetch_args = pbl_malloc_check(sizeof(AppFetchUIArgs));
       *fetch_args = (AppFetchUIArgs){};
       fetch_args->common = config->common;
       fetch_args->app_id = id;

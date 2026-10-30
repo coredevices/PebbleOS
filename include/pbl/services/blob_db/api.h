@@ -9,6 +9,7 @@
 #include <time.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
 
 #include <system/status_codes.h>
@@ -39,10 +40,10 @@
  *
  * int len = blob_db_get_len(BlobDBIdContacts, (const uint8_t *)&key, sizeof(key));
  * if (len > 0) {
- *   uint8_t *buf = kernel_malloc_check(len);
+ *   uint8_t *buf = pbl_malloc_check(len);
  *   rv = blob_db_read(BlobDBIdContacts, (const uint8_t *)&key, sizeof(key), buf, len);
  *   ...
- *   kernel_free(buf);
+ *   pbl_free(buf);
  * }
  * @endcode
  * @{

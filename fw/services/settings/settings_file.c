@@ -8,13 +8,12 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/services/settings/settings_raw_iter.h>
 #include <pbl/task_wdt/task_wdt.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
 
@@ -52,7 +51,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint8_t flags, in
   }
 
   *file = (SettingsFile){
-    .name = kernel_strdup_check(name),
+    .name = pbl_strdup_check(name),
     .max_used_space = max_used_space,
     .alloc_used_space = alloc_used_space,
     .min_alloc_used_space = min_alloc_used_space,
@@ -141,7 +140,7 @@ status_t settings_file_open_growable(SettingsFile *file, const char *name, int m
 
 void settings_file_close(SettingsFile *file) {
   settings_raw_iter_deinit(&file->iter);
-  kernel_free(file->name);
+  pbl_free(file->name);
   file->name = nullptr;
 }
 
@@ -220,12 +219,12 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
   // One reusable buffer for key+val per record; sized for the worst case.
   // Avoids two malloc/free pairs per record over what can be thousands of
   // records on a large persist file.
-  uint8_t *kv_buf = kernel_malloc(SETTINGS_KEY_MAX_LEN + SETTINGS_VAL_MAX_LEN);
-  char *name = kernel_strdup(file->name);
+  uint8_t *kv_buf = pbl_malloc(SETTINGS_KEY_MAX_LEN + SETTINGS_VAL_MAX_LEN);
+  char *name = pbl_strdup(file->name);
   if (!kv_buf || !name) {
     PBL_LOG_ERR("Could not allocate buffers to compact settings file %s", file->name);
-    kernel_free(kv_buf);
-    kernel_free(name);
+    pbl_free(kv_buf);
+    pbl_free(name);
     return E_OUT_OF_MEMORY;
   }
 
@@ -239,8 +238,8 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
   if (status < 0) {
     PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %" PRIi32 ".",
                 status);
-    kernel_free(kv_buf);
-    kernel_free(name);
+    pbl_free(kv_buf);
+    pbl_free(name);
     pbl_task_wdt_resume();
     return status;
   }
@@ -282,7 +281,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
       settings_raw_iter_next(&new_file.iter);
     }
   }
-  kernel_free(kv_buf);
+  pbl_free(kv_buf);
   settings_file_close(file);
   // We have to close and reopen the new_file so that it's temp flag is cleared.
   // Before the close succeeds, if we reboot, we will just end up reading the
@@ -293,7 +292,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
   settings_file_close(&new_file);
   status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space,
                     alloc_used_space, min_alloc_used_space);
-  kernel_free(name);
+  pbl_free(name);
 
   pbl_task_wdt_resume();
 
@@ -612,7 +611,7 @@ static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *
   uint8_t key[SETTINGS_KEY_MAX_LEN];
   info->get_key(old_file, key, info->key_len);
 
-  uint8_t *val = kernel_malloc(info->val_len);
+  uint8_t *val = pbl_malloc(info->val_len);
   if (!val) {
     return; // Skip this record on OOM
   }
@@ -622,7 +621,7 @@ static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *
   // Preserving the timestamp ensures sync conflict resolution works correctly
   settings_file_set_with_timestamp(new_file, key, info->key_len, val, info->val_len,
                                    info->last_modified);
-  kernel_free(val);
+  pbl_free(val);
 }
 
 status_t settings_file_mark_all_dirty(SettingsFile *file) {
@@ -684,7 +683,7 @@ static bool prv_rewrite_cb(SettingsFile *file, SettingsRecordInfo *info, void *c
   return true; // continue iterating
 }
 status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context) {
-  char *name = kernel_strdup(file->name);
+  char *name = pbl_strdup(file->name);
   if (!name) {
     PBL_LOG_ERR("Could not allocate name to rewrite settings file %s", file->name);
     return E_OUT_OF_MEMORY;
@@ -694,7 +693,7 @@ status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback c
       prv_open(&new_file, file->name, OP_FLAG_OVERWRITE | OP_FLAG_READ, file->max_used_space,
                file->alloc_used_space, file->min_alloc_used_space);
   if (status < 0) {
-    kernel_free(name);
+    pbl_free(name);
     return status;
   }
   RewriteCbContext cb_ctx = (RewriteCbContext){
@@ -713,7 +712,7 @@ status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback c
   settings_file_close(&new_file);
   status = prv_open(file, name, OP_FLAG_READ | OP_FLAG_WRITE, file->max_used_space,
                     alloc_used_space, min_alloc_used_space);
-  kernel_free(name);
+  pbl_free(name);
 
   return status;
 }

@@ -10,10 +10,10 @@
 #include <string.h>
 
 #include <pbl/drivers/display.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/math.h>
 
 #include <board/splash.h>
-#include <kernel/pbl_malloc.h>
 
 enum splash_color {
   SPLASH_COLOR_WHITE,
@@ -165,7 +165,7 @@ static void prv_boot_splash_task(void *param) {
   }
 
   // Cleanup
-  kernel_free(s_boot_splash_fb.data);
+  pbl_free(s_boot_splash_fb.data);
   s_boot_splash_fb.data = nullptr;
   s_boot_splash_task = nullptr;
   pbl_thread_abort(nullptr);
@@ -178,7 +178,7 @@ void boot_splash_start(void) {
 
   // Allocate framebuffer for boot splash
   s_boot_splash_fb = (struct pbl_display_buffer){
-    .data = kernel_malloc(prv_fb_bytes()),
+    .data = pbl_malloc(prv_fb_bytes()),
     .pitch = prv_pitch(),
   };
   if (s_boot_splash_fb.data == nullptr) {
@@ -210,14 +210,14 @@ void boot_splash_stop(void) {
 
     // Draw final frame with logo only (no progress bar)
     struct pbl_display_buffer fb = {
-      .data = kernel_malloc(prv_fb_bytes()),
+      .data = pbl_malloc(prv_fb_bytes()),
       .pitch = prv_pitch(),
     };
     if (fb.data != nullptr) {
       prv_clear(&fb);
       prv_draw_logo(&fb);
       prv_show(&fb);
-      kernel_free(fb.data);
+      pbl_free(fb.data);
     }
   }
 }

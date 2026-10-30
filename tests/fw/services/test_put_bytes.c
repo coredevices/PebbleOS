@@ -5,6 +5,7 @@
 
 #include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -612,9 +613,9 @@ void test_put_bytes__chunk_too_large(void) {
   prv_process_and_reset_test_counters();
 
   size_t chunk_size = 1024 * 1024;
-  uint8_t *chunk = kernel_malloc(chunk_size);
+  uint8_t *chunk = pbl_malloc(chunk_size);
   prv_receive_put(s_last_response_cookie, chunk, chunk_size);
-  kernel_free(chunk);
+  pbl_free(chunk);
 
   assert_ack_count(0);
   assert_nack_count(1);

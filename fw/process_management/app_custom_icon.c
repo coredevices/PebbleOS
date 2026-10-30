@@ -9,12 +9,12 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/util/math.h>
 
 #include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
 
 // We no longer have icons in the launcher, so we don't really need this anymore.
 // However, we may decide to put it back in, so let's keep the code around just in case.
@@ -85,9 +85,9 @@ static void set_icon(const CustomizableAppType app_type, const uint16_t row_size
     return;
   }
   if (info->image_data) {
-    kernel_free(info->image_data);
+    pbl_free(info->image_data);
   }
-  info->image_data = (uint8_t *)kernel_malloc(available_size);
+  info->image_data = (uint8_t *)pbl_malloc(available_size);
   memcpy(info->image_data, image_data, available_size);
   info->icon.addr = info->image_data;
   info->icon.bounds = bounds;
@@ -104,9 +104,9 @@ static void set_name(const CustomizableAppType app_type, const char *name, const
     return;
   }
   if (info->name) {
-    kernel_free(info->name);
+    pbl_free(info->name);
   }
-  info->name = (char *)kernel_malloc(length + 1);
+  info->name = (char *)pbl_malloc(length + 1);
   memcpy(info->name, name, length);
   info->name[length] = 0;
   do_callbacks(app_type);

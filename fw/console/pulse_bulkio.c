@@ -6,13 +6,13 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <console/pulse_bulkio_domain_handler.h>
 #include <console/pulse_protocol_impl.h>
-#include <kernel/pbl_malloc.h>
 
 // Defines how many PULSE file descriptors may be open concurrently
 // This is shared across all supported domains
@@ -483,11 +483,11 @@ static void prv_handle_packet(void *data) {
     prv_respond_malformed_command(cmd, length, "Empty command");
   }
 
-  kernel_free(data);
+  pbl_free(data);
 }
 
 void pulse2_bulkio_packet_handler(void *packet, size_t length) {
-  BulkIOPacketCallbackData *data = kernel_malloc_check(length + sizeof(length));
+  BulkIOPacketCallbackData *data = pbl_malloc_check(length + sizeof(length));
   data->length = length;
   memcpy(&data->packet, packet, length);
   system_task_add_callback(prv_handle_packet, data);

@@ -26,7 +26,7 @@ typedef struct MicState {
   CircularBuffer circ_buffer;
   DMA_HandleTypeDef hdma;
   /**
-   * Raw (unaligned) pointer returned by kernel_malloc for the PDM DMA buffer.
+   * Raw (unaligned) pointer returned by pbl_malloc for the PDM DMA buffer.
    * hpdm->pRxBuffPtr is bumped up to a cache-line boundary so the CPU can
    * invalidate it without clobbering adjacent dirty data.
    */

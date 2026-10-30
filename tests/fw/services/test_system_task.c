@@ -16,7 +16,7 @@
 #define FLOOD        (3 * QUEUE_LENGTH)
 
 void system_task_reset_for_test(void);
-void stub_pbl_malloc_set_kernel_malloc_should_fail(bool should_fail);
+void stub_pbl_malloc_set_should_fail(bool should_fail);
 
 static struct pbl_thread s_bg;
 static struct pbl_thread s_main;
@@ -113,12 +113,12 @@ void test_system_task__initialize(void) {
   s_num_ran = 0;
   s_flood_start = 0;
   s_flood_ticks = 0;
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
+  stub_pbl_malloc_set_should_fail(false);
   system_task_reset_for_test();
 }
 
 void test_system_task__cleanup(void) {
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
+  stub_pbl_malloc_set_should_fail(false);
 }
 
 // ---- tests ------------------------------------------------------------------
@@ -134,7 +134,7 @@ void test_system_task__overflowing_own_queue_never_blocks(void) {
 }
 
 void test_system_task__overflow_without_memory_resets(void) {
-  stub_pbl_malloc_set_kernel_malloc_should_fail(true);
+  stub_pbl_malloc_set_should_fail(true);
   prv_run();
   cl_assert(s_reset);
   cl_assert_equal_i(s_reason.code, RebootReasonCode_EventQueueFull);

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/touch.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_event.h>
@@ -19,7 +20,7 @@
 
 // Stubs
 
-void kernel_free(void *p) {
+void pbl_free(void *p) {
 }
 
 // Declared in syscall/syscall.h; in the test build DEFINE_SYSCALL is a plain function.

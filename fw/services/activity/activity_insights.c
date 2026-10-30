@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
@@ -451,7 +452,7 @@ static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
   TimelineItemActionGroup action_group = {
     .num_actions = num_actions,
     // Malloc the actions in order to save stack space
-    .actions = kernel_zalloc_check(sizeof(TimelineItemAction) * num_actions),
+    .actions = pbl_zalloc_check(sizeof(TimelineItemAction) * num_actions),
   };
   action_group.actions[0] = (TimelineItemAction){
     .id = 0,
@@ -482,7 +483,7 @@ static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
     ResponseItem *response_item = &response_items[i];
     attribute_list_destroy_list(&response_item->attr_list);
   }
-  kernel_free(action_group.actions);
+  pbl_free(action_group.actions);
   attribute_list_destroy_list(&open_attr_list);
   attribute_list_destroy_list(&remove_attr_list);
 
@@ -586,7 +587,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
   attribute_list_add_uint8(&pin_attr_list, AttributeIdDisplayTime, WeatherTimeType_None);
   attribute_list_add_uint32(&pin_attr_list, AttributeIdLastUpdated, now_utc);
 
-  char *percentage_buf = kernel_malloc_check(SUBTITLE_BUFFER_LENGTH);
+  char *percentage_buf = pbl_malloc_check(SUBTITLE_BUFFER_LENGTH);
   if (percentage == 0) {
     strcpy(percentage_buf, "0%");
   } else {
@@ -597,7 +598,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
   TimelineItem *item = prv_create_pin(pin_time_utc, now_utc, 0, LayoutIdWeather, &pin_attr_list,
                                       config->health_card_type);
 
-  kernel_free(percentage_buf);
+  pbl_free(percentage_buf);
   i18n_free_all(&pin_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
 
@@ -659,7 +660,7 @@ static bool prv_stats_filter(int index, int32_t value, void *context) {
 // total and consecutive days of history
 PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
                                                      ActivityInsightMetricHistoryStats *stats) {
-  int32_t *history = kernel_malloc_check(sizeof(int32_t[ACTIVITY_HISTORY_DAYS]));
+  int32_t *history = pbl_malloc_check(sizeof(int32_t[ACTIVITY_HISTORY_DAYS]));
   activity_get_metric(metric, ACTIVITY_HISTORY_DAYS, history);
 
   const enum pbl_stats_op op = (PBL_STATS_OP_AVERAGE | PBL_STATS_OP_COUNT |
@@ -683,7 +684,7 @@ PBL_T_STATIC void prv_calculate_metric_history_stats(ActivityMetric metric,
     .median = result.median,
   };
 
-  kernel_free(history);
+  pbl_free(history);
 
   PBL_LOG_DBG("Metric history stats - med: %" PRIu32 " mean: %" PRIu32 " tot: %" PRIu8
               " cons: %" PRIu8,
@@ -886,8 +887,8 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
 
   // Fits the maximum strings "10H 30M of sleep", "10:00AM - 11:00PM" and i18n variants
   const size_t max_attr_length = 64;
-  char *elapsed = kernel_zalloc_check(max_attr_length);
-  char *short_subtitle = kernel_zalloc_check(max_attr_length);
+  char *elapsed = pbl_zalloc_check(max_attr_length);
+  char *short_subtitle = pbl_zalloc_check(max_attr_length);
   const uint32_t duration_s = session->length_min * PBL_SEC_PER_MIN;
   health_util_format_hours_and_minutes(elapsed, max_attr_length, duration_s, &pin_attr_list);
   const char *short_subtitle_fmt = i18n_get("%s of sleep", &pin_attr_list); /// "10H 30M of sleep"
@@ -900,9 +901,9 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
                              PBL_IF_RECT_ELSE(AttributeIdTitle, AttributeIdLocationName),
                              i18n_get(title_i18n, &pin_attr_list));
 
-  char *start_time = kernel_zalloc_check(TIME_STRING_TIME_LENGTH);
-  char *end_time = kernel_zalloc_check(TIME_STRING_TIME_LENGTH);
-  char *time_range = kernel_zalloc_check(max_attr_length);
+  char *start_time = pbl_zalloc_check(TIME_STRING_TIME_LENGTH);
+  char *end_time = pbl_zalloc_check(TIME_STRING_TIME_LENGTH);
+  char *time_range = pbl_zalloc_check(max_attr_length);
   const char *time_range_fmt = i18n_get("%s - %s", &pin_attr_list); /// "10:00AM - 11:00PM"
   clock_copy_time_string_timestamp(start_time, TIME_STRING_TIME_LENGTH, session->start_utc);
   clock_copy_time_string_timestamp(end_time, TIME_STRING_TIME_LENGTH,
@@ -917,7 +918,7 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
   attribute_list_add_uint8(&pin_attr_list, AttributeIdBgColor, GColorSunsetOrangeARGB8);
 
   const int num_responses = 2;
-  ResponseItem *response_items = kernel_zalloc_check(num_responses * sizeof(ResponseItem));
+  ResponseItem *response_items = pbl_zalloc_check(num_responses * sizeof(ResponseItem));
   response_items[0] = (ResponseItem){
     .type = ActivityInsightResponseTypePositive,
     .text = i18n_noop("I feel great!"),
@@ -931,12 +932,12 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
       session->start_utc, now_utc, session->length_min, LayoutIdWeather, &pin_attr_list,
       HealthCardType_Sleep, num_responses, response_items);
 
-  kernel_free(response_items);
-  kernel_free(time_range);
-  kernel_free(end_time);
-  kernel_free(start_time);
-  kernel_free(short_subtitle);
-  kernel_free(elapsed);
+  pbl_free(response_items);
+  pbl_free(time_range);
+  pbl_free(end_time);
+  pbl_free(start_time);
+  pbl_free(short_subtitle);
+  pbl_free(elapsed);
   i18n_free_all(&pin_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
 
@@ -952,7 +953,7 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
 
   // Enough to fit the filled out format string below and i18n variants
   const int max_notif_length = 128;
-  char *body = kernel_malloc_check(max_notif_length);
+  char *body = pbl_malloc_check(max_notif_length);
   snprintf(body, max_notif_length,
            i18n_get("Aren't naps great? You knocked out for %dH %dM!", body), hours, minutes);
   i18n_free_all(body);
@@ -974,7 +975,7 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
     },
   };
   prv_create_and_push_notification(&config);
-  kernel_free(body);
+  pbl_free(body);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -1163,7 +1164,7 @@ static PBL_NOINLINE void prv_do_activity_reward(time_t now_utc) {
 // Returns the step average corresponding to the current time of day
 static ActivityScalarStore prv_cur_step_avg(time_t now_utc, int minute_of_day) {
   // Determine the current chunk
-  ActivityMetricAverages *averages = kernel_malloc_check(sizeof(ActivityMetricAverages));
+  ActivityMetricAverages *averages = pbl_malloc_check(sizeof(ActivityMetricAverages));
   activity_get_step_averages(time_util_get_day_in_week(now_utc), averages);
 
   // Sum up the averages
@@ -1176,7 +1177,7 @@ static ActivityScalarStore prv_cur_step_avg(time_t now_utc, int minute_of_day) {
     }
   }
 
-  kernel_free(averages);
+  pbl_free(averages);
 
   return total_steps_avg;
 }
@@ -1371,7 +1372,7 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
     return;
   }
 
-  char *body = kernel_malloc_check(max_notif_length);
+  char *body = pbl_malloc_check(max_notif_length);
   snprintf(body, max_notif_length, i18n_get(fmt, body), steps_total, ABS(percentage));
   i18n_free_all(body);
 
@@ -1386,7 +1387,7 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
     },
   };
   prv_create_and_push_notification(&config);
-  kernel_free(body);
+  pbl_free(body);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1482,7 +1483,7 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
     return;
   }
 
-  char *body = kernel_malloc_check(max_notif_length);
+  char *body = pbl_malloc_check(max_notif_length);
   snprintf(body, max_notif_length, i18n_get(fmt, body), hours, minutes, ABS(percentage));
   i18n_free_all(body);
 
@@ -1498,7 +1499,7 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
   };
 
   prv_create_and_push_notification(&config);
-  kernel_free(body);
+  pbl_free(body);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1774,15 +1775,15 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
   TimelineResourceId icon;
 
   const int body_buf_size = 100;
-  char *body = kernel_zalloc_check(body_buf_size);
+  char *body = pbl_zalloc_check(body_buf_size);
   const char *intro_str = prv_get_intro_str_for_activity(session);
   snprintf(body, body_buf_size, "%s", i18n_get(intro_str, body));
 
   const int headings_buf_size = 128;
-  struct pbl_string_list *headings = kernel_zalloc_check(headings_buf_size);
+  struct pbl_string_list *headings = pbl_zalloc_check(headings_buf_size);
 
   const int values_buf_size = 128;
-  struct pbl_string_list *values = kernel_zalloc_check(values_buf_size);
+  struct pbl_string_list *values = pbl_zalloc_check(values_buf_size);
 
   if (session->type == ActivitySessionType_Run) {
     type = ActivityInsightType_ActivitySessionRun;
@@ -1844,9 +1845,9 @@ cleanup:
   i18n_free_all(body);
   i18n_free_all(headings);
   i18n_free_all(values);
-  kernel_free(body);
-  kernel_free(headings);
-  kernel_free(values);
+  pbl_free(body);
+  pbl_free(headings);
+  pbl_free(values);
 }
 
 // ------------------------------------------------------------------------------------------------

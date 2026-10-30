@@ -14,6 +14,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -23,7 +24,6 @@
 #include <pbl/util/math.h>
 
 #include <flash_region/filesystem_regions.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
@@ -322,7 +322,7 @@ static void prv_build_page_flags_cache(void) {
 
   // if it already exists, free it first
   if (s_pfs_page_flags_cache) {
-    kernel_free(s_pfs_page_flags_cache);
+    pbl_free(s_pfs_page_flags_cache);
     s_pfs_page_flags_cache = nullptr;
   }
 
@@ -332,7 +332,7 @@ static void prv_build_page_flags_cache(void) {
   }
 
   // allocate the new cache
-  s_pfs_page_flags_cache = kernel_malloc_check(s_pfs_page_count * sizeof(*s_pfs_page_flags_cache));
+  s_pfs_page_flags_cache = pbl_malloc_check(s_pfs_page_count * sizeof(*s_pfs_page_flags_cache));
 
   // read and set each of the page flags into the cache
   prv_invalidate_page_flags_cache_all();
@@ -946,11 +946,11 @@ static status_t scan_to_offset(File *f, uint32_t *pg_offset) {
 
 static int mark_fd_free(int fd) {
   if (PFS_FD(fd).file.name != nullptr) {
-    kernel_free(PFS_FD(fd).file.name);
+    pbl_free(PFS_FD(fd).file.name);
     PFS_FD(fd).file.name = nullptr;
   }
   if (PFS_FD(fd).file.pg_cache != nullptr) {
-    kernel_free(PFS_FD(fd).file.pg_cache);
+    pbl_free(PFS_FD(fd).file.pg_cache);
     PFS_FD(fd).file.pg_cache = nullptr;
     PFS_FD(fd).file.pg_cache_len = 0;
   }
@@ -1316,14 +1316,14 @@ PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback ca
                                  uint8_t event_flags, void *data) {
   pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
 
-  PFSFileChangedCallbackNode *node = kernel_malloc_check(sizeof(PFSFileChangedCallbackNode));
+  PFSFileChangedCallbackNode *node = pbl_malloc_check(sizeof(PFSFileChangedCallbackNode));
   *node =
       (PFSFileChangedCallbackNode){.callback = callback, .event_flags = event_flags, .data = data};
 
   // find out if we already have a string for this particular filename
   ListNode *find_str = list_find(s_head_callback_node_list, watch_list_find_str, (char *)filename);
   if (find_str == nullptr) {
-    node->name = kernel_strdup_check(filename);
+    node->name = pbl_strdup_check(filename);
   } else {
     node->name = ((PFSFileChangedCallbackNode *)find_str)->name;
   }
@@ -1349,10 +1349,10 @@ void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
   ListNode *find_str =
       list_find(s_head_callback_node_list, watch_list_find_str, (char *)callback_node->name);
   if (find_str == nullptr) {
-    kernel_free((void *)(callback_node->name));
+    pbl_free((void *)(callback_node->name));
   }
 
-  kernel_free(callback_node);
+  pbl_free(callback_node);
 
   pbl_mutex_unlock(&s_pfs_mutex);
 }
@@ -1512,7 +1512,7 @@ static void prv_for_each_file(PFSFilenameTestCallback filter, PrvFileVisitor vis
 static void prv_add_to_file_list(uint16_t pg, const char *file_name, void *ctx) {
   ListNode **head = ctx;
   const size_t name_len = strlen(file_name);
-  PFSFileListEntry *entry = kernel_malloc_check(sizeof(PFSFileListEntry) + name_len + 1);
+  PFSFileListEntry *entry = pbl_malloc_check(sizeof(PFSFileListEntry) + name_len + 1);
   *entry = (PFSFileListEntry){};
   memcpy(entry->name, file_name, name_len + 1);
   *head = list_insert_before(*head, &entry->list_node);
@@ -1532,7 +1532,7 @@ void pfs_delete_file_list(PFSFileListEntry *head) {
   ListNode *next;
   while (node) {
     next = node->next;
-    kernel_free(node);
+    pbl_free(node);
     node = next;
   }
 }
@@ -1601,7 +1601,7 @@ static PBL_NOINLINE void allocate_page_cache(int fd) {
 
   // Note: If there was more space for statics or stack space we could
   // put this temporary buffer there
-  FilePageCache *fpc = kernel_malloc_check(sizeof(FilePageCache) * MAX_PAGE_CACHE_ENTRIES);
+  FilePageCache *fpc = pbl_malloc_check(sizeof(FilePageCache) * MAX_PAGE_CACHE_ENTRIES);
   memset(fpc, 0x00, sizeof(FilePageCache) * MAX_PAGE_CACHE_ENTRIES);
 
   uint16_t virtual_pg = 0;
@@ -1632,13 +1632,13 @@ static PBL_NOINLINE void allocate_page_cache(int fd) {
 
   // The cache is likely to be around for a while and there is no reason to
   // burn up more memory than necessary for a long duration
-  f->pg_cache = kernel_malloc(sizeof(FilePageCache) * cur_idx);
+  f->pg_cache = pbl_malloc(sizeof(FilePageCache) * cur_idx);
   if (f->pg_cache != nullptr) { // if we are not OOM
     memcpy(f->pg_cache, fpc, sizeof(FilePageCache) * cur_idx);
     f->pg_cache_len = cur_idx;
   }
 
-  kernel_free(fpc);
+  pbl_free(fpc);
 }
 
 ///
@@ -1766,7 +1766,7 @@ static int file_found_or_added_to_pfs(int fd, const char *name, uint8_t op_flags
   File *file = &PFS_FD(fd).file;
 
   file_desc->fd_status = FD_STATUS_UNREFERENCED; // set to IN_USE on success
-  if ((file->name = kernel_strdup(name)) == nullptr) {
+  if ((file->name = pbl_strdup(name)) == nullptr) {
     res = E_OUT_OF_MEMORY;
     goto cleanup;
   }
@@ -1863,7 +1863,7 @@ static status_t copy_or_recover_gc_data(int fd, GCData *gcdata, bool do_copy) {
 
   // copy the entire block to file (could use bss?)
   const size_t copy_buf_size = 256;
-  uint8_t *buf = kernel_malloc_check(copy_buf_size);
+  uint8_t *buf = pbl_malloc_check(copy_buf_size);
 
   for (uint16_t pg = 0; pg < PFS_PAGES_PER_ERASE_SECTOR; pg++) {
     uint32_t base_addr = prv_page_to_flash_offset(sector_start_page + pg);
@@ -1905,7 +1905,7 @@ static status_t copy_or_recover_gc_data(int fd, GCData *gcdata, bool do_copy) {
     }
   }
 
-  kernel_free(buf);
+  pbl_free(buf);
   return (S_SUCCESS);
 }
 
@@ -2139,7 +2139,7 @@ void pbl_analytics_external_collect_pfs_stats(void) {
 
 // Dump the first n bytes of a file (from current seek position)
 void pfs_debug_dump(int fd, int num_bytes) {
-  uint8_t *bytes = kernel_malloc(num_bytes);
+  uint8_t *bytes = pbl_malloc(num_bytes);
 
   if (bytes == nullptr) {
     PBL_LOG_ERR("malloc error");
@@ -2154,7 +2154,7 @@ void pfs_debug_dump(int fd, int num_bytes) {
 
   PBL_LOG_HEXDUMP_DBG(bytes, num_bytes);
 cleanup:
-  kernel_free(bytes);
+  pbl_free(bytes);
 }
 
 /*

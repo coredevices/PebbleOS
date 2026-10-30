@@ -3,12 +3,12 @@
 
 #include "wakeup_ui.h"
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_install_manager.h>
@@ -59,7 +59,7 @@ static void prv_show_dialog(void *context) {
   prv_each_app_ids(data->count, data->app_ids, prv_find_len_helper, &missed_app_titles_len);
 
   int16_t missed_message_len = strlen(missed_text) + missed_app_titles_len;
-  char *missed_message = kernel_zalloc(missed_message_len + 1);
+  char *missed_message = pbl_zalloc(missed_message_len + 1);
 
   strncpy(missed_message, missed_text, strlen(missed_text));
   i18n_free(missed_text, data);
@@ -68,8 +68,8 @@ static void prv_show_dialog(void *context) {
   missed_message[missed_message_len] = '\0';
 
   // must free the buffer passed in
-  kernel_free(data->app_ids);
-  kernel_free(data);
+  pbl_free(data->app_ids);
+  pbl_free(data);
 
   ExpandableDialog *ex_dialog = expandable_dialog_create(nullptr);
   Dialog *dialog = expandable_dialog_get_dialog(ex_dialog);
@@ -82,7 +82,7 @@ static void prv_show_dialog(void *context) {
 // ---------------------------------------------------------------------------
 // Display our alert
 void wakeup_popup_window(uint8_t missed_apps_count, AppInstallId *missed_app_ids) {
-  WakeupUICbData *data = kernel_malloc(sizeof(WakeupUICbData));
+  WakeupUICbData *data = pbl_malloc(sizeof(WakeupUICbData));
   if (data) {
     *data = (WakeupUICbData){
       .count = missed_apps_count,

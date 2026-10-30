@@ -7,6 +7,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -22,7 +23,6 @@
 
 #include <applib/health_service.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 
 PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
@@ -114,7 +114,7 @@ PBL_T_STATIC void prv_read_event_from_buffer_and_consume(CircularBuffer *buffer,
 
 static void prv_remove_and_free_subscription(HRMSubscriberState *state) {
   list_remove((ListNode *)state, &s_manager_state.subscribers, nullptr);
-  kernel_free(state);
+  pbl_free(state);
 }
 
 #if UNITTEST
@@ -628,14 +628,14 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
       break;
 #ifdef CONFIG_MFG
     case HRMFeature_CTR: {
-      HRMCTRData *ctr_data = kernel_zalloc_check(sizeof(HRMCTRData));
+      HRMCTRData *ctr_data = pbl_zalloc_check(sizeof(HRMCTRData));
       memcpy(ctr_data->ctr, data->ctr, sizeof(HRMCTRData));
       event->event_type = HRMEvent_CTR;
       event->ctr = ctr_data;
       break;
     }
     case HRMFeature_Leakage: {
-      HRMLeakageData *leakage_data = kernel_zalloc_check(sizeof(HRMLeakageData));
+      HRMLeakageData *leakage_data = pbl_zalloc_check(sizeof(HRMLeakageData));
       memcpy(leakage_data->leakage, data->leakage, sizeof(HRMLeakageData));
       event->event_type = HRMEvent_Leakage;
       event->leakage = leakage_data;
@@ -884,7 +884,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
     session_ref = ++s_manager_state.next_session_ref;
   }
 
-  HRMSubscriberState *state = kernel_malloc_check(sizeof(*state));
+  HRMSubscriberState *state = pbl_malloc_check(sizeof(*state));
   *state = (HRMSubscriberState){
     .session_ref = session_ref,
     .app_id = app_id,

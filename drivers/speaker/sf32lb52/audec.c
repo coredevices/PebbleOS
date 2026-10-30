@@ -1,17 +1,18 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
+
 #include <pbl/drivers/speaker/sf32lb52/audio_definitions.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/services/system_task.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/misc.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_speaker_sf32lb, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
 
@@ -255,7 +256,7 @@ static void prv_apply_volume(AudioDevice *audio_device) {
 
 static bool prv_allocate_buffers(AudioDeviceState *state) {
   // Allocate circular buffer storage
-  state->circ_buffer_storage = kernel_malloc(CIRCULAR_BUF_SIZE_BYTES);
+  state->circ_buffer_storage = pbl_malloc(CIRCULAR_BUF_SIZE_BYTES);
   if (!state->circ_buffer_storage) {
     PBL_LOG_ERR("Failed to allocate circular buffer storage");
     return false;
@@ -270,7 +271,7 @@ static bool prv_allocate_buffers(AudioDeviceState *state) {
 static void prv_free_buffers(AudioDeviceState *state) {
   // Free circular buffer storage
   if (state->circ_buffer_storage) {
-    kernel_free(state->circ_buffer_storage);
+    pbl_free(state->circ_buffer_storage);
     state->circ_buffer_storage = nullptr;
   }
 }
@@ -312,7 +313,7 @@ bool audec_init(AudioDevice *audio_device) {
     // dcache_flush() of one half must not touch lines that belong to the
     // half currently being DMA'd, so both halves need to be aligned.
     const size_t cache_align = dcache_line_size();
-    state->raw_dac_buffer = kernel_malloc(haudcodec->bufSize + cache_align - 1U);
+    state->raw_dac_buffer = pbl_malloc(haudcodec->bufSize + cache_align - 1U);
     PBL_ASSERT(state->raw_dac_buffer, "allocated mem error");
     haudcodec->buf[HAL_AUDCODEC_DAC_CH0] =
         (uint8_t *)(((uintptr_t)state->raw_dac_buffer + cache_align - 1U) &

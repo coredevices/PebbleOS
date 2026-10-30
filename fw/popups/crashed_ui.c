@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 
@@ -12,7 +13,6 @@
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
@@ -32,7 +32,7 @@ static void prv_worker_crash_dialog_unload(void *context) {
   action_bar_layer_deinit(&data->action_bar);
   gbitmap_deinit(&data->check_icon);
   gbitmap_deinit(&data->x_icon);
-  kernel_free(data);
+  pbl_free(data);
 }
 
 static WindowStack *prv_get_window_stack(void) {
@@ -88,7 +88,7 @@ static char *prv_create_worker_crash_reason_string(AppInstallId app_install_id) 
   // "Worker " is 7, optional space is 1, up to 15 for app name, rest of string is 32, 1 for '\0'
   const uint8_t MAX_APP_NAME_STRING_LENGTH = 15;
   const uint8_t CRASH_REASON_BUFFER_SIZE = 7 + 1 + MAX_APP_NAME_STRING_LENGTH + 32 + 1;
-  char *crash_reason = kernel_zalloc_check(CRASH_REASON_BUFFER_SIZE);
+  char *crash_reason = pbl_zalloc_check(CRASH_REASON_BUFFER_SIZE);
   const char *crash_str = i18n_noop("%s%.*s is not responding.\n\nOpen app?");
   sniprintf(crash_reason, CRASH_REASON_BUFFER_SIZE, i18n_get(crash_str, crash_reason),
             app_found ? " " : "", MAX_APP_NAME_STRING_LENGTH, app_found ? entry.name : "");
@@ -99,7 +99,7 @@ static char *prv_create_worker_crash_reason_string(AppInstallId app_install_id) 
 static void prv_push_worker_crash_dialog(void *context) {
   const AppInstallId app_install_id = (AppInstallId)(intptr_t)context;
 
-  WorkerCrashDialogData *data = kernel_zalloc_check(sizeof(WorkerCrashDialogData));
+  WorkerCrashDialogData *data = pbl_zalloc_check(sizeof(WorkerCrashDialogData));
   data->app_install_id = app_install_id;
 
   // Initialize icons for the worker crash dialog's action bar
@@ -127,7 +127,7 @@ static void prv_push_worker_crash_dialog(void *context) {
   }
   Dialog *dialog = actionable_dialog_get_dialog(data->actionable_dialog);
   prv_configure_crash_dialog(dialog, crash_reason);
-  kernel_free(crash_reason);
+  pbl_free(crash_reason);
   actionable_dialog_set_action_bar_type(data->actionable_dialog, DialogActionBarCustom, action_bar);
   DialogCallbacks callbacks = (DialogCallbacks){.unload = prv_worker_crash_dialog_unload};
   dialog_set_callbacks(dialog, &callbacks, data);

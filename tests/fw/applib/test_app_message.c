@@ -20,6 +20,8 @@ extern AppTimer *app_message_outbox_get_ack_nack_timer(void);
 
 // Fakes
 ////////////////////////////////////
+#include <pbl/kernel/malloc.h>
+
 #include <fake_app_timer.h>
 #include <fake_pebble_tasks.h>
 
@@ -282,7 +284,7 @@ void prv_send_data(uint16_t endpoint_id, const uint8_t *data, uint16_t length) {
   }
 
   cl_assert_equal_p(s_sent_data, nullptr);
-  s_sent_data = kernel_malloc(length);
+  s_sent_data = pbl_malloc(length);
   cl_assert(s_sent_data);
   memcpy(s_sent_data, data, length);
   s_sent_data_length = length;
@@ -331,7 +333,7 @@ static void prv_process_sent_data(void) {
   }
   cl_assert(s_remote_receive_handler);
   s_remote_receive_handler(s_sent_endpoint_id, s_sent_data, s_sent_data_length);
-  kernel_free(s_sent_data);
+  pbl_free(s_sent_data);
   s_sent_data = nullptr;
 }
 
@@ -405,7 +407,7 @@ void test_app_message__cleanup(void) {
   cl_assert_equal_b(app_message_is_closed_inbound(), true);
   cl_assert_equal_b(app_message_is_closed_outbound(), true);
   fake_app_timer_deinit();
-  kernel_free(s_sent_data);
+  pbl_free(s_sent_data);
   s_sent_data = nullptr;
 }
 

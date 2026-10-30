@@ -12,6 +12,8 @@ extern void comm_session_send_queue_cleanup(CommSession *session);
 // Fakes & Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include <pbl/kernel/malloc.h>
+
 #include <fake_kernel_malloc.h>
 
 static CommSession s_session;
@@ -74,7 +76,7 @@ void prv_send_job_impl_consume(const SessionSendQueueJob *send_job, size_t lengt
 static int s_free_count;
 
 void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
-  kernel_free(send_job);
+  pbl_free(send_job);
   ++s_free_count;
 }
 
@@ -87,7 +89,7 @@ static const SessionSendJobImpl s_test_job_impl = {
 };
 
 SessionSendQueueJob *prv_create_test_job(const uint8_t *data, size_t length) {
-  TestSendJob *job = kernel_malloc(sizeof(TestSendJob) + length);
+  TestSendJob *job = pbl_malloc(sizeof(TestSendJob) + length);
   cl_assert(job);
   *job = (const TestSendJob){
     .job =

@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/filesystem/pfs.h>
@@ -105,18 +106,18 @@ static int prv_write_notification(TimelineItem *notification, SerializedTimeline
     return result;
   }
 
-  uint8_t *write_buffer = kernel_malloc_check(header->payload_length);
+  uint8_t *write_buffer = pbl_malloc_check(header->payload_length);
 
   timeline_item_serialize_payload(notification, write_buffer, header->payload_length);
   result = pfs_write(fd, write_buffer, header->payload_length);
   if (result < 0) {
     PBL_LOG_ERR("Error writing notification payload %d", result);
-    kernel_free(write_buffer);
+    pbl_free(write_buffer);
     return result;
   }
   bytes_written += result;
 
-  kernel_free(write_buffer);
+  pbl_free(write_buffer);
 
   return bytes_written;
 }
@@ -232,7 +233,7 @@ static bool prv_compress(size_t size_needed, int *fd) {
           "Failed to write notification %s during compression (error %d). Resetting all notifications.",
           uuid_buffer, result);
       // The buffer comes from the calling task's heap (timeline_item_deserialize_item), so it
-      // must not be freed with kernel_free: compression can run on the app task, e.g. when a
+      // must not be freed with pbl_free: compression can run on the app task, e.g. when a
       // workout summary notification is stored while storage is full.
       timeline_item_free_allocated_buffer(&notification);
       goto cleanup;
@@ -578,11 +579,11 @@ static bool prv_compare_ancs_notifications(TimelineItem *notification, const uin
 
   bool found = false;
   if (header->payload_length == payload_size) {
-    uint8_t *read_buffer = kernel_malloc_check(payload_size);
+    uint8_t *read_buffer = pbl_malloc_check(payload_size);
 
     int result = pfs_read(fd, read_buffer, payload_size);
     if (result < 0) {
-      kernel_free(read_buffer);
+      pbl_free(read_buffer);
       return false;
     }
 
@@ -590,7 +591,7 @@ static bool prv_compare_ancs_notifications(TimelineItem *notification, const uin
     pfs_seek(fd, -payload_size, FSeekCur);
 
     found = (memcmp(payload, read_buffer, payload_size) == 0);
-    kernel_free(read_buffer);
+    pbl_free(read_buffer);
   }
   return found;
 }
@@ -606,7 +607,7 @@ bool notification_storage_find_ancs_notification_by_timestamp(
 
   // Serialize notification attributes and actions for easy comparison
   size_t payload_size = timeline_item_get_serialized_payload_size(notification);
-  uint8_t *payload = kernel_malloc_check(payload_size);
+  uint8_t *payload = pbl_malloc_check(payload_size);
   timeline_item_serialize_payload(notification, payload, payload_size);
 
   // Iterate over all records until a match is found
@@ -633,7 +634,7 @@ bool notification_storage_find_ancs_notification_by_timestamp(
     }
   }
 
-  kernel_free(payload);
+  pbl_free(payload);
 
   prv_file_close(fd);
 

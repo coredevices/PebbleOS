@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/build_id.h>
@@ -12,7 +13,6 @@
 #include <pbl/util/string.h>
 
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 #include <system/version.h>
 
@@ -483,7 +483,7 @@ static void prv_dump_log_system_cb(void *context) {
 exit:
   if (status == DumpStatus_DoneFailure || status == DumpStatus_DoneSuccess) {
     state->completed_cb(status == DumpStatus_DoneSuccess);
-    kernel_free(state);
+    pbl_free(state);
   } else {
     // Keep going
     system_task_add_callback(prv_dump_log_system_cb, state);
@@ -503,7 +503,7 @@ bool pbl_log_flash_dump(int generation, pbl_log_flash_dump_line_cb_t line_cb,
     return (false); // no match found
   }
 
-  DumpLogState *state = kernel_malloc_check(sizeof(DumpLogState));
+  DumpLogState *state = pbl_malloc_check(sizeof(DumpLogState));
 
   // Init our state
   *state = (DumpLogState){

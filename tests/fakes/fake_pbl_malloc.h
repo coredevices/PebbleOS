@@ -9,6 +9,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 
@@ -182,50 +183,8 @@ void app_free(void *ptr) {
   free_and_track(ptr);
 }
 
-void *kernel_malloc(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *kernel_zalloc(size_t bytes) {
-  return calloc_and_track(1, bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *kernel_zalloc_check(size_t bytes) {
-  return kernel_zalloc(bytes);
-}
-
-void *kernel_malloc_check(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *kernel_realloc(void *ptr, size_t bytes) {
-  return realloc_and_track(ptr, bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void kernel_free(void *ptr) {
-  free_and_track(ptr);
-}
-
-void *kernel_calloc(size_t count, size_t size) {
-  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
-}
-
-char *kernel_strdup(const char *s) {
-  char *r = malloc_and_track(strlen(s) + 1, PBL_RETURN_ADDRESS(0));
-  if (!r) {
-    return nullptr;
-  }
-
-  strcpy(r, s);
-  return r;
-}
-
-char *kernel_strdup_check(const char *s) {
-  return kernel_strdup(s);
-}
-
 char *task_strdup(const char *s) {
-  return kernel_strdup(s);
+  return pbl_strdup(s);
 }
 
 struct pbl_heap *pbl_malloc_heap(void) {

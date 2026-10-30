@@ -3,12 +3,12 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -277,7 +277,7 @@ void test_attribute__attribute_list_copy(void) {
   // title + subtitle + body + 3 * (attributeid + pointer)
   size_t size_list = attribute_list_get_buffer_size(&list);
   cl_assert_equal_i(size_list, (5 + 1) + (8 + 1) + (4 + 1) + 3 * sizeof(Attribute));
-  uint8_t *buffer = kernel_malloc_check(size_list);
+  uint8_t *buffer = pbl_malloc_check(size_list);
   uint8_t *buffer_orig = buffer;
   AttributeList list2 = {};
   cl_assert(attribute_list_copy(&list2, &list, buffer, buffer + size_list));
@@ -295,7 +295,7 @@ void test_attribute__attribute_list_copy(void) {
   cl_assert(attribute_get_string(&list2, AttributeIdBody, "") !=
             attribute_get_string(&list, AttributeIdBody, ""));
   attribute_list_destroy_list(&list);
-  kernel_free(buffer);
+  pbl_free(buffer);
 }
 
 static void prv_check_app_glance_subtitle_in_attribute_list_deserializes(
@@ -760,7 +760,7 @@ void test_attribute__unknown_attribute_keeps_actions(void) {
 
   const size_t buffer_size = attributes_actions_get_required_buffer_size(
       num_attributes, num_actions, attributes_per_action, string_alloc_size);
-  uint8_t *buffer = kernel_zalloc(buffer_size);
+  uint8_t *buffer = pbl_zalloc(buffer_size);
   uint8_t *const buffer_end = buffer + buffer_size;
   uint8_t *cursor = buffer;
   AttributeList attr_list;
@@ -778,7 +778,7 @@ void test_attribute__unknown_attribute_keeps_actions(void) {
   cl_assert_equal_i(action_group.actions[0].attr_list.num_attributes, 1);
   cl_assert_equal_s(
       attribute_get_string(&action_group.actions[0].attr_list, AttributeIdTitle, nullptr), "Go");
-  kernel_free(buffer);
+  pbl_free(buffer);
 }
 
 void test_attribute__weather_pin_kind_deserializes(void) {

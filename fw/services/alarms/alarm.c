@@ -7,6 +7,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
@@ -25,7 +26,6 @@
 #include <applib/event_service_client.h>
 #include <apps/system_app_ids.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 
 PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
@@ -264,9 +264,9 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
   prv_timeline_remove_alarm(file, alarm->id);
 
   // We allocate some larger variables on the heap to reduce stack usage
-  struct pbl_tm *local_alarm_time = kernel_malloc_check(sizeof(struct pbl_tm));
-  uint8_t *settings_file_buffer = kernel_malloc_check(ALARM_ENTRY_SIZE);
-  AppInstallEntry *entry = kernel_malloc_check(sizeof(AppInstallEntry));
+  struct pbl_tm *local_alarm_time = pbl_malloc_check(sizeof(struct pbl_tm));
+  uint8_t *settings_file_buffer = pbl_malloc_check(ALARM_ENTRY_SIZE);
+  AppInstallEntry *entry = pbl_malloc_check(sizeof(AppInstallEntry));
   if (!app_install_get_entry_for_install_id(APP_ID_ALARMS, entry)) {
     goto cleanup;
   }
@@ -304,9 +304,9 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
   }
 
 cleanup:
-  kernel_free(settings_file_buffer);
-  kernel_free(local_alarm_time);
-  kernel_free(entry);
+  pbl_free(settings_file_buffer);
+  pbl_free(local_alarm_time);
+  pbl_free(entry);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -387,7 +387,7 @@ static void prv_persist_armed_alarm(SettingsFile *file) {
 
 // ----------------------------------------------------------------------------------------------
 static status_t prv_remove_untracked_alarm_pins(SettingsFile *file) {
-  Uuid *tracked = kernel_malloc_check(MAX_CONFIGURED_ALARMS * ALARM_ENTRY_SIZE);
+  Uuid *tracked = pbl_malloc_check(MAX_CONFIGURED_ALARMS * ALARM_ENTRY_SIZE);
   size_t tracked_count = 0;
   status_t rv = S_SUCCESS;
 
@@ -411,7 +411,7 @@ static status_t prv_remove_untracked_alarm_pins(SettingsFile *file) {
   if (rv == S_SUCCESS) {
     rv = alarm_pin_remove_untracked_future(rtc_get_time(), tracked, tracked_count);
   }
-  kernel_free(tracked);
+  pbl_free(tracked);
   return rv;
 }
 
@@ -535,7 +535,7 @@ PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
 
   // We allocate some larger variables on the heap to reduce stack usage
   AlarmConfig *config = &s_most_recent_alarm_config;
-  SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
+  SettingsFile *file = pbl_malloc_check(sizeof(SettingsFile));
   bool rv = prv_file_open_and_lock(file);
   if (!rv) {
     goto cleanup;
@@ -555,7 +555,7 @@ PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
 
 cleanup:
   prv_file_close_and_unlock(file);
-  kernel_free(file);
+  pbl_free(file);
 
   PBL_LOG_INFO("Alarm %u timeout", id);
   s_most_recent_alarm_recorded = false;

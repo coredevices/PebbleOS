@@ -6,6 +6,7 @@
 #include <pbl/bluetooth/comm.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/util/math.h>
@@ -14,7 +15,6 @@
 #include <console/pulse_protocol_impl.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 #define PULSE_PP_OPCODE_DATA  (1)
 #define PULSE_PP_OPCODE_OPEN  (2)
@@ -190,12 +190,12 @@ static void prv_pulse_pp_send_cb(void *data) {
     memcpy(resp, &cb_data->packet, cb_data->packet_length);
     pulse_reliable_send(resp, cb_data->packet_length);
   }
-  kernel_free(data);
+  pbl_free(data);
 }
 
 static void prv_pulse_pp_send(uint8_t opcode, uint8_t *data, size_t data_length) {
   size_t packet_length = sizeof(PulsePPCallbackPacket) + data_length;
-  PulsePPCallbackPacket *cb_data = kernel_malloc_check(packet_length);
+  PulsePPCallbackPacket *cb_data = pbl_malloc_check(packet_length);
   cb_data->packet_length = sizeof(PulsePPPacket) + data_length;
   cb_data->packet.opcode = opcode;
 

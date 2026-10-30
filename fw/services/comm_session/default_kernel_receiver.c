@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_receive_router.h>
@@ -9,7 +10,6 @@
 #include <pbl/util/slist.h>
 
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -65,7 +65,7 @@ static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
   }
 
   size_t size_needed = sizeof(DefaultReceiverImpl) + total_payload_size;
-  DefaultReceiverImpl *receiver = kernel_zalloc(size_needed);
+  DefaultReceiverImpl *receiver = pbl_zalloc(size_needed);
 
   if (!receiver) {
     PBL_LOG_WRN("Could not allocate receiver, handler:%p size:%d", endpoint->handler,
@@ -119,7 +119,7 @@ static bool prv_drain_one_pending(SingleListNode **head) {
     PBL_ASSERTN(impl->handler_scheduled && impl->session);
     impl->endpoint->handler(impl->session, impl->payload, impl->total_payload_size);
     prv_wipe_receiver_data(impl);
-    kernel_free(impl);
+    pbl_free(impl);
   }
   return (*head != nullptr);
 }
@@ -188,7 +188,7 @@ static void prv_default_kernel_receiver_cleanup(Receiver *receiver) {
     return; // the kernel BG/main callback will free the data
   }
   prv_wipe_receiver_data(impl);
-  kernel_free(impl);
+  pbl_free(impl);
 }
 
 const ReceiverImplementation g_default_kernel_receiver_implementation = {

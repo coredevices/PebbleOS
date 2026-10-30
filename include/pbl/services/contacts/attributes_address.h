@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/timeline/item.h>
 
 /**
@@ -24,7 +25,7 @@
  * }
  * size_t buf_size = attributes_address_get_buffer_size(num_attributes, num_addresses,
  *                                                      attrs_per_addr, str_size);
- * uint8_t *buf = kernel_malloc_check(buf_size);
+ * uint8_t *buf = pbl_malloc_check(buf_size);
  * uint8_t *cursor = buf;
  * attributes_address_init(&attr_list, &addr_list, &cursor, num_attributes, num_addresses,
  *                         attrs_per_addr);

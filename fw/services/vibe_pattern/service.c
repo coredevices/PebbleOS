@@ -8,6 +8,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
@@ -19,7 +20,6 @@
 #include <pbl/util/math.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
 
@@ -72,7 +72,7 @@ static void prv_vibe_history_clear(uint64_t cutoff) {
       break;
     }
     s_vibe_history = (VibeHistory *)list_get_next((ListNode *)vibe);
-    kernel_free(vibe);
+    pbl_free(vibe);
   }
 }
 
@@ -95,7 +95,7 @@ static void prv_vibe_history_start_event(void) {
     pbl_mutex_unlock(&s_vibe_history_mutex);
     return;
   }
-  VibeHistory *vibe = kernel_malloc(sizeof(VibeHistory));
+  VibeHistory *vibe = pbl_malloc(sizeof(VibeHistory));
   if (vibe == nullptr) {
     s_vibe_history_enabled = false;
     pbl_mutex_unlock(&s_vibe_history_mutex);
@@ -287,7 +287,7 @@ static void prv_timer_callback(void *data) {
   // remove the event I've finished
   VibePatternStep *removed_node = s_vibe_queue_head;
   s_vibe_queue_head = (VibePatternStep *)list_pop_head((ListNode *)s_vibe_queue_head);
-  kernel_free(removed_node);
+  pbl_free(removed_node);
 
   if (s_vibe_queue_head != nullptr) {
     // move to the next step
@@ -343,7 +343,7 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
     return false;
   }
 
-  VibePatternStep *step = kernel_malloc(sizeof(VibePatternStep));
+  VibePatternStep *step = pbl_malloc(sizeof(VibePatternStep));
   if (step == nullptr) {
     PBL_LOG_ERR("Couldn't malloc for a vibe step");
     pbl_mutex_unlock(&s_vibe_pattern_mutex);
@@ -437,7 +437,7 @@ static void prv_clear_pattern_locked(void) {
   while (s_vibe_queue_head) {
     VibePatternStep *removed_node = s_vibe_queue_head;
     s_vibe_queue_head = (VibePatternStep *)list_pop_head((ListNode *)s_vibe_queue_head);
-    kernel_free(removed_node);
+    pbl_free(removed_node);
     dropped_steps++;
   }
   // Log whether a pattern was still live and whether the motor was on: a

@@ -32,14 +32,3 @@ void task_free(void *ptr);
 void task_free_with_pc(void *ptr, uintptr_t client_pc);
 #endif
 char *task_strdup(const char *s);
-
-void *kernel_malloc(size_t bytes);
-void *kernel_malloc_check(size_t bytes);
-void *kernel_realloc(void *ptr, size_t bytes);
-void *kernel_zalloc(size_t size);
-void *kernel_zalloc_check(size_t size);
-void *kernel_calloc(size_t count, size_t size);
-void *kernel_calloc_check(size_t count, size_t size);
-void kernel_free(void *ptr);
-char *kernel_strdup(const char *s);
-char *kernel_strdup_check(const char *s);

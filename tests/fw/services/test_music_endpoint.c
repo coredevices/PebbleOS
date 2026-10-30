@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_remote_os.h>
 #include <pbl/services/music.h>
@@ -12,7 +13,6 @@
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <stubs_imaging.h>
 
 // Stubs & Fakes
@@ -149,9 +149,9 @@ static void prv_set_dummy_server_connected(bool connected) {
 }
 
 static GBitmap *prv_make_album_art(void) {
-  GBitmap *bitmap = kernel_zalloc(sizeof(*bitmap));
-  bitmap->addr = kernel_zalloc(4);
-  bitmap->palette = kernel_zalloc(sizeof(GColor));
+  GBitmap *bitmap = pbl_zalloc(sizeof(*bitmap));
+  bitmap->addr = pbl_zalloc(4);
+  bitmap->palette = pbl_zalloc(sizeof(GColor));
   return bitmap;
 }
 

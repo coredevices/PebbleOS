@@ -6,6 +6,7 @@
 #include <pbl/bluetooth/comm.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -22,7 +23,6 @@
 #include <comm/ble/kernel_le_client/app_launch/app_launch.h>
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 
 PBL_LOG_MODULE_DEFINE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
@@ -193,7 +193,7 @@ CommSession *comm_session_open(Transport *transport, const TransportImplementati
     }
   }
 
-  CommSession *session = kernel_malloc(sizeof(CommSession));
+  CommSession *session = pbl_malloc(sizeof(CommSession));
   if (!session) {
     PBL_LOG_ERR("Not enough memory for new CommSession");
     return nullptr;
@@ -254,7 +254,7 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   comm_session_receive_router_cleanup(session);
   comm_session_send_queue_cleanup(session);
   list_remove(&session->node, (ListNode **)&s_session_head, nullptr);
-  kernel_free(session);
+  pbl_free(session);
 }
 
 void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,

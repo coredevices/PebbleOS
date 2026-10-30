@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/blob_db/sync.h>
@@ -10,8 +11,6 @@
 #include <pbl/services/timeline/reminders.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -52,7 +51,7 @@ status_t reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id) {
   if (size == 0) {
     return E_DOES_NOT_EXIST;
   }
-  uint8_t *read_buf = kernel_malloc_check(size);
+  uint8_t *read_buf = pbl_malloc_check(size);
   status_t rv = reminder_db_read((uint8_t *)id, sizeof(TimelineItemId), read_buf, size);
   if (rv != S_SUCCESS) {
     goto cleanup;
@@ -65,11 +64,11 @@ status_t reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id) {
     goto cleanup;
   }
 
-  kernel_free(read_buf);
+  pbl_free(read_buf);
   return S_SUCCESS;
 
 cleanup:
-  kernel_free(read_buf);
+  pbl_free(read_buf);
   return rv;
 }
 
@@ -170,7 +169,7 @@ status_t reminder_db_insert_item(TimelineItem *item) {
   }
 
   size_t payload_size = timeline_item_get_serialized_payload_size(item);
-  uint8_t *buffer = kernel_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
+  uint8_t *buffer = pbl_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
   timeline_item_serialize_header(item, (SerializedTimelineItemHeader *)buffer);
   timeline_item_serialize_payload(item, buffer + sizeof(SerializedTimelineItemHeader),
                                   payload_size);
@@ -185,7 +184,7 @@ status_t reminder_db_insert_item(TimelineItem *item) {
   blob_db_sync_record(BlobDBIdReminders, (uint8_t *)&item->header.id, sizeof(TimelineItemId),
                       rtc_get_time());
 
-  kernel_free(buffer);
+  pbl_free(buffer);
   return rv;
 }
 

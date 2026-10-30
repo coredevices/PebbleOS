@@ -1,10 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/sync_util.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -26,7 +25,7 @@ bool sync_util_build_dirty_list_cb(SettingsFile *file, SettingsRecordInfo *info,
   if (info->dirty) {
     BlobDBDirtyItem *dirty_list = *(BlobDBDirtyItem **)context;
 
-    BlobDBDirtyItem *new_node = kernel_zalloc(sizeof(BlobDBDirtyItem) + info->key_len);
+    BlobDBDirtyItem *new_node = pbl_zalloc(sizeof(BlobDBDirtyItem) + info->key_len);
     if (!new_node) {
       PBL_LOG_WRN("Ran out of memory while building a dirty list");
       return false;

@@ -6,6 +6,7 @@
 #include <pbl/btutil/sm_util.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -21,7 +22,6 @@
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -500,7 +500,7 @@ static void prv_call_ble_bonding_change_handlers_impl(pbl_bt_bonding_id_t bondin
 static void prv_call_ble_bonding_change_handlers_cb(void *data) {
   BleBondingChangeContext *context = data;
   prv_call_ble_bonding_change_handlers_impl(context->bonding, context->op);
-  kernel_free(context);
+  pbl_free(context);
 }
 
 static void prv_call_ble_bonding_change_handlers(pbl_bt_bonding_id_t bonding,
@@ -510,7 +510,7 @@ static void prv_call_ble_bonding_change_handlers(pbl_bt_bonding_id_t bonding,
     return;
   }
 
-  BleBondingChangeContext *context = kernel_malloc_check(sizeof(*context));
+  BleBondingChangeContext *context = pbl_malloc_check(sizeof(*context));
 
   *context = (BleBondingChangeContext){
     .bonding = bonding,
@@ -1456,16 +1456,16 @@ static void prv_delete_all_pairings_itr(SettingsFile *old_file, SettingsFile *ne
   }
 
   // Re-write non-pairing entries
-  void *key = kernel_zalloc_check(info->key_len);
+  void *key = pbl_zalloc_check(info->key_len);
   info->get_key(old_file, key, info->key_len);
 
-  void *data = kernel_malloc_check(info->val_len);
+  void *data = pbl_malloc_check(info->val_len);
   info->get_val(old_file, data, info->val_len);
 
   settings_file_set(new_file, key, info->key_len, data, info->val_len);
 
-  kernel_free(key);
-  kernel_free(data);
+  pbl_free(key);
+  pbl_free(data);
 }
 
 void bt_persistent_storage_delete_all_pairings(void) {

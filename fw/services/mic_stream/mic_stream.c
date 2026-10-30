@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/audio_endpoint.h>
@@ -13,7 +14,6 @@
 #include <pbl/services/voice_endpoint.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 
@@ -86,7 +86,7 @@ static void prv_finish_teardown(const MicStreamTeardown *teardown) {
   // The mic stops first, so no frame arrives while the stop is sent. Also drops the reservation;
   // no-op on the mic if it never started or dictation already took it.
   mic_manager_release(MicClientAppStream);
-  kernel_free(teardown->chunk);
+  pbl_free(teardown->chunk);
   if (teardown->close_transfer) {
     if (teardown->phone_expects_stop) {
       audio_endpoint_stop_transfer(teardown->session);
@@ -196,7 +196,7 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
     return MicStreamServiceStartErrNoMemory;
   }
   const uint16_t chunk_samples = voice_speex_get_frame_size();
-  int16_t *chunk = kernel_malloc(chunk_samples * sizeof(int16_t));
+  int16_t *chunk = pbl_malloc(chunk_samples * sizeof(int16_t));
   if (!chunk) {
     mic_manager_release(MicClientAppStream);
     return MicStreamServiceStartErrNoMemory;
@@ -204,7 +204,7 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
   // Fails while a previous session still closes
   const AudioEndpointSessionId session = audio_endpoint_setup_transfer(prv_transfer_stopped);
   if (session == AUDIO_ENDPOINT_SESSION_INVALID_ID) {
-    kernel_free(chunk);
+    pbl_free(chunk);
     mic_manager_release(MicClientAppStream);
     return MicStreamServiceStartErrBusy;
   }
@@ -212,7 +212,7 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_focus_losses != focus_losses) {
     pbl_mutex_unlock(&s_lock);
-    kernel_free(chunk);
+    pbl_free(chunk);
     mic_manager_release(MicClientAppStream);
     audio_endpoint_cancel_transfer(session);
     return MicStreamServiceStartErrNotForeground;

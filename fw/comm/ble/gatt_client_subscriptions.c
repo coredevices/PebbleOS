@@ -11,6 +11,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
@@ -20,7 +21,6 @@
 
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 // -------------------------------------------------------------------------------------------------
 // Static variables
@@ -410,7 +410,7 @@ static void prv_release_buffer(void) {
     --s_circular_buffer_retain_count;
     if (s_circular_buffer_retain_count == 0) {
       // Last subscription to require the circular buffer, go ahead and clean it up:
-      kernel_free(s_circular_buffer);
+      pbl_free(s_circular_buffer);
       s_circular_buffer = nullptr;
       // if the buffer is destroyed, there are no more events
       s_is_notification_event_pending = false;
@@ -428,7 +428,7 @@ static bool prv_retain_buffer(void) {
       // First subscription to require the circular buffer, go ahead and create it:
       PBL_ASSERTN(s_circular_buffer == nullptr);
       const size_t size = sizeof(CircularBuffer) + GATT_CLIENT_SUBSCRIPTIONS_BUFFER_SIZE;
-      uint8_t *buffer = (uint8_t *)kernel_zalloc(size);
+      uint8_t *buffer = (uint8_t *)pbl_zalloc(size);
       if (!buffer) {
         rv = false;
         goto unlock;
@@ -497,7 +497,7 @@ static bool prv_sanitize_subscription_type(BLESubscription *subscription_type,
 static void prv_remove_subscription(GAPLEConnection *connection,
                                     GATTClientSubscriptionNode *subscription) {
   list_remove(&subscription->node, (ListNode **)&connection->gatt_subscriptions, nullptr);
-  kernel_free(subscription);
+  pbl_free(subscription);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -540,7 +540,7 @@ static enum pbl_bt_errno prv_subscribe(pbl_bt_characteristic_t characteristic_re
       return PBL_BT_ERRNO_INVALID_STATE;
     }
     // No subscriptions for the characteristic yet, go create one:
-    subscription = (GATTClientSubscriptionNode *)kernel_malloc(sizeof(GATTClientSubscriptionNode));
+    subscription = (GATTClientSubscriptionNode *)pbl_malloc(sizeof(GATTClientSubscriptionNode));
     if (!subscription) {
       // OOM
       return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
@@ -667,7 +667,7 @@ void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *con
 
       if (!should_unsubscribe) {
         // Just free the node and don't bother unsubscribing:
-        kernel_free(node);
+        pbl_free(node);
       }
       node = next;
     }

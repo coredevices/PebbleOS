@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/util/math.h>
@@ -13,7 +14,6 @@
 #include <comm/qemu/transport.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct {
   CommSession *session;
@@ -40,7 +40,7 @@ static void prv_send_next(Transport *transport) {
   }
 
   const size_t temp_buffer_size = MIN(bytes_remaining, QEMU_MAX_DATA_LEN);
-  uint8_t *temp_buffer = kernel_malloc_check(temp_buffer_size);
+  uint8_t *temp_buffer = pbl_malloc_check(temp_buffer_size);
   while (bytes_remaining) {
     const size_t bytes_to_copy = MIN(bytes_remaining, temp_buffer_size);
     comm_session_send_queue_copy(session, 0 /* start_offset */, bytes_to_copy, temp_buffer);
@@ -48,7 +48,7 @@ static void prv_send_next(Transport *transport) {
     comm_session_send_queue_consume(session, bytes_to_copy);
     bytes_remaining -= bytes_to_copy;
   }
-  kernel_free(temp_buffer);
+  pbl_free(temp_buffer);
 }
 
 // -----------------------------------------------------------------------------------------

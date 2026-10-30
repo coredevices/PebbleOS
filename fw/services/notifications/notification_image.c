@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/notifications/notification_image.h>
 
 #include <applib/graphics/gtypes.h>
-#include <kernel/pbl_malloc.h>
 
 //! Responses are delivered on KernelMain while the card that requested and renders the image runs
 //! on KernelMain (modal) or the App task (notification history), so the slot needs a lock. It is
@@ -21,9 +21,9 @@ static bool s_pending; //!< Waiting on a response for s_token.
 
 static void prv_free(GBitmap *bitmap) {
   if (bitmap) {
-    kernel_free(bitmap->addr);
-    kernel_free(bitmap->palette);
-    kernel_free(bitmap);
+    pbl_free(bitmap->addr);
+    pbl_free(bitmap->palette);
+    pbl_free(bitmap);
   }
 }
 

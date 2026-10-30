@@ -10,6 +10,7 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
@@ -106,7 +107,7 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
   }
 
   // Allocate frequency domain buffer (FFT_SIZE/2 + 1 complex points)
-  kiss_fft_cpx *freq_data = kernel_malloc_check((FFT_SIZE / 2 + 1) * sizeof(kiss_fft_cpx));
+  kiss_fft_cpx *freq_data = pbl_malloc_check((FFT_SIZE / 2 + 1) * sizeof(kiss_fft_cpx));
 
   // Perform real FFT
   kiss_fftr(fft_cfg, samples, freq_data);
@@ -136,7 +137,7 @@ static int prv_find_peak_frequency(int16_t *samples, size_t sample_count) {
                (long)max_magnitude);
 
   // Clean up
-  kernel_free(freq_data);
+  pbl_free(freq_data);
   kiss_fftr_free(fft_cfg);
 
   // Check if magnitude is above threshold
@@ -168,7 +169,7 @@ static void prv_analyze_dual_mic(AppData *data) {
   uint32_t num_channels = mic_get_channels(MIC);
 
   // Allocate temporary buffer for FFT analysis
-  int16_t *fft_buffer = kernel_malloc_check(FFT_SIZE * 2 * sizeof(int16_t));
+  int16_t *fft_buffer = pbl_malloc_check(FFT_SIZE * 2 * sizeof(int16_t));
 
   while (data->flash_addr - FLASH_START < BLOCK_SIZE) {
     // Read first portion of data from flash for FFT analysis
@@ -220,7 +221,7 @@ static void prv_analyze_dual_mic(AppData *data) {
       snprintf(data->mic2_text, STATUS_STR_LEN, "Mic 2: N/A");
     }
   }
-  kernel_free(fft_buffer);
+  pbl_free(fft_buffer);
 }
 
 // Microphone data callback - writes to flash

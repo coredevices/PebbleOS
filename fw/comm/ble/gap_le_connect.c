@@ -12,6 +12,7 @@
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
@@ -20,7 +21,6 @@
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -586,7 +586,7 @@ static bool prv_intent_matches_connection(const GAPLEConnectionIntent *intent,
 
 static void prv_intent_remove_and_free(GAPLEConnectionIntent *intent) {
   list_remove(&intent->node, (ListNode **)&s_intents, nullptr);
-  kernel_free(intent);
+  pbl_free(intent);
 }
 
 static bool prv_intent_filter_by_device(ListNode *node, void *data) {
@@ -731,7 +731,7 @@ static enum pbl_bt_errno prv_register_intent(struct RegisterIntentRequest *reque
   // Create intent for device and add to list:
   const size_t alloc_size = sizeof(GAPLEConnectionIntent) +
                             (request->is_bonding_based ? sizeof(GAPLEConnectionIntentBonding) : 0);
-  intent = (GAPLEConnectionIntent *)kernel_malloc(alloc_size);
+  intent = (GAPLEConnectionIntent *)pbl_malloc(alloc_size);
   if (!intent) {
     return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
   }

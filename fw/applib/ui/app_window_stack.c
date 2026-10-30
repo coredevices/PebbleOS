@@ -7,11 +7,11 @@
 #include "window_stack.h"
 #include "window_stack_private.h"
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 #ifdef CONFIG_SHELL
@@ -95,7 +95,7 @@ static int prv_cmd_windows(const struct pbl_shell *sh, size_t argc, char **argv)
     pbl_shell_print(sh, "window %p <%s>", info.dump[i].addr, info.dump[i].name);
   }
 cleanup:
-  kernel_free(info.dump);
+  pbl_free(info.dump);
   return ret;
 }
 

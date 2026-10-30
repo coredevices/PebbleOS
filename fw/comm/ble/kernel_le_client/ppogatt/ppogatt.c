@@ -12,6 +12,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session_transport.h>
@@ -25,7 +26,6 @@
 #include <comm/ble/gatt_client_operations.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 typedef enum {
@@ -413,7 +413,7 @@ static void prv_timer_callback(void *unused) {
 // -------------------------------------------------------------------------------------------------
 
 static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry_timer) {
-  PPoGATTClient *client = kernel_malloc(sizeof(PPoGATTClient));
+  PPoGATTClient *client = pbl_malloc(sizeof(PPoGATTClient));
   if (!client) {
     return nullptr;
   }
@@ -454,7 +454,7 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   list_remove(&client->node, (ListNode **)&s_ppogatt_head, nullptr);
   new_timer_delete(client->rx_ack_timer);
   new_timer_delete(client->send_retry_timer);
-  kernel_free(client);
+  pbl_free(client);
 
   prv_update_ack_timer();
 }
@@ -813,7 +813,7 @@ static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *v
 static void prv_rediscover_kernelbg_cb(void *data) {
   struct pbl_bt_device_internal *device = (struct pbl_bt_device_internal *)data;
   const enum pbl_bt_errno e = gatt_client_discovery_rediscover_all(device);
-  kernel_free(device);
+  pbl_free(device);
   if (e != PBL_BT_ERRNO_OK) {
     PBL_LOG_ERR("PPoGATT couldn't restart discovery: %d", (int)e);
   }
@@ -828,7 +828,7 @@ static void prv_request_meta_rediscovery(PPoGATTClient *client) {
     return;
   }
 
-  struct pbl_bt_device_internal *device = kernel_malloc(sizeof(struct pbl_bt_device_internal));
+  struct pbl_bt_device_internal *device = pbl_malloc(sizeof(struct pbl_bt_device_internal));
   if (!device) {
     return;
   }
@@ -1195,25 +1195,25 @@ typedef struct {
 static void prv_reversed_subscribed_kernelmain_cb(void *data) {
   ReversedSubscribedCtx *ctx = (ReversedSubscribedCtx *)data;
   ppogatt_reversed_handle_subscribed(&ctx->device, ctx->conn_handle);
-  kernel_free(ctx);
+  pbl_free(ctx);
 }
 
 static void prv_reversed_unsubscribed_kernelmain_cb(void *data) {
   ReversedUnsubscribedCtx *ctx = (ReversedUnsubscribedCtx *)data;
   ppogatt_reversed_handle_unsubscribed(ctx->conn_handle);
-  kernel_free(ctx);
+  pbl_free(ctx);
 }
 
 static void prv_reversed_data_kernelmain_cb(void *data) {
   ReversedDataCtx *ctx = (ReversedDataCtx *)data;
   ppogatt_reversed_handle_data(ctx->conn_handle, ctx->buf, ctx->len);
-  kernel_free(ctx->buf);
-  kernel_free(ctx);
+  pbl_free(ctx->buf);
+  pbl_free(ctx);
 }
 
 void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *device,
                                         uint16_t conn_handle) {
-  ReversedSubscribedCtx *ctx = kernel_malloc(sizeof(*ctx));
+  ReversedSubscribedCtx *ctx = pbl_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG subscribed: out of memory");
     return;
@@ -1224,7 +1224,7 @@ void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *dev
 }
 
 void pbl_bt_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
-  ReversedUnsubscribedCtx *ctx = kernel_malloc(sizeof(*ctx));
+  ReversedUnsubscribedCtx *ctx = pbl_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG unsubscribed: out of memory");
     return;
@@ -1234,10 +1234,10 @@ void pbl_bt_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
 }
 
 void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len) {
-  ReversedDataCtx *ctx = kernel_malloc(sizeof(*ctx));
+  ReversedDataCtx *ctx = pbl_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG data: out of memory");
-    kernel_free(buf);
+    pbl_free(buf);
     return;
   }
   ctx->conn_handle = conn_handle;
@@ -1388,7 +1388,7 @@ static PPoGATTPacket *prv_lazily_allocate_packet_if_needed(const PPoGATTClient *
     if (max_payload_size == 0) {
       return nullptr;
     }
-    packet = (PPoGATTPacket *)kernel_malloc_check(sizeof(PPoGATTPacket) + max_payload_size);
+    packet = (PPoGATTPacket *)pbl_malloc_check(sizeof(PPoGATTPacket) + max_payload_size);
     *heap_packet_in_out = packet;
   }
   return packet;
@@ -1669,7 +1669,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
     }
   }
 
-  kernel_free(heap_packet);
+  pbl_free(heap_packet);
 
   client->send_in_progress = false;
 }

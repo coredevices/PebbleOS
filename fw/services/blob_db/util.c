@@ -1,9 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/util.h>
-
-#include <kernel/pbl_malloc.h>
 
 void blob_db_util_free_dirty_list(BlobDBDirtyItem *dirty_list) {
   ListNode *head = &dirty_list->node;
@@ -11,6 +10,6 @@ void blob_db_util_free_dirty_list(BlobDBDirtyItem *dirty_list) {
   while (head) {
     cur = head;
     list_remove(cur, &head, nullptr);
-    kernel_free(cur);
+    pbl_free(cur);
   }
 }

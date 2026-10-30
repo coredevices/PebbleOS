@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/notifications/action_chaining_window.h>
 
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct {
   Window window;
@@ -86,7 +86,7 @@ static void prv_chaining_window_unload(Window *window) {
 #if PBL_RECT
   status_bar_layer_deinit(&data->status_layer);
 #endif
-  kernel_free(data);
+  pbl_free(data);
 }
 
 static void prv_chaining_window_load(Window *window) {
@@ -131,7 +131,7 @@ void action_chaining_window_push(WindowStack *window_stack, const char *title,
                                  TimelineItemActionGroup *action_group,
                                  ActionChainingMenuSelectCb select_cb, void *select_cb_context,
                                  ActionChainingMenuClosedCb closed_cb, void *closed_cb_context) {
-  ChainingWindowData *data = kernel_zalloc_check(sizeof(ChainingWindowData));
+  ChainingWindowData *data = pbl_zalloc_check(sizeof(ChainingWindowData));
   *data = (ChainingWindowData){
     .title = title,
     .action_group = action_group,

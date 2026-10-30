@@ -8,11 +8,11 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
 
 #include <applib/applib_malloc.auto.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
@@ -384,7 +384,7 @@ static void prv_session_do_double_tap_handle(PebbleEvent *e, void *context) {
 // -----------------------------------------------------------------------------------------------
 AccelServiceState *accel_session_create(void) {
   prv_assert_session_task();
-  AccelServiceState *state = kernel_malloc_check(sizeof(AccelServiceState));
+  AccelServiceState *state = pbl_malloc_check(sizeof(AccelServiceState));
 
   *state = (AccelServiceState){
     .sampling_rate = ACCEL_DEFAULT_SAMPLING_RATE,
@@ -412,7 +412,7 @@ void accel_session_delete(AccelServiceState *session) {
   PBL_ASSERTN(session->manager_state == nullptr);
 
   // A data event still queued for the session only reads its token
-  kernel_free(session);
+  pbl_free(session);
 }
 
 // ----------------------------------------------------------------------------------------------

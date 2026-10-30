@@ -7,6 +7,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/compositor_private.h>
@@ -16,7 +17,6 @@
 #include <applib/graphics/gcolor_definitions.h>
 #include <applib/graphics/gtypes.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 static void (*s_update_complete_handler)(bool success);
 
@@ -149,7 +149,7 @@ void compositor_display_init(void) {
 
   if (max_width > 0) {
     s_corner_bytes = PIXEL_BYTE(max_width - 1) + 1;
-    s_saved_corners = kernel_malloc_check(DISPLAY->num_corners * 2 * 2 * s_corner_bytes);
+    s_saved_corners = pbl_malloc_check(DISPLAY->num_corners * 2 * 2 * s_corner_bytes);
   }
 }
 

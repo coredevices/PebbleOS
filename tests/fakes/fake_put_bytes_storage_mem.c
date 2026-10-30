@@ -6,10 +6,10 @@
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/put_bytes/put_bytes_storage_internal.h>
 
 #include <clar_asserts.h>
-#include <kernel/pbl_malloc.h>
 
 #define FAKE_STORAGE_MAX_SIZE (512 * 1024)
 
@@ -44,7 +44,7 @@ static bool fake_pb_storage_mem_init(PutBytesStorage *storage, PutBytesObjectTyp
   s_storage_data.total_size = buffer_size;
   PutBytesStorageInfo *info_copy = nullptr;
   if (info) {
-    info_copy = (PutBytesStorageInfo *)kernel_malloc_check(sizeof(PutBytesStorageInfo));
+    info_copy = (PutBytesStorageInfo *)pbl_malloc_check(sizeof(PutBytesStorageInfo));
     *info_copy = *info;
   }
   s_storage_data.info = info_copy;
@@ -79,7 +79,7 @@ static uint32_t fake_pb_storage_mem_calculate_crc(PutBytesStorage *storage,
 }
 
 static void prv_cleanup(void) {
-  kernel_free(s_storage_data.info);
+  pbl_free(s_storage_data.info);
   s_storage_data.info = nullptr;
   s_storage_data.total_size = 0;
 }

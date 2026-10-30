@@ -7,7 +7,7 @@
 
 #include <string.h>
 
-#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/malloc.h>
 
 struct {
   RamStorage ram_storage;
@@ -44,7 +44,7 @@ status_t test_db_is_dirty(bool *is_dirty_out) {
 bool prv_dirty_items_each_cb(RamStorageEntry *entry, void *context) {
   BlobDBDirtyItem **dirty_items = context;
   if (entry->flags & RamStorageFlagDirty) {
-    BlobDBDirtyItem *new_item = kernel_zalloc_check(sizeof(BlobDBDirtyItem) + entry->key_len);
+    BlobDBDirtyItem *new_item = pbl_zalloc_check(sizeof(BlobDBDirtyItem) + entry->key_len);
     memcpy(new_item->key, entry->key, entry->key_len);
     new_item->key_len = entry->key_len;
     *dirty_items =
