@@ -16,29 +16,7 @@ typedef struct {
 // The SDK exporter can't crawl the framebuffer headers.
 #if !defined(SDK)
 
-#ifdef UNITTEST
-// Do nothing, a unit-test's wscript specifies platforms=[]
-// used by tools/waf/pebble_test.py to define these includes per test
-#else
-
-#ifdef CONFIG_BOARD_ASTERIX
-#include <board/displays/display_asterix.h>
-#elif defined(CONFIG_BOARD_OBELIX_DVT) || defined(CONFIG_BOARD_OBELIX_PVT) || \
-    defined(CONFIG_BOARD_OBELIX_BB2)
-#include <board/displays/display_obelix.h>
-#elif defined(CONFIG_BOARD_GETAFIX_DVT) || defined(CONFIG_BOARD_GETAFIX_DVT2)
-#include <board/displays/display_getafix.h>
-#elif defined(CONFIG_BOARD_QEMU_EMERY) || defined(CONFIG_BOARD_NATIVE_EMERY)
-#include <board/displays/display_qemu_emery.h>
-#elif defined(CONFIG_BOARD_QEMU_FLINT) || defined(CONFIG_BOARD_NATIVE_FLINT)
-#include <board/displays/display_qemu_flint.h>
-#elif defined(CONFIG_BOARD_QEMU_GABBRO) || defined(CONFIG_BOARD_NATIVE_GABBRO)
-#include <board/displays/display_qemu_gabbro.h>
-#else
-#error "Unknown display definition for board"
-#endif // BOARD_*
-
-#endif // UNITTEST
+#include <board/display_platform.h>
 
 // For backwards compatibility, new code should use PBL_DISPLAY_WIDTH and PBL_DISPLAY_HEIGHT
 #if !defined(DISP_COLS) || !defined(DISP_ROWS)

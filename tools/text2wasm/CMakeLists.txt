@@ -83,11 +83,9 @@ target_include_directories(pebble_renderer PRIVATE
 target_compile_definitions(pebble_renderer PRIVATE
   UNITTEST
   CONFIG_SCREEN_COLOR_DEPTH_BITS=8
-  DISP_COLS=144
-  DISP_ROWS=168
-  DISPLAY_FRAMEBUFFER_BYTES=24192
-  PBL_COLOR
-  PBL_RECT
+  CONFIG_PLATFORM_COLOR=1
+  CONFIG_PLATFORM_DISPLAY_WIDTH=144
+  CONFIG_PLATFORM_DISPLAY_HEIGHT=168
   CONFIG_BOARD_OBELIX=1
   CONFIG_PLATFORM_EMERY=1
   CONFIG_FLASH_GD25Q256E=1
@@ -98,6 +96,7 @@ target_compile_definitions(pebble_renderer PRIVATE
 )
 target_compile_options(pebble_renderer PRIVATE
   -O2
+  -include${PEBBLEOS_ROOT}/fw/board/display_platform.h
 )
 target_link_options(pebble_renderer PRIVATE
   -O2

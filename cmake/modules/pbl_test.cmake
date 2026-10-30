@@ -79,13 +79,36 @@ endfunction()
 function(_pbl_test_platform_defines platform out_defines out_bitdepth)
   if(platform STREQUAL "flint")
     set(bitdepth 1)
-  elseif(platform STREQUAL "emery" OR platform STREQUAL "gabbro")
+    set(display 144 168 144 168)
+  elseif(platform STREQUAL "emery")
     set(bitdepth 8)
+    set(display 200 228 144 168)
+  elseif(platform STREQUAL "gabbro")
+    set(bitdepth 8)
+    set(display 260 260 180 180)
   else()
     message(FATAL_ERROR "Unknown test platform '${platform}'")
   endif()
   string(TOUPPER ${platform} upper)
   set(defines CONFIG_PLATFORM_${upper}=1)
+  if(bitdepth EQUAL 8)
+    list(APPEND defines CONFIG_PLATFORM_COLOR=1)
+  endif()
+  if(platform STREQUAL "gabbro")
+    list(APPEND defines CONFIG_PLATFORM_ROUND=1)
+  endif()
+  list(GET display 0 width)
+  list(GET display 1 height)
+  list(GET display 2 legacy_width)
+  list(GET display 3 legacy_height)
+  list(APPEND defines
+    CONFIG_PLATFORM_DISPLAY_WIDTH=${width}
+    CONFIG_PLATFORM_DISPLAY_HEIGHT=${height}
+    CONFIG_PLATFORM_LEGACY_2X_DISPLAY_WIDTH=${legacy_width}
+    CONFIG_PLATFORM_LEGACY_2X_DISPLAY_HEIGHT=${legacy_height}
+    CONFIG_PLATFORM_LEGACY_3X_DISPLAY_WIDTH=${legacy_width}
+    CONFIG_PLATFORM_LEGACY_3X_DISPLAY_HEIGHT=${legacy_height}
+  )
 
   # app_manager.c sizes app segments from these; the values are the ones
   # the old sdk_memory_limits.auto.h test override carried.
@@ -323,10 +346,10 @@ function(_pbl_test_add id)
       "PBI2PNG_EXE=\"${PBL_BASE}/tools/pbi2png.py\"")
   endif()
 
-  # display.h and its per-platform sibling are force-included so that the
-  # firmware's #ifdefs resolve without a per-platform reconfigure.
+  # The platform display macros are force-included so that the firmware's
+  # #ifdefs resolve without a per-platform reconfigure.
   set(options -Wno-unused-command-line-argument
-              -include${PBL_BASE}/fw/board/displays/display_qemu_${platform}.h)
+              -include${PBL_BASE}/fw/board/display_platform.h)
 
   # Everything that changes the generated code, and nothing that does
   # not: two tests agreeing on all of it share their objects.

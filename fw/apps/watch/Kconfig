@@ -6,7 +6,7 @@ menu "Watch faces"
 choice
     prompt "TicToc watch face"
     default APPS_WATCH_TICTOC_ROUND if PLATFORM_GABBRO
-    default APPS_WATCH_TICTOC_BW if SCREEN_COLOR_DEPTH_BITS_1
+    default APPS_WATCH_TICTOC_BW if !PLATFORM_COLOR
     default APPS_WATCH_TICTOC_DEFAULT
     help
       Which built-in TicToc watch face variant to build.
