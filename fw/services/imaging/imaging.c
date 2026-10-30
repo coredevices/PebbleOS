@@ -4,16 +4,16 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/imaging.h>
-#include <pbl/util/heap.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
-#include <kernel/kernel_heap.h>
 #include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
@@ -80,7 +80,7 @@ static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *rea
   unsigned int used;
   unsigned int free_bytes;
   unsigned int largest_free;
-  heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &largest_free);
+  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &largest_free);
   PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size, largest_free);
 
   prv_rx_reset();

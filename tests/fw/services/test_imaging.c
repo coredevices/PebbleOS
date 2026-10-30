@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/heap.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/imaging.h>
-#include <pbl/util/heap.h>
 
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
@@ -48,13 +48,13 @@ static uint8_t s_last_token;
 static uint8_t s_last_failure_token;
 static GBitmap *s_last_bitmap;
 
-Heap *kernel_heap_get(void) {
-  static Heap heap;
+struct pbl_heap *pbl_malloc_heap(void) {
+  static struct pbl_heap heap;
   return &heap;
 }
 
-void heap_calc_totals(Heap *heap, unsigned int *used, unsigned int *free_bytes,
-                      unsigned int *max_free) {
+void pbl_heap_stats(struct pbl_heap *heap, unsigned int *used, unsigned int *free_bytes,
+                    unsigned int *max_free) {
   *used = 0;
   *free_bytes = 0;
   *max_free = 64 * 1024;

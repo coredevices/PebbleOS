@@ -4,13 +4,13 @@
 #include <time.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/util/heap.h>
+#include <pbl/kernel/heap.h>
 
 #include <process_state/app_state/app_state.h>
 
-static Heap s_worker_heap;
+static struct pbl_heap s_worker_heap;
 
-PBL_WEAK Heap *worker_state_get_heap(void) {
+PBL_WEAK struct pbl_heap *worker_state_get_heap(void) {
   return &s_worker_heap;
 }
 

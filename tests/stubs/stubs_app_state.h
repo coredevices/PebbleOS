@@ -4,8 +4,8 @@
 #pragma once
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/services/app_glances/app_glance_service.h>
-#include <pbl/util/heap.h>
 
 #include <applib/graphics/graphics.h>
 #include <applib/ui/animation_private.h>
@@ -33,7 +33,7 @@ LocaleInfo *app_state_get_locale_info(void);
 extern GContext *s_app_state_get_graphics_context;
 GContext *app_state_get_graphics_context(void);
 
-Heap *app_state_get_heap(void);
+struct pbl_heap *app_state_get_heap(void);
 
 AnimationState *app_state_get_animation_state(void);
 

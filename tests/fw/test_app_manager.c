@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/heap.h>
 #include <pbl/mcu/mpu.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/vibe_pattern.h>
-#include <pbl/util/heap.h>
 
 #include <applib/app_comm.h>
 #include <applib/graphics/framebuffer.h>
@@ -289,7 +289,7 @@ void vibe_pattern_clear_for_owner(VibePatternOwner owner) {
 void speaker_service_stop_for_task(PebbleTask task) {
 }
 
-Heap *worker_state_get_heap(void) {
+struct pbl_heap *worker_state_get_heap(void) {
   return nullptr;
 }
 
@@ -345,7 +345,7 @@ const CompositorTransition *shell_get_close_compositor_animation(AppInstallId cu
 
 FAKE_VOID_FUNC(watchface_launch_default, const CompositorTransition *);
 
-void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_md) {
+void process_heap_set_exception_handlers(struct pbl_heap *heap, const PebbleProcessMd *app_md) {
 }
 
 // Tests

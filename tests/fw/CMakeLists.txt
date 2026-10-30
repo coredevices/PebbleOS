@@ -131,6 +131,7 @@ pbl_clar_test(test_tick)
 pbl_clar_test(test_heap
   SOURCES
     fw/applib/app_heap_util.c
+    kernel/heap.c
 )
 
 pbl_clar_test(test_data_logging
@@ -165,6 +166,7 @@ pbl_clar_test(test_app_manager
     fw/process_management/process_runtime.c
     fw/kernel/memory_layout.c
     fw/kernel/util/segment.c
+    kernel/heap.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

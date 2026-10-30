@@ -205,14 +205,12 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   }
   // The remaining space in worker_segment is assigned to the worker's
   // heap. Worker state needs to be configured before initializing the
-  // heap as the WorkerState struct holds the worker heap's Heap object.
-  Heap *worker_heap = worker_state_get_heap();
+  // heap as the WorkerState struct holds the worker heap.
+  struct pbl_heap *worker_heap = worker_state_get_heap();
   PBL_LOG_DBG("Worker heap init %p %p", worker_segment.start, worker_segment.end);
-  heap_init(worker_heap, worker_segment.start, worker_segment.end,
-            /* enable_heap_fuzzing */ false);
-  heap_set_lock_impl(worker_heap, (HeapLockImpl){
-                                    .lock_function = prv_heap_lock,
-                                  });
+  pbl_heap_init(worker_heap, worker_segment.start, worker_segment.end,
+                /* enable_heap_fuzzing */ false);
+  pbl_heap_set_lock(worker_heap, (struct pbl_heap_lock){.lock = prv_heap_lock});
   process_heap_set_exception_handlers(worker_heap, app_md);
 
   // Init services required for this process before it starts to execute

@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/util/heap.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 
@@ -54,8 +54,8 @@ static void prv_pointer_list_remove(void *ptr) {
 
 static size_t s_max_size_allowed = ~0;
 
-static Heap s_heap;
-Heap *task_heap_get_for_current_task(void) {
+static struct pbl_heap s_heap;
+struct pbl_heap *task_heap_get_for_current_task(void) {
   return &s_heap;
 }
 
@@ -226,6 +226,54 @@ char *kernel_strdup_check(const char *s) {
 
 char *task_strdup(const char *s) {
   return kernel_strdup(s);
+}
+
+struct pbl_heap *pbl_malloc_heap(void) {
+  return &s_heap;
+}
+
+void *pbl_malloc(size_t size) {
+  return malloc_and_track(size, PBL_RETURN_ADDRESS(0));
+}
+
+void *pbl_malloc_check(size_t size) {
+  return malloc_and_track(size, PBL_RETURN_ADDRESS(0));
+}
+
+void *pbl_zalloc(size_t size) {
+  return calloc_and_track(1, size, PBL_RETURN_ADDRESS(0));
+}
+
+void *pbl_zalloc_check(size_t size) {
+  return calloc_and_track(1, size, PBL_RETURN_ADDRESS(0));
+}
+
+void *pbl_calloc(size_t count, size_t size) {
+  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
+}
+
+void *pbl_calloc_check(size_t count, size_t size) {
+  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
+}
+
+void *pbl_realloc(void *ptr, size_t size) {
+  return realloc_and_track(ptr, size, PBL_RETURN_ADDRESS(0));
+}
+
+char *pbl_strdup(const char *s) {
+  char *r = malloc_and_track(strlen(s) + 1, PBL_RETURN_ADDRESS(0));
+  if (r) {
+    strcpy(r, s);
+  }
+  return r;
+}
+
+char *pbl_strdup_check(const char *s) {
+  return pbl_strdup(s);
+}
+
+void pbl_free(void *ptr) {
+  free_and_track(ptr);
 }
 
 void smart_free(void *ptr) {

@@ -17,6 +17,7 @@
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/backend.h>
@@ -46,7 +47,6 @@
 #include <kernel/fault_handling.h>
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
-#include <kernel/kernel_heap.h>
 #include <kernel/memory_layout.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
@@ -88,7 +88,7 @@ int main(void) {
 
   enable_fault_handlers();
 
-  kernel_heap_init();
+  pbl_malloc_init();
 
   dbgserial_init();
   pulse_early_init();
