@@ -18,6 +18,7 @@
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/reset/sf32lb.h>
+#include <pbl/drivers/sf32lb52/hxt.h>
 #include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
 #include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/touch/cst816.h>
@@ -111,10 +112,14 @@ PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", 2, 16U * 1024U * 1024U,
                                 PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2), PBL_SPI_MEM_XIP,
                                 nullptr);
 
-static const struct pbl_flash_otp_cell s_otp_cells[] = {BOARD_OTP_CELLS};
+static const struct pbl_flash_otp_cell s_otp_cells[] = {
+  BOARD_OTP_CELLS, BOARD_OTP_CELLS_SOC_CONFIG
+};
 static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
 PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_mpi2.mem, &pbl_flash_nor_gd25q256e,
                          SF32LB52_MPI2_MEM_BASE, &s_otp_layout);
+
+PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &s_flash.flash, "soc-config-user", "soc-config-cust");
 
 const struct pbl_flash *const FLASH = &s_flash.flash;
 
