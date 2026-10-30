@@ -187,6 +187,9 @@ AnimationPrivate *animation_private_animation_find(Animation *handle) {
   return nullptr;
 }
 
+void compositor_display_init(void) {
+}
+
 static int s_count_display_update = 0;
 static bool s_display_update_success = true;
 void compositor_display_update(void (*handle_update_complete_cb)(bool success)) {

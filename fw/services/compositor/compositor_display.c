@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/display.h>
 #include <pbl/drivers/rtc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor.h>
@@ -136,6 +137,17 @@ static void prv_flush_done(int status, void *arg) {
   };
 
   event_put_isr(&e);
+}
+
+void compositor_display_init(void) {
+#if PBL_BW
+  const enum pbl_display_format format = PBL_DISPLAY_FORMAT_MONO;
+#else
+  const enum pbl_display_format format = PBL_DISPLAY_FORMAT_ARGB2222;
+#endif
+
+  PBL_ASSERTN((DISPLAY->width == DISP_COLS) && (DISPLAY->height == DISP_ROWS) &&
+              (DISPLAY->format == format));
 }
 
 void compositor_display_update(void (*handle_update_complete_cb)(bool success)) {

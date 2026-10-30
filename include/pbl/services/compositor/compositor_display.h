@@ -11,6 +11,13 @@
  */
 
 /**
+ * @brief Check that the display can show the system framebuffer.
+ *
+ * Asserts when the display size or format differs from the platform's.
+ */
+void compositor_display_init(void);
+
+/**
  * @brief Flush the dirty region of the system framebuffer to the display.
  *
  * Does nothing when the framebuffer is not dirty. On completion the dirty region is reset.
