@@ -21,7 +21,8 @@ const struct pbl_flash_nor_part pbl_flash_nor_gd25q256e = {
   .qe = PBL_FLASH_NOR_QE_SR2_BIT1,
   .sr1_bp_mask = 0x7CU,
   .reset_ms = 12U,
-  .suspend_us = 20U,
+  .suspend_us = 30U,
+  .resume_us = 100U,
   .dpd_enter_us = 3U,
   .dpd_exit_us = 20U,
 };

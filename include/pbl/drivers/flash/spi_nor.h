@@ -46,6 +46,7 @@ struct pbl_flash_spi_nor_data {
   struct pbl_flash_geometry geometry;
   struct pbl_spi_mem_dirmap dirmap;
   struct pbl_spi_mem_pm pm;
+  struct pbl_spi_mem_suspend susp;
   uint8_t addr_nbytes;
   uint8_t reg_addr_nbytes;
   uint8_t qer;
