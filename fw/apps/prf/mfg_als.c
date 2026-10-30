@@ -14,10 +14,10 @@
 #include <pbl/services/light.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <apps/prf/mfg_test_result.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
@@ -167,7 +167,7 @@ static void prv_config_provider(void *context) {
 }
 
 static void prv_handle_init(void) {
-  AmbientLightAppData *data = task_zalloc_check(sizeof(AmbientLightAppData));
+  AmbientLightAppData *data = app_zalloc_check(sizeof(AmbientLightAppData));
 
   // Force backlight off for the duration of the test to avoid interfering
   // with ALS readings (e.g. when pressing CENTER to start sampling).
@@ -220,7 +220,7 @@ static void prv_handle_deinit(void) {
   text_layer_destroy(data->status_text_layer);
   text_layer_destroy(data->reading_text_layer);
   window_destroy(data->window);
-  task_free(data);
+  app_free(data);
 
   light_allow(true);
 }

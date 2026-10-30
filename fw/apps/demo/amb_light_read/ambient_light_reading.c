@@ -8,9 +8,9 @@
 #include <pbl/drivers/als.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
@@ -38,7 +38,7 @@ static void timer_callback(void *cb_data) {
 }
 
 static void handle_init(void) {
-  AmbientLightAppData *data = task_malloc_check(sizeof(AmbientLightAppData));
+  AmbientLightAppData *data = app_malloc_check(sizeof(AmbientLightAppData));
 
   data->window = window_create();
 
@@ -64,7 +64,7 @@ static void handle_deinit(void) {
   AmbientLightAppData *data = app_state_get_user_data();
   text_layer_destroy(data->text_layer);
   window_destroy(data->window);
-  task_free(data);
+  app_free(data);
 }
 
 static void s_main(void) {

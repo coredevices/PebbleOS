@@ -9,12 +9,12 @@
 #include <pbl/util/trig.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/pbl_std/pbl_std.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 #define STEP_ROTATION_ANGLE (TRIG_MAX_ANGLE / 360) // 1 degree
@@ -387,7 +387,7 @@ static void main_window_unload(Window *window) {
 }
 
 static void init(void) {
-  AppData *data = task_zalloc(sizeof(AppData));
+  AppData *data = app_zalloc(sizeof(AppData));
   if (!data) {
     return;
   }
@@ -417,7 +417,7 @@ static void init(void) {
 
 static void deinit(void) {
   AppData *data = window_get_user_data(s_window);
-  task_free(data);
+  app_free(data);
   window_destroy(s_window);
 }
 

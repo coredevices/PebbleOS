@@ -7,6 +7,7 @@
 #include <pbl/util/trig.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtransform.h>
@@ -15,7 +16,6 @@
 #include <applib/ui/action_bar_layer.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 typedef enum {
@@ -409,7 +409,7 @@ static void timer_callback(void *cb_data) {
 }
 
 static void init(void) {
-  AppData *data = task_malloc_check(sizeof(AppData));
+  AppData *data = app_malloc_check(sizeof(AppData));
   memset(data, 0x00, sizeof(AppData));
 
   s_display_colors[0] = GColorWhite;
@@ -494,7 +494,7 @@ static void init(void) {
 
 static void deinit(void) {
   AppData *data = app_state_get_user_data();
-  task_free(data);
+  app_free(data);
 }
 
 static void s_main(void) {

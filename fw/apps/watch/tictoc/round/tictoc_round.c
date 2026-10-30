@@ -25,7 +25,7 @@ static GPath *prv_pointed_hand_path(GContext *ctx, ClockHand *hand) {
   if (hand->backwards_extension > 0)
     num_points = 9;
 
-  GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
+  GPoint *points = (GPoint *)app_malloc(num_points * sizeof(GPoint));
   if (!points)
     return nullptr;
 
@@ -57,7 +57,7 @@ static GPath *prv_square_hand_path(GContext *ctx, ClockHand *hand) {
   if (hand->backwards_extension > 0)
     num_points = 8;
 
-  GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
+  GPoint *points = (GPoint *)app_malloc(num_points * sizeof(GPoint));
   if (!points)
     return nullptr;
 

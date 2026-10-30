@@ -3,9 +3,9 @@
 
 #include "warning_dialog.h"
 
+#include <applib/app_malloc.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct WeatherAppWarningDialogData {
   WeatherAppWarningDialogDismissedCallback dismissed_cb;
@@ -16,7 +16,7 @@ static void prv_warning_dialog_unload(void *context) {
   if (data->dismissed_cb) {
     data->dismissed_cb();
   }
-  task_free(data);
+  app_free(data);
 }
 
 static void prv_warning_dialog_select_handler(ClickRecognizerRef recognizer, void *context) {
@@ -26,7 +26,7 @@ static void prv_warning_dialog_select_handler(ClickRecognizerRef recognizer, voi
 
 WeatherAppWarningDialog *weather_app_warning_dialog_push(
     const char *localized_string, WeatherAppWarningDialogDismissedCallback dismissed_cb) {
-  WeatherAppWarningDialogData *data = task_zalloc_check(sizeof(WeatherAppWarningDialogData));
+  WeatherAppWarningDialogData *data = app_zalloc_check(sizeof(WeatherAppWarningDialogData));
   ExpandableDialog *expandable_dialog = expandable_dialog_create("Weather - warning dialog");
 
   Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);

@@ -9,11 +9,11 @@
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/i18n/i18n.h>
 
+#include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/preferred_durations.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <resource/resource_ids.auto.h>
 
@@ -185,7 +185,7 @@ static void prv_sound_highlight_handler(const ActionMenuItem *item, void *contex
 
 static ActionMenuLevel *prv_create_main_menu(void) {
   ActionMenuLevel *level =
-      task_malloc(sizeof(ActionMenuLevel) + DetailMenuItemIndexNum * sizeof(ActionMenuItem));
+      app_malloc(sizeof(ActionMenuLevel) + DetailMenuItemIndexNum * sizeof(ActionMenuItem));
   if (!level)
     return nullptr;
   *level = (ActionMenuLevel){
@@ -198,7 +198,7 @@ static ActionMenuLevel *prv_create_main_menu(void) {
 
 static ActionMenuLevel *prv_create_snooze_menu(ActionMenuLevel *parent_level) {
   ActionMenuLevel *level =
-      task_malloc(sizeof(ActionMenuLevel) + NUM_SNOOZE_MENU_ITEMS * sizeof(ActionMenuItem));
+      app_malloc(sizeof(ActionMenuLevel) + NUM_SNOOZE_MENU_ITEMS * sizeof(ActionMenuItem));
   if (!level)
     return nullptr;
   *level = (ActionMenuLevel){
@@ -212,7 +212,7 @@ static ActionMenuLevel *prv_create_snooze_menu(ActionMenuLevel *parent_level) {
 #ifdef CONFIG_SPEAKER
 static ActionMenuLevel *prv_create_sound_menu(ActionMenuLevel *parent_level) {
   ActionMenuLevel *level =
-      task_malloc(sizeof(ActionMenuLevel) + NUM_SOUND_MENU_ITEMS * sizeof(ActionMenuItem));
+      app_malloc(sizeof(ActionMenuLevel) + NUM_SOUND_MENU_ITEMS * sizeof(ActionMenuItem));
   if (!level)
     return nullptr;
   *level = (ActionMenuLevel){
@@ -241,19 +241,19 @@ void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu, const ActionMenuItem
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   AlarmDetailData *data = (AlarmDetailData *)context;
   i18n_free_all(data);
-  task_free((void *)root_level->items[DetailMenuItemIndexSnooze].next_level);
+  app_free((void *)root_level->items[DetailMenuItemIndexSnooze].next_level);
 #ifdef CONFIG_SPEAKER
-  task_free((void *)root_level->items[DetailMenuItemIndexSound].next_level);
+  app_free((void *)root_level->items[DetailMenuItemIndexSound].next_level);
 #endif
-  task_free((void *)root_level);
-  task_free(data);
+  app_free((void *)root_level);
+  app_free(data);
   data = nullptr;
 }
 
 void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
                               AlarmEditorCompleteCallback alarm_editor_callback,
                               void *callback_context) {
-  AlarmDetailData *data = task_malloc_check(sizeof(AlarmDetailData));
+  AlarmDetailData *data = app_malloc_check(sizeof(AlarmDetailData));
   *data = (AlarmDetailData){
     .alarm_id = alarm_id,
     .alarm_info = *alarm_info,

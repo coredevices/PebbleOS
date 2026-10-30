@@ -33,7 +33,6 @@
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gap_le_device_name.h>
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/system_icons.h>
 #include <resource/resource_ids.auto.h>
@@ -121,7 +120,7 @@ static void add_remote(SettingsBluetoothData *data, StoredRemote *remote) {
 }
 
 static StoredRemote *stored_remote_create(void) {
-  StoredRemote *remote = task_malloc_check(sizeof(*remote));
+  StoredRemote *remote = app_malloc_check(sizeof(*remote));
   *remote = (StoredRemote){};
   return remote;
 }
@@ -175,7 +174,7 @@ static void prv_clear_remote_list(SettingsBluetoothData *data) {
   while (data->remote_list_head) {
     StoredRemote *remote = (StoredRemote *)data->remote_list_head;
     data->remote_list_head = list_pop_head(&remote->list_node);
-    task_free(remote);
+    app_free(remote);
   }
 }
 
@@ -350,7 +349,7 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer, uint
   const char ellipsis[] = UTF8_ELLIPSIS_STRING;
   const size_t max_name_size = PBL_BT_DEVICE_NAME_BUFFER_SIZE - 2;
   const size_t name_size = strnlen(remote->name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
-  char *remote_name = task_zalloc_check(max_name_size + sizeof(ellipsis));
+  char *remote_name = app_zalloc_check(max_name_size + sizeof(ellipsis));
   strncpy(remote_name, remote->name, name_size);
   if (name_size > max_name_size) {
     const size_t ellipsis_start_offset = utf8_get_size_truncate(remote_name, name_size);
@@ -365,7 +364,7 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer, uint
   PBL_IF_RECT_ELSE(prv_draw_stored_remote_item_rect, prv_draw_stored_remote_item_round)(
       ctx, cell_layer, remote_name, connected_string, le_string, is_sharing_heart_rate);
 
-  task_free(remote_name);
+  app_free(remote_name);
 }
 
 #if PBL_RECT
