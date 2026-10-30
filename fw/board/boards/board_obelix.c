@@ -320,10 +320,6 @@ static const AudioDevice audio_device = {
 const AudioDevice *AUDIO = &audio_device;
 PBL_IRQ_CONNECT(DMAC1_CH4, 5, audec_dac0_dma_irq_handler, AUDIO, 0);
 
-uint32_t BSP_GetOtpBase(void) {
-  return MPI2_MEM_BASE;
-}
-
 void board_early_init(void) {
 }
 
