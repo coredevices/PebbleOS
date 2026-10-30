@@ -116,6 +116,8 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
                                    int16_t offset_y, const AppFrameFit *fit);
 
 void compositor_init(void) {
+  compositor_display_init();
+
   const GSize fb_size = GSize(DISP_COLS, DISP_ROWS);
   framebuffer_init(&s_framebuffer, &fb_size);
   framebuffer_clear(&s_framebuffer);
