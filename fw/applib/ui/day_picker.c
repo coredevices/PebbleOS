@@ -172,7 +172,7 @@ void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *c
                              .draw_row = prv_day_picker_draw_row,
                              .select_click = prv_day_picker_handle_selection,
                            });
-  menu_layer_set_highlight_colors(&data->menu_layer, config.highlight_color, GColorWhite);
+  menu_layer_set_highlight_colors(&data->menu_layer, config.highlight_color, PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -343,7 +343,7 @@ void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallba
                              .select_click = prv_custom_day_picker_handle_selection,
                              .selection_changed = prv_custom_day_picker_selection_changed,
                            });
-  menu_layer_set_highlight_colors(&data->menu_layer, highlight_color, GColorWhite);
+  menu_layer_set_highlight_colors(&data->menu_layer, highlight_color, PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());

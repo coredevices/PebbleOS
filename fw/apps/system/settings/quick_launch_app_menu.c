@@ -186,8 +186,8 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap,
     .choice = prv_choice(install_id, app_index),
     .status_colors =
         {
-          GColorWhite,
-          GColorBlack,
+          system_theme_get_bg_color(),
+          system_theme_get_fg_color(),
         },
     .highlight_colors = {highlight_bg, gcolor_legible_over(highlight_bg)},
     .icons_enabled = true,

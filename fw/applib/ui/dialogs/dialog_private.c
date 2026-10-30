@@ -14,6 +14,7 @@
 #include <applib/ui/window_stack.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 static void prv_app_timer_callback(void *context) {
   Dialog *dialog = context;
@@ -26,12 +27,12 @@ void dialog_init(Dialog *dialog, const char *dialog_name) {
   *dialog = (Dialog){};
 
   window_init(&dialog->window, dialog_name);
-  window_set_background_color(&dialog->window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+  window_set_background_color(&dialog->window, PBL_IF_COLOR_ELSE(system_theme_is_dark_mode() ? GColorDarkGray : GColorLightGray, system_theme_get_bg_color()));
 
   // initial values
   dialog->icon_anim_direction = DialogIconAnimationFromRight;
   dialog->destroy_on_pop = true;
-  dialog->text_color = GColorBlack;
+  dialog->text_color = system_theme_get_fg_color();
 }
 
 void dialog_pop(Dialog *dialog) {

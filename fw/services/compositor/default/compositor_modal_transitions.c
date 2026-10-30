@@ -9,7 +9,6 @@
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gdraw_command_sequence.h>
 #include <applib/ui/animation_interpolate.h>
-#include <apps/system/timeline/common.h>
 #include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
 
@@ -23,6 +22,8 @@
 #define MODAL_CONTRACT_FROM_MODAL_ANIMATION (RESOURCE_ID_MODAL_CONTRACT_FROM_MODAL_SEQUENCE)
 #define MODAL_EXPAND_TO_APP_ANIMATION       (RESOURCE_ID_MODAL_EXPAND_TO_APP_SEQUENCE)
 #endif
+
+#define CONTRACT_BORDER_COLOR               system_theme_get_fg_color()
 
 typedef struct {
   GColor outer_color;
@@ -43,7 +44,7 @@ static void prv_modal_transition_animation_init_sequence(const uint32_t resource
 static void prv_modal_transition_fill_update(GContext *ctx, uint32_t distance_normalized,
                                              bool inner) {
   const GColor replace_color = GColorGreen;
-  const GColor stroke_color = TIMELINE_DOT_COLOR;
+  const GColor stroke_color = CONTRACT_BORDER_COLOR;
   compositor_transition_pdcs_animation_update(
       ctx, s_data.animation_sequence, distance_normalized, replace_color, stroke_color,
       s_data.outer_color /* overdraw color */, inner, nullptr);
@@ -114,7 +115,7 @@ static PBL_NOINLINE void prv_render_transition_round(GContext *ctx, Animation *a
   const int16_t dot_ring_inner_radius = interpolated_dot_ring_outer_radius - dot_radius;
 
   // Draw the dot ring
-  graphics_context_set_fill_color(ctx, TIMELINE_DOT_COLOR);
+  graphics_context_set_fill_color(ctx, CONTRACT_BORDER_COLOR);
   graphics_fill_radial_internal(ctx, circle_center, dot_ring_inner_radius,
                                 interpolated_dot_ring_outer_radius, 0, TRIG_MAX_ANGLE);
 
@@ -167,7 +168,7 @@ const CompositorTransition *prv_modal_transition_get_rect(bool modal_is_destinat
   // NOTE: This initialization will set .expanding to false so we default to contracting to a dot
   s_data = (CompositorModalTransitionData){
     .modal_is_destination = modal_is_destination,
-    .outer_color = GColorLightGray,
+    .outer_color = system_theme_is_dark_mode() ? GColorDarkGray : GColorLightGray,
   };
 
   static const CompositorTransition s_impl = {

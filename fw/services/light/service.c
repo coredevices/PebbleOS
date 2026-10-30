@@ -271,6 +271,13 @@ void light_set_dark_threshold(uint32_t threshold) {
   s_dark_threshold = threshold;
 }
 
+bool ambient_light_is_light(void) {
+  if (!pbl_device_is_ready(&ALS->dev)) {
+    return false;
+  }
+  return prv_get_als_level() > s_dark_threshold;
+}
+
 AmbientLightLevel light_level_to_enum(uint32_t lux) {
   const uint32_t delta = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD_DELTA;
 

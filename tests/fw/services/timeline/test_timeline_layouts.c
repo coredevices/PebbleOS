@@ -11,6 +11,8 @@
 #include <pbl/services/timeline/weather_layout.h>
 #include <pbl/util/size.h>
 
+#include <shell/system_theme.h>
+
 #include <applib/ui/window_private.h>
 #include <apps/system/timeline/pin_window.h>
 #include <clar.h>
