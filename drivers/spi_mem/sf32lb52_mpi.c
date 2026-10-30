@@ -253,6 +253,39 @@ static PBL_ALWAYS_INLINE void prv_read_window(uintptr_t mem_base, uint32_t *word
   }
 }
 
+// Polls the status in software, and whenever an interrupt is pending suspends the operation,
+// lets the interrupts more urgent than the kernel's own run, and resumes it; never sooner than
+// resume_cyc after the last resume, so that the operation progresses
+static PBL_SECTION_RAM void prv_ram_poll_suspend(uintptr_t base, const struct ccr_op *cmd,
+                                                 const struct ccr_op *status, uint8_t mask,
+                                                 uint8_t match, const struct ccr_op *suspend,
+                                                 const struct ccr_op *resume, uint32_t suspend_cyc,
+                                                 uint32_t resume_cyc) {
+  const unsigned int key = pbl_irq_disable_all();
+  uint32_t resumed;
+
+  prv_issue(base, cmd);
+  resumed = pbl_cycle_get_32();
+
+  while ((prv_read_status(base, status) & mask) != match) {
+    if ((pbl_cycle_get_32() - resumed) < resume_cyc || !pbl_irq_window_pending(key)) {
+      continue;
+    }
+
+    prv_issue(base, suspend);
+    prv_delay_cycles(suspend_cyc);
+    while ((prv_read_status(base, status) & mask) != match) {
+    }
+
+    pbl_irq_window();
+
+    prv_issue(base, resume);
+    resumed = pbl_cycle_get_32();
+  }
+
+  pbl_irq_restore_all(key);
+}
+
 // Changes the window's read command, keeping the previous one if the window reads differently
 static PBL_SECTION_RAM int prv_ram_set_read(uintptr_t base, uintptr_t mem_base, uint8_t opcode,
                                             uint32_t ccr, uint32_t line_size) {
@@ -390,6 +423,17 @@ static int prv_poll_status(const struct pbl_spi_mem *mem, const struct pbl_spi_m
 
   if (op->data.dir == PBL_SPI_MEM_DATA_OUT) {
     return prv_write(mem, op, status, mask, match);
+  }
+
+  if (susp != nullptr && susp->suspend.data.dir == PBL_SPI_MEM_NO_DATA &&
+      susp->resume.data.dir == PBL_SPI_MEM_NO_DATA) {
+    const uint32_t cycles_per_us = (pbl_cycles_per_sec() + 999999U) / 1000000U;
+    const struct ccr_op suspend = prv_encode(&susp->suspend);
+    const struct ccr_op resume = prv_encode(&susp->resume);
+
+    prv_ram_poll_suspend(base, &cmd, &st, mask, match, &suspend, &resume,
+                         susp->suspend_us * cycles_per_us, susp->resume_us * cycles_per_us);
+    return 0;
   }
 
   prv_ram_poll(base, &cmd, &st, mask, match);
