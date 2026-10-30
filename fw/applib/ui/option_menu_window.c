@@ -235,6 +235,21 @@ void option_menu_set_highlight_colors(OptionMenu *option_menu, GColor background
                                   option_menu->highlight_colors.foreground);
 }
 
+void option_menu_set_theme_colors(OptionMenu *option_menu, const SystemThemeColors *colors) {
+  if (!option_menu || !colors) {
+    return;
+  }
+#if PBL_COLOR
+  option_menu_set_status_colors(option_menu, colors->secondary_color, colors->secondary_text_color);
+  option_menu_set_normal_colors(option_menu, colors->background_color, colors->text_color);
+  option_menu_set_highlight_colors(option_menu, colors->primary_color, colors->primary_text_color);
+#else
+  option_menu_set_status_colors(option_menu, GColorWhite, GColorBlack);
+  option_menu_set_normal_colors(option_menu, GColorWhite, GColorBlack);
+  option_menu_set_highlight_colors(option_menu, GColorBlack, GColorWhite);
+#endif
+}
+
 void option_menu_set_callbacks(OptionMenu *option_menu, const OptionMenuCallbacks *callbacks,
                                void *context) {
   option_menu->callbacks = *callbacks;

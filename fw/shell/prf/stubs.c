@@ -307,6 +307,62 @@ uint32_t shell_prefs_get_language_resource_id(void) {
 void shell_prefs_set_language(ShellLanguage language) {
 }
 
+GColor shell_prefs_get_theme_highlight_color(void) {
+  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+}
+
+void shell_prefs_set_theme_highlight_color(GColor color) {
+}
+
+GColor shell_prefs_get_theme_secondary_color(void) {
+  return PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack);
+}
+
+void shell_prefs_set_theme_secondary_color(GColor color) {
+}
+
+GColor shell_prefs_get_theme_background_color(void) {
+  return GColorWhite;
+}
+
+void shell_prefs_set_theme_background_color(GColor color) {
+}
+
+bool shell_prefs_is_theme_background_default(void) {
+  return true;
+}
+
+GColor shell_prefs_get_theme_text_color(void) {
+  return GColorClear;
+}
+
+void shell_prefs_set_theme_text_color(GColor color) {
+}
+
+Uuid shell_prefs_get_theme_active_uuid(void) {
+  return UUID_INVALID;
+}
+
+void shell_prefs_set_theme_active_uuid(const Uuid *uuid) {
+}
+
+uint32_t shell_prefs_get_theme_bg_resource_id(void) {
+  return 0;
+}
+
+void shell_prefs_set_theme_bg_resource_id(uint32_t resource_id) {
+}
+
+ThemeAppColorMode shell_prefs_get_theme_app_color_mode(void) {
+  return ThemeAppColorMode_ColorsAndBackground;
+}
+
+void shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode) {
+}
+
+void shell_prefs_reset_theme_to_default(bool dark_mode) {
+}
+
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
   return nullptr;
 }

@@ -73,6 +73,12 @@
 
 #ifdef CONFIG_THEMING
   PREFS_MACRO(PREF_KEY_THEME_HIGHLIGHT_COLOR, s_theme_highlight_color)
+  PREFS_MACRO(PREF_KEY_THEME_SECONDARY_COLOR, s_theme_secondary_color)
+  PREFS_MACRO(PREF_KEY_THEME_BACKGROUND_COLOR, s_theme_background_color)
+  PREFS_MACRO(PREF_KEY_THEME_TEXT_COLOR, s_theme_text_color)
+  PREFS_MACRO(PREF_KEY_THEME_ACTIVE_UUID, s_theme_active_uuid)
+  PREFS_MACRO(PREF_KEY_THEME_BG_RESOURCE_ID, s_theme_bg_resource_id)
+  PREFS_MACRO(PREF_KEY_THEME_APP_COLOR_MODE, s_theme_app_color_mode)
 #endif
 
   PREFS_MACRO(PREF_KEY_MENU_SCROLL_WRAP_AROUND, s_menu_scroll_wrap_around)

@@ -341,9 +341,21 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
 #ifdef CONFIG_THEMING
-#define PREF_KEY_THEME_HIGHLIGHT_COLOR "themeHighlightColor"
+#define PREF_KEY_THEME_HIGHLIGHT_COLOR  "themeHighlightColor"
+#define PREF_KEY_THEME_SECONDARY_COLOR  "themeSecondaryColor"
+#define PREF_KEY_THEME_BACKGROUND_COLOR "themeBackgroundColor"
+#define PREF_KEY_THEME_TEXT_COLOR       "themeTextColor"
+#define PREF_KEY_THEME_ACTIVE_UUID      "themeActiveUuid"
+#define PREF_KEY_THEME_BG_RESOURCE_ID   "themeBgResourceId"
+#define PREF_KEY_THEME_APP_COLOR_MODE   "themeAppColorMode"
 
 static GColor s_theme_highlight_color = GColorVividCerulean;
+static GColor s_theme_secondary_color = GColorCobaltBlue;
+static GColor s_theme_background_color = GColorClear;
+static GColor s_theme_text_color = GColorClear;
+static Uuid s_theme_active_uuid = UUID_INVALID_INIT;
+static uint32_t s_theme_bg_resource_id = 0;
+static uint8_t s_theme_app_color_mode = ThemeAppColorMode_ColorsAndBackground;
 #endif
 
 #define PREF_KEY_MENU_SCROLL_WRAP_AROUND    "menuScrollWrapAround"
@@ -922,41 +934,65 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 #endif
 
 #ifdef CONFIG_THEMING
-// Valid theme colors (unified scheme)
-// Must match s_color_definitions in settings_themes.h
 static bool prv_is_valid_theme_color(GColor color) {
-  // GColorClear means "use default"
-  if (color.argb == GColorClear.argb) {
-    return true;
-  }
-  // Valid colors from settings_themes.h
-  static const uint8_t valid_colors[] = {
-    GColorSunsetOrangeARGB8,   // Red
-    GColorChromeYellowARGB8,   // Orange
-    GColorYellowARGB8,         // Yellow
-    GColorGreenARGB8,          // Green
-    GColorCyanARGB8,           // Cyan
-    GColorVividCeruleanARGB8,  // Light Blue
-    GColorVeryLightBlueARGB8,  // Royal Blue
-    GColorLavenderIndigoARGB8, // Purple
-    GColorMagentaARGB8,        // Magenta
-    GColorBrilliantRoseARGB8,  // Pink
-  };
-  for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
-    if (color.argb == valid_colors[i]) {
-      return true;
-    }
-  }
-  return false;
+  return (color.argb == GColorClear.argb) || (color.a == 3);
 }
 
 static bool prv_set_s_theme_highlight_color(GColor *color) {
   if (!prv_is_valid_theme_color(*color)) {
     PBL_LOG_WRN("Invalid menu highlight color 0x%02x, using default", color->argb);
     s_theme_highlight_color = GColorVividCerulean;
-    return false; // Reject invalid value
+    return false;
   }
-  s_theme_highlight_color = *color;
+  s_theme_highlight_color = (color->argb == GColorClear.argb) ? GColorVividCerulean : *color;
+  return true;
+}
+
+static bool prv_set_s_theme_secondary_color(GColor *color) {
+  if (!prv_is_valid_theme_color(*color)) {
+    PBL_LOG_WRN("Invalid theme secondary color 0x%02x, using default", color->argb);
+    s_theme_secondary_color = GColorCobaltBlue;
+    return false;
+  }
+  s_theme_secondary_color = (color->argb == GColorClear.argb) ? GColorCobaltBlue : *color;
+  return true;
+}
+
+static bool prv_set_s_theme_background_color(GColor *color) {
+  if (!prv_is_valid_theme_color(*color)) {
+    PBL_LOG_WRN("Invalid theme background color 0x%02x, using default", color->argb);
+    s_theme_background_color = GColorClear;
+    return false;
+  }
+  s_theme_background_color = *color;
+  return true;
+}
+
+static bool prv_set_s_theme_text_color(GColor *color) {
+  if (!prv_is_valid_theme_color(*color)) {
+    PBL_LOG_WRN("Invalid theme text color 0x%02x, using default", color->argb);
+    s_theme_text_color = GColorClear;
+    return false;
+  }
+  s_theme_text_color = *color;
+  return true;
+}
+
+static bool prv_set_s_theme_active_uuid(Uuid *uuid) {
+  s_theme_active_uuid = *uuid;
+  return true;
+}
+
+static bool prv_set_s_theme_bg_resource_id(uint32_t *resource_id) {
+  s_theme_bg_resource_id = *resource_id;
+  return true;
+}
+
+static bool prv_set_s_theme_app_color_mode(uint8_t *mode) {
+  if (*mode >= ThemeAppColorMode_Count) {
+    return false;
+  }
+  s_theme_app_color_mode = *mode;
   return true;
 }
 #endif
@@ -2348,9 +2384,22 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 }
 #endif
 
+#ifdef CONFIG_THEMING
+static void prv_notify_theme_pref_changed(const char *key, size_t key_len) {
+  PebbleEvent pref_event = {
+    .type = PEBBLE_PREF_CHANGE_EVENT,
+    .pref_change = {
+      .key = key,
+      .key_len = key_len,
+    },
+  };
+  event_put(&pref_event);
+}
+#endif
+
 GColor shell_prefs_get_theme_highlight_color(void) {
 #ifdef CONFIG_THEMING
-  return s_theme_highlight_color;
+  return PBL_IF_COLOR_ELSE(s_theme_highlight_color, GColorBlack);
 #else
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 #endif
@@ -2359,6 +2408,136 @@ GColor shell_prefs_get_theme_highlight_color(void) {
 void shell_prefs_set_theme_highlight_color(GColor color) {
 #ifdef CONFIG_THEMING
   prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &color, sizeof(GColor));
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_HIGHLIGHT_COLOR,
+                                sizeof(PREF_KEY_THEME_HIGHLIGHT_COLOR));
+#endif
+}
+
+GColor shell_prefs_get_theme_secondary_color(void) {
+#ifdef CONFIG_THEMING
+  return PBL_IF_COLOR_ELSE(s_theme_secondary_color, GColorBlack);
+#else
+  return PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack);
+#endif
+}
+
+void shell_prefs_set_theme_secondary_color(GColor color) {
+#ifdef CONFIG_THEMING
+  prv_pref_set(PREF_KEY_THEME_SECONDARY_COLOR, &color, sizeof(GColor));
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_SECONDARY_COLOR,
+                                sizeof(PREF_KEY_THEME_SECONDARY_COLOR));
+#endif
+}
+
+GColor shell_prefs_get_theme_background_color(void) {
+#ifdef CONFIG_THEMING
+  return (s_theme_background_color.argb == GColorClear.argb) ? GColorWhite
+                                                             : s_theme_background_color;
+#else
+  return GColorWhite;
+#endif
+}
+
+void shell_prefs_set_theme_background_color(GColor color) {
+#ifdef CONFIG_THEMING
+  prv_pref_set(PREF_KEY_THEME_BACKGROUND_COLOR, &color, sizeof(GColor));
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_BACKGROUND_COLOR,
+                                sizeof(PREF_KEY_THEME_BACKGROUND_COLOR));
+#endif
+}
+
+bool shell_prefs_is_theme_background_default(void) {
+#ifdef CONFIG_THEMING
+  return (s_theme_background_color.argb == GColorClear.argb) && (s_theme_bg_resource_id == 0);
+#else
+  return true;
+#endif
+}
+
+GColor shell_prefs_get_theme_text_color(void) {
+#ifdef CONFIG_THEMING
+  return s_theme_text_color;
+#else
+  return GColorClear;
+#endif
+}
+
+void shell_prefs_set_theme_text_color(GColor color) {
+#ifdef CONFIG_THEMING
+  prv_pref_set(PREF_KEY_THEME_TEXT_COLOR, &color, sizeof(GColor));
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_TEXT_COLOR, sizeof(PREF_KEY_THEME_TEXT_COLOR));
+#endif
+}
+
+Uuid shell_prefs_get_theme_active_uuid(void) {
+#ifdef CONFIG_THEMING
+  return s_theme_active_uuid;
+#else
+  return UUID_INVALID;
+#endif
+}
+
+void shell_prefs_set_theme_active_uuid(const Uuid *uuid) {
+#ifdef CONFIG_THEMING
+  Uuid val = uuid ? *uuid : UUID_INVALID;
+  prv_pref_set(PREF_KEY_THEME_ACTIVE_UUID, &val, sizeof(Uuid));
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_ACTIVE_UUID, sizeof(PREF_KEY_THEME_ACTIVE_UUID));
+#endif
+}
+
+uint32_t shell_prefs_get_theme_bg_resource_id(void) {
+#ifdef CONFIG_THEMING
+  return s_theme_bg_resource_id;
+#else
+  return 0;
+#endif
+}
+
+void shell_prefs_set_theme_bg_resource_id(uint32_t resource_id) {
+#ifdef CONFIG_THEMING
+  prv_pref_set(PREF_KEY_THEME_BG_RESOURCE_ID, &resource_id, sizeof(uint32_t));
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_BG_RESOURCE_ID,
+                                sizeof(PREF_KEY_THEME_BG_RESOURCE_ID));
+#endif
+}
+
+ThemeAppColorMode shell_prefs_get_theme_app_color_mode(void) {
+#ifdef CONFIG_THEMING
+  return (ThemeAppColorMode)s_theme_app_color_mode;
+#else
+  return ThemeAppColorMode_ColorsAndBackground;
+#endif
+}
+
+void shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode) {
+#ifdef CONFIG_THEMING
+  uint8_t mode_val = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_THEME_APP_COLOR_MODE, &mode_val, sizeof(uint8_t));
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_APP_COLOR_MODE,
+                                sizeof(PREF_KEY_THEME_APP_COLOR_MODE));
+#endif
+}
+
+void shell_prefs_reset_theme_to_default(bool dark_mode) {
+#ifdef CONFIG_THEMING
+  const Uuid invalid_uuid = UUID_INVALID;
+  const GColor highlight =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorCobaltBlue : GColorVividCerulean, GColorBlack);
+  const GColor secondary =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorOxfordBlue : GColorCobaltBlue, GColorBlack);
+  const GColor bg = PBL_IF_COLOR_ELSE(dark_mode ? GColorBlack : GColorClear, GColorClear);
+  const GColor text = GColorClear;
+  const uint32_t bg_res_id = 0;
+
+  prv_pref_set(PREF_KEY_THEME_ACTIVE_UUID, &invalid_uuid, sizeof(Uuid));
+  prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &highlight, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_SECONDARY_COLOR, &secondary, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_BACKGROUND_COLOR, &bg, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_TEXT_COLOR, &text, sizeof(GColor));
+  prv_pref_set(PREF_KEY_THEME_BG_RESOURCE_ID, &bg_res_id, sizeof(uint32_t));
+
+  prv_notify_theme_pref_changed(PREF_KEY_THEME_HIGHLIGHT_COLOR,
+                                sizeof(PREF_KEY_THEME_HIGHLIGHT_COLOR));
 #endif
 }
 

@@ -59,3 +59,6 @@ void PBL_WEAK menu_layer_set_selected_index(MenuLayer *menu_layer, MenuIndex ind
 
 void PBL_WEAK menu_layer_reload_data(MenuLayer *menu_layer) {
 }
+
+void PBL_WEAK menu_layer_set_theme_colors(MenuLayer *menu_layer, const SystemThemeColors *colors) {
+}

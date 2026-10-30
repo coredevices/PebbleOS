@@ -108,10 +108,8 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
       (is_large ? CHARGING_ICON_LARGE_WIDTH : CHARGING_ICON_SMALL_WIDTH) * h / num_rows;
 
   if (render) {
-    // Icons are always black on color displays, white on B&W when highlighted
     graphics_context_set_fill_color(
-        ctx, PBL_IF_COLOR_ELSE(GColorBlack, launcher_app_glance_structured_get_highlight_color(
-                                                structured_glance)));
+        ctx, launcher_app_glance_structured_get_highlight_color(structured_glance));
     for (int16_t y = 0; y < h; y++) {
       const ChargingIconRow *row = &rows[y * num_rows / h];
       const int16_t x = row->x * h / num_rows;

@@ -3,9 +3,28 @@
 
 #pragma once
 
+#include <pbl/kernel/compiler.h>
+
 #include <applib/fonts/fonts.h>
+#include <applib/graphics/gtypes.h>
 #include <applib/platform.h>
 #include <applib/preferred_content_size.h>
+
+typedef enum ThemeAppColorMode {
+  ThemeAppColorMode_ColorsAndBackground = 0,
+  ThemeAppColorMode_BackgroundOnly = 1,
+  ThemeAppColorMode_Count
+} ThemeAppColorMode;
+
+typedef struct PBL_PACKED SystemThemeColors {
+  GColor8 primary_color;
+  GColor8 primary_text_color;
+  GColor8 secondary_color;
+  GColor8 secondary_text_color;
+  GColor8 background_color;
+  GColor8 text_color;
+  GColor8 subtitle_color;
+} SystemThemeColors;
 
 //! System Theme Text Style is a font collection used to unify text styles across the system.
 //! It contains a variety of different font sizes for use in an application, each meant for a
@@ -101,3 +120,28 @@ PreferredContentSize system_theme_get_default_content_size_for_runtime_platform(
 //! platform
 PreferredContentSize system_theme_convert_host_content_size_to_runtime_platform(
     PreferredContentSize size);
+
+//! Populate \p colors_out with the resolved system theme colors.
+void system_theme_get_colors(SystemThemeColors *colors_out);
+
+//! Populate \p colors_out with the resolved colors for a default system app, respecting
+//! the user's \ref ThemeAppColorMode preference.
+void system_theme_get_app_colors(GColor default_primary, GColor default_secondary,
+                                 SystemThemeColors *colors_out);
+
+GColor system_theme_get_primary_color(void);
+GColor system_theme_get_secondary_color(void);
+GColor system_theme_get_background_color(void);
+GColor system_theme_get_text_color(void);
+
+//! Create a GBitmap for the active theme's background image resource, or nullptr if none.
+//! Caller owns the returned GBitmap and must free it with gbitmap_destroy().
+GBitmap *system_theme_create_background_bitmap(void);
+
+//! Draw the system theme background (solid color and optional static background bitmap) into
+//! bounds.
+void system_theme_draw_background(GContext *ctx, const GRect *bounds, GColor fallback_bg_color,
+                                  const GBitmap *cached_bg_bitmap);
+
+//! Reset the active theme to the built-in Light or Dark preset.
+void system_theme_reset_to_default(bool dark_mode);

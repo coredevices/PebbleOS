@@ -19,6 +19,7 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_menu_data_source.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 typedef struct {
   AppMenuDataSource data_source;
@@ -180,19 +181,17 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap,
   const uint16_t app_index =
       app_menu_data_source_get_index_of_app_with_install_id(&data->data_source, install_id);
 
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
   const OptionMenuConfig config = {
     .title = i18n_get(s_category_titles[category], data),
     .choice = prv_choice(install_id, app_index),
-    .status_colors =
-        {
-          GColorWhite,
-          GColorBlack,
-        },
-    .highlight_colors = {highlight_bg, gcolor_legible_over(highlight_bg)},
+    .status_colors = {colors.secondary_color, colors.secondary_text_color},
+    .highlight_colors = {colors.primary_color, colors.primary_text_color},
     .icons_enabled = true,
   };
   option_menu_configure(option_menu, &config);
+  option_menu_set_theme_colors(option_menu, &colors);
   option_menu_set_callbacks(option_menu,
                             &(OptionMenuCallbacks){
                               .select = prv_menu_select,

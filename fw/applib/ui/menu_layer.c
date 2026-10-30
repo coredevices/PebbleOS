@@ -23,6 +23,7 @@
 #include <applib/ui/window.h>
 #include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
+#include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH
 #include <pbl/drivers/rtc.h>
@@ -149,7 +150,10 @@ static void prv_scrollbar_fill_capped_arc(GContext *ctx, GPoint center, uint16_t
 //! The subdued color of the full-length track behind the thumb: the gray nearer the menu's
 //! background, so the track reads as a guide while the foreground-colored thumb pops.
 static GColor prv_scrollbar_track_color(MenuLayer *menu_layer) {
-  const GColor bg = menu_layer->normal_colors[MenuLayerColorBackground];
+  GColor bg = menu_layer->normal_colors[MenuLayerColorBackground];
+  if (gcolor_is_transparent(bg)) {
+    bg = gcolor_legible_over(menu_layer->normal_colors[MenuLayerColorForeground]);
+  }
   const int luminance = bg.r + bg.g + bg.b; // 2-bit channels, 0..9
   return (luminance >= 5) ? GColorLightGray : GColorDarkGray;
 }
@@ -205,7 +209,11 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
   }
   // 1px halo around the thumb so it stays visible over both normal and highlighted cells
   const GRect halo = grect_inset_internal(thumb, -1, -1);
-  graphics_context_set_fill_color(ctx, menu_layer->normal_colors[MenuLayerColorBackground]);
+  GColor halo_bg = menu_layer->normal_colors[MenuLayerColorBackground];
+  if (gcolor_is_transparent(halo_bg)) {
+    halo_bg = gcolor_legible_over(menu_layer->normal_colors[MenuLayerColorForeground]);
+  }
+  graphics_context_set_fill_color(ctx, halo_bg);
   graphics_fill_round_rect(ctx, &halo, 2, GCornersAll);
   graphics_context_set_fill_color(ctx, menu_layer->normal_colors[MenuLayerColorForeground]);
   graphics_fill_round_rect(ctx, &thumb, 1, GCornersAll);
@@ -853,6 +861,8 @@ static void PBL_NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ct
   } else if (highlight) {
     ctx->draw_state.fill_color = menu_layer->highlight_colors[MenuLayerColorBackground];
     graphics_fill_rect(ctx, bounds);
+  } else if (gcolor_is_transparent(menu_layer->normal_colors[MenuLayerColorBackground])) {
+    system_theme_draw_background(ctx, bounds, system_theme_get_background_color(), nullptr);
   } else {
     ctx->draw_state.fill_color = menu_layer->normal_colors[MenuLayerColorBackground];
     graphics_fill_rect(ctx, bounds);
@@ -1683,6 +1693,19 @@ void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GCol
 void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {
   menu_layer->highlight_colors[MenuLayerColorBackground] = background;
   menu_layer->highlight_colors[MenuLayerColorForeground] = foreground;
+}
+
+void menu_layer_set_theme_colors(MenuLayer *menu_layer, const SystemThemeColors *colors) {
+  if (!menu_layer || !colors) {
+    return;
+  }
+#if PBL_COLOR
+  menu_layer_set_normal_colors(menu_layer, colors->background_color, colors->text_color);
+  menu_layer_set_highlight_colors(menu_layer, colors->primary_color, colors->primary_text_color);
+#else
+  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
+  menu_layer_set_highlight_colors(menu_layer, GColorBlack, GColorWhite);
+#endif
 }
 
 bool menu_layer_get_center_focused(MenuLayer *menu_layer) {

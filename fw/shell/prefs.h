@@ -283,6 +283,27 @@ void display_orientation_set_left(bool left);
 GColor shell_prefs_get_theme_highlight_color(void);
 void shell_prefs_set_theme_highlight_color(GColor color);
 
+GColor shell_prefs_get_theme_secondary_color(void);
+void shell_prefs_set_theme_secondary_color(GColor color);
+
+GColor shell_prefs_get_theme_background_color(void);
+void shell_prefs_set_theme_background_color(GColor color);
+bool shell_prefs_is_theme_background_default(void);
+
+GColor shell_prefs_get_theme_text_color(void);
+void shell_prefs_set_theme_text_color(GColor color);
+
+Uuid shell_prefs_get_theme_active_uuid(void);
+void shell_prefs_set_theme_active_uuid(const Uuid *uuid);
+
+uint32_t shell_prefs_get_theme_bg_resource_id(void);
+void shell_prefs_set_theme_bg_resource_id(uint32_t resource_id);
+
+ThemeAppColorMode shell_prefs_get_theme_app_color_mode(void);
+void shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode);
+
+void shell_prefs_reset_theme_to_default(bool dark_mode);
+
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void);
 void shell_prefs_set_menu_scroll_wrap_around_enable(bool enable);
 

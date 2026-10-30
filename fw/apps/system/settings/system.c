@@ -173,10 +173,12 @@ static const char *s_item_titles[SystemMenuItem_Count] = {
 // This will init it and set the correct style to be used within the settings
 // app.
 static void prv_init_status_bar(StatusBarLayer *status_layer, Window *window, const char *text) {
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
   status_bar_layer_init(status_layer);
   status_bar_layer_set_title(status_layer, text, false, false);
   status_bar_layer_set_separator_mode(status_layer, OPTION_MENU_STATUS_SEPARATOR_MODE);
-  status_bar_layer_set_colors(status_layer, GColorWhite, GColorBlack);
+  status_bar_layer_set_colors(status_layer, colors.secondary_color, colors.secondary_text_color);
   layer_add_child(&window->layer, status_bar_layer_get_layer(status_layer));
 }
 
@@ -273,8 +275,9 @@ static void prv_information_window_load(Window *window) {
                              .get_cell_height = prv_information_get_cell_height_callback,
                              .draw_row = prv_information_draw_row_callback,
                            });
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
+  menu_layer_set_theme_colors(menu_layer, &colors);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -622,8 +625,9 @@ static void prv_debugging_window_load(Window *window) {
                              .draw_row = prv_debugging_draw_row_callback,
                              .select_click = prv_debugging_select_callback,
                            });
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
+  menu_layer_set_theme_colors(menu_layer, &colors);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -1139,8 +1143,9 @@ static void prv_certification_window_load(Window *window) {
                              .draw_row = prv_certification_draw_row_callback,
                              .select_click = prv_certification_select_callback,
                            });
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
+  menu_layer_set_theme_colors(menu_layer, &colors);
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(

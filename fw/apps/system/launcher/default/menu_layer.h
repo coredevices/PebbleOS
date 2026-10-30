@@ -21,6 +21,7 @@ typedef struct LauncherMenuLayer {
   PreferredContentSize content_size;
   AppMenuDataSource *data_source;
   LauncherAppGlanceService glance_service;
+  GBitmap *bg_bitmap;
   bool selection_animations_enabled;
   AppInstallId app_to_launch_after_next_render;
 } LauncherMenuLayer;
@@ -48,6 +49,8 @@ void launcher_menu_layer_reload_data(LauncherMenuLayer *launcher_menu_layer);
 //! Re-initialize the launcher menu layer if the user's preferred content size changed since it was
 //! initialized, keeping the current selection.
 void launcher_menu_layer_update_content_size(LauncherMenuLayer *launcher_menu_layer);
+
+void launcher_menu_layer_update_theme(LauncherMenuLayer *launcher_menu_layer);
 
 void launcher_menu_layer_set_selection_state(LauncherMenuLayer *launcher_menu_layer,
                                              const LauncherMenuLayerSelectionState *new_state);

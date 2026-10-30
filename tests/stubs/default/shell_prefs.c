@@ -82,3 +82,83 @@ MenuScrollVibeBehavior PBL_WEAK shell_prefs_get_menu_scroll_vibe_behavior(void) 
 void PBL_WEAK shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) {
   s_menu_scroll_vibe_behavior = behavior;
 }
+
+static GColor s_theme_highlight_color = {.argb = GColorVividCeruleanARGB8};
+static GColor s_theme_secondary_color = {.argb = GColorCobaltBlueARGB8};
+static GColor s_theme_background_color = {.argb = GColorClearARGB8};
+static GColor s_theme_text_color = {.argb = GColorClearARGB8};
+static Uuid s_theme_active_uuid = UUID_INVALID_INIT;
+static uint32_t s_theme_bg_resource_id = 0;
+static ThemeAppColorMode s_theme_app_color_mode = ThemeAppColorMode_ColorsAndBackground;
+
+GColor PBL_WEAK shell_prefs_get_theme_highlight_color(void) {
+  return PBL_IF_COLOR_ELSE(s_theme_highlight_color, GColorBlack);
+}
+
+void PBL_WEAK shell_prefs_set_theme_highlight_color(GColor color) {
+  s_theme_highlight_color = color;
+}
+
+GColor PBL_WEAK shell_prefs_get_theme_secondary_color(void) {
+  return PBL_IF_COLOR_ELSE(s_theme_secondary_color, GColorBlack);
+}
+
+void PBL_WEAK shell_prefs_set_theme_secondary_color(GColor color) {
+  s_theme_secondary_color = color;
+}
+
+GColor PBL_WEAK shell_prefs_get_theme_background_color(void) {
+  return (s_theme_background_color.argb == GColorClear.argb) ? GColorWhite
+                                                             : s_theme_background_color;
+}
+
+void PBL_WEAK shell_prefs_set_theme_background_color(GColor color) {
+  s_theme_background_color = color;
+}
+
+bool PBL_WEAK shell_prefs_is_theme_background_default(void) {
+  return (s_theme_background_color.argb == GColorClear.argb) && (s_theme_bg_resource_id == 0);
+}
+
+GColor PBL_WEAK shell_prefs_get_theme_text_color(void) {
+  return s_theme_text_color;
+}
+
+void PBL_WEAK shell_prefs_set_theme_text_color(GColor color) {
+  s_theme_text_color = color;
+}
+
+Uuid PBL_WEAK shell_prefs_get_theme_active_uuid(void) {
+  return s_theme_active_uuid;
+}
+
+void PBL_WEAK shell_prefs_set_theme_active_uuid(const Uuid *uuid) {
+  s_theme_active_uuid = uuid ? *uuid : UUID_INVALID;
+}
+
+uint32_t PBL_WEAK shell_prefs_get_theme_bg_resource_id(void) {
+  return s_theme_bg_resource_id;
+}
+
+void PBL_WEAK shell_prefs_set_theme_bg_resource_id(uint32_t resource_id) {
+  s_theme_bg_resource_id = resource_id;
+}
+
+ThemeAppColorMode PBL_WEAK shell_prefs_get_theme_app_color_mode(void) {
+  return s_theme_app_color_mode;
+}
+
+void PBL_WEAK shell_prefs_set_theme_app_color_mode(ThemeAppColorMode mode) {
+  s_theme_app_color_mode = mode;
+}
+
+void PBL_WEAK shell_prefs_reset_theme_to_default(bool dark_mode) {
+  s_theme_active_uuid = UUID_INVALID;
+  s_theme_highlight_color =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorCobaltBlue : GColorVividCerulean, GColorBlack);
+  s_theme_secondary_color =
+      PBL_IF_COLOR_ELSE(dark_mode ? GColorOxfordBlue : GColorCobaltBlue, GColorBlack);
+  s_theme_background_color = PBL_IF_COLOR_ELSE(dark_mode ? GColorBlack : GColorClear, GColorClear);
+  s_theme_text_color = GColorClear;
+  s_theme_bg_resource_id = 0;
+}

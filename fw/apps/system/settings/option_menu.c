@@ -8,6 +8,7 @@
 #include <pbl/services/i18n/i18n.h>
 
 #include <kernel/pbl_malloc.h>
+#include <shell/system_theme.h>
 
 static void prv_menu_unload(OptionMenu *option_menu, void *context) {
   SettingsOptionMenuData *data = context;
@@ -45,16 +46,18 @@ OptionMenu *settings_option_menu_create(const char *i18n_title_key,
   if (!option_menu) {
     return nullptr;
   }
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
+  SystemThemeColors colors;
+  system_theme_get_colors(&colors);
   const OptionMenuConfig config = {
     .title = i18n_get(i18n_title_key, option_menu),
     .content_type = content_type,
     .choice = choice,
-    .status_colors = {GColorWhite, GColorBlack},
-    .highlight_colors = {highlight_bg, gcolor_legible_over(highlight_bg)},
+    .status_colors = {colors.secondary_color, colors.secondary_text_color},
+    .highlight_colors = {colors.primary_color, colors.primary_text_color},
     .icons_enabled = icons_enabled,
   };
   option_menu_configure(option_menu, &config);
+  option_menu_set_theme_colors(option_menu, &colors);
   SettingsOptionMenuData *data = task_malloc_check(sizeof(SettingsOptionMenuData));
   OptionMenuCallbacks callbacks = *callbacks_ref;
   *data = (SettingsOptionMenuData){
