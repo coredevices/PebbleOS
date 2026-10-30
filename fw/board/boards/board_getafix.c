@@ -258,10 +258,6 @@ const MicDevice *MIC = &mic_device;
 PBL_IRQ_CONNECT(PDM1, 5, pdm1_data_handler, MIC, 0);
 PBL_IRQ_CONNECT(DMAC1_CH5, 5, pdm1_l_dma_handler, MIC, 0);
 
-uint32_t BSP_GetOtpBase(void) {
-  return MPI2_MEM_BASE;
-}
-
 void board_early_init(void) {
 }
 

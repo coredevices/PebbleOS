@@ -22,7 +22,6 @@ set(micro_sources
   SiFli-SDK/drivers/hal/bf0_hal_hlp.c
   SiFli-SDK/drivers/hal/bf0_hal_pmu.c
   SiFli-SDK/drivers/hal/bf0_hal_rcc.c
-  SiFli-SDK/drivers/hal/bf0_sys_cfg.c
 )
 set(ramfunc_sources
   SiFli-SDK/drivers/hal/bf0_hal_rcc.c
