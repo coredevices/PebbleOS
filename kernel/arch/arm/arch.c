@@ -207,6 +207,27 @@ void arch_irq_enable(void) {
   __set_BASEPRI(0);
 }
 
+// Faults and the most urgent interrupts stay enabled.
+#define HEAP_LOCK_BASEPRI (2 << (8 - __NVIC_PRIO_BITS))
+
+static bool s_heap_locked;
+static uint32_t s_heap_basepri;
+
+void arch_heap_lock(void) {
+  if (mcu_state_are_interrupts_enabled()) {
+    s_heap_basepri = __get_BASEPRI();
+    __set_BASEPRI(HEAP_LOCK_BASEPRI);
+    s_heap_locked = true;
+  }
+}
+
+void arch_heap_unlock(void) {
+  if (s_heap_locked) {
+    __set_BASEPRI(s_heap_basepri);
+    s_heap_locked = false;
+  }
+}
+
 void arch_switch_request(void) {
   SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
   __DSB();

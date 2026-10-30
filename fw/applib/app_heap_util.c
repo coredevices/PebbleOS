@@ -4,15 +4,15 @@
 #include "app_heap_util.h"
 
 #include <pbl/kernel/fatal.h>
-#include <pbl/util/heap.h>
+#include <pbl/kernel/heap.h>
 
 #include <kernel/pebble_tasks.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 
-static Heap *get_task_heap(void) {
+static struct pbl_heap *get_task_heap(void) {
   PebbleTask task = pebble_task_get_current();
-  Heap *heap = nullptr;
+  struct pbl_heap *heap = nullptr;
 
   if (task == PebbleTask_App) {
     heap = app_state_get_heap();
@@ -26,11 +26,11 @@ static Heap *get_task_heap(void) {
 }
 
 size_t heap_bytes_used(void) {
-  Heap *heap = get_task_heap();
-  return heap->current_size;
+  struct pbl_heap *heap = get_task_heap();
+  return pbl_heap_used(heap);
 }
 
 size_t heap_bytes_free(void) {
-  Heap *heap = get_task_heap();
-  return heap_size(heap) - heap->current_size;
+  struct pbl_heap *heap = get_task_heap();
+  return pbl_heap_size(heap) - pbl_heap_used(heap);
 }

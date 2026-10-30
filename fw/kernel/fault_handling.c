@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
@@ -9,7 +10,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/services/system_task.h>
-#include <pbl/util/heap.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_logging.h>
@@ -152,7 +152,7 @@ extern void sys_app_fault(uint32_t lr);
   trigger_fault(RebootReasonCode_Assert, lr);
 }
 
-[[noreturn]] void trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
+[[noreturn]] void pbl_heap_oom_handler(struct pbl_heap *heap_ptr, size_t bytes, uintptr_t lr) {
   // OOM on a process's own heap is the app's fault, not the kernel's: kill just
   // that process even when privileged (Moddable apps run privileged inside the
   // moddable_createMachine syscall). Only kernel-heap OOM reboots.

@@ -6,15 +6,15 @@
 #include <pbl/drivers/mic/nrf5/pdm_definitions.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/circular_buffer.h>
-#include <pbl/util/heap.h>
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <kernel/kernel_heap.h>
 #include <kernel/pbl_malloc.h>
 #include <nrfx_pdm.h>
 
@@ -64,7 +64,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
 
   if (!storage) {
     unsigned int used, free_bytes, max_free;
-    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)",
                 (unsigned)CIRCULAR_BUF_MIN_SIZE_BYTES, max_free);
     prv_free_buffers(state);
@@ -73,7 +73,7 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
 
   if (try_size < CIRCULAR_BUF_SIZE_BYTES) {
     unsigned int used, free_bytes, max_free;
-    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_WRN("PDM circular buffer fell back to %u B (requested %u, max_free %u)",
                 (unsigned)try_size, (unsigned)CIRCULAR_BUF_SIZE_BYTES, max_free);
   }

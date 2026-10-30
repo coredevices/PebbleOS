@@ -22,3 +22,21 @@ the sections, their load and run addresses, and the kernel's data, stack and
 heap; `kernel/linker/memory.ld` how SRAM is divided between the kernel, the
 app and the worker; and, on ARM, `kernel/arch/arm/linker/regions.ld` the
 alignment the MPU imposes on those regions.
+
+## Heaps
+
+`pbl/kernel/heap.h` is a first-fit allocator over a region the caller
+provides. A `struct pbl_heap` can be locked, can report double frees and
+corruption to a handler instead of asserting, and, with
+`CONFIG_MALLOC_INSTRUMENTATION`, records the caller of every block so
+`sys heap` and `pbl heapstats` can attribute it.
+
+The kernel owns one heap, between `_heap_start` and `_heap_end`.
+`pbl/kernel/malloc.h` allocates from it: `pbl_malloc()`, `pbl_zalloc()`,
+`pbl_calloc()`, `pbl_realloc()`, `pbl_strdup()` and `pbl_free()`, with
+`_check` variants that never return NULL. They use the kernel heap whatever
+thread calls them; memory meant for an app or a worker comes from that
+process's own heap instead.
+
+An allocation that cannot fail calls `pbl_heap_oom()`, which logs the heap
+usage and calls `pbl_heap_oom_handler()`, implemented by the platform.

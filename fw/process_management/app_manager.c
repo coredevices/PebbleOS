@@ -353,16 +353,14 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   }
   // The remaining space in app_segment is assigned to the app's heap.
   // app_state needs to be configured before initializing the app heap
-  // as the AppState struct holds the app heap's Heap object.
+  // as the AppState struct holds the app heap.
 
   // Don't fuzz 3rd party app heaps because likely many of them rely on accessing free'd memory
   bool enable_heap_fuzzing = (sdk_type == ProcessAppSDKType_System);
-  Heap *app_heap = app_state_get_heap();
+  struct pbl_heap *app_heap = app_state_get_heap();
   PBL_LOG_DBG("App heap init %p %p", app_segment.start, app_segment.end);
-  heap_init(app_heap, app_segment.start, app_segment.end, enable_heap_fuzzing);
-  heap_set_lock_impl(app_heap, (HeapLockImpl){
-                                 .lock_function = prv_heap_lock,
-                               });
+  pbl_heap_init(app_heap, app_segment.start, app_segment.end, enable_heap_fuzzing);
+  pbl_heap_set_lock(app_heap, (struct pbl_heap_lock){.lock = prv_heap_lock});
   process_heap_set_exception_handlers(app_heap, app_md);
 
   // We're now going to start the app. We can't abort the app now without calling prv_app_cleanup.

@@ -8,7 +8,9 @@
 #include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
@@ -16,10 +18,8 @@
 #include <pbl/services/system_task.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/circular_buffer.h>
-#include <pbl/util/heap.h>
 
 #include <board/board.h>
-#include <kernel/kernel_heap.h>
 #include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
@@ -122,7 +122,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
 
   if (!storage) {
     unsigned int used, free_bytes, max_free;
-    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)", (unsigned)floor,
                 max_free);
     return false;
@@ -130,7 +130,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
 
   if (try_size < requested) {
     unsigned int used, free_bytes, max_free;
-    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_WRN("PDM circular buffer fell back to %u B (requested %u, max_free %u)",
                 (unsigned)try_size, (unsigned)requested, max_free);
   }

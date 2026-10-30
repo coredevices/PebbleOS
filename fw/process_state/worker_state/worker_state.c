@@ -14,7 +14,7 @@
 #endif
 
 typedef struct {
-  Heap heap;
+  struct pbl_heap heap;
 
   struct pbl_tm gmtime_tm;
   struct pbl_tm localtime_tm;
@@ -74,7 +74,7 @@ void worker_state_deinit(void) {
   health_service_state_deinit(worker_state_get_health_service_state());
 }
 
-Heap *worker_state_get_heap(void) {
+struct pbl_heap *worker_state_get_heap(void) {
   return &s_worker_state_ptr->heap;
 }
 
@@ -133,7 +133,7 @@ HealthServiceState *worker_state_get_health_service_state(void) {
 
 #if defined(CONFIG_MALLOC_INSTRUMENTATION) && defined(CONFIG_SHELL)
 static int prv_cmd_heap_worker(const struct pbl_shell *sh, size_t argc, char **argv) {
-  heap_dump_malloc_instrumentation_to_dbgserial(worker_state_get_heap());
+  pbl_heap_dump(worker_state_get_heap());
   return 0;
 }
 

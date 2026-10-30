@@ -4,7 +4,7 @@
 #include "process_heap.h"
 
 #include <pbl/kernel/fatal.h>
-#include <pbl/util/heap.h>
+#include <pbl/kernel/heap.h>
 
 #include <applib/app_logging.h>
 #include <process_management/pebble_process_info.h>
@@ -32,7 +32,7 @@ static void prv_panic_on_heap_corruption(void *ptr) {
   pbl_panic("Error: Heap corrupt around <%p>", ptr);
 }
 
-void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_md) {
+void process_heap_set_exception_handlers(struct pbl_heap *heap, const PebbleProcessMd *app_md) {
   // prior to version 2.1 of the firmware (app sdk version 5.2), we never had
   // double free detection in our heap and we would just silently ignore someone
   // trying to free an invalid pointer.  going forward we want to let our
@@ -43,9 +43,9 @@ void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_
   static const Version old_style_double_free_handling_version = {5, 1};
   const Version app_sdk_version = process_metadata_get_sdk_version(app_md);
   if (version_compare(app_sdk_version, old_style_double_free_handling_version) <= 0) {
-    heap_set_double_free_handler(heap, prv_warn_on_double_free);
+    pbl_heap_set_double_free_handler(heap, prv_warn_on_double_free);
   } else {
-    heap_set_double_free_handler(heap, prv_panic_on_double_free);
+    pbl_heap_set_double_free_handler(heap, prv_panic_on_double_free);
   }
   // We try to detect heap corruption by looking at segment headers and
   // comparing the sizes of and prevSizes of consecutive blocks.
@@ -70,8 +70,8 @@ void process_heap_set_exception_handlers(Heap *heap, const PebbleProcessMd *app_
 
   if (version_compare(app_sdk_version, old_style_heap_corruption_version) < 0) {
     // They're using 3.2 SDK or older, just let them off with a log message.
-    heap_set_corruption_handler(heap, prv_warn_on_heap_corruption);
+    pbl_heap_set_corruption_handler(heap, prv_warn_on_heap_corruption);
   } else {
-    heap_set_corruption_handler(heap, prv_panic_on_heap_corruption);
+    pbl_heap_set_corruption_handler(heap, prv_panic_on_heap_corruption);
   }
 }

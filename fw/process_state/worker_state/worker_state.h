@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/util/heap.h>
+#include <pbl/kernel/heap.h>
 
 #include <applib/accel_service_private.h>
 #include <applib/backlight_service_private.h>
@@ -30,7 +30,7 @@ void worker_state_init(void);
 //! Clean up after ourselves nicely. Note that this may not be called if the app crashes.
 void worker_state_deinit(void);
 
-Heap *worker_state_get_heap(void);
+struct pbl_heap *worker_state_get_heap(void);
 
 AccelServiceState *worker_state_get_accel_state(void);
 

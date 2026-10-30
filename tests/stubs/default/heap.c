@@ -1,16 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/compiler.h>
-#include <pbl/util/heap.h>
+#include <stdlib.h>
 
-PBL_WEAK void heap_dump_malloc_instrumentation_to_dbgserial(Heap *heap) {
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/heap.h>
+
+PBL_WEAK void pbl_heap_dump(struct pbl_heap *heap) {
 }
 
-PBL_WEAK size_t heap_size(const Heap *heap) {
+PBL_WEAK size_t pbl_heap_size(const struct pbl_heap *heap) {
   return 0;
 }
 
-PBL_WEAK bool heap_is_allocated(Heap *heap, void *ptr) {
+PBL_WEAK bool pbl_heap_is_allocated(struct pbl_heap *heap, void *ptr) {
   return true;
+}
+
+PBL_WEAK [[noreturn]] void pbl_heap_oom_handler(struct pbl_heap *heap, size_t size,
+                                                uintptr_t caller) {
+  abort();
 }

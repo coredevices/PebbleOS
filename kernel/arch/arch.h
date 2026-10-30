@@ -44,6 +44,10 @@ uint32_t arch_cycles_per_sec(void);
 void arch_irq_disable(void);
 void arch_irq_enable(void);
 
+//! Lock of the kernel heap, usable before the kernel runs. Not nestable.
+void arch_heap_lock(void);
+void arch_heap_unlock(void);
+
 void arch_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs);
 void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_REG_COUNT]);
 

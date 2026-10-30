@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include <pbl/kernel/heap.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/timeline/timeline_actions.h>
-#include <pbl/util/heap.h>
 
 #include <applib/accel_service_private.h>
 #include <applib/app_focus_service.h>
@@ -76,7 +76,7 @@ void app_state_init(void);
 //! Clean up after ourselves nicely. Note that this may not be called if the app crashes.
 void app_state_deinit(void);
 
-Heap *app_state_get_heap(void);
+struct pbl_heap *app_state_get_heap(void);
 
 AppInbox **app_state_get_app_message_inbox(void);
 

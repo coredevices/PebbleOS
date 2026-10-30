@@ -12,12 +12,9 @@
 //! The kernel heap is located in protected memory and is used by the kernel itself. The app
 //! heap is located inside the app region and is reset between each app.
 
-typedef struct Heap Heap;
+struct pbl_heap;
 
-Heap *task_heap_get_for_current_task(void);
-
-//! Log a failed allocation of @p bytes from @p heap_ptr at @p lr and fault.
-[[noreturn]] void pbl_malloc_oom(size_t bytes, uintptr_t lr, Heap *heap_ptr);
+struct pbl_heap *task_heap_get_for_current_task(void);
 
 // task_* functions map to app_* or kernel_* based on which task we're calling it on.
 void *task_malloc(size_t bytes);

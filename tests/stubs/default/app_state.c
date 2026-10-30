@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/services/app_glances/app_glance_service.h>
-#include <pbl/util/heap.h>
 
 #include <applib/graphics/graphics.h>
 #include <applib/ui/animation_private.h>
@@ -13,7 +13,7 @@
 #include <applib/unobstructed_area_service_private.h>
 #include <process_state/app_state/app_state.h>
 
-static Heap s_app_heap;
+static struct pbl_heap s_app_heap;
 
 PBL_WEAK bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_type,
                                   int16_t obstruction_origin_y) {
@@ -50,7 +50,7 @@ PBL_WEAK GContext *app_state_get_graphics_context(void) {
   return s_app_state_get_graphics_context;
 }
 
-PBL_WEAK Heap *app_state_get_heap(void) {
+PBL_WEAK struct pbl_heap *app_state_get_heap(void) {
   return &s_app_heap;
 }
 
