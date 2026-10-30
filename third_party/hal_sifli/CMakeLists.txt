@@ -22,7 +22,6 @@ set(micro_sources
   SiFli-SDK/drivers/hal/bf0_hal_hlp.c
   SiFli-SDK/drivers/hal/bf0_hal_pmu.c
   SiFli-SDK/drivers/hal/bf0_hal_rcc.c
-  SiFli-SDK/drivers/hal/bf0_sys_cfg.c
 )
 set(ramfunc_sources
   SiFli-SDK/drivers/hal/bf0_hal_rcc.c
@@ -127,18 +126,6 @@ endif()
 if(CONFIG_HAL_SIFLI_MAILBOX)
   list(APPEND micro_sources
     SiFli-SDK/drivers/hal/bf0_hal_mailbox.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_MPI)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_mpi.c
-    SiFli-SDK/drivers/hal/bf0_hal_mpi_ex.c
-    SiFli-SDK/drivers/hal/flash_table.c
-  )
-  list(APPEND ramfunc_sources
-    SiFli-SDK/drivers/hal/bf0_hal_mpi.c
-    SiFli-SDK/drivers/hal/bf0_hal_mpi_ex.c
-    SiFli-SDK/drivers/hal/flash_table.c
   )
 endif()
 if(CONFIG_HAL_SIFLI_PCD)

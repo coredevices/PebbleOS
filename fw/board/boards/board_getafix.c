@@ -6,6 +6,7 @@
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/dma/sf32lb52.h>
+#include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/input/gpio_keys.h>
@@ -15,6 +16,8 @@
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/reset/sf32lb.h>
+#include <pbl/drivers/sf32lb52/hxt.h>
+#include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
 #include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/touch/cst816.h>
 #include <pbl/drivers/uart/sf32lb.h>
@@ -23,6 +26,7 @@
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
+#include <board/otp_layout.h>
 #include <hardware/sf32lb52_memorymap.h>
 
 PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
@@ -50,37 +54,22 @@ PBL_UART_SF32LB_DEFINE(s_uart3, "uart3", 3, 1000000, &s_hci_trace_uart_default, 
 const struct pbl_uart *const HCI_TRACE_UART = &s_uart3.uart;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
-static QSPIPortState s_qspi_port_state = {
-  .cfg =
-      {
-        .Instance = FLASH2,
-        .line = HAL_FLASH_QMODE,
-        .base = FLASH2_BASE_ADDR,
-        .msize = 32,
-        .SpiMode = SPI_MODE_NOR,
-      },
-  .dma =
-      {
-        .Instance = DMA1_Channel2,
-        .dma_irq = DMAC1_CH2_IRQn,
-        .request = DMA_REQUEST_1,
-      },
-  .t_enter_deep_us = 3,
-  .t_exit_deep_us = 20,
-};
+static const struct pbl_dma_chan s_mpi2_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 1, SF32LB52_DMA_REQ_MPI2, SF32LB52_DMA_PL_MEDIUM);
+PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", 2, 32U * 1024U * 1024U,
+                                PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2), &s_mpi2_dma,
+                                PBL_SPI_MEM_XIP, nullptr);
 
-static QSPIPort QSPI_PORT = {
-  .state = &s_qspi_port_state,
-  .clk_div = 0U,
+static const struct pbl_flash_otp_cell s_otp_cells[] = {
+  BOARD_OTP_CELLS, BOARD_OTP_CELLS_SOC_CONFIG
 };
-QSPIPort *const QSPI = &QSPI_PORT;
+static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
+PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_mpi2.mem, &pbl_flash_nor_gd25q256e,
+                         SF32LB52_MPI2_MEM_BASE, &s_otp_layout);
 
-static QSPIFlashState s_qspi_flash_state;
-static QSPIFlash QSPI_FLASH_DEVICE = {
-  .state = &s_qspi_flash_state,
-  .qspi = &QSPI_PORT,
-};
-QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
+PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &s_flash.flash, "soc-config-user", "soc-config-cust");
+
+const struct pbl_flash *const FLASH = &s_flash.flash;
 
 PBL_PINCTRL_STATE_DEFINE(
     s_display_default, SF32LB52_PINCTRL,
@@ -271,10 +260,6 @@ static const MicDevice mic_device = {
 const MicDevice *MIC = &mic_device;
 PBL_IRQ_CONNECT(PDM1, 5, pdm1_data_handler, MIC, 0);
 PBL_IRQ_CONNECT(DMAC1_CH5, 5, pdm1_l_dma_handler, MIC, 0);
-
-uint32_t BSP_GetOtpBase(void) {
-  return MPI2_MEM_BASE;
-}
 
 void board_early_init(void) {
 }

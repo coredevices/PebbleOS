@@ -47,7 +47,6 @@ pbl_clar_test(test_persist
 
 pbl_clar_test(test_pbl_std
   SOURCES
-    fw/flash_region/flash_region.c
     fw/applib/pbl_std/pbl_std.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -56,7 +55,6 @@ pbl_clar_test(test_pbl_std
 
 pbl_clar_test(test_strftime
   SOURCES
-    fw/flash_region/flash_region.c
     fw/applib/pbl_std/pbl_std.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
@@ -89,7 +87,6 @@ pbl_clar_test(test_text_resources
 
 pbl_clar_test(test_system_resource_language_fonts
   SOURCES
-    fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     fw/system/hexdump.c
     fw/applib/fonts/codepoint.c

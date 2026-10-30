@@ -136,7 +136,6 @@ pbl_clar_test(test_heap
 pbl_clar_test(test_flash_logging
   SOURCES
     fw/debug/flash_logging.c
-    fw/flash_region/flash_region.c
     tests/fakes/fake_spi_flash.c
   DEFINES DUMA_DISABLED
   OVERRIDES dummy_board

@@ -17,7 +17,6 @@ pbl_clar_test(test_bluetooth_persistent_storage_prf
   SOURCES
     fw/services/bluetooth/bluetooth_persistent_storage_prf.c
     fw/services/shared_prf_storage/shared_prf_storage.c
-    tests/fakes/fake_flash_region.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_events.c
   PLATFORMS emery

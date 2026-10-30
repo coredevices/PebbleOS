@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "syscfg.h"
+
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/init.h>
@@ -19,9 +21,9 @@ void pbl_soc_early_init(void) {
 
   SystemInit();
 
-  // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
-  // that the flash is properly power cycled on reset. A flash power cycle is
-  // needed if left in 4-byte addressing mode, as bootrom does not support it.
+  // Make the boot ROM power cycle the flash through PA21 on reset: the
+  // bootloader leaves it in 4-byte address mode, which the ROM cannot read,
+  // and a reset can come before the flash driver takes it out.
   bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
   bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
   bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
@@ -41,8 +43,7 @@ void pbl_soc_early_init(void) {
   HAL_HPAON_WakeCore(CORE_ID_LCPU);
   HAL_RCC_Reset_and_Halt_LCPU(1);
 
-  // Load system configuration from EFUSE
-  BSP_System_Config();
+  soc_sf32lb52_syscfg_init();
 
   HAL_HPAON_StartGTimer();
 

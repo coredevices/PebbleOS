@@ -20,7 +20,7 @@ static uint32_t timed_read_bytes(uint32_t num_bytes) {
   time_t start_time_s;
   uint16_t start_time_ms;
   rtc_get_time_ms(&start_time_s, &start_time_ms);
-  flash_read_bytes(buffer, FLASH_REGION_FILESYSTEM_BEGIN, num_bytes);
+  pbl_flash_read(FLASH, FLASH_REGION_FILESYSTEM_BEGIN, buffer, num_bytes);
   time_t stop_time_s;
   uint16_t stop_time_ms;
   rtc_get_time_ms(&stop_time_s, &stop_time_ms);

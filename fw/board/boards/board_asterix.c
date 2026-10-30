@@ -5,7 +5,7 @@
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/display/sharp_ls013b7dh01.h>
-#include <pbl/drivers/flash/qspi_flash_definitions.h>
+#include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
@@ -16,49 +16,38 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/nrf5.h>
 #include <pbl/drivers/pwm/nrf5_rtc.h>
-#include <pbl/drivers/qspi_definitions.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
 #include <pbl/drivers/spi/nrf5.h>
+#include <pbl/drivers/spi_mem/nrf5_qspi.h>
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/vibe/drv2604.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
 
 #include <board/board.h>
+#include <board/otp_layout.h>
 #include <flash_region/flash_region.h>
-#include <nrfx_i2s.h>
-
-// QSPI
 #include <hal/nrf_clock.h>
 #include <hal/nrf_gpio.h>
+#include <nrfx_i2s.h>
 #include <nrfx_pdm.h>
 
-static QSPIPortState s_qspi_port_state;
-static QSPIPort QSPI_PORT = {
-  .state = &s_qspi_port_state,
-  .clk_freq_hz = 8000000UL,
-  .cs_gpio = NRF_GPIO_PIN_MAP(0, 17),
-  .clk_gpio = NRF_GPIO_PIN_MAP(0, 19),
-  .data_gpio = {
-    NRF_GPIO_PIN_MAP(0, 20),
-    NRF_GPIO_PIN_MAP(0, 21),
-    NRF_GPIO_PIN_MAP(0, 22),
-    NRF_GPIO_PIN_MAP(0, 23),
-  },
-};
-QSPIPort *const QSPI = &QSPI_PORT;
+PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 8000000, PBL_GPIO(NRF5_GPIO_P0, 19, 0),
+                             PBL_GPIO(NRF5_GPIO_P0, 17, 0), PBL_GPIO(NRF5_GPIO_P0, 20, 0),
+                             PBL_GPIO(NRF5_GPIO_P0, 21, 0), PBL_GPIO(NRF5_GPIO_P0, 22, 0),
+                             PBL_GPIO(NRF5_GPIO_P0, 23, 0));
+PBL_IRQ_CONNECT(QSPI, 5, pbl_spi_mem_nrf5_qspi_irq_handler, &s_qspi, 0);
 
-static QSPIFlashState s_qspi_flash_state;
-static QSPIFlash QSPI_FLASH_DEVICE = {
-  .state = &s_qspi_flash_state,
-  .qspi = &QSPI_PORT,
-  .read_mode = QSPI_FLASH_READ_READ4IO,
-  .write_mode = QSPI_FLASH_WRITE_PP4O,
-};
-QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
+static const struct pbl_flash_otp_cell s_otp_cells[] = {BOARD_OTP_CELLS};
+static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
+PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &pbl_flash_nor_gd25lq255e,
+                         FLASH_REGION_BASE_ADDRESS, &s_otp_layout);
+
+const struct pbl_flash *const FLASH = &s_flash.flash;
 /* PERIPHERAL ID 43 */
 
 PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0, 1000000, PBL_GPIO(NRF5_GPIO_P0, 27, 0),

@@ -3,12 +3,12 @@
 
 #include <inttypes.h>
 
+#include <pbl/drivers/flash.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/math.h>
 
 #include <board/board.h>
-#include <drivers/flash.h>
 #include <drivers/rtc.h>
 #include <drivers/sf32lb52/rc10k.h>
 #include <kernel/util/idle.h>
@@ -82,8 +82,6 @@ static inline void prv_enter_wfi(void) {
 static void prv_enter_deepwfi(void) {
   s_last_sleep_type = SleepTypeDeepWfi;
 
-  flash_power_down_for_stop_mode();
-
   __DSB();
   __ISB();
 
@@ -92,18 +90,10 @@ static void prv_enter_deepwfi(void) {
   SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
 }
 
-PBL_SECTION_RAM static void prv_enter_deepslep(void) {
-  QSPIPortState *flash_state;
+// Runs with the flash powered down
+PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   uint32_t dll1_freq = 0UL;
   int clk_src;
-
-  flash_state = QSPI_FLASH->qspi->state;
-
-  prv_save_iser();
-
-  HAL_FLASH_NOP_CMD(&flash_state->ctx.handle);
-  HAL_FLASH_DEEP_PWRDOWN(&flash_state->ctx.handle);
-  HAL_Delay_us(flash_state->t_enter_deep_us);
 
   NVIC_EnableIRQ(AON_IRQn);
 
@@ -150,10 +140,11 @@ PBL_SECTION_RAM static void prv_enter_deepslep(void) {
     HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_DLL1);
     HAL_Delay_us(0);
   }
+}
 
-  HAL_FLASH_RELEASE_DPD(&flash_state->ctx.handle);
-  HAL_Delay_us(flash_state->t_exit_deep_us);
-
+static void prv_enter_deepslep(void) {
+  prv_save_iser();
+  pbl_flash_power_down(FLASH, prv_deepsleep, nullptr);
   prv_restore_iser();
 }
 

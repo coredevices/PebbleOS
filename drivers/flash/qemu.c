@@ -1,257 +1,97 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
-#include <pbl/drivers/flash.h>
-#include <pbl/drivers/flash/flash_impl.h>
+#include <pbl/drivers/flash/qemu.h>
+#include <pbl/kernel/mmio.h>
+#include <pbl/util/bits.h>
+#include <pbl/util/math.h>
 
 #include <board/board.h>
-#include <system/status_codes.h>
 
-#define REG32(addr) (*(volatile uint32_t *)(addr))
+#define FLASH_CMD    0x00U
+#define FLASH_ADDR   0x04U
+#define FLASH_STATUS 0x08U
+// The device persists the written range to its backing file when FLASH_SYNC is written with its
+// start address, after FLASH_SYNC_LEN. Erases persist on their own.
+#define FLASH_SYNC_LEN 0x18U
+#define FLASH_SYNC     0x1CU
 
-// External flash controller MMIO register offsets
-#define FLASH_CMD        0x00
-#define FLASH_ADDR       0x04
-#define FLASH_STATUS     0x08
-#define FLASH_INT_CTRL   0x0C
-#define FLASH_INT_STATUS 0x10
-#define FLASH_SIZE       0x14
-// Range-based persistence handshake with the QEMU pebble-extflash device.
-// The device used to auto-flush its in-RAM XIP storage on SIGTERM, but that
-// captured torn writes (flash_logging journal mid-update, PFS OVERWRITE_STARTED
-// with no matching COMPLETE, etc.) and wedged the next boot.  Now we drive
-// persistence ourselves after each individual page write:
-//   1. write FLASH_SYNC_LEN = bytes_written
-//   2. write FLASH_SYNC     = XIP address of the start of that range
-// QEMU then blk_pwrite()s just that range to the backing file.  Erases are
-// auto-flushed in QEMU (the geometry is implicit in FLASH_ADDR + CMD), so we
-// don't need to SYNC them from here.
-#define FLASH_SYNC_LEN 0x18
-#define FLASH_SYNC     0x1C
+#define CMD_ERASE_SUBSECTOR 1U
+#define CMD_ERASE_SECTOR    2U
 
-// CMD values
-#define CMD_ERASE_SUBSECTOR 1
-#define CMD_ERASE_SECTOR    2
-#define CMD_WRITE_ENABLE    3
+#define STATUS_BUSY PBL_BIT(0)
 
-// STATUS bits
-#define STATUS_BUSY     (1 << 0)
-#define STATUS_COMPLETE (1 << 1)
-
-// Standard flash geometry
-#define QEMU_SECTOR_SIZE    0x10000 // 64 KB
-#define QEMU_SUBSECTOR_SIZE 0x1000  // 4 KB
-#define QEMU_PAGE_SIZE      256
-
-static bool s_initialized;
-
-status_t flash_impl_init(bool coredump_mode) {
-  (void)coredump_mode;
-  s_initialized = true;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_set_burst_mode(bool enable) {
-  (void)enable;
-  return S_SUCCESS;
-}
-
-FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
-  return addr & ~(QEMU_SECTOR_SIZE - 1);
-}
-
-FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
-  return addr & ~(QEMU_SUBSECTOR_SIZE - 1);
-}
-
-size_t flash_impl_get_capacity(void) {
-  return REG32(QEMU_EXTFLASH_BASE + FLASH_SIZE);
-}
-
-status_t flash_impl_enter_low_power_mode(void) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_exit_low_power_mode(void) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
-  // Flash addresses already include the XIP base (0x10000000), read directly
-  const uint8_t *src = (const uint8_t *)(uintptr_t)addr;
-  memcpy(buffer, src, len);
-  return S_SUCCESS;
-}
-
-void flash_impl_enable_write_protection(void) {
-  // No-op for QEMU
-}
-
-status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
-  (void)start_sector;
-  (void)end_sector;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_unprotect(void) {
-  return S_SUCCESS;
-}
-
-static size_t s_last_write_len;
-
-int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t len) {
-  // Calculate how many bytes we can write in this page
-  size_t page_offset = addr & (QEMU_PAGE_SIZE - 1);
-  size_t page_remaining = QEMU_PAGE_SIZE - page_offset;
-  size_t write_len = (len < page_remaining) ? len : page_remaining;
-
-  // Write directly to XIP region - addr already includes base
-  volatile uint8_t *dst = (volatile uint8_t *)(uintptr_t)addr;
-  const uint8_t *src = (const uint8_t *)buffer;
-  for (size_t i = 0; i < write_len; i++) {
-    dst[i] = src[i];
-  }
-
-  REG32(QEMU_EXTFLASH_BASE + FLASH_SYNC_LEN) = (uint32_t)write_len;
-  REG32(QEMU_EXTFLASH_BASE + FLASH_SYNC) = (uint32_t)addr;
-  s_last_write_len = write_len;
-  return (int)write_len;
-}
-
-status_t flash_impl_get_write_status(void) {
-  // Writes complete immediately in QEMU
-  return S_SUCCESS;
-}
-
-status_t flash_impl_write_suspend(FlashAddress addr) {
-  (void)addr;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_write_resume(FlashAddress addr) {
-  (void)addr;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
-  REG32(QEMU_EXTFLASH_BASE + FLASH_ADDR) = subsector_addr;
-  REG32(QEMU_EXTFLASH_BASE + FLASH_CMD) = CMD_ERASE_SUBSECTOR;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_sector_begin(FlashAddress sector_addr) {
-  REG32(QEMU_EXTFLASH_BASE + FLASH_ADDR) = sector_addr;
-  REG32(QEMU_EXTFLASH_BASE + FLASH_CMD) = CMD_ERASE_SECTOR;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_bulk_begin(void) {
-  // Erase the entire flash by erasing sector by sector
-  size_t capacity = flash_impl_get_capacity();
-  for (size_t addr = 0; addr < capacity; addr += QEMU_SECTOR_SIZE) {
-    flash_impl_erase_sector_begin(addr);
-    // Wait for completion
-    while (flash_impl_get_erase_status() == E_BUSY) {
-      // spin
-    }
-  }
-  return S_SUCCESS;
-}
-
-status_t flash_impl_get_erase_status(void) {
-  uint32_t status = REG32(QEMU_EXTFLASH_BASE + FLASH_STATUS);
-  if (status & STATUS_BUSY) {
-    return E_BUSY;
-  }
-  return S_SUCCESS;
-}
-
-uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) {
-  return 1; // QEMU erases are instantaneous
-}
-
-uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) {
-  return 1; // QEMU erases are instantaneous
-}
-
-status_t flash_impl_erase_suspend(FlashAddress addr) {
-  (void)addr;
-  // Check if erase already completed
-  if (flash_impl_get_erase_status() == S_SUCCESS) {
-    return S_NO_ACTION_REQUIRED;
-  }
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_resume(FlashAddress addr) {
-  (void)addr;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_blank_check_subsector(FlashAddress addr) {
-  FlashAddress base = flash_impl_get_subsector_base_address(addr);
-  const uint8_t *p = (const uint8_t *)(uintptr_t)base;
-  for (size_t i = 0; i < QEMU_SUBSECTOR_SIZE; i++) {
-    if (p[i] != 0xFF) {
-      return S_FALSE;
-    }
-  }
-  return S_TRUE;
-}
-
-status_t flash_impl_blank_check_sector(FlashAddress addr) {
-  FlashAddress base = flash_impl_get_sector_base_address(addr);
-  const uint8_t *p = (const uint8_t *)(uintptr_t)base;
-  for (size_t i = 0; i < QEMU_SECTOR_SIZE; i++) {
-    if (p[i] != 0xFF) {
-      return S_FALSE;
-    }
-  }
-  return S_TRUE;
-}
-
-void flash_impl_use(void) {
-  // No power management needed for QEMU flash
-}
-
-void flash_impl_release(void) {
-}
-
-void flash_impl_release_many(uint32_t num_locks) {
-  (void)num_locks;
-}
-
-status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
-  (void)addr;
-  *val = 0xFF;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked) {
-  (void)address;
-  *locked = false;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_security_register(uint32_t addr) {
-  (void)addr;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
-  (void)addr;
-  (void)val;
-  return S_SUCCESS;
-}
-
-static const FlashSecurityRegisters s_security_regs = {
-  .sec_regs = nullptr,
-  .num_sec_regs = 0,
-  .sec_reg_size = 0,
+static const struct pbl_flash_geometry s_geometry = {
+  .size = 32U * 1024U * 1024U,
+  .page_size = 256U,
+  .sector_size = 64U * 1024U,
+  .subsector_size = 4U * 1024U,
+  .sector_erase_ms = 1U,
+  .subsector_erase_ms = 1U,
 };
 
-const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
-  return &s_security_regs;
+static int prv_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len) {
+  memcpy(buf, (const void *)(uintptr_t)addr, len);
+
+  return 0;
 }
+
+static int prv_write(const struct pbl_flash *flash, uint32_t addr, const void *buf, size_t len) {
+  const uint32_t page_size = flash->geometry->page_size;
+  const uint8_t *src = buf;
+
+  while (len > 0U) {
+    size_t chunk = MIN(len, page_size - (addr % page_size));
+    volatile uint8_t *dst = (volatile uint8_t *)(uintptr_t)addr;
+
+    for (size_t i = 0U; i < chunk; i++) {
+      dst[i] = src[i];
+    }
+
+    pbl_writel(chunk, QEMU_EXTFLASH_BASE + FLASH_SYNC_LEN);
+    pbl_writel(addr, QEMU_EXTFLASH_BASE + FLASH_SYNC);
+
+    addr += chunk;
+    src += chunk;
+    len -= chunk;
+  }
+
+  return 0;
+}
+
+static int prv_erase(const struct pbl_flash *flash, uint32_t addr, uint32_t size) {
+  uint32_t cmd;
+
+  if (size == flash->geometry->sector_size) {
+    cmd = CMD_ERASE_SECTOR;
+  } else if (size == flash->geometry->subsector_size) {
+    cmd = CMD_ERASE_SUBSECTOR;
+  } else {
+    return -EINVAL;
+  }
+
+  pbl_writel(addr, QEMU_EXTFLASH_BASE + FLASH_ADDR);
+  pbl_writel(cmd, QEMU_EXTFLASH_BASE + FLASH_CMD);
+
+  return 0;
+}
+
+static int prv_erase_status(const struct pbl_flash *flash) {
+  return ((pbl_readl(QEMU_EXTFLASH_BASE + FLASH_STATUS) & STATUS_BUSY) != 0U) ? -EBUSY : 0;
+}
+
+static const struct pbl_flash_ops s_ops = {
+  .read = prv_read,
+  .write = prv_write,
+  .erase = prv_erase,
+  .erase_status = prv_erase_status,
+};
+
+PBL_FLASH_STATE_DEFINE(pbl_flash_qemu);
+const struct pbl_flash pbl_flash_qemu =
+    PBL_FLASH_INIT(pbl_flash_qemu, "flash", nullptr, nullptr, &s_ops, QEMU_EXTFLASH_XIP_BASE,
+                   &s_geometry, nullptr, nullptr);
+PBL_DEVICE_REGISTER(pbl_flash_qemu, &pbl_flash_qemu.dev);

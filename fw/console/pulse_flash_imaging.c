@@ -104,7 +104,7 @@ typedef struct PBL_PACKED EraseAndWriteAck {
   uint8_t complete;
 } EraseAndWriteAck;
 
-static void prv_erase_complete(void *ignored, status_t result);
+static void prv_erase_complete(int status, void *arg);
 
 static void prv_handle_erase(Command *cmd, size_t length) {
   if (length != sizeof(cmd->erase)) {
@@ -135,14 +135,15 @@ static void prv_handle_erase(Command *cmd, size_t length) {
     };
     pulse_best_effort_send(message, sizeof(EraseAndWriteAck));
 
-    uint32_t end_address = cmd->erase.address + cmd->erase.length;
-    flash_erase_optimal_range(cmd->erase.address, cmd->erase.address, end_address,
-                              (end_address + SECTOR_SIZE_BYTES - 1) & SECTOR_ADDR_MASK,
-                              prv_erase_complete, nullptr);
+    int ret = pbl_flash_erase_async(FLASH, cmd->erase.address, cmd->erase.length,
+                                    prv_erase_complete, nullptr);
+    if (ret != 0) {
+      prv_erase_complete(ret, nullptr);
+    }
   }
 }
 
-static void prv_erase_complete(void *ignored, status_t result) {
+static void prv_erase_complete(int status, void *arg) {
   EraseAndWriteAck *message = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
   *message = (EraseAndWriteAck){
     .opcode = IMAGING_RESP_ACK_ERASE,
@@ -151,7 +152,7 @@ static void prv_erase_complete(void *ignored, status_t result) {
     .complete = 1
   };
 
-  if (FAILED(result)) {
+  if (status != 0) {
     message->opcode = IMAGING_RESP_INTERNAL_ERROR;
     pulse_best_effort_send(message, sizeof(message->opcode));
   } else {
@@ -168,7 +169,7 @@ static void prv_handle_write(Command *cmd, size_t command_length) {
   }
 
   size_t write_length = command_length - sizeof(cmd->write);
-  flash_write_bytes(&cmd->write.data[0], cmd->write.address, write_length);
+  pbl_flash_write(FLASH, cmd->write.address, &cmd->write.data[0], write_length);
 
   EraseAndWriteAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
   *ack = (EraseAndWriteAck){
@@ -199,7 +200,7 @@ static void prv_handle_crc(Command *cmd, size_t length) {
     uint32_t crc;
   } CrcAck;
 
-  uint32_t crc = flash_crc32_legacy(cmd->crc.address, cmd->crc.length);
+  uint32_t crc = pbl_flash_crc32_legacy(FLASH, cmd->crc.address, cmd->crc.length);
 
   CrcAck *ack = pulse_best_effort_send_begin(PULSE_PROTOCOL_FLASH_IMAGING);
   *ack = (CrcAck){
@@ -221,7 +222,7 @@ static void prv_handle_query_region(Command *cmd, size_t length) {
   switch (cmd->region.region) {
     case FLASH_REGION_PRF:
       // assume a query of the region means we are going to write to it
-      flash_prf_set_protection(false);
+      (void)pbl_flash_unprotect(FLASH);
       region_base = FLASH_REGION_SAFE_FIRMWARE_BEGIN;
       region_length = FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN;
       break;
@@ -263,7 +264,8 @@ static void prv_handle_finalize_region(Command *cmd, size_t length) {
 
   switch (cmd->region.region) {
     case FLASH_REGION_PRF:
-      flash_prf_set_protection(true);
+      (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                              FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
       break;
     case FLASH_REGION_SYSTEM_RESOURCES:
       boot_bit_set(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);

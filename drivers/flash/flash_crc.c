@@ -25,20 +25,20 @@ static size_t prv_allocate_crc_buffer(void **buffer) {
   return chunk_size;
 }
 
-uint32_t flash_crc32(uint32_t flash_addr, uint32_t num_bytes) {
+uint32_t pbl_flash_crc32(const struct pbl_flash *flash, uint32_t flash_addr, size_t num_bytes) {
   void *buffer;
   unsigned int chunk_size = prv_allocate_crc_buffer(&buffer);
 
   uint32_t crc = 0;
   while (num_bytes > chunk_size) {
-    flash_read_bytes(buffer, flash_addr, chunk_size);
+    (void)pbl_flash_read(flash, flash_addr, buffer, chunk_size);
     crc = pbl_crc32(crc, buffer, chunk_size);
 
     num_bytes -= chunk_size;
     flash_addr += chunk_size;
   }
 
-  flash_read_bytes(buffer, flash_addr, num_bytes);
+  (void)pbl_flash_read(flash, flash_addr, buffer, num_bytes);
   crc = pbl_crc32(crc, buffer, num_bytes);
 
   kernel_free(buffer);
@@ -46,7 +46,8 @@ uint32_t flash_crc32(uint32_t flash_addr, uint32_t num_bytes) {
   return crc;
 }
 
-uint32_t flash_crc32_legacy(uint32_t flash_addr, uint32_t num_bytes) {
+uint32_t pbl_flash_crc32_legacy(const struct pbl_flash *flash, uint32_t flash_addr,
+                                size_t num_bytes) {
   void *buffer;
   unsigned int chunk_size = prv_allocate_crc_buffer(&buffer);
 
@@ -54,14 +55,14 @@ uint32_t flash_crc32_legacy(uint32_t flash_addr, uint32_t num_bytes) {
   pbl_crc32_legacy_init(&checksum);
 
   while (num_bytes > chunk_size) {
-    flash_read_bytes(buffer, flash_addr, chunk_size);
+    (void)pbl_flash_read(flash, flash_addr, buffer, chunk_size);
     pbl_crc32_legacy_update(&checksum, buffer, chunk_size);
 
     num_bytes -= chunk_size;
     flash_addr += chunk_size;
   }
 
-  flash_read_bytes(buffer, flash_addr, num_bytes);
+  (void)pbl_flash_read(flash, flash_addr, buffer, num_bytes);
   pbl_crc32_legacy_update(&checksum, buffer, num_bytes);
 
   kernel_free(buffer);

@@ -64,7 +64,6 @@ pbl_clar_test(test_language_pack_storage
     fw/services/filesystem/flash_translation.c
     fw/services/filesystem/pfs.c
     fw/services/filesystem/app_file.c
-    fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     drivers/flash/flash_crc.c
     tests/fakes/fake_bootbits.c
@@ -376,7 +375,6 @@ pbl_clar_test(test_accel_manager
 pbl_clar_test(test_shared_prf_storage_v3
   SOURCES
     fw/services/shared_prf_storage/shared_prf_storage.c
-    tests/fakes/fake_flash_region.c
     tests/fakes/fake_spi_flash.c
   PLATFORMS emery
   OVERRIDES shared_prf_storage_v3

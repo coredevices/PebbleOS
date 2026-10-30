@@ -4,5 +4,4 @@
 pbl_library()
 pbl_library_sources(
   hfxo.c
-  qspi.c
 )

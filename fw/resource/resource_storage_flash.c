@@ -89,12 +89,12 @@ static uint32_t resource_storage_system_bank_metadata_size(ResourceStoreEntry *e
 static uint32_t resource_storage_system_bank_get_crc(ResourceStoreEntry *entry, uint32_t num_bytes,
                                                      uint32_t entry_offset) {
   uint32_t start_offset = resource_store_get_metadata_size(entry) + entry_offset;
-  return flash_crc32_legacy(BANK.begin + start_offset, num_bytes);
+  return pbl_flash_crc32_legacy(FLASH, BANK.begin + start_offset, num_bytes);
 }
 
 static uint32_t resource_storage_system_bank_read(ResourceStoreEntry *entry, uint32_t offset,
                                                   void *data, size_t num_bytes) {
-  flash_read_bytes(data, BANK.begin + offset, num_bytes);
+  pbl_flash_read(FLASH, BANK.begin + offset, data, num_bytes);
   return num_bytes;
 }
 
@@ -127,7 +127,7 @@ static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreE
 
 static void resource_storage_system_bank_clear(ResourceStoreEntry *entry) {
   uint8_t buffer[MANIFEST_SIZE] = {};
-  flash_write_bytes(buffer, BANK.begin, MANIFEST_SIZE);
+  pbl_flash_write(FLASH, BANK.begin, buffer, MANIFEST_SIZE);
 }
 
 bool resource_storage_system_bank_check(ResAppNum app_num, uint32_t resource_id,

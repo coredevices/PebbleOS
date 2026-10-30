@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SF32LB52_HXT
+    bool "SF32LB52 crystal trim"
+    default y
+    depends on SOC_SF32LB52 && FLASH_OTP
+    help
+      Apply the 48 MHz crystal load capacitance trim from the SoC factory
+      configuration in the flash OTP area, once the flash is up.
+
+if SF32LB52_HXT
+
+module = DRIVER_SF32LB52_HXT
+module-str = SF32LB52 crystal trim
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SF32LB52_HXT

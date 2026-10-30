@@ -12,6 +12,4 @@ extern const struct pbl_uart *const DBG_UART;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern const struct pbl_uart *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern QSPIPort *const QSPI;
-extern QSPIFlash *const QSPI_FLASH;
 extern const MicDevice *MIC;

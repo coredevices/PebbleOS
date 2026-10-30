@@ -28,10 +28,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-void flash_region_erase_optimal_range_no_watchdog(uint32_t min_start, uint32_t max_start,
-                                                  uint32_t min_end, uint32_t max_end) {
-}
-
 static int prv_prebake_pfs(const char *filename) {
   struct stat st;
   if (stat(filename, &st) != 0) {
@@ -45,7 +41,7 @@ static int prv_prebake_pfs(const char *filename) {
   int fd = open(filename, O_RDWR);
 
   uint8_t *spi_image_file = mmap(NULL, st.st_size, PROT_WRITE, MAP_SHARED, fd, 0);
-  flash_read_bytes(spi_image_file, 0, st.st_size);
+  pbl_flash_read(FLASH, 0, spi_image_file, st.st_size);
   munmap(spi_image_file, st.st_size);
 
   close(fd);

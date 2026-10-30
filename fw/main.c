@@ -38,6 +38,7 @@
 #include <console/pulse.h>
 #include <console/serial_console.h>
 #include <debug/debug.h>
+#include <flash_region/flash_region.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/fault_handling.h>
@@ -127,10 +128,8 @@ static void init_drivers(void) {
 
   battery_init();
 
-  flash_init();
-  flash_sleep_when_idle(true);
-  flash_enable_write_protection();
-  flash_prf_set_protection(true);
+  (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                          FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
 
   uint8_t vibe_cali = mfg_info_get_vibe_cali();
   if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {
