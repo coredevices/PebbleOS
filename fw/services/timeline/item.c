@@ -8,7 +8,7 @@
 #include <pbl/services/timeline/item.h>
 #include <pbl/util/testing.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/applib_malloc.auto.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -26,7 +26,7 @@ static bool prv_item_init(TimelineItem *item, int num_attributes, int num_action
   const size_t alloc_size = attributes_actions_get_required_buffer_size(
       num_attributes, num_actions, attributes_per_action, required_size_for_strings);
 
-  uint8_t *buffer = task_zalloc(alloc_size);
+  uint8_t *buffer = applib_zalloc_try(alloc_size);
   if (buffer == nullptr) {
     return false;
   }
@@ -49,7 +49,7 @@ PBL_T_STATIC bool prv_deep_copy_attributes_actions(AttributeList *attr_list,
   const size_t data_size = attributes_actions_get_buffer_size(attr_list, action_group);
 
   if (data_size) {
-    item_out->allocated_buffer = task_malloc_check(data_size);
+    item_out->allocated_buffer = applib_malloc(data_size);
     uint8_t *buf_end = item_out->allocated_buffer + data_size;
 
     bool rv =
@@ -90,7 +90,7 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
                                                    TimelineItemType type, LayoutId layout,
                                                    AttributeList *attr_list,
                                                    TimelineItemActionGroup *action_group) {
-  TimelineItem *item = task_zalloc_check(sizeof(TimelineItem));
+  TimelineItem *item = applib_zalloc(sizeof(TimelineItem));
 
   uuid_generate(&item->header.id);
   item->header.type = type;
@@ -109,14 +109,14 @@ TimelineItem *timeline_item_create_with_attributes(time_t timestamp, uint16_t du
 TimelineItem *timeline_item_create(int num_attributes, int num_actions,
                                    uint8_t attributes_per_action[],
                                    size_t required_size_for_strings, uint8_t **string_buffer) {
-  TimelineItem *item = task_zalloc(sizeof(TimelineItem));
+  TimelineItem *item = applib_zalloc_try(sizeof(TimelineItem));
   if (item == nullptr) {
     return nullptr;
   }
 
   if (!prv_item_init(item, num_attributes, num_actions, attributes_per_action,
                      required_size_for_strings, string_buffer)) {
-    task_free(item);
+    applib_free(item);
     return nullptr;
   }
 
@@ -128,7 +128,7 @@ TimelineItem *timeline_item_copy(TimelineItem *src) {
     return nullptr;
   }
 
-  TimelineItem *item_out = task_zalloc(sizeof(TimelineItem));
+  TimelineItem *item_out = applib_zalloc_try(sizeof(TimelineItem));
   if (!item_out) {
     return nullptr;
   }
@@ -234,13 +234,13 @@ bool timeline_item_deserialize_payload(TimelineItem *item, char *string_buffer,
 void timeline_item_destroy(TimelineItem *item) {
   if (item != nullptr) {
     timeline_item_free_allocated_buffer(item);
-    task_free(item);
+    applib_free(item);
   }
 }
 
 void timeline_item_free_allocated_buffer(TimelineItem *item) {
   if (item->allocated_buffer != nullptr) {
-    task_free(item->allocated_buffer);
+    applib_free(item->allocated_buffer);
     item->allocated_buffer = nullptr;
   }
 }

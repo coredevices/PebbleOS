@@ -9,10 +9,10 @@
 #include <pbl/util/math.h>
 #include <pbl/util/trig.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/ui/kino/kino_reel/scale_segmented.h>
 #include <applib/ui/kino/kino_reel/transform.h>
 #include <applib/ui/kino/kino_reel/unfold.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <shell/system_theme.h>
 
@@ -89,7 +89,7 @@ static void prv_layout_text(PeekLayer *peek_layer) {
 /////////////////////
 
 PeekLayer *peek_layer_create(GRect frame) {
-  PeekLayer *peek_layer = task_malloc(sizeof(PeekLayer));
+  PeekLayer *peek_layer = applib_malloc(sizeof(PeekLayer));
   if (peek_layer) {
     peek_layer_init(peek_layer, &frame);
   }
@@ -102,7 +102,7 @@ void peek_layer_destroy(PeekLayer *peek_layer) {
     peek_layer_deinit(peek_layer);
   }
 
-  task_free(peek_layer);
+  applib_free(peek_layer);
 }
 
 void peek_layer_init(PeekLayer *peek_layer, const GRect *frame) {

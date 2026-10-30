@@ -46,6 +46,7 @@
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/ui/action_button.h>
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/app_window_stack.h>
@@ -60,7 +61,6 @@
 #include <applib/ui/window_stack.h>
 #include <apps/system/timeline/peek_layer.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
@@ -521,7 +521,7 @@ PBL_T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t r
 
   NotificationType type = notifications_presented_list_get_type(id);
 
-  TimelineItem *item = task_zalloc_check(sizeof(TimelineItem));
+  TimelineItem *item = applib_zalloc(sizeof(TimelineItem));
 
   if (type == NotificationMobile) {
     if (!notification_storage_get(id, item)) {

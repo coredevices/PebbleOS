@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/applib_malloc.auto.h>
 
 static DictionaryResult dict_init(DictionaryIterator *iter, const uint8_t *const buffer,
                                   const uint16_t length) {
@@ -316,7 +316,7 @@ const Tuple *const NULL_TUPLE = (const Tuple *const)NULL_TUPLE_BUFFER;
 
 static uint8_t *dict_copy(DictionaryIterator *iter) {
   size_t size = dict_size(iter);
-  uint8_t *buf = task_malloc(size);
+  uint8_t *buf = applib_malloc(size);
   if (buf == nullptr)
     return nullptr;
   memcpy(buf, iter->dictionary, size);
@@ -429,7 +429,7 @@ DictionaryResult dict_merge(DictionaryIterator *dest_iter, uint32_t *dest_buf_le
   *dest_buf_length_in_out = dict_write_end(dest_iter);
 
 cleanup:
-  task_free(orig_buffer);
+  applib_free(orig_buffer);
   return result;
 }
 

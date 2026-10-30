@@ -22,13 +22,13 @@
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/ui/status_bar_layer.h>
 #include <apps/system/timeline/pin_window.h>
 #include <apps/system/timeline/timeline.h>
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
@@ -176,7 +176,7 @@ static TimelineNode *prv_find_first(TimelineNode *head, TimelineIterDirection di
 
 static void prv_remove_node(TimelineNode **head, TimelineNode *node) {
   list_remove((ListNode *)node, (ListNode **)head, nullptr);
-  task_free(node);
+  applib_free(node);
 }
 
 static int prv_num_nodes_for_serialized_item(CommonTimelineItemHeader *header) {
@@ -260,7 +260,7 @@ static void prv_add_nodes_for_serialized_item(TimelineNode **list_head,
   // copy UUID to all the nodes
   for (int i = 0; i < num_nodes; i++) {
     // each node requires its own malloc because each node must be individually free-able
-    nodes[i] = task_malloc_check(sizeof(TimelineNode));
+    nodes[i] = applib_malloc(sizeof(TimelineNode));
     *(nodes[i]) = (TimelineNode){};
     nodes[i]->id = header->id;
   }
@@ -753,7 +753,7 @@ static void prv_perform_ancs_negative_action(const TimelineItem *item,
 
 static void prv_get_pin_and_push_pin_window(void *data) {
   Uuid *parent_id = data;
-  TimelineItem *pin = task_malloc(sizeof(TimelineItem)); // cleaned-up by the modal
+  TimelineItem *pin = applib_malloc(sizeof(TimelineItem)); // cleaned-up by the modal
   if (pin && pin_db_get(parent_id, pin) == S_SUCCESS) {
     timeline_pin_window_push_modal(pin);
   } else {

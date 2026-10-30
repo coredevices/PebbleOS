@@ -7,10 +7,10 @@
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/util/size.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/ui.h>
 #include <font_resource_keys.auto.h>
-#include <kernel/pbl_malloc.h>
 
 //////////////////////////////////////////
 //  Card Mode
@@ -173,7 +173,7 @@ bool generic_layout_verify(bool existing_attributes[]) {
 }
 
 LayoutLayer *generic_layout_create(const LayoutLayerConfig *config) {
-  GenericLayout *layout = task_zalloc_check(sizeof(GenericLayout));
+  GenericLayout *layout = applib_zalloc(sizeof(GenericLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
     .attributes = {AttributeIdTitle, AttributeIdSubtitle},

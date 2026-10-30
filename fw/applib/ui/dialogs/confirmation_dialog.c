@@ -3,10 +3,10 @@
 
 #include "confirmation_dialog.h"
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/action_bar_layer.h>
 #include <applib/ui/dialogs/actionable_dialog.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 
 struct ConfirmationDialog {
@@ -20,17 +20,17 @@ ConfirmationDialog *confirmation_dialog_create(const char *dialog_name) {
   // Note: This isn't a memory leak as the ConfirmationDialog has the action dialog as its
   // first member, so when we call init and pass the ConfirmationDialog as the argument, when
   // it frees the associated data, it actually frees the ConfirmationDialog.
-  ConfirmationDialog *confirmation_dialog = task_zalloc_check(sizeof(ConfirmationDialog));
+  ConfirmationDialog *confirmation_dialog = applib_zalloc(sizeof(ConfirmationDialog));
   if (!gbitmap_init_with_resource(&confirmation_dialog->confirm_icon,
                                   RESOURCE_ID_ACTION_BAR_ICON_CHECK)) {
-    task_free(confirmation_dialog);
+    applib_free(confirmation_dialog);
     return nullptr;
   }
 
   if (!gbitmap_init_with_resource(&confirmation_dialog->decline_icon,
                                   RESOURCE_ID_ACTION_BAR_ICON_X)) {
     gbitmap_deinit(&confirmation_dialog->confirm_icon);
-    task_free(confirmation_dialog);
+    applib_free(confirmation_dialog);
     return nullptr;
   }
 

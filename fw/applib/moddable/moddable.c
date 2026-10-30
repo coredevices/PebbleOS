@@ -16,8 +16,8 @@
 #if defined(CONFIG_MODDABLE_XS) && !defined(CONFIG_RECOVERY_FW)
 #include <pbl/kernel/malloc.h>
 
+#include <applib/app_malloc.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <moddableAppState.h>
 #include <process_management/app_manager.h>
@@ -66,7 +66,7 @@ void moddable_cleanup(void) {
   }
 
   app_state_set_js_memory_api_context(nullptr);
-  task_free(state);
+  app_free(state);
 }
 
 typedef struct {
@@ -117,7 +117,7 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
     }
   }
 
-  ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
+  ModdablePebbleAppState state = app_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
   app_state_set_js_memory_api_context((void *)state);
 
   // Read flags if the record is large enough to include them

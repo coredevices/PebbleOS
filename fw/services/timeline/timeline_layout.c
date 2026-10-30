@@ -10,6 +10,7 @@
 #include <pbl/util/string.h>
 #include <pbl/util/units.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gcontext.h>
 #include <applib/graphics/text_resources.h>
 #include <applib/graphics/utf8.h>
@@ -17,7 +18,6 @@
 #include <applib/ui/ui.h>
 #include <apps/system/timeline/layer.h>
 #include <apps/system/timeline/text_node.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <popups/timeline/peek.h>
 #include <process_state/app_state/app_state.h>
@@ -178,7 +178,7 @@ void timeline_layout_deinit(TimelineLayout *timeline_layout) {
     for (unsigned int i = 0; i < timeline_layout->num_metric_icon_layers; i++) {
       kino_layer_destroy(timeline_layout->metric_icon_layers[i]);
     }
-    task_free(timeline_layout->metric_icon_layers);
+    applib_free(timeline_layout->metric_icon_layers);
     timeline_layout->num_metric_icon_layers = 0;
     timeline_layout->metric_icon_layers = nullptr;
   }
@@ -308,7 +308,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 
 void timeline_layout_destroy(LayoutLayer *layout) {
   timeline_layout_deinit((TimelineLayout *)layout);
-  task_free(layout);
+  applib_free(layout);
 }
 
 void timeline_layout_change_mode(LayoutLayer *layout, LayoutLayerMode final_mode) {

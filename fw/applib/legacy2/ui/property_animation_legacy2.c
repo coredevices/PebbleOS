@@ -5,9 +5,9 @@
 
 #include <pbl/logging/logging.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/ui/layer.h>
 #include <applib/ui/property_animation.h>
-#include <kernel/pbl_malloc.h>
 
 /////////////////////
 // Property Animation
@@ -97,7 +97,7 @@ struct PropertyAnimationLegacy2 *property_animation_legacy2_create(
     const struct PropertyAnimationLegacy2Implementation *implementation, void *subject,
     void *from_value, void *to_value) {
   struct PropertyAnimationLegacy2 *property_animation =
-      task_malloc(sizeof(struct PropertyAnimationLegacy2));
+      applib_malloc(sizeof(struct PropertyAnimationLegacy2));
   if (property_animation) {
     property_animation_legacy2_init(property_animation, implementation, subject, from_value,
                                     to_value);
@@ -110,7 +110,7 @@ void property_animation_legacy2_destroy(struct PropertyAnimationLegacy2 *propert
     return;
   }
   animation_legacy2_unschedule(&property_animation->animation);
-  task_free(property_animation);
+  applib_free(property_animation);
 }
 
 static void prv_set_frame(void *subject, GRect frame) {
@@ -146,7 +146,7 @@ struct PropertyAnimationLegacy2 *property_animation_legacy2_create_layer_frame(s
                                                                                GRect *from_frame,
                                                                                GRect *to_frame) {
   struct PropertyAnimationLegacy2 *property_animation =
-      task_malloc(sizeof(struct PropertyAnimationLegacy2));
+      applib_malloc(sizeof(struct PropertyAnimationLegacy2));
   if (property_animation) {
     property_animation_legacy2_init_layer_frame(property_animation, layer, from_frame, to_frame);
   }

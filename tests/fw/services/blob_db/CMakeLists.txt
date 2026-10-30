@@ -10,7 +10,7 @@ pbl_clar_test(test_timeline
     fw/services/timeline/timeline.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_settings_file.c
-  OVERRIDES dummy_board
+  OVERRIDES dummy_board applib_malloc
 )
 
 pbl_clar_test(test_pin_db
