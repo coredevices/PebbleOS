@@ -181,9 +181,8 @@ function(pbl_link_firmware)
       OUTPUT ${syscalls_stamp}
       COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_FIRMWARE_PY} check-syscalls
               --elf ${elf} --objdump ${CMAKE_OBJDUMP}
-              --legacy ${PBL_BASE}/fw/syscall/legacy_syscalls.txt
       COMMAND ${CMAKE_COMMAND} -E touch ${syscalls_stamp}
-      DEPENDS pebbleos ${PBL_FIRMWARE_PY} ${PBL_BASE}/fw/syscall/legacy_syscalls.txt
+      DEPENDS pebbleos ${PBL_FIRMWARE_PY}
       WORKING_DIRECTORY ${PBL_BASE}
       COMMENT "Checking syscall definitions"
       VERBATIM

@@ -10,7 +10,7 @@
 
 #include <clar.h>
 #include <fake_pebble_tasks.h>
-#include <stubs_syscall_internal.h>
+#include <stubs_kernel_syscall.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////

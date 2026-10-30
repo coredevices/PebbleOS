@@ -70,6 +70,10 @@ void pebble_task_attr_set_syscall_stack(PebbleTask task, struct pbl_thread_attr 
 
 void pebble_task_configure_idle_task(void);
 
+//! Allow or forbid instruction fetches from App RAM on the running App task.
+//! Forbidding them makes privileged code fault if it jumps into app code.
+void pebble_task_set_app_ram_executable(bool executable);
+
 #if UNITTEST
 #define PBL_ASSERT_TASK(task)
 #define PBL_ASSERT_NOT_TASK(task)

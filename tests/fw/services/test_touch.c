@@ -22,7 +22,7 @@
 void kernel_free(void *p) {
 }
 
-// Declared in syscall/syscall.h; in the test build DEFINE_SYSCALL is a plain function.
+// Declared in syscall/syscall.h; in the test build PBL_SYSCALL is a plain function.
 void sys_touch_set_raw_subscribed(bool subscribed);
 
 // sys_touch_set_raw_subscribed marks the calling task; make it settable.

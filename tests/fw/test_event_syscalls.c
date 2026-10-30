@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "fake_pebble_tasks.h"
-#include "stubs_syscall_internal.h"
+#include "stubs_kernel_syscall.h"
 
 #include <pbl/services/event_service.h>
 #include <pbl/util/size.h>

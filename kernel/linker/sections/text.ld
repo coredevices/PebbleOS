@@ -7,8 +7,6 @@
     .text : {
         __syscall_text_start__ = .;
         *(.syscall_text.*)           /* System call functions */
-        __syscall_checked_text_start__ = .;
-        *(.syscall_checked.*)        /* System calls defined with PBL_SYSCALL */
         __syscall_text_end__ = .;
         *(.text)                   /* remaining code */
         *(.text.*)                 /* remaining code */

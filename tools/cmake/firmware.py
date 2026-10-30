@@ -81,30 +81,12 @@ def cmd_check_syscalls(args):
         [args.objdump, "-t", args.elf], check=True, capture_output=True, text=True
     ).stdout
     addrs = {}
-    funcs = {}
     for line in symbols.splitlines():
         m = re.match(r"^([0-9a-f]{8}) (.{7}) .*\s(\S+)$", line)
         if m:
             addrs.setdefault(m.group(3), int(m.group(1), 16))
-            if "F" in m.group(2):
-                funcs[m.group(3)] = int(m.group(1), 16)
     start = addrs["__syscall_text_start__"]
-    checked = addrs["__syscall_checked_text_start__"]
     end = addrs["__syscall_text_end__"]
-
-    with open(args.legacy) as f:
-        legacy = {ln.strip() for ln in f if ln.strip() and not ln.startswith("#")}
-    unlisted = sorted(n for n, a in funcs.items() if start <= a < checked and n not in legacy)
-    if unlisted:
-        sys.exit(
-            "New syscalls must be defined with PBL_SYSCALL, not DEFINE_SYSCALL: "
-            + ", ".join(unlisted)
-        )
-    converted = sorted(n for n, a in funcs.items() if checked <= a < end and n in legacy)
-    if converted:
-        sys.exit(
-            f"Defined with PBL_SYSCALL, remove from {args.legacy}: " + ", ".join(converted)
-        )
 
     disasm = subprocess.run(
         [args.objdump, "-d", "--no-show-raw-insn", args.elf],
@@ -129,7 +111,7 @@ def cmd_check_syscalls(args):
     )
     if bad:
         sys.exit(
-            "PRIVILEGE_WAS_ELEVATED is only valid in a DEFINE_SYSCALL body or a "
+            "ARCH_SYSCALL_FROM_USER() is only valid in a syscall stub body or a "
             "PBL_ALWAYS_INLINE helper, but is evaluated in: " + ", ".join(bad)
         )
 
@@ -214,7 +196,6 @@ def main():
     p = sub.add_parser("check-syscalls")
     p.add_argument("--elf", required=True)
     p.add_argument("--objdump", required=True)
-    p.add_argument("--legacy", required=True)
     p.set_defaults(func=cmd_check_syscalls)
 
     p = sub.add_parser("bundle")

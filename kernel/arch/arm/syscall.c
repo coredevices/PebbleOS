@@ -47,7 +47,10 @@ static PBL_USED void arch_user_call_enter(void (*fn)(void *), void *ctx, uintptr
 
   struct pbl_arch_thread *arch = &pbl_cur->backend.arch;
   struct arch_user_call *call = &arch->user_call;
-  PBL_ASSERTN(!call->active);
+  if (call->active) {
+    // fn made a syscall that called into user code again.
+    pbl_syscall_fail();
+  }
 
   *call = (struct arch_user_call){
     .active = true,
@@ -93,6 +96,20 @@ bool arch_user_call_return(uint32_t *frame) {
   frame[5] = 0;
 
   return true;
+}
+
+void pbl_user_call_unwind(void) {
+  PBL_ASSERTN(!arch_is_user_context());
+
+  struct pbl_arch_thread *arch = &pbl_cur->backend.arch;
+  struct arch_user_call *call = &arch->user_call;
+  if (!call->active) {
+    return;
+  }
+
+  call->active = false;
+  arch->syscall_lr = call->outer_syscall_lr;
+  arch->syscall_sp = call->outer_syscall_sp;
 }
 
 // The re-entry SVC is deliberately outside .syscall_text. It is only accepted

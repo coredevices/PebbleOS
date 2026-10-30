@@ -9,16 +9,16 @@
 
 #include <cmsis_core.h>
 
-//! Defines the syscall stub @p name, placed in @p section, and opens the body
-//! of __@p name, which the stub runs privileged.
-#define ARCH_SYSCALL_DEFINE(section, ret, name, ...)           \
-  ret PBL_NAKED PBL_SECTION(section #name) name(__VA_ARGS__) { \
-    __asm volatile(                                            \
-        "push { lr } \n"                                       \
-        "bl arch_syscall_enter \n"                             \
-        "svc 2 \n"                                             \
-        "b __" #name "\n");                                    \
-  }                                                            \
+//! Defines the syscall stub @p name, placed in .syscall_text, and opens the
+//! body of __@p name, which the stub runs privileged.
+#define ARCH_SYSCALL_DEFINE(ret, name, ...)                             \
+  ret PBL_NAKED PBL_SECTION(".syscall_text." #name) name(__VA_ARGS__) { \
+    __asm volatile(                                                     \
+        "push { lr } \n"                                                \
+        "bl arch_syscall_enter \n"                                      \
+        "svc 2 \n"                                                      \
+        "b __" #name "\n");                                             \
+  }                                                                     \
   ret PBL_EXTERNALLY_VISIBLE PBL_USED __##name(__VA_ARGS__)
 
 //! True in the body of a syscall stub called from unprivileged code. Only valid

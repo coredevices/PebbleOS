@@ -83,6 +83,11 @@ void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regio
   (void)regions;
 }
 
+void arch_thread_region_set(struct pbl_thread *t, const MpuRegion *region) {
+  (void)t;
+  (void)region;
+}
+
 void posix_run(struct pbl_thread *t) {
   struct posix_thread *pt = t->backend.arch.pt;
   pt->run = true;

@@ -45,6 +45,9 @@ PBL_WEAK enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
 PBL_WEAK void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
 }
 
+PBL_WEAK void pbl_thread_region_set(struct pbl_thread *t, const MpuRegion *region) {
+}
+
 PBL_WEAK void pbl_thread_saved_regs(const struct pbl_thread *t,
                                     struct pbl_thread_saved_regs *regs) {
   *regs = (struct pbl_thread_saved_regs){.control = s_app_task_control_reg};
