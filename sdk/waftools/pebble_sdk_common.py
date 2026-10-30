@@ -20,20 +20,7 @@ from waflib.Task import Task
 from waflib.TaskGen import after_method, before_method, feature
 from waflib.Tools import c, c_preproc
 
-INIT_ARRAYS = """
-        . = ALIGN(4);
-        PROVIDE_HIDDEN(__preinit_array_start = .);
-        KEEP(*(.preinit_array))
-        PROVIDE_HIDDEN(__preinit_array_end = .);
-        PROVIDE_HIDDEN(__init_array_start = .);
-        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)))
-        KEEP(*(.init_array))
-        PROVIDE_HIDDEN(__init_array_end = .);
-        PROVIDE_HIDDEN(__fini_array_start = .);
-        KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
-        KEEP(*(.fini_array))
-        PROVIDE_HIDDEN(__fini_array_end = .);
-"""
+CMAKE_DOCS = "https://pebbleos.readthedocs.io/latest/sdk/app_build.html"
 
 # Override the default waf task __str__ method to include display of the HW platform being targeted
 Task.__str__ = wrap_task_name_with_platform
@@ -68,6 +55,10 @@ def configure(conf):
     :param conf: the ConfigureContext
     :return: N/A
     """
+    Logs.warn(
+        "Building apps with waf is deprecated and will be removed: build with CMake "
+        "instead, see " + CMAKE_DOCS
+    )
     if not conf.options.debug:
         conf.env.append_value("DEFINES", "RELEASE")
     else:
@@ -131,6 +122,9 @@ def build(bld):
     # Process message keys
     bld(features="message_keys")
 
+    with open(os.path.join(bld.env.PEBBLE_SDK_COMMON, "pebble_app_init_arrays.ld")) as f:
+        init_arrays = f.read()
+
     cached_env = bld.env
     for platform in bld.env.TARGET_PLATFORMS:
         # bld.env is set to a shallow copy of the ConfigSet labeled <platform>
@@ -142,11 +136,12 @@ def build(bld):
 
         # Generate a linker script specific to the current platform
         build_node = bld.path.get_bld().find_or_declare(bld.env.BUILD_DIR)
+        frozen = "FROZEN_AT_REVISION" in bld.env.PLATFORM
         bld(
             features="subst",
             source=find_sdk_component(bld, bld.env, "pebble_app.ld.template"),
             target=build_node.make_node("pebble_app.ld.auto"),
-            INIT_ARRAYS="" if "FROZEN_AT_REVISION" in bld.env.PLATFORM else INIT_ARRAYS,
+            INIT_ARRAYS="" if frozen else init_arrays,
             **bld.env.PLATFORM,
         )
 

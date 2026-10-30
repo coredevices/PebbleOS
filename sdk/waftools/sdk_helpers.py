@@ -3,10 +3,11 @@
 
 import json
 import os
-import re
 import struct
 
+import pebble_project
 from pebble_package import LibraryPackage
+from pebble_project import ProjectError
 from pebble_sdk_platform import pebble_platforms
 from pebble_sdk_version import set_env_sdk_version
 from resources.types.resource_object import ResourceObject
@@ -307,35 +308,14 @@ def process_package(ctx, package, root_lib_node=None):
             return libinfo, resources_json, dependencies
 
 
-def truncate_to_32_bytes(name):
-    """
-    This method takes an input string and returns a 32-byte truncated string if the input string is
-    longer than 32 bytes
-    :param name: the string to truncate
-    :return: the truncated string, if the input string was > 32 bytes, or else the original input
-    string
-    """
-    return name[:30] + ".." if len(name) > 32 else name
+truncate_to_32_bytes = pebble_project.truncate_to_32_bytes
 
 
 def validate_message_keys_object(ctx, project_info, info_json_type):
-    """
-    Verify that the appropriately-named message key object is present in the project info file
-    :param ctx: the ConfigureContext object
-    :param project_info: JSON object containing project info
-    :param info_json_type: string containing the name of the file used to extract project info
-    :return: N/A
-    """
-    if "appKeys" in project_info and info_json_type == "package.json":
-        ctx.fatal(
-            "Project contains an invalid object `appKeys` in package.json. Please use "
-            "`messageKeys` instead."
-        )
-    if "messageKeys" in project_info and info_json_type == "appinfo.json":
-        ctx.fatal(
-            "Project contains an invalid object `messageKeys` in appinfo.json. Please use "
-            "`appKeys` instead."
-        )
+    try:
+        pebble_project.validate_message_keys_object(project_info, info_json_type)
+    except ProjectError as e:
+        ctx.fatal(str(e))
 
 
 def validate_resource_not_larger_than(
@@ -417,123 +397,33 @@ def wrap_task_name_with_platform(self):
     return f"{name}: {src_str}{sep}{tgt_str}"
 
 
-# Must match the phone app's PermissionKind and PluginDefinedPermissions.
-PLUGIN_PERMISSION_KINDS = ("exfiltrating", "read", "write")
-RESERVED_PLUGIN_PERMISSION_NAMES = ("InvokeAction",)
-
-
-def bundled_file_paths(project_info):
-    """
-    The project files the phone app reads out of the pbw by name: the plugin script, and a config
-    page shipped in the pbw rather than hosted at an http(s) URL.
-    :param project_info: the project info appinfo.json is written from
-    :return: their paths relative to the project root, as appinfo.json names them
-    """
-    paths = []
-    plugin = project_info.get("plugin")
-    if isinstance(plugin, dict):
-        paths.append(plugin.get("script", "plugin.js"))
-    config_page = project_info.get("configPage")
-    if isinstance(config_page, str) and not config_page.startswith(
-        ("http://", "https://")
-    ):
-        paths.append(config_page)
-    return paths
-
-
-# appinfo.json features the phone app only knows from a manifestVersion 2 pbw.
-MANIFEST_V2_KEYS = ("plugin", "usesPermissions", "configPage")
-
-
-# What the phone app calls the watch microphone, in usesPermissions.
-WATCH_MICROPHONE = "WatchMicrophone"
-_MICROPHONE_CALL = re.compile(r"\b(mic_capture_start|mic_stream_to_phone_start)\s*\(")
+bundled_file_paths = pebble_project.bundled_file_paths
 
 
 def warn_undeclared_microphone(project_info, sources):
     """
     Warn when the app's C code starts the microphone without the permission the phone app needs to
-    allow it: without it, every start is refused (mic_capture_start returns
-    MicCaptureStartErrPermissionDenied, and the phone refuses streams).
+    allow it.
     :param project_info: the project info appinfo.json is written from
     :param sources: the app's C source nodes
     :return: N/A
     """
-    declared = {
-        p if isinstance(p, str) else p.get("name")
-        for p in project_info.get("usesPermissions") or []
-        if isinstance(p, (str, dict))
-    }
-    legacy = project_info.get("manifestVersion", 2) < 2
-    if WATCH_MICROPHONE in declared and not legacy:
-        return
-    for node in sources:
-        match = _MICROPHONE_CALL.search(node.read())
-        if match is None:
-            continue
-        if legacy:
-            Logs.warn(
-                f"{node.name} calls {match.group(1)}(), but the phone app denies the microphone to "
-                f"manifestVersion 1 apps: remove '\"manifestVersion\": 1' and declare "
-                f"'{WATCH_MICROPHONE}' in usesPermissions"
-            )
-        else:
-            Logs.warn(
-                f"{node.name} calls {match.group(1)}(), but package.json doesn't declare "
-                f"'{WATCH_MICROPHONE}' in usesPermissions, so the phone app will deny the microphone"
-            )
-        return
+    warning = pebble_project.undeclared_microphone_warning(
+        project_info, [(node.name, node.read()) for node in sources]
+    )
+    if warning:
+        Logs.warn(warning)
 
 
 def validate_manifest_version(ctx, project_info):
-    """
-    Check the project's manifestVersion, which defaults to 2. The phone app treats a version 1 pbw
-    as a legacy app and ignores the newer appinfo features.
-    :param ctx: the ConfigureContext object
-    :param project_info: the project info appinfo.json is written from
-    :return: N/A
-    """
-    version = project_info.get("manifestVersion", 2)
-    if isinstance(version, bool) or not isinstance(version, int) or version < 1:
-        ctx.fatal("'manifestVersion' must be 1 or 2")
-    if version < 2:
-        used = [key for key in MANIFEST_V2_KEYS if key in project_info]
-        if used:
-            ctx.fatal(
-                f"{', '.join(repr(key) for key in used)} {'needs' if len(used) == 1 else 'need'} "
-                "manifestVersion 2, the default: "
-                "remove '\"manifestVersion\": 1' from package.json"
-            )
+    try:
+        pebble_project.validate_manifest_version(project_info)
+    except ProjectError as e:
+        ctx.fatal(str(e))
 
 
 def validate_plugin(ctx, project_info):
-    """
-    Check the project's `plugin` block (and that the files appinfo.json names exist) the way the
-    phone app will when it loads the pbw.
-    :param ctx: the ConfigureContext object
-    :param project_info: the project info appinfo.json is written from
-    :return: N/A
-    """
-    plugin = project_info.get("plugin")
-    if plugin is not None and not isinstance(plugin, dict):
-        ctx.fatal("'plugin' must be an object")
-    if project_info.get("projectType") == "plugin" and plugin is None:
-        ctx.fatal("A plugin project needs a 'plugin' block in package.json")
-
-    for permission in (plugin or {}).get("definesPermissions", []):
-        name = permission.get("name", "")
-        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", name):
-            ctx.fatal(f"Plugin permission name '{name}' must be alphanumeric")
-        if name in RESERVED_PLUGIN_PERMISSION_NAMES:
-            ctx.fatal(f"Plugin permission name '{name}' is reserved")
-        if not str(permission.get("label", "")).strip():
-            ctx.fatal(f"Plugin permission '{name}' has no label")
-        if permission.get("kind") not in PLUGIN_PERMISSION_KINDS:
-            ctx.fatal(
-                f"Plugin permission '{name}' needs a kind: one of "
-                f"{', '.join(PLUGIN_PERMISSION_KINDS)}"
-            )
-
-    for path in bundled_file_paths(project_info):
-        if ctx.path.find_node(path) is None:
-            ctx.fatal(f"'{path}', named in package.json, does not exist")
+    try:
+        pebble_project.validate_plugin(project_info, ctx.path.abspath())
+    except ProjectError as e:
+        ctx.fatal(str(e))

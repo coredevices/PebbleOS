@@ -165,8 +165,12 @@ def main():
                 TINTIN_ROOT=REPO_ROOT, PLATFORM_PATH=platform_dir)
 
     _copy_tree(os.path.join(SDK_ROOT, "include"), os.path.join(common, "include"))
-    _copy(os.path.join(SDK_ROOT, "pebble_app.ld.template"),
-          os.path.join(common, "pebble_app.ld.template"))
+    for name in ("pebble_app.ld.template", "pebble_app_init_arrays.ld"):
+        _copy(os.path.join(SDK_ROOT, name), os.path.join(common, name))
+
+    # The CMake package apps find the SDK with.
+    shutil.rmtree(os.path.join(args.output, "cmake"), ignore_errors=True)
+    _copy_tree(os.path.join(SDK_ROOT, "cmake"), os.path.join(args.output, "cmake"))
 
     _check_templates(os.path.join(SDK_ROOT, "defaults"))
     _copy_tree(os.path.join(SDK_ROOT, "defaults"), os.path.join(common, "templates"))
@@ -175,11 +179,15 @@ def main():
     for tool in SHARED_TOOLS:
         _copy(os.path.join(REPO_ROOT, "tools", tool),
               os.path.join(common, "tools", tool))
+    # How the CMake app build drives the resource generators, as the
+    # firmware build does.
+    _copy(os.path.join(REPO_ROOT, "tools", "cmake", "wafshim.py"),
+          os.path.join(common, "tools", "wafshim.py"))
     # The resource pipeline the app build shares with the firmware. It goes
     # over whole: resource_generator loads the per-type generators by name,
     # so a hand-picked subset breaks on whichever type nobody tried.
     _copy_python_package(os.path.join(REPO_ROOT, "tools", "resources"),
-                         os.path.join(common, "waftools", "resources"))
+                         os.path.join(common, "tools", "resources"))
 
     _build_waf(args.work_dir, args.output)
 
