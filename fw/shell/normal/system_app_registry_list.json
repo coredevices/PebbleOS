@@ -650,6 +650,14 @@
       ]
     },
     {
+      "id": -195,
+      "enum": "SYSCALL_FUZZ",
+      "md_fn": "syscall_fuzz_get_info",
+      "ifdefs": [
+        "CONFIG_SYSCALL_FUZZ"
+      ]
+    },
+    {
       "id": -192,
       "enum": "EMOJI_TEST",
       "md_fn": "emoji_test_app_get_info",

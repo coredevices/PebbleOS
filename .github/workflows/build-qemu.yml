@@ -62,7 +62,7 @@ jobs:
           - build: normal-itest
             variant: normal
             suffix: -normal-itest
-            options: -DCONFIG_BT_HCI_UART=y
+            options: -DCONFIG_BT_HCI_UART=y -DCONFIG_SYSCALL_FUZZ=y
           - build: prf-itest
             variant: prf
             suffix: -prf-itest

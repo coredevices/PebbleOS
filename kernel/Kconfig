@@ -80,6 +80,12 @@ config USERSPACE
 	  they are handed. Without it every thread runs privileged and
 	  syscalls are plain calls.
 
+config SYSCALL_DESC
+	bool
+	help
+	  Every PBL_SYSCALL also records its name and the kinds of its
+	  arguments in the image, with a wrapper to call it generically.
+
 config RAMFUNC
 	bool
 	help

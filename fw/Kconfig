@@ -110,4 +110,13 @@ config PERFORMANCE_TESTS
     bool "Performance test instrumentation"
     select PROFILER
 
+config SYSCALL_FUZZ
+    bool "Syscall fuzzer"
+    depends on USERSPACE
+    select SYSCALL_DESC
+    help
+      Add the Syscall Fuzz app, which calls every syscall in the image
+      unprivileged with arguments that must be rejected. A syscall that
+      fails returns to the app instead of killing it. For tests only.
+
 endmenu
