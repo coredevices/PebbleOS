@@ -21,6 +21,7 @@
 #include <process_management/pebble_process_md.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/resource_storage_file.h>
+#include <shell/normal/button_lock.h>
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
 
@@ -47,6 +48,23 @@ void watchface_set_default_install_id(AppInstallId id) {
 }
 
 void watchface_handle_button_event(PebbleEvent *e) {
+}
+
+bool button_lock_handle_button_event(PebbleEvent *e) {
+  return false;
+}
+
+bool button_lock_is_locked(void) {
+  return false;
+}
+
+void button_lock_handle_activity(void) {
+}
+
+void button_lock_handle_charger_change(bool is_plugged) {
+}
+
+void button_lock_handle_prefs_changed(void) {
 }
 
 void app_idle_timeout_refresh(void) {

@@ -28,6 +28,7 @@
 #include <process_management/app_manager.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/battery_ui.h>
+#include <shell/normal/button_lock.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
@@ -58,6 +59,7 @@ void shell_event_loop_init(void) {
   app_outbox_service_init();
   app_message_sender_init();
   watchface_init();
+  button_lock_init();
   timeline_peek_init();
   mic_banner_init();
   // Start activity tracking if enabled

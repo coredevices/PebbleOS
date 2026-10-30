@@ -12,6 +12,7 @@
 #include <board/board.h>
 #include <process_management/pebble_process_md.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/normal/button_lock.h>
 #include <shell/prefs.h>
 
 void app_idle_timeout_start(uint32_t timeout_ms) {
@@ -30,6 +31,23 @@ void app_idle_timeout_touch_up(void) {
 }
 
 void watchface_start_low_power(bool enable) {
+}
+
+bool button_lock_handle_button_event(PebbleEvent *e) {
+  return false;
+}
+
+bool button_lock_is_locked(void) {
+  return false;
+}
+
+void button_lock_handle_activity(void) {
+}
+
+void button_lock_handle_charger_change(bool is_plugged) {
+}
+
+void button_lock_handle_prefs_changed(void) {
 }
 
 uint32_t backlight_get_timeout_ms(void) {
