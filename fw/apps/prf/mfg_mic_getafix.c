@@ -22,7 +22,6 @@
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <mfg/mfg_info.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>

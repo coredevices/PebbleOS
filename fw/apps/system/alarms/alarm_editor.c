@@ -12,13 +12,13 @@
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/pbl_std/timelocal.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/day_picker.h>
 #include <applib/ui/time_selection_window.h>
 #include <applib/ui/ui.h>
 #include <apps/system/settings/option_menu.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <shell/prefs.h>
 
@@ -126,7 +126,7 @@ static void prv_day_picker_callback(DayPickerResult result, void *context) {
     time_selection_window_deinit(&data->time_picker_window);
     prv_remove_windows(data);
     i18n_free_all(data);
-    task_free(data);
+    app_free(data);
   } else {
     if (data->alarm_kind == ALARM_KIND_CUSTOM) {
       alarm_set_custom(data->alarm_id, result.custom_days);
@@ -135,7 +135,7 @@ static void prv_day_picker_callback(DayPickerResult result, void *context) {
     }
     data->complete_callback(EDITED, data->alarm_id, data->callback_context);
     i18n_free_all(data);
-    task_free(data);
+    app_free(data);
   }
 }
 
@@ -154,7 +154,7 @@ static void prv_time_picker_window_unload(Window *window) {
     data->complete_callback(EDITED, data->alarm_id, data->callback_context);
   }
   i18n_free_all(data);
-  task_free(data);
+  app_free(data);
 }
 
 static void prv_time_picker_window_appear(Window *window) {
@@ -274,7 +274,7 @@ static void prv_setup_type_menu_window(AlarmEditorData *data) {
 
 Window *alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callback,
                                       void *callback_context) {
-  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  AlarmEditorData *data = app_malloc_check(sizeof(AlarmEditorData));
   *data = (AlarmEditorData){
     .alarm_id = ALARM_INVALID_ID,
     .complete_callback = complete_callback,
@@ -290,7 +290,7 @@ Window *alarm_editor_create_new_alarm(AlarmEditorCompleteCallback complete_callb
 void alarm_editor_update_alarm_time(AlarmId alarm_id, AlarmType alarm_type,
                                     AlarmEditorCompleteCallback complete_callback,
                                     void *callback_context) {
-  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  AlarmEditorData *data = app_malloc_check(sizeof(AlarmEditorData));
   *data = (AlarmEditorData){
     .alarm_id = alarm_id,
     .alarm_type = alarm_type,
@@ -305,7 +305,7 @@ void alarm_editor_update_alarm_time(AlarmId alarm_id, AlarmType alarm_type,
 
 void alarm_editor_update_alarm_days(AlarmId alarm_id, AlarmEditorCompleteCallback complete_callback,
                                     void *callback_context) {
-  AlarmEditorData *data = task_malloc_check(sizeof(AlarmEditorData));
+  AlarmEditorData *data = app_malloc_check(sizeof(AlarmEditorData));
   *data = (AlarmEditorData){
     .alarm_id = alarm_id,
     .complete_callback = complete_callback,

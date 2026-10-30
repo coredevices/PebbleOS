@@ -15,7 +15,6 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
@@ -58,7 +57,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
 }
 
 static void prv_handle_init(void) {
-  AppData *data = task_zalloc(sizeof(*data));
+  AppData *data = app_zalloc(sizeof(*data));
   app_state_set_user_data(data);
 
   Window *window = &data->window;

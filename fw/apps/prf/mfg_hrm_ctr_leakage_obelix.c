@@ -26,7 +26,6 @@
 #include <applib/ui/window_private.h>
 #include <apps/prf/mfg_test_result.h>
 #include <gh_demo.h>
-#include <kernel/pbl_malloc.h>
 #include <mfg/mfg_info.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
@@ -224,7 +223,7 @@ static void prv_config_provider(void *data) {
 }
 
 static void prv_handle_init(void) {
-  AppData *data = task_zalloc(sizeof(*data));
+  AppData *data = app_zalloc(sizeof(*data));
   app_state_set_user_data(data);
 
   Window *window = &data->window;

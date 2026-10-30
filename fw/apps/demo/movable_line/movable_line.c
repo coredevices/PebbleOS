@@ -9,13 +9,13 @@
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/graphics/text.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 static Window *s_window;
@@ -231,7 +231,7 @@ static void main_window_unload(Window *window) {
 }
 
 static void init(void) {
-  AppData *data = task_zalloc(sizeof(AppData));
+  AppData *data = app_zalloc(sizeof(AppData));
   if (!data) {
     return;
   }
@@ -252,7 +252,7 @@ static void init(void) {
 
 static void deinit(void) {
   AppData *data = window_get_user_data(s_window);
-  task_free(data);
+  app_free(data);
   window_destroy(s_window);
 }
 

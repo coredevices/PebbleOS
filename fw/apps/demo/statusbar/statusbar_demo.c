@@ -7,8 +7,8 @@
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct StatusBarDemoWindow {
   Window window;
@@ -77,7 +77,7 @@ static Window *prv_window_create(void) {
   const GColor8 window_color = (GColor8){.argb = description.window_color};
   const GColor8 status_bar_color = (GColor8){.argb = description.status_bar_color};
 
-  StatusBarDemoWindow *window = task_zalloc_check(sizeof(*window));
+  StatusBarDemoWindow *window = app_zalloc_check(sizeof(*window));
   Window *result = &window->window;
   window_init(result, description.debug_name);
   window_set_fullscreen(result, description.full_screen);

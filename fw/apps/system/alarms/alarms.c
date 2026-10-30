@@ -23,7 +23,6 @@
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
@@ -79,7 +78,7 @@ static void prv_clear_alarm_list(AlarmsAppData *data) {
   while (data->alarm_list_head) {
     AlarmNode *old_head = data->alarm_list_head;
     data->alarm_list_head = (AlarmNode *)list_pop_head((ListNode *)old_head);
-    task_free(old_head);
+    app_free(old_head);
     old_head = nullptr;
   }
 }
@@ -87,7 +86,7 @@ static void prv_clear_alarm_list(AlarmsAppData *data) {
 static void prv_add_alarm_to_list(AlarmId id, const AlarmInfo *info, void *callback_context) {
   AlarmsAppData *data = (AlarmsAppData *)callback_context;
 
-  AlarmNode *new_node = task_malloc_check(sizeof(AlarmNode));
+  AlarmNode *new_node = app_malloc_check(sizeof(AlarmNode));
   list_init((ListNode *)new_node);
   new_node->id = id;
   new_node->info = *info;

@@ -11,7 +11,7 @@
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h> // SerializedWeatherAppPrefs
 
-#include <kernel/pbl_malloc.h> // task_zalloc_check / task_free
+#include <applib/app_malloc.h>
 
 static void prv_copy_str(char *dst, size_t dst_size, const char *src) {
   if (!src) {
@@ -82,7 +82,7 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
   if (len < (int)sizeof(WeatherDBEntryV3)) {
     return;
   }
-  WeatherDBEntry *entry = task_zalloc_check(len);
+  WeatherDBEntry *entry = app_zalloc_check(len);
   const status_t rv = weather_db_read((uint8_t *)&key, sizeof(key), (uint8_t *)entry, len);
   // Version alone isn't enough: a truncated/corrupt record can carry version==4 with a
   // v3-sized payload (weather_db_insert validates length, insert_stale does not) — reading
@@ -186,7 +186,7 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
       }
     }
   }
-  task_free(entry);
+  app_free(entry);
 }
 
 bool weather_ds_name_prefix(const char *name, const char *needle) {

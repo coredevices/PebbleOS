@@ -19,7 +19,6 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/progress_window.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
