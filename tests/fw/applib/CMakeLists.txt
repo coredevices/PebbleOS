@@ -165,6 +165,12 @@ pbl_clar_test(test_dict
     fw/applib/dict.c
 )
 
+pbl_clar_test(test_app_install
+  SOURCES
+    fw/applib/app_install.c
+    fw/syscall/app_install_syscalls.c
+)
+
 pbl_clar_test(test_qr_code
   MODULES graphics
   SOURCES
