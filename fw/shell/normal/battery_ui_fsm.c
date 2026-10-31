@@ -185,10 +185,11 @@ static void prv_exit_critical(void) {
 }
 
 static void prv_display_plugged(void *data) {
+  const PreciseBatteryChargeState *charge_state = data;
   if (!do_not_disturb_is_active()) {
     vibes_short_pulse();
   }
-  battery_ui_display_plugged();
+  battery_ui_display_plugged(charge_state->pct);
 }
 
 static void prv_dismiss_plugged(void) {
@@ -256,6 +257,8 @@ void battery_ui_handle_state_change_event(PreciseBatteryChargeState charge_state
   BatteryUIStateID next_state = prv_get_state(&charge_state);
   if (prv_is_valid_transition(next_state)) {
     prv_transition(next_state, &charge_state);
+  } else if (next_state == BatteryCharging && s_state == BatteryCharging) {
+    battery_ui_update_charge_level(charge_state.pct);
   }
 }
 
