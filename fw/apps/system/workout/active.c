@@ -9,6 +9,7 @@
 #include "workout.h"
 
 #include <applib/app.h>
+#include <applib/ui/action_bar_layer_private.h>
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/ui.h>
@@ -32,7 +33,6 @@
 #include <pbl/util/testing.h>
 #include <pbl/util/trig.h>
 #include <pbl/util/units.h>
-
 #include <resource/resource_ids.auto.h>
 
 #define TEXT_COLOR       (GColorBlack)
@@ -1848,7 +1848,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window, void *w
   GRect base_layer_bounds = window->layer.bounds;
 #if PBL_RECT
   if (active_window->layout != WorkoutLayout_Dashboard) {
-    base_layer_bounds.size.w -= ACTION_BAR_WIDTH;
+    base_layer_bounds = action_bar_layer_inset_bounds(base_layer_bounds);
   }
 #endif
 
@@ -1856,7 +1856,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window, void *w
       active_window->layout == WorkoutLayout_Dashboard ? 0 : STATUS_BAR_LAYER_HEIGHT;
   layer_init(&active_window->base_layer, &base_layer_bounds);
   layer_add_child(&window->layer, &active_window->base_layer);
-  base_layer_bounds.origin.y = 0;
+  base_layer_bounds.origin = GPointZero;
 
   if (active_window->layout == WorkoutLayout_Dashboard) {
     layer_set_update_proc(&active_window->base_layer, prv_dashboard_update_proc);
@@ -1903,8 +1903,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window, void *w
     status_bar_layer_set_colors(status_layer, GColorClear, GColorBlack);
     layer_add_child(&window->layer, status_bar_layer_get_layer(status_layer));
 #if PBL_RECT
-    GRect status_layer_bounds = window->layer.bounds;
-    status_layer_bounds.size.w -= ACTION_BAR_WIDTH;
+    GRect status_layer_bounds = action_bar_layer_inset_bounds(window->layer.bounds);
     layer_set_frame(&status_layer->layer, &status_layer_bounds);
 #endif
     action_bar_layer_add_to_window(action_bar, window);
