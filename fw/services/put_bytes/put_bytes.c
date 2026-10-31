@@ -116,6 +116,7 @@ typedef struct {
 typedef struct {
   bool enable_preack;
   bool need_to_ack_later;
+  bool process_scheduled;
   uint8_t num_allocated_pb_jobs;
   PutBytesJob job[MAX_BATCHED_PB_PUT_OPS];
   uint8_t read_idx;
@@ -883,6 +884,7 @@ static bool prv_check_putrequest_for_errors(const PutRequest *request_hdr,
 static void prv_process_put_requests_system_task_cb(void *unused) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
   prv_lock_pb_job_state();
+  put_jobs->process_scheduled = false;
   uint8_t num_put_jobs = put_jobs->num_ops_pending;
   uint8_t read_idx = put_jobs->read_idx;
   uint32_t initial_remaining_bytes = s_pb_state.remaining_bytes;
@@ -954,6 +956,25 @@ static void prv_process_put_requests_system_task_cb(void *unused) {
 
   if (do_ack) { // If we did not pre-ack, we need to ack the packet now!
     prv_send_response(ResponseAck, token);
+  }
+}
+
+//! One callback processes every pending PutRequest, so only queue one at a time: a callback per
+//! request piles up on the system task while the sender keeps pace with the flash writes.
+static void prv_schedule_put_requests_processing(void) {
+  PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
+  bool schedule;
+  prv_lock_pb_job_state();
+  {
+    schedule = !put_jobs->process_scheduled;
+    put_jobs->process_scheduled = true;
+  }
+  prv_unlock_pb_job_state();
+
+  if (schedule && !system_task_add_callback(prv_process_put_requests_system_task_cb, nullptr)) {
+    prv_lock_pb_job_state();
+    put_jobs->process_scheduled = false;
+    prv_unlock_pb_job_state();
   }
 }
 
@@ -1234,7 +1255,7 @@ void prv_receiver_finish(Receiver *receiver) {
   if (prv_receiver_contains_put_request()) {
     // The PutRequest handler has no reliance on the receiver struct so mark processing as done
     prv_receiver_reset();
-    system_task_add_callback(prv_process_put_requests_system_task_cb, nullptr);
+    prv_schedule_put_requests_processing();
   } else {
     system_task_add_callback(prv_process_msg_system_task_callback, nullptr);
   }
