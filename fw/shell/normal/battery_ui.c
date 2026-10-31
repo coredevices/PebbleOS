@@ -11,10 +11,12 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gdraw_command.h>
 #include <applib/graphics/gdraw_command_list.h>
 #include <applib/ui/dialogs/dialog_private.h>
 #include <applib/ui/dialogs/simple_dialog.h>
+#include <applib/ui/kino/kino_reel_custom.h>
 #include <applib/ui/ui.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
@@ -24,17 +26,45 @@ typedef void (*DialogUpdateFn)(Dialog *, void *);
 
 static Dialog *s_dialog = nullptr;
 
-// Liquid polygon in the charging icon: bottom-left, top-left, top-right, bottom-right at 100%
-#define LIQUID_COMMAND_IDX 2
-#define LIQUID_RISE_MS     2500
-#define LIQUID_CYCLE_MS    3200
+// Charging icon: the level bar rises in up to nine even stages, stopping at the charge level (the
+// last stage ends with the steam wisp), then drops back to the bottom. The resource has four rises,
+// the middle ones are reused for the extra stages. Bar coordinates are in the resource's 1/8 px
+// units.
+#define CHARGE_STAGES         9
+#define CHARGE_STAGE_PERCENT  10
+#define CHARGE_ART_STAGES     4
+#define CHARGE_STAGE_MS       1400
+#define CHARGE_DROP_MS        5705
+#define CHARGE_LOOP_MS        6090
+#define CHARGE_BAR_CENTER_X   484
+#define CHARGE_BAR_MIN_X      376
+#define CHARGE_BAR_MIN_WIDTH  64
+#define CHARGE_BAR_EMPTY_Y    564
+#define CHARGE_BAR_FULL_Y     352
+#define CHARGE_BAR_EMPTY_HALF 40
+#define CHARGE_BAR_FULL_HALF  57
+
+typedef struct {
+  KinoReel *reel;
+  uint32_t elapsed_ms;
+  uint32_t cycle_start_ms;
+  uint32_t cycle_ms;
+  uint8_t percent;
+} ChargeReelData;
 
 typedef struct {
   GDrawCommandProcessor processor;
-  Animation *animation;
-  uint8_t percent;
-  uint8_t level;
-} LiquidProcessor;
+  int16_t art_from_y;
+  int16_t art_to_y;
+  int16_t from_y;
+  int16_t to_y;
+} ChargeBarProcessor;
+
+// Where the bar settles at the end of each stage in the resource
+static const int16_t s_charge_bar_art_y[CHARGE_ART_STAGES] = {504, 440, 376, 352};
+
+static uint8_t s_charge_percent;
+static KinoReel *s_charge_reel;
 
 typedef struct {
   uint32_t percent;
@@ -54,101 +84,216 @@ static const ResourceId s_warning_icon[] = {
   RESOURCE_ID_BATTERY_ICON_LOW_LARGE, RESOURCE_ID_BATTERY_ICON_VERY_LOW_LARGE
 };
 
-static GPoint prv_lerp_point(GPoint from, GPoint to, uint8_t percent) {
-  return GPoint(from.x + (to.x - from.x) * percent / 100, from.y + (to.y - from.y) * percent / 100);
+static uint32_t prv_charge_stages(uint8_t percent) {
+  return CLIP(DIVIDE_CEIL(percent, CHARGE_STAGE_PERCENT), 1, CHARGE_STAGES);
 }
 
-static void prv_fill_liquid(GDrawCommandProcessor *processor, GDrawCommand *processed_command,
-                            size_t processed_command_max_size, const GDrawCommandList *list,
-                            const GDrawCommand *command) {
-  if (command != gdraw_command_list_get_command((GDrawCommandList *)list, LIQUID_COMMAND_IDX)) {
+//! The rise of the resource to play for a stage, the last one has the steam wisp
+static int32_t prv_charge_art_stage(int32_t stage) {
+  return (stage == CHARGE_STAGES - 1) ? (CHARGE_ART_STAGES - 1) : MIN(stage, CHARGE_ART_STAGES - 2);
+}
+
+static uint32_t prv_charge_cycle_ms(void) {
+  const uint32_t stages = prv_charge_stages(s_charge_percent);
+  if (stages == CHARGE_STAGES) {
+    return (CHARGE_STAGES - 1) * CHARGE_STAGE_MS + CHARGE_LOOP_MS -
+           (CHARGE_ART_STAGES - 1) * CHARGE_STAGE_MS;
+  }
+
+  return stages * CHARGE_STAGE_MS + (CHARGE_LOOP_MS - CHARGE_DROP_MS);
+}
+
+//! Height of the bar at the end of a stage: an even step, or the charge level if that comes first.
+//! The last stage covers everything above it.
+static int16_t prv_charge_bar_stage_y(uint8_t percent, int32_t stage) {
+  const int32_t range = CHARGE_BAR_EMPTY_Y - CHARGE_BAR_FULL_Y;
+  const int32_t level_y = CHARGE_BAR_EMPTY_Y - range * MIN(percent, 100) / 100;
+  if (stage == CHARGE_STAGES - 1) {
+    return level_y;
+  }
+  return MAX(level_y, CHARGE_BAR_EMPTY_Y - range * (stage + 1) * CHARGE_STAGE_PERCENT / 100);
+}
+
+static void prv_charge_bar_process(GDrawCommandProcessor *processor,
+                                   GDrawCommand *processed_command,
+                                   size_t processed_command_max_size, const GDrawCommandList *list,
+                                   const GDrawCommand *command) {
+  if (gdraw_command_get_num_points(processed_command) != 2) {
     return;
   }
 
-  const LiquidProcessor *liquid = (LiquidProcessor *)processor;
-  const GPoint bottom_left = gdraw_command_get_point(processed_command, 0);
-  const GPoint top_left = gdraw_command_get_point(processed_command, 1);
-  const GPoint top_right = gdraw_command_get_point(processed_command, 2);
-  const GPoint bottom_right = gdraw_command_get_point(processed_command, 3);
-
-  gdraw_command_set_point(processed_command, 1,
-                          prv_lerp_point(bottom_left, top_left, liquid->level));
-  gdraw_command_set_point(processed_command, 2,
-                          prv_lerp_point(bottom_right, top_right, liquid->level));
-  gdraw_command_set_fill_color(processed_command,
-                               PBL_IF_COLOR_ELSE(GColorWindsorTan, GColorLightGray));
-  gdraw_command_set_hidden(processed_command, false);
-}
-
-static LiquidProcessor s_liquid = {
-  .processor.command = prv_fill_liquid,
-};
-
-static void prv_liquid_animation_update(Animation *animation, const AnimationProgress progress) {
-  const uint32_t elapsed_ms = (uint32_t)progress * LIQUID_CYCLE_MS / ANIMATION_NORMALIZED_MAX;
-  const uint32_t rise_ms = MIN(elapsed_ms, LIQUID_RISE_MS);
-  const uint8_t level = s_liquid.percent + (100 - s_liquid.percent) * rise_ms / LIQUID_RISE_MS;
-
-  if (level != s_liquid.level && s_dialog) {
-    s_liquid.level = level;
-    layer_mark_dirty(&s_dialog->icon_layer.layer);
-  }
-}
-
-static const AnimationImplementation s_liquid_animation_impl = {
-  .update = prv_liquid_animation_update,
-};
-
-static void prv_liquid_animation_start(void) {
-  if (s_liquid.animation) {
+  // The bar is the only wide two point line inside the cup
+  const GPoint a = gdraw_command_get_point(processed_command, 0);
+  const GPoint b = gdraw_command_get_point(processed_command, 1);
+  if (MIN(a.x, b.x) < CHARGE_BAR_MIN_X || ABS(a.x - b.x) < CHARGE_BAR_MIN_WIDTH) {
     return;
   }
 
-  s_liquid.level = s_liquid.percent;
-  Animation *animation = animation_create();
-  animation_set_implementation(animation, &s_liquid_animation_impl);
-  animation_set_duration(animation, LIQUID_CYCLE_MS);
-  animation_set_curve(animation, AnimationCurveLinear);
-  animation_set_play_count(animation, ANIMATION_PLAY_COUNT_INFINITE);
-  animation_schedule(animation);
-  s_liquid.animation = animation;
-}
+  const ChargeBarProcessor *bar = (const ChargeBarProcessor *)processor;
 
-static void prv_liquid_animation_stop(void) {
-  if (s_liquid.animation) {
-    animation_destroy(s_liquid.animation);
-    s_liquid.animation = nullptr;
+  for (uint16_t i = 0; i < 2; i++) {
+    const GPoint point = (i == 0) ? a : b;
+    // Keep the ripple around the stage's height, and scale the rise to it
+    int32_t offset_y = point.y - bar->art_to_y;
+    if (offset_y > 8) {
+      offset_y = offset_y * (bar->from_y - bar->to_y) / (bar->art_from_y - bar->art_to_y);
+    }
+    const int16_t y = bar->to_y + offset_y;
+    const int16_t half_width =
+        CHARGE_BAR_EMPTY_HALF + (CHARGE_BAR_FULL_HALF - CHARGE_BAR_EMPTY_HALF) *
+                                    (CHARGE_BAR_EMPTY_Y - y) /
+                                    (CHARGE_BAR_EMPTY_Y - CHARGE_BAR_FULL_Y);
+    const int16_t x =
+        CHARGE_BAR_CENTER_X + ((point.x < CHARGE_BAR_CENTER_X) ? -half_width : half_width);
+    gdraw_command_set_point(processed_command, i, GPoint(x, y));
   }
 }
 
-static void prv_set_liquid_processor(Dialog *dialog) {
-  if (dialog->icon_id == RESOURCE_ID_BATTERY_ICON_CHARGING_LARGE) {
-    kino_layer_set_draw_command_processor(&dialog->icon_layer, &s_liquid.processor);
-    prv_liquid_animation_start();
+static void prv_charge_reel_destructor(KinoReel *reel) {
+  ChargeReelData *data = kino_reel_custom_get_data(reel);
+  kino_reel_destroy(data->reel);
+  applib_free(data);
+  s_charge_reel = nullptr;
+}
+
+static uint32_t prv_charge_reel_get_elapsed(KinoReel *reel) {
+  ChargeReelData *data = kino_reel_custom_get_data(reel);
+  return data->elapsed_ms;
+}
+
+static bool prv_charge_reel_set_elapsed(KinoReel *reel, uint32_t elapsed_ms) {
+  ChargeReelData *data = kino_reel_custom_get_data(reel);
+  if (elapsed_ms < data->cycle_start_ms) {
+    data->cycle_start_ms = 0;
+    data->cycle_ms = prv_charge_cycle_ms();
+    data->percent = s_charge_percent;
+  }
+
+  // Charge level changes are picked up at the start of a cycle
+  while (elapsed_ms - data->cycle_start_ms >= data->cycle_ms) {
+    data->cycle_start_ms += data->cycle_ms;
+    data->cycle_ms = prv_charge_cycle_ms();
+    data->percent = s_charge_percent;
+  }
+  data->elapsed_ms = elapsed_ms;
+
+  // Skip the remaining stages and jump to the drop
+  const uint32_t cycle_elapsed_ms = elapsed_ms - data->cycle_start_ms;
+  const uint32_t rise_ms = data->cycle_ms - (CHARGE_LOOP_MS - CHARGE_DROP_MS);
+  uint32_t reel_elapsed_ms;
+  if (cycle_elapsed_ms >= rise_ms) {
+    reel_elapsed_ms = CHARGE_DROP_MS + cycle_elapsed_ms - rise_ms;
   } else {
-    kino_layer_set_draw_command_processor(&dialog->icon_layer, nullptr);
-    prv_liquid_animation_stop();
+    const int32_t stage = MIN(cycle_elapsed_ms / CHARGE_STAGE_MS, CHARGE_STAGES - 1);
+    reel_elapsed_ms = cycle_elapsed_ms + (prv_charge_art_stage(stage) - stage) * CHARGE_STAGE_MS;
   }
+
+  // The icon sequence loops, so later cycles play a loop ahead to not replay the intro transform
+  if (data->cycle_start_ms > 0) {
+    reel_elapsed_ms += CHARGE_LOOP_MS;
+  }
+
+  return kino_reel_set_elapsed(data->reel, reel_elapsed_ms);
 }
 
-static void prv_update_liquid(Dialog *dialog) {
-  if (window_is_loaded(&dialog->window)) {
-    prv_set_liquid_processor(dialog);
+static uint32_t prv_charge_reel_get_duration(KinoReel *reel) {
+  return PLAY_DURATION_INFINITE;
+}
+
+static GSize prv_charge_reel_get_size(KinoReel *reel) {
+  ChargeReelData *data = kino_reel_custom_get_data(reel);
+  return kino_reel_get_size(data->reel);
+}
+
+static void prv_charge_reel_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
+                                           KinoReelProcessor *processor) {
+  ChargeReelData *data = kino_reel_custom_get_data(reel);
+  const uint32_t cycle_elapsed_ms = data->elapsed_ms - data->cycle_start_ms;
+  const uint32_t rise_ms = data->cycle_ms - (CHARGE_LOOP_MS - CHARGE_DROP_MS);
+
+  // The drop frames already end at the bottom, only the rise follows the charge level
+  if (cycle_elapsed_ms >= rise_ms) {
+    kino_reel_draw_processed(data->reel, ctx, offset, processor);
+    return;
   }
+
+  const int32_t stage = MIN(cycle_elapsed_ms / CHARGE_STAGE_MS, CHARGE_STAGES - 1);
+  const int32_t art_stage = prv_charge_art_stage(stage);
+  ChargeBarProcessor bar = {
+    .processor.command = prv_charge_bar_process,
+    .art_from_y = (art_stage > 0) ? s_charge_bar_art_y[art_stage - 1] : CHARGE_BAR_EMPTY_Y,
+    .art_to_y = s_charge_bar_art_y[art_stage],
+    .from_y = (stage > 0) ? prv_charge_bar_stage_y(data->percent, stage - 1) : CHARGE_BAR_EMPTY_Y,
+    .to_y = prv_charge_bar_stage_y(data->percent, stage),
+  };
+  KinoReelProcessor bar_processor = {
+    .draw_command_processor = &bar.processor,
+  };
+  kino_reel_draw_processed(data->reel, ctx, offset, &bar_processor);
+}
+
+static GDrawCommandList *prv_charge_reel_get_gdraw_command_list(KinoReel *reel) {
+  ChargeReelData *data = kino_reel_custom_get_data(reel);
+  return kino_reel_get_gdraw_command_list(data->reel);
+}
+
+static const KinoReelImpl s_charge_reel_impl = {
+  .destructor = prv_charge_reel_destructor,
+  .get_elapsed = prv_charge_reel_get_elapsed,
+  .set_elapsed = prv_charge_reel_set_elapsed,
+  .get_duration = prv_charge_reel_get_duration,
+  .get_size = prv_charge_reel_get_size,
+  .draw_processed = prv_charge_reel_draw_processed,
+  .get_gdraw_command_list = prv_charge_reel_get_gdraw_command_list,
+};
+
+//! Wrap the charging icon reel so the bar drops back once it reaches the charge level
+static void prv_set_charge_reel(Dialog *dialog) {
+  KinoLayer *icon_layer = &dialog->icon_layer;
+  KinoPlayer *player = kino_layer_get_player(icon_layer);
+  KinoReel *reel = kino_layer_get_reel(icon_layer);
+  if (dialog->icon_id != RESOURCE_ID_BATTERY_ICON_CHARGING_LARGE || !reel ||
+      reel == s_charge_reel || !player->owns_reel) {
+    return;
+  }
+
+  ChargeReelData *data = applib_malloc(sizeof(ChargeReelData));
+  if (!data) {
+    return;
+  }
+
+  KinoReel *charge_reel = kino_reel_custom_create(&s_charge_reel_impl, data);
+  if (!charge_reel) {
+    applib_free(data);
+    return;
+  }
+
+  *data = (ChargeReelData){
+    .reel = reel,
+    .cycle_ms = prv_charge_cycle_ms(),
+    .percent = s_charge_percent,
+  };
+
+  // The charge reel takes over ownership of the icon reel
+  player->owns_reel = false;
+  kino_layer_set_reel(icon_layer, charge_reel, true);
+  s_charge_reel = charge_reel;
+  kino_layer_play(icon_layer);
 }
 
 static void prv_update_ui_fully_charged(Dialog *dialog, void *ignored) {
   dialog_set_text(dialog, i18n_get("Fully Charged", dialog));
   dialog_set_background_color(dialog, GColorKellyGreen);
   dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_FULL_LARGE);
-  prv_update_liquid(dialog);
 }
 
 static void prv_update_ui_charging(Dialog *dialog, void *ignored) {
   dialog_set_text(dialog, i18n_get("Charging", dialog));
   dialog_set_background_color(dialog, GColorLightGray);
   dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_CHARGING_LARGE);
-  prv_update_liquid(dialog);
+  if (window_is_loaded(&dialog->window)) {
+    prv_set_charge_reel(dialog);
+  }
 }
 
 static void prv_update_ui_warning(Dialog *dialog, void *context) {
@@ -167,18 +312,16 @@ static void prv_update_ui_warning(Dialog *dialog, void *context) {
   }
 
   dialog_set_icon(dialog, data->warning_icon);
-  prv_update_liquid(dialog);
 }
 
 static void prv_dialog_on_load(void *context) {
-  prv_set_liquid_processor(context);
+  prv_set_charge_reel(context);
 }
 
 static void prv_dialog_on_unload(void *context) {
   Dialog *dialog = context;
   i18n_free_all(dialog);
   if (dialog == s_dialog) {
-    prv_liquid_animation_stop();
     s_dialog = nullptr;
   }
 }
@@ -238,7 +381,7 @@ static void prv_display_modal(WindowStack *stack, DialogUpdateFn update_fn, void
 ////////////////////
 
 void battery_ui_display_plugged(uint8_t percent) {
-  s_liquid.percent = percent;
+  s_charge_percent = percent;
   // If we're plugged in for charging, we want to alert the user of this,
   // but we don't want to overlay ourselves over anything they may have
   // on the screen at the moment.
@@ -247,7 +390,7 @@ void battery_ui_display_plugged(uint8_t percent) {
 }
 
 void battery_ui_update_charge_level(uint8_t percent) {
-  s_liquid.percent = percent;
+  s_charge_percent = percent;
 }
 
 void battery_ui_display_fully_charged(void) {
