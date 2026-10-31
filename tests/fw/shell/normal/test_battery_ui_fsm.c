@@ -70,9 +70,12 @@ void app_manager_close_current_app(bool gracefully) {
   s_critical = false;
 }
 
-void battery_ui_display_plugged(void) {
+void battery_ui_display_plugged(uint8_t percent) {
   s_modal_onscreen = true;
   s_modal_charging = true;
+}
+
+void battery_ui_update_charge_level(uint8_t percent) {
 }
 
 void battery_ui_display_fully_charged(void) {
