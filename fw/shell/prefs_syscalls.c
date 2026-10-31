@@ -10,7 +10,7 @@ PBL_SYSCALL(UnitsDistance, sys_shell_prefs_get_units_distance) {
 }
 
 #ifdef CONFIG_ORIENTATION_MANAGER
-DEFINE_SYSCALL(bool, sys_display_orientation_is_left, void) {
+PBL_SYSCALL(bool, sys_display_orientation_is_left) {
   return display_orientation_is_left();
 }
 #endif
