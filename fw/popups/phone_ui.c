@@ -230,6 +230,9 @@ static void prv_window_pop_with_delay(uint32_t delay_ms);
 static void prv_action_bar_setup(PhoneCallActions actions);
 
 static void prv_set_answer_window(void) {
+#ifdef CONFIG_TOUCH
+  window_set_touch_bridge_disabled(&s_phone_ui_data->window, true);
+#endif
   modal_window_push(&s_phone_ui_data->window, ModalPriorityPhone, false /* don't animate */);
 }
 
