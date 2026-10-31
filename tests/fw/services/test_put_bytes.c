@@ -700,6 +700,27 @@ void test_put_bytes__receive_batched_messages(void) {
   fake_pb_storage_mem_assert_contents_written(buffer, sizeof(buffer));
 }
 
+void test_put_bytes__batched_messages_share_one_callback(void) {
+  if (prv_put_bytes_get_max_batched_pb_ops() < 3) {
+    return;
+  }
+
+  prv_receive_init_fw_object();
+  prv_process_and_reset_test_counters();
+
+  const uint8_t chunks[] = {0xaa, 0xbb, 0xcc, 0xdd};
+  prv_receive_put(s_last_response_cookie, &chunks[0], 2);
+  prv_receive_put(s_last_response_cookie, &chunks[2], 2);
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+
+  fake_system_task_callbacks_invoke_pending();
+  assert_ack_count(2);
+  fake_pb_storage_mem_assert_contents_written(chunks, sizeof(chunks));
+
+  prv_receive_put(s_last_response_cookie, chunks, 2);
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Commit Message
 
