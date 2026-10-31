@@ -193,11 +193,6 @@ bool arch_in_isr(void) {
   return mcu_state_is_isr();
 }
 
-void arch_cycle_enable(void) {
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-}
-
 uint32_t arch_cycles_per_sec(void) {
   return SystemCoreClock;
 }

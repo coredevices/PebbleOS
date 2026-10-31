@@ -6,6 +6,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/kernel/compiler.h>
+
+#include <pbl_arch_cache.h>
+
 /**
  * @defgroup mcu_cache Cache
  * @ingroup mcu
@@ -120,6 +124,21 @@ void dcache_invalidate(void *addr, size_t size);
  * @param size Size in bytes, a multiple of the line size.
  */
 void dcache_flush_invalidate(const void *addr, size_t size);
+
+/**
+ * @brief Invalidate the data cache lines covering a region, inline.
+ *
+ * For code that runs from RAM while the flash is unreadable, which cannot call
+ * dcache_invalidate().
+ *
+ * @param addr Start of the region.
+ * @param size Size of the region in bytes.
+ * @param line_size dcache_line_size(), read beforehand.
+ */
+static PBL_ALWAYS_INLINE void dcache_invalidate_inline(uintptr_t addr, size_t size,
+                                                       uint32_t line_size) {
+  arch_dcache_invalidate_lines(addr, size, line_size);
+}
 
 /**
  * @brief Widen a range to whole instruction cache lines.
