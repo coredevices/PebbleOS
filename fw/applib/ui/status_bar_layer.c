@@ -15,6 +15,7 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/graphics_line.h>
 #include <applib/graphics/text.h>
+#include <applib/graphics/utf8.h>
 #include <applib/ui/window_stack.h>
 #include <kernel/ui/kernel_ui.h>
 #include <process_state/app_state/app_state.h>
@@ -217,8 +218,10 @@ GColor status_bar_layer_get_foreground_color(const StatusBarLayer *status_bar_la
 
 void status_bar_layer_set_title(StatusBarLayer *status_bar_layer, const char *text, bool revert,
                                 bool animated) {
-  // copies the contents at text into title_text_buffer for display
-  strncpy(status_bar_layer->config.title_text_buffer, text, TITLE_TEXT_BUFFER_SIZE);
+  // copies the contents at text into title_text_buffer for display, truncating on a codepoint
+  // boundary so multi-byte titles stay valid UTF-8
+  utf8_truncate_with_ellipsis(text, status_bar_layer->config.title_text_buffer,
+                              TITLE_TEXT_BUFFER_SIZE);
   if (revert) { // revert title text back to clock time after STATUS_BAR_LAYER_TITLE_TIMEOUT
     if (status_bar_layer->title_timer_id != TIMER_INVALID_ID) {
       app_timer_cancel(status_bar_layer->title_timer_id);
