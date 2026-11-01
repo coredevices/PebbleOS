@@ -569,7 +569,7 @@ void test_clock__next_monday(void) {
     .dst_start = 1394330400, // Sun, 09 Mar 2014 02:00
     .dst_end = 1414893600    // Sun, 02 Nov 2014 02:00
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
   prv_set_current_time(jan_1);
   cl_assert_equal_i(clock_to_timestamp(MONDAY, 17, 30), pbl_mktime(&jan_6));
 }
@@ -635,7 +635,7 @@ void test_clock__cross_dst(void) {
     .dst_end = 1446343200,   // Sun, 01 Nov 2015 02:00
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
   prv_set_current_time(oct_31);
   cl_assert_equal_i(clock_to_timestamp(SATURDAY, 0, 15), pbl_mktime(&nov_7));
 }
@@ -670,7 +670,7 @@ void test_clock__today(void) {
     .dst_end = 1478397600,   // Sun, 06 Nov 2016 02:00
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
   prv_set_current_time(may_30);
   cl_assert_equal_i(clock_to_timestamp(TODAY, 5, 0), pbl_mktime(&may_31));
 }
@@ -1616,4 +1616,54 @@ void test_clock__hour_and_minute_add(void) {
   clock_hour_and_minute_add(&hour, &minute, -30);
   cl_assert_equal_i(hour, 23);
   cl_assert_equal_i(minute, 45);
+}
+
+// Once a DST period ends the stored period becomes next year's. Times within the period that
+// just ended must still read as DST, also after a reboot.
+static void prv_check_prev_dst_kept(uint8_t dst_id, time_t in_prev) {
+  fake_rtc_init(0, in_prev);
+  rtc_timezone_clear();
+  clock_init();
+
+  TimezoneInfo prev = {
+    .tm_zone = "TST",
+    .dst_id = dst_id,
+    .tm_gmtoff = s_dst_correct_values[dst_id][2],
+  };
+  prv_update_dstrule_timestamps_by_dstzone_id(&prev, in_prev);
+  cl_assert(prev.dst_start <= in_prev && in_prev < prev.dst_end);
+
+  time_t now = prev.dst_end + PBL_SEC_PER_HOUR;
+  TimezoneInfo tz_info = prev;
+  prv_update_dstrule_timestamps_by_dstzone_id(&tz_info, now);
+  cl_assert(tz_info.dst_start > prev.dst_end);
+  prv_update_time_info_and_generate_event(&now, &tz_info);
+
+  cl_assert(time_get_isdst(prev.dst_start));
+  cl_assert(time_get_isdst(prev.dst_end - 1));
+  cl_assert(!time_get_isdst(prev.dst_start - 1));
+  cl_assert(!time_get_isdst(prev.dst_end));
+  cl_assert(!time_get_isdst(now));
+
+  // Reboot: the stored timezone only holds the next period until the previous one is loaded
+  clock_init();
+  cl_assert(!time_get_isdst(prev.dst_end - 1));
+  clock_init_prev_dst();
+  cl_assert(time_get_isdst(prev.dst_start));
+  cl_assert(time_get_isdst(prev.dst_end - 1));
+  cl_assert(!time_get_isdst(prev.dst_end));
+  cl_assert(!time_get_isdst(now));
+
+  rtc_timezone_clear();
+  time_util_update_timezone(&(TimezoneInfo){}, 0, 0);
+}
+
+void test_clock__prev_dst_kept_northern(void) {
+  // Canada, 2026-11-01 04:00 UTC: local midnight while still on EDT
+  prv_check_prev_dst_kept(8, 1793505600);
+}
+
+void test_clock__prev_dst_kept_southern(void) {
+  // Chatham, DST spans the new year: 2026-01-15 00:00 UTC
+  prv_check_prev_dst_kept(9, 1768435200);
 }

@@ -254,7 +254,7 @@ static TimelineItem s_reminder_before_all_day_reminder = {
 };
 
 void test_reminders__all_day(void) {
-  time_util_update_timezone(&s_tz);
+  time_util_update_timezone(&s_tz, 0, 0);
   cl_assert_equal_i(reminders_insert(&s_all_day_reminder), S_SUCCESS);
   cl_assert_equal_i(reminders_insert(&s_reminder_before_all_day_reminder), S_SUCCESS);
 
@@ -273,7 +273,7 @@ void test_reminders__all_day(void) {
 }
 
 void test_reminders__stale_all_day(void) {
-  time_util_update_timezone(&s_tz);
+  time_util_update_timezone(&s_tz, 0, 0);
   // set time to 21:00 PST March 5, when s_all_day_reminder should be rejected for being stale
   now = 1425618000;
   cl_assert_equal_i(reminders_insert(&s_all_day_reminder), E_INVALID_OPERATION);

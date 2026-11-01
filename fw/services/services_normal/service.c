@@ -10,6 +10,7 @@
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/endpoint_private.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/mic_capture.h>
@@ -82,6 +83,8 @@ void services_normal_early_init(void) {
 }
 
 void services_normal_init(void) {
+  clock_init_prev_dst();
+
   persist_service_init();
 
   app_install_manager_init();

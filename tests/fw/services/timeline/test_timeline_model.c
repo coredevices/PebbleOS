@@ -251,7 +251,7 @@ void test_timeline_model__initialize(void) {
   pfs_init(false);
   // Note: creating a settings file is going to result in one malloc for the FD name
   pin_db_init();
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   fake_pbl_malloc_clear_tracking();
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_items); ++i) {
     cl_assert_equal_i(pin_db_insert_item(&s_items[i]), 0);

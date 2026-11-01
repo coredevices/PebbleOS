@@ -26,7 +26,7 @@ static void prv_set_pacific(void) {
     .dst_start = DST_START,
     .dst_end = DST_END,
   };
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
 }
 
 void test_clock_time__initialize(void) {
@@ -63,7 +63,7 @@ void test_clock_time__uk_abbr(void) {
     .dst_start = DST_START,
     .dst_end = DST_END,
   };
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
 
   char abbr[PBL_TZ_LEN];
   time_get_timezone_abbr(abbr, SUMMER_UTC);
@@ -80,7 +80,7 @@ void test_clock_time__lord_howe_half_hour_dst(void) {
     .dst_start = DST_START,
     .dst_end = DST_END,
   };
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   cl_assert_equal_i(time_get_dstoffset(), PBL_SEC_PER_HOUR / 2);
   cl_assert_equal_i(time_utc_to_local(SUMMER_UTC), SUMMER_UTC + 11 * PBL_SEC_PER_HOUR);
 }

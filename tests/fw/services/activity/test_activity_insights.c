@@ -697,7 +697,7 @@ void test_activity_insights__sleep_summary_midnight_timezone(void) {
   static TimezoneInfo tz = {
     .tm_gmtoff = -8 * PBL_SEC_PER_HOUR, // PST
   };
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + tz.tm_gmtoff);
 
   prv_set_sleep_history_avg();
@@ -928,7 +928,7 @@ static void prv_use_utc_timezone(void) {
   static TimezoneInfo tz = {
     .tm_gmtoff = 0,
   };
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   prv_set_time(&s_init_time_tm);
 }
 
@@ -1016,7 +1016,7 @@ void test_activity_insights__sleep_summary_no_renotify_timezone_change(void) {
   static TimezoneInfo tz = {
     .tm_gmtoff = -1 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR);
   activity_insights_process_sleep_data(rtc_get_time());
   prv_minute_update(2);
@@ -1026,7 +1026,7 @@ void test_activity_insights__sleep_summary_no_renotify_timezone_change(void) {
 
   // And back east again
   tz.tm_gmtoff = 0;
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR);
   activity_insights_process_sleep_data(rtc_get_time());
   prv_minute_update(2);

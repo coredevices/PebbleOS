@@ -56,7 +56,7 @@ static TimezoneInfo g_timezone;
 static void prv_set_rtc(time_t t, const TimezoneInfo *tz_info) {
   fake_rtc_init(0, t);
   g_timezone = *tz_info;
-  time_util_update_timezone(&g_timezone);
+  time_util_update_timezone(&g_timezone, 0, 0);
 }
 
 static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
@@ -66,7 +66,7 @@ static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
 static void prv_clock_change(int32_t time_diff, int32_t gmt_diff, bool dst_trans) {
   rtc_set_time(rtc_get_time() + time_diff);
   g_timezone.tm_gmtoff += gmt_diff;
-  time_util_update_timezone(&g_timezone);
+  time_util_update_timezone(&g_timezone, 0, 0);
   pbl_cron_handle_clock_change(time_diff, gmt_diff, dst_trans);
 }
 

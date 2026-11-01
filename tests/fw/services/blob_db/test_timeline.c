@@ -423,7 +423,7 @@ void test_timeline__initialize(void) {
   fake_rtc_init(0, 0);
   // Note: creating a settings file is going to result in one malloc for the FD name
   pin_db_init();
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   uint8_t num_net_allocs = fake_pbl_malloc_num_net_allocs();
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_items); ++i) {
     cl_assert_equal_i(pin_db_insert_item(&s_items[i]), 0);
@@ -1443,7 +1443,7 @@ void test_timeline__all_day_ios_bug_2(void) {
     .tm_gmtoff = 3 * 60 * 60, // MSK
   };
 
-  time_util_update_timezone(&moscow_tz);
+  time_util_update_timezone(&moscow_tz, 0, 0);
   cl_assert_equal_i(pin_db_flush(), 0);
   cl_assert(timeline_add(&item));
 
