@@ -72,7 +72,7 @@ void test_alarm_smart__initialize(void) {
   TimezoneInfo tz_info = {
     .tm_zone = "UTC",
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
   rtc_set_timezone(&tz_info);
 
   // Default to Thursday

@@ -56,14 +56,6 @@ static time_t prv_migrate_local_time_to_UTC(time_t local_time) {
   return time_local_to_utc(local_time);
 }
 
-// Should only called by prv_update_time_info_and_generate_event()!
-static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
-  time_util_update_timezone(tz_info);
-
-  // Update the RTC registers with the latest timezone info
-  rtc_set_timezone(tz_info);
-}
-
 typedef struct PBL_PACKED {
   // Mirrors the Pebble Protocol time endpoint payload (big endian).
   int32_t utc_time;                       // UTC timestamp
@@ -198,6 +190,53 @@ PBL_T_STATIC void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_i
   tz_info->dst_end = dst_end_stamps[end_idx];
 
 #endif // CONFIG_RECOVERY_FW
+}
+
+// The DST period that ended before tz_info's, or zeros if there is none.
+static void prv_get_prev_dst(const TimezoneInfo *tz_info, time_t *prev_start, time_t *prev_end) {
+  *prev_start = 0;
+  *prev_end = 0;
+#if !defined(CONFIG_RECOVERY_FW)
+  TimezoneDSTRule dst_rule_begin;
+  TimezoneDSTRule dst_rule_end;
+
+  if ((tz_info->dst_id == 0) || (tz_info->dst_start == 0) ||
+      !timezone_database_load_dst_rule(tz_info->dst_id, &dst_rule_begin, &dst_rule_end)) {
+    return;
+  }
+
+  struct pbl_tm start_tm;
+  pbl_gmtime_r(&tz_info->dst_start, &start_tm);
+
+  // The previous period ends last before the current one starts, and starts last before that
+  for (int year = start_tm.tm_year - 1; year <= start_tm.tm_year; year++) {
+    const time_t end = prv_clock_dstrule_to_timestamp(true, tz_info, &dst_rule_end, year);
+    if (end < tz_info->dst_start) {
+      *prev_end = MAX(*prev_end, end);
+    }
+  }
+  for (int year = start_tm.tm_year - 1; year <= start_tm.tm_year; year++) {
+    const time_t start = prv_clock_dstrule_to_timestamp(false, tz_info, &dst_rule_begin, year);
+    if (start < *prev_end) {
+      *prev_start = MAX(*prev_start, start);
+    }
+  }
+#endif
+}
+
+static void prv_set_timezone(const TimezoneInfo *tz_info) {
+  time_t prev_start;
+  time_t prev_end;
+  prv_get_prev_dst(tz_info, &prev_start, &prev_end);
+  time_util_update_timezone(tz_info, prev_start, prev_end);
+}
+
+// Should only called by prv_update_time_info_and_generate_event()!
+static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
+  prv_set_timezone(tz_info);
+
+  // Update the RTC registers with the latest timezone info
+  rtc_set_timezone(tz_info);
 }
 
 static void prv_clock_get_timezone_info_from_region_id(int16_t region_id, time_t utc_time,
@@ -431,7 +470,7 @@ void clock_init(void) {
   if (clock_is_timezone_set()) {
     TimezoneInfo tz_info;
     rtc_get_timezone(&tz_info);
-    time_util_update_timezone(&tz_info);
+    time_util_update_timezone(&tz_info, 0, 0);
   }
   // TODO: Using a regular timer is pretty gross...
   s_dst_checker = (RegularTimerInfo){
@@ -442,6 +481,14 @@ void clock_init(void) {
   s_hourly_chime_armed = false;
 #endif
   regular_timer_add_minutes_callback(&s_dst_checker);
+}
+
+void clock_init_prev_dst(void) {
+  if (clock_is_timezone_set()) {
+    TimezoneInfo tz_info;
+    rtc_get_timezone(&tz_info);
+    prv_set_timezone(&tz_info);
+  }
 }
 
 #ifndef CONFIG_RECOVERY_FW

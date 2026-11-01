@@ -443,7 +443,7 @@ void test_protobuf_log__initialize(void) {
     .tm_zone = "???",
     .tm_gmtoff = PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   s_dls_session_created = false;
   s_saved_encoded_msg = nullptr;

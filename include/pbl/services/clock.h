@@ -84,6 +84,9 @@ typedef enum {
  */
 void clock_init(void);
 
+/** @brief Load the DST period before the stored one. Needs the timezone database. */
+void clock_init_prev_dst(void);
+
 #ifndef CONFIG_RECOVERY_FW
 /**
  * @ingroup services_clock

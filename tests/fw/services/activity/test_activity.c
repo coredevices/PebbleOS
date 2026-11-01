@@ -946,7 +946,7 @@ void test_activity__initialize(void) {
     .tm_zone = "UTC",
     .tm_gmtoff = 0,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   struct pbl_tm time_tm = s_init_time_tm;
   time_t utc_sec = pbl_mktime(&time_tm);
@@ -2208,7 +2208,7 @@ void test_activity__sleep_after_timezone_change(void) {
     .tm_zone = "EST",
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
@@ -2223,7 +2223,7 @@ void test_activity__sleep_after_timezone_change(void) {
     .tm_zone = "PST",
     .tm_gmtoff = -8 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Walk some more until 11pm PST
   prv_feed_canned_accel_data(8 * PBL_SEC_PER_HOUR, 50, ActivitySleepStateAwake);
@@ -2259,7 +2259,7 @@ void test_activity__sleep_after_timezone_change(void) {
     .tm_zone = "EST",
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Starting at 2am EST: 2 Cycles of 3 hrs each light (165 min), awake (15 min)
   for (int i = 0; i < 2; i++) {
@@ -2291,7 +2291,7 @@ void test_activity__health_service_interpolation(void) {
     .tm_zone = "PST",
     .tm_gmtoff = -8 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
@@ -3240,4 +3240,40 @@ void test_activity__activity_sessions_logged_after_future_clock(void) {
   cl_assert_equal_i(state->logged_step_activity_exit_at_utc,
                     walk_session.start_utc + walk_session.length_min * PBL_SEC_PER_MIN);
   cl_assert_equal_i(state->logged_restful_sleep_activity_exit_at_utc, 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// Rebooting on the day DST ends, after the change, must keep today's metrics in today's slot.
+void test_activity__reboot_after_dst_end_keeps_today(void) {
+  // America/Toronto, 2026 DST period: 2026-03-08 07:00Z .. 2026-11-01 06:00Z
+  TimezoneInfo tz_info = {
+    .tm_zone = "E*T",
+    .dst_id = 1,
+    .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
+    .dst_start = 1772953200,
+    .dst_end = 1793512800,
+  };
+  time_util_update_timezone(&tz_info, 0, 0);
+
+  // 2026-11-01 00:30 EDT: the day's history is stamped while DST is still in effect
+  activity_stop_tracking();
+  fake_system_task_callbacks_invoke_pending();
+  rtc_set_time(1793507400);
+  prv_activity_init_and_set_enabled(true);
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+  activity_metrics_set_metric_exact(ActivityMetricStepCount, 1234);
+  activity_stop_tracking();
+  fake_system_task_callbacks_invoke_pending();
+
+  // After the change the stored period is 2027's, the clock service keeps 2026's as previous
+  tz_info.dst_start = 1805007600;
+  tz_info.dst_end = 1825567200;
+  time_util_update_timezone(&tz_info, 1772953200, 1793512800);
+
+  // 2026-11-01 14:22 EST: reboot
+  rtc_set_time(1793560920);
+  prv_activity_init_and_set_enabled(true);
+  ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
+                              ((const uint32_t[ACTIVITY_HISTORY_DAYS]){1234, 0, 0, 0, 0, 0, 0}));
 }

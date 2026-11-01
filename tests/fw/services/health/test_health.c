@@ -288,7 +288,7 @@ void test_health__initialize(void) {
     .tm_zone = "UTC",
     .tm_gmtoff = 0,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   s_health_service = (HealthServiceState){};
   time_t utc_sec = 1451293942; // some constant time for this test
@@ -416,7 +416,7 @@ void test_health__range_to_day_id_respects_local_time(void) {
     .tm_zone = "FOO",
     .tm_gmtoff = utc_to_local_delta,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   result = prv_calculate_time_range(now - PBL_SEC_PER_DAY, now, &range);
   cl_assert(result);
