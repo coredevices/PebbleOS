@@ -39,7 +39,7 @@ enum MemoryRegionAssignments {
 #endif
   MemoryRegion_Flash,
   MemoryRegion_ReadOnlyBss,
-  MemoryRegion_ReadOnlyData,
+  MemoryRegion_ResourceBanks,
   MemoryRegion_IsrStackGuard,
   MemoryRegion_AppRAM,
   MemoryRegion_WorkerRAM,
