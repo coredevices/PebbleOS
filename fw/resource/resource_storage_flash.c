@@ -111,14 +111,9 @@ bool resource_storage_flash_bytes_are_readonly(const void *bytes) {
   return false;
 }
 
-static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreEntry *entry,
-                                                                  bool has_privileged_access) {
+static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreEntry *entry) {
 #ifdef CONFIG_MMAP_RESOURCES
-  // Bank is XIP-mapped, so data is addressable at BANK.begin + offset. Only
-  // privileged callers get the raw pointer; unprivileged apps use the copy path.
-  if (!has_privileged_access) {
-    return nullptr;
-  }
+  // Bank is XIP-mapped and readable by unprivileged code too.
   return (const uint8_t *)(uintptr_t)(BANK.begin + entry->offset);
 #else
   return nullptr;
