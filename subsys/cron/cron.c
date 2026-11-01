@@ -323,8 +323,8 @@ static bool prv_adjust_for_wday_spec(const struct pbl_cron_job *cron, struct tm 
 
 // Does the local clock reading at `t` satisfy the job's spec?
 static bool prv_matches_spec(const struct pbl_cron_job *job, time_t t) {
-  struct pbl_tm tm;
-  pbl_localtime_r(&t, &tm);
+  struct tm tm;
+  localtime_r(&t, &tm);
   return (job->minute == PBL_CRON_MINUTE_ANY || job->minute == tm.tm_min) &&
          (job->hour == PBL_CRON_HOUR_ANY || job->hour == tm.tm_hour) &&
          (job->mday == PBL_CRON_MDAY_ANY || job->mday == tm.tm_mday - 1) &&
