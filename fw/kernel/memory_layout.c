@@ -10,6 +10,7 @@
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
+#include <flash_region/flash_region.h>
 #include <logging/logging_private.h>
 
 #ifdef CONFIG_SHELL
@@ -24,7 +25,7 @@ static const char *const MEMORY_REGION_NAMES[] = {
 #ifdef CONFIG_SOC_SF32LB52
   "RESERVED0",       "RESERVED1",       "RESERVED2",       "RESERVED3",
 #endif
-  "UNPRIV_FLASH",    "UNPRIV_RO_BSS",   "UNPRIV_RO_DATA",  "ISR_STACK_GUARD",
+  "UNPRIV_FLASH",    "UNPRIV_RO_BSS",   "UNPRIV_RES",      "ISR_STACK_GUARD",
   "Task Specific 1", "Task Specific 2", "Task Specific 3", "Task Specific 4"
 };
 
@@ -174,6 +175,22 @@ static const MpuRegion s_microflash_region = {
   .permissions = MpuPermissions_PrivRO_UserRO,
 };
 
+#if defined(CONFIG_SOC_SF32LB52) && defined(CONFIG_MMAP_RESOURCES)
+static_assert(FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END ==
+                  FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
+              "resource banks must be contiguous");
+
+// System resources are served as pointers into the memory mapped banks.
+static const MpuRegion s_resource_banks_region = {
+  .region_num = MemoryRegion_ResourceBanks,
+  .enabled = true,
+  .base_address = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
+  .size = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END - FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
+  .cache_policy = MpuCachePolicy_WriteThrough,
+  .permissions = MpuPermissions_PrivRO_UserRO,
+};
+#endif
+
 static const MpuRegion s_kernel_main_stack_guard_region = {
   .region_num = MemoryRegion_TaskStackGuard,
   .enabled = true,
@@ -198,10 +215,12 @@ void memory_layout_setup_mpu(void) {
 
   // Unprivileged flash, by default anyone can read any part of flash.
   // On SF32LB52 the SiFli HAL already programs a user-RO executable region
-  // covering __FLASH_start__..(__FLASH_start__ + __FLASH_size__ - 1) in
-  // SystemInit(), so we skip our own.
+  // covering the firmware image in SystemInit(), so we skip our own.
 #ifndef CONFIG_SOC_SF32LB52
   mpu_set_region(&s_microflash_region);
+#endif
+#if defined(CONFIG_SOC_SF32LB52) && defined(CONFIG_MMAP_RESOURCES)
+  mpu_set_region(&s_resource_banks_region);
 #endif
 
   // RAM parts
