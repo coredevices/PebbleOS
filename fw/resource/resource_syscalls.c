@@ -65,7 +65,7 @@ PBL_SYSCALL(const uint8_t *, sys_resource_read_only_bytes, (VAL, ResAppNum, app_
     prv_assert_app_num_accessible(app_num);
   }
 
-  return resource_get_readonly_bytes(app_num, resource_id, num_bytes_out, !from_user);
+  return resource_get_readonly_bytes(app_num, resource_id, num_bytes_out);
 }
 
 PBL_SYSCALL(bool, sys_resource_is_valid, (VAL, ResAppNum, app_num), (VAL, uint32_t, resource_id)) {

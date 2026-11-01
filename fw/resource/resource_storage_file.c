@@ -124,8 +124,7 @@ static uint32_t resource_storage_file_read(ResourceStoreEntry *entry, uint32_t o
   return prv_file_common_read(prv_file_open(entry, op_flags), offset, data, num_bytes);
 }
 
-static const uint8_t *resource_storage_file_readonly_bytes_unsupported(ResourceStoreEntry *entry,
-                                                                       bool has_privileged_access) {
+static const uint8_t *resource_storage_file_readonly_bytes_unsupported(ResourceStoreEntry *entry) {
   return nullptr;
 }
 
