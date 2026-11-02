@@ -61,6 +61,13 @@ CLI, one page per command, and `extending.md` for how to extend it),
 - Build firmware: `pbl build`
 - Run tests: `pbl test`
 
+## Hardware on this host
+
+- `pbl lab --json` lists the watches, power supplies and dongles wired to
+  this host (from its lab file), whether their ports are there and which
+  one runs the build. Check it instead of guessing serial ports; device
+  commands take their ports from it. See `docs/pbl/lab.md`.
+
 ## Submodules in agent workspaces
 
 The submodules are large. In disposable or isolated agent workspaces, do not

@@ -43,6 +43,7 @@ class Run(PblCommand):
                 ("run", "flash"),
                 resources=args.resources,
                 extra_args=extra_args,
+                watch=self.lab_watch(build, args.tty),
             )
             if "run" not in runner.capabilities().commands:
                 if extra_args:

@@ -48,6 +48,11 @@ class ITest(PblCommand):
         env["PYTHONPATH"] = os.pathsep.join(
             p for p in (tests, env.get("PYTHONPATH")) if p
         )
+        lab_args = []
+        if getattr(args, "lab", None):
+            lab_args.append(f"--lab={args.lab}")
+        if getattr(args, "watch", None):
+            lab_args.append(f"--watch={args.watch}")
         return self.run_cmd(
             [
                 sys.executable,
@@ -60,6 +65,7 @@ class ITest(PblCommand):
                 "-p",
                 "harness.plugin",
                 f"--build-dir={build}",
+                *lab_args,
                 *unknown,
             ],
             cwd=tests,

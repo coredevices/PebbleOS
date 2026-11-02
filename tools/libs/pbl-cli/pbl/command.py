@@ -46,6 +46,19 @@ def global_options():
         default=argparse.SUPPRESS,
         help="Print the commands that would run instead of running them",
     )
+    group.add_argument(
+        "--lab",
+        metavar="FILE",
+        default=argparse.SUPPRESS,
+        help="Lab file: the hardware wired to this host (default: $PBL_LAB, "
+        "else ~/.config/pbl/lab.yaml)",
+    )
+    group.add_argument(
+        "--watch",
+        metavar="NAME",
+        default=argparse.SUPPRESS,
+        help="The lab's watch to use, when several run the build",
+    )
     return parser
 
 
@@ -61,6 +74,7 @@ class PblCommand(ABC):
         self.parser = None
         self.workspace = None
         self.args = None
+        self._lab = False
 
     # --- wiring -----------------------------------------------------------
 
@@ -122,6 +136,42 @@ class PblCommand(ABC):
     def test_dir(self):
         """The unit tests' build directory, a CMake project of its own."""
         return self._build_dir(self.workspace.test_dir)
+
+    def lab(self):
+        """The lab (:class:`pbl.lab.Lab`), or None without a lab file."""
+        if self._lab is False:
+            from pbl import lab as labs
+
+            path = getattr(self.args, "lab", None) or labs.default_path()
+            if path is None:
+                if getattr(self.args, "watch", None):
+                    self.die("--watch needs a lab file: pass --lab or set $PBL_LAB")
+                self._lab = None
+            else:
+                try:
+                    self._lab = labs.Lab.load(path)
+                except labs.LabError as e:
+                    self.die(str(e))
+        return self._lab
+
+    def lab_watch(self, build, tty=None):
+        """The lab's watch for ``build``: the one given with --watch, the one
+        on ``tty`` when a port is given, else the one running the build.
+        None on the emulator, without a lab, or when no watch matches."""
+        from pbl import lab as labs
+
+        if build.config.CONFIG_QEMU or build.config.CONFIG_SOC_POSIX:
+            return None
+        lab = self.lab()
+        if lab is None:
+            return None
+        name = getattr(self.args, "watch", None)
+        try:
+            if name is None and tty is not None:
+                return lab.watch_on(tty)
+            return lab.watch_for(build.board, name)
+        except labs.LabError as e:
+            self.die(str(e))
 
     # --- running things ---------------------------------------------------
 

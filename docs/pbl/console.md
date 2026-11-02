@@ -5,9 +5,12 @@ running emulator, or to the native simulator under {doc}`debug`, which
 moves its console off the terminal.
 
 ```shell
-pbl console                       # the emulator
+pbl console                       # the emulator, or the lab's watch
 pbl console --tty /dev/ttyACM0    # a watch
 ```
+
+On a watch, the port and baud rate default to those of the
+{doc}`lab's <lab>` watch for the build.
 
 Send `help` to list the console commands. Firmware log messages are hashed
 at compile time, so the binary only contains a hash and the arguments; the
