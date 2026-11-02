@@ -1,7 +1,7 @@
 # Logging
 
-`subsys/logging/` sends leveled log messages to the serial console (or
-PULSE) and to a circular buffer in flash. Its public API is
+`subsys/logging/` passes leveled log messages to backends, such as the
+serial console (or PULSE) and a circular buffer in flash. Its public API is
 `include/pbl/logging/logging.h`; the {apidoc}`API reference <logging>`
 covers every macro.
 
@@ -37,6 +37,51 @@ PBL_LOG_DBG("channel %d armed", id);
 Messages above the module level are compiled out. Files without a module
 use the default level.
 
+## Backends
+
+A backend receives every message at or below its level, in the context of
+the caller. It is defined anywhere in the firmware with
+`PBL_LOG_BACKEND_DEFINE()` from `include/pbl/logging/backend.h`, and
+provides a `process` operation, plus optional `init` (run by
+`pbl_log_init()`) and `panic` (run by `pbl_log_panic()` before a software
+reset) operations:
+
+```c
+#include <pbl/logging/backend.h>
+
+static void prv_process(const struct pbl_log_backend *backend,
+                        const struct pbl_log_msg *msg) {
+  ...
+}
+
+static const struct pbl_log_backend_api s_api = {
+  .process = prv_process,
+};
+
+PBL_LOG_BACKEND_DEFINE(mine, s_api, LOG_LEVEL_INFO, true);
+```
+
+Messages carry flags: `PBL_LOG_MSG_ASYNC` when the message may be written
+later, and `PBL_LOG_MSG_FAULT` for messages from fault handlers, where OS
+services are unavailable. Messages logged by apps carry the app UUID. A
+backend skips the messages it cannot handle in the current context.
+
+Backends start enabled unless defined otherwise, and are enabled, disabled
+and given a level at runtime with `pbl_log_backend_enable()`,
+`pbl_log_backend_disable()` and `pbl_log_backend_set_level()`. The `log
+backends` shell command lists them, and `log level <backend> [level]` reads
+or sets a level.
+
+| Backend | Option | Writes |
+|---|---|---|
+| `pulse` | `CONFIG_LOG_BACKEND_PULSE` | PULSE log packets, with `CONFIG_PULSE_EVERYWHERE` |
+| `uart` | `CONFIG_LOG_BACKEND_UART` | Text lines on the serial console, without `CONFIG_PULSE_EVERYWHERE` |
+| `flash` | `CONFIG_LOG_BACKEND_FLASH` | The debug flash region, one generation per boot; not app or fault messages |
+| `app_log` | `CONFIG_SERVICE_APP_LOG_ENDPOINT` | App messages to the phone, while it asks for them |
+
+Each backend in `subsys/logging/backends/` takes its initial level from
+`CONFIG_LOG_BACKEND_<BACKEND>_LEVEL_<LEVEL>`.
+
 ## Hashing
 
 With `CONFIG_LOG_HASHED`, the default, format strings are replaced by
@@ -62,7 +107,7 @@ using `CONFIG_<MODULE>_LOG_LEVEL` as the initial level. The level is
 changed with `PBL_LOG_MODULE_LEVEL_SET(name, level)` and read with
 `PBL_LOG_MODULE_LEVEL_GET(name)`, where `name` is the one given to
 `PBL_LOG_MODULE_DEFINE`. Messages accepted by the module level skip the
-serial and flash log level filters. This increases ROM usage for that
+backend level filters. This increases ROM usage for that
 module.
 
 The **Settings → System → Debugging → Vibe Log Info** preference sets the
