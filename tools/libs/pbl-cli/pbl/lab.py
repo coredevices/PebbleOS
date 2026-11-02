@@ -13,9 +13,10 @@ from it.
 import dataclasses
 import os
 
+from pbl import power
+
 ENV = "PBL_LAB"
 LEGACY_ENV = "PBL_ITEST_LAB"
-SUPPLY_TYPES = ("ppk2",)
 DEFAULT_SERIAL_BAUD = 115200
 
 
@@ -91,7 +92,7 @@ class Lab:
         lab = cls(path=path)
         for name, entry in (data.get("supplies") or {}).items():
             lab.supplies[name] = Supply(name=name, **entry)
-            if lab.supplies[name].type not in SUPPLY_TYPES:
+            if lab.supplies[name].type not in power.TYPES:
                 raise ValueError(f"supply {name}: unknown type {entry['type']!r}")
         for name, entry in (data.get("dongles") or {}).items():
             lab.dongles[name] = Dongle(name=name, **entry)

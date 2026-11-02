@@ -86,9 +86,9 @@ class HardwareAdapter(DeviceAdapter):
                 f.write(shlex.join(command) + "\n")
                 f.flush()
                 if supply is not None:
-                    supply.power_off()
+                    supply.off()
                     time.sleep(POWER_OFF_S)
-                    supply.power_on()
+                    supply.on()
                 result = subprocess.run(
                     command,
                     cwd=self.build.topdir,
@@ -133,7 +133,7 @@ class HardwareAdapter(DeviceAdapter):
         self.disconnect()
         self.invalidate_firmware_slots()
         if not self._hard_reset():
-            raise HarnessError("booting PRF needs a power supply (--ppk2)")
+            raise HarnessError("booting PRF needs a power supply")
         self.connect()
         self.wait_ready()
 
@@ -147,7 +147,7 @@ class HardwareAdapter(DeviceAdapter):
         self.disconnect()
         self.erase_filesystem()
         if not self._hard_reset():
-            raise HarnessError("booting after an erase needs a power supply (--ppk2)")
+            raise HarnessError("booting after an erase needs a power supply")
         self.connect()
         self.wait_ready()
 
@@ -159,7 +159,7 @@ class HardwareAdapter(DeviceAdapter):
         elif self.config.erase_fs and self._hard_reset():
             pass
         elif self.config.power_supply is not None:
-            self.config.power_supply.power_on()
+            self.config.power_supply.on()
             time.sleep(POWER_ON_SETTLE_S)
 
     def _close_device(self):
@@ -169,6 +169,6 @@ class HardwareAdapter(DeviceAdapter):
         supply = self.config.power_supply
         if supply is None:
             return False
-        supply.power_cycle(POWER_OFF_S)
+        supply.cycle(POWER_OFF_S)
         time.sleep(POWER_ON_SETTLE_S)
         return True

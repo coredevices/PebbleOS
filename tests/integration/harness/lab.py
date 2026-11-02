@@ -64,7 +64,9 @@ class Setup:
     watch: str = None
     serial: list = dataclasses.field(default_factory=list)
     serial_baud: int = DEFAULT_SERIAL_BAUD
-    ppk2: str = None
+    #: The supply powering the watch: a :mod:`pbl.power` type, and its port.
+    supply_type: str = None
+    supply_port: str = None
     voltage_mv: int = DEFAULT_VOLTAGE_MV
     #: An emulated watch's Bluetooth: VIRTUAL, or a dongle's serial port
     #: (for QEMU, any -serial spec).
@@ -82,7 +84,7 @@ class Setup:
             if self.phone.controller is None and self.bt_hci != VIRTUAL:
                 return "no Bluetooth controller for the phone"
         elif need == "power":
-            if self.ppk2 is None:
+            if self.supply_port is None:
                 return "no power supply in this setup"
         return None
 
@@ -95,9 +97,11 @@ class Setup:
             locks.append(
                 (lock.probe_key(self.watch), f"watch {self.watch}'s debug probe")
             )
-        if self.ppk2:
-            key = "ppk2-auto" if self.ppk2 == "auto" else lock.serial_key(self.ppk2)
-            locks.append((key, f"PPK2 {self.ppk2}"))
+        if self.supply_port:
+            from pbl import power
+
+            key = power.lock_key(self.supply_type, self.supply_port)
+            locks.append((key, f"{self.supply_type} {self.supply_port}"))
         for port in (self.bt_hci, self.phone.controller if self.phone else None):
             locks.append((lock.serial_key(port), f"Bluetooth controller {port}"))
         return locks
@@ -106,8 +110,10 @@ class Setup:
         parts = [self.watch or self.device_type]
         if self.serial:
             parts.append(f"serial {', '.join(self.serial)}")
-        if self.ppk2:
-            parts.append(f"PPK2 {self.ppk2} at {self.voltage_mv} mV")
+        if self.supply_port:
+            parts.append(
+                f"{self.supply_type} {self.supply_port} at {self.voltage_mv} mV"
+            )
         if self.bt_hci:
             parts.append(f"Bluetooth {self.bt_hci}")
         if self.phone:
@@ -138,7 +144,8 @@ def resolve(build, device_type, options, lab=None):
             setup.serial = [watch.serial] if watch.serial else []
             setup.serial_baud = watch.serial_baud
             if watch.supply is not None:
-                setup.ppk2 = lab.supplies[watch.supply].port
+                supply = lab.supplies[watch.supply]
+                setup.supply_type, setup.supply_port = supply.type, supply.port
         phone_controller = dongles[0] if dongles else None
     elif device_type in ("qemu", "native") and build is not None:
         if build.config.get("CONFIG_BT_HCI_UART"):
@@ -156,7 +163,7 @@ def resolve(build, device_type, options, lab=None):
     if options.get("serial_baud"):
         setup.serial_baud = options["serial_baud"]
     if options.get("ppk2"):
-        setup.ppk2 = options["ppk2"]
+        setup.supply_type, setup.supply_port = "ppk2", options["ppk2"]
     if options.get("voltage_mv"):
         setup.voltage_mv = options["voltage_mv"]
     phone_controller = options.get("ble_controller") or phone_controller

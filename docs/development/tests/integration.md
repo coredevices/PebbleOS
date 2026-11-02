@@ -105,7 +105,7 @@ pbl -b build-getafix itest --lab ~/pebble-lab.yaml --flash-before
 ```
 
 The report starts with the setup, e.g. `setup: getafix, serial
-/dev/tty.wchusbserial1, PPK2 auto at 3800 mV, phone bumble on
+/dev/tty.wchusbserial1, ppk2 auto at 3800 mV, phone bumble on
 /dev/cu.usbmodem1101`. Tests that need what the setup lacks are skipped
 with the reason, without touching the device: a test needs a phone when it
 takes `phones`, and a power supply when it takes `power`.
