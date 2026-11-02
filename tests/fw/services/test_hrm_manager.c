@@ -1498,3 +1498,21 @@ void test_hrm_manager__enable_failure_limit_stops_retries(void) {
   cl_assert(!stub_new_timer_is_scheduled(prv_get_timer_id()));
   sys_hrm_manager_unsubscribe(session_ref);
 }
+
+void test_hrm_manager__quality_from_confidence(void) {
+  cl_assert_equal_i(hrm_quality_from_confidence(100), HRMQuality_Excellent);
+  cl_assert_equal_i(hrm_quality_from_confidence(90), HRMQuality_Excellent);
+  cl_assert_equal_i(hrm_quality_from_confidence(89), HRMQuality_Good);
+  cl_assert_equal_i(hrm_quality_from_confidence(HRM_CONFIDENCE_HIGH), HRMQuality_Good);
+  cl_assert_equal_i(hrm_quality_from_confidence(HRM_CONFIDENCE_HIGH - 1), HRMQuality_Acceptable);
+  cl_assert_equal_i(hrm_quality_from_confidence(60), HRMQuality_Acceptable);
+  cl_assert_equal_i(hrm_quality_from_confidence(59), HRMQuality_Poor);
+  cl_assert_equal_i(hrm_quality_from_confidence(40), HRMQuality_Poor);
+  cl_assert_equal_i(hrm_quality_from_confidence(39), HRMQuality_Worst);
+  cl_assert_equal_i(hrm_quality_from_confidence(0), HRMQuality_Worst);
+
+  // The representative confidence of each grade maps back to that grade
+  for (HRMQuality q = HRMQuality_Worst; q <= HRMQuality_Excellent; q++) {
+    cl_assert_equal_i(hrm_quality_from_confidence(hrm_confidence_from_quality(q)), q);
+  }
+}

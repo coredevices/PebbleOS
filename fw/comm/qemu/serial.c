@@ -204,6 +204,7 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
     .features = HRMFeature_BPM,
     .hrm_bpm = hdr->bpm,
     .hrm_quality = (HRMQuality)hdr->quality,
+    .hrm_confidence = hrm_confidence_from_quality((HRMQuality)hdr->quality),
   };
   hrm_manager_new_data_cb(&hrm_data);
 #else

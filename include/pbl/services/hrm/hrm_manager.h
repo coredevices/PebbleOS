@@ -66,6 +66,55 @@ typedef enum {
   HRMQuality_Excellent,
 } HRMQuality;
 
+/**
+ * @brief Algorithm confidence (0-100) at or above which a reading is considered accurate.
+ *
+ * Readings below it are still valid; the algorithm already drops unusable ones.
+ */
+#define HRM_CONFIDENCE_HIGH (80)
+
+/**
+ * @brief Legacy @ref HRMQuality grade for an on-wrist algorithm confidence (0-100).
+ *
+ * Only for outputs that predate the confidence score (phone logging, Bluetooth). Decisions
+ * should use the confidence directly.
+ */
+static inline HRMQuality hrm_quality_from_confidence(uint8_t confidence) {
+  if (confidence >= 90) {
+    return HRMQuality_Excellent;
+  } else if (confidence >= HRM_CONFIDENCE_HIGH) {
+    return HRMQuality_Good;
+  } else if (confidence >= 60) {
+    return HRMQuality_Acceptable;
+  } else if (confidence >= 40) {
+    return HRMQuality_Poor;
+  }
+  return HRMQuality_Worst;
+}
+
+/**
+ * @brief Representative confidence for a legacy @ref HRMQuality grade.
+ *
+ * For sources that only provide a grade (e.g. QEMU injection).
+ */
+static inline uint8_t hrm_confidence_from_quality(HRMQuality quality) {
+  switch (quality) {
+    case HRMQuality_Excellent:
+      return 95;
+    case HRMQuality_Good:
+      return 85;
+    case HRMQuality_Acceptable:
+      return 70;
+    case HRMQuality_Poor:
+      return 50;
+    case HRMQuality_Worst:
+      return 20;
+    case HRMQuality_OffWrist:
+    default:
+      return 0;
+  }
+}
+
 /** @brief Bit positions of @ref HRMFeature. */
 typedef enum {
   /** Heart rate. */
@@ -260,19 +309,23 @@ typedef struct {
 
   /** Heart rate, in beats per minute. */
   uint8_t hrm_bpm;
-  /** Heart rate quality. */
+  /** Heart rate quality (legacy grade, derived from @c hrm_confidence). */
   HRMQuality hrm_quality;
+  /** Heart rate algorithm confidence, 0-100. */
+  uint8_t hrm_confidence;
 
   /** Peak-to-peak interval, in milliseconds. */
   uint16_t hrv_ppi_ms;
-  /** HRV quality. */
+  /** HRV quality (legacy grade, derived from @c hrv_confidence). */
   HRMQuality hrv_quality;
+  /** HRV algorithm confidence, 0-100. */
+  uint8_t hrv_confidence;
 
   /** Oxygen saturation (SpO2), in percent. */
   uint8_t spo2_percent;
   /** SpO2 quality. */
   HRMQuality spo2_quality;
-  /** Raw algorithm confidence coefficient (debug). */
+  /** SpO2 algorithm confidence, 0-100. */
   uint8_t spo2_confidence;
   /** Raw algorithm valid level (debug). */
   uint8_t spo2_valid_level;

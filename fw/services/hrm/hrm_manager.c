@@ -615,11 +615,13 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
       event->event_type = HRMEvent_BPM;
       event->bpm.bpm = data->hrm_bpm;
       event->bpm.quality = data->hrm_quality;
+      event->bpm.confidence = data->hrm_confidence;
       break;
     case HRMFeature_HRV:
       event->event_type = HRMEvent_HRV;
       event->hrv.ppi_ms = data->hrv_ppi_ms;
       event->hrv.quality = data->hrv_quality;
+      event->hrv.confidence = data->hrv_confidence;
       break;
     case HRMFeature_SpO2:
       event->event_type = HRMEvent_SpO2;
@@ -687,7 +689,8 @@ void hrm_manager_new_data_cb(const HRMData *data) {
 
   HRM_LOG("HRM Data:");
   if (data->features & HRMFeature_BPM) {
-    HRM_LOG("  BPM: %" PRIu8 ", Quality: %d", data->hrm_bpm, data->hrm_quality);
+    HRM_LOG("  BPM: %" PRIu8 ", Quality: %d, Confidence: %" PRIu8, data->hrm_bpm, data->hrm_quality,
+            data->hrm_confidence);
   }
   if (data->features & HRMFeature_HRV) {
     HRM_LOG("  HRV PPI: %" PRIu16 "ms, Quality: %d", data->hrv_ppi_ms, data->hrv_quality);

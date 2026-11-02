@@ -544,6 +544,7 @@ typedef struct {
   uint8_t resting_bpm;
   HRMQuality quality : 8;
   bool is_filtered;
+  uint8_t confidence; //!< algorithm confidence, 0-100
 } HealthEventHeartRateUpdateData;
 
 //! @internal
