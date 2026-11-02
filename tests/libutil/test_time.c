@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <limits.h>
+
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
@@ -95,6 +97,22 @@ void test_time__breakdown(void) {
   prv_assert_breakdown(1735689599, 2024, 11, 31, 23, 59, 59, PBL_TUESDAY, 365);
   prv_assert_breakdown(1790870400, 2026, 9, 1, 16, 0, 0, PBL_THURSDAY, 273);
   prv_assert_breakdown(-1, 1969, 11, 31, 23, 59, 59, PBL_WEDNESDAY, 364);
+}
+
+void test_time__breakdown_far_times(void) {
+  if (sizeof(time_t) <= 4) {
+    return;
+  }
+  prv_assert_breakdown((time_t)253402300799LL, 9999, 11, 31, 23, 59, 59, PBL_FRIDAY, 364);
+  prv_assert_breakdown((time_t)-11676096000LL, 1600, 0, 1, 0, 0, 0, PBL_SATURDAY, 0);
+  prv_assert_breakdown((time_t)-62135596800LL, 1, 0, 1, 0, 0, 0, PBL_MONDAY, 0);
+
+  // Years an int can't hold are clamped, without walking there year by year
+  struct pbl_tm tm = {};
+  pbl_time_breakdown((time_t)INT64_MAX, &tm);
+  cl_assert_equal_i(tm.tm_year, INT_MAX);
+  pbl_time_breakdown((time_t)INT64_MIN, &tm);
+  cl_assert_equal_i(tm.tm_year, INT_MIN);
 }
 
 void test_time__breakdown_keeps_zone_fields(void) {
