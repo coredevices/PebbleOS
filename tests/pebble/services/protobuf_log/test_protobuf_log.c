@@ -272,7 +272,7 @@ static TestPLParsedMsg *prv_parse_encoded_event_payload(void *buffer) {
       char uuid_str[UUID_STRING_BUFFER_LENGTH];
       uuid_to_string(&s_parsed_msg.events.uuids[i], uuid_str);
       LOG("  Uuid: %s", uuid_str);
-      LOG("  time_utc: %" PRIu32 ", created_time_utc: %" PRIu32 ", utc_to_local: %" PRIi32 "",
+      LOG("  time_utc: %" PRIu64 ", created_time_utc: %" PRIu64 ", utc_to_local: %" PRIi32 "",
           event->time_utc, event->created_time_utc, event->utc_to_local);
       LOG("  duration: %" PRIu32, event->duration);
       // Activity Event
