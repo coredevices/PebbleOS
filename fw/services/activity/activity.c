@@ -228,6 +228,7 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
               .resting_bpm = s_activity_state.hr.metrics.resting_bpm,
               .quality = hrm_event->bpm.quality,
               .is_filtered = false,
+              .confidence = hrm_event->bpm.confidence,
             },
           },
         };

@@ -627,20 +627,22 @@ typedef struct PBL_PACKED PebbleWeatherEvent {
   WeatherEventType type : 8;
 } PebbleWeatherEvent;
 
-typedef struct HRMBPMData { // 2 bytes
+typedef struct HRMBPMData { // 3 bytes
   uint8_t bpm;
   HRMQuality quality : 8;
+  uint8_t confidence; //!< algorithm confidence, 0-100
 } HRMBPMData;
 
-typedef struct HRMHRVData { // 3 bytes
+typedef struct HRMHRVData { // 4 bytes
   uint16_t ppi_ms;          //!< Peak-to-peak interval (ms)
   HRMQuality quality : 8;
+  uint8_t confidence; //!< algorithm confidence, 0-100
 } HRMHRVData;
 
 typedef struct HRMSpO2Data { // 4 bytes
   uint8_t percent;
   HRMQuality quality : 8;
-  uint8_t confidence;      //!< raw algorithm confidence coefficient (debug)
+  uint8_t confidence;      //!< algorithm confidence, 0-100
   uint8_t valid_level : 7; //!< raw algorithm valid level (debug)
   uint8_t invalid : 1;     //!< raw algorithm invalid flag (debug)
 } HRMSpO2Data;
