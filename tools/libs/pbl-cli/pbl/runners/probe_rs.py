@@ -5,7 +5,7 @@ import os
 
 import yaml
 
-from .core import Runner, RunnerCaps, RunnerError
+from .core import Runner, RunnerCaps, RunnerError, port_in_use
 
 GDB_PORT = 1337
 
@@ -38,6 +38,13 @@ class ProbeRsRunner(Runner):
             metavar="VID:PID[:SERIAL]",
             help="Debug probe for the probe-rs runner (default: the lab's)",
         )
+
+    def locks(self, command):
+        # 'pbl debug' attaches to a running 'pbl debugserver', which holds them
+        if command == "debug" and port_in_use(self.gdb_port(GDB_PORT)):
+            return []
+        locks = super().locks(command)
+        return locks[:1] if self.tty else locks[1:]
 
     def _support(self):
         with open(_support_file(self.cfg.board_dir)) as f:

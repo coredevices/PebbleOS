@@ -5,6 +5,7 @@ import os
 import shlex
 import sys
 
+from pbl import lock
 from pbl.command import PblCommand
 
 
@@ -43,11 +44,12 @@ class _ImageCommand(PblCommand):
 
         tool = self.script("tools", self._tool(build, args) + ".py")
         self.inf(f'writing "{path}" to {tty}')
-        self.check_shell(
-            f"{shlex.quote(sys.executable)} {tool} -t {shlex.quote(tty)} "
-            f"-p {self.partition} {shlex.quote(path)}",
-            "imaging failed",
-        )
+        with self.holding([(lock.serial_key(tty), f"serial port {tty}")]):
+            self.check_shell(
+                f"{shlex.quote(sys.executable)} {tool} -t {shlex.quote(tty)} "
+                f"-p {self.partition} {shlex.quote(path)}",
+                "imaging failed",
+            )
 
 
 class ImageResources(_ImageCommand):

@@ -4,6 +4,7 @@
 import shlex
 import sys
 
+from pbl import lock
 from pbl.command import PblCommand
 from pbl.emulator import CONSOLE_PORT
 
@@ -76,4 +77,5 @@ class Console(PblCommand):
             keepalive = self.script("tools", "console_keepalive.py")
             console = f"{python} {keepalive} -t {tty} -- {console}"
 
-        return self.run_shell(console)
+        with self.holding([(lock.serial_key(tty), f"serial port {tty}")]):
+            return self.run_shell(console)

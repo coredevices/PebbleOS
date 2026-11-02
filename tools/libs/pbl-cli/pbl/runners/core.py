@@ -23,6 +23,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import NamedTuple
 
+from pbl import lock
+
 # Commands a runner may implement.
 COMMANDS = ("flash", "run", "erase", "debug", "debugserver")
 
@@ -119,7 +121,27 @@ class Runner(ABC):
             raise UnsupportedOperation(
                 f"{self.name} runner does not support flashing resources"
             )
-        return self.do_run(command)
+        if self.cfg.dry_run:
+            return self.do_run(command)
+        try:
+            with lock.holding(self.locks(command)):
+                return self.do_run(command)
+        except lock.LockError as e:
+            raise RunnerError(str(e)) from None
+
+    def locks(self, command):
+        """The locks (:mod:`pbl.lock`) ``command`` holds while it runs."""
+        locks = []
+        if "serial" in self.lab_ports:
+            locks.append((lock.serial_key(self.cfg.tty), f"serial port {self.cfg.tty}"))
+        if "probe" in self.lab_ports and self.cfg.watch is not None:
+            locks.append(
+                (
+                    lock.probe_key(self.cfg.watch.name),
+                    f"watch {self.cfg.watch.name}'s debug probe",
+                )
+            )
+        return locks
 
     @abstractmethod
     def do_run(self, command):

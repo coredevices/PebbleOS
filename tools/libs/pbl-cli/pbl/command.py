@@ -10,6 +10,7 @@ directory and the shared options.
 """
 
 import argparse
+import contextlib
 import os
 import shlex
 import subprocess
@@ -171,6 +172,20 @@ class PblCommand(ABC):
                 return lab.watch_on(tty)
             return lab.watch_for(build.board, name)
         except labs.LabError as e:
+            self.die(str(e))
+
+    @contextlib.contextmanager
+    def holding(self, locks):
+        """Hold the locks (:mod:`pbl.lock`) on the ports a command uses."""
+        from pbl import lock
+
+        if self.dry_run:
+            yield
+            return
+        try:
+            with lock.holding(locks):
+                yield
+        except lock.LockError as e:
             self.die(str(e))
 
     # --- running things ---------------------------------------------------

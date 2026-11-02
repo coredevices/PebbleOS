@@ -1,8 +1,8 @@
 # `pbl lab`
 
 Show the lab: the watches, power supplies and Bluetooth dongles wired to
-this host, whether their ports are there, and the watch the build runs
-on.
+this host, whether their ports are there, which session holds them, and
+the watch the build runs on.
 
 ```shell
 pbl lab
@@ -14,7 +14,7 @@ lab: /home/me/.config/pbl/lab.yaml
 build: build (obelix@pvt), on watch obelix
 watches:
  * obelix: obelix@pvt
-      serial: /dev/tty.wchusbserial5B7A1355001
+      serial: /dev/tty.wchusbserial5B7A1355001, in use by pid 4242 (pbl console, since 2026-11-02T10:12:03+01:00, in /home/me/pebbleos)
    getafix: getafix@dvt2
       serial: /dev/tty.wchusbserial5B7A1354971 (missing)
       supply: ppk2
@@ -23,7 +23,8 @@ supplies:
 ```
 
 `--json` prints the same for scripts and agents: per port, `present`
-(`false` when the device node is not there, `null` when it cannot tell).
+(`false` when the device node is not there, `null` when it cannot tell)
+and `locked_by`, the session holding it.
 
 (pbl-lab-file)=
 
@@ -52,6 +53,27 @@ has to pick one. With a lab in place, a watch is a `pbl run` away:
 pbl run --resources
 pbl console
 ```
+
+## Locks
+
+While a command uses a port, it holds a lock on it, so that sessions
+running in parallel, people or agents, do not use the same watch at once.
+Another command that needs the port fails right away, naming who holds it:
+
+```text
+error: serial port /dev/tty.wchusbserial5B7A1355001 is in use by pid 4242 (pbl console, since 2026-11-02T10:12:03+01:00, in /home/me/pebbleos)
+```
+
+Serial ports are locked by their device path, whether given with `--tty` or
+taken from the lab, so a `pbl console` on the debug UART blocks the `sftool`
+runner, which needs the same port, but not an `openocd` flash over the
+probe. Debug probes are locked per lab watch. An {doc}`itest` session on a
+watch holds all of its ports, its supply and its dongles for as long as it
+runs; the commands it runs itself go through.
+
+The locks are `flock`s on files in `$PBL_LOCK_DIR` (default: a `pbl-<uid>`
+directory in the system's temporary directory). The kernel drops them when
+their process exits, so a crashed session leaves none behind.
 
 ## Options
 

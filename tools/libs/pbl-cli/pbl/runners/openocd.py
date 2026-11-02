@@ -27,6 +27,7 @@ def _is_openocd_running():
 
 class OpenOcdRunner(Runner):
     name = "openocd"
+    lab_ports = ("probe",)
 
     @classmethod
     def capabilities(cls):
@@ -34,6 +35,12 @@ class OpenOcdRunner(Runner):
             commands={"flash", "erase", "debug", "debugserver"},
             flash_resources=True,
         )
+
+    def locks(self, command):
+        # 'pbl debug' attaches to a running 'pbl debugserver', which holds them
+        if command == "debug" and _is_openocd_running():
+            return []
+        return super().locks(command)
 
     @property
     def _cfg_file(self):

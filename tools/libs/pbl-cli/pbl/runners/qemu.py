@@ -5,7 +5,7 @@ import os
 import platform
 import sys
 
-from pbl import emulator
+from pbl import emulator, lock
 
 from .core import Runner, RunnerCaps, RunnerError
 
@@ -67,6 +67,11 @@ class QemuRunner(Runner):
             decoration=getattr(args, "decoration", None),
             bt_hci=getattr(args, "bt_hci", None),
         )
+
+    def locks(self, command):
+        if command != "run":
+            return []
+        return [(lock.serial_key(self.bt_hci), f"Bluetooth controller {self.bt_hci}")]
 
     def do_run(self, command):
         if command == "debug":
