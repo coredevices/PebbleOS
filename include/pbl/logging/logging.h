@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -182,6 +183,21 @@ void pbl_log_filtered(uint8_t log_level, const char *src_filename, int src_line_
  */
 void pbl_log_filtered_sync(uint8_t log_level, const char *src_filename, int src_line_number,
                            const char *fmt, ...) PBL_FORMAT_PRINTF(4, 5);
+
+/**
+ * @brief Log data as xxd-style lines of 16 bytes, sent before returning.
+ *
+ * Each line has the offset, the bytes in hex and their printable ASCII characters. Prefer the
+ * PBL_LOG_HEXDUMP macros, which filter by level.
+ *
+ * @param log_level Level, one of the @c LOG_LEVEL_ values.
+ * @param src_filename Source file path.
+ * @param src_line_number Source line number.
+ * @param data Data to dump.
+ * @param length Length of @p data in bytes.
+ */
+void pbl_log_hexdump(uint8_t log_level, const char *src_filename, int src_line_number,
+                     const void *data, size_t length);
 
 /**
  * @brief Format a message as a binary log record.
@@ -629,6 +645,63 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
  */
 #define PBL_LOG_SYNC_VERBOSE(fmt, ...) \
   PBL_LOG_COLOR_SYNC(LOG_LEVEL_DEBUG_VERBOSE, LOG_COLOR_FOR_VERBOSE, fmt, ##__VA_ARGS__)
+
+/**
+ * @def PBL_LOG_HEXDUMP
+ * @brief Hex dump data with an explicit level, sent before returning.
+ *
+ * Prefer the level-named macros.
+ *
+ * @param level Level, one of the @c LOG_LEVEL_ values.
+ * @param data Data to dump.
+ * @param length Length of @p data in bytes.
+ */
+#ifdef CONFIG_LOG
+#define PBL_LOG_HEXDUMP(level, data, length)                         \
+  do {                                                               \
+    if (PBL_SHOULD_LOG(level)) {                                     \
+      pbl_log_hexdump(level, __FILE_NAME__, __LINE__, data, length); \
+    }                                                                \
+  } while (0)
+#else
+#define PBL_LOG_HEXDUMP(level, data, length)
+#endif
+
+/**
+ * @brief Hex dump data as an error.
+ *
+ * @param data Data to dump.
+ * @param length Length of @p data in bytes.
+ */
+#define PBL_LOG_HEXDUMP_ERR(data, length) PBL_LOG_HEXDUMP(LOG_LEVEL_ERROR, data, length)
+/**
+ * @brief Hex dump data as a warning.
+ *
+ * @param data Data to dump.
+ * @param length Length of @p data in bytes.
+ */
+#define PBL_LOG_HEXDUMP_WRN(data, length) PBL_LOG_HEXDUMP(LOG_LEVEL_WARNING, data, length)
+/**
+ * @brief Hex dump data as an attention-worthy event.
+ *
+ * @param data Data to dump.
+ * @param length Length of @p data in bytes.
+ */
+#define PBL_LOG_HEXDUMP_INFO(data, length) PBL_LOG_HEXDUMP(LOG_LEVEL_INFO, data, length)
+/**
+ * @brief Hex dump data as a routine debug message.
+ *
+ * @param data Data to dump.
+ * @param length Length of @p data in bytes.
+ */
+#define PBL_LOG_HEXDUMP_DBG(data, length) PBL_LOG_HEXDUMP(LOG_LEVEL_DEBUG, data, length)
+/**
+ * @brief Hex dump data as a verbose debug message.
+ *
+ * @param data Data to dump.
+ * @param length Length of @p data in bytes.
+ */
+#define PBL_LOG_HEXDUMP_VERBOSE(data, length) PBL_LOG_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, length)
 
 /**
  * @def RETURN_STATUS
