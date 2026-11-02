@@ -78,7 +78,7 @@ pbl_clar_test(test_text_render
 pbl_clar_test(test_text_resources
   MODULES resources
   SOURCES
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     fw/applib/fonts/codepoint.c
     fw/applib/fonts/fonts.c
     fw/applib/graphics/text_resources.c
@@ -91,7 +91,7 @@ pbl_clar_test(test_system_resource_language_fonts
   SOURCES
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     fw/applib/fonts/codepoint.c
     fw/applib/fonts/fonts.c
     fw/applib/graphics/text_resources.c

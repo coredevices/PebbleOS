@@ -6,7 +6,7 @@ pbl_clar_test(test_settings_file
   SOURCES
     fw/applib/dict.c
     tests/fakes/fake_rtc.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
   DEFINES DUMA_DISABLED
   OVERRIDES dummy_board
 )

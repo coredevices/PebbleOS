@@ -13,7 +13,6 @@
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 
-#include <system/hexdump.h>
 #include <system/version.h>
 
 static const ResourceStoreImplementation *s_resource_store_impls[] = {

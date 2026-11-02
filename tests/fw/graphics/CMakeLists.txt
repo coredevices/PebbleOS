@@ -85,7 +85,7 @@ set(graphics_draw_text_sources
   fw/applib/graphics/text_resources.c
   fw/flash_region/flash_region.c
   fw/flash_region/filesystem_regions.c
-  fw/system/hexdump.c
+  subsys/logging/hexdump.c
   fw/applib/fonts/codepoint.c
   fw/resource/resource.c
   fw/resource/resource_storage.c
@@ -141,7 +141,7 @@ pbl_clar_test(test_graphics_draw_text_flow
     tests/fakes/fake_gbitmap_png.c
     tests/fakes/fake_display.c
     fw/applib/graphics/text_resources.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_rtc.c
   PLATFORMS gabbro
   OVERRIDES dummy_board

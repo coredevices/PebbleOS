@@ -11,7 +11,6 @@
 #include <clar.h>
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
-#include <system/hexdump.h>
 
 // Stubs
 ////////////////////////////////////

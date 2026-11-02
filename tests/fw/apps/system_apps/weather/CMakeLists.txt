@@ -8,7 +8,7 @@ pbl_clar_test(test_weather_app_layout
     fw/applib/graphics/text_resources.c
     fw/applib/ui/layer.c
     fw/apps/system/timeline/text_node.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c

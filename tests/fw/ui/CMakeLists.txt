@@ -244,7 +244,7 @@ pbl_clar_test(test_menu_layer_system_cells
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -266,7 +266,7 @@ pbl_clar_test(test_action_menu_window
     fw/applib/graphics/text_resources.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -297,7 +297,7 @@ pbl_clar_test(test_notification_window
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
     fw/applib/ui/preferred_durations.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -341,7 +341,7 @@ pbl_clar_test(test_simple_dialog
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -375,7 +375,7 @@ pbl_clar_test(test_emoji_fonts
     fw/applib/ui/menu_text_scroll.c
     fw/shell/system_theme_style.c
     fw/board/displays/display_gabbro.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -393,7 +393,7 @@ pbl_clar_test(test_emoji_glyphs
     fw/applib/graphics/text_render.c
     fw/applib/graphics/text_resources.c
     fw/board/displays/display_gabbro.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
   DEFINES "FIRMWARE_EMOJI_DIR=\"${PBL_BASE}/resources/normal/base/pbf\""
@@ -409,7 +409,7 @@ pbl_clar_test(test_expandable_dialog
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -448,7 +448,7 @@ pbl_clar_test(test_selection_windows
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -491,7 +491,7 @@ pbl_clar_test(test_timeline_peek
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/applib/ui/menu_text_scroll.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/fixtures/screen_grid.c
@@ -530,7 +530,7 @@ pbl_clar_test(test_option_menu_window
     fw/applib/graphics/text_resources.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/fixtures/screen_grid.c

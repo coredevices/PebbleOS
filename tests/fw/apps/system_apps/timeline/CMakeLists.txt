@@ -8,7 +8,7 @@ pbl_clar_test(test_timeline_list_view
     fw/applib/graphics/text_resources.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_animation.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_graphics_context.c
@@ -69,7 +69,7 @@ pbl_clar_test(test_timeline_no_events
     fw/applib/graphics/text_resources.c
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_animation.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_graphics_context.c

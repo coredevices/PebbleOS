@@ -27,7 +27,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 
 typedef enum {
   StateDisconnectedReadingMeta,
@@ -769,7 +768,7 @@ static void prv_handle_data(PPoGATTClient *client, const PPoGATTPacket *packet,
 static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *value,
                                          uint16_t value_length) {
   //  PBL_LOG_DBG("IN:");
-  //  PBL_HEXDUMP(LOG_LEVEL_DEBUG, value, value_length);
+  //  PBL_LOG_HEXDUMP_DBG(value, value_length);
 
   if (PBL_UNLIKELY(value_length == 0)) {
     PBL_LOG_ERR("Zero length packet");

@@ -12,7 +12,6 @@
 #include <pb_encode.h>
 #include <process_state/app_state/app_state.h>
 #include <simple.pb.h>
-#include <system/hexdump.h>
 
 static void prv_init(void) {
   SimpleMessage msg = {
@@ -22,7 +21,7 @@ static void prv_init(void) {
   pb_ostream_t s = pb_ostream_from_buffer(buffer, 30);
   pb_encode(&s, SimpleMessage_fields, &msg);
   PBL_LOG_DBG("Encoded message, size: %u bytes", s.bytes_written);
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, buffer, s.bytes_written);
+  PBL_LOG_HEXDUMP_DBG(buffer, s.bytes_written);
   app_state_set_user_data(buffer);
 }
 

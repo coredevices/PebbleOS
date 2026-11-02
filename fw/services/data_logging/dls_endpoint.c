@@ -298,7 +298,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
   comm_session_send_buffer_end_write(sb);
 
   dls_endpoint_print_message((uint8_t *)&header, num_bytes);
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, MIN(num_bytes, 64));
+  PBL_LOG_HEXDUMP_DBG(data, MIN(num_bytes, 64));
 
   logging_session->comm.num_bytes_pending = num_bytes;
 

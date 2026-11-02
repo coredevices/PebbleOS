@@ -11,7 +11,6 @@
 #include <pbl/util/math.h>
 
 #include <kernel/events.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DEFINE(service_phone_pp, CONFIG_SERVICE_PHONE_PP_LOG_LEVEL);
 
@@ -203,7 +202,7 @@ static bool prv_parse_msg_to_event(const uint8_t *iter, size_t length, PebbleEve
   } else {
     // Try to catch potentially malformed messages.
     PBL_LOG_ERR("Error parsing phone msg");
-    PBL_HEXDUMP(LOG_LEVEL_INFO, iter, length);
+    PBL_LOG_HEXDUMP_INFO(iter, length);
   }
 
   return did_parse;
@@ -218,7 +217,7 @@ static void prv_parse_msg_and_emit_event(const uint8_t *msg, size_t length,
 }
 
 void phone_protocol_msg_callback(CommSession *session, const uint8_t *iter, size_t length) {
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, iter, length);
+  PBL_LOG_HEXDUMP_DBG(iter, length);
 
   // Get State Response is basically a list representing the state of current calls. It's
   // conveniently formatted exactly the same as the event messages, so just loop over them and

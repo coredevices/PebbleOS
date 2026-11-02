@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/btutil/bt_uuid.h>
 
 #include <applib/bluetooth/ble_ad_parse.h>
 #include <clar.h>
-#include <system/hexdump.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

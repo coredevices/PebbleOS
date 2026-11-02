@@ -10,7 +10,6 @@
 #include <pbl/services/comm_session/session.h>
 
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 #include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
@@ -319,7 +318,7 @@ static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBComman
 void blob_db_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
 
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, length);
+  PBL_LOG_HEXDUMP_DBG(data, length);
 
   // Each BlobDB message is required to have at least a Command and a Token
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);

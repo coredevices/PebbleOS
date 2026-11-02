@@ -12,7 +12,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/applib/ui/layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/window.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_rtc.c
     fw/applib/template_string.c
     fw/applib/ui/content_indicator.c

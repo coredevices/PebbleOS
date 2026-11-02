@@ -10,8 +10,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
-#include <system/hexdump.h>
-
 // Generated table of endpoint handler (s_protocol_endpoints):
 #include <services/comm_session/protocol_endpoints_table.auto.h>
 
@@ -155,7 +153,7 @@ static void prv_write_payload_to_receiver(ReceiveRouter *rtr, size_t *data_size_
 void comm_session_receive_router_write(CommSession *session, const uint8_t *data,
                                        size_t data_size) {
   PBL_LOG_VERBOSE("Received packet from BT");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, data_size);
+  PBL_LOG_HEXDUMP_VERBOSE(data, data_size);
 
   ReceiveRouter *rtr = &session->recv_router;
 

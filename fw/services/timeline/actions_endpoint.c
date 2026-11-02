@@ -14,7 +14,6 @@
 
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <kernel/pbl_malloc.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -173,7 +172,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   uuid_to_string(id, uuid_string);
   PBL_LOG_INFO("Send action to phone (Item ID: %s; Action ID: %d)", uuid_string, action_id);
 
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, (uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
+  PBL_LOG_HEXDUMP_DBG((uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
 
   if (do_async) {
     system_task_add_callback(prv_action_system_task_callback, invoke_action_data);
@@ -220,7 +219,7 @@ void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const 
 
   PebbleSysNotificationActionResult *action_result = nullptr;
 
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, length);
+  PBL_LOG_HEXDUMP_DBG(data, length);
 
   if (header->command == CommandPhoneResponse) {
     PhoneResponseMsg *msg = (PhoneResponseMsg *)data;

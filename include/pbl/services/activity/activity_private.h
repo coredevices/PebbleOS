@@ -19,7 +19,6 @@
 
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
-#include <system/hexdump.h>
 
 /**
  * @defgroup services_activity_activity_private Activity service internals
