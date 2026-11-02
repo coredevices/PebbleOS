@@ -160,13 +160,6 @@ void health_data_update_sleep(HealthData *health_data, uint32_t new_sleep,
 void health_data_update_current_bpm(HealthData *health_data) {
   health_data->resting_hr_bpm = activity_prefs_heart_get_resting_hr();
 
-  // Check the quality. If it doesn't meet our standards, bail
-  int32_t quality;
-  activity_get_metric(ActivityMetricHeartRateRawQuality, 1, &quality);
-  if (quality < HRMQuality_Acceptable) {
-    return;
-  }
-
   uint32_t current_hr_timestamp;
   activity_get_metric(ActivityMetricHeartRateRawUpdatedTimeUTC, 1,
                       (int32_t *)&current_hr_timestamp);
