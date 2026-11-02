@@ -17,6 +17,7 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline.h>
+#include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
@@ -193,7 +194,9 @@ static void prv_handle_dictation_event(PebbleEvent *e, void *context) {
     strcpy(data->reminder_str, e->dictation.text);
     data->reminder_str[reminder_str_len] = '\0';
 
-    data->timestamp = e->dictation.timestamp;
+    // The event holds the low 32 bits of a time close to now
+    data->timestamp =
+        e->dictation.timestamp ? pbl_time_from_low32(e->dictation.timestamp, pbl_realtime()) : 0;
     if (data->timestamp == 0) {
       // If the user didn't specify a time set it to be 1 hour from the current time,
       // rounded up to the nearest 15 min.
