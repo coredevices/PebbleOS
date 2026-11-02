@@ -108,7 +108,7 @@ static void prv_config_provider(void *data) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData){.test_pattern = (TestPattern)app_manager_get_task_context()->args};
+  *data = (AppData){.test_pattern = (TestPattern)(uintptr_t)app_manager_get_task_context()->args};
 
   app_state_set_user_data(data);
 
