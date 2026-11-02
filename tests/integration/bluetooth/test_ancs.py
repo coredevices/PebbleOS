@@ -60,7 +60,8 @@ def test_notification_shown(ui, ancs):
     _wait_modal(ui)
 
 
-def test_pre_existing_ignored(ui, ancs):
+@pytest.mark.parametrize("attempt", range(8))
+def test_pre_existing_ignored(dut, ui, ancs, attempt):
     """Notifications the phone had before the watch's last session ended
     are not shown again right after it connects."""
     ancs.post(
@@ -70,7 +71,9 @@ def test_pre_existing_ignored(ui, ancs):
         date=ancs.clock() - PRE_EXISTING_AGE_S,
     )
     time.sleep(2)
-    assert NOTIFICATION_WINDOW not in ui.modal_stack()
+    if NOTIFICATION_WINDOW in ui.modal_stack():
+        diag = dut.prompt("bt ancs_diag") + dut.prompt("bt ancs_notif_diag")
+        pytest.fail("notification shown\n" + "\n".join(diag))
 
 
 def test_missed_notification_recovered(ui, iphone, ancs):
