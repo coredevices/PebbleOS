@@ -132,7 +132,9 @@ bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {
   return true;
 }
 
+static HRMFeature s_hrm_manager_last_features;
 bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
+  s_hrm_manager_last_features = features;
   return true;
 }
 
@@ -2696,6 +2698,34 @@ void test_activity__spo2_prefers_high_confidence(void) {
 
   cl_assert_equal_i(spo2->num_valid_samples, 6);
   cl_assert_equal_i(spo2->num_high_confidence_samples, 2);
+}
+
+// ---------------------------------------------------------------------------------------
+// The background SpO2 window waits for a minute without walking.
+void test_activity__spo2_deferred_while_walking(void) {
+  activity_prefs_set_spo2_enabled(true);
+  activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval_10Min);
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  ActivityState *state = activity_private_state();
+  state->hr.currently_sampling = false;
+  state->last_orientation = 0x11; // Not flat
+  state->spo2.currently_sampling = false;
+  state->spo2.toggled_sampling_at_ts = time_get_uptime_seconds();
+  fake_rtc_set_ticks(rtc_get_ticks() + (11 * PBL_SEC_PER_MIN * PBL_TICK_HZ));
+
+  s_hrm_manager_last_features = 0;
+  state->last_minute_steps = ACTIVITY_SPO2_MAX_STEPS_PER_MIN + 1;
+  prv_put_spo2(0, 0, true /*invalid*/);
+  cl_assert_equal_b(state->spo2.currently_sampling, false);
+
+  state->last_minute_steps = ACTIVITY_SPO2_MAX_STEPS_PER_MIN;
+  prv_put_spo2(0, 0, true /*invalid*/);
+  cl_assert_equal_b(state->spo2.currently_sampling, true);
+  cl_assert_equal_i(s_hrm_manager_last_features, HRMFeature_SpO2);
+
+  activity_prefs_set_spo2_enabled(false);
 }
 
 // ---------------------------------------------------------------------------------------
