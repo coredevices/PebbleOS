@@ -1,7 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/fs/fs.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/timezone_database.h>
@@ -1667,4 +1671,108 @@ void test_clock__prev_dst_kept_northern(void) {
 void test_clock__prev_dst_kept_southern(void) {
   // Chatham, DST spans the new year: 2026-01-15 00:00 UTC
   prv_check_prev_dst_kept(9, 1768435200);
+}
+
+// Time endpoint
+extern void clock_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                        size_t length);
+///////////////////////////
+static bool s_phone_has_time64;
+static uint8_t s_sent[16];
+static size_t s_sent_len;
+
+bool pbl_pp_session_has_capability(const struct pbl_pp_session *session,
+                                   enum pbl_pp_capability capability) {
+  return (capability == PBL_PP_CAP_TIME64) && s_phone_has_time64;
+}
+
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
+  cl_assert_equal_i(endpoint_id, 11);
+  cl_assert(length <= sizeof(s_sent));
+  memcpy(s_sent, data, length);
+  s_sent_len = length;
+  return 0;
+}
+
+static void prv_send_set_timezone(uint8_t cmd, uint64_t utc, size_t time_size, int16_t offset_min,
+                                  const char *name) {
+  uint8_t msg[64];
+  size_t len = 0;
+  msg[len++] = cmd;
+  for (int i = time_size - 1; i >= 0; i--) {
+    msg[len++] = utc >> (8 * i);
+  }
+  msg[len++] = (uint16_t)offset_min >> 8;
+  msg[len++] = offset_min;
+  msg[len++] = strlen(name);
+  memcpy(msg + len, name, strlen(name));
+  len += strlen(name);
+  clock_protocol_msg_callback(nullptr, msg, len);
+}
+
+void test_clock__endpoint_set_time_32_and_64_bit(void) {
+  fake_rtc_init(0, 0);
+  tz_storage_clear();
+  clock_init();
+
+  // 2040-06-01 00:00:00 UTC, past 2038 as unsigned 32 bits
+  prv_send_set_timezone(0x03, 2222164800u, 4, 120, "Europe/Berlin");
+  cl_assert(pbl_realtime() == 2222164800LL);
+  cl_assert(clock_is_timezone_set());
+  cl_assert_equal_i(time_get_gmtoffset(), 3600);
+  cl_assert(time_get_isdst(pbl_realtime()));
+
+  // 2200-01-01 00:00:00 UTC, past 2106
+  const time_t t2200 = 7258118400LL;
+  prv_send_set_timezone(0x05, t2200, 8, 60, "Europe/Berlin");
+  cl_assert(pbl_realtime() == t2200);
+  cl_assert_equal_i(time_get_gmtoffset(), 3600);
+  cl_assert(!time_get_isdst(pbl_realtime()));
+
+  // Truncated or overlong messages are ignored
+  const uint8_t short_msg[] = {0x05, 0, 0, 0, 0, 0x84, 0x7f, 0x0c, 0x00};
+  clock_protocol_msg_callback(nullptr, short_msg, sizeof(short_msg));
+  cl_assert(pbl_realtime() == t2200);
+  uint8_t long_name[1 + 8 + 2 + 1 + 40] = {0x05, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 40};
+  clock_protocol_msg_callback(nullptr, long_name, sizeof(long_name));
+  cl_assert(pbl_realtime() == t2200);
+
+  // Negative times and ones past year 9999 (e.g. milliseconds) are ignored
+  prv_send_set_timezone(0x05, (uint64_t)-1LL, 8, 60, "Europe/Berlin");
+  cl_assert(pbl_realtime() == t2200);
+  prv_send_set_timezone(0x05, 1700000000000ULL, 8, 60, "Europe/Berlin");
+  cl_assert(pbl_realtime() == t2200);
+  prv_send_set_timezone(0x05, 253402300800ULL, 8, 60, "Europe/Berlin");
+  cl_assert(pbl_realtime() == t2200);
+  prv_send_set_timezone(0x05, 253402300799ULL, 8, 60, "Europe/Berlin");
+  cl_assert(pbl_realtime() == 253402300799LL);
+}
+
+void test_clock__endpoint_get_time(void) {
+  fake_rtc_init(0, 0);
+  tz_storage_clear();
+  clock_init();
+  const time_t t2200 = 7258118400LL;
+  pbl_realtime_set(t2200);
+
+  const uint8_t get_time = 0x00;
+  s_phone_has_time64 = false;
+  clock_protocol_msg_callback(nullptr, &get_time, 1);
+  cl_assert_equal_i(s_sent_len, 5);
+  cl_assert_equal_i(s_sent[0], 0x01);
+  const uint32_t t32 =
+      ((uint32_t)s_sent[1] << 24) | (s_sent[2] << 16) | (s_sent[3] << 8) | s_sent[4];
+  cl_assert_equal_i(t32, (uint32_t)t2200);
+
+  s_phone_has_time64 = true;
+  clock_protocol_msg_callback(nullptr, &get_time, 1);
+  cl_assert_equal_i(s_sent_len, 9);
+  cl_assert_equal_i(s_sent[0], 0x06);
+  uint64_t t64 = 0;
+  for (int i = 1; i <= 8; i++) {
+    t64 = (t64 << 8) | s_sent[i];
+  }
+  cl_assert(t64 == (uint64_t)t2200);
+  s_phone_has_time64 = false;
 }
