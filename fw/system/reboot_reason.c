@@ -3,19 +3,14 @@
 
 #include "reboot_reason.h"
 
+#include <stddef.h>
+
+#include <pbl/drivers/retained.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
-
-#ifdef CONFIG_SOC_SF32LB52
-#include <bf0_hal.h>
-#endif
-
-#if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
-extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
-#endif
+#include <pbl/util/size.h>
 
 #ifdef CONFIG_SOC_POSIX
 // The host has no interrupt priority masking.
@@ -26,11 +21,17 @@ extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 
 static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
 
+static const enum pbl_retained_reg s_regs[] = {
+  PBL_RETAINED_REBOOT_REASON_0,
+  PBL_RETAINED_REBOOT_REASON_1,
+  PBL_RETAINED_REBOOT_REASON_2,
+  PBL_RETAINED_REBOOT_REASON_3,
+};
+
 void reboot_reason_set(RebootReason *reason) {
-#ifdef CONFIG_SOC_NRF52
   uint32_t *raw = (uint32_t *)reason;
 
-  if (retained_read(REBOOT_REASON_REGISTER_1)) {
+  if (pbl_retained_read(PBL_RETAINED_REBOOT_REASON_0)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
     if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
@@ -39,43 +40,9 @@ void reboot_reason_set(RebootReason *reason) {
     return;
   }
 
-  retained_write(REBOOT_REASON_REGISTER_1, raw[0]);
-  retained_write(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
-  retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
-  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
-#elifdef CONFIG_SOC_SF32LB52
-  uint32_t *raw = (uint32_t *)reason;
-
-  if (HAL_Get_backup(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
-    // != 0)
-    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
-      PBL_LOG_WRN("Reboot reason is already set");
-    }
-    return;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_regs); i++) {
+    pbl_retained_write(s_regs[i], raw[i]);
   }
-
-  HAL_Set_backup(REBOOT_REASON_REGISTER_1, raw[0]);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
-#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-  uint32_t *raw = (uint32_t *)reason;
-
-  if (RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1)) {
-    // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
-    // != 0)
-    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
-      PBL_LOG_WRN("Reboot reason is already set");
-    }
-    return;
-  }
-
-  RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, raw[0]);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
-#endif
 }
 
 void reboot_reason_set_restarted_safely(void) {
@@ -83,75 +50,28 @@ void reboot_reason_set_restarted_safely(void) {
   reboot_reason_get(&reason);
   reason.restarted_safely = true;
 
-#ifdef CONFIG_SOC_NRF52
   uint32_t *raw = (uint32_t *)&reason;
-  retained_write(REBOOT_REASON_REGISTER_1, *raw);
-#elifdef CONFIG_SOC_SF32LB52
-  uint32_t *raw = (uint32_t *)&reason;
-  HAL_Set_backup(REBOOT_REASON_REGISTER_1, *raw);
-#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-  uint32_t *raw = (uint32_t *)&reason;
-  RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, *raw);
-#endif
+  pbl_retained_write(PBL_RETAINED_REBOOT_REASON_0, *raw);
 }
 
 void reboot_reason_get(RebootReason *reason) {
-#ifdef CONFIG_SOC_NRF52
   uint32_t *raw = (uint32_t *)reason;
-  raw[0] = retained_read(REBOOT_REASON_REGISTER_1);
-  raw[1] = retained_read(REBOOT_REASON_STUCK_TASK_PC);
-  raw[2] = retained_read(REBOOT_REASON_STUCK_TASK_LR);
-  raw[3] = retained_read(REBOOT_REASON_STUCK_TASK_CALLBACK);
-#elifdef CONFIG_SOC_SF32LB52
-  uint32_t *raw = (uint32_t *)reason;
-  raw[0] = HAL_Get_backup(REBOOT_REASON_REGISTER_1);
-  raw[1] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_PC);
-  raw[2] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_LR);
-  raw[3] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_CALLBACK);
-#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-  uint32_t *raw = (uint32_t *)reason;
-  raw[0] = RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1);
-  raw[1] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_PC);
-  raw[2] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_LR);
-  raw[3] = RTC_ReadBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK);
-#endif
+
+  for (size_t i = 0; i < ARRAY_LENGTH(s_regs); i++) {
+    raw[i] = pbl_retained_read(s_regs[i]);
+  }
 }
 
 void reboot_reason_clear(void) {
-#ifdef CONFIG_SOC_NRF52
-  retained_write(REBOOT_REASON_REGISTER_1, 0);
-  retained_write(REBOOT_REASON_STUCK_TASK_PC, 0);
-  retained_write(REBOOT_REASON_STUCK_TASK_LR, 0);
-  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
-#elifdef CONFIG_SOC_SF32LB52
-  HAL_Set_backup(REBOOT_REASON_REGISTER_1, 0);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, 0);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, 0);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
-#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-  RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, 0);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_PC, 0);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_LR, 0);
-  RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
-#endif
+  for (size_t i = 0; i < ARRAY_LENGTH(s_regs); i++) {
+    pbl_retained_write(s_regs[i], 0);
+  }
 }
 
 uint32_t reboot_get_slot_of_last_launched_app(void) {
-#ifdef CONFIG_SOC_NRF52
-  return retained_read(SLOT_OF_LAST_LAUNCHED_APP);
-#elifdef CONFIG_SOC_SF32LB52
-  return HAL_Get_backup(SLOT_OF_LAST_LAUNCHED_APP);
-#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-  return RTC_ReadBackupRegister(SLOT_OF_LAST_LAUNCHED_APP);
-#endif
+  return pbl_retained_read(PBL_RETAINED_LAST_APP_SLOT);
 }
 
 void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
-#ifdef CONFIG_SOC_NRF52
-  retained_write(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
-#elifdef CONFIG_SOC_SF32LB52
-  HAL_Set_backup(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
-#elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-  RTC_WriteBackupRegister(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
-#endif
+  pbl_retained_write(PBL_RETAINED_LAST_APP_SLOT, app_slot);
 }

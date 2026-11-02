@@ -1,124 +1,48 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/crc/crc.h>
-#include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/logging/logging.h>
-
-#include <flash_region/flash_region.h>
-#include <system/bootbits.h>
-#include <system/version.h>
-
-#ifdef CONFIG_SOC_SF32LB52
-#include <bf0_hal.h>
-#endif
-
-#if MICRO_FAMILY_STM32F4
-#include <pbl/kernel/compiler.h>
-
-#include <stm32f4xx.h>
-#endif
-
-#if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
-// Provided by the QEMU RTC driver
-extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
-extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
-#endif
-
 #include <inttypes.h>
 #include <stdint.h>
 
-#ifdef CONFIG_SOC_NRF52
-static uint32_t PBL_SECTION(".retained") retained[256 / 4];
+#include <pbl/drivers/retained.h>
+#include <pbl/logging/logging.h>
 
-void retained_write(uint8_t id, uint32_t value) {
-  retained[id] = value;
-  uint32_t crc32_computed = pbl_crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
-  retained[NRF_RETAINED_REGISTER_CRC] = crc32_computed;
-}
+#include <system/bootbits.h>
 
-uint32_t retained_read(uint8_t id) {
-  return retained[id];
-}
+#ifdef CONFIG_PBLBOOT
+#include <pbl/drivers/flash.h>
+#include <pbl/kernel/compiler.h>
+
+#include <flash_region/flash_region.h>
+#endif
 
 void boot_bit_init(void) {
-  // Make sure that the bootbits have a valid CRC -- otherwise, their
-  // in-memory value is probably scrambled and should be reset.
-  uint32_t crc32_computed = pbl_crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
-  if (crc32_computed != retained[NRF_RETAINED_REGISTER_CRC]) {
-    PBL_LOG_WRN(
-        "Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!",
-        crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
-    memset(retained, 0, sizeof(retained));
-  }
-
   if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
-    retained_write(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
+    pbl_retained_write(PBL_RETAINED_BOOTBITS, BOOT_BIT_INITIALIZED);
   }
 }
 
 void boot_bit_set(BootBitValue bit) {
-  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
-  current_value |= bit;
-  retained_write(RTC_BKP_BOOTBIT_DR, current_value);
+  pbl_retained_write(PBL_RETAINED_BOOTBITS, pbl_retained_read(PBL_RETAINED_BOOTBITS) | bit);
 }
 
 void boot_bit_clear(BootBitValue bit) {
-  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
-  current_value &= ~bit;
-  retained_write(RTC_BKP_BOOTBIT_DR, current_value);
+  pbl_retained_write(PBL_RETAINED_BOOTBITS, pbl_retained_read(PBL_RETAINED_BOOTBITS) & ~bit);
 }
 
 bool boot_bit_test(BootBitValue bit) {
-  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
-  return (current_value & bit);
+  return (pbl_retained_read(PBL_RETAINED_BOOTBITS) & bit) != 0U;
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%" PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, pbl_retained_read(PBL_RETAINED_BOOTBITS));
 }
 
 uint32_t boot_bits_get(void) {
-  return retained_read(RTC_BKP_BOOTBIT_DR);
+  return pbl_retained_read(PBL_RETAINED_BOOTBITS);
 }
 
-uint32_t boot_version_read(void) {
-  return retained_read(BOOTLOADER_VERSION_REGISTER);
-}
-
-#elifdef CONFIG_SOC_SF32LB52
-void boot_bit_init(void) {
-  if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
-    HAL_Set_backup(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
-  }
-}
-
-void boot_bit_set(BootBitValue bit) {
-  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
-  current_value |= bit;
-  HAL_Set_backup(RTC_BKP_BOOTBIT_DR, current_value);
-}
-
-void boot_bit_clear(BootBitValue bit) {
-  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
-  current_value &= ~bit;
-  HAL_Set_backup(RTC_BKP_BOOTBIT_DR, current_value);
-}
-
-bool boot_bit_test(BootBitValue bit) {
-  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
-  return (current_value & bit);
-}
-
-void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%" PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
-}
-
-uint32_t boot_bits_get(void) {
-  return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
-}
-
+#ifdef CONFIG_PBLBOOT
 #define PB_VERSION_MAGIC 0x50425652UL
 
 struct pb_version {
@@ -148,44 +72,8 @@ uint32_t boot_version_read(void) {
 
   return version;
 }
-
 #else
-
-void boot_bit_init(void) {
-  rtc_init();
-
-  if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
-    RTC_WriteBackupRegister(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
-  }
-}
-
-void boot_bit_set(BootBitValue bit) {
-  uint32_t current_value = RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR);
-  current_value |= bit;
-  RTC_WriteBackupRegister(RTC_BKP_BOOTBIT_DR, current_value);
-}
-
-void boot_bit_clear(BootBitValue bit) {
-  uint32_t current_value = RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR);
-  current_value &= ~bit;
-  RTC_WriteBackupRegister(RTC_BKP_BOOTBIT_DR, current_value);
-}
-
-bool boot_bit_test(BootBitValue bit) {
-  uint32_t current_value = RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR);
-  return (current_value & bit);
-}
-
-void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%" PRIx32, RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR));
-}
-
-uint32_t boot_bits_get(void) {
-  return RTC_ReadBackupRegister(RTC_BKP_BOOTBIT_DR);
-}
-
 uint32_t boot_version_read(void) {
-  return RTC_ReadBackupRegister(BOOTLOADER_VERSION_REGISTER);
+  return pbl_retained_read(PBL_RETAINED_BOOT_VERSION);
 }
-
 #endif

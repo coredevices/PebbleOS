@@ -1,50 +1,31 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
 #include <stdio.h>
 
+#include <pbl/drivers/retained.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
+#include <pbl/util/size.h>
 
 #include <board/board.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // RTC MMIO register offsets (must match QEMU pebble-rtc device)
-#define RTC_TIME_LO     0x00 // Unix timestamp low 32 bits (r/w)
-#define RTC_TIME_HI     0x04 // Unix timestamp high 32 bits (r)
-#define RTC_ALARM       0x08
-#define RTC_CTRL        0x0C
-#define RTC_TICKS_REG   0x10 // Monotonic 1000Hz tick counter (r)
-#define RTC_BACKUP_BASE 0x40
+#define RTC_TIME_LO   0x00 // Unix timestamp low 32 bits (r/w)
+#define RTC_TIME_HI   0x04 // Unix timestamp high 32 bits (r)
+#define RTC_ALARM     0x08
+#define RTC_CTRL      0x0C
+#define RTC_TICKS_REG 0x10 // Monotonic 1000Hz tick counter (r)
 
 // CTRL bits
 #define CTRL_ALARM_IE (1 << 0)
 
 // STATUS bits
 #define STATUS_ALARM_PENDING (1 << 0)
-
-// Number of backup registers
-#define NUM_BACKUP_REGS 16
-
-// Backup register access macros
-#define RTC_BACKUP_REG(n) (QEMU_RTC_BASE + RTC_BACKUP_BASE + ((n) * 4))
-
-// RTC_WriteBackupRegister / RTC_ReadBackupRegister compatibility
-// These are used by the common RTC code (rtc/common.c) for timezone storage.
-void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value) {
-  if (reg_id < NUM_BACKUP_REGS) {
-    REG32(RTC_BACKUP_REG(reg_id)) = value;
-  }
-}
-
-uint32_t RTC_ReadBackupRegister(uint32_t reg_id) {
-  if (reg_id < NUM_BACKUP_REGS) {
-    return REG32(RTC_BACKUP_REG(reg_id));
-  }
-  return 0;
-}
 
 void rtc_init(void) {
   // Clear alarm IRQ pending and disable alarm
@@ -131,38 +112,36 @@ bool rtc_alarm_is_initialized(void) {
   return true;
 }
 
-// Timezone uses backup registers 11-15 to avoid conflicts with bootbits (0-10)
-#define TZ_BACKUP_BASE 11
+static const enum pbl_retained_reg s_tz_regs[] = {
+  PBL_RETAINED_TZ_0, PBL_RETAINED_TZ_1, PBL_RETAINED_TZ_2, PBL_RETAINED_TZ_3, PBL_RETAINED_TZ_4,
+};
 
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
-  static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t), "RTC Set Timezone invalid data size");
+  static_assert(sizeof(TimezoneInfo) <= ARRAY_LENGTH(s_tz_regs) * sizeof(uint32_t),
+                "RTC Set Timezone invalid data size");
 
-  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 0, raw[0]);
-  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 1, raw[1]);
-  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 2, raw[2]);
-  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 3, raw[3]);
-  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 4, raw[4]);
+  for (size_t i = 0; i < ARRAY_LENGTH(s_tz_regs); i++) {
+    pbl_retained_write(s_tz_regs[i], raw[i]);
+  }
 }
 
 void rtc_get_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
 
-  raw[0] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 0);
-  raw[1] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 1);
-  raw[2] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 2);
-  raw[3] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 3);
-  raw[4] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 4);
+  for (size_t i = 0; i < ARRAY_LENGTH(s_tz_regs); i++) {
+    raw[i] = pbl_retained_read(s_tz_regs[i]);
+  }
 }
 
 uint16_t rtc_get_timezone_id(void) {
   // timezone_id is stored in the upper 16 bits of register 1 (matching common.c layout)
-  return ((RTC_ReadBackupRegister(TZ_BACKUP_BASE + 1) >> 16) & 0xFFFF);
+  return ((pbl_retained_read(PBL_RETAINED_TZ_1) >> 16) & 0xFFFF);
 }
 
 bool rtc_is_timezone_set(void) {
   // True if the timezone abbreviation has been set
-  return (RTC_ReadBackupRegister(TZ_BACKUP_BASE + 0) != 0);
+  return (pbl_retained_read(PBL_RETAINED_TZ_0) != 0);
 }
 
 const char *rtc_get_time_string(char *buffer) {
@@ -177,7 +156,7 @@ const char *time_t_to_string(char *buffer, time_t t) {
 }
 
 void rtc_timezone_clear(void) {
-  for (int i = 0; i < 5; i++) {
-    RTC_WriteBackupRegister(TZ_BACKUP_BASE + i, 0);
+  for (size_t i = 0; i < ARRAY_LENGTH(s_tz_regs); i++) {
+    pbl_retained_write(s_tz_regs[i], 0);
   }
 }
