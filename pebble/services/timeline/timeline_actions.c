@@ -50,6 +50,9 @@
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
+//! The time a postpone action asks for, passed to the action by reference
+static time_t s_postpone_time;
+
 typedef struct {
   void *action_data;
   void *context;
@@ -555,7 +558,7 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
       int cur_attribute = pin->attr_list.num_attributes;
       response_attributes.attributes[cur_attribute++] = (Attribute){
         .id = AttributeIdTimestamp,
-        .uint32 = pin->header.timestamp,
+        .time = pin->header.timestamp,
       };
 
       timeline_invoke_action(pin, action, &response_attributes);
@@ -586,7 +589,8 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
     case TimelineItemActionTypePostpone: {
       Attribute timestamp_attr = {
         .id = AttributeIdTimestamp,
-        .uint32 = (uint32_t)(uintptr_t)context,
+        // A time doesn't fit in a 32-bit pointer, so the postpone menu passes it by reference
+        .time = (context == &s_postpone_time) ? s_postpone_time : (time_t)(uintptr_t)context,
       };
 
       AttributeList response_attributes = {
@@ -963,7 +967,8 @@ static void prv_postpone_15_minutes(ActionMenu *action_menu, const ActionMenuIte
   const TimelineItemAction *action = action_menu_item->action_data;
 
   time_t new_time = pbl_realtime() + (15 * PBL_SEC_PER_MIN);
-  prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
+  s_postpone_time = new_time;
+  prv_invoke_remote_action(action_menu, action, pin, &s_postpone_time);
 }
 
 static void prv_postpone_later_today(ActionMenu *action_menu,
@@ -995,7 +1000,8 @@ static void prv_postpone_later_today(ActionMenu *action_menu,
   }
   time_t new_time = pbl_mktime(&local_tm);
 
-  prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
+  s_postpone_time = new_time;
+  prv_invoke_remote_action(action_menu, action, pin, &s_postpone_time);
 }
 
 static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem *action_menu_item,
@@ -1013,7 +1019,8 @@ static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem 
   local_tm.tm_sec = 0;
   time_t new_time = pbl_mktime(&local_tm);
 
-  prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
+  s_postpone_time = new_time;
+  prv_invoke_remote_action(action_menu, action, pin, &s_postpone_time);
 }
 
 static ActionMenuLevel *prv_create_postpone_level(TimelineItemAction *action,
