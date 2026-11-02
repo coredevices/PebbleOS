@@ -191,3 +191,20 @@ void test_weather_service__get_default_location_forecast_from_watch_app_prefs_db
   prv_assert_forecast_equal(forecast, &s_forecasts[0]);
   weather_service_destroy_default_forecast(forecast);
 }
+
+// The phone sends the update time as 32 bits; it is placed relative to the current time
+void test_weather_service__update_time_past_2106(void) {
+  weather_shared_data_cleanup();
+  // 2200-01-01T12:00:00+00:00
+  const time_t now = 7258161600LL;
+  weather_shared_data_init_at(now);
+
+  size_t count_out;
+  WeatherDataListNode *head = weather_service_locations_list_create(&count_out);
+  cl_assert_equal_i(count_out, 4);
+  for (WeatherDataListNode *current = head; current;
+       current = (WeatherDataListNode *)current->node.next) {
+    cl_assert(current->forecast.time_updated_utc == now);
+  }
+  weather_service_locations_list_destroy(head);
+}

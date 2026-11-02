@@ -14,6 +14,7 @@
 #include <pbl/services/time.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
+#include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
 #include <applib/app_glance.h>
@@ -586,7 +587,8 @@ status_t app_glance_db_read_creation_time(const Uuid *uuid, time_t *time_out) {
       app_glance_db_read((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&serialized_glance_header,
                          sizeof(serialized_glance_header));
   if (rv == S_SUCCESS) {
-    *time_out = serialized_glance_header.creation_time;
+    // A recent time, so its low 32 bits are enough to place it
+    *time_out = pbl_time_from_low32(serialized_glance_header.creation_time, pbl_realtime());
   }
   return rv;
 }
@@ -657,7 +659,9 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
   SerializedAppGlanceHeader existing_glance = {};
   status_t rv = app_glance_db_read((uint8_t *)app_uuid, UUID_SIZE, (uint8_t *)&existing_glance,
                                    sizeof(existing_glance));
-  if ((rv == S_SUCCESS) && (serialized_glance->creation_time <= existing_glance.creation_time)) {
+  const time_t now = pbl_realtime();
+  if ((rv == S_SUCCESS) && (pbl_time_from_low32(serialized_glance->creation_time, now) <=
+                            pbl_time_from_low32(existing_glance.creation_time, now))) {
     PBL_LOG_WRN("Tried to insert AppGlanceDB entry with older creation_time (%" PRIu32
                 ")"
                 " than existing entry (%" PRIu32 ")",

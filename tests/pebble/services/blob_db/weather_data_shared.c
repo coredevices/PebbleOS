@@ -164,9 +164,13 @@ static void prv_initialize_entries(void) {
   }
 }
 
-void weather_shared_data_init(void) {
-  pbl_realtime_set(1461765790); // 2016-04-27T14:03:10+00:00
+void weather_shared_data_init_at(time_t now) {
+  pbl_realtime_set(now);
   prv_initialize_entries();
+}
+
+void weather_shared_data_init(void) {
+  weather_shared_data_init_at(1461765790); // 2016-04-27T14:03:10+00:00
 }
 
 void weather_shared_data_cleanup(void) {
