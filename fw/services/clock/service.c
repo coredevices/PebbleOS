@@ -1080,8 +1080,8 @@ void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_set(const struct pbl_shell *sh, size_t argc, char **argv) {
-  long val;
-  if (pbl_shell_strtol(argv[1], &val) != 0 || val == 0) {
+  long long val;
+  if (pbl_shell_strtoll(argv[1], &val) != 0 || val == 0) {
     pbl_shell_error(sh, "invalid timestamp '%s'", argv[1]);
     return -EINVAL;
   }
