@@ -917,10 +917,8 @@ void test_put_bytes__install_message_fw_and_sys_resources_boot_bits_set(void) {
   assert_ack_count(1);
   assert_nack_count(0);
 
-  // Finally, expect both boot bits to be set at once:
+  // Finally, expect the boot bit to be set:
   cl_assert_equal_i((s_boot_bits_orred & BOOT_BIT_NEW_FW_AVAILABLE), BOOT_BIT_NEW_FW_AVAILABLE);
-  cl_assert_equal_i((s_boot_bits_orred & BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE),
-                    BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

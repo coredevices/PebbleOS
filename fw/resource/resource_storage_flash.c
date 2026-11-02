@@ -13,7 +13,6 @@
 #include <pbl/util/size.h>
 
 #include <resource/resource_version.auto.h>
-#include <system/bootbits.h>
 
 static const SystemResourceBank s_resource_banks[] = {
   {
@@ -37,8 +36,6 @@ static bool s_valid_resources_found = false;
 const ResourceStoreImplementation g_system_bank_impl;
 
 static void resource_storage_system_bank_init(void) {
-  boot_bit_clear(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
-
   ResourceStoreEntry entry = {
     .id = 0, // resource id 0 means the store itself
     .impl = &g_system_bank_impl,

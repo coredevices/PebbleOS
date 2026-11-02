@@ -475,12 +475,6 @@ static void prv_finish_fw_update_if_completed(void) {
   s_ready_to_install[ObjectFirmware - 1].type = 0;
   s_ready_to_install[ObjectSysResources - 1].type = 0;
 
-  bool set_res_bit = true;
-
-  if (set_res_bit) {
-    boot_bit_set(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
-  }
-
   boot_bit_set(BOOT_BIT_NEW_FW_AVAILABLE);
 }
 
