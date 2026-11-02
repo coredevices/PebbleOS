@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PROFILER
+    bool "Profiler"
+    help
+      Cycle-counting profiler: named nodes accumulate the cycles spent
+      between their start and stop calls.
+
+if PROFILER
+
+config PROFILER_SHELL
+    bool "Shell commands"
+    default y
+    depends on SHELL
+    help
+      The profiler command: start, stop and log the stats.
+
+module = PROFILER
+module-str = Profiler
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

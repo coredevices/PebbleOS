@@ -3,13 +3,13 @@
 
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/profiler/profiler.h>
 
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window.h>
 #include <applib/ui/window_stack.h>
 #include <profile_mutexes.h>
-#include <system/profiler.h>
 
 static Window *window;
 static PBL_MUTEX_DEFINE(s_mutex);
@@ -17,8 +17,8 @@ static PBL_MUTEX_DEFINE(s_rmutex);
 
 static void profile_mutexes(void) {
   PBL_LOG_DBG("INITIALIZING PROFILER FOR MUTEXES!");
-  PROFILER_INIT;
-  PROFILER_START;
+  pbl_profiler_reset();
+  pbl_profiler_start();
 
   for (int i = 0; i < 10000; i++) {
     pbl_mutex_lock(&s_mutex, PBL_FOREVER);
@@ -32,8 +32,7 @@ static void profile_mutexes(void) {
     pbl_mutex_unlock(&s_rmutex);
   }
 
-  PROFILER_STOP;
-  PROFILER_PRINT_STATS;
+  pbl_profiler_print_stats();
 }
 
 static void s_main(void) {

@@ -12,6 +12,7 @@ bluetooth.md
 crc.md
 input.md
 logging.md
+profiler.md
 shell.md
 task_watchdog.md
 ```

@@ -9,7 +9,6 @@
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gtypes.h>
 #include <board/display.h>
-#include <system/profiler.h>
 
 volatile const int FrameBuffer_MaxX = DISP_COLS;
 volatile const int FrameBuffer_MaxY = DISP_ROWS;

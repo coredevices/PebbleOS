@@ -10,7 +10,6 @@
 #include <applib/ui/window.h>
 #include <profile_mutexes.h>
 #include <syscall/syscall.h>
-#include <system/profiler.h>
 
 static Window *window;
 static PBL_MUTEX_DEFINE(s_mutex);
