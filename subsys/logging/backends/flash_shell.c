@@ -15,6 +15,7 @@
 #include <pbl/services/time.h>
 #include <pbl/shell/shell.h>
 #include <pbl/util/byteorder.h>
+#include <pbl/util/time.h>
 
 #include <logging/logging_private.h>
 
@@ -29,9 +30,12 @@ static bool prv_dump_line_cb(uint8_t *msg, uint32_t total_length) {
   }
 
   message->message[message->message_length] = 0;
+  // Messages hold the low 32 bits of the time
+  const time_t timestamp =
+      pbl_time_from_time32((pbl_time32_t)pbl_be32_to_cpu(message->timestamp), pbl_realtime());
   pbl_shell_print(s_dump_sh, "%c %s %s:%d> %s", pbl_log_get_level_char(message->log_level),
-                  time_t_to_string(time_buffer, pbl_cpu_to_be32(message->timestamp)),
-                  message->filename, (int)pbl_cpu_to_be16(message->line_number), message->message);
+                  time_t_to_string(time_buffer, timestamp), message->filename,
+                  (int)pbl_cpu_to_be16(message->line_number), message->message);
   return true;
 }
 
