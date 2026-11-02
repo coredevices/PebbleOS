@@ -63,6 +63,13 @@ void posix_host_quit(void);
 //! Restarts the process, as a reset would the watch.
 void posix_host_reboot(void) __attribute__((noreturn));
 
+//! Number of words posix_host_retained() holds.
+#define POSIX_HOST_RETAINED_WORDS 16
+
+//! Words that survive posix_host_reboot(), as retained registers survive a reset. Zero in a newly
+//! started process.
+uint32_t *posix_host_retained(void);
+
 //! Microseconds on a monotonic clock.
 uint64_t posix_host_monotonic_us(void);
 

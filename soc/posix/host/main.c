@@ -22,6 +22,8 @@
 #define MAX_HOOKS   16
 #define POLL_MS     10
 
+#define RETAINED_ENV "PBL_POSIX_RETAINED"
+
 static const struct posix_host_option *s_options[MAX_OPTIONS];
 static size_t s_num_options;
 static const struct posix_host_hook *s_hooks[MAX_HOOKS];
@@ -32,6 +34,8 @@ static pthread_cond_t s_cond = PTHREAD_COND_INITIALIZER;
 static bool s_woken;
 static bool s_quit;
 static bool s_reboot;
+
+static uint32_t s_retained[POSIX_HOST_RETAINED_WORDS];
 
 static char **s_argv;
 static char s_exe_dir[PATH_MAX];
@@ -73,6 +77,36 @@ void posix_host_reboot(void) {
   for (;;) {
     pause();
   }
+}
+
+uint32_t *posix_host_retained(void) {
+  return s_retained;
+}
+
+// The restarted process gets the retained words through its environment.
+static void prv_retained_load(void) {
+  const char *value = getenv(RETAINED_ENV);
+  if (value == nullptr) {
+    return;
+  }
+
+  for (size_t i = 0; i < POSIX_HOST_RETAINED_WORDS && *value != '\0'; i++) {
+    char *end;
+    s_retained[i] = (uint32_t)strtoul(value, &end, 16);
+    value = (*end == ',') ? end + 1 : end;
+  }
+  unsetenv(RETAINED_ENV);
+}
+
+static void prv_retained_save(void) {
+  char value[POSIX_HOST_RETAINED_WORDS * 9];
+  size_t len = 0;
+
+  for (size_t i = 0; i < POSIX_HOST_RETAINED_WORDS; i++) {
+    len += (size_t)snprintf(&value[len], sizeof(value) - len, "%s%x", (i > 0) ? "," : "",
+                            s_retained[i]);
+  }
+  setenv(RETAINED_ENV, value, 1);
 }
 
 uint64_t posix_host_monotonic_us(void) {
@@ -167,6 +201,7 @@ int main(int argc, char **argv) {
   }
 
   prv_parse_options(argc, argv);
+  prv_retained_load();
 
   for (size_t i = 0; i < s_num_hooks; i++) {
     if (s_hooks[i]->init != nullptr) {
@@ -196,6 +231,7 @@ int main(int argc, char **argv) {
 
   if (s_reboot) {
     fprintf(stderr, "\n*** reboot ***\n\n");
+    prv_retained_save();
 #ifdef __EMSCRIPTEN__
     emscripten_run_script("location.reload()");
 #endif

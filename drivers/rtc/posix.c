@@ -6,26 +6,24 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/services/time.h>
 
+#include <posix_host.h>
 #include <sys/time.h>
 
 // Wall time follows the host clock, plus whatever offset the firmware sets.
 
-#define NUM_BACKUP_REGS 16
-
 static int64_t s_offset_s;
-static uint32_t s_backup[NUM_BACKUP_REGS];
 static struct timeval s_boot;
 static TimezoneInfo s_tzinfo;
 static bool s_tz_set;
 
 void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value) {
-  if (reg_id < NUM_BACKUP_REGS) {
-    s_backup[reg_id] = value;
+  if (reg_id < POSIX_HOST_RETAINED_WORDS) {
+    posix_host_retained()[reg_id] = value;
   }
 }
 
 uint32_t RTC_ReadBackupRegister(uint32_t reg_id) {
-  return reg_id < NUM_BACKUP_REGS ? s_backup[reg_id] : 0;
+  return reg_id < POSIX_HOST_RETAINED_WORDS ? posix_host_retained()[reg_id] : 0;
 }
 
 void rtc_init(void) {
