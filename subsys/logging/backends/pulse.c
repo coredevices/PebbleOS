@@ -223,27 +223,6 @@ void pulse_logging_log_sync(uint8_t log_level, const char *src_filename, uint16_
   prv_send_pulse_packet(log_level, src_filename, src_line_number, message);
 }
 
-void *pulse_logging_log_sync_begin(uint8_t log_level, const char *src_filename,
-                                   uint16_t src_line_number) {
-  MessageContents *contents = pulse_push_send_begin(PULSE_PROTOCOL_LOGGING);
-  prv_serialize_log_header(contents, log_level, prv_get_timestamp_ms(), pebble_task_get_current(),
-                           src_filename, src_line_number);
-  contents->message[0] = '\0';
-  return contents;
-}
-
-void pulse_logging_log_sync_append(void *ctx, const char *message) {
-  MessageContents *contents = ctx;
-  strncat(contents->message, message, sizeof(contents->message) - strlen(contents->message) - 1);
-}
-
-void pulse_logging_log_sync_send(void *ctx) {
-  MessageContents *contents = ctx;
-  size_t payload_length =
-      MIN(sizeof(MessageContents), offsetof(MessageContents, message) + strlen(contents->message));
-  pulse_push_send(contents, payload_length);
-}
-
 static void prv_backend_init(const struct pbl_log_backend *backend) {
   pulse_logging_init();
 }
