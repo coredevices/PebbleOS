@@ -47,10 +47,6 @@ bool PBL_WEAK activity_prefs_spo2_is_enabled(void) {
   return false;
 }
 
-bool PBL_WEAK activity_prefs_spo2_activity_tracking_is_enabled(void) {
-  return false;
-}
-
 PBL_WEAK bool activity_get_metric_typical(ActivityMetric metric, enum pbl_weekday day,
                                           int32_t *value_out) {
   return false;

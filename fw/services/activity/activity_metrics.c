@@ -634,7 +634,6 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
     // Save the BPM, quality, and update time (UTC) of the last reading for activity_get_metric()
     state->hr.metrics.current_bpm = hrm_event->bpm.bpm;
     state->hr.metrics.current_quality = hrm_event->bpm.quality;
-    state->hr.metrics.current_confidence = hrm_event->bpm.confidence;
     state->hr.metrics.current_update_time_utc = now_utc;
   }
   pbl_mutex_unlock(&state->mutex);

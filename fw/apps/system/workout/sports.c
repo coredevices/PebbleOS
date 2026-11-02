@@ -232,8 +232,6 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
     case WorkoutMetricType_AvgCadence:
     case WorkoutMetricType_ActiveCalories:
     case WorkoutMetricType_AvgHr:
-    case WorkoutMetricType_SpO2:
-    case WorkoutMetricType_SpO2Min:
     case WorkoutMetricType_HrZone0Time:
     case WorkoutMetricType_HrZone1Time:
     case WorkoutMetricType_HrZone2Time:

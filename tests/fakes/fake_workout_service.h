@@ -23,7 +23,6 @@ void workout_service_set_active_kcalories(int32_t active);
 
 void workout_service_set_avg_hr(int32_t bpm);
 void workout_service_set_hr_samples(int32_t samples);
-void workout_service_set_spo2(int32_t last_pct, int32_t min_pct, bool measuring);
 void workout_service_set_hr_zone_time(const int32_t *hr_zone_time_s);
 
 bool workout_service_get_current_workout_type(ActivitySessionType *type_out);

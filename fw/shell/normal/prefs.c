@@ -2232,17 +2232,6 @@ void activity_prefs_set_spo2_enabled(bool enabled) {
   }
 }
 
-bool activity_prefs_spo2_activity_tracking_is_enabled(void) {
-  return s_activity_spo2_preferences.activity_tracking_enabled;
-}
-
-void activity_prefs_set_spo2_activity_tracking_enabled(bool enabled) {
-  if (s_activity_spo2_preferences.activity_tracking_enabled != enabled) {
-    s_activity_spo2_preferences.activity_tracking_enabled = enabled;
-    prv_activity_spo2_prefs_store();
-  }
-}
-
 HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void) {
   uint8_t interval = s_activity_spo2_preferences.measurement_interval;
   if (interval >= HRMonitoringIntervalCount) {

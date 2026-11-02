@@ -17,9 +17,6 @@ typedef enum {
   WorkoutMetricType_AvgCadence,
   WorkoutMetricType_ActiveCalories,
   WorkoutMetricType_AvgHr,
-  //! Percent, 0 before the first reading and -1 while one is in progress.
-  WorkoutMetricType_SpO2,
-  WorkoutMetricType_SpO2Min,
   WorkoutMetricType_HrZone0Time,
   WorkoutMetricType_HrZone1Time,
   WorkoutMetricType_HrZone2Time,

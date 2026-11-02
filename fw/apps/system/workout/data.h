@@ -19,9 +19,6 @@ typedef struct WorkoutData {
   int32_t hr_samples;
   int32_t active_kcal;
   int32_t avg_bpm;
-  int32_t spo2;
-  int32_t spo2_min;
-  bool spo2_measuring;
   int32_t hr_zone_time_s[HRZoneCount];
   HRZone hr_zone;
 } WorkoutData;
