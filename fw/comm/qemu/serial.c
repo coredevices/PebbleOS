@@ -30,7 +30,6 @@
 #include <popups/timeline/peek.h>
 #include <process_management/app_manager.h>
 #include <shell/system_theme.h>
-#include <system/hexdump.h>
 
 static void prv_uart_rx(const struct pbl_uart *uart, uint8_t byte, void *arg);
 
@@ -345,7 +344,7 @@ static void prv_uart_rx(const struct pbl_uart *uart, uint8_t byte, void *arg) {
 // -----------------------------------------------------------------------------------------
 static void prv_send(const uint8_t *data, uint32_t len) {
   PBL_LOG_VERBOSE("Sending data:");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, len);
+  PBL_LOG_HEXDUMP_VERBOSE(data, len);
 
   while (len--) {
     pbl_uart_poll_out(QEMU_UART, *data++);

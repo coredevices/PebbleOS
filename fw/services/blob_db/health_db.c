@@ -17,8 +17,6 @@
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
-#include <system/hexdump.h>
-
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define HEALTH_DB_DEBUG       0
@@ -311,7 +309,7 @@ void health_db_init(void) {
 status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!prv_key_is_valid(key, key_len)) {
     PBL_LOG_ERR("Invalid health db key");
-    PBL_HEXDUMP(LOG_LEVEL_ERROR, key, key_len);
+    PBL_LOG_HEXDUMP_ERR(key, key_len);
     return E_INVALID_ARGUMENT;
   } else if (!prv_value_is_valid(key, key_len, val, val_len)) {
     PBL_LOG_ERR("Invalid health db value. Length %d", val_len);
@@ -320,9 +318,9 @@ status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, i
 
 #if HEALTH_DB_DEBUG
   PBL_LOG_DBG("New health db entry key:");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, key, key_len);
+  PBL_LOG_HEXDUMP_DBG(key, key_len);
   PBL_LOG_DBG("val: ");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, val, val_len);
+  PBL_LOG_HEXDUMP_DBG(val, val_len);
 #endif
 
   // Only store typicals / averages in this settings file. "Current" values are stored in the

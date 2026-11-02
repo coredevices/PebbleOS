@@ -22,7 +22,7 @@ pbl_clar_test(test_language_pack_protocol
 pbl_clar_test(test_pfs
   MODULES pfs
   SOURCES
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_rtc.c
   PLATFORMS emery
   DEFINES DUMA_DISABLED

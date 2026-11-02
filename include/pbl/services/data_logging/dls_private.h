@@ -18,7 +18,6 @@
 #include <applib/data_logging.h>
 #include <flash_region/flash_region.h>
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 
 /**
  * @defgroup services_data_logging_dls_private Data logging internals

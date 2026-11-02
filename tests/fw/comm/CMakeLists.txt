@@ -139,7 +139,7 @@ pbl_clar_test(test_ppogatt_v0
   MODULES rand
   SOURCES
     fw/services/clock/time.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
     tests/fakes/fake_gatt_client_operations.c
@@ -153,7 +153,7 @@ pbl_clar_test(test_ppogatt_v1
   MODULES rand
   SOURCES
     fw/services/clock/time.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
     tests/fakes/fake_gatt_client_operations.c
@@ -166,7 +166,7 @@ pbl_clar_test(test_ppogatt_reversed
   MODULES rand
   SOURCES
     fw/services/clock/time.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
     fw/services/regular_timer/service.c
     tests/fakes/fake_gatt_client_operations.c

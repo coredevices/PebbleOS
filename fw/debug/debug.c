@@ -19,7 +19,6 @@
 #include <logging/logging_private.h>
 #include <mfg/mfg_serials.h>
 #include <process_management/app_manager.h>
-#include <system/hexdump.h>
 #include <system/reboot_reason.h>
 #include <system/version.h>
 
@@ -196,7 +195,7 @@ void debug_print_last_launched_app(void) {
 
     if (result == GET_APP_INFO_SUCCESS) {
       PBL_LOG_INFO("Last launched app: %s", last_launched_app.name);
-      PBL_HEXDUMP(LOG_LEVEL_INFO, build_id, sizeof(build_id));
+      PBL_LOG_HEXDUMP_INFO(build_id, sizeof(build_id));
     }
   }
 }

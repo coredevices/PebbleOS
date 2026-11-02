@@ -24,7 +24,6 @@
 #include <kernel/events.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
 
@@ -35,9 +34,9 @@ PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
   do {                               \
     PBL_LOG_DBG(fmt, ##__VA_ARGS__); \
   } while (0)
-#define HRM_HEXDUMP(data, length)                          \
-  do {                                                     \
-    PBL_HEXDUMP(LOG_LEVEL_DEBUG, (uint8_t *)data, length); \
+#define HRM_HEXDUMP(data, length)                 \
+  do {                                            \
+    PBL_LOG_HEXDUMP_DBG((uint8_t *)data, length); \
   } while (0)
 #else
 #define HRM_LOG(fmt, ...)

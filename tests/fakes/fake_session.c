@@ -15,7 +15,6 @@
 #include <clar_asserts.h>
 #include <comm/bt_lock.h>
 #include <kernel/pbl_malloc.h>
-#include <system/hexdump.h>
 
 extern void fake_system_task_callbacks_invoke_pending(void);
 
@@ -94,7 +93,7 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
 void comm_session_receive_router_write(CommSession *session, const uint8_t *received_data,
                                        size_t num_bytes_to_copy) {
   PBL_LOG_DBG("Received Data:");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, received_data, num_bytes_to_copy);
+  PBL_LOG_HEXDUMP_DBG(received_data, num_bytes_to_copy);
 }
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
@@ -346,7 +345,7 @@ static void prv_fake_transport_send_next(Transport *transport) {
     } else {
       PBL_LOG_DBG("Sending Data to PP endpoint %u (0x%x):", pp_header.endpoint_id,
                   pp_header.endpoint_id);
-      PBL_HEXDUMP(LOG_LEVEL_DEBUG, buffer, pp_header.length);
+      PBL_LOG_HEXDUMP_DBG(buffer, pp_header.length);
 
       DataNode *data_node = kernel_malloc(sizeof(DataNode) + pp_header.length);
       list_init(&data_node->node);

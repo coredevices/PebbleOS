@@ -11,7 +11,7 @@ pbl_clar_test(test_workout_summary
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -61,7 +61,7 @@ set(workout_active_args
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -117,7 +117,7 @@ pbl_clar_test(test_workout_dialog
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c

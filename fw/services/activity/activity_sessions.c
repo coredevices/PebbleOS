@@ -638,8 +638,7 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
       // NOTE: We check for full validity as well as we can (rather than just checking for a
       // non-null activity start time for example) because there have been cases where
       // flash got corrupted.
-      PBL_HEXDUMP(LOG_LEVEL_INFO, (void *)state->activity_sessions,
-                  sizeof(state->activity_sessions));
+      PBL_LOG_HEXDUMP_INFO((void *)state->activity_sessions, sizeof(state->activity_sessions));
       PBL_LOG_ERR("Invalid activity session detected - could be flash corruption");
 
       // Zero out flash so that we don't get into a reboot loop

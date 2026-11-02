@@ -99,7 +99,7 @@ the repository root:
 pbl_clar_test(test_pfs
   MODULES pfs
   SOURCES
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

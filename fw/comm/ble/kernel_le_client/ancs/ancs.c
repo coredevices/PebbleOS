@@ -27,7 +27,6 @@
 #include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -731,7 +730,7 @@ static void prv_reassemble_ds_notification(uint32_t length, const uint8_t *data)
   const bool is_complete = prv_reassembly_is_complete(response_data, response_length, &parse_error);
 
   if (parse_error) {
-    PBL_HEXDUMP(LOG_LEVEL_INFO, response_data, response_length);
+    PBL_LOG_HEXDUMP_INFO(response_data, response_length);
     prv_reset_due_to_parse_error();
     return;
   }
@@ -1058,7 +1057,7 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
   PBL_LOG_VERBOSE("> CategoryID: <%d>", nsnotification->category_id);
   PBL_LOG_VERBOSE("> CategoryCount: <%d>", nsnotification->category_count);
   PBL_LOG_VERBOSE("> NotificationUID: <%" PRIu32 ">", nsnotification->uid);
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, (uint8_t *)nsnotification, sizeof(NSNotification));
+  PBL_LOG_HEXDUMP_VERBOSE((uint8_t *)nsnotification, sizeof(NSNotification));
 
   // Handle the CategoryID
   if (nsnotification->category_id == CategoryIDMissedCall) {
@@ -1195,7 +1194,7 @@ static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size)
   const enum pbl_bt_errno error = gatt_client_op_write(cp, (const uint8_t *)cmd, size);
 
   PBL_LOG_DBG("Writing to control point:");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, (const uint8_t *)cmd, size);
+  PBL_LOG_HEXDUMP_DBG((const uint8_t *)cmd, size);
 
   if (error != PBL_BT_ERRNO_OK) {
     PBL_LOG_DBG("Control point write error: %d", error);

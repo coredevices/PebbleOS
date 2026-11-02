@@ -25,7 +25,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -368,7 +367,7 @@ static void prv_handle_player_playback_info_update(const AMSEntityUpdateNotifica
     music_update_player_playback_state(&state);
   } else {
     PBL_LOG_ERR("Expected CSV with 3 values:");
-    PBL_HEXDUMP(LOG_LEVEL_ERROR, (const uint8_t *)update->value_str, value_length);
+    PBL_LOG_HEXDUMP_ERR((const uint8_t *)update->value_str, value_length);
   }
 }
 
@@ -376,7 +375,7 @@ static bool prv_float_string_parse(const char *value, const uint16_t value_lengt
                                    int32_t multiplier, int32_t *value_in_out) {
   if (value_length && !ams_util_float_string_parse(value, value_length, multiplier, value_in_out)) {
     PBL_LOG_ERR("AMS float failed to parse:");
-    PBL_HEXDUMP(LOG_LEVEL_ERROR, (const uint8_t *)value, value_length);
+    PBL_LOG_HEXDUMP_ERR((const uint8_t *)value, value_length);
     return false;
   }
   return true;

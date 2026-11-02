@@ -17,7 +17,6 @@
 
 #include <bf0_hal.h>
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 
 // NOTE: transport.h needs os_mbuf.h to be included first
 // clang-format off
@@ -138,7 +137,7 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   }
 
   PBL_LOG_DBG("%s, %s %" PRIu16, type_str, (h4tl_packet == H4TL_PACKET_HOST) ? "TX" : "RX", len);
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, len);
+  PBL_LOG_HEXDUMP_DBG(data, len);
 }
 #elif defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
 void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {

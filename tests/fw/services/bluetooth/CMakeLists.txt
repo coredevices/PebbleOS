@@ -27,7 +27,7 @@ pbl_clar_test(test_bluetooth_persistent_storage
   MODULES settings
   SOURCES
     fw/services/bluetooth/bluetooth_persistent_storage_normal.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_shared_prf_storage.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c

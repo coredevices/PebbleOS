@@ -9,7 +9,7 @@ pbl_clar_test(test_health_card_view
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -58,7 +58,7 @@ pbl_clar_test(test_health_activity_summary_card
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -101,7 +101,7 @@ pbl_clar_test(test_health_sleep_summary_card
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -144,7 +144,7 @@ pbl_clar_test(test_health_hr_summary_card
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -188,7 +188,7 @@ pbl_clar_test(test_health_activity_detail_card
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -230,7 +230,7 @@ pbl_clar_test(test_health_sleep_detail_card
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -272,7 +272,7 @@ pbl_clar_test(test_health_hr_detail_card
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
@@ -315,7 +315,7 @@ pbl_clar_test(test_health_detail_card
     fw/applib/ui/layer.c
     fw/applib/ui/menu_layer_system_cells.c
     fw/shell/system_theme_style.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c

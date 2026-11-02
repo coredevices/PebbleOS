@@ -25,7 +25,6 @@
 #include <flash_region/filesystem_regions.h>
 #include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DEFINE(service_filesystem, CONFIG_SERVICE_FILESYSTEM_LOG_LEVEL);
 
@@ -2153,7 +2152,7 @@ void pfs_debug_dump(int fd, int num_bytes) {
     goto cleanup;
   }
 
-  PBL_HEXDUMP_D_SERIAL(LOG_LEVEL_DEBUG, bytes, num_bytes);
+  PBL_LOG_HEXDUMP_DBG(bytes, num_bytes);
 cleanup:
   kernel_free(bytes);
 }
