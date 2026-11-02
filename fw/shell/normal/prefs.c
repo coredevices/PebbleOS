@@ -273,7 +273,8 @@ static uint8_t s_welcome_version = 0;
 static ActivitySettings s_activity_preferences = ACTIVITY_DEFAULT_PREFERENCES;
 
 #define PREF_KEY_ACTIVITY_ACTIVATED_TIMESTAMP "activityActivated"
-static time_t s_activity_activation_timestamp = 0;
+// Stored on flash as 32 bits.
+static uint32_t s_activity_activation_timestamp = 0;
 
 #define PREF_KEY_ACTIVITY_ACTIVATION_DELAY_INSIGHT "activityActivationDelayInsights"
 static uint32_t s_activity_activation_delay_insight = 0;
@@ -773,7 +774,7 @@ static bool prv_set_s_activity_preferences(ActivitySettings *new_settings) {
   return !invalid_data;
 }
 
-static bool prv_set_s_activity_activation_timestamp(time_t *timestamp) {
+static bool prv_set_s_activity_activation_timestamp(uint32_t *timestamp) {
   s_activity_activation_timestamp = *timestamp;
   return true;
 }

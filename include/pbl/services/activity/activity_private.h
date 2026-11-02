@@ -220,9 +220,9 @@ typedef enum {
   /** Unused. */
   ActivitySettingsKeyUnused5,
 
-  /** time_t: last time the sleep reward was shown, 0 if never. */
+  /** uint32_t: last time the sleep reward was shown, 0 if never. */
   ActivitySettingsKeyInsightSleepRewardTime,
-  /** time_t: last time the activity reward was shown, 0 if never. */
+  /** uint32_t: last time the activity reward was shown, 0 if never. */
   ActivitySettingsKeyInsightActivityRewardTime,
   /** SummaryPinLastState: UUID and last time the activity summary pin was added. */
   ActivitySettingsKeyInsightActivitySummaryState,
@@ -232,17 +232,17 @@ typedef enum {
   ActivitySettingsKeyRestingKCaloriesHistory,
   /** Active kcal (@ref ActivitySettingsValueHistory). */
   ActivitySettingsKeyActiveKCaloriesHistory,
-  /** time_t: UTC time of the last sleep activity logged to analytics. */
+  /** uint32_t: UTC time of the last sleep activity logged to analytics. */
   ActivitySettingsKeyLastSleepActivityUTC,
-  /** time_t: UTC time of the last restful sleep activity logged to analytics. */
+  /** uint32_t: UTC time of the last restful sleep activity logged to analytics. */
   ActivitySettingsKeyLastRestfulSleepActivityUTC,
-  /** time_t: UTC time of the last step activity logged to analytics. */
+  /** uint32_t: UTC time of the last step activity logged to analytics. */
   ActivitySettingsKeyLastStepActivityUTC,
   /** @ref ActivitySession[@ref ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT]: stored sessions. */
   ActivitySettingsKeyStoredActivities,
-  /** time_t: last time the nap pin was shown. */
+  /** uint32_t: last time the nap pin was shown. */
   ActivitySettingsKeyInsightNapSessionTime,
-  /** time_t: last time the activity session pin was shown. */
+  /** uint32_t: last time the activity session pin was shown. */
   ActivitySettingsKeyInsightActivitySessionTime,
   /** VMC of the last processed minute (@ref ActivityScalarStore). */
   ActivitySettingsKeyLastVMC,
@@ -570,12 +570,13 @@ typedef struct {
 
   // Exit time for the last sleep/step activities we logged. Used to prevent logging the same event
   // more than once.
+  // Stored in the settings file as 32 bits.
   /** End time of the last logged sleep activity, UTC. */
-  time_t logged_sleep_activity_exit_at_utc;
+  uint32_t logged_sleep_activity_exit_at_utc;
   /** End time of the last logged restful sleep activity, UTC. */
-  time_t logged_restful_sleep_activity_exit_at_utc;
+  uint32_t logged_restful_sleep_activity_exit_at_utc;
   /** End time of the last logged step activity, UTC. */
-  time_t logged_step_activity_exit_at_utc;
+  uint32_t logged_step_activity_exit_at_utc;
 
   /** Data logging session for activity sessions. */
   DataLoggingSession *activity_dls_session;
