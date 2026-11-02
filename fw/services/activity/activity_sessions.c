@@ -498,7 +498,7 @@ static void prv_log_activities(time_t now_utc) {
   // List of event classes and info on each
   typedef struct {
     ActivitySettingsKey key; // settings key used to store last UTC time for this activity class
-    time_t *exit_utc;        // pointer to last UTC time in our globals
+    uint32_t *exit_utc;      // pointer to last UTC time in our globals
     bool modified;           // true if we need to update it.
   } ActivityClassParams;
 
@@ -517,7 +517,7 @@ static void prv_log_activities(time_t now_utc) {
   // would mark every new session as already logged. Reset them; the phone dedups re-sent ones.
   for (int i = 0; i < ActivityClassCount; i++) {
     ActivityClassParams *params = &class_settings[i];
-    if (*params->exit_utc > now_utc) {
+    if ((time_t)*params->exit_utc > now_utc) {
       PBL_LOG_WRN("Last logged activity exit time in the future, resetting");
       *params->exit_utc = 0;
       params->modified = true;
@@ -561,7 +561,7 @@ static void prv_log_activities(time_t now_utc) {
     PBL_ASSERTN(params);
 
     // If this is an event we already logged, or it's still ongoing, don't log it
-    if (session->ongoing || (session_exit_utc <= *params->exit_utc)) {
+    if (session->ongoing || (session_exit_utc <= (time_t)*params->exit_utc)) {
       continue;
     }
 
