@@ -47,11 +47,19 @@
  */
 #define ChkMul(dest, src1, src2) (src1 ? (dest / src1 != src2) : 0)
 
-#define _BASE_YEAR        70L
-#define _LEAP_YEAR_ADJUST 17L // leap years between 1900 and 1970
+#define _BASE_YEAR 70L
 // Years since 1900, minus one, up to which tm_year is accepted: 2039 for a 32-bit time_t
-// (overflow checks catch the rest), otherwise 2099, the last year the leap rule below holds.
-#define _MAX_YEAR (sizeof(time_t) > 4 ? 198L : 138L)
+// (overflow checks catch the rest), otherwise 9999.
+#define _MAX_YEAR (sizeof(time_t) > 4 ? 8098L : 138L)
+// Results allowed with a 64-bit time_t: the years 1969 to 9999, plus a day either way for the
+// zone offset. Out of range fields, like a huge tm_mday, can reach past them.
+#define _MIN_TIME (-31536000LL - 86400LL)
+#define _MAX_TIME (253402300799LL + 86400LL)
+
+// Leap years from year 1 through year y.
+static time_t prv_leap_years_through(time_t y) {
+  return y / 4 - y / 100 + y / 400;
+}
 
 time_t pbl_mktime(struct pbl_tm *tb) {
   const int16_t _days[] = {-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333, 364};
@@ -94,7 +102,7 @@ time_t pbl_mktime(struct pbl_tm *tb) {
    * month. Check for leap year and adjust if necessary.
    */
   tmptm2 = _days[tb->tm_mon];
-  if (!(tmptm1 & 3) && (tb->tm_mon > 1))
+  if (pbl_time_is_leap_year(tmptm1 + PBL_TM_YEAR_ORIGIN) && (tb->tm_mon > 1))
     tmptm2++;
 
   /*
@@ -105,7 +113,8 @@ time_t pbl_mktime(struct pbl_tm *tb) {
    * each elapsed leap year. no danger of overflow because of the range
    * check (above) on tmptm1.
    */
-  tmptm3 = (tmptm1 - _BASE_YEAR) * 365L + ((tmptm1 - 1L) >> 2) - _LEAP_YEAR_ADJUST;
+  tmptm3 = (tmptm1 - _BASE_YEAR) * 365L + prv_leap_years_through(tmptm1 + PBL_TM_YEAR_ORIGIN - 1) -
+           prv_leap_years_through(_BASE_YEAR + PBL_TM_YEAR_ORIGIN - 1);
 
   /*
    * elapsed days to current month (still no possible overflow)
@@ -168,6 +177,10 @@ time_t pbl_mktime(struct pbl_tm *tb) {
    */
 
   tmptm1 -= tb->tm_gmtoff;
+
+  const int64_t result = tmptm1;
+  if (result < _MIN_TIME || result > _MAX_TIME)
+    goto err_mktime;
 
   /*
    * Convert this second count back into a time block structure.

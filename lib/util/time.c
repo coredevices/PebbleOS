@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <limits.h>
+
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
@@ -46,16 +48,15 @@ int pbl_time_minute_of_day_adjust(int minute, int delta) {
   return minute;
 }
 
+// Every 400 years have the same number of days
+#define DAYS_PER_400_YEARS 146097
+
 void pbl_time_breakdown(time_t t, struct pbl_tm *tm) {
-  int32_t days = t / PBL_SEC_PER_DAY;
-  int32_t rem = t % PBL_SEC_PER_DAY;
-  while (rem < 0) {
+  int64_t days = (int64_t)t / PBL_SEC_PER_DAY;
+  int32_t rem = (int32_t)((int64_t)t % PBL_SEC_PER_DAY);
+  if (rem < 0) {
     rem += PBL_SEC_PER_DAY;
     --days;
-  }
-  while (rem >= PBL_SEC_PER_DAY) {
-    rem -= PBL_SEC_PER_DAY;
-    ++days;
   }
 
   tm->tm_hour = (int)(rem / PBL_SEC_PER_HOUR);
@@ -63,31 +64,32 @@ void pbl_time_breakdown(time_t t, struct pbl_tm *tm) {
   tm->tm_min = (int)(rem / PBL_SEC_PER_MIN);
   tm->tm_sec = (int)(rem % PBL_SEC_PER_MIN);
 
-  if ((tm->tm_wday = ((PBL_EPOCH_WDAY + days) % PBL_DAY_PER_WEEK)) < 0) {
+  if ((tm->tm_wday = (int)((PBL_EPOCH_WDAY + days) % PBL_DAY_PER_WEEK)) < 0) {
     tm->tm_wday += PBL_DAY_PER_WEEK;
   }
 
-  int y = PBL_EPOCH_YEAR;
+  // Skip whole 400-year cycles, so far off times don't walk year by year
+  int64_t cycles = days / DAYS_PER_400_YEARS;
+  days -= cycles * DAYS_PER_400_YEARS;
+  if (days < 0) {
+    days += DAYS_PER_400_YEARS;
+    --cycles;
+  }
+  int64_t y = PBL_EPOCH_YEAR + cycles * 400;
   int yleap;
-  if (days >= 0) {
-    for (;;) {
-      yleap = pbl_time_is_leap_year(y);
-      if (days < s_year_lengths[yleap]) {
-        break;
-      }
-      y++;
-      days -= s_year_lengths[yleap];
+  for (;;) {
+    yleap = pbl_time_is_leap_year((int)(y % 400));
+    if (days < s_year_lengths[yleap]) {
+      break;
     }
-  } else {
-    do {
-      --y;
-      yleap = pbl_time_is_leap_year(y);
-      days += s_year_lengths[yleap];
-    } while (days < 0);
+    y++;
+    days -= s_year_lengths[yleap];
   }
 
-  tm->tm_year = y - PBL_TM_YEAR_ORIGIN;
-  tm->tm_yday = days;
+  // Clamp years an int can't hold
+  y -= PBL_TM_YEAR_ORIGIN;
+  tm->tm_year = (y > INT_MAX) ? INT_MAX : (y < INT_MIN) ? INT_MIN : (int)y;
+  tm->tm_yday = (int)days;
   const uint8_t *ip = s_mon_lengths[yleap];
   for (tm->tm_mon = 0; days >= ip[tm->tm_mon]; ++tm->tm_mon) {
     days -= ip[tm->tm_mon];
