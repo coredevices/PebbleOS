@@ -91,14 +91,16 @@ extern const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops;
  * @param _pinctrl Panel interface pins, from PBL_PINCTRL().
  * @param _discharge Pins driven low while the panel is power cycled, or NULL.
  * @param _num_discharge Number of @p _discharge pins.
+ * @param ... Other mounting properties, as for PBL_DISPLAY_INIT().
  */
 #define PBL_DISPLAY_SF32LB_LCDC_DEFINE(sym, _name, _base, _irqn, _clk, _rst, _panel, _width,     \
-                                       _height, _rotated, _pinctrl, _discharge, _num_discharge)  \
+                                       _height, _rotated, _pinctrl, _discharge, _num_discharge,  \
+                                       ...)                                                      \
   PBL_DISPLAY_STATE_DEFINE(sym);                                                                 \
   static struct pbl_display_sf32lb_lcdc_state sym##_lcdc_state;                                  \
   const struct pbl_display_sf32lb_lcdc sym = {                                                   \
     .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sf32lb_lcdc_ops, nullptr, _width, _height, \
-                             PBL_DISPLAY_FORMAT_ARGB2222, _rotated),                             \
+                             PBL_DISPLAY_FORMAT_ARGB2222, _rotated, __VA_ARGS__),                \
     .state = &sym##_lcdc_state,                                                                  \
     .base = (_base),                                                                             \
     .irqn = (_irqn),                                                                             \
