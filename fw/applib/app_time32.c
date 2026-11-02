@@ -1,12 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-// App ABI versions of time syscalls apps call directly.
+// 32-bit versions of time syscalls apps call directly.
 
-#include <pbl/services/clock.h>
-
-#include <applib/pbl_std/pbl_std.h>
-#include <syscall/syscall.h>
+#include <applib/app_time32.h>
 
 pbl_time32_t time_start_of_today_time32(void) {
   return pbl_time_to_time32(sys_time_start_of_today());

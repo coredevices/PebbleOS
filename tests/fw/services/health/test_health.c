@@ -6,6 +6,7 @@
 #include <pbl/services/activity/activity.h>
 #include <pbl/util/size.h>
 
+#include <applib/app_time32.h>
 #include <applib/health_service_private.h>
 #include <clar.h>
 #include <shell/prefs_syscalls.h>
@@ -185,7 +186,8 @@ typedef struct {
 static sys_activity_get_step_averages_values s_sys_activity_get_step_averages_values_weekday;
 static sys_activity_get_step_averages_values s_sys_activity_get_step_averages_values_weekend;
 
-bool sys_activity_get_step_averages(uint16_t day_of_week, ActivityMetricAverages *averages) {
+bool sys_activity_get_step_averages(enum pbl_weekday day_of_week,
+                                    ActivityMetricAverages *averages) {
   cl_assert(averages);
   if (day_of_week == PBL_SUNDAY || day_of_week == PBL_SATURDAY) {
     s_sys_activity_get_step_averages_values_weekend.in.day_of_week = day_of_week;
@@ -211,8 +213,7 @@ static HealthActivityCBData s_prv_activity_cb__args[100];
 static uint32_t s_prv_activity_cb__call_count;
 static uint32_t s_prv_activity_cb__false_at_call_no = UINT32_MAX;
 
-bool prv_activity_cb(HealthActivity activity, pbl_time32_t time_start, pbl_time32_t time_end,
-                     void *context) {
+bool prv_activity_cb(HealthActivity activity, time_t time_start, time_t time_end, void *context) {
   s_prv_activity_cb__args[s_prv_activity_cb__call_count] = (HealthActivityCBData){
     .activity = activity,
     .time_start = time_start,
@@ -1046,8 +1047,8 @@ void test_health__get_minute_history_edge_case_args(void) {
   uint32_t written;
 
   // null pointer
-  pbl_time32_t time_start = now - 10 * 60 - 30;
-  pbl_time32_t time_end = now - 20;
+  time_t time_start = now - 10 * 60 - 30;
+  time_t time_end = now - 20;
   written = health_service_get_minute_history(nullptr, ARRAY_LENGTH(data), &time_start, &time_end);
   cl_assert_equal_i(0, written);
 
@@ -1060,7 +1061,7 @@ void test_health__get_minute_history_edge_case_args(void) {
   cl_assert_equal_i(0, written);
 
   // empty end before start
-  pbl_time32_t early_end = time_start - 20 * PBL_SEC_PER_MIN;
+  time_t early_end = time_start - 20 * PBL_SEC_PER_MIN;
   written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &early_end);
   cl_assert_equal_i(0, written);
 
@@ -1094,8 +1095,8 @@ void test_health__get_minute_history(void) {
   };
 
   // pass time that's not exactly on a boundary
-  pbl_time32_t time_start = now - 10 * PBL_SEC_PER_MIN - 30;
-  pbl_time32_t time_end = now - 20;
+  time_t time_start = now - 10 * PBL_SEC_PER_MIN - 30;
+  time_t time_end = now - 20;
   written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
   cl_assert_equal_i(3, written);
   cl_assert_equal_i(now - 10 * PBL_SEC_PER_MIN, time_start);
@@ -1118,8 +1119,8 @@ void test_health__get_minute_history_respects_time_end(void) {
   HealthMinuteData data[5] = {};
 
   // pass time that's not exactly on a boundary
-  pbl_time32_t time_start;
-  pbl_time32_t time_end;
+  time_t time_start;
+  time_t time_end;
 
   ////////////
   // start time on boundary
@@ -1780,4 +1781,81 @@ void test_health__metric_alert_registration(void) {
   // Should be able to register another now
   alert = health_service_register_metric_alert(HealthMetricHeartRateBPM, 65);
   cl_assert(alert != nullptr);
+}
+
+static uint32_t s_prv_activity_cb32__call_count;
+static pbl_time32_t s_prv_activity_cb32__start;
+static pbl_time32_t s_prv_activity_cb32__end;
+
+static bool prv_activity_cb32(HealthActivity activity, pbl_time32_t time_start,
+                              pbl_time32_t time_end, void *context) {
+  s_prv_activity_cb32__call_count++;
+  s_prv_activity_cb32__start = time_start;
+  s_prv_activity_cb32__end = time_end;
+  return true;
+}
+
+void test_health__activities_iterate_time32(void) {
+  const time_t now = rtc_get_time();
+  s_sys_activity_get_sessions_values.out.result = true;
+  s_sys_activity_get_sessions_values.out.num_sessions = 1;
+  s_sys_activity_get_sessions_values.out.sessions[0] = (ActivitySession){
+    .type = ActivitySessionType_Walk,
+    .start_utc = now - 30 * PBL_SEC_PER_MIN,
+    .length_min = 20,
+  };
+
+  health_service_activities_iterate_time32(
+      HealthActivityMaskAll, pbl_time_to_time32(now - 100 * PBL_SEC_PER_MIN),
+      pbl_time_to_time32(now), HealthIterationDirectionPast, prv_activity_cb32, nullptr);
+  cl_assert_equal_i(s_prv_activity_cb32__call_count, 1);
+  cl_assert_equal_i(s_prv_activity_cb32__start, now - 30 * PBL_SEC_PER_MIN);
+  cl_assert_equal_i(s_prv_activity_cb32__end, now - 10 * PBL_SEC_PER_MIN);
+
+  // The 64-bit callback sees the same session.
+  s_prv_activity_cb__call_count = 0;
+  health_service_activities_iterate(HealthActivityMaskAll, now - 100 * PBL_SEC_PER_MIN, now,
+                                    HealthIterationDirectionPast, prv_activity_cb, nullptr);
+  cl_assert_equal_i(s_prv_activity_cb__call_count, 1);
+  cl_assert(s_prv_activity_cb__args[0].time_start == now - 30 * PBL_SEC_PER_MIN);
+}
+
+void test_health__get_minute_history_time32_writes_32_bits(void) {
+  const time_t now = rtc_get_time();
+  s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
+    .out[0] = {
+      .num_records = 2,
+      .utc_start = now - 5 * PBL_SEC_PER_MIN,
+      .result = true,
+    },
+  };
+
+  HealthMinuteData data[5] = {};
+  struct {
+    pbl_time32_t start;
+    uint32_t guard_start;
+    pbl_time32_t end;
+    uint32_t guard_end;
+  } t = {
+    .start = pbl_time_to_time32(now - 6 * PBL_SEC_PER_MIN),
+    .guard_start = 0xdeadbeef,
+    .end = pbl_time_to_time32(now),
+    .guard_end = 0xdeadbeef,
+  };
+  const uint32_t written =
+      health_service_get_minute_history_time32(data, ARRAY_LENGTH(data), &t.start, &t.end);
+  cl_assert_equal_i(written, 2);
+  cl_assert(s_sys_activity_get_minute_history_values.in[0].utc_start == now - 6 * PBL_SEC_PER_MIN);
+  cl_assert_equal_i(t.start, now - 5 * PBL_SEC_PER_MIN);
+  cl_assert_equal_i(t.end, now - 3 * PBL_SEC_PER_MIN);
+  cl_assert_equal_i(t.guard_start, 0xdeadbeef);
+  cl_assert_equal_i(t.guard_end, 0xdeadbeef);
+}
+
+void test_health__sum_time32_matches_sum(void) {
+  const time_t now = rtc_get_time();
+  const time_t start = now - 2 * PBL_SEC_PER_HOUR;
+  cl_assert_equal_i(health_service_sum_time32(HealthMetricStepCount, pbl_time_to_time32(start),
+                                              pbl_time_to_time32(now)),
+                    health_service_sum(HealthMetricStepCount, start, now));
 }

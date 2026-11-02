@@ -16,7 +16,15 @@
 #include <syscall/syscall.h>
 
 // Time
-pbl_time32_t pbl_override_time(pbl_time32_t *tloc) {
+time_t pbl_override_time(time_t *tloc) {
+  const time_t t = sys_get_time();
+  if (tloc) {
+    *tloc = t;
+  }
+  return t;
+}
+
+pbl_time32_t pbl_override_time_time32(pbl_time32_t *tloc) {
   const pbl_time32_t t = pbl_time_to_time32(sys_get_time());
   if (tloc) {
     *tloc = t;
@@ -24,52 +32,45 @@ pbl_time32_t pbl_override_time(pbl_time32_t *tloc) {
   return t;
 }
 
-// Manually construct double to avoid requiring soft-fp
-static double prv_time_to_double(int32_t time) {
-  if (time == 0) {
+// Manually construct the double to avoid requiring soft-fp
+static double prv_magnitude_to_double(uint64_t significand, bool negative) {
+  if (significand == 0) {
     return 0;
   }
 
   // Construct the double in two uint32_t's then reinterpret as double
-  // Using a uint64_t would pull in helper functions for 64bit shifts
   union {
     double result;
     uint32_t representation[2];
   } conv;
 
-  conv.representation[1] = 0;
-  if (time < 0) {
-    // set the sign bit
-    conv.representation[1] |= (1 << 31);
+  const uint32_t sign = negative ? (1u << 31) : 0;
 
-    // sign bit takes care of positive vs negative
-    time *= -1;
-  }
+  // Shift off the leading 0s plus the msb, which is implicit in a double
+  const int shift = __builtin_clzll(significand) + 1;
+  significand = (shift == 64) ? 0 : (significand << shift);
 
-  uint32_t significand = (uint32_t)time;
-
-  // In order to normalize the significand, we shift off all the leading 0s
-  // plus the msb which is implicitly included
-  int shift = PBL_CLZ(time) + 1;
-
-  significand <<= shift;
-
-  // top 20 bits fit into the upper 32 bits of the double
-  conv.representation[1] |= (significand >> 12);
-
-  // bottom 12 bits go into the lower 32 bits of the double
-  conv.representation[0] = (significand << 20);
-
-  // Exponent is biased by 1023, then adjusted for the amount the significand was
-  // shifted. Out of the 52 significand bits, the bottom 20 are never used.
-  uint32_t exp = 1023 + 52 - shift - 20;
-  // Set the exponent
-  conv.representation[1] |= (exp << 20);
+  // The top 52 bits are the stored significand; anything below is truncated, which only
+  // matters beyond 2^53 seconds.
+  const uint32_t exp = 1023 + 64 - shift;
+  conv.representation[1] = sign | (exp << 20) | (uint32_t)(significand >> 44);
+  conv.representation[0] = (uint32_t)(significand >> 12);
 
   return conv.result;
 }
 
-double pbl_override_difftime(pbl_time32_t end, pbl_time32_t beginning) {
+static double prv_time_to_double(int64_t time) {
+  return (time < 0) ? prv_magnitude_to_double(-(uint64_t)time, true)
+                    : prv_magnitude_to_double((uint64_t)time, false);
+}
+
+double pbl_override_difftime(time_t end, time_t beginning) {
+  // The difference can need 65 bits, but its magnitude fits 64 unsigned ones
+  return (end >= beginning) ? prv_magnitude_to_double((uint64_t)end - (uint64_t)beginning, false)
+                            : prv_magnitude_to_double((uint64_t)beginning - (uint64_t)end, true);
+}
+
+double pbl_override_difftime_time32(pbl_time32_t end, pbl_time32_t beginning) {
   // Wraps like the 32-bit subtraction apps were built with.
   return prv_time_to_double((int32_t)((uint32_t)end - (uint32_t)beginning));
 }
