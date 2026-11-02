@@ -139,26 +139,18 @@ static HeapInfo_t *get_previous_block(struct pbl_heap *heap, HeapInfo_t *block) 
 static void prv_calc_totals(struct pbl_heap *heap, unsigned int *used, unsigned int *free,
                             unsigned int *max_free) {
   HeapInfo_t *heap_info_ptr;
-  uint16_t free_segments;
-  uint16_t alloc_segments;
 
   /* Initialize the return values.                                  */
   *used = 0;
   *free = 0;
   *max_free = 0;
-  free_segments = 0;
-  alloc_segments = 0;
   heap_info_ptr = heap->begin;
 
   do {
     /* Check to see if the current fragment is marked as free.     */
     if (heap_info_ptr->is_allocated) {
-      alloc_segments++;
-
       *used += heap_info_ptr->Size * ALIGNMENT_SIZE;
     } else {
-      free_segments++;
-
       /* Accumulate the total number of free Bytes.               */
       *free += heap_info_ptr->Size * ALIGNMENT_SIZE;
 
@@ -175,11 +167,6 @@ static void prv_calc_totals(struct pbl_heap *heap, unsigned int *used, unsigned 
   } while (heap_info_ptr < heap->end);
 
   PBL_ASSERTN(heap_info_ptr == heap->end);
-
-  char format_str[80];
-  snprintf(format_str, sizeof(format_str), "alloc: %u (%u bytes), free: %u (%u bytes)",
-           alloc_segments, *used, free_segments, *free);
-  util_dbgserial_str(format_str);
 }
 
 void pbl_heap_stats(struct pbl_heap *heap, unsigned int *used, unsigned int *free,
