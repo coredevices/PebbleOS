@@ -383,6 +383,9 @@ def test_idle(ui, power):
     assert m.mean_ua < LIMIT_UA, m
 ```
 
+The harness drives the supply through `pbl.power` (see {doc}`/pbl/power`),
+so a lab's supply of any type that measures serves the power tests.
+
 `power.measure(name)` measures the duration of a `with` block instead,
 connections and all. A measurement has `mean_ua`, `min_ua`, `max_ua`,
 `percentile_ua(q)`, `charge_uah` and `energy_uwh`, and is saved in the

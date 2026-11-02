@@ -47,12 +47,15 @@ from the lab's watch for the build: {doc}`run`, {doc}`erase`,
 (`--tty`), and {doc}`itest`, which takes its whole setup from it. The watch
 is the one given with `--watch`, else the one on the port given with
 `--tty`, else the one running the build's board; when several do, `--watch`
-has to pick one. With a lab in place, a watch is a `pbl run` away:
+has to pick one. {doc}`power` powers it with its supply. With a lab in
+place, a watch is a `pbl run` away:
 
 ```shell
 pbl run --resources
 pbl console
 ```
+
+(pbl-lab-locks)=
 
 ## Locks
 
