@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 
+#include <pbl/drivers/retained.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
@@ -16,6 +17,11 @@
 #include <hal/nrf_rtc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_rtc_nrf5, CONFIG_DRIVER_RTC_LOG_LEVEL);
+
+/* Retained registers: time state, and timezone in 5 registers */
+#define RETAINED_REG_TIME  3U
+#define RETAINED_REG_TICKS 4U
+#define RETAINED_REG_TZ    12U
 
 //! The type of a raw reading from the RTC (masked to 0xFFFFFF).
 typedef uint32_t RtcIntervalTicks;
@@ -148,8 +154,8 @@ void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
 
 static void prv_restore_rtc_time_state(void) {
   // Recover the previously set time from the RTC backup registers.
-  RtcIntervalTicks last_save_time_ticks = retained_read(CURRENT_INTERVAL_TICKS_REGISTER);
-  time_t last_save_time = retained_read(CURRENT_TIME_REGISTER);
+  RtcIntervalTicks last_save_time_ticks = pbl_retained_read(RETAINED_REG_TICKS);
+  time_t last_save_time = pbl_retained_read(RETAINED_REG_TIME);
 
   if (s_had_amnesia_on_boot) {
     /* We have no idea what time it might be.  The closest we got is the
@@ -166,12 +172,12 @@ static void prv_restore_rtc_time_state(void) {
 }
 
 static RtcIntervalTicks prv_get_last_save_time_ticks(void) {
-  return retained_read(CURRENT_INTERVAL_TICKS_REGISTER);
+  return pbl_retained_read(RETAINED_REG_TICKS);
 }
 
 static void prv_save_rtc_time_state_exact(RtcIntervalTicks current_rtc_ticks, time_t time) {
-  retained_write(CURRENT_TIME_REGISTER, time);
-  retained_write(CURRENT_INTERVAL_TICKS_REGISTER, current_rtc_ticks);
+  pbl_retained_write(RETAINED_REG_TIME, time);
+  pbl_retained_write(RETAINED_REG_TICKS, current_rtc_ticks);
 }
 
 static void prv_save_rtc_time_state(RtcIntervalTicks current_rtc_ticks) {
@@ -239,38 +245,38 @@ void rtc_set_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
   static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t), "RTC Set Timezone invalid data size");
 
-  retained_write(RTC_TIMEZONE_ABBR_START, raw[0]);
-  retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, raw[1]);
-  retained_write(RTC_TIMEZONE_GMTOFFSET, raw[2]);
-  retained_write(RTC_TIMEZONE_DST_START, raw[3]);
-  retained_write(RTC_TIMEZONE_DST_END, raw[4]);
+  pbl_retained_write(RETAINED_REG_TZ, raw[0]);
+  pbl_retained_write(RETAINED_REG_TZ + 1U, raw[1]);
+  pbl_retained_write(RETAINED_REG_TZ + 2U, raw[2]);
+  pbl_retained_write(RETAINED_REG_TZ + 3U, raw[3]);
+  pbl_retained_write(RETAINED_REG_TZ + 4U, raw[4]);
 }
 
 void rtc_get_timezone(TimezoneInfo *tzinfo) {
   uint32_t *raw = (uint32_t *)tzinfo;
 
-  raw[0] = retained_read(RTC_TIMEZONE_ABBR_START);
-  raw[1] = retained_read(RTC_TIMEZONE_ABBR_END_TZID_DSTID);
-  raw[2] = retained_read(RTC_TIMEZONE_GMTOFFSET);
-  raw[3] = retained_read(RTC_TIMEZONE_DST_START);
-  raw[4] = retained_read(RTC_TIMEZONE_DST_END);
+  raw[0] = pbl_retained_read(RETAINED_REG_TZ);
+  raw[1] = pbl_retained_read(RETAINED_REG_TZ + 1U);
+  raw[2] = pbl_retained_read(RETAINED_REG_TZ + 2U);
+  raw[3] = pbl_retained_read(RETAINED_REG_TZ + 3U);
+  raw[4] = pbl_retained_read(RETAINED_REG_TZ + 4U);
 }
 
 void rtc_timezone_clear(void) {
-  retained_write(RTC_TIMEZONE_ABBR_START, 0);
-  retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, 0);
-  retained_write(RTC_TIMEZONE_GMTOFFSET, 0);
-  retained_write(RTC_TIMEZONE_DST_START, 0);
-  retained_write(RTC_TIMEZONE_DST_END, 0);
+  pbl_retained_write(RETAINED_REG_TZ, 0);
+  pbl_retained_write(RETAINED_REG_TZ + 1U, 0);
+  pbl_retained_write(RETAINED_REG_TZ + 2U, 0);
+  pbl_retained_write(RETAINED_REG_TZ + 3U, 0);
+  pbl_retained_write(RETAINED_REG_TZ + 4U, 0);
 }
 
 uint16_t rtc_get_timezone_id(void) {
-  return ((retained_read(RTC_TIMEZONE_ABBR_END_TZID_DSTID) >> 16) & 0xFFFF);
+  return ((pbl_retained_read(RETAINED_REG_TZ + 1U) >> 16) & 0xFFFF);
 }
 
 bool rtc_is_timezone_set(void) {
   // True if the timezone abbreviation has been set (including UNK for unknown)
-  return (retained_read(RTC_TIMEZONE_ABBR_START) != 0);
+  return (pbl_retained_read(RETAINED_REG_TZ) != 0);
 }
 
 void rtc_enable_backup_regs(void) {

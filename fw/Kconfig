@@ -5,6 +5,24 @@ rsource "apps/Kconfig"
 rsource "kernel/Kconfig"
 rsource "services/Kconfig"
 
+menu "Retained registers"
+
+config REBOOT_REASON_RETAINED_REG
+    int "Reboot reason"
+    default 5
+    help
+      First of the 4 retained registers holding the reboot reason.
+
+config LAST_APP_SLOT_RETAINED_REG
+    int "Last launched app slot"
+    default 19 if SOC_NRF52
+    default 9 if SOC_SF32LB52
+    default 10
+    help
+      Retained register holding the slot of the last launched app.
+
+endmenu
+
 menu "Software Features"
 
 config SETTINGS_ICONS
