@@ -11,7 +11,27 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 void notif_db_init(void) {
 }
 
+static status_t prv_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+
 status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+  if (timeline_item_phone_has_time64()) {
+    return prv_insert(key, key_len, val, val_len);
+  }
+  // A phone without 64-bit times sends the 32-bit header
+  if (key_len != UUID_SIZE || val_len < (int)TIMELINE_ITEM_HEADER_TIME32_SIZE) {
+    return E_INVALID_ARGUMENT;
+  }
+  size_t wide_len;
+  uint8_t *wide = timeline_item_serialized_widen(val, val_len, &wide_len);
+  if (!wide) {
+    return E_OUT_OF_MEMORY;
+  }
+  const status_t rv = prv_insert(key, key_len, wide, wide_len);
+  pbl_free(wide);
+  return rv;
+}
+
+static status_t prv_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (key_len != UUID_SIZE || val_len < (int)sizeof(SerializedTimelineItemHeader)) {
     return E_INVALID_ARGUMENT;
   }

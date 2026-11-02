@@ -1,7 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/timeline_item_storage.h>
@@ -87,7 +90,7 @@ static bool prv_each_first_item(SettingsFile *file, SettingsRecordInfo *info, vo
   }
 
   if (!filtered_out && (timestamp < next_info->best || !next_info->found) &&
-      (timestamp >= (int)(next_info->current - next_info->max_age))) {
+      (timestamp >= next_info->current - (time_t)next_info->max_age)) {
     next_info->found = true;
     next_info->best = timestamp;
     info->get_key(file, (uint8_t *)&next_info->id, sizeof(Uuid));
@@ -245,16 +248,123 @@ status_t timeline_item_storage_each(TimelineItemStorage *storage,
   return rv;
 }
 
-void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, uint32_t max_size,
-                                uint32_t max_age) {
+// Earlier firmware stored items with 32-bit timestamps, in a file under another name that it
+// keeps reading. They are copied into the current file at boot, then that file is removed, so
+// earlier firmware never reads a 64-bit item. Until it is removed the old file is what counts:
+// a migration cut short by a reset or an error starts over at the next boot, and so does one
+// after a downgrade let earlier firmware write to the old file again.
+
+typedef struct {
+  SettingsFile *new_file;
+  status_t status;
+} MigrateInfo;
+
+static bool prv_count_item_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+  if (info->key_len == UUID_SIZE && info->val_len >= (int)TIMELINE_ITEM_HEADER_TIME32_SIZE) {
+    (*(int *)context)++;
+  }
+  return true;
+}
+
+// Copies an item stored with a 32-bit timestamp, keeping its sync state and modification time.
+static bool prv_migrate_item_cb(SettingsFile *old_file, SettingsRecordInfo *info, void *context) {
+  MigrateInfo *migrate = context;
+  if (info->key_len != UUID_SIZE || info->val_len < (int)TIMELINE_ITEM_HEADER_TIME32_SIZE) {
+    return true; // skip deleted and malformed records
+  }
+  uint8_t key[UUID_SIZE];
+  info->get_key(old_file, key, sizeof(key));
+  uint8_t *val = pbl_malloc(info->val_len);
+  if (!val) {
+    migrate->status = E_OUT_OF_MEMORY;
+    return false;
+  }
+  info->get_val(old_file, val, info->val_len);
+  size_t wide_len;
+  uint8_t *wide = timeline_item_serialized_widen(val, info->val_len, &wide_len);
+  pbl_free(val);
+  if (!wide) {
+    migrate->status = E_OUT_OF_MEMORY;
+    return false;
+  }
+  // Flags and status are stored inverted, which widening leaves alone
+  status_t rv = settings_file_set_with_timestamp(migrate->new_file, key, sizeof(key), wide,
+                                                 wide_len, info->last_modified);
+  pbl_free(wide);
+  if ((rv == S_SUCCESS) && !info->dirty) {
+    rv = settings_file_mark_synced(migrate->new_file, key, sizeof(key));
+  }
+  if (FAILED(rv)) {
+    migrate->status = rv;
+    return false;
+  }
+  return true;
+}
+
+//! Migrates the items of @p legacy_name into the storage file, leaving it open.
+//! @return S_SUCCESS if the storage file is open, S_NO_ACTION_REQUIRED if there was nothing to
+//! migrate, an error otherwise.
+static status_t prv_migrate_time32(TimelineItemStorage *storage, const char *legacy_name) {
+  struct pbl_fs_dirent entry;
+  if (pbl_fs_stat(legacy_name, &entry) < 0) {
+    return S_NO_ACTION_REQUIRED;
+  }
+  PBL_LOG_INFO("Migrating %s to %s", legacy_name, storage->name);
+
+  SettingsFile old_file;
+  status_t rv = settings_file_open_growable(&old_file, legacy_name, storage->max_size, PBL_KIB(8));
+  if (FAILED(rv)) {
+    return rv;
+  }
+
+  // Size the new file up front: every item grows by its timestamp
+  int items = 0;
+  settings_file_each(&old_file, prv_count_item_cb, &items);
+  const int growth = (int)(sizeof(SerializedTimelineItemHeader) - TIMELINE_ITEM_HEADER_TIME32_SIZE);
+  const int needed = old_file.used_space + (items + 1) * growth;
+
+  // Start over from the old file, also after an earlier attempt or a downgrade
+  pbl_fs_unlink(storage->name);
+  rv = settings_file_open_growable(&storage->file, storage->name,
+                                   MAX((int)storage->max_size, needed), MAX(PBL_KIB(8), needed));
+  if (FAILED(rv)) {
+    settings_file_close(&old_file);
+    return rv;
+  }
+
+  MigrateInfo info = {.new_file = &storage->file, .status = S_SUCCESS};
+  rv = settings_file_each(&old_file, prv_migrate_item_cb, &info);
+  settings_file_close(&old_file);
+  if (FAILED(rv) || FAILED(info.status)) {
+    settings_file_close(&storage->file);
+    pbl_fs_unlink(storage->name);
+    return FAILED(rv) ? rv : info.status;
+  }
+
+  // Every item is in the new file. A reset before this only repeats the migration.
+  pbl_fs_unlink(legacy_name);
+  return S_SUCCESS;
+}
+
+void timeline_item_storage_init(TimelineItemStorage *storage, char *filename,
+                                const char *legacy_filename, uint32_t max_size, uint32_t max_age) {
   *storage = (TimelineItemStorage){
     .name = filename,
     .max_size = max_size,
     .max_item_age = max_age,
   };
   pbl_mutex_init(&storage->mutex);
-  status_t rv =
-      settings_file_open_growable(&storage->file, storage->name, storage->max_size, PBL_KIB(8));
+
+  status_t rv = prv_migrate_time32(storage, legacy_filename);
+  if (rv == S_SUCCESS) {
+    return;
+  }
+  if (FAILED(rv)) {
+    PBL_LOG_ERR("Could not migrate %s, rv = %" PRId32 "; retrying at next boot", legacy_filename,
+                rv);
+  }
+
+  rv = settings_file_open_growable(&storage->file, storage->name, storage->max_size, PBL_KIB(8));
   if (FAILED(rv)) {
     PBL_LOG_ERR("Unable to create settings file %s, rv = %" PRId32 "!", filename, rv);
   }
@@ -289,7 +399,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
   time_t now = rtc_get_time();
   time_t timestamp = timeline_item_get_tz_timestamp(&hdr->common);
   time_t end_timestamp = timestamp + hdr->common.duration * PBL_SEC_PER_MIN;
-  if (end_timestamp < (int)(now - storage->max_item_age)) {
+  if (end_timestamp < now - (time_t)storage->max_item_age) {
     PBL_LOG_WRN("Rejecting stale timeline item %ld seconds old", (long)(now - timestamp));
     return E_INVALID_OPERATION;
   }
@@ -320,6 +430,58 @@ int timeline_item_storage_get_len(TimelineItemStorage *storage, const uint8_t *k
   status_t rv = settings_file_get_len(&storage->file, key, key_len);
 
   prv_storage_unlock(storage, lock_ticks, __func__);
+  return rv;
+}
+
+status_t timeline_item_storage_insert_from_phone(TimelineItemStorage *storage, const uint8_t *key,
+                                                 int key_len, const uint8_t *val, int val_len,
+                                                 bool mark_as_synced) {
+  if (timeline_item_phone_has_time64()) {
+    return timeline_item_storage_insert(storage, key, key_len, val, val_len, mark_as_synced);
+  }
+  if (val_len < (int)TIMELINE_ITEM_HEADER_TIME32_SIZE) {
+    return E_INVALID_ARGUMENT;
+  }
+  size_t wide_len;
+  uint8_t *wide = timeline_item_serialized_widen(val, val_len, &wide_len);
+  if (!wide) {
+    return E_OUT_OF_MEMORY;
+  }
+  const status_t rv =
+      timeline_item_storage_insert(storage, key, key_len, wide, wide_len, mark_as_synced);
+  pbl_free(wide);
+  return rv;
+}
+
+int timeline_item_storage_get_len_for_phone(TimelineItemStorage *storage, const uint8_t *key,
+                                            int key_len) {
+  const int len = timeline_item_storage_get_len(storage, key, key_len);
+  if (timeline_item_phone_has_time64() || len < (int)sizeof(SerializedTimelineItemHeader)) {
+    return len;
+  }
+  return len - (int)(sizeof(SerializedTimelineItemHeader) - TIMELINE_ITEM_HEADER_TIME32_SIZE);
+}
+
+status_t timeline_item_storage_read_for_phone(TimelineItemStorage *storage, const uint8_t *key,
+                                              int key_len, uint8_t *val_out, int val_len) {
+  if (timeline_item_phone_has_time64()) {
+    return timeline_item_storage_read(storage, key, key_len, val_out, val_len);
+  }
+  if (val_len < (int)TIMELINE_ITEM_HEADER_TIME32_SIZE) {
+    return E_INVALID_ARGUMENT;
+  }
+  const int wide_len =
+      val_len + (int)(sizeof(SerializedTimelineItemHeader) - TIMELINE_ITEM_HEADER_TIME32_SIZE);
+  uint8_t *wide = pbl_malloc(wide_len);
+  if (!wide) {
+    return E_OUT_OF_MEMORY;
+  }
+  status_t rv = timeline_item_storage_read(storage, key, key_len, wide, wide_len);
+  if (rv == S_SUCCESS) {
+    timeline_item_serialized_narrow(wide, wide_len);
+    memcpy(val_out, wide, val_len);
+  }
+  pbl_free(wide);
   return rv;
 }
 
