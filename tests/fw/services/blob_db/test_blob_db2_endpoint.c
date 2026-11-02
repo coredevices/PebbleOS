@@ -22,6 +22,11 @@ CommSession *comm_session_get_system_session(void) {
   return (CommSession *)1;
 }
 
+static bool s_phone_has_time64;
+bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
+  return (capability == CommSessionTime64Support) && s_phone_has_time64;
+}
+
 void blob_db_set_accepting_messages(bool ehh) {
 }
 
@@ -119,6 +124,7 @@ void test_blob_db2_endpoint__initialize(void) {
   sendbuffer_length = 0;
   sendbuffer_write_index = 0;
   memset(sendbuffer, 0, sizeof(sendbuffer));
+  s_phone_has_time64 = false;
 }
 
 void test_blob_db2_endpoint__cleanup(void) {
@@ -310,4 +316,86 @@ static const uint8_t s_write_message[] = {
 void test_blob_db2_endpoint__send_write(void) {
   s_expected_msg = s_write_message;
   blob_db_endpoint_send_write(BlobDBIdiOSNotifPref, last_updated, &key, 1, &val, 1);
+}
+
+static const uint8_t s_write_64_message[] = {
+  BLOB_DB_COMMAND_WRITE_64, // cmd
+  0x22,
+  0x00,                 // token
+  BlobDBIdiOSNotifPref, // db id
+  0x00,
+  0x19,
+  0x9e,
+  0xb0,
+  0x01,
+  0x00,
+  0x00,
+  0x00, // last updated, 2200-01-01
+  0x01, // key_len
+  key,  // key
+  0x01,
+  0x00, // val_len
+  val,  // val
+};
+
+static const uint8_t s_writeback_64_message[] = {
+  BLOB_DB_COMMAND_WRITEBACK_64, // cmd
+  0x22,
+  0x00,                 // token
+  BlobDBIdiOSNotifPref, // db id
+  0x00,
+  0x19,
+  0x9e,
+  0xb0,
+  0x01,
+  0x00,
+  0x00,
+  0x00, // last updated, 2200-01-01
+  0x01, // key_len
+  key,  // key
+  0x01,
+  0x00, // val_len
+  val,  // val
+};
+
+void test_blob_db2_endpoint__send_write_64(void) {
+  s_phone_has_time64 = true;
+  s_expected_msg = s_write_64_message;
+  blob_db_endpoint_send_write(BlobDBIdiOSNotifPref, 7258118400LL, &key, 1, &val, 1);
+  cl_assert_equal_i(sendbuffer_length, sizeof(s_write_64_message));
+  s_expected_msg = s_writeback_64_message;
+  blob_db_endpoint_send_writeback(BlobDBIdiOSNotifPref, 7258118400LL, &key, 1, &val, 1);
+  cl_assert_equal_i(sendbuffer_length, sizeof(s_writeback_64_message));
+}
+
+void test_blob_db2_endpoint__send_write_32_past_2038(void) {
+  // Phones without the capability get the time as unsigned 32 bits
+  static const uint8_t msg[] = {
+    BLOB_DB_COMMAND_WRITE,
+    0x22,
+    0x00,
+    BlobDBIdiOSNotifPref,
+    0x00,
+    0x5e,
+    0xd0,
+    0xb2, // last updated, 3000000000
+    0x01,
+    key,
+    0x01,
+    0x00,
+    val,
+  };
+  s_expected_msg = msg;
+  blob_db_endpoint_send_write(BlobDBIdiOSNotifPref, 3000000000LL, &key, 1, &val, 1);
+  cl_assert_equal_i(sendbuffer_length, sizeof(msg));
+}
+
+void test_blob_db2_endpoint__handle_64_responses(void) {
+  const uint8_t write_resp[] = {BLOB_DB_COMMAND_WRITE_64_RESPONSE, 0x12, 0x34, BLOB_DB_SUCCESS};
+  blob_db2_protocol_msg_callback(nullptr, write_resp, sizeof(write_resp));
+  cl_assert(did_sync_next);
+  did_sync_next = false;
+  const uint8_t wb_resp[] = {BLOB_DB_COMMAND_WRITEBACK_64_RESPONSE, 0x12, 0x34, BLOB_DB_SUCCESS};
+  blob_db2_protocol_msg_callback(nullptr, wb_resp, sizeof(wb_resp));
+  cl_assert(did_sync_next);
 }

@@ -929,3 +929,91 @@ void test_blob_db_endpoint__handle_start_sync_request(void) {
   s_expected_data = s_start_sync_response;
   blob_db_protocol_msg_callback(nullptr, s_start_sync_request, sizeof(s_start_sync_request));
 }
+
+/*************************************
+ * INSERT_WITH_TIMESTAMP, 32 and 64 bit
+ *************************************/
+
+static time_t s_insert_timestamp;
+static int s_insert_with_timestamp_calls;
+
+status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len, const uint8_t *val,
+                                                int val_len, time_t timestamp) {
+  s_insert_timestamp = timestamp;
+  s_insert_with_timestamp_calls++;
+  return S_SUCCESS;
+}
+
+static void prv_check_insert_with_timestamp(const uint8_t *cmd, size_t len, BlobDBResponse result) {
+  uint8_t *resp = process_blob_db_command(cmd, len);
+  cl_assert_equal_i(resp[0] | (resp[1] << 8), 0x1234);
+  cl_assert_equal_i(resp[2], result);
+}
+
+void test_blob_db_endpoint__insert_with_timestamp_32_and_64_bit(void) {
+  // 3000000000: past 2038, unsigned
+  const uint8_t cmd32[] = {
+    BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP,
+    0x34,
+    0x12,
+    BlobDBIdSettings,
+    0x00,
+    0x5e,
+    0xd0,
+    0xb2, // timestamp
+    0x01,
+    'k', // key
+    0x01,
+    0x00,
+    'v', // value
+  };
+  s_insert_with_timestamp_calls = 0;
+  prv_check_insert_with_timestamp(cmd32, sizeof(cmd32), BLOB_DB_SUCCESS);
+  cl_assert_equal_i(s_insert_with_timestamp_calls, 1);
+  cl_assert(s_insert_timestamp == 3000000000LL);
+
+  // 7258118400: 2200-01-01
+  const uint8_t cmd64[] = {
+    BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP_64,
+    0x34,
+    0x12,
+    BlobDBIdSettings,
+    0x00,
+    0x19,
+    0x9e,
+    0xb0,
+    0x01,
+    0x00,
+    0x00,
+    0x00, // timestamp
+    0x01,
+    'k', // key
+    0x01,
+    0x00,
+    'v', // value
+  };
+  prv_check_insert_with_timestamp(cmd64, sizeof(cmd64), BLOB_DB_SUCCESS);
+  cl_assert_equal_i(s_insert_with_timestamp_calls, 2);
+  cl_assert(s_insert_timestamp == 7258118400LL);
+
+  // A 64-bit command cut short is rejected
+  prv_check_insert_with_timestamp(cmd64, sizeof(cmd64) - 1, BLOB_DB_INVALID_DATA);
+  const uint8_t short64[] = {
+    BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP_64,
+    0x34,
+    0x12,
+    BlobDBIdSettings,
+    0x00,
+    0x19,
+    0x9e,
+    0xb0,
+    0x01,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+  };
+  prv_check_insert_with_timestamp(short64, sizeof(short64), BLOB_DB_INVALID_DATA);
+  cl_assert_equal_i(s_insert_with_timestamp_calls, 2);
+}

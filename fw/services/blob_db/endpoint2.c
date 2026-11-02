@@ -258,10 +258,12 @@ static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBComman
       prv_handle_start_sync(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_WRITE_RESPONSE:
+    case BLOB_DB_COMMAND_WRITE_64_RESPONSE:
       PBL_LOG_DBG("WRITE Response");
       prv_handle_write_response(session, data, data_length);
       break;
     case BLOB_DB_COMMAND_WRITEBACK_RESPONSE:
+    case BLOB_DB_COMMAND_WRITEBACK_64_RESPONSE:
       PBL_LOG_DBG("WRITEBACK Response");
       prv_handle_wb_response(session, data, data_length);
       break;
@@ -284,29 +286,41 @@ static void prv_blob_db_msg_decode_and_handle(CommSession *session, BlobDBComman
   }
 }
 
-static uint16_t prv_send_write_writeback(BlobDBCommand cmd, BlobDBId db_id, time_t last_updated,
-                                         const uint8_t *key, int key_len, const uint8_t *val,
-                                         int val_len) {
+static uint16_t prv_send_write_writeback(BlobDBCommand cmd, BlobDBCommand cmd64, BlobDBId db_id,
+                                         time_t last_updated, const uint8_t *key, int key_len,
+                                         const uint8_t *val, int val_len) {
   struct PBL_PACKED WritebackMetadata {
     BlobDBCommand cmd;
     BlobDBToken token;
     BlobDBId db_id;
-    uint32_t last_updated;
+    union {
+      uint32_t last_updated;
+      int64_t last_updated_64;
+    };
   } writeback_metadata = {
-    .cmd = cmd,
     .token = prv_new_token(),
     .db_id = db_id,
-    .last_updated = last_updated,
   };
+  size_t metadata_length;
+  if (comm_session_has_capability(comm_session_get_system_session(), CommSessionTime64Support)) {
+    writeback_metadata.cmd = cmd64;
+    writeback_metadata.last_updated_64 = last_updated;
+    metadata_length = sizeof(writeback_metadata);
+  } else {
+    // Unsigned, until 2106
+    writeback_metadata.cmd = cmd;
+    writeback_metadata.last_updated = (uint32_t)last_updated;
+    metadata_length = offsetof(struct WritebackMetadata, last_updated) + sizeof(uint32_t);
+  }
 
-  size_t writeback_length = sizeof(writeback_metadata) + sizeof(uint8_t) /* key length size*/ +
-                            key_len + sizeof(uint16_t) /* val length size */ + val_len;
+  size_t writeback_length = metadata_length + sizeof(uint8_t) /* key length size*/ + key_len +
+                            sizeof(uint16_t) /* val length size */ + val_len;
 
   SendBuffer *sb =
       comm_session_send_buffer_begin_write(comm_session_get_system_session(), BLOB_DB2_ENDPOINT_ID,
                                            writeback_length, COMM_SESSION_DEFAULT_TIMEOUT);
   if (sb) {
-    comm_session_send_buffer_write(sb, (uint8_t *)&writeback_metadata, sizeof(writeback_metadata));
+    comm_session_send_buffer_write(sb, (uint8_t *)&writeback_metadata, metadata_length);
     comm_session_send_buffer_write(sb, (uint8_t *)&key_len, sizeof(uint8_t));
     comm_session_send_buffer_write(sb, key, key_len);
     comm_session_send_buffer_write(sb, (uint8_t *)&val_len, sizeof(uint16_t));
@@ -319,16 +333,17 @@ static uint16_t prv_send_write_writeback(BlobDBCommand cmd, BlobDBId db_id, time
 
 BlobDBToken blob_db_endpoint_send_write(BlobDBId db_id, time_t last_updated, const void *key,
                                         int key_len, const void *val, int val_len) {
-  BlobDBToken token = prv_send_write_writeback(BLOB_DB_COMMAND_WRITE, db_id, last_updated, key,
-                                               key_len, val, val_len);
+  BlobDBToken token = prv_send_write_writeback(BLOB_DB_COMMAND_WRITE, BLOB_DB_COMMAND_WRITE_64,
+                                               db_id, last_updated, key, key_len, val, val_len);
 
   return token;
 }
 
 BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id, time_t last_updated, const void *key,
                                             int key_len, const void *val, int val_len) {
-  BlobDBToken token = prv_send_write_writeback(BLOB_DB_COMMAND_WRITEBACK, db_id, last_updated, key,
-                                               key_len, val, val_len);
+  BlobDBToken token =
+      prv_send_write_writeback(BLOB_DB_COMMAND_WRITEBACK, BLOB_DB_COMMAND_WRITEBACK_64, db_id,
+                               last_updated, key, key_len, val, val_len);
 
   return token;
 }
