@@ -186,6 +186,7 @@ static const HRMData s_hrm_event_data = {
   .features = HRMFeature_BPM,
   .hrm_bpm = 82,
   .hrm_quality = HRMQuality_Excellent,
+  .hrm_confidence = 95,
 };
 
 static void prv_fake_send_new_data(void) {
@@ -1089,7 +1090,7 @@ void test_hrm_manager__app_queue_full_drops_without_panic(void) {
   sys_hrm_manager_unsubscribe(session_ref);
 }
 
-// A subscriber the sensor cannot serve (quality never reaches Good) must not pin the sensor on
+// A subscriber the sensor cannot serve (confidence never gets high) must not pin the sensor on
 // indefinitely: after HRM_MAX_UNSERVED_TIME_SEC it is deferred to its next interval.
 void test_hrm_manager__unserved_subscriber_timeout(void) {
   HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(1 /*app_id*/, 600 /*interval_s*/,
@@ -1099,11 +1100,12 @@ void test_hrm_manager__unserved_subscriber_timeout(void) {
   // Never served, so the sensor turns on right away
   cl_assert_equal_b(hrm_is_enabled(HRM), true);
 
-  // Sub-Good readings don't serve the subscriber; the sensor stays on before the timeout
+  // Low-confidence readings don't serve the subscriber; the sensor stays on before the timeout
   const HRMData poor_data = {
     .features = HRMFeature_BPM,
     .hrm_bpm = 70,
     .hrm_quality = HRMQuality_Acceptable,
+    .hrm_confidence = HRM_CONFIDENCE_HIGH - 1,
   };
   for (int i = 0; i < 2 * HRM_CHECK_SENSOR_DISABLE_COUNT; ++i) {
     hrm_manager_new_data_cb(&poor_data);
@@ -1138,6 +1140,7 @@ void test_hrm_manager__unserved_timeout_keeps_live_hr_on(void) {
     .features = HRMFeature_BPM,
     .hrm_bpm = 70,
     .hrm_quality = HRMQuality_Acceptable,
+    .hrm_confidence = HRM_CONFIDENCE_HIGH - 1,
   };
   prv_advance_time_ms((HRM_MAX_UNSERVED_TIME_SEC + 1) * PBL_MSEC_PER_SEC);
   for (int i = 0; i <= HRM_CHECK_SENSOR_DISABLE_COUNT; ++i) {
@@ -1228,6 +1231,7 @@ void test_hrm_manager__poor_reports_do_not_extend_serve_deadline(void) {
     .features = HRMFeature_BPM,
     .hrm_bpm = 70,
     .hrm_quality = HRMQuality_Acceptable,
+    .hrm_confidence = HRM_CONFIDENCE_HIGH - 1,
   };
   for (int elapsed_s = 30; elapsed_s < HRM_MAX_UNSERVED_TIME_SEC; elapsed_s += 30) {
     prv_advance_time_ms(30 * PBL_MSEC_PER_SEC);

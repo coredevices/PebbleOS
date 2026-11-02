@@ -726,12 +726,13 @@ void hrm_manager_new_data_cb(const HRMData *data) {
     HRMSubscriberState *expired_state = nullptr;
 
     // Mark a subscriber "served" once it gets usable data for a feature it requested, so the sensor
-    // can power-cycle off. BPM keys off its Good+ quality grade. SpO2 keys off the algorithm's own
-    // invalid flag, not the confidence grade: an algorithm-accepted reading is usable even if its
-    // confidence only grades Acceptable/Poor, and requiring Good kept the sensor on forever.
+    // can power-cycle off. BPM waits for a high-confidence reading; if one never comes, the
+    // unserved timeout defers the subscriber instead. SpO2 keys off the algorithm's own invalid
+    // flag: an algorithm-accepted reading is usable even at lower confidence, and requiring more
+    // kept the sensor on forever.
     const bool bpm_served =
         (state->features & HRMFeature_BPM) && (data->features & HRMFeature_BPM) &&
-        (data->hrm_quality >= HRMQuality_Good || data->hrm_quality == HRMQuality_OffWrist);
+        (data->hrm_confidence >= HRM_CONFIDENCE_HIGH || data->hrm_quality == HRMQuality_OffWrist);
     const bool spo2_served = (state->features & HRMFeature_SpO2) &&
                              (data->features & HRMFeature_SpO2) &&
                              ((!data->spo2_invalid && data->spo2_percent > 0 &&
