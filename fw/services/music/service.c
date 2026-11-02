@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <inttypes.h>
+
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/types.h>
@@ -393,11 +395,18 @@ void music_get_pos(uint32_t *track_pos_ms, uint32_t *track_length_ms) {
       (time_elapsed_ms * s_music_ctx.playback_rate_percent) / MUSIC_NORMAL_PLAYBACK_RATE_PERCENT;
   const int32_t pos_ms = s_music_ctx.track_pos_ms + track_time_elapsed;
   const int32_t length_ms = s_music_ctx.track_length_ms;
+  const uint32_t last_pos_ms = s_music_ctx.track_pos_ms;
+  const int32_t rate = s_music_ctx.playback_rate_percent;
 
   *track_pos_ms = CLIP(pos_ms, 0, length_ms);
   *track_length_ms = length_ms;
 
   pbl_mutex_unlock(&s_music_ctx.mutex);
+
+  if (pos_ms < 0 && rate >= 0) {
+    PBL_LOG_WRN("Negative track position: pos=%" PRIu32 " elapsed=%" PRId32 " rate=%" PRId32,
+                last_pos_ms, time_elapsed_ms, rate);
+  }
 }
 
 int32_t music_get_playback_rate_percent(void) {
