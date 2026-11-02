@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/kernel/reboot.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/util/size.h>
 
@@ -25,7 +26,6 @@
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <system/bootbits.h>
-#include <system/reset.h>
 
 // "XXXXXX - 100%"
 #define DEVICE_INFO_SUBTITLE_SIZE (MFG_SERIAL_NUMBER_SIZE + 8)
@@ -68,7 +68,7 @@ static void prv_select_ble_adv(int index, void *context) {
 }
 
 static void prv_select_reset(int index, void *context) {
-  system_reset();
+  pbl_reboot();
 }
 
 static void prv_select_utilities(int index, void *context) {
@@ -87,7 +87,7 @@ static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context)
   bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
   if (confirmed) {
     boot_bit_set(BOOT_BIT_FORCE_PRF);
-    system_reset();
+    pbl_reboot();
   }
 }
 

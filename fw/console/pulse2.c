@@ -18,6 +18,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
@@ -346,6 +347,15 @@ void pulse_start(void) {
 void pulse_end(void) {
   ppp_control_protocol_close(PULSE2_LCP, PPPCPCloseWait_WaitForClosed);
 }
+
+static void prv_sys_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
+  pulse_end();
+}
+
+PBL_SYS_OFF_HANDLER_DEFINE(pulse_restart, PBL_SYS_OFF_RESTART_PREPARE, PBL_SYS_OFF_PRIO_DEFAULT,
+                           prv_sys_off_prepare, nullptr);
+PBL_SYS_OFF_HANDLER_DEFINE(pulse_power_off, PBL_SYS_OFF_POWER_OFF_PREPARE, PBL_SYS_OFF_PRIO_DEFAULT,
+                           prv_sys_off_prepare, nullptr);
 
 static void prv_assert_tx_buffer(void *buf) {
   // Ensure the buffer is actually a PULSE transmit buffer

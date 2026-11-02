@@ -15,18 +15,6 @@
  */
 
 /**
- * @brief Power off the board.
- *
- * All components lose power except the RTC, and the PMIC wakes the board on a button press.
- * Fails while USB power is connected.
- *
- * @retval -EBUSY USB power is connected.
- * @retval -ETIMEDOUT The board is still powered.
- * @retval -errno Other errors.
- */
-int pmic_power_off(void);
-
-/**
  * @brief Enable the PMIC battery monitor.
  *
  * Disable it with pmic_disable_battery_measure() when readings are no longer needed.

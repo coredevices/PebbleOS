@@ -3,8 +3,6 @@
 
 #pragma once
 
-void fw_prepare_for_reset(void);
-
 void fw_reset_into_prf(void);
 
 typedef enum RemoteResetType {

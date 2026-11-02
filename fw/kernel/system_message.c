@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session.h>
@@ -18,7 +19,6 @@
 #include <kernel/pebble_tasks.h>
 #include <kernel/system_message.h>
 #include <system/reboot_reason.h>
-#include <system/reset.h>
 
 static const uint16_t ENDPOINT_ID = SYS_MSG_ENDPOINT_ID;
 
@@ -34,7 +34,7 @@ static void prv_reset_kernel_bg_cb(void *unused) {
   PBL_LOG_ALWAYS("Rebooting to install firmware...");
   RebootReason reason = {RebootReasonCode_SoftwareUpdate, 0};
   reboot_reason_set(&reason);
-  system_reset();
+  pbl_reboot();
 }
 
 static void prv_ui_update_reset_delay_timer_callback(void *unused) {
