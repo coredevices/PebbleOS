@@ -44,7 +44,7 @@ struct channel {
 
 static struct channel s_channels[UART_POSIX_NUM_CHANNELS] = {
   [UART_POSIX_CONSOLE] = {.listen_fd = -1, .client_fd = -1},
-  [UART_POSIX_QEMU] = {.listen_fd = -1, .client_fd = -1},
+  [UART_POSIX_QEMU] = {.flow_control = true, .listen_fd = -1, .client_fd = -1},
   [UART_POSIX_BT_HCI] = {.connect = true, .flow_control = true, .listen_fd = -1, .client_fd = -1},
 };
 
