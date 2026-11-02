@@ -74,6 +74,7 @@ void health_tracking_ui_feature_show_disabled(void) {
 
 // These are declared as PBL_T_STATIC in activity.c
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
+void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_minute_system_task_cb(void *data);
 
 void hrm_manager_handle_prefs_changed(void) {
@@ -2647,6 +2648,54 @@ void test_activity__hrm_ignore(void) {
   // Should not fire off an event. Bad HR reading
   prv_advance_time_hr(1 /*sec*/, 20 /*hr*/, HRMQuality_Excellent, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 4);
+}
+
+// ---------------------------------------------------------------------------------------
+static void prv_put_spo2(uint8_t percent, uint8_t confidence, bool invalid) {
+  PebbleHRMEvent hrm_event = {
+    .event_type = HRMEvent_SpO2,
+    .spo2 = {
+      .percent = percent,
+      .quality = hrm_quality_from_confidence(confidence),
+      .confidence = confidence,
+      .invalid = invalid,
+    },
+  };
+  prv_spo2_subscription_cb(&hrm_event, nullptr);
+}
+
+static uint8_t prv_take_spo2_percent(void) {
+  uint8_t percent, quality;
+  activity_metrics_prv_get_spo2_sample(&percent, &quality);
+  return percent;
+}
+
+// Without a high-confidence reading the latest valid one is kept; once one came in, lower ones
+// no longer replace it.
+void test_activity__spo2_prefers_high_confidence(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+  ActivitySpO2Support *spo2 = &activity_private_state()->spo2;
+  spo2->num_valid_samples = 0;
+  spo2->num_high_confidence_samples = 0;
+
+  prv_put_spo2(95, 60, false);
+  cl_assert_equal_i(prv_take_spo2_percent(), 95);
+
+  prv_put_spo2(96, 70, false);
+  prv_put_spo2(97, HRM_CONFIDENCE_HIGH, false);
+  prv_put_spo2(94, 60, false);
+  prv_put_spo2(98, 90, true /*invalid*/);
+  cl_assert_equal_i(prv_take_spo2_percent(), 97);
+
+  prv_put_spo2(93, 60, false);
+  cl_assert_equal_i(prv_take_spo2_percent(), 0);
+
+  prv_put_spo2(99, 90, false);
+  cl_assert_equal_i(prv_take_spo2_percent(), 99);
+
+  cl_assert_equal_i(spo2->num_valid_samples, 6);
+  cl_assert_equal_i(spo2->num_high_confidence_samples, 2);
 }
 
 // ---------------------------------------------------------------------------------------
