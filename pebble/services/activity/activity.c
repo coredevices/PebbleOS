@@ -1250,17 +1250,16 @@ bool activity_init(void) {
   s_activity_state.resting_calories = activity_private_compute_resting_calories(minute_of_day);
 
   key = ActivitySettingsKeyLastSleepActivityUTC;
-  pbl_settings_get(file, &key, sizeof(key), &s_activity_state.logged_sleep_activity_exit_at_utc,
-                   sizeof(s_activity_state.logged_sleep_activity_exit_at_utc));
+  pbl_settings_get_time(file, &key, sizeof(key),
+                        &s_activity_state.logged_sleep_activity_exit_at_utc);
 
   key = ActivitySettingsKeyLastRestfulSleepActivityUTC;
-  pbl_settings_get(file, &key, sizeof(key),
-                   &s_activity_state.logged_restful_sleep_activity_exit_at_utc,
-                   sizeof(s_activity_state.logged_restful_sleep_activity_exit_at_utc));
+  pbl_settings_get_time(file, &key, sizeof(key),
+                        &s_activity_state.logged_restful_sleep_activity_exit_at_utc);
 
   key = ActivitySettingsKeyLastStepActivityUTC;
-  pbl_settings_get(file, &key, sizeof(key), &s_activity_state.logged_step_activity_exit_at_utc,
-                   sizeof(s_activity_state.logged_step_activity_exit_at_utc));
+  pbl_settings_get_time(file, &key, sizeof(key),
+                        &s_activity_state.logged_step_activity_exit_at_utc);
 
   // Clean up
   activity_private_settings_close(file);

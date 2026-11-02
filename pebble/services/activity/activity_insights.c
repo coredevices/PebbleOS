@@ -99,8 +99,8 @@ typedef struct InsightCopyVariants {
 // -----------------------------------------------------------------------------------------
 // Globals
 typedef struct InsightStateCommon {
-  bool history_valid;          // True if history requirements were met for the associated reward
-  uint32_t last_triggered_utc; // Last time reward was triggered, saved to flash
+  bool history_valid;        // True if history requirements were met for the associated reward
+  time_t last_triggered_utc; // Last time reward was triggered, saved to flash
 } InsightStateCommon;
 
 static struct {
@@ -126,9 +126,15 @@ static EventServiceInfo s_blobdb_event_info; // Used to detect pin deletion even
 // Timestamp and UUID of the last time we added a new summary pin - stored to flash to allow
 // us to continue to update the pin across reboots
 typedef struct PBL_PACKED SummaryPinLastState {
-  int32_t last_triggered_utc;
+  int64_t last_triggered_utc;
   Uuid uuid;
 } SummaryPinLastState;
+
+// As stored by earlier firmware
+typedef struct PBL_PACKED SummaryPinLastStateV1 {
+  int32_t last_triggered_utc;
+  Uuid uuid;
+} SummaryPinLastStateV1;
 
 typedef struct ActivityPinState {
   Uuid uuid;
@@ -138,29 +144,43 @@ typedef struct ActivityPinState {
 } ActivityPinState;
 static ActivityPinState s_activity_pin_state;
 
-// Saved to flash as is, so the times are 32 bits.
-typedef struct SleepPinState {
+// Saved to flash as is.
+typedef struct PBL_PACKED SleepPinState {
+  int64_t last_triggered_utc;
+  Uuid uuid;
+  int64_t first_enter_utc;
+  int active_minutes;
+  bool removed;
+  bool notified;
+  // Start of the sleep-day window this state belongs to. The summary notification fires at
+  // most once per window, no matter how often the sleep bounds change within it.
+  int64_t window_utc;
+} SleepPinState;
+static SleepPinState s_sleep_pin_state;
+
+// As stored by earlier firmware, with 32-bit times
+typedef struct SleepPinStateV1 {
   uint32_t last_triggered_utc;
   Uuid uuid;
   uint32_t first_enter_utc;
   int active_minutes;
   bool removed;
   bool notified;
-  // Start of the sleep-day window this state belongs to. The summary notification fires at
-  // most once per window, no matter how often the sleep bounds change within it.
-  // Note: must stay the last field so older persisted states fail to restore cleanly.
   uint32_t window_utc;
-} SleepPinState;
-static_assert(sizeof(SleepPinState) == 36, "SleepPinState is persisted");
-static SleepPinState s_sleep_pin_state;
+} SleepPinStateV1;
+static_assert(sizeof(SleepPinStateV1) == 36, "SleepPinStateV1 layout");
+// Older states had no window_utc; they no longer restore.
+static_assert(sizeof(SleepPinState) != sizeof(SleepPinStateV1) &&
+                  sizeof(SleepPinState) != offsetof(SleepPinStateV1, window_utc),
+              "SleepPinState sizes must differ to tell them apart");
 
 typedef struct SessionPinState {
-  uint32_t start_utc;
+  time_t start_utc;
 } SessionPinState;
 static SessionPinState s_session_pin_state;
 
 typedef struct NapPinState {
-  uint32_t last_triggered_utc;
+  time_t last_triggered_utc;
 } NapPinState;
 static NapPinState s_nap_pin_state;
 
@@ -323,12 +343,6 @@ static const char *prv_get_variant(const InsightCopyVariants *set, int variant) 
 
 // ------------------------------------------------------------------------------------------------
 // Helper functions for saving insight state to settings file
-static int prv_restore_state(struct pbl_settings_file *file, ActivitySettingsKey key, void *val_out,
-                             size_t val_out_len) {
-  return pbl_settings_get(file, &key, sizeof(key), val_out, val_out_len);
-}
-
-// ------------------------------------------------------------------------------------------------
 static int prv_save_state(ActivitySettingsKey key, void *val, size_t val_len) {
   struct pbl_settings_file *file = activity_private_settings_open();
   if (!file) {
@@ -338,6 +352,65 @@ static int prv_save_state(ActivitySettingsKey key, void *val, size_t val_len) {
   int rv = pbl_settings_set(file, &key, sizeof(key), val, val_len);
   activity_private_settings_close(file);
   return rv;
+}
+
+// ------------------------------------------------------------------------------------------------
+static void prv_restore_time(struct pbl_settings_file *file, ActivitySettingsKey key,
+                             time_t *time_out) {
+  pbl_settings_get_time(file, &key, sizeof(key), time_out);
+}
+
+// ------------------------------------------------------------------------------------------------
+static int prv_save_time(ActivitySettingsKey key, time_t time) {
+  struct pbl_settings_file *file = activity_private_settings_open();
+  if (!file) {
+    return -EIO;
+  }
+
+  int rv = pbl_settings_set_time(file, &key, sizeof(key), time);
+  activity_private_settings_close(file);
+  return rv;
+}
+
+// ------------------------------------------------------------------------------------------------
+PBL_T_STATIC void prv_restore_sleep_pin_state(struct pbl_settings_file *file,
+                                              SleepPinState *state) {
+  const ActivitySettingsKey key = ActivitySettingsKeyInsightSleepSummaryState;
+  const size_t len = pbl_settings_get_len(file, &key, sizeof(key));
+  if (len == sizeof(SleepPinStateV1)) {
+    SleepPinStateV1 v1;
+    if (pbl_settings_get(file, &key, sizeof(key), &v1, sizeof(v1)) == 0) {
+      *state = (SleepPinState){
+        .last_triggered_utc = v1.last_triggered_utc,
+        .uuid = v1.uuid,
+        .first_enter_utc = v1.first_enter_utc,
+        .active_minutes = v1.active_minutes,
+        .removed = v1.removed,
+        .notified = v1.notified,
+        .window_utc = v1.window_utc,
+      };
+    }
+  } else if (len == sizeof(SleepPinState)) {
+    pbl_settings_get(file, &key, sizeof(key), state, sizeof(*state));
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+PBL_T_STATIC void prv_restore_summary_pin_state(struct pbl_settings_file *file,
+                                                SummaryPinLastState *state) {
+  const ActivitySettingsKey key = ActivitySettingsKeyInsightActivitySummaryState;
+  const size_t len = pbl_settings_get_len(file, &key, sizeof(key));
+  if (len == sizeof(SummaryPinLastStateV1)) {
+    SummaryPinLastStateV1 v1;
+    if (pbl_settings_get(file, &key, sizeof(key), &v1, sizeof(v1)) == 0) {
+      *state = (SummaryPinLastState){
+        .last_triggered_utc = (uint32_t)v1.last_triggered_utc,
+        .uuid = v1.uuid,
+      };
+    }
+  } else if (len == sizeof(SummaryPinLastState)) {
+    pbl_settings_get(file, &key, sizeof(key), state, sizeof(*state));
+  }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -665,8 +738,7 @@ static void prv_push_reward(time_t now_utc, const RewardNotifConfig *notif_confi
   notif_config->state->last_triggered_utc = time_util_get_midnight_of(now_utc);
 
   // Save out the trigger time
-  prv_save_state(notif_config->settings_key, &notif_config->state->last_triggered_utc,
-                 sizeof(notif_config->state->last_triggered_utc));
+  prv_save_time(notif_config->settings_key, notif_config->state->last_triggered_utc);
 
   PBL_LOG_DBG("Saved reward state: %ld", (long)notif_config->state->last_triggered_utc);
 }
@@ -1130,7 +1202,7 @@ static void prv_do_sleep_summary(time_t now_utc) {
   // Bounds changes within one window (merged sessions, evening extensions) update the pin
   // below without re-arming the notification.
   const time_t window_utc = activity_sessions_prv_get_sleep_window_start_utc(now_utc);
-  const time_t window_shift = window_utc - (time_t)s_sleep_pin_state.window_utc;
+  const time_t window_shift = window_utc - s_sleep_pin_state.window_utc;
   if (window_shift != 0 && window_shift > -SLEEP_WINDOW_TZ_SHIFT_MAX &&
       window_shift < SLEEP_WINDOW_TZ_SHIFT_MAX) {
     // A UTC offset change (travel, DST) moves the local 9pm cutoff without starting a new
@@ -1138,8 +1210,8 @@ static void prv_do_sleep_summary(time_t now_utc) {
     PBL_LOG_DBG("Sleep window moved by %ld s, keeping pin state", (long)window_shift);
     s_sleep_pin_state.window_utc = window_utc;
   }
-  if (window_utc != (time_t)s_sleep_pin_state.window_utc ||
-      now_utc < (time_t)s_sleep_pin_state.last_triggered_utc) {
+  if (window_utc != s_sleep_pin_state.window_utc ||
+      now_utc < s_sleep_pin_state.last_triggered_utc) {
     // Checking "now_utc < s_sleep_pin_state.last_triggered_utc" catches cases where
     // the activity_test integration test might have created a pin in the future (because it
     // mucks with the real time clock)
@@ -1167,8 +1239,8 @@ static void prv_do_sleep_summary(time_t now_utc) {
 
   // If the bounds haven't changed since we last pushed the pin, send the notification for it
   // now if we haven't already.
-  if (sleep_exit_utc <= (time_t)s_sleep_pin_state.last_triggered_utc &&
-      sleep_enter_utc == (time_t)s_sleep_pin_state.first_enter_utc) {
+  if (sleep_exit_utc <= s_sleep_pin_state.last_triggered_utc &&
+      sleep_enter_utc == s_sleep_pin_state.first_enter_utc) {
     // Notify about the sleep pin
     prv_do_sleep_notification(now_utc, sleep_exit_utc, sleep_total_seconds);
     PBL_LOG_DBG("Not adding sleep pin - already checked session %ld", (long)sleep_exit_utc);
@@ -2030,7 +2102,7 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
     return;
   }
 
-  if ((time_t)s_session_pin_state.start_utc >= session->start_utc) {
+  if (s_session_pin_state.start_utc >= session->start_utc) {
     PBL_LOG_DBG("Not adding session pin - session too old");
     return;
   }
@@ -2060,8 +2132,7 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
 
   s_session_pin_state.start_utc = session->start_utc;
 
-  prv_save_state(ActivitySettingsKeyInsightActivitySessionTime, &s_session_pin_state.start_utc,
-                 sizeof(s_session_pin_state.start_utc));
+  prv_save_time(ActivitySettingsKeyInsightActivitySessionTime, s_session_pin_state.start_utc);
 
   if (s_activity_session_settings.session.show_notification) {
     int32_t avg_hr = 0;
@@ -2204,24 +2275,19 @@ void activity_insights_init(time_t now_utc) {
 
   // Load in previous saved state
   // No need to lock mutex since this should only be called from activity_init
-  SummaryPinLastState activity_pin_last_state;
+  SummaryPinLastState activity_pin_last_state = {};
   struct pbl_settings_file *file = activity_private_settings_open();
   if (file) {
-    prv_restore_state(file, ActivitySettingsKeyInsightSleepRewardTime,
-                      &s_sleep_reward_state.common.last_triggered_utc,
-                      sizeof(s_sleep_reward_state.common.last_triggered_utc));
-    prv_restore_state(file, ActivitySettingsKeyInsightActivityRewardTime,
-                      &s_activity_reward_state.common.last_triggered_utc,
-                      sizeof(s_activity_reward_state.common.last_triggered_utc));
-    prv_restore_state(file, ActivitySettingsKeyInsightActivitySummaryState,
-                      &activity_pin_last_state, sizeof(activity_pin_last_state));
-    prv_restore_state(file, ActivitySettingsKeyInsightSleepSummaryState, &s_sleep_pin_state,
-                      sizeof(s_sleep_pin_state));
-    prv_restore_state(file, ActivitySettingsKeyInsightNapSessionTime,
-                      &s_nap_pin_state.last_triggered_utc,
-                      sizeof(s_nap_pin_state.last_triggered_utc));
-    prv_restore_state(file, ActivitySettingsKeyInsightActivitySessionTime,
-                      &s_session_pin_state.start_utc, sizeof(s_session_pin_state.start_utc));
+    prv_restore_time(file, ActivitySettingsKeyInsightSleepRewardTime,
+                     &s_sleep_reward_state.common.last_triggered_utc);
+    prv_restore_time(file, ActivitySettingsKeyInsightActivityRewardTime,
+                     &s_activity_reward_state.common.last_triggered_utc);
+    prv_restore_summary_pin_state(file, &activity_pin_last_state);
+    prv_restore_sleep_pin_state(file, &s_sleep_pin_state);
+    prv_restore_time(file, ActivitySettingsKeyInsightNapSessionTime,
+                     &s_nap_pin_state.last_triggered_utc);
+    prv_restore_time(file, ActivitySettingsKeyInsightActivitySessionTime,
+                     &s_session_pin_state.start_utc);
     activity_private_settings_close(file);
   }
 
