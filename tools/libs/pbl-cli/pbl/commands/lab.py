@@ -4,11 +4,18 @@
 import json
 
 from pbl import lab as labs
+from pbl import lock
 from pbl.command import PblCommand
 
 
 def _port(port):
-    return {"port": port, "present": labs.port_present(port)}
+    present = labs.port_present(port)
+    key = lock.serial_key(port)
+    return {
+        "port": port,
+        "present": present,
+        "locked_by": lock.holder(key) if key else None,
+    }
 
 
 class Lab(PblCommand):
@@ -19,8 +26,8 @@ class Lab(PblCommand):
             "lab",
             "Show the hardware wired to this host",
             "Show the lab: the watches, power supplies and Bluetooth dongles "
-            "wired to this host, whether their ports are there, and the watch "
-            "the build runs on.",
+            "wired to this host, whether their ports are there, which session "
+            "holds them, and the watch the build runs on.",
         )
 
     def do_add_parser(self, parser_adder):
@@ -58,6 +65,7 @@ class Lab(PblCommand):
                     "serial": _port(watch.serial) if watch.serial else None,
                     "serial_baud": watch.serial_baud,
                     "probe": watch.probe,
+                    "probe_locked_by": lock.holder(lock.probe_key(watch.name)),
                     "supply": watch.supply,
                 }
             )
@@ -74,6 +82,8 @@ class Lab(PblCommand):
         text = entry["port"]
         if entry["present"] is False:
             text += " (missing)"
+        if entry["locked_by"] is not None:
+            text += f", in use by {lock.describe(entry['locked_by'])}"
         return text
 
     def do_run(self, args, unknown):
@@ -103,8 +113,11 @@ class Lab(PblCommand):
             print(f" {mark} {watch['name']}: {watch['board']}")
             if watch["serial"]:
                 print(f"      serial: {self._port_text(watch['serial'])}")
-            if watch["probe"]:
-                print(f"      probe: {watch['probe']}")
+            if watch["probe"] or watch["probe_locked_by"]:
+                probe = watch["probe"] or "the board's default"
+                if watch["probe_locked_by"]:
+                    probe += f", in use by {lock.describe(watch['probe_locked_by'])}"
+                print(f"      probe: {probe}")
             if watch["supply"]:
                 print(f"      supply: {watch['supply']}")
         if status["supplies"]:

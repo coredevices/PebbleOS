@@ -96,7 +96,8 @@ what plays the phone. The same tests run on any of:
 The setup comes from the {doc}`lab file <../../pbl/lab>`, which describes
 the hardware wired to this host and the rest of `pbl` uses too: the watch
 running the build's board (`--watch` picks another), its supply, and a dongle for the phone. Options on the
-command line override it.
+command line override it. A session on a watch holds the locks on all of
+those ports while it runs.
 
 ```shell
 pbl -b build-getafix itest --lab ~/pebble-lab.yaml --flash-before

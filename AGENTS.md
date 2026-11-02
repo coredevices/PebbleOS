@@ -64,9 +64,11 @@ CLI, one page per command, and `extending.md` for how to extend it),
 ## Hardware on this host
 
 - `pbl lab --json` lists the watches, power supplies and dongles wired to
-  this host (from its lab file), whether their ports are there and which
-  one runs the build. Check it instead of guessing serial ports; device
-  commands take their ports from it. See `docs/pbl/lab.md`.
+  this host (from its lab file), whether their ports are there, which one
+  runs the build, and which session holds each port. Check it instead of
+  guessing serial ports; device commands take their ports from it.
+- A port held by another session is in use: wait or ask, never kill the
+  holder. See `docs/pbl/lab.md`.
 
 ## Submodules in agent workspaces
 

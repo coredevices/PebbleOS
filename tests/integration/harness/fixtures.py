@@ -58,7 +58,19 @@ def lab_setup(request):
 
 
 @pytest.fixture(scope="session")
-def ppk2(lab_setup):
+def lab_locks(lab_setup):
+    """Hold the ports the setup uses, against other sessions."""
+    from pbl import lock
+
+    try:
+        with lock.holding(lab_setup.locks()):
+            yield
+    except lock.LockError as e:
+        pytest.exit(str(e), returncode=pytest.ExitCode.USAGE_ERROR)
+
+
+@pytest.fixture(scope="session")
+def ppk2(lab_setup, lab_locks):
     """The PPK2 powering the watch, if the setup has one."""
     if lab_setup.ppk2 is None:
         yield None
@@ -73,7 +85,7 @@ def ppk2(lab_setup):
 
 
 @pytest.fixture(scope="session")
-def device_object(request, build, results_dir, lab_setup, ppk2):
+def device_object(request, build, results_dir, lab_setup, lab_locks, ppk2):
     """The device, not launched."""
     from harness.build import Build
 

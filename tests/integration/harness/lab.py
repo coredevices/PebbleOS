@@ -86,6 +86,22 @@ class Setup:
                 return "no power supply in this setup"
         return None
 
+    def locks(self):
+        """The locks (:mod:`pbl.lock`) on the ports the setup uses."""
+        from pbl import lock
+
+        locks = [(lock.serial_key(port), f"serial port {port}") for port in self.serial]
+        if self.watch:
+            locks.append(
+                (lock.probe_key(self.watch), f"watch {self.watch}'s debug probe")
+            )
+        if self.ppk2:
+            key = "ppk2-auto" if self.ppk2 == "auto" else lock.serial_key(self.ppk2)
+            locks.append((key, f"PPK2 {self.ppk2}"))
+        for port in (self.bt_hci, self.phone.controller if self.phone else None):
+            locks.append((lock.serial_key(port), f"Bluetooth controller {port}"))
+        return locks
+
     def describe(self):
         parts = [self.watch or self.device_type]
         if self.serial:

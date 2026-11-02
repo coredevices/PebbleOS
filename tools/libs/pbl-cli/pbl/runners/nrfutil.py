@@ -12,6 +12,7 @@ QSPI_XIP_BASE = 0x12000000
 
 class NrfUtilRunner(Runner):
     name = "nrfutil"
+    lab_ports = ("probe",)
 
     @classmethod
     def capabilities(cls):
