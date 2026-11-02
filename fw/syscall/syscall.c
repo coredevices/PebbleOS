@@ -44,7 +44,7 @@ PBL_SYSCALL(void, sys_pbl_log, (VAL, LogBinaryMessage *, log_message), (VAL, uin
   // log_message points at a struct whose trailing message[] is sized by the
   // embedded message_length byte. Without a check, an app can hand us any
   // kernel address: log_level and message_length steer the formatting code,
-  // and kernel_pbl_log_flash() ends up writing `sizeof(*log_message) +
+  // and the flash backend ends up writing `sizeof(*log_message) +
   // message_length` bytes straight from that address to the flash log channel
   // — a generic kernel-memory exfiltration primitive.
   if (from_user) {

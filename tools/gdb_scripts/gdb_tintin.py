@@ -1217,9 +1217,9 @@ class DumpLogBuffer(gdb.Command):
 
     def invoke(self, arg, from_tty):
         gdb.write(f"Build ID: {self._get_build_id()}\n")
-        s_buffer = get_static_variable("s_buffer", _file="advanced_logging.c")
+        s_buffer = get_static_variable("s_buffer", _file="flash.c")
         s_buffer_client = get_static_variable(
-            "s_buffer_client", _file="advanced_logging.c"
+            "s_buffer_client", _file="flash.c"
         )
         buf = gdb.parse_and_eval(s_buffer)
         client = gdb.parse_and_eval(s_buffer_client)

@@ -38,3 +38,18 @@ backend-str = UART
 source "subsys/logging/Kconfig.template.backend_level"
 
 endif
+
+config LOG_BACKEND_FLASH
+    bool "Flash backend"
+    default y
+    help
+      Store log messages in the debug flash region, one log generation
+      per boot.
+
+if LOG_BACKEND_FLASH
+
+backend = FLASH
+backend-str = Flash
+source "subsys/logging/Kconfig.template.backend_level"
+
+endif

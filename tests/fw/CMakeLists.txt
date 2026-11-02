@@ -133,14 +133,6 @@ pbl_clar_test(test_heap
     fw/applib/app_heap_util.c
 )
 
-pbl_clar_test(test_flash_logging
-  SOURCES
-    fw/debug/flash_logging.c
-    tests/fakes/fake_spi_flash.c
-  DEFINES DUMA_DISABLED
-  OVERRIDES dummy_board
-)
-
 pbl_clar_test(test_data_logging
   MODULES pfs rand
   SOURCES

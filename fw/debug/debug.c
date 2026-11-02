@@ -3,11 +3,11 @@
 
 #include "debug.h"
 
-#include "advanced_logging.h"
 #include "debug_reboot_reason.h"
-#include "flash_logging.h"
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/backend.h>
+#include <pbl/logging/backend_flash.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -74,7 +74,7 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
   return true;
 }
 
-// Called by flash_dump_log_file() when the log has been completely dumped
+// Called by pbl_log_flash_dump() when the log has been completely dumped
 static void prv_bt_log_dump_completed_cb(bool success) {
   BluetoothHeader header = {.cookie = s_bt_dump_chunk_callback_data.cookie};
   // Send a "no logs" message if the generation did not exist and the remote supports
@@ -110,16 +110,16 @@ static void prv_flash_logging_bluetooth_dump(CommSession *session, int generatio
   prv_put_status_event(DebugInfoStateStarted);
 
   // Temporarily disable logging so we don't log forever.
-  flash_logging_set_enabled(false);
+  pbl_log_backend_disable(PBL_LOG_BACKEND_GET(flash));
 
   s_bt_dump_chunk_callback_data.in_progress = true;
   s_bt_dump_chunk_callback_data.generation = generation;
   s_bt_dump_chunk_callback_data.comm_session = session;
   s_bt_dump_chunk_callback_data.cookie = cookie;
 
-  flash_dump_log_file(s_bt_dump_chunk_callback_data.generation, prv_bt_log_dump_line_cb,
-                      prv_bt_log_dump_completed_cb);
-  flash_logging_set_enabled(true);
+  pbl_log_flash_dump(s_bt_dump_chunk_callback_data.generation, prv_bt_log_dump_line_cb,
+                     prv_bt_log_dump_completed_cb);
+  pbl_log_backend_enable(PBL_LOG_BACKEND_GET(flash));
 }
 
 void dump_log_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
@@ -160,8 +160,6 @@ void dump_log_protocol_msg_callback(CommSession *session, const uint8_t *data, s
 }
 
 void debug_init(McuRebootReason mcu_reboot_reason) {
-  advanced_logging_init();
-
   // Log the firmware version in the first flash log line:
   PBL_LOG_ALWAYS("Firmware version: %s", TINTIN_METADATA.version_tag);
   PBL_LOG_ALWAYS("Platform: %u, hw: %s, sn: %s", TINTIN_METADATA.hw_platform, mfg_get_hw_version(),

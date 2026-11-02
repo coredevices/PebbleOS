@@ -3,6 +3,8 @@
 
 #ifdef CONFIG_SHELL
 
+#include "flash.h"
+
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
@@ -12,7 +14,6 @@
 #include <pbl/shell/shell.h>
 #include <pbl/util/byteorder.h>
 
-#include <debug/flash_logging.h>
 #include <logging/logging_private.h>
 
 static const struct pbl_shell *s_dump_sh;
@@ -46,7 +47,7 @@ static void prv_dump_completed_cb(bool success) {
 static int prv_dump(const struct pbl_shell *sh, int generation) {
   // Completion runs later on this same task, or synchronously (with s_dump_sh still unset) when
   // the generation doesn't exist.
-  if (!flash_dump_log_file(generation, prv_dump_line_cb, prv_dump_completed_cb)) {
+  if (!pbl_log_flash_dump(generation, prv_dump_line_cb, prv_dump_completed_cb)) {
     pbl_shell_error(sh, "log generation %d not found", generation);
     return -ENOENT;
   }
@@ -90,8 +91,8 @@ static void prv_spam_cb(void *data) {
     memset(msg->message, letter, msg->message_length - 1);
     msg->message[msg->message_length - 1] = 0;
 
-    uint32_t flash_addr = flash_logging_log_start(sizeof(buffer));
-    flash_logging_write(buffer, flash_addr, sizeof(buffer));
+    uint32_t flash_addr = pbl_log__flash_storage_log_start(sizeof(buffer));
+    pbl_log__flash_storage_write(buffer, flash_addr, sizeof(buffer));
   }
 }
 

@@ -67,7 +67,7 @@ static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_
                                               uint16_t max_period_secs,
                                               pbl_bt_responsiveness_granted_cb_t granted_handler) {
   // PutBytes calls this every single packet — at INFO it pushes ~76 bytes/packet
-  // into the 1200-byte advanced_logging ring buffer, which fills in ~16 packets
+  // into the 1200-byte flash log backend ring buffer, which fills in ~16 packets
   // and forces inline flash-logging flushes on KernelMain.  That starves
   // SystemTask's PutBytes callback (it's competing for s_flash_write_mutex) and
   // wedges the install with no watchdog reboot.  CLAUDE.md is explicit that

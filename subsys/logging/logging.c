@@ -7,16 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/kernel/irq.h>
-#include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/interrupts.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/string.h>
-
-#include <debug/advanced_logging.h>
 
 #ifndef PBL_NO_LINKER_SCRIPT
 extern const struct pbl_log_backend __pbl_log_backends_start[];
@@ -32,6 +27,25 @@ extern const struct pbl_log_backend __pbl_log_backends_end[] PBL_UNSORTED_SECTIO
        _backend < __pbl_log_backends_end; _backend++)
 
 bool g_pbl_log_enabled = true;
+
+char pbl_log_get_level_char(const uint8_t log_level) {
+  switch (log_level) {
+    case LOG_LEVEL_ALWAYS:
+      return '*';
+    case LOG_LEVEL_ERROR:
+      return 'E';
+    case LOG_LEVEL_WARNING:
+      return 'W';
+    case LOG_LEVEL_INFO:
+      return 'I';
+    case LOG_LEVEL_DEBUG:
+      return 'D';
+    case LOG_LEVEL_DEBUG_VERBOSE:
+      return 'V';
+    default:
+      return '?';
+  }
+}
 
 void pbl_log_backend_enable(const struct pbl_log_backend *backend) {
   __atomic_store_n(&backend->state->enabled, true, __ATOMIC_RELAXED);
@@ -110,16 +124,6 @@ static void prv_log_binary(LogBinaryMessage *log_message, uint32_t flags, const 
   prv_dispatch(&msg, flags & PBL_LOG_FLAG_FILTERED);
 }
 
-static void prv_log_flash(LogBinaryMessage *log_message, uint32_t flags) {
-  int length = sizeof(*log_message) + log_message->message_length;
-
-  if (g_pbl_log_enabled &&
-      ((flags & PBL_LOG_FLAG_FILTERED) || log_message->log_level == LOG_LEVEL_ALWAYS ||
-       (log_message->log_level <= FLASH_LOG_LEVEL))) {
-    pbl_log_advanced((const char *)log_message, length, flags & PBL_LOG_FLAG_ASYNC);
-  }
-}
-
 void kernel_pbl_log_verify_user(const LogBinaryMessage *log_message) {
   pbl_syscall_verify_user(log_message, sizeof(*log_message));
 
@@ -141,10 +145,6 @@ void kernel_pbl_log_verify_user(const LogBinaryMessage *log_message) {
 
 void kernel_pbl_log(LogBinaryMessage *log_message, uint32_t flags) {
   prv_log_binary(log_message, flags, nullptr);
-
-  if (!pbl_irq_is_locked() && !mcu_state_is_isr() && !pbl_sched_is_locked()) {
-    prv_log_flash(log_message, flags);
-  }
 }
 
 void kernel_pbl_log_app(LogBinaryMessage *log_message, const uint8_t *app_uuid) {

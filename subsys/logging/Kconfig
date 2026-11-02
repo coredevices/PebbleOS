@@ -46,27 +46,6 @@ config DEFAULT_LOG_LEVEL
     default 200 if DEFAULT_LOG_LEVEL_DEBUG
     default 255 if DEFAULT_LOG_LEVEL_DEBUG_VERBOSE
 
-choice
-    prompt "Flash log level"
-    default FLASH_LOG_LEVEL_INFO
-
-config FLASH_LOG_LEVEL_ERROR
-    bool "Error"
-
-config FLASH_LOG_LEVEL_WARNING
-    bool "Warning"
-
-config FLASH_LOG_LEVEL_INFO
-    bool "Info"
-
-config FLASH_LOG_LEVEL_DEBUG
-    bool "Debug"
-
-config FLASH_LOG_LEVEL_DEBUG_VERBOSE
-    bool "Debug verbose"
-
-endchoice
-
 config LOG_TASK_PREFIX
     bool "Task prefix"
     depends on LOG
