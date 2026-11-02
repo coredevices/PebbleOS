@@ -71,19 +71,20 @@ extern const struct pbl_display_ops pbl_display_sharp_ls013b7dh01_ops;
  * @param _enable DISP input, from PBL_GPIO().
  * @param _extcomin EXTCOMIN output, from PBL_PWM(), at twice the VCOM frequency.
  * @param _rotated Panel mounted upside down.
+ * @param ... Other mounting properties, as for PBL_DISPLAY_INIT().
  */
-#define PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(sym, _name, _spi, _enable, _extcomin, _rotated) \
-  PBL_DISPLAY_STATE_DEFINE(sym);                                                             \
-  static struct pbl_display_sharp_ls013b7dh01_state sym##_sharp_state;                       \
-  const struct pbl_display_sharp_ls013b7dh01 sym = {                                         \
-    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sharp_ls013b7dh01_ops, nullptr,        \
-                             SHARP_LS013B7DH01_WIDTH, SHARP_LS013B7DH01_HEIGHT,              \
-                             PBL_DISPLAY_FORMAT_MONO, _rotated),                             \
-    .state = &sym##_sharp_state,                                                             \
-    .spi = _spi,                                                                             \
-    .enable = _enable,                                                                       \
-    .extcomin = _extcomin,                                                                   \
-  };                                                                                         \
+#define PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(sym, _name, _spi, _enable, _extcomin, _rotated, ...) \
+  PBL_DISPLAY_STATE_DEFINE(sym);                                                                  \
+  static struct pbl_display_sharp_ls013b7dh01_state sym##_sharp_state;                            \
+  const struct pbl_display_sharp_ls013b7dh01 sym = {                                              \
+    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sharp_ls013b7dh01_ops, nullptr,             \
+                             SHARP_LS013B7DH01_WIDTH, SHARP_LS013B7DH01_HEIGHT,                   \
+                             PBL_DISPLAY_FORMAT_MONO, _rotated, __VA_ARGS__),                     \
+    .state = &sym##_sharp_state,                                                                  \
+    .spi = _spi,                                                                                  \
+    .enable = _enable,                                                                            \
+    .extcomin = _extcomin,                                                                        \
+  };                                                                                              \
   PBL_DEVICE_REGISTER(sym, &sym.disp.dev)
 
 /** @} */

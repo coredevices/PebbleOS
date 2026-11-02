@@ -119,6 +119,13 @@ struct pbl_display {
   enum pbl_display_format format;
   /** Panel mounted upside down. */
   bool rotated;
+  /**
+   * Pixels hidden at each end of the first rows, mirrored in the last rows, e.g. by tinted
+   * rounded corners on the glass, or NULL.
+   */
+  const uint8_t *corners;
+  /** Number of @ref corners entries. */
+  uint8_t num_corners;
 };
 
 /** @brief The display, defined by the board. */
@@ -145,18 +152,17 @@ extern const struct pbl_display *const DISPLAY;
  * @param _height Height, in pixels.
  * @param _format Framebuffer format.
  * @param _rotated Panel mounted upside down.
+ * @param ... Other mounting properties, designated initializers of struct pbl_display.
  */
-#define PBL_DISPLAY_INIT(sym, _name, _ops, _deps, _width, _height, _format, _rotated)            \
-  {                                                                                              \
-    .dev =                                                                                       \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_init, nullptr, _deps, &pbl_display_class), \
-    .ops = (_ops),                                                                               \
-    .state = &sym##_display_state,                                                               \
-    .width = (_width),                                                                           \
-    .height = (_height),                                                                         \
-    .format = (_format),                                                                         \
-    .rotated = (_rotated),                                                                       \
-  }
+#define PBL_DISPLAY_INIT(sym, _name, _ops, _deps, _width, _height, _format, _rotated, ...)         \
+  {.dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_init, nullptr, _deps, &pbl_display_class), \
+   .ops = (_ops),                                                                                  \
+   .state = &sym##_display_state,                                                                  \
+   .width = (_width),                                                                              \
+   .height = (_height),                                                                            \
+   .format = (_format),                                                                            \
+   .rotated = (_rotated),                                                                          \
+   __VA_ARGS__}
 
 /**
  * @brief Device init of every display: sets the class state up, then calls the driver's init.

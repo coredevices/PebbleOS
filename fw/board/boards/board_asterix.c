@@ -26,6 +26,7 @@
 #include <pbl/drivers/vibe/drv2604.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/size.h>
 
 #include <board/board.h>
 #include <flash_region/flash_region.h>
@@ -85,11 +86,15 @@ PBL_SPI_NRF5_DEFINE(s_spi3, "spi3", 3, PBL_GPIO(NRF5_GPIO_P0, 6, 0), PBL_GPIO(NR
                     PBL_GPIO(nullptr, 0, 0), nullptr, PBL_GPIO(NRF5_GPIO_P1, 3, 0));
 PBL_IRQ_CONNECT(SPIM3, 7, pbl_spi_nrf5_irq_handler, &s_spi3, 0);
 
+// Tinted rounded corners on the glass
+static const uint8_t s_display_corners[] = {3, 1, 1};
+
 // EXTCOMIN feeds a flip-flop, generating a 60 Hz 50% VCOM
 PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(
     s_display, "display",
     PBL_SPI_DEV(&s_spi3.bus, 0, 1000000, PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST),
-    PBL_GPIO(NRF5_GPIO_P0, 4, 0), PBL_PWM(&s_extcomin.ctrl, 0, PBL_PWM_HZ(120), 0), false);
+    PBL_GPIO(NRF5_GPIO_P0, 4, 0), PBL_PWM(&s_extcomin.ctrl, 0, PBL_PWM_HZ(120), 0), false,
+    .corners = s_display_corners, .num_corners = ARRAY_LENGTH(s_display_corners));
 
 const struct pbl_display *const DISPLAY = &s_display.disp;
 

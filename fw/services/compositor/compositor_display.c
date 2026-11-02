@@ -11,12 +11,12 @@
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/compositor_private.h>
 #include <pbl/util/math.h>
-#include <pbl/util/size.h>
 
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gcolor_definitions.h>
 #include <applib/graphics/gtypes.h>
 #include <kernel/events.h>
+#include <kernel/pbl_malloc.h>
 
 static void (*s_update_complete_handler)(bool success);
 
@@ -27,26 +27,16 @@ static RtcTicks s_flush_ticks;
 static uint16_t s_flush_y0;
 static uint16_t s_flush_y1;
 
-// Rounded corners, drawn into the framebuffer for the flush and undone after it. Each entry is
-// the number of pixels masked from the left and right edges of a row from the top or bottom.
-#ifdef CONFIG_BOARD_ASTERIX
-static const uint8_t s_corner_shape[] = {3, 1, 1};
-#elifdef CONFIG_BOARD_OBELIX
-static const uint8_t s_corner_shape[] = {3, 3, 2, 1};
-#endif
-
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX)
-#define CORNER_ROWS      ARRAY_LENGTH(s_corner_shape)
-#define CORNER_MAX_WIDTH 3
+// Corner pixels hidden by the display mounting, drawn into the framebuffer for the flush and
+// undone after it. Holds the bytes of each masked row: [row][left, right][byte]
+static uint8_t *s_saved_corners;
+static uint8_t s_corner_bytes;
 
 #if PBL_BW
 #define PIXEL_BYTE(x) ((x) / 8)
 #else
 #define PIXEL_BYTE(x) (x)
 #endif
-
-// Bytes holding the corner pixels of each masked row: [row][left, right][byte]
-static uint8_t s_saved_corners[CORNER_ROWS * 2][2][CORNER_MAX_WIDTH];
 
 static void prv_mask_pixel(uint8_t *line, uint16_t x) {
 #if PBL_BW
@@ -56,50 +46,53 @@ static void prv_mask_pixel(uint8_t *line, uint16_t x) {
 #endif
 }
 
-static void prv_corner_row(uint16_t y, uint8_t *width, uint8_t *save_idx) {
-  if (y < CORNER_ROWS) {
-    *width = s_corner_shape[y];
+static uint8_t prv_corner_row(uint16_t y, uint8_t *save_idx) {
+  const uint8_t rows = DISPLAY->num_corners;
+
+  if (y < rows) {
     *save_idx = y;
-  } else if (y >= DISP_ROWS - CORNER_ROWS) {
-    *width = s_corner_shape[DISP_ROWS - y - 1];
-    *save_idx = CORNER_ROWS + (DISP_ROWS - y - 1);
-  } else {
-    *width = 0;
+    return DISPLAY->corners[y];
   }
+
+  if (y >= DISP_ROWS - rows) {
+    *save_idx = rows + (DISP_ROWS - y - 1);
+    return DISPLAY->corners[DISP_ROWS - y - 1];
+  }
+
+  return 0;
 }
 
 static void prv_corners_apply(FrameBuffer *fb, bool mask) {
-  for (uint16_t y = s_flush_y0; y <= s_flush_y1; y++) {
-    uint8_t width;
-    uint8_t idx;
+  if (s_saved_corners == nullptr) {
+    return;
+  }
 
-    prv_corner_row(y, &width, &idx);
+  for (uint16_t y = s_flush_y0; y <= s_flush_y1; y++) {
+    uint8_t idx;
+    const uint8_t width = prv_corner_row(y, &idx);
     if (width == 0) {
       continue;
     }
 
     uint8_t *line = (uint8_t *)framebuffer_get_line(fb, y);
+    uint8_t *saved = &s_saved_corners[idx * 2 * s_corner_bytes];
     uint16_t left = PIXEL_BYTE(0);
     uint16_t right = PIXEL_BYTE(DISP_COLS - width);
     uint16_t len = PIXEL_BYTE(width - 1) - left + 1;
 
     if (mask) {
-      memcpy(s_saved_corners[idx][0], &line[left], len);
-      memcpy(s_saved_corners[idx][1], &line[right], len);
+      memcpy(saved, &line[left], len);
+      memcpy(&saved[s_corner_bytes], &line[right], len);
       for (uint8_t x = 0; x < width; x++) {
         prv_mask_pixel(line, x);
         prv_mask_pixel(line, DISP_COLS - x - 1);
       }
     } else {
-      memcpy(&line[left], s_saved_corners[idx][0], len);
-      memcpy(&line[right], s_saved_corners[idx][1], len);
+      memcpy(&line[left], saved, len);
+      memcpy(&line[right], &saved[s_corner_bytes], len);
     }
   }
 }
-#else
-static void prv_corners_apply(FrameBuffer *fb, bool mask) {
-}
-#endif
 
 static void prv_flush_finish(void *data) {
   bool success = (data == nullptr);
@@ -148,6 +141,16 @@ void compositor_display_init(void) {
 
   PBL_ASSERTN((DISPLAY->width == DISP_COLS) && (DISPLAY->height == DISP_ROWS) &&
               (DISPLAY->format == format));
+
+  uint8_t max_width = 0;
+  for (uint8_t i = 0; i < DISPLAY->num_corners; i++) {
+    max_width = MAX(max_width, DISPLAY->corners[i]);
+  }
+
+  if (max_width > 0) {
+    s_corner_bytes = PIXEL_BYTE(max_width - 1) + 1;
+    s_saved_corners = kernel_malloc_check(DISPLAY->num_corners * 2 * 2 * s_corner_bytes);
+  }
 }
 
 void compositor_display_update(void (*handle_update_complete_cb)(bool success)) {
