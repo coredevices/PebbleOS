@@ -67,7 +67,7 @@ message MeasurementSet {
   }
   required bytes uuid = 1; /// 16-byte uuid for efficient message size
   optional User user = 2;
-  required uint32 time_utc = 3;     /// time since epoch (in seconds)
+  required uint64 time_utc = 3;     /// time since epoch (in seconds)
   required sint32 utc_to_local = 4; /// sint32 stores neg number efficiently. need to recast before
                                     /// adding to time_utc, but saves storage
   optional bytes sensor_settings = 5; /// sensors might have all sorts of different modes or config
