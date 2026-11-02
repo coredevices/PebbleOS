@@ -512,7 +512,9 @@ void hrm_init(HRMDevice *dev) {
   pbl_gpio_configure(&dev->int_input, PBL_GPIO_INPUT | PBL_GPIO_PULL_DOWN);
 #endif
 
-  dev->state->is_wear = false;
+  // Wear state is unknown until the soft ADT reaches a verdict, which can take minutes while the
+  // wearer moves. Assume worn until then: the ADT reports off-wrist as well as on-wrist.
+  dev->state->is_wear = true;
   dev->state->initialized = true;
 }
 
