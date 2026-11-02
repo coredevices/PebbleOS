@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <string.h>
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/kernel/compiler.h>
@@ -51,6 +52,14 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 //! <uint8_t key_size M> <uint8_t[M] key_bytes>
 //! <uint16_t value_size N> <uint8_t[N] value_bytes>
 //! \endcode
+//!
+//! <b>INSERT_WITH_TIMESTAMP_64:</b> Same as INSERT_WITH_TIMESTAMP with a signed 64-bit time.
+//!
+//! \code{.c}
+//! 0x0E <uint16_t token> <uint8_t DatabaseId> <int64_t timestamp>
+//! <uint8_t key_size M> <uint8_t[M] key_bytes>
+//! <uint16_t value_size N> <uint8_t[N] value_bytes>
+//! \endcode
 
 //! BlobDB Endpoint ID
 
@@ -59,7 +68,8 @@ static const uint8_t VALUE_DATA_LENGTH = (sizeof(uint16_t) + sizeof(uint8_t));
 
 //! Message Length Constants
 static const uint8_t MIN_INSERT_LENGTH = 8;
-static const uint8_t MIN_INSERT_WITH_TIMESTAMP_LENGTH = 12; // + 4 bytes for timestamp
+static const uint8_t MIN_INSERT_WITH_TIMESTAMP_LENGTH = 12;    // + 4 bytes for timestamp
+static const uint8_t MIN_INSERT_WITH_TIMESTAMP_64_LENGTH = 16; // + 8 bytes for timestamp
 static const uint8_t MIN_DELETE_LENGTH = 5;
 static const uint8_t MIN_CLEAR_LENGTH = 3;
 
@@ -185,8 +195,9 @@ static void prv_handle_database_insert(struct pbl_pp_session *session, const uin
 }
 
 static void prv_handle_database_insert_with_timestamp(struct pbl_pp_session *session,
-                                                      const uint8_t *data, uint32_t length) {
-  if (length < MIN_INSERT_WITH_TIMESTAMP_LENGTH) {
+                                                      const uint8_t *data, uint32_t length,
+                                                      bool time64) {
+  if (length < (time64 ? MIN_INSERT_WITH_TIMESTAMP_64_LENGTH : MIN_INSERT_WITH_TIMESTAMP_LENGTH)) {
     prv_send_response(session, prv_try_read_token(data, length), BLOB_DB_INVALID_DATA);
     return;
   }
@@ -198,9 +209,19 @@ static void prv_handle_database_insert_with_timestamp(struct pbl_pp_session *ses
   // Read token and db_id
   iter = endpoint_private_read_token_db_id(iter, &token, &db_id);
 
-  // Read timestamp (4 bytes, little-endian)
-  uint32_t timestamp = *(uint32_t *)iter;
-  iter += sizeof(uint32_t);
+  // Read timestamp (little-endian)
+  time_t timestamp;
+  if (time64) {
+    int64_t t64;
+    memcpy(&t64, iter, sizeof(t64));
+    iter += sizeof(t64);
+    timestamp = t64;
+  } else {
+    uint32_t t32;
+    memcpy(&t32, iter, sizeof(t32));
+    iter += sizeof(t32);
+    timestamp = t32;
+  }
 
   // read key length and key bytes ptr
   uint8_t key_size;
@@ -236,7 +257,7 @@ static void prv_handle_database_insert_with_timestamp(struct pbl_pp_session *ses
 
   // Use timestamped insert for Settings - will reject if watch data is newer
   int ret = settings_blob_db_insert_with_timestamp(key_bytes, key_size, value_bytes, value_size,
-                                                   (time_t)timestamp);
+                                                   timestamp);
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 }
 
@@ -311,7 +332,11 @@ static void prv_blob_db_msg_decode_and_handle(struct pbl_pp_session *session, Bl
       break;
     case BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP:
       PBL_LOG_DBG("Got INSERT_WITH_TIMESTAMP");
-      prv_handle_database_insert_with_timestamp(session, data, data_length);
+      prv_handle_database_insert_with_timestamp(session, data, data_length, false /* time64 */);
+      break;
+    case BLOB_DB_COMMAND_INSERT_WITH_TIMESTAMP_64:
+      PBL_LOG_DBG("Got INSERT_WITH_TIMESTAMP_64");
+      prv_handle_database_insert_with_timestamp(session, data, data_length, true /* time64 */);
       break;
     // Commands not implemented.
     case BLOB_DB_COMMAND_READ:
