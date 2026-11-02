@@ -5,11 +5,11 @@
 
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/timer.h>
 
 #include <system/bootbits.h>
 #include <system/reboot_reason.h>
-#include <system/reset.h>
 
 // Must stay well below the PMIC's back button reset, ~8-11 s, so that a user trying to reset
 // does not shut the watch down instead.
@@ -40,7 +40,7 @@ static void prv_held(struct pbl_timer *timer) {
   reboot_reason_set(&reason);
 
   // This back door must work: no orderly shutdown.
-  system_hard_reset();
+  pbl_reboot_emergency();
 }
 
 static struct pbl_timer s_timer = PBL_TIMER_INITIALIZER(prv_held);

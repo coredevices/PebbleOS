@@ -12,6 +12,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/task_wdt/task_wdt.h>
@@ -389,6 +390,19 @@ void pbl_flash_stop(const struct pbl_flash *flash) {
   st->stopped = true;
   pbl_mutex_unlock(&st->lock);
 }
+
+static void prv_sys_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
+  const struct pbl_device *dev;
+
+  PBL_DEVICE_CLASS_FOREACH(&pbl_flash_class, dev) {
+    pbl_flash_stop(container_of(dev, const struct pbl_flash, dev));
+  }
+}
+
+PBL_SYS_OFF_HANDLER_DEFINE(flash_restart, PBL_SYS_OFF_RESTART_PREPARE, PBL_SYS_OFF_PRIO_DEFAULT,
+                           prv_sys_off_prepare, nullptr);
+PBL_SYS_OFF_HANDLER_DEFINE(flash_power_off, PBL_SYS_OFF_POWER_OFF_PREPARE, PBL_SYS_OFF_PRIO_DEFAULT,
+                           prv_sys_off_prepare, nullptr);
 
 // Serializes an access that is neither a read, a write nor an erase of the array
 int pbl_flash__access_begin(const struct pbl_flash *flash, uint32_t resume_ms) {

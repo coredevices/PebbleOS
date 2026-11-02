@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/runlevel.h>
@@ -19,7 +20,6 @@
 #include <system/bootbits.h>
 #include <system/firmware_storage.h>
 #include <system/reboot_reason.h>
-#include <system/reset.h>
 
 #if !defined(CONFIG_RECOVERY_FW)
 #include <pbl/services/blob_db/pin_db.h>
@@ -57,7 +57,7 @@ static void prv_factory_reset_non_pfs_data() {
 void factory_reset_set_reason_and_reset(void) {
   RebootReason reason = {RebootReasonCode_FactoryResetReset, 0};
   reboot_reason_set(&reason);
-  system_reset();
+  pbl_reboot();
 }
 
 static void prv_factory_reset_post(bool should_shutdown) {

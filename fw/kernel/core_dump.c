@@ -24,6 +24,7 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/mpu.h>
 #include <pbl/services/comm_session/session.h>
@@ -39,7 +40,6 @@ extern char *itoa(int value, char *str, int base);
 #include <mfg/mfg_serials.h>
 #include <pebbleos/chip_id.h>
 #include <system/bootbits.h>
-#include <system/reset.h>
 #include <system/version.h>
 
 #ifdef CONFIG_SOC_NRF52
@@ -160,7 +160,7 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
 
 [[noreturn]] static void prv_reset(void) {
   dbgserial_flush();
-  system_hard_reset();
+  pbl_reboot_emergency();
 }
 
 // -----------------------------------------------------------------------------------------

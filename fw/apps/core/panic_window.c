@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/reboot.h>
 #include <pbl/services/runlevel.h>
 
 #include <applib/app.h>
@@ -17,7 +18,6 @@
 #include <kernel/panic.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
-#include <system/reset.h>
 
 static const uint8_t sad_watch[] = {
   0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x20, 0x00,
@@ -70,7 +70,7 @@ static void prv_panic_reset_callback(void *data) {
   };
   reboot_reason_set(&reason);
 
-  system_reset();
+  pbl_reboot();
 }
 
 static void prv_panic_button_click_handler(ClickRecognizerRef recognizer, void *context) {
