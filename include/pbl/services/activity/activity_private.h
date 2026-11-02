@@ -79,11 +79,11 @@ typedef uint32_t ActivityScalarStore;
  */
 #define ACTIVITY_HR_EARLY_ABORT_SEC (40)
 
-/** @brief Good quality heart rate samples after which the window ends early. */
-#define ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT (10)
-
-/** @brief Excellent quality heart rate samples after which the window ends early. */
-#define ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT (5)
+/**
+ * @brief High-confidence (@ref HRM_CONFIDENCE_HIGH) heart rate samples after which the window
+ * ends early.
+ */
+#define ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SAMPLES_SHORT_CIRCUIT (10)
 
 /**
  * @brief Good quality SpO2 samples after which the window ends early.
@@ -310,6 +310,8 @@ typedef struct {
   ActivityScalarStore resting_bpm;
   /** Quality of the most recent reading, an @c HRMQuality value. */
   ActivityScalarStore current_quality;
+  /** Algorithm confidence of the most recent reading, 0-100. */
+  uint8_t current_confidence;
   /** Last stable (median) heart rate, in beats per minute. */
   ActivityScalarStore last_stable_bpm;
   /** UTC time of the last stable heart rate. */
@@ -466,10 +468,8 @@ typedef struct {
 
   /** Samples in the past minute. */
   uint16_t num_samples;
-  /** Good quality samples in the past minute. */
-  uint16_t num_good_quality_samples;
-  /** Excellent quality samples in the past minute. */
-  uint16_t num_excellent_samples;
+  /** High-confidence samples in the past minute. */
+  uint16_t num_high_confidence_samples;
   /** Stored samples, in beats per minute. */
   uint8_t samples[ACTIVITY_MAX_HR_SAMPLES];
   /** Weights of the stored samples. */

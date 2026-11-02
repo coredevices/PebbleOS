@@ -521,21 +521,14 @@ uint32_t activity_metrics_prv_get_steps(void) {
   return state->step_data.steps;
 }
 
-static uint8_t prv_get_hr_quality_weight(HRMQuality quality) {
-  static const struct {
-    HRMQuality quality;
-    uint8_t weight_x100;
-  } s_hr_quality_weights_x100[] = {
-    {HRMQuality_OffWrist, 0},    {HRMQuality_Worst, 1}, {HRMQuality_Poor, 1},
-    {HRMQuality_Acceptable, 60}, {HRMQuality_Good, 65}, {HRMQuality_Excellent, 85},
-  };
-
-  for (size_t i = 0; i < ARRAY_LENGTH(s_hr_quality_weights_x100); i++) {
-    if (quality == s_hr_quality_weights_x100[i].quality) {
-      return s_hr_quality_weights_x100[i].weight_x100;
-    }
+// Weight of a sample in the minute median, x100. Squaring the algorithm confidence lets
+// high-confidence samples dominate while low-confidence ones still count.
+static uint8_t prv_get_hr_confidence_weight(HRMBPMData bpm) {
+  if (bpm.quality == HRMQuality_OffWrist) {
+    return 0;
   }
-  return 0;
+  const uint32_t confidence = MIN(bpm.confidence, 100U);
+  return (uint8_t)((confidence * confidence) / 100);
 }
 
 // --------------------------------------------------------------------------------------------
@@ -578,8 +571,7 @@ void activity_metrics_prv_reset_hr_stats(void) {
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
     state->hr.num_samples = 0;
-    state->hr.num_good_quality_samples = 0;
-    state->hr.num_excellent_samples = 0;
+    state->hr.num_high_confidence_samples = 0;
     memset(state->hr.samples, 0, sizeof(state->hr.samples));
     memset(state->hr.weights, 0, sizeof(state->hr.weights));
 
@@ -627,12 +619,9 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
       // is terribly wrong.
       PBL_ASSERT(state->hr.num_samples <= ACTIVITY_MAX_HR_SAMPLES, "Too many samples");
       state->hr.samples[state->hr.num_samples] = hrm_event->bpm.bpm;
-      state->hr.weights[state->hr.num_samples] = prv_get_hr_quality_weight(hrm_event->bpm.quality);
-      if (hrm_event->bpm.quality >= HRMQuality_Good) {
-        state->hr.num_good_quality_samples++;
-      }
-      if (hrm_event->bpm.quality >= HRMQuality_Excellent) {
-        state->hr.num_excellent_samples++;
+      state->hr.weights[state->hr.num_samples] = prv_get_hr_confidence_weight(hrm_event->bpm);
+      if (hrm_event->bpm.confidence >= HRM_CONFIDENCE_HIGH) {
+        state->hr.num_high_confidence_samples++;
       }
 
       state->hr.num_samples++;
@@ -645,6 +634,7 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
     // Save the BPM, quality, and update time (UTC) of the last reading for activity_get_metric()
     state->hr.metrics.current_bpm = hrm_event->bpm.bpm;
     state->hr.metrics.current_quality = hrm_event->bpm.quality;
+    state->hr.metrics.current_confidence = hrm_event->bpm.confidence;
     state->hr.metrics.current_update_time_utc = now_utc;
   }
   pbl_mutex_unlock(&state->mutex);

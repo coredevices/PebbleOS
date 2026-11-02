@@ -113,13 +113,10 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
   if (s_activity_state.hr.currently_sampling) {
     // If we are currently sampling, turn off when:
     // - We reach the end of our maximum time on, ACTIVITY_DEFAULT_HR_ON_TIME_SEC
-    // - We get ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT good quality samples
-    // - We get ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT excellent quality samples
+    // - We get ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SAMPLES_SHORT_CIRCUIT high-confidence samples
     const uint32_t turn_off_at = last_toggled_ts + ACTIVITY_DEFAULT_HR_ON_TIME_SEC;
-    const bool good_samples_req_met = (s_activity_state.hr.num_good_quality_samples >=
-                                       ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT);
-    const bool excellent_samples_req_met = (s_activity_state.hr.num_excellent_samples >=
-                                            ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT);
+    const bool samples_req_met = (s_activity_state.hr.num_high_confidence_samples >=
+                                  ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SAMPLES_SHORT_CIRCUIT);
     // Doomed-case early abort: no valid reading at all by the cutoff means the signal isn't
     // converging (off-wrist / no contact), so stop wasting green-LED time on the back half of the
     // window. Keyed on last_sample_ts (uptime of the last valid BPM) vs the window start, NOT the
@@ -130,8 +127,7 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     // short-circuit.
     const bool early_abort = (now_ts >= last_toggled_ts + ACTIVITY_HR_EARLY_ABORT_SEC) &&
                              (s_activity_state.hr.last_sample_ts < last_toggled_ts);
-    if ((turn_off_at <= now_ts) || good_samples_req_met || excellent_samples_req_met ||
-        early_abort) {
+    if ((turn_off_at <= now_ts) || samples_req_met || early_abort) {
       should_toggle = true;
     }
   } else {
