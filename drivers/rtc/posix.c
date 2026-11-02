@@ -69,8 +69,8 @@ bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
   if (t->tm_year < 100) {
     t->tm_year = 100;
     return true;
-  } else if (t->tm_year > 137) {
-    t->tm_year = 137;
+  } else if (t->tm_year > RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN) {
+    t->tm_year = RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN;
     return true;
   }
   return false;

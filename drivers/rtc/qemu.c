@@ -1,7 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
@@ -91,8 +93,8 @@ bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
   if (t->tm_year < 100) {
     t->tm_year = 100;
     return true;
-  } else if (t->tm_year > 137) {
-    t->tm_year = 137;
+  } else if (t->tm_year > RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN) {
+    t->tm_year = RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN;
     return true;
   }
   return false;
@@ -134,25 +136,34 @@ bool rtc_alarm_is_initialized(void) {
 // Timezone uses backup registers 11-15 to avoid conflicts with bootbits (0-10)
 #define TZ_BACKUP_BASE 11
 
+// The fields up to tm_gmtoff are stored as raw words, the DST times as 32 bits.
+#define TZ_RAW_WORDS 3
+static_assert(offsetof(TimezoneInfo, tm_gmtoff) + sizeof(int32_t) ==
+                  TZ_RAW_WORDS * sizeof(uint32_t),
+              "TimezoneInfo layout changed");
+
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
-  uint32_t *raw = (uint32_t *)tzinfo;
-  static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t), "RTC Set Timezone invalid data size");
+  uint32_t raw[TZ_RAW_WORDS];
+  memcpy(raw, tzinfo, sizeof(raw));
 
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 0, raw[0]);
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 1, raw[1]);
   RTC_WriteBackupRegister(TZ_BACKUP_BASE + 2, raw[2]);
-  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 3, raw[3]);
-  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 4, raw[4]);
+  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 3, (uint32_t)tzinfo->dst_start);
+  RTC_WriteBackupRegister(TZ_BACKUP_BASE + 4, (uint32_t)tzinfo->dst_end);
 }
 
 void rtc_get_timezone(TimezoneInfo *tzinfo) {
-  uint32_t *raw = (uint32_t *)tzinfo;
+  uint32_t raw[TZ_RAW_WORDS] = {
+    RTC_ReadBackupRegister(TZ_BACKUP_BASE + 0),
+    RTC_ReadBackupRegister(TZ_BACKUP_BASE + 1),
+    RTC_ReadBackupRegister(TZ_BACKUP_BASE + 2),
+  };
 
-  raw[0] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 0);
-  raw[1] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 1);
-  raw[2] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 2);
-  raw[3] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 3);
-  raw[4] = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 4);
+  *tzinfo = (TimezoneInfo){};
+  memcpy(tzinfo, raw, sizeof(raw));
+  tzinfo->dst_start = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 3);
+  tzinfo->dst_end = RTC_ReadBackupRegister(TZ_BACKUP_BASE + 4);
 }
 
 uint16_t rtc_get_timezone_id(void) {

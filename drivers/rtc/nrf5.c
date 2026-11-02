@@ -2,6 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
+#include <stddef.h>
+#include <string.h>
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
@@ -170,7 +172,7 @@ static RtcIntervalTicks prv_get_last_save_time_ticks(void) {
 }
 
 static void prv_save_rtc_time_state_exact(RtcIntervalTicks current_rtc_ticks, time_t time) {
-  retained_write(CURRENT_TIME_REGISTER, time);
+  retained_write(CURRENT_TIME_REGISTER, (uint32_t)time);
   retained_write(CURRENT_INTERVAL_TICKS_REGISTER, current_rtc_ticks);
 }
 
@@ -190,16 +192,15 @@ static void prv_save_rtc_time_state(RtcIntervalTicks current_rtc_ticks) {
 /*** Logic that ought be refactored into rtc_common, were it not stm32-only. ***/
 
 bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
-  // These values come from time_t (which suffers from the 2038 problem) and our hardware which
-  // only stores a 2 digit year, so we only represent values after 2000.
+  // Our hardware only stores a 2 digit year, so we only represent values after 2000.
 
   // Remember tm_year is years since 1900.
   if (t->tm_year < 100) {
     // Bump it up to the year 2000 to work with our hardware.
     t->tm_year = 100;
     return true;
-  } else if (t->tm_year > 137) {
-    t->tm_year = 137;
+  } else if (t->tm_year > RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN) {
+    t->tm_year = RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN;
     return true;
   }
   return false;
@@ -235,25 +236,34 @@ const char *time_t_to_string(char *buffer, time_t t) {
 
 //! We attempt to save registers by placing both the timezone abbreviation
 //! timezone index and the daylight_savings_time into the same register set
+// The fields up to tm_gmtoff are stored as raw words, the DST times as 32 bits.
+#define TZ_RAW_WORDS 3
+static_assert(offsetof(TimezoneInfo, tm_gmtoff) + sizeof(int32_t) ==
+                  TZ_RAW_WORDS * sizeof(uint32_t),
+              "TimezoneInfo layout changed");
+
 void rtc_set_timezone(TimezoneInfo *tzinfo) {
-  uint32_t *raw = (uint32_t *)tzinfo;
-  static_assert(sizeof(TimezoneInfo) <= 5 * sizeof(uint32_t), "RTC Set Timezone invalid data size");
+  uint32_t raw[TZ_RAW_WORDS];
+  memcpy(raw, tzinfo, sizeof(raw));
 
   retained_write(RTC_TIMEZONE_ABBR_START, raw[0]);
   retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, raw[1]);
   retained_write(RTC_TIMEZONE_GMTOFFSET, raw[2]);
-  retained_write(RTC_TIMEZONE_DST_START, raw[3]);
-  retained_write(RTC_TIMEZONE_DST_END, raw[4]);
+  retained_write(RTC_TIMEZONE_DST_START, (uint32_t)tzinfo->dst_start);
+  retained_write(RTC_TIMEZONE_DST_END, (uint32_t)tzinfo->dst_end);
 }
 
 void rtc_get_timezone(TimezoneInfo *tzinfo) {
-  uint32_t *raw = (uint32_t *)tzinfo;
+  uint32_t raw[TZ_RAW_WORDS] = {
+    retained_read(RTC_TIMEZONE_ABBR_START),
+    retained_read(RTC_TIMEZONE_ABBR_END_TZID_DSTID),
+    retained_read(RTC_TIMEZONE_GMTOFFSET),
+  };
 
-  raw[0] = retained_read(RTC_TIMEZONE_ABBR_START);
-  raw[1] = retained_read(RTC_TIMEZONE_ABBR_END_TZID_DSTID);
-  raw[2] = retained_read(RTC_TIMEZONE_GMTOFFSET);
-  raw[3] = retained_read(RTC_TIMEZONE_DST_START);
-  raw[4] = retained_read(RTC_TIMEZONE_DST_END);
+  *tzinfo = (TimezoneInfo){};
+  memcpy(tzinfo, raw, sizeof(raw));
+  tzinfo->dst_start = retained_read(RTC_TIMEZONE_DST_START);
+  tzinfo->dst_end = retained_read(RTC_TIMEZONE_DST_END);
 }
 
 void rtc_timezone_clear(void) {
