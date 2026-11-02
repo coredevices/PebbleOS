@@ -221,7 +221,11 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
     ]:
         sdk_header_filename = path.join(sdk_include_dir, type_name_prefix[1])
         make_app_header(
-            exports_tree, sdk_header_filename, type_name_prefix[0], type_name_prefix[2]
+            exports_tree,
+            sdk_header_filename,
+            type_name_prefix[0],
+            type_name_prefix[2],
+            frozen=frozen_revision is not None,
         )
 
     # On platforms with Moddable XS support, ship xsffi.h alongside the SDK so
