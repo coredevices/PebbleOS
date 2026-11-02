@@ -785,3 +785,26 @@ void test_voice_endpoint__handle_nlp_result_with_app_id(void) {
   // Just make sure we don't crash or do anything weird. We just ignore the app uuid for now
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
 }
+
+void test_voice_endpoint__handle_nlp_result_time_widths(void) {
+  uint8_t nlp_result[] = {
+    0x03, 0x00, 0x00, 0x00, 0x00,                   // Message ID: NLP result, flags
+    0x11, 0x22, 0x00,                               // session ID, result - success
+    0x02,                                           // num attributes
+    0x04, 0x01, 0x00, 'P',                          // reminder
+    0x05, 0x08, 0x00,                               // timestamp, 8 bytes
+    0x00, 0x19, 0x9e, 0xb0, 0x01, 0x00, 0x00, 0x00, // 2200-01-01
+  };
+  voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(nlp_result));
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert(s_timestamp == 7258118400LL);
+
+  // 32 bits, past 2038: unsigned
+  uint8_t nlp_result_32[] = {
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x00, 0x02, 0x04,
+    0x01, 0x00, 'P',  0x05, 0x04, 0x00, 0x00, 0x5e, 0xd0, 0xb2, // 3000000000
+  };
+  voice_endpoint_protocol_msg_callback(nullptr, nlp_result_32, sizeof(nlp_result_32));
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert(s_timestamp == 3000000000LL);
+}
