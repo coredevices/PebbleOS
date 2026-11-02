@@ -10,10 +10,11 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <applib/applib_malloc.auto.h>
-#include <applib/graphics/gdraw_command.h>
 #include <applib/graphics/gdraw_command_list.h>
+#include <applib/graphics/gpath.h>
 #include <applib/ui/dialogs/dialog_private.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/kino/kino_reel_custom.h>
@@ -26,46 +27,97 @@ typedef void (*DialogUpdateFn)(Dialog *, void *);
 
 static Dialog *s_dialog = nullptr;
 
-// Charging icon: the level bar rises in up to nine even stages, stopping at the charge level (the
-// last stage ends with the steam wisp), then drops back to the bottom. The resource has four rises,
-// the middle ones are reused for the extra stages. Bar coordinates are in the resource's 1/8 px
-// units.
+// Charging icon: a static cup with the level bar, the drips and the steam wisp drawn on top. The
+// bar rises in up to nine even stages, stopping at the charge level (the last stage ends with the
+// steam wisp), then drains back to the bottom. Coordinates are in 1/8 px.
 #define CHARGE_STAGES         9
 #define CHARGE_STAGE_PERCENT  10
-#define CHARGE_ART_STAGES     4
-#define CHARGE_STAGE_MS       1400
-#define CHARGE_DROP_MS        5705
-#define CHARGE_LOOP_MS        6090
+#define CHARGE_FRAME_MS       35
+#define CHARGE_STAGE_FRAMES   40
+#define CHARGE_DRAIN_FRAMES   11
+#define CHARGE_STEAM_FRAME    20
+#define CHARGE_RIPPLE_RISE    64
+#define CHARGE_RIPPLE_MAX     8
+#define CHARGE_BAR_WIDTH      4
 #define CHARGE_BAR_CENTER_X   484
-#define CHARGE_BAR_MIN_X      376
-#define CHARGE_BAR_MIN_WIDTH  64
 #define CHARGE_BAR_EMPTY_Y    564
 #define CHARGE_BAR_FULL_Y     352
 #define CHARGE_BAR_EMPTY_HALF 40
 #define CHARGE_BAR_FULL_HALF  57
+#define CHARGE_STEAM_WIDTH    3
+#define CHARGE_STEAM_X        464
+#define CHARGE_STEAM_Y        40
+#define CHARGE_STEAM_POINTS   4
 
 typedef struct {
   KinoReel *reel;
   uint32_t elapsed_ms;
-  uint32_t cycle_start_ms;
-  uint32_t cycle_ms;
+  uint32_t intro_ms;
+  uint32_t cycle_start;
+  uint32_t cycle_frames;
+  int32_t frame;
   uint8_t percent;
 } ChargeReelData;
 
 typedef struct {
-  GDrawCommandProcessor processor;
-  int16_t art_from_y;
-  int16_t art_to_y;
-  int16_t from_y;
-  int16_t to_y;
-} ChargeBarProcessor;
+  uint8_t num_points;
+  uint8_t points[CHARGE_STEAM_POINTS][2];
+} ChargeSteamFrame;
 
-// Where the bar settles at the end of each stage in the resource
-static const int16_t s_charge_bar_art_y[CHARGE_ART_STAGES] = {504, 440, 376, 352};
+//! Bar ends (left, right) along a stage, relative to where it settles. Offsets above
+//! CHARGE_RIPPLE_MAX are the rise, drawn for a rise of CHARGE_RIPPLE_RISE.
+static const int8_t s_charge_bar_ripple[CHARGE_STAGE_FRAMES][2] = {
+  {64, 64},  {64, 64}, {64, 64},   {63, 64},   {62, 63},   {61, 62},   {60, 60},   {60, 30},
+  {39, -7},  {1, -20}, {-20, -17}, {-22, -13}, {-21, -12}, {-19, -11}, {-4, -14},  {0, -4},
+  {2, 0},    {5, 2},   {6, 5},     {6, 6},     {6, 6},     {4, 6},     {3, 4},     {0, 3},
+  {-2, 0},   {-5, -2}, {-7, -5},   {-8, -7},   {-10, -8},  {-10, -10}, {-10, -10}, {-10, -10},
+  {-9, -10}, {-8, -9}, {-6, -8},   {-5, -6},   {-3, -5},   {-2, -3},   {-1, -2},   {0, -1},
+};
+
+//! Bar while it drains, relative to the bottom
+static const int8_t s_charge_bar_drain[CHARGE_DRAIN_FRAMES] = {24, 18, 14, 10, 6, 2,
+                                                               0,  0,  -1, -2, -2};
+
+//! Drips (top, bottom) falling into the cup from the second frame of each stage
+static const int16_t s_charge_drips[][3][2] = {
+  {{-20, 12}},
+  {{2, 34}, {76, 108}},
+  {{8, 40}, {98, 130}, {172, 204}},
+  {{11, 43}, {104, 136}, {194, 226}},
+  {{12, 44}, {107, 139}, {200, 232}},
+  {{16, 48}, {112, 144}, {208, 240}},
+  {{52, 84}, {148, 180}, {244, 276}},
+  {{154, 186}},
+  {{242, 274}},
+  {{274, 282}},
+};
+
+//! Steam wisp at the end of the last stage, relative to (CHARGE_STEAM_X, CHARGE_STEAM_Y)
+static const ChargeSteamFrame s_charge_steam[CHARGE_STAGE_FRAMES - CHARGE_STEAM_FRAME] = {
+  {2, {{44, 208}, {32, 232}}},
+  {2, {{47, 170}, {27, 214}}},
+  {3, {{38, 150}, {44, 158}, {25, 201}}},
+  {3, {{22, 190}, {42, 146}, {25, 130}}},
+  {3, {{20, 179}, {40, 135}, {8, 111}}},
+  {4, {{19, 173}, {39, 129}, {7, 105}, {14, 88}}},
+  {4, {{18, 166}, {38, 123}, {6, 98}, {20, 68}}},
+  {4, {{17, 159}, {36, 115}, {5, 91}, {28, 51}}},
+  {4, {{30, 38}, {4, 85}, {36, 110}, {17, 151}}},
+  {4, {{19, 141}, {35, 106}, {4, 81}, {32, 29}}},
+  {4, {{22, 130}, {35, 102}, {3, 78}, {33, 22}}},
+  {4, {{28, 116}, {35, 99}, {3, 74}, {32, 19}}},
+  {4, {{32, 17}, {3, 71}, {31, 94}, {29, 102}}},
+  {3, {{25, 87}, {3, 67}, {32, 15}}},
+  {3, {{33, 13}, {3, 65}, {10, 72}}},
+  {2, {{33, 10}, {7, 56}}},
+  {2, {{33, 8}, {15, 40}}},
+  {2, {{33, 6}, {22, 27}}},
+  {2, {{28, 16}, {33, 5}}},
+  {2, {{34, 4}, {33, 7}}},
+};
 
 static uint8_t s_charge_percent;
 static KinoReel *s_charge_reel;
-
 typedef struct {
   uint32_t percent;
   GColor background_color;
@@ -88,19 +140,8 @@ static uint32_t prv_charge_stages(uint8_t percent) {
   return CLIP(DIVIDE_CEIL(percent, CHARGE_STAGE_PERCENT), 1, CHARGE_STAGES);
 }
 
-//! The rise of the resource to play for a stage, the last one has the steam wisp
-static int32_t prv_charge_art_stage(int32_t stage) {
-  return (stage == CHARGE_STAGES - 1) ? (CHARGE_ART_STAGES - 1) : MIN(stage, CHARGE_ART_STAGES - 2);
-}
-
-static uint32_t prv_charge_cycle_ms(void) {
-  const uint32_t stages = prv_charge_stages(s_charge_percent);
-  if (stages == CHARGE_STAGES) {
-    return (CHARGE_STAGES - 1) * CHARGE_STAGE_MS + CHARGE_LOOP_MS -
-           (CHARGE_ART_STAGES - 1) * CHARGE_STAGE_MS;
-  }
-
-  return stages * CHARGE_STAGE_MS + (CHARGE_LOOP_MS - CHARGE_DROP_MS);
+static uint32_t prv_charge_cycle_frames(uint8_t percent) {
+  return prv_charge_stages(percent) * CHARGE_STAGE_FRAMES + CHARGE_DRAIN_FRAMES;
 }
 
 //! Height of the bar at the end of a stage: an even step, or the charge level if that comes first.
@@ -114,39 +155,68 @@ static int16_t prv_charge_bar_stage_y(uint8_t percent, int32_t stage) {
   return MAX(level_y, CHARGE_BAR_EMPTY_Y - range * (stage + 1) * CHARGE_STAGE_PERCENT / 100);
 }
 
-static void prv_charge_bar_process(GDrawCommandProcessor *processor,
-                                   GDrawCommand *processed_command,
-                                   size_t processed_command_max_size, const GDrawCommandList *list,
-                                   const GDrawCommand *command) {
-  if (gdraw_command_get_num_points(processed_command) != 2) {
+static int16_t prv_charge_ripple_y(int32_t offset, int16_t from_y, int16_t to_y) {
+  if (offset > CHARGE_RIPPLE_MAX) {
+    offset = offset * (from_y - to_y) / CHARGE_RIPPLE_RISE;
+  }
+  return to_y + offset;
+}
+
+static void prv_charge_draw_path(GContext *ctx, GPoint origin, GPointPrecise *points,
+                                 size_t num_points) {
+  for (size_t i = 0; i < num_points; i++) {
+    points[i].x.raw_value += origin.x * GPOINT_PRECISE_FACTOR;
+    points[i].y.raw_value += origin.y * GPOINT_PRECISE_FACTOR;
+  }
+  gpath_draw_outline_precise_internal(ctx, points, num_points, true);
+}
+
+static int16_t prv_charge_bar_half_width(int16_t y) {
+  return CHARGE_BAR_EMPTY_HALF + (CHARGE_BAR_FULL_HALF - CHARGE_BAR_EMPTY_HALF) *
+                                     (CHARGE_BAR_EMPTY_Y - y) /
+                                     (CHARGE_BAR_EMPTY_Y - CHARGE_BAR_FULL_Y);
+}
+
+//! Draw the bar across the cup, its ends following the cup walls
+static void prv_charge_draw_bar(GContext *ctx, GPoint origin, int16_t left_y, int16_t right_y) {
+  GPointPrecise points[] = {
+    GPointPrecise(CHARGE_BAR_CENTER_X - prv_charge_bar_half_width(left_y), left_y),
+    GPointPrecise(CHARGE_BAR_CENTER_X + prv_charge_bar_half_width(right_y), right_y),
+  };
+  prv_charge_draw_path(ctx, origin, points, ARRAY_LENGTH(points));
+}
+
+static void prv_charge_draw_drips(GContext *ctx, GPoint origin, uint32_t frame) {
+  if (frame < 1 || frame > ARRAY_LENGTH(s_charge_drips)) {
     return;
   }
 
-  // The bar is the only wide two point line inside the cup
-  const GPoint a = gdraw_command_get_point(processed_command, 0);
-  const GPoint b = gdraw_command_get_point(processed_command, 1);
-  if (MIN(a.x, b.x) < CHARGE_BAR_MIN_X || ABS(a.x - b.x) < CHARGE_BAR_MIN_WIDTH) {
-    return;
-  }
-
-  const ChargeBarProcessor *bar = (const ChargeBarProcessor *)processor;
-
-  for (uint16_t i = 0; i < 2; i++) {
-    const GPoint point = (i == 0) ? a : b;
-    // Keep the ripple around the stage's height, and scale the rise to it
-    int32_t offset_y = point.y - bar->art_to_y;
-    if (offset_y > 8) {
-      offset_y = offset_y * (bar->from_y - bar->to_y) / (bar->art_from_y - bar->art_to_y);
+  for (size_t i = 0; i < ARRAY_LENGTH(s_charge_drips[0]); i++) {
+    const int16_t *drip = s_charge_drips[frame - 1][i];
+    if (drip[0] == drip[1]) {
+      continue;
     }
-    const int16_t y = bar->to_y + offset_y;
-    const int16_t half_width =
-        CHARGE_BAR_EMPTY_HALF + (CHARGE_BAR_FULL_HALF - CHARGE_BAR_EMPTY_HALF) *
-                                    (CHARGE_BAR_EMPTY_Y - y) /
-                                    (CHARGE_BAR_EMPTY_Y - CHARGE_BAR_FULL_Y);
-    const int16_t x =
-        CHARGE_BAR_CENTER_X + ((point.x < CHARGE_BAR_CENTER_X) ? -half_width : half_width);
-    gdraw_command_set_point(processed_command, i, GPoint(x, y));
+    GPointPrecise points[] = {
+      GPointPrecise(CHARGE_BAR_CENTER_X, drip[0]),
+      GPointPrecise(CHARGE_BAR_CENTER_X, drip[1]),
+    };
+    prv_charge_draw_path(ctx, origin, points, ARRAY_LENGTH(points));
   }
+}
+
+static void prv_charge_draw_steam(GContext *ctx, GPoint origin, uint32_t frame) {
+  if (frame < CHARGE_STEAM_FRAME) {
+    return;
+  }
+
+  const ChargeSteamFrame *steam = &s_charge_steam[frame - CHARGE_STEAM_FRAME];
+  GPointPrecise points[CHARGE_STEAM_POINTS];
+  for (uint8_t i = 0; i < steam->num_points; i++) {
+    points[i] =
+        GPointPrecise(CHARGE_STEAM_X + steam->points[i][0], CHARGE_STEAM_Y + steam->points[i][1]);
+  }
+  graphics_context_set_stroke_width(ctx, CHARGE_STEAM_WIDTH);
+  prv_charge_draw_path(ctx, origin, points, steam->num_points);
 }
 
 static void prv_charge_reel_destructor(KinoReel *reel) {
@@ -163,37 +233,34 @@ static uint32_t prv_charge_reel_get_elapsed(KinoReel *reel) {
 
 static bool prv_charge_reel_set_elapsed(KinoReel *reel, uint32_t elapsed_ms) {
   ChargeReelData *data = kino_reel_custom_get_data(reel);
-  if (elapsed_ms < data->cycle_start_ms) {
-    data->cycle_start_ms = 0;
-    data->cycle_ms = prv_charge_cycle_ms();
+  data->elapsed_ms = elapsed_ms;
+  bool changed = kino_reel_set_elapsed(data->reel, MIN(elapsed_ms, data->intro_ms));
+
+  // The icon's intro transform plays first, without the animated parts
+  if (elapsed_ms < data->intro_ms) {
+    changed |= (data->frame >= 0);
+    data->frame = -1;
+    return changed;
+  }
+
+  const uint32_t frame = (elapsed_ms - data->intro_ms) / CHARGE_FRAME_MS;
+  if (data->frame < 0 || frame < data->cycle_start) {
+    data->cycle_start = 0;
     data->percent = s_charge_percent;
+    data->cycle_frames = prv_charge_cycle_frames(data->percent);
   }
 
   // Charge level changes are picked up at the start of a cycle
-  while (elapsed_ms - data->cycle_start_ms >= data->cycle_ms) {
-    data->cycle_start_ms += data->cycle_ms;
-    data->cycle_ms = prv_charge_cycle_ms();
+  while (frame - data->cycle_start >= data->cycle_frames) {
+    data->cycle_start += data->cycle_frames;
     data->percent = s_charge_percent;
-  }
-  data->elapsed_ms = elapsed_ms;
-
-  // Skip the remaining stages and jump to the drop
-  const uint32_t cycle_elapsed_ms = elapsed_ms - data->cycle_start_ms;
-  const uint32_t rise_ms = data->cycle_ms - (CHARGE_LOOP_MS - CHARGE_DROP_MS);
-  uint32_t reel_elapsed_ms;
-  if (cycle_elapsed_ms >= rise_ms) {
-    reel_elapsed_ms = CHARGE_DROP_MS + cycle_elapsed_ms - rise_ms;
-  } else {
-    const int32_t stage = MIN(cycle_elapsed_ms / CHARGE_STAGE_MS, CHARGE_STAGES - 1);
-    reel_elapsed_ms = cycle_elapsed_ms + (prv_charge_art_stage(stage) - stage) * CHARGE_STAGE_MS;
+    data->cycle_frames = prv_charge_cycle_frames(data->percent);
   }
 
-  // The icon sequence loops, so later cycles play a loop ahead to not replay the intro transform
-  if (data->cycle_start_ms > 0) {
-    reel_elapsed_ms += CHARGE_LOOP_MS;
-  }
-
-  return kino_reel_set_elapsed(data->reel, reel_elapsed_ms);
+  const int32_t cycle_frame = frame - data->cycle_start;
+  changed |= (cycle_frame != data->frame);
+  data->frame = cycle_frame;
+  return changed;
 }
 
 static uint32_t prv_charge_reel_get_duration(KinoReel *reel) {
@@ -208,28 +275,33 @@ static GSize prv_charge_reel_get_size(KinoReel *reel) {
 static void prv_charge_reel_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
                                            KinoReelProcessor *processor) {
   ChargeReelData *data = kino_reel_custom_get_data(reel);
-  const uint32_t cycle_elapsed_ms = data->elapsed_ms - data->cycle_start_ms;
-  const uint32_t rise_ms = data->cycle_ms - (CHARGE_LOOP_MS - CHARGE_DROP_MS);
-
-  // The drop frames already end at the bottom, only the rise follows the charge level
-  if (cycle_elapsed_ms >= rise_ms) {
-    kino_reel_draw_processed(data->reel, ctx, offset, processor);
+  kino_reel_draw_processed(data->reel, ctx, offset, processor);
+  if (data->frame < 0) {
     return;
   }
 
-  const int32_t stage = MIN(cycle_elapsed_ms / CHARGE_STAGE_MS, CHARGE_STAGES - 1);
-  const int32_t art_stage = prv_charge_art_stage(stage);
-  ChargeBarProcessor bar = {
-    .processor.command = prv_charge_bar_process,
-    .art_from_y = (art_stage > 0) ? s_charge_bar_art_y[art_stage - 1] : CHARGE_BAR_EMPTY_Y,
-    .art_to_y = s_charge_bar_art_y[art_stage],
-    .from_y = (stage > 0) ? prv_charge_bar_stage_y(data->percent, stage - 1) : CHARGE_BAR_EMPTY_Y,
-    .to_y = prv_charge_bar_stage_y(data->percent, stage),
-  };
-  KinoReelProcessor bar_processor = {
-    .draw_command_processor = &bar.processor,
-  };
-  kino_reel_draw_processed(data->reel, ctx, offset, &bar_processor);
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_context_set_stroke_width(ctx, CHARGE_BAR_WIDTH);
+
+  const uint32_t stages = prv_charge_stages(data->percent);
+  const uint32_t rise_frames = stages * CHARGE_STAGE_FRAMES;
+  if ((uint32_t)data->frame >= rise_frames) {
+    const int16_t y = CHARGE_BAR_EMPTY_Y + s_charge_bar_drain[data->frame - rise_frames];
+    prv_charge_draw_bar(ctx, offset, y, y);
+    return;
+  }
+
+  const int32_t stage = data->frame / CHARGE_STAGE_FRAMES;
+  const uint32_t frame = data->frame % CHARGE_STAGE_FRAMES;
+  const int16_t from_y =
+      (stage > 0) ? prv_charge_bar_stage_y(data->percent, stage - 1) : CHARGE_BAR_EMPTY_Y;
+  const int16_t to_y = prv_charge_bar_stage_y(data->percent, stage);
+  prv_charge_draw_bar(ctx, offset, prv_charge_ripple_y(s_charge_bar_ripple[frame][0], from_y, to_y),
+                      prv_charge_ripple_y(s_charge_bar_ripple[frame][1], from_y, to_y));
+  prv_charge_draw_drips(ctx, offset, frame);
+  if (stage == CHARGE_STAGES - 1) {
+    prv_charge_draw_steam(ctx, offset, frame);
+  }
 }
 
 static GDrawCommandList *prv_charge_reel_get_gdraw_command_list(KinoReel *reel) {
@@ -247,7 +319,7 @@ static const KinoReelImpl s_charge_reel_impl = {
   .get_gdraw_command_list = prv_charge_reel_get_gdraw_command_list,
 };
 
-//! Wrap the charging icon reel so the bar drops back once it reaches the charge level
+//! Wrap the static charging icon to draw the animated parts on top
 static void prv_set_charge_reel(Dialog *dialog) {
   KinoLayer *icon_layer = &dialog->icon_layer;
   KinoPlayer *player = kino_layer_get_player(icon_layer);
@@ -270,8 +342,8 @@ static void prv_set_charge_reel(Dialog *dialog) {
 
   *data = (ChargeReelData){
     .reel = reel,
-    .cycle_ms = prv_charge_cycle_ms(),
-    .percent = s_charge_percent,
+    .intro_ms = kino_reel_get_duration(reel),
+    .frame = -1,
   };
 
   // The charge reel takes over ownership of the icon reel
@@ -280,7 +352,6 @@ static void prv_set_charge_reel(Dialog *dialog) {
   s_charge_reel = charge_reel;
   kino_layer_play(icon_layer);
 }
-
 static void prv_update_ui_fully_charged(Dialog *dialog, void *ignored) {
   dialog_set_text(dialog, i18n_get("Fully Charged", dialog));
   dialog_set_background_color(dialog, GColorKellyGreen);
