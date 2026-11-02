@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig RETAINED
+    bool "Retained registers"
+    help
+      32-bit registers that survive a reset.
+
+if RETAINED
+
+config RETAINED_NRF5
+    bool "Nordic nRF5"
+    default y if SOC_NRF52
+    help
+      31 registers in retained RAM, followed by their CRC32.
+
+config RETAINED_SF32LB
+    bool "SiFli SF32LB"
+    default y if SOC_SF32LB52
+    help
+      The 10 RTC backup registers.
+
+config RETAINED_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      The 16 backup registers of the QEMU RTC.
+
+config RETAINED_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      16 registers in process memory: they survive a reset of the
+      firmware, not of the process.
+
+endif # RETAINED
