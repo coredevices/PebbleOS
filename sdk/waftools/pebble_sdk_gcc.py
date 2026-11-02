@@ -63,8 +63,10 @@ def configure(conf):
 
     if (conf.env.SDK_VERSION_MAJOR == 5) and (conf.env.SDK_VERSION_MINOR > 19):
         pebble_cflags.append("-D_TIME_H_")
-        # Override time_t to be 32-bit for Pebble compatibility (newer toolchains default to 64-bit)
-        pebble_cflags.append("-Dtime_t=long")
+        if "FROZEN_AT_REVISION" in conf.env.PLATFORM:
+            # Frozen platforms keep the 32-bit time_t of their firmware; newer toolchains
+            # default to 64 bits, which the other platforms use.
+            pebble_cflags.append("-Dtime_t=long")
     pebble_cflags.extend(c_warnings)
 
     pebble_linkflags = [

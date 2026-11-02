@@ -122,7 +122,7 @@ if(CONFIG_CPU_HAS_FPU)
 endif()
 
 if(CONFIG_QEMU)
-  list(APPEND pbl_arch_flags -Dsniprintf=snprintf -D_USE_LONG_TIME_T)
+  list(APPEND pbl_arch_flags -Dsniprintf=snprintf)
 endif()
 
 # Reproducibility: strip the absolute source-root prefix from every

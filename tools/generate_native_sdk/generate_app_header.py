@@ -72,7 +72,9 @@ def apply_renames(text, renames):
     return pattern.sub(lambda m: renames[m.group(1)], text)
 
 
-def make_app_header(exports_tree, output_filename, header_type, inject_text):
+def make_app_header(
+    exports_tree, output_filename, header_type, inject_text, frozen=False
+):
     output_filename_dir = os.path.dirname(output_filename)
     if not os.path.exists(output_filename_dir):
         os.makedirs(output_filename_dir)
@@ -91,6 +93,20 @@ def make_app_header(exports_tree, output_filename, header_type, inject_text):
         writeline(f, "#include <stdbool.h>")
         writeline(f, "#include <string.h>")
         writeline(f, "#include <time.h>")
+        if not frozen:
+            # The app build hides the C library's <time.h>; this has its 64-bit time_t. Frozen
+            # platforms define time_t to a 32-bit long instead.
+            writeline(f, "#include <sys/types.h>")
+        writeline(f)
+        # The firmware ABI of the platform fixes the width of time_t. Fail the app build, also as
+        # C99, if the toolchain's headers give it another one.
+        time_t_size = 4 if frozen else 8
+        writeline(f, "//! @internal")
+        writeline(
+            f,
+            f"typedef char pbl_time_t_size_check_{header_type}"
+            f"[(sizeof(time_t) == {time_t_size}) ? 1 : -1];",
+        )
         writeline(f)
         writeline(f, '#include "pebble_warn_unsupported_functions.h"')
         if header_type == "app":
