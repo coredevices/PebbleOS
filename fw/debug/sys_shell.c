@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
@@ -19,7 +20,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/util/factory_reset.h>
 #include <process_management/worker_manager.h>
-#include <system/bootbits.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 
@@ -38,9 +38,9 @@ static int prv_cmd_crash(const struct pbl_shell *sh, size_t argc, char **argv) {
 static int prv_cmd_crash_hard(const struct pbl_shell *sh, size_t argc, char **argv) {
   RebootReason reason = {RebootReasonCode_HardFault, 0};
   reboot_reason_set(&reason);
-  boot_bit_set(BOOT_BIT_FW_START_FAIL_STRIKE_TWO);
-  boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
-  boot_bit_clear(BOOT_BIT_FW_STABLE);
+  pbl_bootbit_set(PBL_BOOTBIT_FW_START_FAIL_STRIKE_TWO);
+  pbl_bootbit_set(PBL_BOOTBIT_SOFTWARE_FAILURE_OCCURRED);
+  pbl_bootbit_clear(PBL_BOOTBIT_FW_STABLE);
   system_hard_reset();
 }
 
@@ -86,9 +86,9 @@ static int prv_cmd_bootbit(const struct pbl_shell *sh, size_t argc, char **argv)
   }
 
   if (value == 0) {
-    boot_bit_clear(1U << bit);
+    pbl_bootbit_clear((enum pbl_bootbit)bit);
   } else {
-    boot_bit_set(1U << bit);
+    pbl_bootbit_set((enum pbl_bootbit)bit);
   }
 
   return 0;

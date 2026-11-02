@@ -25,11 +25,6 @@ bool recovery_first_use_is_complete(void) {
   return true;
 }
 
-#include <system/bootbits.h>
-bool boot_bit_test(BootBitValue bit) {
-  return false;
-}
-
 // Use this macro to define a PebbleProcessMd* getter function and an associated constant
 // that it will return.
 #define DEFINE_STUB_APP(FUNC_NAME, RESULT_VAL)                           \

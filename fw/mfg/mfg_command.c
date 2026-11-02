@@ -8,12 +8,12 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/shell/shell.h>
 
 #include <kernel/util/factory_reset.h>
 #include <kernel/util/standby.h>
 #include <mfg/mfg_info.h>
-#include <system/bootbits.h>
 
 #ifdef CONFIG_MFG
 #define MFG_WRITE_OPT 1
@@ -26,7 +26,7 @@ static int prv_cmd_standby(const struct pbl_shell *sh, size_t argc, char **argv)
 }
 
 static int prv_cmd_consumer(const struct pbl_shell *sh, size_t argc, char **argv) {
-  boot_bit_set(BOOT_BIT_FORCE_PRF);
+  pbl_bootbit_set(PBL_BOOTBIT_FORCE_PRF);
   factory_reset(true /* should_shutdown */);
   return 0;
 }

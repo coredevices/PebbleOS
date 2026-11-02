@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
@@ -15,13 +16,12 @@
 #include <kernel/util/factory_reset.h>
 #include <kernel/util/fw_reset.h>
 #include <process_management/app_manager.h>
-#include <system/bootbits.h>
 #include <system/reset.h>
 
 static void prv_reset_into_prf(void) {
   RebootReason reason = {RebootReasonCode_PrfReset, 0};
   reboot_reason_set(&reason);
-  boot_bit_set(BOOT_BIT_FORCE_PRF);
+  pbl_bootbit_set(PBL_BOOTBIT_FORCE_PRF);
   services_set_runlevel(RunLevel_BareMinimum);
   system_reset();
 }

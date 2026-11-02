@@ -17,7 +17,6 @@ pbl_clar_test(test_i18n
   MODULES resources
   SOURCES
     fw/services/i18n/i18n.c
-    tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

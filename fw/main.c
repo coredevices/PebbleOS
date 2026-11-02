@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <pbl/bluetooth/init.h>
+#include <pbl/boot/bootbit.h>
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
@@ -52,7 +53,6 @@
 #include <mfg/mfg_serials.h>
 #include <resource/resource.h>
 #include <resource/system_resource.h>
-#include <system/bootbits.h>
 #include <system/firmware_storage.h>
 #include <system/version.h>
 #ifdef CONFIG_QEMU_SERIAL
@@ -95,7 +95,7 @@ int main(void) {
   rtc_init();
 
 #ifdef CONFIG_RECOVERY_FW
-  boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
+  pbl_bootbit_clear(PBL_BOOTBIT_RECOVERY_START_IN_PROGRESS);
 #endif
 
   extern uint32_t __kernel_main_stack_start__[];
@@ -145,17 +145,11 @@ static void init_drivers(void) {
   rtc_alarm_init();
 }
 
-static void clear_reset_loop_detection_bits(void) {
-  boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_ONE);
-  boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_TWO);
-  boot_bit_clear(BOOT_BIT_RESET_LOOP_DETECT_THREE);
-}
-
 #ifndef CONFIG_MFG
 static void uptime_callback(void *data) {
   PBL_LOG_VERBOSE("Uptime reached 15 minutes, set stable bit.");
   new_timer_delete(s_uptime_timer);
-  boot_bit_set(BOOT_BIT_FW_STABLE);
+  pbl_bootbit_set(PBL_BOOTBIT_FW_STABLE);
 }
 #endif
 
@@ -260,7 +254,7 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 #endif
   rtc_calibrate_frequency(mfg_info_get_rtc_freq());
 
-  clear_reset_loop_detection_bits();
+  pbl_bootbit_reset_loop_cnt_set(0U);
 
   PBL_ASSERTN(pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr, nullptr) >= 0);
 
@@ -275,7 +269,7 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   s_uptime_timer = new_timer_create();
   new_timer_start(s_uptime_timer, 15 * 60 * 1000, uptime_callback, nullptr, 0 /*flags*/);
 #else
-  boot_bit_set(BOOT_BIT_FW_STABLE);
+  pbl_bootbit_set(PBL_BOOTBIT_FW_STABLE);
 #endif
 
   input_buttons_enable();

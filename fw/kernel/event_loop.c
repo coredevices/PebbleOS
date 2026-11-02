@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/cron/cron.h>
 #include <pbl/mcu/fpu.h>
 #include <pbl/services/analytics/analytics.h>
@@ -71,7 +72,6 @@
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
 #include <shell/shell_event_loop.h>
-#include <system/bootbits.h>
 #include <system/testinfra.h>
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
@@ -636,7 +636,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
     PBL_LOG_WRN("Not launching worker because launcher panic");
   } else if (input_buttons_get_state() != 0) {
     PBL_LOG_WRN("Not launching worker because button held");
-  } else if (boot_bit_test(BOOT_BIT_FW_START_FAIL_STRIKE_TWO)) {
+  } else if (pbl_bootbit_fw_fail_cnt_get() >= 2U) {
     PBL_LOG_WRN("Not launching worker because of 2 strikes");
   } else {
     process_manager_launch_process(&(ProcessLaunchConfig){
