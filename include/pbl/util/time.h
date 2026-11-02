@@ -36,6 +36,13 @@ struct pbl_tm {
   char tm_zone[PBL_TZ_LEN]; /*!< Timezone abbreviation */
 };
 
+/**
+ * @brief Seconds since the epoch, as a 32-bit @c time_t holds them.
+ *
+ * For interfaces that keep a 32-bit @c time_t whatever the width of the native one.
+ */
+typedef int32_t pbl_time32_t;
+
 /** @brief Year that @c tm_year in struct pbl_tm counts from. */
 #define PBL_TM_YEAR_ORIGIN 1900
 /** @brief Year of the Unix epoch. */
@@ -156,5 +163,30 @@ struct pbl_tm *pbl_gmtime_r(const time_t *timep, struct pbl_tm *result);
  * @return Seconds since the Unix epoch, or -1 if out of range.
  */
 time_t pbl_mktime(struct pbl_tm *tb);
+
+/**
+ * @brief Narrow a time to 32 bits.
+ *
+ * Keeps the low 32 bits, so times past 2038 wrap like a 32-bit @c time_t does.
+ *
+ * @param t Seconds since the Unix epoch.
+ * @return @p t as a 32-bit time.
+ */
+static inline pbl_time32_t pbl_time_to_time32(time_t t) {
+  return (pbl_time32_t)(uint32_t)t;
+}
+
+/**
+ * @brief Widen a 32-bit time.
+ *
+ * Up to 2038 (while @p reference fits in 32 bits) this is a plain sign extension. Later, the
+ * result is the time closest to @p reference with the same low 32 bits, so recent times keep
+ * their meaning after they wrap.
+ *
+ * @param t 32-bit time.
+ * @param reference Current time, to place @p t relative to.
+ * @return @p t as seconds since the Unix epoch.
+ */
+time_t pbl_time_from_time32(pbl_time32_t t, time_t reference);
 
 /** @} */
