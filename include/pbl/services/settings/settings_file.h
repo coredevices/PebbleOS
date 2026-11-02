@@ -176,6 +176,33 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, 
                            size_t val_out_len);
 
 /**
+ * @brief Read a time stored with settings_file_set_time().
+ *
+ * Also reads times stored as 4 bytes by earlier firmware, as unsigned seconds.
+ *
+ * @param file Settings file.
+ * @param key Key.
+ * @param key_len Length of @p key in bytes.
+ * @param[out] time_out The time, 0 on failure.
+ * @retval S_SUCCESS Time read.
+ * @retval E_DOES_NOT_EXIST No such record, or it was deleted.
+ * @retval E_RANGE The stored value is neither 4 nor 8 bytes long.
+ */
+status_t settings_file_get_time(SettingsFile *file, const void *key, size_t key_len,
+                                time_t *time_out);
+
+/**
+ * @brief Write a time, as 8 bytes.
+ *
+ * @param file Settings file.
+ * @param key Key.
+ * @param key_len Length of @p key in bytes.
+ * @param time The time.
+ * @return As settings_file_set().
+ */
+status_t settings_file_set_time(SettingsFile *file, const void *key, size_t key_len, time_t time);
+
+/**
  * @brief Write a value, timestamped with the current time.
  *
  * Atomic: after a reboot the record holds either the old or the new value. Compacts or grows the

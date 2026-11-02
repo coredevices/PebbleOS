@@ -972,3 +972,38 @@ void test_settings_file__rewrite_filtered_oom(void) {
   verify(&file, key, key_len, val, val_len);
   settings_file_close(&file);
 }
+
+void test_settings_file__time_32_and_64_bit(void) {
+  SettingsFile file;
+  cl_must_pass(settings_file_open(&file, "/TIME", 4096));
+  const uint8_t key32 = 1;
+  const uint8_t key64 = 2;
+  const uint8_t key_bad = 3;
+  const uint8_t key_none = 4;
+
+  // Stored by earlier firmware as 32 bits: past 2038, still read as unsigned.
+  const uint32_t t32 = 3000000000u;
+  cl_must_pass(settings_file_set(&file, &key32, sizeof(key32), &t32, sizeof(t32)));
+  time_t t = 0;
+  cl_assert_equal_i(settings_file_get_time(&file, &key32, sizeof(key32), &t), S_SUCCESS);
+  cl_assert(t == 3000000000LL);
+
+  // Written now, as 64 bits: past 2106.
+  const time_t far = 5000000000LL;
+  cl_must_pass(settings_file_set_time(&file, &key64, sizeof(key64), far));
+  cl_assert_equal_i(settings_file_get_len(&file, &key64, sizeof(key64)), 8);
+  cl_assert_equal_i(settings_file_get_time(&file, &key64, sizeof(key64), &t), S_SUCCESS);
+  cl_assert(t == far);
+
+  // Rewriting an old 32-bit record widens it.
+  cl_must_pass(settings_file_set_time(&file, &key32, sizeof(key32), t + 1));
+  cl_assert_equal_i(settings_file_get_len(&file, &key32, sizeof(key32)), 8);
+
+  const uint16_t bad = 1;
+  cl_must_pass(settings_file_set(&file, &key_bad, sizeof(key_bad), &bad, sizeof(bad)));
+  cl_assert_equal_i(settings_file_get_time(&file, &key_bad, sizeof(key_bad), &t), E_RANGE);
+  cl_assert(t == 0);
+  cl_assert_equal_i(settings_file_get_time(&file, &key_none, sizeof(key_none), &t),
+                    E_DOES_NOT_EXIST);
+  settings_file_close(&file);
+}

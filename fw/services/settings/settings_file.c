@@ -472,6 +472,38 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, 
   return S_SUCCESS;
 }
 
+status_t settings_file_get_time(SettingsFile *file, const void *key, size_t key_len,
+                                time_t *time_out) {
+  *time_out = 0;
+  const int len = settings_file_get_len(file, key, key_len);
+  if (len == 0) {
+    return E_DOES_NOT_EXIST;
+  }
+  if (len == sizeof(uint32_t)) {
+    // Earlier firmware stored 32 bits.
+    uint32_t t32;
+    const status_t rv = settings_file_get(file, key, key_len, &t32, sizeof(t32));
+    if (rv == S_SUCCESS) {
+      *time_out = t32;
+    }
+    return rv;
+  }
+  if (len == sizeof(int64_t)) {
+    int64_t t64;
+    const status_t rv = settings_file_get(file, key, key_len, &t64, sizeof(t64));
+    if (rv == S_SUCCESS) {
+      *time_out = t64;
+    }
+    return rv;
+  }
+  return E_RANGE;
+}
+
+status_t settings_file_set_time(SettingsFile *file, const void *key, size_t key_len, time_t time) {
+  const int64_t t64 = time;
+  return settings_file_set(file, key, key_len, &t64, sizeof(t64));
+}
+
 status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_len, size_t offset,
                                 uint8_t byte) {
   if (key_len > SETTINGS_KEY_MAX_LEN) {

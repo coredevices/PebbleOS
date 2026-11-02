@@ -66,6 +66,33 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
   return S_SUCCESS;
 }
 
+status_t settings_file_get_time(SettingsFile *file, const void *key, size_t key_len,
+                                time_t *time_out) {
+  *time_out = 0;
+  const int len = settings_file_get_len(file, key, key_len);
+  if (len == 0) {
+    return E_DOES_NOT_EXIST;
+  }
+  if (len == sizeof(uint32_t)) {
+    uint32_t t32;
+    settings_file_get(file, key, key_len, &t32, sizeof(t32));
+    *time_out = t32;
+    return S_SUCCESS;
+  }
+  if (len == sizeof(int64_t)) {
+    int64_t t64;
+    settings_file_get(file, key, key_len, &t64, sizeof(t64));
+    *time_out = t64;
+    return S_SUCCESS;
+  }
+  return E_RANGE;
+}
+
+status_t settings_file_set_time(SettingsFile *file, const void *key, size_t key_len, time_t time) {
+  const int64_t t64 = time;
+  return settings_file_set(file, key, key_len, &t64, sizeof(t64));
+}
+
 int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
   if (settings_file_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
