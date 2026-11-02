@@ -83,6 +83,11 @@ typedef struct PBL_PACKED {
       bool app_permissions_support : 1;
       /** Multiple packs, phone management, and active-language selection. */
       bool multiple_language_packs_support : 1;
+      /**
+       * 64-bit times in the protocol: the side that sets it reads 64-bit times wherever a
+       * format has a 64-bit variant, and expects them from the other side if both set it.
+       */
+      bool time64_support : 1;
     };
     /** All flags as a bitset. */
     uint64_t flags;
