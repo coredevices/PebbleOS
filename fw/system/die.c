@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/kernel/irq.h>
 
 #include <logging/logging_private.h>
 #include <logging/pulse_logging.h>
-#include <system/bootbits.h>
 #include <system/reset.h>
 
 void prepare_for_software_failure(void) {
@@ -14,7 +14,7 @@ void prepare_for_software_failure(void) {
 #endif
 
 #ifndef CONFIG_MFG
-  boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
+  pbl_bootbit_set(PBL_BOOTBIT_SOFTWARE_FAILURE_OCCURRED);
 #endif
 }
 

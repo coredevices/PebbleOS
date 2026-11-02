@@ -19,6 +19,7 @@
 // (-std=c23), so declare it explicitly for non-Pebble libcs.
 extern char *itoa(int value, char *str, int base);
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/watchdog.h>
@@ -40,7 +41,6 @@ extern char *itoa(int value, char *str, int base);
 #include <logging/pulse_logging.h>
 #include <mfg/mfg_serials.h>
 #include <pebbleos/chip_id.h>
-#include <system/bootbits.h>
 #include <system/reset.h>
 #include <system/version.h>
 
@@ -204,7 +204,7 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
 // -----------------------------------------------------------------------------------------
 void coredump_assert(int line) {
   prv_debug_str_int("CD: assert - line ", line, 10);
-  boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
+  pbl_bootbit_set(PBL_BOOTBIT_SOFTWARE_FAILURE_OCCURRED);
   prv_reset();
 }
 
@@ -531,7 +531,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   // if we coredump after new fw has been installed but before we reboot, the
   // FW image will be overwritten with a coredump. Clear the boot bit so we
   // don't try and load it, which would result in us dropping to PRF
-  boot_bit_clear(BOOT_BIT_NEW_FW_AVAILABLE);
+  pbl_bootbit_clear(PBL_BOOTBIT_NEW_FW_AVAILABLE);
 
   // Normally a reboot reason would be set before initiating a core dump. In
   // case this isn't true, set a default reason so that we know the reboot was

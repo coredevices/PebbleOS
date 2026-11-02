@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/types.h>
+#include <pbl/boot/version.h>
 #include <pbl/drivers/mcu.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
@@ -23,7 +24,6 @@
 #include <resource/resource.h>
 #include <resource/system_resource.h>
 #include <shell/system_app_ids.auto.h>
-#include <system/bootbits.h>
 #include <system/version.h>
 
 #ifdef CONFIG_SHELL
@@ -75,7 +75,7 @@ static void resource_version_to_network_endian(ResourceVersion *resources_versio
 static void prv_send_watch_versions(CommSession *session) {
   struct VersionsMessage versions_msg = {
     .command = VERSION_RESPONSE,
-    .boot_version = pbl_cpu_to_be32(boot_version_read()),
+    .boot_version = pbl_cpu_to_be32(pbl_boot_version_get()),
   };
 
   static_assert(sizeof(struct VersionsMessage) >=
@@ -219,7 +219,7 @@ static int prv_cmd_version(const struct pbl_shell *sh, size_t argc, char **argv)
     pbl_shell_print(sh, "MCU Serial: %s", serial_str);
   }
 
-  pbl_shell_print(sh, "Boot:0x%08" PRIx32, boot_version_read());
+  pbl_shell_print(sh, "Boot:0x%08" PRIx32, pbl_boot_version_get());
   pbl_shell_print(sh, "HW:%s", hw_version);
   pbl_shell_print(sh, "SN:%s", serial_number);
 

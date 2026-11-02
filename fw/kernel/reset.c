@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
@@ -11,7 +12,6 @@
 #include <board/board.h>
 #include <kernel/core_dump.h>
 #include <kernel/util/fw_reset.h>
-#include <system/bootbits.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 
@@ -34,7 +34,7 @@ void system_reset_prepare(void) {
   bool already_failed = failure_occurred;
   if (!failure_occurred) {
     // Don't overwrite failure_occurred if a failure has already occurred
-    failure_occurred = boot_bit_test(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
+    failure_occurred = pbl_bootbit_test(PBL_BOOTBIT_SOFTWARE_FAILURE_OCCURRED);
   }
 
   // Skip safe teardown if doing so the first time already caused a second reset attempt; or

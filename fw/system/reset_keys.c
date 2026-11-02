@@ -3,11 +3,11 @@
 
 #ifndef CONFIG_MFG
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/timer.h>
 
-#include <system/bootbits.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
 
@@ -31,7 +31,7 @@ static void prv_held(struct pbl_timer *timer) {
   // Up held as well forces PRF.
   const bool force_prf = (s_held & KEY_UP) != 0U;
   if (force_prf) {
-    boot_bit_set(BOOT_BIT_FORCE_PRF);
+    pbl_bootbit_set(PBL_BOOTBIT_FORCE_PRF);
   }
 
   RebootReason reason = {
