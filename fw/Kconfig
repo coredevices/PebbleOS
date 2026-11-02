@@ -103,9 +103,6 @@ config MALLOC_INSTRUMENTATION
     help
       Track the caller PC of every heap allocation.
 
-config PROFILER
-    bool "Profiler"
-
 config PERFORMANCE_TESTS
     bool "Performance test instrumentation"
     select PROFILER

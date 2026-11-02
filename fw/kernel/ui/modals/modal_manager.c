@@ -6,6 +6,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/profiler/profiler.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 
 #include <applib/touch_service.h>
@@ -26,7 +27,6 @@
 #include <process_state/app_state/app_state.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
-#include <system/profiler.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
@@ -39,6 +39,8 @@
 #ifdef CONFIG_SERVICE_MIC_CAPTURE
 #include <pbl/services/mic_capture.h>
 #endif
+
+PBL_PROFILER_NODE_DEFINE(render_modal);
 
 typedef struct ModalContext {
   WindowStack window_stack;
@@ -548,9 +550,9 @@ static bool prv_render_modal_stack_callback(ModalContext *modal, IterContext *it
     WindowTransitioningContext *const transition_context = &stack->transition_context;
     transition_context->implementation->render(transition_context, ctx);
   } else {
-    PROFILER_NODE_START(render_modal);
+    PBL_PROFILER_NODE_START(render_modal);
     window_render(window, ctx);
-    PROFILER_NODE_STOP(render_modal);
+    PBL_PROFILER_NODE_STOP(render_modal);
   }
 
   return true;

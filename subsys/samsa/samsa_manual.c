@@ -184,13 +184,3 @@ void samsa_manual_animation_sequence_create(SamsaCpu *c) {
 void samsa_manual_animation_spawn_create(SamsaCpu *c) {
   prv_animation_create(c, animation_spawn_create_from_array);
 }
-
-// The profiler counts Cortex-M cycles, which a native build does not have.
-void sys_profiler_init(void) {
-}
-void sys_profiler_start(void) {
-}
-void sys_profiler_stop(void) {
-}
-void sys_profiler_print_stats(void) {
-}

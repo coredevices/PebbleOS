@@ -3,3 +3,4 @@
 
 config DEMO_APP_PROFILE_MUTEXES
     bool "Profile Mutexes"
+    select PROFILER
