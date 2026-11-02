@@ -86,19 +86,20 @@ typedef uint32_t ActivityScalarStore;
 #define ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SAMPLES_SHORT_CIRCUIT (10)
 
 /**
- * @brief Good quality SpO2 samples after which the window ends early.
+ * @brief High-confidence (@ref HRM_CONFIDENCE_HIGH) SpO2 samples after which the window ends
+ * early.
  *
- * Kept low: good readings are hard to get on the wrist.
+ * Kept low: high-confidence readings are hard to get on the wrist.
  */
-#define ACTIVITY_MIN_NUM_GOOD_SPO2_SAMPLES_SHORT_CIRCUIT (2)
+#define ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SPO2_SAMPLES_SHORT_CIRCUIT (2)
 
 /**
  * @brief Maximum length of a background SpO2 measurement window, in seconds.
  *
- * Longer than the heart rate window since SpO2 typically needs about 30 s to converge; bounds
- * the high-current red/IR LED on-time when no reading comes.
+ * SpO2 typically needs about 30 s to converge; bounds the high-current red/IR LED on-time when
+ * no high-confidence reading comes.
  */
-#define ACTIVITY_DEFAULT_SPO2_ON_TIME_SEC (90)
+#define ACTIVITY_DEFAULT_SPO2_ON_TIME_SEC (60)
 
 /**
  * @brief Time into a SpO2 window after which it is aborted if no sample was accepted, in
@@ -490,8 +491,10 @@ typedef struct {
   bool currently_sampling;
   /** Uptime, in seconds, of the last sampling toggle. */
   uint32_t toggled_sampling_at_ts;
-  /** Good quality samples in the current window. */
-  uint16_t num_good_quality_samples;
+  /** Valid samples in the current window. */
+  uint16_t num_valid_samples;
+  /** High-confidence samples in the current window. */
+  uint16_t num_high_confidence_samples;
 
   // Latest valid reading waiting to be written into the next minute record (0 = none pending).
   // The minute handler consumes and clears these, so each measurement is logged exactly once.

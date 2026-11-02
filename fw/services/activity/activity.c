@@ -305,7 +305,8 @@ static void prv_spo2_set_sampling(bool sampling, uint32_t now_ts) {
   s_activity_state.spo2.currently_sampling = sampling;
   s_activity_state.spo2.toggled_sampling_at_ts = now_ts;
   if (sampling) {
-    s_activity_state.spo2.num_good_quality_samples = 0;
+    s_activity_state.spo2.num_valid_samples = 0;
+    s_activity_state.spo2.num_high_confidence_samples = 0;
   }
   PBL_LOG_DBG("Changed SpO2 sampling period to %" PRIu32 " sec", interval_sec);
 }
@@ -330,15 +331,15 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
 
   bool should_toggle = false;
   if (s_activity_state.spo2.currently_sampling) {
-    // Turn off when we hit the max on-time or collect enough good-quality samples
+    // Turn off when we hit the max on-time or collect enough high-confidence samples
     const uint32_t turn_off_at = last_toggled_ts + ACTIVITY_DEFAULT_SPO2_ON_TIME_SEC;
-    const bool good_samples_req_met = (s_activity_state.spo2.num_good_quality_samples >=
-                                       ACTIVITY_MIN_NUM_GOOD_SPO2_SAMPLES_SHORT_CIRCUIT);
+    const bool samples_req_met = (s_activity_state.spo2.num_high_confidence_samples >=
+                                  ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SPO2_SAMPLES_SHORT_CIRCUIT);
     // Doomed-case early abort: the algorithm has accepted nothing by the cutoff, so the red/IR LED
     // is burning for a reading that isn't going to converge. Bail instead of running to ON_TIME.
     const bool early_abort = (now_ts >= last_toggled_ts + ACTIVITY_SPO2_EARLY_ABORT_SEC) &&
-                             (s_activity_state.spo2.num_good_quality_samples == 0);
-    if ((turn_off_at <= now_ts) || good_samples_req_met || early_abort) {
+                             (s_activity_state.spo2.num_valid_samples == 0);
+    if ((turn_off_at <= now_ts) || samples_req_met || early_abort) {
       should_toggle = true;
     }
   } else {
@@ -416,17 +417,23 @@ PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *cont
 
   const uint8_t pct = hrm_event->spo2.percent;
   const HRMQuality quality = hrm_event->spo2.quality;
-  PBL_LOG_DBG("SpO2: %" PRIu8 "%%, qual: %d", pct, (int)quality);
+  const uint8_t confidence = hrm_event->spo2.confidence;
+  PBL_LOG_DBG("SpO2: %" PRIu8 "%%, qual: %d, conf: %" PRIu8, pct, (int)quality, confidence);
 
-  // A reading the algorithm accepted (not invalid), on-wrist, with a plausible percent is a usable
-  // measurement: count it toward the short-circuit AND stash it for the next minute record. The
-  // algorithm's own invalid flag is the right gate - the confidence-derived quality grade is a
-  // relative score, and requiring "Good" left algorithm-valid readings uncounted, so the sensor
-  // never stopped firing even while it was handing us readings.
+  // A reading the algorithm accepted (not invalid), on-wrist, with a plausible percent is usable.
+  // Stash the latest one for the next minute record, so a window that never reaches high
+  // confidence still yields its last reading. Once a high-confidence reading came in, lower ones
+  // no longer replace it, and enough high-confidence readings end the window early.
   if (!hrm_event->spo2.invalid && quality != HRMQuality_OffWrist && pct > 0) {
-    s_activity_state.spo2.num_good_quality_samples++;
-    s_activity_state.spo2.pending_percent = pct;
-    s_activity_state.spo2.pending_quality = prv_spo2_health_quality(quality);
+    const bool high_confidence = (confidence >= HRM_CONFIDENCE_HIGH);
+    s_activity_state.spo2.num_valid_samples++;
+    if (high_confidence || (s_activity_state.spo2.num_high_confidence_samples == 0)) {
+      s_activity_state.spo2.pending_percent = pct;
+      s_activity_state.spo2.pending_quality = prv_spo2_health_quality(quality);
+    }
+    if (high_confidence) {
+      s_activity_state.spo2.num_high_confidence_samples++;
+    }
   }
 
   // Modify our sampling period now if necessary
