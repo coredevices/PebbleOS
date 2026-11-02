@@ -10,6 +10,10 @@ class WatchTimeout(HarnessError):
     """The watch did not answer, or did not reach a state, in time."""
 
 
+class LinkClosed(HarnessError):
+    """The connection to the watch closed while it was in use."""
+
+
 class Unsupported(HarnessError):
     """None of the session's connections or its target can do this."""
 

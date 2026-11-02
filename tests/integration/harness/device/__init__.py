@@ -20,7 +20,7 @@ from datetime import datetime
 
 from harness import commands, connections
 from harness.connections import Capability
-from harness.errors import HarnessError, Unsupported, WatchTimeout
+from harness.errors import HarnessError, LinkClosed, Unsupported, WatchTimeout
 from harness.lab import VIRTUAL
 from harness.logs import Dehasher, LogBuffer, LogFile
 
@@ -219,7 +219,7 @@ class DeviceAdapter(ABC):
         if not self._hard_reset():
             try:
                 self.prompt(self.command("reset"), timeout=2)
-            except WatchTimeout:
+            except (WatchTimeout, LinkClosed):
                 pass
         self.disconnect()
         self.connect()
