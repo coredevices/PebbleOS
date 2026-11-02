@@ -19,6 +19,7 @@ config SOC_SF32LB52
     select CPU_STAR_MC1
     select CPU_HAS_FPU
     select RAMFUNC
+    select SOC_HAS_RESET
 
 config SOC_QEMU
     bool "QEMU emulated"
@@ -26,11 +27,18 @@ config SOC_QEMU
 config SOC_POSIX
     bool "POSIX host"
     select ARCH_POSIX
+    select SOC_HAS_RESET
     help
       Run the firmware as a native application on a POSIX host
       (Linux, macOS), with emulated peripherals.
 
 endchoice
+
+config SOC_HAS_RESET
+    bool
+    help
+      The SoC implements pbl_soc_reset(), which the kernel uses instead
+      of the architecture's reset.
 
 config SOC
     string

@@ -54,3 +54,6 @@ void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_
 //! Idle-thread hook: nothing is runnable for up to @p max_ticks (0 when a
 //! timeout is already due, PBL_TICK_FOREVER when none is pending).
 void arch_idle(pbl_tick_t max_ticks);
+
+//! Resets the core and its peripherals; called with interrupts locked.
+[[noreturn]] void arch_reset(void);

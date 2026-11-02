@@ -12,6 +12,7 @@ pbl_library_sources(
   msgq.c
   mutex.c
   poll.c
+  reboot.c
   sched.c
   sem.c
   syscall.c
@@ -26,5 +27,6 @@ if(CONFIG_ASAN)
   set_source_files_properties(heap.c PROPERTIES COMPILE_OPTIONS -fno-sanitize=address)
 endif()
 pbl_library_include_directories(. arch)
+pbl_linker_sources(rom-start reboot.ld)
 
 add_subdirectory(arch)

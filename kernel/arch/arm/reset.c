@@ -3,6 +3,8 @@
 
 #include <pbl/kernel/compiler.h>
 
+#include <arch.h>
+#include <cmsis_core.h>
 #include <kernel.h>
 
 [[noreturn]] PBL_NAKED void Reset_Handler(void) {
@@ -15,4 +17,8 @@
 #endif
       "  b kernel_prep_c \n"
       "  .ltorg \n");
+}
+
+[[noreturn]] void arch_reset(void) {
+  NVIC_SystemReset();
 }
