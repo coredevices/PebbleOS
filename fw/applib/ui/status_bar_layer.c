@@ -7,6 +7,7 @@
 #include <pbl/services/clock.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
+#include <pbl/util/time.h>
 
 #include <applib/app_logging.h>
 #include <applib/applib_malloc.auto.h>
@@ -334,7 +335,8 @@ static void prv_tick_timer_handler_cb(PebbleEvent *e, void *cb_data) {
     return;
   }
   struct pbl_tm currtime;
-  const time_t tick_time = e->clock_tick.tick_time;
+  // Events hold the low 32 bits of the time
+  const time_t tick_time = pbl_time_from_low32(e->clock_tick.tick_time, sys_get_time());
   sys_localtime_r(&tick_time, &currtime);
   const int min_of_day = (currtime.tm_hour * 60) + currtime.tm_min;
   if (status_bar_layer->previous_min_of_day != min_of_day) {

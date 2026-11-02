@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
@@ -14,6 +15,7 @@
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
+#include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
 #include <applib/fonts/fonts.h>
@@ -358,7 +360,8 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
   Dialog *dialog = actionable_dialog_get_dialog(s_alarm_popup_data->alarm_popup);
   char display_time[16];
   struct pbl_tm alarm_tm;
-  const time_t alarm_time = event->alarm_time;
+  // Events hold the low 32 bits of the time
+  const time_t alarm_time = pbl_time_from_low32(event->alarm_time, rtc_get_time());
   pbl_localtime_r(&alarm_time, &alarm_tm);
   if (clock_is_24h_style()) {
     pbl_strftime_r(display_time, 16, "%H:%M", &alarm_tm);
