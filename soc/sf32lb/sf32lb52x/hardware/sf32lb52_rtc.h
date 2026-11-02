@@ -9,9 +9,12 @@
 
 /* Register offsets */
 
-#define SF32LB52_RTC_PBR_OFFSET(n) (0x005c + ((n) * 4))
-#define SF32LB52_RTC_PAWK1R_OFFSET 0x006c
-#define SF32LB52_RTC_PAWK2R_OFFSET 0x0070
+#define SF32LB52_RTC_BKPR_OFFSET(n) (0x0030 + ((n) * 4))
+#define SF32LB52_RTC_PBR_OFFSET(n)  (0x005c + ((n) * 4))
+#define SF32LB52_RTC_PAWK1R_OFFSET  0x006c
+#define SF32LB52_RTC_PAWK2R_OFFSET  0x0070
+
+#define SF32LB52_RTC_BKPR_NUM 10
 
 /* Register bit definitions */
 
