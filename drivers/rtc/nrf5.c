@@ -151,7 +151,8 @@ void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
 static void prv_restore_rtc_time_state(void) {
   // Recover the previously set time from the RTC backup registers.
   RtcIntervalTicks last_save_time_ticks = retained_read(CURRENT_INTERVAL_TICKS_REGISTER);
-  time_t last_save_time = retained_read(CURRENT_TIME_REGISTER);
+  time_t last_save_time = ((time_t)retained_read(CURRENT_TIME_HI_REGISTER) << 32) |
+                          retained_read(CURRENT_TIME_REGISTER);
 
   if (s_had_amnesia_on_boot) {
     /* We have no idea what time it might be.  The closest we got is the
@@ -173,6 +174,7 @@ static RtcIntervalTicks prv_get_last_save_time_ticks(void) {
 
 static void prv_save_rtc_time_state_exact(RtcIntervalTicks current_rtc_ticks, time_t time) {
   retained_write(CURRENT_TIME_REGISTER, (uint32_t)time);
+  retained_write(CURRENT_TIME_HI_REGISTER, (uint32_t)((uint64_t)time >> 32));
   retained_write(CURRENT_INTERVAL_TICKS_REGISTER, current_rtc_ticks);
 }
 
@@ -250,7 +252,9 @@ void rtc_set_timezone(TimezoneInfo *tzinfo) {
   retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, raw[1]);
   retained_write(RTC_TIMEZONE_GMTOFFSET, raw[2]);
   retained_write(RTC_TIMEZONE_DST_START, (uint32_t)tzinfo->dst_start);
+  retained_write(RTC_TIMEZONE_DST_START_HI, (uint32_t)((uint64_t)tzinfo->dst_start >> 32));
   retained_write(RTC_TIMEZONE_DST_END, (uint32_t)tzinfo->dst_end);
+  retained_write(RTC_TIMEZONE_DST_END_HI, (uint32_t)((uint64_t)tzinfo->dst_end >> 32));
 }
 
 void rtc_get_timezone(TimezoneInfo *tzinfo) {
@@ -262,8 +266,10 @@ void rtc_get_timezone(TimezoneInfo *tzinfo) {
 
   *tzinfo = (TimezoneInfo){};
   memcpy(tzinfo, raw, sizeof(raw));
-  tzinfo->dst_start = retained_read(RTC_TIMEZONE_DST_START);
-  tzinfo->dst_end = retained_read(RTC_TIMEZONE_DST_END);
+  tzinfo->dst_start = ((time_t)retained_read(RTC_TIMEZONE_DST_START_HI) << 32) |
+                      retained_read(RTC_TIMEZONE_DST_START);
+  tzinfo->dst_end =
+      ((time_t)retained_read(RTC_TIMEZONE_DST_END_HI) << 32) | retained_read(RTC_TIMEZONE_DST_END);
 }
 
 void rtc_timezone_clear(void) {
@@ -271,7 +277,9 @@ void rtc_timezone_clear(void) {
   retained_write(RTC_TIMEZONE_ABBR_END_TZID_DSTID, 0);
   retained_write(RTC_TIMEZONE_GMTOFFSET, 0);
   retained_write(RTC_TIMEZONE_DST_START, 0);
+  retained_write(RTC_TIMEZONE_DST_START_HI, 0);
   retained_write(RTC_TIMEZONE_DST_END, 0);
+  retained_write(RTC_TIMEZONE_DST_END_HI, 0);
 }
 
 uint16_t rtc_get_timezone_id(void) {

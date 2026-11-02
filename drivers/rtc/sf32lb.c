@@ -373,8 +373,9 @@ typedef struct PBL_PACKED {
   uint8_t dst_id;               // Daylight savings time zone index
   int16_t timezone_id;          // Olson index of timezone
   int32_t tm_gmtoff;            // GMT time offset
-  uint32_t dst_start;           // Timestamp of start of DST period (0 if none)
-  uint32_t dst_end;             // Timestamp of end of DST period (0 if none)
+  // DST times stay 32 bits so earlier firmware keeps reading this layout. This RTC stops at 2099.
+  uint32_t dst_start; // Timestamp of start of DST period (0 if none)
+  uint32_t dst_end;   // Timestamp of end of DST period (0 if none)
 } TzinfoFlashStorage;
 
 #define TZINFO_VERSION 1
@@ -389,8 +390,8 @@ void rtc_set_timezone(TimezoneInfo *tzinfo) {
     .dst_id = tzinfo->dst_id,
     .timezone_id = tzinfo->timezone_id,
     .tm_gmtoff = tzinfo->tm_gmtoff,
-    .dst_start = tzinfo->dst_start,
-    .dst_end = tzinfo->dst_end,
+    .dst_start = (uint32_t)tzinfo->dst_start,
+    .dst_end = (uint32_t)tzinfo->dst_end,
   };
   memcpy(storage.tm_zone, tzinfo->tm_zone, PBL_TZ_LEN - 1);
 

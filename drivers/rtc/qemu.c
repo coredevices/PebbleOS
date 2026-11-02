@@ -68,7 +68,14 @@ void rtc_set_time(time_t time) {
 }
 
 time_t rtc_get_time(void) {
-  return (time_t)REG32(QEMU_RTC_BASE + RTC_TIME_LO);
+  // Read the high word on both sides of the low one, in case the low one wraps in between.
+  uint32_t hi;
+  uint32_t lo;
+  do {
+    hi = REG32(QEMU_RTC_BASE + RTC_TIME_HI);
+    lo = REG32(QEMU_RTC_BASE + RTC_TIME_LO);
+  } while (hi != REG32(QEMU_RTC_BASE + RTC_TIME_HI));
+  return ((time_t)hi << 32) | lo;
 }
 
 void rtc_set_time_tm(struct pbl_tm *time_tm) {
@@ -136,7 +143,8 @@ bool rtc_alarm_is_initialized(void) {
 // Timezone uses backup registers 11-15 to avoid conflicts with bootbits (0-10)
 #define TZ_BACKUP_BASE 11
 
-// The fields up to tm_gmtoff are stored as raw words, the DST times as 32 bits.
+// The fields up to tm_gmtoff are stored as raw words, the DST times as 32 bits: all 16 backup
+// registers are taken, so they stop at 2106 on the emulator.
 #define TZ_RAW_WORDS 3
 static_assert(offsetof(TimezoneInfo, tm_gmtoff) + sizeof(int32_t) ==
                   TZ_RAW_WORDS * sizeof(uint32_t),
