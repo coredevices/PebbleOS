@@ -94,8 +94,38 @@ Each exported symbol has a `type` of `function`, `define`, `type`,
 
 A `group` nests further `exports` under a `name`. Functions support
 additional flags (`internal`, `removed`, `deprecated`, `appOnly`,
-`workerOnly`, `implName`, `skipDefinition`) — see existing entries and
-`tools/generate_native_sdk/exports.py` for their meaning.
+`workerOnly`, `implName`, `skipDefinition`, `supersededRevision`) — see
+existing entries and `tools/generate_native_sdk/exports.py` for their
+meaning.
+
+### Changing a function's signature
+
+The jump table slot of an exported function can't change, since existing
+apps call it. To give new apps a different signature, add the function
+again under the same `name` with a new `addedRevision`, and mark the old
+entry with `supersededRevision` set to that revision. Point the old
+entry's `implName` at a firmware function that keeps the old behavior:
+
+```json
+{
+  "type": "function",
+  "name": "clock_to_timestamp",
+  "implName": "clock_to_timestamp_time32",
+  "addedRevision": "24",
+  "supersededRevision": "112"
+}, {
+  "type": "function",
+  "name": "clock_to_timestamp",
+  "addedRevision": "112"
+}
+```
+
+On platforms that reach the superseding revision, the old entry keeps its
+slot but leaves the headers, like a deprecated one, and its shim symbol in
+`libpebble.a` is named `<name>__pre<revision>` (`clock_to_timestamp__pre112`
+above) so it doesn't clash with the new one. Platforms frozen at an earlier
+revision keep the old entry, declared and documented like its replacement,
+and drop the new one, so their headers don't change.
 
 Notes:
 
