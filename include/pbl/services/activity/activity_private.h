@@ -102,6 +102,13 @@ typedef uint32_t ActivityScalarStore;
 #define ACTIVITY_DEFAULT_SPO2_ON_TIME_SEC (60)
 
 /**
+ * @brief Steps in the last minute above which a background SpO2 window is deferred.
+ *
+ * SpO2 needs the wearer to be still; tolerates a few stray steps.
+ */
+#define ACTIVITY_SPO2_MAX_STEPS_PER_MIN (10)
+
+/**
  * @brief Time into a SpO2 window after which it is aborted if no sample was accepted, in
  * seconds.
  *
@@ -561,6 +568,8 @@ typedef struct {
   uint32_t resting_calories;
   /** VMC of the last minute. */
   ActivityScalarStore last_vmc;
+  /** Steps in the last minute. */
+  uint16_t last_minute_steps;
   /** Orientation of the last minute. */
   uint8_t last_orientation;
   /** UTC time of the last rate update. */

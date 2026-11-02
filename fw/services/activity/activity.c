@@ -364,6 +364,12 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
       return;
     }
 
+    // SpO2 needs the wearer to be still; wait for a minute without walking.
+    if (!s_activity_state.spo2.currently_sampling &&
+        (s_activity_state.last_minute_steps > ACTIVITY_SPO2_MAX_STEPS_PER_MIN)) {
+      return;
+    }
+
     // Skip sampling if the watch looks to be off-wrist (lying flat), same heuristic as HR
     const uint8_t z_axis = s_activity_state.last_orientation >> 4;
     const bool watch_is_flat = z_axis == 0 || z_axis == 8;
@@ -945,6 +951,7 @@ static void PBL_NOINLINE prv_process_minute_data(time_t utc_sec) {
   activity_algorithm_minute_handler(utc_sec, &minute_record);
 
   s_activity_state.last_vmc = minute_record.data.base.vmc;
+  s_activity_state.last_minute_steps = minute_record.data.base.steps;
   s_activity_state.last_orientation = minute_record.data.base.orientation;
 
   // The rest of the minute handling is separated into another method to decrease the stack
