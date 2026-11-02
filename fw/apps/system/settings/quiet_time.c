@@ -261,9 +261,10 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
       break;
     case QuietTimeScheduleItemSleepAware:
       title = i18n_get("Sleep Aware", data);
-      strncpy(subtitle, do_not_disturb_is_sleep_dnd_enabled() ?
-                i18n_ctx_get("QuietTime", "Enabled", data) :
-                i18n_ctx_get("QuietTime", "Disabled", data), buffer_length);
+      strncpy(subtitle,
+              do_not_disturb_is_sleep_dnd_enabled() ? i18n_ctx_get("QuietTime", "Enabled", data)
+                                                    : i18n_ctx_get("QuietTime", "Disabled", data),
+              buffer_length);
       break;
     case QuietTimeScheduleItemWeekday:
       title = i18n_get("Weekdays", data);
@@ -288,6 +289,14 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   app_free(subtitle);
 }
 
+static bool prv_require_activity_tracking(bool enabling) {
+  if (enabling && (!activity_prefs_tracking_is_enabled() || !activity_tracking_on())) {
+    health_tracking_ui_feature_show_disabled();
+    return false;
+  }
+  return true;
+}
+
 static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   SettingsQuietTimeScheduleData *data = (SettingsQuietTimeScheduleData *)context;
 
@@ -296,12 +305,9 @@ static void prv_schedule_select_click_cb(SettingsCallbacks *context, uint16_t ro
       do_not_disturb_toggle_smart_dnd();
       break;
     case QuietTimeScheduleItemSleepAware:
-      if (!do_not_disturb_is_sleep_dnd_enabled() &&
-          !activity_prefs_tracking_is_enabled()) {
-        health_tracking_ui_feature_show_disabled();
-        break;
+      if (prv_require_activity_tracking(!do_not_disturb_is_sleep_dnd_enabled())) {
+        do_not_disturb_toggle_sleep_dnd();
       }
-      do_not_disturb_toggle_sleep_dnd();
       break;
     case QuietTimeScheduleItemWeekday:
       prv_scheduled_dnd_menu_push(WeekdaySchedule, data);
@@ -456,8 +462,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
     case QuietTimeItemUntilWake:
       title = i18n_get("Until Wake", data);
-      subtitle = do_not_disturb_is_until_wake_enabled() ?
-                     i18n_get("On", data) : i18n_get("Off", data);
+      subtitle =
+          do_not_disturb_is_until_wake_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
       break;
     case QuietTimeItemSchedule:
       title = i18n_get("Schedule", data);
@@ -492,12 +498,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSourceSettingsMenu);
       break;
     case QuietTimeItemUntilWake:
-      if (!do_not_disturb_is_until_wake_enabled() &&
-          !activity_prefs_tracking_is_enabled()) {
-        health_tracking_ui_feature_show_disabled();
-        break;
+      if (prv_require_activity_tracking(!do_not_disturb_is_until_wake_enabled())) {
+        do_not_disturb_set_until_wake_enabled(!do_not_disturb_is_until_wake_enabled());
       }
-      do_not_disturb_set_until_wake_enabled(!do_not_disturb_is_until_wake_enabled());
       break;
     case QuietTimeItemSchedule:
       prv_schedule_submenu_push();
