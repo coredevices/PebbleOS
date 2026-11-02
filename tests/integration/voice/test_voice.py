@@ -43,6 +43,7 @@ def voice(dut, lab_setup, results_dir):
 @pytest.fixture(autouse=True)
 def answering(voice):
     voice.result = RESULT_SUCCESS
+    voice.setup_delay_s = 0.0
 
 
 @pytest.mark.parametrize(
@@ -71,6 +72,8 @@ def test_session(prompt, voice, kind, session_type):
 
 def test_rejected(dut, prompt, voice):
     voice.result = RESULT_FAIL_SERVICE_UNAVAILABLE
+    # The text console drops logs while its prompt is open
+    voice.setup_delay_s = 1.0
     since = len(voice.sessions)
     mark = dut.logs.mark()
     start(prompt)
