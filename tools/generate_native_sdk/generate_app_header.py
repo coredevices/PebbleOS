@@ -45,6 +45,8 @@ def strip_internal_subcomments(string):
 
 
 def rename_full_definition(e):
+    if getattr(e, "declared_definition", None):
+        return e.declared_definition.replace(e.declared_as, e.name, 1)
     if hasattr(e, "impl_name"):
         return e.full_definition.replace(e.impl_name, e.name, 1)
     else:
