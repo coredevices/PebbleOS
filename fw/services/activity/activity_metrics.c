@@ -658,7 +658,7 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
                         fetch_size);
 
-      uint16_t day = time_util_get_day(old_history.utc_sec);
+      uint16_t day = time_util_get_day(pbl_time_from_low32(old_history.utc_sec, utc_now));
       int old_age = state->cur_day_index - day;
 
       // If this is resting kcalories, the default for each day is not 0
