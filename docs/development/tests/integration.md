@@ -76,7 +76,8 @@ reachable only at random.
 
 `--erase-fs` erases the watch's filesystem first (bondings, settings, apps
 and data) and the bonding kept for PRF, for a known starting point, with
-{doc}`../../pbl/erase` and the board's runner.
+{doc}`../../pbl/erase` and the board's runner. It also clears the timezone,
+which the firmware keeps outside the filesystem.
 
 The integration tests run debug builds, including the current measurements
 (see below): release builds have no usable console.

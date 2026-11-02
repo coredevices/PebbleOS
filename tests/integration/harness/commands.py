@@ -21,6 +21,7 @@ SHELL = {
     "reset": "sys reset",
     "rx_disable": "sys rx_disable {seconds}",
     "set_time": "time set {timestamp}",
+    "tz_clear": "time tz_clear",
     "version": "version",
     "windows": "ui windows",
 }

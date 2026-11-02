@@ -85,6 +85,8 @@ class DeviceAdapter(ABC):
         self._device_launch()
         self.connect()
         self.wait_ready()
+        if self.config.erase_fs:
+            self._clear_timezone()
 
     def close(self):
         self.disconnect()
@@ -222,6 +224,16 @@ class DeviceAdapter(ABC):
         self.disconnect()
         self.connect()
         self.wait_ready()
+
+    def _clear_timezone(self):
+        """The timezone outlives a filesystem erase; the harness phone dates
+        notifications in UTC, which the watch takes for local time."""
+        if not self.has(Capability.PROMPT):
+            return
+        try:
+            self.prompt(self.command("tz_clear"))
+        except Unsupported:
+            pass
 
     def wait_ready(self, timeout=None):
         """Wait until the firmware answers on the prompt or the protocol."""
