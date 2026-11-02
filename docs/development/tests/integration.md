@@ -93,13 +93,10 @@ what plays the phone. The same tests run on any of:
 | Watch, serial console | Bumble, on a dongle | the lab's watch, and its first dongle for the phone |
 | Watch, serial console | CoreApp | `--phone coreapp` (not supported yet) |
 
-A lab file describes the hardware wired to this host, and nothing else:
-watches (board, serial port, the supply powering them), power supplies and
-Bluetooth dongles. Pass it with `--lab` (or `$PBL_LAB`), and the
-harness takes the setup for the build from it: the watch running its
-board (`--watch` picks another), its supply, and a dongle for the
-phone. Options on the command line override it.
-`tools/libs/pbl-cli/lab.example.yaml` describes the format:
+The setup comes from the {doc}`lab file <../../pbl/lab>`, which describes
+the hardware wired to this host and the rest of `pbl` uses too: the watch
+running the build's board (`--watch` picks another), its supply, and a dongle for the phone. Options on the
+command line override it.
 
 ```shell
 pbl -b build-getafix itest --lab ~/pebble-lab.yaml --flash-before

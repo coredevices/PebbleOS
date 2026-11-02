@@ -82,6 +82,8 @@ with `--tty`, e.g. `/dev/ttyACM0` or `/dev/tty.usbmodem1102`:
 pbl run --tty /dev/ttyACM0
 ```
 
+With the watch in a {doc}`lab file <lab>`, its ports need not be given.
+
 The first time, the system resources have to be written too. The `sftool`
 runner, and the `openocd` and `nrfutil` ones on asterix, take `--resources`;
 otherwise, image them over the serial console once the firmware is running,

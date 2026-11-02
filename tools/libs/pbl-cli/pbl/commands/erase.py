@@ -66,4 +66,10 @@ class Erase(PblCommand):
             ranges.append((_int(address, "address"), _int(size, "size")))
         if not ranges:
             raise CommandContextError("nothing to erase: give --region or --range")
-        run_on_device(build, args, "erase", erase_ranges=ranges)
+        run_on_device(
+            build,
+            args,
+            "erase",
+            erase_ranges=ranges,
+            watch=self.lab_watch(build, args.tty),
+        )

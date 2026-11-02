@@ -70,11 +70,16 @@ class RunnerConfig(NamedTuple):
     gdb_port: int | None = None  # None for the runner's default
     build: object | None = None  # pbl.build.BuildDir, for runners on the host
     extra_args: tuple = ()  # passed on to the program a runner starts
+    tty: str | None = None  # the device's serial port
+    probe: str | None = None  # the debug probe, as the runner names it
+    watch: object | None = None  # pbl.lab.Watch, from the lab
     dry_run: bool = False
 
 
 class Runner(ABC):
     name = None
+    #: What the runner uses of a lab's watch: "serial" and/or "probe".
+    lab_ports = ()
 
     def __init__(self, cfg):
         self.cfg = cfg

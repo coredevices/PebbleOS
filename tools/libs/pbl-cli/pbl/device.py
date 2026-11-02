@@ -9,7 +9,7 @@ execute one of the device commands.
 
 import os
 
-from pbl import runners
+from pbl import runners, util
 from pbl.errors import CommandContextError
 
 
@@ -28,12 +28,19 @@ def runner_options(parser):
 
 
 def make_runner(
-    build, args, commands, resources=False, erase_ranges=(), extra_args=()
+    build,
+    args,
+    commands,
+    resources=False,
+    erase_ranges=(),
+    extra_args=(),
+    watch=None,
 ):
     """Create the runner for ``build``, honoring ``--runner``.
 
     Without it, the board's first runner that can handle the build and one
-    of ``commands`` is picked.
+    of ``commands`` is picked. ``watch``, the lab's (:class:`pbl.lab.Watch`),
+    gives the ports the command line leaves out.
     """
     resources_file = None
     resources_address = None
@@ -60,6 +67,9 @@ def make_runner(
         gdb_port=getattr(args, "gdb_port", None),
         build=build,
         extra_args=tuple(extra_args),
+        tty=getattr(args, "tty", None) or (watch.serial if watch else None),
+        probe=getattr(args, "probe", None) or (watch.probe if watch else None),
+        watch=watch,
         dry_run=getattr(args, "dry_run", False),
     )
 
@@ -86,14 +96,22 @@ def make_runner(
         raise CommandContextError(
             f"the {selected} runner cannot run this {build.board} build"
         )
-    return runners.create(selected, cfg, args)
+    runner = runners.create(selected, cfg, args)
+    if watch is not None and runner.lab_ports:
+        util.inf(f"lab: watch {watch.name} ({watch.board})")
+    return runner
 
 
-def run_on_device(build, args, command, resources=False, erase_ranges=()):
+def run_on_device(build, args, command, resources=False, erase_ranges=(), watch=None):
     """Dispatch one runner command, reporting failures as command errors."""
     try:
         make_runner(
-            build, args, (command,), resources=resources, erase_ranges=erase_ranges
+            build,
+            args,
+            (command,),
+            resources=resources,
+            erase_ranges=erase_ranges,
+            watch=watch,
         ).run(command)
     except runners.RunnerError as e:
         raise CommandContextError(str(e)) from e

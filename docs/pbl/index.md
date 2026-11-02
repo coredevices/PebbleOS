@@ -35,16 +35,21 @@ command's own options.
 | {doc}`test` | {doc}`image_resources` |
 | {doc}`itest` | {doc}`image_recovery` |
 | | {doc}`erase` |
+| | {doc}`lab` |
 
 ## Shared options
 
-Two options are accepted by every command, before or after the command
+These options are accepted by every command, before or after the command
 name:
 
 - `-b, --build-dir DIR` — use a different build directory. It defaults to
   the one `pbl.yml` names (`build/`, or `build-test/` for `pbl test`), and
   `PBL_BUILD_DIR` overrides that in turn.
 - `--dry-run` — print the commands that would run instead of running them.
+- `--lab FILE` — the {ref}`lab file <pbl-lab-file>` describing the
+  hardware wired to this host, which device commands take their ports
+  from. It defaults to `$PBL_LAB`, else `~/.config/pbl/lab.yaml`.
+- `--watch NAME` — the lab's watch to use, when several run the build.
 
 Separate build directories let several boards be built side by side:
 
@@ -102,7 +107,8 @@ the external flash configuration from the board's
 The `probe-rs` runner needs [probe-rs](https://probe.rs). It takes the
 chip from the board's `support/probe-rs.yml`. Some platforms have a
 serial-based debugger, e.g. over the programmer's debug UART: give its
-port with `--tty`. `--probe` picks one of several debug probes. Where
+port with `--tty`. `--probe` picks one of several debug probes. Both
+default to the lab's watch, see {doc}`lab`. Where
 probe-rs misreports the flash region to GDB, the file's `gdb-flash` gives
 it, so that GDB sets hardware breakpoints there.
 
@@ -135,6 +141,7 @@ emulator.md
 image_resources.md
 image_recovery.md
 erase.md
+lab.md
 ```
 
 ```{toctree}

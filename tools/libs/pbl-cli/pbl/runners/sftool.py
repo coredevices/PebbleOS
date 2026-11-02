@@ -6,10 +6,7 @@ from .core import Runner, RunnerCaps, RunnerError
 
 class SfToolRunner(Runner):
     name = "sftool"
-
-    def __init__(self, cfg, tty=None):
-        super().__init__(cfg)
-        self.tty = tty
+    lab_ports = ("serial",)
 
     @classmethod
     def capabilities(cls):
@@ -18,18 +15,16 @@ class SfToolRunner(Runner):
     @classmethod
     def do_add_parser(cls, parser):
         parser.add_argument(
-            "--tty", help="Serial port for the sftool and probe-rs runners"
+            "--tty",
+            help="Serial port for the sftool and probe-rs runners (default: the lab's)",
         )
 
-    @classmethod
-    def do_create(cls, cfg, args):
-        return cls(cfg, tty=getattr(args, "tty", None))
-
     def _sftool(self, command):
-        if not self.tty:
-            raise RunnerError("Port not specified, use --tty")
+        tty = self.cfg.tty
+        if not tty:
+            raise RunnerError("Port not specified, use --tty or a lab file")
         self.call(
-            f"{self.quote(self.cfg.sftool, '-c', self.cfg.soc, '-p', self.tty)} {command}"
+            f"{self.quote(self.cfg.sftool, '-c', self.cfg.soc, '-p', tty)} {command}"
         )
 
     def do_run(self, command):

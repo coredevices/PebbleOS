@@ -20,7 +20,8 @@ class _DebugCommand(PblCommand):
         return parser
 
     def do_run(self, args, unknown):
-        run_on_device(self.build_dir(), args, self.name)
+        build = self.build_dir()
+        run_on_device(build, args, self.name, watch=self.lab_watch(build, args.tty))
 
 
 class Debug(_DebugCommand):
