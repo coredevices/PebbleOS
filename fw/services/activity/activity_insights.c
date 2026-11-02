@@ -655,7 +655,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
                                  s_tier_config[tier].card_icon);
 
   attribute_list_add_uint8(&pin_attr_list, AttributeIdDisplayTime, WeatherTimeType_None);
-  attribute_list_add_uint32(&pin_attr_list, AttributeIdLastUpdated, now_utc);
+  attribute_list_add_time(&pin_attr_list, AttributeIdLastUpdated, now_utc);
 
   char *percentage_buf = pbl_malloc_check(SUBTITLE_BUFFER_LENGTH);
   if (percentage == 0) {
@@ -949,7 +949,7 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
   attribute_list_add_uint8(&pin_attr_list, AttributeIdHealthInsightType,
                            ActivityInsightType_ActivitySessionNap);
   attribute_list_add_uint8(&pin_attr_list, AttributeIdHealthActivityType, ActivitySessionType_Nap);
-  attribute_list_add_uint32(&pin_attr_list, AttributeIdTimestamp, session->start_utc);
+  attribute_list_add_time(&pin_attr_list, AttributeIdTimestamp, session->start_utc);
 
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
                              i18n_get("Nap Time", &pin_attr_list));
@@ -983,7 +983,7 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
 
   // Don't display the time in the title
   attribute_list_add_uint8(&pin_attr_list, AttributeIdDisplayTime, WeatherTimeType_None);
-  attribute_list_add_uint32(&pin_attr_list, AttributeIdLastUpdated, now_utc);
+  attribute_list_add_time(&pin_attr_list, AttributeIdLastUpdated, now_utc);
   attribute_list_add_uint8(&pin_attr_list, AttributeIdBgColor, GColorSunsetOrangeARGB8);
 
   const int num_responses = 2;
@@ -1261,7 +1261,7 @@ static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConf
                                    session ? session->type : ActivitySessionType_None);
 
   if (session && session->start_utc) {
-    attribute_list_add_uint32(&notif_attr_list, AttributeIdTimestamp, session->start_utc);
+    attribute_list_add_time(&notif_attr_list, AttributeIdTimestamp, session->start_utc);
   }
 
   if (config->headings) {

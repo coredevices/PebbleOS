@@ -763,7 +763,7 @@ static void prv_last_updated_update(const LayoutLayer *layout,
                                     const LayoutNodeTextDynamicConfig *config, char *buffer,
                                     bool render) {
   AttributeList *attributes = layout->attributes;
-  const time_t last_updated_time = attribute_get_uint32(attributes, AttributeIdLastUpdated, 0);
+  const time_t last_updated_time = attribute_get_time(attributes, AttributeIdLastUpdated, 0);
   clock_get_since_time(buffer, config->buffer_size, last_updated_time);
 }
 
@@ -774,7 +774,7 @@ GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *la
   }
   LayoutNodeVerticalConfig vertical_config = *(LayoutNodeVerticalConfig *)config;
   const bool has_last_updated =
-      (attribute_get_uint32(layout->layout_layer.attributes, AttributeIdLastUpdated, 0) != 0);
+      (attribute_get_time(layout->layout_layer.attributes, AttributeIdLastUpdated, 0) != 0);
   // One node for paragraphs and headings, and conditionally two more for the last updated time.
   const int num_default_nodes = has_last_updated ? 3 : 1;
   vertical_config.container.extra_capacity = num_default_nodes;

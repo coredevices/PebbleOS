@@ -294,7 +294,7 @@ static bool prv_deserialize_slice(SerializedAppGlanceSliceHeader *serialized_sli
   // Note that we default the expiration time to "never expire" if one was not provided
   *current_slice_out = (AppGlanceSliceInternal){
     .expiration_time =
-        attribute_get_uint32(&attr_list, AttributeIdTimestamp, APP_GLANCE_SLICE_NO_EXPIRATION),
+        attribute_get_time(&attr_list, AttributeIdTimestamp, APP_GLANCE_SLICE_NO_EXPIRATION),
     .type = (AppGlanceSliceType)serialized_slice->type,
   };
   // Copy type-specific fields from the serialized slice to the output glance's slice
@@ -385,8 +385,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
 
     AttributeList *attr_list = &current_attr_list_data->attr_list;
     // Initialize the attributes common to all slice types in the attribute list
-    attribute_list_add_uint32(attr_list, AttributeIdTimestamp,
-                              (uint32_t)current_slice->expiration_time);
+    attribute_list_add_time(attr_list, AttributeIdTimestamp, current_slice->expiration_time);
     // Initialize the type-specific attributes in the attribute list
     s_slice_type_impls[current_slice->type].init_attr_list_from_slice(current_slice, attr_list);
 

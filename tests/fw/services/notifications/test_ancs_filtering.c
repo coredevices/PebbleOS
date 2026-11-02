@@ -116,9 +116,9 @@ void test_ancs_filtering__record_app_no_action_needed(void) {
         {.id = AttributeIdTitle, .cstring = "Title"},
         {.id = AttributeIdBody, .cstring = "Body"},
         {.id = AttributeIdAppName, .cstring = "Awesome"},
-        {.id = AttributeIdLastUpdated, .uint32 = s_now},
+        {.id = AttributeIdLastUpdated, .time = s_now},
         {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_Always},
-        {.id = AttributeIdMuteExpiration, .uint32 = 0},
+        {.id = AttributeIdMuteExpiration, .time = 0},
         {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
       },
     },
@@ -138,9 +138,9 @@ void test_ancs_filtering__record_app_no_prefs_yet(void) {
     .attributes = (Attribute[]){
       {.id = AttributeIdAppName, .cstring = "Awesome"},
       {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None},
-      {.id = AttributeIdMuteExpiration, .uint32 = 0},
+      {.id = AttributeIdMuteExpiration, .time = 0},
       {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
-      {.id = AttributeIdLastUpdated, .uint32 = s_now},
+      {.id = AttributeIdLastUpdated, .time = s_now},
     }
   };
   s_expected_attributes = &attr_list;
@@ -177,9 +177,9 @@ void test_ancs_filtering__record_app_existing_mute(void) {
       {.id = AttributeIdBody, .cstring = "Body"},
       {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_Always},
       {.id = AttributeIdAppName, .cstring = "Awesome"},
-      {.id = AttributeIdMuteExpiration, .uint32 = 0},
+      {.id = AttributeIdMuteExpiration, .time = 0},
       {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
-      {.id = AttributeIdLastUpdated, .uint32 = s_now},
+      {.id = AttributeIdLastUpdated, .time = s_now},
     }
   };
   s_expected_attributes = &expected_attributes;
@@ -211,9 +211,9 @@ void test_ancs_filtering__record_app_existing_display_name(void) {
     .attributes = (Attribute[]){
       {.id = AttributeIdAppName, .cstring = "Awesome"},
       {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None},
-      {.id = AttributeIdMuteExpiration, .uint32 = 0},
+      {.id = AttributeIdMuteExpiration, .time = 0},
       {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
-      {.id = AttributeIdLastUpdated, .uint32 = s_now},
+      {.id = AttributeIdLastUpdated, .time = s_now},
     }
   };
   s_expected_attributes = &expected_attributes;
@@ -237,9 +237,9 @@ void test_ancs_filtering__record_app_update_timestamp(void) {
       .attributes = (Attribute[]){
         {.id = AttributeIdAppName, .cstring = "Awesome"},
         {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None},
-        {.id = AttributeIdMuteExpiration, .uint32 = 0},
+        {.id = AttributeIdMuteExpiration, .time = 0},
         {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
-        {.id = AttributeIdLastUpdated, .uint32 = s_now},
+        {.id = AttributeIdLastUpdated, .time = s_now},
       },
     },
   };
@@ -255,9 +255,9 @@ void test_ancs_filtering__record_app_update_timestamp(void) {
     .attributes = (Attribute[]){
       {.id = AttributeIdAppName, .cstring = "Awesome"},
       {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None},
-      {.id = AttributeIdMuteExpiration, .uint32 = 0},
+      {.id = AttributeIdMuteExpiration, .time = 0},
       {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
-      {.id = AttributeIdLastUpdated, .uint32 = s_now},
+      {.id = AttributeIdLastUpdated, .time = s_now},
     }
   };
   s_expected_attributes = &expected_attributes;
@@ -330,7 +330,7 @@ void test_ancs_filtering__record_app_existing_mute_expiration(void) {
         {.id = AttributeIdTitle, .cstring = "Title"},
         {.id = AttributeIdBody, .cstring = "Body"},
         {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None},
-        {.id = AttributeIdMuteExpiration, .uint32 = 12345678},
+        {.id = AttributeIdMuteExpiration, .time = 12345678},
       },
     },
   };
@@ -342,10 +342,10 @@ void test_ancs_filtering__record_app_existing_mute_expiration(void) {
       {.id = AttributeIdTitle, .cstring = "Title"},
       {.id = AttributeIdBody, .cstring = "Body"},
       {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None},
-      {.id = AttributeIdMuteExpiration, .uint32 = 12345678},
+      {.id = AttributeIdMuteExpiration, .time = 12345678},
       {.id = AttributeIdAppName, .cstring = "Awesome"},
       {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
-      {.id = AttributeIdLastUpdated, .uint32 = s_now},
+      {.id = AttributeIdLastUpdated, .time = s_now},
     }
   };
   s_expected_attributes = &expected_attributes;
@@ -365,7 +365,7 @@ void test_ancs_filtering__should_ignore_because_timed_muted(void) {
     .attr_list = {
       .num_attributes = 1,
       .attributes = (Attribute[]){
-        {.id = AttributeIdMuteExpiration, .uint32 = 2000},
+        {.id = AttributeIdMuteExpiration, .time = 2000},
       }
     }
   };
@@ -389,9 +389,9 @@ void test_ancs_filtering__record_app_no_display_name(void) {
     .attributes = (Attribute[]){
       {.id = AttributeIdAppName, .cstring = "Apple Pay = :("},
       {.id = AttributeIdMuteDayOfWeek, .uint8 = MuteBitfield_None},
-      {.id = AttributeIdMuteExpiration, .uint32 = 0},
+      {.id = AttributeIdMuteExpiration, .time = 0},
       {.id = AttributeIdNotificationFilteringRules, .string_list = &s_empty_filtering_rules.list},
-      {.id = AttributeIdLastUpdated, .uint32 = s_now},
+      {.id = AttributeIdLastUpdated, .time = s_now},
     }
   };
   s_expected_attributes = &expected_attributes;
