@@ -8,7 +8,6 @@
 #include <pbl/logging/logging.h>
 
 #include <kernel/util/standby.h>
-#include <system/bootbits.h>
 #include <system/reset.h>
 
 int enter_standby(RebootReasonCode reason) {
@@ -35,8 +34,6 @@ int enter_standby(RebootReasonCode reason) {
   int ret = pmic_power_off();
   // Everything is torn down already, so resetting is the only way out
   PBL_LOG_ERR("Could not power off (%d), resetting", ret);
-#else
-  boot_bit_set(BOOT_BIT_STANDBY_MODE_REQUESTED);
 #endif
   system_hard_reset();
 }

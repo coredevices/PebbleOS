@@ -4,12 +4,14 @@
 #include <limits.h>
 
 #include <pbl/bluetooth/conn_event_stats.h>
+#include <pbl/boot/bootbit.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_receive_router.h>
 #include <pbl/services/put_bytes/put_bytes.h>
+#include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
 
 #include <clar.h>
@@ -22,7 +24,6 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <system/bootbits.h>
 #include <system/firmware_storage.h>
 
 extern struct pbl_sem *put_bytes_get_semaphore(void);
@@ -44,8 +45,8 @@ static const PebbleProtocolEndpoint s_put_bytes_endpoint = (const PebbleProtocol
 //////////////////////////////////////////////////////////
 
 uint32_t s_boot_bits_orred;
-void boot_bit_set(BootBitValue bit) {
-  s_boot_bits_orred |= bit;
+void pbl_bootbit_set(enum pbl_bootbit bit) {
+  s_boot_bits_orred |= PBL_BIT(bit);
 }
 
 static bool s_firmware_update_is_in_progress;
@@ -900,7 +901,7 @@ void test_put_bytes__install_message_prf_boot_bit_set(void) {
   prv_receive_init_put_commit_and_install(ObjectRecovery);
   assert_ack_count(1);
   assert_nack_count(0);
-  cl_assert_equal_i((s_boot_bits_orred & BOOT_BIT_NEW_PRF_AVAILABLE), BOOT_BIT_NEW_PRF_AVAILABLE);
+  cl_assert_equal_i((s_boot_bits_orred & PBL_BIT(PBL_BOOTBIT_NEW_PRF_AVAILABLE)) != 0U, true);
 }
 
 void test_put_bytes__install_message_fw_and_sys_resources_boot_bits_set(void) {
@@ -910,17 +911,15 @@ void test_put_bytes__install_message_fw_and_sys_resources_boot_bits_set(void) {
   assert_nack_count(0);
 
   // Expect boot bit not to be set yet:
-  cl_assert_equal_i((s_boot_bits_orred & BOOT_BIT_NEW_FW_AVAILABLE), 0);
+  cl_assert_equal_i((s_boot_bits_orred & PBL_BIT(PBL_BOOTBIT_NEW_FW_AVAILABLE)), 0);
 
   // System Resources object:
   prv_receive_init_put_commit_and_install(ObjectSysResources);
   assert_ack_count(1);
   assert_nack_count(0);
 
-  // Finally, expect both boot bits to be set at once:
-  cl_assert_equal_i((s_boot_bits_orred & BOOT_BIT_NEW_FW_AVAILABLE), BOOT_BIT_NEW_FW_AVAILABLE);
-  cl_assert_equal_i((s_boot_bits_orred & BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE),
-                    BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
+  // Finally, expect the boot bit to be set:
+  cl_assert_equal_i((s_boot_bits_orred & PBL_BIT(PBL_BOOTBIT_NEW_FW_AVAILABLE)) != 0U, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

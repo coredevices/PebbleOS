@@ -67,7 +67,6 @@ pbl_clar_test(test_language_pack_storage
     fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
     drivers/flash/flash_crc.c
-    tests/fakes/fake_bootbits.c
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_rtc.c
     tests/fixtures/resources/builtin_resources.auto.c
@@ -195,7 +194,6 @@ pbl_clar_test(test_clock
   MODULES resources time
   SOURCES
     fw/services/i18n/i18n.c
-    tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_events.c
     fw/services/timezone_database/service.c
@@ -217,7 +215,6 @@ pbl_clar_test(test_wakeup
   SOURCES
     fw/process_management/pebble_process_info.c
     fw/services/wakeup/service.c
-    tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )
@@ -227,7 +224,6 @@ pbl_clar_test(test_migrate_wakeup
   SOURCES
     fw/process_management/pebble_process_info.c
     fw/services/wakeup/service.c
-    tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

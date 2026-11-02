@@ -7,8 +7,6 @@
 
 #include <pbl/kernel/compiler.h>
 
-#include <system/rtc_registers.h>
-
 // NOTE: We include the reboot reason in analytics and the tools we use to analyze the analytics are
 // dependent on the position and ordering of these enumerated values. To keep the analysis tools
 // simpler, it is best to keep these enums in the same order and add new ones to the end.

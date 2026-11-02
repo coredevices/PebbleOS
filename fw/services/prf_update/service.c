@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
 #include <flash_region/flash_region.h>
-#include <system/bootbits.h>
 #include <system/firmware_storage.h>
 
 PBL_LOG_MODULE_DEFINE(service_prf_update, CONFIG_SERVICE_PRF_UPDATE_LOG_LEVEL);
@@ -66,11 +66,11 @@ done:
 #endif
 
 void check_prf_update(void) {
-  if (!boot_bit_test(BOOT_BIT_NEW_PRF_AVAILABLE)) {
+  if (!pbl_bootbit_test(PBL_BOOTBIT_NEW_PRF_AVAILABLE)) {
     return;
   }
 
-  boot_bit_clear(BOOT_BIT_NEW_PRF_AVAILABLE);
+  pbl_bootbit_clear(PBL_BOOTBIT_NEW_PRF_AVAILABLE);
 
 #ifndef CONFIG_RECOVERY_FW
   prv_do_update();

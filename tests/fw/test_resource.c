@@ -11,7 +11,6 @@
 
 // Fakes
 #include <fake_app_manager.h>
-#include <fake_bootbits.h>
 
 // Stubs
 
@@ -525,7 +524,6 @@ void test_resource__system_resource_init(void) {
 void test_resource__resource_update(void) {
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  true /* is_next */);
-  fake_boot_bit_set(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
   resource_init();
 }
 

@@ -13,7 +13,6 @@
 #include <console/pulse_protocol_impl.h>
 #include <flash_region/flash_region.h>
 #include <resource/resource_storage_flash.h>
-#include <system/bootbits.h>
 
 #define IMAGING_CMD_ERASE           (1)
 #define IMAGING_CMD_WRITE           (2)
@@ -264,9 +263,6 @@ static void prv_handle_finalize_region(Command *cmd, size_t length) {
   switch (cmd->region.region) {
     case FLASH_REGION_PRF:
       flash_prf_set_protection(true);
-      break;
-    case FLASH_REGION_SYSTEM_RESOURCES:
-      boot_bit_set(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
       break;
     default:
       break;

@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/boot/version.h>
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
@@ -48,7 +49,6 @@
 #include <shell/prefs.h>
 #include <shell/system_app_ids.auto.h>
 #include <syscall/syscall.h>
-#include <system/bootbits.h>
 #include <system/version.h>
 
 enum {
@@ -302,7 +302,7 @@ static void prv_information_window_push(SettingsSystemData *data) {
   }
 
   sniprintf(info->boot_version_string, sizeof(info->boot_version_string), "0x%08" PRIx32,
-            boot_version_read());
+            pbl_boot_version_get());
   bt_local_id_copy_address_mac_string(info->bt_mac_addr);
 
   // Ensure OTP strings are null-terminated

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/util/size.h>
 
@@ -24,7 +25,6 @@
 #include <mfg/mfg_serials.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
-#include <system/bootbits.h>
 #include <system/reset.h>
 
 // "XXXXXX - 100%"
@@ -86,7 +86,7 @@ static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context)
 
   bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
   if (confirmed) {
-    boot_bit_set(BOOT_BIT_FORCE_PRF);
+    pbl_bootbit_set(PBL_BOOTBIT_FORCE_PRF);
     system_reset();
   }
 }

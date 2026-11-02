@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/conn_event_stats.h>
+#include <pbl/boot/bootbit.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -29,7 +30,6 @@
 #include <kernel/pebble_tasks.h>
 #include <kernel/system_message.h>
 #include <resource/resource_storage_file.h>
-#include <system/bootbits.h>
 #include <system/firmware_storage.h>
 
 PBL_LOG_MODULE_DEFINE(service_put_bytes, CONFIG_SERVICE_PUT_BYTES_LOG_LEVEL);
@@ -475,13 +475,7 @@ static void prv_finish_fw_update_if_completed(void) {
   s_ready_to_install[ObjectFirmware - 1].type = 0;
   s_ready_to_install[ObjectSysResources - 1].type = 0;
 
-  bool set_res_bit = true;
-
-  if (set_res_bit) {
-    boot_bit_set(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
-  }
-
-  boot_bit_set(BOOT_BIT_NEW_FW_AVAILABLE);
+  pbl_bootbit_set(PBL_BOOTBIT_NEW_FW_AVAILABLE);
 }
 
 static void prv_do_install(uint32_t token) {
@@ -509,7 +503,7 @@ static void prv_do_install(uint32_t token) {
       prv_finish_fw_update_if_completed();
       break;
     case ObjectRecovery:
-      boot_bit_set(BOOT_BIT_NEW_PRF_AVAILABLE);
+      pbl_bootbit_set(PBL_BOOTBIT_NEW_PRF_AVAILABLE);
       [[fallthrough]];
     default:
       break;

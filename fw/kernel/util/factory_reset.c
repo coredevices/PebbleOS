@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/boot/bootbit.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
@@ -16,7 +17,6 @@
 #include <kernel/util/standby.h>
 #include <process_management/worker_manager.h>
 #include <shell/normal/app_idle_timeout.h>
-#include <system/bootbits.h>
 #include <system/firmware_storage.h>
 #include <system/reboot_reason.h>
 #include <system/reset.h>
@@ -78,7 +78,7 @@ void factory_reset(bool should_shutdown) {
   // and a reset in that window (watchdog, crash, power loss) must land in
   // PRF instead of rebooting a half-wiped normal firmware.
   // "First use" is part of the PRF image for Snowy.
-  boot_bit_set(BOOT_BIT_FORCE_PRF);
+  pbl_bootbit_set(PBL_BOOTBIT_FORCE_PRF);
 #ifdef CONFIG_PBLBOOT
   // Invalidate both firmware slots so the bootloader doesn't boot into them
   firmware_storage_invalidate_firmware_slot(0);
