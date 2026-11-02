@@ -32,6 +32,8 @@ typedef enum {
   AttributeTypeStringList,
   AttributeTypeResourceId,
   AttributeTypeUint32List,
+  //! A time: 4 bytes serialized while it fits in 32 unsigned bits, 8 bytes beyond
+  AttributeTypeTime,
 } AttributeType;
 
 static AttributeType prv_attribute_type(AttributeId id) {
@@ -79,12 +81,13 @@ static AttributeType prv_attribute_type(AttributeId id) {
     case AttributeIdIconPin:
     case AttributeIdIcon:
       return AttributeTypeResourceId;
-    case AttributeIdLastUpdated:
     case AttributeIdLaunchCode:
     case AttributeIdAncsId:
+      return AttributeTypeUint32;
+    case AttributeIdLastUpdated:
     case AttributeIdTimestamp:
     case AttributeIdMuteExpiration:
-      return AttributeTypeUint32;
+      return AttributeTypeTime;
     case AttributeIdCannedResponses:
     case AttributeIdHeadings:
     case AttributeIdParagraphs:
@@ -136,6 +139,19 @@ static bool prv_deserialize_attribute(char **buffer, char *const buf_end, const 
         return false;
       }
       notif_attr->uint32 = *(uint32_t *)*cursor;
+      break;
+    case AttributeTypeTime:
+      if (attribute->length == sizeof(uint32_t)) {
+        uint32_t time32;
+        memcpy(&time32, *cursor, sizeof(time32));
+        notif_attr->time = time32;
+      } else if (attribute->length == sizeof(int64_t)) {
+        int64_t time64;
+        memcpy(&time64, *cursor, sizeof(time64));
+        notif_attr->time = time64;
+      } else {
+        return false;
+      }
       break;
     case AttributeTypeResourceId:
       if (attribute->length != sizeof(uint32_t)) {
@@ -221,7 +237,8 @@ Attribute *prv_add_attribute(AttributeList *list, AttributeId id) {
   uint8_t attribute_idx = list->num_attributes;
   list->num_attributes++;
   list->attributes = pbl_realloc(list->attributes, list->num_attributes * sizeof(Attribute));
-  list->attributes[attribute_idx].id = id;
+  // Zeroed, so a value set through a narrower member reads the same through a wider one
+  list->attributes[attribute_idx] = (Attribute){.id = id};
   return &list->attributes[attribute_idx];
 }
 
@@ -237,6 +254,11 @@ int32_t attribute_get_buffer_size_for_serialized_attributes(uint8_t num_attribut
     size += result;
   }
   return size;
+}
+
+// Times that fit in 32 unsigned bits stay 4 bytes, as phones and earlier firmware expect.
+static size_t prv_time_serialized_size(time_t time) {
+  return (time >= 0 && time <= (time_t)UINT32_MAX) ? sizeof(uint32_t) : sizeof(int64_t);
 }
 
 size_t attribute_list_get_serialized_size(const AttributeList *attr_list) {
@@ -263,6 +285,9 @@ size_t attribute_list_get_serialized_size(const AttributeList *attr_list) {
         break;
       case AttributeTypeUint32List:
         size += Uint32ListSize(attr_list->attributes[i].uint32_list->num_values);
+        break;
+      case AttributeTypeTime:
+        size += prv_time_serialized_size(attr_list->attributes[i].time);
         break;
       default:
         break;
@@ -306,6 +331,18 @@ size_t attribute_list_serialize(const AttributeList *attr_list, uint8_t *buffer,
         attribute->length = Uint32ListSize(attr_list->attributes[i].uint32_list->num_values);
         memcpy(buffer, attr_list->attributes[i].uint32_list, attribute->length);
         break;
+      case AttributeTypeTime: {
+        const time_t time = attr_list->attributes[i].time;
+        attribute->length = prv_time_serialized_size(time);
+        if (attribute->length == sizeof(uint32_t)) {
+          const uint32_t time32 = (uint32_t)time;
+          memcpy(buffer, &time32, sizeof(time32));
+        } else {
+          const int64_t time64 = time;
+          memcpy(buffer, &time64, sizeof(time64));
+        }
+        break;
+      }
       default:
         attribute->length = 0;
         break;
@@ -450,6 +487,13 @@ void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uin
   prv_add_attribute(list, id)->uint32 = uint32;
 }
 
+void attribute_list_add_time(AttributeList *list, AttributeId id, time_t time) {
+  if (prv_attribute_type(id) != AttributeTypeTime) {
+    PBL_LOG_WRN("Adding attribute with type time for non-time attribute");
+  }
+  prv_add_attribute(list, id)->time = time;
+}
+
 void attribute_list_add_resource_id(AttributeList *list, AttributeId id, uint32_t resource_id) {
   if (prv_attribute_type(id) != AttributeTypeResourceId) {
     PBL_LOG_WRN(
@@ -514,6 +558,11 @@ bool attribute_check_serialized_list(const uint8_t *cursor, const uint8_t *val_e
       case AttributeTypeResourceId:
       case AttributeTypeUint32:
         if (attrib_hdr->length != sizeof(uint32_t)) {
+          return false;
+        }
+        break;
+      case AttributeTypeTime:
+        if (attrib_hdr->length != sizeof(uint32_t) && attrib_hdr->length != sizeof(int64_t)) {
           return false;
         }
         break;
@@ -592,6 +641,14 @@ uint32_t attribute_get_uint32(const AttributeList *attr_list, AttributeId id,
   //  HB TODO: test the type of id!
   Attribute *attribute = attribute_find(attr_list, id);
   return attribute ? attribute->uint32 : default_value;
+}
+
+time_t attribute_get_time(const AttributeList *attr_list, AttributeId id, time_t default_value) {
+  PBL_ASSERTN(attr_list != nullptr);
+  PBL_ASSERTN(prv_attribute_type(id) == AttributeTypeTime);
+
+  Attribute *attribute = attribute_find(attr_list, id);
+  return attribute ? attribute->time : default_value;
 }
 
 Uint32List *attribute_get_uint32_list(const AttributeList *attr_list, AttributeId id) {
