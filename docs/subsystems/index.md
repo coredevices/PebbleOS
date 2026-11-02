@@ -9,6 +9,7 @@ it at link time, and a Kconfig option selects the backend.
 :maxdepth: 1
 
 bluetooth.md
+boot.md
 crc.md
 input.md
 logging.md

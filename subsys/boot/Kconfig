@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig BOOT
+    bool "Bootloader interface"
+    default y
+    depends on RETAINED
+    help
+      Boot bits and bootloader version, shared with the bootloader.
+
+if BOOT
+
+config BOOT_BOOTBITS_RETAINED_REG
+    int "Boot bits retained register"
+    default 0 if SOC_NRF52
+    default 2 if SOC_SF32LB52
+    default 1
+    help
+      Retained register holding the boot bits. It must match the one the
+      bootloader uses. QEMU writes its settings to register 0.
+
+config BOOT_VERSION_RETAINED_REG
+    int "Bootloader version retained register"
+    depends on !PBLBOOT
+    default 2
+    help
+      Retained register the bootloader writes its version to.
+
+endif # BOOT
