@@ -13,6 +13,7 @@
 #include <pbl/services/time.h>
 #include <pbl/util/string.h>
 
+#include <applib/app_logging.h>
 #include <logging/logging_private.h>
 #include <process_management/worker_manager.h>
 
@@ -51,6 +52,19 @@ PBL_SYSCALL(void, sys_pbl_log, (VAL, LogBinaryMessage *, log_message), (VAL, uin
     kernel_pbl_log_verify_user(log_message);
   }
   kernel_pbl_log(log_message, flags);
+}
+
+PBL_SYSCALL(void, sys_app_log, (VAL, size_t, length), (IN_BUF, void *, log_buffer, length)) {
+  AppLogBinaryMessage *message = log_buffer;
+
+  if (from_user) {
+    if (length < sizeof(*message)) {
+      pbl_syscall_fail();
+    }
+    kernel_pbl_log_verify_user(&message->log_msg);
+  }
+
+  kernel_pbl_log_app(&message->log_msg, (const uint8_t *)&message->uuid);
 }
 
 PBL_SYSCALL(void, sys_copy_timezone_abbr, (OUT_BUF, char *, timezone_abbr, PBL_TZ_LEN),
