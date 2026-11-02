@@ -17,7 +17,7 @@ void do_not_disturb_init(void) {
   return;
 }
 
-void do_not_disturb_handle_pref_synced(void) {
+void do_not_disturb_handle_pref_synced(bool sleep_pref_changed) {
   return;
 }
 

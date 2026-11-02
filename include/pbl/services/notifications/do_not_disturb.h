@@ -22,7 +22,8 @@
  * - Scheduled: a daily period, with separate schedules for weekdays and weekends.
  * - Smart (calendar aware): active while a calendar event is ongoing.
  * - Sleep aware: active while activity tracking reports confirmed sleep.
- * - Until wake: active immediately, ends after confirmed sleep followed by waking.
+ * - Until wake: active immediately, ends after confirmed sleep followed by sustained waking, or
+ *   after its fallback timeout.
  *
  * Every change of the active state posts a @c PEBBLE_DO_NOT_DISTURB_EVENT.
  * @{
@@ -179,7 +180,7 @@ void do_not_disturb_handle_clock_change(void);
  *
  * Re-evaluates the DND state so the change fires the usual event and updates the schedule timers.
  */
-void do_not_disturb_handle_pref_synced(void);
+void do_not_disturb_handle_pref_synced(bool sleep_pref_changed);
 
 /**
  * @brief Re-evaluate smart DND after a calendar event.

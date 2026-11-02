@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <time.h>
+
 #include <pbl/services/notifications/alerts_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/vibes/vibe_client.h>
@@ -321,8 +323,10 @@ typedef enum {
   DndUntilWakeStateDisabled = 0,
   /** Active, no confirmed sleep seen yet. */
   DndUntilWakeStateWaitingForSleep,
-  /** Active, sleep seen; ends on wake. */
+  /** Active, sleep seen; ends when the primary sleep session ends. */
   DndUntilWakeStateWaitingForWake,
+  /** Number of states. */
+  DndUntilWakeStateCount,
 } DndUntilWakeState;
 
 /**
@@ -338,6 +342,20 @@ DndUntilWakeState alerts_preferences_dnd_get_until_wake_state(void);
  * @param state New state.
  */
 void alerts_preferences_dnd_set_until_wake_state(DndUntilWakeState state);
+
+/**
+ * @brief Get the time at which Until Wake DND must turn off.
+ *
+ * @return Expiration time in UTC, or 0 when disabled.
+ */
+time_t alerts_preferences_dnd_get_until_wake_expiration(void);
+
+/**
+ * @brief Store the Until Wake DND expiration time.
+ *
+ * @param expiration Expiration time in UTC, or 0 when disabled.
+ */
+void alerts_preferences_dnd_set_until_wake_expiration(time_t expiration);
 
 /**
  * @brief Lock the alerts preferences mutex.

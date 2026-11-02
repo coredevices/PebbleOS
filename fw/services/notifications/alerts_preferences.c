@@ -87,6 +87,9 @@ static bool s_do_not_disturb_sleep_dnd_enabled = false;
 #define PREF_KEY_DND_UNTIL_WAKE_STATE "dndUntilWakeState"
 static DndUntilWakeState s_do_not_disturb_until_wake_state = DndUntilWakeStateDisabled;
 
+#define PREF_KEY_DND_UNTIL_WAKE_EXPIRATION "dndUntilWakeExpiration"
+static time_t s_do_not_disturb_until_wake_expiration;
+
 #define PREF_KEY_FIRST_USE_COMPLETE "firstUseComplete"
 static uint32_t s_first_use_complete = 0;
 
@@ -363,6 +366,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
   RESTORE_PREF(PREF_KEY_DND_SLEEP_ENABLED, s_do_not_disturb_sleep_dnd_enabled);
   RESTORE_PREF(PREF_KEY_DND_UNTIL_WAKE_STATE, s_do_not_disturb_until_wake_state);
+  RESTORE_PREF(PREF_KEY_DND_UNTIL_WAKE_EXPIRATION, s_do_not_disturb_until_wake_expiration);
   RESTORE_PREF(PREF_KEY_DND_INTERRUPTIONS_MASK, s_dnd_interruptions_mask);
   RESTORE_PREF(PREF_KEY_DND_SHOW_NOTIFICATIONS, s_dnd_show_notifications);
   RESTORE_PREF(PREF_KEY_DND_MOTION_BACKLIGHT, s_dnd_motion_backlight);
@@ -408,6 +412,16 @@ void alerts_preferences_init(void) {
   // clamps this, so an out-of-range stored value has to be caught here.
   if (s_speaker_volume > 100) {
     s_speaker_volume = 100;
+  }
+  if ((unsigned)s_do_not_disturb_until_wake_state >= DndUntilWakeStateCount) {
+    s_do_not_disturb_until_wake_state = DndUntilWakeStateDisabled;
+    s_do_not_disturb_until_wake_expiration = 0;
+    settings_file_set(&file, PREF_KEY_DND_UNTIL_WAKE_STATE, strlen(PREF_KEY_DND_UNTIL_WAKE_STATE),
+                      &s_do_not_disturb_until_wake_state,
+                      sizeof(s_do_not_disturb_until_wake_state));
+    settings_file_set(
+        &file, PREF_KEY_DND_UNTIL_WAKE_EXPIRATION, strlen(PREF_KEY_DND_UNTIL_WAKE_EXPIRATION),
+        &s_do_not_disturb_until_wake_expiration, sizeof(s_do_not_disturb_until_wake_expiration));
   }
   prv_save_changed_vibe_scores_to_file(&file, orig_vibe_score_notifications,
                                        orig_vibe_score_incoming_calls, orig_vibe_score_alarms,
@@ -740,6 +754,15 @@ void alerts_preferences_dnd_set_until_wake_state(DndUntilWakeState state) {
   SET_PREF(PREF_KEY_DND_UNTIL_WAKE_STATE, s_do_not_disturb_until_wake_state);
 }
 
+time_t alerts_preferences_dnd_get_until_wake_expiration(void) {
+  return s_do_not_disturb_until_wake_expiration;
+}
+
+void alerts_preferences_dnd_set_until_wake_expiration(time_t expiration) {
+  s_do_not_disturb_until_wake_expiration = expiration;
+  SET_PREF(PREF_KEY_DND_UNTIL_WAKE_EXPIRATION, s_do_not_disturb_until_wake_expiration);
+}
+
 void alerts_preferences_lock(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 }
@@ -842,7 +865,7 @@ done:
     // DND state keys are reloaded behind the DND service's back; kick it so the
     // change re-arms the schedule timer and fires PEBBLE_DO_NOT_DISTURB_EVENT.
     if (prv_is_dnd_state_key(matched_key)) {
-      do_not_disturb_handle_pref_synced();
+      do_not_disturb_handle_pref_synced(strcmp(matched_key, PREF_KEY_DND_SLEEP_ENABLED) == 0);
     }
     PebbleEvent pref_event = {
       .type = PEBBLE_PREF_CHANGE_EVENT,

@@ -17,5 +17,5 @@ void PBL_WEAK do_not_disturb_manual_toggle_with_dialog(void) {
 void PBL_WEAK do_not_disturb_toggle_manually_enabled(ManualDNDFirstUseSource source) {
 }
 
-void PBL_WEAK do_not_disturb_handle_pref_synced(void) {
+void PBL_WEAK do_not_disturb_handle_pref_synced(bool sleep_pref_changed) {
 }
