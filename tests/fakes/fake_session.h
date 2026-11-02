@@ -96,4 +96,7 @@ bool fake_comm_session_send_buffer_write_raw_by_transport(Transport *transport, 
 // Fake life cycle
 
 void fake_comm_session_init(void);
+
+//! Capabilities reported by comm_session_has_capability(), all of them by default.
+void fake_comm_session_set_capabilities(uint64_t capabilities);
 void fake_comm_session_cleanup(void);
