@@ -78,9 +78,14 @@ static DataLoggingSendDataMessage s_prev_send_data_hdr;
 static uint8_t s_prev_send_data[PBL_PP_MAX_OUTBOUND_PAYLOAD];
 static uint32_t s_prev_send_data_bytes;
 
+static uint8_t s_last_msg[64];
+static unsigned int s_last_msg_len;
+
 static void prv_transport_sent_data_cb(uint16_t endpoint_id, const uint8_t *data,
                                        unsigned int data_length) {
   PBL_LOG_INFO("Received %d bytes of data from watch", data_length);
+  s_last_msg_len = data_length;
+  memcpy(s_last_msg, data, PBL_MIN(data_length, sizeof(s_last_msg)));
   if (data_length >= sizeof(s_prev_send_data_hdr)) {
     memcpy(&s_prev_send_data_hdr, data, sizeof(s_prev_send_data_hdr));
     data_length -= sizeof(s_prev_send_data_hdr);
@@ -531,7 +536,7 @@ void test_data_logging__recover_32_bit_header(void) {
     // dls_init() starts the same timer again
     fake_wallclock_work_cleanup();
     dls_init();
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
     session = dls_list_get_next(nullptr);
     cl_assert(session);
   }
@@ -540,7 +545,7 @@ void test_data_logging__recover_32_bit_header(void) {
 
   fake_wallclock_work_cleanup();
   dls_init();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   session = dls_list_get_next(nullptr);
   cl_assert(session);
@@ -703,4 +708,44 @@ void test_data_logging__send_session_medium(void) {
 // Test using the endpoint to empty a session using small, odd item sizes.
 void test_data_logging__send_session_small(void) {
   prv_endpoint_test(true /*buffered*/, 19, 45);
+}
+
+// ----------------------------------------------------------------------------------------
+// The session open message carries a 64-bit time to phones with the time64 capability
+static void prv_check_open_message(bool phone_has_time64, uint8_t tag) {
+  fake_comm_session_set_capabilities(phone_has_time64 ? PBL_PP_CAP_TIME64 : 0);
+  Uuid uuid = UUID_SYSTEM;
+  DataLoggingSession *session =
+      dls_create(tag, DATA_LOGGING_BYTE_ARRAY, 4, false /*buffered*/, false /*resume*/, &uuid);
+  cl_assert(session);
+  fake_sys_work_callbacks_invoke_pending();
+  s_last_msg_len = 0;
+  fake_comm_session_process_send_next();
+
+  const int time_offset = 2 + sizeof(Uuid);
+  if (phone_has_time64) {
+    cl_assert_equal_i(s_last_msg_len, time_offset + 8 + 4 + 1 + 2);
+    cl_assert_equal_i(s_last_msg[0], DataLoggingEndpointCmdOpen64);
+    int64_t t;
+    memcpy(&t, s_last_msg + time_offset, sizeof(t));
+    cl_assert(t == session->session_created_timestamp);
+    cl_assert_equal_i(s_last_msg[time_offset + 8], tag);
+  } else {
+    cl_assert_equal_i(s_last_msg_len, time_offset + 4 + 4 + 1 + 2);
+    cl_assert_equal_i(s_last_msg[0], DataLoggingEndpointCmdOpen);
+    uint32_t t;
+    memcpy(&t, s_last_msg + time_offset, sizeof(t));
+    cl_assert(t == (uint32_t)session->session_created_timestamp);
+    cl_assert_equal_i(s_last_msg[time_offset + 4], tag);
+  }
+  cl_assert_equal_i(s_last_msg[1], session->comm.session_id);
+  dls_finish(session);
+  fake_sys_work_callbacks_invoke_pending();
+}
+
+void test_data_logging__open_message_time(void) {
+  // 2200-01-01
+  pbl_realtime_set(7258118400LL);
+  prv_check_open_message(true, 0x41);
+  prv_check_open_message(false, 0x42);
 }

@@ -101,4 +101,7 @@ bool fake_comm_session_send_buffer_write_raw(struct pbl_pp_session *session, con
 // Fake life cycle
 
 void fake_comm_session_init(void);
+
+//! Capabilities reported by pbl_pp_session_has_capability(), all of them by default.
+void fake_comm_session_set_capabilities(uint32_t capabilities);
 void fake_comm_session_cleanup(void);
