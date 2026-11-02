@@ -166,15 +166,13 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t valid_score) {
   hrm_data.features = HRMFeature_BPM;
 
   if (!HRM->state->is_wear) {
-    hrm_data.hrm_quality = HRMQuality_OffWrist;
+    hrm_data.off_wrist = true;
   } else if (bpm < GH3X2X_HR_MIN_PLAUSIBLE_BPM || bpm > GH3X2X_HR_MAX_PLAUSIBLE_BPM) {
-    // Implausible reading: report as worst quality with no BPM so consumers discard it.
+    // Implausible reading: report no BPM and no confidence so consumers discard it.
     PBL_LOG_WRN("GH3X2X dropping implausible BPM %" PRIu8, bpm);
-    hrm_data.hrm_quality = HRMQuality_Worst;
   } else {
     hrm_data.hrm_bpm = bpm;
     hrm_data.hrm_confidence = MIN(valid_score, 100U);
-    hrm_data.hrm_quality = hrm_quality_from_confidence(hrm_data.hrm_confidence);
   }
 
   hrm_manager_new_data_cb(&hrm_data);
@@ -197,15 +195,7 @@ void gh3x2x_spo2_result_report(uint8_t pct, uint8_t confidence, uint8_t valid_le
   hrm_data.spo2_confidence = MIN(confidence, 100U);
   hrm_data.spo2_valid_level = valid_level;
   hrm_data.spo2_invalid = (invalid_flg != 0);
-
-  // A reading the algorithm rejects (invalid_flg) is never treated as usable.
-  if (!HRM->state->is_wear) {
-    hrm_data.spo2_quality = HRMQuality_OffWrist;
-  } else if (invalid_flg) {
-    hrm_data.spo2_quality = HRMQuality_Worst;
-  } else {
-    hrm_data.spo2_quality = hrm_quality_from_confidence(hrm_data.spo2_confidence);
-  }
+  hrm_data.off_wrist = !HRM->state->is_wear;
 
   hrm_manager_new_data_cb(&hrm_data);
 }
@@ -216,7 +206,7 @@ void gh3x2x_hrv_result_report(const int32_t *rri, int32_t confidence, int32_t va
   if (!HRM->state->is_wear) {
     HRMData hrm_data = {};
     hrm_data.features = HRMFeature_HRV;
-    hrm_data.hrv_quality = HRMQuality_OffWrist;
+    hrm_data.off_wrist = true;
     hrm_manager_new_data_cb(&hrm_data);
     return;
   }
@@ -232,7 +222,6 @@ void gh3x2x_hrv_result_report(const int32_t *rri, int32_t confidence, int32_t va
     hrm_data.features = HRMFeature_HRV;
     hrm_data.hrv_ppi_ms = (uint16_t)rri[i];
     hrm_data.hrv_confidence = (uint8_t)CLIP(confidence, 0, 100);
-    hrm_data.hrv_quality = hrm_quality_from_confidence(hrm_data.hrv_confidence);
     hrm_manager_new_data_cb(&hrm_data);
   }
 }

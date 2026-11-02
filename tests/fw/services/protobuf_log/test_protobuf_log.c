@@ -29,8 +29,6 @@
 
 #define LOG(fmt, args...) PBL_LOG_DBG(fmt, ##args)
 
-extern uint32_t prv_hr_quality_int(HRMQuality quality);
-
 // ---------------------------------------------------------------------------------------------
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
 static const struct pbl_tm s_init_time_tm = {
@@ -730,7 +728,8 @@ void test_protobuf_log__hr_samples(void) {
   };
 
   uint32_t offset_sec[] = {1, 2};
-  uint32_t values[] = {0x11, HRMQuality_Acceptable, 0x33, HRMQuality_Excellent};
+  // BPM and algorithm confidence; the confidence is logged as a quality grade.
+  uint32_t values[] = {0x11, 70, 0x33, 95};
 
   TestPLParsedMsg input = {
     .type = ProtobufLogType_Measurements,
@@ -759,17 +758,44 @@ void test_protobuf_log__hr_samples(void) {
     rtc_set_time(input.msrmt.time_utc + input.msrmt.offset_sec[i]);
     uint32_t *vals = &input.msrmt.values[i * values_per_samples];
     success = protobuf_log_hr_add_sample(session_ref, rtc_get_time(),
-                                         vals[0],  // BPM
-                                         vals[1]); // Quality
+                                         vals[0], // BPM
+                                         vals[1], // Confidence
+                                         false /*off_wrist*/);
     cl_assert(success);
   }
 
-  // Convert the values from HRMQuality to pebble_pipeline values
+  // Convert the confidences to pebble_pipeline quality values
   for (unsigned i = 1; i < input.msrmt.num_values; i += 2) {
-    values[i] = prv_hr_quality_int(values[i]);
+    values[i] = protobuf_log_hr_quality(values[i], false /*off_wrist*/);
   }
 
   prv_test_decode_payload(&input, false /*use_data_logging*/, session_ref);
+}
+
+// ---------------------------------------------------------------------------------------------
+void test_protobuf_log__hr_quality(void) {
+  cl_assert_equal_i(protobuf_log_hr_quality(100, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Excellent);
+  cl_assert_equal_i(protobuf_log_hr_quality(90, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Excellent);
+  cl_assert_equal_i(protobuf_log_hr_quality(89, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Good);
+  cl_assert_equal_i(protobuf_log_hr_quality(HRM_CONFIDENCE_HIGH, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Good);
+  cl_assert_equal_i(protobuf_log_hr_quality(HRM_CONFIDENCE_HIGH - 1, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Acceptable);
+  cl_assert_equal_i(protobuf_log_hr_quality(60, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Acceptable);
+  cl_assert_equal_i(protobuf_log_hr_quality(59, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Poor);
+  cl_assert_equal_i(protobuf_log_hr_quality(40, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Poor);
+  cl_assert_equal_i(protobuf_log_hr_quality(39, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Worst);
+  cl_assert_equal_i(protobuf_log_hr_quality(0, false),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_Worst);
+  cl_assert_equal_i(protobuf_log_hr_quality(100, true),
+                    pebble_pipeline_MeasurementSet_HeartRateQuality_OffWrist);
 }
 
 // ---------------------------------------------------------------------------------------------

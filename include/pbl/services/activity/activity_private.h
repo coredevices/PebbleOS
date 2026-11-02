@@ -310,8 +310,8 @@ typedef struct {
   ActivityScalarStore current_hr_zone;
   /** Resting heart rate, in beats per minute. */
   ActivityScalarStore resting_bpm;
-  /** Quality of the most recent reading, an @c HRMQuality value. */
-  ActivityScalarStore current_quality;
+  /** Algorithm confidence of the most recent reading, 0-100. */
+  ActivityScalarStore current_confidence;
   /** Last stable (median) heart rate, in beats per minute. */
   ActivityScalarStore last_stable_bpm;
   /** UTC time of the last stable heart rate. */

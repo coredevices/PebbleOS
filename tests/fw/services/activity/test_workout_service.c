@@ -154,13 +154,13 @@ static void prv_inc_steps_and_put_event(int steps) {
 #define CONF_LOW  (75)
 #define CONF_POOR (40)
 
-static void prv_put_hr_event(int bpm, HRMQuality quality, uint8_t confidence) {
+static void prv_put_hr_event(int bpm, bool off_wrist, uint8_t confidence) {
   PebbleEvent event = {
     .type = PEBBLE_HEALTH_SERVICE_EVENT,
     .health_event = {
       .type = HealthEventHeartRateUpdate,
       .data.heart_rate_update.current_bpm = bpm,
-      .data.heart_rate_update.quality = quality,
+      .data.heart_rate_update.off_wrist = off_wrist,
       .data.heart_rate_update.confidence = confidence,
     },
   };
@@ -170,11 +170,11 @@ static void prv_put_hr_event(int bpm, HRMQuality quality, uint8_t confidence) {
 }
 
 static void prv_put_bpm_event(int bpm, uint8_t confidence) {
-  prv_put_hr_event(bpm, HRMQuality_Good, confidence);
+  prv_put_hr_event(bpm, false /*off_wrist*/, confidence);
 }
 
 static void prv_put_offwrist_event(void) {
-  prv_put_hr_event(0, HRMQuality_OffWrist, 0);
+  prv_put_hr_event(0, true /*off_wrist*/, 0);
 }
 
 static void prv_inc_time(int seconds) {

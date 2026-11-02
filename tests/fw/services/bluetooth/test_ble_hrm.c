@@ -381,7 +381,7 @@ void test_ble_hrm__sub_after_deinit(void) {
   ble_hrm_init(); // reinit, __cleanup() will deinit again
 }
 
-static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQuality quality,
+static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, bool off_wrist,
                                          bool expect_pbl_bt_cb, bool expected_is_on_wrist) {
   int call_count_before = pbl_bt_hrm_service_handle_measurement_fake.call_count;
 
@@ -391,7 +391,7 @@ static void prv_put_and_assert_hrm_event(HRMEventType subtype, uint8_t bpm, HRMQ
       .event_type = subtype,
       .bpm = {
         .bpm = bpm,
-        .quality = quality,
+        .off_wrist = off_wrist,
       },
     },
   };
@@ -416,18 +416,18 @@ void test_ble_hrm__handle_hrm_event(void) {
   pbl_bt_cb_hrm_service_update_subscription(s_device_b, true);
   prv_assert_permissions_ui_and_respond(false /* is_granted */);
 
-  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_Excellent,
+  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, false /* off_wrist */,
                                true /* expect bt driver cb */, true /* expected_is_on_wrist */);
 
   // Assert only device A is listed as "permitted device" and B is not:
   cl_assert_equal_i(1, pbl_bt_hrm_service_handle_measurement_fake.arg2_val);
   cl_assert_equal_m(&s_last_permitted_devices[0], s_device_a, sizeof(*s_device_a));
 
-  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, HRMQuality_OffWrist,
+  prv_put_and_assert_hrm_event(HRMEvent_BPM, 80, true /* off_wrist */,
                                true /* expect bt driver cb */, false /* expected_is_on_wrist */);
 
   // Ignore non-BPM event:
-  prv_put_and_assert_hrm_event(HRMEvent_HRV, 80, HRMQuality_OffWrist,
+  prv_put_and_assert_hrm_event(HRMEvent_HRV, 80, true /* off_wrist */,
                                false /* expect bt driver cb */, false /* expected_is_on_wrist */);
 }
 

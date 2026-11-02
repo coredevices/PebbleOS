@@ -610,19 +610,19 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
     case HRMFeature_BPM:
       event->event_type = HRMEvent_BPM;
       event->bpm.bpm = data->hrm_bpm;
-      event->bpm.quality = data->hrm_quality;
+      event->bpm.off_wrist = data->off_wrist;
       event->bpm.confidence = data->hrm_confidence;
       break;
     case HRMFeature_HRV:
       event->event_type = HRMEvent_HRV;
       event->hrv.ppi_ms = data->hrv_ppi_ms;
-      event->hrv.quality = data->hrv_quality;
+      event->hrv.off_wrist = data->off_wrist;
       event->hrv.confidence = data->hrv_confidence;
       break;
     case HRMFeature_SpO2:
       event->event_type = HRMEvent_SpO2;
       event->spo2.percent = data->spo2_percent;
-      event->spo2.quality = data->spo2_quality;
+      event->spo2.off_wrist = data->off_wrist;
       event->spo2.confidence = data->spo2_confidence;
       event->spo2.valid_level = data->spo2_valid_level;
       event->spo2.invalid = data->spo2_invalid;
@@ -683,16 +683,16 @@ void hrm_manager_new_data_cb(const HRMData *data) {
     goto unlock;
   }
 
-  HRM_LOG("HRM Data:");
+  HRM_LOG("HRM Data (off wrist: %d):", data->off_wrist);
   if (data->features & HRMFeature_BPM) {
-    HRM_LOG("  BPM: %" PRIu8 ", Quality: %d, Confidence: %" PRIu8, data->hrm_bpm, data->hrm_quality,
-            data->hrm_confidence);
+    HRM_LOG("  BPM: %" PRIu8 ", Confidence: %" PRIu8, data->hrm_bpm, data->hrm_confidence);
   }
   if (data->features & HRMFeature_HRV) {
-    HRM_LOG("  HRV PPI: %" PRIu16 "ms, Quality: %d", data->hrv_ppi_ms, data->hrv_quality);
+    HRM_LOG("  HRV PPI: %" PRIu16 "ms, Confidence: %" PRIu8, data->hrv_ppi_ms,
+            data->hrv_confidence);
   }
   if (data->features & HRMFeature_SpO2) {
-    HRM_LOG("  SpO2: %" PRIu8 ", Quality: %d", data->spo2_percent, data->spo2_quality);
+    HRM_LOG("  SpO2: %" PRIu8 ", Confidence: %" PRIu8, data->spo2_percent, data->spo2_confidence);
   }
 
 #ifdef CONFIG_HRM_HRV
@@ -705,7 +705,7 @@ void hrm_manager_new_data_cb(const HRMData *data) {
         .type = HealthEventHRVUpdate,
         .data.hrv_update = {
           .ppi_ms = data->hrv_ppi_ms,
-          .quality = data->hrv_quality,
+          .confidence = data->hrv_confidence,
         },
       },
     };
@@ -726,14 +726,12 @@ void hrm_manager_new_data_cb(const HRMData *data) {
     // unserved timeout defers the subscriber instead. SpO2 keys off the algorithm's own invalid
     // flag: an algorithm-accepted reading is usable even at lower confidence, and requiring more
     // kept the sensor on forever.
-    const bool bpm_served =
-        (state->features & HRMFeature_BPM) && (data->features & HRMFeature_BPM) &&
-        (data->hrm_confidence >= HRM_CONFIDENCE_HIGH || data->hrm_quality == HRMQuality_OffWrist);
+    const bool bpm_served = (state->features & HRMFeature_BPM) &&
+                            (data->features & HRMFeature_BPM) &&
+                            (data->hrm_confidence >= HRM_CONFIDENCE_HIGH || data->off_wrist);
     const bool spo2_served = (state->features & HRMFeature_SpO2) &&
                              (data->features & HRMFeature_SpO2) &&
-                             ((!data->spo2_invalid && data->spo2_percent > 0 &&
-                               data->spo2_quality != HRMQuality_OffWrist) ||
-                              data->spo2_quality == HRMQuality_OffWrist);
+                             (data->off_wrist || (!data->spo2_invalid && data->spo2_percent > 0));
     if (bpm_served || spo2_served) {
       state->last_valid_bpm_ticks = cur_ticks;
       state->is_due = false;
@@ -1102,11 +1100,13 @@ static void prv_console_finish_cb(void *data) {
   s_console_session = HRM_INVALID_SESSION_REF;
 
   if (s_console_event.event_type == HRMEvent_BPM) {
-    pbl_shell_print(sh, "BPM: %" PRIu8 " quality: %" PRIu8, s_console_event.bpm.bpm,
-                    s_console_event.bpm.quality);
+    pbl_shell_print(sh, "BPM: %" PRIu8 " confidence: %" PRIu8 "%s", s_console_event.bpm.bpm,
+                    s_console_event.bpm.confidence,
+                    s_console_event.bpm.off_wrist ? " (off wrist)" : "");
   } else {
-    pbl_shell_print(sh, "SpO2: %" PRIu8 "%% quality: %" PRIu8, s_console_event.spo2.percent,
-                    s_console_event.spo2.quality);
+    pbl_shell_print(sh, "SpO2: %" PRIu8 "%% confidence: %" PRIu8 "%s", s_console_event.spo2.percent,
+                    s_console_event.spo2.confidence,
+                    s_console_event.spo2.off_wrist ? " (off wrist)" : "");
   }
   pbl_shell_cmd_done(sh, 0);
 }

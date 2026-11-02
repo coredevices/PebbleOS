@@ -225,7 +225,7 @@ bool health_db_get_typical_value(ActivityMetric metric, enum pbl_weekday day, in
     case ActivityMetricSleepStateSeconds:
     case ActivityMetricLastVMC:
     case ActivityMetricHeartRateRawBPM:
-    case ActivityMetricHeartRateRawQuality:
+    case ActivityMetricHeartRateRawConfidence:
     case ActivityMetricHeartRateRawUpdatedTimeUTC:
     case ActivityMetricHeartRateFilteredBPM:
     case ActivityMetricHeartRateFilteredUpdatedTimeUTC:

@@ -216,7 +216,7 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
     return;
   }
 
-  if (event->quality == HRMQuality_OffWrist) {
+  if (event->off_wrist) {
     // Reset to zero for OffWrist readings
     prv_reset_hr_data();
   } else {

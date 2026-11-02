@@ -112,8 +112,8 @@ void activity_metrics_prv_get_metric_info(ActivityMetric metric, ActivityMetricI
     case ActivityMetricHeartRateRawBPM:
       info->value_p = &state->hr.metrics.current_bpm;
       break;
-    case ActivityMetricHeartRateRawQuality:
-      info->value_p = &state->hr.metrics.current_quality;
+    case ActivityMetricHeartRateRawConfidence:
+      info->value_p = &state->hr.metrics.current_confidence;
       break;
     case ActivityMetricHeartRateRawUpdatedTimeUTC:
       info->value_u32p = &state->hr.metrics.current_update_time_utc;
@@ -524,7 +524,7 @@ uint32_t activity_metrics_prv_get_steps(void) {
 // Weight of a sample in the minute median, x100. Squaring the algorithm confidence lets
 // high-confidence samples dominate while low-confidence ones still count.
 static uint8_t prv_get_hr_confidence_weight(HRMBPMData bpm) {
-  if (bpm.quality == HRMQuality_OffWrist) {
+  if (bpm.off_wrist) {
     return 0;
   }
   const uint32_t confidence = MIN(bpm.confidence, 100U);
@@ -631,9 +631,9 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
     // UTC time on us.
     state->hr.last_sample_ts = now_uptime;
 
-    // Save the BPM, quality, and update time (UTC) of the last reading for activity_get_metric()
+    // Save the BPM, confidence, and update time (UTC) of the last reading for activity_get_metric()
     state->hr.metrics.current_bpm = hrm_event->bpm.bpm;
-    state->hr.metrics.current_quality = hrm_event->bpm.quality;
+    state->hr.metrics.current_confidence = hrm_event->bpm.confidence;
     state->hr.metrics.current_update_time_utc = now_utc;
   }
   pbl_mutex_unlock(&state->mutex);

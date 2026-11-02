@@ -174,7 +174,7 @@ static void prv_ble_hrm_handle_hrm_data(PebbleEvent *e, void *context) {
   }
   const struct pbl_bt_hrm_service_measurement measurement = {
     .bpm = hrm_event->bpm.bpm,
-    .is_on_wrist = (hrm_event->bpm.quality >= HRMQuality_Worst),
+    .is_on_wrist = !hrm_event->bpm.off_wrist,
   };
 
   struct pbl_bt_device_internal sharing_to_devices[4];
