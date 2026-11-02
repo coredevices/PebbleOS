@@ -95,11 +95,11 @@ what plays the phone. The same tests run on any of:
 
 A lab file describes the hardware wired to this host, and nothing else:
 watches (board, serial port, the supply powering them), power supplies and
-Bluetooth dongles. Pass it with `--lab` (or `$PBL_ITEST_LAB`), and the
+Bluetooth dongles. Pass it with `--lab` (or `$PBL_LAB`), and the
 harness takes the setup for the build from it: the watch running its
-board (`--lab-watch` picks another), its supply, and a dongle for the
+board (`--watch` picks another), its supply, and a dongle for the
 phone. Options on the command line override it.
-`tests/integration/lab.example.yaml` describes the format:
+`tools/libs/pbl-cli/lab.example.yaml` describes the format:
 
 ```shell
 pbl -b build-getafix itest --lab ~/pebble-lab.yaml --flash-before
