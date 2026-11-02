@@ -852,8 +852,8 @@ static ActivitySession *s_health_sessions;
 static time_t s_health_sessions_sleep_time;
 static time_t s_health_sessions_awake_time;
 
-static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, time_t time_end,
-                                    void *context) {
+static bool prv_activity_iterate_cb(HealthActivity activity, pbl_time32_t time_start,
+                                    pbl_time32_t time_end, void *context) {
   if (s_health_sessions_count >= s_health_sessions_max) {
     return false;
   }
@@ -868,12 +868,14 @@ static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, 
     }
   }
 
+  const time_t start = time_start;
+  const time_t end = time_end;
   char time_start_text[64];
-  struct pbl_tm *local_tm = pbl_override_localtime(&time_start);
+  struct pbl_tm *local_tm = pbl_override_localtime(&start);
   pbl_strftime_r(time_start_text, sizeof(time_start_text), "%F %r", local_tm);
 
   char time_end_text[64];
-  local_tm = pbl_override_localtime(&time_end);
+  local_tm = pbl_override_localtime(&end);
   pbl_strftime_r(time_end_text, sizeof(time_end_text), "%F %r", local_tm);
 
   PBL_LOG_DBG("Got activity: %d %s to %s (%d min)", (int)activity, time_start_text, time_end_text,
@@ -1733,8 +1735,8 @@ void test_activity__get_minute_history(void) {
   for (int i = 0; i < ALG_MINUTES_PER_FILE_RECORD; i++) {
     // Ask for the last ALG_MINUTES_PER_RECORD minutes of data
     num_records = ALG_MINUTES_PER_FILE_RECORD;
-    time_t start_time = oldest_to_fetch + (i * PBL_SEC_PER_MIN);
-    time_t end_time = utc_sec;
+    pbl_time32_t start_time = oldest_to_fetch + (i * PBL_SEC_PER_MIN);
+    pbl_time32_t end_time = utc_sec;
     HealthMinuteData received_records[ALG_MINUTES_PER_FILE_RECORD];
     num_records =
         health_service_get_minute_history(received_records, num_records, &start_time, &end_time);

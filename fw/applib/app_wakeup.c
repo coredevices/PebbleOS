@@ -5,6 +5,7 @@
 
 #include <pbl/services/wakeup.h>
 
+#include <applib/app_time32.h>
 #include <applib/app_wakeup.h>
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
@@ -34,8 +35,8 @@ void app_wakeup_service_subscribe(WakeupHandler handler) {
   }
 }
 
-WakeupId app_wakeup_schedule(time_t timestamp, int32_t cookie, bool notify_if_missed) {
-  return sys_wakeup_schedule(timestamp, cookie, notify_if_missed);
+WakeupId app_wakeup_schedule(pbl_time32_t timestamp, int32_t cookie, bool notify_if_missed) {
+  return sys_wakeup_schedule(app_time_from_time32(timestamp), cookie, notify_if_missed);
 }
 
 void app_wakeup_cancel(WakeupId wakeup_id) {
@@ -59,10 +60,10 @@ bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie) {
   return true;
 }
 
-bool app_wakeup_query(WakeupId wakeup_id, time_t *timestamp) {
-  time_t scheduled_time = sys_wakeup_query(wakeup_id);
+bool app_wakeup_query(WakeupId wakeup_id, pbl_time32_t *timestamp) {
+  const time_t scheduled_time = sys_wakeup_query(wakeup_id);
   if (timestamp != nullptr) {
-    *timestamp = scheduled_time;
+    *timestamp = pbl_time_to_time32(scheduled_time);
   }
 
   return (scheduled_time >= 0) ? true : false;

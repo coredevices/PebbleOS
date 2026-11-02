@@ -43,14 +43,14 @@
 //! @param tloc if provided receives the current UTC Unix Time seconds portion
 //! @param out_ms if provided receives the current Unix Time milliseconds portion
 //! @return Current Unix Time milliseconds portion
-uint16_t time_ms(time_t *tloc, uint16_t *out_ms);
+uint16_t time_ms_time32(pbl_time32_t *tloc, uint16_t *out_ms);
 
 //! Obtain the number of seconds since epoch.
 //! Note that the epoch is not adjusted for Timezones and Daylight Savings.
 //! @param tloc Optionally points to an address of a time_t variable to store the time in.
 //!     If you only want to use the return value, you may pass NULL into tloc instead
 //! @return The number of seconds since epoch, January 1st 1970
-time_t pbl_override_time(time_t *tloc);
+pbl_time32_t pbl_override_time(pbl_time32_t *tloc);
 
 //! Obtain the number of seconds elapsed between beginning and end represented as a double.
 //! @param end A time_t variable representing some number of seconds since epoch, January 1st 1970
@@ -63,33 +63,33 @@ time_t pbl_override_time(time_t *tloc);
 //!     \code{.c}
 //!     int difference = ts1 - ts2;
 //!     \endcode
-double pbl_override_difftime(time_t end, time_t beginning);
+double pbl_override_difftime(pbl_time32_t end, pbl_time32_t beginning);
 
 //! Obtain the number of seconds since epoch.
 //! Note that the epoch is adjusted for Timezones and Daylight Savings.
 //! @param tloc Optionally points to an address of a time_t variable to store the time in.
 //!     If you only want to use the return value, you may pass NULL into tloc instead
 //! @return The number of seconds since epoch, January 1st 1970
-time_t pbl_override_time_legacy(time_t *tloc);
+pbl_time32_t pbl_override_time_legacy(pbl_time32_t *tloc);
 
 //! convert the time value pointed at by clock to a struct pbl_tm which contains the time
 //! adjusted for the local timezone
 //! @param timep A pointer to an object of type time_t that contains a time value
 //! @return A pointer to a struct pbl_tm containing the broken out time value adjusted
 //!   for the local timezone
-struct pbl_tm *pbl_override_localtime(const time_t *timep);
+struct pbl_tm *pbl_override_localtime_time32(const pbl_time32_t *timep);
 
 //! convert the time value pointed at by clock to a struct pbl_tm
 //!   which contains the time expressed in Coordinated Universal Time (UTC)
 //! @param timep A pointer to an object of type time_t that contains a time value
 //! @return A pointer to a struct pbl_tm containing Coordinated Universal Time (UTC)
-struct pbl_tm *pbl_override_gmtime(const time_t *timep);
+struct pbl_tm *pbl_override_gmtime_time32(const pbl_time32_t *timep);
 
 //! convert the broken-down time structure to a timestamp
 //!   expressed in Coordinated Universal Time (UTC)
 //! @param tb A pointer to an object of type tm that contains broken-down time
 //! @return The number of seconds since epoch, January 1st 1970
-time_t pbl_override_mktime(struct pbl_tm *tb);
+pbl_time32_t pbl_override_mktime_time32(struct pbl_tm *tb);
 
 //! Returns the current local time in Unix Timestamp Format with milliseconds
 //! The time_ms() method, in contrast, returns the UTC time instead of local time.
@@ -98,7 +98,7 @@ time_t pbl_override_mktime(struct pbl_tm *tb);
 //! @param out_ms Optionally points to an address of a uin16_t variable to store the ms in.
 //!     If you only want to use the return value, you may pass NULL into out_ms instead
 //! @return Current milliseconds portion
-uint16_t pbl_override_time_ms_legacy(time_t *t_loc, uint16_t *out_ms);
+uint16_t pbl_override_time_ms_legacy(pbl_time32_t *t_loc, uint16_t *out_ms);
 
 //! Format the time value at tm according to fmt and place the result in a buffer s of size max
 //! @param s A preallocation char array of size max
@@ -111,6 +111,15 @@ size_t pbl_strftime(char *s, size_t maxsize, const char *format, const struct pb
 
 //!   @} // end addtogroup StandardTime
 //! @} // end addtogroup StandardC
+
+// The firmware's own versions of the above, with a full-width time_t.
+uint16_t time_ms(time_t *tloc, uint16_t *out_ms);
+struct pbl_tm *pbl_override_localtime(const time_t *timep);
+struct pbl_tm *pbl_override_gmtime(const time_t *timep);
+time_t pbl_override_mktime(struct pbl_tm *tb);
+
+// Start of today for apps; see time_start_of_today().
+pbl_time32_t time_start_of_today_time32(void);
 
 int pbl_snprintf(char *str, size_t n, const char *format, ...);
 

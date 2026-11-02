@@ -1030,7 +1030,7 @@ def main():
         '#include "all_sdk_headers.h"',
         '#include "samsa_runtime.h"',
         "",
-        "typedef time_t samsa_time_t;",
+        "typedef pbl_time32_t samsa_time_t;",
         "",
         '#pragma GCC diagnostic ignored "-Wunused-variable"',
         '#pragma GCC diagnostic ignored "-Wunused-but-set-variable"',
