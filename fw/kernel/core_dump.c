@@ -36,7 +36,6 @@ extern char *itoa(int value, char *str, int base);
 #include <kernel/core_dump.h>
 #include <kernel/core_dump_private.h>
 #include <kernel/pbl_malloc.h>
-#include <logging/backends/pulse.h>
 #include <logging/logging_private.h>
 #include <mfg/mfg_serials.h>
 #include <pebbleos/chip_id.h>
@@ -135,19 +134,12 @@ static void prv_debug_str(const char *msg) {
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
 static void prv_debug_str_str(const char *msg, const char *s) {
-#ifdef CONFIG_PULSE_EVERYWHERE
-  void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
-  pulse_logging_log_sync_append(ctx, msg);
-  pulse_logging_log_sync_append(ctx, s);
-  pulse_logging_log_sync_send(ctx);
-#else
-  int max_length = 256;
-  while (*msg && max_length--) {
-    dbgserial_putchar(*msg);
-    ++msg;
-  }
-  dbgserial_putstr(s);
-#endif
+  char buffer[64];
+
+  strncpy(buffer, msg, sizeof(buffer) - 1);
+  buffer[sizeof(buffer) - 1] = '\0';
+  strncat(buffer, s, sizeof(buffer) - strlen(buffer) - 1);
+  prv_debug_str(buffer);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -164,19 +156,7 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
     itoa(i, buffer, base);
   }
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-  void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
-  pulse_logging_log_sync_append(ctx, msg);
-  pulse_logging_log_sync_append(ctx, buffer);
-  pulse_logging_log_sync_send(ctx);
-#else
-  int max_length = 256;
-  while (*msg && max_length--) {
-    dbgserial_putchar(*msg);
-    ++msg;
-  }
-  dbgserial_putstr(buffer);
-#endif
+  prv_debug_str_str(msg, buffer);
 }
 
 [[noreturn]] static void prv_reset(void) {
