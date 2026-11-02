@@ -46,9 +46,9 @@ def _check(build, power, record_property, measurement):
     print(measurement)
 
     nominal = IDLE_NOMINAL_UA.get(build.board, {}).get(measurement.name)
-    if nominal is None or power.ppk2.voltage_mv != NOMINAL_VOLTAGE_MV:
+    if nominal is None or power.supply.voltage_mv != NOMINAL_VOLTAGE_MV:
         warnings.warn(
-            f"no {measurement.name} limit for {build.board} at {power.ppk2.voltage_mv} mV",
+            f"no {measurement.name} limit for {build.board} at {power.supply.voltage_mv} mV",
             stacklevel=2,
         )
         return
