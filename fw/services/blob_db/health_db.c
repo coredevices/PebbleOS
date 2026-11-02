@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
@@ -111,7 +112,9 @@ static bool prv_value_is_valid(const uint8_t *key, int key_len, const uint8_t *v
   return val_len && val_len % sizeof(uint32_t) == 0;
 }
 
-static bool prv_is_last_processed_timestamp_valid(time_t timestamp) {
+static bool prv_is_last_processed_timestamp_valid(uint32_t timestamp32) {
+  // A recent time, so its low 32 bits are enough to place it
+  const time_t timestamp = pbl_time_from_low32(timestamp32, rtc_get_time());
   // We only store today + the last 6 days. Anything older than that should be ignored
   const time_t start_of_today = time_start_of_today();
   // This might not handle DST perfectly, but it should be good enough

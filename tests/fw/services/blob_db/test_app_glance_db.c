@@ -627,3 +627,35 @@ void test_app_glance_db__insert_app_in_cache(void) {
                     S_SUCCESS);
   cl_assert_equal_i(app_cache_app_launched_fake.call_count, 1);
 }
+
+// Creation times are 32 bits, placed relative to the current time, so ordering survives 2106
+void test_app_glance_db__creation_time_across_2106(void) {
+  const time_t wrap = 1LL << 32;
+  rtc_set_time(wrap + 1000);
+
+  SerializedAppGlanceHeader before = {
+    .version = APP_GLANCE_DB_CURRENT_VERSION,
+    .creation_time = (uint32_t)(wrap - 100),
+  };
+  cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
+                                         (uint8_t *)&before, sizeof(before)),
+                    S_SUCCESS);
+  time_t time_out;
+  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, &time_out), S_SUCCESS);
+  cl_assert(time_out == wrap - 100);
+
+  SerializedAppGlanceHeader after = {
+    .version = APP_GLANCE_DB_CURRENT_VERSION,
+    .creation_time = (uint32_t)(wrap + 500),
+  };
+  cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
+                                         (uint8_t *)&after, sizeof(after)),
+                    S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, &time_out), S_SUCCESS);
+  cl_assert(time_out == wrap + 500);
+
+  // Older again
+  cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
+                                         (uint8_t *)&before, sizeof(before)),
+                    E_INVALID_ARGUMENT);
+}

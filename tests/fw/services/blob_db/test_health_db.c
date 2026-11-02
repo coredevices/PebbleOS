@@ -32,9 +32,10 @@ RtcTicks rtc_get_ticks(void) {
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-static const time_t NOW = 1471269600; // Mon, 15 Aug 2016 14:00:00 GMT
+#define NOW 1471269600 // Mon, 15 Aug 2016 14:00:00 GMT
+static time_t s_now = NOW;
 time_t rtc_get_time(void) {
-  return NOW;
+  return s_now;
 }
 
 bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
@@ -52,6 +53,7 @@ void activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday day
 ////////////////////////////////////////////////////////////////
 
 void test_health_db__initialize(void) {
+  s_now = NOW;
   fake_settings_file_reset();
   health_db_init();
   s_metric_updated_count = 0;
@@ -449,6 +451,27 @@ void test_health_db__notify_listeners(void) {
   key = "monday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_future_movement_data,
                                      sizeof(s_movement_data)),
+                    S_SUCCESS);
+  cl_assert_equal_i(s_metric_updated_count, 0);
+}
+
+// The phone sends the last processed time as 32 bits; it is placed relative to the current time
+void test_health_db__timestamps_past_2106(void) {
+  // Mon, 1 Jan 2200 14:00:00 GMT
+  s_now = 7258168800LL;
+  uint32_t data[ARRAY_LENGTH(s_movement_data)];
+  memcpy(data, s_movement_data, sizeof(data));
+  char *key = "monday_movementData";
+
+  data[1] = (uint32_t)s_now;
+  s_metric_updated_count = 0;
+  cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)data, sizeof(data)),
+                    S_SUCCESS);
+  cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_MOVEMENT_METRICS);
+
+  data[1] = (uint32_t)(s_now - 7 * PBL_SEC_PER_DAY);
+  s_metric_updated_count = 0;
+  cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)data, sizeof(data)),
                     S_SUCCESS);
   cl_assert_equal_i(s_metric_updated_count, 0);
 }

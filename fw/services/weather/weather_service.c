@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -11,6 +12,7 @@
 #include <pbl/services/time.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h>
+#include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
 #include <applib/event_service_client.h>
@@ -64,7 +66,10 @@ static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
     return false;
   }
 
-  if (prv_entry_update_time_too_old_to_be_valid(entry->last_update_time_utc)) {
+  // A recent time, so its low 32 bits are enough to place it
+  const time_t last_update_time_utc =
+      pbl_time_from_low32(entry->last_update_time_utc, rtc_get_time());
+  if (prv_entry_update_time_too_old_to_be_valid(last_update_time_utc)) {
     PBL_LOG_WRN("Weather entry too old to fill forecast");
     return false;
   }
@@ -78,7 +83,7 @@ static bool prv_fill_forecast_from_entry(WeatherDBEntry *entry,
     .tomorrow_high = entry->tomorrow_high_temp,
     .tomorrow_low = entry->tomorrow_low_temp,
     .tomorrow_weather_type = entry->tomorrow_weather_type,
-    .time_updated_utc = entry->last_update_time_utc,
+    .time_updated_utc = last_update_time_utc,
   };
 
   // add 1 for null terminator
