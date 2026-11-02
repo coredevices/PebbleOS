@@ -60,7 +60,8 @@ def test_notification_shown(ui, ancs):
     _wait_modal(ui)
 
 
-def test_pre_existing_ignored(ui, ancs):
+@pytest.mark.parametrize("attempt", range(8))
+def test_pre_existing_ignored(ui, ancs, attempt):
     """Notifications the phone had before the watch's last session ended
     are not shown again right after it connects."""
     ancs.post(
