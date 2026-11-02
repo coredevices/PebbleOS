@@ -45,13 +45,14 @@ PBL_WEAK bool health_service_events_unsubscribe(void) {
   return false;
 }
 
-PBL_WEAK HealthValue health_service_sum_averaged(HealthMetric metric, time_t time_start,
-                                                 time_t time_end, HealthServiceTimeScope scope) {
+PBL_WEAK HealthValue health_service_sum_averaged(HealthMetric metric, pbl_time32_t time_start,
+                                                 pbl_time32_t time_end,
+                                                 HealthServiceTimeScope scope) {
   return 0;
 }
 
 PBL_WEAK uint32_t health_service_get_minute_history(HealthMinuteData *minute_data,
-                                                    uint32_t max_records, time_t *time_start,
-                                                    time_t *time_end) {
+                                                    uint32_t max_records, pbl_time32_t *time_start,
+                                                    pbl_time32_t *time_end) {
   return 0;
 }

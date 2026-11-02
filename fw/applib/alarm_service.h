@@ -5,6 +5,8 @@
 
 #include <time.h>
 
+#include <pbl/util/time.h>
+
 //! @addtogroup Foundation
 //! @{
 //!   @addtogroup AlarmService
@@ -20,7 +22,7 @@
 //! @param timestamp_out Must point to a valid `time_t`. If an enabled alarm
 //!        exists, it is set to the UTC time at which that alarm fires.
 //! @return true if at least one enabled alarm is scheduled, false otherwise.
-bool alarm_service_peek_next(time_t *timestamp_out);
+bool alarm_service_peek_next(pbl_time32_t *timestamp_out);
 
 //!   @} // group AlarmService
 //! @} // group Foundation

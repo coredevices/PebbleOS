@@ -211,7 +211,8 @@ static HealthActivityCBData s_prv_activity_cb__args[100];
 static uint32_t s_prv_activity_cb__call_count;
 static uint32_t s_prv_activity_cb__false_at_call_no = UINT32_MAX;
 
-bool prv_activity_cb(HealthActivity activity, time_t time_start, time_t time_end, void *context) {
+bool prv_activity_cb(HealthActivity activity, pbl_time32_t time_start, pbl_time32_t time_end,
+                     void *context) {
   s_prv_activity_cb__args[s_prv_activity_cb__call_count] = (HealthActivityCBData){
     .activity = activity,
     .time_start = time_start,
@@ -1045,8 +1046,8 @@ void test_health__get_minute_history_edge_case_args(void) {
   uint32_t written;
 
   // null pointer
-  time_t time_start = now - 10 * 60 - 30;
-  time_t time_end = now - 20;
+  pbl_time32_t time_start = now - 10 * 60 - 30;
+  pbl_time32_t time_end = now - 20;
   written = health_service_get_minute_history(nullptr, ARRAY_LENGTH(data), &time_start, &time_end);
   cl_assert_equal_i(0, written);
 
@@ -1059,7 +1060,7 @@ void test_health__get_minute_history_edge_case_args(void) {
   cl_assert_equal_i(0, written);
 
   // empty end before start
-  time_t early_end = time_start - 20 * PBL_SEC_PER_MIN;
+  pbl_time32_t early_end = time_start - 20 * PBL_SEC_PER_MIN;
   written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &early_end);
   cl_assert_equal_i(0, written);
 
@@ -1093,8 +1094,8 @@ void test_health__get_minute_history(void) {
   };
 
   // pass time that's not exactly on a boundary
-  time_t time_start = now - 10 * PBL_SEC_PER_MIN - 30;
-  time_t time_end = now - 20;
+  pbl_time32_t time_start = now - 10 * PBL_SEC_PER_MIN - 30;
+  pbl_time32_t time_end = now - 20;
   written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
   cl_assert_equal_i(3, written);
   cl_assert_equal_i(now - 10 * PBL_SEC_PER_MIN, time_start);
@@ -1117,8 +1118,8 @@ void test_health__get_minute_history_respects_time_end(void) {
   HealthMinuteData data[5] = {};
 
   // pass time that's not exactly on a boundary
-  time_t time_start;
-  time_t time_end;
+  pbl_time32_t time_start;
+  pbl_time32_t time_end;
 
   ////////////
   // start time on boundary

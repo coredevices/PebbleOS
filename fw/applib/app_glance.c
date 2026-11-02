@@ -9,6 +9,7 @@
 #include <pbl/util/string.h>
 #include <pbl/util/uuid.h>
 
+#include <applib/app_time32.h>
 #include <applib/template_string.h>
 #include <apps/system/launcher/default/app_glance_generic.h>
 #include <process_state/app_state/app_state.h>
@@ -74,8 +75,10 @@ AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceS
   }
 
   // Check if the slice would expire in the past (if it's not APP_GLANCE_SLICE_NO_EXPIRATION)
-  if ((slice.expiration_time != APP_GLANCE_SLICE_NO_EXPIRATION) &&
-      slice.expiration_time <= current_time) {
+  const time_t expiration_time = (slice.expiration_time == APP_GLANCE_SLICE_NO_EXPIRATION)
+                                     ? 0
+                                     : pbl_time_from_time32(slice.expiration_time, current_time);
+  if ((expiration_time != 0) && (expiration_time <= current_time)) {
     result |= APP_GLANCE_RESULT_EXPIRES_IN_THE_PAST;
   }
 
@@ -83,7 +86,7 @@ AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceS
   if (result == APP_GLANCE_RESULT_SUCCESS) {
     AppGlanceSliceInternal *slice_dest = &glance->slices[glance->num_slices];
     *slice_dest = (AppGlanceSliceInternal){
-      .expiration_time = slice.expiration_time,
+      .expiration_time = expiration_time,
       .type = AppGlanceSliceType_IconAndSubtitle,
       .icon_and_subtitle.icon_resource_id = slice.layout.icon,
     };

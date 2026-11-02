@@ -259,6 +259,7 @@
             }, {
               "type": "function",
               "name": "clock_to_timestamp",
+              "implName": "clock_to_timestamp_time32",
               "addedRevision": "24"
             }, {
               "type": "function",
@@ -4687,23 +4688,23 @@
             }, {
               "type": "function",
               "name": "localtime",
-              "implName": "pbl_override_localtime",
+              "implName": "pbl_override_localtime_time32",
               "sortName": "gmtime",
               "addedRevision": "31"
             }, {
               "type": "function",
               "name": "gmtime",
-              "implName": "pbl_override_gmtime",
+              "implName": "pbl_override_gmtime_time32",
               "addedRevision": "0"
             }, {
               "type": "function",
               "name": "mktime",
-              "implName": "pbl_override_mktime",
+              "implName": "pbl_override_mktime_time32",
               "addedRevision": "29"
             }, {
               "type": "function",
               "name": "localtime__deprecated",
-              "implName": "pbl_override_gmtime",
+              "implName": "pbl_override_gmtime_time32",
               "deprecated": true,
               "addedRevision": "0"
             }, {
@@ -4731,11 +4732,12 @@
             }, {
               "type": "function",
               "name": "time_ms",
+              "implName": "time_ms_time32",
               "addedRevision": "59"
             }, {
               "type": "function",
               "name": "time_start_of_today",
-              "implName": "sys_time_start_of_today",
+              "implName": "time_start_of_today_time32",
               "addedRevision": "78"
             }
           ]

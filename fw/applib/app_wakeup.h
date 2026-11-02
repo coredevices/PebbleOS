@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include <pbl/services/wakeup.h>
+#include <pbl/util/time.h>
 
 //! @addtogroup Foundation
 //! @{
@@ -41,7 +42,7 @@ void app_wakeup_service_subscribe(WakeupHandler handler);
 //! E_INVALID_ARGUMENT if the time requested is in the past.
 //! E_OUT_OF_RESOURCES if the application has already scheduled all 8 wakeup events.
 //! E_INTERNAL if a system error occurred during scheduling.
-WakeupId app_wakeup_schedule(time_t timestamp, int32_t cookie, bool notify_if_missed);
+WakeupId app_wakeup_schedule(pbl_time32_t timestamp, int32_t cookie, bool notify_if_missed);
 
 //! Cancels a wakeup event.
 //! @param wakeup_id Wakeup event to cancel
@@ -67,7 +68,7 @@ bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie);
 //! You may pass NULL instead if you do not need it.
 //! @return True if WakeupId is still scheduled, false if it doesn't exist or has
 //! already occurred
-bool app_wakeup_query(WakeupId wakeup_id, time_t *timestamp);
+bool app_wakeup_query(WakeupId wakeup_id, pbl_time32_t *timestamp);
 
 //!   @} // group Wakeup
 //! @} // group Foundation
