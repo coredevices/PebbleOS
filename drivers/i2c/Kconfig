@@ -25,7 +25,6 @@ config I2C_SF32LB
 
 config I2C_SHELL
     bool "Shell commands"
-    default y
     depends on SHELL
     help
       The i2c shell command, to list the buses, scan them and read or

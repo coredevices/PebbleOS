@@ -10,7 +10,6 @@ if BACKLIGHT
 
 config BACKLIGHT_SHELL
     bool "Shell commands"
-    default y
     depends on SHELL
     help
       The backlight shell command, to set the brightness and color.

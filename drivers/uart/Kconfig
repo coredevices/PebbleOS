@@ -34,7 +34,6 @@ config UART_POSIX
 
 config UART_SHELL
     bool "Shell commands"
-    default y
     depends on SHELL
     help
       The uart shell command, to list the ports, change their line

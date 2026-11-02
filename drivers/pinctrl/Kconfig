@@ -17,7 +17,6 @@ config PINCTRL_SF32LB52
 
 config PINCTRL_SHELL
     bool "Pin controller shell commands"
-    default y
     depends on PINCTRL && SHELL
     help
       The pinctrl shell command, to dump the pad registers of every pin

@@ -58,7 +58,6 @@ endif # DISPLAY_SDL
 
 config DISPLAY_SHELL
     bool "Shell commands"
-    default y
     depends on SHELL
     help
       The display shell command, to show the display and turn its panel on
