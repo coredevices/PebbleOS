@@ -226,15 +226,16 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
   if (event->quality == HRMQuality_OffWrist) {
     // Reset to zero for OffWrist readings
     prv_reset_hr_data();
-  } else if (event->quality >= HRMQuality_Acceptable) {
+  } else {
     const int prev_bpm_timestamp_ts = wrkt_data->current_bpm_timestamp_ts;
     const uint8_t raw_bpm = event->current_bpm;
 
-    // The live displayed HR is median-filtered over the last few samples to reject motion spikes,
-    // which are the main source of jitter during a workout. When the signal is clean we take the
-    // raw value directly (and clear the ring) so we don't lag genuine rapid changes like interval
-    // surges. The session average below still accumulates the raw value for accuracy.
-    if (event->quality >= HRMQuality_Good) {
+    // Every reading the algorithm outputs is used: confidence tends to stay low during motion,
+    // so gating on it stalls the display for the whole workout. Low-confidence readings are
+    // median-filtered over the last few samples to reject motion spikes; high-confidence ones
+    // are taken directly (clearing the ring) so we don't lag rapid changes like interval surges.
+    // The session average below still accumulates the raw value.
+    if (event->confidence >= HRM_CONFIDENCE_HIGH) {
       wrkt_data->bpm_ring_count = 0;
       wrkt_data->bpm_ring_head = 0;
       wrkt_data->current_bpm = raw_bpm;
