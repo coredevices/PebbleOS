@@ -45,11 +45,11 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
     snprintf(app_data->status_string, STATUS_STRING_LEN, "Sampling...");
 
     if (e->hrm.event_type == HRMEvent_BPM) {
-      snprintf(app_data->bpm_string, BPM_STRING_LEN, "HR:%d (quality:%d)", e->hrm.bpm.bpm,
-               e->hrm.bpm.quality);
+      snprintf(app_data->bpm_string, BPM_STRING_LEN, "HR:%d (conf:%d)", e->hrm.bpm.bpm,
+               e->hrm.bpm.confidence);
     } else if (e->hrm.event_type == HRMEvent_SpO2) {
-      snprintf(app_data->spo2_string, SPO2_STRING_LEN, "SpO2:%d (quality:%d)", e->hrm.spo2.percent,
-               e->hrm.spo2.quality);
+      snprintf(app_data->spo2_string, SPO2_STRING_LEN, "SpO2:%d (conf:%d)", e->hrm.spo2.percent,
+               e->hrm.spo2.confidence);
     }
 
     layer_mark_dirty(&app_data->window.layer);

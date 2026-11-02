@@ -173,12 +173,11 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   PBL_LOG_DBG("Got HR event: %d", (int)hrm_event->event_type);
   if (hrm_event->event_type == HRMEvent_BPM) {
-    PBL_LOG_DBG("HR bpm: %" PRIu8 ", qual: %" PRId8 " ", hrm_event->bpm.bpm,
-                (int8_t)hrm_event->bpm.quality);
+    PBL_LOG_DBG("HR bpm: %" PRIu8 ", conf: %" PRIu8 ", off wrist: %d", hrm_event->bpm.bpm,
+                hrm_event->bpm.confidence, hrm_event->bpm.off_wrist);
 
     // Perform a basic validity check so we only proceed with reasonable data
-    // TODO: Use quality to filter out some readings,
-    // TODO: Use HRMQuality_OffWrist as a special case to slow down the HRM subscription
+    // TODO: Use off-wrist as a special case to slow down the HRM subscription
     bool valid_hr_reading = true;
     if (hrm_event->bpm.bpm < ACTIVITY_DEFAULT_MIN_HR ||
         hrm_event->bpm.bpm > ACTIVITY_DEFAULT_MAX_HR) {
@@ -190,8 +189,7 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
 
     // Cache the worn-status from this event so sleep tracking can use it as a strong off-wrist
     // signal (PPG off-wrist detection is far more reliable than the accel-only heuristics).
-    activity_metrics_prv_set_hrm_worn_status(now_utc,
-                                             hrm_event->bpm.quality == HRMQuality_OffWrist);
+    activity_metrics_prv_set_hrm_worn_status(now_utc, hrm_event->bpm.off_wrist);
 
     if (valid_hr_reading) {
       // Update the heart rate metrics
@@ -199,10 +197,10 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
 
       // Log it to the mobile
       protobuf_log_hr_add_sample(s_activity_state.hr.log_session, now_utc, hrm_event->bpm.bpm,
-                                 hrm_event->bpm.quality);
+                                 hrm_event->bpm.confidence, hrm_event->bpm.off_wrist);
     }
 
-    if (valid_hr_reading || hrm_event->bpm.quality == HRMQuality_OffWrist) {
+    if (valid_hr_reading || hrm_event->bpm.off_wrist) {
       pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
       {
         // Post a health service heart rate changed event
@@ -211,10 +209,9 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
           .health_event = {
             .type = HealthEventHeartRateUpdate,
             .data.heart_rate_update = {
-              .current_bpm =
-                  (hrm_event->bpm.quality == HRMQuality_OffWrist) ? 0 : hrm_event->bpm.bpm,
+              .current_bpm = hrm_event->bpm.off_wrist ? 0 : hrm_event->bpm.bpm,
               .resting_bpm = s_activity_state.hr.metrics.resting_bpm,
-              .quality = hrm_event->bpm.quality,
+              .off_wrist = hrm_event->bpm.off_wrist,
               .is_filtered = false,
               .confidence = hrm_event->bpm.confidence,
             },
@@ -382,30 +379,6 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Map the sensor's HRMQuality onto the 0-7 HeartRateQuality scale stored in the minute record
-// (0=none, 1=OffWrist, 3=Worst .. 7=Excellent), matching how heart rate quality is reported.
-#ifdef CONFIG_HRM
-static uint8_t prv_spo2_health_quality(HRMQuality quality) {
-  switch (quality) {
-    case HRMQuality_Excellent:
-      return 7;
-    case HRMQuality_Good:
-      return 6;
-    case HRMQuality_Acceptable:
-      return 5;
-    case HRMQuality_Poor:
-      return 4;
-    case HRMQuality_Worst:
-      return 3;
-    case HRMQuality_OffWrist:
-      return 1;
-    default:
-      return 0;
-  }
-}
-#endif // CONFIG_HRM
-
-// ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new SpO2 data arrives
 #ifdef CONFIG_HRM
 PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
@@ -414,20 +387,20 @@ PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *cont
   }
 
   const uint8_t pct = hrm_event->spo2.percent;
-  const HRMQuality quality = hrm_event->spo2.quality;
   const uint8_t confidence = hrm_event->spo2.confidence;
-  PBL_LOG_DBG("SpO2: %" PRIu8 "%%, qual: %d, conf: %" PRIu8, pct, (int)quality, confidence);
+  PBL_LOG_DBG("SpO2: %" PRIu8 "%%, conf: %" PRIu8 ", off wrist: %d", pct, confidence,
+              hrm_event->spo2.off_wrist);
 
   // A reading the algorithm accepted (not invalid), on-wrist, with a plausible percent is usable.
   // Stash the latest one for the next minute record, so a window that never reaches high
   // confidence still yields its last reading. Once a high-confidence reading came in, lower ones
   // no longer replace it, and enough high-confidence readings end the window early.
-  if (!hrm_event->spo2.invalid && quality != HRMQuality_OffWrist && pct > 0) {
+  if (!hrm_event->spo2.invalid && !hrm_event->spo2.off_wrist && pct > 0) {
     const bool high_confidence = (confidence >= HRM_CONFIDENCE_HIGH);
     s_activity_state.spo2.num_valid_samples++;
     if (high_confidence || (s_activity_state.spo2.num_high_confidence_samples == 0)) {
       s_activity_state.spo2.pending_percent = pct;
-      s_activity_state.spo2.pending_quality = prv_spo2_health_quality(quality);
+      s_activity_state.spo2.pending_quality = protobuf_log_hr_quality(confidence, false);
     }
     if (high_confidence) {
       s_activity_state.spo2.num_high_confidence_samples++;

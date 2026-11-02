@@ -282,9 +282,13 @@ bool protobuf_log_session_delete(ProtobufLogRef session) {
   return true;
 }
 
-bool protobuf_log_hr_add_sample(ProtobufLogRef ref, time_t now_utc, uint8_t bpm,
-                                HRMQuality quality) {
+bool protobuf_log_hr_add_sample(ProtobufLogRef ref, time_t now_utc, uint8_t bpm, uint8_t confidence,
+                                bool off_wrist) {
   return true;
+}
+
+uint8_t protobuf_log_hr_quality(uint8_t confidence, bool off_wrist) {
+  return 0;
 }
 
 // =============================================================================================
@@ -2439,7 +2443,13 @@ void test_activity__distance(void) {
 // --------------------------------------------------------------------------------------------
 // Advance through time simulating the heart rate manager calls
 static int s_num_hrm_callbacks;
-static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, HRMQuality quality,
+// Algorithm confidence of the simulated readings, or OFF_WRIST.
+#define CONF_EXCELLENT  (95)
+#define CONF_GOOD       (85)
+#define CONF_ACCEPTABLE (70)
+#define CONF_WORST      (20)
+#define OFF_WRIST       (-1)
+static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, int confidence,
                                 bool force_continuous) {
   // Call the minute handler, which computes the minute stats and saves them to data logging
   // as well as the sleep PFS file.
@@ -2451,8 +2461,8 @@ static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, HRMQuality qualit
       PebbleHRMEvent hrm_event = {
         .event_type = HRMEvent_BPM,
         .bpm.bpm = bpm,
-        .bpm.quality = quality,
-        .bpm.confidence = hrm_confidence_from_quality(quality),
+        .bpm.confidence = (confidence == OFF_WRIST) ? 0 : confidence,
+        .bpm.off_wrist = (confidence == OFF_WRIST),
       };
       prv_hrm_subscription_cb(&hrm_event, nullptr);
       s_num_hrm_callbacks++;
@@ -2472,8 +2482,7 @@ void test_activity__hrm_sampling_period(void) {
   fake_system_task_callbacks_invoke_pending();
   s_test_alg_state.orientation = 0x11; // Not flat
 
-  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, HRMQuality_Good,
-                      false /*force_continuous*/);
+  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
 
   // Should be 1 second sampling when we start up
   cl_assert_equal_i(s_hrm_manager_update_interval, 1);
@@ -2486,7 +2495,7 @@ void test_activity__hrm_sampling_period(void) {
   // Simulate callbacks one second away from turning down the sampling rate
   // Use Acceptable (low confidence) because of the short circuiting in
   // `prv_heart_rate_subscription_update`
-  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_ON_TIME_SEC - 1, 100 /*bpm*/, HRMQuality_Acceptable,
+  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_ON_TIME_SEC - 1, 100 /*bpm*/, CONF_ACCEPTABLE,
                       false /*force_continuous*/);
 
   // The last update time should be within a second
@@ -2498,14 +2507,13 @@ void test_activity__hrm_sampling_period(void) {
   cl_assert_equal_i(s_hrm_manager_update_interval, 1);
 
   // Tick one more second, should trigger slow sampling
-  prv_advance_time_hr(1, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+  prv_advance_time_hr(1, 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
   // Should be back to no sampling by now (very large sampling period)
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
   // Advance to our next sampling period, but the watch is flat so we shouldn't start sampling
   s_test_alg_state.orientation = 0x00; // Flat
-  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, HRMQuality_Good,
-                      false /*force_continuous*/);
+  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
   // Advance to our next sampling period, the watch is no longer flat so we should be sampling.
@@ -2513,7 +2521,7 @@ void test_activity__hrm_sampling_period(void) {
   // the next minute boundary triggers the subscription update and starts sampling.
   s_test_alg_state.orientation = 0x22; // Not flat
   for (uint32_t i = 0; i < (10 * PBL_SEC_PER_MIN); i++) {
-    prv_advance_time_hr(1, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+    prv_advance_time_hr(1, 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
     if (s_hrm_manager_update_interval == 1) {
       break;
     }
@@ -2543,7 +2551,7 @@ void test_activity__hrm_median(void) {
   cl_assert_equal_i(last_update_utc, 0);
 
   // Simulate some HRM callbacks with no heart rate, should get 0 median
-  prv_advance_time_hr(10 /*sec*/, 0 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
+  prv_advance_time_hr(10 /*sec*/, 0 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   activity_metrics_prv_get_median_hr_bpm(&median, &total_weight);
   cl_assert_equal_i(median, 0);
   cl_assert_equal_i(total_weight, 0);
@@ -2555,10 +2563,10 @@ void test_activity__hrm_median(void) {
   cl_assert_equal_i(last_update_utc, 0);
 
   // Simulate some HRM callbacks with non-zero heart rate
-  prv_advance_time_hr(3 /*sec*/, 50 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
-  prv_advance_time_hr(3 /*sec*/, 100 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
-  prv_advance_time_hr(1 /*sec*/, 51 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
-  prv_advance_time_hr(8 /*sec*/, 120 /*hr*/, HRMQuality_Worst, true /*force_continuous*/);
+  prv_advance_time_hr(3 /*sec*/, 50 /*hr*/, CONF_GOOD, true /*force_continuous*/);
+  prv_advance_time_hr(3 /*sec*/, 100 /*hr*/, CONF_GOOD, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 51 /*hr*/, CONF_GOOD, true /*force_continuous*/);
+  prv_advance_time_hr(8 /*sec*/, 120 /*hr*/, CONF_WORST, true /*force_continuous*/);
   prv_minute_system_task_cb(nullptr);
   activity_metrics_prv_get_median_hr_bpm(&median, &total_weight);
   cl_assert_equal_i(median, 51);
@@ -2604,35 +2612,34 @@ void test_activity__hrm_ignore(void) {
   fake_event_set_callback(prv_fake_hr_event_handler);
 
   // Should not fire off an event. Bad HR reading
-  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 0);
 
   // Should fire off an event. Good HR and Good quality
-  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 1);
 
   // Should fire off an event. OffWrist, tell clients
-  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, HRMQuality_OffWrist, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, OFF_WRIST, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 2);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 0);
-  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.quality, HRMQuality_OffWrist);
+  cl_assert(s_last_hr_event.data.heart_rate_update.off_wrist);
 
   // Should fire off an event. OffWrist, tell clients
-  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, HRMQuality_OffWrist, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, OFF_WRIST, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 3);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 0);
-  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.quality, HRMQuality_OffWrist);
+  cl_assert(s_last_hr_event.data.heart_rate_update.off_wrist);
 
   // Should fire off an event. Good HR and Good Quality
-  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, HRMQuality_Excellent, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, CONF_EXCELLENT, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 4);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 120);
-  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.quality, HRMQuality_Excellent);
-  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.confidence,
-                    hrm_confidence_from_quality(HRMQuality_Excellent));
+  cl_assert(!s_last_hr_event.data.heart_rate_update.off_wrist);
+  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.confidence, CONF_EXCELLENT);
 
   // Should not fire off an event. Bad HR reading
-  prv_advance_time_hr(1 /*sec*/, 20 /*hr*/, HRMQuality_Excellent, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 20 /*hr*/, CONF_EXCELLENT, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 4);
 }
 
@@ -2642,7 +2649,6 @@ static void prv_put_spo2(uint8_t percent, uint8_t confidence, bool invalid) {
     .event_type = HRMEvent_SpO2,
     .spo2 = {
       .percent = percent,
-      .quality = hrm_quality_from_confidence(confidence),
       .confidence = confidence,
       .invalid = invalid,
     },

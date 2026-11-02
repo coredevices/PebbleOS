@@ -254,8 +254,8 @@ typedef enum {
 
   /** Most recent heart rate reading, in beats per minute. */
   ActivityMetricHeartRateRawBPM,
-  /** Quality of the most recent heart rate reading, an @c HRMQuality value. */
-  ActivityMetricHeartRateRawQuality,
+  /** Algorithm confidence of the most recent heart rate reading, 0-100. */
+  ActivityMetricHeartRateRawConfidence,
   /** UTC time of the most recent heart rate reading. */
   ActivityMetricHeartRateRawUpdatedTimeUTC,
   /** Most recent stable heart rate (median over a minute), in beats per minute. */

@@ -180,7 +180,6 @@ bool battery_is_usb_connected(void) {
 static const HRMData s_hrm_event_data = {
   .features = HRMFeature_BPM,
   .hrm_bpm = 82,
-  .hrm_quality = HRMQuality_Excellent,
   .hrm_confidence = 95,
 };
 
@@ -480,7 +479,6 @@ void test_hrm_manager__spo2_preempts_green(void) {
   const HRMData spo2_data = {
     .features = HRMFeature_SpO2,
     .spo2_percent = 97,
-    .spo2_quality = HRMQuality_Good,
   };
   hrm_manager_new_data_cb(&spo2_data);
   hrm_manager_handle_prefs_changed();
@@ -625,7 +623,7 @@ void test_hrm_manager__kernel_expiration(void) {
   cl_assert_equal_i(s_num_cb_events_1, 1);
   cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
   cl_assert_equal_i(s_cb_events_1[0].bpm.bpm, s_hrm_event_data.hrm_bpm);
-  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, s_hrm_event_data.hrm_quality);
+  cl_assert(!s_cb_events_1[0].bpm.off_wrist);
 
   // Now advance time to just before the expiration time
   rtc_set_time(rtc_get_time() + expire_s - 1);
@@ -778,7 +776,7 @@ void test_hrm_manager__system_task_data_callback(void) {
   cl_assert_equal_i(s_num_cb_events_1, 1);
   cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
   cl_assert_equal_i(s_cb_events_1[0].bpm.bpm, s_hrm_event_data.hrm_bpm);
-  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, s_hrm_event_data.hrm_quality);
+  cl_assert(!s_cb_events_1[0].bpm.off_wrist);
 
   sys_hrm_manager_unsubscribe(session_ref);
 }
@@ -811,12 +809,12 @@ void test_hrm_manager__multiple_system_task_data_callbacks(void) {
   cl_assert_equal_i(s_num_cb_events_1, 1);
   cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
   cl_assert_equal_i(s_cb_events_1[0].bpm.bpm, s_hrm_event_data.hrm_bpm);
-  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, s_hrm_event_data.hrm_quality);
+  cl_assert(!s_cb_events_1[0].bpm.off_wrist);
 
   cl_assert_equal_i(s_num_cb_events_1, 1);
   cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
   cl_assert_equal_i(s_cb_events_1[0].bpm.bpm, s_hrm_event_data.hrm_bpm);
-  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, s_hrm_event_data.hrm_quality);
+  cl_assert(!s_cb_events_1[0].bpm.off_wrist);
 
   sys_hrm_manager_unsubscribe(session_ref_1);
   sys_hrm_manager_unsubscribe(session_ref_2);
@@ -870,7 +868,7 @@ void test_hrm_manager__circular_buffer_event_copy(void) {
   circular_buffer_init(&cb, buffer, buf_size);
 
   PebbleHRMEvent event[NUM_TEST_EVENTS] = {
-    {.event_type = HRMEvent_BPM, .bpm = {.bpm = 65, .quality = 5}},
+    {.event_type = HRMEvent_BPM, .bpm = {.bpm = 65, .confidence = 95}},
   };
   { // These events will insert properly aligned in the buffer
     for (int i = 0; i < NUM_TEST_EVENTS; ++i) {
@@ -1099,7 +1097,6 @@ void test_hrm_manager__unserved_subscriber_timeout(void) {
   const HRMData poor_data = {
     .features = HRMFeature_BPM,
     .hrm_bpm = 70,
-    .hrm_quality = HRMQuality_Acceptable,
     .hrm_confidence = HRM_CONFIDENCE_HIGH - 1,
   };
   for (int i = 0; i < 2 * HRM_CHECK_SENSOR_DISABLE_COUNT; ++i) {
@@ -1134,7 +1131,6 @@ void test_hrm_manager__unserved_timeout_keeps_live_hr_on(void) {
   const HRMData poor_data = {
     .features = HRMFeature_BPM,
     .hrm_bpm = 70,
-    .hrm_quality = HRMQuality_Acceptable,
     .hrm_confidence = HRM_CONFIDENCE_HIGH - 1,
   };
   prv_advance_time_ms((HRM_MAX_UNSERVED_TIME_SEC + 1) * PBL_MSEC_PER_SEC);
@@ -1147,7 +1143,7 @@ void test_hrm_manager__unserved_timeout_keeps_live_hr_on(void) {
   sys_hrm_manager_unsubscribe(session_ref);
 }
 
-// Test that OffWrist quality is delivered immediately without delay
+// Test that off-wrist readings are delivered immediately without delay
 void test_hrm_manager__immediate_off_wrist(void) {
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   s_num_cb_events_1 = 0;
@@ -1162,7 +1158,7 @@ void test_hrm_manager__immediate_off_wrist(void) {
   HRMData off_wrist_data = {
     .features = HRMFeature_BPM,
     .hrm_bpm = 0,
-    .hrm_quality = HRMQuality_OffWrist,
+    .off_wrist = true,
   };
   hrm_manager_new_data_cb(&off_wrist_data);
   fake_system_task_callbacks_invoke_pending();
@@ -1170,7 +1166,7 @@ void test_hrm_manager__immediate_off_wrist(void) {
   // OffWrist should be delivered immediately
   cl_assert_equal_i(s_num_cb_events_1, 1);
   cl_assert_equal_i(s_cb_events_1[0].event_type, HRMEvent_BPM);
-  cl_assert_equal_i(s_cb_events_1[0].bpm.quality, HRMQuality_OffWrist);
+  cl_assert(s_cb_events_1[0].bpm.off_wrist);
 
   sys_hrm_manager_unsubscribe(session_ref);
 }
@@ -1208,7 +1204,7 @@ void test_hrm_manager__live_off_wrist_subscription_keeps_sensor_on(void) {
   const HRMData off_wrist_data = {
     .features = HRMFeature_BPM,
     .hrm_bpm = 0,
-    .hrm_quality = HRMQuality_OffWrist,
+    .off_wrist = true,
   };
   prv_advance_time_ms(20 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC);
   for (int i = 0; i <= HRM_CHECK_SENSOR_DISABLE_COUNT; ++i) {
@@ -1225,7 +1221,6 @@ void test_hrm_manager__poor_reports_do_not_extend_serve_deadline(void) {
   const HRMData poor_data = {
     .features = HRMFeature_BPM,
     .hrm_bpm = 70,
-    .hrm_quality = HRMQuality_Acceptable,
     .hrm_confidence = HRM_CONFIDENCE_HIGH - 1,
   };
   for (int elapsed_s = 30; elapsed_s < HRM_MAX_UNSERVED_TIME_SEC; elapsed_s += 30) {
@@ -1413,7 +1408,6 @@ void test_hrm_manager__silent_live_reader_does_not_delay_next_periodic_optical_p
   const HRMData spo2_data = {
     .features = HRMFeature_SpO2,
     .spo2_percent = 97,
-    .spo2_quality = HRMQuality_Good,
   };
   for (int i = 0; i < HRM_CHECK_SENSOR_DISABLE_COUNT; ++i) {
     hrm_manager_new_data_cb(&spo2_data);
@@ -1496,22 +1490,4 @@ void test_hrm_manager__enable_failure_limit_stops_retries(void) {
   cl_assert_equal_i(s_hrm_state.enable_failures, 0);
   cl_assert(!stub_new_timer_is_scheduled(prv_get_timer_id()));
   sys_hrm_manager_unsubscribe(session_ref);
-}
-
-void test_hrm_manager__quality_from_confidence(void) {
-  cl_assert_equal_i(hrm_quality_from_confidence(100), HRMQuality_Excellent);
-  cl_assert_equal_i(hrm_quality_from_confidence(90), HRMQuality_Excellent);
-  cl_assert_equal_i(hrm_quality_from_confidence(89), HRMQuality_Good);
-  cl_assert_equal_i(hrm_quality_from_confidence(HRM_CONFIDENCE_HIGH), HRMQuality_Good);
-  cl_assert_equal_i(hrm_quality_from_confidence(HRM_CONFIDENCE_HIGH - 1), HRMQuality_Acceptable);
-  cl_assert_equal_i(hrm_quality_from_confidence(60), HRMQuality_Acceptable);
-  cl_assert_equal_i(hrm_quality_from_confidence(59), HRMQuality_Poor);
-  cl_assert_equal_i(hrm_quality_from_confidence(40), HRMQuality_Poor);
-  cl_assert_equal_i(hrm_quality_from_confidence(39), HRMQuality_Worst);
-  cl_assert_equal_i(hrm_quality_from_confidence(0), HRMQuality_Worst);
-
-  // The representative confidence of each grade maps back to that grade
-  for (HRMQuality q = HRMQuality_Worst; q <= HRMQuality_Excellent; q++) {
-    cl_assert_equal_i(hrm_quality_from_confidence(hrm_confidence_from_quality(q)), q);
-  }
 }

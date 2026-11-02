@@ -542,7 +542,7 @@ typedef struct {
 typedef struct {
   uint8_t current_bpm;
   uint8_t resting_bpm;
-  HRMQuality quality : 8;
+  bool off_wrist;
   bool is_filtered;
   uint8_t confidence; //!< algorithm confidence, 0-100
 } HealthEventHeartRateUpdateData;
@@ -550,7 +550,7 @@ typedef struct {
 //! @internal
 typedef struct {
   uint16_t ppi_ms;
-  HRMQuality quality : 8;
+  uint8_t confidence; //!< algorithm confidence, 0-100
 } HealthEventHRVUpdateData;
 
 //! @internal

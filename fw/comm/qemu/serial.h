@@ -178,7 +178,7 @@ typedef struct PBL_PACKED {
 typedef struct PBL_PACKED {
   /** Heart rate in beats per minute. */
   uint8_t bpm;
-  /** Reading quality, an HRMQuality value (signed: off-wrist is -1). */
+  /** Reading grade: -1 off wrist, 0 (worst) to 4 (excellent). */
   int8_t quality;
 } QemuProtocolHeartRateHeader;
 
