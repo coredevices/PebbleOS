@@ -64,15 +64,11 @@ static time_t prv_migrate_local_time_to_UTC(time_t local_time) {
 
 typedef struct PBL_PACKED {
   // Mirrors the Pebble Protocol time endpoint payload (big endian).
-  int32_t utc_time;                       // UTC timestamp
+  uint32_t utc_time;                      // UTC timestamp, unsigned to reach past 2038
   int16_t utc_offset_min;                 // local timestamp - UTC timestamp in mins
   int8_t region_name_len;                 // timezone name length
   char region_name[TIMEZONE_NAME_LENGTH]; // timezone name string
 } TimezoneCBData;
-
-#if !UNITTEST && !defined(CONFIG_LIBC_HOST)
-static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
-#endif
 
 #if !defined(CONFIG_RECOVERY_FW)
 static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz_info,
@@ -328,14 +324,14 @@ PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInf
   }
 
   int new_gmt_offset = time_get_gmtoffset();
-  int new_utc_time = pbl_realtime();
+  time_t new_utc_time = pbl_realtime();
 
   PBL_ANALYTICS_SET_SIGNED(utc_offset_s, new_gmt_offset);
 
   PebbleEvent e = {
     .type = PEBBLE_SET_TIME_EVENT,
     .set_time_info = {
-      .utc_time_delta = new_utc_time - orig_utc_time,
+      .utc_time_delta = (int32_t)(new_utc_time - orig_utc_time),
       .gmt_offset_delta = new_gmt_offset - orig_gmt_offset,
       .dst_changed = false,
     }
@@ -389,7 +385,7 @@ void clock_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
 
       response_buffer[0] = 0x01;
 
-      *(uint32_t *)(response_buffer + 1) = pbl_cpu_to_be32(t);
+      *(uint32_t *)(response_buffer + 1) = pbl_cpu_to_be32((uint32_t)t);
 
       pbl_pp_send(session, protocol_time_endpoint_id, response_buffer, response_buffer_length,
                   PBL_PP_DEFAULT_TIMEOUT_MS);
