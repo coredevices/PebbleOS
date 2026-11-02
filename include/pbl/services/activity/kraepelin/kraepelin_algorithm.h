@@ -247,23 +247,4 @@ void kalg_get_sleep_stats(KAlgState *state, KAlgOngoingSleepStats *stats);
 void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable,
                                    KAlgActivitySessionCallback sessions_cb, void *context);
 
-/**
- * @brief Check whether a continuous heart rate session is active for a detected activity.
- *
- * @param kalg_state State passed to kalg_init().
- * @return true if a walk or run heart rate session is active.
- */
-bool kalg_activity_hrm_is_active(KAlgState *kalg_state);
-
-/**
- * @brief Pause or resume the heart rate sessions of detected activities.
- *
- * Pausing sets their update interval to a day, freeing the shared optical path for a SpO2
- * reading; resuming restores the 1 second interval.
- *
- * @param kalg_state State passed to kalg_init().
- * @param paused true to pause, false to resume.
- */
-void kalg_activity_hrm_set_paused(KAlgState *kalg_state, bool paused);
-
 /** @} */

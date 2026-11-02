@@ -118,13 +118,6 @@ typedef uint32_t ActivityScalarStore;
  */
 #define ACTIVITY_SPO2_EARLY_ABORT_SEC (45)
 
-/** @brief Interval between SpO2 attempts during a detected activity, in seconds. */
-#define ACTIVITY_SPO2_ACTIVITY_INTERVAL_SEC (5 * PBL_SEC_PER_MIN)
-/** @brief Duration of a SpO2 attempt during a detected activity, in seconds. */
-#define ACTIVITY_SPO2_ACTIVITY_ATTEMPT_SEC (35)
-/** @brief Heart rate time after a failed SpO2 attempt before retrying, in seconds. */
-#define ACTIVITY_SPO2_ACTIVITY_BACKOFF_SEC (PBL_SEC_PER_MIN)
-
 /** @brief Minimum heart rate samples in a minute to report a zone above zone 0. */
 #define ACTIVITY_MIN_NUM_SAMPLES_FOR_HR_ZONE (5)
 
@@ -319,8 +312,6 @@ typedef struct {
   ActivityScalarStore resting_bpm;
   /** Quality of the most recent reading, an @c HRMQuality value. */
   ActivityScalarStore current_quality;
-  /** Algorithm confidence of the most recent reading, 0-100. */
-  uint8_t current_confidence;
   /** Last stable (median) heart rate, in beats per minute. */
   ActivityScalarStore last_stable_bpm;
   /** UTC time of the last stable heart rate. */
@@ -512,34 +503,6 @@ typedef struct {
   uint8_t pending_quality;
 } ActivitySpO2Support;
 
-/** @brief Phases of the SpO2 reader during detected activities. */
-typedef enum {
-  /** Not in an eligible activity. */
-  ActivitySpO2ActPhase_Idle = 0,
-  /** Sampling heart rate, waiting for the next attempt. */
-  ActivitySpO2ActPhase_Wait,
-  /** Heart rate paused, sampling SpO2 within the attempt budget. */
-  ActivitySpO2ActPhase_Sampling,
-  /** Last attempt failed; heart rate resumed before retrying. */
-  ActivitySpO2ActPhase_Backoff,
-} ActivitySpO2ActPhase;
-
-/** @brief SpO2 reader state during detected activities. */
-typedef struct {
-  /** Dedicated SpO2 session, only sampled during an attempt. */
-  HRMSessionRef hrm_session;
-  /** Current phase. */
-  ActivitySpO2ActPhase phase;
-  /** Uptime, in seconds, at which the current phase began. */
-  uint32_t phase_started_ts;
-  /** A valid reading arrived during this attempt. */
-  bool got_reading;
-  /** SpO2 of the last valid reading, in percent. */
-  uint8_t percent;
-  /** A KernelBG callback running the state machine is queued. */
-  bool update_pending;
-} ActivitySpO2ActivitySupport;
-
 /** @brief Activity service state. */
 typedef struct {
   /** Mutex serializing access to the state. */
@@ -589,9 +552,6 @@ typedef struct {
 
   /** Background SpO2 support. */
   ActivitySpO2Support spo2;
-
-  /** SpO2 during detected activities. */
-  ActivitySpO2ActivitySupport activity_spo2;
 
   /** Current day index. */
   uint16_t cur_day_index;
