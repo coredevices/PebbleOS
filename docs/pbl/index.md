@@ -36,6 +36,7 @@ command's own options.
 | {doc}`itest` | {doc}`image_recovery` |
 | | {doc}`erase` |
 | | {doc}`lab` |
+| | {doc}`power` |
 
 ## Shared options
 
@@ -142,6 +143,7 @@ image_resources.md
 image_recovery.md
 erase.md
 lab.md
+power.md
 ```
 
 ```{toctree}

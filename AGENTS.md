@@ -67,6 +67,11 @@ CLI, one page per command, and `extending.md` for how to extend it),
   this host (from its lab file), whether their ports are there, which one
   runs the build, and which session holds each port. Check it instead of
   guessing serial ports; device commands take their ports from it.
+- `pbl power on` powers the build's watch from its lab supply and keeps it
+  powered in the background until `pbl power off`; meanwhile
+  `pbl power measure --json`, or `start`/`stop` around other work, measure
+  its current. Power it off when done: it blocks itest on that watch. See
+  `docs/pbl/power.md`.
 - A port held by another session is in use: wait or ask, never kill the
   holder. See `docs/pbl/lab.md`.
 

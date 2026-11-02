@@ -23,7 +23,8 @@ watches:
     serial: /dev/tty.usbmodem0010500000001
     probe: 1366:1051:001050000000
 
-# Power supplies; one powers one watch at a time.
+# Power supplies (see docs/pbl/power.md for the types); one powers one
+# watch at a time.
 supplies:
   ppk2:
     type: ppk2
