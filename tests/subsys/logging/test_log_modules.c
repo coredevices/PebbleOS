@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include <pbl/kernel/compiler.h>
@@ -31,8 +32,6 @@ static uint8_t s_serial_level;
 static uint8_t s_flash_level;
 static bool s_serial_async;
 static bool s_flash_async;
-static bool s_irq_locked;
-static bool s_sched_locked;
 static char s_message[LOG_BUFFER_LENGTH];
 
 PebbleTask pebble_task_get_current(void) {
@@ -66,14 +65,6 @@ void sys_pbl_log(LogBinaryMessage *message, uint32_t flags) {
   kernel_pbl_log(message, flags);
 }
 
-bool pbl_irq_is_locked(void) {
-  return s_irq_locked;
-}
-
-bool pbl_sched_is_locked(void) {
-  return s_sched_locked;
-}
-
 static void prv_serial_process(const struct pbl_log_backend *backend,
                                const struct pbl_log_msg *msg) {
   s_serial_count++;
@@ -88,13 +79,19 @@ static const struct pbl_log_backend_api s_serial_api = {
 
 PBL_LOG_BACKEND_DEFINE(test_serial, s_serial_api, LOG_LEVEL_INFO, true);
 
-void pbl_log_advanced(const char *buffer, int length, bool async) {
-  const LogBinaryMessage *message = (const LogBinaryMessage *)buffer;
-  cl_assert_equal_i(length, sizeof(*message) + message->message_length);
+static void prv_flash_process(const struct pbl_log_backend *backend,
+                              const struct pbl_log_msg *msg) {
+  cl_assert_equal_i(msg->text_len, strlen(msg->text));
   s_flash_count++;
-  s_flash_level = message->log_level;
-  s_flash_async = async;
+  s_flash_level = msg->level;
+  s_flash_async = msg->flags & PBL_LOG_MSG_ASYNC;
 }
+
+static const struct pbl_log_backend_api s_flash_api = {
+  .process = prv_flash_process,
+};
+
+PBL_LOG_BACKEND_DEFINE(test_flash, s_flash_api, LOG_LEVEL_INFO, true);
 
 void test_log_modules__initialize(void) {
   PBL_LOG_MODULE_LEVEL_SET(test_runtime, CONFIG_TEST_RUNTIME_LOG_LEVEL);
@@ -102,10 +99,11 @@ void test_log_modules__initialize(void) {
   s_serial_count = s_flash_count = 0;
   s_serial_level = s_flash_level = 0;
   s_serial_async = s_flash_async = false;
-  s_irq_locked = s_sched_locked = false;
   s_message[0] = '\0';
   g_pbl_log_enabled = true;
   pbl_log_backend_set_level(PBL_LOG_BACKEND_GET(test_serial), LOG_LEVEL_INFO);
+  pbl_log_backend_set_level(PBL_LOG_BACKEND_GET(test_flash), LOG_LEVEL_INFO);
+  pbl_log_backend_enable(PBL_LOG_BACKEND_GET(test_flash));
 }
 
 void test_log_modules__default_filters_debug_without_evaluating_arguments(void) {
@@ -182,18 +180,33 @@ void test_log_modules__off_and_warning_levels(void) {
   cl_assert_equal_i(s_flash_count, 1);
 }
 
-void test_log_modules__global_disable_and_unsafe_contexts_still_apply(void) {
+void test_log_modules__global_disable_applies(void) {
   PBL_LOG_MODULE_LEVEL_SET(test_runtime, LOG_LEVEL_DEBUG);
   g_pbl_log_enabled = false;
   PBL_LOG_DBG("disabled");
   cl_assert_equal_i(s_serial_count, 0);
   cl_assert_equal_i(s_flash_count, 0);
   g_pbl_log_enabled = true;
-  s_irq_locked = true;
-  PBL_LOG_DBG("irq locked");
-  s_irq_locked = false;
-  s_sched_locked = true;
-  PBL_LOG_DBG("scheduler locked");
-  cl_assert_equal_i(s_serial_count, 2);
+  PBL_LOG_DBG("enabled");
+  cl_assert_equal_i(s_serial_count, 1);
+  cl_assert_equal_i(s_flash_count, 1);
+}
+
+void test_log_modules__backend_levels_and_disable(void) {
+  const struct pbl_log_backend *flash = PBL_LOG_BACKEND_GET(test_flash);
+  pbl_log(LOG_LEVEL_DEBUG, __FILE__, __LINE__, "debug");
+  cl_assert_equal_i(s_serial_count, 0);
   cl_assert_equal_i(s_flash_count, 0);
+  pbl_log_backend_set_level(flash, LOG_LEVEL_DEBUG);
+  pbl_log(LOG_LEVEL_DEBUG, __FILE__, __LINE__, "debug");
+  cl_assert_equal_i(s_serial_count, 0);
+  cl_assert_equal_i(s_flash_count, 1);
+  pbl_log_backend_disable(flash);
+  pbl_log(LOG_LEVEL_ERROR, __FILE__, __LINE__, "error");
+  cl_assert_equal_i(s_serial_count, 1);
+  cl_assert_equal_i(s_flash_count, 1);
+  pbl_log_backend_enable(flash);
+  pbl_log_backend_set_level(flash, LOG_LEVEL_INFO);
+  cl_assert(pbl_log_backend_get_by_name("test_flash") == flash);
+  cl_assert(pbl_log_backend_get_by_name("nope") == nullptr);
 }

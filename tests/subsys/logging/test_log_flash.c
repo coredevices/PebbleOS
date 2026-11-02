@@ -10,17 +10,17 @@
 #include <pbl/util/string.h>
 
 #include <clar.h>
-#include <debug/flash_logging.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
+#include <logging/backends/flash.h>
 
-void test_flash_logging__initialize(void) {
+void test_log_flash__initialize(void) {
   fake_spi_flash_init(0, BOARD_NOR_FLASH_SIZE);
 }
 
-void test_flash_logging__cleanup(void) {
+void test_log_flash__cleanup(void) {
   fake_flash_assert_untouched_outside(FLASH_REGION_DEBUG_DB_BEGIN, FLASH_REGION_DEBUG_DB_END);
   fake_spi_flash_cleanup();
 }
@@ -34,8 +34,8 @@ typedef struct {
 
 static ExpectedMessage s_msg;
 
-void test_flash_logging_get_info(uint32_t *tot_size, uint32_t *erase_unit_size,
-                                 uint32_t *chunk_size, uint32_t *page_hdr_size);
+void test_log_flash_get_info(uint32_t *tot_size, uint32_t *erase_unit_size, uint32_t *chunk_size,
+                             uint32_t *page_hdr_size);
 
 const uint8_t *version_get_build_id(size_t *out_len) {
   static uint8_t build_id[20] = {0xee, 0xd2, 0xbf, 0x50, 0x5b, 0x59, 0x04, 0xb5, 0x14, 0x98,
@@ -110,10 +110,10 @@ static void prv_flash_log_dump_completed_cb(bool success) {
 static void setup_and_test_expected_msg(char **msg_arr, int log_gen, int start_idx, int num_items) {
   for (int i = start_idx; i < num_items; i++) {
     char *msg = msg_arr[i];
-    uint32_t addr = flash_logging_log_start(strlen(msg));
-    cl_assert(addr != FLASH_LOG_INVALID_ADDR);
+    uint32_t addr = pbl_log__flash_storage_log_start(strlen(msg));
+    cl_assert(addr != PBL_LOG__FLASH_INVALID_ADDR);
 
-    bool rv = flash_logging_write((uint8_t *)msg, addr, strlen(msg));
+    bool rv = pbl_log__flash_storage_write((uint8_t *)msg, addr, strlen(msg));
     cl_assert(rv);
   }
 
@@ -128,7 +128,7 @@ static void setup_and_test_expected_msg(char **msg_arr, int log_gen, int start_i
 
   s_completed = false;
   bool success =
-      flash_dump_log_file(log_gen, prv_flash_log_line_dump, prv_flash_log_dump_completed_cb);
+      pbl_log_flash_dump(log_gen, prv_flash_log_line_dump, prv_flash_log_dump_completed_cb);
   cl_assert(success);
   while (!s_completed) {
     fake_system_task_callbacks_invoke_pending();
@@ -174,8 +174,8 @@ static void free_logs(char **msg_arr, int num_logs) {
 //
 
 //! Simple test to confirm that we can log and read back several messages
-void test_flash_logging__basic(void) {
-  flash_logging_init();
+void test_log_flash__basic(void) {
+  pbl_log__flash_storage_init();
 
   const char *test_messages[] = {
     "A simple test log message! Woohoo!", "Another message", "ABCDEFG 0123456789",
@@ -189,14 +189,14 @@ void test_flash_logging__basic(void) {
 
 //! Auto generate unique log messages of uniform length which span multiple log
 //! chunks. Try several log message lengths
-void test_flash_logging__multi_region(void) {
+void test_log_flash__multi_region(void) {
   const uint32_t header_overhead = 8 * 28;
   const uint32_t space_avail = 64 * 1024 - header_overhead;
 
   for (int log_len = 2; log_len < 128; log_len += 3) {
-    test_flash_logging__cleanup();
-    test_flash_logging__initialize();
-    flash_logging_init();
+    test_log_flash__cleanup();
+    test_log_flash__initialize();
+    pbl_log__flash_storage_init();
     int num_logs;
     char **logs = generate_unique_logs(space_avail, log_len, &num_logs);
     setup_and_test_expected_msg(logs, 0, 0, num_logs);
@@ -205,12 +205,12 @@ void test_flash_logging__multi_region(void) {
 }
 
 //!
-void test_flash_logging__wrap(void) {
-  flash_logging_init();
+void test_log_flash__wrap(void) {
+  pbl_log__flash_storage_init();
 
   uint32_t tot_size, erase_size, page_size, page_hdr_size;
 
-  test_flash_logging_get_info(&tot_size, &erase_size, &page_size, &page_hdr_size);
+  test_log_flash_get_info(&tot_size, &erase_size, &page_size, &page_hdr_size);
 
   int num_pages = tot_size / page_size;
 
@@ -241,15 +241,15 @@ void test_flash_logging__wrap(void) {
 
 //! Keep simulating reboots and generating new logs. Confirm that
 //! the most recent generations are not removed during reboots.
-void test_flash_logging__generations(void) {
+void test_log_flash__generations(void) {
   uint32_t tot_size, erase_size, page_size, page_hdr_size;
-  test_flash_logging_get_info(&tot_size, &erase_size, &page_size, &page_hdr_size);
+  test_log_flash_get_info(&tot_size, &erase_size, &page_size, &page_hdr_size);
 
   int gens_avail = (tot_size - erase_size) / page_size;
 
   char *log = malloc(100);
   for (int i = 0; i < 533; i++) {
-    flash_logging_init();
+    pbl_log__flash_storage_init();
 
     // Write the new message
     snprintf(log, 100, "Generation 0x%x", i);
@@ -296,18 +296,18 @@ static bool flash_log_line_dump_long_lived(uint8_t *msg, uint32_t tot_len) {
   return (true);
 }
 
-void test_flash_logging__long_lived_log(void) {
-  flash_logging_init();
+void test_log_flash__long_lived_log(void) {
+  pbl_log__flash_storage_init();
 
-  uint32_t start_addr = flash_logging_log_start(1);
+  uint32_t start_addr = pbl_log__flash_storage_log_start(1);
   char *msg = "h";
-  bool rv = flash_logging_write((uint8_t *)msg, start_addr, 1);
+  bool rv = pbl_log__flash_storage_write((uint8_t *)msg, start_addr, 1);
   cl_assert(rv);
 
   uint32_t tot_size, erase_size, page_size, page_hdr_size;
-  test_flash_logging_get_info(&tot_size, &erase_size, &page_size, &page_hdr_size);
+  test_log_flash_get_info(&tot_size, &erase_size, &page_size, &page_hdr_size);
 
-  uint32_t addr = FLASH_LOG_INVALID_ADDR;
+  uint32_t addr = PBL_LOG__FLASH_INVALID_ADDR;
   int loop_count = 0;
   char *log = malloc(100);
   int num_half_wraps = 0;
@@ -316,9 +316,9 @@ void test_flash_logging__long_lived_log(void) {
   while (num_half_wraps < tot_half_wraps) {
     loop_count++;
     snprintf(log, 100, "Loop Counter %d", loop_count);
-    addr = flash_logging_log_start(strlen(log));
-    cl_assert(addr != FLASH_LOG_INVALID_ADDR);
-    rv = flash_logging_write((uint8_t *)log, addr, strlen(log));
+    addr = pbl_log__flash_storage_log_start(strlen(log));
+    cl_assert(addr != PBL_LOG__FLASH_INVALID_ADDR);
+    rv = pbl_log__flash_storage_write((uint8_t *)log, addr, strlen(log));
     cl_assert(rv);
 
     if (addr == start_addr || (addr == (start_addr + erase_size - page_size))) {
@@ -327,12 +327,12 @@ void test_flash_logging__long_lived_log(void) {
   }
 
   // simulate a reboot
-  flash_logging_init();
+  pbl_log__flash_storage_init();
 
   // check to see that the most recent messages (largest loop count numbers)
   // are left
   s_completed = false;
-  rv = flash_dump_log_file(1, flash_log_line_dump_long_lived, prv_flash_log_dump_completed_cb);
+  rv = pbl_log_flash_dump(1, flash_log_line_dump_long_lived, prv_flash_log_dump_completed_cb);
   cl_assert(rv);
 
   while (!s_completed) {
@@ -344,19 +344,19 @@ void test_flash_logging__long_lived_log(void) {
 }
 
 //! Check error handling for some of the different edge cases
-void test_flash_logging__errors(void) {
-  flash_logging_init();
+void test_log_flash__errors(void) {
+  pbl_log__flash_storage_init();
 
-  uint32_t start_addr = flash_logging_log_start(0);
-  cl_assert_equal_i(start_addr, FLASH_LOG_INVALID_ADDR);
+  uint32_t start_addr = pbl_log__flash_storage_log_start(0);
+  cl_assert_equal_i(start_addr, PBL_LOG__FLASH_INVALID_ADDR);
 
   char *msg = "0123456789";
-  start_addr = flash_logging_log_start(10);
-  cl_assert(start_addr != FLASH_LOG_INVALID_ADDR);
-  bool rv = flash_logging_write((uint8_t *)msg, start_addr, strlen(msg));
+  start_addr = pbl_log__flash_storage_log_start(10);
+  cl_assert(start_addr != PBL_LOG__FLASH_INVALID_ADDR);
+  bool rv = pbl_log__flash_storage_write((uint8_t *)msg, start_addr, strlen(msg));
   cl_assert(rv);
 
-  rv = flash_logging_write((uint8_t *)msg, start_addr, strlen(msg));
+  rv = pbl_log__flash_storage_write((uint8_t *)msg, start_addr, strlen(msg));
   cl_assert(!rv);
 
   setup_and_test_expected_msg(&msg, 0, 1, 1);
@@ -365,8 +365,8 @@ void test_flash_logging__errors(void) {
 //! Make sure that when we chunk up our writes for a log message, the lines
 //! are saved as expected and that bogus writes after a record has been written
 //! do not take
-void test_flash_logging__multi_writes_per_log(void) {
-  flash_logging_init();
+void test_log_flash__multi_writes_per_log(void) {
+  pbl_log__flash_storage_init();
 
   const int log_len = 49;
   int num_logs = 0;
@@ -376,22 +376,22 @@ void test_flash_logging__multi_writes_per_log(void) {
     uint8_t write_sizes[4] = {log_len / 2, log_len / 4, log_len / 8, log_len};
 
     int bytes_remaining = log_len;
-    uint32_t addr = flash_logging_log_start(log_len);
-    cl_assert(addr != FLASH_LOG_INVALID_ADDR);
+    uint32_t addr = pbl_log__flash_storage_log_start(log_len);
+    cl_assert(addr != PBL_LOG__FLASH_INVALID_ADDR);
     char *curr_msg = logs[i];
     bool rv;
     for (int j = 0; j < ARRAY_LENGTH(write_sizes); j++) {
       int bytes_to_write = MIN(bytes_remaining, write_sizes[j]);
       int offset = log_len - bytes_remaining;
 
-      rv = flash_logging_write((uint8_t *)&curr_msg[offset], addr, bytes_to_write);
+      rv = pbl_log__flash_storage_write((uint8_t *)&curr_msg[offset], addr, bytes_to_write);
       cl_assert(rv);
       bytes_remaining -= bytes_to_write;
     }
 
     // try to write something past the end to ensure it doesn't take
     uint8_t buf[128] = {};
-    rv = flash_logging_write(&buf[0], addr, sizeof(buf));
+    rv = pbl_log__flash_storage_write(&buf[0], addr, sizeof(buf));
     cl_assert(!rv);
   }
 

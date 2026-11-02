@@ -260,22 +260,6 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 #define DEFAULT_LOG_LEVEL LOG_LEVEL_DEBUG
 #endif
 
-/**
- * @def FLASH_LOG_LEVEL
- * @brief Highest level written to the flash log, from the @c CONFIG_FLASH_LOG_LEVEL_ choice.
- */
-#if defined(CONFIG_FLASH_LOG_LEVEL_ERROR)
-#define FLASH_LOG_LEVEL LOG_LEVEL_ERROR
-#elifdef CONFIG_FLASH_LOG_LEVEL_WARNING
-#define FLASH_LOG_LEVEL LOG_LEVEL_WARNING
-#elifdef CONFIG_FLASH_LOG_LEVEL_DEBUG
-#define FLASH_LOG_LEVEL LOG_LEVEL_DEBUG
-#elifdef CONFIG_FLASH_LOG_LEVEL_DEBUG_VERBOSE
-#define FLASH_LOG_LEVEL LOG_LEVEL_DEBUG_VERBOSE
-#else
-#define FLASH_LOG_LEVEL LOG_LEVEL_INFO
-#endif
-
 #ifdef CONFIG_LOG_HASHED
 #include <pbl/logging/log_hashing.h>
 #endif

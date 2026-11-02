@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "flash.h"
+
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
@@ -9,7 +11,6 @@
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
-#include <debug/flash_logging.h>
 #include <flash_region/flash_region.h>
 #include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
@@ -46,7 +47,7 @@
 
 #define MAX_POSSIBLE_LOG_GENS (LOG_REGION_SIZE / LOG_PAGE_SIZE)
 
-static bool s_flash_logging_enabled = false;
+static bool s_enabled = false;
 
 typedef struct PBL_PACKED {
   uint32_t magic;
@@ -92,15 +93,15 @@ static CurrentLoggingState s_curr_state;
 // This is the state used while performing flash_log_file(). Each log message gets handled
 // by a separate system task callback
 typedef struct {
-  uint8_t page_index;                 // which page we are currently dumping
-  uint8_t num_pages;                  // number of pages to dump
-  uint8_t retry_count;                // How many retries we have performed at this offset
-  bool sent_build_id;                 // True after we've sent the build ID
-  uint16_t page_offset;               // current offset within the page
-  uint32_t log_start_addr;            // start address of the log file we are dumping
-  DumpLineCallback line_cb;           // Called to send each line
-  DumpCompletedCallback completed_cb; // Called when completed
-  uint8_t msg_buf[MAX_MSG_LEN];       // Message buffer
+  uint8_t page_index;                        // which page we are currently dumping
+  uint8_t num_pages;                         // number of pages to dump
+  uint8_t retry_count;                       // How many retries we have performed at this offset
+  bool sent_build_id;                        // True after we've sent the build ID
+  uint16_t page_offset;                      // current offset within the page
+  uint32_t log_start_addr;                   // start address of the log file we are dumping
+  pbl_log_flash_dump_line_cb_t line_cb;      // Called to send each line
+  pbl_log_flash_dump_done_cb_t completed_cb; // Called when completed
+  uint8_t msg_buf[MAX_MSG_LEN];              // Message buffer
 } DumpLogState;
 
 #define DUMP_LOG_MAX_RETRIES 3
@@ -209,7 +210,7 @@ static uint32_t prv_validate_flash_log_region(uint8_t *first_log_file_id) {
 static int prv_get_start_of_log_file(uint8_t log_file_id, uint32_t *start_page_addr) {
   uint8_t num_log_pages = 0;
   uint8_t prev_chunk_id = 0;
-  uint32_t log_start_addr = FLASH_LOG_INVALID_ADDR;
+  uint32_t log_start_addr = PBL_LOG__FLASH_INVALID_ADDR;
 
   for (uint32_t offset = 0; offset < LOG_REGION_SIZE; offset += LOG_PAGE_SIZE) {
     uint32_t flash_addr = FLASH_REGION_DEBUG_DB_BEGIN + offset;
@@ -229,7 +230,7 @@ static int prv_get_start_of_log_file(uint8_t log_file_id, uint32_t *start_page_a
 
     int32_t dist = serial_distance(prev_chunk_id, hdr.log_chunk_id, LOG_ID_BITWIDTH);
 
-    if (log_start_addr == FLASH_LOG_INVALID_ADDR) {
+    if (log_start_addr == PBL_LOG__FLASH_INVALID_ADDR) {
       // this is the first page we've found
       log_start_addr = flash_addr;
       dist = 0; // nothing else to compare against yet
@@ -270,11 +271,7 @@ static void prv_allocate_page_for_use(void) {
   s_curr_state.offset_in_log_page = sizeof(hdr);
 }
 
-void flash_logging_set_enabled(bool enabled) {
-  s_flash_logging_enabled = enabled;
-}
-
-void flash_logging_init(void) {
+void pbl_log__flash_storage_init(void) {
   s_curr_state = (CurrentLoggingState){};
 
   uint8_t prev_log_id = 0;
@@ -331,7 +328,7 @@ void flash_logging_init(void) {
 
 done: // we have allocated a region to be used
   prv_allocate_page_for_use();
-  flash_logging_set_enabled(true);
+  s_enabled = true;
 }
 
 //! Writes the log record header to flash and advances the
@@ -349,9 +346,9 @@ static void prv_write_flash_log_record_header(uint8_t msg_length) {
   s_curr_state.offset_in_log_page += sizeof(record_hdr);
 }
 
-uint32_t flash_logging_log_start(uint8_t msg_length) {
-  if ((msg_length == 0) || (msg_length > MAX_MSG_LEN) || !s_flash_logging_enabled) {
-    return FLASH_LOG_INVALID_ADDR;
+uint32_t pbl_log__flash_storage_log_start(uint8_t msg_length) {
+  if ((msg_length == 0) || (msg_length > MAX_MSG_LEN) || !s_enabled) {
+    return PBL_LOG__FLASH_INVALID_ADDR;
   }
 
   // bytes_remaining should always be 0, but if for some reason this gets called
@@ -383,8 +380,9 @@ done:
   return (s_curr_state.log_start_addr);
 }
 
-bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr, uint32_t read_length) {
-  if ((s_curr_state.bytes_remaining < read_length) || !s_flash_logging_enabled) {
+bool pbl_log__flash_storage_write(const uint8_t *data_to_write, uint32_t flash_addr,
+                                  uint32_t read_length) {
+  if ((s_curr_state.bytes_remaining < read_length) || !s_enabled) {
     return (false);
   }
 
@@ -403,8 +401,8 @@ bool flash_logging_write(const uint8_t *data_to_write, uint32_t flash_addr, uint
   return (true);
 }
 
-// Extract the next log message out of flash and send it using the DumpLineCallback.
-// This system task callback is used by flash_dump_log_file()
+// Extract the next log message out of flash and send it using the pbl_log_flash_dump_line_cb_t.
+// This system task callback is used by pbl_log_flash_dump()
 static void prv_dump_log_system_cb(void *context) {
   DumpStatus status = DumpStatus_DoneFailure;
   DumpLogState *state = (DumpLogState *)context;
@@ -492,8 +490,8 @@ exit:
   }
 }
 
-bool flash_dump_log_file(int generation, DumpLineCallback line_cb,
-                         DumpCompletedCallback completed_cb) {
+bool pbl_log_flash_dump(int generation, pbl_log_flash_dump_line_cb_t line_cb,
+                        pbl_log_flash_dump_done_cb_t completed_cb) {
   uint8_t log_file_id = generation_to_log_file_id(generation);
 
   uint32_t log_start_addr;
@@ -523,8 +521,8 @@ bool flash_dump_log_file(int generation, DumpLineCallback line_cb,
 }
 
 //! For unit tests
-void test_flash_logging_get_info(uint32_t *tot_size, uint32_t *erase_unit_size,
-                                 uint32_t *chunk_size, uint32_t *page_hdr_size) {
+void test_log_flash_get_info(uint32_t *tot_size, uint32_t *erase_unit_size, uint32_t *chunk_size,
+                             uint32_t *page_hdr_size) {
   *tot_size = LOG_REGION_SIZE;
   *erase_unit_size = ERASE_UNIT_SIZE;
   *chunk_size = LOG_PAGE_SIZE;

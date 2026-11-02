@@ -20,6 +20,7 @@
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/backend.h>
+#include <pbl/logging/backend_flash.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/boot_splash.h>
@@ -212,6 +213,10 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
 #if defined(CONFIG_MFG)
   mfg_info_update_constant_data();
+#endif
+
+#ifdef CONFIG_LOG_BACKEND_FLASH
+  pbl_log_flash_init();
 #endif
 
   debug_init(s_mcu_reboot_reason);

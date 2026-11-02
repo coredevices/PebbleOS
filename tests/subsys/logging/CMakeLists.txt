@@ -7,6 +7,14 @@ pbl_clar_test(test_pulse_logging
   DEFINES CONFIG_LOG_BACKEND_PULSE_LEVEL=200 PBL_NO_LINKER_SCRIPT
 )
 
+pbl_clar_test(test_log_flash
+  SOURCES
+    subsys/logging/backends/flash_storage.c
+    tests/fakes/fake_spi_flash.c
+  DEFINES DUMA_DISABLED
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_log_modules
   SOURCES
     subsys/logging/logging.c
