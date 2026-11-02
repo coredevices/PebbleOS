@@ -22,6 +22,8 @@
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
+#define SLEEP_END_CONFIRMATION_MINUTES 30
+
 // ------------------------------------------------------------------------------------
 // Figure out the cutoff times for sleep and step activities for today given the current time
 static void prv_get_earliest_end_times_utc(time_t utc_sec, time_t *sleep_earliest_end_utc,
@@ -359,9 +361,10 @@ static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t m
 // @param max_end_utc Only include sleep sessions that end BEFORE this time
 // @param last_processed_utc When activity sessions were computed, this is the UTC of the
 //        most recent minute we had access to when activities were computed.
-static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
-                                     time_t last_processed_utc) {
+static bool prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc, time_t last_processed_utc,
+                                     ActivitySleepState *sleep_state_out) {
   ActivityState *state = activity_private_state();
+  bool sleep_state_changed;
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
     // We will be filling in this structure based on the sleep sessions
@@ -437,25 +440,17 @@ static void prv_update_sleep_metrics(time_t now_utc, time_t max_end_utc,
       event_put(&e);
     }
 
-    if (sleep_data->cur_state != prev_sleep_data.cur_state) {
-      // Debug logging
+    sleep_state_changed = sleep_data->cur_state != prev_sleep_data.cur_state;
+    if (sleep_state_changed) {
       PBL_LOG_DBG("total_min: %" PRIu32 ", deep_min: %" PRIu32 ", state: %" PRIu32
-                  ", "
-                  "state_min: %" PRIu32 "",
+                  ", state_min: %" PRIu32,
                   sleep_data->total_minutes, sleep_data->restful_minutes, sleep_data->cur_state,
                   sleep_data->cur_state_elapsed_minutes);
-
-      PebbleEvent e = {
-        .type = PEBBLE_ACTIVITY_EVENT,
-        .activity_event = {
-          .type = PebbleActivityEvent_SleepStateChanged,
-          .sleep_state = sleep_data->cur_state,
-        },
-      };
-      event_put(&e);
+      *sleep_state_out = sleep_data->cur_state;
     }
   }
   pbl_mutex_unlock(&state->mutex);
+  return sleep_state_changed;
 }
 
 // --------------------------------------------------------------------------------------------
@@ -645,13 +640,35 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
   // Remove any activities that don't belong to "today" or that are ongoing
   activity_sessions_prv_remove_out_of_range_activity_sessions(utc_now, true /*remove_ongoing*/);
 
+  // Do not publish restored sessions as newly ended. Preserve an end that has not yet reached the
+  // sustained-awake confirmation window so it can still be confirmed after a restart.
+  for (uint16_t i = 0; i < state->activity_sessions_count; i++) {
+    const ActivitySession *restored_session = &state->activity_sessions[i];
+    if (restored_session->type != ActivitySessionType_Sleep) {
+      continue;
+    }
+    const time_t exit_utc =
+        restored_session->start_utc + restored_session->length_min * PBL_SEC_PER_MIN;
+    state->last_seen_sleep_end_event_exit_at_utc =
+        MAX(state->last_seen_sleep_end_event_exit_at_utc, exit_utc);
+  }
+  if (state->last_seen_sleep_end_event_exit_at_utc +
+          SLEEP_END_CONFIRMATION_MINUTES * PBL_SEC_PER_MIN >
+      utc_now) {
+    state->pending_sleep_end_event_exit_at_utc = state->last_seen_sleep_end_event_exit_at_utc;
+  }
+
   PBL_LOG_INFO("Restored %" PRIu16 " activities from storage", state->activity_sessions_count);
 }
 
 // --------------------------------------------------------------------------------------
-void PBL_NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
+bool PBL_NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec,
+                                                       bool *sleep_state_changed_out,
+                                                       ActivitySleepState *sleep_state_out) {
   ActivityState *state = activity_private_state();
   time_t last_sleep_processed_utc = activity_algorithm_get_last_sleep_utc();
+  bool primary_sleep_session_ended = false;
+  bool new_sleep_end_candidate = false;
 
   // Post process sleep sessions if we got any new sleep sessions that showed up
   if (state->sleep_sessions_modified) {
@@ -660,6 +677,17 @@ void PBL_NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
     activity_algorithm_post_process_sleep_sessions(state->activity_sessions_count,
                                                    state->activity_sessions);
     state->sleep_sessions_modified = false;
+
+    for (uint16_t i = 0; i < state->activity_sessions_count; i++) {
+      const ActivitySession *session = &state->activity_sessions[i];
+      const time_t exit_utc = session->start_utc + session->length_min * PBL_SEC_PER_MIN;
+      if (session->type == ActivitySessionType_Sleep && !session->ongoing &&
+          exit_utc > state->last_seen_sleep_end_event_exit_at_utc) {
+        state->last_seen_sleep_end_event_exit_at_utc = exit_utc;
+        state->pending_sleep_end_event_exit_at_utc = exit_utc;
+        new_sleep_end_candidate = true;
+      }
+    }
   }
 
   // Update sleep metrics
@@ -670,10 +698,23 @@ void PBL_NOINLINE activity_sessions_prv_minute_handler(time_t utc_sec) {
   // that the end BEFORE ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY today.
   int last_sleep_utc_of_day =
       time_util_get_midnight_of(utc_sec) + ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * PBL_SEC_PER_MIN;
-  prv_update_sleep_metrics(utc_sec, last_sleep_utc_of_day, last_sleep_processed_utc);
+  *sleep_state_changed_out = prv_update_sleep_metrics(utc_sec, last_sleep_utc_of_day,
+                                                      last_sleep_processed_utc, sleep_state_out);
+
+  if (!new_sleep_end_candidate && (state->sleep_data.cur_state == ActivitySleepStateLightSleep ||
+                                   state->sleep_data.cur_state == ActivitySleepStateRestfulSleep)) {
+    // A new sleep cycle means the previous wake was only a night waking.
+    state->pending_sleep_end_event_exit_at_utc = 0;
+  } else if (state->sleep_data.cur_state == ActivitySleepStateAwake &&
+             state->sleep_data.cur_state_elapsed_minutes >= SLEEP_END_CONFIRMATION_MINUTES &&
+             state->pending_sleep_end_event_exit_at_utc != 0) {
+    primary_sleep_session_ended = true;
+    state->pending_sleep_end_event_exit_at_utc = 0;
+  }
 
   // Log any new activities we detected to the phone
   prv_log_activities(utc_sec);
+  return primary_sleep_session_ended;
 }
 
 // ------------------------------------------------------------------------------------------------

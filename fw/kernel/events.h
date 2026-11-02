@@ -722,6 +722,7 @@ typedef enum PebbleActivityEventType {
   PebbleActivityEvent_TrackingStarted,
   PebbleActivityEvent_TrackingStopped,
   PebbleActivityEvent_SleepStateChanged,
+  PebbleActivityEvent_SleepSessionEnded,
 
   PebbleActivityEventNum
 } PebbleActivityEventType;

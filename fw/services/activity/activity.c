@@ -858,6 +858,9 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
 // We use PBL_NOINLINE to reduce the stack requirements during the minute handler (see PBL-38130)
 static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
   bool need_history_update_event;
+  bool sleep_state_changed;
+  bool primary_sleep_session_ended;
+  ActivitySleepState sleep_state = ActivitySleepStateUnknown;
   uint16_t cur_day_index;
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
@@ -865,7 +868,8 @@ static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
     need_history_update_event = (cur_day_index != s_activity_state.cur_day_index);
 
     // Call the activity sessions minute handler
-    activity_sessions_prv_minute_handler(utc_sec);
+    primary_sleep_session_ended =
+        activity_sessions_prv_minute_handler(utc_sec, &sleep_state_changed, &sleep_state);
 
     // Update our backing store if necessary
     prv_update_storage(utc_sec);
@@ -902,6 +906,27 @@ static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
 #endif
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
+
+  if (sleep_state_changed) {
+    PebbleEvent event = {
+      .type = PEBBLE_ACTIVITY_EVENT,
+      .activity_event = {
+        .type = PebbleActivityEvent_SleepStateChanged,
+        .sleep_state = sleep_state,
+      },
+    };
+    event_put(&event);
+  }
+
+  if (primary_sleep_session_ended) {
+    PebbleEvent event = {
+      .type = PEBBLE_ACTIVITY_EVENT,
+      .activity_event = {
+        .type = PebbleActivityEvent_SleepSessionEnded,
+      },
+    };
+    event_put(&event);
+  }
 
   // Send the history update event now if history has changed
   if (need_history_update_event) {

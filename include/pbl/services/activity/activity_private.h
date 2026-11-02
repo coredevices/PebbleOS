@@ -594,6 +594,10 @@ typedef struct {
 
   /** A new sleep session was registered. */
   bool sleep_sessions_modified;
+  /** Latest primary sleep session end observed by the event publisher, UTC. */
+  time_t last_seen_sleep_end_event_exit_at_utc;
+  /** End of a primary sleep session awaiting sustained-awake confirmation, UTC. */
+  time_t pending_sleep_end_event_exit_at_utc;
 
   // Exit time for the last sleep/step activities we logged. Used to prevent logging the same event
   // more than once.
@@ -761,8 +765,12 @@ void activity_sessions_prv_delete_activity_session(ActivitySession *session);
  * @brief Run the once a minute session maintenance.
  *
  * @param utc_sec Current UTC time.
+ * @param[out] sleep_state_changed_out Whether the current sleep state changed.
+ * @param[out] sleep_state_out New sleep state when it changed.
+ * @return Whether a primary sleep session ended after sustained waking.
  */
-void activity_sessions_prv_minute_handler(time_t utc_sec);
+bool activity_sessions_prv_minute_handler(time_t utc_sec, bool *sleep_state_changed_out,
+                                          ActivitySleepState *sleep_state_out);
 
 /**
  * @brief Send a session to data logging.

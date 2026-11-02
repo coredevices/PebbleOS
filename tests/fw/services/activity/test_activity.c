@@ -2107,16 +2107,20 @@ void test_activity__migrate_settings_v2(void) {
 static PebbleEvent s_captured_sleep_event = {};
 static int s_num_captured_sleep_events = 0;
 static int s_num_captured_sleep_state_events = 0;
+static int s_num_captured_sleep_session_end_events = 0;
 static uint32_t s_captured_sleep_state_mask = 0;
 static void prv_fake_sleep_event_cb(PebbleEvent *event) {
   if ((event->type == PEBBLE_HEALTH_SERVICE_EVENT) &&
       (event->health_event.type == HealthEventSleepUpdate)) {
     s_captured_sleep_event = *event;
     s_num_captured_sleep_events++;
-  } else if ((event->type == PEBBLE_ACTIVITY_EVENT)
-             && (event->activity_event.type == PebbleActivityEvent_SleepStateChanged)) {
+  } else if ((event->type == PEBBLE_ACTIVITY_EVENT) &&
+             (event->activity_event.type == PebbleActivityEvent_SleepStateChanged)) {
     s_num_captured_sleep_state_events++;
     s_captured_sleep_state_mask |= 1 << event->activity_event.sleep_state;
+  } else if ((event->type == PEBBLE_ACTIVITY_EVENT) &&
+             (event->activity_event.type == PebbleActivityEvent_SleepSessionEnded)) {
+    s_num_captured_sleep_session_end_events++;
   }
 }
 
@@ -2167,6 +2171,7 @@ void test_activity__health_events(void) {
   s_captured_sleep_event = (PebbleEvent){};
   s_num_captured_sleep_events = 0;
   s_num_captured_sleep_state_events = 0;
+  s_num_captured_sleep_session_end_events = 0;
   s_captured_sleep_state_mask = 0;
   prv_feed_canned_accel_data(60 * PBL_SEC_PER_MIN, 0, ActivitySleepStateLightSleep);
   prv_feed_canned_accel_data(50 * PBL_SEC_PER_MIN, 0, ActivitySleepStateRestfulSleep);
@@ -2176,9 +2181,8 @@ void test_activity__health_events(void) {
   prv_feed_canned_accel_data(60 * PBL_SEC_PER_MIN, 0, ActivitySleepStateLightSleep);
   prv_feed_canned_accel_data(50 * PBL_SEC_PER_MIN, 0, ActivitySleepStateRestfulSleep);
 
-  // Wait long enough for our recompute sleep logic to run.
-  prv_feed_canned_accel_data(PBL_SEC_PER_MIN * ACTIVITY_SESSION_UPDATE_MIN, 60,
-                             ActivitySleepStateAwake);
+  // Stay awake long enough to confirm that this was the end of the night's sleep.
+  prv_feed_canned_accel_data(45 * PBL_SEC_PER_MIN, 60, ActivitySleepStateAwake);
 
   // See if we got the expected sleep events
   cl_assert(s_num_captured_sleep_events > 0);
@@ -2187,12 +2191,12 @@ void test_activity__health_events(void) {
   cl_assert_equal_i(event.type, PEBBLE_HEALTH_SERVICE_EVENT);
   cl_assert_equal_i(event.health_event.type, HealthEventSleepUpdate);
 
-  const uint32_t expected_sleep_state_mask =
-      (1 << ActivitySleepStateAwake) |
-      (1 << ActivitySleepStateRestfulSleep) |
-      (1 << ActivitySleepStateLightSleep);
+  const uint32_t expected_sleep_state_mask = (1 << ActivitySleepStateAwake) |
+                                             (1 << ActivitySleepStateRestfulSleep) |
+                                             (1 << ActivitySleepStateLightSleep);
   cl_assert_equal_i(s_num_captured_sleep_state_events, 6);
   cl_assert_equal_i(s_captured_sleep_state_mask, expected_sleep_state_mask);
+  cl_assert_equal_i(s_num_captured_sleep_session_end_events, 1);
 
   // -----------------------------------
   // Test that we receive history update events
