@@ -73,42 +73,31 @@ function(pbl_test_broken)
   set_property(GLOBAL APPEND PROPERTY PBL_TEST_BROKEN ${ARGN})
 endfunction()
 
-# A test platform is an SDK platform: its Kconfig symbol and colour
-# depth. Tests load no defconfig, so the symbols the firmware sources
-# expect are injected here. No board symbol is defined.
+# A test platform is an SDK platform: its Kconfig.platform symbols and
+# colour depth. Tests load no defconfig, so the symbols the firmware
+# sources expect are injected here. No board symbol is defined.
 function(_pbl_test_platform_defines platform out_defines out_bitdepth)
-  if(platform STREQUAL "flint")
-    set(bitdepth 1)
-    set(display 144 168 144 168)
-  elseif(platform STREQUAL "emery")
+  get_property(defines GLOBAL PROPERTY PBL_TEST_PLATFORM_${platform})
+  if(NOT defines)
+    execute_process(
+      COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/platform_config.py ${platform}
+      RESULT_VARIABLE ret
+      OUTPUT_VARIABLE defines
+    )
+    if(NOT ret EQUAL 0)
+      message(FATAL_ERROR "Cannot evaluate test platform '${platform}'")
+    endif()
+    set_property(GLOBAL PROPERTY PBL_TEST_PLATFORM_${platform} "${defines}")
+    set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+      ${PBL_BASE}/Kconfig.platform ${PBL_BASE}/tools/cmake/platform_config.py
+      ${PBL_BASE}/tools/pebble_sdk_platform.py)
+  endif()
+
+  if("CONFIG_PLATFORM_COLOR=1" IN_LIST defines)
     set(bitdepth 8)
-    set(display 200 228 144 168)
-  elseif(platform STREQUAL "gabbro")
-    set(bitdepth 8)
-    set(display 260 260 180 180)
   else()
-    message(FATAL_ERROR "Unknown test platform '${platform}'")
+    set(bitdepth 1)
   endif()
-  string(TOUPPER ${platform} upper)
-  set(defines CONFIG_PLATFORM_${upper}=1)
-  if(bitdepth EQUAL 8)
-    list(APPEND defines CONFIG_PLATFORM_COLOR=1)
-  endif()
-  if(platform STREQUAL "gabbro")
-    list(APPEND defines CONFIG_PLATFORM_ROUND=1)
-  endif()
-  list(GET display 0 width)
-  list(GET display 1 height)
-  list(GET display 2 legacy_width)
-  list(GET display 3 legacy_height)
-  list(APPEND defines
-    CONFIG_PLATFORM_DISPLAY_WIDTH=${width}
-    CONFIG_PLATFORM_DISPLAY_HEIGHT=${height}
-    CONFIG_PLATFORM_LEGACY_2X_DISPLAY_WIDTH=${legacy_width}
-    CONFIG_PLATFORM_LEGACY_2X_DISPLAY_HEIGHT=${legacy_height}
-    CONFIG_PLATFORM_LEGACY_3X_DISPLAY_WIDTH=${legacy_width}
-    CONFIG_PLATFORM_LEGACY_3X_DISPLAY_HEIGHT=${legacy_height}
-  )
 
   # app_manager.c sizes app segments from these; the values are the ones
   # the old sdk_memory_limits.auto.h test override carried.

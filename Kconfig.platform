@@ -1,0 +1,65 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# SDK platforms and the properties apps are built against. Self-contained,
+# so tools can evaluate it without a board.
+
+choice
+    prompt "SDK platform"
+config PLATFORM_EMERY
+    bool "Emery"
+    select PLATFORM_COLOR
+config PLATFORM_FLINT
+    bool "Flint"
+config PLATFORM_GABBRO
+    bool "Gabbro"
+    select PLATFORM_COLOR
+    select PLATFORM_ROUND
+endchoice
+
+# Display properties apps are built against. The display hardware may differ;
+# its own properties belong to its driver.
+
+config PLATFORM_COLOR
+    bool
+    help
+      8-bit color display, black and white otherwise.
+
+config PLATFORM_ROUND
+    bool
+    help
+      Round display, rectangular otherwise.
+
+config PLATFORM_DISPLAY_WIDTH
+    int
+    default 200 if PLATFORM_EMERY
+    default 144 if PLATFORM_FLINT
+    default 260 if PLATFORM_GABBRO
+
+config PLATFORM_DISPLAY_HEIGHT
+    int
+    default 228 if PLATFORM_EMERY
+    default 168 if PLATFORM_FLINT
+    default 260 if PLATFORM_GABBRO
+
+# Display size given to apps of each legacy SDK execution environment.
+
+config PLATFORM_LEGACY_2X_DISPLAY_WIDTH
+    int
+    default 180 if PLATFORM_GABBRO
+    default 144
+
+config PLATFORM_LEGACY_2X_DISPLAY_HEIGHT
+    int
+    default 180 if PLATFORM_GABBRO
+    default 168
+
+config PLATFORM_LEGACY_3X_DISPLAY_WIDTH
+    int
+    default 180 if PLATFORM_GABBRO
+    default 144
+
+config PLATFORM_LEGACY_3X_DISPLAY_HEIGHT
+    int
+    default 180 if PLATFORM_GABBRO
+    default 168
