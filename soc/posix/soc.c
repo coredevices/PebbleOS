@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/init.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
 
 #include <kernel/util/idle.h>
@@ -71,6 +72,10 @@ void pbl_soc_idle(pbl_tick_t max_ticks) {
 
 bool pbl_soc_tick_enable(void) {
   return true;
+}
+
+[[noreturn]] void pbl_soc_reset(void) {
+  posix_host_reboot();
 }
 
 void pbl_analytics_external_collect_cpu_stats(void) {
