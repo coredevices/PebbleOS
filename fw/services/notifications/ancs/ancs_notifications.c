@@ -37,6 +37,32 @@ static const Uuid uuid_calendar_data_source = UUID_CALENDAR_DATA_SOURCE;
 
 static time_t s_session_lost_time;
 
+// Diagnostic: silent record of handled notifications, dumped by `bt ancs_notif_diag`.
+#define DIAG_ENTRIES 8
+
+struct diag_entry {
+  uint32_t uid;
+  time_t ts;
+  time_t lost;
+  time_t now;
+  char result;
+  bool recovered;
+};
+
+static struct diag_entry s_diag_entries[DIAG_ENTRIES];
+static uint32_t s_diag_count;
+
+static void prv_diag_record(uint32_t uid, time_t ts, char result, bool recovered) {
+  s_diag_entries[s_diag_count++ % DIAG_ENTRIES] = (struct diag_entry){
+    .uid = uid,
+    .ts = ts,
+    .lost = s_session_lost_time,
+    .now = rtc_get_time(),
+    .result = result,
+    .recovered = recovered,
+  };
+}
+
 static void prv_dismiss_notification(const TimelineItem *notification) {
   const TimelineItemAction *action = timeline_item_find_dismiss_action(notification);
 
@@ -334,6 +360,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
     const bool has_valid_date = date && (ancs_notifications_util_parse_timestamp(date) != 0);
     if (prv_should_ignore_because_not_missed(has_valid_date, timestamp)) {
       PBL_LOG_DBG("Ignoring pre-existing ANCS notification: %" PRIu32, uid);
+      prv_diag_record(uid, timestamp, 'I', true);
       goto cleanup;
     }
   }
@@ -387,6 +414,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
     const bool alert = !is_recovered || (timestamp >= (rtc_get_time() - RECOVERED_ALERT_MAX_AGE_S));
     PBL_LOG_DBG("New ANCS notification: %" PRIu32 " (recovered=%d, alert=%d)", uid, is_recovered,
                 alert);
+    prv_diag_record(uid, timestamp, alert ? 'A' : 'S', is_recovered);
     prv_handle_new_ancs_notif(notification, alert);
   }
 
@@ -460,3 +488,21 @@ void ancs_notifications_handle_access_denied(void) {
   notifications_add_notification(item);
   timeline_item_destroy(item);
 }
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_ancs_notif_diag(const struct pbl_shell *sh, size_t argc, char **argv) {
+  const uint32_t count = s_diag_count;
+  const uint32_t first = (count > DIAG_ENTRIES) ? (count - DIAG_ENTRIES) : 0;
+  for (uint32_t i = first; i < count; i++) {
+    const struct diag_entry *e = &s_diag_entries[i % DIAG_ENTRIES];
+    pbl_shell_print(sh, "ancs_notif_diag %c uid=%" PRIu32 " recovered=%d ts=%ld lost=%ld now=%ld",
+                    e->result, e->uid, e->recovered, (long)e->ts, (long)e->lost, (long)e->now);
+  }
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, ancs_notif_diag, nullptr, "Dump the handled ANCS notifications",
+                     prv_cmd_ancs_notif_diag, 0, 0);
+#endif

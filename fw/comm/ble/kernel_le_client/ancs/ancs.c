@@ -619,6 +619,36 @@ static bool s_connected_ticks_valid;
 static bool s_session_active = false;
 static bool s_had_session = false;
 
+// Diagnostic: silent record of the post-connection window, dumped by `bt ancs_diag`.
+#define DIAG_EVENTS 16
+
+struct diag_event {
+  RtcTicks ticks;
+  uint32_t uid;
+  uint32_t since_ms;
+  char type;
+  bool valid;
+  bool just;
+  bool had;
+  bool active;
+};
+
+static struct diag_event s_diag_events[DIAG_EVENTS];
+static uint32_t s_diag_count;
+
+static void prv_diag_record(char type, uint32_t uid, uint32_t since_ms, bool just) {
+  s_diag_events[s_diag_count++ % DIAG_EVENTS] = (struct diag_event){
+    .ticks = rtc_get_ticks(),
+    .uid = uid,
+    .since_ms = since_ms,
+    .type = type,
+    .valid = s_connected_ticks_valid,
+    .just = just,
+    .had = s_had_session,
+    .active = s_session_active,
+  };
+}
+
 static void prv_start_post_connection_ignore_window(void) {
   s_connected_ticks = rtc_get_ticks();
   s_connected_ticks_valid = true;
@@ -943,6 +973,7 @@ static ANCSCharacteristic prv_get_id_for_characteristic(
 }
 
 static void prv_put_ancs_disconnected_event(void) {
+  prv_diag_record('D', 0, 0, prv_just_connected());
   if (s_session_active) {
     s_session_active = false;
     s_had_session = true;
@@ -972,6 +1003,7 @@ void ancs_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
       prv_ancs_is_alive_start_tracking();
       prv_start_post_connection_ignore_window();
       s_session_active = true;
+      prv_diag_record('S', 0, 0, prv_just_connected());
     }
   } else {
     PBL_LOG_ERR("Failed to subscribe charx: %u (error=%u)", characteristic_id, error);
@@ -1085,6 +1117,12 @@ static void prv_handle_ns_notification(uint32_t length, const uint8_t *notificat
   // Handle the EventID
   switch (nsnotification->event_id) {
     case EventIDNotificationAdded:
+      if (nsnotification->event_flags & EventFlagPreExisting) {
+        const RtcTicks now = rtc_get_ticks();
+        prv_diag_record('P', nsnotification->uid,
+                        (uint32_t)((now - s_connected_ticks) * 1000 / RTC_TICKS_HZ),
+                        prv_just_connected());
+      }
       // In iOS 8.2 several apps (especially mail.app) seem to be setting the pre-existing flag
       // when they shouldn't. This appeared to be fixed in iOS 9 beta 1.
       // By skipping the pre-existing check we will re-receive all the notifications
@@ -1290,3 +1328,25 @@ void ancs_destroy(void) {
   s_ancs_client = nullptr;
   prv_put_ancs_disconnected_event();
 }
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_ancs_diag(const struct pbl_shell *sh, size_t argc, char **argv) {
+  const uint32_t count = s_diag_count;
+  const uint32_t first = (count > DIAG_EVENTS) ? (count - DIAG_EVENTS) : 0;
+  pbl_shell_print(sh, "now=%" PRIu32 " count=%" PRIu32, (uint32_t)rtc_get_ticks(), count);
+  for (uint32_t i = first; i < count; i++) {
+    const struct diag_event *e = &s_diag_events[i % DIAG_EVENTS];
+    pbl_shell_print(sh,
+                    "ancs_diag %c ticks=%" PRIu32 " uid=%" PRIu32 " since_ms=%" PRIu32
+                    " valid=%d just=%d had=%d active=%d",
+                    e->type, (uint32_t)e->ticks, e->uid, e->since_ms, e->valid, e->just, e->had,
+                    e->active);
+  }
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, ancs_diag, nullptr, "Dump the ANCS connection window record",
+                     prv_cmd_ancs_diag, 0, 0);
+#endif
