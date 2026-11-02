@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # A lab: the hardware wired to this host. Pass it with --lab (or
-# $PBL_ITEST_LAB) and the harness takes the setup for the build from it:
+# $PBL_LAB) and the harness takes the setup for the build from it:
 # the watch running its board, the supply powering it, and a dongle for the
 # phone. Command-line options override it.
 
