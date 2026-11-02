@@ -403,6 +403,20 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
   pbl_mutex_unlock(&s_touch_mutex);
 }
 
+// Reported X and Y ranges, after the touchscreen's axis swap.
+static uint16_t prv_range_x(void) {
+  return TOUCH->props.swapped_x_y ? TOUCH->props.size_y : TOUCH->props.size_x;
+}
+
+static uint16_t prv_range_y(void) {
+  return TOUCH->props.swapped_x_y ? TOUCH->props.size_x : TOUCH->props.size_y;
+}
+
+// Maps a coordinate from the touchscreen's range to the framebuffer's.
+static int16_t prv_scale(int32_t value, uint16_t range, int16_t fb_range) {
+  return (int16_t)(value * fb_range / range);
+}
+
 // Input reports are built by a single driver context, so the pending report needs no lock.
 static struct {
   bool has_sample;
@@ -424,9 +438,9 @@ static void prv_input_cb(const struct pbl_input_event *evt, void *user_data) {
       break;
     case PBL_INPUT_EV_ABS:
       if (evt->code == PBL_INPUT_ABS_X) {
-        s_report.x = (int16_t)evt->value;
+        s_report.x = prv_scale(evt->value, prv_range_x(), DISP_COLS);
       } else if (evt->code == PBL_INPUT_ABS_Y) {
-        s_report.y = (int16_t)evt->value;
+        s_report.y = prv_scale(evt->value, prv_range_y(), DISP_ROWS);
       } else {
         return;
       }
