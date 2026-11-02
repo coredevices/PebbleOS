@@ -46,7 +46,6 @@ config FLASH_POSIX
 
 config FLASH_SHELL
     bool "Shell commands"
-    default y
     depends on SHELL
     help
       The flash shell command, to inspect, erase and test the flash.

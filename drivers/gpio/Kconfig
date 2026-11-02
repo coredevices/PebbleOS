@@ -39,7 +39,6 @@ config GPIO_NPM1300
 
 config GPIO_SHELL
     bool "Shell commands"
-    default y
     depends on SHELL
     help
       The gpio shell command, to list the ports and to read, drive,
