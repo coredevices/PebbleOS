@@ -317,10 +317,12 @@ static status_t prv_migrate_time32(TimelineItemStorage *storage, const char *leg
     return rv;
   }
 
-  // Size the new file up front: every item grows by its timestamp
+  // Size the new file up front: every item grows by its timestamp, and its record header grows
+  // too once record times need 64 bits.
   int items = 0;
   settings_file_each(&old_file, prv_count_item_cb, &items);
-  const int growth = (int)(sizeof(SerializedTimelineItemHeader) - TIMELINE_ITEM_HEADER_TIME32_SIZE);
+  const int growth = (int)(sizeof(SerializedTimelineItemHeader) - TIMELINE_ITEM_HEADER_TIME32_SIZE +
+                           sizeof(SettingsRecordHeaderTime64) - sizeof(SettingsRecordHeaderTime32));
   const int needed = old_file.used_space + (items + 1) * growth;
 
   // Start over from the old file, also after an earlier attempt or a downgrade

@@ -377,7 +377,7 @@ static bool prv_print_notif_pref_db(SettingsFile *file, SettingsRecordInfo *info
   pbl_shell_print(sh, "%s", app_id);
 
   pbl_shell_print(sh, "Dirty: %s", info->dirty ? "Yes" : "No");
-  pbl_shell_print(sh, "Last modified: %" PRIu32, info->last_modified);
+  pbl_shell_print(sh, "Last modified: %" PRId64, (int64_t)info->last_modified);
 
   SerializedNotifPrefs *serialized_prefs = nullptr;
   prv_get_serialized_prefs(file, (uint8_t *)app_id, info->key_len, &serialized_prefs);

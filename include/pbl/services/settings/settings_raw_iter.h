@@ -4,7 +4,9 @@
 #pragma once
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <time.h>
 
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
@@ -18,8 +20,9 @@
  *
  * Internal to the settings file implementation; use settings_file_each() instead.
  *
- * A settings file is a @ref SettingsFileHeader followed by records, each a
- * @ref SettingsRecordHeader, the key and the value. Unwritten flash (all ones) marks the end.
+ * A settings file is a @ref SettingsFileHeader followed by records, each a record header, the
+ * key and the value. Unwritten flash (all ones) marks the end. The record header holds a 32-bit
+ * time in version 1 files and a 64-bit one in version 2 files.
  * Record flags are active low: a flag is set by clearing its bit, so it can be written in place.
  *
  * Any PFS error during iteration is treated as a fatal logic error: the file is removed and the
@@ -29,8 +32,10 @@
 
 /** @brief Magic at the start of every settings file. */
 #define SETTINGS_FILE_MAGIC "set"
-/** @brief Current settings file format version. */
-#define SETTINGS_FILE_VERSION 1
+/** @brief Latest settings file format version, with 64-bit record times. */
+#define SETTINGS_FILE_VERSION 2
+/** @brief Settings file format version with 32-bit record times. */
+#define SETTINGS_FILE_VERSION_TIME32 1
 
 /** @brief Settings file header. */
 typedef struct PBL_PACKED {
@@ -72,7 +77,7 @@ static_assert(sizeof((SettingsFileHeader){}.magic) == sizeof(SETTINGS_FILE_MAGIC
 static_assert(KEY_LEN_BITS + VAL_LEN_BITS + FLAGS_BITS == 24,
               "The record header bitfields must add up to 24!");
 
-/** @brief Record header. */
+/** @brief Record header of version 1 files. */
 typedef struct PBL_PACKED {
   /** Modification time, UTC seconds. */
   uint32_t last_modified;
@@ -84,7 +89,48 @@ typedef struct PBL_PACKED {
   unsigned int key_len : KEY_LEN_BITS;
   /** Value length in bytes, 0 for a deleted record. */
   unsigned int val_len : VAL_LEN_BITS;
+} SettingsRecordHeaderTime32;
+
+/** @brief Record header of version 2 files. */
+typedef struct PBL_PACKED {
+  /** Modification time, UTC seconds. */
+  int64_t last_modified;
+  /** pbl_crc8_reversed() of the key, to skip non-matching records quickly. */
+  uint8_t key_hash;
+  /** Active-low @c SETTINGS_FLAG_* bits. */
+  uint8_t flags : FLAGS_BITS;
+  /** Key length in bytes. */
+  unsigned int key_len : KEY_LEN_BITS;
+  /** Value length in bytes, 0 for a deleted record. */
+  unsigned int val_len : VAL_LEN_BITS;
+} SettingsRecordHeaderTime64;
+
+/**
+ * @brief Record header, independent of the file version.
+ *
+ * An all-ones header, -1 time included, marks the end of the records.
+ */
+typedef struct {
+  /** Modification time, UTC seconds. */
+  int64_t last_modified;
+  /** pbl_crc8_reversed() of the key, to skip non-matching records quickly. */
+  uint8_t key_hash;
+  /** Active-low @c SETTINGS_FLAG_* bits. */
+  uint8_t flags : FLAGS_BITS;
+  /** Key length in bytes. */
+  unsigned int key_len : KEY_LEN_BITS;
+  /** Value length in bytes, 0 for a deleted record. */
+  unsigned int val_len : VAL_LEN_BITS;
 } SettingsRecordHeader;
+
+/**
+ * @brief Whether a record time can be stored in a version 1 file.
+ *
+ * The all-ones time is reserved for the end marker.
+ */
+static inline bool settings_record_time_fits_time32(int64_t t) {
+  return t >= 0 && t < UINT32_MAX;
+}
 
 /**
  * @brief Cursor over the records of a settings file.
@@ -136,6 +182,13 @@ void settings_raw_iter_write_file_header(SettingsRawIter *iter, SettingsFileHead
  * @param iter Iterator.
  */
 void settings_raw_iter_begin(SettingsRawIter *iter);
+
+/**
+ * @brief Size of a record header in the file.
+ * @param iter Iterator.
+ * @return Size in bytes, which depends on the file version.
+ */
+int settings_raw_iter_hdr_size(const SettingsRawIter *iter);
 
 /**
  * @brief Start a search from the current record.

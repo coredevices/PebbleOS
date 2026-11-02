@@ -627,7 +627,7 @@ static void prv_delete_other_ble_bondings(pbl_bt_bonding_id_t keep_id) {
 
 typedef struct {
   pbl_bt_bonding_id_t key_out;
-  uint32_t last_modified_out;
+  time_t last_modified_out;
   uint8_t ble_count;
 } MostRecentBleItrData;
 

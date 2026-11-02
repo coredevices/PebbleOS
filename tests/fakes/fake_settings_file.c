@@ -18,7 +18,7 @@ struct {
   uint32_t val_lens[UINT8_MAX];
   uint32_t key_lens[UINT8_MAX];
   bool dirty[UINT8_MAX];
-  uint32_t last_modified[UINT8_MAX];
+  time_t last_modified[UINT8_MAX];
 } s_settings_file;
 
 void fake_settings_file_reset(void) {
@@ -80,7 +80,7 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, 
 }
 
 status_t settings_file_set_with_timestamp(SettingsFile *file, const void *key, size_t key_len,
-                                          const void *val, size_t val_len, uint32_t timestamp) {
+                                          const void *val, size_t val_len, time_t timestamp) {
   void *val_copy = malloc(val_len);
   void *key_copy = malloc(key_len);
   cl_assert(val_copy && key_copy);
@@ -242,7 +242,7 @@ static struct {
   uint32_t val_lens[UINT8_MAX];
   uint32_t key_lens[UINT8_MAX];
   bool dirty[UINT8_MAX];
-  uint32_t last_modified[UINT8_MAX];
+  time_t last_modified[UINT8_MAX];
 } s_rewrite_old;
 
 static void prv_get_old_key(SettingsFile *file, void *key, size_t key_len) {

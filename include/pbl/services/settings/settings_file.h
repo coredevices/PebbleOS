@@ -77,7 +77,7 @@ typedef struct SettingsFile {
   int used_space;
 
   /** Most recent modification time of any record. */
-  uint32_t last_modified;
+  time_t last_modified;
 
   /**
    * Position of the record being visited by settings_file_each() or settings_file_rewrite(), so
@@ -91,6 +91,9 @@ typedef struct SettingsFile {
  *
  * Corrupt files, files with an unknown version and files whose recovery fails are removed and
  * recreated empty. A file created with a smaller size is rewritten to the requested size.
+ *
+ * Files keep 32-bit record times, readable by earlier firmware, until a record time needs 64
+ * bits; the file is then rewritten with 64-bit record times.
  *
  * Persist files need @p max_used_space of at least 5317 bytes to always fit all records in the
  * worst case (all values booleans).
@@ -237,7 +240,7 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
  * @return Same as settings_file_set().
  */
 status_t settings_file_set_with_timestamp(SettingsFile *file, const void *key, size_t key_len,
-                                          const void *val, size_t val_len, uint32_t timestamp);
+                                          const void *val, size_t val_len, time_t timestamp);
 
 /**
  * @brief Mark a record as synced.
@@ -313,7 +316,7 @@ typedef void (*SettingsFileGetter)(SettingsFile *file, void *buf, size_t buf_len
 /** @brief Record being visited by settings_file_each() or settings_file_rewrite(). */
 typedef struct {
   /** Modification timestamp. */
-  uint32_t last_modified;
+  time_t last_modified;
   /** Reads the key. */
   SettingsFileGetter get_key;
   /** Key length in bytes. */
