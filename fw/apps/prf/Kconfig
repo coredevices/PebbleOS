@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MFG_SPEAKER_GAIN_MDB
+    int "Factory speaker test gain (mdB)"
+    depends on SPEAKER
+    default -25000
+    help
+      Gain the factory speaker test plays its tone at, the level the test
+      is qualified at on the board.

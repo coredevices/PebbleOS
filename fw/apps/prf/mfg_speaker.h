@@ -5,4 +5,4 @@
 
 #include <process_management/pebble_process_md.h>
 
-const PebbleProcessMd *mfg_mic_asterix_app_get_info(void);
+const PebbleProcessMd *mfg_speaker_app_get_info(void);
