@@ -1,9 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "pulse_logging.h"
-
-#include "logging_private.h"
+#include "pulse.h"
 
 #include <ctype.h>
 
@@ -11,6 +9,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/logging/backend.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
@@ -19,6 +18,7 @@
 #include <console/pulse_protocol_impl.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
+#include <logging/logging_private.h>
 
 //! This is the format for a PULSEv2 log message when sent out over the wire.
 typedef struct PBL_PACKED MessageContents {
@@ -243,3 +243,28 @@ void pulse_logging_log_sync_send(void *ctx) {
       MIN(sizeof(MessageContents), offsetof(MessageContents, message) + strlen(contents->message));
   pulse_push_send(contents, payload_length);
 }
+
+static void prv_backend_init(const struct pbl_log_backend *backend) {
+  pulse_logging_init();
+}
+
+static void prv_backend_process(const struct pbl_log_backend *backend,
+                                const struct pbl_log_msg *msg) {
+  if (msg->flags & PBL_LOG_MSG_ASYNC) {
+    pulse_logging_log(msg->level, msg->file, msg->line, msg->text);
+  } else {
+    pulse_logging_log_sync(msg->level, msg->file, msg->line, msg->text);
+  }
+}
+
+static void prv_backend_panic(const struct pbl_log_backend *backend) {
+  pulse_logging_log_buffer_flush();
+}
+
+static const struct pbl_log_backend_api s_api = {
+  .init = prv_backend_init,
+  .process = prv_backend_process,
+  .panic = prv_backend_panic,
+};
+
+PBL_LOG_BACKEND_DEFINE(pulse, s_api, CONFIG_LOG_BACKEND_PULSE_LEVEL, true);

@@ -32,8 +32,7 @@ PBL_SYSCALL(void, sys_app_log, (VAL, size_t, length), (IN_BUF, void *, log_buffe
     kernel_pbl_log_verify_user(&message->log_msg);
   }
 
-  // First log to serial, we always do this.
-  kernel_pbl_log_serial(&message->log_msg, 0);
+  kernel_pbl_log_app(&message->log_msg, (const uint8_t *)&message->uuid);
 
   // Now check to see if app logging is enabled over bluetooth.
   if (s_app_logging_mode == AppLoggingDisabled) {

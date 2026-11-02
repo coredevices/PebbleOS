@@ -2,16 +2,14 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/irq.h>
+#include <pbl/logging/backend.h>
 
 #include <logging/logging_private.h>
-#include <logging/pulse_logging.h>
 #include <system/bootbits.h>
 #include <system/reset.h>
 
 void prepare_for_software_failure(void) {
-#ifdef CONFIG_PULSE_EVERYWHERE
-  pulse_logging_log_buffer_flush();
-#endif
+  pbl_log_panic();
 
 #ifndef CONFIG_MFG
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);

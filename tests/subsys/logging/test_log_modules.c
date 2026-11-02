@@ -13,13 +13,14 @@
 #include <pbl/logging/logging.h>
 #define UNITTEST 1
 
+#include <pbl/logging/backend.h>
+
 #include <kernel/pebble_tasks.h>
 #include <logging/logging_private.h>
 
 PBL_LOG_MODULE_DEFINE(test_runtime, CONFIG_TEST_RUNTIME_LOG_LEVEL);
 
 extern bool g_pbl_log_enabled;
-extern int g_pbl_log_level;
 void test_log_runtime_peer(void);
 void test_log_static_peer(int *evaluations);
 
@@ -73,18 +74,19 @@ bool pbl_sched_is_locked(void) {
   return s_sched_locked;
 }
 
-void pulse_logging_log(uint8_t level, const char *filename, uint16_t line, const char *message) {
+static void prv_serial_process(const struct pbl_log_backend *backend,
+                               const struct pbl_log_msg *msg) {
   s_serial_count++;
-  s_serial_level = level;
-  s_serial_async = true;
-  snprintf(s_message, sizeof(s_message), "%s", message);
+  s_serial_level = msg->level;
+  s_serial_async = msg->flags & PBL_LOG_MSG_ASYNC;
+  snprintf(s_message, sizeof(s_message), "%s", msg->text);
 }
 
-void pulse_logging_log_sync(uint8_t level, const char *filename, uint16_t line,
-                            const char *message) {
-  pulse_logging_log(level, filename, line, message);
-  s_serial_async = false;
-}
+static const struct pbl_log_backend_api s_serial_api = {
+  .process = prv_serial_process,
+};
+
+PBL_LOG_BACKEND_DEFINE(test_serial, s_serial_api, LOG_LEVEL_INFO, true);
 
 void pbl_log_advanced(const char *buffer, int length, bool async) {
   const LogBinaryMessage *message = (const LogBinaryMessage *)buffer;
@@ -103,7 +105,7 @@ void test_log_modules__initialize(void) {
   s_irq_locked = s_sched_locked = false;
   s_message[0] = '\0';
   g_pbl_log_enabled = true;
-  g_pbl_log_level = LOG_LEVEL_INFO;
+  pbl_log_backend_set_level(PBL_LOG_BACKEND_GET(test_serial), LOG_LEVEL_INFO);
 }
 
 void test_log_modules__default_filters_debug_without_evaluating_arguments(void) {

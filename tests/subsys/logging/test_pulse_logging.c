@@ -4,7 +4,7 @@
 #include <pbl/logging/logging.h>
 
 #include <clar.h>
-#include <logging/pulse_logging.h>
+#include <logging/backends/pulse.h>
 
 // How many bytes are in a log message before the actual message content in pulse log messages
 const int LOG_METADATA_LENGTH = 29;
