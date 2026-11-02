@@ -30,6 +30,7 @@ config PWM_SF32LB_LPTIM
 
 config PWM_SHELL
     bool "Shell commands"
+    default DRIVER_SHELL
     depends on SHELL
     help
       The pwm shell command, to list the controllers and run or disable

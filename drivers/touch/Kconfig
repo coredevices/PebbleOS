@@ -11,6 +11,7 @@ if TOUCH
 
 config TOUCH_SHELL
     bool "Shell commands"
+    default DRIVER_SHELL
     depends on SHELL
     help
       The touch shell command, to inspect the touchscreen and hold it
