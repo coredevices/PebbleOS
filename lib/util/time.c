@@ -94,3 +94,12 @@ void pbl_time_breakdown(time_t t, struct pbl_tm *tm) {
   }
   tm->tm_mday = days + 1;
 }
+
+time_t pbl_time_from_time32(pbl_time32_t t, time_t reference) {
+  if (reference <= INT32_MAX) {
+    return t;
+  }
+  // The signed difference of the low 32 bits is the offset to the closest match.
+  const int32_t delta = (int32_t)((uint32_t)t - (uint32_t)reference);
+  return reference + delta;
+}
