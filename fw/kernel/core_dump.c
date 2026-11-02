@@ -36,8 +36,8 @@ extern char *itoa(int value, char *str, int base);
 #include <kernel/core_dump.h>
 #include <kernel/core_dump_private.h>
 #include <kernel/pbl_malloc.h>
+#include <logging/backends/pulse.h>
 #include <logging/logging_private.h>
-#include <logging/pulse_logging.h>
 #include <mfg/mfg_serials.h>
 #include <pebbleos/chip_id.h>
 #include <system/bootbits.h>

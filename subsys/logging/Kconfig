@@ -81,4 +81,6 @@ config PULSE_EVERYWHERE
       Use the PULSE protocol for logs and the prompt. Disable to fall
       back to legacy logs and prompt.
 
+rsource "backends/Kconfig"
+
 endmenu

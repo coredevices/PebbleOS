@@ -19,6 +19,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/boot_splash.h>
@@ -48,7 +49,6 @@
 #include <kernel/memory_layout.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
-#include <logging/pulse_logging.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <resource/resource.h>
@@ -171,8 +171,8 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
 #ifdef CONFIG_PULSE_EVERYWHERE
   pulse_init();
-  pulse_logging_init();
 #endif
+  pbl_log_init();
 
   pebble_task_configure_idle_task();
 

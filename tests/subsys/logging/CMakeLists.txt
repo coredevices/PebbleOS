@@ -3,7 +3,8 @@
 
 pbl_clar_test(test_pulse_logging
   SOURCES
-    subsys/logging/pulse_logging.c
+    subsys/logging/backends/pulse.c
+  DEFINES CONFIG_LOG_BACKEND_PULSE_LEVEL=200 PBL_NO_LINKER_SCRIPT
 )
 
 pbl_clar_test(test_log_modules
@@ -14,5 +15,5 @@ pbl_clar_test(test_log_modules
     tests/subsys/logging/static_module_peer.c
   DEFINES CONFIG_PULSE_EVERYWHERE=1 CONFIG_DEFAULT_LOG_LEVEL=100
           CONFIG_TEST_RUNTIME_LOG_LEVEL=100 CONFIG_TEST_RUNTIME_LOG_LEVEL_RUNTIME=1
-          vsniprintf=vsnprintf
+          vsniprintf=vsnprintf PBL_NO_LINKER_SCRIPT
 )
