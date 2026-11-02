@@ -188,6 +188,7 @@ jobs:
       matrix:
         board:
           - getafix@dvt2
+          - obelix@pvt
 
     steps:
       - name: Mark Github workspace as safe
