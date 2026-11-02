@@ -468,6 +468,103 @@ void test_data_logging__recover_five(void) {
 }
 
 // ----------------------------------------------------------------------------------------
+//! Rewrite a session file with the 32-bit time header earlier firmware wrote (version 0x20).
+static void prv_downgrade_session_file(DataLoggingSession *session) {
+  typedef struct PBL_PACKED {
+    uint8_t version;
+    uint8_t comm_session_id;
+    int64_t timestamp;
+    uint32_t tag;
+    Uuid app_uuid;
+    uint8_t item_type;
+    uint16_t item_size;
+  } HeaderV1;
+  typedef struct PBL_PACKED {
+    uint8_t version;
+    uint8_t comm_session_id;
+    uint32_t timestamp;
+    uint32_t tag;
+    Uuid app_uuid;
+    uint8_t item_type;
+    uint16_t item_size;
+  } HeaderV0;
+
+  char name[32];
+  concat_str_int(DLS_FILE_DIR DLS_FILE_NAME_PREFIX, session->comm.session_id, name, sizeof(name));
+  struct pbl_fs_file file;
+  cl_assert_equal_i(pbl_fs_open(&file, name, PBL_FS_O_READ), 0);
+  const size_t size = pbl_fs_size(&file);
+  uint8_t *buf = malloc(size);
+  cl_assert_equal_i(pbl_fs_read(&file, buf, size), size);
+  pbl_fs_close(&file);
+
+  HeaderV1 v1;
+  memcpy(&v1, buf, sizeof(v1));
+  cl_assert_equal_i(v1.version, 0x21);
+  const HeaderV0 v0 = {
+    .version = 0x20,
+    .comm_session_id = v1.comm_session_id,
+    .timestamp = v1.timestamp,
+    .tag = v1.tag,
+    .app_uuid = v1.app_uuid,
+    .item_type = v1.item_type,
+    .item_size = v1.item_size,
+  };
+
+  cl_assert_equal_i(pbl_fs_unlink(name), 0);
+  cl_assert_equal_i(fake_pfs_create(&file, name, size), 0);
+  cl_assert_equal_i(pbl_fs_write(&file, &v0, sizeof(v0)), sizeof(v0));
+  cl_assert_equal_i(pbl_fs_write(&file, buf + sizeof(v1), size - sizeof(v1)), size - sizeof(v1));
+  pbl_fs_close(&file);
+  free(buf);
+}
+
+void test_data_logging__recover_32_bit_header(void) {
+  // Created past 2038, where a signed 32-bit read would go wrong
+  fake_rtc_init(0, 3000000000LL);
+  DataLoggingSessionRef logging_session = data_logging_create(7, DATA_LOGGING_UINT, 1, false);
+  cl_assert(logging_session);
+  const unsigned int num_bytes = 4321;
+  const uint32_t crc = prv_log_random_data(logging_session, 1, num_bytes);
+
+  // Make sure the data is on flash, then rewrite the file the way earlier firmware did
+  dls_list_remove_all();
+  DataLoggingSession *session = nullptr;
+  {
+    // Recover once to get the session back, with its storage closed
+    regular_timer_deinit();
+    regular_timer_init();
+    dls_init();
+    fake_system_task_callbacks_invoke_pending();
+    session = dls_list_get_next(nullptr);
+    cl_assert(session);
+  }
+  prv_downgrade_session_file(session);
+  dls_list_remove_all();
+
+  regular_timer_deinit();
+  regular_timer_init();
+  dls_init();
+  fake_system_task_callbacks_invoke_pending();
+
+  session = dls_list_get_next(nullptr);
+  cl_assert(session);
+  cl_assert(dls_list_get_next(session) == nullptr);
+  cl_assert(session->session_created_timestamp == 3000000000LL);
+  prv_check_session_data(session, crc, num_bytes);
+
+  // The file was rewritten with the current header
+  char name[32];
+  concat_str_int(DLS_FILE_DIR DLS_FILE_NAME_PREFIX, session->comm.session_id, name, sizeof(name));
+  struct pbl_fs_file file;
+  cl_assert_equal_i(pbl_fs_open(&file, name, PBL_FS_O_READ), 0);
+  uint8_t version = 0;
+  cl_assert_equal_i(pbl_fs_read(&file, &version, sizeof(version)), sizeof(version));
+  pbl_fs_close(&file);
+  cl_assert_equal_i(version, 0x21);
+}
+
+// ----------------------------------------------------------------------------------------
 //! Try passing garbage pointers to sessions to data logging functions.
 void test_data_logging__invalid_session_garbage(void) {
   uint32_t data[] = {1, 2, 3};
