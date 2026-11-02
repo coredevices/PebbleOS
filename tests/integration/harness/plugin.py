@@ -112,7 +112,7 @@ def pytest_addoption(parser):
         "--erase-fs",
         action="store_true",
         help="Erase the watch's filesystem (bondings, settings, apps, data) "
-        "and the bonding kept for PRF before the tests",
+        "and the bonding kept for PRF, and clear its timezone, before the tests",
     )
     group.addoption(
         "--flash-command",
