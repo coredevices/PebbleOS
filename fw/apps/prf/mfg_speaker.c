@@ -27,9 +27,6 @@ static const int16_t sine_wave_4k[] = {
   0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768, 0, 32767, 0, -32768,
 };
 
-// The level the factory test is qualified at
-#define SPEAKER_GAIN_MDB (-25000)
-
 static size_t prv_audio_fill(int16_t *samples, size_t count) {
   for (size_t i = 0; i < count; i++) {
     samples[i] = sine_wave_4k[i % ARRAY_LENGTH(sine_wave_4k)];
@@ -38,7 +35,7 @@ static size_t prv_audio_fill(int16_t *samples, size_t count) {
 }
 
 static void prv_play_audio(void) {
-  (void)mfg_audio_playback_start(SPEAKER_GAIN_MDB, prv_audio_fill);
+  (void)mfg_audio_playback_start(CONFIG_MFG_SPEAKER_GAIN_MDB, prv_audio_fill);
 }
 
 static void prv_result_confirmed(ClickRecognizerRef recognizer, void *context) {
@@ -102,14 +99,14 @@ static void s_main(void) {
   mfg_audio_playback_stop();
 }
 
-const PebbleProcessMd *mfg_speaker_obelix_app_get_info(void) {
+const PebbleProcessMd *mfg_speaker_app_get_info(void) {
   static const PebbleProcessMdSystem s_app_info = {
     .common.main_func = &s_main,
     // UUID: c1479d03-5550-4444-b1e7-e2cbad0e5678
     .common.uuid =
         {0xc1, 0x47, 0x9d, 0x03, 0x55, 0x50, 0x44, 0x44, 0xb1, 0xe7, 0xe2, 0xcb, 0xad, 0x0e, 0x56,
          0x78},
-    .name = "MfgSpeakerObelix",
+    .name = "MfgSpeaker",
   };
   return (const PebbleProcessMd *)&s_app_info;
 }

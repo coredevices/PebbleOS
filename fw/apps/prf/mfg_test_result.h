@@ -22,10 +22,10 @@ typedef enum {
 #ifdef CONFIG_MAG
   MfgTestId_Mag,
 #endif
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX)
+#ifdef CONFIG_SPEAKER
   MfgTestId_Speaker,
 #endif
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
+#ifdef CONFIG_MIC
   MfgTestId_Mic,
 #endif
   MfgTestId_ALS,

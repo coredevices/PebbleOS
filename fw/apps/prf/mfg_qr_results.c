@@ -107,12 +107,12 @@ static void prv_append_result(char *buf, size_t bufsz, MfgTestId test) {
       snprintf(entry, sizeof(entry), "MAG:%c", rc);
       break;
 #endif
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX)
+#ifdef CONFIG_SPEAKER
     case MfgTestId_Speaker:
       snprintf(entry, sizeof(entry), "SPK:%c", rc);
       break;
 #endif
-#if defined(CONFIG_BOARD_ASTERIX) || defined(CONFIG_BOARD_OBELIX) || defined(CONFIG_BOARD_GETAFIX)
+#ifdef CONFIG_MIC
     case MfgTestId_Mic:
       snprintf(entry, sizeof(entry), "MIC:%c", rc);
       break;
