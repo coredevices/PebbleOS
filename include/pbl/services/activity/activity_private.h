@@ -555,7 +555,7 @@ typedef struct {
   ActivitySpO2Support spo2;
 
   /** Current day index. */
-  uint16_t cur_day_index;
+  uint32_t cur_day_index;
 
   /** Minutes until the next settings file update. */
   int8_t update_settings_counter;

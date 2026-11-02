@@ -66,9 +66,12 @@ void health_data_update_quick(HealthData *health_data) {
   activity_get_step_averages(local_tm.tm_wday, &health_data->step_averages);
 
   health_data->current_hr_bpm = health_service_peek_current_value(HealthMetricHeartRateBPM);
-  // Get the most recent stable HR Reading timestamp.
-  activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1,
-                      (int32_t *)&health_data->hr_last_updated);
+  // Get the most recent stable HR Reading timestamp, which metrics carry as 32 bits.
+  int32_t hr_last_updated = 0;
+  activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1, &hr_last_updated);
+  // 0 means no reading yet
+  health_data->hr_last_updated =
+      hr_last_updated ? pbl_time_from_low32(hr_last_updated, rtc_get_time()) : 0;
 }
 
 void health_data_update(HealthData *health_data) {
@@ -160,10 +163,11 @@ void health_data_update_sleep(HealthData *health_data, uint32_t new_sleep,
 void health_data_update_current_bpm(HealthData *health_data) {
   health_data->resting_hr_bpm = activity_prefs_heart_get_resting_hr();
 
-  uint32_t current_hr_timestamp;
-  activity_get_metric(ActivityMetricHeartRateRawUpdatedTimeUTC, 1,
-                      (int32_t *)&current_hr_timestamp);
-  if (current_hr_timestamp > (uint32_t)health_data->hr_last_updated) {
+  int32_t current_hr_timestamp32 = 0;
+  activity_get_metric(ActivityMetricHeartRateRawUpdatedTimeUTC, 1, &current_hr_timestamp32);
+  const time_t current_hr_timestamp =
+      current_hr_timestamp32 ? pbl_time_from_low32(current_hr_timestamp32, rtc_get_time()) : 0;
+  if (current_hr_timestamp > health_data->hr_last_updated) {
     health_data->current_hr_bpm = health_service_peek_current_value(HealthMetricHeartRateRawBPM);
     health_data->hr_last_updated = current_hr_timestamp;
   }

@@ -128,7 +128,7 @@ enum pbl_weekday time_util_get_day_in_week(time_t utc_sec) {
 }
 
 // ---------------------------------------------------------------------------------------
-uint16_t time_util_get_day(time_t utc_sec) {
+uint32_t time_util_get_day(time_t utc_sec) {
   // Convert to local seconds
   time_t local_sec = time_utc_to_local(utc_sec);
 

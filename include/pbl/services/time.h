@@ -171,7 +171,7 @@ time_t time_util_utc_to_local_offset(void);
  * @param utc_sec UTC time.
  * @return Days since the epoch, in local time.
  */
-uint16_t time_util_get_day(time_t utc_sec);
+uint32_t time_util_get_day(time_t utc_sec);
 
 /**
  * @brief Get the local day of the week of a time.

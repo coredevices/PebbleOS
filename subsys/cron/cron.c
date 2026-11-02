@@ -59,7 +59,9 @@ static bool prv_is_scheduled(struct pbl_cron_job *job) {
 static int prv_sort(void *a, void *b) {
   struct pbl_cron_job *job_a = (struct pbl_cron_job *)a;
   struct pbl_cron_job *job_b = (struct pbl_cron_job *)b;
-  return job_b->cached_execute_time - job_a->cached_execute_time;
+  // Compare rather than subtract: the difference of two times may not fit an int
+  return (job_b->cached_execute_time > job_a->cached_execute_time) -
+         (job_b->cached_execute_time < job_a->cached_execute_time);
 }
 
 // -------------------------------------------------------------------------------------------

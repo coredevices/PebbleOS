@@ -1032,7 +1032,9 @@ static HealthValue prv_hr_aggregate_averaged(HealthServiceState *state, HealthMe
       // metric HealthMetricHeartRateRawBPM if the user wants the most recent reading.
       HealthValue value;
       sys_activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1, &value);
-      const time_t hr_median_age = now_utc - value;
+      // The metric API carries times as 32 bits
+      const time_t hr_median_age =
+          (value == 0) ? now_utc : now_utc - pbl_time_from_low32(value, now_utc);
       if (hr_median_age >= HS_MAX_AGE_HR_SAMPLE) {
         return 0;
       }

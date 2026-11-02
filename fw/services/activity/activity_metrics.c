@@ -478,7 +478,7 @@ static void prv_update_hr_derived_metrics(void) {
 void activity_metrics_prv_minute_handler(time_t utc_sec) {
   ActivityState *state = activity_private_state();
 
-  uint16_t cur_day_index = time_util_get_day(utc_sec);
+  uint32_t cur_day_index = time_util_get_day(utc_sec);
   if (cur_day_index != state->cur_day_index) {
     // If we've just encountered a midnight rollover, shift history to the new day
     // before we compute metrics for the new day
@@ -658,7 +658,7 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
                         fetch_size);
 
-      uint16_t day = time_util_get_day(pbl_time_from_low32(old_history.utc_sec, utc_now));
+      uint32_t day = time_util_get_day(pbl_time_from_low32(old_history.utc_sec, utc_now));
       int old_age = state->cur_day_index - day;
 
       // If this is resting kcalories, the default for each day is not 0
