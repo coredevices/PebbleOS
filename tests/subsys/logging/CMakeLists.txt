@@ -4,7 +4,8 @@
 pbl_clar_test(test_pulse_logging
   SOURCES
     subsys/logging/backends/pulse.c
-  DEFINES CONFIG_LOG_BACKEND_PULSE_LEVEL=200 PBL_NO_LINKER_SCRIPT
+  DEFINES CONFIG_LOG_BACKEND_PULSE_LEVEL=200 CONFIG_CONSOLE_BAUDRATE=1000000 PBL_NO_LINKER_SCRIPT
+  OVERRIDES dummy_board
 )
 
 pbl_clar_test(test_log_flash

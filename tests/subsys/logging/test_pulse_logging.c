@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/uart.h>
 #include <pbl/logging/logging.h>
 
 #include <clar.h>
@@ -53,6 +54,13 @@ void pulse_best_effort_send(void *buf, size_t length) {
   const size_t message_length = length - LOG_METADATA_LENGTH;
   memcpy(s_log_message_buffer, ((char *)buf) + LOG_METADATA_LENGTH, message_length);
   s_log_message_buffer[message_length] = '\0';
+}
+
+int pbl_uart_early_init(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
+  return 0;
+}
+
+void pulse_early_init(void) {
 }
 
 bool pulse_is_started(void) {

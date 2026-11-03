@@ -103,9 +103,6 @@ static void prv_handlers_notify_state_changed(PulseLinkState link_state) {
   }
 }
 
-void pulse_early_init(void) {
-}
-
 void pulse_init(void) {
 }
 

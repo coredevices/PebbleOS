@@ -7,8 +7,6 @@
 
 #include <pbl/kernel/compiler.h>
 
-void dbgserial_init(void);
-
 void dbgserial_putchar(uint8_t c);
 
 //! Version of dbgserial_putchar that may return before the character is finished writing.

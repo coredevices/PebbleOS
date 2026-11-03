@@ -60,6 +60,13 @@ config PULSE_EVERYWHERE
       Use the PULSE protocol for logs and the prompt. Disable to fall
       back to legacy logs and prompt.
 
+config CONSOLE_BAUDRATE
+    int "Console baud rate"
+    default 1000000 if PULSE_EVERYWHERE
+    default 115200
+    help
+      Line rate of the board's console port, CONSOLE_UART.
+
 rsource "backends/Kconfig"
 
 endmenu

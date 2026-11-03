@@ -12,19 +12,6 @@
 #include <pbl/drivers/uart.h>
 // clang-format on
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-#define DEFAULT_SERIAL_BAUD_RATE 1000000
-#else
-#define DEFAULT_SERIAL_BAUD_RATE 115200
-#endif
-
-// The port is an early console until its device init takes over
-void dbgserial_init(void) {
-  const struct pbl_uart_config cfg = {.baudrate = DEFAULT_SERIAL_BAUD_RATE};
-
-  (void)pbl_uart_early_init(CONSOLE_UART, &cfg);
-}
-
 void dbgserial_change_baud_rate(uint32_t new_baud) {
   const struct pbl_uart_config cfg = {.baudrate = new_baud};
 
@@ -32,7 +19,7 @@ void dbgserial_change_baud_rate(uint32_t new_baud) {
 }
 
 void dbgserial_restore_baud_rate(void) {
-  dbgserial_change_baud_rate(DEFAULT_SERIAL_BAUD_RATE);
+  dbgserial_change_baud_rate(CONFIG_CONSOLE_BAUDRATE);
 }
 
 void dbgserial_putstr(const char *str) {

@@ -6,11 +6,13 @@
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/drivers/uart.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/string.h>
 
+#include <board/board.h>
 #include <console/serial_console.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/stack_info.h>
@@ -95,7 +97,14 @@ static void prv_backend_process(const struct pbl_log_backend *backend,
   prv_log_serial(msg->level, msg->file, msg->line, msg->text);
 }
 
+static void prv_backend_early_init(const struct pbl_log_backend *backend) {
+  const struct pbl_uart_config cfg = {.baudrate = CONFIG_CONSOLE_BAUDRATE};
+
+  (void)pbl_uart_early_init(CONSOLE_UART, &cfg);
+}
+
 static const struct pbl_log_backend_api s_api = {
+  .early_init = prv_backend_early_init,
   .process = prv_backend_process,
 };
 

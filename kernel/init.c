@@ -8,12 +8,14 @@
 
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/logging/backend.h>
 
 void kernel_init(int (*entry)(void)) {
   pbl_soc_early_init();
   pbl_irq_init();
   arch_init();
   pbl_malloc_init();
+  pbl_log_early_init();
 
   entry();
 
