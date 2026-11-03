@@ -29,7 +29,7 @@ static ListNode s_minutes_callbacks;
 static time_t s_last_minute_fire_ts; // uses
 static int s_last_minute_fired = -1; // Track which minute we last fired on
 
-// Fire slightly after the RTC second boundary so the new second is always visible
+// Fire slightly after the second boundary so the new second is always visible
 #define SECOND_BOUNDARY_MARGIN_MS 10
 static time_t s_last_second_fired;
 static bool s_last_second_fired_valid;
@@ -94,11 +94,10 @@ static void do_callbacks(ListNode *list) {
 // -------------------------------------------------------------------------------------------
 static void timer_callback(void *data);
 
-//! Arm the timer for second @p next; the RTC is at @p now and @p ms.
+//! Arm the timer for second @p next; the wall clock is at @p now and @p ms.
 static void prv_arm_locked(time_t now, uint16_t ms, time_t next) {
   uint32_t timeout_ms = (uint32_t)(next - now - 1) * 1000 + (1000 - MIN(ms, 999));
-  // The timer runs on the system tick, which drifts from the RTC in deep sleep.
-  timeout_ms += SECOND_BOUNDARY_MARGIN_MS + timeout_ms / 1024;
+  timeout_ms += SECOND_BOUNDARY_MARGIN_MS;
   bool success = new_timer_start(s_timer_id, timeout_ms, timer_callback, nullptr, 0 /*flags*/);
   PBL_ASSERTN(success);
   s_next_fire = next;
