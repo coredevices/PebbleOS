@@ -12,7 +12,7 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/persist.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>

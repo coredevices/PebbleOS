@@ -5,7 +5,7 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>

@@ -5,7 +5,7 @@
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/insights_settings.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 
 #include <applib/preferred_content_size.h>
 #include <apps/system_app_ids.h>

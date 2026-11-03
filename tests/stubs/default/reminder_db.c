@@ -4,7 +4,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/timeline_item_storage.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 
 PBL_WEAK void reminder_db_init(void) {
   return;

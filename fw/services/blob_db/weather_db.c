@@ -7,8 +7,8 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/weather_db.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/weather/weather_service.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);

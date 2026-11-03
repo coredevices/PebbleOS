@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 
 PBL_WEAK status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
   return S_SUCCESS;

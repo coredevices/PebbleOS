@@ -12,8 +12,8 @@
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/vibes/vibe_intensity.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 

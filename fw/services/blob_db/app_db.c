@@ -9,7 +9,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>

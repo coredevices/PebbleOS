@@ -5,8 +5,8 @@
 
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/timeline/item.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/uuid.h>
 
 /**

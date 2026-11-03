@@ -6,7 +6,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/services/persist.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 
 #include <process_management/process_manager.h>

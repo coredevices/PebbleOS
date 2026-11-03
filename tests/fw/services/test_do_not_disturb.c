@@ -10,8 +10,8 @@
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
+#include <pbl/settings/settings_file.h>
 
 #include <applib/ui/action_toggle.h>
 #include <clar.h>

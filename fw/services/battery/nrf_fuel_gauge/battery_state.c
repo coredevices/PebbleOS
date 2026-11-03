@@ -20,7 +20,7 @@
 #include <kernel/events.h>
 
 #ifndef CONFIG_RECOVERY_FW
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #endif
 
 #ifdef CONFIG_MFG

@@ -12,8 +12,8 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>

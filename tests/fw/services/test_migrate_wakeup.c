@@ -4,8 +4,8 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/wakeup.h>
+#include <pbl/settings/settings_file.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>

@@ -9,11 +9,11 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
 #include <pbl/services/wakeup.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 

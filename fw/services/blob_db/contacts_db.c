@@ -6,7 +6,7 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/contacts.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 

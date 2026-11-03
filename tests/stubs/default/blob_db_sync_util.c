@@ -3,7 +3,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/blob_db/api.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 
 PBL_WEAK bool sync_util_is_dirty_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
   return false;

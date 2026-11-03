@@ -14,9 +14,9 @@
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/light.h>
 #include <pbl/services/light_level.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/base64.h>
 #include <pbl/util/math.h>
 #include <pbl/util/shared_cbuf.h>

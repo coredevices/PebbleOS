@@ -6,8 +6,8 @@
 
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/settings/settings_file.h>
-#include <pbl/services/settings/settings_raw_iter.h>
+#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings_raw_iter.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>

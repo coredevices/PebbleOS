@@ -9,8 +9,8 @@
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/blob_db/sync_util.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/timeline/attributes_actions.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 

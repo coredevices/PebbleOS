@@ -5,7 +5,7 @@
 
 #include <pbl/fs/fs.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/units.h>
 
 #include <clar.h>

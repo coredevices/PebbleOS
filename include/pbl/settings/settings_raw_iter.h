@@ -12,8 +12,8 @@
 #include <system/status_codes.h>
 
 /**
- * @defgroup services_settings_settings_raw_iter Settings file raw iterator
- * @ingroup services_settings
+ * @defgroup settings_raw_iter Settings file raw iterator
+ * @ingroup settings
  * @brief On-flash format of settings files and a cursor over their records.
  *
  * Internal to the settings file implementation; use settings_file_each() instead.

@@ -15,8 +15,8 @@
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/light_level.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 

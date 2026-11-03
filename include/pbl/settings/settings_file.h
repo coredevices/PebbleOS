@@ -10,8 +10,8 @@
 #include <pbl/util/units.h>
 
 /**
- * @defgroup services_settings Settings files
- * @ingroup services
+ * @defgroup settings Settings files
+ * @ingroup subsys
  * @brief Atomic key-value store on top of PFS.
  *
  * A settings file is a log-structured binary key-value store kept in a single PFS file. Keys
