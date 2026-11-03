@@ -1112,7 +1112,15 @@ static int prv_cmd_tz_clear(const struct pbl_shell *sh, size_t argc, char **argv
 
 #ifndef CONFIG_RECOVERY_FW
 static int prv_cmd_show(const struct pbl_shell *sh, size_t argc, char **argv) {
-  const time_t utc = rtc_get_time();
+  time_t utc = rtc_get_time();
+  if (argc > 1) {
+    long val;
+    if (pbl_shell_strtol(argv[1], &val) != 0) {
+      pbl_shell_error(sh, "invalid timestamp '%s'", argv[1]);
+      return -EINVAL;
+    }
+    utc = val;
+  }
   char region[TIMEZONE_NAME_LENGTH];
   clock_get_timezone_region(region, sizeof(region));
 
@@ -1130,6 +1138,7 @@ PBL_SHELL_CMD_REGISTER(time, sub_time, "Time and timezone", nullptr);
 PBL_SHELL_SUBCMD_ADD(sub_time, set, nullptr, "Set the time <unix_timestamp>", prv_cmd_set, 2, 0);
 PBL_SHELL_SUBCMD_ADD(sub_time, tz_clear, nullptr, "Clear the timezone", prv_cmd_tz_clear, 0, 0);
 #ifndef CONFIG_RECOVERY_FW
-PBL_SHELL_SUBCMD_ADD(sub_time, show, nullptr, "Show the time and timezone", prv_cmd_show, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_time, show, nullptr, "Show the time and timezone [unix_timestamp]",
+                     prv_cmd_show, 1, 1);
 #endif
 #endif
