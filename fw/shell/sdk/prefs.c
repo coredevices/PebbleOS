@@ -298,6 +298,10 @@ UnitsWind shell_prefs_get_units_wind(void) {
   return UnitsWind_Mph;
 }
 
+UnitsTemperature shell_prefs_get_units_temperature(void) {
+  return UnitsTemperature_Fahrenheit;
+}
+
 GColor shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 }

@@ -432,7 +432,7 @@ static bool prv_precip_is_the_headline(WeatherType t) {
 // The phone sends temperatures already converted to the user's units, so every absolute
 // threshold below has to be stated in those same units.
 static bool prv_is_imperial(void) {
-  return shell_prefs_get_units_distance() == UnitsDistance_Miles;
+  return shell_prefs_get_units_temperature() == UnitsTemperature_Fahrenheit;
 }
 
 static int prv_temp(int celsius) {

@@ -66,6 +66,9 @@ static uint8_t s_units_distance = UnitsDistance_Miles;
 #define PREF_KEY_UNITS_WIND "unitsWind"
 static uint8_t s_units_wind = UnitsWind_FromDistance;
 
+#define PREF_KEY_UNITS_TEMPERATURE "unitsTemperature"
+static uint8_t s_units_temperature = UnitsTemperature_FromDistance;
+
 #define PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED "lightBehaviour"
 #define PREF_KEY_BACKLIGHT_ENABLED              "lightEnabled"
 static bool s_backlight_enabled = true;
@@ -419,6 +422,15 @@ static bool prv_set_s_units_wind(uint8_t *new_unit) {
     return false;
   }
   s_units_wind = *new_unit;
+  return true;
+};
+
+static bool prv_set_s_units_temperature(uint8_t *new_unit) {
+  if (*new_unit >= UnitsTemperatureCount) {
+    s_units_temperature = UnitsTemperature_FromDistance;
+    return false;
+  }
+  s_units_temperature = *new_unit;
   return true;
 };
 
@@ -1447,6 +1459,19 @@ UnitsWind shell_prefs_get_units_wind(void) {
 void shell_prefs_set_units_wind(UnitsWind new_unit) {
   uint8_t uint_new_unit = new_unit;
   prv_pref_set(PREF_KEY_UNITS_WIND, &uint_new_unit, sizeof(uint_new_unit));
+}
+
+UnitsTemperature shell_prefs_get_units_temperature(void) {
+  if (s_units_temperature == UnitsTemperature_FromDistance) {
+    return (shell_prefs_get_units_distance() == UnitsDistance_Miles) ? UnitsTemperature_Fahrenheit
+                                                                     : UnitsTemperature_Celsius;
+  }
+  return s_units_temperature;
+}
+
+void shell_prefs_set_units_temperature(UnitsTemperature new_unit) {
+  uint8_t uint_new_unit = new_unit;
+  prv_pref_set(PREF_KEY_UNITS_TEMPERATURE, &uint_new_unit, sizeof(uint_new_unit));
 }
 
 void shell_prefs_set_clock_24h_style(bool is24h) {
