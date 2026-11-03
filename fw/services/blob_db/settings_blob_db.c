@@ -46,6 +46,7 @@ static const char *s_syncable_settings[] = {
   // Display preferences
   "unitsDistance",
   "unitsWind",
+  "unitsTemperature",
   "textStyle",
   "systemTextSize",
   "stationaryMode",

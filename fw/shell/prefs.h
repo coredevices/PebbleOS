@@ -67,6 +67,18 @@ typedef enum UnitsWind {
 UnitsWind shell_prefs_get_units_wind(void);
 void shell_prefs_set_units_wind(UnitsWind newUnit);
 
+// Temperature has its own unit so the UK (Celsius, but miles) is expressible. FromDistance is
+// the default, so a phone that never sets this follows the distance unit.
+typedef enum UnitsTemperature {
+  UnitsTemperature_FromDistance,
+  UnitsTemperature_Celsius,
+  UnitsTemperature_Fahrenheit,
+  UnitsTemperatureCount
+} UnitsTemperature;
+
+UnitsTemperature shell_prefs_get_units_temperature(void);
+void shell_prefs_set_units_temperature(UnitsTemperature newUnit);
+
 // The backlight preferences are required in all shells, but the settings are
 // hardcoded when running PRF.
 
