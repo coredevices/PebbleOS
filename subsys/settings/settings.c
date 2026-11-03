@@ -441,7 +441,7 @@ static status_t bootup_check(struct pbl_settings_file *file) {
   return cleanup_partial_transactions(file);
 }
 
-int pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
+size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
   pbl_settings__raw_iter_resume(&file->iter);
   if (search_forward(&file->iter, key, key_len)) {
     return file->iter.hdr.val_len;

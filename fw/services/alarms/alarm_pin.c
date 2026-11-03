@@ -22,7 +22,7 @@ typedef struct {
 static bool prv_collect_untracked_future_pin(struct pbl_settings_file *file,
                                              struct pbl_settings_record *info, void *context) {
   UntrackedAlarmPins *pins = context;
-  if (info->key_len != UUID_SIZE || info->val_len < (int)sizeof(SerializedTimelineItemHeader)) {
+  if (info->key_len != UUID_SIZE || info->val_len < sizeof(SerializedTimelineItemHeader)) {
     return true;
   }
 

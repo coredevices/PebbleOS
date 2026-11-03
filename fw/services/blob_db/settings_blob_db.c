@@ -744,7 +744,7 @@ status_t settings_blob_db_mark_all_dirty(void) {
 // Context for finding last_modified timestamp
 typedef struct {
   const uint8_t *search_key;
-  int search_key_len;
+  size_t search_key_len;
   time_t last_modified;
   bool found;
 } GetTimestampContext;

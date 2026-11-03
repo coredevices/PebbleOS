@@ -66,7 +66,7 @@ status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_
   return S_SUCCESS;
 }
 
-int pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
+size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
   if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     return s_settings_file.val_lens[key_crc8];

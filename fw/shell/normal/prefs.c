@@ -1096,7 +1096,7 @@ static void prv_migrate_activity_hrm_prefs(struct pbl_settings_file *file) {
 static bool prv_take_legacy_bool(struct pbl_settings_file *file, const char *key, bool *value) {
   bool found = false;
   for (size_t key_len = strlen(key); key_len <= strlen(key) + 1; key_len++) {
-    if (pbl_settings_get_len(file, key, key_len) != (int)sizeof(*value)) {
+    if (pbl_settings_get_len(file, key, key_len) != sizeof(*value)) {
       continue;
     }
     if (pbl_settings_get(file, key, key_len, value, sizeof(*value)) == S_SUCCESS) {

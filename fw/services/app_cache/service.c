@@ -238,8 +238,8 @@ static bool prv_each_free_up_space(struct pbl_settings_file *file, struct pbl_se
                                    void *context) {
   // check entry is valid
   if ((info->key_len != sizeof(AppInstallId)) || (info->val_len != sizeof(AppCacheEntry))) {
-    PBL_LOG_WRN("Invalid cache entry with key_len: %u and val_len: %u, flushing", info->key_len,
-                info->val_len);
+    PBL_LOG_WRN("Invalid cache entry with key_len: %u and val_len: %u, flushing",
+                (unsigned)info->key_len, (unsigned)info->val_len);
     system_task_add_callback(prv_delete_cache_callback, nullptr);
     return false; // stop iterating, delete the file and binaries
   }

@@ -212,7 +212,7 @@ status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, si
  * @param key_len Length of @p key in bytes.
  * @return Value length in bytes, 0 if the record does not exist or is deleted.
  */
-int pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len);
+size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len);
 
 /**
  * @brief Read a value.
@@ -356,9 +356,9 @@ struct pbl_settings_record {
   /** Modification timestamp. */
   uint32_t last_modified;
   /** Key length in bytes. */
-  int key_len;
+  size_t key_len;
   /** Value length in bytes, 0 for a deleted record. */
-  int val_len;
+  size_t val_len;
   /** Record has not been marked as synced. */
   bool dirty;
 };

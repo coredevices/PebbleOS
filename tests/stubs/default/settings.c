@@ -28,7 +28,8 @@ PBL_WEAK void pbl_settings_each(struct pbl_settings_file *file, pbl_settings_eac
                                 void *context) {
 }
 
-PBL_WEAK int pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
+PBL_WEAK size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key,
+                                     size_t key_len) {
   return 0;
 }
 
