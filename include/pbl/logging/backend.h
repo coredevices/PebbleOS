@@ -60,6 +60,8 @@ struct pbl_log_backend_api {
   void (*process)(const struct pbl_log_backend *backend, const struct pbl_log_msg *msg);
   /** Write out every pending message, the system is about to stop. Optional. */
   void (*panic)(const struct pbl_log_backend *backend);
+  /** Get the messages kept since boot in @ref pbl_log_backend_start. */
+  bool replay;
 };
 
 /** @brief Runtime state of a backend. */
@@ -124,6 +126,16 @@ struct pbl_log_backend {
 
 /** @brief Start passing messages to @p backend. */
 void pbl_log_backend_enable(const struct pbl_log_backend *backend);
+
+/**
+ * @brief Replay the messages kept since boot to @p backend, then start passing messages to it.
+ *
+ * For backends that come up after boot, e.g. once their storage is ready. Messages logged while
+ * a backend with @ref pbl_log_backend_api::replay that wanted them was disabled are kept in a
+ * @c CONFIG_LOG_BOOT_BUFFER_SIZE buffer, until it is full. Backends without it are only
+ * enabled.
+ */
+void pbl_log_backend_start(const struct pbl_log_backend *backend);
 
 /** @brief Stop passing messages to @p backend. */
 void pbl_log_backend_disable(const struct pbl_log_backend *backend);

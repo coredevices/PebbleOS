@@ -124,7 +124,7 @@ void pbl_log_flash_init(void) {
   pbl_shared_cbuf_init(&s_buffer, s_buffer_storage, sizeof(s_buffer_storage));
   pbl_shared_cbuf_add_client(&s_buffer, &s_buffer_client);
 
-  pbl_log_backend_enable(PBL_LOG_BACKEND_GET(flash));
+  pbl_log_backend_start(PBL_LOG_BACKEND_GET(flash));
 }
 
 // Return true on success
@@ -194,6 +194,7 @@ static void prv_backend_process(const struct pbl_log_backend *backend,
 
 static const struct pbl_log_backend_api s_api = {
   .process = prv_backend_process,
+  .replay = true,
 };
 
 PBL_LOG_BACKEND_DEFINE(flash, s_api, CONFIG_LOG_BACKEND_FLASH_LEVEL, false);

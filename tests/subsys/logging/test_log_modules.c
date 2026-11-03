@@ -33,6 +33,7 @@ static uint8_t s_flash_level;
 static bool s_serial_async;
 static bool s_flash_async;
 static char s_message[LOG_BUFFER_LENGTH];
+static char s_flash_message[LOG_BUFFER_LENGTH];
 
 PebbleTask pebble_task_get_current(void) {
   return PebbleTask_Unknown;
@@ -85,10 +86,12 @@ static void prv_flash_process(const struct pbl_log_backend *backend,
   s_flash_count++;
   s_flash_level = msg->level;
   s_flash_async = msg->flags & PBL_LOG_MSG_ASYNC;
+  snprintf(s_flash_message, sizeof(s_flash_message), "%s", msg->text);
 }
 
 static const struct pbl_log_backend_api s_flash_api = {
   .process = prv_flash_process,
+  .replay = true,
 };
 
 PBL_LOG_BACKEND_DEFINE(test_flash, s_flash_api, LOG_LEVEL_INFO, true);
@@ -100,6 +103,7 @@ void test_log_modules__initialize(void) {
   s_serial_level = s_flash_level = 0;
   s_serial_async = s_flash_async = false;
   s_message[0] = '\0';
+  s_flash_message[0] = '\0';
   g_pbl_log_enabled = true;
   pbl_log_backend_set_level(PBL_LOG_BACKEND_GET(test_serial), LOG_LEVEL_INFO);
   pbl_log_backend_set_level(PBL_LOG_BACKEND_GET(test_flash), LOG_LEVEL_INFO);
@@ -209,4 +213,39 @@ void test_log_modules__backend_levels_and_disable(void) {
   pbl_log_backend_set_level(flash, LOG_LEVEL_INFO);
   cl_assert(pbl_log_backend_get_by_name("test_flash") == flash);
   cl_assert(pbl_log_backend_get_by_name("nope") == nullptr);
+}
+
+void test_log_modules__start_replays_messages_logged_while_disabled(void) {
+  const struct pbl_log_backend *flash = PBL_LOG_BACKEND_GET(test_flash);
+  pbl_log_backend_disable(flash);
+  pbl_log(LOG_LEVEL_ERROR, __FILE__, __LINE__, "early");
+  pbl_log(LOG_LEVEL_DEBUG, __FILE__, __LINE__, "not wanted");
+  cl_assert_equal_i(s_flash_count, 0);
+
+  pbl_log_backend_start(flash);
+  cl_assert(pbl_log_backend_is_enabled(flash));
+  cl_assert(s_flash_count >= 1);
+  cl_assert_equal_s(s_flash_message, "early");
+  cl_assert_equal_i(s_flash_level, LOG_LEVEL_ERROR);
+
+  const int count = s_flash_count;
+  pbl_log(LOG_LEVEL_ERROR, __FILE__, __LINE__, "live");
+  cl_assert_equal_i(s_flash_count, count + 1);
+  cl_assert_equal_s(s_flash_message, "live");
+}
+
+void test_log_modules__start_does_not_replay_without_replay(void) {
+  const struct pbl_log_backend *serial = PBL_LOG_BACKEND_GET(test_serial);
+  pbl_log_backend_disable(serial);
+  pbl_log(LOG_LEVEL_ERROR, __FILE__, __LINE__, "not kept");
+
+  pbl_log_backend_start(serial);
+  cl_assert(pbl_log_backend_is_enabled(serial));
+  cl_assert_equal_i(s_serial_count, 0);
+
+  const struct pbl_log_backend *flash = PBL_LOG_BACKEND_GET(test_flash);
+  pbl_log_backend_disable(flash);
+  s_flash_message[0] = '\0';
+  pbl_log_backend_start(flash);
+  cl_assert(strcmp(s_flash_message, "not kept") != 0);
 }
