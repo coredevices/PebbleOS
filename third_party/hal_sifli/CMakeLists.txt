@@ -197,13 +197,6 @@ if(CONFIG_HAL_SIFLI_WDT)
     SiFli-SDK/drivers/hal/bf0_hal_wdt.c
   )
 endif()
-if(CONFIG_HAL_SIFLI_IPC_QUEUE)
-  list(APPEND micro_sources
-    SiFli-SDK/middleware/ipc_queue/common/circular_buf.c
-    SiFli-SDK/middleware/ipc_queue/common/ipc_hw.c
-    SiFli-SDK/middleware/ipc_queue/common/ipc_queue.c
-  )
-endif()
 if(CONFIG_HAL_SIFLI_SF32LB52)
   list(APPEND micro_sources
     SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_pin_const.c
@@ -212,11 +205,6 @@ if(CONFIG_HAL_SIFLI_SF32LB52)
   list(APPEND ramfunc_sources
     SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_pin_const.c
   )
-  if(CONFIG_HAL_SIFLI_IPC_QUEUE)
-    list(APPEND micro_sources
-      SiFli-SDK/middleware/ipc_queue/porting/sf32lb52x/hcpu/ipc_hw_port.c
-    )
-  endif()
   if(CONFIG_HAL_SIFLI_LCPU_CONFIG)
     list(APPEND micro_sources
       SiFli-SDK/drivers/cmsis/sf32lb52x/lcpu_config_type.c
@@ -224,11 +212,8 @@ if(CONFIG_HAL_SIFLI_SF32LB52)
   endif()
   if(CONFIG_HAL_SIFLI_LCPU)
     list(APPEND micro_sources
-      SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_lcpu_init.c
-      SiFli-SDK/drivers/cmsis/sf32lb52x/lcpu_patch.c
       ../nonfree/pebbleos-nonfree/sf32lb52/lcpu_patch_rev_b.c
       SiFli-SDK/drivers/cmsis/sf32lb52x/bt_rf_fulcal.c
-      sf32lb52/lcpu_config.c
     )
   endif()
 endif()
@@ -238,20 +223,11 @@ set(micro_includes
   SiFli-SDK/drivers/cmsis/Include
   SiFli-SDK/external/CMSIS/Include
   SiFli-SDK/middleware/include
-  SiFli-SDK/middleware/ipc_queue/common
-  SiFli-SDK/middleware/ipc_queue/include
 )
 if(CONFIG_HAL_SIFLI_SF32LB52)
   list(APPEND micro_includes
     sf32lb52
     SiFli-SDK/drivers/cmsis/sf32lb52x
-    SiFli-SDK/middleware/ipc_queue/porting/sf32lb52x/hcpu
-  )
-endif()
-set(micro_defines)
-if(CONFIG_BOARD_OBELIX OR CONFIG_BOARD_GETAFIX)
-  list(APPEND micro_defines
-    LXT_DISABLE
   )
 endif()
 pbl_include_directories(${micro_includes})
@@ -259,5 +235,4 @@ pbl_library_named(hal_sifli)
 pbl_library_kind(stlib)
 pbl_library_sources(${micro_sources})
 pbl_library_ramfunc(${ramfunc_sources})
-pbl_library_compile_definitions(${micro_defines})
 pbl_library_compile_options(-Wno-unused-value -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-sign-compare -Wno-type-limits)

@@ -18,7 +18,6 @@ config HAL_SIFLI_SF32LB52
     bool "SF32LB52 SoC variant"
     select HAL_SIFLI_AON
     select HAL_SIFLI_GPT
-    select HAL_SIFLI_IPC_QUEUE
     select HAL_SIFLI_LPTIM
     select HAL_SIFLI_PINMUX
     select HAL_SIFLI_RTC
@@ -110,21 +109,14 @@ config HAL_SIFLI_I2S
     help
       Enable the I2S SiFli HAL module driver.
 
-config HAL_SIFLI_IPC_QUEUE
-    bool "IPC queue"
-    select HAL_SIFLI_MAILBOX
-    help
-      Enable the IPC queue middleware for inter-core
-      communication.
-
 config HAL_SIFLI_LCPU
-    bool "LCPU boot support"
+    bool "LCPU ROM patches and BT RF calibration"
     depends on HAL_SIFLI_SF32LB52
     select HAL_SIFLI_LCPU_CONFIG
     select HAL_SIFLI_LCPU_PATCH
     help
-      Enable LCPU power-on, patch installation and BT RF
-      calibration support.
+      Enable the LCPU ROM patches (A4 and later) and the BT RF
+      calibration, used by the LCPU driver.
 
 config HAL_SIFLI_LCPU_CONFIG
     bool "LCPU_CONFIG HAL module"
