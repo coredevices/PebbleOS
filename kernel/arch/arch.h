@@ -15,6 +15,7 @@
 //! threads may read it: pbl_thread_current() runs without privilege.
 extern struct pbl_thread *pbl_cur;
 
+//! Early arch setup, before main(): fault exceptions.
 void arch_init(void);
 
 //! Builds the initial context so that the first switch to @p t runs

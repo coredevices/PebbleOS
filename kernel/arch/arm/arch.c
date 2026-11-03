@@ -414,6 +414,16 @@ PBL_NAKED void SVC_Handler(void) {
 // ---- start and tick ---------------------------------------------------------
 
 void arch_init(void) {
+  // NVIC_SetPriority() takes the unshifted priority; PBL_IRQ_PRIO_* are register values.
+  const uint32_t prio = PBL_IRQ_PRIO_MAX_SYSCALL >> (8U - __NVIC_PRIO_BITS);
+  NVIC_SetPriority(MemoryManagement_IRQn, prio);
+  NVIC_SetPriority(BusFault_IRQn, prio);
+  NVIC_SetPriority(UsageFault_IRQn, prio);
+
+  SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk | SCB_SHCSR_USGFAULTENA_Msk;
+  SCB->CCR &= ~SCB_CCR_DIV_0_TRP_Msk;
+  __DSB();
+  __ISB();
 }
 
 void arch_start(void) {

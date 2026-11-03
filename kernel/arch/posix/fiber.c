@@ -9,7 +9,6 @@
 #include <string.h>
 
 #include <pbl/kernel/idle.h>
-#include <pbl/kernel/init.h>
 
 #include <emscripten/emscripten.h>
 #include <emscripten/fiber.h>
@@ -190,9 +189,7 @@ void arch_idle(pbl_tick_t max_ticks) {
 
 static void prv_boot_main(void *arg) {
   prv_reap();
-  pbl_soc_early_init();
-  s_entry();
-  PBL_ASSERTN(false);
+  kernel_init(s_entry);
 }
 
 void pbl_posix_start(int (*entry)(void)) {
