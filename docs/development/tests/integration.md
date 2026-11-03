@@ -241,6 +241,8 @@ Everything a run produces goes to `BUILD/itest` (or `--results-dir`):
 - `<test>/failure.png`: the screen when a test failed; the tail of the log
   is added to the failure report too
 - `<test>/<name>.json`, `<name>.csv`: current measurements
+- `<test>/rerun1/`, ...: the same files for each rerun of a test marked
+  `flaky` (pytest-rerunfailures)
 - `qemu.log`, `uart1.log`, `flash.log`: the emulator's and the flasher's
   output
 - with `-n`, the session-wide files are in a directory per worker (`gw0`,
@@ -398,7 +400,8 @@ The power tests measure TicToc idling while advertising fast and slow for
 discovery, and in airplane mode. They wipe the watch first (`dut.wipe()`),
 so run them on a test watch, with no phone bonded to it nearby. Each passes
 within 10% of the board's nominal figure in `power/test_idle.py`, measured
-at 3.8 V; update the nominals when a change moves them on purpose. Boards
+at 3.8 V, and one out of range is rerun once; update the nominals when a
+change moves them on purpose. Boards
 without nominals record their figures with a warning.
 
 ## Recovery firmware

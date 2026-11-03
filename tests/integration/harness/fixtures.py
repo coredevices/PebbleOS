@@ -142,8 +142,12 @@ def dut(unlaunched_dut):
 
 @pytest.fixture
 def test_results_dir(request):
-    """This test's own results directory."""
+    """This test's own results directory, a ``rerunN`` one inside it for
+    each rerun."""
     path = results_dir_for(request.config, request.node.nodeid)
+    reruns = getattr(request.node, "execution_count", 1) - 1
+    if reruns > 0:
+        path = os.path.join(path, f"rerun{reruns}")
     os.makedirs(path, exist_ok=True)
     return path
 

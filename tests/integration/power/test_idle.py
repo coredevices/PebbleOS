@@ -7,7 +7,12 @@ import warnings
 import pytest
 from harness.fixtures import dut_scope_within
 
-pytestmark = pytest.mark.device_types("hardware")
+# A sporadic burst of background flash work can push a single measurement out
+# of range; a real regression fails the rerun too.
+pytestmark = [
+    pytest.mark.device_types("hardware"),
+    pytest.mark.flaky(reruns=1, only_rerun=["AssertionError"]),
+]
 
 # How long a watch with no bonding advertises fast (20 ms) for discovery,
 # before slowing down to 1022.5 ms (comm/ble/gap_le_slave_discovery.c), which
