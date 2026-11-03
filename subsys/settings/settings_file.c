@@ -210,8 +210,8 @@ static uint32_t utc_time() {
   return rtc_get_time();
 }
 
-static bool deleted_and_expired(SettingsRecordHeader *hdr) {
-  return (hdr->val_len == 0) && (hdr->last_modified <= (utc_time() - DELETED_LIFETIME));
+static bool deleted(SettingsRecordHeader *hdr) {
+  return hdr->val_len == 0;
 }
 
 static void compute_stats(SettingsFile *file) {
@@ -222,7 +222,7 @@ static void compute_stats(SettingsFile *file) {
   file->used_space += sizeof(SettingsRecordHeader); // EOF Marker
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
        settings_raw_iter_next(&file->iter)) {
-    if (overwritten(&file->iter.hdr) || deleted_and_expired(&file->iter.hdr)) {
+    if (overwritten(&file->iter.hdr) || deleted(&file->iter.hdr)) {
       file->dead_space += record_size(&file->iter.hdr);
     } else {
       file->used_space += record_size(&file->iter.hdr);
@@ -276,7 +276,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
       // record, but we should ignore it's garbage data anyway).
       break;
     }
-    if (overwritten(hdr) || deleted_and_expired(hdr)) {
+    if (overwritten(hdr) || deleted(hdr)) {
       continue;
     }
     if (partially_overwritten(hdr)) {
@@ -459,7 +459,7 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, 
     memset(val_out, 0, val_out_len);
     return E_DOES_NOT_EXIST;
   }
-  if (deleted_and_expired(&file->iter.hdr)) {
+  if (deleted(&file->iter.hdr)) {
     memset(val_out, 0, val_out_len);
     return E_DOES_NOT_EXIST;
   }
@@ -602,11 +602,6 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
   return prv_settings_file_set_internal(file, key, key_len, val, val_len, utc_time());
 }
 
-status_t settings_file_set_with_timestamp(SettingsFile *file, const void *key, size_t key_len,
-                                          const void *val, size_t val_len, uint32_t timestamp) {
-  return prv_settings_file_set_internal(file, key, key_len, val, val_len, timestamp);
-}
-
 status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t key_len) {
   // Cannot set keys while iterating (Try settings_file_rewrite)
   PBL_ASSERTN(file->cur_record_pos == 0);
@@ -639,8 +634,8 @@ static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *
 
   // Write to new file with original timestamp - records are dirty by default (no SYNCED flag)
   // Preserving the timestamp ensures sync conflict resolution works correctly
-  settings_file_set_with_timestamp(new_file, key, info->key_len, val, info->val_len,
-                                   info->last_modified);
+  prv_settings_file_set_internal(new_file, key, info->key_len, val, info->val_len,
+                                 info->last_modified);
   pbl_free(val);
 }
 
@@ -662,13 +657,13 @@ static void prv_get_val(SettingsFile *file, void *val, size_t val_len) {
   settings_raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
   settings_raw_iter_read_val(&file->iter, val, val_len);
 }
-status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
+void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
   // Cannot set keys while iterating
   PBL_ASSERTN(file->cur_record_pos == 0);
   SettingsRecordInfo info;
   for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
        settings_raw_iter_next(&file->iter)) {
-    if (overwritten(&file->iter.hdr) || deleted_and_expired(&file->iter.hdr)) {
+    if (overwritten(&file->iter.hdr) || deleted(&file->iter.hdr)) {
       continue;
     }
     info = (SettingsRecordInfo){
@@ -688,8 +683,6 @@ status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, voi
   }
 
   file->cur_record_pos = 0;
-
-  return S_SUCCESS;
 }
 
 typedef struct {

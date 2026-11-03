@@ -153,7 +153,7 @@ static void prv_get_val(SettingsFile *file, void *val, size_t val_len) {
   memcpy(val, s_settings_file.values[s_cur_itr], val_len);
 }
 
-status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
+void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
     if (s_settings_file.keys[i] != nullptr && s_settings_file.values[i] != nullptr) {
       s_cur_itr = i;
@@ -170,7 +170,6 @@ status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, voi
       }
     }
   }
-  return S_SUCCESS;
 }
 
 status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context) {

@@ -140,14 +140,9 @@ bool timeline_item_storage_is_empty(TimelineItemStorage *storage) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
   AnyInfo any_info = {.empty = true};
-  status_t status = settings_file_each(&storage->file, prv_each_any_item, &any_info);
-  if (status) {
-    goto cleanup;
-  }
-
+  settings_file_each(&storage->file, prv_each_any_item, &any_info);
   rv = any_info.empty;
 
-cleanup:
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
@@ -161,11 +156,8 @@ status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_
   next_info.max_age = storage->max_item_age;
   next_info.filter_cb = filter_cb;
 
-  status_t rv = settings_file_each(&storage->file, prv_each_first_item, &next_info);
-  if (rv) {
-    goto cleanup;
-  }
-
+  status_t rv;
+  settings_file_each(&storage->file, prv_each_first_item, &next_info);
   if (!next_info.found) {
     rv = S_NO_MORE_ITEMS;
     goto cleanup;
@@ -187,20 +179,10 @@ bool timeline_item_storage_exists_with_parent(TimelineItemStorage *storage, cons
     .num_children = 0,
     .find_all = false,
   };
-  status_t rv = settings_file_each(&storage->file, prv_each_find_children, &info);
-  if (rv) {
-    goto cleanup;
-  }
+  settings_file_each(&storage->file, prv_each_find_children, &info);
 
-  if (info.num_children) {
-    rv = S_SUCCESS;
-  } else {
-    rv = S_NO_MORE_ITEMS;
-  }
-
-cleanup:
   prv_storage_unlock(storage, lock_ticks, __func__);
-  return rv == S_SUCCESS;
+  return info.num_children > 0;
 }
 
 status_t timeline_item_storage_delete_with_parent(
@@ -213,11 +195,9 @@ status_t timeline_item_storage_delete_with_parent(
     .num_children = 0,
     .find_all = true,
   };
-  status_t rv = settings_file_each(&storage->file, prv_each_find_children, &info);
-  if (rv) {
-    goto cleanup;
-  }
+  settings_file_each(&storage->file, prv_each_find_children, &info);
 
+  status_t rv = S_SUCCESS;
   for (int i = 0; i < info.num_children; ++i) {
     const void *key = &info.children_ids[i];
     rv = settings_file_delete(&storage->file, key, sizeof(Uuid));
@@ -240,9 +220,9 @@ cleanup:
 status_t timeline_item_storage_each(TimelineItemStorage *storage,
                                     TimelineItemStorageEachCallback each, void *data) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = settings_file_each(&storage->file, each, data);
+  settings_file_each(&storage->file, each, data);
   prv_storage_unlock(storage, lock_ticks, __func__);
-  return rv;
+  return S_SUCCESS;
 }
 
 void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, uint32_t max_size,

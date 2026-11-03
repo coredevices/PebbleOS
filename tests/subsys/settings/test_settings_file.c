@@ -55,7 +55,7 @@ static void verify(SettingsFile *file, uint8_t *key, int key_len, uint8_t *val, 
   cl_must_pass(val_len_out);
   cl_assert_equal_i(val_len, val_len_out);
 
-  const bool is_immediate_delete = (val_len == 0 && DELETED_LIFETIME <= 0);
+  const bool is_immediate_delete = (val_len == 0);
   uint8_t *val_out = malloc(val_len_out);
   cl_assert_equal_i(settings_file_get(file, key, key_len, val_out, val_len_out),
                     is_immediate_delete ? E_DOES_NOT_EXIST : S_SUCCESS);
