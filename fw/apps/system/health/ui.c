@@ -5,8 +5,10 @@
 
 #include <time.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/util/string.h>
 
 #include <applib/pbl_std/pbl_std.h>
@@ -56,7 +58,7 @@ void health_ui_draw_text_in_box(GContext *ctx, const char *text, const GRect dra
 // already nudged up to compensate for the text renderer's top padding, so
 // callers can position their body rows relative to it.
 static GRect prv_render_typical_pill(GContext *ctx, Layer *layer, int pill_height) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   struct pbl_tm time_tm;
   pbl_localtime_r(&now, &time_tm);
   char weekday[8];

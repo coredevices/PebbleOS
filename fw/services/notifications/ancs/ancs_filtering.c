@@ -3,11 +3,12 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/ancs/ancs_filtering.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/pstring.h>
 #include <pbl/util/units.h>
@@ -264,7 +265,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
   if (app_notif_prefs) {
     last_updated = attribute_find(&app_notif_prefs->attr_list, AttributeIdLastUpdated);
   }
-  uint32_t now = rtc_get_time();
+  uint32_t now = pbl_realtime();
   // Only perform an update if there is no timestamp or the current timestamp is more than a day old
   if (!last_updated || (last_updated && now > (last_updated->uint32 + PBL_SEC_PER_DAY))) {
     attribute_list_add_uint32(&new_attr_list, AttributeIdLastUpdated, now);
@@ -318,7 +319,7 @@ bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs) {
   uint32_t expiration_ts = ancs_filtering_get_mute_expiration(app_notif_prefs);
 
   struct pbl_tm now_tm;
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   pbl_localtime_r(&now, &now_tm);
 
   return (mute_type & (1 << now_tm.tm_wday)) || (expiration_ts > (uint32_t)now);

@@ -3,7 +3,6 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 
 #include <flash_region/flash_region.h>
@@ -151,8 +150,6 @@ uint32_t boot_version_read(void) {
 #else
 
 void boot_bit_init(void) {
-  rtc_init();
-
   if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
     RTC_WriteBackupRegister(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
   }

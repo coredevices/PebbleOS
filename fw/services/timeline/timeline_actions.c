@@ -4,6 +4,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
@@ -17,6 +18,7 @@
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_actions.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -983,7 +985,7 @@ static void prv_postpone_15_minutes(ActionMenu *action_menu, const ActionMenuIte
   const TimelineItem *pin = timeline_action_menu->item;
   const TimelineItemAction *action = action_menu_item->action_data;
 
-  time_t new_time = rtc_get_time() + (15 * PBL_SEC_PER_MIN);
+  time_t new_time = pbl_realtime() + (15 * PBL_SEC_PER_MIN);
   prv_invoke_remote_action(action_menu, action, pin, (void *)(uintptr_t)new_time);
 }
 
@@ -998,7 +1000,7 @@ static void prv_postpone_later_today(ActionMenu *action_menu,
   // 6pm if created before 4pm,
   // 2 hours from time of creation otherwise
 
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
   struct pbl_tm local_tm;
   pbl_localtime_r(&utc_sec, &local_tm);
 
@@ -1026,7 +1028,7 @@ static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem 
   const TimelineItemAction *action = action_menu_item->action_data;
 
   // The new time is 9am the following day
-  time_t tomorrow_utc = rtc_get_time() + PBL_SEC_PER_DAY;
+  time_t tomorrow_utc = pbl_realtime() + PBL_SEC_PER_DAY;
   struct pbl_tm local_tm;
   pbl_localtime_r(&tomorrow_utc, &local_tm);
   local_tm.tm_hour = 9;
@@ -1039,7 +1041,7 @@ static void prv_postpone_tomorrow(ActionMenu *action_menu, const ActionMenuItem 
 
 static ActionMenuLevel *prv_create_postpone_level(TimelineItemAction *action,
                                                   ActionMenuLevel *root_level) {
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
   struct pbl_tm local_tm;
   pbl_localtime_r(&utc_sec, &local_tm);
 

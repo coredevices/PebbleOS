@@ -5,6 +5,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
@@ -95,7 +96,7 @@ void wakeup_dispatcher_system_task(void *data) {
   WakeupId wakeup_id = (WakeupId)(intptr_t)data;
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
-  if (entry.timestamp > rtc_get_time()) {
+  if (entry.timestamp > pbl_realtime()) {
     prv_wakeup_timer_next_pending();
     return;
   }
@@ -104,7 +105,7 @@ void wakeup_dispatcher_system_task(void *data) {
   prv_wakeup_settings_delete_entry(wakeup_id);
 
   s_dispatched = true;
-  s_last_dispatch_time = rtc_get_time();
+  s_last_dispatch_time = pbl_realtime();
 
   AppInstallId app_id = app_install_get_id_for_uuid(&entry.uuid);
 
@@ -208,7 +209,7 @@ static void prv_wakeup_timer_next_pending(void) {
   // Create a timer for the found wakeup id, given it's valid
   if (s_wakeup_state.current_wakeup_id >= 0) {
     int32_t timestamp = s_wakeup_state.timestamp;
-    time_t current_time = rtc_get_time();
+    time_t current_time = pbl_realtime();
     int32_t time_difference = timestamp - current_time;
 
     // If time_difference is negative, this was a missed past event due to set_time
@@ -304,7 +305,7 @@ static void prv_update_events_callback(struct pbl_settings_file *old_file,
   }
 
   int32_t timestamp = entry.timestamp;
-  time_t current_time = rtc_get_time();
+  time_t current_time = pbl_realtime();
   int32_t time_difference = timestamp - current_time;
 
   // Entries outside the ID range can never fire
@@ -351,7 +352,7 @@ void wakeup_init(void) {
 
   // Create single reusable timer for wakeup events
   s_current_timer_id = new_timer_create();
-  s_wakeup_state.next_wakeup_id = CLIP(rtc_get_time(), WAKEUP_ID_MIN, WAKEUP_ID_MAX);
+  s_wakeup_state.next_wakeup_id = CLIP(pbl_realtime(), WAKEUP_ID_MIN, WAKEUP_ID_MAX);
   s_wakeup_state.timestamp = -1;
 
   struct pbl_settings_file wakeup_settings;
@@ -402,7 +403,7 @@ PBL_SYSCALL(WakeupId, sys_wakeup_schedule, (VAL, time_t, timestamp), (VAL, int32
     timestamp = time_local_to_utc(timestamp);
   }
 
-  time_t current_time = rtc_get_time();
+  time_t current_time = pbl_realtime();
   int32_t time_difference = timestamp - current_time;
 
   // Disallow scheduling past events

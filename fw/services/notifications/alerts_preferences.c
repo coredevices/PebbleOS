@@ -4,11 +4,11 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
@@ -395,10 +395,10 @@ static void prv_migrate_vibe_intensity_to_vibe_scores(struct pbl_settings_file *
     // If the user previously set a vibration intensity, set the vibe scores based on that intensity
     if (pbl_settings_exists(file, PREF_KEY_VIBE_INTENSITY, strlen(PREF_KEY_VIBE_INTENSITY))) {
       prv_set_vibe_scores_based_on_legacy_intensity(s_vibe_intensity);
-    } else if (rtc_is_timezone_set()) {
+    } else if (clock_is_timezone_set()) {
       // Otherwise, if the timezone has been set, then we assume this is a user on 3.10 and lower
       // that has not touched their vibe intensity preferences.
-      // rtc_is_timezone_set() was chosen because it is a setting that gets written when the user
+      // clock_is_timezone_set() was chosen because it is a setting that gets written when the user
       // connects their watch to a phone
       prv_set_vibe_scores_based_on_legacy_intensity(DEFAULT_VIBE_INTENSITY);
     }

@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
@@ -590,7 +590,7 @@ void test_app_glance_db__empty_glance_insert_after_basic_glance_insert_succeeds(
   test_app_glance_db__basic_glance_insert_and_read();
 
   // Let some time pass so the creation time of this next glance insertion is newer
-  rtc_set_time(rtc_get_time() + 10);
+  pbl_realtime_set(pbl_realtime() + 10);
 
   // Try inserting an empty glance; this should succeed and clear the glance
   AppGlance empty_glance = {};

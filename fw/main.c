@@ -11,7 +11,6 @@
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
@@ -79,7 +78,7 @@ static void print_splash_screen(void) {
 int main(void) {
   print_splash_screen();
 
-  rtc_init();
+  clock_restore_time();
 
 #ifdef CONFIG_RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
@@ -238,12 +237,9 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   services_init();
 
-  // The RTC needs be calibrated after the mfg registry service has been initialized so we can
-  // load the measured frequency.
-#if defined(CONFIG_SOC_SF32LB52) && !defined(SF32LB52_USE_LXT)
+#ifdef CONFIG_SOC_SF32LB52
   rc10k_init();
 #endif
-  rtc_calibrate_frequency(mfg_info_get_rtc_freq());
 
   clear_reset_loop_detection_bits();
 

@@ -35,7 +35,7 @@ uint64_t pbl_uptime_ticks(void) {
 // Fakes
 ////////////////////////////////////////////////////////////////
 static const time_t NOW = 1471269600; // Mon, 15 Aug 2016 14:00:00 GMT
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return NOW;
 }
 

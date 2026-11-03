@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/i18n/i18n.h>
@@ -390,7 +391,7 @@ static bool prv_set_s_clock_24h(bool *new_value) {
     // Fire a tick event so watchfaces re-render with the new time format
     PebbleEvent e = {
       .type = PEBBLE_TICK_EVENT,
-      .clock_tick.tick_time = rtc_get_time(),
+      .clock_tick.tick_time = pbl_realtime(),
     };
     event_put(&e);
   } else {
@@ -2108,7 +2109,7 @@ time_t activity_prefs_get_activation_time(void) {
 
 void activity_prefs_set_activated(void) {
   if (s_activity_activation_timestamp == 0) {
-    s_activity_activation_timestamp = rtc_get_time();
+    s_activity_activation_timestamp = pbl_realtime();
     prv_pref_set(PREF_KEY_ACTIVITY_ACTIVATED_TIMESTAMP, &s_activity_activation_timestamp,
                  sizeof(s_activity_activation_timestamp));
   }

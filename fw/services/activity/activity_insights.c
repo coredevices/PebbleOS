@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
@@ -2083,7 +2084,7 @@ void activity_insights_init(time_t now_utc) {
 // ------------------------------------------------------------------------------------------------
 // QA Testing functions
 static void prv_test_push_summary_pins(void *unused) {
-  time_t now_utc = rtc_get_time();
+  time_t now_utc = pbl_realtime();
   int minute_of_day = (20 * PBL_MIN_PER_HOUR) + 30; // Activity pins only trigger after 8:30
 
   Uuid uuid_way_below = UUID_INVALID;
@@ -2139,7 +2140,7 @@ static void prv_test_push_summary_pins(void *unused) {
 }
 
 static void prv_test_push_rewards(void *unused) {
-  time_t now_utc = rtc_get_time();
+  time_t now_utc = pbl_realtime();
 
   if (activity_prefs_sleep_insights_are_enabled()) {
     prv_push_reward(now_utc, &SLEEP_REWARD_NOTIF_CONFIG);
@@ -2151,7 +2152,7 @@ static void prv_test_push_rewards(void *unused) {
 }
 
 static void prv_test_push_walk_run_session(void *unused) {
-  const time_t now_utc = rtc_get_time();
+  const time_t now_utc = pbl_realtime();
   ActivitySession walk_session = {
     .type = ActivitySessionType_Walk,
     .start_utc = now_utc - 30 * PBL_SEC_PER_MIN - 15 * PBL_SEC_PER_MIN,
@@ -2205,7 +2206,7 @@ static void prv_test_push_walk_run_session(void *unused) {
 }
 
 static void prv_test_push_nap_session(void *unused) {
-  const time_t now_utc = rtc_get_time();
+  const time_t now_utc = pbl_realtime();
   const int length_min = PBL_MIN_PER_HOUR + PBL_MIN_PER_HOUR / 2;
   ActivitySession session = {
     .type = ActivitySessionType_Nap,

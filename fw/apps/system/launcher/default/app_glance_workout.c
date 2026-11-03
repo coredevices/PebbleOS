@@ -8,6 +8,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/i18n/i18n.h>
@@ -129,7 +130,7 @@ static void prv_timer_callback(void *data) {
   } else if (has_automatic_session) {
     // Automatic workout is going on - get the type and duration
     workout_type = automatic_session.type;
-    workout_duration_s = rtc_get_time() - automatic_session.start_utc;
+    workout_duration_s = pbl_realtime() - automatic_session.start_utc;
   } else {
     // No workout is going on
     bool glance_changed = false;

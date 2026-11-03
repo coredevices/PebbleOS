@@ -27,6 +27,7 @@
 #include "weather_report.h"
 #include "weather_types.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline.h> // UUID_WEATHER_DATA_SOURCE
 #include <pbl/util/units.h>
@@ -145,7 +146,7 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
       i18n_noop("Sunday"),   i18n_noop("Monday"), i18n_noop("Tuesday"),  i18n_noop("Wednesday"),
       i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
     };
-    time_t t = rtc_get_time() + (time_t)day_offset * PBL_SEC_PER_DAY;
+    time_t t = pbl_realtime() + (time_t)day_offset * PBL_SEC_PER_DAY;
     struct pbl_tm *lt = localtime(&t); // compat maps to pbl_override_localtime
     int w = (lt && lt->tm_wday >= 0 && lt->tm_wday < 7) ? lt->tm_wday : 0;
     i18n_get_with_buffer(kWday[w], buf, bufsize);
@@ -157,7 +158,7 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
 // linked into the firmware, so UTC is derived from localtime + the watch's own offset (the
 // same pair the sunset computation uses).
 static int prv_location_local_hour(const WxDsForecast *ds) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   struct pbl_tm *lt = localtime(&now);
   if (!lt)
     return -1;
@@ -248,7 +249,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     // hour — using the location-shifted hour here made header and clock disagree by the tz
     // delta on the same city. Consistency with the clock outranks the saved-city refinement
     // (which the clock doesn't have either).
-    time_t now_t = rtc_get_time();
+    time_t now_t = pbl_realtime();
     struct pbl_tm *lt_h = localtime(&now_t);
     const int hour = lt_h ? lt_h->tm_hour : -1;
     if (ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&

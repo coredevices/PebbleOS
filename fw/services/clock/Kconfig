@@ -8,6 +8,35 @@ config SERVICE_CLOCK
 
 if SERVICE_CLOCK
 
+config SERVICE_CLOCK_RTC_SAVE_INTERVAL
+    int "RTC save interval (seconds)"
+    range 1 65535
+    default 30 if RTC_RETAINED
+    default 600
+    help
+      How often the wall clock is written to the RTC, besides whenever it
+      is set. This bounds the time lost or gained on a reset to the drift
+      of the RTC over this interval, or, with an RTC that does not count
+      while the system is off, to the interval itself.
+
+choice SERVICE_CLOCK_TZ_STORAGE
+    prompt "Timezone storage"
+    default SERVICE_CLOCK_TZ_STORAGE_RETAINED if SOC_NRF52
+    default SERVICE_CLOCK_TZ_STORAGE_FLASH
+
+config SERVICE_CLOCK_TZ_STORAGE_FLASH
+    bool "Flash"
+    help
+      Keep the timezone in the TZINFO flash region.
+
+config SERVICE_CLOCK_TZ_STORAGE_RETAINED
+    bool "Retained registers"
+    depends on SOC_NRF52
+    help
+      Keep the timezone in retained RAM, which survives resets.
+
+endchoice
+
 module = SERVICE_CLOCK
 module-str = Clock
 source "subsys/logging/Kconfig.template.log_level"

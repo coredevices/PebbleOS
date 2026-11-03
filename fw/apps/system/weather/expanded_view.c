@@ -12,6 +12,7 @@
 #include <string.h>
 #include <time.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_timer.h>
@@ -101,7 +102,7 @@ static int prv_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_mi
   if (lat_e2 == INT16_MIN || lon_e2 == INT16_MIN) {
     return -1;
   }
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   struct pbl_tm lt = *localtime(&now);
   const int N = lt.tm_yday + 1; // day of year 1..366
   // The LOCATION's UTC offset when the phone synced one (v4.1) — so a saved city's
@@ -183,7 +184,7 @@ static void prv_build_sunset(char *out, size_t n, int16_t lat_e2, int16_t lon_e2
 }
 
 static void prv_build_time(char *out, size_t n) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   struct pbl_tm *lt = localtime(&now);
   if (!lt) {
     snprintf(out, n, "--:--");

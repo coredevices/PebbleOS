@@ -9,8 +9,10 @@
 #include <time.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/clock.h> // clock_copy_time_string — notification-style top time
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/util/math_fixed.h>
 #include <pbl/util/trig.h>
 
@@ -1122,7 +1124,7 @@ static void prv_start_report_stage3(void) {
     gdraw_command_image_destroy(raw);
   weather_recolor_pdc_image_for_dark_mode(s_list->fly_pdc);
   // Frozen fan start-ray (Timeline picks a random ray per unfold; RTC seconds vary plenty).
-  s_list->report_angle = (int32_t)(rtc_get_time() % TRIG_MAX_ANGLE);
+  s_list->report_angle = (int32_t)(pbl_realtime() % TRIG_MAX_ANGLE);
   if (!s_list->fly_pdc) { // resource missing: skip straight to the handoff
     prv_report_stage4_stopped(nullptr, true, nullptr);
     return;

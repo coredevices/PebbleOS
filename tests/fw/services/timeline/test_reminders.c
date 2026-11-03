@@ -26,7 +26,7 @@
 static time_t now = 0;
 static int num_events_put = 0;
 
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return now;
 }
 

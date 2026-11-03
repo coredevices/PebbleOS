@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/speaker/speaker_service.h>
 
 #include <clar.h>

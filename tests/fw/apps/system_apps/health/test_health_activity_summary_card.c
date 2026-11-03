@@ -28,7 +28,7 @@ bool clock_is_24h_style(void) {
 
 void test_health_activity_summary_card__initialize(void) {
   // Pin RTC to 2024-01-06 16:19:35 UTC (Saturday 16:19 -> bin minute 975 = 16:15).
-  rtc_set_time(1704557975);
+  pbl_realtime_set(1704557975);
 
   // Setup graphics context
   framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});

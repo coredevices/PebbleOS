@@ -113,7 +113,7 @@ static const AppData app3 = {
 };
 
 void test_app_cache__initialize(void) {
-  rtc_set_time(1478397600);
+  pbl_realtime_set(1478397600);
   fake_spi_flash_init(0, 0x1000000);
   fake_event_init();
   fake_pfs_mount();
@@ -180,8 +180,8 @@ void test_app_cache__add_update_evict(void) {
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
 
-  time_t now = rtc_get_time();
-  rtc_set_time(now + 2);
+  time_t now = pbl_realtime();
+  pbl_realtime_set(now + 2);
 
   // remove 2
   cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(app1.id));
@@ -237,8 +237,8 @@ void test_app_cache__update_all_lots_evict_one(void) {
     }
 
     // increment time so everything won't happen in the same second
-    time_t now = rtc_get_time();
-    rtc_set_time(now + 2);
+    time_t now = pbl_realtime();
+    pbl_realtime_set(now + 2);
   }
 
   // ensure the one that is evicted is INVALID_ID
@@ -251,7 +251,7 @@ void test_app_cache__update_all_lots_evict_one(void) {
 
 void test_app_cache__frequent_app_outlives_newer_idle_app(void) {
   const time_t day = 24 * 60 * 60;
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
 
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
   for (int i = 0; i < 5; i++) {
@@ -259,12 +259,12 @@ void test_app_cache__frequent_app_outlives_newer_idle_app(void) {
   }
 
   // app2 is installed 3 days later but never opened
-  rtc_set_time(now + 3 * day);
+  pbl_realtime_set(now + 3 * day);
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
   cl_assert_equal_i(app2.id, app_cache_get_next_eviction());
 
   // ...but it does win against an app last used much longer ago than its launches cover
-  rtc_set_time(now + 40 * day);
+  pbl_realtime_set(now + 40 * day);
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
   cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app2.id));
   cl_assert_equal_i(app1.id, app_cache_get_next_eviction());
@@ -307,7 +307,7 @@ void test_app_cache__corrupt_key(void) {
   cl_assert_equal_i(0, rv);
 
   AppCacheEntry entry = {
-    .install_date = rtc_get_time(),
+    .install_date = pbl_realtime(),
     .last_launch = 0,
     .launch_count = 0,
     .total_size = 17,
@@ -389,7 +389,7 @@ extern uint32_t app_cache_get_size(void);
 void prv_load_lotta_apps(void) {
   for (int i = 0; i < 50; i++) {
     // time is the basis of the priority. Set the time so we know what priority.
-    rtc_set_time(t_data[i].priority);
+    pbl_realtime_set(t_data[i].priority);
     cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(t_data[i].id, t_data[i].size));
     cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(t_data[i].id));
     // increment time so everything won't happen in the same second

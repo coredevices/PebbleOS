@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
@@ -83,14 +83,14 @@ void prv_basic_reload_cb(AppGlanceReloadSession *session, size_t limit, void *co
 
   s_test_state.resource_is_valid = true;
   AppGlanceSlice slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() + 10,
+    .expiration_time = pbl_realtime() + 10,
     .layout.icon = TIMELINE_RESOURCE_HOTEL_RESERVATION,
     .layout.subtitle_template_string = "Test subtitle",
   };
   cl_assert_equal_i(app_glance_add_slice(session, slice), APP_GLANCE_RESULT_SUCCESS);
 
   slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() + 20,
+    .expiration_time = pbl_realtime() + 20,
     .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
   };
   cl_assert_equal_i(app_glance_add_slice(session, slice), APP_GLANCE_RESULT_SUCCESS);
@@ -110,13 +110,13 @@ void test_app_glance__basic_reload(void) {
     .num_slices = 2,
     .slices = {
       {
-        .expiration_time = rtc_get_time() + 10,
+        .expiration_time = pbl_realtime() + 10,
         .type = AppGlanceSliceType_IconAndSubtitle,
         .icon_and_subtitle.icon_resource_id = TIMELINE_RESOURCE_HOTEL_RESERVATION,
         .icon_and_subtitle.template_string = "Test subtitle",
       },
       {
-        .expiration_time = rtc_get_time() + 20,
+        .expiration_time = pbl_realtime() + 20,
         .type = AppGlanceSliceType_IconAndSubtitle,
         .icon_and_subtitle.icon_resource_id = APP_GLANCE_SLICE_DEFAULT_ICON,
       }
@@ -194,7 +194,7 @@ void prv_reload_with_validation_cb(AppGlanceReloadSession *session, size_t limit
 
   // Check that adding a slice that expires in the past fails
   slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() - 10,
+    .expiration_time = pbl_realtime() - 10,
     .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
     .layout.subtitle_template_string = "Test subtitle",
   };
@@ -214,7 +214,7 @@ void prv_reload_with_validation_cb(AppGlanceReloadSession *session, size_t limit
   // Check that we can get reports of multiple kinds of failures at the same time
   s_test_state.resource_is_valid = false;
   slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() - 10,
+    .expiration_time = pbl_realtime() - 10,
     .layout.icon = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
     .layout.subtitle_template_string = really_long_subtitle,
   };

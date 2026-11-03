@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 
 #include <pebbleos/core_dump_structs.h>
 
@@ -79,7 +80,7 @@ typedef struct PBL_PACKED {
   uint32_t core_number : 8; // See include/pebbleos/core_id.h
   uint32_t version : 24;    // Set to CORE_DUMP_VERSION
 
-  uint32_t time_stamp;       // rtc_get_time() when core dump was created
+  uint32_t time_stamp;       // pbl_realtime() when core dump was created
   uint8_t serial_number[16]; // null terminated watch serial number string
   uint8_t build_id[64];      // null terminated build ID of firmware string
 } CoreDumpImageHeader;

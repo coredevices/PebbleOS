@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
+#include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
@@ -168,7 +169,7 @@ bool app_glance_service_get_current_slice(const Uuid *app_uuid, AppGlanceSliceIn
   // Iterate over the slices to find the current slice (which might be NULL if there aren't any
   // slices or if all of the slices have expired)
   FindCurrentSliceData find_current_slice_data = (FindCurrentSliceData){
-    .current_time = rtc_get_time(),
+    .current_time = pbl_realtime(),
   };
   prv_slice_for_each(app_glance, prv_find_current_glance, &find_current_slice_data);
   if (!find_current_slice_data.current_slice) {

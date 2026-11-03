@@ -77,10 +77,19 @@ typedef enum {
 
 /**
  * @ingroup services_clock
+ * @brief Restore the wall clock from the RTC.
+ *
+ * Called once, early during startup, before anything reads the time. An RTC that lost its time
+ * is moved forward to the minimum valid time.
+ */
+void clock_restore_time(void);
+
+/**
+ * @ingroup services_clock
  * @brief Initialize the clock service.
  *
- * Moves an invalid RTC time forward to the minimum valid boot timestamp, loads the timezone and
- * starts the per-minute DST watch.
+ * Loads the timezone, starts writing the wall clock to the RTC periodically and starts the
+ * per-minute DST watch.
  */
 void clock_init(void);
 
@@ -292,6 +301,25 @@ void clock_set_timezone_by_region_id(uint16_t region_id);
  * @param utc_time New UTC time.
  */
 void clock_set_time(time_t utc_time);
+
+/**
+ * @ingroup services_clock
+ * @brief Forget the timezone, as part of a factory reset.
+ */
+void clock_timezone_clear(void);
+
+/** @brief Size of the buffers passed to time_t_to_string(). */
+#define TIME_STRING_BUFFER_SIZE 26
+
+/**
+ * @ingroup services_clock
+ * @brief Format a time as local time.
+ *
+ * @param[out] buffer Buffer of at least @ref TIME_STRING_BUFFER_SIZE bytes.
+ * @param t Time to format.
+ * @return @p buffer.
+ */
+const char *time_t_to_string(char *buffer, time_t t);
 
 /**
  * @brief Converts a (day, hour, minute) specification to a UTC timestamp occurring in the future.

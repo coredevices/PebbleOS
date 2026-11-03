@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
@@ -48,7 +48,7 @@ void test_app_glance_service__cleanup(void) {
 static void prv_check_expected_slice_data(const AppGlanceSliceInternal *expected_slice_data,
                                           time_t time) {
   // Set the current time to the provided time
-  rtc_set_time(time);
+  pbl_realtime_set(time);
 
   AppGlanceSliceInternal slice_out;
   if (expected_slice_data) {

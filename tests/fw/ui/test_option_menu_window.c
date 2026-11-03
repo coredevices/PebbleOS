@@ -41,7 +41,7 @@ void test_option_menu_window__initialize(void) {
   load_system_resources_fixture();
 
   s_data = (OptionMenuTestData){};
-  rtc_set_time(3 * PBL_SEC_PER_DAY);
+  pbl_realtime_set(3 * PBL_SEC_PER_DAY);
 }
 
 void test_option_menu_window__cleanup(void) {

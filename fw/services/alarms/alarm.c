@@ -4,11 +4,11 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
@@ -17,6 +17,7 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/string.h>
@@ -360,7 +361,7 @@ static void prv_check_and_schedule_alarm(struct pbl_settings_file *fd, Alarm *al
 
   struct pbl_cron_job cron;
   time_t execute_time = prv_build_cron(&alarm->config, &cron);
-  prv_timeline_add_alarm(fd, alarm, &cron, rtc_get_time());
+  prv_timeline_add_alarm(fd, alarm, &cron, pbl_realtime());
 
   if (s_next_alarm_time == 0 || execute_time < s_next_alarm_time) {
     // This alarm is sooner than the previous one!
@@ -413,7 +414,7 @@ static status_t prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) 
   }
 
   if (rv == S_SUCCESS) {
-    rv = alarm_pin_remove_untracked_future(rtc_get_time(), tracked, tracked_count);
+    rv = alarm_pin_remove_untracked_future(pbl_realtime(), tracked, tracked_count);
   }
   pbl_free(tracked);
   return rv;
@@ -460,7 +461,7 @@ static void prv_put_alarm_event(void) {
   PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_ALARM_CLOCK_EVENT,
     .alarm_clock = {
-      .alarm_time = rtc_get_time(),
+      .alarm_time = pbl_realtime(),
       .alarm_label = is_smart ? i18n_noop("Smart Alarm") : i18n_noop("Alarm")
     }
   };
@@ -471,7 +472,7 @@ static void prv_put_alarm_event(void) {
 // ----------------------------------------------------------------------------------------------
 static bool prv_record_alarm_op(AlarmId id, AlarmConfig *config, void *context) {
   // Add a pin to the timeline (will show up in the past)
-  prv_add_pin(id, config, rtc_get_time(), nullptr);
+  prv_add_pin(id, config, pbl_realtime(), nullptr);
 
   return false;
 }
@@ -666,7 +667,7 @@ static AlarmId prv_get_next_free_alarm_id(struct pbl_settings_file *file) {
 static int prv_get_day_for_just_once_alarm(int hour, int minute) {
   // Figure out what day the alarm should happen
   struct pbl_tm local_time;
-  const time_t current_time = rtc_get_time();
+  const time_t current_time = pbl_realtime();
   pbl_localtime_r(&current_time, &local_time);
 
   if (hour < local_time.tm_hour || (hour == local_time.tm_hour && minute <= local_time.tm_min)) {
@@ -1064,7 +1065,7 @@ bool alarm_get_time_until(AlarmId id, time_t *time_out) {
 
   if (time_out) {
     struct pbl_cron_job cron;
-    *time_out = prv_build_cron(&config, &cron) - rtc_get_time();
+    *time_out = prv_build_cron(&config, &cron) - pbl_realtime();
   }
   alarm_is_scheduled = true;
 
@@ -1280,7 +1281,7 @@ void alarm_handle_clock_change(void) {
       } else {
         // Also check if current time is within the smart alarm window past the deadline
         // This handles cases where counter < 28 but we're legitimately past the alarm time
-        time_t now = rtc_get_time();
+        time_t now = pbl_realtime();
         struct pbl_tm now_tm;
         pbl_localtime_r(&now, &now_tm);
         int current_minutes = now_tm.tm_hour * 60 + now_tm.tm_min;
@@ -1377,7 +1378,7 @@ void alarm_init(void) {
 
     // An alarm which was armed for a time we have already passed never got the chance to fire:
     // the watch was down (rebooting, or updating) when it was due.
-    const time_t now = rtc_get_time();
+    const time_t now = pbl_realtime();
     if (armed.time != 0 && armed.id != ALARM_INVALID_ID && now >= armed.time &&
         (now - armed.time) <= ALARM_MISSED_MAX_DELAY_S) {
       s_missed_alarm_id = armed.id;
@@ -1405,7 +1406,7 @@ void alarm_service_enable_alarms(bool enable) {
   const AlarmId id = s_missed_alarm_id;
   s_missed_alarm_id = ALARM_INVALID_ID;
 
-  if ((rtc_get_time() - s_missed_alarm_time) > ALARM_MISSED_MAX_DELAY_S) {
+  if ((pbl_realtime() - s_missed_alarm_time) > ALARM_MISSED_MAX_DELAY_S) {
     PBL_LOG_DBG("Missed alarm %d is too late to fire", id);
     return;
   }

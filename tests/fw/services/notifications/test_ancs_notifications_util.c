@@ -57,7 +57,7 @@ void test_ancs_notifications_util__parse_timestamp(void) {
   time_util_update_timezone(&tz_info, 0, 0);
 
   time_t actual = pbl_mktime(&apr_3_13_00);
-  rtc_set_time(actual);
+  pbl_realtime_set(actual);
 
   ANCSAttribute *valid_date = prv_create_ancs_attr("20150403T130000");
   time_t calculated = ancs_notifications_util_parse_timestamp(valid_date);

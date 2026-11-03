@@ -76,7 +76,7 @@ void put_bytes_cancel(void) {
 // Fakes
 ////////////////////////////////////
 uint32_t time_get_uptime_seconds(void) {
-  return rtc_get_time();
+  return pbl_realtime();
 }
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {

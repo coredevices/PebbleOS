@@ -4,9 +4,10 @@
 #include <errno.h>
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 #include <pbl/shell/backend.h>
 #include <pbl/shell/shell.h>
 
@@ -37,12 +38,8 @@ static void prv_send(int message_type, const char *msg, size_t len) {
 #else
   PromptResponseContents *contents = pulse_best_effort_send_begin(PULSE_PROTOCOL_PROMPT);
 #endif
-  time_t time_s;
-  uint16_t time_ms;
-
-  rtc_get_time_ms(&time_s, &time_ms);
   contents->message_type = message_type;
-  contents->time_ms = (uint64_t)time_s * 1000 + time_ms;
+  contents->time_ms = pbl_realtime_ms();
   if (len > 0) {
     memcpy(contents->message, msg, len);
   }

@@ -3,7 +3,6 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
@@ -234,7 +233,7 @@ static void prv_record_metrics(struct native_heartbeat_record *record, bool rese
   memset(record, 0, sizeof(*record));
 
   record->version = NATIVE_HEARTBEAT_RECORD_VERSION;
-  record->timestamp = rtc_get_time();
+  record->timestamp = pbl_realtime();
   memcpy(record->build_id, &TINTIN_BUILD_ID.data[TINTIN_BUILD_ID.name_length],
          MIN(BUILD_ID_EXPECTED_LEN, TINTIN_BUILD_ID.data_length));
 

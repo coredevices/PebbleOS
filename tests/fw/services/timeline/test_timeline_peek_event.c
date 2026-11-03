@@ -313,7 +313,7 @@ static TimelineItem s_back_to_back_calendar_item2 = {
 
 void test_timeline_peek_event__initialize(void) {
   s_data = (PeekTestData){};
-  rtc_set_time(0);
+  pbl_realtime_set(0);
   fake_event_init();
   fake_event_set_callback(prv_event_handler);
   pin_db_init();
@@ -492,7 +492,7 @@ void test_timeline_peek_event__before_upcoming_event_custom_5min(void) {
 
 void test_timeline_peek_event__before_event_starts(void) {
   // Check that the event is about an item that is about to start
-  rtc_set_time(s_future_item.header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / 2);
+  pbl_realtime_set(s_future_item.header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / 2);
   ADD_EVENT(.item = &s_future_item);
   CHECK_EVENT(.count = 2, .item_id = s_future_item.header.id, .num_concurrent = 0,
               .timeout_ms = (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S * PBL_MSEC_PER_SEC) / 2,
@@ -501,18 +501,18 @@ void test_timeline_peek_event__before_event_starts(void) {
 
 void test_timeline_peek_event__after_event_starts(void) {
   // Check that the event is about an item about to pass the hide time
-  rtc_set_time(5 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(5 * PBL_SEC_PER_MIN);
   ADD_EVENT(.item = &s_item1);
   CHECK_EVENT(.count = 2, .item_id = s_item1.header.id, .num_concurrent = 0,
               .timeout_ms =
-                  ((TIMELINE_PEEK_HIDE_AFTER_TIME_S - (rtc_get_time() - s_item1.header.timestamp)) *
+                  ((TIMELINE_PEEK_HIDE_AFTER_TIME_S - (pbl_realtime() - s_item1.header.timestamp)) *
                    PBL_MSEC_PER_SEC),
               .time_type = TimelinePeekTimeType_ShowStarted, .is_first_event = true);
 }
 
 void test_timeline_peek_event__after_event_starts_short_event(void) {
   // Check that for a short event, the timeout is the end of the item instead
-  rtc_set_time(10 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(10 * PBL_SEC_PER_MIN);
   ADD_EVENT(.item = &s_item3);
   CHECK_EVENT(.count = 2, .item_id = s_item3.header.id, .num_concurrent = 0,
               .timeout_ms = 4 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC,
@@ -521,13 +521,13 @@ void test_timeline_peek_event__after_event_starts_short_event(void) {
 
 void test_timeline_peek_event__after_event_passed_hide_time(void) {
   // Check that there is no event if the last item passed the hide time
-  rtc_set_time(15 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(15 * PBL_SEC_PER_MIN);
   ADD_EVENT(.item = &s_item2);
   CHECK_NO_EVENTS(.count = 2);
 }
 
 void test_timeline_peek_event__after_event_passed_completely(void) {
-  rtc_set_time(30 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(30 * PBL_SEC_PER_MIN);
   ADD_EVENT(.item = &s_item2);
   CHECK_NO_EVENTS(.count = 2, .is_future_empty = true);
 }
@@ -535,7 +535,7 @@ void test_timeline_peek_event__after_event_passed_completely(void) {
 void test_timeline_peek_event__dismiss_event(void) {
   // Check that dismissing the last event causes no events to peek
   TimelineItem *item = &s_future_item;
-  rtc_set_time(item->header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / 2);
+  pbl_realtime_set(item->header.timestamp - TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S / 2);
   ADD_EVENT(.item = item);
   CHECK_EVENT(.count = 2, .item_id = item->header.id, .num_concurrent = 0,
               .timeout_ms = (TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S * PBL_MSEC_PER_SEC) / 2,
@@ -571,7 +571,7 @@ void test_timeline_peek_event__first_event_with_all_day_event_before(void) {
 
 void test_timeline_peek_event__first_event_with_all_day_event_after(void) {
   // After a timed event has passed, all day events no longer show up for the day
-  rtc_set_time(PBL_SEC_PER_HOUR);
+  pbl_realtime_set(PBL_SEC_PER_HOUR);
   TimelineItem item = DEFINE_EVENT(.id = 0x01, .timestamp = PBL_SEC_PER_HOUR + 20 * PBL_SEC_PER_MIN,
                                    .duration = 70);
   [[maybe_unused]] TimelineItem item2 =

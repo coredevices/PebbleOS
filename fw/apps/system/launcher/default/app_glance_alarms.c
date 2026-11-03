@@ -9,6 +9,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/time.h>
@@ -106,7 +107,7 @@ static void prv_update_glance_for_next_alarm(LauncherAppGlanceAlarms *alarms_gla
     clock_copy_time_string_timestamp(time_buffer, sizeof(time_buffer), alarm_time_epoch);
 
     // Determine if the alarm is for today
-    const time_t current_time = rtc_get_time();
+    const time_t current_time = pbl_realtime();
     const time_t today_midnight = time_util_get_midnight_of(current_time);
     const time_t alarm_midnight = time_util_get_midnight_of(alarm_time_epoch);
     const bool is_alarm_for_today = (alarm_midnight == today_midnight);

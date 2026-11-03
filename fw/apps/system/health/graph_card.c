@@ -3,7 +3,6 @@
 
 #include "graph_card.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>

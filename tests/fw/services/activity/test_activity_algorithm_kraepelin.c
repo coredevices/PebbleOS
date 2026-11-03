@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
@@ -264,7 +264,7 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
 }
 
 time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity) {
-  return rtc_get_time();
+  return pbl_realtime();
 }
 
 // Set these to simulate a sleep session (that should result in zeroing out any steps taken)
@@ -272,7 +272,7 @@ static time_t s_kalg_sleep_start_utc;
 static uint16_t s_kalg_sleep_m;
 
 void kalg_get_sleep_stats(KAlgState *alg_state, KAlgOngoingSleepStats *stats) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   if (s_kalg_sleep_start_utc == 0 || now < s_kalg_sleep_start_utc + PBL_SEC_PER_HOUR) {
     // We are before the requested sleep time
     *stats = (KAlgOngoingSleepStats){};
@@ -357,7 +357,7 @@ static void prv_feed_minute_data(uint32_t num_minutes, AlgMinuteDLSSample *minut
     int delay = 0;
     if (simulate_bg_delays) {
       delay = (((i / ALG_MINUTES_PER_FILE_RECORD) + 1) % 30);
-      rtc_set_time(rtc_get_time() + delay);
+      pbl_realtime_set(pbl_realtime() + delay);
     }
     s_alg_next_vmc = minute_data[i].base.vmc;
     s_alg_next_orientation = minute_data[i].base.orientation;
@@ -371,9 +371,9 @@ static void prv_feed_minute_data(uint32_t num_minutes, AlgMinuteDLSSample *minut
         minute_data[i].heart_rate_total_weight_x100;
     s_activity_next_heart_rate_zone = minute_data[i].heart_rate_zone;
     AlgMinuteRecord minute_record = {};
-    activity_algorithm_minute_handler(rtc_get_time(), &minute_record);
+    activity_algorithm_minute_handler(pbl_realtime(), &minute_record);
     if (simulate_bg_delays) {
-      rtc_set_time(rtc_get_time() - delay);
+      pbl_realtime_set(pbl_realtime() - delay);
     }
   }
 }
@@ -444,7 +444,7 @@ static void prv_assert_minute_data(HealthMinuteData *actual, AlgMinuteDLSSample 
 // Test to make sure that when we re-boot we correctly get the saved minute data
 void test_activity_algorithm_kraepelin__minute_data_after_boot(void) {
   const int num_minutes = 4 * PBL_MIN_PER_HOUR;
-  time_t start_utc = rtc_get_time();
+  time_t start_utc = pbl_realtime();
 
   // The test data
   AlgMinuteDLSSample minute_data[num_minutes];
@@ -502,7 +502,7 @@ void test_activity_algorithm_kraepelin__sleep_data_compaction_test(void) {
     s_alg_next_vmc = 0x11;
     s_alg_next_orientation = 0x22;
     AlgMinuteRecord minute_record = {};
-    activity_algorithm_minute_handler(rtc_get_time(), &minute_record);
+    activity_algorithm_minute_handler(pbl_realtime(), &minute_record);
   }
 
   // Get the size of the sleep data and make sure it is within the expected range
@@ -519,7 +519,7 @@ void test_activity_algorithm_kraepelin__sleep_data_compaction_test(void) {
   // Now, put in our expected data
   // Call the minute handler, which computes the minute stats and saves them to data logging
   // as well as the sleep PFS file.
-  time_t start_of_data_utc = rtc_get_time();
+  time_t start_of_data_utc = pbl_realtime();
   prv_feed_minute_data(num_minutes, minute_data, false /*simulate_bg_delays*/);
 
   // Retrieve the minute data now
@@ -539,11 +539,11 @@ void test_activity_algorithm_kraepelin__sleep_data_compaction_test(void) {
 // Test that the call to retrieve minute history from flash works correctly
 void test_activity_algorithm_kraepelin__get_flash_minute_history(void) {
   const int num_minutes = 4 * PBL_MIN_PER_HOUR;
-  time_t start_utc = rtc_get_time();
+  time_t start_utc = pbl_realtime();
 
   // Let's start time not on a 15 minute boundary to aggravate the get_minute logic
   start_utc += 7 * PBL_SEC_PER_MIN;
-  rtc_set_time(start_utc);
+  pbl_realtime_set(start_utc);
 
   // The test data
   AlgMinuteDLSSample minute_data[num_minutes];
@@ -601,11 +601,11 @@ void test_activity_algorithm_kraepelin__get_flash_minute_history(void) {
 void test_activity_algorithm_kraepelin__get_minute_heart_rate(void) {
   const int num_minutes = 4 * PBL_MIN_PER_HOUR;
   const int num_empty = 30;
-  time_t start_utc = rtc_get_time();
+  time_t start_utc = pbl_realtime();
 
   // Not on a 15 minute boundary, so the latest minutes are still in RAM
   start_utc += 7 * PBL_SEC_PER_MIN;
-  rtc_set_time(start_utc);
+  pbl_realtime_set(start_utc);
 
   AlgMinuteDLSSample minute_data[num_minutes];
   prv_create_test_data(num_minutes, minute_data);
@@ -629,11 +629,11 @@ void test_activity_algorithm_kraepelin__get_minute_heart_rate(void) {
 // we correctly include the minute history that has not yet been saved to flash
 void test_activity_algorithm_kraepelin__get_ram_minute_history(void) {
   const int num_minutes = 1 * PBL_MIN_PER_HOUR;
-  time_t start_utc = rtc_get_time();
+  time_t start_utc = pbl_realtime();
 
   // Let's start time not on a 15 minute boundary to aggravate the get_minute logic
   start_utc += 7 * PBL_SEC_PER_MIN;
-  rtc_set_time(start_utc);
+  pbl_realtime_set(start_utc);
 
   // The test data
   AlgMinuteDLSSample minute_data[num_minutes];
@@ -648,7 +648,7 @@ void test_activity_algorithm_kraepelin__get_ram_minute_history(void) {
   // get ALG_MINUTES_PER_RECORD records each time. We know that the activity algorithm code only
   // writes a new minute data record to flash once every ALG_MINUTES_PER_RECORD minutes, but
   // the records that are not yet saved to flash should be correctly retrieved from RAM.
-  time_t oldest_to_fetch = rtc_get_time() - (ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN);
+  time_t oldest_to_fetch = pbl_realtime() - (ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN);
   uint32_t next_read_minute_idx = 0;
   for (int i = 0; i < ALG_MINUTES_PER_FILE_RECORD;
        i++, oldest_to_fetch += PBL_SEC_PER_MIN, next_read_minute_idx++, next_write_minute_idx++) {
@@ -677,7 +677,7 @@ void test_activity_algorithm_kraepelin__get_ram_minute_history(void) {
 
   // Let's add data for a partial minute and make sure that gets returned
   const int exp_steps = 23;
-  oldest_to_fetch = rtc_get_time() - PBL_SEC_PER_MIN;
+  oldest_to_fetch = pbl_realtime() - PBL_SEC_PER_MIN;
   fake_rtc_increment_time(30); // 30 seconds
   s_alg_next_steps = exp_steps;
   AccelRawData samples[100] = {};
@@ -704,9 +704,9 @@ void test_activity_algorithm_kraepelin__get_ram_minute_history(void) {
 void test_activity_algorithm_kraepelin__sleep_post_process(void) {
   // NOTE: All tests by default start at 5pm. Let's advance time to 9pm to give us more
   // time to test the various nap scenarios
-  time_t now_utc = rtc_get_time();
+  time_t now_utc = pbl_realtime();
   now_utc += 4 * PBL_SEC_PER_HOUR;
-  rtc_set_time(now_utc);
+  pbl_realtime_set(now_utc);
   time_t start_of_today = time_util_get_midnight_of(now_utc);
 
   { // Create a 2 hour session at 1pm ==> should be a nap
@@ -879,7 +879,7 @@ void test_activity_algorithm_kraepelin__steps_during_sleep(void) {
 
   // -------------------------------------------------------------------------------
   // Try again while sleeping
-  time_t start_utc = rtc_get_time();
+  time_t start_utc = pbl_realtime();
 
   // Set to sleeping for the first 100 minutes
   s_kalg_sleep_start_utc = start_utc;
@@ -926,7 +926,7 @@ void test_activity_algorithm_kraepelin__minute_data_steps_during_sleep(void) {
     minute_data[i].base.steps = 0;
   }
 
-  time_t start_utc = rtc_get_time();
+  time_t start_utc = pbl_realtime();
 
   // Set to sleeping for the first 100 minutes
   s_kalg_sleep_start_utc = start_utc;

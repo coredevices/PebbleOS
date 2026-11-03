@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/blob_db/sync.h>
@@ -182,7 +183,7 @@ status_t reminder_db_insert_item(TimelineItem *item) {
                           sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
 
   blob_db_sync_record(BlobDBIdReminders, (uint8_t *)&item->header.id, sizeof(TimelineItemId),
-                      rtc_get_time());
+                      pbl_realtime());
 
   pbl_free(buffer);
   return rv;

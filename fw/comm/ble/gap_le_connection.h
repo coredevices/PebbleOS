@@ -10,7 +10,6 @@
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/services/new_timer/new_timer.h>
 
 #include <comm/bt_conn_mgr_impl.h>

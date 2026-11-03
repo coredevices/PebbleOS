@@ -4,12 +4,13 @@
 #include <stdatomic.h>
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/services/timeline/peek.h>
@@ -63,7 +64,7 @@ static void prv_new_timer_callback(void *unused) {
 }
 
 static uint32_t prv_calc_timeout(const TimelineItem *item) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t start = item->header.timestamp;
   const time_t end = start + (item->header.duration * PBL_SEC_PER_MIN);
   if (now >= end) {

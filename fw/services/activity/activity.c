@@ -187,7 +187,7 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
     }
 
     uint32_t now_uptime_ts = time_get_uptime_seconds();
-    time_t now_utc = rtc_get_time();
+    time_t now_utc = pbl_realtime();
 
     // Cache the worn-status from this event so sleep tracking can use it as a strong off-wrist
     // signal (PPG off-wrist detection is far more reliable than the accel-only heuristics).
@@ -371,7 +371,7 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
     // algorithm rejects it. is_hrm_offwrist fails open (only true on fresh positive off-wrist
     // evidence), so this never blocks a genuine on-wrist reading or a config where HR sampling
     // isn't running.
-    const bool hrm_offwrist = activity_metrics_prv_is_hrm_offwrist(rtc_get_time());
+    const bool hrm_offwrist = activity_metrics_prv_is_hrm_offwrist(pbl_realtime());
 
     const bool should_be_sampling =
         !s_activity_state.spo2.currently_sampling && !watch_is_flat && !hrm_offwrist;
@@ -755,7 +755,7 @@ PBL_T_STATIC void prv_minute_system_task_cb(void *data) {
   PBL_LOG_DBG("running minute system task");
 
   // Get the current time
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
 
   // Do our minute processing
   prv_process_minute_data(utc_sec);
@@ -814,7 +814,7 @@ static void prv_collect_raw_samples(AccelRawData *accel_data, uint32_t num_sampl
         .version = ACTIVITY_RAW_SAMPLES_VERSION,
         .session_id = s_activity_state.sample_collection_session_id,
         .len = sizeof(ActivityRawSamplesRecord),
-        .time_local = time_utc_to_local(rtc_get_time()),
+        .time_local = time_utc_to_local(pbl_realtime()),
         .num_samples = data->run_size,
       };
       if (data->first_record) {
@@ -962,10 +962,7 @@ static void prv_accel_cb(AccelRawData *data, uint32_t num_samples, uint64_t time
 static void prv_feed_samples_system_cb(void *context_in) {
   ActivityFeedSamples *context = (ActivityFeedSamples *)context_in;
 
-  time_t time_s;
-  uint16_t time_ms;
-  rtc_get_time_ms(&time_s, &time_ms);
-  uint64_t timestamp = ((uint64_t)time_s) * PBL_MSEC_PER_SEC + time_ms;
+  uint64_t timestamp = pbl_realtime_ms();
 
   // Feed samples into the algorithm
   prv_accel_cb(context->data, context->num_samples, timestamp);
@@ -988,7 +985,7 @@ static void prv_stop_tracking_early(void) {
 
   // Update storage before we close down
   s_activity_state.update_settings_counter = -1;
-  prv_update_storage(rtc_get_time());
+  prv_update_storage(pbl_realtime());
 
   PBL_LOG_DBG("Updated and persisted sessions before stopping activity tracking");
 }
@@ -1234,7 +1231,7 @@ bool activity_init(void) {
   }
 
   // Init the current day index
-  time_t utc_now = rtc_get_time();
+  time_t utc_now = pbl_realtime();
   s_activity_state.cur_day_index = time_util_get_day(utc_now);
 
   // Roll back the history if needed and init each of the metrics for today
@@ -1588,7 +1585,7 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
       s_activity_state.sample_collection_data = data;
       data->first_record = true;
       s_activity_state.sample_collection_session_id++;
-      s_activity_state.sample_collection_seconds = rtc_get_time();
+      s_activity_state.sample_collection_seconds = pbl_realtime();
       s_activity_state.sample_collection_num_samples = 0;
       s_activity_state.sample_collection_enabled = true;
     }
@@ -1603,13 +1600,13 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
       pbl_free(data);
       s_activity_state.sample_collection_data = nullptr;
       s_activity_state.sample_collection_seconds =
-          rtc_get_time() - s_activity_state.sample_collection_seconds;
+          pbl_realtime() - s_activity_state.sample_collection_seconds;
     }
     *enabled = s_activity_state.sample_collection_enabled;
     *session_id = s_activity_state.sample_collection_session_id;
     *num_samples = s_activity_state.sample_collection_num_samples;
     if (*enabled) {
-      *seconds = rtc_get_time() - s_activity_state.sample_collection_seconds;
+      *seconds = pbl_realtime() - s_activity_state.sample_collection_seconds;
     } else {
       *seconds = s_activity_state.sample_collection_seconds;
     }
@@ -1806,7 +1803,7 @@ bool activity_test_fill_minute_file(void) {
 // Send a fake data logging records
 static void prv_send_fake_dls_records_system_cb(void *context_param) {
   // Send a fake legacy sleep logging record
-  time_t utc_now = rtc_get_time();
+  time_t utc_now = pbl_realtime();
   time_t session_start_utc = utc_now - (4 * PBL_SEC_PER_HOUR);
 
   // Send one of each activity type
@@ -1848,7 +1845,7 @@ void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int
     // The first key is set to the current_avg so that the current step average will always be at
     // current_avg. The last key is set to daily_avg - current_avg so that the total daily_avg will
     // always be at daily_avg
-    const time_t now = rtc_get_time();
+    const time_t now = pbl_realtime();
     struct pbl_tm local_tm;
     pbl_localtime_r(&now, &local_tm);
     enum pbl_weekday day_of_week = local_tm.tm_wday;
@@ -1872,7 +1869,7 @@ void activity_test_set_steps_history() {
     return;
   }
   ActivitySettingsValueHistory step_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {
       0, // This ends up overwritten anyway by the current sleep value
       1000, 750, 1250, 500, 2000, 3000
@@ -1888,7 +1885,7 @@ void activity_test_set_sleep_history() {
     return;
   }
   ActivitySettingsValueHistory sleep_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {
       0, // This ends up overwritten anyway by the current sleep value
       400,

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 
 /**
@@ -28,7 +29,7 @@
  *
  * // Once a minute
  * AlgMinuteRecord rec;
- * activity_algorithm_minute_handler(rtc_get_time(), &rec);
+ * activity_algorithm_minute_handler(pbl_realtime(), &rec);
  *
  * uint32_t steps;
  * activity_algorithm_get_steps(&steps);

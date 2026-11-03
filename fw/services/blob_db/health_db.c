@@ -7,6 +7,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/hr_util.h>
@@ -134,7 +135,7 @@ static void prv_notify_health_listeners(const char *key, int key_len, const uint
     }
   }
   // For logging
-  const enum pbl_weekday cur_wday = time_util_get_day_in_week(rtc_get_time());
+  const enum pbl_weekday cur_wday = time_util_get_day_in_week(pbl_realtime());
 
   if (strstr(key, MOVEMENT_DATA_KEY_SUFFIX)) {
     MovementData *data = (MovementData *)val;

@@ -72,8 +72,8 @@ void test_timeline_peek__initialize(void) {
     .tm_zone = "UTC",
   };
   time_util_update_timezone(&tz_info, 0, 0);
-  rtc_set_timezone(&tz_info);
-  rtc_set_time(PBL_SEC_PER_DAY);
+  tz_storage_save(&tz_info);
+  pbl_realtime_set(PBL_SEC_PER_DAY);
 
   // We start time out at 5pm on Jan 1, 2015 for all of these tests
   struct pbl_tm time_tm = {
@@ -145,7 +145,7 @@ typedef struct TimelinePeekItemConfig {
 
 static TimelineItem *prv_set_timeline_item(const TimelinePeekItemConfig *config, bool animated) {
   TimelineItem *item = nullptr;
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t timestamp = config ? (config->timestamp ?: now) : now;
   if (config) {
     AttributeList list;
@@ -270,7 +270,7 @@ void test_timeline_peek__peek_title_only_concurrent_2(void) {
 
 void test_timeline_peek__peek_in_5_minutes(void) {
   prv_render_timeline_peek(&(TimelinePeekItemConfig){
-    .timestamp = rtc_get_time() + (5 * PBL_SEC_PER_MIN),
+    .timestamp = pbl_realtime() + (5 * PBL_SEC_PER_MIN),
     .title = "Stock for party 🍺",
     .subtitle = "Pebble Pad on Park",
     .icon = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,

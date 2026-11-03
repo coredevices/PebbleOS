@@ -3,10 +3,10 @@
 
 #ifdef CONFIG_SHELL
 
+#include <pbl/kernel/time.h>
 #include <pbl/shell/shell.h>
 
 #ifdef CONFIG_TOUCH
-#include <pbl/drivers/rtc.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/timeline/item.h>
 
@@ -28,7 +28,7 @@ static int prv_cmd_test(const struct pbl_shell *sh, size_t argc, char **argv) {
   };
 
   TimelineItem *item =
-      timeline_item_create_with_attributes(rtc_get_time(), 0, TimelineItemTypeNotification,
+      timeline_item_create_with_attributes(pbl_realtime(), 0, TimelineItemTypeNotification,
                                            LayoutIdNotification, &attr_list, &action_group);
   attribute_list_destroy_list(&attr_list);
   attribute_list_destroy_list(&dismiss_attr);

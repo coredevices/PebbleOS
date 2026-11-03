@@ -20,7 +20,6 @@
 extern char *itoa(int value, char *str, int base);
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
@@ -29,6 +28,7 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/mpu.h>
 #include <pbl/services/comm_session/session.h>
+#include <pbl/services/time.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -512,7 +512,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   prv_debug_str("Starting core dump");
 
   // Save the current time now because pbl_uptime_ticks() disables and then re-enables interrupts
-  s_time_stamp = rtc_get_time();
+  s_time_stamp = pbl_realtime();
 
   prv_debug_str("CD: starting");
 
@@ -702,7 +702,7 @@ bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
   }
 
   flash_addr = flash_addr_base + sizeof(CoreDumpFlashRegionHeader);
-  flash_addr += prv_write_image_header(flash_addr, CORE_ID_BLE, build_id, rtc_get_time());
+  flash_addr += prv_write_image_header(flash_addr, CORE_ID_BLE, build_id, pbl_realtime());
 
   *flash_base = flash_addr;
   *max_size = CORE_DUMP_MAX_SIZE - (flash_addr - flash_addr_base);

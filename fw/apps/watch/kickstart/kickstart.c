@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/time.h>
@@ -313,7 +314,7 @@ static void prv_draw_time(GContext *ctx, GFont time_font, GFont am_pm_font, GRec
   char time_buffer[8];
   char am_pm_buffer[4];
 
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   /// Current time in 24 or 12 hour
   const char *time_fmt = clock_is_24h_style() ? "%R" : "%l:%M";
   pbl_strftime_r(time_buffer, sizeof(time_buffer), time_fmt, pbl_override_localtime(&now));
@@ -487,7 +488,7 @@ static void prv_update_current_steps(KickstartData *data) {
 
 static void prv_update_typical_steps(KickstartData *data) {
   data->typical_steps = health_service_sum_averaged(HealthMetricStepCount, time_start_of_today(),
-                                                    rtc_get_time(), HealthServiceTimeScopeWeekly);
+                                                    pbl_realtime(), HealthServiceTimeScopeWeekly);
 }
 
 static void prv_update_daily_steps_avg(KickstartData *data) {

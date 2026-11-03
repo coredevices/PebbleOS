@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
@@ -17,6 +17,7 @@
 #include <pbl/services/notifications/ancs/nexmo.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -86,7 +87,7 @@ static time_t prv_get_timestamp_from_ancs_date(const ANCSAttribute *date,
     // Another ANCS / iOS quirk, some apps (i.e. the Phone app)
     // send an invalid-length string as date...
     // Apple rdar://19639333
-    timestamp = rtc_get_time();
+    timestamp = pbl_realtime();
 
     // copy out app ID to a char buffer
     char app_id_buffer[app_id->length + 1];
@@ -218,7 +219,7 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   static const time_t MAXIMUM_NOTIFY_TIME = 2 * 60 * 60; // 2 hours
   static const time_t INVALID_TIME = ~0;
 
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   // Ignore notifications older than 2 hours (Mail.app Fetch can be set to hourly). Location based
   // reminders come with an invalid timestamp.
   if (timestamp < (now - MAXIMUM_NOTIFY_TIME) && timestamp != INVALID_TIME) {
@@ -384,7 +385,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
     PBL_LOG_DBG("Updating ANCS notification: %" PRIu32, uid);
     prv_handle_ancs_update(notification, &existing_header);
   } else {
-    const bool alert = !is_recovered || (timestamp >= (rtc_get_time() - RECOVERED_ALERT_MAX_AGE_S));
+    const bool alert = !is_recovered || (timestamp >= (pbl_realtime() - RECOVERED_ALERT_MAX_AGE_S));
     PBL_LOG_DBG("New ANCS notification: %" PRIu32 " (recovered=%d, alert=%d)", uid, is_recovered,
                 alert);
     prv_handle_new_ancs_notif(notification, alert);
@@ -408,7 +409,7 @@ cleanup:
 }
 
 void ancs_notifications_handle_session_lost(void) {
-  s_session_lost_time = rtc_get_time();
+  s_session_lost_time = pbl_realtime();
 }
 
 void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSProperty properties) {
@@ -451,7 +452,7 @@ void ancs_notifications_handle_access_denied(void) {
   attribute_list_add_uint8(&attr_list, AttributeIdBgColor, GColorOrangeARGB8);
 
   TimelineItem *item = timeline_item_create_with_attributes(
-      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, nullptr);
+      pbl_realtime(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, nullptr);
   i18n_free_all(&attr_list);
   attribute_list_destroy_list(&attr_list);
   if (!item) {

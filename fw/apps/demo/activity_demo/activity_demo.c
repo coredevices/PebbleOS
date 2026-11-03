@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_insights.h>
@@ -495,7 +496,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   }
 
   // Start as far back as 30 days ago
-  time_t utc_start = rtc_get_time() - 30 * PBL_SEC_PER_DAY;
+  time_t utc_start = pbl_realtime() - 30 * PBL_SEC_PER_DAY;
   uint32_t num_records = 0;
   while (true) {
     uint32_t chunk = k_size;
@@ -522,7 +523,7 @@ static void prv_debug_cmd_minute_data(int index, void *context) {
   // Print detail on the last few minutes
   const int k_print_batch_size = k_size;
   PBL_LOG_DBG("Fetching last %d minutes", k_print_batch_size);
-  utc_start = rtc_get_time() - (k_print_batch_size * PBL_SEC_PER_MIN);
+  utc_start = pbl_realtime() - (k_print_batch_size * PBL_SEC_PER_MIN);
   time_t prior_start = utc_start;
   uint32_t chunk = k_print_batch_size;
   success = activity_get_minute_history(minute_data, &chunk, &utc_start);

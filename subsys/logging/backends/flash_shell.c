@@ -9,8 +9,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/shell/shell.h>
 #include <pbl/util/byteorder.h>
 
@@ -78,7 +80,7 @@ static int prv_cmd_dump_gen(const struct pbl_shell *sh, size_t argc, char **argv
 static void prv_spam_cb(void *data) {
   uint32_t iteration = (uintptr_t)data;
   uint8_t buffer[128];
-  time_t base = rtc_get_time();
+  time_t base = pbl_realtime();
 
   for (int i = 0; i < 16; ++i) {
     LogBinaryMessage *msg = (LogBinaryMessage *)buffer;

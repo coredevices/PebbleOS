@@ -67,9 +67,8 @@ bool pulse_is_started(void) {
   return true;
 }
 
-void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
-  *out_seconds = 0;
-  *out_ms = 0;
+uint64_t pbl_realtime_ms(void) {
+  return 0;
 }
 
 void pbl_irq_lock(void) {

@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/time.h>
@@ -36,9 +36,9 @@ static void prv_arm_wakeup(void) {
     new_timer_stop(s_wakeup_timer);
     return;
   }
-  time_t now;
-  uint16_t milliseconds;
-  rtc_get_time_ms(&now, &milliseconds);
+  uint64_t now_ms = pbl_realtime_ms();
+  time_t now = (time_t)(now_ms / 1000U);
+  uint16_t milliseconds = (uint16_t)(now_ms % 1000U);
   const time_t execute_time = ((struct pbl_cron_job *)s_scheduled_jobs)->cached_execute_time;
   uint64_t timeout_ms = 0;
   if (execute_time > now) {
@@ -66,7 +66,7 @@ static int prv_sort(void *a, void *b) {
 static void prv_timer_callback(void *data) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
   while (s_scheduled_jobs != nullptr &&
-         ((struct pbl_cron_job *)s_scheduled_jobs)->cached_execute_time <= rtc_get_time()) {
+         ((struct pbl_cron_job *)s_scheduled_jobs)->cached_execute_time <= pbl_realtime()) {
     struct pbl_cron_job *job = (struct pbl_cron_job *)s_scheduled_jobs;
     // Remove the job from the list, it's done.
     s_scheduled_jobs = list_pop_head(s_scheduled_jobs);
@@ -128,7 +128,7 @@ void pbl_cron_init(void) {
 time_t pbl_cron_job_schedule(struct pbl_cron_job *job) {
   pbl_mutex_lock(&s_list_mutex, PBL_FOREVER);
 
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   // Always update the execution time.
   job->absolute = false;
   job->cached_execute_time = pbl_cron_job_get_execute_time_from_epoch(job, now);
@@ -511,5 +511,5 @@ time_t pbl_cron_job_get_execute_time_from_epoch(const struct pbl_cron_job *job,
 }
 
 time_t pbl_cron_job_get_execute_time(const struct pbl_cron_job *job) {
-  return pbl_cron_job_get_execute_time_from_epoch(job, rtc_get_time());
+  return pbl_cron_job_get_execute_time_from_epoch(job, pbl_realtime());
 }

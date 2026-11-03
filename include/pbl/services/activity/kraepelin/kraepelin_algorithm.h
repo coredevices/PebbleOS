@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 
 /**
  * @defgroup services_activity_kraepelin Kraepelin algorithm
@@ -31,7 +32,7 @@
  * uint8_t orientation;
  * bool still;
  * kalg_minute_stats(state, &vmc, &orientation, &still);
- * kalg_activities_update(state, rtc_get_time(), minute_steps, vmc, orientation, not_worn,
+ * kalg_activities_update(state, pbl_realtime(), minute_steps, vmc, orientation, not_worn,
  *                        resting_cal, active_cal, distance_mm, false, session_cb, ctx);
  *
  * kalg_deinit(state);

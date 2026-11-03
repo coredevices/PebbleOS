@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline_layout.h>
@@ -520,7 +521,7 @@ static void prv_peek_time_text_update(const LayoutLayer *layout_ref,
                                       const LayoutNodeTextDynamicConfig *config, char *buffer,
                                       bool render) {
   const TimelineLayout *layout = (TimelineLayout *)layout_ref;
-  if (rtc_get_time() < layout->info->timestamp) {
+  if (pbl_realtime() < layout->info->timestamp) {
     clock_get_until_time(buffer, config->buffer_size, layout->info->timestamp,
                          24 /* max_relative_hrs */);
   } else {
@@ -557,7 +558,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   const bool thin_can_have_secondary = style->thin_can_have_secondary;
   const bool has_secondary =
       (((is_peek || is_fat || thin_can_have_secondary) && !IS_EMPTY_STRING(secondary_text)) ||
-       (is_peek && (rtc_get_time() < layout->info->timestamp)));
+       (is_peek && (pbl_realtime() < layout->info->timestamp)));
   const int peek_text_width = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH - (2 * TIMELINE_PEEK_MARGIN);
   const GPoint peek_text_offset = GPoint(TIMELINE_PEEK_MARGIN, PBL_IF_RECT_ELSE(-5, -6));
   const GTextOverflowMode overflow =

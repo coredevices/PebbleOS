@@ -7,7 +7,7 @@
 
 #include <bf0_hal.h>
 
-PBL_LOG_MODULE_DECLARE(driver_rtc_sf32lb, CONFIG_DRIVER_RTC_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_sf32lb52_rc10k, CONFIG_DRIVER_SF32LB52_RC10K_LOG_LEVEL);
 
 #define RC10K_DEFAULT_FREQ_HZ 10000UL
 // One sample per minute; 25 of them keep the average over the last ~25 minutes.
@@ -17,7 +17,7 @@ static void prv_rc10k_cal_timer_cb(void *data) {
   uint8_t lp_cycle;
 
   lp_cycle = HAL_RC_CAL_GetLPCycle();
-  // A dropped sample leaves the RTC running on a stale reference; the LCPU also
+  // A dropped sample leaves the system timer on a stale rate; the LCPU also
   // drives RC calibration here, so losing the mailbox is expected but must not
   // be silent - a run of these means the clock is drifting uncorrected.
   const int rv = HAL_RC_CAL_update_reference_cycle_on_48M_ex(lp_cycle, 0, RC10K_CAL_AVE_WINDOW);

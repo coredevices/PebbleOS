@@ -3,6 +3,7 @@
 
 #include "app.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
 
@@ -50,7 +51,7 @@ static void prv_update_info(SdkAppData *data) {
   const unsigned int tip_delay_s = 5;
   if ((app_id == INSTALL_ID_INVALID) || shell_sdk_last_installed_app_is_watchface()) {
     text = "Install an app to continue";
-  } else if ((rtc_get_time() / tip_delay_s) & 1) {
+  } else if ((pbl_realtime() / tip_delay_s) & 1) {
     // Show the launcher help on every odd set of five seconds since the epoch
     text = "Press Select to access Launcher";
   } else {

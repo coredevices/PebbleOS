@@ -6,6 +6,7 @@
 #include "app_glance_structured.h"
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/struct.h>
@@ -192,7 +193,7 @@ static void prv_update_subtitle_template_string_reeval_timer_if_necessary(
     return;
   }
 
-  const int time_until_next_reeval = new_reeval_time - rtc_get_time();
+  const int time_until_next_reeval = new_reeval_time - pbl_realtime();
   // On the off chance that we missed the reeval, immediately call the timer callback
   if (time_until_next_reeval <= 0) {
     prv_subtitle_reeval_timer_cb(structured_glance);
@@ -281,7 +282,7 @@ static void prv_generic_glance_dynamic_text_node_update(
       structured_glance->glance.current_slice.icon_and_subtitle.template_string;
   TemplateStringEvalConditions template_string_reeval_conditions = {};
   const TemplateStringVars template_string_vars = (TemplateStringVars){
-    .current_time = rtc_get_time(),
+    .current_time = pbl_realtime(),
   };
   TemplateStringError template_string_error = {};
   template_string_evaluate(subtitle_template_string, buffer, buffer_size,

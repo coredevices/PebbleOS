@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/timeline_item_storage.h>
+#include <pbl/services/time.h>
 #include <pbl/util/units.h>
 
 #include <system/status_errno.h>
@@ -157,7 +157,7 @@ status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
 
   NextInfo next_info = {};
-  next_info.current = rtc_get_time();
+  next_info.current = pbl_realtime();
   next_info.max_age = storage->max_item_age;
   next_info.filter_cb = filter_cb;
 
@@ -271,7 +271,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
 
   SerializedTimelineItemHeader *hdr = (SerializedTimelineItemHeader *)val;
   // verify that the item isn't too old
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   time_t timestamp = timeline_item_get_tz_timestamp(&hdr->common);
   time_t end_timestamp = timestamp + hdr->common.duration * PBL_SEC_PER_MIN;
   if (end_timestamp < (int)(now - storage->max_item_age)) {

@@ -1531,13 +1531,13 @@ void test_kraepelin_algorithm__sleep_tests(void) {
     printf("\nRunning sleep sample set: \"%s\"\n", entry->name);
 
     // It's easier to understand the algorithm log messages if we start at 0 time
-    rtc_set_time(0);
+    pbl_realtime_set(0);
     memset(s_kalg_state, 0, kalg_state_size());
     kalg_init(s_kalg_state, prv_stats_cb);
     s_num_captured_sleep_sessions = 0;
 
     // Run samples through the activity detector
-    time_t now = rtc_get_time();
+    time_t now = pbl_realtime();
     time_t test_start_utc = now;
     for (int i = 0; i < entry->num_samples; i++) {
       uint16_t vmc = entry->samples[i].v5_fields.vmc;
@@ -1556,7 +1556,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
       }
 
       now += PBL_SEC_PER_MIN;
-      rtc_set_time(now);
+      pbl_realtime_set(now);
     }
     time_t test_end_utc = now;
     time_t last_processed_utc =
@@ -1699,7 +1699,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
     s_num_captured_activity_sessions = 0;
 
     // Run samples through the activity detector
-    time_t now = rtc_get_time();
+    time_t now = pbl_realtime();
     time_t test_start_utc = now;
     for (int i = 0; i < entry->num_samples; i++) {
       const bool shutting_down = (entry->force_shut_down_at == i);
@@ -1712,7 +1712,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
       }
 
       now += PBL_SEC_PER_MIN;
-      rtc_set_time(now);
+      pbl_realtime_set(now);
     }
 
     // Get summary of the activity
@@ -1901,7 +1901,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
 // activity detector logic
 static void prv_insert_artificial_activity_session(KAlgTestActivityMinute *samples, int samples_len,
                                                    KAlgTestActivitySession *session) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   int start_idx = ((session->start_utc - now) / PBL_SEC_PER_MIN) + 1;
   int len = session->len_minutes;
 
@@ -1920,7 +1920,7 @@ static void prv_insert_artificial_activity_session(KAlgTestActivityMinute *sampl
 // -----------------------------------------------------------------------------------
 // Feed activity minute data into the kalg_activities_update method
 static void prv_feed_activity_minutes(KAlgTestActivityMinute *samples, int samples_len) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   for (int i = 0; i < samples_len; i++) {
     // NOTE: We feed in a significant VMC to simulate activity so that the sleep algorithm
     // doesn't think we're sleeping
@@ -1929,7 +1929,7 @@ static void prv_feed_activity_minutes(KAlgTestActivityMinute *samples, int sampl
                            samples[i].active_calories, samples[i].distance_mm,
                            false /* shutting_down */, prv_activity_session_callback, nullptr);
     now += PBL_SEC_PER_MIN;
-    rtc_set_time(now);
+    pbl_realtime_set(now);
   }
 }
 
@@ -1950,7 +1950,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
   {
     memset(minute_raw_data, 0, k_minute_data_bytes);
     s_num_captured_activity_sessions = 0;
-    time_t now = rtc_get_time();
+    time_t now = pbl_realtime();
 
     int len = 20;
     KAlgTestActivitySession exp_session = {
@@ -1976,7 +1976,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
   {
     memset(minute_raw_data, 0, k_minute_data_bytes);
     s_num_captured_activity_sessions = 0;
-    time_t now = rtc_get_time();
+    time_t now = pbl_realtime();
 
     int len = 30;
     KAlgTestActivitySession exp_session = {
@@ -2010,7 +2010,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
   {
     memset(minute_raw_data, 0, k_minute_data_bytes);
     s_num_captured_activity_sessions = 0;
-    time_t now = rtc_get_time();
+    time_t now = pbl_realtime();
 
     int len = 5;
     KAlgTestActivitySession exp_session = {
@@ -2033,7 +2033,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
   {
     memset(minute_raw_data, 0, k_minute_data_bytes);
     s_num_captured_activity_sessions = 0;
-    time_t now = rtc_get_time();
+    time_t now = pbl_realtime();
 
     int walk_len = 15;
     KAlgTestActivitySession exp_session_walk = {
@@ -2078,7 +2078,7 @@ void test_kraepelin_algorithm__sleep_stats(void) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
 
   // It's easier to understand the algorithm log messages if we start at 0 time
-  rtc_set_time(0);
+  pbl_realtime_set(0);
   memset(s_kalg_state, 0, kalg_state_size());
   kalg_init(s_kalg_state, prv_stats_cb);
   s_num_captured_sleep_sessions = 0;
@@ -2088,7 +2088,7 @@ void test_kraepelin_algorithm__sleep_stats(void) {
   AlgMinuteFileSampleV5 *samples = activity_sample_sleep_v1_1(&num_samples);
 
   // Run samples through the activity detector
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   time_t test_start_utc = now;
   for (int i = 0; i < num_samples; i++) {
     uint16_t vmc = samples[i].vmc;
@@ -2130,7 +2130,7 @@ void test_kraepelin_algorithm__sleep_stats(void) {
     }
 
     now += PBL_SEC_PER_MIN;
-    rtc_set_time(now);
+    pbl_realtime_set(now);
   }
 
   pbl_free(s_kalg_state);
@@ -2145,14 +2145,14 @@ void test_kraepelin_algorithm__sleep_stats(void) {
 #define WALK_TEST_START_UTC 1787618400
 
 static void prv_feed_minutes(int num_minutes, uint16_t steps) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   for (int i = 0; i < num_minutes; i++) {
     kalg_activities_update(s_kalg_state, now, steps, steps ? 7000 : 0 /*vmc*/, 0 /*orientation*/,
                            true /*definitely_not_worn*/, 100 /*resting_calories*/,
                            steps ? 200 : 0 /*active_calories*/, steps ? 1000 : 0 /*distance_mm*/,
                            false /*shutting_down*/, prv_activity_session_callback, nullptr);
     now += PBL_SEC_PER_MIN;
-    rtc_set_time(now);
+    pbl_realtime_set(now);
   }
 }
 
@@ -2163,7 +2163,7 @@ void test_kraepelin_algorithm__walk_does_not_span_workout(void) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
   kalg_init(s_kalg_state, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
-  rtc_set_time(WALK_TEST_START_UTC);
+  pbl_realtime_set(WALK_TEST_START_UTC);
 
   // Too short to be registered before the workout starts
   prv_feed_minutes(6, WALK_STEPS_PER_MIN);
@@ -2189,7 +2189,7 @@ void test_kraepelin_algorithm__registered_walk_ends_with_workout(void) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
   kalg_init(s_kalg_state, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
-  rtc_set_time(WALK_TEST_START_UTC);
+  pbl_realtime_set(WALK_TEST_START_UTC);
 
   prv_feed_minutes(12, WALK_STEPS_PER_MIN);
   cl_assert_equal_i(s_num_captured_activity_sessions, 1);
@@ -2223,14 +2223,14 @@ static void prv_walk_ended_on_time_jump(int jump_secs) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
   kalg_init(s_kalg_state, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
-  rtc_set_time(WALK_TEST_START_UTC);
+  pbl_realtime_set(WALK_TEST_START_UTC);
 
   prv_feed_minutes(12, WALK_STEPS_PER_MIN);
   cl_assert_equal_i(s_num_captured_activity_sessions, 1);
   cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Walk);
 
-  const time_t jumped_utc = rtc_get_time() + jump_secs;
-  rtc_set_time(jumped_utc);
+  const time_t jumped_utc = pbl_realtime() + jump_secs;
+  pbl_realtime_set(jumped_utc);
   prv_feed_minutes(1, 0);
 
   cl_assert(!s_captured_activity_sessions[0].ongoing);

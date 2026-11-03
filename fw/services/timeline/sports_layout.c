@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
@@ -53,7 +53,7 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout, int team_offse
 static void prv_get_until_time(const LayoutLayer *layout, char *buffer, int buffer_size,
                                time_t timestamp) {
   const int max_relative_hrs = 24;
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t difference = timestamp - now;
   size_t starts_len = 0;
   if (difference <= PBL_SEC_PER_HOUR * max_relative_hrs &&
