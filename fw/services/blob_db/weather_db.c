@@ -83,10 +83,10 @@ static bool prv_weather_db_for_each_cb(struct pbl_settings_file *file,
   }
 
   WeatherDBKey key;
-  info->get_key(file, &key, info->key_len);
+  pbl_settings_read_key(file, &key, info->key_len);
 
   WeatherDBEntry *entry = pbl_zalloc_check(info->val_len);
-  info->get_val(file, entry, info->val_len);
+  pbl_settings_read_val(file, entry, info->val_len);
   if (!weather_db_entry_is_supported(entry)) {
     PBL_LOG_WRN("Unsupported weather entry version: %" PRIu8, entry->version);
     goto cleanup;
@@ -262,7 +262,8 @@ static bool prv_each_inspect_keys(struct pbl_settings_file *file, struct pbl_set
   SettingsFileEachKeyHelper *key_helper = context;
 
   if (key_helper->keys != nullptr) {
-    info->get_key(file, (uint8_t *)&key_helper->keys[key_helper->key_count], sizeof(WeatherDBKey));
+    pbl_settings_read_key(file, (uint8_t *)&key_helper->keys[key_helper->key_count],
+                          sizeof(WeatherDBKey));
   }
 
   key_helper->key_count++;

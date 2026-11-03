@@ -27,7 +27,7 @@ static bool prv_collect_untracked_future_pin(struct pbl_settings_file *file,
   }
 
   SerializedTimelineItemHeader header;
-  info->get_val(file, &header, sizeof(header));
+  pbl_settings_read_val(file, &header, sizeof(header));
   const Uuid alarm_source = UUID_ALARMS_DATA_SOURCE;
   if (header.common.type != TimelineItemTypePin ||
       !uuid_equal(&header.common.parent_id, &alarm_source) ||
@@ -36,7 +36,7 @@ static bool prv_collect_untracked_future_pin(struct pbl_settings_file *file,
   }
 
   Uuid id;
-  info->get_key(file, &id, sizeof(id));
+  pbl_settings_read_key(file, &id, sizeof(id));
   for (size_t i = 0; i < pins->tracked_count; ++i) {
     if (uuid_equal(&id, &pins->tracked[i])) {
       return true;

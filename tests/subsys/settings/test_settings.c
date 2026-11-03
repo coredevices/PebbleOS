@@ -116,8 +116,8 @@ static bool prv_each_check_all_values(struct pbl_settings_file *file,
 
   uint32_t key;
   uint32_t value;
-  info->get_key(file, (uint8_t *)&key, sizeof(uint32_t));
-  info->get_val(file, (uint8_t *)&value, sizeof(uint32_t));
+  pbl_settings_read_key(file, (uint8_t *)&key, sizeof(uint32_t));
+  pbl_settings_read_val(file, (uint8_t *)&value, sizeof(uint32_t));
   cl_assert(value == desired_value);
   return true;
 }
@@ -438,8 +438,8 @@ static bool prv_each_cb(struct pbl_settings_file *file, struct pbl_settings_reco
                         void *context) {
   uint8_t *key = malloc(info->key_len + 1);
   uint8_t *val = malloc(info->val_len + 1);
-  info->get_key(file, key, info->key_len);
-  info->get_val(file, val, info->val_len);
+  pbl_settings_read_key(file, key, info->key_len);
+  pbl_settings_read_val(file, val, info->val_len);
   key[info->key_len] = '\0';
   val[info->val_len] = '\0';
 
@@ -487,8 +487,8 @@ static bool prv_each_cb_quit_early(struct pbl_settings_file *file, struct pbl_se
                                    void *context) {
   uint8_t *key = malloc(info->key_len + 1);
   uint8_t *val = malloc(info->val_len + 1);
-  info->get_key(file, key, info->key_len);
-  info->get_val(file, val, info->val_len);
+  pbl_settings_read_key(file, key, info->key_len);
+  pbl_settings_read_val(file, val, info->val_len);
   key[info->key_len] = '\0';
   val[info->val_len] = '\0';
 

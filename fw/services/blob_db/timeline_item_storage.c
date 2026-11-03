@@ -72,7 +72,7 @@ static bool prv_each_first_item(struct pbl_settings_file *file, struct pbl_setti
   }
 
   SerializedTimelineItemHeader hdr;
-  info->get_val(file, &hdr, sizeof(SerializedTimelineItemHeader));
+  pbl_settings_read_val(file, &hdr, sizeof(SerializedTimelineItemHeader));
   // Restore flags & status
   hdr.common.flags = ~hdr.common.flags;
   hdr.common.status = ~hdr.common.status;
@@ -90,7 +90,7 @@ static bool prv_each_first_item(struct pbl_settings_file *file, struct pbl_setti
       (timestamp >= (int)(next_info->current - next_info->max_age))) {
     next_info->found = true;
     next_info->best = timestamp;
-    info->get_key(file, (uint8_t *)&next_info->id, sizeof(Uuid));
+    pbl_settings_read_key(file, (uint8_t *)&next_info->id, sizeof(Uuid));
   }
 
   return true; // continue iterating
@@ -120,7 +120,7 @@ static bool prv_each_find_children(struct pbl_settings_file *file, struct pbl_se
   }
 
   SerializedTimelineItemHeader hdr;
-  info->get_val(file, &hdr, sizeof(SerializedTimelineItemHeader));
+  pbl_settings_read_val(file, &hdr, sizeof(SerializedTimelineItemHeader));
   // Restore flags & status
   hdr.common.flags = ~hdr.common.flags;
   hdr.common.status = ~hdr.common.status;
@@ -328,7 +328,7 @@ status_t timeline_item_storage_get_from_settings_record(struct pbl_settings_file
                                                         struct pbl_settings_record *info,
                                                         TimelineItem *item) {
   uint8_t *read_buf = pbl_zalloc_check(info->val_len);
-  info->get_val(file, read_buf, info->val_len);
+  pbl_settings_read_val(file, read_buf, info->val_len);
 
   SerializedTimelineItemHeader *header = (SerializedTimelineItemHeader *)read_buf;
   // Restore flags & status

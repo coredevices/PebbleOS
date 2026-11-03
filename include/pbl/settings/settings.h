@@ -330,24 +330,33 @@ status_t pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, 
                                size_t offset, uint8_t byte);
 
 /**
- * @brief Read the key or value of the record being visited.
+ * @brief Read the key of the record being visited.
  *
- * @param file Settings file.
+ * Only valid from a pbl_settings_each() or pbl_settings_rewrite() callback.
+ *
+ * @param file Settings file being iterated.
  * @param[out] buf Destination buffer.
- * @param buf_len Bytes to read, at most the key or value length.
+ * @param buf_len Bytes to read, at most the key length.
  */
-typedef void (*pbl_settings_getter_t)(struct pbl_settings_file *file, void *buf, size_t buf_len);
+void pbl_settings_read_key(struct pbl_settings_file *file, void *buf, size_t buf_len);
+
+/**
+ * @brief Read the value of the record being visited.
+ *
+ * Only valid from a pbl_settings_each() or pbl_settings_rewrite() callback.
+ *
+ * @param file Settings file being iterated.
+ * @param[out] buf Destination buffer.
+ * @param buf_len Bytes to read, at most the value length.
+ */
+void pbl_settings_read_val(struct pbl_settings_file *file, void *buf, size_t buf_len);
 
 /** @brief Record being visited by pbl_settings_each() or pbl_settings_rewrite(). */
 struct pbl_settings_record {
   /** Modification timestamp. */
   uint32_t last_modified;
-  /** Reads the key. */
-  pbl_settings_getter_t get_key;
   /** Key length in bytes. */
   int key_len;
-  /** Reads the value. */
-  pbl_settings_getter_t get_val;
   /** Value length in bytes, 0 for a deleted record. */
   int val_len;
   /** Record has not been marked as synced. */

@@ -35,7 +35,7 @@ bool sync_util_build_dirty_list_cb(struct pbl_settings_file *file, struct pbl_se
 
     new_node->last_updated = info->last_modified;
     new_node->key_len = info->key_len;
-    info->get_key(file, new_node->key, new_node->key_len);
+    pbl_settings_read_key(file, new_node->key, new_node->key_len);
 
     *(BlobDBDirtyItem **)context =
         (BlobDBDirtyItem *)list_prepend((ListNode *)dirty_list, (ListNode *)new_node);

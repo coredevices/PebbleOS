@@ -509,12 +509,12 @@ static void prv_settings_rewrite_cb(struct pbl_settings_file *old_file,
   }
 
   ActivitySettingsKey key;
-  info->get_key(old_file, &key, info->key_len);
+  pbl_settings_read_key(old_file, &key, info->key_len);
 
   if (prv_settings_key_is_metric_history(key) &&
       (info->val_len == sizeof(ActivitySettingsValueHistoryV2))) {
     ActivitySettingsValueHistoryV2 old_history;
-    info->get_val(old_file, &old_history, sizeof(old_history));
+    pbl_settings_read_val(old_file, &old_history, sizeof(old_history));
 
     ActivitySettingsValueHistory new_history = {
       .utc_sec = old_history.utc_sec,
@@ -528,7 +528,7 @@ static void prv_settings_rewrite_cb(struct pbl_settings_file *old_file,
 
   if (prv_settings_key_is_metric_scalar(key) && (info->val_len == sizeof(uint16_t))) {
     uint16_t old_value;
-    info->get_val(old_file, &old_value, sizeof(old_value));
+    pbl_settings_read_val(old_file, &old_value, sizeof(old_value));
 
     const ActivityScalarStore new_value = old_value;
     pbl_settings_set(new_file, &key, info->key_len, &new_value, sizeof(new_value));
@@ -537,7 +537,7 @@ static void prv_settings_rewrite_cb(struct pbl_settings_file *old_file,
 
   // rewrite this entry unmodified
   void *data = pbl_malloc_check(info->val_len);
-  info->get_val(old_file, data, info->val_len);
+  pbl_settings_read_val(old_file, data, info->val_len);
 
   pbl_settings_set(new_file, &key, info->key_len, data, info->val_len);
 

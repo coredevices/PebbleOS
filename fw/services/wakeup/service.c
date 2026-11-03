@@ -160,10 +160,10 @@ static bool prv_find_next_wakeup_id_callback(struct pbl_settings_file *file,
   }
 
   WakeupId wakeup_id;
-  info->get_key(file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
+  pbl_settings_read_key(file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(file, (uint8_t *)&entry, sizeof(WakeupEntry));
+  pbl_settings_read_val(file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // If the wakeup_id is valid, and the timestamp of the entry is closer than
   // the timestamp of our global wakeup state, then set the next close wakeup event
@@ -245,10 +245,10 @@ static void prv_migrate_events_callback(struct pbl_settings_file *old_file,
   }
 
   WakeupId wakeup_id;
-  info->get_val(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
+  pbl_settings_read_val(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(old_file, (uint8_t *)&entry, sizeof(WakeupEntry));
+  pbl_settings_read_val(old_file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // Migrate the entries to the new timezone
   if (entry.utc == false) {
@@ -293,10 +293,10 @@ static void prv_update_events_callback(struct pbl_settings_file *old_file,
   struct prv_missed_events_s *missed_events = (struct prv_missed_events_s *)context;
 
   WakeupId wakeup_id;
-  info->get_key(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
+  pbl_settings_read_key(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(old_file, (uint8_t *)&entry, info->val_len);
+  pbl_settings_read_val(old_file, (uint8_t *)&entry, info->val_len);
   if (struct_migration) {
     entry.timestamp = wakeup_id; // WakeupId (key) is a timestamp
     entry.utc = false;           // If we're migrating, this has not been utc
@@ -484,10 +484,10 @@ static bool prv_check_count_and_availability_callback(struct pbl_settings_file *
       (struct prv_check_app_and_wakeup_event_s *)context;
 
   WakeupId wakeup_id;
-  info->get_key(file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
+  pbl_settings_read_key(file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(file, (uint8_t *)&entry, sizeof(WakeupEntry));
+  pbl_settings_read_val(file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // If we have already flagged an error, just skip the rest
   if (check->wakeup_count < S_SUCCESS) {
@@ -565,10 +565,10 @@ static void prv_delete_events_by_uuid_callback(struct pbl_settings_file *old_fil
   }
 
   WakeupId wakeup_id;
-  info->get_key(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
+  pbl_settings_read_key(old_file, (uint8_t *)&wakeup_id, sizeof(WakeupId));
 
   WakeupEntry entry;
-  info->get_val(old_file, (uint8_t *)&entry, sizeof(WakeupEntry));
+  pbl_settings_read_val(old_file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // If the UUID is equal, delete the entry
   if (uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {

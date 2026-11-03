@@ -1188,7 +1188,7 @@ static bool alarm_for_each_itr(struct pbl_settings_file *file, struct pbl_settin
   ForEachAlarmItrData *itr_data = (ForEachAlarmItrData *)context;
 
   AlarmStorageKey key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   if (key.type != ALARM_DATA_CONFIG) {
     return true;

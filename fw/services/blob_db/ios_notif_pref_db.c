@@ -373,7 +373,7 @@ static bool prv_print_notif_pref_db(struct pbl_settings_file *file,
                                     struct pbl_settings_record *info, void *context) {
   const struct pbl_shell *sh = context;
   char app_id[64];
-  info->get_key(file, app_id, info->key_len);
+  pbl_settings_read_key(file, app_id, info->key_len);
   app_id[info->key_len] = '\0';
   pbl_shell_print(sh, "%s", app_id);
 

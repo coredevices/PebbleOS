@@ -183,7 +183,7 @@ static bool prv_read_minute_file_record(struct pbl_settings_file *file,
                                         uint32_t key_range_end, AlgMinuteFileRecord *chunk) {
   // Get the key for this record and see if we want it
   uint32_t key;
-  info->get_key(file, &key, sizeof(key));
+  pbl_settings_read_key(file, &key, sizeof(key));
   if (key < key_range_start || key > key_range_end) {
     return false;
   }
@@ -192,7 +192,7 @@ static bool prv_read_minute_file_record(struct pbl_settings_file *file,
   if (info->val_len != sizeof(*chunk)) {
     return false;
   }
-  info->get_val(file, chunk, sizeof(*chunk));
+  pbl_settings_read_val(file, chunk, sizeof(*chunk));
 
   // Skip invalid keys
   if (chunk->hdr.version != ALG_MINUTE_FILE_RECORD_VERSION) {

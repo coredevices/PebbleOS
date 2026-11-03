@@ -145,11 +145,11 @@ status_t pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, 
 
 uint8_t s_cur_itr;
 
-static void prv_get_key(struct pbl_settings_file *file, void *key, size_t key_len) {
+void pbl_settings_read_key(struct pbl_settings_file *file, void *key, size_t key_len) {
   memcpy(key, s_settings_file.keys[s_cur_itr], key_len);
 }
 
-static void prv_get_val(struct pbl_settings_file *file, void *val, size_t val_len) {
+void pbl_settings_read_val(struct pbl_settings_file *file, void *val, size_t val_len) {
   memcpy(val, s_settings_file.values[s_cur_itr], val_len);
 }
 
@@ -159,8 +159,6 @@ void pbl_settings_each(struct pbl_settings_file *file, pbl_settings_each_cb_t cb
       s_cur_itr = i;
 
       struct pbl_settings_record info = {
-        .get_key = prv_get_key,
-        .get_val = prv_get_val,
         .key_len = s_settings_file.key_lens[i],
         .val_len = s_settings_file.val_lens[i],
         .dirty = s_settings_file.dirty[i],
