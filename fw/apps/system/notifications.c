@@ -331,7 +331,7 @@ static void prv_group_window_load(Window *window) {
                                system_theme_get_fg_color());
   menu_layer_set_highlight_colors(
       menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, system_theme_get_fg_color()),
-      system_theme_get_bg_color());
+      PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, false);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
@@ -992,7 +992,7 @@ static void prv_window_load(Window *window) {
                                system_theme_get_fg_color());
   menu_layer_set_highlight_colors(
       menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, system_theme_get_fg_color()),
-      system_theme_get_bg_color());
+      PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());

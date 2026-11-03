@@ -278,8 +278,9 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
   // Otherwise if the alarm is smart draw according to the menu highlight.
   graphics_context_set_tint_color(
       ctx, !node->info.is_smart ? GColorClear
-                                : (cell_layer->is_highlighted ? system_theme_get_bg_color()
-                                                              : system_theme_get_fg_color()));
+                                : (cell_layer->is_highlighted
+                                       ? PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color())
+                                       : system_theme_get_fg_color()));
 
   char alarm_day_text[32] = {};
   MenuCellLayerConfig config = {
@@ -395,7 +396,7 @@ static void prv_handle_init(void) {
                            });
 
   menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR,
-                                  system_theme_get_bg_color());
+                                  PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());
