@@ -34,15 +34,6 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 //! The BtPersistBonding*Data structs can never shrink, only grow
 
-//! Stores data about a remote BT classic device
-typedef struct PBL_PACKED {
-  struct pbl_bt_addr addr;
-  struct pbl_bt_sm_key link_key;
-  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  // These are the lowest bits of Remote.platform_bitfield_cache, which contain the OS type
-  uint8_t platform_bits;
-} BtPersistBondingBTClassicData;
-
 //! Stores data about a remote BLE device
 typedef struct PBL_PACKED {
   bool supports_ancs : 1;
@@ -56,10 +47,7 @@ typedef struct PBL_PACKED {
 typedef struct PBL_PACKED {
   BtPersistBondingType type : 8;
 
-  union PBL_PACKED {
-    BtPersistBondingBTClassicData bt_classic_data;
-    BtPersistBondingBLEData ble_data;
-  };
+  BtPersistBondingBLEData ble_data;
 } BtPersistBondingData;
 
 typedef struct PBL_PACKED {
@@ -81,9 +69,8 @@ typedef struct PBL_PACKED {
 #define BT_PERSISTENT_STORAGE_FILE_SIZE (4096)
 
 //! All of the actual pairings use a pbl_bt_bonding_id_t as a key. This is because with BLE pairings
-//! an address is not alway available, and it made it easier to have BT Classic and BLE pairings use
-//! the same type of key. When adding pairings there is no pbl_bt_bonding_id_t so a free key has to
-//! be found by iterating over all possible keys.
+//! an address is not alway available. When adding pairings there is no pbl_bt_bonding_id_t so a
+//! free key has to be found by iterating over all possible keys.
 
 //! All of the local device attributes can be accessed directly with the following keys:
 
@@ -1494,9 +1481,7 @@ static void prv_dump_bonding_db_data(const struct pbl_shell *sh, pbl_bt_bonding_
                                      const BtPersistBondingData *data) {
   bool matches_prf;
 
-  if (data->type == BtPersistBondingTypeBTClassic) {
-    pbl_shell_print(sh, "Classic Key %d (legacy)", (int)bond_id);
-  } else if (data->type == BtPersistBondingTypeBLE) {
+  if (data->type == BtPersistBondingTypeBLE) {
     pbl_shell_print(sh, "LE Key %d", (int)bond_id);
 
     pbl_shell_print(sh, " ANCS: %d Gateway: %d Req Pin: %d", (int)data->ble_data.supports_ancs,

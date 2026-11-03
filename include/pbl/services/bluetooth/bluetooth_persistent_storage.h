@@ -36,10 +36,8 @@ typedef enum {
 
 /** @brief Transport of a bonding. */
 typedef enum {
-  /** Bluetooth Classic (legacy, no longer stored). */
-  BtPersistBondingTypeBTClassic,
-  /** Bluetooth Low Energy. */
-  BtPersistBondingTypeBLE,
+  /** Bluetooth Low Energy. Value 0 is reserved. */
+  BtPersistBondingTypeBLE = 1,
   /** Number of bonding types. */
   BtPersistBondingNumTypes
 } BtPersistBondingType;
