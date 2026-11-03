@@ -20,7 +20,6 @@ config HAL_SIFLI_SF32LB52
     select HAL_SIFLI_GPT
     select HAL_SIFLI_IPC_QUEUE
     select HAL_SIFLI_LPTIM
-    select HAL_SIFLI_LRC_CAL
     select HAL_SIFLI_PINMUX
     select HAL_SIFLI_RTC
     help
@@ -28,7 +27,7 @@ config HAL_SIFLI_SF32LB52
       SF32LB52X target define and adds the SF32LB52-specific cmsis
       and local glue sources to the build. It also selects the HAL
       modules required by SoC-level PebbleOS code (clock/tick,
-      sleep, pinmux, RTC and RC calibration).
+      sleep, pinmux and RTC).
 
 config HAL_SIFLI_AES
     bool "AES HAL module"
