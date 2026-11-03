@@ -7,6 +7,14 @@ config MBOX
       Mailbox controller class (pbl/drivers/mbox.h), selected by the
       controller drivers.
 
+config MBOX_SF32LB52
+    bool "SiFli SF32LB52 mailbox"
+    default y if SOC_SF32LB52
+    depends on CLK_SF32LB
+    select MBOX
+    help
+      SF32LB52 mailbox blocks (MAILBOX1, MAILBOX2), channel 1 doorbells.
+
 config MBOX_SHELL
     bool "Mailbox shell commands"
     default DRIVER_SHELL

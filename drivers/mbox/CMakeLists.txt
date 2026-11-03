@@ -3,4 +3,5 @@
 
 pbl_library()
 pbl_library_sources(mbox.c)
+pbl_library_sources_ifdef(CONFIG_MBOX_SF32LB52 sf32lb52.c)
 pbl_library_sources_ifdef(CONFIG_MBOX_SHELL shell.c)
