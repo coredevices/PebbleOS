@@ -13,29 +13,11 @@
 #include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/build_id.h>
-#include <pbl/util/math.h>
 
 #include <process_management/pebble_process_md.h>
 #include <resource/resource_storage.h>
 
 PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
-
-bool app_storage_get_process_load_size(const PebbleProcessInfo *info, size_t *load_size_out) {
-  size_t reloc_size;
-  if (pbl_size_mul_overflow(info->num_reloc_entries, sizeof(uint32_t), &reloc_size)) {
-    PBL_LOG_WRN("App relocation table size overflows: entries=%" PRIu32, info->num_reloc_entries);
-    return false;
-  }
-
-  const uint32_t image_size = process_info_get_load_size(info);
-  if (image_size > (SIZE_MAX - reloc_size)) {
-    PBL_LOG_WRN("App load size overflows: load=%" PRIu32 " reloc=%zu", image_size, reloc_size);
-    return false;
-  }
-
-  *load_size_out = image_size + reloc_size;
-  return true;
-}
 
 AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
                                                         uint8_t *build_id_out, AppInstallId app_id,
