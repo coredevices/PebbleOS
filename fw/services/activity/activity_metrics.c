@@ -652,9 +652,9 @@ void activity_metrics_prv_init(struct pbl_settings_file *file, time_t utc_now) {
       ActivitySettingsValueHistory new_history = {};
 
       // In case we change the length of the history, fetch the old size
-      int fetch_size = sizeof(old_history);
-      fetch_size = MIN(fetch_size, pbl_settings_get_len(file, &m_info.settings_key,
-                                                        sizeof(m_info.settings_key)));
+      size_t fetch_size =
+          MIN(sizeof(old_history),
+              pbl_settings_get_len(file, &m_info.settings_key, sizeof(m_info.settings_key)));
       pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
                        fetch_size);
 

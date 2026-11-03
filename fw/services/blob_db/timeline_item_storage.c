@@ -63,10 +63,10 @@ typedef struct {
 // callback for pbl_settings_each that finds the first item by timestamp
 static bool prv_each_first_item(struct pbl_settings_file *file, struct pbl_settings_record *info,
                                 void *context) {
-  if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) ||
+  if (info->val_len < sizeof(SerializedTimelineItemHeader) ||
       info->key_len != UUID_SIZE) { // deleted or malformed values
     if (info->key_len != UUID_SIZE) {
-      PBL_LOG_WRN("Found reminder with invalid key size %d; ignoring.", info->key_len);
+      PBL_LOG_WRN("Found reminder with invalid key size %u; ignoring.", (unsigned)info->key_len);
     }
     return true;
   }
@@ -98,7 +98,7 @@ static bool prv_each_first_item(struct pbl_settings_file *file, struct pbl_setti
 
 static bool prv_each_any_item(struct pbl_settings_file *file, struct pbl_settings_record *info,
                               void *context) {
-  if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) || info->key_len != UUID_SIZE) {
+  if (info->val_len < sizeof(SerializedTimelineItemHeader) || info->key_len != UUID_SIZE) {
     return true; // continue looking
   }
 
@@ -111,7 +111,7 @@ static bool prv_each_any_item(struct pbl_settings_file *file, struct pbl_setting
 static bool prv_each_find_children(struct pbl_settings_file *file, struct pbl_settings_record *info,
                                    void *context) {
   FindChildrenInfo *find_info = (FindChildrenInfo *)context;
-  if (info->val_len < (int)sizeof(SerializedTimelineItemHeader) || info->key_len != UUID_SIZE) {
+  if (info->val_len < sizeof(SerializedTimelineItemHeader) || info->key_len != UUID_SIZE) {
     // malformed values; deleted values have their lengths set to 0
     if (info->key_len != UUID_SIZE) {
       PBL_LOG_WRN("Found malformed item with invalid key/val sizes; ignoring.");

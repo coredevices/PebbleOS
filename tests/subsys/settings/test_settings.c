@@ -443,7 +443,7 @@ static bool prv_each_cb(struct pbl_settings_file *file, struct pbl_settings_reco
   key[info->key_len] = '\0';
   val[info->val_len] = '\0';
 
-  printf("Read key of %s %d and val of %s %d\n", key, info->key_len, val, info->val_len);
+  printf("Read key of %s %zu and val of %s %zu\n", key, info->key_len, val, info->val_len);
   int key_i = atoi((char *)key + 1);
   cl_assert(key_i >= 0 && key_i < 255);
   uint8_t *counts = (uint8_t *)context;
@@ -492,7 +492,7 @@ static bool prv_each_cb_quit_early(struct pbl_settings_file *file, struct pbl_se
   key[info->key_len] = '\0';
   val[info->val_len] = '\0';
 
-  printf("Read key of %s %d and val of %s %d\n", key, info->key_len, val, info->val_len);
+  printf("Read key of %s %zu and val of %s %zu\n", key, info->key_len, val, info->val_len);
   int key_i = atoi((char *)key + 1);
   cl_assert(key_i >= 0 && key_i < 255);
   uint8_t *cur_val = (uint8_t *)context;
