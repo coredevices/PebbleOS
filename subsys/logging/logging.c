@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
@@ -98,20 +99,128 @@ void pbl_log_panic(void) {
   }
 }
 
+static bool prv_accepts(const struct pbl_log_backend *backend, const struct pbl_log_msg *msg,
+                        bool filtered) {
+  return filtered || msg->level == LOG_LEVEL_ALWAYS ||
+         msg->level <= atomic_load_explicit(&backend->state->level, memory_order_relaxed);
+}
+
+#if CONFIG_LOG_BOOT_BUFFER_SIZE > 0
+struct prv_boot_rec {
+  uint32_t timestamp;
+  uint16_t size;
+  uint16_t line;
+  uint8_t level;
+  uint8_t flags;
+  uint8_t text_len;
+  bool filtered;
+  char file[16];
+  char text[];
+};
+
+static uint8_t s_boot_buf[CONFIG_LOG_BOOT_BUFFER_SIZE] PBL_ALIGNED(4);
+static size_t s_boot_len;
+static bool s_boot_full;
+
+static void prv_boot_record(const struct pbl_log_msg *msg, bool filtered) {
+  const size_t size = (sizeof(struct prv_boot_rec) + msg->text_len + 1U + 3U) & ~3U;
+
+  pbl_irq_lock();
+  if (!s_boot_full && s_boot_len + size > sizeof(s_boot_buf)) {
+    s_boot_full = true;
+  }
+  if (!s_boot_full) {
+    struct prv_boot_rec *rec = (struct prv_boot_rec *)&s_boot_buf[s_boot_len];
+    *rec = (struct prv_boot_rec){
+      .timestamp = msg->timestamp,
+      .size = (uint16_t)size,
+      .line = msg->line,
+      .level = msg->level,
+      .flags = msg->flags,
+      .text_len = msg->text_len,
+      .filtered = filtered,
+    };
+    strncpy(rec->file, msg->file, sizeof(rec->file) - 1U);
+    memcpy(rec->text, msg->text, msg->text_len);
+    rec->text[msg->text_len] = '\0';
+    s_boot_len += size;
+  }
+  pbl_irq_unlock();
+}
+
+static size_t prv_boot_replay(const struct pbl_log_backend *backend, size_t pos, size_t end) {
+  while (pos < end) {
+    const struct prv_boot_rec *rec = (const struct prv_boot_rec *)&s_boot_buf[pos];
+    const struct pbl_log_msg msg = {
+      .file = rec->file,
+      .text = rec->text,
+      .timestamp = rec->timestamp,
+      .line = rec->line,
+      .level = rec->level,
+      .text_len = rec->text_len,
+      .flags = rec->flags,
+    };
+
+    if (prv_accepts(backend, &msg, rec->filtered)) {
+      backend->api->process(backend, &msg);
+    }
+    pos += rec->size;
+  }
+
+  return pos;
+}
+#endif
+
+void pbl_log_backend_start(const struct pbl_log_backend *backend) {
+#if CONFIG_LOG_BOOT_BUFFER_SIZE > 0
+  size_t pos = 0;
+
+  if (!backend->api->replay) {
+    pbl_log_backend_enable(backend);
+    return;
+  }
+
+  while (true) {
+    pbl_irq_lock();
+    const size_t end = s_boot_len;
+    if (pos == end) {
+      atomic_store_explicit(&backend->state->enabled, true, memory_order_relaxed);
+      pbl_irq_unlock();
+      return;
+    }
+    pbl_irq_unlock();
+
+    pos = prv_boot_replay(backend, pos, end);
+  }
+#else
+  pbl_log_backend_enable(backend);
+#endif
+}
+
 //! @param filtered The level was already checked against a runtime module level.
 static void prv_dispatch(const struct pbl_log_msg *msg, bool filtered) {
+  bool record = false;
+
   PRV_FOREACH_BACKEND(backend) {
-    if (!atomic_load_explicit(&backend->state->enabled, memory_order_relaxed)) {
+    if (!prv_accepts(backend, msg, filtered)) {
       continue;
     }
 
-    if (!filtered && msg->level != LOG_LEVEL_ALWAYS &&
-        msg->level > atomic_load_explicit(&backend->state->level, memory_order_relaxed)) {
+    if (!atomic_load_explicit(&backend->state->enabled, memory_order_relaxed)) {
+      record |= backend->api->replay;
       continue;
     }
 
     backend->api->process(backend, msg);
   }
+
+#if CONFIG_LOG_BOOT_BUFFER_SIZE > 0
+  if (record && msg->app_uuid == nullptr && !(msg->flags & PBL_LOG_MSG_FAULT)) {
+    prv_boot_record(msg, filtered);
+  }
+#else
+  (void)record;
+#endif
 }
 
 static void prv_log_binary(LogBinaryMessage *log_message, uint32_t flags, const uint8_t *app_uuid) {

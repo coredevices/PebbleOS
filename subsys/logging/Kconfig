@@ -53,6 +53,15 @@ config LOG_TASK_PREFIX
       Prefix log messages with the originating task identifier char
       (uppercase when logged from privileged mode).
 
+config LOG_BOOT_BUFFER_SIZE
+    int "Boot buffer size"
+    default 512
+    help
+      Messages that a disabled backend would write are kept in a buffer
+      of this many bytes, until it is full, and replayed to the backends
+      started with pbl_log_backend_start(), e.g. the flash backend, so
+      their log begins with the boot banner. 0 disables it.
+
 config PULSE_EVERYWHERE
     bool "PULSE everywhere"
     default y if !RELEASE || MFG
