@@ -5,7 +5,6 @@
 
 #include "system_theme_style.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/syscall.h>
@@ -89,39 +88,19 @@ PBL_SYSCALL(bool, system_theme_is_system_ui) {
   return prv_is_system_app();
 }
 
+//! Effective dark mode, kept up to date by the dark mode updater
+static bool s_dark_mode;
+
+void system_theme_set_dark_mode(bool dark_mode) {
+  s_dark_mode = dark_mode;
+}
+
 PBL_SYSCALL(bool, system_theme_is_dark_mode) {
   // Dark mode is only supported on color platforms, so treat all non-color platforms as light mode
   if (PBL_IF_COLOR_ELSE(false, true)) {
     return false;
   }
-  if (!prv_is_system_app()) {
-    return false;
-  }
-  switch (shell_prefs_get_dark_mode()) {
-    case DarkModeOff:
-      return false;
-    case DarkModeOn:
-      return true;
-    case DarkModeScheduled: {
-      DarkModeSchedule schedule;
-      shell_prefs_get_dark_mode_schedule(&schedule);
-      struct pbl_tm time_now;
-      rtc_get_time_tm(&time_now);
-      const int now_min = time_now.tm_hour * 60 + time_now.tm_min;
-      const int start_min = schedule.from_hour * 60 + schedule.from_minute;
-      const int end_min = schedule.to_hour * 60 + schedule.to_minute;
-      if (start_min == end_min) {
-        return false;
-      }
-      if (start_min < end_min) {
-        return (now_min >= start_min && now_min < end_min);
-      } else {
-        return (now_min >= start_min || now_min < end_min);
-      }
-    }
-    default:
-      return false;
-  }
+  return s_dark_mode && prv_is_system_app();
 }
 
 GColor system_theme_get_bg_color(void) {
