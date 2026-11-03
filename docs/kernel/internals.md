@@ -17,7 +17,7 @@ irq.c          nestable interrupt lock
 debug.c        thread walk, saved registers, stack and run-time stats
 kernel.h       the interface between the objects, the scheduler and the arch
 arch/arch.h    what an arch must provide
-arch/arm/      Cortex-M port: context switch, SVC, MPU, SysTick, idle
+arch/arm/      Cortex-M port: context switch, SVC, MPU, idle
 arch/posix/    host port: threads are pthreads, time is virtual; for tests
 kernel_test.h  harness entry points used by tests/kernel
 ```
@@ -55,10 +55,10 @@ Object operations run under that lock; there is no separate scheduler lock
 inside the kernel. `pbl_sched_lock()` defers switches until unlocked.
 
 **Idle.** The idle thread yields to other threads at its priority, then
-calls the arch idle hook with the ticks until the next timeout. On Cortex-M
-that forwards to the SoC's `pbl_soc_idle()` when the gap is at least two
-ticks, and the SoC reports the sleep back with `pbl_idle_slept()`, which
-advances the clock and expires timeouts.
+calls the arch idle hook with the ticks until the next timeout. The arch
+masks interrupts and hands over to the kernel's tickless idle, which picks
+one of the SoC's idle states and reprograms the clock event device around
+it (see {doc}`idle`).
 
 **Threads.** `struct pbl_thread` is caller-owned; the backend state lives in
 its `backend` member, first in the struct so the arch code can find the
