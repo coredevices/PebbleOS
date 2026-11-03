@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/sf32lb52/rc10k.h>
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/timer.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
@@ -17,6 +17,13 @@
 #define MIN_DELTA 2U
 
 static uint64_t s_rate_mhz;
+
+static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
+
+static struct pbl_clk_notifier s_rc10k_nb = {
+  .clk = PBL_CLK(SF32LB_RC10K, SF32LB52_CLK_RC10K),
+  .fn = prv_rate_changed,
+};
 
 static inline uint32_t prv_getreg(uint32_t offset) {
   return pbl_readl(SF32LB52_LPTIM1_BASE + offset);
@@ -74,14 +81,10 @@ const struct pbl_clocksource *const pbl_system_clocksource = &s_lptim1_cs;
 const struct pbl_clockevent *const pbl_system_clockevent = &s_lptim1_ce;
 
 // Follows the RC10K calibration.
-static void prv_update_rate(void) {
-  uint64_t mhz = rc10k_get_freq_mhz();
-
-  if (mhz != s_rate_mhz) {
-    s_rate_mhz = mhz;
-    pbl_clocksource_set_mhz(&s_lptim1_cs, mhz);
-    pbl_clockevent_set_hz(&s_lptim1_ce, (uint32_t)(mhz / 1000U));
-  }
+static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz) {
+  s_rate_mhz = rate_mhz;
+  pbl_clocksource_set_mhz(&s_lptim1_cs, rate_mhz);
+  pbl_clockevent_set_hz(&s_lptim1_ce, (uint32_t)(rate_mhz / 1000U));
 }
 
 static void prv_isr(void) {
@@ -91,7 +94,6 @@ static void prv_isr(void) {
 
   prv_putreg(SF32LB52_LPTIM_ICR_OFFSET, LPTIM_ICR_OCCLR | LPTIM_ICR_WKUPCLR);
 
-  prv_update_rate();
   pbl_clockevent_handler(&s_lptim1_ce);
 }
 
@@ -104,6 +106,15 @@ static int prv_init(const struct pbl_device *dev) {
   int ret;
 
   if (!s_started) {
+    ret = pbl_device_init(&SF32LB_RC10K->dev);
+    if (ret == 0) {
+      ret = pbl_clk_get_rate(&s_rc10k_nb.clk, &s_rate_mhz);
+    }
+    if (ret != 0) {
+      return ret;
+    }
+    pbl_clk_notifier_register(&s_rc10k_nb);
+
     // Free running over the whole counter, on the RC10K clock.
     prv_putreg(SF32LB52_LPTIM_CR_OFFSET, 0U);
     prv_putreg(SF32LB52_LPTIM_IER_OFFSET, 0U);
@@ -119,7 +130,6 @@ static int prv_init(const struct pbl_device *dev) {
     prv_putreg(SF32LB52_LPTIM_ICR_OFFSET, LPTIM_ICR_OCCLR | LPTIM_ICR_WKUPCLR);
     prv_putreg(SF32LB52_LPTIM_CR_OFFSET, LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT);
     pbl_irq_enable(PBL_IRQN(LPTIM1));
-    s_rate_mhz = rc10k_get_freq_mhz();
     s_started = true;
   }
 

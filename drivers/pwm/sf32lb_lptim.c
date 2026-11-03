@@ -3,8 +3,8 @@
 
 #include <errno.h>
 
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
-#include <pbl/drivers/sf32lb52/rc10k.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/math.h>
@@ -37,11 +37,18 @@ static inline void prv_putreg(const struct pbl_pwm_sf32lb_lptim *lptim, uint32_t
 static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
                      const struct pbl_pwm_state *state) {
   const struct pbl_pwm_sf32lb_lptim *lptim = prv_lptim(ctrl);
-  uint64_t freq = rc10k_get_freq_hz();
+  const struct pbl_clk rc10k = PBL_CLK(SF32LB_RC10K, SF32LB52_CLK_RC10K);
+  uint64_t freq;
   uint32_t period;
   uint32_t duty;
   uint32_t cfgr;
   int ret;
+
+  ret = pbl_clk_get_rate(&rc10k, &freq);
+  if (ret != 0) {
+    return ret;
+  }
+  freq /= 1000U;
 
   period = (uint32_t)MIN((state->period * freq) / PBL_NSEC_PER_SEC, LPTIM_ARR_MASK + 1ULL);
   if (period < 2U) {
@@ -89,9 +96,15 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
 int pbl_pwm_sf32lb_lptim_init(const struct pbl_device *dev) {
   const struct pbl_pwm_sf32lb_lptim *lptim =
       container_of(dev, const struct pbl_pwm_sf32lb_lptim, ctrl.dev);
+  int ret;
 
   if (lptim->index == 0U || lptim->index > ARRAY_LENGTH(s_bases)) {
     return -EINVAL;
+  }
+
+  ret = pbl_device_init(&SF32LB_RC10K->dev);
+  if (ret != 0) {
+    return ret;
   }
 
   prv_putreg(lptim, SF32LB52_LPTIM_CR_OFFSET, 0U);
