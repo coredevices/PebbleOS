@@ -154,6 +154,13 @@ uint32_t arch_cycles_per_sec(void) {
   return 1000000000U;
 }
 
+// Fibers only switch when they block, which no heap operation does.
+void arch_heap_lock(void) {
+}
+
+void arch_heap_unlock(void) {
+}
+
 void arch_irq_disable(void) {
 }
 
