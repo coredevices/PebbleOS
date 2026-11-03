@@ -26,6 +26,9 @@
  * // use the peripheral
  * pbl_clk_disable(&s_clk);
  * @endcode
+ *
+ * A consumer that depends on a clock's rate reads it with pbl_clk_get_rate() and, if the rate
+ * can change at run time, registers a struct pbl_clk_notifier to follow it.
  * @{
  */
 
@@ -33,10 +36,12 @@ struct pbl_clk_controller;
 
 /** @brief Clock controller driver operations, called with interrupts locked. */
 struct pbl_clk_controller_ops {
-  /** Ungate a clock. Returns 0 or a negative errno. */
+  /** Ungate a clock, or NULL if the clocks always run. Returns 0 or a negative errno. */
   int (*enable)(const struct pbl_clk_controller *ctrl, uint32_t id);
-  /** Gate a clock. Returns 0 or a negative errno. */
+  /** Gate a clock, or NULL if the clocks always run. Returns 0 or a negative errno. */
   int (*disable)(const struct pbl_clk_controller *ctrl, uint32_t id);
+  /** Get a clock's rate in mHz, or NULL if unknown. Returns 0 or a negative errno. */
+  int (*get_rate)(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t *rate_mhz);
 };
 
 /** @brief A clock controller. */
@@ -120,5 +125,56 @@ int pbl_clk_disable(const struct pbl_clk *clk);
  * @return True if the clock is enabled.
  */
 bool pbl_clk_is_enabled(const struct pbl_clk *clk);
+
+/**
+ * @brief Get the rate of a clock.
+ *
+ * Callable from any context.
+ *
+ * @param clk Clock.
+ * @param[out] rate_mhz Rate in mHz.
+ * @return 0, @c -ENOTSUP if the controller does not know its rates, or another negative errno.
+ */
+int pbl_clk_get_rate(const struct pbl_clk *clk, uint64_t *rate_mhz);
+
+struct pbl_clk_notifier;
+
+/**
+ * @brief Rate change callback.
+ *
+ * Called from the context the provider changed the rate in, possibly an interrupt: it must not
+ * block.
+ *
+ * @param nb Notifier.
+ * @param rate_mhz New rate in mHz.
+ */
+typedef void (*pbl_clk_notifier_fn_t)(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
+
+/** @brief A rate change subscription. */
+struct pbl_clk_notifier {
+  /** Clock. */
+  struct pbl_clk clk;
+  /** Callback. */
+  pbl_clk_notifier_fn_t fn;
+  /** @cond INTERNAL_HIDDEN */
+  struct pbl_clk_notifier *next;
+  /** @endcond */
+};
+
+/**
+ * @brief Call a function whenever the rate of a clock changes.
+ *
+ * @param nb Notifier, with its clock and callback set; must stay valid.
+ */
+void pbl_clk_notifier_register(struct pbl_clk_notifier *nb);
+
+/**
+ * @brief Report a new rate to the clock's notifiers, for clock providers.
+ *
+ * @param ctrl Clock controller.
+ * @param id Clock number.
+ * @param rate_mhz New rate in mHz.
+ */
+void pbl_clk_rate_changed(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t rate_mhz);
 
 /** @} */
