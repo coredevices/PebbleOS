@@ -29,7 +29,7 @@ void nimble_addr_to_pebble_device(const ble_addr_t *stack_addr,
                                   struct pbl_bt_device_internal *host_addr) {
   nimble_addr_to_pebble_addr(stack_addr, &host_addr->address);
   host_addr->is_random_address = stack_addr->type == BLE_ADDR_RANDOM;
-  host_addr->is_classic = false;
+  host_addr->rsvd = 0;
 }
 
 bool pebble_device_to_nimble_conn_handle(const struct pbl_bt_device_internal *device,

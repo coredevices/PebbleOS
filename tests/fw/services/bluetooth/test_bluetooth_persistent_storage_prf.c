@@ -139,7 +139,6 @@ void test_bluetooth_persistent_storage_prf__ble_store_and_get(void) {
               (struct pbl_bt_addr){
                 .octets = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -183,7 +182,6 @@ void test_bluetooth_persistent_storage_prf__ble_store_and_get(void) {
               (struct pbl_bt_addr){
                 .octets = {0x21, 0x22, 0x13, 0x14, 0x15, 0x26},
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -218,7 +216,6 @@ void test_bluetooth_persistent_storage_prf__ble_store_and_get(void) {
               (struct pbl_bt_addr){
                 .octets = {0x33, 0x22, 0x13, 0x14, 0x15, 0x26},
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -287,7 +284,6 @@ void test_bluetooth_persistent_storage_prf__get_ble_by_address(void) {
                       0x16,
                     },
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -325,7 +321,6 @@ void test_bluetooth_persistent_storage_prf__delete_ble_pairing_by_id(void) {
               (struct pbl_bt_addr){
                 .octets = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
