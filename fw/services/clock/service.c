@@ -1107,6 +1107,7 @@ static int prv_cmd_set(const struct pbl_shell *sh, size_t argc, char **argv) {
 
 static int prv_cmd_tz_clear(const struct pbl_shell *sh, size_t argc, char **argv) {
   rtc_timezone_clear();
+  time_util_update_timezone(&(TimezoneInfo){}, 0, 0);
   return 0;
 }
 
