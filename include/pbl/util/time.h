@@ -189,4 +189,18 @@ static inline pbl_time32_t pbl_time_to_time32(time_t t) {
  */
 time_t pbl_time_from_time32(pbl_time32_t t, time_t reference);
 
+/**
+ * @brief Widen the low 32 bits of a time known to be near @p reference.
+ *
+ * The result is the time closest to @p reference with the same low 32 bits, before 2038 too, so
+ * a near future time past 2038 is not sign extended into 1901. Use it for times the firmware
+ * knows are within 68 years of now, unlike pbl_time_from_time32(), which keeps how a 32-bit
+ * @c time_t from an app read before 2038.
+ *
+ * @param t Low 32 bits of the time.
+ * @param reference Current time, to place @p t relative to.
+ * @return @p t as seconds since the Unix epoch.
+ */
+time_t pbl_time_from_low32(uint32_t t, time_t reference);
+
 /** @} */
