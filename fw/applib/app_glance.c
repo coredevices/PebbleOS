@@ -107,7 +107,7 @@ AppGlanceResult app_glance_add_slice_time32(AppGlanceReloadSession *session,
                                             AppGlanceSlice32 slice) {
   const time_t expiration_time = (slice.expiration_time == APP_GLANCE_SLICE_NO_EXPIRATION)
                                      ? APP_GLANCE_SLICE_NO_EXPIRATION
-                                     : pbl_time_from_time32(slice.expiration_time, sys_get_time());
+                                     : pbl_time_from_low32(slice.expiration_time, sys_get_time());
   return prv_add_slice(session, &slice.layout, expiration_time);
 }
 

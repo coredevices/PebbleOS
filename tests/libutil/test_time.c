@@ -136,3 +136,19 @@ void test_time__time32_closest_after_2038(void) {
   const time_t later = (time_t)5000000000LL;
   cl_assert(pbl_time_from_time32(pbl_time_to_time32(later - 3600), later) == later - 3600);
 }
+
+void test_time__low32_closest_before_2038(void) {
+  if (sizeof(time_t) < 8) {
+    return;
+  }
+  const time_t now = (time_t)INT32_MAX - 86400;
+  // A reminder a month ahead, past 2038, is not sign extended into 1901.
+  const time_t ahead = now + 31 * 86400;
+  cl_assert(pbl_time_from_low32((uint32_t)ahead, now) == ahead);
+  // Recent past and now.
+  cl_assert(pbl_time_from_low32((uint32_t)(now - 3600), now) == now - 3600);
+  cl_assert(pbl_time_from_low32((uint32_t)now, now) == now);
+  // Same as pbl_time_from_time32() after 2038.
+  const time_t later = (time_t)5000000000LL;
+  cl_assert(pbl_time_from_low32((uint32_t)(later + 60), later) == later + 60);
+}
