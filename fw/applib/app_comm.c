@@ -10,5 +10,5 @@ void app_comm_set_sniff_interval(const SniffInterval interval) {
 }
 
 SniffInterval app_comm_get_sniff_interval(void) {
-  return sys_app_comm_get_sniff_interval();
+  return SNIFF_INTERVAL_NORMAL;
 }
