@@ -3,9 +3,9 @@
 
 #include <errno.h>
 
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/rtc/sf32lb.h>
-#include <pbl/drivers/sf32lb52/rc10k.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/services/time.h>
@@ -33,6 +33,13 @@ static inline void prv_modreg(uint32_t offset, uint32_t clear, uint32_t set) {
   pbl_modifyl(clear, set, SF32LB52_RTC_BASE + offset);
 }
 
+static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
+
+static struct pbl_clk_notifier s_rc10k_nb = {
+  .clk = PBL_CLK(SF32LB_RC10K, SF32LB52_CLK_RC10K),
+  .fn = prv_rate_changed,
+};
+
 static uint8_t prv_bcd2bin(uint32_t tens, uint32_t units) {
   return (uint8_t)(tens * 10U + units);
 }
@@ -42,6 +49,20 @@ static int prv_enter_init(void) {
 
   return PBL_POLL_BUSY_US((prv_getreg(SF32LB52_RTC_ISR_OFFSET) & RTC_ISR_INITF) != 0U, 0U,
                           TIMEOUT_US);
+}
+
+// The prescaler can be written while the calendar runs.
+static void prv_set_prescaler(uint64_t rate_mhz) {
+  uint64_t diva = (rate_mhz << DIVA_FRAC_BITS) / (1000U * DIVB);
+
+  prv_putreg(SF32LB52_RTC_PSCLR_OFFSET,
+             PBL_FIELD_PREP(RTC_PSCLR_DIVA_INT_MASK, diva >> DIVA_FRAC_BITS) |
+                 PBL_FIELD_PREP(RTC_PSCLR_DIVA_FRAC_MASK, diva) |
+                 PBL_FIELD_PREP(RTC_PSCLR_DIVB_MASK, DIVB));
+}
+
+static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz) {
+  prv_set_prescaler(rate_mhz);
 }
 
 // Leaves initialization mode and waits for the calendar shadow registers to catch up.
@@ -127,8 +148,13 @@ static int prv_set_time(const struct pbl_rtc *rtc, time_t t) {
 }
 
 static int prv_init(const struct pbl_device *dev) {
-  uint64_t diva = (rc10k_get_freq_mhz() << DIVA_FRAC_BITS) / (1000U * DIVB);
+  uint64_t rate_mhz;
   int ret;
+
+  ret = pbl_device_init(&SF32LB_RC10K->dev);
+  if (ret != 0) {
+    return ret;
+  }
 
   ret = prv_enter_init();
   if (ret != 0) {
@@ -139,10 +165,12 @@ static int prv_init(const struct pbl_device *dev) {
   prv_modreg(SF32LB52_RTC_CR_OFFSET, RTC_CR_FMT | RTC_CR_OSEL_MASK | RTC_CR_POL, 0U);
   prv_modreg(SF32LB52_RTC_ISR_OFFSET, RTC_ISR_INIT, 0U);
 
-  prv_putreg(SF32LB52_RTC_PSCLR_OFFSET,
-             PBL_FIELD_PREP(RTC_PSCLR_DIVA_INT_MASK, diva >> DIVA_FRAC_BITS) |
-                 PBL_FIELD_PREP(RTC_PSCLR_DIVA_FRAC_MASK, diva) |
-                 PBL_FIELD_PREP(RTC_PSCLR_DIVB_MASK, DIVB));
+  ret = pbl_clk_get_rate(&s_rc10k_nb.clk, &rate_mhz);
+  if (ret != 0) {
+    return ret;
+  }
+  prv_set_prescaler(rate_mhz);
+  pbl_clk_notifier_register(&s_rc10k_nb);
 
   return prv_exit_init();
 }

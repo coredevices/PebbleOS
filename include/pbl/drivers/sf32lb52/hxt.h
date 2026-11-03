@@ -9,6 +9,12 @@
 #include <pbl/drivers/flash.h>
 
 /**
+ * @defgroup drivers_sf32lb52 SF32LB52
+ * @ingroup drivers
+ * @brief SF32LB52-specific driver definitions.
+ */
+
+/**
  * @defgroup drivers_sf32lb52_hxt SF32LB52 HXT48 trim
  * @ingroup drivers_sf32lb52
  * @brief Crystal load capacitance trim from the factory configuration in the flash OTP area.

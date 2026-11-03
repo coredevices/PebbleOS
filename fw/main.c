@@ -11,7 +11,6 @@
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
-#include <pbl/drivers/sf32lb52/rc10k.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
@@ -236,10 +235,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   pbl_bt_init();
 
   services_init();
-
-#ifdef CONFIG_SOC_SF32LB52
-  rc10k_init();
-#endif
 
   clear_reset_loop_detection_bits();
 
