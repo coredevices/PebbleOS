@@ -27,6 +27,13 @@ void rc10k_init(void);
 uint32_t rc10k_get_freq_hz(void);
 
 /**
+ * @brief Get the calibrated RC10K frequency, with millihertz resolution.
+ *
+ * @return Frequency in mHz, nominal 10 kHz if no calibration is available.
+ */
+uint64_t rc10k_get_freq_mhz(void);
+
+/**
  * @brief Convert RC10K cycles to RTC milli-ticks.
  *
  * @param rc10k_cyc Number of RC10K cycles.
