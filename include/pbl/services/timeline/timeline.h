@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
+#include <pbl/kernel/time.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/util/iterator.h>
 
@@ -30,7 +31,7 @@
  * TimelineIterState state = {};
  *
  * timeline_init(&timeline);
- * if (timeline_iter_init(&iter, &state, &timeline, TimelineIterDirectionFuture, rtc_get_time()) ==
+ * if (timeline_iter_init(&iter, &state, &timeline, TimelineIterDirectionFuture, pbl_realtime()) ==
  *     S_SUCCESS) {
  *   do {
  *     const char *title = attribute_get_string(&state.pin.attr_list, AttributeIdTitle, "");

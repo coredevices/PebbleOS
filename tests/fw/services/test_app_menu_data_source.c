@@ -125,7 +125,7 @@ AppInstallId big_time_app_id;
 // Fakes
 ////////////////////////////////////
 uint32_t time_get_uptime_seconds(void) {
-  return rtc_get_time();
+  return pbl_realtime();
 }
 
 // Tests
@@ -197,7 +197,7 @@ void test_app_menu_data_source__initialize(void) {
 
   menu_layer_init(&menu_layer, &GRect(0, 0, 144, 76));
 
-  rtc_set_time(100);
+  pbl_realtime_set(100);
 }
 
 extern ListNode *s_head_callback_node_list;

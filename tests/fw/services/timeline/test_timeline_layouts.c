@@ -140,7 +140,7 @@ static void prv_render_layout(LayoutId layout_id, time_t timestamp, uint16_t dur
   };
 
   TimelinePinWindow pin_window = (TimelinePinWindow){};
-  timeline_pin_window_init(&pin_window, &item, rtc_get_time());
+  timeline_pin_window_init(&pin_window, &item, pbl_realtime());
   Window *window = &pin_window.window;
 
   window_set_on_screen(window, true, true);

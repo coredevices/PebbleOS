@@ -10,6 +10,7 @@
 
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 

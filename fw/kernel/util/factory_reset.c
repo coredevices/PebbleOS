@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
@@ -54,7 +54,7 @@ static void prv_factory_reset_non_pfs_data() {
     pbl_sleep_ms(3);
   }
 
-  rtc_timezone_clear();
+  clock_timezone_clear();
 }
 
 void factory_reset_set_reason_and_reset(void) {

@@ -4,6 +4,7 @@
 #include "pin_window.h"
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/time.h>
 
 #include <applib/ui/action_button.h>
@@ -147,7 +148,7 @@ static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
 
 void timeline_pin_window_push_modal(TimelineItem *item) {
   TimelinePinWindow *pin_window = pbl_zalloc_check(sizeof(TimelinePinWindow));
-  timeline_pin_window_init(pin_window, item, time_util_get_midnight_of(rtc_get_time()));
+  timeline_pin_window_init(pin_window, item, time_util_get_midnight_of(pbl_realtime()));
   window_set_window_handlers((Window *)pin_window, &(WindowHandlers){
                                                      .load = prv_pin_window_load,
                                                      .unload = prv_pin_window_unload_modal,

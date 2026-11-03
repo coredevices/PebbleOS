@@ -6,11 +6,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/log_hashing.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/string.h>
 

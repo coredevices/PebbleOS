@@ -16,3 +16,11 @@ module-str = SF32LB52 crystal trim
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # SF32LB52_HXT
+
+if SOC_SF32LB52
+
+module = DRIVER_SF32LB52_RC10K
+module-str = SF32LB52 RC10K calibration
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SOC_SF32LB52

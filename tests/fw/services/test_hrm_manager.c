@@ -255,7 +255,7 @@ void test_hrm_manager__subscription(void) {
   HRMSubscriberState *subscriber = prv_get_subscriber_state_from_ref(session_ref);
   cl_assert(subscriber);
   cl_assert(subscriber->session_ref == session_ref);
-  cl_assert(subscriber->expire_utc == rtc_get_time() + expire_s);
+  cl_assert(subscriber->expire_utc == pbl_realtime() + expire_s);
   cl_assert(subscriber->update_interval_s == update_interval_s);
   cl_assert(subscriber->features == HRMFeature_BPM);
   cl_assert_equal_b(hrm_is_enabled(HRM), true);
@@ -595,7 +595,7 @@ void test_hrm_manager__app_expiration(void) {
   cl_assert(new_session_ref == session_ref);
 
   // Now advance time past the expiration time
-  rtc_set_time(rtc_get_time() + expire_s + 1);
+  pbl_realtime_set(pbl_realtime() + expire_s + 1);
 
   // Send more data, the subscription should get expired now
   prv_fake_send_new_data();
@@ -627,7 +627,7 @@ void test_hrm_manager__kernel_expiration(void) {
   cl_assert(!s_cb_events_1[0].bpm.off_wrist);
 
   // Now advance time to just before the expiration time
-  rtc_set_time(rtc_get_time() + expire_s - 1);
+  pbl_realtime_set(pbl_realtime() + expire_s - 1);
 
   // Send more data, the callback should get the expiring event
   prv_fake_send_new_data();
@@ -638,7 +638,7 @@ void test_hrm_manager__kernel_expiration(void) {
   cl_assert_equal_i(s_cb_events_1[2].event_type, HRMEvent_BPM);
 
   // Now advance time to past expiration time
-  rtc_set_time(rtc_get_time() + expire_s + 1);
+  pbl_realtime_set(pbl_realtime() + expire_s + 1);
 
   // Send more data, the subscription should go away now
   prv_fake_send_new_data();
@@ -848,7 +848,7 @@ void test_hrm_manager__set_update_internal(void) {
       sys_hrm_manager_app_subscribe(app_id, update_interval_a_s, expire_a_s, HRMFeature_BPM);
   HRMSubscriberState *state = prv_get_subscriber_state_from_ref(session_ref);
   cl_assert(state->update_interval_s == update_interval_a_s);
-  cl_assert(state->expire_utc == rtc_get_time() + expire_a_s);
+  cl_assert(state->expire_utc == pbl_realtime() + expire_a_s);
 
   // Change update interval and expiration
   const uint16_t expire_b_s = 2 * PBL_SEC_PER_MIN;
@@ -856,7 +856,7 @@ void test_hrm_manager__set_update_internal(void) {
   sys_hrm_manager_set_update_interval(session_ref, update_interval_b_s, expire_b_s);
   cl_assert(prv_get_subscriber_state_from_ref(session_ref) == state);
   cl_assert(state->update_interval_s == update_interval_b_s);
-  cl_assert(state->expire_utc == rtc_get_time() + expire_b_s);
+  cl_assert(state->expire_utc == pbl_realtime() + expire_b_s);
 }
 
 #define NUM_TEST_EVENTS 1
@@ -928,7 +928,7 @@ void test_hrm_manager__enable_disable(void) {
 static void prv_advance_time_ms(uint32_t ms) {
   uint64_t delta_ticks = pbl_ms_to_ticks(ms);
   fake_rtc_set_ticks(pbl_uptime_ticks() + delta_ticks);
-  rtc_set_time(rtc_get_time() + ms / PBL_MSEC_PER_SEC);
+  pbl_realtime_set(pbl_realtime() + ms / PBL_MSEC_PER_SEC);
 }
 
 // Test that we handle different update intervals correctly

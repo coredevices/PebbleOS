@@ -8,6 +8,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/process_management/app_file.h>
@@ -306,7 +307,7 @@ status_t app_cache_app_launched(AppInstallId app_id) {
                                             (uint8_t *)&entry, sizeof(AppCacheEntry)));
 
     if (rv == S_SUCCESS) {
-      entry.last_launch = rtc_get_time();
+      entry.last_launch = pbl_realtime();
       entry.launch_count += 1;
 
       rv = status_from_errno(pbl_settings_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId),
@@ -490,7 +491,7 @@ status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
     }
 
     AppCacheEntry entry = {
-      .install_date = rtc_get_time(),
+      .install_date = pbl_realtime(),
       .last_launch = 0,
       .launch_count = 0,
       .total_size = total_size,

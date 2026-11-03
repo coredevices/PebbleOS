@@ -3,8 +3,10 @@
 
 #include "detail_card.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
@@ -648,7 +650,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
                                              bool show_crown, GColor fill_color,
                                              GColor today_fill_color, int32_t *day_data,
                                              void *i18n_owner) {
-  time_t time_utc = rtc_get_time();
+  time_t time_utc = pbl_realtime();
   struct pbl_tm time_tm;
 
   int max_data = 0;

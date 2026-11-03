@@ -7,7 +7,6 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
@@ -243,12 +242,7 @@ static void prv_raw_to_mg(const uint8_t *raw, AccelDriverSample *sample) {
 }
 
 static uint64_t prv_get_curr_system_time_us(void) {
-  time_t time_s;
-  uint16_t time_ms;
-
-  rtc_get_time_ms(&time_s, &time_ms);
-
-  return (((uint64_t)time_s) * 1000 + time_ms) * 1000ULL;
+  return pbl_realtime_ms() * 1000ULL;
 }
 
 // Convert and dispatch the samples already sitting in raw_sample_buf. Kept free of

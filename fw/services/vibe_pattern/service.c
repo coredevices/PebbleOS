@@ -5,7 +5,6 @@
 #include <stddef.h>
 
 #include <pbl/drivers/accel.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
@@ -16,6 +15,7 @@
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/time.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
@@ -103,10 +103,7 @@ static void prv_vibe_history_start_event(void) {
     return;
   }
   list_init((ListNode *)vibe);
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
-  vibe->time_start = ((uint64_t)s) * 1000 + ms;
+  vibe->time_start = pbl_realtime_ms();
   vibe->time_end = END_NOT_SET;
 
   if (s_vibe_history == nullptr) {
@@ -127,13 +124,11 @@ static void prv_vibe_history_end_event(void) {
     return;
   }
 
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
+  uint64_t now_ms = pbl_realtime_ms();
 
   VibeHistory *vibe = (VibeHistory *)list_get_tail((ListNode *)s_vibe_history);
   if (vibe->time_end == END_NOT_SET) {
-    vibe->time_end = ((uint64_t)s) * 1000 + ms;
+    vibe->time_end = now_ms;
   }
   pbl_mutex_unlock(&s_vibe_history_mutex);
 }

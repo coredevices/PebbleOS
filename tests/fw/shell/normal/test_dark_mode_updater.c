@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/regular_timer.h>
 
 #include <clar.h>
@@ -53,7 +53,7 @@ bool regular_timer_remove_callback(RegularTimerInfo *cb) {
 ////////////////////////////////////////////////////////////////
 
 static void prv_set_time(int hour, int minute) {
-  rtc_set_time((hour * 60 + minute) * 60);
+  pbl_realtime_set((hour * 60 + minute) * 60);
 }
 
 static void prv_fire_minute(int hour, int minute) {

@@ -4,39 +4,42 @@
 menuconfig RTC
     bool "RTC"
     help
-      RTC Drivers
+      Real-time clock drivers: hardware that keeps the wall clock across
+      resets.
 
 if RTC
 
-config RTC_NRF5
-    bool "Nordic nRF5"
+config RTC_SHELL
+    bool "RTC shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The rtc shell command, to read and set the RTC directly.
+
+config RTC_RETAINED
+    bool "Retained RAM"
     default y if SOC_NRF52
     help
-      Wall clock on the kernel uptime, kept across resets in retained RAM.
+      The time last set, kept in retained RAM, for SoCs without a calendar
+      RTC. It survives resets but not power loss, and does not count while
+      the system is off.
 
 config RTC_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
-    select HAL_SIFLI
-    select HAL_SIFLI_LRC_CAL
-    select HAL_SIFLI_RTC
     help
-      Support for the SiFli SF32LB RTC.
+      SiFli SF32LB calendar RTC, clocked by the calibrated RC10K.
 
 config RTC_QEMU
     bool "QEMU RTC"
     default y if SOC_QEMU
     help
-      Support for the QEMU RTC peripheral.
+      QEMU RTC, following the host clock.
 
 config RTC_POSIX
     bool "POSIX RTC"
     default y if SOC_POSIX
     help
       RTC following the host clock.
-
-module = DRIVER_RTC
-module-str = RTC
-source "subsys/logging/Kconfig.template.log_level"
 
 endif # RTC

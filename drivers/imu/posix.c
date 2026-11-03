@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/imu/posix.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 // A watch lying still, face up. No FIFO: samples are only peeked.
 
@@ -34,12 +34,8 @@ static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
 }
 
 static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *sample) {
-  time_t s;
-  uint16_t ms;
-
-  rtc_get_time_ms(&s, &ms);
   *sample = (AccelDriverSample){
-    .timestamp_us = ((uint64_t)s * 1000 + ms) * 1000,
+    .timestamp_us = pbl_realtime_ms() * 1000,
     .x = 0,
     .y = 0,
     .z = -1000,

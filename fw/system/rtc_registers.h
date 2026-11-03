@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #ifdef CONFIG_SOC_NRF52
 #define RTC_BKP_BOOTBIT_DR                0
 #define STUCK_BUTTON_REGISTER             1

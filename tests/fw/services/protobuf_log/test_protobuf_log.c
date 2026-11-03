@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -377,7 +377,7 @@ static ProtobufLogRef prv_log_create_measurement(TestPLParsedMsg *input, bool us
 static TestPLParsedMsg *prv_flush_get_record(TestPLParsedMsg *input, bool use_data_logging,
                                              ProtobufLogRef session_ref) {
   // Flush it out now, this should end up in our transport method being called
-  input->payload_send_time = rtc_get_time();
+  input->payload_send_time = pbl_realtime();
   bool success = protobuf_log_session_flush(session_ref);
   cl_assert(success);
 
@@ -414,9 +414,9 @@ static ProtobufLogRef *prv_test_encode_measurements(TestPLParsedMsg *input, bool
   uint32_t values_per_samples = input->msrmt.num_types;
   bool success;
   for (unsigned i = 0; i < input->msrmt.num_samples; i++) {
-    rtc_set_time(input->msrmt.time_utc + input->msrmt.offset_sec[i]);
+    pbl_realtime_set(input->msrmt.time_utc + input->msrmt.offset_sec[i]);
     success =
-        protobuf_log_session_add_measurements(session_ref, rtc_get_time(), input->msrmt.num_types,
+        protobuf_log_session_add_measurements(session_ref, pbl_realtime(), input->msrmt.num_types,
                                               &input->msrmt.values[i * values_per_samples]);
     cl_assert(success);
   }
@@ -469,7 +469,7 @@ void test_protobuf_log__measurements_simple(void) {
     TestPLParsedMsg input = {
       .type = ProtobufLogType_Measurements,
       .msrmt = {
-        .time_utc = rtc_get_time(),
+        .time_utc = pbl_realtime(),
         .utc_to_local = time_util_utc_to_local_offset(),
         .num_types = ARRAY_LENGTH(types),
         .types = types,
@@ -492,7 +492,7 @@ void test_protobuf_log__measurements_simple(void) {
     TestPLParsedMsg input = {
       .type = ProtobufLogType_Measurements,
       .msrmt = {
-        .time_utc = rtc_get_time(),
+        .time_utc = pbl_realtime(),
         .utc_to_local = time_util_utc_to_local_offset(),
         .num_types = ARRAY_LENGTH(types),
         .types = types,
@@ -519,7 +519,7 @@ void test_protobuf_log__measurements_simple(void) {
     TestPLParsedMsg input = {
       .type = ProtobufLogType_Measurements,
       .msrmt = {
-        .time_utc = rtc_get_time(),
+        .time_utc = pbl_realtime(),
         .utc_to_local = time_util_utc_to_local_offset(),
         .num_types = ARRAY_LENGTH(types),
         .types = types,
@@ -546,7 +546,7 @@ void test_protobuf_log__measurements_multiple(void) {
   TestPLParsedMsg input = {
     .type = ProtobufLogType_Measurements,
     .msrmt = {
-      .time_utc = rtc_get_time(),
+      .time_utc = pbl_realtime(),
       .utc_to_local = time_util_utc_to_local_offset(),
       .num_types = ARRAY_LENGTH(types),
       .types = types,
@@ -575,9 +575,9 @@ void test_protobuf_log__measurements_multiple(void) {
   uint32_t values_per_samples = input.msrmt.num_types;
   bool success;
   for (unsigned i = 0; i < input.msrmt.num_samples; i++) {
-    rtc_set_time(input.msrmt.time_utc + input.msrmt.offset_sec[i]);
+    pbl_realtime_set(input.msrmt.time_utc + input.msrmt.offset_sec[i]);
     success =
-        protobuf_log_session_add_measurements(session_ref, rtc_get_time(), input.msrmt.num_types,
+        protobuf_log_session_add_measurements(session_ref, pbl_realtime(), input.msrmt.num_types,
                                               &input.msrmt.values[i * values_per_samples]);
     cl_assert(success);
   }
@@ -594,7 +594,7 @@ void test_protobuf_log__measurements_multiple(void) {
   input = (TestPLParsedMsg){
     .type = ProtobufLogType_Measurements,
     .msrmt = {
-      .time_utc = rtc_get_time(),
+      .time_utc = pbl_realtime(),
       .utc_to_local = time_util_utc_to_local_offset(),
       .num_types = ARRAY_LENGTH(types),
       .types = types,
@@ -607,9 +607,9 @@ void test_protobuf_log__measurements_multiple(void) {
   prv_common_payload_initialize(&input);
 
   for (unsigned i = 0; i < input.msrmt.num_samples; i++) {
-    rtc_set_time(input.msrmt.time_utc + input.msrmt.offset_sec[i]);
+    pbl_realtime_set(input.msrmt.time_utc + input.msrmt.offset_sec[i]);
     success =
-        protobuf_log_session_add_measurements(session_ref, rtc_get_time(), input.msrmt.num_types,
+        protobuf_log_session_add_measurements(session_ref, pbl_realtime(), input.msrmt.num_types,
                                               &input.msrmt.values[i * values_per_samples]);
     cl_assert(success);
   }
@@ -642,7 +642,7 @@ void test_protobuf_log__measurements_auto_flush(void) {
 
   // Create a session with an artificially small buffer size which will cause it to flush
   // automatically
-  time_t start_time = rtc_get_time();
+  time_t start_time = pbl_realtime();
   ProtobufLogConfig log_config = {
     .type = ProtobufLogType_Measurements,
     .measurements = {
@@ -660,9 +660,9 @@ void test_protobuf_log__measurements_auto_flush(void) {
   TestPLParsedMsg *msg;
   uint32_t num_samples_encoded = 0;
   for (unsigned i = 0; i < num_samples; i++) {
-    rtc_set_time(start_time + offset_sec[i]);
+    pbl_realtime_set(start_time + offset_sec[i]);
     success = protobuf_log_session_add_measurements(
-        session_ref, rtc_get_time(), num_values_per_sample, &values[i * num_values_per_sample]);
+        session_ref, pbl_realtime(), num_values_per_sample, &values[i * num_values_per_sample]);
     cl_assert(success);
     if (s_saved_encoded_msg == nullptr) {
       LOG("No message available yet...");
@@ -706,7 +706,7 @@ void test_protobuf_log__measurements_with_data_logging(void) {
   TestPLParsedMsg input = {
     .type = ProtobufLogType_Measurements,
     .msrmt = {
-      .time_utc = rtc_get_time(),
+      .time_utc = pbl_realtime(),
       .utc_to_local = time_util_utc_to_local_offset(),
       .num_types = ARRAY_LENGTH(types),
       .types = types,
@@ -734,7 +734,7 @@ void test_protobuf_log__hr_samples(void) {
   TestPLParsedMsg input = {
     .type = ProtobufLogType_Measurements,
     .msrmt = {
-      .time_utc = rtc_get_time(),
+      .time_utc = pbl_realtime(),
       .utc_to_local = time_util_utc_to_local_offset(),
       .num_types = 2,
       .types = types,
@@ -755,9 +755,9 @@ void test_protobuf_log__hr_samples(void) {
   const uint32_t values_per_samples = input.msrmt.num_types;
   bool success;
   for (unsigned i = 0; i < input.msrmt.num_samples; i++) {
-    rtc_set_time(input.msrmt.time_utc + input.msrmt.offset_sec[i]);
+    pbl_realtime_set(input.msrmt.time_utc + input.msrmt.offset_sec[i]);
     uint32_t *vals = &input.msrmt.values[i * values_per_samples];
-    success = protobuf_log_hr_add_sample(session_ref, rtc_get_time(),
+    success = protobuf_log_hr_add_sample(session_ref, pbl_realtime(),
                                          vals[0], // BPM
                                          vals[1], // Confidence
                                          false /*off_wrist*/);
@@ -806,13 +806,13 @@ void test_protobuf_log__events_basic(void) {
       .type = pebble_pipeline_Event_Type_UnknownEvent,
       .duration = 17,
       .has_duration = true,
-      .time_utc = rtc_get_time() - 3000,
+      .time_utc = pbl_realtime() - 3000,
     },
     {
       .type = pebble_pipeline_Event_Type_UnknownEvent,
       .duration = 34,
       .has_duration = true,
-      .time_utc = rtc_get_time() - 2000,
+      .time_utc = pbl_realtime() - 2000,
     }
   };
 

@@ -77,7 +77,7 @@
 // after all firmware headers are included (their declarations are processed
 // before these function-like macros become active).
 // ===========================================================================
-#include <pbl/drivers/rtc.h> // rtc_get_time
+#include <pbl/kernel/time.h> // pbl_realtime
 
 #define layer_get_bounds(layer)     layer_get_bounds_by_value(layer)
 #define layer_get_frame(layer)      layer_get_frame_by_value(layer)
@@ -116,6 +116,6 @@
 #define free(p)        app_free(p)
 
 // Current wall-clock epoch (ported code calls time(NULL)).
-#define time(p) ((void)(p), rtc_get_time())
+#define time(p) ((void)(p), pbl_realtime())
 // localtime isn't linked for apps; the applib provides the override.
 #define localtime(t) pbl_override_localtime(t)

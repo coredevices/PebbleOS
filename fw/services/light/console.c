@@ -6,7 +6,9 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/light.h>
+#include <pbl/services/time.h>
 #include <pbl/shell/shell.h>
 
 #if defined(CONFIG_BACKLIGHT_SHELL) && defined(CONFIG_BACKLIGHT_HAS_COLOR)
@@ -14,7 +16,6 @@
 #include <string.h>
 
 #include <pbl/drivers/backlight.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/util/units.h>
 
 #include <shell/prefs.h>
@@ -87,7 +88,7 @@ PBL_SHELL_SUBCMD_ADD(sub_backlight, test, nullptr, "Turn the light on and print 
 static void prv_day_night_status(const struct pbl_shell *sh) {
   struct pbl_tm now;
 
-  rtc_get_time_tm(&now);
+  clock_get_time_tm(&now);
   pbl_shell_print(sh, "enabled=%d now=%02d:%02d sunrise=%u sunset=%u",
                   backlight_day_night_color_is_enabled(), now.tm_hour, now.tm_min,
                   backlight_get_sunrise_minute(), backlight_get_sunset_minute());
@@ -100,7 +101,7 @@ static int prv_cmd_backlight_day_night(const struct pbl_shell *sh, size_t argc, 
   if (strcmp(argv[1], "start") == 0) {
     struct pbl_tm now;
 
-    rtc_get_time_tm(&now);
+    clock_get_time_tm(&now);
     const uint16_t sunrise = now.tm_hour * PBL_MIN_PER_HOUR + now.tm_min;
     backlight_set_default_color(BACKLIGHT_COLOR_GREEN);
     backlight_set_night_color(BACKLIGHT_COLOR_RED);

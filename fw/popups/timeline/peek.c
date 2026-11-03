@@ -5,6 +5,7 @@
 
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
@@ -134,7 +135,7 @@ static PeekLayout *prv_create_layout(TimelineItem *item, unsigned int num_concur
   PeekLayout *layout = pbl_zalloc_check(sizeof(PeekLayout));
   item = timeline_item_copy(item);
   layout->item = item;
-  timeline_layout_init_info(&layout->info, item, time_util_get_midnight_of(rtc_get_time()));
+  timeline_layout_init_info(&layout->info, item, time_util_get_midnight_of(pbl_realtime()));
   layout->info.num_concurrent = num_concurrent;
   const LayoutLayerConfig config = {
     .frame = &GRect(0, 0, DISP_COLS, TIMELINE_PEEK_HEIGHT),

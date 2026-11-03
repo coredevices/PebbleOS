@@ -177,7 +177,7 @@ void test_wakeup__out_of_order_schedule(void) {
   cl_assert_equal_i(early_wakeup_id, wakeup_get_next_scheduled());
 
   // Set time 5 minutes into the future, early_event should fire
-  rtc_set_time(early_event);
+  pbl_realtime_set(early_event);
 
   // Force wakeup to check for current wakeup event.
   wakeup_enable(false);
@@ -195,7 +195,7 @@ void test_wakeup__out_of_order_schedule(void) {
   cl_assert_equal_i(late_wakeup_id, wakeup_get_next_scheduled());
 
   // Set time 10 minutes into the future, late_event should fire
-  rtc_set_time(late_event);
+  pbl_realtime_set(late_event);
 
   // Force wakeup to check for current wakeup event.
   wakeup_enable(false);
@@ -240,7 +240,7 @@ void test_wakeup__time_jump(void) {
   cl_assert_equal_i(sys_wakeup_query(fourth_wakeup_id), fourth_event);
 
   // Jump to the future right before the 3rd event
-  rtc_set_time(sys_get_time() + 170);
+  pbl_realtime_set(sys_get_time() + 170);
 
   // Force wakeup to check for current wakeup event
   wakeup_enable(false);
@@ -263,7 +263,7 @@ void test_wakeup__time_jump(void) {
   gap_timer = wakeup_get_current();
   cl_assert_equal_i(stub_new_timer_timeout(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
 
-  rtc_set_time(third_event); // manually move time forward to after third event
+  pbl_realtime_set(third_event); // manually move time forward to after third event
   stub_new_timer_fire(wakeup_get_current());
   wakeup_dispatcher_system_task((void *)(uintptr_t)third_wakeup_id);
 
@@ -294,7 +294,7 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   // Jump 30 seconds in the future
   uint32_t initial_timeout = stub_new_timer_timeout(first_timer);
   uint32_t time_jump_seconds = 30;
-  rtc_set_time(sys_get_time() + time_jump_seconds);
+  pbl_realtime_set(sys_get_time() + time_jump_seconds);
 
   // Notify clock change and record change in new timer
   wakeup_handle_clock_change();
@@ -306,7 +306,7 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   cl_assert_equal_b(s_popup_occurred, false);
 
   // Jump the remainder plus an offset (missing the event)
-  rtc_set_time(sys_get_time() + final_timeout / 1000 + time_jump_seconds);
+  pbl_realtime_set(sys_get_time() + final_timeout / 1000 + time_jump_seconds);
   // A large jump that misses an event is a significant clock change: that is
   // the path that deletes past events and raises the missed-event popup.
   wakeup_handle_significant_clock_change();
@@ -399,7 +399,7 @@ void test_wakeup__simultaneous_events_spaced(void) {
   WakeupId wakeup_id = sys_wakeup_schedule(event_time, 0, false);
   cl_assert(wakeup_id > 0);
 
-  rtc_set_time(event_time);
+  pbl_realtime_set(event_time);
   wakeup_enable(false);
   wakeup_enable(true);
 
@@ -428,7 +428,7 @@ void test_wakeup__far_future_not_early(void) {
   cl_assert(timeout_s < event_time - start_time);
 
   // The timer expiring before the event is due re-arms it instead of firing
-  rtc_set_time(start_time + timeout_s);
+  pbl_realtime_set(start_time + timeout_s);
   stub_new_timer_fire(wakeup_get_current());
   wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
 
@@ -445,11 +445,11 @@ void test_wakeup__dispatch_leaves_stationary(void) {
   cl_assert(wakeup_id > 0);
 
   // Not yet due, stays in stationary
-  rtc_set_time(event_time - 1);
+  pbl_realtime_set(event_time - 1);
   wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
   cl_assert_equal_i(s_stationary_wake_up_count, 0);
 
-  rtc_set_time(event_time);
+  pbl_realtime_set(event_time);
   wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
   cl_assert_equal_i(s_stationary_wake_up_count, 1);
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);

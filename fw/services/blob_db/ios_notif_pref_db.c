@@ -5,6 +5,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/sync.h>
@@ -193,7 +194,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
     buffer[length] = '\0';
     PBL_LOG_INFO("Added <%s> to the notif pref db", buffer);
 
-    blob_db_sync_record(BlobDBIdiOSNotifPref, app_id, length, rtc_get_time());
+    blob_db_sync_record(BlobDBIdiOSNotifPref, app_id, length, pbl_realtime());
   }
 
   return rv;

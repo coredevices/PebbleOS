@@ -663,7 +663,7 @@ void test_timeline__gc_past(void) {
   TimelineNode *head = nullptr;
 
   // Tue Jan 13 11:40:00 PST 2015
-  rtc_set_time(1421178000);
+  pbl_realtime_set(1421178000);
   fake_pbl_malloc_clear_tracking();
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
   timeline_init(&head);
@@ -673,7 +673,7 @@ void test_timeline__gc_past(void) {
 
   // Thursday Jan 16 00:00:00 PST 2015
   // No items within window
-  rtc_set_time(1421395200);
+  pbl_realtime_set(1421395200);
   head = nullptr;
   timeline_init(&head);
   cl_assert_equal_i(
@@ -683,7 +683,7 @@ void test_timeline__gc_past(void) {
   fake_pbl_malloc_clear_tracking();
   // Thursday Jan 16 14:00:00 PST 2015
   // all items garbage collected
-  rtc_set_time(1421445600);
+  pbl_realtime_set(1421445600);
   head = nullptr;
   timeline_init(&head);
   cl_assert_equal_i(

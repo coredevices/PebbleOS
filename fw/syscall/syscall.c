@@ -5,7 +5,6 @@
 
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
@@ -31,11 +30,14 @@ PBL_SYSCALL(int, sys_test, (VAL, int, arg)) {
 }
 
 PBL_SYSCALL(time_t, sys_get_time) {
-  return rtc_get_time();
+  return pbl_realtime();
 }
 
 PBL_SYSCALL(void, sys_get_time_ms, (OUT, time_t *, t), (OUT, uint16_t *, out_ms)) {
-  rtc_get_time_ms(t, out_ms);
+  uint64_t now_ms = pbl_realtime_ms();
+
+  *t = (time_t)(now_ms / 1000U);
+  *out_ms = (uint16_t)(now_ms % 1000U);
 }
 
 PBL_SYSCALL(uint64_t, sys_get_ticks) {

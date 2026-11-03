@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <time.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/trig.h>
 
 #include <applib/app_watch_info.h>
@@ -55,7 +56,7 @@ static ClockFace prv_local_clock_face_default(struct pbl_tm *tick_time) {
 static ClockFace prv_configure_non_local_clock_face(int32_t utc_offset, const char *text,
                                                     GColor text_color, GColor hand_color,
                                                     uint32_t bg_bitmap_id, ClockLocation location) {
-  time_t t = rtc_get_time();
+  time_t t = pbl_realtime();
   struct pbl_tm *tick_time = pbl_override_gmtime(&t);
   // TODO: Make this work with non integer hour offsets
   tick_time->tm_hour += utc_offset; // TODO check if this works properly
@@ -297,7 +298,7 @@ void watch_model_cleanup() {
 }
 
 static void prv_intro_animation_finished(Animation *animation) {
-  const time_t t = rtc_get_time();
+  const time_t t = pbl_realtime();
   prv_handle_time_update(pbl_override_localtime(&t), (TimeUnits)0xff);
 
   tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_time_update);
@@ -308,7 +309,7 @@ void watch_model_start_intro() {
 }
 
 void watch_model_init(void) {
-  const time_t t = rtc_get_time();
+  const time_t t = pbl_realtime();
   struct pbl_tm *tick_time = pbl_override_localtime(&t);
   ClockModel model = prv_clock_model_default(tick_time);
   watch_model_handle_change(&model);

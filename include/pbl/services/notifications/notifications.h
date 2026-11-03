@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/timeline/item.h>
 
 /**
@@ -40,7 +41,7 @@
  * };
  *
  * TimelineItem *item = timeline_item_create_with_attributes(
- *     rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list,
+ *     pbl_realtime(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list,
  *     &action_group);
  * attribute_list_destroy_list(&attr_list);
  * attribute_list_destroy_list(&dismiss_attrs);

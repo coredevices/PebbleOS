@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/blob_db/api.h>
@@ -309,7 +309,7 @@ static void prv_set_indices(TimelineNode *timeline) {
 
 static int prv_first_event_comparator(TimelineNode *new_node, TimelineNode *old_node,
                                       TimelineIterDirection direction) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t midnight = time_util_get_midnight_of(now);
   const bool show_all_day = false;
   const bool show_new = prv_show_event(new_node, now, midnight, direction, show_all_day);
@@ -338,7 +338,7 @@ int timeline_item_time_comparator(CommonTimelineItemHeader *new_common,
 bool timeline_item_should_show(CommonTimelineItemHeader *header, TimelineIterDirection direction) {
   TimelineNode node;
   prv_set_node_from_header(header, &node);
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t midnight = time_util_get_midnight_of(now);
   return prv_show_event(&node, now, midnight, direction, false /* show_all_day */);
 }

@@ -17,6 +17,7 @@
 #include <pbl/drivers/pwm/nrf5.h>
 #include <pbl/drivers/pwm/nrf5_rtc.h>
 #include <pbl/drivers/regulator/npm1300.h>
+#include <pbl/drivers/rtc/retained.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
 #include <pbl/drivers/spi/nrf5.h>
 #include <pbl/drivers/spi_mem/nrf5_qspi.h>
@@ -222,3 +223,5 @@ void board_init(void) {
 }
 
 const struct pbl_temp *const DIE_TEMP = NRF5_TEMP;
+
+const struct pbl_rtc *const RTC = RETAINED_RTC;

@@ -5,6 +5,7 @@
 
 #include "fps_test_bitmaps.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/profiler/profiler.h>
 #include <pbl/util/size.h>
@@ -33,10 +34,7 @@ typedef struct AppData {
 } AppData;
 
 static int64_t prv_time_64(void) {
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
-  return (int64_t)s * 1000 + ms;
+  return (int64_t)pbl_realtime_ms();
 }
 
 static void prv_redraw_timer_cb(void *cb_data) {

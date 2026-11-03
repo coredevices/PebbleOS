@@ -51,7 +51,7 @@ static void prv_set_time(time_t day, int hour, int minute) {
   s_current_day = day;
   s_current_hour = hour;
   s_current_minute = minute;
-  rtc_set_time(day + prv_hours_and_minutes_to_seconds(hour, minute));
+  pbl_realtime_set(day + prv_hours_and_minutes_to_seconds(hour, minute));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ void test_alarm_smart__initialize(void) {
     .tm_zone = "UTC",
   };
   time_util_update_timezone(&tz_info, 0, 0);
-  rtc_set_timezone(&tz_info);
+  tz_storage_save(&tz_info);
 
   // Default to Thursday
   prv_set_time(s_thursday, 0, 0);
@@ -137,7 +137,7 @@ void test_alarm_smart__trigger_30_min_early_awake(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 6);
   cl_assert_equal_i(s_num_timeline_removes, 3);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm_smart__trigger_30_min_early_vmc(void) {
@@ -154,7 +154,7 @@ void test_alarm_smart__trigger_30_min_early_vmc(void) {
   pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm_smart__dont_trigger_30_min_early_deep_sleep(void) {
@@ -213,7 +213,7 @@ void test_alarm_smart__trigger_15_min_early_light_sleep(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 6);
   cl_assert_equal_i(s_num_timeline_removes, 3);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm_smart__trigger_at_timeout(void) {
@@ -258,7 +258,7 @@ void test_alarm_smart__trigger_at_timeout(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 6);
   cl_assert_equal_i(s_num_timeline_removes, 3);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm_smart__user_snooze_fires_after_delay(void) {
@@ -395,7 +395,7 @@ void test_alarm_smart__across_midnight_boundary(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 2);
   cl_assert_equal_i(s_num_timeline_removes, 1);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 static AlarmId prv_start_sleeping_smart_alarm(void) {

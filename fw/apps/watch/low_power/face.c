@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include <pbl/services/clock.h>
+#include <pbl/services/time.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>

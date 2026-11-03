@@ -3,6 +3,7 @@
 
 #include "pebble_shapes.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/trig.h>
 
@@ -359,10 +360,7 @@ static void draw_shape(GContext *ctx, AppData *data, DrawShape shape, GColor col
 }
 
 static int64_t prv_time_64(void) {
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
-  return (int64_t)s * 1000 + ms;
+  return (int64_t)pbl_realtime_ms();
 }
 
 static void layer_update_proc(Layer *layer, GContext *ctx) {

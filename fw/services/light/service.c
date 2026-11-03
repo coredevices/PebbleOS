@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/light.h>
 #include <pbl/services/light_level.h>
 
@@ -11,13 +12,13 @@
 #include <pbl/drivers/backlight.h>
 #endif
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
@@ -388,7 +389,7 @@ static uint32_t prv_get_system_color(void) {
   }
 
   struct pbl_tm now;
-  rtc_get_time_tm(&now);
+  clock_get_time_tm(&now);
   return prv_is_daytime(&now) ? backlight_get_default_color() : backlight_get_night_color();
 }
 

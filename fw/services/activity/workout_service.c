@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_calculators.h>
@@ -119,7 +120,7 @@ static void prv_update_duration(void) {
     return;
   }
 
-  time_t now_utc = rtc_get_time();
+  time_t now_utc = pbl_realtime();
 
   time_t total_paused_time_s = s_workout_data.current_workout->duration_completed_pauses_s;
   if (workout_service_is_paused()) {
@@ -446,7 +447,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
 
     s_workout_data.current_workout = pbl_zalloc_check(sizeof(CurrentWorkoutData));
     s_workout_data.current_workout->type = type;
-    s_workout_data.current_workout->start_utc = rtc_get_time();
+    s_workout_data.current_workout->start_utc = pbl_realtime();
     s_workout_data.current_workout->current_bpm_timestamp_ts = time_get_uptime_seconds();
     // FIXME: This probably doesn't need to be on a timer. We can just flush out a new time on each
     // API function call
@@ -498,10 +499,10 @@ bool workout_service_pause_workout(bool should_be_paused) {
 
     if (wrkt_data->paused) {
       // We are paused and want to unpause. Add the in progress pause time to the total
-      wrkt_data->duration_completed_pauses_s += (rtc_get_time() - wrkt_data->last_paused_utc);
+      wrkt_data->duration_completed_pauses_s += (pbl_realtime() - wrkt_data->last_paused_utc);
     } else {
       // We are unpaused and want to pause. Set the last_paused_utc timestamp
-      wrkt_data->last_paused_utc = rtc_get_time();
+      wrkt_data->last_paused_utc = pbl_realtime();
     }
 
     wrkt_data->paused = should_be_paused;
@@ -583,7 +584,7 @@ bool workout_service_stop_workout(void) {
 
   if (save_session) {
     activity_sessions_prv_add_activity_session(&session_to_save);
-    activity_insights_push_activity_session_notification(rtc_get_time(), &session_to_save,
+    activity_insights_push_activity_session_notification(pbl_realtime(), &session_to_save,
                                                          avg_hr_to_save, hr_zone_time_s_to_save);
   }
 

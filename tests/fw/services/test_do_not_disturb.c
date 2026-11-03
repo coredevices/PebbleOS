@@ -104,7 +104,7 @@ static void prv_assert_settings_value(const void *key, size_t key_len, const voi
 }
 
 static void prv_assert_seconds_until_update(time_t expected) {
-  cl_assert_equal_i(pbl_cron_get_next_execute_time() - rtc_get_time(), expected);
+  cl_assert_equal_i(pbl_cron_get_next_execute_time() - pbl_realtime(), expected);
 }
 
 static void prv_assert_manually_dnd_setting_val(bool expected_value) {
@@ -161,7 +161,7 @@ void test_do_not_disturb__initialize(void) {
   fake_pfs_mount();
   pbl_fs_format("/");
 
-  rtc_set_time(s_thursday_00_00);
+  pbl_realtime_set(s_thursday_00_00);
   alerts_preferences_init();
   pbl_cron_init();
   do_not_disturb_init();
@@ -363,7 +363,7 @@ void test_do_not_disturb__disabling_manual_dnd_should_override_scheduled(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == false); // not in Scheduled mode
 
-  rtc_set_time(s_thursday_01_00);
+  pbl_realtime_set(s_thursday_01_00);
   do_not_disturb_handle_clock_change(); // In scheduled period
 
   do_not_disturb_set_manually_enabled(true); // both ON
@@ -410,12 +410,12 @@ void test_do_not_disturb__disable_manual_dnd_when_scheduled_ends(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == true); // Both ON
 
-  rtc_set_time(s_thursday_12_00);
+  pbl_realtime_set(s_thursday_12_00);
   do_not_disturb_handle_clock_change(); // In scheduled period
   active = do_not_disturb_is_active();
   cl_assert(active == true); // Both ON
 
-  rtc_set_time(s_thursday_13_00);
+  pbl_realtime_set(s_thursday_13_00);
   do_not_disturb_handle_clock_change(); // Out of scheduled period
   active = do_not_disturb_is_active();
   cl_assert(active == false); // Both should be turned off
@@ -435,13 +435,13 @@ void test_do_not_disturb__cron_fires_schedule_boundaries(void) {
   cl_assert(do_not_disturb_is_active() == false);
   prv_assert_seconds_until_update(3600);
 
-  rtc_set_time(s_thursday_01_00);
+  pbl_realtime_set(s_thursday_01_00);
   pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == true);
   prv_assert_seconds_until_update(11.5 * PBL_SEC_PER_HOUR);
 
   do_not_disturb_set_manually_enabled(true);
-  rtc_set_time(s_thursday_13_00);
+  pbl_realtime_set(s_thursday_13_00);
   pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
@@ -471,7 +471,7 @@ void test_do_not_disturb__change_schedule_while_in_scheduled(void) {
   };
   prv_set_schedule(WeekdaySlot, &schedule_2);
 
-  rtc_set_time(s_thursday_12_00);
+  pbl_realtime_set(s_thursday_12_00);
   do_not_disturb_handle_clock_change(); // Should still be in scheduled period
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   active = do_not_disturb_is_active();
@@ -542,13 +542,13 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekdaySlot, true);
   prv_set_schedule_enabled(WeekendSlot, true);
 
-  rtc_set_time(s_friday_08_30);
+  pbl_realtime_set(s_friday_08_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Friday 23:00
   prv_assert_seconds_until_update(52200);
 
-  rtc_set_time(s_friday_23_30);
+  pbl_realtime_set(s_friday_23_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 01:00
@@ -556,19 +556,19 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   // Friday's period carries on into Saturday
 
-  rtc_set_time(s_saturday_00_30);
+  pbl_realtime_set(s_saturday_00_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 01:00
   prv_assert_seconds_until_update(1800);
 
-  rtc_set_time(s_saturday_01_30);
+  pbl_realtime_set(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 07:00, end of Friday's period
   prv_assert_seconds_until_update(19800);
 
-  rtc_set_time(s_saturday_10_30);
+  pbl_realtime_set(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Sunday 01:00
@@ -576,13 +576,13 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   prv_set_schedule_enabled(WeekendSlot, false);
 
-  rtc_set_time(s_saturday_01_30);
+  pbl_realtime_set(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 07:00, end of Friday's period
   prv_assert_seconds_until_update(19800);
 
-  rtc_set_time(s_thursday_00_00);
+  pbl_realtime_set(s_thursday_00_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Thursday 07:00
@@ -602,7 +602,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekendSlot, true);
   prv_set_schedule_enabled(WeekdaySlot, false);
 
-  rtc_set_time(s_thursday_01_00);
+  pbl_realtime_set(s_thursday_01_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Saturday 01:00
@@ -611,7 +611,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekendSlot, false);
   prv_set_schedule_enabled(WeekdaySlot, true);
 
-  rtc_set_time(s_saturday_01_30);
+  pbl_realtime_set(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 07:00, end of Friday's period
@@ -635,31 +635,31 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekdaySlot, true);
   prv_set_schedule_enabled(WeekendSlot, true);
 
-  rtc_set_time(s_friday_23_30);
+  pbl_realtime_set(s_friday_23_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 00:00
   prv_assert_seconds_until_update(1800);
 
-  rtc_set_time(s_saturday_00_00);
+  pbl_realtime_set(s_saturday_00_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 08:30, end of Friday's period
   prv_assert_seconds_until_update(30600);
 
-  rtc_set_time(s_saturday_10_30);
+  pbl_realtime_set(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Sunday 00:00
   prv_assert_seconds_until_update(48600);
 
-  rtc_set_time(s_sunday_9_30);
+  pbl_realtime_set(s_sunday_9_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Sunday 10:00
   prv_assert_seconds_until_update(1800);
 
-  rtc_set_time(s_sunday_10_00);
+  pbl_realtime_set(s_sunday_10_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Monday 22:30
@@ -667,13 +667,13 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   // No period starts on Sunday night
 
-  rtc_set_time(s_sunday_23_30);
+  pbl_realtime_set(s_sunday_23_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Monday 22:30
   prv_assert_seconds_until_update(82800);
 
-  rtc_set_time(s_monday_10_30);
+  pbl_realtime_set(s_monday_10_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Monday 22:30
@@ -770,7 +770,7 @@ static void prv_sync_pref_from_phone(const char *key, const void *value, size_t 
 }
 
 static void prv_set_time(time_t t) {
-  rtc_set_time(t);
+  pbl_realtime_set(t);
   do_not_disturb_handle_clock_change();
 }
 

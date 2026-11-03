@@ -100,7 +100,6 @@ MfgSerialsResult mfg_write_hw_version(const char *hwver, size_t hwver_size, uint
 
 #include <stdio.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/logging/logging.h>
 
 #ifndef CONFIG_SOC_NRF52

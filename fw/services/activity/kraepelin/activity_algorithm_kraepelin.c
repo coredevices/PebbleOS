@@ -5,6 +5,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
@@ -267,7 +268,7 @@ bool activity_algorithm_dump_minute_data_to_log(void) {
   }
 
   // Figure out the oldest and newest possible time stamp for chunks that go into these buffers
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   const time_t k_oldest_valid_utc = now - ALG_SLEEP_HISTORY_HOURS_FOR_TODAY * PBL_SEC_PER_HOUR;
   const time_t k_newest_valid_utc = now;
 
@@ -351,7 +352,7 @@ static struct pbl_settings_file *prv_validate_and_trim_minute_file(struct pbl_se
   }
 
   // Figure out which keys we want to keep
-  time_t utc = rtc_get_time();
+  time_t utc = pbl_realtime();
   uint32_t newest_valid_key = prv_minute_file_get_settings_key(utc) + 1;
   int32_t oldest_valid_key = (int32_t)newest_valid_key - max_records;
   oldest_valid_key = MAX(0, oldest_valid_key);
@@ -831,7 +832,7 @@ void activity_algorithm_early_deinit(void) {
     return;
   }
 
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
   // AlgMinuteRecord data storage needed for underlying function
   AlgMinuteRecord record_out = {};
   prv_activity_update_states(utc_sec, &record_out, true /* shutting_down */);
@@ -1184,7 +1185,7 @@ static void prv_read_minute_history_buffer(AlgReadMinutesContext *context) {
 
   // Finally, get the data for the partial last minute that has not even been saved to the circular
   // buffer yet
-  time_t minute_utc = rtc_get_time();
+  time_t minute_utc = pbl_realtime();
   uint32_t seconds_into_minute = minute_utc % PBL_SEC_PER_MIN;
   if (seconds_into_minute > 0) {
     minute_utc -= seconds_into_minute;
@@ -1214,7 +1215,7 @@ static bool prv_read_minutes(AlgReadMinutesContext *context, time_t oldest_reque
   }
 
   // Figure out the lowest key value for for chunks that go into this buffer
-  const time_t utc_now = rtc_get_time();
+  const time_t utc_now = pbl_realtime();
   const time_t oldest_possible =
       utc_now - ALG_MINUTE_FILE_MAX_ENTRIES * ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
   oldest_requested_utc = MAX(oldest_possible, oldest_requested_utc);
@@ -1333,7 +1334,7 @@ exit:
 // -------------------------------------------------------------------------------
 bool activity_algorithm_test_fill_minute_file(void) {
   bool success = false;
-  time_t utc_sec = rtc_get_time() - PBL_SEC_PER_MIN;
+  time_t utc_sec = pbl_realtime() - PBL_SEC_PER_MIN;
 
   AlgMinuteFileRecord record = {};
   prv_init_minute_record(&record.hdr, utc_sec, true /*for_file*/);
@@ -1385,7 +1386,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
 bool activity_algorithm_test_send_fake_minute_data_dls_record(void) {
   AlgMinuteDLSRecord record = {};
   prv_init_minute_record(&record.hdr,
-                         rtc_get_time() - (ALG_MINUTES_PER_DLS_RECORD * PBL_SEC_PER_MIN),
+                         pbl_realtime() - (ALG_MINUTES_PER_DLS_RECORD * PBL_SEC_PER_MIN),
                          false /*for_file*/);
 
   // Fill in fake data

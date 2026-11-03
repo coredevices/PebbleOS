@@ -6,7 +6,6 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/util/list.h>
 
 //! @file animation.h

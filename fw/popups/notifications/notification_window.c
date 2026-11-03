@@ -12,6 +12,7 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
@@ -33,6 +34,7 @@
 #include <pbl/services/notifications/notification_types.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/regular_timer.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/notification_layout.h>
@@ -649,7 +651,7 @@ static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *c
   const time_t reminder_stale_time = prv_get_stale_time(&reminder);
   const time_t event_stale_time = prv_get_stale_time(&item);
   const time_t stale_time = MAX(reminder_stale_time, event_stale_time);
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   if (stale_time <= now && window_data->is_modal) {
     prv_remove_notification(window_data, id, true /* close am */);
@@ -833,7 +835,7 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item,
   Attribute *expiration_attr =
       notif_prefs ? attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration) : nullptr;
   if (notif_prefs && expiration_attr) {
-    const uint32_t expiration_time = rtc_get_time() + duration_seconds;
+    const uint32_t expiration_time = pbl_realtime() + duration_seconds;
     expiration_attr->uint32 = expiration_time;
 
     ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len, &notif_prefs->attr_list,
@@ -858,7 +860,7 @@ static void prv_mute_notification_1_hour(ActionMenu *action_menu,
 
 static void prv_mute_notification_today(ActionMenu *action_menu,
                                         const ActionMenuItem *action_menu_item, void *context) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   struct pbl_tm now_tm;
   pbl_localtime_r(&now, &now_tm);
   const int seconds_until_midnight =

@@ -8,11 +8,11 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/comm_session/protocol.h>
+#include <pbl/services/time.h>
 #include <pbl/util/shared_cbuf.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>

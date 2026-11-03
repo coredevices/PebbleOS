@@ -6,7 +6,6 @@
 #include "app_install_types.h"
 #include "pebble_process_md.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/util/list.h>
 
 #include <applib/graphics/gtypes.h>

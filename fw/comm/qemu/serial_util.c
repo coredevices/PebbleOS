@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
@@ -46,7 +47,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
   uint8_t byte;
   bool exit = false;
   bool got_msg = false;
-  time_t cur_time = rtc_get_time();
+  time_t cur_time = pbl_realtime();
 
   // Reset our state if too much time has passed since we detected start of a packet
   if (state->recv_state != QemuRecvState_WaitingHdrSignatureMSB &&

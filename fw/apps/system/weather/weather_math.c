@@ -6,6 +6,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <pbl/services/time.h>
+
 #include <applib/graphics/gdraw_command_sequence.h>
 #include <applib/ui/animation_interpolate.h>
 

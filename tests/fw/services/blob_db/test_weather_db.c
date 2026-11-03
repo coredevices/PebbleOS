@@ -3,9 +3,9 @@
 
 #include "weather_data_shared.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/weather/weather_types.h>
 #include <pbl/util/pstring.h>
@@ -148,7 +148,7 @@ void test_weather_db__legacy_v3_inserted(void) {
     .tomorrow_weather_type = WeatherType_CloudyDay,
     .tomorrow_high_temp = 60,
     .tomorrow_low_temp = 50,
-    .last_update_time_utc = rtc_get_time(),
+    .last_update_time_utc = pbl_realtime(),
   };
   entry->pstring16s.data_size = data_size;
 

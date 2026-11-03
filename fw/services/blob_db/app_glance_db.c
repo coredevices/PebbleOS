@@ -1,16 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
+#include <pbl/services/time.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
@@ -406,7 +407,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
   // Populate the header of the serialized glance
   *serialized_glance = (SerializedAppGlanceHeader){
     .version = APP_GLANCE_DB_CURRENT_VERSION,
-    .creation_time = (uint32_t)rtc_get_time(),
+    .creation_time = (uint32_t)pbl_realtime(),
   };
 
   uint8_t *glance_buffer_start = (uint8_t *)serialized_glance;

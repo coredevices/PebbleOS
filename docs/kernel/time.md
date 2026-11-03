@@ -44,8 +44,16 @@ it wraps within seconds and stops while the CPU sleeps.
 `pbl_realtime()` and `pbl_realtime_ms()` return UTC time since the epoch,
 kept as an offset from the uptime with microsecond resolution: the wall clock
 runs at the clock source rate and only jumps when `pbl_realtime_set()` sets
-it. The kernel keeps it in RAM only; restoring it after a reset, from an RTC
-device, is up to the clock service.
+it. The kernel keeps it in RAM only. The clock service restores it at boot
+from the board's RTC (`pbl/drivers/rtc.h`), and writes it back whenever the
+time is set and every `CONFIG_SERVICE_CLOCK_RTC_SAVE_INTERVAL` seconds.
+
+| SoC | RTC |
+| --- | --- |
+| nRF52 | Retained RAM: the time last saved, which does not count while off |
+| SF32LB52 | Calendar RTC on the calibrated RC10K |
+| QEMU | QEMU RTC, following the host clock |
+| POSIX | Host clock |
 
 ## Waiting
 

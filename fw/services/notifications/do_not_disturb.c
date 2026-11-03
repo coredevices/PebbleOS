@@ -4,15 +4,16 @@
 #include <errno.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/notifications/do_not_disturb_toggle.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/util/math.h>
 #include <pbl/util/time.h>
@@ -213,7 +214,7 @@ static void prv_schedule_slot_jobs(unsigned int index, const DoNotDisturbSchedul
 
 static void prv_update_schedule_mode(void) {
   struct pbl_tm now;
-  rtc_get_time_tm(&now);
+  clock_get_time_tm(&now);
 
   bool in_period = false;
   for (unsigned int i = 0; i < DND_NUM_SCHEDULE_SLOTS; i++) {

@@ -1,9 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include "rtc_sync.h"
+#include "tz_storage.h"
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/analytics/analytics.h>
@@ -235,8 +238,7 @@ static void prv_set_timezone(const TimezoneInfo *tz_info) {
 static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
   prv_set_timezone(tz_info);
 
-  // Update the RTC registers with the latest timezone info
-  rtc_set_timezone(tz_info);
+  tz_storage_save(tz_info);
 }
 
 static void prv_clock_get_timezone_info_from_region_id(int16_t region_id, time_t utc_time,
@@ -287,7 +289,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
 // consumers interested in time changes
 PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info) {
   int orig_gmt_offset = time_get_gmtoffset();
-  time_t orig_utc_time = rtc_get_time();
+  time_t orig_utc_time = pbl_realtime();
   TimezoneInfo tz_adjust_info = {};
 
   if (clock_is_timezone_set()) { // We'll need to update timezone stamps.
@@ -318,11 +320,12 @@ PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInf
   }
 
   if (t) {
-    rtc_set_time(*t);
+    pbl_realtime_set(*t);
+    rtc_sync_save();
   }
 
   int new_gmt_offset = time_get_gmtoffset();
-  int new_utc_time = rtc_get_time();
+  int new_utc_time = pbl_realtime();
 
   PBL_ANALYTICS_SET_SIGNED(utc_offset_s, new_gmt_offset);
 
@@ -374,7 +377,7 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
   switch (sub_command) {
     // Get time request:
     case 0x00: {
-      time_t t = rtc_get_time();
+      time_t t = pbl_realtime();
 
       // Send Get time response (0x01):
       const unsigned int response_buffer_length = 1 + 4;
@@ -427,10 +430,10 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
 //! detects them at the same instant the old per-second poll did.
 PBL_T_STATIC void prv_watch_dst(void *user) {
   const bool was_dst = (bool)user;
-  const bool is_dst = time_get_isdst(rtc_get_time());
+  const bool is_dst = time_get_isdst(pbl_realtime());
 
 #ifndef CONFIG_RECOVERY_FW
-  const time_t seconds_into_hour = time_utc_to_local(rtc_get_time()) % PBL_SEC_PER_HOUR;
+  const time_t seconds_into_hour = time_utc_to_local(pbl_realtime()) % PBL_SEC_PER_HOUR;
   if (s_hourly_chime_armed && alerts_should_vibrate_for_type(AlertOther) &&
       (seconds_into_hour < HOURLY_CHIME_GRACE_PERIOD_SECONDS)) {
     uint32_t vibe_id = vibe_score_info_get_resource_id(
@@ -457,25 +460,18 @@ PBL_T_STATIC void prv_watch_dst(void *user) {
   }
 }
 
-// Minimum valid time: January 1, 2010 00:00:00 UTC
-// On RTC loss, Asterix boots to 1970 and Obelix to 2000
-// Snap forward so time isnt *that* off
-#define MIN_VALID_BOOT_TIMESTAMP 1262304000
-
 void clock_init(void) {
-  if (rtc_get_time() < MIN_VALID_BOOT_TIMESTAMP) {
-    rtc_set_time(MIN_VALID_BOOT_TIMESTAMP);
-  }
+  rtc_sync_start();
 
   if (clock_is_timezone_set()) {
     TimezoneInfo tz_info;
-    rtc_get_timezone(&tz_info);
+    tz_storage_load(&tz_info);
     time_util_update_timezone(&tz_info, 0, 0);
   }
   // TODO: Using a regular timer is pretty gross...
   s_dst_checker = (RegularTimerInfo){
     .cb = prv_watch_dst,
-    .cb_data = (void *)time_get_isdst(rtc_get_time()),
+    .cb_data = (void *)time_get_isdst(pbl_realtime()),
   };
 #ifndef CONFIG_RECOVERY_FW
   s_hourly_chime_armed = false;
@@ -486,7 +482,7 @@ void clock_init(void) {
 void clock_init_prev_dst(void) {
   if (clock_is_timezone_set()) {
     TimezoneInfo tz_info;
-    rtc_get_timezone(&tz_info);
+    tz_storage_load(&tz_info);
     prv_set_timezone(&tz_info);
   }
 }
@@ -498,7 +494,9 @@ void clock_hourly_chime_arm(void) {
 #endif
 
 void clock_get_time_tm(struct pbl_tm *time_tm) {
-  rtc_get_time_tm(time_tm);
+  time_t t = pbl_realtime();
+
+  pbl_localtime_r(&t, time_tm);
 }
 
 size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minutes,
@@ -575,7 +573,7 @@ static void prv_copy_time_string_timestamp(char *number_buffer, uint8_t number_b
 }
 
 static void prv_get_relative_all_day_string(char *buffer, int buffer_size, time_t timestamp) {
-  time_t today = time_util_get_midnight_of(rtc_get_time());
+  time_t today = time_util_get_midnight_of(pbl_realtime());
   if (time_util_get_midnight_of(timestamp) == today) {
     i18n_get_with_buffer("Today", buffer, buffer_size);
   } else {
@@ -586,7 +584,7 @@ static void prv_get_relative_all_day_string(char *buffer, int buffer_size, time_
 static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_buffer_size,
                                           char *word_buffer, uint8_t word_buffer_size,
                                           time_t timestamp, time_t end_time) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   // average without overflows since time_t might be signed and now ~1.4 billion, so 2*now > INT_MAX
   time_t midtime = timestamp / 2 + end_time / 2;
   if (midtime > now) { // future
@@ -647,7 +645,7 @@ void clock_set_24h_style(bool is_24h_style) {
 }
 
 PBL_SYSCALL(bool, clock_is_timezone_set) {
-  return rtc_is_timezone_set(); // If timezone abbr isn't set
+  return tz_storage_is_set();
 }
 
 bool clock_timezone_source_is_manual(void) {
@@ -742,12 +740,29 @@ void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
 }
 
 int16_t clock_get_timezone_region_id(void) {
-  return rtc_get_timezone_id();
+  TimezoneInfo tz_info;
+
+  tz_storage_load(&tz_info);
+
+  return tz_info.timezone_id;
+}
+
+void clock_timezone_clear(void) {
+  tz_storage_clear();
+}
+
+const char *time_t_to_string(char *buffer, time_t t) {
+  struct pbl_tm time;
+
+  pbl_localtime_r(&t, &time);
+  pbl_strftime_r(buffer, TIME_STRING_BUFFER_SIZE, "%c", &time);
+
+  return buffer;
 }
 
 void clock_set_timezone_by_region_id(uint16_t region_id) {
   TimezoneInfo tz_info;
-  prv_clock_get_timezone_info_from_region_id(region_id, rtc_get_time(), &tz_info);
+  prv_clock_get_timezone_info_from_region_id(region_id, pbl_realtime(), &tz_info);
   prv_update_time_info_and_generate_event(nullptr, &tz_info);
 }
 
@@ -756,7 +771,7 @@ void clock_set_time(time_t utc_time) {
 }
 
 void clock_get_friendly_date(char *buffer, int buf_size, time_t timestamp) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   const time_t midnight = time_util_get_midnight_of(timestamp);
   const time_t today_midnight = time_util_get_midnight_of(now);
@@ -806,11 +821,11 @@ enum {
 
 static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t timestamp,
                                              bool capitalized, bool with_fulltime) {
-  time_t today_midnight = time_util_get_midnight_of(rtc_get_time());
+  time_t today_midnight = time_util_get_midnight_of(pbl_realtime());
   time_t timestamp_midnight = time_util_get_midnight_of(timestamp);
-  time_t yesterday_midnight = time_util_get_midnight_of(rtc_get_time() - PBL_SEC_PER_DAY);
-  time_t last_week_midnight = time_util_get_midnight_of(rtc_get_time() - PBL_SEC_PER_WEEK);
-  time_t next_week_midnight = time_util_get_midnight_of(rtc_get_time() + PBL_SEC_PER_WEEK);
+  time_t yesterday_midnight = time_util_get_midnight_of(pbl_realtime() - PBL_SEC_PER_DAY);
+  time_t last_week_midnight = time_util_get_midnight_of(pbl_realtime() - PBL_SEC_PER_WEEK);
+  time_t next_week_midnight = time_util_get_midnight_of(pbl_realtime() + PBL_SEC_PER_WEEK);
 
   const char *time_fmt = nullptr;
   int style;
@@ -903,9 +918,9 @@ static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t 
 static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_t timestamp,
                                                bool capitalized, int max_relative_hrs,
                                                bool with_fulltime) {
-  time_t difference = rtc_get_time() - timestamp;
+  time_t difference = pbl_realtime() - timestamp;
 
-  time_t today_midnight = time_util_get_midnight_of(rtc_get_time());
+  time_t today_midnight = time_util_get_midnight_of(pbl_realtime());
   time_t timestamp_midnight = time_util_get_midnight_of(timestamp);
 
   if (today_midnight != timestamp_midnight) {
@@ -1013,7 +1028,7 @@ size_t clock_get_month_named_abbrev_date(char *buffer, size_t buffer_size, time_
 }
 
 void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t clamped_timestamp = MIN(now, timestamp);
   prv_clock_get_relative_time_string(buffer, buf_size, clamped_timestamp, false, PBL_HOUR_PER_DAY,
                                      true);
@@ -1100,20 +1115,20 @@ static int prv_cmd_set(const struct pbl_shell *sh, size_t argc, char **argv) {
   time_t t = val;
   prv_update_time_info_and_generate_event(&t, nullptr);
 
-  char time_buffer[26];
-  pbl_shell_print(sh, "Time is now <%s>", rtc_get_time_string(time_buffer));
+  char time_buffer[TIME_STRING_BUFFER_SIZE];
+  pbl_shell_print(sh, "Time is now <%s>", time_t_to_string(time_buffer, pbl_realtime()));
   return 0;
 }
 
 static int prv_cmd_tz_clear(const struct pbl_shell *sh, size_t argc, char **argv) {
-  rtc_timezone_clear();
+  tz_storage_clear();
   time_util_update_timezone(&(TimezoneInfo){}, 0, 0);
   return 0;
 }
 
 #ifndef CONFIG_RECOVERY_FW
 static int prv_cmd_show(const struct pbl_shell *sh, size_t argc, char **argv) {
-  time_t utc = rtc_get_time();
+  time_t utc = pbl_realtime();
   if (argc > 1) {
     long val;
     if (pbl_shell_strtol(argv[1], &val) != 0) {

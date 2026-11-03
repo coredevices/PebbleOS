@@ -118,7 +118,7 @@ bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
 }
 
 uint32_t time_get_uptime_seconds(void) {
-  return PBL_SEC_PER_DAY + rtc_get_time();
+  return PBL_SEC_PER_DAY + pbl_realtime();
 }
 
 static uint32_t s_total_step_count;

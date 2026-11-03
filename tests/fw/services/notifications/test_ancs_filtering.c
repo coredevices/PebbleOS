@@ -19,7 +19,7 @@
 ////////////////////////////////////////////////////////////////
 
 static time_t s_now;
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return s_now;
 }
 

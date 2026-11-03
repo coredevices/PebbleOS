@@ -10,6 +10,7 @@
 // Pebble stuff
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/light.h>
 #include <pbl/services/speaker/speaker_service.h>
@@ -323,7 +324,7 @@ void worker_manager_close_current_worker(bool gracefully) {
   if (closing_worker_install_id == app_manager_get_current_app_id()) {
     app_manager_force_quit_to_launcher();
   } else {
-    const time_t current_time = rtc_get_time();
+    const time_t current_time = pbl_realtime();
     const time_t WORKER_CRASH_RESET_TIMEOUT_SECONDS = 60;
     if ((closing_worker_install_id == s_last_worker_crashed_install_id) &&
         ((current_time - s_last_worker_crash_timestamp) <= WORKER_CRASH_RESET_TIMEOUT_SECONDS)) {

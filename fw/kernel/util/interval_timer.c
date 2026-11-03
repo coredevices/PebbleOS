@@ -3,15 +3,12 @@
 
 #include "interval_timer.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/time.h>
 
 static uint64_t prv_get_curr_system_time_ms(void) {
-  time_t time_s;
-  uint16_t time_ms;
-  rtc_get_time_ms(&time_s, &time_ms);
-  return (((uint64_t)time_s) * 1000 + time_ms);
+  return pbl_realtime_ms();
 }
 
 void interval_timer_init(IntervalTimer *timer, uint32_t min_expected_ms, uint32_t max_expected_ms,

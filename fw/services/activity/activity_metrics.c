@@ -6,6 +6,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -173,7 +174,7 @@ static void prv_set_metric(ActivityMetric metric, enum pbl_weekday wday, int32_t
 
   ActivityMetricInfo m_info = {};
   activity_metrics_prv_get_metric_info(metric, &m_info);
-  const enum pbl_weekday cur_wday = time_util_get_day_in_week(rtc_get_time());
+  const enum pbl_weekday cur_wday = time_util_get_day_in_week(pbl_realtime());
 
   bool current_value_updated = false;
 
@@ -243,7 +244,7 @@ void activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday wda
 // Force the current day's value of a metric to an exact value (may also decrease it). Intended for
 // QEMU/test injection of health data.
 void activity_metrics_set_metric_exact(ActivityMetric metric, int32_t value) {
-  prv_set_metric(metric, time_util_get_day_in_week(rtc_get_time()), value, true /* force */);
+  prv_set_metric(metric, time_util_get_day_in_week(pbl_realtime()), value, true /* force */);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -391,7 +392,7 @@ static void prv_update_median_hr_bpm(ActivityState *state) {
     pbl_free(weight_buf);
 
     state->hr.metrics.last_stable_bpm = (uint8_t)median;
-    state->hr.metrics.last_stable_bpm_update_time_utc = rtc_get_time();
+    state->hr.metrics.last_stable_bpm_update_time_utc = pbl_realtime();
     state->hr.metrics.previous_median_bpm = (uint8_t)median;
     state->hr.metrics.previous_median_total_weight_x100 = total_weight;
 

@@ -5,12 +5,12 @@
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/drivers/mag.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/evented_timer.h>
+#include <pbl/services/time.h>
 #include <pbl/services/wakeup.h>
 #include <pbl/util/time.h>
 

@@ -361,7 +361,7 @@ static void prv_arm_update_timer(int64_t ticks) {
 // Figure out if we should enable the HR sensor or not based on all subscribers and their
 // desired sampling periods, and when to check again. Must be called from the KernelBG task.
 static void prv_update_hrm_enable_system_cb(void *unused) {
-  const time_t utc_now = rtc_get_time();
+  const time_t utc_now = pbl_realtime();
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   {
@@ -513,7 +513,7 @@ static void prv_update_enable_timer_cb(void *context) {
 
 //! The system task needs its own handler for HRM data since we can't queue up generic events.
 static void prv_system_task_hrm_handler(void *context) {
-  time_t utc_now = rtc_get_time();
+  time_t utc_now = pbl_realtime();
 
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
 
@@ -713,7 +713,7 @@ void hrm_manager_new_data_cb(const HRMData *data) {
   }
 #endif
 
-  time_t utc_now = rtc_get_time();
+  time_t utc_now = pbl_realtime();
   uint64_t cur_ticks = pbl_uptime_ticks();
   HRMFeature kernel_bg_features_sent = 0;
 
@@ -806,7 +806,7 @@ void hrm_manager_handle_prefs_changed(void) {
 }
 
 bool hrm_manager_has_continuous_green_subscriber(void) {
-  const time_t utc_now = rtc_get_time();
+  const time_t utc_now = pbl_realtime();
   bool found = false;
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   {
@@ -894,7 +894,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
     .callback_handler = callback,
     .callback_context = context,
     .update_interval_s = update_interval_s,
-    .expire_utc = (expire_s != 0) ? (rtc_get_time() + expire_s) : 0,
+    .expire_utc = (expire_s != 0) ? (pbl_realtime() + expire_s) : 0,
     .low_latency = low_latency,
     .features = features,
   };
@@ -983,7 +983,7 @@ PBL_SYSCALL(bool, sys_hrm_manager_get_subscription_info, (VAL, HRMSessionRef, se
     if (expire_s) {
       int16_t expire_in_s = 0;
       if (state->expire_utc != 0) {
-        expire_in_s = MAX(0, state->expire_utc - rtc_get_time());
+        expire_in_s = MAX(0, state->expire_utc - pbl_realtime());
       }
       *expire_s = MAX(0, expire_in_s);
     }
@@ -1021,7 +1021,7 @@ PBL_SYSCALL(bool, sys_hrm_manager_set_update_interval, (VAL, HRMSessionRef, sess
   HRMSubscriberState *state = prv_get_owned_subscriber_state(session, from_user);
   if (state) {
     state->update_interval_s = update_interval_s;
-    state->expire_utc = (expire_s != 0) ? (rtc_get_time() + expire_s) : 0;
+    state->expire_utc = (expire_s != 0) ? (pbl_realtime() + expire_s) : 0;
     state->sent_expiration_event = false;
     if (state->task == PebbleTask_App || state->task == PebbleTask_Worker) {
       // Apps pick their cadence through the interval, so keep the two in step. Applied at the next
@@ -1067,7 +1067,7 @@ void hrm_manager_process_cleanup(PebbleTask task, AppInstallId app_id) {
 
   // Don't lengthen an expiration that's already shorter than ours — the app explicitly chose a
   // shorter window (e.g. workout post-workout recovery), and overriding it would defeat that.
-  const time_t cleanup_expire_utc = rtc_get_time() + HRM_MANAGER_APP_EXIT_EXPIRATION_SEC;
+  const time_t cleanup_expire_utc = pbl_realtime() + HRM_MANAGER_APP_EXIT_EXPIRATION_SEC;
   if (state->expire_utc != 0 && state->expire_utc <= cleanup_expire_utc) {
     return;
   }

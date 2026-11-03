@@ -5,11 +5,12 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 #include <pbl/util/string.h>
 
 #include <board/board.h>
@@ -30,9 +31,9 @@ static void prv_log_timestamp(void) {
 
   char buffer[TIMESTAMP_BUFFER_SIZE];
 
-  time_t time_seconds;
-  uint16_t time_ms;
-  rtc_get_time_ms(&time_seconds, &time_ms);
+  uint64_t now_ms = pbl_realtime_ms();
+  time_t time_seconds = (time_t)(now_ms / 1000U);
+  uint16_t time_ms = (uint16_t)(now_ms % 1000U);
   struct pbl_tm time_seconds_calendar;
   pbl_gmtime_r(&time_seconds, &time_seconds_calendar);
 

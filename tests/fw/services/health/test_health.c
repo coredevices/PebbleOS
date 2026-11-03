@@ -353,7 +353,7 @@ void test_health__sum_today(void) {
   } while (0);
 
 void test_health__range_to_day_id(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   bool result;
   HealthServiceTimeRange range;
@@ -394,7 +394,7 @@ void test_health__range_to_day_id(void) {
 }
 
 void test_health__range_to_day_id_respects_local_time(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   bool result;
   HealthServiceTimeRange range;
@@ -430,7 +430,7 @@ void test_health__range_to_day_id_respects_local_time(void) {
 }
 
 void test_health__range_to_day_id_rejects_invalid_values(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   bool result;
 
   // check that we *can* return success
@@ -452,7 +452,7 @@ void test_health__range_to_day_id_rejects_invalid_values(void) {
 }
 
 void test_health__range_to_day_id_clamps_values(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   bool result;
   HealthServiceTimeRange range;
 
@@ -489,7 +489,7 @@ void test_health__sum_full_days(void) {
   s_sys_activity_get_metric_values.out.history[3] = 8000;
   s_sys_activity_get_metric_values.out.history[4] = 16000;
 
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   HealthValue result;
   // today until now
   result = health_service_sum(HealthMetricStepCount, time_util_get_midnight_of(now), now);
@@ -590,7 +590,7 @@ void test_health__sum_fraction_days(void) {
   s_sys_activity_get_metric_values.out.history[3] = 8000;
   s_sys_activity_get_metric_values.out.history[4] = 16000;
 
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   HealthValue result;
   // 3/4 of yesterday
   result =
@@ -624,7 +624,7 @@ void test_health__cache(void) {
 }
 
 void test_health__metric_accessible(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   HealthServiceAccessibilityMask accessible;
   // all value in the future
@@ -652,7 +652,7 @@ void test_health__metric_accessible(void) {
 }
 
 void test_health__metric_hr_accessible(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   HealthServiceAccessibilityMask accessible;
   // all value in the future
@@ -674,7 +674,7 @@ void test_health__metric_hr_accessible(void) {
 }
 
 void test_health__metric_hr_averaged_accessible(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   typedef struct {
     const char *desc;
@@ -733,7 +733,7 @@ void test_health__metric_hr_averaged_accessible(void) {
 }
 
 void test_health__metric_hr_aggregate_averaged_accessible(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   typedef struct {
     const char *desc;
@@ -809,7 +809,7 @@ void test_health__metric_hr_aggregate_averaged_accessible(void) {
 }
 
 void test_health__sleep_session_matches(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   ActivitySession session = {
     .type = ActivitySessionType_Sleep,
     .start_utc = now - (10 * PBL_SEC_PER_MIN),
@@ -849,7 +849,7 @@ void test_health__sleep_session_matches(void) {
 }
 
 void test_health__any_activity_accessible(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   HealthServiceAccessibilityMask accessible;
 
   // empty mask => not available
@@ -873,7 +873,7 @@ void test_health__any_activity_accessible(void) {
 }
 
 void test_health__activities_iterate(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   // start from oldest to most-recent - this is more or less an arbitrary order
   s_sys_activity_get_sessions_values.out.sessions[6] = (ActivitySession){
@@ -1001,7 +1001,7 @@ void test_health__peek_current_activities(void) {
 }
 
 void test_health__session_compare(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   // both start at the same time
   cl_assert(0 == prv_session_compare(&(ActivitySession){.start_utc = now, .length_min = 10},
@@ -1040,7 +1040,7 @@ void test_health__session_compare(void) {
 }
 
 void test_health__get_minute_history_edge_case_args(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   HealthMinuteData data[5] = {};
   uint32_t written;
@@ -1076,7 +1076,7 @@ void test_health__get_minute_history_edge_case_args(void) {
 }
 
 void test_health__get_minute_history(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   HealthMinuteData data[5] = {};
   uint32_t written;
@@ -1123,7 +1123,7 @@ void test_health__get_minute_history_respects_time_end(void) {
 
   ////////////
   // start time on boundary
-  const time_t time_on_boundary = (rtc_get_time() / 60 * 60) - 10 * 60;
+  const time_t time_on_boundary = (pbl_realtime() / 60 * 60) - 10 * 60;
 
   // respects time_end, 2.5 minutes => 3 records
   time_start = time_on_boundary;
@@ -1190,7 +1190,7 @@ void test_health__get_yesterdays_sleep_activity(void) {
 // average daily value of a metric
 void test_health__avg_full_days(void) {
   // Get the current time and day
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   struct pbl_tm local_tm;
   pbl_localtime_r(&now, &local_tm);
   enum pbl_weekday day_in_week = local_tm.tm_wday;
@@ -1293,7 +1293,7 @@ static uint32_t prv_averages_sum(uint32_t minute_start_idx, uint32_t minute_end_
 // intraday average of a metric.
 void test_health__avg_partial_days(void) {
   // Get the current time and day
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   struct pbl_tm local_tm;
   pbl_localtime_r(&now, &local_tm);
   enum pbl_weekday day_in_week = local_tm.tm_wday;
@@ -1402,7 +1402,7 @@ void test_health__get_measurement_system_for_display(void) {
 }
 
 void test_health__peek_current_value(void) {
-  const time_t now_utc = rtc_get_time();
+  const time_t now_utc = pbl_realtime();
 
   // Set the return value to a valid time (Less than HS_MAX_AGE_HR_SAMPLE from the current time)
   prv_override_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, now_utc);
@@ -1433,7 +1433,7 @@ void test_health__peek_current_value(void) {
 
   // Set the return value to an invalid time (More than HS_MAX_AGE_HR_SAMPLE from the current time)
   prv_override_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC,
-                      rtc_get_time() - 20 * PBL_SEC_PER_MIN);
+                      pbl_realtime() - 20 * PBL_SEC_PER_MIN);
   result = health_service_peek_current_value(HealthMetricHeartRateBPM);
   cl_assert_equal_i(0, result);
 
@@ -1458,7 +1458,7 @@ static void prv_update_stats(HealthServiceStats *stats, HealthValue value) {
 // DISABLED because the firmware doesn't actually store daily history of HRM values.
 void DISABLED_test_health__min_max_avg_full_days(void) {
   // Get the current time and day
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t yesterday_utc = now - PBL_SEC_PER_DAY;
 
   struct pbl_tm local_tm;
@@ -1616,7 +1616,7 @@ void DISABLED_test_health__min_max_avg_full_days(void) {
 // Test calls to compute heart rate stats with scope once. This ends up being implemented using
 // the minute history
 void test_health__heart_rate_scope_once(void) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   const time_t time_start = now - 2 * PBL_SEC_PER_HOUR;
   const time_t time_end = now;
@@ -1760,7 +1760,7 @@ void test_health__metric_alert_generation(void) {
 void test_health__metric_alert_registration(void) {
   health_service_events_subscribe(prv_test_event_handler, nullptr);
 
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   HealthServiceAccessibilityMask accessible = health_service_metric_aggregate_averaged_accessible(
       HealthMetricHeartRateBPM, now, now, HealthAggregationAvg, HealthServiceTimeScopeOnce);
   cl_assert(accessible & HealthServiceAccessibilityMaskAvailable);

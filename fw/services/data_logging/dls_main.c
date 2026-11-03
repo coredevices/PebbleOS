@@ -5,11 +5,11 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -18,6 +18,7 @@
 #include <pbl/services/data_logging/dls_storage.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/util/list.h>
 #include <pbl/util/string.h>
 #include <pbl/util/uuid.h>
@@ -380,7 +381,7 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
   }
 
   if (logging_session == nullptr) {
-    logging_session = dls_list_create_session(tag, item_type, item_size, uuid, rtc_get_time(),
+    logging_session = dls_list_create_session(tag, item_type, item_size, uuid, pbl_realtime(),
                                               DataLoggingStatusActive);
     if (logging_session == nullptr) {
       // No need to log again here, dls_list_create_session will log on our behalf

@@ -2,12 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/reminders.h>
 #include <pbl/util/testing.h>
@@ -75,7 +76,7 @@ static void prv_job_callback(struct pbl_cron_job *job, void *data) {
   if (system_task_add_callback(prv_trigger_reminder_system_task_callback, &s_next_reminder_id)) {
     s_reminder_armed = false;
   } else {
-    pbl_cron_job_schedule_at(job, rtc_get_time() + 1);
+    pbl_cron_job_schedule_at(job, pbl_realtime() + 1);
   }
 }
 
@@ -119,7 +120,7 @@ status_t reminders_delete(ReminderId *reminder_id) {
 }
 
 PBL_T_STATIC uint32_t prv_calculate_snooze_delay(TimelineItem *item) {
-  time_t current_time_utc = rtc_get_time();
+  time_t current_time_utc = pbl_realtime();
   time_t reminder_time_utc = item->header.timestamp;
   if (current_time_utc <= reminder_time_utc) {
     return INVALID_SNOOZE_DELAY;
@@ -171,7 +172,7 @@ status_t reminders_snooze(Reminder *reminder) {
 
   // Modify reminder timestamp
   TimelineItem *item = (TimelineItem *)reminder;
-  item->header.timestamp = rtc_get_time() + (time_t)snooze_delay;
+  item->header.timestamp = pbl_realtime() + (time_t)snooze_delay;
 
   // Unset the reminded status
   item->header.reminded = false;

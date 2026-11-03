@@ -6,7 +6,6 @@
 #include "session_receive_router.h"
 #include "session_transport.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/list.h>
 

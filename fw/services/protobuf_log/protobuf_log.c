@@ -3,11 +3,11 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
@@ -139,7 +139,7 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
                     },
               },
         },
-    .send_time_utc = rtc_get_time(),
+    .send_time_utc = pbl_realtime(),
   };
 
   // NOTE: A Payload is the master protobuf struct that we send to the phone.
@@ -238,7 +238,7 @@ static bool prv_session_encode_start(PLogSession *session) {
   const ProtobufLogConfig *config = &session->config;
 
   // New session start time
-  session->start_utc = rtc_get_time();
+  session->start_utc = pbl_realtime();
 
   // Create a new stream, reserving space for the header in front
   session->data_stream = pb_ostream_from_buffer(session->data_buffer, session->max_data_size);
@@ -413,7 +413,7 @@ bool protobuf_log_session_add_event(ProtobufLogRef session_ref, pebble_pipeline_
 
   // Don't use {} notation because we won't want to overwrite the data that is already set in
   // the event.
-  event->created_time_utc = rtc_get_time();
+  event->created_time_utc = pbl_realtime();
   event->has_created_time_utc = true;
   event->utc_to_local = time_util_utc_to_local_offset();
   event->uuid = (pb_callback_t){

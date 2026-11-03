@@ -763,9 +763,9 @@ static void prv_subscribe_data_source(void) {
 // Establish a session, lose it at lost_time and reconnect at now.
 static void prv_reconnect(time_t lost_time, time_t now) {
   prv_subscribe_data_source();
-  rtc_set_time(lost_time);
+  pbl_realtime_set(lost_time);
   ancs_invalidate_all_references();
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   ancs_handle_service_discovered(s_characteristics);
   prv_subscribe_data_source();
 }

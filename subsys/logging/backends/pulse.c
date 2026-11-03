@@ -10,6 +10,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/backend.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/util/circular_buffer.h>
@@ -48,10 +49,7 @@ static CircularBuffer s_isr_log_buffer;
 static uint8_t s_isr_log_buffer_storage[256];
 
 static uint64_t prv_get_timestamp_ms(void) {
-  time_t time_s;
-  uint16_t time_ms;
-  rtc_get_time_ms(&time_s, &time_ms);
-  return ((uint64_t)time_s * 1000) + time_ms;
+  return pbl_realtime_ms();
 }
 
 static size_t prv_serialize_log_header(MessageContents *contents, uint8_t log_level,

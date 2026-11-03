@@ -3,7 +3,7 @@
 
 #include "dark_mode_updater.h"
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/regular_timer.h>
 
 #include <kernel/events.h>
@@ -38,7 +38,7 @@ static bool prv_is_dark(void) {
       DarkModeSchedule schedule;
       shell_prefs_get_dark_mode_schedule(&schedule);
       struct pbl_tm now;
-      rtc_get_time_tm(&now);
+      clock_get_time_tm(&now);
       return dark_mode_schedule_is_active(&schedule, now.tm_hour * 60 + now.tm_min);
     }
     default:

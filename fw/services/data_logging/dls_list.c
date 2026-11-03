@@ -7,6 +7,7 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/util/uuid.h>
@@ -233,7 +234,7 @@ uint8_t dls_list_add_new_session(DataLoggingSession *logging_session) {
   // generate random ID
   int loops = 0;
   uint8_t session_id;
-  unsigned seed = rtc_get_time() ^ (uintptr_t)&session_id;
+  unsigned seed = pbl_realtime() ^ (uintptr_t)&session_id;
   do {
     // use a custom seed to avoid apps maliciously setting the task-global seed
     session_id = rand_r(&seed) % 255;

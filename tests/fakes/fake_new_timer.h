@@ -7,9 +7,9 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/list.h>
 

@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/time.h>
 
 /**
@@ -106,7 +107,7 @@ int32_t time_get_dstoffset(void);
 time_t time_get_dst_start(void);
 
 /**
- * @brief Convert UTC time, as returned by rtc_get_time(), to local time.
+ * @brief Convert UTC time, as returned by pbl_realtime(), to local time.
  *
  * @param utc_time UTC time.
  * @return Local time.

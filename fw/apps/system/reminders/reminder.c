@@ -9,11 +9,13 @@
 
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/units.h>
 
@@ -196,7 +198,7 @@ static void prv_handle_dictation_event(PebbleEvent *e, void *context) {
       // If the user didn't specify a time set it to be 1 hour from the current time,
       // rounded up to the nearest 15 min.
       // Ex: a reminder created at 10:08 AM with no specified time is due at 11:15 AM
-      time_t utc_sec = rtc_get_time() + PBL_SEC_PER_HOUR + (15 * PBL_SEC_PER_MIN);
+      time_t utc_sec = pbl_realtime() + PBL_SEC_PER_HOUR + (15 * PBL_SEC_PER_MIN);
       struct pbl_tm local_tm;
       pbl_localtime_r(&utc_sec, &local_tm);
       local_tm.tm_min -= (local_tm.tm_min % 15);

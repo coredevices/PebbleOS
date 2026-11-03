@@ -8,12 +8,12 @@
 #include <time.h>
 
 #include <pbl/crc/crc.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/fs/fs.h>
 #include <pbl/fs/pfs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/settings/settings.h>
 #include <pbl/task_wdt/task_wdt.h>
@@ -206,7 +206,7 @@ static bool overwritten(struct pbl_settings_record_hdr *hdr) {
 }
 
 static uint32_t utc_time() {
-  return rtc_get_time();
+  return pbl_realtime();
 }
 
 static bool deleted(struct pbl_settings_record_hdr *hdr) {

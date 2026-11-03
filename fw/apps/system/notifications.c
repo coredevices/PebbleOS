@@ -8,13 +8,14 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
@@ -215,7 +216,7 @@ static void prv_notifications_history_init(NotificationsData *data) {
   }
 
   if (window > 0) {
-    const time_t now = rtc_get_time();
+    const time_t now = pbl_realtime();
     cutoff = (now > window) ? now - window : 0;
   }
 

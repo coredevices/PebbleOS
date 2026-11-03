@@ -84,10 +84,7 @@ uint32_t pbl_accel_get_max_num_samples(const struct pbl_accel *accel) {
 
 // helpers
 static uint64_t prv_get_current_time() {
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
-  return ((uint64_t)s * 1000) + ms;
+  return pbl_realtime_ms();
 }
 
 //! Snap the fake RTC's tick counter to the smallest value whose floored

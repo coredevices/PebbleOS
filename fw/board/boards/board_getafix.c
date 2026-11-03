@@ -16,6 +16,7 @@
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/reset/sf32lb.h>
+#include <pbl/drivers/rtc/sf32lb.h>
 #include <pbl/drivers/sf32lb52/hxt.h>
 #include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
 #include <pbl/drivers/temperature/sf32lb.h>
@@ -266,3 +267,5 @@ void board_init(void) {
 }
 
 const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;
+
+const struct pbl_rtc *const RTC = SF32LB_RTC;

@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/comm_session/session.h>
@@ -56,7 +57,7 @@ static void prv_send_ping_kernel_bg_cb(void *unused) {
     bool success = comm_session_send_data(system_session, PING_ENDPOINT, (const uint8_t *)&ping_msg,
                                           sizeof(ping_msg), COMM_SESSION_DEFAULT_TIMEOUT);
     if (success) {
-      s_last_send_time = rtc_get_time();
+      s_last_send_time = pbl_realtime();
     }
     PBL_LOG_DBG("Sent ping idle=%d, success=%d", (int)idle, (int)success);
   }
@@ -73,7 +74,7 @@ void ping_send_if_due(void) {
   }
 
   // Only send if we haven't sent within the last PING_MIN_PERIOD_SECS
-  time_t current_time = rtc_get_time();
+  time_t current_time = pbl_realtime();
   if (current_time < s_last_send_time + PING_MIN_PERIOD_SECS) {
     return;
   }

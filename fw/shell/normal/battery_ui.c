@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
@@ -374,7 +375,7 @@ static void prv_update_ui_warning(Dialog *dialog, void *context) {
   const size_t warning_length = 64;
   char buffer[warning_length];
   const uint32_t battery_hours_left = battery_curve_get_hours_remaining(percent);
-  const char *message = clock_get_relative_daypart_string(rtc_get_time(), battery_hours_left);
+  const char *message = clock_get_relative_daypart_string(pbl_realtime(), battery_hours_left);
 
   if (message) {
     snprintf(buffer, warning_length, i18n_get("Powered 'til %s", dialog),

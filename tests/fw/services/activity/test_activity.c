@@ -3,7 +3,6 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
@@ -405,7 +404,7 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   // Preserve the minute data from the last boot
   s_test_alg_state = (AlgorithmState){
     .minute_data = minute_data,
-    .rate_last_update_time = rtc_get_time(),
+    .rate_last_update_time = pbl_realtime(),
   };
 
   return true;
@@ -429,7 +428,7 @@ bool activity_algorithm_deinit(void) {
 void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples, uint64_t timestamp) {
   // For testing purposes, we'll use the x movement as the steps and y as the sleep state
   ActivitySleepState prior_state = s_test_alg_state.minute_data.sleep_state;
-  time_t now_secs = rtc_get_time();
+  time_t now_secs = pbl_realtime();
   s_test_alg_state.minute_data.last_captured_utc = now_secs;
 
   for (int i = 0; i < num_samples; i++) {
@@ -565,7 +564,7 @@ bool activity_algorithm_get_step_rate(uint16_t *steps, uint32_t *elapsed_ms, tim
 bool activity_algorithm_metrics_changed_notification(void) {
   s_test_alg_state.steps = 0;
   s_test_alg_state.rate_last_steps = 0;
-  s_test_alg_state.rate_last_update_time = rtc_get_time();
+  s_test_alg_state.rate_last_update_time = pbl_realtime();
   return true;
 }
 
@@ -626,7 +625,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
 bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                            time_t *utc_start) {
   // Get the current time
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
 
   // Get the minute index
   uint32_t minute_idx = now / PBL_SEC_PER_MIN;
@@ -665,7 +664,7 @@ static int s_minute_heart_rate_calls;
 bool activity_algorithm_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
                                               time_t utc_start) {
   s_minute_heart_rate_calls++;
-  const uint32_t minute_idx = rtc_get_time() / PBL_SEC_PER_MIN;
+  const uint32_t minute_idx = pbl_realtime() / PBL_SEC_PER_MIN;
   const time_t last_second_available =
       (minute_idx - (minute_idx % ALG_MINUTES_PER_FILE_RECORD)) * PBL_SEC_PER_MIN;
 
@@ -705,10 +704,8 @@ static void prv_feed_canned_accel_data(uint32_t num_sec, uint32_t steps_per_minu
   }
   int need_step_ctr = samples_per_step;
 
-  time_t utc_secs;
-  uint16_t ms;
-  rtc_get_time_ms(&utc_secs, &ms);
-  uint64_t start_ms = utc_secs * 1000 + ms;
+  uint64_t start_ms = pbl_realtime_ms();
+  time_t utc_secs = (time_t)(start_ms / 1000U);
   uint64_t ms_per_sample = 1000 / ALGORITHM_SAMPLING_RATE;
 
   for (int i = 0; i < num_samples;) {
@@ -750,10 +747,8 @@ static void prv_feed_canned_accel_data(uint32_t num_sec, uint32_t steps_per_minu
 // ---------------------------------------------------------------------------------------
 // Feed in X seconds of raw data
 static void prv_feed_raw_accel_data(AccelRawData *samples, uint32_t num_samples) {
-  time_t utc_secs;
-  uint16_t ms;
-  rtc_get_time_ms(&utc_secs, &ms);
-  uint64_t start_ms = utc_secs * 1000 + ms;
+  uint64_t start_ms = pbl_realtime_ms();
+  time_t utc_secs = (time_t)(start_ms / 1000U);
 
   for (int i = 0; i < num_samples;) {
     AccelData accel_data[ALGORITHM_SAMPLING_RATE];
@@ -908,7 +903,7 @@ static bool prv_activity_iterate_cb(HealthActivity activity, pbl_time32_t time_s
 static void prv_sleep_sessions_using_health_service(uint32_t *session_entries,
                                                     ActivitySession *sessions,
                                                     HealthIterationDirection direction) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   s_health_sessions_count = 0;
   s_health_sessions_max = *session_entries;
   s_health_sessions = sessions;
@@ -1011,7 +1006,7 @@ void test_activity__init_history(void) {
   prv_feed_canned_accel_data(60, 0, ActivitySleepStateRestfulSleep);
 
   // Put in a stepping activity
-  time_t day_start = time_util_get_midnight_of(rtc_get_time());
+  time_t day_start = time_util_get_midnight_of(pbl_realtime());
   ActivitySession walk_activity = {
     .start_utc = day_start + 12 * PBL_SEC_PER_HOUR,
     .length_min = 120,
@@ -1105,7 +1100,7 @@ void test_activity__init_history(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_activity_init_and_set_enabled(true);
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
                               ((const uint32_t[ACTIVITY_HISTORY_DAYS]){0, 100, 0, 0, 0, 0, 0}));
@@ -1226,7 +1221,7 @@ void test_activity__day_rollover(void) {
 
   // Put in 2 activities, one of which should drop off on a new day because it's old and the
   // other which drop off because it is in the future (invalid)
-  time_t day_start = time_util_get_midnight_of(rtc_get_time());
+  time_t day_start = time_util_get_midnight_of(pbl_realtime());
   ActivitySession old_activity = {
     .start_utc = day_start + 12 * PBL_SEC_PER_HOUR,
     .length_min = 120,
@@ -1316,7 +1311,7 @@ void test_activity__step_derived_metrics(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_activity_init_and_set_enabled(true);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
@@ -1381,7 +1376,7 @@ void test_activity__step_derived_metrics(void) {
 
   // Another day
   utc_sec += PBL_SEC_PER_DAY;
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_activity_init_and_set_enabled(true);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
@@ -1708,7 +1703,7 @@ void test_activity__get_minute_history(void) {
 
   // The last ALG_MINUTES_PER_RECORD of minutes may not be available yet, so start
   // well enough before that
-  time_t utc_start = rtc_get_time() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
+  time_t utc_start = pbl_realtime() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
   const time_t exp_utc_start = utc_start;
 
   stub_pebble_tasks_set_current(PebbleTask_App);
@@ -1733,9 +1728,9 @@ void test_activity__get_minute_history(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
-  time_t oldest_to_fetch = rtc_get_time() - (ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN);
+  time_t oldest_to_fetch = pbl_realtime() - (ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN);
   for (int i = 0; i < ALG_MINUTES_PER_FILE_RECORD; i++) {
     // Ask for the last ALG_MINUTES_PER_RECORD minutes of data
     num_records = ALG_MINUTES_PER_FILE_RECORD;
@@ -1759,7 +1754,7 @@ void test_activity__get_minute_history(void) {
     }
 
     // Advance another minute.
-    rtc_set_time(utc_sec + (i * PBL_SEC_PER_MIN));
+    pbl_realtime_set(utc_sec + (i * PBL_SEC_PER_MIN));
   }
 }
 
@@ -1773,7 +1768,7 @@ void test_activity__get_minute_history_chunked(void) {
   HealthMinuteData minutes[exp_num_records];
 
   time_t utc_start =
-      rtc_get_time() - (exp_num_records + ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN;
+      pbl_realtime() - (exp_num_records + ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN;
   utc_start -= utc_start % PBL_SEC_PER_MIN;
   const time_t exp_utc_start = utc_start;
 
@@ -1798,7 +1793,7 @@ void test_activity__get_minute_history_timeout(void) {
   HealthMinuteData exp_minutes[10];
   memset(exp_minutes, 0xA5, sizeof(exp_minutes));
 
-  time_t utc_start = rtc_get_time() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
+  time_t utc_start = pbl_realtime() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
 
   stub_pebble_tasks_set_current(PebbleTask_App);
   s_system_task_stalled = true;
@@ -1822,7 +1817,7 @@ void test_activity__get_minute_heart_rate(void) {
   const uint32_t num_minutes = PBL_MIN_PER_DAY;
   uint8_t bpm[num_minutes];
   memset(bpm, 0xA5, sizeof(bpm));
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t utc_start = now - (now % PBL_SEC_PER_MIN) - (num_minutes - 1) * PBL_SEC_PER_MIN;
 
   stub_pebble_tasks_set_current(PebbleTask_App);
@@ -1843,7 +1838,7 @@ void test_activity__get_minute_heart_rate_too_long(void) {
 
   static uint8_t bpm[ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES + 1];
   stub_pebble_tasks_set_current(PebbleTask_App);
-  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), rtc_get_time()));
+  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
   cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
 }
 
@@ -1860,7 +1855,7 @@ void test_activity__get_minute_heart_rate_timeout(void) {
 
   stub_pebble_tasks_set_current(PebbleTask_App);
   s_system_task_stalled = true;
-  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), rtc_get_time()));
+  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
   cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
 
   s_system_task_stalled = false;
@@ -1888,7 +1883,7 @@ int prv_expected_steps_per_min(int slot, int multiplier) {
 void prv_assert_known_settings(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   prv_activity_init_and_set_enabled(true);
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
@@ -1913,7 +1908,7 @@ void prv_assert_known_settings(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_t utc_sec = pbl_mktime(&time_tm);
   utc_sec -= 2 * PBL_SEC_PER_DAY;
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   prv_activity_init_and_set_enabled(true);
   activity_start_tracking(false /*test_mode*/);
@@ -2040,7 +2035,7 @@ void test_activity__migrate_settings_v2(void) {
   cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &version, sizeof(version)), 0);
 
   const ActivitySettingsValueHistoryV2 step_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {60000, 65535, 300, 200, 100},
   };
   key = ActivitySettingsKeyStepCountHistory;
@@ -2054,7 +2049,7 @@ void test_activity__migrate_settings_v2(void) {
   // Stored sessions are not metric records; the migration must copy them verbatim
   ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT] = {};
   sessions[0] = (ActivitySession){
-    .start_utc = rtc_get_time() - PBL_SEC_PER_HOUR,
+    .start_utc = pbl_realtime() - PBL_SEC_PER_HOUR,
     .length_min = 42,
     .type = ActivitySessionType_Walk,
     .step_data = {
@@ -2319,11 +2314,11 @@ void test_activity__health_service_interpolation(void) {
 
   // If we ask for the sum from latter half of yesterday till now, we should get 2500
   steps = health_service_sum(HealthMetricStepCount, time_start_of_today() - (12 * PBL_SEC_PER_HOUR),
-                             rtc_get_time());
+                             pbl_realtime());
   cl_assert_equal_i(steps, 2500);
 
   // If we ask for the sum from latter half of yesterday till half of today, we should get 1500
-  time_t elapsed_today = rtc_get_time() - time_start_of_today();
+  time_t elapsed_today = pbl_realtime() - time_start_of_today();
   steps = health_service_sum(HealthMetricStepCount, time_start_of_today() - (12 * PBL_SEC_PER_HOUR),
                              time_start_of_today() + (elapsed_today / 2));
   cl_assert_equal_i(steps, 1500);
@@ -2363,7 +2358,7 @@ void test_activity__distance(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   fake_system_task_callbacks_invoke_pending();
 
   int act_distance[ARRAY_LENGTH(tests)];
@@ -2375,7 +2370,7 @@ void test_activity__distance(void) {
 
     // Advance to new day to reset the distance
     utc_sec += PBL_SEC_PER_DAY;
-    rtc_set_time(utc_sec);
+    pbl_realtime_set(utc_sec);
     prv_activity_init_and_set_enabled(true);
 
     // Set the user's dimensions
@@ -2456,7 +2451,7 @@ static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, int confidence,
   // as well as the sleep PFS file.
   for (int i = 0; i < num_sec; i++) {
     fake_rtc_set_ticks(pbl_uptime_ticks() + PBL_TICK_HZ);
-    rtc_set_time(rtc_get_time() + 1);
+    pbl_realtime_set(pbl_realtime() + 1);
 
     if ((s_hrm_manager_update_interval == 1) || force_continuous) {
       PebbleHRMEvent hrm_event = {
@@ -2468,7 +2463,7 @@ static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, int confidence,
       prv_hrm_subscription_cb(&hrm_event, nullptr);
       s_num_hrm_callbacks++;
     }
-    if ((rtc_get_time() % PBL_SEC_PER_MIN) == 0) {
+    if ((pbl_realtime() % PBL_SEC_PER_MIN) == 0) {
       prv_minute_system_task_cb(nullptr);
     }
   }
@@ -2501,8 +2496,8 @@ void test_activity__hrm_sampling_period(void) {
 
   // The last update time should be within a second
   activity_get_metric(ActivityMetricHeartRateRawUpdatedTimeUTC, 1, &last_update_utc);
-  cl_assert(last_update_utc >= rtc_get_time() - 1);
-  cl_assert(last_update_utc <= rtc_get_time());
+  cl_assert(last_update_utc >= pbl_realtime() - 1);
+  cl_assert(last_update_utc <= pbl_realtime());
 
   // Should still be sampling every 1 second
   cl_assert_equal_i(s_hrm_manager_update_interval, 1);
@@ -2576,8 +2571,8 @@ void test_activity__hrm_median(void) {
   activity_get_metric(ActivityMetricHeartRateFilteredBPM, 1, &last_median);
   activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1, &last_update_utc);
   cl_assert_equal_i(last_median, 51);
-  cl_assert(last_update_utc >= rtc_get_time() - 1);
-  cl_assert(last_update_utc <= rtc_get_time());
+  cl_assert(last_update_utc >= pbl_realtime() - 1);
+  cl_assert(last_update_utc <= pbl_realtime());
 
   // Reset the stats, the median should be 0
   activity_metrics_prv_reset_hr_stats();
@@ -2588,8 +2583,8 @@ void test_activity__hrm_median(void) {
   activity_get_metric(ActivityMetricHeartRateFilteredBPM, 1, &last_median);
   activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1, &last_update_utc);
   cl_assert_equal_i(last_median, 51);
-  cl_assert(last_update_utc >= rtc_get_time() - 1);
-  cl_assert(last_update_utc <= rtc_get_time());
+  cl_assert(last_update_utc >= pbl_realtime() - 1);
+  cl_assert(last_update_utc <= pbl_realtime());
 }
 
 static uint32_t s_num_hr_events;
@@ -2831,7 +2826,7 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   // Add a run session
   const time_t time_elapsed = (20 * PBL_SEC_PER_MIN);
@@ -2849,7 +2844,7 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
 
   // Finish the run session
   utc_sec += (10 * PBL_SEC_PER_MIN);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   run_activity.ongoing = false;
 
   // Update session
@@ -2881,7 +2876,7 @@ void test_activity__activity_sessions_sleep_ongoing_then_delete(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   // Add a Sleep session
   const time_t time_elapsed = (120 * PBL_SEC_PER_MIN);
@@ -2934,7 +2929,7 @@ void test_activity__activity_sessions_ongoing_multiple(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   const time_t time_elapsed = (20 * PBL_SEC_PER_MIN);
 
@@ -3073,9 +3068,9 @@ void test_activity__update_time_in_hr_zones(void) {
   cl_assert_equal_i(zone3_minutes, 2);
 
   // Advance to a new day. The HR zone stats should get reset
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
   utc_sec += PBL_SEC_PER_DAY;
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_minute_system_task_cb(nullptr);
   cl_assert_equal_b(prv_is_hr_elevated(), true); // stays elevated
   activity_get_metric(ActivityMetricHeartRateZone1Minutes, 1, &zone1_minutes);
@@ -3196,7 +3191,7 @@ void test_activity__activity_sessions_logged_after_future_clock(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   // Sessions were logged while the clock was two years ahead
   const time_t future_utc = utc_sec + 2 * 365 * PBL_SEC_PER_DAY;
@@ -3257,7 +3252,7 @@ void test_activity__reboot_after_dst_end_keeps_today(void) {
   // 2026-11-01 00:30 EDT: the day's history is stamped while DST is still in effect
   activity_stop_tracking();
   fake_system_task_callbacks_invoke_pending();
-  rtc_set_time(1793507400);
+  pbl_realtime_set(1793507400);
   prv_activity_init_and_set_enabled(true);
   activity_start_tracking(false /*test_mode*/);
   fake_system_task_callbacks_invoke_pending();
@@ -3271,7 +3266,7 @@ void test_activity__reboot_after_dst_end_keeps_today(void) {
   time_util_update_timezone(&tz_info, 1772953200, 1793512800);
 
   // 2026-11-01 14:22 EST: reboot
-  rtc_set_time(1793560920);
+  pbl_realtime_set(1793560920);
   prv_activity_init_and_set_enabled(true);
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
                               ((const uint32_t[ACTIVITY_HISTORY_DAYS]){1234, 0, 0, 0, 0, 0, 0}));

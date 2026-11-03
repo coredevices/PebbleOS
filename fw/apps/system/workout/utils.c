@@ -6,6 +6,7 @@
 #include "workout.h"
 
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/i18n/i18n.h>
@@ -61,7 +62,7 @@ static TimelineItem *prv_create_abandoned_workout_notification(void) {
     },
   };
 
-  const time_t now_utc = rtc_get_time();
+  const time_t now_utc = pbl_realtime();
 
   // Note: it's fine if this returns null, since the parent functions will check for a null pointer
   TimelineItem *item =

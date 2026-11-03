@@ -64,7 +64,7 @@ static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
 }
 
 static void prv_clock_change(int32_t time_diff, int32_t gmt_diff, bool dst_trans) {
-  rtc_set_time(rtc_get_time() + time_diff);
+  pbl_realtime_set(pbl_realtime() + time_diff);
   g_timezone.tm_gmtoff += gmt_diff;
   time_util_update_timezone(&g_timezone, 0, 0);
   pbl_cron_handle_clock_change(time_diff, gmt_diff, dst_trans);
@@ -904,7 +904,7 @@ void test_cron__clock_correction_runs_due_jobs(void) {
   prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
 
   pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 5);
-  rtc_set_time(rtc_get_time() + 10);
+  pbl_realtime_set(pbl_realtime() + 10);
   pbl_cron_handle_clock_correction();
   cl_assert_equal_i((uintptr_t)job.cb_data, 1);
   cl_assert_equal_i(pbl_cron_get_job_count(), 0);
@@ -921,7 +921,7 @@ void test_cron__clock_correction_keeps_execute_times(void) {
   prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
 
   const time_t execute_time = pbl_cron_job_schedule(&job);
-  rtc_set_time(rtc_get_time() + 10);
+  pbl_realtime_set(pbl_realtime() + 10);
   pbl_cron_handle_clock_correction();
   cl_assert_equal_i(job.cached_execute_time, execute_time);
   cl_assert_equal_i((uintptr_t)job.cb_data, 0);

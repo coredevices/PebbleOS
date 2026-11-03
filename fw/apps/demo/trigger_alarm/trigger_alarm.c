@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -25,7 +25,7 @@ static void handle_init(void) {
 
   PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_ALARM_CLOCK_EVENT,
-    .alarm_clock = {.alarm_time = rtc_get_time(), .alarm_label = "Wake Up"}
+    .alarm_clock = {.alarm_time = pbl_realtime(), .alarm_label = "Wake Up"}
   };
 
   event_put(&e);

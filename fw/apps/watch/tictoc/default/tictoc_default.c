@@ -3,6 +3,7 @@
 
 #include <time.h>
 
+#include <pbl/services/clock.h>
 #include <pbl/util/trig.h>
 
 #include <applib/app.h>
@@ -137,7 +138,7 @@ static void prv_init() {
   app_window_stack_push(&data->window, true);
 
   struct pbl_tm time_struct;
-  rtc_get_time_tm(&time_struct);
+  clock_get_time_tm(&time_struct);
   prv_minute_tick_handler(&time_struct, MINUTE_UNIT);
 
   tick_timer_service_subscribe(MINUTE_UNIT, prv_minute_tick_handler);

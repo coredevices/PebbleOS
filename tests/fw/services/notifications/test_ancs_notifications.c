@@ -39,7 +39,7 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs, const AN
 #include <fake_notification_storage.h>
 
 static time_t s_now;
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return s_now;
 }
 

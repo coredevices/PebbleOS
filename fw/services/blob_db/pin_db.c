@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/api.h>
@@ -124,7 +125,7 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
 
   if (!mark_synced) {
     blob_db_sync_record(BlobDBIdPins, (uint8_t *)&item->header.id, sizeof(TimelineItemId),
-                        rtc_get_time());
+                        pbl_realtime());
   }
 
 cleanup:
@@ -211,7 +212,7 @@ status_t pin_db_compact(void) {
 }
 
 bool pin_db_has_entry_expired(time_t pin_end_timestamp) {
-  return (pin_end_timestamp < (rtc_get_time() - PIN_DB_MAX_AGE));
+  return (pin_end_timestamp < (pbl_realtime() - PIN_DB_MAX_AGE));
 }
 
 status_t pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {

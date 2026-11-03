@@ -8,7 +8,6 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/rtc.h>
 
 /**
  * @defgroup drivers_als_w1160 W1160
