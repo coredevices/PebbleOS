@@ -65,16 +65,13 @@ static void main_task(void *parameter);
 
 static void print_splash_screen(void) {
 #if defined(CONFIG_MFG)
-  PBL_LOG_ALWAYS("PebbleOS - MANUFACTURING MODE");
+  PBL_LOG_ALWAYS("Manufacturing mode");
 #elifdef CONFIG_RECOVERY_FW
-  PBL_LOG_ALWAYS("PebbleOS - RECOVERY MODE");
-#else
-  PBL_LOG_ALWAYS("PebbleOS");
+  PBL_LOG_ALWAYS("Recovery mode");
 #endif
-  PBL_LOG_ALWAYS("%s%s", TINTIN_METADATA.version_tag,
-                 (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware)
-                     ? (TINTIN_METADATA.is_slot_0 ? " (slot0)" : " (slot1)")
-                     : "");
+  if (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware) {
+    PBL_LOG_ALWAYS("Slot %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
+  }
   PBL_LOG_ALWAYS("(c) 2013-2026 The PebbleOS contributors");
   PBL_LOG_ALWAYS(" ");
 }

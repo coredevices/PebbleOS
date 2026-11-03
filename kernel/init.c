@@ -9,6 +9,8 @@
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/backend.h>
+#include <pbl/logging/logging.h>
+#include <pbl/version.h>
 
 void kernel_init(int (*entry)(void)) {
   pbl_soc_early_init();
@@ -16,6 +18,8 @@ void kernel_init(int (*entry)(void)) {
   arch_init();
   pbl_malloc_init();
   pbl_log_early_init();
+
+  PBL_LOG_ALWAYS("*** Booting PebbleOS %s ***", PBL_VERSION_TAG);
 
   entry();
 
