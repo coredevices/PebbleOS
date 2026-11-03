@@ -73,6 +73,14 @@ const struct pbl_log_backend *pbl_log_backend_get_by_name(const char *name) {
   return nullptr;
 }
 
+void pbl_log_early_init(void) {
+  PRV_FOREACH_BACKEND(backend) {
+    if (backend->api->early_init) {
+      backend->api->early_init(backend);
+    }
+  }
+}
+
 void pbl_log_init(void) {
   PRV_FOREACH_BACKEND(backend) {
     if (backend->api->init) {

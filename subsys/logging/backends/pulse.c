@@ -5,6 +5,7 @@
 
 #include <ctype.h>
 
+#include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
@@ -15,6 +16,8 @@
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
 
+#include <board/board.h>
+#include <console/pulse.h>
 #include <console/pulse_protocol_impl.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
@@ -223,6 +226,13 @@ void pulse_logging_log_sync(uint8_t log_level, const char *src_filename, uint16_
   prv_send_pulse_packet(log_level, src_filename, src_line_number, message);
 }
 
+static void prv_backend_early_init(const struct pbl_log_backend *backend) {
+  const struct pbl_uart_config cfg = {.baudrate = CONFIG_CONSOLE_BAUDRATE};
+
+  (void)pbl_uart_early_init(CONSOLE_UART, &cfg);
+  pulse_early_init();
+}
+
 static void prv_backend_init(const struct pbl_log_backend *backend) {
   pulse_logging_init();
 }
@@ -241,6 +251,7 @@ static void prv_backend_panic(const struct pbl_log_backend *backend) {
 }
 
 static const struct pbl_log_backend_api s_api = {
+  .early_init = prv_backend_early_init,
   .init = prv_backend_init,
   .process = prv_backend_process,
   .panic = prv_backend_panic,

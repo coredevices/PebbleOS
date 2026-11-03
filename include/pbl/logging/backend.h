@@ -52,6 +52,8 @@ struct pbl_log_backend;
 
 /** @brief Backend operations. */
 struct pbl_log_backend_api {
+  /** Bring up the backend's output before main(), from @ref pbl_log_early_init. Optional. */
+  void (*early_init)(const struct pbl_log_backend *backend);
   /** Initialize the backend, from @ref pbl_log_init. Optional. */
   void (*init)(const struct pbl_log_backend *backend);
   /** Write a message. */
@@ -138,6 +140,9 @@ void pbl_log_backend_set_level(const struct pbl_log_backend *backend, int level)
  * @return The backend, or NULL if there is none called @p name.
  */
 const struct pbl_log_backend *pbl_log_backend_get_by_name(const char *name);
+
+/** @brief Bring up the backends' output, called by the kernel before main(). */
+void pbl_log_early_init(void);
 
 /** @brief Initialize the backends. */
 void pbl_log_init(void);

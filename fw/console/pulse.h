@@ -3,10 +3,7 @@
 
 #pragma once
 
-//! Perform any required link-maintenance tasks before pulse_init.
-//!
-//! This function should be called as early in boot as possible,
-//! preferably as soon as dbgserial output has been initialized.
+//! Resynchronize the host's link state, right after the early console is up.
 void pulse_early_init(void);
 
 //! Initialize multitasking PULSE

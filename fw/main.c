@@ -34,7 +34,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <board/board.h>
-#include <console/dbgserial.h>
 #include <console/dbgserial_input.h>
 #include <console/pulse.h>
 #include <console/serial_console.h>
@@ -81,8 +80,6 @@ static void print_splash_screen(void) {
 }
 
 int main(void) {
-  dbgserial_init();
-  pulse_early_init();
   print_splash_screen();
 
   rtc_init();
@@ -112,8 +109,7 @@ static void init_drivers(void) {
   pbl_device_init_all();
   board_init();
 
-  // The dbgserial input support requires timer support, so it is initialized here, much later
-  // than the core dbgserial_init().
+  // Console input needs timers, so it starts long after the early console.
   dbgserial_input_init();
 
   serial_console_init();
