@@ -17,8 +17,6 @@
 #include <system/version.h>
 
 void debug_init(McuRebootReason mcu_reboot_reason) {
-  // Log the firmware version in the first flash log line:
-  PBL_LOG_ALWAYS("Firmware version: %s", TINTIN_METADATA.version_tag);
   PBL_LOG_ALWAYS("Platform: %u, hw: %s, sn: %s", TINTIN_METADATA.hw_platform, mfg_get_hw_version(),
                  mfg_get_serial_number());
 
@@ -26,10 +24,6 @@ void debug_init(McuRebootReason mcu_reboot_reason) {
   char build_id_string[64];
   version_copy_current_build_id_hex_string(build_id_string, 64);
   PBL_LOG_ALWAYS("BUILD ID: %s", build_id_string);
-
-#ifdef CONFIG_PBLBOOT
-  PBL_LOG_ALWAYS("Boot slot: %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
-#endif
 
   debug_reboot_reason_print(mcu_reboot_reason);
 }
