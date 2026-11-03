@@ -304,6 +304,14 @@ class DeviceAdapter(ABC):
             if Capability.PROTOCOL in connection.capabilities:
                 connection.set_platform(platform)
 
+    def set_phone_settings_sync(self, enabled):
+        """Make the harness's own Pebble protocol sessions say the phone app
+        supports settings sync, or not. The test then answers the watch's
+        settings write-backs itself."""
+        for connection in self.connections:
+            connection.settings_sync = enabled
+        self.protocol.set_settings_sync(enabled)
+
     def wait_for_log(self, pattern, timeout=None, since=0):
         """The first log record matching ``pattern`` after mark ``since``."""
         self._connection(Capability.LOGS)
