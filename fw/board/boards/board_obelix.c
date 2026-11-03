@@ -41,7 +41,7 @@ static const struct pbl_dma_chan s_dbg_uart_rx_dma =
 
 PBL_UART_SF32LB_DMA_DEFINE(s_uart1, "uart1", 1, 1000000, &s_dbg_uart_default, &s_dbg_uart_rx_dma,
                            nullptr);
-const struct pbl_uart *const DBG_UART = &s_uart1.uart;
+const struct pbl_uart *const CONSOLE_UART = &s_uart1.uart;
 
 PBL_IRQ_CONNECT(USART1, 5, pbl_uart_sf32lb_irq_handler, &s_uart1, 0);
 PBL_IRQ_CONNECT(DMAC1_CH1, 5, pbl_dma_sf32lb52_irq_handler, &s_dbg_uart_rx_dma, 0);

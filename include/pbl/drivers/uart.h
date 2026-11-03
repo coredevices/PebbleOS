@@ -25,11 +25,11 @@
  *
  * const struct pbl_uart_config cfg = {.baudrate = 115200};
  *
- * ret = pbl_uart_configure(DBG_UART, &cfg);
- * ret = pbl_uart_rx_enable(DBG_UART, prv_rx, nullptr);
+ * ret = pbl_uart_configure(CONSOLE_UART, &cfg);
+ * ret = pbl_uart_rx_enable(CONSOLE_UART, prv_rx, nullptr);
  *
- * pbl_uart_poll_out(DBG_UART, 'A');
- * pbl_uart_flush(DBG_UART);
+ * pbl_uart_poll_out(CONSOLE_UART, 'A');
+ * pbl_uart_flush(CONSOLE_UART);
  * @endcode
  *
  * A port can also serve as an early console, before the device model is initialized:
