@@ -110,6 +110,9 @@ bool system_theme_is_system_ui(void);
 //! @return true if the current app context should render in dark mode (system apps only).
 bool system_theme_is_dark_mode(void);
 
+//! Sets the effective dark mode returned by \ref system_theme_is_dark_mode. Only for the dark
+//! mode updater, which also announces the change.
+void system_theme_set_dark_mode(bool dark_mode);
 
 //! @return The background color appropriate for the current theme (black in dark mode on color
 //!         displays, white otherwise).

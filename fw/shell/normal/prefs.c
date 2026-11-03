@@ -21,6 +21,7 @@
 #include <resource/language_pack.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/system_resource.h>
+#include <shell/normal/dark_mode_updater.h>
 #include <shell/normal/prefs_sync.h>
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
@@ -1010,9 +1011,11 @@ static bool prv_set_s_music_show_album_art(bool *enabled) {
 static bool prv_set_s_dark_mode(uint8_t *mode) {
   if (*mode >= DarkModeCount) {
     s_dark_mode = DarkModeOff;
+    dark_mode_updater_prefs_changed();
     return false;
   }
   s_dark_mode = *mode;
+  dark_mode_updater_prefs_changed();
   return true;
 }
 
@@ -1020,6 +1023,7 @@ static bool prv_set_s_dark_mode_schedule(DarkModeSchedule *schedule) {
   if (schedule->from_hour >= 24 || schedule->from_minute >= 60 || schedule->to_hour >= 24 ||
       schedule->to_minute >= 60) {
     s_dark_mode_schedule = (DarkModeSchedule)DEFAULT_DARK_MODE_SCHEDULE;
+    dark_mode_updater_prefs_changed();
     return false;
   }
   s_dark_mode_schedule = *schedule;

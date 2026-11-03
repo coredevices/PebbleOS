@@ -45,6 +45,9 @@ bool PBL_WEAK system_theme_is_dark_mode(void) {
   return false;
 }
 
+void PBL_WEAK system_theme_set_dark_mode(bool dark_mode) {
+}
+
 GColor PBL_WEAK system_theme_get_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 }

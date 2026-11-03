@@ -39,6 +39,8 @@
 // Stubs
 #include <pbl/util/testing.h>
 
+#include <stubs_dark_mode_updater.h>
+
 void prefs_sync_init(void) {
 }
 
