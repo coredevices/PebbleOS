@@ -4,6 +4,7 @@
 #include "uart_posix_bottom.h"
 
 #include <errno.h>
+#include <stdatomic.h>
 #include <stddef.h>
 
 #include <pbl/drivers/uart/posix.h>
@@ -35,7 +36,7 @@ static void prv_rx_isr(void *arg) {
 bool uart_posix_rx_enabled(enum uart_posix_channel channel) {
   const struct pbl_uart *uart = s_devices[channel];
 
-  return uart != nullptr && __atomic_load_n(&uart->state->rx_enabled, __ATOMIC_RELAXED);
+  return uart != nullptr && atomic_load_explicit(&uart->state->rx_enabled, memory_order_relaxed);
 }
 
 void uart_posix_rx(enum uart_posix_channel channel, uint8_t c) {

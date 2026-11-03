@@ -3,6 +3,8 @@
 
 #pragma once
 
-#define arch_mb()  __atomic_thread_fence(__ATOMIC_SEQ_CST)
-#define arch_rmb() __atomic_thread_fence(__ATOMIC_ACQUIRE)
-#define arch_wmb() __atomic_thread_fence(__ATOMIC_RELEASE)
+#include <stdatomic.h>
+
+#define arch_mb()  atomic_thread_fence(memory_order_seq_cst)
+#define arch_rmb() atomic_thread_fence(memory_order_acquire)
+#define arch_wmb() atomic_thread_fence(memory_order_release)

@@ -48,19 +48,19 @@ char pbl_log_get_level_char(const uint8_t log_level) {
 }
 
 void pbl_log_backend_enable(const struct pbl_log_backend *backend) {
-  __atomic_store_n(&backend->state->enabled, true, __ATOMIC_RELAXED);
+  atomic_store_explicit(&backend->state->enabled, true, memory_order_relaxed);
 }
 
 void pbl_log_backend_disable(const struct pbl_log_backend *backend) {
-  __atomic_store_n(&backend->state->enabled, false, __ATOMIC_RELAXED);
+  atomic_store_explicit(&backend->state->enabled, false, memory_order_relaxed);
 }
 
 bool pbl_log_backend_is_enabled(const struct pbl_log_backend *backend) {
-  return __atomic_load_n(&backend->state->enabled, __ATOMIC_RELAXED);
+  return atomic_load_explicit(&backend->state->enabled, memory_order_relaxed);
 }
 
 void pbl_log_backend_set_level(const struct pbl_log_backend *backend, int level) {
-  __atomic_store_n(&backend->state->level, (int16_t)level, __ATOMIC_RELAXED);
+  atomic_store_explicit(&backend->state->level, (int16_t)level, memory_order_relaxed);
 }
 
 const struct pbl_log_backend *pbl_log_backend_get_by_name(const char *name) {
@@ -83,7 +83,8 @@ void pbl_log_init(void) {
 
 void pbl_log_panic(void) {
   PRV_FOREACH_BACKEND(backend) {
-    if (backend->api->panic && __atomic_load_n(&backend->state->enabled, __ATOMIC_RELAXED)) {
+    if (backend->api->panic &&
+        atomic_load_explicit(&backend->state->enabled, memory_order_relaxed)) {
       backend->api->panic(backend);
     }
   }
@@ -92,12 +93,12 @@ void pbl_log_panic(void) {
 //! @param filtered The level was already checked against a runtime module level.
 static void prv_dispatch(const struct pbl_log_msg *msg, bool filtered) {
   PRV_FOREACH_BACKEND(backend) {
-    if (!__atomic_load_n(&backend->state->enabled, __ATOMIC_RELAXED)) {
+    if (!atomic_load_explicit(&backend->state->enabled, memory_order_relaxed)) {
       continue;
     }
 
     if (!filtered && msg->level != LOG_LEVEL_ALWAYS &&
-        msg->level > __atomic_load_n(&backend->state->level, __ATOMIC_RELAXED)) {
+        msg->level > atomic_load_explicit(&backend->state->level, memory_order_relaxed)) {
       continue;
     }
 

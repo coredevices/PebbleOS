@@ -777,7 +777,7 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   }
 
   if (font_cache->language_generation !=
-      __atomic_load_n(&g_font_language_generation, __ATOMIC_ACQUIRE)) {
+      atomic_load_explicit(&g_font_language_generation, memory_order_acquire)) {
     text_resources_reset_cache(font_cache);
   }
 
@@ -863,5 +863,6 @@ void text_resources_reset_cache(FontCache *font_cache) {
   font_cache->offset_table_id = -1;
   font_cache->cached_font = NULL;
   font_cache->language_fetched = 0;
-  font_cache->language_generation = __atomic_load_n(&g_font_language_generation, __ATOMIC_ACQUIRE);
+  font_cache->language_generation =
+      atomic_load_explicit(&g_font_language_generation, memory_order_acquire);
 }

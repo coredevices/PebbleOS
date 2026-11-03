@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -88,7 +89,7 @@ struct pbl_uart_state {
   struct pbl_uart_config cfg;
   pbl_uart_rx_callback_t rx_cb;
   void *rx_arg;
-  bool rx_enabled;
+  atomic_bool rx_enabled;
   bool early;
 };
 /** @endcond */
