@@ -38,9 +38,9 @@ static const ColorDefinition s_color_definitions[11] = {
   {"Green", GColorGreen},
   {"Cyan", GColorCyan},
   {"Light Blue", GColorVividCerulean},
-  {"Royal Blue", GColorVeryLightBlue},
+  {"Periwinkle", GColorBabyBlueEyes},
   {"Purple", GColorLavenderIndigo},
-  {"Magenta", GColorMagenta},
+  {"Magenta", GColorShockingPink},
   {"Pink", GColorBrilliantRose},
 };
 static const char *color_names[ARRAY_LENGTH(s_color_definitions)];
