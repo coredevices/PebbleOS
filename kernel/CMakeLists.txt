@@ -20,6 +20,7 @@ pbl_library_sources(
   thread.c
   tick.c
   time.c
+  timekeeping.c
   timer.c
 )
 # The heap poisons what it hands out but walks its own memory freely.

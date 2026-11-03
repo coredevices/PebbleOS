@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/sf32lb52/rc10k.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/regular_timer.h>
@@ -46,17 +45,5 @@ uint64_t rc10k_get_freq_mhz(void) {
     return RC10K_DEFAULT_FREQ_HZ * 1000ULL;
   } else {
     return (48000000000ULL * HAL_RC_CAL_GetLPCycle()) / hxt48_cyc;
-  }
-}
-
-uint32_t rc10k_cyc_to_milli_ticks(uint32_t rc10k_cyc) {
-  uint32_t hxt48_cyc;
-
-  hxt48_cyc = HAL_RC_CAL_get_average_cycle_on_48M();
-  if (hxt48_cyc == 0UL) {
-    return (1000ULL * RTC_TICKS_HZ * rc10k_cyc) / RC10K_DEFAULT_FREQ_HZ;
-  } else {
-    return (1000ULL * RTC_TICKS_HZ * rc10k_cyc * hxt48_cyc) /
-           (48000000ULL * HAL_RC_CAL_GetLPCycle());
   }
 }

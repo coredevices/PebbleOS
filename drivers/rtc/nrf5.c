@@ -1,130 +1,57 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <inttypes.h>
-
 #include <pbl/drivers/rtc.h>
-#include <pbl/kernel/assert.h>
-#include <pbl/kernel/irq.h>
-#include <pbl/kernel/types.h>
-#include <pbl/logging/logging.h>
-#include <pbl/mcu/interrupts.h>
-#include <pbl/services/regular_timer.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/time.h>
 
 #include <board/board.h>
-#include <hal/nrf_rtc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_rtc_nrf5, CONFIG_DRIVER_RTC_LOG_LEVEL);
-
-//! The type of a raw reading from the RTC (masked to 0xFFFFFF).
-typedef uint32_t RtcIntervalTicks;
-
-//! How frequently we save the time state to the backup registers in ticks.
+//! How frequently we save the time state to the retained registers, in ticks.
 #define SAVE_TIME_FREQUENCY (30 * RTC_TICKS_HZ)
-static RtcIntervalTicks prv_get_last_save_time_ticks(void);
-static void prv_save_rtc_time_state(RtcIntervalTicks current_rtc_ticks);
-
-#define TICKS_IN_AN_INTERVAL (RTC_COUNTER_COUNTER_Msk + 1)
-
-static RtcIntervalTicks prv_elapsed_ticks(RtcIntervalTicks before, RtcIntervalTicks after) {
-  int32_t result = after - before;
-  if (result < 0) {
-    result = (TICKS_IN_AN_INTERVAL - before) + after;
-  }
-  return result;
-}
-
-static RtcIntervalTicks prv_get_rtc_interval_ticks(void) {
-  return nrf_rtc_counter_get(BOARD_RTC_INST);
-}
 
 /***
- * Logic associated with keeping raw coarse / fine RTC ticks -- the
- * monotonic RtcTicks counter.
+ * The RTC counter is reset with the rest of the chip, so the tick count is the kernel uptime and
+ * the wall clock time restarts from the last time saved to retained RAM.
  */
-
-//! The value of the RTC registers last time we checked them.
-static uint32_t s_last_ticks = 0;
-//! This value is added to the current value of the RTC ticks to get the number
-//! of ticks since system start. Incremented whenever we detect a rollover.
-static RtcTicks s_coarse_ticks = 1;
 
 static bool s_did_init_rtc = false;
 
-//! did we boot with a full reset that brought RTC ticks to 0?
-static bool s_had_amnesia_on_boot = false;
+//! UNIX timestamp of the wall clock time at tick s_time_tick_base.
+static time_t s_time_base = 0;
+//! Tick at which the wall clock time was s_time_base.
+static RtcTicks s_time_tick_base = 0;
+//! Tick at which the time state was last saved.
+static RtcTicks s_last_save_ticks = 0;
 
-static void prv_check_and_handle_rollover(RtcIntervalTicks rtc_ticks) {
-  bool save_needed = false;
+static time_t prv_ticks_to_time(RtcTicks ticks) {
+  return s_time_base + (time_t)((ticks - s_time_tick_base) / RTC_TICKS_HZ);
+}
 
-  const RtcIntervalTicks last_ticks = s_last_ticks;
-  s_last_ticks = rtc_ticks;
-
-  if (rtc_ticks < last_ticks) {
-    // We've wrapped.  Add on the RTC wrap length to the base number.  On
-    // nRF5, this is 0xFFFFFF; that's only 4.5 hours (at 1.024 kHz),
-    // compared to STM32's available SECONDS_IN_A_DAY.  Sucks for us; oh
-    // well.
-
-    s_coarse_ticks += TICKS_IN_AN_INTERVAL;
-
-    save_needed = true;
-  } else if (prv_elapsed_ticks(prv_get_last_save_time_ticks(), rtc_ticks) > SAVE_TIME_FREQUENCY) {
-    // If we didn't do this, we would have an edge case where if the watch reset
-    // immediately before rollover and then rolled over before we booted again,
-    // we wouldn't be able to detect the rollover and we'd think the saved state
-    // is very fresh, when really it's over an interval old. By saving multiple
-    // times an interval this is still possible to happen, but it's much less likely.
-    // We would need to be shutdown for (RTC_COUNTER_COUNTER_Msk - SAVE_TIME_FREQUENCY) ticks
-    // for this to happen.
-    save_needed = true;
+static void prv_save_rtc_time_state(RtcTicks ticks) {
+  if (!s_did_init_rtc) {
+    return;
   }
 
-  if (save_needed) {
-    prv_save_rtc_time_state(rtc_ticks);
-  }
+  retained_write(CURRENT_TIME_REGISTER, prv_ticks_to_time(ticks));
+  s_last_save_ticks = ticks;
 }
 
 RtcTicks rtc_get_ticks(void) {
-  // Prevent this from being interrupted
-  bool ints_enabled = mcu_state_are_interrupts_enabled();
-  if (ints_enabled) {
-    __disable_irq();
+  RtcTicks ticks = pbl_uptime_ticks();
+
+  if (ticks - s_last_save_ticks > SAVE_TIME_FREQUENCY) {
+    prv_save_rtc_time_state(ticks);
   }
 
-  RtcTicks rtc_interval_ticks = prv_get_rtc_interval_ticks();
-  prv_check_and_handle_rollover(rtc_interval_ticks);
-
-  if (ints_enabled) {
-    __enable_irq();
-  }
-
-  return s_coarse_ticks + rtc_interval_ticks;
-}
-
-/***
- * Logic associated with converting extended RTC ticks to wall clock time.
- */
-
-//! This variable is a UNIX timestamp of what the current wall clock time was at tick
-//! s_time_tick_base.
-static time_t s_time_base = 0;
-//! This variable is the tick where the wall clock time was equal to s_time_base. If you subtract
-//! this variable from the current tick count, you'll get the number of ticks that have elapsed
-//! since s_time_base, which will allow you to calculate the current wall clock time. Note that this
-//! value may be negative on startup, see prv_restore_rtc_time_state
-static int64_t s_time_tick_base = 0;
-
-static time_t prv_ticks_to_time(RtcTicks ticks) {
-  return s_time_base + ((ticks - s_time_tick_base) / RTC_TICKS_HZ);
+  return ticks;
 }
 
 void rtc_set_time(time_t time) {
   s_time_base = time;
-  s_time_tick_base = rtc_get_ticks();
+  s_time_tick_base = pbl_uptime_ticks();
 
-  prv_save_rtc_time_state(s_time_tick_base - s_coarse_ticks);
+  prv_save_rtc_time_state(s_time_tick_base);
 }
 
 time_t rtc_get_time(void) {
@@ -132,59 +59,10 @@ time_t rtc_get_time(void) {
 }
 
 void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
-  RtcTicks ticks = rtc_get_ticks();
+  RtcTicks ticks_since_time_base = rtc_get_ticks() - s_time_tick_base;
 
-  RtcTicks ticks_since_time_base = (ticks - s_time_tick_base);
-  *out_seconds = s_time_base + (ticks_since_time_base / RTC_TICKS_HZ);
-
-  RtcTicks ticks_this_second = ticks_since_time_base % RTC_TICKS_HZ;
-  *out_ms = (ticks_this_second * 1000) / RTC_TICKS_HZ;
-}
-
-/***
- * Logic associated with saving the RTC-tick-to-wallclock conversion factor
- * to retained-RAM.
- */
-
-static void prv_restore_rtc_time_state(void) {
-  // Recover the previously set time from the RTC backup registers.
-  RtcIntervalTicks last_save_time_ticks = retained_read(CURRENT_INTERVAL_TICKS_REGISTER);
-  time_t last_save_time = retained_read(CURRENT_TIME_REGISTER);
-
-  if (s_had_amnesia_on_boot) {
-    /* We have no idea what time it might be.  The closest we got is the
-     * last time we saved.  */
-    s_time_base = last_save_time;
-    s_time_tick_base = 0;
-  } else {
-    RtcIntervalTicks current_ticks = prv_get_rtc_interval_ticks();
-    const int32_t ticks_since_last_save =
-        prv_elapsed_ticks(last_save_time_ticks * RTC_TICKS_HZ, current_ticks);
-    s_time_base = last_save_time + (ticks_since_last_save / RTC_TICKS_HZ);
-    s_time_tick_base = -(((int64_t)current_ticks) % RTC_TICKS_HZ);
-  }
-}
-
-static RtcIntervalTicks prv_get_last_save_time_ticks(void) {
-  return retained_read(CURRENT_INTERVAL_TICKS_REGISTER);
-}
-
-static void prv_save_rtc_time_state_exact(RtcIntervalTicks current_rtc_ticks, time_t time) {
-  retained_write(CURRENT_TIME_REGISTER, time);
-  retained_write(CURRENT_INTERVAL_TICKS_REGISTER, current_rtc_ticks);
-}
-
-static void prv_save_rtc_time_state(RtcIntervalTicks current_rtc_ticks) {
-  if (!s_did_init_rtc) {
-    return;
-  }
-
-  // Floor it to the latest second
-  const RtcIntervalTicks current_rtc_ticks_at_second =
-      (current_rtc_ticks / RTC_TICKS_HZ) * RTC_TICKS_HZ;
-
-  prv_save_rtc_time_state_exact(current_rtc_ticks_at_second,
-                                prv_ticks_to_time(s_coarse_ticks + current_rtc_ticks));
+  *out_seconds = s_time_base + (time_t)(ticks_since_time_base / RTC_TICKS_HZ);
+  *out_ms = (uint16_t)(((ticks_since_time_base % RTC_TICKS_HZ) * 1000) / RTC_TICKS_HZ);
 }
 
 /*** Logic that ought be refactored into rtc_common, were it not stm32-only. ***/
@@ -284,142 +162,28 @@ void rtc_calibrate_frequency(uint32_t frequency) {
 }
 
 void rtc_init(void) {
-  /* May have been initialized out of sequence by FreeRTOS startup -- if so,
-   * no worries.  */
   if (s_did_init_rtc) {
     return;
   }
 
-#ifndef NRF_RTC_FREQ_TO_PRESCALER
-#define NRF_RTC_FREQ_TO_PRESCALER RTC_FREQ_TO_PRESCALER
-#endif
-  if (prv_get_rtc_interval_ticks() == 0) {
-    s_had_amnesia_on_boot = true;
-    PBL_LOG_INFO("RTC appears to have been reset :( hope you have your phone connected");
-  }
-
-  nrf_rtc_prescaler_set(BOARD_RTC_INST, NRF_RTC_FREQ_TO_PRESCALER(RTC_TICKS_HZ));
-
-  nrf_rtc_task_trigger(BOARD_RTC_INST, NRF_RTC_TASK_START);
-
-  prv_restore_rtc_time_state();
+  s_time_base = retained_read(CURRENT_TIME_REGISTER);
+  s_time_tick_base = pbl_uptime_ticks();
   s_did_init_rtc = true;
-
-  pbl_irq_enable(BOARD_RTC_IRQN);
-
-#if TEST_RTC_FREQ
-  // FIXME: can be removed after FIRM-121 is fixed
-  extern void board_early_init();
-  board_early_init();
-  for (int i = 0; i < 100; i++) {
-    uint32_t ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST);
-    while (nrf_rtc_counter_get(BOARD_RTC_INST) == ctr0)
-      ;
-    ctr0 = nrf_rtc_counter_get(BOARD_RTC_INST) + 100;
-    uint32_t iters = 0;
-    while (nrf_rtc_counter_get(BOARD_RTC_INST) != ctr0)
-      iters++;
-    PBL_LOG_INFO("RTC: 100 RTC ticks took %" PRIu32 " iters", iters);
-  }
-#endif
-}
-
-void rtc_enable_synthetic_systick(void) {
-  // Now that the RTC is awake, we can switch from SysTick to RTC interrupt
-  // ticks.  We need to do this so that we actually get ticks in wfi, since
-  // nRF5 stops SysTick in sleep.
-  static_assert(RTC_TICKS_HZ == PBL_TICK_HZ);
-  if (!s_did_init_rtc) {
-    rtc_init();
-  }
-
-  nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
-  nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_TICK_MASK);
-}
-
-void rtc_systick_pause(void) {
-  // We don't want the fine-grained interrupts at 100Hz when we're in stop
-  // mode -- we have a timer set for that, after all.
-  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
-  nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_TICK_MASK);
-}
-
-void rtc_systick_resume(void) {
-  nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
-  nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
-  nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_TICK_MASK);
-}
-
-//! Our RTC tick counter can overflow if nobody asks about it.  This
-//! repeating callback allows us to make sure this doesn't happen.
-static void prv_rtc_resync_timer_callback(void *data) {
-  rtc_get_ticks();
 }
 
 void rtc_init_timers(void) {
-  static RegularTimerInfo rtc_sync_timer = {
-    .list_node = {0, 0},
-    .cb = prv_rtc_resync_timer_callback
-  };
-  regular_timer_add_minutes_callback(&rtc_sync_timer);
 }
 
-/*** Logic to control RTC wakeup timer. ***/
-
-static RtcTicks s_alarm_set_time = 0;
-static RtcTicks s_alarm_expiry_time = 0;
-static bool s_tick_alarm_initialized = false;
-
 void rtc_alarm_init(void) {
-  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
-  s_tick_alarm_initialized = true;
 }
 
 void rtc_alarm_set(RtcTicks num_ticks) {
-  PBL_ASSERTN(s_tick_alarm_initialized);
-
-  nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-
-  s_alarm_set_time = rtc_get_ticks();
-  s_alarm_expiry_time = s_alarm_set_time + num_ticks - 1;
-
-  /* We're bounded by the regular_timer_add_minutes_callback for the
-   * rtc_alarm_set, so we're not going to wrap around more than once -- one
-   * minute is always less than 4.5 hours.
-   */
-  nrf_rtc_cc_set(BOARD_RTC_INST, 0, s_alarm_expiry_time & RTC_COUNTER_COUNTER_Msk);
-
-  nrf_rtc_event_enable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-  nrf_rtc_int_enable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
 }
 
 RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return rtc_get_ticks() - s_alarm_set_time;
+  return 0;
 }
 
 bool rtc_alarm_is_initialized(void) {
-  return s_tick_alarm_initialized;
-}
-
-//! Handler for the RTC alarm interrupt.  We don't actually have to do
-//! anything in that handler, just the interrupt firing is enough to bring
-//! us out of stop mode.  But once we switch into RTC-provided-systick mode,
-//! we *do* need to call into systick!
-void rtc_irq_handler(void) {
-  if (nrf_rtc_event_check(BOARD_RTC_INST, NRF_RTC_EVENT_TICK)) {
-    extern void SysTick_Handler();
-
-    nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_TICK);
-    SysTick_Handler();
-  }
-
-  if (nrf_rtc_event_check(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0)) {
-    nrf_rtc_event_disable(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-    nrf_rtc_event_clear(BOARD_RTC_INST, NRF_RTC_EVENT_COMPARE_0);
-    nrf_rtc_int_disable(BOARD_RTC_INST, NRF_RTC_INT_COMPARE0_MASK);
-  }
-
-  pbl_irq_clear_pending(BOARD_RTC_IRQN);
+  return true;
 }

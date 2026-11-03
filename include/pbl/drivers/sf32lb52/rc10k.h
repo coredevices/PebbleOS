@@ -33,12 +33,4 @@ uint32_t rc10k_get_freq_hz(void);
  */
 uint64_t rc10k_get_freq_mhz(void);
 
-/**
- * @brief Convert RC10K cycles to RTC milli-ticks.
- *
- * @param rc10k_cyc Number of RC10K cycles.
- * @return Duration in thousandths of an RTC tick.
- */
-uint32_t rc10k_cyc_to_milli_ticks(uint32_t rc10k_cyc);
-
 /** @} */

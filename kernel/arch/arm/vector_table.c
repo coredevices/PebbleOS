@@ -26,7 +26,7 @@ PBL_WEAK PBL_ALIAS("arch_irq_spurious") void UsageFault_Handler(void);
 PBL_WEAK PBL_ALIAS("arch_irq_spurious") void DebugMon_Handler(void);
 void SVC_Handler(void);
 void PendSV_Handler(void);
-void SysTick_Handler(void);
+PBL_WEAK PBL_ALIAS("arch_irq_spurious") void SysTick_Handler(void);
 
 #define ARCH_VECTOR_DECLARE(n) PBL_WEAK PBL_ALIAS("arch_irq_spurious") void pbl_isr_##n(void);
 PBL_LISTIFY(CONFIG_NUM_IRQS, ARCH_VECTOR_DECLARE)

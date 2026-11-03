@@ -355,10 +355,13 @@ pbl_clar_test(test_app_fetch_endpoint
 pbl_clar_test(test_accel_manager
   SOURCES
     drivers/base/device.c
+    drivers/timer/timer.c
     drivers/imu/accel.c
     fw/services/accel_manager/service.c
     tests/fakes/fake_events.c
   DEFINES
+    PBL_NO_LINKER_SCRIPT
+    CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES=25
     CONFIG_DEVICE_LOG_LEVEL=0
     PBL_NO_LINKER_SCRIPT
@@ -474,11 +477,16 @@ pbl_clar_test(test_system_task
     kernel/debug.c
     kernel/arch/posix/arch.c
     kernel/arch/posix/test.c
+    kernel/timekeeping.c
+    drivers/base/device.c
+    drivers/timer/timer.c
   INCLUDES
     kernel
     kernel/arch
     kernel/arch/posix/include
   DEFINES
+    PBL_NO_LINKER_SCRIPT
+    CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_KERNEL_IDLE_STACK_SIZE=1024
     CONFIG_TASK_WDT_TIMEOUT_MS=5000
     CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL=0
