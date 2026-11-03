@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <time.h>
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/types.h>
@@ -11,12 +12,14 @@
 #include <pbl_arch_cycle.h>
 
 /**
- * @defgroup kernel_time Uptime and cycles
+ * @defgroup kernel_time Uptime, wall clock and cycles
  * @ingroup kernel
- * @brief Monotonic time since the scheduler started, and the CPU cycle counter.
+ * @brief Monotonic time since the scheduler started, the wall clock, and the CPU cycle counter.
  *
  * Uptime counts kernel ticks, including those spent in tickless sleep, in 64 bits so it never
- * wraps. The cycle counter is for short, precise measurements: it is 32 bits wide, its rate
+ * wraps. The wall clock is UTC time, kept as an offset from the uptime: it follows the same
+ * clock source and jumps only when set. Persisting it across resets is up to the caller, through
+ * an RTC device. The cycle counter is for short, precise measurements: it is 32 bits wide, its rate
  * follows the CPU clock and it may stop while the CPU sleeps.
  *
  * @code{.c}
@@ -44,6 +47,29 @@ uint64_t pbl_uptime_ticks(void);
  * @return Milliseconds elapsed, with tick resolution.
  */
 uint64_t pbl_uptime_ms(void);
+
+/**
+ * @brief Get the wall clock time.
+ *
+ * @return UTC time in seconds since the epoch.
+ */
+time_t pbl_realtime(void);
+
+/**
+ * @brief Get the wall clock time, in milliseconds.
+ *
+ * @return UTC time in milliseconds since the epoch.
+ */
+uint64_t pbl_realtime_ms(void);
+
+/**
+ * @brief Set the wall clock time.
+ *
+ * Callable before the scheduler starts.
+ *
+ * @param t UTC time in seconds since the epoch.
+ */
+void pbl_realtime_set(time_t t);
 
 /**
  * @brief Read the CPU cycle counter.

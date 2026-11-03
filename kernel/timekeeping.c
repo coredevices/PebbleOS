@@ -25,6 +25,9 @@ static uint32_t s_cs_frac;
 
 static uint64_t s_residency_us[PBL_IDLE_STATES_MAX];
 
+// Wall clock time minus uptime, in microseconds.
+static int64_t s_realtime_offset_us;
+
 // Brings the clock source time up to date.
 static void prv_update(void) {
   uint32_t raw = s_cs->ops->read(s_cs);
@@ -40,6 +43,15 @@ static uint64_t prv_now_us(void) {
   prv_update();
 
   return (s_cs_ticks * 1000000U + (((uint64_t)s_cs_frac * 1000000U) >> FRAC_BITS)) / PBL_TICK_HZ;
+}
+
+// Uptime in microseconds, also before the clock source runs.
+static uint64_t prv_uptime_us(void) {
+  if (!s_running) {
+    return (sched_uptime_ticks() * 1000000U) / PBL_TICK_HZ;
+  }
+
+  return prv_now_us();
 }
 
 static void prv_announce(void) {
@@ -191,6 +203,26 @@ void timekeeping_idle(pbl_tick_t ticks) {
   s_residency_us[i] += prv_now_us() - start_us;
   prv_announce();
   prv_program(sched_uptime_ticks() + 1U);
+  pbl_irq_unlock();
+}
+
+uint64_t pbl_realtime_ms(void) {
+  int64_t us;
+
+  pbl_irq_lock();
+  us = (int64_t)prv_uptime_us() + s_realtime_offset_us;
+  pbl_irq_unlock();
+
+  return (us > 0) ? (uint64_t)us / 1000U : 0U;
+}
+
+time_t pbl_realtime(void) {
+  return (time_t)(pbl_realtime_ms() / 1000U);
+}
+
+void pbl_realtime_set(time_t t) {
+  pbl_irq_lock();
+  s_realtime_offset_us = (int64_t)t * 1000000 - (int64_t)prv_uptime_us();
   pbl_irq_unlock();
 }
 
