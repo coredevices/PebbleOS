@@ -7,8 +7,6 @@
 
 #include <pbl/bluetooth/responsiveness.h>
 
-struct Remote;
-
 typedef struct GAPLEConnection GAPLEConnection;
 
 #define BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS (2)
@@ -50,31 +48,6 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_c
 void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
                                          enum pbl_bt_response_time_state state,
                                          uint16_t max_period_secs);
-
-//! Informs the BT manager module that we want to run the provided classic
-//! connection at the requested rate.
-//!
-//! Note: This currently supports two modes. PBL_BT_RESPONSE_TIME_MAX maps to BT classic sniff mode
-//!       and anything faster maps to BT classic active mode
-//!
-//! @param[in] remote          The BT Classic connection requesting the rate change
-//! @param[in] consumer        The consumer requesting the rate change
-//! @param[in] state           Choose between the latency levels in enum pbl_bt_response_time_state.
-//!                            The lower the latency, the more power being consumed
-//! @param[in] max_period_secs The maximum amount of time to expect being out of sniff mode
-//! @param[in] granted_handler The function to call back to when a state has been entered that is
-//!                            *as least* as responsive as the requested state.
-//!                            It will be executed on KernelMain.
-//!                            It is guaranteed to be called exactly once per call to this function.
-void conn_mgr_set_bt_classic_conn_response_time_ext(
-    struct Remote *remote, enum pbl_bt_consumer consumer, enum pbl_bt_response_time_state state,
-    uint16_t max_period_secs, pbl_bt_responsiveness_granted_cb_t granted_handler);
-
-//! Same as conn_mgr_set_bt_classic_conn_response_time_ext, but without granted_handler.s
-void conn_mgr_set_bt_classic_conn_response_time(struct Remote *remote,
-                                                enum pbl_bt_consumer consumer,
-                                                enum pbl_bt_response_time_state state,
-                                                uint16_t max_period_secs);
 
 //! @param[in] connection The connection for which to get the lowest requested latency.
 //! @param[out] secs_to_wait The longest amount of time that interval has been requested.
