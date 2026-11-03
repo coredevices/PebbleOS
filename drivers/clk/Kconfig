@@ -13,3 +13,18 @@ config CLK_SF32LB
     select CLK
     help
       Clock controller of the SiFli SF32LB52 HPSYS RCC.
+
+config CLK_CAL
+    bool
+    select CLK
+    help
+      Calibrated clocks (pbl/drivers/clk/cal.h), selected by the drivers
+      of oscillators whose rate is measured against a reference.
+
+if CLK_CAL
+
+module = CLK_CAL
+module-str = Calibrated clocks
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # CLK_CAL
