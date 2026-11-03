@@ -129,7 +129,7 @@ static bool prv_each_inspect_ids(struct pbl_settings_file *file, struct pbl_sett
   struct AppDBInitData *data = context;
 
   AppInstallId app_id;
-  info->get_key(file, (uint8_t *)&app_id, sizeof(AppInstallId));
+  pbl_settings_read_key(file, (uint8_t *)&app_id, sizeof(AppInstallId));
 
   data->max_id = MAX(data->max_id, app_id);
   data->num_apps++;
@@ -156,8 +156,8 @@ static bool prv_db_filter_app_id(struct pbl_settings_file *file, struct pbl_sett
 
   AppInstallId app_id;
   AppDBEntry entry = {0};
-  info->get_key(file, (uint8_t *)&app_id, info->key_len);
-  info->get_val(file, (uint8_t *)&entry, APP_DB_LEGACY_ENTRY_SIZE);
+  pbl_settings_read_key(file, (uint8_t *)&app_id, info->key_len);
+  pbl_settings_read_val(file, (uint8_t *)&entry, APP_DB_LEGACY_ENTRY_SIZE);
 
   if (uuid_equal(&uuid_data->uuid, &entry.uuid)) {
     uuid_data->found_id = app_id;
@@ -265,10 +265,10 @@ static bool prv_enumerate_entries(struct pbl_settings_file *file, struct pbl_set
   EnumerateData *cb_data = (EnumerateData *)context;
 
   AppInstallId id;
-  info->get_key(file, (uint8_t *)&id, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&id, info->key_len);
   // The permissions record can't be read while iterating; callers don't need it
   memset(cb_data->entry_buf, 0, sizeof(*cb_data->entry_buf));
-  info->get_val(file, (uint8_t *)cb_data->entry_buf, APP_DB_LEGACY_ENTRY_SIZE);
+  pbl_settings_read_val(file, (uint8_t *)cb_data->entry_buf, APP_DB_LEGACY_ENTRY_SIZE);
 
   // check return value
   cb_data->cb(id, cb_data->entry_buf, cb_data->data);

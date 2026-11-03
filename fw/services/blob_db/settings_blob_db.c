@@ -547,7 +547,7 @@ static bool prv_build_dirty_list_callback(struct pbl_settings_file *file,
 
   // Read the key to check whitelist
   uint8_t key_buf[PBL_SETTINGS_KEY_MAX_LEN];
-  info->get_key(file, key_buf, info->key_len);
+  pbl_settings_read_key(file, key_buf, info->key_len);
 
   // Only include whitelisted settings
   if (!prv_is_syncable(key_buf, info->key_len)) {
@@ -649,7 +649,7 @@ static bool prv_is_dirty_callback(struct pbl_settings_file *file, struct pbl_set
 
   // Check if whitelisted
   uint8_t key_buf[PBL_SETTINGS_KEY_MAX_LEN];
-  info->get_key(file, key_buf, info->key_len);
+  pbl_settings_read_key(file, key_buf, info->key_len);
 
   if (prv_is_syncable(key_buf, info->key_len)) {
     ctx->found_dirty = true;
@@ -758,7 +758,7 @@ static bool prv_get_timestamp_callback(struct pbl_settings_file *file,
   }
 
   uint8_t key_buf[PBL_SETTINGS_KEY_MAX_LEN];
-  info->get_key(file, key_buf, info->key_len);
+  pbl_settings_read_key(file, key_buf, info->key_len);
 
   if (memcmp(key_buf, ctx->search_key, info->key_len) == 0) {
     ctx->last_modified = (time_t)info->last_modified;

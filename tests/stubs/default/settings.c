@@ -43,3 +43,9 @@ PBL_WEAK status_t pbl_settings_compact(struct pbl_settings_file *file) {
 
 PBL_WEAK void pbl_settings_close(struct pbl_settings_file *file) {
 }
+
+PBL_WEAK void pbl_settings_read_key(struct pbl_settings_file *file, void *buf, size_t buf_len) {
+}
+
+PBL_WEAK void pbl_settings_read_val(struct pbl_settings_file *file, void *buf, size_t buf_len) {
+}

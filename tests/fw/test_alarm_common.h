@@ -110,17 +110,6 @@ typedef struct {
 } FakePinRecord;
 
 static FakePinRecord s_fake_pin_records[4];
-static FakePinRecord *s_current_fake_pin_record;
-
-static void prv_fake_pin_get_key(struct pbl_settings_file *file, void *buf, size_t len) {
-  (void)file;
-  memcpy(buf, &s_current_fake_pin_record->id, len);
-}
-
-static void prv_fake_pin_get_val(struct pbl_settings_file *file, void *buf, size_t len) {
-  (void)file;
-  memcpy(buf, &s_current_fake_pin_record->header, len);
-}
 
 static inline void prv_fake_pin_record_add(Uuid id, Uuid parent, time_t timestamp,
                                            LayoutId layout) {
@@ -201,22 +190,18 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
 }
 
 status_t pin_db_each(TimelineItemStorageEachCallback each, void *data) {
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/fakepins", 4096));
   for (size_t i = 0; i < ARRAY_LENGTH(s_fake_pin_records); ++i) {
-    if (!s_fake_pin_records[i].exists) {
-      continue;
-    }
-    s_current_fake_pin_record = &s_fake_pin_records[i];
-    struct pbl_settings_record info = {
-      .get_key = prv_fake_pin_get_key,
-      .key_len = UUID_SIZE,
-      .get_val = prv_fake_pin_get_val,
-      .val_len = sizeof(SerializedTimelineItemHeader),
-    };
-    if (!each(nullptr, &info, data)) {
-      break;
+    if (s_fake_pin_records[i].exists) {
+      cl_must_pass(pbl_settings_set(&file, &s_fake_pin_records[i].id, UUID_SIZE,
+                                    &s_fake_pin_records[i].header,
+                                    sizeof(SerializedTimelineItemHeader)));
     }
   }
-  s_current_fake_pin_record = nullptr;
+  pbl_settings_each(&file, each, data);
+  pbl_settings_close(&file);
+  cl_must_pass(pbl_fs_unlink("/fakepins"));
   return S_SUCCESS;
 }
 

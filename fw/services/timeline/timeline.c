@@ -288,7 +288,7 @@ static bool prv_each(struct pbl_settings_file *file, struct pbl_settings_record 
 
   CommonTimelineItemHeader header;
   // we don't care about the attributes here, so we don't allocate space for them
-  info->get_val(file, (uint8_t *)&header, sizeof(CommonTimelineItemHeader));
+  pbl_settings_read_val(file, (uint8_t *)&header, sizeof(CommonTimelineItemHeader));
   // Flags & Status are stored inverted.
   header.flags = ~header.flags;
   header.status = ~header.status;

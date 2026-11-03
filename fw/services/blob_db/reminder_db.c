@@ -98,7 +98,7 @@ static bool prv_timestamp_title_compare_func(struct pbl_settings_file *file,
   // Compare timestamps (this should omit most reminders)
   ReminderInfo *reminder_info = (ReminderInfo *)context;
   SerializedTimelineItemHeader header;
-  info->get_val(file, (uint8_t *)&header, sizeof(SerializedTimelineItemHeader));
+  pbl_settings_read_val(file, (uint8_t *)&header, sizeof(SerializedTimelineItemHeader));
   if (reminder_info->timestamp != header.common.timestamp) {
     return true; // continue iteration
   }

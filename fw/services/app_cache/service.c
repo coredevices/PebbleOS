@@ -249,8 +249,8 @@ static bool prv_each_free_up_space(struct pbl_settings_file *file, struct pbl_se
   AppInstallId id;
   AppCacheEntry entry;
 
-  info->get_key(file, (uint8_t *)&id, info->key_len);
-  info->get_val(file, (uint8_t *)&entry, info->val_len);
+  pbl_settings_read_key(file, (uint8_t *)&id, info->key_len);
+  pbl_settings_read_val(file, (uint8_t *)&entry, info->val_len);
 
   if (prv_is_in_list(id, data->never_evict, NEVER_EVICT_LIST_SIZE)) {
     return true; // continue iterating
@@ -392,7 +392,7 @@ static bool prv_remove_matching_resource_file_callback(struct pbl_settings_file 
                                                        void *context) {
   AppInstallId id;
   // examine the struct pbl_settings_record and extract the AppInstallId from it
-  info->get_key(file, (uint8_t *)&id, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&id, info->key_len);
   // the context passed in is really a pointer to the resource_list
   FileListEntry **resource_list = context;
   FileListEntry *iter = *resource_list;
@@ -590,7 +590,7 @@ static bool prv_each_get_size(struct pbl_settings_file *file, struct pbl_setting
 
   uint32_t *cache_size = (uint32_t *)context;
   AppCacheEntry entry;
-  info->get_val(file, (uint8_t *)&entry, info->val_len);
+  pbl_settings_read_val(file, (uint8_t *)&entry, info->val_len);
   *cache_size += entry.total_size;
 
   return true; // continue iterating
@@ -632,8 +632,8 @@ static bool prv_each_min_priority(struct pbl_settings_file *file, struct pbl_set
   AppInstallId id;
   AppCacheEntry entry;
 
-  info->get_key(file, (uint8_t *)&id, info->key_len);
-  info->get_val(file, (uint8_t *)&entry, info->val_len);
+  pbl_settings_read_key(file, (uint8_t *)&id, info->key_len);
+  pbl_settings_read_val(file, (uint8_t *)&entry, info->val_len);
 
   uint32_t entry_priority = prv_calculate_priority(&entry);
   if (entry_priority < to_evict->priority) {

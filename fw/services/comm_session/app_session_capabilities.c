@@ -74,8 +74,8 @@ static void prv_rewrite_cb(struct pbl_settings_file *old_file, struct pbl_settin
   }
   Uuid key;
   uint64_t val;
-  info->get_key(old_file, &key, sizeof(key));
-  info->get_val(old_file, &val, sizeof(val));
+  pbl_settings_read_key(old_file, &key, sizeof(key));
+  pbl_settings_read_val(old_file, &val, sizeof(val));
   pbl_settings_set(new_file, &key, sizeof(key), &val, sizeof(val));
 }
 

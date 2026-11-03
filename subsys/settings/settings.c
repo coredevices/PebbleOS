@@ -628,13 +628,13 @@ static void prv_mark_all_dirty_rewrite_cb(struct pbl_settings_file *old_file,
                                           struct pbl_settings_record *info, void *context) {
   // Read key and value from old file
   uint8_t key[PBL_SETTINGS_KEY_MAX_LEN];
-  info->get_key(old_file, key, info->key_len);
+  pbl_settings_read_key(old_file, key, info->key_len);
 
   uint8_t *val = pbl_malloc(info->val_len);
   if (!val) {
     return; // Skip this record on OOM
   }
-  info->get_val(old_file, val, info->val_len);
+  pbl_settings_read_val(old_file, val, info->val_len);
 
   // Write to new file with original timestamp - records are dirty by default (no SYNCED flag)
   // Preserving the timestamp ensures sync conflict resolution works correctly
@@ -651,12 +651,12 @@ status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, si
   return pbl_settings_set(file, key, key_len, nullptr, 0);
 }
 
-static void prv_get_key(struct pbl_settings_file *file, void *key, size_t key_len) {
+void pbl_settings_read_key(struct pbl_settings_file *file, void *key, size_t key_len) {
   PBL_ASSERTN(key_len <= file->iter.hdr.key_len);
   pbl_settings__raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
   pbl_settings__raw_iter_read_key(&file->iter, key);
 }
-static void prv_get_val(struct pbl_settings_file *file, void *val, size_t val_len) {
+void pbl_settings_read_val(struct pbl_settings_file *file, void *val, size_t val_len) {
   PBL_ASSERTN(val_len <= file->iter.hdr.val_len);
   pbl_settings__raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
   pbl_settings__raw_iter_read_val(&file->iter, val, val_len);
@@ -672,9 +672,7 @@ void pbl_settings_each(struct pbl_settings_file *file, pbl_settings_each_cb_t cb
     }
     info = (struct pbl_settings_record){
       .last_modified = file->iter.hdr.last_modified,
-      .get_key = prv_get_key,
       .key_len = file->iter.hdr.key_len,
-      .get_val = prv_get_val,
       .val_len = file->iter.hdr.val_len,
       .dirty = !flag_is_set(&file->iter.hdr, SETTINGS_FLAG_SYNCED),
     };
