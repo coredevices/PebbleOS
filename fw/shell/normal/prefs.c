@@ -943,9 +943,9 @@ static bool prv_is_valid_theme_color(GColor color) {
     GColorGreenARGB8,          // Green
     GColorCyanARGB8,           // Cyan
     GColorVividCeruleanARGB8,  // Light Blue
-    GColorVeryLightBlueARGB8,  // Royal Blue
+    GColorBabyBlueEyesARGB8,   // Periwinkle
     GColorLavenderIndigoARGB8, // Purple
-    GColorMagentaARGB8,        // Magenta
+    GColorShockingPinkARGB8,   // Magenta
     GColorBrilliantRoseARGB8,  // Pink
   };
   for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
