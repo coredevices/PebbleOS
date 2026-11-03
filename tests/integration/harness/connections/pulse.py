@@ -144,5 +144,7 @@ class PulseConnection(Connection):
                 self._relink(10)
             from libpebble2.communication.transports.pulse import PULSETransport
 
-            self._pebble = start_protocol(PULSETransport(self._link), self.platform)
+            self._pebble = start_protocol(
+                PULSETransport(self._link), self.platform, self.settings_sync
+            )
         return self._pebble

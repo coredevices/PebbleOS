@@ -29,7 +29,9 @@ class QemuProtocolConnection(Connection):
         while True:
             try:
                 self._pebble = start_protocol(
-                    QemuTransport(host or "127.0.0.1", int(port)), self.platform
+                    QemuTransport(host or "127.0.0.1", int(port)),
+                    self.platform,
+                    self.settings_sync,
                 )
                 return
             except PebbleConnectionError as e:

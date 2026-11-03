@@ -138,6 +138,11 @@ pbl itest --connection serial:/dev/tty.usbserial-1 --connection devconn:192.168.
 Tests that need something no connection offers are skipped, e.g. the
 `prompt` fixture without a prompt.
 
+The harness's own sessions tell the watch that the phone app supports
+every protocol capability but settings sync, since nothing would answer
+the watch's settings write-backs. `dut.set_phone_settings_sync(True)`
+turns it on, for tests that answer them themselves.
+
 ### Bluetooth
 
 Bluetooth goes through nRF52840 dongles running Zephyr's `hci_uart`
