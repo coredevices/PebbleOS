@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/rtc.h>
+#include <pbl/drivers/sf32lb52/rc10k.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/regular_timer.h>
 
@@ -34,13 +35,17 @@ void rc10k_init(void) {
 }
 
 uint32_t rc10k_get_freq_hz(void) {
+  return (uint32_t)(rc10k_get_freq_mhz() / 1000U);
+}
+
+uint64_t rc10k_get_freq_mhz(void) {
   uint32_t hxt48_cyc;
 
   hxt48_cyc = HAL_RC_CAL_get_average_cycle_on_48M();
   if (hxt48_cyc == 0UL) {
-    return RC10K_DEFAULT_FREQ_HZ;
+    return RC10K_DEFAULT_FREQ_HZ * 1000ULL;
   } else {
-    return (48000000ULL * HAL_RC_CAL_GetLPCycle()) / hxt48_cyc;
+    return (48000000000ULL * HAL_RC_CAL_GetLPCycle()) / hxt48_cyc;
   }
 }
 
