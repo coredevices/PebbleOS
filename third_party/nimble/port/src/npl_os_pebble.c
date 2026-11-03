@@ -19,6 +19,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 
 struct ble_npl_event *npl_pebble_eventq_get(struct ble_npl_eventq *evq, ble_npl_time_t tmo) {
@@ -180,7 +181,7 @@ static void npl_pebble_callout_do_update(struct ble_npl_callout *co) {
   //    it for the minimum amount of time possible, but we make sure that it
   //    is triggered through the same new_timer path that it always would be
   //    otherwise.
-  int rem_ticks = co->update_target_time_ticks - rtc_get_ticks();
+  int rem_ticks = co->update_target_time_ticks - pbl_uptime_ticks();
   if (rem_ticks < 1) {
     // Oh, well...
     rem_ticks = 1;
@@ -230,7 +231,7 @@ ble_npl_error_t npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_tim
   co->ticks = ticks;
 
   co->update_pending = 1;
-  co->update_target_time_ticks = rtc_get_ticks() + ticks;
+  co->update_target_time_ticks = pbl_uptime_ticks() + ticks;
 
   // we may be in an ISR; if we are, we make the event queue actually
   // schedule the timer for us later.  otherwise, we can do it ourselves.

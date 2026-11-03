@@ -3,9 +3,11 @@
 
 #pragma once
 
+#include <pbl/kernel/time.h>
+
 #include <apps/system/launcher/default/launcher.h>
 #include <process_management/pebble_process_md.h>
 
-#define RETURN_TIMEOUT_TICKS (5 * RTC_TICKS_HZ)
+#define RETURN_TIMEOUT_TICKS (5 * PBL_TICK_HZ)
 
 const PebbleProcessMd *launcher_menu_app_get_app_info(void);

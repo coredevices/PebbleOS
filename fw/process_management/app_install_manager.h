@@ -65,7 +65,7 @@
 //! 3. Use the getter functions for the entry to retrieve individual fields within the struct.
 
 #define TIMESTAMP_INVALID \
-  ((RtcTicks)0) //!< for most_recent_communication_timestamp in AppInstallEntry
+  ((uint64_t)0) //!< for most_recent_communication_timestamp in AppInstallEntry
 
 //! Max number of bytes for an application.
 #define APP_NAME_SIZE_BYTES 96

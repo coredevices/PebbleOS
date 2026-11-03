@@ -153,8 +153,8 @@ typedef struct {
   /** Bytes sent to the phone and not acked yet. */
   int num_bytes_pending;
 
-  /** Time in RTC ticks at which the pending ack times out, 0 when not waiting for one. */
-  RtcTicks ack_timeout;
+  /** Uptime in ticks at which the pending ack times out, 0 when not waiting for one. */
+  uint64_t ack_timeout;
 } DataLoggingSessionComm;
 
 /** @brief State of an active session. */

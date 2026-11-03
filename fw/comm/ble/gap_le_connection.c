@@ -8,6 +8,7 @@
 #include <pbl/btutil/bt_device.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/util/list.h>
 
@@ -121,7 +122,7 @@ GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *devi
     .local_is_master = local_is_master,
     .conn_mgr_info = bt_conn_mgr_info_init(),
     .bonding_id = PBL_BT_BONDING_ID_INVALID,
-    .ticks_since_connection = rtc_get_ticks(),
+    .ticks_since_connection = pbl_uptime_ticks(),
     .is_remote_device_managing_connection_parameters = false,
     .connection_parameter_sets = nullptr,
   };

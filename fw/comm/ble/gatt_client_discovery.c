@@ -10,8 +10,8 @@
 #include <inttypes.h>
 
 #include <pbl/bluetooth/gatt_discovery.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/bt_conn_mgr.h>
@@ -106,7 +106,7 @@ static enum pbl_bt_errno prv_run_next_job(GAPLEConnection *connection) {
   if (rv == PBL_BT_ERRNO_OK) {
     if (!connection->gatt_is_service_discovery_in_progress) {
       // Fresh job (not a transparent watchdog retry), record the start time
-      connection->gatt_discovery_start_ticks = rtc_get_ticks();
+      connection->gatt_discovery_start_ticks = pbl_uptime_ticks();
     }
     // if we are back here because a timeout occurred, let the
     // driver handle resetting the watchdog timer (cc2564x issue)
@@ -413,7 +413,7 @@ bool pbl_bt_cb_gatt_client_discovery_complete(GAPLEConnection *connection,
 
     if (errno == PBL_BT_ERRNO_OK) {
       const uint32_t discovery_ms =
-          (rtc_get_ticks() - connection->gatt_discovery_start_ticks) * 1000 / RTC_TICKS_HZ;
+          (pbl_uptime_ticks() - connection->gatt_discovery_start_ticks) * 1000 / PBL_TICK_HZ;
       PBL_LOG_INFO("GATT service discovery completed in %" PRIu32 "ms", discovery_ms);
       // Completion of service discovery implies we are about to have more BLE
       // traffic (for example, ANCS notifications, PPoG communication). Keep the

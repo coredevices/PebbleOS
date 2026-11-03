@@ -32,7 +32,7 @@
 /** @cond INTERNAL_HIDDEN */
 struct pbl_cst816_state {
   struct pbl_irq_spec irq;
-  RtcTicks last_irq_ticks;
+  uint64_t last_irq_ticks;
   bool enabled;
   bool work_pending;
   bool palm_down;

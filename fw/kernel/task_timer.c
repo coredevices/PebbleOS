@@ -5,10 +5,10 @@
 
 #include "task_timer_manager.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/list.h>
@@ -23,9 +23,9 @@ typedef struct TaskTimer {
 
   //! The tick value when this timer will expire (in ticks). If the timer isn't currently
   //! running (scheduled) this value will be zero.
-  RtcTicks expire_time;
+  uint64_t expire_time;
 
-  RtcTicks period_ticks;
+  uint64_t period_ticks;
 
   TaskTimerID id; //<! ID assigned to this timer
 
@@ -147,7 +147,7 @@ TaskTimerID task_timer_create(TaskTimerManager *manager) {
 bool task_timer_start(TaskTimerManager *manager, TaskTimerID timer_id, uint32_t timeout_ms,
                       TaskTimerCallback cb, void *cb_data, uint32_t flags) {
   pbl_tick_t timeout_ticks = pbl_ms_to_ticks(timeout_ms);
-  RtcTicks current_time = rtc_get_ticks();
+  uint64_t current_time = pbl_uptime_ticks();
 
   // Grab lock on timer structures
   pbl_mutex_lock(&manager->mutex, PBL_FOREVER);
@@ -211,7 +211,7 @@ bool task_timer_scheduled(TaskTimerManager *manager, TaskTimerID timer_id, uint3
 
   // Figure out expire timer?
   if (expire_ms_p != nullptr && retval) {
-    RtcTicks current_ticks = rtc_get_ticks();
+    uint64_t current_ticks = pbl_uptime_ticks();
     if (timer->expire_time > current_ticks) {
       *expire_ms_p = ((timer->expire_time - current_ticks) * 1000) / PBL_TICK_HZ;
     } else {
@@ -301,7 +301,7 @@ void task_timer_manager_init(TaskTimerManager *manager, struct pbl_sem *semaphor
 pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) {
   while (1) {
     pbl_tick_t ticks_to_wait = 0;
-    RtcTicks next_expiry_time = 0;
+    uint64_t next_expiry_time = 0;
 
     // -------------------------------------------------------------------------------------
     // If a timer is ready to run, set time_to_wait to 0 and put the timer into 'next_timer'.
@@ -311,7 +311,7 @@ pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
     TaskTimer *next_timer = (TaskTimer *)manager->running_timers;
     if (next_timer != nullptr) {
       next_expiry_time = next_timer->expire_time;
-      RtcTicks current_time = rtc_get_ticks();
+      uint64_t current_time = pbl_uptime_ticks();
 
       if (next_expiry_time <= current_time) {
         // Found a timer that has expired! Move it from the running list to the idle talk and
@@ -327,7 +327,7 @@ pbl_tick_t task_timer_manager_execute_expired_timers(TaskTimerManager *manager) 
         // need to call this callback more than twice in a row in order to catch up.
         if (next_timer->repeating &&
             (int64_t)next_expiry_time <
-                (int64_t)(current_time - next_timer->period_ticks - 5 * RTC_TICKS_HZ)) {
+                (int64_t)(current_time - next_timer->period_ticks - 5 * PBL_TICK_HZ)) {
           PBL_LOG_WRN("NT: Skipping some callbacks for %p because we fell behind", next_timer->cb);
         }
       } else {

@@ -6,6 +6,7 @@
 #include "animation_private_legacy2.h"
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/order.h>
 
@@ -127,7 +128,7 @@ static AnimationLegacy2Scheduler *get_current_scheduler(void) {
 }
 
 inline static uint32_t animation_legacy2_get_ms_since_system_start(void) {
-  return (sys_get_ticks() * 1000 / RTC_TICKS_HZ);
+  return (sys_get_ticks() * 1000 / PBL_TICK_HZ);
 }
 
 static void animation_legacy2_timer_callback(void *data) {

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/animation_private.h>
 #include <applib/ui/property_animation_private.h>
@@ -188,7 +188,7 @@ static void prv_drive(TouchEventType type, int16_t x, int16_t y) {
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / 1000);
+  fake_rtc_increment_ticks((uint64_t)ms * PBL_TICK_HZ / 1000);
 }
 
 // ---------------------------------------------------------------------------------------------

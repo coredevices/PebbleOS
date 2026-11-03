@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
@@ -38,7 +38,7 @@ struct TapRecognizerData {
     uint16_t fingers_down;
     GPoint touch_down_point;   // Touchdown point, used for the movement check
     GPoint tap_point;          // Last PositionUpdate point; the reported tap coord
-    RtcTicks touch_down_ticks; // Touchdown time, used for the duration check
+    uint64_t touch_down_ticks; // Touchdown time, used for the duration check
   } state;
 };
 
@@ -57,8 +57,8 @@ static bool prv_moved_too_far(const TapRecognizerData *data, const TouchEvent *t
 }
 
 static uint32_t prv_touch_duration_ms(const TapRecognizerData *data) {
-  const RtcTicks elapsed = sys_get_ticks() - data->state.touch_down_ticks;
-  return (uint32_t)((elapsed * PBL_MSEC_PER_SEC) / RTC_TICKS_HZ);
+  const uint64_t elapsed = sys_get_ticks() - data->state.touch_down_ticks;
+  return (uint32_t)((elapsed * PBL_MSEC_PER_SEC) / PBL_TICK_HZ);
 }
 
 static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *touch_event) {

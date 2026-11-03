@@ -12,8 +12,8 @@
 
 #include <stddef.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -276,9 +276,9 @@ static void prv_widget_recognizer_event(const Recognizer *recognizer, Recognizer
       break;
     case RecognizerEvent_Updated:
       if (!state->declined && recognizer == state->widget_pan) {
-        const RtcTicks now = sys_get_ticks();
-        const RtcTicks min_ticks =
-            (RtcTicks)TOUCH_NAV_WIDGET_PAN_UPDATE_MIN_INTERVAL_MS * RTC_TICKS_HZ / 1000;
+        const uint64_t now = sys_get_ticks();
+        const uint64_t min_ticks =
+            (uint64_t)TOUCH_NAV_WIDGET_PAN_UPDATE_MIN_INTERVAL_MS * PBL_TICK_HZ / 1000;
         if (now - state->last_update_ticks >= min_ticks) {
           state->last_update_ticks = now;
           ops->pan_update(w, state->gesture_base,

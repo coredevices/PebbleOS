@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/init.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 
 #include <comm/ble/gap_le.h>
@@ -197,10 +198,10 @@ void bt_ctl_set_override_mode(BtCtlModeOverride override) {
 
 static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currently_on) {
   // Track when coming out of airplane mode and we've gone into airplane mode less than 30 secs ago:
-  static RtcTicks s_airplane_mode_last_toggle_ticks;
-  const RtcTicks now_ticks = rtc_get_ticks();
+  static uint64_t s_airplane_mode_last_toggle_ticks;
+  const uint64_t now_ticks = pbl_uptime_ticks();
   const uint64_t max_interval_secs = 30;
-  if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * RTC_TICKS_HZ)) &&
+  if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * PBL_TICK_HZ)) &&
       is_airplane_mode_currently_on) {
     PBL_LOG_DBG("Quick airplane mode toggle detected!");
   }

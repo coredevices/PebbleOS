@@ -11,9 +11,9 @@
 #include <string.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/notifications/alerts_preferences.h>
@@ -109,7 +109,7 @@ static uint8_t s_silence_reasons;
 
 //! Analytics: time-weighted average volume, reset on heartbeat.
 static uint64_t s_volume_time_product_sum;  // Sum of (volume_pct × time_ms)
-static RtcTicks s_last_volume_sample_ticks; // Timestamp of last sample
+static uint64_t s_last_volume_sample_ticks; // Timestamp of last sample
 static uint8_t s_last_sampled_volume_pct;   // Last volume percentage sampled
 static uint32_t s_total_speaker_on_time_ms; // Total speaker on-time tracked
 
@@ -140,10 +140,10 @@ static uint8_t prv_effective_volume(uint8_t vol) {
 }
 
 static void prv_update_volume_analytics(uint8_t new_volume_pct) {
-  RtcTicks now_ticks = rtc_get_ticks();
+  uint64_t now_ticks = pbl_uptime_ticks();
 
   if (s_last_volume_sample_ticks > 0) {
-    uint32_t time_delta_ms = ((now_ticks - s_last_volume_sample_ticks) * 1000) / RTC_TICKS_HZ;
+    uint32_t time_delta_ms = ((now_ticks - s_last_volume_sample_ticks) * 1000) / PBL_TICK_HZ;
 
     s_volume_time_product_sum += (uint64_t)s_last_sampled_volume_pct * time_delta_ms;
 
@@ -937,7 +937,7 @@ void pbl_analytics_external_collect_speaker_stats(void) {
 
   s_volume_time_product_sum = 0;
   s_total_speaker_on_time_ms = 0;
-  s_last_volume_sample_ticks = rtc_get_ticks();
+  s_last_volume_sample_ticks = pbl_uptime_ticks();
 
   pbl_mutex_unlock(&s_lock);
 }

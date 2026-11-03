@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/battery/battery_state.h>
 
 #ifdef CONFIG_QEMU
@@ -115,7 +116,7 @@ static void battery_state_put_change_event(PreciseBatteryChargeState state) {
 void battery_state_reset_filter(void) {
   s_last_battery_state.voltage = battery_get_millivolts();
   // Reset the stabilization timer in case we encountered a current spike during the reset
-  s_last_battery_state.init_time = rtc_get_ticks();
+  s_last_battery_state.init_time = pbl_uptime_ticks();
 }
 
 static uint32_t prv_filter_voltage(uint32_t avg_mv, uint32_t battery_mv) {
@@ -131,8 +132,8 @@ static bool prv_is_stable(const BatteryState *state) {
   // After a reboot, we typically source a lot of current which can drastically impact
   // our mV readings due to the internal resistance of the battery. We use the
   // system_likely_stabilized flag as an indicator of how trustworthy our readings are
-  const uint64_t STABLE_TICKS = 3 * 60 * RTC_TICKS_HZ;
-  uint64_t elapsed_ticks = rtc_get_ticks() - state->init_time;
+  const uint64_t STABLE_TICKS = 3 * 60 * PBL_TICK_HZ;
+  uint64_t elapsed_ticks = pbl_uptime_ticks() - state->init_time;
   return elapsed_ticks > STABLE_TICKS;
 }
 

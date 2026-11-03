@@ -20,6 +20,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/ble/gap_le_connect.h>
@@ -309,13 +310,13 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
 static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
   GATTBufferedNotificationHeader header = {};
   bool has_more = gatt_client_subscriptions_get_notification_header(&header);
-  const RtcTicks start_ticks = rtc_get_ticks();
+  const uint64_t start_ticks = pbl_uptime_ticks();
   while (has_more) {
-    const uint32_t ticks_spent = rtc_get_ticks() - start_ticks;
+    const uint32_t ticks_spent = pbl_uptime_ticks() - start_ticks;
 
     // Don't spend more than ~33ms (or one 30fps animation frame interval) processing the pending
     // GATT notifications, and let KernelMain drain the events posted by the handlers:
-    if ((ticks_spent >= ((RTC_TICKS_HZ * 33) / 1000)) ||
+    if ((ticks_spent >= ((PBL_TICK_HZ * 33) / 1000)) ||
         (event_kernel_to_kernel_num_free() < NOTIFICATION_MIN_FREE_KERNEL_EVENTS)) {
       // Doing this might actually cause an issue if the characteristic(s) for which there are still
       // notifications pending in the buffer become invalid before the time they are processed.

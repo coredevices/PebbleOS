@@ -25,7 +25,7 @@
 #include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/recognizer/pan.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
@@ -1991,11 +1991,11 @@ static void prv_menu_activate_selected(MenuLayer *menu_layer) {
 }
 
 // Reassemble/store the split-half tap timestamp (see the field comment in menu_layer.h).
-static RtcTicks prv_menu_get_last_select_ticks(const MenuLayer *menu_layer) {
-  return ((RtcTicks)menu_layer->last_select_ticks_hi << 32) | menu_layer->last_select_ticks_lo;
+static uint64_t prv_menu_get_last_select_ticks(const MenuLayer *menu_layer) {
+  return ((uint64_t)menu_layer->last_select_ticks_hi << 32) | menu_layer->last_select_ticks_lo;
 }
 
-static void prv_menu_set_last_select_ticks(MenuLayer *menu_layer, RtcTicks ticks) {
+static void prv_menu_set_last_select_ticks(MenuLayer *menu_layer, uint64_t ticks) {
   menu_layer->last_select_ticks_hi = (uint32_t)(ticks >> 32);
   menu_layer->last_select_ticks_lo = (uint32_t)ticks;
 }
@@ -2288,15 +2288,15 @@ void menu_layer_touch_handle_tap(MenuLayer *menu_layer, GPoint point_on_screen) 
     return;
   }
 
-  const RtcTicks now = sys_get_ticks();
-  const RtcTicks window_ticks = (RtcTicks)DOUBLE_TAP_WINDOW_MS * RTC_TICKS_HZ / 1000;
+  const uint64_t now = sys_get_ticks();
+  const uint64_t window_ticks = (uint64_t)DOUBLE_TAP_WINDOW_MS * PBL_TICK_HZ / 1000;
 
   // Priority 1 — fast double tap: a second tap within the window after a tap-select activates the
   // row that select committed, WITHOUT re-hit-testing. The just-selected row may have animated to
   // the centre, so the current tap can hit-test a neighbour; the recorded index is the source of
   // truth. Guarded by an explicit arm flag so it never fires on the first tap.
   if (menu_layer->double_tap_armed &&
-      (RtcTicks)(now - prv_menu_get_last_select_ticks(menu_layer)) <= window_ticks) {
+      (uint64_t)(now - prv_menu_get_last_select_ticks(menu_layer)) <= window_ticks) {
     prv_cancel_selection_animation(menu_layer);
     prv_menu_activate_index(menu_layer, &menu_layer->last_selected_index);
     menu_layer->double_tap_armed = false; // disarm so a third tap does not re-fire

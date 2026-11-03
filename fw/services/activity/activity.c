@@ -10,6 +10,7 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -1181,11 +1182,11 @@ static bool prv_bg_request_run(ActivityBgRequest *req, ActivityBgRequestHandler 
     return false;
   }
 
-  const RtcTicks end_ticks = rtc_get_ticks() + timeout_sec * PBL_TICK_HZ;
+  const uint64_t end_ticks = pbl_uptime_ticks() + timeout_sec * PBL_TICK_HZ;
   while (true) {
     pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
     const bool completed = req->completed;
-    if (!completed && rtc_get_ticks() > end_ticks) {
+    if (!completed && pbl_uptime_ticks() > end_ticks) {
       req->abandoned = true;
     }
     pbl_mutex_unlock(&s_activity_state.mutex);

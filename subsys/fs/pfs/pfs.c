@@ -13,13 +13,13 @@
 
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/task_wdt/task_wdt.h>
@@ -743,7 +743,7 @@ static void pfs_prepare_for_file_creation(uint32_t file_size, uint32_t max_elaps
   uint16_t pages_to_find = (file_size + PFS_PAGE_SIZE) / PFS_PAGE_SIZE;
   uint16_t free_page = 0;
 
-  uint32_t start_ticks = rtc_get_ticks();
+  uint32_t start_ticks = pbl_uptime_ticks();
 
   uint16_t last_written_page = s_last_page_written;
   while ((pages_to_find > 0) && (free_page != INVALID_PAGE)) {
@@ -757,7 +757,7 @@ static void pfs_prepare_for_file_creation(uint32_t file_size, uint32_t max_elaps
     }
     pages_to_find--;
 
-    uint32_t elapsed_ticks = rtc_get_ticks() - start_ticks;
+    uint32_t elapsed_ticks = pbl_uptime_ticks() - start_ticks;
     if (max_elapsed_ticks != 0 && (elapsed_ticks > max_elapsed_ticks)) {
       break;
     }
@@ -2030,7 +2030,7 @@ status_t pfs_init(bool run_filesystem_check) {
   uint32_t bytes_to_free = ((s_pfs_page_count * PFS_PAGE_SIZE) * 4) / 100;
   PBL_LOG_DBG("Preparing %" PRIu32 " bytes of flash for filesystem use", bytes_to_free);
 
-  pfs_prepare_for_file_creation(bytes_to_free, 15 * RTC_TICKS_HZ);
+  pfs_prepare_for_file_creation(bytes_to_free, 15 * PBL_TICK_HZ);
 
   return (S_SUCCESS);
 }

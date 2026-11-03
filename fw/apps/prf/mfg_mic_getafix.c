@@ -9,8 +9,8 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/mic.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
@@ -247,7 +247,7 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
 
     data->state = TestState_Complete;
     snprintf(data->status_text, STATUS_STR_LEN, passed ? "PASS" : "FAIL");
-    data->result_display_start = rtc_get_ticks();
+    data->result_display_start = pbl_uptime_ticks();
 
     return;
   }
@@ -287,7 +287,7 @@ static void prv_start_test(void) {
     mfg_test_result_report(MfgTestId_Mic, false, 0);
     data->state = TestState_Failed;
     snprintf(data->status_text, STATUS_STR_LEN, "Mic start failed");
-    data->result_display_start = rtc_get_ticks();
+    data->result_display_start = pbl_uptime_ticks();
   }
 }
 
@@ -313,7 +313,7 @@ static void prv_timer_callback(void *cb_data) {
 
   // Auto-close after result display timeout
   if (data->state == TestState_Complete || data->state == TestState_Failed) {
-    uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->result_display_start);
+    uint32_t elapsed = (uint32_t)(pbl_uptime_ticks() - data->result_display_start);
     if (elapsed >= RESULT_DISPLAY_MS) {
       app_window_stack_pop(false);
       return;

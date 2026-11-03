@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/imaging.h>
@@ -50,7 +50,7 @@ struct MusicServiceContext {
   uint32_t track_pos_ms;
 
   //! The time when track_pos_ms was last updated.
-  RtcTicks track_pos_updated_at;
+  uint64_t track_pos_updated_at;
 
   //! The current playback rate in percent units.
   //! Example values:
@@ -320,7 +320,7 @@ void music_update_track_position(uint32_t track_pos_ms) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
 
   s_music_ctx.track_pos_ms = track_pos_ms;
-  s_music_ctx.track_pos_updated_at = rtc_get_ticks();
+  s_music_ctx.track_pos_updated_at = pbl_uptime_ticks();
 
   pbl_mutex_unlock(&s_music_ctx.mutex);
 
@@ -379,7 +379,7 @@ bool music_has_now_playing(void) {
 
 uint32_t music_get_ms_since_pos_last_updated(void) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
-  const RtcTicks time_elapsed_ticks = rtc_get_ticks() - s_music_ctx.track_pos_updated_at;
+  const uint64_t time_elapsed_ticks = pbl_uptime_ticks() - s_music_ctx.track_pos_updated_at;
   const uint32_t time_elapsed_ms = pbl_ticks_to_ms(time_elapsed_ticks);
   pbl_mutex_unlock(&s_music_ctx.mutex);
   return time_elapsed_ms;
@@ -430,7 +430,7 @@ void music_update_player_playback_state(const MusicPlayerStateUpdate *state) {
   s_music_ctx.playback_state = state->playback_state;
   s_music_ctx.playback_rate_percent = state->playback_rate_percent;
   s_music_ctx.track_pos_ms = state->elapsed_time_ms;
-  s_music_ctx.track_pos_updated_at = rtc_get_ticks();
+  s_music_ctx.track_pos_updated_at = pbl_uptime_ticks();
   s_music_ctx.skip_seeks_within_track = state->skip_seeks_within_track;
   pbl_mutex_unlock(&s_music_ctx.mutex);
 

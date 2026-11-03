@@ -7,6 +7,7 @@
 #include <pbl/drivers/touch/cst816.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/system_task.h>
@@ -289,9 +290,9 @@ static int prv_update_if_needed(const struct pbl_cst816 *cst) {
 }
 
 static void prv_count_irq(struct pbl_cst816_state *state) {
-  const RtcTicks now = rtc_get_ticks();
-  const RtcTicks wake_spacing = pbl_ms_to_ticks(CST816_WAKE_SPACING_MS);
-  const RtcTicks gap = now - state->last_irq_ticks;
+  const uint64_t now = pbl_uptime_ticks();
+  const uint64_t wake_spacing = pbl_ms_to_ticks(CST816_WAKE_SPACING_MS);
+  const uint64_t gap = now - state->last_irq_ticks;
 
   if (gap >= wake_spacing) {
     PBL_ANALYTICS_ADD(touch_driver_wake_cnt, 1);

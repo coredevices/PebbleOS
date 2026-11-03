@@ -6,9 +6,9 @@
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_state.h>
@@ -88,7 +88,7 @@ static void prv_track_soc_min(void) {
 }
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
-static RtcTicks s_last_log;
+static uint64_t s_last_log;
 static bool s_charger_enabled;
 
 #if FUEL_GAUGE_STATEFUL
@@ -305,7 +305,7 @@ static void prv_battery_state_put_change_event(PreciseBatteryChargeState state) 
 static void prv_update_state(void *force_update) {
   BatteryChargeStatus chg_status;
   BatteryConstants constants;
-  RtcTicks now, delta;
+  uint64_t now, delta;
   uint8_t pct_int;
   bool is_plugged;
   bool is_charging;
@@ -365,8 +365,8 @@ static void prv_update_state(void *force_update) {
   s_last_voltage_mv = constants.v_mv;
   s_last_temp_mc = constants.t_mc;
 
-  now = rtc_get_ticks();
-  delta = (now - prv_ref_time) / RTC_TICKS_HZ;
+  now = pbl_uptime_ticks();
+  delta = (now - prv_ref_time) / PBL_TICK_HZ;
   prv_ref_time = now;
 
   pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f, (float)constants.i_ua / 1000000.0f,
@@ -413,7 +413,7 @@ static void prv_update_state(void *force_update) {
       constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta,
       s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
 
-  if (update || (((now - s_last_log) / RTC_TICKS_HZ > LOG_MIN_SEC) &&
+  if (update || (((now - s_last_log) / PBL_TICK_HZ > LOG_MIN_SEC) &&
                  (s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)))) {
     PBL_LOG_INFO("Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32
                  " uA, "
@@ -526,7 +526,7 @@ void battery_state_init(void) {
   }
 #endif
 
-  prv_ref_time = rtc_get_ticks();
+  prv_ref_time = pbl_uptime_ticks();
 
   s_last_soc_cpct = (uint32_t)(pct * 100.0f);
   prv_track_soc_min();

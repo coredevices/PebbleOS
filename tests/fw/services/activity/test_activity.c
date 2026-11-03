@@ -8,6 +8,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
@@ -2454,7 +2455,7 @@ static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, int confidence,
   // Call the minute handler, which computes the minute stats and saves them to data logging
   // as well as the sleep PFS file.
   for (int i = 0; i < num_sec; i++) {
-    fake_rtc_set_ticks(rtc_get_ticks() + PBL_TICK_HZ);
+    fake_rtc_set_ticks(pbl_uptime_ticks() + PBL_TICK_HZ);
     rtc_set_time(rtc_get_time() + 1);
 
     if ((s_hrm_manager_update_interval == 1) || force_continuous) {
@@ -2703,7 +2704,7 @@ void test_activity__spo2_deferred_while_walking(void) {
   state->last_orientation = 0x11; // Not flat
   state->spo2.currently_sampling = false;
   state->spo2.toggled_sampling_at_ts = time_get_uptime_seconds();
-  fake_rtc_set_ticks(rtc_get_ticks() + (11 * PBL_SEC_PER_MIN * PBL_TICK_HZ));
+  fake_rtc_set_ticks(pbl_uptime_ticks() + (11 * PBL_SEC_PER_MIN * PBL_TICK_HZ));
 
   s_hrm_manager_last_features = 0;
   state->last_minute_steps = ACTIVITY_SPO2_MAX_STEPS_PER_MIN + 1;

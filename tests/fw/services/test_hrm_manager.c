@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <pbl/drivers/hrm.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
@@ -925,8 +926,8 @@ void test_hrm_manager__enable_disable(void) {
 
 // Advance time the given number of milliseconds
 static void prv_advance_time_ms(uint32_t ms) {
-  RtcTicks delta_ticks = pbl_ms_to_ticks(ms);
-  fake_rtc_set_ticks(rtc_get_ticks() + delta_ticks);
+  uint64_t delta_ticks = pbl_ms_to_ticks(ms);
+  fake_rtc_set_ticks(pbl_uptime_ticks() + delta_ticks);
   rtc_set_time(rtc_get_time() + ms / PBL_MSEC_PER_SEC);
 }
 
@@ -1377,7 +1378,7 @@ void test_hrm_manager__periodic_timeout_does_not_stop_another_live_reader(void) 
   fake_system_task_callbacks_invoke_pending();
   cl_assert(hrm_is_enabled(HRM));
   cl_assert_equal_i(prv_get_subscriber_state_from_ref(periodic_ref)->last_valid_bpm_ticks,
-                    rtc_get_ticks());
+                    pbl_uptime_ticks());
   sys_hrm_manager_unsubscribe(live_ref);
   fake_system_task_callbacks_invoke_pending();
   cl_assert(!hrm_is_enabled(HRM));
@@ -1447,7 +1448,7 @@ void test_hrm_manager__serve_window_starts_when_subscriber_is_due(void) {
   fake_system_task_callbacks_invoke_pending();
   cl_assert(hrm_is_enabled(HRM));
   cl_assert_equal_i(prv_get_subscriber_state_from_ref(periodic_ref)->last_valid_bpm_ticks,
-                    rtc_get_ticks());
+                    pbl_uptime_ticks());
   sys_hrm_manager_unsubscribe(periodic_ref);
   sys_hrm_manager_unsubscribe(live_ref);
 }

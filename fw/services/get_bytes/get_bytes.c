@@ -6,8 +6,8 @@
 
 #include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -78,7 +78,7 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
 }
 
 static void prv_gather_and_record_stats(GetBytesState *state) {
-  uint32_t elapsed_time_ms = pbl_ticks_to_ms(rtc_get_ticks() - state->start_ticks);
+  uint32_t elapsed_time_ms = pbl_ticks_to_ms(pbl_uptime_ticks() - state->start_ticks);
   uint32_t bytes_per_sec = ((state->num_bytes * PBL_MSEC_PER_SEC) / elapsed_time_ms);
   PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %" PRIu32 " bytes/sec", bytes_per_sec);
   bluetooth_analytics_handle_get_bytes_stats(state->object_type, state->num_bytes, elapsed_time_ms,
@@ -288,7 +288,7 @@ void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t *msg_da
 
   s_get_bytes_in_progress = true;
   prv_put_status_event(DebugInfoStateStarted);
-  state->start_ticks = rtc_get_ticks();
+  state->start_ticks = pbl_uptime_ticks();
 
   prv_protocol_send_next_chunk(state);
 }

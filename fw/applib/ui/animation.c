@@ -10,6 +10,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/animation_service.h>
 #include <pbl/util/math.h>
@@ -162,7 +163,7 @@ static int prv_scheduler_comparator(void *a, void *b) {
 
 // -------------------------------------------------------------------------------------------
 inline static uint32_t prv_get_ms_since_system_start(void) {
-  return ((sys_get_ticks() * 1000 + RTC_TICKS_HZ / 2) / RTC_TICKS_HZ);
+  return ((sys_get_ticks() * 1000 + PBL_TICK_HZ / 2) / PBL_TICK_HZ);
 }
 
 // -------------------------------------------------------------------------------------------

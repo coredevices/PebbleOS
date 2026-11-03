@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
 
 #include <applib/graphics/gtransform.h>
@@ -120,8 +121,8 @@ static void cl_assert_close_fixed_s32_16(const Fixed_S32_16 a, const Fixed_S32_1
 // --------------------------------------------------------------------------------------
 // Get current time in ms.
 static uint64_t prv_now_ms(void) {
-  RtcTicks ticks = rtc_get_ticks();
-  return (ticks * 1000 + RTC_TICKS_HZ / 2) / RTC_TICKS_HZ;
+  uint64_t ticks = pbl_uptime_ticks();
+  return (ticks * 1000 + PBL_TICK_HZ / 2) / PBL_TICK_HZ;
 }
 
 // --------------------------------------------------------------------------------------
@@ -132,14 +133,14 @@ static void prv_advance_by_ms_no_timers(uint64_t ms_delta) {
   uint64_t target_ms = prv_now_ms() + ms_delta;
 
   // Compensate for rounding errors
-  uint64_t new_ticks = rtc_get_ticks() + (ms_delta * RTC_TICKS_HZ + 500) / 1000;
-  uint64_t new_ms = (new_ticks * 1000 + RTC_TICKS_HZ / 2) / RTC_TICKS_HZ;
+  uint64_t new_ticks = pbl_uptime_ticks() + (ms_delta * PBL_TICK_HZ + 500) / 1000;
+  uint64_t new_ms = (new_ticks * 1000 + PBL_TICK_HZ / 2) / PBL_TICK_HZ;
   if (new_ms == target_ms - 1) {
     new_ticks++;
   } else if (new_ms == target_ms + 1) {
     new_ticks--;
   }
-  new_ms = (new_ticks * 1000 + RTC_TICKS_HZ / 2) / RTC_TICKS_HZ;
+  new_ms = (new_ticks * 1000 + PBL_TICK_HZ / 2) / PBL_TICK_HZ;
   cl_assert(new_ms == target_ms);
   fake_rtc_set_ticks(new_ticks);
 }
@@ -2123,7 +2124,7 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
     .stopped = prv_stopped_handler
   };
 
-  // Simulate some delay incurred on every call to rtc_get_ticks()
+  // Simulate some delay incurred on every call to pbl_uptime_ticks()
   fake_rtc_auto_increment_ticks(3);
 
   Animation *a0, *a1, *a2, *a3;

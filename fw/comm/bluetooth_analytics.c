@@ -5,7 +5,7 @@
 
 #include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/bluetooth/gap_le_connect.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session.h>
@@ -54,11 +54,11 @@ void bluetooth_analytics_handle_connection_disconnection_event(
   static uint32_t last_reset_counter_ticks = 0;
   static uint8_t num_events_logged = 0;
 
-  const uint32_t ticks_per_hour = RTC_TICKS_HZ * 60 * 60;
+  const uint32_t ticks_per_hour = PBL_TICK_HZ * 60 * 60;
 
-  if ((rtc_get_ticks() - last_reset_counter_ticks) > ticks_per_hour) {
+  if ((pbl_uptime_ticks() - last_reset_counter_ticks) > ticks_per_hour) {
     num_events_logged = 0;
-    last_reset_counter_ticks = rtc_get_ticks();
+    last_reset_counter_ticks = pbl_uptime_ticks();
   }
 
   // Per-reason counters — see nimble/ble.h ble_error_codes. The NimBLE BLE_HS_HCI_ERR

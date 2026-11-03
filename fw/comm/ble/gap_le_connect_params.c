@@ -9,7 +9,7 @@
 
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/responsiveness.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -70,7 +70,7 @@
 //! its own, so the link is fragile until our first update request is granted. See
 //! also the note below about Apple's relaxed handling of TGAP timings.
 #define REQUIRED_INIT_PAUSE_S     (1)
-#define REQUIRED_INIT_PAUSE_TICKS (REQUIRED_INIT_PAUSE_S * RTC_TICKS_HZ)
+#define REQUIRED_INIT_PAUSE_TICKS (REQUIRED_INIT_PAUSE_S * PBL_TICK_HZ)
 
 //! Try 3 times before giving up.
 #define MAX_UPDATE_REQUEST_ATTEMPTS (3)
@@ -203,7 +203,7 @@ static void prv_request_params_update(GAPLEConnection *connection,
   // We need to wait at least REQUIRED_INIT_PAUSE_TICKS after a connection before
   // requesting new parameters.
   uint32_t retry_ms = REQUEST_TIMEOUT_MS;
-  if ((rtc_get_ticks() - connection->ticks_since_connection) < REQUIRED_INIT_PAUSE_TICKS) {
+  if ((pbl_uptime_ticks() - connection->ticks_since_connection) < REQUIRED_INIT_PAUSE_TICKS) {
     retry_ms = (REQUIRED_INIT_PAUSE_S * PBL_MSEC_PER_SEC);
     goto retry;
   }

@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/time.h>
+
 #include <applib/app_timer.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text.h>
@@ -399,12 +401,12 @@ typedef struct MenuLayer {
 
   //! @internal
   //! Tier-1 touch tap state for the center-focused "tap selects, second/double tap activates"
-  //! behaviour: the last row a tap-select committed and when (\ref rtc_get_ticks). A second tap
+  //! behaviour: the last row a tap-select committed and when (pbl_uptime_ticks()). A second tap
   //! within the double-tap window activates that row without re-hit-testing (the row may have
   //! animated to the centre by then). Plain menus activate on the first tap and never arm this
   //! window. Declared unconditionally (not under \c CONFIG_TOUCH) so \c sizeof(MenuLayer) is
   //! identical on every board, and carved from \ref padding below like \ref touch_nav_node. The
-  //! timestamp is split into two 32-bit halves rather than a single 8-byte \ref RtcTicks on
+  //! timestamp is split into two 32-bit halves rather than a single 8-byte \ref uint64_t on
   //! purpose: a naturally 8-byte-aligned member would raise the struct's alignment to 8 and its
   //! size past the fixed applib-malloc budget (the size check pins \c sizeof(MenuLayer)).
   //! Reassemble via the accessors in menu_layer.c. All three fields are 4-/2-byte aligned, so they
@@ -449,7 +451,7 @@ typedef struct MenuLayer {
   //! @internal
   //! True once a tap has committed a selection and started the double-tap window (see
   //! \ref last_selected_index). Explicit arm flag so the window is never mistaken as open right
-  //! after boot, when \ref rtc_get_ticks is still small. Packs into the byte already reserved by
+  //! after boot, when pbl_uptime_ticks() is still small. Packs into the byte already reserved by
   //! the flags above, so it does not change \c sizeof(MenuLayer).
   bool double_tap_armed : 1;
 

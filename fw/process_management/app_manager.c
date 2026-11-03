@@ -11,6 +11,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/app_outbox_service.h>
@@ -74,7 +75,7 @@
 #include <pbl/shell/shell.h>
 #endif
 
-#define RETURN_CRASH_TIMEOUT_TICKS (60 * RTC_TICKS_HZ)
+#define RETURN_CRASH_TIMEOUT_TICKS (60 * PBL_TICK_HZ)
 
 //! Behold! The file that manages applications!
 //!
@@ -105,7 +106,7 @@ typedef struct NextApp {
 
 typedef struct {
   AppInstallId install_id;
-  RtcTicks crash_ticks;
+  uint64_t crash_ticks;
 } AppCrashInfo;
 
 static NextApp s_next_app;
@@ -506,10 +507,10 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   // the dialog and show us the default system watch face.
   PBL_ASSERTN(install_id != INSTALL_ID_INVALID);
   if (crash_info.install_id != install_id ||
-      (crash_info.crash_ticks + RETURN_CRASH_TIMEOUT_TICKS) < rtc_get_ticks()) {
+      (crash_info.crash_ticks + RETURN_CRASH_TIMEOUT_TICKS) < pbl_uptime_ticks()) {
     PBL_LOG_ERR("Watchface crashed (id=%" PRId32 "); relaunching", install_id);
     PBL_ANALYTICS_ADD(watchface_crash_count, 1);
-    crash_info = (AppCrashInfo){.install_id = install_id, .crash_ticks = rtc_get_ticks()};
+    crash_info = (AppCrashInfo){.install_id = install_id, .crash_ticks = pbl_uptime_ticks()};
     // Re-launch immediately
     watchface_launch_default(nullptr);
     return;
@@ -553,7 +554,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 
   i18n_free_all(crash_dialog);
 
-  const uint32_t elapsed_ms = (rtc_get_ticks() - crash_info.crash_ticks) * 1000 / RTC_TICKS_HZ;
+  const uint32_t elapsed_ms = (pbl_uptime_ticks() - crash_info.crash_ticks) * 1000 / PBL_TICK_HZ;
   PBL_LOG_WRN("Watchface crashed twice in %" PRIu32 "ms (id=%" PRId32
               "); "
               "reverting to default",

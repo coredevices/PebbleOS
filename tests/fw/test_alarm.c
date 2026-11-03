@@ -6,6 +6,7 @@
 // Stubs
 #include "fake_pfs.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/units.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +28,7 @@ void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
   *out_seconds = rtc_get_time();
 }
 
-RtcTicks rtc_get_ticks(void) {
+uint64_t pbl_uptime_ticks(void) {
   return 0;
 }
 

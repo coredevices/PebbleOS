@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
@@ -26,7 +27,7 @@ typedef struct {
   SimpleMenuLayer *menu_layer;
 
   TimerID timer[NUM_MAX_TIMERS];
-  RtcTicks fired_time[NUM_MAX_TIMERS];
+  uint64_t fired_time[NUM_MAX_TIMERS];
 
   RegularTimerInfo reg_timers[NUM_MAX_TIMERS];
 
@@ -41,7 +42,7 @@ static void timer_callback(void *data) {
   int idx = (int)data;
   PBL_ASSERTN(idx >= 0 && idx < NUM_MAX_TIMERS);
   PBL_LOG_DBG("STT normal callback %d executed", idx);
-  s_app_data->fired_time[idx] = rtc_get_ticks();
+  s_app_data->fired_time[idx] = pbl_uptime_ticks();
   return;
 }
 
@@ -58,7 +59,7 @@ static void long_timer_callback(void *data) {
   int idx = (int)data;
   PBL_ASSERTN(idx >= 0 && idx < NUM_MAX_TIMERS);
   PBL_LOG_DBG("STT long running callback %d executed", idx);
-  s_app_data->fired_time[idx] = rtc_get_ticks();
+  s_app_data->fired_time[idx] = pbl_uptime_ticks();
 
   sys_psleep(250);
   return;
