@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "raw_iter.h"
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/settings/settings_raw_iter.h>
 #include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DECLARE(settings, CONFIG_SETTINGS_LOG_LEVEL);
@@ -19,7 +20,7 @@ PBL_LOG_MODULE_DECLARE(settings, CONFIG_SETTINGS_LOG_LEVEL);
 static uint32_t s_num_record_changes;
 #endif
 
-static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
+static uint8_t *read_file_into_ram(struct pbl_settings_raw_iter *iter) {
   int pos = pbl_fs_tell(&iter->file);
   int file_size = pbl_fs_size(&iter->file);
   if (file_size < 0) {
@@ -54,7 +55,7 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
   return contents;
 }
 
-[[noreturn]] static void fatal_logic_error(SettingsRawIter *iter) {
+[[noreturn]] static void fatal_logic_error(struct pbl_settings_raw_iter *iter) {
   PBL_LOG_ERR(
       "settings_raw_iter logic error. "
       "Attempting to read affected file into RAM for easier debugging...");
@@ -68,7 +69,7 @@ static uint8_t *read_file_into_ram(SettingsRawIter *iter) {
   pbl_panic("Internal logic error.");
 }
 
-static int sfs_seek(SettingsRawIter *iter, int amount, int whence) {
+static int sfs_seek(struct pbl_settings_raw_iter *iter, int amount, int whence) {
   int status = pbl_fs_seek(&iter->file, amount, whence);
   if (status >= 0) {
     return status;
@@ -79,11 +80,11 @@ static int sfs_seek(SettingsRawIter *iter, int amount, int whence) {
   fatal_logic_error(iter);
 }
 
-static int sfs_pos(SettingsRawIter *iter) {
+static int sfs_pos(struct pbl_settings_raw_iter *iter) {
   return sfs_seek(iter, 0, PBL_FS_SEEK_CUR);
 }
 
-static int sfs_read(SettingsRawIter *iter, uint8_t *data, int data_len) {
+static int sfs_read(struct pbl_settings_raw_iter *iter, uint8_t *data, int data_len) {
   if (data_len == 0) {
     return 0;
   }
@@ -97,7 +98,7 @@ static int sfs_read(SettingsRawIter *iter, uint8_t *data, int data_len) {
   fatal_logic_error(iter);
 }
 
-static int sfs_write(SettingsRawIter *iter, const uint8_t *data, int data_len) {
+static int sfs_write(struct pbl_settings_raw_iter *iter, const uint8_t *data, int data_len) {
   if (data_len == 0) {
     return 0;
   }
@@ -115,9 +116,9 @@ static int sfs_write(SettingsRawIter *iter, const uint8_t *data, int data_len) {
 // Actual Iteration Code //
 ///////////////////////////
 
-void settings_raw_iter_init(SettingsRawIter *iter, struct pbl_fs_file *file,
-                            const char *file_name) {
-  *iter = (SettingsRawIter){};
+void pbl_settings__raw_iter_init(struct pbl_settings_raw_iter *iter, struct pbl_fs_file *file,
+                                 const char *file_name) {
+  *iter = (struct pbl_settings_raw_iter){};
   iter->file = *file;
   iter->file_name = file_name;
 
@@ -126,7 +127,8 @@ void settings_raw_iter_init(SettingsRawIter *iter, struct pbl_fs_file *file,
   iter->hdr_pos = -1;
   iter->resumed_pos = -1;
 }
-void settings_raw_iter_write_file_header(SettingsRawIter *iter, SettingsFileHeader *file_hdr) {
+void pbl_settings__raw_iter_write_file_header(struct pbl_settings_raw_iter *iter,
+                                              struct pbl_settings_file_hdr *file_hdr) {
   sfs_seek(iter, 0, PBL_FS_SEEK_SET);
   sfs_write(iter, (uint8_t *)file_hdr, sizeof(*file_hdr));
   iter->file_hdr = *file_hdr;
@@ -134,7 +136,7 @@ void settings_raw_iter_write_file_header(SettingsRawIter *iter, SettingsFileHead
   iter->resumed_pos = -1;
 }
 
-void settings_raw_iter_begin(SettingsRawIter *iter) {
+void pbl_settings__raw_iter_begin(struct pbl_settings_raw_iter *iter) {
   sfs_seek(iter, sizeof(iter->file_hdr), PBL_FS_SEEK_SET);
 
   // Read header for first record.
@@ -143,11 +145,11 @@ void settings_raw_iter_begin(SettingsRawIter *iter) {
   sfs_read(iter, (uint8_t *)&iter->hdr, sizeof(iter->hdr));
 }
 
-void settings_raw_iter_resume(SettingsRawIter *iter) {
+void pbl_settings__raw_iter_resume(struct pbl_settings_raw_iter *iter) {
   iter->resumed_pos = iter->hdr_pos;
 }
 
-void settings_raw_iter_next(SettingsRawIter *iter) {
+void pbl_settings__raw_iter_next(struct pbl_settings_raw_iter *iter) {
   // Seek to start of next record header.
   int record_len = sizeof(iter->hdr) + iter->hdr.key_len + iter->hdr.val_len;
   sfs_seek(iter, iter->hdr_pos + record_len, PBL_FS_SEEK_SET);
@@ -160,82 +162,89 @@ void settings_raw_iter_next(SettingsRawIter *iter) {
   s_num_record_changes++;
 #endif
 }
-bool settings_raw_iter_end(SettingsRawIter *iter) {
-  SettingsRecordHeader *hdr = &iter->hdr;
+bool pbl_settings__raw_iter_end(struct pbl_settings_raw_iter *iter) {
+  struct pbl_settings_record_hdr *hdr = &iter->hdr;
   return (hdr->last_modified == 0xffffffff) &&
          (hdr->flags == ((1 << FLAGS_BITS) - 1) && (hdr->key_hash == 0xff) &&
           (hdr->key_len == ((1 << KEY_LEN_BITS) - 1)) && (hdr->val_len == SETTINGS_EOF_MARKER));
 }
 
-int settings_raw_iter_get_current_record_pos(SettingsRawIter *iter) {
+int pbl_settings__raw_iter_get_current_record_pos(struct pbl_settings_raw_iter *iter) {
   return iter->hdr_pos;
 }
 
-int settings_raw_iter_get_resumed_record_pos(SettingsRawIter *iter) {
+int pbl_settings__raw_iter_get_resumed_record_pos(struct pbl_settings_raw_iter *iter) {
   return iter->resumed_pos;
 }
 
-void settings_raw_iter_set_current_record_pos(SettingsRawIter *iter, int pos) {
+void pbl_settings__raw_iter_set_current_record_pos(struct pbl_settings_raw_iter *iter, int pos) {
   sfs_seek(iter, pos, PBL_FS_SEEK_SET);
   iter->hdr_pos = pos;
   sfs_read(iter, (uint8_t *)&iter->hdr, sizeof(iter->hdr));
 }
 
-void settings_raw_iter_read_key(SettingsRawIter *iter, uint8_t *key_out) {
+void pbl_settings__raw_iter_read_key(struct pbl_settings_raw_iter *iter, uint8_t *key_out) {
   if (iter->hdr.key_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
   sfs_read(iter, key_out, iter->hdr.key_len);
 }
-void settings_raw_iter_read_val(SettingsRawIter *iter, uint8_t *val_out, int val_len) {
+void pbl_settings__raw_iter_read_val(struct pbl_settings_raw_iter *iter, uint8_t *val_out,
+                                     int val_len) {
   if (iter->hdr.val_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader) + iter->hdr.key_len, PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr) + iter->hdr.key_len,
+           PBL_FS_SEEK_SET);
   sfs_read(iter, val_out, val_len);
 }
 
-void settings_raw_iter_read_key_val(SettingsRawIter *iter, uint8_t *key_val_out) {
+void pbl_settings__raw_iter_read_key_val(struct pbl_settings_raw_iter *iter, uint8_t *key_val_out) {
   const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
   if (kv_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
   sfs_read(iter, key_val_out, kv_len);
 }
 
-void settings_raw_iter_write_header(SettingsRawIter *iter, SettingsRecordHeader *hdr) {
-  PBL_ASSERTN(hdr->key_len <= SETTINGS_KEY_MAX_LEN);
-  PBL_ASSERTN(hdr->val_len <= SETTINGS_VAL_MAX_LEN);
+void pbl_settings__raw_iter_write_header(struct pbl_settings_raw_iter *iter,
+                                         struct pbl_settings_record_hdr *hdr) {
+  PBL_ASSERTN(hdr->key_len <= PBL_SETTINGS_KEY_MAX_LEN);
+  PBL_ASSERTN(hdr->val_len <= PBL_SETTINGS_VAL_MAX_LEN);
   sfs_seek(iter, iter->hdr_pos, PBL_FS_SEEK_SET);
   sfs_write(iter, (uint8_t *)hdr, sizeof(*hdr));
   iter->hdr = *hdr;
 }
-void settings_raw_iter_write_key(SettingsRawIter *iter, const uint8_t *key) {
+void pbl_settings__raw_iter_write_key(struct pbl_settings_raw_iter *iter, const uint8_t *key) {
   if (iter->hdr.key_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
   sfs_write(iter, key, iter->hdr.key_len);
 }
-void settings_raw_iter_write_val(SettingsRawIter *iter, const uint8_t *val) {
+void pbl_settings__raw_iter_write_val(struct pbl_settings_raw_iter *iter, const uint8_t *val) {
   if (iter->hdr.val_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader) + iter->hdr.key_len, PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr) + iter->hdr.key_len,
+           PBL_FS_SEEK_SET);
   sfs_write(iter, val, iter->hdr.val_len);
 }
 
-void settings_raw_iter_write_key_val(SettingsRawIter *iter, const uint8_t *key_val) {
+void pbl_settings__raw_iter_write_key_val(struct pbl_settings_raw_iter *iter,
+                                          const uint8_t *key_val) {
   const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
   if (kv_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
   sfs_write(iter, key_val, kv_len);
 }
-void settings_raw_iter_write_byte(SettingsRawIter *iter, int offset, uint8_t byte) {
-  sfs_seek(iter, iter->hdr_pos + sizeof(SettingsRecordHeader) + iter->hdr.key_len + offset,
+void pbl_settings__raw_iter_write_byte(struct pbl_settings_raw_iter *iter, int offset,
+                                       uint8_t byte) {
+  sfs_seek(iter,
+           iter->hdr_pos + sizeof(struct pbl_settings_record_hdr) + iter->hdr.key_len + offset,
            PBL_FS_SEEK_SET);
   sfs_write(iter, &byte, 1);
 }
 
-void settings_raw_iter_deinit(SettingsRawIter *iter) {
+void pbl_settings__raw_iter_deinit(struct pbl_settings_raw_iter *iter) {
   int status = pbl_fs_close(&iter->file);
   if (status < 0) {
     PBL_LOG_WRN("Could not close settings file");
@@ -243,7 +252,7 @@ void settings_raw_iter_deinit(SettingsRawIter *iter) {
 }
 
 #if UNITTEST
-uint32_t settings_raw_iter_prv_get_num_record_searches(void) {
+uint32_t pbl_settings__raw_iter_get_num_record_searches(void) {
   return s_num_record_changes;
 }
 #endif

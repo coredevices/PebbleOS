@@ -20,7 +20,7 @@
 #include <kernel/events.h>
 
 #ifndef CONFIG_RECOVERY_FW
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #endif
 
 #ifdef CONFIG_MFG
@@ -154,37 +154,37 @@ static void prv_save_state(void) {
 static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
 
 static void prv_erase_state(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t ret;
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
   if (ret != S_SUCCESS) {
     return;
   }
 
-  settings_file_delete(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
-  settings_file_close(&file);
+  pbl_settings_delete(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
+  pbl_settings_close(&file);
 
   PBL_LOG_DBG("Fuel gauge state erased");
 }
 
 static bool prv_load_state(void *state, size_t size) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t ret;
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
   if (ret != S_SUCCESS) {
     return false;
   }
 
-  int len = settings_file_get_len(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
+  int len = pbl_settings_get_len(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
   if (len != (int)size) {
-    settings_file_close(&file);
+    pbl_settings_close(&file);
     return false;
   }
 
-  ret = settings_file_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size);
-  settings_file_close(&file);
+  ret = pbl_settings_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size);
+  pbl_settings_close(&file);
 
   if (ret != S_SUCCESS) {
     return false;
@@ -197,7 +197,7 @@ static bool prv_load_state(void *state, size_t size) {
 
 static void prv_save_state(void) {
   uint8_t buf[nrf_fuel_gauge_state_size];
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t ret;
 
   if (nrf_fuel_gauge_state_get(buf, sizeof(buf)) != 0) {
@@ -205,15 +205,15 @@ static void prv_save_state(void) {
     return;
   }
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
   if (ret != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open fuel gauge settings file");
     return;
   }
 
-  ret = settings_file_set(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), buf,
-                          sizeof(buf));
-  settings_file_close(&file);
+  ret = pbl_settings_set(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), buf,
+                         sizeof(buf));
+  pbl_settings_close(&file);
 
   if (ret != S_SUCCESS) {
     PBL_LOG_ERR("Failed to save fuel gauge state");

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(sources
-  settings_file.c
-  settings_raw_iter.c
+  settings.c
+  raw_iter.c
 )
 pbl_library()
 pbl_library_sources(${sources})

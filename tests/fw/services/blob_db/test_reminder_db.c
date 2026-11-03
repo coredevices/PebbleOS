@@ -12,7 +12,7 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -147,7 +147,7 @@ void test_reminder_db__initialize(void) {
 
 void test_reminder_db__cleanup(void) {
   reminder_db_deinit();
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // Tests

@@ -277,7 +277,8 @@ static void prv_add_nodes_for_serialized_item(TimelineNode **list_head,
   }
 }
 
-static bool prv_each(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                     void *context) {
   // check entry is valid
   if (info->key_len != UUID_SIZE || info->val_len == 0) {
     return true; // continue iteration

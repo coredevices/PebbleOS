@@ -13,7 +13,7 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <fake_system_task.h>
 
 // Stubs
@@ -106,7 +106,7 @@ void test_pin_db__initialize(void) {
 
 void test_pin_db__cleanup(void) {
   pin_db_deinit();
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // Tests

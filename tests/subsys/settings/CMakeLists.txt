@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-pbl_clar_test(test_settings_file
+pbl_clar_test(test_settings
   MODULES settings rand
   SOURCES
     fw/applib/dict.c

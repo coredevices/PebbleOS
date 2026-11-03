@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <pbl/crc/crc.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 
 #include <clar_asserts.h>
 #include <system/status_codes.h>
@@ -19,7 +19,7 @@ struct {
   bool dirty[UINT8_MAX];
 } s_settings_file;
 
-void fake_settings_file_reset(void) {
+void fake_settings_reset(void) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
     free(s_settings_file.values[i]);
     s_settings_file.values[i] = nullptr;
@@ -32,9 +32,9 @@ void fake_settings_file_reset(void) {
   s_settings_file.open = false;
 }
 
-status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
-                           size_t val_out_len) {
-  if (settings_file_exists(file, key, key_len)) {
+status_t pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          void *val_out, size_t val_out_len) {
+  if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     memcpy(val_out, s_settings_file.values[key_crc8], val_out_len);
     return S_SUCCESS;
@@ -44,8 +44,8 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, 
   return E_DOES_NOT_EXIST;
 }
 
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, const void *val,
-                           size_t val_len) {
+status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          const void *val, size_t val_len) {
   void *val_copy = malloc(val_len);
   void *key_copy = malloc(key_len);
   cl_assert(val_copy && key_copy);
@@ -66,8 +66,8 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
   return S_SUCCESS;
 }
 
-int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
-  if (settings_file_exists(file, key, key_len)) {
+int pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
+  if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     return s_settings_file.val_lens[key_crc8];
   }
@@ -75,8 +75,8 @@ int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
   return 0;
 }
 
-status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
-  if (settings_file_exists(file, key, key_len)) {
+status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, size_t key_len) {
+  if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     free(s_settings_file.values[key_crc8]);
     free(s_settings_file.keys[key_crc8]);
@@ -91,39 +91,39 @@ status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_le
   }
 }
 
-status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
+status_t pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space) {
   if (s_settings_file.open) {
     return E_BUSY;
   } else {
-    *file = (SettingsFile){};
+    *file = (struct pbl_settings_file){};
     s_settings_file.open = true;
     return S_SUCCESS;
   }
 }
 
-status_t settings_file_open_growable(SettingsFile *file, const char *name, int max_used_space,
-                                     int initial_alloc_size) {
-  return settings_file_open(file, name, max_used_space);
+status_t pbl_settings_open_growable(struct pbl_settings_file *file, const char *name,
+                                    int max_used_space, int initial_alloc_size) {
+  return pbl_settings_open(file, name, max_used_space);
 }
 
-status_t settings_file_compact(SettingsFile *file) {
+status_t pbl_settings_compact(struct pbl_settings_file *file) {
   cl_assert(s_settings_file.open);
   return S_SUCCESS;
 }
 
-void settings_file_close(SettingsFile *file) {
+void pbl_settings_close(struct pbl_settings_file *file) {
   cl_assert(s_settings_file.open);
   s_settings_file.open = false;
 }
 
-bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len) {
+bool pbl_settings_exists(struct pbl_settings_file *file, const void *key, size_t key_len) {
   const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
   return (s_settings_file.values[key_crc8] != nullptr &&
           memcmp(s_settings_file.keys[key_crc8], key, key_len) == 0);
 }
 
-status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t key_len) {
-  if (settings_file_exists(file, key, key_len)) {
+status_t pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len) {
+  if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     s_settings_file.dirty[key_crc8] = false;
     return S_SUCCESS;
@@ -131,9 +131,9 @@ status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t k
   return E_DOES_NOT_EXIST;
 }
 
-status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_len, size_t offset,
-                                uint8_t byte) {
-  if (settings_file_exists(file, key, key_len)) {
+status_t pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, size_t key_len,
+                               size_t offset, uint8_t byte) {
+  if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     uint8_t *val_bytes = s_settings_file.values[key_crc8];
     val_bytes[offset] &= byte;
@@ -145,20 +145,20 @@ status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_
 
 uint8_t s_cur_itr;
 
-static void prv_get_key(SettingsFile *file, void *key, size_t key_len) {
+static void prv_get_key(struct pbl_settings_file *file, void *key, size_t key_len) {
   memcpy(key, s_settings_file.keys[s_cur_itr], key_len);
 }
 
-static void prv_get_val(SettingsFile *file, void *val, size_t val_len) {
+static void prv_get_val(struct pbl_settings_file *file, void *val, size_t val_len) {
   memcpy(val, s_settings_file.values[s_cur_itr], val_len);
 }
 
-void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
+void pbl_settings_each(struct pbl_settings_file *file, pbl_settings_each_cb_t cb, void *context) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
     if (s_settings_file.keys[i] != nullptr && s_settings_file.values[i] != nullptr) {
       s_cur_itr = i;
 
-      SettingsRecordInfo info = {
+      struct pbl_settings_record info = {
         .get_key = prv_get_key,
         .get_val = prv_get_val,
         .key_len = s_settings_file.key_lens[i],
@@ -172,15 +172,15 @@ void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *c
   }
 }
 
-status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context) {
+status_t pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb_t cb,
+                              void *context) {
   // TODO
-  fake_settings_file_reset();
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
-status_t settings_file_rewrite_filtered(SettingsFile *file,
-                                        SettingsFileRewriteFilterCallback filter_cb,
-                                        void *context) {
+status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
+                                       pbl_settings_filter_cb_t filter_cb, void *context) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
     if (s_settings_file.keys[i] == nullptr || s_settings_file.values[i] == nullptr) {
       continue;

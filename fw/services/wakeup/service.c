@@ -13,7 +13,7 @@
 #include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
 #include <pbl/services/wakeup.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
@@ -152,8 +152,8 @@ static void prv_wakeup_dispatcher(void *data) {
   system_task_add_callback(wakeup_dispatcher_system_task, data);
 }
 
-static bool prv_find_next_wakeup_id_callback(SettingsFile *file, SettingsRecordInfo *info,
-                                             void *context) {
+static bool prv_find_next_wakeup_id_callback(struct pbl_settings_file *file,
+                                             struct pbl_settings_record *info, void *context) {
   // Check if valid entry
   if (info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
     return true; // continue iterating
@@ -191,13 +191,13 @@ static void prv_wakeup_timer_next_pending(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     // Find the next event to occur
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
       // Reset wakeup state to use for the search
       s_wakeup_state.current_wakeup_id = -1;
       s_wakeup_state.timestamp = 0;
-      settings_file_each(&wakeup_settings, prv_find_next_wakeup_id_callback, nullptr);
-      settings_file_close(&wakeup_settings);
+      pbl_settings_each(&wakeup_settings, prv_find_next_wakeup_id_callback, nullptr);
+      pbl_settings_close(&wakeup_settings);
     } else {
       PBL_LOG_ERR("Error: could not open APP_WAKEUP settings");
     }
@@ -237,8 +237,9 @@ static void prv_wakeup_timer_next_pending(void) {
   }
 }
 
-static void prv_migrate_events_callback(SettingsFile *old_file, SettingsFile *new_file,
-                                        SettingsRecordInfo *info, void *utc_diff) {
+static void prv_migrate_events_callback(struct pbl_settings_file *old_file,
+                                        struct pbl_settings_file *new_file,
+                                        struct pbl_settings_record *info, void *utc_diff) {
   if (!utc_diff || info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
     return;
   }
@@ -260,11 +261,12 @@ static void prv_migrate_events_callback(SettingsFile *old_file, SettingsFile *ne
 
   // Write the new entry to the settings file.  We always write as there's no
   // chance of it being invalid.
-  settings_file_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
-                    sizeof(WakeupEntry));
+  pbl_settings_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
+                   sizeof(WakeupEntry));
 }
 
-static bool prv_check_for_events(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_check_for_events(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                 void *context) {
   bool *event_found = (bool *)context;
   *event_found = true;
   return false; // stop iterating
@@ -274,8 +276,9 @@ static WakeupId prv_wakeup_id_next(WakeupId wakeup_id) {
   return (wakeup_id >= WAKEUP_ID_MAX) ? WAKEUP_ID_MIN : (wakeup_id + 1);
 }
 
-static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new_file,
-                                       SettingsRecordInfo *info, void *context) {
+static void prv_update_events_callback(struct pbl_settings_file *old_file,
+                                       struct pbl_settings_file *new_file,
+                                       struct pbl_settings_record *info, void *context) {
   // Check if valid entry
   if (!context || info->key_len != sizeof(WakeupId)) {
     return;
@@ -314,9 +317,9 @@ static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new
 
   // schedule non-expired events
   if (time_difference > 0) {
-    // Using settings_file_rewrite, need to write to keep key/value
-    settings_file_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
-                      sizeof(WakeupEntry));
+    // Using pbl_settings_rewrite, need to write to keep key/value
+    pbl_settings_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
+                     sizeof(WakeupEntry));
   } else {
     if (entry.notify_if_missed) {
       if (missed_events->missed_app_ids == nullptr) {
@@ -350,8 +353,8 @@ void wakeup_init(void) {
   s_wakeup_state.next_wakeup_id = CLIP(rtc_get_time(), WAKEUP_ID_MIN, WAKEUP_ID_MAX);
   s_wakeup_state.timestamp = -1;
 
-  SettingsFile wakeup_settings;
-  if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != S_SUCCESS) {
+  struct pbl_settings_file wakeup_settings;
+  if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != S_SUCCESS) {
     PBL_LOG_ERR("Error: could not open wakeup settings");
     return;
   }
@@ -359,15 +362,15 @@ void wakeup_init(void) {
   // Want to check if there are any events first to prevent us from rewriting the file on boot if
   // we don't need to.
   bool event_found = false;
-  settings_file_each(&wakeup_settings, prv_check_for_events, &event_found);
+  pbl_settings_each(&wakeup_settings, prv_check_for_events, &event_found);
   if (event_found) {
     PBL_LOG_DBG("Rewriting wakeup file");
     // Update settings file removing expired events
-    settings_file_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
+    pbl_settings_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
   } else {
     PBL_LOG_DBG("Not rewriting wakeup file because no entries were found");
   }
-  settings_file_close(&wakeup_settings);
+  pbl_settings_close(&wakeup_settings);
 
   // If wakeup events were missed by apps requesting notify_if_missed
   // popup a notification window displaying these apps
@@ -430,10 +433,10 @@ PBL_SYSCALL(WakeupId, sys_wakeup_schedule, (VAL, time_t, timestamp), (VAL, int32
 static void prv_wakeup_settings_delete_entry(WakeupId wakeup_id) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
-      settings_file_delete(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId));
-      settings_file_close(&wakeup_settings);
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+      pbl_settings_delete(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId));
+      pbl_settings_close(&wakeup_settings);
     }
   }
   pbl_mutex_unlock(&s_mutex);
@@ -444,11 +447,11 @@ static WakeupEntry prv_wakeup_settings_get_entry(WakeupId wakeup_id) {
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
-      settings_file_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
-                        (uint8_t *)&entry, sizeof(WakeupEntry));
-      settings_file_close(&wakeup_settings);
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+      pbl_settings_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
+                       sizeof(WakeupEntry));
+      pbl_settings_close(&wakeup_settings);
     }
   }
   pbl_mutex_unlock(&s_mutex);
@@ -469,7 +472,8 @@ PBL_SYSCALL(void, sys_wakeup_delete, (VAL, WakeupId, wakeup_id)) {
   }
 }
 
-static bool prv_check_count_and_availability_callback(SettingsFile *file, SettingsRecordInfo *info,
+static bool prv_check_count_and_availability_callback(struct pbl_settings_file *file,
+                                                      struct pbl_settings_record *info,
                                                       void *context) {
   // Check if valid entry
   if (!context || info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
@@ -504,13 +508,13 @@ static bool prv_check_count_and_availability_callback(SettingsFile *file, Settin
   return true; // continue iterating
 }
 
-static WakeupId prv_wakeup_id_alloc(SettingsFile *file) {
+static WakeupId prv_wakeup_id_alloc(struct pbl_settings_file *file) {
   WakeupId wakeup_id;
 
   do {
     wakeup_id = s_wakeup_state.next_wakeup_id;
     s_wakeup_state.next_wakeup_id = prv_wakeup_id_next(wakeup_id);
-  } while (settings_file_exists(file, &wakeup_id, sizeof(wakeup_id)));
+  } while (pbl_settings_exists(file, &wakeup_id, sizeof(wakeup_id)));
 
   return wakeup_id;
 }
@@ -520,15 +524,15 @@ static WakeupId prv_wakeup_settings_add_entry(WakeupEntry entry) {
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
       // Check if current app already has MAX_WAKEUP_EVENTS_PER_APP scheduled
       // or if the minute event window is already occupied
       struct prv_check_app_and_wakeup_event_s check = {
         .wakeup_count = 0,
         .wakeup_timestamp = entry.timestamp
       };
-      settings_file_each(&wakeup_settings, prv_check_count_and_availability_callback, &check);
+      pbl_settings_each(&wakeup_settings, prv_check_count_and_availability_callback, &check);
 
       if (check.wakeup_count < S_SUCCESS) {
         status = check.wakeup_count;
@@ -536,13 +540,13 @@ static WakeupId prv_wakeup_settings_add_entry(WakeupEntry entry) {
         status = E_OUT_OF_RESOURCES;
       } else {
         WakeupId wakeup_id = prv_wakeup_id_alloc(&wakeup_settings);
-        status = settings_file_set(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
-                                   (uint8_t *)&entry, sizeof(WakeupEntry));
+        status = pbl_settings_set(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
+                                  (uint8_t *)&entry, sizeof(WakeupEntry));
         if (status == S_SUCCESS) {
           status = wakeup_id;
         }
       }
-      settings_file_close(&wakeup_settings);
+      pbl_settings_close(&wakeup_settings);
     } else {
       status = E_INTERNAL;
     }
@@ -552,8 +556,9 @@ static WakeupId prv_wakeup_settings_add_entry(WakeupEntry entry) {
   return status;
 }
 
-static void prv_delete_events_by_uuid_callback(SettingsFile *old_file, SettingsFile *new_file,
-                                               SettingsRecordInfo *info, void *context) {
+static void prv_delete_events_by_uuid_callback(struct pbl_settings_file *old_file,
+                                               struct pbl_settings_file *new_file,
+                                               struct pbl_settings_record *info, void *context) {
   // Check if valid entry
   if (info->key_len != sizeof(WakeupId) || info->val_len != sizeof(WakeupEntry)) {
     return;
@@ -574,20 +579,20 @@ static void prv_delete_events_by_uuid_callback(SettingsFile *old_file, SettingsF
     }
     // Deletes the entry automatically if not written
   } else { // Keep the entry
-    // Using settings_file_rewrite, need to write to keep key/value
-    settings_file_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
-                      sizeof(WakeupEntry));
+    // Using pbl_settings_rewrite, need to write to keep key/value
+    pbl_settings_set(new_file, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
+                     sizeof(WakeupEntry));
   }
 }
 
 PBL_SYSCALL(void, sys_wakeup_cancel_all_for_app) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
       // Update settings file removing all events with UUID = uuid
-      settings_file_rewrite(&wakeup_settings, prv_delete_events_by_uuid_callback, nullptr);
-      settings_file_close(&wakeup_settings);
+      pbl_settings_rewrite(&wakeup_settings, prv_delete_events_by_uuid_callback, nullptr);
+      pbl_settings_close(&wakeup_settings);
     }
   }
   pbl_mutex_unlock(&s_mutex);
@@ -606,12 +611,12 @@ PBL_SYSCALL(time_t, sys_wakeup_query, (VAL, WakeupId, wakeup_id)) {
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
       // Check if the wakeup id is valid by seeing if it is in the wakeup settings_file
-      status = settings_file_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
-                                 (uint8_t *)&entry, sizeof(WakeupEntry));
-      settings_file_close(&wakeup_settings);
+      status = pbl_settings_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
+                                (uint8_t *)&entry, sizeof(WakeupEntry));
+      pbl_settings_close(&wakeup_settings);
     } else {
       status = E_INTERNAL;
     }
@@ -656,10 +661,10 @@ WakeupId wakeup_get_next_scheduled(void) {
 void wakeup_migrate_timezone(int utc_diff) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
-      settings_file_rewrite(&wakeup_settings, prv_migrate_events_callback, (void *)&utc_diff);
-      settings_file_close(&wakeup_settings);
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+      pbl_settings_rewrite(&wakeup_settings, prv_migrate_events_callback, (void *)&utc_diff);
+      pbl_settings_close(&wakeup_settings);
     } else {
       PBL_LOG_ERR("Error: could not open wakeup settings");
     }
@@ -673,11 +678,11 @@ static void prv_wakeup_rewrite_kernel_bg_cb(void *data) {
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile wakeup_settings;
-    if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    struct pbl_settings_file wakeup_settings;
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
       // Update each wakeup entry via prv_update_events_callback and record any missed events
-      settings_file_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
-      settings_file_close(&wakeup_settings);
+      pbl_settings_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
+      pbl_settings_close(&wakeup_settings);
     } else {
       PBL_LOG_ERR("Error: could not open wakeup settings");
     }

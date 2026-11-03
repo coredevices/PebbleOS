@@ -20,7 +20,7 @@
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <fake_spi_flash.h>
 
 bool calendar_layout_verify(bool existing_attributes[]) {
@@ -178,7 +178,7 @@ void test_calendar__initialize(void) {
 void test_calendar__cleanup(void) {
   timeline_event_deinit();
   stub_new_timer_cleanup();
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // Tests

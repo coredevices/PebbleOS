@@ -27,7 +27,7 @@ bool activity_is_initialized(void) {
 #include <fake_kernel_services_notifications.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
 static struct pbl_tm s_init_time_tm = {
@@ -229,12 +229,12 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
   return true;
 }
 
-SettingsFile *activity_private_settings_open(void) {
-  static SettingsFile file = {};
+struct pbl_settings_file *activity_private_settings_open(void) {
+  static struct pbl_settings_file file = {};
   return &file;
 }
 
-void activity_private_settings_close(SettingsFile *file) {
+void activity_private_settings_close(struct pbl_settings_file *file) {
   return;
 }
 
@@ -383,7 +383,7 @@ void test_activity_insights__initialize(void) {
 
 // ---------------------------------------------------------------------------------------
 void test_activity_insights__cleanup(void) {
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -496,7 +496,7 @@ void test_activity_insights__sleep_reward(void) {
   //  ActivityInsightSettings disabled_sleep;
   //  activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD, &disabled_sleep);
   //  disabled_sleep.enabled = false,
-  //  settings_file_set(NULL, /* fake settings file don't care */
+  //  pbl_settings_set(NULL, /* fake settings file don't care */
   //                    ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD,
   //                    strlen(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD), &disabled_sleep,
   //                    sizeof(disabled_sleep));
@@ -603,10 +603,10 @@ void test_activity_insights__disable_activity_reward(void) {
   ActivityInsightSettings disabled_activity;
   activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD, &disabled_activity);
   disabled_activity.enabled = false,
-  settings_file_set(nullptr, /* fake settings file don't care */
-                    ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD,
-                    strlen(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD), &disabled_activity,
-                    sizeof(disabled_activity));
+  pbl_settings_set(nullptr, /* fake settings file don't care */
+                   ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD,
+                   strlen(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD), &disabled_activity,
+                   sizeof(disabled_activity));
   pfs_watch_cb(nullptr); // Update the settings cache
   prv_minute_update(ACTIVE_MINUTES);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);

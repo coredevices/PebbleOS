@@ -297,7 +297,7 @@ class PFSFileNode(Recognizer):
 
 
 class SettingsFile(Recognizer):
-    type = "SettingsFile"
+    type = "struct pbl_settings_file"
     depends_on = "String"
 
     def is_type(self, settings, search_blocks):

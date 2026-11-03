@@ -7,7 +7,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/weather/weather_service_private.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
@@ -18,7 +18,7 @@
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 static struct {
-  SettingsFile settings_file;
+  struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
   // We cache the reminder app prefs because they're read in reminder_app_get_info() which needs to
   // be fast because it's called by analytics from the system task while counting timeline pins
@@ -36,8 +36,8 @@ PBL_T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
-  status_t rv = settings_file_open_growable(&s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE, PBL_KIB(4));
+  status_t rv = pbl_settings_open_growable(&s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME,
+                                           SETTINGS_FILE_SIZE, PBL_KIB(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   }
@@ -45,7 +45,7 @@ static status_t prv_lock_mutex_and_open_file(void) {
 }
 
 static void prv_close_file_and_unlock_mutex(void) {
-  settings_file_close(&s_watch_app_prefs_db.settings_file);
+  pbl_settings_close(&s_watch_app_prefs_db.settings_file);
   pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
 }
 
@@ -59,12 +59,12 @@ static void *prv_get_prefs(const char *pref_key) {
   }
 
   const int len =
-      settings_file_get_len(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key));
+      pbl_settings_get_len(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key));
   void *prefs = pbl_zalloc(len);
 
   if (prefs) {
-    rv = settings_file_get(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key), prefs,
-                           len);
+    rv = pbl_settings_get(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key), prefs,
+                          len);
     if (rv != S_SUCCESS) {
       pbl_free(prefs);
       prefs = nullptr;
@@ -160,7 +160,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
 
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv == S_SUCCESS) {
-    rv = settings_file_set(&s_watch_app_prefs_db.settings_file, key, key_len, val, val_len);
+    rv = pbl_settings_set(&s_watch_app_prefs_db.settings_file, key, key_len, val, val_len);
 
     // Cache the data we just set if it was for the Reminders app
     const int expected_reminder_app_prefs_size = sizeof(SerializedReminderAppPrefs);
@@ -179,7 +179,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
 int watch_app_prefs_db_get_len(const uint8_t *key, int key_len) {
   int len = 0;
   if (prv_lock_mutex_and_open_file() == S_SUCCESS) {
-    len = settings_file_get_len(&s_watch_app_prefs_db.settings_file, key, key_len);
+    len = pbl_settings_get_len(&s_watch_app_prefs_db.settings_file, key, key_len);
     prv_close_file_and_unlock_mutex();
   }
 
@@ -194,7 +194,7 @@ status_t watch_app_prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_o
 
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv == S_SUCCESS) {
-    rv = settings_file_get(&s_watch_app_prefs_db.settings_file, key, key_len, val_out, val_out_len);
+    rv = pbl_settings_get(&s_watch_app_prefs_db.settings_file, key, key_len, val_out, val_out_len);
     prv_close_file_and_unlock_mutex();
   }
 
@@ -204,7 +204,7 @@ status_t watch_app_prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_o
 status_t watch_app_prefs_db_delete(const uint8_t *key, int key_len) {
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv == S_SUCCESS) {
-    rv = settings_file_delete(&s_watch_app_prefs_db.settings_file, key, key_len);
+    rv = pbl_settings_delete(&s_watch_app_prefs_db.settings_file, key, key_len);
     prv_close_file_and_unlock_mutex();
   }
 
@@ -223,7 +223,7 @@ status_t watch_app_prefs_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = settings_file_compact(&s_watch_app_prefs_db.settings_file);
+  rv = pbl_settings_compact(&s_watch_app_prefs_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
 }

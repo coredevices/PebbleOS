@@ -3,4 +3,4 @@
 
 #pragma once
 
-void fake_settings_file_reset(void);
+void fake_settings_reset(void);

@@ -9,7 +9,7 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
@@ -300,9 +300,9 @@ void test_app_cache__corrupt_key(void) {
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
 
   // add one with a key value of length 3
-  // Raw SettingsFile calls
-  SettingsFile file;
-  status_t rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+  // Raw struct pbl_settings_file calls
+  struct pbl_settings_file file;
+  status_t rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
 
   cl_assert_equal_i(S_SUCCESS, rv);
 
@@ -314,11 +314,11 @@ void test_app_cache__corrupt_key(void) {
   };
 
   int rand_id = 1717;
-  rv = settings_file_set(&file, (uint8_t *)&rand_id, (sizeof(AppInstallId) - 1), (uint8_t *)&entry,
-                         sizeof(AppCacheEntry));
+  rv = pbl_settings_set(&file, (uint8_t *)&rand_id, (sizeof(AppInstallId) - 1), (uint8_t *)&entry,
+                        sizeof(AppCacheEntry));
 
-  settings_file_close(&file);
-  // End Raw SettingsFile calls
+  pbl_settings_close(&file);
+  // End Raw struct pbl_settings_file calls
 
   // force iteration on the app_cache. This will find the corrupted entry, and delete the app cache
   app_cache_free_up_space(1);

@@ -9,7 +9,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
@@ -32,7 +32,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 static AppInstallId s_next_unique_flash_app_id;
 
 static struct {
-  SettingsFile settings_file;
+  struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
 } s_app_db;
 
@@ -47,8 +47,8 @@ struct AppDBInitData {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_db.mutex, PBL_FOREVER);
-  status_t rv = settings_file_open_growable(&s_app_db.settings_file, SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE, PBL_KIB(4));
+  status_t rv = pbl_settings_open_growable(&s_app_db.settings_file, SETTINGS_FILE_NAME,
+                                           SETTINGS_FILE_SIZE, PBL_KIB(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_db.mutex);
   }
@@ -56,7 +56,7 @@ static status_t prv_lock_mutex_and_open_file(void) {
 }
 
 static void prv_close_file_and_unlock_mutex(void) {
-  settings_file_close(&s_app_db.settings_file);
+  pbl_settings_close(&s_app_db.settings_file);
   pbl_mutex_unlock(&s_app_db.mutex);
 }
 
@@ -67,35 +67,35 @@ static bool prv_entry_len_valid(size_t len) {
 // Records stay at the legacy size, which older firmware copies into its AppDBEntry unchecked, so
 // the permissions live in their own record keyed by the app's UUID. Older firmware skips it, as
 // its key isn't an AppInstallId.
-static uint32_t prv_read_permissions(SettingsFile *file, const Uuid *uuid) {
+static uint32_t prv_read_permissions(struct pbl_settings_file *file, const Uuid *uuid) {
   uint32_t permissions;
-  if (settings_file_get(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions)) !=
-      S_SUCCESS) {
+  if (pbl_settings_get(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions)) != S_SUCCESS) {
     return 0;
   }
   return permissions;
 }
 
-static status_t prv_write_permissions(SettingsFile *file, const Uuid *uuid, uint32_t permissions) {
+static status_t prv_write_permissions(struct pbl_settings_file *file, const Uuid *uuid,
+                                      uint32_t permissions) {
   if (permissions) {
-    return settings_file_set(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions));
+    return pbl_settings_set(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions));
   }
-  if (settings_file_exists(file, uuid, sizeof(*uuid))) {
-    return settings_file_delete(file, uuid, sizeof(*uuid));
+  if (pbl_settings_exists(file, uuid, sizeof(*uuid))) {
+    return pbl_settings_delete(file, uuid, sizeof(*uuid));
   }
   return S_SUCCESS;
 }
 
-static status_t prv_read_entry(SettingsFile *file, AppInstallId id, AppDBEntry *entry) {
+static status_t prv_read_entry(struct pbl_settings_file *file, AppInstallId id, AppDBEntry *entry) {
   memset(entry, 0, sizeof(*entry));
-  const int len = settings_file_get_len(file, &id, sizeof(id));
+  const int len = pbl_settings_get_len(file, &id, sizeof(id));
   if (!len)
     return E_DOES_NOT_EXIST;
   if (!prv_entry_len_valid(len))
     return E_INVALID_ARGUMENT;
   // Reads only the legacy part, as records written before the permissions moved can be longer.
   // The permissions are a separate lookup, done only where they're needed.
-  return settings_file_get(file, &id, sizeof(id), entry, APP_DB_LEGACY_ENTRY_SIZE);
+  return pbl_settings_get(file, &id, sizeof(id), entry, APP_DB_LEGACY_ENTRY_SIZE);
 }
 
 //! A null uuid means every app's permissions changed.
@@ -117,9 +117,10 @@ static status_t prv_cancel_app_fetch(AppInstallId app_id) {
   }
 }
 
-//! SettingsFileEachCallback function is used to iterate over all keys and find the largest
+//! pbl_settings_each_cb_t function is used to iterate over all keys and find the largest
 //! AppInstallId currently being using.
-static bool prv_each_inspect_ids(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_inspect_ids(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                 void *context) {
   // check entry is valid
   if (!prv_entry_len_valid(info->val_len) || info->key_len != sizeof(AppInstallId)) {
     return true; // continue iterating
@@ -141,10 +142,11 @@ struct UuidFilterData {
   AppInstallId found_id;
 };
 
-//! SettingsFileEachCallback function is used to iterate over all entries and search for
+//! pbl_settings_each_cb_t function is used to iterate over all entries and search for
 //! the particular entry with the given UUID. If one is found, it will set the uuid_data->found_id
 //! to a value other than INSTALL_ID_INVALID
-static bool prv_db_filter_app_id(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_db_filter_app_id(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                 void *context) {
   // check entry is valid
   if (!prv_entry_len_valid(info->val_len) || info->key_len != sizeof(AppInstallId)) {
     return true; // continue iterating
@@ -164,16 +166,17 @@ static bool prv_db_filter_app_id(SettingsFile *file, SettingsRecordInfo *info, v
   return true; // continue iterating
 }
 
-//! Retrieves the AppInstallId for a given UUID using the SettingsFile that is already open.
+//! Retrieves the AppInstallId for a given UUID using the struct pbl_settings_file that is already
+//! open.
 //! @note Requires holding the lock already
-static AppInstallId prv_find_install_id_for_uuid(SettingsFile *file, const Uuid *uuid) {
+static AppInstallId prv_find_install_id_for_uuid(struct pbl_settings_file *file, const Uuid *uuid) {
   // used when iterating through all entries in our database.
   struct UuidFilterData filter_data = {
     .found_id = INSTALL_ID_INVALID,
     .uuid = *uuid,
   };
 
-  settings_file_each(file, prv_db_filter_app_id, (void *)&filter_data);
+  pbl_settings_each(file, prv_db_filter_app_id, (void *)&filter_data);
   return filter_data.found_id;
 }
 
@@ -240,7 +243,7 @@ bool app_db_exists_install_id(AppInstallId app_id) {
   }
 
   bool exists =
-      settings_file_exists(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
+      pbl_settings_exists(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
 
   prv_close_file_and_unlock_mutex();
   return exists;
@@ -252,7 +255,8 @@ typedef struct {
   AppDBEntry *entry_buf;
 } EnumerateData;
 
-static bool prv_enumerate_entries(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_enumerate_entries(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                  void *context) {
   // check entry is valid
   if (!prv_entry_len_valid(info->val_len) || info->key_len != sizeof(AppInstallId)) {
     return true; // continue iteration
@@ -285,7 +289,7 @@ void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {
     .data = data,
     .entry_buf = db_entry,
   };
-  settings_file_each(&s_app_db.settings_file, prv_enumerate_entries, &cb_data);
+  pbl_settings_each(&s_app_db.settings_file, prv_enumerate_entries, &cb_data);
 
   prv_close_file_and_unlock_mutex();
   pbl_free(db_entry);
@@ -312,7 +316,7 @@ void app_db_init(void) {
 
   struct AppDBInitData data = {};
 
-  settings_file_each(&s_app_db.settings_file, prv_each_inspect_ids, &data);
+  pbl_settings_each(&s_app_db.settings_file, prv_each_inspect_ids, &data);
 
   if (data.max_id == INSTALL_ID_INVALID) {
     s_next_unique_flash_app_id = (INSTALL_ID_INVALID + 1);
@@ -363,8 +367,8 @@ status_t app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int 
   }
 
   if ((rv == S_SUCCESS) && !permissions_only) {
-    rv = settings_file_set(&s_app_db.settings_file, &app_id, sizeof(app_id), &incoming,
-                           APP_DB_LEGACY_ENTRY_SIZE);
+    rv = pbl_settings_set(&s_app_db.settings_file, &app_id, sizeof(app_id), &incoming,
+                          APP_DB_LEGACY_ENTRY_SIZE);
   }
   if ((rv == S_SUCCESS) && has_permissions) {
     rv = prv_write_permissions(&s_app_db.settings_file, &incoming.uuid, incoming.permissions);
@@ -398,7 +402,7 @@ int app_db_get_len(const uint8_t *key, int key_len) {
   if (app_id == INSTALL_ID_INVALID) {
     rv = 0;
   } else {
-    rv = settings_file_get_len(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
+    rv = pbl_settings_get_len(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
   }
 
   prv_close_file_and_unlock_mutex();
@@ -440,7 +444,7 @@ status_t app_db_delete(const uint8_t *key, int key_len) {
   }
 
   if (rv == S_SUCCESS) {
-    rv = settings_file_delete(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
+    rv = pbl_settings_delete(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
   }
   if (rv == S_SUCCESS) {
     prv_write_permissions(&s_app_db.settings_file, (const Uuid *)key, 0);
@@ -500,7 +504,7 @@ status_t app_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = settings_file_compact(&s_app_db.settings_file);
+  rv = pbl_settings_compact(&s_app_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
 }

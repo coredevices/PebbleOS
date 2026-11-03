@@ -23,7 +23,7 @@
 ////////////////////////////////////////////////////////////////
 
 #include <fake_rtc.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 void sys_get_app_uuid(Uuid *uuid) {
   if (uuid) {
@@ -56,7 +56,7 @@ void sys_timeline_resources_get_id(const TimelineResourceInfo *timeline_res,
 ////////////////////////////////////////////////////////////////
 
 int pbl_fs_unlink(const char *path) {
-  fake_settings_file_reset();
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
@@ -65,7 +65,7 @@ int pbl_fs_unlink(const char *path) {
 
 void test_app_glance__initialize(void) {
   fake_rtc_init(0, 1337);
-  fake_settings_file_reset();
+  fake_settings_reset();
   app_glance_db_init();
   app_glance_service_init();
 

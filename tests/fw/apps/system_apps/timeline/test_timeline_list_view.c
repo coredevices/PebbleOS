@@ -9,7 +9,7 @@
 #include <pbl/util/units.h>
 
 #include <apps/system/timeline/timeline.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <fixtures/screen_grid.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
@@ -183,7 +183,7 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
   timeline_layer_deinit(&timeline_layer);
   timeline_model_deinit();
   pin_db_flush();
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // Content size grids

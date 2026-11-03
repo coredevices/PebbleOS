@@ -6,11 +6,11 @@
 
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/settings/settings_file.h>
-#include <pbl/settings/settings_raw_iter.h>
+#include <pbl/settings/settings.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>
+#include <settings/raw_iter.h>
 
 // Stubs
 ////////////////////////////////////
@@ -21,14 +21,14 @@
 
 // Tests
 ////////////////////////////////////
-extern status_t settings_file_compact(SettingsFile *file);
+extern status_t pbl_settings_compact(struct pbl_settings_file *file);
 
-void test_settings_file__initialize(void) {
+void test_settings__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
   fake_pfs_mount();
 }
 
-void test_settings_file__cleanup(void) {
+void test_settings__cleanup(void) {
   stub_pbl_malloc_set_should_fail(false);
 }
 
@@ -39,10 +39,10 @@ void test_settings_file__cleanup(void) {
   (byte & 0x80 ? 1 : 0), (byte & 0x40 ? 1 : 0), (byte & 0x20 ? 1 : 0), (byte & 0x10 ? 1 : 0), \
       (byte & 0x08 ? 1 : 0), (byte & 0x04 ? 1 : 0), (byte & 0x02 ? 1 : 0), (byte & 0x01 ? 1 : 0)
 
-void settings_file_dump(SettingsFile *file) {
-  for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-       settings_raw_iter_next(&file->iter)) {
-    SettingsRecordHeader hdr = file->iter.hdr;
+void settings_file_dump(struct pbl_settings_file *file) {
+  for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
+       pbl_settings__raw_iter_next(&file->iter)) {
+    struct pbl_settings_record_hdr hdr = file->iter.hdr;
     printf("Record { last_modified: %d, ", hdr.last_modified);
     printf("flags: " BIN8_FMT ", ", TO_BINARY(hdr.flags));
     printf("key_hash: %" PRIu8 ", key_len: %d, val_len: %d }\n", hdr.key_hash, hdr.key_len,
@@ -50,14 +50,15 @@ void settings_file_dump(SettingsFile *file) {
   }
 }
 
-static void verify(SettingsFile *file, uint8_t *key, int key_len, uint8_t *val, int val_len) {
-  int val_len_out = settings_file_get_len(file, key, key_len);
+static void verify(struct pbl_settings_file *file, uint8_t *key, int key_len, uint8_t *val,
+                   int val_len) {
+  int val_len_out = pbl_settings_get_len(file, key, key_len);
   cl_must_pass(val_len_out);
   cl_assert_equal_i(val_len, val_len_out);
 
   const bool is_immediate_delete = (val_len == 0);
   uint8_t *val_out = malloc(val_len_out);
-  cl_assert_equal_i(settings_file_get(file, key, key_len, val_out, val_len_out),
+  cl_assert_equal_i(pbl_settings_get(file, key, key_len, val_out, val_len_out),
                     is_immediate_delete ? E_DOES_NOT_EXIST : S_SUCCESS);
   if (!is_immediate_delete) {
     cl_assert_equal_m(val, val_out, val_len);
@@ -65,16 +66,16 @@ static void verify(SettingsFile *file, uint8_t *key, int key_len, uint8_t *val, 
   free(val_out);
 }
 
-static void set_and_verify(SettingsFile *file, uint8_t *key, int key_len, uint8_t *val,
+static void set_and_verify(struct pbl_settings_file *file, uint8_t *key, int key_len, uint8_t *val,
                            int val_len) {
-  cl_must_pass(settings_file_set(file, key, key_len, val, val_len));
+  cl_must_pass(pbl_settings_set(file, key, key_len, val, val_len));
   verify(file, key, key_len, val, val_len);
 }
 
-void test_settings_file__set_get_one(void) {
+void test_settings__set_get_one(void) {
   printf("\nTesting setting and retrieving a single key a single time...\n");
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_set_get_one", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_set_get_one", 4096));
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
   memcpy(key, "key", sizeof(key));
@@ -85,10 +86,10 @@ void test_settings_file__set_get_one(void) {
   set_and_verify(&file, key, key_len, val, val_len);
 }
 
-void test_settings_file__set_get_one_many_times(void) {
+void test_settings__set_get_one_many_times(void) {
   printf("\nTesting setting and retrieving a key several times...\n");
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_set_get_one_many_times", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_set_get_one_many_times", 4096));
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
   memcpy(key, "key", sizeof(key));
@@ -102,14 +103,15 @@ void test_settings_file__set_get_one_many_times(void) {
     set_and_verify(&file, key, key_len, val, val_len);
   }
 
-  settings_file_close(&file);
-  cl_must_pass(settings_file_open(&file, "/test_file_set_get_one_many_times", 4096));
+  pbl_settings_close(&file);
+  cl_must_pass(pbl_settings_open(&file, "/test_file_set_get_one_many_times", 4096));
 
   printf("Making sure we still get the right value after closing & reopening the file...\n");
   verify(&file, key, key_len, val, val_len);
 }
 
-static bool prv_each_check_all_values(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_check_all_values(struct pbl_settings_file *file,
+                                      struct pbl_settings_record *info, void *context) {
   uint32_t desired_value = *(uint32_t *)context;
 
   uint32_t key;
@@ -124,8 +126,8 @@ static void prv_test_settings_file_compaction(const bool manual) {
   // If manual is enabled, then the test will force a compaction every so often
   // If manual is disabled, then the test will only compact when it is required to do so.
 
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_compaction", 2048));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_compaction", 2048));
 
   uint32_t value = 0;
   static const uint32_t LOOPS = 10;
@@ -133,18 +135,17 @@ static void prv_test_settings_file_compaction(const bool manual) {
 
   // set all keys to 0
   for (uint32_t i = 0; i < NUMBER_ENTRIES; i++) {
-    settings_file_set(&file, (uint8_t *)&i, sizeof(uint32_t), (uint8_t *)&value, sizeof(uint32_t));
+    pbl_settings_set(&file, (uint8_t *)&i, sizeof(uint32_t), (uint8_t *)&value, sizeof(uint32_t));
   }
 
   for (uint32_t i = 0; i < LOOPS; i++) {
     // increment value of all NUMBER_ENTRIES entries
     for (uint32_t j = 0; j < NUMBER_ENTRIES; j++) {
       if (manual && (j % 10 == 0)) {
-        cl_must_pass(settings_file_compact(&file));
+        cl_must_pass(pbl_settings_compact(&file));
       }
 
-      settings_file_get(&file, (uint8_t *)&j, sizeof(uint32_t), (uint8_t *)&value,
-                        sizeof(uint32_t));
+      pbl_settings_get(&file, (uint8_t *)&j, sizeof(uint32_t), (uint8_t *)&value, sizeof(uint32_t));
       value += 1;
       set_and_verify(&file, (uint8_t *)&j, sizeof(uint32_t), (uint8_t *)&value, sizeof(uint32_t));
     }
@@ -152,33 +153,33 @@ static void prv_test_settings_file_compaction(const bool manual) {
 
   // ensure all values of every entry is equal to LOOPS
   uint32_t desired_value = LOOPS;
-  settings_file_each(&file, prv_each_check_all_values, (void *)&desired_value);
+  pbl_settings_each(&file, prv_each_check_all_values, (void *)&desired_value);
 }
 
-void test_settings_file__manual_compaction_increment(void) {
+void test_settings__manual_compaction_increment(void) {
   printf("\nTesting manual file compaction...\n");
   const bool manual_compaction = true;
   prv_test_settings_file_compaction(manual_compaction);
 }
 
-void test_settings_file__automatic_compaction_increment(void) {
+void test_settings__automatic_compaction_increment(void) {
   printf("\nTesting automatic file compaction...\n");
   const bool manual_compaction = false;
   prv_test_settings_file_compaction(manual_compaction);
 }
 
-static void prv_print_stats(SettingsFile *file) {
+static void prv_print_stats(struct pbl_settings_file *file) {
   printf("file max used space = %d\n", file->max_used_space);
   printf("file max space total = %d\n", file->max_space_total);
   printf("file used space = %d\n", file->used_space);
   printf("file dead space = %d\n", file->dead_space);
 }
 
-void test_settings_file__compute_stats(void) {
+void test_settings__compute_stats(void) {
   printf("\nTesting if compute stats is equal to live stats...\n");
-  SettingsFile file;
+  struct pbl_settings_file file;
   const uint32_t max_used_space = 4096;
-  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", max_used_space));
+  cl_must_pass(pbl_settings_open(&file, "/test_file_max_storage", max_used_space));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -191,24 +192,24 @@ void test_settings_file__compute_stats(void) {
     set_and_verify(&file, key, key_len, val, val_len);
     // delete the first 50
     if (i < 50) {
-      settings_file_delete(&file, key, key_len);
+      pbl_settings_delete(&file, key, key_len);
     }
   }
   prv_print_stats(&file);
-  settings_file_compact(&file);
-  const SettingsFile file_copy = file;
-  settings_file_close(&file);
-  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", max_used_space));
+  pbl_settings_compact(&file);
+  const struct pbl_settings_file file_copy = file;
+  pbl_settings_close(&file);
+  cl_must_pass(pbl_settings_open(&file, "/test_file_max_storage", max_used_space));
   cl_assert_equal_i(file.max_used_space, file_copy.max_used_space);
   cl_assert_equal_i(file.max_space_total, file_copy.max_space_total);
   cl_assert_equal_i(file.used_space, file_copy.used_space);
   cl_assert_equal_i(file.dead_space, file_copy.dead_space);
 }
 
-void test_settings_file__max_storage(void) {
+void test_settings__max_storage(void) {
   printf("\nTesting what happens when we hit the storage limits...\n");
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_max_storage", 4096));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -224,21 +225,21 @@ void test_settings_file__max_storage(void) {
   printf("Making sure we handle running out of storage gracefully...\n");
   memcpy(key, "k255", 5);
   memcpy(val, "v255", 5);
-  cl_assert_equal_i(settings_file_set(&file, key, key_len, val, val_len), E_OUT_OF_STORAGE);
-  int val_len_out = settings_file_get_len(&file, key, key_len);
+  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), E_OUT_OF_STORAGE);
+  int val_len_out = pbl_settings_get_len(&file, key, key_len);
   cl_must_pass(val_len_out);
   uint8_t *val_out = malloc(val_len_out);
-  cl_assert_equal_i(settings_file_get(&file, key, key_len, val_out, val_len_out), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(pbl_settings_get(&file, key, key_len, val_out, val_len_out), E_DOES_NOT_EXIST);
   free(val_out);
   printf("Making sure we can delete when at max storage...\n");
   memcpy(key, "k000", 5);
-  cl_must_pass(settings_file_delete(&file, key, key_len));
+  cl_must_pass(pbl_settings_delete(&file, key, key_len));
 }
 
-void test_settings_file__max_storage_with_delete(void) {
+void test_settings__max_storage_with_delete(void) {
   printf("\nTesting what happens when we hit the storage limits with deletes...\n");
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_max_storage", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_max_storage", 4096));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -253,24 +254,24 @@ void test_settings_file__max_storage_with_delete(void) {
     set_and_verify(&file, key, key_len, val, val_len);
     // delete the first iteration
     if (j < 255) {
-      settings_file_delete(&file, key, key_len);
+      pbl_settings_delete(&file, key, key_len);
     }
   }
   printf("Making sure we handle running out of storage gracefully...\n");
   memcpy(key, "k255", 5);
   memcpy(val, "v255", 5);
-  cl_assert_equal_i(settings_file_set(&file, key, key_len, val, val_len), E_OUT_OF_STORAGE);
-  int val_len_out = settings_file_get_len(&file, key, key_len);
+  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), E_OUT_OF_STORAGE);
+  int val_len_out = pbl_settings_get_len(&file, key, key_len);
   cl_must_pass(val_len_out);
   uint8_t *val_out = malloc(val_len_out);
-  cl_assert_equal_i(settings_file_get(&file, key, key_len, val_out, val_len_out), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(pbl_settings_get(&file, key, key_len, val_out, val_len_out), E_DOES_NOT_EXIST);
   free(val_out);
 }
 
-void test_settings_file__used_space_tracking(void) {
+void test_settings__used_space_tracking(void) {
   printf("\nTesting used space tracking...\n");
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_used_space_tracking", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_used_space_tracking", 4096));
   uint8_t key[5];
   int key_len = 4;
   uint8_t val[5];
@@ -297,7 +298,7 @@ void test_settings_file__used_space_tracking(void) {
 
   // Finally, try to set a key to a large value. This should succeed with
   // plenty of room to spare if our space tracking is functioning correctly.
-  uint8_t big_val[SETTINGS_VAL_MAX_LEN] = {};
+  uint8_t big_val[PBL_SETTINGS_VAL_MAX_LEN] = {};
   set_and_verify(&file, key, key_len, big_val, 511);
 }
 
@@ -314,8 +315,8 @@ static RecordResult write_and_change_record_aborting_after_bytes(int after_n_byt
   fake_rtc_init(0, 1388563200);
   fake_pfs_mount();
 
-  SettingsFile file_original;
-  cl_must_pass(settings_file_open(&file_original, "/test_file_atomic", 4096));
+  struct pbl_settings_file file_original;
+  cl_must_pass(pbl_settings_open(&file_original, "/test_file_atomic", 4096));
 
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
@@ -347,16 +348,16 @@ static RecordResult write_and_change_record_aborting_after_bytes(int after_n_byt
     fake_pfs_mount();
 
     // Reopen the file we were in the middle of writing.
-    SettingsFile file_new;
-    cl_must_pass(settings_file_open(&file_new, "/test_file_atomic", 4096));
+    struct pbl_settings_file file_new;
+    cl_must_pass(pbl_settings_open(&file_new, "/test_file_atomic", 4096));
 
     settings_file_dump(&file_new);
 
-    int val_len_out = settings_file_get_len(&file_new, key, key_len);
+    int val_len_out = pbl_settings_get_len(&file_new, key, key_len);
     cl_must_pass(val_len_out);
 
     uint8_t *val_out = malloc(val_len_out);
-    cl_must_pass(settings_file_get(&file_new, key, key_len, val_out, val_len_out));
+    cl_must_pass(pbl_settings_get(&file_new, key, key_len, val_out, val_len_out));
 
     if (val_len_out == original_value_length) {
       printf("original! %d\n", original_value_length);
@@ -385,7 +386,7 @@ static RecordResult write_and_change_record_aborting_after_bytes(int after_n_byt
   return RecordResultEnd;
 }
 
-void test_settings_file__atomic(void) {
+void test_settings__atomic(void) {
   printf("\nTesting if we really are atomic...\n");
   bool have_hit_old_value = false;
   bool have_hit_new_value = false;
@@ -410,11 +411,11 @@ void test_settings_file__atomic(void) {
   cl_assert(have_hit_end);
 }
 
-void test_settings_file__zero_length(void) {
+void test_settings__zero_length(void) {
   printf("\nTesting if we can set keys & values of zero length...\n");
 
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_zero_length", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_zero_length", 4096));
 
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
@@ -433,7 +434,8 @@ void test_settings_file__zero_length(void) {
   set_and_verify(&file, key, 0, val, val_len);
 }
 
-static bool prv_each_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_cb(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                        void *context) {
   uint8_t *key = malloc(info->key_len + 1);
   uint8_t *val = malloc(info->val_len + 1);
   info->get_key(file, key, info->key_len);
@@ -447,7 +449,7 @@ static bool prv_each_cb(SettingsFile *file, SettingsRecordInfo *info, void *cont
   uint8_t *counts = (uint8_t *)context;
   counts[key_i]++;
 
-  status_t result = settings_file_get(file, key, info->key_len, val, info->val_len);
+  status_t result = pbl_settings_get(file, key, info->key_len, val, info->val_len);
   cl_assert_equal_i(result, S_SUCCESS);
 
   int val_i = atoi((char *)val + 1);
@@ -455,11 +457,11 @@ static bool prv_each_cb(SettingsFile *file, SettingsRecordInfo *info, void *cont
   return true;
 }
 
-void test_settings_file__each(void) {
+void test_settings__each(void) {
   printf("\nTesting if we can use each...\n");
 
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_each", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_each", 4096));
 
   uint8_t key[5];
   int key_len = 4;
@@ -473,7 +475,7 @@ void test_settings_file__each(void) {
   }
 
   uint8_t *counts = pbl_zalloc(255);
-  settings_file_each(&file, prv_each_cb, counts);
+  pbl_settings_each(&file, prv_each_cb, counts);
   for (int i = 0; i < 255; i++) {
     cl_assert_equal_i(counts[i], 1);
   }
@@ -481,7 +483,8 @@ void test_settings_file__each(void) {
 }
 
 static const uint8_t STOPPING_NUM = 117;
-static bool prv_each_cb_quit_early(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_cb_quit_early(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                   void *context) {
   uint8_t *key = malloc(info->key_len + 1);
   uint8_t *val = malloc(info->val_len + 1);
   info->get_key(file, key, info->key_len);
@@ -505,11 +508,11 @@ static bool prv_each_cb_quit_early(SettingsFile *file, SettingsRecordInfo *info,
   return true;
 }
 
-void test_settings_file__each_quit_early(void) {
+void test_settings__each_quit_early(void) {
   printf("\nTesting if we can use each and stop early at %d iterations...\n", STOPPING_NUM);
 
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_each", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_each", 4096));
 
   uint8_t key[5];
   int key_len = 4;
@@ -523,16 +526,16 @@ void test_settings_file__each_quit_early(void) {
   }
 
   uint8_t cur_val = 0;
-  settings_file_each(&file, prv_each_cb_quit_early, (void *)&cur_val);
+  pbl_settings_each(&file, prv_each_cb_quit_early, (void *)&cur_val);
 
   cl_assert_equal_i(STOPPING_NUM, cur_val);
 }
 
-void test_settings_file__in_place(void) {
+void test_settings__in_place(void) {
   printf("Testing that we can update a setting file in place\n");
 
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_in_place", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_in_place", 4096));
 
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
@@ -543,30 +546,30 @@ void test_settings_file__in_place(void) {
   set_and_verify(&file, key, key_len, val, val_len);
 
   // setting a byte to all 0s should work
-  settings_file_set_byte(&file, key, key_len, 2, 0x00);
+  pbl_settings_set_byte(&file, key, key_len, 2, 0x00);
   val[2] &= 0x00;
   verify(&file, key, key_len, val, val_len);
 
   // setting all 1s should do nothing - only reset bytes are applied
-  settings_file_set_byte(&file, key, key_len, 2, 0xff);
+  pbl_settings_set_byte(&file, key, key_len, 2, 0xff);
   val[2] &= 0xff;
   verify(&file, key, key_len, val, val_len);
 
   // setting a mask should leave the other bytes untouched
-  settings_file_set_byte(&file, key, key_len, 3, 0x40);
+  pbl_settings_set_byte(&file, key, key_len, 3, 0x40);
   val[3] &= 0x40;
   verify(&file, key, key_len, val, val_len);
 }
 
 // Test that we successfully detect and reallocate a settings file if it gets opened with
 // a larger requested size.
-void test_settings_file__reallocate_larger(void) {
+void test_settings__reallocate_larger(void) {
   printf("\nTesting re-allocating a settings file to a larger size\n");
 
   const int k_initial_size = 0x1000;
   const int k_larger_size = 0x4000;
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_reallocate_larger", k_initial_size));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_reallocate_larger", k_initial_size));
   int orig_fd_size = pbl_fs_size(&file.iter.file);
 
   uint8_t key[4];
@@ -579,8 +582,8 @@ void test_settings_file__reallocate_larger(void) {
   set_and_verify(&file, key, key_len, val, val_len);
 
   // Now close the file and re-open it with a larger size
-  settings_file_close(&file);
-  cl_must_pass(settings_file_open(&file, "/test_file_reallocate_larger", k_larger_size));
+  pbl_settings_close(&file);
+  cl_must_pass(pbl_settings_open(&file, "/test_file_reallocate_larger", k_larger_size));
   int new_fd_size = pbl_fs_size(&file.iter.file);
   cl_assert(new_fd_size > orig_fd_size);
 
@@ -589,7 +592,7 @@ void test_settings_file__reallocate_larger(void) {
 
 // Test that a growable file automatically grows when writes exceed the initial allocation
 // but stay within the enforcement cap.
-void test_settings_file__growable_auto_growth(void) {
+void test_settings__growable_auto_growth(void) {
   printf("\nTesting growable file auto-growth...\n");
 
   // PFS allocates in 4096-byte pages, so the initial_alloc must span at least
@@ -597,8 +600,8 @@ void test_settings_file__growable_auto_growth(void) {
   // that allows multiple pages. Write enough large records to exceed one page.
   const int initial_alloc = 2048;
   const int max_cap = 32768;
-  SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "/tg", max_cap, initial_alloc));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open_growable(&file, "/tg", max_cap, initial_alloc));
 
   int initial_file_size = pbl_fs_size(&file.iter.file);
   printf("Initial file size: %d, max_space_total: %d\n", initial_file_size, file.max_space_total);
@@ -616,7 +619,7 @@ void test_settings_file__growable_auto_growth(void) {
   for (int i = 0; i < num_records; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
     val[0] = (uint8_t)i; // Make each value unique
-    cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
+    cl_must_pass(pbl_settings_set(&file, key, key_len, val, val_len));
   }
 
   int grown_file_size = pbl_fs_size(&file.iter.file);
@@ -630,19 +633,19 @@ void test_settings_file__growable_auto_growth(void) {
     verify(&file, key, key_len, val, val_len);
   }
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
 // Test that a growable file returns E_OUT_OF_STORAGE when the enforcement cap is hit.
-void test_settings_file__growable_enforces_cap(void) {
+void test_settings__growable_enforces_cap(void) {
   printf("\nTesting growable file cap enforcement...\n");
 
   // Use a cap of 4096 (one PFS page worth) and initial_alloc of 2048.
   // Write large records to hit the cap.
   const int initial_alloc = 2048;
   const int max_cap = 4096;
-  SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "/tc", max_cap, initial_alloc));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open_growable(&file, "/tc", max_cap, initial_alloc));
 
   uint8_t key[5];
   int key_len = 4;
@@ -654,7 +657,7 @@ void test_settings_file__growable_enforces_cap(void) {
   for (i = 0; i < 100; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
     val[0] = (uint8_t)i;
-    status_t status = settings_file_set(&file, key, key_len, val, val_len);
+    status_t status = pbl_settings_set(&file, key, key_len, val, val_len);
     if (status == E_OUT_OF_STORAGE) {
       printf("Hit storage cap at record %d\n", i);
       break;
@@ -672,17 +675,17 @@ void test_settings_file__growable_enforces_cap(void) {
     verify(&file, key, key_len, val, val_len);
   }
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
 // Test that closing and reopening a grown file preserves its size and data.
-void test_settings_file__growable_reopen(void) {
+void test_settings__growable_reopen(void) {
   printf("\nTesting growable file reopen after growth...\n");
 
   const int initial_alloc = 2048;
   const int max_cap = 32768;
-  SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "/tr", max_cap, initial_alloc));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open_growable(&file, "/tr", max_cap, initial_alloc));
 
   // Write enough large records to force growth past the initial page
   uint8_t key[5];
@@ -694,15 +697,15 @@ void test_settings_file__growable_reopen(void) {
   for (int i = 0; i < num_records; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
     val[0] = (uint8_t)i;
-    cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
+    cl_must_pass(pbl_settings_set(&file, key, key_len, val, val_len));
   }
 
   int grown_file_size = pbl_fs_size(&file.iter.file);
   printf("Grown file size: %d\n", grown_file_size);
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // Reopen with the same growable parameters
-  cl_must_pass(settings_file_open_growable(&file, "/tr", max_cap, initial_alloc));
+  cl_must_pass(pbl_settings_open_growable(&file, "/tr", max_cap, initial_alloc));
 
   int reopened_file_size = pbl_fs_size(&file.iter.file);
   printf("Reopened file size: %d\n", reopened_file_size);
@@ -716,46 +719,46 @@ void test_settings_file__growable_reopen(void) {
     verify(&file, key, key_len, val, val_len);
   }
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
-void test_settings_file__open_and_lookup_scale_linearly(void) {
+void test_settings__open_and_lookup_scale_linearly(void) {
   const int num_records = 400;
-  SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "/lin", 1024 * 1024, 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open_growable(&file, "/lin", 1024 * 1024, 4096));
 
   uint8_t key[5];
   uint8_t val[256];
   memset(val, 0x5A, sizeof(val));
   for (int i = 0; i < num_records; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
-    cl_must_pass(settings_file_set(&file, key, 4, val, sizeof(val)));
+    cl_must_pass(pbl_settings_set(&file, key, 4, val, sizeof(val)));
   }
   const int num_pages = pbl_fs_size(&file.iter.file) / 4000 + 1;
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   uint32_t reads = fake_flash_read_count();
-  cl_must_pass(settings_file_open_growable(&file, "/lin", 1024 * 1024, 4096));
+  cl_must_pass(pbl_settings_open_growable(&file, "/lin", 1024 * 1024, 4096));
   reads = fake_flash_read_count() - reads;
   cl_assert(reads <= 3 * (num_records + num_pages));
 
   uint32_t lookup_reads = fake_flash_read_count();
-  cl_assert(!settings_file_exists(&file, (uint8_t *)"none", 4));
+  cl_assert(!pbl_settings_exists(&file, (uint8_t *)"none", 4));
   lookup_reads = fake_flash_read_count() - lookup_reads;
   cl_assert(lookup_reads <= 2 * (num_records + num_pages));
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
 // Compaction shrinks a grown growable file back toward the initial allocation when most
 // records have been deleted, so a brief storage burst doesn't permanently hold flash.
-void test_settings_file__growable_shrinks_on_compact(void) {
+void test_settings__growable_shrinks_on_compact(void) {
   printf("\nTesting growable file shrink on compact...\n");
 
   const int initial_alloc = 2048;
   const int max_cap = 32768;
-  SettingsFile file;
-  cl_must_pass(settings_file_open_growable(&file, "/tk", max_cap, initial_alloc));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open_growable(&file, "/tk", max_cap, initial_alloc));
 
   uint8_t key[5];
   int key_len = 4;
@@ -768,7 +771,7 @@ void test_settings_file__growable_shrinks_on_compact(void) {
   for (int i = 0; i < num_records; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
     val[0] = (uint8_t)i;
-    cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
+    cl_must_pass(pbl_settings_set(&file, key, key_len, val, val_len));
   }
 
   const int grown_file_size = pbl_fs_size(&file.iter.file);
@@ -779,11 +782,11 @@ void test_settings_file__growable_shrinks_on_compact(void) {
   // Delete almost everything. Leave one record so we still exercise the rewrite path.
   for (int i = 0; i < num_records - 1; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
-    cl_must_pass(settings_file_delete(&file, key, key_len));
+    cl_must_pass(pbl_settings_delete(&file, key, key_len));
   }
 
   // Force compact. Should drop alloc to the smallest doubling that fits 2x used.
-  cl_must_pass(settings_file_compact(&file));
+  cl_must_pass(pbl_settings_compact(&file));
 
   const int shrunk_file_size = pbl_fs_size(&file.iter.file);
   const int shrunk_alloc = file.alloc_used_space;
@@ -796,17 +799,17 @@ void test_settings_file__growable_shrinks_on_compact(void) {
   val[0] = (uint8_t)(num_records - 1);
   verify(&file, key, key_len, val, val_len);
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
-// A non-growable file (settings_file_open with the legacy API) must not shrink during
+// A non-growable file (pbl_settings_open with the legacy API) must not shrink during
 // compaction. The pre-allocation guarantee is part of the contract.
-void test_settings_file__non_growable_does_not_shrink_on_compact(void) {
+void test_settings__non_growable_does_not_shrink_on_compact(void) {
   printf("\nTesting non-growable file does not shrink on compact...\n");
 
   const int max_used = 8192;
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/tn", max_used));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/tn", max_used));
 
   const int initial_alloc = file.alloc_used_space;
   const int initial_file_size = pbl_fs_size(&file.iter.file);
@@ -821,13 +824,13 @@ void test_settings_file__non_growable_does_not_shrink_on_compact(void) {
   // Write a few small records, then delete all of them.
   for (int i = 0; i < 10; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
-    cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
+    cl_must_pass(pbl_settings_set(&file, key, key_len, val, val_len));
   }
   for (int i = 0; i < 10; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
-    cl_must_pass(settings_file_delete(&file, key, key_len));
+    cl_must_pass(pbl_settings_delete(&file, key, key_len));
   }
-  cl_must_pass(settings_file_compact(&file));
+  cl_must_pass(pbl_settings_compact(&file));
 
   const int post_alloc = file.alloc_used_space;
   const int post_file_size = pbl_fs_size(&file.iter.file);
@@ -835,13 +838,13 @@ void test_settings_file__non_growable_does_not_shrink_on_compact(void) {
   cl_assert_equal_i(post_alloc, initial_alloc);
   cl_assert_equal_i(post_file_size, initial_file_size);
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
-// Migration: a file written by a prior firmware via settings_file_open with a small
+// Migration: a file written by a prior firmware via pbl_settings_open with a small
 // max_used_space must reopen as growable without losing data, and its physical allocation
 // must be adopted (not silently shrunk to the new initial_alloc_size).
-void test_settings_file__growable_migration_from_non_growable(void) {
+void test_settings__growable_migration_from_non_growable(void) {
   printf("\nTesting migration from non-growable to growable...\n");
 
   const int legacy_max = 6144;
@@ -851,8 +854,8 @@ void test_settings_file__growable_migration_from_non_growable(void) {
   int val_len = sizeof(val);
   memset(val, 0x5A, val_len);
 
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/tm", legacy_max));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/tm", legacy_max));
   int legacy_file_size = pbl_fs_size(&file.iter.file);
   printf("Legacy file size: %d\n", legacy_file_size);
 
@@ -860,13 +863,13 @@ void test_settings_file__growable_migration_from_non_growable(void) {
   for (int i = 0; i < num_records; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
     val[0] = (uint8_t)i;
-    cl_must_pass(settings_file_set(&file, key, key_len, val, val_len));
+    cl_must_pass(pbl_settings_set(&file, key, key_len, val, val_len));
   }
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   const int new_initial_alloc = 4096;
   const int new_max = 1024 * 1024;
-  cl_must_pass(settings_file_open_growable(&file, "/tm", new_max, new_initial_alloc));
+  cl_must_pass(pbl_settings_open_growable(&file, "/tm", new_max, new_initial_alloc));
 
   int reopened_file_size = pbl_fs_size(&file.iter.file);
   printf("Reopened (as growable) file size: %d\n", reopened_file_size);
@@ -879,18 +882,18 @@ void test_settings_file__growable_migration_from_non_growable(void) {
     verify(&file, key, key_len, val, val_len);
   }
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
 // Test that we can start searching beginning at the record we previously found in a recent
 // call into settings file. This makes sure we don't start searching at the beginning of a file
 // each API call.
-extern uint32_t settings_raw_iter_prv_get_num_record_searches(void);
-void test_settings_file__iterator_wrapping(void) {
+extern uint32_t pbl_settings__raw_iter_get_num_record_searches(void);
+void test_settings__iterator_wrapping(void) {
   printf("Testing that we can call get_len and get without iterator searching again\n");
 
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_no_move", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_no_move", 4096));
 
   uint8_t key[5];
   int key_len = 4;
@@ -911,39 +914,39 @@ void test_settings_file__iterator_wrapping(void) {
   snprintf((char *)key, sizeof(key), "k%03d", search_for_idx);
 
   // Move iter to the beginning to bring to a known state
-  settings_raw_iter_begin(&file.iter);
+  pbl_settings__raw_iter_begin(&file.iter);
 
   // Get the iter to the record we want
-  cl_assert_equal_b(true, settings_file_exists(&file, key, key_len));
+  cl_assert_equal_b(true, pbl_settings_exists(&file, key, key_len));
 
   // Check that we can do a get_len and we don't search past the current record
-  int before_count = settings_raw_iter_prv_get_num_record_searches();
-  cl_assert_equal_i(key_len, settings_file_get_len(&file, key, key_len));
-  int after_count = settings_raw_iter_prv_get_num_record_searches();
+  int before_count = pbl_settings__raw_iter_get_num_record_searches();
+  cl_assert_equal_i(key_len, pbl_settings_get_len(&file, key, key_len));
+  int after_count = pbl_settings__raw_iter_get_num_record_searches();
   cl_assert_equal_i(before_count, after_count);
 
   // Check that we can do a get and we don't search past the current record
-  before_count = settings_raw_iter_prv_get_num_record_searches();
-  cl_must_pass(settings_file_get(&file, key, key_len, val, val_len));
-  after_count = settings_raw_iter_prv_get_num_record_searches();
+  before_count = pbl_settings__raw_iter_get_num_record_searches();
+  cl_must_pass(pbl_settings_get(&file, key, key_len, val, val_len));
+  after_count = pbl_settings__raw_iter_get_num_record_searches();
   cl_assert_equal_i(before_count, after_count);
 
   // Force us to move to the record `search_for_idx` + 1
-  settings_raw_iter_next(&file.iter);
+  pbl_settings__raw_iter_next(&file.iter);
 
   // We now are forced to start searching in the middle, wrap around, and continue searching
-  // from the beginning. This will result in us calling `settings_raw_iter_next` NUM_RECORDS - 1
-  // times.
-  before_count = settings_raw_iter_prv_get_num_record_searches();
-  cl_must_pass(settings_file_get(&file, key, key_len, val, val_len));
-  after_count = settings_raw_iter_prv_get_num_record_searches();
+  // from the beginning. This will result in us calling `pbl_settings__raw_iter_next` NUM_RECORDS -
+  // 1 times.
+  before_count = pbl_settings__raw_iter_get_num_record_searches();
+  cl_must_pass(pbl_settings_get(&file, key, key_len, val, val_len));
+  after_count = pbl_settings__raw_iter_get_num_record_searches();
   cl_assert_equal_i(NUM_RECORDS - 1, after_count - before_count);
 }
 
-void test_settings_file__rewrite_filtered_oom(void) {
+void test_settings__rewrite_filtered_oom(void) {
   printf("\nTesting that compaction aborts cleanly when pbl_malloc fails...\n");
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/test_file_rewrite_oom", 4096));
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_rewrite_oom", 4096));
   uint8_t key[4];
   int key_len = sizeof(key) - 1;
   memcpy(key, "key", sizeof(key));
@@ -955,20 +958,20 @@ void test_settings_file__rewrite_filtered_oom(void) {
   // Compaction under OOM must fail without crashing and without touching
   // the on-disk file.
   stub_pbl_malloc_set_should_fail(true);
-  cl_assert_equal_i(E_OUT_OF_MEMORY, settings_file_compact(&file));
+  cl_assert_equal_i(E_OUT_OF_MEMORY, pbl_settings_compact(&file));
   stub_pbl_malloc_set_should_fail(false);
 
   // The file must still be open and intact.
   verify(&file, key, key_len, val, val_len);
 
   // Once memory is available again, compaction must succeed.
-  cl_must_pass(settings_file_compact(&file));
+  cl_must_pass(pbl_settings_compact(&file));
   verify(&file, key, key_len, val, val_len);
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // And the data must survive a reopen.
-  cl_must_pass(settings_file_open(&file, "/test_file_rewrite_oom", 4096));
+  cl_must_pass(pbl_settings_open(&file, "/test_file_rewrite_oom", 4096));
   verify(&file, key, key_len, val, val_len);
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }

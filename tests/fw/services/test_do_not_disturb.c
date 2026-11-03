@@ -11,7 +11,7 @@
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/system_task.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 
 #include <applib/ui/action_toggle.h>
 #include <clar.h>
@@ -95,11 +95,11 @@ void do_not_disturb_toggle_push(ActionTogglePrompt prompt, bool set_exit_reason)
 
 static void prv_assert_settings_value(const void *key, size_t key_len, const void *expected_value,
                                       size_t value_len) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   char buffer[value_len];
-  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
-  cl_must_pass(settings_file_get(&file, key, key_len, buffer, value_len));
-  settings_file_close(&file);
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  cl_must_pass(pbl_settings_get(&file, key, key_len, buffer, value_len));
+  pbl_settings_close(&file);
   cl_assert_equal_m(expected_value, buffer, value_len);
 }
 
@@ -219,10 +219,10 @@ void test_do_not_disturb__manually_enable(void) {
 //! Simulate the phone writing a pref through settings sync: the record lands in the
 //! settings file first, then the BlobDB insert event is handed to alerts_preferences.
 static void prv_sync_bool_pref_from_phone(const char *key, bool value) {
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
-  cl_must_pass(settings_file_set(&file, key, strlen(key), &value, sizeof(value)));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  cl_must_pass(pbl_settings_set(&file, key, strlen(key), &value, sizeof(value)));
+  pbl_settings_close(&file);
 
   PebbleBlobDBEvent event = {
     .type = BlobDBEventTypeInsert,
@@ -746,17 +746,17 @@ static const int s_wednesday_02_00 = 1426039200;
 static const int s_thursday_02_00 = 1426125600;
 
 static void prv_write_pref(const char *key, const void *value, size_t value_len) {
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
-  cl_must_pass(settings_file_set(&file, key, strlen(key), value, value_len));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  cl_must_pass(pbl_settings_set(&file, key, strlen(key), value, value_len));
+  pbl_settings_close(&file);
 }
 
 static void prv_delete_pref(const char *key) {
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/notifpref", 1024));
-  settings_file_delete(&file, key, strlen(key));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  pbl_settings_delete(&file, key, strlen(key));
+  pbl_settings_close(&file);
 }
 
 static void prv_sync_pref_from_phone(const char *key, const void *value, size_t value_len) {

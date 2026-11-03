@@ -39,7 +39,7 @@
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/peek.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
 
@@ -1031,41 +1031,41 @@ static const PrefsTableEntry s_prefs_table[] = {
 #undef PREFS_MACRO
 
 // ------------------------------------------------------------------------------------
-static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
+static void prv_convert_deprecated_backlight_behaviour_key(struct pbl_settings_file *file) {
   // if present, convert deprecated BACKLIGHT_BEHAVIOUR key to the two new separate keys
-  if (settings_file_exists(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                           sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED))) {
+  if (pbl_settings_exists(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
+                          sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED))) {
     bool temp;
     BacklightBehaviour backlight_behaviour = BacklightBehaviour_Auto;
-    settings_file_get(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED), &backlight_behaviour,
-                      sizeof(backlight_behaviour));
+    pbl_settings_get(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
+                     sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED), &backlight_behaviour,
+                     sizeof(backlight_behaviour));
     temp = (backlight_behaviour != BacklightBehaviour_Off);
-    settings_file_set(file, PREF_KEY_BACKLIGHT_ENABLED, sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp,
-                      sizeof(temp));
+    pbl_settings_set(file, PREF_KEY_BACKLIGHT_ENABLED, sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp,
+                     sizeof(temp));
     temp = (backlight_behaviour != BacklightBehaviour_On);
-    settings_file_set(file, PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED,
-                      sizeof(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED), &temp, sizeof(temp));
-    settings_file_delete(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                         sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED));
+    pbl_settings_set(file, PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED,
+                     sizeof(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED), &temp, sizeof(temp));
+    pbl_settings_delete(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
+                        sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED));
   }
 }
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
+static void prv_convert_deprecated_dynamic_intensity_key(struct pbl_settings_file *file) {
   // If present, convert the deprecated dynamic-intensity bool to the mode enum:
   // enabled -> Standard, disabled -> Off.
-  if (settings_file_exists(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                           sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED))) {
+  if (pbl_settings_exists(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
+                          sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED))) {
     bool enabled = true;
-    settings_file_get(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED), &enabled,
-                      sizeof(enabled));
+    pbl_settings_get(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
+                     sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED), &enabled,
+                     sizeof(enabled));
     const uint8_t mode = enabled ? BacklightDynamicMode_Standard : BacklightDynamicMode_Off;
-    settings_file_set(file, PREF_KEY_BACKLIGHT_DYNAMIC_MODE,
-                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_MODE), &mode, sizeof(mode));
-    settings_file_delete(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                         sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED));
+    pbl_settings_set(file, PREF_KEY_BACKLIGHT_DYNAMIC_MODE, sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_MODE),
+                     &mode, sizeof(mode));
+    pbl_settings_delete(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
+                        sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED));
   }
 }
 #endif
@@ -1075,43 +1075,43 @@ static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
 // silently replacing the user's settings with the defaults (HR on, 10 minute interval).
 // Fields have only ever been appended, so a short record is a valid prefix of the
 // current struct and the trailing fields keep their defaults.
-static void prv_migrate_activity_hrm_prefs(SettingsFile *file) {
+static void prv_migrate_activity_hrm_prefs(struct pbl_settings_file *file) {
   const size_t key_len = sizeof(PREF_KEY_ACTIVITY_HRM_PREFERENCES);
-  const int stored_len = settings_file_get_len(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len);
+  const int stored_len = pbl_settings_get_len(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len);
   if (stored_len <= 0 || stored_len >= (int)sizeof(ActivityHRMSettings)) {
     return;
   }
 
   ActivityHRMSettings settings = ACTIVITY_HRM_DEFAULT_PREFERENCES;
-  if (settings_file_get(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, stored_len) !=
+  if (pbl_settings_get(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, stored_len) !=
       S_SUCCESS) {
     return;
   }
 
   PBL_LOG_INFO("Widening %d byte hrmPreferences record", stored_len);
-  settings_file_set(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, sizeof(settings));
+  pbl_settings_set(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, sizeof(settings));
 }
 
 // Locally written keys include the null terminator, phone-originated BlobDB writes may not.
-static bool prv_take_legacy_bool(SettingsFile *file, const char *key, bool *value) {
+static bool prv_take_legacy_bool(struct pbl_settings_file *file, const char *key, bool *value) {
   bool found = false;
   for (size_t key_len = strlen(key); key_len <= strlen(key) + 1; key_len++) {
-    if (settings_file_get_len(file, key, key_len) != (int)sizeof(*value)) {
+    if (pbl_settings_get_len(file, key, key_len) != (int)sizeof(*value)) {
       continue;
     }
-    if (settings_file_get(file, key, key_len, value, sizeof(*value)) == S_SUCCESS) {
+    if (pbl_settings_get(file, key, key_len, value, sizeof(*value)) == S_SUCCESS) {
       found = true;
     }
-    settings_file_delete(file, key, key_len);
+    pbl_settings_delete(file, key, key_len);
   }
   return found;
 }
 
 // spo2Preferences started as a 1 byte interval-only record, with the on/off and
 // during-activities toggles stored under keys of their own.
-static void prv_migrate_activity_spo2_prefs(SettingsFile *file) {
+static void prv_migrate_activity_spo2_prefs(struct pbl_settings_file *file) {
   const size_t key_len = sizeof(PREF_KEY_ACTIVITY_SPO2_PREFERENCES);
-  const int stored_len = settings_file_get_len(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len);
+  const int stored_len = pbl_settings_get_len(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len);
   if (stored_len >= (int)sizeof(ActivitySpO2Settings)) {
     return;
   }
@@ -1119,9 +1119,9 @@ static void prv_migrate_activity_spo2_prefs(SettingsFile *file) {
   ActivitySpO2Settings settings = ACTIVITY_SPO2_DEFAULT_PREFERENCES;
   bool migrate = false;
   if (stored_len == (int)sizeof(settings.measurement_interval)) {
-    migrate = settings_file_get(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len,
-                                &settings.measurement_interval,
-                                sizeof(settings.measurement_interval)) == S_SUCCESS;
+    migrate = pbl_settings_get(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len,
+                               &settings.measurement_interval,
+                               sizeof(settings.measurement_interval)) == S_SUCCESS;
   }
   migrate |= prv_take_legacy_bool(file, "bloodOxygenPreferences", &settings.enabled);
   migrate |= prv_take_legacy_bool(file, "bloodOxygenActivityPreferences",
@@ -1131,7 +1131,7 @@ static void prv_migrate_activity_spo2_prefs(SettingsFile *file) {
   }
 
   PBL_LOG_INFO("Migrating %d byte spo2Preferences record", stored_len);
-  settings_file_set(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len, &settings, sizeof(settings));
+  pbl_settings_set(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len, &settings, sizeof(settings));
 }
 
 // ------------------------------------------------------------------------------------
@@ -1145,8 +1145,8 @@ void shell_prefs_init(void) {
   s_backlight_intensity = s_backlight_preset_settings[BacklightPreset_Standard].intensity;
 #endif
 
-  SettingsFile file = {};
-  if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
+  struct pbl_settings_file file = {};
+  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
     return;
   }
 
@@ -1164,9 +1164,9 @@ void shell_prefs_init(void) {
     // phone-originated BlobDB writes may not.
     static const char *const fit_key = "timelineQuickViewWatchfaceFit";
     for (size_t key_len = strlen(fit_key); key_len <= strlen(fit_key) + 1; key_len++) {
-      if (settings_file_get_len(&file, fit_key, key_len) > 0) {
+      if (pbl_settings_get_len(&file, fit_key, key_len) > 0) {
         PBL_LOG_INFO("Discarding unsupported pref: %s", fit_key);
-        settings_file_delete(&file, fit_key, key_len);
+        pbl_settings_delete(&file, fit_key, key_len);
       }
     }
   }
@@ -1178,12 +1178,12 @@ void shell_prefs_init(void) {
   for (uint32_t i = 0; i < num_entries; i++, entry++) {
     // Keys in the backing store include the null terminator, so we add 1 to key_len
     size_t key_len = strlen(entry->key) + 1;
-    if (settings_file_get_len(&file, entry->key, key_len) == entry->value_len) {
-      settings_file_get(&file, entry->key, key_len, entry->value, entry->value_len);
+    if (pbl_settings_get_len(&file, entry->key, key_len) == entry->value_len) {
+      pbl_settings_get(&file, entry->key, key_len, entry->value, entry->value_len);
     }
   }
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // Loading preferences bypasses their setters.
   prv_set_s_vibe_log_info_enabled(&s_vibe_log_info_enabled);
@@ -1203,11 +1203,11 @@ void shell_prefs_init(void) {
   // device follows the new board default.
   if (!s_als_threshold_migrated_v1) {
     s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
-    SettingsFile mfile = {};
-    if (settings_file_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
-      settings_file_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
-                           sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
-      settings_file_close(&mfile);
+    struct pbl_settings_file mfile = {};
+    if (pbl_settings_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+      pbl_settings_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
+                          sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
+      pbl_settings_close(&mfile);
     }
     const bool migrated = true;
     prv_pref_set(PREF_KEY_ALS_THRESHOLD_MIGRATED_V1, &migrated, sizeof(migrated));
@@ -1218,16 +1218,16 @@ void shell_prefs_init(void) {
   // the device follows the new lux board defaults.
   if (!s_als_threshold_migrated_v2) {
     s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
-    SettingsFile v2file = {};
-    if (settings_file_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
-      settings_file_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
-                           sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
+    struct pbl_settings_file v2file = {};
+    if (pbl_settings_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+      pbl_settings_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
+                          sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
       // Scrub the removed dyn-backlight-min-threshold pref while we're here.
-      settings_file_delete(&v2file, PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD,
-                           sizeof(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD));
+      pbl_settings_delete(&v2file, PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD,
+                          sizeof(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD));
 #endif
-      settings_file_close(&v2file);
+      pbl_settings_close(&v2file);
     }
     const bool migrated_v2 = true;
     prv_pref_set(PREF_KEY_ALS_THRESHOLD_MIGRATED_V2, &migrated_v2, sizeof(migrated_v2));
@@ -1285,14 +1285,14 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
   status_t rv = E_ERROR;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {};
-    if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    struct pbl_settings_file file = {};
+    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator, so we add 1 to key_len
-      rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
+      rv = pbl_settings_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
       if (rv != S_SUCCESS) {
         PBL_LOG_WRN("Failed to set pref '%s' (%" PRIi32 ")", entry->key, (int32_t)rv);
       }
-      settings_file_close(&file);
+      pbl_settings_close(&file);
     }
   }
   pbl_mutex_unlock(&s_mutex);
@@ -1369,14 +1369,14 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   bool success = false;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {};
-    if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    struct pbl_settings_file file = {};
+    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
       // Keys in the backing store include the null terminator
       // Use strlen(entry->key) + 1 to match how it was written, since key_len from
       // BlobDB may or may not include the null terminator
-      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) ==
+      success = (pbl_settings_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) ==
                  S_SUCCESS);
-      settings_file_close(&file);
+      pbl_settings_close(&file);
     }
   }
   pbl_mutex_unlock(&s_mutex);

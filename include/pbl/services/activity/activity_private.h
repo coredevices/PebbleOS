@@ -13,7 +13,7 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
@@ -636,7 +636,7 @@ bool activity_is_hrm_present(void);
  *
  * @return Settings file, NULL on failure.
  */
-SettingsFile *activity_private_settings_open(void);
+struct pbl_settings_file *activity_private_settings_open(void);
 
 /**
  * @brief Close the activity settings file.
@@ -645,7 +645,7 @@ SettingsFile *activity_private_settings_open(void);
  *
  * @param file File returned by activity_private_settings_open().
  */
-void activity_private_settings_close(SettingsFile *file);
+void activity_private_settings_close(struct pbl_settings_file *file);
 
 /**
  * @brief Reinitialize the activity service (test apps).
@@ -666,7 +666,7 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
  * @param file Activity settings file.
  * @param utc_now Current UTC time.
  */
-void activity_sessions_prv_init(SettingsFile *file, time_t utc_now);
+void activity_sessions_prv_init(struct pbl_settings_file *file, time_t utc_now);
 
 /**
  * @brief Get the start of the sleep day containing a time.
@@ -751,7 +751,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
  * @param file Activity settings file.
  * @param utc_now Current UTC time.
  */
-void activity_metrics_prv_init(SettingsFile *file, time_t utc_now);
+void activity_metrics_prv_init(struct pbl_settings_file *file, time_t utc_now);
 
 /**
  * @brief Get the storage information of a metric.

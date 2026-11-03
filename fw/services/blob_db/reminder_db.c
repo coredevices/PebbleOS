@@ -16,7 +16,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define REMINDER_DB_FILE_NAME "/reminderdb"
 #define REMINDER_DB_MAX_SIZE  PBL_KIB(40)
-#define MAX_REMINDER_SIZE     SETTINGS_VAL_MAX_LEN
+#define MAX_REMINDER_SIZE     PBL_SETTINGS_VAL_MAX_LEN
 #define MAX_REMINDER_AGE      (15 * PBL_SEC_PER_MIN)
 
 typedef struct {
@@ -88,8 +88,8 @@ status_t reminder_db_next_item_header(TimelineItem *next_item_out) {
   return rv;
 }
 
-static bool prv_timestamp_title_compare_func(SettingsFile *file, SettingsRecordInfo *info,
-                                             void *context) {
+static bool prv_timestamp_title_compare_func(struct pbl_settings_file *file,
+                                             struct pbl_settings_record *info, void *context) {
   // Check entry is valid
   if (info->key_len != UUID_SIZE || info->val_len == 0) {
     return true; // continue iteration

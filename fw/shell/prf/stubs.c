@@ -76,7 +76,7 @@ void persist_service_client_open(const Uuid *uuid) {
 void persist_service_client_close(const Uuid *uuid) {
 }
 
-SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
+struct pbl_settings_file *persist_service_lock_and_get_store(const Uuid *uuid) {
   return nullptr;
 }
 

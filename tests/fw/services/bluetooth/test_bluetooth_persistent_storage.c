@@ -8,7 +8,7 @@
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h>
 #include <pbl/services/event_service.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>

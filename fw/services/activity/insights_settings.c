@@ -9,7 +9,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/insights_settings.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
@@ -110,10 +110,10 @@ static const AISDefault AIS_DEFAULTS[] = {
 };
 
 // Return true if we successfully opened the file
-static bool prv_open_settings_and_lock(SettingsFile *file) {
+static bool prv_open_settings_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_insight_settings_mutex, PBL_FOREVER);
-  if (settings_file_open(file, ACTIVITY_INSIGHTS_SETTINGS_FILENAME,
-                         ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == S_SUCCESS) {
+  if (pbl_settings_open(file, ACTIVITY_INSIGHTS_SETTINGS_FILENAME,
+                        ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == S_SUCCESS) {
     return true;
   } else {
     pbl_mutex_unlock(&s_insight_settings_mutex);
@@ -122,8 +122,8 @@ static bool prv_open_settings_and_lock(SettingsFile *file) {
 }
 
 // Close the settings file and release the lock
-static void prv_close_settings_and_unlock(SettingsFile *file) {
-  settings_file_close(file);
+static void prv_close_settings_and_unlock(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
   pbl_mutex_unlock(&s_insight_settings_mutex);
 }
 
@@ -133,19 +133,19 @@ void activity_insights_settings_init(void) {
   }
   // Create our mutex
 
-  SettingsFile file;
-  if (settings_file_open(&file, ACTIVITY_INSIGHTS_SETTINGS_FILENAME,
-                         ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == S_SUCCESS) {
-    if (!settings_file_exists(&file, ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY,
-                              strlen(ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY))) {
+  struct pbl_settings_file file;
+  if (pbl_settings_open(&file, ACTIVITY_INSIGHTS_SETTINGS_FILENAME,
+                        ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == S_SUCCESS) {
+    if (!pbl_settings_exists(&file, ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY,
+                             strlen(ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY))) {
       // init version to 0
       const uint16_t default_version = ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_VERSION;
-      settings_file_set(&file, ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY,
-                        strlen(ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY), &default_version,
-                        sizeof(uint16_t));
+      pbl_settings_set(&file, ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY,
+                       strlen(ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY), &default_version,
+                       sizeof(uint16_t));
     }
 
-    settings_file_close(&file);
+    pbl_settings_close(&file);
     return;
   }
 
@@ -157,10 +157,10 @@ uint16_t activity_insights_settings_get_version(void) {
     return ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_VERSION;
   }
   uint16_t version = ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_VERSION;
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (prv_open_settings_and_lock(&file)) {
-    settings_file_get(&file, ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY,
-                      strlen(ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY), &version, sizeof(uint16_t));
+    pbl_settings_get(&file, ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY,
+                     strlen(ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY), &version, sizeof(uint16_t));
     prv_close_settings_and_unlock(&file);
   }
   return version;
@@ -174,10 +174,10 @@ bool activity_insights_settings_read(const char *insight_name,
   bool rv = false;
   *settings_out = (ActivityInsightSettings){};
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (prv_open_settings_and_lock(&file)) {
-    if (settings_file_get(&file, insight_name, strlen(insight_name), settings_out,
-                          sizeof(*settings_out)) != S_SUCCESS) {
+    if (pbl_settings_get(&file, insight_name, strlen(insight_name), settings_out,
+                         sizeof(*settings_out)) != S_SUCCESS) {
       PBL_LOG_DBG("Didn't find insight with key %s", insight_name);
       goto close;
     }
@@ -212,9 +212,9 @@ bool activity_insights_settings_write(const char *insight_name, ActivityInsightS
   }
   bool rv = false;
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (prv_open_settings_and_lock(&file)) {
-    if (settings_file_set(&file, insight_name, strlen(insight_name), settings, sizeof(*settings)) !=
+    if (pbl_settings_set(&file, insight_name, strlen(insight_name), settings, sizeof(*settings)) !=
         S_SUCCESS) {
       PBL_LOG_WRN("Unable to save insight setting with key %s", insight_name);
     } else {

@@ -34,7 +34,7 @@ status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
 }
 
 //! Caution: CommonTimelineItemHeader .flags & .status are stored inverted and not auto-restored
-status_t pin_db_each(SettingsFileEachCallback each, void *data) {
+status_t pin_db_each(pbl_settings_each_cb_t each, void *data) {
   return timeline_item_storage_each(&s_pin_db_storage, each, data);
 }
 

@@ -11,7 +11,8 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 // by the underlying db API. If .flags or .status is used from a CommonTimelineItemHeader below,
 // be very careful
 
-bool sync_util_is_dirty_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+bool sync_util_is_dirty_cb(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                           void *context) {
   // If there is a single dirty record, update the out bool to dirty and stop iterating
   if (info->dirty) {
     *((bool *)context) = true;
@@ -21,7 +22,8 @@ bool sync_util_is_dirty_cb(SettingsFile *file, SettingsRecordInfo *info, void *c
   return true;
 }
 
-bool sync_util_build_dirty_list_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+bool sync_util_build_dirty_list_cb(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                   void *context) {
   if (info->dirty) {
     BlobDBDirtyItem *dirty_list = *(BlobDBDirtyItem **)context;
 
