@@ -172,6 +172,22 @@ void test_kernel__uptime_does_not_wrap(void) {
   pbl_test_kernel_run();
 }
 
+static void prv_realtime_follows_uptime(void *arg) {
+  pbl_realtime_set(1800000000);
+  cl_assert_equal_i(pbl_realtime(), 1800000000);
+  pbl_thread_sleep(PBL_TICKS(3 * PBL_TICK_HZ / 2));
+  cl_assert_equal_i(pbl_realtime(), 1800000001);
+  cl_assert(pbl_realtime_ms() >= 1800000001500ULL);
+  pbl_realtime_set(1700000000);
+  cl_assert_equal_i(pbl_realtime(), 1700000000);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__realtime_follows_uptime(void) {
+  prv_spawn(0, "clock", 2, prv_realtime_follows_uptime, nullptr);
+  pbl_test_kernel_run();
+}
+
 void test_kernel__busy_wait_waits_at_least_the_request(void) {
   struct timespec t0, t1;
   clock_gettime(CLOCK_MONOTONIC, &t0);
