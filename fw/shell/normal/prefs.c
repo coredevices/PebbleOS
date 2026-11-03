@@ -2394,7 +2394,12 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 #endif
 
 GColor shell_prefs_get_theme_highlight_color(void) {
+#if PBL_BW
+  // No accent on black and white displays: highlights invert the theme colors
+  return system_theme_get_fg_color();
+#else
   return s_theme_highlight_color;
+#endif
 }
 
 void shell_prefs_set_theme_highlight_color(GColor color) {

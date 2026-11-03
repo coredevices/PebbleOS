@@ -172,7 +172,9 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
-  return (shell_prefs_get_dark_mode() == DarkModeScheduled) ? 3 : 2;
+  // Accent colors need a color display
+  const uint16_t num_accent_rows = PBL_IF_COLOR_ELSE(1, 0);
+  return ((shell_prefs_get_dark_mode() == DarkModeScheduled) ? 2 : 1) + num_accent_rows;
 }
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
