@@ -31,12 +31,10 @@ config BT_HCI_NRF52
 
 config BT_HCI_SF32LB52
     bool "SiFli LCPU over IPC"
-    depends on SOC_SF32LB52
-    select HAL_SIFLI_IPC_QUEUE
-    select HAL_SIFLI_LCPU
+    depends on REMOTEPROC_SF32LB52
     help
-      Talk H4 HCI to the SiFli controller running on the LCPU through the
-      mailbox IPC queue.
+      Talk H4 HCI to the SiFli controller running on the LCPU, over the
+      byte rings its ROM shares with the HCPU.
 
 config BT_HCI_UART
     bool "H4 over UART"
