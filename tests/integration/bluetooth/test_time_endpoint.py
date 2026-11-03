@@ -79,5 +79,6 @@ def test_set_utc_and_timezone(prompt, phone, restore_time):
 def test_set_localtime(prompt, phone, restore_time):
     """The old message sets local time, which is UTC without a timezone."""
     prompt("time tz_clear")
+    assert _time_info(prompt)["Offset"] == "0"
     phone.send(TIME_ENDPOINT, struct.pack(">BI", SET_LOCALTIME, WINTER))
     _wait_time(prompt, WINTER)
