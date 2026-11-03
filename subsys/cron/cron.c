@@ -22,12 +22,9 @@ static ListNode *s_scheduled_jobs;
 static void prv_timer_callback(void *data);
 
 //! One-shot timer armed for the next job's execute time. Re-armed after every
-//! list mutation and every firing; stopped when no jobs are scheduled. It runs on
-//! the system tick, which drifts from the RTC in deep sleep, so it aims early by
-//! more than the drift and re-arms for what is left when it fires early; the
-//! margin lands it after the RTC second turns.
-#define CRON_ARM_EARLY_DIVISOR 256U
-#define CRON_ARM_MARGIN_MS     10U
+//! list mutation and every firing; stopped when no jobs are scheduled. The margin
+//! lands it after the second turns; it re-arms for what is left if it fires early.
+#define CRON_ARM_MARGIN_MS 10U
 static TimerID s_wakeup_timer = TIMER_INVALID_ID;
 
 //! Arm (or stop) the wakeup timer for the head job. s_list_mutex must be held.
@@ -43,7 +40,6 @@ static void prv_arm_wakeup(void) {
   uint64_t timeout_ms = 0;
   if (execute_time > now) {
     timeout_ms = (uint64_t)(execute_time - now) * 1000U - milliseconds;
-    timeout_ms -= timeout_ms / CRON_ARM_EARLY_DIVISOR;
     timeout_ms += CRON_ARM_MARGIN_MS;
   }
   new_timer_start(s_wakeup_timer, (uint32_t)MIN(timeout_ms, UINT32_MAX), prv_timer_callback,

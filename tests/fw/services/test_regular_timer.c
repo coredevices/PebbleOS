@@ -125,9 +125,8 @@ void test_regular_timer__idle_waits_for_the_minute(void) {
   regular_timer_remove_callback(&s_seconds_info);
   prv_advance_and_fire();
   cl_assert_equal_i(pbl_realtime(), START_TIME + 1);
-  // 39 s to the minute, plus the drift allowance.
-  const uint32_t base = 38 * 1000 + (1000 - MARGIN_MS);
-  cl_assert_equal_i(prv_timeout(), base + MARGIN_MS + base / 1024);
+  // 39 s to the minute.
+  cl_assert_equal_i(prv_timeout(), 38 * 1000 + (1000 - MARGIN_MS) + MARGIN_MS);
   prv_advance_and_fire();
   cl_assert_equal_i(pbl_realtime() % 60, 0);
 }
@@ -157,7 +156,7 @@ void test_regular_timer__adding_pulls_the_timer_in(void) {
   fake_rtc_increment_time_ms(400);
   s_multi_fired = 0;
   regular_timer_add_multisecond_callback(&s_multi_info, 2);
-  cl_assert_equal_i(prv_timeout(), 1000 + (1000 - MARGIN_MS - 400) + MARGIN_MS + 1);
+  cl_assert_equal_i(prv_timeout(), 1000 + (1000 - MARGIN_MS - 400) + MARGIN_MS);
   prv_advance_and_fire();
   cl_assert_equal_i(s_multi_fired, 1);
   cl_assert_equal_i(pbl_realtime(), START_TIME + 3);

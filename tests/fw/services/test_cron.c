@@ -84,8 +84,8 @@ void test_cron__timer_aligned_to_execute_second(void) {
   const time_t execute_time = pbl_cron_job_schedule(&job);
 
   cl_assert_equal_i(execute_time, 1447332300);
-  // 603250 ms away, aimed early by 1/256 plus the margin.
-  cl_assert_equal_i(new_timer_start_fake.arg1_val, 603250 - 603250 / 256 + 10);
+  // 603250 ms away, plus the margin.
+  cl_assert_equal_i(new_timer_start_fake.arg1_val, 603250 + 10);
   cl_assert(pbl_cron_job_unschedule(&job));
 }
 
@@ -847,13 +847,13 @@ void test_cron__schedule_at_fires_at_the_time(void) {
 
   pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 100);
   cl_assert_equal_i(job.cached_execute_time, s_2015_nov12_123456_gmt + 100);
-  cl_assert_equal_i(new_timer_start_fake.arg1_val, 100000 - 100000 / 256 + 10);
+  cl_assert_equal_i(new_timer_start_fake.arg1_val, 100000 + 10);
 
   // The timer expiring early re-arms for what is left.
   fake_rtc_increment_time(99);
   pbl_cron_wakeup();
   cl_assert_equal_i((uintptr_t)job.cb_data, 0);
-  cl_assert_equal_i(new_timer_start_fake.arg1_val, 1000 - 1000 / 256 + 10);
+  cl_assert_equal_i(new_timer_start_fake.arg1_val, 1000 + 10);
 
   fake_rtc_increment_time(1);
   pbl_cron_wakeup();
