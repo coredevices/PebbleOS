@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config REMOTEPROC
+    bool
+    help
+      Remote processor class (pbl/drivers/remoteproc.h), selected by the
+      remote processor drivers.
+
+config REMOTEPROC_SHELL
+    bool "Remote processor shell commands"
+    default DRIVER_SHELL
+    depends on REMOTEPROC && SHELL
+    help
+      The rproc shell command, to list the remote processors and boot or
+      shut them down.
