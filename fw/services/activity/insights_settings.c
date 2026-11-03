@@ -113,7 +113,7 @@ static const AISDefault AIS_DEFAULTS[] = {
 static bool prv_open_settings_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_insight_settings_mutex, PBL_FOREVER);
   if (pbl_settings_open(file, ACTIVITY_INSIGHTS_SETTINGS_FILENAME,
-                        ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == S_SUCCESS) {
+                        ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == 0) {
     return true;
   } else {
     pbl_mutex_unlock(&s_insight_settings_mutex);
@@ -135,7 +135,7 @@ void activity_insights_settings_init(void) {
 
   struct pbl_settings_file file;
   if (pbl_settings_open(&file, ACTIVITY_INSIGHTS_SETTINGS_FILENAME,
-                        ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == S_SUCCESS) {
+                        ACTIVITY_INSIGHTS_SETTINGS_DEFAULT_FILE_SIZE) == 0) {
     if (!pbl_settings_exists(&file, ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY,
                              strlen(ACTIVITY_INSIGHTS_SETTINGS_VERSION_KEY))) {
       // init version to 0
@@ -177,7 +177,7 @@ bool activity_insights_settings_read(const char *insight_name,
   struct pbl_settings_file file;
   if (prv_open_settings_and_lock(&file)) {
     if (pbl_settings_get(&file, insight_name, strlen(insight_name), settings_out,
-                         sizeof(*settings_out)) != S_SUCCESS) {
+                         sizeof(*settings_out)) != 0) {
       PBL_LOG_DBG("Didn't find insight with key %s", insight_name);
       goto close;
     }
@@ -215,7 +215,7 @@ bool activity_insights_settings_write(const char *insight_name, ActivityInsightS
   struct pbl_settings_file file;
   if (prv_open_settings_and_lock(&file)) {
     if (pbl_settings_set(&file, insight_name, strlen(insight_name), settings, sizeof(*settings)) !=
-        S_SUCCESS) {
+        0) {
       PBL_LOG_WRN("Unable to save insight setting with key %s", insight_name);
     } else {
       rv = true;

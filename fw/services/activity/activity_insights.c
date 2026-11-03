@@ -28,6 +28,7 @@
 
 #include <applib/event_service_client.h>
 #include <resource/timeline_resource_ids.auto.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -306,7 +307,7 @@ static const char *prv_get_variant(const InsightCopyVariants *set, int variant) 
 // Helper functions for saving insight state to settings file
 static bool prv_restore_state(struct pbl_settings_file *file, ActivitySettingsKey key,
                               void *val_out, size_t val_out_len) {
-  return pbl_settings_get(file, &key, sizeof(key), val_out, val_out_len);
+  return status_from_errno(pbl_settings_get(file, &key, sizeof(key), val_out, val_out_len));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -315,7 +316,7 @@ static bool prv_save_state(ActivitySettingsKey key, void *val, size_t val_len) {
 
   struct pbl_settings_file *file = activity_private_settings_open();
   if (file) {
-    rv = pbl_settings_set(file, &key, sizeof(key), val, val_len);
+    rv = status_from_errno(pbl_settings_set(file, &key, sizeof(key), val, val_len));
     activity_private_settings_close(file);
   }
   return rv;

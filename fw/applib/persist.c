@@ -11,6 +11,7 @@
 
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
+#include <system/status_errno.h>
 
 static_assert(PERSIST_DATA_MAX_LENGTH <= PBL_SETTINGS_VAL_MAX_LEN,
               "PERSIST_DATA_MAX_LENGTH is larger than the max length that "
@@ -67,7 +68,8 @@ PBL_SYSCALL(int, persist_read_data, (VAL, const uint32_t, key),
   }
 
   const size_t restricted_size = MIN(buffer_size, (size_t)len);
-  const status_t read_result = pbl_settings_get(store, &key, sizeof(key), buffer, restricted_size);
+  const status_t read_result =
+      status_from_errno(pbl_settings_get(store, &key, sizeof(key), buffer, restricted_size));
   if (FAILED(read_result)) {
     RETURN_STATUS_UP(read_result);
   }
@@ -94,13 +96,15 @@ int persist_read_string__deprecated(const uint32_t key, const size_t buffer_size
 
 PBL_SYSCALL(status_t, persist_write_bool, (VAL, const uint32_t, key), (VAL, const bool, value)) {
   LOCK_AND_GET_STORE(store);
-  status_t result = pbl_settings_set(store, &key, sizeof(key), &value, sizeof(value));
+  status_t result =
+      status_from_errno(pbl_settings_set(store, &key, sizeof(key), &value, sizeof(value)));
   return PASSED(result) ? (status_t)sizeof(value) : result;
 }
 
 PBL_SYSCALL(status_t, persist_write_int, (VAL, const uint32_t, key), (VAL, const int32_t, value)) {
   LOCK_AND_GET_STORE(store);
-  status_t result = pbl_settings_set(store, &key, sizeof(key), &value, sizeof(value));
+  status_t result =
+      status_from_errno(pbl_settings_set(store, &key, sizeof(key), &value, sizeof(value)));
   return PASSED(result) ? (status_t)sizeof(value) : result;
 }
 
@@ -108,7 +112,8 @@ PBL_SYSCALL(int, persist_write_data, (VAL, const uint32_t, key),
             (IN_BUF, const void *, buffer, buffer_size), (VAL, const size_t, buffer_size)) {
   const size_t restricted_size = MIN(buffer_size, PERSIST_DATA_MAX_LENGTH);
   LOCK_AND_GET_STORE(store);
-  int result = pbl_settings_set(store, &key, sizeof(key), buffer, restricted_size);
+  int result =
+      status_from_errno(pbl_settings_set(store, &key, sizeof(key), buffer, restricted_size));
   return PASSED(result) ? (int)restricted_size : result;
 }
 
@@ -127,7 +132,7 @@ PBL_SYSCALL(status_t, persist_delete, (VAL, const uint32_t, key)) {
   LOCK_AND_GET_STORE(store);
   status_t result;
   if (pbl_settings_exists(store, &key, sizeof(key))) {
-    result = pbl_settings_delete(store, &key, sizeof(key));
+    result = status_from_errno(pbl_settings_delete(store, &key, sizeof(key)));
     if (PASSED(result)) {
       result = S_TRUE;
     }

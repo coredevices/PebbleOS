@@ -25,6 +25,7 @@
 
 #include <applib/accel_service.h>
 #include <applib/data_logging.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -105,7 +106,7 @@ static void prv_unlock(void) {
 // We use PBL_NOINLINE to reduce the stack requirements during the minute handler
 static PBL_NOINLINE struct pbl_settings_file *prv_minute_data_file_open(void) {
   struct pbl_settings_file *file = pbl_malloc_check(sizeof(struct pbl_settings_file));
-  if (pbl_settings_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != S_SUCCESS) {
+  if (pbl_settings_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != 0) {
     PBL_LOG_ERR("No minute data file");
     return nullptr;
   }
@@ -362,7 +363,8 @@ static struct pbl_settings_file *prv_validate_and_trim_minute_file(struct pbl_se
 
   // Rewrite the settings file, keeping only the keys we need
   PBL_LOG_DBG("Compacting minute file down to %" PRIu16 " records", max_records);
-  status_t status = pbl_settings_rewrite_filtered(file, prv_minute_file_rewrite_cb, &context);
+  status_t status =
+      status_from_errno(pbl_settings_rewrite_filtered(file, prv_minute_file_rewrite_cb, &context));
 
   // Error re-writing?
   if (status != S_SUCCESS) {
@@ -436,8 +438,8 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
   }
 
   uint32_t key = prv_minute_file_get_settings_key(file_record->hdr.time_utc);
-  status_t status =
-      pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
+  status_t status = status_from_errno(
+      pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record)));
   if (status == E_OUT_OF_STORAGE) {
     uint16_t max_records = s_alg_state->num_minute_records / 2;
     PBL_LOG_INFO("Compacting minute file from %" PRIu16 " records to %" PRIu16 "",
@@ -447,7 +449,8 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
       goto exit;
     }
 
-    status = pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
+    status = status_from_errno(
+        pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record)));
   }
 
   // Was there an error writing the value out?

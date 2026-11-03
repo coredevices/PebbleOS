@@ -302,9 +302,9 @@ void test_app_cache__corrupt_key(void) {
   // add one with a key value of length 3
   // Raw struct pbl_settings_file calls
   struct pbl_settings_file file;
-  status_t rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+  int rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
 
-  cl_assert_equal_i(S_SUCCESS, rv);
+  cl_assert_equal_i(0, rv);
 
   AppCacheEntry entry = {
     .install_date = rtc_get_time(),

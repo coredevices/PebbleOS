@@ -22,6 +22,7 @@
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <kernel/event_loop.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -136,15 +137,15 @@ static int prv_file_get(const void *key, size_t key_len, void *data_out, size_t 
   prv_lock();
   {
     struct pbl_settings_file fd;
-    status_t rv =
-        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv != S_SUCCESS) {
       goto cleanup;
     }
 
     data_len = pbl_settings_get_len(&fd, key, key_len);
     // If a big enough buffer wasn't passed in, then the data can't be read.
-    if (data_len > buf_len || pbl_settings_get(&fd, key, key_len, data_out, buf_len) != S_SUCCESS) {
+    if (data_len > buf_len || pbl_settings_get(&fd, key, key_len, data_out, buf_len) != 0) {
       data_len = 0;
     }
 
@@ -181,7 +182,8 @@ static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, con
   prv_lock();
   {
     struct pbl_settings_file fd;
-    rv = pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv != S_SUCCESS) {
       goto cleanup;
     }
@@ -202,10 +204,10 @@ static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, con
 
       if (do_perform_update) {
         PBL_LOG_DBG("Updating GAP bonding record");
-        rv = pbl_settings_set(&fd, key, key_len, (uint8_t *)data_in, data_len);
+        rv = status_from_errno(pbl_settings_set(&fd, key, key_len, (uint8_t *)data_in, data_len));
       }
     } else {
-      rv = pbl_settings_delete(&fd, key, key_len);
+      rv = status_from_errno(pbl_settings_delete(&fd, key, key_len));
     }
     pbl_settings_close(&fd);
   }
@@ -225,7 +227,8 @@ static bool prv_file_each(pbl_settings_each_cb_t itr_cb, void *itr_data) {
   prv_lock();
   {
     struct pbl_settings_file fd;
-    rv = pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
@@ -247,8 +250,8 @@ static pbl_bt_bonding_id_t prv_get_free_key() {
   prv_lock();
   {
     struct pbl_settings_file fd;
-    status_t rv =
-        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
@@ -274,8 +277,8 @@ static pbl_bt_cccd_id_t prv_get_free_cccd() {
   prv_lock();
   {
     struct pbl_settings_file fd;
-    status_t rv =
-        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
@@ -800,7 +803,8 @@ status_t prv_delete_all_cccd_for_addr(const struct pbl_bt_device_internal *dev) 
   prv_lock();
   {
     struct pbl_settings_file fd;
-    rv = pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
@@ -809,7 +813,8 @@ status_t prv_delete_all_cccd_for_addr(const struct pbl_bt_device_internal *dev) 
       if (pbl_settings_exists(&fd, &id, sizeof(id))) {
         BtPersistCCCDData stored_data;
 
-        rv = pbl_settings_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data));
+        rv = status_from_errno(
+            pbl_settings_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data)));
         if (rv) {
           goto cleanup;
         }
@@ -824,7 +829,7 @@ status_t prv_delete_all_cccd_for_addr(const struct pbl_bt_device_internal *dev) 
 
           pbl_bt_handle_host_removed_cccd(&cccd_to_delete);
 
-          rv = pbl_settings_delete(&fd, &id, sizeof(id));
+          rv = status_from_errno(pbl_settings_delete(&fd, &id, sizeof(id)));
           if (rv) {
             goto cleanup;
           }
@@ -1464,8 +1469,8 @@ void bt_persistent_storage_delete_all_pairings(void) {
   prv_lock();
   {
     struct pbl_settings_file fd;
-    status_t rv =
-        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv == S_SUCCESS) {
       pbl_settings_rewrite(&fd, prv_delete_all_pairings_itr, nullptr);
       pbl_settings_close(&fd);

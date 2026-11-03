@@ -27,8 +27,8 @@ static struct {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_contacts_db.mutex, PBL_FOREVER);
-  status_t rv = pbl_settings_open_growable(&s_contacts_db.settings_file, SETTINGS_FILE_NAME,
-                                           SETTINGS_FILE_SIZE, PBL_KIB(4));
+  status_t rv = status_from_errno(pbl_settings_open_growable(
+      &s_contacts_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_contacts_db.mutex);
   }
@@ -65,8 +65,8 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
     return 0;
   }
 
-  rv = pbl_settings_get(&s_contacts_db.settings_file, (uint8_t *)uuid, UUID_SIZE,
-                        (void *)*contact_out, contact_len);
+  rv = status_from_errno(pbl_settings_get(&s_contacts_db.settings_file, (uint8_t *)uuid, UUID_SIZE,
+                                          (void *)*contact_out, contact_len));
   prv_close_file_and_unlock_mutex();
   if (rv != S_SUCCESS) {
     pbl_free(*contact_out);
@@ -99,7 +99,8 @@ status_t contacts_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
     return rv;
   }
 
-  rv = pbl_settings_set(&s_contacts_db.settings_file, key, key_len, val, val_len);
+  rv =
+      status_from_errno(pbl_settings_set(&s_contacts_db.settings_file, key, key_len, val, val_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -131,7 +132,8 @@ status_t contacts_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int
     return rv;
   }
 
-  rv = pbl_settings_get(&s_contacts_db.settings_file, key, key_len, val_out, val_out_len);
+  rv = status_from_errno(
+      pbl_settings_get(&s_contacts_db.settings_file, key, key_len, val_out, val_out_len));
   prv_close_file_and_unlock_mutex();
 
   return rv;
@@ -147,7 +149,7 @@ status_t contacts_db_delete(const uint8_t *key, int key_len) {
     return rv;
   }
 
-  rv = pbl_settings_delete(&s_contacts_db.settings_file, key, key_len);
+  rv = status_from_errno(pbl_settings_delete(&s_contacts_db.settings_file, key, key_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -165,7 +167,7 @@ status_t contacts_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = pbl_settings_compact(&s_contacts_db.settings_file);
+  rv = status_from_errno(pbl_settings_compact(&s_contacts_db.settings_file));
   prv_close_file_and_unlock_mutex();
   return rv;
 }

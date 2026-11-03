@@ -19,6 +19,7 @@
 #include <kernel/events.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -600,8 +601,8 @@ status_t app_glance_db_delete_glance(const Uuid *uuid) {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
-  const status_t rv = pbl_settings_open_growable(&s_app_glance_db.settings_file, SETTINGS_FILE_NAME,
-                                                 SETTINGS_FILE_SIZE, PBL_KIB(4));
+  const status_t rv = status_from_errno(pbl_settings_open_growable(
+      &s_app_glance_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_glance_db.mutex);
   }
@@ -634,7 +635,7 @@ status_t app_glance_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = pbl_settings_compact(&s_app_glance_db.settings_file);
+  rv = status_from_errno(pbl_settings_compact(&s_app_glance_db.settings_file));
   prv_close_file_and_unlock_mutex();
   return rv;
 }
@@ -745,8 +746,8 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
     return rv;
   }
 
-  rv = pbl_settings_set(&s_app_glance_db.settings_file, key, (size_t)key_len, serialized_glance,
-                        len);
+  rv = status_from_errno(pbl_settings_set(&s_app_glance_db.settings_file, key, (size_t)key_len,
+                                          serialized_glance, len));
 
   prv_close_file_and_unlock_mutex();
 
@@ -780,8 +781,8 @@ status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, i
     return rv;
   }
 
-  rv = pbl_settings_get(&s_app_glance_db.settings_file, key, (size_t)key_len, val_out,
-                        (size_t)val_out_len);
+  rv = status_from_errno(pbl_settings_get(&s_app_glance_db.settings_file, key, (size_t)key_len,
+                                          val_out, (size_t)val_out_len));
   if (rv == S_SUCCESS) {
     SerializedAppGlanceHeader *serialized_app_glance = (SerializedAppGlanceHeader *)val_out;
 
@@ -810,7 +811,8 @@ status_t app_glance_db_delete(const uint8_t *key, int key_len) {
   }
 
   if (pbl_settings_exists(&s_app_glance_db.settings_file, key, (size_t)key_len)) {
-    rv = pbl_settings_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
+    rv = status_from_errno(
+        pbl_settings_delete(&s_app_glance_db.settings_file, key, (size_t)key_len));
   } else {
     rv = S_SUCCESS;
   }
@@ -839,7 +841,8 @@ status_t app_glance_db_insert_stale(const uint8_t *key, int key_len, const uint8
     return rv;
   }
 
-  rv = pbl_settings_set(&s_app_glance_db.settings_file, key, key_len, val, val_len);
+  rv = status_from_errno(
+      pbl_settings_set(&s_app_glance_db.settings_file, key, key_len, val, val_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;

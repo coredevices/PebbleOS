@@ -36,8 +36,8 @@ PBL_T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
-  status_t rv = pbl_settings_open_growable(&s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME,
-                                           SETTINGS_FILE_SIZE, PBL_KIB(4));
+  status_t rv = status_from_errno(pbl_settings_open_growable(
+      &s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   }
@@ -63,8 +63,8 @@ static void *prv_get_prefs(const char *pref_key) {
   void *prefs = pbl_zalloc(len);
 
   if (prefs) {
-    rv = pbl_settings_get(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key), prefs,
-                          len);
+    rv = status_from_errno(pbl_settings_get(&s_watch_app_prefs_db.settings_file, pref_key,
+                                            strlen(pref_key), prefs, len));
     if (rv != S_SUCCESS) {
       pbl_free(prefs);
       prefs = nullptr;
@@ -160,7 +160,8 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
 
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv == S_SUCCESS) {
-    rv = pbl_settings_set(&s_watch_app_prefs_db.settings_file, key, key_len, val, val_len);
+    rv = status_from_errno(
+        pbl_settings_set(&s_watch_app_prefs_db.settings_file, key, key_len, val, val_len));
 
     // Cache the data we just set if it was for the Reminders app
     const int expected_reminder_app_prefs_size = sizeof(SerializedReminderAppPrefs);
@@ -194,7 +195,8 @@ status_t watch_app_prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_o
 
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv == S_SUCCESS) {
-    rv = pbl_settings_get(&s_watch_app_prefs_db.settings_file, key, key_len, val_out, val_out_len);
+    rv = status_from_errno(
+        pbl_settings_get(&s_watch_app_prefs_db.settings_file, key, key_len, val_out, val_out_len));
     prv_close_file_and_unlock_mutex();
   }
 
@@ -204,7 +206,7 @@ status_t watch_app_prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_o
 status_t watch_app_prefs_db_delete(const uint8_t *key, int key_len) {
   status_t rv = prv_lock_mutex_and_open_file();
   if (rv == S_SUCCESS) {
-    rv = pbl_settings_delete(&s_watch_app_prefs_db.settings_file, key, key_len);
+    rv = status_from_errno(pbl_settings_delete(&s_watch_app_prefs_db.settings_file, key, key_len));
     prv_close_file_and_unlock_mutex();
   }
 
@@ -223,7 +225,7 @@ status_t watch_app_prefs_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = pbl_settings_compact(&s_watch_app_prefs_db.settings_file);
+  rv = status_from_errno(pbl_settings_compact(&s_watch_app_prefs_db.settings_file));
   prv_close_file_and_unlock_mutex();
   return rv;
 }

@@ -177,7 +177,7 @@ These mechanisms replace dependencies of the code under test:
   #include <fff.h>
 
   FAKE_VOID_FUNC(pbl_settings_close, struct pbl_settings_file *);
-  FAKE_VALUE_FUNC(status_t, pbl_settings_open, struct pbl_settings_file *, const char *, int);
+  FAKE_VALUE_FUNC(int, pbl_settings_open, struct pbl_settings_file *, const char *, int);
 
   #define FAKES(FAKE) FAKE(pbl_settings_close) FAKE(pbl_settings_open)
 

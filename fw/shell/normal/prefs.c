@@ -45,6 +45,7 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
+#include <system/status_errno.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -1027,6 +1028,7 @@ typedef struct {
 #define PREFS_MACRO(key, var) {key, &var, sizeof(var), prv_set_##var##_cb},
 static const PrefsTableEntry s_prefs_table[] = {
 #include "prefs_values.h.inc"
+
 };
 #undef PREFS_MACRO
 
@@ -1084,7 +1086,7 @@ static void prv_migrate_activity_hrm_prefs(struct pbl_settings_file *file) {
 
   ActivityHRMSettings settings = ACTIVITY_HRM_DEFAULT_PREFERENCES;
   if (pbl_settings_get(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, stored_len) !=
-      S_SUCCESS) {
+      0) {
     return;
   }
 
@@ -1099,7 +1101,7 @@ static bool prv_take_legacy_bool(struct pbl_settings_file *file, const char *key
     if (pbl_settings_get_len(file, key, key_len) != sizeof(*value)) {
       continue;
     }
-    if (pbl_settings_get(file, key, key_len, value, sizeof(*value)) == S_SUCCESS) {
+    if (pbl_settings_get(file, key, key_len, value, sizeof(*value)) == 0) {
       found = true;
     }
     pbl_settings_delete(file, key, key_len);
@@ -1121,7 +1123,7 @@ static void prv_migrate_activity_spo2_prefs(struct pbl_settings_file *file) {
   if (stored_len == (int)sizeof(settings.measurement_interval)) {
     migrate = pbl_settings_get(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len,
                                &settings.measurement_interval,
-                               sizeof(settings.measurement_interval)) == S_SUCCESS;
+                               sizeof(settings.measurement_interval)) == 0;
   }
   migrate |= prv_take_legacy_bool(file, "bloodOxygenPreferences", &settings.enabled);
   migrate |= prv_take_legacy_bool(file, "bloodOxygenActivityPreferences",
@@ -1146,7 +1148,7 @@ void shell_prefs_init(void) {
 #endif
 
   struct pbl_settings_file file = {};
-  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
+  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != 0) {
     return;
   }
 
@@ -1204,7 +1206,7 @@ void shell_prefs_init(void) {
   if (!s_als_threshold_migrated_v1) {
     s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
     struct pbl_settings_file mfile = {};
-    if (pbl_settings_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    if (pbl_settings_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
       pbl_settings_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
                           sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
       pbl_settings_close(&mfile);
@@ -1219,7 +1221,7 @@ void shell_prefs_init(void) {
   if (!s_als_threshold_migrated_v2) {
     s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
     struct pbl_settings_file v2file = {};
-    if (pbl_settings_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    if (pbl_settings_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
       pbl_settings_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
                           sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
@@ -1286,9 +1288,10 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file = {};
-    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
       // Keys in the backing store include the null terminator, so we add 1 to key_len
-      rv = pbl_settings_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
+      rv = status_from_errno(
+          pbl_settings_set(&file, entry->key, strlen(entry->key) + 1, value, value_len));
       if (rv != S_SUCCESS) {
         PBL_LOG_WRN("Failed to set pref '%s' (%" PRIi32 ")", entry->key, (int32_t)rv);
       }
@@ -1370,12 +1373,12 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file = {};
-    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
       // Keys in the backing store include the null terminator
       // Use strlen(entry->key) + 1 to match how it was written, since key_len from
       // BlobDB may or may not include the null terminator
-      success = (pbl_settings_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) ==
-                 S_SUCCESS);
+      success =
+          (pbl_settings_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) == 0);
       pbl_settings_close(&file);
     }
   }

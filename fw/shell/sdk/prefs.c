@@ -14,6 +14,7 @@
 #include <process_management/process_manager.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
+#include <system/status_errno.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -38,20 +39,20 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 void shell_prefs_init(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   struct pbl_settings_file file = {};
-  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
+  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != 0) {
     goto cleanup;
   }
   if (pbl_settings_get(&file, PREF_KEY_CLOCK_24H, sizeof(PREF_KEY_CLOCK_24H), &s_is_24h_style,
-                       sizeof(s_is_24h_style)) != S_SUCCESS) {
+                       sizeof(s_is_24h_style)) != 0) {
     // The setting likely doesn't exist yet so set it to the default (true)
     s_is_24h_style = true;
   }
   if (pbl_settings_get(&file, PREF_KEY_DEFAULT_WATCHFACE, sizeof(PREF_KEY_DEFAULT_WATCHFACE),
-                       &s_default_watchface, sizeof(s_default_watchface)) != S_SUCCESS) {
+                       &s_default_watchface, sizeof(s_default_watchface)) != 0) {
     s_default_watchface = UUID_INVALID;
   }
   if (pbl_settings_get(&file, PREF_KEY_CONTENT_SIZE, sizeof(PREF_KEY_CONTENT_SIZE), &s_content_size,
-                       sizeof(s_content_size)) != S_SUCCESS) {
+                       sizeof(s_content_size)) != 0) {
     s_content_size = PreferredContentSizeDefault;
   }
   pbl_settings_close(&file);
@@ -62,10 +63,12 @@ cleanup:
 static bool prv_pref_set(const char *key, const void *val, size_t val_len) {
   struct pbl_settings_file file = {};
   status_t rv;
-  if ((rv = pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN)) != S_SUCCESS) {
+  if ((rv = status_from_errno(
+           pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN))) != S_SUCCESS) {
     goto cleanup;
   }
-  rv = pbl_settings_set(&file, key, strnlen(key, PBL_SETTINGS_KEY_MAX_LEN) + 1, val, val_len);
+  rv = status_from_errno(
+      pbl_settings_set(&file, key, strnlen(key, PBL_SETTINGS_KEY_MAX_LEN) + 1, val, val_len));
   pbl_settings_close(&file);
 cleanup:
   return (rv == S_SUCCESS);

@@ -2030,12 +2030,11 @@ void test_activity__migrate_settings_v2(void) {
   pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
   struct pbl_settings_file file;
   cl_assert_equal_i(
-      pbl_settings_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN), S_SUCCESS);
+      pbl_settings_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN), 0);
 
   ActivitySettingsKey key = ActivitySettingsKeyVersion;
   const uint16_t version = 2;
-  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &version, sizeof(version)),
-                    S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &version, sizeof(version)), 0);
 
   const ActivitySettingsValueHistoryV2 step_history = {
     .utc_sec = rtc_get_time(),
@@ -2043,12 +2042,11 @@ void test_activity__migrate_settings_v2(void) {
   };
   key = ActivitySettingsKeyStepCountHistory;
   cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &step_history, sizeof(step_history)),
-                    S_SUCCESS);
+                    0);
 
   const uint16_t last_vmc = 1234;
   key = ActivitySettingsKeyLastVMC;
-  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &last_vmc, sizeof(last_vmc)),
-                    S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &last_vmc, sizeof(last_vmc)), 0);
 
   // Stored sessions are not metric records; the migration must copy them verbatim
   ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT] = {};
@@ -2064,8 +2062,7 @@ void test_activity__migrate_settings_v2(void) {
     },
   };
   key = ActivitySettingsKeyStoredActivities;
-  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), sessions, sizeof(sessions)),
-                    S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), sessions, sizeof(sessions)), 0);
 
   pbl_settings_close(&file);
 

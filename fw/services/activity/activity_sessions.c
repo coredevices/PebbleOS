@@ -19,6 +19,7 @@
 #include <applib/health_service.h>
 #include <kernel/events.h>
 #include <syscall/syscall.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -588,8 +589,8 @@ static void prv_log_activities(time_t now_utc) {
     if (file) {
       for (int i = 0; i < ActivityClassCount; i++) {
         ActivityClassParams *params = &class_settings[i];
-        status_t result = pbl_settings_set(file, &params->key, sizeof(params->key),
-                                           params->exit_utc, sizeof(*params->exit_utc));
+        status_t result = status_from_errno(pbl_settings_set(
+            file, &params->key, sizeof(params->key), params->exit_utc, sizeof(*params->exit_utc)));
         if (result != S_SUCCESS) {
           PBL_LOG_ERR("Error saving last event time");
         }
@@ -620,8 +621,8 @@ void activity_sessions_prv_init(struct pbl_settings_file *file, time_t utc_now) 
   }
 
   // Read in the stored activities
-  status_t result = pbl_settings_get(file, &key, sizeof(key), state->activity_sessions,
-                                     sizeof(state->activity_sessions));
+  status_t result = status_from_errno(pbl_settings_get(
+      file, &key, sizeof(key), state->activity_sessions, sizeof(state->activity_sessions)));
   if (result != S_SUCCESS) {
     return;
   }

@@ -10,8 +10,6 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 
-#include <system/status_codes.h>
-
 /**
  * @defgroup settings Settings files
  * @ingroup subsys
@@ -31,7 +29,7 @@
  * uint32_t key = 1;
  * uint8_t value = 42;
  *
- * if (pbl_settings_open(&file, "myprefs", 1024) == S_SUCCESS) {
+ * if (pbl_settings_open(&file, "myprefs", 1024) == 0) {
  *   pbl_settings_set(&file, &key, sizeof(key), &value, sizeof(value));
  *   pbl_settings_get(&file, &key, sizeof(key), &value, sizeof(value));
  *   pbl_settings_close(&file);
@@ -114,7 +112,7 @@ struct pbl_settings_file {
   /** Space the file may take before a compaction is forced, at least @ref max_used_space. */
   int max_space_total;
 
-  /** Space valid records may use; writes beyond it fail with @c E_OUT_OF_STORAGE. */
+  /** Space valid records may use; writes beyond it fail with @c -ENOSPC. */
   int max_used_space;
 
   /**
@@ -154,10 +152,10 @@ struct pbl_settings_file {
  * @param[out] file Settings file to initialize.
  * @param name Absolute path of the file, on PFS.
  * @param max_used_space Space valid records may use, in bytes.
- * @retval S_SUCCESS File opened.
- * @return Negative status code from PFS on failure.
+ * @retval 0 File opened.
+ * @return Negative errno from the file system on failure.
  */
-status_t pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space);
+int pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space);
 
 /**
  * @brief Open or create a settings file that grows on demand.
@@ -169,11 +167,11 @@ status_t pbl_settings_open(struct pbl_settings_file *file, const char *name, int
  * @param name Absolute path of the file, on PFS.
  * @param max_used_space Space valid records may use, in bytes.
  * @param initial_alloc_size Initial allocation in bytes, greater than 0.
- * @retval S_SUCCESS File opened.
- * @return Negative status code from PFS on failure.
+ * @retval 0 File opened.
+ * @return Negative errno from the file system on failure.
  */
-status_t pbl_settings_open_growable(struct pbl_settings_file *file, const char *name,
-                                    int max_used_space, int initial_alloc_size);
+int pbl_settings_open_growable(struct pbl_settings_file *file, const char *name, int max_used_space,
+                               int initial_alloc_size);
 
 /**
  * @brief Close a settings file.
@@ -202,7 +200,7 @@ bool pbl_settings_exists(struct pbl_settings_file *file, const void *key, size_t
  * @param key_len Length of @p key in bytes.
  * @return Same as pbl_settings_set().
  */
-status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, size_t key_len);
+int pbl_settings_delete(struct pbl_settings_file *file, const void *key, size_t key_len);
 
 /**
  * @brief Get the length of a value.
@@ -224,12 +222,12 @@ size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, siz
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Value buffer.
  * @param val_out_len Bytes to read, at most the stored value length.
- * @retval S_SUCCESS Value read.
- * @retval E_DOES_NOT_EXIST No such record, or it was deleted.
- * @retval E_RANGE @p val_out_len exceeds the stored value length.
+ * @retval 0 Value read.
+ * @retval -ENOENT No such record, or it was deleted.
+ * @retval -ERANGE @p val_out_len exceeds the stored value length.
  */
-status_t pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len,
-                          void *val_out, size_t val_out_len);
+int pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len, void *val_out,
+                     size_t val_out_len);
 
 /**
  * @brief Write a value, timestamped with the current time.
@@ -244,13 +242,13 @@ status_t pbl_settings_get(struct pbl_settings_file *file, const void *key, size_
  * @param val Value.
  * @param val_len Length of @p val in bytes, at most @ref PBL_SETTINGS_VAL_MAX_LEN. 0 deletes the
  * record.
- * @retval S_SUCCESS Value written.
- * @retval E_RANGE Key or value too long.
- * @retval E_OUT_OF_STORAGE Not enough space for valid records.
- * @return Other negative status codes if compaction fails.
+ * @retval 0 Value written.
+ * @retval -ERANGE Key or value too long.
+ * @retval -ENOSPC Not enough space for valid records.
+ * @return Other negative errno values if compaction fails.
  */
-status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
-                          const void *val, size_t val_len);
+int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                     const void *val, size_t val_len);
 
 /**
  * @brief Mark a record as synced.
@@ -260,11 +258,11 @@ status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_
  * @param file Settings file.
  * @param key Key, at most @ref PBL_SETTINGS_KEY_MAX_LEN bytes.
  * @param key_len Length of @p key in bytes.
- * @retval S_SUCCESS Record marked.
- * @retval E_RANGE Key too long.
- * @retval E_DOES_NOT_EXIST No such record.
+ * @retval 0 Record marked.
+ * @retval -ERANGE Key too long.
+ * @retval -ENOENT No such record.
  */
-status_t pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len);
+int pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len);
 
 /**
  * @brief Mark all records as not synced, to trigger a full sync.
@@ -274,7 +272,7 @@ status_t pbl_settings_mark_synced(struct pbl_settings_file *file, const void *ke
  * @param file Settings file.
  * @return Same as pbl_settings_rewrite().
  */
-status_t pbl_settings_mark_all_dirty(struct pbl_settings_file *file);
+int pbl_settings_mark_all_dirty(struct pbl_settings_file *file);
 
 /**
  * @brief Callback invoked after a record of a watched file is written.
@@ -322,12 +320,12 @@ void pbl_settings_watch_add(struct pbl_settings_watch *watch);
  * @param key_len Length of @p key in bytes.
  * @param offset Offset within the value, less than the value length.
  * @param byte Byte to write.
- * @retval S_SUCCESS Byte written.
- * @retval E_RANGE Key too long.
- * @retval E_DOES_NOT_EXIST No such record, or it was deleted.
+ * @retval 0 Byte written.
+ * @retval -ERANGE Key too long.
+ * @retval -ENOENT No such record, or it was deleted.
  */
-status_t pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, size_t key_len,
-                               size_t offset, uint8_t byte);
+int pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          size_t offset, uint8_t byte);
 
 /**
  * @brief Read the key of the record being visited.
@@ -408,12 +406,12 @@ typedef void (*pbl_settings_rewrite_cb_t)(struct pbl_settings_file *old_file,
  * @param file Settings file.
  * @param cb Callback.
  * @param context Context passed to @p cb.
- * @retval S_SUCCESS File rewritten.
- * @retval E_OUT_OF_MEMORY Allocation failed.
- * @return Other negative status codes if opening the new file fails.
+ * @retval 0 File rewritten.
+ * @retval -ENOMEM Allocation failed.
+ * @return Other negative errno values if opening the new file fails.
  */
-status_t pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb_t cb,
-                              void *context);
+int pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb_t cb,
+                         void *context);
 
 /**
  * @brief Filter callback for pbl_settings_rewrite_filtered().
@@ -438,12 +436,12 @@ typedef bool (*pbl_settings_filter_cb_t)(void *key, size_t key_len, void *value,
  * @param file Settings file.
  * @param filter_cb Filter, or NULL to keep every valid record.
  * @param context Context passed to @p filter_cb.
- * @retval S_SUCCESS File rewritten.
- * @retval E_OUT_OF_MEMORY Allocation failed.
- * @return Other negative status codes on failure.
+ * @retval 0 File rewritten.
+ * @retval -ENOMEM Allocation failed.
+ * @return Other negative errno values on failure.
  */
-status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
-                                       pbl_settings_filter_cb_t filter_cb, void *context);
+int pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
+                                  pbl_settings_filter_cb_t filter_cb, void *context);
 
 /**
  * @brief Compact a settings file.
@@ -452,9 +450,9 @@ status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
  * @ref pbl_settings_file::min_alloc_used_space.
  *
  * @param file Settings file.
- * @retval S_SUCCESS File compacted.
- * @return Negative status code on failure.
+ * @retval 0 File compacted.
+ * @return Negative errno on failure.
  */
-status_t pbl_settings_compact(struct pbl_settings_file *file);
+int pbl_settings_compact(struct pbl_settings_file *file);
 
 /** @} */

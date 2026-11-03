@@ -33,8 +33,8 @@ static PBL_MUTEX_DEFINE(s_mutex);
 static status_t prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv = pbl_settings_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME,
-                                           iOS_NOTIF_PREF_MAX_SIZE, PBL_KIB(4));
+  status_t rv = status_from_errno(pbl_settings_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME,
+                                                             iOS_NOTIF_PREF_MAX_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_mutex);
   }
@@ -53,13 +53,13 @@ static status_t prv_save_serialized_prefs(struct pbl_settings_file *file, const 
   // Invert flags before writing to flash
   ((SerializedNotifPrefs *)val)->flags = ~(((SerializedNotifPrefs *)val)->flags);
 
-  return pbl_settings_set(file, key, key_len, val, val_len);
+  return status_from_errno(pbl_settings_set(file, key, key_len, val, val_len));
 }
 
 //! Assumes the file is opened and locked
 static status_t prv_read_serialized_prefs(struct pbl_settings_file *file, const void *key,
                                           size_t key_len, void *val_out, size_t val_out_len) {
-  status_t rv = pbl_settings_get(file, key, key_len, val_out, val_out_len);
+  status_t rv = status_from_errno(pbl_settings_get(file, key, key_len, val_out, val_out_len));
 
   // The flags for inverted before writing, revert them back
   ((SerializedNotifPrefs *)val_out)->flags = ~(((SerializedNotifPrefs *)val_out)->flags);
@@ -222,7 +222,7 @@ status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len, const uint8_t
     PBL_LOG_DBG("iOS notif pref insert <%s>", buffer);
 
     // All records inserted from the phone are not dirty (the phone is the source of truth)
-    rv = pbl_settings_mark_synced(&file, key, key_len);
+    rv = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
   }
 
   prv_file_close_and_unlock(&file);
@@ -274,7 +274,7 @@ status_t ios_notif_pref_db_delete(const uint8_t *key, int key_len) {
     return rv;
   }
 
-  rv = pbl_settings_delete(&file, key, key_len);
+  rv = status_from_errno(pbl_settings_delete(&file, key, key_len));
 
   prv_file_close_and_unlock(&file);
 
@@ -294,7 +294,7 @@ status_t ios_notif_pref_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = pbl_settings_compact(&file);
+  rv = status_from_errno(pbl_settings_compact(&file));
   prv_file_close_and_unlock(&file);
   return rv;
 }
@@ -339,7 +339,7 @@ status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {
     return rv;
   }
 
-  rv = pbl_settings_mark_synced(&file, key, key_len);
+  rv = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
 
   prv_file_close_and_unlock(&file);
 

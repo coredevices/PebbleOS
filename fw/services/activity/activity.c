@@ -35,6 +35,7 @@
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -438,8 +439,7 @@ static void prv_spo2_deinit(void) {
 // Open the settings file and malloc space for the file struct
 struct pbl_settings_file *activity_private_settings_open(void) {
   struct pbl_settings_file *file = pbl_malloc_check(sizeof(struct pbl_settings_file));
-  if (pbl_settings_open(file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN) !=
-      S_SUCCESS) {
+  if (pbl_settings_open(file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN) != 0) {
     pbl_free(file);
     PBL_LOG_ERR("No settings file");
     return nullptr;
@@ -558,7 +558,8 @@ static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *
 
   // See which version we are on
   key = ActivitySettingsKeyVersion;
-  result = pbl_settings_get(file, &key, sizeof(key), written_version, sizeof(*written_version));
+  result = status_from_errno(
+      pbl_settings_get(file, &key, sizeof(key), written_version, sizeof(*written_version)));
   if (result != S_SUCCESS) {
     // Version 1 had no settings key in it.
     *written_version = 1;
@@ -576,7 +577,7 @@ static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *
   if ((version == 1) || (version == 2)) {
     // Both older versions store metric values as uint16_t, so re-create the file (at the new,
     // bigger size in the version 1 case) while widening metric records to uint32_t.
-    result = pbl_settings_rewrite(file, prv_settings_rewrite_cb, nullptr);
+    result = status_from_errno(pbl_settings_rewrite(file, prv_settings_rewrite_cb, nullptr));
     if (result != S_SUCCESS) {
       PBL_LOG_ERR("Failure %" PRIi32 " while re-writing setting file", (int32_t)result);
     }
