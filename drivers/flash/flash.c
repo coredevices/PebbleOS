@@ -379,7 +379,7 @@ void pbl_flash_stop(const struct pbl_flash *flash) {
   }
   pbl_mutex_unlock(&st->lock);
 
-  while (__atomic_load_n(&st->erase.in_progress, __ATOMIC_SEQ_CST)) {
+  while (atomic_load(&st->erase.in_progress)) {
     pbl_sleep_ms(ERASE_YIELD_MS);
   }
 

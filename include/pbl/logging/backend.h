@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <stdatomic.h>
+#include <stdint.h>
+
 /**
  * @defgroup logging_backend Backends
  * @ingroup logging
@@ -60,9 +63,9 @@ struct pbl_log_backend_api {
 /** @brief Runtime state of a backend. */
 struct pbl_log_backend_state {
   /** Highest LOG_LEVEL_* level written. */
-  int16_t level;
+  _Atomic int16_t level;
   /** Whether messages are passed to the backend. */
-  bool enabled;
+  atomic_bool enabled;
 };
 
 /** @brief Backend. */

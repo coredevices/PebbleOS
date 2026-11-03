@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -347,7 +348,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 [[maybe_unused]] static const int16_t _pbl_log_module_level;
 [[maybe_unused]] static const char *const _pbl_log_module_name;
 // Runtime level of modules with CONFIG_<module>_LOG_LEVEL_RUNTIME, NULL otherwise.
-[[maybe_unused]] static int16_t *const _pbl_log_module_runtime_level;
+[[maybe_unused]] static _Atomic int16_t *const _pbl_log_module_runtime_level;
 
 #define _PBL_LOG_PLACEHOLDER_1            0,
 #define _PBL_LOG_IS_ENABLED(cfg)          _PBL_LOG_IS_ENABLED1(cfg)
@@ -375,15 +376,15 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 // Runtime modules keep every message and filter on a shared level variable,
 // initialized to the configured level.
 #define _PBL_LOG_MODULE_DEFINE_0(name, level) _PBL_LOG_MODULE_STATIC(name, level)
-#define _PBL_LOG_MODULE_DEFINE_1(name, level)      \
-  int16_t _pbl_log_runtime_level_##name = (level); \
+#define _PBL_LOG_MODULE_DEFINE_1(name, level)              \
+  _Atomic int16_t _pbl_log_runtime_level_##name = (level); \
   _PBL_LOG_MODULE_DECLARE_1(name, level)
 
 #define _PBL_LOG_MODULE_DECLARE_0(name, level) _PBL_LOG_MODULE_STATIC(name, level)
-#define _PBL_LOG_MODULE_DECLARE_1(name, level)                           \
-  extern int16_t _pbl_log_runtime_level_##name;                          \
-  [[maybe_unused]] static int16_t *const _pbl_log_module_runtime_level = \
-      &_pbl_log_runtime_level_##name;                                    \
+#define _PBL_LOG_MODULE_DECLARE_1(name, level)                                   \
+  extern _Atomic int16_t _pbl_log_runtime_level_##name;                          \
+  [[maybe_unused]] static _Atomic int16_t *const _pbl_log_module_runtime_level = \
+      &_pbl_log_runtime_level_##name;                                            \
   _PBL_LOG_MODULE_STATIC(name, LOG_LEVEL_DEBUG_VERBOSE)
 /** @endcond */
 
@@ -429,10 +430,10 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
  * @param name Module name.
  * @return Current level.
  */
-#define PBL_LOG_MODULE_LEVEL_GET(name)                                 \
-  ({                                                                   \
-    extern int16_t _pbl_log_runtime_level_##name;                      \
-    __atomic_load_n(&_pbl_log_runtime_level_##name, __ATOMIC_RELAXED); \
+#define PBL_LOG_MODULE_LEVEL_GET(name)                                          \
+  ({                                                                            \
+    extern _Atomic int16_t _pbl_log_runtime_level_##name;                       \
+    atomic_load_explicit(&_pbl_log_runtime_level_##name, memory_order_relaxed); \
   })
 /**
  * @brief Set the runtime level of a module built with @c CONFIG_<module>_LOG_LEVEL_RUNTIME.
@@ -442,10 +443,10 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
  * @param name Module name.
  * @param level New level, one of the @c LOG_LEVEL_ values.
  */
-#define PBL_LOG_MODULE_LEVEL_SET(name, level)                                    \
-  do {                                                                           \
-    extern int16_t _pbl_log_runtime_level_##name;                                \
-    __atomic_store_n(&_pbl_log_runtime_level_##name, (level), __ATOMIC_RELAXED); \
+#define PBL_LOG_MODULE_LEVEL_SET(name, level)                                             \
+  do {                                                                                    \
+    extern _Atomic int16_t _pbl_log_runtime_level_##name;                                 \
+    atomic_store_explicit(&_pbl_log_runtime_level_##name, (level), memory_order_relaxed); \
   } while (0)
 
 /**
@@ -458,7 +459,7 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 #define PBL_SHOULD_LOG(level)                                                             \
   ((level) <= (_pbl_log_module_level != 0 ? _pbl_log_module_level : DEFAULT_LOG_LEVEL) && \
    (_pbl_log_module_runtime_level == nullptr ||                                           \
-    (level) <= __atomic_load_n(_pbl_log_module_runtime_level, __ATOMIC_RELAXED)))
+    (level) <= atomic_load_explicit(_pbl_log_module_runtime_level, memory_order_relaxed)))
 
 /**
  * @def PBL_LOG_COLOR

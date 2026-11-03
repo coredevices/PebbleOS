@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -179,7 +180,7 @@ struct pbl_flash_state {
     uint32_t end;
   } protect;
   struct {
-    bool in_progress;
+    atomic_bool in_progress;
     bool suspended;
     bool done;
     uint8_t retries;

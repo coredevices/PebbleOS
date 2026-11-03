@@ -53,7 +53,7 @@ bool system_resource_is_valid(void) {
 
 // Total number of fonts = NUM_SYSTEM_FONTS + 1 for the fallback font
 FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] KERNEL_READONLY_DATA;
-uint32_t g_font_language_generation KERNEL_READONLY_DATA;
+_Atomic uint32_t g_font_language_generation KERNEL_READONLY_DATA;
 
 #ifndef CONFIG_RECOVERY_FW
 #define NUM_LANGUAGE_FONTS \
@@ -91,7 +91,7 @@ static void prv_invalidate_system_fonts(void) {
   }
   // Publish last: a renderer that sees the new generation must find the fonts unloaded, or it
   // would refill its cache from the old ones under the new generation.
-  __atomic_store_n(&g_font_language_generation, g_font_language_generation + 1, __ATOMIC_RELEASE);
+  atomic_fetch_add_explicit(&g_font_language_generation, 1, memory_order_release);
 }
 
 static void prv_language_changed(void *data) {

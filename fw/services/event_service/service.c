@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdatomic.h>
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
@@ -31,7 +32,7 @@ typedef struct {
   void *ptr;
   PebbleEventType type;
   // There is an intent bit for each task + a special "claimed" bit
-  uint16_t intents_pending;
+  _Atomic uint16_t intents_pending;
 } EventServiceBuffer;
 
 static const uint16_t CLAIMED_BIT = (1 << NumPebbleTask);
@@ -356,7 +357,7 @@ void event_service_free_claimed_buffer(void *ref) {
   if (esb->intents_pending & CLAIMED_BIT) {
     // If other events still need the buffer removing the claim marker will make things
     // get cleaned up as usual.
-    uint16_t intents_pending = __sync_and_and_fetch(&esb->intents_pending, ~CLAIMED_BIT);
+    uint16_t intents_pending = atomic_fetch_and(&esb->intents_pending, ~CLAIMED_BIT) & ~CLAIMED_BIT;
 
     if (!intents_pending) {
       list_remove((ListNode *)esb, (ListNode **)&s_event_service_buffers, nullptr);
@@ -440,7 +441,7 @@ PBL_SYSCALL(void, sys_event_service_cleanup, (OUT_BUF, PebbleEvent *, e, sizeof(
 
   if (esb) {
     uint16_t task_bit = 1 << pebble_task_get_current();
-    uint16_t intents_pending = __sync_and_and_fetch(&esb->intents_pending, ~task_bit);
+    uint16_t intents_pending = atomic_fetch_and(&esb->intents_pending, ~task_bit) & ~task_bit;
     if (intents_pending) {
       // zero out buf so it won't be freed by cleanup. Other tasks are still waiting to use it
       event_clear_buffer(e);

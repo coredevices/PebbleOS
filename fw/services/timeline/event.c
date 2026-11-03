@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdatomic.h>
 #include <time.h>
 
 #include <pbl/drivers/rtc.h>
@@ -40,17 +41,17 @@ static TimelineEventState s_states[TimelineEventServiceCount];
 
 static TimerID s_timer;
 
-static bool s_cb_scheduled;
+static atomic_flag s_cb_scheduled;
 
 static void prv_update_status(void);
 
 static void prv_update_status_system_task_callback(void *unused) {
-  __atomic_clear(&s_cb_scheduled, __ATOMIC_RELAXED);
+  atomic_flag_clear_explicit(&s_cb_scheduled, memory_order_relaxed);
   prv_update_status();
 }
 
 static void prv_update_status_async(void) {
-  if (__atomic_test_and_set(&s_cb_scheduled, __ATOMIC_RELAXED)) {
+  if (atomic_flag_test_and_set_explicit(&s_cb_scheduled, memory_order_relaxed)) {
     return; // we already have a cb scheduled
   }
 

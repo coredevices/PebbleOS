@@ -6,6 +6,8 @@
 #include "console_internal.h"
 #include "shell_dbgserial.h"
 
+#include <stdatomic.h>
+
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
@@ -16,7 +18,7 @@
 #include <console/pulse_internal.h>
 #include <console/pulse_protocol_impl.h>
 
-SerialConsoleState s_serial_console_state = SERIAL_CONSOLE_STATE_LOGGING;
+_Atomic SerialConsoleState s_serial_console_state = SERIAL_CONSOLE_STATE_LOGGING;
 static bool s_serial_console_initialized;
 
 static bool s_prompt_enabled = false;
@@ -109,7 +111,7 @@ void serial_console_set_state(SerialConsoleState new_state) {
 }
 
 SerialConsoleState serial_console_get_state(void) {
-  SerialConsoleState state = __atomic_load_n(&s_serial_console_state, __ATOMIC_RELAXED);
+  SerialConsoleState state = atomic_load_explicit(&s_serial_console_state, memory_order_relaxed);
 
   return state;
 }
