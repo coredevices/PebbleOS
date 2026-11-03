@@ -7,6 +7,14 @@ config CLK
       Clock controller class (pbl/drivers/clk.h), selected by the drivers
       that provide clocks.
 
+config CLK_SHELL
+    bool "Clock shell commands"
+    default DRIVER_SHELL
+    depends on SHELL && CLK
+    help
+      The clk shell command: list clocks and rates, and sample, hold and
+      inspect calibrated clocks.
+
 config CLK_SF32LB
     bool "SiFli SF32LB RCC"
     default y if SOC_SF32LB52

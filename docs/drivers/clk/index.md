@@ -119,18 +119,36 @@ parts contribute differently:
 
 ### Characterizing an oscillator
 
-To choose the parameters for a new oscillator, measure, on the device:
+The parameters come from measurements on the device. With
+`CONFIG_CLK_SHELL`, the `clk cal` shell command takes them, and
+`tools/clk_characterize.py` turns its output into parameters. A calibrated
+clock is named after its controller.
 
-1. **White noise**: gates of several lengths in a row; the slope of the
-   two-sample deviation against $T$ gives `wfm`, and must be $-1/2$.
-2. **Wander and drift**: a long run of short gates while the load, the
-   temperature and the supply change; the spread of a moving average over
-   the period gives `wander`, its excursions over time give `rw`.
-3. **Bias**: freeze the rate, let the device run as it normally does, and
-   compare its time against a reference. The slope is the true mean rate;
-   its difference from the mean of the gates is the bias.
-4. **Replay**: run the estimator over the measured trajectory with the
-   gate length and period under consideration, and compare the time error.
+1. **White noise.** Take raw gates of several lengths, then fit:
+
+   ```
+   clk cal sample <name> 200 100
+   clk cal sample <name> 2000 100
+   clk cal sample <name> 20000 30
+   ```
+
+   `clk_characterize.py noise <log>` fits $\sigma^2 = \mathrm{wfm}^2 / T$
+   plus a floor, the fluctuations a longer gate does not average.
+2. **Wander and drift.** Take short gates for half an hour or more while the
+   load, the temperature and the supply change, e.g.
+   `clk cal sample <name> 2000 1000 2000`. `clk_characterize.py drift <log>
+   --wfm <wfm>` gives `wander`, the spread of single gates around their mean
+   over one period, and `rw`, from the Allan deviation at longer averaging
+   times.
+3. **Bias.** Hold the rate with `clk cal hold <name> <mHz>` and let the device
+   run as it normally does, reading `clk cal status`, which prints the
+   uptime, now and then against the host clock. `clk_characterize.py bias
+   <csv>` fits the true mean rate; its difference from the mean of the gates
+   is the bias. `clk cal hold <name> 0` releases the rate.
+4. **Choice.** `clk_characterize.py steady` gives the gain, time constant,
+   estimate deviation and the time error they cause for a gate length and
+   period. Replaying the estimator over the trajectory from step 2 shows how
+   it follows steps.
 
 The power cost is the reference clock and the counter running for the
 duration of the gates: it is proportional to the duty cycle, gate length
