@@ -13,8 +13,8 @@
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
 #include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
 

@@ -16,10 +16,10 @@
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/timeline.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/size.h>
 
 #include <applib/event_service_client.h>

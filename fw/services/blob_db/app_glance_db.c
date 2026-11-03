@@ -11,7 +11,7 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 

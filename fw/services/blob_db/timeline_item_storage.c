@@ -5,7 +5,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/timeline_item_storage.h>
-#include <pbl/services/settings/settings_raw_iter.h>
+#include <pbl/settings/settings_raw_iter.h>
 #include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);

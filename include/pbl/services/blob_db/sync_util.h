@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/services/blob_db/api.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 
 /**
  * @defgroup services_blob_db_sync_util Sync helpers

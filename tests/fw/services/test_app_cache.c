@@ -9,7 +9,7 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 

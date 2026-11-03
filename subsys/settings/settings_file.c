@@ -13,13 +13,13 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/settings/settings_file.h>
-#include <pbl/services/settings/settings_raw_iter.h>
+#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings_raw_iter.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <system/status_errno.h>
 
-PBL_LOG_MODULE_DEFINE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(settings, CONFIG_SETTINGS_LOG_LEVEL);
 
 // Callback for settings changes (used by settings_sync)
 static SettingsFileChangeCallback s_change_callback = nullptr;

@@ -28,8 +28,8 @@ pbl_test_module(pfs
 pbl_test_module(settings
   REQUIRES pfs
   SOURCES
-    fw/services/settings/settings_file.c
-    fw/services/settings/settings_raw_iter.c
+    subsys/settings/settings_file.c
+    subsys/settings/settings_raw_iter.c
 )
 
 pbl_test_module(resources

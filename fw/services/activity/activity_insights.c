@@ -14,12 +14,12 @@
 #include <pbl/services/activity/insights_settings.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/health_layout.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/weather_layout.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/math.h>
 #include <pbl/util/stats.h>
 #include <pbl/util/string.h>

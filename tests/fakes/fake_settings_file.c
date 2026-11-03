@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <pbl/crc/crc.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 
 #include <clar_asserts.h>
 #include <system/status_codes.h>

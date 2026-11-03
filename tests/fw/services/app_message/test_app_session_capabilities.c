@@ -3,7 +3,7 @@
 
 #include <pbl/services/comm_session/app_session_capabilities.h>
 #include <pbl/services/comm_session/session.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 
 #include <clar.h>
 #include <fff.h>

@@ -1,14 +1,15 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config SERVICE_SETTINGS
-    bool "Settings"
+config SETTINGS
+    bool "Settings files"
+    depends on FS
     help
-      Settings-file storage service.
+      Atomic key-value store kept in a single file.
 
-if SERVICE_SETTINGS
+if SETTINGS
 
-module = SERVICE_SETTINGS
+module = SETTINGS
 module-str = Settings
 source "subsys/logging/Kconfig.template.log_level"
 

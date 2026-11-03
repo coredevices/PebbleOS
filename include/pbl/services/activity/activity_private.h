@@ -13,7 +13,7 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 

@@ -37,9 +37,9 @@
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/peek.h>
+#include <pbl/settings/settings_file.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
 

@@ -6,10 +6,10 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/settings/settings_raw_iter.h>
+#include <pbl/settings/settings_raw_iter.h>
 #include <pbl/util/math.h>
 
-PBL_LOG_MODULE_DECLARE(service_settings, CONFIG_SERVICE_SETTINGS_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(settings, CONFIG_SETTINGS_LOG_LEVEL);
 
 ///////////////////////////////////////////////////
 // Helper functions for handling internal errors //

@@ -65,9 +65,9 @@ components:
     path: moddable/moddable
     supplier: Moddable Tech, Inc.
     description: Moddable SDK (XS JavaScript engine) with PebbleOS changes
-    commit: aeb237b15e7907485927b3d38a97d896a463b6ce
+    commit: 1f923b2a2893d18b99ecc2d32e13fc58201a595d
     license: LGPL-3.0-or-later AND Apache-2.0
-    purl: pkg:github/coredevices/moddable@aeb237b15e7907485927b3d38a97d896a463b6ce
+    purl: pkg:github/coredevices/moddable@1f923b2a2893d18b99ecc2d32e13fc58201a595d
     url: https://github.com/coredevices/moddable
 
   - name: nanopb
