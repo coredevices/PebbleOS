@@ -59,12 +59,21 @@ void sched_start_prepare(void);
 
 //! Arch entry points into the scheduler.
 struct pbl_thread *sched_switch_in(void); // picks and accounts the next thread
-void sched_tick(void);
+//! Advances the tick count by @p ticks and expires the timeouts that fell due.
+void sched_announce(uint64_t ticks);
 bool sched_idle_confirm(void);
-void sched_idle_slept(pbl_tick_t elapsed);
 struct pbl_thread *sched_idle_thread(void);
 //! Current tick count; call with the interrupt lock held.
 pbl_tick_t sched_ticks(void);
+//! Current tick count in 64 bits; call with the interrupt lock held.
+uint64_t sched_uptime_ticks(void);
+
+//! Starts the system timer, when the scheduler starts.
+void timekeeping_start(void);
+//! Catches the tick count up with the system clock source.
+void timekeeping_announce(void);
+//! Idles the CPU for up to @p ticks; call with every interrupt masked and idle confirmed.
+void timekeeping_idle(pbl_tick_t ticks);
 
 //! Runs the callbacks of the expired timers, from the tick ISR.
 void timer_expire(void);

@@ -17,7 +17,6 @@
 #include <pbl/drivers/pwm/nrf5.h>
 #include <pbl/drivers/pwm/nrf5_rtc.h>
 #include <pbl/drivers/regulator/npm1300.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
 #include <pbl/drivers/spi/nrf5.h>
 #include <pbl/drivers/spi_mem/nrf5_qspi.h>
@@ -195,8 +194,6 @@ PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
                          .max_duty_cycle_percent = 67);
 
 const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
-
-PBL_IRQ_CONNECT(RTC1, 7, rtc_irq_handler, , 0);
 
 const Npm1300Config NPM1300_CONFIG = {
   // 128mA = ~1C (rapid charge)

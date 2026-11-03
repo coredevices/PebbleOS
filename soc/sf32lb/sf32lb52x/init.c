@@ -7,6 +7,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/time.h>
 
 #include <bf0_hal.h>
 #include <drivers/watchdog.h>
@@ -118,4 +119,15 @@ void pbl_soc_early_init(void) {
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_IRQ, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LPTIM1, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_GPIO1, AON_PIN_MODE_HIGH);
+
+  // Deep WFI clocks: HCLK = 48 MHz / 12 = 4 MHz, PCLK1 = 4 MHz, PCLK2 = 2 MHz.
+  // TODO(SF32LB52): to use deep WFI when audio is ON, HCLK needs to remain
+  // at 48MHz (div=1). Also, clock needs to be forced ON during deep WFI
+  // (FORCE_HP bit in HPSYS_RCC_DBGR register)
+  HAL_RCC_HCPU_SetDeepWFIDiv(12, 0, 1);
+}
+
+// HAL timeouts count kernel uptime.
+uint32_t HAL_GetTick(void) {
+  return (uint32_t)pbl_uptime_ms();
 }

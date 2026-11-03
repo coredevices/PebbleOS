@@ -9,7 +9,6 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/kernel/idle.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/mcu/mpu.h>
 
@@ -48,10 +47,9 @@
 #define FPCCR_ASPEN_LSPEN      (0x3u << 30)
 
 // System handler priority registers, byte-indexed like the NVIC ones.
-#define SHPR_BYTES   ((volatile uint8_t *)0xE000ED18u)
-#define SHPR_SVCALL  7
-#define SHPR_PENDSV  10
-#define SHPR_SYSTICK 11
+#define SHPR_BYTES  ((volatile uint8_t *)0xE000ED18u)
+#define SHPR_SVCALL 7
+#define SHPR_PENDSV 10
 
 struct pbl_thread *pbl_cur PBL_SECTION(".kernel_unpriv_ro_bss");
 
@@ -411,7 +409,7 @@ PBL_NAKED void SVC_Handler(void) {
       "  b prv_svc \n");
 }
 
-// ---- start and tick ---------------------------------------------------------
+// ---- start and idle ---------------------------------------------------------
 
 void arch_init(void) {
   // NVIC_SetPriority() takes the unshifted priority; PBL_IRQ_PRIO_* are register values.
@@ -427,20 +425,13 @@ void arch_init(void) {
 }
 
 void arch_start(void) {
-  // PendSV and SysTick at the lowest priority; SVC follows once started.
+  // PendSV at the lowest priority; SVC follows once started.
   SHPR_BYTES[SHPR_PENDSV] = (uint8_t)PBL_IRQ_PRIO_KERNEL;
-  SHPR_BYTES[SHPR_SYSTICK] = (uint8_t)PBL_IRQ_PRIO_KERNEL;
 
 #if HAS_FPU
   SCB->CPACR |= (0xfu << 20);
   FPU->FPCCR |= FPCCR_ASPEN_LSPEN;
 #endif
-
-  if (!pbl_soc_tick_enable()) {
-    SysTick->LOAD = (SystemCoreClock / PBL_TICK_HZ) - 1u;
-    SysTick->VAL = 0;
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
-  }
 
   irq_reset();
   __asm volatile("  dsb \n svc %0 \n isb \n" ::"i"(SVC_START));
@@ -448,17 +439,13 @@ void arch_start(void) {
   }
 }
 
-#ifndef CONFIG_SOC_SF32LB52
-void SysTick_Handler(void) {
-  pbl_kernel_tick_isr();
-}
-#endif
-
 void arch_idle(pbl_tick_t max_ticks) {
-  // Short gaps are not worth the sleep entry; the idle loop just comes back.
-  if (max_ticks >= 2) {
-    pbl_soc_idle(max_ticks);
+  // PRIMASK: an interrupt still wakes the CPU up, but only runs once the tick is back.
+  __disable_irq();
+  if (sched_idle_confirm()) {
+    timekeeping_idle(max_ticks);
   }
+  __enable_irq();
 }
 
 // ---- introspection ----------------------------------------------------------

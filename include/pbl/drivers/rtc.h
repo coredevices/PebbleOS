@@ -212,19 +212,4 @@ bool rtc_alarm_is_initialized(void);
  */
 const char *time_t_to_string(char *buffer, time_t t);
 
-#ifdef CONFIG_SOC_NRF52
-/** @brief RTC interrupt handler. */
-void rtc_irq_handler(void);
-/**
- * @brief Drive the OS tick from the RTC instead of SysTick.
- *
- * SysTick stops while the nRF52 sleeps.
- */
-void rtc_enable_synthetic_systick(void);
-/** @brief Pause the RTC-driven OS tick, before entering stop mode. */
-void rtc_systick_pause(void);
-/** @brief Resume the RTC-driven OS tick. */
-void rtc_systick_resume(void);
-#endif
-
 /** @} */

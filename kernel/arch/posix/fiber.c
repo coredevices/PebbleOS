@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <pbl/kernel/idle.h>
-
 #include <emscripten/emscripten.h>
 #include <emscripten/fiber.h>
 #include <kernel.h>
@@ -184,7 +182,9 @@ void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_
 }
 
 void arch_idle(pbl_tick_t max_ticks) {
-  pbl_soc_idle(max_ticks);
+  if (sched_idle_confirm()) {
+    timekeeping_idle(max_ticks);
+  }
 }
 
 static void prv_boot_main(void *arg) {
