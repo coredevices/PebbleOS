@@ -138,7 +138,7 @@ jobs:
       - name: Set up Python
         run: |
           rm -rf .venv
-          /opt/homebrew/bin/python3 -m venv .venv
+          /opt/homebrew/bin/python3.14 -m venv .venv
           .venv/bin/pip install -U pip
           .venv/bin/pip install -r requirements.txt
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
