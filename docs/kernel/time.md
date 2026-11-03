@@ -1,8 +1,33 @@
 # Time and delays
 
-The kernel keeps one monotonic clock, the tick count, advanced by the tick
-interrupt and by `pbl_idle_slept()` after tickless sleep. `pbl/kernel/time.h`
-reads it and the CPU cycle counter; `pbl/kernel/delay.h` waits on them.
+The kernel keeps one monotonic clock, the tick count, derived from the
+system clock source. `pbl/kernel/time.h` reads it and the CPU cycle counter;
+`pbl/kernel/delay.h` waits on them.
+
+## System timer
+
+Two devices from `pbl/drivers/timer.h` keep time, defined by the SoC's timer
+driver as `pbl_system_clocksource` and `pbl_system_clockevent`:
+
+- The clock source is a free-running counter. The kernel extends it to 64
+  bits and converts it to ticks in fixed point, so its rate need not divide
+  the tick rate and may change at run time, as a calibrated RC oscillator's
+  does, without time jumping.
+- The clock event device raises an interrupt once, a given number of its
+  cycles from now. While threads run, the kernel programs it for the next
+  tick; when the CPU idles, for the next timeout. Ticks are counted from
+  the clock source on every event, so a late or missed interrupt loses no
+  time.
+
+Drivers know nothing about ticks: a clock source reads its counter, a clock
+event device programs its compare register.
+
+| SoC | Clock source | Clock event device |
+| --- | --- | --- |
+| nRF52 | RTC1, 32.768 kHz | RTC1 compare |
+| SF32LB52 | LPTIM1, calibrated RC10K | LPTIM1 compare, wakes from deep sleep |
+| QEMU | QEMU RTC 1 kHz counter | SysTick |
+| POSIX | host monotonic clock | host thread |
 
 ## Uptime
 
