@@ -11,6 +11,7 @@
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/insights_settings.h>
+#include <pbl/util/uuid.h>
 
 #include <clar.h>
 
@@ -1158,4 +1159,83 @@ void test_activity_insights__run_session_notification_includes_zero_calories(voi
   prv_push_session_notification(ActivitySessionType_Run, 0);
   cl_assert_equal_i(s_data.notifs_shown, 1);
   cl_assert_equal_i(prv_get_notification_metric("Active Calories"), 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// Insight state stored by earlier firmware, with 32-bit times
+
+typedef struct PBL_PACKED {
+  int64_t last_triggered_utc;
+  Uuid uuid;
+  int64_t first_enter_utc;
+  int active_minutes;
+  bool removed;
+  bool notified;
+  int64_t window_utc;
+} TestSleepPinState;
+
+typedef struct {
+  uint32_t last_triggered_utc;
+  Uuid uuid;
+  uint32_t first_enter_utc;
+  int active_minutes;
+  bool removed;
+  bool notified;
+  uint32_t window_utc;
+} TestSleepPinStateV1;
+
+typedef struct PBL_PACKED {
+  int64_t last_triggered_utc;
+  Uuid uuid;
+} TestSummaryPinLastState;
+
+typedef struct PBL_PACKED {
+  int32_t last_triggered_utc;
+  Uuid uuid;
+} TestSummaryPinLastStateV1;
+
+void prv_restore_sleep_pin_state(SettingsFile *file, TestSleepPinState *state);
+void prv_restore_summary_pin_state(SettingsFile *file, TestSummaryPinLastState *state);
+
+void test_activity_insights__restore_32_bit_state(void) {
+  SettingsFile file = {};
+  const Uuid uuid = UuidMake(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+
+  // Past 2038, so a signed read would go wrong
+  const TestSleepPinStateV1 sleep_v1 = {
+    .last_triggered_utc = 3000000000u,
+    .uuid = uuid,
+    .first_enter_utc = 2999990000u,
+    .active_minutes = 42,
+    .notified = true,
+    .window_utc = 2999980000u,
+  };
+  ActivitySettingsKey key = ActivitySettingsKeyInsightSleepSummaryState;
+  settings_file_set(&file, &key, sizeof(key), &sleep_v1, sizeof(sleep_v1));
+  TestSleepPinState sleep = {};
+  prv_restore_sleep_pin_state(&file, &sleep);
+  cl_assert(sleep.last_triggered_utc == 3000000000LL);
+  cl_assert(sleep.first_enter_utc == 2999990000LL);
+  cl_assert(sleep.window_utc == 2999980000LL);
+  cl_assert(uuid_equal(&sleep.uuid, &uuid));
+  cl_assert_equal_i(sleep.active_minutes, 42);
+  cl_assert(sleep.notified && !sleep.removed);
+
+  // The current layout comes back as stored
+  const TestSleepPinState sleep_v2 = {.last_triggered_utc = 5000000000LL, .window_utc = 7};
+  settings_file_set(&file, &key, sizeof(key), &sleep_v2, sizeof(sleep_v2));
+  prv_restore_sleep_pin_state(&file, &sleep);
+  cl_assert(sleep.last_triggered_utc == 5000000000LL);
+  cl_assert(sleep.window_utc == 7);
+
+  const TestSummaryPinLastStateV1 summary_v1 = {
+    .last_triggered_utc = (int32_t)3000000000u,
+    .uuid = uuid,
+  };
+  key = ActivitySettingsKeyInsightActivitySummaryState;
+  settings_file_set(&file, &key, sizeof(key), &summary_v1, sizeof(summary_v1));
+  TestSummaryPinLastState summary = {};
+  prv_restore_summary_pin_state(&file, &summary);
+  cl_assert(summary.last_triggered_utc == 3000000000LL);
+  cl_assert(uuid_equal(&summary.uuid, &uuid));
 }

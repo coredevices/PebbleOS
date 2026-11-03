@@ -54,8 +54,14 @@ static bool prv_find_session_is_system_filter(ListNode *found_node, void *data) 
   }
 }
 
+static uint64_t s_capabilities = UINT64_MAX;
+
+void fake_comm_session_set_capabilities(uint64_t capabilities) {
+  s_capabilities = capabilities;
+}
+
 bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
-  return true;
+  return (s_capabilities & capability) != 0;
 }
 
 CommSession *comm_session_get_by_type(CommSessionType type) {
@@ -480,6 +486,7 @@ void fake_comm_session_init(void) {
   s_session_close_call_count = 0;
   s_session_open_call_count = 0;
   s_last_responsiveness_granted_handler = nullptr;
+  s_capabilities = UINT64_MAX;
 }
 
 void fake_comm_session_cleanup(void) {

@@ -70,7 +70,7 @@ static void prv_add_notification(int32_t delta_time_s) {
   prv_set_timeline_icon(&list, ARRAY_RAND(icon_resources), 0);
   attribute_list_add_cstring(&list, AttributeIdTitle, ARRAY_RAND(titles));
   attribute_list_add_cstring(&list, AttributeIdBody, ARRAY_RAND(bodies));
-  attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
+  attribute_list_add_time(&list, AttributeIdLastUpdated, now);
   TimelineItem *item = timeline_item_create_with_attributes(
       now + delta_time_s, 0, TimelineItemTypeNotification, LayoutIdNotification, &list, nullptr);
   notification_storage_store(item);
@@ -92,7 +92,7 @@ static void prv_add_weather_pin_with_params(int32_t delta_time_s, bool has_times
   attribute_list_add_cstring(&list, AttributeIdBody,
                              "Cloudy with rain and snow. High 1C. Winds light and variable. "
                              "Chance of precip 100%. 3-7cm of snow expected.");
-  attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
+  attribute_list_add_time(&list, AttributeIdLastUpdated, now);
   if (!has_timestamp) {
     attribute_list_add_uint8(&list, AttributeIdDisplayTime, WeatherTimeType_None);
   }
@@ -136,7 +136,7 @@ static void prv_add_sports_pin(int32_t delta_time_s, GColor secondary_color, boo
   attribute_list_add_cstring(&list, AttributeIdBody,
                              "01:45\nJames 3pt Shot: Missed\n"
                              "03:15 | 22-29\nLeonard Free Throw 2 of 2 (8PTS)");
-  attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
+  attribute_list_add_time(&list, AttributeIdLastUpdated, now);
   TimelineItem *item = timeline_item_create_with_attributes(
       now + delta_time_s, 0, TimelineItemTypePin, LayoutIdSports, &list, nullptr);
 
@@ -173,7 +173,7 @@ static void prv_add_calendar_pin(int32_t delta_time_s, int32_t duration_m, bool 
                              "Topics for the week can be found here: "
                              "http://docs.google.com/u/1/#inbox/14b9fa5f872ebbc6\n\n"
                              "Will email before if we need to cancel");
-  attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
+  attribute_list_add_time(&list, AttributeIdLastUpdated, now);
   TimelineItem *item = timeline_item_create_with_attributes(target, duration_m, TimelineItemTypePin,
                                                             LayoutIdCalendar, &list, nullptr);
 
@@ -200,7 +200,7 @@ static void prv_add_generic_pin(int32_t delta_time_s, bool has_subtitle) {
   attribute_list_add_string_list(&list, AttributeIdHeadings, &headings);
   attribute_list_add_string_list(&list, AttributeIdParagraphs, &paragraphs);
   attribute_list_add_cstring(&list, AttributeIdBody, "Body message");
-  attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
+  attribute_list_add_time(&list, AttributeIdLastUpdated, now);
   TimelineItem *item = timeline_item_create_with_attributes(
       now + delta_time_s, 0, TimelineItemTypePin, LayoutIdGeneric, &list, nullptr);
 
@@ -219,7 +219,7 @@ static void prv_add_activity_session_pin(int32_t delta_time_s, int32_t duration_
                            ActivityInsightType_ActivitySessionRun);
   attribute_list_add_cstring(&list, AttributeIdTitle, "3.3 Mile run");
   attribute_list_add_cstring(&list, AttributeIdSubtitle, "30M of activity");
-  attribute_list_add_uint32(&list, AttributeIdLastUpdated, now);
+  attribute_list_add_time(&list, AttributeIdLastUpdated, now);
 
   uint8_t buffer[Uint32ListSize(ActivitySessionMetricCount)];
   Uint32List *icons = (Uint32List *)buffer;

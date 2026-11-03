@@ -91,6 +91,8 @@ typedef enum {
   DataLoggingEndpointCmdGetSendEnableRsp = 0x0A,
   /** Phone enables or disables sending. */
   DataLoggingEndpointCmdSetSendEnable = 0x0B,
+  /** Watch opens a session, with a 64-bit creation time, to phones with the time64 capability. */
+  DataLoggingEndpointCmdOpen64 = 0x0C,
 } DataLoggingEndpointCmd;
 
 /**

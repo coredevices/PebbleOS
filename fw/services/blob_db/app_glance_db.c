@@ -13,6 +13,7 @@
 #include <pbl/services/blob_db/app_glance_db_private.h>
 #include <pbl/services/settings/settings_file.h>
 #include <pbl/util/math.h>
+#include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
 #include <applib/app_glance.h>
@@ -294,7 +295,7 @@ static bool prv_deserialize_slice(SerializedAppGlanceSliceHeader *serialized_sli
   // Note that we default the expiration time to "never expire" if one was not provided
   *current_slice_out = (AppGlanceSliceInternal){
     .expiration_time =
-        attribute_get_uint32(&attr_list, AttributeIdTimestamp, APP_GLANCE_SLICE_NO_EXPIRATION),
+        attribute_get_time(&attr_list, AttributeIdTimestamp, APP_GLANCE_SLICE_NO_EXPIRATION),
     .type = (AppGlanceSliceType)serialized_slice->type,
   };
   // Copy type-specific fields from the serialized slice to the output glance's slice
@@ -385,8 +386,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
 
     AttributeList *attr_list = &current_attr_list_data->attr_list;
     // Initialize the attributes common to all slice types in the attribute list
-    attribute_list_add_uint32(attr_list, AttributeIdTimestamp,
-                              (uint32_t)current_slice->expiration_time);
+    attribute_list_add_time(attr_list, AttributeIdTimestamp, current_slice->expiration_time);
     // Initialize the type-specific attributes in the attribute list
     s_slice_type_impls[current_slice->type].init_attr_list_from_slice(current_slice, attr_list);
 
@@ -585,7 +585,8 @@ status_t app_glance_db_read_creation_time(const Uuid *uuid, time_t *time_out) {
       app_glance_db_read((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&serialized_glance_header,
                          sizeof(serialized_glance_header));
   if (rv == S_SUCCESS) {
-    *time_out = serialized_glance_header.creation_time;
+    // A recent time, so its low 32 bits are enough to place it
+    *time_out = pbl_time_from_low32(serialized_glance_header.creation_time, rtc_get_time());
   }
   return rv;
 }
@@ -656,7 +657,9 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
   SerializedAppGlanceHeader existing_glance = {};
   status_t rv = app_glance_db_read((uint8_t *)app_uuid, UUID_SIZE, (uint8_t *)&existing_glance,
                                    sizeof(existing_glance));
-  if ((rv == S_SUCCESS) && (serialized_glance->creation_time <= existing_glance.creation_time)) {
+  const time_t now = rtc_get_time();
+  if ((rv == S_SUCCESS) && (pbl_time_from_low32(serialized_glance->creation_time, now) <=
+                            pbl_time_from_low32(existing_glance.creation_time, now))) {
     PBL_LOG_WRN("Tried to insert AppGlanceDB entry with older creation_time (%" PRIu32
                 ")"
                 " than existing entry (%" PRIu32 ")",

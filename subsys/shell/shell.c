@@ -610,6 +610,18 @@ int pbl_shell_strtoul(const char *str, unsigned long *out) {
   return prv_strto(str, false, nullptr, out);
 }
 
+int pbl_shell_strtoll(const char *str, long long *out) {
+  char *end;
+
+  if (str == nullptr || *str == '\0') {
+    return -EINVAL;
+  }
+
+  errno = 0;
+  *out = strtoll(str, &end, 0);
+  return (errno != 0 || *end != '\0') ? -EINVAL : 0;
+}
+
 static int prv_cmd_help(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_shell_print(sh, "Commands:");
   prv_print_level(sh, nullptr);

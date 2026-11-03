@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
@@ -124,8 +126,14 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
   struct pbl_generic_attr *timestamp_attr =
       pbl_generic_attr_find(&msg->attr_list, VEAttributeIdTimestamp, attr_list_size);
   if (timestamp_attr && timestamp_attr->length == sizeof(uint32_t)) {
-    uint32_t *timestamp_ptr = (uint32_t *)timestamp_attr->data;
-    timestamp = *timestamp_ptr;
+    // Unsigned, until 2106
+    uint32_t t32;
+    memcpy(&t32, timestamp_attr->data, sizeof(t32));
+    timestamp = t32;
+  } else if (timestamp_attr && timestamp_attr->length == sizeof(int64_t)) {
+    int64_t t64;
+    memcpy(&t64, timestamp_attr->data, sizeof(t64));
+    timestamp = t64;
   }
 
   struct pbl_generic_attr *reminder_attr =

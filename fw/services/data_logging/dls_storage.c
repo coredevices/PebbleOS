@@ -26,9 +26,11 @@ PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEV
 
 typedef enum {
   DLS_VERSION_0 = 0x20,
+  //! 64-bit session creation time
+  DLS_VERSION_1 = 0x21,
 } DLSFileHeaderVersion;
 
-static const DLSFileHeaderVersion DLS_CURRENT_VERSION = DLS_VERSION_0;
+static const DLSFileHeaderVersion DLS_CURRENT_VERSION = DLS_VERSION_1;
 
 // Set while executing dls_storage_rebuild() which is called from dls_init() during boot time
 // When set, we allow storage accesses from KernelMain whereas normally, only KernelBG is allowed.
@@ -40,12 +42,24 @@ typedef struct PBL_PACKED {
   DLSFileHeaderVersion version : 8;
 
   uint8_t comm_session_id;
-  uint32_t timestamp;
+  int64_t timestamp;
   uint32_t tag;
   Uuid app_uuid;
   DataLoggingItemType item_type : 8;
   uint16_t item_size;
 } DLSFileHeader;
+
+//! DLS_VERSION_0 header, with a 32-bit time. Such files are rewritten at boot.
+typedef struct PBL_PACKED {
+  DLSFileHeaderVersion version : 8;
+
+  uint8_t comm_session_id;
+  uint32_t timestamp;
+  uint32_t tag;
+  Uuid app_uuid;
+  DataLoggingItemType item_type : 8;
+  uint16_t item_size;
+} DLSFileHeaderV0;
 
 // We organize data in the file into chunks with this header at the front of each chunk.
 // This allows us to mark chunks as already read by setting the valid bit to 0 after we
@@ -920,7 +934,31 @@ void dls_storage_rebuild(void) {
 
     // Get the session info
     DLSFileHeader hdr;
-    if (!prv_file_read(&file, &hdr, sizeof(hdr))) {
+    size_t hdr_size = sizeof(hdr);
+    uint8_t version;
+    if (!prv_file_read(&file, &version, sizeof(version)) ||
+        !prv_file_seek(&file, 0, PBL_FS_SEEK_SET)) {
+      pbl_fs_close(&file);
+      goto bad_session;
+    }
+    if (version == DLS_VERSION_0) {
+      DLSFileHeaderV0 hdr_v0;
+      hdr_size = sizeof(hdr_v0);
+      if (!prv_file_read(&file, &hdr_v0, sizeof(hdr_v0))) {
+        pbl_fs_close(&file);
+        goto bad_session;
+      }
+      hdr = (DLSFileHeader){
+        .version = hdr_v0.version,
+        .comm_session_id = hdr_v0.comm_session_id,
+        .timestamp = hdr_v0.timestamp,
+        .tag = hdr_v0.tag,
+        .app_uuid = hdr_v0.app_uuid,
+        .item_type = hdr_v0.item_type,
+        .item_size = hdr_v0.item_size,
+      };
+    } else if (version != DLS_VERSION_1 || !prv_file_read(&file, &hdr, sizeof(hdr))) {
+      PBL_LOG_ERR("Unsupported DLS file version 0x%x", version);
       pbl_fs_close(&file);
       goto bad_session;
     }
@@ -934,7 +972,7 @@ void dls_storage_rebuild(void) {
     }
     session->comm.session_id = hdr.comm_session_id;
     session->storage =
-        (DataLoggingSessionStorage){.write_offset = sizeof(hdr), .read_offset = sizeof(hdr)};
+        (DataLoggingSessionStorage){.write_offset = hdr_size, .read_offset = hdr_size};
 
     // Make sure the filename is what we expect
     prv_get_filename(name, session);
@@ -957,6 +995,18 @@ void dls_storage_rebuild(void) {
     // To update the read offset, we pass 0 as num_bytes into dls_storage_consume()
     if (dls_storage_consume(session, 0) < 0) {
       goto bad_session;
+    }
+
+    if (hdr.version != DLS_CURRENT_VERSION) {
+      // Rewrite the file with the current header, keeping the unread data
+      PBL_LOG_INFO("Upgrading DLS file %s", path);
+      const uint32_t size = MAX(session->storage.num_bytes + prv_get_desired_free_bytes(session),
+                                DLS_FILE_INIT_SIZE_BYTES);
+      if (!prv_realloc_storage(session, size)) {
+        // The session's storage was deleted
+        pbl_free(session);
+        continue;
+      }
     }
 
     PBL_LOG_DBG("Restored session %" PRIu8 " num_bytes:%" PRIu32 ", read_offset:%" PRIu32

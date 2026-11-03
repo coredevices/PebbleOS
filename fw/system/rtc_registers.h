@@ -23,6 +23,10 @@
 #define MAG_XY_CORRECTION_VALS           17
 #define MAG_Z_CORRECTION_VAL             18
 #define SLOT_OF_LAST_LAUNCHED_APP        19
+// High words of the 64-bit times above; 0 when written by earlier firmware
+#define CURRENT_TIME_HI_REGISTER  20
+#define RTC_TIMEZONE_DST_START_HI 21
+#define RTC_TIMEZONE_DST_END_HI   22
 
 // We want a checksum stored in the retained registers, to prove that they
 // are not *totally* full of noise from system-on reset -- otherwise, we

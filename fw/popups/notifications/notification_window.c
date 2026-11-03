@@ -832,8 +832,7 @@ static void prv_mute_notification_timed(const ActionMenuItem *action_menu_item,
   Attribute *expiration_attr =
       notif_prefs ? attribute_find(&notif_prefs->attr_list, AttributeIdMuteExpiration) : nullptr;
   if (notif_prefs && expiration_attr) {
-    const uint32_t expiration_time = rtc_get_time() + duration_seconds;
-    expiration_attr->uint32 = expiration_time;
+    expiration_attr->time = rtc_get_time() + duration_seconds;
 
     ios_notif_pref_db_store_prefs((uint8_t *)app_id, app_id_len, &notif_prefs->attr_list,
                                   &notif_prefs->action_group);

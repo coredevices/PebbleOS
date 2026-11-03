@@ -139,6 +139,7 @@ static void prv_send_watch_versions(CommSession *session) {
 #ifndef CONFIG_RECOVERY_FW
   versions_msg.capabilities.multiple_language_packs_support = 1;
 #endif
+  versions_msg.capabilities.time64_support = 1;
   bt_local_id_copy_address(&versions_msg.device_address);
 
   versions_msg.system_resources_version = resource_get_system_version();

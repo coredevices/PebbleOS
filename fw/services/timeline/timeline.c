@@ -73,7 +73,8 @@ static int prv_time_comparator(void *a, void *b) {
       return (node_b->duration - node_a->duration);
     }
   } else {
-    return (node_b->timestamp - node_a->timestamp);
+    // Compare rather than subtract: the difference of two times may not fit an int
+    return (node_b->timestamp > node_a->timestamp) - (node_b->timestamp < node_a->timestamp);
   }
 }
 

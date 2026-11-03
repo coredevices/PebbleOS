@@ -156,7 +156,8 @@ typedef uint32_t ActivityScalarStore;
 
 /** @brief History of a metric, as stored in the settings file. */
 typedef struct {
-  /** UTC time of the first entry. */
+  /** UTC time of the first entry, widened with pbl_time_from_low32(). Kept 32 bits wide so
+   * earlier firmware still reads the file. */
   uint32_t utc_sec;
   /** One value per day, today at index 0. */
   ActivityScalarStore values[ACTIVITY_HISTORY_DAYS];
@@ -220,9 +221,9 @@ typedef enum {
   /** Unused. */
   ActivitySettingsKeyUnused5,
 
-  /** uint32_t: last time the sleep reward was shown, 0 if never. */
+  /** Time (settings_file_set_time()): last time the sleep reward was shown, 0 if never. */
   ActivitySettingsKeyInsightSleepRewardTime,
-  /** uint32_t: last time the activity reward was shown, 0 if never. */
+  /** Time (settings_file_set_time()): last time the activity reward was shown, 0 if never. */
   ActivitySettingsKeyInsightActivityRewardTime,
   /** SummaryPinLastState: UUID and last time the activity summary pin was added. */
   ActivitySettingsKeyInsightActivitySummaryState,
@@ -232,17 +233,18 @@ typedef enum {
   ActivitySettingsKeyRestingKCaloriesHistory,
   /** Active kcal (@ref ActivitySettingsValueHistory). */
   ActivitySettingsKeyActiveKCaloriesHistory,
-  /** uint32_t: UTC time of the last sleep activity logged to analytics. */
+  /** Time (settings_file_set_time()): UTC time of the last sleep activity logged to analytics. */
   ActivitySettingsKeyLastSleepActivityUTC,
-  /** uint32_t: UTC time of the last restful sleep activity logged to analytics. */
+  /** Time (settings_file_set_time()): UTC time of the last restful sleep activity logged to
+   * analytics. */
   ActivitySettingsKeyLastRestfulSleepActivityUTC,
-  /** uint32_t: UTC time of the last step activity logged to analytics. */
+  /** Time (settings_file_set_time()): UTC time of the last step activity logged to analytics. */
   ActivitySettingsKeyLastStepActivityUTC,
   /** @ref ActivitySession[@ref ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT]: stored sessions. */
   ActivitySettingsKeyStoredActivities,
-  /** uint32_t: last time the nap pin was shown. */
+  /** Time (settings_file_set_time()): last time the nap pin was shown. */
   ActivitySettingsKeyInsightNapSessionTime,
-  /** uint32_t: last time the activity session pin was shown. */
+  /** Time (settings_file_set_time()): last time the activity session pin was shown. */
   ActivitySettingsKeyInsightActivitySessionTime,
   /** VMC of the last processed minute (@ref ActivityScalarStore). */
   ActivitySettingsKeyLastVMC,
@@ -553,7 +555,7 @@ typedef struct {
   ActivitySpO2Support spo2;
 
   /** Current day index. */
-  uint16_t cur_day_index;
+  uint32_t cur_day_index;
 
   /** Minutes until the next settings file update. */
   int8_t update_settings_counter;
@@ -570,13 +572,12 @@ typedef struct {
 
   // Exit time for the last sleep/step activities we logged. Used to prevent logging the same event
   // more than once.
-  // Stored in the settings file as 32 bits.
   /** End time of the last logged sleep activity, UTC. */
-  uint32_t logged_sleep_activity_exit_at_utc;
+  time_t logged_sleep_activity_exit_at_utc;
   /** End time of the last logged restful sleep activity, UTC. */
-  uint32_t logged_restful_sleep_activity_exit_at_utc;
+  time_t logged_restful_sleep_activity_exit_at_utc;
   /** End time of the last logged step activity, UTC. */
-  uint32_t logged_step_activity_exit_at_utc;
+  time_t logged_step_activity_exit_at_utc;
 
   /** Data logging session for activity sessions. */
   DataLoggingSession *activity_dls_session;

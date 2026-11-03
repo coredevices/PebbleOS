@@ -66,15 +66,19 @@ static void prv_handle_timezone_set(TimezoneInfo *tz_info) {
 
 typedef struct PBL_PACKED {
   // Mirrors the Pebble Protocol time endpoint payload (big endian).
-  int32_t utc_time;                       // UTC timestamp
+  uint32_t utc_time;                      // UTC timestamp, unsigned to reach past 2038
   int16_t utc_offset_min;                 // local timestamp - UTC timestamp in mins
   int8_t region_name_len;                 // timezone name length
   char region_name[TIMEZONE_NAME_LENGTH]; // timezone name string
 } TimezoneCBData;
 
-#if !UNITTEST && !defined(CONFIG_LIBC_HOST)
-static_assert(sizeof(time_t) == 4, "Sizeof time_t does not match endpoint definition");
-#endif
+// Same as TimezoneCBData with a 64-bit time, from phones advertising the time64 capability.
+typedef struct PBL_PACKED {
+  int64_t utc_time;
+  int16_t utc_offset_min;
+  int8_t region_name_len;
+  char region_name[TIMEZONE_NAME_LENGTH];
+} TimezoneCBData64;
 
 #if !defined(CONFIG_RECOVERY_FW)
 static time_t prv_clock_dstrule_to_timestamp(bool is_end, const TimezoneInfo *tz_info,
@@ -210,7 +214,7 @@ static void prv_clock_get_timezone_info_from_region_id(int16_t region_id, time_t
 #endif
 }
 
-static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
+static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data, time_t utc_time) {
   int region_id = -1;
 
   if (tz_data->region_name_len) {
@@ -221,7 +225,7 @@ static TimezoneInfo prv_get_timezone_info_from_data(TimezoneCBData *tz_data) {
   if (region_id != -1) {
     // We have a valid region!
     TimezoneInfo tz_info;
-    prv_clock_get_timezone_info_from_region_id(region_id, tz_data->utc_time, &tz_info);
+    prv_clock_get_timezone_info_from_region_id(region_id, utc_time, &tz_info);
     return tz_info;
   }
 
@@ -283,14 +287,14 @@ PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInf
   }
 
   int new_gmt_offset = time_get_gmtoffset();
-  int new_utc_time = rtc_get_time();
+  time_t new_utc_time = rtc_get_time();
 
   PBL_ANALYTICS_SET_SIGNED(utc_offset_s, new_gmt_offset);
 
   PebbleEvent e = {
     .type = PEBBLE_SET_TIME_EVENT,
     .set_time_info = {
-      .utc_time_delta = new_utc_time - orig_utc_time,
+      .utc_time_delta = (int32_t)(new_utc_time - orig_utc_time),
       .gmt_offset_delta = new_gmt_offset - orig_gmt_offset,
       .dst_changed = false,
     }
@@ -298,17 +302,13 @@ PBL_T_STATIC void prv_update_time_info_and_generate_event(time_t *t, TimezoneInf
   event_put(&e);
 }
 
-static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data) {
-  tz_data->utc_time = pbl_be32_to_cpu(tz_data->utc_time);
-  tz_data->utc_offset_min = pbl_be16_to_cpu(tz_data->utc_offset_min);
-
-  TimezoneInfo tz_info = prv_get_timezone_info_from_data(tz_data);
+static void prv_handle_set_utc_and_timezone_msg(TimezoneCBData *tz_data, time_t utc_time) {
+  TimezoneInfo tz_info = prv_get_timezone_info_from_data(tz_data, utc_time);
   shell_prefs_set_automatic_timezone_id(tz_info.timezone_id);
   if (clock_time_source_is_manual()) {
     // Manual time mode: ignore time set from phone entirely
     return;
   }
-  time_t utc_time = tz_data->utc_time;
   if (clock_timezone_source_is_manual()) {
     prv_update_time_info_and_generate_event(&utc_time, nullptr);
   } else {
@@ -329,26 +329,34 @@ static void prv_handle_set_time_msg(time_t new_time) {
   prv_update_time_info_and_generate_event(&new_time, nullptr);
 }
 
+//! Latest time accepted from the phone, 9999-12-31 23:59:59 UTC
+#define PROTOCOL_TIME_MAX 253402300799LL
+
 void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsigned int length) {
   char sub_command = *data++;
 
   switch (sub_command) {
     // Get time request:
     case 0x00: {
-      time_t t = rtc_get_time();
+      const time_t t = rtc_get_time();
 
-      // Send Get time response (0x01):
-      const unsigned int response_buffer_length = 1 + 4;
-      uint8_t response_buffer[response_buffer_length];
-
-      response_buffer[0] = 0x01;
-
-      *(uint32_t *)(response_buffer + 1) = pbl_cpu_to_be32(t);
-
-      comm_session_send_data(session, protocol_time_endpoint_id, response_buffer,
-                             response_buffer_length, COMM_SESSION_DEFAULT_TIMEOUT);
-      PBL_LOG_VERBOSE("protocol_time_callback called, responding with current time: %" PRIu32,
-                      (uint32_t)t);
+      if (comm_session_has_capability(session, CommSessionTime64Support)) {
+        // Send 64-bit get time response (0x06)
+        uint8_t response[1 + sizeof(int64_t)] = {0x06};
+        const uint64_t t64 = pbl_cpu_to_be64((uint64_t)t);
+        memcpy(response + 1, &t64, sizeof(t64));
+        comm_session_send_data(session, protocol_time_endpoint_id, response, sizeof(response),
+                               COMM_SESSION_DEFAULT_TIMEOUT);
+      } else {
+        // Send get time response (0x01), unsigned 32 bits
+        uint8_t response[1 + sizeof(uint32_t)] = {0x01};
+        const uint32_t t32 = pbl_cpu_to_be32((uint32_t)t);
+        memcpy(response + 1, &t32, sizeof(t32));
+        comm_session_send_data(session, protocol_time_endpoint_id, response, sizeof(response),
+                               COMM_SESSION_DEFAULT_TIMEOUT);
+      }
+      PBL_LOG_VERBOSE("protocol_time_callback called, responding with current time: %" PRId64,
+                      (int64_t)t);
       break;
     }
     // Set time:
@@ -368,7 +376,35 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
       }
 
       TimezoneCBData *timezone_data = (TimezoneCBData *)data;
-      prv_handle_set_utc_and_timezone_msg(timezone_data);
+      timezone_data->utc_offset_min = pbl_be16_to_cpu(timezone_data->utc_offset_min);
+      prv_handle_set_utc_and_timezone_msg(timezone_data, pbl_be32_to_cpu(timezone_data->utc_time));
+      break;
+    }
+    // Set timezone, with a 64-bit time:
+    case 0x05: {
+      const size_t header_size = offsetof(TimezoneCBData64, region_name);
+      if (length < sizeof(uint8_t) + header_size) {
+        PBL_LOG_WRN("Set timezone message invalid length");
+        return;
+      }
+      TimezoneCBData64 msg64;
+      memcpy(&msg64, data, MIN(sizeof(msg64), length - sizeof(uint8_t)));
+      if (msg64.region_name_len < 0 || msg64.region_name_len > TIMEZONE_NAME_LENGTH ||
+          length != (sizeof(uint8_t) + header_size + msg64.region_name_len)) {
+        PBL_LOG_WRN("Set timezone message invalid length");
+        return;
+      }
+      TimezoneCBData tz_data = {
+        .utc_offset_min = pbl_be16_to_cpu(msg64.utc_offset_min),
+        .region_name_len = msg64.region_name_len,
+      };
+      memcpy(tz_data.region_name, msg64.region_name, sizeof(tz_data.region_name));
+      const int64_t utc_time = (int64_t)pbl_be64_to_cpu(msg64.utc_time);
+      if (utc_time < 0 || utc_time > PROTOCOL_TIME_MAX) {
+        PBL_LOG_WRN("Set timezone message time out of range");
+        return;
+      }
+      prv_handle_set_utc_and_timezone_msg(&tz_data, (time_t)utc_time);
       break;
     }
     // Request time: sent by the watch to ask the phone for its current time.
@@ -1044,8 +1080,8 @@ void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_set(const struct pbl_shell *sh, size_t argc, char **argv) {
-  long val;
-  if (pbl_shell_strtol(argv[1], &val) != 0 || val == 0) {
+  long long val;
+  if (pbl_shell_strtoll(argv[1], &val) != 0 || val == 0) {
     pbl_shell_error(sh, "invalid timestamp '%s'", argv[1]);
     return -EINVAL;
   }
@@ -1069,8 +1105,8 @@ static int prv_cmd_show(const struct pbl_shell *sh, size_t argc, char **argv) {
   char region[TIMEZONE_NAME_LENGTH];
   clock_get_timezone_region(region, sizeof(region));
 
-  pbl_shell_print(sh, "UTC: %" PRIi32, (int32_t)utc);
-  pbl_shell_print(sh, "Local: %" PRIi32, (int32_t)time_utc_to_local(utc));
+  pbl_shell_print(sh, "UTC: %" PRId64, (int64_t)utc);
+  pbl_shell_print(sh, "Local: %" PRId64, (int64_t)time_utc_to_local(utc));
   pbl_shell_print(sh, "Offset: %" PRIi32, time_get_gmtoffset());
   pbl_shell_print(sh, "DST: %d", time_get_isdst(utc));
   pbl_shell_print(sh, "Region: %s", clock_is_timezone_set() ? region : "");

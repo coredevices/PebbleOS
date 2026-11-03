@@ -54,6 +54,16 @@ typedef struct PBL_PACKED {
   uint16_t data_item_size;
 } DataLoggingOpenSessionMessage;
 
+typedef struct PBL_PACKED {
+  uint8_t command;
+  uint8_t session_id;
+  Uuid app_uuid;
+  int64_t timestamp;
+  uint32_t logging_session_tag;
+  DataLoggingItemType data_item_type : 8;
+  uint16_t data_item_size;
+} DataLoggingOpenSession64Message;
+
 static const uint16_t ENDPOINT_ID_DATA_LOGGING = 0x1a7a;
 
 #define ACK_NACK_TIMEOUT_TICKS (30 * RTC_TICKS_HZ)
@@ -203,6 +213,12 @@ static void dls_endpoint_print_message(uint8_t *message, int num_bytes) {
                   msg->logging_session_tag, msg->data_item_type, msg->data_item_size);
       break;
     }
+    case DataLoggingEndpointCmdOpen64: {
+      DataLoggingOpenSession64Message *msg = (DataLoggingOpenSession64Message *)message;
+      PBL_LOG_DBG("Opening session %u with tag %" PRIu32 ", type %u, size %hu", msg->session_id,
+                  msg->logging_session_tag, msg->data_item_type, msg->data_item_size);
+      break;
+    }
     case DataLoggingEndpointCmdData: {
       DataLoggingSendDataMessage *msg = (DataLoggingSendDataMessage *)message;
       PBL_LOG_DBG("Sending data with session_id %" PRIu8 ", items remaining %" PRIu32
@@ -221,23 +237,36 @@ bool dls_endpoint_open_session(DataLoggingSession *session) {
     return false;
   }
 
+  update_session_state(session, DataLoggingSessionCommStateOpening, true /*reschedule*/);
+
+  if (comm_session_has_capability(comm_session, CommSessionTime64Support)) {
+    DataLoggingOpenSession64Message msg = {
+      .command = DataLoggingEndpointCmdOpen64,
+      .session_id = session->comm.session_id,
+      .app_uuid = session->app_uuid,
+      .timestamp = session->session_created_timestamp,
+      .logging_session_tag = session->tag,
+      .data_item_type = session->item_type,
+      .data_item_size = session->item_size,
+    };
+    dls_endpoint_print_message((uint8_t *)&msg, 0);
+    return comm_session_send_data(comm_session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
+                                  sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
+  }
+
+  // Unsigned, until 2106
   DataLoggingOpenSessionMessage msg = {
     .command = DataLoggingEndpointCmdOpen,
     .session_id = session->comm.session_id,
     .app_uuid = session->app_uuid,
-    .timestamp = session->session_created_timestamp,
+    .timestamp = (uint32_t)session->session_created_timestamp,
     .logging_session_tag = session->tag,
     .data_item_type = session->item_type,
     .data_item_size = session->item_size,
   };
-
   dls_endpoint_print_message((uint8_t *)&msg, 0);
-
-  update_session_state(session, DataLoggingSessionCommStateOpening, true /*reschedule*/);
-
-  return (comm_session_send_data(comm_session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
-                                 sizeof(DataLoggingOpenSessionMessage),
-                                 COMM_SESSION_DEFAULT_TIMEOUT));
+  return comm_session_send_data(comm_session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
+                                sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
 }
 
 void dls_endpoint_close_session(uint8_t session_id) {

@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "111",
+  "revision" : "112",
   "version" : "2.0",
   "files": [
     "fw/system/status_codes.h",
@@ -34,6 +34,7 @@
     "fw/applib/i18n.h",
     "fw/applib/app_timer.h",
     "fw/applib/app_wakeup.h",
+    "fw/applib/app_time32.h",
     "fw/applib/app_exit_reason.h",
     "fw/applib/app_launch_reason.h",
     "fw/applib/app_launch_button.h",
@@ -260,7 +261,12 @@
               "type": "function",
               "name": "clock_to_timestamp",
               "implName": "clock_to_timestamp_time32",
-              "addedRevision": "24"
+              "addedRevision": "24",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "clock_to_timestamp",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "clock_is_timezone_set",
@@ -307,7 +313,12 @@
               "exports": [
                 { "type": "function",
                   "name": "alarm_service_peek_next",
-                  "addedRevision": "105"
+                  "implName": "alarm_service_peek_next_time32",
+                  "addedRevision": "105",
+                  "supersededRevision": "112"
+                }, { "type": "function",
+                  "name": "alarm_service_peek_next",
+                  "addedRevision": "112"
                 }
               ]
             }, {
@@ -636,7 +647,13 @@
             }, {
               "type": "function",
               "name": "health_service_sum",
-              "addedRevision": "77"
+              "implName": "health_service_sum_time32",
+              "addedRevision": "77",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_sum",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "health_service_sum_today",
@@ -651,7 +668,13 @@
             }, {
               "type": "function",
               "name": "health_service_sum_averaged",
-              "addedRevision": "79"
+              "implName": "health_service_sum_averaged_time32",
+              "addedRevision": "79",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_sum_averaged",
+              "addedRevision": "112"
             }, {
               "type": "type",
               "name": "HealthAggregation",
@@ -659,7 +682,13 @@
             }, {
               "type": "function",
               "name": "health_service_aggregate_averaged",
-              "addedRevision": "83"
+              "implName": "health_service_aggregate_averaged_time32",
+              "addedRevision": "83",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_aggregate_averaged",
+              "addedRevision": "112"
             }, {
               "type": "type",
               "name": "HealthActivityMask"
@@ -682,27 +711,58 @@
             }, {
               "type": "function",
               "name": "health_service_activities_iterate",
-              "addedRevision": "77"
+              "implName": "health_service_activities_iterate_time32",
+              "addedRevision": "77",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_activities_iterate",
+              "addedRevision": "112"
             }, {
               "type": "type",
               "name": "HealthServiceAccessibilityMask"
             }, {
               "type": "function",
               "name": "health_service_metric_accessible",
-              "addedRevision": "77"
+              "implName": "health_service_metric_accessible_time32",
+              "addedRevision": "77",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_metric_accessible",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "health_service_metric_averaged_accessible",
-              "addedRevision": "79"
+              "implName": "health_service_metric_averaged_accessible_time32",
+              "addedRevision": "79",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_metric_averaged_accessible",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "health_service_metric_aggregate_averaged_accessible",
+              "implName": "health_service_metric_aggregate_averaged_accessible_time32",
               "addedRevision": "83",
+              "supersededRevision": "112",
+              "stubReturn": "HealthServiceAccessibilityMaskNotSupported"
+            }, {
+              "type": "function",
+              "name": "health_service_metric_aggregate_averaged_accessible",
+              "addedRevision": "112",
               "stubReturn": "HealthServiceAccessibilityMaskNotSupported"
             }, {
               "type": "function",
               "name": "health_service_any_activity_accessible",
-              "addedRevision": "77"
+              "implName": "health_service_any_activity_accessible_time32",
+              "addedRevision": "77",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_any_activity_accessible",
+              "addedRevision": "112"
             }, {
               "type": "type",
               "name": "HealthEventType"
@@ -753,7 +813,13 @@
             }, {
               "type": "function",
               "name": "health_service_get_minute_history",
-              "addedRevision": "77"
+              "implName": "health_service_get_minute_history_time32",
+              "addedRevision": "77",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "health_service_get_minute_history",
+              "addedRevision": "112"
             }, {
               "type": "define",
               "name": "PBL_IF_HEALTH_ELSE"
@@ -1487,8 +1553,14 @@
             }, {
               "type": "function",
               "name": "wakeup_schedule",
+              "implName": "app_wakeup_schedule_time32",
+              "addedRevision": "24",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "wakeup_schedule",
               "implName": "app_wakeup_schedule",
-              "addedRevision": "24"
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "wakeup_cancel",
@@ -1507,8 +1579,14 @@
             }, {
               "type": "function",
               "name": "wakeup_query",
+              "implName": "app_wakeup_query_time32",
+              "addedRevision": "24",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "wakeup_query",
               "implName": "app_wakeup_query",
-              "addedRevision": "24"
+              "addedRevision": "112"
             }
           ]
         }, {
@@ -1601,7 +1679,14 @@
             }, {
               "type": "function",
               "name": "app_glance_add_slice",
+              "implName": "app_glance_add_slice_time32",
               "addedRevision": "83",
+              "supersededRevision": "112",
+              "stubReturn": "APP_GLANCE_RESULT_INVALID_SESSION"
+            }, {
+              "type": "function",
+              "name": "app_glance_add_slice",
+              "addedRevision": "112",
               "stubReturn": "APP_GLANCE_RESULT_INVALID_SESSION"
             }, {
               "type": "type",
@@ -4690,17 +4775,35 @@
               "name": "localtime",
               "implName": "pbl_override_localtime_time32",
               "sortName": "gmtime",
-              "addedRevision": "31"
+              "addedRevision": "31",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "localtime",
+              "implName": "pbl_override_localtime",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "gmtime",
               "implName": "pbl_override_gmtime_time32",
-              "addedRevision": "0"
+              "addedRevision": "0",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "gmtime",
+              "implName": "pbl_override_gmtime",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "mktime",
               "implName": "pbl_override_mktime_time32",
-              "addedRevision": "29"
+              "addedRevision": "29",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "mktime",
+              "implName": "pbl_override_mktime",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "localtime__deprecated",
@@ -4710,13 +4813,25 @@
             }, {
               "type": "function",
               "name": "time",
+              "implName": "pbl_override_time_time32",
+              "addedRevision": "51",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "time",
               "implName": "pbl_override_time",
-              "addedRevision": "51"
+              "addedRevision": "112"
+            }, {
+              "type": "function",
+              "name": "difftime",
+              "implName": "pbl_override_difftime_time32",
+              "addedRevision": "58",
+              "supersededRevision": "112"
             }, {
               "type": "function",
               "name": "difftime",
               "implName": "pbl_override_difftime",
-              "addedRevision": "58"
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "time__deprecated",
@@ -4733,12 +4848,23 @@
               "type": "function",
               "name": "time_ms",
               "implName": "time_ms_time32",
-              "addedRevision": "59"
+              "addedRevision": "59",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "time_ms",
+              "addedRevision": "112"
             }, {
               "type": "function",
               "name": "time_start_of_today",
               "implName": "time_start_of_today_time32",
-              "addedRevision": "78"
+              "addedRevision": "78",
+              "supersededRevision": "112"
+            }, {
+              "type": "function",
+              "name": "time_start_of_today",
+              "implName": "sys_time_start_of_today",
+              "addedRevision": "112"
             }
           ]
         }

@@ -12,8 +12,8 @@
  * @ingroup drivers
  * @brief Real-time clock: wall clock time, tick counter, wake-up alarm and timezone storage.
  *
- * Wall clock time is UTC, limited to years 2000 to 2037. Ticks count at @ref RTC_TICKS_HZ
- * since system start.
+ * Wall clock time is UTC, limited to years 2000 to @ref RTC_MAX_YEAR. Ticks count at @ref
+ * RTC_TICKS_HZ since system start.
  *
  * @code{.c}
  * char buf[TIME_STRING_BUFFER_SIZE];
@@ -69,7 +69,12 @@ void rtc_calibrate_frequency(uint32_t frequency);
 void rtc_init_timers(void);
 
 /**
- * @brief Clamp the year of a broken-down time to 2000-2037.
+ * @brief Last year the RTC keeps: 2037 with a 32-bit time_t, else 2099 (two-digit hardware years).
+ */
+#define RTC_MAX_YEAR (sizeof(time_t) > 4 ? 2099 : 2037)
+
+/**
+ * @brief Clamp the year of a broken-down time to 2000-@ref RTC_MAX_YEAR.
  *
  * Other fields are left untouched.
  *
@@ -79,7 +84,7 @@ void rtc_init_timers(void);
 bool rtc_sanitize_struct_tm(struct pbl_tm *t);
 
 /**
- * @brief Clamp the year of a time to 2000-2037, as rtc_sanitize_struct_tm().
+ * @brief Clamp the year of a time to 2000-@ref RTC_MAX_YEAR, as rtc_sanitize_struct_tm().
  *
  * @param[in,out] t Time to clamp.
  * @return true if @p t was changed.
@@ -89,7 +94,7 @@ bool rtc_sanitize_time_t(time_t *t);
 /**
  * @brief Set the current time.
  *
- * Times outside the years 2000 to 2037 are not supported.
+ * Times outside the years 2000 to @ref RTC_MAX_YEAR are not supported.
  *
  * @param time UTC time in seconds since the epoch.
  */

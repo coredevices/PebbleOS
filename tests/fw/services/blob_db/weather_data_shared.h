@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <time.h>
+
 #include <pbl/services/blob_db/weather_db.h>
 
 #define WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES (5)
@@ -26,6 +28,9 @@ void weather_shared_data_write_strings(struct pbl_serialized_array *strings, con
 void weather_shared_data_initialize_locations_order(void);
 
 void weather_shared_data_init(void);
+
+// Same as weather_shared_data_init(), with the clock set to now.
+void weather_shared_data_init_at(time_t now);
 
 void weather_shared_data_cleanup(void);
 

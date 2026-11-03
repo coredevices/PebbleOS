@@ -35,7 +35,7 @@ typedef enum {
   VEAttributeIdAppUuid = 0x03,
   /** Reminder text of an NLP result. */
   VEAttributeIdReminder = 0x04,
-  /** 32-bit timestamp of an NLP result. */
+  /** Timestamp of an NLP result: unsigned 32 bits, or signed 64 bits. */
   VEAttributeIdTimestamp = 0x05,
 } VEAttributeId;
 

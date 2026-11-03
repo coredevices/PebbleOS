@@ -28,6 +28,15 @@ pbl_clar_test(test_pin_db
     tests/fakes/test_db.c
 )
 
+pbl_clar_test(test_timeline_item_storage
+  MODULES settings timeline_item time
+  SOURCES
+    fw/services/blob_db/timeline_item_storage.c
+    tests/fakes/fake_rtc.c
+    tests/fakes/fake_session.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_blob_db_sync
   SOURCES
     fw/services/blob_db/util.c

@@ -273,7 +273,7 @@ static uint8_t s_welcome_version = 0;
 static ActivitySettings s_activity_preferences = ACTIVITY_DEFAULT_PREFERENCES;
 
 #define PREF_KEY_ACTIVITY_ACTIVATED_TIMESTAMP "activityActivated"
-// Stored on flash as 32 bits.
+// Stored on flash as 32 bits, which earlier firmware requires; widened on read.
 static uint32_t s_activity_activation_timestamp = 0;
 
 #define PREF_KEY_ACTIVITY_ACTIVATION_DELAY_INSIGHT "activityActivationDelayInsights"
@@ -2048,7 +2048,10 @@ static void prv_activity_pref_set(void) {
 }
 
 time_t activity_prefs_get_activation_time(void) {
-  return s_activity_activation_timestamp;
+  if (s_activity_activation_timestamp == 0) {
+    return 0;
+  }
+  return pbl_time_from_low32(s_activity_activation_timestamp, rtc_get_time());
 }
 
 void activity_prefs_set_activated(void) {

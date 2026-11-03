@@ -19,9 +19,11 @@
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-#define PIN_DB_MAX_AGE   (3 * PBL_SEC_PER_DAY) // so we get at two full past days in there
-#define PIN_DB_FILE_NAME "/pindb"
-#define PIN_DB_MAX_SIZE  PBL_KIB(40) // TODO [FBO] variable size / reasonable value
+#define PIN_DB_MAX_AGE (3 * PBL_SEC_PER_DAY) // so we get at two full past days in there
+// Items with 64-bit times. Earlier firmware stored 32-bit ones in the legacy file.
+#define PIN_DB_FILE_NAME        "/pindb64"
+#define PIN_DB_LEGACY_FILE_NAME "/pindb"
+#define PIN_DB_MAX_SIZE         PBL_KIB(40) // TODO [FBO] variable size / reasonable value
 
 static TimelineItemStorage s_pin_db_storage;
 
@@ -39,15 +41,23 @@ status_t pin_db_each(SettingsFileEachCallback each, void *data) {
 }
 
 static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, const uint8_t *val,
-                                           int val_len, bool mark_synced) {
-  CommonTimelineItemHeader *hdr = (CommonTimelineItemHeader *)val;
-  if (hdr->layout == LayoutIdNotification || hdr->layout == LayoutIdReminder) {
+                                           int val_len, bool mark_synced, bool from_phone) {
+  // The layout is past the timestamp, so read it from whichever layout the item is in
+  const size_t layout_offset = sizeof(CommonTimelineItemHeader) - 1 -
+                               ((from_phone && !timeline_item_phone_has_time64()) ? 4 : 0);
+  if (val_len < (int)(layout_offset + 1)) {
+    return E_INVALID_ARGUMENT;
+  }
+  const LayoutId layout = val[layout_offset];
+  if (layout == LayoutIdNotification || layout == LayoutIdReminder) {
     // pins do not support these layouts
     return E_INVALID_ARGUMENT;
   }
 
-  status_t rv =
-      timeline_item_storage_insert(&s_pin_db_storage, key, key_len, val, val_len, mark_synced);
+  status_t rv = from_phone ? timeline_item_storage_insert_from_phone(
+                                 &s_pin_db_storage, key, key_len, val, val_len, mark_synced)
+                           : timeline_item_storage_insert(&s_pin_db_storage, key, key_len, val,
+                                                          val_len, mark_synced);
 
   if (rv == S_SUCCESS) {
     TimelineItemId parent_id = ((CommonTimelineItemHeader *)val)->parent_id;
@@ -116,7 +126,8 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
   Uuid reminders_data_source_uuid = UUID_REMINDERS_DATA_SOURCE;
   const bool mark_synced = !uuid_equal(&item->header.parent_id, &reminders_data_source_uuid);
   rv = prv_insert_serialized_item((uint8_t *)&item->header.id, sizeof(TimelineItemId), buffer,
-                                  sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
+                                  sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced,
+                                  false /* from_phone */);
   if (rv == S_SUCCESS && emit_event) {
     blob_db_event_put(BlobDBEventTypeInsert, BlobDBIdPins, (uint8_t *)&item->header.id,
                       sizeof(TimelineItemId));
@@ -145,12 +156,13 @@ status_t pin_db_set_status_bits(const TimelineItemId *id, uint8_t status) {
 }
 
 status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin) {
-  int size = pin_db_get_len((uint8_t *)id, UUID_SIZE);
+  int size = timeline_item_storage_get_len(&s_pin_db_storage, (uint8_t *)id, UUID_SIZE);
   if (size <= 0) {
     return E_DOES_NOT_EXIST;
   }
   uint8_t *read_buf = pbl_malloc_check(size);
-  status_t status = pin_db_read((uint8_t *)id, UUID_SIZE, read_buf, size);
+  status_t status =
+      timeline_item_storage_read(&s_pin_db_storage, (uint8_t *)id, UUID_SIZE, read_buf, size);
   if (status != S_SUCCESS) {
     goto cleanup;
   }
@@ -176,8 +188,8 @@ bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {
 
 status_t pin_db_read_item_header(TimelineItem *item_out, TimelineItemId *id) {
   SerializedTimelineItemHeader hdr = {};
-  status_t rv = pin_db_read((uint8_t *)id, sizeof(TimelineItemId), (uint8_t *)&hdr,
-                            sizeof(SerializedTimelineItemHeader));
+  status_t rv = timeline_item_storage_read(&s_pin_db_storage, (uint8_t *)id, sizeof(TimelineItemId),
+                                           (uint8_t *)&hdr, sizeof(SerializedTimelineItemHeader));
   timeline_item_deserialize_header(item_out, &hdr);
   return rv;
 }
@@ -199,7 +211,8 @@ status_t pin_db_next_item_header(TimelineItem *next_item_out,
 
 void pin_db_init(void) {
   s_pin_db_storage = (TimelineItemStorage){};
-  timeline_item_storage_init(&s_pin_db_storage, PIN_DB_FILE_NAME, PIN_DB_MAX_SIZE, PIN_DB_MAX_AGE);
+  timeline_item_storage_init(&s_pin_db_storage, PIN_DB_FILE_NAME, PIN_DB_LEGACY_FILE_NAME,
+                             PIN_DB_MAX_SIZE, PIN_DB_MAX_AGE);
 }
 
 void pin_db_deinit(void) {
@@ -217,15 +230,15 @@ bool pin_db_has_entry_expired(time_t pin_end_timestamp) {
 status_t pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   // Records inserted from the phone are already synced
   const bool mark_synced = true;
-  return prv_insert_serialized_item(key, key_len, val, val_len, mark_synced);
+  return prv_insert_serialized_item(key, key_len, val, val_len, mark_synced, true /* from_phone */);
 }
 
 int pin_db_get_len(const uint8_t *key, int key_len) {
-  return timeline_item_storage_get_len(&s_pin_db_storage, key, key_len);
+  return timeline_item_storage_get_len_for_phone(&s_pin_db_storage, key, key_len);
 }
 
 status_t pin_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
-  return timeline_item_storage_read(&s_pin_db_storage, key, key_len, val_out, val_len);
+  return timeline_item_storage_read_for_phone(&s_pin_db_storage, key, key_len, val_out, val_len);
 }
 
 status_t pin_db_delete(const uint8_t *key, int key_len) {

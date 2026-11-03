@@ -54,8 +54,8 @@ PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 #define ALARM_MISSED_MAX_DELAY_S (5 * PBL_SEC_PER_MIN)
 
 typedef struct PBL_PACKED AlarmArmedRecord {
-  //! Cron execute time of the armed alarm, 0 if no alarm is armed.
-  int32_t time;
+  //! Cron execute time of the armed alarm, 0 if no alarm is armed. Good until 2106.
+  uint32_t time;
   AlarmId id;
 } AlarmArmedRecord;
 
@@ -1371,12 +1371,13 @@ void alarm_init(void) {
     // An alarm which was armed for a time we have already passed never got the chance to fire:
     // the watch was down (rebooting, or updating) when it was due.
     const time_t now = rtc_get_time();
-    if (armed.time != 0 && armed.id != ALARM_INVALID_ID && now >= armed.time &&
-        (now - armed.time) <= ALARM_MISSED_MAX_DELAY_S) {
+    const time_t armed_time = armed.time;
+    if (armed_time != 0 && armed.id != ALARM_INVALID_ID && now >= armed_time &&
+        (now - armed_time) <= ALARM_MISSED_MAX_DELAY_S) {
       s_missed_alarm_id = armed.id;
-      s_missed_alarm_time = armed.time;
+      s_missed_alarm_time = armed_time;
       PBL_LOG_INFO("Alarm %d missed by %lds, firing once alarms are enabled", armed.id,
-                   (long)(now - armed.time));
+                   (long)(now - armed_time));
     }
   }
 

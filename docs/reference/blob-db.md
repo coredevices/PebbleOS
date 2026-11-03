@@ -21,12 +21,14 @@ watch echoes in its response. Keys and values are length-prefixed:
 | DELETE                | `0x04` | database id, key                              |
 | CLEAR                 | `0x05` | database id — drops all entries               |
 | INSERT_WITH_TIMESTAMP | `0x0D` | database id, `uint32_t` timestamp, key, value |
+| INSERT_WITH_TIMESTAMP_64 | `0x0E` | database id, `int64_t` timestamp, key, value |
 
 `0x02` (READ) and `0x03` (UPDATE) are defined but not implemented.
 INSERT_WITH_TIMESTAMP is for conflict resolution: if the watch's copy is
 newer, it answers DATA_STALE and the phone should re-sync. The timestamp
 is currently only honored for the Settings database; other databases
-treat it as a plain INSERT.
+treat it as a plain INSERT. INSERT_WITH_TIMESTAMP_64 is the same with a
+64-bit time.
 
 The watch responds to every command with `uint16_t token` +
 `uint8_t response code`:
@@ -51,7 +53,22 @@ Opcodes `0x06`–`0x0C` (DIRTY_DBS, START_SYNC, WRITE, WRITEBACK,
 SYNC_DONE, VERSION, DIRTY_ALL) implement watch→phone writeback of dirty
 records; responses to these set bit 7 of the opcode. VERSION reports the
 protocol version (currently 1). Message layouts are the packed structs
-in `endpoint2.c`.
+in `endpoint2.c`. WRITE_64 (`0x0F`) and WRITEBACK_64 (`0x10`) replace
+WRITE and WRITEBACK, with an `int64_t` instead of a `uint32_t` last
+updated time, for phones with the time64 capability.
+
+## 64-bit times
+
+Phones advertise 64-bit time support with capability bit 29
+(`CommSessionTime64Support`). For those phones the watch sends WRITE_64 and
+WRITEBACK_64, and the timeline item header in Pins, Reminders and
+Notifs values holds an `int64_t` timestamp where other phones send and
+receive a `uint32_t` one.
+
+The watch picks the item layout from the capabilities it has received.
+A phone setting bit 29 must therefore wait until it has answered the
+watch's PhoneVersion request before it inserts into those databases;
+items sent earlier are read in the 32-bit layout.
 
 ## Database ids
 

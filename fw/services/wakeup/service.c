@@ -49,14 +49,14 @@ typedef struct PBL_PACKED {
   bool repeating;               //!< Enable event repetition
   uint16_t repeat_hours_offset; //!< repeat hour interval
   bool notify_if_missed;        //!< Notify user if wakeup event has been missed
-  int32_t timestamp;            //!< The time at which this entry will wake up at
+  uint32_t timestamp;           //!< The time at which this entry will wake up at, until 2106
   bool utc;                     //!< If timezone has been set, the this is UTC time
 } WakeupEntry;
 
 typedef struct PBL_PACKED {
   WakeupId current_wakeup_id;
   WakeupId next_wakeup_id;
-  int32_t timestamp;
+  uint32_t timestamp;
 } WakeupState;
 
 #define WAKEUP_ID_MIN 1
@@ -94,7 +94,7 @@ void wakeup_dispatcher_system_task(void *data) {
   WakeupId wakeup_id = (WakeupId)(intptr_t)data;
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
-  if (entry.timestamp > rtc_get_time()) {
+  if ((time_t)entry.timestamp > rtc_get_time()) {
     prv_wakeup_timer_next_pending();
     return;
   }
@@ -206,9 +206,9 @@ static void prv_wakeup_timer_next_pending(void) {
 
   // Create a timer for the found wakeup id, given it's valid
   if (s_wakeup_state.current_wakeup_id >= 0) {
-    int32_t timestamp = s_wakeup_state.timestamp;
+    time_t timestamp = s_wakeup_state.timestamp;
     time_t current_time = rtc_get_time();
-    int32_t time_difference = timestamp - current_time;
+    time_t time_difference = timestamp - current_time;
 
     // If time_difference is negative, this was a missed past event due to set_time
     // changing current time beyond the event
@@ -224,7 +224,7 @@ static void prv_wakeup_timer_next_pending(void) {
 
     // Space out events of different apps that fall close together
     if (s_dispatched) {
-      int32_t spacing = s_last_dispatch_time + WAKEUP_CATCHUP_WINDOW - current_time;
+      time_t spacing = s_last_dispatch_time + WAKEUP_CATCHUP_WINDOW - current_time;
       time_difference = MAX(time_difference, MIN(spacing, WAKEUP_CATCHUP_WINDOW));
     }
 
@@ -299,9 +299,9 @@ static void prv_update_events_callback(SettingsFile *old_file, SettingsFile *new
     entry.utc = false;           // If we're migrating, this has not been utc
   }
 
-  int32_t timestamp = entry.timestamp;
+  time_t timestamp = entry.timestamp;
   time_t current_time = rtc_get_time();
-  int32_t time_difference = timestamp - current_time;
+  time_t time_difference = timestamp - current_time;
 
   // Entries outside the ID range can never fire
   if (wakeup_id < WAKEUP_ID_MIN) {
@@ -348,7 +348,7 @@ void wakeup_init(void) {
   // Create single reusable timer for wakeup events
   s_current_timer_id = new_timer_create();
   s_wakeup_state.next_wakeup_id = CLIP(rtc_get_time(), WAKEUP_ID_MIN, WAKEUP_ID_MAX);
-  s_wakeup_state.timestamp = -1;
+  s_wakeup_state.timestamp = 0;
 
   SettingsFile wakeup_settings;
   if (settings_file_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != S_SUCCESS) {
@@ -399,10 +399,10 @@ PBL_SYSCALL(WakeupId, sys_wakeup_schedule, (VAL, time_t, timestamp), (VAL, int32
   }
 
   time_t current_time = rtc_get_time();
-  int32_t time_difference = timestamp - current_time;
 
-  // Disallow scheduling past events
-  if (time_difference <= 0) {
+  // Disallow scheduling past events, and ones beyond what an entry can store
+  const int64_t timestamp64 = timestamp;
+  if (timestamp <= current_time || timestamp64 > (int64_t)UINT32_MAX) {
     return E_INVALID_ARGUMENT;
   }
 
@@ -496,8 +496,8 @@ static bool prv_check_count_and_availability_callback(SettingsFile *file, Settin
 
   check->wakeup_count++;
   // If the wakeup_id is with the same minute as another wakeup event of the app
-  if ((entry.timestamp - WAKEUP_EVENT_WINDOW < check->wakeup_timestamp) &&
-      (check->wakeup_timestamp < (entry.timestamp + WAKEUP_EVENT_WINDOW))) {
+  if (((time_t)entry.timestamp - WAKEUP_EVENT_WINDOW < check->wakeup_timestamp) &&
+      (check->wakeup_timestamp < ((time_t)entry.timestamp + WAKEUP_EVENT_WINDOW))) {
     check->wakeup_count = E_RANGE;
   }
 

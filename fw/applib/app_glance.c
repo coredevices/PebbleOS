@@ -16,7 +16,9 @@
 #include <resource/resource_ids.auto.h>
 #include <syscall/syscall.h>
 
-AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceSlice slice) {
+// expiration_time is APP_GLANCE_SLICE_NO_EXPIRATION or a UTC time.
+static AppGlanceResult prv_add_slice(AppGlanceReloadSession *session,
+                                     const AppGlanceSliceLayout *layout, time_t expiration_time) {
   AppGlanceResult result = APP_GLANCE_RESULT_SUCCESS;
 
   AppGlance *glance = app_state_get_glance();
@@ -37,12 +39,12 @@ AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceS
 
   // Check if this slice's icon is a valid resource (but only if it's not the value that specifies
   // that the app's default icon should be used)
-  if (slice.layout.icon != APP_GLANCE_SLICE_DEFAULT_ICON) {
+  if (layout->icon != APP_GLANCE_SLICE_DEFAULT_ICON) {
     Uuid app_uuid;
     sys_get_app_uuid(&app_uuid);
     const TimelineResourceInfo timeline_resource_info = (TimelineResourceInfo){
       .app_id = &app_uuid,
-      .res_id = (TimelineResourceId)slice.layout.icon,
+      .res_id = (TimelineResourceId)layout->icon,
     };
     AppResourceInfo app_resource_info = (AppResourceInfo){};
     sys_timeline_resources_get_id(&timeline_resource_info,
@@ -55,30 +57,27 @@ AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceS
   // Check if the template string is too long (if it's not NULL)
   // Plus one for the null terminator, then plus one more to become too long
   const size_t template_string_too_long_size = ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN + 1 + 1;
-  if (slice.layout.subtitle_template_string &&
-      strnlen(slice.layout.subtitle_template_string, template_string_too_long_size) ==
+  if (layout->subtitle_template_string &&
+      strnlen(layout->subtitle_template_string, template_string_too_long_size) ==
           template_string_too_long_size) {
     result |= APP_GLANCE_RESULT_TEMPLATE_STRING_TOO_LONG;
   }
 
   // Check if the provided subtitle string is a valid template string, if it's present.
   const time_t current_time = sys_get_time();
-  if (slice.layout.subtitle_template_string) {
+  if (layout->subtitle_template_string) {
     const TemplateStringVars template_string_vars = (TemplateStringVars){
       .current_time = current_time,
     };
     TemplateStringError template_string_error = {};
-    if (!template_string_evaluate(slice.layout.subtitle_template_string, nullptr, 0, nullptr,
+    if (!template_string_evaluate(layout->subtitle_template_string, nullptr, 0, nullptr,
                                   &template_string_vars, &template_string_error)) {
       result |= APP_GLANCE_RESULT_INVALID_TEMPLATE_STRING;
     }
   }
 
   // Check if the slice would expire in the past (if it's not APP_GLANCE_SLICE_NO_EXPIRATION)
-  const time_t expiration_time = (slice.expiration_time == APP_GLANCE_SLICE_NO_EXPIRATION)
-                                     ? 0
-                                     : pbl_time_from_time32(slice.expiration_time, current_time);
-  if ((expiration_time != 0) && (expiration_time <= current_time)) {
+  if ((expiration_time != APP_GLANCE_SLICE_NO_EXPIRATION) && (expiration_time <= current_time)) {
     result |= APP_GLANCE_RESULT_EXPIRES_IN_THE_PAST;
   }
 
@@ -88,16 +87,28 @@ AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceS
     *slice_dest = (AppGlanceSliceInternal){
       .expiration_time = expiration_time,
       .type = AppGlanceSliceType_IconAndSubtitle,
-      .icon_and_subtitle.icon_resource_id = slice.layout.icon,
+      .icon_and_subtitle.icon_resource_id = layout->icon,
     };
     // We already checked that the provided template string fits, so use strcpy instead of strncpy
-    if (slice.layout.subtitle_template_string) {
-      strcpy(slice_dest->icon_and_subtitle.template_string, slice.layout.subtitle_template_string);
+    if (layout->subtitle_template_string) {
+      strcpy(slice_dest->icon_and_subtitle.template_string, layout->subtitle_template_string);
     }
     glance->num_slices++;
   }
 
   return result;
+}
+
+AppGlanceResult app_glance_add_slice(AppGlanceReloadSession *session, AppGlanceSlice slice) {
+  return prv_add_slice(session, &slice.layout, slice.expiration_time);
+}
+
+AppGlanceResult app_glance_add_slice_time32(AppGlanceReloadSession *session,
+                                            AppGlanceSlice32 slice) {
+  const time_t expiration_time = (slice.expiration_time == APP_GLANCE_SLICE_NO_EXPIRATION)
+                                     ? APP_GLANCE_SLICE_NO_EXPIRATION
+                                     : pbl_time_from_low32(slice.expiration_time, sys_get_time());
+  return prv_add_slice(session, &slice.layout, expiration_time);
 }
 
 void app_glance_reload(AppGlanceReloadCallback callback, void *context) {

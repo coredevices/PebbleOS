@@ -1,6 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "fake_rtc.h"
+
+#include <applib/app_time32.h>
 #include <applib/pbl_std/locale.h>
 #include <applib/pbl_std/pbl_std.h>
 #include <clar.h>
@@ -163,5 +166,86 @@ void test_pbl_std__verify_difftime_double_conversion(void) {
   cl_assert_equal_i(pbl_override_difftime(22222222, 1), 22222222 - 1);
   cl_assert_equal_i(pbl_override_difftime(0, 0), 0);
   cl_assert_equal_i(pbl_override_difftime(1, 0), 1);
+  if (sizeof(time_t) > 4) {
+    // Differences past what 64 signed bits hold
+    const time_t two_62 = (time_t)1 << 62;
+    cl_assert(pbl_override_difftime(two_62, -two_62) == 9223372036854775808.0);
+    cl_assert(pbl_override_difftime(-two_62, two_62) == -9223372036854775808.0);
+    cl_assert(pbl_override_difftime(INT64_MAX, INT64_MIN) > 1.8e19);
+    cl_assert(pbl_override_difftime(INT64_MIN, 0) == -9223372036854775808.0);
+  }
   cl_assert_equal_i(pbl_override_difftime(2147483647, 0), 2147483647);
+}
+
+// 2026-10-01T16:00:00Z and 2040-06-01T12:00:00Z
+static const time_t s_2026 = 1790870400;
+static const time_t s_2040 = 2222164800LL;
+
+void test_pbl_std__time_is_64_bit(void) {
+  fake_rtc_init(0, s_2040);
+  time_t t = 0;
+  cl_assert(pbl_override_time(&t) == s_2040);
+  cl_assert(t == s_2040);
+  cl_assert(pbl_override_time(nullptr) == s_2040);
+}
+
+void test_pbl_std__time32_writes_only_32_bits(void) {
+  fake_rtc_init(0, s_2040);
+  struct {
+    pbl_time32_t t;
+    uint32_t guard;
+  } out = {.guard = 0xdeadbeef};
+  const pbl_time32_t t = pbl_override_time_time32(&out.t);
+  cl_assert_equal_i(t, (int32_t)(uint32_t)s_2040);
+  cl_assert_equal_i(out.t, t);
+  cl_assert_equal_i(out.guard, 0xdeadbeef);
+  // Widening it again gives the real time back.
+  cl_assert(app_time_from_time32(t) == s_2040);
+}
+
+void test_pbl_std__difftime_64(void) {
+  cl_assert(pbl_override_difftime(s_2040, 0) == 2222164800.0);
+  cl_assert(pbl_override_difftime(0, s_2040) == -2222164800.0);
+  cl_assert(pbl_override_difftime(10, 30) == -20.0);
+  cl_assert(pbl_override_difftime(1LL << 40, 0) == 1099511627776.0);
+  cl_assert(pbl_override_difftime(3, 0) == 3.0);
+  cl_assert(pbl_override_difftime(5, 5) == 0.0);
+}
+
+void test_pbl_std__difftime_32_wraps_like_apps(void) {
+  cl_assert(pbl_override_difftime_time32(30, 10) == 20.0);
+  cl_assert(pbl_override_difftime_time32(10, 30) == -20.0);
+  // Across the 2038 wrap, an app's 32-bit subtraction still gives a small difference.
+  cl_assert(pbl_override_difftime_time32(INT32_MIN, INT32_MAX) == 1.0);
+}
+
+static struct pbl_tm prv_tm(int year, int mon, int mday, int hour) {
+  return (struct pbl_tm){
+    .tm_year = year - PBL_TM_YEAR_ORIGIN,
+    .tm_mon = mon,
+    .tm_mday = mday,
+    .tm_hour = hour,
+  };
+}
+
+void test_pbl_std__mktime_64_past_2038(void) {
+  fake_rtc_init(0, s_2026);
+  struct pbl_tm tm = prv_tm(2040, 5, 1, 12);
+  cl_assert(pbl_override_mktime(&tm) == s_2040);
+}
+
+void test_pbl_std__mktime_32(void) {
+  // In 2026, a 2040 time can't be told apart from 1904 by a 32-bit app.
+  fake_rtc_init(0, s_2026);
+  struct pbl_tm tm = prv_tm(2040, 5, 1, 12);
+  cl_assert_equal_i(pbl_override_mktime_time32(&tm), -1);
+  tm = prv_tm(2030, 0, 1, 0);
+  cl_assert_equal_i(pbl_override_mktime_time32(&tm), 1893456000);
+
+  // In 2040 it comes back wrapped, and widens to the right time.
+  fake_rtc_init(0, s_2040);
+  tm = prv_tm(2040, 5, 1, 12);
+  const pbl_time32_t t = pbl_override_mktime_time32(&tm);
+  cl_assert_equal_i(t, (int32_t)(uint32_t)s_2040);
+  cl_assert(app_time_from_time32(t) == s_2040);
 }

@@ -4,12 +4,9 @@
 # Kconfig-driven C library selection (see lib/c/Kconfig). Sets
 # PBL_LIBC_LINK_FLAGS and PBL_LIBC_LIBS for the firmware link, and adds
 # the flags that make the toolchain libc match what the firmware expects:
-# 32-bit time_t, the integer-only printf aliases, and the POSIX/BSD names
+# 64-bit time_t, the integer-only printf aliases, and the POSIX/BSD names
 # that -std=c23 would otherwise hide.
 
-# newlib defaults time_t to 64-bit; keep it 32-bit (long) to match the
-# firmware's RTC/storage and its %ld format strings.
-set(pbl_newlib_time_define -D_USE_LONG_TIME_T)
 # The firmware calls the integer-only printf names; map them onto the real
 # ones (the historical in-tree libc aliased them in its headers).
 set(pbl_sniprintf_defines -Dsniprintf=snprintf -Dvsniprintf=vsnprintf)
@@ -20,10 +17,10 @@ function(pbl_libc_add_flags)
   add_link_options(${ARGN})
 endfunction()
 
-# picolibc hardcodes a 64-bit __time_t. The firmware wants 32-bit, to match
-# its RTC/storage and %ld formats, so the same machine override is force
-# included into both the picolibc build and the firmware; that keeps the
-# ABI of the time_t-taking functions (mktime/localtime/...) consistent.
+# The firmware wants a 64-bit time_t. The PebbleOS SDK toolchain's picolibc
+# headers hardcode a 32-bit one, so a machine override is force included into
+# the firmware, and into picolibc when built from source. The firmware does not
+# use picolibc's time_t functions, which keep their 32-bit ABI when pre-built.
 function(pbl_picolibc_time_override out)
   set(header ${PROJECT_BINARY_DIR}/picolibc/picolibc_machine_override.h)
   file(WRITE ${header}
@@ -32,7 +29,7 @@ function(pbl_picolibc_time_override out)
 #define _PBL_PICOLIBC_MACHINE_OVERRIDE_H
 /* picolibc force-includes this into .S files too; C-only. */
 #ifndef __ASSEMBLER__
-typedef long __time_t;
+typedef long long __time_t;
 #define __machine_time_t_defined
 #endif
 #endif
@@ -119,8 +116,6 @@ skip_sanity_check = true
   if(NOT EXISTS ${specs})
     message(FATAL_ERROR "picolibc build did not produce picolibc.specs")
   endif()
-  # The firmware needs the same 32-bit time_t override picolibc built with.
-  pbl_libc_add_flags("SHELL:-include ${override}")
   set(${out} ${specs} PARENT_SCOPE)
 endfunction()
 
@@ -148,8 +143,7 @@ if(CONFIG_LIBC_NEWLIB OR CONFIG_LIBC_NEWLIB_NANO)
     message(STATUS "libc: newlib")
   endif()
   set(PBL_LIBC_LIBS m gcc)
-  pbl_libc_add_flags(${pbl_newlib_time_define} ${pbl_default_source_define}
-                     ${pbl_sniprintf_defines})
+  pbl_libc_add_flags(${pbl_default_source_define} ${pbl_sniprintf_defines})
 elseif(CONFIG_LIBC_PICOLIBC)
   set(pbl_picolibc_specs "")
   if(NOT CONFIG_LIBC_PICOLIBC_FROM_SOURCE)
@@ -168,6 +162,8 @@ elseif(CONFIG_LIBC_PICOLIBC)
   endif()
   set(PBL_LIBC_LINK_FLAGS -nostartfiles)
   set(PBL_LIBC_LIBS m gcc)
+  pbl_picolibc_time_override(pbl_picolibc_override)
+  pbl_libc_add_flags("SHELL:-include ${pbl_picolibc_override}")
   # picolibc.specs supplies both the headers (cpp -isystem) and the libc
   # link, so it belongs on the compile and the link line.
   pbl_libc_add_flags(-specs=${pbl_picolibc_specs} ${pbl_default_source_define}

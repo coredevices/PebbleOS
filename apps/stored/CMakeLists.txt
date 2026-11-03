@@ -39,8 +39,9 @@ set(sdk_flags
   -Os
 )
 if(sdk_version_major EQUAL 5 AND sdk_version_minor GREATER 19)
-  # Newer toolchains default time_t to 64-bit; apps expect 32-bit.
-  list(APPEND sdk_flags -D_TIME_H_ -Dtime_t=long)
+  # Stored apps target the firmware's own platform, never a frozen one, so
+  # they get the toolchain's 64-bit time_t.
+  list(APPEND sdk_flags -D_TIME_H_)
 endif()
 # Unlike third-party apps, in-tree apps get no warning exemptions.
 list(APPEND sdk_flags

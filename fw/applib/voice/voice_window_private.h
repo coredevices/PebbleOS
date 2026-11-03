@@ -64,7 +64,7 @@ typedef struct VoiceUiData {
   bool transcription_dialog_keep_alive_on_select;
   char *message;
   size_t message_len;
-  time_t timestamp;
+  uint32_t timestamp; // 32 bits, like the dictation event; keeps the 3.x heap size
   uint8_t error_count;
   bool last_session_successful;
   uint8_t num_sessions;

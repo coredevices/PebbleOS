@@ -1,8 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
+#include <string.h>
+
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/comm_session/session.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/services/timeline/item.h>
@@ -260,6 +265,46 @@ bool timeline_item_verify_layout_serialized(const uint8_t *val, int val_len) {
   LayoutId layout = hdr->common.layout;
   PBL_LOG_DBG("Number of attributes: %d for layout: %d", hdr->num_attributes, layout);
   return layout_verify(has_attribute, layout);
+}
+
+// The 32-bit layout is the current one without the high half of the timestamp.
+#define TIMESTAMP_OFFSET offsetof(SerializedTimelineItemHeader, common.timestamp)
+static_assert(sizeof(((CommonTimelineItemHeader *)0)->timestamp) == 8, "64-bit timestamp");
+
+uint8_t *timeline_item_serialized_widen(const uint8_t *val, size_t val_len, size_t *out_len) {
+  if (val_len < TIMELINE_ITEM_HEADER_TIME32_SIZE) {
+    return nullptr;
+  }
+  *out_len = val_len + 4;
+  uint8_t *out = pbl_malloc(*out_len);
+  if (!out) {
+    return nullptr;
+  }
+  uint32_t timestamp32;
+  memcpy(&timestamp32, val + TIMESTAMP_OFFSET, sizeof(timestamp32));
+  const int64_t timestamp = timestamp32;
+
+  memcpy(out, val, TIMESTAMP_OFFSET);
+  memcpy(out + TIMESTAMP_OFFSET, &timestamp, sizeof(timestamp));
+  memcpy(out + TIMESTAMP_OFFSET + sizeof(timestamp), val + TIMESTAMP_OFFSET + sizeof(timestamp32),
+         val_len - TIMESTAMP_OFFSET - sizeof(timestamp32));
+  return out;
+}
+
+size_t timeline_item_serialized_narrow(uint8_t *val, size_t val_len) {
+  PBL_ASSERTN(val_len >= sizeof(SerializedTimelineItemHeader));
+  int64_t timestamp;
+  memcpy(&timestamp, val + TIMESTAMP_OFFSET, sizeof(timestamp));
+  const uint32_t timestamp32 = (uint32_t)timestamp;
+  memcpy(val + TIMESTAMP_OFFSET, &timestamp32, sizeof(timestamp32));
+  memmove(val + TIMESTAMP_OFFSET + sizeof(timestamp32), val + TIMESTAMP_OFFSET + sizeof(timestamp),
+          val_len - TIMESTAMP_OFFSET - sizeof(timestamp));
+  return val_len - 4;
+}
+
+bool timeline_item_phone_has_time64(void) {
+  CommSession *session = comm_session_get_system_session();
+  return session && comm_session_has_capability(session, CommSessionTime64Support);
 }
 
 bool timeline_item_action_is_dismiss(const TimelineItemAction *action) {

@@ -72,6 +72,26 @@ static inline uint32_t pbl_cpu_to_be32(uint32_t v) {
 }
 
 /**
+ * @brief Convert a big-endian 64-bit value to CPU order.
+ *
+ * @param v Big-endian value.
+ * @return Value in CPU order.
+ */
+static inline uint64_t pbl_be64_to_cpu(uint64_t v) {
+  return __builtin_bswap64(v);
+}
+
+/**
+ * @brief Convert a 64-bit value in CPU order to big-endian.
+ *
+ * @param v Value in CPU order.
+ * @return Big-endian value.
+ */
+static inline uint64_t pbl_cpu_to_be64(uint64_t v) {
+  return __builtin_bswap64(v);
+}
+
+/**
  * @brief Convert a little-endian 16-bit value to CPU order.
  *
  * @param v Little-endian value.

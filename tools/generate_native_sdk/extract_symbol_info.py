@@ -36,7 +36,14 @@ def extract_exported_functions(node, functions=(), types=(), defines=()):
             # Update the exports with comments / definition info from both the
             # 'implName' and 'name'. Keep whatever is longer and does not start
             # with @internal (meaning the whole docstring is internal).
-            if spelling == e.name or (impl_name and spelling == impl_name):
+            declared_as = getattr(e, "declared_as", None)
+            if declared_as and spelling == declared_as:
+                e.declared_definition = parse_c_decl.get_string_from_file(node.extent)
+            if (
+                spelling == e.name
+                or (impl_name and spelling == impl_name)
+                or (declared_as and spelling == declared_as)
+            ):
                 comment = parse_c_decl.get_comment_string_for_decl(node)
                 if (
                     comment is not None

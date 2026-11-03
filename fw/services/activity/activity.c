@@ -658,7 +658,7 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
 // We use PBL_NOINLINE to reduce the stack requirements during the minute handler
 static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
   bool need_history_update_event;
-  uint16_t cur_day_index;
+  uint32_t cur_day_index;
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
     cur_day_index = time_util_get_day(utc_sec);
@@ -1248,17 +1248,16 @@ bool activity_init(void) {
   s_activity_state.resting_calories = activity_private_compute_resting_calories(minute_of_day);
 
   key = ActivitySettingsKeyLastSleepActivityUTC;
-  settings_file_get(file, &key, sizeof(key), &s_activity_state.logged_sleep_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_sleep_activity_exit_at_utc));
+  settings_file_get_time(file, &key, sizeof(key),
+                         &s_activity_state.logged_sleep_activity_exit_at_utc);
 
   key = ActivitySettingsKeyLastRestfulSleepActivityUTC;
-  settings_file_get(file, &key, sizeof(key),
-                    &s_activity_state.logged_restful_sleep_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_restful_sleep_activity_exit_at_utc));
+  settings_file_get_time(file, &key, sizeof(key),
+                         &s_activity_state.logged_restful_sleep_activity_exit_at_utc);
 
   key = ActivitySettingsKeyLastStepActivityUTC;
-  settings_file_get(file, &key, sizeof(key), &s_activity_state.logged_step_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_step_activity_exit_at_utc));
+  settings_file_get_time(file, &key, sizeof(key),
+                         &s_activity_state.logged_step_activity_exit_at_utc);
 
   // Clean up
   activity_private_settings_close(file);

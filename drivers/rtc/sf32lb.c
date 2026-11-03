@@ -216,7 +216,12 @@ static void prv_rtc_set_time_no_cal_reset(time_t time) {
   struct pbl_tm t;
   pbl_gmtime_r(&time, &t);
 
-  PBL_ASSERTN(!rtc_sanitize_struct_tm(&t));
+  // The hardware only holds years 2000 to RTC_MAX_YEAR
+  const int year = t.tm_year + PBL_TM_YEAR_ORIGIN;
+  if (rtc_sanitize_struct_tm(&t)) {
+    PBL_LOG_WRN("Year %d out of RTC range, clamped", year);
+    time = pbl_mktime(&t);
+  }
 
   RTC_TimeTypeDef rtc_time_struct = {.Hours = t.tm_hour, .Minutes = t.tm_min, .Seconds = t.tm_sec};
 
@@ -316,16 +321,15 @@ bool rtc_alarm_is_initialized(void) {
 }
 
 bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
-  // These values come from time_t (which suffers from the 2038 problem) and our hardware which
-  // only stores a 2 digit year, so we only represent values after 2000.
+  // Our hardware only stores a 2 digit year, so we only represent values after 2000.
 
   // Remember tm_year is years since 1900.
   if (t->tm_year < 100) {
     // Bump it up to the year 2000 to work with our hardware.
     t->tm_year = 100;
     return true;
-  } else if (t->tm_year > 137) {
-    t->tm_year = 137;
+  } else if (t->tm_year > RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN) {
+    t->tm_year = RTC_MAX_YEAR - PBL_TM_YEAR_ORIGIN;
     return true;
   }
   return false;
@@ -369,8 +373,9 @@ typedef struct PBL_PACKED {
   uint8_t dst_id;               // Daylight savings time zone index
   int16_t timezone_id;          // Olson index of timezone
   int32_t tm_gmtoff;            // GMT time offset
-  time_t dst_start;             // Timestamp of start of DST period (0 if none)
-  time_t dst_end;               // Timestamp of end of DST period (0 if none)
+  // DST times stay 32 bits so earlier firmware keeps reading this layout. This RTC stops at 2099.
+  uint32_t dst_start; // Timestamp of start of DST period (0 if none)
+  uint32_t dst_end;   // Timestamp of end of DST period (0 if none)
 } TzinfoFlashStorage;
 
 #define TZINFO_VERSION 1
@@ -385,8 +390,8 @@ void rtc_set_timezone(TimezoneInfo *tzinfo) {
     .dst_id = tzinfo->dst_id,
     .timezone_id = tzinfo->timezone_id,
     .tm_gmtoff = tzinfo->tm_gmtoff,
-    .dst_start = tzinfo->dst_start,
-    .dst_end = tzinfo->dst_end,
+    .dst_start = (uint32_t)tzinfo->dst_start,
+    .dst_end = (uint32_t)tzinfo->dst_end,
   };
   memcpy(storage.tm_zone, tzinfo->tm_zone, PBL_TZ_LEN - 1);
 

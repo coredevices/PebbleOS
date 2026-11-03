@@ -216,7 +216,7 @@ typedef struct PBL_PACKED {
    * Time at which the item occurs, in seconds since the epoch. UTC, except for all-day and
    * floating items in serialized headers, which use local time.
    */
-  int32_t timestamp;
+  int64_t timestamp;
   /**
    * Duration in minutes. A pin stays in the NOW section of the timeline until timestamp plus
    * duration.
@@ -465,6 +465,44 @@ void timeline_item_free_allocated_buffer(TimelineItem *item);
  * @return true if valid.
  */
 bool timeline_item_verify_layout_serialized(const uint8_t *val, int val_len);
+
+/**
+ * @brief Size of a serialized header in the 32-bit layout.
+ *
+ * Phones without @c CommSessionTime64Support, and earlier firmware, use a header whose timestamp
+ * is 32 bits (unsigned, good until 2106). It is otherwise the same as
+ * @ref SerializedTimelineItemHeader.
+ */
+#define TIMELINE_ITEM_HEADER_TIME32_SIZE (sizeof(SerializedTimelineItemHeader) - 4)
+
+/**
+ * @brief Widen a serialized item from the 32-bit layout.
+ *
+ * @param val Serialized item in the 32-bit layout.
+ * @param val_len Length of @p val in bytes, at least @ref TIMELINE_ITEM_HEADER_TIME32_SIZE.
+ * @param[out] out_len Length of the result.
+ * @return The item in the current layout, allocated with pbl_malloc(), or NULL.
+ */
+uint8_t *timeline_item_serialized_widen(const uint8_t *val, size_t val_len, size_t *out_len);
+
+/**
+ * @brief Narrow a serialized item in place to the 32-bit layout.
+ *
+ * @param[in,out] val Serialized item in the current layout.
+ * @param val_len Length of @p val in bytes, at least the size of the current header.
+ * @return The new length.
+ */
+size_t timeline_item_serialized_narrow(uint8_t *val, size_t val_len);
+
+/**
+ * @brief Whether the connected phone exchanges items in the current, 64-bit layout.
+ *
+ * False until the phone's capabilities arrive, so phones send items only after answering the
+ * PhoneVersion request (see docs/reference/blob-db.md).
+ *
+ * @return true if the phone announced @c CommSessionTime64Support.
+ */
+bool timeline_item_phone_has_time64(void);
 
 /**
  * @brief Find an action by id.

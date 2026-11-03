@@ -303,4 +303,16 @@ int pbl_shell_strtol(const char *str, long *out);
  */
 int pbl_shell_strtoul(const char *str, unsigned long *out);
 
+/**
+ * @brief Parse an argument as a 64-bit signed integer.
+ *
+ * As pbl_shell_strtol(), for values such as times that do not fit a @c long.
+ *
+ * @param str Argument.
+ * @param[out] out Value.
+ * @retval 0 Success.
+ * @retval -EINVAL @p str is empty, not a number or out of range.
+ */
+int pbl_shell_strtoll(const char *str, long long *out);
+
 /** @} */

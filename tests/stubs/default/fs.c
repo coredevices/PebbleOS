@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 
@@ -14,4 +16,8 @@ PBL_WEAK off_t pbl_fs_seek(struct pbl_fs_file *file, off_t offset, int whence) {
 
 PBL_WEAK ssize_t pbl_fs_read(struct pbl_fs_file *file, void *buf, size_t len) {
   return 0;
+}
+
+PBL_WEAK int pbl_fs_stat(const char *path, struct pbl_fs_dirent *entry) {
+  return -ENOENT;
 }

@@ -60,13 +60,17 @@ typedef void (*TimelineItemStorageChildDeleteCallback)(const Uuid *id);
 /**
  * @brief Initialize a storage and open its settings file.
  *
+ * Items stored by earlier firmware in @p legacy_filename, with 32-bit timestamps, are moved into
+ * @p filename, which earlier firmware does not read.
+ *
  * @param[out] storage Storage.
  * @param filename Settings file name; must outlive the storage.
+ * @param legacy_filename Name of the file earlier firmware stored the items in.
  * @param max_size Maximum file size in bytes.
  * @param max_age Age in seconds past which items are rejected or skipped.
  */
-void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, uint32_t max_size,
-                                uint32_t max_age);
+void timeline_item_storage_init(TimelineItemStorage *storage, char *filename,
+                                const char *legacy_filename, uint32_t max_size, uint32_t max_age);
 
 /**
  * @brief Close the settings file of a storage.
@@ -161,6 +165,30 @@ status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage, con
  * @return Length in bytes, 0 if not found, or a negative error code.
  */
 int timeline_item_storage_get_len(TimelineItemStorage *storage, const uint8_t *key, int key_len);
+
+/**
+ * @brief Insert an item received from the phone.
+ *
+ * As timeline_item_storage_insert(), widening an item in the 32-bit layout unless the phone
+ * announced 64-bit times.
+ */
+status_t timeline_item_storage_insert_from_phone(TimelineItemStorage *storage, const uint8_t *key,
+                                                 int key_len, const uint8_t *val, int val_len,
+                                                 bool mark_as_synced);
+
+/**
+ * @brief Length of an item as sent to the phone, in the 32-bit layout unless the phone announced
+ * 64-bit times.
+ */
+int timeline_item_storage_get_len_for_phone(TimelineItemStorage *storage, const uint8_t *key,
+                                            int key_len);
+
+/**
+ * @brief Read an item to send to the phone, as timeline_item_storage_read(), in the layout
+ * timeline_item_storage_get_len_for_phone() gives the length of.
+ */
+status_t timeline_item_storage_read_for_phone(TimelineItemStorage *storage, const uint8_t *key,
+                                              int key_len, uint8_t *val_out, int val_len);
 
 /**
  * @brief Insert or replace a serialized item.

@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
@@ -498,7 +499,7 @@ static void prv_log_activities(time_t now_utc) {
   // List of event classes and info on each
   typedef struct {
     ActivitySettingsKey key; // settings key used to store last UTC time for this activity class
-    uint32_t *exit_utc;      // pointer to last UTC time in our globals
+    time_t *exit_utc;        // pointer to last UTC time in our globals
     bool modified;           // true if we need to update it.
   } ActivityClassParams;
 
@@ -517,7 +518,7 @@ static void prv_log_activities(time_t now_utc) {
   // would mark every new session as already logged. Reset them; the phone dedups re-sent ones.
   for (int i = 0; i < ActivityClassCount; i++) {
     ActivityClassParams *params = &class_settings[i];
-    if ((time_t)*params->exit_utc > now_utc) {
+    if (*params->exit_utc > now_utc) {
       PBL_LOG_WRN("Last logged activity exit time in the future, resetting");
       *params->exit_utc = 0;
       params->modified = true;
@@ -561,7 +562,7 @@ static void prv_log_activities(time_t now_utc) {
     PBL_ASSERTN(params);
 
     // If this is an event we already logged, or it's still ongoing, don't log it
-    if (session->ongoing || (session_exit_utc <= (time_t)*params->exit_utc)) {
+    if (session->ongoing || (session_exit_utc <= *params->exit_utc)) {
       continue;
     }
 
@@ -588,8 +589,8 @@ static void prv_log_activities(time_t now_utc) {
     if (file) {
       for (int i = 0; i < ActivityClassCount; i++) {
         ActivityClassParams *params = &class_settings[i];
-        status_t result = settings_file_set(file, &params->key, sizeof(params->key),
-                                            params->exit_utc, sizeof(*params->exit_utc));
+        status_t result =
+            settings_file_set_time(file, &params->key, sizeof(params->key), *params->exit_utc);
         if (result != S_SUCCESS) {
           PBL_LOG_ERR("Error saving last event time");
         }
@@ -598,6 +599,41 @@ static void prv_log_activities(time_t now_utc) {
     }
     pbl_mutex_unlock(&state->mutex);
   }
+}
+
+// ------------------------------------------------------------------------------------------------
+// ActivitySession as stored by earlier firmware, with a 32-bit start time
+typedef struct PBL_PACKED {
+  int32_t start_utc;
+  uint16_t length_min;
+  uint8_t type;
+  uint8_t flags;
+  ActivitySessionDataStepping step_data;
+} ActivitySessionV1;
+static_assert(sizeof(ActivitySessionV1) == 16, "ActivitySessionV1 layout");
+static_assert(sizeof(ActivitySession) == sizeof(ActivitySessionV1) + 4, "ActivitySession layout");
+
+static status_t prv_load_v1_sessions(SettingsFile *file, ActivitySettingsKey key,
+                                     ActivitySession *sessions, size_t count) {
+  const size_t len = sizeof(ActivitySessionV1) * count;
+  ActivitySessionV1 *v1 = pbl_malloc(len);
+  if (!v1) {
+    return E_OUT_OF_MEMORY;
+  }
+  const status_t result = settings_file_get(file, &key, sizeof(key), v1, len);
+  if (result == S_SUCCESS) {
+    for (size_t i = 0; i < count; i++) {
+      sessions[i] = (ActivitySession){
+        .start_utc = v1[i].start_utc ? (uint32_t)v1[i].start_utc : 0,
+        .length_min = v1[i].length_min,
+        .type = v1[i].type,
+        .flags = v1[i].flags,
+        .step_data = v1[i].step_data,
+      };
+    }
+  }
+  pbl_free(v1);
+  return result;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -613,15 +649,19 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
     PBL_LOG_DBG("No stored activity sessions");
     return;
   }
-  if (stored_len != sizeof(state->activity_sessions)) {
+  status_t result;
+  if (stored_len == sizeof(ActivitySessionV1) * ARRAY_LENGTH(state->activity_sessions)) {
+    // Stored by earlier firmware, with 32-bit start times
+    result = prv_load_v1_sessions(file, key, state->activity_sessions,
+                                  ARRAY_LENGTH(state->activity_sessions));
+  } else if (stored_len == sizeof(state->activity_sessions)) {
+    result = settings_file_get(file, &key, sizeof(key), state->activity_sessions,
+                               sizeof(state->activity_sessions));
+  } else {
     PBL_LOG_WRN("Stored activities incompatible: len %d != %d", stored_len,
                 (int)sizeof(state->activity_sessions));
     return;
   }
-
-  // Read in the stored activities
-  status_t result = settings_file_get(file, &key, sizeof(key), state->activity_sessions,
-                                      sizeof(state->activity_sessions));
   if (result != S_SUCCESS) {
     return;
   }

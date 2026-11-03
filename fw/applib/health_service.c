@@ -914,10 +914,8 @@ static HealthValue prv_aggregate_averaged(HealthMetric metric, time_t time_start
                                           HealthServiceTimeScope scope);
 
 HealthServiceAccessibilityMask health_service_metric_accessible(HealthMetric metric,
-                                                                pbl_time32_t time_start32,
-                                                                pbl_time32_t time_end32) {
-  const time_t time_start = app_time_from_time32(time_start32);
-  const time_t time_end = app_time_from_time32(time_end32);
+                                                                time_t time_start,
+                                                                time_t time_end) {
   if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
@@ -927,22 +925,19 @@ HealthServiceAccessibilityMask health_service_metric_accessible(HealthMetric met
 
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
-    HealthMetric metric, pbl_time32_t time_start, pbl_time32_t time_end,
-    HealthServiceTimeScope scope) {
+    HealthMetric metric, time_t time_start, time_t time_end, HealthServiceTimeScope scope) {
   if (!sys_activity_is_initialized()) {
     return HealthServiceAccessibilityMaskNotAvailable;
   }
-  return prv_metric_aggregate_averaged_accessible(metric, app_time_from_time32(time_start),
-                                                  app_time_from_time32(time_end),
+  return prv_metric_aggregate_averaged_accessible(metric, time_start, time_end,
                                                   prv_default_aggregation(metric), scope);
 }
 
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessible(
-    HealthMetric metric, pbl_time32_t time_start, pbl_time32_t time_end,
-    HealthAggregation aggregation, HealthServiceTimeScope scope) {
-  return prv_metric_aggregate_averaged_accessible(
-      metric, app_time_from_time32(time_start), app_time_from_time32(time_end), aggregation, scope);
+    HealthMetric metric, time_t time_start, time_t time_end, HealthAggregation aggregation,
+    HealthServiceTimeScope scope) {
+  return prv_metric_aggregate_averaged_accessible(metric, time_start, time_end, aggregation, scope);
 }
 
 static HealthServiceAccessibilityMask prv_metric_aggregate_averaged_accessible(
@@ -992,25 +987,22 @@ HealthValue health_service_sum_today(HealthMetric metric) {
 }
 
 // ----------------------------------------------------------------------------------------------
-HealthValue health_service_sum(HealthMetric metric, pbl_time32_t time_start,
-                               pbl_time32_t time_end) {
+HealthValue health_service_sum(HealthMetric metric, time_t time_start, time_t time_end) {
   if (!sys_activity_is_initialized()) {
     return 0;
   }
-  return prv_aggregate_averaged(metric, app_time_from_time32(time_start),
-                                app_time_from_time32(time_end), HealthAggregationSum,
+  return prv_aggregate_averaged(metric, time_start, time_end, HealthAggregationSum,
                                 HealthServiceTimeScopeOnce);
 }
 
 // ----------------------------------------------------------------------------------------------
 // Compute the sum of a metric, but averaged over multiple days.
-HealthValue health_service_sum_averaged(HealthMetric metric, pbl_time32_t time_start,
-                                        pbl_time32_t time_end, HealthServiceTimeScope scope) {
+HealthValue health_service_sum_averaged(HealthMetric metric, time_t time_start, time_t time_end,
+                                        HealthServiceTimeScope scope) {
   if (!sys_activity_is_initialized()) {
     return 0;
   }
-  return prv_aggregate_averaged(metric, app_time_from_time32(time_start),
-                                app_time_from_time32(time_end), HealthAggregationSum, scope);
+  return prv_aggregate_averaged(metric, time_start, time_end, HealthAggregationSum, scope);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1040,7 +1032,9 @@ static HealthValue prv_hr_aggregate_averaged(HealthServiceState *state, HealthMe
       // metric HealthMetricHeartRateRawBPM if the user wants the most recent reading.
       HealthValue value;
       sys_activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1, &value);
-      const time_t hr_median_age = now_utc - value;
+      // The metric API carries times as 32 bits
+      const time_t hr_median_age =
+          (value == 0) ? now_utc : now_utc - pbl_time_from_low32(value, now_utc);
       if (hr_median_age >= HS_MAX_AGE_HR_SAMPLE) {
         return 0;
       }
@@ -1066,11 +1060,10 @@ static HealthValue prv_hr_aggregate_averaged(HealthServiceState *state, HealthMe
 }
 
 // ----------------------------------------------------------------------------------------------
-HealthValue health_service_aggregate_averaged(HealthMetric metric, pbl_time32_t time_start,
-                                              pbl_time32_t time_end, HealthAggregation aggregation,
+HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_start,
+                                              time_t time_end, HealthAggregation aggregation,
                                               HealthServiceTimeScope scope) {
-  return prv_aggregate_averaged(metric, app_time_from_time32(time_start),
-                                app_time_from_time32(time_end), aggregation, scope);
+  return prv_aggregate_averaged(metric, time_start, time_end, aggregation, scope);
 }
 
 static HealthValue prv_aggregate_averaged(HealthMetric metric, time_t time_start, time_t time_end,
@@ -1335,38 +1328,35 @@ uint16_t health_service_get_heart_rate_sample_period_expiration_sec(void) {
 
 // ----------------------------------------------------------------------------------------------
 uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32_t max_records,
-                                           pbl_time32_t *time_start32, pbl_time32_t *time_end32) {
+                                           time_t *time_start, time_t *time_end) {
   if (!sys_activity_is_initialized()) {
     return 0;
   }
-  if (!minute_data || max_records == 0 || !time_start32) {
+  if (!minute_data || max_records == 0 || !time_start) {
     return 0;
   }
-  time_t time_start = app_time_from_time32(*time_start32);
-  const time_t time_end = time_end32 ? app_time_from_time32(*time_end32) : 0;
-  if (time_end32 && time_end < time_start) {
+  if (time_end && *time_end < *time_start) {
     return 0;
   }
 
   uint32_t num_records = max_records;
 
   // only query for as many records as necessary for the given time span
-  if (time_end32) {
-    const time_t lower_bounded_start = (time_start / PBL_SEC_PER_MIN) * PBL_SEC_PER_MIN;
-    const time_t upper_bounded_end = time_end + PBL_SEC_PER_MIN - 1;
+  if (time_end) {
+    const time_t lower_bounded_start = (*time_start / PBL_SEC_PER_MIN) * PBL_SEC_PER_MIN;
+    const time_t upper_bounded_end = *time_end + PBL_SEC_PER_MIN - 1;
     const uint32_t needed_partial_minutes =
         (upper_bounded_end - lower_bounded_start) / PBL_SEC_PER_MIN;
     num_records = MIN(num_records, needed_partial_minutes);
   }
 
-  const bool success = sys_activity_get_minute_history(minute_data, &num_records, &time_start);
+  const bool success = sys_activity_get_minute_history(minute_data, &num_records, time_start);
   if (!success) {
     return 0;
   }
 
-  *time_start32 = pbl_time_to_time32(time_start);
-  if (time_end32) {
-    *time_end32 = pbl_time_to_time32(time_start + PBL_SEC_PER_MIN * num_records);
+  if (time_end) {
+    *time_end = *time_start + PBL_SEC_PER_MIN * num_records;
   }
   return num_records;
 }
@@ -1412,20 +1402,20 @@ HealthActivityMask health_service_peek_current_activities(void) {
 // to miss sessions.
 #define NUM_EVALUATED_SLEEP_SESSIONS 16
 
-void health_service_activities_iterate(HealthActivityMask activity_mask, pbl_time32_t time_start32,
-                                       pbl_time32_t time_end32, HealthIterationDirection direction,
-                                       HealthActivityIteratorCB callback, void *context) {
+// Calls exactly one of callback and callback32, whichever is set.
+static void prv_activities_iterate(HealthActivityMask activity_mask, time_t time_start,
+                                   time_t time_end, HealthIterationDirection direction,
+                                   HealthActivityIteratorCB callback,
+                                   HealthActivityIteratorCB32 callback32, void *context) {
   if (!sys_activity_is_initialized()) {
     return;
   }
-  const time_t time_start = app_time_from_time32(time_start32);
-  const time_t time_end = app_time_from_time32(time_end32);
   HealthServiceState *state = prv_get_state(true);
   if (!state->cache) {
     return;
   }
 
-  if (callback == nullptr || activity_mask == HealthActivityNone) {
+  if ((callback == nullptr && callback32 == nullptr) || activity_mask == HealthActivityNone) {
     return;
   }
 
@@ -1464,14 +1454,28 @@ void health_service_activities_iterate(HealthActivityMask activity_mask, pbl_tim
           pbl_panic();
           break;
       }
-      const time_t session_end = session->start_utc + (session->length_min * PBL_SEC_PER_MIN);
-      if (!callback(session_activity, pbl_time_to_time32(session->start_utc),
-                    pbl_time_to_time32(session_end), context)) {
+      const time_t session_start = session->start_utc;
+      const time_t session_end = session_start + (session->length_min * PBL_SEC_PER_MIN);
+      const bool keep_going = callback
+                                  ? callback(session_activity, session_start, session_end, context)
+                                  : callback32(session_activity, pbl_time_to_time32(session_start),
+                                               pbl_time_to_time32(session_end), context);
+      if (!keep_going) {
         // clients can interrupt the iteration at any time
         break;
       }
     }
   }
+}
+
+void health_service_activities_iterate(HealthActivityMask activity_mask, time_t time_start,
+                                       time_t time_end, HealthIterationDirection direction,
+                                       HealthActivityIteratorCB callback, void *context) {
+  if (callback == nullptr) {
+    return;
+  }
+  prv_activities_iterate(activity_mask, time_start, time_end, direction, callback, nullptr,
+                         context);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1484,9 +1488,7 @@ bool health_service_private_get_yesterdays_sleep_activity(HealthValue *enter_sec
 
 // ----------------------------------------------------------------------------------------------
 HealthServiceAccessibilityMask health_service_any_activity_accessible(
-    HealthActivityMask activity_mask, pbl_time32_t start_time32, pbl_time32_t end_time32) {
-  const time_t start_time = app_time_from_time32(start_time32);
-  const time_t end_time = app_time_from_time32(end_time32);
+    HealthActivityMask activity_mask, time_t start_time, time_t end_time) {
   // TODO: reply with HealthServiceAccessibilityMaskNoPermission once permissions exist
 
   if (activity_mask == HealthActivityNone) {
@@ -1530,4 +1532,85 @@ void health_service_state_init(HealthServiceState *state) {
 // ----------------------------------------------------------------------------------------------
 void health_service_state_deinit(HealthServiceState *state) {
   prv_health_service_deinit_cache(state);
+}
+
+// ----------------------------------------------------------------------------------------------
+// Versions for apps built with a 32-bit time_t
+
+HealthValue health_service_sum_time32(HealthMetric metric, pbl_time32_t time_start,
+                                      pbl_time32_t time_end) {
+  return health_service_sum(metric, app_time_from_time32(time_start),
+                            app_time_from_time32(time_end));
+}
+
+HealthValue health_service_sum_averaged_time32(HealthMetric metric, pbl_time32_t time_start,
+                                               pbl_time32_t time_end,
+                                               HealthServiceTimeScope scope) {
+  return health_service_sum_averaged(metric, app_time_from_time32(time_start),
+                                     app_time_from_time32(time_end), scope);
+}
+
+HealthValue health_service_aggregate_averaged_time32(HealthMetric metric, pbl_time32_t time_start,
+                                                     pbl_time32_t time_end,
+                                                     HealthAggregation aggregation,
+                                                     HealthServiceTimeScope scope) {
+  return health_service_aggregate_averaged(metric, app_time_from_time32(time_start),
+                                           app_time_from_time32(time_end), aggregation, scope);
+}
+
+void health_service_activities_iterate_time32(HealthActivityMask activity_mask,
+                                              pbl_time32_t time_start, pbl_time32_t time_end,
+                                              HealthIterationDirection direction,
+                                              HealthActivityIteratorCB32 callback, void *context) {
+  if (callback == nullptr) {
+    return;
+  }
+  prv_activities_iterate(activity_mask, app_time_from_time32(time_start),
+                         app_time_from_time32(time_end), direction, nullptr, callback, context);
+}
+
+HealthServiceAccessibilityMask health_service_metric_accessible_time32(HealthMetric metric,
+                                                                       pbl_time32_t time_start,
+                                                                       pbl_time32_t time_end) {
+  return health_service_metric_accessible(metric, app_time_from_time32(time_start),
+                                          app_time_from_time32(time_end));
+}
+
+HealthServiceAccessibilityMask health_service_metric_averaged_accessible_time32(
+    HealthMetric metric, pbl_time32_t time_start, pbl_time32_t time_end,
+    HealthServiceTimeScope scope) {
+  return health_service_metric_averaged_accessible(metric, app_time_from_time32(time_start),
+                                                   app_time_from_time32(time_end), scope);
+}
+
+HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessible_time32(
+    HealthMetric metric, pbl_time32_t time_start, pbl_time32_t time_end,
+    HealthAggregation aggregation, HealthServiceTimeScope scope) {
+  return health_service_metric_aggregate_averaged_accessible(
+      metric, app_time_from_time32(time_start), app_time_from_time32(time_end), aggregation, scope);
+}
+
+HealthServiceAccessibilityMask health_service_any_activity_accessible_time32(
+    HealthActivityMask activity_mask, pbl_time32_t time_start, pbl_time32_t time_end) {
+  return health_service_any_activity_accessible(activity_mask, app_time_from_time32(time_start),
+                                                app_time_from_time32(time_end));
+}
+
+uint32_t health_service_get_minute_history_time32(HealthMinuteData *minute_data,
+                                                  uint32_t max_records, pbl_time32_t *time_start,
+                                                  pbl_time32_t *time_end) {
+  if (!time_start) {
+    return 0;
+  }
+  time_t start = app_time_from_time32(*time_start);
+  time_t end = time_end ? app_time_from_time32(*time_end) : 0;
+  const uint32_t num_records = health_service_get_minute_history(minute_data, max_records, &start,
+                                                                 time_end ? &end : nullptr);
+  // Write back like the 64-bit call, also when no records came back. Untouched times round trip
+  // unchanged.
+  *time_start = pbl_time_to_time32(start);
+  if (time_end) {
+    *time_end = pbl_time_to_time32(end);
+  }
+  return num_records;
 }

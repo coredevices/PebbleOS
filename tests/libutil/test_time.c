@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <limits.h>
+
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
@@ -97,6 +99,22 @@ void test_time__breakdown(void) {
   prv_assert_breakdown(-1, 1969, 11, 31, 23, 59, 59, PBL_WEDNESDAY, 364);
 }
 
+void test_time__breakdown_far_times(void) {
+  if (sizeof(time_t) <= 4) {
+    return;
+  }
+  prv_assert_breakdown((time_t)253402300799LL, 9999, 11, 31, 23, 59, 59, PBL_FRIDAY, 364);
+  prv_assert_breakdown((time_t)-11676096000LL, 1600, 0, 1, 0, 0, 0, PBL_SATURDAY, 0);
+  prv_assert_breakdown((time_t)-62135596800LL, 1, 0, 1, 0, 0, 0, PBL_MONDAY, 0);
+
+  // Years an int can't hold are clamped, without walking there year by year
+  struct pbl_tm tm = {};
+  pbl_time_breakdown((time_t)INT64_MAX, &tm);
+  cl_assert_equal_i(tm.tm_year, INT_MAX);
+  pbl_time_breakdown((time_t)INT64_MIN, &tm);
+  cl_assert_equal_i(tm.tm_year, INT_MIN);
+}
+
 void test_time__breakdown_keeps_zone_fields(void) {
   struct pbl_tm tm = {.tm_isdst = 1, .tm_gmtoff = 3600, .tm_zone = "CET"};
   pbl_time_breakdown(0, &tm);
@@ -135,4 +153,20 @@ void test_time__time32_closest_after_2038(void) {
   // Far past 2106.
   const time_t later = (time_t)5000000000LL;
   cl_assert(pbl_time_from_time32(pbl_time_to_time32(later - 3600), later) == later - 3600);
+}
+
+void test_time__low32_closest_before_2038(void) {
+  if (sizeof(time_t) < 8) {
+    return;
+  }
+  const time_t now = (time_t)INT32_MAX - 86400;
+  // A reminder a month ahead, past 2038, is not sign extended into 1901.
+  const time_t ahead = now + 31 * 86400;
+  cl_assert(pbl_time_from_low32((uint32_t)ahead, now) == ahead);
+  // Recent past and now.
+  cl_assert(pbl_time_from_low32((uint32_t)(now - 3600), now) == now - 3600);
+  cl_assert(pbl_time_from_low32((uint32_t)now, now) == now);
+  // Same as pbl_time_from_time32() after 2038.
+  const time_t later = (time_t)5000000000LL;
+  cl_assert(pbl_time_from_low32((uint32_t)(later + 60), later) == later + 60);
 }

@@ -454,3 +454,26 @@ void test_wakeup__dispatch_leaves_stationary(void) {
   cl_assert_equal_i(s_stationary_wake_up_count, 1);
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
 }
+
+void test_wakeup__after_2038(void) {
+  // 2040-06-01T12:00:00Z
+  const time_t start_time = 2222164800LL;
+  rtc_set_time(start_time);
+  sys_wakeup_cancel_all_for_app();
+
+  const time_t event = start_time + WAKEUP_EVENT_WINDOW * 5;
+  const WakeupId wakeup_id = sys_wakeup_schedule(event, 0, false);
+  cl_assert(wakeup_id > 0);
+  cl_assert(sys_wakeup_query(wakeup_id) == event);
+  cl_assert_equal_i(wakeup_id, wakeup_get_next_scheduled());
+
+  rtc_set_time(event);
+  wakeup_enable(false);
+  wakeup_enable(true);
+  stub_new_timer_fire(wakeup_get_current());
+  wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+
+  // Past what an entry can hold
+  cl_assert_equal_i(sys_wakeup_schedule((time_t)UINT32_MAX + 100, 0, false), E_INVALID_ARGUMENT);
+}

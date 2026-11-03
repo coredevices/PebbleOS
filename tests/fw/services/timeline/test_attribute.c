@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/attribute_private.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/size.h>
 
@@ -84,6 +85,55 @@ static void prv_check_attribute_list_serialize(AttributeList *attr_list_to_seria
                                                buffer + expected_attr_list_serialized_size);
   cl_assert_equal_i(size, expected_attr_list_serialized_size);
   cl_assert_equal_m(expected_attr_list_serialized, buffer, expected_attr_list_serialized_size);
+}
+
+static void prv_round_trip_time(time_t time, size_t expected_value_len) {
+  AttributeList attr_list = {};
+  attribute_list_add_time(&attr_list, AttributeIdLastUpdated, time);
+
+  // Serialized as 4 bytes while the time fits, as phones and earlier firmware expect
+  const size_t serialized_size = attribute_list_get_serialized_size(&attr_list);
+  cl_assert_equal_i(serialized_size, sizeof(SerializedAttributeHeader) + expected_value_len);
+  uint8_t serialized[serialized_size];
+  cl_assert_equal_i(attribute_list_serialize(&attr_list, serialized, &serialized[serialized_size]),
+                    serialized_size);
+  bool has_attribute[NumAttributeIds] = {};
+  cl_assert(
+      attribute_check_serialized_list(serialized, &serialized[serialized_size], 1, has_attribute));
+
+  AttributeList attr_list_out = {};
+  attribute_list_init_list(1, &attr_list_out);
+  char buffer[8];
+  char *buffer_cursor = buffer;
+  const uint8_t *cursor = serialized;
+  cl_assert(attribute_deserialize_list(&buffer_cursor, &buffer[sizeof(buffer)], &cursor,
+                                       &serialized[serialized_size], &attr_list_out));
+  cl_assert(attribute_get_time(&attr_list_out, AttributeIdLastUpdated, 0) == time);
+  attribute_list_destroy_list(&attr_list_out);
+  attribute_list_destroy_list(&attr_list);
+}
+
+void test_attribute__time(void) {
+  prv_round_trip_time(0, 4);
+  prv_round_trip_time(1790870400, 4);
+  // Past 2038, still in 32 unsigned bits
+  prv_round_trip_time(3000000000LL, 4);
+  prv_round_trip_time(UINT32_MAX, 4);
+  // Past 2106
+  prv_round_trip_time((time_t)UINT32_MAX + 1, 8);
+  prv_round_trip_time(5000000000LL, 8);
+  // Before 1970
+  prv_round_trip_time(-1, 8);
+}
+
+void test_attribute__time_rejects_other_lengths(void) {
+  uint8_t serialized[sizeof(SerializedAttributeHeader) + 2] = {};
+  SerializedAttributeHeader *hdr = (SerializedAttributeHeader *)serialized;
+  hdr->id = AttributeIdTimestamp;
+  hdr->length = 2;
+  bool has_attribute[NumAttributeIds] = {};
+  cl_assert(!attribute_check_serialized_list(serialized, &serialized[sizeof(serialized)], 1,
+                                             has_attribute));
 }
 
 void test_attribute__serialize_attr_list(void) {

@@ -115,12 +115,14 @@ class Connection(ABC):
 # The version response the harness answers with: a phone app (on Android
 # unless a test's phone is connected), with every protocol capability but
 # settings sync, whose write-backs it would leave unanswered and the watch
-# retry for minutes.
+# retry for minutes, and 64-bit times, as libpebble2 only speaks the 32-bit
+# formats.
 PHONE_OS_UNKNOWN = 0
 PHONE_OS_IOS = 1
 PHONE_OS_ANDROID = 2
 SETTINGS_SYNC_SUPPORT = 1 << 23
-PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~SETTINGS_SYNC_SUPPORT
+TIME64_SUPPORT = 1 << 29
+PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~(SETTINGS_SYNC_SUPPORT | TIME64_SUPPORT)
 
 
 def _phone_app_version(platform):
