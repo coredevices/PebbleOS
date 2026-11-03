@@ -3,10 +3,14 @@
 
 #pragma once
 
-#include "settings_raw_iter.h"
-
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/compiler.h>
+
+#include <system/status_codes.h>
 
 /**
  * @defgroup settings Settings files
@@ -14,36 +18,96 @@
  * @brief Atomic key-value store on top of PFS.
  *
  * A settings file is a log-structured binary key-value store kept in a single PFS file. Keys
- * (up to @ref SETTINGS_KEY_MAX_LEN bytes) and values (up to @ref SETTINGS_VAL_MAX_LEN bytes) are
- * arbitrary bytes. Every update is atomic: after a reboot in the middle of a write, the record
- * holds either the old or the new value. Records carry a modification timestamp and a synced
+ * (up to @ref PBL_SETTINGS_KEY_MAX_LEN bytes) and values (up to @ref PBL_SETTINGS_VAL_MAX_LEN
+ * bytes) are arbitrary bytes. Every update is atomic: after a reboot in the middle of a write, the
+ * record holds either the old or the new value. Records carry a modification timestamp and a synced
  * flag used for synchronization with the phone.
  *
  * Settings files are not thread-safe: callers serialize access to a file themselves, and a file
  * must not be open twice at the same time.
  *
  * @code{.c}
- * SettingsFile file;
+ * struct pbl_settings_file file;
  * uint32_t key = 1;
  * uint8_t value = 42;
  *
- * if (settings_file_open(&file, "myprefs", 1024) == S_SUCCESS) {
- *   settings_file_set(&file, &key, sizeof(key), &value, sizeof(value));
- *   settings_file_get(&file, &key, sizeof(key), &value, sizeof(value));
- *   settings_file_close(&file);
+ * if (pbl_settings_open(&file, "myprefs", 1024) == S_SUCCESS) {
+ *   pbl_settings_set(&file, &key, sizeof(key), &value, sizeof(value));
+ *   pbl_settings_get(&file, &key, sizeof(key), &value, sizeof(value));
+ *   pbl_settings_close(&file);
  * }
  * @endcode
  * @{
  */
+
+/** @brief Maximum key length in bytes. */
+#define PBL_SETTINGS_KEY_MAX_LEN 127
+/** @brief Maximum value length in bytes. */
+#define PBL_SETTINGS_VAL_MAX_LEN 2046
+
+/** @cond INTERNAL_HIDDEN */
+
+/** @brief Settings file header. */
+struct PBL_PACKED pbl_settings_file_hdr {
+  /** File magic. */
+  uint32_t magic;
+  /** Format version. */
+  uint16_t version;
+  /** Unused, all ones. */
+  uint16_t flags;
+};
+
+/** @brief Record header. */
+struct PBL_PACKED pbl_settings_record_hdr {
+  /** Modification time, UTC seconds. */
+  uint32_t last_modified;
+  /** pbl_crc8_reversed() of the key, to skip non-matching records quickly. */
+  uint8_t key_hash;
+  /** Active-low flags. */
+  uint8_t flags : 6;
+  /** Key length in bytes. */
+  unsigned int key_len : 7;
+  /** Value length in bytes, 0 for a deleted record. */
+  unsigned int val_len : 11;
+};
+
+/**
+ * @brief Cursor over the records of a settings file.
+ *
+ * Guarantees the upper layers never lose track of their position in the file (reading data as a
+ * header, or past the end of a key or value), and turns unexpected conditions from bad logic or
+ * corruption into a controlled failure.
+ */
+struct pbl_settings_raw_iter {
+  /** File name, for diagnostics. */
+  const char *file_name;
+  /** Open file. */
+  struct pbl_fs_file file;
+  /** File header. */
+  struct pbl_settings_file_hdr file_hdr;
+
+  /** Header of the current record. */
+  struct pbl_settings_record_hdr hdr;
+  /** Offset of the current record header. */
+  int hdr_pos;
+  /**
+   * Offset of the record a search began or resumed from, so a search can wrap around from the
+   * end to the beginning. Only changed by pbl_settings__raw_iter_begin() and
+   * pbl_settings__raw_iter_resume().
+   */
+  int resumed_pos;
+};
+
+/** @endcond */
 
 /**
  * @brief Open settings file.
  *
  * The fields are internal to the settings file implementation.
  */
-typedef struct SettingsFile {
+struct pbl_settings_file {
   /** Raw iterator over the underlying file. */
-  SettingsRawIter iter;
+  struct pbl_settings_raw_iter iter;
   /** File name, heap allocated. */
   char *name;
 
@@ -72,11 +136,11 @@ typedef struct SettingsFile {
   uint32_t last_modified;
 
   /**
-   * Position of the record being visited by settings_file_each() or settings_file_rewrite(), so
+   * Position of the record being visited by pbl_settings_each() or pbl_settings_rewrite(), so
    * that other records can be read from the callback. 0 when not iterating.
    */
   int cur_record_pos;
-} SettingsFile;
+};
 
 /**
  * @brief Open or create a settings file.
@@ -93,12 +157,12 @@ typedef struct SettingsFile {
  * @retval S_SUCCESS File opened.
  * @return Negative status code from PFS on failure.
  */
-status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space);
+status_t pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space);
 
 /**
  * @brief Open or create a settings file that grows on demand.
  *
- * Like settings_file_open(), but the file starts with room for @p initial_alloc_size bytes of
+ * Like pbl_settings_open(), but the file starts with room for @p initial_alloc_size bytes of
  * records and doubles its allocation as needed, up to @p max_used_space.
  *
  * @param[out] file Settings file to initialize.
@@ -108,15 +172,15 @@ status_t settings_file_open(SettingsFile *file, const char *name, int max_used_s
  * @retval S_SUCCESS File opened.
  * @return Negative status code from PFS on failure.
  */
-status_t settings_file_open_growable(SettingsFile *file, const char *name, int max_used_space,
-                                     int initial_alloc_size);
+status_t pbl_settings_open_growable(struct pbl_settings_file *file, const char *name,
+                                    int max_used_space, int initial_alloc_size);
 
 /**
  * @brief Close a settings file.
  *
  * @param file Settings file.
  */
-void settings_file_close(SettingsFile *file);
+void pbl_settings_close(struct pbl_settings_file *file);
 
 /**
  * @brief Check whether a key holds a non-empty value.
@@ -126,7 +190,7 @@ void settings_file_close(SettingsFile *file);
  * @param key_len Length of @p key in bytes.
  * @return true if the record exists and is not deleted.
  */
-bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len);
+bool pbl_settings_exists(struct pbl_settings_file *file, const void *key, size_t key_len);
 
 /**
  * @brief Delete a record.
@@ -136,9 +200,9 @@ bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len);
  * @param file Settings file.
  * @param key Key.
  * @param key_len Length of @p key in bytes.
- * @return Same as settings_file_set().
+ * @return Same as pbl_settings_set().
  */
-status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len);
+status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, size_t key_len);
 
 /**
  * @brief Get the length of a value.
@@ -148,7 +212,7 @@ status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_le
  * @param key_len Length of @p key in bytes.
  * @return Value length in bytes, 0 if the record does not exist or is deleted.
  */
-int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len);
+int pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len);
 
 /**
  * @brief Read a value.
@@ -164,29 +228,29 @@ int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len);
  * @retval E_DOES_NOT_EXIST No such record, or it was deleted.
  * @retval E_RANGE @p val_out_len exceeds the stored value length.
  */
-status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
-                           size_t val_out_len);
+status_t pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          void *val_out, size_t val_out_len);
 
 /**
  * @brief Write a value, timestamped with the current time.
  *
  * Atomic: after a reboot the record holds either the old or the new value. Compacts or grows the
- * file when needed. Must not be called from a settings_file_each() callback. Invokes the change
+ * file when needed. Must not be called from a pbl_settings_each() callback. Invokes the change
  * callback, if any, on success.
  *
  * @param file Settings file.
- * @param key Key, at most @ref SETTINGS_KEY_MAX_LEN bytes.
+ * @param key Key, at most @ref PBL_SETTINGS_KEY_MAX_LEN bytes.
  * @param key_len Length of @p key in bytes.
  * @param val Value.
- * @param val_len Length of @p val in bytes, at most @ref SETTINGS_VAL_MAX_LEN. 0 deletes the
+ * @param val_len Length of @p val in bytes, at most @ref PBL_SETTINGS_VAL_MAX_LEN. 0 deletes the
  * record.
  * @retval S_SUCCESS Value written.
  * @retval E_RANGE Key or value too long.
  * @retval E_OUT_OF_STORAGE Not enough space for valid records.
  * @return Other negative status codes if compaction fails.
  */
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, const void *val,
-                           size_t val_len);
+status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          const void *val, size_t val_len);
 
 /**
  * @brief Mark a record as synced.
@@ -194,13 +258,13 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
  * The flag stays until the record is overwritten.
  *
  * @param file Settings file.
- * @param key Key, at most @ref SETTINGS_KEY_MAX_LEN bytes.
+ * @param key Key, at most @ref PBL_SETTINGS_KEY_MAX_LEN bytes.
  * @param key_len Length of @p key in bytes.
  * @retval S_SUCCESS Record marked.
  * @retval E_RANGE Key too long.
  * @retval E_DOES_NOT_EXIST No such record.
  */
-status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t key_len);
+status_t pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len);
 
 /**
  * @brief Mark all records as not synced, to trigger a full sync.
@@ -208,9 +272,9 @@ status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t k
  * Rewrites the whole file, preserving timestamps, which can be slow for large files.
  *
  * @param file Settings file.
- * @return Same as settings_file_rewrite().
+ * @return Same as pbl_settings_rewrite().
  */
-status_t settings_file_mark_all_dirty(SettingsFile *file);
+status_t pbl_settings_mark_all_dirty(struct pbl_settings_file *file);
 
 /**
  * @brief Callback invoked after a record is written.
@@ -220,8 +284,8 @@ status_t settings_file_mark_all_dirty(SettingsFile *file);
  * @param key_len Length of @p key in bytes.
  * @param last_modified Timestamp of the change.
  */
-typedef void (*SettingsFileChangeCallback)(SettingsFile *file, const void *key, size_t key_len,
-                                           uint32_t last_modified);
+typedef void (*pbl_settings_change_cb_t)(struct pbl_settings_file *file, const void *key,
+                                         size_t key_len, uint32_t last_modified);
 
 /**
  * @brief Register the callback invoked after any record of any settings file is written.
@@ -230,7 +294,7 @@ typedef void (*SettingsFileChangeCallback)(SettingsFile *file, const void *key, 
  *
  * @param callback Callback, or NULL to unregister.
  */
-void settings_file_set_change_callback(SettingsFileChangeCallback callback);
+void pbl_settings_set_change_callback(pbl_settings_change_cb_t callback);
 
 /**
  * @brief Write a single byte of a value in place.
@@ -239,7 +303,7 @@ void settings_file_set_change_callback(SettingsFileChangeCallback callback);
  * to modify several bytes in a row.
  *
  * @param file Settings file.
- * @param key Key, at most @ref SETTINGS_KEY_MAX_LEN bytes.
+ * @param key Key, at most @ref PBL_SETTINGS_KEY_MAX_LEN bytes.
  * @param key_len Length of @p key in bytes.
  * @param offset Offset within the value, less than the value length.
  * @param byte Byte to write.
@@ -247,8 +311,8 @@ void settings_file_set_change_callback(SettingsFileChangeCallback callback);
  * @retval E_RANGE Key too long.
  * @retval E_DOES_NOT_EXIST No such record, or it was deleted.
  */
-status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_len, size_t offset,
-                                uint8_t byte);
+status_t pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, size_t key_len,
+                               size_t offset, uint8_t byte);
 
 /**
  * @brief Read the key or value of the record being visited.
@@ -257,57 +321,58 @@ status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_
  * @param[out] buf Destination buffer.
  * @param buf_len Bytes to read, at most the key or value length.
  */
-typedef void (*SettingsFileGetter)(SettingsFile *file, void *buf, size_t buf_len);
+typedef void (*pbl_settings_getter_t)(struct pbl_settings_file *file, void *buf, size_t buf_len);
 
-/** @brief Record being visited by settings_file_each() or settings_file_rewrite(). */
-typedef struct {
+/** @brief Record being visited by pbl_settings_each() or pbl_settings_rewrite(). */
+struct pbl_settings_record {
   /** Modification timestamp. */
   uint32_t last_modified;
   /** Reads the key. */
-  SettingsFileGetter get_key;
+  pbl_settings_getter_t get_key;
   /** Key length in bytes. */
   int key_len;
   /** Reads the value. */
-  SettingsFileGetter get_val;
+  pbl_settings_getter_t get_val;
   /** Value length in bytes, 0 for a deleted record. */
   int val_len;
   /** Record has not been marked as synced. */
   bool dirty;
-} SettingsRecordInfo;
+};
 
 /**
- * @brief Callback for settings_file_each().
+ * @brief Callback for pbl_settings_each().
  *
  * @param file Settings file being iterated.
  * @param info Current record.
- * @param context Context passed to settings_file_each().
+ * @param context Context passed to pbl_settings_each().
  * @return true to continue iterating, false to stop.
  */
-typedef bool (*SettingsFileEachCallback)(SettingsFile *file, SettingsRecordInfo *info,
-                                         void *context);
+typedef bool (*pbl_settings_each_cb_t)(struct pbl_settings_file *file,
+                                       struct pbl_settings_record *info, void *context);
 
 /**
  * @brief Call a callback for every valid record.
  *
  * The callback may read other records but must not modify the file; use
- * settings_file_rewrite() for that.
+ * pbl_settings_rewrite() for that.
  *
  * @param file Settings file.
  * @param cb Callback.
  * @param context Context passed to @p cb.
  */
-void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context);
+void pbl_settings_each(struct pbl_settings_file *file, pbl_settings_each_cb_t cb, void *context);
 
 /**
- * @brief Callback for settings_file_rewrite().
+ * @brief Callback for pbl_settings_rewrite().
  *
  * @param old_file Original file, to read the record from.
  * @param new_file New file, to write records that should be kept to.
  * @param info Current record of @p old_file.
- * @param context Context passed to settings_file_rewrite().
+ * @param context Context passed to pbl_settings_rewrite().
  */
-typedef void (*SettingsFileRewriteCallback)(SettingsFile *old_file, SettingsFile *new_file,
-                                            SettingsRecordInfo *info, void *context);
+typedef void (*pbl_settings_rewrite_cb_t)(struct pbl_settings_file *old_file,
+                                          struct pbl_settings_file *new_file,
+                                          struct pbl_settings_record *info, void *context);
 
 /**
  * @brief Rewrite a settings file record by record.
@@ -323,10 +388,11 @@ typedef void (*SettingsFileRewriteCallback)(SettingsFile *old_file, SettingsFile
  * @retval E_OUT_OF_MEMORY Allocation failed.
  * @return Other negative status codes if opening the new file fails.
  */
-status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context);
+status_t pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb_t cb,
+                              void *context);
 
 /**
- * @brief Filter callback for settings_file_rewrite_filtered().
+ * @brief Filter callback for pbl_settings_rewrite_filtered().
  *
  * Must not call any other settings file function.
  *
@@ -334,16 +400,16 @@ status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback c
  * @param key_len Length of @p key in bytes.
  * @param value Record value.
  * @param value_len Length of @p value in bytes.
- * @param context Context passed to settings_file_rewrite_filtered().
+ * @param context Context passed to pbl_settings_rewrite_filtered().
  * @return true to keep the record, false to drop it.
  */
-typedef bool (*SettingsFileRewriteFilterCallback)(void *key, size_t key_len, void *value,
-                                                  size_t value_len, void *context);
+typedef bool (*pbl_settings_filter_cb_t)(void *key, size_t key_len, void *value, size_t value_len,
+                                         void *context);
 
 /**
  * @brief Rewrite a settings file, keeping only the records a filter accepts.
  *
- * Much faster than settings_file_rewrite() when records are only being dropped.
+ * Much faster than pbl_settings_rewrite() when records are only being dropped.
  *
  * @param file Settings file.
  * @param filter_cb Filter, or NULL to keep every valid record.
@@ -352,19 +418,19 @@ typedef bool (*SettingsFileRewriteFilterCallback)(void *key, size_t key_len, voi
  * @retval E_OUT_OF_MEMORY Allocation failed.
  * @return Other negative status codes on failure.
  */
-status_t settings_file_rewrite_filtered(SettingsFile *file,
-                                        SettingsFileRewriteFilterCallback filter_cb, void *context);
+status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
+                                       pbl_settings_filter_cb_t filter_cb, void *context);
 
 /**
  * @brief Compact a settings file.
  *
  * Rewrites all valid records, dropping dead space. Growable files shrink their allocation toward
- * @ref SettingsFile::min_alloc_used_space.
+ * @ref pbl_settings_file::min_alloc_used_space.
  *
  * @param file Settings file.
  * @retval S_SUCCESS File compacted.
  * @return Negative status code on failure.
  */
-status_t settings_file_compact(SettingsFile *file);
+status_t pbl_settings_compact(struct pbl_settings_file *file);
 
 /** @} */

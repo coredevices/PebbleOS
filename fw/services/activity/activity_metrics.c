@@ -188,20 +188,20 @@ static void prv_set_metric(ActivityMetric metric, enum pbl_weekday wday, int32_t
     }
   } else if (m_info.has_history) {
     // This update is for a day in the past. Modify the copy stored in the settings file
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
     if (!file) {
       goto unlock;
     }
     ActivitySettingsValueHistory history;
-    settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                      sizeof(history));
+    pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                     sizeof(history));
 
     int day = positive_modulo(cur_wday - wday, PBL_DAY_PER_WEEK);
     if ((int32_t)history.values[day] != value) {
       history.values[day] = value;
 
-      settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                        sizeof(history));
+      pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                       sizeof(history));
     }
     activity_private_settings_close(file);
   }
@@ -254,7 +254,7 @@ static void PBL_NOINLINE prv_shift_history(time_t utc_now) {
   PBL_LOG_INFO("resetting metrics for new day");
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
     if (!file) {
       goto unlock;
     }
@@ -267,8 +267,8 @@ static void PBL_NOINLINE prv_shift_history(time_t utc_now) {
       // Shift the history
       if (m_info.has_history) {
         PBL_ASSERTN(m_info.value_p);
-        settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                          sizeof(history));
+        pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                         sizeof(history));
 
         for (int i = ACTIVITY_HISTORY_DAYS - 1; i >= 1; i--) {
           history.values[i] = history.values[i - 1];
@@ -280,8 +280,8 @@ static void PBL_NOINLINE prv_shift_history(time_t utc_now) {
         history.values[0] = 0;
         history.utc_sec = utc_now;
 
-        settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                          sizeof(history));
+        pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                         sizeof(history));
       }
     }
     activity_private_settings_close(file);
@@ -413,15 +413,15 @@ static void prv_write_hr_zone_info_to_flash(HRZone zone) {
     return;
   }
 
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (!file) {
     return;
   }
 
   ActivityMetricInfo m_info;
   activity_metrics_prv_get_metric_info(metric, &m_info);
-  settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
-                    sizeof(*m_info.value_p));
+  pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
+                   sizeof(*m_info.value_p));
   activity_private_settings_close(file);
 }
 
@@ -640,7 +640,7 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
 }
 
 // ------------------------------------------------------------------------------------------------
-void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
+void activity_metrics_prv_init(struct pbl_settings_file *file, time_t utc_now) {
   ActivityState *state = activity_private_state();
   // Roll back the history if needed and init each of the metrics for today
   for (ActivityMetric metric = ActivityMetricFirst; metric < ActivityMetricNumMetrics; metric++) {
@@ -653,10 +653,10 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
 
       // In case we change the length of the history, fetch the old size
       int fetch_size = sizeof(old_history);
-      fetch_size = MIN(fetch_size, settings_file_get_len(file, &m_info.settings_key,
-                                                         sizeof(m_info.settings_key)));
-      settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
-                        fetch_size);
+      fetch_size = MIN(fetch_size, pbl_settings_get_len(file, &m_info.settings_key,
+                                                        sizeof(m_info.settings_key)));
+      pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
+                       fetch_size);
 
       uint16_t day = time_util_get_day(old_history.utc_sec);
       int old_age = state->cur_day_index - day;
@@ -696,15 +696,15 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       if (memcmp(old_history.values, new_history.values, sizeof(old_history.values)) != 0 ||
           old_age != 0) {
         // Write out the updated history
-        settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &new_history,
-                          sizeof(new_history));
+        pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &new_history,
+                         sizeof(new_history));
       }
 
     } else if (m_info.settings_key != ActivitySettingsKeyInvalid) {
       // Metric with no history, just init current value
       PBL_ASSERTN(m_info.value_p);
-      settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
-                        sizeof(*m_info.value_p));
+      pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
+                       sizeof(*m_info.value_p));
     }
   }
 }
@@ -750,14 +750,14 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
     if (history_len > 1) {
       // Read from the history stored in settings
       ActivitySettingsValueHistory setting_history = {};
-      SettingsFile *file = activity_private_settings_open();
+      struct pbl_settings_file *file = activity_private_settings_open();
       if (!file) {
         PBL_LOG_ERR("Settings file DNE. No need to continue getting metric");
         success = false;
         goto unlock;
       }
-      settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &setting_history,
-                        sizeof(setting_history));
+      pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &setting_history,
+                       sizeof(setting_history));
       for (uint32_t i = 1; i < history_len; i++) {
         history[i] = m_info.converter(setting_history.values[i]);
         PBL_LOG_DBG("get metric %" PRIi32 " %" PRIu32 " days ago: %" PRIi32 "", (int32_t)metric, i,

@@ -9,7 +9,7 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -17,13 +17,13 @@
 #include <pbl/util/units.h>
 
 int pbl_fs_unlink(const char *path) {
-  fake_settings_file_reset();
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
 status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
                         int val_len) {
-  return settings_file_set(nullptr, key, key_len, val, val_len);
+  return pbl_settings_set(nullptr, key, key_len, val, val_len);
 }
 
 RtcTicks rtc_get_ticks(void) {
@@ -52,7 +52,7 @@ void activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday day
 ////////////////////////////////////////////////////////////////
 
 void test_health_db__initialize(void) {
-  fake_settings_file_reset();
+  fake_settings_reset();
   health_db_init();
   s_metric_updated_count = 0;
 }

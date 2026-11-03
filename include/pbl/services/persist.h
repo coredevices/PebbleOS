@@ -15,22 +15,23 @@
  * @ingroup services
  * @brief Per-app persistent key-value stores.
  *
- * A store is a SettingsFile named after the app UUID. An app and its worker share one store,
- * file handle and SettingsFile state. The file is created lazily on first access.
+ * A store is a struct pbl_settings_file named after the app UUID. An app and its worker share one
+ * store, file handle and struct pbl_settings_file state. The file is created lazily on first
+ * access.
  *
- * The SettingsFile is not reentrant: access it only between
+ * The struct pbl_settings_file is not reentrant: access it only between
  * persist_service_lock_and_get_store() and persist_service_unlock_store().
  *
  * @code{.c}
- * SettingsFile *file = persist_service_lock_and_get_store(&app_uuid);
- * status_t rv = settings_file_set(file, &key, sizeof(key), &value, sizeof(value));
+ * struct pbl_settings_file *file = persist_service_lock_and_get_store(&app_uuid);
+ * status_t rv = pbl_settings_set(file, &key, sizeof(key), &value, sizeof(value));
  * persist_service_unlock_store(file);
  * @endcode
  * @{
  */
 
 /** @brief Settings file backing a store. */
-typedef struct SettingsFile SettingsFile;
+struct pbl_settings_file;
 
 /**
  * @brief Initialize the persist service.
@@ -55,14 +56,14 @@ size_t persist_service_get_max_size(void);
  * @param uuid App UUID.
  * @return Store of the app.
  */
-SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid);
+struct pbl_settings_file *persist_service_lock_and_get_store(const Uuid *uuid);
 
 /**
  * @brief Unlock a store obtained with persist_service_lock_and_get_store().
  *
  * @param store Store to unlock.
  */
-void persist_service_unlock_store(SettingsFile *store);
+void persist_service_unlock_store(struct pbl_settings_file *store);
 
 /**
  * @brief Register a process using the store of an app.

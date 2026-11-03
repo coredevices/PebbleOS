@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "raw_iter.h"
+
 #include <errno.h>
 #include <string.h>
 #include <time.h>
@@ -13,8 +15,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/settings/settings_file.h>
-#include <pbl/settings/settings_raw_iter.h>
+#include <pbl/settings/settings.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <system/status_errno.h>
@@ -22,23 +23,23 @@
 PBL_LOG_MODULE_DEFINE(settings, CONFIG_SETTINGS_LOG_LEVEL);
 
 // Callback for settings changes (used by settings_sync)
-static SettingsFileChangeCallback s_change_callback = nullptr;
+static pbl_settings_change_cb_t s_change_callback = nullptr;
 
-static status_t bootup_check(SettingsFile *file);
-static void compute_stats(SettingsFile *file);
+static status_t bootup_check(struct pbl_settings_file *file);
+static void compute_stats(struct pbl_settings_file *file);
 
-static bool file_hdr_is_uninitialized(SettingsFileHeader *file_hdr) {
+static bool file_hdr_is_uninitialized(struct pbl_settings_file_hdr *file_hdr) {
   return (file_hdr->magic == 0xffffffff) && (file_hdr->version == 0xffff) &&
          (file_hdr->flags == 0xffff);
 }
 
-static status_t prv_close_and_remove(SettingsFile *file, const char *name) {
+static status_t prv_close_and_remove(struct pbl_settings_file *file, const char *name) {
   pbl_fs_close(&file->iter.file);
   return status_from_errno(pbl_fs_unlink(name));
 }
 
-static status_t prv_open(SettingsFile *file, const char *name, uint32_t flags, int max_used_space,
-                         int alloc_used_space, int min_alloc_used_space) {
+static status_t prv_open(struct pbl_settings_file *file, const char *name, uint32_t flags,
+                         int max_used_space, int alloc_used_space, int min_alloc_used_space) {
   // Making the max_space_total at least a little bit larger than the
   // alloc_used_space allows us to avoid thrashing. Without it, if
   // max_space_total == alloc_used_space, then if the file is full, changing a
@@ -70,7 +71,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint32_t flags, i
     return status_from_errno(ret);
   }
 
-  *file = (SettingsFile){
+  *file = (struct pbl_settings_file){
     .name = pbl_strdup_check(name),
     .max_used_space = max_used_space,
     .alloc_used_space = alloc_used_space,
@@ -78,14 +79,14 @@ static status_t prv_open(SettingsFile *file, const char *name, uint32_t flags, i
     .max_space_total = max_space_total,
   };
 
-  settings_raw_iter_init(&file->iter, &fs_file, file->name);
+  pbl_settings__raw_iter_init(&file->iter, &fs_file, file->name);
 
-  SettingsFileHeader file_hdr = file->iter.file_hdr;
+  struct pbl_settings_file_hdr file_hdr = file->iter.file_hdr;
   if (file_hdr_is_uninitialized(&file_hdr)) {
     // Newly created file, create & write out header.
     memcpy(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic));
     file_hdr.version = SETTINGS_FILE_VERSION;
-    settings_raw_iter_write_file_header(&file->iter, &file_hdr);
+    pbl_settings__raw_iter_write_file_header(&file->iter, &file_hdr);
   }
 
   if (memcmp(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic)) != 0) {
@@ -133,7 +134,7 @@ static status_t prv_open(SettingsFile *file, const char *name, uint32_t flags, i
   if (alloc_used_space >= max_used_space && actual_size < max_space_total) {
     PBL_LOG_DBG("Re-writing settings file %s to increase its size from %d to %d.", name,
                 actual_size, max_space_total);
-    status = settings_file_rewrite_filtered(file, nullptr, nullptr);
+    status = pbl_settings_rewrite_filtered(file, nullptr, nullptr);
     if (status < 0) {
       PBL_LOG_ERR("Could not resize file %s (error %" PRId32 "). Creating new one", name, status);
       return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
@@ -145,26 +146,26 @@ static status_t prv_open(SettingsFile *file, const char *name, uint32_t flags, i
   return S_SUCCESS;
 }
 
-status_t settings_file_open(SettingsFile *file, const char *name, int max_used_space) {
+status_t pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space) {
   return prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, max_used_space, max_used_space,
                   max_used_space);
 }
 
-status_t settings_file_open_growable(SettingsFile *file, const char *name, int max_used_space,
-                                     int initial_alloc_size) {
+status_t pbl_settings_open_growable(struct pbl_settings_file *file, const char *name,
+                                    int max_used_space, int initial_alloc_size) {
   // prv_grow doubles alloc_used_space; a zero seed would loop forever.
   PBL_ASSERTN(initial_alloc_size > 0);
   return prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, max_used_space, initial_alloc_size,
                   initial_alloc_size);
 }
 
-void settings_file_close(SettingsFile *file) {
-  settings_raw_iter_deinit(&file->iter);
+void pbl_settings_close(struct pbl_settings_file *file) {
+  pbl_settings__raw_iter_deinit(&file->iter);
   pbl_free(file->name);
   file->name = nullptr;
 }
 
-static int record_size(SettingsRecordHeader *hdr) {
+static int record_size(struct pbl_settings_record_hdr *hdr) {
   return sizeof(*hdr) + hdr->key_len + hdr->val_len;
 }
 
@@ -172,13 +173,13 @@ static int record_size(SettingsRecordHeader *hdr) {
 // zero denotes that the flag is set, a 1 means it is not. This is because our
 // flash chip is NOR flash, and thus is all 1's by default.
 // Once setting a flag, we cannot unset it.
-static void set_flag(SettingsRecordHeader *hdr, uint8_t flags) {
+static void set_flag(struct pbl_settings_record_hdr *hdr, uint8_t flags) {
   hdr->flags &= ~flags;
 }
-static void clear_flag(SettingsRecordHeader *hdr, uint8_t flags) {
+static void clear_flag(struct pbl_settings_record_hdr *hdr, uint8_t flags) {
   hdr->flags |= flags;
 }
-static bool flag_is_set(SettingsRecordHeader *hdr, uint8_t flags) {
+static bool flag_is_set(struct pbl_settings_record_hdr *hdr, uint8_t flags) {
   return (hdr->flags & flags) == 0;
 }
 
@@ -194,14 +195,14 @@ static bool flag_is_set(SettingsRecordHeader *hdr, uint8_t flags) {
 // - overwritten: This record has been superseded by another, which has been
 //     completely written out to flash. We skip over and ignore overwritten
 //     records.
-static bool partially_written(SettingsRecordHeader *hdr) {
+static bool partially_written(struct pbl_settings_record_hdr *hdr) {
   return !flag_is_set(hdr, SETTINGS_FLAG_WRITE_COMPLETE);
 }
-static bool partially_overwritten(SettingsRecordHeader *hdr) {
+static bool partially_overwritten(struct pbl_settings_record_hdr *hdr) {
   return flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_STARTED) &&
          !flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
 }
-static bool overwritten(SettingsRecordHeader *hdr) {
+static bool overwritten(struct pbl_settings_record_hdr *hdr) {
   return flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_STARTED) &&
          flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
 }
@@ -210,18 +211,18 @@ static uint32_t utc_time() {
   return rtc_get_time();
 }
 
-static bool deleted(SettingsRecordHeader *hdr) {
+static bool deleted(struct pbl_settings_record_hdr *hdr) {
   return hdr->val_len == 0;
 }
 
-static void compute_stats(SettingsFile *file) {
+static void compute_stats(struct pbl_settings_file *file) {
   file->dead_space = 0;
   file->used_space = 0;
   file->last_modified = 0;
-  file->used_space += sizeof(SettingsFileHeader);
-  file->used_space += sizeof(SettingsRecordHeader); // EOF Marker
-  for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-       settings_raw_iter_next(&file->iter)) {
+  file->used_space += sizeof(struct pbl_settings_file_hdr);
+  file->used_space += sizeof(struct pbl_settings_record_hdr); // EOF Marker
+  for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
+       pbl_settings__raw_iter_next(&file->iter)) {
     if (overwritten(&file->iter.hdr) || deleted(&file->iter.hdr)) {
       file->dead_space += record_size(&file->iter.hdr);
     } else {
@@ -233,13 +234,12 @@ static void compute_stats(SettingsFile *file) {
   }
 }
 
-status_t settings_file_rewrite_filtered(SettingsFile *file,
-                                        SettingsFileRewriteFilterCallback filter_cb,
-                                        void *context) {
+status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
+                                       pbl_settings_filter_cb_t filter_cb, void *context) {
   // One reusable buffer for key+val per record; sized for the worst case.
   // Avoids two malloc/free pairs per record over what can be thousands of
   // records on a large persist file.
-  uint8_t *kv_buf = pbl_malloc(SETTINGS_KEY_MAX_LEN + SETTINGS_VAL_MAX_LEN);
+  uint8_t *kv_buf = pbl_malloc(PBL_SETTINGS_KEY_MAX_LEN + PBL_SETTINGS_VAL_MAX_LEN);
   char *name = pbl_strdup(file->name);
   if (!kv_buf || !name) {
     PBL_LOG_ERR("Could not allocate buffers to compact settings file %s", file->name);
@@ -251,7 +251,7 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
   // A 1 MiB grow can take many seconds of pure flash erase + write time.
   pbl_task_wdt_suspend(60 * 1000);
 
-  SettingsFile new_file;
+  struct pbl_settings_file new_file;
   status_t status =
       prv_open(&new_file, file->name, PBL_FS_O_REPLACE | PBL_FS_O_READ, file->max_used_space,
                file->alloc_used_space, file->min_alloc_used_space);
@@ -264,11 +264,11 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
     return status;
   }
 
-  settings_raw_iter_begin(&new_file.iter);
+  pbl_settings__raw_iter_begin(&new_file.iter);
 
-  for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-       settings_raw_iter_next(&file->iter)) {
-    SettingsRecordHeader *hdr = &file->iter.hdr;
+  for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
+       pbl_settings__raw_iter_next(&file->iter)) {
+    struct pbl_settings_record_hdr *hdr = &file->iter.hdr;
     if (partially_written(hdr)) {
       // This should only happen if we reboot in the middle of writing a new
       // record, and it should always be the most recently written record, so
@@ -290,26 +290,26 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
     }
 
     // Read key+val in a single PFS call; key occupies the first key_len bytes.
-    settings_raw_iter_read_key_val(&file->iter, kv_buf);
+    pbl_settings__raw_iter_read_key_val(&file->iter, kv_buf);
     uint8_t *key = kv_buf;
     uint8_t *val = kv_buf + hdr->key_len;
 
     // Include in re-written file if it passes the filter
     if (!filter_cb || filter_cb(key, hdr->key_len, val, hdr->val_len, context)) {
-      settings_raw_iter_write_header(&new_file.iter, hdr);
-      settings_raw_iter_write_key_val(&new_file.iter, kv_buf);
-      settings_raw_iter_next(&new_file.iter);
+      pbl_settings__raw_iter_write_header(&new_file.iter, hdr);
+      pbl_settings__raw_iter_write_key_val(&new_file.iter, kv_buf);
+      pbl_settings__raw_iter_next(&new_file.iter);
     }
   }
   pbl_free(kv_buf);
-  settings_file_close(file);
+  pbl_settings_close(file);
   // We have to close and reopen the new_file so that it's temp flag is cleared.
   // Before the close succeeds, if we reboot, we will just end up reading the
   // old file. After the close succeeds, we will end up reading the new
   // (compacted) file.
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
-  settings_file_close(&new_file);
+  pbl_settings_close(&new_file);
   status = prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, file->max_used_space,
                     alloc_used_space, min_alloc_used_space);
   pbl_free(name);
@@ -319,11 +319,11 @@ status_t settings_file_rewrite_filtered(SettingsFile *file,
   return status;
 }
 
-void settings_file_set_change_callback(SettingsFileChangeCallback callback) {
+void pbl_settings_set_change_callback(pbl_settings_change_cb_t callback) {
   s_change_callback = callback;
 }
 
-status_t settings_file_compact(SettingsFile *file) {
+status_t pbl_settings_compact(struct pbl_settings_file *file) {
   // For growable files, drop alloc_used_space toward the floor when live data
   // is much smaller than the current allocation. Without this, a file that
   // burst to e.g. 256 KiB and then idled would hold that flash forever even
@@ -340,7 +340,7 @@ status_t settings_file_compact(SettingsFile *file) {
       file->alloc_used_space = target;
     }
   }
-  status_t status = settings_file_rewrite_filtered(file, nullptr, nullptr);
+  status_t status = pbl_settings_rewrite_filtered(file, nullptr, nullptr);
   if (status < 0) {
     // rewrite_filtered fails before the swap if it fails at all; the on-disk
     // file is still at old_alloc, so put the in-memory book-keeping back.
@@ -349,8 +349,8 @@ status_t settings_file_compact(SettingsFile *file) {
   return status;
 }
 
-static bool key_matches(SettingsRawIter *iter, const uint8_t *key, int key_len) {
-  SettingsRecordHeader *hdr = &iter->hdr;
+static bool key_matches(struct pbl_settings_raw_iter *iter, const uint8_t *key, int key_len) {
+  struct pbl_settings_record_hdr *hdr = &iter->hdr;
   if (key_len != hdr->key_len) {
     return false;
   }
@@ -358,14 +358,15 @@ static bool key_matches(SettingsRawIter *iter, const uint8_t *key, int key_len) 
     return false;
   }
   uint8_t hdr_key[hdr->key_len];
-  settings_raw_iter_read_key(iter, hdr_key);
+  pbl_settings__raw_iter_read_key(iter, hdr_key);
   if (memcmp(key, hdr_key, hdr->key_len) == 0) {
     return true;
   }
   return false;
 }
 
-static bool prv_is_desired_hdr(SettingsRawIter *iter, const uint8_t *key, int key_len) {
+static bool prv_is_desired_hdr(struct pbl_settings_raw_iter *iter, const uint8_t *key,
+                               int key_len) {
   if (overwritten(&iter->hdr) || partially_written(&iter->hdr)) {
     return false;
   }
@@ -373,11 +374,11 @@ static bool prv_is_desired_hdr(SettingsRawIter *iter, const uint8_t *key, int ke
   return key_matches(iter, key, key_len);
 }
 
-static bool search_forward(SettingsRawIter *iter, const uint8_t *key, int key_len) {
-  const int resumed_pos = settings_raw_iter_get_resumed_record_pos(iter);
+static bool search_forward(struct pbl_settings_raw_iter *iter, const uint8_t *key, int key_len) {
+  const int resumed_pos = pbl_settings__raw_iter_get_resumed_record_pos(iter);
 
   // Resume searching at the current record
-  for (; !settings_raw_iter_end(iter); settings_raw_iter_next(iter)) {
+  for (; !pbl_settings__raw_iter_end(iter); pbl_settings__raw_iter_next(iter)) {
     if (prv_is_desired_hdr(iter, key, key_len)) {
       return true;
     }
@@ -385,9 +386,9 @@ static bool search_forward(SettingsRawIter *iter, const uint8_t *key, int key_le
 
   // If we got here, we didn't find it between `resumed_pos` and the last record in the file.
   // Wrap around to the beginning and search until we get to the `resumed_pos`
-  settings_raw_iter_begin(iter);
-  for (; settings_raw_iter_get_current_record_pos(iter) < resumed_pos;
-       settings_raw_iter_next(iter)) {
+  pbl_settings__raw_iter_begin(iter);
+  for (; pbl_settings__raw_iter_get_current_record_pos(iter) < resumed_pos;
+       pbl_settings__raw_iter_next(iter)) {
     if (prv_is_desired_hdr(iter, key, key_len)) {
       return true;
     }
@@ -397,23 +398,24 @@ static bool search_forward(SettingsRawIter *iter, const uint8_t *key, int key_le
   return false;
 }
 
-static status_t cleanup_partial_transactions(SettingsFile *file) {
-  for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-       settings_raw_iter_next(&file->iter)) {
+static status_t cleanup_partial_transactions(struct pbl_settings_file *file) {
+  for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
+       pbl_settings__raw_iter_next(&file->iter)) {
     if (partially_written(&file->iter.hdr)) {
       // Compact will remove partially written records. We could be smarter,
       // but this is something of an edge case.
-      return settings_file_compact(file);
+      return pbl_settings_compact(file);
     }
 
     if (!partially_overwritten(&file->iter.hdr)) {
       continue;
     }
 
-    int partially_overwritten_record_pos = settings_raw_iter_get_current_record_pos(&file->iter);
+    int partially_overwritten_record_pos =
+        pbl_settings__raw_iter_get_current_record_pos(&file->iter);
     uint8_t key[file->iter.hdr.key_len];
-    settings_raw_iter_read_key(&file->iter, key);
-    settings_raw_iter_next(&file->iter); // Skip the current record
+    pbl_settings__raw_iter_read_key(&file->iter, key);
+    pbl_settings__raw_iter_next(&file->iter); // Skip the current record
     bool found_another = search_forward(&file->iter, key, file->iter.hdr.key_len);
 
     if (!found_another) {
@@ -422,25 +424,25 @@ static status_t cleanup_partial_transactions(SettingsFile *file) {
       // previous record while clearing the overwrite bits for us, so that we
       // can still find the previous record. We could be smarter here, but
       // this should happen pretty rarely.
-      return settings_file_compact(file);
+      return pbl_settings_compact(file);
     }
 
     // The overwrite completed, we just rebooted before getting a chance
     // to flip the completion bit on the previous record. Flip it now so
     // that we don't have to keep checking on every boot.
-    settings_raw_iter_set_current_record_pos(&file->iter, partially_overwritten_record_pos);
+    pbl_settings__raw_iter_set_current_record_pos(&file->iter, partially_overwritten_record_pos);
     set_flag(&file->iter.hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
-    settings_raw_iter_write_header(&file->iter, &file->iter.hdr);
+    pbl_settings__raw_iter_write_header(&file->iter, &file->iter.hdr);
   }
   return S_SUCCESS;
 }
 
-static status_t bootup_check(SettingsFile *file) {
+static status_t bootup_check(struct pbl_settings_file *file) {
   return cleanup_partial_transactions(file);
 }
 
-int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
-  settings_raw_iter_resume(&file->iter);
+int pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
+  pbl_settings__raw_iter_resume(&file->iter);
   if (search_forward(&file->iter, key, key_len)) {
     return file->iter.hdr.val_len;
   } else {
@@ -448,13 +450,13 @@ int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {
   }
 }
 
-bool settings_file_exists(SettingsFile *file, const void *key, size_t key_len) {
-  return (settings_file_get_len(file, key, key_len) > 0);
+bool pbl_settings_exists(struct pbl_settings_file *file, const void *key, size_t key_len) {
+  return (pbl_settings_get_len(file, key, key_len) > 0);
 }
 
-status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, void *val_out,
-                           size_t val_out_len) {
-  settings_raw_iter_resume(&file->iter);
+status_t pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          void *val_out, size_t val_out_len) {
+  pbl_settings__raw_iter_resume(&file->iter);
   if (!search_forward(&file->iter, key, key_len)) {
     memset(val_out, 0, val_out_len);
     return E_DOES_NOT_EXIST;
@@ -468,29 +470,29 @@ status_t settings_file_get(SettingsFile *file, const void *key, size_t key_len, 
     memset(val_out, 0, val_out_len);
     return E_RANGE;
   }
-  settings_raw_iter_read_val(&file->iter, val_out, val_out_len);
+  pbl_settings__raw_iter_read_val(&file->iter, val_out, val_out_len);
   return S_SUCCESS;
 }
 
-status_t settings_file_set_byte(SettingsFile *file, const void *key, size_t key_len, size_t offset,
-                                uint8_t byte) {
-  if (key_len > SETTINGS_KEY_MAX_LEN) {
+status_t pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, size_t key_len,
+                               size_t offset, uint8_t byte) {
+  if (key_len > PBL_SETTINGS_KEY_MAX_LEN) {
     return E_RANGE;
   }
 
   // Find the record
-  settings_raw_iter_resume(&file->iter);
+  pbl_settings__raw_iter_resume(&file->iter);
   if (!search_forward(&file->iter, key, key_len) || file->iter.hdr.val_len == 0) {
     return E_DOES_NOT_EXIST;
   }
 
   PBL_ASSERTN(offset < file->iter.hdr.val_len);
-  settings_raw_iter_write_byte(&file->iter, offset, byte);
+  pbl_settings__raw_iter_write_byte(&file->iter, offset, byte);
 
   return S_SUCCESS;
 }
 
-static status_t prv_grow(SettingsFile *file, int needed_used_space) {
+static status_t prv_grow(struct pbl_settings_file *file, int needed_used_space) {
   int new_alloc = file->alloc_used_space;
   while (new_alloc < needed_used_space && new_alloc < file->max_used_space) {
     new_alloc *= 2;
@@ -504,7 +506,7 @@ static status_t prv_grow(SettingsFile *file, int needed_used_space) {
 
   int old_alloc = file->alloc_used_space;
   file->alloc_used_space = new_alloc;
-  status_t status = settings_file_rewrite_filtered(file, nullptr, nullptr);
+  status_t status = pbl_settings_rewrite_filtered(file, nullptr, nullptr);
   if (status < 0) {
     file->alloc_used_space = old_alloc;
   }
@@ -517,19 +519,19 @@ static status_t prv_grow(SettingsFile *file, int needed_used_space) {
 // written and returned for all future queries, or, if we reboot/loose power/
 // run into an error, then we will continue to return the previous value.
 // We should never run into a case where neither value exists.
-static status_t prv_settings_file_set_internal(SettingsFile *file, const void *key, size_t key_len,
-                                               const void *val, size_t val_len,
+static status_t prv_settings_file_set_internal(struct pbl_settings_file *file, const void *key,
+                                               size_t key_len, const void *val, size_t val_len,
                                                uint32_t timestamp) {
-  // Cannot set keys while iterating (Try settings_file_rewrite)
+  // Cannot set keys while iterating (Try pbl_settings_rewrite)
   PBL_ASSERTN(file->cur_record_pos == 0);
-  if (key_len > SETTINGS_KEY_MAX_LEN) {
+  if (key_len > PBL_SETTINGS_KEY_MAX_LEN) {
     return E_RANGE;
   }
-  if (val_len > SETTINGS_VAL_MAX_LEN) {
+  if (val_len > PBL_SETTINGS_VAL_MAX_LEN) {
     return E_RANGE;
   }
   const bool is_delete = (val_len == 0);
-  const int rec_size = sizeof(SettingsRecordHeader) + key_len + val_len;
+  const int rec_size = sizeof(struct pbl_settings_record_hdr) + key_len + val_len;
   if (!is_delete && file->used_space + rec_size > file->max_used_space) {
     return E_OUT_OF_STORAGE;
   }
@@ -540,7 +542,7 @@ static status_t prv_settings_file_set_internal(SettingsFile *file, const void *k
     if (needs_growth) {
       status = prv_grow(file, file->used_space + rec_size);
     } else {
-      status = settings_file_compact(file);
+      status = pbl_settings_compact(file);
     }
     if (status < 0) {
       return status;
@@ -549,42 +551,42 @@ static status_t prv_settings_file_set_internal(SettingsFile *file, const void *k
 
   int overwritten_record = -1;
   // Find an existing record, if any, and mark it as overwrite-in-progress.
-  settings_raw_iter_resume(&file->iter);
+  pbl_settings__raw_iter_resume(&file->iter);
   if (search_forward(&file->iter, key, key_len)) {
     set_flag(&file->iter.hdr, SETTINGS_FLAG_OVERWRITE_STARTED);
-    settings_raw_iter_write_header(&file->iter, &file->iter.hdr);
-    overwritten_record = settings_raw_iter_get_current_record_pos(&file->iter);
+    pbl_settings__raw_iter_write_header(&file->iter, &file->iter.hdr);
+    overwritten_record = pbl_settings__raw_iter_get_current_record_pos(&file->iter);
   }
 
-  while (!settings_raw_iter_end(&file->iter)) {
-    settings_raw_iter_next(&file->iter);
+  while (!pbl_settings__raw_iter_end(&file->iter)) {
+    pbl_settings__raw_iter_next(&file->iter);
   }
 
   // Create and write out a new record. Writing the header transitions us into
   // the write-in-progress state, since at least once of the bits must be
   // flipped from a 1 to a 0 in order for the header to be valid.
-  SettingsRecordHeader new_hdr;
+  struct pbl_settings_record_hdr new_hdr;
   memset(&new_hdr, 0xff, sizeof(new_hdr));
   new_hdr.last_modified = timestamp;
   new_hdr.key_hash = pbl_crc8_reversed(0, key, key_len);
   new_hdr.key_len = key_len;
   new_hdr.val_len = val_len;
 
-  settings_raw_iter_write_header(&file->iter, &new_hdr);
-  settings_raw_iter_write_key(&file->iter, key);
-  settings_raw_iter_write_val(&file->iter, val);
+  pbl_settings__raw_iter_write_header(&file->iter, &new_hdr);
+  pbl_settings__raw_iter_write_key(&file->iter, key);
+  pbl_settings__raw_iter_write_val(&file->iter, val);
 
   // Mark the new record as write complete, now that we have completely written
   // out the header, key, and value.
   set_flag(&new_hdr, SETTINGS_FLAG_WRITE_COMPLETE);
-  settings_raw_iter_write_header(&file->iter, &new_hdr);
+  pbl_settings__raw_iter_write_header(&file->iter, &new_hdr);
   file->used_space += rec_size;
 
   // Finally, mark the existing record, if any, as overwritten.
   if (overwritten_record >= 0) {
-    settings_raw_iter_set_current_record_pos(&file->iter, overwritten_record);
+    pbl_settings__raw_iter_set_current_record_pos(&file->iter, overwritten_record);
     set_flag(&file->iter.hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
-    settings_raw_iter_write_header(&file->iter, &file->iter.hdr);
+    pbl_settings__raw_iter_write_header(&file->iter, &file->iter.hdr);
     file->dead_space += record_size(&file->iter.hdr);
     file->used_space -= record_size(&file->iter.hdr);
   }
@@ -597,33 +599,34 @@ static status_t prv_settings_file_set_internal(SettingsFile *file, const void *k
   return S_SUCCESS;
 }
 
-status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, const void *val,
-                           size_t val_len) {
+status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          const void *val, size_t val_len) {
   return prv_settings_file_set_internal(file, key, key_len, val, val_len, utc_time());
 }
 
-status_t settings_file_mark_synced(SettingsFile *file, const void *key, size_t key_len) {
-  // Cannot set keys while iterating (Try settings_file_rewrite)
+status_t pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len) {
+  // Cannot set keys while iterating (Try pbl_settings_rewrite)
   PBL_ASSERTN(file->cur_record_pos == 0);
-  if (key_len > SETTINGS_KEY_MAX_LEN) {
+  if (key_len > PBL_SETTINGS_KEY_MAX_LEN) {
     return E_RANGE;
   }
 
   // Find an existing record, if any, and mark it as synced
-  settings_raw_iter_resume(&file->iter);
+  pbl_settings__raw_iter_resume(&file->iter);
   if (search_forward(&file->iter, key, key_len)) {
     set_flag(&file->iter.hdr, SETTINGS_FLAG_SYNCED);
-    settings_raw_iter_write_header(&file->iter, &file->iter.hdr);
+    pbl_settings__raw_iter_write_header(&file->iter, &file->iter.hdr);
     return S_SUCCESS;
   }
 
   return E_DOES_NOT_EXIST;
 }
 
-static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *new_file,
-                                          SettingsRecordInfo *info, void *context) {
+static void prv_mark_all_dirty_rewrite_cb(struct pbl_settings_file *old_file,
+                                          struct pbl_settings_file *new_file,
+                                          struct pbl_settings_record *info, void *context) {
   // Read key and value from old file
-  uint8_t key[SETTINGS_KEY_MAX_LEN];
+  uint8_t key[PBL_SETTINGS_KEY_MAX_LEN];
   info->get_key(old_file, key, info->key_len);
 
   uint8_t *val = pbl_malloc(info->val_len);
@@ -639,34 +642,34 @@ static void prv_mark_all_dirty_rewrite_cb(SettingsFile *old_file, SettingsFile *
   pbl_free(val);
 }
 
-status_t settings_file_mark_all_dirty(SettingsFile *file) {
-  return settings_file_rewrite(file, prv_mark_all_dirty_rewrite_cb, nullptr);
+status_t pbl_settings_mark_all_dirty(struct pbl_settings_file *file) {
+  return pbl_settings_rewrite(file, prv_mark_all_dirty_rewrite_cb, nullptr);
 }
 
-status_t settings_file_delete(SettingsFile *file, const void *key, size_t key_len) {
-  return settings_file_set(file, key, key_len, nullptr, 0);
+status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, size_t key_len) {
+  return pbl_settings_set(file, key, key_len, nullptr, 0);
 }
 
-static void prv_get_key(SettingsFile *file, void *key, size_t key_len) {
+static void prv_get_key(struct pbl_settings_file *file, void *key, size_t key_len) {
   PBL_ASSERTN(key_len <= file->iter.hdr.key_len);
-  settings_raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
-  settings_raw_iter_read_key(&file->iter, key);
+  pbl_settings__raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
+  pbl_settings__raw_iter_read_key(&file->iter, key);
 }
-static void prv_get_val(SettingsFile *file, void *val, size_t val_len) {
+static void prv_get_val(struct pbl_settings_file *file, void *val, size_t val_len) {
   PBL_ASSERTN(val_len <= file->iter.hdr.val_len);
-  settings_raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
-  settings_raw_iter_read_val(&file->iter, val, val_len);
+  pbl_settings__raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
+  pbl_settings__raw_iter_read_val(&file->iter, val, val_len);
 }
-void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
+void pbl_settings_each(struct pbl_settings_file *file, pbl_settings_each_cb_t cb, void *context) {
   // Cannot set keys while iterating
   PBL_ASSERTN(file->cur_record_pos == 0);
-  SettingsRecordInfo info;
-  for (settings_raw_iter_begin(&file->iter); !settings_raw_iter_end(&file->iter);
-       settings_raw_iter_next(&file->iter)) {
+  struct pbl_settings_record info;
+  for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
+       pbl_settings__raw_iter_next(&file->iter)) {
     if (overwritten(&file->iter.hdr) || deleted(&file->iter.hdr)) {
       continue;
     }
-    info = (SettingsRecordInfo){
+    info = (struct pbl_settings_record){
       .last_modified = file->iter.hdr.last_modified,
       .get_key = prv_get_key,
       .key_len = file->iter.hdr.key_len,
@@ -674,34 +677,36 @@ void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *c
       .val_len = file->iter.hdr.val_len,
       .dirty = !flag_is_set(&file->iter.hdr, SETTINGS_FLAG_SYNCED),
     };
-    file->cur_record_pos = settings_raw_iter_get_current_record_pos(&file->iter);
+    file->cur_record_pos = pbl_settings__raw_iter_get_current_record_pos(&file->iter);
     // if the callback returns false, stop iterating.
     if (!cb(file, &info, context)) {
       break;
     }
-    settings_raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
+    pbl_settings__raw_iter_set_current_record_pos(&file->iter, file->cur_record_pos);
   }
 
   file->cur_record_pos = 0;
 }
 
 typedef struct {
-  SettingsFileRewriteCallback cb;
-  SettingsFile *new_file;
+  pbl_settings_rewrite_cb_t cb;
+  struct pbl_settings_file *new_file;
   void *user_context;
 } RewriteCbContext;
-static bool prv_rewrite_cb(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_rewrite_cb(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                           void *context) {
   RewriteCbContext *cb_ctx = (RewriteCbContext *)context;
   cb_ctx->cb(file, cb_ctx->new_file, info, cb_ctx->user_context);
   return true; // continue iterating
 }
-status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback cb, void *context) {
+status_t pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb_t cb,
+                              void *context) {
   char *name = pbl_strdup(file->name);
   if (!name) {
     PBL_LOG_ERR("Could not allocate name to rewrite settings file %s", file->name);
     return E_OUT_OF_MEMORY;
   }
-  SettingsFile new_file;
+  struct pbl_settings_file new_file;
   status_t status =
       prv_open(&new_file, file->name, PBL_FS_O_REPLACE | PBL_FS_O_READ, file->max_used_space,
                file->alloc_used_space, file->min_alloc_used_space);
@@ -714,15 +719,15 @@ status_t settings_file_rewrite(SettingsFile *file, SettingsFileRewriteCallback c
     .new_file = &new_file,
     .user_context = context,
   };
-  settings_file_each(file, prv_rewrite_cb, &cb_ctx);
-  settings_file_close(file);
+  pbl_settings_each(file, prv_rewrite_cb, &cb_ctx);
+  pbl_settings_close(file);
   // We have to close and reopen the new_file so that it's temp flag is cleared.
   // Before the close succeeds, if we reboot, we will just end up reading the
   // old file. After the close succeeds, we will end up reading the new
   // (compacted) file.
   int alloc_used_space = new_file.alloc_used_space;
   int min_alloc_used_space = new_file.min_alloc_used_space;
-  settings_file_close(&new_file);
+  pbl_settings_close(&new_file);
   status = prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, file->max_used_space,
                     alloc_used_space, min_alloc_used_space);
   pbl_free(name);

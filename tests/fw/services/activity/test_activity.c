@@ -2028,14 +2028,13 @@ void test_activity__migrate_settings_v2(void) {
 
   // Build a version 2 settings file by hand
   pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
-  SettingsFile file;
+  struct pbl_settings_file file;
   cl_assert_equal_i(
-      settings_file_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN),
-      S_SUCCESS);
+      pbl_settings_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN), S_SUCCESS);
 
   ActivitySettingsKey key = ActivitySettingsKeyVersion;
   const uint16_t version = 2;
-  cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), &version, sizeof(version)),
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &version, sizeof(version)),
                     S_SUCCESS);
 
   const ActivitySettingsValueHistoryV2 step_history = {
@@ -2043,12 +2042,12 @@ void test_activity__migrate_settings_v2(void) {
     .values = {60000, 65535, 300, 200, 100},
   };
   key = ActivitySettingsKeyStepCountHistory;
-  cl_assert_equal_i(
-      settings_file_set(&file, &key, sizeof(key), &step_history, sizeof(step_history)), S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &step_history, sizeof(step_history)),
+                    S_SUCCESS);
 
   const uint16_t last_vmc = 1234;
   key = ActivitySettingsKeyLastVMC;
-  cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), &last_vmc, sizeof(last_vmc)),
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &last_vmc, sizeof(last_vmc)),
                     S_SUCCESS);
 
   // Stored sessions are not metric records; the migration must copy them verbatim
@@ -2065,10 +2064,10 @@ void test_activity__migrate_settings_v2(void) {
     },
   };
   key = ActivitySettingsKeyStoredActivities;
-  cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), sessions, sizeof(sessions)),
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), sessions, sizeof(sessions)),
                     S_SUCCESS);
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // Initializing triggers the migration
   prv_activity_init_and_set_enabled(true);

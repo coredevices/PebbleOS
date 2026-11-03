@@ -513,10 +513,10 @@ void test_alarm__reload_removes_untracked_future_pins(void) {
   AlarmId id = alarm_create(&(AlarmInfo){.hour = 7, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
   Uuid tracked[3];
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "/alarms", 1024));
-  cl_must_pass(settings_file_get(&file, &key, sizeof(key), tracked, sizeof(tracked)));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/alarms", 1024));
+  cl_must_pass(pbl_settings_get(&file, &key, sizeof(key), tracked, sizeof(tracked)));
+  pbl_settings_close(&file);
 
   const Uuid alarm_source = UUID_ALARMS_DATA_SOURCE;
   const Uuid other_source = UUID_REMINDERS_DATA_SOURCE;

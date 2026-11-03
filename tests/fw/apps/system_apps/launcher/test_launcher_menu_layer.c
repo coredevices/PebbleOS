@@ -23,7 +23,7 @@ static GContext s_ctx;
 
 #include <fake_content_indicator.h>
 #include <fake_pfs.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
 #include <fixtures/screen_grid.h>
@@ -255,7 +255,7 @@ void test_launcher_menu_layer__initialize(void) {
   content_indicator_init_buffer(buffer);
 
   // Setup AppGlanceDB
-  fake_settings_file_reset();
+  fake_settings_reset();
   app_glance_db_init();
 
   // Setup AppGlanceService

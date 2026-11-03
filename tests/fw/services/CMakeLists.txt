@@ -455,7 +455,7 @@ pbl_clar_test(test_app_glance_service
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
   OVERRIDES dummy_board
 )
 
@@ -502,7 +502,7 @@ pbl_clar_test(test_mic_capture
     fw/services/mic_manager/mic_manager.c
     fw/services/blob_db/app_db.c
     tests/fakes/fake_events.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
   DEFINES CONFIG_SERVICE_MIC_CAPTURE
   OVERRIDES dummy_board
 )

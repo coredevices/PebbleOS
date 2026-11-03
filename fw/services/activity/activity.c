@@ -436,9 +436,9 @@ static void prv_spo2_deinit(void) {
 
 // ----------------------------------------------------------------------------------------------
 // Open the settings file and malloc space for the file struct
-SettingsFile *activity_private_settings_open(void) {
-  SettingsFile *file = pbl_malloc_check(sizeof(SettingsFile));
-  if (settings_file_open(file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN) !=
+struct pbl_settings_file *activity_private_settings_open(void) {
+  struct pbl_settings_file *file = pbl_malloc_check(sizeof(struct pbl_settings_file));
+  if (pbl_settings_open(file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN) !=
       S_SUCCESS) {
     pbl_free(file);
     PBL_LOG_ERR("No settings file");
@@ -449,8 +449,8 @@ SettingsFile *activity_private_settings_open(void) {
 
 // ------------------------------------------------------------------------------------------------
 // Close the settings file and free the file struct
-void activity_private_settings_close(SettingsFile *file) {
-  settings_file_close(file);
+void activity_private_settings_close(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
   pbl_free(file);
 }
 
@@ -500,8 +500,9 @@ static bool prv_settings_key_is_metric_scalar(ActivitySettingsKey key) {
 // records grew from uint16_t to uint32_t values, so history and scalar metric records get
 // expanded; everything else is copied verbatim. This also handles the version 1 to 2 change,
 // which only made the file bigger.
-static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_file,
-                                    SettingsRecordInfo *info, void *context) {
+static void prv_settings_rewrite_cb(struct pbl_settings_file *old_file,
+                                    struct pbl_settings_file *new_file,
+                                    struct pbl_settings_record *info, void *context) {
   if (info->key_len != sizeof(ActivitySettingsKey)) {
     PBL_LOG_WRN("Unexpected key len: %" PRIu32 " ", (uint32_t)info->key_len);
     return;
@@ -521,7 +522,7 @@ static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_fi
     for (int i = 0; i < ACTIVITY_HISTORY_DAYS; i++) {
       new_history.values[i] = old_history.values[i];
     }
-    settings_file_set(new_file, &key, info->key_len, &new_history, sizeof(new_history));
+    pbl_settings_set(new_file, &key, info->key_len, &new_history, sizeof(new_history));
     return;
   }
 
@@ -530,7 +531,7 @@ static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_fi
     info->get_val(old_file, &old_value, sizeof(old_value));
 
     const ActivityScalarStore new_value = old_value;
-    settings_file_set(new_file, &key, info->key_len, &new_value, sizeof(new_value));
+    pbl_settings_set(new_file, &key, info->key_len, &new_value, sizeof(new_value));
     return;
   }
 
@@ -538,25 +539,26 @@ static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_fi
   void *data = pbl_malloc_check(info->val_len);
   info->get_val(old_file, data, info->val_len);
 
-  settings_file_set(new_file, &key, info->key_len, data, info->val_len);
+  pbl_settings_set(new_file, &key, info->key_len, data, info->val_len);
 
   pbl_free(data);
 }
 
 // ----------------------------------------------------------------------------------------------
 // Migrate settings from an earlier version now if necessary
-static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_version) {
+static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *file,
+                                                      uint16_t *written_version) {
   status_t result = E_ERROR;
 
   ActivitySettingsKey key = ActivitySettingsKeyStepCountHistory;
-  if (!settings_file_exists(file, &key, sizeof(key))) {
+  if (!pbl_settings_exists(file, &key, sizeof(key))) {
     // If this settings file is empty, no migration necessary
     return file;
   }
 
   // See which version we are on
   key = ActivitySettingsKeyVersion;
-  result = settings_file_get(file, &key, sizeof(key), written_version, sizeof(*written_version));
+  result = pbl_settings_get(file, &key, sizeof(key), written_version, sizeof(*written_version));
   if (result != S_SUCCESS) {
     // Version 1 had no settings key in it.
     *written_version = 1;
@@ -574,7 +576,7 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
   if ((version == 1) || (version == 2)) {
     // Both older versions store metric values as uint16_t, so re-create the file (at the new,
     // bigger size in the version 1 case) while widening metric records to uint32_t.
-    result = settings_file_rewrite(file, prv_settings_rewrite_cb, nullptr);
+    result = pbl_settings_rewrite(file, prv_settings_rewrite_cb, nullptr);
     if (result != S_SUCCESS) {
       PBL_LOG_ERR("Failure %" PRIi32 " while re-writing setting file", (int32_t)result);
     }
@@ -606,7 +608,7 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
   // so we need to surround it with mutex ownership
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
 
     if (file && (s_activity_state.update_settings_counter <= 0)) {
       // Periodically save current stats into settings, so that if watch resets or crashes we
@@ -620,15 +622,15 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
 
         if (m_info.has_history) {
           ActivitySettingsValueHistory history;
-          settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                            sizeof(history));
+          pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                           sizeof(history));
           history.values[0] = *m_info.value_p;
-          settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                            sizeof(history));
+          pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                           sizeof(history));
         } else {
           if (m_info.settings_key != ActivitySettingsKeyInvalid) {
-            settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key),
-                              m_info.value_p, sizeof(*m_info.value_p));
+            pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key),
+                             m_info.value_p, sizeof(*m_info.value_p));
           }
         }
       }
@@ -636,8 +638,8 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
       if (s_activity_state.need_activities_saved) {
         // Save stored activities
         ActivitySettingsKey key = ActivitySettingsKeyStoredActivities;
-        settings_file_set(file, &key, sizeof(key), s_activity_state.activity_sessions,
-                          sizeof(s_activity_state.activity_sessions));
+        pbl_settings_set(file, &key, sizeof(key), s_activity_state.activity_sessions,
+                         sizeof(s_activity_state.activity_sessions));
         s_activity_state.need_activities_saved = false;
       }
 
@@ -1210,7 +1212,7 @@ bool activity_init(void) {
   pbl_sem_init(&s_activity_state.bg_wait_semaphore, 0, 1);
 
   // Open up our settings file so that we can init our state
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (!file) {
     return false;
   }
@@ -1226,7 +1228,7 @@ bool activity_init(void) {
   ActivitySettingsKey key = ActivitySettingsKeyVersion;
   const uint16_t version = ACTIVITY_SETTINGS_CURRENT_VERSION;
   if (version != written_version) {
-    settings_file_set(file, &key, sizeof(key), &version, sizeof(version));
+    pbl_settings_set(file, &key, sizeof(key), &version, sizeof(version));
   }
 
   // Init the current day index
@@ -1248,17 +1250,17 @@ bool activity_init(void) {
   s_activity_state.resting_calories = activity_private_compute_resting_calories(minute_of_day);
 
   key = ActivitySettingsKeyLastSleepActivityUTC;
-  settings_file_get(file, &key, sizeof(key), &s_activity_state.logged_sleep_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_sleep_activity_exit_at_utc));
+  pbl_settings_get(file, &key, sizeof(key), &s_activity_state.logged_sleep_activity_exit_at_utc,
+                   sizeof(s_activity_state.logged_sleep_activity_exit_at_utc));
 
   key = ActivitySettingsKeyLastRestfulSleepActivityUTC;
-  settings_file_get(file, &key, sizeof(key),
-                    &s_activity_state.logged_restful_sleep_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_restful_sleep_activity_exit_at_utc));
+  pbl_settings_get(file, &key, sizeof(key),
+                   &s_activity_state.logged_restful_sleep_activity_exit_at_utc,
+                   sizeof(s_activity_state.logged_restful_sleep_activity_exit_at_utc));
 
   key = ActivitySettingsKeyLastStepActivityUTC;
-  settings_file_get(file, &key, sizeof(key), &s_activity_state.logged_step_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_step_activity_exit_at_utc));
+  pbl_settings_get(file, &key, sizeof(key), &s_activity_state.logged_step_activity_exit_at_utc,
+                   sizeof(s_activity_state.logged_step_activity_exit_at_utc));
 
   // Clean up
   activity_private_settings_close(file);
@@ -1686,9 +1688,9 @@ bool activity_test_run_minute_callback(void) {
 // Writes history to settings file
 static void prv_write_metric_history(ActivitySettingsKey key,
                                      const ActivitySettingsValueHistory *history) {
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (file) {
-    settings_file_set(file, &key, sizeof(key), history, sizeof(*history));
+    pbl_settings_set(file, &key, sizeof(key), history, sizeof(*history));
     activity_private_settings_close(file);
   }
 }

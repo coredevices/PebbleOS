@@ -11,7 +11,7 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
@@ -38,7 +38,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 static_assert(APP_GLANCE_DB_MAX_USED_SIZE <= SETTINGS_FILE_SIZE, "AppGlanceDB is too small!");
 
 static struct {
-  SettingsFile settings_file;
+  struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
 } s_app_glance_db;
 
@@ -600,8 +600,8 @@ status_t app_glance_db_delete_glance(const Uuid *uuid) {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
-  const status_t rv = settings_file_open_growable(
-      &s_app_glance_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4));
+  const status_t rv = pbl_settings_open_growable(&s_app_glance_db.settings_file, SETTINGS_FILE_NAME,
+                                                 SETTINGS_FILE_SIZE, PBL_KIB(4));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_glance_db.mutex);
   }
@@ -609,7 +609,7 @@ static status_t prv_lock_mutex_and_open_file(void) {
 }
 
 static void prv_close_file_and_unlock_mutex(void) {
-  settings_file_close(&s_app_glance_db.settings_file);
+  pbl_settings_close(&s_app_glance_db.settings_file);
   pbl_mutex_unlock(&s_app_glance_db.mutex);
 }
 
@@ -634,7 +634,7 @@ status_t app_glance_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = settings_file_compact(&s_app_glance_db.settings_file);
+  rv = pbl_settings_compact(&s_app_glance_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
 }
@@ -745,8 +745,8 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
     return rv;
   }
 
-  rv = settings_file_set(&s_app_glance_db.settings_file, key, (size_t)key_len, serialized_glance,
-                         len);
+  rv = pbl_settings_set(&s_app_glance_db.settings_file, key, (size_t)key_len, serialized_glance,
+                        len);
 
   prv_close_file_and_unlock_mutex();
 
@@ -763,7 +763,7 @@ int app_glance_db_get_len(const uint8_t *key, int key_len) {
     return 0;
   }
 
-  const int length = settings_file_get_len(&s_app_glance_db.settings_file, key, (size_t)key_len);
+  const int length = pbl_settings_get_len(&s_app_glance_db.settings_file, key, (size_t)key_len);
 
   prv_close_file_and_unlock_mutex();
 
@@ -780,8 +780,8 @@ status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, i
     return rv;
   }
 
-  rv = settings_file_get(&s_app_glance_db.settings_file, key, (size_t)key_len, val_out,
-                         (size_t)val_out_len);
+  rv = pbl_settings_get(&s_app_glance_db.settings_file, key, (size_t)key_len, val_out,
+                        (size_t)val_out_len);
   if (rv == S_SUCCESS) {
     SerializedAppGlanceHeader *serialized_app_glance = (SerializedAppGlanceHeader *)val_out;
 
@@ -789,7 +789,7 @@ status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, i
     if (serialized_app_glance->version != APP_GLANCE_DB_CURRENT_VERSION) {
       // Clear out the stale entry
       PBL_LOG_WRN("Read a AppGlanceDB entry with an outdated version; deleting it");
-      settings_file_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
+      pbl_settings_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
       rv = E_DOES_NOT_EXIST;
     }
   }
@@ -809,8 +809,8 @@ status_t app_glance_db_delete(const uint8_t *key, int key_len) {
     return rv;
   }
 
-  if (settings_file_exists(&s_app_glance_db.settings_file, key, (size_t)key_len)) {
-    rv = settings_file_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
+  if (pbl_settings_exists(&s_app_glance_db.settings_file, key, (size_t)key_len)) {
+    rv = pbl_settings_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
   } else {
     rv = S_SUCCESS;
   }
@@ -839,7 +839,7 @@ status_t app_glance_db_insert_stale(const uint8_t *key, int key_len, const uint8
     return rv;
   }
 
-  rv = settings_file_set(&s_app_glance_db.settings_file, key, key_len, val, val_len);
+  rv = pbl_settings_set(&s_app_glance_db.settings_file, key, key_len, val, val_len);
 
   prv_close_file_and_unlock_mutex();
   return rv;

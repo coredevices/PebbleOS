@@ -18,13 +18,13 @@
 ////////////////////////////////////////////////////////////////
 
 #include <fake_events.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
 
 int pbl_fs_unlink(const char *path) {
-  fake_settings_file_reset();
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
@@ -210,7 +210,7 @@ void test_app_glance_db__initialize(void) {
   RESET_FAKE(app_cache_app_launched);
 
   fake_event_init();
-  fake_settings_file_reset();
+  fake_settings_reset();
   app_glance_db_init();
 }
 

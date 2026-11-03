@@ -20,7 +20,7 @@ pbl_clar_test(test_calendar
     fw/services/timeline/timeline.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
   OVERRIDES dummy_board
 )
 
@@ -34,7 +34,7 @@ pbl_clar_test(test_timeline_peek_event
     fw/services/timeline/timeline.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
   OVERRIDES dummy_board
 )
 

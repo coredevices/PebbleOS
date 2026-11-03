@@ -16,7 +16,7 @@
 #include <pbl/services/light_level.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/base64.h>
 #include <pbl/util/math.h>
 #include <pbl/util/shared_cbuf.h>
@@ -103,9 +103,9 @@ static void prv_unlock(void) {
 // ----------------------------------------------------------------------------------------------
 // Open the minute data settings file and malloc space for the file struct
 // We use PBL_NOINLINE to reduce the stack requirements during the minute handler
-static PBL_NOINLINE SettingsFile *prv_minute_data_file_open(void) {
-  SettingsFile *file = pbl_malloc_check(sizeof(SettingsFile));
-  if (settings_file_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != S_SUCCESS) {
+static PBL_NOINLINE struct pbl_settings_file *prv_minute_data_file_open(void) {
+  struct pbl_settings_file *file = pbl_malloc_check(sizeof(struct pbl_settings_file));
+  if (pbl_settings_open(file, ALG_MINUTE_DATA_FILE_NAME, ALG_MINUTE_DATA_FILE_LEN) != S_SUCCESS) {
     PBL_LOG_ERR("No minute data file");
     return nullptr;
   }
@@ -114,8 +114,8 @@ static PBL_NOINLINE SettingsFile *prv_minute_data_file_open(void) {
 
 // ------------------------------------------------------------------------------------------------
 // Close the settings file and free the file struct
-static void prv_minute_data_file_close(SettingsFile *file) {
-  settings_file_close(file);
+static void prv_minute_data_file_close(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
   pbl_free(file);
 }
 
@@ -175,12 +175,12 @@ static void prv_create_activity_session_cb(void *context, KAlgActivityType kalg_
 }
 
 // ------------------------------------------------------------------------------------------
-// Used from settings_file_each() callback to read in a chunk based on the SettingsRecordInfo
+// Used from pbl_settings_each() callback to read in a chunk based on the struct pbl_settings_record
 // given to the callback. Returns true if the chunk is within the designated key range and
 // should be processed.
-static bool prv_read_minute_file_record(SettingsFile *file, SettingsRecordInfo *info,
-                                        uint32_t key_range_start, uint32_t key_range_end,
-                                        AlgMinuteFileRecord *chunk) {
+static bool prv_read_minute_file_record(struct pbl_settings_file *file,
+                                        struct pbl_settings_record *info, uint32_t key_range_start,
+                                        uint32_t key_range_end, AlgMinuteFileRecord *chunk) {
   // Get the key for this record and see if we want it
   uint32_t key;
   info->get_key(file, &key, sizeof(key));
@@ -203,7 +203,7 @@ static bool prv_read_minute_file_record(SettingsFile *file, SettingsRecordInfo *
 }
 
 // ----------------------------------------------------------------------------------------------
-// The callback we give to settings_file_each to send the minute data to the logs
+// The callback we give to pbl_settings_each to send the minute data to the logs
 typedef struct {
   uint32_t oldest_key;
   uint32_t newest_key;
@@ -212,8 +212,8 @@ typedef struct {
   time_t newest_valid_utc;
 } AlgLogMinuteFileContext;
 
-static bool prv_log_minute_file_minutes_cb(SettingsFile *file, SettingsRecordInfo *info,
-                                           void *context_param) {
+static bool prv_log_minute_file_minutes_cb(struct pbl_settings_file *file,
+                                           struct pbl_settings_record *info, void *context_param) {
   AlgLogMinuteFileContext *context = (AlgLogMinuteFileContext *)context_param;
 
   AlgMinuteFileRecord chunk;
@@ -257,7 +257,7 @@ bool activity_algorithm_dump_minute_data_to_log(void) {
   }
 
   bool success = false;
-  SettingsFile *file = nullptr;
+  struct pbl_settings_file *file = nullptr;
 
   // Open the minute data file
   file = prv_minute_data_file_open();
@@ -279,7 +279,7 @@ bool activity_algorithm_dump_minute_data_to_log(void) {
 
   // Feed in the saved data, reading chunks out of the saved minute data and compressing
   // it into algorithm sleep minute structures.
-  settings_file_each(file, prv_log_minute_file_minutes_cb, &context);
+  pbl_settings_each(file, prv_log_minute_file_minutes_cb, &context);
   success = true;
 
 exit:
@@ -332,7 +332,8 @@ static bool prv_minute_file_rewrite_cb(void *key_arg, size_t key_len, void *val_
 // Scan the existing minute file, validate it, keep only the most recent 'max_records' records
 // If the file handle is not NULL, it will be used. Otherwise, the file will be opened and then
 // closed again before we exit.
-static SettingsFile *prv_validate_and_trim_minute_file(SettingsFile *file, uint16_t max_records) {
+static struct pbl_settings_file *prv_validate_and_trim_minute_file(struct pbl_settings_file *file,
+                                                                   uint16_t max_records) {
   bool need_close = false;
   bool nuke_file = false;
 
@@ -361,7 +362,7 @@ static SettingsFile *prv_validate_and_trim_minute_file(SettingsFile *file, uint1
 
   // Rewrite the settings file, keeping only the keys we need
   PBL_LOG_DBG("Compacting minute file down to %" PRIu16 " records", max_records);
-  status_t status = settings_file_rewrite_filtered(file, prv_minute_file_rewrite_cb, &context);
+  status_t status = pbl_settings_rewrite_filtered(file, prv_minute_file_rewrite_cb, &context);
 
   // Error re-writing?
   if (status != S_SUCCESS) {
@@ -428,7 +429,7 @@ static void PBL_NOINLINE prv_set_file_minute_record_entry(AlgMinuteFileRecord *f
 static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
   bool success = false;
 
-  SettingsFile *minute_file = prv_minute_data_file_open();
+  struct pbl_settings_file *minute_file = prv_minute_data_file_open();
   if (!minute_file) {
     PBL_LOG_ERR("Could not open minute file for saving minute stats");
     goto exit;
@@ -436,7 +437,7 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
 
   uint32_t key = prv_minute_file_get_settings_key(file_record->hdr.time_utc);
   status_t status =
-      settings_file_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
+      pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
   if (status == E_OUT_OF_STORAGE) {
     uint16_t max_records = s_alg_state->num_minute_records / 2;
     PBL_LOG_INFO("Compacting minute file from %" PRIu16 " records to %" PRIu16 "",
@@ -446,7 +447,7 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
       goto exit;
     }
 
-    status = settings_file_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
+    status = pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
   }
 
   // Was there an error writing the value out?
@@ -1111,10 +1112,10 @@ static bool prv_insert_health_minute_record(AlgReadMinutesContext *context, time
 }
 
 // ----------------------------------------------------------------------------------------------
-// The callback we give to settings_file_each to read in the minute data for
+// The callback we give to pbl_settings_each to read in the minute data for
 // activity_algorithm_get_minute_history()
-static bool prv_read_minute_history_file_cb(SettingsFile *file, SettingsRecordInfo *info,
-                                            void *context_param) {
+static bool prv_read_minute_history_file_cb(struct pbl_settings_file *file,
+                                            struct pbl_settings_record *info, void *context_param) {
   AlgReadMinutesContext *context = (AlgReadMinutesContext *)context_param;
 
   AlgMinuteFileRecord chunk;
@@ -1204,7 +1205,7 @@ static bool prv_read_minutes(AlgReadMinutesContext *context, time_t oldest_reque
   }
 
   bool success = false;
-  SettingsFile *file = prv_minute_data_file_open();
+  struct pbl_settings_file *file = prv_minute_data_file_open();
   if (!file) {
     goto exit;
   }
@@ -1221,7 +1222,7 @@ static bool prv_read_minutes(AlgReadMinutesContext *context, time_t oldest_reque
   context->last_record_idx_written = -1;
 
   // Read the minute data from flash
-  settings_file_each(file, prv_read_minute_history_file_cb, context);
+  pbl_settings_each(file, prv_read_minute_history_file_cb, context);
 
   // Fill in any data we have in RAM as well
   prv_read_minute_history_buffer(context);
@@ -1279,8 +1280,8 @@ typedef struct {
   uint32_t num_records;
 } AlgMinuteFileInfoContext;
 
-static bool prv_read_minute_file_info_cb(SettingsFile *file, SettingsRecordInfo *info,
-                                         void *context_arg) {
+static bool prv_read_minute_file_info_cb(struct pbl_settings_file *file,
+                                         struct pbl_settings_record *info, void *context_arg) {
   AlgMinuteFileInfoContext *context = (AlgMinuteFileInfoContext *)context_arg;
   context->num_records++;
   return true;
@@ -1292,7 +1293,7 @@ bool activity_algorithm_minute_file_info(bool compact_first, uint32_t *num_recor
     return false;
   }
   bool success = false;
-  SettingsFile *file = nullptr;
+  struct pbl_settings_file *file = nullptr;
 
   file = prv_minute_data_file_open();
   if (file && compact_first) {
@@ -1305,7 +1306,7 @@ bool activity_algorithm_minute_file_info(bool compact_first, uint32_t *num_recor
   // Count # of records in minute file
   AlgMinuteFileInfoContext context = (AlgMinuteFileInfoContext){};
 
-  settings_file_each(file, prv_read_minute_file_info_cb, &context);
+  pbl_settings_each(file, prv_read_minute_file_info_cb, &context);
   success = true;
 
 exit:

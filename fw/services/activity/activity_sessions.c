@@ -584,12 +584,12 @@ static void prv_log_activities(time_t now_utc) {
   // Update settings file if any exit times changed
   if (exit_utc_changed) {
     pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
     if (file) {
       for (int i = 0; i < ActivityClassCount; i++) {
         ActivityClassParams *params = &class_settings[i];
-        status_t result = settings_file_set(file, &params->key, sizeof(params->key),
-                                            params->exit_utc, sizeof(*params->exit_utc));
+        status_t result = pbl_settings_set(file, &params->key, sizeof(params->key),
+                                           params->exit_utc, sizeof(*params->exit_utc));
         if (result != S_SUCCESS) {
           PBL_LOG_ERR("Error saving last event time");
         }
@@ -602,13 +602,13 @@ static void prv_log_activities(time_t now_utc) {
 
 // ------------------------------------------------------------------------------------------------
 // Load in the stored activities from our settings file
-void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
+void activity_sessions_prv_init(struct pbl_settings_file *file, time_t utc_now) {
   ActivityState *state = activity_private_state();
   ActivitySettingsKey key = ActivitySettingsKeyStoredActivities;
 
-  // Check the length first. The settings_file_get() call will not return an error if we ask
+  // Check the length first. The pbl_settings_get() call will not return an error if we ask
   // for less than the value size
-  int stored_len = settings_file_get_len(file, &key, sizeof(key));
+  int stored_len = pbl_settings_get_len(file, &key, sizeof(key));
   if (stored_len == 0) {
     PBL_LOG_DBG("No stored activity sessions");
     return;
@@ -620,8 +620,8 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
   }
 
   // Read in the stored activities
-  status_t result = settings_file_get(file, &key, sizeof(key), state->activity_sessions,
-                                      sizeof(state->activity_sessions));
+  status_t result = pbl_settings_get(file, &key, sizeof(key), state->activity_sessions,
+                                     sizeof(state->activity_sessions));
   if (result != S_SUCCESS) {
     return;
   }
@@ -643,8 +643,8 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
 
       // Zero out flash so that we don't get into a reboot loop
       memset(state->activity_sessions, 0, sizeof(state->activity_sessions));
-      settings_file_set(file, &key, sizeof(key), state->activity_sessions,
-                        sizeof(state->activity_sessions));
+      pbl_settings_set(file, &key, sizeof(key), state->activity_sessions,
+                       sizeof(state->activity_sessions));
       pbl_panic();
     }
     state->activity_sessions_count++;

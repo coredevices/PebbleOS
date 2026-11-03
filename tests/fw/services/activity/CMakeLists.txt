@@ -36,7 +36,7 @@ pbl_clar_test(test_activity_insights
     fw/services/timeline/attribute.c
     fw/services/timeline/metricgroup.c
     tests/fakes/fake_clock.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     tests/fakes/fake_kernel_services_notifications.c
     tests/fakes/fake_rtc.c
     fw/applib/pbl_std/strftime.c

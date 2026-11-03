@@ -12,7 +12,7 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/persist.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
@@ -28,7 +28,7 @@ PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 typedef struct PersistStore {
   ListNode list_node;
   Uuid uuid;
-  SettingsFile file;
+  struct pbl_settings_file file;
   bool file_open;
   uint8_t usage_count; //!< How many clients are using this store
 } PersistStore;
@@ -62,7 +62,7 @@ static inline void prv_unlock(void) {
 
 static status_t prv_get_file_name(char *name, size_t buf_len, const Uuid *uuid) {
   // Persist files are named "ps<uuid-hex>". The "ps" prefix indicates the file
-  // is in SettingsFile format. The UUID is stable across reinstalls, so the
+  // is in struct pbl_settings_file format. The UUID is stable across reinstalls, so the
   // file follows the app regardless of its (volatile) AppInstallId.
   const uint8_t *b = (const uint8_t *)uuid;
   return snprintf(name, buf_len,
@@ -195,28 +195,28 @@ void persist_service_init(void) {
 // must call persist_service_client_open() to create/open the store during its
 // startup and persist_service_client_close() during its shutdown.
 //
-// The SettingsFile is opened/created lazily. A persist file will not be
+// The struct pbl_settings_file is opened/created lazily. A persist file will not be
 // created for an app unless it calls a persist function.
 //
 // The persist service mutex is locked when this function is called. It will
 // only be unlocked after a call to persist_service_unlock(). While the global
 // persist service mutex is currently used, the API is designed such that a
 // per-file mutex could be used without altering the callers.
-SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
+struct pbl_settings_file *persist_service_lock_and_get_store(const Uuid *uuid) {
   prv_lock();
   PersistStore *store = prv_find_open_store(uuid);
   PBL_ASSERTN(store);
   if (!store->file_open) {
     char filename[PERSIST_FILE_NAME_MAX_LENGTH];
     PBL_ASSERTN(PASSED(prv_get_file_name(filename, sizeof(filename), uuid)));
-    PBL_ASSERTN(PASSED(settings_file_open_growable(
-        &store->file, filename, PERSIST_STORAGE_MAX_SPACE, PERSIST_STORAGE_INITIAL_ALLOC)));
+    PBL_ASSERTN(PASSED(pbl_settings_open_growable(&store->file, filename, PERSIST_STORAGE_MAX_SPACE,
+                                                  PERSIST_STORAGE_INITIAL_ALLOC)));
     store->file_open = true;
   }
   return &store->file;
 }
 
-void persist_service_unlock_store(SettingsFile *store) {
+void persist_service_unlock_store(struct pbl_settings_file *store) {
   prv_unlock();
 }
 
@@ -255,7 +255,7 @@ void persist_service_client_close(const Uuid *uuid) {
 
     if (--store->usage_count == 0) {
       if (store->file_open) {
-        settings_file_close(&store->file);
+        pbl_settings_close(&store->file);
       }
       list_remove(&store->list_node, &s_client_stores /* &head */, nullptr /* &tail */);
       pbl_free(store);

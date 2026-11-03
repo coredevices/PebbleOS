@@ -19,7 +19,7 @@
 #include <pbl/services/timeline/health_layout.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/weather_layout.h>
-#include <pbl/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/stats.h>
 #include <pbl/util/string.h>
@@ -304,18 +304,18 @@ static const char *prv_get_variant(const InsightCopyVariants *set, int variant) 
 
 // ------------------------------------------------------------------------------------------------
 // Helper functions for saving insight state to settings file
-static bool prv_restore_state(SettingsFile *file, ActivitySettingsKey key, void *val_out,
-                              size_t val_out_len) {
-  return settings_file_get(file, &key, sizeof(key), val_out, val_out_len);
+static bool prv_restore_state(struct pbl_settings_file *file, ActivitySettingsKey key,
+                              void *val_out, size_t val_out_len) {
+  return pbl_settings_get(file, &key, sizeof(key), val_out, val_out_len);
 }
 
 // ------------------------------------------------------------------------------------------------
 static bool prv_save_state(ActivitySettingsKey key, void *val, size_t val_len) {
   bool rv = false;
 
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (file) {
-    rv = settings_file_set(file, &key, sizeof(key), val, val_len);
+    rv = pbl_settings_set(file, &key, sizeof(key), val, val_len);
     activity_private_settings_close(file);
   }
   return rv;
@@ -2032,7 +2032,7 @@ void activity_insights_init(time_t now_utc) {
   // Load in previous saved state
   // No need to lock mutex since this should only be called from activity_init
   SummaryPinLastState activity_pin_last_state;
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (file) {
     prv_restore_state(file, ActivitySettingsKeyInsightSleepRewardTime,
                       &s_sleep_reward_state.common.last_triggered_utc,

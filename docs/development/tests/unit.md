@@ -113,8 +113,8 @@ Sources that travel together are grouped into modules in
 pbl_test_module(settings
   REQUIRES pfs
   SOURCES
-    subsys/settings/settings_file.c
-    subsys/settings/settings_raw_iter.c
+    subsys/settings/settings.c
+    subsys/settings/raw_iter.c
 )
 ```
 
@@ -176,10 +176,10 @@ These mechanisms replace dependencies of the code under test:
   ```c
   #include <fff.h>
 
-  FAKE_VOID_FUNC(settings_file_close, SettingsFile *);
-  FAKE_VALUE_FUNC(status_t, settings_file_open, SettingsFile *, const char *, int);
+  FAKE_VOID_FUNC(pbl_settings_close, struct pbl_settings_file *);
+  FAKE_VALUE_FUNC(status_t, pbl_settings_open, struct pbl_settings_file *, const char *, int);
 
-  #define FAKES(FAKE) FAKE(settings_file_close) FAKE(settings_file_open)
+  #define FAKES(FAKE) FAKE(pbl_settings_close) FAKE(pbl_settings_open)
 
   void test_foo__initialize(void) {
     FAKES(RESET_FAKE);
